@@ -28,24 +28,6 @@ const fiveHours = oneHour * 5;
 
 const itemsToClear = ["cookies", "offlineApps"];
 
-function hasIndexedDB(origin) {
-  return new Promise(resolve => {
-    let hasData = true;
-    let uri = Services.io.newURI(origin);
-    let principal = Services.scriptSecurityManager.createContentPrincipal(
-      uri,
-      {}
-    );
-    let request = indexedDB.openForPrincipal(principal, "TestDatabase", 1);
-    request.onupgradeneeded = function(e) {
-      hasData = false;
-    };
-    request.onsuccess = function(e) {
-      resolve(hasData);
-    };
-  });
-}
-
 function waitForUnregister(host) {
   return new Promise(resolve => {
     let listener = {
@@ -126,7 +108,7 @@ add_task(async function testWithRange() {
   is(found, 2, "Our origins are active.");
 
   ok(
-    await hasIndexedDB("https://example.org"),
+    await SiteDataTestUtils.hasIndexedDB("https://example.org"),
     "We have indexedDB data for example.org"
   );
   ok(
@@ -135,7 +117,7 @@ add_task(async function testWithRange() {
   );
 
   ok(
-    await hasIndexedDB("https://example.com"),
+    await SiteDataTestUtils.hasIndexedDB("https://example.com"),
     "We have indexedDB data for example.com"
   );
   ok(
@@ -157,7 +139,7 @@ add_task(async function testWithRange() {
   await p;
 
   ok(
-    !(await hasIndexedDB("https://example.org")),
+    !(await SiteDataTestUtils.hasIndexedDB("https://example.org")),
     "We don't have indexedDB data for example.org"
   );
   ok(
@@ -166,7 +148,7 @@ add_task(async function testWithRange() {
   );
 
   ok(
-    await hasIndexedDB("https://example.com"),
+    await SiteDataTestUtils.hasIndexedDB("https://example.com"),
     "We still have indexedDB data for example.com"
   );
   ok(
@@ -186,7 +168,7 @@ add_task(async function testWithRange() {
   await Sanitizer.sanitize(itemsToClear, { ignoreTimespan: false });
 
   ok(
-    await hasIndexedDB("https://example.com"),
+    await SiteDataTestUtils.hasIndexedDB("https://example.com"),
     "We still have indexedDB data for example.com"
   );
   ok(
@@ -195,7 +177,7 @@ add_task(async function testWithRange() {
   );
 
   ok(
-    !(await hasIndexedDB("https://example.org")),
+    !(await SiteDataTestUtils.hasIndexedDB("https://example.org")),
     "We don't have indexedDB data for example.org"
   );
   ok(
@@ -206,7 +188,7 @@ add_task(async function testWithRange() {
   sas.testOnlyReset();
 
   // Clean up.
-  await Sanitizer.sanitize(itemsToClear);
+  await SiteDataTestUtils.clear();
 });
 
 add_task(async function testExceptionsOnShutdown() {
@@ -222,7 +204,7 @@ add_task(async function testExceptionsOnShutdown() {
   );
 
   ok(
-    await hasIndexedDB("https://example.org"),
+    await SiteDataTestUtils.hasIndexedDB("https://example.org"),
     "We have indexedDB data for example.org"
   );
   ok(
@@ -231,7 +213,7 @@ add_task(async function testExceptionsOnShutdown() {
   );
 
   ok(
-    await hasIndexedDB("https://example.com"),
+    await SiteDataTestUtils.hasIndexedDB("https://example.com"),
     "We have indexedDB data for example.com"
   );
   ok(
@@ -250,7 +232,7 @@ add_task(async function testExceptionsOnShutdown() {
   await Sanitizer.runSanitizeOnShutdown();
   // Data for example.org should not have been cleared
   ok(
-    await hasIndexedDB("https://example.org"),
+    await SiteDataTestUtils.hasIndexedDB("https://example.org"),
     "We still have indexedDB data for example.org"
   );
   ok(
@@ -259,11 +241,15 @@ add_task(async function testExceptionsOnShutdown() {
   );
   // Data for example.com should be cleared
   ok(
-    !(await hasIndexedDB("https://example.com")),
+    !(await SiteDataTestUtils.hasIndexedDB("https://example.com")),
     "We don't have indexedDB data for example.com"
   );
   ok(
     !SiteDataTestUtils.hasServiceWorkers("https://example.com"),
     "We don't have serviceWorker data for example.com"
   );
+
+  // Clean up
+  await SiteDataTestUtils.clear();
+  Services.perms.removeAll();
 });
