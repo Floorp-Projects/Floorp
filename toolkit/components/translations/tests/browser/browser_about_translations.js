@@ -90,15 +90,11 @@ add_task(async function test_about_translations_dropdowns() {
       { fromLang: "is", toLang: "en" },
     ],
     runInPage: async ({ selectors }) => {
-      const { document, window } = content;
+      const { document } = content;
 
       await ContentTaskUtils.waitForCondition(() => {
-        const element = document.querySelector(
-          selectors.translationResultBlank
-        );
-        const { visibility } = window.getComputedStyle(element);
-        return visibility === "visible";
-      }, `Waiting for placeholder text to be visible."`);
+        return document.body.hasAttribute("ready");
+      }, "Waiting for the document to be ready.");
 
       /**
        * Some languages can be marked as hidden in the dropbdown. This function
@@ -206,12 +202,8 @@ add_task(async function test_about_translations_translations() {
       Cu.waiveXrays(window).DEBOUNCE_DELAY = 5; // Make the timer run faster for tests.
 
       await ContentTaskUtils.waitForCondition(() => {
-        const element = document.querySelector(
-          selectors.translationResultBlank
-        );
-        const { visibility } = window.getComputedStyle(element);
-        return visibility === "visible";
-      }, `Waiting for placeholder text to be visible."`);
+        return document.body.hasAttribute("ready");
+      }, "Waiting for the document to be ready.");
 
       /** @type {HTMLSelectElement} */
       const fromSelect = document.querySelector(selectors.fromLanguageSelect);
@@ -296,12 +288,8 @@ add_task(async function test_about_translations_language_directions() {
       Cu.waiveXrays(window).DEBOUNCE_DELAY = 5; // Make the timer run faster for tests.
 
       await ContentTaskUtils.waitForCondition(() => {
-        const element = document.querySelector(
-          selectors.translationResultBlank
-        );
-        const { visibility } = window.getComputedStyle(element);
-        return visibility === "visible";
-      }, `Waiting for placeholder text to be visible."`);
+        return document.body.hasAttribute("ready");
+      }, "Waiting for the document to be ready.");
 
       /** @type {HTMLSelectElement} */
       const fromSelect = document.querySelector(selectors.fromLanguageSelect);
@@ -372,12 +360,8 @@ add_task(async function test_about_translations_debounce() {
       Cu.waiveXrays(window).DEBOUNCE_DELAY = 5;
 
       await ContentTaskUtils.waitForCondition(() => {
-        const element = document.querySelector(
-          selectors.translationResultBlank
-        );
-        const { visibility } = window.getComputedStyle(element);
-        return visibility === "visible";
-      }, `Waiting for placeholder text to be visible."`);
+        return document.body.hasAttribute("ready");
+      }, "Waiting for the document to be ready.");
 
       /** @type {HTMLSelectElement} */
       const fromSelect = document.querySelector(selectors.fromLanguageSelect);
@@ -456,12 +440,8 @@ add_task(async function test_about_translations_html() {
       Cu.waiveXrays(window).DEBOUNCE_DELAY = 5; // Make the timer run faster for tests.
 
       await ContentTaskUtils.waitForCondition(() => {
-        const element = document.querySelector(
-          selectors.translationResultBlank
-        );
-        const { visibility } = window.getComputedStyle(element);
-        return visibility === "visible";
-      }, `Waiting for placeholder text to be visible."`);
+        return document.body.hasAttribute("ready");
+      }, "Waiting for the document to be ready.");
 
       /** @type {HTMLSelectElement} */
       const fromSelect = document.querySelector(selectors.fromLanguageSelect);
@@ -520,12 +500,8 @@ add_task(async function test_about_translations_language_identification() {
       Cu.waiveXrays(window).DEBOUNCE_DELAY = 5; // Make the timer run faster for tests.
 
       await ContentTaskUtils.waitForCondition(() => {
-        const element = document.querySelector(
-          selectors.translationResultBlank
-        );
-        const { visibility } = window.getComputedStyle(element);
-        return visibility === "visible";
-      }, `Waiting for placeholder text to be visible."`);
+        return document.body.hasAttribute("ready");
+      }, "Waiting for the document to be ready.");
 
       /** @type {HTMLSelectElement} */
       const fromSelect = document.querySelector(selectors.fromLanguageSelect);

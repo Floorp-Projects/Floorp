@@ -89,6 +89,14 @@ class TranslationsState {
 
     this.ui = new TranslationsUI(this);
     this.ui.setup();
+
+    // Set the UI as ready after all of the state promises have settled.
+    Promise.allSettled([
+      this.languageIdEngineCreated,
+      this.supportedLanguages,
+    ]).then(() => {
+      this.ui.setAsReady();
+    });
   }
 
   /**
@@ -358,6 +366,13 @@ class TranslationsUI {
     }
     this.setupDropdowns();
     this.setupTextarea();
+  }
+
+  /**
+   * Signals that the UI is ready, for tests.
+   */
+  setAsReady() {
+    document.body.setAttribute("ready", "");
   }
 
   /**
