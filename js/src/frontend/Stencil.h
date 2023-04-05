@@ -64,6 +64,8 @@ using ParserModuleScopeSlotInfo = ParserScopeSlotInfo<ModuleScope>;
 using ParserVarScopeSlotInfo = ParserScopeSlotInfo<VarScope>;
 
 using ParserBindingIter = AbstractBindingIter<TaggedParserAtomIndex>;
+using ParserPositionalFormalParameterIter =
+    AbstractPositionalFormalParameterIter<TaggedParserAtomIndex>;
 
 // [SMDOC] Script Stencil (Frontend Representation)
 //
