@@ -3024,36 +3024,6 @@ void nsLineLayout::ExpandInlineRubyBoxes(PerSpanData* aSpan) {
   }
 }
 
-nscoord nsLineLayout::GetHangFrom(const PerSpanData* aSpan, bool aLineIsRTL) {
-  const PerFrameData* pfd = aSpan->mLastFrame;
-  nscoord result = 0;
-  while (pfd) {
-    if (const PerSpanData* childSpan = pfd->mSpan) {
-      return GetHangFrom(childSpan, aLineIsRTL);
-    }
-    if (pfd->mIsTextFrame) {
-      const auto* lastText = static_cast<const nsTextFrame*>(pfd->mFrame);
-      result = lastText->GetHangableISize();
-      // If the hangable space will be at the start edge of the line, due to
-      // its bidi direction being against the line direction, we flag this by
-      // negating the advance.
-      if (lastText->GetTextRun(nsTextFrame::eInflated)->IsRightToLeft() !=
-          aLineIsRTL) {
-        result = -result;
-      }
-      return result;
-    }
-    if (!pfd->mSkipWhenTrimmingWhitespace) {
-      // If we hit a frame on the end that's not text and not a placeholder or
-      // <br>, then there is no trailing whitespace to hang. Stop the search.
-      return result;
-    }
-    // Scan back for a preceding frame whose whitespace we can hang.
-    pfd = pfd->mPrev;
-  }
-  return result;
-}
-
 // Align inline frames within the line according to the CSS text-align
 // property.
 void nsLineLayout::TextAlignLine(nsLineBox* aLine, bool aIsLastLine) {
@@ -3079,14 +3049,8 @@ void nsLineLayout::TextAlignLine(nsLineBox* aLine, bool aIsLastLine) {
   StyleTextAlign textAlign =
       aIsLastLine ? mStyleText->TextAlignForLastLine() : mStyleText->mTextAlign;
 
-  // Check if there's trailing whitespace we need to "hang" at line-wrap.
-  nscoord hang = 0;
-  if (aLine->IsLineWrapped()) {
-    hang = GetHangFrom(mRootSpan, lineWM.IsBidiRTL());
-  }
-
   bool isSVG = LineContainerFrame()->IsInSVGTextSubtree();
-  bool doTextAlign = remainingISize > 0 || hang != 0;
+  bool doTextAlign = remainingISize > 0;
 
   int32_t additionalGaps = 0;
   if (!isSVG &&
@@ -3143,40 +3107,31 @@ void nsLineLayout::TextAlignLine(nsLineBox* aLine, bool aIsLastLine) {
 
       case StyleTextAlign::Start:
       case StyleTextAlign::Char:
-        // Default alignment is to start edge so do nothing, except to apply
-        // any "reverse-hang" amount resulting from reversed-direction trailing
-        // space.
+        // default alignment is to start edge so do nothing.
         // Char is for tables so treat as start if we find it in block layout.
-        if (hang < 0) {
-          dx = hang;
-        }
         break;
 
       case StyleTextAlign::Left:
       case StyleTextAlign::MozLeft:
         if (lineWM.IsBidiRTL()) {
-          dx = remainingISize + (hang > 0 ? hang : 0);
-        } else if (hang < 0) {
-          dx = hang;
+          dx = remainingISize;
         }
         break;
 
       case StyleTextAlign::Right:
       case StyleTextAlign::MozRight:
         if (lineWM.IsBidiLTR()) {
-          dx = remainingISize + (hang > 0 ? hang : 0);
-        } else if (hang < 0) {
-          dx = hang;
+          dx = remainingISize;
         }
         break;
 
       case StyleTextAlign::End:
-        dx = remainingISize + (hang > 0 ? hang : 0);
+        dx = remainingISize;
         break;
 
       case StyleTextAlign::Center:
       case StyleTextAlign::MozCenter:
-        dx = (remainingISize + hang) / 2;
+        dx = remainingISize / 2;
         break;
     }
   }

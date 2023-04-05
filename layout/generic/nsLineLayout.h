@@ -524,10 +524,6 @@ class nsLineLayout {
                      .GetPhysicalSize(mRootSpan->mWritingMode);
   }
 
-  // Get the advance of any trailing hangable whitespace. If the whitespace
-  // has directionality opposite to the line, the result is negated.
-  nscoord GetHangFrom(const PerSpanData* aSpan, bool aLineIsRTL);
-
   gfxBreakPriority mLastOptionalBreakPriority;
   int32_t mLastOptionalBreakFrameOffset;
   int32_t mForceBreakFrameOffset;
