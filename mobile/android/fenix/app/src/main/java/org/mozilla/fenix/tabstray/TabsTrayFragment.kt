@@ -262,7 +262,12 @@ class TabsTrayFragment : AppCompatDialogFragment() {
 
             fabButtonComposeBinding.root.setContent {
                 FirefoxTheme(theme = Theme.getTheme(allowPrivateTheme = false)) {
-                    TabsTrayFab(tabsTrayStore = tabsTrayStore)
+                    TabsTrayFab(
+                        tabsTrayStore = tabsTrayStore,
+                        onNormalTabsFabClicked = tabsTrayInteractor::onNormalTabsFabClicked,
+                        onPrivateTabsFabClicked = tabsTrayInteractor::onPrivateTabsFabClicked,
+                        onSyncedTabsFabClicked = tabsTrayInteractor::onSyncedTabsFabClicked,
+                    )
                 }
             }
         } else {
