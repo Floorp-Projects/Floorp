@@ -160,6 +160,7 @@
 #endif
 #ifdef MOZ_GTK
 @BINPATH@/vaapitest
+@BINPATH@/glxtest
 #endif
 
 ; [Components]

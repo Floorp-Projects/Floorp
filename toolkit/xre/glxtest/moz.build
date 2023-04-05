@@ -1,0 +1,26 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Widget: Gtk")
+
+Program("glxtest")
+SOURCES += [
+    "glxtest.cpp",
+]
+
+if CONFIG["MOZ_ASAN"]:
+    SOURCES += [
+        "../../../mozglue/build/AsanOptions.cpp",
+    ]
+
+CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
+CXXFLAGS += CONFIG["MOZ_PANGO_CFLAGS"]
+OS_LIBS += CONFIG["MOZ_X11_LIBS"]
+OS_LIBS += CONFIG["MOZ_GTK3_LIBS"]
+
+NO_PGO = True
+DisableStlWrapping()
