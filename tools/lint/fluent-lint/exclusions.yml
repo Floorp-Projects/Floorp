@@ -147,7 +147,7 @@ CO01:
         - extension-firefox-alpenglow-name
         # browser/locales/en-US/browser/browser.ftl
         - identity-custom-root
-        - identity-description-custom-root2
+        - identity-description-custom-root
         # browser/locales/en-US/browser/migration.ftl
         - import-from-firefox
         # browser/locales/en-US/browser/migrationWizard.ftl
