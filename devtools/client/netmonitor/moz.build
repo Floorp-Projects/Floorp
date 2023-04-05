@@ -8,7 +8,10 @@ DevToolsModules("initializer.js", "panel.js")
 
 XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
 
-BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
+BROWSER_CHROME_MANIFESTS += [
+    "test/browser.ini",
+    "test/browser_http3.ini",
+]
 
 with Files("**"):
     BUG_COMPONENT = ("DevTools", "Netmonitor")
