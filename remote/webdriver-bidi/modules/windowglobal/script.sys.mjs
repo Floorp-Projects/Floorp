@@ -18,14 +18,14 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 /**
  * @typedef {string} EvaluationStatus
- **/
+ */
 
 /**
  * Enum of possible evaluation states.
  *
  * @readonly
  * @enum {EvaluationStatus}
- **/
+ */
 const EvaluationStatus = {
   Normal: "normal",
   Throw: "throw",
@@ -288,7 +288,7 @@ class ScriptModule extends Module {
   /**
    * Call a function in the current window global.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {boolean} awaitPromise
    *     Determines if the command should wait for the return value of the
    *     expression to resolve, if this return value is a Promise.
@@ -305,7 +305,7 @@ class ScriptModule extends Module {
    * @param {RemoteValue=} thisParameter
    *     The value of the this keyword for the function call.
    *
-   * @return {Object}
+   * @returns {object}
    *     - evaluationStatus {EvaluationStatus} One of "normal", "throw".
    *     - exceptionDetails {ExceptionDetails=} the details of the exception if
    *     the evaluation status was "throw".
@@ -353,7 +353,7 @@ class ScriptModule extends Module {
    * Delete the provided handles from the realm corresponding to the provided
    * sandbox name.
    *
-   * @param {Object=} options
+   * @param {object=} options
    * @param {Array<string>} handles
    *     Array of handle ids to disown.
    * @param {string=} realmId
@@ -372,7 +372,7 @@ class ScriptModule extends Module {
   /**
    * Evaluate a provided expression in the current window global.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {boolean} awaitPromise
    *     Determines if the command should wait for the return value of the
    *     expression to resolve, if this return value is a Promise.
@@ -385,7 +385,7 @@ class ScriptModule extends Module {
    * @param {string=} sandbox
    *     The name of the sandbox.
    *
-   * @return {Object}
+   * @returns {object}
    *     - evaluationStatus {EvaluationStatus} One of "normal", "throw".
    *     - exceptionDetails {ExceptionDetails=} the details of the exception if
    *     the evaluation status was "throw".
@@ -414,7 +414,7 @@ class ScriptModule extends Module {
   /**
    * Get realms for the current window global.
    *
-   * @return {Array<Object>}
+   * @returns {Array<object>}
    *     - context {BrowsingContext} The browsing context, associated with the realm.
    *     - id {string} The realm unique identifier.
    *     - origin {string} The serialization of an origin.

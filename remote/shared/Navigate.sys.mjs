@@ -47,8 +47,8 @@ const webProgressListeners = new Set();
  *
  * @param {WebProgress} webProgress
  *     The WebProgress instance to observe.
- * @param {Object=} options
- * @param {Boolean=} options.resolveWhenStarted
+ * @param {object=} options
+ * @param {boolean=} options.resolveWhenStarted
  *     Flag to indicate that the Promise has to be resolved when the
  *     page load has been started. Otherwise wait until the page has
  *     finished loading. Defaults to `false`.
@@ -120,22 +120,22 @@ export class ProgressListener {
    *
    * @param {WebProgress} webProgress
    *     The web progress to attach the listener to.
-   * @param {Object=} options
-   * @param {Boolean=} options.expectNavigation
+   * @param {object=} options
+   * @param {boolean=} options.expectNavigation
    *     Flag to indicate that a navigation is guaranteed to happen.
    *     When set to `true`, the ProgressListener will ignore options.unloadTimeout
    *     and will only resolve when the expected navigation happens.
    *     Defaults to `false`.
-   * @param {Boolean=} options.resolveWhenStarted
+   * @param {boolean=} options.resolveWhenStarted
    *     Flag to indicate that the Promise has to be resolved when the
    *     page load has been started. Otherwise wait until the page has
    *     finished loading. Defaults to `false`.
-   * @param {Number=} options.unloadTimeout
+   * @param {number=} options.unloadTimeout
    *     Time to allow before the page gets unloaded. Defaults to 200ms on
    *     regular platforms. A multiplier will be applied on slower platforms
    *     (eg. debug, ccov...).
    *     Ignored if options.expectNavigation is set to `true`
-   * @param {Boolean=} options.waitForExplicitStart
+   * @param {boolean=} options.waitForExplicitStart
    *     Flag to indicate that the Promise can only resolve after receiving a
    *     STATE_START state change. In other words, if the webProgress is already
    *     navigating, the Promise will only resolve for the next navigation.
@@ -361,7 +361,7 @@ export class ProgressListener {
   /**
    * Stop observing web progress changes.
    *
-   * @param {Object=} options
+   * @param {object=} options
    * @param {Error=} options.error
    *     If specified the navigation promise will be rejected with this error.
    */
@@ -401,7 +401,7 @@ export class ProgressListener {
    * Stop the progress listener if and only if we already detected a navigation
    * start.
    *
-   * @param {Object=} options
+   * @param {object=} options
    * @param {Error=} options.error
    *     If specified the navigation promise will be rejected with this error.
    */

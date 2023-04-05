@@ -48,7 +48,7 @@ class SessionModule extends Module {
   /**
    * Enable certain events either globally, or for a list of browsing contexts.
    *
-   * @params {Object=} params
+   * @params {object=} params
    * @params {Array<string>} events
    *     List of events to subscribe to.
    * @params {Array<string>=} contexts
@@ -85,7 +85,7 @@ class SessionModule extends Module {
   /**
    * Disable certain events either globally, or for a list of browsing contexts.
    *
-   * @params {Object=} params
+   * @params {object=} params
    * @params {Array<string>} events
    *     List of events to unsubscribe from.
    * @params {Array<string>=} contexts
@@ -211,7 +211,7 @@ class SessionModule extends Module {
    * @param {string} eventName
    *     The name of the event.
    *
-   * @return {Set<string>} The set of browsing context.
+   * @returns {Set<string>} The set of browsing context.
    */
   #obtainEventEnabledBrowsingContextIds(eventName) {
     const contextIds = new Set();
@@ -247,7 +247,7 @@ class SessionModule extends Module {
    * @param {boolean} enabled
    *     True, if events have to be enabled. Otherwise false.
    *
-   * @return {Array<Subscription>} subscriptions
+   * @returns {Array<Subscription>} subscriptions
    *     The list of information to subscribe/unsubscribe to.
    *
    * @throws {InvalidArgumentError}

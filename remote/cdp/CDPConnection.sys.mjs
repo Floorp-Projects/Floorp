@@ -70,11 +70,11 @@ export class CDPConnection extends WebSocketConnection {
   /**
    * Send an error back to the CDP client.
    *
-   * @param {Number} id
+   * @param {number} id
    *     Id of the packet which lead to an error.
    * @param {Error} err
    *     Error object with `message` and `stack` attributes.
-   * @param {String=} sessionId
+   * @param {string=} sessionId
    *     Id of the session used to send this packet. Falls back to the
    *     default session if not specified.
    */
@@ -90,12 +90,12 @@ export class CDPConnection extends WebSocketConnection {
   /**
    * Send an event coming from a Domain to the CDP client.
    *
-   * @param {String} method
+   * @param {string} method
    *     The event name. This is composed by a domain name, a dot character
    *     followed by the event name, e.g. `Target.targetCreated`.
-   * @param {Object} params
+   * @param {object} params
    *     A JSON-serializable object, which is the payload of this event.
-   * @param {String=} sessionId
+   * @param {string=} sessionId
    *     The sessionId from which this packet is emitted. Falls back to the
    *     default session if not specified.
    */
@@ -129,9 +129,9 @@ export class CDPConnection extends WebSocketConnection {
   /**
    * Interpret a given CDP packet for a given Session.
    *
-   * @param {String} sessionId
+   * @param {string} sessionId
    *     ID of the session for which we should execute a command.
-   * @param {String} message
+   * @param {string} message
    *     The stringified JSON payload of the CDP packet, which is about
    *     executing a Domain's function.
    */
@@ -158,11 +158,11 @@ export class CDPConnection extends WebSocketConnection {
   /**
    * Send the result of a call to a Domain's function back to the CDP client.
    *
-   * @param {Number} id
+   * @param {number} id
    *     The request id being sent by the client to call the domain's method.
-   * @param {Object} result
+   * @param {object} result
    *     A JSON-serializable object, which is the actual result.
-   * @param {String=} sessionId
+   * @param {string=} sessionId
    *     The sessionId from which this packet is emitted. Falls back to the
    *     default session if not specified.
    */
@@ -208,7 +208,7 @@ export class CDPConnection extends WebSocketConnection {
    * This packet is sent by a CDP client and is meant to execute
    * a particular function on a given Domain.
    *
-   * @param {Object} packet
+   * @param {object} packet
    *        JSON-serializable object sent by the client.
    */
   async onPacket(packet) {
@@ -269,10 +269,10 @@ export class CDPConnection extends WebSocketConnection {
 /**
  * Splits a CDP method into domain and command components.
  *
- * @param {String} method
+ * @param {string} method
  *     Name of the method to split, e.g. "Browser.getVersion".
  *
- * @returns {Object<String, String>}
+ * @returns {Object<string, string>}
  *     Object with the domain ("Browser") and command ("getVersion")
  *     as properties.
  */

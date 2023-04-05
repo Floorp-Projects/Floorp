@@ -74,7 +74,7 @@ export const error = {
    *
    * @param {*} val
    *     Any value that should be undergo the test for errorness.
-   * @return {boolean}
+   * @returns {boolean}
    *     True if error, false otherwise.
    */
   isError(val) {
@@ -100,7 +100,7 @@ export const error = {
    * @param {*} obj
    *     Arbitrary object to test.
    *
-   * @return {boolean}
+   * @returns {boolean}
    *     True if ``obj`` is of the WebDriverError prototype chain,
    *     false otherwise.
    */
@@ -121,7 +121,7 @@ export const error = {
    * @param {Error} err
    *     Error to conditionally turn into a WebDriverError.
    *
-   * @return {WebDriverError}
+   * @returns {WebDriverError}
    *     If ``err`` is a WebDriverError, it is returned unmodified.
    *     Otherwise an UnknownError type is returned.
    */
@@ -190,7 +190,7 @@ class WebDriverError extends RemoteError {
   }
 
   /**
-   * @return {Object.<string, string>}
+   * @returns {Object<string, string>}
    *     JSON serialisation of error prototype.
    */
   toJSON() {
@@ -205,10 +205,10 @@ class WebDriverError extends RemoteError {
    * Unmarshals a JSON error representation to the appropriate Marionette
    * error type.
    *
-   * @param {Object.<string, string>} json
+   * @param {Object<string, string>} json
    *     Error object.
    *
-   * @return {Error}
+   * @returns {Error}
    *     Error prototype.
    */
   static fromJSON(json) {

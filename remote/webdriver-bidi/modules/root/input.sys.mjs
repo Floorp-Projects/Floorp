@@ -46,7 +46,7 @@ class InputModule extends Module {
   /**
    * Reset the input state in the provided browsing context.
    *
-   * @param {Object=} options
+   * @param {object=} options
    * @param {string} options.context
    *     Id of the browsing context to reset the input state.
    *

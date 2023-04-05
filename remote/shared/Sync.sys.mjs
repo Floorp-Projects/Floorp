@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
  * @param {ChromeWindow} win
  *     Window to request the animation frame from.
  *
- * @return {Promise}
+ * @returns {Promise}
  */
 export function AnimationFramePromise(win) {
   const animationFramePromise = new Promise(resolve => {
@@ -43,7 +43,7 @@ export function AnimationFramePromise(win) {
 /**
  * Create a helper object to defer a promise.
  *
- * @returns {Object}
+ * @returns {object}
  *     An object that returns the following properties:
  *       - fulfilled Flag that indicates that the promise got resolved
  *       - pending Flag that indicates a not yet fulfilled/rejected promise
@@ -93,12 +93,12 @@ export function Deferred() {
  *     The element that should receive the event.
  * @param {string} eventName
  *     Case-sensitive string representing the event name to listen for.
- * @param {Object=} options
+ * @param {object=} options
  * @param {boolean=} [false] options.capture
  *     Indicates the event will be despatched to this subject,
  *     before it bubbles down to any EventTarget beneath it in the
  *     DOM tree.
- * @param {function=} [null] options.checkFn
+ * @param {Function=} [null] options.checkFn
  *     Called with the Event object as argument, should return true if the
  *     event is the expected one, or false if it should be ignored and
  *     listening should continue. If not specified, the first event with
@@ -113,7 +113,7 @@ export function Deferred() {
  * @param {boolean=} [false] options.wantUntrusted
  *     Receive synthetic events despatched by web content.
  *
- * @return {Promise<Event>}
+ * @returns {Promise<Event>}
  *     Either fulfilled with the first described event, satisfying
  *     options.checkFn if specified, or rejected with TimeoutError after
  *     options.timeout milliseconds if specified.
@@ -195,7 +195,7 @@ export function EventPromise(subject, eventName, options = {}) {
 /**
  * Wait for the next tick in the event loop to execute a callback.
  *
- * @param {function} fn
+ * @param {Function} fn
  *     Function to be executed.
  */
 export function executeSoon(fn) {
@@ -246,7 +246,7 @@ export function executeSoon(fn) {
  *     Duration between each poll of ``func`` in milliseconds.
  *     Defaults to 10 milliseconds.
  *
- * @return {Promise.<*>}
+ * @returns {Promise.<*>}
  *     Yields the value passed to ``func``'s
  *     ``resolve`` or ``reject`` callbacks.
  *

@@ -33,7 +33,7 @@ export class Context {
    * @param {string} s
    *     Context string serialisation.
    *
-   * @return {Context}
+   * @returns {Context}
    *     Context.
    *
    * @throws {TypeError}
@@ -122,7 +122,7 @@ browser.Context = class {
    * browser, represented by the <code>&lt;xul:browser&gt;</code>,
    * has been detached.
    *
-   * @return {boolean}
+   * @returns {boolean}
    *     True if browsing context has been discarded, false otherwise.
    */
   get closed() {
@@ -132,7 +132,7 @@ browser.Context = class {
   /**
    * Gets the position and dimensions of the top-level browsing context.
    *
-   * @return {Map.<string, number>}
+   * @returns {Map.<string, number>}
    *     Object with |x|, |y|, |width|, and |height| properties.
    */
   get rect() {
@@ -164,7 +164,7 @@ browser.Context = class {
   /**
    * Close the current window.
    *
-   * @return {Promise}
+   * @returns {Promise}
    *     A promise which is resolved when the current window has been closed.
    */
   async closeWindow() {
@@ -174,7 +174,7 @@ browser.Context = class {
   /**
    * Focus the current window.
    *
-   * @return {Promise}
+   * @returns {Promise}
    *     A promise which is resolved when the current window has been focused.
    */
   async focusWindow() {
@@ -187,7 +187,7 @@ browser.Context = class {
   /**
    * Open a new browser window.
    *
-   * @return {Promise}
+   * @returns {Promise}
    *     A promise resolving to the newly created chrome window.
    */
   openBrowserWindow(focus = false, isPrivate = false) {
@@ -201,7 +201,7 @@ browser.Context = class {
   /**
    * Close the current tab.
    *
-   * @return {Promise}
+   * @returns {Promise}
    *     A promise which is resolved when the current tab has been closed.
    *
    * @throws UnsupportedOperationError
@@ -285,7 +285,7 @@ browser.Context = class {
    *      A boolean value which determins whether to focus
    *      the window. Defaults to true.
    *
-   * @return {Tab}
+   * @returns {Tab}
    *     The selected tab.
    *
    * @throws UnsupportedOperationError
@@ -358,7 +358,7 @@ export const WindowState = {
    * @param {number} windowState
    *     Attribute from {@link nsIDOMChromeWindow.windowState}.
    *
-   * @return {WindowState}
+   * @returns {WindowState}
    *     JSON representation.
    *
    * @throws {TypeError}

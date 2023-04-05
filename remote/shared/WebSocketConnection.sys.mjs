@@ -84,7 +84,7 @@ export class WebSocketConnection {
   /**
    * Send the JSON-serializable object to the client.
    *
-   * @param {Object} data
+   * @param {object} data
    *     The object to be sent.
    */
   send(data) {
@@ -140,7 +140,7 @@ export class WebSocketConnection {
    *
    * Needs to be implemented in the sub class.
    *
-   * @param {Object} packet
+   * @param {object} packet
    *     JSON-serializable object sent by the client.
    */
   async onPacket(packet) {

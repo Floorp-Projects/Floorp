@@ -9,11 +9,11 @@ export class MarionetteReftestParent extends JSWindowActorParent {
   /**
    * Wait for the expected URL to be loaded.
    *
-   * @param {String} url
+   * @param {string} url
    *        The expected url.
-   * @param {Boolean} useRemote
+   * @param {boolean} useRemote
    *        True if tests are running with e10s.
-   * @return {Boolean} true if the page is fully loaded with the expected url,
+   * @returns {boolean} true if the page is fully loaded with the expected url,
    *         false otherwise.
    */
   async reftestWait(url, useRemote) {

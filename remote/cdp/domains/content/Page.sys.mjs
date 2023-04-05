@@ -163,10 +163,10 @@ export class Page extends ContentProcessDomain {
    * At this time, queued scripts do not get evaluated, hence `source` is marked as
    * "unsupported".
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {string} options.source (not supported)
    * @param {string=} options.worldName
-   * @return {string} Page.ScriptIdentifier
+   * @returns {string} Page.ScriptIdentifier
    */
   addScriptToEvaluateOnNewDocument(options = {}) {
     const { source, worldName } = options;
@@ -187,7 +187,7 @@ export class Page extends ContentProcessDomain {
    *
    * Really it just creates an execution context with label "isolated".
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {string} options.frameId
    *     Id of the frame in which the isolated world should be created.
    * @param {string=} options.worldName
@@ -195,7 +195,7 @@ export class Page extends ContentProcessDomain {
    * @param {boolean=} options.grantUniversalAccess (not supported)
    *     This is a powerful option, use with caution.
    *
-   * @return {number} Runtime.ExecutionContextId
+   * @returns {number} Runtime.ExecutionContextId
    *     Execution context of the isolated world.
    */
   createIsolatedWorld(options = {}) {
@@ -234,7 +234,7 @@ export class Page extends ContentProcessDomain {
   /**
    * Controls whether page will emit lifecycle events.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {boolean} options.enabled
    *     If true, starts emitting lifecycle events.
    */
@@ -297,7 +297,7 @@ export class Page extends ContentProcessDomain {
   }
 
   /**
-   * @param {Object=} options
+   * @param {object=} options
    * @param {number} options.windowId
    *     The inner window id of the window the script has been loaded for.
    * @param {Window} options.window

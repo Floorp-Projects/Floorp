@@ -68,12 +68,12 @@ export class MarionetteReftestChild extends JSWindowActorChild {
    * - if present, wait for the "reftest-wait" classname to be removed from the
    *   document element
    *
-   * @param {Object} options
-   * @param {String} options.url
+   * @param {object} options
+   * @param {string} options.url
    *        The expected test page URL
-   * @param {Boolean} options.useRemote
+   * @param {boolean} options.useRemote
    *        True when using e10s
-   * @return {Boolean}
+   * @returns {boolean}
    *         Returns true when the correct page is loaded and ready for
    *         screenshots. Returns false if the page loaded bug does not have the
    *         expected URL.
@@ -173,8 +173,8 @@ export class MarionetteReftestChild extends JSWindowActorChild {
   /**
    * Ensure layout is flushed in each frame
    *
-   * @param {Object} options
-   * @param {Boolean} options.ignoreThrottledAnimations Don't flush
+   * @param {object} options
+   * @param {boolean} options.ignoreThrottledAnimations Don't flush
    *        the layout of throttled animations. We can end up in a
    *        situation where flushing a throttled animation causes
    *        mozAfterPaint events even when all rendering we care about

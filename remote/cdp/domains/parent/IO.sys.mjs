@@ -16,7 +16,7 @@ export class IO extends Domain {
   /**
    * Close the stream, discard any temporary backing storage.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {string} options.handle
    *     Handle of the stream to close.
    */
@@ -33,7 +33,7 @@ export class IO extends Domain {
   /**
    * Read a chunk of the stream.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {string} options.handle
    *     Handle of the stream to read.
    * @param {number=} options.offset
@@ -44,7 +44,7 @@ export class IO extends Domain {
    *     Maximum number of bytes to read (left upon the agent
    *     discretion if not specified).
    *
-   * @return {string, boolean, boolean}
+   * @returns {string, boolean, boolean}
    *     Data that were read, including flags for base64-encoded, and end-of-file reached.
    */
   async read(options = {}) {

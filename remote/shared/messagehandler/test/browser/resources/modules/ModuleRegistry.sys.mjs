@@ -6,16 +6,16 @@
  * Retrieve the WebDriver BiDi module class matching the provided module name
  * and folder.
  *
- * @param {String} moduleName
+ * @param {string} moduleName
  *     The name of the module to get the class for.
- * @param {String} moduleFolder
+ * @param {string} moduleFolder
  *     A valid folder name for modules.
- * @return {Class=}
+ * @returns {Class=}
  *     The class corresponding to the module name and folder, null if no match
  *     was found.
  * @throws {Error}
  *     If the provided module folder is unexpected.
- **/
+ */
 export const getModuleClass = function(moduleName, moduleFolder) {
   const root = `chrome://mochitests/content/browser/remote/shared/messagehandler/test/`;
   const path = `${root}browser/resources/modules/${moduleFolder}/${moduleName}.sys.mjs`;

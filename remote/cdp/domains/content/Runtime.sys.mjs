@@ -153,10 +153,10 @@ export class Runtime extends ContentProcessDomain {
    *
    * Object group of the result is inherited from the target object.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {string} options.functionDeclaration
    *     Declaration of the function to call.
-   * @param {Array.<Object>=} options.arguments
+   * @param {Array.<object>=} options.arguments
    *     Call arguments. All call arguments must belong to the same
    *     JavaScript world as the target object.
    * @param {boolean=} options.awaitPromise
@@ -173,7 +173,7 @@ export class Runtime extends ContentProcessDomain {
    *     Whether the result is expected to be a JSON object
    *     which should be sent by value.
    *
-   * @return {Object.<RemoteObject, ExceptionDetails>}
+   * @returns {Object<RemoteObject, ExceptionDetails>}
    */
   callFunctionOn(options = {}) {
     if (typeof options.functionDeclaration != "string") {
@@ -237,7 +237,7 @@ export class Runtime extends ContentProcessDomain {
   /**
    * Evaluate expression on global object.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {string} options.expression
    *     Expression to evaluate.
    * @param {boolean=} options.awaitPromise
@@ -253,7 +253,7 @@ export class Runtime extends ContentProcessDomain {
    * @param {boolean=} options.userGesture [unsupported]
    *     Whether execution should be treated as initiated by user in the UI.
    *
-   * @return {Object<RemoteObject, exceptionDetails>}
+   * @returns {Object<RemoteObject, exceptionDetails>}
    *     The evaluation result, and optionally exception details.
    */
   evaluate(options = {}) {
@@ -473,7 +473,7 @@ export class Runtime extends ContentProcessDomain {
    *
    * @param {string} name
    *     Event name
-   * @param {Object=} options
+   * @param {object=} options
    * @param {number} options.windowId
    *     The inner window id of the newly instantiated document.
    * @param {Window} options.window
@@ -485,7 +485,7 @@ export class Runtime extends ContentProcessDomain {
    * @param {string=} options.contextType
    *     "default" or "isolated"
    *
-   * @return {number} ID of created context
+   * @returns {number} ID of created context
    *
    */
   _onContextCreated(name, options = {}) {
@@ -546,7 +546,7 @@ export class Runtime extends ContentProcessDomain {
    *
    * @param {string} name
    *     Event name
-   * @param {Object=} options
+   * @param {object=} options
    * @param {number} id
    *     The execution context id to destroy.
    * @param {number} windowId

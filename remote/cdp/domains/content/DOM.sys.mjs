@@ -27,7 +27,7 @@ export class DOM extends ContentProcessDomain {
    *
    * Does not require domain to be enabled. Does not start tracking any objects.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {number=} options.backendNodeId [not supported]
    *     Identifier of the backend node.
    * @param {number=} options.depth [not supported]
@@ -41,7 +41,7 @@ export class DOM extends ContentProcessDomain {
    *     Whether or not iframes and shadow roots should be traversed
    *     when returning the subtree, defaults to false.
    *
-   * @return {DOM.Node}
+   * @returns {DOM.Node}
    *     Node description.
    */
   describeNode(options = {}) {
@@ -192,7 +192,7 @@ export class DOM extends ContentProcessDomain {
   /**
    * Resolves the JavaScript node object for a given NodeId or BackendNodeId.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {number} options.backendNodeId [required for now]
    *     Backend identifier of the node to resolve.
    * @param {number=} options.executionContextId
@@ -202,7 +202,7 @@ export class DOM extends ContentProcessDomain {
    * @param {string=} options.objectGroup [not supported]
    *     Symbolic group name that can be used to release multiple objects.
    *
-   * @return {Runtime.RemoteObject}
+   * @returns {Runtime.RemoteObject}
    *     JavaScript object wrapper for given node.
    */
   resolveNode(options = {}) {

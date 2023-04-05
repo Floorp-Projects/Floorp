@@ -12,12 +12,12 @@ const ID_THUNDERBIRD = "{3550f703-e582-4d05-9a08-453d09bdfdc6}";
  * used by different protocols as handled by the Remote Agent.
  *
  * @typedef {object} RemoteAgent.AppInfo
- * @property {Boolean} isAndroid - Whether the application runs on Android.
- * @property {Boolean} isLinux - Whether the application runs on Linux.
- * @property {Boolean} isMac - Whether the application runs on Mac OS.
- * @property {Boolean} isWindows - Whether the application runs on Windows.
- * @property {Boolean} isFirefox - Whether the application is Firefox.
- * @property {Boolean} isThunderbird - Whether the application is Thunderbird.
+ * @property {boolean} isAndroid - Whether the application runs on Android.
+ * @property {boolean} isLinux - Whether the application runs on Linux.
+ * @property {boolean} isMac - Whether the application runs on Mac OS.
+ * @property {boolean} isWindows - Whether the application runs on Windows.
+ * @property {boolean} isFirefox - Whether the application is Firefox.
+ * @property {boolean} isThunderbird - Whether the application is Thunderbird.
  *
  * @since 88
  */

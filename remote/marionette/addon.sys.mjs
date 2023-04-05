@@ -55,7 +55,7 @@ export class Addon {
    * @param {boolean=} temporary
    *     True to install the addon temporarily, false (default) otherwise.
    *
-   * @return {Promise.<string>}
+   * @returns {Promise.<string>}
    *     Addon ID.
    *
    * @throws {UnknownError}
@@ -100,7 +100,7 @@ export class Addon {
    * @param {string} id
    *     ID of the addon to uninstall.
    *
-   * @return {Promise}
+   * @returns {Promise}
    *
    * @throws {UnknownError}
    *     If there is a problem uninstalling the addon.

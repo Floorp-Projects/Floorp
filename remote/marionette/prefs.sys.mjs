@@ -21,7 +21,7 @@ export class Branch {
    * @param {?=} fallback
    *     Fallback value to return if `pref` does not exist.
    *
-   * @return {(string|boolean|number)}
+   * @returns {(string|boolean|number)}
    *     Value of `pref`, or the `fallback` value if `pref` does
    *     not exist.
    *
@@ -108,7 +108,7 @@ class MarionetteBranch extends Branch {
    * server startup until a modal dialogue has been clicked to allow
    * time for user to set breakpoints in the Browser Toolbox.
    *
-   * @return {boolean}
+   * @returns {boolean}
    */
   get clickToStart() {
     return this.get("debugging.clicktostart", false);
@@ -118,7 +118,7 @@ class MarionetteBranch extends Branch {
    * The `marionette.port` preference, detailing which port
    * the TCP server should listen on.
    *
-   * @return {number}
+   * @returns {number}
    */
   get port() {
     return this.get("port", 2828);
@@ -132,7 +132,7 @@ class MarionetteBranch extends Branch {
    * Gets the `marionette.setpermission.enabled` preference, should
    * only be used for testdriver's set_permission API.
    *
-   * @return {boolean}
+   * @returns {boolean}
    */
   get setPermissionEnabled() {
     return this.get("setpermission.enabled", false);
@@ -150,7 +150,7 @@ export class EnvironmentPrefs {
    * @param {string} key
    *     Environment variable.
    *
-   * @return {Iterable.<string, (string|boolean|number)>
+   * @returns {Iterable.<string, (string|boolean|number)>
    */
   static *from(key) {
     if (!Services.env.exists(key)) {

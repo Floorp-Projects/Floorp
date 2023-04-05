@@ -65,7 +65,7 @@ export class Page extends Domain {
   /**
    * Navigates current page to given URL.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {string} options.url
    *     destination URL
    * @param {string=} options.frameId
@@ -75,7 +75,7 @@ export class Page extends Domain {
    *     referred URL (optional)
    * @param {string=} options.transitionType
    *     intended transition type
-   * @return {Object}
+   * @returns {object}
    *         - frameId {string} frame id that has navigated (or failed to)
    *         - errorText {string=} error message if navigation has failed
    *         - loaderId {string} (not supported)
@@ -192,7 +192,7 @@ export class Page extends Domain {
   /**
    * Capture page screenshot.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {Viewport=} options.clip
    *     Capture the screenshot of a given region only.
    * @param {string=} options.format
@@ -200,7 +200,7 @@ export class Page extends Domain {
    * @param {number=} options.quality
    *     Compression quality from range [0..100] (jpeg only). Defaults to 80.
    *
-   * @return {string}
+   * @returns {string}
    *     Base64-encoded image data.
    */
   async captureScreenshot(options = {}) {
@@ -397,7 +397,7 @@ export class Page extends Domain {
    *     {number} height
    *         Height of scrollable area
    *
-   * @return {Promise}
+   * @returns {Promise}
    * @resolves {layoutViewport, visualViewport, contentSize}
    */
   async getLayoutMetrics() {
@@ -410,7 +410,7 @@ export class Page extends Domain {
   /**
    * Returns navigation history for the current page.
    *
-   * @return {currentIndex:number, entries:Array<NavigationEntry>}
+   * @returns {currentIndex:number, entries:Array<NavigationEntry>}
    */
   async getNavigationHistory() {
     const { window } = this.session.target;
@@ -446,7 +446,7 @@ export class Page extends Domain {
    * prompt) for this page. This will always close the dialog, either accepting
    * or rejecting it, with the optional prompt filled.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {boolean=} options.accept
    *    for "confirm", "prompt", "beforeunload" dialogs true will accept
    *    the dialog, false will cancel it. For "alert" dialogs, true or
@@ -466,7 +466,7 @@ export class Page extends Domain {
   /**
    * Navigates current page to the given history entry.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {number} options.entryId
    *    Unique id of the entry to navigate to.
    */
@@ -499,7 +499,7 @@ export class Page extends Domain {
   /**
    * Print page as PDF.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {boolean=} options.displayHeaderFooter
    *     Display header and footer. Defaults to false.
    * @param {string=} options.footerTemplate (not supported)
@@ -539,7 +539,7 @@ export class Page extends Domain {
    *     Return as base64-encoded string (ReturnAsBase64),
    *     or stream (ReturnAsStream). Defaults to ReturnAsBase64.
    *
-   * @return {Promise<{data:string, stream:Stream}>}
+   * @returns {Promise<{data:string, stream:Stream}>}
    *     Based on the transferMode setting data is a base64-encoded string,
    *     or stream is a Stream.
    */
@@ -668,7 +668,7 @@ export class Page extends Domain {
    * the native file chooser dialog is not shown.
    * Instead, a protocol event Page.fileChooserOpened is emitted.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {boolean=} options.enabled
    *     Enabled state of file chooser interception.
    */

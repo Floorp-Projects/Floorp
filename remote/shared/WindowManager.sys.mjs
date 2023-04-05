@@ -41,11 +41,11 @@ class WindowManager {
   /**
    * Find a specific window matching the provided window handle.
    *
-   * @param {String} handle
+   * @param {string} handle
    *     The unique handle of either a chrome window or a content browser, as
    *     returned by :js:func:`#getIdForBrowser` or :js:func:`#getIdForWindow`.
    *
-   * @return {Object} A window properties object,
+   * @returns {object} A window properties object,
    *     @see :js:func:`GeckoDriver#getWindowProperties`
    */
   findWindowByHandle(handle) {
@@ -81,13 +81,13 @@ class WindowManager {
    * identify it. The described window can either be a Chrome Window or a
    * Content Window.
    *
-   * @typedef {Object} WindowProperties
+   * @typedef {object} WindowProperties
    * @property {Window} win - The Chrome Window containing the window.
    *     When describing a Chrome Window, this is the window itself.
-   * @property {String} id - The unique id of the containing Chrome Window.
-   * @property {Boolean} hasTabBrowser - `true` if the Chrome Window has a
+   * @property {string} id - The unique id of the containing Chrome Window.
+   * @property {boolean} hasTabBrowser - `true` if the Chrome Window has a
    *     tabBrowser.
-   * @property {Number} tabIndex - Optional, the index of the specific tab
+   * @property {number} tabIndex - Optional, the index of the specific tab
    *     within the window.
    */
 
@@ -96,10 +96,10 @@ class WindowManager {
    *
    * @param {Window} win
    *     The Chrome Window for which we want to create a properties object.
-   * @param {Object} options
-   * @param {Number} options.tabIndex
+   * @param {object} options
+   * @param {number} options.tabIndex
    *     Tab index of a specific Content Window in the specified Chrome Window.
-   * @return {WindowProperties} A window properties object.
+   * @returns {WindowProperties} A window properties object.
    */
   getWindowProperties(win, options = {}) {
     if (!Window.isInstance(win)) {
@@ -120,7 +120,7 @@ class WindowManager {
    *
    * @param {window} win
    *     The window object for which we want to retrieve the id.
-   * @return {String} The unique id for this chrome window.
+   * @returns {string} The unique id for this chrome window.
    */
   getIdForWindow(win) {
     if (!this._chromeWindowHandles.has(win)) {
@@ -135,7 +135,7 @@ class WindowManager {
    *
    * @param {window} win
    *     The window to close.
-   * @return {Promise}
+   * @returns {Promise}
    *     A promise which is resolved when the current window has been closed.
    */
   async closeWindow(win) {
@@ -153,7 +153,7 @@ class WindowManager {
    *
    * @param {window} win
    *     The window to focus.
-   * @return {Promise}
+   * @returns {Promise}
    *     A promise which is resolved when the window has been focused.
    */
   async focusWindow(win) {
@@ -170,15 +170,15 @@ class WindowManager {
   /**
    * Open a new browser window.
    *
-   * @param {Object=} options
-   * @param {Boolean=} options.focus
+   * @param {object=} options
+   * @param {boolean=} options.focus
    *     If true, the opened window will receive the focus. Defaults to false.
-   * @param {Boolean=} options.isPrivate
+   * @param {boolean=} options.isPrivate
    *     If true, the opened window will be a private window. Defaults to false.
    * @param {ChromeWindow=} options.openerWindow
    *     Use this window as the opener of the new window. Defaults to the
    *     topmost window.
-   * @return {Promise}
+   * @returns {Promise}
    *     A promise resolving to the newly created chrome window.
    */
   async openBrowserWindow(options = {}) {
@@ -236,7 +236,7 @@ class WindowManager {
   /**
    * Wait until the initial application window has been opened and loaded.
    *
-   * @return {Promise<WindowProxy>}
+   * @returns {Promise<WindowProxy>}
    *     A promise that resolved to the application window.
    */
   waitForInitialApplicationWindowLoaded() {

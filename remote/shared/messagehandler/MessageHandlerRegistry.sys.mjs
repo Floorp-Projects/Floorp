@@ -36,9 +36,9 @@ XPCOMUtils.defineLazyGetter(
 /**
  * Get the MessageHandler subclass corresponding to the provided type.
 
- * @param {String} type
+ * @param {string} type
  *     MessageHandler type, one of MessageHandler.type.
- * @return {Class}
+ * @returns {Class}
  *     A MessageHandler subclass
  * @throws {Error}
  *      Throws if no MessageHandler subclass is found for the provided type.
@@ -115,7 +115,7 @@ export class MessageHandlerRegistry extends EventEmitter {
    * Retrieve all MessageHandler instances held in this registry, for all
    * session IDs.
    *
-   * @return {Iterable.<MessageHandler>}
+   * @returns {Iterable.<MessageHandler>}
    *     Iterator of MessageHandler instances
    */
   getAllMessageHandlers() {
@@ -126,9 +126,9 @@ export class MessageHandlerRegistry extends EventEmitter {
    * Retrieve an existing MessageHandler instance matching the provided session
    * id. Returns null if no MessageHandler was found.
    *
-   * @param {String} sessionId
+   * @param {string} sessionId
    *     ID of the session the handler is used for.
-   * @return {MessageHandler=}
+   * @returns {MessageHandler=}
    *     A MessageHandler instance, null if not found.
    */
   getExistingMessageHandler(sessionId) {
@@ -139,14 +139,14 @@ export class MessageHandlerRegistry extends EventEmitter {
    * Retrieve an already registered MessageHandler instance matching the
    * provided parameters.
    *
-   * @param {String} sessionId
+   * @param {string} sessionId
    *     ID of the session the handler is used for.
-   * @param {String} type
+   * @param {string} type
    *     MessageHandler type, one of MessageHandler.type.
-   * @param {Object=} context
+   * @param {object=} context
    *     The context object, which depends on the type. Can be null for ROOT
    *     type MessageHandlers.
-   * @return {MessageHandler}
+   * @returns {MessageHandler}
    *     A MessageHandler instance.
    */
   getOrCreateMessageHandler(sessionId) {
@@ -162,9 +162,9 @@ export class MessageHandlerRegistry extends EventEmitter {
    * Retrieve an already registered RootMessageHandler instance matching the
    * provided sessionId.
    *
-   * @param {String} sessionId
+   * @param {string} sessionId
    *     ID of the session the handler is used for.
-   * @return {RootMessageHandler}
+   * @returns {RootMessageHandler}
    *     A RootMessageHandler instance.
    * @throws {Error}
    *     If no root MessageHandler can be found for the provided session id.
@@ -189,12 +189,12 @@ export class MessageHandlerRegistry extends EventEmitter {
   /**
    * Create a new MessageHandler instance.
    *
-   * @param {String} sessionId
+   * @param {string} sessionId
    *     ID of the session the handler will be used for.
    * @param {Array<SessionDataItem>=} sessionDataItems
    *     Optional array of session data items to be applied automatically to the
    *     MessageHandler.
-   * @return {MessageHandler}
+   * @returns {MessageHandler}
    *     A new MessageHandler instance.
    */
   _createMessageHandler(sessionId, sessionDataItems) {

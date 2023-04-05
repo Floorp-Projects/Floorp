@@ -70,9 +70,9 @@ export class MessageHandlerFrameParent extends JSWindowActorParent {
    *
    * @param {Command} command
    *     The command to forward. See type definition in MessageHandler.js
-   * @param {String} sessionId
+   * @param {string} sessionId
    *     ID of the session that sent the command.
-   * @return {Promise}
+   * @returns {Promise}
    *     Promise that will resolve with the result of query sent to the
    *     MessageHandlerFrameChild actor.
    */

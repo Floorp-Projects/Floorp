@@ -41,10 +41,10 @@ export class Module {
    *
    * Such events should bubble up to the root of a MessageHandler network.
    *
-   * @param {String} name
+   * @param {string} name
    *     Name of the event. Protocol level events should be of the
    *     form [module name].[event name].
-   * @param {Object} data
+   * @param {object} data
    *     The event's data.
    * @param {ContextInfo=} contextInfo
    *     The event's context info, see MessageHandler:emitEvent. Optional.
@@ -60,9 +60,9 @@ export class Module {
    *
    * @param {string} name
    *     Name of the event.
-   * @param {Object} payload
+   * @param {object} payload
    *    The event's payload.
-   * @returns {Object}
+   * @returns {object}
    *     The modified event payload.
    */
   interceptEvent(name, payload) {
@@ -74,7 +74,7 @@ export class Module {
   /**
    * Assert if experimental commands are enabled.
    *
-   * @param {String} methodName
+   * @param {string} methodName
    *     Name of the command.
    *
    * @throws {UnknownCommandError}

@@ -14,17 +14,17 @@ Services.scriptloader.loadSubScript(
  * network.
  * Returns a promise which will resolve the result of the command broadcast.
  *
- * @param {String} module
+ * @param {string} module
  *     The name of the module implementing the command to broadcast.
- * @param {String} command
+ * @param {string} command
  *     The name of the command to broadcast.
- * @param {Object} params
+ * @param {object} params
  *     The parameters for the command.
  * @param {ContextDescriptor} contextDescriptor
  *     The context descriptor to use for this broadcast
  * @param {RootMessageHandler} rootMessageHandler
  *     The root of the MessageHandler network.
- * @return {Promise.<Array>}
+ * @returns {Promise.<Array>}
  *     Promise which resolves an array where each item is the result of the
  *     command handled by an individual context.
  */

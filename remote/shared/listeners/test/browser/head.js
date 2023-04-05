@@ -19,7 +19,7 @@ async function clearConsole() {
  *
  * @param {string} script
  *     The script to execute.
- * @return {Promise}
+ * @returns {Promise}
  *     A promise that resolves when the script node was added and removed from
  *     the content page.
  */
@@ -58,7 +58,7 @@ async function doGC() {
  *
  * @param {Browser} browser
  *     The browser element where the URL should be loaded.
- * @param {String} url
+ * @param {string} url
  *     The URL to load.
  */
 async function loadURL(browser, url) {
@@ -74,7 +74,7 @@ async function loadURL(browser, url) {
  *
  * @param {Browser} browser
  *     The browser element where the fetch should be performed.
- * @param {String} url
+ * @param {string} url
  *     The URL to fetch.
  */
 function fetch(browser, url) {

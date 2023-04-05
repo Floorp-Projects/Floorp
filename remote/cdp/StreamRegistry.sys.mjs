@@ -86,7 +86,7 @@ export class StreamRegistry {
    * @param {string} path
    *      The path to the file to use as a stream.
    *
-   * @return {string}
+   * @returns {string}
    *     Stream handle (uuid)
    */
   add(stream) {
@@ -110,7 +110,7 @@ export class StreamRegistry {
    * @param {string} handle
    *      Handle of the stream to retrieve.
    *
-   * @return {Stream}
+   * @returns {Stream}
    *      The requested stream.
    */
   get(handle) {
@@ -129,7 +129,7 @@ export class StreamRegistry {
    * @param {string} handle
    *      Handle of the stream to remove.
    *
-   * @return {boolean}
+   * @returns {boolean}
    *     true if successfully removed
    */
   async remove(handle) {

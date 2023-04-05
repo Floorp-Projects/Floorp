@@ -20,14 +20,14 @@ XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 
 /**
  * @typedef {string} SessionDataCategory
- **/
+ */
 
 /**
  * Enum of session data categories.
  *
  * @readonly
  * @enum {SessionDataCategory}
- **/
+ */
 export const SessionDataCategory = {
   Event: "event",
   PreloadScript: "preload-script",
@@ -35,14 +35,14 @@ export const SessionDataCategory = {
 
 /**
  * @typedef {string} SessionDataMethod
- **/
+ */
 
 /**
  * Enum of session data methods.
  *
  * @readonly
  * @enum {SessionDataMethod}
- **/
+ */
 export const SessionDataMethod = {
   Add: "add",
   Remove: "remove",
@@ -59,8 +59,8 @@ export const SESSION_DATA_SHARED_DATA_KEY = "MessageHandlerSessionData";
 const sessionDataMap = new Map();
 
 /**
- * @typedef {Object} SessionDataItem
- * @property {String} moduleName
+ * @typedef {object} SessionDataItem
+ * @property {string} moduleName
  *     The name of the module responsible for this data item.
  * @property {SessionDataCategory} category
  *     The category of data. The supported categories depend on the module.
@@ -74,7 +74,7 @@ const sessionDataMap = new Map();
  * @typedef SessionDataItemUpdate
  * @property {SessionDataMethod} method
  *     The way sessionData is updated.
- * @property {String} moduleName
+ * @property {string} moduleName
  *     The name of the module responsible for this data item.
  * @property {SessionDataCategory} category
  *     The category of data. The supported categories depend on the module.
@@ -166,7 +166,7 @@ export class SessionData {
    * @param {Array<SessionDataItemUpdate>} sessionDataItemUpdates
    *     Array of session data item updates.
    *
-   * @return {Array<SessionDataItemUpdate>}
+   * @returns {Array<SessionDataItemUpdate>}
    *     The subset of session data item updates which want to be applied.
    */
   applySessionData(sessionDataItemUpdates = []) {
@@ -231,14 +231,14 @@ export class SessionData {
   /**
    * Retrieve the SessionDataItems for a given module and type.
    *
-   * @param {String} moduleName
+   * @param {string} moduleName
    *     The name of the module responsible for this data item.
-   * @param {String} category
+   * @param {string} category
    *     The session data category.
    * @param {ContextDescriptor=} contextDescriptor
    *     Optional context descriptor, to retrieve only session data items added
    *     for a specific context descriptor.
-   * @return {Array<SessionDataItem>}
+   * @returns {Array<SessionDataItem>}
    *     Array of SessionDataItems for the provided module and type.
    */
   getSessionData(moduleName, category, contextDescriptor) {

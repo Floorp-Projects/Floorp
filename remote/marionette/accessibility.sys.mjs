@@ -97,7 +97,7 @@ accessibility.get = function(strict = false) {
  *
  * @param {Document} doc
  *     The document to wait for.
- * @return {Promise}
+ * @returns {Promise}
  *     A promise which resolves when the document's accessibility state is no
  *     longer busy.
  */
@@ -130,7 +130,7 @@ function waitForDocumentAccessibility(doc) {
  * @param {Element} element
  *     The element for which we need to retrieve the accessible.
  *
- * @return {nsIAccessible|null}
+ * @returns {nsIAccessible|null}
  *     The Accessible object corresponding to the provided element or null if
  *     the accessibility service is not available.
  */
@@ -173,7 +173,7 @@ accessibility.Checks = class {
    *     Flag indicating that the element must have an accessible object.
    *     Defaults to not require this.
    *
-   * @return {Promise.<nsIAccessible>}
+   * @returns {Promise.<nsIAccessible>}
    *     Promise with an accessibility object for the given element.
    */
   async assertAccessible(element, mustHaveAccessible = false) {
@@ -196,7 +196,7 @@ accessibility.Checks = class {
    * @param {nsIAccessible} accessible
    *     Accessible object.
    *
-   * @return {boolean}
+   * @returns {boolean}
    *     True if an actionable role is found on the accessible, false
    *     otherwise.
    */
@@ -212,7 +212,7 @@ accessibility.Checks = class {
    * @param {nsIAccessible} accessible
    *     Accessible object.
    *
-   * @return {boolean}
+   * @returns {boolean}
    *     True if the accessible has at least one supported action,
    *     false otherwise.
    */
@@ -226,7 +226,7 @@ accessibility.Checks = class {
    * @param {nsIAccessible} accessible
    *     Accessible object.
    *
-   * @return {boolean}
+   * @returns {boolean}
    *     True if the accessible has a non-empty valid name, or false if
    *     this is not the case.
    */
@@ -240,7 +240,7 @@ accessibility.Checks = class {
    * @param {nsIAccessible} accessible
    *     Accessible object.
    *
-   * @return {boolean}
+   * @returns {boolean}
    *     True if the accessible object has a {@code hidden} attribute,
    *     false otherwise.
    */
@@ -262,7 +262,7 @@ accessibility.Checks = class {
    * @param {number} stateToMatch
    *     State to match.
    *
-   * @return {boolean}
+   * @returns {boolean}
    *     True if |accessible| has |stateToMatch|, false otherwise.
    */
   matchState(accessible, stateToMatch) {
@@ -277,7 +277,7 @@ accessibility.Checks = class {
    * @param {nsIAccessible} accessible
    *     Accessible object.
    *
-   * @return {boolean}
+   * @returns {boolean}
    *     True if element is hidden from user, false otherwise.
    */
   isHidden(accessible) {

@@ -31,7 +31,7 @@ export class Security extends Domain {
   /**
    * Enable/disable whether all certificate errors should be ignored
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {boolean=} options.ignore
    *    if true, all certificate errors will be ignored.
    */

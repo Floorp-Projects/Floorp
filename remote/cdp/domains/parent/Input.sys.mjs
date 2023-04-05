@@ -10,7 +10,7 @@ export class Input extends Domain {
   /**
    * Simulate key events.
    *
-   * @param {Object} options
+   * @param {object} options
    *        - autoRepeat (not supported)
    *        - code (not supported)
    *        - key
@@ -77,7 +77,7 @@ export class Input extends Domain {
   /**
    * Simulate mouse events.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {string} options.type
    * @param {number} options.x
    * @param {number} options.y

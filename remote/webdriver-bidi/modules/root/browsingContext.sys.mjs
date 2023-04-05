@@ -34,15 +34,15 @@ XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
 );
 
 /**
- * @typedef {Object} CreateType
- **/
+ * @typedef {object} CreateType
+ */
 
 /**
  * Enum of types supported by the browsingContext.create command.
  *
  * @readonly
  * @enum {CreateType}
- **/
+ */
 const CreateType = {
   tab: "tab",
   window: "window",
@@ -50,7 +50,7 @@ const CreateType = {
 
 /**
  * @typedef {string} WaitCondition
- **/
+ */
 
 /**
  * Wait conditions supported by WebDriver BiDi for navigation.
@@ -94,7 +94,7 @@ class BrowsingContextModule extends Module {
   /**
    * Capture a base64-encoded screenshot of the provided browsing context.
    *
-   * @param {Object=} options
+   * @param {object=} options
    * @param {string} context
    *     Id of the browsing context to screenshot.
    *
@@ -137,7 +137,7 @@ class BrowsingContextModule extends Module {
   /**
    * Close the provided browsing context.
    *
-   * @param {Object=} options
+   * @param {object=} options
    * @param {string} context
    *     Id of the browsing context to close.
    *
@@ -182,7 +182,7 @@ class BrowsingContextModule extends Module {
   /**
    * Create a new browsing context using the provided type "tab" or "window".
    *
-   * @param {Object=} options
+   * @param {object=} options
    * @param {string=} options.referenceContext
    *     Id of the top-level browsing context to use as reference.
    *     If options.type is "tab", the new tab will open in the same window as
@@ -291,7 +291,7 @@ class BrowsingContextModule extends Module {
    * Returns a tree of all browsing contexts that are descendents of the
    * given context, or all top-level contexts when no root is provided.
    *
-   * @param {Object=} options
+   * @param {object=} options
    * @param {number=} maxDepth
    *     Depth of the browsing context tree to traverse. If not specified
    *     the whole tree is returned.
@@ -341,16 +341,16 @@ class BrowsingContextModule extends Module {
    *
    * @typedef BrowsingContextNavigateResult
    *
-   * @property {String} navigation
+   * @property {string} navigation
    *     Unique id for this navigation.
-   * @property {String} url
+   * @property {string} url
    *     The requested or reached URL.
    */
 
   /**
    * Navigate the given context to the provided url, with the provided wait condition.
    *
-   * @param {Object=} options
+   * @param {object=} options
    * @param {string} context
    *     Id of the browsing context to navigate.
    * @param {string} url
@@ -446,7 +446,7 @@ class BrowsingContextModule extends Module {
    *
    * @typedef BrowsingContextPrintResult
    *
-   * @property {String} data
+   * @property {string} data
    *     Base64 encoded PDF representing printed document.
    */
 
@@ -455,7 +455,7 @@ class BrowsingContextModule extends Module {
    * of the provided browsing context, and returns it
    * as a Base64-encoded string.
    *
-   * @param {Object=} options
+   * @param {object=} options
    * @param {string} options.context
    *     Id of the browsing context.
    * @param {boolean=} options.background
@@ -568,7 +568,7 @@ class BrowsingContextModule extends Module {
    *     The WebProgress instance to observe for this navigation.
    * @param {nsIURI} targetURI
    *     The URI to navigate to.
-   * @param {Object} options
+   * @param {object} options
    * @param {WaitCondition} options.wait
    *     The WaitCondition to use to wait for the navigation.
    */
@@ -655,7 +655,7 @@ class BrowsingContextModule extends Module {
   /**
    * Retrieves a browsing context based on its id.
    *
-   * @param {Number} contextId
+   * @param {number} contextId
    *     Id of the browsing context.
    * @returns {BrowsingContext=}
    *     The browsing context or null if <var>contextId</var> is null.
@@ -684,7 +684,7 @@ class BrowsingContextModule extends Module {
    *
    * @param {BrowsingContext} context
    *     The browsing context to get the information from.
-   * @param {Object=} options
+   * @param {object=} options
    * @param {boolean=} isRoot
    *     Flag that indicates if this browsing context is the root of all the
    *     browsing contexts to be returned. Defaults to true.

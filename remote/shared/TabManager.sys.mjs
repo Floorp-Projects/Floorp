@@ -17,7 +17,7 @@ export var TabManager = {
   /**
    * Retrieve all the browser elements from tabs as contained in open windows.
    *
-   * @return {Array<xul:browser>}
+   * @returns {Array<xul:browser>}
    *     All the found <xul:browser>s. Will return an empty array if
    *     no windows and tabs can be found.
    */
@@ -49,7 +49,7 @@ export var TabManager = {
    * TODO: Similarly to getBrowserById, we should improve the performance of
    * this getter in Bug 1750065.
    *
-   * @return {Array<String>}
+   * @returns {Array<string>}
    *     Array of UUIDs for all content browsers.
    */
   get allBrowserUniqueIds() {
@@ -79,7 +79,7 @@ export var TabManager = {
    * @param {Tab} tab
    *     The tab whose browser needs to be returned.
    *
-   * @return {xul:browser}
+   * @returns {xul:browser}
    *     The linked browser for the tab or null if no browser can be found.
    */
   getBrowserForTab(tab) {
@@ -96,7 +96,7 @@ export var TabManager = {
    * @param {ChromeWindow} win
    *     Window whose <code>tabbrowser</code> needs to be accessed.
    *
-   * @return {Tab}
+   * @returns {Tab}
    *     Tab browser or null if it's not a browser window.
    */
   getTabBrowser(win) {
@@ -112,15 +112,15 @@ export var TabManager = {
   /**
    * Create a new tab.
    *
-   * @param {Object} options
-   * @param {Boolean=} options.focus
+   * @param {object} options
+   * @param {boolean=} options.focus
    *     Set to true if the new tab should be focused (selected). Defaults to
    *     false.
    * @param {Tab=} options.referenceTab
    *     The reference tab after which the new tab will be added. If no
    *     reference tab is provided, the new tab will be added after all the
    *     other tabs.
-   * @param {Number} options.userContextId
+   * @param {number} options.userContextId
    *     The user context (container) id.
    * @param {window=} options.window
    *     The window where the new tab will open. Defaults to Services.wm.getMostRecentWindow
@@ -167,9 +167,9 @@ export var TabManager = {
    * potentially leaking those elements, this method loops over all windows and
    * all tabs. It should be replaced by a faster implementation in Bug 1750065.
    *
-   * @param {String} id
+   * @param {string} id
    *     A browser unique id created by getIdForBrowser.
-   * @return {xul:browser}
+   * @returns {xul:browser}
    *     The <xul:browser> corresponding to the provided id. Will return null if
    *     no matching browser element is found.
    */
@@ -191,9 +191,9 @@ export var TabManager = {
   /**
    * Retrieve the browsing context corresponding to the provided unique id.
    *
-   * @param {String} id
+   * @param {string} id
    *     A browsing context unique id (created by getIdForBrowsingContext).
-   * @return {BrowsingContext=}
+   * @returns {BrowsingContext=}
    *     The browsing context found for this id, null if none was found.
    */
   getBrowsingContextById(id) {
@@ -214,7 +214,7 @@ export var TabManager = {
    *
    * @param {xul:browser} browserElement
    *     The <xul:browser> for which we want to retrieve the id.
-   * @return {String} The unique id for this browser.
+   * @returns {string} The unique id for this browser.
    */
   getIdForBrowser(browserElement) {
     if (browserElement === null) {
@@ -237,7 +237,7 @@ export var TabManager = {
    * @param {BrowsingContext=} browsingContext
    *     The browsing context to get the id from.
    *
-   * @returns {String}
+   * @returns {string}
    *     The id of the browsing context.
    */
   getIdForBrowsingContext(browsingContext) {

@@ -196,7 +196,7 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
 
   /** Clear the text of an element.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {Element} options.elem
    */
   clearElement(options = {}) {
@@ -238,8 +238,8 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
    * Find an element in the current browsing context's document using the
    * given search strategy.
    *
-   * @param {Object} options
-   * @param {Object} options.opts
+   * @param {object} options
+   * @param {object} options.opts
    * @param {Element} opts.startNode
    * @param {string} opts.strategy
    * @param {string} opts.selector
@@ -258,8 +258,8 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
    * Find elements in the current browsing context's document using the
    * given search strategy.
    *
-   * @param {Object} options
-   * @param {Object} options.opts
+   * @param {object} options
+   * @param {object} options.opts
    * @param {Element} opts.startNode
    * @param {string} opts.strategy
    * @param {string} opts.selector
@@ -407,7 +407,7 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
    *
    * Also it takes care of scrolling an element into view if requested.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {Element} options.elem
    *     Optional element to take a screenshot of.
    * @param {boolean=} options.full
@@ -417,7 +417,7 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
    *     When <var>elem</var> is given, scroll it into view.
    *     Defaults to true.
    *
-   * @return {DOMRect}
+   * @returns {DOMRect}
    *     The area to take a snapshot from.
    */
   async getScreenshotRect(options = {}) {
@@ -497,10 +497,10 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
   /**
    * Perform a series of grouped actions at the specified points in time.
    *
-   * @param {Object} options
-   * @param {Object} options.actions
+   * @param {object} options
+   * @param {object} options.actions
    *     Array of objects with each representing an action sequence.
-   * @param {Object} options.capabilities
+   * @param {object} options.capabilities
    *     Object with a list of WebDriver session capabilities.
    */
   async performActions(options = {}) {
@@ -557,7 +557,7 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
   /**
    * Switch to the specified frame.
    *
-   * @param {Object=} options
+   * @param {object=} options
    * @param {(number|Element)=} options.id
    *     If it's a number treat it as the index for all the existing frames.
    *     If it's an Element switch to this specific frame.

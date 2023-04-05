@@ -20,6 +20,7 @@ registerCleanupFunction(() => {
 
 /**
  * Acts just as `add_task`, but does cleanup afterwards
+ *
  * @param taskFn
  */
 function add_networking_task(taskFn) {

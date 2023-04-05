@@ -31,7 +31,7 @@ export class Emulation extends Domain {
    *   - window.innerHeight
    *   - "device-width"/"device-height"-related CSS media query results
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {number} options.width
    *     Overriding width value in pixels. 0 disables the override.
    * @param {number} options.height
@@ -97,7 +97,7 @@ export class Emulation extends Domain {
   /**
    * Enables touch on platforms which do not support them.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {boolean} options.enabled
    *     Whether the touch event emulation should be enabled.
    * @param {number=} options.maxTouchPoints [not yet supported]
@@ -123,7 +123,7 @@ export class Emulation extends Domain {
   /**
    * Allows overriding user agent with the given string.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {string} options.userAgent
    *     User agent to use.
    * @param {string=} options.acceptLanguage [not yet supported]

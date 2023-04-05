@@ -62,7 +62,7 @@ export const evaluate = {};
  * @param {number=} [timeout=DEFAULT_TIMEOUT] timeout
  *     Duration in milliseconds before interrupting the script.
  *
- * @return {Promise}
+ * @returns {Promise}
  *     A promise that when resolved will give you the return value from
  *     the script.  Note that the return value requires serialisation before
  *     it can be sent to the client.
@@ -170,7 +170,7 @@ evaluate.sandbox = function(
  * was assosciated with and extension popup.  This provides a way to
  * still test for a dead object.
  *
- * @param {Object} obj
+ * @param {object} obj
  *     A potentially dead object.
  * @param {string} prop
  *     Name of a property on the object.
@@ -210,11 +210,11 @@ sandbox.cloneInto = function(obj, sb) {
  *
  * @param {Sandbox} sb
  *     The sandbox to augment.
- * @param {Object} adapter
+ * @param {object} adapter
  *     Object that holds an `exports` property, or a map, of function
  *     names and function references.
  *
- * @return {Sandbox}
+ * @returns {Sandbox}
  *     The augmented sandbox.
  */
 sandbox.augment = function(sb, adapter) {
@@ -241,7 +241,7 @@ sandbox.augment = function(sb, adapter) {
  *     An optional, custom principal to prefer over the Window.  Useful if
  *     you need elevated security permissions.
  *
- * @return {Sandbox}
+ * @returns {Sandbox}
  *     The created sandbox.
  */
 sandbox.create = function(win, principal = null, opts = {}) {
@@ -266,7 +266,7 @@ sandbox.create = function(win, principal = null, opts = {}) {
  * @param {Window} win
  *     The DOM Window object.
  *
- * @return {Sandbox}
+ * @returns {Sandbox}
  *     The created sandbox.
  */
 sandbox.createMutable = function(win) {
@@ -326,7 +326,7 @@ export class Sandboxes {
    * @param {boolean=} [fresh=false] fresh
    *     Remove old sandbox by name first, if it exists.
    *
-   * @return {Sandbox}
+   * @returns {Sandbox}
    *     A used or fresh sandbox.
    */
   get(name = "default", fresh = false) {

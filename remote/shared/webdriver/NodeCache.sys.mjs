@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * @typedef {Object} NodeReferenceDetails
+ * @typedef {object} NodeReferenceDetails
  * @property {number} browserId
  * @property {number} browsingContextGroupId
  * @property {number} browsingContextId
@@ -45,7 +45,7 @@ export class NodeCache {
    * @param {Node} node
    *    The node to be added.
    *
-   * @return {string}
+   * @returns {string}
    *     The unique node reference for the DOM node.
    */
   getOrCreateNodeReference(node) {
@@ -87,7 +87,7 @@ export class NodeCache {
   /**
    * Clear known DOM nodes.
    *
-   * @param {Object=} options
+   * @param {object=} options
    * @param {boolean=} options.all
    *     Clear all references from any browsing context. Defaults to false.
    * @param {BrowsingContext=} browsingContext
@@ -127,7 +127,7 @@ export class NodeCache {
    * @param {string} nodeId
    *     The unique node reference of the DOM node.
    *
-   * @return {Node|null}
+   * @returns {Node|null}
    *     The DOM node that the unique identifier was generated for or
    *     `null` if the node does not exist anymore.
    */

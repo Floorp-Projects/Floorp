@@ -70,7 +70,7 @@ export class WebDriverBiDiConnection extends WebSocketConnection {
   /**
    * Send an error back to the WebDriver BiDi client.
    *
-   * @param {Number} id
+   * @param {number} id
    *     Id of the packet which lead to an error.
    * @param {Error} err
    *     Error object with `status`, `message` and `stack` attributes.
@@ -89,10 +89,10 @@ export class WebDriverBiDiConnection extends WebSocketConnection {
   /**
    * Send an event coming from a module to the WebDriver BiDi client.
    *
-   * @param {String} method
+   * @param {string} method
    *     The event name. This is composed by a module name, a dot character
    *     followed by the event name, e.g. `log.entryAdded`.
-   * @param {Object} params
+   * @param {object} params
    *     A JSON-serializable object, which is the payload of this event.
    */
   sendEvent(method, params) {
@@ -111,9 +111,9 @@ export class WebDriverBiDiConnection extends WebSocketConnection {
    * Send the result of a call to a module's method back to the
    * WebDriver BiDi client.
    *
-   * @param {Number} id
+   * @param {number} id
    *     The request id being sent by the client to call the module's method.
-   * @param {Object} result
+   * @param {object} result
    *     A JSON-serializable object, which is the actual result.
    */
   sendResult(id, result) {
@@ -196,10 +196,10 @@ export class WebDriverBiDiConnection extends WebSocketConnection {
 /**
  * Splits a WebDriver BiDi method into module and command components.
  *
- * @param {String} method
+ * @param {string} method
  *     Name of the method to split, e.g. "session.subscribe".
  *
- * @returns {Object<String, String>}
+ * @returns {Object<string, string>}
  *     Object with the module ("session") and command ("subscribe")
  *     as properties.
  */

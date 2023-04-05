@@ -27,14 +27,14 @@ function getUUID() {
 
 /**
  * @typedef {string} ScriptEvaluateResultType
- **/
+ */
 
 /**
  * Enum of possible evaluation result types.
  *
  * @readonly
  * @enum {ScriptEvaluateResultType}
- **/
+ */
 const ScriptEvaluateResultType = {
   Exception: "exception",
   Success: "success",
@@ -80,7 +80,7 @@ class ScriptModule extends Module {
    * Adds a preload script, which runs on creation of a new Window,
    * before any author-defined script have run.
    *
-   * @param {Object=} options
+   * @param {object=} options
    * @param {Array<Channel>=} arguments [unsupported]
    *     The arguments to pass to the function call.
    * @param {string} functionDeclaration
@@ -213,7 +213,7 @@ class ScriptModule extends Module {
    * Calls a provided function with given arguments and scope in the provided
    * target, which is either a realm or a browsing context.
    *
-   * @param {Object=} options
+   * @param {object=} options
    * @param {Array<RemoteValue>=} arguments
    *     The arguments to pass to the function call.
    * @param {boolean} awaitPromise
@@ -224,7 +224,7 @@ class ScriptModule extends Module {
    * @param {OwnershipModel=} resultOwnership
    *     The ownership model to use for the results of this evaluation. Defaults
    *     to `OwnershipModel.None`.
-   * @param {Object} target
+   * @param {object} target
    *     The target for the evaluation, which either matches the definition for
    *     a RealmTarget or for ContextTarget.
    * @param {RemoteValue=} this
@@ -294,10 +294,10 @@ class ScriptModule extends Module {
    * guarantee the handled object will be garbage collected, as there can be
    * other handles or strong ECMAScript references.
    *
-   * @param {Object=} options
+   * @param {object=} options
    * @param {Array<string>} handles
    *     Array of handle ids to disown.
-   * @param {Object} target
+   * @param {object} target
    *     The target owning the handles, which either matches the definition for
    *     a RealmTarget or for ContextTarget.
    */
@@ -336,7 +336,7 @@ class ScriptModule extends Module {
    * Evaluate a provided expression in the provided target, which is either a
    * realm or a browsing context.
    *
-   * @param {Object=} options
+   * @param {object=} options
    * @param {boolean} awaitPromise
    *     Determines if the command should wait for the return value of the
    *     expression to resolve, if this return value is a Promise.
@@ -345,7 +345,7 @@ class ScriptModule extends Module {
    * @param {OwnershipModel=} resultOwnership
    *     The ownership model to use for the results of this evaluation. Defaults
    *     to `OwnershipModel.None`.
-   * @param {Object} target
+   * @param {object} target
    *     The target for the evaluation, which either matches the definition for
    *     a RealmTarget or for ContextTarget.
    *
@@ -447,7 +447,7 @@ class ScriptModule extends Module {
    * of a specific type, or to the realms associated with
    * a specified browsing context.
    *
-   * @param {Object=} options
+   * @param {object=} options
    * @param {string=} context
    *     The id of the browsing context to filter
    *     only realms associated with it. If not provided, return realms
@@ -501,7 +501,7 @@ class ScriptModule extends Module {
   /**
    * Removes a preload script.
    *
-   * @param {Object=} options
+   * @param {object=} options
    * @param {string} script
    *     The unique id associated with a preload script.
    *

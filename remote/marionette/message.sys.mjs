@@ -39,7 +39,7 @@ export class Message {
    *     message type, message ID, method name or error, and parameters
    *     or result.
    *
-   * @return {Message}
+   * @returns {Message}
    *     Based on the message type, a {@link Command} or {@link Response}
    *     instance.
    *
@@ -128,7 +128,7 @@ Message.Origin = {
  *     Message ID unique identifying this message.
  * @param {string} name
  *     Command name.
- * @param {Object.<string, ?>} params
+ * @param {Object<string, ?>} params
  *     Command parameters.
  */
 export class Command extends Message {
@@ -164,7 +164,7 @@ export class Command extends Message {
   /**
    * Encodes the command to a packet.
    *
-   * @return {Array}
+   * @returns {Array}
    *     Packet.
    */
   toPacket() {
@@ -178,7 +178,7 @@ export class Command extends Message {
    *     A four element array where the elements, in sequence, signifies
    *     message type, message ID, command name, and parameters.
    *
-   * @return {Command}
+   * @returns {Command}
    *     Representation of packet.
    *
    * @throws {TypeError}
@@ -294,7 +294,7 @@ export class Response extends Message {
   /**
    * Encodes the response to a packet.
    *
-   * @return {Array}
+   * @returns {Array}
    *     Packet.
    */
   toPacket() {
@@ -308,7 +308,7 @@ export class Response extends Message {
    *     A four element array where the elements, in sequence, signifies
    *     message type, message ID, error, and result.
    *
-   * @return {Response}
+   * @returns {Response}
    *     Representation of packet.
    *
    * @throws {TypeError}

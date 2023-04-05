@@ -127,7 +127,7 @@ export class Proxy {
   /**
    * Sets Firefox proxy settings.
    *
-   * @return {boolean}
+   * @returns {boolean}
    *     True if proxy settings were updated as a result of calling this
    *     function, or false indicating that this function acted as
    *     a no-op.
@@ -201,7 +201,7 @@ export class Proxy {
   }
 
   /**
-   * @param {Object.<string, ?>} json
+   * @param {Object<string, ?>} json
    *     JSON Object to unmarshal.
    *
    * @throws {InvalidArgumentError}
@@ -346,7 +346,7 @@ export class Proxy {
   }
 
   /**
-   * @return {Object.<string, (number|string)>}
+   * @returns {Object<string, (number | string)>}
    *     JSON serialisation of proxy object.
    */
   toJSON() {
@@ -482,7 +482,7 @@ export class Capabilities extends Map {
   /**
    * JSON serialisation of capabilities object.
    *
-   * @return {Object.<string, ?>}
+   * @returns {Object<string, ?>}
    */
   toJSON() {
     let marshalled = marshal(this);
@@ -500,10 +500,10 @@ export class Capabilities extends Map {
   /**
    * Unmarshal a JSON object representation of WebDriver capabilities.
    *
-   * @param {Object.<string, *>=} json
+   * @param {Object<string, *>=} json
    *     WebDriver capabilities.
    *
-   * @return {Capabilities}
+   * @returns {Capabilities}
    *     Internal representation of WebDriver capabilities.
    */
   static fromJSON(json) {

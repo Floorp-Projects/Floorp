@@ -73,7 +73,7 @@ export class Network extends Domain {
   /**
    * Deletes browser cookies with matching name and url or domain/path pair.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {string} name
    *     Name of the cookies to remove.
    * @param {string=} url
@@ -127,7 +127,7 @@ export class Network extends Domain {
   /**
    * Activates emulation of network conditions.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {boolean} offline
    *     True to emulate internet disconnection.
    */
@@ -146,9 +146,9 @@ export class Network extends Domain {
    *
    * Depending on the backend support, will return detailed cookie information in the cookies field.
    *
-   * @param {Object} options
+   * @param {object} options
    *
-   * @return {Array<Cookie>}
+   * @returns {Array<Cookie>}
    *     Array of cookie objects.
    */
   async getAllCookies(options = {}) {
@@ -163,12 +163,12 @@ export class Network extends Domain {
   /**
    * Returns all browser cookies for the current URL.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {Array<string>=} urls
    *     The list of URLs for which applicable cookies will be fetched.
    *     Defaults to the currently open URL.
    *
-   * @return {Array<Cookie>}
+   * @returns {Array<Cookie>}
    *     Array of cookie objects.
    */
   async getCookies(options = {}) {
@@ -231,7 +231,7 @@ export class Network extends Domain {
    *
    * Note that it may overwrite equivalent cookies if they exist.
    *
-   * @param {Object} cookie
+   * @param {object} cookie
    * @param {string} name
    *     Cookie name.
    * @param {string} value
@@ -253,7 +253,7 @@ export class Network extends Domain {
    *     This value can affect the default domain and path values of the
    *     created cookie.
    *
-   * @return {boolean}
+   * @returns {boolean}
    *     True if successfully set cookie.
    */
   setCookie(cookie) {
@@ -340,7 +340,7 @@ export class Network extends Domain {
   /**
    * Sets given cookies.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {Array.<Cookie>} cookies
    *     Cookies to be set.
    */
@@ -362,7 +362,7 @@ export class Network extends Domain {
   /**
    * Toggles ignoring cache for each request. If true, cache will not be used.
    *
-   * @param {Object} options
+   * @param {object} options
    * @param {boolean} options.cacheDisabled
    *     Cache disabled state.
    */
@@ -514,7 +514,7 @@ function _buildCookie(cookie) {
  *
  * @param {Array} headers
  *    Array of {name, value}
- * @returns {Object}
+ * @returns {object}
  *    Object where each key is a header name.
  */
 function headersAsObject(headers) {

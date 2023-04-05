@@ -99,7 +99,7 @@ assert.mobile = function(msg = "") {
  * @param {string=} msg
  *     Custom error message.
  *
- * @return {string}
+ * @returns {string}
  *     <var>context</var> is returned unaltered.
  *
  * @throws {UnsupportedOperationError}
@@ -122,7 +122,7 @@ assert.content = function(context, msg = "") {
  * @param {string=} msg
  *     Custom error message.
  *
- * @return {CanonicalBrowsingContext}
+ * @returns {CanonicalBrowsingContext}
  *     <var>browsingContext</var> is returned unaltered.
  *
  * @throws {NoSuchWindowError}
@@ -174,7 +174,7 @@ assert.noUserPrompt = function(dialog, msg = "") {
  * @param {string=} msg
  *     Custom error message.
  *
- * @return {?}
+ * @returns {?}
  *     <var>obj</var> is returned unaltered.
  *
  * @throws {InvalidArgumentError}
@@ -193,7 +193,7 @@ assert.defined = function(obj, msg = "") {
  * @param {string=} msg
  *     Custom error message.
  *
- * @return {number}
+ * @returns {number}
  *     <var>obj</var> is returned unaltered.
  *
  * @throws {InvalidArgumentError}
@@ -212,7 +212,7 @@ assert.number = function(obj, msg = "") {
  * @param {string=} msg
  *     Custom error message.
  *
- * @return {number}
+ * @returns {number}
  *     <var>obj</var> is returned unaltered.
  *
  * @throws {InvalidArgumentError}
@@ -234,7 +234,7 @@ assert.positiveNumber = function(obj, msg = "") {
  * @param {string=} msg
  *     Custom error message.
  *
- * @return {number}
+ * @returns {number}
  *     <var>obj</var> is returned unaltered.
  *
  * @throws {InvalidArgumentError}
@@ -255,7 +255,7 @@ assert.numberInRange = function(obj, range, msg = "") {
  * @param {string=} msg
  *     Custom error message.
  *
- * @return {Function}
+ * @returns {Function}
  *     <var>obj</var> is returned unaltered.
  *
  * @throws {InvalidArgumentError}
@@ -274,7 +274,7 @@ assert.callable = function(obj, msg = "") {
  * @param {string=} msg
  *     Custom error message.
  *
- * @return {number}
+ * @returns {number}
  *     <var>obj</var> is returned unaltered.
  *
  * @throws {InvalidArgumentError}
@@ -293,7 +293,7 @@ assert.unsignedShort = function(obj, msg = "") {
  * @param {string=} msg
  *     Custom error message.
  *
- * @return {number}
+ * @returns {number}
  *     <var>obj</var> is returned unaltered.
  *
  * @throws {InvalidArgumentError}
@@ -312,7 +312,7 @@ assert.integer = function(obj, msg = "") {
  * @param {string=} msg
  *     Custom error message.
  *
- * @return {number}
+ * @returns {number}
  *     <var>obj</var> is returned unaltered.
  *
  * @throws {InvalidArgumentError}
@@ -334,7 +334,7 @@ assert.positiveInteger = function(obj, msg = "") {
  * @param {string=} msg
  *     Custom error message.
  *
- * @return {number}
+ * @returns {number}
  *     <var>obj</var> is returned unaltered.
  *
  * @throws {InvalidArgumentError}
@@ -355,7 +355,7 @@ assert.integerInRange = function(obj, range, msg = "") {
  * @param {string=} msg
  *     Custom error message.
  *
- * @return {boolean}
+ * @returns {boolean}
  *     <var>obj</var> is returned unaltered.
  *
  * @throws {InvalidArgumentError}
@@ -374,7 +374,7 @@ assert.boolean = function(obj, msg = "") {
  * @param {string=} msg
  *     Custom error message.
  *
- * @return {string}
+ * @returns {string}
  *     <var>obj</var> is returned unaltered.
  *
  * @throws {InvalidArgumentError}
@@ -393,7 +393,7 @@ assert.string = function(obj, msg = "") {
  * @param {string=} msg
  *     Custom error message.
  *
- * @return {Object}
+ * @returns {object}
  *     obj| is returned unaltered.
  *
  * @throws {InvalidArgumentError}
@@ -419,7 +419,7 @@ assert.object = function(obj, msg = "") {
  * @param {string=} msg
  *     Custom error message.
  *
- * @return {?}
+ * @returns {?}
  *     The array element, or the value of <var>obj</var>'s own property
  *     <var>prop</var>.
  *
@@ -447,7 +447,7 @@ assert.in = function(prop, obj, msg = "") {
  * @param {string=} msg
  *     Custom error message.
  *
- * @return {Object}
+ * @returns {object}
  *     <var>obj</var> is returned unaltered.
  *
  * @throws {InvalidArgumentError}
@@ -470,7 +470,7 @@ assert.array = function(obj, msg = "") {
  * @param {Error=} error
  *     Custom error type by its class.
  *
- * @return {function(?): ?}
+ * @returns {function(?): ?}
  *     Function that takes and returns the passed in value unaltered,
  *     and which may throw <var>error</var> with <var>message</var>
  *     if <var>predicate</var> evaluates to false.

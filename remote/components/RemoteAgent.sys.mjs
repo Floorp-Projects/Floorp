@@ -157,7 +157,7 @@ class RemoteAgentParentProcess {
    *
    * @param {nsIURI} uri
    *     The URI to check.
-   * @return {boolean}
+   * @returns {boolean}
    */
   #isIPAddress(uri) {
     try {
@@ -327,7 +327,7 @@ class RemoteAgentParentProcess {
    * @param {nsICommandLine} cmdLine
    *     Instance of the command line interface.
    *
-   * @return {boolean}
+   * @returns {boolean}
    *     Return `true` if the command line argument has been found.
    */
   handleRemoteDebuggingPortFlag(cmdLine) {

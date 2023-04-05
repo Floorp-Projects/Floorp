@@ -33,7 +33,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
  * };
  * ```
  *
- * @emits before-request-sent
+ * @fires before-request-sent
  *    The NetworkListener emits "before-request-sent" events, with the
  *    following object as payload:
  *      - {number} browsingContextId - The browsing context id of the browsing

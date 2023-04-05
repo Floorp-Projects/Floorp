@@ -23,7 +23,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * };
  * ```
  *
- * @emits message
+ * @fires message
  *    The LoadListener emits "DOMContentLoaded" and "load" events,
  *    with the following object as payload:
  *      - {Document} target

@@ -111,14 +111,14 @@ event.parseModifiers_ = function(modifiers, win) {
  *     Offset from viewport left, in CSS pixels
  * @param {number} top
  *     Offset from viewport top, in CSS pixels
- * @param {Object} opts
+ * @param {object} opts
  *     Object which may contain the properties "shiftKey", "ctrlKey",
  *     "altKey", "metaKey", "accessKey", "clickCount", "button", and
  *     "type".
  * @param {Window} win
  *     Window object.
  *
- * @return {boolean} defaultPrevented
+ * @returns {boolean} defaultPrevented
  */
 event.synthesizeMouseAtPoint = function(left, top, opts, win) {
   return _getEventUtils(win).synthesizeMouseAtPoint(left, top, opts, win);
@@ -134,14 +134,14 @@ event.synthesizeMouseAtPoint = function(left, top, opts, win) {
  *     Offset from viewport left, in CSS pixels
  * @param {number} top
  *     Offset from viewport top, in CSS pixels
- * @param {Object} opts
+ * @param {object} opts
  *     Object which may contain the properties "id", "rx", "ry", "angle",
  *     "force", "shiftKey", "ctrlKey", "altKey", "metaKey", "accessKey",
  *     "type".
  * @param {Window} win
  *     Window object.
  *
- * @return {boolean} defaultPrevented
+ * @returns {boolean} defaultPrevented
  */
 event.synthesizeTouchAtPoint = function(left, top, opts, win) {
   return _getEventUtils(win).synthesizeTouchAtPoint(left, top, opts, win);
@@ -154,7 +154,7 @@ event.synthesizeTouchAtPoint = function(left, top, opts, win) {
  *     Offset from viewport left, in CSS pixels
  * @param {number} top
  *     Offset from viewport top, in CSS pixels
- * @param {Object} opts
+ * @param {object} opts
  *     Object which may contain the properties "shiftKey", "ctrlKey",
  *     "altKey", "metaKey", "accessKey", "deltaX", "deltaY", "deltaZ",
  *     "deltaMode", "lineOrPageDeltaX", "lineOrPageDeltaY", "isMomentum",
@@ -188,7 +188,7 @@ event.synthesizeMultiTouch = function(opts, win) {
 /**
  * Synthesize a keydown event for a single key.
  *
- * @param {Object} key
+ * @param {object} key
  *     Key data as returned by keyData.getData
  * @param {Window} win
  *     Window object.
@@ -200,7 +200,7 @@ event.sendKeyDown = function(key, win) {
 /**
  * Synthesize a keyup event for a single key.
  *
- * @param {Object} key
+ * @param {object} key
  *     Key data as returned by keyData.getData
  * @param {Window} win
  *     Window object.
@@ -212,7 +212,7 @@ event.sendKeyUp = function(key, win) {
 /**
  * Synthesize a key event for a single key.
  *
- * @param {Object} key
+ * @param {object} key
  *     Key data as returned by keyData.getData
  * @param {Window} win
  *     Window object.
