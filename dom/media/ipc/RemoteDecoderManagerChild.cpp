@@ -768,14 +768,9 @@ void RemoteDecoderManagerChild::OpenRemoteDecoderManagerChildForProcess(
         new RemoteDecoderManagerChild(aLocation);
     if (aEndpoint.Bind(manager)) {
       remoteDecoderManagerChild = manager;
-      manager->InitIPDL();
     }
   }
 }
-
-void RemoteDecoderManagerChild::InitIPDL() { mIPDLSelfRef = this; }
-
-void RemoteDecoderManagerChild::ActorDealloc() { mIPDLSelfRef = nullptr; }
 
 bool RemoteDecoderManagerChild::DeallocShmem(mozilla::ipc::Shmem& aShmem) {
   nsCOMPtr<nsISerialEventTarget> managerThread = GetManagerThread();

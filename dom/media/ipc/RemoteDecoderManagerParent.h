@@ -76,7 +76,6 @@ class RemoteDecoderManagerParent final
       const SurfaceDescriptorGPUVideo& aSD);
 
   void ActorDestroy(mozilla::ipc::IProtocol::ActorDestroyReason) override;
-  void ActorDealloc() override;
 
  private:
   explicit RemoteDecoderManagerParent(nsISerialEventTarget* aThread);
