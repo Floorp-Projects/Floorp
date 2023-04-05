@@ -96,10 +96,14 @@ add_setup(async () => {
   Services.prefs.setBoolPref("extensions.dnr.enabled", true);
   Services.prefs.setBoolPref("extensions.dnr.feedback", true);
 
+  setupTelemetryForTests();
+
   await ExtensionTestUtils.startAddonManager();
 });
 
 add_task(async function test_dnr_startup_cache_save_and_load() {
+  resetTelemetryData();
+
   const rule_resources = [
     {
       id: "ruleset_1",
@@ -137,6 +141,11 @@ add_task(async function test_dnr_startup_cache_save_and_load() {
     })
   );
 
+  assertDNRTelemetryMetricsNoSamples(
+    ["validateRulesTime"],
+    "before any test extensions have been loaded"
+  );
+
   await temporarilyInstalledExt.startup();
   await extension.startup();
   info(
@@ -147,6 +156,12 @@ add_task(async function test_dnr_startup_cache_save_and_load() {
     "Wait for DNR initialization completed for the permanently installed extension"
   );
   await ExtensionDNR.ensureInitialized(extension.extension);
+
+  assertDNRTelemetryMetricsSamplesCount(
+    ["validateRulesTime"],
+    2,
+    "after two test extensions have been loaded"
+  );
 
   Assert.equal(
     spyScheduleCacheDataSave.callCount,
@@ -163,7 +178,22 @@ add_task(async function test_dnr_startup_cache_save_and_load() {
     ruleset_1: getSchemaNormalizedRules(extension, RULESET_1_DATA),
   });
 
+  assertDNRTelemetryMetricsNoSamples(
+    [
+      "startupCacheWriteTime",
+      "startupCacheWriteSize",
+      // Expected no startup cache file to be loaded or used for a newly installed extension.
+      "startupCacheReadSize",
+      "startupCacheReadTime",
+    ],
+    "on loading dnr rules for newly installed extension"
+  );
   await dnrStore.waitSaveCacheDataForTesting();
+  assertDNRTelemetryMetricsSamplesCount(
+    ["startupCacheWriteTime", "startupCacheWriteSize"],
+    1,
+    "after writing DNR startup cache data to disk"
+  );
 
   ok(
     await IOUtils.exists(cacheFile),
@@ -203,9 +233,28 @@ add_task(async function test_dnr_startup_cache_save_and_load() {
       "scheduleCacheDataSave"
     );
 
+    resetTelemetryData();
     await AddonTestUtils.promiseStartupManager();
     await extension.awaitStartup();
     await ExtensionDNR.ensureInitialized(extension.extension);
+
+    if (expectLoadedFromCache) {
+      assertDNRTelemetryMetricsSamplesCount(
+        ["startupCacheReadSize", "startupCacheReadTime"],
+        1,
+        "after DNR store loaded startup cache data"
+      );
+      assertDNRTelemetryMetricsNoSamples(
+        ["validateRulesTime"],
+        "after DNR store loaded startup cache data"
+      );
+    } else {
+      assertDNRTelemetryMetricsSamplesCount(
+        ["validateRulesTime", "startupCacheReadTime", "startupCacheReadSize"],
+        1,
+        "after DNR store load with expected startup cache miss"
+      );
+    }
 
     Assert.equal(
       scheduleCacheDataSaveSpy.called,

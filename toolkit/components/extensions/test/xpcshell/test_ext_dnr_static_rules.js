@@ -139,6 +139,8 @@ add_setup(async () => {
   Services.prefs.setBoolPref("extensions.dnr.enabled", true);
   Services.prefs.setBoolPref("extensions.dnr.feedback", true);
 
+  setupTelemetryForTests();
+
   await ExtensionTestUtils.startAddonManager();
 });
 
@@ -1479,6 +1481,142 @@ add_task(async function test_dnr_all_rules_disabled_allowed() {
 
   await assertDNRGetEnabledRulesets(extension, []);
   await assertDNRStoreData(dnrStore, extension, {});
+
+  await extension.unload();
+});
+
+add_task(async function test_static_rules_telemetry() {
+  resetTelemetryData();
+
+  const ruleset1 = [
+    getDNRRule({
+      id: 1,
+      action: { type: "block" },
+      condition: {
+        resourceTypes: ["xmlhttprequest"],
+        requestDomains: ["example.com"],
+      },
+    }),
+  ];
+  const ruleset2 = [
+    getDNRRule({
+      id: 1,
+      action: { type: "block" },
+      condition: {
+        resourceTypes: ["xmlhttprequest"],
+        requestDomains: ["example.org"],
+      },
+    }),
+  ];
+
+  const rule_resources = [
+    {
+      id: "ruleset1",
+      enabled: false,
+      path: "ruleset1.json",
+    },
+    {
+      id: "ruleset2",
+      enabled: false,
+      path: "ruleset2.json",
+    },
+  ];
+
+  const files = {
+    "ruleset1.json": JSON.stringify(ruleset1),
+    "ruleset2.json": JSON.stringify(ruleset2),
+  };
+
+  const extension = ExtensionTestUtils.loadExtension(
+    getDNRExtension({
+      id: "tabId-invalid-in-session-rules@mochitest",
+      rule_resources,
+      files,
+    })
+  );
+
+  assertDNRTelemetryMetricsNoSamples(
+    ["validateRulesTime", "evaluateRulesTime"],
+    "before test extension have been loaded"
+  );
+
+  await extension.startup();
+  await extension.awaitMessage("bgpage:ready");
+
+  await assertDNRGetEnabledRulesets(extension, []);
+
+  assertDNRTelemetryMetricsNoSamples(
+    ["validateRulesTime"],
+    "after test extension loaded with all static rulesets disabled"
+  );
+
+  info("Enable static ruleset1");
+  extension.sendMessage("updateEnabledRulesets", {
+    enableRulesetIds: ["ruleset1"],
+  });
+  await extension.awaitMessage("updateEnabledRulesets:done");
+
+  await assertDNRGetEnabledRulesets(extension, ["ruleset1"]);
+
+  // Expect one sample after enabling ruleset1.
+  let expectedValidateRulesTimeSamples = 1;
+  assertDNRTelemetryMetricsSamplesCount(
+    ["validateRulesTime"],
+    expectedValidateRulesTimeSamples,
+    "after enabling static rulesets1"
+  );
+
+  info("Enable static ruleset2");
+  extension.sendMessage("updateEnabledRulesets", {
+    enableRulesetIds: ["ruleset2"],
+  });
+  await extension.awaitMessage("updateEnabledRulesets:done");
+
+  await assertDNRGetEnabledRulesets(extension, ["ruleset1", "ruleset2"]);
+
+  // Expect one new sample after enabling ruleset2.
+  expectedValidateRulesTimeSamples += 1;
+  assertDNRTelemetryMetricsSamplesCount(
+    ["validateRulesTime"],
+    expectedValidateRulesTimeSamples,
+    "after enabling static rulesets2"
+  );
+
+  await extension.addon.disable();
+
+  assertDNRTelemetryMetricsSamplesCount(
+    ["validateRulesTime"],
+    expectedValidateRulesTimeSamples,
+    "no new samples expected after disabling test extension"
+  );
+
+  await extension.addon.enable();
+  await extension.awaitMessage("bgpage:ready");
+  await ExtensionDNR.ensureInitialized(extension.extension);
+
+  // Expect 2 new samples after re-enabling the addon with
+  // the 2 rulesets enabled being loaded from the DNR store file.
+  expectedValidateRulesTimeSamples += 2;
+  assertDNRTelemetryMetricsSamplesCount(
+    ["validateRulesTime"],
+    expectedValidateRulesTimeSamples,
+    "after re-enabling test extension"
+  );
+
+  info("Disable static ruleset1");
+
+  extension.sendMessage("updateEnabledRulesets", {
+    disableRulesetIds: ["ruleset1"],
+  });
+  await extension.awaitMessage("updateEnabledRulesets:done");
+
+  await assertDNRGetEnabledRulesets(extension, ["ruleset2"]);
+
+  assertDNRTelemetryMetricsSamplesCount(
+    ["validateRulesTime"],
+    expectedValidateRulesTimeSamples,
+    "no new validation should be hit after disabling ruleset1"
+  );
 
   await extension.unload();
 });
