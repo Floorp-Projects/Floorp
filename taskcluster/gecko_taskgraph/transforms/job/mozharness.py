@@ -283,10 +283,24 @@ def mozharness_on_generic_worker(config, job, taskdesc):
 
     mh_command = []
     if job["worker"]["os"] == "windows":
-        mh_command.append("c:/mozilla-build/python3/python3.exe")
+        system_python_dir = "c:/mozilla-build/python3/"
         gecko_path = "%GECKO_PATH%"
     else:
+        system_python_dir = ""
         gecko_path = "$GECKO_PATH"
+
+    if run.get("use-system-python", False):
+        python_bindir = system_python_dir
+    else:
+        # $MOZ_PYTHON_HOME is going to be substituted in run-task, when we
+        # know the actual MOZ_PYTHON_HOME value.
+        is_windows = job["worker"]["os"] == "windows"
+        if is_windows:
+            python_bindir = "%MOZ_PYTHON_HOME%/"
+        else:
+            python_bindir = "${MOZ_PYTHON_HOME}/bin/"
+
+    mh_command = ["{}python3".format(python_bindir)]
 
     mh_command += [
         f"{gecko_path}/mach",
