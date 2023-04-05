@@ -529,11 +529,11 @@
   display: none;
 }
 
-.permission-popup-permission-remove-button:not(:-moz-focusring):hover {
+.permission-popup-permission-remove-button:not(:focus-visible):hover {
   background-color: var(--button-hover-bgcolor);
 }
 
-.permission-popup-permission-remove-button:not(:-moz-focusring):hover:active {
+.permission-popup-permission-remove-button:not(:focus-visible):hover:active {
   background-color: var(--button-active-bgcolor)
 }
 
