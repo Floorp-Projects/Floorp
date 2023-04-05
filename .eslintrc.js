@@ -283,7 +283,6 @@ module.exports = {
         "modules/**",
         "netwerk/**",
         "parser/htmlparser/**",
-        "remote/**",
         "services/**",
         "storage/**",
         "testing/**",
