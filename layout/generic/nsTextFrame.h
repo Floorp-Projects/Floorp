@@ -771,6 +771,9 @@ class nsTextFrame : public nsIFrame {
   // (To be used only on the first textframe in the chain.)
   nsTextFrame* FindContinuationForOffset(int32_t aOffset);
 
+  void SetHangableISize(nscoord aISize);
+  nscoord GetHangableISize() const;
+
  protected:
   virtual ~nsTextFrame();
 
@@ -807,6 +810,11 @@ class nsTextFrame : public nsIFrame {
 
   // Whether a cached continuations array is present.
   bool mHasContinuationsProperty = false;
+
+  // Whether a HangableWhitespace property is present. This could have been a
+  // frame state bit, but they are currently full. Because we have a uint8_t
+  // and a bool just above, there's a hole here that we can use.
+  bool mHasHangableWS = false;
 
   /**
    * Return true if the frame is part of a Selection.
