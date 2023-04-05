@@ -7,6 +7,7 @@
 #include "jit/InterpreterEntryTrampoline.h"
 #include "jit/JitRuntime.h"
 #include "jit/Linker.h"
+#include "vm/Interpreter.h"
 
 #include "gc/Marking-inl.h"
 
@@ -142,6 +143,54 @@ void JitRuntime::generateBaselineInterpreterEntryTrampoline(
   masm.ret();
 }
 
+void JitRuntime::generateInterpreterEntryTrampoline(MacroAssembler& masm) {
+  AutoCreatedBy acb(masm, "JitRuntime::generateInterpreterEntryTrampoline");
+
+  // If BLI is disabled, we don't need an offset.
+  if (IsBaselineInterpreterEnabled()) {
+    uint32_t offset = startTrampolineCode(masm);
+    if (!vmInterpreterEntryOffset_) {
+      vmInterpreterEntryOffset_ = offset;
+    }
+  }
+
+  masm.push(FramePointer);
+  masm.moveStackPtrTo(FramePointer);
+
+  AllocatableRegisterSet regs(RegisterSet::Volatile());
+  LiveRegisterSet save(regs.asLiveSet());
+  masm.PushRegsInMask(save);
+
+#ifdef JS_CODEGEN_X86
+  Register temp0 = regs.takeAnyGeneral();
+  Register temp1 = regs.takeAnyGeneral();
+  Address cxAddr(FramePointer, 2 * sizeof(void*));
+  Address stateAddr(FramePointer, 3 * sizeof(void*));
+  masm.loadPtr(cxAddr, temp0);
+  masm.loadPtr(stateAddr, temp1);
+#else
+  Register temp0 = IntArgReg0;
+  Register temp1 = IntArgReg1;
+#endif
+
+  Register scratch = regs.takeAnyGeneral();
+
+  using Fn = bool (*)(JSContext * cx, js::RunState & state);
+  masm.setupUnalignedABICall(scratch);
+  masm.passABIArg(temp0);  // cx
+  masm.passABIArg(temp1);  // state
+  masm.callWithABI<Fn, Interpret>(
+      MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
+
+  LiveRegisterSet ignore;
+  ignore.add(ReturnReg);
+  masm.PopRegsInMaskIgnore(save, ignore);
+
+  masm.moveToStackPtr(FramePointer);
+  masm.pop(FramePointer);
+  masm.ret();
+}
+
 JitCode* JitRuntime::generateEntryTrampolineForScript(JSContext* cx,
                                                       JSScript* script) {
   if (JitSpewEnabled(JitSpew_Codegen)) {
@@ -161,8 +210,13 @@ JitCode* JitRuntime::generateEntryTrampolineForScript(JSContext* cx,
   StackMacroAssembler masm(cx, temp);
   PerfSpewerRangeRecorder rangeRecorder(masm);
 
-  generateBaselineInterpreterEntryTrampoline(masm);
-  rangeRecorder.recordOffset("BaselineInterpreter", cx, script);
+  if (IsBaselineInterpreterEnabled()) {
+    generateBaselineInterpreterEntryTrampoline(masm);
+    rangeRecorder.recordOffset("BaselineInterpreter", cx, script);
+  }
+
+  generateInterpreterEntryTrampoline(masm);
+  rangeRecorder.recordOffset("Interpreter", cx, script);
 
   Linker linker(masm);
   JitCode* code = linker.newCode(cx, CodeKind::Other);

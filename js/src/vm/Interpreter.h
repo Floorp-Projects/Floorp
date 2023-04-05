@@ -298,6 +298,7 @@ inline void RunState::setReturnValue(const Value& v) {
 }
 
 extern bool RunScript(JSContext* cx, RunState& state);
+extern bool Interpret(JSContext* cx, RunState& state);
 
 extern JSType TypeOfObject(JSObject* obj);
 
