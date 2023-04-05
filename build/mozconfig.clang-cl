@@ -1,10 +1,6 @@
 if test -d "$MOZ_FETCHES_DIR/clang/bin"; then
     CLANG_DIR=`cd "$MOZ_FETCHES_DIR/clang/bin" ; pwd`
     export PATH="${CLANG_DIR}:${PATH}"
-
-    if $(cd $MOZ_FETCHES_DIR/clang/lib/clang/* && test -d lib/windows); then
-        export LIB="$(cd $MOZ_FETCHES_DIR/clang/lib/clang/* && cd lib/windows && pwd)"
-    fi
 fi
 
 export CC=clang-cl

@@ -100,7 +100,6 @@ Run ``mach bootstrap`` to get an updated clang-cl in your
    export LDFLAGS="clang_rt.asan_dynamic-x86_64.lib clang_rt.asan_dynamic_runtime_thunk-x86_64.lib"
    CLANG_LIB_DIR="$(cd ~/.mozbuild/clang/lib/clang/*/lib/windows && pwd)"
    export MOZ_CLANG_RT_ASAN_LIB_PATH="${CLANG_LIB_DIR}/clang_rt.asan_dynamic-x86_64.dll"
-   export LIB=$LIB:$CLANG_LIB_DIR
 
 If you launch an ASan build under WinDbg, you may see spurious
 first-chance Access Violation exceptions. These come from ASan creating
