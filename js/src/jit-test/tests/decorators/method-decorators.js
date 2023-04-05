@@ -4,6 +4,7 @@ load(libdir + "asserts.js");
 
 let dec1Called = false;
 
+// This explicitly tests the case where undefined is returned.
 function dec1(value, context) {
   dec1Called = true;
   // return undefined
@@ -40,13 +41,13 @@ let decorators = {
 
 function checkDecoratorContext(kind, isPrivate, isStatic, name) {
   return (value, context) => {
-    assertEq(typeof (value.call), "function");
+    assertEq(typeof value.call, "function");
     assertEq(context.kind, kind);
-    assertEq(typeof (context.access), "object");
+    assertEq(typeof context.access, "object");
     assertEq(context.private, isPrivate);
     assertEq(context.static, isStatic);
     assertEq(context.name, name);
-    assertEq(typeof (context.addInitializer), "object");
+    assertEq(typeof context.addInitializer, "object");
   }
 }
 

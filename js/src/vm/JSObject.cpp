@@ -290,8 +290,12 @@ bool js::Throw(JSContext* cx, HandleId id, unsigned errorNumber,
 
 /*** PropertyDescriptor operations and DefineProperties *********************/
 
+#ifndef ENABLE_DECORATORS
+// These are defined by CommonPropertyNames.h and WellKnownAtom.{cpp,h}
+// when decorators are enabled.
 static const char js_getter_str[] = "getter";
 static const char js_setter_str[] = "setter";
+#endif
 
 static Result<> CheckCallable(JSContext* cx, JSObject* obj,
                               const char* fieldName) {
