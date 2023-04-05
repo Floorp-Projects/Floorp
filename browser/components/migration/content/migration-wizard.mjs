@@ -304,6 +304,10 @@ export class MigrationWizard extends HTMLElement {
       true
     );
     this.#browserProfileSelectorList.addEventListener("click", this);
+    // Until bug 1823489 is fixed, this is the easiest way for the
+    // migration wizard to style the selector dropdown so that it more
+    // closely lines up with the edges of the selector button.
+    this.#browserProfileSelectorList.style.boxSizing = "border-box";
   }
 
   /**
