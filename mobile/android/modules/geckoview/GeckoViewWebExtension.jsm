@@ -558,6 +558,20 @@ class AddonManagerListener {
       extension,
     });
   }
+
+  async onEnabled(aAddon) {
+    debug`onEnabled ${aAddon.id}`;
+
+    const extension = await exportExtension(
+      aAddon,
+      aAddon.userPermissions,
+      /* aSourceURI */ null
+    );
+    lazy.EventDispatcher.instance.sendRequest({
+      type: "GeckoView:WebExtension:OnEnabled",
+      extension,
+    });
+  }
 }
 
 new AddonManagerListener();
