@@ -964,7 +964,13 @@ add_task(async function test_dynamic_rules_validation_telemetry() {
   );
 
   assertDNRTelemetryMetricsNoSamples(
-    ["validateRulesTime"],
+    [
+      {
+        metric: "validateRulesTime",
+        mirroredName: "WEBEXT_DNR_VALIDATE_RULES_MS",
+        mirroredType: "histogram",
+      },
+    ],
     "before test extension have been loaded"
   );
 
@@ -981,7 +987,13 @@ add_task(async function test_dynamic_rules_validation_telemetry() {
   );
 
   assertDNRTelemetryMetricsNoSamples(
-    ["validateRulesTime"],
+    [
+      {
+        metric: "validateRulesTime",
+        mirroredName: "WEBEXT_DNR_VALIDATE_RULES_MS",
+        mirroredType: "histogram",
+      },
+    ],
     "no additional rule validation expected for dynamic rules pre-validated on a updateDynamicRules API call"
   );
 
@@ -996,7 +1008,13 @@ add_task(async function test_dynamic_rules_validation_telemetry() {
   );
 
   assertDNRTelemetryMetricsNoSamples(
-    ["validateRulesTime"],
+    [
+      {
+        metric: "validateRulesTime",
+        mirroredName: "WEBEXT_DNR_VALIDATE_RULES_MS",
+        mirroredType: "histogram",
+      },
+    ],
     "no additional rule validation expected for dynamic rules removed by a updateDynamicRules API call"
   );
 
@@ -1004,7 +1022,13 @@ add_task(async function test_dynamic_rules_validation_telemetry() {
   await extension.addon.disable();
 
   assertDNRTelemetryMetricsNoSamples(
-    ["validateRulesTime"],
+    [
+      {
+        metric: "validateRulesTime",
+        mirroredName: "WEBEXT_DNR_VALIDATE_RULES_MS",
+        mirroredType: "histogram",
+      },
+    ],
     "no rule validation hit after disabling the extension"
   );
 
@@ -1017,15 +1041,29 @@ add_task(async function test_dynamic_rules_validation_telemetry() {
   await ExtensionDNR.ensureInitialized(extension.extension);
 
   assertDNRTelemetryMetricsSamplesCount(
-    ["validateRulesTime"],
-    1,
+    [
+      {
+        metric: "validateRulesTime",
+        mirroredName: "WEBEXT_DNR_VALIDATE_RULES_MS",
+        mirroredType: "histogram",
+        expectedSamplesCount: 1,
+      },
+    ],
     "expected rule validation to be hit on re-loading dynamic rules from DNR store file"
   );
   assertDNRTelemetryMetricsNoSamples(
     [
       // Expected no startup cache file to be loaded or used on re-enabling a disabled extension.
-      "startupCacheReadSize",
-      "startupCacheReadTime",
+      {
+        metric: "startupCacheReadSize",
+        mirroredName: "WEBEXT_DNR_STARTUPCACHE_READ_BYTES",
+        mirroredType: "histogram",
+      },
+      {
+        metric: "startupCacheReadTime",
+        mirroredName: "WEBEXT_DNR_STARTUPCACHE_READ_MS",
+        mirroredType: "histogram",
+      },
     ],
     "on loading dnr rules for newly installed extension"
   );
