@@ -57,9 +57,13 @@ object MatcherHelper {
         }
     }
 
-    fun assertItemContainingTextExists(vararg appItems: UiObject) {
+    fun assertItemContainingTextExists(vararg appItems: UiObject, exists: Boolean = true) {
         for (appItem in appItems) {
-            assertTrue(appItem.waitForExists(waitingTime))
+            if (exists) {
+                assertTrue(appItem.waitForExists(waitingTime))
+            } else {
+                assertFalse(appItem.waitForExists(waitingTime))
+            }
         }
     }
 

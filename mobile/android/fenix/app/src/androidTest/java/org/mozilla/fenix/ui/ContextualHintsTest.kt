@@ -9,6 +9,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
@@ -51,7 +52,7 @@ class ContextualHintsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericPage.url) {
-            verifyCookiesProtectionHint()
+            verifyCookiesProtectionHintIsDisplayed(true)
             // One back press to dismiss the TCP hint
             mDevice.pressBack()
         }.goToHomescreen {
@@ -59,13 +60,29 @@ class ContextualHintsTest {
         }
     }
 
+    @SmokeTest
     @Test
-    fun cookieProtectionHintTest() {
+    fun openTotalCookieProtectionLearnMoreLinkTest() {
         val genericPage = getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericPage.url) {
-            verifyCookiesProtectionHint()
+            verifyCookiesProtectionHintIsDisplayed(true)
+            clickTotalCookieProtectionLearnMoreLink()
+            verifyUrl("support.mozilla.org/en-US/kb/enhanced-tracking-protection-firefox-android")
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun dismissTotalCookieProtectionHintTest() {
+        val genericPage = getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(genericPage.url) {
+            verifyCookiesProtectionHintIsDisplayed(true)
+            clickTotalCookieProtectionCloseButton()
+            verifyCookiesProtectionHintIsDisplayed(false)
         }
     }
 }

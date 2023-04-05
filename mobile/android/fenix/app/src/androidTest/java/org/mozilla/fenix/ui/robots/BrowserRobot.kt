@@ -46,9 +46,11 @@ import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.MatcherHelper
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithDescriptionExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
@@ -762,14 +764,33 @@ class BrowserRobot {
 
     fun clickSetCookiesButton() = clickPageObject(webPageItemWithResourceId("setCookies"))
 
-    fun verifyCookiesProtectionHint() {
-        val hintMessage =
-            mDevice.findObject(
-                UiSelector()
-                    .textContains(getStringResource(R.string.tcp_cfr_message)),
+    fun verifyCookiesProtectionHintIsDisplayed(isDisplayed: Boolean) {
+        if (isDisplayed) {
+            assertItemContainingTextExists(
+                totalCookieProtectionHintMessage,
+                totalCookieProtectionHintLearnMoreLink,
             )
-        assertTrue(hintMessage.waitForExists(waitingTime))
+            assertItemWithDescriptionExists(
+                totalCookieProtectionHintCloseButton,
+            )
+        } else {
+            assertItemContainingTextExists(
+                totalCookieProtectionHintMessage,
+                totalCookieProtectionHintLearnMoreLink,
+                exists = isDisplayed,
+            )
+            assertItemWithDescriptionExists(
+                totalCookieProtectionHintCloseButton,
+                exists = isDisplayed,
+            )
+        }
     }
+
+    fun clickTotalCookieProtectionLearnMoreLink() =
+        totalCookieProtectionHintLearnMoreLink.clickAndWaitForNewWindow(waitingTime)
+
+    fun clickTotalCookieProtectionCloseButton() =
+        totalCookieProtectionHintCloseButton.click()
 
     fun clickForm(formType: String) {
         when (formType) {
@@ -1424,3 +1445,9 @@ private val currentDay = currentDate.dayOfMonth
 private val currentMonth = currentDate.month
 private val currentYear = currentDate.year
 private val cookieBanner = itemWithResId("CybotCookiebotDialog")
+private val totalCookieProtectionHintMessage =
+    itemContainingText(getStringResource(R.string.tcp_cfr_message))
+private val totalCookieProtectionHintLearnMoreLink =
+    itemContainingText(getStringResource(R.string.tcp_cfr_learn_more))
+private val totalCookieProtectionHintCloseButton =
+    itemWithDescription(getStringResource(R.string.mozac_cfr_dismiss_button_content_description))
