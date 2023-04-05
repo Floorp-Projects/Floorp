@@ -282,6 +282,10 @@
   }
 }
 
+#identity-popup-content-verifier-unknown > label {
+  display: inline;
+}
+
 /* CONTENT BLOCKING / TRACKING PROTECTION */
 
 #protections-popup-sendReportView-heading,
