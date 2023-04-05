@@ -137,7 +137,8 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
   if (CSPCONTEXTLOGENABLED()) {
     CSPCONTEXTLOG(("nsCSPContext::ShouldLoad, aContentLocation: %s",
                    aContentLocation->GetSpecOrDefault().get()));
-    CSPCONTEXTLOG((">>>>                      aContentType: %d", aContentType));
+    CSPCONTEXTLOG((">>>>                      aContentType: %s",
+                   NS_CP_ContentTypeName(aContentType)));
   }
 
   // This ShouldLoad function is called from nsCSPService::ShouldLoad,
