@@ -38,7 +38,6 @@ void VsyncBridgeParent::Open(Endpoint<PVsyncBridgeParent>&& aEndpoint) {
     // We can't recover from this.
     MOZ_CRASH("Failed to bind VsyncBridgeParent to endpoint");
   }
-  AddRef();
   mOpen = true;
 }
 
@@ -70,8 +69,6 @@ void VsyncBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
   mOpen = false;
   mCompositorThreadRef = nullptr;
 }
-
-void VsyncBridgeParent::ActorDealloc() { Release(); }
 
 }  // namespace gfx
 }  // namespace mozilla
