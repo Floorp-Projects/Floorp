@@ -565,6 +565,37 @@ class MigrationUtils {
       }
 
       if (aOpener?.openPreferences) {
+        if (aOptions.entrypoint == this.MIGRATION_ENTRYPOINTS.NEWTAB) {
+          // When migration is kicked off from about:welcome, there are
+          // a few different behaviors that we want to test, controlled
+          // by a preference that is instrumented for Nimbus. The pref
+          // has the following possible states:
+          //
+          // "autoclose":
+          //   The user will be directed to the migration wizard in
+          //   about:preferences, but once the wizard is dismissed,
+          //   the tab will close.
+          //
+          // "standalone":
+          //   The migration wizard will open in a new top-level content
+          //   window.
+          //
+          // "default" / other
+          //   The user will be directed to the migration wizard in
+          //   about:preferences. The tab will not close once the
+          //   user closes the wizard.
+          let aboutWelcomeBehavior = Services.prefs.getCharPref(
+            "browser.migrate.content-modal.about-welcome-behavior",
+            "default"
+          );
+
+          if (aboutWelcomeBehavior == "autoclose") {
+            return aOpener.openPreferences("general-migrate-autoclose");
+          } else if (aboutWelcomeBehavior == "standalone") {
+            openStandaloneWindow();
+            return Promise.resolve();
+          }
+        }
         return aOpener.openPreferences("general-migrate");
       }
 

@@ -2185,6 +2185,8 @@ pref("browser.migrate.content-modal.enabled", false);
 #endif
 
 pref("browser.migrate.content-modal.import-all.enabled", false);
+// Values can be: "default", "autoclose", "standalone".
+pref("browser.migrate.content-modal.about-welcome-behavior", "default");
 
 // The maximum age of history entries we'll import, in days.
 pref("browser.migrate.history.maxAgeInDays", 180);
