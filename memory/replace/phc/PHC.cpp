@@ -728,7 +728,7 @@ class GMut {
   // The total fragmentation in PHC
   size_t FragmentationBytes() const {
     size_t sum = 0;
-    for (auto page : mAllocPages) {
+    for (const auto& page : mAllocPages) {
       sum += page.FragmentationBytes();
     }
     return sum;
