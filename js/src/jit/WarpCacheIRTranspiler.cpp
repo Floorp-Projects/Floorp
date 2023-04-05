@@ -435,6 +435,9 @@ bool WarpCacheIRTranspiler::emitGuardMultipleShapes(ObjOperandId objId,
   MInstruction* shapeList = objectStubField(shapesOffset);
 
   auto* ins = MGuardMultipleShapes::New(alloc(), def, shapeList);
+  if (builder_->isMonomorphicInlined()) {
+    ins->setBailoutKind(BailoutKind::MonomorphicInlinedStubFolding);
+  }
   add(ins);
 
   setOperand(objId, ins);
@@ -4881,6 +4884,43 @@ bool WarpCacheIRTranspiler::emitCallFunction(
     ObjOperandId calleeId, Int32OperandId argcId,
     mozilla::Maybe<ObjOperandId> thisObjId, CallFlags flags, CallKind kind) {
   MDefinition* callee = getOperand(calleeId);
+  if (kind == CallKind::Scripted && callInfo_ && callInfo_->isInlined()) {
+    // We are transpiling to generate the correct guards. We also
+    // update the CallInfo to use the correct arguments. Code for the
+    // inlined function itself will be generated in
+    // WarpBuilder::buildInlinedCall.
+    if (!updateCallInfo(callee, flags)) {
+      return false;
+    }
+    if (callInfo_->constructing()) {
+      MOZ_ASSERT(flags.isConstructing());
+
+      // We call maybeCreateThis to update |this|, but inlined constructors
+      // never need a VM call. CallIRGenerator::getThisForScripted ensures that
+      // we don't attach a specialized stub unless we have a template object or
+      // know that the constructor needs uninitialized this.
+      MOZ_ALWAYS_FALSE(maybeCreateThis(callee, flags, CallKind::Scripted));
+      mozilla::DebugOnly<MDefinition*> thisArg = callInfo_->thisArg();
+      MOZ_ASSERT(thisArg->isNewPlainObject() ||
+                 thisArg->type() == MIRType::MagicUninitializedLexical);
+    }
+
+    if (flags.getArgFormat() == CallFlags::FunCall) {
+      callInfo_->setInliningResumeMode(ResumeMode::InlinedFunCall);
+    } else {
+      MOZ_ASSERT(flags.getArgFormat() == CallFlags::Standard);
+      callInfo_->setInliningResumeMode(ResumeMode::InlinedStandardCall);
+    }
+
+    switch (callInfo_->argFormat()) {
+      case CallInfo::ArgFormat::Standard:
+        break;
+      default:
+        MOZ_CRASH("Unsupported arg format");
+    }
+    return true;
+  }
+
 #ifdef DEBUG
   MDefinition* argc = getOperand(argcId);
   MOZ_ASSERT(argc->toConstant()->toInt32() ==
@@ -5024,43 +5064,6 @@ bool WarpCacheIRTranspiler::emitCallInlinedFunction(ObjOperandId calleeId,
                                                     uint32_t icScriptOffset,
                                                     CallFlags flags,
                                                     uint32_t argcFixed) {
-  if (callInfo_->isInlined()) {
-    // We are transpiling to generate the correct guards. We also
-    // update the CallInfo to use the correct arguments. Code for the
-    // inlined function itself will be generated in
-    // WarpBuilder::buildInlinedCall.
-    MDefinition* callee = getOperand(calleeId);
-    if (!updateCallInfo(callee, flags)) {
-      return false;
-    }
-    if (callInfo_->constructing()) {
-      MOZ_ASSERT(flags.isConstructing());
-
-      // We call maybeCreateThis to update |this|, but inlined constructors
-      // never need a VM call. CallIRGenerator::getThisForScripted ensures that
-      // we don't attach a specialized stub unless we have a template object or
-      // know that the constructor needs uninitialized this.
-      MOZ_ALWAYS_FALSE(maybeCreateThis(callee, flags, CallKind::Scripted));
-      mozilla::DebugOnly<MDefinition*> thisArg = callInfo_->thisArg();
-      MOZ_ASSERT(thisArg->isNewPlainObject() ||
-                 thisArg->type() == MIRType::MagicUninitializedLexical);
-    }
-
-    if (flags.getArgFormat() == CallFlags::FunCall) {
-      callInfo_->setInliningResumeMode(ResumeMode::InlinedFunCall);
-    } else {
-      MOZ_ASSERT(flags.getArgFormat() == CallFlags::Standard);
-      callInfo_->setInliningResumeMode(ResumeMode::InlinedStandardCall);
-    }
-
-    switch (callInfo_->argFormat()) {
-      case CallInfo::ArgFormat::Standard:
-        break;
-      default:
-        MOZ_CRASH("Unsupported arg format");
-    }
-    return true;
-  }
   return emitCallFunction(calleeId, argcId, mozilla::Nothing(), flags,
                           CallKind::Scripted);
 }
@@ -5388,8 +5391,22 @@ bool WarpCacheIRTranspiler::emitCallGetterResult(CallKind kind,
                                                  uint32_t nargsAndFlagsOffset) {
   MDefinition* receiver = getOperand(receiverId);
   MDefinition* getter = objectStubField(getterOffset);
-  uint32_t nargsAndFlags = uint32StubField(nargsAndFlagsOffset);
+  if (kind == CallKind::Scripted && callInfo_ && callInfo_->isInlined()) {
+    // We are transpiling to generate the correct guards. We also update the
+    // CallInfo to use the correct arguments. Code for the inlined getter
+    // itself will be generated in WarpBuilder::buildInlinedCall.
+    callInfo_->initForGetterCall(getter, receiver);
+    callInfo_->setInliningResumeMode(ResumeMode::InlinedAccessor);
 
+    // Make sure there's enough room to push the arguments on the stack.
+    if (!current->ensureHasSlots(2)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  uint32_t nargsAndFlags = uint32StubField(nargsAndFlagsOffset);
   uint16_t nargs = nargsAndFlags >> 16;
   FunctionFlags flags = FunctionFlags(uint16_t(nargsAndFlags));
   WrappedFunction* wrappedTarget =
@@ -5424,24 +5441,6 @@ bool WarpCacheIRTranspiler::emitCallScriptedGetterResult(
 bool WarpCacheIRTranspiler::emitCallInlinedGetterResult(
     ValOperandId receiverId, uint32_t getterOffset, uint32_t icScriptOffset,
     bool sameRealm, uint32_t nargsAndFlagsOffset) {
-  if (callInfo_) {
-    MOZ_ASSERT(callInfo_->isInlined());
-    // We are transpiling to generate the correct guards. We also update the
-    // CallInfo to use the correct arguments. Code for the inlined getter
-    // itself will be generated in WarpBuilder::buildInlinedCall.
-    MDefinition* receiver = getOperand(receiverId);
-    MDefinition* getter = objectStubField(getterOffset);
-    callInfo_->initForGetterCall(getter, receiver);
-    callInfo_->setInliningResumeMode(ResumeMode::InlinedAccessor);
-
-    // Make sure there's enough room to push the arguments on the stack.
-    if (!current->ensureHasSlots(2)) {
-      return false;
-    }
-
-    return true;
-  }
-
   return emitCallGetterResult(CallKind::Scripted, receiverId, getterOffset,
                               sameRealm, nargsAndFlagsOffset);
 }
@@ -5461,8 +5460,22 @@ bool WarpCacheIRTranspiler::emitCallSetter(CallKind kind,
   MDefinition* receiver = getOperand(receiverId);
   MDefinition* setter = objectStubField(setterOffset);
   MDefinition* rhs = getOperand(rhsId);
-  uint32_t nargsAndFlags = uint32StubField(nargsAndFlagsOffset);
+  if (kind == CallKind::Scripted && callInfo_ && callInfo_->isInlined()) {
+    // We are transpiling to generate the correct guards. We also update the
+    // CallInfo to use the correct arguments. Code for the inlined setter
+    // itself will be generated in WarpBuilder::buildInlinedCall.
+    callInfo_->initForSetterCall(setter, receiver, rhs);
+    callInfo_->setInliningResumeMode(ResumeMode::InlinedAccessor);
 
+    // Make sure there's enough room to push the arguments on the stack.
+    if (!current->ensureHasSlots(3)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  uint32_t nargsAndFlags = uint32StubField(nargsAndFlagsOffset);
   uint16_t nargs = nargsAndFlags >> 16;
   FunctionFlags flags = FunctionFlags(uint16_t(nargsAndFlags));
   WrappedFunction* wrappedTarget =
@@ -5495,25 +5508,6 @@ bool WarpCacheIRTranspiler::emitCallScriptedSetter(
 bool WarpCacheIRTranspiler::emitCallInlinedSetter(
     ObjOperandId receiverId, uint32_t setterOffset, ValOperandId rhsId,
     uint32_t icScriptOffset, bool sameRealm, uint32_t nargsAndFlagsOffset) {
-  if (callInfo_) {
-    MOZ_ASSERT(callInfo_->isInlined());
-    // We are transpiling to generate the correct guards. We also update the
-    // CallInfo to use the correct arguments. Code for the inlined setter
-    // itself will be generated in WarpBuilder::buildInlinedCall.
-    MDefinition* receiver = getOperand(receiverId);
-    MDefinition* setter = objectStubField(setterOffset);
-    MDefinition* rhs = getOperand(rhsId);
-    callInfo_->initForSetterCall(setter, receiver, rhs);
-    callInfo_->setInliningResumeMode(ResumeMode::InlinedAccessor);
-
-    // Make sure there's enough room to push the arguments on the stack.
-    if (!current->ensureHasSlots(3)) {
-      return false;
-    }
-
-    return true;
-  }
-
   return emitCallSetter(CallKind::Scripted, receiverId, setterOffset, rhsId,
                         sameRealm, nargsAndFlagsOffset);
 }
