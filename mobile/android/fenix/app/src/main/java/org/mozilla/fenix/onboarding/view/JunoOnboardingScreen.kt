@@ -53,14 +53,14 @@ import org.mozilla.fenix.theme.FirefoxTheme
 fun JunoOnboardingScreen(
     onboardingPageTypeList: List<JunoOnboardingPageType>,
     onMakeFirefoxDefaultClick: () -> Unit,
-    onSkipDefaultClick: () -> Unit = {},
+    onSkipDefaultClick: () -> Unit,
     onPrivacyPolicyClick: (url: String) -> Unit,
     onSignInButtonClick: () -> Unit,
-    onSkipSignInClick: () -> Unit = {},
+    onSkipSignInClick: () -> Unit,
     onNotificationPermissionButtonClick: () -> Unit,
-    onSkipNotificationClick: () -> Unit = {},
-    onFinish: () -> Unit,
-    onImpression: (pageType: JunoOnboardingPageType) -> Unit = {},
+    onSkipNotificationClick: () -> Unit,
+    onFinish: (pageType: JunoOnboardingPageType) -> Unit,
+    onImpression: (pageType: JunoOnboardingPageType) -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
     val pagerState = rememberPagerState()
@@ -75,7 +75,7 @@ fun JunoOnboardingScreen(
 
     val scrollToNextPageOrDismiss: () -> Unit = {
         if (pagerState.currentPage == pagerState.pageCount - 1) {
-            onFinish()
+            onFinish(onboardingPageTypeList[pagerState.currentPage])
         } else {
             coroutineScope.launch {
                 pagerState.animateScrollToPage(pagerState.currentPage + 1)
