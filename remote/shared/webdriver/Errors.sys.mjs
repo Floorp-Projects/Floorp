@@ -26,6 +26,7 @@ const ERRORS = new Set([
   "NoSuchAlertError",
   "NoSuchElementError",
   "NoSuchFrameError",
+  "NoSuchHandleError",
   "NoSuchNodeError",
   "NoSuchScriptError",
   "NoSuchShadowRootError",
@@ -438,6 +439,16 @@ class NoSuchFrameError extends WebDriverError {
 }
 
 /**
+ * The handle of a strong object reference could not be found
+ */
+class NoSuchHandleError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "no such handle";
+  }
+}
+
+/**
  * A node as given by its unique shared id could not be found within the cache
  * of known nodes.
  */
@@ -559,6 +570,7 @@ const STATUSES = new Map([
   ["no such alert", NoSuchAlertError],
   ["no such element", NoSuchElementError],
   ["no such frame", NoSuchFrameError],
+  ["no such handle", NoSuchHandleError],
   ["no such node", NoSuchNodeError],
   ["no such script", NoSuchScriptError],
   ["no such shadow root", NoSuchShadowRootError],

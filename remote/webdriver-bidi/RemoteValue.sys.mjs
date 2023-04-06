@@ -276,7 +276,7 @@ export function deserialize(realm, serializedValue, options = {}) {
 
     const object = realm.getObjectForHandle(handle);
     if (!object) {
-      throw new lazy.error.InvalidArgumentError(
+      throw new lazy.error.NoSuchHandleError(
         `Unable to find an object reference for "handle" ${handle}`
       );
     }
