@@ -30,6 +30,16 @@ interface nsITouchBarHelper : nsISupports
   readonly attribute boolean isUrlbarFocused;
 
   /**
+   * Toggles Urlbar focus.
+   */
+  void toggleFocusUrlbar();
+
+  /**
+   * Unfocuses the Urlbar.
+   */
+  void unfocusUrlbar();
+
+  /**
    * Returns all available Touch Bar Inputs in an nsIArray
    * of nsITouchBarInput objects.
    */
