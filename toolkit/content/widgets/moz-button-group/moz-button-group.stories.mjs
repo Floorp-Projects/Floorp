@@ -18,14 +18,21 @@ export default {
       control: { type: "select" },
     },
   },
+  parameters: {
+    fluent: `
+moz-button-group-p = The button group is below. Card for emphasis.
+moz-button-group-ok = OK
+moz-button-group-cancel = Cancel
+    `,
+  },
 };
 
 const Template = ({ platform }) => html`
   <div class="card card-no-hover" style="max-width: 400px">
-    <p>The button group is below. Card for emphasis.</p>
+    <p data-l10n-id="moz-button-group-p"></p>
     <moz-button-group .platform=${platform}>
-      <button class="primary">OK</button>
-      <button>Cancel</button>
+      <button class="primary" data-l10n-id="moz-button-group-ok"></button>
+      <button data-l10n-id="moz-button-group-cancel"></button>
     </moz-button-group>
   </div>
 `;

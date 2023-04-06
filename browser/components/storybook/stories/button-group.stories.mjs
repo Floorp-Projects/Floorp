@@ -9,20 +9,29 @@ import "toolkit-widgets/named-deck.js";
 
 export default {
   title: "Widgets/Functional/Button Group",
+  component: "button-group",
   argTypes: {
     orientation: {
       options: ["horizontal", "vertical"],
       control: { type: "radio" },
     },
   },
+  parameters: {
+    fluent: `
+button-group-one = One
+button-group-two = Two
+button-group-three = Three
+button-group-four = Four
+    `,
+  },
 };
 
 const Template = ({ orientation }) => html`
   <button-group orientation=${orientation}>
-    <button>One</button>
-    <button>Two</button>
-    <button>Three</button>
-    <button>Four</button>
+    <button data-l10n-id="button-group-one"></button>
+    <button data-l10n-id="button-group-two"></button>
+    <button data-l10n-id="button-group-three"></button>
+    <button data-l10n-id="button-group-four"></button>
   </button-group>
 
   <p>

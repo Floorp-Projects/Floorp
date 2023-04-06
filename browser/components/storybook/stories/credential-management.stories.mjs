@@ -9,6 +9,7 @@ import "../../aboutlogins/content/components/login-timeline.mjs";
 
 export default {
   title: "Widgets/Credential Management/Timeline",
+  component: "login-timeline",
 };
 
 window.MozXULElement.insertFTLIfNeeded("browser/aboutLogins.ftl");

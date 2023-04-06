@@ -9,6 +9,17 @@ import "toolkit-widgets/named-deck.js";
 
 export default {
   title: "Widgets/Functional/Named Deck",
+  component: "named-deck",
+  parameters: {
+    fluent: `
+named-deck-tab-one = Tab 1
+named-deck-tab-two = Tab 2
+named-deck-tab-three = Tab 3
+named-deck-content-one = This is tab 1
+named-deck-content-two = This is tab 2
+named-deck-content-three = This is tab 3
+    `,
+  },
 };
 
 export const Tabs = () => html`
@@ -18,14 +29,14 @@ export const Tabs = () => html`
     }
   </style>
   <button-group>
-    <button is="named-deck-button" deck="tabs-deck" name="tab-1">Tab 1</button>
-    <button is="named-deck-button" deck="tabs-deck" name="tab-2">Tab 2</button>
-    <button is="named-deck-button" deck="tabs-deck" name="tab-3">Tab 3</button>
+    <button is="named-deck-button" deck="tabs-deck" name="tab-1" data-l10n-id="named-deck-tab-one"></button>
+    <button is="named-deck-button" deck="tabs-deck" name="tab-2" data-l10n-id="named-deck-tab-two"></button>
+    <button is="named-deck-button" deck="tabs-deck" name="tab-3" data-l10n-id="named-deck-tab-three"></button>
   </button-group>
   <named-deck id="tabs-deck" is-tabbed>
-    <p name="tab-1">This is tab 1</p>
-    <p name="tab-2">This is tab 2</p>
-    <p name="tab-3">This is tab 3</p>
+    <p name="tab-1" data-l10n-id="named-deck-content-one"></p>
+    <p name="tab-2" data-l10n-id="named-deck-content-two"></p>
+    <p name="tab-3" data-l10n-id="named-deck-content-three"></p>
   </named-deck>
 
   <hr>

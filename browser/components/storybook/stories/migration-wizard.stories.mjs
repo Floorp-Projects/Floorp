@@ -16,6 +16,7 @@ import "toolkit-widgets/named-deck.js";
 
 export default {
   title: "Design System/Components/Migration Wizard",
+  component: "migration-wizard",
 };
 
 const FAKE_BROWSER_LIST = [
