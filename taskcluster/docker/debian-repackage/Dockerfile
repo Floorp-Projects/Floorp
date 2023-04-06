@@ -20,7 +20,7 @@ ARG TASKCLUSTER_ROOT_URL
 ARG DOCKER_IMAGE_PACKAGES
 RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAGES && \
     apt-get update && \
-    apt-get install debootstrap python3-distutils && set -x && \
+    apt-get install debootstrap python3-distutils && set -xe && \
     for arch in i386 amd64; do \
         debootstrap \
         --arch=$arch \
