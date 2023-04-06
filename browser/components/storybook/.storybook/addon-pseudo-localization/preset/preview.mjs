@@ -7,13 +7,21 @@
  * could combine multiple decorators, but for now we only need one.
  */
 
-import { withPseudoLocalization } from "../withPseudoLocalization.mjs";
+import {
+  withPseudoLocalization,
+  withFluentStrings,
+} from "../withPseudoLocalization.mjs";
 
-export const decorators = [withPseudoLocalization];
+export const decorators = [withPseudoLocalization, withFluentStrings];
 export const globalTypes = {
   pseudoStrategy: {
     name: "Pseudo l10n strategy",
     description: "Provides text variants for testing different locales.",
     defaultValue: "default",
+  },
+  fluentStrings: {
+    name: "Fluent string map for components",
+    description: "Mapping of component to fluent strings.",
+    defaultValue: {},
   },
 };

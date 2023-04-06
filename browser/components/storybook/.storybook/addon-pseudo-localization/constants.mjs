@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 export const ADDON_ID = "addon-pseudo-localization";
+export const PANEL_ID = `${ADDON_ID}/fluentPanel`;
 export const TOOL_ID = `${ADDON_ID}/toolbarButton`;
 
 export const STRATEGY_DEFAULT = "default";
@@ -27,3 +28,5 @@ export const DIRECTION_BY_STRATEGY = {
 };
 
 export const UPDATE_STRATEGY_EVENT = "update-strategy";
+export const FLUENT_SET_STRINGS = "fluent-set-strings";
+export const FLUENT_CHANGED = "fluent-changed";

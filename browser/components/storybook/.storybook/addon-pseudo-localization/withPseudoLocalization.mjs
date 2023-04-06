@@ -7,7 +7,9 @@ import {
   DIRECTIONS,
   DIRECTION_BY_STRATEGY,
   UPDATE_STRATEGY_EVENT,
+  FLUENT_CHANGED,
 } from "./constants.mjs";
+import { provideFluent } from "../fluent-utils.mjs";
 
 /**
  * withPseudoLocalization is a Storybook decorator that handles emitting an
@@ -40,6 +42,48 @@ export const withPseudoLocalization = (StoryFn, context) => {
       document.documentElement.setAttribute("dir", direction);
     }
   }, [direction, isInDocs]);
+
+  return StoryFn();
+};
+
+/**
+ * withFluentStrings is a Storybook decorator that handles emitting an
+ * event to update the Fluent strings shown in the Fluent panel.
+ *
+ * @param {Function} StoryFn - Provided by Storybook, used to render the story.
+ * @param {Object} context - Provided by Storybook, data about the story.
+ * @returns {Function} StoryFn unmodified.
+ */
+export const withFluentStrings = (StoryFn, context) => {
+  const [{ fluentStrings }, updateGlobals] = useGlobals();
+  const channel = addons.getChannel();
+
+  const fileName = context.component + ".ftl";
+  let strings = [];
+
+  if (context.parameters?.fluent && fileName) {
+    if (fluentStrings.hasOwnProperty(fileName)) {
+      strings = fluentStrings[fileName];
+    } else {
+      let resource = provideFluent(context.parameters.fluent, fileName);
+      for (let message of resource.body) {
+        strings.push([
+          message.id,
+          [
+            message.value,
+            ...Object.entries(message.attributes).map(
+              ([key, value]) => `  .${key} = ${value}`
+            ),
+          ].join("\n"),
+        ]);
+      }
+      updateGlobals({
+        fluentStrings: { ...fluentStrings, [fileName]: strings },
+      });
+    }
+  }
+
+  channel.emit(FLUENT_CHANGED, strings);
 
   return StoryFn();
 };

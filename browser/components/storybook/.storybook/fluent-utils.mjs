@@ -7,6 +7,7 @@ import { FluentBundle, FluentResource } from "@fluent/bundle";
 import { addons } from "@storybook/addons";
 import { PSEUDO_STRATEGY_TRANSFORMS } from "./l10n-pseudo.mjs";
 import {
+  FLUENT_SET_STRINGS,
   UPDATE_STRATEGY_EVENT,
   STRATEGY_DEFAULT,
   PSEUDO_STRATEGIES,
@@ -26,6 +27,15 @@ let storybookBundle = new FluentBundle("en-US", {
 // Listen for update events from addon-pseudo-localization.
 const channel = addons.getChannel();
 channel.on(UPDATE_STRATEGY_EVENT, updatePseudoStrategy);
+channel.on(FLUENT_SET_STRINGS, ftlContents => {
+  let resource = new FluentResource(ftlContents);
+  for (let message of resource.body) {
+    let existingMessage = storybookBundle.getMessage(message.id);
+    existingMessage.value = message.value;
+    existingMessage.attributes = message.attributes;
+  }
+  document.l10n.translateRoots();
+});
 
 /**
  * Updates "currentStrategy" when the selected pseudo localization strategy
@@ -98,8 +108,15 @@ export async function insertFTLIfNeeded(fileName) {
     return;
   }
 
+  provideFluent(ftlContents, fileName);
+}
+
+export function provideFluent(ftlContents, fileName) {
   let ftlResource = new FluentResource(ftlContents);
   storybookBundle.addResource(ftlResource);
-  loadedResources.set(fileName, ftlResource);
+  if (fileName) {
+    loadedResources.set(fileName, ftlResource);
+  }
   document.l10n.translateRoots();
+  return ftlResource;
 }
