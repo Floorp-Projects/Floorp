@@ -77,6 +77,7 @@ export class JSONHandler {
 
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.setHeader("Content-Type", "application/json");
+      response.setHeader("Content-Security-Policy", "frame-ancestors 'none'");
       response.write(payload);
     } catch (e) {
       new lazy.RemoteAgentError(e).notify();
