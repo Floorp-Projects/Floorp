@@ -62,6 +62,7 @@ job_description_schema = Schema(
             "optimization"
         ],
         Optional("use-sccache"): task_description_schema["use-sccache"],
+        Optional("use-system-python"): bool,
         Optional("priority"): task_description_schema["priority"],
         # The "when" section contains descriptions of the circumstances under which
         # this task should be included in the task graph.  This will be converted
@@ -239,6 +240,34 @@ def get_attribute(dict, key, attributes, attribute_name):
     value = attributes.get(attribute_name)
     if value:
         dict[key] = value
+
+
+@transforms.add
+def use_system_python(config, jobs):
+    for job in jobs:
+        if job.pop("use-system-python", True):
+            yield job
+        else:
+            fetches = job.setdefault("fetches", {})
+            toolchain = fetches.setdefault("toolchain", [])
+
+            moz_python_home = mozpath.join("fetches", "python")
+            if "win" in job["worker"]["os"]:
+                platform = "win64"
+            elif "linux" in job["worker"]["os"]:
+                platform = "linux64"
+            elif "macosx" in job["worker"]["os"]:
+                platform = "macosx64"
+            else:
+                raise ValueError("unexpected worker.os value {}".format(platform))
+
+            toolchain.append("{}-python".format(platform))
+
+            worker = job.setdefault("worker", {})
+            env = worker.setdefault("env", {})
+            env["MOZ_PYTHON_HOME"] = moz_python_home
+
+            yield job
 
 
 @transforms.add

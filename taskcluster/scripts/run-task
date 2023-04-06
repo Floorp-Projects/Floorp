@@ -27,7 +27,6 @@ import errno
 import io
 import json
 import os
-import platform
 import random
 import re
 import shutil
@@ -936,7 +935,7 @@ def main(args):
     resource_process = None
 
     try:
-        for k in ('GECKO_PATH', 'MOZ_FETCHES_DIR', 'UPLOAD_DIR'):
+        for k in ('GECKO_PATH', 'MOZ_FETCHES_DIR', 'UPLOAD_DIR', 'MOZ_PYTHON_HOME'):
             if k in os.environ:
                 # Normalize paths to use forward slashes. Some shell scripts
                 # tolerate that better on Windows.
@@ -947,6 +946,43 @@ def main(args):
 
         if 'MOZ_FETCHES' in os.environ:
             fetch_artifacts()
+
+            # If Python is a fetch dependency, add it to the PATH and setting
+            # the mozilla-specific MOZ_PYTHON_HOME to relocate binaries.
+            if 'MOZ_PYTHON_HOME' in os.environ:
+
+                print_line(b'setup',
+                           b'Setting up local python environment\n')
+                prev = [os.environ['PATH']] if 'PATH' in os.environ else []
+
+                moz_python_home = os.environ['MOZ_PYTHON_HOME']
+                if IS_WINDOWS:
+                    ext = '.exe'
+                    moz_python_bindir = moz_python_home
+                else:
+                    ext = ''
+                    moz_python_bindir = moz_python_home + '/bin'
+
+
+                # just a sanity check
+                candidate = os.path.join(moz_python_bindir, f'python3{ext}')
+                if not os.path.exists(candidate):
+                    raise RuntimeError("Inconsistent Python installation: "
+                                       "archive found, but no python3 binary "
+                                       "detected")
+
+                new = os.environ['PATH'] = os.pathsep.join([moz_python_bindir]
+                                                           + prev)
+
+                # Relocate the python binary. Standard way uses PYTHONHOME, but
+                # this conflicts with system python (e.g. used by hg) so we
+                # maintain a small patch to use MOZPYTHONHOME instead.
+                os.environ['MOZPYTHONHOME'] = moz_python_home
+
+                print_line(b'setup',
+                           b'updated PATH with python artifact: '
+                           + new.encode() + b'\n')
+
 
         resource_process = maybe_run_resource_monitoring()
 
