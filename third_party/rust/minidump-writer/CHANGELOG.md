@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
+## [0.8.0] - 2023-04-03
+### Removed
+- [PR#77](https://github.com/rust-minidump/minidump-writer/pull/77) removed the dependency on `winapi`, all bindings are either part of `minidump-writer` or `crash-context` now.
+
+### Changed
+- [PR#77](https://github.com/rust-minidump/minidump-writer/pull/77) closed [#67](https://github.com/rust-minidump/minidump-writer/issues/67) by allowing the user to specify the `MinidumpType` flags when creating a minidump.
+
+### Fixed
+- [PR#68](https://github.com/rust-minidump/minidump-writer/pull/68) resolved [#29](https://github.com/rust-minidump/minidump-writer/issues/29) by ignoring the bening `ESRCH` error when detaching pthreads. Thanks [@afranchuk](https://github.com/afranchuk)!
+- [PR#74](https://github.com/rust-minidump/minidump-writer/pull/74) resolved [#73](https://github.com/rust-minidump/minidump-writer/issues/73) by ensuring the `NT_GNU_BUILD_ID` section had the proper correct `GNU` name before using it as the build identifier.
+
 ## [0.7.0] - 2022-11-17
 ### Changed
 - [PR#65](https://github.com/rust-minidump/minidump-writer/pull/65) updated `crash-context` to 0.5, which has support for a custom `capture_context` to replace `RtlCaptureContext` on Windows, due to improper bindings and deficiencies, resolving [#63](https://github.com/rust-minidump/minidump-writer/issues/63).
@@ -60,7 +71,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release, including basic support for `x86_64-unknown-linux-gnu/musl` and `x86_64-pc-windows-msvc`
 
 <!-- next-url -->
-[Unreleased]: https://github.com/rust-minidump/minidump-writer/compare/0.7.0...HEAD
+[Unreleased]: https://github.com/rust-minidump/minidump-writer/compare/0.8.0...HEAD
+[0.8.0]: https://github.com/rust-minidump/minidump-writer/compare/0.7.0...0.8.0
 [0.7.0]: https://github.com/rust-minidump/minidump-writer/compare/0.6.0...0.7.0
 [0.6.0]: https://github.com/rust-minidump/minidump-writer/compare/0.5.0...0.6.0
 [0.5.0]: https://github.com/rust-minidump/minidump-writer/compare/0.4.0...0.5.0

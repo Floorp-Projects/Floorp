@@ -131,7 +131,7 @@ cfg_if::cfg_if! {
         #[derive(Clone)]
         #[doc(hidden)]
         pub struct mcontext_t {
-            pub gregs: [i64; 23],
+            pub gregs: [i32; 23],
             pub fpregs: *mut fpregset_t,
             pub oldmask: u32,
             pub cr2: u32,

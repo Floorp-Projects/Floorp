@@ -185,7 +185,7 @@ impl CpuResourceException {
         debug_assert_eq!(resource_exc_kind(code), ResourceKind::Cpu as u8);
 
         let flavor = Flavor::from(code);
-        let interval_seconds = ((code >> 7) & 0x1ffffff) as u64;
+        let interval_seconds = (code >> 7) & 0x1ffffff;
         let limit = (code & 0x7f) as u8;
         let consumed = subcode.map_or(0, |sc| sc & 0x7f) as u8;
 
@@ -262,7 +262,7 @@ impl WakeupsResourceException {
         let flavor = Flavor::from(code);
         // Note that Apple has a bug in exc_resource.h where the masks in the
         // decode macros for the interval and the permitted wakeups have been swapped
-        let interval_seconds = ((code >> 20) & 0xfff) as u64;
+        let interval_seconds = (code >> 20) & 0xfff;
         let permitted = (code & 0xfffff) as u32;
         let observed = subcode.map_or(0, |sc| sc & 0xfffff) as u32;
 
@@ -388,7 +388,7 @@ impl IoResourceException {
         debug_assert_eq!(resource_exc_kind(code), ResourceKind::Io as u8);
 
         let flavor = Flavor::from(code);
-        let interval_seconds = ((code >> 15) & 0x1ffff) as u64;
+        let interval_seconds = (code >> 15) & 0x1ffff;
         let limit_mib = (code & 0x7fff) as u16;
         let observed_mib = subcode.map_or(0, |sc| sc & 0x7fff) as u16;
 
