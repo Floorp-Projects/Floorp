@@ -220,6 +220,7 @@
 #include "jit/ExecutableAllocator.h"
 #include "jit/JitCode.h"
 #include "jit/JitRealm.h"
+#include "jit/JitRuntime.h"
 #include "jit/ProcessExecutableMemory.h"
 #include "js/HeapAPI.h"  // JS::GCCellPtr
 #include "js/SliceBudget.h"
@@ -4920,6 +4921,9 @@ void GCRuntime::checkHashTablesAfterMovingGC() {
    * that have been moved.
    */
   rt->geckoProfiler().checkStringsMapAfterMovingGC();
+  if (rt->hasJitRuntime() && rt->jitRuntime()->hasInterpreterEntryMap()) {
+    rt->jitRuntime()->getInterpreterEntryMap()->checkScriptsAfterMovingGC();
+  }
   for (ZonesIter zone(this, SkipAtoms); !zone.done(); zone.next()) {
     zone->checkUniqueIdTableAfterMovingGC();
     zone->shapeZone().checkTablesAfterMovingGC();

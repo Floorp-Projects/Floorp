@@ -21,6 +21,7 @@
 #include "jit/BaselineICList.h"
 #include "jit/BaselineJIT.h"
 #include "jit/CalleeToken.h"
+#include "jit/InterpreterEntryTrampoline.h"
 #include "jit/IonCompileTask.h"
 #include "jit/IonTypes.h"
 #include "jit/JitCode.h"
@@ -190,6 +191,10 @@ class JitRuntime {
 
   // Global table of jitcode native address => bytecode address mappings.
   UnprotectedData<JitcodeGlobalTable*> jitcodeGlobalTable_{nullptr};
+
+  // Map used to collect entry trampolines for the Interpreters which is used
+  // for external profiling to identify which functions are being interpreted.
+  MainThreadData<EntryTrampolineMap*> interpreterEntryMap_{nullptr};
 
 #ifdef DEBUG
   // The number of possible bailing places encountered before forcefully bailing
@@ -373,6 +378,15 @@ class JitRuntime {
   JitcodeGlobalTable* getJitcodeGlobalTable() {
     MOZ_ASSERT(hasJitcodeGlobalTable());
     return jitcodeGlobalTable_;
+  }
+
+  bool hasInterpreterEntryMap() const {
+    return interpreterEntryMap_ != nullptr;
+  }
+
+  EntryTrampolineMap* getInterpreterEntryMap() {
+    MOZ_ASSERT(hasInterpreterEntryMap());
+    return interpreterEntryMap_;
   }
 
   bool isProfilerInstrumentationEnabled(JSRuntime* rt) {
