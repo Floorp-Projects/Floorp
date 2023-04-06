@@ -36,6 +36,7 @@ chrome フォルダに CSS フォルダが作成されるのでそこに .css �
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 var { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+var { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 (function () {
 	// 起動時に他の窓がある（２窓目の）場合は抜ける
@@ -212,24 +213,48 @@ var { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 					process.run(false, [path], 1);
 		     	  } catch (e) { }
 			}
+			
 			let l10n = new Localization(["browser/floorp.ftl"], true);
 			const editor = Services.prefs.getStringPref("view_source.editor.path");
-			let WindowsNotepadPath = { value: "C:\\windows\\system32\\notepad.exe" };
-		    let setPathPromise = new Promise((resolve) => {
-			    if (editor == ""){
-					if(Services.prompt.prompt(null, l10n.formatValueSync("not-found-editor-path") , l10n.formatValueSync("set-pref-description") , WindowsNotepadPath, null, { value: 0 })){
-			          let editorPath = WindowsNotepadPath.value;
-			          Services.prefs.setStringPref("view_source.editor.path", editorPath);
-			    	} 
-			    resolve();
-			    } else {
-				openInEditor();
+			let WindowsNotepadPath = { value: "" };
+			
+			// check if VScode is installed
+			const AppPath = OS.Constants.Path.homeDir + "\\AppData\\Local\\Programs\\Microsoft VS Code\\code.exe";
+			async function checkIfVScodeExists() {
+			  const isVScodeInstalled = await OS.File.exists(AppPath);
+			  return isVScodeInstalled;
+			}
+			
+			async function getEditorPath() {
+			  let editorPath = "";
+			  if (AppConstants.platform == "win") {
+				WindowsNotepadPath.value = "C:\\windows\\system32\\notepad.exe";
+				editorPath = WindowsNotepadPath.value;
+				const isVScodeInstalled = await checkIfVScodeExists();
+				if (isVScodeInstalled) {
+				  WindowsNotepadPath.value = AppPath;
+				  editorPath = AppPath;
 				}
+			  } else {
+				WindowsNotepadPath.value = "/usr/bin/gedit";
+				editorPath = WindowsNotepadPath.value;
+			  }
+			  return editorPath;
+			}
+			
+			let setPathPromise = new Promise(async (resolve) => {
+			  if (editor == "") {
+				const editorPath = await getEditorPath();
+				if (Services.prompt.prompt(null, l10n.formatValueSync("not-found-editor-path"), l10n.formatValueSync("set-pref-description"), WindowsNotepadPath, null, { value: false })) {
+				  Services.prefs.setStringPref("view_source.editor.path", editorPath);
+				}
+			  }
+			  resolve();
 			});
-				 setPathPromise.then(() => {
-				 openInEditor();
+			
+			setPathPromise.then(() => {
+			  openInEditor();
 			});
-
 		},
 		create: async function (aLeafName) {
 			let l10n = new Localization(["browser/floorp.ftl"], true);
