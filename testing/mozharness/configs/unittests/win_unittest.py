@@ -100,6 +100,7 @@ config = {
                 "--symbols-path=%(symbols_path)s",
                 "--certificate-path=tests/certs",
                 "--quiet",
+                "--log-raw=%(raw_log_file)s",
                 "--log-errorsummary=%(error_summary_file)s",
                 "--screenshot-on-fail",
                 "--cleanup-crashes",
@@ -114,6 +115,7 @@ config = {
                 "--utility-path=tests/bin",
                 "--extra-profile-file=tests/bin/plugins",
                 "--symbols-path=%(symbols_path)s",
+                "--log-raw=%(raw_log_file)s",
                 "--log-errorsummary=%(error_summary_file)s",
                 "--cleanup-crashes",
                 "--marionette-startup-timeout=180",
@@ -126,6 +128,7 @@ config = {
             "options": [
                 "--self-test",
                 "--symbols-path=%(symbols_path)s",
+                "--log-raw=%(raw_log_file)s",
                 "--log-errorsummary=%(error_summary_file)s",
                 "--utility-path=tests/bin",
                 "--manifest=tests/xpcshell/tests/xpcshell.ini",
