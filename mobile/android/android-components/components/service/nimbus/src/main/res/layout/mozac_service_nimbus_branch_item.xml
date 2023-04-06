@@ -16,6 +16,7 @@
         android:layout_marginStart="16dp"
         android:importantForAccessibility="no"
         android:visibility="visible"
+        app:tint="?android:attr/textColorPrimary"
         app:srcCompat="@drawable/mozac_ic_check"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
