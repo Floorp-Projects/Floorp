@@ -85,19 +85,28 @@ var gBuiltInInputs = {
     title: "back",
     image: "chrome://browser/skin/back.svg",
     type: kInputTypes.BUTTON,
-    callback: () => execCommand("Browser:Back"),
+    callback: () => {
+      lazy.touchBarHelper.unfocusUrlbar();
+      execCommand("Browser:Back");
+    },
   },
   Forward: {
     title: "forward",
     image: "chrome://browser/skin/forward.svg",
     type: kInputTypes.BUTTON,
-    callback: () => execCommand("Browser:Forward"),
+    callback: () => {
+      lazy.touchBarHelper.unfocusUrlbar();
+      execCommand("Browser:Forward");
+    },
   },
   Reload: {
     title: "reload",
     image: "chrome://global/skin/icons/reload.svg",
     type: kInputTypes.BUTTON,
-    callback: () => execCommand("Browser:Reload"),
+    callback: () => {
+      lazy.touchBarHelper.unfocusUrlbar();
+      execCommand("Browser:Reload");
+    },
   },
   Home: {
     title: "home",
@@ -153,7 +162,7 @@ var gBuiltInInputs = {
     title: "open-location",
     image: "chrome://global/skin/icons/search-glass.svg",
     type: kInputTypes.MAIN_BUTTON,
-    callback: () => execCommand("Browser:OpenLocation"),
+    callback: () => lazy.touchBarHelper.toggleFocusUrlbar(),
   },
   // This is a special-case `type: kInputTypes.SCRUBBER` element.
   // Scrubbers are not yet generally implemented.
@@ -314,6 +323,21 @@ class TouchBarHelper {
       return false;
     }
     return TouchBarHelper.window.gURLBar.focused;
+  }
+
+  toggleFocusUrlbar() {
+    if (this.isUrlbarFocused) {
+      this.unfocusUrlbar();
+    } else {
+      execCommand("Browser:OpenLocation");
+    }
+  }
+
+  unfocusUrlbar() {
+    if (!this.isUrlbarFocused) {
+      return;
+    }
+    TouchBarHelper.window.gURLBar.blur();
   }
 
   static get baseWindow() {
