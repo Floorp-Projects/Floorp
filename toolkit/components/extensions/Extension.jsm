@@ -2069,8 +2069,12 @@ class ExtensionData {
         `webextSitePerms.headerWithGatedPerms.${info.sitePermissions[0]}`,
         [host]
       );
+
+      // We use the same string for midi and midi-sysex, and don't support any
+      // other types of site permission add-ons. So we just hard-code the
+      // descriptor for now. See bug 1826747.
       result.text = bundle.GetStringFromName(
-        `webextSitePerms.descriptionGatedPerms`
+        `webextSitePerms.descriptionGatedPerms.midi`
       );
 
       return result;

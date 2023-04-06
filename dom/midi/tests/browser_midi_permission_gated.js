@@ -153,7 +153,7 @@ add_task(async function testRequestMIDIAccess() {
     installDialog.querySelector("popupnotificationcontent description")
       .textContent,
     gNavigatorBundle.getFormattedString(
-      "webextSitePerms.descriptionGatedPerms",
+      "webextSitePerms.descriptionGatedPerms.midi",
       [testPageHost]
     ),
     "Install dialog has expected description"
@@ -299,7 +299,7 @@ add_task(async function testRequestMIDIAccess() {
     installDialog.querySelector("popupnotificationcontent description")
       .textContent,
     gNavigatorBundle.getFormattedString(
-      "webextSitePerms.descriptionGatedPerms",
+      "webextSitePerms.descriptionGatedPerms.midi",
       [testPageHost]
     ),
     "Install dialog has expected description"

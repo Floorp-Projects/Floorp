@@ -357,6 +357,15 @@ var ExtensionsUI = {
           textEl.textContent = strings.text;
           textEl.hidden = !strings.text;
 
+          // By default, multiline strings don't get formatted properly. These
+          // are presently only used in site permission add-ons, so we treat it
+          // as a special case to avoid unintended effects on other things.
+          let isMultiline = strings.text.includes("\n\n");
+          textEl.classList.toggle(
+            "addon-webext-perm-text-multiline",
+            isMultiline
+          );
+
           let listIntroEl = doc.getElementById("addon-webext-perm-intro");
           listIntroEl.textContent = strings.listIntro;
           listIntroEl.hidden = !strings.msgs.length || !strings.listIntro;
