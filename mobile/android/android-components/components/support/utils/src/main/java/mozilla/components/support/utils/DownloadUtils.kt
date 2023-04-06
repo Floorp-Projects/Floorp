@@ -344,7 +344,7 @@ object DownloadUtils {
             // Compare the last segment of the extension against the mime type.
             // If there's a mismatch, discard the entire extension.
             val typeFromExt = mimeTypeMap.getMimeTypeFromExtension(filename.substringAfterLast('.'))
-            if (typeFromExt?.equals(mimeType, ignoreCase = true) != false) {
+            if (typeFromExt?.equals(mimeType, ignoreCase = true) != true) {
                 extension = mimeTypeMap.getExtensionFromMimeType(mimeType)?.let { ".$it" }
                 // Check if the extension needs to be changed
                 if (extension != null && filename.endsWith(extension, ignoreCase = true)) {
