@@ -1,8 +1,11 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
 import io.gitlab.arturbosch.detekt.Detekt
 import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
 
 buildscript {
     // This logic is duplicated in the allprojects block: I don't know how to fix that.
@@ -282,4 +285,19 @@ tasks.register("githubLintDetektDetails", GithubDetailsTask) {
 
 tasks.register("githubLintAndroidDetails", GithubDetailsTask) {
     text = "### [Android Lint Results Fenix]({reportsUrl}/lint-results-debug.html)"
+}
+
+// Task to copy generated baseline profile to the app module nightly variant.
+tasks.register("copyBaselineProfile", DefaultTask) {
+    doLast {
+        File profileFile = fileTree('benchmark/build/outputs') {
+            include '**/*baseline-prof.txt'
+        }.getSingleFile()
+        def destinationPath = Paths.get("app", "src", "nightly", "baselineProfiles", "baseline-prof.txt")
+        File destinationDir = destinationPath.toFile().parentFile
+        if (!destinationDir.exists()) {
+            destinationDir.mkdirs()
+        }
+        Files.copy(profileFile.toPath(), destinationPath, StandardCopyOption.REPLACE_EXISTING)
+    }
 }
