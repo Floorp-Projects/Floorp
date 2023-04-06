@@ -250,11 +250,7 @@ add_task(async function retryConfigOnConnectivityChange() {
   // Now check that we also reload a missing config if a TRR confirmation fails.
   ohttpService.clearTRRConfig();
   configPromise = TestUtils.topicObserved("ohttp-service-config-loaded");
-  Services.obs.notifyObservers(
-    null,
-    "network:trr-confirmation",
-    "CONFIRM_FAILED"
-  );
+  Services.obs.notifyObservers(null, "trrservice-confirmation-failed");
   [, status] = await configPromise;
   equal(status, "success");
   await new TRRDNSListener("example4.com", "2.2.2.2");
