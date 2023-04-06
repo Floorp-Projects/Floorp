@@ -8,14 +8,17 @@
 #define vm_Caches_h
 
 #include "mozilla/Array.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MruCache.h"
+#include "mozilla/TemplateLib.h"
 
 #include "frontend/ScopeBindingCache.h"
 #include "gc/Tracer.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "vm/JSScript.h"
+#include "vm/Shape.h"
 #include "vm/StencilCache.h"  // js::StencilCache
 #include "vm/StringType.h"
 
@@ -181,10 +184,15 @@ class MegamorphicCache {
   using Entry = MegamorphicCacheEntry;
 
   static constexpr size_t NumEntries = 1024;
-  // log2(alignof(Shape))
-  static constexpr uint8_t ShapeHashShift1 = 3;
-  // ShapeHashShift1 + log2(NumEntries)
-  static constexpr uint8_t ShapeHashShift2 = ShapeHashShift1 + 10;
+  static constexpr uint8_t ShapeHashShift1 =
+      mozilla::tl::FloorLog2<alignof(Shape)>::value;
+  static constexpr uint8_t ShapeHashShift2 =
+      ShapeHashShift1 + mozilla::tl::FloorLog2<NumEntries>::value;
+
+  static_assert(mozilla::IsPowerOfTwo(alignof(Shape)) &&
+                    mozilla::IsPowerOfTwo(NumEntries),
+                "FloorLog2 is exact because alignof(Shape) and NumEntries are "
+                "both powers of two");
 
  private:
   mozilla::Array<Entry, NumEntries> entries_;
@@ -299,10 +307,15 @@ class MegamorphicSetPropCache {
   // the sweet spot where we are getting most of the hits we would get with
   // an infinitely sized cache
   static constexpr size_t NumEntries = 256;
-  // log2(alignof(Shape))
-  static constexpr uint8_t ShapeHashShift1 = 3;
-  // ShapeHashShift1 + log2(NumEntries)
-  static constexpr uint8_t ShapeHashShift2 = ShapeHashShift1 + 8;
+  static constexpr uint8_t ShapeHashShift1 =
+      mozilla::tl::FloorLog2<alignof(Shape)>::value;
+  static constexpr uint8_t ShapeHashShift2 =
+      ShapeHashShift1 + mozilla::tl::FloorLog2<NumEntries>::value;
+
+  static_assert(mozilla::IsPowerOfTwo(alignof(Shape)) &&
+                    mozilla::IsPowerOfTwo(NumEntries),
+                "FloorLog2 is exact because alignof(Shape) and NumEntries are "
+                "both powers of two");
 
  private:
   mozilla::Array<Entry, NumEntries> entries_;
