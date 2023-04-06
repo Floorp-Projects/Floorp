@@ -406,11 +406,13 @@ function initPage() {
         });
       });
 
+      let isTrrServerError = true;
       if (RPMIsSiteSpecificTRRError()) {
         // Only show the exclude button if the failure is specific to this
         // domain. If the TRR server is inaccessible we don't want to allow
         // the user to add an exception just for this domain.
         trrExceptionButton.hidden = false;
+        isTrrServerError = false;
       }
       let trrSettingsButton = document.getElementById("trrSettingsButton");
       trrSettingsButton.addEventListener("click", () => {
@@ -466,11 +468,20 @@ function initPage() {
       let trrOnlyLearnMoreLink = document.getElementById(
         "trrOnlylearnMoreLink"
       );
-      // This will be replaced at a later point with a link to an offline support page
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=1806257
-      trrOnlyLearnMoreLink.href =
-        RPMGetFormatURLPref("network.trr_ui.skip_reason_learn_more_url") +
-        skipReason.toLowerCase().replaceAll("_", "-");
+      if (isTrrServerError) {
+        // Go to DoH settings page
+        trrOnlyLearnMoreLink.href = "about:preferences#privacy-doh";
+        trrOnlyLearnMoreLink.addEventListener("click", event => {
+          event.preventDefault();
+          RPMSendAsyncMessage("OpenTRRPreferences");
+        });
+      } else {
+        // This will be replaced at a later point with a link to an offline support page
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1806257
+        trrOnlyLearnMoreLink.href =
+          RPMGetFormatURLPref("network.trr_ui.skip_reason_learn_more_url") +
+          skipReason.toLowerCase().replaceAll("_", "-");
+      }
 
       let div = document.getElementById("trrOnlyContainer");
       div.hidden = false;
