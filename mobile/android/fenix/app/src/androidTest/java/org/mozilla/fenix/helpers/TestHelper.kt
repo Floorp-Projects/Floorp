@@ -65,6 +65,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.Constants.PackageName.YOUTUBE_APP
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.ext.waitNotNull
@@ -340,17 +341,24 @@ object TestHelper {
 
     fun grantPermission() {
         if (Build.VERSION.SDK_INT >= 23) {
-            mDevice.findObject(
-                By.text(
-                    when (Build.VERSION.SDK_INT) {
-                        Build.VERSION_CODES.R -> Pattern.compile(
-                            "WHILE USING THE APP",
-                            Pattern.CASE_INSENSITIVE,
-                        )
-                        else -> Pattern.compile("Allow", Pattern.CASE_INSENSITIVE)
-                    },
-                ),
-            ).click()
+            when (Build.VERSION.SDK_INT) {
+                Build.VERSION_CODES.R ->
+                    itemWithResIdAndText(
+                        "com.android.permissioncontroller:id/permission_allow_foreground_only_button",
+                        "While using the app",
+                    ).also {
+                        it.waitForExists(waitingTime)
+                        it.click()
+                    }
+                else ->
+                    itemWithResIdAndText(
+                        "com.android.packageinstaller:id/permission_allow_button",
+                        "ALLOW",
+                    ).also {
+                        it.waitForExists(waitingTime)
+                        it.click()
+                    }
+            }
         }
     }
 
