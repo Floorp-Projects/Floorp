@@ -4,78 +4,99 @@
 
 package org.mozilla.fenix
 
-import android.util.Log
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
+import io.mockk.spyk
 import io.mockk.verify
-import org.junit.After
+import mozilla.components.support.base.log.sink.AndroidLogSink
 import org.junit.Before
 import org.junit.Test
 
 class FenixLogSinkTest {
 
+    private lateinit var androidLogSink: AndroidLogSink
+
     @Before
     fun setup() {
-        mockkStatic(Log::class)
-    }
-
-    @After
-    fun teardown() {
-        unmockkStatic(Log::class)
+        androidLogSink = spyk(AndroidLogSink())
     }
 
     @Test
     fun `GIVEN we're in a release build WHEN we log debug statements THEN logs should not be forwarded`() {
-        val logSink = FenixLogSink(false)
+        val logSink = FenixLogSink(false, androidLogSink)
         logSink.log(
             mozilla.components.support.base.log.Log.Priority.DEBUG,
             "test",
             message = "test",
         )
-        verify(exactly = 0) { Log.println(Log.DEBUG, "test", "test") }
+        verify(exactly = 0) { androidLogSink.log(any(), any(), any()) }
     }
 
     @Test
     fun `GIVEN we're in a release build WHEN we log error statements THEN logs should be forwarded`() {
-        val logSink = FenixLogSink(false)
+        val logSink = FenixLogSink(false, androidLogSink)
         logSink.log(
             mozilla.components.support.base.log.Log.Priority.ERROR,
             "test",
             message = "test",
         )
-        verify(exactly = 1) { Log.println(Log.ERROR, "test", "test") }
+
+        verify(exactly = 1) {
+            androidLogSink.log(
+                mozilla.components.support.base.log.Log.Priority.ERROR,
+                "test",
+                message = "test",
+            )
+        }
     }
 
     @Test
     fun `GIVEN we're in a release build WHEN we log warn statements THEN logs should be forwarded`() {
-        val logSink = FenixLogSink(false)
+        val logSink = FenixLogSink(false, androidLogSink)
         logSink.log(
             mozilla.components.support.base.log.Log.Priority.WARN,
             "test",
             message = "test",
         )
-        verify(exactly = 1) { Log.println(Log.WARN, "test", "test") }
+        verify(exactly = 1) {
+            androidLogSink.log(
+                mozilla.components.support.base.log.Log.Priority.WARN,
+                "test",
+                message = "test",
+            )
+        }
     }
 
     @Test
     fun `GIVEN we're in a release build WHEN we log info statements THEN logs should be forwarded`() {
-        val logSink = FenixLogSink(false)
+        val logSink = FenixLogSink(false, androidLogSink)
         logSink.log(
             mozilla.components.support.base.log.Log.Priority.INFO,
             "test",
             message = "test",
         )
-        verify(exactly = 1) { Log.println(Log.INFO, "test", "test") }
+        verify(exactly = 1) {
+            androidLogSink.log(
+                mozilla.components.support.base.log.Log.Priority.INFO,
+                "test",
+                message = "test",
+            )
+        }
     }
 
     @Test
     fun `GIVEN we're in a debug build WHEN we log debug statements THEN logs should be forwarded`() {
-        val logSink = FenixLogSink(true)
+        val logSink = FenixLogSink(true, androidLogSink)
         logSink.log(
             mozilla.components.support.base.log.Log.Priority.DEBUG,
             "test",
             message = "test",
         )
-        verify(exactly = 1) { Log.println(Log.DEBUG, "test", "test") }
+
+        verify(exactly = 1) {
+            androidLogSink.log(
+                mozilla.components.support.base.log.Log.Priority.DEBUG,
+                "test",
+                message = "test",
+            )
+        }
     }
 }
