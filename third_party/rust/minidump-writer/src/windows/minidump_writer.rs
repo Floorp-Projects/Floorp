@@ -1,22 +1,17 @@
+#![allow(unsafe_code)]
+
 use crate::windows::errors::Error;
 use crate::windows::ffi::{
-    capture_context, GetCurrentProcess, GetCurrentThreadId, GetThreadContext, MiniDumpNormal,
-    MiniDumpWriteDump, OpenProcess, OpenThread, ResumeThread, SuspendThread, EXCEPTION_POINTERS,
-    HANDLE, MINIDUMP_EXCEPTION_INFORMATION, MINIDUMP_USER_STREAM, MINIDUMP_USER_STREAM_INFORMATION,
+    capture_context, CloseHandle, GetCurrentProcess, GetCurrentThreadId, GetThreadContext,
+    MiniDumpWriteDump, MinidumpType, OpenProcess, OpenThread, ResumeThread, SuspendThread,
+    EXCEPTION_POINTERS, EXCEPTION_RECORD, FALSE, HANDLE, MINIDUMP_EXCEPTION_INFORMATION,
+    MINIDUMP_USER_STREAM, MINIDUMP_USER_STREAM_INFORMATION, PROCESS_ALL_ACCESS,
+    STATUS_NONCONTINUABLE_EXCEPTION, THREAD_GET_CONTEXT, THREAD_QUERY_INFORMATION,
+    THREAD_SUSPEND_RESUME,
 };
 use minidump_common::format::{BreakpadInfoValid, MINIDUMP_BREAKPAD_INFO, MINIDUMP_STREAM_TYPE};
 use scroll::Pwrite;
 use std::os::windows::io::AsRawHandle;
-use winapi::{
-    shared::minwindef::FALSE,
-    um::{
-        handleapi::CloseHandle,
-        winnt::{
-            EXCEPTION_RECORD, PROCESS_ALL_ACCESS, STATUS_NONCONTINUABLE_EXCEPTION,
-            THREAD_GET_CONTEXT, THREAD_QUERY_INFORMATION, THREAD_SUSPEND_RESUME,
-        },
-    },
-};
 
 pub struct MinidumpWriter {
     /// Optional exception information
@@ -29,7 +24,7 @@ pub struct MinidumpWriter {
     tid: u32,
     /// The exception code for the dump
     #[allow(dead_code)]
-    exception_code: u32,
+    exception_code: i32,
     /// Whether we are dumping the current process or not
     is_external_process: bool,
 }
@@ -49,8 +44,9 @@ impl MinidumpWriter {
     /// function can also fail if `thread_id` is specified and we are unable to
     /// acquire the thread's context
     pub fn dump_local_context(
-        exception_code: Option<u32>,
+        exception_code: Option<i32>,
         thread_id: Option<u32>,
+        minidump_type: Option<MinidumpType>,
         destination: &mut std::fs::File,
     ) -> Result<(), Error> {
         let exception_code = exception_code.unwrap_or(STATUS_NONCONTINUABLE_EXCEPTION);
@@ -76,7 +72,7 @@ impl MinidumpWriter {
                         tid,   // thread id
                     );
 
-                    if thread_handle.is_null() {
+                    if thread_handle == 0 {
                         return Err(Error::ThreadOpen(std::io::Error::last_os_error()));
                     }
 
@@ -134,7 +130,7 @@ impl MinidumpWriter {
                 exception_code,
             };
 
-            Self::dump_crash_context(cc, destination)
+            Self::dump_crash_context(cc, minidump_type, destination)
         }
     }
 
@@ -154,6 +150,7 @@ impl MinidumpWriter {
     /// for the duration of this function call.
     pub fn dump_crash_context(
         crash_context: crash_context::CrashContext,
+        minidump_type: Option<MinidumpType>,
         destination: &mut std::fs::File,
     ) -> Result<(), Error> {
         let pid = crash_context.process_id;
@@ -167,7 +164,7 @@ impl MinidumpWriter {
                     pid,                // pid
                 );
 
-                if proc.is_null() {
+                if proc == 0 {
                     return Err(std::io::Error::last_os_error().into());
                 }
 
@@ -208,11 +205,15 @@ impl MinidumpWriter {
             is_external_process,
         };
 
-        mdw.dump(destination)
+        mdw.dump(minidump_type, destination)
     }
 
     /// Writes a minidump to the specified file
-    fn dump(mut self, destination: &mut std::fs::File) -> Result<(), Error> {
+    fn dump(
+        mut self,
+        minidump_type: Option<MinidumpType>,
+        destination: &mut std::fs::File,
+    ) -> Result<(), Error> {
         let exc_info = self.exc_info.take();
 
         let mut user_streams = Vec::with_capacity(1);
@@ -241,7 +242,7 @@ impl MinidumpWriter {
                 self.crashing_process, // HANDLE to the process with the crash we want to capture
                 self.pid,              // process id
                 destination.as_raw_handle() as HANDLE, // file to write the minidump to
-                MiniDumpNormal,        // MINIDUMP_TYPE - we _might_ want to make this configurable
+                minidump_type.unwrap_or(MinidumpType::Normal),
                 exc_info
                     .as_ref()
                     .map_or(std::ptr::null(), |ei| ei as *const _), // exceptionparam - the actual exception information
@@ -276,7 +277,7 @@ impl MinidumpWriter {
             validity: BreakpadInfoValid::DumpThreadId.bits()
                 | BreakpadInfoValid::RequestingThreadId.bits(),
             dump_thread_id: self.tid,
-            // Safety: syscall
+            // SAFETY: syscall
             requesting_thread_id: unsafe { GetCurrentThreadId() },
         };
 

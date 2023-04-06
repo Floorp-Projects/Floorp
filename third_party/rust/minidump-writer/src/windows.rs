@@ -1,3 +1,5 @@
 pub mod errors;
-pub mod ffi;
+mod ffi;
 pub mod minidump_writer;
+
+pub use ffi::MinidumpType;
