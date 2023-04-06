@@ -19,6 +19,8 @@ class InputModule extends Module {
     this.#actionState = null;
   }
 
+  destroy() {}
+
   async performActions(options) {
     const { actions } = options;
     if (this.#actionState === null) {
