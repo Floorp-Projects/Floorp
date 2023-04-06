@@ -93,8 +93,7 @@ class DocumentOrShadowRoot : public RadioGroupManager {
 
   void RemoveStyleSheet(StyleSheet&);
 
-  Element* GetElementById(const nsAString& aElementId) const;
-  Element* GetElementById(nsAtom* aElementId) const;
+  Element* GetElementById(const nsAString& aElementId);
 
   /**
    * This method returns _all_ the elements in this scope which have id
@@ -202,7 +201,7 @@ class DocumentOrShadowRoot : public RadioGroupManager {
     return true;
   }
 
-  void ReportEmptyGetElementByIdArg() const;
+  void ReportEmptyGetElementByIdArg();
 
   // Web Animations
   MOZ_CAN_RUN_SCRIPT
