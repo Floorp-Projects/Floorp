@@ -1059,19 +1059,33 @@ void js::jit::CollectPerfSpewerWasmFunctionMap(uintptr_t base, uintptr_t size,
                                  uint64_t(size), profilerRecord, lock);
 }
 
-void js::jit::PerfSpewerRangeRecorder::RecordOffset(const char* name) {
-  if (!PerfEnabled()) {
-    return;
-  }
-  if (!ranges.append(
-          std::make_pair(masm.currentOffset(), DuplicateString(name)))) {
+void js::jit::PerfSpewerRangeRecorder::appendEntry(UniqueChars& desc) {
+  if (!ranges.append(std::make_pair(masm.currentOffset(), std::move(desc)))) {
     AutoLockPerfSpewer lock;
     DisablePerfSpewer(lock);
     ranges.clear();
   }
 }
 
-void js::jit::PerfSpewerRangeRecorder::CollectRangesForJitCode(JitCode* code) {
+void js::jit::PerfSpewerRangeRecorder::recordOffset(const char* name) {
+  if (!PerfEnabled()) {
+    return;
+  }
+  UniqueChars desc = DuplicateString(name);
+  appendEntry(desc);
+}
+
+void js::jit::PerfSpewerRangeRecorder::recordOffset(const char* name,
+                                                    JSContext* cx,
+                                                    JSScript* script) {
+  if (!PerfEnabled()) {
+    return;
+  }
+  UniqueChars desc = GetFunctionDesc(name, cx, script);
+  appendEntry(desc);
+}
+
+void js::jit::PerfSpewerRangeRecorder::collectRangesForJitCode(JitCode* code) {
   if (!PerfEnabled() || ranges.empty()) {
     return;
   }
