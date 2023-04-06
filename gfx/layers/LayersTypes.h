@@ -337,6 +337,8 @@ struct RemoteTextureId {
 
   static RemoteTextureId GetNext();
 
+  static constexpr RemoteTextureId Max() { return RemoteTextureId{UINT64_MAX}; }
+
   bool IsValid() const { return mId != 0; }
 
   // Allow explicit cast to a uint64_t for now

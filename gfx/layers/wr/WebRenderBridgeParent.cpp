@@ -2273,6 +2273,29 @@ TimeDuration WebRenderBridgeParent::GetVsyncInterval() const {
   return TimeDuration();
 }
 
+class SchedulePendingRemoteTextures : public wr::NotificationHandler {
+ public:
+  SchedulePendingRemoteTextures(
+      wr::WindowId aWindowId,
+      UniquePtr<RemoteTextureInfoList>&& aPendingRemoteTextures)
+      : mWindowId(aWindowId),
+        mPendingRemoteTextures(std::move(aPendingRemoteTextures)) {}
+
+  virtual void Notify(wr::Checkpoint aCheckpoint) override {
+    if (aCheckpoint == wr::Checkpoint::FrameBuilt) {
+      wr::RenderThread::Get()->PushPendingRemoteTexture(
+          mWindowId, std::move(mPendingRemoteTextures));
+
+    } else {
+      MOZ_ASSERT(aCheckpoint == wr::Checkpoint::TransactionDropped);
+    }
+  }
+
+ protected:
+  wr::WindowId mWindowId;
+  UniquePtr<RemoteTextureInfoList> mPendingRemoteTextures;
+};
+
 void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
                                                bool aForceGenerateFrame,
                                                wr::RenderReasons aReasons) {
@@ -2345,6 +2368,14 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
 
   SetOMTASampleTime();
   SetAPZSampleTime();
+
+  auto pendingTextures = mAsyncImageManager->GetPendingRemoteTextures();
+  if (pendingTextures) {
+    MOZ_ASSERT(!pendingTextures->mList.empty());
+    fastTxn.Notify(wr::Checkpoint::FrameBuilt,
+                   MakeUnique<SchedulePendingRemoteTextures>(
+                       mApi->GetId(), std::move(pendingTextures)));
+  }
 
 #if defined(ENABLE_FRAME_LATENCY_LOG)
   auto startTime = TimeStamp::Now();
