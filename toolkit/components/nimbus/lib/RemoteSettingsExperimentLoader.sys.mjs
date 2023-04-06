@@ -7,7 +7,6 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  _ExperimentFeature: "resource://nimbus/ExperimentAPI.sys.mjs",
   ExperimentManager: "resource://nimbus/lib/ExperimentManager.sys.mjs",
   JsonSchema: "resource://gre/modules/JsonSchema.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
@@ -377,10 +376,6 @@ export class EnrollmentsContext {
     this.invalidBranches = new Map();
     this.invalidFeatures = new Map();
     this.validatorCache = {};
-    this.missingLocale = [];
-    this.missingL10nIds = new Map();
-
-    this.locale = Services.locale.appLocaleAsBCP47;
   }
 
   getResults() {
@@ -389,9 +384,6 @@ export class EnrollmentsContext {
       invalidRecipes: this.invalidRecipes,
       invalidBranches: this.invalidBranches,
       invalidFeatures: this.invalidFeatures,
-      missingLocale: this.missingLocale,
-      missingL10nIds: this.missingL10nIds,
-      locale: this.locale,
       validationEnabled: this.validationEnabled,
     };
   }
@@ -409,7 +401,7 @@ export class EnrollmentsContext {
       return false;
     }
 
-    const validateFeatureSchemas =
+    const validateFeatures =
       this.validationEnabled && !recipe.featureValidationOptOut;
 
     if (this.validationEnabled) {
@@ -474,35 +466,18 @@ export class EnrollmentsContext {
 
     this.matches++;
 
-    if (
-      typeof recipe.localizations === "object" &&
-      recipe.localizations !== null
-    ) {
-      if (
-        typeof recipe.localizations[this.locale] !== "object" ||
-        recipe.localizations[this.locale] === null
-      ) {
-        this.missingLocale.push(recipe.slug);
-        lazy.log.debug(
-          `${recipe.id} is localized but missing locale ${this.locale}`
-        );
+    if (validateFeatures) {
+      const result = await this._validateBranches(recipe);
+      if (!result.valid) {
+        if (result.invalidBranchSlugs.length) {
+          this.invalidBranches.set(recipe.slug, result.invalidBranchSlugs);
+        }
+        if (result.invalidFeatureIds.length) {
+          this.invalidFeatures.set(recipe.slug, result.invalidFeatureIds);
+        }
+        lazy.log.debug(`${recipe.id} did not validate`);
         return false;
       }
-    }
-
-    const result = await this._validateBranches(recipe, validateFeatureSchemas);
-    if (!result.valid) {
-      if (result.invalidBranchSlugs.length) {
-        this.invalidBranches.set(recipe.slug, result.invalidBranchSlugs);
-      }
-      if (result.invalidFeatureIds.length) {
-        this.invalidFeatures.set(recipe.slug, result.invalidFeatureIds);
-      }
-      if (result.missingL10nIds.length) {
-        this.missingL10nIds.set(recipe.slug, result.missingL10nIds);
-      }
-      lazy.log.debug(`${recipe.id} did not validate`);
-      return false;
     }
 
     return true;
@@ -563,94 +538,67 @@ export class EnrollmentsContext {
   }
 
   /**
-   * Validate the branches of an experiment.
+   * Validate the branches of an experiment using schemas
    *
    * @param {object} recipe The recipe object.
-   * @param {boolean} validateSchema Whether to validate the feature values
-   *        using JSON schemas.
+   * @param {object} validatorCache A cache of JSON Schema validators keyed by feature
+   *                                ID.
    *
    * @returns {object} The lists of invalid branch slugs and invalid feature
    *                   IDs.
    */
-  async _validateBranches({ id, branches, localizations }, validateSchema) {
+  async _validateBranches({ id, branches }) {
     const invalidBranchSlugs = [];
     const invalidFeatureIds = new Set();
-    const missingL10nIds = new Set();
 
-    if (validateSchema || typeof localizations !== "undefined") {
-      for (const [branchIdx, branch] of branches.entries()) {
-        const features = branch.features ?? [branch.feature];
-        for (const feature of features) {
-          const { featureId, value } = feature;
-          if (!lazy.NimbusFeatures[featureId]) {
-            console.error(
-              `Experiment ${id} has unknown featureId: ${featureId}`
+    for (const [branchIdx, branch] of branches.entries()) {
+      const features = branch.features ?? [branch.feature];
+      for (const feature of features) {
+        const { featureId, value } = feature;
+        if (!lazy.NimbusFeatures[featureId]) {
+          console.error(`Experiment ${id} has unknown featureId: ${featureId}`);
+
+          invalidFeatureIds.add(featureId);
+          continue;
+        }
+
+        let validator;
+        if (this.validatorCache[featureId]) {
+          validator = this.validatorCache[featureId];
+        } else if (lazy.NimbusFeatures[featureId].manifest.schema?.uri) {
+          const uri = lazy.NimbusFeatures[featureId].manifest.schema.uri;
+          try {
+            const schema = await fetch(uri, { credentials: "omit" }).then(rsp =>
+              rsp.json()
             );
 
-            invalidFeatureIds.add(featureId);
-            continue;
+            validator = this.validatorCache[
+              featureId
+            ] = new lazy.JsonSchema.Validator(schema);
+          } catch (e) {
+            throw new Error(
+              `Could not fetch schema for feature ${featureId} at "${uri}": ${e}`
+            );
           }
+        } else {
+          const schema = this._generateVariablesOnlySchema(
+            lazy.NimbusFeatures[featureId]
+          );
+          validator = this.validatorCache[
+            featureId
+          ] = new lazy.JsonSchema.Validator(schema);
+        }
 
-          let substitutedValue = value;
-
-          if (localizations) {
-            // We already know that we have a localization table for this locale
-            // because we checked in `checkRecipe`.
-            try {
-              substitutedValue = lazy._ExperimentFeature.substituteLocalizations(
-                value,
-                localizations[Services.locale.appLocaleAsBCP47],
-                missingL10nIds
-              );
-            } catch (e) {
-              if (e?.reason === "l10n-missing-entry") {
-                // Skip validation because it *will* fail.
-                continue;
-              }
-              throw e;
-            }
-          }
-
-          if (validateSchema) {
-            let validator;
-            if (this.validatorCache[featureId]) {
-              validator = this.validatorCache[featureId];
-            } else if (lazy.NimbusFeatures[featureId].manifest.schema?.uri) {
-              const uri = lazy.NimbusFeatures[featureId].manifest.schema.uri;
-              try {
-                const schema = await fetch(uri, {
-                  credentials: "omit",
-                }).then(rsp => rsp.json());
-
-                validator = this.validatorCache[
-                  featureId
-                ] = new lazy.JsonSchema.Validator(schema);
-              } catch (e) {
-                throw new Error(
-                  `Could not fetch schema for feature ${featureId} at "${uri}": ${e}`
-                );
-              }
-            } else {
-              const schema = this._generateVariablesOnlySchema(
-                lazy.NimbusFeatures[featureId]
-              );
-              validator = this.validatorCache[
-                featureId
-              ] = new lazy.JsonSchema.Validator(schema);
-            }
-
-            const result = validator.validate(substitutedValue);
-            if (!result.valid) {
-              console.error(
-                `Experiment ${id} branch ${branchIdx} feature ${featureId} does not validate: ${JSON.stringify(
-                  result.errors,
-                  undefined,
-                  2
-                )}`
-              );
-              invalidBranchSlugs.push(branch.slug);
-            }
-          }
+        const result = validator.validate(value);
+        if (!result.valid) {
+          console.error(
+            `Experiment ${id} branch ${branchIdx} feature ${featureId} does not validate: ${JSON.stringify(
+              result.errors,
+              undefined,
+              2
+            )}`
+          );
+          invalidBranchSlugs.push(branch.slug);
         }
       }
     }
@@ -658,11 +606,7 @@ export class EnrollmentsContext {
     return {
       invalidBranchSlugs,
       invalidFeatureIds: Array.from(invalidFeatureIds),
-      missingL10nIds: Array.from(missingL10nIds),
-      valid:
-        invalidBranchSlugs.length === 0 &&
-        invalidFeatureIds.size === 0 &&
-        missingL10nIds.size === 0,
+      valid: invalidBranchSlugs.length === 0 && invalidFeatureIds.size === 0,
     };
   }
 
