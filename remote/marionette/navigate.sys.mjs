@@ -405,6 +405,7 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
       }
     },
     {
+      errorMessage: "Navigation timed out",
       timeout: driver.currentSession.timeouts.pageLoad,
     }
   ).finally(() => {
