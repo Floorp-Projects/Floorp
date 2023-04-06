@@ -129,6 +129,15 @@ DefaultJitOptions::DefaultJitOptions() {
   // Whether the Baseline Interpreter is enabled.
   SET_DEFAULT(baselineInterpreter, true);
 
+  // Emit baseline interpreter and interpreter entry frames to distinguish which
+  // JSScript is being interpreted by external profilers.
+  // Enabled by default under --enable-perf, otherwise disabled.
+#if defined(JS_ION_PERF)
+  SET_DEFAULT(emitInterpreterEntryTrampoline, true);
+#else
+  SET_DEFAULT(emitInterpreterEntryTrampoline, false);
+#endif
+
   // Whether the Baseline JIT is enabled.
   SET_DEFAULT(baselineJit, true);
 
