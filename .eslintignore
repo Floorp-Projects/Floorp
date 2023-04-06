@@ -1,6 +1,9 @@
 # Please DO NOT add more third party files to this file.
 # They should be added to tools/rewriting/ThirdPartyPaths.txt instead.
 
+# If you update this file, please add to the .eslintignore setion in
+# .prettierignore as well.
+
 # This file should only be used for exclusions where we have:
 # - preprocessed files
 # - generated files that are for some reason checked into source
