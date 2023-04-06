@@ -332,10 +332,10 @@ class ToastHandler : public WinToastLib::IWinToastHandler {
     activitiesPerformed.shown = NotificationShown::Shown;
     activitiesPerformed.action = NotificationAction::ToastClicked;
 
-    // An activation without clicking a specific button does not clearly
-    // signal that the default should be changed, so just show the settings
-    // dialog instead of SetDefaultBrowserFromNotification().
-    LaunchModernSettingsDialogDefaultApps();
+    // Notification strings are written to indicate the default browser is
+    // restored to Firefox when the notification body is clicked to prevent
+    // ambiguity when buttons aren't pressed.
+    SetDefaultBrowserFromNotification(mAumiStr.c_str());
 
     FinishHandler(activitiesPerformed);
   }
