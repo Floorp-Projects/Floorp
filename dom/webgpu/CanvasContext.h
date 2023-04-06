@@ -85,7 +85,6 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
   void Configure(const dom::GPUCanvasConfiguration& aDesc);
   void Unconfigure();
 
-  dom::GPUTextureFormat GetPreferredFormat(Adapter& aAdapter) const;
   RefPtr<Texture> GetCurrentTexture(ErrorResult& aRv);
   void MaybeQueueSwapChainPresent();
   void SwapChainPresent();
