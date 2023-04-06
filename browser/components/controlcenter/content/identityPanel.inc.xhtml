@@ -147,25 +147,25 @@
 
           <!-- Active Mixed Content Blocked -->
           <description class="identity-popup-warning-box identity-popup-warning-gray"
-                       when-mixedcontent="active-blocked"
-                       data-l10n-id="identity-description-active-blocked">
-            <label data-l10n-name="link" is="text-link" class="identity-popup-mcb-learn-more"/>
+                       when-mixedcontent="active-blocked">
+            <label data-l10n-id="identity-description-active-blocked2"/>
+            <html:a is="moz-support-link" class="identity-popup-mcb-learn-more" support-page="mixed-content"/>
           </description>
 
           <!-- Passive Mixed Content Loaded -->
           <description when-mixedcontent="passive-loaded" data-l10n-id="identity-description-passive-loaded"></description>
           <description class="identity-popup-warning-box identity-popup-warning-yellow"
-                       when-mixedcontent="passive-loaded"
-                       data-l10n-id="identity-description-passive-loaded-insecure">
-            <label data-l10n-name="link" is="text-link" class="identity-popup-mcb-learn-more"/>
+                       when-mixedcontent="passive-loaded">
+            <label data-l10n-id="identity-description-passive-loaded-insecure2"/>
+            <html:a is="moz-support-link" class="identity-popup-mcb-learn-more" support-page="mixed-content"/>
           </description>
 
           <!-- Passive Mixed Content Loaded, Active Mixed Content Blocked -->
           <description when-mixedcontent="passive-loaded active-blocked" data-l10n-id="identity-description-passive-loaded"></description>
           <description when-mixedcontent="passive-loaded active-blocked"
-                       class="identity-popup-warning-box identity-popup-warning-yellow"
-                       data-l10n-id="identity-description-passive-loaded-mixed">
-            <label data-l10n-name="link" is="text-link" class="identity-popup-mcb-learn-more"/>
+                       class="identity-popup-warning-box identity-popup-warning-yellow">
+            <label data-l10n-id="identity-description-passive-loaded-mixed2"/>
+            <html:a is="moz-support-link" class="identity-popup-mcb-learn-more" support-page="mixed-content"/>
           </description>
 
           <!-- Active Mixed Content Blocking Disabled -->
@@ -174,8 +174,8 @@
           <description when-mixedcontent="active-loaded"
                        data-l10n-id="identity-description-active-loaded-insecure"></description>
           <hbox>
-            <label when-mixedcontent="active-loaded"
-                       and-when-loginforms="secure" is="text-link" class="identity-popup-mcb-learn-more" data-l10n-id="identity-learn-more"/>
+            <html:a is="moz-support-link" when-mixedcontent="active-loaded"
+                       and-when-loginforms="secure" class="identity-popup-mcb-learn-more" support-page="mixed-content"/>
           </hbox>
 
 
