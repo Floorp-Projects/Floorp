@@ -268,10 +268,6 @@
   font-weight: 600;
 }
 
-#identity-popup-securityView-extended-info > .identity-popup-warning-box > label {
-  display: inline-block;
-}
-
 #identity-popup-securityView-extended-info > button {
   margin-inline: 0;
 }

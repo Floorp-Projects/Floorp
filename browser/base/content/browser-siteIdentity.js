@@ -166,7 +166,6 @@ var gIdentityHandler = {
 
   _popupInitialized: false,
   _initializePopup() {
-    window.ensureCustomElements("moz-support-link");
     if (!this._popupInitialized) {
       let wrapper = document.getElementById("template-identity-popup");
       wrapper.replaceWith(wrapper.content);
@@ -929,6 +928,9 @@ var gIdentityHandler = {
 
     // Update "Learn More" for Mixed Content Blocking and Insecure Login Forms.
     let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
+    this._identityPopupMixedContentLearnMore.forEach(e =>
+      e.setAttribute("href", baseURL + "mixed-content")
+    );
 
     this._identityPopupCustomRootLearnMore.setAttribute(
       "href",
