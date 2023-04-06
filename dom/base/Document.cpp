@@ -14923,7 +14923,7 @@ void Document::HidePopover(Element& aPopover, bool aFocusPreviousElement,
       PopoverVisibilityState::Hidden);
 
   // TODO: Queue popover toggle event task.
-  // TODO: Handle element focus.
+  popoverHTMLEl->HandleFocusAfterHidingPopover(aFocusPreviousElement);
 }
 
 nsTArray<Element*> Document::AutoPopoverList() const {

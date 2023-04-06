@@ -3225,12 +3225,29 @@ void nsGenericHTMLElement::ShowPopover(ErrorResult& aRv) {
     return;
   }
   // TODO: Run auto popover steps.
+
+  const bool shouldRestoreFocus = !OwnerDoc()->GetTopmostAutoPopover();
+  // Let originallyFocusedElement be document's focused area of the document's
+  // DOM anchor.
+  nsWeakPtr originallyFocusedElement;
+  if (Document* doc = GetComposedDoc()) {
+    if (nsIContent* unretargetedFocus = doc->GetUnretargetedFocusedContent()) {
+      originallyFocusedElement =
+          do_GetWeakReference(unretargetedFocus->AsElement());
+    }
+  }
+
   // TODO: Add to Top Layer.
 
   PopoverPseudoStateUpdate(true, true);
   GetPopoverData()->SetPopoverVisibilityState(PopoverVisibilityState::Showing);
 
-  // TODO: Handle popover focusing.
+  // Run the popover focusing steps given element.
+  FocusPopover();
+  if (shouldRestoreFocus && GetPopoverState() != PopoverState::None) {
+    GetPopoverData()->SetPreviouslyFocusedElement(originallyFocusedElement);
+  }
+
   // TODO: Queue popover toggle event task.
 }
 
@@ -3249,6 +3266,25 @@ void nsGenericHTMLElement::HidePopoverInternal(bool aFocusPreviousElement,
                                                bool aFireEvents,
                                                ErrorResult& aRv) {
   OwnerDoc()->HidePopover(*this, aFocusPreviousElement, aFireEvents, aRv);
+}
+
+void nsGenericHTMLElement::HandleFocusAfterHidingPopover(
+    bool aFocusPreviousElement) {
+  auto* data = GetPopoverData();
+  MOZ_ASSERT(data, "Should have popover data");
+
+  RefPtr<Element> control =
+      do_QueryReferent(data->GetPreviouslyFocusedElement().get());
+  data->SetPreviouslyFocusedElement(nullptr);
+
+  if (!control || !aFocusPreviousElement) {
+    return;
+  }
+
+  // Run the focusing steps for previouslyFocusedElement
+  FocusOptions options;
+  options.mPreventScroll = true;
+  control->Focus(options, CallerType::NonSystem, IgnoreErrors());
 }
 
 // https://html.spec.whatwg.org/multipage/popover.html#dom-togglepopover
