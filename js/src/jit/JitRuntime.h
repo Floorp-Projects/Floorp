@@ -264,7 +264,11 @@ class JitRuntime {
     return TrampolinePtr(trampolineCode_->raw() + offset);
   }
 
+  void generateBaselineInterpreterEntryTrampoline(MacroAssembler& masm);
+
  public:
+  JitCode* generateEntryTrampolineForScript(JSContext* cx, JSScript* script);
+
   JitRuntime() = default;
   ~JitRuntime();
   [[nodiscard]] bool initialize(JSContext* cx);
