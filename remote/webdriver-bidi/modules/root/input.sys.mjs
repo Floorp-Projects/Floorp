@@ -27,6 +27,13 @@ class InputModule extends Module {
     );
 
     const context = lazy.TabManager.getBrowsingContextById(contextId);
+    if (!context) {
+      throw new lazy.error.NoSuchFrameError(
+        `Browsing context with id ${contextId} not found`
+      );
+    }
+
+    // Bug 1821460: Fetch top-level browsing context.
 
     await this.messageHandler.forwardCommand({
       moduleName: "input",
