@@ -272,10 +272,6 @@ criteria = "safe-to-deploy"
 version = "1.0.9"
 criteria = "safe-to-deploy"
 
-[[exemptions.cargo-platform]]
-version = "0.1.2"
-criteria = "safe-to-deploy"
-
 [[exemptions.cexpr]]
 version = "0.6.0"
 criteria = "safe-to-deploy"
@@ -486,14 +482,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.float-cmp]]
 version = "0.6.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.foreign-types]]
-version = "0.3.2"
-criteria = "safe-to-deploy"
-
-[[exemptions.foreign-types-shared]]
-version = "0.1.1"
 criteria = "safe-to-deploy"
 
 [[exemptions.freetype]]
@@ -862,14 +850,6 @@ criteria = "safe-to-deploy"
 version = "0.2.9"
 criteria = "safe-to-deploy"
 
-[[exemptions.pin-utils]]
-version = "0.1.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.pkg-config]]
-version = "0.3.25"
-criteria = "safe-to-deploy"
-
 [[exemptions.plain]]
 version = "0.2.3"
 criteria = "safe-to-deploy"
@@ -1064,10 +1044,6 @@ criteria = "safe-to-run"
 
 [[exemptions.siphasher]]
 version = "0.3.10"
-criteria = "safe-to-deploy"
-
-[[exemptions.slab]]
-version = "0.4.6"
 criteria = "safe-to-deploy"
 
 [[exemptions.smallbitvec]]
