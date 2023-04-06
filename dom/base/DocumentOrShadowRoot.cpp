@@ -225,16 +225,28 @@ void DocumentOrShadowRoot::CloneAdoptedSheetsFrom(
   }
 }
 
-Element* DocumentOrShadowRoot::GetElementById(const nsAString& aElementId) {
+Element* DocumentOrShadowRoot::GetElementById(
+    const nsAString& aElementId) const {
   if (MOZ_UNLIKELY(aElementId.IsEmpty())) {
-    nsContentUtils::ReportEmptyGetElementByIdArg(AsNode().OwnerDoc());
+    ReportEmptyGetElementByIdArg();
     return nullptr;
   }
 
   if (IdentifierMapEntry* entry = mIdentifierMap.GetEntry(aElementId)) {
-    if (Element* el = entry->GetIdElement()) {
-      return el;
-    }
+    return entry->GetIdElement();
+  }
+
+  return nullptr;
+}
+
+Element* DocumentOrShadowRoot::GetElementById(nsAtom* aElementId) const {
+  if (MOZ_UNLIKELY(aElementId == nsGkAtoms::_empty)) {
+    ReportEmptyGetElementByIdArg();
+    return nullptr;
+  }
+
+  if (IdentifierMapEntry* entry = mIdentifierMap.GetEntry(aElementId)) {
+    return entry->GetIdElement();
   }
 
   return nullptr;
@@ -578,7 +590,7 @@ Element* DocumentOrShadowRoot::LookupImageElement(const nsAString& aId) {
   return entry ? entry->GetImageIdElement() : nullptr;
 }
 
-void DocumentOrShadowRoot::ReportEmptyGetElementByIdArg() {
+void DocumentOrShadowRoot::ReportEmptyGetElementByIdArg() const {
   nsContentUtils::ReportEmptyGetElementByIdArg(AsNode().OwnerDoc());
 }
 

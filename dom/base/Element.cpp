@@ -1727,18 +1727,22 @@ Element* Element::GetAttrAssociatedElement(nsAtom* aAttr) const {
     }
   }
 
-  nsAutoString value;
-  if (!GetAttr(aAttr, value)) {
+  const nsAttrValue* value = GetParsedAttr(aAttr);
+  if (!value) {
     return nullptr;
   }
 
+  nsAtom* valueAtom = value->GetAtomValue();
+  MOZ_ASSERT(valueAtom,
+             "Attribute used for attr associated element must be parsed");
+
   if (auto* docOrShadowRoot = GetContainingDocumentOrShadowRoot()) {
-    return docOrShadowRoot->GetElementById(value);
+    return docOrShadowRoot->GetElementById(valueAtom);
   }
 
   nsINode* root = SubtreeRoot();
   for (auto* node = root; node; node = node->GetNextNode(root)) {
-    if (node->HasID() && node->AsContent()->GetID()->Equals(value)) {
+    if (node->HasID() && node->AsContent()->GetID() == valueAtom) {
       return node->AsElement();
     }
   }
