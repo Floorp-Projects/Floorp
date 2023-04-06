@@ -16,6 +16,7 @@ const MESSAGE_TYPES = {
 
 export default {
   title: "Design System/Components/Message Bar",
+  component: "message-bar",
   argTypes: {
     type: {
       options: Object.keys(MESSAGE_TYPES),
@@ -23,13 +24,19 @@ export default {
       control: { type: "select" },
     },
   },
+  parameters: {
+    fluent: `
+message-bar-text = A very expressive and slightly whimsical message goes here.
+message-bar-button = Click me, please!
+    `,
+  },
 };
 
 const Template = ({ dismissable, type }) =>
   html`
     <message-bar type=${type} ?dismissable=${dismissable}>
-      <span>A very expressive and slightly whimsical message goes here.</span>
-      <button>Click me, please!</button>
+      <span data-l10n-id="message-bar-text"></span>
+      <button data-l10n-id="message-bar-button"></button>
     </message-bar>
   `;
 

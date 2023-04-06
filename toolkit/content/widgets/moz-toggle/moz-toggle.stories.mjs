@@ -14,6 +14,15 @@ export default {
     actions: {
       handles: ["toggle"],
     },
+    fluent: `
+moz-toggle-aria-label =
+  .aria-label = This is the aria-label
+moz-toggle-label =
+  .label = This is the label
+moz-toggle-description =
+  .label = This is the label
+  .description = This is the description.
+    `,
   },
 };
 
@@ -23,6 +32,7 @@ const Template = ({
   label,
   description,
   ariaLabel,
+  l10nId,
   hasSupportLink,
 }) => html`
   <div style="max-width: 400px">
@@ -32,6 +42,8 @@ const Template = ({
       label=${ifDefined(label)}
       description=${ifDefined(description)}
       aria-label=${ifDefined(ariaLabel)}
+      data-l10n-id=${ifDefined(l10nId)}
+      data-l10n-attrs="aria-label, description, label"
     >
       ${hasSupportLink
         ? html`
@@ -50,7 +62,7 @@ export const Toggle = Template.bind({});
 Toggle.args = {
   pressed: true,
   disabled: false,
-  ariaLabel: "This is the aria-label",
+  l10nId: "moz-toggle-aria-label",
 };
 
 export const ToggleDisabled = Template.bind({});
@@ -63,14 +75,14 @@ export const WithLabel = Template.bind({});
 WithLabel.args = {
   pressed: true,
   disabled: false,
-  label: "This is the label",
+  l10nId: "moz-toggle-label",
   hasSupportLink: false,
 };
 
 export const WithDescription = Template.bind({});
 WithDescription.args = {
   ...WithLabel.args,
-  description: "This is the description.",
+  l10nId: "moz-toggle-description",
 };
 
 export const WithSupportLink = Template.bind({});

@@ -8,10 +8,20 @@ import { html, ifDefined } from "lit.all.mjs";
 
 export default {
   title: "Design System/Components/Panel Menu",
+  component: "panel-list",
   parameters: {
     actions: {
       handles: ["click"],
     },
+    fluent: `
+panel-list-item-one = Item One
+panel-list-item-two = Item Two (accesskey w)
+panel-list-item-three = Item Three
+panel-list-checked = Checked
+panel-list-badged = Badged, look at me
+panel-list-passwords = Passwords
+panel-list-settings = Settings
+    `,
   },
 };
 
@@ -82,9 +92,8 @@ const Template = ({ isOpen, items, wideAnchor }) =>
                 ?checked=${i.checked}
                 ?badged=${i.badged}
                 accesskey=${ifDefined(i.accesskey)}
-              >
-                ${i.text ?? i}
-              </panel-item>
+                data-l10n-id=${i.l10nId ?? i}
+              ></panel-item>
             `
       )}
     </panel-list>
@@ -95,12 +104,12 @@ Simple.args = {
   isOpen: false,
   wideAnchor: false,
   items: [
-    "Item One",
-    { text: "Item Two (accesskey w)", accesskey: "w" },
-    "Item Three",
+    "panel-list-item-one",
+    { l10nId: "panel-list-item-two", accesskey: "w" },
+    "panel-list-item-three",
     "<hr>",
-    { text: "Checked", checked: true },
-    { text: "Badged, look at me", badged: true, icon: "settings" },
+    { l10nId: "panel-list-checked", checked: true },
+    { l10nId: "panel-list-badged", badged: true, icon: "settings" },
   ],
 };
 
@@ -109,8 +118,8 @@ Icons.args = {
   isOpen: false,
   wideAnchor: false,
   items: [
-    { text: "Passwords", icon: "passwords" },
-    { text: "Settings", icon: "settings" },
+    { l10nId: "panel-list-passwords", icon: "passwords" },
+    { l10nId: "panel-list-settings", icon: "settings" },
   ],
 };
 
