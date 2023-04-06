@@ -1,13 +1,10 @@
 ChromeUtils.defineESModuleGetters(this, {
   Downloads: "resource://gre/modules/Downloads.sys.mjs",
   FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
+  PermissionTestUtils: "resource://testing-common/PermissionTestUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   Sanitizer: "resource:///modules/Sanitizer.sys.mjs",
   SiteDataTestUtils: "resource://testing-common/SiteDataTestUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  PermissionTestUtils: "resource://testing-common/PermissionTestUtils.jsm",
 });
 
 function createIndexedDB(host, originAttributes) {

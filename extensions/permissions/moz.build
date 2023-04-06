@@ -7,7 +7,7 @@
 TEST_DIRS += ["test"]
 
 TESTING_JS_MODULES += [
-    "test/PermissionTestUtils.jsm",
+    "test/PermissionTestUtils.sys.mjs",
 ]
 
 EXPORTS.mozilla += [

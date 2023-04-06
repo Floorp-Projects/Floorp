@@ -12,8 +12,8 @@ const {
   "resource://gre/modules/addons/siteperms-addon-utils.sys.mjs"
 );
 
-const { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
+const { PermissionTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PermissionTestUtils.sys.mjs"
 );
 
 const addonsBundle = new Localization(["toolkit/about/aboutAddons.ftl"], true);

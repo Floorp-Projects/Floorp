@@ -6,11 +6,11 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   DownloadSpamProtection: "resource:///modules/DownloadSpamProtection.sys.mjs",
+  PermissionTestUtils: "resource://testing-common/PermissionTestUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  PermissionTestUtils: "resource://testing-common/PermissionTestUtils.jsm",
 });
 
 const TEST_URI = "https://example.com";

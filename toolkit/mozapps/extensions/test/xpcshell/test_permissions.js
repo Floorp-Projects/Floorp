@@ -5,8 +5,8 @@
 // Checks that permissions set in preferences are correctly imported but can
 // be removed by the user.
 
-const { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
+const { PermissionTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PermissionTestUtils.sys.mjs"
 );
 
 const XPI_MIMETYPE = "application/x-xpinstall";

@@ -18,8 +18,8 @@ const { updateAppInfo, getAppInfo } = ChromeUtils.importESModule(
 const { FileTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/FileTestUtils.sys.mjs"
 );
-const { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
+const { PermissionTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PermissionTestUtils.sys.mjs"
 );
 ChromeUtils.defineESModuleGetters(lazy, {
   SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",

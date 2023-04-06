@@ -6,8 +6,8 @@
 const { WebChannel } = ChromeUtils.importESModule(
   "resource://gre/modules/WebChannel.sys.mjs"
 );
-const { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
+const { PermissionTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PermissionTestUtils.sys.mjs"
 );
 
 const ERROR_ID_ORIGIN_REQUIRED =
