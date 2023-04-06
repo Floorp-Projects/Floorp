@@ -1310,6 +1310,15 @@ static void TraceJitExitFrame(JSTracer* trc, const JSJitFrameIter& frame) {
   TraceJitExitFrameCopiedArguments(trc, f, footer);
 }
 
+static void TraceBaselineInterpreterEntryFrame(JSTracer* trc,
+                                               const JSJitFrameIter& frame) {
+  // Baseline Interpreter entry code generated under --emit-interpreter-entry.
+  BaselineInterpreterEntryFrameLayout* layout =
+      (BaselineInterpreterEntryFrameLayout*)frame.fp();
+  layout->replaceCalleeToken(TraceCalleeToken(trc, layout->calleeToken()));
+  TraceThisAndArguments(trc, frame, layout);
+}
+
 static void TraceRectifierFrame(JSTracer* trc, const JSJitFrameIter& frame) {
   // Trace thisv.
   //
@@ -1362,6 +1371,9 @@ static void TraceJitActivation(JSTracer* trc, JitActivation* activation) {
           break;
         case FrameType::Bailout:
           TraceBailoutFrame(trc, jitFrame);
+          break;
+        case FrameType::BaselineInterpreterEntry:
+          TraceBaselineInterpreterEntryFrame(trc, jitFrame);
           break;
         case FrameType::Rectifier:
           TraceRectifierFrame(trc, jitFrame);
@@ -1438,6 +1450,12 @@ void GetPcScript(JSContext* cx, JSScript** scriptRes, jsbytecode** pcRes) {
   uint8_t* retAddr;
   if (it.frame().isExitFrame()) {
     ++it;
+
+    // Skip baseline interpreter entry frames.
+    // Can exist before rectifier frames.
+    if (it.frame().isBaselineInterpreterEntry()) {
+      ++it;
+    }
 
     // Skip rectifier frames.
     if (it.frame().isRectifier()) {
@@ -2477,9 +2495,12 @@ void AssertJitStackInvariants(JSContext* cx) {
         prevFrameSize = frameSize;
         frameSize = callerFp - calleeFp;
 
-        if (frames.isScripted() && frames.prevType() == FrameType::Rectifier) {
-          MOZ_RELEASE_ASSERT(frameSize % JitStackAlignment == 0,
-                             "The rectifier frame should keep the alignment");
+        if (frames.isScripted() &&
+            (frames.prevType() == FrameType::Rectifier ||
+             frames.prevType() == FrameType::BaselineInterpreterEntry)) {
+          MOZ_RELEASE_ASSERT(
+              frameSize % JitStackAlignment == 0,
+              "The rectifier and bli entry frame should keep the alignment");
 
           size_t expectedFrameSize =
               sizeof(Value) *

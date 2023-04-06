@@ -2287,6 +2287,11 @@ static void InvalidateActivation(JS::GCContext* gcx,
         JitSpew(JitSpew_IonInvalidate, "#%zu baseline stub frame @ %p", frameno,
                 frame.fp());
         break;
+      case FrameType::BaselineInterpreterEntry:
+        JitSpew(JitSpew_IonInvalidate,
+                "#%zu baseline interpreter entry frame @ %p", frameno,
+                frame.fp());
+        break;
       case FrameType::Rectifier:
         JitSpew(JitSpew_IonInvalidate, "#%zu rectifier frame @ %p", frameno,
                 frame.fp());
