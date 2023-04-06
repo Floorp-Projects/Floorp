@@ -26,6 +26,7 @@
 #include "mozilla/layers/SurfacePool.h"
 #include "mozilla/layers/SynchronousTask.h"
 #include "mozilla/PerfStats.h"
+#include "mozilla/StaticPrefs_webgl.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/webrender/RendererOGL.h"
@@ -384,6 +385,56 @@ size_t RenderThread::ActiveRendererCount() const {
   return num_active;
 }
 
+void RenderThread::PushPendingRemoteTexture(
+    wr::WindowId aWindowId,
+    UniquePtr<layers::RemoteTextureInfoList>&& aPendingRemoteTextures) {
+  auto windows = mWindowInfos.Lock();
+  auto it = windows->find(AsUint64(aWindowId));
+  if (it == windows->end()) {
+    MOZ_ASSERT(false);
+    return;
+  }
+  WindowInfo* info = it->second.get();
+
+  info->mPendingWrNotifierEvents.emplace(WrNotifierEvent::PendingRemoteTextures(
+      std::move(aPendingRemoteTextures)));
+}
+
+bool RenderThread::CheckIsRemoteTextureReady(
+    WrWindowId aWindowId, layers::RemoteTextureInfoList* aList) {
+  MOZ_ASSERT(aList);
+  MOZ_ASSERT(gfx::gfxVars::UseCanvasRenderThread());
+  MOZ_ASSERT(StaticPrefs::webgl_out_of_process_async_present());
+  MOZ_ASSERT(!gfx::gfxVars::WebglOopAsyncPresentForceSync());
+
+  auto callback = [windowId = aWindowId]() {
+    RefPtr<nsIRunnable> runnable = NewRunnableMethod<WrWindowId>(
+        "RenderThread::HandleWrNotifierEvents", RenderThread::Get(),
+        &RenderThread::HandleWrNotifierEvents, windowId);
+    RenderThread::Get()->PostRunnable(runnable.forget());
+  };
+
+  bool isReady = true;
+  while (!aList->mList.empty() && isReady) {
+    auto& front = aList->mList.front();
+    isReady &= layers::RemoteTextureMap::Get()->CheckRemoteTextureReady(
+        front, callback);
+    if (isReady) {
+      aList->mList.pop();
+    }
+  }
+
+  {
+    auto windows = mWindowInfos.Lock();
+    auto it = windows->find(AsUint64(aWindowId));
+    MOZ_RELEASE_ASSERT(it != windows->end());
+    WindowInfo* info = it->second.get();
+    info->mIsWaitingRemoteTextureReady = !isReady;
+  }
+
+  return isReady;
+}
+
 void RenderThread::WrNotifierEvent_WakeUp(WrWindowId aWindowId,
                                           bool aCompositeNeeded) {
   auto windows = mWindowInfos.Lock();
@@ -454,6 +505,11 @@ void RenderThread::PostWrNotifierEvents(WrWindowId aWindowId,
     return;
   }
 
+  // Waitig callback from RemoteTextureMap
+  if (aInfo->mIsWaitingRemoteTextureReady) {
+    return;
+  }
+
   // Runnable has not been triggered yet.
   RefPtr<nsIRunnable> runnable = NewRunnableMethod<WrWindowId>(
       "RenderThread::HandleWrNotifierEvents", this,
@@ -502,6 +558,13 @@ void RenderThread::HandleWrNotifierEvents(WrWindowId aWindowId) {
         break;
       case WrNotifierEvent::Tag::ExternalEvent:
         WrNotifierEvent_HandleExternalEvent(aWindowId, front.ExternalEvent());
+        break;
+      case WrNotifierEvent::Tag::PendingRemoteTextures:
+        bool isReady =
+            CheckIsRemoteTextureReady(aWindowId, front.RemoteTextureInfoList());
+        if (!isReady) {
+          return;
+        }
         break;
     }
     events->pop();

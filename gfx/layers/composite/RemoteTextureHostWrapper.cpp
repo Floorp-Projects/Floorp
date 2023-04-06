@@ -191,6 +191,10 @@ bool RemoteTextureHostWrapper::CheckIsReadyForRendering() {
   return !!mRemoteTextureForDisplayList;
 }
 
+bool RemoteTextureHostWrapper::IsReadyForRendering() {
+  return !!mRemoteTextureForDisplayList;
+}
+
 void RemoteTextureHostWrapper::ApplyTextureFlagsToRemoteTexture() {
   if (!mRemoteTextureForDisplayList) {
     return;

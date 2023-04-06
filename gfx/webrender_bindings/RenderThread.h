@@ -21,6 +21,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/layers/CompositionRecorder.h"
+#include "mozilla/layers/RemoteTextureMap.h"
 #include "mozilla/layers/SynchronousTask.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/VsyncDispatcher.h"
@@ -235,6 +236,10 @@ class RenderThread final {
   void DecPendingFrameBuildCount(wr::WindowId aWindowId);
   void DecPendingFrameCount(wr::WindowId aWindowId);
 
+  void PushPendingRemoteTexture(
+      wr::WindowId aWindowId,
+      UniquePtr<layers::RemoteTextureInfoList>&& aPendingRemoteTextures);
+
   // RenderNotifier implementation
   void WrNotifierEvent_WakeUp(WrWindowId aWindowId, bool aCompositeNeeded);
   void WrNotifierEvent_NewFrameReady(WrWindowId aWindowId,
@@ -314,6 +319,7 @@ class RenderThread final {
       WakeUp,
       NewFrameReady,
       ExternalEvent,
+      PendingRemoteTextures,
     };
     const Tag mTag;
 
@@ -329,14 +335,22 @@ class RenderThread final {
           mPublishId(aPublishId) {
       MOZ_ASSERT(mTag == Tag::NewFrameReady);
     }
-    WrNotifierEvent(const Tag aTag, UniquePtr<RendererEvent> aRendererEvent)
+    WrNotifierEvent(const Tag aTag, UniquePtr<RendererEvent>&& aRendererEvent)
         : mTag(aTag), mRendererEvent(std::move(aRendererEvent)) {
       MOZ_ASSERT(mTag == Tag::ExternalEvent);
     }
+    WrNotifierEvent(
+        const Tag aTag,
+        UniquePtr<layers::RemoteTextureInfoList>&& aPendingRemoteTextures)
+        : mTag(aTag),
+          mPendingRemoteTextures(std::move(aPendingRemoteTextures)) {
+      MOZ_ASSERT(mTag == Tag::PendingRemoteTextures);
+    }
 
     const bool mCompositeNeeded = false;
-    UniquePtr<RendererEvent> mRendererEvent;
     const FramePublishId mPublishId = FramePublishId::INVALID;
+    UniquePtr<RendererEvent> mRendererEvent;
+    UniquePtr<layers::RemoteTextureInfoList> mPendingRemoteTextures;
 
    public:
     static WrNotifierEvent WakeUp(const bool aCompositeNeeded) {
@@ -349,8 +363,14 @@ class RenderThread final {
     }
 
     static WrNotifierEvent ExternalEvent(
-        UniquePtr<RendererEvent> aRendererEvent) {
+        UniquePtr<RendererEvent>&& aRendererEvent) {
       return WrNotifierEvent(Tag::ExternalEvent, std::move(aRendererEvent));
+    }
+
+    static WrNotifierEvent PendingRemoteTextures(
+        UniquePtr<layers::RemoteTextureInfoList>&& aPendingRemoteTextures) {
+      return WrNotifierEvent(Tag::PendingRemoteTextures,
+                             std::move(aPendingRemoteTextures));
     }
 
     bool CompositeNeeded() {
@@ -369,7 +389,17 @@ class RenderThread final {
     }
     UniquePtr<RendererEvent> ExternalEvent() {
       if (mTag == Tag::ExternalEvent) {
+        MOZ_ASSERT(mRendererEvent);
         return std::move(mRendererEvent);
+      }
+      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+      return nullptr;
+    }
+
+    layers::RemoteTextureInfoList* RemoteTextureInfoList() {
+      if (mTag == Tag::PendingRemoteTextures) {
+        MOZ_ASSERT(mPendingRemoteTextures);
+        return mPendingRemoteTextures.get();
       }
       MOZ_ASSERT_UNREACHABLE("unexpected to be called");
       return nullptr;
@@ -412,6 +442,8 @@ class RenderThread final {
                                            FramePublishId aPublishId);
   void WrNotifierEvent_HandleExternalEvent(
       wr::WindowId aWindowId, UniquePtr<RendererEvent> aRendererEvent);
+  bool CheckIsRemoteTextureReady(WrWindowId aWindowId,
+                                 layers::RemoteTextureInfoList* aList);
 
   ~RenderThread();
 
@@ -446,6 +478,7 @@ class RenderThread final {
     bool mIsDestroyed = false;
     RefPtr<nsIRunnable> mWrNotifierEventsRunnable;
     std::queue<WrNotifierEvent> mPendingWrNotifierEvents;
+    bool mIsWaitingRemoteTextureReady = false;
   };
 
   DataMutex<std::unordered_map<uint64_t, UniquePtr<WindowInfo>>> mWindowInfos;

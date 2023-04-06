@@ -82,6 +82,8 @@ class RemoteTextureHostWrapper : public TextureHost {
 
   bool CheckIsReadyForRendering();
 
+  bool IsReadyForRendering();
+
   void ApplyTextureFlagsToRemoteTexture();
 
   const RemoteTextureId mTextureId;

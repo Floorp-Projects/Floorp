@@ -13,9 +13,11 @@
 #include "gfxEnv.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/layers/RemoteTextureHostWrapper.h"
 #include "mozilla/layers/SharedSurfacesParent.h"
 #include "mozilla/layers/WebRenderImageHost.h"
 #include "mozilla/layers/WebRenderTextureHost.h"
+#include "mozilla/StaticPrefs_webgl.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/webrender/WebRenderTypes.h"
@@ -742,6 +744,45 @@ void AsyncImagePipelineManager::CheckForTextureHostsNotUsedByGPU() {
 wr::Epoch AsyncImagePipelineManager::GetNextImageEpoch() {
   mAsyncImageEpoch.mHandle++;
   return mAsyncImageEpoch;
+}
+
+UniquePtr<RemoteTextureInfoList>
+AsyncImagePipelineManager::GetPendingRemoteTextures() {
+  if (!gfx::gfxVars::UseCanvasRenderThread() ||
+      !StaticPrefs::webgl_out_of_process_async_present() ||
+      gfx::gfxVars::WebglOopAsyncPresentForceSync()) {
+    return nullptr;
+  }
+
+  // async remote texture is enabled
+  MOZ_ASSERT(gfx::gfxVars::UseCanvasRenderThread());
+  MOZ_ASSERT(StaticPrefs::webgl_out_of_process_async_present());
+  MOZ_ASSERT(!gfx::gfxVars::WebglOopAsyncPresentForceSync());
+
+  auto list = MakeUnique<RemoteTextureInfoList>();
+
+  for (const auto& entry : mAsyncImagePipelines) {
+    AsyncImagePipeline* pipeline = entry.GetWeak();
+
+    if (!pipeline->mImageHost->GetCurrentTextureHost()) {
+      continue;
+    }
+
+    auto* wrapper = pipeline->mImageHost->GetCurrentTextureHost()
+                        ->AsRemoteTextureHostWrapper();
+    if (!wrapper || !wrapper->IsReadyForRendering()) {
+      continue;
+    }
+
+    list->mList.emplace(wrapper->mTextureId, wrapper->mOwnerId,
+                        wrapper->mForPid);
+  }
+
+  if (list->mList.empty()) {
+    return nullptr;
+  }
+
+  return list;
 }
 
 AsyncImagePipelineManager::WebRenderPipelineInfoHolder::

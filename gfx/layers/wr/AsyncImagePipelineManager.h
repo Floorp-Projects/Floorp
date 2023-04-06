@@ -12,6 +12,7 @@
 #include "CompositableHost.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/ipc/FileDescriptor.h"
+#include "mozilla/layers/RemoteTextureMap.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/webrender/WebRenderAPI.h"
@@ -128,6 +129,8 @@ class AsyncImagePipelineManager final {
 
   void SetWillGenerateFrame();
   bool GetAndResetWillGenerateFrame();
+
+  UniquePtr<RemoteTextureInfoList> GetPendingRemoteTextures();
 
   static wr::ExternalImageId GetNextExternalImageId();
 
