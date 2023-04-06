@@ -203,25 +203,16 @@ def update_glean(command_context, version):
     please run the following commands:
 
         cargo update -p glean
-        mach vendor rust --ignore-modified
+        ./mach vendor rust --ignore-modified
 
-    `mach vendor rust` may identify version mismatches.
+    `./mach vendor rust` may identify version mismatches.
     Please consult the Updating the Glean SDK docs for assistance:
     https://firefox-source-docs.mozilla.org/toolkit/components/glean/dev/updating_sdk.html
 
-    Once you resolve these issues and `mach vendor rust` completes successfully,
-    (or if there were no issues in the first place)
-    you will need to certify that the Glean SDK crates are okay to include in
-    Firefox using `mach cargo vet`.
+    The Glean SDK is already vetted and no additional vetting for it is necessary.
+    To prune the configuration file after vendoring run:
 
-    Please run these commands, reading and following their instructions:
-
-        mach cargo vet certify glean {version}
-        mach cargo vet certify glean-core {version}
-
-    You then get to again run:
-
-      mach vendor rust --ignore-modified
+        ./mach cargo vet prune
 
     Then, to update webrender which independently relies on the Glean SDK, run:
 
