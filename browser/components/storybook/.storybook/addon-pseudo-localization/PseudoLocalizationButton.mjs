@@ -2,13 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* eslint-disable no-unused-vars */
+// eslint-disable-next-line no-unused-vars
 import React from "react";
 import { useGlobals } from "@storybook/api";
 import {
+  // eslint-disable-next-line no-unused-vars
   Icons,
+  // eslint-disable-next-line no-unused-vars
   IconButton,
+  // eslint-disable-next-line no-unused-vars
   WithTooltip,
+  // eslint-disable-next-line no-unused-vars
   TooltipLinkList,
 } from "@storybook/components";
 import { TOOL_ID, STRATEGY_DEFAULT, PSEUDO_STRATEGIES } from "./constants.mjs";
