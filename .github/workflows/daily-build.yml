@@ -7,7 +7,7 @@ on:
 
 jobs:
   windows-x86-64-build-with-enable-profile-generate:
-    if: (github.event_name == 'schedule' && github.repository == 'Floorp-Projects/Floorp') || (github.event_name != 'schedule')
+    if: (github.event_name == 'schedule' && github.repository_owner == 'Floorp-Projects') || (github.event_name != 'schedule')
 
     name: Windows x86_64 Build with --enable-profile-generate
 
@@ -146,7 +146,7 @@ jobs:
         mkdir $GITHUB_WORKSPACE
 
   windows-x86-64-generate-profdata-and-jarlog:
-    if: (github.event_name == 'schedule' && github.repository == 'Floorp-Projects/Floorp') || (github.event_name != 'schedule')
+    if: (github.event_name == 'schedule' && github.repository_owner == 'Floorp-Projects') || (github.event_name != 'schedule')
 
     name: Windows x86_64 Generate profdata and jarlog
 
@@ -187,7 +187,7 @@ jobs:
           en-US.log
 
   windows-x86-64-build-with-profdata-and-jarlog:
-    if: (github.event_name == 'schedule' && github.repository == 'Floorp-Projects/Floorp') || (github.event_name != 'schedule')
+    if: (github.event_name == 'schedule' && github.repository_owner == 'Floorp-Projects') || (github.event_name != 'schedule')
 
     name: Windows x86_64 Build with profdata and jarlog
 
@@ -351,7 +351,7 @@ jobs:
         mkdir $GITHUB_WORKSPACE
 
   linux-x86-64-build:
-    if: (github.event_name == 'schedule' && github.repository == 'Floorp-Projects/Floorp') || (github.event_name != 'schedule')
+    if: (github.event_name == 'schedule' && github.repository_owner == 'Floorp-Projects') || (github.event_name != 'schedule')
     name: Linux x86_64 Build
     runs-on: ubuntu-22.04
     steps:
