@@ -50,6 +50,12 @@ static bool GetInitialNotificationShown() {
       .valueOr(false);
 }
 
+static bool ResetInitialNotificationShown() {
+  return RegistryDeleteValue(IsPrefixed::Unprefixed,
+                             L"InitialNotificationShown")
+      .isOk();
+}
+
 static bool SetFollowupNotificationShown(bool wasShown) {
   return !RegistrySetValueBool(IsPrefixed::Unprefixed,
                                L"FollowupNotificationShown", wasShown)
@@ -549,6 +555,12 @@ NotificationActivities MaybeShowNotification(
     // Notifications aren't shown in versions prior to Windows 10 because the
     // notification API we want isn't available.
     return activitiesPerformed;
+  }
+
+  // Reset notification state machine, user setting default browser to Firefox
+  // is a strong signal that they intend to have it as the default browser.
+  if (browserInfo.currentDefaultBrowser == Browser::Firefox) {
+    ResetInitialNotificationShown();
   }
 
   bool initialNotificationShown = GetInitialNotificationShown();
