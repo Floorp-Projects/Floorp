@@ -91,7 +91,6 @@ config = {
                 "--certificate-path=tests/certs",
                 "--setpref=webgl.force-enabled=true",
                 "--quiet",
-                "--log-raw=%(raw_log_file)s",
                 "--log-errorsummary=%(error_summary_file)s",
                 "--use-test-media-devices",
                 "--screenshot-on-fail",
@@ -108,7 +107,6 @@ config = {
                 "--utility-path=tests/bin",
                 "--extra-profile-file=tests/bin/plugins",
                 "--symbols-path=%(symbols_path)s",
-                "--log-raw=%(raw_log_file)s",
                 "--log-errorsummary=%(error_summary_file)s",
                 "--cleanup-crashes",
                 "--marionette-startup-timeout=180",
@@ -121,7 +119,6 @@ config = {
             "options": [
                 "--self-test",
                 "--symbols-path=%(symbols_path)s",
-                "--log-raw=%(raw_log_file)s",
                 "--log-errorsummary=%(error_summary_file)s",
                 "--utility-path=tests/bin",
             ],

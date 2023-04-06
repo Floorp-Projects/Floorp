@@ -26,9 +26,6 @@ job-defaults:
             - type: file
               name: public/remote/pup_errorsummary.json
               path: /builds/worker/pup_errorsummary.json
-            - type: file
-              name: public/remote/pup_raw.log
-              path: /builds/worker/pup_raw.log
     optimization:
         skip-unless-expanded: null
 
@@ -41,7 +38,7 @@ puppeteer:
         command: >
             cd $GECKO_PATH/ &&
             $MOZ_FETCHES_DIR/firefox/firefox --screenshot http://example.org &&
-            ./mach puppeteer-test --ci -vv --binary $MOZ_FETCHES_DIR/firefox/firefox --headless --log-tbpl - --log-errorsummary /builds/worker/pup_errorsummary.json --log-raw /builds/worker/pup_raw.log
+            ./mach puppeteer-test --ci -vv --binary $MOZ_FETCHES_DIR/firefox/firefox --headless --log-tbpl - --log-errorsummary /builds/worker/pup_errorsummary.json
 
 puppeteer-with-bidi:
     description: Puppeteer tests against Firefox Webdriver BiDi remote protocol
@@ -52,4 +49,4 @@ puppeteer-with-bidi:
         command: >
             cd $GECKO_PATH/ &&
             $MOZ_FETCHES_DIR/firefox/firefox --screenshot http://example.org &&
-            ./mach puppeteer-test --ci -vv --binary $MOZ_FETCHES_DIR/firefox/firefox --bidi --log-tbpl - --log-errorsummary /builds/worker/pup_errorsummary.json --log-raw /builds/worker/pup_raw.log
+            ./mach puppeteer-test --ci -vv --binary $MOZ_FETCHES_DIR/firefox/firefox --bidi --log-tbpl - --log-errorsummary /builds/worker/pup_errorsummary.json
