@@ -22,9 +22,13 @@ import json
 import subprocess
 import sys
 
+# Ignore module-manifest.json updates which can randomly happen when
+# building bundles.
+hg_exclude = "devtools/client/debugger/bin/module-manifest.json"
+
 print("Run `hg status devtools/`")
 status = (
-    subprocess.check_output(["hg", "status", "-n", "devtools/"])
+    subprocess.check_output(["hg", "status", "-n", "devtools/", "-X", hg_exclude])
     .decode("utf-8")
     .split("\n")
 )
@@ -39,11 +43,6 @@ for l in status:
         # Ignore empty lines
         continue
 
-    if "module-manifest.json" in l:
-        # Ignore module-manifest.json updates which can randomly happen when
-        # building bundles.
-        continue
-
     failures[l] = [
         {
             "path": l,
@@ -55,6 +54,11 @@ for l in status:
             + f"instructions at: {doc}",
         }
     ]
+
+
+diff = subprocess.check_output(["hg", "diff", "devtools/", "-X", hg_exclude]).decode(
+    "utf-8"
+)
 
 # Revert all the changes created by `node bin/bundle.js`
 subprocess.check_output(["hg", "revert", "-C", "devtools/"])
@@ -75,5 +79,7 @@ if len(failures) > 0:
     print("The following devtools bundles were detected as outdated:")
     for failure in failures:
         print(failure)
+
+    print(f"diff:{diff}")
 
     sys.exit(1)
