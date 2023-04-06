@@ -25,6 +25,7 @@ import org.mockito.Mock
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
@@ -608,6 +609,62 @@ class NimbusMessagingStorageTest {
 
         verify(messagingFeature).recordExposure()
         assertEquals(message.id, result!!.id)
+    }
+
+    @Test
+    fun `GIVEN a control message WHEN calling getNextMessage THEN return the next eligible message with the correct surface`() {
+        val spiedStorage = spy(storage)
+        val messageData: MessageData = createMessageData()
+        val incorrectMessageData: MessageData = createMessageData(surface = NOTIFICATION)
+        val controlMessageData: MessageData = createMessageData(isControl = true)
+
+        doReturn(SHOW_NEXT_MESSAGE).`when`(spiedStorage).getOnControlBehavior()
+
+        val message = Message(
+            "id",
+            messageData,
+            action = "action",
+            mock(),
+            listOf("trigger"),
+            Message.Metadata("same-id"),
+        )
+
+        val incorrectMessage = Message(
+            "incorrect-id",
+            incorrectMessageData,
+            action = "action",
+            mock(),
+            listOf("trigger"),
+            Message.Metadata("same-id"),
+        )
+
+        val controlMessage = Message(
+            "control-id",
+            controlMessageData,
+            action = "action",
+            mock(),
+            listOf("trigger"),
+            Message.Metadata("same-id"),
+        )
+
+        doReturn(true).`when`(spiedStorage).isMessageEligible(any(), any(), any())
+        doReturn(true).`when`(spiedStorage).isMessageUnderExperiment(any(), any())
+
+        var result = spiedStorage.getNextMessage(
+            HOMESCREEN,
+            listOf(controlMessage, incorrectMessage, message),
+        )
+
+        verify(messagingFeature, times(1)).recordExposure()
+        assertEquals(message.id, result!!.id)
+
+        result = spiedStorage.getNextMessage(
+            HOMESCREEN,
+            listOf(controlMessage, incorrectMessage),
+        )
+
+        verify(messagingFeature, times(2)).recordExposure()
+        assertNull(result)
     }
 
     @Test

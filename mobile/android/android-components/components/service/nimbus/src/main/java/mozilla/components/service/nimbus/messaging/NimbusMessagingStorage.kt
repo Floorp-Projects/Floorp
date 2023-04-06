@@ -6,6 +6,7 @@ package mozilla.components.service.nimbus.messaging
 
 import android.content.Context
 import androidx.annotation.VisibleForTesting
+import kotlinx.coroutines.runBlocking
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONObject
 import org.mozilla.experiments.nimbus.GleanPlumbInterface
@@ -120,12 +121,22 @@ class NimbusMessagingStorage(
         return if (!message.data.isControl) {
             message
         } else {
+            // If a message is control then it's considered as displayed
+            val updatedMetadata = message.metadata.copy(
+                displayCount = message.metadata.displayCount + 1,
+                lastTimeShown = System.currentTimeMillis(),
+            )
+
+            runBlocking {
+                updateMetadata(updatedMetadata)
+            }
+
             // This is a control, so we need to either return the next message (there may not be one)
             // or not display anything.
             when (getOnControlBehavior()) {
                 ControlMessageBehavior.SHOW_NEXT_MESSAGE -> availableMessages.firstOrNull {
                     // There should only be one control message, and we've just detected it.
-                    !it.data.isControl && isMessageEligible(it, helper, jexlCache)
+                    surface == it.surface && !it.data.isControl && isMessageEligible(it, helper, jexlCache)
                 }
                 ControlMessageBehavior.SHOW_NONE -> null
             }
