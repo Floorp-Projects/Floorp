@@ -661,13 +661,33 @@ void TRRService::ConfirmationContext::SetState(
     enum ConfirmationState aNewState) {
   mState = aNewState;
 
-  if (mState == CONFIRM_FAILED) {
-    NS_DispatchToMainThread(
-        NS_NewRunnableFunction("TRRService::ConfirmationContextRetry", [] {
+  enum ConfirmationState state = mState;
+  if (XRE_IsParentProcess()) {
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "TRRService::ConfirmationContextNotify", [state] {
           if (nsCOMPtr<nsIObserverService> obs =
                   mozilla::services::GetObserverService()) {
-            obs->NotifyObservers(nullptr, "trrservice-confirmation-failed",
-                                 nullptr);
+            auto stateString =
+                [](enum ConfirmationState aState) -> const char16_t* {
+              switch (aState) {
+                case CONFIRM_OFF:
+                  return u"CONFIRM_OFF";
+                case CONFIRM_TRYING_OK:
+                  return u"CONFIRM_TRYING_OK";
+                case CONFIRM_OK:
+                  return u"CONFIRM_OK";
+                case CONFIRM_FAILED:
+                  return u"CONFIRM_FAILED";
+                case CONFIRM_TRYING_FAILED:
+                  return u"CONFIRM_TRYING_FAILED";
+                case CONFIRM_DISABLED:
+                  return u"CONFIRM_DISABLED";
+              }
+              MOZ_ASSERT_UNREACHABLE();
+            };
+
+            obs->NotifyObservers(nullptr, "network:trr-confirmation",
+                                 stateString(state));
           }
         }));
   }
