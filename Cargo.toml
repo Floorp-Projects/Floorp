@@ -105,9 +105,6 @@ darling = { path = "build/rust/darling" }
 # Patch redox_users to an empty crate
 redox_users = { path = "build/rust/redox_users" }
 
-# Patch getrandom 0.7 to 0.8
-rand = { path = "build/rust/rand" }
-
 # Patch env_logger 0.9 to 0.10
 env_logger = { path = "build/rust/env_logger" }
 
