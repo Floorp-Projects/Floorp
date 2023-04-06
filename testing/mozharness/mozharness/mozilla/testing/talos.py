@@ -847,10 +847,6 @@ class Talos(
                 "--log-errorsummary=%s"
                 % os.path.join(env["MOZ_UPLOAD_DIR"], fname_pattern % "errorsummary")
             )
-            mozlog_opts.append(
-                "--log-raw=%s"
-                % os.path.join(env["MOZ_UPLOAD_DIR"], fname_pattern % "raw")
-            )
 
         def launch_in_debug_mode(cmdline):
             cmdline = set(cmdline)
