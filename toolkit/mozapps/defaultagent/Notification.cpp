@@ -195,9 +195,9 @@ static bool GetStrings(Strings& strings) {
                localizedIniFormat, installPath.get());
 
   IniReader localizedReader(localizedIniPath.get());
-  localizedReader.AddKey("DefaultBrowserNotificationTitle",
+  localizedReader.AddKey("DefaultBrowserNotificationHeaderText",
                          &strings.localizedToast.text1);
-  localizedReader.AddKey("DefaultBrowserNotificationText",
+  localizedReader.AddKey("DefaultBrowserNotificationBodyText",
                          &strings.localizedToast.text2);
   localizedReader.AddKey("DefaultBrowserNotificationYesButtonText",
                          &strings.localizedToast.action1);
