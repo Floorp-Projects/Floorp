@@ -8,6 +8,8 @@
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/dom/WebGPUBinding.h"
+#include "mozilla/layers/BuildConstants.h"
 #include "nsCOMPtr.h"
 #include "ObjectModel.h"
 
@@ -34,6 +36,13 @@ class Instance final : public nsWrapperCache {
 
   already_AddRefed<dom::Promise> RequestAdapter(
       const dom::GPURequestAdapterOptions& aOptions, ErrorResult& aRv);
+
+  dom::GPUTextureFormat GetPreferredCanvasFormat() const {
+    if (kIsAndroid) {
+      return dom::GPUTextureFormat::Rgba8unorm;
+    }
+    return dom::GPUTextureFormat::Bgra8unorm;
+  };
 
  private:
   explicit Instance(nsIGlobalObject* aOwner);
