@@ -208,11 +208,12 @@ export function TimedPromise(fn, options = {}) {
     // Reject only if |throws| is given.  Otherwise it is assumed that
     // the user is OK with the promise timing out.
     let bail = () => {
+      const message = `${errorMessage} after ${timeout} ms`;
       if (throws !== null) {
-        let err = new throws(`${errorMessage} after ${timeout} ms`);
+        let err = new throws(message);
         reject(err);
       } else {
-        lazy.logger.warn(`${errorMessage} after ${timeout} ms`, trace);
+        lazy.logger.warn(message, trace);
         resolve();
       }
     };
