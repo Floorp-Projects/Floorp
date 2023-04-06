@@ -92,12 +92,12 @@ add_task(async function testRequestMIDIAccess() {
   );
   is(
     installPopupHeader.textContent,
-    gNavigatorBundle.getString("sitePermissionInstallFirstPrompt.header"),
+    gNavigatorBundle.getString("sitePermissionInstallFirstPrompt.midi.header"),
     "First popup has expected header text"
   );
   is(
     installPopupMessage.textContent,
-    gNavigatorBundle.getString("sitePermissionInstallFirstPrompt.message"),
+    gNavigatorBundle.getString("sitePermissionInstallFirstPrompt.midi.message"),
     "First popup has expected message"
   );
 

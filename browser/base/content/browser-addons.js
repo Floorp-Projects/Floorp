@@ -643,8 +643,12 @@ var gXPInstallObserver = {
         let hasHost = !!options.displayURI;
 
         if (isSitePermissionAddon) {
+          // At present, WebMIDI is the only consumer of the site permission
+          // add-on infrastructure, and so we can hard-code a midi string here.
+          // If and when we use it for other things, we'll need to plumb that
+          // information through. See bug 1826747.
           messageString = gNavigatorBundle.getString(
-            "sitePermissionInstallFirstPrompt.header"
+            "sitePermissionInstallFirstPrompt.midi.header"
           );
         } else if (hasHost) {
           messageString = gNavigatorBundle.getFormattedString(
@@ -675,7 +679,7 @@ var gXPInstallObserver = {
 
           if (isSitePermissionAddon) {
             message.textContent = gNavigatorBundle.getString(
-              "sitePermissionInstallFirstPrompt.message"
+              "sitePermissionInstallFirstPrompt.midi.message"
             );
           } else if (hasHost) {
             let text = gNavigatorBundle.getString(
