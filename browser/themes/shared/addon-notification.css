@@ -28,6 +28,11 @@ html|*.addon-webext-perm-list {
   margin-inline-start: 0;
 }
 
+.addon-webext-perm-text-multiline {
+  margin-top: 1em;
+  white-space: pre-line;
+}
+
 .popup-notification-description[popupid="addon-webext-permissions"],
 .popup-notification-description[popupid="addon-webext-permissions-notification"] {
   margin-inline-start: -1px;
