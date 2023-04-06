@@ -3388,6 +3388,9 @@ already_AddRefed<nsINode> nsINode::CloneAndAdopt(
         if (elm->MayHaveFormSelectEventListener()) {
           window->SetHasFormSelectEventListeners();
         }
+        if (elm->MayHaveTransitionEventListener()) {
+          window->SetHasTransitionEventListeners();
+        }
       }
     }
     if (wasRegistered) {
