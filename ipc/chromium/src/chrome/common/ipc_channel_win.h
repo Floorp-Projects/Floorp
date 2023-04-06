@@ -155,6 +155,11 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
   // buffers of this message.
   mozilla::UniquePtr<Message> incoming_message_ MOZ_GUARDED_BY(IOThread());
 
+  // Timer started when a MODE_SERVER channel begins waiting for a connection,
+  // and cancelled when the connection completes. Will produce an error if no
+  // connection occurs before the timeout.
+  nsCOMPtr<nsITimer> connect_timeout_ MOZ_GUARDED_BY(IOThread());
+
   // Will be set to `true` until `Connect()` has been called, and, if in
   // server-mode, the client has connected. The `input_state_` is used to wait
   // for the client to connect in overlapped mode.
