@@ -95,6 +95,41 @@ add_task(async function json_list({ client }) {
   }
 });
 
+add_task(async function json_prevent_load_in_iframe({ client }) {
+  const { Page } = client;
+
+  const PAGE = `https://example.com/document-builder.sjs?html=${encodeURIComponent(
+    '<iframe src="http://localhost:9222/json/version"></iframe>`'
+  )}`;
+
+  await Page.enable();
+
+  const NAVIGATED = "Page.frameNavigated";
+
+  const history = new RecordEvents(2);
+  history.addRecorder({
+    event: Page.frameNavigated,
+    eventName: NAVIGATED,
+    messageFn: payload => {
+      return `Received ${NAVIGATED} for frame id ${payload.frame.id}`;
+    },
+  });
+
+  await loadURL(PAGE);
+
+  const frameNavigatedEvents = await history.record();
+
+  const frames = frameNavigatedEvents
+    .map(({ payload }) => payload.frame)
+    .filter(frame => frame.parentId !== undefined);
+
+  const windowGlobal = BrowsingContext.get(frames[0].id).currentWindowGlobal;
+  ok(
+    windowGlobal.documentURI.spec.startsWith("about:neterror?e=cspBlocked"),
+    "Expected page not be loaded within an iframe"
+  );
+});
+
 async function requestJSON(path) {
   const response = await fetch(`http://${RemoteAgent.debuggerAddress}${path}`);
   is(response.status, 200, "JSON response is 200");
