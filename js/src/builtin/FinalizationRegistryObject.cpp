@@ -240,15 +240,15 @@ bool FinalizationRegistryObject::construct(JSContext* cx, unsigned argc,
     return false;
   }
 
-  RootedObject proto(cx);
-  if (!GetPrototypeFromBuiltinConstructor(
-          cx, args, JSProto_FinalizationRegistry, &proto)) {
-    return false;
-  }
-
   RootedObject cleanupCallback(
       cx, ValueToCallable(cx, args.get(0), 1, NO_CONSTRUCT));
   if (!cleanupCallback) {
+    return false;
+  }
+
+  RootedObject proto(cx);
+  if (!GetPrototypeFromBuiltinConstructor(
+          cx, args, JSProto_FinalizationRegistry, &proto)) {
     return false;
   }
 
