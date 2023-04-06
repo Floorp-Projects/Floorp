@@ -25,8 +25,22 @@
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">ደህንነቱ የተጠበቀ ግንኙነት አልተሳካም</string>
 
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>ይህ በአገልጋዩ ውቅር ላይ ያጋጠመ ችግር ሊሆን ይችላል ወይም ደግሞ አገልጋዩን ለመምሰል የሚሞክር ሰው ሊሆን ይችላል።</li>
+        <li>ከዚህ አገልጋይ ጋር ከዚህ ቀደም በተሳካ ሁኔታ ከተገናኙ ስህተቱ ጊዜያዊ ሊሆን ይችላል እና ቆይተው እንደገና መሞከር ይችላሉ።</li>
+      </ul>
+    ]]></string>
+
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">የላቀ…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>አንድ ሰው ድረ-ገፁን ለማስመሰል እየሞከረ ሊሆን ይችላል እና እርስዎ መቀጠል የለብዎትም።</label>
+        <br><br>
+        <label>ድረ-ገፆች ማንነታቸውን በእውቅና ማረጋገጫዎች ያረጋግጣሉ። %1$s <b>%2$s</b>ን አያምንም ምክንያቱም የእውቅና ማረጋገጫ ሰጪው ስለማይታወቅ፣ የእውቅና ማረጋገጫው በራሱ የተፈረመ ነው ወይም አገልጋዩ ትክክለኛ መካከለኛ የእውቅና ማረጋገጫዎችን እየላከ አይደለም።</label>
+    ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">ተመለስ (የሚመከር)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
@@ -47,14 +61,42 @@
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">የላቀ…</string>
 
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
+        <label> <b>%1$s</b> HTTP Strict Transport Security (HSTS) የሚባል የደህንነት ፖሊሲ አለው፣ ይህ ማለት <b>%2$s</b> ደህንነቱ በተጠበቀ ሁኔታ ብቻ ነው መገናኘት የሚችለው። ይህንን ድረ-ገጽ ለመጎብኘት የተለየ ፈቃድ ማከል አይችሉም።
+    ]]></string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> <b>%1$s</b> HTTP Strict Transport Security (HSTS) የሚባል የደህንነት ፖሊሲ አለው፣ ይህ ማለት <b>%2$s</b> ደህንነቱ በተጠበቀ ሁኔታ ብቻ ነው መገናኘት የሚችለው። ይህንን ድረ-ገጽ ለመጎብኘት የተለየ ፈቃድ ማከል አይችሉም። </label>
+    ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">ወደኋላ ተመለስ</string>
 
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">ግንኙነቱ ተቋርጧል</string>
 
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>አሳሹ በተሳካ ሁኔታ ተገናኝቷል፣ ነገር ግን መረጃ በሚተላለፍበት ጊዜ ግንኙነቱ ተቋርጧል። እባክዎ እንደገና ይሞክሩ።</p>
+      <ul>
+        <li>ድረ-ገጹ ለጊዜው የማይገኝ ወይም በጣም ስራ የበዛበት ሊሆን ይችላል። ከጥቂት ጊዜ በኋላ እንደገና ይሞክሩ።</li>
+        <li>ምንም ገጾችን መጫን ካልቻሉ የመሣሪያዎን ውሂብ ወይም የWi-Fi ግንኙነት ያረጋግጡ።</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">ግንኙነቱ ጊዜው አልፎበታል</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+      <p>የተጠየቀው ድረ-ገጽ ለግንኙነት ጥያቄ ምላሽ አልሰጠም እና አሳሹ ምላሽ መጠበቅ አቁሟል።</p>
+      <ul>
+        <li>አገልጋዩ ከፍተኛ ፍላጎት ወይም ጊዜያዊ መቋረጥ እያጋጠመው ሊሆን ይችላል? ቆይተው እንደገና ይሞክሩ።</li>
+        <li>ሌሎች ድረ-ገጾችን ማሰስ አይችሉም? የመሳሪያውን የአውታረ መረብ ግንኙነት ይፈትሹ።</li>
+        <li>የእርስዎ መሣሪያ ወይም አውታረ መረብ በፋየርዎል ወይም በፕሮክሲ የተጠበቀ ነው? ትክክል ያልሆኑ ቅንብሮች በድር አሰሳ ላይ ጣልቃ ሊገቡ ይችላሉ።</li>
+        <li>አሁንም ችግር አለ? ለእርዳታ የአውታረ መረብ አስተዳዳሪዎን ወይም የበይነመረብ አቅራቢዎን ያማክሩ።</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">መገናኘት አልተቻለም</string>
@@ -78,8 +120,26 @@
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">ገጹ በትክክል እየተዘዋወረ አይደለም</string>
 
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      <p>አሳሹ የተጠየቀውን ንጥል ሰርስሮ ለማውጣት መሞከሩን አቁሟል። ድረ-ገጹ ጥያቄውን በማያጠናቅቅ መንገድ እየመራው ነው።</p>
+      <ul>
+        <li>በዚህ ድረ-ገጽ የሚፈለጉ ኩኪዎችን አሰናክለዋል ወይም አግደዋል?</li>
+        <li>የድረ-ገጹን ኩኪዎች መቀበል ችግሩን ካልፈታው፣ ምናልባት የእርስዎ መሣሪያ ሳይሆን የአገልጋይ ውቅር ችግር ነው።</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">ከመስመር ውጭ ሁነታ</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+      <p>አሳሹ የሚሰራው ከመስመር ውጭ በሆነው ሁነታ ነው እና ከተጠየቀው ንጥል ጋር መገናኘት አይችልም።</p>
+      <ul>
+        <li>መሣሪያው ከገባሪ አውታረ መረብ ጋር የተገናኘ ነው?</li>
+        <li>ወደ የመስመር ላይ ሁነታ ለመቀየር እና ገጹን እንደገና ለመጫን “እንደገና ሞክር”ን ይጫኑ።</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">ግንኙነቱ ዳግም ተጀምሯል</string>
@@ -156,6 +216,14 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">ሰነዱ አልተገኘም</string>
 
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>ንጥሉ ሊሰየም፣ ሊወገድ ወይም ወደ ሌላ ቦታ ሊዛወር ይችል ነበር?</li>
+        <li>በአድራሻው ውስጥ የፊደል ግድፈት፣ አጣጣል ወይም ሌላ የአጻጻፍ ስህተት አለ?</li>
+        <li>ለተጠየቀው ንጥል በቂ የመዳረሻ ፍቃድ አለዎት?</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">የፋይሉ መዳረሻ ተከልክሏል</string>
     <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
@@ -167,8 +235,26 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">ተኪ አገልጋይ ግንኙነትን ውድቅ አድርጓል</string>
 
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>አሳሹ ተኪ አገልጋይ እንዲጠቀም ተዋቅሯል፣ ነገር ግን ተኪው ግንኙነትን ውድቅ አደረገ።</p>
+      <ul>
+        <li>የአሳሹ ተኪ ውቅር ትክክል ነው? ቅንብሮቹን ይፈትሹ እና እንደገና ይሞክሩ።</li>
+        <li>የተኪ አገልግሎቱ ከዚህ አውታረ መረብ ጋር መገናኘትን ይፈቅዳል?</li>
+        <li>አሁንም ችግር አለ? ለእርዳታ የአውታረ መረብ አስተዳዳሪዎን ወይም የበይነመረብ አቅራቢዎን ያማክሩ።</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">ተኪ አገልጋይ አልተገኘም</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      <p>አሳሹ ተኪ አገልጋይ እንዲጠቀም ተዋቅሯል፣ ነገር ግን ተኪው ሊገኝ አልቻለም።</p>
+      <ul>
+        <li>የአሳሹ ተኪ ውቅር ትክክል ነው? ቅንብሮቹን ይፈትሹ እና እንደገና ይሞክሩ።</li>
+        <li>መሣሪያው ከገባሪ አውታረ መረብ ጋር የተገናኘ ነው?</li>
+        <li>አሁንም ችግር አለ? ለእርዳታ የአውታረ መረብ አስተዳዳሪዎን ወይም የበይነመረብ አቅራቢዎን ያማክሩ።</li>
+      </ul>
+    ]]></string>
 
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
@@ -177,6 +263,11 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">የማይፈለግ የድረ-ገፅ ጉዳይ</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>በ%1$s ያለው ድረ-ገጽ ያልተፈለገ ሶፍትዌር እንደሚያቀርብ ሪፖርት ተደርጓል እና በእርስዎ የደህንነት ምርጫዎች መሰረት ታግዷል።</p>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_harmful_uri_title">ጎጂ የድረ-ገፅ ጉዳይ</string>

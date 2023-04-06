@@ -298,6 +298,33 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">ไม่ใช่ตอนนี้</string>
 
+    <!-- Juno first user onboarding flow experiment -->
+    <!-- Title for set firefox as default browser screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_default_browser_title">ทำให้ %s เป็นเบราว์เซอร์เริ่มต้นของคุณ</string>
+    <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
+    This is part of the string with the key "juno_onboarding_default_browser_description". -->
+    <string name="juno_onboarding_default_browser_description_link_text">ประกาศความเป็นส่วนตัว</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
+    <string name="juno_onboarding_default_browser_positive_button">ตั้งเป็นเบราว์เซอร์เริ่มต้น</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_default_browser_negative_button">ไม่ใช่ตอนนี้</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title">สับเปลี่ยนไปมาระหว่างโทรศัพท์กับแล็ปท็อป</string>
+    <!-- Description for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_description">นำแท็บและรหัสผ่านจากอุปกรณ์อื่น ๆ ของคุณเข้ามาเพื่อเรียกดูต่อจากที่คุณค้างไว้</string>
+    <!-- Text for the button to sign in to sync on the device -->
+    <string name="juno_onboarding_sign_in_positive_button">ลงชื่อเข้า</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_sign_in_negative_button">ไม่ใช่ตอนนี้</string>
+    <!-- Title for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_title">การแจ้งเตือนช่วยให้คุณทำสิ่งต่างๆ ได้มากขึ้นด้วย %s</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="juno_onboarding_enable_notifications_positive_button">เปิดการแจ้งเตือน</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_enable_notifications_negative_button">ไม่ใช่ตอนนี้</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">เปิดแท็บ %1$s ใหม่</string>
@@ -362,11 +389,19 @@
     <string name="reduce_cookie_banner_summary_1">%1$s จะพยายามปฏิเสธคำขอคุกกี้บนแบนเนอร์คุกกี้โดยอัตโนมัติ</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">ปิดสำหรับไซต์นี้</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">ยกเลิก</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title">การลดแบนเนอร์คุกกี้</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text">ส่งคำขอรองรับไซต์แล้ว</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">เปิดสำหรับไซต์นี้</string>
 
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted">ส่งคำขอรองรับไซต์แล้ว</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">ไม่รองรับไซต์ในขณะนี้</string>
+    <string name="reduce_cookie_banner_unsupported_site">ไม่รองรับไซต์ในขณะนี้</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">ต้องการเปิดการลดแบนเนอร์คุกกี้สำหรับ %1$s หรือไม่?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -1229,11 +1264,11 @@
     <!-- Survey -->
     <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
     The app name is in the text, due to limitations with localizing Nimbus experiments -->
-    <string name="nimbus_survey_message_text" tools:ignore="UnusedResources">โปรดช่วยทำให้ Firefox ดีขึ้นโดยการทำแบบสำรวจสั้นๆ</string>
+    <string name="nimbus_survey_message_text">โปรดช่วยทำให้ Firefox ดีขึ้นโดยการทำแบบสำรวจสั้นๆ</string>
     <!-- Preference for taking the short survey. -->
-    <string name="preferences_take_survey" tools:ignore="UnusedResources">ทำแบบสำรวจ</string>
+    <string name="preferences_take_survey">ทำแบบสำรวจ</string>
     <!-- Preference for not taking the short survey. -->
-    <string name="preferences_not_take_survey" tools:ignore="UnusedResources">ไม่ ขอบคุณ</string>
+    <string name="preferences_not_take_survey">ไม่ ขอบคุณ</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
@@ -1450,29 +1485,29 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">การป้องกันการติดตามแบบพิเศษ</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">เรียกดูโดยไม่ต้องมีใครมาติดตาม</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">เรียกดูโดยไม่ต้องมีใครมาติดตาม</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
-    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">ตอนนี้มีการป้องกันคุกกี้แบบทั้งหมด ซึ่งเป็นอุปสรรคต่อตัวติดตามข้ามไซต์ที่ทรงพลังที่สุดของเรา</string>
+    <string name="preference_enhanced_tracking_protection_summary">ตอนนี้มีการป้องกันคุกกี้แบบทั้งหมด ซึ่งเป็นอุปสรรคต่อตัวติดตามข้ามไซต์ที่ทรงพลังที่สุดของเรา</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">เก็บข้อมูลของคุณไว้กับตัวคุณเอง %s ปกป้องคุณจากตัวติดตามที่พบบ่อยที่สุดซึ่งติดตามสิ่งที่คุณทำทางออนไลน์</string>
+    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">เก็บข้อมูลของคุณไว้กับตัวคุณเอง %s ปกป้องคุณจากตัวติดตามที่พบบ่อยที่สุดซึ่งติดตามสิ่งที่คุณทำทางออนไลน์</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">%s ปกป้องคุณจากตัวติดตามที่พบบ่อยที่สุดซึ่งติดตามสิ่งที่คุณทำทางออนไลน์</string>
+    <string name="preference_enhanced_tracking_protection_explanation_2">%s ปกป้องคุณจากตัวติดตามที่พบบ่อยที่สุดซึ่งติดตามสิ่งที่คุณทำทางออนไลน์</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">เรียนรู้เพิ่มเติม</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">มาตรฐาน (ค่าเริ่มต้น)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">ความเป็นส่วนตัวและประสิทธิภาพแบบสมดุล หน้าเว็บจะโหลดเป็นปกติ</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">ความเป็นส่วนตัวและประสิทธิภาพแบบสมดุล หน้าเว็บจะโหลดเป็นปกติ</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">หน้าเว็บต่างๆ จะโหลดตามปกติ แต่จะปิดกั้นตัวติดตามน้อยลง</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_5">หน้าเว็บต่างๆ จะโหลดตามปกติ แต่จะปิดกั้นตัวติดตามน้อยลง</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">สิ่งที่ถูกปิดกั้นโดยการป้องกันการติดตามแบบมาตรฐาน</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">เข้มงวด</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">ปิดกั้นตัวติดตามเพิ่มเติมเพื่อให้โหลดหน้าเว็บได้เร็วขึ้น แต่การทำงานบางอย่างในหน้าเว็บอาจพัง</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">ปิดกั้นตัวติดตามเพิ่มเติมเพื่อให้โหลดหน้าเว็บได้เร็วขึ้น แต่การทำงานบางอย่างในหน้าเว็บอาจพัง</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">การป้องกันการติดตามที่แข็งแกร่งขึ้นและประสิทธิภาพที่เร็วขึ้น แต่บางไซต์อาจทำงานไม่ถูกต้อง</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_4">การป้องกันการติดตามที่แข็งแกร่งขึ้นและประสิทธิภาพที่เร็วขึ้น แต่บางไซต์อาจทำงานไม่ถูกต้อง</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">สิ่งที่ถูกปิดกั้นโดยการป้องกันการติดตามแบบเข้มงวด</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->

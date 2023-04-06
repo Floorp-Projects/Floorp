@@ -413,7 +413,7 @@
     <string name="cookie_banner_handling_report_site_snack_bar_text">Žiadosť o podporu stránky bola odoslaná.</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Zapnuté pre túto stránku</string>
-    <!-- Text for indicating that a request for unsupported site was sent to nimbus, this is shown as part of the protections panel with the tracking protection toggle -->
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site_request_submitted">Žiadosť o podporu stránky bola odoslaná</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">Stránka momentálne nie je podporovaná</string>
@@ -421,6 +421,8 @@
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Zapnúť znižovanie počtu bannerov k súborom cookie pre %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">Vypnúť znižovanie počtu bannerov k súborom cookie pre %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request">Na tejto stránke momentálne nie je podporované znižovanie počtu bannerov k súborom cookie. Chceli by ste, aby náš tím v budúcnosti skontroloval túto webovú stránku a pridal podporu?</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s vymaže súbory cookie tohto webu a obnoví stránku. Vymazanie všetkých súborov cookie vás môže odhlásiť zo stránky alebo vyprázdniť nákupné košíky.</string>
 
@@ -1285,11 +1287,11 @@
     <!-- Survey -->
     <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
     The app name is in the text, due to limitations with localizing Nimbus experiments -->
-    <string name="nimbus_survey_message_text" tools:ignore="UnusedResources">Pomôžte nám vylepšiť Firefox vyplnením krátkeho prieskumu.</string>
+    <string name="nimbus_survey_message_text">Pomôžte nám vylepšiť Firefox vyplnením krátkeho prieskumu.</string>
     <!-- Preference for taking the short survey. -->
-    <string name="preferences_take_survey" tools:ignore="UnusedResources">Zúčastniť sa prieskumu</string>
+    <string name="preferences_take_survey">Zúčastniť sa prieskumu</string>
     <!-- Preference for not taking the short survey. -->
-    <string name="preferences_not_take_survey" tools:ignore="UnusedResources">Nie, ďakujem</string>
+    <string name="preferences_not_take_survey">Nie, ďakujem</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
@@ -1602,7 +1604,7 @@
     <string name="about_whats_new">Novinky v aplikácii %s</string>
     <!-- Open source licenses page title
     The first parameter is the app name -->
-    <string name="open_source_licenses_title">%s | OSS knižnice</string>
+    <string name="open_source_licenses_title">%s | Knižnice OSS</string>
 
     <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_title">Sledovače presmerovania</string>
@@ -1614,6 +1616,10 @@
     <string name="preference_etp_smartblock_description">Niektoré sledovacie prvky označené nižšie boli na tejto stránke čiastočne odblokované, pretože s nimi prebiehala interakcia*.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">Ďalšie informácie</string>
+
+    <!-- Content description (not visible, for screen readers etc.):
+    Enhanced tracking protection exception preference icon for ETP settings. -->
+    <string name="preference_etp_exceptions_icon_description">Ikona nastavenia výnimky z Rozšírenej ochrany pred sledovaním</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Podpora</string>
