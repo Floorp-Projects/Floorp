@@ -25,6 +25,7 @@ const defaultFilter = [
 
 export class Target extends Domain {
   #browserContextIds;
+  #discoverTargetFilter;
 
   constructor(session) {
     super(session);
@@ -77,8 +78,24 @@ export class Target extends Domain {
   }
 
   setDiscoverTargets(options = {}) {
-    const { discover } = options;
+    const { discover, filter } = options;
     const { targetList } = this.session.target;
+
+    if (typeof discover !== "boolean") {
+      throw new TypeError("discover: boolean value expected");
+    }
+
+    if (discover === false && filter !== undefined) {
+      throw new Error("filter: should not be present when discover is false");
+    }
+
+    // null filter should not be defaulted
+    const targetFilter = filter === undefined ? defaultFilter : filter;
+    this._validateTargetFilter(targetFilter);
+
+    // Store active filter for filtering in event listeners (targetCreated, targetDestroyed, targetInfoChanged)
+    this.#discoverTargetFilter = targetFilter;
+
     if (discover) {
       targetList.on("target-created", this._onTargetCreated);
       targetList.on("target-destroyed", this._onTargetDestroyed);
@@ -86,6 +103,7 @@ export class Target extends Domain {
       targetList.off("target-created", this._onTargetCreated);
       targetList.off("target-destroyed", this._onTargetDestroyed);
     }
+
     for (const target of targetList) {
       this._onTargetCreated("target-created", target);
     }
@@ -248,11 +266,19 @@ export class Target extends Domain {
   }
 
   _onTargetCreated(eventName, target) {
+    if (!this._filterIncludesTarget(target, this.#discoverTargetFilter)) {
+      return;
+    }
+
     const targetInfo = this._getTargetInfo(target);
     this.emit("Target.targetCreated", { targetInfo });
   }
 
   _onTargetDestroyed(eventName, target) {
+    if (!this._filterIncludesTarget(target, this.#discoverTargetFilter)) {
+      return;
+    }
+
     this.emit("Target.targetDestroyed", {
       targetId: target.id,
     });
