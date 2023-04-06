@@ -3,65 +3,252 @@
 
 "use strict";
 
+// These tests are a near copy of the tests for Target.getTargets, but using
+// the `setDiscoverTargets` method and `targetCreated` events instead.
+// Calling `setDiscoverTargets` with `discover: true` will dispatch a
+// `targetCreated` event for all already opened tabs and NOT the browser target
+// with the default filter.
+
+const PAGE_TEST =
+  "https://example.com/browser/remote/cdp/test/browser/target/doc_test.html";
+
 add_task(
-  async function mainTarget({ client }) {
+  async function discoverInvalidTypes({ client }) {
     const { Target } = client;
-    const { targetInfo } = await new Promise(resolve => {
-      const unsubscribe = Target.targetCreated(target => {
-        if (target.targetInfo.type == "browser") {
-          unsubscribe();
-          resolve(target);
-        }
-      });
 
-      // Calling `setDiscoverTargets` will dispatch `targetCreated` event for all
-      // already opened tabs and the browser target.
-      Target.setDiscoverTargets({ discover: true });
-    });
+    for (const discover of [null, undefined, 1, "foo", [], {}]) {
+      info(`Checking discover with invalid value: ${discover}`);
 
-    ok(!!targetInfo, "Target info for main target has been found");
-    ok(!!targetInfo.targetId, "Main target has a non-empty target id");
-    is(targetInfo.type, "browser", "Type of target is browser");
+      let errorThrown = "";
+      try {
+        await Target.setDiscoverTargets({ discover });
+      } catch (e) {
+        errorThrown = e.message;
+      }
+
+      ok(
+        errorThrown.match(/discover: boolean value expected/),
+        `Discover fails for invalid type: ${discover}`
+      );
+    }
   },
   { createTab: false }
 );
 
-add_task(async function pageTargets({ client, tab }) {
-  const { Target, target } = client;
+add_task(
+  async function filterInvalid({ client }) {
+    const { Target } = client;
 
-  const currentTargetId = target.id;
-  const url = toDataURL("pageTargets");
-  await loadURL(url);
+    for (const filter of [null, true, 1, "foo", {}]) {
+      info(`Checking filter with invalid value: ${filter}`);
 
-  const targets = await new Promise(resolve => {
-    const targets = [];
-
-    const unsubscribe = Target.targetCreated(target => {
-      if (target.targetInfo.type == "page") {
-        targets.push(target);
-
-        // Return once all page targets have been discovered
-        if (targets.length == gBrowser.tabs.length) {
-          unsubscribe();
-          resolve(targets);
-        }
+      let errorThrown = "";
+      try {
+        await Target.setDiscoverTargets({ discover: true, filter });
+      } catch (e) {
+        errorThrown = e.message;
       }
-    });
 
-    // Calling `setDiscoverTargets` will dispatch `targetCreated` event for all
-    // already opened tabs and the browser target.
-    Target.setDiscoverTargets({ discover: true });
-  });
+      ok(
+        errorThrown.match(/filter: array value expected/),
+        `Filter fails for invalid type: ${filter}`
+      );
+    }
 
-  // Get the current target
-  const filtered_targets = targets.filter(target => {
-    return target.targetInfo.targetId == currentTargetId;
-  });
-  is(filtered_targets.length, 1, "The current target has been found");
-  const { targetInfo } = filtered_targets[0];
+    for (const filterEntry of [null, undefined, true, 1, "foo", []]) {
+      info(`Checking filter entry with invalid value: ${filterEntry}`);
 
-  ok(!!targetInfo, "Target info for current tab has been found");
-  ok(!!targetInfo.targetId, "Page target has a non-empty target id");
-  is(targetInfo.type, "page", "Type of current target is 'page'");
-  is(targetInfo.url, url, "Page target has a non-empty target id");
-});
+      let errorThrown = "";
+      try {
+        await Target.setDiscoverTargets({
+          discover: true,
+          filter: [filterEntry],
+        });
+      } catch (e) {
+        errorThrown = e.message;
+      }
+
+      ok(
+        errorThrown.match(/filter: object values expected in array/),
+        `Filter entry fails for invalid type: ${filterEntry}`
+      );
+    }
+
+    for (const type of [null, true, 1, [], {}]) {
+      info(`Checking filter entry with type as invalid value: ${type}`);
+
+      let errorThrown = "";
+      try {
+        await Target.setDiscoverTargets({
+          discover: true,
+          filter: [{ type }],
+        });
+      } catch (e) {
+        errorThrown = e.message;
+      }
+
+      ok(
+        errorThrown.match(/filter: type: string value expected/),
+        `Filter entry type fails for invalid type: ${type}`
+      );
+    }
+
+    for (const exclude of [null, 1, "foo", [], {}]) {
+      info(`Checking filter entry with exclude as invalid value: ${exclude}`);
+
+      let errorThrown = "";
+      try {
+        await Target.setDiscoverTargets({
+          discover: true,
+          filter: [{ exclude }],
+        });
+      } catch (e) {
+        errorThrown = e.message;
+      }
+
+      ok(
+        errorThrown.match(/filter: exclude: boolean value expected/),
+        `Filter entry exclude for invalid type: ${exclude}`
+      );
+    }
+  },
+  { createTab: false }
+);
+
+add_task(
+  async function noFilterWithDiscoverFalse({ client }) {
+    const { Target } = client;
+
+    // Check filter cannot be given with discover: false
+    let errorThrown = "";
+    try {
+      await Target.setDiscoverTargets({
+        discover: false,
+        filter: [{}],
+      });
+    } catch (e) {
+      errorThrown = e.message;
+    }
+
+    ok(
+      errorThrown.match(/filter: should not be present when discover is false/),
+      `Error throw when given filter with discover false`
+    );
+  },
+  { createTab: false }
+);
+
+add_task(
+  async function targetInfoValues({ client }) {
+    const { Target, target } = client;
+
+    await loadURL(PAGE_TEST);
+
+    const targets = await getDiscoveredTargets(Target);
+
+    Assert.equal(targets.length, 1, "Got expected amount of targets");
+
+    const targetInfo = targets[0];
+    is(targetInfo.id, target.id, "Got expected target id");
+    is(targetInfo.type, "page", "Got expected target type");
+    is(targetInfo.title, "Test Page", "Got expected target title");
+    is(targetInfo.url, PAGE_TEST, "Got expected target URL");
+  },
+  { createTab: false }
+);
+
+add_task(
+  async function discoverEnabledAndMultipleTabs({ client }) {
+    const { Target, target } = client;
+    const { targetInfo: newTabTargetInfo } = await openTab(Target);
+
+    await loadURL(PAGE_TEST);
+
+    const targets = await getDiscoveredTargets(Target);
+
+    Assert.equal(targets.length, 2, "Got expected amount of targets");
+    const targetIds = targets.map(info => info.id);
+    ok(targetIds.includes(target.id), "Got expected original target id");
+    ok(targetIds.includes(newTabTargetInfo.id), "Got expected new target id");
+  },
+  { createTab: false }
+);
+
+add_task(
+  async function allFilters({ client }) {
+    const { Target } = client;
+
+    await loadURL(PAGE_TEST);
+
+    for (const filter of [[{}], [{ type: "browser" }, { type: "page" }]]) {
+      // Blank/all filter so all targets are returned, including main process
+      const targets = await getDiscoveredTargets(Target, { filter });
+
+      is(targets.length, 2, "Got expected amount of targets with all filter");
+
+      const pageTarget = targets.find(info => info.type === "page");
+      ok(!!pageTarget, "Found page target in targets with all filter");
+
+      const mainProcessTarget = targets.find(info => info.type === "browser");
+      ok(
+        !!mainProcessTarget,
+        "Found main process target in targets with all filter"
+      );
+    }
+  },
+  { createTab: false }
+);
+
+add_task(
+  async function pageOnlyFilters({ client }) {
+    const { Target } = client;
+
+    await loadURL(PAGE_TEST);
+
+    for (const filter of [
+      [{ type: "page" }],
+      [{ type: "browser", exclude: true }, { type: "page" }],
+    ]) {
+      // Filter so only page targets are returned
+      // This returns same as default but pass our own custom filter to ensure
+      // these filters still return what they should
+      const targets = await getDiscoveredTargets(Target, { filter });
+
+      is(targets.length, 1, "Got expected amount of targets with page filter");
+      is(
+        targets[0].type,
+        "page",
+        "Got expected type 'page' of target from page filter"
+      );
+    }
+  },
+  { createTab: false }
+);
+
+add_task(
+  async function browserOnlyFilters({ client }) {
+    const { Target } = client;
+
+    await loadURL(PAGE_TEST);
+
+    for (const filter of [
+      [{ type: "browser" }],
+      [{ type: "page", exclude: true }, {}],
+    ]) {
+      // Filter so only main process target is returned
+      const targets = await getDiscoveredTargets(Target, { filter });
+
+      is(
+        targets.length,
+        1,
+        "Got expected amount of targets with browser only filter"
+      );
+      is(
+        targets[0].type,
+        "browser",
+        "Got expected type 'browser' of target from browser only filter"
+      );
+    }
+  },
+  { createTab: false }
+);
