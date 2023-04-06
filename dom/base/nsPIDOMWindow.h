@@ -238,6 +238,20 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
 
   /**
    * Call this to check whether some node (this window, its document,
+   * or content in that document) has a transition* event listeners.
+   */
+  bool HasTransitionEventListeners() { return mMayHaveTransitionEventListener; }
+
+  /**
+   * Call this to indicate that some node (this window, its document,
+   * or content in that document) has a transition* event listener.
+   */
+  void SetHasTransitionEventListeners() {
+    mMayHaveTransitionEventListener = true;
+  }
+
+  /**
+   * Call this to check whether some node (this window, its document,
    * or content in that document) has a beforeinput event listener.
    * Returing false may be wrong if some nodes have come from another document
    * with `Document.adoptNode`.
@@ -667,6 +681,7 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   bool mMayHaveFormSelectEventListener;
   bool mMayHaveMouseEnterLeaveEventListener;
   bool mMayHavePointerEnterLeaveEventListener;
+  bool mMayHaveTransitionEventListener;
   // Only used for telemetry probes.  This may be wrong if some nodes have
   // come from another document with `Document.adoptNode`.
   bool mMayHaveBeforeInputEventListenerForTelemetry;

@@ -157,11 +157,11 @@ class EventListenerManagerBase {
   uint16_t mMayHaveInputOrCompositionEventListener : 1;
   uint16_t mMayHaveSelectionChangeEventListener : 1;
   uint16_t mMayHaveFormSelectEventListener : 1;
+  uint16_t mMayHaveTransitionEventListener : 1;
   uint16_t mClearingListeners : 1;
   uint16_t mIsMainThreadELM : 1;
   uint16_t mHasNonPrivilegedClickListeners : 1;
   uint16_t mUnknownNonPrivilegedClickListeners : 1;
-  // uint16_t mUnused : 1;
 };
 
 /*
@@ -489,6 +489,9 @@ class EventListenerManager final : public EventListenerManagerBase {
   }
   bool MayHaveFormSelectEventListener() const {
     return mMayHaveFormSelectEventListener;
+  }
+  bool MayHaveTransitionEventListener() {
+    return mMayHaveTransitionEventListener;
   }
 
   bool HasNonPrivilegedClickListeners();

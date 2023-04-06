@@ -280,6 +280,18 @@ struct AnimationEventInfo {
     MOZ_ASSERT(mEvent.is<InternalTransitionEvent>() ||
                mEvent.is<InternalAnimationEvent>());
 
+    if (mEvent.is<InternalTransitionEvent>() && target->IsNode()) {
+      nsPIDOMWindowInner* inner =
+          target->AsNode()->OwnerDoc()->GetInnerWindow();
+      if (inner && !inner->HasTransitionEventListeners()) {
+        MOZ_ASSERT(AsWidgetEvent()->mMessage == eTransitionStart ||
+                   AsWidgetEvent()->mMessage == eTransitionRun ||
+                   AsWidgetEvent()->mMessage == eTransitionEnd ||
+                   AsWidgetEvent()->mMessage == eTransitionCancel);
+        return;
+      }
+    }
+
     EventDispatcher::Dispatch(target, aPresContext, AsWidgetEvent());
   }
 };
