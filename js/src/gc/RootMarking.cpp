@@ -339,6 +339,11 @@ void js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc,
          zone.next()) {
       zone->traceRootsInMajorGC(trc);
     }
+
+    // Trace interpreter entry code generated with --emit-interpreter-entry
+    if (rt->hasJitRuntime() && rt->jitRuntime()->hasInterpreterEntryMap()) {
+      rt->jitRuntime()->getInterpreterEntryMap()->traceTrampolineCode(trc);
+    }
   }
 
   // Trace helper thread roots.
@@ -431,6 +436,9 @@ void js::gc::GCRuntime::finishRoots() {
 #ifdef JS_GC_ZEAL
   clearSelectedForMarking();
 #endif
+
+  // Clear out the interpreter entry map before the final gc.
+  ClearInterpreterEntryMap(rt);
 
   // Clear any remaining roots from the embedding (as otherwise they will be
   // left dangling after we shut down) and remove the callbacks.
