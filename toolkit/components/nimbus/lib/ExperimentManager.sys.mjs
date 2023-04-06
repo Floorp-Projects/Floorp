@@ -179,9 +179,7 @@ export class _ExperimentManager {
     recipeMismatches,
     invalidRecipes,
     invalidBranches,
-    invalidFeatures,
-    missingLocale,
-    missingL10nIds
+    invalidFeatures
   ) {
     for (const enrollment of enrollments) {
       const { slug, source } = enrollment;
@@ -198,10 +196,6 @@ export class _ExperimentManager {
             reason = "invalid-recipe";
           } else if (invalidBranches.has(slug) || invalidFeatures.has(slug)) {
             reason = "invalid-branch";
-          } else if (missingLocale.includes(slug)) {
-            reason = "l10n-missing-locale";
-          } else if (missingL10nIds.has(slug)) {
-            reason = "l10n-missing-entry";
           } else {
             reason = "recipe-not-seen";
           }
@@ -227,16 +221,6 @@ export class _ExperimentManager {
    *         feature validation.
    * @param {Map<string, string[]>} options.invalidFeatures
    *        The mapping of experiment slugs to a list of invalid feature IDs.
-   * @param {string[]} options.missingLocale
-   *        The list of experiment slugs missing an entry in the localization
-   *        table for the current locale.
-   * @param {Map<string, string[]>} options.missingL10nIds
-   *        The mapping of experiment slugs to the IDs of localization entries
-   *        missing from the current locale.
-   * @param {string | null} options.locale
-   *        The current locale.
-   * @param {boolean} options.validationEnabled
-   *        Whether or not schema validation was enabled.
    */
   onFinalize(
     sourceToCheck,
@@ -245,9 +229,6 @@ export class _ExperimentManager {
       invalidRecipes = [],
       invalidBranches = new Map(),
       invalidFeatures = new Map(),
-      missingLocale = [],
-      missingL10nIds = new Map(),
-      locale = null,
       validationEnabled = true,
     } = {}
   ) {
@@ -262,9 +243,7 @@ export class _ExperimentManager {
       recipeMismatches,
       invalidRecipes,
       invalidBranches,
-      invalidFeatures,
-      missingLocale,
-      missingL10nIds
+      invalidFeatures
     );
     this._checkUnseenEnrollments(
       activeRollouts,
@@ -272,13 +251,11 @@ export class _ExperimentManager {
       recipeMismatches,
       invalidRecipes,
       invalidBranches,
-      invalidFeatures,
-      missingLocale,
-      missingL10nIds
+      invalidFeatures
     );
 
-    // If schema validation is disabled, then we will never send these
-    // validation failed telemetry events
+    // If validation is disabled, then we will never send validation failed
+    // telemetry.
     if (validationEnabled) {
       for (const slug of invalidRecipes) {
         this.sendValidationFailedTelemetry(slug, "invalid-recipe");
@@ -296,21 +273,6 @@ export class _ExperimentManager {
             feature: featureId,
           });
         }
-      }
-    }
-
-    if (locale) {
-      for (const slug of missingLocale.values()) {
-        this.sendValidationFailedTelemetry(slug, "l10n-missing-locale", {
-          locale,
-        });
-      }
-
-      for (const [slug, ids] of missingL10nIds.entries()) {
-        this.sendValidationFailedTelemetry(slug, "l10n-missing-entry", {
-          l10n_ids: ids.join(","),
-          locale,
-        });
       }
     }
 
@@ -393,7 +355,6 @@ export class _ExperimentManager {
       userFacingDescription,
       featureIds,
       isRollout,
-      localizations,
     },
     branch,
     source,
@@ -414,7 +375,6 @@ export class _ExperimentManager {
       lastSeen: new Date().toJSON(),
       featureIds,
       prefs,
-      localizations,
     };
 
     if (typeof isRollout !== "undefined") {
