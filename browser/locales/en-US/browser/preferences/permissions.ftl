@@ -197,3 +197,26 @@ permissions-site-speaker-window =
     .title = Settings - Speaker Permissions
     .style = { permissions-window2.style }
 permissions-site-speaker-desc = The following websites have requested to select an audio output device. You can specify which websites are allowed to select an audio output device.
+
+permissions-exceptions-doh-window =
+    .title = Website Exceptions for DNS over HTTPS
+    .style = { permissions-window2.style }
+permissions-exceptions-manage-doh-desc = { -brand-short-name } won’t use secure DNS on these sites and their subdomains.
+
+permissions-doh-entry-field = Enter website domain name
+    .accesskey = d
+
+permissions-doh-add-exception =
+    .label = Add
+    .accesskey = A
+
+permissions-doh-col =
+    .label = Domain
+
+permissions-doh-remove =
+    .label = Remove
+    .accesskey = R
+
+permissions-doh-remove-all =
+    .label = Remove All
+    .accesskey = e
