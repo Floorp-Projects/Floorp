@@ -6,12 +6,10 @@ package org.mozilla.fenix
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.test.core.app.ApplicationProvider
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.utils.toSafeIntent
 import org.junit.Assert.assertEquals
@@ -20,7 +18,6 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity.Companion.PRIVATE_BROWSING_MODE
@@ -34,8 +31,6 @@ import org.mozilla.fenix.utils.Settings
 
 @RunWith(FenixRobolectricTestRunner::class)
 class HomeActivityTest {
-
-    @get:Rule val gleanTestRule = GleanTestRule(ApplicationProvider.getApplicationContext())
 
     private lateinit var activity: HomeActivity
 
