@@ -11,6 +11,7 @@
 #include "gmp-entrypoints.h"
 #include "prlink.h"
 #include "prenv.h"
+#include "prerror.h"
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
 #  include "mozilla/sandboxTarget.h"
 #  include "mozilla/sandboxing/SandboxInitialization.h"
@@ -117,7 +118,8 @@ bool GMPLoader::Load(const char* aUTF8LibPath, uint32_t aUTF8LibPathLen,
 #endif
   PRLibrary* lib = PR_LoadLibraryWithFlags(libSpec, 0);
   if (!lib) {
-    MOZ_CRASH("Cannot load plugin as library!");
+    MOZ_CRASH_UNSAFE_PRINTF("Cannot load plugin as library %d %d",
+                            PR_GetError(), PR_GetOSError());
     return false;
   }
 
