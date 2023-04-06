@@ -336,7 +336,7 @@ dependencies = [
  "nom",
  "nss-gk-api",
  "pkcs11-bindings",
- "rand 0.8.5",
+ "rand",
  "runloop",
  "serde",
  "serde_bytes",
@@ -491,7 +491,7 @@ dependencies = [
  "comedy",
  "guid_win",
  "lazy_static",
- "rand 0.8.5",
+ "rand",
  "regex",
  "tempfile",
  "thiserror",
@@ -1129,7 +1129,7 @@ name = "dap_ffi"
 version = "0.1.0"
 dependencies = [
  "prio",
- "rand 0.8.5",
+ "rand",
  "thin-vec",
 ]
 
@@ -3783,7 +3783,7 @@ version = "0.1.0"
 dependencies = [
  "nserror",
  "ohttp",
- "rand 0.8.5",
+ "rand",
  "thin-vec",
  "xpcom",
 ]
@@ -3986,7 +3986,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5d5285893bb5eb82e6aaf5d59ee909a06a16737a8970984dd7746ba9283498d6"
 dependencies = [
  "phf_shared",
- "rand 0.8.5",
+ "rand",
 ]
 
 [[package]]
@@ -4270,13 +4270,6 @@ dependencies = [
 
 [[package]]
 name = "rand"
-version = "0.7.999"
-dependencies = [
- "rand 0.8.5",
-]
-
-[[package]]
-name = "rand"
 version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "34af8d1a0e25924bc5b7c43c079c942339d8f0a8b57c39049bef581b46327404"
@@ -4494,13 +4487,13 @@ checksum = "8a654c5bda722c699be6b0fe4c0d90de218928da5b724c3e467fc48865c37263"
 
 [[package]]
 name = "rust_cascade"
-version = "1.4.0"
+version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef248456c30c6607f1eb1e5d11025367b3340e235314dd33d2b31b41b35ac335"
+checksum = "04249959e1b66d36f746f45ca8d0eed17cdc30c30aad178a856b7c45d51fe127"
 dependencies = [
  "byteorder",
  "murmurhash3",
- "rand 0.7.999",
+ "rand",
  "sha2",
 ]
 
@@ -5087,7 +5080,7 @@ version = "0.1.0"
 source = "git+https://github.com/mozilla/application-services?rev=86c84c217036c12283d19368867323a66bf35883#86c84c217036c12283d19368867323a66bf35883"
 dependencies = [
  "base64",
- "rand 0.8.5",
+ "rand",
  "rusqlite",
  "serde",
 ]
