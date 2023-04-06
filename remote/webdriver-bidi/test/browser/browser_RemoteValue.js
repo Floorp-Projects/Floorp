@@ -469,14 +469,14 @@ add_task(function test_deserializeLocalValuesByHandle() {
 
     Assert.throws(
       () => deserialize(realm2, remoteReference),
-      /InvalidArgumentError:/,
+      /NoSuchHandleError:/,
       `Got expected error when using the wrong realm for deserialize`
     );
 
     realm1.removeObjectHandle(serializedValue.handle);
     Assert.throws(
       () => deserialize(realm1, remoteReference),
-      /InvalidArgumentError:/,
+      /NoSuchHandleError:/,
       `Got expected error when after deleting the object handle`
     );
   }
