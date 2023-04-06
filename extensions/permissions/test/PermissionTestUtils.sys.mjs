@@ -6,17 +6,14 @@
  * with uri or origin string parameters.
  */
 
-"use strict";
-
 let pm = Services.perms;
 
 let secMan = Services.scriptSecurityManager;
 
-const EXPORTED_SYMBOLS = ["PermissionTestUtils"];
-
 /**
  * Convert origin string or uri to principal.
  * If passed an nsIPrincipal it will be returned without conversion.
+ *
  * @param {Ci.nsIPrincipal|Ci.nsIURI|string} subject - Subject to convert to principal
  * @returns {Ci.nsIPrincipal} Principal created from subject
  */
@@ -35,10 +32,11 @@ function convertToPrincipal(subject) {
   );
 }
 
-let PermissionTestUtils = {
+export let PermissionTestUtils = {
   /**
    * Add permission information for a given subject.
    * Subject can be a principal, uri or origin string.
+   *
    * @see nsIPermissionManager for documentation
    *
    * @param {Ci.nsIPrincipal|Ci.nsIURI|string} subject
@@ -50,6 +48,7 @@ let PermissionTestUtils = {
   /**
    * Get all custom permissions for a given subject.
    * Subject can be a principal, uri or origin string.
+   *
    * @see nsIPermissionManager for documentation
    *
    * @param {Ci.nsIPrincipal|Ci.nsIURI|string} subject
@@ -61,6 +60,7 @@ let PermissionTestUtils = {
   /**
    * Remove permission information for a given subject and permission type
    * Subject can be a principal, uri or origin string.
+   *
    * @see nsIPermissionManager for documentation
    *
    * @param {Ci.nsIPrincipal|Ci.nsIURI|string} subject
@@ -72,6 +72,7 @@ let PermissionTestUtils = {
   /**
    * Test whether a website has permission to perform the given action.
    * Subject can be a principal, uri or origin string.
+   *
    * @see nsIPermissionManager for documentation
    *
    * @param {Ci.nsIPrincipal|Ci.nsIURI|string} subject
@@ -83,6 +84,7 @@ let PermissionTestUtils = {
   /**
    * Test whether a website has permission to perform the given action.
    * Subject can be a principal, uri or origin string.
+   *
    * @see nsIPermissionManager for documentation
    *
    * @param {Ci.nsIPrincipal|Ci.nsIURI|string} subject
@@ -97,6 +99,7 @@ let PermissionTestUtils = {
   /**
    * Get the permission object associated with the given subject and action.
    * Subject can be a principal, uri or origin string.
+   *
    * @see nsIPermissionManager for documentation
    *
    * @param {Ci.nsIPrincipal|Ci.nsIURI|string} subject

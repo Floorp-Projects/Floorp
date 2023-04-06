@@ -1,5 +1,5 @@
-var { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
+var { PermissionTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PermissionTestUtils.sys.mjs"
 );
 
 const PREF_PERMISSION_FAKE = "media.navigator.permission.fake";

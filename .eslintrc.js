@@ -273,7 +273,7 @@ module.exports = {
         "docshell/base/URIFixup.sys.mjs",
         "dom/**",
         "editor/**",
-        "extensions/permissions/test/PermissionTestUtils.jsm",
+        "extensions/permissions/test/PermissionTestUtils.sys.mjs",
         "gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js",
         "image/test/**",
         "intl/**",

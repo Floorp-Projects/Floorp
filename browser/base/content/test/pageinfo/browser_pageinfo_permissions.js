@@ -1,5 +1,5 @@
-const { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
+const { PermissionTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PermissionTestUtils.sys.mjs"
 );
 
 const TEST_ORIGIN = "https://example.com";

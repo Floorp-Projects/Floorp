@@ -4,8 +4,8 @@
 
 // tests the translation infobar, using a fake 'Translation' implementation.
 
-const { PermissionTestUtils } = ChromeUtils.import(
-  "resource://testing-common/PermissionTestUtils.jsm"
+const { PermissionTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PermissionTestUtils.sys.mjs"
 );
 
 const kLanguagesPref = "browser.translation.neverForLanguages";

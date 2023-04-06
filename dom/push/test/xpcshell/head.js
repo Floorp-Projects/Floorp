@@ -8,6 +8,7 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
+  PermissionTestUtils: "resource://testing-common/PermissionTestUtils.sys.mjs",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
@@ -20,7 +21,6 @@ ChromeUtils.defineESModuleGetters(this, {
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
-  PermissionTestUtils: "resource://testing-common/PermissionTestUtils.jsm",
 });
 var {
   clearInterval,
