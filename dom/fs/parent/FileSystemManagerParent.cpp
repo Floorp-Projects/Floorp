@@ -279,7 +279,10 @@ IPCResult FileSystemManagerParent::RecvGetFile(
     }
   }
 
-  RefPtr<BlobImpl> blob = MakeRefPtr<FileBlobImpl>(fileObject);
+  // TODO: Currently, there is no way to assign type and it is empty.
+  // See bug 1826780.
+  RefPtr<BlobImpl> blob =
+      MakeRefPtr<FileBlobImpl>(fileObject, path.LastElement(), type);
 
   IPCBlob ipcBlob;
   QM_TRY(MOZ_TO_RESULT(IPCBlobUtils::Serialize(blob, ipcBlob)), IPC_OK(),
