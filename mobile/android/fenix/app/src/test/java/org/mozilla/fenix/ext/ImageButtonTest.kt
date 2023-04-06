@@ -6,36 +6,44 @@ package org.mozilla.fenix.ext
 
 import android.view.View
 import android.widget.ImageButton
-import mozilla.components.support.test.robolectric.testContext
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import io.mockk.Runs
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
+import io.mockk.verify
+import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
-@RunWith(FenixRobolectricTestRunner::class)
 class ImageButtonTest {
-    private val imageButton = ImageButton(testContext)
+    private val imageButton: ImageButton = mockk()
+
+    @Before
+    fun setup() {
+        every { imageButton.visibility = any() } just Runs
+        every { imageButton.isEnabled = any() } just Runs
+    }
 
     @Test
     fun `Hide and disable`() {
         imageButton.hideAndDisable()
-        assertFalse(imageButton.isEnabled)
-        assertEquals(View.INVISIBLE, imageButton.visibility)
+
+        verify { imageButton.isEnabled = false }
+        verify { imageButton.visibility = View.INVISIBLE }
     }
 
     @Test
     fun `Show and enable`() {
         imageButton.showAndEnable()
-        assertTrue(imageButton.isEnabled)
-        assertEquals(View.VISIBLE, imageButton.visibility)
+
+        verify { imageButton.isEnabled = true }
+        verify { imageButton.visibility = View.VISIBLE }
     }
 
     @Test
     fun `Remove and disable`() {
         imageButton.removeAndDisable()
-        assertFalse(imageButton.isEnabled)
-        assertEquals(View.GONE, imageButton.visibility)
+
+        verify { imageButton.isEnabled = false }
+        verify { imageButton.visibility = View.GONE }
     }
 }
