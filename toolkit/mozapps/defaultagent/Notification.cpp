@@ -129,23 +129,6 @@ struct Strings {
   }
 };
 
-// Gets a string out of the specified INI file.
-// Returns true on success, false on failure
-static bool GetString(const wchar_t* iniPath, const char* section,
-                      const char* key,
-                      mozilla::UniquePtr<wchar_t[]>& toastString) {
-  IniReader reader(iniPath, section);
-  reader.AddKey(key, &toastString);
-  int result = reader.Read();
-  if (result != OK) {
-    LOG_ERROR_MESSAGE(
-        L"Unable to retrieve INI string: section=%S, key=%S, result=%d",
-        section, key, result);
-    return false;
-  }
-  return true;
-}
-
 // Gets all strings out of the relevant INI files.
 // Returns true on success, false on failure
 static bool GetStrings(Strings& strings) {
@@ -543,31 +526,13 @@ static NotificationActivities ShowNotification(
   return activitiesPerformed;
 }
 
-// This function checks that the Firefox build is using English. This is checked
-// because of the peculiar way we are localizing toast notifications where we
-// use a completely different set of strings in English.
-bool FirefoxInstallIsEnglish() {
-  mozilla::UniquePtr<wchar_t[]> installPath;
-  bool success = GetInstallDirectory(installPath);
-  if (!success) {
-    LOG_ERROR_MESSAGE(L"Failed to get install directory when getting strings");
-    return false;
-  }
-  const wchar_t* iniFormat = L"%s\\locale.ini";
-  int bufferSize = _scwprintf(iniFormat, installPath.get());
-  ++bufferSize;  // Extra character for terminating null
-  mozilla::UniquePtr<wchar_t[]> iniPath =
-      mozilla::MakeUnique<wchar_t[]>(bufferSize);
-  _snwprintf_s(iniPath.get(), bufferSize, _TRUNCATE, iniFormat,
-               installPath.get());
-
-  mozilla::UniquePtr<wchar_t[]> firefoxLocale;
-  if (!GetString(iniPath.get(), "locale", "locale", firefoxLocale)) {
-    return false;
-  }
-
-  return _wcsnicmp(firefoxLocale.get(), L"en-", 3) == 0;
-}
+// Previously this function checked that the Firefox build was using English.
+// This was checked because of the peculiar way we were localizing toast
+// notifications where we used a completely different set of strings in English.
+//
+// We've since unified the notification flows but need to clean up unused code
+// and config files - Bug 1826375.
+bool FirefoxInstallIsEnglish() { return false; }
 
 // If a notification is shown, this function will block until the notification
 // is activated or dismissed.
