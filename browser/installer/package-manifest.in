@@ -109,6 +109,10 @@
 @BINPATH@/@DLL_PREFIX@mozwayland@DLL_SUFFIX@
 #endif
 #endif
+#ifdef MOZ_GTK
+@BINPATH@/vaapitest
+@BINPATH@/glxtest
+#endif
 
 ; We don't have a complete view of which dlls to expect when doing an artifact
 ; build because we haven't run the relevant parts of configure, so we guess
@@ -157,9 +161,6 @@
 #else
 @BINPATH@/@DLL_PREFIX@qipcap@DLL_SUFFIX@
 #endif
-#endif
-#ifdef MOZ_GTK
-@BINPATH@/vaapitest
 #endif
 
 ; [Components]

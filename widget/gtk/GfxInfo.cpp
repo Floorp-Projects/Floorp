@@ -163,7 +163,7 @@ void GfxInfo::GetData() {
         wait_for_glxtest_process = true;
       } else {
         // Bug 718629
-        // ECHILD happens when the glxtest process got reaped got reaped after a
+        // ECHILD happens when the glxtest process got reaped after a
         // PR_CreateProcess as per bug 227246. This shouldn't matter, as we
         // still seem to get the data from the pipe, and if we didn't, the
         // outcome would be to blocklist anyway.
