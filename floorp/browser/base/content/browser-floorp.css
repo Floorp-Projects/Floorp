@@ -48,6 +48,10 @@
 
   #sidebar-select-box {
     background: var(--toolbar-bgcolor);
+    background-image: var(--lwt-additional-images);
+    background-repeat: no-repeat, no-repeat, no-repeat;
+    background-position: center;
+    background-size: cover;
   }
   
   #sidebar-select-box {

@@ -14,7 +14,11 @@
    min-width: -moz-available !important;;
    max-width: -moz-available !important;
    height: 100% !important;
-   background: transparent ;
+   background: transparent;
+   background-image: var(--lwt-additional-images);
+   background-repeat: no-repeat, no-repeat, no-repeat;
+   background-position: left;
+   background-size: cover;
   }
   
   #toolbar-items-verticaltabs {
@@ -90,12 +94,11 @@
  }
  
   #tabs-newtab-button {
-   display: block !important;
+   display: flex !important;
    width: -moz-available;
   }
  
  #tabs-newtab-button:hover {
-  appearance: inherit !important;
   background: var(--toolbarbutton-hover-background);
 }
 
@@ -106,7 +109,7 @@
 #tabs-newtab-button {
   width: -moz-available;
   position: unset;
-  appearance: auto;
+  appearance: inherit;
   margin-left: 5px;
   margin-right: 5px;
 }
@@ -117,6 +120,12 @@
  
   #tabs-newtab-button > .toolbarbutton-text {
    display: none ;
+  }
+
+  #tabs-newtab-button > .toolbarbutton-icon {
+   margin-left: auto;
+   margin-right: auto;
+   margin-inline-end: auto !important;
   }
   
   .tabbrowser-tab {
