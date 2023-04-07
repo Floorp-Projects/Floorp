@@ -3967,7 +3967,7 @@ bool js::GlobalOrEvalDeclInstantiation(JSContext* cx, HandleObject envChain,
 
 bool js::InitFunctionEnvironmentObjects(JSContext* cx, AbstractFramePtr frame) {
   MOZ_ASSERT(frame.isFunctionFrame());
-  MOZ_ASSERT(frame.callee()->needsSomeEnvironmentObject());
+  MOZ_ASSERT(frame.callee()->needsFunctionEnvironmentObjects());
 
   RootedFunction callee(cx, frame.callee());
 

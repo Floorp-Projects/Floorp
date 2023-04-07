@@ -257,8 +257,6 @@ class BaselineCodeGen {
   [[nodiscard]] bool emitDebugPrologue();
   [[nodiscard]] bool emitDebugEpilogue();
 
-  template <typename F>
-  [[nodiscard]] bool initEnvironmentChainHelper(const F& initFunctionEnv);
   [[nodiscard]] bool initEnvironmentChain();
 
   [[nodiscard]] bool emitHandleCodeCoverageAtPrologue();
