@@ -38,6 +38,12 @@ class UtilityProcessParent final
 
   mozilla::ipc::IPCResult RecvFOGData(ByteBuf&& aBuf);
 
+#if defined(XP_WIN)
+  mozilla::ipc::IPCResult RecvGetModulesTrust(
+      ModulePaths&& aModPaths, bool aRunAtNormalPriority,
+      GetModulesTrustResolver&& aResolver);
+#endif  // defined(XP_WIN)
+
   mozilla::ipc::IPCResult RecvAccumulateChildHistograms(
       nsTArray<HistogramAccumulation>&& aAccumulations);
   mozilla::ipc::IPCResult RecvAccumulateChildKeyedHistograms(
