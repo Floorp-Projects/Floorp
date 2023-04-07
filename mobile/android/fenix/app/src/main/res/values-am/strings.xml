@@ -507,6 +507,8 @@
     <string name="preferences_data_choices">የውሂብ ምርጫዎች</string>
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">የውሂብ መሰብሰብ</string>
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">በUSB የርቀት ማረም</string>
     <!-- Preference title for switch preference to show search engines -->
     <string name="preferences_show_search_engines">የፍለጋ ፍርግሞችን አሳይ</string>
     <!-- Preference title for switch preference to show search suggestions -->
@@ -578,16 +580,29 @@
     <!-- Title for the customize home screen section with sponsored Pocket stories. -->
     <string name="customize_toggle_pocket_sponsored">ስፖንሰር የተደረጉ ታሪኮች</string>
 
+    <!-- Title for the opening wallpaper settings screen -->
+    <string name="customize_wallpapers">ልጣፎች</string>
     <!-- Title for the customize home screen section with sponsored shortcuts. -->
     <string name="customize_toggle_contile">ስፖንሰር የተደረጉ አቋራጮች</string>
 
+    <!-- Wallpapers -->
+    <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
+    <string name="wallpapers_item_name_content_description">ልጣፍ ንጥል፡- %1$s</string>
+    <!-- Snackbar message for when wallpaper is selected -->
+    <string name="wallpaper_updated_snackbar_message">ልጣፍ ዘምኗል!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">ዕይታ</string>
+    <!-- Snackbar message for when wallpaper couldn't be downloaded -->
+    <string name="wallpaper_download_error_snackbar_message">ልጣፍ ማውረድ አልተቻለም</string>
     <!-- Snackbar label for action to retry downloading the wallpaper -->
     <string name="wallpaper_download_error_snackbar_action">እንደገና ሞክር</string>
+    <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
+    <string name="wallpaper_select_error_snackbar_message">ልጣፍ መቀየር አልተቻለም</string>
     <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
     <string name="wallpaper_learn_more">ተጨማሪ ይወቁ</string>
 
+    <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
+    <string name="wallpaper_classic_title">ምርጥ %s</string>
     <!-- Text for limited edition wallpapers title. -->
     <string name="wallpaper_limited_edition_title">የተወሰነ ስሪት</string>
     <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
@@ -596,6 +611,11 @@
     <string name="wallpaper_limited_edition_description">አዲሱ ገለልተኛ ድምጾች ስብስብ።</string>
     <!-- Wallpaper onboarding dialog header text. -->
     <string name="wallpapers_onboarding_dialog_title_text">የቀለም ነጠብጣብ ይሞክሩ</string>
+
+    <!-- Wallpaper onboarding dialog body text. -->
+    <string name="wallpapers_onboarding_dialog_body_text">እርስዎን የሚያናግር ልጣፍ ይምረጡ።</string>
+    <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
+    <string name="wallpapers_onboarding_dialog_explore_more_button_text">ተጨማሪ ልጣፎችን ያስሱ</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -739,6 +759,9 @@
     <!-- Title to show in alert when a lot of tabs are to be opened
     %d is a placeholder for the number of tabs that will be opened -->
     <string name="open_all_warning_title">%d ትሮች ይከፈቱ?</string>
+    <!-- Message to warn users that a large number of tabs will be opened
+    %s will be replaced by app name. -->
+    <string name="open_all_warning_message">ይህን ብዙ ትሮች መክፈት ገጾቹ በሚጫኑበት ጊዜ %sን ሊያዘገየው ይችላል። እርግጠኛ ነዎት መቀጠል ይፈልጋሉ?</string>
     <!-- Dialog button text for confirming open all tabs -->
     <string name="open_all_warning_confirm">ትሮችን ክፈት</string>
     <!-- Dialog button text for canceling open all tabs -->
@@ -1506,6 +1529,8 @@
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">በሁሉም ትሮች ውስጥ</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">በግል ትሮች ውስጥ ብቻ</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">የአሳሽ አሻራ መከታተያዎች</string>
     <!-- Button label for navigating to the Enhanced Tracking Protection details -->
     <string name="enhanced_tracking_protection_details">ዝርዝር ማብራሪያዎች</string>
     <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
@@ -1524,6 +1549,8 @@
     <string name="etp_cookies_description">የማስታወቂያ አውታረ መረቦች እና የትንታኔ ኩባንያዎች የእርስዎን የአሰሳ ውሂብ በብዙ ድረ-ገጾች ላይ ለመሰብሰብ የሚጠቀሙባቸውን ኩኪዎች ያግዳል።</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description_2">አጠቃላይ የኩኪ ጥበቃ ኩኪዎችን እርስዎ ካሉበት ድረ-ገጽ ላይ ይነጥላቸዋል ስለዚህ እንደ የማስታወቂያ አውታረ መረቦች ያሉ መከታተያዎች እርስዎን በሁሉም ድረ-ገጾች ላይ ለመከታተል ሊጠቀሙባቸው አይችሉም።</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">የአሳሽ አሻራ መከታተያዎች</string>
     <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_description">ለክትትል ዓላማዎች የሚያገለግል በልዩ ሁኔታ የሚለይ ውሂብ ስለ መሳሪያዎ እንዳይሰበሰብ ያቆማል።</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
@@ -1786,6 +1813,8 @@
     <string name="addresses_state">ክልል</string>
     <!-- The header for the subregion of an address when "province" should be used -->
     <string name="addresses_province">ዞን</string>
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">ዚፕ</string>
     <!-- The header for the country or region of an address -->
     <string name="addresses_country">ሀገር ወይም ክልል</string>
     <!-- The header for the phone number of an address -->

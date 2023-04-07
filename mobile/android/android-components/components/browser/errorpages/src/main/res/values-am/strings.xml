@@ -141,8 +141,25 @@
       </ul>
     ]]></string>
 
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">ለደህንነት ሲባል ወደብ ተገድቧል</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+      <p>የተጠየቀው አድራሻ ወደብ (ምሣ. <q>mozilla.org:80</q> በmozilla.org ላይ ወደብ 80) በተለምዶ ከድር አሰሳ ውጭ ለ<em>ሌላ</em> ጥቅም ላይ ይውላል። ለእርስዎ ጥበቃ እና ደህንነት አሳሹ ጥያቄውን ሰርዟል።</p>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">ግንኙነቱ ዳግም ተጀምሯል</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>በግንኙነት ላይ ሲደራደሩ የአውታረ መረቡ ማገናኛ ተቋርጧል። እባክዎ እንደገና ይሞክሩ።</p>
+      <ul>
+        <li>ድረ-ገጹ ለጊዜው የማይገኝ ወይም በጣም ስራ የበዛበት ሊሆን ይችላል። ከጥቂት ጊዜ በኋላ እንደገና ይሞክሩ።</li>
+        <li>ምንም ገጾችን መጫን ካልቻሉ የመሣሪያዎን ውሂብ ወይም የWi-Fi ግንኙነት ያረጋግጡ።</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">ደህንነቱ ያልተጠበቀ የፋይል አይነት</string>
@@ -186,6 +203,17 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">አድራሻ አልተገኘም</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>አሳሹ ለተጠቀሰው አድራሻ አስተናጋጅ አገልጋይ ማግኘት አልቻለም።</p>
+      <ul>
+        <li>ለትየባ ስህተቶች አድራሻውን ያረጋግጡ ለምሣሌ
+          <strong>ww</strong>.example.com
+          በ<strong>www</strong>.example.com ምትክ።</li>
+        <li>ምንም ገጾችን መጫን ካልቻሉ የመሣሪያዎን ውሂብ ወይም የWi-Fi ግንኙነት ያረጋግጡ።</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">ምንም የበይነመረብ ግንኙነት የለም</string>

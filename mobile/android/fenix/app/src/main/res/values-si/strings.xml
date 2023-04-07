@@ -15,6 +15,8 @@
     <string name="content_description_disable_private_browsing_button">පෞද්. පිරික්සීම අබල කරන්න</string>
     <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
     <string name="search_hint">සොයන්න හෝ ලිපිනය යොදන්න</string>
+    <!-- Placeholder text shown in the search bar before a user enters text for a general engine -->
+    <string name="search_hint_general_engine">වියමනහි සොයන්න</string>
     <!-- Placeholder text shown in search bar when using history search -->
     <string name="history_search_hint">ඉතිහාසය සොයන්න</string>
     <!-- Placeholder text shown in search bar when using bookmarks search -->
@@ -291,8 +293,18 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">දැන් නොවේ</string>
 
+    <!-- Juno first user onboarding flow experiment -->
+    <!-- Title for set firefox as default browser screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_default_browser_title">%s පෙරනිමි අතිරික්සුව කරන්න</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
+    <string name="juno_onboarding_default_browser_positive_button">පෙරනිමි අතිරික්සුව කරන්න</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_default_browser_negative_button">දැන් නොවේ</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title">දුරකථනයෙන් පරිගණකයට සහ ආපසු</string>
+    <!-- Description for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_description">ඔබ නතර කළ තැනින් අතට ගැනීමට ඔබගේ අනෙකුත් උපාංගවලින් පටිති සහ මුරපද ගන්න.</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button">පිවිසෙන්න</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -414,6 +426,9 @@
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">ඉඩ දෙන්න</string>
 
+    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
+    <string name="reduce_cookie_banner_dialog_change_setting_button">ඉඩ දෙන්න</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">ඉහළ ආරක්‍ෂාවක් සඳහා HTTPS සංකේතන කෙටුම්පත භාවිතයෙන් අඩවි වෙත ස්වයංක්‍රීයව සම්බන්ධ වීමට තැත් කරයි.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
@@ -492,6 +507,10 @@
     <string name="preferences_enable_autocomplete_urls">ඒ.ස.නි. ස්වයං පිරවීම</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">යෙදුම්වල සබැඳි අරින්න</string>
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">සැමවිටම</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">කවදාවත්</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">බාහිර බාගැනීම් කළමනාකරු</string>
     <!-- Preference for add_ons -->
@@ -1195,12 +1214,18 @@
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">අළෙවිකරණය</string>
 
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_text" tools:ignore="UnusedResources">ෆයර්ෆොක්ස් පෙරනිමි අතිරික්සුව කරන්න</string>
     <!-- Title shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_title">පෞද්. පිරික්සුම බලන්න</string>
 
     <!-- Text shown in the notification that pops up to re-engage the user.
     %1$s is a placeholder that will be replaced by the app name. -->
     <string name="notification_re_engagement_text">%1$s හි සුරැකින ලද දත්තකඩ හෝ ඉතිහාසයක් නැතිව පිරික්සන්න</string>
+
+    <!-- Preference for not taking the short survey. -->
+    <string name="preferences_not_take_survey">එපා, ස්තුතියි</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
@@ -1340,6 +1365,8 @@
     <string name="onboarding_firefox_account_sync_is_on">සමමුහූර්තය සක්‍රියයි</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">පෙරනිමි පෞද්ගලිකත්‍ව රැකවරණය</string>
+    <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_old">%1$s මගින් අන්තර්ජාලය පුරා ඔබව රහසිගතව ලුහුබඳින සමාගම් ස්වයංක්‍රීයව නවත්වයි.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">පූර්ණ දත්තකඩ රැකවරණය මගින් වියමන පුරා දත්තකඩ භාවිතයෙන් ඔබ පසුපස හඹා එන ලුහුබඳින්නන් නවත්වයි.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->

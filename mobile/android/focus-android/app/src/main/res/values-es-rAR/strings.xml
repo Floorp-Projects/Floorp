@@ -354,7 +354,7 @@
     <string name="preference_privacy_notice">Aviso de privacidad</string>
 
     <!-- In-app link (in settings) to Focus licensing information. -->
-    <string name="preference_licensing_info">Información de la licencia</string>
+    <string name="preference_licensing_info">Información de licencia</string>
 
     <!-- Link to Focus licensing information from other libraries that we use. -->
     <string name="preference_libraries_we_use">Bibliotecas que usamos</string>
