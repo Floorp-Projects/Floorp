@@ -3358,11 +3358,11 @@ void ClientWebGLContext::RawBufferData(GLenum target, const uint8_t* srcBytes,
 void ClientWebGLContext::RawBufferSubData(GLenum target,
                                           WebGLsizeiptr dstByteOffset,
                                           const uint8_t* srcBytes,
-                                          size_t srcLen) {
+                                          size_t srcLen, bool unsynchronized) {
   const FuncScope funcScope(*this, "bufferSubData");
 
   Run<RPROC(BufferSubData)>(target, dstByteOffset,
-                            RawBuffer<>({srcBytes, srcLen}));
+                            RawBuffer<>({srcBytes, srcLen}), unsynchronized);
 }
 
 void ClientWebGLContext::BufferSubData(GLenum target,
@@ -3371,7 +3371,8 @@ void ClientWebGLContext::BufferSubData(GLenum target,
   const FuncScope funcScope(*this, "bufferSubData");
   src.ComputeState();
   const auto range = Range<const uint8_t>{src.Data(), src.Length()};
-  Run<RPROC(BufferSubData)>(target, dstByteOffset, RawBuffer<>(range));
+  Run<RPROC(BufferSubData)>(target, dstByteOffset, RawBuffer<>(range),
+                            /* unsynchronized */ false);
 }
 
 void ClientWebGLContext::BufferSubData(GLenum target,
@@ -3387,7 +3388,8 @@ void ClientWebGLContext::BufferSubData(GLenum target,
     return;
   }
   const auto range = Range<const uint8_t>{bytes, byteLen};
-  Run<RPROC(BufferSubData)>(target, dstByteOffset, RawBuffer<>(range));
+  Run<RPROC(BufferSubData)>(target, dstByteOffset, RawBuffer<>(range),
+                            /* unsynchronized */ false);
 }
 
 void ClientWebGLContext::CopyBufferSubData(GLenum readTarget,

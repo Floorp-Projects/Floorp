@@ -174,25 +174,29 @@ void WebGLBuffer::BufferData(const GLenum target, const uint64_t size,
   ResetLastUpdateFenceId();
 }
 
-void WebGLBuffer::BufferSubData(GLenum target, uint64_t dstByteOffset,
-                                uint64_t dataLen, const void* data) const {
-  if (!ValidateRange(dstByteOffset, dataLen)) return;
+void WebGLBuffer::BufferSubData(GLenum target, uint64_t rawDstByteOffset,
+                                uint64_t rawDataLen, const void* data,
+                                bool unsynchronized) const {
+  if (!ValidateRange(rawDstByteOffset, rawDataLen)) return;
 
-  if (!CheckedInt<GLintptr>(dstByteOffset).isValid() ||
-      !CheckedInt<GLsizeiptr>(dataLen).isValid())
+  const CheckedInt<GLintptr> dstByteOffset = rawDstByteOffset;
+  const CheckedInt<GLsizeiptr> dataLen = rawDataLen;
+  if (!dstByteOffset.isValid() || !dataLen.isValid()) {
     return mContext->ErrorOutOfMemory("offset or size too large for platform.");
+  }
 
   ////
 
-  if (!dataLen) return;  // With validation successful, nothing else to do.
+  if (!rawDataLen) return;  // With validation successful, nothing else to do.
 
   const void* uploadData = data;
   if (mIndexCache) {
-    const auto cachedDataBegin = (uint8_t*)mIndexCache.get() + dstByteOffset;
-    memcpy(cachedDataBegin, data, dataLen);
+    auto* const cachedDataBegin =
+        (uint8_t*)mIndexCache.get() + rawDstByteOffset;
+    memcpy(cachedDataBegin, data, dataLen.value());
     uploadData = cachedDataBegin;
 
-    InvalidateCacheRange(dstByteOffset, dataLen);
+    InvalidateCacheRange(dstByteOffset.value(), dataLen.value());
   }
 
   ////
@@ -200,7 +204,28 @@ void WebGLBuffer::BufferSubData(GLenum target, uint64_t dstByteOffset,
   const auto& gl = mContext->gl;
   const ScopedLazyBind lazyBind(gl, target, this);
 
-  gl->fBufferSubData(target, dstByteOffset, dataLen, uploadData);
+  void* mapping = nullptr;
+  if (unsynchronized && gl->IsSupported(gl::GLFeature::map_buffer_range)) {
+    GLbitfield access = LOCAL_GL_MAP_WRITE_BIT |
+                        LOCAL_GL_MAP_UNSYNCHRONIZED_BIT |
+                        LOCAL_GL_MAP_INVALIDATE_RANGE_BIT;
+    // On some Mali devices there are known performance issues with the
+    // combination of GL_MAP_UNSYNCHRONIZED_BIT and GL_MAP_INVALIDATE_RANGE_BIT,
+    // so omit the latter.
+    if (gl->Renderer() == gl::GLRenderer::MaliT) {
+      access &= ~LOCAL_GL_MAP_INVALIDATE_RANGE_BIT;
+    }
+    mapping = gl->fMapBufferRange(target, dstByteOffset.value(),
+                                  dataLen.value(), access);
+  }
+
+  if (mapping) {
+    memcpy(mapping, uploadData, dataLen.value());
+    gl->fUnmapBuffer(target);
+  } else {
+    gl->fBufferSubData(target, dstByteOffset.value(), dataLen.value(),
+                       uploadData);
+  }
 
   ResetLastUpdateFenceId();
 }

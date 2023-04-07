@@ -164,6 +164,7 @@ enum class GLRenderer {
   AdrenoTM420,
   Mali400MP,
   Mali450MP,
+  MaliT,
   SGX530,
   SGX540,
   SGX544MP,

@@ -689,8 +689,14 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
 
   void BufferData(GLenum target, uint64_t dataLen, const uint8_t* data,
                   GLenum usage) const;
+  // The unsynchronized flag may allow for better performance when
+  // interleaving buffer updates with draw calls. However, care must
+  // be taken. This has similar semantics to glMapBufferRange's
+  // GL_MAP_UNSYNCHRONIZED_BIT: the results of any pending operations
+  // that reference the region of the buffer being updated are
+  // undefined.
   void BufferSubData(GLenum target, uint64_t dstByteOffset, uint64_t srcDataLen,
-                     const uint8_t* srcData) const;
+                     const uint8_t* srcData, bool unsynchronized = false) const;
 
  protected:
   // bound buffer state
