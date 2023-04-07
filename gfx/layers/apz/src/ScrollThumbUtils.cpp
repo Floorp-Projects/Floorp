@@ -225,7 +225,7 @@ void AsyncScrollThumbTransformer::ApplyTransformForAxis(const Axis& aAxis) {
     // The scroll thumb needs to be translated in opposite direction of the
     // async scroll. This is because scrolling down, which translates the layer
     // content up, should result in moving the scroll thumb down.
-    translation = -asyncScroll.value * unitlessThumbRatio;
+    ParentLayerCoord translationPL = -asyncScroll * unitlessThumbRatio;
 
     // The translation we computed is in the scroll frame's ParentLayer space.
     // This includes the full cumulative resolution, even if we are a subframe.
@@ -233,8 +233,14 @@ void AsyncScrollThumbTransformer::ApplyTransformForAxis(const Axis& aAxis) {
     // is already subject to the resolutions of enclosing scroll frames. To
     // avoid double application of these enclosing resolutions, divide them out,
     // leaving only the local resolution if any.
-    translation /= (mMetrics.GetCumulativeResolution().scale /
-                    mMetrics.GetPresShellResolution());
+    translationPL /= (mMetrics.GetCumulativeResolution().scale /
+                      mMetrics.GetPresShellResolution());
+
+    // Convert translation to CSS pixels as this is what TranslateThumb expects.
+    translation = ViewAs<OuterCSSPixel>(
+        translationPL / (mMetrics.GetDevPixelsPerCSSPixel() *
+                         LayoutDeviceToParentLayerScale(1.0)),
+        PixelCastJustification::CSSPixelsOfSurroundingContent);
   }
 
   // When scaling the thumb to account for the async zoom, keep the position
