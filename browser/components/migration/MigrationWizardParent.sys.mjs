@@ -33,6 +33,10 @@ export class MigrationWizardParent extends JSWindowActorParent {
     Services.telemetry.setEventRecordingEnabled("browser.migration", true);
   }
 
+  didDestroy() {
+    Services.obs.notifyObservers(this, "MigrationWizard:Destroyed");
+  }
+
   /**
    * General message handler function for messages received from the
    * associated MigrationWizardChild JSWindowActor.
