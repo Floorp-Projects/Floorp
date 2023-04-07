@@ -2089,14 +2089,8 @@ var gBrowserInit = {
     let shouldRemoveFocusedAttribute = true;
 
     this._callWithURIToLoad(uriToLoad => {
-      // Check if user is enrolled in an aboutWelcome experiment that has skipFocus
-      // property set to true, if yes remove focus from urlbar for about:welcome
-      const aboutWelcomeSkipUrlBarFocus =
-        uriToLoad == "about:welcome" &&
-        NimbusFeatures.aboutwelcome.getVariable("skipFocus");
-
       if (
-        (isBlankPageURL(uriToLoad) && !aboutWelcomeSkipUrlBarFocus) ||
+        isBlankPageURL(uriToLoad) ||
         uriToLoad == "about:privatebrowsing" ||
         this.getTabToAdopt()?.isEmpty
       ) {

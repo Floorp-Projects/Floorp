@@ -116,17 +116,17 @@ TEST(NimbusFeaturesGetFallback, Errors)
 {
   // No experiment is set and we expect to return fallback pref values
 
-  // As defined by fallbackPref browser.aboutwelcome.skipFocus
+  // As defined by fallbackPref browser.aboutwelcome.enabled
   // in FeatureManifest.yaml
-  Preferences::SetBool("browser.aboutwelcome.skipFocus", true,
+  Preferences::SetBool("browser.aboutwelcome.enabled", true,
                        PrefValueKind::Default);
-  ASSERT_EQ(NimbusFeatures::GetBool("aboutwelcome"_ns, "skipFocus"_ns, false),
+  ASSERT_EQ(NimbusFeatures::GetBool("aboutwelcome"_ns, "enabled"_ns, false),
             true);
-  Preferences::SetBool("browser.aboutwelcome.skipFocus", false,
+  Preferences::SetBool("browser.aboutwelcome.enabled", false,
                        PrefValueKind::User);
-  ASSERT_EQ(NimbusFeatures::GetBool("aboutwelcome"_ns, "skipFocus"_ns, true),
+  ASSERT_EQ(NimbusFeatures::GetBool("aboutwelcome"_ns, "enabled"_ns, true),
             false);
-  Preferences::ClearUser("browser.aboutwelcome.skipFocus");
+  Preferences::ClearUser("browser.aboutwelcome.enabled");
 
   const auto FALLBACK_VALUE = 5;
   const auto DEFAULT_VALUE = 42;
