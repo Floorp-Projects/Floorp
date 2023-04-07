@@ -1667,7 +1667,6 @@ pref("trailhead.firstrun.newtab.triplets", "");
 pref("browser.aboutwelcome.enabled", true);
 // Used to set multistage welcome UX
 pref("browser.aboutwelcome.screens", "");
-pref("browser.aboutwelcome.skipFocus", true);
 // Used to enable window modal onboarding
 pref("browser.aboutwelcome.showModal", false);
 

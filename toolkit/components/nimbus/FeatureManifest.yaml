@@ -287,12 +287,6 @@ aboutwelcome:
       type: json
       fallbackPref: browser.aboutwelcome.screens
       description: Content to show in the onboarding flow
-    skipFocus:
-      type: boolean
-      fallbackPref: browser.aboutwelcome.skipFocus
-      description: >-
-        Should the urlbar should be focused when users first land on
-        about:welcome?
     languageMismatchEnabled:
       type: boolean
       fallbackPref: intl.multilingual.aboutWelcome.languageMismatchEnabled
