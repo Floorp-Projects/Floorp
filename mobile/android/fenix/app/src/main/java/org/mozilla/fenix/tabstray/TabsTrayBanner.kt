@@ -39,29 +39,42 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import mozilla.components.browser.state.state.ContentState
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.ui.tabcounter.TabCounter
 import org.mozilla.fenix.R
+import org.mozilla.fenix.compose.DropdownMenu
+import org.mozilla.fenix.compose.MenuItem
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.theme.FirefoxTheme
+
+private val ICON_SIZE = 24.dp
 
 /**
  * Top-level UI for displaying the banner in [TabsTray].
  *
- * @param isInMultiSelectMode Whether the tab list is in multi-select mode.
+ * @param selectMode Current [TabsTrayState.Mode] used in the tabs tray.
  * @param selectedPage The active [Page] of the Tabs Tray.
  * @param normalTabCount The total amount of normal browsing tabs currently open.
+ * @param isInDebugMode True for debug variant or if secret menu is enabled for this session.
  * @param onTabPageIndicatorClicked Invoked when the user clicks on a tab page indicator.
  */
 @Composable
 fun TabsTrayBanner(
-    isInMultiSelectMode: Boolean,
+    selectMode: TabsTrayState.Mode,
     selectedPage: Page,
     normalTabCount: Int,
+    isInDebugMode: Boolean,
     onTabPageIndicatorClicked: (Page) -> Unit,
 ) {
-    if (isInMultiSelectMode) {
-        MultiSelectBanner()
+    if (selectMode is TabsTrayState.Mode.Select) {
+        MultiSelectBanner(
+            selectedTabCount = selectMode.selectedTabs.size,
+            shouldShowInactiveButton = isInDebugMode,
+        )
     } else {
         SingleSelectBanner(
             onTabPageIndicatorClicked = onTabPageIndicatorClicked,
@@ -198,20 +211,94 @@ private fun NormalTabsTabIcon(normalTabCount: Int) {
     }
 }
 
+/**
+ * Banner displayed in multi select mode.
+ *
+ * @param selectedTabCount Number of selected tabs.
+ * @param shouldShowInactiveButton Whether or not to show the inactive tabs menu item.
+ */
+@Suppress("LongMethod")
 @Composable
-private fun MultiSelectBanner() {
-    Box(
+private fun MultiSelectBanner(
+    selectedTabCount: Int,
+    shouldShowInactiveButton: Boolean,
+) {
+    var showMenu by remember { mutableStateOf(false) }
+    val menuItems = mutableListOf(
+        MenuItem(
+            title = stringResource(R.string.tab_tray_multiselect_menu_item_bookmark),
+        ) {},
+        MenuItem(
+            title = stringResource(R.string.tab_tray_multiselect_menu_item_close),
+        ) {},
+    )
+    if (shouldShowInactiveButton) {
+        menuItems.add(
+            MenuItem(
+                title = stringResource(R.string.inactive_tabs_menu_item),
+            ) {},
+        )
+    }
+
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp)
+            .height(88.dp)
             .background(color = FirefoxTheme.colors.layerAccent),
-        contentAlignment = Alignment.Center,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
+        IconButton(onClick = {}) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_close),
+                contentDescription = stringResource(id = R.string.tab_tray_close_multiselect_content_description),
+                tint = FirefoxTheme.colors.iconOnColor,
+            )
+        }
+
         Text(
-            text = "Multi selection mode",
-            color = FirefoxTheme.colors.textOnColorPrimary,
+            text = stringResource(R.string.tab_tray_multi_select_title, selectedTabCount),
             style = FirefoxTheme.typography.body1,
+            color = FirefoxTheme.colors.textOnColorPrimary,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.W500,
         )
+
+        Spacer(modifier = Modifier.weight(1.0f))
+
+        IconButton(onClick = {}) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_tab_collection),
+                contentDescription = stringResource(
+                    id = R.string.tab_tray_collection_button_multiselect_content_description,
+                ),
+                tint = FirefoxTheme.colors.iconOnColor,
+            )
+        }
+
+        IconButton(onClick = {}) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_share),
+                contentDescription = stringResource(
+                    id = R.string.tab_tray_multiselect_share_content_description,
+                ),
+                tint = FirefoxTheme.colors.iconOnColor,
+            )
+        }
+
+        IconButton(onClick = { showMenu = true }) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_menu),
+                contentDescription = stringResource(id = R.string.tab_tray_multiselect_menu_content_description),
+                tint = FirefoxTheme.colors.iconOnColor,
+            )
+
+            DropdownMenu(
+                menuItems = menuItems,
+                showMenu = showMenu,
+                offset = DpOffset(x = 0.dp, y = -ICON_SIZE),
+                onDismissRequest = { showMenu = false },
+            )
+        }
     }
 }
 
@@ -236,13 +323,28 @@ private fun TabsTrayBannerInfinityPreview() {
 @Composable
 private fun TabsTrayBannerMultiselectPreview() {
     TabsTrayBannerPreviewRoot(
-        isInMultiSelectMode = true,
+        selectMode = TabsTrayState.Mode.Select(
+            setOf(
+                TabSessionState(
+                    id = "1",
+                    content = ContentState(
+                        url = "www.mozilla.com",
+                    ),
+                ),
+                TabSessionState(
+                    id = "2",
+                    content = ContentState(
+                        url = "www.mozilla.com",
+                    ),
+                ),
+            ),
+        ),
     )
 }
 
 @Composable
 private fun TabsTrayBannerPreviewRoot(
-    isInMultiSelectMode: Boolean = false,
+    selectMode: TabsTrayState.Mode = TabsTrayState.Mode.Normal,
     selectedPage: Page = Page.NormalTabs,
     normalTabCount: Int = 10,
 ) {
@@ -251,9 +353,10 @@ private fun TabsTrayBannerPreviewRoot(
     FirefoxTheme {
         Box(modifier = Modifier.background(color = FirefoxTheme.colors.layer1)) {
             TabsTrayBanner(
-                isInMultiSelectMode = isInMultiSelectMode,
+                selectMode = selectMode,
                 selectedPage = selectedPageState,
                 normalTabCount = normalTabCount,
+                isInDebugMode = true,
                 onTabPageIndicatorClicked = { page ->
                     selectedPageState = page
                 },

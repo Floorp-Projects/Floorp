@@ -50,6 +50,7 @@ import mozilla.components.browser.storage.sync.Tab as SyncTab
  * @param browserStore [BrowserStore] used to listen for changes to [BrowserState].
  * @param tabsTrayStore [TabsTrayStore] used to listen for changes to [TabsTrayState].
  * @param displayTabsInGrid Whether the normal and private tabs should be displayed in a grid.
+ * @param isInDebugMode True for debug variant or if secret menu is enabled for this session.
  * @param onTabClose Invoked when the user clicks to close a tab.
  * @param onTabMediaClick Invoked when the user interacts with a tab's media controls.
  * @param onTabClick Invoked when the user clicks on a tab.
@@ -68,13 +69,14 @@ import mozilla.components.browser.storage.sync.Tab as SyncTab
  * @param onSyncedTabClick Invoked when the user clicks on a synced tab.
  */
 @OptIn(ExperimentalPagerApi::class, ExperimentalComposeUiApi::class)
-@Suppress("LongMethod", "LongParameterList")
+@Suppress("LongMethod", "LongParameterList", "ComplexMethod")
 @Composable
 fun TabsTray(
     appStore: AppStore,
     browserStore: BrowserStore,
     tabsTrayStore: TabsTrayStore,
     displayTabsInGrid: Boolean,
+    isInDebugMode: Boolean,
     shouldShowInactiveTabsAutoCloseDialog: (Int) -> Boolean,
     onTabPageClick: (Page) -> Unit,
     onTabClose: (TabSessionState) -> Unit,
@@ -116,6 +118,12 @@ fun TabsTray(
         }
     }
 
+    val shapeModifier = if (isInMultiSelectMode) {
+        Modifier
+    } else {
+        Modifier.clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+    }
+
     LaunchedEffect(selectedPage) {
         pagerState.animateScrollToPage(selectedPage.ordinal)
     }
@@ -123,14 +131,15 @@ fun TabsTray(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+            .then(shapeModifier)
             .background(FirefoxTheme.colors.layer1),
     ) {
         Box(modifier = Modifier.nestedScroll(rememberNestedScrollInteropConnection())) {
             TabsTrayBanner(
-                isInMultiSelectMode = isInMultiSelectMode,
+                selectMode = multiselectMode,
                 selectedPage = selectedPage,
                 normalTabCount = normalTabs.size + inactiveTabs.size,
+                isInDebugMode = isInDebugMode,
                 onTabPageIndicatorClicked = onTabPageClick,
             )
         }
@@ -341,6 +350,7 @@ private fun TabsTrayPreviewRoot(
             browserStore = browserStore,
             tabsTrayStore = tabsTrayStore,
             displayTabsInGrid = displayTabsInGrid,
+            isInDebugMode = false,
             shouldShowInactiveTabsAutoCloseDialog = { true },
             onTabPageClick = { page ->
                 selectedPageState = page

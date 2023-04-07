@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -28,6 +29,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param showMenu Whether or not the menu is currently displayed to the user.
  * @param onDismissRequest Invoked when user dismisses the menu or on orientation changes.
  * @param modifier Modifier to be applied to the menu.
+ * @param offset Offset to be added to the position of the menu.
  */
 @Composable
 fun DropdownMenu(
@@ -35,6 +37,7 @@ fun DropdownMenu(
     showMenu: Boolean,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
+    offset: DpOffset = DpOffset.Zero,
 ) {
     DisposableEffect(LocalConfiguration.current.orientation) {
         onDispose { onDismissRequest() }
@@ -44,6 +47,7 @@ fun DropdownMenu(
         DropdownMenu(
             expanded = showMenu && menuItems.isNotEmpty(),
             onDismissRequest = { onDismissRequest() },
+            offset = offset,
             modifier = Modifier
                 .background(color = FirefoxTheme.colors.layer2)
                 .then(modifier),
