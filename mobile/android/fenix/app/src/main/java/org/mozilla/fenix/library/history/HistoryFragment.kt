@@ -17,6 +17,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.RadioGroup
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.Lifecycle
@@ -63,6 +64,8 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
     private lateinit var historyStore: HistoryFragmentStore
     private lateinit var historyInteractor: HistoryInteractor
     private lateinit var historyProvider: DefaultPagedHistoryProvider
+
+    private var deleteHistory: MenuItem? = null
 
     private var history: Flow<PagingData<History>> = Pager(
         PagingConfig(PAGE_SIZE),
@@ -190,6 +193,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
 
         consumeFrom(historyStore) {
             historyView.update(it)
+            updateDeleteMenuItemView(!it.isEmpty)
         }
 
         requireContext().components.appStore.flowScoped(viewLifecycleOwner) { flow ->
@@ -204,6 +208,16 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
             history.collect {
                 historyView.historyAdapter.submitData(it)
             }
+        }
+    }
+
+    private fun updateDeleteMenuItemView(isEnabled: Boolean) {
+        val closedTabs = requireContext().components.core.store.state.closedTabs.size
+        if (!isEnabled && closedTabs == 0) {
+            deleteHistory?.isEnabled = false
+            deleteHistory?.icon?.setTint(
+                ContextCompat.getColor(requireContext(), R.color.fx_mobile_icon_color_disabled),
+            )
         }
     }
 
@@ -223,6 +237,8 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
                 }
         } else {
             inflater.inflate(R.menu.history_menu, menu)
+            deleteHistory = menu.findItem(R.id.history_delete)
+            updateDeleteMenuItemView(!historyStore.state.isEmpty)
         }
     }
 
