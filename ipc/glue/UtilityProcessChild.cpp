@@ -156,8 +156,7 @@ void CGSShutdownServerConnections();
 
 mozilla::ipc::IPCResult UtilityProcessChild::RecvInit(
     const Maybe<FileDescriptor>& aBrokerFd,
-    const bool& aCanRecordReleaseTelemetry,
-    const bool& aIsReadyForBackgroundProcessing) {
+    const bool& aCanRecordReleaseTelemetry) {
   // Do this now (before closing WindowServer on macOS) to avoid risking
   // blocking in GetCurrentProcess() called on that platform
   mozilla::ipc::SetThisProcessName("Utility Process");
@@ -183,7 +182,7 @@ mozilla::ipc::IPCResult UtilityProcessChild::RecvInit(
 #if defined(XP_WIN)
   if (aCanRecordReleaseTelemetry) {
     RefPtr<DllServices> dllSvc(DllServices::Get());
-    dllSvc->StartUntrustedModulesProcessor(aIsReadyForBackgroundProcessing);
+    dllSvc->StartUntrustedModulesProcessor(false);
   }
 #endif  // defined(XP_WIN)
   return IPC_OK();
@@ -273,7 +272,7 @@ mozilla::ipc::IPCResult UtilityProcessChild::RecvStartJSOracleService(
   return IPC_OK();
 }
 
-#if defined(XP_WIN)
+#ifdef XP_WIN
 mozilla::ipc::IPCResult UtilityProcessChild::RecvStartWindowsUtilsService(
     Endpoint<dom::PWindowsUtilsChild>&& aEndpoint) {
   mWindowsUtilsInstance = new dom::WindowsUtilsChild();
@@ -285,28 +284,7 @@ mozilla::ipc::IPCResult UtilityProcessChild::RecvStartWindowsUtilsService(
   MOZ_ASSERT(ok);
   return IPC_OK();
 }
-
-mozilla::ipc::IPCResult UtilityProcessChild::RecvGetUntrustedModulesData(
-    GetUntrustedModulesDataResolver&& aResolver) {
-  RefPtr<DllServices> dllSvc(DllServices::Get());
-  dllSvc->GetUntrustedModulesData()->Then(
-      GetMainThreadSerialEventTarget(), __func__,
-      [aResolver](Maybe<UntrustedModulesData>&& aData) {
-        aResolver(std::move(aData));
-      },
-      [aResolver](nsresult aReason) { aResolver(Nothing()); });
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-UtilityProcessChild::RecvUnblockUntrustedModulesThread() {
-  if (nsCOMPtr<nsIObserverService> obs =
-          mozilla::services::GetObserverService()) {
-    obs->NotifyObservers(nullptr, "unblock-untrusted-modules-thread", nullptr);
-  }
-  return IPC_OK();
-}
-#endif  // defined(XP_WIN)
+#endif
 
 void UtilityProcessChild::ActorDestroy(ActorDestroyReason aWhy) {
   if (AbnormalShutdown == aWhy) {
