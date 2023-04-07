@@ -37,7 +37,8 @@ void TaskQueueFrameDecodeScheduler::ScheduleFrame(
     uint32_t rtp,
     FrameDecodeTiming::FrameSchedule schedule,
     FrameReleaseCallback cb) {
-  RTC_DCHECK(!stopped_) << "Can not schedule frames after stopped.";
+  // Mozilla modification, until https://bugs.webrtc.org/14944 is fixed
+  //RTC_DCHECK(!stopped_) << "Can not schedule frames after stopped.";
   RTC_DCHECK(!scheduled_rtp_.has_value())
       << "Can not schedule two frames for release at the same time.";
   RTC_DCHECK(cb);
