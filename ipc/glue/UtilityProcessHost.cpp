@@ -237,7 +237,14 @@ void UtilityProcessHost::InitAfterConnect(bool aSucceeded) {
   }
 #endif  // XP_LINUX && MOZ_SANDBOX
 
-  Unused << GetActor()->SendInit(brokerFd, Telemetry::CanRecordReleaseData());
+  bool isReadyForBackgroundProcessing = false;
+#if defined(XP_WIN)
+  RefPtr<DllServices> dllSvc(DllServices::Get());
+  isReadyForBackgroundProcessing = dllSvc->IsReadyForBackgroundProcessing();
+#endif
+
+  Unused << GetActor()->SendInit(brokerFd, Telemetry::CanRecordReleaseData(),
+                                 isReadyForBackgroundProcessing);
 
   Unused << GetActor()->SendInitProfiler(
       ProfilerParent::CreateForProcess(GetActor()->OtherPid()));
