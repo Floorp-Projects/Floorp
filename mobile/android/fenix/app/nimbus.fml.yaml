@@ -313,12 +313,9 @@ features:
         type: Boolean
         default: false
     defaults:
-      - channel: nightly
-        value:
-          enabled: true
       - channel: developer
         value:
-          enabled: true
+          enabled: false
 
   onboarding:
     description: "A feature that configures the new user onboarding page.
