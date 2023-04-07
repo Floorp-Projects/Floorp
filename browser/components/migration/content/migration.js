@@ -170,6 +170,7 @@ var MigrationWizard = {
     os.removeObserver(this, "Migration:ItemAfterMigrate");
     os.removeObserver(this, "Migration:ItemError");
     os.removeObserver(this, "Migration:Ended");
+    os.notifyObservers(this, "MigrationWizard:Destroyed");
     MigrationUtils.finishMigration();
   },
 

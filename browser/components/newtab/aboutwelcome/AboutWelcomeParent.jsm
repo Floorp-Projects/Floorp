@@ -212,18 +212,19 @@ class AboutWelcomeParent extends JSWindowActorParent {
           !AboutWelcomeParent.isDefaultBrowser()
         );
       case "AWPage:WAIT_FOR_MIGRATION_CLOSE":
-        return new Promise(resolve =>
-          Services.ww.registerNotification(function observer(subject, topic) {
-            if (
-              topic === "domwindowclosed" &&
-              subject.document.documentURI ===
-                "chrome://browser/content/migration/migration.xhtml"
-            ) {
-              Services.ww.unregisterNotification(observer);
-              resolve();
-            }
-          })
-        );
+        // Support multiples types of migration: 1) content modal 2) old
+        // migration modal 3) standalone content modal
+        return new Promise(resolve => {
+          const topics = [
+            "MigrationWizard:Closed",
+            "MigrationWizard:Destroyed",
+          ];
+          const observer = () => {
+            topics.forEach(t => Services.obs.removeObserver(observer, t));
+            resolve();
+          };
+          topics.forEach(t => Services.obs.addObserver(observer, t));
+        });
       case "AWPage:GET_APP_AND_SYSTEM_LOCALE_INFO":
         return lazy.LangPackMatcher.getAppAndSystemLocaleInfo();
       case "AWPage:EVALUATE_SCREEN_TARGETING":

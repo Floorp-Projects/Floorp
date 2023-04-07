@@ -1783,9 +1783,22 @@ var gMainPane = {
     }
     migrationWizardDialog.firstElementChild.requestState();
 
-    if (closeTabWhenDone) {
-      migrationWizardDialog.addEventListener("close", () => window.close());
-    }
+    migrationWizardDialog.addEventListener(
+      "close",
+      () => {
+        // Let others know that the wizard is closed -- potentially because of a
+        // user action within the dialog that dispatches "MigrationWizard:Close"
+        // but this also covers cases like hitting Escape.
+        Services.obs.notifyObservers(
+          migrationWizardDialog,
+          "MigrationWizard:Closed"
+        );
+        if (closeTabWhenDone) {
+          window.close();
+        }
+      },
+      { once: true }
+    );
 
     migrationWizardDialog.showModal();
   },
