@@ -38,7 +38,8 @@ class UtilityProcessChild final : public PUtilityProcessChild {
             const nsCString& aParentBuildID, uint64_t aSandboxingKind);
 
   mozilla::ipc::IPCResult RecvInit(const Maybe<ipc::FileDescriptor>& aBrokerFd,
-                                   const bool& aCanRecordReleaseTelemetry);
+                                   const bool& aCanRecordReleaseTelemetry,
+                                   const bool& aIsReadyForBackgroundProcessing);
   mozilla::ipc::IPCResult RecvInitProfiler(
       Endpoint<PProfilerChild>&& aEndpoint);
 
@@ -63,10 +64,14 @@ class UtilityProcessChild final : public PUtilityProcessChild {
   mozilla::ipc::IPCResult RecvStartJSOracleService(
       Endpoint<dom::PJSOracleChild>&& aEndpoint);
 
-#ifdef XP_WIN
+#if defined(XP_WIN)
   mozilla::ipc::IPCResult RecvStartWindowsUtilsService(
       Endpoint<PWindowsUtilsChild>&& aEndpoint);
-#endif
+
+  mozilla::ipc::IPCResult RecvGetUntrustedModulesData(
+      GetUntrustedModulesDataResolver&& aResolver);
+  mozilla::ipc::IPCResult RecvUnblockUntrustedModulesThread();
+#endif  // defined(XP_WIN)
 
   AsyncBlockers& AsyncShutdownService() { return mShutdownBlockers; }
 

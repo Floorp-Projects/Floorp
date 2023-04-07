@@ -30,6 +30,12 @@ using mozilla::Telemetry::KeyedScalarAction from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::ChildEventData from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::DiscardedData from "mozilla/TelemetryComms.h";
 
+#if defined(XP_WIN)
+[MoveOnly] using mozilla::UntrustedModulesData from "mozilla/UntrustedModulesData.h";
+[MoveOnly] using mozilla::ModulePaths from "mozilla/UntrustedModulesData.h";
+[MoveOnly] using mozilla::ModulesMapResult from "mozilla/UntrustedModulesData.h";
+#endif  // defined(XP_WIN)
+
 namespace mozilla {
 
 namespace ipc {
@@ -50,6 +56,11 @@ parent:
   // https://firefox-source-docs.mozilla.org/toolkit/components/glean/dev/ipc.html
   async FOGData(ByteBuf buf);
 
+#if defined(XP_WIN)
+  async GetModulesTrust(ModulePaths aModPaths, bool aRunAtNormalPriority)
+      returns (ModulesMapResult? modMapResult);
+#endif  // defined(XP_WIN)
+
   // Messages for sending telemetry to parent process.
   async AccumulateChildHistograms(HistogramAccumulation[] accumulations);
   async AccumulateChildKeyedHistograms(KeyedHistogramAccumulation[] accumulations);
@@ -61,7 +72,7 @@ parent:
   async InitCompleted();
 
 child:
-  async Init(FileDescriptor? sandboxBroker, bool canRecordReleaseTelemetry);
+  async Init(FileDescriptor? sandboxBroker, bool canRecordReleaseTelemetry, bool aIsReadyForBackgroundProcessing);
 
   async InitProfiler(Endpoint<PProfilerChild> endpoint);
 
@@ -91,7 +102,16 @@ child:
 
 #if defined(XP_WIN)
   async StartWindowsUtilsService(Endpoint<PWindowsUtilsChild> aEndpoint);
-#endif
+
+  async GetUntrustedModulesData() returns (UntrustedModulesData? data);
+
+  /**
+  * This method is used to notify a child process to start
+  * processing module loading events in UntrustedModulesProcessor.
+  * This should be called when the parent process has gone idle.
+  */
+  async UnblockUntrustedModulesThread();
+#endif  // defined(XP_WIN)
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
   async InitSandboxTesting(Endpoint<PSandboxTestingChild> aEndpoint);
