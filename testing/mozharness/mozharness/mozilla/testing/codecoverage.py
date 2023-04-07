@@ -385,8 +385,15 @@ class CodeCoverageMixin(SingleTestMixin):
             assert "JSVM_RESULTS_DIR" in env
             # In this case, parse_coverage_artifacts has removed GCOV_RESULTS_DIR and
             # JSVM_RESULTS_DIR so we need to remove GCOV_PREFIX and JS_CODE_COVERAGE_OUTPUT_DIR.
-            shutil.rmtree(self.gcov_dir)
-            shutil.rmtree(self.jsvm_dir)
+            try:
+                shutil.rmtree(self.gcov_dir)
+            except FileNotFoundError:
+                pass
+
+            try:
+                shutil.rmtree(self.jsvm_dir)
+            except FileNotFoundError:
+                pass
 
     def is_covered(self, sf):
         # For C/C++ source files, we can consider a file as being uncovered

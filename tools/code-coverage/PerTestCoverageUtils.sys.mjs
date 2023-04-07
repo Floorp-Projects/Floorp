@@ -13,30 +13,6 @@ const jsvmPrefixPath = Services.env.get("JS_CODE_COVERAGE_OUTPUT_DIR");
 // This is the directory where codecoverage.py is expecting to see the lcov files.
 const jsvmResultsPath = Services.env.get("JSVM_RESULTS_DIR");
 
-const gcovPrefixDir = Cc["@mozilla.org/file/local;1"].createInstance(
-  Ci.nsIFile
-);
-if (gcovPrefixPath) {
-  gcovPrefixDir.initWithPath(gcovPrefixPath);
-}
-
-let gcovResultsDir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-if (gcovResultsPath) {
-  gcovResultsDir.initWithPath(gcovResultsPath);
-}
-
-const jsvmPrefixDir = Cc["@mozilla.org/file/local;1"].createInstance(
-  Ci.nsIFile
-);
-if (jsvmPrefixPath) {
-  jsvmPrefixDir.initWithPath(jsvmPrefixPath);
-}
-
-let jsvmResultsDir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-if (jsvmResultsPath) {
-  jsvmResultsDir.initWithPath(jsvmResultsPath);
-}
-
 function awaitPromise(promise) {
   let ret;
   let complete = false;
@@ -57,20 +33,6 @@ function awaitPromise(promise) {
   return ret;
 }
 
-function removeDirectoryContents(dir) {
-  let entries = dir.directoryEntries;
-  while (entries.hasMoreElements()) {
-    entries.nextFile.remove(true);
-  }
-}
-
-function moveDirectoryContents(src, dst) {
-  let entries = src.directoryEntries;
-  while (entries.hasMoreElements()) {
-    entries.nextFile.moveTo(dst, null);
-  }
-}
-
 export var PerTestCoverageUtils = class PerTestCoverageUtilsClass {
   // Resets the counters to 0.
   static async beforeTest() {
@@ -85,12 +47,18 @@ export var PerTestCoverageUtils = class PerTestCoverageUtilsClass {
     await codeCoverageService.flushCounters();
 
     // Remove coverage files created by the flush, and those that might have been created between the end of a previous test and the beginning of the next one (e.g. some tests can create a new content process for every sub-test).
-    removeDirectoryContents(gcovPrefixDir);
-    removeDirectoryContents(jsvmPrefixDir);
+    await IOUtils.remove(gcovPrefixPath, {
+      recursive: true,
+      ignoreAbsent: true,
+    });
+    await IOUtils.remove(jsvmPrefixPath, {
+      recursive: true,
+      ignoreAbsent: true,
+    });
 
     // Move coverage files from the GCOV_RESULTS_DIR and JSVM_RESULTS_DIR directories, so we can accumulate the counters.
-    moveDirectoryContents(gcovResultsDir, gcovPrefixDir);
-    moveDirectoryContents(jsvmResultsDir, jsvmPrefixDir);
+    await IOUtils.move(gcovResultsPath, gcovPrefixPath);
+    await IOUtils.move(jsvmResultsPath, jsvmPrefixPath);
   }
 
   static beforeTestSync() {
@@ -110,8 +78,8 @@ export var PerTestCoverageUtils = class PerTestCoverageUtilsClass {
     await codeCoverageService.flushCounters();
 
     // Move the coverage files in GCOV_RESULTS_DIR and JSVM_RESULTS_DIR, so that the execution from now to shutdown (or next test) is not counted.
-    moveDirectoryContents(gcovPrefixDir, gcovResultsDir);
-    moveDirectoryContents(jsvmPrefixDir, jsvmResultsDir);
+    await IOUtils.move(gcovPrefixPath, gcovResultsPath);
+    await IOUtils.move(jsvmPrefixPath, jsvmResultsPath);
   }
 
   static afterTestSync() {
