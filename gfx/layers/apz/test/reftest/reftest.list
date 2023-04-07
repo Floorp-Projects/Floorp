@@ -13,8 +13,10 @@ fuzzy-if(Android,0-43,0-26) fuzzy-if(gtkWidget,0-14,12-32) fuzzy-if(cocoaWidget,
 # Different async zoom levels. Since the scrollthumb gets async-scaled in the
 # compositor, the border-radius ends of the scrollthumb are going to be a little
 # off, hence the fuzzy-if clauses.
-fuzzy-if(Android,0-54,0-33) fuzzy-if(!Android,0-107,0-72) pref(apz.allow_zooming,true) == root-scrollbar-async-zoomed-in.html root-scrollbar-async-zoomed-in-ref.html
-fuzzy-if(Android,0-53,0-30) fuzzy-if(!Android,0-107,0-167) pref(apz.allow_zooming,true) == root-scrollbar-async-zoomed-out.html root-scrollbar-async-zoomed-out-ref.html
+skip-if(Android) fuzzy(0-107,0-72) pref(apz.allow_zooming,true) pref(apz.scrollthumb.recalc,true) == root-scrollbar-async-zoomed-in.html root-scrollbar-async-zoomed-in-ref.html
+skip-if(Android) fuzzy(0-107,0-167) pref(apz.allow_zooming,true) pref(apz.scrollthumb.recalc,true) == root-scrollbar-async-zoomed-out.html root-scrollbar-async-zoomed-out-ref.html
+skip-if(!Android) fuzzy(0-54,0-33) pref(apz.allow_zooming,true) == root-scrollbar-async-zoomed-in.html root-scrollbar-async-zoomed-in-ref.html
+skip-if(!Android) fuzzy(0-53,0-30) pref(apz.allow_zooming,true) == root-scrollbar-async-zoomed-out.html root-scrollbar-async-zoomed-out-ref.html
 
 # Test that the compositor thumb sizing calculations handle a non-default device scale correctly
 fuzzy-if(Android,0-31,0-29) fuzzy-if(gtkWidget,0-18,0-49) fuzzy-if(cocoaWidget,0-21,0-53) == async-scrollbar-1-v-fullzoom.html async-scrollbar-1-v-fullzoom-ref.html
