@@ -196,9 +196,9 @@ bool BaselineInterpreterHandler::addDebugInstrumentationOffset(
 MethodStatus BaselineCompiler::compile() {
   AutoCreatedBy acb(masm, "BaselineCompiler::compile");
 
-  JSScript* script = handler.script();
+  Rooted<JSScript*> script(cx, handler.script());
   JitSpew(JitSpew_BaselineScripts, "Baseline compiling script %s:%u:%u (%p)",
-          script->filename(), script->lineno(), script->column(), script);
+          script->filename(), script->lineno(), script->column(), script.get());
 
   JitSpew(JitSpew_Codegen, "# Emitting baseline code for script %s:%u:%u",
           script->filename(), script->lineno(), script->column());
@@ -220,6 +220,10 @@ MethodStatus BaselineCompiler::compile() {
 
   // Suppress GC during compilation.
   gc::AutoSuppressGC suppressGC(cx);
+
+  if (!script->jitScript()->ensureHasCachedBaselineJitData(cx, script)) {
+    return Method_Error;
+  }
 
   MOZ_ASSERT(!script->hasBaselineScript());
 
