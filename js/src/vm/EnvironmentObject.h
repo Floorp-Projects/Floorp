@@ -770,6 +770,10 @@ class NamedLambdaObject : public BlockLexicalEnvironmentObject {
 
   // For JITs.
   static size_t lambdaSlot();
+
+  static size_t offsetOfLambdaSlot() {
+    return getFixedSlotOffset(lambdaSlot());
+  }
 };
 
 class ClassBodyLexicalEnvironmentObject
