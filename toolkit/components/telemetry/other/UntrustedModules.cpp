@@ -9,6 +9,8 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/net/SocketProcessParent.h"
+#include "mozilla/ipc/UtilityProcessParent.h"
+#include "mozilla/ipc/UtilityProcessManager.h"
 #include "mozilla/RDDChild.h"
 #include "mozilla/RDDProcessManager.h"
 #include "mozilla/WinDllServices.h"
@@ -137,6 +139,14 @@ MultiGetUntrustedModulesData::GetUntrustedModuleLoadEvents() {
   if (RDDProcessManager* rddMgr = RDDProcessManager::Get()) {
     if (RDDChild* rddChild = rddMgr->GetRDDChild()) {
       AddPending(rddChild->SendGetUntrustedModulesData());
+    }
+  }
+
+  if (RefPtr<ipc::UtilityProcessManager> utilityManager =
+          ipc::UtilityProcessManager::GetIfExists()) {
+    for (RefPtr<ipc::UtilityProcessParent>& parent :
+         utilityManager->GetAllProcessesProcessParent()) {
+      AddPending(parent->SendGetUntrustedModulesData());
     }
   }
 
