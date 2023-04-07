@@ -253,14 +253,15 @@ void WebGLContext::BufferData(GLenum target, uint64_t dataLen,
 ////////////////////////////////////////
 
 void WebGLContext::BufferSubData(GLenum target, uint64_t dstByteOffset,
-                                 uint64_t dataLen, const uint8_t* data) const {
+                                 uint64_t dataLen, const uint8_t* data,
+                                 bool unsynchronized) const {
   MOZ_ASSERT(data || !dataLen);
   const FuncScope funcScope(*this, "bufferSubData");
   if (IsContextLost()) return;
 
   const auto& buffer = ValidateBufferSelection(target);
   if (!buffer) return;
-  buffer->BufferSubData(target, dstByteOffset, dataLen, data);
+  buffer->BufferSubData(target, dstByteOffset, dataLen, data, unsynchronized);
 }
 
 ////////////////////////////////////////

@@ -649,6 +649,7 @@ bool GLContext::InitImpl() {
       "Adreno (TM) 420",
       "Mali-400 MP",
       "Mali-450 MP",
+      "Mali-T",
       "PowerVR SGX 530",
       "PowerVR SGX 540",
       "PowerVR SGX 544MP",

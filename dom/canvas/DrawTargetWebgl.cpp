@@ -3137,8 +3137,12 @@ bool DrawTargetWebgl::SharedContext::DrawPathAccel(
           entry->SetVertexRange(vertexRange);
         }
         // printf_stderr("      ... offset %d\n", mPathVertexOffset);
+        // Normal glBufferSubData interleaved with draw calls causes performance
+        // issues on Mali, so use our special unsynchronized version. This is
+        // safe as we never update regions referenced by pending draw calls.
         mWebgl->RawBufferSubData(LOCAL_GL_ARRAY_BUFFER, mPathVertexOffset,
-                                 vbData, vertexBytes);
+                                 vbData, vertexBytes,
+                                 /* unsynchronized */ true);
         mPathVertexOffset += vertexBytes;
         if (wgrVB) {
           WGR::wgr_vertex_buffer_release(wgrVB.ref());
