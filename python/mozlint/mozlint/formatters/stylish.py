@@ -146,4 +146,11 @@ class StylishFormatter(object):
             )
         )
 
+        if result.total_suppressed_warnings > 0 and num_errors == 0:
+            message.append(
+                "(pass {c1}-W/--warnings{c2} to see warnings.)".format(
+                    c1=self.color("grey"), c2=self.term.normal
+                )
+            )
+
         return "\n".join(message)
