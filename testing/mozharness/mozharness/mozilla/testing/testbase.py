@@ -461,9 +461,7 @@ You can set this by specifying --test-url URL
                 self.info("Extracting everything from web-platform archive")
                 unpack_dirs = None
 
-            url = self.query_build_dir_url(file_name).replace(
-                "public/build/", "public/cidata/"
-            )
+            url = self.query_build_dir_url(file_name)
             self.download_unpack(url, target_dir, extract_dirs=unpack_dirs)
 
     def _download_test_zip(self, extract_dirs=None):
