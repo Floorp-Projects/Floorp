@@ -66,16 +66,17 @@ function setMultirowTabMaxHeight() {
     .removeAttribute("style");
 
   let rowValue = Services.prefs.getIntPref("floorp.browser.tabbar.multirow.max.row");
-  let multiRowTabEnabled = Services.prefs.getBoolPref("floorp.enable.multitab");
   let multiRowTabValueEnabled = Services.prefs.getBoolPref("floorp.browser.tabbar.multirow.max.enabled");
-  let tabHeight = document.querySelector(".tabbrowser-tab").clientHeight;
-  document.querySelector("#tabbrowser-arrowscrollbox")
-    .shadowRoot
-    .querySelector("[part=scrollbox]")
-    .setAttribute(
-      "style",
-      "max-height: " + (tabHeight * rowValue) + "px !important;"
+  if(multiRowTabValueEnabled){
+    let tabHeight = document.querySelector(".tabbrowser-tab").clientHeight;
+    document.querySelector("#tabbrowser-arrowscrollbox")
+      .shadowRoot
+      .querySelector("[part=scrollbox]")
+      .setAttribute(
+        "style",
+        "max-height: " + (tabHeight * rowValue) + "px !important;"
     );
+  }
 }
 
 function removeMultirowTabMaxHeight() {
