@@ -311,36 +311,36 @@
     <!-- Juno first user onboarding flow experiment -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" tools:ignore="UnusedResources">将 %s 设为主力浏览器。</string>
+    <string name="juno_onboarding_default_browser_title">将 %s 设为主力浏览器。</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" tools:ignore="UnusedResources">%1$s 始终以人为本，并通过拦截跨站跟踪器等机制保护您的隐私。\n\n可阅读我们的%2$s详细了解 </string>
+    <string name="juno_onboarding_default_browser_description">%1$s 始终以人为本，并通过拦截跨站跟踪器等机制保护您的隐私。\n\n可阅读我们的%2$s详细了解 </string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">隐私声明</string>
+    <string name="juno_onboarding_default_browser_description_link_text">隐私声明</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">设为默认浏览器</string>
+    <string name="juno_onboarding_default_browser_positive_button">设为默认浏览器</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">暂时不要</string>
+    <string name="juno_onboarding_default_browser_negative_button">暂时不要</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">全平台快速切换</string>
+    <string name="juno_onboarding_sign_in_title">全平台快速切换</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">同步您其他设备上的标签页和密码，从中断的地方继续浏览。</string>
+    <string name="juno_onboarding_sign_in_description">同步您其他设备上的标签页和密码，从中断的地方继续浏览。</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">登录</string>
+    <string name="juno_onboarding_sign_in_positive_button">登录</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">暂时不要</string>
+    <string name="juno_onboarding_sign_in_negative_button">暂时不要</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" tools:ignore="UnusedResources">允许通知可以让 %s 更贴心好用</string>
+    <string name="juno_onboarding_enable_notifications_title">允许通知可以让 %s 更贴心好用</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" tools:ignore="UnusedResources">在设备之间传输标签页、管理下载，解锁 %s 完整体验。</string>
+    <string name="juno_onboarding_enable_notifications_description">在设备之间传输标签页、管理下载，解锁 %s 完整体验。</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">开启通知</string>
+    <string name="juno_onboarding_enable_notifications_positive_button">开启通知</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">暂时不要</string>
+    <string name="juno_onboarding_enable_notifications_negative_button">暂时不要</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -406,15 +406,27 @@
     <string name="reduce_cookie_banner_summary_1">%1$s 会尝试自动拒绝 Cookie 横幅的 Cookie 请求。</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">在该网站关闭</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">取消</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button">请求支持</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title">减少 Cookie 横幅</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text">请求已提交。</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">在该网站开启</string>
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted">请求已提交。</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">目前不支持该网站</string>
+    <string name="reduce_cookie_banner_unsupported_site">目前不支持该网站</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">要为 %1$s 开启“减少 Cookie 横幅”功能吗？</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">要为 %1$s 关闭“减少 Cookie 横幅”功能吗？</string>
 
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request">“减少 Cookie 横幅”功能暂不支持此网站。您希望我们的团队调查此网站以在将来完成支持吗？</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s 将清除此网站的 Cookie 并刷新页面。清除 Cookie 可能会导致您退出登录，或清空购物车。</string>
 
@@ -1301,11 +1313,11 @@
     <!-- Survey -->
     <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
     The app name is in the text, due to limitations with localizing Nimbus experiments -->
-    <string name="nimbus_survey_message_text" tools:ignore="UnusedResources">请填写这份简短的问卷，帮助 Firefox 变得更好。</string>
+    <string name="nimbus_survey_message_text">请填写这份简短的问卷，帮助 Firefox 变得更好。</string>
     <!-- Preference for taking the short survey. -->
-    <string name="preferences_take_survey" tools:ignore="UnusedResources">问卷调查</string>
+    <string name="preferences_take_survey">问卷调查</string>
     <!-- Preference for not taking the short survey. -->
-    <string name="preferences_not_take_survey" tools:ignore="UnusedResources">不了，谢谢</string>
+    <string name="preferences_not_take_survey">不了，谢谢</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
@@ -1528,29 +1540,29 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">增强型跟踪保护</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">自由上网，拒绝跟踪</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">自由上网，拒绝跟踪</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
-    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">现已支持“全方位 Cookie 保护”功能，这是我们迄今针对跨站跟踪器最为强大的屏障。</string>
+    <string name="preference_enhanced_tracking_protection_summary">现已支持“全方位 Cookie 保护”功能，这是我们迄今针对跨站跟踪器最为强大的屏障。</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">你的数据只由你掌握。%s 可保护您免受大多数常见的跟踪器对您在线活动的窥视。</string>
+    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">你的数据只由你掌握。%s 可保护您免受大多数常见的跟踪器对您在线活动的窥视。</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">%s 保护您免受众多常见跟踪器对您在线活动的窥视。</string>
+    <string name="preference_enhanced_tracking_protection_explanation_2">%s 保护您免受众多常见跟踪器对您在线活动的窥视。</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">详细了解</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">标准（默认）</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">平衡隐私和性能。页面可正常加载。</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">平衡隐私和性能。页面可正常加载。</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">页面将正常加载，但拦截的跟踪器少一些。</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_5">页面将正常加载，但拦截的跟踪器少一些。</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">标准跟踪保护会拦截的内容</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">严格</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">拦截更多跟踪器，页面加载更快，但可能导致页面上某些功能异常。</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">拦截更多跟踪器，页面加载更快，但可能导致页面上某些功能异常。</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">更强的跟踪保护与更快的性能，但可导致某些网站的运作不正常。</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_4">更强的跟踪保护与更快的性能，但可导致某些网站的运作不正常。</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">严格跟踪保护会拦截的内容</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1638,6 +1650,10 @@
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">详细了解</string>
 
+    <!-- Content description (not visible, for screen readers etc.):
+    Enhanced tracking protection exception preference icon for ETP settings. -->
+    <string name="preference_etp_exceptions_icon_description">增强型跟踪保护例外首选项图标</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">用户支持</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1647,9 +1663,9 @@
     <!-- About page link text to open know your rights link -->
     <string name="about_know_your_rights">了解您的权利</string>
     <!-- About page link text to open licensing information link -->
-    <string name="about_licensing_information">授权信息</string>
+    <string name="about_licensing_information">许可信息</string>
     <!-- About page link text to open a screen with libraries that are used -->
-    <string name="about_other_open_source_libraries">我们使用的库</string>
+    <string name="about_other_open_source_libraries">我们使用的开源库</string>
 
     <!-- Toast shown to the user when they are activating the secret dev menu
         The first parameter is number of long clicks left to enable the menu -->

@@ -241,6 +241,14 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">ያልታወቀ ፕሮቶኮል</string>
 
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>አድራሻው ፕሮቶኮልን ይገልጻል (ለምሳሌ <q>wxyz://</q>) አሳሹ ይህን ስለማያቀው በትክክል ከድረ-ገጹ ጋር መገናኘት አይችልም።</p>
+      <ul>
+        <li>መልቲሚዲያ ወይም ሌሎች የጽሑፍ ያልሆኑ አገልግሎቶችን ለማግኘት እየሞከሩ ነው? ለተጨማሪ መስፈርቶች ድረ-ገጹን ይፈትሹ።</li>
+        <li>አንዳንድ ፕሮቶኮሎች በአሳሹ ከመታወቃቸው በፊት የሶስተኛ ወገን ሶፍትዌር ወይም ቅጥያዎችን ሊፈልጉ ይችላሉ።</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">ሰነዱ አልተገኘም</string>
 
