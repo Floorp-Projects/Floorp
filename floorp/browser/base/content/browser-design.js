@@ -20,8 +20,8 @@ function setBrowserDesign() {
                          .tabbrowser-tab { margin-top: 0.7em !important;  position: relative !important;  top: -0.34em !important; }`,
     fluentUI: `@import url(chrome://browser/skin/fluentUI/fluentUI.css);`,
     gnomeUI: `@import url(chrome://browser/skin/gnomeUI/gnomeUI.css);`,
-    FluerialUI: `@import url(chrome://browser/skin/floorplegacy/test_legacy.css);`,
-    FluerialUIMultitab:`@import url(chrome://browser/skin/floorplegacy/test_legacy.css);
+    FluerialUI: `@import url(chrome://browser/skin/floorplegacy/test_legacy.css?${updateNumber});`,
+    FluerialUIMultitab:`@import url(chrome://browser/skin/floorplegacy/test_legacy.css?${updateNumber});
                         @import url(chrome://browser/skin/floorplegacy/test_legacy_multitab.css);`
   }
   var Tag = document.createElement('style');
@@ -65,5 +65,6 @@ function setBrowserDesign() {
 document.addEventListener("DOMContentLoaded", () => {
   setBrowserDesign();
   Services.prefs.addObserver("floorp.browser.user.interface", setBrowserDesign);
+  Services.prefs.addObserver("floorp.fluerial.roundVerticalTabs", setBrowserDesign);
   Services.obs.addObserver(setBrowserDesign, "update-photon-pref");
 }, { once: true });
