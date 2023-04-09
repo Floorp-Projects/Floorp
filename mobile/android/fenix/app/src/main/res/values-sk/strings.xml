@@ -895,7 +895,7 @@
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Súkromná</string>
     <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
-    <string name="tab_drawer_fab_sync">Synchronizácia</string>
+    <string name="tab_drawer_fab_sync">Synchronizovať</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Zobraziť všetky karty</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -1485,7 +1485,7 @@
     <!-- Instructions on how to access pairing -->
     <string name="sign_in_instructions"><![CDATA[Spustite Firefox na svojom počítači a navštívte stránku <b>https://firefox.com/pair</b>]]></string>
     <!-- Text shown for sign in pairing when ready -->
-    <string name="sign_in_ready_for_scan">Skenovanie je pripravené</string>
+    <string name="sign_in_ready_for_scan">Pripravené na skenovanie</string>
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Prihláste sa pomocou fotoaparátu</string>
     <!-- Text shown for settings option for sign with email -->

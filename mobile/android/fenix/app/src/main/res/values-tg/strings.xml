@@ -1333,7 +1333,7 @@
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Ба реҷаи экрани пурра ворид шуда истодааст</string>
     <!-- Message for copying the URL via long press on the toolbar -->
-    <string name="url_copied">URL нусха бардошта шуд</string>
+    <string name="url_copied">Нишонии URL нусха бардошта шуд</string>
     <!-- Sample text for accessibility font size -->
     <string name="accessibility_text_size_sample_text_1">Ин матни намунавӣ мебошад. Дар ин ҷо матни намунавӣ нишон медиҳад, ки чӣ тавр он ҳангоми калон ва хурд кардани андозаи ҳуруф бо танзими ҷорӣ нишон дода мешавад.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
@@ -1647,7 +1647,7 @@
     <!-- Paste the text in the clipboard -->
     <string name="browser_toolbar_long_press_popup_paste">Гузоштан</string>
     <!-- Snackbar message shown after an URL has been copied to clipboard. -->
-    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL ба ҳофизаи муваққатӣ нусха бардошта шуд</string>
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">Нишонии URL ба ҳофизаи муваққатӣ нусха бардошта шуд</string>
 
     <!-- Title text for the Add To Homescreen dialog -->
     <string name="add_to_homescreen_title">Илова кардан ба экрани асосӣ</string>

@@ -393,14 +393,26 @@
     <string name="reduce_cookie_banner_summary_1">%1$s თავად ეცდება უარყოს ფუნთუშების მოთხოვები და მოაცილოს აბრები.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">გამორთ. ამ საიტზე</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">გაუქმება</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button">მხარდაჭერის მოთხოვნა</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title">ფუნთუშის მოთხოვნების შემცირება</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text">მხარდაჭერის მოთხოვნა საიტისთვის გადაგზავნილია.</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">ჩართ. ამ საიტზე</string>
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted">მხარდაჭერის მოთხოვნა საიტისთვის გაგზავნილია</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">ეს საიტი ჯერ არაა მხარდაჭერილი</string>
+    <string name="reduce_cookie_banner_unsupported_site">ეს საიტი ჯერ არაა მხარდაჭერილი</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">ჩაირთოს ფუნთუშის მოთხოვნების შემცირება საიტზე %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">გამოირთოს ფუნთუშის მოთხოვნების შემცირება საიტზე %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request">საიტზე ამჟამად არაა მხარდაჭერილი ფუნთუშების ნებართვების არიდება. გსურთ სთხოვოთ ჩვენს გუნდს, გადახედოს ამ ვებსაიტს და გახადოს მომავალში მხარდაჭერილი?</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s გაასუფთავებს ამ საიტის ფუნთუშებს და განაახლებს გვერდს. ყველა ფუნთუშის წაშლით შეიძლება გამოხვიდეთ ანგარიშებიდან და დაცარიელდეს საყიდლების კალათა.</string>
 
@@ -1260,11 +1272,11 @@
     <!-- Survey -->
     <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
     The app name is in the text, due to limitations with localizing Nimbus experiments -->
-    <string name="nimbus_survey_message_text" tools:ignore="UnusedResources">გთხოვთ დაგვეხმაროთ მცირე კითხვარის შევსებით, რომ გავაუმჯობესოთ Firefox.</string>
+    <string name="nimbus_survey_message_text">გთხოვთ დაგვეხმაროთ მცირე კითხვარის შევსებით, რომ გავაუმჯობესოთ Firefox.</string>
     <!-- Preference for taking the short survey. -->
-    <string name="preferences_take_survey" tools:ignore="UnusedResources">კითხვარის შევსება</string>
+    <string name="preferences_take_survey">კითხვარის შევსება</string>
     <!-- Preference for not taking the short survey. -->
-    <string name="preferences_not_take_survey" tools:ignore="UnusedResources">არა, გმადლობთ</string>
+    <string name="preferences_not_take_survey">არა, გმადლობთ</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
@@ -1480,30 +1492,30 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">თვალთვალისგან გაძლიერებული დაცვა</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">მოინახულეთ გვერდები მეთვალყურეების გარეშე</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">მოინახულეთ გვერდები მეთვალყურეების გარეშე</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
-    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">ახლა უკვე ახლავს ფუნთუშებისგან ყოველმხრივი დაცვაც, ჩვენი არნახულად მძლავრი საშუალება საიტთაშორისი მეთვალყურეების წინააღმდეგ.</string>
+    <string name="preference_enhanced_tracking_protection_summary">ახლა უკვე ახლავს ფუნთუშებისგან ყოველმხრივი დაცვაც, ჩვენი არნახულად მძლავრი საშუალება საიტთაშორისი მეთვალყურეების წინააღმდეგ.</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">დატოვეთ თქვენი მონაცემები პირადი. %s აგარიდებთ ცნობილი მეთვალყურეების უმეტესობას, რომლებიც თან დაგყვებათ ინტერნეტში.</string>
+    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">დატოვეთ თქვენი მონაცემები პირადი. %s აგარიდებთ ცნობილი მეთვალყურეების უმეტესობას, რომლებიც თან დაგყვებათ ინტერნეტში.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">%s აგარიდებთ ცნობილი მეთვალყურეების უმეტესობას, რომლებიც თან დაგყვებათ ინტერნეტში.</string>
+    <string name="preference_enhanced_tracking_protection_explanation_2">%s აგარიდებთ ცნობილი მეთვალყურეების უმეტესობას, რომლებიც თან დაგყვებათ ინტერნეტში.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">ვრცლად</string>
 
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">ჩვეულებრივი (ნაგულისხმევი)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">წონასწორული უსაფრთხოებასა და წარმადობას შორის. გვერდები ჩაიტვირთება ჩვეულებრივ.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">წონასწორული უსაფრთხოებასა და წარმადობას შორის. გვერდები ჩაიტვირთება ჩვეულებრივ.</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">გვერდები ჩაიტვირთება ჩვეულებრივ, მაგრამ ნაკლები მეთვალყურე შეიზღუდება.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_5">გვერდები ჩაიტვირთება ჩვეულებრივ, მაგრამ ნაკლები მეთვალყურე შეიზღუდება.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">რა იზღუდება თვალთვალისგან ჩვეულებრივი დაცვით</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">მკაცრი</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">ზღუდავს მეტ მეთვალყურეს, გვერდის ჩატვირთვა ასწრაფდება, თუმცა გამართულად შეიძლება ვერ იმუშაოს.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">ზღუდავს მეტ მეთვალყურეს, გვერდის ჩატვირთვა ასწრაფდება, თუმცა გამართულად შეიძლება ვერ იმუშაოს.</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">მეტად მძლავრი დაცვა თვალთვალისგან და მეტი სისწრაფე, მაგრამ საიტების ნაწილმა, შესაძლოა გაუმართავად იმუშაოს.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_4">მეტად მძლავრი დაცვა თვალთვალისგან და მეტი სისწრაფე, მაგრამ საიტების ნაწილმა, შესაძლოა გაუმართავად იმუშაოს.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">რა იზღუდება თვალთვალისგან მკაცრი დაცვით</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1592,6 +1604,10 @@
     <string name="preference_etp_smartblock_description">ქვემოთ მონიშნული ზოგი მეთვალყურე ნაწილობრივ დაშვებულია ამ გვერდზე, მათთან თქვენი ურთიერთქმედების გამო *.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">ვრცლად</string>
+
+    <!-- Content description (not visible, for screen readers etc.):
+    Enhanced tracking protection exception preference icon for ETP settings. -->
+    <string name="preference_etp_exceptions_icon_description">თვალთვალისგან გაძლიერებული დაცვის გამონაკლისის მანიშნებელი ხატულა</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">მხარდაჭერა</string>
