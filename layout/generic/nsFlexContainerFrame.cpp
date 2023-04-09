@@ -5356,8 +5356,9 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
         // make progress) in one of the flex container's *next* fragment. It's
         // because ComputeAvailableSizeForItems() always reserves at least 1px
         // available block-size for its children, and we consume all available
-        // block-size and add it to SumOfChildrenBlockSizeProperty even if we
-        // are not laying out any child.
+        // block-size and add it to
+        // PerFragmentFlexData::mCumulativeContentBoxBSize even if we are not
+        // laying out any child.
         FLEX_LOG(
             "[frag] Flex item %p needed to be pushed to container's "
             "next-in-flow due to position below available space's block-end",
