@@ -212,6 +212,7 @@ let tabSleepEnabled = false;
 let TAB_TIMEOUT_MINUTES;
 let tabObserve_ = null;
 let interval = null;
+let isEnabled = false;
 let isTestMode = false;
 
 function enableTabSleep() {
@@ -343,7 +344,7 @@ if (Services.prefs.prefHasUserValue(TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF)) {
 }
 
 {
-    let isEnabled = Services.prefs.getBoolPref(TAB_SLEEP_ENABLED_PREF, false);
+    isEnabled = Services.prefs.getBoolPref(TAB_SLEEP_ENABLED_PREF, false);
     isTestMode = Services.prefs.getBoolPref(TAB_SLEEP_TESTMODE_ENABLED_PREF, false);
 
     let systemMemory = Services.sysinfo.getProperty("memsize");
@@ -370,7 +371,7 @@ if (Services.prefs.prefHasUserValue(TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF)) {
     }
 
     Services.prefs.addObserver(TAB_SLEEP_ENABLED_PREF, function() {
-        let isEnabled = Services.prefs.getBoolPref(TAB_SLEEP_ENABLED_PREF, false);
+        isEnabled = Services.prefs.getBoolPref(TAB_SLEEP_ENABLED_PREF, false);
         if (isEnabled) {
             enableTabSleep();
         } else {
