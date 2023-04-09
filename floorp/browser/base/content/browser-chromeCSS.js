@@ -216,37 +216,35 @@ var { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.j
 			
 			let l10n = new Localization(["browser/floorp.ftl"], true);
 			const editor = Services.prefs.getStringPref("view_source.editor.path");
-			let WindowsNotepadPath = { value: "" };
-			
-			// check if VScode is installed
-			const AppPath = OS.Constants.Path.homeDir + "\\AppData\\Local\\Programs\\Microsoft VS Code\\code.exe";
-			async function checkIfVScodeExists() {
-			  const isVScodeInstalled = await OS.File.exists(AppPath);
-			  return isVScodeInstalled;
-			}
+			let textEditorPath = { value: "" };
 			
 			async function getEditorPath() {
 			  let editorPath = "";
 			  if (AppConstants.platform == "win") {
-				WindowsNotepadPath.value = "C:\\windows\\system32\\notepad.exe";
-				editorPath = WindowsNotepadPath.value;
-				const isVScodeInstalled = await checkIfVScodeExists();
-				if (isVScodeInstalled) {
-				  WindowsNotepadPath.value = AppPath;
-				  editorPath = AppPath;
+				const notepadPath = "C:\\windows\\system32\\notepad.exe";
+				editorPath = notepadPath;
+				// check if VSCode is installed
+				const vscodePath = OS.Constants.Path.homeDir + "\\AppData\\Local\\Programs\\Microsoft VS Code\\code.exe";
+				const isVSCodeInstalled = await OS.File.exists(vscodePath);
+				if (isVSCodeInstalled) {
+				  editorPath = vscodePath;
 				}
 			  } else {
-				WindowsNotepadPath.value = "/usr/bin/gedit";
-				editorPath = WindowsNotepadPath.value;
+				// check if gedit is installed
+				const geditPath = "/usr/bin/gedit";
+				const isGeditInstalled = await OS.File.exists(geditPath);
+				if (isGeditInstalled) {
+				  editorPath = geditPath;
+				}
 			  }
 			  return editorPath;
 			}
 			
 			let setPathPromise = new Promise(async (resolve) => {
 			  if (editor == "") {
-				const editorPath = await getEditorPath();
-				if (Services.prompt.prompt(null, l10n.formatValueSync("not-found-editor-path"), l10n.formatValueSync("set-pref-description"), WindowsNotepadPath, null, { value: false })) {
-				  Services.prefs.setStringPref("view_source.editor.path", editorPath);
+				textEditorPath.value = await getEditorPath();
+				if (Services.prompt.prompt(null, l10n.formatValueSync("not-found-editor-path"), l10n.formatValueSync("set-pref-description"), textEditorPath, null, { value: false })) {
+				  Services.prefs.setStringPref("view_source.editor.path", textEditorPath.value);
 				}
 			  }
 			  resolve();
