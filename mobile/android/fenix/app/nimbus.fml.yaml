@@ -303,7 +303,7 @@ features:
       enabled:
         description: if true, the pre-permission notification prompt is shown to the user.
         type: Boolean
-        default: true
+        default: false
 
   juno-onboarding:
     description: A feature that shows juno onboarding flow.
