@@ -1,8 +1,12 @@
 (async() => {
+    const FLOORP_ISPORTABLE_PREF = "floorp.isPortable";
     let isPortable = false;
-    try {
-        isPortable = await browser.aboutConfigPrefs.getBoolPref("floorp.isPortable");
-    } catch (e) {}
+    if (
+        await browser.aboutConfigPrefs.prefHasDefaultValue(FLOORP_ISPORTABLE_PREF) ||
+        await browser.aboutConfigPrefs.prefHasUserValue(FLOORP_ISPORTABLE_PREF)
+    ) {
+        isPortable = await browser.aboutConfigPrefs.getBoolPref(FLOORP_ISPORTABLE_PREF);
+    }
     console.log(`floorp.isPortable: ${isPortable}`);
     if (!isPortable) return;
 
