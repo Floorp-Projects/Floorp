@@ -22,6 +22,7 @@
 #include "nsBlockFrame.h"
 #include "nsContentUtils.h"
 #include "nsCSSAnonBoxes.h"
+#include "nsDebug.h"
 #include "nsDisplayList.h"
 #include "nsFieldSetFrame.h"
 #include "nsIFrameInlines.h"
@@ -5378,6 +5379,11 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
                            availableSize, aContainerSize);
 
         const bool shouldPushItem = [&]() {
+          if (availableBSizeForItem == NS_UNCONSTRAINEDSIZE) {
+            // If the available block-size is unconstrained, then we're not
+            // fragmenting and we don't want to push the item.
+            return false;
+          }
           if (framePos.B(flexWM) == containerContentBoxOrigin.B(flexWM)) {
             // The flex item is adjacent with block-start of the container's
             // content-box. Don't push it, or we'll trap in an infinite loop.
@@ -5475,6 +5481,10 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
 
   const bool anyChildIncomplete = PushIncompleteChildren(
       pushedItems, incompleteItems, overflowIncompleteItems);
+  MOZ_ASSERT(!anyChildIncomplete ||
+                 aAvailableSizeForItems.BSize(flexWM) != NS_UNCONSTRAINEDSIZE,
+             "We shouldn't have any incomplete children if the available "
+             "block-size is unconstrained!");
 
   if (!pushedItems.IsEmpty()) {
     AddStateBits(NS_STATE_FLEX_DID_PUSH_ITEMS);
