@@ -1484,8 +1484,6 @@ items from that key's value."
                 platforms = yaml.safe_load(artfile.read())
                 for artifact in platforms[main_platform]:
                     arts.append(artifact)
-                for artifact in platforms["*"]:
-                    arts.append(artifact)
         except FileNotFoundError:
             self.fatal("Could not read artifacts.yml; file not found. Exiting.")
         except PermissionError:
