@@ -50,8 +50,9 @@ namespace InspectorUtils {
 
   boolean isIgnorableWhitespace(CharacterData dataNode);
   Node? getParentForNode(Node node, boolean showingAnonymousContent);
-  [NewObject] NodeList getChildrenForNode(Node node,
-                                          boolean showingAnonymousContent);
+  sequence<Node> getChildrenForNode(Node node,
+                                    boolean showingAnonymousContent,
+                                    boolean includeAssignedNodes);
   [Throws] boolean setContentState(Element element, unsigned long long state);
   [Throws] boolean removeContentState(
       Element element,

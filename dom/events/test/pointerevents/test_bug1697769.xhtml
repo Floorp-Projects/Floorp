@@ -31,7 +31,7 @@ let scrollbarThumb;
 add_setup(async function() {
   scrollbar = document.getElementById("scrollbar");
   scrollbarThumb = null;
-  for (let child of SpecialPowers.InspectorUtils.getChildrenForNode(scrollbar, true)) {
+  for (let child of SpecialPowers.InspectorUtils.getChildrenForNode(scrollbar, true, false)) {
     if (child.nodeName === "slider") {
       scrollbarThumb = SpecialPowers.unwrap(child.childNodes[0]);
     }

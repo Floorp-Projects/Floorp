@@ -153,13 +153,7 @@ function standardTreeWalkerFilter(node) {
   // Ignore all native anonymous roots inside a non-XUL document.
   // We need to do this to skip things like form controls, scrollbars,
   // video controls, etc (see bug 1187482).
-  // Accept the children of NAC roots (like UA widgets). If our root is
-  // anonymous the whole tree is anonymous.
-  if (
-    isNativeAnonymous(node) &&
-    !isInXULDocument(node) &&
-    !isNativeAnonymous(node.getRootNode())
-  ) {
+  if (isNativeAnonymous(node) && !isInXULDocument(node)) {
     return nodeFilterConstants.FILTER_SKIP;
   }
 

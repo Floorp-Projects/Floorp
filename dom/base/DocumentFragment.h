@@ -56,8 +56,10 @@ class DocumentFragment : public FragmentOrElement {
     Init();
   }
 
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  NS_IMPL_FROMNODE_HELPER(DocumentFragment, IsDocumentFragment());
+
+  JSObject* WrapNode(JSContext* aCx,
+                     JS::Handle<JSObject*> aGivenProto) override;
 
   nsresult BindToTree(BindContext&, nsINode& aParent) override {
     NS_ASSERTION(false, "Trying to bind a fragment to a tree");

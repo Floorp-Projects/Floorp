@@ -67,14 +67,6 @@ class NodePicker {
       node = this._findNodeAtMouseEventPosition(event) || node;
     }
 
-    // The node picker should only surface elements valid for the current walker
-    // configuration. UserAgent shadow DOM should only be visible if
-    // showAllAnonymousContent is set to true. Otherwise, fallback to the host.
-    const shadowRoot = node.containingShadowRoot;
-    if (shadowRoot?.isUAWidget() && !this._walker.showAllAnonymousContent) {
-      node = shadowRoot.host;
-    }
-
     return this._walker.attachElement(node);
   }
 

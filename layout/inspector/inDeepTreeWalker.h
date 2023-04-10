@@ -22,7 +22,8 @@ class inDeepTreeWalker final : public inIDeepTreeWalker {
 
   inDeepTreeWalker();
 
-  nsresult SetCurrentNode(nsINode* aCurrentNode, nsINodeList* aSiblings);
+  using ChildList = AutoTArray<RefPtr<nsINode>, 8>;
+  void GetChildren(nsINode& aParent, ChildList&);
 
  protected:
   virtual ~inDeepTreeWalker();
@@ -30,9 +31,9 @@ class inDeepTreeWalker final : public inIDeepTreeWalker {
   already_AddRefed<nsINode> GetParent();
   nsresult EdgeChild(nsINode** _retval, bool aReverse);
 
-  bool mShowAnonymousContent;
-  bool mShowSubDocuments;
-  bool mShowDocumentsAsNodes;
+  bool mShowAnonymousContent = false;
+  bool mShowSubDocuments = false;
+  bool mShowDocumentsAsNodes = false;
 
   // The root node. previousNode and parentNode will return
   // null from here.
@@ -43,15 +44,10 @@ class inDeepTreeWalker final : public inIDeepTreeWalker {
   // Notes: normally siblings are all the children of the parent
   // of mCurrentNode (that are interesting for use for the walk)
   // and mCurrentIndex is the index of mCurrentNode in that list
-  // But if mCurrentNode is a (sub) document then instead of
-  // storing a list that has only one element (the document)
-  // and setting mCurrentIndex to null, we set mSibilings to null.
-  // The reason for this is purely technical, since nsINodeList is
-  // nsIContent based hence we cannot use it to store a document node.
-  nsCOMPtr<nsINodeList> mSiblings;
+  ChildList mSiblings;
 
   // Index of mCurrentNode in the mSiblings list.
-  int32_t mCurrentIndex;
+  int32_t mCurrentIndex = -1;
 };
 
 // {BFCB82C2-5611-4318-90D6-BAF4A7864252}
