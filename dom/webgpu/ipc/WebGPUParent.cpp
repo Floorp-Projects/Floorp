@@ -5,6 +5,7 @@
 
 #include "WebGPUParent.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageDataSerializer.h"
@@ -71,10 +72,10 @@ class PresentationData {
   layers::RGBDescriptor mDesc;
   uint32_t mSourcePitch = 0;
   int32_t mNextFrameID = 1;
-  std::vector<RawId> mUnassignedBufferIds;
-  std::vector<RawId> mAvailableBufferIds;
-  std::vector<RawId> mQueuedBufferIds;
-  Mutex mBuffersLock MOZ_UNANNOTATED;
+  std::vector<RawId> mUnassignedBufferIds MOZ_GUARDED_BY(mBuffersLock);
+  std::vector<RawId> mAvailableBufferIds MOZ_GUARDED_BY(mBuffersLock);
+  std::vector<RawId> mQueuedBufferIds MOZ_GUARDED_BY(mBuffersLock);
+  Mutex mBuffersLock;
 
   PresentationData(RawId aDeviceId, RawId aQueueId,
                    const layers::RGBDescriptor& aDesc, uint32_t aSourcePitch,
@@ -788,8 +789,14 @@ static void PresentCallback(ffi::WGPUBufferMapAsyncStatus status,
     MutexAutoLock lock(data->mBuffersLock);
     bufferId = data->mQueuedBufferIds.back();
     data->mQueuedBufferIds.pop_back();
-    data->mAvailableBufferIds.push_back(bufferId);
   }
+
+  // Ensure we'll make the bufferId available for reuse
+  auto releaseBuffer = MakeScopeExit([data = RefPtr{data}, bufferId] {
+    MutexAutoLock lock(data->mBuffersLock);
+    data->mAvailableBufferIds.push_back(bufferId);
+  });
+
   MOZ_LOG(
       sLogger, LogLevel::Info,
       ("PresentCallback for buffer %" PRIu64 " status=%d\n", bufferId, status));
