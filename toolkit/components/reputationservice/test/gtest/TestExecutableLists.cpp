@@ -6,6 +6,7 @@
 #include "nsLocalFileCommon.h"
 #include "ApplicationReputation.h"
 
+// clang-format off
 // PLEASE read the comment in ApplicationReputation.cpp before modifying this
 // list.
 static const char* const kTestFileExtensions[] = {
@@ -111,7 +112,9 @@ static const char* const kTestFileExtensions[] = {
     ".iso",                // CD image
     ".isp",                // IIS config
     ".jar",                // Java
+#ifndef MOZ_ESR
     ".jnlp",               // Java
+#endif
     ".js",                 // JavaScript script
     ".jse",                // JScript
     ".ksh",                // Linux shell
@@ -298,6 +301,7 @@ static const char* const kTestFileExtensions[] = {
 #endif
     ".zipx",  // WinZip
 };
+// clang-format on
 
 #define CheckListSorted(_list)                                   \
   {                                                              \

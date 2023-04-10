@@ -25,6 +25,8 @@
 // other warnings. PLEASE read the longer comment in
 // toolkit/components/reputationservice/ApplicationReputation.cpp
 // before modifying this list!
+// If you update this list, make sure to update the length of sExecutableExts
+// in nsLocalFileCommmon.h.
 /* static */
 const char* const sExecutableExts[] = {
     // clang-format off
@@ -61,7 +63,9 @@ const char* const sExecutableExts[] = {
   ".ins",
   ".isp",
   ".jar",         // java application bundle
+#ifndef MOZ_ESR
   ".jnlp",
+#endif
   ".js",
   ".jse",
   ".lnk",
