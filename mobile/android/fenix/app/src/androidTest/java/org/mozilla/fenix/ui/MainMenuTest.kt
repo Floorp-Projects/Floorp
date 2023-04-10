@@ -2,6 +2,7 @@ package org.mozilla.fenix.ui
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
+import mozilla.components.concept.engine.utils.EngineReleaseChannel
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
@@ -9,11 +10,13 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.customannotations.SmokeTest
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
+import org.mozilla.fenix.helpers.TestHelper.runWithCondition
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
 class MainMenuTest {
@@ -47,6 +50,19 @@ class MainMenuTest {
             waitForPageToLoad()
         }.openThreeDotMenu {
             verifyPageThreeDotMainMenuItems(isRequestDesktopSiteEnabled = false)
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun openMainMenuNewTabItemTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.openThreeDotMenu {
+        }.clickNewTabButton {
+            verifySearchView()
         }
     }
 
@@ -139,6 +155,24 @@ class MainMenuTest {
 
     @SmokeTest
     @Test
+    fun mainMenuReportSiteIssueTest() {
+        runWithCondition(
+            // This test will not run on RC builds because the "Report site issue button" is not available.
+            activityTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
+        ) {
+            val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+            navigationToolbar {
+            }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            }.openThreeDotMenu {
+            }.openReportSiteIssue {
+                verifyUrl("webcompat.com/issues/new")
+            }
+        }
+    }
+
+    @SmokeTest
+    @Test
     fun openMainMenuAddToCollectionTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
@@ -191,6 +225,21 @@ class MainMenuTest {
         }.openThreeDotMenu {
             verifyThreeDotMenuExists()
         }.refreshPage {
+            verifyPageContent("REFRESHED")
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun mainMenuForceRefreshTest() {
+        val refreshWebPage = TestAssetHelper.getRefreshAsset(mockWebServer)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(refreshWebPage.url) {
+            mDevice.waitForIdle()
+        }.openThreeDotMenu {
+            verifyThreeDotMenuExists()
+        }.forceRefreshPage {
             verifyPageContent("REFRESHED")
         }
     }

@@ -28,6 +28,7 @@ import org.hamcrest.Matchers.allOf
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.MatcherHelper.assertCheckedItemWithResIdAndTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
@@ -200,6 +201,13 @@ class ThreeDotMenuMainRobot {
             return BookmarksRobot.Transition()
         }
 
+        fun clickNewTabButton(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
+            normalBrowsingNewTabButton.click()
+
+            SearchRobot().interact()
+            return SearchRobot.Transition()
+        }
+
         fun openHistory(interact: HistoryRobot.() -> Unit): HistoryRobot.Transition {
             threeDotMenuRecyclerView().perform(swipeDown())
             mDevice.waitNotNull(Until.findObject(By.text("History")), waitingTime)
@@ -284,6 +292,14 @@ class ThreeDotMenuMainRobot {
 
         fun refreshPage(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             refreshButton.click()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
+        fun forceRefreshPage(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            mDevice.findObject(By.desc(getStringResource(R.string.browser_menu_refresh)))
+                .click(LONG_CLICK_DURATION)
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
