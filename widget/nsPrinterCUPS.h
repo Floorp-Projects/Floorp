@@ -42,18 +42,17 @@ class nsPrinterCUPS final : public nsPrinterBase {
       : nsPrinterBase(aArray),
         mShim(aShim),
         mDisplayName(std::move(aDisplayName)),
-        mPrinter(aPrinter),
-        mPrinterInfoMutex("nsPrinterCUPS::mPrinterInfoMutex") {}
+        mPrinterInfoMutex(CUPSPrinterInfo{aPrinter},
+                          "nsPrinterCUPS::mPrinterInfoMutex") {}
 
   static void ForEachExtraMonochromeSetting(
       mozilla::FunctionRef<void(const nsACString&, const nsACString&)>);
 
-  inline const char* FindCUPSOption(const char* name) const {
-    return mShim.cupsGetOption(name, mPrinter->num_options, mPrinter->options);
-  }
-
  private:
   struct CUPSPrinterInfo {
+    explicit constexpr CUPSPrinterInfo(cups_dest_t* aPrinter)
+        : mPrinter(aPrinter) {}
+    cups_dest_t* mPrinter;
     cups_dinfo_t* mPrinterInfo = nullptr;
     uint64_t mCUPSMajor = 0;
     uint64_t mCUPSMinor = 0;
@@ -63,9 +62,17 @@ class nsPrinterCUPS final : public nsPrinterBase {
     bool mTriedInitWithDefault = false;
     // Whether we have attempted to fetch mPrinterInfo with a connection.
     bool mTriedInitWithConnection = false;
-    CUPSPrinterInfo() = default;
+    CUPSPrinterInfo() = delete;
     CUPSPrinterInfo(const CUPSPrinterInfo&) = delete;
-    CUPSPrinterInfo(CUPSPrinterInfo&&) = delete;
+    CUPSPrinterInfo(CUPSPrinterInfo&& aOther)
+        : mPrinter(aOther.mPrinter),
+          mPrinterInfo(aOther.mPrinterInfo),
+          mCUPSMajor(aOther.mCUPSMajor),
+          mCUPSMinor(aOther.mCUPSMinor),
+          mCUPSPatch(aOther.mCUPSPatch) {
+      aOther.mPrinter = nullptr;
+      aOther.mPrinterInfo = nullptr;
+    }
   };
 
   using PrinterInfoMutex =
@@ -91,6 +98,11 @@ class nsPrinterCUPS final : public nsPrinterBase {
   bool IsCUPSVersionAtLeast(uint64_t aCUPSMajor, uint64_t aCUPSMinor,
                             uint64_t aCUPSPatch) const;
 
+  const char* FindCUPSOption(PrinterInfoLock& aLock, const char* name) const {
+    const cups_dest_t* const printer = aLock->mPrinter;
+    return mShim.cupsGetOption(name, printer->num_options, printer->options);
+  }
+
   class Connection {
    public:
     http_t* GetConnection(cups_dest_t* aDest);
@@ -114,11 +126,24 @@ class nsPrinterCUPS final : public nsPrinterBase {
    * on older versions of Ubuntu (18 and below).
    */
   PrinterInfoLock TryEnsurePrinterInfo(
-      http_t* const aConnection = CUPS_HTTP_DEFAULT) const;
+      http_t* const aConnection = CUPS_HTTP_DEFAULT) const {
+    PrinterInfoLock lock = mPrinterInfoMutex.Lock();
+    TryEnsurePrinterInfo(lock, aConnection);
+    return lock;
+  }
+
+  /**
+   * TryEnsurePrinterInfo that uses a caller-provided PrinterInfoLock.
+   *
+   * This can be used to avoid unnecessarily redundant locking of
+   * mPrinterInfoLock when getting a connection through
+   * Connection::GetConnection and then passing that into TryEnsurePrinterInfo.
+   */
+  void TryEnsurePrinterInfo(PrinterInfoLock& aLock,
+                            http_t* const aConnection) const;
 
   const nsCUPSShim& mShim;
   nsString mDisplayName;
-  cups_dest_t* mPrinter;
   mutable PrinterInfoMutex mPrinterInfoMutex;
 };
 
