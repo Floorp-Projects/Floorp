@@ -26,8 +26,6 @@ DIRS += [
     "/third_party/libwebrtc/api/audio_codecs/ilbc/audio_decoder_ilbc_gn",
     "/third_party/libwebrtc/api/audio_codecs/ilbc/audio_encoder_ilbc_config_gn",
     "/third_party/libwebrtc/api/audio_codecs/ilbc/audio_encoder_ilbc_gn",
-    "/third_party/libwebrtc/api/audio_codecs/isac/audio_decoder_isac_gn",
-    "/third_party/libwebrtc/api/audio_codecs/isac/audio_encoder_isac_gn",
     "/third_party/libwebrtc/api/audio_codecs/L16/audio_decoder_L16_gn",
     "/third_party/libwebrtc/api/audio_codecs/L16/audio_encoder_L16_gn",
     "/third_party/libwebrtc/api/audio_codecs/opus/audio_decoder_multiopus_gn",
@@ -168,7 +166,6 @@ DIRS += [
     "/third_party/libwebrtc/modules/audio_coding/ilbc_c_gn",
     "/third_party/libwebrtc/modules/audio_coding/ilbc_gn",
     "/third_party/libwebrtc/modules/audio_coding/isac_bwinfo_gn",
-    "/third_party/libwebrtc/modules/audio_coding/isac_common_gn",
     "/third_party/libwebrtc/modules/audio_coding/isac_vad_gn",
     "/third_party/libwebrtc/modules/audio_coding/legacy_encoded_audio_frame_gn",
     "/third_party/libwebrtc/modules/audio_coding/neteq_gn",
@@ -459,10 +456,6 @@ if CONFIG["OS_TARGET"] == "Android":
 if CONFIG["OS_TARGET"] == "Darwin":
 
     DIRS += [
-        "/third_party/libwebrtc/api/audio_codecs/isac/audio_decoder_isac_float_gn",
-        "/third_party/libwebrtc/api/audio_codecs/isac/audio_encoder_isac_float_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_c_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_gn",
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn",
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_objc_gn",
         "/third_party/libwebrtc/modules/desktop_capture/primitives_gn",
@@ -477,10 +470,6 @@ if CONFIG["OS_TARGET"] == "Darwin":
 if CONFIG["OS_TARGET"] == "OpenBSD":
 
     DIRS += [
-        "/third_party/libwebrtc/api/audio_codecs/isac/audio_decoder_isac_float_gn",
-        "/third_party/libwebrtc/api/audio_codecs/isac/audio_encoder_isac_float_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_c_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_gn",
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn",
         "/third_party/libwebrtc/modules/desktop_capture/primitives_gn"
     ]
@@ -488,10 +477,6 @@ if CONFIG["OS_TARGET"] == "OpenBSD":
 if CONFIG["OS_TARGET"] == "WINNT":
 
     DIRS += [
-        "/third_party/libwebrtc/api/audio_codecs/isac/audio_decoder_isac_float_gn",
-        "/third_party/libwebrtc/api/audio_codecs/isac/audio_encoder_isac_float_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_c_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_gn",
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn",
         "/third_party/libwebrtc/modules/desktop_capture/primitives_gn",
         "/third_party/libwebrtc/rtc_base/win/create_direct3d_device_gn",
@@ -504,38 +489,23 @@ if CONFIG["OS_TARGET"] == "WINNT":
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Android":
 
     DIRS += [
-        "/third_party/libwebrtc/api/audio_codecs/isac/audio_decoder_isac_float_gn",
-        "/third_party/libwebrtc/api/audio_codecs/isac/audio_encoder_isac_float_gn",
         "/third_party/libwebrtc/common_audio/common_audio_neon_c_gn",
-        "/third_party/libwebrtc/common_audio/common_audio_neon_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_c_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_gn"
+        "/third_party/libwebrtc/common_audio/common_audio_neon_gn"
     ]
 
 if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Android":
 
     DIRS += [
-        "/third_party/libwebrtc/api/audio_codecs/isac/audio_decoder_isac_fix_gn",
-        "/third_party/libwebrtc/api/audio_codecs/isac/audio_encoder_isac_fix_gn",
         "/third_party/libwebrtc/common_audio/common_audio_neon_c_gn",
         "/third_party/libwebrtc/common_audio/common_audio_neon_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_fix_c_arm_asm_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_fix_c_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_fix_common_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_fix_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_neon_gn",
         "/third_party/libwebrtc/rtc_base/system/asm_defines_gn"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
 
     DIRS += [
-        "/third_party/libwebrtc/api/audio_codecs/isac/audio_decoder_isac_float_gn",
-        "/third_party/libwebrtc/api/audio_codecs/isac/audio_encoder_isac_float_gn",
         "/third_party/libwebrtc/common_audio/common_audio_avx2_gn",
         "/third_party/libwebrtc/common_audio/common_audio_sse2_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_c_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_gn",
         "/third_party/libwebrtc/modules/audio_processing/aec3/aec3_avx2_gn",
         "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/vector_math_avx2_gn"
     ]
@@ -543,12 +513,8 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
 
     DIRS += [
-        "/third_party/libwebrtc/api/audio_codecs/isac/audio_decoder_isac_float_gn",
-        "/third_party/libwebrtc/api/audio_codecs/isac/audio_encoder_isac_float_gn",
         "/third_party/libwebrtc/common_audio/common_audio_avx2_gn",
         "/third_party/libwebrtc/common_audio/common_audio_sse2_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_c_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_gn",
         "/third_party/libwebrtc/modules/audio_processing/aec3/aec3_avx2_gn",
         "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/vector_math_avx2_gn"
     ]
@@ -573,12 +539,8 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Darwin":
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
 
     DIRS += [
-        "/third_party/libwebrtc/api/audio_codecs/isac/audio_decoder_isac_float_gn",
-        "/third_party/libwebrtc/api/audio_codecs/isac/audio_encoder_isac_float_gn",
         "/third_party/libwebrtc/common_audio/common_audio_neon_c_gn",
         "/third_party/libwebrtc/common_audio/common_audio_neon_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_c_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_gn",
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn",
         "/third_party/libwebrtc/modules/desktop_capture/primitives_gn",
         "/third_party/libwebrtc/modules/portal/portal_gn",
@@ -591,15 +553,8 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
 if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Linux":
 
     DIRS += [
-        "/third_party/libwebrtc/api/audio_codecs/isac/audio_decoder_isac_fix_gn",
-        "/third_party/libwebrtc/api/audio_codecs/isac/audio_encoder_isac_fix_gn",
         "/third_party/libwebrtc/common_audio/common_audio_neon_c_gn",
         "/third_party/libwebrtc/common_audio/common_audio_neon_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_fix_c_arm_asm_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_fix_c_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_fix_common_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_fix_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_neon_gn",
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn",
         "/third_party/libwebrtc/modules/desktop_capture/primitives_gn",
         "/third_party/libwebrtc/modules/portal/portal_gn",
@@ -610,24 +565,11 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Linux":
         "/third_party/libwebrtc/third_party/pipewire/pipewire_gn"
     ]
 
-if CONFIG["CPU_ARCH"] == "ppc64" and CONFIG["OS_TARGET"] == "Linux":
-
-    DIRS += [
-        "/third_party/libwebrtc/api/audio_codecs/isac/audio_decoder_isac_float_gn",
-        "/third_party/libwebrtc/api/audio_codecs/isac/audio_encoder_isac_float_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_c_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_gn"
-    ]
-
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
 
     DIRS += [
-        "/third_party/libwebrtc/api/audio_codecs/isac/audio_decoder_isac_float_gn",
-        "/third_party/libwebrtc/api/audio_codecs/isac/audio_encoder_isac_float_gn",
         "/third_party/libwebrtc/common_audio/common_audio_avx2_gn",
         "/third_party/libwebrtc/common_audio/common_audio_sse2_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_c_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_gn",
         "/third_party/libwebrtc/modules/audio_processing/aec3/aec3_avx2_gn",
         "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/vector_math_avx2_gn",
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn",
@@ -643,12 +585,8 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
 
     DIRS += [
-        "/third_party/libwebrtc/api/audio_codecs/isac/audio_decoder_isac_float_gn",
-        "/third_party/libwebrtc/api/audio_codecs/isac/audio_encoder_isac_float_gn",
         "/third_party/libwebrtc/common_audio/common_audio_avx2_gn",
         "/third_party/libwebrtc/common_audio/common_audio_sse2_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_c_gn",
-        "/third_party/libwebrtc/modules/audio_coding/isac_gn",
         "/third_party/libwebrtc/modules/audio_processing/aec3/aec3_avx2_gn",
         "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/vector_math_avx2_gn",
         "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn",
