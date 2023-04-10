@@ -15,6 +15,56 @@ const TEST_SCENARIO_9 = 9;
 const TEST_SCENARIO_10 = 10;
 const TEST_SCENARIO_11 = 11;
 
+let processResultsGlobal = (data, successes, failures) => {
+  let expectedPrecision = data.precision;
+  let scenario = data.options.scenario;
+  let shouldBeRounded = data.options.shouldBeRounded;
+  for (let success of successes) {
+    ok(
+      true,
+      (shouldBeRounded ? "Should " : "Should not ") +
+        `have rounded '${success[0]}' to nearest ${expectedPrecision} ms; saw ${success[1]}. ` +
+        `scenario: TEST_SCENARIO_${scenario}`
+    );
+  }
+  if (failures.length > 2) {
+    for (let failure of failures) {
+      ok(
+        false,
+        (shouldBeRounded ? "Should " : "Should not ") +
+          `have rounded '${failure[0]}' to nearest ${expectedPrecision} ms; saw ${failure[1]}. ` +
+          `scenario: TEST_SCENARIO_${scenario}`
+      );
+    }
+  } else if (
+    failures.length == 2 &&
+    expectedPrecision < 10 &&
+    failures[0][0].indexOf("Date().getTime()") > 0 &&
+    failures[1][0].indexOf('File([], "").lastModified') > 0
+  ) {
+    /*
+     * At high precisions, the epoch-based timestamps are large enough that their expected
+     * rounding values lie directly between two integers; and floating point math is imprecise enough
+     * that we need to accept these failures
+     */
+    ok(
+      true,
+      "Two Free Failures that " +
+        (data.options.shouldBeRounded ? "ahould " : "should not ") +
+        `be rounded on the epoch dates and precision: ${expectedPrecision}. ` +
+        `scenario: TEST_SCENARIO_${data.options.scenario}`
+    );
+  } else if (failures.length == 1) {
+    ok(
+      true,
+      "Free Failure: " +
+        (data.options.shouldBeRounded ? "Should " : "Should not ") +
+        `have rounded '${failures[0][0]}' to nearest ${expectedPrecision} ms; saw ${failures[0][1]}. ` +
+        `scenario: TEST_SCENARIO_${data.options.scenario}`
+    );
+  }
+};
+
 // ================================================================================================
 // ================================================================================================
 // This test case is mostly copy-and-paste from the test case for window in
@@ -28,6 +78,8 @@ add_task(async function runRTPTestDOM() {
     // remove the assignment, you will see it is not
     // eslint-disable-next-line
     let isRounded = eval(data.isRoundedFunc);
+    // eslint-disable-next-line
+    let processResults = eval(data.options.processResultsFunc);
 
     // Prepare for test of AudioContext.currentTime
     // eslint-disable-next-line
@@ -84,50 +136,7 @@ add_task(async function runRTPTestDOM() {
       }
     }
 
-    for (let success of successes) {
-      ok(
-        resultSwitchisRounded(success[1]),
-        (data.options.shouldBeRounded ? "Should " : "Should not ") +
-          `have rounded '${success[0]}' to nearest ${expectedPrecision} ms; saw ${success[1]}. ` +
-          `Scenario: ${data.options.scenario}`
-      );
-    }
-    if (failures.length > 2) {
-      for (let failure of failures) {
-        ok(
-          resultSwitchisRounded(failure[1]),
-          (data.options.shouldBeRounded ? "Should " : "Should not ") +
-            `have rounded '${failure[0]}' to nearest ${expectedPrecision} ms; saw ${failure[1]}. ` +
-            `Scenario: ${data.options.scenario}`
-        );
-      }
-    } else if (
-      failures.length == 2 &&
-      expectedPrecision < 10 &&
-      failures[0][0] == timeStampCodes[0] &&
-      failures[1][0] == timeStampCodes[1]
-    ) {
-      /*
-       * At high precisions, the epoch-based timestamps are large enough that their expected
-       * rounding values lie directly between two integers; and floating point math is imprecise enough
-       * that we need to accept these failures
-       */
-      ok(
-        true,
-        "Two Free Failures that " +
-          (data.options.shouldBeRounded ? "ahould " : "should not ") +
-          `be rounded on the epoch dates and precision: ${expectedPrecision}. ` +
-          `Scenario: ${data.options.scenario}`
-      );
-    } else if (failures.length == 1) {
-      ok(
-        true,
-        "Free Failure: " +
-          (data.options.shouldBeRounded ? "Should " : "Should not ") +
-          `have rounded '${failures[0][0]}' to nearest ${expectedPrecision} ms; saw ${failures[0][1]}. ` +
-          `Scenario: ${data.options.scenario}`
-      );
-    }
+    processResults(data, successes, failures);
   };
 
   // RFP
@@ -137,6 +146,7 @@ add_task(async function runRTPTestDOM() {
       reduceTimerPrecision: true,
       crossOriginIsolated: true,
       scenario: TEST_SCENARIO_1,
+      processResultsFunc: processResultsGlobal.toString(),
     },
     100,
     runTests
@@ -148,6 +158,7 @@ add_task(async function runRTPTestDOM() {
       crossOriginIsolated: true,
       shouldBeRounded: false,
       scenario: TEST_SCENARIO_2,
+      processResultsFunc: processResultsGlobal.toString(),
     },
     100,
     runTests
@@ -159,6 +170,7 @@ add_task(async function runRTPTestDOM() {
       reduceTimerPrecision: true,
       crossOriginIsolated: true,
       scenario: TEST_SCENARIO_3,
+      processResultsFunc: processResultsGlobal.toString(),
     },
     100,
     runTests
@@ -169,6 +181,7 @@ add_task(async function runRTPTestDOM() {
       resistFingerprinting: true,
       crossOriginIsolated: true,
       scenario: TEST_SCENARIO_4,
+      processResultsFunc: processResultsGlobal.toString(),
     },
     13,
     runTests
@@ -179,6 +192,7 @@ add_task(async function runRTPTestDOM() {
       crossOriginIsolated: true,
       shouldBeRounded: false,
       scenario: TEST_SCENARIO_5,
+      processResultsFunc: processResultsGlobal.toString(),
     },
     13,
     runTests
@@ -190,6 +204,7 @@ add_task(async function runRTPTestDOM() {
       openPrivateWindow: true,
       crossOriginIsolated: true,
       scenario: TEST_SCENARIO_6,
+      processResultsFunc: processResultsGlobal.toString(),
     },
     13,
     runTests
@@ -203,6 +218,7 @@ add_task(async function runRTPTestDOM() {
       resistFingerprinting: true,
       crossOriginIsolated: true,
       scenario: TEST_SCENARIO_7,
+      processResultsFunc: processResultsGlobal.toString(),
     },
     7.97,
     runTests
@@ -213,6 +229,7 @@ add_task(async function runRTPTestDOM() {
       crossOriginIsolated: true,
       shouldBeRounded: false,
       scenario: TEST_SCENARIO_8,
+      processResultsFunc: processResultsGlobal.toString(),
     },
     7.97,
     runTests
@@ -223,6 +240,7 @@ add_task(async function runRTPTestDOM() {
       openPrivateWindow: true,
       crossOriginIsolated: true,
       scenario: TEST_SCENARIO_9,
+      processResultsFunc: processResultsGlobal.toString(),
     },
     7.97,
     runTests
@@ -233,6 +251,7 @@ add_task(async function runRTPTestDOM() {
     {
       reduceTimerPrecision: true,
       scenario: TEST_SCENARIO_10,
+      processResultsFunc: processResultsGlobal.toString(),
     },
     7.97,
     runTests
@@ -242,6 +261,7 @@ add_task(async function runRTPTestDOM() {
       reduceTimerPrecision: true,
       crossOriginIsolated: true,
       scenario: TEST_SCENARIO_11,
+      processResultsFunc: processResultsGlobal.toString(),
     },
     0.005,
     runTests
