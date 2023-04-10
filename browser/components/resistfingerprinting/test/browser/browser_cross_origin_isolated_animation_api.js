@@ -60,7 +60,10 @@ add_task(async function runRTPTestAnimation() {
         // If we are testing that preference, we accept either rounded or not
         // rounded values as A-OK.
         var maybeAcceptEverything = function(value) {
-          if (data.reduceTimerPrecision && !data.resistFingerprinting) {
+          if (
+            data.options.reduceTimerPrecision &&
+            !data.options.resistFingerprinting
+          ) {
             return true;
           }
 
@@ -122,7 +125,6 @@ add_task(async function runRTPTestAnimation() {
   await setupAndRunCrossOriginIsolatedTest(
     {
       resistFingerprinting: true,
-      reduceTimerPrecision: false,
       crossOriginIsolated: true,
     },
     50,
@@ -131,7 +133,6 @@ add_task(async function runRTPTestAnimation() {
   await setupAndRunCrossOriginIsolatedTest(
     {
       resistFingerprinting: true,
-      reduceTimerPrecision: false,
       crossOriginIsolated: true,
     },
     0.1,
@@ -149,7 +150,6 @@ add_task(async function runRTPTestAnimation() {
 
   await setupAndRunCrossOriginIsolatedTest(
     {
-      resistFingerprinting: false,
       reduceTimerPrecision: true,
       crossOriginIsolated: true,
     },
