@@ -681,11 +681,7 @@ class WalkerActor extends Actor {
 
   rawParentNode(node) {
     const rawNode = node instanceof NodeActor ? node.rawNode : node;
-    if (rawNode.nodeType === Node.DOCUMENT_NODE) {
-      // NOTE: This preserves previous behavior and it's needed to fix the
-      // issues described in bug 1826517 comment 2 (so that we don't create
-      // duplicate actors for the same node from different walkers).
-      // Maybe there's a better fix for this.
+    if (rawNode == this.rootDoc) {
       return null;
     }
     return InspectorUtils.getParentForNode(rawNode, /* anonymous = */ true);
