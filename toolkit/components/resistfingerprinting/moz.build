@@ -14,8 +14,6 @@ UNIFIED_SOURCES += [
     "RelativeTimeline.cpp",
 ]
 
-SPHINX_TREES["resistfingerprinting"] = "docs"
-
 FINAL_LIBRARY = "xul"
 
 EXPORTS += ["nsRFPService.h", "RFPTargets.inc"]

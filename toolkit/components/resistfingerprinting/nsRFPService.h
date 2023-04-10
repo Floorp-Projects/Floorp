@@ -277,7 +277,7 @@ class nsRFPService final : public nsIObserver {
   nsCString mInitialTZValue;
 
   void UpdateRFPPref();
-  void UpdateFPPOverrideList();
+  void UpdateRFPLiteOverrideList();
   void StartShutdown();
 
   void PrefChanged(const char* aPref);
