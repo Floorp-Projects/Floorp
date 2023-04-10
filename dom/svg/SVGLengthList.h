@@ -85,7 +85,10 @@ class SVGLengthList {
    * This may fail on OOM if the internal capacity needs to be increased, in
    * which case the list will be left unmodified.
    */
-  nsresult CopyFrom(const SVGLengthList& rhs);
+  nsresult CopyFrom(const SVGLengthList&);
+  void SwapWith(SVGLengthList& aOther) {
+    mLengths.SwapElements(aOther.mLengths);
+  }
 
   SVGLength& operator[](uint32_t aIndex) { return mLengths[aIndex]; }
 

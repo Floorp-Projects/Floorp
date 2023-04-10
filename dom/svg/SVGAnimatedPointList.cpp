@@ -54,18 +54,7 @@ nsresult SVGAnimatedPointList::SetBaseValueString(const nsAString& aValue) {
   // SVGElement::ParseAttribute under Element::SetAttr,
   // which takes care of notifying.
 
-  nsresult rv2 = mBaseVal.CopyFrom(newBaseValue);
-  if (NS_FAILED(rv2)) {
-    // Attempting to increase mBaseVal's length failed (mBaseVal is left
-    // unmodified). We MUST keep any DOM wrappers in sync:
-    if (baseValWrapper) {
-      baseValWrapper->InternalListWillChangeTo(mBaseVal);
-    }
-    if (animValWrapper) {
-      animValWrapper->InternalListWillChangeTo(mBaseVal);
-    }
-    return rv2;
-  }
+  mBaseVal.SwapWith(newBaseValue);
   return rv;
 }
 
@@ -165,7 +154,7 @@ SMILValue SVGAnimatedPointList::SMILAnimatedPointList::GetBaseValue() const {
   SMILValue val;
 
   SMILValue tmp(&SVGPointListSMILType::sSingleton);
-  SVGPointListAndInfo* list = static_cast<SVGPointListAndInfo*>(tmp.mU.mPtr);
+  auto* list = static_cast<SVGPointListAndInfo*>(tmp.mU.mPtr);
   nsresult rv = list->CopyFrom(mVal->mBaseVal);
   if (NS_SUCCEEDED(rv)) {
     list->SetInfo(mElement);

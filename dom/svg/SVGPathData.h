@@ -213,6 +213,7 @@ class SVGPathData {
    * which case the list will be left unmodified.
    */
   nsresult CopyFrom(const SVGPathData& rhs);
+  void SwapWith(SVGPathData& aRhs) { mData.SwapElements(aRhs.mData); }
 
   float& operator[](uint32_t aIndex) { return mData[aIndex]; }
 

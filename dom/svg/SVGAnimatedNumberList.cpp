@@ -19,10 +19,7 @@ namespace mozilla {
 
 nsresult SVGAnimatedNumberList::SetBaseValueString(const nsAString& aValue) {
   SVGNumberList newBaseValue;
-  nsresult rv = newBaseValue.SetValueFromString(aValue);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  MOZ_TRY(newBaseValue.SetValueFromString(aValue));
 
   DOMSVGAnimatedNumberList* domWrapper =
       DOMSVGAnimatedNumberList::GetDOMWrapperIfExists(this);
@@ -40,13 +37,8 @@ nsresult SVGAnimatedNumberList::SetBaseValueString(const nsAString& aValue) {
   // which takes care of notifying.
 
   mIsBaseSet = true;
-  rv = mBaseVal.CopyFrom(newBaseValue);
-  if (NS_FAILED(rv) && domWrapper) {
-    // Attempting to increase mBaseVal's length failed - reduce domWrapper
-    // back to the same length:
-    domWrapper->InternalBaseValListWillChangeTo(mBaseVal);
-  }
-  return rv;
+  mBaseVal.SwapWith(newBaseValue);
+  return NS_OK;
 }
 
 void SVGAnimatedNumberList::ClearBaseValue(uint32_t aAttrEnum) {
