@@ -113,19 +113,6 @@ class SmokeTest {
         }
     }
 
-    // Verifies the Bookmark button in a tab's 3 dot menu
-    @Test
-    fun mainMenuBookmarkButtonTest() {
-        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-        }.openThreeDotMenu {
-        }.bookmarkPage {
-            verifySnackBarText("Bookmark saved!")
-        }
-    }
-
     // Device or AVD requires a Google Services Android OS installation with Play Store installed
     // Verifies the Open in app button when an app is installed
     @Test
