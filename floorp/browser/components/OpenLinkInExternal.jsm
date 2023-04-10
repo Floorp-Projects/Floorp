@@ -438,7 +438,7 @@ let documentObserver = {
                     // Triggers a command event and updates the display.
                     options.querySelector(
                         `[value="${Services.prefs.getStringPref("floorp.openLinkInExternal.browserId", "").replaceAll(`"`, `\\"`)}"]`
-                    ).dispatchEvent(new Event("command"));
+                    )?.dispatchEvent(new Event("command"));
                 }, { once: true });
             }
         }
