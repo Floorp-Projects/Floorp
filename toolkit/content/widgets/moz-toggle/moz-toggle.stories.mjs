@@ -34,6 +34,7 @@ const Template = ({
   ariaLabel,
   l10nId,
   hasSupportLink,
+  accessKey,
 }) => html`
   <div style="max-width: 400px">
     <moz-toggle
@@ -44,6 +45,7 @@ const Template = ({
       aria-label=${ifDefined(ariaLabel)}
       data-l10n-id=${ifDefined(l10nId)}
       data-l10n-attrs="aria-label, description, label"
+      accesskey=${ifDefined(accessKey)}
     >
       ${hasSupportLink
         ? html`
@@ -77,6 +79,7 @@ WithLabel.args = {
   disabled: false,
   l10nId: "moz-toggle-label",
   hasSupportLink: false,
+  accessKey: "h",
 };
 
 export const WithDescription = Template.bind({});

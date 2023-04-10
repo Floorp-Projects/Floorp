@@ -4,6 +4,8 @@
 
 import { html, ifDefined } from "../vendor/lit.all.mjs";
 import { MozLitElement } from "../lit-utils.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://global/content/elements/moz-label.mjs";
 
 /**
  * A simple toggle element that can be used to switch between two states.
@@ -31,6 +33,7 @@ export default class MozToggle extends MozLitElement {
     label: { type: String },
     description: { type: String },
     ariaLabel: { type: String, attribute: "aria-label" },
+    accessKey: { type: String, attribute: "accesskey" },
   };
 
   static get queries() {
@@ -71,7 +74,13 @@ export default class MozToggle extends MozLitElement {
     if (this.label) {
       return html`
         <span class="label-wrapper">
-          <label id="moz-toggle-label" part="label" for="moz-toggle-button">
+          <label
+            is="moz-label"
+            id="moz-toggle-label"
+            part="label"
+            for="moz-toggle-button"
+            accesskey=${ifDefined(this.accessKey)}
+          >
             ${this.label}
           </label>
           ${!this.description ? this.supportLinkTemplate() : ""}
