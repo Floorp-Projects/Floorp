@@ -26,7 +26,7 @@ gcloud:
     - class org.mozilla.fenix.ui.NavigationToolbarTest#goBackTest
     - class org.mozilla.fenix.ui.NavigationToolbarTest#goForwardTest
     - class org.mozilla.fenix.ui.HistoryTest#visitedUrlHistoryTest
-    - class org.mozilla.fenix.ui.SmokeTest#openMainMenuSettingsItemTest
+    - class org.mozilla.fenix.ui.MainMenuTest#openMainMenuSettingsItemTest
     - class org.mozilla.fenix.ui.SettingsSearchTest#toggleSearchSuggestionsTest
     - class org.mozilla.fenix.ui.CollectionTest#deleteCollectionTest
     - class org.mozilla.fenix.ui.SmokeTest#noHistoryInPrivateBrowsingTest
