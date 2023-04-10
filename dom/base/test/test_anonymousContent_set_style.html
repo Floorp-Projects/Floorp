@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1571650
 
   info("Test the element which became to anonymous");
   const mozCustomContentContainerEl =
-    [...SpecialPowers.InspectorUtils.getChildrenForNode(document.documentElement, true)]
+    [...SpecialPowers.InspectorUtils.getChildrenForNode(document.documentElement, true, false)]
       .find(n => n.classList && n.classList.contains("moz-custom-content-container"));
 
   const targetEl = mozCustomContentContainerEl.querySelector(".set-style-test");

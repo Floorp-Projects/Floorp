@@ -25,7 +25,7 @@ domWinUtils.loadSheetUsingURIString('data:text/css,@namespace url("http://www.mo
 function init()
 {
   downButton = SpecialPowers.unwrap(
-    SpecialPowers.InspectorUtils.getChildrenForNode(scrollbar, true)[4]);
+    SpecialPowers.InspectorUtils.getChildrenForNode(scrollbar, true, false)[4]);
   if (!downButton) {
     ok(navigator.userAgent.indexOf("Linux") !== -1 ||
        navigator.userAgent.indexOf("Mac") !== -1, "Theme doesn't support scrollbar buttons");

@@ -36,7 +36,8 @@ button {
   width: 100%;
 }
 
-button:dir(rtl) {
+button:dir(rtl),
+button:-moz-locale-dir(rtl) {
   background-position-x: right 8px;
 }
 

@@ -56,7 +56,8 @@ nsresult SVGLengthList::SetValueFromString(const nsAString& aValue) {
   if (tokenizer.separatorAfterCurrentToken()) {
     return NS_ERROR_DOM_SYNTAX_ERR;  // trailing comma
   }
-  return CopyFrom(temp);
+  mLengths = std::move(temp.mLengths);
+  return NS_OK;
 }
 
 bool SVGLengthList::operator==(const SVGLengthList& rhs) const {

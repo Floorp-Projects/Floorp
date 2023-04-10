@@ -25,8 +25,10 @@ const TEST_URL = `data:text/html;charset=utf-8,
   });
 </script>`;
 
+const MAX_CHILDREN = 5;
+
 add_task(async function() {
-  await pushPref("devtools.markup.pagesize", 5);
+  await pushPref("devtools.markup.pagesize", MAX_CHILDREN);
 
   const { inspector } = await openInspectorForURL(TEST_URL);
 
@@ -45,11 +47,11 @@ add_task(async function() {
 
   is(
     childContainers.length,
-    6,
-    "Expecting 6 children: shadowroot, 5 host children"
+    MAX_CHILDREN,
+    "Expecting 5 children: shadowroot, 4 host children"
   );
   assertContainerHasText(childContainers[0], "#shadow-root");
-  for (let i = 1; i < 6; i++) {
+  for (let i = 1; i < 5; i++) {
     assertContainerHasText(childContainers[i], "div");
     assertContainerHasText(childContainers[i], "node " + i);
   }
@@ -85,7 +87,7 @@ add_task(async function() {
   await waitForMultipleChildrenUpdates(inspector);
 
   let slotChildContainers = slotContainer.getChildContainers();
-  is(slotChildContainers.length, 5, "Expecting 5 slotted children");
+  is(slotChildContainers.length, MAX_CHILDREN, "Expecting 5 slotted children");
   for (const slotChildContainer of slotChildContainers) {
     assertContainerHasText(slotChildContainer, "div");
     ok(
@@ -107,7 +109,11 @@ add_task(async function() {
   await inspector.markup._waitForChildren();
 
   slotChildContainers = slotContainer.getChildContainers();
-  is(slotChildContainers.length, 6, "Expecting one additional slotted element");
+  is(
+    slotChildContainers.length,
+    7,
+    "Expecting one additional slotted element and fallback"
+  );
   assertContainerHasText(slotChildContainers[5], "div");
   ok(
     slotChildContainers[5].elt.querySelector(".reveal-link"),

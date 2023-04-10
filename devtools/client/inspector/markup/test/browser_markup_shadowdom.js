@@ -168,6 +168,7 @@ const TEST_DATA = [
           slot
             ::before
             div!slotted
+            default content
             ::after
         ::before
         class="light-dom"

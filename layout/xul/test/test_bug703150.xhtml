@@ -19,7 +19,7 @@ function doTest()
 {
   var scrollbar = document.getElementById("scrollbar");
   var scrollbarThumb = null;
-  for (let child of SpecialPowers.InspectorUtils.getChildrenForNode(scrollbar, true)) {
+  for (let child of SpecialPowers.InspectorUtils.getChildrenForNode(scrollbar, true, false)) {
     if (child.nodeName === "slider") {
       scrollbarThumb = SpecialPowers.unwrap(child.childNodes[0]);
     }

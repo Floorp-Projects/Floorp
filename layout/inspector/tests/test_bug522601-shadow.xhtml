@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=522601
   <iframe id="frame1" src="file_bug522601.html">frame text</iframe>
 </div>
 <pre id="test">
-<script type="application/javascript">
+<script>
 <![CDATA[
 
 /** Test for Bug 522601 **/
@@ -49,7 +49,7 @@ addLoadEvent(function() {
               .createInstance(SpecialPowers.Ci.inIDeepTreeWalker);
   walkerSubDocument.showAnonymousContent = false;
   walkerSubDocument.showSubDocuments = true;
-  walkerSubDocument.init($("frame1"), NodeFilter.SHOW_ALL);
+  walkerSubDocument.init($("frame1"));
 
   is(SpecialPowers.unwrap(walkerSubDocument.currentNode), $("frame1"), "Unexpected sub-doc root");
   testFunc(walkerSubDocument, "firstChild", $("frame1").contentDocument.doctype,
@@ -63,7 +63,7 @@ addLoadEvent(function() {
   walkerSubDocument.showAnonymousContent = false;
   walkerSubDocument.showSubDocuments = true;
   walkerSubDocument.showDocumentsAsNodes = true;
-  walkerSubDocument.init($("frame1"), NodeFilter.SHOW_ALL);
+  walkerSubDocument.init($("frame1"));
 
   is(SpecialPowers.unwrap(walkerSubDocument.currentNode), $("frame1"), "Unexpected sub-doc root");
   testFunc(walkerSubDocument, "firstChild", $("frame1").contentDocument,
@@ -84,7 +84,7 @@ addLoadEvent(function() {
               .createInstance(SpecialPowers.Ci.inIDeepTreeWalker);
   walkerFrameChild.showAnonymousContent = false;
   walkerFrameChild.showSubDocuments = false;
-  walkerFrameChild.init($("frame1"), NodeFilter.SHOW_ALL);
+  walkerFrameChild.init($("frame1"));
 
   is(SpecialPowers.unwrap(walkerFrameChild.currentNode), $("frame1"), "Unexpected sub-doc root");
   testFunc(walkerFrameChild, "firstChild", $("frame1").firstChild,
@@ -93,7 +93,7 @@ addLoadEvent(function() {
   var walkerNonAnon =
     SpecialPowers.Cc["@mozilla.org/inspector/deep-tree-walker;1"]
               .createInstance(SpecialPowers.Ci.inIDeepTreeWalker);
-  walkerNonAnon.init($("display"), NodeFilter.SHOW_ALL);
+  walkerNonAnon.init($("display"));
   walkerNonAnon.showAnonymousContent = false;
 
   is(SpecialPowers.unwrap(walkerNonAnon.currentNode), $("display"), "Unexpected non-anon root");
@@ -138,6 +138,7 @@ addLoadEvent(function() {
 
   // Move the walker over to the end
   while (walkerNonAnon.nextNode()) { /* do nothing */ }
+
   is(SpecialPowers.unwrap(walkerNonAnon.currentNode), $("i2").firstChild, "unexpected last node");
   testFunc(walkerNonAnon, "previousNode", $("i2"), "step back to second italic");
   testFunc(walkerNonAnon, "previousNode", $("i1").nextSibling,
@@ -184,14 +185,18 @@ addLoadEvent(function() {
     SpecialPowers.Cc["@mozilla.org/inspector/deep-tree-walker;1"]
               .createInstance(SpecialPowers.Ci.inIDeepTreeWalker);
   walkerAnon.showAnonymousContent = true;
-  walkerAnon.init($("display"), NodeFilter.SHOW_ALL);
+  walkerAnon.init($("display"));
 
   is(SpecialPowers.unwrap(walkerAnon.currentNode), $("display"), "Unexpected anon root");
+  testFunc(walkerAnon, "nextNode", $("display").shadowRoot,
+           "step to shadow root");
   testFunc(walkerAnon, "nextNode", anonDiv,
            "step to anonymous div");
   testFunc(walkerAnon, "nextNode", slot, "step into slot");
-  testFunc(walkerAnon, "nextNode", $("s").previousSibling,
-           "step to some text (anon)");
+  testFunc(walkerAnon, "nextNode", namedSlot, "step into named slot");
+  testFunc(walkerAnon, "nextNode", $("s").previousSibling, "step to light dom text (out of shadow tree)");
+  testFunc(walkerAnon, "nextNode", $("s"), "step to span (anon)");
+  testFunc(walkerAnon, "nextNode", $("s").firstChild, "step to span text (anon)");
   testFunc(walkerAnon, "nextNode", $("s").nextSibling, "step to more text (anon)");
   testFunc(walkerAnon, "nextNode", $("b"), "step to bold (anon)");
   testFunc(walkerAnon, "nextNode", $("b").firstChild, "step to bold text (anon)");
@@ -203,32 +208,38 @@ addLoadEvent(function() {
   testFunc(walkerAnon, "nextNode", $("i2"), "step to second italic (anon)");
   testFunc(walkerAnon, "nextNode", $("i2").firstChild,
            "step to second italic text (anon)");
-  testFunc(walkerAnon, "nextNode", namedSlot, "step into named slot");
-  testFunc(walkerAnon, "nextNode", $("s"), "step to span (anon)");
-  testFunc(walkerAnon, "nextNode", $("s").firstChild, "step to span text (anon)");
   testFunc(walkerAnon, "nextNode", null, "step past end (anon)");
-  testFunc(walkerAnon, "parentNode", $("s"), "step up to span (anon)");
-  testFunc(walkerAnon, "parentNode", namedSlot, "step up to named slot");
+  testFunc(walkerAnon, "parentNode", $("i2"), "step up to italic (anon)");
+  testFunc(walkerAnon, "parentNode", $("b"), "step up to bold (anon)");
   testFunc(walkerAnon, "parentNode", $("display"), "step up to display (anon)");
-  testFunc(walkerAnon, "nextNode", anonDiv, "step to anonymous div again");
+  testFunc(walkerAnon, "nextNode", $("display").shadowRoot, "step to shadow root again");
   testFunc(walkerAnon, "parentNode", $("display"),
-           "step up to display again (anon)");
+           "step up to display again (anon)")
   testFunc(walkerAnon, "parentNode", null, "step up past root (anon)");
-  testFunc(walkerAnon, "firstChild", anonDiv,
+  testFunc(walkerAnon, "firstChild", $("display").shadowRoot,
            "step firstChild to display first child (anon)");
-  testFunc(walkerAnon, "nextSibling", namedSlot,
-           "step nextSibling named slot");
+  testFunc(walkerAnon, "nextSibling", $("s").previousSibling,
+           "step nextSibling text (anon)");
+  testFunc(walkerAnon, "nextSibling", $("s"),
+           "step nextSibling span (anon)");
+  testFunc(walkerAnon, "nextSibling", $("s").nextSibling,
+           "step nextSibling more text (anon)");
+  testFunc(walkerAnon, "nextSibling", $("b"),
+           "step nextSibling bold (anon)");
   testFunc(walkerAnon, "nextSibling", null, "step nextSibling past end (anon)");
-  testFunc(walkerAnon, "previousSibling", anonDiv,
-           "step previousSibling to anonymous div");
+  testFunc(walkerAnon, "previousSibling", $("s").nextSibling,
+           "step previousSibling to more text");
+  testFunc(walkerAnon, "previousSibling", $("s"),
+           "step previousSibling to span");
+  testFunc(walkerAnon, "previousSibling", $("s").previousSibling,
+           "step previousSibling to prev text");
+  testFunc(walkerAnon, "previousSibling", $("display").shadowRoot,
+           "step shadowRoot");
   testFunc(walkerAnon, "previousSibling", null, "step previousSibling past end (anon)");
 
   // Move the walker over to the end
   while (walkerAnon.nextNode()) { /* do nothing */ }
-  testFunc(walkerAnon, "previousNode", $("s"), "step back to span (anon)");
-  testFunc(walkerAnon, "previousNode", namedSlot, "step back to named slot");
-  testFunc(walkerAnon, "previousNode", $("i2").firstChild,
-           "step back to second italic text (anon)");
+
   testFunc(walkerAnon, "previousNode", $("i2"), "step back to second italic (anon)");
   testFunc(walkerAnon, "previousNode", $("i1").nextSibling,
            "step back to more bold text (anon)");
@@ -238,11 +249,17 @@ addLoadEvent(function() {
   testFunc(walkerAnon, "previousNode", $("b").firstChild, "step back to bold text (anon)");
   testFunc(walkerAnon, "previousNode", $("b"), "step back to bold (anon)");
   testFunc(walkerAnon, "previousNode", $("s").nextSibling, "step back to more text (anon)");
+  testFunc(walkerAnon, "previousNode", $("s").firstChild,
+           "step back to span text (anon)");
+  testFunc(walkerAnon, "previousNode", $("s"),
+           "step back to span (anon)");
   testFunc(walkerAnon, "previousNode", $("s").previousSibling,
            "step back to some text (anon)");
-  testFunc(walkerAnon, "previousNode", slot, "steb back to slot");
+  testFunc(walkerAnon, "previousNode", namedSlot, "step back to named slot");
+  testFunc(walkerAnon, "previousNode", slot, "step back to slot");
   testFunc(walkerAnon, "previousNode", anonDiv,
            "step back to anonymous div");
+  testFunc(walkerAnon, "previousNode", $("display").shadowRoot, "step back to shadow root (anon)");
   testFunc(walkerAnon, "previousNode", $("display"), "step back to root (anon)");
   testFunc(walkerAnon, "previousNode", null, "step back past root (anon)");
 
