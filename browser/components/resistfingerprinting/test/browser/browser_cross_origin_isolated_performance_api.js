@@ -121,25 +121,31 @@ let runWorkerTest = async function(data) {
 add_task(async function runTestsForWorker() {
   // RFP
   await setupAndRunCrossOriginIsolatedTest(
-    true,
-    true,
-    true,
+    {
+      resistFingerprinting: true,
+      reduceTimerPrecision: true,
+      crossOriginIsolated: true,
+    },
     100,
     runWorkerTest,
     "runTimerTests"
   );
   await setupAndRunCrossOriginIsolatedTest(
-    true,
-    false,
-    true,
+    {
+      resistFingerprinting: true,
+      reduceTimerPrecision: false,
+      crossOriginIsolated: true,
+    },
     13,
     runWorkerTest,
     "runTimerTests"
   );
   await setupAndRunCrossOriginIsolatedTest(
-    true,
-    true,
-    true,
+    {
+      resistFingerprinting: true,
+      reduceTimerPrecision: true,
+      crossOriginIsolated: true,
+    },
     0.13,
     runWorkerTest,
     "runTimerTests"
@@ -147,17 +153,21 @@ add_task(async function runTestsForWorker() {
 
   // RTP
   await setupAndRunCrossOriginIsolatedTest(
-    false,
-    true,
-    false,
+    {
+      resistFingerprinting: false,
+      reduceTimerPrecision: true,
+      crossOriginIsolated: false,
+    },
     0.13,
     runWorkerTest,
     "runTimerTests"
   );
   await setupAndRunCrossOriginIsolatedTest(
-    false,
-    true,
-    true,
+    {
+      resistFingerprinting: false,
+      reduceTimerPrecision: true,
+      crossOriginIsolated: true,
+    },
     0.005,
     runWorkerTest,
     "runTimerTests"
