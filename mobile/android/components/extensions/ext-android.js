@@ -3,6 +3,11 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+/**
+ * NOTE: If you change the globals in this file, you must check if the globals
+ * list in mobile/android/.eslintrc.js also needs updating.
+ */
+
 ChromeUtils.defineESModuleGetters(this, {
   GeckoViewTabBridge: "resource://gre/modules/GeckoViewTab.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
@@ -28,8 +33,6 @@ var { ExtensionUtils } = ChromeUtils.import(
 var { DefaultWeakMap, ExtensionError } = ExtensionUtils;
 
 var { defineLazyGetter } = ExtensionCommon;
-
-global.GlobalEventDispatcher = EventDispatcher.instance;
 
 const BrowserStatusFilter = Components.Constructor(
   "@mozilla.org/appshell/component/browser-status-filter;1",
@@ -204,9 +207,9 @@ global.makeGlobalEvent = function makeGlobalEvent(
         },
       };
 
-      GlobalEventDispatcher.registerListener(listener2, [event]);
+      EventDispatcher.instance.registerListener(listener2, [event]);
       return () => {
-        GlobalEventDispatcher.unregisterListener(listener2, [event]);
+        EventDispatcher.instance.unregisterListener(listener2, [event]);
       };
     },
   }).api();
