@@ -1,0 +1,142 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>MozLabel tests</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+  <script type="module" src="chrome://global/content/elements/moz-label.mjs"></script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+  <label is="moz-label" for="checkbox" accesskey="c">For the checkbox:</label>
+  <input type="checkbox" id="checkbox" />
+
+  <label is="moz-label" accesskey="n">
+    For the nested checkbox:
+    <input type="checkbox" />
+  </label>
+
+  <label is="moz-label" for="radio" accesskey="r">For the radio:</label>
+  <input type="radio" id="radio" />
+
+  <label is="moz-label" accesskey="F">
+    For the nested radio:
+    <input type="radio" />
+  </label>
+
+  <label is="moz-label" for="button" accesskey="b">For the button:</label>
+  <button id="button">Click me</button>
+
+  <label is="moz-label" accesskey="u">
+    For the nested button:
+    <button>Click me too</button>
+  </label>
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript">
+  let labels = document.querySelectorAll("label[is='moz-label']");
+  let isMac = navigator.platform.includes("Mac");
+
+  function performAccessKey(key) {
+    synthesizeKey(
+      key,
+      navigator.platform.includes("Mac")
+        ? { altKey: true, ctrlKey: true }
+        : { altKey: true, shiftKey: true }
+      );
+  }
+
+  // Accesskey underlining is disabled by default on Mac.
+  // Reload the window and wait for load to ensure pref is applied.
+  add_setup(async function setup() {
+    if (isMac && !SpecialPowers.getIntPref("ui.key.menuAccessKey")) {
+      await SpecialPowers.pushPrefEnv(
+        { set: [["ui.key.menuAccessKey", 1]] },
+        async () => {
+          window.location.reload();
+          await new Promise(resolve => {
+            addEventListener("load", resolve, { once: true });
+          });
+        }
+      );
+    }
+  });
+
+  add_task(async function testAccesskeyUnderlined() {
+    labels.forEach(label => {
+      let accessKey = label.getAttribute("accesskey");
+      let wrapper = label.querySelector(".accesskey");
+      is(wrapper.textContent, accessKey, "The accesskey character is wrapped.")
+
+      let textDecoration = getComputedStyle(wrapper)["text-decoration"]
+      ok(textDecoration.includes("underline"), "The accesskey character is underlined.")
+    })
+  });
+
+  add_task(async function testAccesskeyFocus() {
+    labels.forEach(label => {
+      let accessKey = label.getAttribute("accesskey");
+      // Find the labelled element via the "for" attr if there's an ID
+      // association, or select the lastElementChild for nested elements
+      let element = document.getElementById(label.getAttribute("for")) || label.lastElementChild;
+
+      isnot(document.activeElement, element, "Focus is not on the associated element.");
+
+      performAccessKey(accessKey);
+
+      is(document.activeElement, element, "Focus moved to the associated element.")
+    })
+  });
+
+  add_task(async function testAccesskeyChange() {
+    let label = labels[0];
+    let nextAccesskey = "x";
+    let originalAccesskey = label.getAttribute("accesskey");
+    let getWrapper = () => label.querySelector(".accesskey");
+    is(getWrapper().textContent, originalAccesskey, "Original accesskey character is wrapped.")
+
+    label.setAttribute("accesskey", nextAccesskey);
+    is(getWrapper().textContent, nextAccesskey, "New accesskey character is wrapped.")
+
+    let elementId = label.getAttribute("for");
+    let focusedEl = document.getElementById(elementId);
+
+    performAccessKey(originalAccesskey);
+    isnot(document.activeElement.id, focusedEl.id, "Focus has not moved to the associated element.")
+
+    performAccessKey(nextAccesskey);
+    is(document.activeElement.id, focusedEl.id, "Focus moved to the associated element.")
+  });
+
+  add_task(async function testAccesskeyAppended() {
+    let label = labels[0];
+    let originalText = label.textContent;
+    let accesskey = "z"; // Letter not included in the label text.
+    label.setAttribute("accesskey", accesskey);
+
+    let expectedText = `${originalText} (Z):`;
+    is(label.textContent, expectedText, "Access key is appended when not included in label text.")
+  });
+
+  add_task(async function testLabelClick() {
+    let label = labels[0];
+    let input = document.getElementById(label.getAttribute("for"));
+    is(input.checked, false, "The associated input is not checked.")
+
+    // Input state changes on label click.
+    synthesizeMouseAtCenter(label, {});
+    ok(input.checked, "The associated input is checked.")
+
+    // Input state doesn't change on label click when input is disabled.
+    input.disabled = true;
+    synthesizeMouseAtCenter(label, {});
+    ok(input.checked, "The associated input is still checked.")
+  });
+</script>
+</pre>
+</body>
+</html>
