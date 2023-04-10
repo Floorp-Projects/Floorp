@@ -3,17 +3,11 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Custom element manifest analyzer plugin to remove specific properties from
- * custom-elements.json that we don't want to document in our Storybook props tables.
+ * Custom element manifest analyzer plugin to remove static and private
+ * properties from custom-elements.json that we don't want to document in our
+ * Storybook props tables.
  */
-function removeExcludedProperties() {
-  const EXCLUDED_PROPERTIES = [
-    "SUPPORT_URL",
-    "LOCAL_NAME",
-    "queries",
-    "stylesheetUrl",
-    "shadowRootOptions",
-  ];
+function removePrivateAndStaticFields() {
   return {
     packageLinkPhase({ customElementsManifest }) {
       customElementsManifest?.modules?.forEach(module => {
@@ -22,7 +16,7 @@ function removeExcludedProperties() {
             declaration.members = declaration.members.filter(member => {
               return (
                 !member.kind === "field" ||
-                !EXCLUDED_PROPERTIES.includes(member.name)
+                (!member.static && !member.name.startsWith("#"))
               );
             });
           }
@@ -33,8 +27,9 @@ function removeExcludedProperties() {
 }
 
 /**
- * Custom element manifest config. Controls how we parse directories for
- * custom elements to populate custom-elements.json.
+ * Custom element manifest config. Controls how we parse directories for custom
+ * elements to populate custom-elements.json, which is used by Storybook to
+ * generate docs.
  */
 const config = {
   globs: ["../../../toolkit/content/widgets/**/*.mjs"],
@@ -45,7 +40,7 @@ const config = {
   ],
   outdir: ".",
   litelement: true,
-  plugins: [removeExcludedProperties()],
+  plugins: [removePrivateAndStaticFields()],
 };
 
 export default config;
