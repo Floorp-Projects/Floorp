@@ -96,7 +96,7 @@ let setupPerformanceAPISpoofAndDisableTest = async function(
   await BrowserTestUtils.closeWindow(win);
 };
 
-let isTimeValueRounded = (x, expectedPrecision) => {
+let isTimeValueRounded = (x, expectedPrecision, console) => {
   const nearestExpected = Math.round(x / expectedPrecision) * expectedPrecision;
   // First we do the perfectly normal check that should work just fine
   if (x === nearestExpected) {
@@ -111,6 +111,20 @@ let isTimeValueRounded = (x, expectedPrecision) => {
   // To be clear, this error is introduced in our re-calculation of 'rounded'
   // above in JavaScript.
   const error = Math.abs(x - nearestExpected);
+
+  if (console) {
+    console.log(
+      "Additional Debugging Info: Expected Precision: " +
+        expectedPrecision +
+        " Measured Value: " +
+        x +
+        " Nearest Expected Vaue: " +
+        nearestExpected +
+        " Error: " +
+        error
+    );
+  }
+
   if (Math.abs(error) < 0.0005) {
     return true;
   }
@@ -129,18 +143,6 @@ let isTimeValueRounded = (x, expectedPrecision) => {
       return true;
     }
   }
-
-  ok(
-    false,
-    "Looming Test Failure, Additional Debugging Info: Expected Precision: " +
-      expectedPrecision +
-      " Measured Value: " +
-      x +
-      " Nearest Expected Vaue: " +
-      nearestExpected +
-      " Error: " +
-      error
-  );
 
   return false;
 };
@@ -200,10 +202,19 @@ let setupAndRunCrossOriginIsolatedTest = async function(
     options.crossOriginIsolated = false;
   }
 
+  if (options.openPrivateWindow === undefined) {
+    options.openPrivateWindow = false;
+  }
+  if (options.shouldBeRounded === undefined) {
+    options.shouldBeRounded = true;
+  }
+
   console.log(prefsToSet);
   await SpecialPowers.pushPrefEnv({ set: prefsToSet });
 
-  let win = await BrowserTestUtils.openNewBrowserWindow();
+  let win = await BrowserTestUtils.openNewBrowserWindow({
+    private: options.openPrivateWindow,
+  });
   let tab = await BrowserTestUtils.openNewForegroundTab(
     win.gBrowser,
     `https://example.com/browser/browser/components/resistfingerprinting` +
@@ -212,7 +223,10 @@ let setupAndRunCrossOriginIsolatedTest = async function(
 
   // No matter what we set the precision to, if we're in ResistFingerprinting
   // mode we use the larger of the precision pref and the RFP time-atom constant
-  if (options.resistFingerprinting) {
+  if (
+    options.resistFingerprinting ||
+    (options.resistFingerprintingPBMOnly && options.openPrivateWindow)
+  ) {
     const RFP_TIME_ATOM_MS = 16.667;
     expectedPrecision = Math.max(RFP_TIME_ATOM_MS, expectedPrecision);
   }
@@ -223,8 +237,7 @@ let setupAndRunCrossOriginIsolatedTest = async function(
         precision: expectedPrecision,
         isRoundedFunc: isTimeValueRounded.toString(),
         workerCall,
-        resistFingerprinting: options.resistFingerprinting,
-        reduceTimerPrecision: options.reduceTimerPrecision,
+        options,
       },
     ],
     runTests

@@ -133,7 +133,6 @@ add_task(async function runTestsForWorker() {
   await setupAndRunCrossOriginIsolatedTest(
     {
       resistFingerprinting: true,
-      reduceTimerPrecision: false,
       crossOriginIsolated: true,
     },
     13,
@@ -154,9 +153,7 @@ add_task(async function runTestsForWorker() {
   // RTP
   await setupAndRunCrossOriginIsolatedTest(
     {
-      resistFingerprinting: false,
       reduceTimerPrecision: true,
-      crossOriginIsolated: false,
     },
     0.13,
     runWorkerTest,
@@ -164,7 +161,6 @@ add_task(async function runTestsForWorker() {
   );
   await setupAndRunCrossOriginIsolatedTest(
     {
-      resistFingerprinting: false,
       reduceTimerPrecision: true,
       crossOriginIsolated: true,
     },
