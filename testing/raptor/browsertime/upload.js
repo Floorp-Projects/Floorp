@@ -57,7 +57,7 @@ module.exports = async function(context, commands) {
 
     let localFilePath = path.join(
       `${context.options.browsertime.moz_fetch_dir}`,
-      "upload-test-50MB.dat"
+      "upload-test-32MB.dat"
     );
 
     context.log.info("Sending file path: " + localFilePath);

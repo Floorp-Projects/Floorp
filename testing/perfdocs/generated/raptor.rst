@@ -7114,7 +7114,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 1
-   * **browsertime args**: --browsertime.upload_iterations=10 --firefox.preference=network.http.http3.enabled:false
+   * **browsertime args**: --browsertime.upload_iterations=10 --firefox.preference=network.http.http3.enable:false --chrome.args disable-quic
    * **custom data**: true
    * **expected**: pass
    * **gecko profile entries**: 14000000
