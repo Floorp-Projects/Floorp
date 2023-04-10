@@ -14,9 +14,9 @@ import org.mozilla.fenix.home.mozonline.showPrivacyPopWindow
  * a privacy notice on first run. Once the privacy notice is accepted, and for
  * all subsequent launches, it will simply launch the Fenix [HomeActivity].
  */
-open class MozillaOnlineHomeActivity : AppCompatActivity() {
+class MozillaOnlineHomeActivity : AppCompatActivity() {
 
-    final override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         if ((this.application as FenixApplication).shouldShowPrivacyNotice()) {
