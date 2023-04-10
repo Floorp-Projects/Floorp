@@ -532,16 +532,8 @@ void Location::SetSearch(const nsAString& aSearch,
     return;
   }
 
-  if (Document* doc = GetEntryDocument()) {
-    aRv = NS_MutateURI(uri)
-              .SetQueryWithEncoding(NS_ConvertUTF16toUTF8(aSearch),
-                                    doc->GetDocumentCharacterSet())
-              .Finalize(uri);
-  } else {
-    aRv = NS_MutateURI(uri)
-              .SetQuery(NS_ConvertUTF16toUTF8(aSearch))
-              .Finalize(uri);
-  }
+  aRv =
+      NS_MutateURI(uri).SetQuery(NS_ConvertUTF16toUTF8(aSearch)).Finalize(uri);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
