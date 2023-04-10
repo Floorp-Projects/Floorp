@@ -171,7 +171,7 @@ upload-speed-test-file:
     description: "File used for the upload speed performance test"
     fetch:
         type: static-url
-        artifact-name: upload-test-50MB.dat
-        url: https://github.com/mozilla/perf-automation/raw/master/test_files/upload-test-50MB.dat
-        sha256: 107c214d7b5318bdf954287fbbbcffb47d5b4d9a87732e97cac68f757306406a
-        size: 52428800
+        artifact-name: upload-test-32MB.dat
+        url: https://github.com/mozilla/perf-automation/raw/master/test_files/upload-test-32MB.dat
+        sha256: 72caa47a951e9f37d1e1be2119a64b1fbc6348c4f37d574bee4587e02b8f96a5
+        size: 32000000
