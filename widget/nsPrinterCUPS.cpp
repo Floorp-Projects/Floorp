@@ -83,9 +83,9 @@ static void FetchCUPSVersionForPrinter(const nsCUPSShim& aShim,
 }
 
 nsPrinterCUPS::~nsPrinterCUPS() {
-  auto printerInfoLock = mPrinterInfoMutex.Lock();
-  if (printerInfoLock->mPrinterInfo) {
-    mShim.cupsFreeDestInfo(printerInfoLock->mPrinterInfo);
+  PrinterInfoLock lock = mPrinterInfoMutex.Lock();
+  if (lock->mPrinterInfo) {
+    mShim.cupsFreeDestInfo(lock->mPrinterInfo);
   }
   if (mPrinter) {
     mShim.cupsFreeDests(1, mPrinter);
@@ -121,9 +121,8 @@ const char* nsPrinterCUPS::LocalizeMediaName(http_t& aConnection,
   if (!mShim.cupsLocalizeDestMedia) {
     return aMedia.media;
   }
-  auto printerInfoLock = TryEnsurePrinterInfo();
-  cups_dinfo_t* const printerInfo = printerInfoLock->mPrinterInfo;
-  return mShim.cupsLocalizeDestMedia(&aConnection, mPrinter, printerInfo,
+  PrinterInfoLock lock = TryEnsurePrinterInfo();
+  return mShim.cupsLocalizeDestMedia(&aConnection, mPrinter, lock->mPrinterInfo,
                                      CUPS_MEDIA_FLAGS_DEFAULT, &aMedia);
 }
 
@@ -168,34 +167,33 @@ nsPrinterBase::PrinterInfo nsPrinterCUPS::CreatePrinterInfo() const {
 }
 
 bool nsPrinterCUPS::Supports(const char* aOption, const char* aValue) const {
-  auto printerInfoLock = TryEnsurePrinterInfo();
-  cups_dinfo_t* const printerInfo = printerInfoLock->mPrinterInfo;
-  return mShim.cupsCheckDestSupported(CUPS_HTTP_DEFAULT, mPrinter, printerInfo,
-                                      aOption, aValue);
+  PrinterInfoLock lock = TryEnsurePrinterInfo();
+  return mShim.cupsCheckDestSupported(CUPS_HTTP_DEFAULT, mPrinter,
+                                      lock->mPrinterInfo, aOption, aValue);
 }
 
 bool nsPrinterCUPS::IsCUPSVersionAtLeast(uint64_t aCUPSMajor,
                                          uint64_t aCUPSMinor,
                                          uint64_t aCUPSPatch) const {
-  auto printerInfoLock = TryEnsurePrinterInfo();
+  PrinterInfoLock lock = TryEnsurePrinterInfo();
   // Compare major version.
-  if (printerInfoLock->mCUPSMajor > aCUPSMajor) {
+  if (lock->mCUPSMajor > aCUPSMajor) {
     return true;
   }
-  if (printerInfoLock->mCUPSMajor < aCUPSMajor) {
+  if (lock->mCUPSMajor < aCUPSMajor) {
     return false;
   }
 
   // Compare minor version.
-  if (printerInfoLock->mCUPSMinor > aCUPSMinor) {
+  if (lock->mCUPSMinor > aCUPSMinor) {
     return true;
   }
-  if (printerInfoLock->mCUPSMinor < aCUPSMinor) {
+  if (lock->mCUPSMinor < aCUPSMinor) {
     return false;
   }
 
   // Compare patch.
-  return aCUPSPatch <= printerInfoLock->mCUPSPatch;
+  return aCUPSPatch <= lock->mCUPSPatch;
 }
 
 http_t* nsPrinterCUPS::Connection::GetConnection(cups_dest_t* aDest) {
@@ -228,8 +226,7 @@ PrintSettingsInitializer nsPrinterCUPS::DefaultSettings(
     Connection& aConnection) const {
   nsString printerName;
   GetPrinterName(printerName);
-  auto printerInfoLock = TryEnsurePrinterInfo();
-  cups_dinfo_t* const printerInfo = printerInfoLock->mPrinterInfo;
+  PrinterInfoLock lock = TryEnsurePrinterInfo();
 
   cups_size_t media;
 
@@ -237,15 +234,15 @@ PrintSettingsInitializer nsPrinterCUPS::DefaultSettings(
 // cupsGetDestMediaDefault appears to return more accurate defaults on macOS,
 // and the IPP attribute appears to return more accurate defaults on Linux.
 #ifdef XP_MACOSX
-  hasDefaultMedia =
-      mShim.cupsGetDestMediaDefault(CUPS_HTTP_DEFAULT, mPrinter, printerInfo,
-                                    CUPS_MEDIA_FLAGS_DEFAULT, &media);
+  hasDefaultMedia = mShim.cupsGetDestMediaDefault(
+      CUPS_HTTP_DEFAULT, mPrinter, lock->mPrinterInfo, CUPS_MEDIA_FLAGS_DEFAULT,
+      &media);
 #else
   {
     ipp_attribute_t* defaultMediaIPP =
         mShim.cupsFindDestDefault
             ? mShim.cupsFindDestDefault(CUPS_HTTP_DEFAULT, mPrinter,
-                                        printerInfo, "media")
+                                        lock->mPrinterInfo, "media")
             : nullptr;
 
     const char* defaultMediaName =
@@ -254,7 +251,7 @@ PrintSettingsInitializer nsPrinterCUPS::DefaultSettings(
 
     hasDefaultMedia = defaultMediaName &&
                       mShim.cupsGetDestMediaByName(
-                          CUPS_HTTP_DEFAULT, mPrinter, printerInfo,
+                          CUPS_HTTP_DEFAULT, mPrinter, lock->mPrinterInfo,
                           defaultMediaName, CUPS_MEDIA_FLAGS_DEFAULT, &media);
   }
 #endif
@@ -295,26 +292,26 @@ PrintSettingsInitializer nsPrinterCUPS::DefaultSettings(
 nsTArray<mozilla::PaperInfo> nsPrinterCUPS::PaperList(
     Connection& aConnection) const {
   http_t* const connection = aConnection.GetConnection(mPrinter);
-  auto printerInfoLock = TryEnsurePrinterInfo(connection);
-  cups_dinfo_t* const printerInfo = printerInfoLock->mPrinterInfo;
+  PrinterInfoLock lock = TryEnsurePrinterInfo(connection);
 
-  if (!printerInfo) {
+  if (!lock->mPrinterInfo) {
     return {};
   }
 
-  const int paperCount =
-      mShim.cupsGetDestMediaCount
-          ? mShim.cupsGetDestMediaCount(connection, mPrinter, printerInfo,
-                                        CUPS_MEDIA_FLAGS_DEFAULT)
-          : 0;
+  const int paperCount = mShim.cupsGetDestMediaCount
+                             ? mShim.cupsGetDestMediaCount(
+                                   connection, mPrinter, lock->mPrinterInfo,
+                                   CUPS_MEDIA_FLAGS_DEFAULT)
+                             : 0;
   nsTArray<PaperInfo> paperList;
   nsTHashtable<nsCharPtrHashKey> paperSet(std::max(paperCount, 0));
 
   paperList.SetCapacity(paperCount);
   for (int i = 0; i < paperCount; ++i) {
     cups_size_t media;
-    const int getInfoSucceeded = mShim.cupsGetDestMediaByIndex(
-        connection, mPrinter, printerInfo, i, CUPS_MEDIA_FLAGS_DEFAULT, &media);
+    const int getInfoSucceeded =
+        mShim.cupsGetDestMediaByIndex(connection, mPrinter, lock->mPrinterInfo,
+                                      i, CUPS_MEDIA_FLAGS_DEFAULT, &media);
 
     if (!getInfoSucceeded || !paperSet.EnsureInserted(media.media)) {
       continue;
