@@ -32,7 +32,8 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/modules/audio_processing/agc2/adaptive_digital_gain_controller.cc"
+    "/third_party/libwebrtc/modules/audio_processing/agc2/saturation_protector.cc",
+    "/third_party/libwebrtc/modules/audio_processing/agc2/saturation_protector_buffer.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -220,4 +221,4 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
-Library("adaptive_digital_gn")
+Library("saturation_protector_gn")
