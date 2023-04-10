@@ -60,7 +60,7 @@
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description_2">
-  ඔබ පෞද්. පටිති වසා දැමූ විට හෝ යෙදුමෙන් ඉවත් වූ විට %1$s මගින් ඔබගේ සෙවුම් සහ පිරික්සුම් ඉතිහාසය හිස් කෙරේ, නමුත් මෙය ඔබව අඩවි වලින් හෝ අන්තර්ජාල සැපයුම්කරුගෙන් නිර්නාමික නොකරයි. එය ඔබ මාර්ගගතව කරන දෑ මෙම උපාංගය භාවිත කරන වෙනත් අයගෙන් පෞද්ගලිකව තබා ගැනීම පහසු කරයි.</string>
+  ඔබ පෞද්. පටිති වසා දැමූ විට හෝ යෙදුමෙන් ඉවත් වූ විට %1$s ඔබගේ සෙවුම් සහ පිරික්සුම් ඉතිහාසය හිස් කරයි, නමුත් ඔබව අඩවි වලින් හෝ අන්තර්ජාල සැපයුම්කරුගෙන් නිර්නාමික නොකරයි. මෙය ඔබ මාර්ගගතව කරන දෑ මෙම උපාංගය භාවිතා කරන වෙනත් අයගෙන් පෞද්ගලිකව තබා ගැනීම පහසු කරයි.</string>
     <string name="private_browsing_common_myths">
   පෞද්ගලික පිරික්සීම පිළිබඳව සුලබ මිථ්‍යා
   </string>
@@ -360,7 +360,7 @@
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">පෞද්. පටිත්තක සබැඳිය අරින්න</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
-    <string name="preferences_allow_screenshots_in_private_mode">පෞද්. පිරික්සුමෙහි තිරසේයා සඳහා ඉඩදෙන්න</string>
+    <string name="preferences_allow_screenshots_in_private_mode">පෞද්. පිරික්සුමේ දී තිරසේයා සඳහා ඉඩදෙන්න</string>
     <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
     <string name="preferences_screenshots_in_private_mode_disclaimer">ඉඩ දී ඇත්නම්, යෙදුම් කිහිපයක් විවෘතව තිබෙන විට ද පෞද්. පටිති දිස්වේ</string>
     <!-- Preference for adding private browsing shortcut -->
@@ -482,7 +482,7 @@
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">දත්ත තේරීම්</string>
     <!-- Preference for data collection -->
-    <string name="preferences_data_collection">දත්ත එකතුව</string>
+    <string name="preferences_data_collection">දත්ත රැස් කිරීම</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">USB හරහා දුරස්ථ නිදොස්කරණය</string>
     <!-- Preference title for switch preference to show search engines -->
@@ -519,7 +519,7 @@
     <string name="preferences_notifications">දැනුම්දීම්</string>
 
     <!-- Summary for notification preference indicating notifications are allowed -->
-    <string name="notifications_allowed_summary">ඉඩ දුන්</string>
+    <string name="notifications_allowed_summary">ඉඩ දී ඇත</string>
     <!-- Summary for notification preference indicating notifications are not allowed -->
     <string name="notifications_not_allowed_summary">ඉඩ නොදේ</string>
 
@@ -704,7 +704,7 @@
     <string name="preference_gestures_dynamic_toolbar">මෙවලම් තීරුව සැඟවීමට අනුචලනය</string>
 
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">පටිති මාරුවට තීරුව පැත්තට තල්ලු කරන්න</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">පටිති අතර මාරුවට මෙවලම් තීරුව පැත්තට තල්ලු කිරීම</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">පටිති ඇරීමට තීරුව ඉහළට තල්ලු කරන්න</string>
 
@@ -1074,7 +1074,7 @@
     <!-- Label that indicates that a permission must be blocked -->
     <string name="preference_option_phone_feature_blocked">අවහිරයි</string>
     <!-- Label that indicates that a permission must be allowed -->
-    <string name="preference_option_phone_feature_allowed">ඉඩ දුන්</string>
+    <string name="preference_option_phone_feature_allowed">ඉඩ දී ඇත</string>
     <!--Label that indicates a permission is by the Android OS-->
     <string name="phone_feature_blocked_by_android">ඇන්ඩ්‍රොයිඩ් මගින් අවහිරයි</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
@@ -1494,7 +1494,7 @@
     <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">අවහිර කළ</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
-    <string name="enhanced_tracking_protection_allowed">ඉඩ දුන්</string>
+    <string name="enhanced_tracking_protection_allowed">ඉඩ දී ඇත</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">සමාජ මාධ්‍ය ලුහුබැඳීම්</string>
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
@@ -1512,7 +1512,7 @@
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">ඇඟිලි සටහන්</string>
     <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_fingerprinters_description">ලුහුබැඳීමේ අරමුණු සඳහා භාවිතා කළ හැකි ඔබගේ උපාංගය අනන්‍යව හඳුනාගත හැකි දත්ත රැස් කිරීම නවත්වයි.</string>
+    <string name="etp_fingerprinters_description">ලුහුබැඳීමේ අරමුණු සඳහා භාවිතයට ඔබගේ උපාංගය අනන්‍යව හඳුනාගත හැකි දත්ත රැස් කිරීම් නවත්වයි.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">ලුහුබැඳීමේ අන්තර්ගතය</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
@@ -1535,7 +1535,7 @@
     <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_title">හරවා යැවෙන ලුහුබැඳීම්</string>
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_redirect_trackers_description">දන්නා ලුහුබඳින අඩවි වෙත හරවා යැවීම් මඟින් සැකසූ දත්තකඩ හිස් කරයි.</string>
+    <string name="etp_redirect_trackers_description">දන්නා ලුහුබඳින අඩවි වෙත හරවා යැවීමෙන් සැකසූ දත්තකඩ හිස් කරයි.</string>
     <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
          as we use it on the UI to indicate which trackers have been partially unblocked.  -->
     <string name="preference_etp_smartblock_description">ඔබ පහත ලුහුබැඳීම් සමඟ අන්යෝන්‍යව කටයුතු කළ නිසා සලකුණු කර තිබෙන දෑ මෙම පිටුවෙහි අර්ධ වශයෙන් අවහිර කර ඇත *.</string>
@@ -1594,7 +1594,7 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">කිසිවිට නොසුරකින්න</string>
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
-    <string name="preferences_passwords_autofill2">%1$s හි ඉබේ පුරවයි</string>
+    <string name="preferences_passwords_autofill2">%1$s හි ඉබේ පිරවීම</string>
     <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill_description">%1$s භාවිත කරන අතරතුර අඩවිවල පරිශීලක නාම සහ මුරපද පුරවා සුරකින්න.</string>
     <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
@@ -1607,7 +1607,7 @@
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">පිවිසුම් සමමුහූර්තය</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices">උපාංග අතර පිවිසුම් සමමුහූර්තය</string>
+    <string name="preferences_passwords_sync_logins_across_devices">උපාංගවල පිවිසුම් සමමුහූර්තය</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">සුරැකි පිවිසුම්</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
@@ -1665,7 +1665,7 @@
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">සියළු අඩවි විශාලනය</string>
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
-    <string name="preference_accessibility_force_enable_zoom_summary">මෙම අභිනය වළක්වන අඩවිවල පවා, කුඩාලනය හා විශාලනය කිරීමට ඉඩ දීමට සබල කරන්න.</string>
+    <string name="preference_accessibility_force_enable_zoom_summary">මෙම අභිනය වළක්වන අඩවිවල පවා, කුඩාලනය හා විශාලනය සඳහා ඉඩ දීමට සබල කරන්න.</string>
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">නම (අ-ෆ)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->

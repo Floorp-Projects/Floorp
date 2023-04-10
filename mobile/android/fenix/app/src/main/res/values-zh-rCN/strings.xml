@@ -783,7 +783,7 @@
     <string name="open_all_warning_title">要打开这 %d 个标签页吗？</string>
     <!-- Message to warn users that a large number of tabs will be opened
     %s will be replaced by app name. -->
-    <string name="open_all_warning_message">一并载入太多页面可能会减慢 %s 的运行。您确定要一并打开吗？</string>
+    <string name="open_all_warning_message">一并加载太多页面可能会减慢 %s 的运行。您确定要一并打开吗？</string>
     <!-- Dialog button text for confirming open all tabs -->
     <string name="open_all_warning_confirm">打开标签页</string>
     <!-- Dialog button text for canceling open all tabs -->

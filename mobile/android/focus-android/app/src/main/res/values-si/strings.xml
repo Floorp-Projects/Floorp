@@ -58,7 +58,7 @@
     <string name="menu_settings">සැකසුම්</string>
     <string name="menu_about">පිළිබඳව</string>
     <string name="menu_help">උදව්</string>
-    <string name="menu_rights">ඔබේ අයිතීන්</string>
+    <string name="menu_rights">ඔබගේ අයිතීන්</string>
 
     <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
          for the currently loaded website. The number of blocked trackers is shown below this label.
@@ -782,7 +782,7 @@
     <string name="preference_option_phone_feature_blocked">අවහිරයි</string>
 
     <!-- Label that indicates that a permission must be allowed -->
-    <string name="preference_option_phone_feature_allowed">ඉඩ දුන්</string>
+    <string name="preference_option_phone_feature_allowed">ඉඩ දී ඇත</string>
 
     <!--Label that indicates a permission is by the Android OS-->
     <string name="phone_feature_blocked_by_android">ඇන්ඩ්‍රොයිඩ් මගින් අවහිරයි</string>
