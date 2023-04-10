@@ -295,6 +295,11 @@ async function OpenLinkInExternal(url) {
             }
             browser = targets[0];
         }
+        // Flatpak version will be launched that does not work properly.
+        // To avoid data corruption, do not launch it.
+        if (browser["fileInfo"]["Desktop Entry"]["Exec"].startsWith("/usr/bin/flatpak")) {
+            return;
+        }
         let shellscript = "#!/bin/sh\n";
         shellscript += browser["fileInfo"]["Desktop Entry"]["Exec"].replace(
             "%u",
@@ -399,6 +404,11 @@ let documentObserver = {
                     if (platform === "linux") {
                         let desktopFilesInfo = await getBrowsersOnLinux();
                         for (let desktopFileInfo of desktopFilesInfo) {
+                            // Flatpak version will be launched that does not work properly.
+                            // To avoid data corruption, do not display them in the list.
+                            if (desktopFileInfo["fileInfo"]["Desktop Entry"]["Exec"].startsWith("/usr/bin/flatpak")) {
+                                continue;
+                            }
                             browsers.push({
                                 name: DesktopFileParser.getCurrentLanguageNameProperty(desktopFileInfo),
                                 id: desktopFileInfo["filename"].replace(/\.desktop$/, ""),
