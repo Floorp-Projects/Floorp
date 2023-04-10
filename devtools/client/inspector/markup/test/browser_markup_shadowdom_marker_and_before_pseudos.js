@@ -65,6 +65,7 @@ const TEST_DATA = [
         #shadow-root
           slot
             div!slotted
+            default content
         ::marker
         ::before
         class="light-dom"`,

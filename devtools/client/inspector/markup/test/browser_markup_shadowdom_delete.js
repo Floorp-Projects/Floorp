@@ -61,13 +61,24 @@ add_task(async function() {
   await expandContainer(inspector, slotContainer);
 
   let slotChildContainers = slotContainer.getChildContainers();
-  is(slotChildContainers.length, 2, "Expecting 2 slotted children");
-  slotChildContainers.forEach(container => assertContainerSlotted(container));
+  is(
+    slotChildContainers.length,
+    3,
+    "Expecting 3 children (2 slotted, fallback)"
+  );
+  assertContainerSlotted(slotChildContainers[0]);
+  assertContainerSlotted(slotChildContainers[1]);
+  assertContainerHasText(slotChildContainers[2], "div");
 
   await deleteNode(inspector, "#el1");
   slotChildContainers = slotContainer.getChildContainers();
-  is(slotChildContainers.length, 1, "Expecting 1 slotted child");
+  is(
+    slotChildContainers.length,
+    2,
+    "Expecting 2 children (1 slotted, fallback)"
+  );
   assertContainerSlotted(slotChildContainers[0]);
+  assertContainerHasText(slotChildContainers[1], "div");
 
   await deleteNode(inspector, "#el2");
   slotChildContainers = slotContainer.getChildContainers();

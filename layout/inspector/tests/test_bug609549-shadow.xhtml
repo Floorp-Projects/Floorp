@@ -19,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=609549
   
 </div>
 <pre id="test">
-<script type="application/javascript">
+<script>
 <![CDATA[
 
 /** Test for Bug 609549 **/
@@ -39,16 +39,22 @@ const InspectorUtils = SpecialPowers.InspectorUtils;
 addLoadEvent(function() {
   ok("getChildrenForNode" in InspectorUtils, "InspectorUtils has no getChildrenForNode");
   var withoutAnons =
-    SpecialPowers.unwrap(InspectorUtils.getChildrenForNode($("bound"), false));
+    InspectorUtils.getChildrenForNode($("bound"), false, false);
 
   is(withoutAnons.length, $("bound").childNodes.length,
      "withoutAnons should be the same length as childNodes");
-  is(withoutAnons[0], $("p"), "didn't get paragraph - without anons");
-  is(withoutAnons[1], $("sandwiched"),
+  is(SpecialPowers.unwrap(withoutAnons[0]), $("p"), "didn't get paragraph - without anons");
+  is(SpecialPowers.unwrap(withoutAnons[1]), $("sandwiched"),
      "didn't get sandwiched span - without anons");
 
-  var withAnons = InspectorUtils.getChildrenForNode($("bound"), true);
+  var withAnons = InspectorUtils.getChildrenForNode($("bound"), true, false);
+  is(withAnons.length, 3, "bad withAnons.length");
+  ok(SpecialPowers.unwrap(withAnons[0]) instanceof ShadowRoot, "First one is shadow");
+  is(SpecialPowers.unwrap(withAnons[1]), $("p"), "didn't get paragraph - without anons");
+  is(SpecialPowers.unwrap(withAnons[2]), $("sandwiched"),
+     "didn't get sandwiched span - without anons");
 
+  withAnons = InspectorUtils.getChildrenForNode(withAnons[0], true, false);
   is(withAnons.length, 4, "bad withAnons.length");
   is(withAnons[0].getAttribute("anonid"), "box-A",
      "didn't get anonymous box-A");
@@ -58,7 +64,7 @@ addLoadEvent(function() {
      "didn't get anonymous box-C");
   is(withAnons[3].assignedNodes()[0].id, "p", "didn't get paragraph - with anons");
 
-  var bKids = InspectorUtils.getChildrenForNode(withAnons[1], true)[0].assignedNodes();
+  var bKids = InspectorUtils.getChildrenForNode(withAnons[1], true, false)[0].assignedNodes();
   is(bKids.length, 1, "bKids.length is bad");
   is(SpecialPowers.unwrap(bKids[0]), $("sandwiched"),
      "didn't get sandwiched span inserted into box-B");
