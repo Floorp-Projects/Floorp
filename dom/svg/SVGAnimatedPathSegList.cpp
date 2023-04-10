@@ -25,7 +25,6 @@ nsresult SVGAnimatedPathSegList::SetBaseValueString(const nsAString& aValue) {
   // The spec says that the path data is parsed and accepted up to the first
   // error encountered, so we don't return early if an error occurs. However,
   // we do want to throw any error code from setAttribute if there's a problem.
-
   nsresult rv = newBaseValue.SetValueFromString(aValue);
 
   // We must send these notifications *before* changing mBaseVal! Our baseVal's
@@ -56,20 +55,7 @@ nsresult SVGAnimatedPathSegList::SetBaseValueString(const nsAString& aValue) {
   // SVGElement::ParseAttribute under Element::SetAttr,
   // which takes care of notifying.
 
-  nsresult rv2 = mBaseVal.CopyFrom(newBaseValue);
-  if (NS_FAILED(rv2)) {
-    if (StaticPrefs::dom_svg_pathSeg_enabled()) {
-      // Attempting to increase mBaseVal's length failed (mBaseVal is left
-      // unmodified). We MUST keep any DOM wrappers in sync:
-      if (baseValWrapper) {
-        baseValWrapper->InternalListWillChangeTo(mBaseVal);
-      }
-      if (animValWrapper) {
-        animValWrapper->InternalListWillChangeTo(mBaseVal);
-      }
-    }
-    return rv2;
-  }
+  mBaseVal.SwapWith(newBaseValue);
   return rv;
 }
 
@@ -177,7 +163,7 @@ SMILValue SVGAnimatedPathSegList::SMILAnimatedPathSegList::GetBaseValue()
   SMILValue val;
 
   SMILValue tmp(SVGPathSegListSMILType::Singleton());
-  SVGPathDataAndInfo* list = static_cast<SVGPathDataAndInfo*>(tmp.mU.mPtr);
+  auto* list = static_cast<SVGPathDataAndInfo*>(tmp.mU.mPtr);
   nsresult rv = list->CopyFrom(mVal->mBaseVal);
   if (NS_SUCCEEDED(rv)) {
     list->SetElement(mElement);
