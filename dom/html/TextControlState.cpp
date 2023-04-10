@@ -1118,6 +1118,9 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
         mTextControlAction(aTextControlAction) {
     MOZ_ASSERT(aTextControlAction != TextControlAction::SetValue,
                "Use specific constructor");
+    MOZ_DIAGNOSTIC_ASSERT_IF(
+        !aTextControlState.mTextListener,
+        !aTextControlState.mBoundFrame || !aTextControlState.mTextEditor);
     mTextControlState.mHandlingState = this;
     if (Is(TextControlAction::CommitComposition)) {
       MOZ_ASSERT(mParent);
@@ -1148,6 +1151,9 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
         mTextControlAction(aTextControlAction) {
     MOZ_ASSERT(aTextControlAction == TextControlAction::SetValue,
                "Use generic constructor");
+    MOZ_DIAGNOSTIC_ASSERT_IF(
+        !aTextControlState.mTextListener,
+        !aTextControlState.mBoundFrame || !aTextControlState.mTextEditor);
     mTextControlState.mHandlingState = this;
     if (!nsContentUtils::PlatformToDOMLineBreaks(mSettingValue, fallible)) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
@@ -1497,6 +1503,7 @@ void TextControlState::Clear() {
     // If we have a bound frame around, UnbindFromFrame will call DestroyEditor
     // for us.
     DestroyEditor();
+    MOZ_DIAGNOSTIC_ASSERT(!mBoundFrame || !mTextEditor);
   }
   mTextListener = nullptr;
 }
