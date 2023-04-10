@@ -8,7 +8,7 @@
         "revert-llvmorg-17-init-4120-g02e8eb1a438b.patch",
         "partial-revert-llvmorg-16-init-15775-g1ae7d83803e4.patch",
         "revert-llvmorg-16-init-11301-g163bb6d64e5f.patch",
-        "revert-llvmorg-16-init-9324-g01859da84bad.patch",
+        "revert-llvmorg-16-init-9324-g01859da84bad_clang_17.patch",
         "revert-llvmorg-16-init-7598-g54bfd0484615.patch",
         "revert-llvmorg-15-init-13446-g7524fe962e47.patch",
         "revert-llvmorg-15-init-11205-gcead4eceb01b_clang_16.patch",
