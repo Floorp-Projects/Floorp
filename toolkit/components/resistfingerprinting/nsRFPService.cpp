@@ -84,12 +84,9 @@ static mozilla::LazyLogModule gResistFingerprintingLog(
     "nsResistFingerprinting");
 
 #define RESIST_FINGERPRINTING_PREF "privacy.resistFingerprinting"
-#define RESIST_FINGERPRINTING_PBMODE_PREF "privacy.resistFingerprinting.pbmode"
-#define RESIST_FINGERPRINTINGPROTECTION_PREF "privacy.fingerprintingProtection"
-#define RESIST_FINGERPRINTINGPROTECTION_PBMODE_PREF \
-  "privacy.fingerprintingProtection.pbmode"
-#define RESIST_FINGERPRINTINGPROTECTION_OVERRIDE_PREF \
-  "privacy.fingerprintingProtection.overrides"
+#define RESIST_FINGERPRINTINGLITE_PREF "privacy.resistFingerprintingLite"
+#define RESIST_FINGERPRINTINGLITE_OVERRIDE_PREF \
+  "privacy.resistFingerprintingLite.overrides"
 #define RFP_TIMER_UNCONDITIONAL_VALUE 20
 #define PROFILE_INITIALIZED_TOPIC "profile-initial-state"
 #define LAST_PB_SESSION_EXITED_TOPIC "last-pb-context-exited"
@@ -100,7 +97,7 @@ static constexpr uint32_t kVideoDroppedRatio = 5;
 #define RFP_DEFAULT_SPOOFING_KEYBOARD_LANG KeyboardLang::EN
 #define RFP_DEFAULT_SPOOFING_KEYBOARD_REGION KeyboardRegion::US
 
-static nsTArray<mozilla::RFPTarget> sFPPTargets = {
+static nsTArray<mozilla::RFPTarget> sRFPLiteTargets = {
     RFPTarget::IsAlwaysEnabledForPrecompute, RFPTarget::Unknown};
 
 // ============================================================================
@@ -135,10 +132,8 @@ nsRFPService* nsRFPService::GetOrCreate() {
 
 static const char* gCallbackPrefs[] = {
     RESIST_FINGERPRINTING_PREF,
-    RESIST_FINGERPRINTING_PBMODE_PREF,
-    RESIST_FINGERPRINTINGPROTECTION_PREF,
-    RESIST_FINGERPRINTINGPROTECTION_PBMODE_PREF,
-    RESIST_FINGERPRINTINGPROTECTION_OVERRIDE_PREF,
+    RESIST_FINGERPRINTINGLITE_PREF,
+    RESIST_FINGERPRINTINGLITE_OVERRIDE_PREF,
     nullptr,
 };
 
@@ -176,27 +171,25 @@ nsresult nsRFPService::Init() {
 
   // Call Update here to cache the values of the prefs and set the timezone.
   UpdateRFPPref();
-  UpdateFPPOverrideList();
+  UpdateRFPLiteOverrideList();
 
   return rv;
 }
 
 /* static */
 bool nsRFPService::IsRFPEnabledFor(RFPTarget aTarget) {
-  if (StaticPrefs::privacy_resistFingerprinting_DoNotUseDirectly() ||
-      StaticPrefs::privacy_resistFingerprinting_pbmode_DoNotUseDirectly()) {
+  if (StaticPrefs::privacy_resistFingerprinting_DoNotUseDirectly()) {
     return true;
   }
 
-  if (StaticPrefs::privacy_fingerprintingProtection_DoNotUseDirectly() ||
-      StaticPrefs::privacy_fingerprintingProtection_pbmode_DoNotUseDirectly()) {
+  if (StaticPrefs::privacy_resistFingerprintingLite_DoNotUseDirectly()) {
     if (sTargetOverrideAdditions.Contains(aTarget)) {
       return true;
     }
     if (sTargetOverrideSubtractions.Contains(aTarget)) {
       return false;
     }
-    if (sFPPTargets.Contains(aTarget)) {
+    if (sRFPLiteTargets.Contains(aTarget)) {
       return true;
     }
     return false;
@@ -270,10 +263,10 @@ void nsRFPService::UpdateRFPPref() {
   }
 }
 
-void nsRFPService::UpdateFPPOverrideList() {
+void nsRFPService::UpdateRFPLiteOverrideList() {
   nsAutoString targetOverrides;
-  nsresult rv = Preferences::GetString(
-      RESIST_FINGERPRINTINGPROTECTION_OVERRIDE_PREF, targetOverrides);
+  nsresult rv = Preferences::GetString(RESIST_FINGERPRINTINGLITE_OVERRIDE_PREF,
+                                       targetOverrides);
   if (!NS_SUCCEEDED(rv) || targetOverrides.IsEmpty()) {
     MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
             ("Could not map any values"));
@@ -353,20 +346,19 @@ void nsRFPService::PrefChanged(const char* aPref, void* aSelf) {
 void nsRFPService::PrefChanged(const char* aPref) {
   nsDependentCString pref(aPref);
 
-  if (pref.EqualsLiteral(RESIST_FINGERPRINTINGPROTECTION_OVERRIDE_PREF)) {
-    UpdateFPPOverrideList();
-  } else {
+  if (pref.EqualsLiteral(RESIST_FINGERPRINTING_PREF)) {
     UpdateRFPPref();
 
 #if defined(XP_WIN)
-    if (StaticPrefs::privacy_resistFingerprinting_testing_setTZtoUTC() &&
-        !XRE_IsE10sParentProcess()) {
+    if (!XRE_IsE10sParentProcess()) {
       // Windows does not follow POSIX. Updates to the TZ environment variable
       // are not reflected immediately on that platform as they are on UNIX
       // systems without this call.
       _tzset();
     }
 #endif
+  } else if (pref.EqualsLiteral(RESIST_FINGERPRINTINGLITE_OVERRIDE_PREF)) {
+    UpdateRFPLiteOverrideList();
   }
 }
 

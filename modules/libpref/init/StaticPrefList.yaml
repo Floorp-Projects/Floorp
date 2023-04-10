@@ -13006,23 +13006,7 @@
   mirror: always
   do_not_use_directly: true
 
-# When the .pbmode pref is on, RFP or FPP will be enabled in PBM
-# When the non-pbm pref is on, they will be enabled in PBM and non-PBM
-- name: privacy.resistFingerprinting.pbmode
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-  do_not_use_directly: true
-
-# privacy.fingerprintingProtection enables a set of fingerprinting protections
-# designed to minimize breakage while maximizing protection.
-- name: privacy.fingerprintingProtection
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-  do_not_use_directly: true
-
-- name: privacy.fingerprintingProtection.pbmode
+- name: privacy.resistFingerprintingLite
   type: RelaxedAtomicBool
   value: false
   mirror: always

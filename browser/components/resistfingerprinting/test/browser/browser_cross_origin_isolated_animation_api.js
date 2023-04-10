@@ -60,10 +60,7 @@ add_task(async function runRTPTestAnimation() {
         // If we are testing that preference, we accept either rounded or not
         // rounded values as A-OK.
         var maybeAcceptEverything = function(value) {
-          if (
-            data.options.reduceTimerPrecision &&
-            !data.options.resistFingerprinting
-          ) {
+          if (data.reduceTimerPrecision && !data.resistFingerprinting) {
             return true;
           }
 
@@ -113,47 +110,10 @@ add_task(async function runRTPTestAnimation() {
     await promise;
   };
 
-  await setupAndRunCrossOriginIsolatedTest(
-    {
-      resistFingerprinting: true,
-      reduceTimerPrecision: true,
-      crossOriginIsolated: true,
-    },
-    100,
-    runTests
-  );
-  await setupAndRunCrossOriginIsolatedTest(
-    {
-      resistFingerprinting: true,
-      crossOriginIsolated: true,
-    },
-    50,
-    runTests
-  );
-  await setupAndRunCrossOriginIsolatedTest(
-    {
-      resistFingerprinting: true,
-      crossOriginIsolated: true,
-    },
-    0.1,
-    runTests
-  );
-  await setupAndRunCrossOriginIsolatedTest(
-    {
-      resistFingerprinting: true,
-      reduceTimerPrecision: true,
-      crossOriginIsolated: true,
-    },
-    0.013,
-    runTests
-  );
+  await setupAndRunCrossOriginIsolatedTest(true, true, true, 100, runTests);
+  await setupAndRunCrossOriginIsolatedTest(true, false, true, 50, runTests);
+  await setupAndRunCrossOriginIsolatedTest(true, false, true, 0.1, runTests);
+  await setupAndRunCrossOriginIsolatedTest(true, true, true, 0.013, runTests);
 
-  await setupAndRunCrossOriginIsolatedTest(
-    {
-      reduceTimerPrecision: true,
-      crossOriginIsolated: true,
-    },
-    0.005,
-    runTests
-  );
+  await setupAndRunCrossOriginIsolatedTest(false, true, true, 0.005, runTests);
 });

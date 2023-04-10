@@ -908,9 +908,9 @@ pref("privacy.popups.disable_from_plugins", 3);
 // domains exempted from RFP.
 pref("privacy.resistFingerprinting.exemptedDomains", "*.example.invalid");
 
-// If privacy.fingerprintingProtection is enabled, this pref can be used to add
+// If privacy.resistFingerprintingLite is enabled, this pref can be used to add
 // or remove features from its effects
-pref("privacy.fingerprintingProtection.overrides", "");
+pref("privacy.resistFingerprintingLite.overrides", "");
 
 // Fix cookie blocking breakage by providing ephemeral Paritioned LocalStorage
 // for a list of hosts when detected as trackers.
