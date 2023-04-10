@@ -54,7 +54,7 @@ function runTest() {
     ["", "Small"].forEach(function (size) {
       var elem = document.getElementById(orient + size);
       var thumbRect = SpecialPowers.unwrap(
-        SpecialPowers.InspectorUtils.getChildrenForNode(elem, true)[0])
+        SpecialPowers.InspectorUtils.getChildrenForNode(elem, true, false)[0])
         .childNodes[0].getBoundingClientRect();
       var sizeToCheck = orient == "horizontal" ? "width" : "height";
       // var expectedSize = size == "Small" ? 19 : 26;
