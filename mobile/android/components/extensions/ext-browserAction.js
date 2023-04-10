@@ -6,9 +6,6 @@
 
 "use strict";
 
-// The ext-* files are imported into the same scopes.
-/* import-globals-from ext-android.js */
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   GeckoViewWebExtension: "resource://gre/modules/GeckoViewWebExtension.jsm",
   ExtensionActionHelper: "resource://gre/modules/GeckoViewWebExtension.jsm",
