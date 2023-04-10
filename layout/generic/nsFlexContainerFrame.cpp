@@ -5481,10 +5481,12 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
 
   const bool anyChildIncomplete = PushIncompleteChildren(
       pushedItems, incompleteItems, overflowIncompleteItems);
-  MOZ_ASSERT(!anyChildIncomplete ||
-                 aAvailableSizeForItems.BSize(flexWM) != NS_UNCONSTRAINEDSIZE,
-             "We shouldn't have any incomplete children if the available "
-             "block-size is unconstrained!");
+
+  // TODO: Try making this a fatal assertion after we fix bug 1751260.
+  NS_ASSERTION(!anyChildIncomplete ||
+                   aAvailableSizeForItems.BSize(flexWM) != NS_UNCONSTRAINEDSIZE,
+               "We shouldn't have any incomplete children if the available "
+               "block-size is unconstrained!");
 
   if (!pushedItems.IsEmpty()) {
     AddStateBits(NS_STATE_FLEX_DID_PUSH_ITEMS);
