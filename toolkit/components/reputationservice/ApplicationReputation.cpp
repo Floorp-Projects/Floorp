@@ -275,10 +275,12 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     ".internetconnect",  // Configuration file for Apple system
     //".inx", // InstallShield
     ".iso",  // CD image
-    //".isp", exec // IIS config
-    //".isu", // InstallShield
-    //".jar", exec // Java
-    //".jnlp", exec // Java
+             //".isp", exec // IIS config
+             //".isu", // InstallShield
+             //".jar", exec // Java
+#ifndef MOZ_ESR
+//".jnlp", exec // Java
+#endif
     //".job", // Windows
     //".jpg",
     //".jpeg",
