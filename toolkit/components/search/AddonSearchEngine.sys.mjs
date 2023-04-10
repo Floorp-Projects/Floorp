@@ -32,6 +32,10 @@ XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {
 export class AddonSearchEngine extends SearchEngine {
   // Whether the engine is provided by the application.
   #isAppProvided = false;
+  // The extension ID if added by an extension.
+  _extensionID = null;
+  // The locale, or "DEFAULT", if required.
+  _locale = null;
 
   /**
    * Creates a AddonSearchEngine.
@@ -63,6 +67,12 @@ export class AddonSearchEngine extends SearchEngine {
     if (json) {
       this._initWithJSON(json);
     }
+  }
+
+  _initWithJSON(json) {
+    super._initWithJSON(json);
+    this._extensionID = json.extensionID || json._extensionID || null;
+    this._locale = json.extensionLocale || json._locale || null;
   }
 
   /**
@@ -179,6 +189,13 @@ export class AddonSearchEngine extends SearchEngine {
     return this.#isAppProvided;
   }
 
+  get isGeneralPurposeEngine() {
+    return !!(
+      this._extensionID &&
+      lazy.SearchUtils.GENERAL_SEARCH_ENGINE_IDS.has(this._extensionID)
+    );
+  }
+
   /**
    * Creates a JavaScript object that represents this engine.
    *
@@ -196,7 +213,10 @@ export class AddonSearchEngine extends SearchEngine {
         _metaData: this._metaData,
       };
     }
-    return super.toJSON();
+    let json = super.toJSON();
+    json._extensionID = this._extensionID;
+    json._locale = this._locale;
+    return json;
   }
 
   /**

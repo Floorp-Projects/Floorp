@@ -81,6 +81,7 @@ class SVGPointList {
    * which case the list will be left unmodified.
    */
   nsresult CopyFrom(const SVGPointList& rhs);
+  void SwapWith(SVGPointList& aRhs) { mItems.SwapElements(aRhs.mItems); }
 
   SVGPoint& operator[](uint32_t aIndex) { return mItems[aIndex]; }
 

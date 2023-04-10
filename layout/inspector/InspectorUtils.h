@@ -183,13 +183,18 @@ class InspectorUtils {
     return GetParentForNode(aNode, aShowingAnonymousContent);
   }
 
-  static already_AddRefed<nsINodeList> GetChildrenForNode(
-      GlobalObject& aGlobalObject, nsINode& aNode,
-      bool aShowingAnonymousContent) {
-    return GetChildrenForNode(aNode, aShowingAnonymousContent);
+  static void GetChildrenForNode(GlobalObject&, nsINode& aNode,
+                                 bool aShowingAnonymousContent,
+                                 bool aIncludeAssignedNodes,
+                                 nsTArray<RefPtr<nsINode>>& aResult) {
+    return GetChildrenForNode(aNode, aShowingAnonymousContent,
+                              aIncludeAssignedNodes,
+                              /* aIncludeSubdocuments = */ true, aResult);
   }
-  static already_AddRefed<nsINodeList> GetChildrenForNode(
-      nsINode& aNode, bool aShowingAnonymousContent);
+  static void GetChildrenForNode(nsINode& aNode, bool aShowingAnonymousContent,
+                                 bool aIncludeAssignedNodes,
+                                 bool aIncludeSubdocuments,
+                                 nsTArray<RefPtr<nsINode>>& aResult);
 
   /**
    * Setting and removing content state on an element. Both these functions

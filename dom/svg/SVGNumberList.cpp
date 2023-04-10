@@ -58,7 +58,8 @@ nsresult SVGNumberList::SetValueFromString(const nsAString& aValue) {
   if (tokenizer.separatorAfterCurrentToken()) {
     return NS_ERROR_DOM_SYNTAX_ERR;  // trailing comma
   }
-  return CopyFrom(temp);
+  mNumbers = std::move(temp.mNumbers);
+  return NS_OK;
 }
 
 }  // namespace mozilla

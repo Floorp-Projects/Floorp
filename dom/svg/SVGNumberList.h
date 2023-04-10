@@ -84,6 +84,7 @@ class SVGNumberList {
    * which case the list will be left unmodified.
    */
   nsresult CopyFrom(const SVGNumberList& rhs);
+  void SwapWith(SVGNumberList& aRhs) { mNumbers.SwapElements(aRhs.mNumbers); }
 
   float& operator[](uint32_t aIndex) { return mNumbers[aIndex]; }
 

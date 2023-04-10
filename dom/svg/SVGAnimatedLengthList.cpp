@@ -20,10 +20,7 @@ using namespace dom;
 
 nsresult SVGAnimatedLengthList::SetBaseValueString(const nsAString& aValue) {
   SVGLengthList newBaseValue;
-  nsresult rv = newBaseValue.SetValueFromString(aValue);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  MOZ_TRY(newBaseValue.SetValueFromString(aValue));
 
   DOMSVGAnimatedLengthList* domWrapper =
       DOMSVGAnimatedLengthList::GetDOMWrapperIfExists(this);
@@ -39,14 +36,8 @@ nsresult SVGAnimatedLengthList::SetBaseValueString(const nsAString& aValue) {
   // We don't need to call DidChange* here - we're only called by
   // SVGElement::ParseAttribute under Element::SetAttr,
   // which takes care of notifying.
-
-  rv = mBaseVal.CopyFrom(newBaseValue);
-  if (NS_FAILED(rv) && domWrapper) {
-    // Attempting to increase mBaseVal's length failed - reduce domWrapper
-    // back to the same length:
-    domWrapper->InternalBaseValListWillChangeTo(mBaseVal);
-  }
-  return rv;
+  mBaseVal.SwapWith(newBaseValue);
+  return NS_OK;
 }
 
 void SVGAnimatedLengthList::ClearBaseValue(uint32_t aAttrEnum) {

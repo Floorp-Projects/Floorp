@@ -579,10 +579,6 @@ export class SearchEngine {
   #cachedSearchForm = null;
   // Whether or not to send an attribution request to the server.
   _sendAttributionRequest = false;
-  // The extension ID if added by an extension.
-  _extensionID = null;
-  // The locale, or "DEFAULT", if required.
-  _locale = null;
   // The order hint from the configuration (if any).
   _orderHint = null;
   // The telemetry id from the configuration (if any).
@@ -1120,8 +1116,6 @@ export class SearchEngine {
       this._definedAliases.push(json._definedAlias);
     }
     this._filePath = json.filePath || json._filePath || null;
-    this._extensionID = json.extensionID || json._extensionID || null;
-    this._locale = json.extensionLocale || json._locale || null;
 
     for (let i = 0; i < json._urls.length; ++i) {
       let url = json._urls[i];
@@ -1154,8 +1148,6 @@ export class SearchEngine {
       "_orderHint",
       "_telemetryId",
       "_filePath",
-      "_extensionID",
-      "_locale",
       "_definedAliases",
     ];
 
@@ -1334,10 +1326,7 @@ export class SearchEngine {
   }
 
   get isGeneralPurposeEngine() {
-    return !!(
-      this._extensionID &&
-      lazy.SearchUtils.GENERAL_SEARCH_ENGINE_IDS.has(this._extensionID)
-    );
+    return false;
   }
 
   get _hasUpdates() {

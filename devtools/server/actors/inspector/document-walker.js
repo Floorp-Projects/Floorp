@@ -6,12 +6,6 @@
 
 loader.lazyRequireGetter(
   this,
-  "isShadowRoot",
-  "resource://devtools/shared/layout/utils.js",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "nodeFilterConstants",
   "resource://devtools/shared/dom-node-filter-constants.js"
 );
@@ -83,17 +77,6 @@ class DocumentWalker {
   }
 
   parentNode() {
-    if (isShadowRoot(this.currentNode)) {
-      this.currentNode = this.currentNode.host;
-      return this.currentNode;
-    }
-
-    const parentNode = this.currentNode.parentNode;
-    // deep-tree-walker currently does not return shadowRoot elements as parentNodes.
-    if (parentNode && isShadowRoot(parentNode)) {
-      this.currentNode = parentNode;
-      return this.currentNode;
-    }
     return this.walker.parentNode();
   }
 
@@ -112,8 +95,7 @@ class DocumentWalker {
   }
 
   firstChild() {
-    const node = this.walker.currentNode;
-    if (!node) {
+    if (!this.walker.currentNode) {
       return null;
     }
 
@@ -126,8 +108,7 @@ class DocumentWalker {
   }
 
   lastChild() {
-    const node = this.walker.currentNode;
-    if (!node) {
+    if (!this.walker.currentNode) {
       return null;
     }
 

@@ -4,8 +4,8 @@
   <title>Video controls with Audio file test</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/EventUtils.js"></script>
-  <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <p id="display"></p>
@@ -15,31 +15,12 @@
 </div>
 
 <pre id="test">
-<script class="testbody" type="application/javascript">
+<script>
 
   const video = document.getElementById("video");
-
-  function findElementByAttribute(element, aName, aValue) {
-    if (!("getAttribute" in element)) {
-      return false;
-    }
-    if (element.getAttribute(aName) === aValue) {
-      return element;
-    }
-    let children =
-      InspectorUtils.getChildrenForNode(element, true);
-    for (let child of children) {
-      const result = findElementByAttribute(child, aName, aValue);
-      if (result) {
-        return result;
-      }
-    }
-    return false;
-  }
-
   function loadedmetadata(event) {
     SimpleTest.executeSoon(function() {
-      const controlBar = findElementByAttribute(video, "class", "controlBar");
+      const controlBar = SpecialPowers.wrap(video).openOrClosedShadowRoot.querySelector(".controlBar");
       is(controlBar.getAttribute("fullscreen-unavailable"), "true", "Fullscreen button is hidden");
       SimpleTest.finish();
     });

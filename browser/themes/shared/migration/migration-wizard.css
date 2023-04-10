@@ -64,10 +64,6 @@ label:not([hidden]) {
   width: fit-content;
 }
 
-button {
-  margin-block-end: 0;
-}
-
 #wizard-deck > div {
   display: flex;
   flex-direction: column;
@@ -75,6 +71,7 @@ button {
 
 #browser-profile-selector {
   display: flex;
+  align-items: center;
   border: 0;
   padding: 8px;
   margin: 0;
@@ -101,7 +98,6 @@ button {
   fill: var(--in-content-icon-color);
   height: 16px;
   width: 16px;
-  align-self: center;
 }
 
 .migrator-description {

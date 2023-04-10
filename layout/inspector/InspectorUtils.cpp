@@ -9,12 +9,14 @@
 #include "inLayoutUtils.h"
 
 #include "gfxTextRun.h"
+#include "mozilla/dom/HTMLSlotElement.h"
 #include "nsArray.h"
 #include "nsContentList.h"
 #include "nsString.h"
 #include "nsIContentInlines.h"
 #include "nsIScrollableFrame.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/HTMLTemplateElement.h"
 #include "ChildIterator.h"
 #include "nsComputedDOMStyle.h"
 #include "mozilla/EventStateManager.h"
@@ -142,32 +144,81 @@ bool InspectorUtils::IsIgnorableWhitespace(CharacterData& aDataNode) {
 /* static */
 nsINode* InspectorUtils::GetParentForNode(nsINode& aNode,
                                           bool aShowingAnonymousContent) {
+  if (nsINode* parent = aNode.GetParentNode()) {
+    return parent;
+  }
   if (aNode.IsDocument()) {
     return inLayoutUtils::GetContainerFor(*aNode.AsDocument());
   }
-  if (aShowingAnonymousContent && aNode.IsContent()) {
-    return aNode.AsContent()->GetFlattenedTreeParentNode();
+  if (aShowingAnonymousContent) {
+    if (auto* frag = DocumentFragment::FromNode(aNode)) {
+      // This deals with shadow roots and HTMLTemplateElement.content.
+      return frag->GetHost();
+    }
   }
-  // Ok, just get the normal DOM parent node
-  return aNode.GetParentNode();
+  return nullptr;
 }
 
 /* static */
-already_AddRefed<nsINodeList> InspectorUtils::GetChildrenForNode(
-    nsINode& aNode, bool aShowingAnonymousContent) {
-  nsCOMPtr<nsINodeList> kids;
-  if (aShowingAnonymousContent && aNode.IsContent()) {
-    // XXX It's weird that `aShowingAnonymousContent` really means "show the
-    // flat tree", but alright.
-    AllChildrenIterator iter(aNode.AsContent(), nsIContent::eAllChildren);
-    RefPtr list = new nsSimpleContentList(&aNode);
-    while (nsIContent* kid = iter.GetNextChild()) {
-      list->AppendElement(kid);
+void InspectorUtils::GetChildrenForNode(nsINode& aNode,
+                                        bool aShowingAnonymousContent,
+                                        bool aIncludeAssignedNodes,
+                                        bool aIncludeSubdocuments,
+                                        nsTArray<RefPtr<nsINode>>& aResult) {
+  if (aIncludeSubdocuments) {
+    if (auto* doc = inLayoutUtils::GetSubDocumentFor(&aNode)) {
+      aResult.AppendElement(doc);
+      // XXX Do we really want to early-return?
+      return;
     }
-    return list.forget();
   }
 
-  return do_AddRef(aNode.ChildNodes());
+  if (!aShowingAnonymousContent || !aNode.IsContent()) {
+    for (nsINode* child = aNode.GetFirstChild(); child;
+         child = child->GetNextSibling()) {
+      aResult.AppendElement(child);
+    }
+    return;
+  }
+
+  if (auto* tmpl = HTMLTemplateElement::FromNode(aNode)) {
+    aResult.AppendElement(tmpl->Content());
+    // XXX Do we really want to early-return?
+    return;
+  }
+
+  if (auto* element = Element::FromNode(aNode)) {
+    if (auto* shadow = element->GetShadowRoot()) {
+      aResult.AppendElement(shadow);
+    }
+  }
+  nsIContent* parent = aNode.AsContent();
+  if (auto* node = nsLayoutUtils::GetMarkerPseudo(parent)) {
+    aResult.AppendElement(node);
+  }
+  if (auto* node = nsLayoutUtils::GetBeforePseudo(parent)) {
+    aResult.AppendElement(node);
+  }
+  if (aIncludeAssignedNodes) {
+    if (auto* slot = HTMLSlotElement::FromNode(aNode)) {
+      for (nsINode* node : slot->AssignedNodes()) {
+        aResult.AppendElement(node);
+      }
+    }
+  }
+  for (nsIContent* node = parent->GetFirstChild(); node;
+       node = node->GetNextSibling()) {
+    aResult.AppendElement(node);
+  }
+  AutoTArray<nsIContent*, 4> anonKids;
+  nsContentUtils::AppendNativeAnonymousChildren(parent, anonKids,
+                                                nsIContent::eAllChildren);
+  for (nsIContent* node : anonKids) {
+    aResult.AppendElement(node);
+  }
+  if (auto* node = nsLayoutUtils::GetAfterPseudo(parent)) {
+    aResult.AppendElement(node);
+  }
 }
 
 /* static */
