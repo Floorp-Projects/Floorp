@@ -451,6 +451,14 @@ export class MigrationWizard extends HTMLElement {
         this.#browserProfileSelectorList.firstElementChild
       );
     }
+
+    // Since this is called before the named-deck actually switches to
+    // show the selection page, we cannot focus this button immediately.
+    // Instead, we use a rAF to queue this up for focusing before the
+    // next paint.
+    requestAnimationFrame(() => {
+      this.#browserProfileSelector.focus({ focusVisible: false });
+    });
   }
 
   /**
