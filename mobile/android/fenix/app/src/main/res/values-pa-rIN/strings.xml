@@ -310,37 +310,37 @@
     <!-- Juno first user onboarding flow experiment -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" tools:ignore="UnusedResources">%s ਨੂੰ ਆਪਣਾ ਪੱਕਾ ਬਰਾਊਜ਼ਰ ਬਣਾਓ</string>
+    <string name="juno_onboarding_default_browser_title">%s ਨੂੰ ਆਪਣਾ ਪੱਕਾ ਬਰਾਊਜ਼ਰ ਬਣਾਓ</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" tools:ignore="UnusedResources">%1$s ਫ਼ਾਇਦੇ ਤੋਂ ਪਹਿਲਾਂ ਲੋਕਾਂ ਨੂੰ ਰੱਖਦਾ ਹੈ ਅਤੇ ਅੰਤਰ-ਸਾਈਟ ਟਰੈਕਰਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾ ਕੇ ਤੁਹਾਡੀ ਪਰਦੇਦਾਰੀ ਦੀ ਰੱਖਿਆ ਕਰਦਾ ਹੈ।\n\nਸਾਡੇ %2$s ਬਾਰੇ ਹੋਰ ਜਾਣੋ।</string>
+    <string name="juno_onboarding_default_browser_description">%1$s ਫ਼ਾਇਦੇ ਤੋਂ ਪਹਿਲਾਂ ਲੋਕਾਂ ਨੂੰ ਰੱਖਦਾ ਹੈ ਅਤੇ ਅੰਤਰ-ਸਾਈਟ ਟਰੈਕਰਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾ ਕੇ ਤੁਹਾਡੀ ਪਰਦੇਦਾਰੀ ਦੀ ਰੱਖਿਆ ਕਰਦਾ ਹੈ।\n\nਸਾਡੇ %2$s ਬਾਰੇ ਹੋਰ ਜਾਣੋ।</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">ਪਰਦੇਦਾਰੀ ਸੂਚਨਾ</string>
+    <string name="juno_onboarding_default_browser_description_link_text">ਪਰਦੇਦਾਰੀ ਸੂਚਨਾ</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">ਮੂਲ ਬਰਾਊਜ਼ਰ ਬਣਾਓ</string>
+    <string name="juno_onboarding_default_browser_positive_button">ਮੂਲ ਬਰਾਊਜ਼ਰ ਬਣਾਓ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">ਹੁਣੇ ਨਹੀਂ</string>
+    <string name="juno_onboarding_default_browser_negative_button">ਹੁਣੇ ਨਹੀਂ</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">ਫ਼ੋਨ ਤੋਂ ਲੈਪਟਾਪ ਉੱਤੇ ਜਾਓ ਤੇ ਵਾਪਸ ਆਓ</string>
+    <string name="juno_onboarding_sign_in_title">ਫ਼ੋਨ ਤੋਂ ਲੈਪਟਾਪ ਉੱਤੇ ਜਾਓ ਤੇ ਵਾਪਸ ਆਓ</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">ਆਪਣੇ ਹੋਰ ਡਿਵਾਈਸਾਂ ਉੱਤੇ ਜਿੱਥੇ ਤੁਸੀਂ ਟੈਬਾਂ ਤੇ ਪਾਸਵਰਡਾਂ ਨੂੰ ਜਿੱਥੇ ਛੱਡਿਆ ਸੀ, ਓਥੋਂ ਹੀ ਲਵੋ।</string>
+    <string name="juno_onboarding_sign_in_description">ਆਪਣੇ ਹੋਰ ਡਿਵਾਈਸਾਂ ਉੱਤੇ ਜਿੱਥੇ ਤੁਸੀਂ ਟੈਬਾਂ ਤੇ ਪਾਸਵਰਡਾਂ ਨੂੰ ਜਿੱਥੇ ਛੱਡਿਆ ਸੀ, ਓਥੋਂ ਹੀ ਲਵੋ।</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">ਸਾਈਨ ਇਨ</string>
+    <string name="juno_onboarding_sign_in_positive_button">ਸਾਈਨ ਇਨ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">ਹੁਣੇ ਨਹੀਂ</string>
+    <string name="juno_onboarding_sign_in_negative_button">ਹੁਣੇ ਨਹੀਂ</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" tools:ignore="UnusedResources">ਨੋਟੀਫ਼ਿਕੇਸ਼ਨ ਤੁਹਾਨੂੰ %s ਨਾਲ ਹੋਰ ਕਰਨ ਦੀ ਮਦਦ ਕਰਦੇ ਹਨ</string>
+    <string name="juno_onboarding_enable_notifications_title">ਨੋਟੀਫ਼ਿਕੇਸ਼ਨ ਤੁਹਾਨੂੰ %s ਨਾਲ ਹੋਰ ਕਰਨ ਦੀ ਮਦਦ ਕਰਦੇ ਹਨ</string>
 
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" tools:ignore="UnusedResources">ਡਿਵਾਈਸਾਂ ਵਿੱਚ ਟੈਬਾਂ ਭੇਜੋ, ਡਾਊਨਲੋਡਾਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ ਅਤੇ %s ਦਾ ਭਰਪੂਰ ਫ਼ਾਇਦਾ ਲੈਣ ਲਈ ਹੋਰ ਸੁਝਾਅ ਲਵੋ।</string>
+    <string name="juno_onboarding_enable_notifications_description">ਡਿਵਾਈਸਾਂ ਵਿੱਚ ਟੈਬਾਂ ਭੇਜੋ, ਡਾਊਨਲੋਡਾਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ ਅਤੇ %s ਦਾ ਭਰਪੂਰ ਫ਼ਾਇਦਾ ਲੈਣ ਲਈ ਹੋਰ ਸੁਝਾਅ ਲਵੋ।</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">ਸੂਚਨਾਵਾਂ ਚਾਲੂ ਕਰੋ</string>
+    <string name="juno_onboarding_enable_notifications_positive_button">ਸੂਚਨਾਵਾਂ ਚਾਲੂ ਕਰੋ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">ਹੁਣੇ ਨਹੀਂ</string>
+    <string name="juno_onboarding_enable_notifications_negative_button">ਹੁਣੇ ਨਹੀਂ</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -406,16 +406,28 @@
     <string name="reduce_cookie_banner_summary_1">%1$s ਕੂਕੀ ਬੈਨਰਾਂ ਤੋਂ ਕੂਕੀ ਬੇਨਤੀਆਂ ਨੂੰ ਆਪਣੇ-ਆਪਹੀ ਰੱਦ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰਦਾ ਹੈ।</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">ਇਸ ਸਾਈਟ ਲਈ ਬੰਦ</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">ਰੱਦ ਕਰੋ</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button">ਸਹਿਯੋਗ ਲਈ ਬੇਨਤੀ</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title">ਕੂਕੀ ਬੈਨਰ ਘਟਾਉਣਾ</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text">ਸਹਿਯੋਗ ਸਾਈਟ ਲਈ ਬੇਨਤੀ ਕੀਤੀ ਗਈ ਹੈ।</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">ਇਸ ਸਾਈਟ ਲਈ ਚਾਲੂ</string>
 
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted">ਸਾਈਟ ਲਈ ਸਹਿਯੋਗ ਦੀ ਬੇਨਤੀ ਭੇਜੀ ਗਈ ਹੈ</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">ਸਾਈਟ ਇਸ ਵੇਲੇ ਸਹਾਇਕ ਨਹੀਂ ਹੈ</string>
+    <string name="reduce_cookie_banner_unsupported_site">ਸਾਈਟ ਇਸ ਵੇਲੇ ਸਹਾਇਕ ਨਹੀਂ ਹੈ</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">%1$s ਲਈ ਕੁਕੀ ਬੈਨਰ ਘਟਾਉਣੇ ਚਾਲੂ ਕਰਨੇ ਹਨ?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">%1$s ਲਈ ਕੁਕੀ ਬੈਨਰ ਘਟਾਉਣੇ ਬੰਦ ਕਰਨੇ ਹਨ?</string>
 
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request">ਇਹ ਸਾਈਟ ਇਸ ਵੇਲੇ ਕੂਕੀ ਬੈਨਰ ਘਟਾਉਣ ਲਈ ਸਹਾਇਕ ਨਹੀਂ ਹੈ। ਕੀ ਤੁਸੀਂ ਸਾਡੀ ਟੀਮ ਨੂੰ ਇਸ ਦੀ ਪੜਤਾਲ ਕਰਨ ਅਤੇ ਭਵਿੱਖ ਵਿੱਚ ਸਹਿਯੋਗ ਲਈ ਜੋੜਨਾ ਚਾਹੁੰਦੇ ਹੋ?</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s ਇਸ ਸਾਈਟ ਦੀਆਂ ਕੁਕੀਆਂ ਨੂੰ ਸਾਫ਼ ਕਰ ਕੇ ਵਰਕੇ ਨੂੰ ਸੱਜਰਾ ਕਰ ਦੇਵੇਗਾ। ਸਾਰੀਆਂ ਕੁਕੀਆਂ ਨੂੰ ਸਾਫ਼ ਕਰਨ ਨਾਲ ਤੁਸੀਂ ਸਾਈਨ ਆਊਟ ਹੋ ਸਕਦੇ ਹੋ ਜਾਂ ਖਰੀਦਦਾਰੀ ਵਾਲੀ ਟੋਕਰੀ ਖਾਲੀ ਹੋ ਸਕਦੀ ਹੈ।</string>
 
@@ -1284,11 +1296,11 @@
     <!-- Survey -->
     <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
     The app name is in the text, due to limitations with localizing Nimbus experiments -->
-    <string name="nimbus_survey_message_text" tools:ignore="UnusedResources">ਛੋਟੇ ਜਿਹੇ ਸਰਵੇਖਣ ਦਾ ਹਿੱਸਾ ਬਣ ਕੇ Firefox ਨੂੰ ਬੇਹਤਰ ਬਣਾਉਣ ਲਈ ਮਦਦ ਕਰੋ।</string>
+    <string name="nimbus_survey_message_text">ਛੋਟੇ ਜਿਹੇ ਸਰਵੇਖਣ ਦਾ ਹਿੱਸਾ ਬਣ ਕੇ Firefox ਨੂੰ ਬੇਹਤਰ ਬਣਾਉਣ ਲਈ ਮਦਦ ਕਰੋ।</string>
     <!-- Preference for taking the short survey. -->
-    <string name="preferences_take_survey" tools:ignore="UnusedResources">ਸਰਵੇਖਣ ਭਰੋ</string>
+    <string name="preferences_take_survey">ਸਰਵੇਖਣ ਭਰੋ</string>
     <!-- Preference for not taking the short survey. -->
-    <string name="preferences_not_take_survey" tools:ignore="UnusedResources">ਨਹੀਂ, ਧੰਨਵਾਦ</string>
+    <string name="preferences_not_take_survey">ਨਹੀਂ, ਧੰਨਵਾਦ</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
@@ -1508,29 +1520,29 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">ਟਰੈਕ ਹੋਣ ਤੋਂ ਵਾਧਾ ਕੀਤੀ ਸੁਰੱਖਿਆ</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">ਬਿਨਾਂ ਪਿੱਛੇ ਕੀਤੇ ਜਾਣ ਤੋਂ ਬਰਾਊਜ਼ ਕਰੋ</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">ਬਿਨਾਂ ਪਿੱਛੇ ਕੀਤੇ ਜਾਣ ਤੋਂ ਬਰਾਊਜ਼ ਕਰੋ</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
-    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">ਨਵੀਂ ਆਈ ਕੁੱਲ ਕੂਕੀ ਸੁਰੱਖਿਆ, ਅੰਤਰ-ਸਾਈਟ ਟਰੈਕਰਾਂ ਖ਼ਿਲਾਫ਼ ਸਾਡੀ ਸਭ ਤੋਂ ਮਜ਼ਬੂਤ ਢਾਲ ਹੈ।</string>
+    <string name="preference_enhanced_tracking_protection_summary">ਨਵੀਂ ਆਈ ਕੁੱਲ ਕੂਕੀ ਸੁਰੱਖਿਆ, ਅੰਤਰ-ਸਾਈਟ ਟਰੈਕਰਾਂ ਖ਼ਿਲਾਫ਼ ਸਾਡੀ ਸਭ ਤੋਂ ਮਜ਼ਬੂਤ ਢਾਲ ਹੈ।</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">ਆਪਣੇ ਡਾਟੇ ਨੂੰ ਆਪਣੇ ਕੋਲ ਰੱਖੋ। %s ਤੁਹਾਨੂੰ ਬਹੁਤੇ ਆਮ ਟਰੈਕਰਾਂ ਤੋਂ ਸੁਰ਼ਖਿਅਤ ਕਰਦਾ ਹੈ, ਜੋ ਕਿ ਆਨਲਾਈਨ ਤੁਹਾਡਾ ਪਿੱਛਾ ਕਰਦੇ ਹਨ।</string>
+    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">ਆਪਣੇ ਡਾਟੇ ਨੂੰ ਆਪਣੇ ਕੋਲ ਰੱਖੋ। %s ਤੁਹਾਨੂੰ ਬਹੁਤੇ ਆਮ ਟਰੈਕਰਾਂ ਤੋਂ ਸੁਰ਼ਖਿਅਤ ਕਰਦਾ ਹੈ, ਜੋ ਕਿ ਆਨਲਾਈਨ ਤੁਹਾਡਾ ਪਿੱਛਾ ਕਰਦੇ ਹਨ।</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">%s ਤੁਹਾਨੂੰ ਬਹੁਤੇ ਆਮ ਟਰੈਕਰਾਂ ਤੋਂ ਸੁਰੱਖਿਅਤ ਕਰਦਾ ਹੈ, ਜੋ ਕਿ ਆਨਲਾਈਨ ਤੁਹਾਡਾ ਪਿੱਛਾ ਕਰਦੇ ਹਨ।</string>
+    <string name="preference_enhanced_tracking_protection_explanation_2">%s ਤੁਹਾਨੂੰ ਬਹੁਤੇ ਆਮ ਟਰੈਕਰਾਂ ਤੋਂ ਸੁਰੱਖਿਅਤ ਕਰਦਾ ਹੈ, ਜੋ ਕਿ ਆਨਲਾਈਨ ਤੁਹਾਡਾ ਪਿੱਛਾ ਕਰਦੇ ਹਨ।</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">ਹੋਰ ਸਿੱਖੋ</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">ਸਟੈਂਡਰਡ (ਮੂਲ)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">ਪਰਦੇਦਾਰੀ ਅਤੇ ਕਾਰਗੁਜ਼ਾਰੀ ਵਿਚਾਲੇ ਸੰਤੁਲਨ ਹੈ। ਸਫ਼ੇ ਆਮ ਨਾਲੋਂ ਤੇਜ਼ ਨਾਲ ਲੋਡ ਹੁੰਦੇ ਹਨ।</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">ਪਰਦੇਦਾਰੀ ਅਤੇ ਕਾਰਗੁਜ਼ਾਰੀ ਵਿਚਾਲੇ ਸੰਤੁਲਨ ਹੈ। ਸਫ਼ੇ ਆਮ ਨਾਲੋਂ ਤੇਜ਼ ਨਾਲ ਲੋਡ ਹੁੰਦੇ ਹਨ।</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">ਸਫ਼ਿਆਂ ਨੂੰ ਆਮ ਵਾਂਗ ਲੋਡ ਕੀਤਾ ਜਾਂਦਾ ਹੈ, ਪਰ ਕੁਝ ਟਰੈਕਰਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਈ ਜਾਂਦੀ ਹੈ।</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_5">ਸਫ਼ਿਆਂ ਨੂੰ ਆਮ ਵਾਂਗ ਲੋਡ ਕੀਤਾ ਜਾਂਦਾ ਹੈ, ਪਰ ਕੁਝ ਟਰੈਕਰਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਈ ਜਾਂਦੀ ਹੈ।</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">ਮਿਆਰੀ ਟਰੈਕਿੰਗ ਸੁਰੱਖਿਆ ਰਾਹੀਂ ਕਿਸ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਈ ਜਾਂਦੀ ਹੈ</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">ਸਖ਼ਤ</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">ਹੋਰ ਟਰੈਕਰਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਉਂਦਾ ਹੈ, ਜਿਸ ਨਾਲ ਸਫ਼ੇ ਤੇਜ਼ੀ ਨਾਲ ਲੋਡ ਹੁੰਦੇ ਹਨ, ਪਰ ਕੁਝ ਸਫ਼ੇ ਸ਼ਾਇਦ ਠੀਕ ਤਰ੍ਹਾਂ ਕੰਮ ਨਾ ਕਰਨ।</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">ਹੋਰ ਟਰੈਕਰਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਉਂਦਾ ਹੈ, ਜਿਸ ਨਾਲ ਸਫ਼ੇ ਤੇਜ਼ੀ ਨਾਲ ਲੋਡ ਹੁੰਦੇ ਹਨ, ਪਰ ਕੁਝ ਸਫ਼ੇ ਸ਼ਾਇਦ ਠੀਕ ਤਰ੍ਹਾਂ ਕੰਮ ਨਾ ਕਰਨ।</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">ਮਜ਼ਬੂਤ ਟਰੈਕਿੰਗ ਸੁਰੱਖਿਆ ਅਤੇ ਵੱਧ ਤੇਜ਼ ਕਾਰਗੁਜ਼ਜਾਰੀ, ਪਰ ਕੁਝ ਸਾਈਟਾਂ ਠੀਕ ਤਰ੍ਹਾਂ ਕੰਮ ਨਹੀਂ ਕਰਨਗੀਆਂ।</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_4">ਮਜ਼ਬੂਤ ਟਰੈਕਿੰਗ ਸੁਰੱਖਿਆ ਅਤੇ ਵੱਧ ਤੇਜ਼ ਕਾਰਗੁਜ਼ਜਾਰੀ, ਪਰ ਕੁਝ ਸਾਈਟਾਂ ਠੀਕ ਤਰ੍ਹਾਂ ਕੰਮ ਨਹੀਂ ਕਰਨਗੀਆਂ।</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">ਸਖ਼ਤ ਟਰੈਕਿੰਗ ਸੁਰੱਖਿਆ ਰਾਹੀਂ ਕਿਸ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਈ ਜਾਂਦੀ ਹੈ</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1617,6 +1629,10 @@
     <string name="preference_etp_smartblock_description">ਇਸ ਸਫ਼ੇ ਉੱਤੇ ਹੇਠ ਨਿਸ਼ਾਨ ਲਾਏ ਕੁਝ ਟਰੈਕਰਾਂ ਤੋਂ ਅਧੂਰੇ ਰੂਪ ਵਿੱਚ ਪਾਬੰਦੀ ਹਟਾਈ ਗਈ ਹੈ, ਕਿਉਂਕਿ ਤੁਸੀਂ ਉਹਨਾਂ ਨਾਲ ਸੰਪਰਕ ਕਰ ਰਹੇ ਹੋ *।</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">ਹੋਰ ਜਾਣੋ</string>
+
+    <!-- Content description (not visible, for screen readers etc.):
+    Enhanced tracking protection exception preference icon for ETP settings. -->
+    <string name="preference_etp_exceptions_icon_description">ਵਾਧਾ ਕੀਤੀ ਟਰੈਕਿੰਗ ਰੋਧੀ ਛੋਟ ਪਸੰਦ ਆਈਕਾਨ</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">ਸਹਿਯੋਗ</string>

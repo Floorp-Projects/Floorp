@@ -397,10 +397,12 @@
     <string name="reduce_cookie_banner_summary_1">%1$s ensaja de regetar automaticament las demandas de cookies de las banièras de cookies.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Desactivada per aqueste site</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Anullar</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Activada per aqueste site</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">Site actualament pas pres en carga</string>
+    <string name="reduce_cookie_banner_unsupported_site">Site actualament pas pres en carga</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Activar la reduccion de las bandièras de cookies per %1$s ?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -1281,11 +1283,11 @@
     <!-- Survey -->
     <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
     The app name is in the text, due to limitations with localizing Nimbus experiments -->
-    <string name="nimbus_survey_message_text" tools:ignore="UnusedResources">Ajudatz-nos a melhorar Firefox en respondent a un sondatge cort.</string>
+    <string name="nimbus_survey_message_text">Ajudatz-nos a melhorar Firefox en respondent a un sondatge cort.</string>
     <!-- Preference for taking the short survey. -->
-    <string name="preferences_take_survey" tools:ignore="UnusedResources">Participar al sondatge</string>
+    <string name="preferences_take_survey">Participar al sondatge</string>
     <!-- Preference for not taking the short survey. -->
-    <string name="preferences_not_take_survey" tools:ignore="UnusedResources">Non, mercé</string>
+    <string name="preferences_not_take_survey">Non, mercé</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
@@ -1504,29 +1506,29 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Proteccion renfortida contra lo seguiment</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Navegatz sens èsser seguit</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Navegatz sens èsser seguit</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
-    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">Ara amb una proteccion totala de cookies, nòstra barrièra mai potenta pel moment contra los traçadors intersites.</string>
+    <string name="preference_enhanced_tracking_protection_summary">Ara amb una proteccion totala de cookies, nòstra barrièra mai potenta pel moment contra los traçadors intersites.</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Gardatz vòstras donadas per vos. %s vos protegís de la màger part dels traçadors mai comuns que vos seguisson en linha.</string>
+    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Gardatz vòstras donadas per vos. %s vos protegís de la màger part dels traçadors mai comuns que vos seguisson en linha.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">%s vos protegís de la màger part dels traçadors mai comuns que vos seguisson en linha.</string>
+    <string name="preference_enhanced_tracking_protection_explanation_2">%s vos protegís de la màger part dels traçadors mai comuns que vos seguisson en linha.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Ne saber mai</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Estandarda (per defaut)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">Equilibri entre confidencialitat e performança. Las pagina cargaràn normalament.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Equilibri entre confidencialitat e performança. Las pagina cargaràn normalament.</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">Se cargaràn normalament las paginas mas blocaràn mens de traçadors.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_5">Se cargaràn normalament las paginas mas blocaràn mens de traçadors.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Çò que la proteccion contra lo seguiment estandarda bloca</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Estricte</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">Bloca mai de traçadors, accelèra la cargament de las paginas mas d’unas pòdon quitar de foncionar.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Bloca mai de traçadors, accelèra la cargament de las paginas mas d’unas pòdon quitar de foncionar.</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">Una proteccion refortida contra lo seguiment e de performanças melhoras, mas d’unes sites pòdon quitar de foncionar.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_4">Una proteccion refortida contra lo seguiment e de performanças melhoras, mas d’unes sites pòdon quitar de foncionar.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Çò que la proteccion contra lo seguiment estricta bloca</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
