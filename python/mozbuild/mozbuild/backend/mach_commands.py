@@ -131,96 +131,27 @@ def setup_vscode(command_context, vscode_cmd):
         command_context.topsrcdir, ".vscode", "settings.json"
     )
 
-    clangd_cc_path = mozpath.join(command_context.topobjdir, "clangd")
-
-    # Verify if the required files are present
-    clang_tools_path = mozpath.join(
-        command_context._mach_context.state_dir, "clang-tools"
-    )
-    clang_tidy_bin = mozpath.join(clang_tools_path, "clang-tidy", "bin")
-
-    clangd_path = mozpath.join(
-        clang_tidy_bin,
-        "clangd" + command_context.config_environment.substs.get("BIN_SUFFIX", ""),
-    )
-
-    if not os.path.exists(clangd_path):
-        command_context.log(
-            logging.ERROR,
-            "ide",
-            {},
-            "Unable to locate clangd in {}.".format(clang_tidy_bin),
+    new_settings = {}
+    artifact_prefix = ""
+    if command_context.config_environment.is_artifact_build:
+        artifact_prefix = (
+            "\nArtifact build configured: Skipping clang and rust setup. "
+            "If you later switch to a full build, please re-run this command."
         )
-        rc = get_clang_tools(command_context, clang_tools_path)
+    else:
+        new_settings = setup_clangd_rust_in_vscode(command_context)
 
-        if rc != 0:
-            return rc
-
-    import difflib
-    import json
-    import multiprocessing
-
-    from mozbuild.code_analysis.utils import ClangTidyConfig
-
-    clang_tidy_cfg = ClangTidyConfig(command_context.topsrcdir)
-
-    cargo_check_command = [
-        sys.executable,
-        mozpath.join(command_context.topsrcdir, "mach"),
-        "--log-no-times",
-        "cargo",
-        "check",
-        "-j",
-        str(multiprocessing.cpu_count() // 2),
-        "--all-crates",
-        "--message-format-json",
-    ]
-
-    file_associations_json = {
+    # Add file associations.
+    new_settings = {
+        **new_settings,
         "files.associations": {
             "*.jsm": "javascript",
             "*.sjs": "javascript",
-        }
-    }
-
-    clangd_json = {
-        "clangd.path": clangd_path,
-        "clangd.arguments": [
-            "--compile-commands-dir",
-            clangd_cc_path,
-            "-j",
-            str(multiprocessing.cpu_count() // 2),
-            "--limit-results",
-            "0",
-            "--completion-style",
-            "detailed",
-            "--background-index",
-            "--all-scopes-completion",
-            "--log",
-            "info",
-            "--pch-storage",
-            "memory",
-            "--clang-tidy",
-        ],
-        "rust-analyzer.server.extraEnv": {
-            # Point rust-analyzer at the real target directory used by our
-            # build, so it can discover the files created when we run `./mach
-            # cargo check`.
-            "CARGO_TARGET_DIR": command_context.topobjdir,
         },
-        "rust-analyzer.cargo.buildScripts.overrideCommand": cargo_check_command,
-        "rust-analyzer.checkOnSave.overrideCommand": cargo_check_command,
     }
 
-    clang_tidy = {}
-    clang_tidy["Checks"] = ",".join(clang_tidy_cfg.checks)
-    clang_tidy.update(clang_tidy_cfg.checks_config)
-
-    # Write .clang-tidy yml
-    import yaml
-
-    with open(".clang-tidy", "w") as file:
-        yaml.dump(clang_tidy, file)
+    import difflib
+    import json
 
     # Load the existing .vscode/settings.json file, to check if if needs to
     # be created or updated.
@@ -228,13 +159,17 @@ def setup_vscode(command_context, vscode_cmd):
         with open(vscode_settings) as fh:
             old_settings_str = fh.read()
     except FileNotFoundError:
-        print("Configuration for {} will be created.".format(vscode_settings))
+        print(
+            "Configuration for {} will be created.{}".format(
+                vscode_settings, artifact_prefix
+            )
+        )
         old_settings_str = None
 
     if old_settings_str is None:
         # No old settings exist
         with open(vscode_settings, "w") as fh:
-            json.dump(clangd_json, fh, indent=4)
+            json.dump(new_settings, fh, indent=4)
     else:
         # Merge our new settings with the existing settings, and check if we
         # need to make changes. Only prompt & write out the updated config
@@ -249,7 +184,7 @@ def setup_vscode(command_context, vscode_cmd):
                 "Existing settings will be lost!"
             )
 
-        settings = {**old_settings, **clangd_json, **file_associations_json}
+        settings = {**old_settings, **new_settings}
 
         if old_settings != settings:
             # Prompt the user with a diff of the changes we're going to make
@@ -269,8 +204,8 @@ def setup_vscode(command_context, vscode_cmd):
                 )
             )
             choice = prompt_bool(
-                "{}\nProceed with modifications to {}?".format(
-                    prompt_prefix, vscode_settings
+                "{}{}\nProceed with modifications to {}?".format(
+                    artifact_prefix, prompt_prefix, vscode_settings
                 )
             )
             if not choice:
@@ -302,6 +237,90 @@ def setup_vscode(command_context, vscode_cmd):
         return rc
 
     return 0
+
+
+def setup_clangd_rust_in_vscode(command_context):
+    clangd_cc_path = mozpath.join(command_context.topobjdir, "clangd")
+
+    # Verify if the required files are present
+    clang_tools_path = mozpath.join(
+        command_context._mach_context.state_dir, "clang-tools"
+    )
+    clang_tidy_bin = mozpath.join(clang_tools_path, "clang-tidy", "bin")
+
+    clangd_path = mozpath.join(
+        clang_tidy_bin,
+        "clangd" + command_context.config_environment.substs.get("BIN_SUFFIX", ""),
+    )
+
+    if not os.path.exists(clangd_path):
+        command_context.log(
+            logging.ERROR,
+            "ide",
+            {},
+            "Unable to locate clangd in {}.".format(clang_tidy_bin),
+        )
+        rc = get_clang_tools(command_context, clang_tools_path)
+
+        if rc != 0:
+            return rc
+
+    import multiprocessing
+
+    from mozbuild.code_analysis.utils import ClangTidyConfig
+
+    clang_tidy_cfg = ClangTidyConfig(command_context.topsrcdir)
+
+    cargo_check_command = [
+        sys.executable,
+        mozpath.join(command_context.topsrcdir, "mach"),
+        "--log-no-times",
+        "cargo",
+        "check",
+        "-j",
+        str(multiprocessing.cpu_count() // 2),
+        "--all-crates",
+        "--message-format-json",
+    ]
+
+    clang_tidy = {}
+    clang_tidy["Checks"] = ",".join(clang_tidy_cfg.checks)
+    clang_tidy.update(clang_tidy_cfg.checks_config)
+
+    # Write .clang-tidy yml
+    import yaml
+
+    with open(".clang-tidy", "w") as file:
+        yaml.dump(clang_tidy, file)
+
+    return {
+        "clangd.path": clangd_path,
+        "clangd.arguments": [
+            "--compile-commands-dir",
+            clangd_cc_path,
+            "-j",
+            str(multiprocessing.cpu_count() // 2),
+            "--limit-results",
+            "0",
+            "--completion-style",
+            "detailed",
+            "--background-index",
+            "--all-scopes-completion",
+            "--log",
+            "info",
+            "--pch-storage",
+            "disk",
+            "--clang-tidy",
+        ],
+        "rust-analyzer.server.extraEnv": {
+            # Point rust-analyzer at the real target directory used by our
+            # build, so it can discover the files created when we run `./mach
+            # cargo check`.
+            "CARGO_TARGET_DIR": command_context.topobjdir,
+        },
+        "rust-analyzer.cargo.buildScripts.overrideCommand": cargo_check_command,
+        "rust-analyzer.checkOnSave.overrideCommand": cargo_check_command,
+    }
 
 
 def get_clang_tools(command_context, clang_tools_path):
