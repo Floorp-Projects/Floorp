@@ -177,8 +177,8 @@ nimbus_events:
       reason:
         type: string
         description: >
-          Why validation failed (one of "invalid-recipe", "invalid-branch", or
-          "invalid-reason").
+          Why validation failed (one of "invalid-recipe", "invalid-branch",
+          "invalid-reason", "missing-locale", or "missing-l10n-entry").
       branch:
         type: string
         description: >
@@ -186,12 +186,27 @@ nimbus_events:
       feature:
         type: string
         description: If reason == invalid-feature, the invalid feature ID.
+      locale:
+        type: string
+        description: >
+          If reason == missing-locale, the locale that was missing from the
+          localization table.
+          If reason == missing-l10n-entry, the locale that was missing the
+          localization entries.
+      l10n_ids:
+        type: string
+        description: >
+          If reason == missing-l10n-entry, a comma-sparated list of missing
+          localization entries.
+
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1762652
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1781953
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1821092
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1762652
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1781953
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1821092
     data_sensitivity:
       - technical
     notification_emails:
