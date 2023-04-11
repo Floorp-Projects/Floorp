@@ -52,15 +52,13 @@ class nsFileControlFrame final : public nsBlockFrame,
   void ElementStateChanged(mozilla::dom::ElementState aStates) override;
 
   // nsIAnonymousContentCreator
-  nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;
-  void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
+  nsresult CreateAnonymousContent(nsTArray<ContentInfo>&) override;
+  void AppendAnonymousContentTo(nsTArray<nsIContent*>&,
                                 uint32_t aFilter) override;
 
 #ifdef ACCESSIBILITY
-  virtual mozilla::a11y::AccType AccessibleType() override;
+  mozilla::a11y::AccType AccessibleType() override;
 #endif
-
-  typedef bool (*AcceptAttrCallback)(const nsAString&, void*);
 
  protected:
   class MouseListener;
@@ -116,7 +114,7 @@ class nsFileControlFrame final : public nsBlockFrame,
                            bool aSupportsMultiple);
   };
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override {
+  bool IsFrameOfType(uint32_t aFlags) const override {
     return nsBlockFrame::IsFrameOfType(
         aFlags & ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
