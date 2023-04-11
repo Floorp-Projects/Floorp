@@ -210,11 +210,12 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
         mJavaDecoder->IsAdaptivePlaybackSupported();
     mIsHardwareAccelerated = mJavaDecoder->IsHardwareAccelerated();
 
-    // On Mediatek 6735 devices we have observed that the transform obtained
-    // from SurfaceTexture.getTransformMatrix() is incorrect for surfaces
-    // produced by a MediaCodec. We therefore override the transform to be a
-    // simple y-flip to ensure it is rendered correctly.
-    if (java::sdk::Build::HARDWARE()->ToString().EqualsASCII("mt6735")) {
+    // On some devices we have observed that the transform obtained from
+    // SurfaceTexture.getTransformMatrix() is incorrect for surfaces produced by
+    // a MediaCodec. We therefore override the transform to be a simple y-flip
+    // to ensure it is rendered correctly.
+    const auto hardware = java::sdk::Build::HARDWARE()->ToString();
+    if (hardware.EqualsASCII("mt6735") || hardware.EqualsASCII("kirin980")) {
       mTransformOverride = Some(
           gfx::Matrix4x4::Scaling(1.0, -1.0, 1.0).PostTranslate(0.0, 1.0, 0.0));
     }
