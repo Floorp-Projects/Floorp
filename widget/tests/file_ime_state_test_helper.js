@@ -118,6 +118,16 @@ class TIPWrapper {
     );
   }
 
+  typeA() {
+    const AKey = new this.#mWindow.KeyboardEvent("", {
+      key: "a",
+      code: "KeyA",
+      keyCode: this.#mWindow.KeyboardEvent.DOM_VK_A,
+    });
+    this.#mTIP.keydown(AKey);
+    this.#mTIP.keyup(AKey);
+  }
+
   isAvailable() {
     return this.#mTIP != null;
   }
