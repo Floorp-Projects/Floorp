@@ -633,6 +633,11 @@ TimeStamp TimerThread::ComputeWakeupTimeFromTimers() const {
   return mTimers[0].Timeout();
 }
 
+constexpr TimeDuration TimerThread::ComputeAcceptableFiringDelay(
+    TimeDuration minDelay, TimeDuration maxDelay) const {
+  return std::min(minDelay, maxDelay);
+}
+
 NS_IMETHODIMP
 TimerThread::Run() {
   MonitorAutoLock lock(mMonitor);
@@ -871,21 +876,25 @@ nsresult TimerThread::AddTimer(nsTimerImpl* aTimer,
   }
 
   // Awaken the timer thread if:
-  // - This timer wants to fire *before* the Timer Thread is scheduled to wake
-  //   up. We don't track this directly but we know that we will have attempted
-  //   to wake up at the timeout for the first time in our list (if it exists),
-  //   so we can use that. Note: This is true even if the timer has since been
-  //   canceled.
+  // - This timer needs to fire *before* the Timer Thread is scheduled to wake
+  //   up.
   // AND/OR
   // - The delay is 0, which is usually meant to be run as soon as possible.
   //   Note: Even if the thread is scheduled to wake up now/soon, on some
   //   systems there could be a significant delay compared to notifying, which
   //   is almost immediate; and some users of 0-delay depend on it being this
   //   fast!
+  const TimeDuration minTimerDelay = TimeDuration::FromMilliseconds(
+      StaticPrefs::timer_minimum_firing_delay_tolerance_ms());
+  const TimeDuration maxTimerDelay = TimeDuration::FromMilliseconds(
+      StaticPrefs::timer_maximum_firing_delay_tolerance_ms());
+  const TimeDuration firingDelay =
+      ComputeAcceptableFiringDelay(minTimerDelay, maxTimerDelay);
+  const bool firingBeforeNextWakeup =
+      mIntendedWakeupTime.IsNull() ||
+      (aTimer->mTimeout + firingDelay < mIntendedWakeupTime);
   const bool wakeUpTimerThread =
-      mWaiting &&
-      (mTimers.Length() == 0 || aTimer->mTimeout < mTimers[0].Timeout() ||
-       aTimer->mDelay.IsZero());
+      mWaiting && (firingBeforeNextWakeup || aTimer->mDelay.IsZero());
 
 #if TIMER_THREAD_STATISTICS
   if (mTotalTimersAdded == 0) {

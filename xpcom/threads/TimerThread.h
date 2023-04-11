@@ -158,6 +158,16 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
   // future this will be more sophisticated.
   TimeStamp ComputeWakeupTimeFromTimers() const MOZ_REQUIRES(mMonitor);
 
+  // Computes how late a timer can acceptably fire.
+  // minDelay is an amount by which any timer can be delayed. This function
+  // will never return a value smaller than minDelay (unless this conflicts with
+  // maxDelay).
+  // maxDelay is the upper limit on the amount by which we will ever delay any
+  // timer. Takes precedence over minDelay if there is a conflict. (Zero will
+  // effectively disable timer coalescing.)
+  constexpr TimeDuration ComputeAcceptableFiringDelay(
+      TimeDuration minDelay, TimeDuration maxDelay) const;
+
 #ifdef DEBUG
   // Checks mTimers to see if any entries are out of order or any cached
   // timeouts are incorrect and will assert if any inconsistency is found. Has
