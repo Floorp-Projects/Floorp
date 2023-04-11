@@ -132,7 +132,7 @@ void SVGGeometryFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     if (!IsVisibleForPainting()) {
       return;
     }
-    if (StyleEffects()->mOpacity == 0.0f) {
+    if (StyleEffects()->IsTransparent()) {
       return;
     }
     const auto* styleSVG = StyleSVG();
@@ -737,7 +737,7 @@ bool SVGGeometryFrame::CreateWebRenderCommands(
     return false;
   }
 
-  if (StyleEffects()->mMixBlendMode != StyleBlend::Normal) {
+  if (StyleEffects()->HasMixBlendMode()) {
     // FIXME: not implemented
     return false;
   }
