@@ -77,8 +77,6 @@ virtual void TextBeforeOffset(int32_t aOffset,
                               int32_t* aStartOffset, int32_t* aEndOffset,
                               nsAString& aText) override;
 
-char16_t CharAt(int32_t aOffset);
-
 virtual int32_t OffsetAtPoint(int32_t aX, int32_t aY,
                               uint32_t aCoordType) override;
 

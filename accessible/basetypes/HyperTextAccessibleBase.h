@@ -100,6 +100,12 @@ class HyperTextAccessibleBase {
   bool CharAt(int32_t aOffset, nsAString& aChar,
               int32_t* aStartOffset = nullptr, int32_t* aEndOffset = nullptr);
 
+  virtual char16_t CharAt(int32_t aOffset) {
+    nsAutoString charAtOffset;
+    CharAt(aOffset, charAtOffset);
+    return charAtOffset.CharAt(0);
+  }
+
   /**
    * Return a rect (in dev pixels) for character at given offset relative
    * given coordinate system.
