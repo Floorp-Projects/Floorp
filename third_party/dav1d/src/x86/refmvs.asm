@@ -57,6 +57,7 @@ save_pack0:    db  0,  1,  2,  3,  4,  0,  1,  2,  3,  4,  0,  1,  2,  3,  4,  0
 save_pack1:    db  2,  3,  4,  0,  1,  2,  3,  4,  0,  1,  2,  3,  4,  0,  1,  2
                db  3,  4,  0,  1,  2,  3,  4,  0,  1,  2,  3,  4,  0,  1,  2,  3
 save_ref_shuf: db  0, -1, -1, -1,  1, -1, -1, -1,  8, -1, -1, -1,  9, -1, -1, -1
+cond_shuf512:  db  3,  3,  3,  3,  7,  7,  7,  7,  7,  7,  7,  7,  3,  3,  3,  3
 save_cond0:    db  0x80, 0x81, 0x82, 0x83, 0x89, 0x84, 0x00, 0x00
 save_cond1:    db  0x84, 0x85, 0x86, 0x87, 0x88, 0x80, 0x00, 0x00
 pb_128:        times 16 db 128
@@ -73,6 +74,12 @@ save_tmvs_avx2_table: SAVE_TMVS_TABLE 2, 16, avx2
                       SAVE_TMVS_TABLE 4,  4, avx2
                       SAVE_TMVS_TABLE 5,  2, avx2
                       SAVE_TMVS_TABLE 7,  1, avx2
+
+save_tmvs_avx512icl_table: SAVE_TMVS_TABLE 2, 16, avx512icl
+                           SAVE_TMVS_TABLE 4,  8, avx512icl
+                           SAVE_TMVS_TABLE 4,  4, avx512icl
+                           SAVE_TMVS_TABLE 5,  2, avx512icl
+                           SAVE_TMVS_TABLE 7,  1, avx512icl
 
 JMP_TABLE splat_mv_avx512icl, 1, 2, 4, 8, 16, 32
 JMP_TABLE splat_mv_avx2,      1, 2, 4, 8, 16, 32
@@ -170,8 +177,6 @@ cglobal save_tmvs, 6, 7, 8, rp, stride, rr, ref_sign, \
 %define rpq  r3
 %define r10  r1
 %define r10d r1
-%define r10w r1w
-%define r10b r1b
 %define r11  r4
 %define r11d r4
 %endif
@@ -485,6 +490,125 @@ cglobal splat_mv, 4, 5, 3, rr, a, bx4, bw4, bh4
     dec           bh4d
     jg .loop
     RET
+
+INIT_ZMM avx512icl
+; refmvs_temporal_block *rp, ptrdiff_t stride,
+; refmvs_block **rr, uint8_t *ref_sign,
+; int col_end8, int row_end8, int col_start8, int row_start8
+cglobal save_tmvs, 4, 15, 10, rp, stride, rr, ref_sign, \
+                              xend, yend, xstart, ystart
+%define base r14-.write1
+    lea            r14, [.write1]
+    movifnidn    xendd, xendm
+    movifnidn    yendd, yendm
+    mov        xstartd, xstartm
+    mov        ystartd, ystartm
+    psllq           m4, [ref_signq]{bcstq}, 8
+    vpbroadcastq    m3, [base+save_ref_shuf+8]
+    vbroadcasti32x4 m5, [base+cond_shuf512]
+    vbroadcasti32x4 m6, [base+save_cond0]
+    vpbroadcastd    m7, [base+pb_128]
+    mova            m8, [base+save_pack0]
+    movu           xm9, [base+save_pack0+4]
+    lea            r9d, [xendq*5]
+    lea        xstartd, [xstartq*5]
+    sub          yendd, ystartd
+    add        ystartd, ystartd
+    lea        strideq, [strideq*5]
+    sub        xstartq, r9
+    add          xendd, r9d
+    add            rpq, r9
+    mov           r10d, 0x1f
+    kmovb           k2, r10d
+ DEFINE_ARGS rp, stride, rr, x, xend, h, xstart, ystart, b, cand
+.loop_y:
+    and        ystartd, 30
+    mov             xq, xstartq
+    mov             bq, [rrq+ystartq*8]
+    add        ystartd, 2
+    lea             bq, [bq+xendq*4]
+.loop_x:
+    imul         candq, xq, 0x9999
+    sar          candq, 16                   ; x / 5 * 3
+    movzx         r10d, byte [bq+candq*8+22] ; cand_b->bs
+    movu           xm0, [bq+candq*8+12]      ; cand_b
+    movzx         r11d, byte [base+save_tmvs_avx512icl_table+r10*2+0]
+    movzx         r10d, byte [base+save_tmvs_avx512icl_table+r10*2+1]
+    add            r10, r14
+    add          candq, r11
+    jge .calc
+    movzx         r11d, byte [bq+candq*8+22]
+    vinserti32x4   ym0, [bq+candq*8+12], 1
+    movzx         r12d, byte [base+save_tmvs_avx512icl_table+r11*2+0]
+    movzx         r11d, byte [base+save_tmvs_avx512icl_table+r11*2+1]
+    add            r11, r14
+    add          candq, r12
+    jge .calc
+    movzx         r12d, byte [bq+candq*8+22]
+    vinserti32x4    m0, [bq+candq*8+12], 2
+    movzx         r13d, byte [base+save_tmvs_avx512icl_table+r12*2+0]
+    movzx         r12d, byte [base+save_tmvs_avx512icl_table+r12*2+1]
+    add            r12, r14
+    add          candq, r13
+    jge .calc
+    vinserti32x4    m0, [bq+candq*8+12], 3
+    movzx         r13d, byte [bq+candq*8+22]
+    movzx         r13d, byte [base+save_tmvs_avx512icl_table+r13*2+1]
+    add            r13, r14
+.calc:
+    pshufb          m1, m0, m3
+    pabsw           m2, m0
+    pshufb          m1, m4, m1      ; ref > 0 && res_sign[ref - 1]
+    psrlw           m2, 12          ; (abs(mv.x) | abs(mv.y)) < 4096
+    psubd           m2, m1
+    pshufb          m2, m5           ; c0 c1 c1 c0
+    pand            m2, m6
+    punpckhqdq      m1, m2, m2
+    vpternlogd      m1, m2, m7, 0x56 ; (c0shuf | c1shuf) ^ 0x80
+    pshufb          m2, m0, m1
+    mova           xm0, xm2
+    call           r10
+    jge .next_line
+    vextracti32x4  xm0, m2, 1
+    call           r11
+    jge .next_line
+    vextracti32x4  xm0, m2, 2
+    call           r12
+    jge .next_line
+    vextracti32x4  xm0, m2, 3
+    call           r13
+    jl .loop_x
+.next_line:
+    add            rpq, strideq
+    dec             hd
+    jg .loop_y
+    RET
+.write1:
+    vmovdqu8 [rpq+xq]{k2}, xm0
+    add             xq, 5*1
+    ret
+.write2:
+    pshufb         xm0, xm8
+    vmovdqu16 [rpq+xq]{k2}, xm0
+    add             xq, 5*2
+    ret
+.write4:
+    vpermb         ym0, ym8, ym0
+    vmovdqu32 [rpq+xq]{k2}, ym0
+    add             xq, 5*4
+    ret
+.write8:
+    vpermb          m0, m8, m0
+    vmovdqu64 [rpq+xq]{k2}, m0
+    add             xq, 5*8
+    ret
+.write16:
+    vpermb          m1, m8, m0
+    movu   [rpq+xq+ 0], m1
+    pshufb         xm0, xm9
+    movu   [rpq+xq+64], xm0
+    add             xq, 5*16
+    ret
 
 INIT_ZMM avx512icl
 cglobal splat_mv, 4, 7, 3, rr, a, bx4, bw4, bh4

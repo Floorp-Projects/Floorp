@@ -3137,10 +3137,14 @@ INV_TXFM_8X16_FN identity, adst
 INV_TXFM_8X16_FN identity, flipadst
 INV_TXFM_8X16_FN identity, identity
 
-%macro IDTX16 3-4 ; src/dst, tmp, pw_1697x16, [pw_16394]
+%macro IDTX16 3-4 ; src/dst, tmp, pw_1697x16, [pw_16384]
     pmulhrsw            m%2, m%3, m%1
 %if %0 == 4 ; if downshifting by 1
+%ifnum %4
     pmulhrsw            m%2, m%4
+%else ; without rounding
+    psraw               m%2, 1
+%endif
 %else
     paddsw              m%1, m%1
 %endif
@@ -6837,10 +6841,11 @@ ALIGN function_align
     ret
 
 cglobal inv_txfm_add_identity_identity_16x32_10bpc, 4, 7, 12, dst, stride, c, eob
+    vpbroadcastd         m7, [pixel_10bpc_max]
+.pass1:
     vpbroadcastd         m8, [pw_2896x8]
     vpbroadcastd         m9, [pw_1697x16]
     vpbroadcastd        m11, [pw_8192]
-    vpbroadcastd         m7, [pixel_10bpc_max]
     lea                  r6, [strideq*5]
     pxor                 m6, m6
     paddw               m10, m11, m11 ; pw_16384
@@ -6910,11 +6915,15 @@ ALIGN function_align
     punpckhqdq           m1, m3, m2
     jmp m(iidentity_8x8_internal_10bpc).write_2x8x2
 
+cglobal inv_txfm_add_identity_identity_16x32_12bpc, 4, 7, 12, dst, stride, c, eob
+    vpbroadcastd         m7, [pixel_12bpc_max]
+    jmp m(inv_txfm_add_identity_identity_16x32_10bpc).pass1
+
 cglobal inv_txfm_add_dct_dct_32x16_10bpc, 4, 7, 0, dst, stride, c, eob
     test               eobd, eobd
     jz .dconly
     PROLOGUE              0, 8, 16, 32*40, dst, stride, c, eob
-    %undef cmp
+%undef cmp
     vpbroadcastd        m12, [clip_18b_min]
     vpbroadcastd        m13, [clip_18b_max]
     lea                  r6, [rsp+32*4]
@@ -7136,10 +7145,11 @@ ALIGN function_align
     jmp m(idct_16x8_internal_10bpc).write_16x4
 
 cglobal inv_txfm_add_identity_identity_32x16_10bpc, 4, 7, 11, dst, stride, c, eob
+    vpbroadcastd         m7, [pixel_10bpc_max]
+.pass1:
     vpbroadcastd         m8, [pw_2896x8]
     vpbroadcastd         m9, [pw_1697x16]
-    vpbroadcastd        m10, [pw_2048]
-    vpbroadcastd         m7, [pixel_10bpc_max]
+    vpbroadcastd        m10, [pw_4096]
     lea                  r6, [strideq*5]
     pxor                 m6, m6
     mov                  r5, dstq
@@ -7187,16 +7197,20 @@ ALIGN function_align
     packssdw             m3, [cq+64*7]
     REPX  {pmulhrsw x, m8 }, m0, m1, m2, m3
     REPX  {paddsw   x, x  }, m0, m1, m2, m3
-    REPX  {IDTX16 x, 4, 9 }, 0, 1, 2, 3
+    REPX  {IDTX16 x, 4, 9, _ }, 0, 1, 2, 3
     REPX  {pmulhrsw x, m10}, m0, m1, m2, m3
     REPX {mova [cq+64*x], m6}, 0, 1, 2, 3, 4, 5, 6, 7
     jmp m(inv_txfm_add_identity_identity_16x32_10bpc).main2
+
+cglobal inv_txfm_add_identity_identity_32x16_12bpc, 4, 7, 11, dst, stride, c, eob
+    vpbroadcastd         m7, [pixel_12bpc_max]
+    jmp m(inv_txfm_add_identity_identity_32x16_10bpc).pass1
 
 cglobal inv_txfm_add_dct_dct_32x32_10bpc, 4, 7, 0, dst, stride, c, eob
     test               eobd, eobd
     jz .dconly
     PROLOGUE              0, 8, 16, 32*83, dst, stride, c, eob
-    %undef cmp
+%undef cmp
     vpbroadcastd        m12, [clip_18b_min]
     vpbroadcastd        m13, [clip_18b_max]
     lea                  r6, [rsp+32*7]
@@ -7364,9 +7378,10 @@ ALIGN function_align
     jmp m(idct_16x16_internal_8bpc).main
 
 cglobal inv_txfm_add_identity_identity_32x32_10bpc, 4, 8, 8, dst, stride, c, eob
-    %undef cmp
-    vpbroadcastd         m5, [pw_8192]
+%undef cmp
     vpbroadcastd         m7, [pixel_10bpc_max]
+.pass1:
+    vpbroadcastd         m5, [pw_8192]
     pxor                 m6, m6
     lea                  r6, [strideq*3]
     lea                  r5, [strideq*5]
@@ -7432,6 +7447,10 @@ ALIGN function_align
     REPX   {pmulhrsw x, m5}, m0, m1, m2, m3
     jmp m(inv_txfm_add_identity_identity_8x32_10bpc).main_zero
 
+cglobal inv_txfm_add_identity_identity_32x32_12bpc, 4, 8, 8, dst, stride, c, eob
+    vpbroadcastd         m7, [pixel_12bpc_max]
+    jmp m(inv_txfm_add_identity_identity_32x32_10bpc).pass1
+
 %macro IDCT64_PART2_END 6-10 ; out, src[1-2], tmp[1-3], (offset[1-4])
 %if %1 & 1
     mova                m%5, [r5-32*(51-%1)] ; idct16 out 0+n
@@ -7472,7 +7491,7 @@ cglobal inv_txfm_add_dct_dct_16x64_10bpc, 4, 7, 0, dst, stride, c, eob
     test               eobd, eobd
     jz .dconly
     PROLOGUE              0, 10, 16, 32*98, dst, stride, c, eob
-    %undef cmp
+%undef cmp
     vpbroadcastd        m11, [pd_2048]
     vpbroadcastd        m12, [clip_18b_min]
     vpbroadcastd        m13, [clip_18b_max]
@@ -7814,7 +7833,7 @@ cglobal inv_txfm_add_dct_dct_32x64_10bpc, 4, 7, 0, dst, stride, c, eob
     test               eobd, eobd
     jz .dconly
     PROLOGUE              0, 11, 16, 32*134, dst, stride, c, eob
-    %undef cmp
+%undef cmp
     vpbroadcastd        m12, [clip_18b_min]
     vpbroadcastd        m13, [clip_18b_max]
     lea                  r6, [rsp+32*6]
@@ -8043,7 +8062,7 @@ cglobal inv_txfm_add_dct_dct_64x16_10bpc, 4, 7, 0, dst, stride, c, eob
     RET
 .normal:
     PROLOGUE              0, 8, 16, 32*96, dst, stride, c, eob
-    %undef cmp
+%undef cmp
     vpbroadcastd        m11, [pd_2048]
     vpbroadcastd        m12, [clip_18b_min]
     vpbroadcastd        m13, [clip_18b_max]
@@ -8262,7 +8281,7 @@ cglobal inv_txfm_add_dct_dct_64x32_10bpc, 4, 7, 0, dst, stride, c, eob
     test               eobd, eobd
     jz .dconly
     PROLOGUE              0, 8, 16, 32*163, dst, stride, c, eob
-    %undef cmp
+%undef cmp
     vpbroadcastd        m11, [pd_2048]
     vpbroadcastd        m12, [clip_18b_min]
     vpbroadcastd        m13, [clip_18b_max]
@@ -8411,7 +8430,7 @@ cglobal inv_txfm_add_dct_dct_64x64_10bpc, 4, 7, 0, dst, stride, c, eob
     test               eobd, eobd
     jz .dconly
     PROLOGUE              0, 11, 16, 32*195, dst, stride, c, eob
-    %undef cmp
+%undef cmp
     vpbroadcastd        m11, [pd_2048]
     vpbroadcastd        m12, [clip_18b_min]
     vpbroadcastd        m13, [clip_18b_max]

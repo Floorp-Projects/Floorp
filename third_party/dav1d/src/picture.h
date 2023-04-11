@@ -101,6 +101,12 @@ int dav1d_default_picture_alloc(Dav1dPicture *p, void *cookie);
 void dav1d_default_picture_release(Dav1dPicture *p, void *cookie);
 void dav1d_picture_unref_internal(Dav1dPicture *p);
 
+void dav1d_picture_copy_props(Dav1dPicture *p,
+                              Dav1dContentLightLevel *content_light, Dav1dRef *content_light_ref,
+                              Dav1dMasteringDisplay *mastering_display, Dav1dRef *mastering_display_ref,
+                              Dav1dITUTT35 *itut_t35, Dav1dRef *itut_t35_ref,
+                              const Dav1dDataProps *props);
+
 /**
  * Get event flags from picture flags.
  */

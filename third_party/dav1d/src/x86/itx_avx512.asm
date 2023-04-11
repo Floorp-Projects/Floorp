@@ -5143,7 +5143,7 @@ cglobal inv_txfm_add_dct_dct_16x64_8bpc, 4, 7, 0, dst, stride, c, eob
     sar                 r6d, 8+2
     jmp m(inv_txfm_add_dct_dct_16x8_8bpc).dconly3
 ALIGN function_align
-.main_oddhalf_fast: ; bottom three-quarters are zero
+cglobal_label .main_oddhalf_fast ; bottom three-quarters are zero
     vpbroadcastd         m8, [o(pw_101_4095x8)]
     vpbroadcastd        m21, [o(pw_m1474_3822x8)]
     vpbroadcastd        m14, [o(pw_897_3996x8)]
@@ -5170,7 +5170,7 @@ ALIGN function_align
     mova                m20, m15
     jmp .main_oddhalf2
 ALIGN function_align
-.main_oddhalf:
+cglobal_label .main_oddhalf
     vpbroadcastd         m8, [o(pw_101_4095x8)]
     vpbroadcastd         m9, [o(pw_m2824_2967x8)]
     vpbroadcastd        m11, [o(pw_1660_3745x8)]

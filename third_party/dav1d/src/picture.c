@@ -142,9 +142,6 @@ static int picture_alloc_with_edges(Dav1dContext *const c,
     p->p.h = h;
     p->seq_hdr = seq_hdr;
     p->frame_hdr = frame_hdr;
-    p->content_light = content_light;
-    p->mastering_display = mastering_display;
-    p->itut_t35 = itut_t35;
     p->p.layout = seq_hdr->layout;
     p->p.bpc = bpc;
     dav1d_data_props_set_defaults(&p->m);
@@ -194,21 +191,38 @@ static int picture_alloc_with_edges(Dav1dContext *const c,
     p->frame_hdr_ref = frame_hdr_ref;
     if (frame_hdr_ref) dav1d_ref_inc(frame_hdr_ref);
 
-    dav1d_data_props_copy(&p->m, props);
+    dav1d_picture_copy_props(p, content_light, content_light_ref,
+                             mastering_display, mastering_display_ref,
+                             itut_t35, itut_t35_ref, props);
 
     if (extra && extra_ptr)
         *extra_ptr = &pic_ctx->extra_ptr;
 
+    return 0;
+}
+
+void dav1d_picture_copy_props(Dav1dPicture *const p,
+                              Dav1dContentLightLevel *const content_light, Dav1dRef *const content_light_ref,
+                              Dav1dMasteringDisplay *const mastering_display, Dav1dRef *const mastering_display_ref,
+                              Dav1dITUTT35 *const itut_t35, Dav1dRef *const itut_t35_ref,
+                              const Dav1dDataProps *const props)
+{
+    dav1d_data_props_copy(&p->m, props);
+
+    dav1d_ref_dec(&p->content_light_ref);
     p->content_light_ref = content_light_ref;
+    p->content_light = content_light;
     if (content_light_ref) dav1d_ref_inc(content_light_ref);
 
+    dav1d_ref_dec(&p->mastering_display_ref);
     p->mastering_display_ref = mastering_display_ref;
+    p->mastering_display = mastering_display;
     if (mastering_display_ref) dav1d_ref_inc(mastering_display_ref);
 
+    dav1d_ref_dec(&p->itut_t35_ref);
     p->itut_t35_ref = itut_t35_ref;
+    p->itut_t35 = itut_t35;
     if (itut_t35_ref) dav1d_ref_inc(itut_t35_ref);
-
-    return 0;
 }
 
 int dav1d_thread_picture_alloc(Dav1dContext *const c, Dav1dFrameContext *const f,

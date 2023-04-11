@@ -1560,7 +1560,14 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, const int globa
             if (c->n_fc == 1) {
                 dav1d_thread_picture_ref(&c->out,
                                          &c->refs[c->frame_hdr->existing_frame_idx].p);
-                dav1d_data_props_copy(&c->out.p.m, &in->m);
+                dav1d_picture_copy_props(&c->out.p,
+                                         c->content_light, c->content_light_ref,
+                                         c->mastering_display, c->mastering_display_ref,
+                                         c->itut_t35, c->itut_t35_ref,
+                                         &in->m);
+                // Must be removed from the context after being attached to the frame
+                dav1d_ref_dec(&c->itut_t35_ref);
+                c->itut_t35 = NULL;
                 c->event_flags |= dav1d_picture_get_event_flags(&c->refs[c->frame_hdr->existing_frame_idx].p);
             } else {
                 pthread_mutex_lock(&c->task_thread.lock);
@@ -1606,7 +1613,15 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, const int globa
                 dav1d_thread_picture_ref(out_delayed,
                                          &c->refs[c->frame_hdr->existing_frame_idx].p);
                 out_delayed->visible = 1;
-                dav1d_data_props_copy(&out_delayed->p.m, &in->m);
+                dav1d_picture_copy_props(&out_delayed->p,
+                                         c->content_light, c->content_light_ref,
+                                         c->mastering_display, c->mastering_display_ref,
+                                         c->itut_t35, c->itut_t35_ref,
+                                         &in->m);
+                // Must be removed from the context after being attached to the frame
+                dav1d_ref_dec(&c->itut_t35_ref);
+                c->itut_t35 = NULL;
+
                 pthread_mutex_unlock(&c->task_thread.lock);
             }
             if (c->refs[c->frame_hdr->existing_frame_idx].p.p.frame_hdr->frame_type == DAV1D_FRAME_TYPE_KEY) {
