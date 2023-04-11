@@ -9,13 +9,13 @@
 #define SkSharedLock_DEFINED
 
 #include "include/core/SkTypes.h"
-#include "include/private/SkMacros.h"
-#include "include/private/SkSemaphore.h"
-#include "include/private/SkThreadAnnotations.h"
+#include "include/private/base/SkMacros.h"
+#include "include/private/base/SkSemaphore.h"
+#include "include/private/base/SkThreadAnnotations.h"
 #include <atomic>
 
 #ifdef SK_DEBUG
-    #include "include/private/SkMutex.h"
+    #include "include/private/base/SkMutex.h"
     #include <memory>
 #endif  // SK_DEBUG
 
@@ -67,8 +67,8 @@ private:
 };
 
 #ifndef SK_DEBUG
-inline void SkSharedMutex::assertHeld() const {};
-inline void SkSharedMutex::assertHeldShared() const {};
+inline void SkSharedMutex::assertHeld() const {}
+inline void SkSharedMutex::assertHeldShared() const {}
 #endif  // SK_DEBUG
 
 class SK_SCOPED_CAPABILITY SkAutoSharedMutexExclusive {
@@ -82,8 +82,6 @@ public:
 private:
     SkSharedMutex& fLock;
 };
-
-#define SkAutoSharedMutexExclusive(...) SK_REQUIRE_LOCAL_VAR(SkAutoSharedMutexExclusive)
 
 class SK_SCOPED_CAPABILITY SkAutoSharedMutexShared {
 public:
@@ -100,7 +98,5 @@ public:
 private:
     SkSharedMutex& fLock;
 };
-
-#define SkAutoSharedMutexShared(...) SK_REQUIRE_LOCAL_VAR(SkAutoSharedMutexShared)
 
 #endif // SkSharedLock_DEFINED

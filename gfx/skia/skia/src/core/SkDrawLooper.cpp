@@ -6,11 +6,14 @@
  */
 
 #include "include/core/SkCanvas.h"
-#include "include/core/SkDrawLooper.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkPaint.h"
 #include "include/core/SkRect.h"
-#include "src/core/SkArenaAlloc.h"
+#include "src/base/SkArenaAlloc.h"
+
+#ifdef SK_SUPPORT_LEGACY_DRAWLOOPER
+
+#include "include/core/SkDrawLooper.h"
 
 void SkDrawLooper::Context::Info::applyToCTM(SkMatrix* ctm) const {
     if (fApplyPostCTM) {
@@ -22,9 +25,7 @@ void SkDrawLooper::Context::Info::applyToCTM(SkMatrix* ctm) const {
 
 void SkDrawLooper::Context::Info::applyToCanvas(SkCanvas* canvas) const {
     if (fApplyPostCTM) {
-        SkMatrix ctm = canvas->getTotalMatrix();
-        ctm.postTranslate(fTranslate.fX, fTranslate.fY);
-        canvas->setMatrix(ctm);
+        canvas->setMatrix(canvas->getLocalToDevice().postTranslate(fTranslate.fX, fTranslate.fY));
     } else {
         canvas->translate(fTranslate.fX, fTranslate.fY);
     }
@@ -95,9 +96,8 @@ void SkDrawLooper::apply(SkCanvas* canvas, const SkPaint& paint,
             }
             canvas->save();
             if (info.fApplyPostCTM) {
-                SkMatrix ctm = canvas->getTotalMatrix();
-                ctm.postTranslate(info.fTranslate.fX, info.fTranslate.fY);
-                canvas->setMatrix(ctm);
+                canvas->setMatrix(canvas->getLocalToDevice().postTranslate(info.fTranslate.fX,
+                                                                           info.fTranslate.fY));
             } else {
                 canvas->translate(info.fTranslate.fX, info.fTranslate.fY);
             }
@@ -106,3 +106,5 @@ void SkDrawLooper::apply(SkCanvas* canvas, const SkPaint& paint,
         }
     }
 }
+
+#endif

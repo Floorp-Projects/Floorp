@@ -9,25 +9,36 @@
 #define SkPictureData_DEFINED
 
 #include "include/core/SkBitmap.h"
+#include "include/core/SkData.h"
 #include "include/core/SkDrawable.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
 #include "include/core/SkPicture.h"
-#include "include/private/SkTArray.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkTextBlob.h"
+#include "include/core/SkTypes.h"
+#include "include/core/SkVertices.h"
+#include "include/private/base/SkTArray.h"
 #include "src/core/SkPictureFlat.h"
+#include "src/core/SkReadBuffer.h"
 
+#if defined(SK_GANESH)
+#include "include/private/chromium/Slug.h"
+#endif
+
+#include <cstdint>
 #include <memory>
 
-class SkData;
+class SkFactorySet;
 class SkPictureRecord;
-class SkReader32;
-struct SkSerialProcs;
+class SkRefCntSet;
 class SkStream;
 class SkWStream;
-class SkBBoxHierarchy;
-class SkMatrix;
-class SkPaint;
-class SkPath;
-class SkReadBuffer;
-class SkTextBlob;
+class SkWriteBuffer;
+struct SkDeserialProcs;
+struct SkSerialProcs;
 
 struct SkPictInfo {
     SkPictInfo() : fVersion(~0U) {}
@@ -62,16 +73,18 @@ public:
 #define SK_PICT_PAINT_BUFFER_TAG    SkSetFourByteTag('p', 'n', 't', ' ')
 #define SK_PICT_PATH_BUFFER_TAG     SkSetFourByteTag('p', 't', 'h', ' ')
 #define SK_PICT_TEXTBLOB_BUFFER_TAG SkSetFourByteTag('b', 'l', 'o', 'b')
+#define SK_PICT_SLUG_BUFFER_TAG SkSetFourByteTag('s', 'l', 'u', 'g')
 #define SK_PICT_VERTICES_BUFFER_TAG SkSetFourByteTag('v', 'e', 'r', 't')
 #define SK_PICT_IMAGE_BUFFER_TAG    SkSetFourByteTag('i', 'm', 'a', 'g')
 
-// Always write this guy last (with no length field afterwards)
+// Always write this last (with no length field afterwards)
 #define SK_PICT_EOF_TAG     SkSetFourByteTag('e', 'o', 'f', ' ')
 
 template <typename T>
-T* read_index_base_1_or_null(SkReadBuffer* reader, const SkTArray<sk_sp<T>>& array) {
+T* read_index_base_1_or_null(SkReadBuffer* reader,
+                             const skia_private::TArray<sk_sp<T>>& array) {
     int index = reader->readInt();
-    return reader->validate(index > 0 && index <= array.count()) ? array[index - 1].get() : nullptr;
+    return reader->validate(index > 0 && index <= array.size()) ? array[index - 1].get() : nullptr;
 }
 
 class SkPictureData {
@@ -81,11 +94,14 @@ public:
     static SkPictureData* CreateFromStream(SkStream*,
                                            const SkPictInfo&,
                                            const SkDeserialProcs&,
-                                           SkTypefacePlayback*);
+                                           SkTypefacePlayback*,
+                                           int recursionLimit);
     static SkPictureData* CreateFromBuffer(SkReadBuffer&, const SkPictInfo&);
 
     void serialize(SkWStream*, const SkSerialProcs&, SkRefCntSet*, bool textBlobsOnly=false) const;
     void flatten(SkWriteBuffer&) const;
+
+    const SkPictInfo& info() const { return fInfo; }
 
     const sk_sp<SkData>& opData() const { return fOpData; }
 
@@ -93,19 +109,20 @@ protected:
     explicit SkPictureData(const SkPictInfo& info);
 
     // Does not affect ownership of SkStream.
-    bool parseStream(SkStream*, const SkDeserialProcs&, SkTypefacePlayback*);
+    bool parseStream(SkStream*, const SkDeserialProcs&, SkTypefacePlayback*,
+                     int recursionLimit);
     bool parseBuffer(SkReadBuffer& buffer);
 
 public:
     const SkImage* getImage(SkReadBuffer* reader) const {
         // images are written base-0, unlike paths, pictures, drawables, etc.
         const int index = reader->readInt();
-        return reader->validateIndex(index, fImages.count()) ? fImages[index].get() : nullptr;
+        return reader->validateIndex(index, fImages.size()) ? fImages[index].get() : nullptr;
     }
 
     const SkPath& getPath(SkReadBuffer* reader) const {
         int index = reader->readInt();
-        return reader->validate(index > 0 && index <= fPaths.count()) ?
+        return reader->validate(index > 0 && index <= fPaths.size()) ?
                 fPaths[index - 1] : fEmptyPath;
     }
 
@@ -117,18 +134,22 @@ public:
         return read_index_base_1_or_null(reader, fDrawables);
     }
 
-    const SkPaint* getPaint(SkReadBuffer* reader) const {
-        int index = reader->readInt();
-        if (index == 0) {
-            return nullptr; // recorder wrote a zero for no paint (likely drawimage)
-        }
-        return reader->validate(index > 0 && index <= fPaints.count()) ?
-                &fPaints[index - 1] : nullptr;
-    }
+    // Return a paint if one was used for this op, or nullptr if none was used.
+    const SkPaint* optionalPaint(SkReadBuffer* reader) const;
+
+    // Return the paint used for this op, invalidating the SkReadBuffer if there appears to be none.
+    // The returned paint is always safe to use.
+    const SkPaint& requiredPaint(SkReadBuffer* reader) const;
 
     const SkTextBlob* getTextBlob(SkReadBuffer* reader) const {
         return read_index_base_1_or_null(reader, fTextBlobs);
     }
+
+#if defined(SK_GANESH)
+    const sktext::gpu::Slug* getSlug(SkReadBuffer* reader) const {
+        return read_index_base_1_or_null(reader, fSlugs);
+    }
+#endif
 
     const SkVertices* getVertices(SkReadBuffer* reader) const {
         return read_index_base_1_or_null(reader, fVertices);
@@ -138,23 +159,28 @@ private:
     // these help us with reading/writing
     // Does not affect ownership of SkStream.
     bool parseStreamTag(SkStream*, uint32_t tag, uint32_t size,
-                        const SkDeserialProcs&, SkTypefacePlayback*);
+                        const SkDeserialProcs&, SkTypefacePlayback*,
+                        int recursionLimit);
     void parseBufferTag(SkReadBuffer&, uint32_t tag, uint32_t size);
     void flattenToBuffer(SkWriteBuffer&, bool textBlobsOnly) const;
 
-    SkTArray<SkPaint>  fPaints;
-    SkTArray<SkPath>   fPaths;
+    skia_private::TArray<SkPaint> fPaints;
+    skia_private::TArray<SkPath>  fPaths;
 
-    sk_sp<SkData>   fOpData;    // opcodes and parameters
+    sk_sp<SkData>                 fOpData;    // opcodes and parameters
 
-    const SkPath    fEmptyPath;
-    const SkBitmap  fEmptyBitmap;
+    const SkPath                  fEmptyPath;
+    const SkBitmap                fEmptyBitmap;
 
-    SkTArray<sk_sp<const SkPicture>>   fPictures;
-    SkTArray<sk_sp<SkDrawable>>        fDrawables;
-    SkTArray<sk_sp<const SkTextBlob>>  fTextBlobs;
-    SkTArray<sk_sp<const SkVertices>>  fVertices;
-    SkTArray<sk_sp<const SkImage>>     fImages;
+    skia_private::TArray<sk_sp<const SkPicture>>   fPictures;
+    skia_private::TArray<sk_sp<SkDrawable>>        fDrawables;
+    skia_private::TArray<sk_sp<const SkTextBlob>>  fTextBlobs;
+    skia_private::TArray<sk_sp<const SkVertices>>  fVertices;
+    skia_private::TArray<sk_sp<const SkImage>>     fImages;
+#if defined(SK_GANESH)
+    skia_private::TArray<sk_sp<const sktext::gpu::Slug>> fSlugs;
+#endif
+
 
     SkTypefacePlayback                 fTFPlayback;
     std::unique_ptr<SkFactoryPlayback> fFactoryPlayback;

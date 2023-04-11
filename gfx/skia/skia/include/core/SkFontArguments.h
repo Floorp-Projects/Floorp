@@ -8,6 +8,7 @@
 #ifndef SkFontArguments_DEFINED
 #define SkFontArguments_DEFINED
 
+#include "include/core/SkColor.h"
 #include "include/core/SkScalar.h"
 #include "include/core/SkTypes.h"
 
@@ -21,13 +22,28 @@ struct SkFontArguments {
         const Coordinate* coordinates;
         int coordinateCount;
     };
-    // deprecated, use VariationPosition::Coordinate instead
-    struct Axis {
-       SkFourByteTag fTag;
-       float fStyleValue;
+
+    /** Specify a palette to use and overrides for palette entries.
+     *
+     *  `overrides` is a list of pairs of palette entry index and color.
+     *  The overriden palette entries will use the associated color.
+     *  Override pairs with palette entry indices out of range will not be applied.
+     *  Later override entries override earlier ones.
+     */
+    struct Palette {
+        struct Override {
+            int index;
+            SkColor color;
+        };
+        int index;
+        const Override* overrides;
+        int overrideCount;
     };
 
-    SkFontArguments() : fCollectionIndex(0), fVariationDesignPosition{nullptr, 0} {}
+    SkFontArguments()
+            : fCollectionIndex(0)
+            , fVariationDesignPosition{nullptr, 0}
+            , fPalette{0, nullptr, 0} {}
 
     /** Specify the index of the desired font.
      *
@@ -36,14 +52,6 @@ struct SkFontArguments {
      */
     SkFontArguments& setCollectionIndex(int collectionIndex) {
         fCollectionIndex = collectionIndex;
-        return *this;
-    }
-
-    // deprecated, use setVariationDesignPosition instead.
-    SkFontArguments& setAxes(const Axis* axes, int axisCount) {
-        fVariationDesignPosition.coordinates =
-                reinterpret_cast<const VariationPosition::Coordinate*>(axes);
-        fVariationDesignPosition.coordinateCount = axisCount;
         return *this;
     }
 
@@ -63,17 +71,24 @@ struct SkFontArguments {
     int getCollectionIndex() const {
         return fCollectionIndex;
     }
-    // deprecated, use getVariationDesignPosition instead.
-    const Axis* getAxes(int* axisCount) const {
-        *axisCount = fVariationDesignPosition.coordinateCount;
-        return reinterpret_cast<const Axis*>(fVariationDesignPosition.coordinates);
-    }
+
     VariationPosition getVariationDesignPosition() const {
         return fVariationDesignPosition;
     }
+
+    SkFontArguments& setPalette(Palette palette) {
+        fPalette.index = palette.index;
+        fPalette.overrides = palette.overrides;
+        fPalette.overrideCount = palette.overrideCount;
+        return *this;
+    }
+
+    Palette getPalette() const { return fPalette; }
+
 private:
     int fCollectionIndex;
     VariationPosition fVariationDesignPosition;
+    Palette fPalette;
 };
 
 #endif

@@ -26,8 +26,8 @@ enum SkEncodedOrigin {
 
 /**
  * Given an encoded origin and the width and height of the source data, returns a matrix
- * that transforms the source rectangle [0, 0, w, h] to a correctly oriented destination
- * rectangle, with the upper left corner still at [0, 0].
+ * that transforms the source rectangle with upper left corner at [0, 0] and origin to a correctly
+ * oriented destination rectangle of [0, 0, w, h].
  */
 static inline SkMatrix SkEncodedOriginToMatrix(SkEncodedOrigin origin, int w, int h) {
     switch (origin) {
@@ -36,12 +36,19 @@ static inline SkMatrix SkEncodedOriginToMatrix(SkEncodedOrigin origin, int w, in
         case kBottomRight_SkEncodedOrigin: return SkMatrix::MakeAll(-1,  0, w,  0, -1, h, 0, 0, 1);
         case  kBottomLeft_SkEncodedOrigin: return SkMatrix::MakeAll( 1,  0, 0,  0, -1, h, 0, 0, 1);
         case     kLeftTop_SkEncodedOrigin: return SkMatrix::MakeAll( 0,  1, 0,  1,  0, 0, 0, 0, 1);
-        case    kRightTop_SkEncodedOrigin: return SkMatrix::MakeAll( 0, -1, h,  1,  0, 0, 0, 0, 1);
-        case kRightBottom_SkEncodedOrigin: return SkMatrix::MakeAll( 0, -1, h, -1,  0, w, 0, 0, 1);
-        case  kLeftBottom_SkEncodedOrigin: return SkMatrix::MakeAll( 0,  1, 0, -1,  0, w, 0, 0, 1);
+        case    kRightTop_SkEncodedOrigin: return SkMatrix::MakeAll( 0, -1, w,  1,  0, 0, 0, 0, 1);
+        case kRightBottom_SkEncodedOrigin: return SkMatrix::MakeAll( 0, -1, w, -1,  0, h, 0, 0, 1);
+        case  kLeftBottom_SkEncodedOrigin: return SkMatrix::MakeAll( 0,  1, 0, -1,  0, h, 0, 0, 1);
     }
     SK_ABORT("Unexpected origin");
 }
 
+/**
+ * Return true if the encoded origin includes a 90 degree rotation, in which case the width
+ * and height of the source data are swapped relative to a correctly oriented destination.
+ */
+static inline bool SkEncodedOriginSwapsWidthHeight(SkEncodedOrigin origin) {
+    return origin >= kLeftTop_SkEncodedOrigin;
+}
 
 #endif // SkEncodedOrigin_DEFINED

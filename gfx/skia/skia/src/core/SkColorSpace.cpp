@@ -7,21 +7,24 @@
 
 #include "include/core/SkColorSpace.h"
 #include "include/core/SkData.h"
-#include "include/third_party/skcms/skcms.h"
+#include "include/private/SkOpts_spi.h"
+#include "include/private/base/SkFloatingPoint.h"
+#include "include/private/base/SkTemplates.h"
+#include "modules/skcms/skcms.h"
 #include "src/core/SkColorSpacePriv.h"
-#include "src/core/SkOpts.h"
+
+#include <cstring>
 
 bool SkColorSpacePrimaries::toXYZD50(skcms_Matrix3x3* toXYZ_D50) const {
     return skcms_PrimariesToXYZD50(fRX, fRY, fGX, fGY, fBX, fBY, fWX, fWY, toXYZ_D50);
 }
 
-SkColorSpace::SkColorSpace(const float transferFn[7],
-                           const skcms_Matrix3x3& toXYZD50) {
-    memcpy(fToXYZD50_3x3, &toXYZD50.vals[0][0], 9*sizeof(float));
-    fToXYZD50Hash = SkOpts::hash_fn(fToXYZD50_3x3, 9*sizeof(float), 0);
-
-    memcpy(fTransferFn, transferFn, 7*sizeof(float));
-    fTransferFnHash = SkOpts::hash_fn(fTransferFn, 7*sizeof(float), 0);
+SkColorSpace::SkColorSpace(const skcms_TransferFunction& transferFn,
+                           const skcms_Matrix3x3& toXYZD50)
+        : fTransferFn(transferFn)
+        , fToXYZD50(toXYZD50) {
+    fTransferFnHash = SkOpts::hash_fn(&fTransferFn, 7*sizeof(float), 0);
+    fToXYZD50Hash = SkOpts::hash_fn(&fToXYZD50, 9*sizeof(float), 0);
 }
 
 static bool xyz_almost_equal(const skcms_Matrix3x3& mA, const skcms_Matrix3x3& mB) {
@@ -38,34 +41,34 @@ static bool xyz_almost_equal(const skcms_Matrix3x3& mA, const skcms_Matrix3x3& m
 
 sk_sp<SkColorSpace> SkColorSpace::MakeRGB(const skcms_TransferFunction& transferFn,
                                           const skcms_Matrix3x3& toXYZ) {
-    if (classify_transfer_fn(transferFn) == Bad_TF) {
+    if (skcms_TransferFunction_getType(&transferFn) == skcms_TFType_Invalid) {
         return nullptr;
     }
 
-    const float* tf = &transferFn.g;
+    const skcms_TransferFunction* tf = &transferFn;
 
     if (is_almost_srgb(transferFn)) {
         if (xyz_almost_equal(toXYZ, SkNamedGamut::kSRGB)) {
             return SkColorSpace::MakeSRGB();
         }
-        tf = &SkNamedTransferFn::kSRGB.g;
+        tf = &SkNamedTransferFn::kSRGB;
     } else if (is_almost_2dot2(transferFn)) {
-        tf = &SkNamedTransferFn::k2Dot2.g;
+        tf = &SkNamedTransferFn::k2Dot2;
     } else if (is_almost_linear(transferFn)) {
         if (xyz_almost_equal(toXYZ, SkNamedGamut::kSRGB)) {
             return SkColorSpace::MakeSRGBLinear();
         }
-        tf = &SkNamedTransferFn::kLinear.g;
+        tf = &SkNamedTransferFn::kLinear;
     }
 
-    return sk_sp<SkColorSpace>(new SkColorSpace(tf, toXYZ));
+    return sk_sp<SkColorSpace>(new SkColorSpace(*tf, toXYZ));
 }
 
 class SkColorSpaceSingletonFactory {
 public:
     static SkColorSpace* Make(const skcms_TransferFunction& transferFn,
                               const skcms_Matrix3x3& to_xyz) {
-        return new SkColorSpace(&transferFn.g, to_xyz);
+        return new SkColorSpace(transferFn, to_xyz);
     }
 };
 
@@ -94,22 +97,17 @@ void SkColorSpace::computeLazyDstFields() const {
 
         // Invert 3x3 gamut, defaulting to sRGB if we can't.
         {
-            skcms_Matrix3x3 fwd, inv;
-            memcpy(&fwd, fToXYZD50_3x3, 9*sizeof(float));
-            if (!skcms_Matrix3x3_invert(&fwd, &inv)) {
-                SkAssertResult(skcms_Matrix3x3_invert(&skcms_sRGB_profile()->toXYZD50, &inv));
+            if (!skcms_Matrix3x3_invert(&fToXYZD50, &fFromXYZD50)) {
+                SkAssertResult(skcms_Matrix3x3_invert(&skcms_sRGB_profile()->toXYZD50,
+                                                      &fFromXYZD50));
             }
-            memcpy(fFromXYZD50_3x3, &inv, 9*sizeof(float));
         }
 
         // Invert transfer function, defaulting to sRGB if we can't.
         {
-            skcms_TransferFunction fwd, inv;
-            this->transferFn(&fwd.g);
-            if (!skcms_TransferFunction_invert(&fwd, &inv)) {
-                inv = *skcms_sRGB_Inverse_TransferFunction();
+            if (!skcms_TransferFunction_invert(&fTransferFn, &fInvTransferFn)) {
+                fInvTransferFn = *skcms_sRGB_Inverse_TransferFunction();
             }
-            memcpy(fInvTransferFn, &inv, 7*sizeof(float));
         }
 
     });
@@ -119,40 +117,31 @@ bool SkColorSpace::isNumericalTransferFn(skcms_TransferFunction* coeffs) const {
     // TODO: Change transferFn/invTransferFn to just operate on skcms_TransferFunction (all callers
     // already pass pointers to an skcms struct). Then remove this function, and update the two
     // remaining callers to do the right thing with transferFn and classify.
-    this->transferFn(&coeffs->g);
-    return classify_transfer_fn(*coeffs) == sRGBish_TF;
+    this->transferFn(coeffs);
+    return skcms_TransferFunction_getType(coeffs) == skcms_TFType_sRGBish;
 }
 
 void SkColorSpace::transferFn(float gabcdef[7]) const {
     memcpy(gabcdef, &fTransferFn, 7*sizeof(float));
 }
 
-void SkColorSpace::invTransferFn(float gabcdef[7]) const {
-    this->computeLazyDstFields();
-    memcpy(gabcdef, &fInvTransferFn, 7*sizeof(float));
+void SkColorSpace::transferFn(skcms_TransferFunction* fn) const {
+    *fn = fTransferFn;
 }
 
-bool SkColorSpace::toXYZD50(SkMatrix44* toXYZD50) const {
-    toXYZD50->set3x3RowMajorf(fToXYZD50_3x3);
-    return true;
+void SkColorSpace::invTransferFn(skcms_TransferFunction* fn) const {
+    this->computeLazyDstFields();
+    *fn = fInvTransferFn;
 }
 
 bool SkColorSpace::toXYZD50(skcms_Matrix3x3* toXYZD50) const {
-    memcpy(toXYZD50, fToXYZD50_3x3, 9*sizeof(float));
+    *toXYZD50 = fToXYZD50;
     return true;
 }
 
-void SkColorSpace::gamutTransformTo(const SkColorSpace* dst, float src_to_dst[9]) const {
+void SkColorSpace::gamutTransformTo(const SkColorSpace* dst, skcms_Matrix3x3* src_to_dst) const {
     dst->computeLazyDstFields();
-
-    skcms_Matrix3x3 toXYZD50,
-                  fromXYZD50;
-
-    memcpy(&  toXYZD50, this->  fToXYZD50_3x3, 9*sizeof(float));
-    memcpy(&fromXYZD50, dst ->fFromXYZD50_3x3, 9*sizeof(float));
-
-    skcms_Matrix3x3 srcToDst = skcms_Matrix3x3_concat(&fromXYZD50, &toXYZD50);
-    memcpy(src_to_dst, &srcToDst, 9*sizeof(float));
+    *src_to_dst = skcms_Matrix3x3_concat(&dst->fFromXYZD50, &fToXYZD50);
 }
 
 bool SkColorSpace::isSRGB() const {
@@ -161,30 +150,26 @@ bool SkColorSpace::isSRGB() const {
 
 bool SkColorSpace::gammaCloseToSRGB() const {
     // Nearly-equal transfer functions were snapped at construction time, so just do an exact test
-    return memcmp(fTransferFn, &SkNamedTransferFn::kSRGB.g, 7*sizeof(float)) == 0;
+    return memcmp(&fTransferFn, &SkNamedTransferFn::kSRGB, 7*sizeof(float)) == 0;
 }
 
 bool SkColorSpace::gammaIsLinear() const {
     // Nearly-equal transfer functions were snapped at construction time, so just do an exact test
-    return memcmp(fTransferFn, &SkNamedTransferFn::kLinear.g, 7*sizeof(float)) == 0;
+    return memcmp(&fTransferFn, &SkNamedTransferFn::kLinear, 7*sizeof(float)) == 0;
 }
 
 sk_sp<SkColorSpace> SkColorSpace::makeLinearGamma() const {
     if (this->gammaIsLinear()) {
         return sk_ref_sp(const_cast<SkColorSpace*>(this));
     }
-    skcms_Matrix3x3 gamut;
-    this->toXYZD50(&gamut);
-    return SkColorSpace::MakeRGB(SkNamedTransferFn::kLinear, gamut);
+    return SkColorSpace::MakeRGB(SkNamedTransferFn::kLinear, fToXYZD50);
 }
 
 sk_sp<SkColorSpace> SkColorSpace::makeSRGBGamma() const {
     if (this->gammaCloseToSRGB()) {
         return sk_ref_sp(const_cast<SkColorSpace*>(this));
     }
-    skcms_Matrix3x3 gamut;
-    this->toXYZD50(&gamut);
-    return SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, gamut);
+    return SkColorSpace::MakeRGB(SkNamedTransferFn::kSRGB, fToXYZD50);
 }
 
 sk_sp<SkColorSpace> SkColorSpace::makeColorSpin() const {
@@ -194,24 +179,15 @@ sk_sp<SkColorSpace> SkColorSpace::makeColorSpin() const {
         { 0, 1, 0 },
     }};
 
-    skcms_Matrix3x3 toXYZ;
-    this->toXYZD50(&toXYZ);
-
-    skcms_Matrix3x3 spun = skcms_Matrix3x3_concat(&toXYZ, &spin);
+    skcms_Matrix3x3 spun = skcms_Matrix3x3_concat(&fToXYZD50, &spin);
 
     return sk_sp<SkColorSpace>(new SkColorSpace(fTransferFn, spun));
 }
 
 void SkColorSpace::toProfile(skcms_ICCProfile* profile) const {
-    skcms_TransferFunction tf;
-    skcms_Matrix3x3        toXYZD50;
-
-    memcpy(&tf,       fTransferFn,   7*sizeof(float));
-    memcpy(&toXYZD50, fToXYZD50_3x3, 9*sizeof(float));
-
     skcms_Init               (profile);
-    skcms_SetTransferFunction(profile, &tf);
-    skcms_SetXYZD50          (profile, &toXYZD50);
+    skcms_SetTransferFunction(profile, &fTransferFn);
+    skcms_SetXYZD50          (profile, &fToXYZD50);
 }
 
 sk_sp<SkColorSpace> SkColorSpace::Make(const skcms_ICCProfile& profile) {
@@ -272,9 +248,9 @@ enum NamedGamma {
 
 struct ColorSpaceHeader {
     // Flag values, only used by old (k0_Version) serialization
-    static constexpr uint8_t kMatrix_Flag     = 1 << 0;
-    static constexpr uint8_t kICC_Flag        = 1 << 1;
-    static constexpr uint8_t kTransferFn_Flag = 1 << 3;
+    inline static constexpr uint8_t kMatrix_Flag     = 1 << 0;
+    inline static constexpr uint8_t kICC_Flag        = 1 << 1;
+    inline static constexpr uint8_t kTransferFn_Flag = 1 << 3;
 
     uint8_t fVersion = kCurrent_Version;
 
@@ -289,10 +265,10 @@ size_t SkColorSpace::writeToMemory(void* memory) const {
         *((ColorSpaceHeader*) memory) = ColorSpaceHeader();
         memory = SkTAddOffset<void>(memory, sizeof(ColorSpaceHeader));
 
-        memcpy(memory, fTransferFn, 7 * sizeof(float));
+        memcpy(memory, &fTransferFn, 7 * sizeof(float));
         memory = SkTAddOffset<void>(memory, 7 * sizeof(float));
 
-        memcpy(memory, fToXYZD50_3x3, 9 * sizeof(float));
+        memcpy(memory, &fToXYZD50, 9 * sizeof(float));
     }
 
     return sizeof(ColorSpaceHeader) + 16 * sizeof(float);
@@ -407,12 +383,28 @@ bool SkColorSpace::Equals(const SkColorSpace* x, const SkColorSpace* y) {
     }
 
     if (x->hash() == y->hash()) {
+    #if defined(SK_DEBUG)
+        // Do these floats function equivalently?
+        // This returns true more often than simple float comparison   (NaN vs. NaN) and,
+        // also returns true more often than simple bitwise comparison (+0 vs. -0) and,
+        // even returns true more often than those two OR'd together   (two different NaNs).
+        auto equiv = [](float X, float Y) {
+            return (X==Y)
+                || (sk_float_isnan(X) && sk_float_isnan(Y));
+        };
+
         for (int i = 0; i < 7; i++) {
-            SkASSERT(x->  fTransferFn[i] == y->  fTransferFn[i] && "Hash collsion");
+            float X = (&x->fTransferFn.g)[i],
+                  Y = (&y->fTransferFn.g)[i];
+            SkASSERTF(equiv(X,Y), "Hash collision at tf[%d], !equiv(%g,%g)\n", i, X,Y);
         }
-        for (int i = 0; i < 9; i++) {
-            SkASSERT(x->fToXYZD50_3x3[i] == y->fToXYZD50_3x3[i] && "Hash collsion");
+        for (int r = 0; r < 3; r++)
+        for (int c = 0; c < 3; c++) {
+            float X = x->fToXYZD50.vals[r][c],
+                  Y = y->fToXYZD50.vals[r][c];
+            SkASSERTF(equiv(X,Y), "Hash collision at toXYZD50[%d][%d], !equiv(%g,%g)\n", r,c, X,Y);
         }
+    #endif
         return true;
     }
     return false;

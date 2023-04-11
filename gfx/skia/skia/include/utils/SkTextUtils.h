@@ -8,11 +8,16 @@
 #ifndef SkTextUtils_DEFINED
 #define SkTextUtils_DEFINED
 
-#include "include/core/SkCanvas.h"
-#include "include/core/SkFont.h"
-#include "include/core/SkPaint.h"
-#include "include/core/SkString.h"
+#include "include/core/SkFontTypes.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkTypes.h"
 
+#include <cstddef>
+#include <string>
+
+class SkCanvas;
+class SkFont;
+class SkPaint;
 class SkPath;
 
 class SK_API SkTextUtils {

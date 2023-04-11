@@ -13,6 +13,23 @@
 #include "src/core/SkRecordDraw.h"
 #include "src/core/SkRecordedDrawable.h"
 
+#if defined(SK_GANESH)
+#include "include/private/chromium/Slug.h"
+#endif
+
+size_t SkRecordedDrawable::onApproximateBytesUsed() {
+    size_t drawablesSize = 0;
+    if (fDrawableList) {
+        for (auto&& drawable : *fDrawableList) {
+            drawablesSize += drawable->approximateBytesUsed();
+        }
+    }
+    return sizeof(*this) +
+           (fRecord ? fRecord->bytesUsed() : 0) +
+           (fBBH ? fBBH->bytesUsed() : 0) +
+           drawablesSize;
+}
+
 void SkRecordedDrawable::onDraw(SkCanvas* canvas) {
     SkDrawable* const* drawables = nullptr;
     int drawableCount = 0;
@@ -24,21 +41,17 @@ void SkRecordedDrawable::onDraw(SkCanvas* canvas) {
 }
 
 SkPicture* SkRecordedDrawable::onNewPictureSnapshot() {
-    SkBigPicture::SnapshotArray* pictList = nullptr;
-    if (fDrawableList) {
-        // TODO: should we plumb-down the BBHFactory and recordFlags from our host
-        //       PictureRecorder?
-        pictList = fDrawableList->newDrawableSnapshot();
-    }
+    // TODO: should we plumb-down the BBHFactory and recordFlags from our host
+    //       PictureRecorder?
+    std::unique_ptr<SkBigPicture::SnapshotArray> pictList{
+        fDrawableList ? fDrawableList->newDrawableSnapshot() : nullptr
+    };
 
     size_t subPictureBytes = 0;
     for (int i = 0; pictList && i < pictList->count(); i++) {
         subPictureBytes += pictList->begin()[i]->approximateBytesUsed();
     }
-    // SkBigPicture will take ownership of a ref on both fRecord and fBBH.
-    // We're not willing to give up our ownership, so we must ref them for SkPicture.
-    return new SkBigPicture(fBounds, SkRef(fRecord.get()), pictList, SkSafeRef(fBBH.get()),
-                            subPictureBytes);
+    return new SkBigPicture(fBounds, fRecord, std::move(pictList), fBBH, subPictureBytes);
 }
 
 void SkRecordedDrawable::flatten(SkWriteBuffer& buffer) const {
@@ -58,9 +71,10 @@ void SkRecordedDrawable::flatten(SkWriteBuffer& buffer) const {
     }
 
     // Record the draw commands.
+    SkDrawable* const* drawables = fDrawableList ? fDrawableList->begin() : nullptr;
+    int drawableCount            = fDrawableList ? fDrawableList->count() : 0;
     pictureRecord.beginRecording();
-    SkRecordDraw(*fRecord, &pictureRecord, nullptr, fDrawableList->begin(), fDrawableList->count(),
-                bbh, nullptr);
+    SkRecordDraw(*fRecord, &pictureRecord, nullptr, drawables, drawableCount, bbh, nullptr);
     pictureRecord.endRecording();
 
     // Flatten the recorded commands and drawables.

@@ -8,24 +8,17 @@
 #include "include/android/SkAnimatedImage.h"
 #include "include/codec/SkAndroidCodec.h"
 #include "include/codec/SkCodec.h"
+#include "include/codec/SkEncodedImageFormat.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkPicture.h"
 #include "include/core/SkPictureRecorder.h"
 #include "include/core/SkPixelRef.h"
 #include "src/codec/SkCodecPriv.h"
+#include "src/codec/SkPixmapUtils.h"
 #include "src/core/SkImagePriv.h"
 
 #include <limits.h>
 #include <utility>
-
-sk_sp<SkAnimatedImage> SkAnimatedImage::Make(std::unique_ptr<SkAndroidCodec> codec,
-        SkISize scaledSize, SkIRect cropRect, sk_sp<SkPicture> postProcess) {
-    if (!codec) {
-        return nullptr;
-    }
-    auto info = codec->getInfo().makeDimensions(scaledSize);
-    return Make(std::move(codec), info, cropRect, std::move(postProcess));
-}
 
 sk_sp<SkAnimatedImage> SkAnimatedImage::Make(std::unique_ptr<SkAndroidCodec> codec,
         const SkImageInfo& requestedInfo, SkIRect cropRect, sk_sp<SkPicture> postProcess) {
@@ -33,18 +26,12 @@ sk_sp<SkAnimatedImage> SkAnimatedImage::Make(std::unique_ptr<SkAndroidCodec> cod
         return nullptr;
     }
 
-    auto scaledSize = requestedInfo.dimensions();
-    auto decodeInfo = requestedInfo;
-    if (codec->getEncodedFormat() != SkEncodedImageFormat::kWEBP
-            || scaledSize.width()  >= decodeInfo.width()
-            || scaledSize.height() >= decodeInfo.height()) {
-        // Only libwebp can decode to arbitrary smaller sizes.
-        auto dims = codec->getInfo().dimensions();
-        decodeInfo = decodeInfo.makeDimensions(dims);
+    if (!requestedInfo.bounds().contains(cropRect)) {
+        return nullptr;
     }
 
-    auto image = sk_sp<SkAnimatedImage>(new SkAnimatedImage(std::move(codec), scaledSize,
-                decodeInfo, cropRect, std::move(postProcess)));
+    auto image = sk_sp<SkAnimatedImage>(new SkAnimatedImage(std::move(codec), requestedInfo,
+                cropRect, std::move(postProcess)));
     if (!image->fDisplayFrame.fBitmap.getPixels()) {
         // tryAllocPixels failed.
         return nullptr;
@@ -58,45 +45,61 @@ sk_sp<SkAnimatedImage> SkAnimatedImage::Make(std::unique_ptr<SkAndroidCodec> cod
         return nullptr;
     }
 
-    const auto decodeInfo = codec->getInfo();
-    const auto scaledSize = decodeInfo.dimensions();
-    const auto cropRect   = SkIRect::MakeSize(scaledSize);
-    auto image = sk_sp<SkAnimatedImage>(new SkAnimatedImage(std::move(codec), scaledSize,
-                decodeInfo, cropRect, nullptr));
-
-    if (!image->fDisplayFrame.fBitmap.getPixels()) {
-        // tryAllocPixels failed.
-        return nullptr;
+    auto decodeInfo = codec->getInfo();
+    const auto origin = codec->codec()->getOrigin();
+    if (SkEncodedOriginSwapsWidthHeight(origin)) {
+        decodeInfo = decodeInfo.makeWH(decodeInfo.height(), decodeInfo.width());
     }
-
-    SkASSERT(image->fSimple);
-    return image;
+    const auto cropRect = SkIRect::MakeSize(decodeInfo.dimensions());
+    return Make(std::move(codec), decodeInfo, cropRect, nullptr);
 }
 
-SkAnimatedImage::SkAnimatedImage(std::unique_ptr<SkAndroidCodec> codec, SkISize scaledSize,
-        SkImageInfo decodeInfo, SkIRect cropRect, sk_sp<SkPicture> postProcess)
+SkAnimatedImage::SkAnimatedImage(std::unique_ptr<SkAndroidCodec> codec,
+        const SkImageInfo& requestedInfo, SkIRect cropRect, sk_sp<SkPicture> postProcess)
     : fCodec(std::move(codec))
-    , fScaledSize(scaledSize)
-    , fDecodeInfo(decodeInfo)
+    , fDecodeInfo(requestedInfo)
     , fCropRect(cropRect)
     , fPostProcess(std::move(postProcess))
     , fFrameCount(fCodec->codec()->getFrameCount())
-    , fSimple(fScaledSize == fDecodeInfo.dimensions() && !fPostProcess
-              && fCropRect == fDecodeInfo.bounds())
+    , fSampleSize(1)
     , fFinished(false)
     , fRepetitionCount(fCodec->codec()->getRepetitionCount())
     , fRepetitionsCompleted(0)
 {
+    auto scaledSize = requestedInfo.dimensions();
+
+    // For simplicity in decoding and compositing frames, decode directly to a size and
+    // orientation that fCodec can do directly, and then use fMatrix to handle crop (along with a
+    // clip), orientation, and scaling outside of fCodec. The matrices are computed individually
+    // and applied in the following order:
+    //      [crop] X [origin] X [scale]
+    const auto origin = fCodec->codec()->getOrigin();
+    if (origin != SkEncodedOrigin::kDefault_SkEncodedOrigin) {
+        // The origin is applied after scaling, so use scaledSize, which is the final scaled size.
+        fMatrix = SkEncodedOriginToMatrix(origin, scaledSize.width(), scaledSize.height());
+
+        if (SkEncodedOriginSwapsWidthHeight(origin)) {
+            // The client asked for sizes post-rotation. Swap back to the pre-rotation sizes to pass
+            // to fCodec and for the scale matrix computation.
+            fDecodeInfo = SkPixmapUtils::SwapWidthHeight(fDecodeInfo);
+            scaledSize = { scaledSize.height(), scaledSize.width() };
+        }
+    }
+
+    auto decodeSize = scaledSize;
+    fSampleSize = fCodec->computeSampleSize(&decodeSize);
+    fDecodeInfo = fDecodeInfo.makeDimensions(decodeSize);
+
     if (!fDecodingFrame.fBitmap.tryAllocPixels(fDecodeInfo)) {
         return;
     }
 
-    if (!fSimple) {
-        fMatrix = SkMatrix::MakeTrans(-fCropRect.fLeft, -fCropRect.fTop);
-        float scaleX = (float) fScaledSize.width()  / fDecodeInfo.width();
-        float scaleY = (float) fScaledSize.height() / fDecodeInfo.height();
-        fMatrix.preConcat(SkMatrix::MakeScale(scaleX, scaleY));
+    if (scaledSize != fDecodeInfo.dimensions()) {
+        float scaleX = (float) scaledSize.width()  / fDecodeInfo.width();
+        float scaleY = (float) scaledSize.height() / fDecodeInfo.height();
+        fMatrix.preConcat(SkMatrix::Scale(scaleX, scaleY));
     }
+    fMatrix.postConcat(SkMatrix::Translate(-fCropRect.fLeft, -fCropRect.fTop));
     this->decodeNextFrame();
 }
 
@@ -242,7 +245,8 @@ int SkAnimatedImage::decodeNextFrame() {
     // for frame |i+1|.
     // We could be even smarter about which frames to save by looking at the
     // entire dependency chain.
-    SkCodec::Options options;
+    SkAndroidCodec::AndroidOptions options;
+    options.fSampleSize = fSampleSize;
     options.fFrameIndex = frameToDecode;
     if (frameInfo.fRequiredFrame == SkCodec::kNoFrame) {
         if (is_restore_previous(frameInfo.fDisposalMethod)) {
@@ -297,10 +301,11 @@ int SkAnimatedImage::decodeNextFrame() {
         return this->finish();
     }
 
-    auto result = fCodec->codec()->getPixels(dst->info(), dst->getPixels(), dst->rowBytes(),
-                                             &options);
+    auto result = fCodec->getAndroidPixels(dst->info(), dst->getPixels(), dst->rowBytes(),
+                                           &options);
     if (result != SkCodec::kSuccess) {
-        SkCodecPrintf("error %i, frame %i of %i\n", result, frameToDecode, fFrameCount);
+        SkCodecPrintf("%s, frame %i of %i\n", SkCodec::ResultToString(result),
+                      frameToDecode, fFrameCount);
         return this->finish();
     }
 
@@ -329,10 +334,9 @@ int SkAnimatedImage::decodeNextFrame() {
 }
 
 void SkAnimatedImage::onDraw(SkCanvas* canvas) {
-    auto image = SkMakeImageFromRasterBitmap(fDisplayFrame.fBitmap,
-                                             kNever_SkCopyPixelsMode);
+    auto image = this->getCurrentFrameSimple();
 
-    if (fSimple) {
+    if (this->simple()) {
         canvas->drawImage(image, 0, 0);
         return;
     }
@@ -341,12 +345,11 @@ void SkAnimatedImage::onDraw(SkCanvas* canvas) {
     if (fPostProcess) {
         canvas->saveLayer(&bounds, nullptr);
     }
+    canvas->clipRect(bounds);
     {
         SkAutoCanvasRestore acr(canvas, fPostProcess != nullptr);
         canvas->concat(fMatrix);
-        SkPaint paint;
-        paint.setFilterQuality(kLow_SkFilterQuality);
-        canvas->drawImage(image, 0, 0, &paint);
+        canvas->drawImage(image, 0, 0, SkSamplingOptions(SkFilterMode::kLinear), nullptr);
     }
     if (fPostProcess) {
         canvas->drawPicture(fPostProcess);
@@ -356,4 +359,31 @@ void SkAnimatedImage::onDraw(SkCanvas* canvas) {
 
 void SkAnimatedImage::setRepetitionCount(int newCount) {
     fRepetitionCount = newCount;
+}
+
+sk_sp<SkImage> SkAnimatedImage::getCurrentFrameSimple() {
+    // This SkBitmap may be reused later to decode the following frame. But Frame::init
+    // lazily copies the pixel ref if it has any other references. So it is safe to not
+    // do a deep copy here.
+    return SkMakeImageFromRasterBitmap(fDisplayFrame.fBitmap,
+                                       kNever_SkCopyPixelsMode);
+}
+
+sk_sp<SkImage> SkAnimatedImage::getCurrentFrame() {
+    if (this->simple()) return this->getCurrentFrameSimple();
+
+    auto imageInfo = fDisplayFrame.fBitmap.info().makeDimensions(fCropRect.size());
+    if (fPostProcess) {
+        // Defensively use premul in case the post process adds alpha.
+        imageInfo = imageInfo.makeAlphaType(kPremul_SkAlphaType);
+    }
+
+    SkBitmap dst;
+    if (!dst.tryAllocPixels(imageInfo)) {
+        return nullptr;
+    }
+
+    SkCanvas canvas(dst);
+    this->draw(&canvas);
+    return SkMakeImageFromRasterBitmap(dst, kNever_SkCopyPixelsMode);
 }

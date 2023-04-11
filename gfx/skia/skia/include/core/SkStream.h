@@ -11,15 +11,16 @@
 #include "include/core/SkData.h"
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkScalar.h"
-#include "include/private/SkTo.h"
+#include "include/core/SkTypes.h"
+#include "include/private/base/SkCPUTypes.h"
+#include "include/private/base/SkTo.h"
 
-#include <memory.h>
-
-class SkStream;
-class SkStreamRewindable;
-class SkStreamSeekable;
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
+#include <memory>
+#include <utility>
 class SkStreamAsset;
-class SkStreamMemory;
 
 /**
  *  SkStream -- abstraction for a source of bytes. Subclasses can be backed by
@@ -122,7 +123,7 @@ public:
     }
 
 //SkStreamSeekable
-    /** Returns true if this stream can report it's current position. */
+    /** Returns true if this stream can report its current position. */
     virtual bool hasPosition() const { return false; }
     /** Returns the current position in the stream. If this cannot be done, returns 0. */
     virtual size_t getPosition() const { return 0; }
@@ -140,7 +141,7 @@ public:
     virtual bool move(long /*offset*/) { return false; }
 
 //SkStreamAsset
-    /** Returns true if this stream can report it's total length. */
+    /** Returns true if this stream can report its total length. */
     virtual bool hasLength() const { return false; }
     /** Returns the total length of the stream. If this cannot be done, returns 0. */
     virtual size_t getLength() const { return 0; }
@@ -255,10 +256,10 @@ public:
 
     bool writeText(const char text[]) {
         SkASSERT(text);
-        return this->write(text, strlen(text));
+        return this->write(text, std::strlen(text));
     }
 
-    bool newline() { return this->write("\n", strlen("\n")); }
+    bool newline() { return this->write("\n", std::strlen("\n")); }
 
     bool writeDecAsText(int32_t);
     bool writeBigDecAsText(int64_t, int minDigits = 0);
@@ -296,8 +297,6 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-#include <stdio.h>
-
 /** A stream that wraps a C FILE* file stream. */
 class SK_API SkFILEStream : public SkStreamAsset {
 public:
@@ -308,10 +307,17 @@ public:
 
     /** Initialize the stream with an existing C FILE stream.
      *  The current position of the C FILE stream will be considered the
-     *  beginning of the SkFILEStream.
+     *  beginning of the SkFILEStream and the current seek end of the FILE will be the end.
      *  The C FILE stream will be closed in the destructor.
      */
     explicit SkFILEStream(FILE* file);
+
+    /** Initialize the stream with an existing C FILE stream.
+     *  The current position of the C FILE stream will be considered the
+     *  beginning of the SkFILEStream and size bytes later will be the end.
+     *  The C FILE stream will be closed in the destructor.
+     */
+    explicit SkFILEStream(FILE* file, size_t size);
 
     ~SkFILEStream() override;
 
@@ -345,19 +351,21 @@ public:
     size_t getLength() const override;
 
 private:
-    explicit SkFILEStream(std::shared_ptr<FILE>, size_t size, size_t offset);
-    explicit SkFILEStream(std::shared_ptr<FILE>, size_t size, size_t offset, size_t originalOffset);
+    explicit SkFILEStream(FILE*, size_t size, size_t start);
+    explicit SkFILEStream(std::shared_ptr<FILE>, size_t end, size_t start);
+    explicit SkFILEStream(std::shared_ptr<FILE>, size_t end, size_t start, size_t current);
 
     SkStreamAsset* onDuplicate() const override;
     SkStreamAsset* onFork() const override;
 
     std::shared_ptr<FILE> fFILE;
     // My own council will I keep on sizes and offsets.
-    size_t fSize;
-    size_t fOffset;
-    size_t fOriginalOffset;
+    // These are seek positions in the underling FILE, not offsets into the stream.
+    size_t fEnd;
+    size_t fStart;
+    size_t fCurrent;
 
-    typedef SkStreamAsset INHERITED;
+    using INHERITED = SkStreamAsset;
 };
 
 class SK_API SkMemoryStream : public SkStreamMemory {
@@ -430,7 +438,7 @@ private:
     sk_sp<SkData>   fData;
     size_t          fOffset;
 
-    typedef SkStreamMemory INHERITED;
+    using INHERITED = SkStreamMemory;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -452,7 +460,7 @@ public:
 private:
     FILE* fFILE;
 
-    typedef SkWStream INHERITED;
+    using INHERITED = SkWStream;
 };
 
 class SK_API SkDynamicMemoryWStream : public SkWStream {
@@ -509,7 +517,7 @@ private:
     friend class SkBlockMemoryStream;
     friend class SkBlockMemoryRefCnt;
 
-    typedef SkWStream INHERITED;
+    using INHERITED = SkWStream;
 };
 
 #endif

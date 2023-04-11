@@ -7,14 +7,16 @@
 
 #include "include/core/SkRegion.h"
 
-#include "include/private/SkMacros.h"
-#include "include/private/SkTemplates.h"
-#include "include/private/SkTo.h"
+#include "include/private/base/SkMacros.h"
+#include "include/private/base/SkTemplates.h"
+#include "include/private/base/SkTo.h"
+#include "src/base/SkSafeMath.h"
 #include "src/core/SkRegionPriv.h"
-#include "src/core/SkSafeMath.h"
-#include "src/utils/SkUTF.h"
 
+#include <algorithm>
 #include <utility>
+
+using namespace skia_private;
 
 /* Region Layout
  *
@@ -65,7 +67,7 @@ public:
     }
 private:
     SkRegionPriv::RunType fStack[kRunArrayStackCount];
-    SkAutoTMalloc<SkRegionPriv::RunType> fMalloc;
+    AutoTMalloc<SkRegionPriv::RunType> fMalloc;
     int fCount = kRunArrayStackCount;
     SkRegionPriv::RunType* fPtr;  // non-owning pointer
 };
@@ -897,7 +899,7 @@ static int operate(const SkRegionPriv::RunType a_runs[],
                    SkRegion::Op op,
                    bool quickExit) {
     const SkRegionPriv::RunType gEmptyScanline[] = {
-        0,  // dummy bottom value
+        0,  // fake bottom value
         0,  // zero intervals
         SkRegion_kRunTypeSentinel,
         // just need a 2nd value, since spanRec.init() reads 2 values, even
@@ -924,7 +926,7 @@ static int operate(const SkRegionPriv::RunType a_runs[],
     assert_sentinel(b_top, false);
     assert_sentinel(b_bot, false);
 
-    RgnOper oper(SkMin32(a_top, b_top), dst, op);
+    RgnOper oper(std::min(a_top, b_top), dst, op);
 
     int prevBot = SkRegion_kRunTypeSentinel; // so we fail the first test
 
@@ -1139,7 +1141,7 @@ bool SkRegion::op(const SkRegion& rgna, const SkRegion& rgnb, Op op) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "src/core/SkBuffer.h"
+#include "src/base/SkBuffer.h"
 
 size_t SkRegion::writeToMemory(void* storage) const {
     if (nullptr == storage) {
@@ -1203,7 +1205,7 @@ static bool validate_run(const int32_t* runs,
         return false;
     }
     SkASSERT(runCount >= 7);  // 7==SkRegion::kRectRegionRuns
-    // quick sanity check:
+    // quick safety check:
     if (runs[runCount - 1] != SkRegion_kRunTypeSentinel ||
         runs[runCount - 2] != SkRegion_kRunTypeSentinel) {
         return false;
@@ -1528,10 +1530,10 @@ bool SkRegion::Spanerator::next(int* left, int* right) {
     SkASSERT(runs[1] > fLeft);
 
     if (left) {
-        *left = SkMax32(fLeft, runs[0]);
+        *left = std::max(fLeft, runs[0]);
     }
     if (right) {
-        *right = SkMin32(fRight, runs[1]);
+        *right = std::min(fRight, runs[1]);
     }
     fRuns = runs + 2;
     return true;

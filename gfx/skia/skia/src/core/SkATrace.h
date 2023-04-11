@@ -44,7 +44,13 @@ public:
         return category;
     }
 
+    // Atrace does not yet support splitting up trace output into sections.
+    void newTracingSection(const char* name) override {}
+
 private:
+    SkATrace(const SkATrace&) = delete;
+    SkATrace& operator=(const SkATrace&) = delete;
+
     void (*fBeginSection)(const char*);
     void (*fEndSection)(void);
     bool (*fIsEnabled)(void);

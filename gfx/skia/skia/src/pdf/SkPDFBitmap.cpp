@@ -7,13 +7,15 @@
 
 #include "src/pdf/SkPDFBitmap.h"
 
+#include "include/codec/SkEncodedImageFormat.h"
+#include "include/core/SkBitmap.h"
 #include "include/core/SkData.h"
 #include "include/core/SkExecutor.h"
 #include "include/core/SkImage.h"
 #include "include/core/SkStream.h"
 #include "include/private/SkColorData.h"
-#include "include/private/SkImageInfoPriv.h"
-#include "include/private/SkTo.h"
+#include "include/private/base/SkTo.h"
+#include "src/core/SkImageInfoPriv.h"
 #include "src/pdf/SkDeflate.h"
 #include "src/pdf/SkJpegInfo.h"
 #include "src/pdf/SkPDFDocumentPriv.h"
@@ -45,10 +47,10 @@ static SkColor get_neighbor_avg_color(const SkPixmap& bm, int xOrig, int yOrig) 
     SkASSERT(kBGRA_8888_SkColorType == bm.colorType());
     unsigned r = 0, g = 0, b = 0, n = 0;
     // Clamp the range to the edge of the bitmap.
-    int ymin = SkTMax(0, yOrig - 1);
-    int ymax = SkTMin(yOrig + 1, bm.height() - 1);
-    int xmin = SkTMax(0, xOrig - 1);
-    int xmax = SkTMin(xOrig + 1, bm.width() - 1);
+    int ymin = std::max(0, yOrig - 1);
+    int ymax = std::min(yOrig + 1, bm.height() - 1);
+    int xmin = std::max(0, xOrig - 1);
+    int xmax = std::min(xOrig + 1, bm.width() - 1);
     for (int y = ymin; y <= ymax; ++y) {
         const SkColor* scanline = bm.addr32(0, y);
         for (int x = xmin; x <= xmax; ++x) {
@@ -65,6 +67,10 @@ static SkColor get_neighbor_avg_color(const SkPixmap& bm, int xOrig, int yOrig) 
                  : SK_ColorTRANSPARENT;
 }
 
+namespace {
+enum class SkPDFStreamFormat { DCT, Flate, Uncompressed };
+}
+
 template <typename T>
 static void emit_image_stream(SkPDFDocument* doc,
                               SkPDFIndirectReference ref,
@@ -73,7 +79,7 @@ static void emit_image_stream(SkPDFDocument* doc,
                               const char* colorSpace,
                               SkPDFIndirectReference sMask,
                               int length,
-                              bool isJpeg) {
+                              SkPDFStreamFormat format) {
     SkPDFDict pdfDict("XObject");
     pdfDict.insertName("Subtype", "Image");
     pdfDict.insertInt("Width", size.width());
@@ -86,12 +92,20 @@ static void emit_image_stream(SkPDFDocument* doc,
     #ifdef SK_PDF_BASE85_BINARY
     auto filters = SkPDFMakeArray();
     filters->appendName("ASCII85Decode");
-    filters->appendName(isJpeg ? "DCTDecode" : "FlateDecode");
+    switch (format) {
+        case SkPDFStreamFormat::DCT: filters->appendName("DCTDecode"); break;
+        case SkPDFStreamFormat::Flate: filters->appendName("FlateDecode"); break;
+        case SkPDFStreamFormat::Uncompressed: break;
+    }
     pdfDict.insertObject("Filter", std::move(filters));
     #else
-    pdfDict.insertName("Filter", isJpeg ? "DCTDecode" : "FlateDecode");
+    switch (format) {
+        case SkPDFStreamFormat::DCT: pdfDict.insertName("Filter", "DCTDecode"); break;
+        case SkPDFStreamFormat::Flate: pdfDict.insertName("Filter", "FlateDecode"); break;
+        case SkPDFStreamFormat::Uncompressed: break;
+    }
     #endif
-    if (isJpeg) {
+    if (format == SkPDFStreamFormat::DCT) {
         pdfDict.insertInt("ColorTransform", 0);
     }
     pdfDict.insertInt("Length", length);
@@ -99,11 +113,20 @@ static void emit_image_stream(SkPDFDocument* doc,
 }
 
 static void do_deflated_alpha(const SkPixmap& pm, SkPDFDocument* doc, SkPDFIndirectReference ref) {
+    SkPDF::Metadata::CompressionLevel compressionLevel = doc->metadata().fCompressionLevel;
+    SkPDFStreamFormat format = compressionLevel == SkPDF::Metadata::CompressionLevel::None
+                             ? SkPDFStreamFormat::Uncompressed
+                             : SkPDFStreamFormat::Flate;
     SkDynamicMemoryWStream buffer;
-    SkDeflateWStream deflateWStream(&buffer);
+    SkWStream* stream = &buffer;
+    std::optional<SkDeflateWStream> deflateWStream;
+    if (format == SkPDFStreamFormat::Flate) {
+        deflateWStream.emplace(&buffer, SkToInt(compressionLevel));
+        stream = &*deflateWStream;
+    }
     if (kAlpha_8_SkColorType == pm.colorType()) {
         SkASSERT(pm.rowBytes() == (size_t)pm.width());
-        buffer.write(pm.addr8(), pm.width() * pm.height());
+        stream->write(pm.addr8(), pm.width() * pm.height());
     } else {
         SkASSERT(pm.alphaType() == kUnpremul_SkAlphaType);
         SkASSERT(pm.colorType() == kBGRA_8888_SkColorType);
@@ -112,18 +135,20 @@ static void do_deflated_alpha(const SkPixmap& pm, SkPDFDocument* doc, SkPDFIndir
         const uint32_t* stop = ptr + pm.height() * pm.width();
 
         uint8_t byteBuffer[4092];
-        uint8_t* bufferStop = byteBuffer + SK_ARRAY_COUNT(byteBuffer);
+        uint8_t* bufferStop = byteBuffer + std::size(byteBuffer);
         uint8_t* dst = byteBuffer;
         while (ptr != stop) {
             *dst++ = 0xFF & ((*ptr++) >> SK_BGRA_A32_SHIFT);
             if (dst == bufferStop) {
-                deflateWStream.write(byteBuffer, sizeof(byteBuffer));
+                stream->write(byteBuffer, sizeof(byteBuffer));
                 dst = byteBuffer;
             }
         }
-        deflateWStream.write(byteBuffer, dst - byteBuffer);
+        stream->write(byteBuffer, dst - byteBuffer);
     }
-    deflateWStream.finalize();
+    if (deflateWStream) {
+        deflateWStream->finalize();
+    }
 
     #ifdef SK_PDF_BASE85_BINARY
     SkPDFUtils::Base85Encode(buffer.detachAsStream(), &buffer);
@@ -131,7 +156,7 @@ static void do_deflated_alpha(const SkPixmap& pm, SkPDFDocument* doc, SkPDFIndir
     int length = SkToInt(buffer.bytesWritten());
     emit_image_stream(doc, ref, [&buffer](SkWStream* stream) { buffer.writeToAndReset(stream); },
                       pm.info().dimensions(), "DeviceGray", SkPDFIndirectReference(),
-                      length, false);
+                      length, format);
 }
 
 static void do_deflated_image(const SkPixmap& pm,
@@ -142,17 +167,26 @@ static void do_deflated_image(const SkPixmap& pm,
     if (!isOpaque) {
         sMask = doc->reserveRef();
     }
+    SkPDF::Metadata::CompressionLevel compressionLevel = doc->metadata().fCompressionLevel;
+    SkPDFStreamFormat format = compressionLevel == SkPDF::Metadata::CompressionLevel::None
+                             ? SkPDFStreamFormat::Uncompressed
+                             : SkPDFStreamFormat::Flate;
     SkDynamicMemoryWStream buffer;
-    SkDeflateWStream deflateWStream(&buffer);
+    SkWStream* stream = &buffer;
+    std::optional<SkDeflateWStream> deflateWStream;
+    if (format == SkPDFStreamFormat::Flate) {
+        deflateWStream.emplace(&buffer, SkToInt(compressionLevel));
+        stream = &*deflateWStream;
+    }
     const char* colorSpace = "DeviceGray";
     switch (pm.colorType()) {
         case kAlpha_8_SkColorType:
-            fill_stream(&deflateWStream, '\x00', pm.width() * pm.height());
+            fill_stream(stream, '\x00', pm.width() * pm.height());
             break;
         case kGray_8_SkColorType:
             SkASSERT(sMask.fValue = -1);
             SkASSERT(pm.rowBytes() == (size_t)pm.width());
-            deflateWStream.write(pm.addr8(), pm.width() * pm.height());
+            stream->write(pm.addr8(), pm.width() * pm.height());
             break;
         default:
             colorSpace = "DeviceRGB";
@@ -160,8 +194,8 @@ static void do_deflated_image(const SkPixmap& pm,
             SkASSERT(pm.colorType() == kBGRA_8888_SkColorType);
             SkASSERT(pm.rowBytes() == (size_t)pm.width() * 4);
             uint8_t byteBuffer[3072];
-            static_assert(SK_ARRAY_COUNT(byteBuffer) % 3 == 0, "");
-            uint8_t* bufferStop = byteBuffer + SK_ARRAY_COUNT(byteBuffer);
+            static_assert(std::size(byteBuffer) % 3 == 0, "");
+            uint8_t* bufferStop = byteBuffer + std::size(byteBuffer);
             uint8_t* dst = byteBuffer;
             for (int y = 0; y < pm.height(); ++y) {
                 const SkColor* src = pm.addr32(0, y);
@@ -174,20 +208,22 @@ static void do_deflated_image(const SkPixmap& pm,
                     *dst++ = SkColorGetG(color);
                     *dst++ = SkColorGetB(color);
                     if (dst == bufferStop) {
-                        deflateWStream.write(byteBuffer, sizeof(byteBuffer));
+                        stream->write(byteBuffer, sizeof(byteBuffer));
                         dst = byteBuffer;
                     }
                 }
             }
-            deflateWStream.write(byteBuffer, dst - byteBuffer);
+            stream->write(byteBuffer, dst - byteBuffer);
     }
-    deflateWStream.finalize();
+    if (deflateWStream) {
+        deflateWStream->finalize();
+    }
     #ifdef SK_PDF_BASE85_BINARY
     SkPDFUtils::Base85Encode(buffer.detachAsStream(), &buffer);
     #endif
     int length = SkToInt(buffer.bytesWritten());
     emit_image_stream(doc, ref, [&buffer](SkWStream* stream) { buffer.writeToAndReset(stream); },
-                      pm.info().dimensions(), colorSpace, sMask, length, false);
+                      pm.info().dimensions(), colorSpace, sMask, length, format);
     if (!isOpaque) {
         do_deflated_alpha(pm, doc, sMask);
     }
@@ -204,7 +240,7 @@ static bool do_jpeg(sk_sp<SkData> data, SkPDFDocument* doc, SkISize size,
     }
     bool yuv = jpegColorType == SkEncodedInfo::kYUV_Color;
     bool goodColorType = yuv || jpegColorType == SkEncodedInfo::kGray_Color;
-    if (jpegSize != size  // Sanity check.
+    if (jpegSize != size  // Safety check.
             || !goodColorType
             || kTopLeft_SkEncodedOrigin != exifOrientation) {
         return false;
@@ -218,7 +254,7 @@ static bool do_jpeg(sk_sp<SkData> data, SkPDFDocument* doc, SkISize size,
     emit_image_stream(doc, ref,
                       [&data](SkWStream* dst) { dst->write(data->data(), data->size()); },
                       jpegSize, yuv ? "DeviceRGB" : "DeviceGray",
-                      SkPDFIndirectReference(), SkToInt(data->size()), true);
+                      SkPDFIndirectReference(), SkToInt(data->size()), SkPDFStreamFormat::DCT);
     return true;
 }
 
@@ -239,7 +275,8 @@ static SkBitmap to_pixels(const SkImage* image) {
             bm.allocPixels(SkImageInfo::Make(w, h, kBGRA_8888_SkColorType, at));
         }
     }
-    if (!image->readPixels(bm.pixmap(), 0, 0)) {
+    // TODO: support GPU images in PDFs
+    if (!image->readPixels(nullptr, bm.pixmap(), 0, 0)) {
         bm.eraseColor(SkColorSetARGB(0xFF, 0, 0, 0));
     }
     return bm;
@@ -253,17 +290,19 @@ void serialize_image(const SkImage* img,
     SkASSERT(doc);
     SkASSERT(encodingQuality >= 0);
     SkISize dimensions = img->dimensions();
-    sk_sp<SkData> data = img->refEncodedData();
-    if (data && do_jpeg(std::move(data), doc, dimensions, ref)) {
-        return;
+    if (sk_sp<SkData> data = img->refEncodedData()) {
+        if (do_jpeg(std::move(data), doc, dimensions, ref)) {
+            return;
+        }
     }
     SkBitmap bm = to_pixels(img);
-    SkPixmap pm = bm.pixmap();
+    const SkPixmap& pm = bm.pixmap();
     bool isOpaque = pm.isOpaque() || pm.computeIsOpaque();
     if (encodingQuality <= 100 && isOpaque) {
-        sk_sp<SkData> data = img->encodeToData(SkEncodedImageFormat::kJPEG, encodingQuality);
-        if (data && do_jpeg(std::move(data), doc, dimensions, ref)) {
-            return;
+        if (sk_sp<SkData> data = img->encodeToData(SkEncodedImageFormat::kJPEG, encodingQuality)) {
+            if (do_jpeg(std::move(data), doc, dimensions, ref)) {
+                return;
+            }
         }
     }
     do_deflated_image(pm, doc, isOpaque, ref);

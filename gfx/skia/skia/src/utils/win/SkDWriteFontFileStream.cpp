@@ -8,13 +8,15 @@
 #if defined(SK_BUILD_FOR_WIN)
 
 #include "include/core/SkTypes.h"
-#include "include/private/SkTFitsIn.h"
-#include "include/private/SkTemplates.h"
+#include "include/private/base/SkTFitsIn.h"
+#include "include/private/base/SkTemplates.h"
 #include "src/utils/win/SkDWriteFontFileStream.h"
 #include "src/utils/win/SkHRESULT.h"
 #include "src/utils/win/SkTScopedComPtr.h"
 
 #include <dwrite.h>
+
+using namespace skia_private;
 
 ///////////////////////////////////////////////////////////////////////////////
 //  SkIDWriteFontFileStream
@@ -111,9 +113,8 @@ SkDWriteFontFileStream* SkDWriteFontFileStream::onFork() const {
 }
 
 size_t SkDWriteFontFileStream::getLength() const {
-    HRESULT hr = S_OK;
     UINT64 realFileSize = 0;
-    hr = fFontFileStream->GetFileSize(&realFileSize);
+    fFontFileStream->GetFileSize(&realFileSize);
     if (!SkTFitsIn<size_t>(realFileSize)) {
         return 0;
     }
@@ -206,7 +207,7 @@ SK_STDMETHODIMP SkDWriteFontFileStreamWrapper::ReadFileFragment(
         if (!fStream->seek(static_cast<size_t>(fileOffset))) {
             return E_FAIL;
         }
-        SkAutoTMalloc<uint8_t> streamData(static_cast<size_t>(fragmentSize));
+        AutoTMalloc<uint8_t> streamData(static_cast<size_t>(fragmentSize));
         if (fStream->read(streamData.get(), static_cast<size_t>(fragmentSize)) != fragmentSize) {
             return E_FAIL;
         }

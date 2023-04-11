@@ -7,10 +7,17 @@
 
 #include "src/effects/SkEmbossMask.h"
 
-#include "include/core/SkMath.h"
-#include "include/private/SkFixed.h"
-#include "include/private/SkTo.h"
-#include "src/core/SkMathPriv.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkTypes.h"
+#include "include/private/base/SkFixed.h"
+#include "include/private/base/SkTo.h"
+#include "src/base/SkMathPriv.h"
+#include "src/core/SkMask.h"
+
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
 
 static inline int nonzero_to_one(int x) {
 #if 0
@@ -81,7 +88,7 @@ void SkEmbossMask::Emboss(SkMask* mask, const SkEmbossMaskFilter::Light& light) 
                 int denom = SkSqrt32(nx * nx + ny * ny + kDelta*kDelta);
                 SkFixed dot = numer / denom;
                 dot >>= 8;  // now dot is 2^8 instead of 2^16
-                mul = SkMin32(mul + dot, 255);
+                mul = std::min(mul + dot, 255);
 
                 // now for the reflection
 
@@ -91,7 +98,7 @@ void SkEmbossMask::Emboss(SkMask* mask, const SkEmbossMaskFilter::Light& light) 
                 int hilite = (2 * dot - lz_dot8) * lz_dot8 >> 8;
                 if (hilite > 0) {
                     // pin hilite to 255, since our fast math is also a little sloppy
-                    hilite = SkClampMax(hilite, 255);
+                    hilite = std::min(hilite, 255);
 
                     // specular is 4.4
                     // would really like to compute the fractional part of this

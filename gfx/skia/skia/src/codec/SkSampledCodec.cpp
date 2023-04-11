@@ -5,16 +5,20 @@
  * found in the LICENSE file.
  */
 
-#include "include/codec/SkCodec.h"
-#include "include/core/SkMath.h"
-#include "include/private/SkTemplates.h"
-#include "src/codec/SkCodecPriv.h"
 #include "src/codec/SkSampledCodec.h"
-#include "src/codec/SkSampler.h"
-#include "src/core/SkMathPriv.h"
 
-SkSampledCodec::SkSampledCodec(SkCodec* codec, ExifOrientationBehavior behavior)
-    : INHERITED(codec, behavior)
+#include "include/codec/SkCodec.h"
+#include "include/codec/SkEncodedImageFormat.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkTypes.h"
+#include "include/private/base/SkTemplates.h"
+#include "src/base/SkMathPriv.h"
+#include "src/codec/SkCodecPriv.h"
+#include "src/codec/SkSampler.h"
+
+SkSampledCodec::SkSampledCodec(SkCodec* codec)
+    : INHERITED(codec)
 {}
 
 SkISize SkSampledCodec::accountForNativeScaling(int* sampleSizePtr, int* nativeSampleSize) const {
@@ -73,14 +77,10 @@ SkISize SkSampledCodec::onGetSampledDimensions(int sampleSize) const {
 
 SkCodec::Result SkSampledCodec::onGetAndroidPixels(const SkImageInfo& info, void* pixels,
         size_t rowBytes, const AndroidOptions& options) {
-    // Create an Options struct for the codec.
-    SkCodec::Options codecOptions;
-    codecOptions.fZeroInitialized = options.fZeroInitialized;
-
-    SkIRect* subset = options.fSubset;
+    const SkIRect* subset = options.fSubset;
     if (!subset || subset->size() == this->codec()->dimensions()) {
         if (this->codec()->dimensionsSupported(info.dimensions())) {
-            return this->codec()->getPixels(info, pixels, rowBytes, &codecOptions);
+            return this->codec()->getPixels(info, pixels, rowBytes, &options);
         }
 
         // If the native codec does not support the requested scale, scale by sampling.
@@ -103,15 +103,17 @@ SkCodec::Result SkSampledCodec::onGetAndroidPixels(const SkImageInfo& info, void
 
     const SkImageInfo scaledInfo = info.makeDimensions(scaledSize);
 
+    // Copy so we can use a different fSubset.
+    AndroidOptions subsetOptions = options;
     {
         // Although startScanlineDecode expects the bottom and top to match the
         // SkImageInfo, startIncrementalDecode uses them to determine which rows to
         // decode.
         SkIRect incrementalSubset = SkIRect::MakeXYWH(scaledSubsetX, scaledSubsetY,
                                                       scaledSubsetWidth, scaledSubsetHeight);
-        codecOptions.fSubset = &incrementalSubset;
+        subsetOptions.fSubset = &incrementalSubset;
         const SkCodec::Result startResult = this->codec()->startIncrementalDecode(
-                scaledInfo, pixels, rowBytes, &codecOptions);
+                scaledInfo, pixels, rowBytes, &subsetOptions);
         if (SkCodec::kSuccess == startResult) {
             int rowsDecoded = 0;
             const SkCodec::Result incResult = this->codec()->incrementalDecode(&rowsDecoded);
@@ -128,17 +130,17 @@ SkCodec::Result SkSampledCodec::onGetAndroidPixels(const SkImageInfo& info, void
             return startResult;
         }
         // Otherwise fall down to use the old scanline decoder.
-        // codecOptions.fSubset will be reset below, so it will not continue to
+        // subsetOptions.fSubset will be reset below, so it will not continue to
         // point to the object that is no longer on the stack.
     }
 
     // Start the scanline decode.
     SkIRect scanlineSubset = SkIRect::MakeXYWH(scaledSubsetX, 0, scaledSubsetWidth,
             scaledSize.height());
-    codecOptions.fSubset = &scanlineSubset;
+    subsetOptions.fSubset = &scanlineSubset;
 
     SkCodec::Result result = this->codec()->startScanlineDecode(scaledInfo,
-            &codecOptions);
+            &subsetOptions);
     if (SkCodec::kSuccess != result) {
         return result;
     }
@@ -167,10 +169,6 @@ SkCodec::Result SkSampledCodec::sampledDecode(const SkImageInfo& info, void* pix
     // We should only call this function when sampling.
     SkASSERT(options.fSampleSize > 1);
 
-    // Create options struct for the codec.
-    SkCodec::Options sampledOptions;
-    sampledOptions.fZeroInitialized = options.fZeroInitialized;
-
     // FIXME: This was already called by onGetAndroidPixels. Can we reduce that?
     int sampleSize = options.fSampleSize;
     int nativeSampleSize;
@@ -198,7 +196,6 @@ SkCodec::Result SkSampledCodec::sampledDecode(const SkImageInfo& info, void* pix
 
         // The scanline decoder only needs to be aware of subsetting in the x-dimension.
         subset.setXYWH(subsetX, 0, subsetWidth, nativeSize.height());
-        sampledOptions.fSubset = &subset;
     }
 
     // Since we guarantee that output dimensions are always at least one (even if the sampleSize
@@ -217,13 +214,13 @@ SkCodec::Result SkSampledCodec::sampledDecode(const SkImageInfo& info, void* pix
         // Although startScanlineDecode expects the bottom and top to match the
         // SkImageInfo, startIncrementalDecode uses them to determine which rows to
         // decode.
-        SkCodec::Options incrementalOptions = sampledOptions;
+        AndroidOptions incrementalOptions = options;
         SkIRect incrementalSubset;
-        if (sampledOptions.fSubset) {
-            incrementalSubset.fTop = subsetY;
-            incrementalSubset.fBottom = subsetY + subsetHeight;
-            incrementalSubset.fLeft = sampledOptions.fSubset->fLeft;
-            incrementalSubset.fRight = sampledOptions.fSubset->fRight;
+        if (options.fSubset) {
+            incrementalSubset.fTop     = subsetY;
+            incrementalSubset.fBottom  = subsetY + subsetHeight;
+            incrementalSubset.fLeft    = subset.fLeft;
+            incrementalSubset.fRight   = subset.fRight;
             incrementalOptions.fSubset = &incrementalSubset;
         }
         const SkCodec::Result startResult = this->codec()->startIncrementalDecode(nativeInfo,
@@ -263,6 +260,10 @@ SkCodec::Result SkSampledCodec::sampledDecode(const SkImageInfo& info, void* pix
     }
 
     // Start the scanline decode.
+    AndroidOptions sampledOptions = options;
+    if (options.fSubset) {
+        sampledOptions.fSubset = &subset;
+    }
     SkCodec::Result result = this->codec()->startScanlineDecode(nativeInfo,
             &sampledOptions);
     if (SkCodec::kIncompleteInput == result || SkCodec::kErrorInInput == result) {
@@ -273,7 +274,7 @@ SkCodec::Result SkSampledCodec::sampledDecode(const SkImageInfo& info, void* pix
 
     SkSampler* sampler = this->codec()->getSampler(true);
     if (!sampler) {
-        return SkCodec::kUnimplemented;
+        return SkCodec::kInternalError;
     }
 
     if (sampler->setSampleX(sampleX) != info.width()) {

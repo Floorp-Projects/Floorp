@@ -13,11 +13,12 @@
 #include "include/core/SkMaskFilter.h"
 #include "include/core/SkPaint.h"
 #include "include/core/SkStrokeRec.h"
-#include "include/private/SkNoncopyable.h"
+#include "include/private/base/SkNoncopyable.h"
 #include "src/core/SkMask.h"
 
-#if SK_SUPPORT_GPU
-#include "include/private/GrTypesPriv.h"
+#if defined(SK_GANESH)
+#include "include/private/gpu/ganesh/GrTypesPriv.h"
+#include "src/shaders/SkShaderBase.h"
 #endif
 
 class GrClip;
@@ -26,9 +27,14 @@ class GrFragmentProcessor;
 class GrPaint;
 class GrRecordingContext;
 class GrRenderTarget;
-class GrRenderTargetContext;
+namespace skgpu {
+namespace ganesh {
+class SurfaceDrawContext;
+}
+}  // namespace skgpu
 class GrResourceProvider;
-class GrShape;
+class GrStyledShape;
+class GrSurfaceProxyView;
 class GrTexture;
 class GrTextureProxy;
 
@@ -63,7 +69,7 @@ public:
     virtual bool filterMask(SkMask* dst, const SkMask& src, const SkMatrix&,
                             SkIPoint* margin) const = 0;
 
-#if SK_SUPPORT_GPU
+#if defined(SK_GANESH)
     /**
      *  Returns a processor if the filter can be expressed a single-pass GrProcessor without
      *  requiring an explicit input mask. Per-pixel, the effect receives the incoming mask's
@@ -71,7 +77,8 @@ public:
      *  pixel's filtered coverage must only depend on the unfiltered mask value for that pixel and
      *  not on surrounding values.
      */
-    std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs& args) const;
+    std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs& args,
+                                                             const SkMatrix& ctm) const;
 
     /**
      *  Returns true iff asFragmentProcessor() will return a processor
@@ -102,7 +109,7 @@ public:
      *        filterMaskGPU(devShape, ...)
      * this would hide the RRect special case and the mask generation
      */
-    virtual bool canFilterMaskGPU(const GrShape&,
+    virtual bool canFilterMaskGPU(const GrStyledShape&,
                                   const SkIRect& devSpaceShapeBounds,
                                   const SkIRect& clipBounds,
                                   const SkMatrix& ctm,
@@ -113,11 +120,11 @@ public:
      *  successful. If false is returned then paint is unmodified.
      */
     virtual bool directFilterMaskGPU(GrRecordingContext*,
-                                     GrRenderTargetContext*,
+                                     skgpu::ganesh::SurfaceDrawContext*,
                                      GrPaint&& paint,
-                                     const GrClip&,
+                                     const GrClip*,
                                      const SkMatrix& viewMatrix,
-                                     const GrShape& shape) const;
+                                     const GrStyledShape& shape) const;
 
     /**
      * This function is used to implement filters that require an explicit src mask. It should only
@@ -126,12 +133,12 @@ public:
      * Implementations are free to get the GrContext from the src texture in order to create
      * additional textures and perform multiple passes.
      */
-    virtual sk_sp<GrTextureProxy> filterMaskGPU(GrRecordingContext*,
-                                                sk_sp<GrTextureProxy> srcProxy,
-                                                GrColorType srcColorType,
-                                                SkAlphaType srcAlphaType,
-                                                const SkMatrix& ctm,
-                                                const SkIRect& maskRect) const;
+    virtual GrSurfaceProxyView filterMaskGPU(GrRecordingContext*,
+                                             GrSurfaceProxyView srcView,
+                                             GrColorType srcColorType,
+                                             SkAlphaType srcAlphaType,
+                                             const SkMatrix& ctm,
+                                             const SkIRect& maskRect) const;
 #endif
 
     /**
@@ -140,7 +147,7 @@ public:
      * paint as its src param and the filter adjust those bounds using its
      * current mask and returns the result using the dest param. Callers are
      * allowed to provide the same struct for both src and dest so each
-     * implementation must accomodate that behavior.
+     * implementation must accommodate that behavior.
      *
      *  The default impl calls filterMask with the src mask having no image,
      *  but subclasses may override this if they can compute the rect faster.
@@ -158,11 +165,21 @@ public:
      */
     virtual bool asABlur(BlurRec*) const;
 
+    static SkFlattenable::Type GetFlattenableType() {
+        return kSkMaskFilter_Type;
+    }
+
+    SkFlattenable::Type getFlattenableType() const override {
+        return kSkMaskFilter_Type;
+    }
+
 protected:
     SkMaskFilterBase() {}
 
-#if SK_SUPPORT_GPU
-    virtual std::unique_ptr<GrFragmentProcessor> onAsFragmentProcessor(const GrFPArgs&) const;
+#if defined(SK_GANESH)
+    using MatrixRec = SkShaderBase::MatrixRec;
+    virtual std::unique_ptr<GrFragmentProcessor> onAsFragmentProcessor(const GrFPArgs&,
+                                                                       const MatrixRec&) const;
     virtual bool onHasFragmentProcessor() const;
 #endif
 
@@ -211,6 +228,7 @@ protected:
 
 private:
     friend class SkDraw;
+    friend class SkDrawBase;
 
     /** Helper method that, given a path in device space, will rasterize it into a kA8_Format mask
      and then call filterMask(). If this returns true, the specified blitter will be called
@@ -227,7 +245,7 @@ private:
     bool filterRRect(const SkRRect& devRRect, const SkMatrix& ctm, const SkRasterClip&,
                      SkBlitter*) const;
 
-    typedef SkFlattenable INHERITED;
+    using INHERITED = SkFlattenable;
 };
 
 inline SkMaskFilterBase* as_MFB(SkMaskFilter* mf) {
@@ -241,5 +259,8 @@ inline const SkMaskFilterBase* as_MFB(const SkMaskFilter* mf) {
 inline const SkMaskFilterBase* as_MFB(const sk_sp<SkMaskFilter>& mf) {
     return static_cast<SkMaskFilterBase*>(mf.get());
 }
+
+// For RegisterFlattenables access to the blur mask filter implementation
+extern void sk_register_blur_maskfilter_createproc();
 
 #endif

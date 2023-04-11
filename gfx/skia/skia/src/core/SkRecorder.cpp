@@ -7,26 +7,67 @@
 
 #include "src/core/SkRecorder.h"
 
+#include "include/core/SkCanvas.h"
+#include "include/core/SkData.h"
+#include "include/core/SkDrawable.h"
 #include "include/core/SkImage.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
 #include "include/core/SkPicture.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRSXform.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkString.h"
 #include "include/core/SkSurface.h"
-#include "include/private/SkTo.h"
+#include "include/core/SkTextBlob.h"
+#include "include/core/SkVertices.h"
+#include "include/private/base/SkAssert.h"
+#include "include/private/base/SkFloatingPoint.h"
+#include "include/private/base/SkTemplates.h"
+#include "include/private/base/SkTo.h"
 #include "src/core/SkBigPicture.h"
 #include "src/core/SkCanvasPriv.h"
+#include "src/core/SkRecord.h"
+#include "src/core/SkRecords.h"
+#include "src/text/GlyphRun.h"
 #include "src/utils/SkPatchUtils.h"
 
+#if defined(SK_GANESH)
+#include "include/private/chromium/Slug.h"
+#endif
+
+#include <cstdint>
+#include <cstring>
+#include <memory>
 #include <new>
 
+class SkBlender;
+class SkMesh;
+class SkPath;
+class SkRRect;
+class SkRegion;
+class SkSurfaceProps;
+enum class SkBlendMode;
+enum class SkClipOp;
+struct SkDrawShadowRec;
+
+using namespace skia_private;
+
 SkDrawableList::~SkDrawableList() {
-    fArray.unrefAll();
+    for(SkDrawable* p : fArray) {
+        p->unref();
+    }
+    fArray.reset();
 }
 
 SkBigPicture::SnapshotArray* SkDrawableList::newDrawableSnapshot() {
-    const int count = fArray.count();
+    const int count = fArray.size();
     if (0 == count) {
         return nullptr;
     }
-    SkAutoTMalloc<const SkPicture*> pics(count);
+    AutoTMalloc<const SkPicture*> pics(count);
     for (int i = 0; i < count; ++i) {
         pics[i] = fArray[i]->newPictureSnapshot();
     }
@@ -39,27 +80,39 @@ void SkDrawableList::append(SkDrawable* drawable) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-SkRecorder::SkRecorder(SkRecord* record, int width, int height, SkMiniRecorder* mr)
-    : SkCanvasVirtualEnforcer<SkNoDrawCanvas>(width, height)
-    , fDrawPictureMode(Record_DrawPictureMode)
-    , fApproxBytesUsedBySubPictures(0)
-    , fRecord(record)
-    , fMiniRecorder(mr) {}
+static SkIRect safe_picture_bounds(const SkRect& bounds) {
+    SkIRect picBounds = bounds.roundOut();
+    // roundOut() saturates the float edges to +/-SK_MaxS32FitsInFloat (~2billion), but this is
+    // large enough that width/height calculations will overflow, leading to negative dimensions.
+    static constexpr int32_t kSafeEdge = SK_MaxS32FitsInFloat / 2 - 1;
+    static constexpr SkIRect kSafeBounds = {-kSafeEdge, -kSafeEdge, kSafeEdge, kSafeEdge};
+    static_assert((kSafeBounds.fRight - kSafeBounds.fLeft) >= 0 &&
+                  (kSafeBounds.fBottom - kSafeBounds.fTop) >= 0);
+    if (!picBounds.intersect(kSafeBounds)) {
+        picBounds.setEmpty();
+    }
+    return picBounds;
+}
 
-SkRecorder::SkRecorder(SkRecord* record, const SkRect& bounds, SkMiniRecorder* mr)
-    : SkCanvasVirtualEnforcer<SkNoDrawCanvas>(bounds.roundOut())
-    , fDrawPictureMode(Record_DrawPictureMode)
-    , fApproxBytesUsedBySubPictures(0)
-    , fRecord(record)
-    , fMiniRecorder(mr) {}
+SkRecorder::SkRecorder(SkRecord* record, int width, int height)
+        : SkCanvasVirtualEnforcer<SkNoDrawCanvas>(width, height)
+        , fApproxBytesUsedBySubPictures(0)
+        , fRecord(record) {
+    SkASSERT(this->imageInfo().width() >= 0 && this->imageInfo().height() >= 0);
+}
 
-void SkRecorder::reset(SkRecord* record, const SkRect& bounds,
-                       DrawPictureMode dpm, SkMiniRecorder* mr) {
+SkRecorder::SkRecorder(SkRecord* record, const SkRect& bounds)
+        : SkCanvasVirtualEnforcer<SkNoDrawCanvas>(safe_picture_bounds(bounds))
+        , fApproxBytesUsedBySubPictures(0)
+        , fRecord(record) {
+    SkASSERT(this->imageInfo().width() >= 0 && this->imageInfo().height() >= 0);
+}
+
+void SkRecorder::reset(SkRecord* record, const SkRect& bounds) {
     this->forgetRecord();
-    fDrawPictureMode = dpm;
     fRecord = record;
-    this->resetCanvas(bounds.roundOut());
-    fMiniRecorder = mr;
+    this->resetCanvas(safe_picture_bounds(bounds));
+    SkASSERT(this->imageInfo().width() >= 0 && this->imageInfo().height() >= 0);
 }
 
 void SkRecorder::forgetRecord() {
@@ -71,14 +124,8 @@ void SkRecorder::forgetRecord() {
 // To make appending to fRecord a little less verbose.
 template<typename T, typename... Args>
 void SkRecorder::append(Args&&... args) {
-    if (fMiniRecorder) {
-        this->flushMiniRecorder();
-    }
     new (fRecord->append<T>()) T{std::forward<Args>(args)...};
 }
-
-#define TRY_MINIRECORDER(method, ...) \
-    if (fMiniRecorder && fMiniRecorder->method(__VA_ARGS__)) return
 
 // For methods which must call back into SkNoDrawCanvas.
 #define INHERITED(method, ...) this->SkNoDrawCanvas::method(__VA_ARGS__)
@@ -126,14 +173,6 @@ char* SkRecorder::copy(const char* src) {
     return this->copy(src, strlen(src)+1);
 }
 
-void SkRecorder::flushMiniRecorder() {
-    if (fMiniRecorder) {
-        SkMiniRecorder* mr = fMiniRecorder;
-        fMiniRecorder = nullptr;  // Needs to happen before flushAndReset() or we recurse forever.
-        mr->flushAndReset(this);
-    }
-}
-
 void SkRecorder::onDrawPaint(const SkPaint& paint) {
     this->append<SkRecords::DrawPaint>(paint);
 }
@@ -150,7 +189,6 @@ void SkRecorder::onDrawPoints(PointMode mode,
 }
 
 void SkRecorder::onDrawRect(const SkRect& rect, const SkPaint& paint) {
-    TRY_MINIRECORDER(drawRect, rect, paint);
     this->append<SkRecords::DrawRect>(paint, rect);
 }
 
@@ -176,119 +214,78 @@ void SkRecorder::onDrawDRRect(const SkRRect& outer, const SkRRect& inner, const 
 }
 
 void SkRecorder::onDrawDrawable(SkDrawable* drawable, const SkMatrix* matrix) {
-    if (fDrawPictureMode == Record_DrawPictureMode) {
-        if (!fDrawableList) {
-            fDrawableList.reset(new SkDrawableList);
-        }
-        fDrawableList->append(drawable);
-        this->append<SkRecords::DrawDrawable>(this->copy(matrix), drawable->getBounds(), fDrawableList->count() - 1);
-    } else {
-        SkASSERT(fDrawPictureMode == Playback_DrawPictureMode);
-        drawable->draw(this, matrix);
+    if (!fDrawableList) {
+        fDrawableList = std::make_unique<SkDrawableList>();
     }
+    fDrawableList->append(drawable);
+    this->append<SkRecords::DrawDrawable>(this->copy(matrix), drawable->getBounds(), fDrawableList->count() - 1);
 }
 
 void SkRecorder::onDrawPath(const SkPath& path, const SkPaint& paint) {
-    TRY_MINIRECORDER(drawPath, path, paint);
     this->append<SkRecords::DrawPath>(paint, path);
 }
 
-void SkRecorder::onDrawBitmap(const SkBitmap& bitmap,
-                              SkScalar left,
-                              SkScalar top,
-                              const SkPaint* paint) {
-    sk_sp<SkImage> image = SkImage::MakeFromBitmap(bitmap);
-    if (image) {
-        this->onDrawImage(image.get(), left, top, paint);
-    }
+void SkRecorder::onDrawImage2(const SkImage* image, SkScalar x, SkScalar y,
+                              const SkSamplingOptions& sampling, const SkPaint* paint) {
+    this->append<SkRecords::DrawImage>(this->copy(paint), sk_ref_sp(image), x, y, sampling);
 }
 
-void SkRecorder::onDrawBitmapRect(const SkBitmap& bitmap,
-                                  const SkRect* src,
-                                  const SkRect& dst,
-                                  const SkPaint* paint,
+void SkRecorder::onDrawImageRect2(const SkImage* image, const SkRect& src, const SkRect& dst,
+                                  const SkSamplingOptions& sampling, const SkPaint* paint,
                                   SrcRectConstraint constraint) {
-    sk_sp<SkImage> image = SkImage::MakeFromBitmap(bitmap);
-    if (image) {
-        this->onDrawImageRect(image.get(), src, dst, paint, constraint);
-    }
+    this->append<SkRecords::DrawImageRect>(this->copy(paint), sk_ref_sp(image), src, dst,
+                                           sampling, constraint);
 }
 
-void SkRecorder::onDrawBitmapNine(const SkBitmap& bitmap,
-                                  const SkIRect& center,
-                                  const SkRect& dst,
-                                  const SkPaint* paint) {
-    sk_sp<SkImage> image = SkImage::MakeFromBitmap(bitmap);
-    if (image) {
-        this->onDrawImageNine(image.get(), center, dst, paint);
-    }
-}
-
-void SkRecorder::onDrawBitmapLattice(const SkBitmap& bitmap, const Lattice& lattice,
-                                     const SkRect& dst, const SkPaint* paint) {
-    sk_sp<SkImage> image = SkImage::MakeFromBitmap(bitmap);
-    this->onDrawImageLattice(image.get(), lattice, dst, paint);
-}
-
-void SkRecorder::onDrawImage(const SkImage* image, SkScalar left, SkScalar top,
-                             const SkPaint* paint) {
-    this->append<SkRecords::DrawImage>(this->copy(paint), sk_ref_sp(image), left, top);
-}
-
-void SkRecorder::onDrawImageRect(const SkImage* image, const SkRect* src, const SkRect& dst,
-                                 const SkPaint* paint, SrcRectConstraint constraint) {
-    this->append<SkRecords::DrawImageRect>(this->copy(paint), sk_ref_sp(image), this->copy(src), dst, constraint);
-}
-
-void SkRecorder::onDrawImageNine(const SkImage* image, const SkIRect& center,
-                                 const SkRect& dst, const SkPaint* paint) {
-    this->append<SkRecords::DrawImageNine>(this->copy(paint), sk_ref_sp(image), center, dst);
-}
-
-void SkRecorder::onDrawImageLattice(const SkImage* image, const Lattice& lattice, const SkRect& dst,
-                                    const SkPaint* paint) {
+void SkRecorder::onDrawImageLattice2(const SkImage* image, const Lattice& lattice, const SkRect& dst,
+                                     SkFilterMode filter, const SkPaint* paint) {
     int flagCount = lattice.fRectTypes ? (lattice.fXCount + 1) * (lattice.fYCount + 1) : 0;
     SkASSERT(lattice.fBounds);
     this->append<SkRecords::DrawImageLattice>(this->copy(paint), sk_ref_sp(image),
            lattice.fXCount, this->copy(lattice.fXDivs, lattice.fXCount),
            lattice.fYCount, this->copy(lattice.fYDivs, lattice.fYCount),
            flagCount, this->copy(lattice.fRectTypes, flagCount),
-           this->copy(lattice.fColors, flagCount), *lattice.fBounds, dst);
+           this->copy(lattice.fColors, flagCount), *lattice.fBounds, dst, filter);
 }
 
 void SkRecorder::onDrawTextBlob(const SkTextBlob* blob, SkScalar x, SkScalar y,
                                 const SkPaint& paint) {
-    TRY_MINIRECORDER(drawTextBlob, blob, x, y, paint);
     this->append<SkRecords::DrawTextBlob>(paint, sk_ref_sp(blob), x, y);
 }
 
-void SkRecorder::onDrawPicture(const SkPicture* pic, const SkMatrix* matrix, const SkPaint* paint) {
-    if (fDrawPictureMode == Record_DrawPictureMode) {
-        fApproxBytesUsedBySubPictures += pic->approximateBytesUsed();
-        this->append<SkRecords::DrawPicture>(this->copy(paint), sk_ref_sp(pic), matrix ? *matrix : SkMatrix::I());
-    } else if (fDrawPictureMode == PlaybackTop_DrawPictureMode) {
-        // temporarily change the mode of this recorder to Record,
-        fDrawPictureMode = Record_DrawPictureMode;
-        // play back the top level picture
-        SkAutoCanvasMatrixPaint acmp(this, matrix, paint, pic->cullRect());
-        pic->playback(this);
-        // restore the mode
-        fDrawPictureMode = PlaybackTop_DrawPictureMode;
-    } else {
-        SkASSERT(fDrawPictureMode == Playback_DrawPictureMode);
-        SkAutoCanvasMatrixPaint acmp(this, matrix, paint, pic->cullRect());
-        pic->playback(this);
+#if defined(SK_GANESH)
+void SkRecorder::onDrawSlug(const sktext::gpu::Slug* slug) {
+    this->append<SkRecords::DrawSlug>(sk_ref_sp(slug));
+}
+#endif
+
+void SkRecorder::onDrawGlyphRunList(
+        const sktext::GlyphRunList& glyphRunList, const SkPaint& paint) {
+    sk_sp<SkTextBlob> blob = sk_ref_sp(glyphRunList.blob());
+    if (glyphRunList.blob() == nullptr) {
+        blob = glyphRunList.makeBlob();
     }
+
+    this->onDrawTextBlob(blob.get(), glyphRunList.origin().x(), glyphRunList.origin().y(), paint);
 }
 
-void SkRecorder::onDrawVerticesObject(const SkVertices* vertices, const SkVertices::Bone bones[],
-                                      int boneCount, SkBlendMode bmode, const SkPaint& paint) {
+void SkRecorder::onDrawPicture(const SkPicture* pic, const SkMatrix* matrix, const SkPaint* paint) {
+    fApproxBytesUsedBySubPictures += pic->approximateBytesUsed();
+    this->append<SkRecords::DrawPicture>(this->copy(paint), sk_ref_sp(pic), matrix ? *matrix : SkMatrix::I());
+}
+
+void SkRecorder::onDrawVerticesObject(const SkVertices* vertices, SkBlendMode bmode,
+                                      const SkPaint& paint) {
     this->append<SkRecords::DrawVertices>(paint,
                                           sk_ref_sp(const_cast<SkVertices*>(vertices)),
-                                          this->copy(bones, boneCount),
-                                          boneCount,
                                           bmode);
 }
+
+#ifdef SK_ENABLE_SKSL
+void SkRecorder::onDrawMesh(const SkMesh& mesh, sk_sp<SkBlender> blender, const SkPaint& paint) {
+    this->append<SkRecords::DrawMesh>(paint, mesh, std::move(blender));
+}
+#endif
 
 void SkRecorder::onDrawPatch(const SkPoint cubics[12], const SkColor colors[4],
                              const SkPoint texCoords[4], SkBlendMode bmode,
@@ -300,9 +297,10 @@ void SkRecorder::onDrawPatch(const SkPoint cubics[12], const SkColor colors[4],
            bmode);
 }
 
-void SkRecorder::onDrawAtlas(const SkImage* atlas, const SkRSXform xform[], const SkRect tex[],
-                             const SkColor colors[], int count, SkBlendMode mode,
-                             const SkRect* cull, const SkPaint* paint) {
+void SkRecorder::onDrawAtlas2(const SkImage* atlas, const SkRSXform xform[], const SkRect tex[],
+                              const SkColor colors[], int count, SkBlendMode mode,
+                              const SkSamplingOptions& sampling, const SkRect* cull,
+                              const SkPaint* paint) {
     this->append<SkRecords::DrawAtlas>(this->copy(paint),
            sk_ref_sp(atlas),
            this->copy(xform, count),
@@ -310,6 +308,7 @@ void SkRecorder::onDrawAtlas(const SkImage* atlas, const SkRSXform xform[], cons
            this->copy(colors, count),
            count,
            mode,
+           sampling,
            this->copy(cull));
 }
 
@@ -327,20 +326,21 @@ void SkRecorder::onDrawEdgeAAQuad(const SkRect& rect, const SkPoint clip[4],
             rect, this->copy(clip, 4), aa, color, mode);
 }
 
-void SkRecorder::onDrawEdgeAAImageSet(const ImageSetEntry set[], int count,
-                                      const SkPoint dstClips[], const SkMatrix preViewMatrices[],
-                                      const SkPaint* paint, SrcRectConstraint constraint) {
+void SkRecorder::onDrawEdgeAAImageSet2(const ImageSetEntry set[], int count,
+                                       const SkPoint dstClips[], const SkMatrix preViewMatrices[],
+                                       const SkSamplingOptions& sampling, const SkPaint* paint,
+                                       SrcRectConstraint constraint) {
     int totalDstClipCount, totalMatrixCount;
     SkCanvasPriv::GetDstClipAndMatrixCounts(set, count, &totalDstClipCount, &totalMatrixCount);
 
-    SkAutoTArray<ImageSetEntry> setCopy(count);
+    AutoTArray<ImageSetEntry> setCopy(count);
     for (int i = 0; i < count; ++i) {
         setCopy[i] = set[i];
     }
 
     this->append<SkRecords::DrawEdgeAAImageSet>(this->copy(paint), std::move(setCopy), count,
             this->copy(dstClips, totalDstClipCount),
-            this->copy(preViewMatrices, totalMatrixCount), constraint);
+            this->copy(preViewMatrices, totalMatrixCount), sampling, constraint);
 }
 
 void SkRecorder::onFlush() {
@@ -355,9 +355,8 @@ SkCanvas::SaveLayerStrategy SkRecorder::getSaveLayerStrategy(const SaveLayerRec&
     this->append<SkRecords::SaveLayer>(this->copy(rec.fBounds)
                     , this->copy(rec.fPaint)
                     , sk_ref_sp(rec.fBackdrop)
-                    , sk_ref_sp(rec.fClipMask)
-                    , this->copy(rec.fClipMatrix)
-                    , rec.fSaveLayerFlags);
+                    , rec.fSaveLayerFlags
+                    , SkCanvasPriv::GetBackdropScaleFactor(rec));
     return SkCanvas::kNoLayer_SaveLayerStrategy;
 }
 
@@ -370,12 +369,16 @@ void SkRecorder::didRestore() {
     this->append<SkRecords::Restore>(this->getTotalMatrix());
 }
 
-void SkRecorder::didConcat(const SkMatrix& matrix) {
-    this->append<SkRecords::Concat>(matrix);
+void SkRecorder::didConcat44(const SkM44& m) {
+    this->append<SkRecords::Concat44>(m);
 }
 
-void SkRecorder::didSetMatrix(const SkMatrix& matrix) {
-    this->append<SkRecords::SetMatrix>(matrix);
+void SkRecorder::didSetM44(const SkM44& m) {
+    this->append<SkRecords::SetM44>(m);
+}
+
+void SkRecorder::didScale(SkScalar sx, SkScalar sy) {
+    this->append<SkRecords::Scale>(sx, sy);
 }
 
 void SkRecorder::didTranslate(SkScalar dx, SkScalar dy) {
@@ -400,9 +403,19 @@ void SkRecorder::onClipPath(const SkPath& path, SkClipOp op, ClipEdgeStyle edgeS
     this->append<SkRecords::ClipPath>(path, opAA);
 }
 
+void SkRecorder::onClipShader(sk_sp<SkShader> cs, SkClipOp op) {
+    INHERITED(onClipShader, cs, op);
+    this->append<SkRecords::ClipShader>(std::move(cs), op);
+}
+
 void SkRecorder::onClipRegion(const SkRegion& deviceRgn, SkClipOp op) {
     INHERITED(onClipRegion, deviceRgn, op);
     this->append<SkRecords::ClipRegion>(deviceRgn, op);
+}
+
+void SkRecorder::onResetClip() {
+    INHERITED(onResetClip);
+    this->append<SkRecords::ResetClip>();
 }
 
 sk_sp<SkSurface> SkRecorder::onNewSurface(const SkImageInfo&, const SkSurfaceProps&) {

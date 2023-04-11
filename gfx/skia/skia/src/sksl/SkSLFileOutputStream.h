@@ -21,7 +21,9 @@ public:
     }
 
     ~FileOutputStream() override {
-        SkASSERT(!fOpen);
+        if (fOpen) {
+            close();
+        }
     }
 
     bool isValid() const override {
@@ -68,7 +70,7 @@ private:
     bool fOpen = true;
     FILE *fFile;
 
-    typedef OutputStream INHERITED;
+    using INHERITED = OutputStream;
 };
 
 } // namespace

@@ -5,228 +5,1192 @@
  * found in the LICENSE file.
  */
 
-#include "src/sksl/SkSLContext.h"
 #include "src/sksl/ir/SkSLType.h"
+
+#include "include/private/SkSLLayout.h"
+#include "include/private/SkSLString.h"
+#include "include/private/base/SkTFitsIn.h"
+#include "include/sksl/SkSLErrorReporter.h"
+#include "src/base/SkMathPriv.h"
+#include "src/sksl/SkSLBuiltinTypes.h"
+#include "src/sksl/SkSLConstantFolder.h"
+#include "src/sksl/SkSLContext.h"
+#include "src/sksl/SkSLProgramSettings.h"
+#include "src/sksl/ir/SkSLConstructorArrayCast.h"
+#include "src/sksl/ir/SkSLConstructorCompoundCast.h"
+#include "src/sksl/ir/SkSLConstructorScalarCast.h"
+#include "src/sksl/ir/SkSLExpression.h"
+#include "src/sksl/ir/SkSLSymbolTable.h"
+
+#include <algorithm>
+#include <cstdint>
+#include <limits>
+#include <optional>
+#include <string_view>
+#include <utility>
 
 namespace SkSL {
 
-int Type::coercionCost(const Type& other) const {
-    if (*this == other) {
-        return 0;
+static constexpr int kMaxStructDepth = 8;
+
+class AliasType final : public Type {
+public:
+    AliasType(std::string_view name, const Type& targetType)
+        : INHERITED(name, targetType.abbreviatedName(), targetType.typeKind())
+        , fTargetType(targetType) {}
+
+    const Type& resolve() const override {
+        return fTargetType;
     }
-    if (this->kind() == kNullable_Kind && other.kind() != kNullable_Kind) {
-        int result = this->componentType().coercionCost(other);
-        if (result != INT_MAX) {
-            ++result;
+
+    const Type& componentType() const override {
+        return fTargetType.componentType();
+    }
+
+    NumberKind numberKind() const override {
+        return fTargetType.numberKind();
+    }
+
+    int priority() const override {
+        return fTargetType.priority();
+    }
+
+    int columns() const override {
+        return fTargetType.columns();
+    }
+
+    int rows() const override {
+        return fTargetType.rows();
+    }
+
+    int bitWidth() const override {
+        return fTargetType.bitWidth();
+    }
+
+    bool isAllowedInES2() const override {
+        return fTargetType.isAllowedInES2();
+    }
+
+    size_t slotCount() const override {
+        return fTargetType.slotCount();
+    }
+
+    SpvDim_ dimensions() const override {
+        return fTargetType.dimensions();
+    }
+
+    bool isDepth() const override {
+        return fTargetType.isDepth();
+    }
+
+    bool isArrayedTexture() const override {
+        return fTargetType.isArrayedTexture();
+    }
+
+    bool isScalar() const override {
+        return fTargetType.isScalar();
+    }
+
+    bool isLiteral() const override {
+        return fTargetType.isLiteral();
+    }
+
+    bool isVector() const override {
+        return fTargetType.isVector();
+    }
+
+    bool isMatrix() const override {
+        return fTargetType.isMatrix();
+    }
+
+    bool isArray() const override {
+        return fTargetType.isArray();
+    }
+
+    bool isUnsizedArray() const override {
+        return fTargetType.isUnsizedArray();
+    }
+
+    bool isStruct() const override {
+        return fTargetType.isStruct();
+    }
+
+    bool isInterfaceBlock() const override {
+        return fTargetType.isInterfaceBlock();
+    }
+
+    bool isMultisampled() const override {
+        return fTargetType.isMultisampled();
+    }
+
+    TextureAccess textureAccess() const override {
+        return fTargetType.textureAccess();
+    }
+
+    SkSpan<const Type* const> coercibleTypes() const override {
+        return fTargetType.coercibleTypes();
+    }
+
+private:
+    using INHERITED = Type;
+
+    const Type& fTargetType;
+};
+
+class ArrayType final : public Type {
+public:
+    inline static constexpr TypeKind kTypeKind = TypeKind::kArray;
+
+    ArrayType(std::string_view name, const char* abbrev, const Type& componentType, int count)
+        : INHERITED(name, abbrev, kTypeKind)
+        , fComponentType(componentType)
+        , fCount(count) {
+        SkASSERT(count > 0 || count == kUnsizedArray);
+        // Disallow multi-dimensional arrays.
+        SkASSERT(!componentType.is<ArrayType>());
+    }
+
+    bool isArray() const override {
+        return true;
+    }
+
+    bool isUnsizedArray() const override {
+        return fCount == kUnsizedArray;
+    }
+
+    const Type& componentType() const override {
+        return fComponentType;
+    }
+
+    int columns() const override {
+        return fCount;
+    }
+
+    int bitWidth() const override {
+        return this->componentType().bitWidth();
+    }
+
+    bool isAllowedInES2() const override {
+        return fComponentType.isAllowedInES2();
+    }
+
+    size_t slotCount() const override {
+        SkASSERT(fCount != kUnsizedArray);
+        SkASSERT(fCount > 0);
+        return fCount * fComponentType.slotCount();
+    }
+
+private:
+    using INHERITED = Type;
+
+    const Type& fComponentType;
+    int fCount;
+};
+
+class GenericType final : public Type {
+public:
+    inline static constexpr TypeKind kTypeKind = TypeKind::kGeneric;
+
+    GenericType(const char* name, SkSpan<const Type* const> coercibleTypes)
+        : INHERITED(name, "G", kTypeKind) {
+        fNumTypes = coercibleTypes.size();
+        SkASSERT(fNumTypes <= std::size(fCoercibleTypes));
+        std::copy(coercibleTypes.begin(), coercibleTypes.end(), fCoercibleTypes);
+    }
+
+    SkSpan<const Type* const> coercibleTypes() const override {
+        return SkSpan(fCoercibleTypes, fNumTypes);
+    }
+
+private:
+    using INHERITED = Type;
+
+    const Type* fCoercibleTypes[9];
+    size_t fNumTypes;
+};
+
+class LiteralType : public Type {
+public:
+    inline static constexpr TypeKind kTypeKind = TypeKind::kLiteral;
+
+    LiteralType(const char* name, const Type& scalarType, int8_t priority)
+        : INHERITED(name, "L", kTypeKind)
+        , fScalarType(scalarType)
+        , fPriority(priority) {}
+
+    const Type& scalarTypeForLiteral() const override {
+        return fScalarType;
+    }
+
+    int priority() const override {
+        return fPriority;
+    }
+
+    int columns() const override {
+        return 1;
+    }
+
+    int rows() const override {
+        return 1;
+    }
+
+    NumberKind numberKind() const override {
+        return fScalarType.numberKind();
+    }
+
+    int bitWidth() const override {
+        return fScalarType.bitWidth();
+    }
+
+    double minimumValue() const override {
+        return fScalarType.minimumValue();
+    }
+
+    double maximumValue() const override {
+        return fScalarType.maximumValue();
+    }
+
+    bool isScalar() const override {
+        return true;
+    }
+
+    bool isLiteral() const override {
+        return true;
+    }
+
+    size_t slotCount() const override {
+        return 1;
+    }
+
+private:
+    using INHERITED = Type;
+
+    const Type& fScalarType;
+    int8_t fPriority;
+};
+
+
+class ScalarType final : public Type {
+public:
+    inline static constexpr TypeKind kTypeKind = TypeKind::kScalar;
+
+    ScalarType(std::string_view name, const char* abbrev, NumberKind numberKind, int8_t priority,
+               int8_t bitWidth)
+        : INHERITED(name, abbrev, kTypeKind)
+        , fNumberKind(numberKind)
+        , fPriority(priority)
+        , fBitWidth(bitWidth) {}
+
+    NumberKind numberKind() const override {
+        return fNumberKind;
+    }
+
+    int priority() const override {
+        return fPriority;
+    }
+
+    int bitWidth() const override {
+        return fBitWidth;
+    }
+
+    int columns() const override {
+        return 1;
+    }
+
+    int rows() const override {
+        return 1;
+    }
+
+    bool isScalar() const override {
+        return true;
+    }
+
+    bool isAllowedInES2() const override {
+        return fNumberKind != NumberKind::kUnsigned;
+    }
+
+    size_t slotCount() const override {
+        return 1;
+    }
+
+    using int_limits = std::numeric_limits<int32_t>;
+    using short_limits = std::numeric_limits<int16_t>;
+    using uint_limits = std::numeric_limits<uint32_t>;
+    using ushort_limits = std::numeric_limits<uint16_t>;
+    using float_limits = std::numeric_limits<float>;
+
+    /** Returns the maximum value that can fit in the type. */
+    double minimumValue() const override {
+        switch (this->numberKind()) {
+            case NumberKind::kSigned:
+                return this->highPrecision() ? int_limits::lowest()
+                                             : short_limits::lowest();
+
+            case NumberKind::kUnsigned:
+                return 0;
+
+            case NumberKind::kFloat:
+            default:
+                return float_limits::lowest();
         }
-        return result;
     }
-    if (this->fName == "null" && other.kind() == kNullable_Kind) {
-        return 0;
-    }
-    if (this->kind() == kVector_Kind && other.kind() == kVector_Kind) {
-        if (this->columns() == other.columns()) {
-            return this->componentType().coercionCost(other.componentType());
-        }
-        return INT_MAX;
-    }
-    if (this->kind() == kMatrix_Kind) {
-        if (this->columns() == other.columns() && this->rows() == other.rows()) {
-            return this->componentType().coercionCost(other.componentType());
-        }
-        return INT_MAX;
-    }
-    if (this->isNumber() && other.isNumber() && other.priority() > this->priority()) {
-        return other.priority() - this->priority();
-    }
-    for (size_t i = 0; i < fCoercibleTypes.size(); i++) {
-        if (*fCoercibleTypes[i] == other) {
-            return (int) i + 1;
+
+    /** Returns the maximum value that can fit in the type. */
+    double maximumValue() const override {
+        switch (this->numberKind()) {
+            case NumberKind::kSigned:
+                return this->highPrecision() ? int_limits::max()
+                                             : short_limits::max();
+
+            case NumberKind::kUnsigned:
+                return this->highPrecision() ? uint_limits::max()
+                                             : ushort_limits::max();
+
+            case NumberKind::kFloat:
+            default:
+                return float_limits::max();
         }
     }
-    return INT_MAX;
+
+private:
+    using INHERITED = Type;
+
+    NumberKind fNumberKind;
+    int8_t fPriority;
+    int8_t fBitWidth;
+};
+
+class AtomicType final : public Type {
+public:
+    inline static constexpr TypeKind kTypeKind = TypeKind::kAtomic;
+
+    AtomicType(std::string_view name, const char* abbrev) : INHERITED(name, abbrev, kTypeKind) {}
+
+    bool isAllowedInES2() const override { return false; }
+
+private:
+    using INHERITED = Type;
+};
+
+class MatrixType final : public Type {
+public:
+    inline static constexpr TypeKind kTypeKind = TypeKind::kMatrix;
+
+    MatrixType(std::string_view name, const char* abbrev, const Type& componentType,
+               int8_t columns, int8_t rows)
+        : INHERITED(name, abbrev, kTypeKind)
+        , fComponentType(componentType.as<ScalarType>())
+        , fColumns(columns)
+        , fRows(rows) {
+        SkASSERT(columns >= 2 && columns <= 4);
+        SkASSERT(rows >= 2 && rows <= 4);
+    }
+
+    const ScalarType& componentType() const override {
+        return fComponentType;
+    }
+
+    int columns() const override {
+        return fColumns;
+    }
+
+    int rows() const override {
+        return fRows;
+    }
+
+    int bitWidth() const override {
+        return this->componentType().bitWidth();
+    }
+
+    bool isMatrix() const override {
+        return true;
+    }
+
+    bool isAllowedInES2() const override {
+        return fColumns == fRows;
+    }
+
+    size_t slotCount() const override {
+        return fColumns * fRows;
+    }
+
+private:
+    using INHERITED = Type;
+
+    const ScalarType& fComponentType;
+    int8_t fColumns;
+    int8_t fRows;
+};
+
+class TextureType final : public Type {
+public:
+    inline static constexpr TypeKind kTypeKind = TypeKind::kTexture;
+
+    TextureType(const char* name, SpvDim_ dimensions, bool isDepth, bool isArrayed,
+                bool isMultisampled, TextureAccess textureAccess)
+        : INHERITED(name, "T", kTypeKind)
+        , fDimensions(dimensions)
+        , fIsDepth(isDepth)
+        , fIsArrayed(isArrayed)
+        , fIsMultisampled(isMultisampled)
+        , fTextureAccess(textureAccess) {}
+
+    SpvDim_ dimensions() const override {
+        return fDimensions;
+    }
+
+    bool isDepth() const override {
+        return fIsDepth;
+    }
+
+    bool isArrayedTexture() const override {
+        return fIsArrayed;
+    }
+
+    bool isMultisampled() const override {
+        return fIsMultisampled;
+    }
+
+    TextureAccess textureAccess() const override {
+        return fTextureAccess;
+    }
+
+private:
+    using INHERITED = Type;
+
+    SpvDim_ fDimensions;
+    bool fIsDepth;
+    bool fIsArrayed;
+    bool fIsMultisampled;
+    TextureAccess fTextureAccess;
+};
+
+class SamplerType final : public Type {
+public:
+    inline static constexpr TypeKind kTypeKind = TypeKind::kSampler;
+
+    SamplerType(const char* name, const Type& textureType)
+        : INHERITED(name, "Z", kTypeKind)
+        , fTextureType(textureType.as<TextureType>()) {}
+
+    const TextureType& textureType() const override {
+        return fTextureType;
+    }
+
+    SpvDim_ dimensions() const override {
+        return fTextureType.dimensions();
+    }
+
+    bool isDepth() const override {
+        return fTextureType.isDepth();
+    }
+
+    bool isArrayedTexture() const override {
+        return fTextureType.isArrayedTexture();
+    }
+
+    bool isMultisampled() const override {
+        return fTextureType.isMultisampled();
+    }
+
+    TextureAccess textureAccess() const override {
+        return fTextureType.textureAccess();
+    }
+
+private:
+    using INHERITED = Type;
+
+    const TextureType& fTextureType;
+};
+
+class StructType final : public Type {
+public:
+    inline static constexpr TypeKind kTypeKind = TypeKind::kStruct;
+
+    StructType(Position pos, std::string_view name, std::vector<Field> fields, bool interfaceBlock)
+            : INHERITED(std::move(name), "S", kTypeKind, pos)
+            , fFields(std::move(fields))
+            , fInterfaceBlock(interfaceBlock) {}
+
+    const std::vector<Field>& fields() const override {
+        return fFields;
+    }
+
+    bool isStruct() const override {
+        return true;
+    }
+
+    bool isInterfaceBlock() const override {
+        return fInterfaceBlock;
+    }
+
+    bool isAllowedInES2() const override {
+        return std::all_of(fFields.begin(), fFields.end(), [](const Field& f) {
+            return f.fType->isAllowedInES2();
+        });
+    }
+
+    size_t slotCount() const override {
+        size_t slots = 0;
+        for (const Field& field : fFields) {
+            slots += field.fType->slotCount();
+        }
+        return slots;
+    }
+
+private:
+    using INHERITED = Type;
+
+    std::vector<Field> fFields;
+    bool fInterfaceBlock;
+};
+
+class VectorType final : public Type {
+public:
+    inline static constexpr TypeKind kTypeKind = TypeKind::kVector;
+
+    VectorType(std::string_view name, const char* abbrev, const Type& componentType,
+               int8_t columns)
+        : INHERITED(name, abbrev, kTypeKind)
+        , fComponentType(componentType.as<ScalarType>())
+        , fColumns(columns) {
+        SkASSERT(columns >= 2 && columns <= 4);
+    }
+
+    const ScalarType& componentType() const override {
+        return fComponentType;
+    }
+
+    int columns() const override {
+        return fColumns;
+    }
+
+    int rows() const override {
+        return 1;
+    }
+
+    int bitWidth() const override {
+        return this->componentType().bitWidth();
+    }
+
+    bool isVector() const override {
+        return true;
+    }
+
+    bool isAllowedInES2() const override {
+        return fComponentType.isAllowedInES2();
+    }
+
+    size_t slotCount() const override {
+        return fColumns;
+    }
+
+private:
+    using INHERITED = Type;
+
+    const ScalarType& fComponentType;
+    int8_t fColumns;
+};
+
+std::string Type::getArrayName(int arraySize) const {
+    std::string_view name = this->name();
+    if (arraySize == kUnsizedArray) {
+        return String::printf("%.*s[]", (int)name.size(), name.data());
+    }
+    return String::printf("%.*s[%d]", (int)name.size(), name.data(), arraySize);
+}
+
+std::unique_ptr<Type> Type::MakeAliasType(std::string_view name, const Type& targetType) {
+    return std::make_unique<AliasType>(std::move(name), targetType);
+}
+
+std::unique_ptr<Type> Type::MakeArrayType(std::string_view name, const Type& componentType,
+                                          int columns) {
+    return std::make_unique<ArrayType>(std::move(name), componentType.abbreviatedName(),
+                                       componentType, columns);
+}
+
+std::unique_ptr<Type> Type::MakeGenericType(const char* name, SkSpan<const Type* const> types) {
+    return std::make_unique<GenericType>(name, types);
+}
+
+std::unique_ptr<Type> Type::MakeLiteralType(const char* name, const Type& scalarType,
+                                            int8_t priority) {
+    return std::make_unique<LiteralType>(name, scalarType, priority);
+}
+
+std::unique_ptr<Type> Type::MakeMatrixType(std::string_view name, const char* abbrev,
+                                           const Type& componentType, int columns, int8_t rows) {
+    return std::make_unique<MatrixType>(name, abbrev, componentType, columns, rows);
+}
+
+std::unique_ptr<Type> Type::MakeSamplerType(const char* name, const Type& textureType) {
+    return std::make_unique<SamplerType>(name, textureType);
+}
+
+std::unique_ptr<Type> Type::MakeSpecialType(const char* name, const char* abbrev,
+                                            Type::TypeKind typeKind) {
+    return std::unique_ptr<Type>(new Type(name, abbrev, typeKind));
+}
+
+std::unique_ptr<Type> Type::MakeScalarType(std::string_view name, const char* abbrev,
+                                           Type::NumberKind numberKind, int8_t priority,
+                                           int8_t bitWidth) {
+    return std::make_unique<ScalarType>(name, abbrev, numberKind, priority, bitWidth);
+}
+
+std::unique_ptr<Type> Type::MakeAtomicType(std::string_view name, const char* abbrev) {
+    return std::make_unique<AtomicType>(name, abbrev);
+}
+
+static bool is_too_deeply_nested(const Type* t, int limit) {
+    if (limit <= 0) {
+        return true;
+    }
+
+    if (t->isStruct()) {
+        for (const Type::Field& f : t->fields()) {
+            if (is_too_deeply_nested(f.fType, limit - 1)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+std::unique_ptr<Type> Type::MakeStructType(const Context& context,
+                                           Position pos,
+                                           std::string_view name,
+                                           std::vector<Field> fields,
+                                           bool interfaceBlock) {
+    for (const Field& field : fields) {
+        if (field.fModifiers.fFlags != Modifiers::kNo_Flag) {
+            std::string desc = field.fModifiers.description();
+            desc.pop_back();  // remove trailing space
+            context.fErrors->error(field.fPosition,
+                                   "modifier '" + desc + "' is not permitted on a struct field");
+        }
+        if (field.fModifiers.fLayout.fFlags & Layout::kBinding_Flag) {
+            context.fErrors->error(field.fPosition,
+                                   "layout qualifier 'binding' is not permitted on a struct field");
+        }
+        if (field.fModifiers.fLayout.fFlags & Layout::kSet_Flag) {
+            context.fErrors->error(field.fPosition,
+                                   "layout qualifier 'set' is not permitted on a struct field");
+        }
+
+        if (field.fType->isVoid()) {
+            context.fErrors->error(field.fPosition, "type 'void' is not permitted in a struct");
+        }
+        if (field.fType->isOpaque() && !field.fType->isAtomic()) {
+            context.fErrors->error(field.fPosition, "opaque type '" + field.fType->displayName() +
+                                                    "' is not permitted in a struct");
+        }
+    }
+    for (const Field& field : fields) {
+        if (is_too_deeply_nested(field.fType, kMaxStructDepth)) {
+            context.fErrors->error(pos, "struct '" + std::string(name) + "' is too deeply nested");
+            break;
+        }
+    }
+    return std::make_unique<StructType>(pos, name, std::move(fields), interfaceBlock);
+}
+
+std::unique_ptr<Type> Type::MakeTextureType(const char* name, SpvDim_ dimensions, bool isDepth,
+                                            bool isArrayedTexture, bool isMultisampled,
+                                            TextureAccess textureAccess) {
+    return std::make_unique<TextureType>(name, dimensions, isDepth, isArrayedTexture,
+                                         isMultisampled, textureAccess);
+}
+
+std::unique_ptr<Type> Type::MakeVectorType(std::string_view name, const char* abbrev,
+                                           const Type& componentType, int columns) {
+    return std::make_unique<VectorType>(name, abbrev, componentType, columns);
+}
+
+CoercionCost Type::coercionCost(const Type& other) const {
+    if (this->matches(other)) {
+        return CoercionCost::Free();
+    }
+    if (this->typeKind() == other.typeKind() &&
+        (this->isVector() || this->isMatrix() || this->isArray())) {
+        // Vectors/matrices/arrays of the same size can be coerced if their component type can be.
+        if (this->isMatrix() && (this->rows() != other.rows())) {
+            return CoercionCost::Impossible();
+        }
+        if (this->columns() != other.columns()) {
+            return CoercionCost::Impossible();
+        }
+        return this->componentType().coercionCost(other.componentType());
+    }
+    if (this->isNumber() && other.isNumber()) {
+        if (this->isLiteral() && this->isInteger()) {
+            return CoercionCost::Free();
+        } else if (this->numberKind() != other.numberKind()) {
+            return CoercionCost::Impossible();
+        } else if (other.priority() >= this->priority()) {
+            return CoercionCost::Normal(other.priority() - this->priority());
+        } else {
+            return CoercionCost::Narrowing(this->priority() - other.priority());
+        }
+    }
+    if (fTypeKind == TypeKind::kGeneric) {
+        SkSpan<const Type* const> types = this->coercibleTypes();
+        for (size_t i = 0; i < types.size(); i++) {
+            if (types[i]->matches(other)) {
+                return CoercionCost::Normal((int) i + 1);
+            }
+        }
+    }
+    return CoercionCost::Impossible();
+}
+
+const Type* Type::applyQualifiers(const Context& context,
+                                  Modifiers* modifiers,
+                                  SymbolTable* symbols,
+                                  Position pos) const {
+    const Type* type;
+    type = this->applyPrecisionQualifiers(context, modifiers, symbols, pos);
+    type = type->applyAccessQualifiers(context, modifiers, symbols, pos);
+    return type;
+}
+
+const Type* Type::applyPrecisionQualifiers(const Context& context,
+                                           Modifiers* modifiers,
+                                           SymbolTable* symbols,
+                                           Position pos) const {
+    int precisionQualifiers = modifiers->fFlags & (Modifiers::kHighp_Flag |
+                                                   Modifiers::kMediump_Flag |
+                                                   Modifiers::kLowp_Flag);
+    if (!precisionQualifiers) {
+        // No precision qualifiers here. Return the type as-is.
+        return this;
+    }
+
+    if (!ProgramConfig::IsRuntimeEffect(context.fConfig->fKind)) {
+        // We want to discourage precision modifiers internally. Instead, use the type that
+        // corresponds to the precision you need. (e.g. half vs float, short vs int)
+        context.fErrors->error(pos, "precision qualifiers are not allowed");
+        return context.fTypes.fPoison.get();
+    }
+
+    if (SkPopCount(precisionQualifiers) > 1) {
+        context.fErrors->error(pos, "only one precision qualifier can be used");
+        return context.fTypes.fPoison.get();
+    }
+
+    // We're going to return a whole new type, so the modifier bits can be cleared out.
+    modifiers->fFlags &= ~(Modifiers::kHighp_Flag |
+                           Modifiers::kMediump_Flag |
+                           Modifiers::kLowp_Flag);
+
+    const Type& component = this->componentType();
+    if (component.highPrecision()) {
+        if (precisionQualifiers & Modifiers::kHighp_Flag) {
+            // Type is already high precision, and we are requesting high precision. Return as-is.
+            return this;
+        }
+
+        // SkSL doesn't support low precision, so `lowp` is interpreted as medium precision.
+        // Ascertain the mediump equivalent type for this type, if any.
+        const Type* mediumpType;
+        switch (component.numberKind()) {
+            case Type::NumberKind::kFloat:
+                mediumpType = context.fTypes.fHalf.get();
+                break;
+
+            case Type::NumberKind::kSigned:
+                mediumpType = context.fTypes.fShort.get();
+                break;
+
+            case Type::NumberKind::kUnsigned:
+                mediumpType = context.fTypes.fUShort.get();
+                break;
+
+            default:
+                mediumpType = context.fTypes.fPoison.get();
+                break;
+        }
+
+        if (mediumpType) {
+            // Convert the mediump component type into the final vector/matrix/array type as needed.
+            return this->isArray()
+                           ? symbols->addArrayDimension(mediumpType, this->columns())
+                           : &mediumpType->toCompound(context, this->columns(), this->rows());
+        }
+    }
+
+    context.fErrors->error(pos, "type '" + this->displayName() +
+                                "' does not support precision qualifiers");
+    return context.fTypes.fPoison.get();
+}
+
+const Type* Type::applyAccessQualifiers(const Context& context,
+                                        Modifiers* modifiers,
+                                        SymbolTable* symbols,
+                                        Position pos) const {
+    int accessQualifiers = modifiers->fFlags & (Modifiers::kReadOnly_Flag |
+                                                Modifiers::kWriteOnly_Flag);
+    if (!accessQualifiers) {
+        // No access qualifiers here. Return the type as-is.
+        return this;
+    }
+
+    // We're going to return a whole new type, so the modifier bits can be cleared out.
+    modifiers->fFlags &= ~(Modifiers::kReadOnly_Flag |
+                           Modifiers::kWriteOnly_Flag);
+
+    if (this->matches(*context.fTypes.fReadWriteTexture2D)) {
+        switch (accessQualifiers) {
+            case Modifiers::kReadOnly_Flag:
+                return context.fTypes.fReadOnlyTexture2D.get();
+
+            case Modifiers::kWriteOnly_Flag:
+                return context.fTypes.fWriteOnlyTexture2D.get();
+
+            default:
+                context.fErrors->error(pos, "'readonly' and 'writeonly' qualifiers "
+                                            "cannot be combined");
+                return this;
+        }
+    }
+
+    context.fErrors->error(pos, "type '" + this->displayName() + "' does not support qualifier '" +
+                                Modifiers::DescribeFlags(accessQualifiers) + "'");
+    return this;
 }
 
 const Type& Type::toCompound(const Context& context, int columns, int rows) const {
-    SkASSERT(this->kind() == Type::kScalar_Kind);
+    SkASSERT(this->isScalar());
     if (columns == 1 && rows == 1) {
         return *this;
     }
-    if (*this == *context.fFloat_Type || *this == *context.fFloatLiteral_Type) {
+    if (this->matches(*context.fTypes.fFloat) || this->matches(*context.fTypes.fFloatLiteral)) {
         switch (rows) {
             case 1:
                 switch (columns) {
-                    case 2: return *context.fFloat2_Type;
-                    case 3: return *context.fFloat3_Type;
-                    case 4: return *context.fFloat4_Type;
-                    default: ABORT("unsupported vector column count (%d)", columns);
+                    case 1: return *context.fTypes.fFloat;
+                    case 2: return *context.fTypes.fFloat2;
+                    case 3: return *context.fTypes.fFloat3;
+                    case 4: return *context.fTypes.fFloat4;
+                    default: SK_ABORT("unsupported vector column count (%d)", columns);
                 }
             case 2:
                 switch (columns) {
-                    case 2: return *context.fFloat2x2_Type;
-                    case 3: return *context.fFloat3x2_Type;
-                    case 4: return *context.fFloat4x2_Type;
-                    default: ABORT("unsupported matrix column count (%d)", columns);
+                    case 2: return *context.fTypes.fFloat2x2;
+                    case 3: return *context.fTypes.fFloat3x2;
+                    case 4: return *context.fTypes.fFloat4x2;
+                    default: SK_ABORT("unsupported matrix column count (%d)", columns);
                 }
             case 3:
                 switch (columns) {
-                    case 2: return *context.fFloat2x3_Type;
-                    case 3: return *context.fFloat3x3_Type;
-                    case 4: return *context.fFloat4x3_Type;
-                    default: ABORT("unsupported matrix column count (%d)", columns);
+                    case 2: return *context.fTypes.fFloat2x3;
+                    case 3: return *context.fTypes.fFloat3x3;
+                    case 4: return *context.fTypes.fFloat4x3;
+                    default: SK_ABORT("unsupported matrix column count (%d)", columns);
                 }
             case 4:
                 switch (columns) {
-                    case 2: return *context.fFloat2x4_Type;
-                    case 3: return *context.fFloat3x4_Type;
-                    case 4: return *context.fFloat4x4_Type;
-                    default: ABORT("unsupported matrix column count (%d)", columns);
+                    case 2: return *context.fTypes.fFloat2x4;
+                    case 3: return *context.fTypes.fFloat3x4;
+                    case 4: return *context.fTypes.fFloat4x4;
+                    default: SK_ABORT("unsupported matrix column count (%d)", columns);
                 }
-            default: ABORT("unsupported row count (%d)", rows);
+            default: SK_ABORT("unsupported row count (%d)", rows);
         }
-    } else if (*this == *context.fHalf_Type) {
+    } else if (this->matches(*context.fTypes.fHalf)) {
         switch (rows) {
             case 1:
                 switch (columns) {
-                    case 2: return *context.fHalf2_Type;
-                    case 3: return *context.fHalf3_Type;
-                    case 4: return *context.fHalf4_Type;
-                    default: ABORT("unsupported vector column count (%d)", columns);
+                    case 1: return *context.fTypes.fHalf;
+                    case 2: return *context.fTypes.fHalf2;
+                    case 3: return *context.fTypes.fHalf3;
+                    case 4: return *context.fTypes.fHalf4;
+                    default: SK_ABORT("unsupported vector column count (%d)", columns);
                 }
             case 2:
                 switch (columns) {
-                    case 2: return *context.fHalf2x2_Type;
-                    case 3: return *context.fHalf3x2_Type;
-                    case 4: return *context.fHalf4x2_Type;
-                    default: ABORT("unsupported matrix column count (%d)", columns);
+                    case 2: return *context.fTypes.fHalf2x2;
+                    case 3: return *context.fTypes.fHalf3x2;
+                    case 4: return *context.fTypes.fHalf4x2;
+                    default: SK_ABORT("unsupported matrix column count (%d)", columns);
                 }
             case 3:
                 switch (columns) {
-                    case 2: return *context.fHalf2x3_Type;
-                    case 3: return *context.fHalf3x3_Type;
-                    case 4: return *context.fHalf4x3_Type;
-                    default: ABORT("unsupported matrix column count (%d)", columns);
+                    case 2: return *context.fTypes.fHalf2x3;
+                    case 3: return *context.fTypes.fHalf3x3;
+                    case 4: return *context.fTypes.fHalf4x3;
+                    default: SK_ABORT("unsupported matrix column count (%d)", columns);
                 }
             case 4:
                 switch (columns) {
-                    case 2: return *context.fHalf2x4_Type;
-                    case 3: return *context.fHalf3x4_Type;
-                    case 4: return *context.fHalf4x4_Type;
-                    default: ABORT("unsupported matrix column count (%d)", columns);
+                    case 2: return *context.fTypes.fHalf2x4;
+                    case 3: return *context.fTypes.fHalf3x4;
+                    case 4: return *context.fTypes.fHalf4x4;
+                    default: SK_ABORT("unsupported matrix column count (%d)", columns);
                 }
-            default: ABORT("unsupported row count (%d)", rows);
+            default: SK_ABORT("unsupported row count (%d)", rows);
         }
-    } else if (*this == *context.fDouble_Type) {
+    } else if (this->matches(*context.fTypes.fInt) || this->matches(*context.fTypes.fIntLiteral)) {
         switch (rows) {
             case 1:
                 switch (columns) {
-                    case 2: return *context.fDouble2_Type;
-                    case 3: return *context.fDouble3_Type;
-                    case 4: return *context.fDouble4_Type;
-                    default: ABORT("unsupported vector column count (%d)", columns);
+                    case 1: return *context.fTypes.fInt;
+                    case 2: return *context.fTypes.fInt2;
+                    case 3: return *context.fTypes.fInt3;
+                    case 4: return *context.fTypes.fInt4;
+                    default: SK_ABORT("unsupported vector column count (%d)", columns);
                 }
-            case 2:
-                switch (columns) {
-                    case 2: return *context.fDouble2x2_Type;
-                    case 3: return *context.fDouble3x2_Type;
-                    case 4: return *context.fDouble4x2_Type;
-                    default: ABORT("unsupported matrix column count (%d)", columns);
-                }
-            case 3:
-                switch (columns) {
-                    case 2: return *context.fDouble2x3_Type;
-                    case 3: return *context.fDouble3x3_Type;
-                    case 4: return *context.fDouble4x3_Type;
-                    default: ABORT("unsupported matrix column count (%d)", columns);
-                }
-            case 4:
-                switch (columns) {
-                    case 2: return *context.fDouble2x4_Type;
-                    case 3: return *context.fDouble3x4_Type;
-                    case 4: return *context.fDouble4x4_Type;
-                    default: ABORT("unsupported matrix column count (%d)", columns);
-                }
-            default: ABORT("unsupported row count (%d)", rows);
+            default: SK_ABORT("unsupported row count (%d)", rows);
         }
-    } else if (*this == *context.fInt_Type || *this == *context.fIntLiteral_Type) {
+    } else if (this->matches(*context.fTypes.fShort)) {
         switch (rows) {
             case 1:
                 switch (columns) {
-                    case 2: return *context.fInt2_Type;
-                    case 3: return *context.fInt3_Type;
-                    case 4: return *context.fInt4_Type;
-                    default: ABORT("unsupported vector column count (%d)", columns);
+                    case 1: return *context.fTypes.fShort;
+                    case 2: return *context.fTypes.fShort2;
+                    case 3: return *context.fTypes.fShort3;
+                    case 4: return *context.fTypes.fShort4;
+                    default: SK_ABORT("unsupported vector column count (%d)", columns);
                 }
-            default: ABORT("unsupported row count (%d)", rows);
+            default: SK_ABORT("unsupported row count (%d)", rows);
         }
-    } else if (*this == *context.fShort_Type) {
+    } else if (this->matches(*context.fTypes.fUInt)) {
         switch (rows) {
             case 1:
                 switch (columns) {
-                    case 2: return *context.fShort2_Type;
-                    case 3: return *context.fShort3_Type;
-                    case 4: return *context.fShort4_Type;
-                    default: ABORT("unsupported vector column count (%d)", columns);
+                    case 1: return *context.fTypes.fUInt;
+                    case 2: return *context.fTypes.fUInt2;
+                    case 3: return *context.fTypes.fUInt3;
+                    case 4: return *context.fTypes.fUInt4;
+                    default: SK_ABORT("unsupported vector column count (%d)", columns);
                 }
-            default: ABORT("unsupported row count (%d)", rows);
+            default: SK_ABORT("unsupported row count (%d)", rows);
         }
-    } else if (*this == *context.fByte_Type) {
+    } else if (this->matches(*context.fTypes.fUShort)) {
         switch (rows) {
             case 1:
                 switch (columns) {
-                    case 2: return *context.fByte2_Type;
-                    case 3: return *context.fByte3_Type;
-                    case 4: return *context.fByte4_Type;
-                    default: ABORT("unsupported vector column count (%d)", columns);
+                    case 1: return *context.fTypes.fUShort;
+                    case 2: return *context.fTypes.fUShort2;
+                    case 3: return *context.fTypes.fUShort3;
+                    case 4: return *context.fTypes.fUShort4;
+                    default: SK_ABORT("unsupported vector column count (%d)", columns);
                 }
-            default: ABORT("unsupported row count (%d)", rows);
+            default: SK_ABORT("unsupported row count (%d)", rows);
         }
-    } else if (*this == *context.fUInt_Type) {
+    } else if (this->matches(*context.fTypes.fBool)) {
         switch (rows) {
             case 1:
                 switch (columns) {
-                    case 2: return *context.fUInt2_Type;
-                    case 3: return *context.fUInt3_Type;
-                    case 4: return *context.fUInt4_Type;
-                    default: ABORT("unsupported vector column count (%d)", columns);
+                    case 1: return *context.fTypes.fBool;
+                    case 2: return *context.fTypes.fBool2;
+                    case 3: return *context.fTypes.fBool3;
+                    case 4: return *context.fTypes.fBool4;
+                    default: SK_ABORT("unsupported vector column count (%d)", columns);
                 }
-            default: ABORT("unsupported row count (%d)", rows);
-        }
-    } else if (*this == *context.fUShort_Type) {
-        switch (rows) {
-            case 1:
-                switch (columns) {
-                    case 2: return *context.fUShort2_Type;
-                    case 3: return *context.fUShort3_Type;
-                    case 4: return *context.fUShort4_Type;
-                    default: ABORT("unsupported vector column count (%d)", columns);
-                }
-            default: ABORT("unsupported row count (%d)", rows);
-        }
-    } else if (*this == *context.fUByte_Type) {
-        switch (rows) {
-            case 1:
-                switch (columns) {
-                    case 2: return *context.fUByte2_Type;
-                    case 3: return *context.fUByte3_Type;
-                    case 4: return *context.fUByte4_Type;
-                    default: ABORT("unsupported vector column count (%d)", columns);
-                }
-            default: ABORT("unsupported row count (%d)", rows);
-        }
-    } else if (*this == *context.fBool_Type) {
-        switch (rows) {
-            case 1:
-                switch (columns) {
-                    case 2: return *context.fBool2_Type;
-                    case 3: return *context.fBool3_Type;
-                    case 4: return *context.fBool4_Type;
-                    default: ABORT("unsupported vector column count (%d)", columns);
-                }
-            default: ABORT("unsupported row count (%d)", rows);
+            default: SK_ABORT("unsupported row count (%d)", rows);
         }
     }
-    ABORT("unsupported scalar_to_compound type %s", this->description().c_str());
+    SkDEBUGFAILF("unsupported toCompound type %s", this->description().c_str());
+    return *context.fTypes.fVoid;
 }
 
-} // namespace
+const Type* Type::clone(SymbolTable* symbolTable) const {
+    // Many types are built-ins, and exist in every SymbolTable by default.
+    if (this->isInBuiltinTypes()) {
+        return this;
+    }
+    // Even if the type isn't a built-in, it might already exist in the SymbolTable.
+    const Symbol* clonedSymbol = symbolTable->find(this->name());
+    if (clonedSymbol != nullptr) {
+        const Type& clonedType = clonedSymbol->as<Type>();
+        SkASSERT(clonedType.typeKind() == this->typeKind());
+        return &clonedType;
+    }
+    // This type actually needs to be cloned into the destination SymbolTable.
+    switch (this->typeKind()) {
+        case TypeKind::kArray: {
+            return symbolTable->addArrayDimension(&this->componentType(), this->columns());
+        }
+        case TypeKind::kStruct: {
+            // We are cloning an existing struct, so there's no need to call MakeStructType and
+            // fully error-check it again.
+            const std::string* name = symbolTable->takeOwnershipOfString(std::string(this->name()));
+            return symbolTable->add(std::make_unique<StructType>(
+                    this->fPosition, *name, this->fields(), this->isInterfaceBlock()));
+        }
+        default:
+            SkDEBUGFAILF("don't know how to clone type '%s'", this->description().c_str());
+            return nullptr;
+    }
+}
+
+std::unique_ptr<Expression> Type::coerceExpression(std::unique_ptr<Expression> expr,
+                                                   const Context& context) const {
+    if (!expr || expr->isIncomplete(context)) {
+        return nullptr;
+    }
+    if (expr->type().matches(*this)) {
+        return expr;
+    }
+
+    const Position pos = expr->fPosition;
+    const ProgramSettings& settings = context.fConfig->fSettings;
+    if (!expr->coercionCost(*this).isPossible(settings.fAllowNarrowingConversions)) {
+        context.fErrors->error(pos, "expected '" + this->displayName() + "', but found '" +
+                expr->type().displayName() + "'");
+        return nullptr;
+    }
+
+    if (this->isScalar()) {
+        return ConstructorScalarCast::Make(context, pos, *this, std::move(expr));
+    }
+    if (this->isVector() || this->isMatrix()) {
+        return ConstructorCompoundCast::Make(context, pos, *this, std::move(expr));
+    }
+    if (this->isArray()) {
+        return ConstructorArrayCast::Make(context, pos, *this, std::move(expr));
+    }
+    context.fErrors->error(pos, "cannot construct '" + this->displayName() + "'");
+    return nullptr;
+}
+
+static bool is_or_contains_array(const Type* type, bool onlyMatchUnsizedArrays) {
+    if (type->isStruct()) {
+        for (const Type::Field& f : type->fields()) {
+            if (is_or_contains_array(f.fType, onlyMatchUnsizedArrays)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    if (type->isArray()) {
+        return onlyMatchUnsizedArrays
+                    ? (type->isUnsizedArray() || is_or_contains_array(&type->componentType(), true))
+                    : true;
+    }
+
+    return false;
+}
+
+bool Type::isOrContainsArray() const {
+    return is_or_contains_array(this, /*onlyMatchUnsizedArrays=*/false);
+}
+
+bool Type::isOrContainsUnsizedArray() const {
+    return is_or_contains_array(this, /*onlyMatchUnsizedArrays=*/true);
+}
+
+bool Type::isOrContainsAtomic() const {
+    if (this->isAtomic()) {
+        return true;
+    }
+
+    if (this->isArray() && this->componentType().isOrContainsAtomic()) {
+        return true;
+    }
+
+    if (this->isStruct()) {
+        for (const Field& f : this->fields()) {
+            if (f.fType->isOrContainsAtomic()) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+bool Type::isAllowedInES2(const Context& context) const {
+    return !context.fConfig->strictES2Mode() || this->isAllowedInES2();
+}
+
+bool Type::checkForOutOfRangeLiteral(const Context& context, const Expression& expr) const {
+    bool foundError = false;
+    const Type& baseType = this->componentType();
+    if (baseType.isNumber()) {
+        // Replace constant expressions with their corresponding values.
+        const Expression* valueExpr = ConstantFolder::GetConstantValueForVariable(expr);
+        if (valueExpr->supportsConstantValues()) {
+            // Iterate over every constant subexpression in the value.
+            int numSlots = valueExpr->type().slotCount();
+            for (int slot = 0; slot < numSlots; ++slot) {
+                std::optional<double> slotVal = valueExpr->getConstantValue(slot);
+                // Check for Literal values that are out of range for the base type.
+                if (slotVal.has_value() &&
+                    baseType.checkForOutOfRangeLiteral(context, *slotVal, valueExpr->fPosition)) {
+                    foundError = true;
+                }
+            }
+        }
+    }
+
+    // We don't need range checks for floats or booleans; any matched-type value is acceptable.
+    return foundError;
+}
+
+bool Type::checkForOutOfRangeLiteral(const Context& context, double value, Position pos) const {
+    SkASSERT(this->isScalar());
+    if (!this->isNumber()) {
+       return false;
+    }
+    if (value >= this->minimumValue() && value <= this->maximumValue()) {
+        return false;
+    }
+    // We found a value that can't fit in our type. Flag it as an error.
+    context.fErrors->error(pos, SkSL::String::printf("value is out of range for type '%s': %.0f",
+                                                     this->displayName().c_str(),
+                                                     value));
+    return true;
+}
+
+bool Type::checkIfUsableInArray(const Context& context, Position arrayPos) const {
+    if (this->isArray()) {
+        context.fErrors->error(arrayPos, "multi-dimensional arrays are not supported");
+        return false;
+    }
+    if (this->isVoid()) {
+        context.fErrors->error(arrayPos, "type 'void' may not be used in an array");
+        return false;
+    }
+    if (this->isOpaque() && !this->isAtomic()) {
+        context.fErrors->error(arrayPos, "opaque type '" + std::string(this->name()) +
+                                         "' may not be used in an array");
+        return false;
+    }
+    return true;
+}
+
+SKSL_INT Type::convertArraySize(const Context& context, Position arrayPos,
+        std::unique_ptr<Expression> size) const {
+    size = context.fTypes.fInt->coerceExpression(std::move(size), context);
+    if (!size) {
+        return 0;
+    }
+    if (!this->checkIfUsableInArray(context, arrayPos)) {
+        return 0;
+    }
+    SKSL_INT count;
+    if (!ConstantFolder::GetConstantInt(*size, &count)) {
+        context.fErrors->error(size->fPosition, "array size must be an integer");
+        return 0;
+    }
+    if (count <= 0) {
+        context.fErrors->error(size->fPosition, "array size must be positive");
+        return 0;
+    }
+    if (!SkTFitsIn<int32_t>(count)) {
+        context.fErrors->error(size->fPosition, "array size is too large");
+        return 0;
+    }
+    return static_cast<int>(count);
+}
+
+std::string Type::Field::description() const {
+    return fModifiers.description() + fType->displayName() + " " + std::string(fName) + ";";
+}
+
+}  // namespace SkSL

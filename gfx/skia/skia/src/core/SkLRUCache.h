@@ -9,14 +9,14 @@
 #define SkLRUCache_DEFINED
 
 #include "include/private/SkChecksum.h"
-#include "include/private/SkTHash.h"
-#include "src/core/SkTInternalLList.h"
+#include "src/base/SkTInternalLList.h"
+#include "src/core/SkTHash.h"
 
 /**
  * A generic LRU cache.
  */
 template <typename K, typename V, typename HashK = SkGoodHash>
-class SkLRUCache : public SkNoncopyable {
+class SkLRUCache {
 private:
     struct Entry {
         Entry(const K& key, V&& value)
@@ -30,8 +30,8 @@ private:
     };
 
 public:
-    explicit SkLRUCache(int maxCount)
-    : fMaxCount(maxCount) {}
+    explicit SkLRUCache(int maxCount) : fMaxCount(maxCount) {}
+    SkLRUCache() = delete;
 
     ~SkLRUCache() {
         Entry* node = fLRU.head();
@@ -41,6 +41,10 @@ public:
             node = fLRU.head();
         }
     }
+
+    // Make noncopyable
+    SkLRUCache(const SkLRUCache&) = delete;
+    SkLRUCache& operator=(const SkLRUCache&) = delete;
 
     V* find(const K& key) {
         Entry** value = fMap.find(key);
@@ -56,6 +60,8 @@ public:
     }
 
     V* insert(const K& key, V value) {
+        SkASSERT(!this->find(key));
+
         Entry* entry = new Entry(key, std::move(value));
         fMap.set(entry);
         fLRU.addToHead(entry);
@@ -65,16 +71,25 @@ public:
         return &entry->fValue;
     }
 
-    int count() {
+    V* insert_or_update(const K& key, V value) {
+        if (V* found = this->find(key)) {
+            *found = std::move(value);
+            return found;
+        } else {
+            return this->insert(key, std::move(value));
+        }
+    }
+
+    int count() const {
         return fMap.count();
     }
 
-    template <typename Fn>  // f(V*)
+    template <typename Fn>  // f(K*, V*)
     void foreach(Fn&& fn) {
         typename SkTInternalLList<Entry>::Iter iter;
         for (Entry* e = iter.init(fLRU, SkTInternalLList<Entry>::Iter::kHead_IterStart); e;
              e = iter.next()) {
-            fn(&e->fValue);
+            fn(&e->fKey, &e->fValue);
         }
     }
 

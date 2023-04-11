@@ -10,8 +10,8 @@
 
 #include "include/core/SkRect.h"
 #include "include/private/SkColorData.h"
-#include "include/private/SkMacros.h"
-#include "include/private/SkTemplates.h"
+#include "include/private/base/SkMacros.h"
+#include "include/private/base/SkTemplates.h"
 
 #include <memory>
 
@@ -22,7 +22,7 @@
 struct SkMask {
     SkMask() : fImage(nullptr) {}
 
-    enum Format {
+    enum Format : uint8_t {
         kBW_Format, //!< 1bit per pixel mask (e.g. monochrome)
         kA8_Format, //!< 8bits per pixel mask (e.g. antialiasing)
         k3D_Format, //!< 3 8bit per pixl planes: alpha, mul, add
@@ -237,7 +237,7 @@ template <> struct SkMask::AlphaIter<SkMask::kLCD16_Format> {
  *  Stack class used to manage the fImage buffer in a SkMask.
  *  When this object loses scope, the buffer is freed with SkMask::FreeImage().
  */
-using SkAutoMaskFreeImage = std::unique_ptr<uint8_t, SkFunctionWrapper<decltype(SkMask::FreeImage), SkMask::FreeImage>>;
-#define SkAutoMaskFreeImage(...) SK_REQUIRE_LOCAL_VAR(SkAutoMaskFreeImage)
+using SkAutoMaskFreeImage =
+        std::unique_ptr<uint8_t, SkFunctionObject<SkMask::FreeImage>>;
 
 #endif

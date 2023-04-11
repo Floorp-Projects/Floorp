@@ -4,9 +4,11 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-
-#include "include/private/SkMalloc.h"
 #include "src/codec/SkColorTable.h"
+
+#include "include/private/base/SkMalloc.h"
+
+#include <cstring>
 
 SkColorTable::SkColorTable(const SkPMColor colors[], int count) {
     SkASSERT(0 == count || colors);

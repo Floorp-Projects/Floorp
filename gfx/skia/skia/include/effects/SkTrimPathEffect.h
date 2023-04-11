@@ -8,7 +8,11 @@
 #ifndef SkTrimPathEffect_DEFINED
 #define SkTrimPathEffect_DEFINED
 
-#include "include/core/SkPathEffect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkTypes.h"
+
+class SkPathEffect;
 
 class SK_API SkTrimPathEffect {
 public:
@@ -33,7 +37,7 @@ public:
      *
      *  Note: for Mode::kNormal, this will return one (logical) segment (even if it is spread
      *        across multiple contours). For Mode::kInverted, this will return 2 logical
-     *        segments: 0...stopT and startT...1
+     *        segments: stopT..1 and 0...startT, in this order.
      */
     static sk_sp<SkPathEffect> Make(SkScalar startT, SkScalar stopT, Mode = Mode::kNormal);
 };

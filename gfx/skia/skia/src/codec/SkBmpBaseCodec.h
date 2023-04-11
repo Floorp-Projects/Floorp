@@ -7,8 +7,15 @@
 #ifndef SkBmpBaseCodec_DEFINED
 #define SkBmpBaseCodec_DEFINED
 
-#include "include/private/SkTemplates.h"
+#include "include/codec/SkCodec.h"
+#include "include/private/base/SkTemplates.h"
 #include "src/codec/SkBmpCodec.h"
+
+#include <cstdint>
+#include <memory>
+
+class SkStream;
+struct SkEncodedInfo;
 
 /*
  * Common base class for SkBmpStandardCodec and SkBmpMaskCodec.
@@ -31,8 +38,8 @@ protected:
     uint8_t* srcBuffer() { return reinterpret_cast<uint8_t*>(fSrcBuffer.get()); }
 
 private:
-    SkAutoFree fSrcBuffer;
+    skia_private::UniqueVoidPtr fSrcBuffer;
 
-    typedef SkBmpCodec INHERITED;
+    using INHERITED = SkBmpCodec;
 };
 #endif // SkBmpBaseCodec_DEFINED
