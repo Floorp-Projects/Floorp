@@ -178,7 +178,10 @@ for result in results:
                 not iface in DEPRECATED_INTERFACE__EXCLUDE_LIST
                 and not name in unsafe_getters_names
                 and member.isAttr()
-                and member.getExtendedAttribute("Deprecated")
+                and (
+                    member.getExtendedAttribute("Deprecated")
+                    or member.getExtendedAttribute("LegacyLenientThis")
+                )
             ):
                 unsafe_getters_names.append(name)
 

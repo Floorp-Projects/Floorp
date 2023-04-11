@@ -13,6 +13,9 @@ module.exports = [
   "mozPreservesPitch",
   "mozPressure",
   "nearestViewportElement",
+  "onmouseenter",
+  "onmouseleave",
   "onmozfullscreenchange",
   "onmozfullscreenerror",
+  "onreadystatechange",
 ];
