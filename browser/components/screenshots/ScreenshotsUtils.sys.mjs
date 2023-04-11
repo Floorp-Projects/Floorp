@@ -384,8 +384,6 @@ export var ScreenshotsUtils = {
    * @param rect DOMRect containing bounds of the screenshot.
    */
   async takeScreenshot(browser, dialog, rect) {
-    this.cropScreenshotRectIfNeeded(rect);
-
     let { canvas, snapshot } = await this.createCanvas(rect, browser);
 
     let newImg = dialog._frame.contentDocument.createElement("img");
@@ -411,6 +409,8 @@ export var ScreenshotsUtils = {
    * @returns The canvas and snapshot in an object
    */
   async createCanvas(box, browser) {
+    this.cropScreenshotRectIfNeeded(box);
+
     let rect = new DOMRect(box.x1, box.y1, box.width, box.height);
     let { devicePixelRatio } = box;
 
