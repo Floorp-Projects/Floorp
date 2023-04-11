@@ -390,11 +390,6 @@ nsresult nsFileControlFrame::SetFormProperty(nsAtom* aName,
   return NS_OK;
 }
 
-void nsFileControlFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                                          const nsDisplayListSet& aLists) {
-  BuildDisplayListForInline(aBuilder, aLists);
-}
-
 #ifdef ACCESSIBILITY
 a11y::AccType nsFileControlFrame::AccessibleType() {
   return a11y::eHTMLFileInputType;
