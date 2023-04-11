@@ -2339,8 +2339,13 @@ package org.mozilla.geckoview {
 
   public static interface WebExtensionController.AddonManagerDelegate {
     method @UiThread default public void onDisabled(@NonNull WebExtension);
+    method @UiThread default public void onDisabling(@NonNull WebExtension);
     method @UiThread default public void onEnabled(@NonNull WebExtension);
+    method @UiThread default public void onEnabling(@NonNull WebExtension);
+    method @UiThread default public void onInstalled(@NonNull WebExtension);
+    method @UiThread default public void onInstalling(@NonNull WebExtension);
     method @UiThread default public void onUninstalled(@NonNull WebExtension);
+    method @UiThread default public void onUninstalling(@NonNull WebExtension);
   }
 
   public static interface WebExtensionController.DebuggerDelegate {

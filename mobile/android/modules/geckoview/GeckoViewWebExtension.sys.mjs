@@ -527,6 +527,20 @@ class AddonManagerListener {
     lazy.AddonManager.addAddonListener(this);
   }
 
+  async onDisabling(aAddon) {
+    debug`onDisabling ${aAddon.id}`;
+
+    const extension = await exportExtension(
+      aAddon,
+      aAddon.userPermissions,
+      /* aSourceURI */ null
+    );
+    lazy.EventDispatcher.instance.sendRequest({
+      type: "GeckoView:WebExtension:OnDisabling",
+      extension,
+    });
+  }
+
   async onDisabled(aAddon) {
     debug`onDisabled ${aAddon.id}`;
 
@@ -537,6 +551,20 @@ class AddonManagerListener {
     );
     lazy.EventDispatcher.instance.sendRequest({
       type: "GeckoView:WebExtension:OnDisabled",
+      extension,
+    });
+  }
+
+  async onEnabling(aAddon) {
+    debug`onEnabling ${aAddon.id}`;
+
+    const extension = await exportExtension(
+      aAddon,
+      aAddon.userPermissions,
+      /* aSourceURI */ null
+    );
+    lazy.EventDispatcher.instance.sendRequest({
+      type: "GeckoView:WebExtension:OnEnabling",
       extension,
     });
   }
@@ -555,6 +583,20 @@ class AddonManagerListener {
     });
   }
 
+  async onUninstalling(aAddon) {
+    debug`onUninstalling ${aAddon.id}`;
+
+    const extension = await exportExtension(
+      aAddon,
+      aAddon.userPermissions,
+      /* aSourceURI */ null
+    );
+    lazy.EventDispatcher.instance.sendRequest({
+      type: "GeckoView:WebExtension:OnUninstalling",
+      extension,
+    });
+  }
+
   async onUninstalled(aAddon) {
     debug`onUninstalled ${aAddon.id}`;
 
@@ -565,6 +607,34 @@ class AddonManagerListener {
     );
     lazy.EventDispatcher.instance.sendRequest({
       type: "GeckoView:WebExtension:OnUninstalled",
+      extension,
+    });
+  }
+
+  async onInstalling(aAddon) {
+    debug`onInstalling ${aAddon.id}`;
+
+    const extension = await exportExtension(
+      aAddon,
+      aAddon.userPermissions,
+      /* aSourceURI */ null
+    );
+    lazy.EventDispatcher.instance.sendRequest({
+      type: "GeckoView:WebExtension:OnInstalling",
+      extension,
+    });
+  }
+
+  async onInstalled(aAddon) {
+    debug`onInstalled ${aAddon.id}`;
+
+    const extension = await exportExtension(
+      aAddon,
+      aAddon.userPermissions,
+      /* aSourceURI */ null
+    );
+    lazy.EventDispatcher.instance.sendRequest({
+      type: "GeckoView:WebExtension:OnInstalled",
       extension,
     });
   }
