@@ -43,7 +43,7 @@ export class InfoGroup extends HTMLElement {
 
     let criticalIcon = this.shadowRoot.querySelector("#critical-info");
     if (!this.item.Critical) {
-      criticalIcon.style.visibility = "hidden";
+      criticalIcon.style.display = "none";
     }
   }
 
