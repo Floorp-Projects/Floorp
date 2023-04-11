@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { workerHandler } from "devtools/client/shared/worker-utils";
+import { workerHandler } from "../../../../shared/worker-utils";
 import { prettyFast } from "./pretty-fast";
 
 var { SourceMapGenerator } = require("source-map");

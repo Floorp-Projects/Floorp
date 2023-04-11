@@ -10,7 +10,7 @@ import findOutOfScopeLocations from "./findOutOfScopeLocations";
 import { hasSyntaxError } from "./validate";
 import mapExpression from "./mapExpression";
 
-import { workerHandler } from "devtools/client/shared/worker-utils";
+import { workerHandler } from "../../../../shared/worker-utils";
 
 function clearState() {
   clearASTs();
