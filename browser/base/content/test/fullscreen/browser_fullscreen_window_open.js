@@ -28,7 +28,7 @@ async function testWindowOpen(iframeID) {
   BrowserTestUtils.removeTab(tab);
 }
 
-async function testWindowOpenExistingWindow() {
+async function testWindowOpenExistingWindow(funToOpenExitingWindow, iframeID) {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
   let popup = await jsWindowOpen(tab.linkedBrowser, true);
 
@@ -38,9 +38,9 @@ async function testWindowOpenExistingWindow() {
   info("Entering full-screen");
   await changeFullscreen(tab.linkedBrowser, true);
 
+  info("open existing popup window");
   await testExpectFullScreenExit(tab.linkedBrowser, true, async () => {
-    info("Calling window.open() again should reuse the existing window");
-    jsWindowOpen(tab.linkedBrowser, true);
+    await funToOpenExitingWindow(tab.linkedBrowser, iframeID);
   });
 
   // Cleanup
@@ -65,6 +65,38 @@ add_task(function test_iframeWindowOpen() {
   return testWindowOpen(IFRAME_ID);
 });
 
-add_task(function test_parentWindowOpenExistWindow() {
-  return testWindowOpenExistingWindow();
+add_task(async function test_parentWindowOpenExistWindow() {
+  await testWindowOpenExistingWindow(browser => {
+    info(
+      "Calling window.open() with same name again should reuse the existing window"
+    );
+    jsWindowOpen(browser, true);
+  });
+});
+
+add_task(async function test_iframeWindowOpenExistWindow() {
+  await testWindowOpenExistingWindow((browser, iframeID) => {
+    info(
+      "Calling window.open() with same name again should reuse the existing window"
+    );
+    jsWindowOpen(browser, true, iframeID);
+  }, IFRAME_ID);
+});
+
+add_task(async function test_parentWindowClickLinkOpenExistWindow() {
+  await testWindowOpenExistingWindow(browser => {
+    info(
+      "Clicking link with same target name should reuse the existing window"
+    );
+    jsClickLink(browser, true);
+  });
+});
+
+add_task(async function test_iframeWindowClickLinkOpenExistWindow() {
+  await testWindowOpenExistingWindow((browser, iframeID) => {
+    info(
+      "Clicking link with same target name should reuse the existing window"
+    );
+    jsClickLink(browser, true, iframeID);
+  }, IFRAME_ID);
 });

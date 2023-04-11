@@ -2,9 +2,11 @@
 <html>
 <head>
   <meta charset='utf-8'>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
 </head>
 <body>
-  <input></input>
+  <input></input><br>
+  <a href="https://example.com" target="test">link</a>
   <script>
     const MY_ORIGIN = window.location.origin;
     const CROSS_ORIGIN = "https://example.org";
@@ -43,6 +45,9 @@
       } else if(event.data === "elementfocus") {
         document.querySelector("input").focus();
         if (canReply) event.ports[0].postMessage('elementfocused');
+      } else if(event.data === "clicklink") {
+        synthesizeMouseAtCenter(document.querySelector("a"), {});
+        if (canReply) event.ports[0].postMessage('linkclicked');
       }
     }
     window.addEventListener('message', window.onMessage);
