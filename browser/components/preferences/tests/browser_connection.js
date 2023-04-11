@@ -13,7 +13,7 @@ function test() {
     Services.prefs.setIntPref("network.proxy.type", oldNetworkProxyType);
     Services.prefs.clearUserPref("network.proxy.no_proxies_on");
     // On accepting the dialog, we also write TRR values, so we need to clear
-    // them. They are tested separately in browser_connect_dnsoverhttps.js.
+    // them. They are tested separately in browser_privacy_dnsoverhttps.js.
     Services.prefs.clearUserPref("network.trr.mode");
     Services.prefs.clearUserPref("network.trr.uri");
   });
