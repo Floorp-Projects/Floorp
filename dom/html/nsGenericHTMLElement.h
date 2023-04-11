@@ -1233,7 +1233,7 @@ class nsGenericHTMLFormControlElementWithState
   NS_IMPL_FROMNODE_HELPER(nsGenericHTMLFormControlElementWithState,
                           IsGenericHTMLFormControlElementWithState())
 
-  // Element
+  // nsIContent
   bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                       const nsAString& aValue,
                       nsIPrincipal* aMaybeScriptedPrincipal,

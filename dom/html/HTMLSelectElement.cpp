@@ -1162,8 +1162,8 @@ bool HTMLSelectElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
       return true;
     }
   }
-  return nsGenericHTMLFormControlElementWithState::ParseAttribute(
-      aNamespaceID, aAttribute, aValue, aMaybeScriptedPrincipal, aResult);
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aMaybeScriptedPrincipal, aResult);
 }
 
 void HTMLSelectElement::MapAttributesIntoRule(
