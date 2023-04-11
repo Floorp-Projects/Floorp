@@ -14,10 +14,6 @@ SkAutoPixmapStorage::~SkAutoPixmapStorage() {
     this->freeStorage();
 }
 
-SkAutoPixmapStorage::SkAutoPixmapStorage(SkAutoPixmapStorage&& other) : fStorage(nullptr) {
-    *this = std::move(other);
-}
-
 SkAutoPixmapStorage& SkAutoPixmapStorage::operator=(SkAutoPixmapStorage&& other) {
     this->fStorage = other.fStorage;
     this->INHERITED::reset(other.info(), this->fStorage, other.rowBytes());
@@ -55,18 +51,6 @@ bool SkAutoPixmapStorage::tryAlloc(const SkImageInfo& info) {
 
 void SkAutoPixmapStorage::alloc(const SkImageInfo& info) {
     SkASSERT_RELEASE(this->tryAlloc(info));
-}
-
-void* SkAutoPixmapStorage::detachPixels() {
-    if (!fStorage) {
-        return nullptr;
-    }
-
-    void* data = fStorage;
-    fStorage = nullptr;
-    this->INHERITED::reset();
-
-    return data;
 }
 
 sk_sp<SkData> SkAutoPixmapStorage::detachPixelsAsData() {

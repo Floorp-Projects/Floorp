@@ -8,42 +8,29 @@
 #ifndef SKSL_DISCARDSTATEMENT
 #define SKSL_DISCARDSTATEMENT
 
-#include "include/private/SkSLIRNode.h"
-#include "include/private/SkSLStatement.h"
-#include "include/sksl/SkSLPosition.h"
-
-#include <memory>
-#include <string>
+#include "src/sksl/ir/SkSLExpression.h"
+#include "src/sksl/ir/SkSLStatement.h"
 
 namespace SkSL {
-
-class Context;
 
 /**
  * A 'discard' statement.
  */
-class DiscardStatement final : public Statement {
-public:
-    inline static constexpr Kind kIRNodeKind = Kind::kDiscard;
+struct DiscardStatement : public Statement {
+    DiscardStatement(int offset)
+    : INHERITED(offset, kDiscard_Kind) {}
 
-    DiscardStatement(Position pos) : INHERITED(pos, kIRNodeKind) {}
-
-    // Creates a discard-statement; reports errors via ErrorReporter.
-    static std::unique_ptr<Statement> Convert(const Context& context, Position pos);
-
-    // Creates a discard-statement; reports errors via SkASSERT.
-    static std::unique_ptr<Statement> Make(const Context& context, Position pos);
-
-    std::unique_ptr<Statement> clone() const override;
-
-    std::string description() const override {
-        return "discard;";
+    std::unique_ptr<Statement> clone() const override {
+        return std::unique_ptr<Statement>(new DiscardStatement(fOffset));
     }
 
-private:
-    using INHERITED = Statement;
+    String description() const override {
+        return String("discard;");
+    }
+
+    typedef Statement INHERITED;
 };
 
-}  // namespace SkSL
+} // namespace
 
 #endif

@@ -8,37 +8,29 @@
 #ifndef SKSL_BREAKSTATEMENT
 #define SKSL_BREAKSTATEMENT
 
-#include "include/private/SkSLStatement.h"
 #include "src/sksl/ir/SkSLExpression.h"
+#include "src/sksl/ir/SkSLStatement.h"
 
 namespace SkSL {
 
 /**
  * A 'break' statement.
  */
-class BreakStatement final : public Statement {
-public:
-    inline static constexpr Kind kIRNodeKind = Kind::kBreak;
-
-    BreakStatement(Position pos)
-        : INHERITED(pos, kIRNodeKind) {}
-
-    static std::unique_ptr<Statement> Make(Position pos) {
-        return std::make_unique<BreakStatement>(pos);
-    }
+struct BreakStatement : public Statement {
+    BreakStatement(int offset)
+    : INHERITED(offset, kBreak_Kind) {}
 
     std::unique_ptr<Statement> clone() const override {
-        return std::make_unique<BreakStatement>(fPosition);
+        return std::unique_ptr<Statement>(new BreakStatement(fOffset));
     }
 
-    std::string description() const override {
-        return "break;";
+    String description() const override {
+        return String("break;");
     }
 
-private:
-    using INHERITED = Statement;
+    typedef Statement INHERITED;
 };
 
-}  // namespace SkSL
+} // namespace
 
 #endif

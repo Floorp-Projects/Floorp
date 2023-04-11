@@ -8,10 +8,8 @@
 #ifndef SkShaderMaskFilter_DEFINED
 #define SkShaderMaskFilter_DEFINED
 
-#include "include/core/SkRefCnt.h"
-#include "include/core/SkTypes.h"
+#include "include/core/SkMaskFilter.h"
 
-class SkMaskFilter;
 class SkShader;
 
 class SK_API SkShaderMaskFilter {

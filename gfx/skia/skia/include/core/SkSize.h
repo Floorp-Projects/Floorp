@@ -10,8 +10,6 @@
 
 #include "include/core/SkScalar.h"
 
-#include <cstdint>
-
 struct SkISize {
     int32_t fWidth;
     int32_t fHeight;
@@ -32,10 +30,8 @@ struct SkISize {
     /** Set the width and height to 0 */
     void setEmpty() { fWidth = fHeight = 0; }
 
-    constexpr int32_t width() const { return fWidth; }
-    constexpr int32_t height() const { return fHeight; }
-
-    constexpr int64_t area() const { return fWidth * fHeight; }
+    int32_t width() const { return fWidth; }
+    int32_t height() const { return fHeight; }
 
     bool equals(int32_t w, int32_t h) const { return fWidth == w && fHeight == h; }
 };
@@ -56,6 +52,10 @@ struct SkSize {
 
     static SkSize Make(const SkISize& src) {
         return {SkIntToScalar(src.width()), SkIntToScalar(src.height())};
+    }
+
+    SkSize& operator=(const SkISize& src) {
+        return *this = SkSize{SkIntToScalar(src.fWidth), SkIntToScalar(src.fHeight)};
     }
 
     static SkSize MakeEmpty() { return {0, 0}; }

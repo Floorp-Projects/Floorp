@@ -8,9 +8,9 @@
 #ifndef SkRecord_DEFINED
 #define SkRecord_DEFINED
 
-#include "include/private/base/SkTLogic.h"
-#include "include/private/base/SkTemplates.h"
-#include "src/base/SkArenaAlloc.h"
+#include "include/private/SkTLogic.h"
+#include "include/private/SkTemplates.h"
+#include "src/core/SkArenaAlloc.h"
 #include "src/core/SkRecords.h"
 
 // SkRecord represents a sequence of SkCanvas calls, saved for future use.
@@ -28,7 +28,7 @@
 class SkRecord : public SkRefCnt {
 public:
     SkRecord() = default;
-    ~SkRecord() override;
+    ~SkRecord();
 
     // Returns the number of canvas commands in this SkRecord.
     int count() const { return fCount; }
@@ -85,6 +85,19 @@ public:
         return fRecords[i].set(this->allocCommand<T>());
     }
 
+    // Replace the i-th command with a new command of type T.
+    // You are expected to placement new an object of type T onto this pointer.
+    // You must show proof that you've already adopted the existing command.
+    template <typename T, typename Existing>
+    T* replace(int i, const SkRecords::Adopted<Existing>& proofOfAdoption) {
+        SkASSERT(i < this->count());
+
+        SkASSERT(Existing::kType == fRecords[i].type());
+        SkASSERT(proofOfAdoption == fRecords[i].ptr());
+
+        return fRecords[i].set(this->allocCommand<T>());
+    }
+
     // Does not return the bytes in any pointers embedded in the Records; callers
     // need to iterate with a visitor to measure those they care for.
     size_t bytesUsed() const;
@@ -116,13 +129,13 @@ private:
     };
 
     template <typename T>
-    std::enable_if_t<std::is_empty<T>::value, T*> allocCommand() {
+    SK_WHEN(std::is_empty<T>::value, T*) allocCommand() {
         static T singleton = {};
         return &singleton;
     }
 
     template <typename T>
-    std::enable_if_t<!std::is_empty<T>::value, T*> allocCommand() { return this->alloc<T>(); }
+    SK_WHEN(!std::is_empty<T>::value, T*) allocCommand() { return this->alloc<T>(); }
 
     void grow();
 
@@ -170,7 +183,7 @@ private:
     // support efficient random access and forward iteration.  (It doesn't need to be contiguous.)
     int fCount{0},
         fReserved{0};
-    skia_private::AutoTMalloc<Record> fRecords;
+    SkAutoTMalloc<Record> fRecords;
 
     // fAlloc needs to be a data structure which can append variable length data in contiguous
     // chunks, returning a stable handle to that data for later retrieval.

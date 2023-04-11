@@ -12,7 +12,7 @@
 
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkTypeface.h"
-#include "include/private/base/SkTArray.h"
+#include "include/private/SkTArray.h"
 
 class SkTypefaceCache {
 public:
@@ -47,10 +47,10 @@ public:
     void purgeAll();
 
     /**
-     *  Helper: returns a unique typefaceID to pass to the constructor of
+     *  Helper: returns a unique fontID to pass to the constructor of
      *  your subclass of SkTypeface
      */
-    static SkTypefaceID NewTypefaceID();
+    static SkFontID NewFontID();
 
     // These are static wrappers around a global instance of a cache.
 
@@ -68,7 +68,7 @@ private:
 
     void purge(int count);
 
-    skia_private::TArray<sk_sp<SkTypeface>> fTypefaces;
+    SkTArray<sk_sp<SkTypeface>> fTypefaces;
 };
 
 #endif

@@ -5,16 +5,14 @@
  * found in the LICENSE file.
  */
 
+#include "src/xml/SkXMLParser.h"
+
+#include "expat.h"
+
 #include "include/core/SkStream.h"
 #include "include/core/SkString.h"
 #include "include/core/SkTypes.h"
-#include "include/private/base/SkTemplates.h"
-#include "include/private/base/SkTo.h"
-#include "src/xml/SkXMLParser.h"
-
-#include <expat.h>
-
-#include <vector>
+#include "include/private/SkTo.h"
 
 static char const* const gErrorStrings[] = {
     "empty or missing file ",
@@ -41,7 +39,7 @@ void SkXMLParserError::getErrorString(SkString* str) const
     SkASSERT(str);
     SkString temp;
     if (fCode != kNoError) {
-        if ((unsigned)fCode < std::size(gErrorStrings))
+        if ((unsigned)fCode < SK_ARRAY_COUNT(gErrorStrings))
             temp.set(gErrorStrings[fCode - 1]);
         temp.append(fNoun);
     } else
@@ -71,21 +69,21 @@ struct ParsingContext {
         , fXMLParser(XML_ParserCreate_MM(nullptr, &sk_XML_alloc, nullptr)) { }
 
     void flushText() {
-        if (!fBufferedText.empty()) {
-            fParser->text(fBufferedText.data(), SkTo<int>(fBufferedText.size()));
-            fBufferedText.clear();
+        if (!fBufferedText.isEmpty()) {
+            fParser->text(fBufferedText.c_str(), SkTo<int>(fBufferedText.size()));
+            fBufferedText.reset();
         }
     }
 
     void appendText(const char* txt, size_t len) {
-        fBufferedText.insert(fBufferedText.end(), txt, &txt[len]);
+        fBufferedText.append(txt, len);
     }
 
     SkXMLParser* fParser;
-    SkAutoTCallVProc<std::remove_pointer_t<XML_Parser>, XML_ParserFree> fXMLParser;
+    SkAutoTCallVProc<skstd::remove_pointer_t<XML_Parser>, XML_ParserFree> fXMLParser;
 
 private:
-    std::vector<char> fBufferedText;
+    SkString fBufferedText;
 };
 
 #define HANDLER_CONTEXT(arg, name) ParsingContext* name = static_cast<ParsingContext*>(arg)
@@ -125,7 +123,7 @@ void XMLCALL entity_decl_handler(void *data,
                                  const XML_Char *notationName) {
     HANDLER_CONTEXT(data, ctx);
 
-    SkDEBUGF("'%s' entity declaration found, stopping processing", entityName);
+    SkDebugf("'%s' entity declaration found, stopping processing", entityName);
     XML_StopParser(ctx->fXMLParser, XML_FALSE);
 }
 
@@ -143,7 +141,7 @@ bool SkXMLParser::parse(SkStream& docStream)
 {
     ParsingContext ctx(this);
     if (!ctx.fXMLParser) {
-        SkDEBUGF("could not create XML parser\n");
+        SkDebugf("could not create XML parser\n");
         return false;
     }
 
@@ -154,12 +152,12 @@ bool SkXMLParser::parse(SkStream& docStream)
     // Disable entity processing, to inhibit internal entity expansion. See expat CVE-2013-0340.
     XML_SetEntityDeclHandler(ctx.fXMLParser, entity_decl_handler);
 
-    static constexpr int kBufferSize = 4096;
+    static const int kBufferSize = 512 SkDEBUGCODE( - 507);
     bool done = false;
     do {
         void* buffer = XML_GetBuffer(ctx.fXMLParser, kBufferSize);
         if (!buffer) {
-            SkDEBUGF("could not buffer enough to continue\n");
+            SkDebugf("could not buffer enough to continue\n");
             return false;
         }
 
@@ -167,13 +165,11 @@ bool SkXMLParser::parse(SkStream& docStream)
         done = docStream.isAtEnd();
         XML_Status status = XML_ParseBuffer(ctx.fXMLParser, SkToS32(len), done);
         if (XML_STATUS_ERROR == status) {
-        #if defined(SK_DEBUG)
             XML_Error error = XML_GetErrorCode(ctx.fXMLParser);
             int line = XML_GetCurrentLineNumber(ctx.fXMLParser);
             int column = XML_GetCurrentColumnNumber(ctx.fXMLParser);
             const XML_LChar* errorString = XML_ErrorString(error);
-            SkDEBUGF("parse error @%d:%d: %d (%s).\n", line, column, error, errorString);
-        #endif
+            SkDebugf("parse error @%d:%d: %d (%s).\n", line, column, error, errorString);
             return false;
         }
     } while (!done);

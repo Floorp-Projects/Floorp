@@ -9,7 +9,7 @@
 #define SkResourceCache_DEFINED
 
 #include "include/core/SkBitmap.h"
-#include "include/private/base/SkTDArray.h"
+#include "include/private/SkTDArray.h"
 #include "src/core/SkMessageBus.h"
 
 class SkCachedData;
@@ -165,7 +165,6 @@ public:
     static size_t GetEffectiveSingleAllocationByteLimit();
 
     static void PurgeAll();
-    static void CheckMessages();
 
     static void TestDumpMemoryStatistics();
 
@@ -271,7 +270,7 @@ private:
     size_t  fSingleAllocationByteLimit;
     int     fCount;
 
-    SkMessageBus<PurgeSharedIDMessage, uint32_t>::Inbox fPurgeSharedIDInbox;
+    SkMessageBus<PurgeSharedIDMessage>::Inbox fPurgeSharedIDInbox;
 
     void checkMessages();
     void purgeAsNeeded(bool forcePurge = false);

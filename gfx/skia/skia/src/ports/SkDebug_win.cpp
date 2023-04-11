@@ -9,7 +9,7 @@
 
 #if defined(SK_BUILD_FOR_WIN)
 
-#include "src/base/SkLeanWindows.h"
+#include "src/core/SkLeanWindows.h"
 
 #include <stdarg.h>
 #include <stdio.h>

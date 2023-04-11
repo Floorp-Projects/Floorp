@@ -5,28 +5,50 @@
  * found in the LICENSE file.
  */
 
-#include "include/core/SkColor.h"
-#include "include/core/SkRefCnt.h"
-#include "include/core/SkTypes.h"
-
-class SkColorFilter;
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkFlattenable.h"
 
 #ifndef SkOverdrawColorFilter_DEFINED
 #define SkOverdrawColorFilter_DEFINED
 
 /**
  *  Uses the value in the src alpha channel to set the dst pixel.
- *  0             -> colors[0]
- *  1             -> colors[1]
+ *  0             -> fColors[0]
+ *  1             -> fColors[1]
  *  ...
- *  5 (or larger) -> colors[5]
+ *  5 (or larger) -> fColors[5]
  *
  */
-class SK_API SkOverdrawColorFilter {
+class SK_API SkOverdrawColorFilter : public SkColorFilter {
 public:
     static constexpr int kNumColors = 6;
 
-    static sk_sp<SkColorFilter> MakeWithSkColors(const SkColor[kNumColors]);
+    static sk_sp<SkOverdrawColorFilter> Make(const SkPMColor colors[kNumColors]) {
+        return sk_sp<SkOverdrawColorFilter>(new SkOverdrawColorFilter(colors));
+    }
+
+#if SK_SUPPORT_GPU
+    std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(GrRecordingContext*,
+                                                             const GrColorInfo&) const override;
+#endif
+
+    static void RegisterFlattenables();
+
+protected:
+    void flatten(SkWriteBuffer& buffer) const override;
+
+private:
+    SK_FLATTENABLE_HOOKS(SkOverdrawColorFilter)
+
+    SkOverdrawColorFilter(const SkPMColor colors[kNumColors]) {
+        memcpy(fColors, colors, kNumColors * sizeof(SkPMColor));
+    }
+
+    bool onAppendStages(const SkStageRec&, bool) const override;
+
+    SkPMColor fColors[kNumColors];
+
+    typedef SkColorFilter INHERITED;
 };
 
 #endif // SkOverdrawColorFilter_DEFINED

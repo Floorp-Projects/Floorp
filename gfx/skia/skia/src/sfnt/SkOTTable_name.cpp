@@ -7,10 +7,11 @@
 
 #include "src/sfnt/SkOTTable_name.h"
 
-#include "src/base/SkEndian.h"
-#include "src/base/SkTSearch.h"
-#include "src/base/SkUTF.h"
+#include "include/private/SkTemplates.h"
+#include "src/core/SkEndian.h"
 #include "src/core/SkStringUtils.h"
+#include "src/core/SkTSearch.h"
+#include "src/core/SkUtils.h"
 
 static SkUnichar next_unichar_UTF16BE(const uint8_t** srcPtr, size_t* length) {
     SkASSERT(srcPtr && *srcPtr && length);
@@ -26,10 +27,10 @@ static SkUnichar next_unichar_UTF16BE(const uint8_t** srcPtr, size_t* length) {
     *length -= sizeof(leading);
     SkUnichar c = SkEndian_SwapBE16(leading);
 
-    if (SkUTF::IsTrailingSurrogateUTF16(c)) {
+    if (SkUTF16_IsTrailingSurrogate(c)) {
         return 0xFFFD;
     }
-    if (SkUTF::IsLeadingSurrogateUTF16(c)) {
+    if (SkUTF16_IsLeadingSurrogate(c)) {
         uint16_t trailing;
         if (*length < sizeof(trailing)) {
             *length = 0;
@@ -37,7 +38,7 @@ static SkUnichar next_unichar_UTF16BE(const uint8_t** srcPtr, size_t* length) {
         }
         memcpy(&trailing, *srcPtr, sizeof(trailing));
         SkUnichar c2 = SkEndian_SwapBE16(trailing);
-        if (!SkUTF::IsTrailingSurrogateUTF16(c2)) {
+        if (!SkUTF16_IsTrailingSurrogate(c2)) {
             return 0xFFFD;
         }
         *srcPtr += sizeof(trailing);
@@ -452,7 +453,7 @@ namespace {
 bool BCP47FromLanguageIdLess(const BCP47FromLanguageId& a, const BCP47FromLanguageId& b) {
     return a.languageID < b.languageID;
 }
-}  // namespace
+}
 
 bool SkOTTableName::Iterator::next(SkOTTableName::Iterator::Record& record) {
     SkOTTableName nameTable;
@@ -474,7 +475,7 @@ bool SkOTTableName::Iterator::next(SkOTTableName::Iterator::Record& record) {
     // Find the next record which matches the requested type.
     SkOTTableName::Record nameRecord;
     const size_t nameRecordsCount = SkEndian_SwapBE16(nameTable.count);
-    const size_t nameRecordsMax = std::min(nameRecordsCount, nameRecordsSize / sizeof(nameRecord));
+    const size_t nameRecordsMax = SkTMin(nameRecordsCount, nameRecordsSize / sizeof(nameRecord));
     do {
         if (fIndex >= nameRecordsMax) {
             return false;
@@ -505,7 +506,6 @@ bool SkOTTableName::Iterator::next(SkOTTableName::Iterator::Record& record) {
                 record.name.reset();
                 break; // continue?
             }
-            [[fallthrough]];
         case SkOTTableName::Record::PlatformID::Unicode:
         case SkOTTableName::Record::PlatformID::ISO:
             SkString_from_UTF16BE(nameString, nameLength, record.name);
@@ -574,7 +574,7 @@ bool SkOTTableName::Iterator::next(SkOTTableName::Iterator::Record& record) {
     // Handle format 0 languages, translating them into BCP 47.
     const BCP47FromLanguageId target = { languageID, "" };
     int languageIndex = SkTSearch<BCP47FromLanguageId, BCP47FromLanguageIdLess>(
-        BCP47FromLanguageID, std::size(BCP47FromLanguageID), target, sizeof(target));
+        BCP47FromLanguageID, SK_ARRAY_COUNT(BCP47FromLanguageID), target, sizeof(target));
     if (languageIndex >= 0) {
         record.language = BCP47FromLanguageID[languageIndex].bcp47;
         return true;

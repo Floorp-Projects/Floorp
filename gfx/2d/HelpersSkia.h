@@ -9,10 +9,8 @@
 
 #include "2D.h"
 #include "skia/include/core/SkCanvas.h"
-#include "skia/include/core/SkPathEffect.h"
-#include "skia/include/core/SkPathTypes.h"
-#include "skia/include/core/SkShader.h"
 #include "skia/include/effects/SkDashPathEffect.h"
+#include "skia/include/core/SkShader.h"
 #include "mozilla/Assertions.h"
 #include <cmath>
 #include <vector>
@@ -148,8 +146,8 @@ static inline bool StrokeOptionsToPaint(SkPaint& aPaint,
           SkFloatToScalar(aOptions.mDashPattern[i % aOptions.mDashLength]);
     }
 
-    auto dash = SkDashPathEffect::Make(&pattern.front(), dashCount,
-                                       SkFloatToScalar(aOptions.mDashOffset));
+    sk_sp<SkPathEffect> dash = SkDashPathEffect::Make(
+        &pattern.front(), dashCount, SkFloatToScalar(aOptions.mDashOffset));
     aPaint.setPathEffect(dash);
   }
 
@@ -305,14 +303,14 @@ static inline SkFontHinting GfxHintingToSkiaHinting(FontHinting aHinting) {
   return SkFontHinting::kNormal;
 }
 
-static inline FillRule GetFillRule(SkPathFillType aFillType) {
+static inline FillRule GetFillRule(SkPath::FillType aFillType) {
   switch (aFillType) {
-    case SkPathFillType::kWinding:
+    case SkPath::kWinding_FillType:
       return FillRule::FILL_WINDING;
-    case SkPathFillType::kEvenOdd:
+    case SkPath::kEvenOdd_FillType:
       return FillRule::FILL_EVEN_ODD;
-    case SkPathFillType::kInverseWinding:
-    case SkPathFillType::kInverseEvenOdd:
+    case SkPath::kInverseWinding_FillType:
+    case SkPath::kInverseEvenOdd_FillType:
     default:
       NS_WARNING("Unsupported fill type\n");
       break;

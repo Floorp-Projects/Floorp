@@ -9,10 +9,7 @@
 #define SkMD5_DEFINED
 
 #include "include/core/SkStream.h"
-#include "include/private/base/SkTo.h"
-
-#include <cstdint>
-#include <cstring>
+#include "include/private/SkTo.h"
 
 /* Calculate a 128-bit MD5 message-digest of the bytes sent to this stream. */
 class SkMD5 : public SkWStream {

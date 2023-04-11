@@ -8,18 +8,12 @@
 #define SkBmpCodec_DEFINED
 
 #include "include/codec/SkCodec.h"
-#include "include/codec/SkEncodedImageFormat.h"
-#include "include/core/SkColorType.h"
+#include "include/core/SkColorSpace.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkStream.h"
 #include "include/core/SkTypes.h"
-#include "modules/skcms/skcms.h"
-
-#include <cstddef>
-#include <cstdint>
-#include <memory>
-
-class SkStream;
-struct SkEncodedInfo;
-struct SkImageInfo;
+#include "src/codec/SkColorTable.h"
+#include "src/codec/SkSwizzler.h"
 
 /*
  * This class enables code sharing between its bmp codec subclasses.  The
@@ -108,8 +102,8 @@ protected:
      * BMPs are typically encoded as BGRA/BGR so this is a more efficient choice
      * than RGBA.
      */
-    inline static constexpr SkColorType kXformSrcColorType = kBGRA_8888_SkColorType;
-    inline static constexpr auto kXformSrcColorFormat = skcms_PixelFormat_BGRA_8888;
+    static constexpr SkColorType kXformSrcColorType = kBGRA_8888_SkColorType;
+    static constexpr auto kXformSrcColorFormat = skcms_PixelFormat_BGRA_8888;
 
 private:
 
@@ -151,7 +145,7 @@ private:
     const size_t                fSrcRowBytes;
     std::unique_ptr<uint32_t[]> fXformBuffer;
 
-    using INHERITED = SkCodec;
+    typedef SkCodec INHERITED;
 };
 
 #endif

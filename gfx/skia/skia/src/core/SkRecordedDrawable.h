@@ -8,6 +8,7 @@
 #define SkRecordedDrawable_DEFINED
 
 #include "include/core/SkDrawable.h"
+#include "src/core/SkBBoxHierarchy.h"
 #include "src/core/SkRecord.h"
 #include "src/core/SkRecorder.h"
 
@@ -25,7 +26,6 @@ public:
 
 protected:
     SkRect onGetBounds() override { return fBounds; }
-    size_t onApproximateBytesUsed() override;
 
     void onDraw(SkCanvas* canvas) override;
 

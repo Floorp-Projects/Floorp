@@ -8,17 +8,12 @@
 #ifndef SkPicturePlayback_DEFINED
 #define SkPicturePlayback_DEFINED
 
-#include "include/core/SkM44.h"
-#include "include/core/SkPicture.h"
-#include "include/private/base/SkNoncopyable.h"
 #include "src/core/SkPictureFlat.h"
 
-#include <cstddef>
-#include <cstdint>
-
+class SkBitmap;
 class SkCanvas;
+class SkPaint;
 class SkPictureData;
-class SkReadBuffer;
 
 // The basic picture playback class replays the provided picture into a canvas.
 class SkPicturePlayback final : SkNoncopyable {
@@ -36,7 +31,7 @@ public:
     size_t curOpID() const { return fCurOffset; }
     void resetOpID() { fCurOffset = 0; }
 
-private:
+protected:
     const SkPictureData* fPictureData;
 
     // The offset of the current operation when within the draw method
@@ -46,7 +41,9 @@ private:
                   DrawType op,
                   uint32_t size,
                   SkCanvas* canvas,
-                  const SkM44& initialMatrix);
+                  const SkMatrix& initialMatrix);
+
+    static DrawType ReadOpAndSize(SkReadBuffer* reader, uint32_t* size);
 
     class AutoResetOpID {
     public:
@@ -61,7 +58,8 @@ private:
         SkPicturePlayback* fPlayback;
     };
 
-    using INHERITED = SkNoncopyable;
+private:
+    typedef SkNoncopyable INHERITED;
 };
 
 #endif

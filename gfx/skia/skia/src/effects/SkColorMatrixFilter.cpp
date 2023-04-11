@@ -5,14 +5,7 @@
  * found in the LICENSE file.
  */
 
-#include "include/core/SkBlendMode.h"
-#include "include/core/SkColor.h"
-#include "include/core/SkColorFilter.h"
-#include "include/core/SkRefCnt.h"
-#include "include/core/SkScalar.h"
-#include "include/core/SkTypes.h"
-#include "include/effects/SkColorMatrix.h"
-#include "include/private/base/SkCPUTypes.h"
+#include "include/effects/SkColorMatrixFilter.h"
 
 static SkScalar byte_to_unit_float(U8CPU byte) {
     if (0xFF == byte) {
@@ -23,7 +16,7 @@ static SkScalar byte_to_unit_float(U8CPU byte) {
     }
 }
 
-sk_sp<SkColorFilter> SkColorFilters::Lighting(SkColor mul, SkColor add) {
+sk_sp<SkColorFilter> SkColorMatrixFilter::MakeLightingFilter(SkColor mul, SkColor add) {
     const SkColor opaqueAlphaMask = SK_ColorBLACK;
     // omit the alpha and compare only the RGB values
     if (0 == (add & ~opaqueAlphaMask)) {

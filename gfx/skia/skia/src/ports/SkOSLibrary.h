@@ -8,8 +8,7 @@
 #ifndef SkOSLibrary_DEFINED
 #define SkOSLibrary_DEFINED
 
-void* SkLoadDynamicLibrary(const char* libraryName);
-void* SkGetProcedureAddress(void* library, const char* functionName);
-bool  SkFreeDynamicLibrary(void* library);
+void* DynamicLoadLibrary(const char* libraryName);
+void* GetProcedureAddress(void* library, const char* functionName);
 
 #endif

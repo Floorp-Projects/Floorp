@@ -39,23 +39,5 @@ namespace SkCodecAnimation {
          */
         kRestorePrevious    = 3,
     };
-
-    /**
-     * How to blend the current frame.
-     */
-    enum class Blend {
-        /**
-         *  Blend with the prior frame as if using SkBlendMode::kSrcOver.
-         */
-        kSrcOver,
-
-        /**
-         *  Blend with the prior frame as if using SkBlendMode::kSrc.
-         *
-         *  This frame's pixels replace the destination pixels.
-         */
-        kSrc,
-    };
-
-} // namespace SkCodecAnimation
+}
 #endif // SkCodecAnimation_DEFINED

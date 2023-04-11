@@ -28,7 +28,6 @@ struct DFAState {
             return !(*this == other);
         }
 
-#ifdef SK_DEBUG
         std::string description() const {
             std::string result = "<";
             const char* separator = "";
@@ -40,7 +39,6 @@ struct DFAState {
             result += ">";
             return result;
         }
-#endif
     };
 
     DFAState()

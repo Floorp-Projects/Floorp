@@ -7,30 +7,19 @@
 #ifndef SkOpSegment_DEFINE
 #define SkOpSegment_DEFINE
 
-#include "include/core/SkPath.h"
-#include "include/core/SkPoint.h"
-#include "include/core/SkScalar.h"
-#include "include/core/SkTypes.h"
-#include "include/pathops/SkPathOps.h"
-#include "include/private/base/SkDebug.h"
-#include "include/private/base/SkMath.h"
-#include "src/base/SkArenaAlloc.h"
+#include "src/core/SkArenaAlloc.h"
 #include "src/pathops/SkOpAngle.h"
 #include "src/pathops/SkOpSpan.h"
 #include "src/pathops/SkPathOpsBounds.h"
-#include "src/pathops/SkPathOpsConic.h"
 #include "src/pathops/SkPathOpsCubic.h"
 #include "src/pathops/SkPathOpsCurve.h"
-#include "src/pathops/SkPathOpsPoint.h"
-#include "src/pathops/SkPathOpsQuad.h"
-#include "src/pathops/SkPathOpsTypes.h"
 
-enum class SkOpRayDir;
+struct SkDCurve;
 class SkOpCoincidence;
 class SkOpContour;
-class SkPathWriter;
+enum class SkOpRayDir;
 struct SkOpRayHit;
-template <typename T> class SkTDArray;
+class SkPathWriter;
 
 class SkOpSegment {
 public:

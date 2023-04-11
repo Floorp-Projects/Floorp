@@ -6,13 +6,10 @@
  */
 
 #include "include/core/SkBBHFactory.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
 #include "src/core/SkRTree.h"
 
-sk_sp<SkBBoxHierarchy> SkRTreeFactory::operator()() const {
-    return sk_make_sp<SkRTree>();
-}
-
-void SkBBoxHierarchy::insert(const SkRect rects[], const Metadata[], int N) {
-    // Ignore Metadata.
-    this->insert(rects, N);
+SkBBoxHierarchy* SkRTreeFactory::operator()() const {
+    return new SkRTree;
 }

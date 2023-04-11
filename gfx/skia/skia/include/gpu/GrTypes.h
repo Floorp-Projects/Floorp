@@ -8,20 +8,54 @@
 #ifndef GrTypes_DEFINED
 #define GrTypes_DEFINED
 
+#include "include/core/SkMath.h"
 #include "include/core/SkTypes.h"
-#include "include/private/base/SkTo.h" // IWYU pragma: keep
+#include "include/gpu/GrConfig.h"
 
-#include <cstddef>
-#include <cstdint>
 class GrBackendSemaphore;
-
-namespace skgpu {
-enum class Mipmapped : bool;
-enum class Protected : bool;
-enum class Renderable : bool;
-}
+class SkImage;
+class SkSurface;
 
 ////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Defines overloaded bitwise operators to make it easier to use an enum as a
+ * bitfield.
+ */
+#define GR_MAKE_BITFIELD_OPS(X) \
+    inline X operator |(X a, X b) { \
+        return (X) (+a | +b); \
+    } \
+    inline X& operator |=(X& a, X b) { \
+        return (a = a | b); \
+    } \
+    inline X operator &(X a, X b) { \
+        return (X) (+a & +b); \
+    } \
+    inline X& operator &=(X& a, X b) { \
+        return (a = a & b); \
+    } \
+    template <typename T> \
+    inline X operator &(T a, X b) { \
+        return (X) (+a & +b); \
+    } \
+    template <typename T> \
+    inline X operator &(X a, T b) { \
+        return (X) (+a & +b); \
+    } \
+
+#define GR_DECL_BITFIELD_OPS_FRIENDS(X) \
+    friend X operator |(X a, X b); \
+    friend X& operator |=(X& a, X b); \
+    \
+    friend X operator &(X a, X b); \
+    friend X& operator &=(X& a, X b); \
+    \
+    template <typename T> \
+    friend X operator &(T a, X b); \
+    \
+    template <typename T> \
+    friend X operator &(X a, T b); \
 
 /**
  * Wraps a C++11 enum that we use as a bitfield, and enables a limited amount of
@@ -36,57 +70,110 @@ private:
     const int fValue;
 };
 
+// Or-ing a mask always returns another mask.
+template<typename TFlags> constexpr GrTFlagsMask<TFlags> operator|(GrTFlagsMask<TFlags> a,
+                                                                   GrTFlagsMask<TFlags> b) {
+    return GrTFlagsMask<TFlags>(a.value() | b.value());
+}
+template<typename TFlags> constexpr GrTFlagsMask<TFlags> operator|(GrTFlagsMask<TFlags> a,
+                                                                   TFlags b) {
+    return GrTFlagsMask<TFlags>(a.value() | static_cast<int>(b));
+}
+template<typename TFlags> constexpr GrTFlagsMask<TFlags> operator|(TFlags a,
+                                                                   GrTFlagsMask<TFlags> b) {
+    return GrTFlagsMask<TFlags>(static_cast<int>(a) | b.value());
+}
+template<typename TFlags> inline GrTFlagsMask<TFlags>& operator|=(GrTFlagsMask<TFlags>& a,
+                                                                  GrTFlagsMask<TFlags> b) {
+    return (a = a | b);
+}
+
+// And-ing two masks returns another mask; and-ing one with regular flags returns flags.
+template<typename TFlags> constexpr GrTFlagsMask<TFlags> operator&(GrTFlagsMask<TFlags> a,
+                                                                   GrTFlagsMask<TFlags> b) {
+    return GrTFlagsMask<TFlags>(a.value() & b.value());
+}
+template<typename TFlags> constexpr TFlags operator&(GrTFlagsMask<TFlags> a, TFlags b) {
+    return static_cast<TFlags>(a.value() & static_cast<int>(b));
+}
+template<typename TFlags> constexpr TFlags operator&(TFlags a, GrTFlagsMask<TFlags> b) {
+    return static_cast<TFlags>(static_cast<int>(a) & b.value());
+}
+template<typename TFlags> inline TFlags& operator&=(TFlags& a, GrTFlagsMask<TFlags> b) {
+    return (a = a & b);
+}
+
 /**
  * Defines bitwise operators that make it possible to use an enum class as a
  * basic bitfield.
  */
 #define GR_MAKE_BITFIELD_CLASS_OPS(X) \
-    [[maybe_unused]] constexpr GrTFlagsMask<X> operator~(X a) { \
+    constexpr GrTFlagsMask<X> operator~(X a) { \
         return GrTFlagsMask<X>(~static_cast<int>(a)); \
     } \
-    [[maybe_unused]] constexpr X operator|(X a, X b) { \
+    constexpr X operator|(X a, X b) { \
         return static_cast<X>(static_cast<int>(a) | static_cast<int>(b)); \
     } \
-    [[maybe_unused]] inline X& operator|=(X& a, X b) { \
+    inline X& operator|=(X& a, X b) { \
         return (a = a | b); \
     } \
-    [[maybe_unused]] constexpr bool operator&(X a, X b) { \
+    constexpr bool operator&(X a, X b) { \
         return SkToBool(static_cast<int>(a) & static_cast<int>(b)); \
-    } \
-    [[maybe_unused]] constexpr GrTFlagsMask<X> operator|(GrTFlagsMask<X> a, GrTFlagsMask<X> b) { \
-        return GrTFlagsMask<X>(a.value() | b.value()); \
-    } \
-    [[maybe_unused]] constexpr GrTFlagsMask<X> operator|(GrTFlagsMask<X> a, X b) { \
-        return GrTFlagsMask<X>(a.value() | static_cast<int>(b)); \
-    } \
-    [[maybe_unused]] constexpr GrTFlagsMask<X> operator|(X a, GrTFlagsMask<X> b) { \
-        return GrTFlagsMask<X>(static_cast<int>(a) | b.value()); \
-    } \
-    [[maybe_unused]] constexpr X operator&(GrTFlagsMask<X> a, GrTFlagsMask<X> b) { \
-        return static_cast<X>(a.value() & b.value()); \
-    } \
-    [[maybe_unused]] constexpr X operator&(GrTFlagsMask<X> a, X b) { \
-        return static_cast<X>(a.value() & static_cast<int>(b)); \
-    } \
-    [[maybe_unused]] constexpr X operator&(X a, GrTFlagsMask<X> b) { \
-        return static_cast<X>(static_cast<int>(a) & b.value()); \
-    } \
-    [[maybe_unused]] inline X& operator&=(X& a, GrTFlagsMask<X> b) { \
-        return (a = a & b); \
     } \
 
 #define GR_DECL_BITFIELD_CLASS_OPS_FRIENDS(X) \
     friend constexpr GrTFlagsMask<X> operator ~(X); \
     friend constexpr X operator |(X, X); \
     friend X& operator |=(X&, X); \
-    friend constexpr bool operator &(X, X); \
-    friend constexpr GrTFlagsMask<X> operator|(GrTFlagsMask<X>, GrTFlagsMask<X>); \
-    friend constexpr GrTFlagsMask<X> operator|(GrTFlagsMask<X>, X); \
-    friend constexpr GrTFlagsMask<X> operator|(X, GrTFlagsMask<X>); \
-    friend constexpr X operator&(GrTFlagsMask<X>, GrTFlagsMask<X>); \
-    friend constexpr X operator&(GrTFlagsMask<X>, X); \
-    friend constexpr X operator&(X, GrTFlagsMask<X>); \
-    friend X& operator &=(X&, GrTFlagsMask<X>)
+    friend constexpr bool operator &(X, X)
+
+////////////////////////////////////////////////////////////////////////////////
+
+// compile time versions of min/max
+#define GR_CT_MAX(a, b) (((b) < (a)) ? (a) : (b))
+#define GR_CT_MIN(a, b) (((b) < (a)) ? (b) : (a))
+
+/**
+ *  divide, rounding up
+ */
+static inline constexpr int32_t GrIDivRoundUp(int x, int y) {
+    SkASSERT(y > 0);
+    return (x + (y-1)) / y;
+}
+static inline constexpr uint32_t GrUIDivRoundUp(uint32_t x, uint32_t y) {
+    return (x + (y-1)) / y;
+}
+static inline constexpr size_t GrSizeDivRoundUp(size_t x, size_t y) { return (x + (y - 1)) / y; }
+
+/**
+ *  align up
+ */
+static inline constexpr uint32_t GrUIAlignUp(uint32_t x, uint32_t alignment) {
+    return GrUIDivRoundUp(x, alignment) * alignment;
+}
+static inline constexpr size_t GrSizeAlignUp(size_t x, size_t alignment) {
+    return GrSizeDivRoundUp(x, alignment) * alignment;
+}
+
+/**
+ * amount of pad needed to align up
+ */
+static inline constexpr uint32_t GrUIAlignUpPad(uint32_t x, uint32_t alignment) {
+    return (alignment - x % alignment) % alignment;
+}
+static inline constexpr size_t GrSizeAlignUpPad(size_t x, size_t alignment) {
+    return (alignment - x % alignment) % alignment;
+}
+
+/**
+ *  align down
+ */
+static inline constexpr uint32_t GrUIAlignDown(uint32_t x, uint32_t alignment) {
+    return (x / alignment) * alignment;
+}
+static inline constexpr size_t GrSizeAlignDown(size_t x, uint32_t alignment) {
+    return (x / alignment) * alignment;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -94,11 +181,10 @@ private:
  * Possible 3D APIs that may be used by Ganesh.
  */
 enum class GrBackendApi : unsigned {
+    kMetal,
+    kDawn,
     kOpenGL,
     kVulkan,
-    kMetal,
-    kDirect3D,
-    kDawn,
     /**
      * Mock is a backend that does not draw anything. It is used for unit tests
      * and to measure CPU overhead.
@@ -127,20 +213,26 @@ static constexpr GrBackendApi kMock_GrBackend = GrBackendApi::kMock;
 /**
  * Used to say whether a texture has mip levels allocated or not.
  */
-/** Deprecated legacy alias of skgpu::Mipmapped. */
-using GrMipmapped = skgpu::Mipmapped;
-/** Deprecated legacy alias of skgpu::Mipmapped. */
-using GrMipMapped = skgpu::Mipmapped;
+enum class GrMipMapped : bool {
+    kNo = false,
+    kYes = true
+};
 
 /*
  * Can a GrBackendObject be rendered to?
  */
-using GrRenderable = skgpu::Renderable;
+enum class GrRenderable : bool {
+    kNo = false,
+    kYes = true
+};
 
 /*
  * Used to say whether texture is backed by protected memory.
  */
-using GrProtected = skgpu::Protected;
+enum class GrProtected : bool {
+    kNo = false,
+    kYes = true
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -171,6 +263,7 @@ enum GrGLBackendState {
     kProgram_GrGLBackendState          = 1 << 8,
     kFixedFunction_GrGLBackendState    = 1 << 9,
     kMisc_GrGLBackendState             = 1 << 10,
+    kPathRendering_GrGLBackendState    = 1 << 11,
     kALL_GrGLBackendState              = 0xffff
 };
 
@@ -179,14 +272,14 @@ enum GrGLBackendState {
  */
 static const uint32_t kAll_GrBackendState = 0xffffffff;
 
+enum GrFlushFlags {
+    kNone_GrFlushFlags = 0,
+    // flush will wait till all submitted GPU work is finished before returning.
+    kSyncCpu_GrFlushFlag = 0x1,
+};
+
 typedef void* GrGpuFinishedContext;
 typedef void (*GrGpuFinishedProc)(GrGpuFinishedContext finishedContext);
-
-typedef void* GrGpuSubmittedContext;
-typedef void (*GrGpuSubmittedProc)(GrGpuSubmittedContext submittedContext, bool success);
-
-typedef void* GrDirectContextDestroyedContext;
-typedef void (*GrDirectContextDestroyedProc)(GrDirectContextDestroyedContext destroyedContext);
 
 /**
  * Struct to supply options to flush calls.
@@ -195,8 +288,7 @@ typedef void (*GrDirectContextDestroyedProc)(GrDirectContextDestroyedContext des
  * passes in an array of fNumSemaphores GrBackendSemaphores. In general these GrBackendSemaphore's
  * can be either initialized or not. If they are initialized, the backend uses the passed in
  * semaphore. If it is not initialized, a new semaphore is created and the GrBackendSemaphore
- * object is initialized with that semaphore. The semaphores are not sent to the GPU until the next
- * GrContext::submit call is made. See the GrContext::submit for more information.
+ * object is initialized with that semaphore.
  *
  * The client will own and be responsible for deleting the underlying semaphores that are stored
  * and returned in initialized GrBackendSemaphore objects. The GrBackendSemaphore objects
@@ -206,39 +298,52 @@ typedef void (*GrDirectContextDestroyedProc)(GrDirectContextDestroyedContext des
  * from this flush call and all previous flush calls has finished on the GPU. If the flush call
  * fails due to an error and nothing ends up getting sent to the GPU, the finished proc is called
  * immediately.
- *
- * If a submittedProc is provided, the submittedProc will be called when all work from this flush
- * call is submitted to the GPU. If the flush call fails due to an error and nothing will get sent
- * to the GPU, the submitted proc is called immediately. It is possibly that when work is finally
- * submitted, that the submission actual fails. In this case we will not reattempt to do the
- * submission. Skia notifies the client of these via the success bool passed into the submittedProc.
- * The submittedProc is useful to the client to know when semaphores that were sent with the flush
- * have actually been submitted to the GPU so that they can be waited on (or deleted if the submit
- * fails).
- * Note about GL: In GL work gets sent to the driver immediately during the flush call, but we don't
- * really know when the driver sends the work to the GPU. Therefore, we treat the submitted proc as
- * we do in other backends. It will be called when the next GrContext::submit is called after the
- * flush (or possibly during the flush if there is no work to be done for the flush). The main use
- * case for the submittedProc is to know when semaphores have been sent to the GPU and even in GL
- * it is required to call GrContext::submit to flush them. So a client should be able to treat all
- * backend APIs the same in terms of how the submitted procs are treated.
  */
 struct GrFlushInfo {
-    size_t fNumSemaphores = 0;
-    GrBackendSemaphore* fSignalSemaphores = nullptr;
-    GrGpuFinishedProc fFinishedProc = nullptr;
+    GrFlushFlags         fFlags = kNone_GrFlushFlags;
+    int                  fNumSemaphores = 0;
+    GrBackendSemaphore*  fSignalSemaphores = nullptr;
+    GrGpuFinishedProc    fFinishedProc = nullptr;
     GrGpuFinishedContext fFinishedContext = nullptr;
-    GrGpuSubmittedProc fSubmittedProc = nullptr;
-    GrGpuSubmittedContext fSubmittedContext = nullptr;
 };
 
 /**
- * Enum used as return value when flush with semaphores so the client knows whether the valid
- * semaphores will be submitted on the next GrContext::submit call.
+ * Enum used as return value when flush with semaphores so the client knows whether the semaphores
+ * were submitted to GPU or not.
  */
 enum class GrSemaphoresSubmitted : bool {
     kNo = false,
     kYes = true
+};
+
+/**
+ * Array of SkImages and SkSurfaces which Skia will prepare for external use when passed into a
+ * flush call on GrContext. All the SkImages and SkSurfaces must be GPU backed.
+ *
+ * If fPrepareSurfaceForPresent is not nullptr, then it must be an array the size of fNumSurfaces.
+ * Each entry in the array corresponds to the SkSurface at the same index in the fSurfaces array. If
+ * an entry is true, then that surface will be prepared for both external use and present.
+ *
+ * Currently this only has an effect if the backend API is Vulkan. In this case, all the underlying
+ * VkImages associated with the SkImages and SkSurfaces will be transitioned into the VkQueueFamily
+ * in which they were originally wrapped or created with. This allows a client to wrap a VkImage
+ * from a queue which is different from the graphics queue and then have Skia transition it back to
+ * that queue without needing to delete the SkImage or SkSurface. If the an SkSurface is also
+ * flagged to be prepared for present, then its VkImageLayout will be set to
+ * VK_IMAGE_LAYOUT_PRESENT_SRC_KHR if the VK_KHR_swapchain extension has been enabled for the
+ * GrContext and the original queue is not VK_QUEUE_FAMILY_EXTERNAL or VK_QUEUE_FAMILY_FOREIGN_EXT.
+ *
+ * If an SkSurface or SkImage is used again, it will be transitioned back to the graphics queue and
+ * whatever layout is needed for its use.
+ */
+struct GrPrepareForExternalIORequests {
+    int fNumImages = 0;
+    SkImage** fImages = nullptr;
+    int fNumSurfaces = 0;
+    SkSurface** fSurfaces = nullptr;
+    bool* fPrepareSurfaceForPresent = nullptr;
+
+    bool hasRequests() const { return fNumImages || fNumSurfaces; }
 };
 
 #endif

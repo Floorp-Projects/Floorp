@@ -8,66 +8,73 @@
 #ifndef SKSL_PREFIXEXPRESSION
 #define SKSL_PREFIXEXPRESSION
 
-#include "include/private/SkSLIRNode.h"
-#include "include/sksl/SkSLOperator.h"
-#include "include/sksl/SkSLPosition.h"
+#include "src/sksl/SkSLCompiler.h"
+#include "src/sksl/SkSLIRGenerator.h"
+#include "src/sksl/SkSLLexer.h"
 #include "src/sksl/ir/SkSLExpression.h"
-
-#include <memory>
-#include <string>
-#include <utility>
+#include "src/sksl/ir/SkSLFloatLiteral.h"
 
 namespace SkSL {
-
-class Context;
 
 /**
  * An expression modified by a unary operator appearing before it, such as '!flag'.
  */
-class PrefixExpression final : public Expression {
-public:
-    inline static constexpr Kind kIRNodeKind = Kind::kPrefix;
+struct PrefixExpression : public Expression {
+    PrefixExpression(Token::Kind op, std::unique_ptr<Expression> operand)
+    : INHERITED(operand->fOffset, kPrefix_Kind, operand->fType)
+    , fOperand(std::move(operand))
+    , fOperator(op) {}
 
-    // Use PrefixExpression::Make to automatically simplify various prefix expression types.
-    PrefixExpression(Position pos, Operator op, std::unique_ptr<Expression> operand)
-        : INHERITED(pos, kIRNodeKind, &operand->type())
-        , fOperator(op)
-        , fOperand(std::move(operand)) {}
-
-    // Creates an SkSL prefix expression; uses the ErrorReporter to report errors.
-    static std::unique_ptr<Expression> Convert(const Context& context, Position pos, Operator op,
-                                               std::unique_ptr<Expression> base);
-
-    // Creates an SkSL prefix expression; reports errors via ASSERT.
-    static std::unique_ptr<Expression> Make(const Context& context, Position pos, Operator op,
-                                            std::unique_ptr<Expression> base);
-
-    Operator getOperator() const {
-        return fOperator;
+    bool isConstant() const override {
+        return fOperator == Token::MINUS && fOperand->isConstant();
     }
 
-    std::unique_ptr<Expression>& operand() {
-        return fOperand;
+    bool hasSideEffects() const override {
+        return fOperator == Token::PLUSPLUS || fOperator == Token::MINUSMINUS ||
+               fOperand->hasSideEffects();
     }
 
-    const std::unique_ptr<Expression>& operand() const {
-        return fOperand;
+    std::unique_ptr<Expression> constantPropagate(const IRGenerator& irGenerator,
+                                                  const DefinitionMap& definitions) override {
+        if (fOperand->fKind == Expression::kFloatLiteral_Kind) {
+            return std::unique_ptr<Expression>(new FloatLiteral(
+                                                              irGenerator.fContext,
+                                                              fOffset,
+                                                              -((FloatLiteral&) *fOperand).fValue));
+
+        }
+        return nullptr;
     }
 
-    std::unique_ptr<Expression> clone(Position pos) const override {
-        return std::make_unique<PrefixExpression>(pos, this->getOperator(),
-                                                  this->operand()->clone());
+    SKSL_FLOAT getFVecComponent(int index) const override {
+        SkASSERT(fOperator == Token::Kind::MINUS);
+        return -fOperand->getFVecComponent(index);
     }
 
-    std::string description(OperatorPrecedence parentPrecedence) const override;
+    SKSL_INT getIVecComponent(int index) const override {
+        SkASSERT(fOperator == Token::Kind::MINUS);
+        return -fOperand->getIVecComponent(index);
+    }
 
-private:
-    Operator fOperator;
+    SKSL_FLOAT getMatComponent(int col, int row) const override {
+        SkASSERT(fOperator == Token::Kind::MINUS);
+        return -fOperand->getMatComponent(col, row);
+    }
+
+    std::unique_ptr<Expression> clone() const override {
+        return std::unique_ptr<Expression>(new PrefixExpression(fOperator, fOperand->clone()));
+    }
+
+    String description() const override {
+        return Compiler::OperatorName(fOperator) + fOperand->description();
+    }
+
     std::unique_ptr<Expression> fOperand;
+    const Token::Kind fOperator;
 
-    using INHERITED = Expression;
+    typedef Expression INHERITED;
 };
 
-}  // namespace SkSL
+} // namespace
 
 #endif

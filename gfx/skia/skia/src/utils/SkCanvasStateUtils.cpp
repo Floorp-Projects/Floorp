@@ -7,24 +7,12 @@
 
 #include "include/utils/SkCanvasStateUtils.h"
 
-#include "include/core/SkAlphaType.h"
-#include "include/core/SkBitmap.h"
 #include "include/core/SkCanvas.h"
-#include "include/core/SkColorType.h"
-#include "include/core/SkImageInfo.h"
-#include "include/core/SkMatrix.h"
-#include "include/core/SkPixmap.h"
-#include "include/core/SkPoint.h"
-#include "include/core/SkRect.h"
-#include "include/core/SkSize.h"
-#include "include/private/base/SkMalloc.h"
+#include "src/core/SkClipOpPriv.h"
 #include "src/core/SkDevice.h"
+#include "src/core/SkRasterClip.h"
 #include "src/core/SkWriter32.h"
 #include "src/utils/SkCanvasStack.h"
-
-#include <cstddef>
-#include <cstdint>
-#include <utility>
 
 /*
  * WARNING: The structs below are part of a stable ABI and as such we explicitly
@@ -122,20 +110,12 @@ public:
     }
 
     ~SkCanvasState_v1() {
-        // loop through the layers and free the data allocated to the clipRects.
-        // See setup_MC_state, clipRects is only allocated when the clip isn't empty; and empty
-        // is implicitly represented as clipRectCount == 0.
+        // loop through the layers and free the data allocated to the clipRects
         for (int i = 0; i < layerCount; ++i) {
-            if (layers[i].mcState.clipRectCount > 0) {
-                sk_free(layers[i].mcState.clipRects);
-            }
+            sk_free(layers[i].mcState.clipRects);
         }
 
-        if (mcState.clipRectCount > 0) {
-            sk_free(mcState.clipRects);
-        }
-
-        // layers is always allocated, even if it's with sk_malloc(0), so this is safe.
+        sk_free(mcState.clipRects);
         sk_free(layers);
     }
 
@@ -145,7 +125,7 @@ public:
     SkCanvasLayerState* layers;
 private:
     SkCanvas* originalCanvas;
-    using INHERITED = SkCanvasState;
+    typedef SkCanvasState INHERITED;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -175,6 +155,8 @@ static void setup_MC_state(SkMCState* state, const SkMatrix& matrix, const SkIRe
     }
 }
 
+
+
 SkCanvasState* SkCanvasStateUtils::CaptureCanvasState(SkCanvas* canvas) {
     SkASSERT(canvas);
 
@@ -187,51 +169,51 @@ SkCanvasState* SkCanvasStateUtils::CaptureCanvasState(SkCanvas* canvas) {
 
     setup_MC_state(&canvasState->mcState, canvas->getTotalMatrix(), canvas->getDeviceClipBounds());
 
-    // Historically, the canvas state could report multiple top-level layers because SkCanvas
-    // supported unclipped layers. With that feature removed, all required information is contained
-    // by the canvas' top-most device.
-    SkBaseDevice* device = canvas->topDevice();
-    SkASSERT(device);
+    /*
+     * decompose the layers
+     *
+     * storage is allocated on the stack for the first 3 layers. It is common in
+     * some view systems (e.g. Android) that a few non-clipped layers are present
+     * and we will not need to malloc any additional memory in those cases.
+     */
+    SkSWriter32<3*sizeof(SkCanvasLayerState)> layerWriter;
+    int layerCount = 0;
+    for (SkCanvas::LayerIter layer(canvas); !layer.done(); layer.next()) {
 
-    SkSWriter32<sizeof(SkCanvasLayerState)> layerWriter;
-    // we currently only work for bitmap backed devices
-    SkPixmap pmap;
-    if (!device->accessPixels(&pmap) || 0 == pmap.width() || 0 == pmap.height()) {
-        return nullptr;
-    }
-    // and for axis-aligned devices (so not transformed for an image filter)
-    if (!device->isPixelAlignedToGlobal()) {
-        return nullptr;
-    }
-
-    SkIPoint origin = device->getOrigin(); // safe since it's pixel aligned
-
-    SkCanvasLayerState* layerState =
-            (SkCanvasLayerState*) layerWriter.reserve(sizeof(SkCanvasLayerState));
-    layerState->type = kRaster_CanvasBackend;
-    layerState->x = origin.x();
-    layerState->y = origin.y();
-    layerState->width = pmap.width();
-    layerState->height = pmap.height();
-
-    switch (pmap.colorType()) {
-        case kN32_SkColorType:
-            layerState->raster.config = kARGB_8888_RasterConfig;
-            break;
-        case kRGB_565_SkColorType:
-            layerState->raster.config = kRGB_565_RasterConfig;
-            break;
-        default:
+        // we currently only work for bitmap backed devices
+        SkPixmap pmap;
+        if (!layer.device()->accessPixels(&pmap) || 0 == pmap.width() || 0 == pmap.height()) {
             return nullptr;
-    }
-    layerState->raster.rowBytes = pmap.rowBytes();
-    layerState->raster.pixels = pmap.writable_addr();
+        }
 
-    setup_MC_state(&layerState->mcState, device->localToDevice(), device->devClipBounds());
+        SkCanvasLayerState* layerState =
+                (SkCanvasLayerState*) layerWriter.reserve(sizeof(SkCanvasLayerState));
+        layerState->type = kRaster_CanvasBackend;
+        layerState->x = layer.x();
+        layerState->y = layer.y();
+        layerState->width = pmap.width();
+        layerState->height = pmap.height();
+
+        switch (pmap.colorType()) {
+            case kN32_SkColorType:
+                layerState->raster.config = kARGB_8888_RasterConfig;
+                break;
+            case kRGB_565_SkColorType:
+                layerState->raster.config = kRGB_565_RasterConfig;
+                break;
+            default:
+                return nullptr;
+        }
+        layerState->raster.rowBytes = pmap.rowBytes();
+        layerState->raster.pixels = pmap.writable_addr();
+
+        setup_MC_state(&layerState->mcState, layer.matrix(), layer.clipBounds());
+        layerCount++;
+    }
 
     // allocate memory for the layers and then and copy them to the struct
-    SkASSERT(layerWriter.bytesWritten() == sizeof(SkCanvasLayerState));
-    canvasState->layerCount = 1;
+    SkASSERT(layerWriter.bytesWritten() == layerCount * sizeof(SkCanvasLayerState));
+    canvasState->layerCount = layerCount;
     canvasState->layers = (SkCanvasLayerState*) sk_malloc_throw(layerWriter.bytesWritten());
     layerWriter.flatten(canvasState->layers);
 
@@ -312,19 +294,17 @@ std::unique_ptr<SkCanvas> SkCanvasStateUtils::MakeFromCanvasState(const SkCanvas
     // setup the matrix and clip on the n-way canvas
     setup_canvas_from_MC_state(state_v1->mcState, canvas.get());
 
-    // Iterate over the layers and add them to the n-way canvas. New clients will only send one
-    // layer since unclipped layers are no longer supported, but old canvas clients may still
-    // create them.
+    // Iterate over the layers and add them to the n-way canvas
     for (int i = state_v1->layerCount - 1; i >= 0; --i) {
         std::unique_ptr<SkCanvas> canvasLayer = make_canvas_from_canvas_layer(state_v1->layers[i]);
-        if (!canvasLayer) {
+        if (!canvasLayer.get()) {
             return nullptr;
         }
         canvas->pushCanvas(std::move(canvasLayer), SkIPoint::Make(state_v1->layers[i].x,
                                                                   state_v1->layers[i].y));
     }
 
-    return std::move(canvas);
+    return canvas;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -10,16 +10,8 @@
 
 #include "include/codec/SkCodec.h"
 #include "include/core/SkColor.h"
-#include "include/core/SkTypes.h"
+#include "include/core/SkImageInfo.h"
 #include "src/codec/SkSampler.h"
-
-#include <cstddef>
-#include <cstdint>
-#include <memory>
-
-struct SkEncodedInfo;
-struct SkIRect;
-struct SkImageInfo;
 
 class SkSwizzler : public SkSampler {
 public:

@@ -8,21 +8,15 @@
 #ifndef SkSVGCanvas_DEFINED
 #define SkSVGCanvas_DEFINED
 
-#include "include/core/SkTypes.h"
+#include "include/core/SkCanvas.h"
 
-#include <cstdint>
-#include <memory>
-
-class SkCanvas;
 class SkWStream;
-struct SkRect;
 
 class SK_API SkSVGCanvas {
 public:
     enum {
-        kConvertTextToPaths_Flag   = 0x01, // emit text as <path>s
-        kNoPrettyXML_Flag          = 0x02, // suppress newlines and tabs in output
-        kRelativePathEncoding_Flag = 0x04, // use relative commands for path encoding
+        kConvertTextToPaths_Flag = 0x01, // emit text as <path>s
+        kNoPrettyXML_Flag        = 0x02, // suppress newlines and tabs in output
     };
 
     /**

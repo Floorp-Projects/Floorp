@@ -8,24 +8,17 @@
 #ifndef SkSpecialSurface_DEFINED
 #define SkSpecialSurface_DEFINED
 
-#include "include/core/SkCanvas.h"
 #include "include/core/SkImageInfo.h"
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkSurfaceProps.h"
 
-#if defined(SK_GANESH)
-#include "include/private/gpu/ganesh/GrTypesPriv.h"
-#endif
-
-#if defined(SK_GRAPHITE)
-namespace skgpu::graphite {
-    class Recorder;
-}
+#if SK_SUPPORT_GPU
+#include "include/private/GrTypesPriv.h"
 #endif
 
 class GrBackendFormat;
+class GrContext;
 class GrRecordingContext;
-class SkBaseDevice;
 class SkBitmap;
 class SkCanvas;
 class SkSpecialImage;
@@ -40,48 +33,44 @@ class SkSpecialImage;
  */
 class SkSpecialSurface : public SkRefCnt {
 public:
-    SkSpecialSurface(sk_sp<SkBaseDevice>, const SkIRect& subset);
+    const SkSurfaceProps& props() const { return fProps; }
 
-#ifdef SK_DEBUG
-    SkSurfaceProps props() const { return fCanvas->getBaseProps(); }
-#endif
-
-    const SkIRect& subset() const { return fSubset; }
     int width() const { return fSubset.width(); }
     int height() const { return fSubset.height(); }
 
     /**
-    *  Return a canvas that will draw into this special surface. This will always
-    *  return the same canvas for a given special surface, and is managed/owned by the
-    *  special surface.
+    *  Return a canvas that will draw into this surface. This will always
+    *  return the same canvas for a given surface, and is managed/owned by the
+    *  surface.
     *
-    *  The canvas will be invalid after 'makeImageSnapshot' is called.
+    *  The canvas will be invalid after 'newImageSnapshot' is called.
     */
-    SkCanvas* getCanvas() { return fCanvas.get(); }
+    SkCanvas* getCanvas();
 
     /**
     *  Returns an image of the current state of the surface pixels up to this
     *  point. The canvas returned by 'getCanvas' becomes invalidated by this
     *  call and no more drawing to this surface is allowed.
+    *
+    *  Note: the caller inherits a ref from this call that must be balanced
     */
     sk_sp<SkSpecialImage> makeImageSnapshot();
 
-#if defined(SK_GANESH)
+#if SK_SUPPORT_GPU
     /**
      *  Allocate a new GPU-backed SkSpecialSurface. If the requested surface cannot
      *  be created, nullptr will be returned.
      */
-    static sk_sp<SkSpecialSurface> MakeRenderTarget(GrRecordingContext*,
-                                                    const SkImageInfo&,
-                                                    const SkSurfaceProps&,
-                                                    GrSurfaceOrigin);
+    static sk_sp<SkSpecialSurface> MakeRenderTarget(GrRecordingContext*, int width, int height,
+                                                    GrColorType, sk_sp<SkColorSpace> colorSpace,
+                                                    const SkSurfaceProps* = nullptr);
 #endif
 
-#if defined(SK_GRAPHITE)
-    static sk_sp<SkSpecialSurface> MakeGraphite(skgpu::graphite::Recorder*,
-                                                const SkImageInfo&,
-                                                const SkSurfaceProps&);
-#endif
+    /**
+     * Use and existing SkBitmap as the backing store.
+     */
+    static sk_sp<SkSpecialSurface> MakeFromBitmap(const SkIRect& subset, SkBitmap& bm,
+                                                  const SkSurfaceProps* = nullptr);
 
     /**
      *  Return a new CPU-backed surface, with the memory for the pixels automatically
@@ -91,11 +80,20 @@ public:
      *  supported configuration, nullptr will be returned.
      */
     static sk_sp<SkSpecialSurface> MakeRaster(const SkImageInfo&,
-                                              const SkSurfaceProps&);
+                                              const SkSurfaceProps* = nullptr);
+
+protected:
+    SkSpecialSurface(const SkIRect& subset, const SkSurfaceProps*);
+
+    // For testing only
+    friend class TestingSpecialSurfaceAccess;
+    const SkIRect& subset() const { return fSubset; }
 
 private:
-    std::unique_ptr<SkCanvas> fCanvas;
-    const SkIRect             fSubset;
+    const SkSurfaceProps fProps;
+    const SkIRect        fSubset;
+
+    typedef SkRefCnt INHERITED;
 };
 
 #endif

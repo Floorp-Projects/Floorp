@@ -5,22 +5,14 @@
  * found in the LICENSE file.
  */
 
-#include "src/effects/SkEmbossMaskFilter.h"
-
-#include "include/core/SkBlurTypes.h"
-#include "include/core/SkMatrix.h"
-#include "include/core/SkPoint.h"
-#include "include/core/SkTypes.h"
+#include "include/core/SkColorPriv.h"
+#include "include/core/SkString.h"
+#include "include/effects/SkBlurMaskFilter.h"
 #include "src/core/SkBlurMask.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
 #include "src/effects/SkEmbossMask.h"
-
-#if defined(SK_SUPPORT_LEGACY_EMBOSSMASKFILTER)
-#include "include/effects/SkBlurMaskFilter.h"
-#endif
-
-#include <cstring>
+#include "src/effects/SkEmbossMaskFilter.h"
 
 static void normalize3(SkScalar dst[3], const SkScalar src[3]) {
     SkScalar mag = SkScalarSquare(src[0]) + SkScalarSquare(src[1]) + SkScalarSquare(src[2]);
@@ -59,7 +51,7 @@ sk_sp<SkMaskFilter> SkBlurMaskFilter::MakeEmboss(SkScalar blurSigma, const SkSca
     light.fAmbient = SkUnitScalarClampToByte(ambient);
     // specular should be 0..15.99 as a scalar
     static const SkScalar kSpecularMultiplier = SkIntToScalar(255) / 16;
-    light.fSpecular = static_cast<U8CPU>(SkTPin(specular, 0.0f, 16.0f) * kSpecularMultiplier + 0.5);
+    light.fSpecular = static_cast<U8CPU>(SkScalarPin(specular, 0, 16) * kSpecularMultiplier + 0.5);
 
     return SkEmbossMaskFilter::Make(blurSigma, light);
 }

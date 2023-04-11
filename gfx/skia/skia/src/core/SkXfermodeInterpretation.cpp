@@ -5,21 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkXfermodeInterpretation.h"
-
-#include "include/core/SkBlendMode.h"
 #include "include/core/SkPaint.h"
+#include "src/core/SkXfermodeInterpretation.h"
 
 static bool just_solid_color(const SkPaint& p) {
     return SK_AlphaOPAQUE == p.getAlpha() && !p.getColorFilter() && !p.getShader();
 }
 
 SkXfermodeInterpretation SkInterpretXfermode(const SkPaint& paint, bool dstIsOpaque) {
-    const auto bm = paint.asBlendMode();
-    if (!bm) {
-        return kNormal_SkXfermodeInterpretation;
-    }
-    switch (bm.value()) {
+    switch (paint.getBlendMode()) {
         case SkBlendMode::kSrcOver:
             return kSrcOver_SkXfermodeInterpretation;
         case SkBlendMode::kSrc:

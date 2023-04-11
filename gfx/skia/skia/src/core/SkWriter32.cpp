@@ -5,11 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkWriter32.h"
-
-#include "include/core/SkSamplingOptions.h"
-#include "include/private/base/SkTo.h"
+#include "include/core/SkString.h"
+#include "include/private/SkTo.h"
 #include "src/core/SkMatrixPriv.h"
+#include "src/core/SkReader32.h"
+
+#include "src/core/SkWriter32.h"
 
 void SkWriter32::writeMatrix(const SkMatrix& matrix) {
     size_t size = SkMatrixPriv::WriteToMemory(matrix, nullptr);
@@ -17,18 +18,31 @@ void SkWriter32::writeMatrix(const SkMatrix& matrix) {
     SkMatrixPriv::WriteToMemory(matrix, this->reserve(size));
 }
 
-void SkWriter32::writeSampling(const SkSamplingOptions& sampling) {
-    this->write32(sampling.maxAniso);
-    if (!sampling.isAniso()) {
-        this->writeBool(sampling.useCubic);
-        if (sampling.useCubic) {
-            this->writeScalar(sampling.cubic.B);
-            this->writeScalar(sampling.cubic.C);
-        } else {
-            this->write32((unsigned)sampling.filter);
-            this->write32((unsigned)sampling.mipmap);
-        }
+/*
+ *  Strings are stored as: length[4-bytes] + string_data + '\0' + pad_to_mul_4
+ */
+
+const char* SkReader32::readString(size_t* outLen) {
+    size_t len = this->readU32();
+    const void* ptr = this->peek();
+
+    // skip over the string + '\0' and then pad to a multiple of 4
+    size_t alignedSize = SkAlign4(len + 1);
+    this->skip(alignedSize);
+
+    if (outLen) {
+        *outLen = len;
     }
+    return (const char*)ptr;
+}
+
+size_t SkReader32::readIntoString(SkString* copy) {
+    size_t len;
+    const char* ptr = this->readString(&len);
+    if (copy) {
+        copy->set(ptr, len);
+    }
+    return len;
 }
 
 void SkWriter32::writeString(const char str[], size_t len) {
@@ -61,7 +75,7 @@ size_t SkWriter32::WriteStringSize(const char* str, size_t len) {
 void SkWriter32::growToAtLeast(size_t size) {
     const bool wasExternal = (fExternal != nullptr) && (fData == fExternal);
 
-    fCapacity = 4096 + std::max(size, fCapacity + (fCapacity / 2));
+    fCapacity = 4096 + SkTMax(size, fCapacity + (fCapacity / 2));
     fInternal.realloc(fCapacity);
     fData = fInternal.get();
 

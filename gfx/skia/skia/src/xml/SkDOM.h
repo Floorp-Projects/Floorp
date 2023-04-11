@@ -10,9 +10,9 @@
 
 #include "include/core/SkScalar.h"
 #include "include/core/SkTypes.h"
-#include "include/private/base/SkNoncopyable.h"
-#include "include/private/base/SkTemplates.h"
-#include "src/base/SkArenaAlloc.h"
+#include "include/private/SkNoncopyable.h"
+#include "include/private/SkTemplates.h"
+#include "src/core/SkArenaAlloc.h"
 
 struct SkDOMNode;
 struct SkDOMAttr;
@@ -85,11 +85,11 @@ public:
     };
 
 private:
-    SkArenaAllocWithReset        fAlloc;
+    SkArenaAlloc                 fAlloc;
     Node*                        fRoot;
     std::unique_ptr<SkDOMParser> fParser;
 
-    using INHERITED = SkNoncopyable;
+    typedef SkNoncopyable INHERITED;
 };
 
 #endif

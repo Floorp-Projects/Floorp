@@ -4,25 +4,15 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "src/core/SkConvertPixels.h"
 
-#include "include/core/SkColorType.h"
-#include "include/core/SkImageInfo.h"
-#include "include/core/SkSize.h"
 #include "include/private/SkColorData.h"
-#include "include/private/base/SkAssert.h"
-#include "include/private/base/SkTemplates.h"
-#include "src/base/SkHalf.h"
-#include "src/base/SkRectMemcpy.h"
+#include "include/private/SkHalf.h"
+#include "include/private/SkImageInfoPriv.h"
+#include "src/core/SkColorSpacePriv.h"
 #include "src/core/SkColorSpaceXformSteps.h"
-#include "src/core/SkImageInfoPriv.h"
+#include "src/core/SkConvertPixels.h"
 #include "src/core/SkOpts.h"
 #include "src/core/SkRasterPipeline.h"
-#include "src/core/SkRasterPipelineOpContexts.h"
-
-#include <cstdint>
-#include <cstring>
-#include <initializer_list>
 
 static bool rect_memcpy(const SkImageInfo& dstInfo,       void* dstPixels, size_t dstRB,
                         const SkImageInfo& srcInfo, const void* srcPixels, size_t srcRB,
@@ -112,10 +102,7 @@ static bool convert_to_alpha8(const SkImageInfo& dstInfo,       void* vdst, size
         case kR16G16_unorm_SkColorType:
         case kR16G16_float_SkColorType:
         case kRGB_888x_SkColorType:
-        case kRGB_101010x_SkColorType:
-        case kBGR_101010x_SkColorType:
-        case kBGR_101010x_XR_SkColorType:
-        case kR8_unorm_SkColorType: {
+        case kRGB_101010x_SkColorType: {
             for (int y = 0; y < srcInfo.height(); ++y) {
                memset(dst, 0xFF, srcInfo.width());
                dst = SkTAddOffset<uint8_t>(dst, dstRB);
@@ -136,8 +123,7 @@ static bool convert_to_alpha8(const SkImageInfo& dstInfo,       void* vdst, size
         }
 
         case kBGRA_8888_SkColorType:
-        case kRGBA_8888_SkColorType:
-        case kSRGBA_8888_SkColorType: {
+        case kRGBA_8888_SkColorType: {
             auto src32 = (const uint32_t*) src;
             for (int y = 0; y < srcInfo.height(); y++) {
                 for (int x = 0; x < srcInfo.width(); x++) {
@@ -149,8 +135,7 @@ static bool convert_to_alpha8(const SkImageInfo& dstInfo,       void* vdst, size
             return true;
         }
 
-        case kRGBA_1010102_SkColorType:
-        case kBGRA_1010102_SkColorType: {
+        case kRGBA_1010102_SkColorType: {
             auto src32 = (const uint32_t*) src;
             for (int y = 0; y < srcInfo.height(); y++) {
                 for (int x = 0; x < srcInfo.width(); x++) {
@@ -215,39 +200,35 @@ static bool convert_to_alpha8(const SkImageInfo& dstInfo,       void* vdst, size
 }
 
 // Default: Use the pipeline.
-static void convert_with_pipeline(const SkImageInfo& dstInfo, void* dstRow, int dstStride,
-                                  const SkImageInfo& srcInfo, const void* srcRow, int srcStride,
+static void convert_with_pipeline(const SkImageInfo& dstInfo, void* dstRow, size_t dstRB,
+                                  const SkImageInfo& srcInfo, const void* srcRow, size_t srcRB,
                                   const SkColorSpaceXformSteps& steps) {
-    SkRasterPipeline_MemoryCtx src = { (void*)srcRow, srcStride },
-                               dst = { (void*)dstRow, dstStride };
+
+    SkRasterPipeline_MemoryCtx src = { (void*)srcRow, (int)(srcRB / srcInfo.bytesPerPixel()) },
+                               dst = { (void*)dstRow, (int)(dstRB / dstInfo.bytesPerPixel()) };
 
     SkRasterPipeline_<256> pipeline;
     pipeline.append_load(srcInfo.colorType(), &src);
-    steps.apply(&pipeline);
+    steps.apply(&pipeline, srcInfo.colorType());
+
+    pipeline.append_gamut_clamp_if_normalized(dstInfo);
+
     pipeline.append_store(dstInfo.colorType(), &dst);
     pipeline.run(0,0, srcInfo.width(), srcInfo.height());
 }
 
-bool SkConvertPixels(const SkImageInfo& dstInfo,       void* dstPixels, size_t dstRB,
+void SkConvertPixels(const SkImageInfo& dstInfo,       void* dstPixels, size_t dstRB,
                      const SkImageInfo& srcInfo, const void* srcPixels, size_t srcRB) {
     SkASSERT(dstInfo.dimensions() == srcInfo.dimensions());
     SkASSERT(SkImageInfoValidConversion(dstInfo, srcInfo));
-
-    int srcStride = (int)(srcRB / srcInfo.bytesPerPixel());
-    int dstStride = (int)(dstRB / dstInfo.bytesPerPixel());
-    if ((size_t)srcStride * srcInfo.bytesPerPixel() != srcRB ||
-        (size_t)dstStride * dstInfo.bytesPerPixel() != dstRB) {
-        return false;
-    }
 
     SkColorSpaceXformSteps steps{srcInfo.colorSpace(), srcInfo.alphaType(),
                                  dstInfo.colorSpace(), dstInfo.alphaType()};
 
     for (auto fn : {rect_memcpy, swizzle_or_premul, convert_to_alpha8}) {
         if (fn(dstInfo, dstPixels, dstRB, srcInfo, srcPixels, srcRB, steps)) {
-            return true;
+            return;
         }
     }
-    convert_with_pipeline(dstInfo, dstPixels, dstStride, srcInfo, srcPixels, srcStride, steps);
-    return true;
+    convert_with_pipeline(dstInfo, dstPixels, dstRB, srcInfo, srcPixels, srcRB, steps);
 }

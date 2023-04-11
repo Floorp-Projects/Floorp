@@ -18,7 +18,7 @@
 
 class SkSafeRange {
 public:
-    explicit operator bool() const { return fOK; }
+    MOZ_IMPLICIT operator bool() const { return fOK; }
 
     bool ok() const { return fOK; }
 
