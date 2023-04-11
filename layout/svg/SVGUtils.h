@@ -242,12 +242,11 @@ class SVGUtils final {
   static nsIFrame* GetOuterSVGFrameAndCoveredRegion(nsIFrame* aFrame,
                                                     nsRect* aRect);
 
-  /* Paint SVG frame with SVG effects - aDirtyRect is the area being
-   * redrawn, in device pixel coordinates relative to the outer svg */
+  /* Paint SVG frame with SVG effects
+   */
   static void PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
                                     const gfxMatrix& aTransform,
-                                    imgDrawingParams& aImgParams,
-                                    const nsIntRect* aDirtyRect = nullptr);
+                                    imgDrawingParams& aImgParams);
 
   /* Hit testing - check if point hits the clipPath of indicated
    * frame.  Returns true if no clipPath set. */

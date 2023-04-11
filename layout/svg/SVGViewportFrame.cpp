@@ -27,8 +27,7 @@ namespace mozilla {
 
 void SVGViewportFrame::PaintSVG(gfxContext& aContext,
                                 const gfxMatrix& aTransform,
-                                imgDrawingParams& aImgParams,
-                                const nsIntRect* aDirtyRect) {
+                                imgDrawingParams& aImgParams) {
   NS_ASSERTION(HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
                "Only painting of non-display SVG should take this code path");
 
@@ -48,8 +47,7 @@ void SVGViewportFrame::PaintSVG(gfxContext& aContext,
     SVGUtils::SetClipRect(&aContext, aTransform, clipRect);
   }
 
-  SVGDisplayContainerFrame::PaintSVG(aContext, aTransform, aImgParams,
-                                     aDirtyRect);
+  SVGDisplayContainerFrame::PaintSVG(aContext, aTransform, aImgParams);
 }
 
 void SVGViewportFrame::ReflowSVG() {

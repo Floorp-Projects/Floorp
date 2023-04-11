@@ -32,8 +32,7 @@ class SVGViewportFrame : public SVGDisplayContainerFrame, public ISVGSVGFrame {
 
   // ISVGDisplayableFrame interface:
   void PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
-                imgDrawingParams& aImgParams,
-                const nsIntRect* aDirtyRect = nullptr) override;
+                imgDrawingParams& aImgParams) override;
   void ReflowSVG() override;
   void NotifySVGChanged(uint32_t aFlags) override;
   SVGBBox GetBBoxContribution(const Matrix& aToBBoxUserspace,

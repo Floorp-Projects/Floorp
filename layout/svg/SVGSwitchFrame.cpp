@@ -50,8 +50,7 @@ class SVGSwitchFrame final : public SVGGFrame {
 
   // ISVGDisplayableFrame interface:
   virtual void PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
-                        imgDrawingParams& aImgParams,
-                        const nsIntRect* aDirtyRect = nullptr) override;
+                        imgDrawingParams& aImgParams) override;
   nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) override;
   void ReflowSVG() override;
   virtual SVGBBox GetBBoxContribution(const Matrix& aToBBoxUserspace,
@@ -97,8 +96,7 @@ void SVGSwitchFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 }
 
 void SVGSwitchFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
-                              imgDrawingParams& aImgParams,
-                              const nsIntRect* aDirtyRect) {
+                              imgDrawingParams& aImgParams) {
   NS_ASSERTION(HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
                "Only painting of non-display SVG should take this code path");
 
@@ -112,7 +110,7 @@ void SVGSwitchFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
     if (kid->GetContent()->IsSVGElement()) {
       tm = SVGUtils::GetTransformMatrixInUserSpace(kid) * tm;
     }
-    SVGUtils::PaintFrameWithEffects(kid, aContext, tm, aImgParams, aDirtyRect);
+    SVGUtils::PaintFrameWithEffects(kid, aContext, tm, aImgParams);
   }
 }
 

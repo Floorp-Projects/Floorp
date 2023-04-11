@@ -155,8 +155,7 @@ bool SVGForeignObjectFrame::IsSVGTransformed(
 
 void SVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
                                      const gfxMatrix& aTransform,
-                                     imgDrawingParams& aImgParams,
-                                     const nsIntRect* aDirtyRect) {
+                                     imgDrawingParams& aImgParams) {
   NS_ASSERTION(HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
                "Only painting of non-display SVG should take this code path");
 
@@ -172,32 +171,6 @@ void SVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
   if (aTransform.IsSingular()) {
     NS_WARNING("Can't render foreignObject element!");
     return;
-  }
-
-  nsRect kidDirtyRect = kid->InkOverflowRect();
-
-  /* Check if we need to draw anything. */
-  if (aDirtyRect) {
-    // Transform the dirty rect into app units in our userspace.
-    gfxMatrix invmatrix = aTransform;
-    DebugOnly<bool> ok = invmatrix.Invert();
-    NS_ASSERTION(ok, "inverse of non-singular matrix should be non-singular");
-
-    gfxRect transDirtyRect = gfxRect(aDirtyRect->x, aDirtyRect->y,
-                                     aDirtyRect->width, aDirtyRect->height);
-    transDirtyRect = invmatrix.TransformBounds(transDirtyRect);
-
-    kidDirtyRect.IntersectRect(kidDirtyRect,
-                               nsLayoutUtils::RoundGfxRectToAppRect(
-                                   transDirtyRect, AppUnitsPerCSSPixel()));
-
-    // XXX after bug 614732 is fixed, we will compare mRect with aDirtyRect,
-    // not with kidDirtyRect. I.e.
-    // int32_t appUnitsPerDevPx = PresContext()->AppUnitsPerDevPixel();
-    // mRect.ToOutsidePixels(appUnitsPerDevPx).Intersects(*aDirtyRect)
-    if (kidDirtyRect.IsEmpty()) {
-      return;
-    }
   }
 
   aContext.Save();
@@ -234,7 +207,7 @@ void SVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
   if (aImgParams.imageFlags & imgIContainer::FLAG_HIGH_QUALITY_SCALING) {
     flags |= PaintFrameFlags::UseHighQualityScaling;
   }
-  nsLayoutUtils::PaintFrame(&aContext, kid, nsRegion(kidDirtyRect),
+  nsLayoutUtils::PaintFrame(&aContext, kid, nsRegion(kid->InkOverflowRect()),
                             NS_RGBA(0, 0, 0, 0),
                             nsDisplayListBuilderMode::Painting, flags);
 
