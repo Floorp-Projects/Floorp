@@ -2785,10 +2785,15 @@ bool nsGenericHTMLFormControlElementWithState::ParseAttribute(
     int32_t aNamespaceID, nsAtom* aAttribute, const nsAString& aValue,
     nsIPrincipal* aMaybeScriptedPrincipal, nsAttrValue& aResult) {
   if (aNamespaceID == kNameSpaceID_None &&
-      aAttribute == nsGkAtoms::popovertargetaction &&
       StaticPrefs::dom_element_popover_enabled()) {
-    return aResult.ParseEnumValue(aValue, kPopoverTargetActionTable, false,
-                                  kPopoverTargetActionDefault);
+    if (aAttribute == nsGkAtoms::popovertargetaction) {
+      return aResult.ParseEnumValue(aValue, kPopoverTargetActionTable, false,
+                                    kPopoverTargetActionDefault);
+    }
+    if (aAttribute == nsGkAtoms::popovertarget) {
+      aResult.ParseAtom(aValue);
+      return true;
+    }
   }
 
   return nsGenericHTMLFormControlElement::ParseAttribute(
