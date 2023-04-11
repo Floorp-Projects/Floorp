@@ -694,6 +694,15 @@ TimerThread::Run() {
       waitFor = TimeDuration::Forever();
       TimeStamp now = TimeStamp::Now();
 
+#if TIMER_THREAD_STATISTICS
+      if (!mNotified && !mIntendedWakeupTime.IsNull() &&
+          now < mIntendedWakeupTime) {
+        ++mEarlyWakeups;
+        const double earlinessms = (mIntendedWakeupTime - now).ToMilliseconds();
+        mTotalEarlyWakeupTime += earlinessms;
+      }
+#endif
+
       RemoveLeadingCanceledTimersInternal();
 
       if (!mTimers.IsEmpty()) {
@@ -1292,5 +1301,8 @@ void TimerThread::PrintStatistics() const {
                          mTotalUnnotifiedWakeupCount,
                          mTotalTimersFiredUnnotified,
                          mTotalActualTimerFiringDelayUnnotified, "Unnotified ");
+
+  printf_stderr("Early Wake-ups: %6llu Avg: %7.4fms\n", mEarlyWakeups,
+                mTotalEarlyWakeupTime / mEarlyWakeups);
 }
 #endif

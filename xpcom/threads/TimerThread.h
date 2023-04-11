@@ -222,6 +222,9 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
 
   mutable TimeStamp mFirstTimerAdded MOZ_GUARDED_BY(mMonitor);
 
+  mutable size_t mEarlyWakeups MOZ_GUARDED_BY(mMonitor) = 0;
+  mutable double mTotalEarlyWakeupTime MOZ_GUARDED_BY(mMonitor) = 0.0;
+
   void PrintStatistics() const;
 #endif
 };
