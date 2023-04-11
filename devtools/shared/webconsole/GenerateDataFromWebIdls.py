@@ -2,7 +2,7 @@
 This script parses mozilla-central's WebIDL bindings and writes a JSON-formatted
 subset of the function bindings to several files:
 - "devtools/server/actors/webconsole/webidl-pure-allowlist.js" (for eager evaluation processing)
-- "devtools/server/actors/webconsole/webidl-deprecated-list.js"
+- "devtools/server/actors/webconsole/webidl-unsafe-getters-names.js" (for preventing automatically call getters that could emit warnings)
 
 Run this script via
 
@@ -59,8 +59,9 @@ module.exports = %(data)s;
 pure_output_file = path.join(
     buildconfig.topsrcdir, "devtools/server/actors/webconsole/webidl-pure-allowlist.js"
 )
-deprecated_output_file = path.join(
-    buildconfig.topsrcdir, "devtools/server/actors/webconsole/webidl-deprecated-list.js"
+unsafe_getters_names_file = path.join(
+    buildconfig.topsrcdir,
+    "devtools/server/actors/webconsole/webidl-unsafe-getters-names.js",
 )
 
 input_file = path.join(buildconfig.topobjdir, "dom/bindings/file-lists.json")
@@ -135,7 +136,7 @@ pure_output = {
         },
     },
 }
-deprecated_output = {}
+unsafe_getters_names = []
 for result in results:
     if isinstance(result, WebIDL.IDLInterface):
         iface = result.identifier.name
@@ -175,29 +176,27 @@ for result in results:
                 pure_output[iface][owner_type][prop_type].append(name)
             if (
                 not iface in DEPRECATED_INTERFACE__EXCLUDE_LIST
-                and (member.isMethod() or member.isAttr())
+                and not name in unsafe_getters_names
+                and member.isAttr()
                 and member.getExtendedAttribute("Deprecated")
             ):
-                if not iface in deprecated_output:
-                    deprecated_output[iface] = []
-                if member.isStatic():
-                    deprecated_output[iface].append([name])
-                else:
-                    deprecated_output[iface].append(["prototype", name])
+                unsafe_getters_names.append(name)
+
 
 with open(pure_output_file, "w") as f:
     f.write(FILE_TEMPLATE % {"data": json.dumps(pure_output, indent=2, sort_keys=True)})
 print("Successfully generated", pure_output_file)
 
-with open(deprecated_output_file, "w") as f:
+unsafe_getters_names.sort()
+with open(unsafe_getters_names_file, "w") as f:
     f.write(
         FILE_TEMPLATE
-        % {"data": json.dumps(deprecated_output, indent=2, sort_keys=True)}
+        % {"data": json.dumps(unsafe_getters_names, indent=2, sort_keys=True)}
     )
-print("Successfully generated", deprecated_output_file)
+print("Successfully generated", unsafe_getters_names_file)
 
 print("Formatting files...")
-system("./mach eslint --fix " + pure_output_file + " " + deprecated_output_file)
+system("./mach eslint --fix " + pure_output_file + " " + unsafe_getters_names_file)
 print("Files are now properly formatted")
 
 # Parsing the idls generate a parser.out file that we don't have any use of.
