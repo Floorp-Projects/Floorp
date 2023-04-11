@@ -9,7 +9,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  ExperimentManager: "resource://nimbus/lib/ExperimentManager.sys.mjs",
+  ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   JsonSchema: "resource://gre/modules/JsonSchema.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   _ExperimentManager: "resource://nimbus/lib/ExperimentManager.sys.mjs",
@@ -186,7 +186,7 @@ export const ExperimentFakes = {
   },
   async enrollWithRollout(
     featureConfig,
-    { manager = lazy.ExperimentManager, source } = {}
+    { manager = lazy.ExperimentAPI._manager, source } = {}
   ) {
     await manager.store.init();
     const rollout = this.rollout(`${featureConfig.featureId}-rollout`, {
@@ -223,7 +223,7 @@ export const ExperimentFakes = {
   },
   async enrollWithFeatureConfig(
     featureConfig,
-    { manager = lazy.ExperimentManager, isRollout = false } = {}
+    { manager = lazy.ExperimentAPI._manager, isRollout = false } = {}
   ) {
     await manager.store.ready();
     // Use id passed in featureConfig value to compute experimentId
@@ -259,7 +259,7 @@ export const ExperimentFakes = {
 
     return doExperimentCleanup;
   },
-  enrollmentHelper(recipe, { manager = lazy.ExperimentManager } = {}) {
+  enrollmentHelper(recipe, { manager = lazy.ExperimentAPI._manager } = {}) {
     if (!recipe?.slug) {
       throw new Error("Enrollment helper expects a recipe");
     }
@@ -297,7 +297,7 @@ export const ExperimentFakes = {
 
     return { enrollmentPromise, doExperimentCleanup };
   },
-  async cleanupAll(slugs, { manager = lazy.ExperimentManager } = {}) {
+  async cleanupAll(slugs, { manager = lazy.ExperimentAPI._manager } = {}) {
     function unenrollCompleted(slug) {
       return new Promise(resolve =>
         manager.store.on(`update:${slug}`, (event, experiment) => {
