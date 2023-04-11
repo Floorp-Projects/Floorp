@@ -29,6 +29,16 @@
 
 #include <stdio.h>
 
+static inline int gen_mv(const int total_bits, int spel_bits) {
+    int bits = rnd() & ((1 << spel_bits) - 1);
+    do {
+        bits |= (rnd() & 1) << spel_bits;
+    } while (rnd() & 1 && ++spel_bits < total_bits);
+    // the do/while makes it relatively more likely to be close to zero (fpel)
+    // than far away
+    return rnd() & 1 ? -bits : bits;
+}
+
 static void check_save_tmvs(const Dav1dRefmvsDSPContext *const c) {
     refmvs_block *rr[31];
     refmvs_block r[31 * 256];
@@ -58,10 +68,10 @@ static void check_save_tmvs(const Dav1dRefmvsDSPContext *const c) {
                 while (j + ((dav1d_block_dimensions[bs][0] + 1) >> 1) > col_end8)
                     bs++;
                 rr[i * 2][j * 2 + 1] = (refmvs_block) {
-                    .mv.mv[0].x = -(rnd() & 1) * (rnd() & 8191),
-                    .mv.mv[0].y = -(rnd() & 1) * (rnd() & 8191),
-                    .mv.mv[1].x = -(rnd() & 1) * (rnd() & 8191),
-                    .mv.mv[1].y = -(rnd() & 1) * (rnd() & 8191),
+                    .mv.mv[0].x = gen_mv(14, 10),
+                    .mv.mv[0].y = gen_mv(14, 10),
+                    .mv.mv[1].x = gen_mv(14, 10),
+                    .mv.mv[1].y = gen_mv(14, 10),
                     .ref.ref = { (rnd() % 9) - 1, (rnd() % 9) - 1 },
                     .bs = bs
                 };

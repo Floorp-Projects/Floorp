@@ -133,6 +133,7 @@ static void check_intra_pred(Dav1dIntraPredDSPContext *const c) {
                                             a & 0x1ff, a & 0x600, maxw, maxh);
                                 else if (mode == FILTER_PRED)
                                     fprintf(stderr, "filter_idx = %d\n", a & 0x1ff);
+                                break;
                             }
 
                             bench_new(a_dst, stride, topleft, w, h, a, 128, 128
