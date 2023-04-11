@@ -627,10 +627,52 @@ size_t TimerThread::ComputeTimerInsertionIndex(const TimeStamp& timeout) const {
 TimeStamp TimerThread::ComputeWakeupTimeFromTimers() const {
   mMonitor.AssertCurrentThreadOwns();
 
-  MOZ_RELEASE_ASSERT(!mTimers.IsEmpty());
-  MOZ_RELEASE_ASSERT(mTimers[0].Value());
+  // Timer list should be non-empty and first timer should always be
+  // non-canceled at this point and we rely on that here.
+  MOZ_ASSERT(!mTimers.IsEmpty());
+  MOZ_ASSERT(mTimers[0].Value());
 
-  return mTimers[0].Timeout();
+  // Overview: Find the last timer in the list that can be "bundled" together in
+  // the same wake-up with mTimers[0] and use its timeout as our target wake-up
+  // time.
+
+  // bundleWakeup is when we should wake up in order to be able to fire all of
+  // the timers in our selected bundle. It will always be the timeout of the
+  // last timer in the bundle.
+  TimeStamp bundleWakeup = mTimers[0].Timeout();
+
+  // cutoffTime is the latest that we can wake up for the timers currently
+  // accepted into the bundle.
+  const TimeDuration minTimerDelay = TimeDuration::FromMilliseconds(
+      StaticPrefs::timer_minimum_firing_delay_tolerance_ms());
+  const TimeDuration maxTimerDelay = TimeDuration::FromMilliseconds(
+      StaticPrefs::timer_maximum_firing_delay_tolerance_ms());
+  const TimeStamp cutoffTime =
+      bundleWakeup + ComputeAcceptableFiringDelay(minTimerDelay, maxTimerDelay);
+
+  const size_t timerCount = mTimers.Length();
+  for (size_t entryIndex = 1; entryIndex < timerCount; ++entryIndex) {
+    const Entry& curEntry = mTimers[entryIndex];
+    const nsTimerImpl* curTimer = curEntry.Value();
+    if (!curTimer) {
+      // Canceled timer - skip it
+      continue;
+    }
+
+    const TimeStamp curTimerDue = curEntry.Timeout();
+    if (curTimerDue > cutoffTime) {
+      // Can't include this timer in the bundle - it fires too late.
+      break;
+    }
+
+    // This timer can be included in the bundle. Update bundleWakeup.
+    bundleWakeup = curTimerDue;
+    MOZ_ASSERT(bundleWakeup <= cutoffTime);
+  }
+
+  MOZ_ASSERT(bundleWakeup - mTimers[0].Timeout() <=
+             ComputeAcceptableFiringDelay(minTimerDelay, maxTimerDelay));
+  return bundleWakeup;
 }
 
 constexpr TimeDuration TimerThread::ComputeAcceptableFiringDelay(
