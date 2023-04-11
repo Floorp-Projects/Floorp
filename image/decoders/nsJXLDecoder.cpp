@@ -22,8 +22,8 @@ namespace mozilla::image {
 
 #define JXL_TRY(expr)                        \
   do {                                       \
-    JxlDecoderStatus status = (expr);        \
-    if (status != JXL_DEC_SUCCESS) {         \
+    JxlDecoderStatus _status = (expr);       \
+    if (_status != JXL_DEC_SUCCESS) {        \
       return Transition::TerminateFailure(); \
     }                                        \
   } while (0);

@@ -537,8 +537,8 @@ class Dav1dDecoder final : AVIFDecoderInterface {
       MOZ_LOG(sAVIFLog, LogLevel::Verbose, ("[this=%p] Decoding alpha", this));
 
       alphaPic = OwnedDav1dPicture(new Dav1dPicture());
-      Dav1dResult r = GetPicture(*mAlphaContext, *aSamples.mAlphaImage,
-                                 alphaPic.get(), aShouldSendTelemetry);
+      r = GetPicture(*mAlphaContext, *aSamples.mAlphaImage, alphaPic.get(),
+                     aShouldSendTelemetry);
       if (r != 0) {
         return AsVariant(r);
       }
@@ -789,8 +789,8 @@ class AOMDecoder final : AVIFDecoderInterface {
       MOZ_ASSERT(mAlphaContext.isSome());
 
       aom_image_t* alphaImg = nullptr;
-      DecodeResult r = GetImage(*mAlphaContext, *aSamples.mAlphaImage,
-                                &alphaImg, aShouldSendTelemetry);
+      r = GetImage(*mAlphaContext, *aSamples.mAlphaImage, &alphaImg,
+                   aShouldSendTelemetry);
       if (!IsDecodeSuccess(r)) {
         return r;
       }
@@ -854,8 +854,8 @@ class AOMDecoder final : AVIFDecoderInterface {
     if (aHasAlpha) {
       // Init alpha decoder context
       mAlphaContext.emplace();
-      aom_codec_err_t r = aom_codec_dec_init(
-          mAlphaContext.ptr(), iface, /* cfg = */ nullptr, /* flags = */ 0);
+      r = aom_codec_dec_init(mAlphaContext.ptr(), iface, /* cfg = */ nullptr,
+                             /* flags = */ 0);
 
       MOZ_LOG(sAVIFLog, r == AOM_CODEC_OK ? LogLevel::Verbose : LogLevel::Error,
               ("[this=%p] color decoder: aom_codec_dec_init -> %d, name = %s",
@@ -863,6 +863,7 @@ class AOMDecoder final : AVIFDecoderInterface {
 
       if (r != AOM_CODEC_OK) {
         mAlphaContext.reset();
+        return r;
       }
     }
 
