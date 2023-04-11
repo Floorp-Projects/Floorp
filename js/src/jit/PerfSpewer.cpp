@@ -215,6 +215,7 @@ static bool openJitDump() {
     return false;
   }
 
+#  ifdef XP_LINUX
   // We need to mmap the jitdump file for perf to find it.
   long page_size = sysconf(_SC_PAGESIZE);
   mmap_address =
@@ -223,6 +224,7 @@ static bool openJitDump() {
     PerfMode = PerfModeType::None;
     return false;
   }
+#  endif
 
   writeJitDumpHeader(lock);
   return true;
