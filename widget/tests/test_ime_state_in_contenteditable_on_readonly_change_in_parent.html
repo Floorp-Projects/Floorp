@@ -1,0 +1,42 @@
+<html>
+<head>
+  <title>Test for IME state of contenteditable on readonly state change</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="file_ime_state_test_helper.js"></script>
+  <script src="file_test_ime_state_in_contenteditable_on_readonly_change.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+<script>
+"use strict";
+
+/* import-globals-from file_ime_state_test_helper.js */
+/* import-globals-from file_test_ime_state_in_contenteditable_on_readonly_change.js */
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async () => {
+  const tipWrapper = new TIPWrapper(window);
+  const editingHost = document.querySelector("div[contenteditable]");
+  await (async function test_ime_state_in_contenteditable_on_readonly_change() {
+    const tester = new IMEStateInContentEditableOnReadonlyChangeTester();
+    tester.checkResultOfPreparation(await tester.prepareToRun(editingHost, editingHost), window, tipWrapper);
+    tester.checkResultOfMakingHTMLEditorReadonly(await tester.runToMakeHTMLEditorReadonly());
+    tester.checkResultOfMakingHTMLEditorEditable(await tester.runToMakeHTMLEditorEditable());
+    tester.checkResultOfRemovingContentEditableAttribute(await tester.runToRemoveContentEditableAttribute());
+    tester.clear();
+  })();
+
+  await (async function test_ime_state_in_button_in_contenteditable_on_readonly_change() {
+    const tester = new IMEStateInContentEditableOnReadonlyChangeTester();
+    const button = editingHost.querySelector("button");
+    tester.checkResultOfPreparation(await tester.prepareToRun(editingHost, button), window, tipWrapper);
+    tester.checkResultOfMakingHTMLEditorReadonly(await tester.runToMakeHTMLEditorReadonly());
+    tester.checkResultOfMakingHTMLEditorEditable(await tester.runToMakeHTMLEditorEditable());
+    tester.checkResultOfRemovingContentEditableAttribute(await tester.runToRemoveContentEditableAttribute());
+    tester.clear();
+  })();
+
+  SimpleTest.finish();
+});
+</script>
+</head>
+<body><div contenteditable><br><button>button</button></div></body>
+</html>
