@@ -285,6 +285,8 @@ export var SelectParentHelper = {
     this._selectRect = rect;
     this._registerListeners(browser, menulist.menupopup);
 
+    let win = browser.ownerGlobal;
+
     // Set the maximum height to show exactly MAX_ROWS items.
     let menupopup = menulist.menupopup;
     let firstItem = menupopup.firstElementChild;
@@ -292,7 +294,6 @@ export var SelectParentHelper = {
       firstItem = firstItem.nextElementSibling;
     }
 
-    let win = menulist.ownerGlobal;
     if (firstItem) {
       let itemHeight = firstItem.getBoundingClientRect().height;
 
@@ -728,11 +729,12 @@ export var SelectParentHelper = {
 
 export class SelectParent extends JSWindowActorParent {
   get relevantBrowser() {
-    return this.browsingContext.top.embedderElement;
+    let bc = this.manager.browsingContext;
+    return bc.isContent ? bc.topFrameElement : bc.embedderElement;
   }
 
   get _document() {
-    return this.browsingContext.topChromeWindow.document;
+    return this.relevantBrowser.ownerDocument;
   }
 
   get _menulist() {
@@ -782,7 +784,7 @@ export class SelectParent extends JSWindowActorParent {
           data.selectedIndex,
           // We only want to apply the full zoom. The text zoom is already
           // applied in the font-size.
-          this.browsingContext.fullZoom,
+          this.manager.browsingContext.fullZoom,
           data.custom && lazy.CUSTOM_STYLING_ENABLED,
           data.isDarkBackground,
           data.defaultStyle,
