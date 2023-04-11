@@ -75,8 +75,6 @@ class RemoteAccessible : public RemoteAccessibleBase<RemoteAccessible> {
 
   virtual nsAtom* LandmarkRole() const override;
 
-  virtual bool IsSearchbox() const override;
-
   virtual int32_t SelectionCount() override;
 
   using RemoteAccessibleBase<RemoteAccessible>::SelectionBoundsAt;

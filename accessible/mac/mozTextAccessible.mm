@@ -125,8 +125,12 @@ inline NSString* ToNSString(id aValue) {
     return NSAccessibilitySecureTextFieldSubrole;
   }
 
-  if (mRole == roles::ENTRY && mGeckoAccessible->IsSearchbox()) {
-    return @"AXSearchField";
+  if (mRole == roles::ENTRY) {
+    LocalAccessible* acc = mGeckoAccessible->AsLocal();
+    RemoteAccessible* proxy = mGeckoAccessible->AsRemote();
+    if ((acc && acc->IsSearchbox()) || (proxy && proxy->IsSearchbox())) {
+      return @"AXSearchField";
+    }
   }
 
   return nil;

@@ -202,8 +202,6 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
 
   virtual nsAtom* TagName() const override;
 
-  virtual nsAtom* InputType() const override;
-
   virtual already_AddRefed<nsAtom> DisplayStyle() const override;
 
   virtual float Opacity() const override;

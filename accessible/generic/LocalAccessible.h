@@ -469,6 +469,8 @@ class LocalAccessible : public nsISupports, public Accessible {
 
   a11y::RootAccessible* AsRoot();
 
+  bool IsSearchbox() const;
+
   virtual TableAccessible* AsTable() { return nullptr; }
 
   virtual TableCellAccessible* AsTableCell() { return nullptr; }
@@ -765,8 +767,6 @@ class LocalAccessible : public nsISupports, public Accessible {
   void MaybeQueueCacheUpdateForStyleChanges();
 
   virtual nsAtom* TagName() const override;
-
-  virtual nsAtom* InputType() const override;
 
   virtual already_AddRefed<nsAtom> DisplayStyle() const override;
 
