@@ -124,6 +124,25 @@ async function jsWindowOpen(browser, isPopup, iframeId) {
   return windowOpened;
 }
 
+async function jsClickLink(browser, isPopup, iframeId) {
+  //let windowOpened = BrowserTestUtils.waitForNewWindow();
+  let windowOpened = isPopup
+    ? BrowserTestUtils.waitForNewWindow({ url: TEST_URL })
+    : BrowserTestUtils.waitForNewTab(gBrowser, TEST_URL, true);
+  ContentTask.spawn(browser, { isPopup, iframeId }, async args => {
+    let destWin = content;
+    if (args.iframeId) {
+      // Create a cross origin iframe
+      destWin = (
+        await content.wrappedJSObject.createIframe(args.iframeId, true)
+      ).contentWindow;
+    }
+    // Send message to either the iframe or the current page to click a link
+    await content.wrappedJSObject.sendMessage(destWin, "clicklink");
+  });
+  return windowOpened;
+}
+
 function waitForFocus(...args) {
   return new Promise(resolve => SimpleTest.waitForFocus(resolve, ...args));
 }
