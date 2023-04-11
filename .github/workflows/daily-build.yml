@@ -478,7 +478,7 @@ jobs:
         path: ${{ env.RUNNER_USERDIR }}/output
 
   cleanup:
-    if: (github.event_name == 'schedule' && github.repository == 'Floorp-Projects/Floorp') || (github.event_name != 'schedule')
+    if: (github.event_name == 'schedule' && github.repository_owner == 'Floorp-Projects') || (github.event_name != 'schedule')
     name: Clean Up
     needs: [windows-x86-64-build-with-profdata-and-jarlog, linux-x86-64-build]
     runs-on: ubuntu-22.04
