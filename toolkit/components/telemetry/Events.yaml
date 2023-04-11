@@ -1034,6 +1034,14 @@ normandy:
       reason: Why validation failed (one of "invalid-recipe", "invalid-branch", or "invalid-reason").
       branch: If reason == invalid-branch, the branch that failed validation.
       feature: If reason == invalid-feature, the invalid feature ID.
+      locale: >
+        If reason == missing-locale, the locale that was missing from the
+        localization table.
+        If reason == missing-l10n-entry, the locale that was missing the
+        localization entries.
+      l10n_ids: >
+        If reason == missing-l10n-entry, a comma-separated list of missing
+        localization entries.
 
 browser.launched_to_handle:
   system_notification:
