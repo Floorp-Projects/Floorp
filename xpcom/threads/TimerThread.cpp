@@ -144,6 +144,13 @@ TimerThread::~TimerThread() {
   mThread = nullptr;
 
   NS_ASSERTION(mTimers.IsEmpty(), "Timers remain in TimerThread::~TimerThread");
+
+#if TIMER_THREAD_STATISTICS
+  {
+    MonitorAutoLock lock(mMonitor);
+    PrintStatistics();
+  }
+#endif
 }
 
 namespace {
@@ -754,8 +761,6 @@ TimerThread::Run() {
       }
     }
 
-    mWaiting = true;
-    mNotified = false;
     {
       // About to sleep - let's make note of how many timers we processed and
       // see if we should send out a new batch of telemetry.
@@ -766,7 +771,36 @@ TimerThread::Run() {
             queuedTimersFiredPerWakeup);
         queuedTimerFiredCount = 0;
       }
-      timersFiredThisWakeup = 0;
+    }
+
+#if TIMER_THREAD_STATISTICS
+    {
+      size_t bucketIndex = 0;
+      while (bucketIndex < sTimersFiredPerWakeupBucketCount - 1 &&
+             timersFiredThisWakeup >
+                 sTimersFiredPerWakeupThresholds[bucketIndex]) {
+        ++bucketIndex;
+      }
+      MOZ_ASSERT(bucketIndex < sTimersFiredPerWakeupBucketCount);
+      ++mTimersFiredPerWakeup[bucketIndex];
+
+      ++mTotalWakeupCount;
+      if (mNotified) {
+        ++mTimersFiredPerNotifiedWakeup[bucketIndex];
+        ++mTotalNotifiedWakeupCount;
+      } else {
+        ++mTimersFiredPerUnnotifiedWakeup[bucketIndex];
+        ++mTotalUnnotifiedWakeupCount;
+      }
+    }
+#endif
+
+    timersFiredThisWakeup = 0;
+
+    mWaiting = true;
+    mNotified = false;
+
+    {
       AUTO_PROFILER_TRACING_MARKER("TimerThread", "Wait", OTHER);
       mMonitor.Wait(waitFor);
     }
@@ -817,6 +851,13 @@ nsresult TimerThread::AddTimer(nsTimerImpl* aTimer,
       (mTimers.Length() == 0 || aTimer->mTimeout < mTimers[0].Timeout() ||
        aTimer->mDelay.IsZero());
 
+#if TIMER_THREAD_STATISTICS
+  if (mTotalTimersAdded == 0) {
+    mFirstTimerAdded = TimeStamp::Now();
+  }
+  ++mTotalTimersAdded;
+#endif
+
   // Add the timer to our list.
   if (!AddTimerInternal(*aTimer)) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -856,6 +897,10 @@ nsresult TimerThread::RemoveTimer(nsTimerImpl* aTimer,
   if (!RemoveTimerInternal(*aTimer)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
+
+#if TIMER_THREAD_STATISTICS
+  ++mTotalTimersRemoved;
+#endif
 
   // Note: The timer thread is *not* awoken.
   // The removed-timer entry is just left null, and will be reused (by a new or
@@ -1059,6 +1104,19 @@ void TimerThread::PostTimerEvent(already_AddRefed<nsTimerImpl> aTimerRef) {
   AUTO_TIMERS_STATS(TimerThread_PostTimerEvent);
 
   RefPtr<nsTimerImpl> timer(aTimerRef);
+
+#if TIMER_THREAD_STATISTICS
+  const double actualFiringDelay =
+      std::max((TimeStamp::Now() - timer->mTimeout).ToMilliseconds(), 0.0);
+  if (mNotified) {
+    ++mTotalTimersFiredNotified;
+    mTotalActualTimerFiringDelayNotified += actualFiringDelay;
+  } else {
+    ++mTotalTimersFiredUnnotified;
+    mTotalActualTimerFiringDelayUnnotified += actualFiringDelay;
+  }
+#endif
+
   if (!timer->mEventTarget) {
     NS_ERROR("Attempt to post timer event to NULL event target");
     return;
@@ -1093,6 +1151,9 @@ void TimerThread::PostTimerEvent(already_AddRefed<nsTimerImpl> aTimerRef) {
       // different order than is used in RemoveTimer().  RemoveTimer() has
       // aTimer->mMutex first.   We use timer.get() to keep static analysis
       // happy
+      // NOTE: I'm not sure that any of the below is actually necessary. It
+      // seems to me that the timer that we're trying to fire will have already
+      // been removed prior to this.
       MutexAutoLock lock1(timer.get()->mMutex);
       MonitorAutoLock lock2(mMonitor);
       RemoveTimerInternal(*timer);
@@ -1142,3 +1203,49 @@ uint32_t TimerThread::AllowedEarlyFiringMicroseconds() {
   MonitorAutoLock lock(mMonitor);
   return mAllowedEarlyFiringMicroseconds;
 }
+
+#if TIMER_THREAD_STATISTICS
+void TimerThread::PrintStatistics() const {
+  mMonitor.AssertCurrentThreadOwns();
+
+  const TimeStamp freshNow = TimeStamp::Now();
+  const double timeElapsed = mFirstTimerAdded.IsNull()
+                                 ? 0.0
+                                 : (freshNow - mFirstTimerAdded).ToSeconds();
+  printf_stderr("TimerThread Stats (Total time %8.2fs)\n", timeElapsed);
+
+  printf_stderr("Added: %6llu Removed: %6llu Fired: %6llu\n", mTotalTimersAdded,
+                mTotalTimersRemoved,
+                mTotalTimersFiredNotified + mTotalTimersFiredUnnotified);
+
+  auto PrintTimersFiredBucket =
+      [](const AutoTArray<size_t, sTimersFiredPerWakeupBucketCount>& buckets,
+         const size_t wakeupCount, const size_t timersFiredCount,
+         const double totalTimerDelay, const char* label) {
+        printf_stderr("%s : [", label);
+        for (size_t bucketVal : buckets) {
+          printf_stderr(" %5llu", bucketVal);
+        }
+        printf_stderr(
+            " ] Wake-ups/timer %6llu / %6llu (%7.4f) Avg Timer Delay %7.4f\n",
+            wakeupCount, timersFiredCount,
+            static_cast<double>(wakeupCount) / timersFiredCount,
+            totalTimerDelay / timersFiredCount);
+      };
+
+  printf_stderr("Wake-ups:\n");
+  PrintTimersFiredBucket(
+      mTimersFiredPerWakeup, mTotalWakeupCount,
+      mTotalTimersFiredNotified + mTotalTimersFiredUnnotified,
+      mTotalActualTimerFiringDelayNotified +
+          mTotalActualTimerFiringDelayUnnotified,
+      "Total      ");
+  PrintTimersFiredBucket(mTimersFiredPerNotifiedWakeup,
+                         mTotalNotifiedWakeupCount, mTotalTimersFiredNotified,
+                         mTotalActualTimerFiringDelayNotified, "Notified   ");
+  PrintTimersFiredBucket(mTimersFiredPerUnnotifiedWakeup,
+                         mTotalUnnotifiedWakeupCount,
+                         mTotalTimersFiredUnnotified,
+                         mTotalActualTimerFiringDelayUnnotified, "Unnotified ");
+}
+#endif

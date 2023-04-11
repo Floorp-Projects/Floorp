@@ -28,6 +28,10 @@ namespace mozilla {
 class TimeStamp;
 }  // namespace mozilla
 
+// Enable this to compute lots of interesting statistics and print them out when
+// PrintStatistics() is called.
+#define TIMER_THREAD_STATISTICS 0
+
 class TimerThread final : public mozilla::Runnable, public nsIObserver {
  public:
   typedef mozilla::Monitor Monitor;
@@ -163,6 +167,41 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
   // Set only at the start of the thread's Run():
   uint32_t mAllowedEarlyFiringMicroseconds MOZ_GUARDED_BY(mMonitor);
   ProfilerThreadId mProfilerThreadId MOZ_GUARDED_BY(mMonitor);
+
+#if TIMER_THREAD_STATISTICS
+  static constexpr size_t sTimersFiredPerWakeupBucketCount = 16;
+  static inline constexpr std::array<size_t, sTimersFiredPerWakeupBucketCount>
+      sTimersFiredPerWakeupThresholds = {
+          0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 20, 30, 40, 50, 70, (size_t)(-1)};
+
+  mutable AutoTArray<size_t, sTimersFiredPerWakeupBucketCount>
+      mTimersFiredPerWakeup MOZ_GUARDED_BY(mMonitor) = {0, 0, 0, 0, 0, 0, 0, 0,
+                                                        0, 0, 0, 0, 0, 0, 0, 0};
+  mutable AutoTArray<size_t, sTimersFiredPerWakeupBucketCount>
+      mTimersFiredPerUnnotifiedWakeup MOZ_GUARDED_BY(mMonitor) = {
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  mutable AutoTArray<size_t, sTimersFiredPerWakeupBucketCount>
+      mTimersFiredPerNotifiedWakeup MOZ_GUARDED_BY(mMonitor) = {
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+  mutable size_t mTotalTimersAdded MOZ_GUARDED_BY(mMonitor) = 0;
+  mutable size_t mTotalTimersRemoved MOZ_GUARDED_BY(mMonitor) = 0;
+  mutable size_t mTotalTimersFiredNotified MOZ_GUARDED_BY(mMonitor) = 0;
+  mutable size_t mTotalTimersFiredUnnotified MOZ_GUARDED_BY(mMonitor) = 0;
+
+  mutable size_t mTotalWakeupCount MOZ_GUARDED_BY(mMonitor) = 0;
+  mutable size_t mTotalUnnotifiedWakeupCount MOZ_GUARDED_BY(mMonitor) = 0;
+  mutable size_t mTotalNotifiedWakeupCount MOZ_GUARDED_BY(mMonitor) = 0;
+
+  mutable double mTotalActualTimerFiringDelayNotified MOZ_GUARDED_BY(mMonitor) =
+      0.0;
+  mutable double mTotalActualTimerFiringDelayUnnotified
+      MOZ_GUARDED_BY(mMonitor) = 0.0;
+
+  mutable TimeStamp mFirstTimerAdded MOZ_GUARDED_BY(mMonitor);
+
+  void PrintStatistics() const;
+#endif
 };
 
 #endif /* TimerThread_h___ */
