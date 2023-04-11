@@ -53,8 +53,4 @@ class TestMutex : public mozilla::storage::SQLiteMutex {
 #  define DISABLE_STORAGE_SANITY5_DEATH_TEST
 #endif
 
-// We need to use a namespace to avoid duplicate definitions of some functions
-// within TestDeadlockDetector.cpp.
-namespace storage {
 #include "../../../xpcom/tests/gtest/TestDeadlockDetector.cpp"
-}
