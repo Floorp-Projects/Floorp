@@ -56,6 +56,12 @@ function featuresCompat(branch) {
   return features;
 }
 
+function getBranchFeature(enrollment, targetFeatureId) {
+  return featuresCompat(enrollment.branch).find(
+    ({ featureId }) => featureId === targetFeatureId
+  );
+}
+
 const experimentBranchAccessor = {
   get: (target, prop) => {
     // Offer an API where we can access `branch.feature.*`.
@@ -351,20 +357,32 @@ export class _ExperimentFeature {
   }
 
   /**
-   * Lookup feature variables in experiments, prefs, and remote defaults.
+   * Lookup feature variables in experiments, rollouts, and fallback prefs.
    * @param {{defaultValues?: {[variableName: string]: any}}} options
    * @returns {{[variableName: string]: any}} The feature value
    */
   getAllVariables({ defaultValues = null } = {}) {
-    const branch = ExperimentAPI.getActiveBranch({ featureId: this.featureId });
-    const featureValue = featuresCompat(branch).find(
-      ({ featureId }) => featureId === this.featureId
-    )?.value;
+    let enrollment = null;
+    try {
+      enrollment = ExperimentAPI._store.getExperimentForFeature(this.featureId);
+    } catch (e) {
+      console.error(e);
+    }
+    let featureValue = this._getLocalizedValue(enrollment);
+
+    if (typeof featureValue === "undefined") {
+      try {
+        enrollment = ExperimentAPI._store.getRolloutForFeature(this.featureId);
+      } catch (e) {
+        console.error(e);
+      }
+      featureValue = this._getLocalizedValue(enrollment);
+    }
 
     return {
       ...this.prefGetters,
       ...defaultValues,
-      ...(featureValue ? featureValue : this.getRollout()?.value),
+      ...featureValue,
     };
   }
 
@@ -379,21 +397,26 @@ export class _ExperimentFeature {
     }
 
     // Next, check if an experiment is defined
-    const branch = ExperimentAPI.getActiveBranch({
-      featureId: this.featureId,
-    });
-    const experimentValue = featuresCompat(branch).find(
-      ({ featureId }) => featureId === this.featureId
-    )?.value?.[variable];
-
-    if (typeof experimentValue !== "undefined") {
-      return experimentValue;
+    let enrollment = null;
+    try {
+      enrollment = ExperimentAPI._store.getExperimentForFeature(this.featureId);
+    } catch (e) {
+      console.error(e);
+    }
+    let value = this._getLocalizedValue(enrollment, variable);
+    if (typeof value !== "undefined") {
+      return value;
     }
 
-    // Next, check remote defaults
-    const remoteValue = this.getRollout()?.value?.[variable];
-    if (typeof remoteValue !== "undefined") {
-      return remoteValue;
+    // Next, check for a rollout.
+    try {
+      enrollment = ExperimentAPI._store.getRolloutForFeature(this.featureId);
+    } catch (e) {
+      console.error(e);
+    }
+    value = this._getLocalizedValue(enrollment, variable);
+    if (typeof value !== "undefined") {
+      return value;
     }
 
     // Return the default preference value
@@ -477,7 +500,117 @@ export class _ExperimentFeature {
       rollouts: this.getRollout(),
     };
   }
+
+  /**
+   * Do recursive locale substitution on the values, if applicable.
+   *
+   * If there are no localizations provided, the value will be returned as-is.
+   *
+   * If the value is an object containing an $l10n key, its substitution will be
+   * returned.
+   *
+   * Otherwise, the value will be recursively substituted.
+   *
+   * @param {unknown} values The values to perform substitutions upon.
+   * @param {Record<string, string>} localizations The localization
+   *        substitutions for a specific locale.
+   *
+   * @returns {any} The values, potentially locale substituted.
+   */
+  static substituteLocalizations(values, localizations) {
+    // If the recipe is not localized, we don't need to do anything.
+    // Likewise, if the value we are attempting to localize is not an object,
+    // there is nothing to localize.
+    if (
+      typeof localizations === "undefined" ||
+      typeof values !== "object" ||
+      values === null
+    ) {
+      return values;
+    }
+
+    if (Array.isArray(values)) {
+      return values.map(value =>
+        _ExperimentFeature.substituteLocalizations(value, localizations)
+      );
+    }
+
+    const substituted = Object.assign({}, values);
+
+    for (const [key, value] of Object.entries(values)) {
+      if (
+        key === "$l10n" &&
+        typeof value === "object" &&
+        value !== null &&
+        value?.id
+      ) {
+        if (!Object.hasOwn(localizations, value.id)) {
+          throw new ExperimentLocalizationError("l10n-missing-entry");
+        }
+
+        return localizations[value.id];
+      }
+
+      substituted[key] = _ExperimentFeature.substituteLocalizations(
+        value,
+        localizations
+      );
+    }
+
+    return substituted;
+  }
+
+  /**
+   * Return a value (or all values) from an enrollment, potentially localized.
+   *
+   * @param {Enrollment} enrollment - The enrollment to query for the value or values.
+   * @param {string?} variable - The name of the variable to query for. If not
+   *                             provided, all variables will be returned.
+   *
+   * @returns {any} The value for the variable(s) in question.
+   */
+  _getLocalizedValue(enrollment, variable = undefined) {
+    if (enrollment) {
+      const locale = Services.locale.appLocaleAsBCP47;
+
+      if (
+        typeof enrollment.localizations === "object" &&
+        enrollment.localizations !== null &&
+        (typeof enrollment.localizations[locale] !== "object" ||
+          enrollment.localizations[locale] === null)
+      ) {
+        ExperimentAPI._manager.unenroll(enrollment.slug, "l10n-missing-locale");
+        return undefined;
+      }
+
+      const allValues = getBranchFeature(enrollment, this.featureId)?.value;
+      const value =
+        typeof variable === "undefined" ? allValues : allValues?.[variable];
+
+      if (typeof value !== "undefined") {
+        try {
+          return _ExperimentFeature.substituteLocalizations(
+            value,
+            enrollment.localizations?.[locale]
+          );
+        } catch (e) {
+          // This should never happen.
+          if (e instanceof ExperimentLocalizationError) {
+            ExperimentAPI._manager.unenroll(enrollment.slug, e.reason);
+          } else {
+            throw e;
+          }
+        }
+      }
+    }
+
+    return undefined;
+  }
 }
+
+XPCOMUtils.defineLazyGetter(ExperimentAPI, "_manager", function() {
+  return lazy.ExperimentManager;
+});
 
 XPCOMUtils.defineLazyGetter(ExperimentAPI, "_store", function() {
   return IS_MAIN_PROCESS
@@ -488,3 +621,10 @@ XPCOMUtils.defineLazyGetter(ExperimentAPI, "_store", function() {
 XPCOMUtils.defineLazyGetter(ExperimentAPI, "_remoteSettingsClient", function() {
   return lazy.RemoteSettings(lazy.COLLECTION_ID);
 });
+
+class ExperimentLocalizationError extends Error {
+  constructor(reason) {
+    super(`Localized experiment error (${reason})`);
+    this.reason = reason;
+  }
+}
