@@ -118,6 +118,10 @@ void RemoteAccessible::Relations(
 }
 
 bool RemoteAccessible::IsSearchbox() const {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::IsSearchbox();
+  }
+
   bool retVal = false;
   Unused << mDoc->SendIsSearchbox(mID, &retVal);
   return retVal;
