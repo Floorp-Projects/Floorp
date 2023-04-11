@@ -640,11 +640,6 @@ wr::MaybeExternalImageId RemoteTextureMap::GetExternalImageIdOfRemoteTexture(
   }
 
   TextureHost* remoteTexture = it->second->mAsyncRemoteTextureHost;
-  if (remoteTexture->GetFlags() & TextureFlags::DUMMY_TEXTURE) {
-    // Remote texture allocation was failed.
-    return Nothing();
-  }
-  MOZ_ASSERT(!(remoteTexture->GetFlags() & TextureFlags::DUMMY_TEXTURE));
 
   auto* owner = GetTextureOwner(lock, aOwnerId, aForPid);
   if (!owner) {
@@ -654,6 +649,15 @@ wr::MaybeExternalImageId RemoteTextureMap::GetExternalImageIdOfRemoteTexture(
     }
     return remoteTexture->GetMaybeExternalImageId();
   }
+
+  if (remoteTexture &&
+      remoteTexture->GetFlags() & TextureFlags::DUMMY_TEXTURE) {
+    // Remote texture allocation was failed.
+    return Nothing();
+  }
+  MOZ_ASSERT(!(remoteTexture &&
+               remoteTexture->GetFlags() & TextureFlags::DUMMY_TEXTURE));
+
   MOZ_ASSERT(owner);
 
   if (!remoteTexture) {
