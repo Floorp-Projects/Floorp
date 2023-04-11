@@ -1530,6 +1530,12 @@ preferences-doh-checkbox-warn =
 
 preferences-doh-select-resolver = Choose provider:
 
+preferences-doh-exceptions-description = { -brand-short-name } won’t use secure DNS on these sites
+
+preferences-doh-manage-exceptions =
+    .label = Manage Exceptions…
+    .accesskey = x
+
 ## The following strings are used in the Download section of settings
 
 desktop-folder-name = Desktop
