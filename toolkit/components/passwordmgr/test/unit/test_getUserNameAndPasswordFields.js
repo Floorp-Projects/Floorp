@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { LoginManagerChild } = ChromeUtils.import(
-  "resource://gre/modules/LoginManagerChild.jsm"
+const { LoginManagerChild } = ChromeUtils.importESModule(
+  "resource://gre/modules/LoginManagerChild.sys.mjs"
 );
 const TESTCASES = [
   {

@@ -6,11 +6,7 @@
  * Machine learning model for identifying sign up scenario forms
  */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["SignUpFormRuleset"];
-
-const {
+import {
   dom,
   out,
   rule,
@@ -18,11 +14,12 @@ const {
   score,
   type,
   element,
-  utils: { isVisible, attributesMatch, min, setDefault },
-  clusters: { euclidean },
-} = ChromeUtils.importESModule(
-  "resource://gre/modules/third_party/fathom/fathom.mjs"
-);
+  utils,
+  clusters,
+} from "resource://gre/modules/third_party/fathom/fathom.mjs";
+
+let { isVisible, attributesMatch, min, setDefault } = utils;
+let { euclidean } = clusters;
 
 const DEVELOPMENT = false;
 
@@ -558,7 +555,7 @@ function createRuleset(coeffs, biases) {
  * --- END OF RULESET ---
  */
 
-const SignUpFormRuleset = {
+export const SignUpFormRuleset = {
   type: "form",
   rules: createRuleset([...coefficients.signup], biases),
 };

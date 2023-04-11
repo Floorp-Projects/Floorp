@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { LoginManagerContextMenu } = ChromeUtils.import(
-  "resource://gre/modules/LoginManagerContextMenu.jsm"
+const { LoginManagerContextMenu } = ChromeUtils.importESModule(
+  "resource://gre/modules/LoginManagerContextMenu.sys.mjs"
 );
 
 const dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined, {

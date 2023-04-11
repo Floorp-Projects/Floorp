@@ -326,10 +326,10 @@ let JSWINDOWACTORS = {
 
   LoginManager: {
     parent: {
-      moduleURI: "resource://gre/modules/LoginManagerParent.jsm",
+      esModuleURI: "resource://gre/modules/LoginManagerParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource://gre/modules/LoginManagerChild.jsm",
+      esModuleURI: "resource://gre/modules/LoginManagerChild.sys.mjs",
       events: {
         DOMDocFetchSuccess: {},
         DOMFormBeforeSubmit: {},

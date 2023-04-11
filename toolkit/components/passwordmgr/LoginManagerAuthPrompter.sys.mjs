@@ -2,15 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PrivateBrowsingUtils.sys.mjs"
-);
-const { PromptUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromptUtils.sys.mjs"
-);
+import { PrivateBrowsingUtils } from "resource://gre/modules/PrivateBrowsingUtils.sys.mjs";
+import { PromptUtils } from "resource://gre/modules/PromptUtils.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -23,11 +17,9 @@ XPCOMUtils.defineLazyServiceGetter(
 
 /* eslint-disable block-scoped-var, no-var */
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "LoginHelper",
-  "resource://gre/modules/LoginHelper.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
+});
 
 const LoginInfo = Components.Constructor(
   "@mozilla.org/login-manager/loginInfo;1",
@@ -96,7 +88,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
  *
  * Invoked by [toolkit/components/prompts/src/Prompter.jsm]
  */
-function LoginManagerAuthPromptFactory() {
+export function LoginManagerAuthPromptFactory() {
   Services.obs.addObserver(this, "passwordmgr-crypto-login", true);
 }
 
@@ -289,7 +281,7 @@ XPCOMUtils.defineLazyGetter(
  * nsILoginManagerAuthPrompter: Used by consumers to indicate which tab/window a
  * prompt should appear on.
  */
-function LoginManagerAuthPrompter() {}
+export function LoginManagerAuthPrompter() {}
 
 LoginManagerAuthPrompter.prototype = {
   classID: Components.ID("{8aa66d77-1bbb-45a6-991e-b8f47751c291}"),
@@ -1121,8 +1113,3 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "prompts.modalType.httpAuth",
   Services.prompt.MODAL_TYPE_WINDOW
 );
-
-const EXPORTED_SYMBOLS = [
-  "LoginManagerAuthPromptFactory",
-  "LoginManagerAuthPrompter",
-];

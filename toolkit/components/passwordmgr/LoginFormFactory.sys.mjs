@@ -7,29 +7,20 @@
  * which aren't necessarily marked up with a <form> element.
  */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["LoginFormFactory"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  LoginHelper: "resource://gre/modules/LoginHelper.jsm",
+  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   return lazy.LoginHelper.createLogger("LoginFormFactory");
 });
 
-const LoginFormFactory = {
+export const LoginFormFactory = {
   /**
    * WeakMap of the root element of a LoginForm to the LoginForm representing its fields.
    *

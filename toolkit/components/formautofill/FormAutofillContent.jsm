@@ -25,6 +25,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
+  InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
@@ -36,7 +37,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   FormAutofill: "resource://autofill/FormAutofill.jsm",
   FormAutofillHandler: "resource://autofill/FormAutofillHandler.jsm",
   FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
-  InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(

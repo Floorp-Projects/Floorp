@@ -8,11 +8,11 @@
 
 "use strict";
 
-const { LoginCSVImport } = ChromeUtils.import(
-  "resource://gre/modules/LoginCSVImport.jsm"
+const { LoginCSVImport } = ChromeUtils.importESModule(
+  "resource://gre/modules/LoginCSVImport.sys.mjs"
 );
-const { LoginExport } = ChromeUtils.import(
-  "resource://gre/modules/LoginExport.jsm"
+const { LoginExport } = ChromeUtils.importESModule(
+  "resource://gre/modules/LoginExport.sys.mjs"
 );
 const { TelemetryTestUtils: TTU } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"

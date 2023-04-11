@@ -12,12 +12,8 @@ const { DownloadUtils } = ChromeUtils.import(
 
 /* import-globals-from pageInfo.js */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "LoginHelper",
-  "resource://gre/modules/LoginHelper.jsm"
-);
 ChromeUtils.defineESModuleGetters(this, {
+  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
   PluralForm: "resource://gre/modules/PluralForm.sys.mjs",
 });
 

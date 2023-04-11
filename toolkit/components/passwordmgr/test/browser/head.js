@@ -1,7 +1,7 @@
 const DIRECTORY_PATH = "/browser/toolkit/components/passwordmgr/test/browser/";
 
-var { LoginTestUtils } = ChromeUtils.import(
-  "resource://testing-common/LoginTestUtils.jsm"
+var { LoginTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/LoginTestUtils.sys.mjs"
 );
 
 const { TelemetryTestUtils } = ChromeUtils.importESModule(
@@ -461,8 +461,8 @@ async function cleanupPasswordNotifications(
 
 async function clearMessageCache(browser) {
   await SpecialPowers.spawn(browser, [], async () => {
-    const { LoginManagerChild } = ChromeUtils.import(
-      "resource://gre/modules/LoginManagerChild.jsm"
+    const { LoginManagerChild } = ChromeUtils.importESModule(
+      "resource://gre/modules/LoginManagerChild.sys.mjs"
     );
     let docState = LoginManagerChild.forWindow(content).stateForDocument(
       content.document

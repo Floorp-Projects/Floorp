@@ -10,13 +10,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   ContentDOMReference: "resource://gre/modules/ContentDOMReference.sys.mjs",
   LayoutUtils: "resource://gre/modules/LayoutUtils.sys.mjs",
+  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
 });
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "LoginHelper",
-  "resource://gre/modules/LoginHelper.jsm"
-);
 
 let autoCompleteListeners = new Set();
 

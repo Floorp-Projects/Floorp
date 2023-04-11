@@ -6,22 +6,16 @@
  * nsIAutoCompleteResult and nsILoginAutoCompleteSearch implementations for saved logins.
  */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["LoginAutoComplete", "LoginAutoCompleteResult"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.jsm",
-  LoginFormFactory: "resource://gre/modules/LoginFormFactory.jsm",
-  LoginHelper: "resource://gre/modules/LoginHelper.jsm",
-  LoginManagerChild: "resource://gre/modules/LoginManagerChild.jsm",
-  NewPasswordModel: "resource://gre/modules/NewPasswordModel.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.sys.mjs",
+  LoginFormFactory: "resource://gre/modules/LoginFormFactory.sys.mjs",
+  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
+  LoginManagerChild: "resource://gre/modules/LoginManagerChild.sys.mjs",
+  NewPasswordModel: "resource://gre/modules/NewPasswordModel.sys.mjs",
 });
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
@@ -268,7 +262,7 @@ class LoginsFooterAutocompleteItem extends AutocompleteItem {
 }
 
 // nsIAutoCompleteResult implementation
-class LoginAutoCompleteResult {
+export class LoginAutoCompleteResult {
   #rows = [];
 
   constructor(
@@ -490,7 +484,7 @@ class LoginAutoCompleteResult {
   }
 }
 
-class LoginAutoComplete {
+export class LoginAutoComplete {
   // HTMLInputElement to number, the element's new-password heuristic confidence score
   #cachedNewPasswordScore = new WeakMap();
   #autoCompleteLookupPromise = null;

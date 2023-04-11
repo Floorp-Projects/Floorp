@@ -5,21 +5,15 @@
 /* ownerGlobal doesn't exist in content privileged windows. */
 /* eslint-disable mozilla/use-ownerGlobal */
 
-const EXPORTED_SYMBOLS = ["InsecurePasswordUtils"];
-
 const STRINGS_URI = "chrome://global/locale/security/security.properties";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "LoginHelper",
-  "resource://gre/modules/LoginHelper.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
+});
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   return lazy.LoginHelper.createLogger("InsecurePasswordUtils");
@@ -29,7 +23,7 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
  * A module that provides utility functions for form security.
  *
  */
-const InsecurePasswordUtils = {
+export const InsecurePasswordUtils = {
   _formRootsWarned: new WeakMap(),
 
   /**

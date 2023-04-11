@@ -12,17 +12,17 @@ const { AppConstants } = ChromeUtils.importESModule(
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { LoginRecipesContent, LoginRecipesParent } = ChromeUtils.import(
-  "resource://gre/modules/LoginRecipes.jsm"
+const { LoginRecipesContent, LoginRecipesParent } = ChromeUtils.importESModule(
+  "resource://gre/modules/LoginRecipes.sys.mjs"
 );
-const { LoginHelper } = ChromeUtils.import(
-  "resource://gre/modules/LoginHelper.jsm"
+const { LoginHelper } = ChromeUtils.importESModule(
+  "resource://gre/modules/LoginHelper.sys.mjs"
 );
 const { FileTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/FileTestUtils.sys.mjs"
 );
-const { LoginTestUtils } = ChromeUtils.import(
-  "resource://testing-common/LoginTestUtils.jsm"
+const { LoginTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/LoginTestUtils.sys.mjs"
 );
 const { MockDocument } = ChromeUtils.importESModule(
   "resource://testing-common/MockDocument.sys.mjs"

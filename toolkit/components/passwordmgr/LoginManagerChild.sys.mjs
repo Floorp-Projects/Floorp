@@ -9,10 +9,6 @@
 // Disable use-ownerGlobal since LoginForm doesn't have it.
 /* eslint-disable mozilla/use-ownerGlobal */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["LoginManagerChild", "LoginFormState"];
-
 const PASSWORD_INPUT_ADDED_COALESCING_THRESHOLD_MS = 1;
 // The amount of time a context menu event supresses showing a
 // popup from a focus event in ms. This matches the threshold in
@@ -27,18 +23,10 @@ const SUBMIT_FORM_IS_REMOVED = 3;
 const LOG_MESSAGE_FORM_SUBMISSION = "form submission";
 const LOG_MESSAGE_FIELD_EDIT = "field edit";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PrivateBrowsingUtils.sys.mjs"
-);
-const { CreditCard } = ChromeUtils.importESModule(
-  "resource://gre/modules/CreditCard.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { PrivateBrowsingUtils } from "resource://gre/modules/PrivateBrowsingUtils.sys.mjs";
+import { CreditCard } from "resource://gre/modules/CreditCard.sys.mjs";
 
 const lazy = {};
 
@@ -46,14 +34,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ContentDOMReference: "resource://gre/modules/ContentDOMReference.sys.mjs",
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  LoginFormFactory: "resource://gre/modules/LoginFormFactory.jsm",
-  LoginRecipesContent: "resource://gre/modules/LoginRecipes.jsm",
-  LoginHelper: "resource://gre/modules/LoginHelper.jsm",
-  InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.jsm",
-  SignUpFormRuleset: "resource://gre/modules/SignUpFormRuleset.jsm",
+  InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.sys.mjs",
+  LoginFormFactory: "resource://gre/modules/LoginFormFactory.sys.mjs",
+  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
+  LoginRecipesContent: "resource://gre/modules/LoginRecipes.sys.mjs",
+  SignUpFormRuleset: "resource://gre/modules/SignUpFormRuleset.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -443,7 +428,7 @@ class SignUpFormScenario extends FormScenario {
  * This class will be shared with Firefox iOS and should have no references to
  * Gecko internals. See Bug 1774208.
  */
-class LoginFormState {
+export class LoginFormState {
   /**
    * Keeps track of filled fields and values.
    */
@@ -1473,7 +1458,7 @@ class LoginFormState {
  * NOTE: there are still bits of code here that needs to be moved to
  * LoginFormState.
  */
-class LoginManagerChild extends JSWindowActorChild {
+export class LoginManagerChild extends JSWindowActorChild {
   /**
    * WeakMap of the root element of a LoginForm to the DeferredTask to fill its fields.
    *

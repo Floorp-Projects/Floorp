@@ -9,11 +9,9 @@
 
 // Globals
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "LoginStore",
-  "resource://gre/modules/LoginStore.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  LoginStore: "resource://gre/modules/LoginStore.sys.mjs",
+});
 
 const TEST_STORE_FILE_NAME = "test-logins.json";
 

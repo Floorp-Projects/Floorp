@@ -10,27 +10,15 @@
  * of nsILoginManager and nsILoginManagerStorage.
  */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = [
-  "LoginHelper",
-  "OptInFeature",
-  "ParentAutocompleteOption",
-];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { Logic } = ChromeUtils.importESModule(
-  "resource://gre/modules/LoginManager.shared.mjs"
-);
+import { Logic } from "resource://gre/modules/LoginManager.shared.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
 });
 
-class ParentAutocompleteOption {
+export class ParentAutocompleteOption {
   icon;
   title;
   subtitle;
@@ -379,7 +367,7 @@ class ImportRowProcessor {
 /**
  * Contains functions shared by different Login Manager components.
  */
-const LoginHelper = {
+export const LoginHelper = {
   debug: null,
   enabled: null,
   storageEnabled: null,
@@ -1792,7 +1780,7 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
 
 LoginHelper.init();
 
-class OptInFeature {
+export class OptInFeature {
   implementation;
   #offered;
   #enabled;

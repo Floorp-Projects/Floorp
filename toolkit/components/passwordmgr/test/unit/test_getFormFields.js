@@ -4,12 +4,12 @@
 
 "use strict";
 
-const { LoginFormFactory } = ChromeUtils.import(
-  "resource://gre/modules/LoginFormFactory.jsm"
+const { LoginFormFactory } = ChromeUtils.importESModule(
+  "resource://gre/modules/LoginFormFactory.sys.mjs"
 );
 
-const { LoginManagerChild } = ChromeUtils.import(
-  "resource://gre/modules/LoginManagerChild.jsm"
+const { LoginManagerChild } = ChromeUtils.importESModule(
+  "resource://gre/modules/LoginManagerChild.sys.mjs"
 );
 
 const TESTENVIRONMENTS = {

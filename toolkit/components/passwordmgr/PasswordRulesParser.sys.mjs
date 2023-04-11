@@ -1,11 +1,7 @@
 // Sourced from https://github.com/apple/password-manager-resources/blob/5f6da89483e75cdc4165a6fc4756796e0ced7a21/tools/PasswordRulesParser.js
 // Copyright (c) 2019 - 2020 Apple Inc. Licensed under MIT License.
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["PasswordRulesParser"];
-
-this.PasswordRulesParser = {
+export const PasswordRulesParser = {
   parsePasswordRules,
 };
 
@@ -460,7 +456,7 @@ function _parsePasswordRequiredOrAllowedPropertyValue(input, position) {
 
     console.error(
       "Failed to find start of next property or property value: " +
-      input.substr(position)
+        input.substr(position)
     );
     return [null, position];
   }
@@ -553,7 +549,7 @@ function _parseInteger(input, position) {
   if (!_isASCIIDigit(input[position])) {
     console.error(
       "Failed to parse value of type integer; not a number: " +
-      input.substr(position)
+        input.substr(position)
     );
     return [null, position];
   }
@@ -576,7 +572,7 @@ function _parseInteger(input, position) {
 
   console.error(
     "Failed to parse value of type integer; not a number: " +
-    input.substr(initialPosition)
+      input.substr(initialPosition)
   );
   return [null, position];
 }

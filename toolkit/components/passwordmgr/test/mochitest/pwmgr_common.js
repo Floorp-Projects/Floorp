@@ -4,8 +4,8 @@
 
 /* import-globals-from ../../../../../toolkit/components/satchel/test/satchel_common.js */
 
-const { LoginTestUtils } = SpecialPowers.ChromeUtils.import(
-  "resource://testing-common/LoginTestUtils.jsm"
+const { LoginTestUtils } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://testing-common/LoginTestUtils.sys.mjs"
 );
 const Services = SpecialPowers.Services;
 
@@ -16,8 +16,8 @@ LoginTestUtils.setAssertReporter(
   })
 );
 
-const { LoginHelper } = SpecialPowers.ChromeUtils.import(
-  "resource://gre/modules/LoginHelper.jsm"
+const { LoginHelper } = SpecialPowers.ChromeUtils.importESModule(
+  "resource://gre/modules/LoginHelper.sys.mjs"
 );
 
 const {
@@ -793,8 +793,8 @@ SimpleTest.registerCleanupFunction(() => {
   runInParent(function cleanupParent() {
     /* eslint-env mozilla/chrome-script */
     // eslint-disable-next-line no-shadow
-    const { LoginManagerParent } = ChromeUtils.import(
-      "resource://gre/modules/LoginManagerParent.jsm"
+    const { LoginManagerParent } = ChromeUtils.importESModule(
+      "resource://gre/modules/LoginManagerParent.sys.mjs"
     );
 
     // Remove all logins and disabled hosts

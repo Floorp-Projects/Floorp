@@ -6,11 +6,9 @@
 
 // Globals
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "OSCrypto",
-  "resource://gre/modules/OSCrypto_win.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  OSCrypto: "resource://gre/modules/OSCrypto_win.sys.mjs",
+});
 
 let crypto = new OSCrypto();
 

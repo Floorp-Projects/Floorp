@@ -158,8 +158,8 @@ add_task(async function fill_generated_password_empty_field() {
         browser,
         [[passwordInputSelector]],
         function checkFinalFieldValue(inputSelector) {
-          let { LoginTestUtils: LTU } = ChromeUtils.import(
-            "resource://testing-common/LoginTestUtils.jsm"
+          let { LoginTestUtils: LTU } = ChromeUtils.importESModule(
+            "resource://testing-common/LoginTestUtils.sys.mjs"
           );
           const input = content.document.querySelector(inputSelector);
           Assert.equal(
@@ -226,8 +226,8 @@ add_task(async function fill_generated_password_nonempty_field() {
         browser,
         [[passwordInputSelector]],
         function checkFinalFieldValue(inputSelector) {
-          let { LoginTestUtils: LTU } = ChromeUtils.import(
-            "resource://testing-common/LoginTestUtils.jsm"
+          let { LoginTestUtils: LTU } = ChromeUtils.importESModule(
+            "resource://testing-common/LoginTestUtils.sys.mjs"
           );
           const input = content.document.querySelector(inputSelector);
           Assert.equal(
@@ -293,8 +293,8 @@ add_task(async function fill_generated_password_with_matching_logins() {
         browser,
         [[passwordInputSelector]],
         function checkFinalFieldValue(inputSelector) {
-          let { LoginTestUtils: LTU } = ChromeUtils.import(
-            "resource://testing-common/LoginTestUtils.jsm"
+          let { LoginTestUtils: LTU } = ChromeUtils.importESModule(
+            "resource://testing-common/LoginTestUtils.sys.mjs"
           );
           const input = content.document.querySelector(inputSelector);
           Assert.equal(
@@ -347,8 +347,8 @@ add_task(async function fill_generated_password_with_matching_logins() {
         browser,
         [[passwordInputSelector]],
         function checkFieldNotGeneratedPassword(inputSelector) {
-          let { LoginTestUtils: LTU } = ChromeUtils.import(
-            "resource://testing-common/LoginTestUtils.jsm"
+          let { LoginTestUtils: LTU } = ChromeUtils.importESModule(
+            "resource://testing-common/LoginTestUtils.sys.mjs"
           );
           const input = content.document.querySelector(inputSelector);
           Assert.equal(
@@ -409,8 +409,8 @@ add_task(async function test_edited_generated_password_in_new_tab() {
         browser,
         [[passwordInputSelector]],
         function checkAndEditFieldValue(inputSelector) {
-          let { LoginTestUtils: LTU } = ChromeUtils.import(
-            "resource://testing-common/LoginTestUtils.jsm"
+          let { LoginTestUtils: LTU } = ChromeUtils.importESModule(
+            "resource://testing-common/LoginTestUtils.sys.mjs"
           );
           const input = content.document.querySelector(inputSelector);
           Assert.equal(
@@ -462,8 +462,8 @@ add_task(async function test_edited_generated_password_in_new_tab() {
         browser,
         [[passwordInputSelector]],
         function checkAndEditFieldValue(inputSelector) {
-          let { LoginTestUtils: LTU } = ChromeUtils.import(
-            "resource://testing-common/LoginTestUtils.jsm"
+          let { LoginTestUtils: LTU } = ChromeUtils.importESModule(
+            "resource://testing-common/LoginTestUtils.sys.mjs"
           );
           const input = content.document.querySelector(inputSelector);
           Assert.equal(

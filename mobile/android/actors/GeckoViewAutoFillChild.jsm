@@ -5,9 +5,6 @@
 const { GeckoViewActorChild } = ChromeUtils.importESModule(
   "resource://gre/modules/GeckoViewActorChild.sys.mjs"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const { GeckoViewUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/GeckoViewUtils.sys.mjs"
 );
@@ -17,10 +14,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
   LayoutUtils: "resource://gre/modules/LayoutUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  LoginManagerChild: "resource://gre/modules/LoginManagerChild.jsm",
+  LoginManagerChild: "resource://gre/modules/LoginManagerChild.sys.mjs",
 });
 
 const EXPORTED_SYMBOLS = ["GeckoViewAutoFillChild"];

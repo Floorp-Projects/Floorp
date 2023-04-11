@@ -4,13 +4,11 @@
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "LoginHelper",
-  "resource://gre/modules/LoginHelper.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
+});
 
-function nsLoginInfo() {}
+export function nsLoginInfo() {}
 
 nsLoginInfo.prototype = {
   classID: Components.ID("{0f2f347c-1e4f-40cc-8efd-792dea70a85e}"),
@@ -135,5 +133,3 @@ nsLoginInfo.prototype = {
   timePasswordChanged: null,
   timesUsed: null,
 }; // end of nsLoginInfo implementation
-
-const EXPORTED_SYMBOLS = ["nsLoginInfo"];

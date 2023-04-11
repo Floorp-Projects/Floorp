@@ -6,24 +6,22 @@
  * nsILoginManagerStorage implementation for GeckoView
  */
 
-"use strict";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { LoginManagerStorage_json } = ChromeUtils.import(
-  "resource://gre/modules/storage-json.js"
-);
+import { LoginManagerStorage_json } from "resource://gre/modules/storage-json.sys.mjs";
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   GeckoViewAutocomplete: "resource://gre/modules/GeckoViewAutocomplete.jsm",
-  LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   LoginEntry: "resource://gre/modules/GeckoViewAutocomplete.jsm",
 });
 
-class LoginManagerStorage_geckoview extends LoginManagerStorage_json {
+export class LoginManagerStorage_geckoview extends LoginManagerStorage_json {
   get classID() {
     return Components.ID("{337f317f-f713-452a-962d-db831c785fec}");
   }
@@ -256,5 +254,3 @@ XPCOMUtils.defineLazyGetter(
     return logger.log.bind(logger);
   }
 );
-
-const EXPORTED_SYMBOLS = ["LoginManagerStorage_geckoview"];

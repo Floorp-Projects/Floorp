@@ -1,5 +1,5 @@
-let { LoginManagerPrompter } = ChromeUtils.import(
-  "resource://gre/modules/LoginManagerPrompter.jsm"
+let { LoginManagerPrompter } = ChromeUtils.importESModule(
+  "resource://gre/modules/LoginManagerPrompter.sys.mjs"
 );
 
 const TEST_CASES = [

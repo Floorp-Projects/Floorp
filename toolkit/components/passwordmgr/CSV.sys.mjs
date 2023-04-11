@@ -6,10 +6,6 @@
  * A Class to parse CSV files
  */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["CSV"];
-
 const QUOTATION_MARK = '"';
 const LINE_BREAKS = ["\r", "\n"];
 const EOL = {};
@@ -20,7 +16,7 @@ class ParsingFailedException extends Error {
   }
 }
 
-class CSV {
+export class CSV {
   /**
    * Parses a csv formated string into rows split into [headerLine, parsedLines].
    * The csv string format has to follow RFC 4180, otherwise the parsing process is stopped and a ParsingFailedException is thrown, e.g.:

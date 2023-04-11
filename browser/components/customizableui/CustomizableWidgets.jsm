@@ -26,17 +26,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource:///modules/sessionstore/RecentlyClosedTabsAndWindowsMenuUtils.sys.mjs",
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
+  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Sanitizer: "resource:///modules/Sanitizer.jsm",
 });
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "LoginHelper",
-  "resource://gre/modules/LoginHelper.jsm"
-);
 
 ChromeUtils.defineModuleGetter(
   lazy,

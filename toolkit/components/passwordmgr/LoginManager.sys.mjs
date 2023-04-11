@@ -2,22 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 const PERMISSION_SAVE_LOGINS = "login-saving";
 const MAX_DATE_MS = 8640000000000000;
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "LoginHelper",
-  "resource://gre/modules/LoginHelper.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
+});
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   let logger = lazy.LoginHelper.createLogger("LoginManager");
@@ -30,7 +24,7 @@ if (Services.appinfo.processType !== Services.appinfo.PROCESS_TYPE_DEFAULT) {
   throw new Error("LoginManager.jsm should only run in the parent process");
 }
 
-function LoginManager() {
+export function LoginManager() {
   this.init();
 }
 
@@ -677,5 +671,3 @@ LoginManager.prototype = {
     );
   },
 }; // end of LoginManager implementation
-
-const EXPORTED_SYMBOLS = ["LoginManager"];

@@ -49,14 +49,14 @@ add_task(async function test() {
       tab.linkedBrowser,
       [{ login, usernameRequested }],
       async ({ login: addedLogin, usernameRequested: aUsernameRequested }) => {
-        const { LoginFormFactory } = ChromeUtils.import(
-          "resource://gre/modules/LoginFormFactory.jsm"
+        const { LoginFormFactory } = ChromeUtils.importESModule(
+          "resource://gre/modules/LoginFormFactory.sys.mjs"
         );
-        const { LoginManagerChild } = ChromeUtils.import(
-          "resource://gre/modules/LoginManagerChild.jsm"
+        const { LoginManagerChild } = ChromeUtils.importESModule(
+          "resource://gre/modules/LoginManagerChild.sys.mjs"
         );
-        const { LoginHelper } = ChromeUtils.import(
-          "resource://gre/modules/LoginHelper.jsm"
+        const { LoginHelper } = ChromeUtils.importESModule(
+          "resource://gre/modules/LoginHelper.sys.mjs"
         );
 
         let password = content.document.querySelector("#form-basic-password");
