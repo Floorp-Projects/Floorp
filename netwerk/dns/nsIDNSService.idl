@@ -98,6 +98,15 @@ interface nsIDNSService : nsISupports
         ALL_DNSFLAGS_BITS = ((1 << 17) - 1),
     };
 
+    cenum ConfirmationState : 8 {
+        CONFIRM_OFF = 0,
+        CONFIRM_TRYING_OK = 1,
+        CONFIRM_OK = 2,
+        CONFIRM_FAILED = 3,
+        CONFIRM_TRYING_FAILED = 4,
+        CONFIRM_DISABLED = 5,
+    };
+
     /**
      * kicks off an asynchronous host lookup.
      *
