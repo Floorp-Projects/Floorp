@@ -2,15 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["GeckoViewStorageController"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { GeckoViewUtils } from "resource://gre/modules/GeckoViewUtils.sys.mjs";
 
 const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
+  PrincipalsCollector: "resource://gre/modules/PrincipalsCollector.sys.mjs",
+});
 
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
@@ -24,15 +24,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "serviceModePBM",
   "cookiebanners.service.mode.privateBrowsing",
   Ci.nsICookieBannerService.MODE_DISABLED
-);
-const { GeckoViewUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/GeckoViewUtils.sys.mjs"
-);
-const { PrincipalsCollector } = ChromeUtils.import(
-  "resource://gre/modules/PrincipalsCollector.jsm"
-);
-const { E10SUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/E10SUtils.sys.mjs"
 );
 
 const { debug, warn } = GeckoViewUtils.initLogging(
@@ -112,7 +103,7 @@ function convertFlags(aJavaFlags) {
   return flags;
 }
 
-const GeckoViewStorageController = {
+export const GeckoViewStorageController = {
   onEvent(aEvent, aData, aCallback) {
     debug`onEvent ${aEvent} ${aData}`;
 
@@ -138,7 +129,7 @@ const GeckoViewStorageController = {
         const permissions = rawPerms.map(p => {
           return {
             uri: Services.io.createExposableURI(p.principal.URI).displaySpec,
-            principal: E10SUtils.serializePrincipal(p.principal),
+            principal: lazy.E10SUtils.serializePrincipal(p.principal),
             perm: p.type,
             value: p.capability,
             contextId: p.principal.originAttributes.geckoViewSessionContextId,
@@ -163,7 +154,7 @@ const GeckoViewStorageController = {
         const permissions = rawPerms.map(p => {
           return {
             uri: Services.io.createExposableURI(p.principal.URI).displaySpec,
-            principal: E10SUtils.serializePrincipal(p.principal),
+            principal: lazy.E10SUtils.serializePrincipal(p.principal),
             perm: p.type,
             value: p.capability,
             contextId: p.principal.originAttributes.geckoViewSessionContextId,
@@ -174,7 +165,7 @@ const GeckoViewStorageController = {
         break;
       }
       case "GeckoView:SetPermission": {
-        const principal = E10SUtils.deserializePrincipal(aData.principal);
+        const principal = lazy.E10SUtils.deserializePrincipal(aData.principal);
         let key = aData.perm;
         if (key == "storage-access") {
           key = "3rdPartyStorage^" + aData.thirdPartyOrigin;
@@ -297,7 +288,7 @@ const GeckoViewStorageController = {
     // user interaction, we need to ensure that we only delete those permissions that
     // do not have any existing storage.
     if (flags & Ci.nsIClearDataService.CLEAR_HISTORY) {
-      const principalsCollector = new PrincipalsCollector();
+      const principalsCollector = new lazy.PrincipalsCollector();
       const principals = await principalsCollector.getAllPrincipals();
       await new Promise(resolve => {
         Services.clearData.deleteUserInteractionForClearingHistory(

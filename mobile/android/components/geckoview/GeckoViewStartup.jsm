@@ -129,11 +129,11 @@ class GeckoViewStartup {
       case "content-process-ready-for-script":
       case "app-startup": {
         GeckoViewUtils.addLazyGetter(this, "GeckoViewConsole", {
-          module: "resource://gre/modules/GeckoViewConsole.jsm",
+          module: "resource://gre/modules/GeckoViewConsole.sys.mjs",
         });
 
         GeckoViewUtils.addLazyGetter(this, "GeckoViewStorageController", {
-          module: "resource://gre/modules/GeckoViewStorageController.jsm",
+          module: "resource://gre/modules/GeckoViewStorageController.sys.mjs",
           ged: [
             "GeckoView:ClearData",
             "GeckoView:ClearSessionContextData",
@@ -150,7 +150,7 @@ class GeckoViewStartup {
         });
 
         GeckoViewUtils.addLazyGetter(this, "GeckoViewPushController", {
-          module: "resource://gre/modules/GeckoViewPushController.jsm",
+          module: "resource://gre/modules/GeckoViewPushController.sys.mjs",
           ged: ["GeckoView:PushEvent", "GeckoView:PushSubscriptionChanged"],
         });
 
@@ -173,7 +173,7 @@ class GeckoViewStartup {
 
           if (Services.appinfo.sessionHistoryInParent) {
             GeckoViewUtils.addLazyGetter(this, "GeckoViewSessionStore", {
-              module: "resource://gre/modules/GeckoViewSessionStore.jsm",
+              module: "resource://gre/modules/GeckoViewSessionStore.sys.mjs",
               observers: [
                 "browsing-context-did-set-embedder",
                 "browsing-context-discarded",
@@ -182,7 +182,7 @@ class GeckoViewStartup {
           }
 
           GeckoViewUtils.addLazyGetter(this, "GeckoViewWebExtension", {
-            module: "resource://gre/modules/GeckoViewWebExtension.jsm",
+            module: "resource://gre/modules/GeckoViewWebExtension.sys.mjs",
             ged: [
               "GeckoView:ActionDelegate:Attached",
               "GeckoView:BrowserAction:Click",
@@ -211,7 +211,7 @@ class GeckoViewStartup {
           });
 
           GeckoViewUtils.addLazyGetter(this, "ChildCrashHandler", {
-            module: "resource://gre/modules/ChildCrashHandler.jsm",
+            module: "resource://gre/modules/ChildCrashHandler.sys.mjs",
             observers: ["ipc:content-shutdown", "compositor:process-aborted"],
           });
 
@@ -224,7 +224,7 @@ class GeckoViewStartup {
 
       case "profile-after-change": {
         GeckoViewUtils.addLazyGetter(this, "GeckoViewRemoteDebugger", {
-          module: "resource://gre/modules/GeckoViewRemoteDebugger.jsm",
+          module: "resource://gre/modules/GeckoViewRemoteDebugger.sys.mjs",
           init: gvrd => gvrd.onInit(),
         });
 
@@ -239,7 +239,7 @@ class GeckoViewStartup {
         );
 
         GeckoViewUtils.addLazyGetter(this, "DownloadTracker", {
-          module: "resource://gre/modules/GeckoViewWebExtension.jsm",
+          module: "resource://gre/modules/GeckoViewWebExtension.sys.mjs",
           ged: ["GeckoView:WebExtension:DownloadChanged"],
         });
 

@@ -2,14 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["GeckoViewSessionStore"];
-
-const { GeckoViewUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/GeckoViewUtils.sys.mjs"
-);
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+import { GeckoViewUtils } from "resource://gre/modules/GeckoViewUtils.sys.mjs";
 
 const lazy = {};
 
@@ -115,7 +108,7 @@ class SHistoryListener {
   }
 }
 
-var GeckoViewSessionStore = {
+export var GeckoViewSessionStore = {
   // For each <browser> element, records the SHistoryListener.
   _browserSHistoryListener: new WeakMap(),
 

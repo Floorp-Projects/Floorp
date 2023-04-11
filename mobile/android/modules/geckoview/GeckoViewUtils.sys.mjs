@@ -89,7 +89,7 @@ export var GeckoViewUtils = {
     XPCOMUtils.defineLazyGetter(scope, name, _ => {
       let ret = undefined;
       if (module) {
-        ret = ChromeUtils.import(module)[name];
+        ret = ChromeUtils.importESModule(module)[name];
       } else if (service) {
         ret = Cc[service].getService(Ci.nsISupports).wrappedJSObject;
       } else if (typeof handler === "function") {
