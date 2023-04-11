@@ -14252,6 +14252,25 @@
 #endif
   mirror: always
 
+# Amount of time by which it is always acceptable to delay the firing of a timer.
+# Any timer may be delayed by up to this amount in order to enable timers to be
+# bundled together for efficiency.
+- name: timer.minimum_firing_delay_tolerance_ms
+  type: AtomicFloat
+  value: 1.0
+  mirror: always
+
+# Maximum amount of time by which it is acceptable to delay the firing of any timer.
+# Setting this to zero will effectively disable timer coalescing.
+- name: timer.maximum_firing_delay_tolerance_ms
+  type: AtomicFloat
+#ifdef NIGHTLY_BUILD
+  value: 1.0
+#else
+  value: 0.0
+#endif
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "toolkit."
 #---------------------------------------------------------------------------
