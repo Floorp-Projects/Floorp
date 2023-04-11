@@ -258,6 +258,7 @@ export class AutoCompleteParent extends JSWindowActorParent {
       this.openedPopup._normalMaxRows = this.openedPopup.maxRows;
       this.openedPopup.mInput.maxRows = 10;
     }
+    browser.constrainPopup(this.openedPopup);
     this.openedPopup.addEventListener("popuphidden", this);
     this.openedPopup.addEventListener("popupshowing", this);
     this.openedPopup.openPopupAtScreenRect(
