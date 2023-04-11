@@ -642,13 +642,15 @@ TimeStamp TimerThread::ComputeWakeupTimeFromTimers() const {
   TimeStamp bundleWakeup = mTimers[0].Timeout();
 
   // cutoffTime is the latest that we can wake up for the timers currently
-  // accepted into the bundle.
+  // accepted into the bundle. These needs to be updated as we go through the
+  // list because later timers may have more strict delay tolerances.
   const TimeDuration minTimerDelay = TimeDuration::FromMilliseconds(
       StaticPrefs::timer_minimum_firing_delay_tolerance_ms());
   const TimeDuration maxTimerDelay = TimeDuration::FromMilliseconds(
       StaticPrefs::timer_maximum_firing_delay_tolerance_ms());
-  const TimeStamp cutoffTime =
-      bundleWakeup + ComputeAcceptableFiringDelay(minTimerDelay, maxTimerDelay);
+  TimeStamp cutoffTime =
+      bundleWakeup + ComputeAcceptableFiringDelay(mTimers[0].Delay(),
+                                                  minTimerDelay, maxTimerDelay);
 
   const size_t timerCount = mTimers.Length();
   for (size_t entryIndex = 1; entryIndex < timerCount; ++entryIndex) {
@@ -665,19 +667,32 @@ TimeStamp TimerThread::ComputeWakeupTimeFromTimers() const {
       break;
     }
 
-    // This timer can be included in the bundle. Update bundleWakeup.
+    // This timer can be included in the bundle. Update bundleWakeup and
+    // cutoffTime.
     bundleWakeup = curTimerDue;
+    cutoffTime = std::min(
+        curTimerDue + ComputeAcceptableFiringDelay(
+                          curEntry.Delay(), minTimerDelay, maxTimerDelay),
+        cutoffTime);
     MOZ_ASSERT(bundleWakeup <= cutoffTime);
   }
 
   MOZ_ASSERT(bundleWakeup - mTimers[0].Timeout() <=
-             ComputeAcceptableFiringDelay(minTimerDelay, maxTimerDelay));
+             ComputeAcceptableFiringDelay(mTimers[0].Delay(), minTimerDelay,
+                                          maxTimerDelay));
   return bundleWakeup;
 }
 
-constexpr TimeDuration TimerThread::ComputeAcceptableFiringDelay(
-    TimeDuration minDelay, TimeDuration maxDelay) const {
-  return std::min(minDelay, maxDelay);
+TimeDuration TimerThread::ComputeAcceptableFiringDelay(
+    TimeDuration timerDuration, TimeDuration minDelay,
+    TimeDuration maxDelay) const {
+  // Use the timer's duration divided by this value as a base for how much
+  // firing delay a timer can accept. 8 was chosen specifically because it is a
+  // power of two which means that this division turns nicely into a shift.
+  constexpr int64_t timerDurationDivider = 8;
+  static_assert(IsPowerOfTwo(static_cast<uint64_t>(timerDurationDivider)));
+  const TimeDuration tmp = timerDuration / timerDurationDivider;
+  return std::min(std::max(minDelay, tmp), maxDelay);
 }
 
 NS_IMETHODIMP
@@ -939,8 +954,8 @@ nsresult TimerThread::AddTimer(nsTimerImpl* aTimer,
       StaticPrefs::timer_minimum_firing_delay_tolerance_ms());
   const TimeDuration maxTimerDelay = TimeDuration::FromMilliseconds(
       StaticPrefs::timer_maximum_firing_delay_tolerance_ms());
-  const TimeDuration firingDelay =
-      ComputeAcceptableFiringDelay(minTimerDelay, maxTimerDelay);
+  const TimeDuration firingDelay = ComputeAcceptableFiringDelay(
+      aTimer->mDelay, minTimerDelay, maxTimerDelay);
   const bool firingBeforeNextWakeup =
       mIntendedWakeupTime.IsNull() ||
       (aTimer->mTimeout + firingDelay < mIntendedWakeupTime);
