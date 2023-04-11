@@ -10,7 +10,7 @@ import mozunit
 import pytest
 import requests
 
-import mozperftest.system.android_startup as android_startup
+from mozperftest.system import android_startup
 from mozperftest.system.android_startup import (
     AndroidStartUpInstallError,
     AndroidStartUpMatchingError,
@@ -35,6 +35,7 @@ ARGS = {
     "AndroidStartUp-product": "fenix",
     "AndroidStartUp-release-channel": "nightly",
     "apk_metadata": SAMPLE_APK_METADATA,
+    "test-date": "2023.01.01",
 }
 
 

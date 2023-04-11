@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import pathlib
+import re
+import subprocess
 from datetime import datetime
 
 import requests
@@ -13,33 +15,27 @@ from mozperftest.system.android_startup import (
     KEY_DATETIME,
     KEY_NAME,
     KEY_PRODUCT,
-    PROD_FOCUS,
 )
+
+HTTP_200_OKAY = 200
 
 
 def before_iterations(kw):
     product = kw["AndroidStartUp_product"]
-    download_date = datetime.today()
     architecture = "arm64-v8a"
+    commit_info = subprocess.getoutput("hg log -l 1")
+    commit_date = re.search(r"date:\s+([:\s\w]+)\s+", str(commit_info)).group(1)
+    download_date = datetime.strptime(commit_date, "%a %b %d %H:%M:%S %Y").strftime(
+        DATETIME_FORMAT
+    )
 
-    if product == PROD_FOCUS:
-        if download_date >= datetime(2023, 2, 17):
-            pass
-        elif download_date >= datetime(2022, 12, 15):
-            product += "-v3"
-        elif download_date >= datetime(2021, 11, 5):
-            product += "-v2"
-
-    # The above sections with v2, v3 are occurring because of change in task cluster indicies
-    # This is not expected to occur regularly, the new indicies contain both focus and fenix
-    # android components
-
-    nightly_url = BASE_URL_DICT[product + "-latest"].format(
-        date=download_date.strftime(DATETIME_FORMAT), architecture=architecture
+    nightly_url = BASE_URL_DICT[product].format(
+        date=download_date, architecture=architecture
     )
     filename = f"{product}_nightly_{architecture}.apk"
     print("Fetching {}...".format(filename), end="", flush=True)
     download_apk_as_date(nightly_url, download_date, filename)
+    print(f"Downloaded {product} for date: {download_date}")
 
     kw["apk_metadata"] = {
         KEY_NAME: filename,
@@ -52,7 +48,7 @@ def before_iterations(kw):
 
 def download_apk_as_date(nightly_url, download_date_string, filename):
     apk = requests.get(nightly_url)
-    if apk.status_code != 200:
+    if apk.status_code != HTTP_200_OKAY:
         raise Exception(
             f"Something went wrong downloading the apk check to make sure you have entered"
             f" a date that is valid and that the apk for the date you have requested("
