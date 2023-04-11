@@ -3,7 +3,7 @@
    - https://creativecommons.org/publicdomain/zero/1.0/ -->
 <html>
 <head>
-  <title>Video controls test - Initial scrubber position</title>
+  <title>Video controls test - Initial scrubber position when preload is turned off</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="text/javascript" src="head.js"></script>
@@ -13,7 +13,7 @@
 <p id="display"></p>
 
 <div id="content">
-  <video width="320" height="240" id="video" mozNoDynamicControls preload="auto"></video>
+  <video width="320" height="240" id="video" mozNoDynamicControls controls="true" preload="none" src="seek_with_sound.ogg"></video>
 </div>
 
 <div id="host"></div>
@@ -23,23 +23,10 @@
 
 const video = document.getElementById("video");
 
-add_task(async function setup() {
-  await new Promise(resolve => {
-    video.addEventListener("canplaythrough", resolve, {once: true});
-    video.src = "seek_with_sound.ogg";
-  });
-
+add_task(function test_initial_scrubber_position() {
   // Check initial state upon load
   is(video.paused, true, "checking video play state");
-});
 
-add_task(function test_initial_scrubber_position() {
-  // When the controls are shown after the initial video frame,
-  // reflowedDimensions might not be set...
-  video.setAttribute("controls", "true");
-
-  // ... but we still want to ensure the initial scrubber position
-  // is reasonable.
   const scrubber = getElementWithinVideo(video, "scrubber");
   ok(scrubber.max, "The max value should be set on the scrubber");
   is(parseInt(scrubber.value), 0, "The initial position should be 0");
