@@ -26,6 +26,7 @@ class BrowsertimeDesktop(PerftestDesktop, Browsertime):
         if self.config["app"] in (
             "chrome",
             "chromium",
+            "custom-car",
         ):
             return args_list + [
                 "--browser",
