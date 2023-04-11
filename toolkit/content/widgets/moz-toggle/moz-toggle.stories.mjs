@@ -8,7 +8,7 @@ import "./moz-toggle.mjs";
 import "../moz-support-link/moz-support-link.mjs";
 
 export default {
-  title: "Design System/Experiments/MozToggle",
+  title: "Toggle",
   component: "moz-toggle",
   parameters: {
     actions: {
