@@ -175,6 +175,12 @@ class IMEHandler final {
   static void AppendInputScopeFromType(const nsAString& aInputType,
                                        nsTArray<InputScope>& aScopes);
 
+  /**
+   * Return focused window if this receives focus notification and has not
+   * received blur notification yet.
+   */
+  static nsWindow* GetFocusedWindow() { return sFocusedWindow; }
+
  private:
   static nsWindow* sFocusedWindow;
   static InputContextAction::Cause sLastContextActionCause;

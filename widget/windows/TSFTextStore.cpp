@@ -6689,10 +6689,16 @@ void TSFTextStore::SetInputContext(nsWindow* aWidget,
   // If focus isn't actually changed but the enabled state is changed,
   // emulate the focus move.
   if (!ThinksHavingFocus() && aContext.mIMEState.IsEditable()) {
-    MOZ_LOG(gIMELog, LogLevel::Debug,
-            ("  TSFTextStore::SetInputContent() emulates focus for IME "
-             "state change"));
-    OnFocusChange(true, aWidget, aContext);
+    if (!IMEHandler::GetFocusedWindow()) {
+      MOZ_LOG(gIMELog, LogLevel::Error,
+              ("  TSFTextStore::SetInputContent() gets called to enable IME, "
+               "but IMEHandler has not received focus notification"));
+    } else {
+      MOZ_LOG(gIMELog, LogLevel::Debug,
+              ("  TSFTextStore::SetInputContent() emulates focus for IME "
+               "state change"));
+      OnFocusChange(true, aWidget, aContext);
+    }
   } else if (ThinksHavingFocus() && !aContext.mIMEState.IsEditable()) {
     MOZ_LOG(gIMELog, LogLevel::Debug,
             ("  TSFTextStore::SetInputContent() emulates blur for IME "
