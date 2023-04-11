@@ -241,6 +241,11 @@ void RemoteAccessible::TextBeforeOffset(int32_t aOffset,
 }
 
 char16_t RemoteAccessible::CharAt(int32_t aOffset) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    MOZ_ASSERT(IsHyperText(), "is not hypertext?");
+    return RemoteAccessibleBase<RemoteAccessible>::CharAt(aOffset);
+  }
+
   uint16_t retval = 0;
   Unused << mDoc->SendCharAt(mID, aOffset, &retval);
   return static_cast<char16_t>(retval);

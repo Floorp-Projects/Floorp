@@ -39,6 +39,8 @@ class RemoteAccessible : public RemoteAccessibleBase<RemoteAccessible> {
 
   virtual uint32_t CharacterCount() const override;
 
+  virtual char16_t CharAt(int32_t aOffset) override;
+
   LayoutDeviceIntRect TextBounds(
       int32_t aStartOffset, int32_t aEndOffset,
       uint32_t aCoordType =

@@ -220,17 +220,14 @@ static gchar* getTextAtOffsetCB(AtkText* aText, gint aOffset,
 }
 
 static gunichar getCharacterAtOffsetCB(AtkText* aText, gint aOffset) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (accWrap) {
-    HyperTextAccessible* text = accWrap->AsHyperText();
-    if (!text || !text->IsTextRole()) {
-      return 0;
-    }
-    return DOMtoATK::ATKCharacter(text, aOffset);
+  Accessible* acc = GetInternalObj(ATK_OBJECT(aText));
+  if (!acc) {
+    return 0;
   }
 
-  if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
-    return DOMtoATK::ATKCharacter(proxy, aOffset);
+  HyperTextAccessibleBase* text = acc->AsHyperTextBase();
+  if (text) {
+    return DOMtoATK::ATKCharacter(text, aOffset);
   }
 
   return 0;

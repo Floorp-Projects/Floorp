@@ -127,12 +127,6 @@ class HyperTextAccessible : public AccessibleWrap,
 
   using HyperTextAccessibleBase::CharAt;
 
-  char16_t CharAt(int32_t aOffset) {
-    nsAutoString charAtOffset;
-    CharAt(aOffset, charAtOffset);
-    return charAtOffset.CharAt(0);
-  }
-
   /**
    * Return true if char at the given offset equals to given char.
    */
