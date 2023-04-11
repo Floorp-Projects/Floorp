@@ -15,7 +15,7 @@
 </hbox>
 
 <!-- Tracking / Content Blocking -->
-<groupbox id="trackingGroup" data-category="panePrivacy" hidden="true" aria-describedby="contentBlockingDescription">
+<groupbox id="trackingGroup" data-category="panePrivacy" hidden="true" aria-describedby="contentBlockingDescription" class="highlighting-group">
   <label id="contentBlockingHeader"><html:h2 data-l10n-id="content-blocking-enhanced-tracking-protection"/></label>
   <vbox data-subcategory="trackingprotection">
     <hbox align="start">
@@ -57,7 +57,7 @@
       <radiogroup id="contentBlockingCategoryRadio"
                   preference="browser.contentblocking.category"
                   aria-labelledby="trackingProtectionMenuDesc">
-        <vbox id="contentBlockingOptionStandard" class="content-blocking-category info-box-container">
+        <vbox id="contentBlockingOptionStandard" class="privacy-detailedoption info-box-container">
           <hbox>
             <radio id="standardRadio"
                    value="standard"
@@ -71,7 +71,7 @@
           </hbox>
           <vbox class="indent">
             <description data-l10n-id="content-blocking-etp-standard-desc"></description>
-            <vbox class="content-blocking-extra-information">
+            <vbox class="privacy-extra-information">
               <label class="content-blocking-extra-blocking-desc" data-l10n-id="content-blocking-etp-blocking-desc"/>
               <vbox class="indent">
                 <hbox class="extra-information-label social-media-option" hidden="true">
@@ -138,7 +138,7 @@
             </vbox>
           </vbox>
         </vbox>
-        <vbox id="contentBlockingOptionStrict" class="content-blocking-category info-box-container">
+        <vbox id="contentBlockingOptionStrict" class="privacy-detailedoption info-box-container">
           <hbox>
             <radio id="strictRadio"
                    value="strict"
@@ -152,7 +152,7 @@
           </hbox>
           <vbox class="indent">
             <label data-l10n-id="content-blocking-etp-strict-desc"></label>
-            <vbox class="content-blocking-extra-information">
+            <vbox class="privacy-extra-information">
               <label class="content-blocking-extra-blocking-desc" data-l10n-id="content-blocking-etp-blocking-desc"/>
               <vbox class="indent">
                 <hbox class="extra-information-label social-media-option" hidden="true">
@@ -221,7 +221,7 @@
             </vbox>
           </vbox>
         </vbox>
-        <vbox id="contentBlockingOptionCustom" class="content-blocking-category info-box-container">
+        <vbox id="contentBlockingOptionCustom" class="privacy-detailedoption info-box-container">
           <hbox>
             <radio id="customRadio"
                    value="custom"
@@ -235,7 +235,7 @@
           </hbox>
           <vbox class="indent">
             <description id="contentBlockingCustomDesc" data-l10n-id="content-blocking-etp-custom-desc"></description>
-            <vbox class="content-blocking-extra-information">
+            <vbox class="privacy-extra-information">
                 <hbox class="reject-trackers-ui custom-option">
                   <checkbox id="contentBlockingBlockCookiesCheckbox"
                             class="content-blocking-checkbox" flex="1"
@@ -1183,6 +1183,178 @@
                     " />
     </vbox>
   </hbox>
+</groupbox>
+
+<!-- DoH -->
+<hbox id="DoHCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="panePrivacy">
+  <html:h1 data-l10n-id="preferences-doh-header"/>
+</hbox>
+
+<groupbox id="dohBox" data-category="panePrivacy" data-subcategory="doh" hidden="true" class="highlighting-group">
+  <label class="search-header" searchkeywords="doh trr" hidden="true"><html:h2 data-l10n-id="preferences-doh-header"/></label>
+  <vbox flex="1">
+    <html:span id="dohDescription" class="tail-with-learn-more" data-l10n-id="preferences-doh-description"></html:span>
+    <html:a is="moz-support-link"
+            id="dohLearnMore"
+            class="learnMore"
+            support-page="firefox-dns-over-https"
+    />
+  </vbox>
+  <vbox id="dohStatusSection" class="privacy-detailedoption info-box-container">
+    <label id="dohStatus"/>
+    <label id="dohResolver"/>
+    <label id="dohSteeringStatus" data-l10n-id="preferences-doh-steering-status" hidden="true"/>
+  </vbox>
+  <vbox>
+    <label><html:h2 id="dohGroupMessage" data-l10n-id="preferences-doh-group-message"/></label>
+    <vbox id="dohCategories">
+      <radiogroup id="dohCategoryRadioGroup"
+                  preference="network.trr.mode" aria-labelledby="dohGroupMessage">
+        <vbox id="dohOptionDefault" class="privacy-detailedoption info-box-container">
+          <hbox>
+            <radio id="dohDefaultRadio"
+                   value="0"
+                   data-l10n-id="preferences-doh-setting-default"
+                   flex="1"/>
+            <button id="dohDefaultArrow"
+                    is="highlightable-button"
+                    class="arrowhead doh-expand-section"
+                    data-l10n-id="preferences-doh-expand-section"
+                    aria-expanded="false"/>
+          </hbox>
+          <vbox class="indent">
+            <label data-l10n-id="preferences-doh-default-desc"></label>
+            <vbox class="privacy-extra-information">
+              <vbox class="indent">
+                <hbox class="extra-information-label">
+                  <label class="doh-label" data-l10n-id="preferences-doh-default-detailed-desc-1"/>
+                </hbox>
+                <hbox class="extra-information-label">
+                  <label class="doh-label" data-l10n-id="preferences-doh-default-detailed-desc-2"/>
+                </hbox>
+                <hbox class="extra-information-label">
+                  <label class="doh-label tail-with-learn-more" data-l10n-id="preferences-doh-default-detailed-desc-3"/>
+                  <html:a is="moz-support-link"
+                          id="default-desc-3-learn-more"
+                          class="learnMore"
+                          support-page="firefox-dns-over-https"
+                  />
+                </hbox>
+                <hbox class="extra-information-label">
+                  <label class="doh-label" data-l10n-id="preferences-doh-default-detailed-desc-4"/>
+                </hbox>
+                <hbox class="extra-information-label">
+                  <label class="doh-label tail-with-learn-more" data-l10n-id="preferences-doh-default-detailed-desc-5"/>
+                  <html:a is="moz-support-link"
+                          id="default-desc-5-learn-more"
+                          class="learnMore"
+                          support-page="firefox-dns-over-https"
+                  />
+                </hbox>
+              </vbox>
+              <hbox id="dohWarningBox1" class="extra-information-label" hidden="true">
+                <checkbox id="dohWarnCheckbox1"
+                          flex="1"
+                          data-l10n-id="preferences-doh-checkbox-warn"
+                          preference="network.trr.display_fallback_warning"/>
+              </hbox>
+            </vbox>
+          </vbox>
+        </vbox>
+        <vbox id="dohOptionEnabled" class="privacy-detailedoption info-box-container">
+          <hbox>
+            <radio id="dohEnabledRadio"
+                   value="2"
+                   data-l10n-id="preferences-doh-setting-enabled"
+                   flex="1"/>
+            <button id="dohEnabledArrow"
+                    is="highlightable-button"
+                    class="arrowhead doh-expand-section"
+                    data-l10n-id="preferences-doh-expand-section"
+                    aria-expanded="false"/>
+          </hbox>
+          <vbox class="indent">
+            <label data-l10n-id="preferences-doh-enabled-desc"></label>
+            <vbox class="privacy-extra-information">
+              <vbox class="indent">
+                <hbox class="extra-information-label">
+                  <label class="doh-label" data-l10n-id="preferences-doh-enabled-detailed-desc-1"/>
+                </hbox>
+                <hbox class="extra-information-label">
+                  <label class="doh-label" data-l10n-id="preferences-doh-enabled-detailed-desc-2"/>
+                </hbox>
+              </vbox>
+              <hbox id="dohWarningBox2" class="extra-information-label" hidden="true">
+                <checkbox id="dohWarnCheckbox2"
+                          flex="1"
+                          data-l10n-id="preferences-doh-checkbox-warn"
+                          preference="network.trr.display_fallback_warning"/>
+              </hbox>
+              <vbox class="extra-information-label">
+                <label data-l10n-id="preferences-doh-select-resolver"/>
+                <menulist id="dohEnabledResolverChoices"
+                          sizetopopup="none">
+                </menulist>
+                <html:input id="dohEnabledInputField" type="text" style="flex: 1;"
+                    preference="network.trr.custom_uri" hidden="true"/>
+              </vbox>
+            </vbox>
+          </vbox>
+        </vbox>
+        <vbox id="dohOptionStrict" class="privacy-detailedoption info-box-container">
+          <hbox>
+            <radio id="dohStrictRadio"
+                   value="3"
+                   data-l10n-id="preferences-doh-setting-strict"
+                   flex="1"/>
+            <button id="dohStrictArrow"
+                    is="highlightable-button"
+                    class="arrowhead doh-expand-section"
+                    data-l10n-id="preferences-doh-expand-section"
+                    aria-expanded="false"/>
+          </hbox>
+          <vbox class="indent">
+            <label data-l10n-id="preferences-doh-strict-desc"></label>
+            <vbox class="privacy-extra-information">
+              <vbox class="indent">
+                <hbox class="extra-information-label">
+                  <label class="doh-label" data-l10n-id="preferences-doh-strict-detailed-desc-1"/>
+                </hbox>
+                <hbox class="extra-information-label">
+                  <label class="doh-label" data-l10n-id="preferences-doh-strict-detailed-desc-2"/>
+                </hbox>
+                <hbox class="extra-information-label">
+                  <label class="doh-label" data-l10n-id="preferences-doh-strict-detailed-desc-3"/>
+                </hbox>
+              </vbox>
+              <vbox class="extra-information-label">
+                <label data-l10n-id="preferences-doh-select-resolver"/>
+                <menulist id="dohStrictResolverChoices"
+                          sizetopopup="none">
+                </menulist>
+                <html:input id="dohStrictInputField" type="text" style="flex: 1;"
+                    preference="network.trr.custom_uri" hidden="true"/>
+              </vbox>
+            </vbox>
+          </vbox>
+        </vbox>
+        <vbox id="dohOptionOff" class="privacy-detailedoption info-box-container">
+          <hbox>
+            <radio id="dohOffRadio"
+                   value="5"
+                   data-l10n-id="preferences-doh-setting-off"
+                   flex="1"/>
+          </hbox>
+          <vbox class="indent">
+            <label data-l10n-id="preferences-doh-off-desc"></label>
+          </vbox>
+        </vbox>
+      </radiogroup>
+    </vbox>
+  </vbox>
 </groupbox>
 
 </html:template>

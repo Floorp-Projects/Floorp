@@ -74,6 +74,10 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+ChromeUtils.defineESModuleGetters(this, {
+  DoHConfigController: "resource:///modules/DoHConfig.sys.mjs",
+});
+
 Preferences.addAll([
   // Content blocking / Tracking Protection
   { id: "privacy.trackingprotection.enabled", type: "bool" },
@@ -204,6 +208,15 @@ Preferences.addAll([
   { id: "cookiebanners.ui.desktop.enabled", type: "bool" },
   { id: "cookiebanners.service.mode", type: "int" },
   { id: "cookiebanners.service.detectOnly", type: "bool" },
+
+  // DoH
+  { id: "network.trr.mode", type: "int" },
+  { id: "network.trr.uri", type: "string" },
+  { id: "network.trr.default_provider_uri", type: "string" },
+  { id: "network.trr.custom_uri", type: "string" },
+  { id: "network.trr_ui.show_fallback_warning_option", type: "bool" },
+  { id: "network.trr.display_fallback_warning", type: "bool" },
+  { id: "doh-rollout.disable-heuristics", type: "bool" },
 ]);
 
 // Study opt out
@@ -483,6 +496,270 @@ var gPrivacyPane = {
     Preferences.get("dom.security.https_only_mode_pbm").on("change", () =>
       this.syncFromHttpsOnlyPref()
     );
+  },
+
+  get dnsOverHttpsResolvers() {
+    let providers = DoHConfigController.currentConfig.providerList;
+    // if there's no default, we'll hold its position with an empty string
+    let defaultURI = DoHConfigController.currentConfig.fallbackProviderURI;
+    let defaultIndex = providers.findIndex(p => p.uri == defaultURI);
+    if (defaultIndex == -1 && defaultURI) {
+      // the default value for the pref isn't included in the resolvers list
+      // so we'll make a stub for it. Without an id, we'll have to use the url as the label
+      providers.unshift({ uri: defaultURI });
+    }
+    return providers;
+  },
+
+  updateDoHResolverList(mode) {
+    let resolvers = this.dnsOverHttpsResolvers;
+    let currentURI = Preferences.get("network.trr.uri").value;
+    if (!currentURI) {
+      currentURI = Preferences.get("network.trr.default_provider_uri").value;
+    }
+    let menu = document.getElementById(`${mode}ResolverChoices`);
+
+    let selectedIndex = currentURI
+      ? resolvers.findIndex(r => r.uri == currentURI)
+      : 0;
+    if (selectedIndex == -1) {
+      // select the last "Custom" item
+      selectedIndex = menu.itemCount - 1;
+    }
+    menu.selectedIndex = selectedIndex;
+
+    let customInput = document.getElementById(`${mode}InputField`);
+    customInput.hidden = menu.value != "custom";
+  },
+
+  populateDoHResolverList(mode) {
+    let resolvers = this.dnsOverHttpsResolvers;
+    let defaultURI = DoHConfigController.currentConfig.fallbackProviderURI;
+    let menu = document.getElementById(`${mode}ResolverChoices`);
+
+    // populate the DNS-Over-HTTPS resolver list
+    menu.removeAllItems();
+    for (let resolver of resolvers) {
+      let item = menu.appendItem(undefined, resolver.uri);
+      if (resolver.uri == defaultURI) {
+        document.l10n.setAttributes(
+          item,
+          "connection-dns-over-https-url-item-default",
+          {
+            name: resolver.UIName || resolver.uri,
+          }
+        );
+      } else {
+        item.label = resolver.UIName || resolver.uri;
+      }
+    }
+    let lastItem = menu.appendItem(undefined, "custom");
+    document.l10n.setAttributes(
+      lastItem,
+      "connection-dns-over-https-url-custom"
+    );
+
+    // set initial selection in the resolver provider picker
+    this.updateDoHResolverList(mode);
+
+    let customInput = document.getElementById(`${mode}InputField`);
+    menu.addEventListener("command", () => {
+      if (menu.value == "custom") {
+        customInput.hidden = false;
+        Services.prefs.setStringPref("network.trr.uri", customInput.value);
+      } else {
+        customInput.hidden = true;
+        if (
+          menu.value ==
+          Preferences.get("network.trr.default_provider_uri").value
+        ) {
+          Services.prefs.clearUserPref("network.trr.uri");
+        } else {
+          Services.prefs.setStringPref("network.trr.uri", menu.value);
+        }
+      }
+
+      // Update other menu too.
+      let otherMode = mode == "dohEnabled" ? "dohStrict" : "dohEnabled";
+      let otherMenu = document.getElementById(`${otherMode}ResolverChoices`);
+      let otherInput = document.getElementById(`${otherMode}InputField`);
+      otherMenu.value = menu.value;
+      otherInput.hidden = otherMenu.value != "custom";
+    });
+
+    // Change the URL when you press ENTER in the input field it or loses focus
+    customInput.addEventListener("change", () => {
+      Services.prefs.setStringPref("network.trr.uri", customInput.value);
+    });
+  },
+
+  updateDoHStatus() {
+    let trrURI = Services.dns.currentTrrURI;
+    let hostname = "";
+    try {
+      hostname = new URL(trrURI).hostname;
+    } catch (e) {}
+
+    let steering = document.getElementById("dohSteeringStatus");
+    steering.hidden = true;
+
+    let dohResolver = document.getElementById("dohResolver");
+    dohResolver.hidden = true;
+
+    let status = document.getElementById("dohStatus");
+
+    async function setStatus(localizedStringName) {
+      let statusString = await document.l10n.formatValue(localizedStringName);
+      document.l10n.setAttributes(status, "preferences-doh-status", {
+        status: statusString,
+      });
+    }
+
+    function computeStatus() {
+      let mode = Services.dns.currentTrrMode;
+      let confirmationState = Services.dns.currentTrrConfirmationState;
+      if (
+        mode == Ci.nsIDNSService.MODE_TRRFIRST ||
+        mode == Ci.nsIDNSService.MODE_TRRONLY
+      ) {
+        switch (confirmationState) {
+          case Ci.nsIDNSService.CONFIRM_TRYING_OK:
+          case Ci.nsIDNSService.CONFIRM_OK:
+          case Ci.nsIDNSService.CONFIRM_DISABLED:
+            return "preferences-doh-status-active";
+          default:
+            return "preferences-doh-status-not-active";
+        }
+      }
+
+      return "preferences-doh-status-disabled";
+    }
+
+    let statusLabel = computeStatus();
+    // setStatus will format and set the statusLabel asynchronously.
+    setStatus(statusLabel);
+    dohResolver.hidden = statusLabel == "preferences-doh-status-disabled";
+
+    // No need to set the resolver name since we're not going to show it.
+    if (statusLabel == "preferences-doh-status-disabled") {
+      return;
+    }
+
+    function nameOrDomain() {
+      for (let resolver of DoHConfigController.currentConfig.providerList) {
+        if (resolver.uri == trrURI) {
+          return resolver.UIName || hostname || trrURI;
+        }
+      }
+
+      // Also check if this is a steering provider.
+      for (let resolver of DoHConfigController.currentConfig.providerSteering
+        .providerList) {
+        if (resolver.uri == trrURI) {
+          steering.hidden = false;
+          return resolver.UIName || hostname || trrURI;
+        }
+      }
+
+      return hostname;
+    }
+
+    let resolverNameOrDomain = nameOrDomain();
+    document.l10n.setAttributes(dohResolver, "preferences-doh-resolver", {
+      name: resolverNameOrDomain,
+    });
+  },
+
+  highlightDoHCategoryAndUpdateStatus() {
+    let value = Preferences.get("network.trr.mode").value;
+    let defaultOption = document.getElementById("dohOptionDefault");
+    let enabledOption = document.getElementById("dohOptionEnabled");
+    let strictOption = document.getElementById("dohOptionStrict");
+    let offOption = document.getElementById("dohOptionOff");
+    defaultOption.classList.remove("selected");
+    enabledOption.classList.remove("selected");
+    strictOption.classList.remove("selected");
+    offOption.classList.remove("selected");
+
+    switch (value) {
+      case Ci.nsIDNSService.MODE_NATIVEONLY:
+        defaultOption.classList.add("selected");
+        break;
+      case Ci.nsIDNSService.MODE_TRRFIRST:
+        enabledOption.classList.add("selected");
+        break;
+      case Ci.nsIDNSService.MODE_TRRONLY:
+        strictOption.classList.add("selected");
+        break;
+      case Ci.nsIDNSService.MODE_TRROFF:
+        offOption.classList.add("selected");
+        break;
+      default:
+        // The pref is set to a random value.
+        // This shouldn't happen, but let's make sure off is selected.
+        offOption.classList.add("selected");
+        document.getElementById("dohCategoryRadioGroup").selectedIndex = 3;
+        break;
+    }
+
+    // When the mode is set to 0 we need to clear the URI so
+    // doh-rollout can kick in.
+    if (value == Ci.nsIDNSService.MODE_NATIVEONLY) {
+      Services.prefs.clearUserPref("network.trr.uri");
+      Services.prefs.clearUserPref("doh-rollout.disable-heuristics");
+    }
+
+    gPrivacyPane.updateDoHStatus();
+  },
+
+  /**
+   * Init DoH corresponding prefs
+   */
+  initDoH() {
+    setEventListener("dohDefaultArrow", "command", this.toggleExpansion);
+    setEventListener("dohEnabledArrow", "command", this.toggleExpansion);
+    setEventListener("dohStrictArrow", "command", this.toggleExpansion);
+
+    this.populateDoHResolverList("dohEnabled");
+    this.populateDoHResolverList("dohStrict");
+
+    Preferences.get("network.trr.uri").on("change", () => {
+      gPrivacyPane.updateDoHResolverList("dohEnabled");
+      gPrivacyPane.updateDoHResolverList("dohStrict");
+      gPrivacyPane.updateDoHStatus();
+    });
+
+    // Update status box and hightlightling when the pref changes
+    Preferences.get("network.trr.mode").on(
+      "change",
+      gPrivacyPane.highlightDoHCategoryAndUpdateStatus
+    );
+    this.highlightDoHCategoryAndUpdateStatus();
+
+    Services.obs.addObserver(this, "network:trr-uri-changed");
+    Services.obs.addObserver(this, "network:trr-mode-changed");
+    Services.obs.addObserver(this, "network:trr-confirmation");
+    let unload = () => {
+      Services.obs.removeObserver(this, "network:trr-uri-changed");
+      Services.obs.removeObserver(this, "network:trr-mode-changed");
+      Services.obs.removeObserver(this, "network:trr-confirmation");
+    };
+    window.addEventListener("unload", unload, { once: true });
+
+    if (Preferences.get("network.trr_ui.show_fallback_warning_option").value) {
+      document.getElementById("dohWarningBox1").hidden = false;
+      document.getElementById("dohWarningBox2").hidden = false;
+    }
+
+    if (Services.prefs.prefIsLocked("network.trr.mode")) {
+      document.getElementById("dohCategoryRadioGroup").disabled = true;
+      // The URI is locked by policy. We need to update the custom_uri pref
+      // to make sure the input box contains the correct URL.
+      Services.prefs.setStringPref(
+        "network.trr.custom_uri",
+        Services.prefs.getStringPref("network.trr.uri")
+      );
+    }
   },
 
   /**
@@ -774,6 +1051,8 @@ var gPrivacyPane = {
 
     /* init HTTPS-Only mode */
     this.initHttpsOnly();
+
+    this.initDoH();
 
     // Notify observers that the UI is now ready
     Services.obs.notifyObservers(window, "privacy-pane-loaded");
@@ -1311,7 +1590,7 @@ var gPrivacyPane = {
   toggleExpansion(e) {
     let carat = e.target;
     carat.classList.toggle("up");
-    carat.closest(".content-blocking-category").classList.toggle("expanded");
+    carat.closest(".privacy-detailedoption").classList.toggle("expanded");
     carat.setAttribute(
       "aria-expanded",
       carat.getAttribute("aria-expanded") === "false"
@@ -2967,6 +3246,11 @@ var gPrivacyPane = {
         SiteDataManager.getTotalUsage().then(
           this.updateTotalDataSizeLabel.bind(this)
         );
+        break;
+      case "network:trr-uri-changed":
+      case "network:trr-mode-changed":
+      case "network:trr-confirmation":
+        gPrivacyPane.updateDoHStatus();
         break;
     }
   },
