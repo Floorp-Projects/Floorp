@@ -1176,6 +1176,35 @@ InitializeFrameFromOtherFrame(nsIGlobalObject* aGlobal, VideoFrameData&& aData,
 }
 
 /*
+ * Helper classes carrying VideoFrame data
+ */
+
+VideoFrameData::VideoFrameData(layers::Image* aImage,
+                               const VideoPixelFormat& aFormat,
+                               gfx::IntRect aVisibleRect,
+                               gfx::IntSize aDisplaySize,
+                               Maybe<uint64_t> aDuration, int64_t aTimestamp,
+                               const VideoColorSpaceInit& aColorSpace)
+    : mImage(aImage),
+      mFormat(aFormat),
+      mVisibleRect(aVisibleRect),
+      mDisplaySize(aDisplaySize),
+      mDuration(aDuration),
+      mTimestamp(aTimestamp),
+      mColorSpace(aColorSpace) {}
+
+VideoFrameSerializedData::VideoFrameSerializedData(
+    layers::Image* aImage, const VideoPixelFormat& aFormat,
+    gfx::IntSize aCodedSize, gfx::IntRect aVisibleRect,
+    gfx::IntSize aDisplaySize, Maybe<uint64_t> aDuration, int64_t aTimestamp,
+    const VideoColorSpaceInit& aColorSpace,
+    already_AddRefed<nsIURI> aPrincipalURI)
+    : VideoFrameData(aImage, aFormat, aVisibleRect, aDisplaySize, aDuration,
+                     aTimestamp, aColorSpace),
+      mCodedSize(aCodedSize),
+      mPrincipalURI(aPrincipalURI) {}
+
+/*
  * W3C Webcodecs VideoFrame implementation
  */
 
