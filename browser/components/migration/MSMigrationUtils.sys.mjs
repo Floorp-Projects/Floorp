@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-
+import { ctypes } from "resource://gre/modules/ctypes.sys.mjs";
 import { MigrationUtils } from "resource:///modules/MigrationUtils.sys.mjs";
 
 const lazy = {};
@@ -12,7 +12,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.sys.mjs",
 });
-const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
 
 const EDGE_FAVORITES = "AC\\MicrosoftEdge\\User\\Default\\Favorites";
 const FREE_CLOSE_FAILED = 0;

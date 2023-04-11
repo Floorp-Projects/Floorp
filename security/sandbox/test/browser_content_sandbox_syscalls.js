@@ -28,7 +28,9 @@ Services.scriptloader.loadSubScript(
 // Calls the native execv library function. Include imports so this can be
 // safely serialized and run remotely by ContentTask.spawn.
 function callExec(args) {
-  const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  const { ctypes } = ChromeUtils.importESModule(
+    "resource://gre/modules/ctypes.sys.mjs"
+  );
   let { lib, cmd } = args;
   let libc = ctypes.open(lib);
   let exec = libc.declare(
@@ -44,7 +46,9 @@ function callExec(args) {
 
 // Calls the native fork syscall.
 function callFork(args) {
-  const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  const { ctypes } = ChromeUtils.importESModule(
+    "resource://gre/modules/ctypes.sys.mjs"
+  );
   let { lib } = args;
   let libc = ctypes.open(lib);
   let fork = libc.declare("fork", ctypes.default_abi, ctypes.int);
@@ -55,7 +59,9 @@ function callFork(args) {
 
 // Calls the native sysctl syscall.
 function callSysctl(args) {
-  const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  const { ctypes } = ChromeUtils.importESModule(
+    "resource://gre/modules/ctypes.sys.mjs"
+  );
   let { lib, name } = args;
   let libc = ctypes.open(lib);
   let sysctlbyname = libc.declare(
@@ -74,7 +80,9 @@ function callSysctl(args) {
 }
 
 function callPrctl(args) {
-  const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  const { ctypes } = ChromeUtils.importESModule(
+    "resource://gre/modules/ctypes.sys.mjs"
+  );
   let { lib, option } = args;
   let libc = ctypes.open(lib);
   let prctl = libc.declare(
@@ -97,7 +105,9 @@ function callPrctl(args) {
 
 // Calls the native open/close syscalls.
 function callOpen(args) {
-  const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  const { ctypes } = ChromeUtils.importESModule(
+    "resource://gre/modules/ctypes.sys.mjs"
+  );
   let { lib, path, flags } = args;
   let libc = ctypes.open(lib);
   let open = libc.declare(
@@ -116,7 +126,9 @@ function callOpen(args) {
 
 // Verify faccessat2
 function callFaccessat2(args) {
-  const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  const { ctypes } = ChromeUtils.importESModule(
+    "resource://gre/modules/ctypes.sys.mjs"
+  );
   let { lib, dirfd, path, mode, flag } = args;
   let libc = ctypes.open(lib);
   let faccessat = libc.declare(
@@ -185,7 +197,9 @@ function computeKernelVersion(major, minor, dot) {
 }
 
 function getGlibcVersion() {
-  const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  const { ctypes } = ChromeUtils.importESModule(
+    "resource://gre/modules/ctypes.sys.mjs"
+  );
   let libc = ctypes.open(getOSLib());
   let gnu_get_libc_version = libc.declare(
     "gnu_get_libc_version",

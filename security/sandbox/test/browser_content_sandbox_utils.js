@@ -87,7 +87,9 @@ function createFile(path) {
 // created, otherwise false. Include imports so this can be safely serialized
 // and run remotely by ContentTask.spawn.
 function createSymlink(path) {
-  const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  const { ctypes } = ChromeUtils.importESModule(
+    "resource://gre/modules/ctypes.sys.mjs"
+  );
 
   try {
     const libc = ctypes.open(

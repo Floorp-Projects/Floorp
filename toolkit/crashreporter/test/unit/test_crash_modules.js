@@ -8,8 +8,8 @@ add_task(async function run_test() {
 
   await do_crash(
     function() {
-      const { ctypes } = ChromeUtils.import(
-        "resource://gre/modules/ctypes.jsm"
+      const { ctypes } = ChromeUtils.importESModule(
+        "resource://gre/modules/ctypes.sys.mjs"
       );
       // Load and unload a DLL so that it will show up as unloaded in the minidump
       let lib = ctypes.open("wininet");

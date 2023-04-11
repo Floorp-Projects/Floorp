@@ -214,8 +214,8 @@ export class BrowserTestUtilsChild extends JSWindowActorChild {
         // should happen immediately
         // upon loading this frame script.
 
-        const { ctypes } = ChromeUtils.import(
-          "resource://gre/modules/ctypes.jsm"
+        const { ctypes } = ChromeUtils.importESModule(
+          "resource://gre/modules/ctypes.sys.mjs"
         );
 
         let dies = function() {

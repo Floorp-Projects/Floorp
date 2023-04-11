@@ -43,7 +43,8 @@ export var CrashTestUtils = {
 };
 
 // Grab APIs from the testcrasher shared library
-const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+import { ctypes } from "resource://gre/modules/ctypes.sys.mjs";
+
 var dir = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
 var file = dir.clone();
 file = file.parent;

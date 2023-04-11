@@ -12,10 +12,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.sys.mjs",
   WindowsVersionInfo:
     "resource://gre/modules/components-utils/WindowsVersionInfo.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ctypes: "resource://gre/modules/ctypes.jsm",
+  ctypes: "resource://gre/modules/ctypes.sys.mjs",
 });
 
 const PER_INSTALLATION_PREFS_PLATFORMS = ["win"];

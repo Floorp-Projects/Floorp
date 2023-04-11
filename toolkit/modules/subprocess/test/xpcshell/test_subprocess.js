@@ -454,7 +454,9 @@ if (AppConstants.isPlatformAndVersionAtLeast("win", "6")) {
     let { libc, win32 } = ChromeUtils.importESModule(
       "resource://gre/modules/subprocess/subprocess_win.sys.mjs"
     );
-    const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+    const { ctypes } = ChromeUtils.importESModule(
+      "resource://gre/modules/ctypes.sys.mjs"
+    );
 
     let secAttr = new win32.SECURITY_ATTRIBUTES();
     secAttr.nLength = win32.SECURITY_ATTRIBUTES.size;

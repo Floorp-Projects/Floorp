@@ -2,10 +2,7 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   MockRegistry: "resource://testing-common/MockRegistry.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  ctypes: "resource://gre/modules/ctypes.jsm",
+  ctypes: "resource://gre/modules/ctypes.sys.mjs",
 });
 
 do_get_profile();

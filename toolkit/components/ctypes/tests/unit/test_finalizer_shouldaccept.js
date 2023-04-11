@@ -1,7 +1,9 @@
 try {
   // We might be running without privileges, in which case it's up to the
   // harness to give us the 'ctypes' object.
-  var { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  var { ctypes } = ChromeUtils.importESModule(
+    "resource://gre/modules/ctypes.sys.mjs"
+  );
 } catch (e) {}
 
 var acquire,

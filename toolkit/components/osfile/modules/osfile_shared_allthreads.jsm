@@ -87,7 +87,9 @@ if (typeof Components != "undefined") {
   // On the main thread, OS.Constants is defined by a xpcom
   // component. On other threads, it is available automatically
   /* global OS */
-  var { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  var { ctypes } = ChromeUtils.importESModule(
+    "resource://gre/modules/ctypes.sys.mjs"
+  );
   Cc["@mozilla.org/net/osfileconstantsservice;1"]
     .getService(Ci.nsIOSFileConstantsService)
     .init();

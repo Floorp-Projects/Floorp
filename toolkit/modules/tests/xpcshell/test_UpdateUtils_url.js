@@ -12,7 +12,9 @@ const { AppConstants } = ChromeUtils.importESModule(
 const { getAppInfo, updateAppInfo } = ChromeUtils.importESModule(
   "resource://testing-common/AppInfo.sys.mjs"
 );
-const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+const { ctypes } = ChromeUtils.importESModule(
+  "resource://gre/modules/ctypes.sys.mjs"
+);
 
 ChromeUtils.defineESModuleGetters(this, {
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.sys.mjs",
