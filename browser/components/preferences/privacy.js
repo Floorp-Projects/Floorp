@@ -563,10 +563,24 @@ var gPrivacyPane = {
     this.updateDoHResolverList(mode);
 
     let customInput = document.getElementById(`${mode}InputField`);
+
+    function updateURIPref() {
+      if (customInput.value == "") {
+        // Setting the pref to empty string will make it have the default
+        // pref value which makes us fallback to using the default TRR
+        // resolver in network.trr.default_provider_uri.
+        // If the input is empty we set it to "(space)" which is essentially
+        // the same.
+        Services.prefs.setStringPref("network.trr.uri", " ");
+      } else {
+        Services.prefs.setStringPref("network.trr.uri", customInput.value);
+      }
+    }
+
     menu.addEventListener("command", () => {
       if (menu.value == "custom") {
         customInput.hidden = false;
-        Services.prefs.setStringPref("network.trr.uri", customInput.value);
+        updateURIPref();
       } else {
         customInput.hidden = true;
         if (
@@ -589,16 +603,18 @@ var gPrivacyPane = {
 
     // Change the URL when you press ENTER in the input field it or loses focus
     customInput.addEventListener("change", () => {
-      Services.prefs.setStringPref("network.trr.uri", customInput.value);
+      updateURIPref();
     });
   },
 
-  updateDoHStatus() {
+  async updateDoHStatus() {
     let trrURI = Services.dns.currentTrrURI;
     let hostname = "";
     try {
       hostname = new URL(trrURI).hostname;
-    } catch (e) {}
+    } catch (e) {
+      hostname = await document.l10n.formatValue("preferences-doh-bad-url");
+    }
 
     let steering = document.getElementById("dohSteeringStatus");
     steering.hidden = true;
