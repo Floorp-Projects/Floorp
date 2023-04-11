@@ -344,10 +344,7 @@ export class NetErrorParent extends JSWindowActorParent {
         }
 
         let win = browser.ownerGlobal;
-        // XXX(valentin) This will be a different section
-        // when we move DNS over HTTPS settings to the privacy page
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=1610741
-        win.openPreferences("general-netsettings");
+        win.openPreferences("privacy-doh");
         break;
     }
   }
