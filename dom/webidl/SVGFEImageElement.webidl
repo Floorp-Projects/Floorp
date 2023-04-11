@@ -14,6 +14,8 @@
 interface SVGFEImageElement : SVGElement {
   [Constant]
   readonly attribute SVGAnimatedPreserveAspectRatio preserveAspectRatio;
+  [SetterThrows]
+  attribute DOMString? crossOrigin;
 };
 
 SVGFEImageElement includes SVGFilterPrimitiveStandardAttributes;
