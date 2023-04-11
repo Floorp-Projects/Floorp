@@ -3212,9 +3212,6 @@ ImgDrawResult nsTreeBodyFrame::PaintImage(
   ComputedStyle* imageContext =
       GetPseudoComputedStyle(nsCSSAnonBoxes::mozTreeImage());
 
-  // Obtain opacity value for the image.
-  float opacity = imageContext->StyleEffects()->mOpacity;
-
   // Obtain the margins for the image and then deflate our rect by that
   // amount.  The image is assumed to be contained within the deflated rect.
   nsRect imageRect(aImageRect);
@@ -3339,9 +3336,11 @@ ImgDrawResult nsTreeBodyFrame::PaintImage(
       }
     }
 
-    if (opacity != 1.0f) {
-      aRenderingContext.PushGroupForBlendBack(gfxContentType::COLOR_ALPHA,
-                                              opacity);
+    const auto* styleEffects = imageContext->StyleEffects();
+    gfxGroupForBlendAutoSaveRestore autoGroupForBlend(&aRenderingContext);
+    if (!styleEffects->IsOpaque()) {
+      autoGroupForBlend.PushGroupForBlendBack(gfxContentType::COLOR_ALPHA,
+                                              styleEffects->mOpacity);
     }
 
     uint32_t drawFlags = aBuilder && aBuilder->UseHighQualityScaling()
@@ -3351,10 +3350,6 @@ ImgDrawResult nsTreeBodyFrame::PaintImage(
         aRenderingContext, imageContext, aPresContext, image,
         nsLayoutUtils::GetSamplingFilterForFrame(this), wholeImageDest,
         destRect, destRect.TopLeft(), aDirtyRect, drawFlags);
-
-    if (opacity != 1.0f) {
-      aRenderingContext.PopGroupAndBlend();
-    }
   }
 
   // Update the aRemainingWidth and aCurrX values.
@@ -3399,9 +3394,6 @@ ImgDrawResult nsTreeBodyFrame::PaintText(
   // ourselves out and to paint.
   ComputedStyle* textContext =
       GetPseudoComputedStyle(nsCSSAnonBoxes::mozTreeCellText());
-
-  // Obtain opacity value for the image.
-  float opacity = textContext->StyleEffects()->mOpacity;
 
   // Obtain the margins for the text and then deflate our rect by that
   // amount.  The text is assumed to be contained within the deflated rect.
@@ -3475,9 +3467,11 @@ ImgDrawResult nsTreeBodyFrame::PaintText(
   ComputedStyle* cellContext =
       GetPseudoComputedStyle(nsCSSAnonBoxes::mozTreeCell());
 
-  if (opacity != 1.0f) {
-    aRenderingContext.PushGroupForBlendBack(gfxContentType::COLOR_ALPHA,
-                                            opacity);
+  const auto* styleEffects = textContext->StyleEffects();
+  gfxGroupForBlendAutoSaveRestore autoGroupForBlend(&aRenderingContext);
+  if (!styleEffects->IsOpaque()) {
+    autoGroupForBlend.PushGroupForBlendBack(gfxContentType::COLOR_ALPHA,
+                                            styleEffects->mOpacity);
   }
 
   aRenderingContext.SetColor(
@@ -3485,10 +3479,6 @@ ImgDrawResult nsTreeBodyFrame::PaintText(
   nsLayoutUtils::DrawString(
       this, *fontMet, &aRenderingContext, text.get(), text.Length(),
       textRect.TopLeft() + nsPoint(0, baseline), cellContext);
-
-  if (opacity != 1.0f) {
-    aRenderingContext.PopGroupAndBlend();
-  }
 
   return result;
 }
