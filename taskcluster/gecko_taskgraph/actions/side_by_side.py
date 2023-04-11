@@ -101,11 +101,14 @@ def side_by_side_action(parameters, graph_config, input, task_group_id, task_id)
     )
     # TODO: find another way to detect side-by-side comparable jobs
     # (potentially lookig at the visual metrics flag)
-    if "browsertime-tp6" not in task["metadata"]["name"]:
+    if (
+        "browsertime-tp6" not in task["metadata"]["name"]
+        or "welcome" not in task["metadata"]["name"]
+    ):
         logger.exception(
             f"Task {task['metadata']['name']} is not side-by-side comparable."
         )
-        sys.exit(1)
+        return
 
     failed = False
     input_for_action = {}
