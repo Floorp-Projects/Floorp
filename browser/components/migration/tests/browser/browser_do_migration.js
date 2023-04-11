@@ -125,6 +125,12 @@ add_task(async function test_successful_migrations() {
   await withMigrationWizardDialog(async prefsWin => {
     let dialogBody = prefsWin.document.body;
     let wizard = dialogBody.querySelector("migration-wizard");
+    let shadow = wizard.openOrClosedShadowRoot;
+    let selector = shadow.querySelector("#browser-profile-selector");
+
+    await new Promise(resolve => prefsWin.requestAnimationFrame(resolve));
+    Assert.equal(shadow.activeElement, selector, "Selector should be focused.");
+
     let wizardDone = BrowserTestUtils.waitForEvent(
       wizard,
       "MigrationWizard:DoneMigration"
@@ -135,7 +141,6 @@ add_task(async function test_successful_migrations() {
     await migration;
 
     let dialog = prefsWin.document.querySelector("#migrationWizardDialog");
-    let shadow = wizard.openOrClosedShadowRoot;
     let doneButton = shadow.querySelector("#done-button");
     let dialogClosed = BrowserTestUtils.waitForEvent(dialog, "close");
 
@@ -161,6 +166,12 @@ add_task(async function test_successful_migrations() {
   await withMigrationWizardDialog(async prefsWin => {
     let dialogBody = prefsWin.document.body;
     let wizard = dialogBody.querySelector("migration-wizard");
+    let shadow = wizard.openOrClosedShadowRoot;
+    let selector = shadow.querySelector("#browser-profile-selector");
+
+    await new Promise(resolve => prefsWin.requestAnimationFrame(resolve));
+    Assert.equal(shadow.activeElement, selector, "Selector should be focused.");
+
     let wizardDone = BrowserTestUtils.waitForEvent(
       wizard,
       "MigrationWizard:DoneMigration"
@@ -171,7 +182,6 @@ add_task(async function test_successful_migrations() {
     await migration;
 
     let dialog = prefsWin.document.querySelector("#migrationWizardDialog");
-    let shadow = wizard.openOrClosedShadowRoot;
     let doneButton = shadow.querySelector("#done-button");
     let dialogClosed = BrowserTestUtils.waitForEvent(dialog, "close");
 
@@ -196,6 +206,12 @@ add_task(async function test_successful_migrations() {
   await withMigrationWizardDialog(async prefsWin => {
     let dialogBody = prefsWin.document.body;
     let wizard = dialogBody.querySelector("migration-wizard");
+    let shadow = wizard.openOrClosedShadowRoot;
+    let selector = shadow.querySelector("#browser-profile-selector");
+
+    await new Promise(resolve => prefsWin.requestAnimationFrame(resolve));
+    Assert.equal(shadow.activeElement, selector, "Selector should be focused.");
+
     let wizardDone = BrowserTestUtils.waitForEvent(
       wizard,
       "MigrationWizard:DoneMigration"
