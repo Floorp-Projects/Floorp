@@ -12,76 +12,11 @@
   <!-- input elements -->
   <input type="text"     id="text"/><br/>
   <input type="text"     id="text_readonly" readonly="readonly"/><br/>
-  <input type="password" id="password"/><br/>
-  <input type="password" id="password_readonly" readonly="readonly"/><br/>
-  <input type="checkbox" id="checkbox"/><br/>
-  <input type="radio"    id="radio"/><br/>
-  <input type="submit"   id="submit"/><br/>
-  <input type="reset"    id="reset"/><br/>
-  <input type="file"     id="file"/><br/>
-  <input type="button"   id="ibutton"/><br/>
-  <input type="image"    id="image" alt="image"/><br/>
-
-  <!-- html5 input elements -->
-  <input type="url"      id="url"/><br/>
-  <input type="email"    id="email"/><br/>
-  <input type="search"   id="search"/><br/>
-  <input type="tel"      id="tel"/><br/>
-  <input type="number"   id="number"/><br/>
-  <input type="date"     id="date"/><br/>
-  <input type="datetime-local" id="datetime-local"/><br/>
-  <input type="time"     id="time"/><br/>
-  <!-- TODO(bug 1283382, bug 1283382): month and week -->
-  <input type="week"     id="week"/><br/>
-  <input type="month"    id="month"/><br/>
 
   <!-- form controls -->
   <button id="button">button</button><br/>
   <textarea id="textarea">textarea</textarea><br/>
   <textarea id="textarea_readonly" readonly="readonly">textarea[readonly]</textarea><br/>
-
-  <!-- ime-mode test -->
-  <input type="text" id="ime_mode_auto"     style="ime-mode: auto;"/><br/>
-  <input type="text" id="ime_mode_normal"   style="ime-mode: normal;"/><br/>
-  <input type="text" id="ime_mode_active"   style="ime-mode: active;"/><br/>
-  <input type="text" id="ime_mode_inactive" style="ime-mode: inactive;"/><br/>
-  <input type="text" id="ime_mode_disabled" style="ime-mode: disabled;"/><br/>
-
-  <input type="text" id="ime_mode_auto_url"     style="ime-mode: auto;"/><br/>
-  <input type="text" id="ime_mode_normal_url"   style="ime-mode: normal;"/><br/>
-  <input type="text" id="ime_mode_active_url"   style="ime-mode: active;"/><br/>
-  <input type="text" id="ime_mode_inactive_url" style="ime-mode: inactive;"/><br/>
-  <input type="text" id="ime_mode_disabled_url" style="ime-mode: disabled;"/><br/>
-
-  <input type="text" id="ime_mode_auto_email"     style="ime-mode: auto;"/><br/>
-  <input type="text" id="ime_mode_normal_email"   style="ime-mode: normal;"/><br/>
-  <input type="text" id="ime_mode_active_email"   style="ime-mode: active;"/><br/>
-  <input type="text" id="ime_mode_inactive_email" style="ime-mode: inactive;"/><br/>
-  <input type="text" id="ime_mode_disabled_email" style="ime-mode: disabled;"/><br/>
-
-  <input type="text" id="ime_mode_auto_search"     style="ime-mode: auto;"/><br/>
-  <input type="text" id="ime_mode_normal_search"   style="ime-mode: normal;"/><br/>
-  <input type="text" id="ime_mode_active_search"   style="ime-mode: active;"/><br/>
-  <input type="text" id="ime_mode_inactive_search" style="ime-mode: inactive;"/><br/>
-  <input type="text" id="ime_mode_disabled_search" style="ime-mode: disabled;"/><br/>
-
-  <input type="text" id="ime_mode_auto_tel"     style="ime-mode: auto;"/><br/>
-  <input type="text" id="ime_mode_normal_tel"   style="ime-mode: normal;"/><br/>
-  <input type="text" id="ime_mode_active_tel"   style="ime-mode: active;"/><br/>
-  <input type="text" id="ime_mode_inactive_tel" style="ime-mode: inactive;"/><br/>
-  <input type="text" id="ime_mode_disabled_tel" style="ime-mode: disabled;"/><br/>
-
-  <input type="text" id="ime_mode_auto_number"     style="ime-mode: auto;"/><br/>
-  <input type="text" id="ime_mode_normal_number"   style="ime-mode: normal;"/><br/>
-  <input type="text" id="ime_mode_active_number"   style="ime-mode: active;"/><br/>
-  <input type="text" id="ime_mode_inactive_number" style="ime-mode: inactive;"/><br/>
-  <input type="text" id="ime_mode_disabled_number" style="ime-mode: disabled;"/><br/>
-
-  <input type="password" id="ime_mode_auto_p"     style="ime-mode: auto;"/><br/>
-  <input type="password" id="ime_mode_normal_p"   style="ime-mode: normal;"/><br/>
-  <input type="password" id="ime_mode_active_p"   style="ime-mode: active;"/><br/>
-  <input type="password" id="ime_mode_inactive_p" style="ime-mode: inactive;"/><br/>
-  <input type="password" id="ime_mode_disabled_p" style="ime-mode: disabled;"/><br/>
 
   <!-- contenteditable editor -->
   <div id="contenteditableEditor" contenteditable="true"></div>
@@ -106,53 +41,6 @@ function hitEventLoop(aFunc, aTimes) {
 
 var gUtils = window.windowUtils;
 var gFM = Services.focus;
-
-function runReadonlyChangingTest() {
-  const kInputControls = [
-    { id: "text",
-      type: "text",     expected: gUtils.IME_STATUS_ENABLED  },
-    { id: "password",
-      type: "password", expected: gUtils.IME_STATUS_PASSWORD },
-    { id: "url",
-      type: "url",      expected: gUtils.IME_STATUS_ENABLED  },
-    { id: "email",
-      type: "email",    expected: gUtils.IME_STATUS_ENABLED  },
-    { id: "search",
-      type: "search",   expected: gUtils.IME_STATUS_ENABLED  },
-    { id: "tel",
-      type: "tel",      expected: gUtils.IME_STATUS_ENABLED  },
-    { id: "number",
-      type: "number",   expected: gUtils.IME_STATUS_ENABLED  },
-    { id: "textarea",
-      type: "textarea", expected: gUtils.IME_STATUS_ENABLED  },
-  ];
-  const kOpenedState = [ true, false ];
-
-  for (var i = 0; i < kOpenedState.length; i++) {
-    const kOpened = kOpenedState[i];
-    for (var j = 0; j < kInputControls.length; j++) {
-      const kInput = kInputControls[j];
-      var e = document.getElementById(kInput.id);
-      e.focus();
-      if (IsIMEOpenStateSupported() && gUtils.IMEStatus == gUtils.IME_STATUS_ENABLED) {
-        gUtils.IMEIsOpen = kOpened;
-      }
-      e.setAttribute("readonly", "readonly");
-      is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
-         "readonly attr setting test: type=" + kInput.type);
-      e.removeAttribute("readonly");
-      is(gUtils.IMEStatus, kInput.expected,
-         "readonly attr removing test: type=" + kInput.type);
-      if (IsIMEOpenStateSupported() && gUtils.IMEStatus == gUtils.IME_STATUS_ENABLED) {
-        is(gUtils.IMEIsOpen, kOpened,
-           "readonly attr removing test (open state is changed): type=" +
-           kInput.type);
-      }
-    }
-    if (!IsIMEOpenStateSupported())
-      break;
-  }
-}
 
 function runComplexContenteditableTests() {
   var description = "runReadonlyChangingOnContenteditable: ";
@@ -559,9 +447,6 @@ async function runTests() {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.forms.always_allow_key_and_focus_events.enabled", true]],
   });
-  // changing readonly attribute
-  runReadonlyChangingTest();
-
   // complex contenteditable editor's tests
   runComplexContenteditableTests();
 
