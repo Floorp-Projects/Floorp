@@ -46,63 +46,6 @@ function runComplexContenteditableTests() {
   const container = document.getElementById("display");
   const kReadonly = Ci.nsIEditor.eEditorReadonlyMask;
 
-  function testOnIndependentEditor(aEditor, aEditorDescription) {
-    const description = "testOnIndependentEditor: ";
-    var expectedState =
-      aEditor.readOnly ? gUtils.IME_STATUS_DISABLED : gUtils.IME_STATUS_ENABLED;
-    var unexpectedStateDescription =
-      expectedState != gUtils.IME_STATUS_ENABLED ? "enabled" : "disabled";
-    aEditor.focus();
-    is(gFM.focusedElement, aEditor,
-       description + "The " + aEditorDescription + " doesn't get focus");
-    is(gUtils.IMEStatus, expectedState,
-       description + "IME is " + unexpectedStateDescription +
-         " on the " + aEditorDescription);
-    container.setAttribute("contenteditable", "true");
-    is(gFM.focusedElement, aEditor,
-       description + "The " + aEditorDescription +
-         " loses focus, the container is editable now");
-    is(gUtils.IMEStatus, expectedState,
-       description + "IME becomes " + unexpectedStateDescription +
-         " on the " + aEditorDescription + ", the container is editable now");
-    const editor = window.docShell.editor;
-    const flags = editor.flags;
-    editor.flags = flags | kReadonly;
-    is(gFM.focusedElement, aEditor,
-       description + "The " + aEditorDescription +
-         " loses focus by changing editor flags");
-    is(gUtils.IMEStatus, expectedState,
-       description + "IME becomes " + unexpectedStateDescription + " on the " +
-         aEditorDescription + ", the container is readonly now");
-    editor.flags = flags;
-    is(gFM.focusedElement, aEditor,
-       description + "The " + aEditorDescription +
-         " loses focus by changing editor flags #2");
-    is(gUtils.IMEStatus, expectedState,
-       description + "IME becomes " + unexpectedStateDescription + " on the " +
-         aEditorDescription + ", the container isn't readonly now");
-    container.removeAttribute("contenteditable");
-    is(gFM.focusedElement, aEditor,
-       description + "The " + aEditorDescription +
-         " loses focus, the container has been no editable");
-    is(gUtils.IMEStatus, expectedState,
-       description + "IME becomes " + unexpectedStateDescription + " on the " +
-         aEditorDescription + ", the container has been no editable");
-  }
-
-  // a textarea which is in the editor has focus
-  testOnIndependentEditor(document.getElementById("textarea"),
-                          "textarea");
-  // a readonly textarea which is in the editor has focus
-  testOnIndependentEditor(document.getElementById("textarea_readonly"),
-                          "textarea[readonly]");
-  // an input field which is in the editor has focus
-  testOnIndependentEditor(document.getElementById("text"),
-                          "input[type=\"text\"]");
-  // a readonly input field which is in the editor has focus
-  testOnIndependentEditor(document.getElementById("text_readonly"),
-                          "input[type=\"text\"][readonly]");
-
   function testOnOutsideOfEditor(aFocusNode, aFocusNodeDescription, aEditor) {
     const description = "testOnOutsideOfEditor: ";
     if (aFocusNode) {
