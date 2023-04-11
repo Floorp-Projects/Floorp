@@ -99,6 +99,8 @@ toolkit.jar:
    content/global/elements/moz-label.css       (widgets/moz-label/moz-label.css)
    content/global/elements/moz-label.mjs       (widgets/moz-label/moz-label.mjs)
    content/global/elements/moz-support-link.mjs    (widgets/moz-support-link/moz-support-link.mjs)
+   content/global/elements/moz-test-something.css    (widgets/moz-test-something/moz-test-something.css)
+   content/global/elements/moz-test-something.mjs    (widgets/moz-test-something/moz-test-something.mjs)
    content/global/elements/moz-toggle.css      (widgets/moz-toggle/moz-toggle.css)
    content/global/elements/moz-toggle.mjs      (widgets/moz-toggle/moz-toggle.mjs)
    content/global/elements/named-deck.js       (widgets/named-deck.js)
