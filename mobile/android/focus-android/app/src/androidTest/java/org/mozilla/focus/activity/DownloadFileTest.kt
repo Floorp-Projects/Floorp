@@ -4,7 +4,6 @@
 package org.mozilla.focus.activity
 
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
-import mozilla.components.concept.engine.utils.EngineReleaseChannel
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
@@ -14,7 +13,6 @@ import org.junit.runner.RunWith
 import org.mozilla.focus.activity.robots.downloadRobot
 import org.mozilla.focus.activity.robots.notificationTray
 import org.mozilla.focus.activity.robots.searchScreen
-import org.mozilla.focus.ext.components
 import org.mozilla.focus.helpers.DeleteFilesHelper.deleteFileUsingDisplayName
 import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityIntentsTestRule
@@ -26,7 +24,6 @@ import org.mozilla.focus.helpers.TestHelper.assertNativeAppOpens
 import org.mozilla.focus.helpers.TestHelper.getTargetContext
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.permAllowBtn
-import org.mozilla.focus.helpers.TestHelper.runWithCondition
 import org.mozilla.focus.helpers.TestHelper.verifyDownloadedFileOnStorage
 import org.mozilla.focus.helpers.TestHelper.verifySnackBarText
 import org.mozilla.focus.helpers.TestHelper.waitingTime
@@ -147,19 +144,12 @@ class DownloadFileTest {
         downloadFileName = "washington.pdf"
         val pdfFileURL = "https://storage.googleapis.com/mobile_test_assets/public/washington.pdf"
         val pdfFileContent = "Washington Crossing the Delaware"
-
-        runWithCondition(
-            // Returns the GeckoView channel set for the current version, if a feature is limited to Nightly.
-            // Once this feature lands in Beta/RC we should remove the wrapper.
-            mActivityTestRule.activity.components.engine.version.releaseChannel == EngineReleaseChannel.NIGHTLY,
-        ) {
-            searchScreen {
-            }.loadPage(downloadTestPage) {
-                progressBar.waitUntilGone(waitingTime)
-                clickLinkMatchingText(downloadFileName)
-                verifyPageURL(pdfFileURL)
-                verifyPageContent(pdfFileContent)
-            }
+        searchScreen {
+        }.loadPage(downloadTestPage) {
+            progressBar.waitUntilGone(waitingTime)
+            clickLinkMatchingText(downloadFileName)
+            verifyPageURL(pdfFileURL)
+            verifyPageContent(pdfFileContent)
         }
     }
 
