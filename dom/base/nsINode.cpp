@@ -3199,7 +3199,7 @@ Element* nsINode::GetNearestInclusiveTargetPopoverForInvoker() const {
   return nullptr;
 }
 
-Element* nsINode::GetEffectivePopoverTargetElement() const {
+nsGenericHTMLElement* nsINode::GetEffectivePopoverTargetElement() const {
   const auto* formControl =
       nsGenericHTMLFormControlElementWithState::FromNode(this);
   if (!formControl || !formControl->IsConceptButton() ||
