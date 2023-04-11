@@ -359,6 +359,7 @@ mapping:
         source_path_modifier: ''
         from:
             - attribution
+            - attribution-l10n
         only_for_platforms:
             - win32-shippable
             - win32-devedition
