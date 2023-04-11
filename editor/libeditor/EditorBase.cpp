@@ -5613,11 +5613,14 @@ nsresult EditorBase::OnFocus(const nsINode& aOriginalEventTargetNode) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
 
-  RefPtr<nsPresContext> presContext = GetPresContext();
+  const RefPtr<Element> focusedElement = GetFocusedElement();
+  RefPtr<nsPresContext> presContext =
+      focusedElement ? focusedElement->GetPresContext(
+                           Element::PresContextFor::eForComposedDoc)
+                     : GetPresContext();
   if (NS_WARN_IF(!presContext)) {
     return NS_ERROR_FAILURE;
   }
-  RefPtr<Element> focusedElement = GetFocusedElement();
   IMEStateManager::OnFocusInEditor(*presContext, focusedElement, *this);
 
   return NS_OK;

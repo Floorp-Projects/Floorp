@@ -2669,7 +2669,11 @@ void nsFocusManager::Focus(
                              relatedTargetElement);
       }
     } else {
-      IMEStateManager::OnChangeFocus(presContext, nullptr,
+      // We should notify IMEStateManager of actual focused element even if it
+      // won't get focus event because the other IMEStateManager users do not
+      // want to depend on this check, but IMEStateManager wants to verify
+      // passed focused element for avoidng to overrride nested calls.
+      IMEStateManager::OnChangeFocus(presContext, elementToFocus,
                                      GetFocusMoveActionCause(aFlags));
       if (!aWindowRaised) {
         aWindow->UpdateCommands(u"focus"_ns, nullptr, 0);

@@ -29,7 +29,8 @@
 #include "mozilla/ContentIterator.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EditorForwards.h"
-#include "mozilla/Encoding.h"      // for Encoding
+#include "mozilla/Encoding.h"  // for Encoding
+#include "mozilla/IMEStateManager.h"
 #include "mozilla/IntegerRange.h"  // for IntegerRange
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/mozInlineSpellChecker.h"
@@ -737,6 +738,43 @@ void HTMLEditor::UpdateRootElement() {
   }
 }
 
+nsresult HTMLEditor::FocusedElementOrDocumentBecomesEditable(
+    Document& aDocument, Element* aElement) {
+  // If we should've already handled focus event, selection limiter should not
+  // be set.  Therefore, if it's set, we should do nothing here.
+  if (GetSelectionAncestorLimiter()) {
+    return NS_OK;
+  }
+  // If we should be in the design mode, we want to handle focus event fired
+  // on the document node.  Therefore, we should emulate it here.
+  if (IsInDesignMode() && (!aElement || aElement->IsInDesignMode())) {
+    MOZ_ASSERT(&aDocument == GetDocument());
+    nsresult rv = OnFocus(aDocument);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "HTMLEditor::OnFocus() failed");
+    return rv;
+  }
+
+  if (NS_WARN_IF(!aElement)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  // Otherwise, we should've already handled focus event on the element,
+  // therefore, we need to emulate it here.
+  MOZ_ASSERT(nsFocusManager::GetFocusManager()->GetFocusedElement() ==
+             aElement);
+  nsresult rv = OnFocus(*aElement);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "HTMLEditor::OnFocus() failed");
+
+  // Note that we don't need to call
+  // IMEStateManager::MaybeOnEditableStateDisabled here because
+  // EditorBase::OnFocus must have already been called IMEStateManager::OnFocus
+  // if succeeded. And perhaps, it's okay that IME is not enabled when
+  // HTMLEditor fails to start handling since nobody can handle composition
+  // events anyway...
+
+  return rv;
+}
+
 nsresult HTMLEditor::OnFocus(const nsINode& aOriginalEventTargetNode) {
   // Before doing anything, we should check whether the original target is still
   // valid focus event target because it may have already lost focus.
@@ -750,6 +788,66 @@ nsresult HTMLEditor::OnFocus(const nsINode& aOriginalEventTargetNode) {
   }
 
   return EditorBase::OnFocus(aOriginalEventTargetNode);
+}
+
+nsresult HTMLEditor::FocusedElementOrDocumentBecomesNotEditable(
+    HTMLEditor* aHTMLEditor, Document& aDocument, Element* aElement) {
+  nsresult rv = [&]() MOZ_CAN_RUN_SCRIPT {
+    // If HTMLEditor has not been created yet, we just need to adjust
+    // IMEStateManager.  So, don't return error.
+    if (!aHTMLEditor) {
+      return NS_OK;
+    }
+
+    nsIContent* const limiter = aHTMLEditor->GetSelectionAncestorLimiter();
+    // The HTMLEditor has not received `focus` event so that it does not need to
+    // emulate `blur`.
+    if (!limiter) {
+      return NS_OK;
+    }
+
+    // If we should be in the design mode, we should treat it as blur from
+    // the document node.
+    if (aHTMLEditor->IsInDesignMode() &&
+        (!aElement || aElement->IsInDesignMode())) {
+      MOZ_ASSERT(aHTMLEditor->GetDocument() == &aDocument);
+      nsresult rv = aHTMLEditor->OnBlur(&aDocument);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "HTMLEditor::OnBlur() failed");
+      return rv;
+    }
+    // If the HTMLEditor has already received `focus` event for different
+    // element than aElement, we'll receive `blur` event later so that we need
+    // to do nothing here.
+    if (aElement != limiter) {
+      return NS_OK;
+    }
+
+    // Otherwise, even though the limiter keeps having focus but becomes not
+    // editable.  From HTMLEditor point of view, this is equivalent to the
+    // elements gets blurred.  Therefore, we should treat it as losing
+    // focus.
+    nsresult rv = aHTMLEditor->OnBlur(aElement);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "HTMLEditor::OnBlur() failed");
+    return rv;
+  }();
+
+  // If the element becomes not editable without focus change, IMEStateManager
+  // does not have a chance to disable IME.  Therefore, (even if we fail to
+  // handle the emulated blur above,) we should notify IMEStateManager of the
+  // editing state change.
+  RefPtr<Element> focusedElement = aElement ? aElement
+                                   : aHTMLEditor
+                                       ? aHTMLEditor->GetFocusedElement()
+                                       : nullptr;
+  RefPtr<nsPresContext> presContext =
+      focusedElement ? focusedElement->GetPresContext(
+                           Element::PresContextFor::eForComposedDoc)
+                     : aDocument.GetPresContext();
+  if (presContext) {
+    IMEStateManager::MaybeOnEditableStateDisabled(*presContext, focusedElement);
+  }
+
+  return rv;
 }
 
 nsresult HTMLEditor::OnBlur(const EventTarget* aEventTarget) {
@@ -769,8 +867,6 @@ nsresult HTMLEditor::OnBlur(const EventTarget* aEventTarget) {
   // If it's in the designMode, and blur occurs, the target must be the
   // document node.  If a blur event is fired and the target is an element, it
   // must be delayed blur event at initializing the `HTMLEditor`.
-  // TODO: Add automated tests for checking the case that the target node
-  //       is in a shadow DOM tree whose host is in design mode.
   if (IsInDesignMode() && Element::FromEventTargetOrNull(aEventTarget)) {
     return NS_OK;
   }

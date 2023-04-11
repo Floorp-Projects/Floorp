@@ -1,0 +1,263 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for IME state management at changing editable state</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="file_ime_state_test_helper.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<div></div>
+<script>
+"use strict";
+
+/* import-globals-from file_ime_state_test_helper.js */
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async () => {
+  const tipWrapper = new TIPWrapper(window);
+
+  function waitForIMEContentObserverSendingNotifications() {
+    return new Promise(
+      resolve => requestAnimationFrame(
+        () => requestAnimationFrame(resolve)
+      )
+    );
+  }
+
+  function resetIMEStateWithFocusMove() {
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+    input.focus();
+    input.remove();
+    return waitForIMEContentObserverSendingNotifications();
+  }
+
+  await (async function test_setting_contenteditable_of_focused_div() {
+    const div = document.querySelector("div");
+    div.setAttribute("tabindex", "0");
+    div.focus();
+    is(
+      window.windowUtils.IMEStatus,
+      Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED,
+      "test_setting_contenteditable_of_focused_div: IME should be disabled when non-editable <div> has focus"
+    );
+    div.setAttribute("contenteditable", "");
+    await waitForIMEContentObserverSendingNotifications();
+    // Sometimes, it's not enough waiting only 2 animation frames here to wait
+    // for IME focus, perhaps, it may be related to HTMLEditor initialization.
+    // Let's wait one more animation frame here.
+    if (!tipWrapper.IMEHasFocus) {
+      await new Promise(resolve => requestAnimationFrame(resolve));
+    }
+    is(
+      window.windowUtils.IMEStatus,
+      Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED,
+      "test_setting_contenteditable_of_focused_div: IME should be enabled when contenteditable of focused <div> is set"
+    );
+    ok(
+      tipWrapper.IMEHasFocus,
+      "test_setting_contenteditable_of_focused_div: IME should have focus when contenteditable of focused <div> is set"
+    )
+    div.removeAttribute("contenteditable");
+    await waitForIMEContentObserverSendingNotifications();
+    is(
+      window.windowUtils.IMEStatus,
+      Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED,
+      "test_setting_contenteditable_of_focused_div: IME should be disabled when contenteditable of focused <div> is removed"
+    );
+    ok(
+      !tipWrapper.IMEHasFocus,
+      "test_setting_contenteditable_of_focused_div: IME should not have focus when contenteditable of focused <div> is removed"
+    );
+    div.removeAttribute("tabindex");
+  })();
+
+  await resetIMEStateWithFocusMove();
+
+  await (async function test_removing_contenteditable_of_non_last_editable_div() {
+    const div = document.querySelector("div");
+    div.setAttribute("tabindex", "0");
+    div.setAttribute("contenteditable", "");
+    const anotherEditableDiv = document.createElement("div");
+    anotherEditableDiv.setAttribute("contenteditable", "");
+    div.parentElement.appendChild(anotherEditableDiv);
+    div.focus();
+    await waitForIMEContentObserverSendingNotifications();
+    div.removeAttribute("contenteditable");
+    await waitForIMEContentObserverSendingNotifications();
+    is(
+      window.windowUtils.IMEStatus,
+      Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED,
+      "test_removing_contenteditable_of_non_last_editable_div: IME should be disabled when contenteditable of focused <div> is removed"
+    );
+    ok(
+      !tipWrapper.IMEHasFocus,
+      "test_removing_contenteditable_of_non_last_editable_div: IME should not have focus when contenteditable of focused <div> is removed"
+    );
+    anotherEditableDiv.remove();
+    div.removeAttribute("tabindex");
+  })();
+
+  await resetIMEStateWithFocusMove();
+
+  await (async function test_setting_designMode() {
+    window.focus();
+    document.designMode = "on";
+    await waitForIMEContentObserverSendingNotifications();
+    is(
+      window.windowUtils.IMEStatus,
+      Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED,
+      'test_setting_designMode: IME should be enabled when designMode is set to "on"'
+    );
+    ok(
+      tipWrapper.IMEHasFocus,
+      'test_setting_designMode: IME should have focus when designMode is set to "on"'
+    );
+    document.designMode = "off";
+    await waitForIMEContentObserverSendingNotifications();
+    is(
+      window.windowUtils.IMEStatus,
+      Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED,
+      'test_setting_designMode: IME should be disabled when designMode is set to "off"'
+    );
+    ok(
+      !tipWrapper.IMEHasFocus,
+      'test_setting_designMode: IME should not have focus when designMode is set to "off"'
+    );
+  })();
+
+  await resetIMEStateWithFocusMove();
+
+  async function test_setting_content_editable_of_body_when_shadow_DOM_has_focus(aMode) {
+    const div = document.querySelector("div");
+    const shadow = div.attachShadow({mode: aMode});
+    const divInShadow = document.createElement("div");
+    divInShadow.setAttribute("tabindex", "0");
+    shadow.appendChild(divInShadow);
+    divInShadow.focus();
+    await waitForIMEContentObserverSendingNotifications();
+    is(
+      window.windowUtils.IMEStatus,
+      Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED,
+      `test_setting_content_editable_of_body_when_shadow_DOM_has_focus(${
+        aMode
+      }): IME should be disabled when non-editable <div> in a shadow DOM has focus`
+    );
+    document.body.setAttribute("contenteditable", "");
+    await waitForIMEContentObserverSendingNotifications();
+    // todo_is because of bug 1807597.  Gecko does not update focus when focused
+    // element becomes an editable child.  Therefore, cannot initialize
+    // HTMLEditor with the new editing host.
+    todo_is(
+      window.windowUtils.IMEStatus,
+      Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED,
+      `test_setting_content_editable_of_body_when_shadow_DOM_has_focus(${
+        aMode
+      }): IME should be enabled when the <body> becomes editable`
+    );
+    todo(
+      tipWrapper.IMEHasFocus,
+      `test_setting_content_editable_of_body_when_shadow_DOM_has_focus(${
+        aMode
+      }): IME should have focus when the <body> becomes editable`
+    );
+    document.body.removeAttribute("contenteditable");
+    await waitForIMEContentObserverSendingNotifications();
+    is(
+      window.windowUtils.IMEStatus,
+      Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED,
+      `test_setting_content_editable_of_body_when_shadow_DOM_has_focus)${
+        aMode
+      }): IME should be disabled when the <body> becomes not editable`
+    );
+    ok(
+      !tipWrapper.IMEHasFocus,
+      `test_setting_content_editable_of_body_when_shadow_DOM_has_focus)${
+        aMode
+      }): IME should not have focus when the <body> becomes not editable`
+    );
+    div.remove();
+    document.body.appendChild(document.createElement("div"));
+  };
+
+  async function test_setting_designMode_when_shadow_DOM_has_focus(aMode) {
+    const div = document.querySelector("div");
+    const shadow = div.attachShadow({mode: aMode});
+    const divInShadow = document.createElement("div");
+    divInShadow.setAttribute("tabindex", "0");
+    shadow.appendChild(divInShadow);
+    divInShadow.focus();
+    await waitForIMEContentObserverSendingNotifications();
+    is(
+      window.windowUtils.IMEStatus,
+      Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED,
+      `test_setting_designMode_when_shadow_DOM_has_focus(${
+        aMode
+      }): IME should be disabled when non-editable <div> in a shadow DOM has focus`
+    );
+    document.designMode = "on";
+    await waitForIMEContentObserverSendingNotifications();
+    is(
+      window.windowUtils.IMEStatus,
+      Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED,
+      `test_setting_designMode_when_shadow_DOM_has_focus(${
+        aMode
+      }): IME should stay disabled when designMode is set`
+    );
+    ok(
+      !tipWrapper.IMEHasFocus,
+      `test_setting_designMode_when_shadow_DOM_has_focus(${
+        aMode
+      }): IME should not have focus when designMode is set`
+    );
+    divInShadow.setAttribute("contenteditable", "");
+    await waitForIMEContentObserverSendingNotifications();
+    // todo_is because of bug 1807597.  Gecko does not update focus when focused
+    // document is into the design mode.  Therefore, cannot initialize
+    // HTMLEditor with the document node properly.
+    todo_is(
+      window.windowUtils.IMEStatus,
+      Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED,
+      `test_setting_designMode_when_shadow_DOM_has_focus(${
+        aMode
+      }): IME should be enabled when focused <div> in a shadow DOM becomes editable`
+    );
+    todo(
+      tipWrapper.IMEHasFocus,
+      `test_setting_designMode_when_shadow_DOM_has_focus(${
+        aMode
+      }): IME should have focus when focused <div> in a shadow DOM becomes editable`
+    );
+    document.designMode = "off";
+    await waitForIMEContentObserverSendingNotifications();
+    is(
+      window.windowUtils.IMEStatus,
+      Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED,
+      `test_setting_designMode_when_shadow_DOM_has_focus(${
+        aMode
+      }): IME should be disabled when designMode is unset`
+    );
+    ok(
+      !tipWrapper.IMEHasFocus,
+      `test_setting_designMode_when_shadow_DOM_has_focus(${
+        aMode
+      }): IME should not have focus when designMode is unset`
+    );
+    div.remove();
+    document.body.appendChild(document.createElement("div"));
+  }
+
+  for (const mode of ["open", "closed"]) {
+    await test_setting_content_editable_of_body_when_shadow_DOM_has_focus(mode);
+    await resetIMEStateWithFocusMove();
+    await test_setting_designMode_when_shadow_DOM_has_focus(mode);
+    await resetIMEStateWithFocusMove();
+  }
+
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>

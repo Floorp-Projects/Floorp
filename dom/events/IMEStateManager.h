@@ -158,7 +158,11 @@ class IMEStateManager {
   /**
    * OnChangeFocus() should be called when focused content is changed or
    * IME enabled state is changed.  If nobody has focus, set both aPresContext
-   * and aContent nullptr.  E.g., all windows are deactivated.
+   * and aContent nullptr.  E.g., all windows are deactivated.  Otherwise,
+   * set focused element (even if it won't receive `focus`event) and
+   * corresponding nsPresContext for it.  Then, IMEStateManager can avoid
+   * handling delayed notifications from the others with verifying the
+   * focused element.
    */
   MOZ_CAN_RUN_SCRIPT static nsresult OnChangeFocus(
       nsPresContext* aPresContext, dom::Element* aElement,
@@ -234,6 +238,12 @@ class IMEStateManager {
   // This method is called when focus is set to same content again.
   MOZ_CAN_RUN_SCRIPT static void OnReFocus(nsPresContext& aPresContext,
                                            dom::Element& aElement);
+
+  // This method is called when designMode is set to "off" or an editing host
+  // becomes not editable due to removing `contenteditable` attribute or setting
+  // it to "false".
+  MOZ_CAN_RUN_SCRIPT static void MaybeOnEditableStateDisabled(
+      nsPresContext& aPresContext, dom::Element* aElement);
 
   /**
    * All composition events must be dispatched via DispatchCompositionEvent()

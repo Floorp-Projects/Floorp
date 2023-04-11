@@ -208,6 +208,22 @@ class HTMLEditor final : public EditorBase,
   nsresult OnBlur(const dom::EventTarget* aEventTarget) final;
 
   /**
+   * Called when aDocument or aElement becomes editable without focus change.
+   * E.g., when the design mode is enabled or the contenteditable attribute
+   * is set to the focused element.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult FocusedElementOrDocumentBecomesEditable(
+      Document& aDocument, Element* aElement);
+
+  /**
+   * Called when aDocument or aElement becomes not editable without focus
+   * change. E.g., when the design mode ends or the contenteditable attribute is
+   * removed or set to "false".
+   */
+  MOZ_CAN_RUN_SCRIPT static nsresult FocusedElementOrDocumentBecomesNotEditable(
+      HTMLEditor* aHTMLEditor, Document& aDocument, Element* aElement);
+
+  /**
    * GetBackgroundColorState() returns what the background color of the
    * selection.
    *

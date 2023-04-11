@@ -475,8 +475,8 @@ function runComplexContenteditableTests() {
   container.removeAttribute("contenteditable");
   todo_is(gFM.focusedElement, null,
           description + "The container still has focus, the editor has been no editable");
-  todo_is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
-          description + "IME is still enabled on the editor, the editor has been no editable");
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
+     description + "IME is still enabled on the editor, the editor has been no editable");
 
   // a button which is in the editor has focus
   button.focus();

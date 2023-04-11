@@ -29,7 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1128787
       is(document.designMode, "off",
          "designMode should become \"off\" even if it's reset by the blur event handler caused by enabling designMode");
 
-      todo_is(utils.IMEStatus, utils.IME_STATUS_DISABLED, "IME should be disabled");
+      is(utils.IMEStatus, utils.IME_STATUS_DISABLED, "IME should be disabled");
       SimpleTest.finish();
     }, {once: true});
     document.designMode = "on";
