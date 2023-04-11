@@ -450,7 +450,7 @@ function initPage() {
         skipReason == "TRR_NO_ANSWERS" ||
         skipReason == "TRR_NXDOMAIN"
       ) {
-        descriptionTag = "neterror-dns-not-found-trr-unknown-host";
+        descriptionTag = "neterror-dns-not-found-trr-unknown-host2";
       } else if (
         skipReason == "TRR_DECODE_FAILED" ||
         skipReason == "TRR_SERVER_RESPONSE_ERR"
