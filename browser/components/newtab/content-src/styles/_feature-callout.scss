@@ -289,6 +289,12 @@ $max-z-index: 2147483647;
     inset-inline-start: $arrow-inset-size;
   }
 
+  // hidden arrow display
+  &.hidden-arrow::before,
+  &.hidden-arrow::after {
+    display: none;
+  }
+
   &:focus-visible {
     .screen {
       &[pos='callout'] {

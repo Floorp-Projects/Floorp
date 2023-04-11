@@ -294,6 +294,10 @@ export class FeatureCallout {
         "callout-arrow",
         "hidden"
       );
+      this._container.classList.toggle(
+        "hidden-arrow",
+        this.currentScreen?.content?.hide_arrow
+      );
       this._container.id = CONTAINER_ID;
       // This value is reported as the "page" in about:welcome telemetry
       this._container.dataset.page = this.page;

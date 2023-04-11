@@ -741,3 +741,32 @@ add_task(
     sandbox.restore();
   }
 );
+
+add_task(async function feature_callout_does_not_display_arrow_if_hidden() {
+  const testMessage = getCalloutMessageById(
+    "FIREFOX_VIEW_FEATURE_TOUR_1_NO_CWS"
+  );
+  testMessage.message.content.screens[0].content.hide_arrow = true;
+  const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:firefoxview",
+    },
+    async browser => {
+      const { document } = browser.contentWindow;
+      ok(
+        getComputedStyle(
+          document.querySelector(".callout-arrow"),
+          ":before"
+        ).getPropertyValue("display") == "none" &&
+          getComputedStyle(
+            document.querySelector(".callout-arrow"),
+            ":after"
+          ).getPropertyValue("display") == "none",
+        "callout arrow is not visible"
+      );
+    }
+  );
+  sandbox.restore();
+});
