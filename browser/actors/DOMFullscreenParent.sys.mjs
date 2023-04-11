@@ -271,9 +271,8 @@ export class DOMFullscreenParent extends JSWindowActorParent {
    * enter or exit request comes from.
    */
   get requestOrigin() {
-    let topBC = this.browsingContext.top;
-    let chromeBC = topBC.embedderElement.ownerGlobal.browsingContext;
-    let requestOrigin = chromeBC.fullscreenRequestOrigin;
+    let chromeBC = this.browsingContext.topChromeWindow?.browsingContext;
+    let requestOrigin = chromeBC?.fullscreenRequestOrigin;
     return requestOrigin && requestOrigin.get();
   }
 
@@ -283,8 +282,12 @@ export class DOMFullscreenParent extends JSWindowActorParent {
    * browsing context.
    */
   set requestOrigin(aActor) {
-    let topBC = this.browsingContext.top;
-    let chromeBC = topBC.embedderElement.ownerGlobal.browsingContext;
+    let chromeBC = this.browsingContext.topChromeWindow?.browsingContext;
+    if (!chromeBC) {
+      console.error("not able to get browsingContext for chrome window.");
+      return;
+    }
+
     if (aActor) {
       chromeBC.fullscreenRequestOrigin = Cu.getWeakReference(aActor);
     } else {
