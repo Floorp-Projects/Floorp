@@ -23,10 +23,10 @@ add_task(async function runRTPTestDOM() {
 
     // Known ways to generate time stamps, in milliseconds
     const timeStampCodes = [
-      "content.performance.now()",
       "new content.Date().getTime()",
-      'new content.Event("").timeStamp',
       'new content.File([], "").lastModified',
+      "content.performance.now()",
+      'new content.Event("").timeStamp',
     ];
     // These are measured in seconds, so we need to scale them up
     var timeStampCodesDOM = timeStampCodes.concat([
@@ -69,7 +69,6 @@ add_task(async function runRTPTestDOM() {
   await setupAndRunCrossOriginIsolatedTest(
     {
       resistFingerprinting: true,
-      reduceTimerPrecision: false,
       crossOriginIsolated: true,
     },
     13,
@@ -78,7 +77,6 @@ add_task(async function runRTPTestDOM() {
   await setupAndRunCrossOriginIsolatedTest(
     {
       resistFingerprinting: true,
-      reduceTimerPrecision: false,
       crossOriginIsolated: true,
     },
     0.13,
@@ -88,16 +86,13 @@ add_task(async function runRTPTestDOM() {
   // RTP
   await setupAndRunCrossOriginIsolatedTest(
     {
-      resistFingerprinting: false,
       reduceTimerPrecision: true,
-      crossOriginIsolated: false,
     },
     0.13,
     runTests
   );
   await setupAndRunCrossOriginIsolatedTest(
     {
-      resistFingerprinting: false,
       reduceTimerPrecision: true,
       crossOriginIsolated: true,
     },
@@ -185,7 +180,6 @@ add_task(async function runRTPTestsForWorker() {
   await setupAndRunCrossOriginIsolatedTest(
     {
       resistFingerprinting: true,
-      reduceTimerPrecision: false,
       crossOriginIsolated: true,
     },
     13,
@@ -194,7 +188,6 @@ add_task(async function runRTPTestsForWorker() {
   await setupAndRunCrossOriginIsolatedTest(
     {
       resistFingerprinting: true,
-      reduceTimerPrecision: false,
       crossOriginIsolated: true,
     },
     0.13,
@@ -204,16 +197,13 @@ add_task(async function runRTPTestsForWorker() {
   // RTP
   await setupAndRunCrossOriginIsolatedTest(
     {
-      resistFingerprinting: false,
       reduceTimerPrecision: true,
-      crossOriginIsolated: false,
     },
     0.13,
     runWorkerTest
   );
   await setupAndRunCrossOriginIsolatedTest(
     {
-      resistFingerprinting: false,
       reduceTimerPrecision: true,
       crossOriginIsolated: true,
     },
