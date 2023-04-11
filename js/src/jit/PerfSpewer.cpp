@@ -109,14 +109,7 @@ static bool IsPerfProfiling() { return JitDumpFilePtr != nullptr; }
 
 AutoLockPerfSpewer::AutoLockPerfSpewer() { PerfMutex.lock(); }
 
-AutoLockPerfSpewer::~AutoLockPerfSpewer() {
-#ifdef JS_ION_PERF
-  if (JitDumpFilePtr) {
-    fflush(JitDumpFilePtr);
-  }
-#endif
-  PerfMutex.unlock();
-}
+AutoLockPerfSpewer::~AutoLockPerfSpewer() { PerfMutex.unlock(); }
 
 #ifdef JS_ION_PERF
 static uint64_t GetMonotonicTimestamp() {
