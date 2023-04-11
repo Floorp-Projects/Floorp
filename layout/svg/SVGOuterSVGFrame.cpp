@@ -653,15 +653,14 @@ void SVGOuterSVGFrame::NotifyViewportOrTransformChanged(uint32_t aFlags) {
 
 void SVGOuterSVGFrame::PaintSVG(gfxContext& aContext,
                                 const gfxMatrix& aTransform,
-                                imgDrawingParams& aImgParams,
-                                const nsIntRect* aDirtyRect) {
+                                imgDrawingParams& aImgParams) {
   NS_ASSERTION(
       PrincipalChildList().FirstChild()->IsSVGOuterSVGAnonChildFrame() &&
           !PrincipalChildList().FirstChild()->GetNextSibling(),
       "We should have a single, anonymous, child");
   auto* anonKid = static_cast<SVGOuterSVGAnonChildFrame*>(
       PrincipalChildList().FirstChild());
-  anonKid->PaintSVG(aContext, aTransform, aImgParams, aDirtyRect);
+  anonKid->PaintSVG(aContext, aTransform, aImgParams);
 }
 
 SVGBBox SVGOuterSVGFrame::GetBBoxContribution(

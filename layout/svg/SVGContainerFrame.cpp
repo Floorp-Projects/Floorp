@@ -207,8 +207,7 @@ bool SVGDisplayContainerFrame::IsSVGTransformed(
 
 void SVGDisplayContainerFrame::PaintSVG(gfxContext& aContext,
                                         const gfxMatrix& aTransform,
-                                        imgDrawingParams& aImgParams,
-                                        const nsIntRect* aDirtyRect) {
+                                        imgDrawingParams& aImgParams) {
   NS_ASSERTION(HasAnyStateBits(NS_FRAME_IS_NONDISPLAY) ||
                    PresContext()->Document()->IsSVGGlyphsDocument(),
                "Only painting of non-display SVG should take this code path");
@@ -240,7 +239,7 @@ void SVGDisplayContainerFrame::PaintSVG(gfxContext& aContext,
         continue;
       }
     }
-    SVGUtils::PaintFrameWithEffects(kid, aContext, m, aImgParams, aDirtyRect);
+    SVGUtils::PaintFrameWithEffects(kid, aContext, m, aImgParams);
   }
 }
 

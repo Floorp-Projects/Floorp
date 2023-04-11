@@ -154,8 +154,7 @@ void SVGGeometryFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
 void SVGGeometryFrame::PaintSVG(gfxContext& aContext,
                                 const gfxMatrix& aTransform,
-                                imgDrawingParams& aImgParams,
-                                const nsIntRect* aDirtyRect) {
+                                imgDrawingParams& aImgParams) {
   if (!StyleVisibility()->IsVisible()) {
     return;
   }

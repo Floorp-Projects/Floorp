@@ -98,8 +98,7 @@ class SVGGeometryFrame : public nsIFrame, public ISVGDisplayableFrame {
  protected:
   // ISVGDisplayableFrame interface:
   void PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
-                imgDrawingParams& aImgParams,
-                const nsIntRect* aDirtyRect = nullptr) override;
+                imgDrawingParams& aImgParams) override;
   nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) override;
   void ReflowSVG() override;
   void NotifySVGChanged(uint32_t aFlags) override;

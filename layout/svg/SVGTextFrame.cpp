@@ -3030,8 +3030,7 @@ static bool ShouldPaintCaret(const TextRenderedRun& aThisRun, nsCaret* aCaret) {
 }
 
 void SVGTextFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
-                            imgDrawingParams& aImgParams,
-                            const nsIntRect* aDirtyRect) {
+                            imgDrawingParams& aImgParams) {
   DrawTarget& aDrawTarget = *aContext.GetDrawTarget();
   nsIFrame* kid = PrincipalChildList().FirstChild();
   if (!kid) {
@@ -3074,25 +3073,6 @@ void SVGTextFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
   }
 
   gfxMatrix matrixForPaintServers = aTransform * initialMatrix;
-
-  // Check if we need to draw anything.
-  if (aDirtyRect) {
-    NS_ASSERTION(HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
-                 "Display lists handle dirty rect intersection test");
-    nsRect dirtyRect(aDirtyRect->x, aDirtyRect->y, aDirtyRect->width,
-                     aDirtyRect->height);
-
-    gfxFloat appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
-    gfxRect frameRect(
-        mRect.x / appUnitsPerDevPixel, mRect.y / appUnitsPerDevPixel,
-        mRect.width / appUnitsPerDevPixel, mRect.height / appUnitsPerDevPixel);
-
-    nsRect canvasRect = nsLayoutUtils::RoundGfxRectToAppRect(
-        GetCanvasTM().TransformBounds(frameRect), 1);
-    if (!canvasRect.Intersects(dirtyRect)) {
-      return;
-    }
-  }
 
   // SVG frames' PaintSVG methods paint in CSS px, but normally frames paint in
   // dev pixels. Here we multiply a CSS-px-to-dev-pixel factor onto aTransform

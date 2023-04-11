@@ -74,13 +74,9 @@ class ISVGDisplayableFrame : public nsQueryFrame {
    *
    * @param aImgParams imagelib parameters that may be used when painting
    *   feImage.
-   *
-   * @param aDirtyRect The area being redrawn, in frame offset pixel
-   *   coordinates.
    */
   virtual void PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
-                        imgDrawingParams& aImgParams,
-                        const nsIntRect* aDirtyRect = nullptr) = 0;
+                        imgDrawingParams& aImgParams) = 0;
 
   /**
    * Returns the frame that should handle pointer events at aPoint.  aPoint is
