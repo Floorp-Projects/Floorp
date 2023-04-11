@@ -5,6 +5,7 @@
 package org.mozilla.fenix.ui
 
 import androidx.core.net.toUri
+import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
@@ -12,6 +13,8 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
+import org.mozilla.fenix.helpers.TestHelper.setNetworkEnabled
+import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
 /**
@@ -30,6 +33,12 @@ class BrowsingErrorPagesTest {
     @Rule
     @JvmField
     val retryTestRule = RetryTestRule(3)
+
+    @After
+    fun tearDown() {
+        // Restoring network connection
+        setNetworkEnabled(true)
+    }
 
     @SmokeTest
     @Test
@@ -72,6 +81,35 @@ class BrowsingErrorPagesTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(harmfulURl.toUri()) {
             verifyPageContent(harmfulSiteWarning)
+        }
+    }
+
+    @Test
+    fun connectionFailureErrorMessageTest() {
+        val url = "example.com"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(url.toUri()) {
+            waitForPageToLoad()
+            verifyPageContent("Example Domain")
+        }
+
+        setNetworkEnabled(false)
+
+        browserScreen {
+        }.openThreeDotMenu {
+        }.refreshPage {
+            waitForPageToLoad()
+            verifyConnectionErrorMessage()
+        }
+
+        setNetworkEnabled(true)
+
+        browserScreen {
+        }.openThreeDotMenu {
+        }.refreshPage {
+            waitForPageToLoad()
+            verifyPageContent("Example Domain")
         }
     }
 }
