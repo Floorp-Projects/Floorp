@@ -13,6 +13,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Vector.h"
 
+#include "skia/include/core/SkBitmap.h"
 #include "skia/include/core/SkCanvas.h"
 #include "skia/include/core/SkFont.h"
 #include "skia/include/core/SkSurface.h"
@@ -21,7 +22,8 @@
 #include "skia/include/effects/SkGradientShader.h"
 #include "skia/include/core/SkColorFilter.h"
 #include "skia/include/core/SkRegion.h"
-#include "skia/include/effects/SkBlurImageFilter.h"
+#include "skia/include/effects/SkImageFilters.h"
+#include "skia/include/private/base/SkMalloc.h"
 #include "Blur.h"
 #include "Logging.h"
 #include "Tools.h"
@@ -433,21 +435,23 @@ static bool ExtractAlphaBitmap(const sk_sp<SkImage>& aImage,
   // Skia does not fully allocate the last row according to stride.
   // Since some of our algorithms (i.e. blur) depend on this, we must allocate
   // the bitmap pixels manually.
-  size_t stride = SkAlign4(info.minRowBytes());
-  CheckedInt<size_t> size = stride;
-  size *= info.height();
-  // We need to leave room for an additional 3 bytes for a potential overrun
-  // in our blurring code.
-  size += 3;
-  if (size.isValid()) {
-    void* buf = sk_malloc_flags(size.value(), 0);
-    if (buf) {
-      SkBitmap bitmap;
-      if (bitmap.installPixels(info, buf, stride, FreeAlphaPixels, nullptr) &&
-          aImage->readPixels(bitmap.info(), bitmap.getPixels(),
-                             bitmap.rowBytes(), 0, 0)) {
-        *aResultBitmap = bitmap;
-        return true;
+  size_t stride = GetAlignedStride<4>(info.width(), info.bytesPerPixel());
+  if (stride) {
+    CheckedInt<size_t> size = stride;
+    size *= info.height();
+    // We need to leave room for an additional 3 bytes for a potential overrun
+    // in our blurring code.
+    size += 3;
+    if (size.isValid()) {
+      void* buf = sk_malloc_flags(size.value(), 0);
+      if (buf) {
+        SkBitmap bitmap;
+        if (bitmap.installPixels(info, buf, stride, FreeAlphaPixels, nullptr) &&
+            aImage->readPixels(bitmap.info(), bitmap.getPixels(),
+                               bitmap.rowBytes(), 0, 0)) {
+          *aResultBitmap = bitmap;
+          return true;
+        }
       }
     }
   }
@@ -457,8 +461,8 @@ static bool ExtractAlphaBitmap(const sk_sp<SkImage>& aImage,
 }
 
 static sk_sp<SkImage> ExtractAlphaForSurface(SourceSurface* aSurface,
-                                             Maybe<MutexAutoLock>& aLock) {
-  sk_sp<SkImage> image = GetSkImageForSurface(aSurface, &aLock);
+                                             Maybe<MutexAutoLock>* aLock) {
+  sk_sp<SkImage> image = GetSkImageForSurface(aSurface, aLock);
   if (!image) {
     return nullptr;
   }
@@ -619,7 +623,12 @@ static void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern,
       SkTileMode xTile = ExtendModeToTileMode(pat.mExtendMode, Axis::X_AXIS);
       SkTileMode yTile = ExtendModeToTileMode(pat.mExtendMode, Axis::Y_AXIS);
 
-      sk_sp<SkShader> shader = image->makeShader(xTile, yTile, &mat);
+      SkFilterMode filterMode = pat.mSamplingFilter == SamplingFilter::POINT
+                                    ? SkFilterMode::kNearest
+                                    : SkFilterMode::kLinear;
+
+      sk_sp<SkShader> shader =
+          image->makeShader(xTile, yTile, SkSamplingOptions(filterMode), &mat);
       if (shader) {
         aPaint.setShader(shader);
       } else {
@@ -627,10 +636,6 @@ static void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern,
                    << (int)xTile << " y-tile=" << (int)yTile
                    << " matrix=" << (mat.isFinite() ? "finite" : "non-finite");
         aPaint.setColor(SK_ColorTRANSPARENT);
-      }
-
-      if (pat.mSamplingFilter == SamplingFilter::POINT) {
-        aPaint.setFilterQuality(kNone_SkFilterQuality);
       }
       break;
     }
@@ -710,7 +715,6 @@ struct AutoPaintSetup {
       mPaint.setAlpha(ColorFloatToByte(aOptions.mAlpha));
       mAlpha = aOptions.mAlpha;
     }
-    mPaint.setFilterQuality(kLow_SkFilterQuality);
   }
 
   // TODO: Maybe add an operator overload to access this easier?
@@ -745,11 +749,15 @@ void DrawTargetSkia::DrawSurface(SourceSurface* aSurface, const Rect& aDest,
       image->isAlphaOnly() && aOptions.mCompositionOp != CompositionOp::OP_OVER;
 
   AutoPaintSetup paint(mCanvas, aOptions, &aDest, forceGroup);
-  if (aSurfOptions.mSamplingFilter == SamplingFilter::POINT) {
-    paint.mPaint.setFilterQuality(kNone_SkFilterQuality);
-  }
 
-  mCanvas->drawImageRect(image, sourceRect, destRect, &paint.mPaint);
+  SkFilterMode filterMode =
+      aSurfOptions.mSamplingFilter == SamplingFilter::POINT
+          ? SkFilterMode::kNearest
+          : SkFilterMode::kLinear;
+
+  mCanvas->drawImageRect(image, sourceRect, destRect,
+                         SkSamplingOptions(filterMode), &paint.mPaint,
+                         SkCanvas::kStrict_SrcRectConstraint);
 }
 
 DrawTargetType DrawTargetSkia::GetType() const {
@@ -813,23 +821,26 @@ void DrawTargetSkia::DrawSurfaceWithShadow(SourceSurface* aSurface,
 
     shadowPaint.setColor(ColorToSkColor(aShadow.mColor, 1.0f));
 
-    mCanvas->drawBitmap(blurMask, shadowDest.x, shadowDest.y, &shadowPaint);
+    mCanvas->drawImage(blurMask.asImage(), shadowDest.x, shadowDest.y,
+                       SkSamplingOptions(SkFilterMode::kLinear), &shadowPaint);
   } else {
     sk_sp<SkImageFilter> blurFilter(
-        SkBlurImageFilter::Make(aShadow.mSigma, aShadow.mSigma, nullptr));
+        SkImageFilters::Blur(aShadow.mSigma, aShadow.mSigma, nullptr));
     sk_sp<SkColorFilter> colorFilter(SkColorFilters::Blend(
         ColorToSkColor(aShadow.mColor, 1.0f), SkBlendMode::kSrcIn));
 
     shadowPaint.setImageFilter(blurFilter);
     shadowPaint.setColorFilter(colorFilter);
 
-    mCanvas->drawImage(image, shadowDest.x, shadowDest.y, &shadowPaint);
+    mCanvas->drawImage(image, shadowDest.x, shadowDest.y,
+                       SkSamplingOptions(SkFilterMode::kLinear), &shadowPaint);
   }
 
   if (aSurface->GetFormat() != SurfaceFormat::A8) {
     // Composite the original image after the shadow
     auto dest = IntPoint::Round(aDest);
-    mCanvas->drawImage(image, dest.x, dest.y, &paint);
+    mCanvas->drawImage(image, dest.x, dest.y,
+                       SkSamplingOptions(SkFilterMode::kLinear), &paint);
   }
 
   mCanvas->restore();
@@ -1425,7 +1436,8 @@ void DrawTargetSkia::Mask(const Pattern& aSource, const Pattern& aMask,
   mCanvas->save();
   mCanvas->resetMatrix();
 
-  mCanvas->drawBitmap(maskBitmap, maskOrigin.fX, maskOrigin.fY, &paint.mPaint);
+  mCanvas->drawImage(maskBitmap.asImage(), maskOrigin.fX, maskOrigin.fY,
+                     SkSamplingOptions(SkFilterMode::kLinear), &paint.mPaint);
 
   mCanvas->restore();
 }
@@ -1434,19 +1446,20 @@ void DrawTargetSkia::MaskSurface(const Pattern& aSource, SourceSurface* aMask,
                                  Point aOffset, const DrawOptions& aOptions) {
   MarkChanged();
 
-  SkMatrix invOffset = SkMatrix::MakeTrans(SkFloatToScalar(-aOffset.x),
+  SkMatrix invOffset = SkMatrix::Translate(SkFloatToScalar(-aOffset.x),
                                            SkFloatToScalar(-aOffset.y));
   AutoPaintSetup paint(mCanvas, aOptions, aSource, nullptr, &invOffset);
 
   Maybe<MutexAutoLock> lock;
-  sk_sp<SkImage> alphaMask = ExtractAlphaForSurface(aMask, lock);
+  sk_sp<SkImage> alphaMask = ExtractAlphaForSurface(aMask, &lock);
   if (!alphaMask) {
     gfxDebug() << *this << ": MaskSurface() failed to extract alpha for mask";
     return;
   }
 
   mCanvas->drawImage(alphaMask, aOffset.x + aMask->GetRect().x,
-                     aOffset.y + aMask->GetRect().y, &paint.mPaint);
+                     aOffset.y + aMask->GetRect().y,
+                     SkSamplingOptions(SkFilterMode::kLinear), &paint.mPaint);
 }
 
 bool DrawTarget::Draw3DTransformedSurface(SourceSurface* aSurface,
@@ -1498,14 +1511,14 @@ bool DrawTarget::Draw3DTransformedSurface(SourceSurface* aSurface,
   // Do the transform.
   SkPaint paint;
   paint.setAntiAlias(true);
-  paint.setFilterQuality(kLow_SkFilterQuality);
   paint.setBlendMode(SkBlendMode::kSrc);
 
   SkMatrix xform;
   GfxMatrixToSkiaMatrix(fullMat, xform);
   dstCanvas->setMatrix(xform);
 
-  dstCanvas->drawImage(srcImage, 0, 0, &paint);
+  dstCanvas->drawImage(srcImage, 0, 0, SkSamplingOptions(SkFilterMode::kLinear),
+                       &paint);
   dstCanvas->flush();
 
   // Temporarily reset the DT's transform, since it has already been composed
@@ -1540,13 +1553,13 @@ bool DrawTargetSkia::Draw3DTransformedSurface(SourceSurface* aSurface,
 
   SkPaint paint;
   paint.setAntiAlias(true);
-  paint.setFilterQuality(kLow_SkFilterQuality);
 
   SkMatrix xform;
   GfxMatrixToSkiaMatrix(aMatrix, xform);
   mCanvas->concat(xform);
 
-  mCanvas->drawImage(image, 0, 0, &paint);
+  mCanvas->drawImage(image, 0, 0, SkSamplingOptions(SkFilterMode::kLinear),
+                     &paint);
 
   mCanvas->restore();
 
@@ -1721,7 +1734,10 @@ bool DrawTargetSkia::Init(const IntSize& aSize, SurfaceFormat aFormat) {
   // we need to have surfaces that have a stride aligned to 4 for interop with
   // cairo
   SkImageInfo info = MakeSkiaImageInfo(aSize, aFormat);
-  size_t stride = SkAlign4(info.minRowBytes());
+  size_t stride = GetAlignedStride<4>(info.width(), info.bytesPerPixel());
+  if (!stride) {
+    return false;
+  }
   SkSurfaceProps props(0, GetSkPixelGeometry());
 
   if (aFormat == SurfaceFormat::A8) {
@@ -1964,16 +1980,23 @@ void DrawTargetSkia::PushLayerWithBlend(bool aOpaque, Float aOpacity,
   // the lock until the corresponding PopLayer, we'd risk deadlocking if someone
   // tried to touch the originating DrawTarget while the layer was pushed.
   sk_sp<SkImage> clipImage =
-      aMask ? GetSkImageForSurface(aMask, nullptr) : nullptr;
-  SkMatrix clipMatrix;
-  GfxMatrixToSkiaMatrix(aMaskTransform, clipMatrix);
-  if (aMask) {
+      aMask ? ExtractAlphaForSurface(aMask, nullptr) : nullptr;
+  if (bool(clipImage)) {
+    SkMatrix clipMatrix;
+    GfxMatrixToSkiaMatrix(aMaskTransform, clipMatrix);
     clipMatrix.preTranslate(aMask->GetRect().X(), aMask->GetRect().Y());
+    sk_sp<SkShader> shader = clipImage->makeShader(
+        SkTileMode::kDecal, SkTileMode::kDecal,
+        SkSamplingOptions(SkFilterMode::kLinear), clipMatrix);
+    if (shader) {
+      paint.setShader(shader);
+    } else {
+      paint.setColor(SK_ColorTRANSPARENT);
+    }
   }
 
   SkCanvas::SaveLayerRec saveRec(
-      aBounds.IsEmpty() ? nullptr : &bounds, &paint, nullptr, clipImage.get(),
-      &clipMatrix,
+      aBounds.IsEmpty() ? nullptr : &bounds, &paint, nullptr,
       SkCanvas::kPreserveLCDText_SaveLayerFlag |
           (aCopyBackground ? SkCanvas::kInitWithPrevious_SaveLayerFlag : 0));
 
