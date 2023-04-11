@@ -478,11 +478,11 @@ LexerTransition<nsJPEGDecoder::State> nsJPEGDecoder::ReadJPEGData(
       if (mState == JPEG_DECOMPRESS_PROGRESSIVE) {
         LOG_SCOPE((mozilla::LogModule*)sJPEGLog,
                   "nsJPEGDecoder::Write -- JPEG_DECOMPRESS_PROGRESSIVE case");
-        auto AllComponentsSeen = [](jpeg_decompress_struct& mInfo) {
+        auto AllComponentsSeen = [](jpeg_decompress_struct& info) {
           bool all_components_seen = true;
-          if (mInfo.coef_bits) {
-            for (int c = 0; c < mInfo.num_components; ++c) {
-              bool current_component_seen = mInfo.coef_bits[c][0] != -1;
+          if (info.coef_bits) {
+            for (int c = 0; c < info.num_components; ++c) {
+              bool current_component_seen = info.coef_bits[c][0] != -1;
               all_components_seen &= current_component_seen;
             }
           }
