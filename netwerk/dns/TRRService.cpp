@@ -294,19 +294,12 @@ bool TRRService::MaybeSetPrivateURI(const nsACString& aURI) {
       clearCache = true;
     }
 
-    nsCOMPtr<nsIURI> url;
-    nsresult rv = NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
-                      .Apply(&nsIStandardURLMutator::Init,
-                             nsIStandardURL::URLTYPE_STANDARD, 443, newURI,
-                             nullptr, nullptr, nullptr)
-                      .Finalize(url);
-    if (NS_FAILED(rv)) {
-      LOG(("TRRService::MaybeSetPrivateURI failed to create URI!\n"));
-      return false;
-    }
-
     nsAutoCString host;
-    url->GetHost(host);
+
+    nsCOMPtr<nsIURI> url;
+    if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(url), newURI))) {
+      url->GetHost(host);
+    }
 
     SetProviderDomain(host);
 
