@@ -8,7 +8,7 @@ import { html } from "lit.all.mjs";
 import "toolkit-widgets/named-deck.js";
 
 export default {
-  title: "Widgets/Functional/Named Deck",
+  title: "UI Widgets/Named Deck",
   component: "named-deck",
   parameters: {
     fluent: `
@@ -18,6 +18,10 @@ named-deck-tab-three = Tab 3
 named-deck-content-one = This is tab 1
 named-deck-content-two = This is tab 2
 named-deck-content-three = This is tab 3
+button-group-one = One
+button-group-two = Two
+button-group-three = Three
+button-group-four = Four
     `,
   },
 };
@@ -131,3 +135,30 @@ export const ListMenu = () => html`
     to navigate back to the first view.
   </p>
 `;
+
+const FocusGroupTemplate = ({ orientation }) => html`
+  <button-group orientation=${orientation}>
+    <button data-l10n-id="button-group-one"></button>
+    <button data-l10n-id="button-group-two"></button>
+    <button data-l10n-id="button-group-three"></button>
+    <button data-l10n-id="button-group-four"></button>
+  </button-group>
+
+  <p>
+    The <code>button-group</code> element will group focus to the buttons,
+    requiring left/right or up/down to switch focus between its child elements.
+    It accepts an <code>orientation</code> property, which determines if
+    left/right or up/down are used to change the focused button.
+  </p>
+`;
+
+export const FocusGroup = FocusGroupTemplate.bind({});
+FocusGroup.args = {
+  orientation: "horizontal",
+};
+FocusGroup.argTypes = {
+  orientation: {
+    options: ["horizontal", "vertical"],
+    control: { type: "radio" },
+  },
+};
