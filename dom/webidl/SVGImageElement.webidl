@@ -22,8 +22,6 @@ interface SVGImageElement : SVGGraphicsElement {
   readonly attribute SVGAnimatedLength height;
   [Constant]
   readonly attribute SVGAnimatedPreserveAspectRatio preserveAspectRatio;
-  [SetterThrows]
-  attribute DOMString? crossOrigin;
   [CEReactions, SetterThrows]
   attribute DOMString decoding;
   [NewObject]
