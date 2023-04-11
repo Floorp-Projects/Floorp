@@ -12823,7 +12823,7 @@
 # to false, the basic list will be used instead.
 - name: privacy.annotate_channels.strict_list.pbmode.enabled
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # Enable the clearing of cache data using the clear-site-data header. If enabled,
