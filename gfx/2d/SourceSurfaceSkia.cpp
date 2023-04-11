@@ -11,6 +11,7 @@
 #include "skia/include/core/SkData.h"
 #include "skia/include/core/SkImage.h"
 #include "skia/include/core/SkSurface.h"
+#include "skia/include/private/base/SkMalloc.h"
 #include "mozilla/CheckedInt.h"
 
 namespace mozilla::gfx {
@@ -134,7 +135,10 @@ bool SourceSurfaceSkia::InitFromImage(const sk_sp<SkImage>& aImage,
   } else if (aFormat != SurfaceFormat::UNKNOWN) {
     mFormat = aFormat;
     SkImageInfo info = MakeSkiaImageInfo(mSize, mFormat);
-    mStride = SkAlign4(info.minRowBytes());
+    mStride = GetAlignedStride<4>(info.width(), info.bytesPerPixel());
+    if (!mStride) {
+      return false;
+    }
   } else {
     return false;
   }
@@ -154,7 +158,10 @@ already_AddRefed<SourceSurface> SourceSurfaceSkia::ExtractSubrect(
     return nullptr;
   }
   SkImageInfo info = MakeSkiaImageInfo(aRect.Size(), mFormat);
-  size_t stride = SkAlign4(info.minRowBytes());
+  size_t stride = GetAlignedStride<4>(info.width(), info.bytesPerPixel());
+  if (!stride) {
+    return nullptr;
+  }
   sk_sp<SkImage> subImage = ReadSkImage(mImage, info, stride, aRect.x, aRect.y);
   if (!subImage) {
     return nullptr;
