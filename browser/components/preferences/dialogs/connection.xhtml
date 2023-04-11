@@ -128,32 +128,5 @@
   <checkbox id="networkProxySOCKSRemoteDNS"
             preference="network.proxy.socks_remote_dns"
             data-l10n-id="connection-proxy-socks-remote-dns" />
-
-  <groupbox>
-    <checkbox id="networkDnsOverHttps"
-            data-l10n-id="connection-dns-over-https"
-            preference="network.trr.mode"/>
-
-    <box id="dnsOverHttps-grid" class="indent" flex="1">
-      <html:div class="dnsOverHttps-grid-row">
-        <hbox pack="end">
-          <label id="networkDnsOverHttpsResolverChoicesLabel"
-                data-l10n-id="connection-dns-over-https-url-resolver"
-                control="networkDnsOverHttpsResolverChoices"/>
-        </hbox>
-        <menulist id="networkDnsOverHttpsResolverChoices"
-                  oncommand="gConnectionsDialog.updateDnsOverHttpsUI()"></menulist>
-      </html:div>
-      <html:div class="dnsOverHttps-grid-row" id="customDnsOverHttpsContainer" hidden="hidden">
-        <hbox pack="end">
-          <label id="networkCustomDnsOverHttpsInputLabel"
-                data-l10n-id="connection-dns-over-https-custom-label"
-                control="networkCustomDnsOverHttpsInput"/>
-        </hbox>
-        <html:input id="networkCustomDnsOverHttpsInput" type="text" style="flex: 1;"
-                    preference="network.trr.custom_uri"/>
-      </html:div>
-    </box>
-  </groupbox>
 </dialog>
 </window>
