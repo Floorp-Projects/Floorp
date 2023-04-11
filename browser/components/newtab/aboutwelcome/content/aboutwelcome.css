@@ -285,6 +285,9 @@
   top: -11px;
   inset-inline-start: 12px;
 }
+.onboardingContainer.featureCallout.hidden-arrow::before, .onboardingContainer.featureCallout.hidden-arrow::after {
+  display: none;
+}
 .onboardingContainer.featureCallout:focus-visible .screen[pos=callout] .section-main .main-content {
   outline: 2px solid var(--fc-accent-color);
   border-color: transparent;
