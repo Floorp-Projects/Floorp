@@ -512,12 +512,15 @@ already_AddRefed<WorkerNavigator> WorkerGlobalScope::GetExistingNavigator()
   return navigator.forget();
 }
 
-FontFaceSet* WorkerGlobalScope::Fonts() {
+FontFaceSet* WorkerGlobalScope::GetFonts(ErrorResult& aRv) {
   AssertIsOnWorkerThread();
 
   if (!mFontFaceSet) {
     mFontFaceSet = FontFaceSet::CreateForWorker(this, mWorkerPrivate);
-    MOZ_ASSERT(mFontFaceSet);
+    if (MOZ_UNLIKELY(!mFontFaceSet)) {
+      aRv.ThrowInvalidStateError("Couldn't acquire worker reference");
+      return nullptr;
+    }
   }
 
   return mFontFaceSet;

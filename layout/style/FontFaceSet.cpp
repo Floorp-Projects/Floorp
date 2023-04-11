@@ -119,8 +119,8 @@ FontFaceSet::~FontFaceSet() {
   RefPtr<FontFaceSet> set = new FontFaceSet(aDocument->GetScopeObject());
   RefPtr<FontFaceSetDocumentImpl> impl =
       new FontFaceSetDocumentImpl(set, aDocument);
+  set->mImpl = impl;
   impl->Initialize();
-  set->mImpl = std::move(impl);
   return set.forget();
 }
 
@@ -128,10 +128,10 @@ FontFaceSet::~FontFaceSet() {
     nsIGlobalObject* aParent, WorkerPrivate* aWorkerPrivate) {
   RefPtr<FontFaceSet> set = new FontFaceSet(aParent);
   RefPtr<FontFaceSetWorkerImpl> impl = new FontFaceSetWorkerImpl(set);
+  set->mImpl = impl;
   if (NS_WARN_IF(!impl->Initialize(aWorkerPrivate))) {
     return nullptr;
   }
-  set->mImpl = std::move(impl);
   return set.forget();
 }
 
