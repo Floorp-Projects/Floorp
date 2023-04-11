@@ -3373,6 +3373,22 @@ class nsContentUtils {
    */
   static void RequestGeckoTaskBurst();
 
+  static void SetMayHaveFormCheckboxStateChangeListeners() {
+    sMayHaveFormCheckboxStateChangeListeners = true;
+  }
+
+  static bool MayHaveFormCheckboxStateChangeListeners() {
+    return sMayHaveFormCheckboxStateChangeListeners;
+  }
+
+  static void SetMayHaveFormRadioStateChangeListeners() {
+    sMayHaveFormRadioStateChangeListeners = true;
+  }
+
+  static bool MayHaveFormRadioStateChangeListeners() {
+    return sMayHaveFormRadioStateChangeListeners;
+  }
+
  private:
   static bool InitializeEventTable();
 
@@ -3493,6 +3509,9 @@ class nsContentUtils {
 
   static int32_t sInnerOrOuterWindowCount;
   static uint32_t sInnerOrOuterWindowSerialCounter;
+
+  static bool sMayHaveFormCheckboxStateChangeListeners;
+  static bool sMayHaveFormRadioStateChangeListeners;
 };
 
 /* static */ inline ExtContentPolicyType
