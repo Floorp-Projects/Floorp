@@ -1204,9 +1204,16 @@
     />
   </vbox>
   <vbox id="dohStatusSection" class="privacy-detailedoption info-box-container">
-    <label id="dohStatus"/>
-    <label id="dohResolver"/>
-    <label id="dohSteeringStatus" data-l10n-id="preferences-doh-steering-status" hidden="true"/>
+    <hbox>
+      <label id="dohStatus" class="doh-status-label tail-with-learn-more"/>
+      <html:a is="moz-support-link"
+            id="dohStatusLearnMore"
+            class="learnMore"
+            support-page="firefox-dns-over-https"
+            hidden="true"/>
+    </hbox>
+    <label class="doh-status-label" id="dohResolver"/>
+    <label class="doh-status-label" id="dohSteeringStatus" data-l10n-id="preferences-doh-steering-status" hidden="true"/>
   </vbox>
   <vbox>
     <label><html:h2 id="dohGroupMessage" data-l10n-id="preferences-doh-group-message"/></label>
