@@ -46,7 +46,10 @@ function initTab(performReadbackTest) {
 
 function disableResistFingerprinting() {
   return SpecialPowers.pushPrefEnv({
-    set: [["privacy.resistFingerprinting", false]],
+    set: [
+      ["privacy.resistFingerprinting", false],
+      ["privacy.resistFingerprinting.pbmode", false],
+    ],
   });
 }
 
@@ -54,32 +57,24 @@ function enableResistFingerprinting(RfpNonPbmExclusion, RfpDomainExclusion) {
   if (RfpNonPbmExclusion && RfpDomainExclusion) {
     return SpecialPowers.pushPrefEnv({
       set: [
-        ["privacy.resistFingerprinting", true],
-        ["privacy.resistFingerprinting.testGranularityMask", 6],
+        ["privacy.resistFingerprinting.pbmode", true],
         ["privacy.resistFingerprinting.exemptedDomains", "example.com"],
       ],
     });
   } else if (RfpNonPbmExclusion) {
     return SpecialPowers.pushPrefEnv({
-      set: [
-        ["privacy.resistFingerprinting", true],
-        ["privacy.resistFingerprinting.testGranularityMask", 2],
-      ],
+      set: [["privacy.resistFingerprinting.pbmode", true]],
     });
   } else if (RfpDomainExclusion) {
     return SpecialPowers.pushPrefEnv({
       set: [
         ["privacy.resistFingerprinting", true],
-        ["privacy.resistFingerprinting.testGranularityMask", 4],
         ["privacy.resistFingerprinting.exemptedDomains", "example.com"],
       ],
     });
   }
   return SpecialPowers.pushPrefEnv({
-    set: [
-      ["privacy.resistFingerprinting", true],
-      ["privacy.resistFingerprinting.testGranularityMask", 0],
-    ],
+    set: [["privacy.resistFingerprinting", true]],
   });
 }
 
@@ -138,6 +133,7 @@ async function populatePlacedData() {
     }
   );
   await BrowserTestUtils.closeWindow(win);
+  await SpecialPowers.popPrefEnv();
 }
 
 async function rfpExclusionTestOnCanvas(
@@ -184,6 +180,7 @@ async function testCanvasRfpExclusion(
     )
   );
   await BrowserTestUtils.closeWindow(win);
+  await SpecialPowers.popPrefEnv();
 }
 
 add_task(populatePlacedData.bind(null));

@@ -56,7 +56,6 @@ add_task(async function exempt_domain() {
 
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["privacy.resistFingerprinting.testGranularityMask", 4],
       ["privacy.resistFingerprinting.exemptedDomains", "example.net"],
       ["privacy.resistFingerprinting", true],
     ],

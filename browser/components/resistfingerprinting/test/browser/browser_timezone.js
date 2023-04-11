@@ -86,7 +86,6 @@ add_task(async function test_timezone() {
 add_task(async function test_timezone_exempt() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["privacy.resistFingerprinting.testGranularityMask", 0x4],
       ["privacy.resistFingerprinting.exemptedDomains", "example.net"],
       ["privacy.resistFingerprinting", true],
     ],
@@ -135,7 +134,6 @@ add_task(async function test_timezone_exempt() {
 add_task(async function test_timezone_exempt_wrong_domain() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["privacy.resistFingerprinting.testGranularityMask", 0x4],
       ["privacy.resistFingerprinting.exemptedDomains", "example.net"],
       ["privacy.resistFingerprinting", true],
     ],

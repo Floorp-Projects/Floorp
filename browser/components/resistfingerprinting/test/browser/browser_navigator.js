@@ -370,7 +370,6 @@ add_task(async function setupRFPExemptions() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
-      ["privacy.resistFingerprinting.testGranularityMask", 4],
       [
         "privacy.resistFingerprinting.exemptedDomains",
         "example.net, mochi.test",
