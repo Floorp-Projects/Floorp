@@ -113,6 +113,11 @@ label:not([hidden]) {
   display: none;
 }
 
+.profile-name {
+  font-size: 0.73em;
+  text-transform: uppercase;
+}
+
 /**
  * Until we address bug 1823489, it's not that easy to apply styles on
  * the panel-list. We work around this by setting the CSS variable for
