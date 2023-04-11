@@ -15,12 +15,6 @@ const { TelemetryEvents } = ChromeUtils.import(
   "resource://normandy/lib/TelemetryEvents.jsm"
 );
 
-const LEGACY_TELEMETRY_FILTER = {
-  category: "normandy",
-  method: "unenroll",
-  object: "nimbus_experiment",
-};
-
 const LOCALIZATIONS = {
   "en-US": {
     foo: "localized foo text",
@@ -312,7 +306,11 @@ add_task(async function test_getLocalizedValue_unenroll_missingEntry() {
         extra: { reason: "l10n-missing-entry" },
       },
     ],
-    LEGACY_TELEMETRY_FILTER
+    {
+      category: "normandy",
+      method: "unenroll",
+      object: "nimbus_experiment",
+    }
   );
 
   await cleanupStore(manager.store);
@@ -392,7 +390,11 @@ add_task(async function test_getLocalizedValue_unenroll_missingEntry() {
         extra: { reason: "l10n-missing-locale" },
       },
     ],
-    LEGACY_TELEMETRY_FILTER
+    {
+      category: "normandy",
+      method: "unenroll",
+      object: "nimbus_experiment",
+    }
   );
 
   await cleanupStore(manager.store);
@@ -823,13 +825,556 @@ add_task(async function test_getVariables_fallback_unenroll() {
         extra: { reason: "l10n-missing-entry" },
       },
     ],
-    LEGACY_TELEMETRY_FILTER
+    {
+      category: "normandy",
+      method: "unenroll",
+      object: "nimbus_experiment",
+    }
   );
 
   Services.prefs.clearUserPref(FEATURE.manifest.variables.foo.fallbackPref);
   Services.prefs.clearUserPref(FEATURE.manifest.variables.bar.fallbackPref);
   Services.prefs.clearUserPref(FEATURE.manifest.variables.baz.fallbackPref);
   Services.prefs.clearUserPref(FEATURE.manifest.variables.waldo.fallbackPref);
+
+  await cleanupStore(manager.store);
+  sandbox.reset();
+});
+
+add_task(async function test_updateRecipes() {
+  const sandbox = sinon.createSandbox();
+  const manager = ExperimentFakes.manager();
+  const loader = ExperimentFakes.rsLoader();
+
+  loader.manager = manager;
+  sandbox.stub(ExperimentAPI, "_manager").get(() => manager);
+  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+  sandbox.stub(manager, "onRecipe");
+
+  const recipe = ExperimentFakes.recipe("foo", {
+    branches: [
+      {
+        slug: "control",
+        features: [
+          {
+            featureId: FEATURE_ID,
+            value: DEEPLY_NESTED_VALUE,
+          },
+        ],
+        ratio: 1,
+      },
+    ],
+    localizations: LOCALIZATIONS,
+  });
+
+  await loader.init();
+
+  await manager.onStartup();
+  await manager.store.ready();
+
+  sandbox.stub(loader.remoteSettingsClient, "get").resolves([recipe]);
+  await loader.updateRecipes();
+
+  Assert.ok(manager.onRecipe.calledOnce, "Enrolled");
+
+  await cleanupStore(manager.store);
+  sandbox.reset();
+});
+
+async function test_updateRecipes_missingLocale({
+  featureValidationOptOut = false,
+  validationEnabled = true,
+} = {}) {
+  resetTelemetry();
+
+  const sandbox = sinon.createSandbox();
+  const manager = ExperimentFakes.manager();
+  const loader = ExperimentFakes.rsLoader();
+
+  loader.manager = manager;
+  sandbox.stub(ExperimentAPI, "_manager").get(() => manager);
+  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+  sandbox.stub(manager, "onRecipe");
+  sandbox.spy(manager, "onFinalize");
+
+  const recipe = ExperimentFakes.recipe("foo", {
+    branches: [
+      {
+        slug: "control",
+        features: [
+          {
+            featureId: FEATURE_ID,
+            value: DEEPLY_NESTED_VALUE,
+          },
+        ],
+        ratio: 1,
+      },
+    ],
+    localizations: {},
+    featureValidationOptOut,
+  });
+
+  await loader.init();
+
+  await manager.onStartup();
+  await manager.store.ready();
+
+  sandbox.stub(loader.remoteSettingsClient, "get").resolves([recipe]);
+  await loader.updateRecipes();
+
+  Assert.ok(!manager.onRecipe.called, "Did not enroll in the recipe");
+  Assert.ok(
+    onFinalizeCalled(manager.onFinalize, "rs-loader", {
+      recipeMismatches: [],
+      invalidRecipes: [],
+      invalidBranches: new Map(),
+      invalidFeatures: new Map(),
+      missingLocale: ["foo"],
+      missingL10nIds: new Map(),
+      locale: "en-US",
+      validationEnabled,
+    }),
+    "should call .onFinalize with missing locale"
+  );
+
+  const gleanEvents = Glean.nimbusEvents.validationFailed.testGetValue();
+  Assert.equal(gleanEvents.length, 1, "Should be one validationFailed event");
+  Assert.equal(
+    gleanEvents[0].extra.experiment,
+    "foo",
+    "Experiment slug should match"
+  );
+  Assert.equal(
+    gleanEvents[0].extra.reason,
+    "l10n-missing-locale",
+    "Reason should match"
+  );
+  Assert.equal(gleanEvents[0].extra.locale, "en-US", "Locale should match");
+
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        value: "foo",
+      },
+    ],
+    {
+      category: "normandy",
+      method: "validationFailed",
+      object: "nimbus_experiment",
+    }
+  );
+
+  await cleanupStore(manager.store);
+  sandbox.reset();
+}
+
+add_task(test_updateRecipes_missingLocale);
+
+add_task(async function test_updateRecipes_missingEntry() {
+  resetTelemetry();
+
+  const sandbox = sinon.createSandbox();
+  const manager = ExperimentFakes.manager();
+  const loader = ExperimentFakes.rsLoader();
+
+  loader.manager = manager;
+  sandbox.stub(ExperimentAPI, "_manager").get(() => manager);
+  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+  sandbox.stub(manager, "onRecipe");
+  sandbox.spy(manager, "onFinalize");
+
+  const recipe = ExperimentFakes.recipe("foo", {
+    branches: [
+      {
+        slug: "control",
+        features: [
+          {
+            featureId: FEATURE_ID,
+            value: DEEPLY_NESTED_VALUE,
+          },
+        ],
+        ratio: 1,
+      },
+    ],
+    localizations: {
+      "en-US": {},
+    },
+  });
+
+  await loader.init();
+
+  await manager.onStartup();
+  await manager.store.ready();
+
+  sandbox.stub(loader.remoteSettingsClient, "get").resolves([recipe]);
+  await loader.updateRecipes();
+
+  Assert.ok(!manager.onRecipe.called, "Did not enroll in the recipe");
+  Assert.ok(
+    onFinalizeCalled(manager.onFinalize, "rs-loader", {
+      recipeMismatches: [],
+      invalidRecipes: [],
+      invalidBranches: new Map(),
+      invalidFeatures: new Map(),
+      missingLocale: [],
+      missingL10nIds: new Map([["foo", ["foo", "qux", "grault", "waldo"]]]),
+      locale: "en-US",
+      validationEnabled: true,
+    }),
+    "should call .onFinalize with missing locale"
+  );
+
+  const gleanEvents = Glean.nimbusEvents.validationFailed.testGetValue();
+  Assert.equal(gleanEvents.length, 1, "Should be one validationFailed event");
+  Assert.equal(
+    gleanEvents[0].extra.experiment,
+    "foo",
+    "Experiment slug should match"
+  );
+  Assert.equal(
+    gleanEvents[0].extra.reason,
+    "l10n-missing-entry",
+    "Reason should match"
+  );
+  Assert.equal(
+    gleanEvents[0].extra.l10n_ids,
+    "foo,qux,grault,waldo",
+    "Missing IDs should match"
+  );
+  Assert.equal(gleanEvents[0].extra.locale, "en-US", "Locale should match");
+
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        value: "foo",
+        extra: {
+          reason: "l10n-missing-entry",
+          locale: "en-US",
+          l10n_ids: "foo,qux,grault,waldo",
+        },
+      },
+    ],
+    {
+      category: "normandy",
+      method: "validationFailed",
+      object: "nimbus_experiment",
+    }
+  );
+
+  await cleanupStore(manager.store);
+  sandbox.reset();
+});
+
+add_task(async function test_updateRecipes_validationDisabled_pref() {
+  resetTelemetry();
+
+  Services.prefs.setBoolPref("nimbus.validation.enabled", false);
+
+  await test_updateRecipes_missingLocale({ validationEnabled: false });
+
+  Services.prefs.clearUserPref("nimbus.validation.enabled");
+});
+
+add_task(async function test_updateRecipes_validationDisabled_flag() {
+  resetTelemetry();
+
+  await test_updateRecipes_missingLocale({ featureValidationOptOut: true });
+});
+
+add_task(async function test_updateRecipes_unenroll_missingEntry() {
+  resetTelemetry();
+
+  const sandbox = sinon.createSandbox();
+  const manager = ExperimentFakes.manager();
+  const loader = ExperimentFakes.rsLoader();
+
+  loader.manager = manager;
+  sandbox.stub(ExperimentAPI, "_manager").get(() => manager);
+  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+  sandbox.spy(manager, "onRecipe");
+  sandbox.spy(manager, "onFinalize");
+  sandbox.spy(manager, "unenroll");
+
+  const recipe = ExperimentFakes.recipe("foo", {
+    branches: [
+      {
+        slug: "control",
+        features: [
+          {
+            featureId: FEATURE_ID,
+            value: DEEPLY_NESTED_VALUE,
+          },
+        ],
+        ratio: 1,
+      },
+    ],
+    localizations: LOCALIZATIONS,
+  });
+
+  await loader.init();
+
+  await manager.onStartup();
+  await manager.store.ready();
+
+  await ExperimentFakes.enrollmentHelper(recipe, {
+    source: "rs-loader",
+  }).enrollmentPromise;
+  Assert.ok(
+    !!manager.store.getExperimentForFeature(FEATURE_ID),
+    "Should be enrolled in the experiment"
+  );
+
+  const badRecipe = { ...recipe, localizations: { "en-US": {} } };
+
+  sandbox.stub(loader.remoteSettingsClient, "get").resolves([badRecipe]);
+
+  await loader.updateRecipes();
+
+  Assert.ok(
+    onFinalizeCalled(manager.onFinalize, "rs-loader", {
+      recipeMismatches: [],
+      invalidRecipes: [],
+      invalidBranches: new Map(),
+      invalidFeatures: new Map(),
+      missingLocale: [],
+      missingL10nIds: new Map([
+        [recipe.slug, ["foo", "qux", "grault", "waldo"]],
+      ]),
+      locale: "en-US",
+      validationEnabled: true,
+    }),
+    "should call .onFinalize with missing l10n entry"
+  );
+
+  Assert.ok(manager.unenroll.calledWith(recipe.slug, "l10n-missing-entry"));
+
+  Assert.equal(
+    manager.store.getExperimentForFeature(FEATURE_ID),
+    null,
+    "Should no longer be enrolled in the experiment"
+  );
+
+  const unenrollEvents = Glean.nimbusEvents.unenrollment.testGetValue();
+  Assert.equal(unenrollEvents.length, 1, "Should be one unenroll event");
+  Assert.equal(
+    unenrollEvents[0].extra.experiment,
+    "foo",
+    "Experiment slug should match"
+  );
+  Assert.equal(
+    unenrollEvents[0].extra.reason,
+    "l10n-missing-entry",
+    "Reason should match"
+  );
+
+  const validationFailedEvents = Glean.nimbusEvents.validationFailed.testGetValue();
+  Assert.equal(
+    validationFailedEvents.length,
+    1,
+    "Should be one validation failed event"
+  );
+  Assert.equal(
+    validationFailedEvents[0].extra.experiment,
+    "foo",
+    "Experiment slug should match"
+  );
+  Assert.equal(
+    validationFailedEvents[0].extra.reason,
+    "l10n-missing-entry",
+    "Reason should match"
+  );
+  Assert.equal(
+    validationFailedEvents[0].extra.l10n_ids,
+    "foo,qux,grault,waldo",
+    "Missing IDs should match"
+  );
+  Assert.equal(
+    validationFailedEvents[0].extra.locale,
+    "en-US",
+    "Locale should match"
+  );
+
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        value: "foo",
+        extra: {
+          reason: "l10n-missing-entry",
+        },
+      },
+    ],
+    {
+      category: "normandy",
+      method: "unenroll",
+      object: "nimbus_experiment",
+    },
+    { clear: false }
+  );
+
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        value: "foo",
+        extra: {
+          reason: "l10n-missing-entry",
+          l10n_ids: "foo,qux,grault,waldo",
+          locale: "en-US",
+        },
+      },
+    ],
+    {
+      category: "normandy",
+      method: "validationFailed",
+      object: "nimbus_experiment",
+    }
+  );
+
+  await cleanupStore(manager.store);
+  sandbox.reset();
+});
+
+add_task(async function test_updateRecipes_unenroll_missingLocale() {
+  resetTelemetry();
+
+  const sandbox = sinon.createSandbox();
+  const manager = ExperimentFakes.manager();
+  const loader = ExperimentFakes.rsLoader();
+
+  loader.manager = manager;
+  sandbox.stub(ExperimentAPI, "_manager").get(() => manager);
+  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
+  sandbox.spy(manager, "onRecipe");
+  sandbox.spy(manager, "onFinalize");
+  sandbox.spy(manager, "unenroll");
+
+  const recipe = ExperimentFakes.recipe("foo", {
+    branches: [
+      {
+        slug: "control",
+        features: [
+          {
+            featureId: FEATURE_ID,
+            value: DEEPLY_NESTED_VALUE,
+          },
+        ],
+        ratio: 1,
+      },
+    ],
+    localizations: LOCALIZATIONS,
+  });
+
+  await loader.init();
+
+  await manager.onStartup();
+  await manager.store.ready();
+
+  await ExperimentFakes.enrollmentHelper(recipe, {
+    source: "rs-loader",
+  }).enrollmentPromise;
+  Assert.ok(
+    !!manager.store.getExperimentForFeature(FEATURE_ID),
+    "Should be enrolled in the experiment"
+  );
+
+  const badRecipe = {
+    ...recipe,
+    localizations: {},
+  };
+
+  sandbox.stub(loader.remoteSettingsClient, "get").resolves([badRecipe]);
+
+  await loader.updateRecipes();
+
+  Assert.ok(
+    onFinalizeCalled(manager.onFinalize, "rs-loader", {
+      recipeMismatches: [],
+      invalidRecipes: [],
+      invalidBranches: new Map(),
+      invalidFeatures: new Map(),
+      missingLocale: ["foo"],
+      missingL10nIds: new Map(),
+      locale: "en-US",
+      validationEnabled: true,
+    }),
+    "should call .onFinalize with missing locale"
+  );
+
+  Assert.ok(manager.unenroll.calledWith(recipe.slug, "l10n-missing-locale"));
+
+  Assert.equal(
+    manager.store.getExperimentForFeature(FEATURE_ID),
+    null,
+    "Should no longer be enrolled in the experiment"
+  );
+
+  const unenrollEvents = Glean.nimbusEvents.unenrollment.testGetValue();
+  Assert.equal(unenrollEvents.length, 1, "Should be one unenroll event");
+  Assert.equal(
+    unenrollEvents[0].extra.experiment,
+    "foo",
+    "Experiment slug should match"
+  );
+  Assert.equal(
+    unenrollEvents[0].extra.reason,
+    "l10n-missing-locale",
+    "Reason should match"
+  );
+
+  const validationFailedEvents = Glean.nimbusEvents.validationFailed.testGetValue();
+  Assert.equal(
+    validationFailedEvents.length,
+    1,
+    "Should be one validation failed event"
+  );
+  Assert.equal(
+    validationFailedEvents[0].extra.experiment,
+    "foo",
+    "Experiment slug should match"
+  );
+  Assert.equal(
+    validationFailedEvents[0].extra.reason,
+    "l10n-missing-locale",
+    "Reason should match"
+  );
+  Assert.equal(
+    validationFailedEvents[0].extra.locale,
+    "en-US",
+    "Locale should match"
+  );
+
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        value: "foo",
+        extra: {
+          reason: "l10n-missing-locale",
+        },
+      },
+    ],
+    {
+      category: "normandy",
+      method: "unenroll",
+      object: "nimbus_experiment",
+    },
+    { clear: false }
+  );
+
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        value: "foo",
+        extra: {
+          reason: "l10n-missing-locale",
+          locale: "en-US",
+        },
+      },
+    ],
+    {
+      category: "normandy",
+      method: "validationFailed",
+      object: "nimbus_experiment",
+    }
+  );
 
   await cleanupStore(manager.store);
   sandbox.reset();

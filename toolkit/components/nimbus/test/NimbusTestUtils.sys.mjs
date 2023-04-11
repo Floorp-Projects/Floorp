@@ -259,7 +259,10 @@ export const ExperimentFakes = {
 
     return doExperimentCleanup;
   },
-  enrollmentHelper(recipe, { manager = lazy.ExperimentAPI._manager } = {}) {
+  enrollmentHelper(
+    recipe,
+    { manager = lazy.ExperimentAPI._manager, source = "enrollmentHelper" } = {}
+  ) {
     if (!recipe?.slug) {
       throw new Error("Enrollment helper expects a recipe");
     }
@@ -293,7 +296,7 @@ export const ExperimentFakes = {
     if (!manager.store._isReady) {
       throw new Error("Manager store not ready, call `manager.onStartup`");
     }
-    manager.enroll(recipe, "enrollmentHelper");
+    manager.enroll(recipe, source);
 
     return { enrollmentPromise, doExperimentCleanup };
   },
