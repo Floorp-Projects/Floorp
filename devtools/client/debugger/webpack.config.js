@@ -25,11 +25,6 @@ module.exports = {
   node: { fs: "empty" },
   recordsPath: path.join(__dirname, "bin/module-manifest.json"),
   entry: {
-    // We always generate the debugger bundle, but we will only copy the CSS
-    // artifact over to mozilla-central.
-    "parser-worker": getEntry("src/workers/parser/worker.js"),
-    "pretty-print-worker": getEntry("src/workers/pretty-print/worker.js"),
-    "search-worker": getEntry("src/workers/search/worker.js"),
     vendors: getEntry("src/vendors.js"),
   },
 

@@ -1269,7 +1269,10 @@
       "../node_modules/@babel/generator/node_modules/source-map/lib/quick-sort.js": 1117,
       "../node_modules/@babel/generator/node_modules/source-map/lib/source-node.js": 1118,
       "../node_modules/source-map/lib/wasm.js": 1119,
-      "external \"devtools/client/shared/vendor/micromatch/micromatch\"": 1120
+      "external \"devtools/client/shared/vendor/micromatch/micromatch\"": 1120,
+      "../node_modules/node-libs-browser/node_modules/buffer/index.js": 1121,
+      "../node_modules/node-libs-browser/node_modules/base64-js/index.js": 1122,
+      "../node_modules/node-libs-browser/node_modules/ieee754/index.js": 1123
     },
     "usedIds": {
       "0": 0,
@@ -2392,7 +2395,10 @@
       "1117": 1117,
       "1118": 1118,
       "1119": 1119,
-      "1120": 1120
+      "1120": 1120,
+      "1121": 1121,
+      "1122": 1122,
+      "1123": 1123
     }
   },
   "chunks": {
@@ -2408,10 +2414,7 @@
     },
     "byBlocks": {},
     "usedIds": {
-      "0": 0,
-      "1": 1,
-      "4": 4,
-      "5": 5
+      "1": 1
     }
   },
   "extract-text-webpack-plugin ../../extract-text-webpack-plugin/dist ../../css-loader/index.js??ref--3-1!../../postcss-loader/lib/index.js!../../../packages/devtools-contextmenu/menu.css": [
@@ -2535,7 +2538,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -2556,7 +2559,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
