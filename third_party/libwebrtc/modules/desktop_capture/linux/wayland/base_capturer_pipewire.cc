@@ -12,9 +12,9 @@
 
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capturer.h"
-#include "modules/desktop_capture/linux/wayland/pipewire_utils.h"
 #include "modules/desktop_capture/linux/wayland/restore_token_manager.h"
-#include "modules/desktop_capture/linux/wayland/xdg_desktop_portal_utils.h"
+#include "modules/portal/pipewire_utils.h"
+#include "modules/portal/xdg_desktop_portal_utils.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 
@@ -72,7 +72,8 @@ void BaseCapturerPipeWire::OnScreenCastRequestResult(RequestResponse result,
   capturer_failed_ = false;
   if (result != RequestResponse::kSuccess ||
       !options_.screencast_stream()->StartScreenCastStream(
-          stream_node_id, fd, options_.get_width(), options_.get_height())) {
+          stream_node_id, fd, options_.get_width(), options_.get_height(),
+          options_.prefer_cursor_embedded())) {
     capturer_failed_ = true;
     RTC_LOG(LS_ERROR) << "ScreenCastPortal failed: "
                       << static_cast<uint>(result);

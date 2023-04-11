@@ -69,8 +69,6 @@ if CONFIG["OS_TARGET"] == "Darwin":
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["WEBRTC_MAC"] = True
     DEFINES["WEBRTC_POSIX"] = True
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
     DEFINES["_LIBCPP_HAS_NO_ALIGNED_ALLOCATION"] = True
     DEFINES["__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES"] = "0"
     DEFINES["__STDC_CONSTANT_MACROS"] = True
@@ -103,8 +101,6 @@ if CONFIG["OS_TARGET"] == "OpenBSD":
     DEFINES["WEBRTC_BSD"] = True
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["WEBRTC_POSIX"] = True
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
     DEFINES["_FILE_OFFSET_BITS"] = "64"
     DEFINES["_LARGEFILE64_SOURCE"] = True
     DEFINES["_LARGEFILE_SOURCE"] = True
@@ -120,8 +116,6 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["UNICODE"] = True
     DEFINES["USE_AURA"] = "1"
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
     DEFINES["WEBRTC_WIN"] = True
     DEFINES["WIN32"] = True
     DEFINES["WIN32_LEAN_AND_MEAN"] = True
@@ -161,17 +155,6 @@ if CONFIG["CPU_ARCH"] == "arm":
     DEFINES["WEBRTC_ARCH_ARM"] = True
     DEFINES["WEBRTC_ARCH_ARM_V7"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "1"
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "0"
-
-if CONFIG["CPU_ARCH"] == "ppc64":
-
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
-
-    OS_LIBS += [
-        "m"
-    ]
 
 if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Android":
 
@@ -197,11 +180,6 @@ if CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["USE_X11"] = "1"
 
-if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Android":
-
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
-
 if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Android":
 
     OS_LIBS += [
@@ -215,28 +193,14 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Android":
         "-msse2"
     ]
 
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
-
     OS_LIBS += [
         "android_support"
     ]
 
-if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
-
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
-
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
     DEFINES["_GNU_SOURCE"] = True
-
-    OS_LIBS += [
-        "m"
-    ]
 
 if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Linux":
 
@@ -250,23 +214,11 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
     ]
 
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
     DEFINES["_GNU_SOURCE"] = True
-
-    OS_LIBS += [
-        "m"
-    ]
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FIX"] = "0"
-    DEFINES["WEBRTC_USE_BUILTIN_ISAC_FLOAT"] = "1"
     DEFINES["_GNU_SOURCE"] = True
-
-    OS_LIBS += [
-        "m"
-    ]
 
 Library("builtin_audio_encoder_factory_gn")

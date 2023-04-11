@@ -110,8 +110,8 @@ EmulatedNetworkStats NetworkQualityMetricsReporter::PopulateStats(
     EmulatedNetworkManagerInterface* network) {
   rtc::Event wait;
   EmulatedNetworkStats stats;
-  network->GetStats([&](std::unique_ptr<EmulatedNetworkStats> s) {
-    stats = *s;
+  network->GetStats([&](EmulatedNetworkStats s) {
+    stats = std::move(s);
     wait.Set();
   });
   bool stats_received = wait.Wait(kStatsWaitTimeout);

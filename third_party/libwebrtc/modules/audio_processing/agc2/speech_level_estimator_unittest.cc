@@ -42,13 +42,6 @@ void RunOnConstantLevel(int num_iterations,
   }
 }
 
-constexpr AdaptiveDigitalConfig GetAdaptiveDigitalConfig(
-    int adjacent_speech_frames_threshold) {
-  AdaptiveDigitalConfig config;
-  config.adjacent_speech_frames_threshold = adjacent_speech_frames_threshold;
-  return config;
-}
-
 constexpr float kNoSpeechProbability = 0.0f;
 constexpr float kLowSpeechProbability = kVadConfidenceThreshold / 2.0f;
 constexpr float kMaxSpeechProbability = 1.0f;
@@ -59,7 +52,8 @@ struct TestLevelEstimator {
       : data_dumper(0),
         estimator(std::make_unique<SpeechLevelEstimator>(
             &data_dumper,
-            GetAdaptiveDigitalConfig(adjacent_speech_frames_threshold))),
+            AdaptiveDigitalConfig{},
+            adjacent_speech_frames_threshold)),
         initial_speech_level_dbfs(estimator->level_dbfs()),
         level_rms_dbfs(initial_speech_level_dbfs / 2.0f),
         level_peak_dbfs(initial_speech_level_dbfs / 3.0f) {
@@ -99,7 +93,7 @@ TEST(GainController2SpeechLevelEstimator, IsNotConfident) {
                      level_estimator.level_rms_dbfs,
                      level_estimator.level_peak_dbfs, kMaxSpeechProbability,
                      *level_estimator.estimator);
-  EXPECT_FALSE(level_estimator.estimator->IsConfident());
+  EXPECT_FALSE(level_estimator.estimator->is_confident());
 }
 
 // Checks that the level controller becomes confident when enough speech frames
@@ -110,7 +104,7 @@ TEST(GainController2SpeechLevelEstimator, IsConfident) {
                      level_estimator.level_rms_dbfs,
                      level_estimator.level_peak_dbfs, kMaxSpeechProbability,
                      *level_estimator.estimator);
-  EXPECT_TRUE(level_estimator.estimator->IsConfident());
+  EXPECT_TRUE(level_estimator.estimator->is_confident());
 }
 
 // Checks that the estimated level is not affected by the level of non-speech
@@ -156,7 +150,7 @@ TEST(GainController2SpeechLevelEstimator, ConvergenceSpeedAfterConfidence) {
   // No estimate change should occur, but confidence is achieved.
   ASSERT_FLOAT_EQ(level_estimator.estimator->level_dbfs(),
                   level_estimator.initial_speech_level_dbfs);
-  ASSERT_TRUE(level_estimator.estimator->IsConfident());
+  ASSERT_TRUE(level_estimator.estimator->is_confident());
   // After confidence.
   constexpr float kConvergenceTimeAfterConfidenceNumFrames = 600;  // 6 seconds.
   static_assert(

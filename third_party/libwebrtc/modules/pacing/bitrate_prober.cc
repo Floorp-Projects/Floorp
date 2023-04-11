@@ -18,12 +18,12 @@
 #include "logging/rtc_event_log/events/rtc_event_probe_cluster_created.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-#include "system_wrappers/include/metrics.h"
 
 namespace webrtc {
 
 namespace {
 constexpr TimeDelta kProbeClusterTimeout = TimeDelta::Seconds(5);
+constexpr size_t kMaxPendingProbeClusters = 5;
 
 }  // namespace
 
@@ -36,18 +36,9 @@ BitrateProberConfig::BitrateProberConfig(
                   key_value_config->Lookup("WebRTC-Bwe-ProbingBehavior"));
 }
 
-BitrateProber::~BitrateProber() {
-  RTC_HISTOGRAM_COUNTS_1000("WebRTC.BWE.Probing.TotalProbeClustersRequested",
-                            total_probe_count_);
-  RTC_HISTOGRAM_COUNTS_1000("WebRTC.BWE.Probing.TotalFailedProbeClusters",
-                            total_failed_probe_count_);
-}
-
 BitrateProber::BitrateProber(const FieldTrialsView& field_trials)
     : probing_state_(ProbingState::kDisabled),
       next_probe_time_(Timestamp::PlusInfinity()),
-      total_probe_count_(0),
-      total_failed_probe_count_(0),
       config_(&field_trials) {
   SetEnabled(true);
 }
@@ -82,12 +73,11 @@ void BitrateProber::CreateProbeCluster(
     const ProbeClusterConfig& cluster_config) {
   RTC_DCHECK(probing_state_ != ProbingState::kDisabled);
 
-  total_probe_count_++;
   while (!clusters_.empty() &&
-         cluster_config.at_time - clusters_.front().requested_at >
-             kProbeClusterTimeout) {
+         (cluster_config.at_time - clusters_.front().requested_at >
+              kProbeClusterTimeout ||
+          clusters_.size() > kMaxPendingProbeClusters)) {
     clusters_.pop();
-    total_failed_probe_count_++;
   }
 
   ProbeCluster cluster;
@@ -169,13 +159,6 @@ void BitrateProber::ProbeSent(Timestamp now, DataSize size) {
     next_probe_time_ = CalculateNextProbeTime(*cluster);
     if (cluster->sent_bytes >= cluster->pace_info.probe_cluster_min_bytes &&
         cluster->sent_probes >= cluster->pace_info.probe_cluster_min_probes) {
-      RTC_HISTOGRAM_COUNTS_100000("WebRTC.BWE.Probing.ProbeClusterSizeInBytes",
-                                  cluster->sent_bytes);
-      RTC_HISTOGRAM_COUNTS_100("WebRTC.BWE.Probing.ProbesPerCluster",
-                               cluster->sent_probes);
-      RTC_HISTOGRAM_COUNTS_10000("WebRTC.BWE.Probing.TimePerProbeCluster",
-                                 (now - cluster->started_at).ms());
-
       clusters_.pop();
     }
     if (clusters_.empty()) {

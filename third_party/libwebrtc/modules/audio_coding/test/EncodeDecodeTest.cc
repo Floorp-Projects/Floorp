@@ -110,9 +110,7 @@ void Receiver::Setup(AudioCodingModule* acm,
   EXPECT_EQ(0, acm->InitializeReceiver());
 
   if (channels == 1) {
-    acm->SetReceiveCodecs({{103, {"ISAC", 16000, 1}},
-                           {104, {"ISAC", 32000, 1}},
-                           {107, {"L16", 8000, 1}},
+    acm->SetReceiveCodecs({{107, {"L16", 8000, 1}},
                            {108, {"L16", 16000, 1}},
                            {109, {"L16", 32000, 1}},
                            {0, {"PCMU", 8000, 1}},
@@ -232,7 +230,6 @@ EncodeDecodeTest::EncodeDecodeTest() = default;
 
 void EncodeDecodeTest::Perform() {
   const std::map<int, SdpAudioFormat> send_codecs = {
-      {103, {"ISAC", 16000, 1}}, {104, {"ISAC", 32000, 1}},
       {107, {"L16", 8000, 1}},   {108, {"L16", 16000, 1}},
       {109, {"L16", 32000, 1}},  {0, {"PCMU", 8000, 1}},
       {8, {"PCMA", 8000, 1}},

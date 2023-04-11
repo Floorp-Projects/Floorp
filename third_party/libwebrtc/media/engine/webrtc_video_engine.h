@@ -149,7 +149,8 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   webrtc::RtpParameters GetRtpSendParameters(uint32_t ssrc) const override;
   webrtc::RTCError SetRtpSendParameters(
       uint32_t ssrc,
-      const webrtc::RtpParameters& parameters) override;
+      const webrtc::RtpParameters& parameters,
+      webrtc::SetParametersCallback callback) override;
   webrtc::RtpParameters GetRtpReceiveParameters(uint32_t ssrc) const override;
   webrtc::RtpParameters GetDefaultRtpReceiveParameters() const override;
   bool GetSendCodec(VideoCodec* send_codec) override;
@@ -179,7 +180,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   void OnReadyToSend(bool ready) override;
   void OnNetworkRouteChanged(absl::string_view transport_name,
                              const rtc::NetworkRoute& network_route) override;
-  void SetInterface(NetworkInterface* iface) override;
+  void SetInterface(MediaChannelNetworkInterface* iface) override;
 
   // E2E Encrypted Video Frame API
   // Set a frame decryptor to a particular ssrc that will intercept all
@@ -363,7 +364,8 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     ~WebRtcVideoSendStream();
 
     void SetSendParameters(const ChangedSendParameters& send_params);
-    webrtc::RTCError SetRtpParameters(const webrtc::RtpParameters& parameters);
+    webrtc::RTCError SetRtpParameters(const webrtc::RtpParameters& parameters,
+                                      webrtc::SetParametersCallback callback);
     webrtc::RtpParameters GetRtpParameters() const;
 
     void SetFrameEncryptor(
@@ -422,7 +424,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     void RecreateWebRtcStream();
     webrtc::VideoEncoderConfig CreateVideoEncoderConfig(
         const VideoCodec& codec) const;
-    void ReconfigureEncoder();
+    void ReconfigureEncoder(webrtc::SetParametersCallback callback);
 
     // Calls Start or Stop according to whether or not `sending_` is true,
     // and whether or not the encoding in `rtp_parameters_` is active.

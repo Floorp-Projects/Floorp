@@ -103,8 +103,6 @@ class ABSL_DEPRECATED("") ModuleRtpRtcpImpl
 
   void SetMid(absl::string_view mid) override;
 
-  void SetCsrcs(const std::vector<uint32_t>& csrcs) override;
-
   RTCPSender::FeedbackState GetFeedbackState();
 
   void SetRtxSendStatus(int mode) override;

@@ -188,7 +188,7 @@ EncoderInfoSettings::EncoderInfoSettings(absl::string_view name)
   resolution_bitrate_limits_ = ToResolutionBitrateLimits(bitrate_limits.Get());
 }
 
-absl::optional<int> EncoderInfoSettings::requested_resolution_alignment()
+absl::optional<uint32_t> EncoderInfoSettings::requested_resolution_alignment()
     const {
   if (requested_resolution_alignment_ &&
       requested_resolution_alignment_.Value() < 1) {

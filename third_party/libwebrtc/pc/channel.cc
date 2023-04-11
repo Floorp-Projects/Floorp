@@ -154,7 +154,7 @@ std::string BaseChannel::ToString() const {
 
 bool BaseChannel::ConnectToRtpTransport_n() {
   RTC_DCHECK(rtp_transport_);
-  RTC_DCHECK(media_channel());
+  RTC_DCHECK(media_send_channel());
 
   // We don't need to call OnDemuxerCriteriaUpdatePending/Complete because
   // there's no previous criteria to worry about.
@@ -174,7 +174,7 @@ bool BaseChannel::ConnectToRtpTransport_n() {
 
 void BaseChannel::DisconnectFromRtpTransport_n() {
   RTC_DCHECK(rtp_transport_);
-  RTC_DCHECK(media_channel());
+  RTC_DCHECK(media_send_channel());
   rtp_transport_->UnregisterRtpDemuxerSink(this);
   rtp_transport_->SignalReadyToSend.disconnect(this);
   rtp_transport_->SignalNetworkRouteChanged.disconnect(this);
@@ -458,7 +458,7 @@ bool BaseChannel::MaybeUpdateDemuxerAndRtpExtensions_w(
   // TODO(bugs.webrtc.org/13536): See if we can do this asynchronously.
 
   if (update_demuxer)
-    media_channel()->OnDemuxerCriteriaUpdatePending();
+    media_receive_channel()->OnDemuxerCriteriaUpdatePending();
 
   bool success = network_thread()->BlockingCall([&]() mutable {
     RTC_DCHECK_RUN_ON(network_thread());
@@ -481,7 +481,7 @@ bool BaseChannel::MaybeUpdateDemuxerAndRtpExtensions_w(
   });
 
   if (update_demuxer)
-    media_channel()->OnDemuxerCriteriaUpdateComplete();
+    media_receive_channel()->OnDemuxerCriteriaUpdateComplete();
 
   return success;
 }
@@ -584,7 +584,7 @@ bool BaseChannel::SetPayloadTypeDemuxingEnabled_w(bool enabled) {
     // were matched to this channel by MID or RID. Ideally we'd remove only the
     // streams that were matched based on payload type alone, but currently
     // there is no straightforward way to identify those streams.
-    media_channel()->ResetUnsignaledRecvStream();
+    media_receive_channel()->ResetUnsignaledRecvStream();
     if (!demuxer_criteria_.payload_types().empty()) {
       config_changed = true;
       demuxer_criteria_.payload_types().clear();
@@ -629,7 +629,7 @@ bool BaseChannel::UpdateLocalStreams_w(const std::vector<StreamParams>& streams,
         GetStream(streams, StreamFinder(&old_stream))) {
       continue;
     }
-    if (!media_channel()->RemoveSendStream(old_stream.first_ssrc())) {
+    if (!media_send_channel()->RemoveSendStream(old_stream.first_ssrc())) {
       error_desc = StringFormat(
           "Failed to remove send stream with ssrc %u from m-section with "
           "mid='%s'.",
@@ -672,7 +672,7 @@ bool BaseChannel::UpdateLocalStreams_w(const std::vector<StreamParams>& streams,
                                /* flex_fec = */ false, ssrc_generator_);
     }
 
-    if (media_channel()->AddSendStream(new_stream)) {
+    if (media_send_channel()->AddSendStream(new_stream)) {
       RTC_LOG(LS_INFO) << "Add send stream ssrc: " << new_stream.ssrcs[0]
                        << " into " << ToString();
     } else {
@@ -709,12 +709,12 @@ bool BaseChannel::UpdateRemoteStreams_w(const MediaContentDescription* content,
     // If we no longer have an unsignaled stream, we would like to remove
     // the unsignaled stream params that are cached.
     if (!old_stream.has_ssrcs() && !new_has_unsignaled_ssrcs) {
-      media_channel()->ResetUnsignaledRecvStream();
+      media_receive_channel()->ResetUnsignaledRecvStream();
       RTC_LOG(LS_INFO) << "Reset unsignaled remote stream for " << ToString()
                        << ".";
     } else if (old_stream.has_ssrcs() &&
                !GetStreamBySsrc(streams, old_stream.first_ssrc())) {
-      if (media_channel()->RemoveRecvStream(old_stream.first_ssrc())) {
+      if (media_receive_channel()->RemoveRecvStream(old_stream.first_ssrc())) {
         RTC_LOG(LS_INFO) << "Remove remote ssrc: " << old_stream.first_ssrc()
                          << " from " << ToString() << ".";
       } else {
@@ -735,7 +735,7 @@ bool BaseChannel::UpdateRemoteStreams_w(const MediaContentDescription* content,
     // stream received later.
     if ((!new_stream.has_ssrcs() && !old_has_unsignaled_ssrcs) ||
         !GetStreamBySsrc(remote_streams_, new_stream.first_ssrc())) {
-      if (media_channel()->AddRecvStream(new_stream)) {
+      if (media_receive_channel()->AddRecvStream(new_stream)) {
         RTC_LOG(LS_INFO) << "Add remote ssrc: "
                          << (new_stream.has_ssrcs()
                                  ? std::to_string(new_stream.first_ssrc())
@@ -808,7 +808,7 @@ bool BaseChannel::ClearHandledPayloadTypes() {
 void BaseChannel::SignalSentPacket_n(const rtc::SentPacket& sent_packet) {
   RTC_DCHECK_RUN_ON(network_thread());
   RTC_DCHECK(network_initialized());
-  media_channel()->OnPacketSent(sent_packet);
+  media_send_channel()->OnPacketSent(sent_packet);
 }
 
 VoiceChannel::VoiceChannel(rtc::Thread* worker_thread,
@@ -839,12 +839,12 @@ void VoiceChannel::UpdateMediaSendRecvState_w() {
   // content. We receive data on the default channel and multiplexed streams.
   bool ready_to_receive = enabled() && webrtc::RtpTransceiverDirectionHasRecv(
                                            local_content_direction());
-  media_channel()->SetPlayout(ready_to_receive);
+  media_receive_channel()->SetPlayout(ready_to_receive);
 
   // Send outgoing data if we're the active call, we have the remote content,
   // and we have had some form of connectivity.
   bool send = IsReadyToSendMedia_w();
-  media_channel()->SetSend(send);
+  media_send_channel()->SetSend(send);
 
   RTC_LOG(LS_INFO) << "Changing voice state, recv=" << ready_to_receive
                    << " send=" << send << " for " << ToString();
@@ -861,7 +861,7 @@ bool VoiceChannel::SetLocalContent_w(const MediaContentDescription* content,
   RtpHeaderExtensions header_extensions =
       GetDeduplicatedRtpHeaderExtensions(content->rtp_header_extensions());
   bool update_header_extensions = true;
-  media_channel()->SetExtmapAllowMixed(content->extmap_allow_mixed());
+  media_send_channel()->SetExtmapAllowMixed(content->extmap_allow_mixed());
 
   AudioRecvParameters recv_params = last_recv_params_;
   RtpParametersFromMediaDescription(
@@ -869,7 +869,7 @@ bool VoiceChannel::SetLocalContent_w(const MediaContentDescription* content,
       webrtc::RtpTransceiverDirectionHasRecv(content->direction()),
       &recv_params);
 
-  if (!media_channel()->SetRecvParameters(recv_params)) {
+  if (!media_receive_channel()->SetRecvParameters(recv_params)) {
     error_desc = StringFormat(
         "Failed to set local audio description recv parameters for m-section "
         "with mid='%s'.",
@@ -921,7 +921,8 @@ bool VoiceChannel::SetRemoteContent_w(const MediaContentDescription* content,
                                         extensions_filter(), &send_params);
   send_params.mid = mid();
 
-  bool parameters_applied = media_channel()->SetSendParameters(send_params);
+  bool parameters_applied =
+      media_send_channel()->SetSendParameters(send_params);
   if (!parameters_applied) {
     error_desc = StringFormat(
         "Failed to set remote audio description send parameters for m-section "
@@ -961,7 +962,7 @@ void VideoChannel::UpdateMediaSendRecvState_w() {
   // Send outgoing data if we're the active call, we have the remote content,
   // and we have had some form of connectivity.
   bool send = IsReadyToSendMedia_w();
-  media_channel()->SetSend(send);
+  media_send_channel()->SetSend(send);
   RTC_LOG(LS_INFO) << "Changing video state, send=" << send << " for "
                    << ToString();
 }
@@ -977,7 +978,7 @@ bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
   RtpHeaderExtensions header_extensions =
       GetDeduplicatedRtpHeaderExtensions(content->rtp_header_extensions());
   bool update_header_extensions = true;
-  media_channel()->SetExtmapAllowMixed(content->extmap_allow_mixed());
+  media_send_channel()->SetExtmapAllowMixed(content->extmap_allow_mixed());
 
   VideoRecvParameters recv_params = last_recv_params_;
 
@@ -1007,7 +1008,7 @@ bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
     }
   }
 
-  if (!media_channel()->SetRecvParameters(recv_params)) {
+  if (!media_receive_channel()->SetRecvParameters(recv_params)) {
     error_desc = StringFormat(
         "Failed to set local video description recv parameters for m-section "
         "with mid='%s'.",
@@ -1026,7 +1027,7 @@ bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
   last_recv_params_ = recv_params;
 
   if (needs_send_params_update) {
-    if (!media_channel()->SetSendParameters(send_params)) {
+    if (!media_send_channel()->SetSendParameters(send_params)) {
       error_desc = StringFormat(
           "Failed to set send parameters for m-section with mid='%s'.",
           mid().c_str());
@@ -1092,7 +1093,7 @@ bool VideoChannel::SetRemoteContent_w(const MediaContentDescription* content,
     }
   }
 
-  if (!media_channel()->SetSendParameters(send_params)) {
+  if (!media_send_channel()->SetSendParameters(send_params)) {
     error_desc = StringFormat(
         "Failed to set remote video description send parameters for m-section "
         "with mid='%s'.",
@@ -1102,7 +1103,7 @@ bool VideoChannel::SetRemoteContent_w(const MediaContentDescription* content,
   last_send_params_ = send_params;
 
   if (needs_recv_params_update) {
-    if (!media_channel()->SetRecvParameters(recv_params)) {
+    if (!media_receive_channel()->SetRecvParameters(recv_params)) {
       error_desc = StringFormat(
           "Failed to set recv parameters for m-section with mid='%s'.",
           mid().c_str());

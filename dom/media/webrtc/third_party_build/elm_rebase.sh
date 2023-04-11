@@ -65,35 +65,35 @@ if [ -f $STATE_DIR/rebase_resume_state ]; then
   source $STATE_DIR/rebase_resume_state
 else
 
-if [ "x" == "x$MOZ_TOP_FF" ]; then
-  MOZ_TOP_FF=`hg log -r . -T"{node|short}"`
+  if [ "x" == "x$MOZ_TOP_FF" ]; then
+    MOZ_TOP_FF=`hg log -r . -T"{node|short}"`
 
-  ERROR_HELP=$"
+    ERROR_HELP=$"
 The topmost commit to be rebased is not in the public phase. Should it be
 pushed to elm first? If this is intentional, please rerun the command and pass
 it in explicitly:
   MOZ_TOP_FF=$MOZ_TOP_FF bash $0
 "
-  if [[ $(hg phase -r .) != *public ]]; then
-    echo "$ERROR_HELP"
-    exit 1
-  fi
-  ERROR_HELP=""
+    if [[ $(hg phase -r .) != *public ]]; then
+      echo "$ERROR_HELP"
+      exit 1
+    fi
+    ERROR_HELP=""
 
-  ERROR_HELP=$"
+    ERROR_HELP=$"
 The topmost commit to be rebased is public but has descendants. If those
 descendants should not be rebased, please rerun the command and pass the commit
 in explicitly:
   MOZ_TOP_FF=$MOZ_TOP_FF bash $0
-  "
-  if [ "x" != "x$(hg log -r 'descendants(.) and !.' -T'{node|short}')" ]; then
-    echo "$ERROR_HELP"
-    exit 1
+"
+    if [ "x" != "x$(hg log -r 'descendants(.) and !.' -T'{node|short}')" ]; then
+      echo "$ERROR_HELP"
+      exit 1
+    fi
+    ERROR_HELP=""
   fi
-  ERROR_HELP=""
-fi
 
-ERROR_HELP=$"
+  ERROR_HELP=$"
 An error here is likely because no revision for central is found.
 One possible reason for this is this is your first rebase operation.
 To 'bootstrap' the first rebase operation, please find the
@@ -107,54 +107,54 @@ could be the sha of the .arcconfig commit if it is the bottom commit.
 That command looks like:
   MOZ_BOTTOM_FF={base-sha} MOZ_CURRENT_CENTRAL={central-sha} bash $0
 "
-if [ "x" == "x$MOZ_CURRENT_CENTRAL" ]; then
-  MOZ_CURRENT_CENTRAL=`hg log -r central -T"{node|short}"`
-fi
-if [ "x" == "x$MOZ_BOTTOM_FF" ]; then
-  MOZ_BOTTOM_FF=`hg log -r $MOZ_CURRENT_CENTRAL~-1 -T"{node|short}"`
-fi
-ERROR_HELP=""
+  if [ "x" == "x$MOZ_CURRENT_CENTRAL" ]; then
+    MOZ_CURRENT_CENTRAL=`hg log -r central -T"{node|short}"`
+  fi
+  if [ "x" == "x$MOZ_BOTTOM_FF" ]; then
+    MOZ_BOTTOM_FF=`hg log -r $MOZ_CURRENT_CENTRAL~-1 -T"{node|short}"`
+  fi
+  ERROR_HELP=""
 
-if [ "x" == "x$MOZ_BOTTOM_FF" ]; then
-  echo "No value found for the bottom commit of the fast-forward commit stack."
-  exit 1
-fi
+  if [ "x" == "x$MOZ_BOTTOM_FF" ]; then
+    echo "No value found for the bottom commit of the fast-forward commit stack."
+    exit 1
+  fi
 
-# After this point:
-# * eE: All commands should succeed.
-# * u: All variables should be defined before use.
-# * o pipefail: All stages of all pipes should succeed.
-set -eEuo pipefail
+  # After this point:
+  # * eE: All commands should succeed.
+  # * u: All variables should be defined before use.
+  # * o pipefail: All stages of all pipes should succeed.
+  set -eEuo pipefail
 
-hg pull central
-MOZ_NEW_CENTRAL=`hg log -r central -T"{node|short}"`
+  hg pull central
+  MOZ_NEW_CENTRAL=`hg log -r central -T"{node|short}"`
 
-echo "moz-central in elm is currently $MOZ_CURRENT_CENTRAL"
-echo "bottom of fast-foward tree is $MOZ_BOTTOM_FF"
-echo "top of fast-forward tree (webrtc-fast-forward) is $MOZ_TOP_FF"
-echo "new target for elm rebase $MOZ_NEW_CENTRAL (tip of moz-central)"
+  echo "moz-central in elm is currently $MOZ_CURRENT_CENTRAL"
+  echo "bottom of fast-foward tree is $MOZ_BOTTOM_FF"
+  echo "top of fast-forward tree (webrtc-fast-forward) is $MOZ_TOP_FF"
+  echo "new target for elm rebase $MOZ_NEW_CENTRAL (tip of moz-central)"
 
-hg log -T '{rev}:{node|short} {desc|firstline}\n' \
-    -r $MOZ_BOTTOM_FF::$MOZ_TOP_FF > $COMMIT_LIST_FILE
+  hg log -T '{rev}:{node|short} {desc|firstline}\n' \
+      -r $MOZ_BOTTOM_FF::$MOZ_TOP_FF > $COMMIT_LIST_FILE
 
-# move all FLOAT lines to end of file, and delete the "empty" tilde line
-# line at the beginning
-ed -s $COMMIT_LIST_FILE <<< $'g/- FLOAT -/m$\ng/^~$/d\nw\nq'
+  # move all FLOAT lines to end of file, and delete the "empty" tilde line
+  # line at the beginning
+  ed -s $COMMIT_LIST_FILE <<< $'g/- FLOAT -/m$\ng/^~$/d\nw\nq'
 
-MOZ_BOOKMARK=`date "+webrtc-fast-forward-%Y-%m-%d--%H-%M"`
-hg bookmark -r $MOZ_TOP_FF $MOZ_BOOKMARK
+  MOZ_BOOKMARK=`date "+webrtc-fast-forward-%Y-%m-%d--%H-%M"`
+  hg bookmark -r elm $MOZ_BOOKMARK
 
-hg update $MOZ_NEW_CENTRAL
+  hg update $MOZ_NEW_CENTRAL
 
-# pre-work is complete, let's write out a temporary config file that allows
-# us to resume
-echo $"export MOZ_CURRENT_CENTRAL=$MOZ_CURRENT_CENTRAL
+  # pre-work is complete, let's write out a temporary config file that allows
+  # us to resume
+  echo $"export MOZ_CURRENT_CENTRAL=$MOZ_CURRENT_CENTRAL
 export MOZ_BOTTOM_FF=$MOZ_BOTTOM_FF
 export MOZ_TOP_FF=$MOZ_TOP_FF
 export MOZ_NEW_CENTRAL=$MOZ_NEW_CENTRAL
 export MOZ_BOOKMARK=$MOZ_BOOKMARK
 " > $STATE_DIR/rebase_resume_state
-fi
+fi # if [ -f $STATE_DIR/rebase_resume_state ]; then ; else
 
 # grab all commits
 COMMITS=`cat $COMMIT_LIST_FILE | awk '{print $1;}'`

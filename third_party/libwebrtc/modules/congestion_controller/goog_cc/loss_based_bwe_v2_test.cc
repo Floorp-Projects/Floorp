@@ -205,7 +205,8 @@ TEST_P(LossBasedBweV2Test, ReturnsDelayBasedEstimateWhenDisabled) {
       /*packet_results=*/{},
       /*delay_based_estimate=*/DataRate::KilobitsPerSec(100),
       BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
   EXPECT_EQ(
       loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate,
       DataRate::KilobitsPerSec(100));
@@ -221,7 +222,8 @@ TEST_P(LossBasedBweV2Test,
       /*packet_results=*/{},
       /*delay_based_estimate=*/DataRate::KilobitsPerSec(100),
       BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
   EXPECT_EQ(
       loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate,
       DataRate::KilobitsPerSec(100));
@@ -241,8 +243,10 @@ TEST_P(LossBasedBweV2Test,
   loss_based_bandwidth_estimator.SetBandwidthEstimate(
       DataRate::KilobitsPerSec(600));
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
-      enough_feedback, DataRate::PlusInfinity(), BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      enough_feedback, /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   EXPECT_TRUE(loss_based_bandwidth_estimator.IsReady());
   EXPECT_TRUE(loss_based_bandwidth_estimator.GetLossBasedResult()
@@ -259,8 +263,10 @@ TEST_P(LossBasedBweV2Test, NoBandwidthEstimateGivenNoInitialization) {
   LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
 
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
-      enough_feedback, DataRate::PlusInfinity(), BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      enough_feedback, /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   EXPECT_FALSE(loss_based_bandwidth_estimator.IsReady());
   EXPECT_TRUE(loss_based_bandwidth_estimator.GetLossBasedResult()
@@ -294,8 +300,10 @@ TEST_P(LossBasedBweV2Test, NoBandwidthEstimateGivenNotEnoughFeedback) {
                   .bandwidth_estimate.IsPlusInfinity());
 
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
-      not_enough_feedback, DataRate::PlusInfinity(), BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      not_enough_feedback, /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   EXPECT_FALSE(loss_based_bandwidth_estimator.IsReady());
   EXPECT_TRUE(loss_based_bandwidth_estimator.GetLossBasedResult()
@@ -320,8 +328,10 @@ TEST_P(LossBasedBweV2Test,
   loss_based_bandwidth_estimator.SetBandwidthEstimate(
       DataRate::KilobitsPerSec(600));
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
-      enough_feedback_1, DataRate::PlusInfinity(), BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      enough_feedback_1, /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   EXPECT_NE(
       loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate,
@@ -335,8 +345,10 @@ TEST_P(LossBasedBweV2Test,
       DataRate::KilobitsPerSec(600));
 
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
-      enough_feedback_2, DataRate::PlusInfinity(), BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      enough_feedback_2, /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   EXPECT_NE(
       loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate,
@@ -364,11 +376,15 @@ TEST_P(LossBasedBweV2Test,
   loss_based_bandwidth_estimator_2.SetBandwidthEstimate(
       DataRate::KilobitsPerSec(600));
   loss_based_bandwidth_estimator_1.UpdateBandwidthEstimate(
-      enough_feedback_1, DataRate::PlusInfinity(), BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      enough_feedback_1, /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
   loss_based_bandwidth_estimator_2.UpdateBandwidthEstimate(
-      enough_feedback_1, DataRate::PlusInfinity(), BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      enough_feedback_1, /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   EXPECT_EQ(
       loss_based_bandwidth_estimator_1.GetLossBasedResult().bandwidth_estimate,
@@ -382,11 +398,15 @@ TEST_P(LossBasedBweV2Test,
       DataRate::KilobitsPerSec(660));
 
   loss_based_bandwidth_estimator_1.UpdateBandwidthEstimate(
-      enough_feedback_2, DataRate::PlusInfinity(), BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      enough_feedback_2, /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
   loss_based_bandwidth_estimator_2.UpdateBandwidthEstimate(
-      enough_feedback_2, DataRate::PlusInfinity(), BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      enough_feedback_2, /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   EXPECT_NE(
       loss_based_bandwidth_estimator_1.GetLossBasedResult().bandwidth_estimate,
@@ -407,8 +427,10 @@ TEST_P(LossBasedBweV2Test,
   loss_based_bandwidth_estimator.SetBandwidthEstimate(
       DataRate::KilobitsPerSec(600));
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
-      enough_feedback_no_received_packets, DataRate::PlusInfinity(),
-      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt);
+      enough_feedback_no_received_packets,
+      /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   EXPECT_EQ(
       loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate,
@@ -436,14 +458,17 @@ TEST_P(LossBasedBweV2Test, BandwidthEstimateNotIncreaseWhenNetworkUnderusing) {
   loss_based_bandwidth_estimator.SetBandwidthEstimate(
       DataRate::KilobitsPerSec(600));
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
-      enough_feedback_1, DataRate::PlusInfinity(),
-      BandwidthUsage::kBwUnderusing, /*probe_estimate=*/absl::nullopt);
+      enough_feedback_1, /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      BandwidthUsage::kBwUnderusing, /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
   EXPECT_LE(
       loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate,
       DataRate::KilobitsPerSec(600));
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
-      enough_feedback_2, DataRate::PlusInfinity(), BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      enough_feedback_2, /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
   EXPECT_LE(
       loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate,
       DataRate::KilobitsPerSec(600));
@@ -470,8 +495,10 @@ TEST_P(LossBasedBweV2Test,
   loss_based_bandwidth_estimator.SetBandwidthEstimate(
       DataRate::KilobitsPerSec(600));
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
-      enough_feedback_1, DataRate::PlusInfinity(), BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      enough_feedback_1, /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
   // If the delay based estimate is infinity, then loss based estimate increases
   // and not bounded by delay based estimate.
   EXPECT_GT(
@@ -480,7 +507,8 @@ TEST_P(LossBasedBweV2Test,
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_2, /*delay_based_estimate=*/DataRate::KilobitsPerSec(500),
       BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
   // If the delay based estimate is not infinity, then loss based estimate is
   // bounded by delay based estimate.
   EXPECT_EQ(
@@ -512,13 +540,17 @@ TEST_P(LossBasedBweV2Test, UseAckedBitrateForEmegencyBackOff) {
   loss_based_bandwidth_estimator.SetAcknowledgedBitrate(acked_bitrate);
   // Update estimate when network is overusing, and 50% loss rate.
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
-      enough_feedback_1, DataRate::PlusInfinity(), BandwidthUsage::kBwOverusing,
-      /*probe_estimate=*/absl::nullopt);
+      enough_feedback_1, /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      BandwidthUsage::kBwOverusing,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
   // Update estimate again when network is continuously overusing, and 100%
   // loss rate.
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
-      enough_feedback_2, DataRate::PlusInfinity(), BandwidthUsage::kBwOverusing,
-      /*probe_estimate=*/absl::nullopt);
+      enough_feedback_2, /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      BandwidthUsage::kBwOverusing,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
   // The estimate bitrate now is backed off based on acked bitrate.
   EXPECT_LE(
       loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate,
@@ -541,15 +573,19 @@ TEST_P(LossBasedBweV2Test, NoBweChangeIfObservationDurationUnchanged) {
       DataRate::KilobitsPerSec(300));
 
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
-      enough_feedback_1, DataRate::PlusInfinity(), BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      enough_feedback_1, /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
   DataRate estimate_1 =
       loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate;
 
   // Use the same feedback and check if the estimate is unchanged.
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
-      enough_feedback_1, DataRate::PlusInfinity(), BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      enough_feedback_1, /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
   DataRate estimate_2 =
       loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate;
   EXPECT_EQ(estimate_2, estimate_1);
@@ -574,14 +610,18 @@ TEST_P(LossBasedBweV2Test,
   loss_based_bandwidth_estimator.SetBandwidthEstimate(
       DataRate::KilobitsPerSec(600));
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
-      enough_feedback_1, DataRate::PlusInfinity(), BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      enough_feedback_1, /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
   DataRate estimate_1 =
       loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate;
 
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
-      enough_feedback_2, DataRate::PlusInfinity(), BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      enough_feedback_2, /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
   DataRate estimate_2 =
       loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate;
   EXPECT_EQ(estimate_2, estimate_1);
@@ -606,14 +646,17 @@ TEST_P(LossBasedBweV2Test,
   loss_based_bandwidth_estimator.SetBandwidthEstimate(
       DataRate::KilobitsPerSec(600));
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
-      enough_feedback_1, DataRate::PlusInfinity(), BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      enough_feedback_1, /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
   DataRate estimate_1 =
       loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate;
 
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
-      enough_feedback_2, DataRate::PlusInfinity(),
-      BandwidthUsage::kBwUnderusing, /*probe_estimate=*/absl::nullopt);
+      enough_feedback_2, /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      BandwidthUsage::kBwUnderusing, /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
   DataRate estimate_2 =
       loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate;
   EXPECT_LE(estimate_2, estimate_1);
@@ -645,14 +688,18 @@ TEST_P(LossBasedBweV2Test,
   loss_based_bandwidth_estimator.SetAcknowledgedBitrate(
       DataRate::KilobitsPerSec(300));
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
-      enough_feedback_1, DataRate::PlusInfinity(), BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      enough_feedback_1, /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
   DataRate estimate_1 =
       loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate;
 
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
-      enough_feedback_2, DataRate::PlusInfinity(), BandwidthUsage::kBwOverusing,
-      /*probe_estimate=*/absl::nullopt);
+      enough_feedback_2, /*delay_based_estimate=*/DataRate::PlusInfinity(),
+      BandwidthUsage::kBwOverusing,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
   DataRate estimate_2 =
       loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate;
   EXPECT_LT(estimate_2, estimate_1);
@@ -677,13 +724,15 @@ TEST_P(LossBasedBweV2Test,
 
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_1, delay_based_estimate, BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
   EXPECT_EQ(
       loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate,
       delay_based_estimate);
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_2, delay_based_estimate, BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
   EXPECT_EQ(
       loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate,
       delay_based_estimate);
@@ -697,7 +746,7 @@ TEST_P(LossBasedBweV2Test,
       "ObservationWindowSize:2,ObservationDurationLowerBound:200ms,"
       "InstantUpperBoundBwBalance:10000kbps,"
       "DelayBasedCandidate:true,MaxIncreaseFactor:1.5,BwRampupUpperBoundFactor:"
-      "2.0/");
+      "2.0,NotIncreaseIfInherentLossLessThanAverageLoss:false/");
   LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
   DataRate delay_based_estimate = DataRate::KilobitsPerSec(5000);
   DataRate acked_rate = DataRate::KilobitsPerSec(300);
@@ -711,7 +760,8 @@ TEST_P(LossBasedBweV2Test,
           /*first_packet_timestamp=*/Timestamp::Zero());
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_1, delay_based_estimate, BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
   LossBasedBweV2::Result result_at_loss =
       loss_based_bandwidth_estimator.GetLossBasedResult();
 
@@ -724,7 +774,8 @@ TEST_P(LossBasedBweV2Test,
       DataRate::KilobitsPerSec(600));
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_2, delay_based_estimate, BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   LossBasedBweV2::Result result_after_recovery =
       loss_based_bandwidth_estimator.GetLossBasedResult();
@@ -732,10 +783,115 @@ TEST_P(LossBasedBweV2Test,
             result_at_loss.bandwidth_estimate * 1.5);
 }
 
+TEST_P(LossBasedBweV2Test,
+       LossBasedStateIsDelayBasedEstimateAfterNetworkRecovering) {
+  ExplicitKeyValueConfig key_value_config(
+      "WebRTC-Bwe-LossBasedBweV2/"
+      "Enabled:true,CandidateFactors:100|1|0.5,AckedRateCandidate:true,"
+      "ObservationWindowSize:2,ObservationDurationLowerBound:200ms,"
+      "InstantUpperBoundBwBalance:10000kbps,"
+      "DelayBasedCandidate:true,MaxIncreaseFactor:100,"
+      "BwRampupUpperBoundFactor:"
+      "2.0,NotIncreaseIfInherentLossLessThanAverageLoss:false/");
+  LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
+  DataRate delay_based_estimate = DataRate::KilobitsPerSec(600);
+  DataRate acked_rate = DataRate::KilobitsPerSec(300);
+  loss_based_bandwidth_estimator.SetBandwidthEstimate(
+      DataRate::KilobitsPerSec(600));
+  loss_based_bandwidth_estimator.SetAcknowledgedBitrate(acked_rate);
+
+  // Create some loss to create the loss limited scenario.
+  std::vector<PacketResult> enough_feedback_1 =
+      CreatePacketResultsWith100pLossRate(
+          /*first_packet_timestamp=*/Timestamp::Zero());
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      enough_feedback_1, delay_based_estimate, BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
+  ASSERT_EQ(loss_based_bandwidth_estimator.GetLossBasedResult().state,
+            LossBasedState::kDecreasing);
+
+  // Network recovers after loss.
+  std::vector<PacketResult> enough_feedback_2 =
+      CreatePacketResultsWithReceivedPackets(
+          /*first_packet_timestamp=*/Timestamp::Zero() +
+          kObservationDurationLowerBound);
+  loss_based_bandwidth_estimator.SetAcknowledgedBitrate(
+      DataRate::KilobitsPerSec(600));
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      enough_feedback_2, delay_based_estimate, BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
+  EXPECT_EQ(loss_based_bandwidth_estimator.GetLossBasedResult().state,
+            LossBasedState::kDelayBasedEstimate);
+
+  // Network recovers continuing.
+  std::vector<PacketResult> enough_feedback_3 =
+      CreatePacketResultsWithReceivedPackets(
+          /*first_packet_timestamp=*/Timestamp::Zero() +
+          kObservationDurationLowerBound * 2);
+  loss_based_bandwidth_estimator.SetAcknowledgedBitrate(
+      DataRate::KilobitsPerSec(600));
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      enough_feedback_3, delay_based_estimate, BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
+  EXPECT_EQ(loss_based_bandwidth_estimator.GetLossBasedResult().state,
+            LossBasedState::kDelayBasedEstimate);
+}
+
+TEST_P(LossBasedBweV2Test,
+       LossBasedStateIsNotDelayBasedEstimateIfDelayBasedEsimtateInfinite) {
+  ExplicitKeyValueConfig key_value_config(
+      "WebRTC-Bwe-LossBasedBweV2/"
+      "Enabled:true,CandidateFactors:100|1|0.5,AckedRateCandidate:true,"
+      "ObservationWindowSize:2,ObservationDurationLowerBound:200ms,"
+      "InstantUpperBoundBwBalance:10000kbps,"
+      "DelayBasedCandidate:true,MaxIncreaseFactor:100,"
+      "BwRampupUpperBoundFactor:"
+      "2.0/");
+  LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
+  DataRate delay_based_estimate = DataRate::PlusInfinity();
+  DataRate acked_rate = DataRate::KilobitsPerSec(300);
+  loss_based_bandwidth_estimator.SetBandwidthEstimate(
+      DataRate::KilobitsPerSec(600));
+  loss_based_bandwidth_estimator.SetAcknowledgedBitrate(acked_rate);
+
+  // Create some loss to create the loss limited scenario.
+  std::vector<PacketResult> enough_feedback_1 =
+      CreatePacketResultsWith100pLossRate(
+          /*first_packet_timestamp=*/Timestamp::Zero());
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      enough_feedback_1, delay_based_estimate, BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
+  ASSERT_EQ(loss_based_bandwidth_estimator.GetLossBasedResult().state,
+            LossBasedState::kDecreasing);
+
+  // Network recovers after loss.
+  std::vector<PacketResult> enough_feedback_2 =
+      CreatePacketResultsWithReceivedPackets(
+          /*first_packet_timestamp=*/Timestamp::Zero() +
+          kObservationDurationLowerBound);
+  loss_based_bandwidth_estimator.SetAcknowledgedBitrate(
+      DataRate::KilobitsPerSec(600));
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      enough_feedback_2, delay_based_estimate, BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
+  EXPECT_NE(loss_based_bandwidth_estimator.GetLossBasedResult().state,
+            LossBasedState::kDelayBasedEstimate);
+}
+
 // After loss based bwe backs off, the next estimate is capped by
 // a factor of acked bitrate.
 TEST_P(LossBasedBweV2Test,
        IncreaseByFactorOfAckedBitrateAfterLossBasedBweBacksOff) {
+  ExplicitKeyValueConfig key_value_config(
+      "WebRTC-Bwe-LossBasedBweV2/"
+      "Enabled:true,LossThresholdOfHighBandwidthPreference:0.99,"
+      "BwRampupUpperBoundFactor:1.2,"
+      "InherentLossUpperBoundOffset:0.9,ObservationDurationLowerBound:200ms/");
   std::vector<PacketResult> enough_feedback_1 =
       CreatePacketResultsWith100pLossRate(
           /*first_packet_timestamp=*/Timestamp::Zero());
@@ -743,9 +899,6 @@ TEST_P(LossBasedBweV2Test,
       CreatePacketResultsWith10pLossRate(
           /*first_packet_timestamp=*/Timestamp::Zero() +
           kObservationDurationLowerBound);
-  ExplicitKeyValueConfig key_value_config(
-      Config(/*enabled=*/true, /*valid=*/true,
-             /*trendline_integration_enabled=*/GetParam()));
   LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
   DataRate delay_based_estimate = DataRate::KilobitsPerSec(5000);
 
@@ -755,7 +908,8 @@ TEST_P(LossBasedBweV2Test,
       DataRate::KilobitsPerSec(300));
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_1, delay_based_estimate, BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   // Change the acked bitrate to make sure that the estimate is bounded by a
   // factor of acked bitrate.
@@ -763,7 +917,8 @@ TEST_P(LossBasedBweV2Test,
   loss_based_bandwidth_estimator.SetAcknowledgedBitrate(acked_bitrate);
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_2, delay_based_estimate, BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   // The estimate is capped by acked_bitrate * BwRampupUpperBoundFactor.
   DataRate estimate_2 =
@@ -798,14 +953,16 @@ TEST_P(LossBasedBweV2Test,
       DataRate::KilobitsPerSec(300));
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_1, delay_based_estimate, BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
   // Increase the acknowledged bitrate to make sure that the estimate is not
   // capped too low.
   loss_based_bandwidth_estimator.SetAcknowledgedBitrate(
       DataRate::KilobitsPerSec(5000));
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_2, delay_based_estimate, BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   // The estimate is capped by current_estimate * kMaxIncreaseFactor because
   // it recently backed off.
@@ -814,7 +971,8 @@ TEST_P(LossBasedBweV2Test,
 
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_3, delay_based_estimate, BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
   // The latest estimate is the same as the previous estimate since the sent
   // packets were sent within the DelayedIncreaseWindow.
   EXPECT_EQ(
@@ -847,14 +1005,16 @@ TEST_P(LossBasedBweV2Test, KeepIncreasingEstimateAfterDelayedIncreaseWindow) {
       DataRate::KilobitsPerSec(300));
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_1, delay_based_estimate, BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
   // Increase the acknowledged bitrate to make sure that the estimate is not
   // capped too low.
   loss_based_bandwidth_estimator.SetAcknowledgedBitrate(
       DataRate::KilobitsPerSec(5000));
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_2, delay_based_estimate, BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   // The estimate is capped by current_estimate * kMaxIncreaseFactor because it
   // recently backed off.
@@ -863,7 +1023,8 @@ TEST_P(LossBasedBweV2Test, KeepIncreasingEstimateAfterDelayedIncreaseWindow) {
 
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_3, delay_based_estimate, BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
   // The estimate can continue increasing after the DelayedIncreaseWindow.
   EXPECT_GE(
       loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate,
@@ -889,7 +1050,8 @@ TEST_P(LossBasedBweV2Test, NotIncreaseIfInherentLossLessThanAverageLoss) {
           /*first_packet_timestamp=*/Timestamp::Zero());
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_10p_loss_1, delay_based_estimate,
-      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt);
+      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   std::vector<PacketResult> enough_feedback_10p_loss_2 =
       CreatePacketResultsWith10pLossRate(
@@ -897,7 +1059,8 @@ TEST_P(LossBasedBweV2Test, NotIncreaseIfInherentLossLessThanAverageLoss) {
           kObservationDurationLowerBound);
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_10p_loss_2, delay_based_estimate,
-      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt);
+      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   // Do not increase the bitrate because inherent loss is less than average loss
   EXPECT_EQ(
@@ -914,7 +1077,7 @@ TEST_P(LossBasedBweV2Test,
       "DelayBasedCandidate:true,InstantUpperBoundBwBalance:100kbps,"
       "ObservationDurationLowerBound:200ms,HigherBwBiasFactor:1000,"
       "HigherLogBwBiasFactor:1000,LossThresholdOfHighBandwidthPreference:0."
-      "20/");
+      "20,NotIncreaseIfInherentLossLessThanAverageLoss:false/");
   LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
   DataRate delay_based_estimate = DataRate::KilobitsPerSec(5000);
 
@@ -926,7 +1089,8 @@ TEST_P(LossBasedBweV2Test,
           /*first_packet_timestamp=*/Timestamp::Zero());
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_10p_loss_1, delay_based_estimate,
-      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt);
+      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   std::vector<PacketResult> enough_feedback_10p_loss_2 =
       CreatePacketResultsWith10pLossRate(
@@ -934,7 +1098,8 @@ TEST_P(LossBasedBweV2Test,
           kObservationDurationLowerBound);
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_10p_loss_2, delay_based_estimate,
-      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt);
+      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   // Because LossThresholdOfHighBandwidthPreference is 20%, the average loss is
   // 10%, bandwidth estimate should increase.
@@ -964,7 +1129,8 @@ TEST_P(LossBasedBweV2Test,
           /*first_packet_timestamp=*/Timestamp::Zero());
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_10p_loss_1, delay_based_estimate,
-      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt);
+      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   std::vector<PacketResult> enough_feedback_10p_loss_2 =
       CreatePacketResultsWith10pLossRate(
@@ -972,7 +1138,8 @@ TEST_P(LossBasedBweV2Test,
           kObservationDurationLowerBound);
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_10p_loss_2, delay_based_estimate,
-      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt);
+      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   // Because LossThresholdOfHighBandwidthPreference is 5%, the average loss is
   // 10%, bandwidth estimate should decrease.
@@ -1002,7 +1169,8 @@ TEST_P(LossBasedBweV2Test, UseProbeResultWhenRecoveringFromLoss) {
           /*first_packet_timestamp=*/Timestamp::Zero());
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_1, delay_based_estimate, BandwidthUsage::kBwNormal,
-      /*probe_estimate=*/absl::nullopt);
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   // Network recovers after loss.
   DataRate probe_estimate = DataRate::KilobitsPerSec(300);
@@ -1012,11 +1180,137 @@ TEST_P(LossBasedBweV2Test, UseProbeResultWhenRecoveringFromLoss) {
           kObservationDurationLowerBound);
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_2, delay_based_estimate, BandwidthUsage::kBwNormal,
-      probe_estimate);
+      probe_estimate, /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   LossBasedBweV2::Result result_after_recovery =
       loss_based_bandwidth_estimator.GetLossBasedResult();
   EXPECT_EQ(result_after_recovery.bandwidth_estimate, probe_estimate);
+}
+
+// If BoundByUpperLinkCapacityWhenLossLimited is enabled, the estimate is
+// bounded by the upper link capacity when bandwidth is loss limited.
+TEST_P(LossBasedBweV2Test, BoundEstimateByUpperLinkCapacityWhenLossLimited) {
+  ExplicitKeyValueConfig key_value_config(
+      "WebRTC-Bwe-LossBasedBweV2/"
+      "Enabled:true,CandidateFactors:1.2|1|0.5,AckedRateCandidate:true,"
+      "ObservationWindowSize:2,ObservationDurationLowerBound:200ms,"
+      "InstantUpperBoundBwBalance:10000kbps,"
+      "DelayBasedCandidate:true,MaxIncreaseFactor:1000,"
+      "BwRampupUpperBoundFactor:2.0,BoundByUpperLinkCapacityWhenLossLimited:"
+      "true/");
+  LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
+  DataRate delay_based_estimate = DataRate::KilobitsPerSec(5000);
+  DataRate acked_rate = DataRate::KilobitsPerSec(300);
+  loss_based_bandwidth_estimator.SetBandwidthEstimate(
+      DataRate::KilobitsPerSec(600));
+  loss_based_bandwidth_estimator.SetAcknowledgedBitrate(acked_rate);
+
+  // Create some loss to create the loss limited scenario.
+  std::vector<PacketResult> enough_feedback_1 =
+      CreatePacketResultsWith100pLossRate(
+          /*first_packet_timestamp=*/Timestamp::Zero());
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      enough_feedback_1, delay_based_estimate, BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
+
+  // Network recovers after loss.
+  DataRate upper_link_capacity = DataRate::KilobitsPerSec(10);
+  std::vector<PacketResult> enough_feedback_2 =
+      CreatePacketResultsWithReceivedPackets(
+          /*first_packet_timestamp=*/Timestamp::Zero() +
+          kObservationDurationLowerBound);
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      enough_feedback_2, delay_based_estimate, BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt, upper_link_capacity);
+
+  LossBasedBweV2::Result result_after_recovery =
+      loss_based_bandwidth_estimator.GetLossBasedResult();
+  EXPECT_EQ(result_after_recovery.bandwidth_estimate, upper_link_capacity);
+}
+
+// If BoundByUpperLinkCapacityWhenLossLimited is enabled, the estimate is not
+// bounded by the upper link capacity when bandwidth is not loss limited.
+TEST_P(LossBasedBweV2Test,
+       NotBoundEstimateByUpperLinkCapacityWhenNotLossLimited) {
+  ExplicitKeyValueConfig key_value_config(
+      "WebRTC-Bwe-LossBasedBweV2/"
+      "Enabled:true,CandidateFactors:1.2|1|0.5,AckedRateCandidate:true,"
+      "ObservationWindowSize:2,ObservationDurationLowerBound:200ms,"
+      "InstantUpperBoundBwBalance:10000kbps,"
+      "DelayBasedCandidate:true,MaxIncreaseFactor:1000,"
+      "BwRampupUpperBoundFactor:2.0,BoundByUpperLinkCapacityWhenLossLimited:"
+      "true/");
+  LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
+  DataRate delay_based_estimate = DataRate::KilobitsPerSec(5000);
+  DataRate acked_rate = DataRate::KilobitsPerSec(300);
+  loss_based_bandwidth_estimator.SetBandwidthEstimate(
+      DataRate::KilobitsPerSec(600));
+  loss_based_bandwidth_estimator.SetAcknowledgedBitrate(acked_rate);
+
+  // Create a normal network without loss
+  std::vector<PacketResult> enough_feedback_1 =
+      CreatePacketResultsWithReceivedPackets(
+          /*first_packet_timestamp=*/Timestamp::Zero());
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      enough_feedback_1, delay_based_estimate, BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
+
+  DataRate upper_link_capacity = DataRate::KilobitsPerSec(10);
+  std::vector<PacketResult> enough_feedback_2 =
+      CreatePacketResultsWithReceivedPackets(
+          /*first_packet_timestamp=*/Timestamp::Zero() +
+          kObservationDurationLowerBound);
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      enough_feedback_2, delay_based_estimate, BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt, upper_link_capacity);
+
+  LossBasedBweV2::Result loss_based_result =
+      loss_based_bandwidth_estimator.GetLossBasedResult();
+  EXPECT_GT(loss_based_result.bandwidth_estimate, upper_link_capacity);
+}
+
+// If BoundByUpperLinkCapacityWhenLossLimited is disabled, the estimate is not
+// bounded by the upper link capacity.
+TEST_P(LossBasedBweV2Test, NotBoundEstimateByUpperLinkCapacity) {
+  ExplicitKeyValueConfig key_value_config(
+      "WebRTC-Bwe-LossBasedBweV2/"
+      "Enabled:true,CandidateFactors:1.2|1|0.5,AckedRateCandidate:true,"
+      "ObservationWindowSize:2,ObservationDurationLowerBound:200ms,"
+      "InstantUpperBoundBwBalance:10000kbps,"
+      "DelayBasedCandidate:true,MaxIncreaseFactor:1000,"
+      "BwRampupUpperBoundFactor:2.0,BoundByUpperLinkCapacityWhenLossLimited:"
+      "false/");
+  LossBasedBweV2 loss_based_bandwidth_estimator(&key_value_config);
+  DataRate delay_based_estimate = DataRate::KilobitsPerSec(5000);
+  DataRate acked_rate = DataRate::KilobitsPerSec(300);
+  loss_based_bandwidth_estimator.SetBandwidthEstimate(
+      DataRate::KilobitsPerSec(600));
+  loss_based_bandwidth_estimator.SetAcknowledgedBitrate(acked_rate);
+
+  // Create some loss to create the loss limited scenario.
+  std::vector<PacketResult> enough_feedback_1 =
+      CreatePacketResultsWith100pLossRate(
+          /*first_packet_timestamp=*/Timestamp::Zero());
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      enough_feedback_1, delay_based_estimate, BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
+
+  // Network recovers after loss.
+  DataRate upper_link_capacity = DataRate::KilobitsPerSec(10);
+  std::vector<PacketResult> enough_feedback_2 =
+      CreatePacketResultsWithReceivedPackets(
+          /*first_packet_timestamp=*/Timestamp::Zero() +
+          kObservationDurationLowerBound);
+  loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
+      enough_feedback_2, delay_based_estimate, BandwidthUsage::kBwNormal,
+      /*probe_estimate=*/absl::nullopt, upper_link_capacity);
+
+  LossBasedBweV2::Result result_after_recovery =
+      loss_based_bandwidth_estimator.GetLossBasedResult();
+  EXPECT_GT(result_after_recovery.bandwidth_estimate, upper_link_capacity);
 }
 
 TEST_P(LossBasedBweV2Test,
@@ -1042,7 +1336,8 @@ TEST_P(LossBasedBweV2Test,
           /*first_packet_timestamp=*/Timestamp::Zero());
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_10p_loss_1, delay_based_estimate,
-      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt);
+      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   std::vector<PacketResult> enough_feedback_10p_loss_2 =
       CreatePacketResultsWith10pLossRate(
@@ -1050,7 +1345,8 @@ TEST_P(LossBasedBweV2Test,
           kObservationDurationLowerBound);
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_10p_loss_2, delay_based_estimate,
-      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt);
+      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   // At 10% loss rate and high loss rate threshold to be 10%, cap the estimate
   // to be 500 * 1000-0.1 = 400kbps.
@@ -1082,7 +1378,8 @@ TEST_P(LossBasedBweV2Test,
           /*first_packet_timestamp=*/Timestamp::Zero());
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_50p_loss_1, delay_based_estimate,
-      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt);
+      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   std::vector<PacketResult> enough_feedback_50p_loss_2 =
       CreatePacketResultsWith50pLossRate(
@@ -1090,7 +1387,8 @@ TEST_P(LossBasedBweV2Test,
           kObservationDurationLowerBound);
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_50p_loss_2, delay_based_estimate,
-      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt);
+      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   // At 50% loss rate and high loss rate threshold to be 30%, cap the estimate
   // to be the min bitrate.
@@ -1122,7 +1420,8 @@ TEST_P(LossBasedBweV2Test,
           /*first_packet_timestamp=*/Timestamp::Zero());
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_100p_loss_1, delay_based_estimate,
-      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt);
+      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   std::vector<PacketResult> enough_feedback_100p_loss_2 =
       CreatePacketResultsWith100pLossRate(
@@ -1130,7 +1429,8 @@ TEST_P(LossBasedBweV2Test,
           kObservationDurationLowerBound);
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_100p_loss_2, delay_based_estimate,
-      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt);
+      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   // At 100% loss rate and high loss rate threshold to be 30%, cap the estimate
   // to be the min bitrate.
@@ -1161,7 +1461,8 @@ TEST_P(LossBasedBweV2Test, EstimateRecoversAfterHighLoss) {
           /*first_packet_timestamp=*/Timestamp::Zero());
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_100p_loss_1, delay_based_estimate,
-      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt);
+      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   // Make sure that the estimate is set to min bitrate because of 100% loss
   // rate.
@@ -1176,7 +1477,8 @@ TEST_P(LossBasedBweV2Test, EstimateRecoversAfterHighLoss) {
           kObservationDurationLowerBound);
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_0p_loss_1, delay_based_estimate,
-      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt);
+      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   std::vector<PacketResult> enough_feedback_0p_loss_2 =
       CreatePacketResultsWithReceivedPackets(
@@ -1184,7 +1486,8 @@ TEST_P(LossBasedBweV2Test, EstimateRecoversAfterHighLoss) {
           kObservationDurationLowerBound * 2);
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback_0p_loss_2, delay_based_estimate,
-      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt);
+      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   // The estimate increases as network recovers.
   EXPECT_GT(
@@ -1207,7 +1510,8 @@ TEST_P(LossBasedBweV2Test, EstimateIsNotHigherThanMaxBitrate) {
           /*first_packet_timestamp=*/Timestamp::Zero());
   loss_based_bandwidth_estimator.UpdateBandwidthEstimate(
       enough_feedback, /*delay_based_estimate=*/DataRate::PlusInfinity(),
-      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt);
+      BandwidthUsage::kBwNormal, /*probe_estimate=*/absl::nullopt,
+      /*upper_link_capacity=*/DataRate::PlusInfinity());
 
   EXPECT_LE(
       loss_based_bandwidth_estimator.GetLossBasedResult().bandwidth_estimate,

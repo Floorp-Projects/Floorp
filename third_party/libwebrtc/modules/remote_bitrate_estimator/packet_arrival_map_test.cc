@@ -264,5 +264,28 @@ TEST(PacketArrivalMapTest, EraseAllRemembersBeginningSeqNbr) {
   EXPECT_FALSE(map.has_received(51));
 }
 
+TEST(PacketArrivalMapTest, EraseToMissingSequenceNumber) {
+  PacketArrivalTimeMap map;
+
+  map.AddPacket(37, Timestamp::Millis(10));
+  map.AddPacket(39, Timestamp::Millis(11));
+  map.AddPacket(40, Timestamp::Millis(12));
+  map.AddPacket(41, Timestamp::Millis(13));
+
+  map.EraseTo(38);
+
+  map.AddPacket(42, Timestamp::Millis(40));
+
+  EXPECT_EQ(map.begin_sequence_number(), 38);
+  EXPECT_EQ(map.end_sequence_number(), 43);
+
+  EXPECT_FALSE(map.has_received(37));
+  EXPECT_FALSE(map.has_received(38));
+  EXPECT_TRUE(map.has_received(39));
+  EXPECT_TRUE(map.has_received(40));
+  EXPECT_TRUE(map.has_received(41));
+  EXPECT_TRUE(map.has_received(42));
+}
+
 }  // namespace
 }  // namespace webrtc

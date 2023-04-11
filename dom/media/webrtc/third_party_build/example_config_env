@@ -9,43 +9,43 @@ export MOZ_LIBWEBRTC_SRC="{path-to}/moz-libwebrtc"
 # the commit summary as each upstream commit is vendored into the
 # mercurial repository.  The bug used for the v106 fast-forward was
 # 1800920.
-export MOZ_FASTFORWARD_BUG="1817024"
+export MOZ_FASTFORWARD_BUG="1822194"
 
 # MOZ_NEXT_LIBWEBRTC_MILESTONE and MOZ_NEXT_FIREFOX_REL_TARGET are
 # not used during fast-forward processing, but facilitate generating this
 # example config.  To generate an example config for the next update, run
 # bash dom/media/webrtc/third_party_build/update_example_config_env.sh
-export MOZ_NEXT_LIBWEBRTC_MILESTONE=109
-export MOZ_NEXT_FIREFOX_REL_TARGET=113
+export MOZ_NEXT_LIBWEBRTC_MILESTONE=110
+export MOZ_NEXT_FIREFOX_REL_TARGET=114
 
 # The branch name for the most recently completed fast-forward version.
 # The convention is to include which version of Chromium and the target
-# Firefox release in the branch name. We landed the v108 fast-forward in
-# Firefox 112.  This branch name is used to prep the github repo for the
+# Firefox release in the branch name. We landed the v109 fast-forward in
+# Firefox 113.  This branch name is used to prep the github repo for the
 # next fast-forward by grabbing all the Mozilla specific commits in the
 # prior branch and restacking them at the same base commit ready to
 # rebase onto the next upstream commit.
-export MOZ_PRIOR_LIBWEBRTC_BRANCH="moz-mods-chr108-for-rel112"
+export MOZ_PRIOR_LIBWEBRTC_BRANCH="moz-mods-chr109-for-rel113"
 
 # For Chromium release branches, see:
 # https://chromiumdash.appspot.com/branches
 
-# Chromium's v108 release branch was 5359.  This is used to pre-stack
+# Chromium's v109 release branch was 5414.  This is used to pre-stack
 # the previous release branch's commits onto the appropriate base commit
 # (the first common commit between trunk and the release branch).
-export MOZ_PRIOR_UPSTREAM_BRANCH_HEAD_NUM="5359"
+export MOZ_PRIOR_UPSTREAM_BRANCH_HEAD_NUM="5414"
 
-# New target release branch for v109 is branch-heads/5414.  This is used
+# New target release branch for v110 is branch-heads/5481.  This is used
 # to calculate the next upstream commit.
-export MOZ_TARGET_UPSTREAM_BRANCH_HEAD="branch-heads/5414"
+export MOZ_TARGET_UPSTREAM_BRANCH_HEAD="branch-heads/5481"
 
 # For local development 'mozpatches' is fine for a branch name, but when
 # pushing the patch stack to github, it should be named something like
-# 'moz-mods-chr109-for-rel113'.
+# 'moz-mods-chr110-for-rel114'.
 export MOZ_LIBWEBRTC_BRANCH="mozpatches"
 
 # After elm has been merged to mozilla-central, the patch stack in
 # moz-libwebrtc should be pushed to github.  The script
 # push_official_branch.sh uses this branch name when pushing to the
 # public repo.
-export MOZ_LIBWEBRTC_OFFICIAL_BRANCH="moz-mods-chr109-for-rel113"
+export MOZ_LIBWEBRTC_OFFICIAL_BRANCH="moz-mods-chr110-for-rel114"

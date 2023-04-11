@@ -31,6 +31,7 @@
 #include "common_audio/vad/include/vad.h"
 #include "logging/rtc_event_log/events/rtc_event_audio_send_stream_config.h"
 #include "logging/rtc_event_log/rtc_stream_config.h"
+#include "media/base/media_channel.h"
 #include "modules/audio_coding/codecs/cng/audio_encoder_cng.h"
 #include "modules/audio_coding/codecs/red/audio_encoder_copy_red.h"
 #include "modules/audio_processing/include/audio_processing.h"
@@ -151,8 +152,6 @@ AudioSendStream::AudioSendStream(
           field_trials_.IsEnabled("WebRTC-Audio-ABWENoTWCC")),
       enable_audio_alr_probing_(
           !field_trials_.IsDisabled("WebRTC-Audio-AlrProbing")),
-      send_side_bwe_with_overhead_(
-          !field_trials_.IsDisabled("WebRTC-SendSideBwe-WithOverhead")),
       allocation_settings_(field_trials_),
       config_(Config(/*send_transport=*/nullptr)),
       audio_state_(audio_state),
@@ -174,7 +173,7 @@ AudioSendStream::AudioSendStream(
   RTC_DCHECK(rtp_rtcp_module_);
 
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-  ConfigureStream(config, true);
+  ConfigureStream(config, true, nullptr);
   UpdateCachedTargetAudioBitrateConstraints();
 }
 
@@ -195,9 +194,10 @@ const webrtc::AudioSendStream::Config& AudioSendStream::GetConfig() const {
 }
 
 void AudioSendStream::Reconfigure(
-    const webrtc::AudioSendStream::Config& new_config) {
+    const webrtc::AudioSendStream::Config& new_config,
+    SetParametersCallback callback) {
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-  ConfigureStream(new_config, false);
+  ConfigureStream(new_config, false, std::move(callback));
 }
 
 AudioSendStream::ExtensionIds AudioSendStream::FindExtensionIds(
@@ -229,7 +229,8 @@ int AudioSendStream::TransportSeqNumId(const AudioSendStream::Config& config) {
 
 void AudioSendStream::ConfigureStream(
     const webrtc::AudioSendStream::Config& new_config,
-    bool first_time) {
+    bool first_time,
+    SetParametersCallback callback) {
   RTC_LOG(LS_INFO) << "AudioSendStream::ConfigureStream: "
                    << new_config.ToString();
   UpdateEventLogStreamConfig(event_log_, new_config,
@@ -327,6 +328,10 @@ void AudioSendStream::ConfigureStream(
 
   if (!ReconfigureSendCodec(new_config)) {
     RTC_LOG(LS_ERROR) << "Failed to set up send codec state.";
+
+    webrtc::InvokeSetParametersCallback(
+        callback, webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR,
+                                   "Failed to set up send codec state."));
   }
 
   // Set currently known overhead (used in ANA, opus only).
@@ -352,6 +357,8 @@ void AudioSendStream::ConfigureStream(
   if (!first_time) {
     UpdateCachedTargetAudioBitrateConstraints();
   }
+
+  webrtc::InvokeSetParametersCallback(callback, webrtc::RTCError::OK());
 }
 
 void AudioSendStream::Start() {
@@ -363,8 +370,7 @@ void AudioSendStream::Start() {
       config_.max_bitrate_bps != -1 &&
       (allocate_audio_without_feedback_ || TransportSeqNumId(config_) != 0)) {
     rtp_transport_->AccountForAudioPacketsInPacedSender(true);
-    if (send_side_bwe_with_overhead_)
-      rtp_transport_->IncludeOverheadInPacedSender();
+    rtp_transport_->IncludeOverheadInPacedSender();
     rtp_rtcp_module_->SetAsPartOfAllocation(true);
     ConfigureBitrateObserver();
   } else {
@@ -803,8 +809,7 @@ void AudioSendStream::ReconfigureBitrateObserver(
   if (!new_config.has_dscp && new_config.min_bitrate_bps != -1 &&
       new_config.max_bitrate_bps != -1 && TransportSeqNumId(new_config) != 0) {
     rtp_transport_->AccountForAudioPacketsInPacedSender(true);
-    if (send_side_bwe_with_overhead_)
-      rtp_transport_->IncludeOverheadInPacedSender();
+    rtp_transport_->IncludeOverheadInPacedSender();
     // We may get a callback immediately as the observer is registered, so
     // make sure the bitrate limits in config_ are up-to-date.
     config_.min_bitrate_bps = new_config.min_bitrate_bps;
@@ -827,22 +832,21 @@ void AudioSendStream::ConfigureBitrateObserver() {
   RTC_DCHECK(constraints.has_value());
 
   DataRate priority_bitrate = allocation_settings_.priority_bitrate;
-  if (send_side_bwe_with_overhead_) {
-    if (use_legacy_overhead_calculation_) {
-      // OverheadPerPacket = Ipv4(20B) + UDP(8B) + SRTP(10B) + RTP(12)
-      constexpr int kOverheadPerPacket = 20 + 8 + 10 + 12;
-      const TimeDelta kMinPacketDuration = TimeDelta::Millis(20);
-      DataRate max_overhead =
-          DataSize::Bytes(kOverheadPerPacket) / kMinPacketDuration;
-      priority_bitrate += max_overhead;
-    } else {
-      RTC_DCHECK(frame_length_range_);
-      const DataSize overhead_per_packet =
-          DataSize::Bytes(total_packet_overhead_bytes_);
-      DataRate min_overhead = overhead_per_packet / frame_length_range_->second;
-      priority_bitrate += min_overhead;
-    }
+  if (use_legacy_overhead_calculation_) {
+    // OverheadPerPacket = Ipv4(20B) + UDP(8B) + SRTP(10B) + RTP(12)
+    constexpr int kOverheadPerPacket = 20 + 8 + 10 + 12;
+    const TimeDelta kMinPacketDuration = TimeDelta::Millis(20);
+    DataRate max_overhead =
+        DataSize::Bytes(kOverheadPerPacket) / kMinPacketDuration;
+    priority_bitrate += max_overhead;
+  } else {
+    RTC_DCHECK(frame_length_range_);
+    const DataSize overhead_per_packet =
+        DataSize::Bytes(total_packet_overhead_bytes_);
+    DataRate min_overhead = overhead_per_packet / frame_length_range_->second;
+    priority_bitrate += min_overhead;
   }
+
   if (allocation_settings_.priority_bitrate_raw)
     priority_bitrate = *allocation_settings_.priority_bitrate_raw;
 
@@ -895,25 +899,23 @@ AudioSendStream::GetMinMaxBitrateConstraints() const {
                         << "TargetAudioBitrateConstraints::min";
     return absl::nullopt;
   }
-  if (send_side_bwe_with_overhead_) {
-    if (use_legacy_overhead_calculation_) {
-      // OverheadPerPacket = Ipv4(20B) + UDP(8B) + SRTP(10B) + RTP(12)
-      const DataSize kOverheadPerPacket = DataSize::Bytes(20 + 8 + 10 + 12);
-      const TimeDelta kMaxFrameLength =
-          TimeDelta::Millis(60);  // Based on Opus spec
-      const DataRate kMinOverhead = kOverheadPerPacket / kMaxFrameLength;
-      constraints.min += kMinOverhead;
-      constraints.max += kMinOverhead;
-    } else {
-      if (!frame_length_range_.has_value()) {
-        RTC_LOG(LS_WARNING) << "frame_length_range_ is not set";
-        return absl::nullopt;
-      }
-      const DataSize kOverheadPerPacket =
-          DataSize::Bytes(total_packet_overhead_bytes_);
-      constraints.min += kOverheadPerPacket / frame_length_range_->second;
-      constraints.max += kOverheadPerPacket / frame_length_range_->first;
+  if (use_legacy_overhead_calculation_) {
+    // OverheadPerPacket = Ipv4(20B) + UDP(8B) + SRTP(10B) + RTP(12)
+    const DataSize kOverheadPerPacket = DataSize::Bytes(20 + 8 + 10 + 12);
+    const TimeDelta kMaxFrameLength =
+        TimeDelta::Millis(60);  // Based on Opus spec
+    const DataRate kMinOverhead = kOverheadPerPacket / kMaxFrameLength;
+    constraints.min += kMinOverhead;
+    constraints.max += kMinOverhead;
+  } else {
+    if (!frame_length_range_.has_value()) {
+      RTC_LOG(LS_WARNING) << "frame_length_range_ is not set";
+      return absl::nullopt;
     }
+    const DataSize kOverheadPerPacket =
+        DataSize::Bytes(total_packet_overhead_bytes_);
+    constraints.min += kOverheadPerPacket / frame_length_range_->second;
+    constraints.max += kOverheadPerPacket / frame_length_range_->first;
   }
   return constraints;
 }

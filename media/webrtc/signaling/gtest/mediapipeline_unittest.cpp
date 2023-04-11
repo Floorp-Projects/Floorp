@@ -18,6 +18,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SpinEventLoopUntil.h"
+#include "MediaConduitInterface.h"
 #include "MediaPipeline.h"
 #include "MediaPipelineFilter.h"
 #include "MediaTrackGraph.h"

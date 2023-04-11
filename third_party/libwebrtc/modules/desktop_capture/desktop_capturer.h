@@ -87,6 +87,10 @@ class RTC_EXPORT DesktopCapturer {
     // TODO(https://crbug.com/1369162): Remove or refactor this value.
     WindowId in_process_id = kNullWindowId;
 #endif
+
+    // The display's unique ID. If no ID is defined, it will hold the value
+    // kInvalidDisplayId.
+    int64_t display_id = kInvalidDisplayId;
   };
 
   typedef std::vector<Source> SourceList;

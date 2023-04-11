@@ -43,6 +43,7 @@ class DEPRECATED_RtpSenderEgress {
 
     void EnqueuePackets(
         std::vector<std::unique_ptr<RtpPacketToSend>> packets) override;
+    void RemovePacketsForSsrc(uint32_t ssrc) override {}
 
    private:
     uint16_t transport_sequence_number_;
@@ -110,7 +111,6 @@ class DEPRECATED_RtpSenderEgress {
   const absl::optional<uint32_t> rtx_ssrc_;
   const absl::optional<uint32_t> flexfec_ssrc_;
   const bool populate_network2_timestamp_;
-  const bool send_side_bwe_with_overhead_;
   Clock* const clock_;
   RtpPacketHistory* const packet_history_;
   Transport* const transport_;

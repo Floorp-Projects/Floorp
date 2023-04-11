@@ -27,8 +27,11 @@ namespace webrtc {
 namespace {
 // The maximum allowed value for a timestamp in milliseconds. This is lower
 // than the numerical limit since we often convert to microseconds.
-static constexpr int64_t kMaxTimeMs =
-    std::numeric_limits<int64_t>::max() / 1000;
+constexpr int64_t kMaxTimeMs = std::numeric_limits<int64_t>::max() / 1000;
+constexpr TimeDelta kBackWindow = TimeDelta::Millis(500);
+constexpr TimeDelta kMinInterval = TimeDelta::Millis(50);
+constexpr TimeDelta kMaxInterval = TimeDelta::Millis(250);
+constexpr TimeDelta kDefaultInterval = TimeDelta::Millis(100);
 
 TimeDelta GetAbsoluteSendTimeDelta(uint32_t new_sendtime,
                                    uint32_t previous_sendtime) {
@@ -48,22 +51,20 @@ TimeDelta GetAbsoluteSendTimeDelta(uint32_t new_sendtime,
 
 RemoteEstimatorProxy::RemoteEstimatorProxy(
     TransportFeedbackSender feedback_sender,
-    const FieldTrialsView* key_value_config,
     NetworkStateEstimator* network_state_estimator)
     : feedback_sender_(std::move(feedback_sender)),
-      send_config_(key_value_config),
       last_process_time_(Timestamp::MinusInfinity()),
       network_state_estimator_(network_state_estimator),
       media_ssrc_(0),
       feedback_packet_count_(0),
       packet_overhead_(DataSize::Zero()),
-      send_interval_(send_config_.default_interval.Get()),
+      send_interval_(kDefaultInterval),
       send_periodic_feedback_(true),
       previous_abs_send_time_(0),
       abs_send_timestamp_(Timestamp::Zero()) {
   RTC_LOG(LS_INFO)
-      << "Maximum interval between transport feedback RTCP messages (ms): "
-      << send_config_.max_interval->ms();
+      << "Maximum interval between transport feedback RTCP messages: "
+      << kMaxInterval;
 }
 
 RemoteEstimatorProxy::~RemoteEstimatorProxy() {}
@@ -72,10 +73,10 @@ void RemoteEstimatorProxy::MaybeCullOldPackets(int64_t sequence_number,
                                                Timestamp arrival_time) {
   if (periodic_window_start_seq_ >=
           packet_arrival_times_.end_sequence_number() &&
-      arrival_time - Timestamp::Zero() >= send_config_.back_window.Get()) {
+      arrival_time - Timestamp::Zero() >= kBackWindow) {
     // Start new feedback packet, cull old packets.
-    packet_arrival_times_.RemoveOldPackets(
-        sequence_number, arrival_time - send_config_.back_window.Get());
+    packet_arrival_times_.RemoveOldPackets(sequence_number,
+                                           arrival_time - kBackWindow);
   }
 }
 
@@ -172,19 +173,17 @@ void RemoteEstimatorProxy::OnBitrateChanged(int bitrate_bps) {
   // TwccReport size at 250ms interval is 36 byte.
   // AverageTwccReport = (TwccReport(50ms) + TwccReport(250ms)) / 2
   constexpr DataSize kTwccReportSize = DataSize::Bytes(20 + 8 + 10 + 30);
-  const DataRate kMinTwccRate =
-      kTwccReportSize / send_config_.max_interval.Get();
+  constexpr DataRate kMinTwccRate = kTwccReportSize / kMaxInterval;
 
   // Let TWCC reports occupy 5% of total bandwidth.
-  DataRate twcc_bitrate =
-      DataRate::BitsPerSec(send_config_.bandwidth_fraction * bitrate_bps);
+  DataRate twcc_bitrate = DataRate::BitsPerSec(0.05 * bitrate_bps);
 
   // Check upper send_interval bound by checking bitrate to avoid overflow when
   // dividing by small bitrate, in particular avoid dividing by zero bitrate.
-  TimeDelta send_interval = twcc_bitrate <= kMinTwccRate
-                                ? send_config_.max_interval.Get()
-                                : std::max(kTwccReportSize / twcc_bitrate,
-                                           send_config_.min_interval.Get());
+  TimeDelta send_interval =
+      twcc_bitrate <= kMinTwccRate
+          ? kMaxInterval
+          : std::max(kTwccReportSize / twcc_bitrate, kMinInterval);
 
   MutexLock lock(&lock_);
   send_interval_ = send_interval;

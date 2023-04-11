@@ -14,8 +14,10 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "absl/types/optional.h"
+#include "api/numerics/samples_stats_counter.h"
 #include "api/units/data_size.h"
 #include "api/units/timestamp.h"
 #include "api/video/video_frame.h"
@@ -62,6 +64,10 @@ struct FrameStats {
   VideoFrameType pre_decoded_frame_type = VideoFrameType::kEmptyFrame;
   DataSize pre_decoded_image_size = DataSize::Bytes(0);
   uint32_t target_encode_bitrate = 0;
+  // There can be multiple qp values for single video frame when simulcast
+  // or SVC is used. In such case multiple EncodedImage's are created by encoder
+  // and each of it will have its own qp value.
+  SamplesStatsCounter qp_values;
 
   absl::optional<int> decoded_frame_width = absl::nullopt;
   absl::optional<int> decoded_frame_height = absl::nullopt;

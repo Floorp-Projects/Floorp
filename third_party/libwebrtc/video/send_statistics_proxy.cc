@@ -985,6 +985,8 @@ void SendStatisticsProxy::OnSendEncodedImage(
   stats->frames_encoded++;
   stats->total_encode_time_ms += encoded_image.timing_.encode_finish_ms -
                                  encoded_image.timing_.encode_start_ms;
+  if (codec_info)
+    stats->scalability_mode = codec_info->scalability_mode;
   // Report resolution of the top spatial layer.
   bool is_top_spatial_layer =
       codec_info == nullptr || codec_info->end_of_picture;

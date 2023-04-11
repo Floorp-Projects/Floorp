@@ -136,8 +136,10 @@ void VideoQualityMetricsReporter::ReportVideoBweResults(
     const std::string& peer_name,
     const VideoBweStats& video_bwe_stats) {
   std::string test_case_name = GetTestCaseName(peer_name);
+  // TODO(bugs.webrtc.org/14757): Remove kExperimentalTestNameMetadataKey.
   std::map<std::string, std::string> metric_metadata{
-      {MetricMetadataKey::kPeerMetadataKey, peer_name}};
+      {MetricMetadataKey::kPeerMetadataKey, peer_name},
+      {MetricMetadataKey::kExperimentalTestNameMetadataKey, test_case_name_}};
 
   metrics_logger_->LogMetric(
       "available_send_bandwidth", test_case_name,

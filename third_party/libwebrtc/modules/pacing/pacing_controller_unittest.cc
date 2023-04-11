@@ -27,6 +27,7 @@
 #include "test/gtest.h"
 
 using ::testing::_;
+using ::testing::AnyNumber;
 using ::testing::Field;
 using ::testing::Pointee;
 using ::testing::Property;
@@ -1520,7 +1521,7 @@ TEST_F(PacingControllerTest, SmallFirstProbePacket) {
   size_t packets_sent = 0;
   bool media_seen = false;
   EXPECT_CALL(callback, SendPacket)
-      .Times(::testing::AnyNumber())
+      .Times(AnyNumber())
       .WillRepeatedly([&](std::unique_ptr<RtpPacketToSend> packet,
                           const PacedPacketInfo& cluster_info) {
         if (packets_sent == 0) {
@@ -1674,7 +1675,7 @@ TEST_F(PacingControllerTest,
   for (bool account_for_audio : {false, true}) {
     uint16_t sequence_number = 1234;
     MockPacketSender callback;
-    EXPECT_CALL(callback, SendPacket).Times(::testing::AnyNumber());
+    EXPECT_CALL(callback, SendPacket).Times(AnyNumber());
     auto pacer =
         std::make_unique<PacingController>(&clock_, &callback, trials_);
     pacer->SetAccountForAudioPackets(account_for_audio);
@@ -2113,6 +2114,61 @@ TEST_F(PacingControllerTest, BudgetDoesNotAffectRetransmissionInsTrial) {
                                   /*sequence_number=*/1,
                                   /*capture_time=*/1, kPacketSize.bytes()));
   pacer.ProcessPackets();
+}
+
+TEST_F(PacingControllerTest, AbortsAfterReachingCircuitBreakLimit) {
+  const DataSize kPacketSize = DataSize::Bytes(1000);
+
+  EXPECT_CALL(callback_, SendPadding).Times(0);
+  PacingController pacer(&clock_, &callback_, trials_);
+  pacer.SetPacingRates(kTargetRate, /*padding_rate=*/DataRate::Zero());
+
+  // Set the circuit breaker to abort after one iteration of the main
+  // sending loop.
+  pacer.SetCircuitBreakerThreshold(1);
+  EXPECT_CALL(callback_, SendPacket).Times(1);
+
+  // Send two packets.
+  pacer.EnqueuePacket(BuildPacket(RtpPacketMediaType::kVideo, kVideoSsrc,
+                                  /*sequence_number=*/1,
+                                  /*capture_time=*/1, kPacketSize.bytes()));
+  pacer.EnqueuePacket(BuildPacket(RtpPacketMediaType::kVideo, kVideoSsrc,
+                                  /*sequence_number=*/2,
+                                  /*capture_time=*/2, kPacketSize.bytes()));
+
+  // Advance time to way past where both should be eligible for sending.
+  clock_.AdvanceTime(TimeDelta::Seconds(1));
+
+  pacer.ProcessPackets();
+}
+
+TEST_F(PacingControllerTest, DoesNotPadIfProcessThreadIsBorked) {
+  PacingControllerPadding callback;
+  PacingController pacer(&clock_, &callback, trials_);
+
+  // Set both pacing and padding rate to be non-zero.
+  pacer.SetPacingRates(kTargetRate, /*padding_rate=*/kTargetRate);
+
+  // Add one packet to the queue, but do not send it yet.
+  pacer.EnqueuePacket(BuildPacket(RtpPacketMediaType::kVideo, kVideoSsrc,
+                                  /*sequence_number=*/1,
+                                  /*capture_time=*/1,
+                                  /*size=*/1000));
+
+  // Advance time to waaay after the packet should have been sent.
+  clock_.AdvanceTime(TimeDelta::Seconds(42));
+
+  // `ProcessPackets()` should send the delayed packet, followed by a small
+  // amount of missed padding.
+  pacer.ProcessPackets();
+
+  // The max padding window is the max replay duration + the target padding
+  // duration.
+  const DataSize kMaxPadding = (PacingController::kMaxPaddingReplayDuration +
+                                PacingController::kTargetPaddingDuration) *
+                               kTargetRate;
+
+  EXPECT_LE(callback.padding_sent(), kMaxPadding.bytes<size_t>());
 }
 
 }  // namespace

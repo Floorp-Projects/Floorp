@@ -2123,6 +2123,45 @@ TEST(DefaultVideoQualityAnalyzerTest, InfraMetricsNotCollectedByDefault) {
   EXPECT_EQ(stats.on_decoder_error_processing_time_ms.NumSamples(), 0);
 }
 
+TEST(DefaultVideoQualityAnalyzerTest,
+     FrameDroppedByDecoderIsAccountedCorrectly) {
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
+                                       /*type=*/absl::nullopt,
+                                       /*num_squares=*/absl::nullopt);
+
+  DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
+  options.report_infra_metrics = false;
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(), options);
+  analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
+                 kAnalyzerMaxThreadsCount);
+
+  VideoFrame to_be_dropped_frame =
+      NextFrame(frame_generator.get(), /*timestamp_us=*/1);
+  uint16_t frame_id =
+      analyzer.OnFrameCaptured("alice", "alice_video", to_be_dropped_frame);
+  to_be_dropped_frame.set_id(frame_id);
+  analyzer.OnFramePreEncode("alice", to_be_dropped_frame);
+  analyzer.OnFrameEncoded("alice", to_be_dropped_frame.id(),
+                          FakeEncode(to_be_dropped_frame),
+                          VideoQualityAnalyzerInterface::EncoderStats(), false);
+  VideoFrame received_to_be_dropped_frame = DeepCopy(to_be_dropped_frame);
+  analyzer.OnFramePreDecode("bob", received_to_be_dropped_frame.id(),
+                            FakeEncode(received_to_be_dropped_frame));
+  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video", {"bob"},
+                            /*frames_count=*/1, *frame_generator);
+
+  // Give analyzer some time to process frames on async thread. The computations
+  // have to be fast (heavy metrics are disabled!), so if doesn't fit 100ms it
+  // means we have an issue!
+  SleepMs(100);
+  analyzer.Stop();
+
+  StreamStats stats = analyzer.GetStats().at(StatsKey("alice_video", "bob"));
+  ASSERT_EQ(stats.dropped_by_phase[FrameDropPhase::kByDecoder], 1);
+}
+
 class DefaultVideoQualityAnalyzerTimeBetweenFreezesTest
     : public TestWithParam<bool> {};
 

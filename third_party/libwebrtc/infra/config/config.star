@@ -597,6 +597,7 @@ def try_builder(
     properties = properties or {}
     properties["builder_group"] = "tryserver.webrtc"
     properties.update(make_goma_properties(enable_ats = goma_enable_ats, jobs = goma_jobs))
+    properties.update(make_reclient_properties("rbe-webrtc-untrusted"))
     if cq != None:
         luci.cq_tryjob_verifier(name, cq_group = "cq", **cq)
         if branch_cq:
@@ -628,9 +629,13 @@ def perf_builder(name, perf_cat, **kwargs):
     properties = make_goma_properties()
     properties.update(make_reclient_properties("rbe-webrtc-trusted"))
     properties["builder_group"] = "client.webrtc.perf"
+    dimensions = {"pool": "luci.webrtc.perf", "os": "Linux", "cores": "2"}
+    if "Android" in name:
+        # Android perf testers require more performant bots to finish under 3 hours.
+        dimensions["cores"] = "8"
     return webrtc_builder(
         name = name,
-        dimensions = {"pool": "luci.webrtc.perf", "os": "Linux"},
+        dimensions = dimensions,
         properties = properties,
         bucket = "perf",
         service_account = "webrtc-ci-builder@chops-service-accounts.iam.gserviceaccount.com",
@@ -703,11 +708,12 @@ ios_builder, ios_try_job = normal_builder_factory(
 
 # Actual builder configuration:
 
-android_builder("Android32 (M Nexus5X)(dbg)", "Android|arm|dbg")
-android_try_job("android_compile_arm_dbg", cq = None)
+android_builder("Android32 (dbg)", "Android|arm|dbg")
+android_try_job("android_compile_arm_dbg", cq = {"experiment_percentage": 100})
 android_try_job("android_arm_dbg")
-android_builder("Android32 (M Nexus5X)", "Android|arm|rel")
+android_builder("Android32", "Android|arm|rel")
 android_try_job("android_arm_rel")
+android_try_job("android_arm_rel_reclient", cq = {"experiment_percentage": 100})
 android_builder("Android32 Builder arm", "Android|arm|size", perf_cat = "Android|arm|Builder|", prioritized = True)
 android_try_job("android_compile_arm_rel")
 perf_builder("Perf Android32 (M Nexus5)", "Android|arm|Tester|M Nexus5", triggered_by = ["Android32 Builder arm"])
@@ -716,7 +722,7 @@ perf_builder("Perf Android32 (O Pixel2)", "Android|arm|Tester|O Pixel2", trigger
 perf_builder("Perf Android32 (R Pixel5)", "Android|arm|Tester|R Pixel5", triggered_by = ["Android32 Builder arm"])
 android_try_job("android_compile_arm64_dbg", cq = None)
 android_try_job("android_arm64_dbg", cq = None)
-android_builder("Android64 (M Nexus5X)", "Android|arm64|rel")
+android_builder("Android64", "Android|arm64|rel")
 android_try_job("android_arm64_rel")
 android_builder("Android64 Builder arm64", "Android|arm64|size", perf_cat = "Android|arm64|Builder|", prioritized = True)
 perf_builder("Perf Android64 (M Nexus5X)", "Android|arm64|Tester|M Nexus5X", triggered_by = ["Android64 Builder arm64"])
@@ -738,6 +744,7 @@ ios_builder("iOS64 Debug", "iOS|arm64|dbg")
 ios_try_job("ios_compile_arm64_dbg")
 ios_builder("iOS64 Release", "iOS|arm64|rel")
 ios_try_job("ios_compile_arm64_rel")
+ios_try_job("ios_compile_arm64_rel_reclient", cq = {"experiment_percentage": 100})
 ios_builder("iOS64 Sim Debug (iOS 14)", "iOS|x64|14")
 ios_try_job("ios_sim_x64_dbg_ios14")
 ios_builder("iOS64 Sim Debug (iOS 13)", "iOS|x64|13")
@@ -756,6 +763,7 @@ linux_try_job("linux_dbg", cq = None)
 linux_try_job("linux_compile_dbg")
 linux_builder("Linux64 Release", "Linux|x64|rel")
 linux_try_job("linux_rel")
+linux_try_job("linux_rel_reclient", cq = {"experiment_percentage": 100})
 linux_builder("Linux64 Builder", "Linux|x64|size", perf_cat = "Linux|x64|Builder|", prioritized = True)
 linux_try_job("linux_compile_rel")
 perf_builder("Perf Linux Bionic", "Linux|x64|Tester|Bionic", triggered_by = ["Linux64 Builder"])
@@ -783,8 +791,12 @@ linux_builder("Linux (more configs)", "Linux|x64|more")
 linux_try_job("linux_more_configs")
 linux_try_job("linux_chromium_compile", recipe = "chromium_trybot", branch_cq = False)
 linux_try_job("linux_chromium_compile_dbg", recipe = "chromium_trybot", branch_cq = False)
+linux_try_job("linux_coverage", cq = None)
+
+linux_builder("Fuchsia Builder", ci_cat = None, perf_cat = "Fuchsia|x64|Builder|", prioritized = True)
 linux_builder("Fuchsia Release", "Fuchsia|x64|rel")
 linux_try_job("fuchsia_rel", cq = None)
+perf_builder("Perf Fuchsia", "Fuchsia|x64|Tester|", triggered_by = ["Fuchsia Builder"])
 
 mac_builder("Mac64 Debug", "Mac|x64|dbg")
 mac_try_job("mac_dbg", cq = None)
@@ -792,9 +804,10 @@ mac_try_job("mac_compile_dbg")
 mac_builder("Mac64 Release", "Mac|x64|rel")
 
 mac_try_job("mac_rel")
+mac_try_job("mac_rel_reclient", cq = {"experiment_percentage": 100})
 mac_try_job("mac_compile_rel", cq = None)
 mac_builder("Mac64 Builder", ci_cat = None, perf_cat = "Mac|x64|Builder|")
-mac_builder("MacArm64 Builder", ci_cat = None, perf_cat = "Mac|arm64|Builder")
+mac_builder("MacArm64 Builder", ci_cat = None, perf_cat = "Mac|arm64|Builder|")
 perf_builder("Perf Mac 11", "Mac|x64|Tester|11", triggered_by = ["Mac64 Builder"])
 perf_builder("Perf Mac M1 Arm64 12", "Mac|arm64|Tester|12", triggered_by = ["MacArm64 Builder"])
 
@@ -811,15 +824,15 @@ win_try_job("win_compile_x86_clang_dbg")
 win_builder("Win32 Release (Clang)", "Win Clang|x86|rel")
 win_try_job("win_x86_clang_rel")
 win_try_job("win_compile_x86_clang_rel", cq = None)
-win_builder("Win32 Builder (Clang)", ci_cat = None, perf_cat = "Win|x86|Builder|")
-perf_builder("Perf Win7", "Win|x86|Tester|7", triggered_by = ["Win32 Builder (Clang)"])
+win_builder("Win64 Builder (Clang)", ci_cat = None, perf_cat = "Win|x64|Builder|")
+perf_builder("Perf Win 10", "Win|x64|Tester|10", triggered_by = ["Win64 Builder (Clang)"])
 win_builder("Win64 Debug (Clang)", "Win Clang|x64|dbg")
 win_try_job("win_x64_clang_dbg", cq = None)
-win_try_job("win_x64_clang_dbg_win10", cq = None)
 win_try_job("win_compile_x64_clang_dbg")
 win_builder("Win64 Release (Clang)", "Win Clang|x64|rel")
 win_try_job("win_x64_clang_rel", cq = None)
 win_try_job("win_compile_x64_clang_rel")
+win_try_job("win_compile_x64_clang_rel_reclient", cq = {"experiment_percentage": 100})
 win_builder("Win64 ASan", "Win Clang|x64|asan")
 win_try_job("win_asan")
 win_builder("Win (more configs)", "Win Clang|x86|more")
@@ -870,6 +883,8 @@ lkgr_config = {
                 "WebRTC Chromium FYI Android Builder (dbg)",
                 "WebRTC Chromium FYI Android Builder ARM64 (dbg)",
                 "WebRTC Chromium FYI Android Builder",
+                "WebRTC Chromium FYI Android Tests (dbg)",
+                "WebRTC Chromium FYI Android Tests ARM64 (dbg)",
                 "WebRTC Chromium FYI Linux Builder (dbg)",
                 "WebRTC Chromium FYI Linux Builder",
                 "WebRTC Chromium FYI Linux Tester",

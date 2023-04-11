@@ -30,6 +30,7 @@
 #include "modules/audio_processing/include/audio_processing.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/network_route.h"
+#include "rtc_base/thread.h"
 
 using webrtc::RtpExtension;
 
@@ -149,20 +150,25 @@ class RtpHelper : public Base {
   }
   virtual webrtc::RTCError SetRtpSendParameters(
       uint32_t ssrc,
-      const webrtc::RtpParameters& parameters) {
+      const webrtc::RtpParameters& parameters,
+      webrtc::SetParametersCallback callback) {
     auto parameters_iterator = rtp_send_parameters_.find(ssrc);
     if (parameters_iterator != rtp_send_parameters_.end()) {
       auto result = CheckRtpParametersInvalidModificationAndValues(
           parameters_iterator->second, parameters);
-      if (!result.ok())
-        return result;
+      if (!result.ok()) {
+        return webrtc::InvokeSetParametersCallback(callback, result);
+      }
 
       parameters_iterator->second = parameters;
-      return webrtc::RTCError::OK();
+
+      return webrtc::InvokeSetParametersCallback(callback,
+                                                 webrtc::RTCError::OK());
     }
     // Replicate the behavior of the real media channel: return false
     // when setting parameters for unknown SSRCs.
-    return webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR);
+    return InvokeSetParametersCallback(
+        callback, webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR));
   }
 
   virtual webrtc::RtpParameters GetRtpReceiveParameters(uint32_t ssrc) const {
@@ -231,6 +237,24 @@ class RtpHelper : public Base {
                             int64_t packet_time_us) {
     rtcp_packets_.push_back(std::string(packet->cdata<char>(), packet->size()));
   }
+
+  // Stuff that deals with encryptors, transformers and the like
+  void SetFrameEncryptor(uint32_t ssrc,
+                         rtc::scoped_refptr<webrtc::FrameEncryptorInterface>
+                             frame_encryptor) override {}
+  void SetEncoderToPacketizerFrameTransformer(
+      uint32_t ssrc,
+      rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer)
+      override {}
+
+  void SetFrameDecryptor(uint32_t ssrc,
+                         rtc::scoped_refptr<webrtc::FrameDecryptorInterface>
+                             frame_decryptor) override {}
+
+  void SetDepacketizerToDecoderFrameTransformer(
+      uint32_t ssrc,
+      rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer)
+      override {}
 
  protected:
   bool MuteStream(uint32_t ssrc, bool mute) {

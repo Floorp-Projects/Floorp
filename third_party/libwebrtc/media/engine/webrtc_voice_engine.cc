@@ -789,19 +789,19 @@ class WebRtcVoiceMediaChannel::WebRtcAudioSendStream
   void SetSendCodecSpec(
       const webrtc::AudioSendStream::Config::SendCodecSpec& send_codec_spec) {
     UpdateSendCodecSpec(send_codec_spec);
-    ReconfigureAudioSendStream();
+    ReconfigureAudioSendStream(nullptr);
   }
 
   void SetRtpExtensions(const std::vector<webrtc::RtpExtension>& extensions) {
     RTC_DCHECK_RUN_ON(&worker_thread_checker_);
     config_.rtp.extensions = extensions;
     rtp_parameters_.header_extensions = extensions;
-    ReconfigureAudioSendStream();
+    ReconfigureAudioSendStream(nullptr);
   }
 
   void SetExtmapAllowMixed(bool extmap_allow_mixed) {
     config_.rtp.extmap_allow_mixed = extmap_allow_mixed;
-    ReconfigureAudioSendStream();
+    ReconfigureAudioSendStream(nullptr);
   }
 
   void SetMid(const std::string& mid) {
@@ -810,14 +810,14 @@ class WebRtcVoiceMediaChannel::WebRtcAudioSendStream
       return;
     }
     config_.rtp.mid = mid;
-    ReconfigureAudioSendStream();
+    ReconfigureAudioSendStream(nullptr);
   }
 
   void SetFrameEncryptor(
       rtc::scoped_refptr<webrtc::FrameEncryptorInterface> frame_encryptor) {
     RTC_DCHECK_RUN_ON(&worker_thread_checker_);
     config_.frame_encryptor = frame_encryptor;
-    ReconfigureAudioSendStream();
+    ReconfigureAudioSendStream(nullptr);
   }
 
   void SetAudioNetworkAdaptorConfig(
@@ -830,7 +830,7 @@ class WebRtcVoiceMediaChannel::WebRtcAudioSendStream
     audio_network_adaptor_config_from_options_ = audio_network_adaptor_config;
     UpdateAudioNetworkAdaptorConfig();
     UpdateAllowedBitrateRange();
-    ReconfigureAudioSendStream();
+    ReconfigureAudioSendStream(nullptr);
   }
 
   bool SetMaxSendBitrate(int bps) {
@@ -848,7 +848,7 @@ class WebRtcVoiceMediaChannel::WebRtcAudioSendStream
 
     if (send_rate != config_.send_codec_spec->target_bitrate_bps) {
       config_.send_codec_spec->target_bitrate_bps = send_rate;
-      ReconfigureAudioSendStream();
+      ReconfigureAudioSendStream(nullptr);
     }
     return true;
   }
@@ -958,11 +958,12 @@ class WebRtcVoiceMediaChannel::WebRtcAudioSendStream
     return rtp_parameters_;
   }
 
-  webrtc::RTCError SetRtpParameters(const webrtc::RtpParameters& parameters) {
+  webrtc::RTCError SetRtpParameters(const webrtc::RtpParameters& parameters,
+                                    webrtc::SetParametersCallback callback) {
     webrtc::RTCError error = CheckRtpParametersInvalidModificationAndValues(
         rtp_parameters_, parameters);
     if (!error.ok()) {
-      return error;
+      return webrtc::InvokeSetParametersCallback(callback, error);
     }
 
     absl::optional<int> send_rate;
@@ -971,7 +972,8 @@ class WebRtcVoiceMediaChannel::WebRtcAudioSendStream
                                      parameters.encodings[0].max_bitrate_bps,
                                      *audio_codec_spec_);
       if (!send_rate) {
-        return webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR);
+        return webrtc::InvokeSetParametersCallback(
+            callback, webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR));
       }
     }
 
@@ -1001,7 +1003,9 @@ class WebRtcVoiceMediaChannel::WebRtcAudioSendStream
       // used.
       UpdateAudioNetworkAdaptorConfig();
       UpdateAllowedBitrateRange();
-      ReconfigureAudioSendStream();
+      ReconfigureAudioSendStream(std::move(callback));
+    } else {
+      webrtc::InvokeSetParametersCallback(callback, webrtc::RTCError::OK());
     }
 
     rtp_parameters_.rtcp.cname = config_.rtp.c_name;
@@ -1016,7 +1020,7 @@ class WebRtcVoiceMediaChannel::WebRtcAudioSendStream
       rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer) {
     RTC_DCHECK_RUN_ON(&worker_thread_checker_);
     config_.frame_transformer = std::move(frame_transformer);
-    ReconfigureAudioSendStream();
+    ReconfigureAudioSendStream(nullptr);
   }
 
  private:
@@ -1037,7 +1041,6 @@ class WebRtcVoiceMediaChannel::WebRtcAudioSendStream
     // - a reasonable default of 32kbps min/max
     // - fixed target bitrate from codec spec
     // - lower min bitrate if adaptive ptime is enabled
-    // - bitrate configured in the rtp_parameter encodings settings
     const int kDefaultBitrateBps = 32000;
     config_.min_bitrate_bps = kDefaultBitrateBps;
     config_.max_bitrate_bps = kDefaultBitrateBps;
@@ -1052,13 +1055,6 @@ class WebRtcVoiceMediaChannel::WebRtcAudioSendStream
       config_.min_bitrate_bps = std::min(
           config_.min_bitrate_bps,
           static_cast<int>(adaptive_ptime_config_.min_encoder_bitrate.bps()));
-    }
-
-    if (rtp_parameters_.encodings[0].min_bitrate_bps) {
-      config_.min_bitrate_bps = *rtp_parameters_.encodings[0].min_bitrate_bps;
-    }
-    if (rtp_parameters_.encodings[0].max_bitrate_bps) {
-      config_.max_bitrate_bps = *rtp_parameters_.encodings[0].max_bitrate_bps;
     }
   }
 
@@ -1106,10 +1102,10 @@ class WebRtcVoiceMediaChannel::WebRtcAudioSendStream
         audio_network_adaptor_config_from_options_;
   }
 
-  void ReconfigureAudioSendStream() {
+  void ReconfigureAudioSendStream(webrtc::SetParametersCallback callback) {
     RTC_DCHECK_RUN_ON(&worker_thread_checker_);
     RTC_DCHECK(stream_);
-    stream_->Reconfigure(config_);
+    stream_->Reconfigure(config_, std::move(callback));
   }
 
   int NumPreferredChannels() const override { return num_encoded_channels_; }
@@ -1389,14 +1385,16 @@ webrtc::RtpParameters WebRtcVoiceMediaChannel::GetRtpSendParameters(
 
 webrtc::RTCError WebRtcVoiceMediaChannel::SetRtpSendParameters(
     uint32_t ssrc,
-    const webrtc::RtpParameters& parameters) {
+    const webrtc::RtpParameters& parameters,
+    webrtc::SetParametersCallback callback) {
   RTC_DCHECK_RUN_ON(worker_thread_);
   auto it = send_streams_.find(ssrc);
   if (it == send_streams_.end()) {
     RTC_LOG(LS_WARNING) << "Attempting to set RTP send parameters for stream "
                            "with ssrc "
                         << ssrc << " which doesn't exist.";
-    return webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR);
+    return webrtc::InvokeSetParametersCallback(
+        callback, webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR));
   }
 
   // TODO(deadbeef): Handle setting parameters with a list of codecs in a
@@ -1405,7 +1403,8 @@ webrtc::RTCError WebRtcVoiceMediaChannel::SetRtpSendParameters(
   if (current_parameters.codecs != parameters.codecs) {
     RTC_DLOG(LS_ERROR) << "Using SetParameters to change the set of codecs "
                           "is not currently supported.";
-    return webrtc::RTCError(webrtc::RTCErrorType::UNSUPPORTED_PARAMETER);
+    return webrtc::InvokeSetParametersCallback(
+        callback, webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR));
   }
 
   if (!parameters.encodings.empty()) {
@@ -1440,7 +1439,7 @@ webrtc::RTCError WebRtcVoiceMediaChannel::SetRtpSendParameters(
   // Codecs are handled at the WebRtcVoiceMediaChannel level.
   webrtc::RtpParameters reduced_params = parameters;
   reduced_params.codecs.clear();
-  return it->second->SetRtpParameters(reduced_params);
+  return it->second->SetRtpParameters(reduced_params, std::move(callback));
 }
 
 webrtc::RtpParameters WebRtcVoiceMediaChannel::GetRtpReceiveParameters(

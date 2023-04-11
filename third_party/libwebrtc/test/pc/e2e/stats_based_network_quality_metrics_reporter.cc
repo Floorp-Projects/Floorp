@@ -22,6 +22,7 @@
 #include "absl/strings/string_view.h"
 #include "api/array_view.h"
 #include "api/scoped_refptr.h"
+#include "api/sequence_checker.h"
 #include "api/stats/rtc_stats.h"
 #include "api/stats/rtcstats_objects.h"
 #include "api/test/metrics/metric.h"
@@ -34,6 +35,7 @@
 #include "rtc_base/ip_address.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/system/no_unique_address.h"
 #include "system_wrappers/include/field_trial.h"
 #include "test/pc/e2e/metric_metadata_keys.h"
 
@@ -43,6 +45,9 @@ namespace {
 
 using ::webrtc::test::ImprovementDirection;
 using ::webrtc::test::Unit;
+
+using NetworkLayerStats =
+    StatsBasedNetworkQualityMetricsReporter::NetworkLayerStats;
 
 constexpr TimeDelta kStatsWaitTimeout = TimeDelta::Seconds(1);
 
@@ -55,11 +60,10 @@ EmulatedNetworkStats PopulateStats(std::vector<EmulatedEndpoint*> endpoints,
                                    NetworkEmulationManager* network_emulation) {
   rtc::Event stats_loaded;
   EmulatedNetworkStats stats;
-  network_emulation->GetStats(endpoints,
-                              [&](std::unique_ptr<EmulatedNetworkStats> s) {
-                                stats = *s;
-                                stats_loaded.Set();
-                              });
+  network_emulation->GetStats(endpoints, [&](EmulatedNetworkStats s) {
+    stats = std::move(s);
+    stats_loaded.Set();
+  });
   bool stats_received = stats_loaded.Wait(kStatsWaitTimeout);
   RTC_CHECK(stats_received);
   return stats;
@@ -78,6 +82,83 @@ std::map<rtc::IPAddress, std::string> PopulateIpToPeer(
   }
   return out;
 }
+
+// Accumulates emulated network stats being executed on the network thread.
+// When all stats are collected stores it in thread safe variable.
+class EmulatedNetworkStatsAccumulator {
+ public:
+  // `expected_stats_count` - the number of calls to
+  // AddEndpointStats/AddUplinkStats/AddDownlinkStats the accumulator is going
+  // to wait. If called more than expected, the program will crash.
+  explicit EmulatedNetworkStatsAccumulator(size_t expected_stats_count)
+      : not_collected_stats_count_(expected_stats_count) {
+    RTC_DCHECK_GE(not_collected_stats_count_, 0);
+    if (not_collected_stats_count_ == 0) {
+      all_stats_collected_.Set();
+    }
+    sequence_checker_.Detach();
+  }
+
+  // Has to be executed on network thread.
+  void AddEndpointStats(std::string peer_name, EmulatedNetworkStats stats) {
+    RTC_DCHECK_RUN_ON(&sequence_checker_);
+    n_stats_[peer_name].endpoints_stats = std::move(stats);
+    DecrementNotCollectedStatsCount();
+  }
+
+  // Has to be executed on network thread.
+  void AddUplinkStats(std::string peer_name, EmulatedNetworkNodeStats stats) {
+    RTC_DCHECK_RUN_ON(&sequence_checker_);
+    n_stats_[peer_name].uplink_stats = std::move(stats);
+    DecrementNotCollectedStatsCount();
+  }
+
+  // Has to be executed on network thread.
+  void AddDownlinkStats(std::string peer_name, EmulatedNetworkNodeStats stats) {
+    RTC_DCHECK_RUN_ON(&sequence_checker_);
+    n_stats_[peer_name].downlink_stats = std::move(stats);
+    DecrementNotCollectedStatsCount();
+  }
+
+  // Can be executed on any thread.
+  // Returns true if count down was completed and false if timeout elapsed
+  // before.
+  bool Wait(TimeDelta timeout) { return all_stats_collected_.Wait(timeout); }
+
+  // Can be called once. Returns all collected stats by moving underlying
+  // object.
+  std::map<std::string, NetworkLayerStats> ReleaseStats() {
+    RTC_DCHECK(!stats_released_);
+    stats_released_ = true;
+    MutexLock lock(&mutex_);
+    return std::move(stats_);
+  }
+
+ private:
+  void DecrementNotCollectedStatsCount() {
+    RTC_DCHECK_RUN_ON(&sequence_checker_);
+    RTC_CHECK_GT(not_collected_stats_count_, 0)
+        << "All stats are already collected";
+    not_collected_stats_count_--;
+    if (not_collected_stats_count_ == 0) {
+      MutexLock lock(&mutex_);
+      stats_ = std::move(n_stats_);
+      all_stats_collected_.Set();
+    }
+  }
+
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker sequence_checker_;
+  size_t not_collected_stats_count_ RTC_GUARDED_BY(sequence_checker_);
+  // Collected on the network thread. Moved into `stats_` after all stats are
+  // collected.
+  std::map<std::string, NetworkLayerStats> n_stats_
+      RTC_GUARDED_BY(sequence_checker_);
+
+  rtc::Event all_stats_collected_;
+  Mutex mutex_;
+  std::map<std::string, NetworkLayerStats> stats_ RTC_GUARDED_BY(mutex_);
+  bool stats_released_ = false;
+};
 
 }  // namespace
 
@@ -114,11 +195,15 @@ void StatsBasedNetworkQualityMetricsReporter::NetworkLayerStatsCollector::
 
 void StatsBasedNetworkQualityMetricsReporter::NetworkLayerStatsCollector::
     AddPeer(absl::string_view peer_name,
-            std::vector<EmulatedEndpoint*> endpoints) {
+            std::vector<EmulatedEndpoint*> endpoints,
+            std::vector<EmulatedNetworkNode*> uplink,
+            std::vector<EmulatedNetworkNode*> downlink) {
   MutexLock lock(&mutex_);
   // When new peer is added not in the constructor, don't check if it has empty
   // stats, because their endpoint could be used for traffic before.
   peer_endpoints_.emplace(peer_name, std::move(endpoints));
+  peer_uplinks_.emplace(peer_name, std::move(uplink));
+  peer_downlinks_.emplace(peer_name, std::move(downlink));
   for (const EmulatedEndpoint* const endpoint : endpoints) {
     RTC_CHECK(ip_to_peer_.find(endpoint->GetPeerLocalAddress()) ==
               ip_to_peer_.end())
@@ -127,19 +212,43 @@ void StatsBasedNetworkQualityMetricsReporter::NetworkLayerStatsCollector::
   }
 }
 
-std::map<std::string,
-         StatsBasedNetworkQualityMetricsReporter::NetworkLayerStats>
+std::map<std::string, NetworkLayerStats>
 StatsBasedNetworkQualityMetricsReporter::NetworkLayerStatsCollector::
     GetStats() {
   MutexLock lock(&mutex_);
-  std::map<std::string, NetworkLayerStats> peer_to_stats;
+  EmulatedNetworkStatsAccumulator stats_accumulator(
+      peer_endpoints_.size() + peer_uplinks_.size() + peer_downlinks_.size());
+  for (const auto& entry : peer_endpoints_) {
+    network_emulation_->GetStats(
+        entry.second, [&stats_accumulator,
+                       peer = entry.first](EmulatedNetworkStats s) mutable {
+          stats_accumulator.AddEndpointStats(std::move(peer), std::move(s));
+        });
+  }
+  for (const auto& entry : peer_uplinks_) {
+    network_emulation_->GetStats(
+        entry.second, [&stats_accumulator,
+                       peer = entry.first](EmulatedNetworkNodeStats s) mutable {
+          stats_accumulator.AddUplinkStats(std::move(peer), std::move(s));
+        });
+  }
+  for (const auto& entry : peer_downlinks_) {
+    network_emulation_->GetStats(
+        entry.second, [&stats_accumulator,
+                       peer = entry.first](EmulatedNetworkNodeStats s) mutable {
+          stats_accumulator.AddDownlinkStats(std::move(peer), std::move(s));
+        });
+  }
+  bool stats_collected = stats_accumulator.Wait(kStatsWaitTimeout);
+  RTC_CHECK(stats_collected);
+  std::map<std::string, NetworkLayerStats> peer_to_stats =
+      stats_accumulator.ReleaseStats();
   std::map<std::string, std::vector<std::string>> sender_to_receivers;
   for (const auto& entry : peer_endpoints_) {
-    NetworkLayerStats stats;
-    stats.stats = PopulateStats(entry.second, network_emulation_);
     const std::string& peer_name = entry.first;
+    const NetworkLayerStats& stats = peer_to_stats[peer_name];
     for (const auto& income_stats_entry :
-         stats.stats.incoming_stats_per_source) {
+         stats.endpoints_stats.incoming_stats_per_source) {
       const rtc::IPAddress& source_ip = income_stats_entry.first;
       auto it = ip_to_peer_.find(source_ip);
       if (it == ip_to_peer_.end()) {
@@ -148,7 +257,6 @@ StatsBasedNetworkQualityMetricsReporter::NetworkLayerStatsCollector::
       }
       sender_to_receivers[it->second].push_back(peer_name);
     }
-    peer_to_stats.emplace(peer_name, std::move(stats));
   }
   for (auto& entry : peer_to_stats) {
     const std::vector<std::string>& receivers =
@@ -162,7 +270,17 @@ StatsBasedNetworkQualityMetricsReporter::NetworkLayerStatsCollector::
 void StatsBasedNetworkQualityMetricsReporter::AddPeer(
     absl::string_view peer_name,
     std::vector<EmulatedEndpoint*> endpoints) {
-  collector_.AddPeer(peer_name, std::move(endpoints));
+  collector_.AddPeer(peer_name, std::move(endpoints), /*uplink=*/{},
+                     /*downlink=*/{});
+}
+
+void StatsBasedNetworkQualityMetricsReporter::AddPeer(
+    absl::string_view peer_name,
+    std::vector<EmulatedEndpoint*> endpoints,
+    std::vector<EmulatedNetworkNode*> uplink,
+    std::vector<EmulatedNetworkNode*> downlink) {
+  collector_.AddPeer(peer_name, std::move(endpoints), std::move(uplink),
+                     std::move(downlink));
 }
 
 void StatsBasedNetworkQualityMetricsReporter::Start(
@@ -252,16 +370,18 @@ void StatsBasedNetworkQualityMetricsReporter::ReportStats(
     const NetworkLayerStats& network_layer_stats,
     int64_t packet_loss,
     const Timestamp& end_time) {
+  // TODO(bugs.webrtc.org/14757): Remove kExperimentalTestNameMetadataKey.
   std::map<std::string, std::string> metric_metadata{
-      {MetricMetadataKey::kPeerMetadataKey, pc_label}};
+      {MetricMetadataKey::kPeerMetadataKey, pc_label},
+      {MetricMetadataKey::kExperimentalTestNameMetadataKey, test_case_name_}};
   metrics_logger_->LogSingleValueMetric(
       "bytes_discarded_no_receiver", GetTestCaseName(pc_label),
-      network_layer_stats.stats.overall_incoming_stats
+      network_layer_stats.endpoints_stats.overall_incoming_stats
           .bytes_discarded_no_receiver.bytes(),
       Unit::kBytes, ImprovementDirection::kNeitherIsBetter, metric_metadata);
   metrics_logger_->LogSingleValueMetric(
       "packets_discarded_no_receiver", GetTestCaseName(pc_label),
-      network_layer_stats.stats.overall_incoming_stats
+      network_layer_stats.endpoints_stats.overall_incoming_stats
           .packets_discarded_no_receiver,
       Unit::kUnitless, ImprovementDirection::kNeitherIsBetter, metric_metadata);
 
@@ -313,55 +433,62 @@ void StatsBasedNetworkQualityMetricsReporter::LogNetworkLayerStats(
     const std::string& peer_name,
     const NetworkLayerStats& stats) const {
   DataRate average_send_rate =
-      stats.stats.overall_outgoing_stats.packets_sent >= 2
-          ? stats.stats.overall_outgoing_stats.AverageSendRate()
+      stats.endpoints_stats.overall_outgoing_stats.packets_sent >= 2
+          ? stats.endpoints_stats.overall_outgoing_stats.AverageSendRate()
           : DataRate::Zero();
   DataRate average_receive_rate =
-      stats.stats.overall_incoming_stats.packets_received >= 2
-          ? stats.stats.overall_incoming_stats.AverageReceiveRate()
+      stats.endpoints_stats.overall_incoming_stats.packets_received >= 2
+          ? stats.endpoints_stats.overall_incoming_stats.AverageReceiveRate()
           : DataRate::Zero();
+  // TODO(bugs.webrtc.org/14757): Remove kExperimentalTestNameMetadataKey.
   std::map<std::string, std::string> metric_metadata{
-      {MetricMetadataKey::kPeerMetadataKey, peer_name}};
+      {MetricMetadataKey::kPeerMetadataKey, peer_name},
+      {MetricMetadataKey::kExperimentalTestNameMetadataKey, test_case_name_}};
   rtc::StringBuilder log;
   log << "Raw network layer statistic for [" << peer_name << "]:\n"
       << "Local IPs:\n";
-  for (size_t i = 0; i < stats.stats.local_addresses.size(); ++i) {
-    log << "  " << stats.stats.local_addresses[i].ToString() << "\n";
+  for (size_t i = 0; i < stats.endpoints_stats.local_addresses.size(); ++i) {
+    log << "  " << stats.endpoints_stats.local_addresses[i].ToString() << "\n";
   }
-  if (!stats.stats.overall_outgoing_stats.sent_packets_size.IsEmpty()) {
-    metrics_logger_->LogMetric(
-        "sent_packets_size", GetTestCaseName(peer_name),
-        stats.stats.overall_outgoing_stats.sent_packets_size, Unit::kBytes,
-        ImprovementDirection::kNeitherIsBetter, metric_metadata);
-  }
-  if (!stats.stats.overall_incoming_stats.received_packets_size.IsEmpty()) {
-    metrics_logger_->LogMetric(
-        "received_packets_size", GetTestCaseName(peer_name),
-        stats.stats.overall_incoming_stats.received_packets_size, Unit::kBytes,
-        ImprovementDirection::kNeitherIsBetter, metric_metadata);
-  }
-  if (!stats.stats.overall_incoming_stats.packets_discarded_no_receiver_size
+  if (!stats.endpoints_stats.overall_outgoing_stats.sent_packets_size
            .IsEmpty()) {
     metrics_logger_->LogMetric(
-        "packets_discarded_no_receiver_size", GetTestCaseName(peer_name),
-        stats.stats.overall_incoming_stats.packets_discarded_no_receiver_size,
+        "sent_packets_size", GetTestCaseName(peer_name),
+        stats.endpoints_stats.overall_outgoing_stats.sent_packets_size,
         Unit::kBytes, ImprovementDirection::kNeitherIsBetter, metric_metadata);
   }
-  if (!stats.stats.sent_packets_queue_wait_time_us.IsEmpty()) {
+  if (!stats.endpoints_stats.overall_incoming_stats.received_packets_size
+           .IsEmpty()) {
+    metrics_logger_->LogMetric(
+        "received_packets_size", GetTestCaseName(peer_name),
+        stats.endpoints_stats.overall_incoming_stats.received_packets_size,
+        Unit::kBytes, ImprovementDirection::kNeitherIsBetter, metric_metadata);
+  }
+  if (!stats.endpoints_stats.overall_incoming_stats
+           .packets_discarded_no_receiver_size.IsEmpty()) {
+    metrics_logger_->LogMetric(
+        "packets_discarded_no_receiver_size", GetTestCaseName(peer_name),
+        stats.endpoints_stats.overall_incoming_stats
+            .packets_discarded_no_receiver_size,
+        Unit::kBytes, ImprovementDirection::kNeitherIsBetter, metric_metadata);
+  }
+  if (!stats.endpoints_stats.sent_packets_queue_wait_time_us.IsEmpty()) {
     metrics_logger_->LogMetric(
         "sent_packets_queue_wait_time_us", GetTestCaseName(peer_name),
-        stats.stats.sent_packets_queue_wait_time_us, Unit::kUnitless,
+        stats.endpoints_stats.sent_packets_queue_wait_time_us, Unit::kUnitless,
         ImprovementDirection::kNeitherIsBetter, metric_metadata);
   }
 
   log << "Send statistic:\n"
-      << "  packets: " << stats.stats.overall_outgoing_stats.packets_sent
-      << " bytes: " << stats.stats.overall_outgoing_stats.bytes_sent.bytes()
+      << "  packets: "
+      << stats.endpoints_stats.overall_outgoing_stats.packets_sent << " bytes: "
+      << stats.endpoints_stats.overall_outgoing_stats.bytes_sent.bytes()
       << " avg_rate (bytes/sec): " << average_send_rate.bytes_per_sec()
       << " avg_rate (bps): " << average_send_rate.bps() << "\n"
       << "Send statistic per destination:\n";
 
-  for (const auto& entry : stats.stats.outgoing_stats_per_destination) {
+  for (const auto& entry :
+       stats.endpoints_stats.outgoing_stats_per_destination) {
     DataRate source_average_send_rate = entry.second.packets_sent >= 2
                                             ? entry.second.AverageSendRate()
                                             : DataRate::Zero();
@@ -379,14 +506,38 @@ void StatsBasedNetworkQualityMetricsReporter::LogNetworkLayerStats(
     }
   }
 
+  if (!stats.uplink_stats.packet_transport_time.IsEmpty()) {
+    log << "[Debug stats] packet_transport_time=("
+        << stats.uplink_stats.packet_transport_time.GetAverage() << ", "
+        << stats.uplink_stats.packet_transport_time.GetStandardDeviation()
+        << ")\n";
+    metrics_logger_->LogMetric(
+        "uplink_packet_transport_time", GetTestCaseName(peer_name),
+        stats.uplink_stats.packet_transport_time, Unit::kMilliseconds,
+        ImprovementDirection::kNeitherIsBetter, metric_metadata);
+  }
+  if (!stats.uplink_stats.size_to_packet_transport_time.IsEmpty()) {
+    log << "[Debug stats] size_to_packet_transport_time=("
+        << stats.uplink_stats.size_to_packet_transport_time.GetAverage() << ", "
+        << stats.uplink_stats.size_to_packet_transport_time
+               .GetStandardDeviation()
+        << ")\n";
+    metrics_logger_->LogMetric(
+        "uplink_size_to_packet_transport_time", GetTestCaseName(peer_name),
+        stats.uplink_stats.size_to_packet_transport_time, Unit::kUnitless,
+        ImprovementDirection::kNeitherIsBetter, metric_metadata);
+  }
+
   log << "Receive statistic:\n"
-      << "  packets: " << stats.stats.overall_incoming_stats.packets_received
-      << " bytes: " << stats.stats.overall_incoming_stats.bytes_received.bytes()
+      << "  packets: "
+      << stats.endpoints_stats.overall_incoming_stats.packets_received
+      << " bytes: "
+      << stats.endpoints_stats.overall_incoming_stats.bytes_received.bytes()
       << " avg_rate (bytes/sec): " << average_receive_rate.bytes_per_sec()
       << " avg_rate (bps): " << average_receive_rate.bps() << "\n"
       << "Receive statistic per source:\n";
 
-  for (const auto& entry : stats.stats.incoming_stats_per_source) {
+  for (const auto& entry : stats.endpoints_stats.incoming_stats_per_source) {
     DataRate source_average_receive_rate =
         entry.second.packets_received >= 2 ? entry.second.AverageReceiveRate()
                                            : DataRate::Zero();
@@ -410,6 +561,28 @@ void StatsBasedNetworkQualityMetricsReporter::LogNetworkLayerStats(
           entry.second.packets_discarded_no_receiver_size, Unit::kBytes,
           ImprovementDirection::kNeitherIsBetter, metric_metadata);
     }
+  }
+  if (!stats.downlink_stats.packet_transport_time.IsEmpty()) {
+    log << "[Debug stats] packet_transport_time=("
+        << stats.downlink_stats.packet_transport_time.GetAverage() << ", "
+        << stats.downlink_stats.packet_transport_time.GetStandardDeviation()
+        << ")\n";
+    metrics_logger_->LogMetric(
+        "downlink_packet_transport_time", GetTestCaseName(peer_name),
+        stats.downlink_stats.packet_transport_time, Unit::kMilliseconds,
+        ImprovementDirection::kNeitherIsBetter, metric_metadata);
+  }
+  if (!stats.downlink_stats.size_to_packet_transport_time.IsEmpty()) {
+    log << "[Debug stats] size_to_packet_transport_time=("
+        << stats.downlink_stats.size_to_packet_transport_time.GetAverage()
+        << ", "
+        << stats.downlink_stats.size_to_packet_transport_time
+               .GetStandardDeviation()
+        << ")\n";
+    metrics_logger_->LogMetric(
+        "downlink_size_to_packet_transport_time", GetTestCaseName(peer_name),
+        stats.downlink_stats.size_to_packet_transport_time, Unit::kUnitless,
+        ImprovementDirection::kNeitherIsBetter, metric_metadata);
   }
 
   RTC_LOG(LS_INFO) << log.str();

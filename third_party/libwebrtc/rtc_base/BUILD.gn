@@ -316,7 +316,10 @@ rtc_library("platform_thread_types") {
     "platform_thread_types.cc",
     "platform_thread_types.h",
   ]
-  deps = [ ":macromagic" ]
+  deps = [
+    ":checks",
+    ":macromagic",
+  ]
 }
 
 rtc_source_set("refcount") {
@@ -1745,9 +1748,14 @@ if (rtc_include_tests) {
         "numerics/percentile_filter_unittest.cc",
         "numerics/running_statistics_unittest.cc",
         "numerics/sequence_number_util_unittest.cc",
+        "numerics/sequence_numbers_conformance_test.cc",
       ]
       deps = [
         ":rtc_numerics",
+        ":strong_alias",
+        ":timeutils",
+        "../modules:module_api_public",
+        "../net/dcsctp/common:sequence_numbers",
         "../test:test_main",
         "../test:test_support",
       ]

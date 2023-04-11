@@ -95,13 +95,11 @@ class RtpVideoSender : public RtpVideoSenderInterface,
   RtpVideoSender(const RtpVideoSender&) = delete;
   RtpVideoSender& operator=(const RtpVideoSender&) = delete;
 
-  // RtpVideoSender will only route packets if being active, all packets will be
-  // dropped otherwise.
-  void SetActive(bool active) RTC_LOCKS_EXCLUDED(mutex_) override;
   // Sets the sending status of the rtp modules and appropriately sets the
   // payload router to active if any rtp modules are active.
-  void SetActiveModules(std::vector<bool> active_modules)
+  void SetActiveModules(const std::vector<bool>& active_modules)
       RTC_LOCKS_EXCLUDED(mutex_) override;
+  void Stop() RTC_LOCKS_EXCLUDED(mutex_) override;
   bool IsActive() RTC_LOCKS_EXCLUDED(mutex_) override;
 
   void OnNetworkAvailability(bool network_available)
@@ -157,7 +155,7 @@ class RtpVideoSender : public RtpVideoSenderInterface,
 
  private:
   bool IsActiveLocked() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
-  void SetActiveModulesLocked(std::vector<bool> active_modules)
+  void SetActiveModulesLocked(const std::vector<bool>& active_modules)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   void UpdateModuleSendingState() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   void ConfigureProtection();
@@ -170,7 +168,6 @@ class RtpVideoSender : public RtpVideoSenderInterface,
                                  Frequency framerate) const;
 
   const FieldTrialsView& field_trials_;
-  const bool send_side_bwe_with_overhead_;
   const bool use_frame_rate_for_overhead_;
   const bool has_packet_feedback_;
 

@@ -253,6 +253,53 @@ TEST_P(TaskQueuePacedSenderTest, PacesPackets) {
   EXPECT_NEAR((end_time - start_time).ms<double>(), 1000.0, 50.0);
 }
 
+// Same test as above, but with 0.5s of burst applied.
+TEST_P(TaskQueuePacedSenderTest, PacesPacketsWithBurst) {
+  GlobalSimulatedTimeController time_controller(Timestamp::Millis(1234));
+  MockPacketRouter packet_router;
+  ScopedKeyValueConfig trials(GetParam());
+  TaskQueuePacedSender pacer(time_controller.GetClock(), &packet_router, trials,
+                             time_controller.GetTaskQueueFactory(),
+                             PacingController::kMinSleepTime,
+                             TaskQueuePacedSender::kNoPacketHoldback,
+                             // Half a second of bursting.
+                             TimeDelta::Seconds(0.5));
+
+  // Insert a number of packets, covering one second.
+  static constexpr size_t kPacketsToSend = 42;
+  SequenceChecker sequence_checker;
+  pacer.SetPacingRates(
+      DataRate::BitsPerSec(kDefaultPacketSize * 8 * kPacketsToSend),
+      DataRate::Zero());
+  pacer.EnsureStarted();
+  pacer.EnqueuePackets(
+      GeneratePackets(RtpPacketMediaType::kVideo, kPacketsToSend));
+
+  // Expect all of them to be sent.
+  size_t packets_sent = 0;
+  Timestamp end_time = Timestamp::PlusInfinity();
+  EXPECT_CALL(packet_router, SendPacket)
+      .WillRepeatedly([&](std::unique_ptr<RtpPacketToSend> packet,
+                          const PacedPacketInfo& cluster_info) {
+        ++packets_sent;
+        if (packets_sent == kPacketsToSend) {
+          end_time = time_controller.GetClock()->CurrentTime();
+        }
+        EXPECT_EQ(sequence_checker.IsCurrent(), UsingWorkerThread(GetParam()));
+      });
+
+  const Timestamp start_time = time_controller.GetClock()->CurrentTime();
+
+  // Packets should be sent over a period of close to 1s. Expect a little
+  // lower than this since initial probing is a bit quicker.
+  time_controller.AdvanceTime(TimeDelta::Seconds(1));
+  EXPECT_EQ(packets_sent, kPacketsToSend);
+  ASSERT_TRUE(end_time.IsFinite());
+  // Because of half a second of burst, what would normally have been paced over
+  // ~1 second now takes ~0.5 seconds.
+  EXPECT_NEAR((end_time - start_time).ms<double>(), 500.0, 50.0);
+}
+
 TEST_P(TaskQueuePacedSenderTest, ReschedulesProcessOnRateChange) {
   GlobalSimulatedTimeController time_controller(Timestamp::Millis(1234));
   MockPacketRouter packet_router;

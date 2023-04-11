@@ -26,7 +26,8 @@ class MockAudioSendStream : public webrtc::AudioSendStream {
 
   const webrtc::AudioSendStream::Config& GetConfig() const override;
 
-  void Reconfigure(const Config& config) override;
+  void Reconfigure(const Config& config,
+                   webrtc::SetParametersCallback callback) override;
 
   void Start() override {}
 
@@ -130,10 +131,12 @@ class MockVideoSendStream : public webrtc::VideoSendStream {
 
   void ReconfigureVideoEncoder(webrtc::VideoEncoderConfig config) override;
 
+  void ReconfigureVideoEncoder(webrtc::VideoEncoderConfig config,
+                               webrtc::SetParametersCallback callback) override;
+
   Stats GetStats() override { return mStats; }
 
-  void UpdateActiveSimulcastLayers(
-      const std::vector<bool> active_layers) override {}
+  void StartPerRtpStream(const std::vector<bool> active_layers) override {}
 
   void AddAdaptationResource(
       rtc::scoped_refptr<webrtc::Resource> resource) override {}

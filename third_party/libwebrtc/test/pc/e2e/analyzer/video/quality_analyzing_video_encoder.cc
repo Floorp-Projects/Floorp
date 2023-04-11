@@ -290,6 +290,7 @@ EncodedImageCallback::Result QualityAnalyzingVideoEncoder::OnEncodedImage(
   VideoQualityAnalyzerInterface::EncoderStats stats;
   stats.encoder_name = codec_name;
   stats.target_encode_bitrate = target_encode_bitrate;
+  stats.qp = encoded_image.qp_;
   analyzer_->OnFrameEncoded(peer_name_, frame_id, encoded_image, stats,
                             discard);
 

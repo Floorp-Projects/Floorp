@@ -332,8 +332,11 @@ rtc_source_set("video_frame_metadata") {
     "video_frame_metadata.h",
   ]
   deps = [
+    ":video_frame",
+    ":video_frame_type",
+    ":video_rtp_headers",
     "..:array_view",
-    "../../modules/rtp_rtcp:rtp_video_header",
+    "../../rtc_base/system:rtc_export",
     "../transport/rtp:dependency_descriptor",
   ]
   absl_deps = [
@@ -400,12 +403,10 @@ rtc_library("frame_buffer_unittest") {
 if (rtc_include_tests) {
   rtc_library("video_unittests") {
     testonly = true
-    sources = [
-      "video_frame_metadata_unittest.cc",
-      "video_stream_decoder_create_unittest.cc",
-    ]
+    sources = [ "video_stream_decoder_create_unittest.cc" ]
     deps = [
       ":video_frame_metadata",
+      ":video_frame_type",
       ":video_stream_decoder_create",
       "../../modules/rtp_rtcp:rtp_video_header",
       "../../test:test_support",

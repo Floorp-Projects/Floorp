@@ -251,7 +251,8 @@ void VideoRtpReceiver::SetJitterBufferMinimumDelay(
     media_channel_->SetBaseMinimumPlayoutDelayMs(*ssrc_, delay_.GetMs());
 }
 
-void VideoRtpReceiver::SetMediaChannel(cricket::MediaChannel* media_channel) {
+void VideoRtpReceiver::SetMediaChannel(
+    cricket::MediaReceiveChannelInterface* media_channel) {
   RTC_DCHECK_RUN_ON(worker_thread_);
   RTC_DCHECK(media_channel == nullptr ||
              media_channel->media_type() == media_type());
@@ -259,7 +260,8 @@ void VideoRtpReceiver::SetMediaChannel(cricket::MediaChannel* media_channel) {
   SetMediaChannel_w(media_channel);
 }
 
-void VideoRtpReceiver::SetMediaChannel_w(cricket::MediaChannel* media_channel) {
+void VideoRtpReceiver::SetMediaChannel_w(
+    cricket::MediaReceiveChannelInterface* media_channel) {
   RTC_DCHECK_RUN_ON(worker_thread_);
   if (media_channel == media_channel_)
     return;
@@ -274,7 +276,11 @@ void VideoRtpReceiver::SetMediaChannel_w(cricket::MediaChannel* media_channel) {
     SetEncodedSinkEnabled(false);
   }
 
-  media_channel_ = static_cast<cricket::VideoMediaChannel*>(media_channel);
+  if (media_channel) {
+    media_channel_ = media_channel->AsVideoReceiveChannel();
+  } else {
+    media_channel_ = nullptr;
+  }
 
   if (media_channel_) {
     if (saved_generate_keyframe_) {
@@ -310,8 +316,9 @@ std::vector<RtpSource> VideoRtpReceiver::GetSources() const {
   return media_channel_->GetSources(*ssrc_);
 }
 
-void VideoRtpReceiver::SetupMediaChannel(absl::optional<uint32_t> ssrc,
-                                         cricket::MediaChannel* media_channel) {
+void VideoRtpReceiver::SetupMediaChannel(
+    absl::optional<uint32_t> ssrc,
+    cricket::MediaReceiveChannelInterface* media_channel) {
   RTC_DCHECK_RUN_ON(&signaling_thread_checker_);
   RTC_DCHECK(media_channel);
   MediaSourceInterface::SourceState state = source_->state();

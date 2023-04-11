@@ -204,8 +204,12 @@ class RtpTransmissionManager : public RtpSenderBase::SetStreamsObserver {
 
   // Plan B helpers for getting the voice/video media channels for the single
   // audio/video transceiver, if it exists.
-  cricket::VoiceMediaChannel* voice_media_channel() const;
-  cricket::VideoMediaChannel* video_media_channel() const;
+  cricket::VoiceMediaSendChannelInterface* voice_media_send_channel() const;
+  cricket::VideoMediaSendChannelInterface* video_media_send_channel() const;
+  cricket::VoiceMediaReceiveChannelInterface* voice_media_receive_channel()
+      const;
+  cricket::VideoMediaReceiveChannelInterface* video_media_receive_channel()
+      const;
 
  private:
   rtc::Thread* signaling_thread() const { return context_->signaling_thread(); }

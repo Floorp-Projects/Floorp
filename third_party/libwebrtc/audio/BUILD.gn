@@ -70,6 +70,7 @@ rtc_library("audio") {
     "../common_audio:common_audio_c",
     "../logging:rtc_event_audio",
     "../logging:rtc_stream_config",
+    "../media:rtc_media_base",
     "../modules/async_audio_processing",
     "../modules/audio_coding",
     "../modules/audio_coding:audio_coding_module_typedefs",
@@ -290,7 +291,7 @@ if (rtc_include_tests) {
         data += [ "${root_out_dir}/low_bandwidth_audio_test" ]
       }
 
-      if (is_linux || is_chromeos || is_android) {
+      if (is_linux || is_chromeos || is_android || is_fuchsia) {
         data += [
           "../tools_webrtc/audio_quality/linux/PolqaOem64",
           "../tools_webrtc/audio_quality/linux/pesq",

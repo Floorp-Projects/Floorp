@@ -53,8 +53,9 @@ class WebRTCMetaBuildWrapper(mb.MetaBuildWrapper):
 
     is_android = 'target_os="android"' in vals['gn_args']
     is_fuchsia = 'target_os="fuchsia"' in vals['gn_args']
-    is_linux = self.platform.startswith('linux') and not is_android
     is_ios = 'target_os="ios"' in vals['gn_args']
+    is_linux = self.platform.startswith('linux') and not is_android
+    is_win = self.platform.startswith('win')
 
     if test_type == 'nontest':
       self.WriteFailureAndRaise('We should not be isolating %s.' % target,
@@ -81,21 +82,17 @@ class WebRTCMetaBuildWrapper(mb.MetaBuildWrapper):
       ]
     elif is_android:
       cmdline += [
-          vpython_exe, '../../build/android/test_wrapper/logdog_wrapper.py',
-          '--target', target, '--logdog-bin-cmd', '../../bin/logdog_butler',
-          '--logcat-output-file', '${ISOLATED_OUTDIR}/logcats',
-          '--store-tombstones'
+          'luci-auth', 'context', '--', vpython_exe,
+          '../../build/android/test_wrapper/logdog_wrapper.py', '--target',
+          target, '--logdog-bin-cmd',
+          '../../.task_template_packages/logdog_butler', '--logcat-output-file',
+          '${ISOLATED_OUTDIR}/logcats', '--store-tombstones'
       ]
-    elif is_ios or is_fuchsia:
-      cmdline += [
-          vpython_exe, '../../tools_webrtc/flags_compatibility.py',
-          'bin/run_%s' % target
-      ]
-      extra_files.append('../../tools_webrtc/flags_compatibility.py')
-    elif test_type == 'raw':
-      cmdline += [vpython_exe, '../../tools_webrtc/flags_compatibility.py']
-      extra_files.append('../../tools_webrtc/flags_compatibility.py')
-      cmdline.append(_GetExecutable(target, self.platform))
+    elif is_ios or is_fuchsia or test_type == 'raw':
+      if is_win:
+        cmdline += ['bin\\run_{}.bat'.format(target)]
+      else:
+        cmdline += ['bin/run_{}'.format(target)]
     else:
       if isolate_map[target].get('use_webcam', False):
         cmdline += [

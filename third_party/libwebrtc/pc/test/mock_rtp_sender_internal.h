@@ -52,9 +52,13 @@ class MockRtpSenderInternal : public RtpSenderInternal {
               (),
               (const, override));
   MOCK_METHOD(RTCError, SetParameters, (const RtpParameters&), (override));
-  MOCK_METHOD(RTCError,
+  MOCK_METHOD(void,
+              SetParametersAsync,
+              (const RtpParameters&, SetParametersCallback),
+              (override));
+  MOCK_METHOD(void,
               SetParametersInternal,
-              (const RtpParameters&),
+              (const RtpParameters&, SetParametersCallback, bool blocking),
               (override));
   MOCK_METHOD(RTCError,
               SetParametersInternalWithAllLayers,
@@ -87,7 +91,7 @@ class MockRtpSenderInternal : public RtpSenderInternal {
               (override));
 
   // RtpSenderInternal methods.
-  MOCK_METHOD1(SetMediaChannel, void(cricket::MediaChannel*));
+  MOCK_METHOD1(SetMediaChannel, void(cricket::MediaSendChannelInterface*));
   MOCK_METHOD1(SetSsrc, void(uint32_t));
   MOCK_METHOD1(set_stream_ids, void(const std::vector<std::string>&));
   MOCK_METHOD1(SetStreams, void(const std::vector<std::string>&));

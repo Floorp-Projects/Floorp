@@ -36,6 +36,7 @@ rtc_library("agc") {
     "../../../system_wrappers:metrics",
     "../agc2:clipping_predictor",
     "../agc2:gain_map",
+    "../agc2:input_volume_stats_reporter",
     "../vad",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]

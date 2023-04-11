@@ -15,7 +15,6 @@
 #include <stdint.h>
 
 #include <map>
-#include <memory>
 #include <vector>
 
 #include "api/transport/field_trial_based_config.h"
@@ -65,16 +64,12 @@ class RemoteBitrateEstimatorSingleStream : public RemoteBitrateEstimator {
   void GetSsrcs(std::vector<uint32_t>* ssrcs) const
       RTC_SHARED_LOCKS_REQUIRED(mutex_);
 
-  // Returns `remote_rate_` if the pointed to object exists,
-  // otherwise creates it.
-  AimdRateControl* GetRemoteRate() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
-
   Clock* const clock_;
   const FieldTrialBasedConfig field_trials_;
   SsrcOveruseEstimatorMap overuse_detectors_ RTC_GUARDED_BY(mutex_);
   RateStatistics incoming_bitrate_ RTC_GUARDED_BY(mutex_);
   uint32_t last_valid_incoming_bitrate_ RTC_GUARDED_BY(mutex_);
-  std::unique_ptr<AimdRateControl> remote_rate_ RTC_GUARDED_BY(mutex_);
+  AimdRateControl remote_rate_ RTC_GUARDED_BY(mutex_);
   RemoteBitrateObserver* const observer_ RTC_GUARDED_BY(mutex_);
   mutable Mutex mutex_;
   int64_t last_process_time_;

@@ -40,7 +40,7 @@ rtc_source_set("media_configuration") {
     "../../../rtc_base:threading",
     "../../../test:fileutils",
     "../../../test:video_test_support",
-    "../../../test/pc/e2e:video_dumping",
+    "../../../test/pc/e2e/analyzer/video:video_dumping",
     "../../audio:audio_mixer_api",
     "../../rtc_event_log",
     "../../task_queue",

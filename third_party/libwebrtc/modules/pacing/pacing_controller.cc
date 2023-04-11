@@ -33,7 +33,6 @@ constexpr TimeDelta kCongestedPacketInterval = TimeDelta::Millis(500);
 // The maximum debt level, in terms of time, capped when sending packets.
 constexpr TimeDelta kMaxDebtInTime = TimeDelta::Millis(500);
 constexpr TimeDelta kMaxElapsedTime = TimeDelta::Seconds(2);
-constexpr TimeDelta kTargetPaddingDuration = TimeDelta::Millis(5);
 
 bool IsDisabled(const FieldTrialsView& field_trials, absl::string_view key) {
   return absl::StartsWith(field_trials.Lookup(key), "Disabled");
@@ -50,6 +49,9 @@ const TimeDelta PacingController::kMaxExpectedQueueLength =
 const TimeDelta PacingController::kPausedProcessInterval =
     kCongestedPacketInterval;
 const TimeDelta PacingController::kMinSleepTime = TimeDelta::Millis(1);
+const TimeDelta PacingController::kTargetPaddingDuration = TimeDelta::Millis(5);
+const TimeDelta PacingController::kMaxPaddingReplayDuration =
+    TimeDelta::Millis(50);
 const TimeDelta PacingController::kMaxEarlyProbeProcessing =
     TimeDelta::Millis(1);
 
@@ -87,7 +89,8 @@ PacingController::PacingController(Clock* clock,
       congested_(false),
       queue_time_limit_(kMaxExpectedQueueLength),
       account_for_audio_(false),
-      include_overhead_(false) {
+      include_overhead_(false),
+      circuit_breaker_threshold_(1 << 16) {
   if (!drain_large_queues_) {
     RTC_LOG(LS_WARNING) << "Pacer queues will not be drained,"
                            "pushback experiment must be enabled.";
@@ -139,6 +142,14 @@ void PacingController::SetCongested(bool congested) {
     UpdateBudgetWithElapsedTime(UpdateTimeAndGetElapsed(CurrentTime()));
   }
   congested_ = congested;
+}
+
+void PacingController::SetCircuitBreakerThreshold(int num_iterations) {
+  circuit_breaker_threshold_ = num_iterations;
+}
+
+void PacingController::RemovePacketsForSsrc(uint32_t ssrc) {
+  packet_queue_.RemovePacketsForSsrc(ssrc);
 }
 
 bool PacingController::IsProbing() const {
@@ -423,18 +434,24 @@ void PacingController::ProcessPackets() {
   }
 
   DataSize data_sent = DataSize::Zero();
-  // Circuit breaker, making sure main loop isn't forever.
-  static constexpr int kMaxIterations = 1 << 16;
   int iteration = 0;
   int packets_sent = 0;
   int padding_packets_generated = 0;
-  for (; iteration < kMaxIterations; ++iteration) {
+  for (; iteration < circuit_breaker_threshold_; ++iteration) {
     // Fetch packet, so long as queue is not empty or budget is not
     // exhausted.
     std::unique_ptr<RtpPacketToSend> rtp_packet =
         GetPendingPacket(pacing_info, target_send_time, now);
     if (rtp_packet == nullptr) {
       // No packet available to send, check if we should send padding.
+      if (now - target_send_time > kMaxPaddingReplayDuration) {
+        // The target send time is more than `kMaxPaddingReplayDuration` behind
+        // the real-time clock. This can happen if the clock is adjusted forward
+        // without `ProcessPackets()` having been called at the expected times.
+        target_send_time = now - kMaxPaddingReplayDuration;
+        last_process_time_ = std::max(last_process_time_, target_send_time);
+      }
+
       DataSize padding_to_add = PaddingToAdd(recommended_probe_size, data_sent);
       if (padding_to_add > DataSize::Zero()) {
         std::vector<std::unique_ptr<RtpPacketToSend>> padding_packets =
@@ -499,14 +516,30 @@ void PacingController::ProcessPackets() {
     }
   }
 
-  if (iteration >= kMaxIterations) {
+  if (iteration >= circuit_breaker_threshold_) {
     // Circuit break activated. Log warning, adjust send time and return.
     // TODO(sprang): Consider completely clearing state.
-    RTC_LOG(LS_ERROR) << "PacingController exceeded max iterations in "
-                         "send-loop: packets sent = "
-                      << packets_sent << ", padding packets generated = "
-                      << padding_packets_generated
-                      << ", bytes sent = " << data_sent.bytes();
+    RTC_LOG(LS_ERROR)
+        << "PacingController exceeded max iterations in "
+           "send-loop. Debug info: "
+        << " packets sent = " << packets_sent
+        << ", padding packets generated = " << padding_packets_generated
+        << ", bytes sent = " << data_sent.bytes()
+        << ", probing = " << (is_probing ? "true" : "false")
+        << ", recommended_probe_size = " << recommended_probe_size.bytes()
+        << ", now = " << now.us()
+        << ", target_send_time = " << target_send_time.us()
+        << ", last_process_time = " << last_process_time_.us()
+        << ", last_send_time = " << last_send_time_.us()
+        << ", paused = " << (paused_ ? "true" : "false")
+        << ", media_debt = " << media_debt_.bytes()
+        << ", padding_debt = " << padding_debt_.bytes()
+        << ", pacing_rate = " << pacing_rate_.bps()
+        << ", adjusted_media_rate = " << adjusted_media_rate_.bps()
+        << ", padding_rate = " << padding_rate_.bps()
+        << ", queue size (packets) = " << packet_queue_.SizeInPackets()
+        << ", queue size (payload bytes) = "
+        << packet_queue_.SizeInPayloadBytes();
     last_send_time_ = now;
     last_process_time_ = now;
     return;

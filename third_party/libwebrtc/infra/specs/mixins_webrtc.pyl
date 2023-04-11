@@ -35,6 +35,14 @@
       }
     }
   },
+  'hammerhead': {
+    'swarming': {
+      'dimensions': {
+        'device_type': 'hammerhead',
+        'os': 'Android'
+      }
+    }
+  },
   'ios-device-15.7': {
     'swarming': {
       'dimensions': {
@@ -60,7 +68,6 @@
         'iPhone X',
         '--version',
         '12.4',
-        '--undefok=write-compiled-tests-json-to-writable-path',
       ],
       'swarming': {
         'named_caches': [
@@ -79,7 +86,6 @@
         'iPhone X',
         '--version',
         '13.6',
-        '--undefok=write-compiled-tests-json-to-writable-path',
       ],
       'swarming': {
         'named_caches': [
@@ -98,7 +104,6 @@
         'iPhone X',
         '--version',
         '14.5',
-        '--undefok=write-compiled-tests-json-to-writable-path',
       ],
       'swarming': {
         'named_caches': [
@@ -109,17 +114,6 @@
         ],
       },
     }
-  },
-  'logdog-butler': {
-    'swarming': {
-      'cipd_packages': [
-        {
-          "cipd_package": 'infra/tools/luci/logdog/butler/${platform}',
-          'location': 'bin',
-          'revision': 'git_revision:ff387eadf445b24c935f1cf7d6ddd279f8a6b04c',
-        },
-      ],
-    },
   },
   'mac-m1-cpu': {
     'swarming': {
@@ -134,6 +128,22 @@
         'os': 'Mac-11'
       }
     }
+  },
+  'marshmallow_generic': {
+    'swarming': {
+      'dimensions': {
+        'device_os': 'M'
+      }
+    }
+  },
+  'perf-fuchsia-perf-tests': {
+    'merge': {
+      'script': '//tools_webrtc/perf/process_perf_results.py',
+      'args': ['--test-suite', 'fuchsia_perf_tests'],
+    },
+    '$mixin_append': {
+      'args': ['--nologs'],
+    },
   },
   'perf-low-bandwidth-audio-perf-test': {
     'merge': {
@@ -156,6 +166,16 @@
       'idempotent': False,
       'dimensions': {
         'pool': 'WebRTC-perf',
+        'gce': '0',
+      },
+    },
+  },
+  'perf-pool-vm': {
+    'swarming': {
+      'idempotent': False,
+      'dimensions': {
+        'pool': 'WebRTC-perf',
+        'gce': '1',
       },
     },
   },
@@ -182,11 +202,6 @@
         'device_type': 'redfin',
         'os': 'Android'
       }
-    }
-  },
-  'fuchsia': {
-    '$mixin_append': {
-      'args': ['--', '--undefok=use-vulkan']
     }
   },
   'resultdb-gtest-json-format': {
@@ -244,7 +259,6 @@
     '$mixin_append': {
       'args': [
         '--xctest',
-        '--undefok=enable-run-ios-unittests-with-xctest',
       ],
     },
   },

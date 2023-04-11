@@ -23,6 +23,7 @@
 #include "api/video/encoded_image.h"
 #include "api/video/i420_buffer.h"
 #include "api/video/video_frame.h"
+#include "api/video_codecs/scalability_mode.h"
 #include "api/video_codecs/video_codec.h"
 #include "api/video_codecs/video_encoder.h"
 #include "modules/video_coding/include/video_codec_interface.h"
@@ -32,6 +33,7 @@
 #include "modules/video_coding/svc/scalable_video_controller_no_layering.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/numerics/sequence_number_util.h"
 #include "third_party/libaom/source/libaom/aom/aom_codec.h"
 #include "third_party/libaom/source/libaom/aom/aom_encoder.h"
 #include "third_party/libaom/source/libaom/aom/aomcx.h"
@@ -108,6 +110,7 @@ class LibaomAv1Encoder final : public VideoEncoder {
   void MaybeRewrapImgWithFormat(const aom_img_fmt_t fmt);
 
   std::unique_ptr<ScalableVideoController> svc_controller_;
+  absl::optional<ScalabilityMode> scalability_mode_;
   bool inited_;
   bool rates_configured_;
   absl::optional<aom_svc_params_t> svc_params_;
@@ -117,6 +120,7 @@ class LibaomAv1Encoder final : public VideoEncoder {
   aom_codec_ctx_t ctx_;
   aom_codec_enc_cfg_t cfg_;
   EncodedImageCallback* encoded_image_callback_;
+  SeqNumUnwrapper<uint32_t> rtp_timestamp_unwrapper_;
 };
 
 int32_t VerifyCodecSettings(const VideoCodec& codec_settings) {
@@ -183,16 +187,15 @@ int LibaomAv1Encoder::InitEncode(const VideoCodec* codec_settings,
     RTC_LOG(LS_WARNING) << "Simulcast is not implemented by LibaomAv1Encoder.";
     return result;
   }
-  absl::optional<ScalabilityMode> scalability_mode =
-      encoder_settings_.GetScalabilityMode();
-  if (!scalability_mode.has_value()) {
+  scalability_mode_ = encoder_settings_.GetScalabilityMode();
+  if (!scalability_mode_.has_value()) {
     RTC_LOG(LS_WARNING) << "Scalability mode is not set, using 'L1T1'.";
-    scalability_mode = ScalabilityMode::kL1T1;
+    scalability_mode_ = ScalabilityMode::kL1T1;
   }
-  svc_controller_ = CreateScalabilityStructure(*scalability_mode);
+  svc_controller_ = CreateScalabilityStructure(*scalability_mode_);
   if (svc_controller_ == nullptr) {
     RTC_LOG(LS_WARNING) << "Failed to set scalability mode "
-                        << static_cast<int>(*scalability_mode);
+                        << static_cast<int>(*scalability_mode_);
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
 
@@ -636,9 +639,11 @@ int32_t LibaomAv1Encoder::Encode(
                                         layer_frame->TemporalId() > 0 ? 1 : 0);
     }
 
-    // Encode a frame.
-    aom_codec_err_t ret = aom_codec_encode(&ctx_, frame_for_encode_,
-                                           frame.timestamp(), duration, flags);
+    // Encode a frame. The presentation timestamp `pts` should never wrap, hence
+    // the unwrapping.
+    aom_codec_err_t ret = aom_codec_encode(
+        &ctx_, frame_for_encode_,
+        rtp_timestamp_unwrapper_.Unwrap(frame.timestamp()), duration, flags);
     if (ret != AOM_CODEC_OK) {
       RTC_LOG(LS_WARNING) << "LibaomAv1Encoder::Encode returned " << ret
                           << " on aom_codec_encode.";
@@ -705,6 +710,7 @@ int32_t LibaomAv1Encoder::Encode(
       CodecSpecificInfo codec_specific_info;
       codec_specific_info.codecType = kVideoCodecAV1;
       codec_specific_info.end_of_picture = end_of_picture;
+      codec_specific_info.scalability_mode = scalability_mode_;
       bool is_keyframe = layer_frame->IsKeyframe();
       codec_specific_info.generic_frame_info =
           svc_controller_->OnEncodeDone(*layer_frame);

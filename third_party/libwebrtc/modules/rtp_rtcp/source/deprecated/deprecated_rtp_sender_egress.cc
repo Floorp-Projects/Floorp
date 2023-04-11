@@ -28,11 +28,6 @@ constexpr int kSendSideDelayWindowMs = 1000;
 constexpr int kBitrateStatisticsWindowMs = 1000;
 constexpr size_t kRtpSequenceNumberMapMaxEntries = 1 << 13;
 
-bool IsDisabled(absl::string_view name, const FieldTrialsView* field_trials) {
-  FieldTrialBasedConfig default_trials;
-  auto& trials = field_trials ? *field_trials : default_trials;
-  return absl::StartsWith(trials.Lookup(name), "Disabled");
-}
 }  // namespace
 
 DEPRECATED_RtpSenderEgress::NonPacedPacketSender::NonPacedPacketSender(
@@ -72,8 +67,6 @@ DEPRECATED_RtpSenderEgress::DEPRECATED_RtpSenderEgress(
       flexfec_ssrc_(config.fec_generator ? config.fec_generator->FecSsrc()
                                          : absl::nullopt),
       populate_network2_timestamp_(config.populate_network2_timestamp),
-      send_side_bwe_with_overhead_(
-          !IsDisabled("WebRTC-SendSideBwe-WithOverhead", config.field_trials)),
       clock_(config.clock),
       packet_history_(packet_history),
       transport_(config.outgoing_transport),
@@ -316,16 +309,11 @@ void DEPRECATED_RtpSenderEgress::AddPacketToTransportFeedback(
     const RtpPacketToSend& packet,
     const PacedPacketInfo& pacing_info) {
   if (transport_feedback_observer_) {
-    size_t packet_size = packet.payload_size() + packet.padding_size();
-    if (send_side_bwe_with_overhead_) {
-      packet_size = packet.size();
-    }
-
     RtpPacketSendInfo packet_info;
     packet_info.media_ssrc = ssrc_;
     packet_info.transport_sequence_number = packet_id;
     packet_info.rtp_sequence_number = packet.SequenceNumber();
-    packet_info.length = packet_size;
+    packet_info.length = packet.size();
     packet_info.pacing_info = pacing_info;
     packet_info.packet_type = packet.packet_type();
     transport_feedback_observer_->OnAddPacket(packet_info);

@@ -10,6 +10,7 @@
 
 #include "modules/video_coding/codecs/av1/libaom_av1_encoder.h"
 
+#include <limits>
 #include <memory>
 #include <vector>
 
@@ -233,6 +234,30 @@ TEST(LibaomAv1EncoderTest, PopulatesEncodedFrameSize) {
                 AllOf(Field(&EncodedImage::_encodedWidth, codec_settings.width),
                       Field(&EncodedImage::_encodedHeight,
                             codec_settings.height)))));
+}
+
+TEST(LibaomAv1EncoderTest, RtpTimestampWrap) {
+  std::unique_ptr<VideoEncoder> encoder = CreateLibaomAv1Encoder();
+  VideoCodec codec_settings = DefaultCodecSettings();
+  codec_settings.SetScalabilityMode(ScalabilityMode::kL1T1);
+  ASSERT_EQ(encoder->InitEncode(&codec_settings, DefaultEncoderSettings()),
+            WEBRTC_VIDEO_CODEC_OK);
+
+  VideoEncoder::RateControlParameters rate_parameters;
+  rate_parameters.framerate_fps = 30;
+  rate_parameters.bitrate.SetBitrate(/*spatial_index=*/0, 0, 300'000);
+  encoder->SetRates(rate_parameters);
+
+  std::vector<EncodedVideoFrameProducer::EncodedFrame> encoded_frames =
+      EncodedVideoFrameProducer(*encoder)
+          .SetNumInputFrames(2)
+          .SetRtpTimestamp(std::numeric_limits<uint32_t>::max())
+          .Encode();
+  ASSERT_THAT(encoded_frames, SizeIs(2));
+  EXPECT_THAT(encoded_frames[0].encoded_image._frameType,
+              Eq(VideoFrameType::kVideoFrameKey));
+  EXPECT_THAT(encoded_frames[1].encoded_image._frameType,
+              Eq(VideoFrameType::kVideoFrameDelta));
 }
 
 }  // namespace
