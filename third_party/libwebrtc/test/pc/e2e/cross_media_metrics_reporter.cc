@@ -114,6 +114,7 @@ void CrossMediaMetricsReporter::StopAndReportResults() {
   MutexLock lock(&mutex_);
   for (const auto& pair : stats_info_) {
     const std::string& sync_group = pair.first;
+    // TODO(bugs.webrtc.org/14757): Remove kExperimentalTestNameMetadataKey.
     std::map<std::string, std::string> audio_metric_metadata{
         {MetricMetadataKey::kPeerSyncGroupMetadataKey, sync_group},
         {MetricMetadataKey::kAudioStreamMetadataKey,
@@ -121,7 +122,8 @@ void CrossMediaMetricsReporter::StopAndReportResults() {
         {MetricMetadataKey::kPeerMetadataKey,
          pair.second.audio_stream_info.receiver_peer},
         {MetricMetadataKey::kReceiverMetadataKey,
-         pair.second.audio_stream_info.receiver_peer}};
+         pair.second.audio_stream_info.receiver_peer},
+        {MetricMetadataKey::kExperimentalTestNameMetadataKey, test_case_name_}};
     metrics_logger_->LogMetric(
         "audio_ahead_ms",
         GetTestCaseName(pair.second.audio_stream_info.stream_label, sync_group),
@@ -129,6 +131,7 @@ void CrossMediaMetricsReporter::StopAndReportResults() {
         webrtc::test::ImprovementDirection::kSmallerIsBetter,
         std::move(audio_metric_metadata));
 
+    // TODO(bugs.webrtc.org/14757): Remove kExperimentalTestNameMetadataKey.
     std::map<std::string, std::string> video_metric_metadata{
         {MetricMetadataKey::kPeerSyncGroupMetadataKey, sync_group},
         {MetricMetadataKey::kAudioStreamMetadataKey,
@@ -136,7 +139,8 @@ void CrossMediaMetricsReporter::StopAndReportResults() {
         {MetricMetadataKey::kPeerMetadataKey,
          pair.second.video_stream_info.receiver_peer},
         {MetricMetadataKey::kReceiverMetadataKey,
-         pair.second.video_stream_info.receiver_peer}};
+         pair.second.video_stream_info.receiver_peer},
+        {MetricMetadataKey::kExperimentalTestNameMetadataKey, test_case_name_}};
     metrics_logger_->LogMetric(
         "video_ahead_ms",
         GetTestCaseName(pair.second.video_stream_info.stream_label, sync_group),

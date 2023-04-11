@@ -35,6 +35,7 @@
 #include "call/adaptation/resource_adaptation_processor.h"
 #include "call/adaptation/video_source_restrictions.h"
 #include "call/adaptation/video_stream_adapter.h"
+#include "media/base/media_channel.h"
 #include "modules/video_coding/include/video_codec_initializer.h"
 #include "modules/video_coding/svc/svc_rate_allocator.h"
 #include "modules/video_coding/utility/vp8_constants.h"
@@ -149,6 +150,10 @@ bool RequiresEncoderReset(const VideoCodec& prev_send_codec,
   if (new_send_codec.codecType == kVideoCodecVP9) {
     size_t num_spatial_layers = new_send_codec.VP9().numberOfSpatialLayers;
     for (unsigned char i = 0; i < num_spatial_layers; ++i) {
+      if (!new_send_codec.spatialLayers[i].active) {
+        // No need to reset when layer is inactive.
+        continue;
+      }
       if (new_send_codec.spatialLayers[i].width !=
               prev_send_codec.spatialLayers[i].width ||
           new_send_codec.spatialLayers[i].height !=
@@ -156,7 +161,8 @@ bool RequiresEncoderReset(const VideoCodec& prev_send_codec,
           new_send_codec.spatialLayers[i].numberOfTemporalLayers !=
               prev_send_codec.spatialLayers[i].numberOfTemporalLayers ||
           new_send_codec.spatialLayers[i].qpMax !=
-              prev_send_codec.spatialLayers[i].qpMax) {
+              prev_send_codec.spatialLayers[i].qpMax ||
+          !prev_send_codec.spatialLayers[i].active) {
         return true;
       }
     }
@@ -879,9 +885,16 @@ void VideoStreamEncoder::SetStartBitrate(int start_bitrate_bps) {
 
 void VideoStreamEncoder::ConfigureEncoder(VideoEncoderConfig config,
                                           size_t max_data_payload_length) {
+  ConfigureEncoder(std::move(config), max_data_payload_length, nullptr);
+}
+
+void VideoStreamEncoder::ConfigureEncoder(VideoEncoderConfig config,
+                                          size_t max_data_payload_length,
+                                          SetParametersCallback callback) {
   RTC_DCHECK_RUN_ON(worker_queue_);
   encoder_queue_.PostTask(
-      [this, config = std::move(config), max_data_payload_length]() mutable {
+      [this, config = std::move(config), max_data_payload_length,
+       callback = std::move(callback)]() mutable {
         RTC_DCHECK_RUN_ON(&encoder_queue_);
         RTC_DCHECK(sink_);
         RTC_LOG(LS_INFO) << "ConfigureEncoder requested.";
@@ -912,7 +925,13 @@ void VideoStreamEncoder::ConfigureEncoder(VideoEncoderConfig config,
         // minimize the number of reconfigurations. The codec configuration
         // depends on incoming video frame size.
         if (last_frame_info_) {
+          if (callback) {
+            encoder_configuration_callbacks_.push_back(std::move(callback));
+          }
+
           ReconfigureEncoder();
+        } else {
+          webrtc::InvokeSetParametersCallback(callback, webrtc::RTCError::OK());
         }
       });
 }
@@ -1369,6 +1388,8 @@ void VideoStreamEncoder::ReconfigureEncoder() {
   stream_resource_manager_.ConfigureQualityScaler(info);
   stream_resource_manager_.ConfigureBandwidthQualityScaler(info);
 
+  webrtc::RTCError encoder_configuration_result = webrtc::RTCError::OK();
+
   if (!encoder_initialized_) {
     RTC_LOG(LS_WARNING) << "Failed to initialize "
                         << CodecTypeToPayloadString(codec.codecType)
@@ -1378,7 +1399,18 @@ void VideoStreamEncoder::ReconfigureEncoder() {
 
     if (switch_encoder_on_init_failures_) {
       RequestEncoderSwitch();
+    } else {
+      encoder_configuration_result =
+          webrtc::RTCError(RTCErrorType::UNSUPPORTED_OPERATION);
     }
+  }
+
+  if (!encoder_configuration_callbacks_.empty()) {
+    for (auto& callback : encoder_configuration_callbacks_) {
+      webrtc::InvokeSetParametersCallback(callback,
+                                          encoder_configuration_result);
+    }
+    encoder_configuration_callbacks_.clear();
   }
 }
 

@@ -131,10 +131,12 @@ void DefaultAudioQualityAnalyzer::Stop() {
   for (auto& item : streams_stats_) {
     const TrackIdStreamInfoMap::StreamInfo& stream_info =
         stream_info_[item.first];
+    // TODO(bugs.webrtc.org/14757): Remove kExperimentalTestNameMetadataKey.
     std::map<std::string, std::string> metric_metadata{
         {MetricMetadataKey::kAudioStreamMetadataKey, item.first},
         {MetricMetadataKey::kPeerMetadataKey, stream_info.receiver_peer},
-        {MetricMetadataKey::kReceiverMetadataKey, stream_info.receiver_peer}};
+        {MetricMetadataKey::kReceiverMetadataKey, stream_info.receiver_peer},
+        {MetricMetadataKey::kExperimentalTestNameMetadataKey, test_case_name_}};
 
     metrics_logger_->LogMetric("expand_rate", GetTestCaseName(item.first),
                                item.second.expand_rate, Unit::kUnitless,

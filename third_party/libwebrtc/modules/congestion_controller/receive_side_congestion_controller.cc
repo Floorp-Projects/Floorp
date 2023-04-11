@@ -84,7 +84,6 @@ ReceiveSideCongestionController::ReceiveSideCongestionController(
     : clock_(*clock),
       remb_throttler_(std::move(remb_sender), clock),
       remote_estimator_proxy_(std::move(feedback_sender),
-                              &field_trial_config_,
                               network_state_estimator),
       rbe_(new RemoteBitrateEstimatorSingleStream(&remb_throttler_, clock)),
       using_absolute_send_time_(false),

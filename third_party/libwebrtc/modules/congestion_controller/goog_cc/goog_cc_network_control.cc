@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "absl/strings/match.h"
+#include "api/network_state_predictor.h"
 #include "api/units/data_rate.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
@@ -60,6 +61,26 @@ bool IsEnabled(const FieldTrialsView* config, absl::string_view key) {
 bool IsNotDisabled(const FieldTrialsView* config, absl::string_view key) {
   return !absl::StartsWith(config->Lookup(key), "Disabled");
 }
+
+BandwidthLimitedCause GetBandwidthLimitedCause(
+    LossBasedState loss_based_state,
+    BandwidthUsage bandwidth_usage,
+    bool not_probe_if_delay_increased) {
+  if (not_probe_if_delay_increased &&
+      (bandwidth_usage == BandwidthUsage::kBwOverusing ||
+       bandwidth_usage == BandwidthUsage::kBwUnderusing)) {
+    return BandwidthLimitedCause::kDelayBasedLimitedDelayIncreased;
+  }
+  switch (loss_based_state) {
+    case LossBasedState::kDecreasing:
+      return BandwidthLimitedCause::kLossLimitedBweDecreasing;
+    case LossBasedState::kIncreasing:
+      return BandwidthLimitedCause::kLossLimitedBweIncreasing;
+    default:
+      return BandwidthLimitedCause::kDelayBasedLimited;
+  }
+}
+
 }  // namespace
 
 GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
@@ -80,13 +101,9 @@ GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
                     "WebRTC-Bwe-LimitProbesLowerThanThroughputEstimate")),
       rate_control_settings_(
           RateControlSettings::ParseFromKeyValueConfig(key_value_config_)),
-      loss_based_stable_rate_(
-          IsEnabled(key_value_config_, "WebRTC-Bwe-LossBasedStableRate")),
       pace_at_max_of_bwe_and_lower_link_capacity_(
           IsEnabled(key_value_config_,
                     "WebRTC-Bwe-PaceAtMaxOfBweAndLowerLinkCapacity")),
-      pace_at_loss_based_bwe_when_loss_(
-          IsEnabled(key_value_config_, "WebRTC-Bwe-PaceAtLossBaseBweWhenLoss")),
       probe_controller_(
           new ProbeController(key_value_config_, config.event_log)),
       congestion_window_pushback_controller_(
@@ -543,7 +560,8 @@ NetworkControlUpdate GoogCcNetworkController::OnTransportPacketsFeedback(
                                                     result.target_bitrate);
   }
   bandwidth_estimation_->UpdateLossBasedEstimator(
-      report, result.delay_detector_state, probe_bitrate);
+      report, result.delay_detector_state, probe_bitrate,
+      estimate_ ? estimate_->link_capacity_upper : DataRate::PlusInfinity());
   if (result.updated) {
     // Update the estimate in the ProbeController, in case we want to probe.
     MaybeTriggerOnNetworkChanged(&update, report.feedback_time);
@@ -631,11 +649,7 @@ void GoogCcNetworkController::MaybeTriggerOnNetworkChanged(
   }
   DataRate stable_target_rate =
       bandwidth_estimation_->GetEstimatedLinkCapacity();
-  if (loss_based_stable_rate_) {
-    stable_target_rate = std::min(stable_target_rate, loss_based_target_rate);
-  } else {
-    stable_target_rate = std::min(stable_target_rate, pushback_target_rate);
-  }
+  stable_target_rate = std::min(stable_target_rate, pushback_target_rate);
 
   if ((loss_based_target_rate != last_loss_based_target_rate_) ||
       (fraction_loss != last_estimated_fraction_loss_) ||
@@ -670,9 +684,10 @@ void GoogCcNetworkController::MaybeTriggerOnNetworkChanged(
 
     auto probes = probe_controller_->SetEstimatedBitrate(
         loss_based_target_rate,
-        /*bwe_limited_due_to_packet_loss=*/
-        bandwidth_estimation_->loss_based_state() !=
-            LossBasedState::kDelayBasedEstimate,
+        GetBandwidthLimitedCause(
+            bandwidth_estimation_->loss_based_state(),
+            delay_based_bwe_->last_state(),
+            probe_controller_->DontProbeIfDelayIncreased()),
         at_time);
     update->probe_cluster_configs.insert(update->probe_cluster_configs.end(),
                                          probes.begin(), probes.end());
@@ -687,10 +702,7 @@ PacerConfig GoogCcNetworkController::GetPacingRates(Timestamp at_time) const {
   // Pacing rate is based on target rate before congestion window pushback,
   // because we don't want to build queues in the pacer when pushback occurs.
   DataRate pacing_rate = DataRate::Zero();
-  if ((pace_at_max_of_bwe_and_lower_link_capacity_ ||
-       (pace_at_loss_based_bwe_when_loss_ &&
-        last_loss_based_target_rate_ >= delay_based_bwe_->last_estimate())) &&
-      estimate_) {
+  if (pace_at_max_of_bwe_and_lower_link_capacity_ && estimate_) {
     pacing_rate =
         std::max({min_total_allocated_bitrate_, estimate_->link_capacity_lower,
                   last_loss_based_target_rate_}) *

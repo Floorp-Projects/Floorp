@@ -28,7 +28,7 @@ AudioRtpReceiver::AudioRtpReceiver(
     std::string receiver_id,
     std::vector<std::string> stream_ids,
     bool is_unified_plan,
-    cricket::VoiceMediaChannel* voice_channel /*= nullptr*/)
+    cricket::VoiceMediaReceiveChannelInterface* voice_channel /*= nullptr*/)
     : AudioRtpReceiver(worker_thread,
                        receiver_id,
                        CreateStreamsFromIds(std::move(stream_ids)),
@@ -40,7 +40,7 @@ AudioRtpReceiver::AudioRtpReceiver(
     const std::string& receiver_id,
     const std::vector<rtc::scoped_refptr<MediaStreamInterface>>& streams,
     bool is_unified_plan,
-    cricket::VoiceMediaChannel* voice_channel /*= nullptr*/)
+    cricket::VoiceMediaReceiveChannelInterface* voice_channel /*= nullptr*/)
     : worker_thread_(worker_thread),
       id_(receiver_id),
       source_(rtc::make_ref_counted<RemoteAudioSource>(
@@ -314,7 +314,8 @@ void AudioRtpReceiver::SetJitterBufferMinimumDelay(
     media_channel_->SetBaseMinimumPlayoutDelayMs(*ssrc_, delay_.GetMs());
 }
 
-void AudioRtpReceiver::SetMediaChannel(cricket::MediaChannel* media_channel) {
+void AudioRtpReceiver::SetMediaChannel(
+    cricket::MediaReceiveChannelInterface* media_channel) {
   RTC_DCHECK_RUN_ON(worker_thread_);
   RTC_DCHECK(media_channel == nullptr ||
              media_channel->media_type() == media_type());
@@ -323,7 +324,8 @@ void AudioRtpReceiver::SetMediaChannel(cricket::MediaChannel* media_channel) {
 
   media_channel ? worker_thread_safety_->SetAlive()
                 : worker_thread_safety_->SetNotAlive();
-  media_channel_ = static_cast<cricket::VoiceMediaChannel*>(media_channel);
+  media_channel_ =
+      static_cast<cricket::VoiceMediaReceiveChannelInterface*>(media_channel);
 }
 
 void AudioRtpReceiver::NotifyFirstPacketReceived() {

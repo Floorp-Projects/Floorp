@@ -65,10 +65,6 @@ bool IsEnabled(const FieldTrialsView& trials, absl::string_view key) {
   return absl::StartsWith(trials.Lookup(key), "Enabled");
 }
 
-bool IsDisabled(const FieldTrialsView& trials, absl::string_view key) {
-  return absl::StartsWith(trials.Lookup(key), "Disabled");
-}
-
 bool IsRelayed(const rtc::NetworkRoute& route) {
   return route.local.uses_turn() || route.remote.uses_turn();
 }
@@ -84,53 +80,53 @@ RtpTransportControllerSend::PacerSettings::PacerSettings(
 
 RtpTransportControllerSend::RtpTransportControllerSend(
     Clock* clock,
-    webrtc::RtcEventLog* event_log,
-    NetworkStatePredictorFactoryInterface* predictor_factory,
-    NetworkControllerFactoryInterface* controller_factory,
-    const BitrateConstraints& bitrate_config,
-    TaskQueueFactory* task_queue_factory,
-    const FieldTrialsView& trials)
+    const RtpTransportConfig& config)
     : clock_(clock),
-      event_log_(event_log),
-      task_queue_factory_(task_queue_factory),
-      bitrate_configurator_(bitrate_config),
+      event_log_(config.event_log),
+      task_queue_factory_(config.task_queue_factory),
+      bitrate_configurator_(config.bitrate_config),
       pacer_started_(false),
-      pacer_settings_(trials),
+      pacer_settings_(*config.trials),
       pacer_(clock,
              &packet_router_,
-             trials,
-             task_queue_factory,
+             *config.trials,
+             config.task_queue_factory,
              pacer_settings_.holdback_window.Get(),
-             pacer_settings_.holdback_packets.Get()),
+             pacer_settings_.holdback_packets.Get(),
+             config.pacer_burst_interval),
       observer_(nullptr),
-      controller_factory_override_(controller_factory),
+      controller_factory_override_(config.network_controller_factory),
       controller_factory_fallback_(
-          std::make_unique<GoogCcNetworkControllerFactory>(predictor_factory)),
+          std::make_unique<GoogCcNetworkControllerFactory>(
+              config.network_state_predictor_factory)),
       process_interval_(controller_factory_fallback_->GetProcessInterval()),
       last_report_block_time_(Timestamp::Millis(clock_->TimeInMilliseconds())),
       reset_feedback_on_route_change_(
-          !IsEnabled(trials, "WebRTC-Bwe-NoFeedbackReset")),
-      send_side_bwe_with_overhead_(
-          !IsDisabled(trials, "WebRTC-SendSideBwe-WithOverhead")),
+          !IsEnabled(*config.trials, "WebRTC-Bwe-NoFeedbackReset")),
       add_pacing_to_cwin_(
-          IsEnabled(trials, "WebRTC-AddPacingToCongestionWindowPushback")),
+          IsEnabled(*config.trials,
+                    "WebRTC-AddPacingToCongestionWindowPushback")),
       relay_bandwidth_cap_("relay_cap", DataRate::PlusInfinity()),
       transport_overhead_bytes_per_packet_(0),
       network_available_(false),
       congestion_window_size_(DataSize::PlusInfinity()),
       is_congested_(false),
       retransmission_rate_limiter_(clock, kRetransmitWindowSizeMs),
-      task_queue_(trials, "rtp_send_controller", task_queue_factory),
-      field_trials_(trials) {
+      task_queue_(*config.trials,
+                  "rtp_send_controller",
+                  config.task_queue_factory),
+      field_trials_(*config.trials) {
   ParseFieldTrial({&relay_bandwidth_cap_},
-                  trials.Lookup("WebRTC-Bwe-NetworkRouteConstraints"));
-  initial_config_.constraints = ConvertConstraints(bitrate_config, clock_);
-  initial_config_.event_log = event_log;
-  initial_config_.key_value_config = &trials;
-  RTC_DCHECK(bitrate_config.start_bitrate_bps > 0);
+                  config.trials->Lookup("WebRTC-Bwe-NetworkRouteConstraints"));
+  initial_config_.constraints =
+      ConvertConstraints(config.bitrate_config, clock_);
+  initial_config_.event_log = config.event_log;
+  initial_config_.key_value_config = config.trials;
+  RTC_DCHECK(config.bitrate_config.start_bitrate_bps > 0);
 
-  pacer_.SetPacingRates(DataRate::BitsPerSec(bitrate_config.start_bitrate_bps),
-                        DataRate::Zero());
+  pacer_.SetPacingRates(
+      DataRate::BitsPerSec(config.bitrate_config.start_bitrate_bps),
+      DataRate::Zero());
 }
 
 RtpTransportControllerSend::~RtpTransportControllerSend() {
@@ -552,9 +548,7 @@ void RtpTransportControllerSend::OnAddPacket(
     RTC_DCHECK_RUN_ON(&task_queue_);
     feedback_demuxer_.AddPacket(packet_info);
     transport_feedback_adapter_.AddPacket(
-        packet_info,
-        send_side_bwe_with_overhead_ ? transport_overhead_bytes_per_packet_ : 0,
-        creation_time);
+        packet_info, transport_overhead_bytes_per_packet_, creation_time);
   });
 }
 

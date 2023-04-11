@@ -182,7 +182,7 @@ specific_include_rules = {
     "+rtc_base/ref_count.h",
   ],
 
-  "stats_types\.h": [
+  "legacy_stats_types\.h": [
     "+rtc_base/ref_count.h",
     "+rtc_base/thread_checker.h",
   ],

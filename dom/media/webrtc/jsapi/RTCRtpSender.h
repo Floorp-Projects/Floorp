@@ -11,7 +11,6 @@
 #include "mozilla/StateMirroring.h"
 #include "mozilla/Maybe.h"
 #include "js/RootingAPI.h"
-#include "libwebrtcglue/MediaConduitInterface.h"
 #include "libwebrtcglue/RtpRtcpConfig.h"
 #include "nsTArray.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"

@@ -480,7 +480,7 @@ void SendVideoStream::UpdateActiveLayers(std::vector<bool> active_layers) {
     MutexLock lock(&mutex_);
     if (config_.encoder.codec ==
         VideoStreamConfig::Encoder::Codec::kVideoCodecVP8) {
-      send_stream_->UpdateActiveSimulcastLayers(active_layers);
+      send_stream_->StartPerRtpStream(active_layers);
     }
     VideoEncoderConfig encoder_config = CreateVideoEncoderConfig(config_);
     RTC_CHECK_EQ(encoder_config.simulcast_layers.size(), active_layers.size());

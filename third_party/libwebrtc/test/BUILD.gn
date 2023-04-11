@@ -338,6 +338,7 @@ if (is_ios) {
       "../api/test/metrics:chrome_perf_dashboard_metrics_exporter",
       "../api/test/metrics:global_metrics_logger_and_exporter",
       "../api/test/metrics:metrics_exporter",
+      "../api/test/metrics:metrics_set_proto_file_exporter",
       "../api/test/metrics:print_result_proxy_metrics_exporter",
       "../api/test/metrics:stdout_metrics_exporter",
       "../sdk:helpers_objc",
@@ -450,6 +451,7 @@ rtc_library("video_test_support") {
     "../api:sequence_checker",
     "../api/test/video:video_frame_writer",
     "../api/video:encoded_image",
+    "../api/video:resolution",
     "../api/video:video_frame",
     "../api/video_codecs:video_codecs_api",
     "../common_video",
@@ -526,6 +528,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../api/test/metrics:chrome_perf_dashboard_metrics_exporter",
       "../api/test/metrics:global_metrics_logger_and_exporter",
       "../api/test/metrics:metrics_exporter",
+      "../api/test/metrics:metrics_set_proto_file_exporter",
       "../api/test/metrics:print_result_proxy_metrics_exporter",
       "../api/test/metrics:stdout_metrics_exporter",
       "../rtc_base",
@@ -661,6 +664,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../rtc_base/synchronization:mutex",
       "../rtc_base/system:file_wrapper",
       "pc/e2e:e2e_unittests",
+      "pc/e2e/analyzer/video:video_analyzer_unittests",
       "peer_scenario/tests",
       "scenario:scenario_unittests",
       "time_controller:time_controller",
@@ -1096,6 +1100,7 @@ if (is_mac) {
       "OpenGL.framework",
       "CoreVideo.framework",
     ]
+    defines = [ "GL_SILENCE_DEPRECATION" ]
   }
 }
 
@@ -1130,6 +1135,9 @@ rtc_library("test_renderer_generic") {
       "gl/gl_renderer.cc",
       "gl/gl_renderer.h",
     ]
+  }
+  if (is_mac) {
+    defines = [ "GL_SILENCE_DEPRECATION" ]
   }
 
   if ((is_linux || is_chromeos) && rtc_use_x11) {

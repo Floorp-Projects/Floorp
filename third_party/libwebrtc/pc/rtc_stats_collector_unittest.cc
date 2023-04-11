@@ -39,6 +39,7 @@
 #include "api/video/video_sink_interface.h"
 #include "api/video/video_source_interface.h"
 #include "api/video/video_timing.h"
+#include "api/video_codecs/scalability_mode.h"
 #include "common_video/include/quality_limitation_reason.h"
 #include "media/base/media_channel.h"
 #include "modules/audio_processing/include/audio_processing_statistics.h"
@@ -2835,6 +2836,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCOutboundRTPStreamStats_Video) {
   video_media_info.senders[0].frames_sent = 5;
   video_media_info.senders[0].huge_frames_sent = 2;
   video_media_info.senders[0].active = false;
+  video_media_info.senders[0].scalability_mode = ScalabilityMode::kL3T3_KEY;
   video_media_info.aggregated_senders.push_back(video_media_info.senders[0]);
   RtpCodecParameters codec_parameters;
   codec_parameters.payload_type = 42;
@@ -2894,6 +2896,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCOutboundRTPStreamStats_Video) {
   expected_video.huge_frames_sent = 2;
   expected_video.active = false;
   expected_video.power_efficient_encoder = false;
+  expected_video.scalability_mode = "L3T3_KEY";
   // `expected_video.content_type` should be undefined.
   // `expected_video.qp_sum` should be undefined.
   // `expected_video.encoder_implementation` should be undefined.
@@ -3555,6 +3558,32 @@ TEST_P(RTCStatsCollectorTestWithParamKind,
                    .remote_id,
               expected_remote_inbound_rtp.id());
   }
+}
+
+TEST_P(RTCStatsCollectorTestWithParamKind,
+       RTCRemoteInboundRtpStreamStatsRttMissingBeforeMeasurement) {
+  constexpr int64_t kReportBlockTimestampUtcUs = 123456789;
+
+  RTCPReportBlock report_block;
+  // The remote-inbound-rtp SSRC and the outbound-rtp SSRC is the same as the
+  // `source_ssrc`, "SSRC of the RTP packet sender".
+  report_block.source_ssrc = 12;
+  ReportBlockData report_block_data;  // AddRoundTripTimeSample() not called.
+  report_block_data.SetReportBlock(report_block, kReportBlockTimestampUtcUs);
+
+  AddSenderInfoAndMediaChannel("TransportName", {report_block_data},
+                               absl::nullopt);
+
+  rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
+
+  std::string remote_inbound_rtp_id = "RI" + MediaTypeCharStr() + "12";
+  ASSERT_TRUE(report->Get(remote_inbound_rtp_id));
+  auto& remote_inbound_rtp = report->Get(remote_inbound_rtp_id)
+                                 ->cast_to<RTCRemoteInboundRtpStreamStats>();
+
+  EXPECT_TRUE(remote_inbound_rtp.round_trip_time_measurements.is_defined());
+  EXPECT_EQ(0, *remote_inbound_rtp.round_trip_time_measurements);
+  EXPECT_FALSE(remote_inbound_rtp.round_trip_time.is_defined());
 }
 
 TEST_P(RTCStatsCollectorTestWithParamKind,

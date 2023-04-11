@@ -19,7 +19,7 @@
 
 namespace webrtc {
 
-class MockPeerConnectionFactoryInterface final
+class MockPeerConnectionFactoryInterface
     : public rtc::RefCountedObject<webrtc::PeerConnectionFactoryInterface> {
  public:
   static rtc::scoped_refptr<MockPeerConnectionFactoryInterface> Create() {

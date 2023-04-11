@@ -27,6 +27,7 @@ void InitTestSuite(int (*test_suite)(void),
                    char* argv[],
                    bool save_chartjson_result,
                    bool export_perf_results_new_api,
+                   std::string webrtc_test_metrics_output_path,
                    absl::optional<std::vector<std::string>> metrics_to_plot);
 
 // Returns true if unittests should be run by the XCTest runnner.

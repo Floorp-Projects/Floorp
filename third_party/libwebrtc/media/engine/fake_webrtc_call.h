@@ -62,7 +62,8 @@ class FakeAudioSendStream final : public webrtc::AudioSendStream {
 
  private:
   // webrtc::AudioSendStream implementation.
-  void Reconfigure(const webrtc::AudioSendStream::Config& config) override;
+  void Reconfigure(const webrtc::AudioSendStream::Config& config,
+                   webrtc::SetParametersCallback callback) override;
   void Start() override { sending_ = true; }
   void Stop() override { sending_ = false; }
   void SendAudioData(std::unique_ptr<webrtc::AudioFrame> audio_frame) override {
@@ -201,7 +202,7 @@ class FakeVideoSendStream final
   void OnFrame(const webrtc::VideoFrame& frame) override;
 
   // webrtc::VideoSendStream implementation.
-  void UpdateActiveSimulcastLayers(std::vector<bool> active_layers) override;
+  void StartPerRtpStream(std::vector<bool> active_layers) override;
   void Start() override;
   void Stop() override;
   bool started() override { return IsSending(); }
@@ -213,7 +214,10 @@ class FakeVideoSendStream final
       rtc::VideoSourceInterface<webrtc::VideoFrame>* source,
       const webrtc::DegradationPreference& degradation_preference) override;
   webrtc::VideoSendStream::Stats GetStats() override;
+
   void ReconfigureVideoEncoder(webrtc::VideoEncoderConfig config) override;
+  void ReconfigureVideoEncoder(webrtc::VideoEncoderConfig config,
+                               webrtc::SetParametersCallback callback) override;
 
   bool sending_;
   webrtc::VideoSendStream::Config config_;

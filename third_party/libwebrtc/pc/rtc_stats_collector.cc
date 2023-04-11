@@ -33,8 +33,10 @@
 #include "api/stats/rtcstats_objects.h"
 #include "api/units/time_delta.h"
 #include "api/video/video_content_type.h"
+#include "api/video_codecs/scalability_mode.h"
 #include "common_video/include/quality_limitation_reason.h"
 #include "media/base/media_channel.h"
+#include "media/base/media_channel_impl.h"
 #include "modules/audio_processing/include/audio_processing_statistics.h"
 #include "modules/rtp_rtcp/include/report_block_data.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
@@ -792,6 +794,10 @@ void SetOutboundRTPStreamStatsFromVideoSenderInfo(
     outbound_video->power_efficient_encoder =
         video_sender_info.power_efficient_encoder.value();
   }
+  if (video_sender_info.scalability_mode) {
+    outbound_video->scalability_mode = std::string(
+        ScalabilityModeToString(*video_sender_info.scalability_mode));
+  }
 }
 
 std::unique_ptr<RTCRemoteInboundRtpStreamStats>
@@ -815,9 +821,11 @@ ProduceRemoteInboundRtpStreamStatsFromReportBlockData(
   remote_inbound->packets_lost = report_block.packets_lost;
   remote_inbound->fraction_lost =
       static_cast<double>(report_block.fraction_lost) / (1 << 8);
-  remote_inbound->round_trip_time =
-      static_cast<double>(report_block_data.last_rtt_ms()) /
-      rtc::kNumMillisecsPerSec;
+  if (report_block_data.num_rtts() > 0) {
+    remote_inbound->round_trip_time =
+        static_cast<double>(report_block_data.last_rtt_ms()) /
+        rtc::kNumMillisecsPerSec;
+  }
   remote_inbound->total_round_trip_time =
       static_cast<double>(report_block_data.sum_rtt_ms()) /
       rtc::kNumMillisecsPerSec;
@@ -2359,13 +2367,15 @@ void RTCStatsCollector::PrepareTransceiverStatsInfosAndCallStats_s_w_n() {
 
       if (media_type == cricket::MEDIA_TYPE_AUDIO) {
         cricket::VoiceMediaChannel* voice_channel =
-            static_cast<cricket::VoiceMediaChannel*>(channel->media_channel());
+            static_cast<cricket::VoiceMediaChannel*>(
+                channel->voice_media_send_channel());
         RTC_DCHECK(voice_stats.find(voice_channel) == voice_stats.end());
         voice_stats.insert(
             std::make_pair(voice_channel, cricket::VoiceMediaInfo()));
       } else if (media_type == cricket::MEDIA_TYPE_VIDEO) {
         cricket::VideoMediaChannel* video_channel =
-            static_cast<cricket::VideoMediaChannel*>(channel->media_channel());
+            static_cast<cricket::VideoMediaChannel*>(
+                channel->video_media_send_channel());
         RTC_DCHECK(video_stats.find(video_channel) == video_stats.end());
         video_stats.insert(
             std::make_pair(video_channel, cricket::VideoMediaInfo()));
@@ -2405,13 +2415,13 @@ void RTCStatsCollector::PrepareTransceiverStatsInfosAndCallStats_s_w_n() {
         if (media_type == cricket::MEDIA_TYPE_AUDIO) {
           cricket::VoiceMediaChannel* voice_channel =
               static_cast<cricket::VoiceMediaChannel*>(
-                  channel->media_channel());
+                  channel->voice_media_send_channel());
           RTC_DCHECK(voice_stats.find(voice_channel) != voice_stats.end());
           voice_media_info = std::move(voice_stats[voice_channel]);
         } else if (media_type == cricket::MEDIA_TYPE_VIDEO) {
           cricket::VideoMediaChannel* video_channel =
               static_cast<cricket::VideoMediaChannel*>(
-                  channel->media_channel());
+                  channel->video_media_send_channel());
           RTC_DCHECK(video_stats.find(video_channel) != video_stats.end());
           video_media_info = std::move(video_stats[video_channel]);
         }

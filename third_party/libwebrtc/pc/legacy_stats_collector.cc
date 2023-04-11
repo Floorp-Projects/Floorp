@@ -34,6 +34,7 @@
 #include "api/video/video_timing.h"
 #include "call/call.h"
 #include "media/base/media_channel.h"
+#include "media/base/media_channel_impl.h"
 #include "modules/audio_processing/include/audio_processing_statistics.h"
 #include "p2p/base/ice_transport_internal.h"
 #include "p2p/base/p2p_constants.h"
@@ -1043,7 +1044,7 @@ void LegacyStatsCollector::ExtractBweInfo() {
     auto* video_channel = transceiver->internal()->channel();
     if (video_channel) {
       video_media_channels.push_back(static_cast<cricket::VideoMediaChannel*>(
-          video_channel->media_channel()));
+          video_channel->video_media_send_channel()));
     }
   }
 
@@ -1155,11 +1156,11 @@ std::unique_ptr<MediaChannelStatsGatherer> CreateMediaChannelStatsGatherer(
   RTC_DCHECK(channel);
   if (channel->media_type() == cricket::MEDIA_TYPE_AUDIO) {
     return std::make_unique<VoiceMediaChannelStatsGatherer>(
-        static_cast<cricket::VoiceMediaChannel*>(channel));
+        channel->AsVoiceChannel());
   } else {
     RTC_DCHECK_EQ(channel->media_type(), cricket::MEDIA_TYPE_VIDEO);
     return std::make_unique<VideoMediaChannelStatsGatherer>(
-        static_cast<cricket::VideoMediaChannel*>(channel));
+        channel->AsVideoChannel());
   }
 }
 

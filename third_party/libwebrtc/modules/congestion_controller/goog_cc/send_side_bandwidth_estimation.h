@@ -120,7 +120,8 @@ class SendSideBandwidthEstimation {
                            Timestamp at_time);
   void UpdateLossBasedEstimator(const TransportPacketsFeedback& report,
                                 BandwidthUsage delay_detector_state,
-                                absl::optional<DataRate> probe_bitrate);
+                                absl::optional<DataRate> probe_bitrate,
+                                DataRate upper_link_capacity);
 
  private:
   friend class GoogCcStatePrinter;

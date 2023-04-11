@@ -55,10 +55,18 @@ class MockVideoStreamEncoder : public VideoStreamEncoderInterface {
   MOCK_METHOD(void,
               MockedConfigureEncoder,
               (const VideoEncoderConfig&, size_t));
+  MOCK_METHOD(void,
+              MockedConfigureEncoder,
+              (const VideoEncoderConfig&, size_t, SetParametersCallback));
   // gtest generates implicit copy which is not allowed on VideoEncoderConfig,
   // so we can't mock ConfigureEncoder directly.
   void ConfigureEncoder(VideoEncoderConfig config,
                         size_t max_data_payload_length) {
+    MockedConfigureEncoder(config, max_data_payload_length);
+  }
+  void ConfigureEncoder(VideoEncoderConfig config,
+                        size_t max_data_payload_length,
+                        SetParametersCallback) {
     MockedConfigureEncoder(config, max_data_payload_length);
   }
 };

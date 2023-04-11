@@ -58,6 +58,10 @@ if CONFIG["OS_TARGET"] == "Android":
     DEFINES["__STDC_CONSTANT_MACROS"] = True
     DEFINES["__STDC_FORMAT_MACROS"] = True
 
+    OS_LIBS += [
+        "log"
+    ]
+
 if CONFIG["OS_TARGET"] == "Darwin":
 
     DEFINES["WEBRTC_ENABLE_AVX2"] = True

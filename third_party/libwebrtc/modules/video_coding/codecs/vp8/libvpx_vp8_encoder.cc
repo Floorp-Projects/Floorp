@@ -25,6 +25,7 @@
 #include "api/video/video_content_type.h"
 #include "api/video/video_frame_buffer.h"
 #include "api/video/video_timing.h"
+#include "api/video_codecs/scalability_mode.h"
 #include "api/video_codecs/vp8_temporal_layers.h"
 #include "api/video_codecs/vp8_temporal_layers_factory.h"
 #include "modules/video_coding/codecs/interface/common_constants.h"
@@ -1102,6 +1103,17 @@ void LibvpxVp8Encoder::PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
         codec_specific->template_structure->templates.back().spatial_id, 0);
     codec_specific->template_structure->resolutions = {
         RenderResolution(pkt.data.frame.width[0], pkt.data.frame.height[0])};
+  }
+  switch (vpx_configs_[encoder_idx].ts_number_layers) {
+    case 1:
+      codec_specific->scalability_mode = ScalabilityMode::kL1T1;
+      break;
+    case 2:
+      codec_specific->scalability_mode = ScalabilityMode::kL1T2;
+      break;
+    case 3:
+      codec_specific->scalability_mode = ScalabilityMode::kL1T3;
+      break;
   }
 }
 

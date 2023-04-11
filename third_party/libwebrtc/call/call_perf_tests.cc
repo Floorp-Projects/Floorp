@@ -267,8 +267,11 @@ void CallPerfTest::TestAudioVideoSync(FecMode fec,
 
     AudioSendStream::Config audio_send_config(audio_send_transport.get());
     audio_send_config.rtp.ssrc = kAudioSendSsrc;
+    // TODO(bugs.webrtc.org/14683): Let the tests fail with invalid config.
     audio_send_config.send_codec_spec = AudioSendStream::Config::SendCodecSpec(
-        kAudioSendPayloadType, {"ISAC", 16000, 1});
+        kAudioSendPayloadType, {"OPUS", 48000, 2});
+    audio_send_config.min_bitrate_bps = 6000;
+    audio_send_config.max_bitrate_bps = 510000;
     audio_send_config.encoder_factory = CreateBuiltinAudioEncoderFactory();
     audio_send_stream = sender_call_->CreateAudioSendStream(audio_send_config);
 
@@ -290,7 +293,7 @@ void CallPerfTest::TestAudioVideoSync(FecMode fec,
     audio_recv_config.sync_group = kSyncGroup;
     audio_recv_config.decoder_factory = audio_decoder_factory_;
     audio_recv_config.decoder_map = {
-        {kAudioSendPayloadType, {"ISAC", 16000, 1}}};
+        {kAudioSendPayloadType, {"OPUS", 48000, 2}}};
 
     if (create_first == CreateOrder::kAudioFirst) {
       audio_receive_stream =
@@ -775,12 +778,8 @@ TEST_F(CallPerfTest, Bitrate_Kbps_NoPadWithoutMinTransmitBitrate) {
 #endif
 TEST_F(CallPerfTest, MAYBE_KeepsHighBitrateWhenReconfiguringSender) {
   static const uint32_t kInitialBitrateKbps = 400;
+  static const uint32_t kInitialBitrateOverheadKpbs = 6;
   static const uint32_t kReconfigureThresholdKbps = 600;
-
-  // We get lower bitrate than expected by this test if the following field
-  // trial is enabled.
-  test::ScopedKeyValueConfig field_trials(
-      field_trials_, "WebRTC-SendSideBwe-WithOverhead/Disabled/");
 
   class VideoStreamFactory
       : public VideoEncoderConfig::VideoStreamFactoryInterface {
@@ -821,9 +820,10 @@ TEST_F(CallPerfTest, MAYBE_KeepsHighBitrateWhenReconfiguringSender) {
         // First time initialization. Frame size is known.
         // `expected_bitrate` is affected by bandwidth estimation before the
         // first frame arrives to the encoder.
-        uint32_t expected_bitrate = last_set_bitrate_kbps_ > 0
-                                        ? last_set_bitrate_kbps_
-                                        : kInitialBitrateKbps;
+        uint32_t expected_bitrate =
+            last_set_bitrate_kbps_ > 0
+                ? last_set_bitrate_kbps_
+                : kInitialBitrateKbps - kInitialBitrateOverheadKpbs;
         EXPECT_EQ(expected_bitrate, config->startBitrate)
             << "Encoder not initialized at expected bitrate.";
         EXPECT_EQ(kDefaultWidth, config->width);

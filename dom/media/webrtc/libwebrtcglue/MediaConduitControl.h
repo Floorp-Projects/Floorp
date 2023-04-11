@@ -7,12 +7,21 @@
 #ifndef DOM_MEDIA_WEBRTC_LIBWEBRTCGLUE_MEDIACONDUITCONTROL_H_
 #define DOM_MEDIA_WEBRTC_LIBWEBRTCGLUE_MEDIACONDUITCONTROL_H_
 
-#include "jsapi/RTCDTMFSender.h"
-#include "MediaConduitInterface.h"
+#include "jsapi/RTCDTMFSender.h"  // For DtmfEvent
 #include "mozilla/StateMirroring.h"
 #include "RtpRtcpConfig.h"
+#include <vector>
+#include <string>
+#include "mozilla/Maybe.h"
+#include "CodecConfig.h"                   // For Audio/VideoCodecConfig
+#include "api/rtp_parameters.h"            // For webrtc::RtpExtension
+#include "api/video_codecs/video_codec.h"  // For webrtc::VideoCodecMode
 
 namespace mozilla {
+
+using RtpExtList = std::vector<webrtc::RtpExtension>;
+using Ssrc = uint32_t;
+using Ssrcs = std::vector<uint32_t>;
 
 /**
  * These are the interfaces used to control the async conduits. Some parameters

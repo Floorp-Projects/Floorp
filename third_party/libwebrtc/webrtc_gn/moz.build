@@ -170,12 +170,6 @@ if CONFIG["CPU_ARCH"] == "arm":
     DEFINES["WEBRTC_ARCH_ARM_V7"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
-if CONFIG["CPU_ARCH"] == "ppc64":
-
-    OS_LIBS += [
-        "m"
-    ]
-
 if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Android":
 
     DEFINES["_DEBUG"] = True
@@ -229,10 +223,6 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
-    OS_LIBS += [
-        "m"
-    ]
-
 if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
@@ -243,17 +233,9 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
-    OS_LIBS += [
-        "m"
-    ]
-
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
-
-    OS_LIBS += [
-        "m"
-    ]
 
 Library("webrtc_gn")

@@ -1940,7 +1940,7 @@ void BuildRtpmap(const MediaContentDescription* media_desc,
     if (GetMinValue(maxptimes, &min_maxptime)) {
       AddAttributeLine(kCodecParamMaxPTime, min_maxptime, message);
     }
-    RTC_DCHECK(min_maxptime > max_minptime);
+    RTC_DCHECK_GE(min_maxptime, max_minptime);
     // Populate the ptime attribute with the smallest ptime or the largest
     // minptime, whichever is the largest, for all codecs under the same m-line.
     int ptime = INT_MAX;
@@ -2333,40 +2333,57 @@ static bool ParseMsidAttribute(absl::string_view line,
                                std::vector<std::string>* stream_ids,
                                std::string* track_id,
                                SdpParseError* error) {
-  // https://datatracker.ietf.org/doc/draft-ietf-mmusic-msid/16/
-  // a=msid:<stream id> <track id>
+  // https://datatracker.ietf.org/doc/rfc8830/
+  // a=msid:<msid-value>
   // msid-value = msid-id [ SP msid-appdata ]
   // msid-id = 1*64token-char ; see RFC 4566
   // msid-appdata = 1*64token-char  ; see RFC 4566
-  std::string field1;
-  std::string new_stream_id;
-  std::string new_track_id;
-  if (!rtc::tokenize_first(line.substr(kLinePrefixLength),
-                           kSdpDelimiterSpaceChar, &field1, &new_track_id)) {
-    const size_t expected_fields = 2;
-    return ParseFailedExpectFieldNum(line, expected_fields, error);
+  // Note that JSEP stipulates not sending msid-appdata so
+  // a=msid:<stream id> <track id>
+  // is supported for backward compability reasons only.
+  std::vector<std::string> fields;
+  size_t num_fields = rtc::tokenize(line.substr(kLinePrefixLength),
+                                    kSdpDelimiterSpaceChar, &fields);
+  if (num_fields < 1 || num_fields > 2) {
+    return ParseFailed(line, "Expected a stream ID and optionally a track ID",
+                       error);
   }
+  if (num_fields == 1) {
+    if (line.back() == kSdpDelimiterSpaceChar) {
+      return ParseFailed(line, "Missing track ID in msid attribute.", error);
+    }
+    if (!track_id->empty()) {
+      fields.push_back(*track_id);
+    } else {
+      // Ending with an empty string track will cause a random track id
+      // to be generated later in the process.
+      fields.push_back("");
+    }
+  }
+  RTC_DCHECK_EQ(fields.size(), 2);
 
-  if (new_track_id.empty()) {
-    return ParseFailed(line, "Missing track ID in msid attribute.", error);
-  }
   // All track ids should be the same within an m section in a Unified Plan SDP.
-  if (!track_id->empty() && new_track_id.compare(*track_id) != 0) {
+  if (!track_id->empty() && track_id->compare(fields[1]) != 0) {
     return ParseFailed(
         line, "Two different track IDs in msid attribute in one m= section",
         error);
   }
-  *track_id = new_track_id;
+  *track_id = fields[1];
 
   // msid:<msid-id>
-  if (!GetValue(field1, kAttributeMsid, &new_stream_id, error)) {
+  std::string new_stream_id;
+  if (!GetValue(fields[0], kAttributeMsid, &new_stream_id, error)) {
     return false;
   }
   if (new_stream_id.empty()) {
     return ParseFailed(line, "Missing stream ID in msid attribute.", error);
   }
   // The special value "-" indicates "no MediaStream".
-  if (new_stream_id.compare(kNoStreamMsid) != 0) {
+  if (new_stream_id.compare(kNoStreamMsid) != 0 &&
+      !absl::c_any_of(*stream_ids,
+                      [&new_stream_id](const std::string& existing_stream_id) {
+                        return new_stream_id == existing_stream_id;
+                      })) {
     stream_ids->push_back(new_stream_id);
   }
   return true;
@@ -3330,6 +3347,10 @@ bool ParseContent(absl::string_view message,
     // still create a track. This isn't done for data media types because
     // StreamParams aren't used for SCTP streams, and RTP data channels don't
     // support unsignaled SSRCs.
+    // If track id was not specified, create a random one.
+    if (track_id.empty()) {
+      track_id = rtc::CreateRandomString(8);
+    }
     CreateTrackWithNoSsrcs(stream_ids, track_id, send_rids, &tracks);
   }
 

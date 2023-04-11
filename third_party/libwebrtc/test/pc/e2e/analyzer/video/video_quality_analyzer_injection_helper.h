@@ -43,8 +43,6 @@ namespace webrtc_pc_e2e {
 // VideoQualityAnalyzerInterface into PeerConnection pipeline.
 class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
  public:
-  using VideoConfig = ::webrtc::webrtc_pc_e2e::VideoConfig;
-
   VideoQualityAnalyzerInjectionHelper(
       Clock* clock,
       std::unique_ptr<VideoQualityAnalyzerInterface> analyzer,
@@ -71,7 +69,7 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
   // `input_dump_file_name`, video will be written into that file.
   std::unique_ptr<test::TestVideoCapturer::FramePreprocessor>
   CreateFramePreprocessor(absl::string_view peer_name,
-                          const VideoConfig& config);
+                          const webrtc::webrtc_pc_e2e::VideoConfig& config);
   // Creates sink, that will allow video quality analyzer to get access to
   // the rendered frames. If corresponding video track has
   // `output_dump_file_name` in its VideoConfig, which was used for
@@ -160,7 +158,7 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
   Mutex mutex_;
   int peers_count_ RTC_GUARDED_BY(mutex_);
   // Map from stream label to the video config.
-  std::map<std::string, VideoConfig> known_video_configs_
+  std::map<std::string, webrtc::webrtc_pc_e2e::VideoConfig> known_video_configs_
       RTC_GUARDED_BY(mutex_);
   std::map<ReceiverStream,
            std::vector<std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>>>>

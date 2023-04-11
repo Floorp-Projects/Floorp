@@ -297,7 +297,6 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
     RtcpMuxPolicy rtcp_mux_policy;
     std::vector<rtc::scoped_refptr<rtc::RTCCertificate>> certificates;
     int ice_candidate_pool_size;
-    bool DEPRECATED_disable_ipv6;
     bool disable_ipv6_on_wifi;
     int max_ipv6_networks;
     bool disable_link_local_networks;
@@ -343,6 +342,7 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
     webrtc::VpnPreference vpn_preference;
     std::vector<rtc::NetworkMask> vpn_list;
     PortAllocatorConfig port_allocator_config;
+    absl::optional<TimeDelta> pacer_burst_interval;
   };
   static_assert(sizeof(stuff_being_tested_for_equality) == sizeof(*this),
                 "Did you add something to RTCConfiguration and forget to "
@@ -366,7 +366,6 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
          prioritize_most_likely_ice_candidate_pairs ==
              o.prioritize_most_likely_ice_candidate_pairs &&
          media_config == o.media_config &&
-         DEPRECATED_disable_ipv6 == o.DEPRECATED_disable_ipv6 &&
          disable_ipv6_on_wifi == o.disable_ipv6_on_wifi &&
          max_ipv6_networks == o.max_ipv6_networks &&
          disable_link_local_networks == o.disable_link_local_networks &&
@@ -409,7 +408,8 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
          vpn_preference == o.vpn_preference && vpn_list == o.vpn_list &&
          port_allocator_config.min_port == o.port_allocator_config.min_port &&
          port_allocator_config.max_port == o.port_allocator_config.max_port &&
-         port_allocator_config.flags == o.port_allocator_config.flags;
+         port_allocator_config.flags == o.port_allocator_config.flags &&
+         pacer_burst_interval == o.pacer_burst_interval;
 }
 
 bool PeerConnectionInterface::RTCConfiguration::operator!=(
@@ -601,6 +601,16 @@ RTCError PeerConnection::Initialize(
                                                 &stun_servers, &turn_servers);
   if (!parse_error.ok()) {
     return parse_error;
+  }
+
+  // Restrict number of TURN servers.
+  if (!trials().IsDisabled("WebRTC-LimitTurnServers") &&
+      turn_servers.size() > cricket::kMaxTurnServers) {
+    RTC_LOG(LS_WARNING) << "Number of configured TURN servers is "
+                        << turn_servers.size()
+                        << " which exceeds the maximum allowed number of "
+                        << cricket::kMaxTurnServers;
+    turn_servers.resize(cricket::kMaxTurnServers);
   }
 
   // Add the turn logging id to all turn servers
@@ -1164,14 +1174,14 @@ rtc::scoped_refptr<RtpSenderInterface> PeerConnection::CreateSender(
     auto audio_sender =
         AudioRtpSender::Create(worker_thread(), rtc::CreateRandomUuid(),
                                legacy_stats_.get(), rtp_manager());
-    audio_sender->SetMediaChannel(rtp_manager()->voice_media_channel());
+    audio_sender->SetMediaChannel(rtp_manager()->voice_media_send_channel());
     new_sender = RtpSenderProxyWithInternal<RtpSenderInternal>::Create(
         signaling_thread(), audio_sender);
     rtp_manager()->GetAudioTransceiver()->internal()->AddSender(new_sender);
   } else if (kind == MediaStreamTrackInterface::kVideoKind) {
     auto video_sender = VideoRtpSender::Create(
         worker_thread(), rtc::CreateRandomUuid(), rtp_manager());
-    video_sender->SetMediaChannel(rtp_manager()->video_media_channel());
+    video_sender->SetMediaChannel(rtp_manager()->video_media_send_channel());
     new_sender = RtpSenderProxyWithInternal<RtpSenderInternal>::Create(
         signaling_thread(), video_sender);
     rtp_manager()->GetVideoTransceiver()->internal()->AddSender(new_sender);
@@ -1547,6 +1557,17 @@ RTCError PeerConnection::SetConfiguration(
   if (!parse_error.ok()) {
     return parse_error;
   }
+
+  // Restrict number of TURN servers.
+  if (!trials().IsDisabled("WebRTC-LimitTurnServers") &&
+      turn_servers.size() > cricket::kMaxTurnServers) {
+    RTC_LOG(LS_WARNING) << "Number of configured TURN servers is "
+                        << turn_servers.size()
+                        << " which exceeds the maximum allowed number of "
+                        << cricket::kMaxTurnServers;
+    turn_servers.resize(cricket::kMaxTurnServers);
+  }
+
   // Add the turn logging id to all turn servers
   for (cricket::RelayServerConfig& turn_server : turn_servers) {
     turn_server.turn_logging_id = configuration.turn_logging_id;
@@ -1608,15 +1629,16 @@ RTCError PeerConnection::SetConfiguration(
   }
 
   if (modified_config.allow_codec_switching.has_value()) {
-    std::vector<cricket::VideoMediaChannel*> channels;
+    std::vector<cricket::VideoMediaSendChannelInterface*> channels;
     for (const auto& transceiver : rtp_manager()->transceivers()->List()) {
       if (transceiver->media_type() != cricket::MEDIA_TYPE_VIDEO)
         continue;
 
       auto* video_channel = transceiver->internal()->channel();
       if (video_channel)
-        channels.push_back(static_cast<cricket::VideoMediaChannel*>(
-            video_channel->media_channel()));
+        channels.push_back(
+            static_cast<cricket::VideoMediaSendChannelInterface*>(
+                video_channel->media_send_channel()));
     }
 
     worker_thread()->BlockingCall(
@@ -2093,11 +2115,7 @@ PeerConnection::InitializePortAllocator_n(
   port_allocator_flags |= cricket::PORTALLOCATOR_ENABLE_SHARED_SOCKET |
                           cricket::PORTALLOCATOR_ENABLE_IPV6 |
                           cricket::PORTALLOCATOR_ENABLE_IPV6_ON_WIFI;
-  // If the disable-IPv6 flag was specified, we'll not override it
-  // by experiment.
-  if (configuration.DEPRECATED_disable_ipv6) {
-    port_allocator_flags &= ~(cricket::PORTALLOCATOR_ENABLE_IPV6);
-  } else if (trials().IsDisabled("WebRTC-IPv6Default")) {
+  if (trials().IsDisabled("WebRTC-IPv6Default")) {
     port_allocator_flags &= ~(cricket::PORTALLOCATOR_ENABLE_IPV6);
   }
   if (configuration.disable_ipv6_on_wifi) {

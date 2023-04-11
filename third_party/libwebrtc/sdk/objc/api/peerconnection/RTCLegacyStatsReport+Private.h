@@ -10,7 +10,7 @@
 
 #import "RTCLegacyStatsReport.h"
 
-#include "api/stats_types.h"
+#include "api/legacy_stats_types.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

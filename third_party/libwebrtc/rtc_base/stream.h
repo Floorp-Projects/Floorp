@@ -70,46 +70,12 @@ class RTC_EXPORT StreamInterface {
   //  SR_EOS: the end-of-stream has been reached, or the stream is in the
   //    SS_CLOSED state.
 
-  // The deprecated method has a default implementation that may be
-  // overridden in subclasses, rather than being =0.
-  // This allows subclasses to delete the method.
-  // TODO(bugs.webrtc.org/14632): Remove when downstream is converted.
-  [[deprecated("Use ArrayView version")]] virtual StreamResult
-  Read(void* buffer, size_t buffer_len, size_t* read, int* error) {
-    RTC_CHECK_NOTREACHED();
-  }
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-  // Preserve backwards compatibility using a default implementation
-  // because there are subclasses
-  // outside of the WebRTC codebase that need to be converted.
-  //
-  // TODO(bugs.webrtc.org/14632): Remove when downstream is converted.
   virtual StreamResult Read(rtc::ArrayView<uint8_t> buffer,
                             size_t& read,
-                            int& error) {
-    return Read(buffer.data(), buffer.size(), &read, &error);
-  }
-#pragma clang diagnostic pop
-
-  // The deprecated method has a default implementation that may be
-  // overridden in subclasses, rather than being =0.
-  // This allows subclasses to delete the method.
-  // TODO(bugs.webrtc.org/14632): Remove when downstream is converted.
-  [[deprecated("Use ArrayView version")]] virtual StreamResult
-  Write(const void* data, size_t data_len, size_t* written, int* error) {
-    RTC_CHECK_NOTREACHED();
-  }
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+                            int& error) = 0;
   virtual StreamResult Write(rtc::ArrayView<const uint8_t> data,
                              size_t& written,
-                             int& error) {
-    return Write(data.data(), data.size(), &written, &error);
-  }
-#pragma clang diagnostic pop
+                             int& error) = 0;
 
   // Attempt to transition to the SS_CLOSED state.  SE_CLOSE will not be
   // signalled as a result of this call.

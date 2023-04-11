@@ -174,7 +174,7 @@ class RTC_EXPORT VideoEncoder {
     // For example: With I420, this value would be a multiple of 2.
     // Note that this field is unrelated to any horizontal or vertical stride
     // requirements the encoder has on the incoming video frame buffers.
-    int requested_resolution_alignment;
+    uint32_t requested_resolution_alignment;
 
     // Same as above but if true, each simulcast layer should also be divisible
     // by `requested_resolution_alignment`.

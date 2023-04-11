@@ -30,16 +30,14 @@ struct DummyExperiment {
   FieldTrialParameter<std::string> hash =
       FieldTrialParameter<std::string>("h", "a80");
 
-  field_trial::ScopedGlobalFieldTrialsForTesting g{{kDummyExperiment}};
+  field_trial::FieldTrialsAllowedInScopeForTesting k{{kDummyExperiment}};
+
+  DummyExperiment()
+      : DummyExperiment(field_trial::FindFullName(kDummyExperiment)) {}
 
   explicit DummyExperiment(absl::string_view field_trial) {
     ParseFieldTrial({&enabled, &factor, &retries, &size, &ping, &hash},
                     field_trial);
-  }
-  DummyExperiment() {
-    std::string trial_string = field_trial::FindFullName(kDummyExperiment);
-    ParseFieldTrial({&enabled, &factor, &retries, &size, &ping, &hash},
-                    trial_string);
   }
 };
 

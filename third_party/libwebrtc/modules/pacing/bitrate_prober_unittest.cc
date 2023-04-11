@@ -13,6 +13,8 @@
 #include <algorithm>
 
 #include "api/units/data_rate.h"
+#include "api/units/time_delta.h"
+#include "api/units/timestamp.h"
 #include "test/explicit_key_value_config.h"
 #include "test/gtest.h"
 
@@ -141,6 +143,41 @@ TEST(BitrateProberTest, DiscardsDelayedProbes) {
   EXPECT_EQ(prober.NextProbeTime(now), next_probe_time);
   // First and only cluster removed due to timeout.
   EXPECT_FALSE(prober.CurrentCluster(now).has_value());
+}
+
+TEST(BitrateProberTest, LimitsNumberOfPendingProbeClusters) {
+  const FieldTrialBasedConfig config;
+  BitrateProber prober(config);
+  const DataSize kProbeSize = DataSize::Bytes(1000);
+  Timestamp now = Timestamp::Zero();
+  prober.CreateProbeCluster({.at_time = now,
+                             .target_data_rate = DataRate::KilobitsPerSec(900),
+                             .target_duration = TimeDelta::Millis(15),
+                             .target_probe_count = 5,
+                             .id = 0});
+  prober.OnIncomingPacket(kProbeSize);
+  ASSERT_TRUE(prober.is_probing());
+  ASSERT_EQ(prober.CurrentCluster(now)->probe_cluster_id, 0);
+
+  for (int i = 1; i < 11; ++i) {
+    prober.CreateProbeCluster(
+        {.at_time = now,
+         .target_data_rate = DataRate::KilobitsPerSec(900),
+         .target_duration = TimeDelta::Millis(15),
+         .target_probe_count = 5,
+         .id = i});
+    prober.OnIncomingPacket(kProbeSize);
+  }
+  // Expect some clusters has been dropped.
+  EXPECT_TRUE(prober.is_probing());
+  EXPECT_GE(prober.CurrentCluster(now)->probe_cluster_id, 5);
+
+  Timestamp max_expected_probe_time = now + TimeDelta::Seconds(1);
+  while (prober.is_probing() && now < max_expected_probe_time) {
+    now = std::max(now, prober.NextProbeTime(now));
+    prober.ProbeSent(now, kProbeSize);
+  }
+  EXPECT_FALSE(prober.is_probing());
 }
 
 TEST(BitrateProberTest, DoesntInitializeProbingForSmallPackets) {

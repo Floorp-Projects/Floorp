@@ -31,6 +31,10 @@ class InputVolumeStatsReporterTest
 
  protected:
   InputVolumeType InputVolumeType() const { return GetParam(); }
+  std::string VolumeLabel() const {
+    return (rtc::StringBuilder(kLabelPrefix) << VolumeTypeLabel() << "OnChange")
+        .str();
+  }
   std::string DecreaseRateLabel() const {
     return (rtc::StringBuilder(kLabelPrefix)
             << VolumeTypeLabel() << "DecreaseRate")
@@ -73,7 +77,13 @@ class InputVolumeStatsReporterTest
   }
 };
 
-TEST_P(InputVolumeStatsReporterTest, CheckLogVolumeUpdateStatsEmpty) {
+TEST_P(InputVolumeStatsReporterTest, CheckVolumeOnChangeIsEmpty) {
+  InputVolumeStatsReporter stats_reporter(InputVolumeType());
+  stats_reporter.UpdateStatistics(10);
+  EXPECT_METRIC_THAT(metrics::Samples(VolumeLabel()), ::testing::ElementsAre());
+}
+
+TEST_P(InputVolumeStatsReporterTest, CheckRateAverageStatsEmpty) {
   InputVolumeStatsReporter stats_reporter(InputVolumeType());
   constexpr int kInputVolume = 10;
   stats_reporter.UpdateStatistics(kInputVolume);
@@ -96,20 +106,33 @@ TEST_P(InputVolumeStatsReporterTest, CheckLogVolumeUpdateStatsEmpty) {
                      ::testing::ElementsAre());
 }
 
-TEST_P(InputVolumeStatsReporterTest, CheckLogVolumeUpdateStatsNotEmpty) {
+TEST_P(InputVolumeStatsReporterTest, CheckSamples) {
   InputVolumeStatsReporter stats_reporter(InputVolumeType());
-  constexpr int kInputVolume = 10;
-  stats_reporter.UpdateStatistics(kInputVolume);
+
+  constexpr int kInputVolume1 = 10;
+  stats_reporter.UpdateStatistics(kInputVolume1);
   // Update until periodic logging.
+  constexpr int kInputVolume2 = 12;
   for (int i = 0; i < kFramesIn60Seconds; i += 2) {
-    stats_reporter.UpdateStatistics(kInputVolume + 2);
-    stats_reporter.UpdateStatistics(kInputVolume);
+    stats_reporter.UpdateStatistics(kInputVolume2);
+    stats_reporter.UpdateStatistics(kInputVolume1);
   }
   // Update until periodic logging.
+  constexpr int kInputVolume3 = 13;
   for (int i = 0; i < kFramesIn60Seconds; i += 2) {
-    stats_reporter.UpdateStatistics(kInputVolume + 3);
-    stats_reporter.UpdateStatistics(kInputVolume);
+    stats_reporter.UpdateStatistics(kInputVolume3);
+    stats_reporter.UpdateStatistics(kInputVolume1);
   }
+
+  // Check volume changes stats.
+  EXPECT_METRIC_THAT(
+      metrics::Samples(VolumeLabel()),
+      ::testing::ElementsAre(
+          ::testing::Pair(kInputVolume1, kFramesIn60Seconds),
+          ::testing::Pair(kInputVolume2, kFramesIn60Seconds / 2),
+          ::testing::Pair(kInputVolume3, kFramesIn60Seconds / 2)));
+
+  // Check volume change rate stats.
   EXPECT_METRIC_THAT(
       metrics::Samples(UpdateRateLabel()),
       ::testing::ElementsAre(::testing::Pair(kFramesIn60Seconds - 1, 1),
@@ -121,6 +144,8 @@ TEST_P(InputVolumeStatsReporterTest, CheckLogVolumeUpdateStatsNotEmpty) {
   EXPECT_METRIC_THAT(
       metrics::Samples(IncreaseRateLabel()),
       ::testing::ElementsAre(::testing::Pair(kFramesIn60Seconds / 2, 2)));
+
+  // Check volume change average stats.
   EXPECT_METRIC_THAT(
       metrics::Samples(UpdateAverageLabel()),
       ::testing::ElementsAre(::testing::Pair(2, 1), ::testing::Pair(3, 1)));

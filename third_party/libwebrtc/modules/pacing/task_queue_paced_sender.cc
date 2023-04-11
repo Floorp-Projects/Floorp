@@ -57,7 +57,8 @@ TaskQueuePacedSender::TaskQueuePacedSender(
     const FieldTrialsView& field_trials,
     TaskQueueFactory* task_queue_factory,
     TimeDelta max_hold_back_window,
-    int max_hold_back_window_in_packets)
+    int max_hold_back_window_in_packets,
+    absl::optional<TimeDelta> burst_interval)
     : clock_(clock),
       bursty_pacer_flags_(field_trials),
       slacked_pacer_flags_(field_trials),
@@ -84,6 +85,11 @@ TaskQueuePacedSender::TaskQueuePacedSender(
     if (!burst.has_value() || burst.value() < slacked_burst) {
       burst = slacked_burst;
     }
+  }
+  // If not overriden by an experiment, the burst is specified by the
+  // `burst_interval` argument.
+  if (!burst.has_value()) {
+    burst = burst_interval;
   }
   if (burst.has_value()) {
     pacing_controller_.SetSendBurstInterval(burst.value());
@@ -173,6 +179,14 @@ void TaskQueuePacedSender::EnqueuePackets(
         }
         MaybeProcessPackets(Timestamp::MinusInfinity());
       }));
+}
+
+void TaskQueuePacedSender::RemovePacketsForSsrc(uint32_t ssrc) {
+  task_queue_.RunOrPost([this, ssrc]() {
+    RTC_DCHECK_RUN_ON(&task_queue_);
+    pacing_controller_.RemovePacketsForSsrc(ssrc);
+    MaybeProcessPackets(Timestamp::MinusInfinity());
+  });
 }
 
 void TaskQueuePacedSender::SetAccountForAudioPackets(bool account_for_audio) {

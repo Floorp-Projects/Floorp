@@ -77,8 +77,8 @@ class VideoSendStream : public webrtc::VideoSendStream {
   void DeliverRtcp(const uint8_t* packet, size_t length);
 
   // webrtc::VideoSendStream implementation.
-  void UpdateActiveSimulcastLayers(std::vector<bool> active_layers) override;
   void Start() override;
+  void StartPerRtpStream(std::vector<bool> active_layers) override;
   void Stop() override;
   bool started() override;
 
@@ -88,7 +88,9 @@ class VideoSendStream : public webrtc::VideoSendStream {
   void SetSource(rtc::VideoSourceInterface<webrtc::VideoFrame>* source,
                  const DegradationPreference& degradation_preference) override;
 
-  void ReconfigureVideoEncoder(VideoEncoderConfig) override;
+  void ReconfigureVideoEncoder(VideoEncoderConfig config) override;
+  void ReconfigureVideoEncoder(VideoEncoderConfig config,
+                               SetParametersCallback callback) override;
   Stats GetStats() override;
 
   void StopPermanentlyAndGetRtpStates(RtpStateMap* rtp_state_map,

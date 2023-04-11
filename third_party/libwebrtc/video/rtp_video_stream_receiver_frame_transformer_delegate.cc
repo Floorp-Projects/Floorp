@@ -26,7 +26,7 @@ class TransformableVideoReceiverFrame
   TransformableVideoReceiverFrame(std::unique_ptr<RtpFrameObject> frame,
                                   uint32_t ssrc)
       : frame_(std::move(frame)),
-        metadata_(frame_->GetRtpVideoHeader()),
+        metadata_(frame_->GetRtpVideoHeader().GetAsMetadata()),
         ssrc_(ssrc) {}
   ~TransformableVideoReceiverFrame() override = default;
 

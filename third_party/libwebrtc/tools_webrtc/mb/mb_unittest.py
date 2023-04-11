@@ -91,10 +91,11 @@ class FakeMBW(mb.WebRTCMetaBuildWrapper):
     abpath = self._AbsPath(path)
     self.files[abpath] = contents
 
-  def Call(self, cmd, env=None, capture_output=True, stdin=None):
+  def Call(self, cmd, env=None, capture_output=True, input=None):
+    # pylint: disable=redefined-builtin
     del env
     del capture_output
-    del stdin
+    del input
     self.calls.append(cmd)
     if self.cmds:
       return self.cmds.pop(0)
@@ -324,12 +325,15 @@ class UnitTest(unittest.TestCase):
         files,
         ['../../.vpython3', '../../testing/test_env.py', 'foo_unittests'])
     self.assertEqual(command, [
+        'luci-auth',
+        'context',
+        '--',
         'vpython3',
         '../../build/android/test_wrapper/logdog_wrapper.py',
         '--target',
         'foo_unittests',
         '--logdog-bin-cmd',
-        '../../bin/logdog_butler',
+        '../../.task_template_packages/logdog_butler',
         '--logcat-output-file',
         '${ISOLATED_OUTDIR}/logcats',
         '--store-tombstones',
@@ -363,12 +367,15 @@ class UnitTest(unittest.TestCase):
         files,
         ['../../.vpython3', '../../testing/test_env.py', 'foo_unittests'])
     self.assertEqual(command, [
+        'luci-auth',
+        'context',
+        '--',
         'vpython3',
         '../../build/android/test_wrapper/logdog_wrapper.py',
         '--target',
         'foo_unittests',
         '--logdog-bin-cmd',
-        '../../bin/logdog_butler',
+        '../../.task_template_packages/logdog_butler',
         '--logcat-output-file',
         '${ISOLATED_OUTDIR}/logcats',
         '--store-tombstones',
@@ -489,14 +496,9 @@ class UnitTest(unittest.TestCase):
     self.assertEqual(files, [
         '../../.vpython3',
         '../../testing/test_env.py',
-        '../../tools_webrtc/flags_compatibility.py',
         'foo_unittests',
     ])
-    self.assertEqual(command, [
-        'vpython3',
-        '../../tools_webrtc/flags_compatibility.py',
-        './foo_unittests',
-    ])
+    self.assertEqual(command, ['bin/run_foo_unittests'])
 
   def test_gen_non_parallel_console_test_launcher(self):
     test_files = {

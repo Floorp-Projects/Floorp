@@ -1042,7 +1042,8 @@ webrtc::RtpParameters WebRtcVideoChannel::GetRtpSendParameters(
 
 webrtc::RTCError WebRtcVideoChannel::SetRtpSendParameters(
     uint32_t ssrc,
-    const webrtc::RtpParameters& parameters) {
+    const webrtc::RtpParameters& parameters,
+    webrtc::SetParametersCallback callback) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   TRACE_EVENT0("webrtc", "WebRtcVideoChannel::SetRtpSendParameters");
   auto it = send_streams_.find(ssrc);
@@ -1050,7 +1051,8 @@ webrtc::RTCError WebRtcVideoChannel::SetRtpSendParameters(
     RTC_LOG(LS_ERROR) << "Attempting to set RTP send parameters for stream "
                          "with ssrc "
                       << ssrc << " which doesn't exist.";
-    return webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR);
+    return webrtc::InvokeSetParametersCallback(
+        callback, webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR));
   }
 
   // TODO(deadbeef): Handle setting parameters with a list of codecs in a
@@ -1059,7 +1061,8 @@ webrtc::RTCError WebRtcVideoChannel::SetRtpSendParameters(
   if (current_parameters.codecs != parameters.codecs) {
     RTC_DLOG(LS_ERROR) << "Using SetParameters to change the set of codecs "
                           "is not currently supported.";
-    return webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR);
+    return webrtc::InvokeSetParametersCallback(
+        callback, webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR));
   }
 
   if (!parameters.encodings.empty()) {
@@ -1085,7 +1088,7 @@ webrtc::RTCError WebRtcVideoChannel::SetRtpSendParameters(
     SetPreferredDscp(new_dscp);
   }
 
-  return it->second->SetRtpParameters(parameters);
+  return it->second->SetRtpParameters(parameters, std::move(callback));
 }
 
 webrtc::RtpParameters WebRtcVideoChannel::GetRtpReceiveParameters(
@@ -1884,12 +1887,12 @@ void WebRtcVideoChannel::OnNetworkRouteChanged(
       }));
 }
 
-void WebRtcVideoChannel::SetInterface(NetworkInterface* iface) {
+void WebRtcVideoChannel::SetInterface(MediaChannelNetworkInterface* iface) {
   RTC_DCHECK_RUN_ON(&network_thread_checker_);
   MediaChannel::SetInterface(iface);
   // Set the RTP recv/send buffer to a bigger size.
-  MediaChannel::SetOption(NetworkInterface::ST_RTP, rtc::Socket::OPT_RCVBUF,
-                          kVideoRtpRecvBufferSize);
+  MediaChannel::SetOption(MediaChannelNetworkInterface::ST_RTP,
+                          rtc::Socket::OPT_RCVBUF, kVideoRtpRecvBufferSize);
 
   // Speculative change to increase the outbound socket buffer size.
   // In b/15152257, we are seeing a significant number of packets discarded
@@ -1906,8 +1909,8 @@ void WebRtcVideoChannel::SetInterface(NetworkInterface* iface) {
     send_buffer_size = kVideoRtpSendBufferSize;
   }
 
-  MediaChannel::SetOption(NetworkInterface::ST_RTP, rtc::Socket::OPT_SNDBUF,
-                          send_buffer_size);
+  MediaChannel::SetOption(MediaChannelNetworkInterface::ST_RTP,
+                          rtc::Socket::OPT_SNDBUF, send_buffer_size);
 }
 
 void WebRtcVideoChannel::SetFrameDecryptor(
@@ -2156,7 +2159,7 @@ bool WebRtcVideoChannel::WebRtcVideoSendStream::SetVideoSend(
       old_options.is_screencast = options->is_screencast;
     }
     if (parameters_.options != old_options) {
-      ReconfigureEncoder();
+      ReconfigureEncoder(nullptr);
     }
   }
 
@@ -2283,7 +2286,7 @@ void WebRtcVideoChannel::WebRtcVideoSendStream::SetSendParameters(
   }
   if (params.max_bandwidth_bps) {
     parameters_.max_bitrate_bps = *params.max_bandwidth_bps;
-    ReconfigureEncoder();
+    ReconfigureEncoder(nullptr);
   }
   if (params.conference_mode) {
     parameters_.conference_mode = *params.conference_mode;
@@ -2305,7 +2308,8 @@ void WebRtcVideoChannel::WebRtcVideoSendStream::SetSendParameters(
 }
 
 webrtc::RTCError WebRtcVideoChannel::WebRtcVideoSendStream::SetRtpParameters(
-    const webrtc::RtpParameters& new_parameters) {
+    const webrtc::RtpParameters& new_parameters,
+    webrtc::SetParametersCallback callback) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   // This is checked higher in the stack (RtpSender), so this is only checking
   // for users accessing the private APIs or tests, not specification
@@ -2366,7 +2370,9 @@ webrtc::RTCError WebRtcVideoChannel::WebRtcVideoSendStream::SetRtpParameters(
   // Codecs are currently handled at the WebRtcVideoChannel level.
   rtp_parameters_.codecs.clear();
   if (reconfigure_encoder || new_send_state) {
-    ReconfigureEncoder();
+    // Callback responsibility is delegated to ReconfigureEncoder()
+    ReconfigureEncoder(std::move(callback));
+    callback = nullptr;
   }
   if (new_send_state) {
     UpdateSendState();
@@ -2376,7 +2382,7 @@ webrtc::RTCError WebRtcVideoChannel::WebRtcVideoSendStream::SetRtpParameters(
       stream_->SetSource(source_, GetDegradationPreference());
     }
   }
-  return webrtc::RTCError::OK();
+  return webrtc::InvokeSetParametersCallback(callback, webrtc::RTCError::OK());
 }
 
 webrtc::RtpParameters
@@ -2433,7 +2439,7 @@ void WebRtcVideoChannel::WebRtcVideoSendStream::UpdateSendState() {
     }
     // This updates what simulcast layers are sending, and possibly starts
     // or stops the VideoSendStream.
-    stream_->UpdateActiveSimulcastLayers(active_layers);
+    stream_->StartPerRtpStream(active_layers);
   } else {
     if (stream_ != nullptr) {
       stream_->Stop();
@@ -2564,11 +2570,13 @@ WebRtcVideoChannel::WebRtcVideoSendStream::CreateVideoEncoderConfig(
   return encoder_config;
 }
 
-void WebRtcVideoChannel::WebRtcVideoSendStream::ReconfigureEncoder() {
+void WebRtcVideoChannel::WebRtcVideoSendStream::ReconfigureEncoder(
+    webrtc::SetParametersCallback callback) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   if (!stream_) {
     // The webrtc::VideoSendStream `stream_` has not yet been created but other
     // parameters has changed.
+    webrtc::InvokeSetParametersCallback(callback, webrtc::RTCError::OK());
     return;
   }
 
@@ -2583,7 +2591,7 @@ void WebRtcVideoChannel::WebRtcVideoSendStream::ReconfigureEncoder() {
   encoder_config.encoder_specific_settings =
       ConfigureVideoEncoderSettings(codec_settings.codec);
 
-  stream_->ReconfigureVideoEncoder(encoder_config.Copy());
+  stream_->ReconfigureVideoEncoder(encoder_config.Copy(), std::move(callback));
 
   encoder_config.encoder_specific_settings = NULL;
 
@@ -2723,6 +2731,7 @@ WebRtcVideoChannel::WebRtcVideoSendStream::GetPerLayerVideoSenderInfos(
     info.total_encode_time_ms = stream_stats.total_encode_time_ms;
     info.total_encoded_bytes_target = stream_stats.total_encoded_bytes_target;
     info.huge_frames_sent = stream_stats.huge_frames_sent;
+    info.scalability_mode = stream_stats.scalability_mode;
     infos.push_back(info);
   }
   return infos;
@@ -2838,7 +2847,7 @@ void WebRtcVideoChannel::WebRtcVideoSendStream::RecreateWebRtcStream() {
 
   parameters_.encoder_config.encoder_specific_settings = NULL;
 
-  // Calls stream_->UpdateActiveSimulcastLayers() to start the VideoSendStream
+  // Calls stream_->StartPerRtpStream() to start the VideoSendStream
   // if necessary conditions are met.
   UpdateSendState();
 

@@ -32,11 +32,7 @@
 { symbol: ["std::unique_ptr", "public", "<memory>", "public"] },
 # Needed to avoid <iosfwd>
 { symbol: ["std::ostringstream", "public", "<sstream>", "public"] },
-# Needed for unknown reasons
-{ include: ['<__algorithm/equal.h>', "private", '<algorithm>', "public"] },
-{ include: ['<__algorithm/unique.h>', "private", '<algorithm>', "public"] },
-{ include: ['<__type_traits/remove_reference.h>', "private", '<type_traits>', "public"] },
-{ include: ['<__functional/function.h>', "private", '<functional>', "public"] },
-{ include: ['<__utility/pair.h>', "private", '<utility>', "public"] },
+
+{ ref: "../../buildtools/third_party/libc++/trunk/include/libcxx.imp" },
 ]
 

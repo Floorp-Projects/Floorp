@@ -136,12 +136,10 @@ TEST_F(CreateVideoFrameWithIdsWriterTest, VideoIsWritenWithFrameIds) {
   ASSERT_TRUE(writer->WriteFrame(frame2));
   writer->Close();
 
-  test::Y4mFrameReaderImpl frame_reader(video_filename_, /*width=*/2,
-                                        /*height=*/2);
-  ASSERT_TRUE(frame_reader.Init());
-  EXPECT_THAT(frame_reader.NumberOfFrames(), Eq(2));
-  AssertFramesEqual(frame_reader.ReadFrame(), frame1.video_frame_buffer());
-  AssertFramesEqual(frame_reader.ReadFrame(), frame2.video_frame_buffer());
+  auto frame_reader = test::CreateY4mFrameReader(video_filename_);
+  EXPECT_THAT(frame_reader->num_frames(), Eq(2));
+  AssertFramesEqual(frame_reader->PullFrame(), frame1.video_frame_buffer());
+  AssertFramesEqual(frame_reader->PullFrame(), frame2.video_frame_buffer());
   AssertFrameIdsAre(ids_filename_, {"1", "2"});
 }
 
@@ -163,12 +161,10 @@ TEST_F(VideoWriterTest, AllFramesAreWrittenWithSamplingModulo1) {
     frame_writer.Close();
   }
 
-  test::Y4mFrameReaderImpl frame_reader(video_filename_, /*width=*/2,
-                                        /*height=*/2);
-  ASSERT_TRUE(frame_reader.Init());
-  EXPECT_THAT(frame_reader.NumberOfFrames(), Eq(2));
-  AssertFramesEqual(frame_reader.ReadFrame(), frame1.video_frame_buffer());
-  AssertFramesEqual(frame_reader.ReadFrame(), frame2.video_frame_buffer());
+  auto frame_reader = test::CreateY4mFrameReader(video_filename_);
+  EXPECT_THAT(frame_reader->num_frames(), Eq(2));
+  AssertFramesEqual(frame_reader->PullFrame(), frame1.video_frame_buffer());
+  AssertFramesEqual(frame_reader->PullFrame(), frame2.video_frame_buffer());
 }
 
 TEST_F(VideoWriterTest, OnlyEvery2ndFramesIsWrittenWithSamplingModulo2) {
@@ -189,12 +185,10 @@ TEST_F(VideoWriterTest, OnlyEvery2ndFramesIsWrittenWithSamplingModulo2) {
     frame_writer.Close();
   }
 
-  test::Y4mFrameReaderImpl frame_reader(video_filename_, /*width=*/2,
-                                        /*height=*/2);
-  ASSERT_TRUE(frame_reader.Init());
-  EXPECT_THAT(frame_reader.NumberOfFrames(), Eq(2));
-  AssertFramesEqual(frame_reader.ReadFrame(), frame1.video_frame_buffer());
-  AssertFramesEqual(frame_reader.ReadFrame(), frame3.video_frame_buffer());
+  auto frame_reader = test::CreateY4mFrameReader(video_filename_);
+  EXPECT_THAT(frame_reader->num_frames(), Eq(2));
+  AssertFramesEqual(frame_reader->PullFrame(), frame1.video_frame_buffer());
+  AssertFramesEqual(frame_reader->PullFrame(), frame3.video_frame_buffer());
 }
 
 }  // namespace

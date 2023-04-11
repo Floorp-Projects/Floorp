@@ -20,8 +20,8 @@
 
 #include "absl/memory/memory.h"
 #include "modules/desktop_capture/linux/wayland/egl_dmabuf.h"
-#include "modules/desktop_capture/linux/wayland/pipewire_utils.h"
 #include "modules/desktop_capture/linux/wayland/screencast_stream_utils.h"
+#include "modules/portal/pipewire_utils.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/sanitizer.h"
@@ -76,7 +76,8 @@ class SharedScreenCastStreamPrivate {
   bool StartScreenCastStream(uint32_t stream_node_id,
                              int fd,
                              uint32_t width = 0,
-                             uint32_t height = 0);
+                             uint32_t height = 0,
+                             bool is_cursor_embedded = false);
   void UpdateScreenCastStreamResolution(uint32_t width, uint32_t height);
   void SetUseDamageRegion(bool use_damage_region) {
     use_damage_region_ = use_damage_region;
@@ -141,6 +142,10 @@ class SharedScreenCastStreamPrivate {
   bool pending_resolution_change_ RTC_GUARDED_BY(&resolution_lock_) = false;
 
   bool use_damage_region_ = true;
+
+  // Specifies whether the pipewire stream has been initialized with a request
+  // to embed cursor into the captured frames.
+  bool is_cursor_embedded_ = false;
 
   // event handlers
   pw_core_events pw_core_events_ = {};
@@ -384,9 +389,11 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
     uint32_t stream_node_id,
     int fd,
     uint32_t width,
-    uint32_t height) {
+    uint32_t height,
+    bool is_cursor_embedded) {
   width_ = width;
   height_ = height;
+  is_cursor_embedded_ = is_cursor_embedded;
   if (!InitializePipeWire()) {
     RTC_LOG(LS_ERROR) << "Unable to open PipeWire library";
     return false;
@@ -799,6 +806,7 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
     queue_.current_frame()->mutable_updated_region()->SetRect(
         DesktopRect::MakeSize(queue_.current_frame()->size()));
   }
+  queue_.current_frame()->set_may_contain_cursor(is_cursor_embedded_);
 }
 
 RTC_NO_SANITIZE("cfi-icall")
@@ -911,8 +919,10 @@ bool SharedScreenCastStream::StartScreenCastStream(uint32_t stream_node_id) {
 bool SharedScreenCastStream::StartScreenCastStream(uint32_t stream_node_id,
                                                    int fd,
                                                    uint32_t width,
-                                                   uint32_t height) {
-  return private_->StartScreenCastStream(stream_node_id, fd, width, height);
+                                                   uint32_t height,
+                                                   bool is_cursor_embedded) {
+  return private_->StartScreenCastStream(stream_node_id, fd, width, height,
+                                         is_cursor_embedded);
 }
 
 void SharedScreenCastStream::UpdateScreenCastStreamResolution(uint32_t width,

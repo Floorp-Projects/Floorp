@@ -231,9 +231,21 @@ class RTC_EXPORT NetworkManagerBase : public NetworkManager {
   // refactoring of the interface GetNetworks method.
   const std::vector<Network*>& GetNetworksInternal() const { return networks_; }
 
+  std::unique_ptr<Network> CreateNetwork(absl::string_view name,
+                                         absl::string_view description,
+                                         const IPAddress& prefix,
+                                         int prefix_length,
+                                         AdapterType type) const;
+
+  const webrtc::FieldTrialsView* field_trials() const {
+    return field_trials_.get();
+  }
+
  private:
   friend class NetworkTest;
-  const webrtc::FieldTrialsView* field_trials_ = nullptr;
+  webrtc::AlwaysValidPointer<const webrtc::FieldTrialsView,
+                             webrtc::FieldTrialBasedConfig>
+      field_trials_;
   EnumerationPermission enumeration_permission_;
 
   std::vector<Network*> networks_;
@@ -348,10 +360,7 @@ class RTC_EXPORT BasicNetworkManager : public NetworkManagerBase,
   Thread* thread_ = nullptr;
   bool sent_first_update_ = true;
   int start_count_ = 0;
-  // Chromium create BasicNetworkManager() w/o field trials.
-  webrtc::AlwaysValidPointer<const webrtc::FieldTrialsView,
-                             webrtc::FieldTrialBasedConfig>
-      field_trials_;
+
   std::vector<std::string> network_ignore_list_;
   NetworkMonitorFactory* const network_monitor_factory_;
   SocketFactory* const socket_factory_;

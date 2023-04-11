@@ -20,6 +20,7 @@
 #include "api/test/network_emulation_manager.h"
 #include "api/test/pclf/media_configuration.h"
 #include "api/test/pclf/media_quality_test_params.h"
+#include "api/test/pclf/peer_configurer.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
 #include "api/units/time_delta.h"
 #include "rtc_base/time_utils.h"
@@ -35,8 +36,7 @@ namespace {
 using ::testing::Eq;
 using ::testing::Test;
 
-using PeerConfigurer = ::webrtc::webrtc_pc_e2e::
-    PeerConnectionE2EQualityTestFixture::PeerConfigurer;
+using ::webrtc::webrtc_pc_e2e::PeerConfigurer;
 
 // Remove files and directories in a directory non-recursively.
 void CleanDir(absl::string_view dir, size_t expected_output_files_count) {
@@ -127,12 +127,9 @@ TEST_F(PeerConnectionE2EQualityTestTest, OutputVideoIsDumpedWhenRequested) {
 
   fixture.Run(RunParams(TimeDelta::Seconds(2)));
 
-  test::Y4mFrameReaderImpl frame_reader(
-      test::JoinFilename(test_directory_, "alice_video_bob_320x180_15.y4m"),
-      /*width=*/320,
-      /*height=*/180);
-  ASSERT_TRUE(frame_reader.Init());
-  EXPECT_THAT(frame_reader.NumberOfFrames(), Eq(31));  // 2 seconds 15 fps + 1
+  auto frame_reader = test::CreateY4mFrameReader(
+      test::JoinFilename(test_directory_, "alice_video_bob_320x180_15.y4m"));
+  EXPECT_THAT(frame_reader->num_frames(), Eq(31));  // 2 seconds 15 fps + 1
 
   ExpectOutputFilesCount(1);
 }

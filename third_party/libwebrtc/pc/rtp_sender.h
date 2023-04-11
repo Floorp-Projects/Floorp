@@ -54,7 +54,8 @@ class RtpSenderInternal : public RtpSenderInterface {
   // A VoiceMediaChannel should be used for audio RtpSenders and
   // a VideoMediaChannel should be used for video RtpSenders.
   // Must call SetMediaChannel(nullptr) before the media channel is destroyed.
-  virtual void SetMediaChannel(cricket::MediaChannel* media_channel) = 0;
+  virtual void SetMediaChannel(
+      cricket::MediaSendChannelInterface* media_channel) = 0;
 
   // Used to set the SSRC of the sender, once a local description has been set.
   // If `ssrc` is 0, this indiates that the sender should disconnect from the
@@ -73,7 +74,9 @@ class RtpSenderInternal : public RtpSenderInterface {
   // `GetParameters` and `SetParameters` operate with a transactional model.
   // Allow access to get/set parameters without invalidating transaction id.
   virtual RtpParameters GetParametersInternal() const = 0;
-  virtual RTCError SetParametersInternal(const RtpParameters& parameters) = 0;
+  virtual void SetParametersInternal(const RtpParameters& parameters,
+                                     SetParametersCallback,
+                                     bool blocking) = 0;
 
   // GetParameters and SetParameters will remove deactivated simulcast layers
   // and restore them on SetParameters. This is probably a Bad Idea, but we
@@ -118,7 +121,8 @@ class RtpSenderBase : public RtpSenderInternal, public ObserverInterface {
   // A VoiceMediaChannel should be used for audio RtpSenders and
   // a VideoMediaChannel should be used for video RtpSenders.
   // Must call SetMediaChannel(nullptr) before the media channel is destroyed.
-  void SetMediaChannel(cricket::MediaChannel* media_channel) override;
+  void SetMediaChannel(
+      cricket::MediaSendChannelInterface* media_channel) override;
 
   bool SetTrack(MediaStreamTrackInterface* track) override;
   rtc::scoped_refptr<MediaStreamTrackInterface> track() const override {
@@ -130,11 +134,16 @@ class RtpSenderBase : public RtpSenderInternal, public ObserverInterface {
 
   RtpParameters GetParameters() const override;
   RTCError SetParameters(const RtpParameters& parameters) override;
+  void SetParametersAsync(const RtpParameters& parameters,
+                          SetParametersCallback callback) override;
 
   // `GetParameters` and `SetParameters` operate with a transactional model.
   // Allow access to get/set parameters without invalidating transaction id.
   RtpParameters GetParametersInternal() const override;
-  RTCError SetParametersInternal(const RtpParameters& parameters) override;
+  void SetParametersInternal(const RtpParameters& parameters,
+                             SetParametersCallback callback = nullptr,
+                             bool blocking = true) override;
+  RTCError CheckSetParameters(const RtpParameters& parameters);
   RtpParameters GetParametersInternalWithAllLayers() const override;
   RTCError SetParametersInternalWithAllLayers(
       const RtpParameters& parameters) override;
@@ -260,7 +269,7 @@ class RtpSenderBase : public RtpSenderInternal, public ObserverInterface {
   // a guard or lock. Internally there are also several Invoke()s that we could
   // remove since the upstream code may already be performing several operations
   // on the worker thread.
-  cricket::MediaChannel* media_channel_ = nullptr;
+  cricket::MediaSendChannelInterface* media_channel_ = nullptr;
   rtc::scoped_refptr<MediaStreamTrackInterface> track_;
 
   rtc::scoped_refptr<DtlsTransportInterface> dtls_transport_;
@@ -369,8 +378,8 @@ class AudioRtpSender : public DtmfProviderInterface, public RtpSenderBase {
   void RemoveTrackFromStats() override;
 
  private:
-  cricket::VoiceMediaChannel* voice_media_channel() {
-    return static_cast<cricket::VoiceMediaChannel*>(media_channel_);
+  cricket::VoiceMediaSendChannelInterface* voice_media_channel() {
+    return media_channel_->AsVoiceSendChannel();
   }
   rtc::scoped_refptr<AudioTrackInterface> audio_track() const {
     return rtc::scoped_refptr<AudioTrackInterface>(
@@ -427,8 +436,8 @@ class VideoRtpSender : public RtpSenderBase {
   void AttachTrack() override;
 
  private:
-  cricket::VideoMediaChannel* video_media_channel() {
-    return static_cast<cricket::VideoMediaChannel*>(media_channel_);
+  cricket::VideoMediaSendChannelInterface* video_media_channel() {
+    return media_channel_->AsVideoSendChannel();
   }
   rtc::scoped_refptr<VideoTrackInterface> video_track() const {
     return rtc::scoped_refptr<VideoTrackInterface>(

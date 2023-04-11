@@ -53,7 +53,8 @@ class RtpReceiverInternal : public RtpReceiverInterface {
   // * SetMediaChannel(nullptr) must be called before the media channel is
   //   destroyed.
   // * This method must be invoked on the worker thread.
-  virtual void SetMediaChannel(cricket::MediaChannel* media_channel) = 0;
+  virtual void SetMediaChannel(
+      cricket::MediaReceiveChannelInterface* media_channel) = 0;
 
   // Configures the RtpReceiver with the underlying media channel, with the
   // given SSRC as the stream identifier.

@@ -885,7 +885,7 @@ class VideoStreamEncoderTest : public ::testing::Test {
         &video_source_, webrtc::DegradationPreference::MAINTAIN_FRAMERATE);
     video_stream_encoder_->SetStartBitrate(kTargetBitrate.bps());
     video_stream_encoder_->ConfigureEncoder(std::move(video_encoder_config),
-                                            kMaxPayloadLength);
+                                            kMaxPayloadLength, nullptr);
     video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   }
 
@@ -1097,7 +1097,8 @@ class VideoStreamEncoderTest : public ::testing::Test {
       quality_scaling_ = b;
     }
 
-    void SetRequestedResolutionAlignment(int requested_resolution_alignment) {
+    void SetRequestedResolutionAlignment(
+        uint32_t requested_resolution_alignment) {
       MutexLock lock(&local_mutex_);
       requested_resolution_alignment_ = requested_resolution_alignment;
     }
@@ -1331,7 +1332,7 @@ class VideoStreamEncoderTest : public ::testing::Test {
     int last_input_width_ RTC_GUARDED_BY(local_mutex_) = 0;
     int last_input_height_ RTC_GUARDED_BY(local_mutex_) = 0;
     bool quality_scaling_ RTC_GUARDED_BY(local_mutex_) = true;
-    int requested_resolution_alignment_ RTC_GUARDED_BY(local_mutex_) = 1;
+    uint32_t requested_resolution_alignment_ RTC_GUARDED_BY(local_mutex_) = 1;
     bool apply_alignment_to_all_simulcast_layers_ RTC_GUARDED_BY(local_mutex_) =
         false;
     bool is_hardware_accelerated_ RTC_GUARDED_BY(local_mutex_) = false;
@@ -2472,7 +2473,7 @@ class ResolutionAlignmentTest
         scale_factors_(::testing::get<1>(GetParam())) {}
 
  protected:
-  const int requested_alignment_;
+  const uint32_t requested_alignment_;
   const std::vector<double> scale_factors_;
 };
 
@@ -2538,8 +2539,8 @@ TEST_P(ResolutionAlignmentTest, SinkWantsAlignmentApplied) {
   EXPECT_EQ(codec.numberOfSimulcastStreams, num_streams);
   // Frame size should be a multiple of the requested alignment.
   for (int i = 0; i < codec.numberOfSimulcastStreams; ++i) {
-    EXPECT_EQ(codec.simulcastStream[i].width % requested_alignment_, 0);
-    EXPECT_EQ(codec.simulcastStream[i].height % requested_alignment_, 0);
+    EXPECT_EQ(codec.simulcastStream[i].width % requested_alignment_, 0u);
+    EXPECT_EQ(codec.simulcastStream[i].height % requested_alignment_, 0u);
     // Aspect ratio should match.
     EXPECT_EQ(codec.width * codec.simulcastStream[i].height,
               codec.height * codec.simulcastStream[i].width);
@@ -8644,6 +8645,64 @@ TEST_F(VideoStreamEncoderTest,
       kTargetBitrate, kTargetBitrate, kTargetBitrate, 0, 0, 0);
   video_stream_encoder_->WaitUntilTaskQueueIsIdle();
   EXPECT_EQ(video_source_.refresh_frames_requested_, 1);
+
+  video_stream_encoder_->Stop();
+}
+
+TEST_F(VideoStreamEncoderTest, RecreatesEncoderWhenEnableVp9SpatialLayer) {
+  // Set up encoder to use VP9 SVC using two spatial layers.
+  fake_encoder_.SetTemporalLayersSupported(/*spatial_idx=*/0, true);
+  fake_encoder_.SetTemporalLayersSupported(/*spatial_idx*/ 1, true);
+  VideoEncoderConfig video_encoder_config;
+  test::FillEncoderConfiguration(VideoCodecType::kVideoCodecVP9,
+                                 /* num_streams*/ 1, &video_encoder_config);
+  video_encoder_config.max_bitrate_bps = 2 * kTargetBitrate.bps();
+  video_encoder_config.content_type =
+      VideoEncoderConfig::ContentType::kRealtimeVideo;
+  VideoCodecVP9 vp9_settings = VideoEncoder::GetDefaultVp9Settings();
+  vp9_settings.numberOfSpatialLayers = 2;
+  vp9_settings.numberOfTemporalLayers = 2;
+  vp9_settings.interLayerPred = InterLayerPredMode::kOn;
+  vp9_settings.automaticResizeOn = false;
+  video_encoder_config.encoder_specific_settings =
+      rtc::make_ref_counted<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
+          vp9_settings);
+  video_encoder_config.spatial_layers = GetSvcConfig(1280, 720,
+                                                     /*fps=*/30.0,
+                                                     /*first_active_layer=*/0,
+                                                     /*num_spatial_layers=*/2,
+                                                     /*num_temporal_layers=*/3,
+                                                     /*is_screenshare=*/false);
+  ConfigureEncoder(video_encoder_config.Copy(),
+                   VideoStreamEncoder::BitrateAllocationCallbackType::
+                       kVideoLayersAllocation);
+
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      kTargetBitrate, kTargetBitrate, kTargetBitrate, 0, 0, 0);
+
+  video_source_.IncomingCapturedFrame(CreateFrame(CurrentTimeMs(), 1280, 720));
+  WaitForEncodedFrame(CurrentTimeMs());
+  EXPECT_EQ(fake_encoder_.GetNumInitializations(), 1);
+
+  // Turn off the top spatial layer. This does not require an encoder reset.
+  video_encoder_config.spatial_layers[1].active = false;
+  video_stream_encoder_->ConfigureEncoder(video_encoder_config.Copy(),
+                                          kMaxPayloadLength, nullptr);
+
+  time_controller_.AdvanceTime(TimeDelta::Millis(33));
+  video_source_.IncomingCapturedFrame(CreateFrame(CurrentTimeMs(), 1280, 720));
+  WaitForEncodedFrame(CurrentTimeMs());
+  EXPECT_EQ(fake_encoder_.GetNumInitializations(), 1);
+
+  // Turn on the top spatial layer again, this does require an encoder reset.
+  video_encoder_config.spatial_layers[1].active = true;
+  video_stream_encoder_->ConfigureEncoder(video_encoder_config.Copy(),
+                                          kMaxPayloadLength, nullptr);
+
+  time_controller_.AdvanceTime(TimeDelta::Millis(33));
+  video_source_.IncomingCapturedFrame(CreateFrame(CurrentTimeMs(), 1280, 720));
+  WaitForEncodedFrame(CurrentTimeMs());
+  EXPECT_EQ(fake_encoder_.GetNumInitializations(), 2);
 
   video_stream_encoder_->Stop();
 }

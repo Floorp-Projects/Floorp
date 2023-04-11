@@ -225,10 +225,10 @@ void ForwardErrorCorrection::GenerateFecPayloads(
 
         size_t fec_packet_length = fec_header_size + media_payload_length;
         if (fec_packet_length > fec_packet->data.size()) {
-          // Recall that XORing with zero (which the FEC packets are prefilled
-          // with) is the identity operator, thus all prior XORs are
-          // still correct even though we expand the packet length here.
+          size_t old_size = fec_packet->data.size();
           fec_packet->data.SetSize(fec_packet_length);
+          memset(fec_packet->data.MutableData() + old_size, 0,
+                 fec_packet_length - old_size);
         }
         XorHeaders(*media_packet, fec_packet);
         XorPayloads(*media_packet, media_payload_length, fec_header_size,
@@ -573,7 +573,13 @@ bool ForwardErrorCorrection::FinishPacketRecovery(
                            "typical IP packet, and is thus dropped.";
     return false;
   }
+  size_t old_size = recovered_packet->pkt->data.size();
   recovered_packet->pkt->data.SetSize(new_size);
+  data = recovered_packet->pkt->data.MutableData();
+  if (new_size > old_size) {
+    memset(data + old_size, 0, new_size - old_size);
+  }
+
   // Set the SN field.
   ByteWriter<uint16_t>::WriteBigEndian(&data[2], recovered_packet->seq_num);
   // Set the SSRC field.
@@ -613,7 +619,10 @@ void ForwardErrorCorrection::XorPayloads(const Packet& src,
   RTC_DCHECK_LE(kRtpHeaderSize + payload_length, src.data.size());
   RTC_DCHECK_LE(dst_offset + payload_length, dst->data.capacity());
   if (dst_offset + payload_length > dst->data.size()) {
-    dst->data.SetSize(dst_offset + payload_length);
+    size_t old_size = dst->data.size();
+    size_t new_size = dst_offset + payload_length;
+    dst->data.SetSize(new_size);
+    memset(dst->data.MutableData() + old_size, 0, new_size - old_size);
   }
   uint8_t* dst_data = dst->data.MutableData();
   const uint8_t* src_data = src.data.cdata();

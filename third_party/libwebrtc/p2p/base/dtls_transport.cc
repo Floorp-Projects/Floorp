@@ -72,10 +72,9 @@ StreamInterfaceChannel::StreamInterfaceChannel(
       state_(rtc::SS_OPEN),
       packets_(kMaxPendingPackets, kMaxDtlsPacketLen) {}
 
-rtc::StreamResult StreamInterfaceChannel::Read(void* buffer,
-                                               size_t buffer_len,
-                                               size_t* read,
-                                               int* error) {
+rtc::StreamResult StreamInterfaceChannel::Read(rtc::ArrayView<uint8_t> buffer,
+                                               size_t& read,
+                                               int& error) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
 
   if (state_ == rtc::SS_CLOSED)
@@ -83,27 +82,25 @@ rtc::StreamResult StreamInterfaceChannel::Read(void* buffer,
   if (state_ == rtc::SS_OPENING)
     return rtc::SR_BLOCK;
 
-  if (!packets_.ReadFront(buffer, buffer_len, read)) {
+  if (!packets_.ReadFront(buffer.data(), buffer.size(), &read)) {
     return rtc::SR_BLOCK;
   }
 
   return rtc::SR_SUCCESS;
 }
 
-rtc::StreamResult StreamInterfaceChannel::Write(const void* data,
-                                                size_t data_len,
-                                                size_t* written,
-                                                int* error) {
+rtc::StreamResult StreamInterfaceChannel::Write(
+    rtc::ArrayView<const uint8_t> data,
+    size_t& written,
+    int& error) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
   // Always succeeds, since this is an unreliable transport anyway.
   // TODO(zhihuang): Should this block if ice_transport_'s temporarily
   // unwritable?
   rtc::PacketOptions packet_options;
-  ice_transport_->SendPacket(static_cast<const char*>(data), data_len,
-                             packet_options);
-  if (written) {
-    *written = data_len;
-  }
+  ice_transport_->SendPacket(reinterpret_cast<const char*>(data.data()),
+                             data.size(), packet_options);
+  written = data.size();
   return rtc::SR_SUCCESS;
 }
 
@@ -761,7 +758,9 @@ void DtlsTransport::MaybeStartDtls() {
       set_dtls_state(webrtc::DtlsTransportState::kFailed);
       return;
     }
-    RTC_LOG(LS_INFO) << ToString() << ": DtlsTransport: Started DTLS handshake";
+    RTC_LOG(LS_INFO) << ToString()
+                     << ": DtlsTransport: Started DTLS handshake active="
+                     << IsDtlsActive();
     set_dtls_state(webrtc::DtlsTransportState::kConnecting);
     // Now that the handshake has started, we can process a cached ClientHello
     // (if one exists).

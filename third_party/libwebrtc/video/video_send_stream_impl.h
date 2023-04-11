@@ -79,8 +79,7 @@ class VideoSendStreamImpl : public webrtc::BitrateAllocatorObserver,
   ~VideoSendStreamImpl() override;
 
   void DeliverRtcp(const uint8_t* packet, size_t length);
-  void UpdateActiveSimulcastLayers(std::vector<bool> active_layers);
-  void Start();
+  void StartPerRtpStream(std::vector<bool> active_layers);
   void Stop();
 
   // TODO(holmer): Move these to RtpTransportControllerSend.

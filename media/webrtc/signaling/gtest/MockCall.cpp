@@ -10,7 +10,8 @@ const webrtc::AudioSendStream::Config& MockAudioSendStream::GetConfig() const {
   return *mCallWrapper->GetMockCall()->mAudioSendConfig;
 }
 
-void MockAudioSendStream::Reconfigure(const Config& config) {
+void MockAudioSendStream::Reconfigure(const Config& config,
+                                      webrtc::SetParametersCallback callback) {
   mCallWrapper->GetMockCall()->mAudioSendConfig = mozilla::Some(config);
 }
 
@@ -43,6 +44,11 @@ void MockVideoSendStream::ReconfigureVideoEncoder(
     webrtc::VideoEncoderConfig config) {
   mCallWrapper->GetMockCall()->mVideoSendEncoderConfig =
       mozilla::Some(config.Copy());
+}
+
+void MockVideoSendStream::ReconfigureVideoEncoder(
+    webrtc::VideoEncoderConfig config, webrtc::SetParametersCallback callback) {
+  ReconfigureVideoEncoder(std::move(config));
 }
 
 webrtc::RtpHeaderExtensionMap MockVideoReceiveStream::GetRtpExtensionMap()

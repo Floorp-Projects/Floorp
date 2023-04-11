@@ -89,6 +89,8 @@ ModuleRtpRtcpImpl2::ModuleRtpRtcpImpl2(const Configuration& configuration)
     // Make sure rtcp sender use same timestamp offset as rtp sender.
     rtcp_sender_.SetTimestampOffset(
         rtp_sender_->packet_generator.TimestampOffset());
+    rtp_sender_->packet_sender.SetTimestampOffset(
+        rtp_sender_->packet_generator.TimestampOffset());
   }
 
   // Set default packet size limit.
@@ -186,6 +188,7 @@ void ModuleRtpRtcpImpl2::SetRtpState(const RtpState& rtp_state) {
   rtp_sender_->packet_generator.SetRtpState(rtp_state);
   rtp_sender_->sequencer.SetRtpState(rtp_state);
   rtcp_sender_.SetTimestampOffset(rtp_state.start_timestamp);
+  rtp_sender_->packet_sender.SetTimestampOffset(rtp_state.start_timestamp);
 }
 
 void ModuleRtpRtcpImpl2::SetRtxState(const RtpState& rtp_state) {
@@ -225,11 +228,6 @@ void ModuleRtpRtcpImpl2::SetMid(absl::string_view mid) {
   }
   // TODO(bugs.webrtc.org/4050): If we end up supporting the MID SDES item for
   // RTCP, this will need to be passed down to the RTCPSender also.
-}
-
-void ModuleRtpRtcpImpl2::SetCsrcs(const std::vector<uint32_t>& csrcs) {
-  rtcp_sender_.SetCsrcs(csrcs);
-  rtp_sender_->packet_generator.SetCsrcs(csrcs);
 }
 
 // TODO(pbos): Handle media and RTX streams separately (separate RTCP

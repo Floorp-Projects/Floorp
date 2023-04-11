@@ -66,7 +66,8 @@ class LossBasedBweV2 {
       rtc::ArrayView<const PacketResult> packet_results,
       DataRate delay_based_estimate,
       BandwidthUsage delay_detector_state,
-      absl::optional<DataRate> probe_bitrate);
+      absl::optional<DataRate> probe_bitrate,
+      DataRate upper_link_capacity);
 
  private:
   struct ChannelParameters {
@@ -110,6 +111,7 @@ class LossBasedBweV2 {
     DataRate bandwidth_cap_at_high_loss_rate = DataRate::MinusInfinity();
     double slope_of_bwe_high_loss_func = 1000.0;
     bool probe_integration_enabled = false;
+    bool bound_by_upper_link_capacity_when_loss_limited = false;
   };
 
   struct Derivatives {
@@ -193,6 +195,7 @@ class LossBasedBweV2 {
   LossBasedState current_state_ = LossBasedState::kDelayBasedEstimate;
   DataRate probe_bitrate_ = DataRate::PlusInfinity();
   DataRate delay_based_estimate_ = DataRate::PlusInfinity();
+  DataRate upper_link_capacity_ = DataRate::PlusInfinity();
 };
 
 }  // namespace webrtc

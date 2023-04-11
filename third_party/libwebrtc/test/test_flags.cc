@@ -42,4 +42,10 @@ ABSL_FLAG(std::string,
           "",
           "Path where the test perf metrics should be stored using "
           "api/test/metrics/metric.proto proto format. File will contain "
-          "MetricsSet as a root proto");
+          "MetricsSet as a root proto. On iOS, this MUST be a file name "
+          "and the file will be stored under NSDocumentDirectory.");
+
+ABSL_FLAG(bool,
+          export_perf_results_new_api,
+          false,
+          "Tells to initialize new API for exporting performance metrics");

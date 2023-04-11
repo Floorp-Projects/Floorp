@@ -151,7 +151,6 @@ void PacketArrivalTimeMap::EraseTo(int64_t sequence_number) {
   }
   // Remove some.
   begin_sequence_number_ = sequence_number;
-  RTC_DCHECK(has_received(begin_sequence_number_));
   AdjustToSize(end_sequence_number_ - begin_sequence_number_);
 }
 

@@ -1753,12 +1753,7 @@ TEST_P(ReceiveStatisticsProxy2TestWithContent, DownscalesReported) {
   statistics_proxy_->UpdateHistograms(absl::nullopt, StreamDataCounters(),
                                       nullptr);
   const int kExpectedDownscales = 30;  // 2 per 4 seconds = 30 per minute.
-  if (videocontenttypehelpers::IsScreenshare(content_type_)) {
-    EXPECT_METRIC_EQ(
-        kExpectedDownscales,
-        metrics::MinSample("WebRTC.Video.Screenshare."
-                           "NumberResolutionDownswitchesPerMinute"));
-  } else {
+  if (!videocontenttypehelpers::IsScreenshare(content_type_)) {
     EXPECT_METRIC_EQ(kExpectedDownscales,
                      metrics::MinSample(
                          "WebRTC.Video.NumberResolutionDownswitchesPerMinute"));

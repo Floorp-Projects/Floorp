@@ -16,10 +16,10 @@
 #include <string>
 
 #include "modules/desktop_capture/desktop_capture_types.h"
-#include "modules/desktop_capture/linux/wayland/portal_request_response.h"
 #include "modules/desktop_capture/linux/wayland/screen_capture_portal_interface.h"
-#include "modules/desktop_capture/linux/wayland/xdg_desktop_portal_utils.h"
-#include "modules/desktop_capture/linux/wayland/xdg_session_details.h"
+#include "modules/portal/portal_request_response.h"
+#include "modules/portal/xdg_desktop_portal_utils.h"
+#include "modules/portal/xdg_session_details.h"
 
 namespace webrtc {
 
@@ -84,7 +84,10 @@ class ScreenCastPortal : public xdg_portal::ScreenCapturePortalInterface {
                    ProxyRequestResponseHandler proxy_request_response_handler,
                    SourcesRequestResponseSignalHandler
                        sources_request_response_signal_handler,
-                   gpointer user_data);
+                   gpointer user_data,
+                   // TODO(chromium:1291247): Remove the default option once
+                   // downstream has been adjusted.
+                   bool prefer_cursor_embedded = false);
 
   ~ScreenCastPortal();
 
@@ -140,7 +143,7 @@ class ScreenCastPortal : public xdg_portal::ScreenCapturePortalInterface {
   CaptureSourceType capture_source_type_ =
       ScreenCastPortal::CaptureSourceType::kScreen;
 
-  CursorMode cursor_mode_ = ScreenCastPortal::CursorMode::kMetadata;
+  CursorMode cursor_mode_ = CursorMode::kMetadata;
 
   PersistMode persist_mode_ = ScreenCastPortal::PersistMode::kDoNotPersist;
 

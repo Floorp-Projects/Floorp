@@ -130,9 +130,7 @@ void TestAllCodecs::Perform() {
   acm_a_->InitializeReceiver();
   acm_b_->InitializeReceiver();
 
-  acm_b_->SetReceiveCodecs({{103, {"ISAC", 16000, 1}},
-                            {104, {"ISAC", 32000, 1}},
-                            {107, {"L16", 8000, 1}},
+  acm_b_->SetReceiveCodecs({{107, {"L16", 8000, 1}},
                             {108, {"L16", 16000, 1}},
                             {109, {"L16", 32000, 1}},
                             {111, {"L16", 8000, 2}},
@@ -184,33 +182,6 @@ void TestAllCodecs::Perform() {
   RegisterSendCodec('A', codec_ilbc, 8000, 15200, 160, 0);
   Run(channel_a_to_b_);
   RegisterSendCodec('A', codec_ilbc, 8000, 15200, 320, 0);
-  Run(channel_a_to_b_);
-  outfile_b_.Close();
-#endif
-#if (defined(WEBRTC_CODEC_ISAC) || defined(WEBRTC_CODEC_ISACFX))
-  test_count_++;
-  OpenOutFile(test_count_);
-  char codec_isac[] = "ISAC";
-  RegisterSendCodec('A', codec_isac, 16000, -1, 480, kVariableSize);
-  Run(channel_a_to_b_);
-  RegisterSendCodec('A', codec_isac, 16000, -1, 960, kVariableSize);
-  Run(channel_a_to_b_);
-  RegisterSendCodec('A', codec_isac, 16000, 15000, 480, kVariableSize);
-  Run(channel_a_to_b_);
-  RegisterSendCodec('A', codec_isac, 16000, 32000, 960, kVariableSize);
-  Run(channel_a_to_b_);
-  outfile_b_.Close();
-#endif
-#ifdef WEBRTC_CODEC_ISAC
-  test_count_++;
-  OpenOutFile(test_count_);
-  RegisterSendCodec('A', codec_isac, 32000, -1, 960, kVariableSize);
-  Run(channel_a_to_b_);
-  RegisterSendCodec('A', codec_isac, 32000, 56000, 960, kVariableSize);
-  Run(channel_a_to_b_);
-  RegisterSendCodec('A', codec_isac, 32000, 37000, 960, kVariableSize);
-  Run(channel_a_to_b_);
-  RegisterSendCodec('A', codec_isac, 32000, 32000, 960, kVariableSize);
   Run(channel_a_to_b_);
   outfile_b_.Close();
 #endif
@@ -319,15 +290,11 @@ void TestAllCodecs::RegisterSendCodec(char side,
   // Store packet-size in samples, used to validate the received packet.
   // If G.722, store half the size to compensate for the timestamp bug in the
   // RFC for G.722.
-  // If iSAC runs in adaptive mode, packet size in samples can change on the
-  // fly, so we exclude this test by setting `packet_size_samples_` to -1.
   int clockrate_hz = sampling_freq_hz;
   size_t num_channels = 1;
   if (absl::EqualsIgnoreCase(codec_name, "G722")) {
     packet_size_samples_ = packet_size / 2;
     clockrate_hz = sampling_freq_hz / 2;
-  } else if (absl::EqualsIgnoreCase(codec_name, "ISAC") && (rate == -1)) {
-    packet_size_samples_ = -1;
   } else if (absl::EqualsIgnoreCase(codec_name, "OPUS")) {
     packet_size_samples_ = packet_size;
     num_channels = 2;

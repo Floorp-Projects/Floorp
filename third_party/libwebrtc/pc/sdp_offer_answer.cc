@@ -120,8 +120,7 @@ const char kSimulcastDisabled[] = "WebRTC.PeerConnection.Simulcast.Disabled";
 static const int kRtcpCnameLength = 16;
 
 // The maximum length of the MID attribute.
-// TODO(bugs.webrtc.org/12517) - reduce to 16 again.
-static constexpr size_t kMidMaxSize = 32;
+static constexpr size_t kMidMaxSize = 16;
 
 const char kDefaultStreamId[] = "default";
 // NOTE: Duplicated in peer_connection.cc:
@@ -408,25 +407,88 @@ bool VerifyIceUfragPwdPresent(
 
 RTCError ValidateMids(const cricket::SessionDescription& description) {
   std::set<std::string> mids;
-  size_t max_length = 0;
   for (const cricket::ContentInfo& content : description.contents()) {
     if (content.name.empty()) {
       LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
                            "A media section is missing a MID attribute.");
     }
-    max_length = std::max(max_length, content.name.size());
     if (content.name.size() > kMidMaxSize) {
       LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
                            "The MID attribute exceeds the maximum supported "
-                           "length of 32 characters.");
+                           "length of 16 characters.");
     }
     if (!mids.insert(content.name).second) {
       LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
                            "Duplicate a=mid value '" + content.name + "'.");
     }
   }
-  RTC_HISTOGRAM_COUNTS_LINEAR("WebRTC.PeerConnection.Mid.Size", max_length, 0,
-                              31, 32);
+  return RTCError::OK();
+}
+
+RTCError FindDuplicateCodecParameters(
+    const RtpCodecParameters codec_parameters,
+    std::map<int, RtpCodecParameters>& payload_to_codec_parameters) {
+  auto existing_codec_parameters =
+      payload_to_codec_parameters.find(codec_parameters.payload_type);
+  if (existing_codec_parameters != payload_to_codec_parameters.end() &&
+      codec_parameters != existing_codec_parameters->second) {
+    return RTCError(RTCErrorType::INVALID_PARAMETER,
+                    "A BUNDLE group contains a codec collision for "
+                    "payload_type='" +
+                        rtc::ToString(codec_parameters.payload_type) +
+                        ". All codecs must share the same type, "
+                        "encoding name, clock rate and parameters.");
+  }
+  payload_to_codec_parameters.insert(
+      std::make_pair(codec_parameters.payload_type, codec_parameters));
+  return RTCError::OK();
+}
+
+RTCError ValidateBundledPayloadTypes(
+    const cricket::SessionDescription& description) {
+  // https://www.rfc-editor.org/rfc/rfc8843#name-payload-type-pt-value-reuse
+  // ... all codecs associated with the payload type number MUST share an
+  // identical codec configuration. This means that the codecs MUST share
+  // the same media type, encoding name, clock rate, and any parameter
+  // that can affect the codec configuration and packetization.
+  std::map<int, RtpCodecParameters> payload_to_codec_parameters;
+  std::vector<const cricket::ContentGroup*> bundle_groups =
+      description.GetGroupsByName(cricket::GROUP_TYPE_BUNDLE);
+  for (const cricket::ContentGroup* bundle_group : bundle_groups) {
+    std::map<int, RtpCodecParameters> payload_to_codec_parameters;
+    for (const std::string& content_name : bundle_group->content_names()) {
+      const cricket::MediaContentDescription* media_description =
+          description.GetContentDescriptionByName(content_name);
+      if (!media_description) {
+        return RTCError(RTCErrorType::INVALID_PARAMETER,
+                        "A BUNDLE group contains a MID='" + content_name +
+                            "' matching no m= section.");
+      }
+      if (!media_description->has_codecs()) {
+        continue;
+      }
+      const auto type = media_description->type();
+      if (type == cricket::MEDIA_TYPE_AUDIO) {
+        RTC_DCHECK(media_description->as_audio());
+        for (const auto& c : media_description->as_audio()->codecs()) {
+          auto error = FindDuplicateCodecParameters(
+              c.ToCodecParameters(), payload_to_codec_parameters);
+          if (!error.ok()) {
+            return error;
+          }
+        }
+      } else if (type == cricket::MEDIA_TYPE_VIDEO) {
+        RTC_DCHECK(media_description->as_video());
+        for (const auto& c : media_description->as_video()->codecs()) {
+          auto error = FindDuplicateCodecParameters(
+              c.ToCodecParameters(), payload_to_codec_parameters);
+          if (!error.ok()) {
+            return error;
+          }
+        }
+      }
+    }
+  }
   return RTCError::OK();
 }
 
@@ -3309,6 +3371,12 @@ RTCError SdpOfferAnswerHandler::ValidateSessionDescription(
   if (!VerifyIceUfragPwdPresent(sdesc->description(), bundle_groups_by_mid)) {
     return RTCError(RTCErrorType::INVALID_PARAMETER, kSdpWithoutIceUfragPwd);
   }
+
+  // Validate bundle, payload types and that there are no collisions.
+  error = ValidateBundledPayloadTypes(*sdesc->description());
+  // TODO(bugs.webrtc.org/14420): actually reject.
+  RTC_HISTOGRAM_BOOLEAN("WebRTC.PeerConnection.ValidBundledPayloadTypes",
+                        error.ok());
 
   if (!pc_->ValidateBundleSettings(sdesc->description(),
                                    bundle_groups_by_mid)) {

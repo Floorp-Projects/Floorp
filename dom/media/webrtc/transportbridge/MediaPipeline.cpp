@@ -47,6 +47,7 @@
 #include "jsapi/PeerConnectionImpl.h"
 #include "Tracing.h"
 #include "libwebrtcglue/WebrtcImageBuffer.h"
+#include "libwebrtcglue/MediaConduitInterface.h"
 #include "common_video/include/video_frame_buffer.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp.h"
 #include "modules/rtp_rtcp/include/rtp_header_extension_map.h"

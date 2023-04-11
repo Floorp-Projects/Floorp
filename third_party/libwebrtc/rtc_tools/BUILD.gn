@@ -14,14 +14,11 @@ group("rtc_tools") {
   # This target shall build all targets in tools/.
   testonly = true
 
-  deps = [
-    ":frame_analyzer",
-    ":video_file_reader",
-  ]
+  deps = [ ":video_file_reader" ]
   if (!build_with_chromium) {
     deps += [
+      ":frame_analyzer",
       ":psnr_ssim_analyzer",
-      ":rgba_to_i420_converter",
       ":video_quality_analysis",
     ]
   }
@@ -29,10 +26,7 @@ group("rtc_tools") {
     deps += [ ":chart_proto" ]
   }
   if (!build_with_chromium && rtc_include_tests) {
-    deps += [
-      ":tools_unittests",
-      ":yuv_to_ivf_converter",
-    ]
+    deps += [ ":tools_unittests" ]
   }
   if (rtc_include_tests && rtc_enable_protobuf) {
     deps += [
@@ -124,40 +118,6 @@ rtc_library("video_quality_analysis") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
-# Abseil dependencies are not moved to the absl_deps field deliberately.
-# If build_with_chromium is true, the absl_deps replaces the dependencies with
-# the "//third_party/abseil-cpp:absl" target. Which doesn't include absl/flags
-# (and some others) because they cannot be used in Chromiums. Special exception
-# for the "frame_analyzer" target in "third_party/abseil-cpp/absl.gni" allows
-# it to be build in chromium.
-rtc_executable("frame_analyzer") {
-  visibility = [ "*" ]
-  testonly = true
-  sources = [ "frame_analyzer/frame_analyzer.cc" ]
-
-  deps = [
-    ":video_file_reader",
-    ":video_file_writer",
-    ":video_quality_analysis",
-    "../api:make_ref_counted",
-    "../api:scoped_refptr",
-    "../api/test/metrics:chrome_perf_dashboard_metrics_exporter",
-    "../api/test/metrics:global_metrics_logger_and_exporter",
-    "../api/test/metrics:metrics_exporter",
-    "../api/test/metrics:stdout_metrics_exporter",
-    "../rtc_base:stringutils",
-    "//third_party/abseil-cpp/absl/flags:flag",
-    "//third_party/abseil-cpp/absl/flags:parse",
-    "//third_party/abseil-cpp/absl/strings",
-  ]
-
-  if (build_with_chromium) {
-    # When building from Chromium, WebRTC's metrics and field trial
-    # implementations need to be replaced by the Chromium ones.
-    deps += [ "//third_party/webrtc_overrides:webrtc_component" ]
-  }
-}
-
 # TODO(bugs.webrtc.org/11474): Enable this on win if needed. For now it
 # is only required for Linux and Android.
 if (!build_with_chromium && !build_with_mozilla && !is_win && !is_ios) {
@@ -181,6 +141,44 @@ if (!is_component_build) {
   # the "//third_party/abseil-cpp:absl" target. Which doesn't include absl/flags
   # (and some others) because they cannot be used in Chromiums. Special exception
   # for the "frame_analyzer" target in "third_party/abseil-cpp/absl.gni" allows
+  # it to be build in chromium.
+  rtc_executable("frame_analyzer") {
+    visibility = [ "*" ]
+    testonly = true
+    sources = [ "frame_analyzer/frame_analyzer.cc" ]
+
+    deps = [
+      ":video_file_reader",
+      ":video_file_writer",
+      ":video_quality_analysis",
+      "../api:make_ref_counted",
+      "../api:scoped_refptr",
+      "../api/test/metrics:chrome_perf_dashboard_metrics_exporter",
+      "../api/test/metrics:global_metrics_logger_and_exporter",
+      "../api/test/metrics:metrics_exporter",
+      "../api/test/metrics:stdout_metrics_exporter",
+      "../rtc_base:stringutils",
+      "//third_party/abseil-cpp/absl/flags:flag",
+      "//third_party/abseil-cpp/absl/flags:parse",
+      "//third_party/abseil-cpp/absl/strings",
+    ]
+
+    if (build_with_chromium) {
+      # When building from Chromium, WebRTC's metrics and field trial
+      # implementations need to be replaced by the Chromium ones.
+      deps += [ "//third_party/webrtc_overrides:webrtc_component" ]
+    }
+  }
+
+  # This target can be built from Chromium but it doesn't support
+  # is_component_build=true because it depends on WebRTC testonly code
+  # which is not part of //third_party/webrtc_overrides:webrtc_component.
+
+  # Abseil dependencies are not moved to the absl_deps field deliberately.
+  # If build_with_chromium is true, the absl_deps replaces the dependencies with
+  # the "//third_party/abseil-cpp:absl" target. Which doesn't include absl/flags
+  # (and some others) because they cannot be used in Chromiums. Special exception
+  # for the "rtp_generator" target in "third_party/abseil-cpp/absl.gni" allows
   # it to be build in chromium.
   rtc_executable("rtp_generator") {
     visibility = [ "*" ]
@@ -241,7 +239,7 @@ if (!is_component_build) {
   # If build_with_chromium is true, the absl_deps replaces the dependencies with
   # the "//third_party/abseil-cpp:absl" target. Which doesn't include absl/flags
   # (and some others) because they cannot be used in Chromiums. Special exception
-  # for the "frame_analyzer" target in "third_party/abseil-cpp/absl.gni" allows
+  # for the "video_replay" target in "third_party/abseil-cpp/absl.gni" allows
   # it to be build in chromium.
   rtc_executable("video_replay") {
     visibility = [ "*" ]
@@ -338,24 +336,6 @@ if (!build_with_chromium) {
     ]
   }
 
-  rtc_executable("rgba_to_i420_converter") {
-    visibility = [ "*" ]
-    testonly = true
-    sources = [
-      "converter/converter.cc",
-      "converter/converter.h",
-      "converter/rgba_to_i420_converter.cc",
-    ]
-
-    deps = [
-      "../common_video",
-      "//third_party/abseil-cpp/absl/flags:flag",
-      "//third_party/abseil-cpp/absl/flags:parse",
-      "//third_party/abseil-cpp/absl/flags:usage",
-      "//third_party/libyuv",
-    ]
-  }
-
   if (rtc_enable_protobuf) {
     proto_library("chart_proto") {
       visibility = [ "*" ]
@@ -437,41 +417,6 @@ if (!build_with_chromium) {
 
 if (rtc_include_tests) {
   if (!build_with_chromium) {
-    rtc_executable("yuv_to_ivf_converter") {
-      visibility = [ "*" ]
-      testonly = true
-      sources = [ "converter/yuv_to_ivf_converter.cc" ]
-      deps = [
-        "../api:create_frame_generator",
-        "../api:frame_generator_api",
-        "../api/task_queue:default_task_queue_factory",
-        "../api/video:encoded_image",
-        "../api/video:video_frame",
-        "../api/video_codecs:video_codecs_api",
-        "../media:rtc_media_base",
-        "../modules/rtp_rtcp:rtp_rtcp_format",
-        "../modules/video_coding:video_codec_interface",
-        "../modules/video_coding:video_coding_utility",
-        "../modules/video_coding:webrtc_h264",
-        "../modules/video_coding:webrtc_vp8",
-        "../modules/video_coding:webrtc_vp9",
-        "../rtc_base:checks",
-        "../rtc_base:criticalsection",
-        "../rtc_base:logging",
-        "../rtc_base:rtc_event",
-        "../rtc_base:rtc_task_queue",
-        "../rtc_base/synchronization:mutex",
-        "../rtc_base/system:file_wrapper",
-        "../test:video_test_common",
-        "../test:video_test_support",
-        "//third_party/abseil-cpp/absl/debugging:failure_signal_handler",
-        "//third_party/abseil-cpp/absl/debugging:symbolize",
-        "//third_party/abseil-cpp/absl/flags:flag",
-        "//third_party/abseil-cpp/absl/flags:parse",
-        "//third_party/abseil-cpp/absl/strings",
-      ]
-    }
-
     if (rtc_enable_protobuf) {
       rtc_executable("event_log_visualizer") {
         # TODO(bugs.webrtc.org/14248): Remove once usage of std::tmpnam

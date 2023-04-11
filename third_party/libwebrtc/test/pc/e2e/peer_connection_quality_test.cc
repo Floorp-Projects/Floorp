@@ -196,16 +196,6 @@ void PeerConnectionE2EQualityTest::AddQualityMetricsReporter(
 }
 
 PeerConnectionE2EQualityTest::PeerHandle* PeerConnectionE2EQualityTest::AddPeer(
-    const PeerNetworkDependencies& network_dependencies,
-    rtc::FunctionView<void(PeerConfigurer*)> configurer) {
-  peer_configurations_.push_back(
-      std::make_unique<PeerConfigurer>(network_dependencies));
-  configurer(peer_configurations_.back().get());
-  peer_handles_.push_back(PeerHandleImpl());
-  return &peer_handles_.back();
-}
-
-PeerConnectionE2EQualityTest::PeerHandle* PeerConnectionE2EQualityTest::AddPeer(
     std::unique_ptr<PeerConfigurer> configurer) {
   peer_configurations_.push_back(std::move(configurer));
   peer_handles_.push_back(PeerHandleImpl());
@@ -751,14 +741,18 @@ void PeerConnectionE2EQualityTest::TearDownCall() {
 }
 
 void PeerConnectionE2EQualityTest::ReportGeneralTestResults() {
+  // TODO(bugs.webrtc.org/14757): Remove kExperimentalTestNameMetadataKey.
   metrics_logger_->LogSingleValueMetric(
       *alice_->params().name + "_connected", test_case_name_, alice_connected_,
       Unit::kUnitless, ImprovementDirection::kBiggerIsBetter,
-      {{MetricMetadataKey::kPeerMetadataKey, *alice_->params().name}});
+      {{MetricMetadataKey::kPeerMetadataKey, *alice_->params().name},
+       {MetricMetadataKey::kExperimentalTestNameMetadataKey, test_case_name_}});
+  // TODO(bugs.webrtc.org/14757): Remove kExperimentalTestNameMetadataKey.
   metrics_logger_->LogSingleValueMetric(
       *bob_->params().name + "_connected", test_case_name_, bob_connected_,
       Unit::kUnitless, ImprovementDirection::kBiggerIsBetter,
-      {{MetricMetadataKey::kPeerMetadataKey, *bob_->params().name}});
+      {{MetricMetadataKey::kPeerMetadataKey, *bob_->params().name},
+       {MetricMetadataKey::kExperimentalTestNameMetadataKey, test_case_name_}});
 }
 
 Timestamp PeerConnectionE2EQualityTest::Now() const {

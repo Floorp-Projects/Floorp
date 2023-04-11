@@ -44,6 +44,7 @@ using ::testing::Ge;
 using ::testing::IsEmpty;
 using ::testing::Not;
 using ::testing::NotNull;
+using ::testing::Optional;
 using ::testing::Pointwise;
 using ::testing::SizeIs;
 using ::testing::Truly;
@@ -248,6 +249,8 @@ TEST_P(LibaomAv1SvcTest, EncodeAndDecodeAllDecodeTargets) {
         requested_ids.push_back(frame_id);
         decoder.Decode(frame_id, frame.encoded_image);
       }
+      EXPECT_THAT(frame.codec_specific_info.scalability_mode,
+                  Optional(param.GetScalabilityMode()));
     }
 
     ASSERT_THAT(requested_ids, SizeIs(Ge(2u)));

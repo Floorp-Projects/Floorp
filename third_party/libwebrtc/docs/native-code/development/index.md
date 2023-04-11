@@ -116,14 +116,16 @@ When you have Ninja project files generated (see previous section), compile
 For [Ninja][ninja] project files generated in `out/Default`:
 
 ```
-$ ninja -C out/Default
+$ autoninja -C out/Default
 ```
 
 To build everything in the generated folder (`out/Default`):
 
 ```
-$ ninja all -C out/Default
+$ autoninja all -C out/Default
 ```
+
+`autoninja` is a wrapper that automatically provides optimal values for the arguments passed to `ninja`.
 
 See [Ninja build rules][ninja-build-rules] to read more about difference between `ninja` and `ninja all`.
 

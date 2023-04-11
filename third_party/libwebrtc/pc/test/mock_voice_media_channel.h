@@ -16,6 +16,7 @@
 
 #include "api/call/audio_sink.h"
 #include "media/base/media_channel.h"
+#include "media/base/media_channel_impl.h"
 #include "rtc_base/gunit.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
@@ -29,7 +30,10 @@ class MockVoiceMediaChannel : public VoiceMediaChannel {
   explicit MockVoiceMediaChannel(webrtc::TaskQueueBase* network_thread)
       : VoiceMediaChannel(network_thread) {}
 
-  MOCK_METHOD(void, SetInterface, (NetworkInterface * iface), (override));
+  MOCK_METHOD(void,
+              SetInterface,
+              (MediaChannelNetworkInterface * iface),
+              (override));
   MOCK_METHOD(void,
               OnPacketReceived,
               (rtc::CopyOnWriteBuffer packet, int64_t packet_time_us),
@@ -64,14 +68,15 @@ class MockVoiceMediaChannel : public VoiceMediaChannel {
       (uint32_t ssrc,
        rtc::scoped_refptr<webrtc::FrameDecryptorInterface> frame_decryptor),
       (override));
-  MOCK_METHOD(void, SetVideoCodecSwitchingEnabled, (bool enabled), (override));
   MOCK_METHOD(webrtc::RtpParameters,
               GetRtpSendParameters,
               (uint32_t ssrc),
               (const, override));
   MOCK_METHOD(webrtc::RTCError,
               SetRtpSendParameters,
-              (uint32_t ssrc, const webrtc::RtpParameters& parameters),
+              (uint32_t ssrc,
+               const webrtc::RtpParameters& parameters,
+               webrtc::SetParametersCallback callback),
               (override));
   MOCK_METHOD(
       void,

@@ -13,7 +13,6 @@
 #include <memory>
 #include <utility>
 
-#include "api/transport/field_trial_based_config.h"
 #include "api/transport/network_types.h"
 #include "api/transport/test/mock_network_control.h"
 #include "api/units/data_size.h"
@@ -79,9 +78,7 @@ class RemoteEstimatorProxyTest : public ::testing::Test {
  public:
   RemoteEstimatorProxyTest()
       : clock_(0),
-        proxy_(feedback_sender_.AsStdFunction(),
-               &field_trial_config_,
-               &network_state_estimator_) {}
+        proxy_(feedback_sender_.AsStdFunction(), &network_state_estimator_) {}
 
  protected:
   void IncomingPacket(
@@ -100,7 +97,6 @@ class RemoteEstimatorProxyTest : public ::testing::Test {
     proxy_.Process(clock_.CurrentTime());
   }
 
-  FieldTrialBasedConfig field_trial_config_;
   SimulatedClock clock_;
   MockFunction<void(std::vector<std::unique_ptr<rtcp::RtcpPacket>>)>
       feedback_sender_;

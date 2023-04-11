@@ -339,13 +339,16 @@ void RtpTransceiver::PushNewMediaChannelAndDeleteChannel(
   }
   context()->worker_thread()->BlockingCall([&]() {
     // Push down the new media_channel, if any, otherwise clear it.
-    auto* media_channel = channel_ ? channel_->media_channel() : nullptr;
+    auto* media_send_channel =
+        channel_ ? channel_->media_send_channel() : nullptr;
     for (const auto& sender : senders_) {
-      sender->internal()->SetMediaChannel(media_channel);
+      sender->internal()->SetMediaChannel(media_send_channel);
     }
 
+    auto* media_receive_channel =
+        channel_ ? channel_->media_receive_channel() : nullptr;
     for (const auto& receiver : receivers_) {
-      receiver->internal()->SetMediaChannel(media_channel);
+      receiver->internal()->SetMediaChannel(media_receive_channel);
     }
 
     // Destroy the channel, if we had one, now _after_ updating the receivers
