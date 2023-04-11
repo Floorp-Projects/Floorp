@@ -2810,6 +2810,31 @@ void nsGenericHTMLFormControlElementWithState::SetPopoverTargetElement(
   ExplicitlySetAttrElement(nsGkAtoms::popovertarget, aElement);
 }
 
+void nsGenericHTMLFormControlElementWithState::HandlePopoverTargetAction() {
+  RefPtr<nsGenericHTMLElement> target = GetEffectivePopoverTargetElement();
+  if (!target) {
+    return;
+  }
+
+  const nsAttrValue* value = GetParsedAttr(nsGkAtoms::popovertargetaction);
+  if (!value) {
+    return;
+  }
+
+  auto action = static_cast<PopoverTargetAction>(value->GetEnumValue());
+  bool canHide = action == PopoverTargetAction::Hide ||
+                 action == PopoverTargetAction::Toggle;
+  bool canShow = action == PopoverTargetAction::Show ||
+                 action == PopoverTargetAction::Toggle;
+
+  if (canHide && target->IsPopoverOpen()) {
+    target->HidePopover(IgnoreErrors());
+  } else if (canShow && !target->IsPopoverOpen()) {
+    // TODO: Set popover's popover invoker to node once invoker API is in.
+    target->ShowPopover(IgnoreErrors());
+  }
+}
+
 void nsGenericHTMLFormControlElementWithState::GenerateStateKey() {
   // Keep the key if already computed
   if (!mStateKey.IsVoid()) {
