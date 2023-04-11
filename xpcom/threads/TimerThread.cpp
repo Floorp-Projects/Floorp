@@ -624,6 +624,15 @@ size_t TimerThread::ComputeTimerInsertionIndex(const TimeStamp& timeout) const {
   return firstGtIndex;
 }
 
+TimeStamp TimerThread::ComputeWakeupTimeFromTimers() const {
+  mMonitor.AssertCurrentThreadOwns();
+
+  MOZ_RELEASE_ASSERT(!mTimers.IsEmpty());
+  MOZ_RELEASE_ASSERT(mTimers[0].Value());
+
+  return mTimers[0].Timeout();
+}
+
 NS_IMETHODIMP
 TimerThread::Run() {
   MonitorAutoLock lock(mMonitor);
@@ -730,14 +739,14 @@ TimerThread::Run() {
         // interval is so small we should not wait at all).
         double microseconds = (timeout - now).ToMicroseconds();
 
+        // The mean value of sFractions must be 1 to ensure that the average of
+        // a long sequence of timeouts converges to the actual sum of their
+        // times.
+        static constexpr double sChaosFractions[] = {0.0, 0.25, 0.5, 0.75,
+                                                     1.0, 1.75, 2.75};
         if (ChaosMode::isActive(ChaosFeature::TimerScheduling)) {
-          // The mean value of sFractions must be 1 to ensure that
-          // the average of a long sequence of timeouts converges to the
-          // actual sum of their times.
-          static const float sFractions[] = {0.0f, 0.25f, 0.5f, 0.75f,
-                                             1.0f, 1.75f, 2.75f};
-          microseconds *= sFractions[ChaosMode::randomUint32LessThan(
-              ArrayLength(sFractions))];
+          microseconds *= sChaosFractions[ChaosMode::randomUint32LessThan(
+              ArrayLength(sChaosFractions))];
           forceRunNextTimer = true;
         }
 
@@ -745,11 +754,38 @@ TimerThread::Run() {
           forceRunNextTimer = false;
           goto next;  // round down; execute event now
         }
-        waitFor = TimeDuration::FromMicroseconds(microseconds);
-        if (waitFor.IsZero()) {
-          // round up, wait the minimum time we can wait
-          waitFor = TimeDuration::FromMicroseconds(1);
+
+        // TECHNICAL NOTE: Determining waitFor (by subtracting |now| from our
+        // desired wake-up time) at this point is not ideal. For one thing, the
+        // |now| that we have at this point is somewhat old. Secondly, there is
+        // quite a bit of code between here and where we actually use waitFor to
+        // request sleep. If I am thinking about this correctly, both of these
+        // will contribute to us requesting more sleep than is actually needed
+        // to wake up at our desired time. We could avoid this problem by only
+        // determining our desired wake-up time here and then calculating the
+        // wait time when we're actually about to sleep.
+        const TimeStamp wakeupTime = ComputeWakeupTimeFromTimers();
+        waitFor = wakeupTime - now;
+
+        // If this were to fail that would mean that we had more timers that we
+        // should have fired.
+        MOZ_ASSERT(!waitFor.IsZero());
+
+        if (ChaosMode::isActive(ChaosFeature::TimerScheduling)) {
+          // If chaos mode is active then mess with the amount of time that we
+          // request to sleep (without changing what we record as our expected
+          // wake-up time). This will simulate unintended early/late wake-ups.
+          const double waitInMs = waitFor.ToMilliseconds();
+          const double chaosWaitInMs =
+              waitInMs * sChaosFractions[ChaosMode::randomUint32LessThan(
+                             ArrayLength(sChaosFractions))];
+          waitFor = TimeDuration::FromMilliseconds(chaosWaitInMs);
+          MOZ_ASSERT(!waitFor.IsZero());
         }
+
+        mIntendedWakeupTime = wakeupTime;
+      } else {
+        mIntendedWakeupTime = TimeStamp{};
       }
 
       if (MOZ_LOG_TEST(GetTimerLog(), LogLevel::Debug)) {
