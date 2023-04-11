@@ -5,7 +5,7 @@
 import { classMap, html } from "lit.all.mjs";
 
 export default {
-  title: "UI Widgets/Button",
+  title: "Design System/Atoms/Button",
   component: "button",
   parameters: {
     fluent: `
