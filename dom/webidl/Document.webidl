@@ -610,7 +610,7 @@ Document includes TouchEventHandlers;
 Document includes ParentNode;
 Document includes OnErrorEventHandlerForNodes;
 Document includes GeometryUtils;
-Document includes  FontFaceSource;
+Document includes FontFaceSource;
 Document includes DocumentOrShadowRoot;
 
 // https://w3c.github.io/webappsec-feature-policy/#idl-index
