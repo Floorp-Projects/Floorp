@@ -86,7 +86,7 @@ document.addEventListener(
   e => {
     window._initialized = PrintEventHandler.init().catch(e => console.error(e));
     ourBrowser.setAttribute("flex", "0");
-    ourBrowser.setAttribute("selectmenuconstrained", "false");
+    ourBrowser.setAttribute("constrainpopups", "false");
     ourBrowser.classList.add("printSettingsBrowser");
     ourBrowser.closest(".dialogBox")?.classList.add("printDialogBox");
   },
