@@ -11,7 +11,6 @@ describe("ASRouterParentProcessMessageHandler", () => {
     const returnValue = { value: 1 };
     const router = new _ASRouter();
     [
-      "_updateOnboardingState",
       "addImpression",
       "addPreviewEndpoint",
       "evaluateExpression",
@@ -173,12 +172,6 @@ describe("ASRouterParentProcessMessageHandler", () => {
       });
     });
     describe("USER_ACTION action", () => {
-      it("with INSTALL_ADDON_FROM_URL calls _updateOnboardingState", () => {
-        handler.handleMessage(msg.USER_ACTION, {
-          type: "INSTALL_ADDON_FROM_URL",
-        });
-        assert.calledOnce(config.router._updateOnboardingState);
-      });
       it("default calls SpecialMessageActions.handleAction", async () => {
         await handler.handleMessage(
           msg.USER_ACTION,
@@ -187,7 +180,6 @@ describe("ASRouterParentProcessMessageHandler", () => {
           },
           { browser: { ownerGlobal: {} } }
         );
-        assert.notCalled(config.router._updateOnboardingState);
         assert.calledOnce(config.specialMessageActions.handleAction);
         assert.calledWith(
           config.specialMessageActions.handleAction,

@@ -70,10 +70,6 @@ class ASRouterParentProcessMessageHandler {
           .then(() => !data.preventDismiss);
       }
       case msg.USER_ACTION: {
-        // This is to support ReturnToAMO
-        if (data.type === "INSTALL_ADDON_FROM_URL") {
-          this._router._updateOnboardingState();
-        }
         return this._specialMessageActions.handleAction(data, browser);
       }
       case msg.IMPRESSION: {

@@ -1720,17 +1720,6 @@ class _ASRouter {
     }
   }
 
-  // Ensure we switch to the Onboarding message after RTAMO addon was installed
-  _updateOnboardingState() {
-    let addonInstallObs = (subject, topic) => {
-      Services.obs.removeObserver(
-        addonInstallObs,
-        "webextension-install-notify"
-      );
-    };
-    Services.obs.addObserver(addonInstallObs, "webextension-install-notify");
-  }
-
   _loadSnippetsAllowHosts() {
     let additionalHosts = [];
     const allowPrefValue = Services.prefs.getStringPref(
