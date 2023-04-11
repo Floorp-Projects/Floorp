@@ -3158,7 +3158,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
   bool needHitTestInfo = aBuilder->BuildCompositorHitTestInfo() &&
                          Style()->PointerEvents() != StylePointerEvents::None;
   bool opacityItemForEventsOnly = false;
-  if (effects->mOpacity == 0.0 && aBuilder->IsForPainting() &&
+  if (effects->IsTransparent() && aBuilder->IsForPainting() &&
       !(disp->mWillChange.bits & StyleWillChangeBits::OPACITY) &&
       !nsLayoutUtils::HasAnimationOfPropertySet(
           this, nsCSSPropertyIDSet::OpacityProperties(), effectSetForOpacity)) {

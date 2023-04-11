@@ -212,7 +212,7 @@ void SVGDisplayContainerFrame::PaintSVG(gfxContext& aContext,
                    PresContext()->Document()->IsSVGGlyphsDocument(),
                "Only painting of non-display SVG should take this code path");
 
-  if (StyleEffects()->mOpacity == 0.0) {
+  if (StyleEffects()->IsTransparent()) {
     return;
   }
 
