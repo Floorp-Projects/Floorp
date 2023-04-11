@@ -517,7 +517,8 @@ export class UrlbarView {
 
     if (
       !this.input.value ||
-      this.input.getAttribute("pageproxystate") == "valid"
+      (this.input.getAttribute("pageproxystate") == "valid" &&
+        !this.window.gBrowser.selectedBrowser.searchTerms)
     ) {
       if (!this.isOpen && ["mousedown", "command"].includes(event.type)) {
         // Try to reuse the cached top-sites context. If it's not cached, then
