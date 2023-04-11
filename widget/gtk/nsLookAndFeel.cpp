@@ -952,6 +952,10 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       EnsureInit();
       aResult = mSystemTheme.mHighContrast;
       break;
+    case IntID::InvertedColors:
+      // No GTK API for checking if inverted colors is enabled
+      aResult = 0;
+      break;
     case IntID::TitlebarRadius: {
       EnsureInit();
       aResult = EffectiveTheme().mTitlebarRadius;

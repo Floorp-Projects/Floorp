@@ -887,6 +887,16 @@ slot {
   display: contents;
 }
 
+/* Un-invert images and videos for users using inverted colors.
+ * "User agents must add the following rule to their UA style sheet"
+ * https://www.w3.org/TR/mediaqueries-5/#inverted
+ */
+@media (inverted-colors) {
+  img:not(picture > img), picture, video {
+    filter: invert(100%);
+  }
+}
+
 /* Hide noscript elements if scripting is enabled */
 @media (scripting) {
   noscript {

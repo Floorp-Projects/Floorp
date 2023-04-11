@@ -464,6 +464,7 @@ STATIC_ATOMS = [
     Atom("_for", "for"),
     Atom("forEach", "for-each"),
     Atom("forcedColors", "forced-colors"),
+    Atom("invertedColors", "inverted-colors"),
     Atom("forceOwnRefreshDriver", "forceOwnRefreshDriver"),
     Atom("form", "form"),
     Atom("formaction", "formaction"),

@@ -70,6 +70,42 @@ static nsresult SystemWantsDarkTheme(int32_t& darkThemeEnabled) {
   return rv;
 }
 
+static int32_t SystemColorFilter() {
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIWindowsRegKey> colorFilteringKey =
+      do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return 0;
+  }
+
+  rv = colorFilteringKey->Open(
+      nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
+      u"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Accessibility\\ATConfig\\colorfiltering"_ns,
+      nsIWindowsRegKey::ACCESS_QUERY_VALUE);
+  if (NS_FAILED(rv)) {
+    return 0;
+  }
+
+  // The Active value is set to 1 when the "Turn on color filters" setting
+  // in the Color filters section of Windows' Ease of Access settings is turned
+  // on. If it is disabled (Active == 0 or does not exist), do not report having
+  // a color filter.
+  uint32_t active;
+  rv = colorFilteringKey->ReadIntValue(u"Active"_ns, &active);
+  if (NS_FAILED(rv) || active == 0) {
+    return 0;
+  }
+
+  // The FilterType value is set to whichever filter is enabled.
+  uint32_t filterType;
+  rv = colorFilteringKey->ReadIntValue(u"FilterType"_ns, &filterType);
+  if (NS_SUCCEEDED(rv)) {
+    return filterType;
+  }
+
+  return 0;
+}
+
 nsLookAndFeel::nsLookAndFeel() {
   mozilla::Telemetry::Accumulate(mozilla::Telemetry::TOUCH_ENABLED_DEVICE,
                                  WinUtils::IsTouchDeviceSupportPresent());
@@ -612,6 +648,15 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       // Prefers reduced transparency if the option for "Transparency Effects"
       // is disabled
       aResult = !WindowsUIUtils::ComputeTransparencyEffects();
+      break;
+    }
+    case IntID::InvertedColors: {
+      int32_t colorFilter = SystemColorFilter();
+
+      // Color filter values
+      // 1: Inverted
+      // 2: Grayscale inverted
+      aResult = colorFilter == 1 || colorFilter == 2 ? 1 : 0;
       break;
     }
     case IntID::PrimaryPointerCapabilities: {
