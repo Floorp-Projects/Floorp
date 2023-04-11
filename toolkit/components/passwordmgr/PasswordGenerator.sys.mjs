@@ -2,15 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /**
  * This file is a port of a subset of Chromium's implementation from
  * https://cs.chromium.org/chromium/src/components/password_manager/core/browser/generation/password_generator.cc?l=93&rcl=a896a3ac4ea731b5ab3d2ab5bd76a139885d5c4f
  * which is Copyright 2018 The Chromium Authors. All rights reserved.
  */
-
-const EXPORTED_SYMBOLS = ["PasswordGenerator"];
 
 const DEFAULT_PASSWORD_LENGTH = 15;
 const MAX_UINT8 = Math.pow(2, 8) - 1;
@@ -45,7 +41,7 @@ DEFAULT_RULES.set(MIN_LENGTH, REQUIRED_CHARACTER_CLASSES.length);
 DEFAULT_RULES.set(MAX_LENGTH, MAX_UINT8);
 DEFAULT_RULES.set(REQUIRED, [UPPER, LOWER, DIGIT, SPECIAL]);
 
-const PasswordGenerator = {
+export const PasswordGenerator = {
   /**
    * @param {Object} options
    * @param {number} options.length - length of the generated password if there are no rules that override the length

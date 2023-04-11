@@ -173,7 +173,7 @@ third_party/
 toolkit/components/certviewer/content/vendor/
 toolkit/components/jsoncpp/
 toolkit/components/normandy/vendor/
-toolkit/components/passwordmgr/PasswordRulesParser.jsm
+toolkit/components/passwordmgr/PasswordRulesParser.sys.mjs
 toolkit/components/protobuf/
 toolkit/components/translation/cld2/
 toolkit/components/translations/bergamot-translator

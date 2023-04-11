@@ -6,27 +6,12 @@
  * Provides a class to import login-related data CSV files.
  */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = [
-  "LoginCSVImport",
-  "ImportFailedException",
-  "ImportFailedErrorType",
-];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  CSV: "resource://gre/modules/CSV.sys.mjs",
+  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
   ResponsivenessMonitor: "resource://gre/modules/ResponsivenessMonitor.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  LoginHelper: "resource://gre/modules/LoginHelper.jsm",
-  CSV: "resource://gre/modules/CSV.js",
 });
 
 /**
@@ -45,14 +30,14 @@ const FIELD_TO_CSV_COLUMNS = {
   timePasswordChanged: ["timepasswordchanged"],
 };
 
-const ImportFailedErrorType = Object.freeze({
+export const ImportFailedErrorType = Object.freeze({
   CONFLICTING_VALUES_ERROR: "CONFLICTING_VALUES_ERROR",
   FILE_FORMAT_ERROR: "FILE_FORMAT_ERROR",
   FILE_PERMISSIONS_ERROR: "FILE_PERMISSIONS_ERROR",
   UNABLE_TO_READ_ERROR: "UNABLE_TO_READ_ERROR",
 });
 
-class ImportFailedException extends Error {
+export class ImportFailedException extends Error {
   constructor(errorType, message) {
     super(message != null ? message : errorType);
     this.errorType = errorType;
@@ -62,7 +47,7 @@ class ImportFailedException extends Error {
 /**
  * Provides an object that has a method to import login-related data CSV files
  */
-class LoginCSVImport {
+export class LoginCSVImport {
   /**
    * Returns a map that has the csv column name as key and the value the field name.
    *

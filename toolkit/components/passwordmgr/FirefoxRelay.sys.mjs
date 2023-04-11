@@ -2,23 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["FirefoxRelay"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-const { FirefoxRelayTelemetry } = ChromeUtils.importESModule(
-  "resource://gre/modules/FirefoxRelayTelemetry.mjs"
-);
-
-const {
+import { FirefoxRelayTelemetry } from "resource://gre/modules/FirefoxRelayTelemetry.mjs";
+import {
   LoginHelper,
   OptInFeature,
   ParentAutocompleteOption,
-} = ChromeUtils.import("resource://gre/modules/LoginHelper.jsm");
+} from "resource://gre/modules/LoginHelper.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const { TelemetryUtils } = ChromeUtils.import(
   "resource://gre/modules/TelemetryUtils.jsm"
@@ -653,4 +643,4 @@ class RelayFeature extends OptInFeature {
   }
 }
 
-const FirefoxRelay = new RelayFeature();
+export const FirefoxRelay = new RelayFeature();

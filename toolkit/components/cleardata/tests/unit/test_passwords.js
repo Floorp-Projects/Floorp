@@ -6,8 +6,8 @@
 
 const URL = "http://example.com";
 
-const { LoginTestUtils } = ChromeUtils.import(
-  "resource://testing-common/LoginTestUtils.jsm"
+const { LoginTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/LoginTestUtils.sys.mjs"
 );
 
 add_task(async function test_principal_downloads() {

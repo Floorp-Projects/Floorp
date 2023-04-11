@@ -7,9 +7,7 @@
  * using Fathom.
  */
 
-const EXPORTED_SYMBOLS = ["NewPasswordModel"];
-
-const {
+import {
   dom,
   element,
   out,
@@ -17,11 +15,12 @@ const {
   ruleset,
   score,
   type,
-  utils: { identity, isVisible, min, setDefault },
-  clusters: { euclidean },
-} = ChromeUtils.importESModule(
-  "resource://gre/modules/third_party/fathom/fathom.mjs"
-);
+  utils,
+  clusters,
+} from "resource://gre/modules/third_party/fathom/fathom.mjs";
+
+let { identity, isVisible, min, setDefault } = utils;
+let { euclidean } = clusters;
 
 /**
  * ----- Start of model -----
@@ -661,7 +660,7 @@ function makeRuleset(coeffs, biases) {
  * ----- End of model -----
  */
 
-const NewPasswordModel = {
+export const NewPasswordModel = {
   type: "new",
   rules: makeRuleset([...coefficients.new], biases),
 };

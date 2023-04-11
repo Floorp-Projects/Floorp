@@ -1,10 +1,8 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "OSCrypto",
-  "resource://gre/modules/OSCrypto_win.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  OSCrypto: "resource://gre/modules/OSCrypto_win.sys.mjs",
+});
 
 const IE7_FORM_PASSWORDS_MIGRATOR_NAME = "IE7FormPasswords";
 const LOGINS_KEY =

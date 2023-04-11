@@ -2,13 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["OSCrypto"];
-
-const { ctypes } = ChromeUtils.importESModule(
-  "resource://gre/modules/ctypes.sys.mjs"
-);
+import { ctypes } from "resource://gre/modules/ctypes.sys.mjs";
 
 const FLAGS_NOT_SET = 0;
 
@@ -23,7 +17,7 @@ const wintypes = {
   WORD: ctypes.uint16_t,
 };
 
-function OSCrypto() {
+export function OSCrypto() {
   this._structs = {};
   this._functions = new Map();
   this._libs = new Map();
@@ -82,6 +76,7 @@ function OSCrypto() {
     throw ex;
   }
 }
+
 OSCrypto.prototype = {
   /**
    * Convert an array containing only two bytes unsigned numbers to a string.

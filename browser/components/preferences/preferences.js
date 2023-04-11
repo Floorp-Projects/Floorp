@@ -85,6 +85,8 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource://gre/modules/ContextualIdentityService.sys.mjs",
   FeatureGate: "resource://featuregates/FeatureGate.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
+  FirefoxRelay: "resource://gre/modules/FirefoxRelay.sys.mjs",
+  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
@@ -103,10 +105,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionPreferencesManager:
     "resource://gre/modules/ExtensionPreferencesManager.jsm",
   ExtensionSettingsStore: "resource://gre/modules/ExtensionSettingsStore.jsm",
-  FirefoxRelay: "resource://gre/modules/FirefoxRelay.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
   LangPackMatcher: "resource://gre/modules/LangPackMatcher.jsm",
-  LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   SelectionChangedMenulist: "resource:///modules/SelectionChangedMenulist.jsm",
   SiteDataManager: "resource:///modules/SiteDataManager.jsm",
   TransientPrefs: "resource:///modules/TransientPrefs.jsm",
@@ -153,7 +153,6 @@ XPCOMUtils.defineLazyGetter(this, "gSubDialog", function() {
 
 var gLastCategory = { category: undefined, subcategory: undefined };
 const gXULDOMParser = new DOMParser();
-
 var gCategoryModules = new Map();
 var gCategoryInits = new Map();
 function init_category_if_required(category) {

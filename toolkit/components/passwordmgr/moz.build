@@ -12,7 +12,7 @@ BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
 XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
 
 TESTING_JS_MODULES += [
-    "test/LoginTestUtils.jsm",
+    "test/LoginTestUtils.sys.mjs",
 ]
 
 XPIDL_SOURCES += [
@@ -30,50 +30,50 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = "loginmgr"
 
 EXTRA_JS_MODULES += [
-    "crypto-SDR.js",
-    "FirefoxRelay.jsm",
+    "crypto-SDR.sys.mjs",
+    "FirefoxRelay.sys.mjs",
     "FirefoxRelayTelemetry.mjs",
-    "InsecurePasswordUtils.jsm",
-    "LoginAutoComplete.jsm",
-    "LoginFormFactory.jsm",
-    "LoginHelper.jsm",
-    "LoginInfo.jsm",
-    "LoginManager.jsm",
+    "InsecurePasswordUtils.sys.mjs",
+    "LoginAutoComplete.sys.mjs",
+    "LoginFormFactory.sys.mjs",
+    "LoginHelper.sys.mjs",
+    "LoginInfo.sys.mjs",
     "LoginManager.shared.mjs",
-    "LoginManagerAuthPrompter.jsm",
-    "LoginManagerChild.jsm",
-    "LoginManagerParent.jsm",
-    "LoginManagerPrompter.jsm",
-    "LoginRecipes.jsm",
-    "LoginRelatedRealms.jsm",
-    "NewPasswordModel.jsm",
-    "PasswordGenerator.jsm",
-    "PasswordRulesManager.jsm",
-    "PasswordRulesParser.jsm",
-    "SignUpFormRuleset.jsm",
-    "storage-json.js",
+    "LoginManager.sys.mjs",
+    "LoginManagerAuthPrompter.sys.mjs",
+    "LoginManagerChild.sys.mjs",
+    "LoginManagerParent.sys.mjs",
+    "LoginManagerPrompter.sys.mjs",
+    "LoginRecipes.sys.mjs",
+    "LoginRelatedRealms.sys.mjs",
+    "NewPasswordModel.sys.mjs",
+    "PasswordGenerator.sys.mjs",
+    "PasswordRulesManager.sys.mjs",
+    "PasswordRulesParser.sys.mjs",
+    "SignUpFormRuleset.sys.mjs",
+    "storage-json.sys.mjs",
 ]
 
 if CONFIG["OS_TARGET"] == "Android":
     EXTRA_JS_MODULES += [
-        "storage-geckoview.js",
+        "storage-geckoview.sys.mjs",
     ]
 else:
     EXTRA_JS_MODULES += [
-        "CSV.js",
-        "LoginCSVImport.jsm",
-        "LoginExport.jsm",
-        "LoginStore.jsm",
+        "CSV.sys.mjs",
+        "LoginCSVImport.sys.mjs",
+        "LoginExport.sys.mjs",
+        "LoginStore.sys.mjs",
     ]
 
 if CONFIG["OS_TARGET"] == "WINNT":
     EXTRA_JS_MODULES += [
-        "OSCrypto_win.jsm",
+        "OSCrypto_win.sys.mjs",
     ]
 
 if CONFIG["MOZ_BUILD_APP"] == "browser" or CONFIG["MOZ_SUITE"]:
     EXTRA_JS_MODULES += [
-        "LoginManagerContextMenu.jsm",
+        "LoginManagerContextMenu.sys.mjs",
     ]
 
 XPCOM_MANIFESTS += [

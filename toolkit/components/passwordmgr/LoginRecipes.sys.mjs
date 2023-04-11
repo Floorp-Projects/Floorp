@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["LoginRecipesContent", "LoginRecipesParent"];
-
 const REQUIRED_KEYS = ["hosts"];
 const OPTIONAL_KEYS = [
   "description",
@@ -20,25 +16,18 @@ const OPTIONAL_KEYS = [
 ];
 const SUPPORTED_KEYS = REQUIRED_KEYS.concat(OPTIONAL_KEYS);
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "LoginHelper",
-  "resource://gre/modules/LoginHelper.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
+  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
+});
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () =>
   lazy.LoginHelper.createLogger("LoginRecipes")
 );
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
-});
 
 /**
  * Create an instance of the object to manage recipes in the parent process.
@@ -50,7 +39,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
  *                                          If it's null, nothing is loaded.
  *
  */
-function LoginRecipesParent(aOptions = { defaults: null }) {
+export function LoginRecipesParent(aOptions = { defaults: null }) {
   if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
     throw new Error(
       "LoginRecipesParent should only be used from the main process"
@@ -245,7 +234,7 @@ LoginRecipesParent.prototype = {
   },
 };
 
-const LoginRecipesContent = {
+export const LoginRecipesContent = {
   _recipeCache: new WeakMap(),
 
   _clearRecipeCache() {

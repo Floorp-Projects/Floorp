@@ -7,8 +7,8 @@
 const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
-const { LoginManagerParent } = ChromeUtils.import(
-  "resource://gre/modules/LoginManagerParent.jsm"
+const { LoginManagerParent } = ChromeUtils.importESModule(
+  "resource://gre/modules/LoginManagerParent.sys.mjs"
 );
 
 // new-password to the happy path

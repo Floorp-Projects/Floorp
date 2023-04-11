@@ -87,8 +87,8 @@ async function verifyGeneratedPasswordWasFilled(
     browser,
     [[passwordInputSelector]],
     function checkFinalFieldValue(inputSelector) {
-      let { LoginTestUtils: LTU } = ChromeUtils.import(
-        "resource://testing-common/LoginTestUtils.jsm"
+      let { LoginTestUtils: LTU } = ChromeUtils.importESModule(
+        "resource://testing-common/LoginTestUtils.sys.mjs"
       );
       let passwordInput = content.document.querySelector(inputSelector);
       Assert.equal(

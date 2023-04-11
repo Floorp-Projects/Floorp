@@ -17,8 +17,8 @@ const pk11db = Cc["@mozilla.org/security/pk11tokendb;1"].getService(
   Ci.nsIPK11TokenDB
 );
 
-const { LoginTestUtils } = ChromeUtils.import(
-  "resource://testing-common/LoginTestUtils.jsm"
+const { LoginTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/LoginTestUtils.sys.mjs"
 );
 
 function testLoggedIn(isLoggedIn) {

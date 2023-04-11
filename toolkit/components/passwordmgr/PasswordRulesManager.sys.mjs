@@ -2,22 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
+  PasswordGenerator: "resource://gre/modules/PasswordGenerator.sys.mjs",
+  PasswordRulesParser: "resource://gre/modules/PasswordRulesParser.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  LoginHelper: "resource://gre/modules/LoginHelper.jsm",
-  PasswordGenerator: "resource://gre/modules/PasswordGenerator.jsm",
-  PasswordRulesParser: "resource://gre/modules/PasswordRulesParser.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
@@ -28,15 +21,13 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
 const IMPROVED_PASSWORD_GENERATION_HISTOGRAM =
   "PWMGR_NUM_IMPROVED_GENERATED_PASSWORDS";
 
-const EXPORTED_SYMBOLS = ["PasswordRulesManagerParent"];
-
 /**
  * Handles interactions between PasswordRulesParser and the "password-rules" Remote Settings collection
  *
  * @class PasswordRulesManagerParent
  * @extends {JSWindowActorParent}
  */
-class PasswordRulesManagerParent extends JSWindowActorParent {
+export class PasswordRulesManagerParent extends JSWindowActorParent {
   /**
    * @type RemoteSettingsClient
    *

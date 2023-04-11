@@ -2488,10 +2488,11 @@ class nsContextMenu {
 
 ChromeUtils.defineESModuleGetters(nsContextMenu, {
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.sys.mjs",
+  LoginManagerContextMenu:
+    "resource://gre/modules/LoginManagerContextMenu.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(nsContextMenu, {
-  LoginManagerContextMenu: "resource://gre/modules/LoginManagerContextMenu.jsm",
   WebNavigationFrames: "resource://gre/modules/WebNavigationFrames.jsm",
 });
 

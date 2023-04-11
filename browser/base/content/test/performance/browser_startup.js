@@ -101,7 +101,7 @@ const startupPhases = {
     denylist: {
       modules: new Set([
         "resource://gre/modules/AsyncPrefs.sys.mjs",
-        "resource://gre/modules/LoginManagerContextMenu.jsm",
+        "resource://gre/modules/LoginManagerContextMenu.sys.mjs",
         "resource://gre/modules/osfile.jsm",
         "resource://pdf.js/PdfStreamConverter.sys.mjs",
       ]),

@@ -2,15 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /**
  * Module to support exporting logins to a .csv file.
  */
 
-const EXPORTED_SYMBOLS = ["LoginExport"];
-
-class LoginExport {
+export class LoginExport {
   /**
    * Builds an array of strings representing a row in a CSV.
    *

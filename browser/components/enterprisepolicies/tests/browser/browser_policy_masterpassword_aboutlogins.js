@@ -3,8 +3,8 @@
 
 "use strict";
 
-let { LoginTestUtils } = ChromeUtils.import(
-  "resource://testing-common/LoginTestUtils.jsm"
+let { LoginTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/LoginTestUtils.sys.mjs"
 );
 
 // Test that create in about:logins asks for primary password

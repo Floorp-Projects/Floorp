@@ -7,11 +7,11 @@
 const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
-const { LoginManagerParent } = ChromeUtils.import(
-  "resource://gre/modules/LoginManagerParent.jsm"
+const { LoginManagerParent } = ChromeUtils.importESModule(
+  "resource://gre/modules/LoginManagerParent.sys.mjs"
 );
-const { LoginManagerPrompter } = ChromeUtils.import(
-  "resource://gre/modules/LoginManagerPrompter.jsm"
+const { LoginManagerPrompter } = ChromeUtils.importESModule(
+  "resource://gre/modules/LoginManagerPrompter.sys.mjs"
 );
 
 const { TestUtils } = ChromeUtils.importESModule(

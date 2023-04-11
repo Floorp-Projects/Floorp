@@ -8,8 +8,8 @@
 
 "use strict";
 
-const { LoginManager } = ChromeUtils.import(
-  "resource://gre/modules/LoginManager.jsm"
+const { LoginManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/LoginManager.sys.mjs"
 );
 
 add_task(async function test_ensureCurrentSyncID() {

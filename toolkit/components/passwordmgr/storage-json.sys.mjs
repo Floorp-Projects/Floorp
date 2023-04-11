@@ -6,22 +6,21 @@
  * nsILoginManagerStorage implementation for the JSON back-end.
  */
 
-"use strict";
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
+  LoginStore: "resource://gre/modules/LoginStore.sys.mjs",
+});
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   FXA_PWDMGR_HOST: "resource://gre/modules/FxAccountsCommon.js",
   FXA_PWDMGR_REALM: "resource://gre/modules/FxAccountsCommon.js",
-  LoginHelper: "resource://gre/modules/LoginHelper.jsm",
-  LoginStore: "resource://gre/modules/LoginStore.jsm",
 });
 
-class LoginManagerStorage_json {
+export class LoginManagerStorage_json {
   constructor() {
     this.__crypto = null; // nsILoginManagerCrypto service
     this.__decryptedPotentiallyVulnerablePasswords = null;
@@ -856,5 +855,3 @@ XPCOMUtils.defineLazyGetter(LoginManagerStorage_json.prototype, "log", () => {
   let logger = lazy.LoginHelper.createLogger("Login storage");
   return logger.log.bind(logger);
 });
-
-const EXPORTED_SYMBOLS = ["LoginManagerStorage_json"];

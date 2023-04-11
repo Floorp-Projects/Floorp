@@ -2,15 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
-const { FirefoxRelayTelemetry } = ChromeUtils.importESModule(
-  "resource://gre/modules/FirefoxRelayTelemetry.mjs"
-);
+import { FirefoxRelayTelemetry } from "resource://gre/modules/FirefoxRelayTelemetry.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const LoginInfo = new Components.Constructor(
   "@mozilla.org/login-manager/loginInfo;1",
@@ -21,30 +14,27 @@ const LoginInfo = new Components.Constructor(
 const lazy = {};
 
 XPCOMUtils.defineLazyGetter(lazy, "LoginRelatedRealmsParent", () => {
-  const { LoginRelatedRealmsParent } = ChromeUtils.import(
-    "resource://gre/modules/LoginRelatedRealms.jsm"
+  const { LoginRelatedRealmsParent } = ChromeUtils.importESModule(
+    "resource://gre/modules/LoginRelatedRealms.sys.mjs"
   );
   return new LoginRelatedRealmsParent();
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "PasswordRulesManager", () => {
-  const { PasswordRulesManagerParent } = ChromeUtils.import(
-    "resource://gre/modules/PasswordRulesManager.jsm"
+  const { PasswordRulesManagerParent } = ChromeUtils.importESModule(
+    "resource://gre/modules/PasswordRulesManager.sys.mjs"
   );
   return new PasswordRulesManagerParent();
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {
   ChromeMigrationUtils: "resource:///modules/ChromeMigrationUtils.sys.mjs",
+  FirefoxRelay: "resource://gre/modules/FirefoxRelay.sys.mjs",
+  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
   MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
+  PasswordGenerator: "resource://gre/modules/PasswordGenerator.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  FirefoxRelay: "resource://gre/modules/FirefoxRelay.jsm",
-  LoginHelper: "resource://gre/modules/LoginHelper.jsm",
-  PasswordGenerator: "resource://gre/modules/PasswordGenerator.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -62,7 +52,6 @@ XPCOMUtils.defineLazyGetter(lazy, "debug", () => {
   let logger = lazy.LoginHelper.createLogger("LoginManagerParent");
   return logger.debug.bind(logger);
 });
-const EXPORTED_SYMBOLS = ["LoginManagerParent"];
 
 /**
  * A listener for notifications to tests.
@@ -188,7 +177,7 @@ async function getImportableLogins(formOrigin) {
     : null;
 }
 
-class LoginManagerParent extends JSWindowActorParent {
+export class LoginManagerParent extends JSWindowActorParent {
   possibleValues = {
     // This is stored at the parent (i.e., frame) scope because the LoginManagerPrompter
     // is shared across all frames.
@@ -1517,8 +1506,8 @@ class LoginManagerParent extends JSWindowActorParent {
 
   static get recipeParentPromise() {
     if (!gRecipeManager) {
-      const { LoginRecipesParent } = ChromeUtils.import(
-        "resource://gre/modules/LoginRecipes.jsm"
+      const { LoginRecipesParent } = ChromeUtils.importESModule(
+        "resource://gre/modules/LoginRecipes.sys.mjs"
       );
       gRecipeManager = new LoginRecipesParent({
         defaults: Services.prefs.getStringPref("signon.recipes.path"),

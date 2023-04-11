@@ -8,8 +8,8 @@
 
 "use strict";
 
-let { LoginExport } = ChromeUtils.import(
-  "resource://gre/modules/LoginExport.jsm"
+let { LoginExport } = ChromeUtils.importESModule(
+  "resource://gre/modules/LoginExport.sys.mjs"
 );
 let { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"

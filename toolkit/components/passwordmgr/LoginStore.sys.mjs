@@ -36,18 +36,10 @@
  * }
  */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["LoginStore"];
-
 // Globals
 
-const { JSONFile } = ChromeUtils.importESModule(
-  "resource://gre/modules/JSONFile.sys.mjs"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { JSONFile } from "resource://gre/modules/JSONFile.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -80,7 +72,7 @@ const MAX_DATE_MS = 8640000000000000;
  * @param aPath
  *        String containing the file path where data should be saved.
  */
-function LoginStore(aPath, aBackupPath = "") {
+export function LoginStore(aPath, aBackupPath = "") {
   JSONFile.call(this, {
     path: aPath,
     dataPostProcessor: this._dataPostProcessor.bind(this),

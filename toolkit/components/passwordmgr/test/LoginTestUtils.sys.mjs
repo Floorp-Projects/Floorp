@@ -5,32 +5,19 @@
  * Shared functions generally available for testing login components.
  */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = ["LoginTestUtils"];
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
 });
 
-let { Assert: AssertCls } = ChromeUtils.importESModule(
-  "resource://testing-common/Assert.sys.mjs"
-);
+import { Assert as AssertCls } from "resource://testing-common/Assert.sys.mjs";
+
 let Assert = AssertCls;
 
-const { TestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/TestUtils.sys.mjs"
-);
-
-const { setTimeout } = ChromeUtils.importESModule(
-  "resource://gre/modules/Timer.sys.mjs"
-);
-
-const { FileTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/FileTestUtils.sys.mjs"
-);
+import { TestUtils } from "resource://testing-common/TestUtils.sys.mjs";
+import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
+import { FileTestUtils } from "resource://testing-common/FileTestUtils.sys.mjs";
 
 const LoginInfo = Components.Constructor(
   "@mozilla.org/login-manager/loginInfo;1",
@@ -38,7 +25,7 @@ const LoginInfo = Components.Constructor(
   "init"
 );
 
-const LoginTestUtils = {
+export const LoginTestUtils = {
   setAssertReporter(reporterFunc) {
     Assert = new AssertCls(Cu.waiveXrays(reporterFunc));
   },
@@ -96,8 +83,8 @@ const LoginTestUtils = {
   },
 
   resetGeneratedPasswordsCache() {
-    let { LoginManagerParent } = ChromeUtils.import(
-      "resource://gre/modules/LoginManagerParent.jsm"
+    let { LoginManagerParent } = ChromeUtils.importESModule(
+      "resource://gre/modules/LoginManagerParent.sys.mjs"
     );
     LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().clear();
   },
@@ -495,8 +482,8 @@ LoginTestUtils.testData = {
 
 LoginTestUtils.recipes = {
   getRecipeParent() {
-    let { LoginManagerParent } = ChromeUtils.import(
-      "resource://gre/modules/LoginManagerParent.jsm"
+    let { LoginManagerParent } = ChromeUtils.importESModule(
+      "resource://gre/modules/LoginManagerParent.sys.mjs"
     );
     if (!LoginManagerParent.recipeParentPromise) {
       return null;

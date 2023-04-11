@@ -942,6 +942,8 @@
   "resource://gre/modules/BrowserTelemetryUtils.jsm":
     "toolkit/modules/BrowserTelemetryUtils.jsm",
   "resource://gre/modules/BrowserUtils.jsm": "toolkit/modules/BrowserUtils.jsm",
+  "resource://gre/modules/CSV.js":
+    "toolkit/components/passwordmgr/CSV.js",
   "resource://gre/modules/CanonicalJSON.jsm":
     "toolkit/modules/CanonicalJSON.jsm",
   "resource://gre/modules/CaptiveDetect.jsm":
@@ -1110,6 +1112,8 @@
   "resource://gre/modules/FinderIterator.jsm":
     "toolkit/modules/FinderIterator.jsm",
   "resource://gre/modules/FinderParent.jsm": "toolkit/modules/FinderParent.jsm",
+  "resource://gre/modules/FirefoxRelay.jsm":
+    "toolkit/components/passwordmgr/FirefoxRelay.jsm",
   "resource://gre/modules/FirstStartup.jsm": "toolkit/modules/FirstStartup.jsm",
   "resource://gre/modules/ForgetAboutSite.jsm":
     "toolkit/components/forgetaboutsite/ForgetAboutSite.jsm",
@@ -1432,6 +1436,8 @@
     "toolkit/modules/ShortcutUtils.jsm",
   "resource://gre/modules/SimpleServices.jsm":
     "toolkit/components/utils/SimpleServices.jsm",
+  "resource://gre/modules/SignUpFormRuleset.jsm":
+    "toolkit/components/passwordmgr/SignUpFormRuleset.jsm",
   "resource://gre/modules/SlowScriptDebug.jsm": "dom/base/SlowScriptDebug.jsm",
   "resource://gre/modules/Sqlite.jsm": "toolkit/modules/Sqlite.jsm",
   "resource://gre/modules/SubDialog.jsm": "toolkit/modules/SubDialog.jsm",

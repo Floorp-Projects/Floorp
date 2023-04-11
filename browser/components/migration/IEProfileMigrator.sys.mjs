@@ -14,14 +14,10 @@ import { MSMigrationUtils } from "resource:///modules/MSMigrationUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  OSCrypto: "resource://gre/modules/OSCrypto_win.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   ctypes: "resource://gre/modules/ctypes.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "OSCrypto",
-  "resource://gre/modules/OSCrypto_win.jsm"
-);
 
 // Resources
 

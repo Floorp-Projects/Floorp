@@ -2,22 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PrivateBrowsingUtils.sys.mjs"
-);
+import { PrivateBrowsingUtils } from "resource://gre/modules/PrivateBrowsingUtils.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
 /* eslint-disable block-scoped-var, no-var */
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "LoginHelper",
-  "resource://gre/modules/LoginHelper.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
+});
 
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
@@ -97,7 +91,7 @@ const observer = {
  * Implements interfaces for prompting the user to enter/save/change login info
  * found in HTML forms.
  */
-class LoginManagerPrompter {
+export class LoginManagerPrompter {
   get classID() {
     return Components.ID("{c47ff942-9678-44a5-bc9b-05e0d676c79c}");
   }
@@ -1121,5 +1115,3 @@ Services.obs.addObserver(observer, "autocomplete-did-enter-text");
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   return lazy.LoginHelper.createLogger("LoginManagerPrompter");
 });
-
-const EXPORTED_SYMBOLS = ["LoginManagerPrompter"];

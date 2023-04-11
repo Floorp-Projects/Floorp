@@ -2,20 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  LoginHelper: "resource://gre/modules/LoginHelper.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
@@ -23,9 +16,7 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   return logger;
 });
 
-const EXPORTED_SYMBOLS = ["LoginRelatedRealmsParent"];
-
-class LoginRelatedRealmsParent extends JSWindowActorParent {
+export class LoginRelatedRealmsParent extends JSWindowActorParent {
   /**
    * @type RemoteSettingsClient
    *
