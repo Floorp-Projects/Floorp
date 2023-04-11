@@ -3032,14 +3032,15 @@ nscoord nsLineLayout::GetHangFrom(const PerSpanData* aSpan, bool aLineIsRTL) {
       return GetHangFrom(childSpan, aLineIsRTL);
     }
     if (pfd->mIsTextFrame) {
-      const auto* lastText = static_cast<const nsTextFrame*>(pfd->mFrame);
+      auto* lastText = static_cast<nsTextFrame*>(pfd->mFrame);
       result = lastText->GetHangableISize();
       if (result) {
         // If the hangable space will be at the start edge of the line, due to
         // its bidi direction being against the line direction, we flag this by
         // negating the advance.
-        if (lastText->GetTextRun(nsTextFrame::eInflated)->IsRightToLeft() !=
-            aLineIsRTL) {
+        lastText->EnsureTextRun(nsTextFrame::eInflated);
+        auto* textRun = lastText->GetTextRun(nsTextFrame::eInflated);
+        if (textRun && textRun->IsRightToLeft() != aLineIsRTL) {
           result = -result;
         }
       }
