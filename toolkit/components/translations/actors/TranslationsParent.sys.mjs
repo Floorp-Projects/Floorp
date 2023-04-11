@@ -800,7 +800,7 @@ function bypassSignatureVerificationIfDev(client) {
     host = url.host;
   } catch (error) {}
 
-  if (host === "settings.dev.mozaws.net") {
+  if (host === "remote-settings-dev.allizom.org") {
     console.warn(
       "The translations is set to the Remote Settings dev server. It's bypassing " +
         "the signature verification."
