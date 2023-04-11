@@ -1430,6 +1430,18 @@ nsAtom* RemoteAccessibleBase<Derived>::TagName() const {
 }
 
 template <class Derived>
+nsAtom* RemoteAccessibleBase<Derived>::InputType() const {
+  if (mCachedFields) {
+    if (auto inputType = mCachedFields->GetAttribute<RefPtr<nsAtom>>(
+            nsGkAtoms::textInputType)) {
+      return *inputType;
+    }
+  }
+
+  return nullptr;
+}
+
+template <class Derived>
 already_AddRefed<nsAtom> RemoteAccessibleBase<Derived>::DisplayStyle() const {
   if (mCachedFields) {
     if (auto display =

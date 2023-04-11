@@ -50,8 +50,6 @@ virtual already_AddRefed<AccAttributes> Attributes() override;
 
 virtual Relation RelationByType(RelationType aType) const override;
 
-bool IsSearchbox() const;
-
 virtual mozilla::a11y::GroupPos GroupPosition() override;
 void ScrollToPoint(uint32_t aScrollType, int32_t aX, int32_t aY);
 

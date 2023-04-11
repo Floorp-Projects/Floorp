@@ -3891,6 +3891,19 @@ nsAtom* LocalAccessible::TagName() const {
                                            : nullptr;
 }
 
+nsAtom* LocalAccessible::InputType() const {
+  if (!IsTextField() && !IsDateTimeField()) {
+    return nullptr;
+  }
+
+  dom::Element* el = mContent->AsElement();
+  if (const nsAttrValue* attr = el->GetParsedAttr(nsGkAtoms::type)) {
+    return attr->GetAtomValue();
+  }
+
+  return nullptr;
+}
+
 already_AddRefed<nsAtom> LocalAccessible::DisplayStyle() const {
   if (dom::Element* elm = Elm()) {
     if (elm->IsHTMLElement(nsGkAtoms::area)) {

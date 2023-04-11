@@ -363,6 +363,16 @@ void Accessible::GetPositionAndSetSize(int32_t* aPosInSet, int32_t* aSetSize) {
   }
 }
 
+bool Accessible::IsSearchbox() const {
+  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+  if ((roleMapEntry && roleMapEntry->Is(nsGkAtoms::searchbox)) ||
+      InputType() == nsGkAtoms::search) {
+    return true;
+  }
+
+  return false;
+}
+
 #ifdef A11Y_LOG
 void Accessible::DebugDescription(nsCString& aDesc) const {
   aDesc.Truncate();
