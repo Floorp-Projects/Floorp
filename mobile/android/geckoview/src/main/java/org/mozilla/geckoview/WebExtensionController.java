@@ -329,12 +329,28 @@ public class WebExtensionController {
   /** This delegate will be called whenever the state of an extension has changed. */
   public interface AddonManagerDelegate {
     /**
+     * Called whenever an extension is being disabled.
+     *
+     * @param extension The {@link WebExtension} that is being disabled.
+     */
+    @UiThread
+    default void onDisabling(@NonNull WebExtension extension) {}
+
+    /**
      * Called whenever an extension has been disabled.
      *
      * @param extension The {@link WebExtension} that is being disabled.
      */
     @UiThread
     default void onDisabled(final @NonNull WebExtension extension) {}
+
+    /**
+     * Called whenever an extension is being enabled.
+     *
+     * @param extension The {@link WebExtension} that is being enabled.
+     */
+    @UiThread
+    default void onEnabling(final @NonNull WebExtension extension) {}
 
     /**
      * Called whenever an extension has been enabled.
@@ -345,12 +361,36 @@ public class WebExtensionController {
     default void onEnabled(final @NonNull WebExtension extension) {}
 
     /**
+     * Called whenever an extension is being uninstalled.
+     *
+     * @param extension The {@link WebExtension} that is being uninstalled.
+     */
+    @UiThread
+    default void onUninstalling(final @NonNull WebExtension extension) {}
+
+    /**
      * Called whenever an extension has been uninstalled.
      *
      * @param extension The {@link WebExtension} that is being uninstalled.
      */
     @UiThread
     default void onUninstalled(final @NonNull WebExtension extension) {}
+
+    /**
+     * Called whenever an extension is being installed.
+     *
+     * @param extension The {@link WebExtension} that is being installed.
+     */
+    @UiThread
+    default void onInstalling(final @NonNull WebExtension extension) {}
+
+    /**
+     * Called whenever an extension has been installed.
+     *
+     * @param extension The {@link WebExtension} that is being installed.
+     */
+    @UiThread
+    default void onInstalled(final @NonNull WebExtension extension) {}
   }
 
   /**
@@ -423,16 +463,26 @@ public class WebExtensionController {
       EventDispatcher.getInstance()
           .unregisterUiThreadListener(
               mInternals,
+              "GeckoView:WebExtension:OnDisabling",
               "GeckoView:WebExtension:OnDisabled",
+              "GeckoView:WebExtension:OnEnabling",
               "GeckoView:WebExtension:OnEnabled",
-              "GeckoView:WebExtension:OnUninstalled");
+              "GeckoView:WebExtension:OnUninstalling",
+              "GeckoView:WebExtension:OnUninstalled",
+              "GeckoView:WebExtension:OnInstalling",
+              "GeckoView:WebExtension:OnInstalled");
     } else if (delegate != null && mAddonManagerDelegate == null) {
       EventDispatcher.getInstance()
           .registerUiThreadListener(
               mInternals,
+              "GeckoView:WebExtension:OnDisabling",
               "GeckoView:WebExtension:OnDisabled",
+              "GeckoView:WebExtension:OnEnabling",
               "GeckoView:WebExtension:OnEnabled",
-              "GeckoView:WebExtension:OnUninstalled");
+              "GeckoView:WebExtension:OnUninstalling",
+              "GeckoView:WebExtension:OnUninstalled",
+              "GeckoView:WebExtension:OnInstalling",
+              "GeckoView:WebExtension:OnInstalled");
     }
 
     mAddonManagerDelegate = delegate;
@@ -786,14 +836,29 @@ public class WebExtensionController {
         mDebuggerDelegate.onExtensionListUpdated();
       }
       return;
+    } else if ("GeckoView:WebExtension:OnDisabling".equals(event)) {
+      onDisabling(bundle);
+      return;
     } else if ("GeckoView:WebExtension:OnDisabled".equals(event)) {
       onDisabled(bundle);
+      return;
+    } else if ("GeckoView:WebExtension:OnEnabling".equals(event)) {
+      onEnabling(bundle);
       return;
     } else if ("GeckoView:WebExtension:OnEnabled".equals(event)) {
       onEnabled(bundle);
       return;
+    } else if ("GeckoView:WebExtension:OnUninstalling".equals(event)) {
+      onUninstalling(bundle);
+      return;
     } else if ("GeckoView:WebExtension:OnUninstalled".equals(event)) {
       onUninstalled(bundle);
+      return;
+    } else if ("GeckoView:WebExtension:OnInstalling".equals(event)) {
+      onInstalling(bundle);
+      return;
+    } else if ("GeckoView:WebExtension:OnInstalled".equals(event)) {
+      onInstalled(bundle);
       return;
     }
 
@@ -980,6 +1045,17 @@ public class WebExtensionController {
             }));
   }
 
+  private void onDisabling(final GeckoBundle bundle) {
+    if (mAddonManagerDelegate == null) {
+      Log.e(LOGTAG, "no AddonManager delegate registered");
+      return;
+    }
+
+    final GeckoBundle extensionBundle = bundle.getBundle("extension");
+    final WebExtension extension = new WebExtension(mDelegateControllerProvider, extensionBundle);
+    mAddonManagerDelegate.onDisabling(extension);
+  }
+
   private void onDisabled(final GeckoBundle bundle) {
     if (mAddonManagerDelegate == null) {
       Log.e(LOGTAG, "no AddonManager delegate registered");
@@ -989,6 +1065,17 @@ public class WebExtensionController {
     final GeckoBundle extensionBundle = bundle.getBundle("extension");
     final WebExtension extension = new WebExtension(mDelegateControllerProvider, extensionBundle);
     mAddonManagerDelegate.onDisabled(extension);
+  }
+
+  private void onEnabling(final GeckoBundle bundle) {
+    if (mAddonManagerDelegate == null) {
+      Log.e(LOGTAG, "no AddonManager delegate registered");
+      return;
+    }
+
+    final GeckoBundle extensionBundle = bundle.getBundle("extension");
+    final WebExtension extension = new WebExtension(mDelegateControllerProvider, extensionBundle);
+    mAddonManagerDelegate.onEnabling(extension);
   }
 
   private void onEnabled(final GeckoBundle bundle) {
@@ -1002,6 +1089,17 @@ public class WebExtensionController {
     mAddonManagerDelegate.onEnabled(extension);
   }
 
+  private void onUninstalling(final GeckoBundle bundle) {
+    if (mAddonManagerDelegate == null) {
+      Log.e(LOGTAG, "no AddonManager delegate registered");
+      return;
+    }
+
+    final GeckoBundle extensionBundle = bundle.getBundle("extension");
+    final WebExtension extension = new WebExtension(mDelegateControllerProvider, extensionBundle);
+    mAddonManagerDelegate.onUninstalling(extension);
+  }
+
   private void onUninstalled(final GeckoBundle bundle) {
     if (mAddonManagerDelegate == null) {
       Log.e(LOGTAG, "no AddonManager delegate registered");
@@ -1011,6 +1109,28 @@ public class WebExtensionController {
     final GeckoBundle extensionBundle = bundle.getBundle("extension");
     final WebExtension extension = new WebExtension(mDelegateControllerProvider, extensionBundle);
     mAddonManagerDelegate.onUninstalled(extension);
+  }
+
+  private void onInstalling(final GeckoBundle bundle) {
+    if (mAddonManagerDelegate == null) {
+      Log.e(LOGTAG, "no AddonManager delegate registered");
+      return;
+    }
+
+    final GeckoBundle extensionBundle = bundle.getBundle("extension");
+    final WebExtension extension = new WebExtension(mDelegateControllerProvider, extensionBundle);
+    mAddonManagerDelegate.onInstalling(extension);
+  }
+
+  private void onInstalled(final GeckoBundle bundle) {
+    if (mAddonManagerDelegate == null) {
+      Log.e(LOGTAG, "no AddonManager delegate registered");
+      return;
+    }
+
+    final GeckoBundle extensionBundle = bundle.getBundle("extension");
+    final WebExtension extension = new WebExtension(mDelegateControllerProvider, extensionBundle);
+    mAddonManagerDelegate.onInstalled(extension);
   }
 
   @SuppressLint("WrongThread") // for .toGeckoBundle
