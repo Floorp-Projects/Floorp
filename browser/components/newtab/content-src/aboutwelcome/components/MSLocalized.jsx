@@ -89,6 +89,10 @@ export const Localized = ({ text, children }) => {
     );
   }
 
+  if (text.aria_label) {
+    props["aria-label"] = text.aria_label;
+  }
+
   // Apply certain configurable styles.
   CONFIGURABLE_STYLES.forEach(style => {
     if (text[style] !== undefined) props.style[style] = text[style];

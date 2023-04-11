@@ -314,13 +314,9 @@ export class ProtonScreen extends React.PureComponent {
             : {}
         }
       >
-        {content.image_alt_text ? (
-          <div
-            className="sr-only image-alt"
-            role="img"
-            data-l10n-id={content.image_alt_text.string_id}
-          />
-        ) : null}
+        <Localized text={content.image_alt_text}>
+          <div className="sr-only image-alt" role="img" />
+        </Localized>
         {content.hero_image ? (
           <HeroImage url={content.hero_image.url} />
         ) : (

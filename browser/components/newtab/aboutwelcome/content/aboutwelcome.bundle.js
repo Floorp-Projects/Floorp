@@ -663,6 +663,10 @@ const Localized = ({
       "data-l10n-name": "zap",
       ref: zapRef
     }, text.zap));
+  }
+
+  if (text.aria_label) {
+    props["aria-label"] = text.aria_label;
   } // Apply certain configurable styles.
 
 
@@ -942,11 +946,12 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
         background: content.background,
         "--mr-secondary-background-position-y": content.split_narrow_bkg_position
       } : {}
-    }, content.image_alt_text ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
+      text: content.image_alt_text
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: "sr-only image-alt",
-      role: "img",
-      "data-l10n-id": content.image_alt_text.string_id
-    }) : null, content.hero_image ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_HeroImage__WEBPACK_IMPORTED_MODULE_9__.HeroImage, {
+      role: "img"
+    })), content.hero_image ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_HeroImage__WEBPACK_IMPORTED_MODULE_9__.HeroImage, {
       url: content.hero_image.url
     }) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement((react__WEBPACK_IMPORTED_MODULE_0___default().Fragment), null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: "message-text"
