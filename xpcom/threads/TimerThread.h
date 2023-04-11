@@ -97,7 +97,9 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
   class Entry final {
    public:
     explicit Entry(nsTimerImpl& aTimerImpl)
-        : mTimeout(aTimerImpl.mTimeout), mTimerImpl(&aTimerImpl) {
+        : mTimeout(aTimerImpl.mTimeout),
+          mDelay(aTimerImpl.mDelay),
+          mTimerImpl(&aTimerImpl) {
       aTimerImpl.SetIsInTimerThread(true);
     }
 
@@ -141,9 +143,15 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
     }
 
     const TimeStamp& Timeout() const { return mTimeout; }
+    const TimeDuration& Delay() const { return mDelay; }
 
    private:
+    // These values are simply cached from the timer. Keeping them here is good
+    // for cache usage and allows us to avoid worrying about locking conflicts
+    // with the timer.
     TimeStamp mTimeout;
+    TimeDuration mDelay;
+
     RefPtr<nsTimerImpl> mTimerImpl;
   };
 
@@ -159,14 +167,16 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
   TimeStamp ComputeWakeupTimeFromTimers() const MOZ_REQUIRES(mMonitor);
 
   // Computes how late a timer can acceptably fire.
-  // minDelay is an amount by which any timer can be delayed. This function
-  // will never return a value smaller than minDelay (unless this conflicts with
-  // maxDelay).
-  // maxDelay is the upper limit on the amount by which we will ever delay any
-  // timer. Takes precedence over minDelay if there is a conflict. (Zero will
-  // effectively disable timer coalescing.)
-  constexpr TimeDuration ComputeAcceptableFiringDelay(
-      TimeDuration minDelay, TimeDuration maxDelay) const;
+  // timerDuration is the duration of the timer whose delay we are calculating.
+  // Longer timers can tolerate longer firing delays.
+  // minDelay is an amount by which any timer can be delayed.
+  // This function will never return a value smaller than minDelay (unless this
+  // conflicts with maxDelay). maxDelay is the upper limit on the amount by
+  // which we will ever delay any timer. Takes precedence over minDelay if there
+  // is a conflict. (Zero will effectively disable timer coalescing.)
+  TimeDuration ComputeAcceptableFiringDelay(TimeDuration timerDuration,
+                                            TimeDuration minDelay,
+                                            TimeDuration maxDelay) const;
 
 #ifdef DEBUG
   // Checks mTimers to see if any entries are out of order or any cached
