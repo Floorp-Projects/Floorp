@@ -5,23 +5,82 @@
 
 /* import-globals-from file_ime_state_test_helper.js */
 
-async function runIMEStateOnFocusMoveTests(
-  aGlobalDescription,
-  aContainer,
-  aTIPWrapper,
-  aWindow = window
-) {
-  const doc = aContainer.ownerDocument;
-  const containerIsEditable = nodeIsEditable(aContainer);
-  const winUtils = SpecialPowers.wrap(aWindow).windowUtils;
+class IMEStateWhenNoActiveElementTester {
+  #mDescription;
 
-  async function runTest(aTest) {
-    const description = `runIMEStateOnFocusMoveTests(${aGlobalDescription}): ${aTest.description}`;
-    info(`Start testing ${description}`);
-    const element = aTest.createElement(doc);
+  constructor(aDescription) {
+    this.#mDescription = aDescription;
+  }
+
+  async run(aDocument, aWindow = window) {
+    aWindow.focus();
+    aDocument.activeElement?.blur();
+
+    await new Promise(resolve =>
+      requestAnimationFrame(() => requestAnimationFrame(resolve))
+    ); // wait for sending IME notifications
+
+    return { designModeValue: aDocument.designMode };
+  }
+
+  check(aExpectedData, aWindow = window) {
+    const winUtils = SpecialPowers.wrap(aWindow).windowUtils;
+    if (aExpectedData.designModeValue == "on") {
+      is(
+        winUtils.IMEStatus,
+        SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED,
+        `IMEStateWhenNoActiveElementTester(${
+          this.#mDescription
+        }): When no element has focus, IME should stay enabled in design mode`
+      );
+    } else {
+      is(
+        winUtils.IMEStatus,
+        SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED,
+        `IMEStateWhenNoActiveElementTester(${
+          this.#mDescription
+        }): When no element has focus, IME should be disabled`
+      );
+    }
+  }
+}
+
+class IMEStateOnFocusMoveTester {
+  // Common fields
+  #mDescription;
+  #mTest;
+  #mWindow;
+  #mWindowUtils;
+
+  // Only runner fields
+  #mCreatedElement;
+  #mCreatedElementForPreviousFocusedElement;
+  #mElementToSetFocus;
+  #mContainerIsEditable;
+
+  // Only checker fields
+  #mTIPWrapper;
+
+  constructor(aDescription, aIndex, aWindow = window) {
+    this.#mTest = IMEStateOnFocusMoveTester.#sTestList[aIndex];
+    this.#mDescription = `IMEStateOnFocusMoveTester(${aDescription}): ${
+      this.#mTest.description
+    }`;
+    this.#mWindow = aWindow;
+    this.#mWindowUtils = SpecialPowers.wrap(this.#mWindow).windowUtils;
+  }
+
+  /**
+   * prepareToRun should be called before run only in the process which will run the test.
+   */
+  async prepareToRun(aContainer) {
+    const doc = aContainer.ownerDocument;
+    this.#mTest = this.#resolveTest(this.#mTest, aContainer);
+    this.#mContainerIsEditable = nodeIsEditable(aContainer);
+    this.#mCreatedElement = this.#mTest.createElement(doc);
     const waitForLoadIfIFrame = new Promise(resolve => {
-      if (element.tagName == "IFRAME") {
-        element.addEventListener("load", resolve, {
+      if (this.#mCreatedElement.tagName == "IFRAME") {
+        this.#mCreatedElement.addEventListener("load", resolve, {
           capture: true,
           once: true,
         });
@@ -29,258 +88,292 @@ async function runIMEStateOnFocusMoveTests(
         resolve();
       }
     });
-    try {
-      aContainer.appendChild(element);
-      await waitForLoadIfIFrame;
+    aContainer.appendChild(this.#mCreatedElement);
+    await waitForLoadIfIFrame;
+    this.#mElementToSetFocus = this.#mCreatedElement.contentDocument
+      ? this.#mCreatedElement.contentDocument.documentElement
+      : this.#mCreatedElement;
+    if (doc.designMode == "on") {
+      doc.activeElement?.blur();
+    } else if (this.#mContainerIsEditable) {
+      getEditingHost(aContainer).focus(); // FIXME: use editing host instead
+    } else {
+      this.#mCreatedElementForPreviousFocusedElement = doc.createElement(
+        "input"
+      );
+      this.#mCreatedElementForPreviousFocusedElement.setAttribute(
+        "type",
+        this.#mTest.expectedEnabledValue ==
+          SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED
+          ? "password"
+          : "text"
+      );
+      aContainer.appendChild(this.#mCreatedElementForPreviousFocusedElement);
+      this.#mCreatedElementForPreviousFocusedElement.focus();
+    }
 
-      function moveFocus(
-        aFocusEventListener,
-        aIMEFocusBlurNotificationListener
-      ) {
-        const elementToSetFocus = element.contentDocument
-          ? element.contentDocument.documentElement
-          : element;
-        let createdElementForPreviousFocusedElement;
-        if (doc.designMode == "on") {
-          doc.activeElement?.blur();
-        } else if (containerIsEditable) {
-          aContainer.focus(); // FIXME: use editing host instead
-        } else {
-          createdElementForPreviousFocusedElement = doc.createElement("input");
-          createdElementForPreviousFocusedElement.setAttribute(
-            "type",
-            aTest.expectedEnabledValue ==
-              Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED
-              ? "password"
-              : "text"
-          );
-          aContainer.appendChild(createdElementForPreviousFocusedElement);
-          createdElementForPreviousFocusedElement.focus();
-        }
-        const focusEventTarget = element.contentDocument
-          ? element.contentDocument
-          : element;
-        focusEventTarget.addEventListener("focus", aFocusEventListener, {
-          capture: true,
-        });
-        aTIPWrapper.onIMEFocusBlur = aIMEFocusBlurNotificationListener;
-        aTIPWrapper.clearFocusBlurNotifications();
+    await new Promise(resolve =>
+      requestAnimationFrame(() => requestAnimationFrame(resolve))
+    ); // wait for sending IME notifications
 
-        const previousFocusedElement = getFocusedElementOrUAWidgetHost();
-        if (aTest.setFocusIntoUAWidget) {
-          aTest.setFocusIntoUAWidget(elementToSetFocus);
-        } else {
-          elementToSetFocus.focus();
-        }
+    return {
+      designModeValue: doc.designMode,
+      containerIsEditable: this.#mContainerIsEditable,
+      isFocusable: this.#mTest.isFocusable,
+      focusEventFired: this.#mTest.focusEventIsExpected,
+      enabledValue: this.#mTest.expectedEnabledValue,
+      testedSubDocumentInDesignMode:
+        this.#mCreatedElement.contentDocument?.designMode == "on",
+    };
+  }
 
-        focusEventTarget.removeEventListener("focus", aFocusEventListener, {
-          capture: true,
-        });
-        aTIPWrapper.onIMEFocusBlur = null;
-
-        const currentFocusedElement = getFocusedElementOrUAWidgetHost();
-        createdElementForPreviousFocusedElement?.remove();
-        if (aTest.isFocusable) {
+  /**
+   * prepareToCheck should be called before calling run only in the process which will check the result.
+   */
+  prepareToCheck(aExpectedData, aTIPWrapper) {
+    info(`Starting ${this.#mDescription} (enable state check)...`);
+    this.#mTIPWrapper = aTIPWrapper;
+    this.#mTIPWrapper.onIMEFocusBlur = aNotificationType => {
+      switch (aNotificationType) {
+        case "notify-focus":
+          info(aNotificationType);
           is(
-            currentFocusedElement,
-            elementToSetFocus,
-            `${description}, the element should've been focused`
+            this.#mWindowUtils.IMEStatus,
+            aExpectedData.enabledValue,
+            `${
+              this.#mDescription
+            }, IME should receive a focus notification after IME state is updated`
           );
-          return elementToSetFocus == currentFocusedElement;
-        }
-        is(
-          currentFocusedElement,
-          previousFocusedElement,
-          `${description}, the element should not get focus because of non-focusable`
-        );
-        return previousFocusedElement == currentFocusedElement;
-      }
-
-      function testOpened(aOpened) {
-        doc.getElementById("text").focus();
-        winUtils.IMEIsOpen = aOpened;
-        if (!moveFocus()) {
-          return;
-        }
-        const expectedOpenState =
-          aTest.expectedOpenState !== undefined
-            ? aTest.expectedOpenState
-            : aOpened;
-        is(
-          winUtils.IMEIsOpen,
-          expectedOpenState,
-          `${description}, IME should ${
-            aTest.expectedOpenState ? "become" : "keep"
-          } ${expectedOpenState ? "open" : "closed"}`
-        );
-      }
-
-      // IME Enabled state testing
-      let focusEventCount = 0;
-      function focusEventListener(aEvent) {
-        focusEventCount++;
-        is(
-          winUtils.IMEStatus,
-          aTest.expectedEnabledValue,
-          `${description}, wrong enabled state at focus event`
-        );
-      }
-      function focusBlurNotificationListener(aNotificationType) {
-        switch (aNotificationType) {
-          case "notify-focus":
+          break;
+        case "notify-blur":
+          info(aNotificationType);
+          const changingStatus = !(
+            aExpectedData.containerIsEditable &&
+            aExpectedData.enabledValue ==
+              SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED
+          );
+          if (aExpectedData.designModeValue == "on") {
             is(
-              winUtils.IMEStatus,
-              aTest.expectedEnabledValue,
-              `${description}, IME should receive a focus notification after IME state is updated`
+              // FIXME: This is odd, but #mWindowUtils.IMEStatus sometimes IME_STATUS_PASSWORD
+              SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED,
+              aExpectedData.enabledValue,
+              `${
+                this.#mDescription
+              }, IME should receive a blur notification after IME state is updated`
             );
-            break;
-          case "notify-blur":
-            const changingStatus = !(
-              containerIsEditable &&
-              aTest.expectedEnabledValue ==
-                Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED
-            );
-            if (element.contentDocument?.designMode == "on") {
-              is(
-                Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED, // FIXME: This is odd, but winUtils.IMEStatus sometimes IME_STATUS_PASSWORD
-                aTest.expectedEnabledValue,
-                `${description}, IME should receive a blur notification after IME state is updated`
-              );
-            } else if (changingStatus) {
-              isnot(
-                winUtils.IMEStatus,
-                aTest.expectedEnabledValue,
-                `${description}, IME should receive a blur notification BEFORE IME state is updated`
-              );
-            } else {
-              is(
-                winUtils.IMEStatus,
-                aTest.expectedEnabledValue,
-                `${description}, IME should receive a blur notification and its context has expected IME state if the state isn't being changed`
-              );
-            }
-            break;
-        }
-      }
-
-      if (!moveFocus(focusEventListener, focusBlurNotificationListener)) {
-        return;
-      }
-
-      if (aTest.isFocusable) {
-        if (aTest.focusEventIsExpected) {
-          ok(
-            focusEventCount > 0,
-            `${description}, focus event should be fired`
-          );
-          if (
-            aTest.expectedEnabledValue ==
-              Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED ||
-            aTest.expectedEnabledValue ==
-              Ci.nsIDOMWindowUtils.IME_STATUS_PASSWORD
-          ) {
-            ok(
-              aTIPWrapper.numberOfFocusNotifications > 0,
-              `${description}, IME should receive a focus notification`
-            );
-            if (
-              doc.designMode == "on" &&
-              element.contentDocument?.designMode != "on"
-            ) {
-              is(
-                aTIPWrapper.numberOfBlurNotifications,
-                0,
-                `${description}, IME shouldn't receive a blur notification in designMode since focus isn't moved from another editor`
-              );
-            } else {
-              ok(
-                aTIPWrapper.numberOfBlurNotifications > 0,
-                `${description}, IME should receive a blur notification for the previous focused editor`
-              );
-            }
-            ok(
-              aTIPWrapper.IMEHasFocus,
-              `${description}, IME should have focus right now`
+          } else if (changingStatus) {
+            isnot(
+              this.#mWindowUtils.IMEStatus,
+              aExpectedData.enabledValue,
+              `${
+                this.#mDescription
+              }, IME should receive a blur notification BEFORE IME state is updated`
             );
           } else {
             is(
-              aTIPWrapper.numberOfFocusNotifications,
-              0,
-              `${description}, IME shouldn't receive a focus notification`
-            );
-            ok(
-              aTIPWrapper.numberOfBlurNotifications > 0,
-              `${description}, IME should receive a blur notification`
-            );
-            ok(
-              !aTIPWrapper.IMEHasFocus,
-              `${description}, IME shouldn't have focus right now`
+              this.#mWindowUtils.IMEStatus,
+              aExpectedData.enabledValue,
+              `${
+                this.#mDescription
+              }, IME should receive a blur notification and its context has expected IME state if the state isn't being changed`
             );
           }
-        } else {
+          break;
+      }
+    };
+
+    this.#mTIPWrapper.clearFocusBlurNotifications();
+  }
+
+  /**
+   * @returns {bool} whether expected element has focus or not after moving focus.
+   */
+  async run() {
+    const previousFocusedElement = getFocusedElementOrUAWidgetHost();
+    if (this.#mTest.setFocusIntoUAWidget) {
+      this.#mTest.setFocusIntoUAWidget(this.#mElementToSetFocus);
+    } else {
+      this.#mElementToSetFocus.focus();
+    }
+
+    await new Promise(resolve =>
+      requestAnimationFrame(() => requestAnimationFrame(resolve))
+    ); // wait for sending IME notifications
+
+    const currentFocusedElement = getFocusedElementOrUAWidgetHost();
+    this.#mCreatedElementForPreviousFocusedElement?.remove();
+    if (this.#mTest.isFocusable) {
+      return this.#mElementToSetFocus == currentFocusedElement;
+    }
+    return previousFocusedElement == currentFocusedElement;
+  }
+
+  check(aExpectedData) {
+    this.#mTIPWrapper.onIMEFocusBlur = null;
+
+    if (aExpectedData.isFocusable) {
+      if (aExpectedData.focusEventFired) {
+        if (
+          aExpectedData.enabledValue ==
+            SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED ||
+          aExpectedData.enabledValue ==
+            SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_PASSWORD
+        ) {
           ok(
-            focusEventCount > 0,
-            `${description}, focus event should be fired`
+            this.#mTIPWrapper.numberOfFocusNotifications > 0,
+            `${this.#mDescription}, IME should receive a focus notification`
+          );
+          if (
+            aExpectedData.designModeValue == "on" &&
+            !aExpectedData.testedSubDocumentInDesignMode
+          ) {
+            is(
+              this.#mTIPWrapper.numberOfBlurNotifications,
+              0,
+              `${
+                this.#mDescription
+              }, IME shouldn't receive a blur notification in designMode since focus isn't moved from another editor`
+            );
+          } else {
+            ok(
+              this.#mTIPWrapper.numberOfBlurNotifications > 0,
+              `${
+                this.#mDescription
+              }, IME should receive a blur notification for the previous focused editor`
+            );
+          }
+          ok(
+            this.#mTIPWrapper.IMEHasFocus,
+            `${this.#mDescription}, IME should have focus right now`
+          );
+        } else {
+          is(
+            this.#mTIPWrapper.numberOfFocusNotifications,
+            0,
+            `${this.#mDescription}, IME shouldn't receive a focus notification`
+          );
+          ok(
+            this.#mTIPWrapper.numberOfBlurNotifications > 0,
+            `${this.#mDescription}, IME should receive a blur notification`
+          );
+          ok(
+            !this.#mTIPWrapper.IMEHasFocus,
+            `${this.#mDescription}, IME shouldn't have focus right now`
           );
         }
       } else {
-        is(
-          aTIPWrapper.numberOfFocusNotifications,
-          0,
-          `${description}, IME shouldn't receive a focus notification at testing non-focusable element`
-        );
-        is(
-          aTIPWrapper.numberOfBlurNotifications,
-          0,
-          `${description}, IME shouldn't receive a blur notification at testing non-focusable element`
-        );
+        ok(true, `${this.#mDescription}, focus event should be fired`);
       }
-
+    } else {
       is(
-        winUtils.IMEStatus,
-        aTest.expectedEnabledValue,
-        `${description}, wrong enabled state`
+        this.#mTIPWrapper.numberOfFocusNotifications,
+        0,
+        `${
+          this.#mDescription
+        }, IME shouldn't receive a focus notification at testing non-focusable element`
       );
-      if (aTest.expectedInputElementType && doc.designMode != "on") {
-        is(
-          winUtils.focusedInputType,
-          aTest.expectedInputElementType,
-          `${description}, wrong input type`
-        );
-      } else if (doc.designMode == "on") {
-        is(winUtils.focusedInputType, "", `${description}, wrong input type`);
-      }
+      is(
+        this.#mTIPWrapper.numberOfBlurNotifications,
+        0,
+        `${
+          this.#mDescription
+        }, IME shouldn't receive a blur notification at testing non-focusable element`
+      );
+    }
 
-      if (
-        !IsIMEOpenStateSupported() ||
-        winUtils.IMEStatus != Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED ||
-        aTest.expectedEnabledValue != Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED
-      ) {
-        return;
-      }
-
-      // IME Open state testing
-      testOpened(false);
-      testOpened(true);
-    } finally {
-      element.remove();
-      aTIPWrapper.clearFocusBlurNotifications();
+    is(
+      this.#mWindowUtils.IMEStatus,
+      aExpectedData.enabledValue,
+      `${this.#mDescription}, wrong enabled state`
+    );
+    if (
+      this.#mTest.expectedInputElementType &&
+      aExpectedData.designModeValue != "on"
+    ) {
+      is(
+        this.#mWindowUtils.focusedInputType,
+        this.#mTest.expectedInputElementType,
+        `${this.#mDescription}, wrong input type`
+      );
+    } else if (aExpectedData.designModeValue == "on") {
+      is(
+        this.#mWindowUtils.focusedInputType,
+        "",
+        `${this.#mDescription}, wrong input type`
+      );
     }
   }
 
-  aWindow.focus();
-  doc.activeElement?.blur();
-  if (doc.designMode == "on") {
-    is(
-      winUtils.IMEStatus,
-      Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED,
-      `runIMEStateOnFocusMoveTests(${aGlobalDescription}): When no element has focus, IME should stay enabled in design mode`
+  destroy() {
+    this.#mCreatedElement?.remove();
+    this.#mCreatedElementForPreviousFocusedElement?.remove();
+    this.#mTIPWrapper?.clearFocusBlurNotifications();
+    this.#mTIPWrapper = null;
+  }
+
+  /**
+   * Open/Close state test check
+   * Note that these tests are not run now.
+   * If these tests should run between `run` and `cleanUp` call of the above
+   * tests.
+   */
+  canTestOpenCloseState(aExpectedData) {
+    return (
+      IsIMEOpenStateSupported() &&
+      this.#mWindowUtils.IMEStatus ==
+        SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED &&
+      aExpectedData.enabledValue ==
+        SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED
     );
-  } else {
+  }
+  async prepareToRunOpenCloseTest(aContainer) {
+    const doc = aContainer.ownerDocument;
+    this.#mCreatedElementForPreviousFocusedElement?.remove();
+    this.#mCreatedElementForPreviousFocusedElement = doc.createElement("input");
+    this.#mCreatedElementForPreviousFocusedElement.setAttribute("type", "text");
+    aContainer.appendChild(this.#mCreatedElementForPreviousFocusedElement);
+
+    this.#mContainerIsEditable = nodeIsEditable(aContainer);
+    this.#mCreatedElement = this.#mTest.createElement(doc);
+    const waitForLoadIfIFrame = new Promise(resolve => {
+      if (this.#mCreatedElement.tagName == "IFRAME") {
+        this.#mCreatedElement.addEventListener("load", resolve, {
+          capture: true,
+          once: true,
+        });
+      } else {
+        resolve();
+      }
+    });
+    aContainer.appendChild(this.#mCreatedElement);
+    await waitForLoadIfIFrame;
+    this.#mElementToSetFocus = this.#mCreatedElement.contentDocument
+      ? this.#mCreatedElement.contentDocument.documentElement
+      : this.#mCreatedElement;
+
+    this.#mCreatedElementForPreviousFocusedElement.focus();
+
+    return {};
+  }
+  prepareToCheckOpenCloseTest(aPreviousOpenState, aExpectedData) {
+    info(`Starting ${this.#mDescription} (open/close state check)...`);
+    this.#mWindowUtils.IMEIsOpen = aPreviousOpenState;
+    aExpectedData.defaultOpenState = this.#mWindowUtils.IMEIsOpen;
+  }
+  async runOpenCloseTest() {
+    return this.run();
+  }
+  checkOpenCloseTest(aExpectedData) {
+    const expectedOpenState =
+      this.#mTest.expectedOpenState != undefined
+        ? this.#mTest.expectedOpenState
+        : aExpectedData.defaultOpenState;
     is(
-      winUtils.IMEStatus,
-      Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED,
-      `runIMEStateOnFocusMoveTests(${aGlobalDescription}): When no element has focus, IME should be disabled`
+      this.#mWindowUtils.IMEIsOpen,
+      expectedOpenState,
+      `${this.#mDescription}, IME should ${
+        expectedOpenState != aExpectedData.defaultOpenState ? "become" : "keep"
+      } ${expectedOpenState ? "open" : "closed"}`
     );
   }
 
@@ -291,7 +384,7 @@ async function runIMEStateOnFocusMoveTests(
   /**
    * @param {Element} aElement
    */
-  function _elementIsConnectedAndNotInDesignMode(aElement) {
+  static #elementIsConnectedAndNotInDesignMode(aElement) {
     return aElement.isConnected && !nodeIsInDesignMode(aElement);
   }
 
@@ -299,56 +392,60 @@ async function runIMEStateOnFocusMoveTests(
    * @param {Element} aElementContainer
    * @param {bool} aElementIsEditingHost
    */
-  function _elementIsFocusableIfEditingHost(
+  static #elementIsFocusableIfEditingHost(
     aElementContainer,
     aElementIsEditingHost
   ) {
     return !nodeIsEditable(aElementContainer) && aElementIsEditingHost;
   }
 
-  function _IMEStateEnabledAlways() {
-    return Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED;
+  static #IMEStateEnabledAlways() {
+    return SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED;
   }
 
   /**
    * @param {Element} aElement
    * @param {bool} aElementIsEditingHost
    */
-  function _IMEStateEnabledIfEditable(aElement, aElementIsEditingHost) {
+  static #IMEStateEnabledIfEditable(aElement, aElementIsEditingHost) {
     return nodeIsEditable(aElement) || aElementIsEditingHost
-      ? Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED
-      : Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED;
+      ? SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED
+      : SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED;
   }
 
   /**
    * @param {Element} aElement
    */
-  function _IMEStateEnabledIfInDesignMode(aElement) {
-    return _elementIsConnectedAndNotInDesignMode(aElement)
-      ? Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED
-      : Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED;
+  static #IMEStateEnabledIfInDesignMode(aElement) {
+    return IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode(
+      aElement
+    )
+      ? SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED
+      : SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED;
   }
 
   /**
    * @param {Element} aElement
    */
-  function _IMEStatePasswordIfNotInDesignMode(aElement) {
-    return _elementIsConnectedAndNotInDesignMode(aElement)
-      ? Ci.nsIDOMWindowUtils.IME_STATUS_PASSWORD
-      : Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED;
+  static #IMEStatePasswordIfNotInDesignMode(aElement) {
+    return IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode(
+      aElement
+    )
+      ? SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_PASSWORD
+      : SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED;
   }
 
   /**
    * @param {Element} aElement
    */
-  function _elementIsConnectedAndNotEditable(aElement) {
+  static #elementIsConnectedAndNotEditable(aElement) {
     return aElement.isConnected && !nodeIsEditable(aElement);
   }
 
   /**
    * @param {Element} aElementContainer
    */
-  function _focusEventIsExpectedUnlessEditableChild(aElementContainer) {
+  static #focusEventIsExpectedUnlessEditableChild(aElementContainer) {
     return !nodeIsEditable(aElementContainer);
   }
 
@@ -356,7 +453,7 @@ async function runIMEStateOnFocusMoveTests(
   // condition, however, if they are editable, they are "enabled".
   // XXX Probably there are some bugs: If the form controls editable, they
   //     shouldn't be focusable.
-  function resolveTest(aTest) {
+  #resolveTest(aTest, aContainer) {
     const isFocusable = aTest.isFocusable(
       aContainer,
       aTest.isNewElementEditingHost
@@ -389,7 +486,7 @@ async function runIMEStateOnFocusMoveTests(
       expectedInputElementType: aTest.expectedInputElementType,
     };
   }
-  const kIMEStateTestList = [
+  static #sTestList = [
     {
       description: "input[type=text]",
       createElement: aDocument => {
@@ -397,9 +494,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("type", "text");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
       expectedInputElementType: "text",
     },
     {
@@ -410,9 +508,11 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("readonly", "");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledIfInDesignMode,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfInDesignMode,
     },
     {
       description: "input[type=password]",
@@ -421,9 +521,11 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("type", "password");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStatePasswordIfNotInDesignMode,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStatePasswordIfNotInDesignMode,
       expectedInputElementType: "password",
     },
     {
@@ -434,9 +536,11 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("readonly", "");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledIfInDesignMode,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfInDesignMode,
     },
     {
       description: "input[type=checkbox]",
@@ -445,9 +549,12 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("type", "checkbox");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
-      focusEventIsExpected: _focusEventIsExpectedUnlessEditableChild,
-      expectedEnabledValue: _IMEStateEnabledIfEditable,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
+      focusEventIsExpected:
+        IMEStateOnFocusMoveTester.#focusEventIsExpectedUnlessEditableChild,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfEditable,
     },
     {
       description: "input[type=radio]",
@@ -456,9 +563,12 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("type", "radio");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
-      focusEventIsExpected: _focusEventIsExpectedUnlessEditableChild,
-      expectedEnabledValue: _IMEStateEnabledIfEditable,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
+      focusEventIsExpected:
+        IMEStateOnFocusMoveTester.#focusEventIsExpectedUnlessEditableChild,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfEditable,
     },
     {
       description: "input[type=submit]",
@@ -467,9 +577,11 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("type", "submit");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledIfEditable,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfEditable,
     },
     {
       description: "input[type=reset]",
@@ -478,9 +590,11 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("type", "reset");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledIfEditable,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfEditable,
     },
     {
       description: "input[type=file]",
@@ -489,9 +603,12 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("type", "file");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
-      focusEventIsExpected: _focusEventIsExpectedUnlessEditableChild,
-      expectedEnabledValue: _IMEStateEnabledIfEditable,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
+      focusEventIsExpected:
+        IMEStateOnFocusMoveTester.#focusEventIsExpectedUnlessEditableChild,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfEditable,
     },
     {
       description: "input[type=button]",
@@ -500,9 +617,11 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("type", "button");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledIfEditable,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfEditable,
     },
     {
       description: "input[type=image]",
@@ -511,9 +630,11 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("type", "image");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledIfEditable,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfEditable,
     },
     {
       description: "input[type=url]",
@@ -522,9 +643,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("type", "url");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
       expectedInputElementType: "url",
     },
     {
@@ -534,9 +656,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("type", "email");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
       expectedInputElementType: "email",
     },
     {
@@ -546,9 +669,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("type", "search");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
       expectedInputElementType: "search",
     },
     {
@@ -558,9 +682,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("type", "tel");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
       expectedInputElementType: "tel",
     },
     {
@@ -570,9 +695,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("type", "number");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
       expectedInputElementType: "number",
     },
     {
@@ -582,9 +708,11 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("type", "date");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledIfInDesignMode,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfInDesignMode,
       expectedInputElementType: "date",
     },
     {
@@ -594,9 +722,11 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("type", "datetime-local");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledIfInDesignMode,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfInDesignMode,
       expectedInputElementType: "datetime-local",
     },
     {
@@ -606,9 +736,11 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("type", "time");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledIfInDesignMode,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfInDesignMode,
       expectedInputElementType: "time",
     },
     // TODO(bug 1283382, bug 1283382): month and week
@@ -617,16 +749,19 @@ async function runIMEStateOnFocusMoveTests(
     {
       description: "button",
       createElement: aDocument => aDocument.createElement("button"),
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledIfEditable,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfEditable,
     },
     {
       description: "textarea",
       createElement: aDocument => aDocument.createElement("textarea"),
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
     },
     {
       description: "textarea[readonly]",
@@ -635,9 +770,11 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("readonly", "");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledIfInDesignMode,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfInDesignMode,
     },
     {
       description: "select (dropdown list)",
@@ -654,9 +791,12 @@ async function runIMEStateOnFocusMoveTests(
         select.appendChild(option3);
         return select;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
-      focusEventIsExpected: _focusEventIsExpectedUnlessEditableChild,
-      expectedEnabledValue: _IMEStateEnabledIfEditable,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
+      focusEventIsExpected:
+        IMEStateOnFocusMoveTester.#focusEventIsExpectedUnlessEditableChild,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfEditable,
     },
     {
       description: "select (list box)",
@@ -674,9 +814,12 @@ async function runIMEStateOnFocusMoveTests(
         select.appendChild(option3);
         return select;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
-      focusEventIsExpected: _focusEventIsExpectedUnlessEditableChild,
-      expectedEnabledValue: _IMEStateEnabledIfEditable,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
+      focusEventIsExpected:
+        IMEStateOnFocusMoveTester.#focusEventIsExpectedUnlessEditableChild,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfEditable,
     },
 
     // a element
@@ -688,9 +831,11 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("href", "about:blank");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotEditable,
-      focusEventIsExpected: _focusEventIsExpectedUnlessEditableChild,
-      expectedEnabledValue: _IMEStateEnabledIfEditable,
+      isFocusable: IMEStateOnFocusMoveTester.#elementIsConnectedAndNotEditable,
+      focusEventIsExpected:
+        IMEStateOnFocusMoveTester.#focusEventIsExpectedUnlessEditableChild,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfEditable,
     },
 
     // audio element
@@ -701,9 +846,11 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("controls", "");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledIfEditable,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfEditable,
     },
     {
       description: "playButton in audio",
@@ -716,9 +863,11 @@ async function runIMEStateOnFocusMoveTests(
         SpecialPowers.wrap(aElement)
           .openOrClosedShadowRoot.getElementById("playButton")
           .focus(),
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledIfInDesignMode,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfInDesignMode,
     },
     {
       description: "scrubber in audio",
@@ -731,9 +880,11 @@ async function runIMEStateOnFocusMoveTests(
         SpecialPowers.wrap(aElement)
           .openOrClosedShadowRoot.getElementById("scrubber")
           .focus(),
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledIfInDesignMode,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfInDesignMode,
     },
     {
       description: "muteButton in audio",
@@ -746,9 +897,11 @@ async function runIMEStateOnFocusMoveTests(
         SpecialPowers.wrap(aElement)
           .openOrClosedShadowRoot.getElementById("muteButton")
           .focus(),
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledIfInDesignMode,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfInDesignMode,
     },
     {
       description: "volumeControl in audio",
@@ -761,9 +914,11 @@ async function runIMEStateOnFocusMoveTests(
         SpecialPowers.wrap(aElement)
           .openOrClosedShadowRoot.getElementById("volumeControl")
           .focus(),
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledIfInDesignMode,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfInDesignMode,
     },
 
     // video element
@@ -774,9 +929,11 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("controls", "");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledIfEditable,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfEditable,
     },
     {
       description: "playButton in video",
@@ -789,9 +946,11 @@ async function runIMEStateOnFocusMoveTests(
         SpecialPowers.wrap(aElement)
           .openOrClosedShadowRoot.getElementById("playButton")
           .focus(),
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledIfInDesignMode,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfInDesignMode,
     },
     {
       description: "scrubber in video",
@@ -804,9 +963,11 @@ async function runIMEStateOnFocusMoveTests(
         SpecialPowers.wrap(aElement)
           .openOrClosedShadowRoot.getElementById("scrubber")
           .focus(),
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledIfInDesignMode,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfInDesignMode,
     },
     {
       description: "muteButton in video",
@@ -819,9 +980,11 @@ async function runIMEStateOnFocusMoveTests(
         SpecialPowers.wrap(aElement)
           .openOrClosedShadowRoot.getElementById("muteButton")
           .focus(),
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledIfInDesignMode,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfInDesignMode,
     },
     {
       description: "volumeControl in video",
@@ -834,9 +997,11 @@ async function runIMEStateOnFocusMoveTests(
         SpecialPowers.wrap(aElement)
           .openOrClosedShadowRoot.getElementById("volumeControl")
           .focus(),
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledIfInDesignMode,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStateEnabledIfInDesignMode,
     },
 
     // ime-mode
@@ -848,9 +1013,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: auto;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
     },
     {
       description: 'input[type=text][style="ime-mode: normal;"]',
@@ -860,9 +1026,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: normal;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
     },
     {
       description: 'input[type=text][style="ime-mode: active;"]',
@@ -872,9 +1039,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: active;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
       expectedOpenState: true,
     },
     {
@@ -885,9 +1053,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: inactive;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
       expectedOpenState: false,
     },
     {
@@ -898,9 +1067,11 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: disabled;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStatePasswordIfNotInDesignMode,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStatePasswordIfNotInDesignMode,
     },
 
     {
@@ -911,9 +1082,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: auto;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
     },
     {
       description: 'input[type=url][style="ime-mode: normal;"]',
@@ -923,9 +1095,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: normal;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
     },
     {
       description: 'input[type=url][style="ime-mode: active;"]',
@@ -935,8 +1108,9 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: active;");
         return element;
       },
-      expectedEnabledValue: _IMEStateEnabledAlways,
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
       expectedOpenState: true,
     },
@@ -948,8 +1122,9 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: inactive;");
         return element;
       },
-      expectedEnabledValue: _IMEStateEnabledAlways,
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
       expectedOpenState: false,
     },
@@ -961,9 +1136,11 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: disabled;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStatePasswordIfNotInDesignMode,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStatePasswordIfNotInDesignMode,
     },
 
     {
@@ -974,9 +1151,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: auto;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
     },
     {
       description: 'input[type=email][style="ime-mode: normal;"]',
@@ -986,9 +1164,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: normal;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
     },
     {
       description: 'input[type=email][style="ime-mode: active;"]',
@@ -998,8 +1177,9 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: active;");
         return element;
       },
-      expectedEnabledValue: _IMEStateEnabledAlways,
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
       expectedOpenState: true,
     },
@@ -1011,8 +1191,9 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: inactive;");
         return element;
       },
-      expectedEnabledValue: _IMEStateEnabledAlways,
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
       expectedOpenState: false,
     },
@@ -1024,9 +1205,11 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: disabled;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStatePasswordIfNotInDesignMode,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStatePasswordIfNotInDesignMode,
     },
 
     {
@@ -1037,9 +1220,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: auto;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
     },
     {
       description: 'input[type=search][style="ime-mode: normal;"]',
@@ -1049,9 +1233,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: normal;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
     },
     {
       description: 'input[type=search][style="ime-mode: active;"]',
@@ -1061,8 +1246,9 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: active;");
         return element;
       },
-      expectedEnabledValue: _IMEStateEnabledAlways,
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
       expectedOpenState: true,
     },
@@ -1074,8 +1260,9 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: inactive;");
         return element;
       },
-      expectedEnabledValue: _IMEStateEnabledAlways,
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
       expectedOpenState: false,
     },
@@ -1087,9 +1274,11 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: disabled;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStatePasswordIfNotInDesignMode,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStatePasswordIfNotInDesignMode,
     },
 
     {
@@ -1100,9 +1289,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: auto;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
     },
     {
       description: 'input[type=tel][style="ime-mode: normal;"]',
@@ -1112,9 +1302,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: normal;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
     },
     {
       description: 'input[type=tel][style="ime-mode: active;"]',
@@ -1124,9 +1315,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: active;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
       expectedOpenState: true,
     },
     {
@@ -1137,9 +1329,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: inactive;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
       expectedOpenState: false,
     },
     {
@@ -1150,9 +1343,11 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: disabled;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStatePasswordIfNotInDesignMode,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStatePasswordIfNotInDesignMode,
     },
 
     {
@@ -1163,9 +1358,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: auto;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
     },
     {
       description: 'input[type=number][style="ime-mode: normal;"]',
@@ -1175,9 +1371,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: normal;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
     },
     {
       description: 'input[type=number][style="ime-mode: active;"]',
@@ -1187,9 +1384,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: active;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
       expectedOpenState: true,
     },
     {
@@ -1200,9 +1398,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: inactive;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
       expectedOpenState: false,
     },
     {
@@ -1213,9 +1412,11 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: disabled;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStatePasswordIfNotInDesignMode,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStatePasswordIfNotInDesignMode,
     },
 
     {
@@ -1226,9 +1427,11 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: auto;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStatePasswordIfNotInDesignMode,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStatePasswordIfNotInDesignMode,
     },
     {
       description: 'input[type=password][style="ime-mode: normal;"]',
@@ -1238,9 +1441,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: normal;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
     },
     {
       description: 'input[type=password][style="ime-mode: active;"]',
@@ -1250,9 +1454,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: active;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
       expectedOpenState: true,
     },
     {
@@ -1263,9 +1468,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: inactive;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
       expectedOpenState: false,
     },
     {
@@ -1276,9 +1482,11 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: disabled;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStatePasswordIfNotInDesignMode,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStatePasswordIfNotInDesignMode,
     },
     {
       description: 'textarea[style="ime-mode: auto;"]',
@@ -1287,9 +1495,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: auto;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
     },
     {
       description: 'textarea[style="ime-mode: normal;"]',
@@ -1298,9 +1507,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: normal;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
     },
     {
       description: 'textarea[style="ime-mode: active;"]',
@@ -1309,9 +1519,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: active;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
       expectedOpenState: true,
     },
     {
@@ -1321,9 +1532,10 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: inactive;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
       expectedOpenState: false,
     },
     {
@@ -1333,9 +1545,11 @@ async function runIMEStateOnFocusMoveTests(
         element.setAttribute("style", "ime-mode: disabled;");
         return element;
       },
-      isFocusable: _elementIsConnectedAndNotInDesignMode,
+      isFocusable:
+        IMEStateOnFocusMoveTester.#elementIsConnectedAndNotInDesignMode,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStatePasswordIfNotInDesignMode,
+      expectedEnabledValue:
+        IMEStateOnFocusMoveTester.#IMEStatePasswordIfNotInDesignMode,
     },
 
     // HTML editors
@@ -1347,9 +1561,9 @@ async function runIMEStateOnFocusMoveTests(
         return div;
       },
       isNewElementEditingHost: true,
-      isFocusable: _elementIsFocusableIfEditingHost,
+      isFocusable: IMEStateOnFocusMoveTester.#elementIsFocusableIfEditingHost,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
     },
     {
       description: "designMode editor",
@@ -1365,11 +1579,11 @@ async function runIMEStateOnFocusMoveTests(
       },
       isFocusable: () => true,
       focusEventIsExpected: () => true,
-      expectedEnabledValue: _IMEStateEnabledAlways,
+      expectedEnabledValue: IMEStateOnFocusMoveTester.#IMEStateEnabledAlways,
     },
   ];
 
-  for (const test of kIMEStateTestList) {
-    await runTest(resolveTest(test));
+  static get numberOfTests() {
+    return IMEStateOnFocusMoveTester.#sTestList.length;
   }
 }
