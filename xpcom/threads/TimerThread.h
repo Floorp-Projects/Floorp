@@ -177,7 +177,7 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
 
   // mTimers is maintained in a "pseudo-sorted" order wrt the timeouts.
   // Specifcally, mTimers is sorted according to the timeouts *if you ignore the
-  // cancelled entries* (those whose mTimerImpl is nullptr). Notably this means
+  // canceled entries* (those whose mTimerImpl is nullptr). Notably this means
   // that you cannot use a binary search on this list.
   nsTArray<Entry> mTimers MOZ_GUARDED_BY(mMonitor);
 
