@@ -10,7 +10,7 @@ import {
 } from "./moz-button-group.mjs";
 
 export default {
-  title: "Design System/Experiments/MozButtonGroup",
+  title: "Button Group",
   component: "moz-button-group",
   argTypes: {
     platform: {
