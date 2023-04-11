@@ -179,7 +179,7 @@ let JSPROCESSACTORS = {
 
   RefreshBlockerObserver: {
     child: {
-      moduleURI: "resource:///actors/RefreshBlockerChild.jsm",
+      esModuleURI: "resource:///actors/RefreshBlockerChild.sys.mjs",
       observers: [
         "webnavigation-create",
         "chrome-webnavigation-create",
@@ -695,10 +695,10 @@ let JSWINDOWACTORS = {
 
   RefreshBlocker: {
     parent: {
-      moduleURI: "resource:///actors/RefreshBlockerParent.jsm",
+      esModuleURI: "resource:///actors/RefreshBlockerParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/RefreshBlockerChild.jsm",
+      esModuleURI: "resource:///actors/RefreshBlockerChild.sys.mjs",
     },
 
     messageManagerGroups: ["browsers"],
