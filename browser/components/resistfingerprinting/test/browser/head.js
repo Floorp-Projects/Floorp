@@ -146,36 +146,73 @@ let isTimeValueRounded = (x, expectedPrecision) => {
 };
 
 let setupAndRunCrossOriginIsolatedTest = async function(
-  resistFingerprinting,
-  reduceTimerPrecision,
-  crossOriginIsolated,
+  options,
   expectedPrecision,
   runTests,
   workerCall
 ) {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["privacy.resistFingerprinting", resistFingerprinting],
-      ["privacy.reduceTimerPrecision", reduceTimerPrecision],
-      [
-        "privacy.resistFingerprinting.reduceTimerPrecision.microseconds",
-        expectedPrecision * 1000,
-      ],
-      ["browser.tabs.remote.useCrossOriginOpenerPolicy", crossOriginIsolated],
-      ["browser.tabs.remote.useCrossOriginEmbedderPolicy", crossOriginIsolated],
+  let prefsToSet = [
+    [
+      "privacy.resistFingerprinting.reduceTimerPrecision.microseconds",
+      expectedPrecision * 1000,
     ],
-  });
+  ];
+
+  if (options.resistFingerprinting !== undefined) {
+    prefsToSet = prefsToSet.concat([
+      ["privacy.resistFingerprinting", options.resistFingerprinting],
+    ]);
+  } else {
+    options.resistFingerprinting = false;
+  }
+
+  if (options.resistFingerprintingPBMOnly !== undefined) {
+    prefsToSet = prefsToSet.concat([
+      [
+        "privacy.resistFingerprinting.pbmode",
+        options.resistFingerprintingPBMOnly,
+      ],
+    ]);
+  } else {
+    options.resistFingerprintingPBMOnly = false;
+  }
+
+  if (options.reduceTimerPrecision !== undefined) {
+    prefsToSet = prefsToSet.concat([
+      ["privacy.reduceTimerPrecision", options.reduceTimerPrecision],
+    ]);
+  } else {
+    options.reduceTimerPrecision = false;
+  }
+
+  if (options.crossOriginIsolated !== undefined) {
+    prefsToSet = prefsToSet.concat([
+      [
+        "browser.tabs.remote.useCrossOriginOpenerPolicy",
+        options.crossOriginIsolated,
+      ],
+      [
+        "browser.tabs.remote.useCrossOriginEmbedderPolicy",
+        options.crossOriginIsolated,
+      ],
+    ]);
+  } else {
+    options.crossOriginIsolated = false;
+  }
+
+  console.log(prefsToSet);
+  await SpecialPowers.pushPrefEnv({ set: prefsToSet });
 
   let win = await BrowserTestUtils.openNewBrowserWindow();
   let tab = await BrowserTestUtils.openNewForegroundTab(
     win.gBrowser,
     `https://example.com/browser/browser/components/resistfingerprinting` +
-      `/test/browser/coop_header.sjs?crossOriginIsolated=${crossOriginIsolated}`
+      `/test/browser/coop_header.sjs?crossOriginIsolated=${options.crossOriginIsolated}`
   );
 
   // No matter what we set the precision to, if we're in ResistFingerprinting
   // mode we use the larger of the precision pref and the RFP time-atom constant
-  if (resistFingerprinting) {
+  if (options.resistFingerprinting) {
     const RFP_TIME_ATOM_MS = 16.667;
     expectedPrecision = Math.max(RFP_TIME_ATOM_MS, expectedPrecision);
   }
@@ -186,14 +223,14 @@ let setupAndRunCrossOriginIsolatedTest = async function(
         precision: expectedPrecision,
         isRoundedFunc: isTimeValueRounded.toString(),
         workerCall,
-        resistFingerprinting,
-        reduceTimerPrecision,
+        resistFingerprinting: options.resistFingerprinting,
+        reduceTimerPrecision: options.reduceTimerPrecision,
       },
     ],
     runTests
   );
 
-  if (crossOriginIsolated) {
+  if (options.crossOriginIsolated) {
     let remoteType = tab.linkedBrowser.remoteType;
     ok(
       remoteType.startsWith(E10SUtils.WEB_REMOTE_COOP_COEP_TYPE_PREFIX),
@@ -202,6 +239,7 @@ let setupAndRunCrossOriginIsolatedTest = async function(
   }
 
   await BrowserTestUtils.closeWindow(win);
+  await SpecialPowers.popPrefEnv();
 };
 
 // This function calculates the maximum available window dimensions and returns

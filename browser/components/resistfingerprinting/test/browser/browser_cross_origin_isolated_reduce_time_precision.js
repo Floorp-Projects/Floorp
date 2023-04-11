@@ -57,13 +57,53 @@ add_task(async function runRTPTestDOM() {
   };
 
   // RFP
-  await setupAndRunCrossOriginIsolatedTest(true, true, true, 100, runTests);
-  await setupAndRunCrossOriginIsolatedTest(true, false, true, 13, runTests);
-  await setupAndRunCrossOriginIsolatedTest(true, false, true, 0.13, runTests);
+  await setupAndRunCrossOriginIsolatedTest(
+    {
+      resistFingerprinting: true,
+      reduceTimerPrecision: true,
+      crossOriginIsolated: true,
+    },
+    100,
+    runTests
+  );
+  await setupAndRunCrossOriginIsolatedTest(
+    {
+      resistFingerprinting: true,
+      reduceTimerPrecision: false,
+      crossOriginIsolated: true,
+    },
+    13,
+    runTests
+  );
+  await setupAndRunCrossOriginIsolatedTest(
+    {
+      resistFingerprinting: true,
+      reduceTimerPrecision: false,
+      crossOriginIsolated: true,
+    },
+    0.13,
+    runTests
+  );
 
   // RTP
-  await setupAndRunCrossOriginIsolatedTest(false, true, false, 0.13, runTests);
-  await setupAndRunCrossOriginIsolatedTest(false, true, true, 0.005, runTests);
+  await setupAndRunCrossOriginIsolatedTest(
+    {
+      resistFingerprinting: false,
+      reduceTimerPrecision: true,
+      crossOriginIsolated: false,
+    },
+    0.13,
+    runTests
+  );
+  await setupAndRunCrossOriginIsolatedTest(
+    {
+      resistFingerprinting: false,
+      reduceTimerPrecision: true,
+      crossOriginIsolated: true,
+    },
+    0.005,
+    runTests
+  );
 });
 
 // ================================================================================================
@@ -134,39 +174,49 @@ let runWorkerTest = async function(data) {
 add_task(async function runRTPTestsForWorker() {
   // RFP
   await setupAndRunCrossOriginIsolatedTest(
-    true,
-    true,
-    true,
+    {
+      resistFingerprinting: true,
+      reduceTimerPrecision: true,
+      crossOriginIsolated: true,
+    },
     100,
     runWorkerTest
   );
   await setupAndRunCrossOriginIsolatedTest(
-    true,
-    false,
-    true,
+    {
+      resistFingerprinting: true,
+      reduceTimerPrecision: false,
+      crossOriginIsolated: true,
+    },
     13,
     runWorkerTest
   );
   await setupAndRunCrossOriginIsolatedTest(
-    true,
-    false,
-    true,
+    {
+      resistFingerprinting: true,
+      reduceTimerPrecision: false,
+      crossOriginIsolated: true,
+    },
     0.13,
     runWorkerTest
   );
 
   // RTP
   await setupAndRunCrossOriginIsolatedTest(
-    false,
-    true,
-    false,
+    {
+      resistFingerprinting: false,
+      reduceTimerPrecision: true,
+      crossOriginIsolated: false,
+    },
     0.13,
     runWorkerTest
   );
   await setupAndRunCrossOriginIsolatedTest(
-    false,
-    true,
-    true,
+    {
+      resistFingerprinting: false,
+      reduceTimerPrecision: true,
+      crossOriginIsolated: true,
+    },
     0.005,
     runWorkerTest
   );
