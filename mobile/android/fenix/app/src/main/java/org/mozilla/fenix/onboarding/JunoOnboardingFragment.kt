@@ -45,7 +45,9 @@ class JunoOnboardingFragment : Fragment() {
     @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        if (isNotATablet()) {
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -69,7 +71,9 @@ class JunoOnboardingFragment : Fragment() {
 
     override fun onDestroy() {
         super.onDestroy()
-        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        if (isNotATablet()) {
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -169,4 +173,7 @@ class JunoOnboardingFragment : Fragment() {
     private fun shouldShowNotificationPage(context: Context) =
         !NotificationManagerCompat.from(context.applicationContext).areNotificationsEnabledSafe() &&
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+
+    private fun isNotATablet() =
+        !resources.getBoolean(R.bool.tablet)
 }
