@@ -83,9 +83,6 @@
   <input type="password" id="ime_mode_inactive_p" style="ime-mode: inactive;"/><br/>
   <input type="password" id="ime_mode_disabled_p" style="ime-mode: disabled;"/><br/>
 
-  <!-- plugin -->
-  <object type="application/x-test" id="plugin"></object><br/>
-
   <!-- contenteditable editor -->
   <div id="contenteditableEditor" contenteditable="true"></div>
 </div>
@@ -109,38 +106,6 @@ function hitEventLoop(aFunc, aTimes) {
 
 var gUtils = window.windowUtils;
 var gFM = Services.focus;
-
-function runPluginTest() {
-  var plugin = document.getElementById("plugin");
-
-  // Plugins are not supported and their elements should not accept focus;
-  // therefore, IME should not enable when we play with it.
-
-  document.activeElement.blur();
-  is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
-     "runPluginTest: unexpected enabled state when no element has focus");
-
-  plugin.focus();
-  is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
-     "runPluginTest: unexpected enabled state when attempting to give focus to plugin");
-
-  plugin.blur();
-  is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
-     "runPluginTest: unexpected enabled state after unfocusing plugin");
-
-  plugin.focus();
-  is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
-     "runPluginTest: unexpected enabled state when attempting to give focus to plugin #2");
-
-  var parent = plugin.parentNode;
-  parent.removeChild(plugin);
-  is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
-     "runPluginTest: unexpected enabled state when plugin is removed from tree");
-
-  document.getElementById("text").focus();
-  is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
-     "runPluginTest: unexpected enabled state when input[type=text] has focus");
-}
 
 function runTypeChangingTest() {
   const kInputControls = [
@@ -850,9 +815,6 @@ async function runTests() {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.forms.always_allow_key_and_focus_events.enabled", true]],
   });
-  // test for plugin contents
-  runPluginTest();
-
   // changing input[type] values
   // XXX currently, type attribute changing doesn't work fine. bug 559728.
   // runTypeChangingTest();

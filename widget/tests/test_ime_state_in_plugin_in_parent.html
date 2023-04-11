@@ -1,0 +1,92 @@
+<html>
+<head>
+  <title>Test for IME state on plugin</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="file_ime_state_test_helper.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<input>
+<object type="application/x-test"></object>
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  const tipWrapper = new TIPWrapper(window);
+  const plugin = document.querySelector("object");
+
+  // Plugins are not supported and their elements should not accept focus;
+  // therefore, IME should not enable when we play with it.
+
+  document.activeElement?.blur();
+  is(
+    window.windowUtils.IMEStatus,
+    Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED,
+    "IME enabled state should be disabled when no element has focus"
+  );
+  ok(
+    !tipWrapper.IMEHasFocus,
+    "IME should not have focus when no element has focus"
+  );
+
+  plugin.focus();
+  is(
+    window.windowUtils.IMEStatus,
+    Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED,
+    "IME enabled state should be disabled when an <object> for plugin has focus"
+  );
+  ok(
+    !tipWrapper.IMEHasFocus,
+    "IME should not have focus when an <object> for plugin has focus"
+  );
+
+  plugin.blur();
+  is(
+    window.windowUtils.IMEStatus,
+    Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED,
+    "IME enabled state should be disabled when an <object> for plugin gets blurred"
+  );
+  ok(
+    !tipWrapper.IMEHasFocus,
+    "IME should not have focus when an <object> for plugin gets blurred"
+  );
+
+  plugin.focus();
+  is(
+    window.windowUtils.IMEStatus,
+    Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED,
+    "IME enabled state should be disabled when an <object> for plugin gets focused again"
+  );
+  ok(
+    !tipWrapper.IMEHasFocus,
+    "IME should not have focus when an <object> for plugin gets focused again"
+  );
+
+  plugin.remove();
+  is(
+    window.windowUtils.IMEStatus,
+    Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED,
+    "IME enabled state should be disabled when focused <object> for plugin is removed from the document"
+  );
+  ok(
+    !tipWrapper.IMEHasFocus,
+    "IME should not have focus when focused <object> for plugin is removed from the document"
+  );
+
+  document.querySelector("input").focus();
+  is(
+    window.windowUtils.IMEStatus,
+    Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED,
+    "IME enabled state should be enabled after <input> gets focus"
+  );
+  ok(
+    tipWrapper.IMEHasFocus,
+    "IME should have focus after <input> gets focus"
+  );
+
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>
