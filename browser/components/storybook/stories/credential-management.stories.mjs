@@ -8,7 +8,7 @@ import { html } from "lit.all.mjs";
 import "../../aboutlogins/content/components/login-timeline.mjs";
 
 export default {
-  title: "Widgets/Credential Management/Timeline",
+  title: "Domain-specific UI Widgets/Credential Management/Timeline",
   component: "login-timeline",
 };
 
