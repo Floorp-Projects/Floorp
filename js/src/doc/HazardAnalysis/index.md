@@ -70,6 +70,8 @@ These builds do the following:
 * produce a set of `.xdb` files describing everything encountered during the compilation
 * analyze the `.xdb` files with scripts in `js/src/devtools/rootAnalysis`
 
+The format of the information stored in those files is [somewhat documented][CFG].
+
 ## Running the analysis
 
 ### Pushing to try
@@ -93,3 +95,4 @@ For more complicated cases, ask on the Matrix channel (see [spidermonkey.dev][sp
 [running]: running.md
 [rooting]: https://searchfox.org/mozilla-central/source/js/public/RootingAPI.h
 [spidermonkey]: https://spidermonkey.dev/
+[CFG]: CFG.md
