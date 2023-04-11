@@ -8,7 +8,7 @@ defaults pref(webgl.force-enabled,true)
 ==  color_quads.html?e_context=webgl&e_width=401&e_height=401  color_quads.html?e_width=401&e_height=401
 
 # Test various alpha values for webgl.
-fuzzy-if(gtkWidget&&useDrawSnapshot,255-255,30000-30000) ==  color_quads.html?desc=premult-alpha_&e_context=webgl&e_color_o1=rgb(0,0,0,0.95)&e_color_o2=rgb(16,16,16,0.95)&e_color_o3=rgb(235,235,235,0.95)&e_color_o4=rgb(255,255,255,0.95)&e_color_i4=rgb(0,0,0,0)    color_quads.html?e_color_o1=rgb(13,13,13)&e_color_o2=rgb(29,29,29)&e_color_o3=rgb(248,248,248)&e_color_i4=rgb(255,255,255)
+==  color_quads.html?desc=premult-alpha_&e_context=webgl&e_color_o1=rgb(0,0,0,0.95)&e_color_o2=rgb(16,16,16,0.95)&e_color_o3=rgb(235,235,235,0.95)&e_color_o4=rgb(255,255,255,0.95)&e_color_i4=rgb(0,0,0,0)    color_quads.html?e_color_o1=rgb(13,13,13)&e_color_o2=rgb(29,29,29)&e_color_o3=rgb(248,248,248)&e_color_i4=rgb(255,255,255)
 
 ==  color_quads.html?desc=no-alpha______&e_context=webgl&e_options={alpha:false}&e_color_o1=rgb(0,0,0,0.95)&e_color_o2=rgb(16,16,16,0.95)&e_color_o3=rgb(235,235,235,0.95)&e_color_o4=rgb(255,255,255,0.95)&e_color_i4=rgb(0,0,0,0)    color_quads.html?e_color_i4=rgb(0,0,0)
 
