@@ -1131,22 +1131,31 @@ void TRRService::RetryTRRConfirm() {
   }
 }
 
-void TRRService::RecordTRRStatus(nsresult aChannelStatus) {
+void TRRService::RecordTRRStatus(TRR* aTrrRequest) {
   MOZ_ASSERT_IF(XRE_IsParentProcess(), NS_IsMainThread() || IsOnTRRThread());
   MOZ_ASSERT_IF(XRE_IsSocketProcess(), NS_IsMainThread());
 
+  nsresult channelStatus = aTrrRequest->ChannelStatus();
+
   Telemetry::AccumulateCategoricalKeyed(
-      ProviderKey(), NS_SUCCEEDED(aChannelStatus)
+      ProviderKey(), NS_SUCCEEDED(channelStatus)
                          ? Telemetry::LABELS_DNS_TRR_SUCCESS3::Fine
-                         : (aChannelStatus == NS_ERROR_NET_TIMEOUT_EXTERNAL
+                         : (channelStatus == NS_ERROR_NET_TIMEOUT_EXTERNAL
                                 ? Telemetry::LABELS_DNS_TRR_SUCCESS3::Timeout
                                 : Telemetry::LABELS_DNS_TRR_SUCCESS3::Bad));
 
-  mConfirmation.RecordTRRStatus(aChannelStatus);
+  mConfirmation.RecordTRRStatus(aTrrRequest);
 }
 
-void TRRService::ConfirmationContext::RecordTRRStatus(nsresult aChannelStatus) {
-  if (NS_SUCCEEDED(aChannelStatus)) {
+void TRRService::ConfirmationContext::RecordTRRStatus(TRR* aTrrRequest) {
+  nsresult channelStatus = aTrrRequest->ChannelStatus();
+
+  if (OwningObject()->Mode() == nsIDNSService::MODE_TRRONLY) {
+    mLastConfirmationSkipReason = aTrrRequest->SkipReason();
+    mLastConfirmationStatus = channelStatus;
+  }
+
+  if (NS_SUCCEEDED(channelStatus)) {
     LOG(("TRRService::RecordTRRStatus channel success"));
     mTRRFailures = 0;
     return;
@@ -1171,7 +1180,7 @@ void TRRService::ConfirmationContext::RecordTRRStatus(nsresult aChannelStatus) {
   }
 
   mFailureReasons[mTRRFailures % ConfirmationContext::RESULTS_SIZE] =
-      StatusToChar(NS_OK, aChannelStatus);
+      StatusToChar(NS_OK, channelStatus);
   uint32_t fails = ++mTRRFailures;
   LOG(("TRRService::RecordTRRStatus fails=%u", fails));
 
@@ -1286,6 +1295,8 @@ void TRRService::ConfirmationContext::CompleteConfirmation(nsresult aStatus,
     }
 
     RequestCompleted(aStatus, aTRRRequest->ChannelStatus());
+    mLastConfirmationSkipReason = aTRRRequest->SkipReason();
+    mLastConfirmationStatus = aTRRRequest->ChannelStatus();
 
     MOZ_ASSERT(mTask);
     if (NS_SUCCEEDED(aStatus)) {

@@ -510,5 +510,19 @@ ChildDNSService::GetTrrDomain(nsACString& aTRRDomain) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+ChildDNSService::GetLastConfirmationStatus(nsresult* aConfirmationStatus) {
+  // XXX(valentin): Fix for socket process
+  *aConfirmationStatus = NS_OK;
+  return NS_OK;
+}
+
+NS_IMETHODIMP ChildDNSService::GetLastConfirmationSkipReason(
+    TRRSkippedReason* aSkipReason) {
+  // XXX(valentin): Fix for socket process
+  *aSkipReason = nsITRRSkipReason::TRR_UNSET;
+  return NS_OK;
+}
+
 }  // namespace net
 }  // namespace mozilla

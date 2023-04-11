@@ -1482,8 +1482,9 @@ preferences-doh-steering-status = Using local provider
 
 preferences-doh-status-active = Active
 preferences-doh-status-disabled = Off
-# TODO: Will add reason in next patch.
-preferences-doh-status-not-active = Not active
+# Variables:
+#   $reason (string) - A string representation of the reason DoH is not active. For example NS_ERROR_UNKNOWN_HOST or TRR_RCODE_FAIL.
+preferences-doh-status-not-active = Not active ({ $reason })
 
 preferences-doh-group-message = Enable secure DNS using:
 
