@@ -22,6 +22,34 @@
 #  include <unistd.h>
 #  define gettid() static_cast<pid_t>(syscall(__NR_gettid))
 #endif
+
+#if defined(JS_ION_PERF) && defined(XP_MACOSX)
+#  include <pthread.h>
+#  include <unistd.h>
+
+pid_t gettid_pthread() {
+  uint64_t tid;
+  if (pthread_threadid_np(nullptr, &tid) != 0) {
+    return 0;
+  }
+  // Truncate the tid to 32 bits. macOS thread IDs are usually small enough.
+  // And even if we do end up truncating, it doesn't matter much for Jitdump
+  // as long as the process ID is correct.
+  return pid_t(tid);
+}
+#  define gettid() gettid_pthread()
+
+const char* get_current_dir_name_cwd() {
+  constexpr size_t CWD_MAX = 256;
+  char* buffer = (char*)malloc(CWD_MAX);
+  if (getcwd(buffer, CWD_MAX) == nullptr) {
+    buffer[0] = 0;
+  }
+  return buffer;
+}
+#  define get_current_dir_name() get_current_dir_name_cwd()
+#endif
+
 #include "jit/PerfSpewer.h"
 
 #include <atomic>
@@ -171,7 +199,9 @@ static bool openJitDump() {
     if (env_dir[0] == '/') {
       spew_dir = JS_smprintf("%s", env_dir);
     } else {
-      spew_dir = JS_smprintf("%s/%s", get_current_dir_name(), env_dir);
+      const char* dir = get_current_dir_name();
+      spew_dir = JS_smprintf("%s/%s", dir, env_dir);
+      free((void*)dir);
     }
   } else {
     fprintf(stderr, "Please define PERF_SPEW_DIR as an output directory.\n");

@@ -431,8 +431,10 @@ option("--enable-perf", env="JS_ION_PERF", help="Enable Linux perf integration")
 
 @depends("--enable-perf", target)
 def ion_perf(value, target):
-    ok_kernel = target.kernel == "Linux" and target.os == "GNU"
-    if value and ok_kernel:
+    is_linux = target.kernel == "Linux" and target.os == "GNU"
+    is_mac = target.kernel == "Darwin" and target.os == "OSX"
+
+    if value and (is_linux or is_mac):
         return True
 
 
