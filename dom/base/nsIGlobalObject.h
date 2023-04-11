@@ -266,7 +266,7 @@ class nsIGlobalObject : public nsISupports,
     return nullptr;
   }
 
-  virtual mozilla::dom::FontFaceSet* Fonts() { return nullptr; }
+  virtual mozilla::dom::FontFaceSet* GetFonts() { return nullptr; }
 
   virtual mozilla::Result<mozilla::ipc::PrincipalInfo, nsresult>
   GetStorageKey();

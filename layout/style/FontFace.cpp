@@ -106,14 +106,14 @@ already_AddRefed<FontFace> FontFace::Constructor(
     const FontFaceDescriptors& aDescriptors, ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
 
-  FontFaceSet* set = global->Fonts();
-  if (!set) {
+  FontFaceSet* set = global->GetFonts();
+  if (NS_WARN_IF(!set)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
   FontFaceSetImpl* setImpl = set->GetImpl();
-  if (!setImpl) {
+  if (NS_WARN_IF(!setImpl)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }

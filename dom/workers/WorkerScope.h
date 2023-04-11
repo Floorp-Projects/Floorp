@@ -258,7 +258,8 @@ class WorkerGlobalScope : public WorkerGlobalScopeBase {
 
   already_AddRefed<WorkerNavigator> GetExistingNavigator() const;
 
-  FontFaceSet* Fonts() final;
+  FontFaceSet* GetFonts(ErrorResult&);
+  FontFaceSet* GetFonts() final { return GetFonts(IgnoreErrors()); }
 
   void ImportScripts(JSContext* aCx, const Sequence<nsString>& aScriptURLs,
                      ErrorResult& aRv);

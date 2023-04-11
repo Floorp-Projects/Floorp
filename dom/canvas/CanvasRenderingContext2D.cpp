@@ -3632,7 +3632,7 @@ bool CanvasRenderingContext2D::SetFontInternalDisconnected(
     fontFaceSet = mCanvasElement->OwnerDoc()->Fonts();
   } else {
     nsIGlobalObject* global = GetParentObject();
-    fontFaceSet = global ? global->Fonts() : nullptr;
+    fontFaceSet = global ? global->GetFonts() : nullptr;
   }
 
   FontFaceSetImpl* fontFaceSetImpl =
