@@ -55,23 +55,18 @@ var Visitor = class {
         }
     }
 
-    // Returns whether we should keep going after seeing this <body, ppoint>
-    // pair. Also records it as visited.
-    visit(body, ppoint, info) {
-        const visited = this.visited_bodies.get(body);
-        const existing = visited.get(ppoint);
-        const action = this.next_action(existing, info);
-        const merged = this.merge_info(existing, info);
-        visited.set(ppoint, merged);
-        return [action, merged];
-    }
+    // Prepend `edge` to the info stored at the successor node, returning
+    // the updated info value. This should be overridden by pretty much any
+    // subclass, as a traversal's semantics are largely determined by this method.
+    extend_path(edge, body, ppoint, successor_value) { return true; }
 
     // Default implementation does a basic "only visit nodes once" search.
     // (Whether this is BFS/DFS/other is determined by the caller.)
 
     // Override if you need to revisit nodes. Valid actions are "continue",
     // "prune", and "done". "continue" means continue with the search. "prune"
-    // means stop at this node, only continue on other edges. "done" means the
+    // means do not continue to predecessors of this node, only continue with
+    // the remaining entries in the work queue. "done" means the
     // whole search is complete even if unvisited nodes remain.
     next_action(prev, current) { return prev ? "prune" : "continue"; }
 
@@ -80,10 +75,33 @@ var Visitor = class {
     // `extend_path`. The node will be updated with the return value.
     merge_info(prev, current) { return true; }
 
-    // Prepend `edge` to the info stored at the successor node, returning
-    // the updated info value. This should be overridden by pretty much any
-    // subclass, as a traversal's semantics are largely determined by this method.
-    extend_path(edge, body, ppoint, successor_path) { return true; }
+    // Default visit() implementation. Subclasses will usually leave this alone
+    // and use the other methods as extension points.
+    //
+    // Take a body, a point within that body, and the info computed by
+    // extend_path() for that point when traversing an edge. Return whether the
+    // search should continue ("continue"), the search should be pruned and
+    // other paths followed ("prune"), or that the whole search is complete and
+    // it is time to return a value ("done", and the value returned by
+    // merge_info() will be returned by the overall search).
+    //
+    // Persistently record the value computed so far at each point, and call
+    // (overridable) next_action() and merge_info() methods with the previous
+    // and freshly-computed value for each point.
+    //
+    // Often, extend_path() will decide how/whether to continue the search and
+    // will return the search action to take, and next_action() will blindly
+    // return it if the point has not yet been visited. (And if it has, it will
+    // prune this branch of the search so that no point is visited multiple
+    // times.)
+    visit(body, ppoint, info) {
+        const visited_value_table = this.visited_bodies.get(body);
+        const existing_value_if_visited = visited_value_table.get(ppoint);
+        const action = this.next_action(existing_value_if_visited, info);
+        const merged = this.merge_info(existing_value_if_visited, info);
+        visited_value_table.set(ppoint, merged);
+        return [action, merged];
+    }
 };
 
 function findMatchingBlock(bodies, blockId) {
@@ -95,50 +113,68 @@ function findMatchingBlock(bodies, blockId) {
     assert(false);
 }
 
-// Perform a mostly breadth-first search through the graph of <body, ppoints>.
-// This is only mostly breadth-first because the visitor decides whether to
-// stop searching when it sees an already-visited node. It can choose to
-// re-visit a node in order to find "better" paths that include a node more
-// than once.
+// For a given function containing a set of bodies, each containing a set of
+// ppoints, perform a mostly breadth-first traversal through the complete graph
+// of all <body, ppoint> nodes throughout all the bodies of the function.
 //
-// The return value depends on how the search finishes. If a 'done' action
-// is returned by visitor.visit(), use the information returned by
-// that call. If the search completes without reaching the entry point of
-// the function (the "root"), return null. If the search manages to reach
-// the root, return the value of the `result_if_reached_root` parameter.
+// When traversing, every <body, ppoint> node is associated with a value that
+// is assigned or updated whenever it is visited. The overall traversal
+// terminates when a given condition is reached, and an arbitrary custom value
+// is returned. If the search completes without the termination condition
+// being reached, it will return the value associated with the entrypoint
+// node, which is initialized to `entrypoint_fallback_value` (and thus serves as
+// the fallback return value if all search paths are pruned before reaching
+// the entrypoint.)
+//
+// The traversal is only *mostly* breadth-first because the visitor decides
+// whether to stop searching when it sees a node. If a node is visited for a
+// second time, the visitor can choose to continue (and thus revisit the node)
+// in order to find "better" paths that may include a node more than once.
+// The search is done in the "upwards" direction -- as in, it starts at the
+// exit point and searches through predecessors.
+//
+// Override visitor.visit() to return an action and a value. The action
+// determines whether the overall search should terminate ('done'), or
+// continues looking through the predecessors of the current node ('continue'),
+// or whether it should just continue processing the work queue without
+// looking at predecessors ('prune').
 //
 // This allows this function to be used in different ways. If the visitor
-// associates a value with each node that chains onto its successors
-// (or predecessors in the "upwards" search order), then this will return
-// a complete path through the graph. But this can also be used to test
-// whether a condition holds (eg "the exit point is reachable after
-// calling SomethingImportant()"), in which case no path is needed and the
-// visitor will cause the return value to be a simple boolean (or null
-// if it terminates the search before reaching the root.)
+// associates a value with each node that chains onto its forward-flow successors
+// (predecessors in the "upwards" search order), then a complete path through
+// the graph will be returned.
 //
-// The information returned by the visitor for a node is often called
-// `path` in the code below, even though it may not represent a path.
+// Alternatively, BFS_upwards() can be used to test whether a condition holds
+// (eg "the exit point is reachable only after calling SomethingImportant()"),
+// in which case no path is needed and the visitor can compute a simple boolean
+// every time it encounters a point. Note that `entrypoint_fallback_value` will
+// still be returned if the search terminates without ever reaching the
+// entrypoint, which is useful for dominator analyses.
 //
+// See the Visitor base class's implementation of visit(), above, for the
+// most commonly used visit logic.
 function BFS_upwards(start_body, start_ppoint, bodies, visitor,
-                     initial_successor_info={},
-                     result_if_reached_root=null)
+                     initial_successor_value = {},
+                     entrypoint_fallback_value=null)
 {
-    const work = [[start_body, start_ppoint, null, initial_successor_info]];
+    let entrypoint_value = entrypoint_fallback_value;
+
+    const work = [[start_body, start_ppoint, null, initial_successor_value]];
     if (TRACING) {
         printErr(`BFS start at ${blockIdentifier(start_body)}:${start_ppoint}`);
     }
 
-    let reached_root = false;
     while (work.length > 0) {
-        const [body, ppoint, edgeToAdd, successor_path] = work.shift();
+        const [body, ppoint, edgeToAdd, successor_value] = work.shift();
         if (TRACING) {
-            printErr(`prepending edge from ${ppoint} to state '${successor_path}'`);
+            const s = edgeToAdd ? " : " + str(edgeToAdd) : "";
+            printErr(`prepending edge from ${ppoint} to state '${successor_value}'${s}`);
         }
-        let path = visitor.extend_path(edgeToAdd, body, ppoint, successor_path);
+        let value = visitor.extend_path(edgeToAdd, body, ppoint, successor_value);
 
-        const [action,  merged_path] = visitor.visit(body, ppoint, path);
+        const [action,  merged_value] = visitor.visit(body, ppoint, value);
         if (action === "done") {
-            return merged_path;
+            return merged_value;
         }
         if (action === "prune") {
             // Do not push anything else to the work queue, but continue processing
@@ -146,7 +182,7 @@ function BFS_upwards(start_body, start_ppoint, bodies, visitor,
             continue;
         }
         assert(action == "continue");
-        path = merged_path;
+        value = merged_value;
 
         const predecessors = getPredecessors(body);
         for (const edge of (predecessors[ppoint] || [])) {
@@ -154,12 +190,12 @@ function BFS_upwards(start_body, start_ppoint, bodies, visitor,
                 // Propagate the search into the exit point of the loop body.
                 const loopBody = findMatchingBlock(bodies, edge.BlockId);
                 const loopEnd = loopBody.Index[1];
-                work.push([loopBody, loopEnd, null, path]);
+                work.push([loopBody, loopEnd, null, value]);
                 // Don't continue to predecessors here without going through
                 // the loop. (The points in this body that enter the loop will
                 // be traversed when we reach the entry point of the loop.)
             } else {
-                work.push([body, edge.Index[0], edge, path]);
+                work.push([body, edge.Index[0], edge, value]);
             }
         }
 
@@ -168,26 +204,26 @@ function BFS_upwards(start_body, start_ppoint, bodies, visitor,
             // Propagate to outer body parents that enter the loop body.
             for (const parent of (body.BlockPPoint || [])) {
                 const parentBody = findMatchingBlock(bodies, parent.BlockId);
-                work.push([parentBody, parent.Index, null, path]);
+                work.push([parentBody, parent.Index, null, value]);
             }
 
             // This point is also preceded by the *end* of this loop, for the
             // previous iteration.
-            work.push([body, body.Index[1], null, path]);
+            work.push([body, body.Index[1], null, value]);
         }
 
-        // Check for reaching the root of the function.
+        // Check for reaching the entrypoint of the function.
         if (body === start_body && ppoint == body.Index[0]) {
-            reached_root = true;
+            entrypoint_value = value;
         }
     }
 
     // The search space was exhausted without finding a 'done' state. That
     // might be because all search paths were pruned before reaching the entry
-    // point of the function, in which case reached_root will be false. (If
-    // reached_root is true, then we may still not have visited the entire
-    // graph, if some paths were pruned but at least one made it to the root.)
-    return reached_root ? result_if_reached_root : null;
+    // point of the function, in which case entrypoint_value will still be its initial
+    // value. (If entrypoint_value has been set, then we may still not have visited the
+    // entire graph, if some paths were pruned but at least one made it to the entrypoint.)
+    return entrypoint_value;
 }
 
 // Given the CFG for the constructor call of some RAII, return whether the
@@ -1035,7 +1071,7 @@ function getCallEdgeProperties(body, edge, calleeName, functionBodies) {
         merge_info(seen, current) { return current; }
 
         // Return the action to take from this node.
-        extend_path(edge, body, ppoint, successor_path) {
+        extend_path(edge, body, ppoint, successor_value) {
             if (!edge) {
                 // Dummy edge to join two points.
                 return "continue";
@@ -1064,7 +1100,7 @@ function getCallEdgeProperties(body, edge, calleeName, functionBodies) {
     // In graph terms: return whether the destructor call is dominated by forget() calls (or similar).
     const edgeIsNonReleasingDtor = !BFS_upwards(
         body, edge.Index[0], functionBodies, visitor, "start",
-        true // Return value if we reach the root without finding a non-forget() use.
+        false // Return value if we do not reach the root without finding a non-forget() use.
     );
     if (edgeIsNonReleasingDtor) {
         attrs |= ATTR_GC_SUPPRESSED | ATTR_NONRELEASING;
