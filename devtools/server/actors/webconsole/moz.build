@@ -14,7 +14,7 @@ DevToolsModules(
     "eager-function-allowlist.js",
     "eval-with-debugger.js",
     "utils.js",
-    "webidl-deprecated-list.js",
     "webidl-pure-allowlist.js",
+    "webidl-unsafe-getters-names.js",
     "worker-listeners.js",
 )
