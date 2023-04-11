@@ -8,11 +8,7 @@
  * actor that enables refresh blocking on each docshell that is created.
  */
 
-var EXPORTED_SYMBOLS = ["RefreshBlockerChild", "RefreshBlockerObserverChild"];
-
-const { setTimeout } = ChromeUtils.importESModule(
-  "resource://gre/modules/Timer.sys.mjs"
-);
+import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
 const REFRESHBLOCKING_PREF = "accessibility.blockautorefresh";
 
@@ -135,7 +131,7 @@ var progressListener = {
   ]),
 };
 
-class RefreshBlockerChild extends JSWindowActorChild {
+export class RefreshBlockerChild extends JSWindowActorChild {
   didDestroy() {
     // If the refresh blocking preference is turned off, all of the
     // RefreshBlockerChild actors will get destroyed, so disable
@@ -178,7 +174,7 @@ class RefreshBlockerChild extends JSWindowActorChild {
   }
 }
 
-class RefreshBlockerObserverChild extends JSProcessActorChild {
+export class RefreshBlockerObserverChild extends JSProcessActorChild {
   constructor() {
     super();
     this.filtersMap = new Map();
