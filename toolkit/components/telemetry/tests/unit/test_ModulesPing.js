@@ -6,7 +6,9 @@
 const { Preferences } = ChromeUtils.importESModule(
   "resource://gre/modules/Preferences.sys.mjs"
 );
-const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+const { ctypes } = ChromeUtils.importESModule(
+  "resource://gre/modules/ctypes.sys.mjs"
+);
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 const MAX_NAME_LENGTH = 64;

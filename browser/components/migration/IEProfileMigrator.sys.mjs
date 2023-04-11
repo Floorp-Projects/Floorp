@@ -13,13 +13,9 @@ import { MSMigrationUtils } from "resource:///modules/MSMigrationUtils.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ctypes",
-  "resource://gre/modules/ctypes.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  ctypes: "resource://gre/modules/ctypes.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(
   lazy,

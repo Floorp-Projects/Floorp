@@ -24,7 +24,9 @@
 var SharedAll;
 if (typeof Components != "undefined") {
   // Module is opened as a jsm module
-  const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  const { ctypes } = ChromeUtils.importESModule(
+    "resource://gre/modules/ctypes.sys.mjs"
+  );
   // eslint-disable-next-line mozilla/reject-global-this
   this.ctypes = ctypes;
 

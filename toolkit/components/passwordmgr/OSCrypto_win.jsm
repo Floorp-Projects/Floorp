@@ -6,7 +6,9 @@
 
 const EXPORTED_SYMBOLS = ["OSCrypto"];
 
-const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+const { ctypes } = ChromeUtils.importESModule(
+  "resource://gre/modules/ctypes.sys.mjs"
+);
 
 const FLAGS_NOT_SET = 0;
 

@@ -12,7 +12,9 @@ if (typeof Components != "undefined") {
   var { Primitives } = ChromeUtils.import(
     "resource://gre/modules/lz4_internal.js"
   );
-  var { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  var { ctypes } = ChromeUtils.importESModule(
+    "resource://gre/modules/ctypes.sys.mjs"
+  );
 
   this.EXPORTED_SYMBOLS = ["Lz4"];
   this.exports = {};

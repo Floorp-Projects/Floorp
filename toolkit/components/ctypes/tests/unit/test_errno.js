@@ -7,7 +7,9 @@ function run_test() {
 
   // Relaunch the test with exotic loading of ctypes.jsm
   Cu.unload("resource://gre/modules/ctypes.jsm");
-  let scope = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+  let scope = ChromeUtils.importESModule(
+    "resource://gre/modules/ctypes.sys.mjs"
+  );
   ctypes = scope.ctypes;
   main_test();
 }
