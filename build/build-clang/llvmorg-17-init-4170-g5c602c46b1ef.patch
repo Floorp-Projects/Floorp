@@ -67,7 +67,7 @@ index e9be04aceb3d..fb61265543d1 100644
 --- a/llvm/cmake/modules/LLVMInstallSymlink.cmake
 +++ b/llvm/cmake/modules/LLVMInstallSymlink.cmake
 @@ -4,7 +4,10 @@
- 
+ set(CMAKE_INSTALL_LIBDIR "lib")
  include(GNUInstallDirs)
  
 -function(install_symlink name target outdir)

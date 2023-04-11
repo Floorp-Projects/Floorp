@@ -21,7 +21,7 @@ linux64-python-3.7:
         fetch:
             - cpython-3.7.15
         toolchain:
-            - linux64-clang-15
+            - linux64-clang-16
 
 linux64-python-3.8:
     treeherder:
@@ -33,7 +33,7 @@ linux64-python-3.8:
         fetch:
             - cpython-3.8.10
         toolchain:
-            - linux64-clang-15
+            - linux64-clang-16
 
 win64-python-3.8:
     description: "cpython 3.8.10"
@@ -60,5 +60,5 @@ macosx64-python-3.8:
         fetch:
             - cpython-3.8.10
         toolchain:
-            - macosx64-clang-15
+            - macosx64-clang-16
             - macosx64-sdk

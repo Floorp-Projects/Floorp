@@ -10,7 +10,7 @@ It causes various reftest regressions.
  llvm/lib/Passes/PassBuilderPipelines.cpp          |  7 ++++---
  llvm/lib/Transforms/Vectorize/VectorCombine.cpp   |  8 ++------
  llvm/test/Other/new-pm-defaults.ll                |  2 +-
- llvm/test/Other/new-pm-thinlto-defaults.ll        |  1 -
+ .../Other/new-pm-thinlto-postlink-defaults.ll     |  1 -
  .../Other/new-pm-thinlto-postlink-pgo-defaults.ll |  1 -
  .../new-pm-thinlto-postlink-samplepgo-defaults.ll |  1 -
  .../Other/new-pm-thinlto-prelink-pgo-defaults.ll  |  1 -
@@ -78,10 +78,10 @@ index 13612c3bb459..5f84d28af4a6 100644
  ; CHECK-O23SZ-NEXT: Running pass: MergedLoadStoreMotionPass
  ; CHECK-O23SZ-NEXT: Running pass: GVNPass
  ; CHECK-O23SZ-NEXT: Running analysis: MemoryDependenceAnalysis
-diff --git a/llvm/test/Other/new-pm-thinlto-defaults.ll b/llvm/test/Other/new-pm-thinlto-defaults.ll
+diff --git a/llvm/test/Other/new-pm-thinlto-postlink-defaults.ll b/llvm/test/Other/new-pm-thinlto-postlink-defaults.ll
 index 3f5d2d5b153d..ea07128c9f6a 100644
---- a/llvm/test/Other/new-pm-thinlto-defaults.ll
-+++ b/llvm/test/Other/new-pm-thinlto-defaults.ll
+--- a/llvm/test/Other/new-pm-thinlto-postlink-defaults.ll
++++ b/llvm/test/Other/new-pm-thinlto-postlink-defaults.ll
 @@ -159,7 +159,6 @@
  ; CHECK-O-NEXT: Running pass: LoopDeletionPass
  ; CHECK-O-NEXT: Running pass: LoopFullUnrollPass
