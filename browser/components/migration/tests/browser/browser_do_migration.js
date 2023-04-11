@@ -139,14 +139,21 @@ add_task(async function test_successful_migrations() {
       MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS,
     ]);
     await migration;
+    await wizardDone;
 
     let dialog = prefsWin.document.querySelector("#migrationWizardDialog");
     let doneButton = shadow.querySelector("#done-button");
-    let dialogClosed = BrowserTestUtils.waitForEvent(dialog, "close");
 
+    await new Promise(resolve => prefsWin.requestAnimationFrame(resolve));
+    Assert.equal(
+      shadow.activeElement,
+      doneButton,
+      "Done button should be focused."
+    );
+
+    let dialogClosed = BrowserTestUtils.waitForEvent(dialog, "close");
     doneButton.click();
     await dialogClosed;
-    await wizardDone;
     assertQuantitiesShown(wizard, [
       MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS,
     ]);
@@ -180,14 +187,21 @@ add_task(async function test_successful_migrations() {
       MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS,
     ]);
     await migration;
+    await wizardDone;
 
     let dialog = prefsWin.document.querySelector("#migrationWizardDialog");
     let doneButton = shadow.querySelector("#done-button");
-    let dialogClosed = BrowserTestUtils.waitForEvent(dialog, "close");
 
+    await new Promise(resolve => prefsWin.requestAnimationFrame(resolve));
+    Assert.equal(
+      shadow.activeElement,
+      doneButton,
+      "Done button should be focused."
+    );
+
+    let dialogClosed = BrowserTestUtils.waitForEvent(dialog, "close");
     doneButton.click();
     await dialogClosed;
-    await wizardDone;
     assertQuantitiesShown(wizard, [
       MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS,
     ]);
@@ -254,17 +268,25 @@ add_task(async function test_invalid_resource_type() {
       MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA,
     ]);
     await migration;
+    await wizardDone;
 
     let dialog = prefsWin.document.querySelector("#migrationWizardDialog");
     let shadow = wizard.openOrClosedShadowRoot;
     let doneButton = shadow.querySelector("#done-button");
-    let dialogClosed = BrowserTestUtils.waitForEvent(dialog, "close");
 
-    doneButton.click();
-    await dialogClosed;
-    await wizardDone;
+    await new Promise(resolve => prefsWin.requestAnimationFrame(resolve));
+    Assert.equal(
+      shadow.activeElement,
+      doneButton,
+      "Done button should be focused."
+    );
+
     assertQuantitiesShown(wizard, [
       MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS,
     ]);
+
+    let dialogClosed = BrowserTestUtils.waitForEvent(dialog, "close");
+    doneButton.click();
+    await dialogClosed;
   });
 });
