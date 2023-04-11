@@ -15,7 +15,7 @@ import { MigrationWizardConstants } from "chrome://browser/content/migration/mig
 import "toolkit-widgets/named-deck.js";
 
 export default {
-  title: "Design System/Components/Migration Wizard",
+  title: "Domain-specific UI Widgets/Migration Wizard",
   component: "migration-wizard",
 };
 
