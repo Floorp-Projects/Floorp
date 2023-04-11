@@ -175,13 +175,6 @@ void SVGImageElement::AsyncEventRunning(AsyncEventDispatcher* aEvent) {
 }
 
 //----------------------------------------------------------------------
-//  nsImageLoadingContent methods:
-
-CORSMode SVGImageElement::GetCORSMode() {
-  return AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin));
-}
-
-//----------------------------------------------------------------------
 // nsIContent methods:
 
 bool SVGImageElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
@@ -189,10 +182,6 @@ bool SVGImageElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                      nsIPrincipal* aMaybeScriptedPrincipal,
                                      nsAttrValue& aResult) {
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aAttribute == nsGkAtoms::crossorigin) {
-      ParseCORSValue(aValue, aResult);
-      return true;
-    }
     if (aAttribute == nsGkAtoms::decoding) {
       return aResult.ParseEnumValue(aValue, kDecodingTable, false,
                                     kDecodingTableDefault);
@@ -217,20 +206,13 @@ nsresult SVGImageElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
     } else {
       CancelImageRequests(aNotify);
     }
-  } else if (aNamespaceID == kNameSpaceID_None) {
-    if (aName == nsGkAtoms::decoding) {
-      // Request sync or async image decoding.
-      SetSyncDecodingHint(
-          aValue && static_cast<ImageDecodingType>(aValue->GetEnumValue()) ==
-                        ImageDecodingType::Sync);
-    } else if (aName == nsGkAtoms::crossorigin) {
-      if (aNotify && GetCORSMode() != AttrValueToCORSMode(aOldValue) &&
-          ShouldLoadImage()) {
-        ForceReload(aNotify, IgnoreErrors());
-      }
-    }
+  } else if (aName == nsGkAtoms::decoding &&
+             aNamespaceID == kNameSpaceID_None) {
+    // Request sync or async image decoding.
+    SetSyncDecodingHint(
+        aValue && static_cast<ImageDecodingType>(aValue->GetEnumValue()) ==
+                      ImageDecodingType::Sync);
   }
-
   return SVGImageElementBase::AfterSetAttr(
       aNamespaceID, aName, aValue, aOldValue, aSubjectPrincipal, aNotify);
 }
