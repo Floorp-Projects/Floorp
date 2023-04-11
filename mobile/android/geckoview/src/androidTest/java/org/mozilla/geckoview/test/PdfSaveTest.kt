@@ -10,6 +10,7 @@ import org.hamcrest.Matchers.equalTo
 import org.junit.Assert.assertFalse
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.geckoview.SessionPdfFileSaver
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -26,5 +27,22 @@ class PdfSaveTest : BaseSessionTest() {
         assertThat("Check that bytes arrays are the same.", result.bytes, equalTo(originalBytes))
 
         assertFalse("Check private mode.", result.isPrivate)
+    }
+
+    @Test fun createResponseForSaving() {
+        val bytes = byteArrayOf(1, 2, 3, 4, 5)
+        val filename = "foobar.pdf"
+        val url = "http://example.com/foobar.pdf"
+        val response = SessionPdfFileSaver.createResponse(
+            bytes,
+            filename,
+            url
+        )!!
+
+        assertThat("Uri", response.uri, equalTo("http://example.com/foobar.pdf"))
+        assertThat("Data", response.body?.readBytes()!!, equalTo(bytes))
+        assertThat("Content type", response.headers.get("content-type"), equalTo("application/pdf"))
+        assertThat("Content length", response.headers.get("Content-Length")!!.toInt(), equalTo(bytes.size))
+        assertThat("Filename", response.headers.get("Content-disposition"), equalTo("attachment; filename=\"" + filename + "\""))
     }
 }

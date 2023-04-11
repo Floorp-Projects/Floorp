@@ -13,6 +13,11 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v114
+- Add [`SessionPdfFileSaver.createResponse`][114.1] to response of saving PDF.
+
+[114.1]: {{javadoc_uri}}/SessionPdfFileSaver.html#createResponse(byte[], String, String)
+
 ## v113
 - Add `DisplayMdoe` annotation to [`displayMode`][113.1], [`getDisplayMode`][113.2] and [`setDisplayMode`][113.3].
   ([bug 1820567]({{bugzilla}}1820567))
@@ -1346,4 +1351,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 3867469003995d18051e031bdc669690295c9171
+[api-version]: b732806c6323be058e5a1933cb66a93a0097a3fa

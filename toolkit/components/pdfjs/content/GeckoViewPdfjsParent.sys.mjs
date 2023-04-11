@@ -167,8 +167,11 @@ class FileSaver {
 
   #callback = null;
 
-  constructor(aBrowser) {
+  #eventDispatcher;
+
+  constructor(aBrowser, eventDispatcher) {
     this.#browser = aBrowser;
+    this.#eventDispatcher = eventDispatcher;
   }
 
   cleanup() {
@@ -193,12 +196,7 @@ class FileSaver {
     );
   }
 
-  async save({ blobUrl, filename }) {
-    if (!this.#callback) {
-      warn`Save a PDF: No callback !`;
-      return;
-    }
-
+  async save({ blobUrl, filename, originalUrl }) {
     try {
       const isPrivate = lazy.PrivateBrowsingUtils.isBrowserPrivate(
         this.#browser
@@ -206,14 +204,30 @@ class FileSaver {
       const response = await fetch(blobUrl);
       const buffer = await response.arrayBuffer();
       const bytes = new Uint8Array(buffer);
-      this.#callback.onSuccess({
-        bytes,
-        filename,
-        isPrivate,
-      });
+
+      if (this.#callback) {
+        this.#callback.onSuccess({
+          bytes,
+          filename,
+          originalUrl,
+          isPrivate,
+        });
+      } else {
+        this.#eventDispatcher.sendRequest({
+          type: "GeckoView:SavePdf",
+          bytes,
+          filename,
+          originalUrl,
+          isPrivate,
+        });
+      }
       debug`Save a PDF: ${bytes.length} bytes sent.`;
     } catch (e) {
-      this.#callback.onError(`Cannot save the pdf: ${e}.`);
+      if (this.#callback) {
+        this.#callback?.onError(`Cannot save the pdf: ${e}.`);
+      } else {
+        warn`Cannot save the pdf because of: ${e}`;
+      }
     } finally {
       this.cleanup();
     }
@@ -279,7 +293,7 @@ export class GeckoViewPdfjsParent extends GeckoViewActorParent {
       "GeckoView:FindInPage",
     ]);
 
-    this.#fileSaver = new FileSaver(this.browser);
+    this.#fileSaver = new FileSaver(this.browser, this.eventDispatcher);
     this.eventDispatcher.registerListener(this.#fileSaver, [
       "GeckoView:PDFSave",
     ]);
