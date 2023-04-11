@@ -15,6 +15,20 @@ const TEST_SCENARIO_9 = 9;
 const TEST_SCENARIO_10 = 10;
 const TEST_SCENARIO_11 = 11;
 
+const TEST_SCENARIO_101 = 101;
+const TEST_SCENARIO_102 = 102;
+const TEST_SCENARIO_103 = 103;
+const TEST_SCENARIO_104 = 104;
+const TEST_SCENARIO_105 = 105;
+const TEST_SCENARIO_106 = 106;
+const TEST_SCENARIO_107 = 107;
+const TEST_SCENARIO_108 = 108;
+const TEST_SCENARIO_109 = 109;
+const TEST_SCENARIO_110 = 110;
+const TEST_SCENARIO_111 = 111;
+
+requestLongerTimeout(2);
+
 let processResultsGlobal = (data, successes, failures) => {
   let expectedPrecision = data.precision;
   let scenario = data.options.scenario;
@@ -355,6 +369,31 @@ add_task(async function runRTPTestsForWorker() {
       resistFingerprinting: true,
       reduceTimerPrecision: true,
       crossOriginIsolated: true,
+      scenario: TEST_SCENARIO_101,
+      processResultsFunc: processResultsGlobal.toString(),
+    },
+    100,
+    runWorkerTest
+  );
+  await setupAndRunCrossOriginIsolatedTest(
+    {
+      resistFingerprintingPBMOnly: true,
+      reduceTimerPrecision: true,
+      crossOriginIsolated: true,
+      shouldBeRounded: false,
+      scenario: TEST_SCENARIO_102,
+      processResultsFunc: processResultsGlobal.toString(),
+    },
+    100,
+    runWorkerTest
+  );
+  await setupAndRunCrossOriginIsolatedTest(
+    {
+      resistFingerprintingPBMOnly: true,
+      openPrivateWindow: true,
+      reduceTimerPrecision: true,
+      crossOriginIsolated: true,
+      scenario: TEST_SCENARIO_103,
       processResultsFunc: processResultsGlobal.toString(),
     },
     100,
@@ -364,6 +403,29 @@ add_task(async function runRTPTestsForWorker() {
     {
       resistFingerprinting: true,
       crossOriginIsolated: true,
+      scenario: TEST_SCENARIO_104,
+      processResultsFunc: processResultsGlobal.toString(),
+    },
+    13,
+    runWorkerTest
+  );
+  await setupAndRunCrossOriginIsolatedTest(
+    {
+      resistFingerprintingPBMOnly: true,
+      crossOriginIsolated: true,
+      shouldBeRounded: false,
+      scenario: TEST_SCENARIO_105,
+      processResultsFunc: processResultsGlobal.toString(),
+    },
+    13,
+    runWorkerTest
+  );
+  await setupAndRunCrossOriginIsolatedTest(
+    {
+      resistFingerprintingPBMOnly: true,
+      openPrivateWindow: true,
+      crossOriginIsolated: true,
+      scenario: TEST_SCENARIO_106,
       processResultsFunc: processResultsGlobal.toString(),
     },
     13,
@@ -373,6 +435,29 @@ add_task(async function runRTPTestsForWorker() {
     {
       resistFingerprinting: true,
       crossOriginIsolated: true,
+      scenario: TEST_SCENARIO_107,
+      processResultsFunc: processResultsGlobal.toString(),
+    },
+    7.97,
+    runWorkerTest
+  );
+  await setupAndRunCrossOriginIsolatedTest(
+    {
+      resistFingerprintingPBMOnly: true,
+      crossOriginIsolated: true,
+      shouldBeRounded: false,
+      scenario: TEST_SCENARIO_108,
+      processResultsFunc: processResultsGlobal.toString(),
+    },
+    7.97,
+    runWorkerTest
+  );
+  await setupAndRunCrossOriginIsolatedTest(
+    {
+      resistFingerprintingPBMOnly: true,
+      openPrivateWindow: true,
+      crossOriginIsolated: true,
+      scenario: TEST_SCENARIO_109,
       processResultsFunc: processResultsGlobal.toString(),
     },
     7.97,
@@ -383,6 +468,7 @@ add_task(async function runRTPTestsForWorker() {
   await setupAndRunCrossOriginIsolatedTest(
     {
       reduceTimerPrecision: true,
+      scenario: TEST_SCENARIO_110,
       processResultsFunc: processResultsGlobal.toString(),
     },
     7.97,
@@ -392,6 +478,7 @@ add_task(async function runRTPTestsForWorker() {
     {
       reduceTimerPrecision: true,
       crossOriginIsolated: true,
+      scenario: TEST_SCENARIO_111,
       processResultsFunc: processResultsGlobal.toString(),
     },
     0.005,
