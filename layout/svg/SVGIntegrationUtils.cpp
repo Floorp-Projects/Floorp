@@ -637,6 +637,22 @@ static bool ValidateSVGFrame(nsIFrame* aFrame) {
   return true;
 }
 
+class AutoPopGroup {
+ public:
+  AutoPopGroup() : mContext(nullptr) {}
+
+  ~AutoPopGroup() {
+    if (mContext) {
+      mContext->PopGroupAndBlend();
+    }
+  }
+
+  void SetContext(gfxContext* aContext) { mContext = aContext; }
+
+ private:
+  gfxContext* mContext;
+};
+
 bool SVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams,
                                     bool& aOutIsMaskComplete) {
   aOutIsMaskComplete = true;
@@ -673,12 +689,12 @@ bool SVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams,
   // XXX check return value?
   SVGObserverUtils::GetAndObserveMasks(firstFrame, &maskFrames);
 
-  gfxGroupForBlendAutoSaveRestore autoPop(&ctx);
+  AutoPopGroup autoPop;
   bool shouldPushOpacity =
       (maskUsage.opacity != 1.0) && (maskFrames.Length() != 1);
   if (shouldPushOpacity) {
-    autoPop.PushGroupForBlendBack(gfxContentType::COLOR_ALPHA,
-                                  maskUsage.opacity);
+    ctx.PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, maskUsage.opacity);
+    autoPop.SetContext(&ctx);
   }
 
   gfxContextMatrixAutoSaveRestore matSR;
@@ -794,8 +810,6 @@ void PaintMaskAndClipPathInternal(const PaintFramesParams& aParams,
        maskUsage.shouldGenerateMaskLayer);
   bool shouldPushMask = false;
 
-  gfxGroupForBlendAutoSaveRestore autoGroupForBlend(&context);
-
   /* Check if we need to do additional operations on this child's
    * rendering, which necessitates rendering into another surface. */
   if (shouldGenerateMask) {
@@ -862,10 +876,9 @@ void PaintMaskAndClipPathInternal(const PaintFramesParams& aParams,
       Matrix maskTransform = context.CurrentMatrix();
       maskTransform.Invert();
 
-      autoGroupForBlend.PushGroupForBlendBack(
-          gfxContentType::COLOR_ALPHA,
-          opacityApplied ? 1.0f : maskUsage.opacity, maskSurface,
-          maskTransform);
+      context.PushGroupForBlendBack(gfxContentType::COLOR_ALPHA,
+                                    opacityApplied ? 1.0 : maskUsage.opacity,
+                                    maskSurface, maskTransform);
     }
   }
 
@@ -917,6 +930,10 @@ void PaintMaskAndClipPathInternal(const PaintFramesParams& aParams,
 
   if (maskUsage.shouldApplyClipPath || maskUsage.shouldApplyBasicShapeOrPath) {
     context.PopClip();
+  }
+
+  if (shouldPushMask) {
+    context.PopGroupAndBlend();
   }
 }
 

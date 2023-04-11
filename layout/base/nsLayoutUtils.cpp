@@ -6868,13 +6868,11 @@ bool nsLayoutUtils::HasNonZeroCornerOnSide(const BorderRadius& aCorners,
 /* static */
 widget::TransparencyMode nsLayoutUtils::GetFrameTransparency(
     nsIFrame* aBackgroundFrame, nsIFrame* aCSSRootFrame) {
-  if (!aCSSRootFrame->StyleEffects()->IsOpaque()) {
+  if (aCSSRootFrame->StyleEffects()->mOpacity < 1.0f)
     return TransparencyMode::Transparent;
-  }
 
-  if (HasNonZeroCorner(aCSSRootFrame->StyleBorder()->mBorderRadius)) {
+  if (HasNonZeroCorner(aCSSRootFrame->StyleBorder()->mBorderRadius))
     return TransparencyMode::Transparent;
-  }
 
   StyleAppearance appearance =
       aCSSRootFrame->StyleDisplay()->EffectiveAppearance();

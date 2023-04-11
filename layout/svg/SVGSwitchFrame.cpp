@@ -102,7 +102,7 @@ void SVGSwitchFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
   NS_ASSERTION(HasAnyStateBits(NS_FRAME_IS_NONDISPLAY),
                "Only painting of non-display SVG should take this code path");
 
-  if (StyleEffects()->IsTransparent()) {
+  if (StyleEffects()->mOpacity == 0.0) {
     return;
   }
 
