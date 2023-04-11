@@ -15,8 +15,9 @@ interface CSSImportRule : CSSRule {
   // be since stylesheet can be null, and in Stylo, media is derived from
   // the stylesheet.  See <https://bugzilla.mozilla.org/show_bug.cgi?id=1326509>.
   [SameObject, PutForwards=mediaText] readonly attribute MediaList? media;
-  // Per spec, the .styleSheet is never null, but in our implementation it can
-  // be.  See <https://bugzilla.mozilla.org/show_bug.cgi?id=1326509>.
+  // This disagrees with CSSOM temporarily, but css-conditional assumes it is
+  // nullable.
+  // see: https://github.com/w3c/csswg-drafts/issues/8608.
   [SameObject, BinaryName="styleSheetForBindings"] readonly attribute CSSStyleSheet? styleSheet;
 };
 

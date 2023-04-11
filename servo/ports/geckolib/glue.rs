@@ -2719,7 +2719,7 @@ pub extern "C" fn Servo_ImportRule_GetLayerName(
 #[no_mangle]
 pub extern "C" fn Servo_ImportRule_GetSheet(rule: &RawServoImportRule) -> *const DomStyleSheet {
     read_locked_arc(rule, |rule: &ImportRule| {
-        rule.stylesheet.as_sheet().unwrap().raw() as *const DomStyleSheet
+        rule.stylesheet.as_sheet().map_or(ptr::null(), |s| s.raw() as *const DomStyleSheet)
     })
 }
 
