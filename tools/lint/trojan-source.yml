@@ -6,7 +6,6 @@ trojan-source:
     exclude:
         - intl/lwbrk/rulebrk.c
         - testing/web-platform/tests/conformance-checkers/tools/ins-del-datetime.py
-        - gfx/skia/skia/src/sksl/SkSLByteCodeGenerator.cpp
         - modules/freetype2/src/autofit/afblue.c
         - modules/freetype2/builds/amiga/include/config/ftconfig.h
         - modules/freetype2/builds/amiga/include/config/ftmodule.h
