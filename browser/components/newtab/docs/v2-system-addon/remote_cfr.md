@@ -11,7 +11,7 @@ Starting in Firefox 68, CFR messages will be defined using [Remote Settings](htt
 
 Until [Bug 1630651](https://bugzilla.mozilla.org/show_bug.cgi?id=1630651) happens, the easiest way to obtain your OpenID credentials is to use the admin interface.
 
-1. [Login on the Admin UI](https://settings.dev.mozaws.net/v1/admin/) using your LDAP identity
+1. [Login on the Admin UI](https://remote-settings-dev.allizom.org/v1/admin/) using your LDAP identity
 2. Copy the authentication header (📋 icon in the top bar)
 3. Test your credentials with ``curl``. When reaching out the server root URL with this bearer token you should see a ``user`` entry whose ``id`` field is ``ldap:<you>@mozilla.com``.
 
