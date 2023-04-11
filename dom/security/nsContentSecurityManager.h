@@ -39,6 +39,8 @@ class nsContentSecurityManager : public nsIContentSecurityManager,
       nsIChannel* aChannel, nsCOMPtr<nsIStreamListener>& aInAndOutListener);
 
   static bool AllowTopLevelNavigationToDataURI(nsIChannel* aChannel);
+  static void ReportBlockedDataURI(nsIURI* aURI, nsILoadInfo* aLoadInfo,
+                                   bool aIsRedirect = false);
   static bool AllowInsecureRedirectToDataURI(nsIChannel* aNewChannel);
   static void MeasureUnexpectedPrivilegedLoads(nsILoadInfo* aLoadInfo,
                                                nsIURI* aFinalURI,
