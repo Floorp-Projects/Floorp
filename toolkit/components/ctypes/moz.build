@@ -15,7 +15,7 @@ LOCAL_INCLUDES += [
 ]
 
 EXTRA_JS_MODULES += [
-    "ctypes.jsm",
+    "ctypes.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [
