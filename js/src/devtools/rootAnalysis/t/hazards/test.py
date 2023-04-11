@@ -113,6 +113,7 @@ assert "Cell* refptr_test6()" in haz_functions
 assert "Cell* refptr_test7()" in haz_functions
 assert "Cell* refptr_test8()" in haz_functions
 assert "Cell* refptr_test9()" not in haz_functions
+assert "Cell* refptr_test10()" in haz_functions
 
 # aggr_init tests.
 

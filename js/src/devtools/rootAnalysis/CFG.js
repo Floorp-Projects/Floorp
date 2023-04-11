@@ -194,9 +194,8 @@ function BFS_upwards(start_body, start_ppoint, bodies, visitor,
                 // Don't continue to predecessors here without going through
                 // the loop. (The points in this body that enter the loop will
                 // be traversed when we reach the entry point of the loop.)
-            } else {
-                work.push([body, edge.Index[0], edge, value]);
             }
+            work.push([body, edge.Index[0], edge, value]);
         }
 
         // Check for hitting the entry point of a loop body.

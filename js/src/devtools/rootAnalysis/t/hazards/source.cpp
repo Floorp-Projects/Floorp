@@ -533,6 +533,18 @@ Cell* refptr_test9() {
   return ref_safe9;
 }
 
+Cell* refptr_test10() {
+  static Cell cell;
+  RefPtr<float> v10;
+  Cell* ref_unsafe10 = &cell;
+  // The destructor has a backwards path that skips the loop body.
+  v10.assign_with_AddRef(&somefloat);
+  while (flipcoin()) {
+    v10.forget();
+  }
+  return ref_unsafe10;
+}
+
 std::pair<bool, AutoCheckCannotGC> pair_returning_function() {
   return std::make_pair(true, AutoCheckCannotGC());
 }
