@@ -634,7 +634,7 @@ class gfxContext final {
  * call Save() on a gfxContext and have Restore() called automatically on the
  * gfxContext before they return.
  */
-class MOZ_STACK_CLASS gfxContextAutoSaveRestore final {
+class gfxContextAutoSaveRestore {
  public:
   gfxContextAutoSaveRestore() : mContext(nullptr) {}
 
@@ -675,7 +675,7 @@ class MOZ_STACK_CLASS gfxContextAutoSaveRestore final {
  * back up the current matrix of a context and have it automatically restored
  * before they return.
  */
-class MOZ_STACK_CLASS gfxContextMatrixAutoSaveRestore final {
+class gfxContextMatrixAutoSaveRestore {
  public:
   gfxContextMatrixAutoSaveRestore() : mContext(nullptr) {}
 
@@ -713,34 +713,7 @@ class MOZ_STACK_CLASS gfxContextMatrixAutoSaveRestore final {
   mozilla::gfx::Matrix mMatrix;
 };
 
-class MOZ_STACK_CLASS gfxGroupForBlendAutoSaveRestore final {
- public:
-  using Float = mozilla::gfx::Float;
-  using Matrix = mozilla::gfx::Matrix;
-
-  explicit gfxGroupForBlendAutoSaveRestore(gfxContext* aContext)
-      : mContext(aContext) {}
-
-  ~gfxGroupForBlendAutoSaveRestore() {
-    if (mPushedGroup) {
-      mContext->PopGroupAndBlend();
-    }
-  }
-
-  void PushGroupForBlendBack(gfxContentType aContent, Float aOpacity = 1.0f,
-                             mozilla::gfx::SourceSurface* aMask = nullptr,
-                             const Matrix& aMaskTransform = Matrix()) {
-    MOZ_ASSERT(!mPushedGroup, "Already called PushGroupForBlendBack once");
-    mContext->PushGroupForBlendBack(aContent, aOpacity, aMask, aMaskTransform);
-    mPushedGroup = true;
-  }
-
- private:
-  gfxContext* mContext;
-  bool mPushedGroup = false;
-};
-
-class MOZ_STACK_CLASS DrawTargetAutoDisableSubpixelAntialiasing final {
+class DrawTargetAutoDisableSubpixelAntialiasing {
  public:
   typedef mozilla::gfx::DrawTarget DrawTarget;
 

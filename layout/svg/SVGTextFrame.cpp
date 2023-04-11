@@ -2573,9 +2573,10 @@ void SVGTextDrawPathCallbacks::MakeFillPattern(GeneralPattern* aOutPattern) {
 }
 
 void SVGTextDrawPathCallbacks::FillAndStrokeGeometry() {
-  gfxGroupForBlendAutoSaveRestore autoGroupForBlend(&mContext);
+  bool pushedGroup = false;
   if (mColor == NS_40PERCENT_FOREGROUND_COLOR) {
-    autoGroupForBlend.PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, 0.4f);
+    pushedGroup = true;
+    mContext.PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, 0.4f);
   }
 
   uint32_t paintOrder = mFrame->StyleSVG()->mPaintOrder;
@@ -2600,6 +2601,10 @@ void SVGTextDrawPathCallbacks::FillAndStrokeGeometry() {
       }
       paintOrder >>= kPaintOrderShift;
     }
+  }
+
+  if (pushedGroup) {
+    mContext.PopGroupAndBlend();
   }
 }
 
@@ -3151,17 +3156,6 @@ void SVGTextFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
         isSelected = false;
       } else {
         isSelected = frame->IsSelected();
-      }
-      gfxGroupForBlendAutoSaveRestore autoGroupForBlend(&aContext);
-      float opacity = 1.0f;
-      nsIFrame* ancestor = frame->GetParent();
-      while (ancestor != this) {
-        opacity *= ancestor->StyleEffects()->mOpacity;
-        ancestor = ancestor->GetParent();
-      }
-      if (opacity < 1.0f) {
-        autoGroupForBlend.PushGroupForBlendBack(gfxContentType::COLOR_ALPHA,
-                                                opacity);
       }
 
       if (ShouldRenderAsPath(frame, paintSVGGlyphs)) {
