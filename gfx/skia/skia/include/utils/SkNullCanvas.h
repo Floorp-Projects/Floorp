@@ -8,11 +8,7 @@
 #ifndef SkNullCanvas_DEFINED
 #define SkNullCanvas_DEFINED
 
-#include "include/core/SkTypes.h"
-
-#include <memory>
-
-class SkCanvas;
+#include "include/core/SkCanvas.h"
 
 /**
  * Creates a canvas that draws nothing. This is useful for performance testing.

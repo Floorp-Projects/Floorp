@@ -14,8 +14,7 @@
 //SK_CPU_FAST_UNALIGNED_ACCESS allows 32 bit <=> 8 bit conversions without copies if SK_CPU_LENDIAN.
 
 #include "src/core/SkMD5.h"
-
-#include "include/private/base/SkFeatures.h"
+#include <string.h>
 
 /** MD5 basic transformation. Transforms state based on block. */
 static void transform(uint32_t state[4], const uint8_t block[64]);
@@ -76,7 +75,7 @@ SkMD5::Digest SkMD5::finish() {
     // Pad out to 56 mod 64.
     unsigned int bufferIndex = (unsigned int)(this->byteCount & 0x3F);
     unsigned int paddingLength = (bufferIndex < 56) ? (56 - bufferIndex) : (120 - bufferIndex);
-    static const uint8_t PADDING[64] = {
+    static uint8_t PADDING[64] = {
         0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

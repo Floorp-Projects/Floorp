@@ -8,17 +8,17 @@
 #include "src/xml/SkXMLWriter.h"
 
 #include "include/core/SkStream.h"
-#include "include/private/base/SkTo.h"
+#include "include/private/SkTo.h"
 
 SkXMLWriter::SkXMLWriter(bool doEscapeMarkup) : fDoEscapeMarkup(doEscapeMarkup)
 {}
 
 SkXMLWriter::~SkXMLWriter() {
-    SkASSERT(fElems.empty());
+    SkASSERT(fElems.count() == 0);
 }
 
 void SkXMLWriter::flush() {
-    while (!fElems.empty()) {
+    while (fElems.count()) {
         this->endElement();
     }
 }
@@ -46,13 +46,13 @@ void SkXMLWriter::addScalarAttribute(const char name[], SkScalar value) {
 }
 
 void SkXMLWriter::addText(const char text[], size_t length) {
-    if (fElems.empty()) {
+    if (fElems.isEmpty()) {
         return;
     }
 
     this->onAddText(text, length);
 
-    fElems.back()->fHasText = true;
+    fElems.top()->fHasText = true;
 }
 
 void SkXMLWriter::doEnd(Elem* elem) {
@@ -60,19 +60,19 @@ void SkXMLWriter::doEnd(Elem* elem) {
 }
 
 bool SkXMLWriter::doStart(const char name[], size_t length) {
-    int level = fElems.size();
+    int level = fElems.count();
     bool firstChild = level > 0 && !fElems[level-1]->fHasChildren;
     if (firstChild) {
         fElems[level-1]->fHasChildren = true;
     }
-    Elem** elem = fElems.append();
+    Elem** elem = fElems.push();
     *elem = new Elem(name, length);
     return firstChild;
 }
 
 SkXMLWriter::Elem* SkXMLWriter::getEnd() {
-    Elem* elem = fElems.back();
-    fElems.pop_back();
+    Elem* elem;
+    fElems.pop(&elem);
     return elem;
 }
 
@@ -95,7 +95,7 @@ static const char* escape_char(char c, char storage[2]) {
     };
 
     const char** array = gEscapeChars;
-    for (unsigned i = 0; i < std::size(gEscapeChars); i++) {
+    for (unsigned i = 0; i < SK_ARRAY_COUNT(gEscapeChars); i++) {
         if (array[i][0] == c) {
             return &array[i][1];
         }
@@ -135,7 +135,7 @@ void SkXMLWriter::addAttributeLen(const char name[], const char value[], size_t 
         size_t   extra = escape_markup(nullptr, value, length);
         if (extra) {
             valueStr.resize(length + extra);
-            (void)escape_markup(valueStr.data(), value, length);
+            (void)escape_markup(valueStr.writable_str(), value, length);
             value = valueStr.c_str();
             length += extra;
         }
@@ -199,7 +199,7 @@ SkXMLStreamWriter::~SkXMLStreamWriter() {
 }
 
 void SkXMLStreamWriter::onAddAttributeLen(const char name[], const char value[], size_t length) {
-    SkASSERT(!fElems.back()->fHasChildren && !fElems.back()->fHasText);
+    SkASSERT(!fElems.top()->fHasChildren && !fElems.top()->fHasText);
     fStream.writeText(" ");
     fStream.writeText(name);
     fStream.writeText("=\"");
@@ -208,14 +208,14 @@ void SkXMLStreamWriter::onAddAttributeLen(const char name[], const char value[],
 }
 
 void SkXMLStreamWriter::onAddText(const char text[], size_t length) {
-    Elem* elem = fElems.back();
+    Elem* elem = fElems.top();
 
     if (!elem->fHasChildren && !elem->fHasText) {
         fStream.writeText(">");
         this->newline();
     }
 
-    this->tab(fElems.size() + 1);
+    this->tab(fElems.count() + 1);
     fStream.write(text, length);
     this->newline();
 }
@@ -223,7 +223,7 @@ void SkXMLStreamWriter::onAddText(const char text[], size_t length) {
 void SkXMLStreamWriter::onEndElement() {
     Elem* elem = getEnd();
     if (elem->fHasChildren || elem->fHasText) {
-        this->tab(fElems.size());
+        this->tab(fElems.count());
         fStream.writeText("</");
         fStream.writeText(elem->fName.c_str());
         fStream.writeText(">");
@@ -235,7 +235,7 @@ void SkXMLStreamWriter::onEndElement() {
 }
 
 void SkXMLStreamWriter::onStartElementLen(const char name[], size_t length) {
-    int level = fElems.size();
+    int level = fElems.count();
     if (this->doStart(name, length)) {
         // the first child, need to close with >
         fStream.writeText(">");
@@ -281,7 +281,7 @@ SkXMLParserWriter::~SkXMLParserWriter() {
 }
 
 void SkXMLParserWriter::onAddAttributeLen(const char name[], const char value[], size_t length) {
-    SkASSERT(fElems.empty() || (!fElems.back()->fHasChildren && !fElems.back()->fHasText));
+    SkASSERT(fElems.count() == 0 || (!fElems.top()->fHasChildren && !fElems.top()->fHasText));
     SkString str(value, length);
     fParser.addAttribute(name, str.c_str());
 }

@@ -13,7 +13,11 @@
 struct SkImageInfo;
 
 static inline SkSurfaceProps SkSurfacePropsCopyOrDefault(const SkSurfaceProps* props) {
-    return props ? *props : SkSurfaceProps();
+    if (props) {
+        return *props;
+    } else {
+        return SkSurfaceProps(SkSurfaceProps::kLegacyFontHost_InitType);
+    }
 }
 
 constexpr size_t kIgnoreRowBytesValue = static_cast<size_t>(~0);

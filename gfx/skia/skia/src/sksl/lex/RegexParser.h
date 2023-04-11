@@ -23,7 +23,7 @@ public:
     RegexNode parse(std::string source);
 
 private:
-    inline static constexpr char END = '\0';
+    static constexpr char END = '\0';
 
     char peek();
 

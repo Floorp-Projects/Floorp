@@ -4,15 +4,8 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "src/pathops/SkReduceOrder.h"
-
-#include "include/core/SkPoint.h"
 #include "src/core/SkGeometry.h"
-#include "src/pathops/SkPathOpsPoint.h"
-#include "src/pathops/SkPathOpsTypes.h"
-
-#include <algorithm>
-#include <cmath>
+#include "src/pathops/SkReduceOrder.h"
 
 int SkReduceOrder::reduce(const SkDLine& line) {
     fLine[0] = line[0];
@@ -214,8 +207,8 @@ int SkReduceOrder::reduce(const SkDCubic& cubic, Quadratics allowQuadratics) {
     for (index = 0; index < 4; ++index) {
         double cx = cubic[index].fX;
         double cy = cubic[index].fY;
-        double denom = std::max(fabs(cx), std::max(fabs(cy),
-                std::max(fabs(cubic[minX].fX), fabs(cubic[minY].fY))));
+        double denom = SkTMax(fabs(cx), SkTMax(fabs(cy),
+                SkTMax(fabs(cubic[minX].fX), fabs(cubic[minY].fY))));
         if (denom == 0) {
             minXSet |= 1 << index;
             minYSet |= 1 << index;

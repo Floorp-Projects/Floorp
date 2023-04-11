@@ -8,14 +8,11 @@
 #include "src/core/SkATrace.h"
 
 #include "src/core/SkTraceEvent.h"
+
 #include "src/core/SkTraceEventCommon.h"
 
 #ifdef SK_BUILD_FOR_ANDROID
-    #include <dlfcn.h>
-#endif
-
-#ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
-    #include <cutils/trace.h>
+#include <dlfcn.h>
 #endif
 
 SkATrace::SkATrace() : fBeginSection(nullptr), fEndSection(nullptr), fIsEnabled(nullptr) {
@@ -79,7 +76,6 @@ const uint8_t* SkATrace::getCategoryGroupEnabled(const char* name) {
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
 
 bool SkAndroidFrameworkTraceUtil::gEnableAndroidTracing = false;
-bool SkAndroidFrameworkTraceUtil::gUsePerfettoTrackEvents = false;
 
 #endif //SK_BUILD_FOR_ANDROID_FRAMEWORK
 

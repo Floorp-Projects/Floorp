@@ -12,13 +12,12 @@
 #include "include/core/SkCanvasVirtualEnforcer.h"
 #include "include/core/SkFlattenable.h"
 #include "include/core/SkPicture.h"
-#include "include/core/SkTextBlob.h"
 #include "include/core/SkVertices.h"
-#include "include/private/base/SkTArray.h"
-#include "include/private/base/SkTDArray.h"
-#include "include/private/base/SkTo.h"
+#include "include/private/SkTArray.h"
+#include "include/private/SkTDArray.h"
+#include "include/private/SkTHash.h"
+#include "include/private/SkTo.h"
 #include "src/core/SkPictureData.h"
-#include "src/core/SkTHash.h"
 #include "src/core/SkWriter32.h"
 
 // These macros help with packing and unpacking a single byte value and
@@ -36,29 +35,23 @@ public:
 
     SkPictureRecord(const SkIRect& dimensions, uint32_t recordFlags);
 
-    const skia_private::TArray<sk_sp<const SkPicture>>& getPictures() const {
+    const SkTArray<sk_sp<const SkPicture>>& getPictures() const {
         return fPictures;
     }
 
-    const skia_private::TArray<sk_sp<SkDrawable>>& getDrawables() const {
+    const SkTArray<sk_sp<SkDrawable>>& getDrawables() const {
         return fDrawables;
     }
 
-    const skia_private::TArray<sk_sp<const SkTextBlob>>& getTextBlobs() const {
+    const SkTArray<sk_sp<const SkTextBlob>>& getTextBlobs() const {
         return fTextBlobs;
     }
 
-#if defined(SK_GANESH)
-    const skia_private::TArray<sk_sp<const sktext::gpu::Slug>>& getSlugs() const {
-        return fSlugs;
-    }
-#endif
-
-    const skia_private::TArray<sk_sp<const SkVertices>>& getVertices() const {
+    const SkTArray<sk_sp<const SkVertices>>& getVertices() const {
         return fVertices;
     }
 
-    const skia_private::TArray<sk_sp<const SkImage>>& getImages() const {
+    const SkTArray<sk_sp<const SkImage>>& getImages() const {
         return fImages;
     }
 
@@ -87,7 +80,7 @@ protected:
 
 private:
     void handleOptimization(int opt);
-    size_t recordRestoreOffsetPlaceholder();
+    size_t recordRestoreOffsetPlaceholder(SkClipOp);
     void fillRestoreOffsetPlaceholdersForCurrentStackLevel(uint32_t restoreOffset);
 
     SkTDArray<int32_t> fRestoreOffsetStack;
@@ -109,7 +102,7 @@ private:
     size_t addDraw(DrawType drawType, size_t* size) {
         size_t offset = fWriter.bytesWritten();
 
-        SkASSERT_RELEASE(this->predrawNotify());
+        this->predrawNotify();
 
         SkASSERT(0 != *size);
         SkASSERT(((uint8_t) drawType) == drawType);
@@ -148,10 +141,8 @@ private:
     void addIRectPtr(const SkIRect* rect);
     void addRRect(const SkRRect&);
     void addRegion(const SkRegion& region);
-    void addSampling(const SkSamplingOptions&);
     void addText(const void* text, size_t byteLength);
     void addTextBlob(const SkTextBlob* blob);
-    void addSlug(const sktext::gpu::Slug* slug);
     void addVertices(const SkVertices*);
 
     int find(const SkBitmap& bitmap);
@@ -171,20 +162,18 @@ protected:
     bool onDoSaveBehind(const SkRect*) override;
     void willRestore() override;
 
-    void didConcat44(const SkM44&) override;
-    void didSetM44(const SkM44&) override;
-    void didScale(SkScalar, SkScalar) override;
-    void didTranslate(SkScalar, SkScalar) override;
+    void didConcat(const SkMatrix&) override;
+    void didSetMatrix(const SkMatrix&) override;
 
     void onDrawDRRect(const SkRRect&, const SkRRect&, const SkPaint&) override;
 
     void onDrawTextBlob(const SkTextBlob* blob, SkScalar x, SkScalar y,
                                 const SkPaint& paint) override;
-#if defined(SK_GANESH)
-    void onDrawSlug(const sktext::gpu::Slug* slug) override;
-#endif
+
     void onDrawPatch(const SkPoint cubics[12], const SkColor colors[4],
                      const SkPoint texCoords[4], SkBlendMode, const SkPaint& paint) override;
+    void onDrawAtlas(const SkImage*, const SkRSXform[], const SkRect[], const SkColor[], int,
+                     SkBlendMode, const SkRect*, const SkPaint*) override;
 
     void onDrawPaint(const SkPaint&) override;
     void onDrawBehind(const SkPaint&) override;
@@ -195,25 +184,22 @@ protected:
     void onDrawArc(const SkRect&, SkScalar, SkScalar, bool, const SkPaint&) override;
     void onDrawRRect(const SkRRect&, const SkPaint&) override;
     void onDrawPath(const SkPath&, const SkPaint&) override;
-
-    void onDrawImage2(const SkImage*, SkScalar, SkScalar, const SkSamplingOptions&,
-                      const SkPaint*) override;
-    void onDrawImageRect2(const SkImage*, const SkRect&, const SkRect&, const SkSamplingOptions&,
-                          const SkPaint*, SrcRectConstraint) override;
-    void onDrawImageLattice2(const SkImage*, const Lattice&, const SkRect&, SkFilterMode,
-                             const SkPaint*) override;
-    void onDrawAtlas2(const SkImage*, const SkRSXform[], const SkRect[], const SkColor[], int,
-                     SkBlendMode, const SkSamplingOptions&, const SkRect*, const SkPaint*) override;
+    void onDrawImage(const SkImage*, SkScalar left, SkScalar top, const SkPaint*) override;
+    void onDrawImageRect(const SkImage*, const SkRect* src, const SkRect& dst,
+                         const SkPaint*, SrcRectConstraint) override;
+    void onDrawImageNine(const SkImage*, const SkIRect& center, const SkRect& dst,
+                         const SkPaint*) override;
+    void onDrawImageLattice(const SkImage*, const SkCanvas::Lattice& lattice, const SkRect& dst,
+                            const SkPaint*) override;
 
     void onDrawShadowRec(const SkPath&, const SkDrawShadowRec&) override;
-    void onDrawVerticesObject(const SkVertices*, SkBlendMode, const SkPaint&) override;
+    void onDrawVerticesObject(const SkVertices*, const SkVertices::Bone bones[], int boneCount,
+                              SkBlendMode, const SkPaint&) override;
 
     void onClipRect(const SkRect&, SkClipOp, ClipEdgeStyle) override;
     void onClipRRect(const SkRRect&, SkClipOp, ClipEdgeStyle) override;
     void onClipPath(const SkPath&, SkClipOp, ClipEdgeStyle) override;
-    void onClipShader(sk_sp<SkShader>, SkClipOp) override;
     void onClipRegion(const SkRegion&, SkClipOp) override;
-    void onResetClip() override;
 
     void onDrawPicture(const SkPicture*, const SkMatrix*, const SkPaint*) override;
 
@@ -222,8 +208,8 @@ protected:
 
     void onDrawEdgeAAQuad(const SkRect&, const SkPoint[4], QuadAAFlags, const SkColor4f&,
                           SkBlendMode) override;
-    void onDrawEdgeAAImageSet2(const ImageSetEntry[], int count, const SkPoint[], const SkMatrix[],
-                               const SkSamplingOptions&,const SkPaint*, SrcRectConstraint) override;
+    void onDrawEdgeAAImageSet(const ImageSetEntry[], int count, const SkPoint[], const SkMatrix[],
+                              const SkPaint*, SrcRectConstraint) override;
 
     int addPathToHeap(const SkPath& path);  // does not write to ops stream
 
@@ -241,8 +227,25 @@ protected:
     void recordSaveLayer(const SaveLayerRec&);
     void recordRestore(bool fillInSkips = true);
 
+    // SHOULD NEVER BE CALLED
+    void onDrawBitmap(const SkBitmap&, SkScalar left, SkScalar top, const SkPaint*) override {
+        SK_ABORT("not reached");
+    }
+    void onDrawBitmapRect(const SkBitmap&, const SkRect* src, const SkRect& dst, const SkPaint*,
+                          SrcRectConstraint) override {
+        SK_ABORT("not reached");
+    }
+    void onDrawBitmapNine(const SkBitmap&, const SkIRect& center, const SkRect& dst,
+                          const SkPaint*) override {
+        SK_ABORT("not reached");
+    }
+    void onDrawBitmapLattice(const SkBitmap&, const SkCanvas::Lattice& lattice, const SkRect& dst,
+                             const SkPaint*) override {
+        SK_ABORT("not reached");
+    }
+
 private:
-    skia_private::TArray<SkPaint>  fPaints;
+    SkTArray<SkPaint>  fPaints;
 
     struct PathHash {
         uint32_t operator()(const SkPath& p) { return p.getGenerationID(); }
@@ -251,21 +254,18 @@ private:
 
     SkWriter32 fWriter;
 
-    skia_private::TArray<sk_sp<const SkImage>>    fImages;
-    skia_private::TArray<sk_sp<const SkPicture>>  fPictures;
-    skia_private::TArray<sk_sp<SkDrawable>>       fDrawables;
-    skia_private::TArray<sk_sp<const SkTextBlob>> fTextBlobs;
-    skia_private::TArray<sk_sp<const SkVertices>> fVertices;
-#if defined(SK_GANESH)
-    skia_private::TArray<sk_sp<const sktext::gpu::Slug>> fSlugs;
-#endif
+    SkTArray<sk_sp<const SkImage>>    fImages;
+    SkTArray<sk_sp<const SkPicture>>  fPictures;
+    SkTArray<sk_sp<SkDrawable>>       fDrawables;
+    SkTArray<sk_sp<const SkTextBlob>> fTextBlobs;
+    SkTArray<sk_sp<const SkVertices>> fVertices;
 
     uint32_t fRecordFlags;
     int      fInitialSaveCount;
 
     friend class SkPictureData;   // for SkPictureData's SkPictureRecord-based constructor
 
-    using INHERITED = SkCanvasVirtualEnforcer<SkCanvas>;
+    typedef SkCanvasVirtualEnforcer<SkCanvas> INHERITED;
 };
 
 #endif

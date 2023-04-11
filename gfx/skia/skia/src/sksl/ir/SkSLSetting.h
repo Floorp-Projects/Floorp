@@ -8,68 +8,48 @@
 #ifndef SKSL_SETTING
 #define SKSL_SETTING
 
-#include "include/private/SkSLIRNode.h"
-#include "include/sksl/SkSLPosition.h"
-#include "src/sksl/SkSLUtil.h"
+#include "src/sksl/SkSLContext.h"
 #include "src/sksl/ir/SkSLExpression.h"
-
-#include <cstdint>
-#include <memory>
-#include <string>
-#include <string_view>
-
 
 namespace SkSL {
 
-class Context;
-class Type;
-enum class OperatorPrecedence : uint8_t;
-
 /**
- * Represents a compile-time constant setting, such as sk_Caps.integerSupport. These IRNodes are
- * used when assembling a module. These nodes are replaced with the value of the setting during
- * compilation when ShaderCaps are available.
+ * Represents a compile-time constant setting, such as sk_Caps.fbFetchSupport. These are generally
+ * collapsed down to their constant representations during the compilation process.
  */
-class Setting final : public Expression {
-public:
-    inline static constexpr Kind kIRNodeKind = Kind::kSetting;
-
-    using CapsPtr = const bool ShaderCaps::*;
-
-    Setting(Position pos, CapsPtr capsPtr, const Type* type)
-        : INHERITED(pos, kIRNodeKind, type)
-        , fCapsPtr(capsPtr) {}
-
-    // Creates the current value of the associated caps bit as a Literal if ShaderCaps are
-    // available, or a Setting IRNode when ShaderCaps are not known. Reports errors via the
-    // ErrorReporter.
-    static std::unique_ptr<Expression> Convert(const Context& context,
-                                               Position pos,
-                                               const std::string_view& name);
-
-    // Creates the current value of the passed-in caps bit as a Literal if ShaderCaps are
-    // available, or a Setting IRNode when ShaderCaps are not known.
-    static std::unique_ptr<Expression> Make(const Context& context, Position pos, CapsPtr capsPtr);
-
-    // Converts a Setting expression to its actual ShaderCaps value (boolean true/false).
-    std::unique_ptr<Expression> toLiteral(const Context& context) const;
-
-    std::unique_ptr<Expression> clone(Position pos) const override {
-        return std::make_unique<Setting>(pos, fCapsPtr, &this->type());
+struct Setting : public Expression {
+    Setting(int offset, String name, std::unique_ptr<Expression> value)
+    : INHERITED(offset, kSetting_Kind, value->fType)
+    , fName(std::move(name))
+    , fValue(std::move(value)) {
+        SkASSERT(fValue->isConstant());
     }
 
-    std::string_view name() const;
+    std::unique_ptr<Expression> constantPropagate(const IRGenerator& irGenerator,
+                                                  const DefinitionMap& definitions) override;
 
-    std::string description(OperatorPrecedence) const override {
-        return "sk_Caps." + std::string(this->name());
+    std::unique_ptr<Expression> clone() const override {
+        return std::unique_ptr<Expression>(new Setting(fOffset, fName, fValue->clone()));
     }
 
-private:
-    CapsPtr fCapsPtr;
+    String description() const override {
+        return fName;
+    }
 
-    using INHERITED = Expression;
+    bool hasSideEffects() const override {
+        return false;
+    }
+
+    bool isConstant() const override {
+        return true;
+    }
+
+    const String fName;
+    std::unique_ptr<Expression> fValue;
+
+    typedef Expression INHERITED;
 };
 
-}  // namespace SkSL
+} // namespace
 
 #endif

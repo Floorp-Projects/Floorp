@@ -6,9 +6,6 @@
  */
 
 #include "src/core/SkOpts.h"
-
-#if !defined(SK_ENABLE_OPTIMIZE_SIZE)
-
 #define SK_OPTS_NS ssse3
 #include "src/opts/SkBitmapProcState_opts.h"
 #include "src/opts/SkBlitMask_opts.h"
@@ -33,6 +30,4 @@ namespace SkOpts {
 
         S32_alpha_D32_filter_DX  = ssse3::S32_alpha_D32_filter_DX;
     }
-}  // namespace SkOpts
-
-#endif // SK_ENABLE_OPTIMIZE_SIZE
+}

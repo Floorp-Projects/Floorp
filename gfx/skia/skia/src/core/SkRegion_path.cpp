@@ -6,13 +6,13 @@
  */
 
 #include "include/core/SkPath.h"
-#include "include/private/base/SkTDArray.h"
-#include "include/private/base/SkTo.h"
-#include "src/base/SkSafeMath.h"
-#include "src/base/SkTSort.h"
+#include "include/private/SkTDArray.h"
+#include "include/private/SkTo.h"
 #include "src/core/SkBlitter.h"
 #include "src/core/SkRegionPriv.h"
+#include "src/core/SkSafeMath.h"
 #include "src/core/SkScan.h"
+#include "src/core/SkTSort.h"
 
 // The rgnbuilder caller *seems* to pass short counts, possible often seens early failure, so
 // we may not want to promote this to a "std" routine just yet.
@@ -253,7 +253,7 @@ static unsigned verb_to_initial_last_index(unsigned verb) {
         0,  //  kClose_Verb
         0   //  kDone_Verb
     };
-    SkASSERT((unsigned)verb < std::size(gPathVerbToInitialLastIndex));
+    SkASSERT((unsigned)verb < SK_ARRAY_COUNT(gPathVerbToInitialLastIndex));
     return gPathVerbToInitialLastIndex[verb];
 }
 
@@ -267,7 +267,7 @@ static unsigned verb_to_max_edges(unsigned verb) {
         0,  //  kClose_Verb
         0   //  kDone_Verb
     };
-    SkASSERT((unsigned)verb < std::size(gPathVerbToMaxEdges));
+    SkASSERT((unsigned)verb < SK_ARRAY_COUNT(gPathVerbToMaxEdges));
     return gPathVerbToMaxEdges[verb];
 }
 
@@ -322,58 +322,21 @@ static bool check_inverse_on_empty_return(SkRegion* dst, const SkPath& path, con
 bool SkRegion::setPath(const SkPath& path, const SkRegion& clip) {
     SkDEBUGCODE(SkRegionPriv::Validate(*this));
 
-    if (clip.isEmpty() || !path.isFinite() || path.isEmpty()) {
-        // This treats non-finite paths as empty as well, so this returns empty or 'clip' if
-        // it's inverse-filled. If clip is also empty, path's fill type doesn't really matter
-        // and this region ends up empty.
+    if (clip.isEmpty() || !path.isFinite()) {
+        return this->setEmpty();
+    }
+
+    if (path.isEmpty()) {
         return check_inverse_on_empty_return(this, path, clip);
     }
 
     // Our builder is very fragile, and can't be called with spans/rects out of Y->X order.
     // To ensure this, we only "fill" clipped to a rect (the clip's bounds), and if the
     // clip is more complex than that, we just post-intersect the result with the clip.
-    const SkIRect clipBounds = clip.getBounds();
     if (clip.isComplex()) {
-        if (!this->setPath(path, SkRegion(clipBounds))) {
+        if (!this->setPath(path, SkRegion(clip.getBounds()))) {
             return false;
         }
-        return this->op(clip, kIntersect_Op);
-    }
-
-    // SkScan::FillPath has limits on the coordinate range of the clipping SkRegion. If it's too
-    // big, tile the clip bounds and union the pieces back together.
-    if (SkScan::PathRequiresTiling(clipBounds)) {
-        static constexpr int kTileSize = 32767 >> 1; // Limit so coords can fit into SkFixed (16.16)
-        const SkIRect pathBounds = path.getBounds().roundOut();
-
-        this->setEmpty();
-
-        // Note: With large integers some intermediate calculations can overflow, but the
-        // end results will still be in integer range. Using int64_t for the intermediate
-        // values will handle this situation.
-        for (int64_t top = clipBounds.fTop; top < clipBounds.fBottom; top += kTileSize) {
-            int64_t bot = std::min(top + kTileSize, (int64_t)clipBounds.fBottom);
-            for (int64_t left = clipBounds.fLeft; left < clipBounds.fRight; left += kTileSize) {
-                int64_t right = std::min(left + kTileSize, (int64_t)clipBounds.fRight);
-
-                SkIRect tileClipBounds = {(int)left, (int)top, (int)right, (int)bot};
-                if (!SkIRect::Intersects(pathBounds, tileClipBounds)) {
-                    continue;
-                }
-
-                // Shift coordinates so the top left is (0,0) during scan conversion and then
-                // translate the SkRegion afterwards.
-                tileClipBounds.offset(-left, -top);
-                SkASSERT(!SkScan::PathRequiresTiling(tileClipBounds));
-                SkRegion tile;
-                tile.setPath(path.makeTransform(SkMatrix::Translate(-left, -top)),
-                             SkRegion(tileClipBounds));
-                tile.translate(left, top);
-                this->op(tile, kUnion_Op);
-            }
-        }
-        // During tiling we only applied the bounds of the tile, now that we have a full SkRegion,
-        // apply the original clip.
         return this->op(clip, kIntersect_Op);
     }
 
@@ -387,8 +350,8 @@ bool SkRegion::setPath(const SkPath& path, const SkRegion& clip) {
     int clipTop, clipBot;
     int clipTransitions = clip.count_runtype_values(&clipTop, &clipBot);
 
-    int top = std::max(pathTop, clipTop);
-    int bot = std::min(pathBot, clipBot);
+    int top = SkMax32(pathTop, clipTop);
+    int bot = SkMin32(pathBot, clipBot);
     if (top >= bot) {
         return check_inverse_on_empty_return(this, path, clip);
     }
@@ -396,7 +359,7 @@ bool SkRegion::setPath(const SkPath& path, const SkRegion& clip) {
     SkRgnBuilder builder;
 
     if (!builder.init(bot - top,
-                      std::max(pathTransitions, clipTransitions),
+                      SkMax32(pathTransitions, clipTransitions),
                       path.isInverseFillType())) {
         // can't allocate working space, so return false
         return this->setEmpty();
@@ -450,7 +413,7 @@ struct Edge {
     }
 
     int top() const {
-        return std::min(fY0, fY1);
+        return SkMin32(fY0, fY1);
     }
 };
 
@@ -559,10 +522,10 @@ bool SkRegion::getBoundaryPath(SkPath* path) const {
         edge[1].set(r.fRight, r.fTop, r.fBottom);
     }
 
-    int count = edges.size();
+    int count = edges.count();
     Edge* start = edges.begin();
     Edge* stop = start + count;
-    SkTQSort<Edge>(start, stop, EdgeLT());
+    SkTQSort<Edge>(start, stop - 1, EdgeLT());
 
     Edge* e;
     for (e = start; e != stop; e++) {

@@ -8,23 +8,11 @@
 #ifndef SkPathOpsCubic_DEFINED
 #define SkPathOpsCubic_DEFINED
 
-#include "include/core/SkPoint.h"
-#include "include/core/SkScalar.h"
-#include "include/core/SkTypes.h"
-#include "include/private/base/SkDebug.h"
-#include "include/private/base/SkMalloc.h"
-#include "src/base/SkArenaAlloc.h"
-#include "src/pathops/SkPathOpsDebug.h"
-#include "src/pathops/SkPathOpsPoint.h"
+#include "include/core/SkPath.h"
+#include "src/core/SkArenaAlloc.h"
 #include "src/pathops/SkPathOpsTCurve.h"
 
-class SkIntersections;
-class SkOpGlobalState;
-struct SkDConic;
 struct SkDCubicPair;
-struct SkDLine;
-struct SkDQuad;
-struct SkDRect;
 
 struct SkDCubic {
     static const int kPointCount = 4;
@@ -172,7 +160,7 @@ inline int other_two(int one, int two) {
 }
 
 struct SkDCubicPair {
-    SkDCubic first() const {
+    const SkDCubic first() const {
 #ifdef SK_DEBUG
         SkDCubic result;
         result.debugSet(&pts[0]);
@@ -181,7 +169,7 @@ struct SkDCubicPair {
         return (const SkDCubic&) pts[0];
 #endif
     }
-    SkDCubic second() const {
+    const SkDCubic second() const {
 #ifdef SK_DEBUG
         SkDCubic result;
         result.debugSet(&pts[3]);

@@ -8,20 +8,12 @@
 #include "src/codec/SkWbmpCodec.h"
 
 #include "include/codec/SkCodec.h"
-#include "include/codec/SkEncodedImageFormat.h"
-#include "include/core/SkColorType.h"
-#include "include/core/SkImageInfo.h"
-#include "include/core/SkSize.h"
+#include "include/core/SkData.h"
 #include "include/core/SkStream.h"
-#include "include/private/SkEncodedInfo.h"
-#include "include/private/base/SkAlign.h"
-#include "include/private/base/SkTo.h"
-#include "modules/skcms/skcms.h"
+#include "include/private/SkColorData.h"
+#include "include/private/SkTo.h"
 #include "src/codec/SkCodecPriv.h"
-
-#include <utility>
-
-using namespace skia_private;
+#include "src/codec/SkColorTable.h"
 
 // Each bit represents a pixel, so width is actually a number of bits.
 // A row will always be stored in bytes, so we round width up to the
@@ -135,7 +127,7 @@ SkCodec::Result SkWbmpCodec::onGetPixels(const SkImageInfo& info,
 
     // Perform the decode
     SkISize size = info.dimensions();
-    AutoTMalloc<uint8_t> src(fSrcRowBytes);
+    SkAutoTMalloc<uint8_t> src(fSrcRowBytes);
     void* dstRow = dst;
     for (int y = 0; y < size.height(); ++y) {
         if (!this->readRow(src.get())) {

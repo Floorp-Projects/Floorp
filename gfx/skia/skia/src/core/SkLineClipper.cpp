@@ -5,15 +5,9 @@
  * found in the LICENSE file.
  */
 
+#include "include/private/SkTo.h"
 #include "src/core/SkLineClipper.h"
 
-#include "include/core/SkPoint.h"
-#include "include/core/SkRect.h"
-#include "include/core/SkScalar.h"
-#include "include/core/SkTypes.h"
-#include "include/private/base/SkTo.h"
-
-#include <cstring>
 #include <utility>
 
 template <typename T> T pin_unsorted(T value, T limit0, T limit1) {
@@ -152,10 +146,10 @@ bool SkLineClipper::IntersectLine(const SkPoint src[2], const SkRect& clip,
     }
 
     if (tmp[index0].fX < clip.fLeft) {
-        tmp[index0].set(clip.fLeft, sect_with_vertical(tmp, clip.fLeft));
+        tmp[index0].set(clip.fLeft, sect_with_vertical(src, clip.fLeft));
     }
     if (tmp[index1].fX > clip.fRight) {
-        tmp[index1].set(clip.fRight, sect_with_vertical(tmp, clip.fRight));
+        tmp[index1].set(clip.fRight, sect_with_vertical(src, clip.fRight));
     }
 #ifdef SK_DEBUG
     bounds.set(tmp[0], tmp[1]);
@@ -178,7 +172,7 @@ static bool is_between_unsorted(SkScalar value,
 }
 #endif
 
-int SkLineClipper::ClipLine(const SkPoint pts[2], const SkRect& clip, SkPoint lines[kMaxPoints],
+int SkLineClipper::ClipLine(const SkPoint pts[], const SkRect& clip, SkPoint lines[],
                             bool canCullToTheRight) {
     int index0, index1;
 

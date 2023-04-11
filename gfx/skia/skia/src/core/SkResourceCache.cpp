@@ -8,20 +8,18 @@
 #include "src/core/SkResourceCache.h"
 
 #include "include/core/SkTraceMemoryDump.h"
-#include "include/private/base/SkMutex.h"
-#include "include/private/base/SkTo.h"
-#include "include/private/chromium/SkDiscardableMemory.h"
+#include "include/private/SkMutex.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkDiscardableMemory.h"
 #include "src/core/SkImageFilter_Base.h"
 #include "src/core/SkMessageBus.h"
-#include "src/core/SkMipmap.h"
+#include "src/core/SkMipMap.h"
 #include "src/core/SkOpts.h"
 
 #include <stddef.h>
 #include <stdlib.h>
 
-using namespace skia_private;
-
-DECLARE_SKMESSAGEBUS_MESSAGE(SkResourceCache::PurgeSharedIDMessage, uint32_t, true)
+DECLARE_SKMESSAGEBUS_MESSAGE(SkResourceCache::PurgeSharedIDMessage)
 
 static inline bool SkShouldPostMessageToBus(
         const SkResourceCache::PurgeSharedIDMessage&, uint32_t) {
@@ -63,7 +61,7 @@ void SkResourceCache::Key::init(void* nameSpace, uint64_t sharedID, size_t dataS
                          (fCount32 - kUnhashedLocal32s) << 2);
 }
 
-#include "src/core/SkTHash.h"
+#include "include/private/SkTHash.h"
 
 namespace {
     struct HashTraits {
@@ -72,7 +70,7 @@ namespace {
             return rec->getKey();
         }
     };
-}  // namespace
+}
 
 class SkResourceCache::Hash :
     public SkTHashTable<SkResourceCache::Rec*, SkResourceCache::Key, HashTraits> {};
@@ -93,14 +91,12 @@ void SkResourceCache::init() {
     fDiscardableFactory = nullptr;
 }
 
-SkResourceCache::SkResourceCache(DiscardableFactory factory)
-        : fPurgeSharedIDInbox(SK_InvalidUniqueID) {
+SkResourceCache::SkResourceCache(DiscardableFactory factory) {
     this->init();
     fDiscardableFactory = factory;
 }
 
-SkResourceCache::SkResourceCache(size_t byteLimit)
-        : fPurgeSharedIDInbox(SK_InvalidUniqueID) {
+SkResourceCache::SkResourceCache(size_t byteLimit) {
     this->init();
     fTotalByteLimit = byteLimit;
 }
@@ -414,7 +410,7 @@ void SkResourceCache::validate() const {
 void SkResourceCache::dump() const {
     this->validate();
 
-    SkDebugf("SkResourceCache: count=%d bytes=%zu %s\n",
+    SkDebugf("SkResourceCache: count=%d bytes=%d %s\n",
              fCount, fTotalBytesUsed, fDiscardableFactory ? "discardable" : "malloc");
 }
 
@@ -438,16 +434,16 @@ size_t SkResourceCache::getEffectiveSingleAllocationByteLimit() const {
         if (0 == limit) {
             limit = fTotalByteLimit;
         } else {
-            limit = std::min(limit, fTotalByteLimit);
+            limit = SkTMin(limit, fTotalByteLimit);
         }
     }
     return limit;
 }
 
 void SkResourceCache::checkMessages() {
-    TArray<PurgeSharedIDMessage> msgs;
+    SkTArray<PurgeSharedIDMessage> msgs;
     fPurgeSharedIDInbox.poll(&msgs);
-    for (int i = 0; i < msgs.size(); ++i) {
+    for (int i = 0; i < msgs.count(); ++i) {
         this->purgeSharedID(msgs[i].fSharedID);
     }
 }
@@ -524,11 +520,6 @@ void SkResourceCache::PurgeAll() {
     return get_cache()->purgeAll();
 }
 
-void SkResourceCache::CheckMessages() {
-    SkAutoMutexExclusive am(resource_cache_mutex());
-    return get_cache()->checkMessages();
-}
-
 bool SkResourceCache::Find(const Key& key, FindVisitor visitor, void* context) {
     SkAutoMutexExclusive am(resource_cache_mutex());
     return get_cache()->find(key, visitor, context);
@@ -546,7 +537,7 @@ void SkResourceCache::VisitAll(Visitor visitor, void* context) {
 
 void SkResourceCache::PostPurgeSharedID(uint64_t sharedID) {
     if (sharedID) {
-        SkMessageBus<PurgeSharedIDMessage, uint32_t>::Post(PurgeSharedIDMessage(sharedID));
+        SkMessageBus<PurgeSharedIDMessage>::Post(PurgeSharedIDMessage(sharedID));
     }
 }
 
@@ -583,7 +574,7 @@ void SkGraphics::PurgeResourceCache() {
 /////////////
 
 static void dump_visitor(const SkResourceCache::Rec& rec, void*) {
-    SkDebugf("RC: %12s bytes %9zu  discardable %p\n",
+    SkDebugf("RC: %12s bytes %9lu  discardable %p\n",
              rec.getCategory(), rec.bytesUsed(), rec.diagnostic_only_getDiscardable());
 }
 

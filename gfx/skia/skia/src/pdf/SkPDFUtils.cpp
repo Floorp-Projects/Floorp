@@ -7,11 +7,10 @@
 
 #include "src/pdf/SkPDFUtils.h"
 
-#include "include/core/SkBitmap.h"
 #include "include/core/SkData.h"
 #include "include/core/SkStream.h"
 #include "include/core/SkString.h"
-#include "include/private/base/SkFixed.h"
+#include "include/private/SkFixed.h"
 #include "src/core/SkGeometry.h"
 #include "src/core/SkPathPriv.h"
 #include "src/image/SkImage_Base.h"
@@ -103,7 +102,7 @@ static void append_quad(const SkPoint quad[], SkWStream* content) {
 
 void SkPDFUtils::AppendRectangle(const SkRect& rect, SkWStream* content) {
     // Skia has 0,0 at top left, pdf at bottom left.  Do the right thing.
-    SkScalar bottom = std::min(rect.fBottom, rect.fTop);
+    SkScalar bottom = SkMinScalar(rect.fBottom, rect.fTop);
 
     SkPDFUtils::AppendScalar(rect.fLeft, content);
     content->writeText(" ");
@@ -129,11 +128,11 @@ void SkPDFUtils::EmitPath(const SkPath& path, SkPaint::Style paintStyle,
 
     SkRect rect;
     bool isClosed; // Both closure and direction need to be checked.
-    SkPathDirection direction;
+    SkPath::Direction direction;
     if (path.isRect(&rect, &isClosed, &direction) &&
         isClosed &&
-        (SkPathDirection::kCW == direction ||
-         SkPathFillType::kEvenOdd == path.getFillType()))
+        (SkPath::kCW_Direction == direction ||
+         SkPath::kEvenOdd_FillType == path.getFillType()))
     {
         SkPDFUtils::AppendRectangle(rect, content);
         return;
@@ -214,7 +213,8 @@ void SkPDFUtils::ClosePath(SkWStream* content) {
     content->writeText("h\n");
 }
 
-void SkPDFUtils::PaintPath(SkPaint::Style style, SkPathFillType fill, SkWStream* content) {
+void SkPDFUtils::PaintPath(SkPaint::Style style, SkPath::FillType fill,
+                           SkWStream* content) {
     if (style == SkPaint::kFill_Style) {
         content->writeText("f");
     } else if (style == SkPaint::kStrokeAndFill_Style) {
@@ -224,9 +224,9 @@ void SkPDFUtils::PaintPath(SkPaint::Style style, SkPathFillType fill, SkWStream*
     }
 
     if (style != SkPaint::kStroke_Style) {
-        NOT_IMPLEMENTED(fill == SkPathFillType::kInverseEvenOdd, false);
-        NOT_IMPLEMENTED(fill == SkPathFillType::kInverseWinding, false);
-        if (fill == SkPathFillType::kEvenOdd) {
+        NOT_IMPLEMENTED(fill == SkPath::kInverseEvenOdd_FillType, false);
+        NOT_IMPLEMENTED(fill == SkPath::kInverseWinding_FillType, false);
+        if (fill == SkPath::kEvenOdd_FillType) {
             content->writeText("*");
         }
     }
@@ -234,7 +234,8 @@ void SkPDFUtils::PaintPath(SkPaint::Style style, SkPathFillType fill, SkWStream*
 }
 
 void SkPDFUtils::StrokePath(SkWStream* content) {
-    SkPDFUtils::PaintPath(SkPaint::kStroke_Style, SkPathFillType::kWinding, content);
+    SkPDFUtils::PaintPath(
+        SkPaint::kStroke_Style, SkPath::kWinding_FillType, content);
 }
 
 void SkPDFUtils::ApplyGraphicState(int objectIndex, SkWStream* content) {
@@ -335,8 +336,7 @@ bool SkPDFUtils::ToBitmap(const SkImage* img, SkBitmap* dst) {
     SkASSERT(img);
     SkASSERT(dst);
     SkBitmap bitmap;
-    // TODO: support GPU images
-    if(as_IB(img)->getROPixels(nullptr, &bitmap)) {
+    if(as_IB(img)->getROPixels(&bitmap)) {
         SkASSERT(bitmap.dimensions() == img->dimensions());
         SkASSERT(!bitmap.drawsNothing());
         *dst = std::move(bitmap);

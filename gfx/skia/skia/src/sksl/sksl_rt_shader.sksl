@@ -1,1 +1,0 @@
-layout(builtin=15) float4 sk_FragCoord;

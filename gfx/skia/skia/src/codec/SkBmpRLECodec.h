@@ -7,21 +7,11 @@
 #ifndef SkBmpRLECodec_DEFINED
 #define SkBmpRLECodec_DEFINED
 
-#include "include/codec/SkCodec.h"
-#include "include/core/SkRefCnt.h"
+#include "include/core/SkImageInfo.h"
 #include "include/core/SkTypes.h"
 #include "src/codec/SkBmpCodec.h"
 #include "src/codec/SkColorTable.h"
 #include "src/codec/SkSampler.h"
-
-#include <cstddef>
-#include <cstdint>
-#include <memory>
-
-class SkStream;
-enum SkColorType : int;
-struct SkEncodedInfo;
-struct SkImageInfo;
 
 /*
  * This class implements the decoding for bmp images that use an RLE encoding
@@ -105,26 +95,26 @@ private:
 
     SkSampler* getSampler(bool createIfNecessary) override;
 
-    sk_sp<SkColorTable>               fColorTable;
+    sk_sp<SkColorTable>        fColorTable;
     // fNumColors is the number specified in the header, or 0 if not present in the header.
-    const uint32_t                    fNumColors;
-    const uint32_t                    fBytesPerColor;
-    const uint32_t                    fOffset;
+    const uint32_t             fNumColors;
+    const uint32_t             fBytesPerColor;
+    const uint32_t             fOffset;
 
-    inline static constexpr size_t    kBufferSize = 4096;
-    uint8_t                           fStreamBuffer[kBufferSize];
-    size_t                            fBytesBuffered;
+    static constexpr size_t    kBufferSize = 4096;
+    uint8_t                    fStreamBuffer[kBufferSize];
+    size_t                     fBytesBuffered;
 
-    uint32_t                          fCurrRLEByte;
-    int                               fSampleX;
-    std::unique_ptr<SkSampler>        fSampler;
+    uint32_t                   fCurrRLEByte;
+    int                        fSampleX;
+    std::unique_ptr<SkSampler> fSampler;
 
     // Scanline decodes allow the client to ask for a single scanline at a time.
     // This can be tricky when the RLE encoding instructs the decoder to jump down
     // multiple lines.  This field keeps track of lines that need to be skipped
     // on subsequent calls to decodeRows().
-    int                               fLinesToSkip;
+    int                        fLinesToSkip;
 
-    using INHERITED = SkBmpCodec;
+    typedef SkBmpCodec INHERITED;
 };
 #endif  // SkBmpRLECodec_DEFINED

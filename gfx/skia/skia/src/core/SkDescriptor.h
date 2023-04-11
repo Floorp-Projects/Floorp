@@ -9,12 +9,9 @@
 #define SkDescriptor_DEFINED
 
 #include <memory>
-#include <new>
 
-#include "include/private/base/SkMacros.h"
-#include "include/private/base/SkNoncopyable.h"
-#include "src/base/SkBuffer.h"
-#include "src/core/SkFontPriv.h"
+#include "include/private/SkMacros.h"
+#include "include/private/SkNoncopyable.h"
 #include "src/core/SkScalerContext.h"
 
 class SkDescriptor : SkNoncopyable {
@@ -26,14 +23,12 @@ public:
 
     static std::unique_ptr<SkDescriptor> Alloc(size_t length);
 
-    //
     // Ensure the unsized delete is called.
     void operator delete(void* p);
-    void* operator new(size_t);
-    void* operator new(size_t, void* p) { return p; }
-
-    void flatten(SkWriteBuffer& buffer) const;
-
+    void init() {
+        fLength = sizeof(SkDescriptor);
+        fCount  = 0;
+    }
     uint32_t getLength() const { return fLength; }
     void* addEntry(uint32_t tag, size_t length, const void* data = nullptr);
     void computeChecksum();
@@ -63,35 +58,33 @@ public:
         uint32_t fLen;
     };
 
+#ifdef SK_DEBUG
     uint32_t getCount() const { return fCount; }
-
-    SkString dumpRec() const;
+#endif
 
 private:
+    // private so no one can create one except our factories
     SkDescriptor() = default;
     friend class SkDescriptorTestHelper;
-    friend class SkAutoDescriptor;
 
     static uint32_t ComputeChecksum(const SkDescriptor* desc);
 
-    uint32_t fChecksum{0};  // must be first
-    uint32_t fLength{sizeof(SkDescriptor)};    // must be second
-    uint32_t fCount{0};
+    uint32_t fChecksum;  // must be first
+    uint32_t fLength;    // must be second
+    uint32_t fCount;
 };
 
 class SkAutoDescriptor {
 public:
     SkAutoDescriptor();
     explicit SkAutoDescriptor(size_t size);
-    explicit SkAutoDescriptor(const SkDescriptor&);
-    SkAutoDescriptor(const SkAutoDescriptor&);
-    SkAutoDescriptor& operator=(const SkAutoDescriptor&);
-    SkAutoDescriptor(SkAutoDescriptor&&);
-    SkAutoDescriptor& operator=(SkAutoDescriptor&&);
-    ~SkAutoDescriptor();
+    explicit SkAutoDescriptor(const SkDescriptor& desc);
+    SkAutoDescriptor(const SkAutoDescriptor& ad);
+    SkAutoDescriptor& operator= (const SkAutoDescriptor& ad);
+    SkAutoDescriptor(SkAutoDescriptor&&) = delete;
+    SkAutoDescriptor& operator= (SkAutoDescriptor&&) = delete;
 
-    // Returns no value if there is an error.
-    static std::optional<SkAutoDescriptor> MakeFromBuffer(SkReadBuffer& buffer);
+    ~SkAutoDescriptor();
 
     void reset(size_t size);
     void reset(const SkDescriptor& desc);
@@ -106,7 +99,7 @@ private:
               + 32;   // slop for occasional small extras
 
     SkDescriptor*   fDesc{nullptr};
-    alignas(uint32_t) char fStorage[kStorageSize];
+    std::aligned_storage<kStorageSize, alignof(uint32_t)>::type fStorage;
 };
 
 #endif  //SkDescriptor_DEFINED

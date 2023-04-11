@@ -8,10 +8,37 @@
 #ifndef GrRectanizer_DEFINED
 #define GrRectanizer_DEFINED
 
-// TODO: Once we can get Flutter to use the ganesh version of the file we can remove this one.
-#include "src/gpu/Rectanizer.h"
+#include "include/gpu/GrTypes.h"
 
-using GrRectanizer = skgpu::Rectanizer;
+struct SkIPoint16;
+
+class GrRectanizer {
+public:
+    GrRectanizer(int width, int height) : fWidth(width), fHeight(height) {
+        SkASSERT(width >= 0);
+        SkASSERT(height >= 0);
+    }
+
+    virtual ~GrRectanizer() {}
+
+    virtual void reset() = 0;
+
+    int width() const { return fWidth; }
+    int height() const { return fHeight; }
+
+    // Attempt to add a rect. Return true on success; false on failure. If
+    // successful the position in the atlas is returned in 'loc'.
+    virtual bool addRect(int width, int height, SkIPoint16* loc) = 0;
+    virtual float percentFull() const = 0;
+
+    /**
+     *  Our factory, which returns the subclass du jour
+     */
+    static GrRectanizer* Factory(int width, int height);
+
+private:
+    int fWidth;
+    int fHeight;
+};
 
 #endif
-

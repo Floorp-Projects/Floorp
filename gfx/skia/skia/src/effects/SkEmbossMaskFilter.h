@@ -8,26 +8,13 @@
 #ifndef SkEmbossMaskFilter_DEFINED
 #define SkEmbossMaskFilter_DEFINED
 
-#include "include/core/SkFlattenable.h"
-#include "include/core/SkMaskFilter.h"
-#include "include/core/SkRect.h"
-#include "include/core/SkRefCnt.h"
-#include "include/core/SkScalar.h"
-#include "src/core/SkMask.h"
 #include "src/core/SkMaskFilterBase.h"
-
-#include <cstdint>
-
-class SkMatrix;
-class SkReadBuffer;
-class SkWriteBuffer;
-struct SkIPoint;
 
 /** \class SkEmbossMaskFilter
 
     This mask filter creates a 3D emboss look, by specifying a light and blur amount.
 */
-class SkEmbossMaskFilter : public SkMaskFilterBase {
+class SK_API SkEmbossMaskFilter : public SkMaskFilterBase {
 public:
     struct Light {
         SkScalar    fDirection[3];  // x,y,z
@@ -55,7 +42,7 @@ private:
     Light       fLight;
     SkScalar    fBlurSigma;
 
-    using INHERITED = SkMaskFilter;
+    typedef SkMaskFilter INHERITED;
 };
 
 #endif

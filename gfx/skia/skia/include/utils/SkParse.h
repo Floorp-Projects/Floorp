@@ -11,11 +11,6 @@
 #define SkParse_DEFINED
 
 #include "include/core/SkColor.h"
-#include "include/core/SkScalar.h"
-#include "include/core/SkTypes.h"
-
-#include <cstddef>
-#include <cstdint>
 
 class SK_API SkParse {
 public:

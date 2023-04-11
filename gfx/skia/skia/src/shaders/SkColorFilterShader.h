@@ -8,46 +8,30 @@
 #ifndef SkColorFilterShader_DEFINED
 #define SkColorFilterShader_DEFINED
 
-#include "src/core/SkColorFilterBase.h"
+#include "include/core/SkColorFilter.h"
 #include "src/shaders/SkShaderBase.h"
 
 class SkArenaAlloc;
 
 class SkColorFilterShader : public SkShaderBase {
 public:
-    SkColorFilterShader(sk_sp<SkShader> shader, float alpha, sk_sp<SkColorFilter> filter);
+    SkColorFilterShader(sk_sp<SkShader> shader, sk_sp<SkColorFilter> filter);
 
-#if defined(SK_GANESH)
-    std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&,
-                                                             const MatrixRec&) const override;
+#if SK_SUPPORT_GPU
+    std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
 #endif
-#if defined(SK_GRAPHITE)
-    void addToKey(const skgpu::graphite::KeyContext&,
-                  skgpu::graphite::PaintParamsKeyBuilder*,
-                  skgpu::graphite::PipelineDataGatherer*) const override;
-#endif
+
+protected:
+    void flatten(SkWriteBuffer&) const override;
+    bool onAppendStages(const SkStageRec&) const override;
 
 private:
-    bool isOpaque() const override;
-    void flatten(SkWriteBuffer&) const override;
-    bool appendStages(const SkStageRec&, const MatrixRec&) const override;
-
-    skvm::Color program(skvm::Builder*,
-                        skvm::Coord device,
-                        skvm::Coord local,
-                        skvm::Color paint,
-                        const MatrixRec&,
-                        const SkColorInfo& dst,
-                        skvm::Uniforms* uniforms,
-                        SkArenaAlloc*) const override;
-
     SK_FLATTENABLE_HOOKS(SkColorFilterShader)
 
-    sk_sp<SkShader>          fShader;
-    sk_sp<SkColorFilterBase> fFilter;
-    float                    fAlpha;
+    sk_sp<SkShader>      fShader;
+    sk_sp<SkColorFilter> fFilter;
 
-    using INHERITED = SkShaderBase;
+    typedef SkShaderBase INHERITED;
 };
 
 #endif

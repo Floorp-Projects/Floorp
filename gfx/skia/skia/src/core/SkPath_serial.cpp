@@ -6,15 +6,13 @@
  */
 
 #include "include/core/SkData.h"
+#include "include/core/SkMath.h"
 #include "include/private/SkPathRef.h"
-#include "include/private/base/SkMath.h"
-#include "include/private/base/SkPathEnums.h"
-#include "include/private/base/SkTPin.h"
-#include "include/private/base/SkTo.h"
-#include "src/base/SkBuffer.h"
-#include "src/base/SkSafeMath.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkBuffer.h"
 #include "src/core/SkPathPriv.h"
 #include "src/core/SkRRectPriv.h"
+#include "src/core/SkSafeMath.h"
 
 #include <cmath>
 
@@ -46,8 +44,8 @@ static unsigned extract_version(uint32_t packed) {
     return packed & kVersion_SerializationMask;
 }
 
-static SkPathFillType extract_filltype(uint32_t packed) {
-    return static_cast<SkPathFillType>((packed >> kFillType_SerializationShift) & 0x3);
+static SkPath::FillType extract_filltype(uint32_t packed) {
+    return static_cast<SkPath::FillType>((packed >> kFillType_SerializationShift) & 0x3);
 }
 
 static SerializationType extract_serializationtype(uint32_t packed) {
@@ -75,7 +73,7 @@ size_t SkPath::writeToMemoryAsRRect(void* storage) const {
         return sizeNeeded;
     }
 
-    int firstDir = isCCW ? (int)SkPathFirstDirection::kCCW : (int)SkPathFirstDirection::kCW;
+    int firstDir = isCCW ? SkPathPriv::kCCW_FirstDirection : SkPathPriv::kCW_FirstDirection;
     int32_t packed = (fFillType << kFillType_SerializationShift) |
                      (firstDir << kDirection_SerializationShift) |
                      (SerializationType::kRRect << kType_SerializationShift) |
@@ -169,17 +167,17 @@ size_t SkPath::readAsRRect(const void* storage, size_t length) {
     SkASSERT(extract_serializationtype(packed) == SerializationType::kRRect);
 
     uint8_t dir = (packed >> kDirection_SerializationShift) & 0x3;
-    SkPathFillType fillType = extract_filltype(packed);
+    FillType fillType = extract_filltype(packed);
 
-    SkPathDirection rrectDir;
+    Direction rrectDir;
     SkRRect rrect;
     int32_t start;
     switch (dir) {
-        case (int)SkPathFirstDirection::kCW:
-            rrectDir = SkPathDirection::kCW;
+        case SkPathPriv::kCW_FirstDirection:
+            rrectDir = kCW_Direction;
             break;
-        case (int)SkPathFirstDirection::kCCW:
-            rrectDir = SkPathDirection::kCCW;
+        case SkPathPriv::kCCW_FirstDirection:
+            rrectDir = kCCW_Direction;
             break;
         default:
             return 0;
@@ -213,7 +211,7 @@ size_t SkPath::readFromMemory_EQ4Or5(const void* storage, size_t length) {
         case SerializationType::kRRect:
             return this->readAsRRect(storage, length);
         case SerializationType::kGeneral:
-            break;  // fall out
+            break;  // fall through
         default:
             return 0;
     }
@@ -250,10 +248,7 @@ size_t SkPath::readFromMemory_EQ4Or5(const void* storage, size_t length) {
 
     SkPath tmp;
     tmp.setFillType(extract_filltype(packed));
-    {
-      // Reserve the exact number of verbs and points needed.
-      SkPathRef::Editor(&tmp.fPathRef, vbs, pts);
-    }
+    tmp.incReserve(pts);
     for (int i = 0; i < vbs; ++i) {
         switch (*verbs) {
             case kMove_Verb:

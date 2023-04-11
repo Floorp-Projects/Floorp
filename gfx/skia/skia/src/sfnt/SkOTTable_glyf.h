@@ -8,7 +8,7 @@
 #ifndef SkOTTable_glyf_DEFINED
 #define SkOTTable_glyf_DEFINED
 
-#include "src/base/SkEndian.h"
+#include "src/core/SkEndian.h"
 #include "src/sfnt/SkOTTableTypes.h"
 #include "src/sfnt/SkOTTable_head.h"
 #include "src/sfnt/SkOTTable_loca.h"
@@ -16,6 +16,8 @@
 #pragma pack(push, 1)
 
 struct SkOTTableGlyphData;
+
+extern uint8_t const * const SK_OT_GlyphData_NoOutline;
 
 struct SkOTTableGlyph {
     static const SK_OT_CHAR TAG0 = 'g';
@@ -26,45 +28,38 @@ struct SkOTTableGlyph {
 
     class Iterator {
     public:
-        Iterator(SkOTTableGlyph& glyf,
+        Iterator(const SkOTTableGlyph& glyf,
                  const SkOTTableIndexToLocation& loca,
                  SkOTTableHead::IndexToLocFormat locaFormat)
         : fGlyf(glyf)
-        , fLoca(loca)
-        , fLocaFormat(locaFormat)
-        , fCurrentGlyph(0)
+        , fLocaFormat(SkOTTableHead::IndexToLocFormat::ShortOffsets == locaFormat.value ? 0 : 1)
         , fCurrentGlyphOffset(0)
-        {
-            SkASSERT(locaFormat.value == SkOTTableHead::IndexToLocFormat::ShortOffsets ||
-                     locaFormat.value == SkOTTableHead::IndexToLocFormat::LongOffsets);
-        }
+        { fLocaPtr.shortOffset = reinterpret_cast<const SK_OT_USHORT*>(&loca); }
 
         void advance(uint16_t num) {
-            fCurrentGlyph += num;
-            if (fLocaFormat.value == SkOTTableHead::IndexToLocFormat::ShortOffsets) {
-                fCurrentGlyphOffset =
-                    SkEndian_SwapBE16(fLoca.offsets.shortOffset[fCurrentGlyph]) << 1;
-            } else if (fLocaFormat.value == SkOTTableHead::IndexToLocFormat::LongOffsets) {
-                fCurrentGlyphOffset = SkEndian_SwapBE32(fLoca.offsets.longOffset[fCurrentGlyph]);
-            }
+            fLocaPtr.shortOffset += num << fLocaFormat;
+            fCurrentGlyphOffset = fLocaFormat ? SkEndian_SwapBE32(*fLocaPtr.longOffset)
+                                              : uint32_t(SkEndian_SwapBE16(*fLocaPtr.shortOffset) << 1);
         }
-        SkOTTableGlyphData* next() {
+        const SkOTTableGlyphData* next() {
             uint32_t previousGlyphOffset = fCurrentGlyphOffset;
             advance(1);
             if (previousGlyphOffset == fCurrentGlyphOffset) {
-                return nullptr;
+                return reinterpret_cast<const SkOTTableGlyphData*>(&SK_OT_GlyphData_NoOutline);
             } else {
-                return reinterpret_cast<SkOTTableGlyphData*>(
-                    reinterpret_cast<SK_OT_BYTE*>(&fGlyf) + previousGlyphOffset
+                return reinterpret_cast<const SkOTTableGlyphData*>(
+                    reinterpret_cast<const SK_OT_BYTE*>(&fGlyf) + previousGlyphOffset
                 );
             }
         }
     private:
-        SkOTTableGlyph& fGlyf;
-        const SkOTTableIndexToLocation& fLoca;
-        SkOTTableHead::IndexToLocFormat fLocaFormat;
-        uint32_t fCurrentGlyph;
+        const SkOTTableGlyph& fGlyf;
+        uint16_t fLocaFormat; //0 or 1
         uint32_t fCurrentGlyphOffset;
+        union LocaPtr {
+            const SK_OT_USHORT* shortOffset;
+            const SK_OT_ULONG* longOffset;
+        } fLocaPtr;
     };
 };
 

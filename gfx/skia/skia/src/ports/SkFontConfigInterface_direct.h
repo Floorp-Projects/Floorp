@@ -15,11 +15,7 @@
 
 class SkFontConfigInterfaceDirect : public SkFontConfigInterface {
 public:
-    /** Create around a FontConfig instance.
-     *  If 'fc' is nullptr, each method call will use the current config.
-     *  Takes ownership of 'fc' and will call FcConfigDestroy on it.
-     */
-    SkFontConfigInterfaceDirect(FcConfig* fc);
+    SkFontConfigInterfaceDirect();
     ~SkFontConfigInterfaceDirect() override;
 
     bool matchFamilyName(const char familyName[],
@@ -34,11 +30,10 @@ protected:
     virtual bool isAccessible(const char* filename);
 
 private:
-    FcConfig * const fFC;
     bool isValidPattern(FcPattern* pattern);
     FcPattern* MatchFont(FcFontSet* font_set, const char* post_config_family,
                          const SkString& family);
-    using INHERITED = SkFontConfigInterface;
+    typedef SkFontConfigInterface INHERITED;
 };
 
 #endif

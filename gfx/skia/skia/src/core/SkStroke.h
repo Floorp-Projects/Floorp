@@ -11,7 +11,8 @@
 #include "include/core/SkPaint.h"
 #include "include/core/SkPath.h"
 #include "include/core/SkPoint.h"
-#include "include/private/base/SkTo.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkStrokerPriv.h"
 
 #ifdef SK_DEBUG
 extern bool gDebugStrokerErrorSet;
@@ -61,7 +62,7 @@ public:
      *  Stroke the specified rect, winding it in the specified direction..
      */
     void    strokeRect(const SkRect& rect, SkPath* result,
-                       SkPathDirection = SkPathDirection::kCW) const;
+                       SkPath::Direction = SkPath::kCW_Direction) const;
     void    strokePath(const SkPath& path, SkPath*) const;
 
     ////////////////////////////////////////////////////////////////

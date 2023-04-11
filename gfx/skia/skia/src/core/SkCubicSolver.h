@@ -9,7 +9,9 @@
 #define SkCubicSolver_DEFINED
 
 #include "include/core/SkTypes.h"
-#include "include/private/base/SkFloatingPoint.h"
+#include "include/private/SkFloatingPoint.h"
+
+//#define CUBICMAP_TRACK_MAX_ERROR
 
 namespace SK_OPTS_NS {
 
@@ -23,6 +25,9 @@ namespace SK_OPTS_NS {
     }
 
     inline float cubic_solver(float A, float B, float C, float D) {
+    #ifdef CUBICMAP_TRACK_MAX_ERROR
+        static int max_iters = 0;
+    #endif
 
     #ifdef SK_DEBUG
         auto valid = [](float t) {
@@ -52,6 +57,12 @@ namespace SK_OPTS_NS {
             t -= numer / denom;
         }
 
+    #ifdef CUBICMAP_TRACK_MAX_ERROR
+        if (max_iters < iters) {
+            max_iters = iters;
+            SkDebugf("max_iters %d\n", max_iters);
+        }
+    #endif
         SkASSERT(valid(t));
         return t;
     }

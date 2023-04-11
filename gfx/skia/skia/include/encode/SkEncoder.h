@@ -9,32 +9,11 @@
 #define SkEncoder_DEFINED
 
 #include "include/core/SkPixmap.h"
-#include "include/private/base/SkAPI.h"
-#include "include/private/base/SkNoncopyable.h"
-#include "include/private/base/SkTemplates.h"
-
-#include <cstddef>
-#include <cstdint>
+#include "include/private/SkNoncopyable.h"
+#include "include/private/SkTemplates.h"
 
 class SK_API SkEncoder : SkNoncopyable {
 public:
-    /**
-     * A single frame to be encoded into an animated image.
-     *
-     * If a frame does not fit in the canvas size, this is an error.
-     * TODO(skia:13705): Add offsets when we have support for an encoder that supports using
-     * offsets.
-     */
-    struct SK_API Frame {
-        /**
-         *  Pixmap of the frame.
-         */
-        SkPixmap pixmap;
-        /**
-         *  Duration of the frame in millseconds.
-         */
-        int duration;
-    };
 
     /**
      *  Encode |numRows| rows of input.  If the caller requests more rows than are remaining
@@ -57,7 +36,7 @@ protected:
 
     const SkPixmap&        fSrc;
     int                    fCurrRow;
-    skia_private::AutoTMalloc<uint8_t> fStorage;
+    SkAutoTMalloc<uint8_t> fStorage;
 };
 
 #endif

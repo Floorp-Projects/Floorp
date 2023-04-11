@@ -8,43 +8,32 @@
 #ifndef SkCodec_DEFINED
 #define SkCodec_DEFINED
 
+#include "include/codec/SkCodecAnimation.h"
 #include "include/codec/SkEncodedOrigin.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkEncodedImageFormat.h"
 #include "include/core/SkImageInfo.h"
 #include "include/core/SkPixmap.h"
-#include "include/core/SkRect.h"
-#include "include/core/SkRefCnt.h"
 #include "include/core/SkSize.h"
+#include "include/core/SkStream.h"
 #include "include/core/SkTypes.h"
-#include "include/core/SkYUVAPixmaps.h"
+#include "include/core/SkYUVASizeInfo.h"
 #include "include/private/SkEncodedInfo.h"
-#include "include/private/base/SkNoncopyable.h"
-#include "modules/skcms/skcms.h"
+#include "include/private/SkNoncopyable.h"
+#include "include/private/SkTemplates.h"
 
-#include <cstddef>
-#include <functional>
-#include <memory>
-#include <tuple>
 #include <vector>
 
+class SkColorSpace;
 class SkData;
 class SkFrameHolder;
-class SkImage;
 class SkPngChunkReader;
 class SkSampler;
-class SkStream;
-struct SkGainmapInfo;
-enum SkAlphaType : int;
-enum class SkEncodedImageFormat;
-
-namespace SkCodecAnimation {
-enum class Blend;
-enum class DisposalMethod;
-}
-
 
 namespace DM {
 class CodecSrc;
-} // namespace DM
+class ColorCodecSrc;
+}
 
 /**
  *  Abstraction layer directly on top of an image codec.
@@ -201,22 +190,12 @@ public:
 
     /**
      *  Return a reasonable SkImageInfo to decode into.
-     *
-     *  If the image has an ICC profile that does not map to an SkColorSpace,
-     *  the returned SkImageInfo will use SRGB.
      */
     SkImageInfo getInfo() const { return fEncodedInfo.makeImageInfo(); }
 
     SkISize dimensions() const { return {fEncodedInfo.width(), fEncodedInfo.height()}; }
     SkIRect bounds() const {
         return SkIRect::MakeWH(fEncodedInfo.width(), fEncodedInfo.height());
-    }
-
-    /**
-     * Return the ICC profile of the encoded data.
-     */
-    const skcms_ICCProfile* getICCProfile() const {
-        return this->getEncodedInfo().profile();
     }
 
     /**
@@ -365,13 +344,9 @@ public:
      *
      *         If the info contains a non-null SkColorSpace, the codec
      *         will perform the appropriate color space transformation.
-     *
-     *         If the caller passes in the SkColorSpace that maps to the
-     *         ICC profile reported by getICCProfile(), the color space
-     *         transformation is a no-op.
-     *
-     *         If the caller passes a null SkColorSpace, no color space
-     *         transformation will be done.
+     *         If the caller passes in the same color space that was
+     *         reported by the codec, the color space transformation is
+     *         a no-op.
      *
      *  If a scanline decode is in progress, scanline mode will end, requiring the client to call
      *  startScanlineDecode() in order to return to decoding scanlines.
@@ -392,35 +367,56 @@ public:
     }
 
     /**
-     *  Return an image containing the pixels.
-     */
-    std::tuple<sk_sp<SkImage>, SkCodec::Result> getImage(const SkImageInfo& info,
-                                                         const Options* opts = nullptr);
-    std::tuple<sk_sp<SkImage>, SkCodec::Result> getImage();
-
-    /**
-     *  If decoding to YUV is supported, this returns true. Otherwise, this
-     *  returns false and the caller will ignore output parameter yuvaPixmapInfo.
+     *  If decoding to YUV is supported, this returns true.  Otherwise, this
+     *  returns false and does not modify any of the parameters.
      *
-     * @param  supportedDataTypes Indicates the data type/planar config combinations that are
-     *                            supported by the caller. If the generator supports decoding to
-     *                            YUV(A), but not as a type in supportedDataTypes, this method
-     *                            returns false.
-     *  @param yuvaPixmapInfo Output parameter that specifies the planar configuration, subsampling,
-     *                        orientation, chroma siting, plane color types, and row bytes.
+     *  @param sizeInfo   Output parameter indicating the sizes and required
+     *                    allocation widths of the Y, U, V, and A planes. Given current codec
+     *                    limitations the size of the A plane will always be 0 and the Y, U, V
+     *                    channels will always be planar.
+     *  @param colorSpace Output parameter.  If non-NULL this is set to kJPEG,
+     *                    otherwise this is ignored.
      */
-    bool queryYUVAInfo(const SkYUVAPixmapInfo::SupportedDataTypes& supportedDataTypes,
-                       SkYUVAPixmapInfo* yuvaPixmapInfo) const;
+    bool queryYUV8(SkYUVASizeInfo* sizeInfo, SkYUVColorSpace* colorSpace) const {
+        if (nullptr == sizeInfo) {
+            return false;
+        }
+
+        bool result = this->onQueryYUV8(sizeInfo, colorSpace);
+        if (result) {
+            for (int i = 0; i <= 2; ++i) {
+                SkASSERT(sizeInfo->fSizes[i].fWidth > 0 && sizeInfo->fSizes[i].fHeight > 0 &&
+                         sizeInfo->fWidthBytes[i] > 0);
+            }
+            SkASSERT(!sizeInfo->fSizes[3].fWidth &&
+                     !sizeInfo->fSizes[3].fHeight &&
+                     !sizeInfo->fWidthBytes[3]);
+        }
+        return result;
+    }
 
     /**
      *  Returns kSuccess, or another value explaining the type of failure.
-     *  This always attempts to perform a full decode. To get the planar
-     *  configuration without decoding use queryYUVAInfo().
+     *  This always attempts to perform a full decode.  If the client only
+     *  wants size, it should call queryYUV8().
      *
-     *  @param yuvaPixmaps  Contains preallocated pixmaps configured according to a successful call
-     *                      to queryYUVAInfo().
+     *  @param sizeInfo   Needs to exactly match the values returned by the
+     *                    query, except the WidthBytes may be larger than the
+     *                    recommendation (but not smaller).
+     *  @param planes     Memory for each of the Y, U, and V planes.
      */
-    Result getYUVAPlanes(const SkYUVAPixmaps& yuvaPixmaps);
+    Result getYUV8Planes(const SkYUVASizeInfo& sizeInfo, void* planes[SkYUVASizeInfo::kMaxCount]) {
+        if (!planes || !planes[0] || !planes[1] || !planes[2]) {
+            return kInvalidInput;
+        }
+        SkASSERT(!planes[3]); // TODO: is this a fair assumption?
+
+        if (!this->rewindIfNeeded()) {
+            return kCouldNotRewind;
+        }
+
+        return this->onGetYUV8Planes(sizeInfo, planes);
+    }
 
     /**
      *  Prepare for an incremental decode with the specified options.
@@ -662,52 +658,17 @@ public:
         SkAlphaType fAlphaType;
 
         /**
-         *  Whether the updated rectangle contains alpha.
-         *
-         *  This is conservative; it will still be set to true if e.g. a color
-         *  index-based frame has a color with alpha but does not use it. In
-         *  addition, it may be set to true, even if the final frame, after
-         *  blending, is opaque.
-         */
-        bool fHasAlphaWithinBounds;
-
-        /**
          *  How this frame should be modified before decoding the next one.
          */
         SkCodecAnimation::DisposalMethod fDisposalMethod;
-
-        /**
-         *  How this frame should blend with the prior frame.
-         */
-        SkCodecAnimation::Blend fBlend;
-
-        /**
-         *  The rectangle updated by this frame.
-         *
-         *  It may be empty, if the frame does not change the image. It will
-         *  always be contained by SkCodec::dimensions().
-         */
-        SkIRect fFrameRect;
     };
 
     /**
      *  Return info about a single frame.
      *
-     *  Does not read through the stream, so it should be called after
-     *  getFrameCount() to parse any frames that have not already been parsed.
-     *
-     *  Only supported by animated (multi-frame) codecs. Note that this is a
-     *  property of the codec (the SkCodec subclass), not the image.
-     *
-     *  To elaborate, some codecs support animation (e.g. GIF). Others do not
-     *  (e.g. BMP). Animated codecs can still represent single frame images.
-     *  Calling getFrameInfo(0, etc) will return true for a single frame GIF
-     *  even if the overall image is not animated (in that the pixels on screen
-     *  do not change over time). When incrementally decoding a GIF image, we
-     *  might only know that there's a single frame *so far*.
-     *
-     *  For non-animated SkCodec subclasses, it's sufficient but not necessary
-     *  for this method to always return false.
+     *  Only supported by multi-frame images. Does not read through the stream,
+     *  so it should be called after getFrameCount() to parse any frames that
+     *  have not already been parsed.
      */
     bool getFrameInfo(int index, FrameInfo* info) const {
         if (index < 0) {
@@ -724,8 +685,7 @@ public:
      *
      *  As such, future decoding calls may require a rewind.
      *
-     *  This may return an empty vector for non-animated codecs. See the
-     *  getFrameInfo(int, FrameInfo*) comment.
+     *  For still (non-animated) image codecs, this will return an empty vector.
      */
     std::vector<FrameInfo> getFrameInfo();
 
@@ -767,14 +727,6 @@ protected:
             std::unique_ptr<SkStream>,
             SkEncodedOrigin = kTopLeft_SkEncodedOrigin);
 
-    void setSrcXformFormat(XformFormat pixelFormat);
-
-    XformFormat getSrcXformFormat() const {
-        return fSrcXformFormat;
-    }
-
-    virtual bool onGetGainmapInfo(SkGainmapInfo*, std::unique_ptr<SkStream>*) { return false; }
-
     virtual SkISize onGetScaledDimensions(float /*desiredScale*/) const {
         // By default, scaling is not supported.
         return this->dimensions();
@@ -801,10 +753,14 @@ protected:
                                void* pixels, size_t rowBytes, const Options&,
                                int* rowsDecoded) = 0;
 
-    virtual bool onQueryYUVAInfo(const SkYUVAPixmapInfo::SupportedDataTypes&,
-                                 SkYUVAPixmapInfo*) const { return false; }
+    virtual bool onQueryYUV8(SkYUVASizeInfo*, SkYUVColorSpace*) const {
+        return false;
+    }
 
-    virtual Result onGetYUVAPlanes(const SkYUVAPixmaps&) { return kUnimplemented; }
+    virtual Result onGetYUV8Planes(const SkYUVASizeInfo&,
+                                   void*[SkYUVASizeInfo::kMaxCount] /*planes*/) {
+        return kUnimplemented;
+    }
 
     virtual bool onGetValidSubset(SkIRect* /*desiredSubset*/) const {
         // By default, subsets are not supported.
@@ -893,10 +849,10 @@ protected:
 
 private:
     const SkEncodedInfo                fEncodedInfo;
-    XformFormat                        fSrcXformFormat;
+    const XformFormat                  fSrcXformFormat;
     std::unique_ptr<SkStream>          fStream;
-    bool fNeedsRewind = false;
-    const SkEncodedOrigin fOrigin;
+    bool                               fNeedsRewind;
+    const SkEncodedOrigin              fOrigin;
 
     SkImageInfo                        fDstInfo;
     Options                            fOptions;
@@ -912,13 +868,9 @@ private:
     skcms_AlphaFormat                  fDstXformAlphaFormat;
 
     // Only meaningful during scanline decodes.
-    int fCurrScanline = -1;
+    int                                fCurrScanline;
 
-    bool fStartedIncrementalDecode = false;
-
-    // Allows SkAndroidCodec to call handleFrameIndex (potentially decoding a prior frame and
-    // clearing to transparent) without SkCodec itself calling it, too.
-    bool fUsingCallbackForHandleFrameIndex = false;
+    bool                               fStartedIncrementalDecode;
 
     bool initializeColorXform(const SkImageInfo& dstInfo, SkEncodedInfo::Alpha, bool srcIsOpaque);
 
@@ -942,23 +894,10 @@ private:
         return nullptr;
     }
 
-    // Callback for decoding a prior frame. The `Options::fFrameIndex` is ignored,
-    // being replaced by frameIndex. This allows opts to actually be a subclass of
-    // SkCodec::Options which SkCodec itself does not know how to copy or modify,
-    // but just passes through to the caller (where it can be reinterpret_cast'd).
-    using GetPixelsCallback = std::function<Result(const SkImageInfo&, void* pixels,
-                                                   size_t rowBytes, const Options& opts,
-                                                   int frameIndex)>;
-
     /**
      *  Check for a valid Options.fFrameIndex, and decode prior frames if necessary.
-     *
-     * If GetPixelsCallback is not null, it will be used to decode a prior frame instead
-     * of using this SkCodec directly. It may also be used recursively, if that in turn
-     * depends on a prior frame. This is used by SkAndroidCodec.
      */
-    Result handleFrameIndex(const SkImageInfo&, void* pixels, size_t rowBytes, const Options&,
-                            GetPixelsCallback = nullptr);
+    Result handleFrameIndex(const SkImageInfo&, void* pixels, size_t rowBytes, const Options&);
 
     // Methods for scanline decoding.
     virtual Result onStartScanlineDecode(const SkImageInfo& /*dstInfo*/,

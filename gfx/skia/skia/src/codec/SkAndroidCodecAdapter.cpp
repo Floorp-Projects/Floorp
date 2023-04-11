@@ -8,11 +8,8 @@
 #include "src/codec/SkAndroidCodecAdapter.h"
 #include "src/codec/SkCodecPriv.h"
 
-struct SkIRect;
-struct SkImageInfo;
-
-SkAndroidCodecAdapter::SkAndroidCodecAdapter(SkCodec* codec)
-    : INHERITED(codec)
+SkAndroidCodecAdapter::SkAndroidCodecAdapter(SkCodec* codec, ExifOrientationBehavior behavior)
+    : INHERITED(codec, behavior)
 {}
 
 SkISize SkAndroidCodecAdapter::onGetSampledDimensions(int sampleSize) const {
@@ -26,5 +23,8 @@ bool SkAndroidCodecAdapter::onGetSupportedSubset(SkIRect* desiredSubset) const {
 
 SkCodec::Result SkAndroidCodecAdapter::onGetAndroidPixels(const SkImageInfo& info, void* pixels,
         size_t rowBytes, const AndroidOptions& options) {
-    return this->codec()->getPixels(info, pixels, rowBytes, &options);
+    SkCodec::Options codecOptions;
+    codecOptions.fZeroInitialized = options.fZeroInitialized;
+    codecOptions.fSubset = options.fSubset;
+    return this->codec()->getPixels(info, pixels, rowBytes, &codecOptions);
 }

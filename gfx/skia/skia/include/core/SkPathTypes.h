@@ -8,6 +8,8 @@
 #ifndef SkPathTypes_DEFINED
 #define SkPathTypes_DEFINED
 
+#include "include/core/SkTypes.h"
+
 enum class SkPathFillType {
     /** Specifies that "inside" is computed by a non-zero sum of signed edge crossings */
     kWinding,
@@ -19,17 +21,11 @@ enum class SkPathFillType {
     kInverseEvenOdd
 };
 
-static inline bool SkPathFillType_IsEvenOdd(SkPathFillType ft) {
-    return (static_cast<int>(ft) & 1) != 0;
-}
-
-static inline bool SkPathFillType_IsInverse(SkPathFillType ft) {
-    return (static_cast<int>(ft) & 2) != 0;
-}
-
-static inline SkPathFillType SkPathFillType_ConvertToNonInverse(SkPathFillType ft) {
-    return static_cast<SkPathFillType>(static_cast<int>(ft) & 1);
-}
+enum class SkPathConvexityType {
+    kUnknown,
+    kConvex,
+    kConcave
+};
 
 enum class SkPathDirection {
     /** clockwise direction for adding closed contours */
@@ -46,12 +42,13 @@ enum SkPathSegmentMask {
 };
 
 enum class SkPathVerb {
-    kMove,   //!< SkPath::RawIter returns 1 point
-    kLine,   //!< SkPath::RawIter returns 2 points
-    kQuad,   //!< SkPath::RawIter returns 3 points
-    kConic,  //!< SkPath::RawIter returns 3 points + 1 weight
-    kCubic,  //!< SkPath::RawIter returns 4 points
-    kClose   //!< SkPath::RawIter returns 0 points
+    kMove,   //!< iter.next returns 1 point
+    kLine,   //!< iter.next returns 2 points
+    kQuad,   //!< iter.next returns 3 points
+    kConic,  //!< iter.next returns 3 points + iter.conicWeight()
+    kCubic,  //!< iter.next returns 4 points
+    kClose,  //!< iter.next returns 1 point (contour's moveTo pt)
+    kDone,   //!< iter.next returns 0 points
 };
 
 #endif

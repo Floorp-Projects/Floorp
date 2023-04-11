@@ -4,23 +4,10 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
+#include "src/core/SkTSort.h"
 #include "src/pathops/SkOpAngle.h"
-
-#include "include/core/SkPoint.h"
-#include "include/core/SkScalar.h"
-#include "include/private/base/SkFloatingPoint.h"
-#include "include/private/base/SkTemplates.h"
-#include "src/base/SkTSort.h"
-#include "src/pathops/SkIntersections.h"
 #include "src/pathops/SkOpSegment.h"
-#include "src/pathops/SkOpSpan.h"
-#include "src/pathops/SkPathOpsCubic.h"
 #include "src/pathops/SkPathOpsCurve.h"
-#include "src/pathops/SkPathOpsLine.h"
-#include "src/pathops/SkPathOpsPoint.h"
-
-#include <algorithm>
-#include <cmath>
 
 /* Angles are sorted counterclockwise. The smallest angle has a positive x and the smallest
    positive y. The largest angle has a positive x and a zero y. */
@@ -76,12 +63,10 @@ bool SkOpAngle::after(SkOpAngle* test) {
     SkOpAngle* rh = lh->fNext;
     SkASSERT(lh != rh);
     fPart.fCurve = fOriginalCurvePart;
-    // Adjust lh and rh to share the same origin (floating point error in intersections can mean
-    // they aren't exactly the same).
     lh->fPart.fCurve = lh->fOriginalCurvePart;
-    lh->fPart.fCurve[0] = fPart.fCurve[0];
+    lh->fPart.fCurve.offset(lh->segment()->verb(), fPart.fCurve[0] - lh->fPart.fCurve[0]);
     rh->fPart.fCurve = rh->fOriginalCurvePart;
-    rh->fPart.fCurve[0] = fPart.fCurve[0];
+    rh->fPart.fCurve.offset(rh->segment()->verb(), fPart.fCurve[0] - rh->fPart.fCurve[0]);
 
 #if DEBUG_ANGLE
     SkString bugOut;
@@ -341,8 +326,8 @@ void SkOpAngle::alignmentSameSide(const SkOpAngle* test, int* order) const {
 }
 
 bool SkOpAngle::checkCrossesZero() const {
-    int start = std::min(fSectorStart, fSectorEnd);
-    int end = std::max(fSectorStart, fSectorEnd);
+    int start = SkTMin(fSectorStart, fSectorEnd);
+    int end = SkTMax(fSectorStart, fSectorEnd);
     bool crossesZero = end - start > 16;
     return crossesZero;
 }
@@ -509,7 +494,7 @@ double SkOpAngle::distEndRatio(double dist) const {
             SkDVector v;
             v.set(pts[idx2] - pts[idx1]);
             double lenSq = v.lengthSquared();
-            longest = std::max(longest, lenSq);
+            longest = SkTMax(longest, lenSq);
         }
     }
     return sqrt(longest) / dist;
@@ -548,7 +533,7 @@ bool SkOpAngle::endsIntersect(SkOpAngle* rh) {
             if (approximately_equal_orderable(tStart, testT)) {
                 continue;
             }
-            smallTs[index] = t = testAscends ? std::max(t, testT) : std::min(t, testT);
+            smallTs[index] = t = testAscends ? SkTMax(t, testT) : SkTMin(t, testT);
             limited[index] = approximately_equal_orderable(t, tEnd);
         }
     }
@@ -595,12 +580,12 @@ bool SkOpAngle::endsIntersect(SkOpAngle* rh) {
         const SkDCurve& curve = index ? rh->fPart.fCurve : this->fPart.fCurve;
         int ptCount = index ? rPts : lPts;
         for (int idx2 = 0; idx2 <= ptCount; ++idx2) {
-            minX = std::min(minX, curve[idx2].fX);
-            minY = std::min(minY, curve[idx2].fY);
-            maxX = std::max(maxX, curve[idx2].fX);
-            maxY = std::max(maxY, curve[idx2].fY);
+            minX = SkTMin(minX, curve[idx2].fX);
+            minY = SkTMin(minY, curve[idx2].fY);
+            maxX = SkTMax(maxX, curve[idx2].fX);
+            maxY = SkTMax(maxY, curve[idx2].fY);
         }
-        double maxWidth = std::max(maxX - minX, maxY - minY);
+        double maxWidth = SkTMax(maxX - minX, maxY - minY);
         delta = sk_ieee_double_divide(delta, maxWidth);
         // FIXME: move these magic numbers
         // This fixes skbug.com/8380
@@ -680,12 +665,12 @@ bool SkOpAngle::endToSide(const SkOpAngle* rh, bool* inside) const {
     const SkDCurve& curve = rh->fPart.fCurve;
     int oppPts = SkPathOpsVerbToPoints(oppVerb);
     for (int idx2 = 0; idx2 <= oppPts; ++idx2) {
-        minX = std::min(minX, curve[idx2].fX);
-        minY = std::min(minY, curve[idx2].fY);
-        maxX = std::max(maxX, curve[idx2].fX);
-        maxY = std::max(maxY, curve[idx2].fY);
+        minX = SkTMin(minX, curve[idx2].fX);
+        minY = SkTMin(minY, curve[idx2].fY);
+        maxX = SkTMax(maxX, curve[idx2].fX);
+        maxY = SkTMax(maxY, curve[idx2].fY);
     }
-    double maxWidth = std::max(maxX - minX, maxY - minY);
+    double maxWidth = SkTMax(maxX - minX, maxY - minY);
     endDist = sk_ieee_double_divide(endDist, maxWidth);
     if (!(endDist >= 5e-12)) {  // empirically found
         return false; // ! above catches NaN
@@ -785,7 +770,7 @@ bool SkOpAngle::insert(SkOpAngle* angle) {
             last->fNext = angle;
             angle->fNext = next;
             debugValidateNext();
-            break;
+            return true;
         }
         last = next;
         if (last == this) {
@@ -1041,7 +1026,7 @@ void SkOpAngle::setSpans() {
         }
         testTs[testCount++] = startT;
         testTs[testCount++] = endT;
-        SkTQSort<double>(testTs, testTs + testCount);
+        SkTQSort<double>(testTs, &testTs[testCount - 1]);
         double bestSide = 0;
         int testCases = (testCount << 1) - 1;
         index = 0;
@@ -1057,9 +1042,9 @@ void SkOpAngle::setSpans() {
             }
             // OPTIMIZE: could avoid call for t == startT, endT
             SkDPoint pt = dcubic_xy_at_t(pts, segment->weight(), testT);
-            SkLineParameters testPart;
-            testPart.cubicEndPoints(fPart.fCurve.fCubic);
-            double testSide = testPart.pointDistance(pt);
+            SkLineParameters tangentPart;
+            tangentPart.cubicEndPoints(fPart.fCurve.fCubic);
+            double testSide = tangentPart.pointDistance(pt);
             if (fabs(bestSide) < fabs(testSide)) {
                 bestSide = testSide;
             }
@@ -1103,7 +1088,7 @@ deferTilLater:
         return;
     }
     bool crossesZero = this->checkCrossesZero();
-    int start = std::min(fSectorStart, fSectorEnd);
+    int start = SkTMin(fSectorStart, fSectorEnd);
     bool curveBendsCCW = (fSectorStart == start) ^ crossesZero;
     // bump the start and end of the sector span if they are on exact compass points
     if ((fSectorStart & 3) == 3) {
@@ -1113,8 +1098,8 @@ deferTilLater:
         fSectorEnd = (fSectorEnd + (curveBendsCCW ? 31 : 1)) & 0x1f;
     }
     crossesZero = this->checkCrossesZero();
-    start = std::min(fSectorStart, fSectorEnd);
-    int end = std::max(fSectorStart, fSectorEnd);
+    start = SkTMin(fSectorStart, fSectorEnd);
+    int end = SkTMax(fSectorStart, fSectorEnd);
     if (!crossesZero) {
         fSectorMask = (unsigned) -1 >> (31 - end + start) << start;
     } else {

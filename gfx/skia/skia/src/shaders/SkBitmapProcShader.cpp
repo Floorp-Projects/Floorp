@@ -7,34 +7,51 @@
 
 #include "src/shaders/SkBitmapProcShader.h"
 
-#include "src/base/SkArenaAlloc.h"
+#include "src/core/SkArenaAlloc.h"
 #include "src/core/SkBitmapProcState.h"
-#include "src/core/SkPaintPriv.h"
 #include "src/core/SkXfermodePriv.h"
 
-class BitmapProcShaderContext : public SkShaderBase::Context {
+static bool only_scale_and_translate(const SkMatrix& matrix) {
+    unsigned mask = SkMatrix::kTranslate_Mask | SkMatrix::kScale_Mask;
+    return (matrix.getType() & ~mask) == 0;
+}
+
+class BitmapProcInfoContext : public SkShaderBase::Context {
 public:
-    BitmapProcShaderContext(const SkShaderBase& shader, const SkShaderBase::ContextRec& rec,
-                            SkBitmapProcState* state)
+    // The info has been allocated elsewhere, but we are responsible for calling its destructor.
+    BitmapProcInfoContext(const SkShaderBase& shader, const SkShaderBase::ContextRec& rec,
+                            SkBitmapProcInfo* info)
         : INHERITED(shader, rec)
-        , fState(state)
-        , fFlags(0)
+        , fInfo(info)
     {
-        if (fState->fPixmap.isOpaque() && (255 == this->getPaintAlpha())) {
+        fFlags = 0;
+        if (fInfo->fPixmap.isOpaque() && (255 == this->getPaintAlpha())) {
             fFlags |= SkShaderBase::kOpaqueAlpha_Flag;
         }
 
-        auto only_scale_and_translate = [](const SkMatrix& matrix) {
-            unsigned mask = SkMatrix::kTranslate_Mask | SkMatrix::kScale_Mask;
-            return (matrix.getType() & ~mask) == 0;
-        };
-
-        if (1 == fState->fPixmap.height() && only_scale_and_translate(this->getTotalInverse())) {
+        if (1 == fInfo->fPixmap.height() && only_scale_and_translate(this->getTotalInverse())) {
             fFlags |= SkShaderBase::kConstInY32_Flag;
         }
     }
 
     uint32_t getFlags() const override { return fFlags; }
+
+private:
+    SkBitmapProcInfo*   fInfo;
+    uint32_t            fFlags;
+
+    typedef SkShaderBase::Context INHERITED;
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+class BitmapProcShaderContext : public BitmapProcInfoContext {
+public:
+    BitmapProcShaderContext(const SkShaderBase& shader, const SkShaderBase::ContextRec& rec,
+                            SkBitmapProcState* state)
+        : INHERITED(shader, rec, state)
+        , fState(state)
+    {}
 
     void shadeSpan(int x, int y, SkPMColor dstC[], int count) override {
         const SkBitmapProcState& state = *fState;
@@ -52,7 +69,7 @@ public:
         SkASSERT(state.fPixmap.addr());
 
         for (;;) {
-            int n = std::min(count, max);
+            int n = SkTMin(count, max);
             SkASSERT(n > 0 && n < BUF_MAX*2);
             mproc(state, buffer, n, x, y);
             sproc(state, buffer, n, dstC);
@@ -68,15 +85,14 @@ public:
 
 private:
     SkBitmapProcState*  fState;
-    uint32_t            fFlags;
 
-    using INHERITED = SkShaderBase::Context;
+    typedef BitmapProcInfoContext INHERITED;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 SkShaderBase::Context* SkBitmapProcLegacyShader::MakeContext(
-    const SkShaderBase& shader, SkTileMode tmx, SkTileMode tmy, const SkSamplingOptions& sampling,
+    const SkShaderBase& shader, SkTileMode tmx, SkTileMode tmy,
     const SkImage_Base* image, const ContextRec& rec, SkArenaAlloc* alloc)
 {
     SkMatrix totalInverse;
@@ -86,7 +102,7 @@ SkShaderBase::Context* SkBitmapProcLegacyShader::MakeContext(
     }
 
     SkBitmapProcState* state = alloc->make<SkBitmapProcState>(image, tmx, tmy);
-    if (!state->setup(totalInverse, rec.fPaintAlpha, sampling)) {
+    if (!state->setup(totalInverse, *rec.fPaint)) {
         return nullptr;
     }
     return alloc->make<BitmapProcShaderContext>(shader, rec, state);
