@@ -419,6 +419,35 @@ Glean telemetry
 - Handle process shutdown in ``register_process_shutdown()`` of `glean
   <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/components/glean/api/src/ipc.rs>`_
 
+Third-Party Modules
+###################
+
+- Ensure your new IPDL includes on the child side
+
+  + `GetUntrustedModulesData
+    <https://searchfox.org/mozilla-central/rev/2ce39261ea6a69e49d87f76a119494b2a7a7e42a/ipc/glue/PUtilityProcess.ipdl#106>`_
+  + `UnblockUntrustedModulesThread
+    <https://searchfox.org/mozilla-central/rev/2ce39261ea6a69e49d87f76a119494b2a7a7e42a/ipc/glue/PUtilityProcess.ipdl#113>`_
+
+- Provide a parent side implementation for both
+
+- Add handling of your new process type in ``MultiGetUntrustedModulesData::GetUntrustedModuleLoadEvents()`` `here <https://searchfox.org/mozilla-central/rev/2ce39261ea6a69e49d87f76a119494b2a7a7e42a/toolkit/components/telemetry/other/UntrustedModules.cpp#145-151>`_
+
+- `Update your IPDL <https://searchfox.org/mozilla-central/rev/2ce39261ea6a69e49d87f76a119494b2a7a7e42a/ipc/glue/PUtilityProcess.ipdl#75>`_ and make sure your ``Init()`` can receive a boolean for
+  ``isReadyForBackgroundProcessing`` `like here <https://searchfox.org/mozilla-central/rev/2ce39261ea6a69e49d87f76a119494b2a7a7e42a/ipc/glue/UtilityProcessChild.cpp#157-160>`_, then within the child's ``RecvInit()``
+  make sure a call to ``DllServices``'s ``StartUntrustedModulesProcessor()`` `is
+  performed <https://searchfox.org/mozilla-central/rev/2ce39261ea6a69e49d87f76a119494b2a7a7e42a/ipc/glue/UtilityProcessChild.cpp#185-186>`_.
+
+- Ensure your new IPDL includes for the parent side
+
+  + `GetModulesTrust <https://searchfox.org/mozilla-central/rev/2ce39261ea6a69e49d87f76a119494b2a7a7e42a/ipc/glue/PUtilityProcess.ipdl#60-61>`_
+
+- Provide an implementation on the `parent side <https://searchfox.org/mozilla-central/rev/2ce39261ea6a69e49d87f76a119494b2a7a7e42a/ipc/glue/UtilityProcessParent.cpp#69-81>`_
+
+- Expose your new process type as supported in ``UntrustedModulesProcessor::IsSupportedProcessType()`` `like others <https://searchfox.org/mozilla-central/rev/2ce39261ea6a69e49d87f76a119494b2a7a7e42a/toolkit/xre/dllservices/UntrustedModulesProcessor.cpp#76-91>`_
+
+- Update ``UntrustedModulesProcessor::SendGetModulesTrust()`` to call `your new child process <https://searchfox.org/mozilla-central/rev/2ce39261ea6a69e49d87f76a119494b2a7a7e42a/toolkit/xre/dllservices/UntrustedModulesProcessor.cpp#757-761>`_
+
 Sandboxing
 ##########
 
