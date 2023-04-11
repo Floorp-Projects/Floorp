@@ -52,6 +52,7 @@
 #include "nsTableColFrame.h"
 #include "nsTableRowFrame.h"
 #include "nsTableCellFrame.h"
+#include "nsFileControlFrame.h"
 #include "nsHTMLParts.h"
 #include "nsUnicharUtils.h"
 #include "nsViewManager.h"
@@ -3476,7 +3477,7 @@ nsCSSFrameConstructor::FindHTMLData(const Element& aElement,
 
   if (aElement.IsInNativeAnonymousSubtree() &&
       aElement.NodeInfo()->NameAtom() == nsGkAtoms::label &&
-      aParentFrame->IsFileControlFrame()) {
+      static_cast<nsFileControlFrame*>(do_QueryFrame(aParentFrame))) {
     static constexpr FrameConstructionData sFileLabelData(
         NS_NewFileControlLabelFrame);
     return &sFileLabelData;

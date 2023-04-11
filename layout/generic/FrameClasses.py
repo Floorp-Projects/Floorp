@@ -5,6 +5,15 @@
 
 from FrameClass import DYNAMIC_LEAF, LEAF, NOT_LEAF, AbstractFrame, Frame
 
+# See FrameClass.py and GenerateFrameLists.py for implementation details.
+# The following is a list of all the frame classes, followed by the frame type,
+# and whether they are a leaf.
+#
+# The frame type is somewhat arbitrary (could literally be anything) but for
+# new frame class implementations it's probably a good idea to make it a unique
+# string (maybe matching the frame name).
+#
+# See bug 1555477 for some related discussion about the whole Type() set-up.
 FRAME_CLASSES = [
     Frame("BRFrame", "Br", LEAF),
     Frame("nsBCTableCellFrame", "TableCell", NOT_LEAF),
@@ -20,7 +29,7 @@ FRAME_CLASSES = [
     Frame("nsContinuingTextFrame", "Text", LEAF),
     Frame("nsDateTimeControlFrame", "DateTimeControl", NOT_LEAF),
     Frame("nsFieldSetFrame", "FieldSet", NOT_LEAF),
-    Frame("nsFileControlFrame", "FileControl", LEAF),
+    Frame("nsFileControlFrame", "Block", LEAF),
     Frame("FileControlLabelFrame", "Block", NOT_LEAF),
     Frame("nsFirstLetterFrame", "Letter", NOT_LEAF),
     Frame("nsFirstLineFrame", "Line", NOT_LEAF),
