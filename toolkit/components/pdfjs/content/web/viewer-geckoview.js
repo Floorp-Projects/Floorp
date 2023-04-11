@@ -36,7 +36,7 @@ exports.FirefoxCom = exports.DownloadManager = void 0;
 __webpack_require__(2);
 var _app = __webpack_require__(3);
 var _pdfjsLib = __webpack_require__(5);
-var _preferences = __webpack_require__(28);
+var _preferences = __webpack_require__(29);
 var _ui_utils = __webpack_require__(4);
 var _l10n_utils = __webpack_require__(18);
 ;
@@ -507,8 +507,8 @@ var _webPdf_sidebar_resizer = __webpack_require__(9);
 var _webPdf_thumbnail_viewer = __webpack_require__(9);
 var _pdf_viewer = __webpack_require__(17);
 var _webSecondary_toolbar = __webpack_require__(9);
-var _webToolbar = __webpack_require__(9);
-var _view_history = __webpack_require__(27);
+var _webToolbar = __webpack_require__(27);
+var _view_history = __webpack_require__(28);
 const FORCE_PAGES_LOADED_TIMEOUT = 10000;
 const WHEEL_ZOOM_DISABLED_TIMEOUT = 1000;
 const ViewOnLoad = {
@@ -1856,14 +1856,14 @@ function webViewerInitialized() {
     });
   }
   if (!PDFViewerApplication.supportsPrinting) {
-    appConfig.toolbar?.print.classList.add("hidden");
+    appConfig.toolbar?.print?.classList.add("hidden");
     appConfig.secondaryToolbar?.printButton.classList.add("hidden");
   }
   if (!PDFViewerApplication.supportsFullscreen) {
     appConfig.secondaryToolbar?.presentationModeButton.classList.add("hidden");
   }
   if (PDFViewerApplication.supportsIntegratedFind) {
-    appConfig.toolbar?.viewFind.classList.add("hidden");
+    appConfig.toolbar?.viewFind?.classList.add("hidden");
   }
   appConfig.mainContainer.addEventListener("transitionend", function (evt) {
     if (evt.target === this) {
@@ -2338,6 +2338,9 @@ function webViewerTouchEnd(evt) {
   PDFViewerApplication._touchUnusedFactor = 1;
 }
 function webViewerClick(evt) {
+  if (document.activeElement === PDFViewerApplication.appConfig.mainContainer) {
+    PDFViewerApplication.toolbar?.toggle();
+  }
   if (!PDFViewerApplication.secondaryToolbar?.isOpen) {
     return;
   }
@@ -6021,7 +6024,7 @@ class PDFViewer {
   #onVisibilityChange = null;
   #scaleTimeoutId = null;
   constructor(options) {
-    const viewerVersion = '3.6.9';
+    const viewerVersion = '3.6.25';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -6984,21 +6987,25 @@ class PDFViewer {
     return true;
   }
   getPagesOverview() {
+    let initialOrientation;
     return this._pages.map(pageView => {
       const viewport = pageView.pdfPage.getViewport({
         scale: 1
       });
-      if (!this.enablePrintAutoRotate || (0, _ui_utils.isPortraitOrientation)(viewport)) {
+      const orientation = (0, _ui_utils.isPortraitOrientation)(viewport);
+      if (initialOrientation === undefined) {
+        initialOrientation = orientation;
+      } else if (this.enablePrintAutoRotate && orientation !== initialOrientation) {
         return {
-          width: viewport.width,
-          height: viewport.height,
-          rotation: viewport.rotation
+          width: viewport.height,
+          height: viewport.width,
+          rotation: (viewport.rotation - 90) % 360
         };
       }
       return {
-        width: viewport.height,
-        height: viewport.width,
-        rotation: (viewport.rotation - 90) % 360
+        width: viewport.width,
+        height: viewport.height,
+        rotation: viewport.rotation
       };
     });
   }
@@ -9153,6 +9160,63 @@ exports.XfaLayerBuilder = XfaLayerBuilder;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
+exports.Toolbar = void 0;
+class Toolbar {
+  #buttons;
+  #eventBus;
+  #toolbar;
+  #mainContainer;
+  #toggleBound = this.toggle.bind(this);
+  constructor(options, eventBus, _l10n) {
+    this.#toolbar = options.container;
+    this.#mainContainer = options.mainContainer;
+    this.#eventBus = eventBus;
+    this.#buttons = [{
+      element: options.download,
+      eventName: "download"
+    }];
+    this.#bindListeners(options);
+  }
+  setPageNumber(pageNumber, pageLabel) {}
+  setPagesCount(pagesCount, hasPageLabels) {}
+  setPageScale(pageScaleValue, pageScale) {}
+  reset() {}
+  #bindListeners(options) {
+    for (const {
+      element,
+      eventName,
+      eventDetails
+    } of this.#buttons) {
+      element.addEventListener("click", evt => {
+        if (eventName !== null) {
+          this.#eventBus.dispatch(eventName, {
+            source: this,
+            ...eventDetails
+          });
+        }
+      });
+    }
+  }
+  updateLoadingIndicatorState(loading = false) {}
+  toggle() {
+    if (this.#toolbar.classList.toggle("show")) {
+      this.#mainContainer.addEventListener("scroll", this.#toggleBound);
+    } else {
+      this.#mainContainer.removeEventListener("scroll", this.#toggleBound);
+    }
+  }
+}
+exports.Toolbar = Toolbar;
+
+/***/ }),
+/* 28 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
 exports.ViewHistory = void 0;
 const DEFAULT_VIEW_HISTORY_CACHE_SIZE = 20;
 class ViewHistory {
@@ -9222,7 +9286,7 @@ class ViewHistory {
 exports.ViewHistory = ViewHistory;
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -9395,18 +9459,24 @@ var _ui_utils = __webpack_require__(4);
 var _app_options = __webpack_require__(6);
 var _pdf_link_service = __webpack_require__(8);
 var _app = __webpack_require__(3);
-const pdfjsVersion = '3.6.9';
-const pdfjsBuild = '184076fe7';
+const pdfjsVersion = '3.6.25';
+const pdfjsBuild = 'a43151103';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;
 window.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplicationOptions = _app_options.AppOptions;
 function getViewerConfiguration() {
+  const mainContainer = document.getElementById("viewerContainer");
   return {
     appContainer: document.body,
-    mainContainer: document.getElementById("viewerContainer"),
+    mainContainer,
     viewerContainer: document.getElementById("viewer"),
+    toolbar: {
+      mainContainer,
+      container: document.getElementById("floatingToolbar"),
+      download: document.getElementById("download")
+    },
     passwordOverlay: {
       dialog: document.getElementById("passwordDialog"),
       label: document.getElementById("passwordText"),
