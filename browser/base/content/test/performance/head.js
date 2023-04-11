@@ -788,7 +788,7 @@ async function runUrlbarTest(
   };
 
   let urlbarRect = URLBar.textbox.getBoundingClientRect();
-  const SHADOW_SIZE = 14;
+  const SHADOW_SIZE = 17;
   let expectedRects = {
     filter: rects => {
       // We put text into the urlbar so expect its textbox to change.
