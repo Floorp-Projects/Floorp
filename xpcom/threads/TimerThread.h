@@ -152,6 +152,12 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
   size_t ComputeTimerInsertionIndex(const TimeStamp& timeout) const
       MOZ_REQUIRES(mMonitor);
 
+  // Computes and returns when we should next try to wake up in order to handle
+  // the triggering of the timers in mTimers. Currently this is very simple and
+  // we always just plan to wake up for the next timer in the list. In the
+  // future this will be more sophisticated.
+  TimeStamp ComputeWakeupTimeFromTimers() const MOZ_REQUIRES(mMonitor);
+
 #ifdef DEBUG
   // Checks mTimers to see if any entries are out of order or any cached
   // timeouts are incorrect and will assert if any inconsistency is found. Has
@@ -164,9 +170,15 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
   // cancelled entries* (those whose mTimerImpl is nullptr). Notably this means
   // that you cannot use a binary search on this list.
   nsTArray<Entry> mTimers MOZ_GUARDED_BY(mMonitor);
+
   // Set only at the start of the thread's Run():
   uint32_t mAllowedEarlyFiringMicroseconds MOZ_GUARDED_BY(mMonitor);
+
   ProfilerThreadId mProfilerThreadId MOZ_GUARDED_BY(mMonitor);
+
+  // Time at which we were intending to wake up the last time that we slept.
+  // Is "null" if we have never slept or if our last sleep was "forever".
+  TimeStamp mIntendedWakeupTime;
 
 #if TIMER_THREAD_STATISTICS
   static constexpr size_t sTimersFiredPerWakeupBucketCount = 16;
