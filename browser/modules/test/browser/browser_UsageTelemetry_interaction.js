@@ -765,7 +765,31 @@ add_task(async function preferences() {
   });
 });
 
-add_task(async function history_appMenu() {
+/**
+ * Context click on a history or bookmark link and open it in a new window.
+ *
+ * @param {Element} link - The link to open.
+ */
+async function openLinkUsingContextMenu(link) {
+  const placesContext = document.getElementById("placesContext");
+  const promisePopup = BrowserTestUtils.waitForEvent(
+    placesContext,
+    "popupshown"
+  );
+  EventUtils.synthesizeMouseAtCenter(link, {
+    button: 2,
+    type: "contextmenu",
+  });
+  await promisePopup;
+  const promiseNewWindow = BrowserTestUtils.waitForNewWindow();
+  placesContext.activateItem(
+    document.getElementById("placesContext_open:newwindow")
+  );
+  const win = await promiseNewWindow;
+  await BrowserTestUtils.closeWindow(win);
+}
+
+async function history_appMenu(useContextClick) {
   await BrowserTestUtils.withNewTab("https://example.com", async browser => {
     let shown = BrowserTestUtils.waitForEvent(
       elem("appMenu-popup"),
@@ -781,9 +805,11 @@ add_task(async function history_appMenu() {
     let list = document.getElementById("appMenu_historyMenu");
     let listItem = list.querySelector("toolbarbutton");
 
-    EventUtils.synthesizeMouseAtCenter(listItem, {});
-
-    // TODO add context menu click event per bug 1823995
+    if (useContextClick) {
+      await openLinkUsingContextMenu(listItem);
+    } else {
+      EventUtils.synthesizeMouseAtCenter(listItem, {});
+    }
 
     let expectedScalars = {
       nav_bar: {
@@ -794,9 +820,17 @@ add_task(async function history_appMenu() {
     };
     assertInteractionScalars(expectedScalars);
   });
+}
+
+add_task(async function history_appMenu_click() {
+  await history_appMenu(false);
 });
 
-add_task(async function bookmarks_appMenu() {
+add_task(async function history_appMenu_context_click() {
+  await history_appMenu(true);
+});
+
+async function bookmarks_appMenu(useContextClick) {
   await BrowserTestUtils.withNewTab("https://example.com", async browser => {
     let shown = BrowserTestUtils.waitForEvent(
       elem("appMenu-popup"),
@@ -817,9 +851,11 @@ add_task(async function bookmarks_appMenu() {
     let list = document.getElementById("panelMenu_bookmarksMenu");
     let listItem = list.querySelector("toolbarbutton");
 
-    EventUtils.synthesizeMouseAtCenter(listItem, {});
-
-    // TODO add context menu click event per bug 1823995
+    if (useContextClick) {
+      await openLinkUsingContextMenu(listItem);
+    } else {
+      EventUtils.synthesizeMouseAtCenter(listItem, {});
+    }
 
     let expectedScalars = {
       nav_bar: {
@@ -830,9 +866,17 @@ add_task(async function bookmarks_appMenu() {
     };
     assertInteractionScalars(expectedScalars);
   });
+}
+
+add_task(async function bookmarks_appMenu_click() {
+  await bookmarks_appMenu(false);
 });
 
-add_task(async function bookmarks_library_navbar() {
+add_task(async function bookmarks_appMenu_context_click() {
+  await bookmarks_appMenu(true);
+});
+
+async function bookmarks_library_navbar(useContextClick) {
   await BrowserTestUtils.withNewTab("https://example.com", async browser => {
     CustomizableUI.addWidgetToArea("library-button", "nav-bar");
     let button = document.getElementById("library-button");
@@ -848,9 +892,11 @@ add_task(async function bookmarks_library_navbar() {
     let list = document.getElementById("panelMenu_bookmarksMenu");
     let listItem = list.querySelector("toolbarbutton");
 
-    EventUtils.synthesizeMouseAtCenter(listItem, {});
-
-    // TODO add context menu click event per bug 1823995
+    if (useContextClick) {
+      await openLinkUsingContextMenu(listItem);
+    } else {
+      EventUtils.synthesizeMouseAtCenter(listItem, {});
+    }
 
     let expectedScalars = {
       nav_bar: {
@@ -863,9 +909,17 @@ add_task(async function bookmarks_library_navbar() {
   });
 
   CustomizableUI.removeWidgetFromArea("library-button");
+}
+
+add_task(async function bookmarks_library_navbar_click() {
+  await bookmarks_library_navbar(false);
 });
 
-add_task(async function history_library_navbar() {
+add_task(async function bookmarks_library_navbar_context_click() {
+  await bookmarks_library_navbar(true);
+});
+
+async function history_library_navbar(useContextClick) {
   await BrowserTestUtils.withNewTab("https://example.com", async browser => {
     CustomizableUI.addWidgetToArea("library-button", "nav-bar");
     let button = document.getElementById("library-button");
@@ -885,9 +939,11 @@ add_task(async function history_library_navbar() {
     let list = document.getElementById("appMenu_historyMenu");
     let listItem = list.querySelector("toolbarbutton");
 
-    EventUtils.synthesizeMouseAtCenter(listItem, {});
-
-    // TODO add context menu click event per bug 1823995
+    if (useContextClick) {
+      await openLinkUsingContextMenu(listItem);
+    } else {
+      EventUtils.synthesizeMouseAtCenter(listItem, {});
+    }
 
     let expectedScalars = {
       nav_bar: {
@@ -900,4 +956,12 @@ add_task(async function history_library_navbar() {
   });
 
   CustomizableUI.removeWidgetFromArea("library-button");
+}
+
+add_task(async function history_library_navbar_click() {
+  await history_library_navbar(false);
+});
+
+add_task(async function history_library_navbar_context_click() {
+  await history_library_navbar(true);
 });
