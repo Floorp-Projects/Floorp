@@ -3,6 +3,12 @@
  *   when it's cross-origin-isolated.
  */
 
+const TEST_SCENARIO_1 = 1;
+const TEST_SCENARIO_4 = 4;
+const TEST_SCENARIO_7 = 7;
+const TEST_SCENARIO_10 = 10;
+const TEST_SCENARIO_11 = 11;
+
 // ================================================================================================
 // ================================================================================================
 // This test case is mostly copy-and-paste from the test case for window in
@@ -33,6 +39,22 @@ add_task(async function runRTPTestDOM() {
       "audioContext.currentTime * 1000",
     ]);
 
+    // If we are not rounding values, this function will invert the return value
+    let resultSwitchisRounded = function(timeStamp) {
+      if (timeStamp == 0) {
+        return true;
+      }
+      let result = isRounded(timeStamp, expectedPrecision, content.console);
+      return data.options.shouldBeRounded ? result : !result;
+    };
+
+    // It's possible that even if we shouldn't be rounding something, we get a timestamp that is rounded.
+    // If we have only one of these outliers, we are okay with that.  This should significantly
+    // reduce intermittents, although it's still likely there will be some intermittents.  We can increase
+    // this if we need to
+    let successes = [],
+      failures = [];
+
     // Loop through each timeStampCode, evaluate it,
     // and check if it is rounded
     for (let timeStampCode of timeStampCodesDOM) {
@@ -49,9 +71,27 @@ add_task(async function runRTPTestDOM() {
         continue;
       }
 
+      if (timeStamp != 0 && resultSwitchisRounded(timeStamp)) {
+        successes = successes.concat([[timeStampCode, timeStamp]]);
+      } else if (timeStamp != 0) {
+        failures = failures.concat([[timeStampCode, timeStamp]]);
+      }
+    }
+
+    for (let success of successes) {
       ok(
-        isRounded(timeStamp, expectedPrecision),
-        `Should be rounded to nearest ${expectedPrecision} ms; saw ${timeStamp}`
+        resultSwitchisRounded(success[1]),
+        (data.options.shouldBeRounded ? "Should " : "Should not ") +
+          `have rounded '${success[0]}' to nearest ${expectedPrecision} ms; saw ${success[1]}. ` +
+          `Scenario: ${data.options.scenario}`
+      );
+    }
+    for (let failure of failures) {
+      ok(
+        resultSwitchisRounded(failure[1]),
+        (data.options.shouldBeRounded ? "Should " : "Should not ") +
+          `have rounded '${failure[0]}' to nearest ${expectedPrecision} ms; saw ${failure[1]}. ` +
+          `Scenario: ${data.options.scenario}`
       );
     }
   };
@@ -62,6 +102,7 @@ add_task(async function runRTPTestDOM() {
       resistFingerprinting: true,
       reduceTimerPrecision: true,
       crossOriginIsolated: true,
+      scenario: TEST_SCENARIO_1,
     },
     100,
     runTests
@@ -70,6 +111,7 @@ add_task(async function runRTPTestDOM() {
     {
       resistFingerprinting: true,
       crossOriginIsolated: true,
+      scenario: TEST_SCENARIO_4,
     },
     13,
     runTests
@@ -78,6 +120,7 @@ add_task(async function runRTPTestDOM() {
     {
       resistFingerprinting: true,
       crossOriginIsolated: true,
+      scenario: TEST_SCENARIO_7,
     },
     0.13,
     runTests
@@ -87,6 +130,7 @@ add_task(async function runRTPTestDOM() {
   await setupAndRunCrossOriginIsolatedTest(
     {
       reduceTimerPrecision: true,
+      scenario: TEST_SCENARIO_10,
     },
     0.13,
     runTests
@@ -95,6 +139,7 @@ add_task(async function runRTPTestDOM() {
     {
       reduceTimerPrecision: true,
       crossOriginIsolated: true,
+      scenario: TEST_SCENARIO_11,
     },
     0.005,
     runTests
@@ -137,10 +182,19 @@ let runWorkerTest = async function(data) {
           });
 
           worker.addEventListener("message", function(e) {
+            // If we are not rounding values, this function will invert the return value
+            let resultSwitchisRounded = function(timeStamp) {
+              if (timeStamp == 0) {
+                return true;
+              }
+              let result = isRounded(timeStamp, expectedPrecision);
+              return data.options.shouldBeRounded ? result : !result;
+            };
+
             if (e.data.type == "result") {
               if (e.data.resultOf == timeStampCode) {
                 ok(
-                  isRounded(e.data.result, expectedPrecision),
+                  resultSwitchisRounded(e.data.result),
                   `The result of ${e.data.resultOf} should be rounded to ` +
                     ` nearest ${expectedPrecision} ms in workers; saw ` +
                     `${e.data.result}`
