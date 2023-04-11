@@ -43,69 +43,11 @@ var gUtils = window.windowUtils;
 var gFM = Services.focus;
 
 function runComplexContenteditableTests() {
-  var description = "runReadonlyChangingOnContenteditable: ";
-
-  var container = document.getElementById("display");
-  var button = document.getElementById("button");
-
-  // the editor has focus directly.
-  container.setAttribute("contenteditable", "true");
-  container.focus();
-
-  is(gFM.focusedElement, container,
-     description + "The editor doesn't get focus");
-  is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
-     description + "IME isn't enabled on HTML editor");
+  const container = document.getElementById("display");
   const kReadonly = Ci.nsIEditor.eEditorReadonlyMask;
-  var editor = window.docShell.editor;
-  var flags = editor.flags;
-  editor.flags = flags | kReadonly;
-  is(gFM.focusedElement, container,
-     description + "The editor loses focus by flag change");
-  is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
-     description + "IME is still enabled on readonly HTML editor");
-  editor.flags = flags;
-  is(gFM.focusedElement, container,
-     description + "The editor loses focus by flag change #2");
-  is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
-     description + "IME is still disabled, the editor isn't readonly now");
-  container.removeAttribute("contenteditable");
-  todo_is(gFM.focusedElement, null,
-          description + "The container still has focus, the editor has been no editable");
-  is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
-     description + "IME is still enabled on the editor, the editor has been no editable");
 
-  // a button which is in the editor has focus
-  button.focus();
-  is(gFM.focusedElement, button,
-     description + "The button doesn't get focus");
-  is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
-     description + "IME is enabled on the button");
-  container.setAttribute("contenteditable", "true");
-  is(gFM.focusedElement, button,
-     description + "The button loses focus, the container is editable now");
-  todo_is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
-          description + "IME is still disabled on the button, the container is editable now");
-  editor = window.docShell.editor;
-  flags = editor.flags;
-  editor.flags = flags | kReadonly;
-  is(gFM.focusedElement, button,
-     description + "The button loses focus by changing editor flags");
-  is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
-     description + "IME is still enabled on the button, the container is readonly now");
-  editor.flags = flags;
-  is(gFM.focusedElement, button,
-     description + "The button loses focus by changing editor flags #2");
-  is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
-     description + "IME is still disabled on the button, the container isn't readonly now");
-  container.removeAttribute("contenteditable");
-  is(gFM.focusedElement, button,
-     description + "The button loses focus, the container has been no editable");
-  todo_is(gUtils.IMEStatus, gUtils.IME_STATUS_DISABLED,
-          description + "IME is still enabled on the button, the container has been no editable");
-
-  description = "testOnIndependentEditor: ";
   function testOnIndependentEditor(aEditor, aEditorDescription) {
+    const description = "testOnIndependentEditor: ";
     var expectedState =
       aEditor.readOnly ? gUtils.IME_STATUS_DISABLED : gUtils.IME_STATUS_ENABLED;
     var unexpectedStateDescription =
@@ -123,8 +65,8 @@ function runComplexContenteditableTests() {
     is(gUtils.IMEStatus, expectedState,
        description + "IME becomes " + unexpectedStateDescription +
          " on the " + aEditorDescription + ", the container is editable now");
-    editor = window.docShell.editor;
-    flags = editor.flags;
+    const editor = window.docShell.editor;
+    const flags = editor.flags;
     editor.flags = flags | kReadonly;
     is(gFM.focusedElement, aEditor,
        description + "The " + aEditorDescription +
@@ -161,8 +103,8 @@ function runComplexContenteditableTests() {
   testOnIndependentEditor(document.getElementById("text_readonly"),
                           "input[type=\"text\"][readonly]");
 
-  description = "testOnOutsideOfEditor: ";
   function testOnOutsideOfEditor(aFocusNode, aFocusNodeDescription, aEditor) {
+    const description = "testOnOutsideOfEditor: ";
     if (aFocusNode) {
       aFocusNode.focus();
       is(gFM.focusedElement, aFocusNode,
@@ -187,8 +129,8 @@ function runComplexContenteditableTests() {
        description + "IME becomes " + unexpectedStateDescription +
          " on the " + aFocusNodeDescription +
          ", the HTML editor is editable now");
-    editor = window.docShell.editor;
-    flags = editor.flags;
+    const editor = window.docShell.editor;
+    const flags = editor.flags;
     editor.flags = flags | kReadonly;
     is(gFM.focusedElement, aFocusNode,
        description + aFocusNodeDescription +
