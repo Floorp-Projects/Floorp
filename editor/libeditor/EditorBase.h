@@ -222,6 +222,14 @@ class EditorBase : public nsIEditor,
   }
 
   /**
+   * @return Ancestor limiter of normal selection
+   */
+  [[nodiscard]] nsIContent* GetSelectionAncestorLimiter() const {
+    Selection* selection = GetSelection(SelectionType::eNormal);
+    return selection ? selection->GetAncestorLimiter() : nullptr;
+  }
+
+  /**
    * Fast non-refcounting editor root element accessor
    */
   Element* GetRoot() const { return mRootElement; }

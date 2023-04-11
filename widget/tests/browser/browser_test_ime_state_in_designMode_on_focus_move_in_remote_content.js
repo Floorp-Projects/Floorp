@@ -107,11 +107,6 @@ add_task(async function() {
       await runIMEStateOnFocusMoveTests('in designMode="on"');
       await SpecialPowers.spawn(browser, [], async () => {
         content.document.designMode = "off";
-        // Hack for passing the first test.
-        const input = content.document.createElement("input");
-        content.document.body.appendChild(input);
-        input.focus();
-        input.remove();
       });
       await runIMEStateOnFocusMoveTests('in designMode="off"');
     }
