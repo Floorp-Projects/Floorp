@@ -636,6 +636,7 @@ mozilla::StylePrefersContrast Gecko_MediaFeatures_PrefersContrast(
     const mozilla::dom::Document*);
 mozilla::StylePrefersColorScheme Gecko_MediaFeatures_PrefersColorScheme(
     const mozilla::dom::Document*, bool aUseContent);
+bool Gecko_MediaFeatures_InvertedColors(const mozilla::dom::Document*);
 mozilla::StyleScripting Gecko_MediaFeatures_Scripting(
     const mozilla::dom::Document*);
 

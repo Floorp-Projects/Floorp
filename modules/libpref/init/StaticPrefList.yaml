@@ -8821,6 +8821,13 @@
   mirror: always
   rust: true
 
+# Dictates whether or not the inverted-colors media query is enabled.
+- name: layout.css.inverted-colors.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Is support for forced-color-adjust properties enabled?
 - name: layout.css.forced-color-adjust.enabled
   type: RelaxedAtomicBool

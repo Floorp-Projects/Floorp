@@ -350,6 +350,10 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = 0;
       break;
 
+    case IntID::InvertedColors:
+      aResult = java::GeckoSystemStateListener::IsInvertedColors();
+      break;
+
     case IntID::PrimaryPointerCapabilities:
       aResult = java::GeckoAppShell::GetAllPointerCapabilities();
 

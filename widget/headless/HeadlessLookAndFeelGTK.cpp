@@ -168,6 +168,9 @@ nsresult HeadlessLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::PrefersReducedTransparency:
       aResult = 0;
       break;
+    case IntID::InvertedColors:
+      aResult = 0;
+      break;
     case IntID::PrimaryPointerCapabilities:
       aResult = 0;
       break;

@@ -182,6 +182,7 @@ static const char sIntPrefs[][45] = {
     "ui.systemUsesDarkTheme",
     "ui.prefersReducedMotion",
     "ui.prefersReducedTransparency",
+    "ui.invertedColors",
     "ui.primaryPointerCapabilities",
     "ui.allPointerCapabilities",
     "ui.systemScrollbarSize",
