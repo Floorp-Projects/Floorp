@@ -26,7 +26,9 @@ static char* UnicodeToNative(JSContext* cx, const char16_t* source,
   }
 
   char* result = static_cast<char*>(JS_malloc(cx, native.Length() + 1));
-  if (!result) return nullptr;
+  if (!result) {
+    return nullptr;
+  }
 
   memcpy(result, native.get(), native.Length() + 1);
   return result;
@@ -48,11 +50,15 @@ Module::~Module() = default;
 static bool InitCTypesClassAndSetCallbacks(JSContext* cx,
                                            JS::Handle<JSObject*> global) {
   // Init the ctypes object.
-  if (!JS::InitCTypesClass(cx, global)) return false;
+  if (!JS::InitCTypesClass(cx, global)) {
+    return false;
+  }
 
   // Set callbacks for charset conversion and such.
   JS::Rooted<JS::Value> ctypes(cx);
-  if (!JS_GetProperty(cx, global, "ctypes", &ctypes)) return false;
+  if (!JS_GetProperty(cx, global, "ctypes", &ctypes)) {
+    return false;
+  }
 
   JS::SetCTypesCallbacks(ctypes.toObjectOrNull(), &sCallbacks);
 
