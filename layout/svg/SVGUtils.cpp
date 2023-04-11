@@ -409,14 +409,14 @@ void SVGUtils::NotifyChildrenOfSVGChange(nsIFrame* aFrame, uint32_t aFlags) {
 // ************************************************************
 
 float SVGUtils::ComputeOpacity(const nsIFrame* aFrame, bool aHandleOpacity) {
-  float opacity = aFrame->StyleEffects()->mOpacity;
+  const auto* styleEffects = aFrame->StyleEffects();
 
-  if (opacity != 1.0f &&
+  if (!styleEffects->IsOpaque() &&
       (SVGUtils::CanOptimizeOpacity(aFrame) || !aHandleOpacity)) {
     return 1.0f;
   }
 
-  return opacity;
+  return styleEffects->mOpacity;
 }
 
 void SVGUtils::DetermineMaskUsage(const nsIFrame* aFrame, bool aHandleOpacity,
@@ -476,7 +476,7 @@ class MixModeBlender {
   }
 
   bool ShouldCreateDrawTargetForBlend() const {
-    return mFrame->StyleEffects()->mMixBlendMode != StyleBlend::Normal;
+    return mFrame->StyleEffects()->HasMixBlendMode();
   }
 
   gfxContext* CreateBlendTarget(const gfxMatrix& aTransform) {
@@ -602,7 +602,7 @@ void SVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
    *
    * + Use cairo's clipPath when representable natively (single object
    *   clip region).
-   *f
+   *
    * + Merge opacity and masking if both used together.
    */
 
@@ -1285,13 +1285,13 @@ void SVGUtils::MakeFillPatternFor(nsIFrame* aFrame, gfxContext* aContext,
     return;
   }
 
-  const float opacity = aFrame->StyleEffects()->mOpacity;
+  const auto* styleEffects = aFrame->StyleEffects();
 
   float fillOpacity = GetOpacity(style->mFillOpacity, aContextPaint);
-  if (opacity < 1.0f && SVGUtils::CanOptimizeOpacity(aFrame)) {
+  if (!styleEffects->IsOpaque() && SVGUtils::CanOptimizeOpacity(aFrame)) {
     // Combine the group opacity into the fill opacity (we will have skipped
     // creating an offscreen surface to apply the group opacity).
-    fillOpacity *= opacity;
+    fillOpacity *= styleEffects->mOpacity;
   }
 
   const DrawTarget* dt = aContext->GetDrawTarget();
@@ -1352,13 +1352,13 @@ void SVGUtils::MakeStrokePatternFor(nsIFrame* aFrame, gfxContext* aContext,
     return;
   }
 
-  const float opacity = aFrame->StyleEffects()->mOpacity;
+  const auto* styleEffects = aFrame->StyleEffects();
 
   float strokeOpacity = GetOpacity(style->mStrokeOpacity, aContextPaint);
-  if (opacity < 1.0f && SVGUtils::CanOptimizeOpacity(aFrame)) {
+  if (!styleEffects->IsOpaque() && SVGUtils::CanOptimizeOpacity(aFrame)) {
     // Combine the group opacity into the stroke opacity (we will have skipped
     // creating an offscreen surface to apply the group opacity).
-    strokeOpacity *= opacity;
+    strokeOpacity *= styleEffects->mOpacity;
   }
 
   const DrawTarget* dt = aContext->GetDrawTarget();

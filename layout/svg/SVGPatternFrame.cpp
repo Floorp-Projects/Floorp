@@ -337,10 +337,11 @@ already_AddRefed<SourceSurface> SVGPatternFrame::PaintPattern(
   dt->ClearRect(Rect(0, 0, surfaceSize.width, surfaceSize.height));
 
   gfxContext ctx(dt);
+  gfxGroupForBlendAutoSaveRestore autoGroupForBlend(&ctx);
 
   if (aGraphicOpacity != 1.0f) {
-    ctx.Save();
-    ctx.PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, aGraphicOpacity);
+    autoGroupForBlend.PushGroupForBlendBack(gfxContentType::COLOR_ALPHA,
+                                            aGraphicOpacity);
   }
 
   // OK, now render -- note that we use "firstKid", which
@@ -371,11 +372,6 @@ already_AddRefed<SourceSurface> SVGPatternFrame::PaintPattern(
   }
 
   patternWithChildren->mSource = nullptr;
-
-  if (aGraphicOpacity != 1.0f) {
-    ctx.PopGroupAndBlend();
-    ctx.Restore();
-  }
 
   // caller now owns the surface
   return dt->GetBackingSurface();
