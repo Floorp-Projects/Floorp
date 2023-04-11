@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import re
 
 from mach.decorators import Command, CommandArgument
 
@@ -52,7 +53,7 @@ import {{ html }} from "../vendor/lit.all.mjs";
 import "./{element_name}.mjs";
 
 export default {{
-  title: "Design System/Experiments/{class_name}",
+  title: "{story_name}",
   component: "{element_name}",
   argTypes: {{
     variant: {{
@@ -147,11 +148,14 @@ def addwidget(command_context, names):
 
         story_path = "{0}/{1}.stories.mjs".format(component_dir, name)
         with open(story_path, "w", newline="\n") as f:
+            story_name = " ".join(
+                name for name in re.findall(r"[A-Z][a-z]+", class_name) if name != "Moz"
+            )
             f.write(
                 STORY_HEADER.format(
                     license=LICENSE_HEADER,
                     element_name=name,
-                    class_name=class_name,
+                    story_name=story_name,
                 )
             )
 
