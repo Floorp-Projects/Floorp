@@ -701,7 +701,6 @@ async function testA(
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
-      ["privacy.resistFingerprinting.testGranularityMask", 4],
       [
         "privacy.resistFingerprinting.exemptedDomains",
         "example.com, example.org, example.net",
@@ -739,7 +738,6 @@ async function testB(
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
-      ["privacy.resistFingerprinting.testGranularityMask", 4],
       [
         "privacy.resistFingerprinting.exemptedDomains",
         "example.com, example.org",
@@ -777,7 +775,6 @@ async function testC(
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
-      ["privacy.resistFingerprinting.testGranularityMask", 4],
       [
         "privacy.resistFingerprinting.exemptedDomains",
         "example.com, example.net",
@@ -815,7 +812,6 @@ async function testD(
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
-      ["privacy.resistFingerprinting.testGranularityMask", 4],
       ["privacy.resistFingerprinting.exemptedDomains", "example.com"],
     ].concat(extraPrefs || []),
   });
@@ -850,7 +846,6 @@ async function testE(
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
-      ["privacy.resistFingerprinting.testGranularityMask", 4],
       ["privacy.resistFingerprinting.exemptedDomains", "example.net"],
     ].concat(extraPrefs || []),
   });
@@ -885,7 +880,6 @@ async function testF(
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
-      ["privacy.resistFingerprinting.testGranularityMask", 4],
       ["privacy.resistFingerprinting.exemptedDomains", ""],
     ].concat(extraPrefs || []),
   });
@@ -920,7 +914,6 @@ async function testG(
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
-      ["privacy.resistFingerprinting.testGranularityMask", 4],
       [
         "privacy.resistFingerprinting.exemptedDomains",
         "example.org, example.net",
@@ -958,7 +951,6 @@ async function testH(
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", true],
-      ["privacy.resistFingerprinting.testGranularityMask", 4],
       ["privacy.resistFingerprinting.exemptedDomains", "example.org"],
     ].concat(extraPrefs || []),
   });

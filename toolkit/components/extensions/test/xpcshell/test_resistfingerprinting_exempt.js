@@ -34,22 +34,6 @@ add_task(
     ],
   },
   async function test_appName_resistFingerprinting() {
-    const SPOOFED_APPNAME = "Netscape";
-
-    let appName = await queryAppName();
-    Assert.equal(appName, SPOOFED_APPNAME);
-  }
-);
-
-add_task(
-  {
-    pref_set: [
-      ["general.appname.override", APPNAME_OVERRIDE],
-      ["privacy.resistFingerprinting", true],
-      ["privacy.resistFingerprinting.testGranularityMask", 0x1],
-    ],
-  },
-  async function test_appName_resistFingerprinting_exempt() {
     let appName = await queryAppName();
     Assert.equal(appName, APPNAME_OVERRIDE);
   }
