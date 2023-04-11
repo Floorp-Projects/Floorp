@@ -281,6 +281,8 @@ let runWorkerTest = async function(data) {
     // remove the assignment, you will see it is not
     // eslint-disable-next-line
     let isRounded = eval(data.isRoundedFunc);
+    // eslint-disable-next-line
+    let processResults = eval(data.options.processResultsFunc);
 
     let worker = new content.Worker(
       "coop_header.sjs?crossOriginIsolated=true&worker=true"
@@ -288,13 +290,15 @@ let runWorkerTest = async function(data) {
 
     // Known ways to generate time stamps, in milliseconds
     const timeStampCodes = [
-      "performance.now()",
       "new Date().getTime()",
-      'new Event("").timeStamp',
       'new File([], "").lastModified',
+      "performance.now()",
+      'new Event("").timeStamp',
     ];
 
-    let promises = [];
+    let promises = [],
+      successes = [],
+      failures = [];
     for (let timeStampCode of timeStampCodes) {
       promises.push(
         new Promise(res => {
@@ -315,12 +319,13 @@ let runWorkerTest = async function(data) {
 
             if (e.data.type == "result") {
               if (e.data.resultOf == timeStampCode) {
-                ok(
-                  resultSwitchisRounded(e.data.result),
-                  `The result of ${e.data.resultOf} should be rounded to ` +
-                    ` nearest ${expectedPrecision} ms in workers; saw ` +
-                    `${e.data.result}`
-                );
+                if (resultSwitchisRounded(e.data.result)) {
+                  successes = successes.concat([
+                    [timeStampCode, e.data.result],
+                  ]);
+                } else {
+                  failures = failures.concat([[timeStampCode, e.data.result]]);
+                }
                 worker.removeEventListener("message", this);
                 res();
               }
@@ -337,6 +342,7 @@ let runWorkerTest = async function(data) {
 
     Promise.all(promises).then(_ => {
       worker.terminate();
+      processResults(data, successes, failures);
       resolve();
     });
   });
@@ -349,6 +355,7 @@ add_task(async function runRTPTestsForWorker() {
       resistFingerprinting: true,
       reduceTimerPrecision: true,
       crossOriginIsolated: true,
+      processResultsFunc: processResultsGlobal.toString(),
     },
     100,
     runWorkerTest
@@ -357,6 +364,7 @@ add_task(async function runRTPTestsForWorker() {
     {
       resistFingerprinting: true,
       crossOriginIsolated: true,
+      processResultsFunc: processResultsGlobal.toString(),
     },
     13,
     runWorkerTest
@@ -365,8 +373,9 @@ add_task(async function runRTPTestsForWorker() {
     {
       resistFingerprinting: true,
       crossOriginIsolated: true,
+      processResultsFunc: processResultsGlobal.toString(),
     },
-    0.13,
+    7.97,
     runWorkerTest
   );
 
@@ -374,14 +383,16 @@ add_task(async function runRTPTestsForWorker() {
   await setupAndRunCrossOriginIsolatedTest(
     {
       reduceTimerPrecision: true,
+      processResultsFunc: processResultsGlobal.toString(),
     },
-    0.13,
+    7.97,
     runWorkerTest
   );
   await setupAndRunCrossOriginIsolatedTest(
     {
       reduceTimerPrecision: true,
       crossOriginIsolated: true,
+      processResultsFunc: processResultsGlobal.toString(),
     },
     0.005,
     runWorkerTest
