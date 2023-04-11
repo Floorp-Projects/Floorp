@@ -2,25 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = [
-  "ExtensionActionHelper",
-  "GeckoViewConnection",
-  "GeckoViewWebExtension",
-  "mobileWindowTracker",
-  "DownloadTracker",
-];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { GeckoViewUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/GeckoViewUtils.sys.mjs"
-);
-const { EventEmitter } = ChromeUtils.importESModule(
-  "resource://gre/modules/EventEmitter.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { GeckoViewUtils } from "resource://gre/modules/GeckoViewUtils.sys.mjs";
+import { EventEmitter } from "resource://gre/modules/EventEmitter.sys.mjs";
 
 const PRIVATE_BROWSING_PERMISSION = {
   permissions: ["internal:privateBrowsingAllowed"],
@@ -52,9 +36,7 @@ XPCOMUtils.defineLazyServiceGetter(
 
 const { debug, warn } = GeckoViewUtils.initLogging("Console");
 
-const DOWNLOAD_CHANGED_MESSAGE = "GeckoView:WebExtension:DownloadChanged";
-
-var DownloadTracker = new (class extends EventEmitter {
+export var DownloadTracker = new (class extends EventEmitter {
   constructor() {
     super();
 
@@ -99,7 +81,7 @@ var DownloadTracker = new (class extends EventEmitter {
 })();
 
 /** Provides common logic between page and browser actions */
-class ExtensionActionHelper {
+export class ExtensionActionHelper {
   constructor({
     tabTracker,
     windowTracker,
@@ -203,7 +185,7 @@ class EmbedderPort {
   }
 }
 
-class GeckoViewConnection {
+export class GeckoViewConnection {
   constructor(sender, target, nativeApp, allowContentMessaging) {
     this.sender = sender;
     this.target = target;
@@ -631,7 +613,7 @@ class MobileWindowTracker extends EventEmitter {
   }
 }
 
-var mobileWindowTracker = new MobileWindowTracker();
+export var mobileWindowTracker = new MobileWindowTracker();
 
 async function updatePromptHandler(aInfo) {
   const oldPerms = aInfo.existingAddon.userPermissions;
@@ -671,7 +653,7 @@ async function updatePromptHandler(aInfo) {
   }
 }
 
-var GeckoViewWebExtension = {
+export var GeckoViewWebExtension = {
   observe(aSubject, aTopic, aData) {
     debug`observe ${aTopic}`;
 

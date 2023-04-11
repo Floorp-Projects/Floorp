@@ -2,16 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["GeckoViewRemoteDebugger"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { GeckoViewUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/GeckoViewUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { GeckoViewUtils } from "resource://gre/modules/GeckoViewUtils.sys.mjs";
 
 const lazy = {};
 
@@ -34,7 +26,7 @@ XPCOMUtils.defineLazyGetter(lazy, "SocketListener", () => {
 
 const { debug, warn } = GeckoViewUtils.initLogging("RemoteDebugger");
 
-var GeckoViewRemoteDebugger = {
+export var GeckoViewRemoteDebugger = {
   observe(aSubject, aTopic, aData) {
     if (aTopic !== "nsPref:changed") {
       return;

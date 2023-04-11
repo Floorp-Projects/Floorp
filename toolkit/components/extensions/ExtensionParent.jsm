@@ -28,6 +28,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.sys.mjs",
+  GeckoViewConnection: "resource://gre/modules/GeckoViewWebExtension.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
@@ -36,7 +37,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   BroadcastConduit: "resource://gre/modules/ConduitsParent.jsm",
   ExtensionData: "resource://gre/modules/Extension.jsm",
   ExtensionActivityLog: "resource://gre/modules/ExtensionActivityLog.jsm",
-  GeckoViewConnection: "resource://gre/modules/GeckoViewWebExtension.jsm",
   MessageManagerProxy: "resource://gre/modules/MessageManagerProxy.jsm",
   NativeApp: "resource://gre/modules/NativeMessaging.jsm",
   PerformanceCounters: "resource://gre/modules/PerformanceCounters.jsm",

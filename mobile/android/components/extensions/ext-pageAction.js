@@ -6,9 +6,9 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  GeckoViewWebExtension: "resource://gre/modules/GeckoViewWebExtension.jsm",
-  ExtensionActionHelper: "resource://gre/modules/GeckoViewWebExtension.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  GeckoViewWebExtension: "resource://gre/modules/GeckoViewWebExtension.sys.mjs",
+  ExtensionActionHelper: "resource://gre/modules/GeckoViewWebExtension.sys.mjs",
 });
 
 const { PageActionBase } = ChromeUtils.import(

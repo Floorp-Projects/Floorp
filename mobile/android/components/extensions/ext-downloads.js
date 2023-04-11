@@ -6,9 +6,7 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   DownloadPaths: "resource://gre/modules/DownloadPaths.sys.mjs",
-});
-XPCOMUtils.defineLazyModuleGetters(this, {
-  DownloadTracker: "resource://gre/modules/GeckoViewWebExtension.jsm",
+  DownloadTracker: "resource://gre/modules/GeckoViewWebExtension.sys.mjs",
 });
 
 Cu.importGlobalProperties(["PathUtils"]);

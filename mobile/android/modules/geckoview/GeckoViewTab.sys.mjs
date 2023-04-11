@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { GeckoViewModule } from "resource://gre/modules/GeckoViewModule.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const { ExtensionUtils } = ChromeUtils.import(
   "resource://gre/modules/ExtensionUtils.jsm"
@@ -15,10 +14,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   EventDispatcher: "resource://gre/modules/Messaging.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  mobileWindowTracker: "resource://gre/modules/GeckoViewWebExtension.jsm",
+  mobileWindowTracker: "resource://gre/modules/GeckoViewWebExtension.sys.mjs",
 });
 
 class Tab {

@@ -9,13 +9,8 @@
 ChromeUtils.defineESModuleGetters(this, {
   GeckoViewTabBridge: "resource://gre/modules/GeckoViewTab.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+  mobileWindowTracker: "resource://gre/modules/GeckoViewWebExtension.sys.mjs",
 });
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "mobileWindowTracker",
-  "resource://gre/modules/GeckoViewWebExtension.jsm"
-);
 
 const getBrowserWindow = window => {
   return window.browsingContext.topChromeWindow;

@@ -11,13 +11,8 @@
 ChromeUtils.defineESModuleGetters(this, {
   GeckoViewTabBridge: "resource://gre/modules/GeckoViewTab.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  mobileWindowTracker: "resource://gre/modules/GeckoViewWebExtension.sys.mjs",
 });
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "mobileWindowTracker",
-  "resource://gre/modules/GeckoViewWebExtension.jsm"
-);
 
 var { EventDispatcher } = ChromeUtils.importESModule(
   "resource://gre/modules/Messaging.sys.mjs"
