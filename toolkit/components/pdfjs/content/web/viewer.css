@@ -1078,8 +1078,6 @@
 
 :root {
   --dir-factor: 1;
-  --inline-start: inline-start;
-  --inline-end: inline-end;
 
   --sidebar-width: 200px;
   --sidebar-transition-duration: 200ms;
@@ -1446,10 +1444,10 @@ body {
 #loadingBar .progress {
   position: absolute;
   top: 0;
-  left: 0;
+  inset-inline-start: 0;
   width: 100%;
   transform: scaleX(var(--progressBar-percent));
-  transform-origin: 0 0;
+  transform-origin: calc(50% - 50% * var(--dir-factor)) 0;
   height: 100%;
   background-color: var(--progressBar-color);
   overflow: hidden;
@@ -1458,7 +1456,7 @@ body {
 
 @keyframes progressIndeterminate {
   0% {
-    transform: translateX(-142px);
+    transform: translateX(calc(-142px * var(--dir-factor)));
   }
   100% {
     transform: translateX(0);
@@ -1474,7 +1472,7 @@ body {
 #loadingBar.indeterminate .progress .glimmer {
   position: absolute;
   top: 0;
-  left: 0;
+  inset-inline-start: 0;
   height: 100%;
   width: calc(100% + 150px);
   background: repeating-linear-gradient(
@@ -1703,11 +1701,11 @@ body {
 
 #toolbarViewerLeft,
 #toolbarSidebarLeft {
-  float: var(--inline-start);
+  float: inline-start;
 }
 #toolbarViewerRight,
 #toolbarSidebarRight {
-  float: var(--inline-end);
+  float: inline-end;
 }
 
 #toolbarViewerLeft > *,
@@ -1717,7 +1715,7 @@ body {
 #toolbarSidebarRight *,
 .findbar * {
   position: relative;
-  float: var(--inline-start);
+  float: inline-start;
 }
 
 #toolbarViewerLeft {
@@ -1735,7 +1733,7 @@ body {
   display: inline-block;
 }
 .splitToolbarButton > .toolbarButton {
-  float: var(--inline-start);
+  float: inline-start;
 }
 
 .toolbarButton,
@@ -1785,7 +1783,7 @@ body {
 }
 
 .splitToolbarButtonSeparator {
-  float: var(--inline-start);
+  float: inline-start;
   margin: 4px 0;
   width: 1px;
   height: 20px;
@@ -2146,7 +2144,7 @@ a.secondaryToolbarButton[href="#"] {
 
 #pageNumber {
   -moz-appearance: textfield; /* hides the spinner in moz */
-  text-align: right;
+  text-align: end;
   width: 40px;
   background-size: 0 0;
   transition-property: none;
@@ -2154,7 +2152,7 @@ a.secondaryToolbarButton[href="#"] {
 #pageNumber.visiblePageIsLoading {
   background-image: var(--loading-icon);
   background-repeat: no-repeat;
-  background-position: 3px;
+  background-position: calc(50% - 42% * var(--dir-factor));
   background-size: 16px 16px;
   /* Using a delay with background-image doesn't work,
      consequently we use background-size. */
@@ -2205,7 +2203,7 @@ a.secondaryToolbarButton[href="#"] {
 }
 
 .thumbnail {
-  float: var(--inline-start);
+  float: inline-start;
   margin: 0 10px 5px;
 }
 
@@ -2287,13 +2285,13 @@ a:focus > .thumbnail > .thumbnailSelectionRing,
   padding-inline-start: 4px;
 }
 #layersView .treeItem > a > label > input {
-  float: var(--inline-start);
+  float: inline-start;
   margin-top: 1px;
 }
 
 .treeItemToggler {
   position: relative;
-  float: var(--inline-start);
+  float: inline-start;
   height: 0;
   width: 0;
   color: rgba(255, 255, 255, 0.5);
