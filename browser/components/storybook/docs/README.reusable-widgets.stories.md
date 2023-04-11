@@ -1,4 +1,4 @@
-# Reusable UI widgets
+# Reusable widgets/components
 
 ## Background
 

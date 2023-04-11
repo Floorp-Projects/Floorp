@@ -7,7 +7,7 @@ import "toolkit-widgets/panel-list.js";
 import { html, ifDefined } from "lit.all.mjs";
 
 export default {
-  title: "UI Widgets/Panel Menu",
+  title: "Design System/Components/Panel Menu",
   component: "panel-list",
   parameters: {
     actions: {

@@ -15,7 +15,7 @@ const MESSAGE_TYPES = {
 };
 
 export default {
-  title: "UI Widgets/Message Bar",
+  title: "Design System/Components/Message Bar",
   component: "message-bar",
   argTypes: {
     type: {
