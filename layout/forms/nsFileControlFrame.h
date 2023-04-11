@@ -35,9 +35,6 @@ class nsFileControlFrame final : public nsBlockFrame,
   void Init(nsIContent* aContent, nsContainerFrame* aParent,
             nsIFrame* aPrevInFlow) override;
 
-  void BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                        const nsDisplayListSet& aLists) override;
-
   // nsIFormControlFrame
   nsresult SetFormProperty(nsAtom* aName, const nsAString& aValue) override;
   void SetFocus(bool aOn, bool aRepaint) override;
