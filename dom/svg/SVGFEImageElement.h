@@ -52,12 +52,20 @@ class SVGFEImageElement final : public SVGFEImageElementBase,
   SVGAnimatedString& GetResultImageName() override {
     return mStringAttributes[RESULT];
   }
+
+  // nsImageLoadingContent
+  CORSMode GetCORSMode() override;
+
   bool OutputIsTainted(const nsTArray<bool>& aInputsAreTainted,
                        nsIPrincipal* aReferencePrincipal) override;
 
   // nsIContent
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
+  bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                      const nsAString& aValue,
+                      nsIPrincipal* aMaybeScriptedPrincipal,
+                      nsAttrValue& aResult) override;
   nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                         const nsAttrValue* aValue, const nsAttrValue* aOldValue,
                         nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
@@ -76,6 +84,15 @@ class SVGFEImageElement final : public SVGFEImageElementBase,
   // WebIDL
   already_AddRefed<DOMSVGAnimatedString> Href();
   already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
+  void GetCrossOrigin(nsAString& aCrossOrigin) {
+    // Null for both missing and invalid defaults is ok, since we
+    // always parse to an enum value, so we don't need an invalid
+    // default, and we _want_ the missing default to be null.
+    GetEnumAttr(nsGkAtoms::crossorigin, nullptr, aCrossOrigin);
+  }
+  void SetCrossOrigin(const nsAString& aCrossOrigin, ErrorResult& aError) {
+    SetOrRemoveNullableStringAttr(nsGkAtoms::crossorigin, aCrossOrigin, aError);
+  }
 
  private:
   nsresult LoadSVGImage(bool aForce, bool aNotify);
