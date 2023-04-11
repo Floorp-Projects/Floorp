@@ -16,6 +16,7 @@
 }
 
 .info-group-title {
+  margin: 0;
   text-align: end;
   font-weight: 700;
   color: var(--in-content-text-color);
