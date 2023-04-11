@@ -4,7 +4,9 @@ const { ChromeMigrationUtils } = ChromeUtils.import(
 const { ExperimentAPI } = ChromeUtils.importESModule(
   "resource://nimbus/ExperimentAPI.sys.mjs"
 );
-
+const { ExperimentFakes } = ChromeUtils.importESModule(
+  "resource://testing-common/NimbusTestUtils.sys.mjs"
+);
 const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
@@ -36,25 +38,19 @@ add_setup(async function setup() {
     .stub(MigrationUtils, "getMigrator")
     .resolves(gTestMigrator);
 
-  const experiment = sinon.stub(ExperimentAPI, "getActiveBranch").returns({
-    slug: "foo",
-    ratio: 1,
-    features: [
-      {
-        featureId: "password-autocomplete",
-        value: { directMigrateSingleProfile: true },
-      },
-    ],
+  const doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "password-autocomplete",
+    value: { directMigrateSingleProfile: true },
   });
 
   // This makes the last autocomplete test *not* show import suggestions.
   Services.prefs.setIntPref("signon.suggestImportCount", 3);
 
-  registerCleanupFunction(() => {
+  registerCleanupFunction(async () => {
+    await doExperimentCleanup();
     debounce.restore();
     importable.restore();
     migrator.restore();
-    experiment.restore();
     Services.prefs.clearUserPref("signon.suggestImportCount");
   });
 });
