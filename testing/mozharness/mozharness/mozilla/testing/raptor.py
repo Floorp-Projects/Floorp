@@ -195,6 +195,7 @@ class Raptor(
                         "refbrow",
                         "fenix",
                         "safari",
+                        "custom-car",
                     ],
                     "dest": "app",
                     "help": "Name of the application we are testing (default: firefox).",
@@ -832,15 +833,16 @@ class Raptor(
     def install_chromium_distribution(self):
         """Install Google Chromium distribution in production"""
         linux, mac, win = "linux", "mac", "win"
-        chrome, chromium = "chrome", "chromium"
+        chrome, chromium, chromium_release = "chrome", "chromium", "custom-car"
 
-        available_chromium_dists = [chrome, chromium]
+        available_chromium_dists = [chrome, chromium, chromium_release]
         binary_location = {
             chromium: {
                 linux: ["chrome-linux", "chrome"],
                 mac: ["chrome-mac", "Chromium.app", "Contents", "MacOS", "Chromium"],
                 win: ["chrome-win", "Chrome.exe"],
             },
+            chromium_release: {linux: ["chromium", "Default", "chrome"]},
         }
 
         if self.app not in available_chromium_dists:
