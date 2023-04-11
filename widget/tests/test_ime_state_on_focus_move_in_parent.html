@@ -1,0 +1,73 @@
+<!doctype html>
+<html style="ime-mode: disabled;">
+<head>
+  <meta charset="utf-8">
+  <title>Test for IME state management on focus move in parent process</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script src="file_ime_state_test_helper.js"></script>
+  <script src="file_test_ime_state_on_focus_move.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body style="ime-mode: disabled;">
+<div style="ime-mode: disabled;"></div>
+<script>
+"use strict";
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async () => {
+  const tipWrapper = new TIPWrapper(window);
+  ok(tipWrapper.isAvailable(), "TextInputProcessor should've been initialized");
+  // test for normal contents.
+  const container = document.querySelector("div");
+  await runIMEStateOnFocusMoveTests(
+    "in non-editable container",
+    container,
+    tipWrapper
+  );
+
+  // test for contentEditable="true"
+  container.setAttribute("contenteditable", "true");
+  await runIMEStateOnFocusMoveTests(
+    "in div[contenteditable]",
+    container,
+    tipWrapper
+  );
+
+  // test for contentEditable="false"
+  container.setAttribute("contenteditable", "false");
+  await runIMEStateOnFocusMoveTests(
+    'in div[contenteditable="false"]',
+    container,
+    tipWrapper
+  );
+
+  // test for removing contentEditable
+  container.setAttribute("contenteditable", "true");
+  container.removeAttribute("contenteditable");
+  await runIMEStateOnFocusMoveTests(
+    "after removing contenteditable from the container",
+    container,
+    tipWrapper
+  );
+
+  // test designMode
+  document.designMode = "on";
+  await runIMEStateOnFocusMoveTests(
+    'in designMode="on"',
+    container,
+    tipWrapper
+  );
+  document.designMode = "off";
+  await runIMEStateOnFocusMoveTests(
+    'in designMode="off"',
+    container,
+    tipWrapper
+  );
+
+  tipWrapper.destroy();
+
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>
