@@ -34,6 +34,21 @@ SimpleTest.waitForFocus(async () => {
     tester.clear();
   })();
 
+  await (async function test_ime_state_of_text_controls_in_contenteditable_on_readonly_change() {
+    const tester = new IMEStateOfTextControlInContentEditableOnReadonlyChangeTester();
+    for (let index = 0;
+         index < IMEStateOfTextControlInContentEditableOnReadonlyChangeTester.numberOfTextControlTypes;
+         index++) {
+      tester.checkResultOfPreparation(await tester.prepareToRun(index, editingHost), window, tipWrapper);
+      tester.checkResultOfMakingParentEditingHost(await tester.runToMakeParentEditingHost());
+      tester.checkResultOfMakingHTMLEditorReadonly(await tester.runToMakeHTMLEditorReadonly());
+      tester.checkResultOfMakingHTMLEditorEditable(await tester.runToMakeHTMLEditorEditable());
+      tester.checkResultOfMakingParentNonEditable(await tester.runToMakeParentNonEditingHost());
+      tester.clear();
+    }
+    editingHost.setAttribute("contenteditable", "");
+  })();
+
   SimpleTest.finish();
 });
 </script>

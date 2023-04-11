@@ -128,6 +128,79 @@ add_task(async function() {
         );
         tester.clear();
       })();
+
+      await (async function test_ime_state_of_text_controls_in_contenteditable_on_readonly_change() {
+        const tester = new IMEStateOfTextControlInContentEditableOnReadonlyChangeTester();
+        await SpecialPowers.spawn(browser, [], () => {
+          content.document.body.innerHTML = "<div contenteditable></div>";
+          content.wrappedJSObject.runner = content.wrappedJSObject.createIMEStateOfTextControlInContentEditableOnReadonlyChangeTester();
+        });
+        for (
+          let index = 0;
+          index <
+          IMEStateOfTextControlInContentEditableOnReadonlyChangeTester.numberOfTextControlTypes;
+          index++
+        ) {
+          const expectedDataOfInitialization = await SpecialPowers.spawn(
+            browser,
+            [index],
+            aIndex => {
+              const editingHost = content.document.querySelector("div");
+              return content.wrappedJSObject.runner.prepareToRun(
+                aIndex,
+                editingHost,
+                content.window
+              );
+            }
+          );
+          tester.checkResultOfPreparation(
+            expectedDataOfInitialization,
+            window,
+            tipWrapper
+          );
+          const expectedDataOfMakingParentEditingHost = await SpecialPowers.spawn(
+            browser,
+            [],
+            () => {
+              return content.wrappedJSObject.runner.runToMakeParentEditingHost();
+            }
+          );
+          tester.checkResultOfMakingParentEditingHost(
+            expectedDataOfMakingParentEditingHost
+          );
+          const expectedDataOfMakingHTMLEditorReadonly = await SpecialPowers.spawn(
+            browser,
+            [],
+            () => {
+              return content.wrappedJSObject.runner.runToMakeHTMLEditorReadonly();
+            }
+          );
+          tester.checkResultOfMakingHTMLEditorReadonly(
+            expectedDataOfMakingHTMLEditorReadonly
+          );
+          const expectedDataOfMakingHTMLEditorEditable = await SpecialPowers.spawn(
+            browser,
+            [],
+            () => {
+              return content.wrappedJSObject.runner.runToMakeHTMLEditorEditable();
+            }
+          );
+          tester.checkResultOfMakingHTMLEditorEditable(
+            expectedDataOfMakingHTMLEditorEditable
+          );
+          const expectedDataOfMakingParentNonEditable = await SpecialPowers.spawn(
+            browser,
+            [],
+            () => {
+              return content.wrappedJSObject.runner.runToMakeParentNonEditingHost();
+            }
+          );
+          tester.checkResultOfMakingParentNonEditable(
+            expectedDataOfMakingParentNonEditable
+          );
+          tester.clear();
+        }
+      })();
     }
   );
 });
