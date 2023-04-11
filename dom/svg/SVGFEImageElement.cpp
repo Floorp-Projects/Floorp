@@ -101,6 +101,19 @@ void SVGFEImageElement::AsyncEventRunning(AsyncEventDispatcher* aEvent) {
 //----------------------------------------------------------------------
 // nsIContent methods:
 
+bool SVGFEImageElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                                       const nsAString& aValue,
+                                       nsIPrincipal* aMaybeScriptedPrincipal,
+                                       nsAttrValue& aResult) {
+  if (aNamespaceID == kNameSpaceID_None &&
+      aAttribute == nsGkAtoms::crossorigin) {
+    ParseCORSValue(aValue, aResult);
+    return true;
+  }
+  return SVGFEImageElementBase::ParseAttribute(
+      aNamespaceID, aAttribute, aValue, aMaybeScriptedPrincipal, aResult);
+}
+
 nsresult SVGFEImageElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                          const nsAttrValue* aValue,
                                          const nsAttrValue* aOldValue,
@@ -114,6 +127,12 @@ nsresult SVGFEImageElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
       }
     } else {
       CancelImageRequests(aNotify);
+    }
+  } else if (aNamespaceID == kNameSpaceID_None &&
+             aName == nsGkAtoms::crossorigin) {
+    if (aNotify && GetCORSMode() != AttrValueToCORSMode(aOldValue) &&
+        ShouldLoadImage()) {
+      ForceReload(aNotify, IgnoreErrors());
     }
   }
 
@@ -175,6 +194,13 @@ already_AddRefed<DOMSVGAnimatedString> SVGFEImageElement::Href() {
   return mStringAttributes[HREF].IsExplicitlySet()
              ? mStringAttributes[HREF].ToDOMAnimatedString(this)
              : mStringAttributes[XLINK_HREF].ToDOMAnimatedString(this);
+}
+
+//----------------------------------------------------------------------
+//  nsImageLoadingContent methods:
+
+CORSMode SVGFEImageElement::GetCORSMode() {
+  return AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin));
 }
 
 //----------------------------------------------------------------------
