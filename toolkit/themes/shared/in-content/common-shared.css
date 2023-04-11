@@ -31,13 +31,13 @@
   --in-content-link-color-hover: var(--in-content-primary-button-background-hover);
   --in-content-link-color-active: var(--in-content-primary-button-background-active);
   --in-content-link-color-visited: var(--in-content-link-color);
-   /* button background states are also used for checkboxes and radiobuttons */
   --in-content-button-text-color: var(--in-content-text-color);
   --in-content-button-text-color-hover: var(--in-content-text-color);
   --in-content-button-text-color-active: var(--in-content-button-text-color-hover);
-  --in-content-button-background: rgba(207,207,216,.33);
-  --in-content-button-background-hover: rgba(207,207,216,.66);
-  --in-content-button-background-active: rgb(207,207,216);
+   /* button background states are also used for checkboxes and radiobuttons */
+  --in-content-button-background: color-mix(in srgb, currentColor 7%, transparent);
+  --in-content-button-background-hover: color-mix(in srgb, currentColor 14%, transparent);
+  --in-content-button-background-active: color-mix(in srgb, currentColor 21%, transparent);
   --in-content-button-border-color: transparent;
   --in-content-button-border-color-hover: transparent;
   --in-content-button-border-color-active: var(--in-content-button-border-color-hover);
@@ -146,9 +146,6 @@
     --in-content-error-text-color: #FF9AA2;
     --in-content-success-icon-color: #54FFBD;
 
-    --in-content-button-background: rgb(43,42,51);
-    --in-content-button-background-hover: rgb(82,82,94);
-    --in-content-button-background-active: rgb(91,91,102);
     --in-content-icon-color: rgb(251,251,254);
 
     --in-content-primary-button-text-color: rgb(43,42,51);
