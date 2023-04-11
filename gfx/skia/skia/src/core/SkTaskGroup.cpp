@@ -8,11 +8,13 @@
 #include "include/core/SkExecutor.h"
 #include "src/core/SkTaskGroup.h"
 
+#include <utility>
+
 SkTaskGroup::SkTaskGroup(SkExecutor& executor) : fPending(0), fExecutor(executor) {}
 
 void SkTaskGroup::add(std::function<void(void)> fn) {
     fPending.fetch_add(+1, std::memory_order_relaxed);
-    fExecutor.add([=] {
+    fExecutor.add([this, fn{std::move(fn)}] {
         fn();
         fPending.fetch_add(-1, std::memory_order_release);
     });

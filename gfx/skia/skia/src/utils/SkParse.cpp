@@ -5,10 +5,16 @@
  * found in the LICENSE file.
  */
 
-
+#include "include/core/SkScalar.h"
+#include "include/core/SkTypes.h"
+#include "include/private/base/SkTo.h"
 #include "include/utils/SkParse.h"
 
-#include <stdlib.h>
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
+#include <limits>
+#include <string>
 
 static inline bool is_between(int c, int min, int max)
 {
@@ -139,24 +145,32 @@ const char* SkParse::FindS32(const char str[], int32_t* value)
     SkASSERT(str);
     str = skip_ws(str);
 
-    int sign = 0;
+    int sign = 1;
+    int64_t maxAbsValue = std::numeric_limits<int>::max();
     if (*str == '-')
     {
         sign = -1;
+        maxAbsValue = -static_cast<int64_t>(std::numeric_limits<int>::min());
         str += 1;
     }
 
-    if (!is_digit(*str))
+    if (!is_digit(*str)) {
         return nullptr;
+    }
 
-    int n = 0;
+    int64_t n = 0;
     while (is_digit(*str))
     {
         n = 10*n + *str - '0';
+        if (n > maxAbsValue) {
+            return nullptr;
+        }
+
         str += 1;
     }
-    if (value)
-        *value = (n ^ sign) - sign;
+    if (value) {
+        *value = SkToS32(sign*n);
+    }
     return str;
 }
 
@@ -248,12 +262,12 @@ bool SkParse::FindBool(const char str[], bool* value)
     static const char* gYes[] = { "yes", "1", "true" };
     static const char* gNo[] = { "no", "0", "false" };
 
-    if (lookup_str(str, gYes, SK_ARRAY_COUNT(gYes)))
+    if (lookup_str(str, gYes, std::size(gYes)))
     {
         if (value) *value = true;
         return true;
     }
-    else if (lookup_str(str, gNo, SK_ARRAY_COUNT(gNo)))
+    else if (lookup_str(str, gNo, std::size(gNo)))
     {
         if (value) *value = false;
         return true;

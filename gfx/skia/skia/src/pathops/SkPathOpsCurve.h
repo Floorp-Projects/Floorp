@@ -7,11 +7,18 @@
 #ifndef SkPathOpsCurve_DEFINE
 #define SkPathOpsCurve_DEFINE
 
-#include "src/pathops/SkIntersections.h"
-
-#ifndef SK_RELEASE
 #include "include/core/SkPath.h"
-#endif
+#include "include/core/SkPoint.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkTypes.h"
+#include "include/private/base/SkDebug.h"
+#include "src/pathops/SkIntersections.h"
+#include "src/pathops/SkPathOpsConic.h"
+#include "src/pathops/SkPathOpsCubic.h"
+#include "src/pathops/SkPathOpsLine.h"
+#include "src/pathops/SkPathOpsPoint.h"
+#include "src/pathops/SkPathOpsQuad.h"
+#include "src/pathops/SkPathOpsTypes.h"
 
 struct SkPathOpsBounds;
 
@@ -71,7 +78,6 @@ struct SkDCurve {
     void dumpID(int ) const;
     SkDPoint lineTop(const SkPoint[2], SkScalar , double , double , double* topT);
     double nearPoint(SkPath::Verb verb, const SkDPoint& xy, const SkDPoint& opp) const;
-    void offset(SkPath::Verb verb, const SkDVector& );
     SkDPoint quadTop(const SkPoint curve[3], SkScalar , double s, double e, double* topT);
 
     void setConicBounds(const SkPoint curve[3], SkScalar curveWeight,

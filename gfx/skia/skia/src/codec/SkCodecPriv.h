@@ -14,7 +14,7 @@
 #include "include/private/SkColorData.h"
 #include "include/private/SkEncodedInfo.h"
 #include "src/codec/SkColorTable.h"
-#include "src/core/SkEndian.h"
+#include "src/base/SkEndian.h"
 
 #ifdef SK_PRINT_CODEC_MESSAGES
     #define SkCodecPrintf SkDebugf
@@ -53,7 +53,7 @@ static inline int get_scaled_dimension(int srcDimension, int sampleSize) {
  *
  * This does not need to be called and is not called when sampleFactor == 1.
  */
-static inline int get_start_coord(int sampleFactor) { return sampleFactor / 2; };
+static inline int get_start_coord(int sampleFactor) { return sampleFactor / 2; }
 
 /*
  * Given a coordinate in the original image, this returns the corresponding
@@ -63,7 +63,7 @@ static inline int get_start_coord(int sampleFactor) { return sampleFactor / 2; }
  *
  * This does not need to be called and is not called when sampleFactor == 1.
  */
-static inline int get_dst_coord(int srcCoord, int sampleFactor) { return srcCoord / sampleFactor; };
+static inline int get_dst_coord(int srcCoord, int sampleFactor) { return srcCoord / sampleFactor; }
 
 /*
  * When scaling, we will discard certain y-coordinates (rows) and
@@ -142,7 +142,7 @@ static inline size_t compute_row_bytes(int width, uint32_t bitsPerPixel) {
  * Get a byte from a buffer
  * This method is unsafe, the caller is responsible for performing a check
  */
-static inline uint8_t get_byte(uint8_t* buffer, uint32_t i) {
+static inline uint8_t get_byte(const uint8_t* buffer, uint32_t i) {
     return buffer[i];
 }
 
@@ -150,7 +150,7 @@ static inline uint8_t get_byte(uint8_t* buffer, uint32_t i) {
  * Get a short from a buffer
  * This method is unsafe, the caller is responsible for performing a check
  */
-static inline uint16_t get_short(uint8_t* buffer, uint32_t i) {
+static inline uint16_t get_short(const uint8_t* buffer, uint32_t i) {
     uint16_t result;
     memcpy(&result, &(buffer[i]), 2);
 #ifdef SK_CPU_BENDIAN
@@ -164,7 +164,7 @@ static inline uint16_t get_short(uint8_t* buffer, uint32_t i) {
  * Get an int from a buffer
  * This method is unsafe, the caller is responsible for performing a check
  */
-static inline uint32_t get_int(uint8_t* buffer, uint32_t i) {
+static inline uint32_t get_int(const uint8_t* buffer, uint32_t i) {
     uint32_t result;
     memcpy(&result, &(buffer[i]), 4);
 #ifdef SK_CPU_BENDIAN
@@ -196,6 +196,14 @@ static inline uint16_t get_endian_short(const uint8_t* data, bool littleEndian) 
     }
 
     return (data[0] << 8) | (data[1]);
+}
+
+static inline uint32_t get_endian_int(const uint8_t* data, bool littleEndian) {
+    if (littleEndian) {
+        return (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | (data[0]);
+    }
+
+    return (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3]);
 }
 
 static inline SkPMColor premultiply_argb_as_rgba(U8CPU a, U8CPU r, U8CPU g, U8CPU b) {

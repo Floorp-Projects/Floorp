@@ -12,6 +12,8 @@
 
 class SkReadBuffer;
 class SkWriteBuffer;
+class SkStream;
+struct SkPictInfo;
 
 class SkPicturePriv {
 public:
@@ -33,6 +35,15 @@ public:
     // Returns NULL if this is not an SkBigPicture.
     static const SkBigPicture* AsSkBigPicture(const sk_sp<const SkPicture> picture) {
         return picture->asSkBigPicture();
+    }
+
+    static uint64_t MakeSharedID(uint32_t pictureID) {
+        uint64_t sharedID = SkSetFourByteTag('p', 'i', 'c', 't');
+        return (sharedID << 32) | pictureID;
+    }
+
+    static void AddedToCache(const SkPicture* pic) {
+        pic->fAddedToCache.store(true);
     }
 
     // V35: Store SkRect (rather then width & height) in header
@@ -74,33 +85,72 @@ public:
     // V71: Unify erode and dilate image filters
     // V72: SkColorFilter_Matrix domain (rgba vs. hsla)
     // V73: Use SkColor4f in per-edge AA quad API
+    // V74: MorphologyImageFilter internal radius is SkScaler
+    // V75: SkVertices switched from unsafe use of SkReader32 to SkReadBuffer (like everything else)
+    // V76: Add filtering enum to ImageShader
+    // V77: Explicit filtering options on imageshaders
+    // V78: Serialize skmipmap data for images that have it
+    // V79: Cubic Resampler option on imageshader
+    // V80: Smapling options on imageshader
+    // V81: sampling parameters on drawImage/drawImageRect/etc.
+    // V82: Add filter param to picture-shader
+    // V83: SkMatrixImageFilter now takes SkSamplingOptions instead of SkFilterQuality
+    // V84: SkImageFilters::Image now takes SkSamplingOptions instead of SkFilterQuality
+    // V85: Remove legacy support for inheriting sampling from the paint.
+    // V86: Remove support for custom data inside SkVertices
+    // V87: SkPaint now holds a user-defined blend function (SkBlender), no longer has DrawLooper
+    // V88: Add blender to ComposeShader and BlendImageFilter
+    // V89: Deprecated SkClipOps are no longer supported
+    // V90: Private API for backdrop scale factor in SaveLayerRec
+    // V91: Added raw image shaders
+    // V92: Added anisotropic filtering to SkSamplingOptions
+    // V94: Removed local matrices from SkShaderBase. Local matrices always use SkLocalMatrixShader.
+    // V95: SkImageFilters::Shader only saves SkShader, not a full SkPaint
 
     enum Version {
-        kTileModeInBlurImageFilter_Version  = 56,
-        kTileInfoInSweepGradient_Version    = 57,
-        k2PtConicalNoFlip_Version           = 58,
-        kRemovePictureImageFilterLocalSpace = 59,
-        kRemoveHeaderFlags_Version          = 60,
-        kTwoColorDrawShadow_Version         = 61,
-        kDontNegateImageSize_Version        = 62,
-        kStoreImageBounds_Version           = 63,
-        kRemoveOccluderFromBlurMaskFilter   = 64,
-        kFloat4PaintColor_Version           = 65,
-        kSaveBehind_Version                 = 66,
-        kSerializeFonts_Version             = 67,
-        kPaintDoesntSerializeFonts_Version  = 68,
-        kCleanupImageFilterEnums_Version    = 69,
-        kHideImageFilterImpls_Version       = 70,
-        kUnifyErodeDilateImpls_Version      = 71,
-        kMatrixColorFilterDomain_Version    = 72,
-        kEdgeAAQuadColor4f_Version          = 73,
+        kPictureShaderFilterParam_Version   = 82,
+        kMatrixImageFilterSampling_Version  = 83,
+        kImageFilterImageSampling_Version   = 84,
+        kNoFilterQualityShaders_Version     = 85,
+        kVerticesRemoveCustomData_Version   = 86,
+        kSkBlenderInSkPaint                 = 87,
+        kBlenderInEffects                   = 88,
+        kNoExpandingClipOps                 = 89,
+        kBackdropScaleFactor                = 90,
+        kRawImageShaders                    = 91,
+        kAnisotropicFilter                  = 92,
+        kBlend4fColorFilter                 = 93,
+        kNoShaderLocalMatrix                = 94,
+        kShaderImageFilterSerializeShader   = 95,
 
         // Only SKPs within the min/current picture version range (inclusive) can be read.
-        kMin_Version     = kTileModeInBlurImageFilter_Version,
-        kCurrent_Version = kEdgeAAQuadColor4f_Version
+        //
+        // When updating kMin_Version also update oldestSupportedSkpVersion in
+        // infra/bots/gen_tasks_logic/gen_tasks_logic.go
+        //
+        // Steps on how to find which oldestSupportedSkpVersion to use:
+        // 1) Find the git hash when the desired kMin_Version was the kCurrent_Version from the
+        //    git logs: https://skia.googlesource.com/skia/+log/main/src/core/SkPicturePriv.h
+        //    Eg: https://skia.googlesource.com/skia/+/bfd330d081952424a93d51715653e4d1314d4822%5E%21/#F1
+        //
+        // 2) Use that git hash to find the SKP asset version number at that time here:
+        //    https://skia.googlesource.com/skia/+/bfd330d081952424a93d51715653e4d1314d4822/infra/bots/assets/skp/VERSION
+        //
+        // 3) [Optional] Increment the SKP asset version number from step 3 and verify that it has
+        //    the expected version number by downloading the asset and running skpinfo on it.
+        //
+        // 4) Use the incremented SKP asset version number as the oldestSupportedSkpVersion in
+        //    infra/bots/gen_tasks_logic/gen_tasks_logic.go
+        //
+        // 5) Run `make -C infra/bots train`
+        //
+        // Contact the Infra Gardener (or directly ping rmistry@) if the above steps do not work
+        // for you.
+        kMin_Version     = kPictureShaderFilterParam_Version,
+        kCurrent_Version = kShaderImageFilterSerializeShader
     };
-
-    static_assert(kMin_Version <= 62, "Remove kFontAxes_bad from SkFontDescriptor.cpp");
 };
+
+bool SkPicture_StreamIsSKP(SkStream*, SkPictInfo*);
 
 #endif

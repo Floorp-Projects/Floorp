@@ -5,13 +5,18 @@
  * found in the LICENSE file.
  */
 
-#include "include/private/SkMacros.h"
-#include "src/core/SkTSort.h"
-#include "src/pathops/SkAddIntersections.h"
-#include "src/pathops/SkOpCoincidence.h"
-#include "src/pathops/SkOpEdgeBuilder.h"
 #include "src/pathops/SkPathOpsCommon.h"
-#include "src/pathops/SkPathWriter.h"
+
+#include "include/core/SkTypes.h"
+#include "include/private/base/SkMacros.h"
+#include "include/private/base/SkMath.h"
+#include "include/private/base/SkTDArray.h"
+#include "src/base/SkTSort.h"
+#include "src/pathops/SkOpAngle.h"
+#include "src/pathops/SkOpCoincidence.h"
+#include "src/pathops/SkOpContour.h"
+#include "src/pathops/SkOpSegment.h"
+#include "src/pathops/SkOpSpan.h"
 
 const SkOpAngle* AngleWinding(SkOpSpanBase* start, SkOpSpanBase* end, int* windingPtr,
         bool* sortablePtr) {
@@ -81,9 +86,9 @@ SkOpSpan* FindUndone(SkOpContourHead* contourHead) {
 
 SkOpSegment* FindChase(SkTDArray<SkOpSpanBase*>* chase, SkOpSpanBase** startPtr,
         SkOpSpanBase** endPtr) {
-    while (chase->count()) {
-        SkOpSpanBase* span;
-        chase->pop(&span);
+    while (!chase->empty()) {
+        SkOpSpanBase* span = chase->back();
+        chase->pop_back();
         SkOpSegment* segment = span->segment();
         *startPtr = span->ptT()->next()->span();
         bool done = true;
@@ -160,12 +165,12 @@ bool SortContourList(SkOpContourHead** contourList, bool evenOdd, bool oppEvenOd
             *list.append() = contour;
         }
     } while ((contour = contour->next()));
-    int count = list.count();
+    int count = list.size();
     if (!count) {
         return false;
     }
     if (count > 1) {
-        SkTQSort<SkOpContour>(list.begin(), list.end() - 1);
+        SkTQSort<SkOpContour>(list.begin(), list.end());
     }
     contour = list[0];
     SkOpContourHead* contourHead = static_cast<SkOpContourHead*>(contour);

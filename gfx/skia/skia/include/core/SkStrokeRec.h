@@ -9,7 +9,7 @@
 #define SkStrokeRec_DEFINED
 
 #include "include/core/SkPaint.h"
-#include "include/private/SkMacros.h"
+#include "include/private/base/SkMacros.h"
 
 class SkPath;
 
@@ -127,7 +127,7 @@ public:
             return this->getStyle() == other.getStyle();
         }
         return fWidth == other.fWidth &&
-               fMiterLimit == other.fMiterLimit &&
+               (fJoin != SkPaint::kMiter_Join || fMiterLimit == other.fMiterLimit) &&
                fCap == other.fCap &&
                fJoin == other.fJoin &&
                fStrokeAndFill == other.fStrokeAndFill;

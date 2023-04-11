@@ -9,8 +9,9 @@
 
 #include "include/core/SkString.h"
 #include "include/core/SkTypes.h"
-#include "include/private/SkTo.h"
-#include "src/core/SkLeanWindows.h"
+#include "include/private/base/SkTemplates.h"
+#include "include/private/base/SkTo.h"
+#include "src/base/SkLeanWindows.h"
 
 void SkTime::DateTime::toISO8601(SkString* dst) const {
     if (dst) {
@@ -79,6 +80,7 @@ double SkTime::GetNSecs() {
 }
 #else
 #include <chrono>
+#include <ratio>
 double SkTime::GetNSecs() {
     auto now = std::chrono::steady_clock::now();
     std::chrono::duration<double, std::nano> ns = now.time_since_epoch();

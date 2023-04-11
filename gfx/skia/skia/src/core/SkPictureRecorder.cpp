@@ -5,81 +5,90 @@
  * found in the LICENSE file.
  */
 
+#include <memory>
+
 #include "include/core/SkData.h"
 #include "include/core/SkDrawable.h"
 #include "include/core/SkPictureRecorder.h"
 #include "include/core/SkTypes.h"
 #include "src/core/SkBigPicture.h"
-#include "src/core/SkMiniRecorder.h"
 #include "src/core/SkRecord.h"
 #include "src/core/SkRecordDraw.h"
 #include "src/core/SkRecordOpts.h"
 #include "src/core/SkRecordedDrawable.h"
 #include "src/core/SkRecorder.h"
 
+using namespace skia_private;
+
 SkPictureRecorder::SkPictureRecorder() {
     fActivelyRecording = false;
-    fMiniRecorder.reset(new SkMiniRecorder);
-    fRecorder.reset(new SkRecorder(nullptr, SkRect::MakeEmpty(), fMiniRecorder.get()));
+    fRecorder = std::make_unique<SkRecorder>(nullptr, SkRect::MakeEmpty());
 }
 
 SkPictureRecorder::~SkPictureRecorder() {}
 
 SkCanvas* SkPictureRecorder::beginRecording(const SkRect& userCullRect,
-                                            SkBBHFactory* bbhFactory /* = nullptr */,
-                                            uint32_t recordFlags /* = 0 */) {
+                                            sk_sp<SkBBoxHierarchy> bbh) {
     const SkRect cullRect = userCullRect.isEmpty() ? SkRect::MakeEmpty() : userCullRect;
 
     fCullRect = cullRect;
-    fFlags = recordFlags;
-
-    if (bbhFactory) {
-        fBBH.reset((*bbhFactory)());
-        SkASSERT(fBBH.get());
-    }
+    fBBH = std::move(bbh);
 
     if (!fRecord) {
         fRecord.reset(new SkRecord);
     }
-    SkRecorder::DrawPictureMode dpm = (recordFlags & kPlaybackDrawPicture_RecordFlag)
-        ? SkRecorder::Playback_DrawPictureMode
-        : SkRecorder::Record_DrawPictureMode;
-    fRecorder->reset(fRecord.get(), cullRect, dpm, fMiniRecorder.get());
+    fRecorder->reset(fRecord.get(), cullRect);
     fActivelyRecording = true;
     return this->getRecordingCanvas();
+}
+
+SkCanvas* SkPictureRecorder::beginRecording(const SkRect& bounds, SkBBHFactory* factory) {
+    return this->beginRecording(bounds, factory ? (*factory)() : nullptr);
 }
 
 SkCanvas* SkPictureRecorder::getRecordingCanvas() {
     return fActivelyRecording ? fRecorder.get() : nullptr;
 }
 
-sk_sp<SkPicture> SkPictureRecorder::finishRecordingAsPicture(uint32_t finishFlags) {
+class SkEmptyPicture final : public SkPicture {
+public:
+    void playback(SkCanvas*, AbortCallback*) const override { }
+
+    size_t approximateBytesUsed() const override { return sizeof(*this); }
+    int    approximateOpCount(bool nested)   const override { return 0; }
+    SkRect cullRect()             const override { return SkRect::MakeEmpty(); }
+};
+
+sk_sp<SkPicture> SkPictureRecorder::finishRecordingAsPicture() {
     fActivelyRecording = false;
     fRecorder->restoreToCount(1);  // If we were missing any restores, add them now.
 
     if (fRecord->count() == 0) {
-        auto pic = fMiniRecorder->detachAsPicture(fBBH ? nullptr : &fCullRect);
-        fBBH.reset(nullptr);
-        return pic;
+        return sk_make_sp<SkEmptyPicture>();
     }
 
     // TODO: delay as much of this work until just before first playback?
     SkRecordOptimize(fRecord.get());
 
     SkDrawableList* drawableList = fRecorder->getDrawableList();
-    SkBigPicture::SnapshotArray* pictList =
-        drawableList ? drawableList->newDrawableSnapshot() : nullptr;
+    std::unique_ptr<SkBigPicture::SnapshotArray> pictList{
+        drawableList ? drawableList->newDrawableSnapshot() : nullptr
+    };
 
-    if (fBBH.get()) {
-        SkAutoTMalloc<SkRect> bounds(fRecord->count());
-        SkRecordFillBounds(fCullRect, *fRecord, bounds);
-        fBBH->insert(bounds, fRecord->count());
+    if (fBBH) {
+        AutoTMalloc<SkRect> bounds(fRecord->count());
+        AutoTMalloc<SkBBoxHierarchy::Metadata> meta(fRecord->count());
+        SkRecordFillBounds(fCullRect, *fRecord, bounds, meta);
+
+        fBBH->insert(bounds, meta, fRecord->count());
 
         // Now that we've calculated content bounds, we can update fCullRect, often trimming it.
-        // TODO: get updated fCullRect from bounds instead of forcing the BBH to return it?
-        SkRect bbhBound = fBBH->getRootBound();
+        SkRect bbhBound = SkRect::MakeEmpty();
+        for (int i = 0; i < fRecord->count(); i++) {
+            bbhBound.join(bounds[i]);
+        }
         SkASSERT((bbhBound.isEmpty() || fCullRect.contains(bbhBound))
-            || (bbhBound.isEmpty() && fCullRect.isEmpty()));
+              || (bbhBound.isEmpty() && fCullRect.isEmpty()));
         fCullRect = bbhBound;
     }
 
@@ -87,14 +96,16 @@ sk_sp<SkPicture> SkPictureRecorder::finishRecordingAsPicture(uint32_t finishFlag
     for (int i = 0; pictList && i < pictList->count(); i++) {
         subPictureBytes += pictList->begin()[i]->approximateBytesUsed();
     }
-    return sk_make_sp<SkBigPicture>(fCullRect, fRecord.release(), pictList, fBBH.release(),
+    return sk_make_sp<SkBigPicture>(fCullRect,
+                                    std::move(fRecord),
+                                    std::move(pictList),
+                                    std::move(fBBH),
                                     subPictureBytes);
 }
 
-sk_sp<SkPicture> SkPictureRecorder::finishRecordingAsPictureWithCull(const SkRect& cullRect,
-                                                                     uint32_t finishFlags) {
+sk_sp<SkPicture> SkPictureRecorder::finishRecordingAsPictureWithCull(const SkRect& cullRect) {
     fCullRect = cullRect;
-    return this->finishRecordingAsPicture(finishFlags);
+    return this->finishRecordingAsPicture();
 }
 
 
@@ -113,17 +124,17 @@ void SkPictureRecorder::partialReplay(SkCanvas* canvas) const {
     SkRecordDraw(*fRecord, canvas, nullptr, drawables, drawableCount, nullptr/*bbh*/, nullptr/*callback*/);
 }
 
-sk_sp<SkDrawable> SkPictureRecorder::finishRecordingAsDrawable(uint32_t finishFlags) {
+sk_sp<SkDrawable> SkPictureRecorder::finishRecordingAsDrawable() {
     fActivelyRecording = false;
-    fRecorder->flushMiniRecorder();
     fRecorder->restoreToCount(1);  // If we were missing any restores, add them now.
 
     SkRecordOptimize(fRecord.get());
 
-    if (fBBH.get()) {
-        SkAutoTMalloc<SkRect> bounds(fRecord->count());
-        SkRecordFillBounds(fCullRect, *fRecord, bounds);
-        fBBH->insert(bounds, fRecord->count());
+    if (fBBH) {
+        AutoTMalloc<SkRect> bounds(fRecord->count());
+        AutoTMalloc<SkBBoxHierarchy::Metadata> meta(fRecord->count());
+        SkRecordFillBounds(fCullRect, *fRecord, bounds, meta);
+        fBBH->insert(bounds, meta, fRecord->count());
     }
 
     sk_sp<SkDrawable> drawable =

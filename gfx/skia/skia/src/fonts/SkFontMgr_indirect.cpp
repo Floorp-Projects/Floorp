@@ -14,10 +14,10 @@
 #include "include/core/SkTypes.h"
 #include "include/ports/SkFontMgr_indirect.h"
 #include "include/ports/SkRemotableFontMgr.h"
-#include "include/private/SkMutex.h"
-#include "include/private/SkOnce.h"
-#include "include/private/SkTArray.h"
-#include "include/private/SkTemplates.h"
+#include "include/private/base/SkMutex.h"
+#include "include/private/base/SkOnce.h"
+#include "include/private/base/SkTArray.h"
+#include "include/private/base/SkTemplates.h"
 
 class SkData;
 
@@ -84,7 +84,7 @@ SkTypeface* SkFontMgr_Indirect::createTypefaceFromFontId(const SkFontIdentity& i
 
     sk_sp<SkTypeface> dataTypeface;
     int dataTypefaceIndex = 0;
-    for (int i = 0; i < fDataCache.count(); ++i) {
+    for (int i = 0; i < fDataCache.size(); ++i) {
         const DataEntry& entry = fDataCache[i];
         if (entry.fDataId == id.fDataId) {
             if (entry.fTtcIndex == id.fTtcIndex &&
@@ -150,16 +150,14 @@ SkTypeface* SkFontMgr_Indirect::onMatchFamilyStyleCharacter(const char familyNam
     return this->createTypefaceFromFontId(id);
 }
 
-SkTypeface* SkFontMgr_Indirect::onMatchFaceStyle(const SkTypeface* familyMember,
-                                                 const SkFontStyle& fontStyle) const {
-    SkString familyName;
-    familyMember->getFamilyName(&familyName);
-    return this->matchFamilyStyle(familyName.c_str(), fontStyle);
-}
-
 sk_sp<SkTypeface> SkFontMgr_Indirect::onMakeFromStreamIndex(std::unique_ptr<SkStreamAsset> stream,
                                                             int ttcIndex) const {
     return fImpl->makeFromStream(std::move(stream), ttcIndex);
+}
+
+sk_sp<SkTypeface> SkFontMgr_Indirect::onMakeFromStreamArgs(std::unique_ptr<SkStreamAsset> stream,
+                                                           const SkFontArguments& args) const {
+    return fImpl->makeFromStream(std::move(stream), args);
 }
 
 sk_sp<SkTypeface> SkFontMgr_Indirect::onMakeFromFile(const char path[], int ttcIndex) const {

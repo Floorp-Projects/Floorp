@@ -5,62 +5,67 @@
  * found in the LICENSE file.
  */
 
-#include "include/effects/SkMergeImageFilter.h"
-
 #include "include/core/SkCanvas.h"
+#include "include/core/SkFlattenable.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkImageFilters.h"
 #include "src/core/SkImageFilter_Base.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkSpecialImage.h"
 #include "src/core/SkSpecialSurface.h"
-#include "src/core/SkValidationUtils.h"
-#include "src/core/SkWriteBuffer.h"
+
+#include <memory>
 
 namespace {
 
-class SkMergeImageFilterImpl final : public SkImageFilter_Base {
+class SkMergeImageFilter final : public SkImageFilter_Base {
 public:
-    SkMergeImageFilterImpl(sk_sp<SkImageFilter>* const filters, int count,
-                           const CropRect* cropRect)
+    SkMergeImageFilter(sk_sp<SkImageFilter>* const filters, int count,
+                       const SkRect* cropRect)
             : INHERITED(filters, count, cropRect) {
         SkASSERT(count >= 0);
     }
 
 protected:
     sk_sp<SkSpecialImage> onFilterImage(const Context&, SkIPoint* offset) const override;
-    bool onCanHandleComplexCTM() const override { return true; }
+    MatrixCapability onGetCTMCapability() const override { return MatrixCapability::kComplex; }
 
 private:
-    friend void SkMergeImageFilter::RegisterFlattenables();
-    SK_FLATTENABLE_HOOKS(SkMergeImageFilterImpl)
+    friend void ::SkRegisterMergeImageFilterFlattenable();
+    SK_FLATTENABLE_HOOKS(SkMergeImageFilter)
 
-    typedef SkImageFilter_Base INHERITED;
+    using INHERITED = SkImageFilter_Base;
 };
 
 } // end namespace
-
-sk_sp<SkImageFilter> SkMergeImageFilter::Make(sk_sp<SkImageFilter>* const filters, int count,
-                                               const SkImageFilter::CropRect* cropRect) {
-    return sk_sp<SkImageFilter>(new SkMergeImageFilterImpl(filters, count, cropRect));
+sk_sp<SkImageFilter> SkImageFilters::Merge(sk_sp<SkImageFilter>* const filters, int count,
+                                           const CropRect& cropRect) {
+    return sk_sp<SkImageFilter>(new SkMergeImageFilter(filters, count, cropRect));
 }
 
-void SkMergeImageFilter::RegisterFlattenables() {
-    SK_REGISTER_FLATTENABLE(SkMergeImageFilterImpl);
+void SkRegisterMergeImageFilterFlattenable() {
+    SK_REGISTER_FLATTENABLE(SkMergeImageFilter);
     // TODO (michaelludwig) - Remove after grace period for SKPs to stop using old name
-    SkFlattenable::Register("SkMergeImageFilter", SkMergeImageFilterImpl::CreateProc);
+    SkFlattenable::Register("SkMergeImageFilterImpl", SkMergeImageFilter::CreateProc);
 }
 
-///////////////////////////////////////////////////////////////////////////////
-
-sk_sp<SkFlattenable> SkMergeImageFilterImpl::CreateProc(SkReadBuffer& buffer) {
+sk_sp<SkFlattenable> SkMergeImageFilter::CreateProc(SkReadBuffer& buffer) {
     Common common;
     if (!common.unflatten(buffer, -1) || !buffer.isValid()) {
         return nullptr;
     }
-    return SkMergeImageFilter::Make(common.inputs(), common.inputCount(), &common.cropRect());
+    return SkImageFilters::Merge(common.inputs(), common.inputCount(), common.cropRect());
 }
 
-sk_sp<SkSpecialImage> SkMergeImageFilterImpl::onFilterImage(const Context& ctx,
-                                                            SkIPoint* offset) const {
+///////////////////////////////////////////////////////////////////////////////
+
+sk_sp<SkSpecialImage> SkMergeImageFilter::onFilterImage(const Context& ctx,
+                                                        SkIPoint* offset) const {
     int inputCount = this->countInputs();
     if (inputCount < 1) {
         return nullptr;
@@ -116,8 +121,7 @@ sk_sp<SkSpecialImage> SkMergeImageFilterImpl::onFilterImage(const Context& ctx,
         }
 
         inputs[i]->draw(canvas,
-                        SkIntToScalar(offsets[i].x() - x0), SkIntToScalar(offsets[i].y() - y0),
-                        nullptr);
+                        SkIntToScalar(offsets[i].x()) - x0, SkIntToScalar(offsets[i].y()) - y0);
     }
 
     offset->fX = bounds.left();

@@ -7,11 +7,23 @@
 #ifndef SkBmpStandardCodec_DEFINED
 #define SkBmpStandardCodec_DEFINED
 
-#include "include/core/SkImageInfo.h"
+#include "include/codec/SkCodec.h"
+#include "include/core/SkRefCnt.h"
 #include "include/core/SkTypes.h"
+#include "include/private/SkEncodedInfo.h"
 #include "src/codec/SkBmpBaseCodec.h"
 #include "src/codec/SkColorTable.h"
 #include "src/codec/SkSwizzler.h"
+
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+
+class SkSampler;
+class SkStream;
+enum SkAlphaType : int;
+enum SkColorType : int;
+struct SkImageInfo;
 
 /*
  * This class implements the decoding for bmp images that use "standard" modes,
@@ -87,6 +99,6 @@ private:
     const bool                  fInIco;
     const size_t                fAndMaskRowBytes; // only used for fInIco decodes
 
-    typedef SkBmpBaseCodec INHERITED;
+    using INHERITED = SkBmpBaseCodec;
 };
 #endif  // SkBmpStandardCodec_DEFINED

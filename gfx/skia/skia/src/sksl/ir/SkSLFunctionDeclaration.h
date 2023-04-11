@@ -8,54 +8,112 @@
 #ifndef SKSL_FUNCTIONDECLARATION
 #define SKSL_FUNCTIONDECLARATION
 
-#include "src/sksl/ir/SkSLExpression.h"
-#include "src/sksl/ir/SkSLModifiers.h"
-#include "src/sksl/ir/SkSLSymbol.h"
-#include "src/sksl/ir/SkSLSymbolTable.h"
-#include "src/sksl/ir/SkSLType.h"
-#include "src/sksl/ir/SkSLVariable.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkSLIRNode.h"
+#include "include/private/SkSLSymbol.h"
+#include "include/private/base/SkTArray.h"
+#include "src/sksl/SkSLIntrinsicList.h"
+
+#include <memory>
+#include <string>
+#include <string_view>
+#include <vector>
 
 namespace SkSL {
+
+class Context;
+class ExpressionArray;
+class FunctionDefinition;
+class Position;
+class SymbolTable;
+class Type;
+class Variable;
+
+struct Modifiers;
 
 /**
  * A function declaration (not a definition -- does not contain a body).
  */
-struct FunctionDeclaration : public Symbol {
-    FunctionDeclaration(int offset, Modifiers modifiers, StringFragment name,
-                        std::vector<const Variable*> parameters, const Type& returnType)
-    : INHERITED(offset, kFunctionDeclaration_Kind, std::move(name))
-    , fDefined(false)
-    , fBuiltin(false)
-    , fModifiers(modifiers)
-    , fParameters(std::move(parameters))
-    , fReturnType(returnType) {}
+class FunctionDeclaration final : public Symbol {
+public:
+    inline static constexpr Kind kIRNodeKind = Kind::kFunctionDeclaration;
 
-    String description() const override {
-        String result = fReturnType.description() + " " + fName + "(";
-        String separator;
-        for (auto p : fParameters) {
-            result += separator;
-            separator = ", ";
-            result += p->description();
-        }
-        result += ")";
-        return result;
+    FunctionDeclaration(Position pos,
+                        const Modifiers* modifiers,
+                        std::string_view name,
+                        std::vector<Variable*> parameters,
+                        const Type* returnType,
+                        bool builtin);
+
+    static FunctionDeclaration* Convert(const Context& context,
+                                        SymbolTable& symbols,
+                                        Position pos,
+                                        Position modifiersPos,
+                                        const Modifiers* modifiers,
+                                        std::string_view name,
+                                        std::vector<std::unique_ptr<Variable>> parameters,
+                                        Position returnTypePos,
+                                        const Type* returnType);
+
+    const Modifiers& modifiers() const {
+        return *fModifiers;
     }
 
-    bool matches(const FunctionDeclaration& f) const {
-        if (fName != f.fName) {
-            return false;
-        }
-        if (fParameters.size() != f.fParameters.size()) {
-            return false;
-        }
-        for (size_t i = 0; i < fParameters.size(); i++) {
-            if (fParameters[i]->fType != f.fParameters[i]->fType) {
-                return false;
-            }
-        }
-        return true;
+    void setModifiers(const Modifiers* m) {
+        fModifiers = m;
     }
+
+    const FunctionDefinition* definition() const {
+        return fDefinition;
+    }
+
+    void setDefinition(const FunctionDefinition* definition) {
+        fDefinition = definition;
+        fIntrinsicKind = kNotIntrinsic;
+    }
+
+    void setNextOverload(FunctionDeclaration* overload) {
+        SkASSERT(!overload || overload->name() == this->name());
+        fNextOverload = overload;
+    }
+
+    const std::vector<Variable*>& parameters() const {
+        return fParameters;
+    }
+
+    const Type& returnType() const {
+        return *fReturnType;
+    }
+
+    bool isBuiltin() const {
+        return fBuiltin;
+    }
+
+    bool isMain() const {
+        return fIsMain;
+    }
+
+    IntrinsicKind intrinsicKind() const {
+        return fIntrinsicKind;
+    }
+
+    bool isIntrinsic() const {
+        return this->intrinsicKind() != kNotIntrinsic;
+    }
+
+    const FunctionDeclaration* nextOverload() const {
+        return fNextOverload;
+    }
+
+    FunctionDeclaration* mutableNextOverload() const {
+        return fNextOverload;
+    }
+
+    std::string mangledName() const;
+
+    std::string description() const override;
+
+    bool matches(const FunctionDeclaration& f) const;
 
     /**
      * Determine the effective types of this function's parameters and return value when called with
@@ -67,51 +125,29 @@ struct FunctionDeclaration : public Symbol {
      * does not guarantee that the function can be successfully called with those arguments, merely
      * indicates that an attempt should be made. If false is returned, the state of
      * outParameterTypes and outReturnType are undefined.
+     *
+     * This always assumes narrowing conversions are *allowed*. The calling code needs to verify
+     * that each argument can actually be coerced to the final parameter type, respecting the
+     * narrowing-conversions flag. This is handled in callCost(), or in convertCall() (via coerce).
      */
-    bool determineFinalTypes(const std::vector<std::unique_ptr<Expression>>& arguments,
-                             std::vector<const Type*>* outParameterTypes,
-                             const Type** outReturnType) const {
-        SkASSERT(arguments.size() == fParameters.size());
-        int genericIndex = -1;
-        for (size_t i = 0; i < arguments.size(); i++) {
-            if (fParameters[i]->fType.kind() == Type::kGeneric_Kind) {
-                std::vector<const Type*> types = fParameters[i]->fType.coercibleTypes();
-                if (genericIndex == -1) {
-                    for (size_t j = 0; j < types.size(); j++) {
-                        if (arguments[i]->fType.canCoerceTo(*types[j])) {
-                            genericIndex = j;
-                            break;
-                        }
-                    }
-                    if (genericIndex == -1) {
-                        return false;
-                    }
-                }
-                outParameterTypes->push_back(types[genericIndex]);
-            } else {
-                outParameterTypes->push_back(&fParameters[i]->fType);
-            }
-        }
-        if (fReturnType.kind() == Type::kGeneric_Kind) {
-            if (genericIndex == -1) {
-                return false;
-            }
-            *outReturnType = fReturnType.coercibleTypes()[genericIndex];
-        } else {
-            *outReturnType = &fReturnType;
-        }
-        return true;
-    }
+    using ParamTypes = SkSTArray<8, const Type*>;
+    bool determineFinalTypes(const ExpressionArray& arguments,
+                             ParamTypes* outParameterTypes,
+                             const Type** outReturnType) const;
 
-    mutable bool fDefined;
+private:
+    const FunctionDefinition* fDefinition;
+    FunctionDeclaration* fNextOverload = nullptr;
+    const Modifiers* fModifiers;
+    std::vector<Variable*> fParameters;
+    const Type* fReturnType;
     bool fBuiltin;
-    Modifiers fModifiers;
-    const std::vector<const Variable*> fParameters;
-    const Type& fReturnType;
+    bool fIsMain;
+    mutable IntrinsicKind fIntrinsicKind = kNotIntrinsic;
 
-    typedef Symbol INHERITED;
+    using INHERITED = Symbol;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

@@ -5,6 +5,11 @@
  * found in the LICENSE file.
  */
 #include "src/pathops/SkPathOpsCubic.h"
+#include "src/pathops/SkPathOpsPoint.h"
+#include "src/pathops/SkPathOpsTypes.h"
+
+#include <algorithm>
+#include <cstddef>
 
 static bool rotate(const SkDCubic& cubic, int zero, int index, SkDCubic& rotPath) {
     double dy = cubic[index].fY - cubic[zero].fY;
@@ -28,9 +33,9 @@ static bool rotate(const SkDCubic& cubic, int zero, int index, SkDCubic& rotPath
         }
         return true;
     }
-    for (int index = 0; index < 4; ++index) {
-        rotPath[index].fX = cubic[index].fX * dx + cubic[index].fY * dy;
-        rotPath[index].fY = cubic[index].fY * dx - cubic[index].fX * dy;
+    for (int i = 0; i < 4; ++i) {
+        rotPath[i].fX = cubic[i].fX * dx + cubic[i].fY * dy;
+        rotPath[i].fY = cubic[i].fY * dx - cubic[i].fX * dy;
     }
     return true;
 }
@@ -102,9 +107,9 @@ int SkDCubic::convexHull(char order[4]) const {
                     double dist1_3 = fPts[1].distanceSquared(fPts[3]);
                     double dist2_0 = fPts[2].distanceSquared(fPts[0]);
                     double dist2_3 = fPts[2].distanceSquared(fPts[3]);
-                    double smallest1distSq = SkTMin(dist1_0, dist1_3);
-                    double smallest2distSq = SkTMin(dist2_0, dist2_3);
-                    if (approximately_zero(SkTMin(smallest1distSq, smallest2distSq))) {
+                    double smallest1distSq = std::min(dist1_0, dist1_3);
+                    double smallest2distSq = std::min(dist2_0, dist2_3);
+                    if (approximately_zero(std::min(smallest1distSq, smallest2distSq))) {
                         order[2] = smallest1distSq < smallest2distSq ? 2 : 1;
                         return 3;
                     }

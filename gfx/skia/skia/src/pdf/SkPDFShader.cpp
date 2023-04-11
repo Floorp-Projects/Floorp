@@ -8,12 +8,13 @@
 #include "src/pdf/SkPDFShader.h"
 
 #include "include/core/SkData.h"
-#include "include/core/SkMath.h"
 #include "include/core/SkScalar.h"
 #include "include/core/SkStream.h"
 #include "include/core/SkSurface.h"
 #include "include/docs/SkPDFDocument.h"
-#include "include/private/SkTemplates.h"
+#include "include/private/base/SkMath.h"
+#include "include/private/base/SkTPin.h"
+#include "include/private/base/SkTemplates.h"
 #include "src/pdf/SkPDFDevice.h"
 #include "src/pdf/SkPDFDocumentPriv.h"
 #include "src/pdf/SkPDFFormXObject.h"
@@ -24,7 +25,7 @@
 
 static void draw(SkCanvas* canvas, const SkImage* image, SkColor4f paintColor) {
     SkPaint paint(paintColor);
-    canvas->drawImage(image, 0, 0, &paint);
+    canvas->drawImage(image, 0, 0, SkSamplingOptions(), &paint);
 }
 
 static SkBitmap to_bitmap(const SkImage* image) {
@@ -48,7 +49,7 @@ static void draw_bitmap_matrix(SkCanvas* canvas, const SkBitmap& bm,
     SkAutoCanvasRestore acr(canvas, true);
     canvas->concat(matrix);
     SkPaint paint(paintColor);
-    canvas->drawBitmap(bm, 0, 0, &paint);
+    canvas->drawImage(bm.asImage(), 0, 0, SkSamplingOptions(), &paint);
 }
 
 static void fill_color_from_bitmap(SkCanvas* canvas,
@@ -264,13 +265,6 @@ static SkPDFIndirectReference make_fallback_shader(SkPDFDocument* doc,
                                                    const SkMatrix& canvasTransform,
                                                    const SkIRect& surfaceBBox,
                                                    SkColor4f paintColor) {
-    // TODO(vandebo) This drops SKComposeShader on the floor.  We could
-    // handle compose shader by pulling things up to a layer, drawing with
-    // the first shader, applying the xfer mode and drawing again with the
-    // second shader, then applying the layer to the original drawing.
-
-    SkMatrix shaderTransform = as_SB(shader)->getLocalMatrix();
-
     // surfaceBBox is in device space. While that's exactly what we
     // want for sizing our bitmap, we need to map it into
     // shader space for adjustments (to match
@@ -288,8 +282,8 @@ static SkPDFIndirectReference make_fallback_shader(SkPDFDocument* doc,
     }
 
     SkISize size = {
-        SkTClamp(SkScalarCeilToInt(rasterScale * surfaceBBox.width()),  1, kMaxBitmapArea),
-        SkTClamp(SkScalarCeilToInt(rasterScale * surfaceBBox.height()), 1, kMaxBitmapArea)};
+        SkTPin(SkScalarCeilToInt(rasterScale * surfaceBBox.width()),  1, kMaxBitmapArea),
+        SkTPin(SkScalarCeilToInt(rasterScale * surfaceBBox.height()), 1, kMaxBitmapArea)};
     SkSize scale = {SkIntToScalar(size.width()) / shaderRect.width(),
                     SkIntToScalar(size.height()) / shaderRect.height()};
 
@@ -305,7 +299,7 @@ static SkPDFIndirectReference make_fallback_shader(SkPDFDocument* doc,
     canvas->translate(-shaderRect.x(), -shaderRect.y());
     canvas->drawPaint(p);
 
-    shaderTransform.setTranslate(shaderRect.x(), shaderRect.y());
+    auto shaderTransform = SkMatrix::Translate(shaderRect.x(), shaderRect.y());
     shaderTransform.preScale(1 / scale.width(), 1 / scale.height());
 
     sk_sp<SkImage> image = surface->makeImageSnapshot();
@@ -334,15 +328,13 @@ SkPDFIndirectReference SkPDFMakeShader(SkPDFDocument* doc,
                                        SkColor4f paintColor) {
     SkASSERT(shader);
     SkASSERT(doc);
-    if (SkShader::kNone_GradientType != shader->asAGradient(nullptr)) {
+    if (as_SB(shader)->asGradient() != SkShaderBase::GradientType::kNone) {
         return SkPDFGradientShader::Make(doc, shader, canvasTransform, surfaceBBox);
     }
     if (surfaceBBox.isEmpty()) {
         return SkPDFIndirectReference();
     }
     SkBitmap image;
-
-    SkASSERT(shader->asAGradient(nullptr) == SkShader::kNone_GradientType) ;
 
     paintColor = adjust_color(shader, paintColor);
     SkMatrix shaderTransform;
