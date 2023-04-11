@@ -16,9 +16,11 @@ var ATTR_CANSCRIPT_BOUNDED = 1 << 1; // Unimplemented
 var ATTR_DOM_ITERATING     = 1 << 2; // Unimplemented
 var ATTR_NONRELEASING      = 1 << 3; // ~RefPtr of value whose refcount will not go to zero
 var ATTR_REPLACED          = 1 << 4; // Ignore edge, it was replaced by zero or more better edges.
+var ATTR_SYNTHETIC         = 1 << 5; // Call was manufactured in some way.
 
+var ATTR_LAST              = 1 << 5;
 var ATTRS_NONE             = 0;
-var ATTRS_ALL              = (ATTR_REPLACED << 1) - 1; // All possible bits set
+var ATTRS_ALL              = (ATTR_LAST << 1) - 1; // All possible bits set
 
 // The traversal algorithms we run will recurse into children if you change any
 // attrs bit to zero. Use all bits set to maximally attributed, including
