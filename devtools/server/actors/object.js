@@ -41,6 +41,20 @@ loader.lazyRequireGetter(
   true
 );
 
+// This is going to be used by findSafeGetters, where we want to avoid calling getters for
+// deprecated properties (otherwise a warning message is displayed in the console).
+// We could do something like EagerEvaluation, where we create a new Sandbox which is then
+// used to compare functions with `isSameNativeWithJitInfo`, but, we'd need to make new
+// classes available in the Sandbox, and possibly do it again when a new property gets
+// deprecated.
+// Since this is only to be able to automatically call getters, we can simply check against
+// a list of unsafe getters that we generate from webidls.
+loader.lazyRequireGetter(
+  this,
+  "unsafeGettersNames",
+  "resource://devtools/server/actors/webconsole/webidl-unsafe-getters-names.js"
+);
+
 // ContentDOMReference requires ChromeUtils, which isn't available in worker context.
 const lazy = {};
 if (!isWorker) {
@@ -548,7 +562,10 @@ class ObjectActor extends Actor {
         continue;
       }
 
-      if (DevToolsUtils.hasSafeGetter(desc)) {
+      if (
+        DevToolsUtils.hasSafeGetter(desc) &&
+        !unsafeGettersNames.includes(name)
+      ) {
         getters.add(name);
       }
     }
