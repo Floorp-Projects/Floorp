@@ -388,3 +388,227 @@ class IMEStateOfTextControlInContentEditableOnReadonlyChangeTester {
     this.#checkResult(aExpectedResult);
   }
 }
+
+class IMEStateOutsideContentEditableOnReadonlyChangeTester {
+  static #sFocusTargets = [
+    {
+      tag: "input",
+      type: "text",
+      readonly: false,
+    },
+    {
+      tag: "input",
+      type: "text",
+      readonly: true,
+    },
+    {
+      tag: "textarea",
+      readonly: false,
+    },
+    {
+      tag: "textarea",
+      readonly: true,
+    },
+    {
+      tag: "button",
+    },
+    {
+      tag: "body",
+    },
+  ];
+
+  static get numberOfFocusTargets() {
+    return IMEStateOutsideContentEditableOnReadonlyChangeTester.#sFocusTargets
+      .length;
+  }
+
+  static #maybeCreateElement(aDocument, aFocusTarget) {
+    if (aFocusTarget.tag == "body") {
+      return null;
+    }
+    const element = aDocument.createElement(aFocusTarget.tag);
+    if (aFocusTarget.type !== undefined) {
+      element.setAttribute("type", aFocusTarget.type);
+    }
+    if (aFocusTarget.readonly) {
+      element.setAttribute("readonly", "");
+    }
+    return element;
+  }
+
+  #getDescription() {
+    return `<${this.#mFocusTarget.tag}${
+      this.#mFocusTarget.type !== undefined
+        ? ` type=${this.#mFocusTarget.type}`
+        : ""
+    }${this.#mFocusTarget.readonly ? " readonly" : ""}>`;
+  }
+
+  #getExpectedIMEState() {
+    return this.#mFocusTarget.readonly ||
+      this.#mFocusTarget.tag == "button" ||
+      this.#mFocusTarget.tag == "body"
+      ? SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED
+      : SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_ENABLED;
+  }
+
+  #flushPendingIMENotifications() {
+    return new Promise(resolve =>
+      this.#mWindow.requestAnimationFrame(() =>
+        this.#mWindow.requestAnimationFrame(resolve)
+      )
+    );
+  }
+
+  // Runner only fields.
+  #mBody;
+  #mEditingHost;
+  #mFocusTarget;
+  #mFocusTargetElement;
+  #mWindow;
+
+  // Checker only fields.
+  #mWindowUtils;
+  #mTIPWrapper;
+
+  clear() {
+    this.#mTIPWrapper?.clearFocusBlurNotifications();
+    this.#mTIPWrapper = null;
+  }
+
+  /**
+   * @param {number} aIndex Index of the test.
+   * @param {Element} aEditingHost The editing host.
+   * @param {Window} aWindow [optional] The DOM window containing aEditingHost.
+   * @returns {object} Expected result of initial state.
+   */
+  async prepareToRun(aIndex, aEditingHost, aWindow = window) {
+    this.#mWindow = aWindow;
+    this.#mEditingHost = aEditingHost;
+    this.#mEditingHost.removeAttribute("contenteditable");
+    this.#mBody = this.#mEditingHost.ownerDocument.body;
+    this.#mBody.ownerDocument.activeElement?.blur();
+    if (this.#mFocusTargetElement != this.#mBody) {
+      this.#mFocusTargetElement?.remove();
+    }
+    await this.#flushPendingIMENotifications();
+    this.#mFocusTarget =
+      IMEStateOutsideContentEditableOnReadonlyChangeTester.#sFocusTargets[
+        aIndex
+      ];
+    this.#mFocusTargetElement = IMEStateOutsideContentEditableOnReadonlyChangeTester.#maybeCreateElement(
+      this.#mBody.ownerDocument,
+      this.#mFocusTarget
+    );
+    if (this.#mFocusTargetElement) {
+      this.#mBody.appendChild(this.#mFocusTargetElement);
+      this.#mFocusTargetElement.focus();
+    }
+    await this.#flushPendingIMENotifications();
+    const expectedIMEState = this.#getExpectedIMEState();
+    return {
+      description: `when ${this.#getDescription()} simply has focus`,
+      expectedIMEState,
+      expectedIMEFocus:
+        expectedIMEState !=
+        SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED,
+    };
+  }
+
+  #checkResult(aExpectedResult) {
+    const description = "IMEStateOutsideContentEditableOnReadonlyChangeTester";
+    is(
+      this.#mWindowUtils.IMEStatus,
+      aExpectedResult.expectedIMEState,
+      `${description}: IME state should be proper one for the focused element ${aExpectedResult.description}`
+    );
+    is(
+      this.#mTIPWrapper.IMEHasFocus,
+      aExpectedResult.expectedIMEFocus,
+      `${description}: IME should ${
+        aExpectedResult.expectedIMEFocus ? "" : "not "
+      }have focus ${aExpectedResult.description}`
+    );
+  }
+
+  /**
+   * @param {object} aExpectedResult The expected result returned by prepareToRun().
+   * @param {Window} aWindow The window whose IME state should be checked.
+   * @param {TIPWrapper} aTIPWrapper The TIP wrapper of aWindow.
+   */
+  checkResultOfPreparation(aExpectedResult, aWindow, aTIPWrapper) {
+    this.#mWindowUtils = SpecialPowers.wrap(aWindow).windowUtils;
+    this.#mTIPWrapper = aTIPWrapper;
+    this.#checkResult(aExpectedResult);
+  }
+
+  async runToMakeParentEditingHost() {
+    this.#mEditingHost.setAttribute("contenteditable", "");
+    await this.#flushPendingIMENotifications();
+    const expectedIMEState = this.#getExpectedIMEState();
+    return {
+      description: `when parent of ${this.#getDescription()} becomes contenteditable`,
+      expectedIMEState,
+      expectedIMEFocus:
+        expectedIMEState !=
+        SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED,
+    };
+  }
+
+  checkResultOfMakingParentEditingHost(aExpectedResult) {
+    this.#checkResult(aExpectedResult);
+  }
+
+  async runToMakeHTMLEditorReadonly() {
+    const editor = SpecialPowers.wrap(this.#mWindow).docShell.editor;
+    editor.flags |= SpecialPowers.Ci.nsIEditor.eEditorReadonlyMask;
+    await this.#flushPendingIMENotifications();
+    const expectedIMEState = this.#getExpectedIMEState();
+    return {
+      description: `when HTMLEditor for parent of ${this.#getDescription()} becomes readonly`,
+      expectedIMEState,
+      expectedIMEFocus:
+        expectedIMEState !=
+        SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED,
+    };
+  }
+
+  checkResultOfMakingHTMLEditorReadonly(aExpectedResult) {
+    this.#checkResult(aExpectedResult);
+  }
+
+  async runToMakeHTMLEditorEditable() {
+    const editor = SpecialPowers.wrap(this.#mWindow).docShell.editor;
+    editor.flags &= ~SpecialPowers.Ci.nsIEditor.eEditorReadonlyMask;
+    await this.#flushPendingIMENotifications();
+    const expectedIMEState = this.#getExpectedIMEState();
+    return {
+      description: `when HTMLEditor for parent of ${this.#getDescription()} becomes editable`,
+      expectedIMEState,
+      expectedIMEFocus:
+        expectedIMEState !=
+        SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED,
+    };
+  }
+
+  checkResultOfMakingHTMLEditorEditable(aExpectedResult) {
+    this.#checkResult(aExpectedResult);
+  }
+
+  async runToMakeParentNonEditingHost() {
+    this.#mEditingHost.removeAttribute("contenteditable");
+    await this.#flushPendingIMENotifications();
+    const expectedIMEState = this.#getExpectedIMEState();
+    return {
+      description: `when parent of ${this.#getDescription()} becomes non-editable`,
+      expectedIMEState,
+      expectedIMEFocus:
+        expectedIMEState !=
+        SpecialPowers.Ci.nsIDOMWindowUtils.IME_STATUS_DISABLED,
+    };
+  }
+
+  checkResultOfMakingParentNonEditable(aExpectedResult) {
+    this.#checkResult(aExpectedResult);
+  }
+}

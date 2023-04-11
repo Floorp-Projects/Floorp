@@ -9,17 +9,7 @@
 </head>
 <body onload="setTimeout(runTests, 0);" style="ime-mode: disabled;">
 <div id="display" style="ime-mode: disabled;">
-  <!-- input elements -->
-  <input type="text"     id="text"/><br/>
-  <input type="text"     id="text_readonly" readonly="readonly"/><br/>
-
-  <!-- form controls -->
-  <button id="button">button</button><br/>
-  <textarea id="textarea">textarea</textarea><br/>
-  <textarea id="textarea_readonly" readonly="readonly">textarea[readonly]</textarea><br/>
-
-  <!-- contenteditable editor -->
-  <div id="contenteditableEditor" contenteditable="true"></div>
+  <input type="text" id="text"/><br/>
 </div>
 <div id="content" style="display: none">
   
@@ -41,79 +31,6 @@ function hitEventLoop(aFunc, aTimes) {
 
 var gUtils = window.windowUtils;
 var gFM = Services.focus;
-
-function runComplexContenteditableTests() {
-  const container = document.getElementById("display");
-  const kReadonly = Ci.nsIEditor.eEditorReadonlyMask;
-
-  function testOnOutsideOfEditor(aFocusNode, aFocusNodeDescription, aEditor) {
-    const description = "testOnOutsideOfEditor: ";
-    if (aFocusNode) {
-      aFocusNode.focus();
-      is(gFM.focusedElement, aFocusNode,
-         description + "The " + aFocusNodeDescription + " doesn't get focus");
-    } else {
-      if (document.activeElement) {
-        document.activeElement.blur();
-      }
-      is(gFM.focusedElement, null,
-         description + "Unexpected element has focus");
-    }
-    var expectedState =
-      aFocusNode ? gUtils.IMEStatus : gUtils.IME_STATUS_DISABLED;
-    var unexpectedStateDescription =
-      expectedState != gUtils.IME_STATUS_ENABLED ? "enabled" : "disabled";
-
-    aEditor.setAttribute("contenteditable", "true");
-    is(gFM.focusedElement, aFocusNode,
-       description + "The " + aFocusNodeDescription +
-         " loses focus, a HTML editor is editable now");
-    is(gUtils.IMEStatus, expectedState,
-       description + "IME becomes " + unexpectedStateDescription +
-         " on the " + aFocusNodeDescription +
-         ", the HTML editor is editable now");
-    const editor = window.docShell.editor;
-    const flags = editor.flags;
-    editor.flags = flags | kReadonly;
-    is(gFM.focusedElement, aFocusNode,
-       description + aFocusNodeDescription +
-         " loses focus by changing HTML editor flags");
-    is(gUtils.IMEStatus, expectedState,
-       description + "IME becomes " + unexpectedStateDescription + " on " +
-         aFocusNodeDescription + ", the HTML editor is readonly now");
-    editor.flags = flags;
-    is(gFM.focusedElement, aFocusNode,
-       description + aFocusNodeDescription +
-         " loses focus by changing HTML editor flags #2");
-    is(gUtils.IMEStatus, expectedState,
-       description + "IME becomes " + unexpectedStateDescription + " on " +
-         aFocusNodeDescription + ", the HTML editor isn't readonly now");
-    container.removeAttribute("contenteditable");
-    is(gFM.focusedElement, aFocusNode,
-       description + aFocusNodeDescription +
-         " loses focus, the HTML editor has been no editable");
-    is(gUtils.IMEStatus, expectedState,
-       description + "IME becomes " + unexpectedStateDescription + " on " +
-         aFocusNodeDescription + ", the HTML editor has been no editable");
-  }
-
-  var div = document.getElementById("contenteditableEditor");
-  // a textarea which is outside of the editor has focus
-  testOnOutsideOfEditor(document.getElementById("textarea"), "textarea", div);
-  // a readonly textarea which is outside of the editor has focus
-  testOnOutsideOfEditor(document.getElementById("textarea_readonly"),
-                        "textarea[readonly]", div);
-  // an input field which is outside of the editor has focus
-  testOnOutsideOfEditor(document.getElementById("text"),
-                        "input[type=\"text\"]", div);
-  // a readonly input field which outside of the editor has focus
-  testOnOutsideOfEditor(document.getElementById("text_readonly"),
-                        "input[type=\"text\"][readonly]", div);
-  // a readonly input field which outside of the editor has focus
-  testOnOutsideOfEditor(document.getElementById("button"), "button", div);
-  // nobody has focus.
-  testOnOutsideOfEditor(null, "nobody", div);
-}
 
 function runEditorFlagChangeTests() {
   var description = "runEditorFlagChangeTests: ";
@@ -332,9 +249,6 @@ async function runTests() {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.forms.always_allow_key_and_focus_events.enabled", true]],
   });
-  // complex contenteditable editor's tests
-  runComplexContenteditableTests();
-
   // test whether the IME state and composition are not changed unexpectedly
   runEditorFlagChangeTests();
 
