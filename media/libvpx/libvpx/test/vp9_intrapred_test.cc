@@ -55,6 +55,21 @@ class IntraPredTest : public ::testing::TestWithParam<PredParam> {
     ref_dst_ = ref_dst;
     int error_count = 0;
     for (int i = 0; i < count_test_block; ++i) {
+      // TODO(webm:1797): Some of the optimised predictor implementations rely
+      // on the trailing half of the above_row_ being a copy of the final
+      // element, however relying on this in some cases can cause the MD5 tests
+      // to fail. We have fixed all of these cases for Neon, so fill the whole
+      // of above_row_ randomly.
+#if HAVE_NEON
+      // Fill edges with random data, try first with saturated values.
+      for (int x = -1; x < 2 * block_size; x++) {
+        if (i == 0) {
+          above_row_[x] = mask_;
+        } else {
+          above_row_[x] = rnd.Rand16() & mask_;
+        }
+      }
+#else
       // Fill edges with random data, try first with saturated values.
       for (int x = -1; x < block_size; x++) {
         if (i == 0) {
@@ -66,6 +81,7 @@ class IntraPredTest : public ::testing::TestWithParam<PredParam> {
       for (int x = block_size; x < 2 * block_size; x++) {
         above_row_[x] = above_row_[block_size - 1];
       }
+#endif
       for (int y = 0; y < block_size; y++) {
         if (i == 0) {
           left_col_[y] = mask_;

@@ -1429,7 +1429,10 @@ INSTANTIATE_TEST_SUITE_P(
                       VarianceParams(5, 4, &vpx_variance32x16_avx2),
                       VarianceParams(4, 5, &vpx_variance16x32_avx2),
                       VarianceParams(4, 4, &vpx_variance16x16_avx2),
-                      VarianceParams(4, 3, &vpx_variance16x8_avx2)));
+                      VarianceParams(4, 3, &vpx_variance16x8_avx2),
+                      VarianceParams(3, 4, &vpx_variance8x16_avx2),
+                      VarianceParams(3, 3, &vpx_variance8x8_avx2),
+                      VarianceParams(3, 2, &vpx_variance8x4_avx2)));
 
 INSTANTIATE_TEST_SUITE_P(
     AVX2, VpxSubpelVarianceTest,

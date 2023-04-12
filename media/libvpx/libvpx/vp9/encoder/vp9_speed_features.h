@@ -417,6 +417,10 @@ typedef struct SPEED_FEATURES {
   // Adaptive prediction mode search
   int adaptive_mode_search;
 
+  // Prune NEAREST and ZEROMV single reference modes based on motion vector
+  // difference and mode rate
+  int prune_single_mode_based_on_mv_diff_mode_rate;
+
   // Chessboard pattern prediction for interp filter. Aggressiveness increases
   // with levels.
   // 0: disable

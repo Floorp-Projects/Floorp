@@ -348,7 +348,7 @@ static vpx_codec_err_t decoder_decode(vpx_codec_alg_priv_t *ctx,
 
   // Initialize the decoder on the first frame.
   if (ctx->pbi == NULL) {
-    const vpx_codec_err_t res = init_decoder(ctx);
+    res = init_decoder(ctx);
     if (res != VPX_CODEC_OK) return res;
   }
 
@@ -367,7 +367,6 @@ static vpx_codec_err_t decoder_decode(vpx_codec_alg_priv_t *ctx,
     for (i = 0; i < frame_count; ++i) {
       const uint8_t *data_start_copy = data_start;
       const uint32_t frame_size = frame_sizes[i];
-      vpx_codec_err_t res;
       if (data_start < data || frame_size > (uint32_t)(data_end - data_start)) {
         set_error_detail(ctx, "Invalid frame size in index");
         return VPX_CODEC_CORRUPT_FRAME;
@@ -382,8 +381,7 @@ static vpx_codec_err_t decoder_decode(vpx_codec_alg_priv_t *ctx,
     const uint8_t *const data_end = data + data_sz;
     while (data_start < data_end) {
       const uint32_t frame_size = (uint32_t)(data_end - data_start);
-      const vpx_codec_err_t res =
-          decode_one(ctx, &data_start, frame_size, user_priv, deadline);
+      res = decode_one(ctx, &data_start, frame_size, user_priv, deadline);
       if (res != VPX_CODEC_OK) return res;
 
       // Account for suboptimal termination by the encoder.

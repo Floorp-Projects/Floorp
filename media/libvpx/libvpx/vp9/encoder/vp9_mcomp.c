@@ -163,8 +163,8 @@ static INLINE const uint8_t *pre(const uint8_t *buf, int stride, int r, int c) {
   do {                                                                         \
     if (c >= minc && c <= maxc && r >= minr && r <= maxr) {                    \
       int64_t tmpmse;                                                          \
-      const MV mv = { r, c };                                                  \
-      const MV ref_mv = { rr, rc };                                            \
+      const MV cb_mv = { r, c };                                               \
+      const MV cb_ref_mv = { rr, rc };                                         \
       if (second_pred == NULL) {                                               \
         thismse = vfp->svf(pre(y, y_stride, r, c), y_stride, sp(c), sp(r), z,  \
                            src_stride, &sse);                                  \
@@ -173,7 +173,8 @@ static INLINE const uint8_t *pre(const uint8_t *buf, int stride, int r, int c) {
                             src_stride, &sse, second_pred);                    \
       }                                                                        \
       tmpmse = thismse;                                                        \
-      tmpmse += mv_err_cost(&mv, &ref_mv, mvjcost, mvcost, error_per_bit);     \
+      tmpmse +=                                                                \
+          mv_err_cost(&cb_mv, &cb_ref_mv, mvjcost, mvcost, error_per_bit);     \
       if (tmpmse >= INT_MAX) {                                                 \
         v = INT_MAX;                                                           \
       } else if ((v = (uint32_t)tmpmse) < besterr) {                           \
@@ -192,15 +193,16 @@ static INLINE const uint8_t *pre(const uint8_t *buf, int stride, int r, int c) {
 #define CHECK_BETTER(v, r, c)                                                  \
   do {                                                                         \
     if (c >= minc && c <= maxc && r >= minr && r <= maxr) {                    \
-      const MV mv = { r, c };                                                  \
-      const MV ref_mv = { rr, rc };                                            \
+      const MV cb_mv = { r, c };                                               \
+      const MV cb_ref_mv = { rr, rc };                                         \
       if (second_pred == NULL)                                                 \
         thismse = vfp->svf(pre(y, y_stride, r, c), y_stride, sp(c), sp(r), z,  \
                            src_stride, &sse);                                  \
       else                                                                     \
         thismse = vfp->svaf(pre(y, y_stride, r, c), y_stride, sp(c), sp(r), z, \
                             src_stride, &sse, second_pred);                    \
-      if ((v = mv_err_cost(&mv, &ref_mv, mvjcost, mvcost, error_per_bit) +     \
+      if ((v = mv_err_cost(&cb_mv, &cb_ref_mv, mvjcost, mvcost,                \
+                           error_per_bit) +                                    \
                thismse) < besterr) {                                           \
         besterr = v;                                                           \
         br = r;                                                                \
@@ -686,13 +688,14 @@ static int accurate_sub_pel_search(
   do {                                                                        \
     if (c >= minc && c <= maxc && r >= minr && r <= maxr) {                   \
       int64_t tmpmse;                                                         \
-      const MV mv = { r, c };                                                 \
-      const MV ref_mv = { rr, rc };                                           \
-      thismse = accurate_sub_pel_search(xd, &mv, x->me_sf, kernel, vfp, z,    \
+      const MV cb_mv = { r, c };                                              \
+      const MV cb_ref_mv = { rr, rc };                                        \
+      thismse = accurate_sub_pel_search(xd, &cb_mv, x->me_sf, kernel, vfp, z, \
                                         src_stride, y, y_stride, second_pred, \
                                         w, h, &sse);                          \
       tmpmse = thismse;                                                       \
-      tmpmse += mv_err_cost(&mv, &ref_mv, mvjcost, mvcost, error_per_bit);    \
+      tmpmse +=                                                               \
+          mv_err_cost(&cb_mv, &cb_ref_mv, mvjcost, mvcost, error_per_bit);    \
       if (tmpmse >= INT_MAX) {                                                \
         v = INT_MAX;                                                          \
       } else if ((v = (uint32_t)tmpmse) < besterr) {                          \
@@ -711,12 +714,13 @@ static int accurate_sub_pel_search(
 #define CHECK_BETTER1(v, r, c)                                                \
   do {                                                                        \
     if (c >= minc && c <= maxc && r >= minr && r <= maxr) {                   \
-      const MV mv = { r, c };                                                 \
-      const MV ref_mv = { rr, rc };                                           \
-      thismse = accurate_sub_pel_search(xd, &mv, x->me_sf, kernel, vfp, z,    \
+      const MV cb_mv = { r, c };                                              \
+      const MV cb_ref_mv = { rr, rc };                                        \
+      thismse = accurate_sub_pel_search(xd, &cb_mv, x->me_sf, kernel, vfp, z, \
                                         src_stride, y, y_stride, second_pred, \
                                         w, h, &sse);                          \
-      if ((v = mv_err_cost(&mv, &ref_mv, mvjcost, mvcost, error_per_bit) +    \
+      if ((v = mv_err_cost(&cb_mv, &cb_ref_mv, mvjcost, mvcost,               \
+                           error_per_bit) +                                   \
                thismse) < besterr) {                                          \
         besterr = v;                                                          \
         br = r;                                                               \
@@ -980,16 +984,14 @@ static INLINE void calc_int_cost_list(const MACROBLOCK *x, const MV *ref_mv,
   const MV fcenter_mv = { ref_mv->row >> 3, ref_mv->col >> 3 };
   int br = best_mv->row;
   int bc = best_mv->col;
-  MV this_mv;
+  const MV mv = { br, bc };
   int i;
   unsigned int sse;
 
-  this_mv.row = br;
-  this_mv.col = bc;
   cost_list[0] =
-      fn_ptr->vf(what->buf, what->stride, get_buf_from_mv(in_what, &this_mv),
+      fn_ptr->vf(what->buf, what->stride, get_buf_from_mv(in_what, &mv),
                  in_what->stride, &sse) +
-      mvsad_err_cost(x, &this_mv, &fcenter_mv, sadpb);
+      mvsad_err_cost(x, &mv, &fcenter_mv, sadpb);
   if (check_bounds(&x->mv_limits, br, bc, 1)) {
     for (i = 0; i < 4; i++) {
       const MV this_mv = { br + neighbors[i].row, bc + neighbors[i].col };
@@ -1170,6 +1172,9 @@ static int vp9_pattern_search(
     } while (s--);
   }
 
+  best_mv->row = br;
+  best_mv->col = bc;
+
   // Returns the one-away integer pel sad values around the best as follows:
   // cost_list[0]: cost at the best integer pel
   // cost_list[1]: cost at delta {0, -1} (left)   from the best integer pel
@@ -1177,11 +1182,8 @@ static int vp9_pattern_search(
   // cost_list[3]: cost at delta { 0, 1} (right)  from the best integer pel
   // cost_list[4]: cost at delta {-1, 0} (top)    from the best integer pel
   if (cost_list) {
-    const MV best_mv = { br, bc };
-    calc_int_cost_list(x, &fcenter_mv, sad_per_bit, vfp, &best_mv, cost_list);
+    calc_int_cost_list(x, &fcenter_mv, sad_per_bit, vfp, best_mv, cost_list);
   }
-  best_mv->row = br;
-  best_mv->col = bc;
   return bestsad;
 }
 
@@ -2321,17 +2323,16 @@ unsigned int vp9_int_pro_motion_estimation(const VP9_COMP *cpi, MACROBLOCK *x,
   // TODO(jingning): Implement integral projection functions for high bit-depth
   // setting and remove this part of code.
   if (xd->bd != 8) {
-    unsigned int this_sad;
+    const unsigned int sad = cpi->fn_ptr[bsize].sdf(
+        x->plane[0].src.buf, src_stride, xd->plane[0].pre[0].buf, ref_stride);
     tmp_mv->row = 0;
     tmp_mv->col = 0;
-    this_sad = cpi->fn_ptr[bsize].sdf(x->plane[0].src.buf, src_stride,
-                                      xd->plane[0].pre[0].buf, ref_stride);
 
     if (scaled_ref_frame) {
       int i;
       for (i = 0; i < MAX_MB_PLANE; i++) xd->plane[i].pre[0] = backup_yv12[i];
     }
-    return this_sad;
+    return sad;
   }
 #endif
 

@@ -743,7 +743,7 @@ static void block_rd_txfm(int plane, int block, int blk_row, int blk_col,
     }
     if (x->block_tx_domain) {
       dist_block(args->cpi, x, plane, plane_bsize, block, blk_row, blk_col,
-                 tx_size, &dist, &sse, /*recon =*/0, sse_calc_done);
+                 tx_size, &dist, &sse, /*out_recon=*/NULL, sse_calc_done);
     } else {
       const struct macroblock_plane *const p = &x->plane[plane];
       const int src_stride = p->src.stride;
@@ -1396,7 +1396,7 @@ static int64_t rd_pick_intra_sby_mode(VP9_COMP *cpi, MACROBLOCK *x, int *rate,
     mic->mode = mode;
 
     super_block_yrd(cpi, x, &this_rate_tokenonly, &this_distortion, &s, NULL,
-                    bsize, best_rd, /*recon = */ 0);
+                    bsize, best_rd, /*recon=*/NULL);
 
     if (this_rate_tokenonly == INT_MAX) continue;
 
@@ -1449,7 +1449,7 @@ static int super_block_uvrd(const VP9_COMP *cpi, MACROBLOCK *x, int *rate,
   for (plane = 1; plane < MAX_MB_PLANE; ++plane) {
     txfm_rd_in_plane(cpi, x, &pnrate, &pndist, &pnskip, &pnsse, ref_best_rd,
                      plane, bsize, uv_tx_size, cpi->sf.use_fast_coef_costing,
-                     /*recon = */ 0);
+                     /*recon=*/NULL);
     if (pnrate == INT_MAX) {
       is_cost_valid = 0;
       break;
@@ -1851,6 +1851,52 @@ static INLINE int skip_iters(const int_mv iter_mvs[][2], int ite, int id) {
     prev_fullpel_mv.as_mv.col = iter_mvs[ite - 2][id].as_mv.col >> 3;
     if (cur_fullpel_mv.as_int == prev_fullpel_mv.as_int) return 1;
   }
+  return 0;
+}
+
+// Compares motion vector and mode rate of current mode and given mode.
+static INLINE int compare_mv_mode_rate(MV this_mv, MV mode_mv,
+                                       int this_mode_rate, int mode_rate,
+                                       int mv_thresh) {
+  const int mv_diff =
+      abs(mode_mv.col - this_mv.col) + abs(mode_mv.row - this_mv.row);
+  if (mv_diff <= mv_thresh && mode_rate < this_mode_rate) return 1;
+  return 0;
+}
+
+// Skips single reference inter modes NEARMV and ZEROMV based on motion vector
+// difference and mode rate.
+static INLINE int skip_single_mode_based_on_mode_rate(
+    int_mv (*mode_mv)[MAX_REF_FRAMES], int *single_mode_rate, int this_mode,
+    int ref0, int this_mode_rate, int best_mode_index) {
+  MV this_mv = mode_mv[this_mode][ref0].as_mv;
+  const int mv_thresh = 3;
+
+  // Pruning is not applicable for NEARESTMV or NEWMV modes.
+  if (this_mode == NEARESTMV || this_mode == NEWMV) return 0;
+  // Pruning is not done when reference frame of the mode is same as best
+  // reference so far.
+  if (best_mode_index > 0 &&
+      ref0 == vp9_mode_order[best_mode_index].ref_frame[0])
+    return 0;
+
+  // Check absolute mv difference and mode rate of current mode w.r.t NEARESTMV
+  if (compare_mv_mode_rate(
+          this_mv, mode_mv[NEARESTMV][ref0].as_mv, this_mode_rate,
+          single_mode_rate[INTER_OFFSET(NEARESTMV)], mv_thresh))
+    return 1;
+
+  // Check absolute mv difference and mode rate of current mode w.r.t NEWMV
+  if (compare_mv_mode_rate(this_mv, mode_mv[NEWMV][ref0].as_mv, this_mode_rate,
+                           single_mode_rate[INTER_OFFSET(NEWMV)], mv_thresh))
+    return 1;
+
+  // Pruning w.r.t NEARMV is applicable only for ZEROMV mode
+  if (this_mode == NEARMV) return 0;
+  // Check absolute mv difference and mode rate of current mode w.r.t NEARMV
+  if (compare_mv_mode_rate(this_mv, mode_mv[NEARMV][ref0].as_mv, this_mode_rate,
+                           single_mode_rate[INTER_OFFSET(NEARMV)], mv_thresh))
+    return 1;
   return 0;
 }
 
@@ -2756,8 +2802,9 @@ static int64_t handle_inter_mode(
     struct buf_2d *recon, int *disable_skip, int_mv (*mode_mv)[MAX_REF_FRAMES],
     int mi_row, int mi_col, int_mv single_newmv[MAX_REF_FRAMES],
     INTERP_FILTER (*single_filter)[MAX_REF_FRAMES],
-    int (*single_skippable)[MAX_REF_FRAMES], int64_t *psse,
-    const int64_t ref_best_rd, int64_t *mask_filter, int64_t filter_cache[]) {
+    int (*single_skippable)[MAX_REF_FRAMES], int *single_mode_rate,
+    int64_t *psse, const int64_t ref_best_rd, int64_t *mask_filter,
+    int64_t filter_cache[], int best_mode_index) {
   VP9_COMMON *cm = &cpi->common;
   MACROBLOCKD *xd = &x->e_mbd;
   MODE_INFO *mi = xd->mi[0];
@@ -2914,6 +2961,15 @@ static int64_t handle_inter_mode(
     *rate2 += cost_mv_ref(cpi, this_mode, mbmi_ext->mode_context[refs[0]]);
   }
 
+  if (!is_comp_pred && cpi->sf.prune_single_mode_based_on_mv_diff_mode_rate) {
+    single_mode_rate[INTER_OFFSET(this_mode)] = *rate2;
+    // Prune NEARMV and ZEROMV modes based on motion vector difference and mode
+    // rate.
+    if (skip_single_mode_based_on_mode_rate(mode_mv, single_mode_rate,
+                                            this_mode, refs[0], *rate2,
+                                            best_mode_index))
+      return INT64_MAX;
+  }
   if (RDCOST(x->rdmult, x->rddiv, *rate2, 0) > ref_best_rd &&
       mi->mode != NEARESTMV)
     return INT64_MAX;
@@ -3380,6 +3436,7 @@ void vp9_rd_pick_inter_mode_sb(VP9_COMP *cpi, TileDataEnc *tile_data,
   int_mv single_newmv[MAX_REF_FRAMES] = { { 0 } };
   INTERP_FILTER single_inter_filter[MB_MODE_COUNT][MAX_REF_FRAMES];
   int single_skippable[MB_MODE_COUNT][MAX_REF_FRAMES];
+  int single_mode_rate[MAX_REF_FRAMES][INTER_MODES];
   int64_t best_rd = best_rd_so_far;
   int64_t best_pred_diff[REFERENCE_MODES];
   int64_t best_pred_rd[REFERENCE_MODES];
@@ -3578,6 +3635,10 @@ void vp9_rd_pick_inter_mode_sb(VP9_COMP *cpi, TileDataEnc *tile_data,
     second_ref_frame = vp9_mode_order[mode_index].ref_frame[1];
 
     vp9_zero(x->sum_y_eobs);
+    comp_pred = second_ref_frame > INTRA_FRAME;
+    if (!comp_pred && ref_frame != INTRA_FRAME &&
+        sf->prune_single_mode_based_on_mv_diff_mode_rate)
+      single_mode_rate[ref_frame][INTER_OFFSET(this_mode)] = INT_MAX;
 
     if (is_rect_partition) {
       if (ctx->skip_ref_frame_mask & (1 << ref_frame)) continue;
@@ -3663,7 +3724,6 @@ void vp9_rd_pick_inter_mode_sb(VP9_COMP *cpi, TileDataEnc *tile_data,
         if (this_mode == NEARMV || this_mode == ZEROMV) continue;
     }
 
-    comp_pred = second_ref_frame > INTRA_FRAME;
     if (comp_pred) {
       if (!cpi->allow_comp_inter_inter) continue;
 
@@ -3783,8 +3843,9 @@ void vp9_rd_pick_inter_mode_sb(VP9_COMP *cpi, TileDataEnc *tile_data,
       this_rd = handle_inter_mode(
           cpi, x, bsize, &rate2, &distortion2, &skippable, &rate_y, &rate_uv,
           recon, &disable_skip, frame_mv, mi_row, mi_col, single_newmv,
-          single_inter_filter, single_skippable, &total_sse, best_rd,
-          &mask_filter, filter_cache);
+          single_inter_filter, single_skippable,
+          &single_mode_rate[ref_frame][0], &total_sse, best_rd, &mask_filter,
+          filter_cache, best_mode_index);
 #if CONFIG_COLLECT_COMPONENT_TIMING
       end_timing(cpi, handle_inter_mode_time);
 #endif
