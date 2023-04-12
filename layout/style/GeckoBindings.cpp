@@ -774,9 +774,8 @@ bool Gecko_MatchLang(const Element* aElement, nsAtom* aOverrideLang,
   // from the parent we have to be prepared to look at all parent
   // nodes.  The language itself is encoded in the LANG attribute.
   if (auto* language = aHasOverrideLang ? aOverrideLang : aElement->GetLang()) {
-    return nsStyleUtil::DashMatchCompare(
-        nsDependentAtomString(language), nsDependentString(aValue),
-        nsASCIICaseInsensitiveStringComparator);
+    return nsStyleUtil::LangTagCompare(nsAtomCString(language),
+                                       NS_ConvertUTF16toUTF8(aValue));
   }
 
   // Try to get the language from the HTTP header or if this
@@ -786,11 +785,10 @@ bool Gecko_MatchLang(const Element* aElement, nsAtom* aOverrideLang,
   nsAutoString language;
   aElement->OwnerDoc()->GetContentLanguage(language);
 
-  nsDependentString langString(aValue);
+  NS_ConvertUTF16toUTF8 langString(aValue);
   language.StripWhitespace();
   for (auto const& lang : language.Split(char16_t(','))) {
-    if (nsStyleUtil::DashMatchCompare(lang, langString,
-                                      nsASCIICaseInsensitiveStringComparator)) {
+    if (nsStyleUtil::LangTagCompare(NS_ConvertUTF16toUTF8(lang), langString)) {
       return true;
     }
   }
