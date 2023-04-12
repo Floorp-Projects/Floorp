@@ -167,6 +167,9 @@ function getCallees(body, edge, scopeAttrs, functionBodies) {
             calls.push({ callee, attrs: scopeAttrs });
         } else {
             const edgeInfo = getCallEdgeProperties(body, edge, callee.name, functionBodies);
+            for (const extra of (edgeInfo.extraCalls || [])) {
+                calls.push({ attrs: scopeAttrs | extra.attrs, callee: { name: extra.name, 'kind': "direct", } });
+            }
             calls.push({ callee, attrs: scopeAttrs | edgeInfo.attrs});
         }
     }

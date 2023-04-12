@@ -154,6 +154,14 @@ function processBody(functionName, body, functionBodies)
         const scopeAttrs = body.attrs[edge.Index[0]] | 0;
 
         for (const { callee, attrs } of getCallees(body, edge, scopeAttrs, functionBodies)) {
+            // Some function names will be synthesized by manually constructing
+            // their names. Verify that we managed to synthesize an existing function.
+            // This cannot be done later with either the callees or callers tables,
+            // because the function may be an otherwise uncalled leaf.
+            if (attrs & ATTR_SYNTHETIC) {
+                assertFunctionExists(callee.name);
+            }
+
             // Individual callees may have additional attrs. The only such
             // bit currently is that nsISupports.{AddRef,Release} are assumed
             // to never GC.
@@ -272,6 +280,11 @@ if (options.function) {
     minStream = maxStream = index;
 }
 
+function assertFunctionExists(name) {
+    var data = xdb.read_entry(name);
+    assert(data.contents != 0, `synthetic function '${name}' not found!`);
+}
+
 function process(functionName, functionBodies)
 {
     for (var body of functionBodies)
@@ -283,8 +296,12 @@ function process(functionName, functionBodies)
         }
     }
 
-    for (var body of functionBodies)
+    if (options.function) {
+        debugger;
+    }
+    for (var body of functionBodies) {
         processBody(functionName, body, functionBodies);
+    }
 
     // Not strictly necessary, but add an edge from the synthetic "(js-code)"
     // to RunScript to allow better stacks than just randomly selecting a
