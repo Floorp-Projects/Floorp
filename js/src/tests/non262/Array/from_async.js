@@ -225,5 +225,78 @@ drainJobQueue();
 
 drainJobQueue();
 
+
+var g = newGlobal();
+g.asyncGen = asyncGen;
+var p = g.evaluate(`
+Array.fromAsync(asyncGen(4))
+`)
+
+p.then((x) => {
+  assertEq(x instanceof Array, false); // Should use the other global's Array.
+  assertEq(x instanceof g.Array, true);
+})
+
+drainJobQueue();
+
+
+var g2 = newGlobal({ newCompartment: true });
+g2.asyncGen = asyncGen;
+var p = g2.evaluate(`
+Array.fromAsync(asyncGen(4))
+`)
+
+p.then((x) => {
+  assertEq(x instanceof Array, false); // Should use the other global's Array.
+  assertEq(x instanceof g2.Array, true);
+  nukeCCW(x); // this will throw if x happens to not be a CCW (it should be!)
+})
+drainJobQueue();
+
+// Test having a CCW 'this' value.
+g2.obj = {};
+var p2 = g2.evaluate(`
+Array.fromAsync.call(obj, asyncGen(4))
+`)
+
+p2.then((x) => {
+  assertEq(x instanceof Array, false); // Should use the other global's Array.
+  assertEq(x instanceof g2.Array, true);
+  nukeCCW(x);
+})
+
+drainJobQueue();
+
+// Verify user promise resolution behaviour.
+var myThenCalled = false;
+var obj = { then: () => { myThenCalled = true; } }
+function* genO() {
+  yield obj;
+  return;
+}
+
+var res = Array.fromAsync(genO());
+res.then((x) => {
+  assertEq(x[0], obj);
+  assertEq(myThenCalled, true);
+});
+
+drainJobQueue();
+
+function* thrower() {
+  throw new Error();
+}
+
+g2.thrower = thrower;
+var p = g2.evaluate(`Array.fromAsync(thrower())`)
+p.catch((e) => {
+  assertEq(e instanceof Error, true, "Should throw an error from the current global");
+})
+drainJobQueue();
+
+p = g2.evaluate(`Array.fromAsync(thrower, 1)`);
+p.catch((e) => assertEq(e instanceof g2.Error, true, "Should throw error from g2"))
+drainJobQueue();
+
 if (typeof reportCompare === 'function')
   reportCompare(true, true);
