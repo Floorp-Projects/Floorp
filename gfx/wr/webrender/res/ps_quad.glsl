@@ -7,9 +7,7 @@
 #include shared,rect,transform,render_task,gpu_buffer
 
 flat varying mediump vec4 v_color;
-flat varying mediump vec4 v_uv_sample_bounds;
-flat varying lowp ivec4 v_flags;
-varying highp vec2 v_uv;
+flat varying mediump ivec2 v_flags;
 
 #ifdef WR_VERTEX_SHADER
 
@@ -25,9 +23,6 @@ varying highp vec2 v_uv;
 #define PART_BOTTOM     4
 
 #define QF_IS_OPAQUE            1
-#define QF_APPLY_DEVICE_CLIP    2
-
-#define INVALID_SEGMENT_INDEX   0xff
 
 #define AA_PIXEL_RADIUS 2.0
 
@@ -42,27 +37,11 @@ struct PrimitiveInfo {
     int edge_flags;
 };
 
-struct QuadSegment {
-    RectWithEndpoint rect;
-    vec4 uv_rect;
-};
-
 struct QuadPrimitive {
     RectWithEndpoint bounds;
     RectWithEndpoint clip;
     vec4 color;
 };
-
-QuadSegment fetch_segment(int base, int index) {
-    QuadSegment seg;
-
-    vec4 texels[2] = fetch_from_gpu_buffer_2(base + 3 + index * 2);
-
-    seg.rect = RectWithEndpoint(texels[0].xy, texels[0].zw);
-    seg.uv_rect = texels[1];
-
-    return seg;
-}
 
 QuadPrimitive fetch_primitive(int index) {
     QuadPrimitive prim;
@@ -90,7 +69,6 @@ struct QuadInstance {
     int z_id;
 
     // w
-    int segment_index;
     int transform_id;
 };
 
@@ -105,8 +83,7 @@ QuadInstance decode_instance() {
         (aData.z >> 24) & 0xff,
         aData.z & 0xffffff,
 
-        (aData.w >> 24) & 0xff,
-        aData.w & 0xffffff
+        aData.w
     );
 
     return qi;
@@ -131,19 +108,7 @@ VertexInfo write_vertex(vec2 local_pos,
     // Convert the world positions to device pixel space.
     vec2 device_pos = world_pos.xy * device_pixel_scale;
 
-    if ((quad_flags & QF_APPLY_DEVICE_CLIP) != 0) {
-        RectWithEndpoint device_clip_rect = RectWithEndpoint(
-            content_origin,
-            content_origin + task_rect.p1 - task_rect.p0
-        );
-
-        // Clip to task rect
-        device_pos = rect_clamp(device_clip_rect, device_pos);
-
-        vi.local_pos = (transform.inv_m * vec4(device_pos / device_pixel_scale, 0.0, 1.0)).xy;
-    } else {
-        vi.local_pos = local_pos;
-    }
+    vi.local_pos = local_pos;
 
     // Apply offsets for the render task to get correct screen location.
     vec2 final_offset = -content_origin + task_rect.p0;
@@ -165,19 +130,13 @@ PrimitiveInfo ps_quad_main(void) {
     QuadPrimitive prim = fetch_primitive(qi.prim_address);
     float z = float(qi.z_id);
 
-    QuadSegment seg;
-    if (qi.segment_index == INVALID_SEGMENT_INDEX) {
-        seg.rect = prim.bounds;
-        seg.uv_rect = vec4(0.0);
-    } else {
-        seg = fetch_segment(qi.prim_address, qi.segment_index);
-    }
+    v_color = prim.color;
 
     // The local space rect that we will draw, which is effectively:
     //  - The tile within the primitive we will draw
     //  - Intersected with any local-space clip rect(s)
     //  - Expanded for AA edges where appropriate
-    RectWithEndpoint local_coverage_rect = seg.rect;
+    RectWithEndpoint local_coverage_rect = prim.bounds;
 
     // Apply local clip rect
     local_coverage_rect.p0 = max(local_coverage_rect.p0, prim.clip.p0);
@@ -246,31 +205,6 @@ PrimitiveInfo ps_quad_main(void) {
         qi.quad_flags
     );
 
-    if (seg.uv_rect.xy == seg.uv_rect.zw) {
-        v_color = prim.color;
-        v_flags.y = 0;
-    } else {
-        v_color = vec4(1.0);
-        v_flags.y = 1;
-
-        vec2 f = (vi.local_pos - seg.rect.p0) / (seg.rect.p1 - seg.rect.p0);
-
-        vec2 uv = mix(
-            seg.uv_rect.xy,
-            seg.uv_rect.zw,
-            f
-        );
-
-        vec2 texture_size = vec2(TEX_SIZE(sColor0));
-
-        v_uv = uv / texture_size;
-
-        v_uv_sample_bounds = vec4(
-            seg.uv_rect.xy + vec2(0.5),
-            seg.uv_rect.zw - vec2(0.5)
-        ) / texture_size.xyxy;
-    }
-
     return PrimitiveInfo(
         vi.local_pos,
         prim.bounds,
@@ -278,4 +212,5 @@ PrimitiveInfo ps_quad_main(void) {
         qi.edge_flags
     );
 }
+
 #endif

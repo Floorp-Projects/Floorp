@@ -41,22 +41,16 @@ void main(void) {
     }
 #endif
 
-    if (v_flags.y != 0) {
-        vec2 uv = clamp(v_uv, v_uv_sample_bounds.xy, v_uv_sample_bounds.zw);
-        vec4 texel = TEX_SAMPLE(sColor0, uv);
-        color *= texel;
-    }
-
     oFragColor = color;
 }
 
 #if defined(SWGL_DRAW_SPAN)
 void swgl_drawSpanRGBA8() {
-    if (v_flags.y != 0) {
-        swgl_commitTextureLinearColorRGBA8(sColor0, v_uv, v_uv_sample_bounds, v_color);
-    } else {
-        swgl_commitSolidRGBA8(v_color);
-    }
+    swgl_commitSolidRGBA8(v_color);
+}
+
+void swgl_drawSpanR8() {
+    swgl_commitSolidR8(v_color.x);
 }
 #endif
 
