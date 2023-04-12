@@ -329,9 +329,3 @@ export function isSourceOverridden(state, source) {
   }
   return state.sources.mutableOverrideSources.has(source.url);
 }
-
-// @backward-compat { version 114 } Checks if the server supports override
-// Remove this selector completely.
-export function getOverridesSupport(state) {
-  return state.sources.isOverridesSupported;
-}

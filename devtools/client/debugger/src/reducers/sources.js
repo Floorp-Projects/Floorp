@@ -20,11 +20,6 @@ export function initialSourcesState(state) {
     mutableSources: new Map(),
 
     /**
-     * @backward-compat { version 112 } Specifies if the server supports overrides
-     * Remove this property once fully supported.
-     */
-    isOverridesSupported: state?.isOverridesSupported || false,
-    /**
      * List of override objects whose sources texts have been locally overridden.
      *
      * Object { sourceUrl, path }
