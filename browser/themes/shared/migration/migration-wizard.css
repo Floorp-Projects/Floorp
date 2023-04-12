@@ -170,6 +170,10 @@ details:not([open]) summary {
   margin-block-end: 16px;
 }
 
+summary {
+  cursor: pointer;
+}
+
 #resource-type-list {
   padding: 0;
 }
