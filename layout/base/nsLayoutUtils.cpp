@@ -4115,6 +4115,9 @@ nsIFrame* nsLayoutUtils::GetNonGeneratedAncestor(nsIFrame* aFrame) {
 }
 
 nsIFrame* nsLayoutUtils::GetParentOrPlaceholderFor(const nsIFrame* aFrame) {
+  // This condition must match the condition in FindContainingBlocks in
+  // RetainedDisplayListBuider.cpp, MarkFrameForDisplayIfVisible and
+  // UnmarkFrameForDisplayIfVisible in nsDisplayList.cpp
   if (aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) &&
       !aFrame->GetPrevInFlow()) {
     return aFrame->GetProperty(nsIFrame::PlaceholderFrameProperty());
