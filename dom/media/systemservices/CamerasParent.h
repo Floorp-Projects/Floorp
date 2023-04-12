@@ -7,17 +7,17 @@
 #ifndef mozilla_CamerasParent_h
 #define mozilla_CamerasParent_h
 
+#include "CamerasChild.h"
 #include "VideoEngine.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/camera/PCamerasParent.h"
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/ShmemPool.h"
-#include "mozilla/Atomics.h"
+#include "mozilla/StaticMutex.h"
 #include "api/video/video_sink_interface.h"
 #include "modules/video_capture/video_capture.h"
 #include "modules/video_capture/video_capture_defines.h"
 #include "video/render/incoming_video_stream.h"
-
-#include "CamerasChild.h"
 
 class nsIThread;
 
@@ -36,7 +36,7 @@ class CallbackHelper : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
 
   // These callbacks end up running on the VideoCapture thread.
   // From  VideoCaptureCallback
-  void OnFrame(const webrtc::VideoFrame& videoFrame) override;
+  void OnFrame(const webrtc::VideoFrame& aVideoFrame) override;
 
   friend CamerasParent;
 
@@ -63,43 +63,46 @@ class CamerasParent final : public PCamerasParent,
   // Messages received from the child. These run on the IPC/PBackground thread.
   mozilla::ipc::IPCResult RecvPCamerasConstructor();
   mozilla::ipc::IPCResult RecvAllocateCapture(
-      const CaptureEngine& aEngine, const nsACString& aUnique_idUTF8,
+      const CaptureEngine& aCapEngine, const nsACString& aUniqueIdUTF8,
       const uint64_t& aWindowID) override;
-  mozilla::ipc::IPCResult RecvReleaseCapture(const CaptureEngine&,
-                                             const int&) override;
+  mozilla::ipc::IPCResult RecvReleaseCapture(const CaptureEngine& aCapEngine,
+                                             const int& aCaptureId) override;
   mozilla::ipc::IPCResult RecvNumberOfCaptureDevices(
-      const CaptureEngine&) override;
-  mozilla::ipc::IPCResult RecvNumberOfCapabilities(const CaptureEngine&,
-                                                   const nsACString&) override;
-  mozilla::ipc::IPCResult RecvGetCaptureCapability(const CaptureEngine&,
-                                                   const nsACString&,
-                                                   const int&) override;
-  mozilla::ipc::IPCResult RecvGetCaptureDevice(const CaptureEngine&,
-                                               const int&) override;
+      const CaptureEngine& aCapEngine) override;
+  mozilla::ipc::IPCResult RecvNumberOfCapabilities(
+      const CaptureEngine& aCapEngine, const nsACString& aUniqueId) override;
+  mozilla::ipc::IPCResult RecvGetCaptureCapability(
+      const CaptureEngine& aCapEngine, const nsACString& aUniqueId,
+      const int& aIndex) override;
+  mozilla::ipc::IPCResult RecvGetCaptureDevice(
+      const CaptureEngine& aCapEngine, const int& aDeviceIndex) override;
   mozilla::ipc::IPCResult RecvStartCapture(
-      const CaptureEngine&, const int&, const VideoCaptureCapability&) override;
-  mozilla::ipc::IPCResult RecvFocusOnSelectedSource(const CaptureEngine&,
-                                                    const int&) override;
-  mozilla::ipc::IPCResult RecvStopCapture(const CaptureEngine&,
-                                          const int&) override;
-  mozilla::ipc::IPCResult RecvReleaseFrame(mozilla::ipc::Shmem&&) override;
+      const CaptureEngine& aCapEngine, const int& aCaptureId,
+      const VideoCaptureCapability& aIpcCaps) override;
+  mozilla::ipc::IPCResult RecvFocusOnSelectedSource(
+      const CaptureEngine& aCapEngine, const int& aCaptureId) override;
+  mozilla::ipc::IPCResult RecvStopCapture(const CaptureEngine& aCapEngine,
+                                          const int& aCaptureId) override;
+  mozilla::ipc::IPCResult RecvReleaseFrame(
+      mozilla::ipc::Shmem&& aShmem) override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
-  mozilla::ipc::IPCResult RecvEnsureInitialized(const CaptureEngine&) override;
+  mozilla::ipc::IPCResult RecvEnsureInitialized(
+      const CaptureEngine& aCapEngine) override;
 
   nsIEventTarget* GetBackgroundEventTarget() {
     return mPBackgroundEventTarget;
   };
   bool IsShuttingDown() {
     // the first 2 are pBackground only, the last is atomic
-    MOZ_ASSERT(GetCurrentSerialEventTarget() == mPBackgroundEventTarget);
+    MOZ_ASSERT(mPBackgroundEventTarget->IsOnCurrentThread());
     return !mChildIsAlive || mDestroyed || !mWebRTCAlive;
   };
   ShmemBuffer GetBuffer(size_t aSize);
 
   // helper to forward to the PBackground thread
-  int DeliverFrameOverIPC(CaptureEngine capEng, uint32_t aStreamId,
-                          const TrackingId& aTrackingId, ShmemBuffer buffer,
-                          unsigned char* altbuffer,
+  int DeliverFrameOverIPC(CaptureEngine aCapEngine, uint32_t aStreamId,
+                          const TrackingId& aTrackingId, ShmemBuffer aBuffer,
+                          unsigned char* aAltBuffer,
                           const VideoFrameProperties& aProps);
 
   CamerasParent();
