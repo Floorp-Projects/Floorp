@@ -272,6 +272,10 @@
   flex: 400 0 auto;
 }
 
+:root[chromehidden~="toolbar"] :is(#urlbar-container, #wrapper-urlbar-container) {
+  flex-shrink: 1;
+}
+
 #urlbar-search-splitter {
   /* The splitter width should equal the location and search bars' combined
      neighboring margin and border width. */
