@@ -27,7 +27,8 @@ UtilityProcessImpl::~UtilityProcessImpl() = default;
 void UtilityProcessImpl::LoadLibraryOrCrash(LPCWSTR aLib) {
   HMODULE module = ::LoadLibraryW(aLib);
   if (!module) {
-    MOZ_CRASH("Unable to preload module");
+    DWORD err = ::GetLastError();
+    MOZ_CRASH_UNSAFE_PRINTF("Unable to preload module: 0x%lx", err);
   }
 }
 #endif  // defined(XP_WIN)
