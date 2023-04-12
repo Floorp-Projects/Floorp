@@ -20,7 +20,6 @@ use selectors::parser::SelectorParseErrorKind;
 use selectors::SelectorList;
 use std::fmt;
 use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss as ToCss_};
-use thin_vec::ThinVec;
 
 pub use crate::gecko::pseudo_element::{
     PseudoElement, EAGER_PSEUDOS, EAGER_PSEUDO_COUNT, PSEUDO_COUNT,
@@ -39,9 +38,7 @@ bitflags! {
 }
 
 /// The type used to store the language argument to the `:lang` pseudo-class.
-#[derive(Clone, Debug, Eq, MallocSizeOf, PartialEq, ToCss, ToShmem)]
-#[css(comma)]
-pub struct Lang(#[css(iterable)] pub ThinVec<AtomIdent>);
+pub type Lang = AtomIdent;
 
 macro_rules! pseudo_class_name {
     ([$(($css:expr, $name:ident, $state:tt, $flags:tt),)*]) => {
@@ -72,9 +69,9 @@ impl ToCss for NonTSPseudoClass {
             ([$(($css:expr, $name:ident, $state:tt, $flags:tt),)*]) => {
                 match *self {
                     $(NonTSPseudoClass::$name => concat!(":", $css),)*
-                    NonTSPseudoClass::Lang(ref lang) => {
+                    NonTSPseudoClass::Lang(ref s) => {
                         dest.write_str(":lang(")?;
-                        lang.to_css(&mut CssWriter::new(dest))?;
+                        cssparser::ToCss::to_css(s, dest)?;
                         return dest.write_char(')');
                     },
                     NonTSPseudoClass::MozLocaleDir(ref dir) => {
@@ -378,13 +375,8 @@ impl<'a, 'i> ::selectors::Parser<'i> for SelectorParser<'a> {
     ) -> Result<NonTSPseudoClass, ParseError<'i>> {
         let pseudo_class = match_ignore_ascii_case! { &name,
             "lang" => {
-                let result = parser.parse_comma_separated(|input| {
-                    Ok(AtomIdent::from(input.expect_ident_or_string()?.as_ref()))
-                })?;
-                if result.is_empty() {
-                    return Err(parser.new_custom_error(StyleParseErrorKind::UnspecifiedError));
-                }
-                NonTSPseudoClass::Lang(Lang(result.into()))
+                let name = parser.expect_ident_or_string()?;
+                NonTSPseudoClass::Lang(Lang::from(name.as_ref()))
             },
             "-moz-locale-dir" => {
                 NonTSPseudoClass::MozLocaleDir(Direction::parse(parser)?)
@@ -434,7 +426,7 @@ impl<'a, 'i> ::selectors::Parser<'i> for SelectorParser<'a> {
         if starts_with_ignore_ascii_case(&name, "-moz-tree-") {
             // Tree pseudo-elements can have zero or more arguments, separated
             // by either comma or space.
-            let mut args = ThinVec::new();
+            let mut args = Vec::new();
             loop {
                 let location = parser.current_source_location();
                 match parser.next() {
@@ -448,6 +440,7 @@ impl<'a, 'i> ::selectors::Parser<'i> for SelectorParser<'a> {
                     _ => unreachable!("Parser::next() shouldn't return any other error"),
                 }
             }
+            let args = args.into_boxed_slice();
             if let Some(pseudo) = PseudoElement::tree_pseudo_element(&name, args) {
                 if self.is_pseudo_element_enabled(&pseudo) {
                     return Ok(pseudo);
