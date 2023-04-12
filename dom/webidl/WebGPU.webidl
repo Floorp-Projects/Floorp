@@ -84,24 +84,14 @@ enum GPUPowerPreference {
 
 [Pref="dom.webgpu.enabled",
  Exposed=(Window /* ,DedicatedWorker */), SecureContext]
-interface GPUAdapterInfo {
-    readonly attribute DOMString vendor;
-    readonly attribute DOMString architecture;
-    readonly attribute DOMString device;
-    readonly attribute DOMString description;
-};
-
-[Pref="dom.webgpu.enabled",
- Exposed=(Window /* ,DedicatedWorker */), SecureContext]
 interface GPUAdapter {
+    readonly attribute DOMString name;
     [SameObject] readonly attribute GPUSupportedFeatures features;
     [SameObject] readonly attribute GPUSupportedLimits limits;
     readonly attribute boolean isFallbackAdapter;
 
     [NewObject]
     Promise<GPUDevice> requestDevice(optional GPUDeviceDescriptor descriptor = {});
-    [NewObject]
-    Promise<GPUAdapterInfo> requestAdapterInfo(optional sequence<DOMString> unmaskHints = []);
 };
 
 dictionary GPUDeviceDescriptor {
