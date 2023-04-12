@@ -471,9 +471,15 @@ class Animation : public DOMEventTargetHelper,
       const Nullable<TimeDuration>& aCurrentTime,
       const TimeDuration& aEffectStartTime, const double aPlaybackRate);
   ProgressTimelinePosition AtProgressTimelineBoundary() const {
+    Nullable<TimeDuration> currentTime = GetUnconstrainedCurrentTime();
     return AtProgressTimelineBoundary(
         mTimeline ? mTimeline->TimelineDuration() : nullptr,
-        GetCurrentTimeAsDuration(),
+        // Set unlimited current time based on the first matching condition:
+        // 1. start time is resolved:
+        //    (timeline time - start time) × playback rate
+        // 2. Otherwise:
+        //    animation’s current time
+        !currentTime.IsNull() ? currentTime : GetCurrentTimeAsDuration(),
         mStartTime.IsNull() ? TimeDuration() : mStartTime.Value(),
         mPlaybackRate);
   }
