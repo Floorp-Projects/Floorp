@@ -636,7 +636,7 @@ void nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
 #ifdef NOISY_FINAL_SIZE
   ListTag(stdout);
   printf(": metrics=%d,%d ascent=%d\n", aMetrics.Width(), aMetrics.Height(),
-         aMetrics.TopAscent());
+         aMetrics.BlockStartAscent());
 #endif
 }
 
