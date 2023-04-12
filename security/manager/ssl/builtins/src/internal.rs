@@ -80,12 +80,12 @@ fn get_root_list_attribute(attribute: CK_ATTRIBUTE_TYPE) -> Option<&'static [u8]
         CKA_TOKEN => Some(CK_TRUE_BYTES),
         CKA_PRIVATE => Some(CK_FALSE_BYTES),
         CKA_MODIFIABLE => Some(CK_FALSE_BYTES),
-        CKA_LABEL => Some(ROOT_LIST_LABEL),
+        CKA_LABEL => Some(&ROOT_LIST_LABEL[..]),
         _ => None,
     }
 }
 
-fn get_cert_attribute(attribute: CK_ATTRIBUTE_TYPE, cert: &Root) -> Option<&'static [u8]> {
+fn get_cert_attribute(attribute: CK_ATTRIBUTE_TYPE, cert: &Root) -> Option<&[u8]> {
     match attribute {
         CKA_CLASS => Some(CKO_CERTIFICATE_BYTES),
         CKA_TOKEN => Some(CK_TRUE_BYTES),
@@ -93,10 +93,10 @@ fn get_cert_attribute(attribute: CK_ATTRIBUTE_TYPE, cert: &Root) -> Option<&'sta
         CKA_MODIFIABLE => Some(CK_FALSE_BYTES),
         CKA_LABEL => Some(cert.label.as_bytes()),
         CKA_CERTIFICATE_TYPE => Some(CKC_X_509_BYTES),
-        CKA_SUBJECT => Some(cert.der_name),
+        CKA_SUBJECT => Some(cert.der_name()),
         CKA_ID => Some(b"0\0"), // null terminated to match C implementation
-        CKA_ISSUER => Some(cert.der_name),
-        CKA_SERIAL_NUMBER => Some(cert.der_serial),
+        CKA_ISSUER => Some(cert.der_name()),
+        CKA_SERIAL_NUMBER => Some(cert.der_serial()),
         CKA_VALUE => Some(cert.der_cert),
         CKA_NSS_MOZILLA_CA_POLICY => cert.mozilla_ca_policy,
         CKA_NSS_SERVER_DISTRUST_AFTER => cert.server_distrust_after,
@@ -105,17 +105,17 @@ fn get_cert_attribute(attribute: CK_ATTRIBUTE_TYPE, cert: &Root) -> Option<&'sta
     }
 }
 
-fn get_trust_attribute(attribute: CK_ATTRIBUTE_TYPE, cert: &Root) -> Option<&'static [u8]> {
+fn get_trust_attribute(attribute: CK_ATTRIBUTE_TYPE, cert: &Root) -> Option<&[u8]> {
     match attribute {
         CKA_CLASS => Some(CKO_NSS_TRUST_BYTES),
         CKA_TOKEN => Some(CK_TRUE_BYTES),
         CKA_PRIVATE => Some(CK_FALSE_BYTES),
         CKA_MODIFIABLE => Some(CK_FALSE_BYTES),
         CKA_LABEL => Some(cert.label.as_bytes()),
-        CKA_CERT_SHA1_HASH => Some(cert.sha1),
-        CKA_CERT_MD5_HASH => Some(cert.md5),
-        CKA_ISSUER => Some(cert.der_name),
-        CKA_SERIAL_NUMBER => Some(cert.der_serial),
+        CKA_CERT_SHA1_HASH => Some(&cert.sha1[..]),
+        CKA_CERT_MD5_HASH => Some(&cert.md5[..]),
+        CKA_ISSUER => Some(cert.der_name()),
+        CKA_SERIAL_NUMBER => Some(cert.der_serial()),
         CKA_TRUST_STEP_UP_APPROVED => Some(CK_FALSE_BYTES),
         CKA_TRUST_SERVER_AUTH => Some(cert.trust_server),
         CKA_TRUST_EMAIL_PROTECTION => Some(cert.trust_email),
@@ -187,20 +187,20 @@ pub fn search(query: &Query) -> SearchResult {
 fn search_by_name(name: &[u8], query: &Query) -> SearchResult {
     let mut results: SearchResult = SearchResult::default();
 
-    let index = match BUILTINS.binary_search_by_key(&name, |r| r.der_name) {
+    let index = match BUILTINS.binary_search_by_key(&name, |r| r.der_name()) {
         Ok(index) => index,
         _ => return results,
     };
 
     // binary search returned a matching index, but maybe not the smallest
     let mut min = index;
-    while min > 0 && name.eq(BUILTINS[min - 1].der_name) {
+    while min > 0 && name.eq(BUILTINS[min - 1].der_name()) {
         min -= 1;
     }
 
     // ... and maybe not the largest.
     let mut max = index;
-    while max < BUILTINS.len() - 1 && name.eq(BUILTINS[max + 1].der_name) {
+    while max < BUILTINS.len() - 1 && name.eq(BUILTINS[max + 1].der_name()) {
         max += 1;
     }
 

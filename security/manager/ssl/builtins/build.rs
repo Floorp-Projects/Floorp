@@ -308,8 +308,8 @@ impl ParseCallbacks for PKCS11TypesParseCallbacks {
 macro_rules! emit_build_error {
     ($out:ident, $err:expr) => {
         writeln!($out, "std::compile_error!(\"{}\");", $err)?;
-        writeln!($out, "pub static ROOT_LIST_LABEL: &[u8] = b\"\";")?;
-        writeln!($out, "pub static BUILTINS: &[Root] = &[];")?;
+        writeln!($out, "pub static ROOT_LIST_LABEL: [u8; 0] = [];")?;
+        writeln!($out, "pub static BUILTINS: [Root; 0] = [];")?;
     };
 }
 
@@ -412,9 +412,8 @@ fn main() -> std::io::Result<()> {
     });
 
     // Write out arrays for the DER encoded certificate, serial number, and subject of each root.
-    // As of Rust 1.64, we can construct subslices of a static array at compile time using
-    // slice::from_raw_parts. Since the serial number and the subject are in the DER cert, we don't
-    // need to store additional data for them.
+    // Since the serial number and the subject are in the DER cert, we don't need to store
+    // additional data for them.
     for (i, cert) in certs.iter().enumerate() {
         // Preserve the comment from certdata.txt
         match attr(cert, "COMMENT") {
@@ -440,9 +439,26 @@ fn main() -> std::io::Result<()> {
             _ => unreachable!(),
         };
 
+        fn need_u16(out: &mut impl Write, attr: &str, what: &str, i: usize) -> std::io::Result<()> {
+            emit_build_error!(
+                out,
+                format!("Certificate {i} in certdata.txt has a {attr} whose {what} doesn't fit in a u8. Time to upgrade to u16 at the expense of size?")
+            );
+            Ok(())
+        }
+
         let serial_len = serial_data.len();
         if let Some(serial_offset) = &der_data.windows(serial_len).position(|s| s == serial_data) {
-            writeln!(out, "static SERIAL_{i}: &[u8] = unsafe {{ slice::from_raw_parts(ROOT_{i}.as_ptr().offset({serial_offset}), {serial_len}) }};")?;
+            if *serial_offset > u8::MAX.into() {
+                return need_u16(&mut out, "CKA_SERIAL_NUMBER", "offset", i);
+            }
+            if serial_len > u8::MAX.into() {
+                return need_u16(&mut out, "CKA_SERIAL_NUMBER", "length", i);
+            }
+            writeln!(
+                out,
+                "const SERIAL_{i}: (u8, u8) = ({serial_offset}, {serial_len});"
+            )?;
         } else {
             emit_build_error!(
                 out,
@@ -456,7 +472,16 @@ fn main() -> std::io::Result<()> {
             .windows(subject_len)
             .position(|s| s == subject_data)
         {
-            writeln!(out, "static SUBJECT_{i}: &[u8] = unsafe {{ slice::from_raw_parts(ROOT_{i}.as_ptr().offset({subject_offset}), {subject_len}) }};")?;
+            if *subject_offset > u8::MAX.into() {
+                return need_u16(&mut out, "CKA_SUBJECT", "offset", i);
+            }
+            if subject_len > u8::MAX.into() {
+                return need_u16(&mut out, "CKA_SUBJECT", "length", i);
+            }
+            writeln!(
+                out,
+                "const SUBJECT_{i}: (u8, u8) = ({subject_offset}, {subject_len});"
+            )?;
         } else {
             emit_build_error!(
                 out,
@@ -467,12 +492,16 @@ fn main() -> std::io::Result<()> {
     }
 
     let root_list_label = attr(root_lists[0], "CKA_LABEL");
+    let root_list_label_len = match root_list_label {
+        Ck::Utf8(x) => x.len() + 1,
+        _ => unreachable!(),
+    };
     writeln!(
         out,
-        "pub const ROOT_LIST_LABEL: &[u8] = b{root_list_label};"
+        "pub const ROOT_LIST_LABEL: [u8; {root_list_label_len}] = *b{root_list_label};"
     )?;
 
-    writeln!(out, "pub static BUILTINS: &[Root] = &[")?;
+    writeln!(out, "pub static BUILTINS: [Root; {}] = [", certs.len())?;
     for (i, cert) in certs.iter().enumerate() {
         let subject = attr(cert, "CKA_SUBJECT");
         let issuer = attr(cert, "CKA_ISSUER");
@@ -504,8 +533,14 @@ fn main() -> std::io::Result<()> {
             return Ok(());
         }
         let trust = *matching_trusts[0];
-        let sha1 = attr(trust, "CKA_CERT_SHA1_HASH");
-        let md5 = attr(trust, "CKA_CERT_MD5_HASH");
+        let sha1 = match attr(trust, "CKA_CERT_SHA1_HASH") {
+            Ck::MultilineOctal(x) => octal_block_to_hex_string(x),
+            _ => unreachable!(),
+        };
+        let md5 = match attr(trust, "CKA_CERT_MD5_HASH") {
+            Ck::MultilineOctal(x) => octal_block_to_hex_string(x),
+            _ => unreachable!(),
+        };
         let server = attr(trust, "CKA_TRUST_SERVER_AUTH");
         let email = attr(trust, "CKA_TRUST_EMAIL_PROTECTION");
 
@@ -519,8 +554,8 @@ fn main() -> std::io::Result<()> {
             mozilla_ca_policy: {mozpol},
             server_distrust_after: {server_distrust},
             email_distrust_after: {email_distrust},
-            sha1: {sha1},
-            md5: {md5},
+            sha1: [{sha1}],
+            md5: [{md5}],
             trust_server: {server},
             trust_email: {email},
         }},"
