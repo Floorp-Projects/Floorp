@@ -3945,6 +3945,23 @@ bool PeerConnectionImpl::ShouldForceProxy() const {
     return true;
   }
 
+  bool isPBM = false;
+  // This complicated null check is being extra conservative to avoid
+  // introducing crashes. It may not be needed.
+  if (mWindow && mWindow->GetExtantDoc() &&
+      mWindow->GetExtantDoc()->GetPrincipal() &&
+      mWindow->GetExtantDoc()
+              ->GetPrincipal()
+              ->OriginAttributesRef()
+              .mPrivateBrowsingId > 0) {
+    isPBM = true;
+  }
+
+  if (isPBM && Preferences::GetBool(
+                   "media.peerconnection.ice.proxy_only_if_pbmode", false)) {
+    return true;
+  }
+
   if (!Preferences::GetBool(
           "media.peerconnection.ice.proxy_only_if_behind_proxy", false)) {
     return false;
