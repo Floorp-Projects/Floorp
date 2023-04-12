@@ -23,7 +23,7 @@ export function toggleTracing(logMethod) {
 
     // Automatically open the split console when enabling tracing to the console
     if (!isTracingEnabled && logMethod == "console") {
-      await panel.toolbox.openSplitConsole();
+      await panel.toolbox.openSplitConsole({ focusConsoleInput: false });
     }
 
     return dispatch({
