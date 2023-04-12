@@ -1183,23 +1183,15 @@ export class SearchEngine {
     delete this._metaData[name];
   }
 
-  // nsISearchEngine
-
   /**
    * Get the user-defined alias.
    *
-   * @returns {string}
+   * @type {string}
    */
   get alias() {
     return this.getAttr("alias") || "";
   }
 
-  /**
-   * Set the user-defined alias.
-   *
-   * @param {string} val
-   *   The new alias.
-   */
   set alias(val) {
     var value = val ? val.trim() : "";
     if (value != this.alias) {
@@ -1748,10 +1740,6 @@ export class SearchEngine {
     }
   }
 
-  /**
-   * @returns {string}
-   *   The identifier of the Search Engine.
-   */
   get id() {
     return this.#id;
   }

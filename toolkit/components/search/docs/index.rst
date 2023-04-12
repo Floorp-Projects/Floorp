@@ -31,3 +31,10 @@ Contents
    DefaultSearchEngines
    Preferences
    Telemetry
+
+API Reference
+-------------
+
+.. toctree::
+
+   SearchService

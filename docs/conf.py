@@ -73,6 +73,7 @@ js_source_path = [
     "../toolkit/components/prompts/src",
     "../toolkit/components/pictureinpicture",
     "../toolkit/components/pictureinpicture/content",
+    "../toolkit/components/search",
 ]
 root_for_relative_js_paths = ".."
 jsdoc_config_path = "jsdoc.json"
