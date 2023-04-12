@@ -25,14 +25,14 @@ window.onload = function (){
   }, "*");
   // click button
   button.click();
-
 }
 // after button clicked and paged scrolled sends URL of current window
 window.onscroll = function(){
   window.opener.postMessage({
     info: "scrolled-to-foo",
-    result: window.location.hash,
+    result: window.location.href,
     button: true,
+    documentURI: document.documentURI,
   }, "*");
  }
 

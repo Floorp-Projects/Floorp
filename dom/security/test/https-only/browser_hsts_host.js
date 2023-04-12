@@ -33,6 +33,7 @@ add_task(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.security.https_only_mode", true]],
   });
+
   Services.console.registerListener(onNewMessage);
   const RESOURCE_LINK =
     getRootDirectory(gTestPath).replace(
@@ -47,6 +48,64 @@ add_task(async function() {
 
   // Clean up
   Services.console.unregisterListener(onNewMessage);
+
+  await SpecialPowers.popPrefEnv();
+});
+
+// Test that when clicking on #fragment with a different scheme (http vs https)
+// DOES cause an actual navigation with HSTS, even though https-only mode is
+// enabled.
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.security.https_only_mode", true],
+      [
+        "dom.security.https_only_mode_break_upgrade_downgrade_endless_loop",
+        false,
+      ],
+    ],
+  });
+
+  const TEST_PAGE =
+    "http://example.com/browser/dom/security/test/https-only/file_fragment_noscript.html";
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_PAGE,
+      waitForLoad: true,
+    },
+    async function(browser) {
+      const UPGRADED_URL = TEST_PAGE.replace("http:", "https:");
+
+      await SpecialPowers.spawn(browser, [UPGRADED_URL], async function(url) {
+        is(content.window.location.href, url);
+
+        content.window.addEventListener("scroll", () => {
+          ok(false, "scroll event should not trigger");
+        });
+
+        let beforeUnload = new Promise(resolve => {
+          content.window.addEventListener("beforeunload", resolve, {
+            once: true,
+          });
+        });
+
+        content.window.document.querySelector("#clickMeButton").click();
+
+        // Wait for unload event.
+        await beforeUnload;
+      });
+
+      await BrowserTestUtils.browserLoaded(browser);
+
+      await SpecialPowers.spawn(browser, [UPGRADED_URL], async function(url) {
+        is(content.window.location.href, url + "#foo");
+      });
+    }
+  );
+
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function() {

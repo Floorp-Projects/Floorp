@@ -8696,12 +8696,22 @@ bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
       // fact that the new URI is currently http), then set mSameExceptHashes to
       // true and only perform a fragment navigation.
       if (!aState.mSameExceptHashes) {
-        nsCOMPtr<nsIChannel> docChannel = GetCurrentDocChannel();
-        if (docChannel) {
+        if (nsCOMPtr<nsIChannel> docChannel = GetCurrentDocChannel()) {
           nsCOMPtr<nsILoadInfo> docLoadInfo = docChannel->LoadInfo();
-          if (!docLoadInfo->GetLoadErrorPage()) {
-            if (nsHTTPSOnlyUtils::IsEqualURIExceptSchemeAndRef(
-                    currentExposableURI, aLoadState->URI(), docLoadInfo)) {
+          if (!docLoadInfo->GetLoadErrorPage() &&
+              nsHTTPSOnlyUtils::IsEqualURIExceptSchemeAndRef(
+                  currentExposableURI, aLoadState->URI(), docLoadInfo)) {
+            uint32_t status = docLoadInfo->GetHttpsOnlyStatus();
+            if (status & (nsILoadInfo::HTTPS_ONLY_UPGRADED_LISTENER_REGISTERED |
+                          nsILoadInfo::HTTPS_ONLY_UPGRADED_HTTPS_FIRST)) {
+              // At this point the requested URI is for sure a fragment
+              // navigation via HTTP and HTTPS-Only mode or HTTPS-First is
+              // enabled. Also it is not interfering the upgrade order of
+              // https://searchfox.org/mozilla-central/source/netwerk/base/nsNetUtil.cpp#2948-2953.
+              // Since we are on an HTTPS site the fragment
+              // navigation should also be an HTTPS.
+              // For that reason we should upgrade the URI to HTTPS.
+              aState.mSecureUpgradeURI = true;
               aState.mSameExceptHashes = true;
             }
           }
@@ -8788,6 +8798,22 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
 
   nsCOMPtr<nsIURI> currentURI = mCurrentURI;
 
+  // We need to upgrade the new URI from http: to https:
+  nsCOMPtr<nsIURI> newURI = aLoadState->URI();
+  if (aState.mSecureUpgradeURI) {
+    MOZ_TRY(NS_GetSecureUpgradedURI(aLoadState->URI(), getter_AddRefs(newURI)));
+    MOZ_LOG(gSHLog, LogLevel::Debug,
+            ("Upgraded URI to %s", newURI->GetSpecOrDefault().get()));
+  }
+
+#ifdef DEBUG
+  if (aState.mSameExceptHashes) {
+    bool sameExceptHashes = false;
+    currentURI->EqualsExceptRef(newURI, &sameExceptHashes);
+    MOZ_ASSERT(sameExceptHashes);
+  }
+#endif
+
   // Save the position of the scrollers.
   nsPoint scrollPos = GetCurScrollPos();
 
@@ -8824,7 +8850,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
   }
 
   // Set the doc's URI according to the new history entry's URI.
-  doc->SetDocumentURI(aLoadState->URI());
+  doc->SetDocumentURI(newURI);
 
   /* This is a anchor traversal within the same page.
    * call OnNewURI() so that, this traversal will be
@@ -8854,8 +8880,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
     newCsp = doc->GetCsp();
   }
 
-  uint32_t locationChangeFlags =
-      GetSameDocumentNavigationFlags(aLoadState->URI());
+  uint32_t locationChangeFlags = GetSameDocumentNavigationFlags(newURI);
 
   // Pass true for aCloneSHChildren, since we're not
   // changing documents here, so all of our subframes are
@@ -8869,10 +8894,9 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
   // Note: we'll actually fire onLocationChange later, in order to preserve
   // ordering of HistoryCommit() in the parent vs onLocationChange (bug
   // 1668126)
-  bool locationChangeNeeded =
-      OnNewURI(aLoadState->URI(), nullptr, newURITriggeringPrincipal,
-               newURIPrincipalToInherit, newURIPartitionedPrincipalToInherit,
-               newCsp, false, true, true);
+  bool locationChangeNeeded = OnNewURI(
+      newURI, nullptr, newURITriggeringPrincipal, newURIPrincipalToInherit,
+      newURIPartitionedPrincipalToInherit, newCsp, false, true, true);
 
   nsCOMPtr<nsIInputStream> postData;
   uint32_t cacheKey = 0;
@@ -9039,15 +9063,13 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
 
       MOZ_LOG(gSHLog, LogLevel::Debug,
               ("Creating an active entry on nsDocShell %p to %s", this,
-               aLoadState->URI()->GetSpecOrDefault().get()));
+               newURI->GetSpecOrDefault().get()));
       if (mActiveEntry) {
-        mActiveEntry =
-            MakeUnique<SessionHistoryInfo>(*mActiveEntry, aLoadState->URI());
+        mActiveEntry = MakeUnique<SessionHistoryInfo>(*mActiveEntry, newURI);
       } else {
         mActiveEntry = MakeUnique<SessionHistoryInfo>(
-            aLoadState->URI(), newURITriggeringPrincipal,
-            newURIPrincipalToInherit, newURIPartitionedPrincipalToInherit,
-            newCsp, mContentTypeHint);
+            newURI, newURITriggeringPrincipal, newURIPrincipalToInherit,
+            newURIPartitionedPrincipalToInherit, newCsp, mContentTypeHint);
       }
 
       // Save the postData obtained from the previous page in to the session
@@ -9086,7 +9108,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
   }
 
   if (locationChangeNeeded) {
-    FireOnLocationChange(this, nullptr, aLoadState->URI(), locationChangeFlags);
+    FireOnLocationChange(this, nullptr, newURI, locationChangeFlags);
   }
 
   /* Restore the original LSHE if we were loading something
@@ -9097,13 +9119,13 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
 
   /* Set the title for the Global History entry for this anchor url.
    */
-  UpdateGlobalHistoryTitle(aLoadState->URI());
+  UpdateGlobalHistoryTitle(newURI);
 
   SetDocCurrentStateObj(mOSHE, mActiveEntry.get());
 
   // Inform the favicon service that the favicon for oldURI also
-  // applies to aLoadState->URI().
-  CopyFavicon(currentURI, aLoadState->URI(), UsePrivateBrowsing());
+  // applies to newURI.
+  CopyFavicon(currentURI, newURI, UsePrivateBrowsing());
 
   RefPtr<nsGlobalWindowOuter> scriptGlobal = mScriptGlobal;
   RefPtr<nsGlobalWindowInner> win =
@@ -9158,7 +9180,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
     if (doHashchange) {
       // Note that currentURI hasn't changed because it's on the
       // stack, so we can just use it directly as the old URI.
-      win->DispatchAsyncHashchange(currentURI, aLoadState->URI());
+      win->DispatchAsyncHashchange(currentURI, newURI);
     }
   }
 
