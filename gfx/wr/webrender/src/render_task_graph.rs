@@ -677,6 +677,19 @@ impl RenderTaskGraph {
         }
     }
 
+    pub fn resolve_texture(
+        &self,
+        task_id: impl Into<Option<RenderTaskId>>,
+    ) -> Option<TextureSource> {
+        let task_id = task_id.into()?;
+        let task = &self[task_id];
+
+        match task.get_texture_source() {
+            TextureSource::Invalid => None,
+            source => Some(source),
+        }
+    }
+
     pub fn resolve_location(
         &self,
         task_id: impl Into<Option<RenderTaskId>>,

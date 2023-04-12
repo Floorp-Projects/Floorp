@@ -51,10 +51,10 @@ fuzzy-if(!useDrawSnapshot,36-40,1096-1162) == clip-path-ellipse-008.html clip-pa
 == clip-path-inset-001b.html clip-path-inset-001-ref.html
 == clip-path-inset-001c.html clip-path-inset-001-ref.html
 # Anti-aliasing behavior for masking and borders is different
-fuzzy-if(useDrawSnapshot,0-64,0-146) fuzzy-if(!useDrawSnapshot,0-1,0-2) == clip-path-inset-002a.html clip-path-inset-002-ref.html
-fuzzy-if(useDrawSnapshot,0-64,0-146) fuzzy-if(!useDrawSnapshot,0-1,0-2) == clip-path-inset-002b.html clip-path-inset-002-ref.html
-fuzzy-if(useDrawSnapshot,0-64,0-146) fuzzy-if(!useDrawSnapshot,0-1,0-2) == clip-path-inset-002c.html clip-path-inset-002-ref.html
-fuzzy-if(useDrawSnapshot,0-64,0-340) fuzzy-if(!useDrawSnapshot,0-1,0-2) == clip-path-inset-003.html clip-path-inset-003-ref.html
+fuzzy-if(useDrawSnapshot,0-64,0-146) fuzzy-if(!useDrawSnapshot,0-2,0-28) == clip-path-inset-002a.html clip-path-inset-002-ref.html
+fuzzy-if(useDrawSnapshot,0-64,0-146) fuzzy-if(!useDrawSnapshot,0-2,0-28) == clip-path-inset-002b.html clip-path-inset-002-ref.html
+fuzzy-if(useDrawSnapshot,0-64,0-146) fuzzy-if(!useDrawSnapshot,0-2,0-28) == clip-path-inset-002c.html clip-path-inset-002-ref.html
+fuzzy-if(useDrawSnapshot,0-64,0-340) fuzzy-if(!useDrawSnapshot,0-1,0-60) == clip-path-inset-003.html clip-path-inset-003-ref.html
 
 fuzzy(0-1,0-10) == clip-path-stroke-001.html clip-path-stroke-001-ref.html
 

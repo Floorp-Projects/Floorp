@@ -19,7 +19,7 @@ use crate::spatial_tree::{SpatialNodeIndex, SpatialTree};
 use crate::clip::{ClipDataStore, ClipNodeFlags, ClipChainInstance, ClipItemKind};
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState};
 use crate::gpu_cache::{GpuCacheHandle, GpuDataRequest};
-use crate::gpu_types::{BrushFlags};
+use crate::gpu_types::{BrushFlags, TransformPaletteId, QuadSegment};
 use crate::internal_types::{FastHashMap, PlaneSplitAnchor};
 use crate::picture::{PicturePrimitive, SliceId, ClusterFlags};
 use crate::picture::{PrimitiveList, PrimitiveCluster, SurfaceIndex, TileCacheInstance, SubpixelMode, Picture3DContext};
@@ -33,14 +33,13 @@ use crate::render_task_cache::{RenderTaskCacheKey, to_cache_size, RenderTaskPare
 use crate::render_task::{RenderTaskKind, RenderTask};
 use crate::renderer::{GpuBufferBuilder, GpuBufferAddress};
 use crate::segment::{EdgeAaSegmentMask, SegmentBuilder};
-use crate::util::{clamp_to_scale_factor, pack_as_float};
+use crate::util::{clamp_to_scale_factor, pack_as_float, MaxRect};
 use crate::visibility::{compute_conservative_visible_rect, PrimitiveVisibility, VisibilityState};
 
 
 const MAX_MASK_SIZE: f32 = 4096.0;
 
 const MIN_BRUSH_SPLIT_AREA: f32 = 128.0 * 128.0;
-
 
 pub fn prepare_primitives(
     store: &mut PrimitiveStore,
@@ -109,8 +108,8 @@ fn can_use_clip_chain_for_quad_path(
     clip_chain: &ClipChainInstance,
     prim_spatial_node_index: SpatialNodeIndex,
     raster_spatial_node_index: SpatialNodeIndex,
-    _clip_store: &ClipStore,
-    _data_stores: &DataStores,
+    clip_store: &ClipStore,
+    data_stores: &DataStores,
     spatial_tree: &SpatialTree,
 ) -> bool {
     let map_prim_to_surface = spatial_tree.get_relative_transform(
@@ -124,7 +123,123 @@ fn can_use_clip_chain_for_quad_path(
         return false;
     }
 
-    !clip_chain.needs_mask
+    if !clip_chain.needs_mask {
+        return true;
+    }
+
+    for i in 0 .. clip_chain.clips_range.count {
+        let clip_instance = clip_store.get_instance_from_range(&clip_chain.clips_range, i);
+        let clip_node = &data_stores.clip[clip_instance.handle];
+
+        // Temporary hack only for landing next stage...
+        if prim_spatial_node_index != clip_node.item.spatial_node_index {
+            return false;
+        }
+
+        match clip_node.item.kind {
+            ClipItemKind::RoundedRectangle { .. } => {
+            }
+            ClipItemKind::Rectangle { mode: ClipMode::ClipOut, .. } => {
+            }
+            ClipItemKind::Rectangle { mode: ClipMode::Clip, .. } => {
+                panic!("bug: xf rect found as mask, not in lcr?");
+            }
+            ClipItemKind::BoxShadow { .. } => {
+                // legacy path for box-shadows for now (move them to a separate primitive next)
+                return false;
+            }
+            ClipItemKind::Image { .. } => {
+                panic!("bug: image-masks not expected on rect/quads");
+            }
+        }
+    }
+
+    true
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum QuadRenderMode {
+    Direct,
+    Indirect,
+    NinePatch {
+        radius: f32,
+        clip_rect: LayoutRect,
+        clip_out: bool,
+    },
+}
+
+#[derive(Debug)]
+pub struct QuadRenderStrategy {
+    pub render_mode: QuadRenderMode,
+}
+
+fn get_prim_render_strategy(
+    clip_chain: &ClipChainInstance,
+    clip_store: &ClipStore,
+    data_stores: &DataStores,
+) -> QuadRenderStrategy {
+    let mut render_mode = QuadRenderMode::Direct;
+
+    if clip_chain.needs_mask {
+        for i in 0 .. clip_chain.clips_range.count {
+            let clip_instance = clip_store.get_instance_from_range(&clip_chain.clips_range, i);
+            let clip_node = &data_stores.clip[clip_instance.handle];
+
+            match clip_node.item.kind {
+                ClipItemKind::RoundedRectangle { ref radius, mode, rect, .. } => {
+                    match render_mode {
+                        QuadRenderMode::Direct => {
+                            let max_corner_width = radius.top_left.width
+                                                        .max(radius.bottom_left.width)
+                                                        .max(radius.top_right.width)
+                                                        .max(radius.bottom_right.width);
+                            let max_corner_height = radius.top_left.height
+                                                        .max(radius.bottom_left.height)
+                                                        .max(radius.top_right.height)
+                                                        .max(radius.bottom_right.height);
+
+                            if clip_chain.pic_coverage_rect.area() > MIN_BRUSH_SPLIT_AREA &&
+                               max_corner_width <= 0.5 * rect.size().width &&
+                               max_corner_height <= 0.5 * rect.size().height {
+
+                                let radius = max_corner_width.max(max_corner_height);
+
+                                render_mode = QuadRenderMode::NinePatch {
+                                    radius,
+                                    clip_rect: rect,
+                                    clip_out: mode == ClipMode::ClipOut,
+                                };
+                            } else {
+                                render_mode = QuadRenderMode::Indirect;
+                            }
+                        }
+                        QuadRenderMode::NinePatch { .. } => {
+                            render_mode = QuadRenderMode::Indirect;
+                        }
+                        QuadRenderMode::Indirect { .. } => {
+
+                        }
+                    }
+                }
+                ClipItemKind::Rectangle { mode: ClipMode::ClipOut, .. } => {
+                    render_mode = QuadRenderMode::Indirect;
+                }
+                ClipItemKind::Rectangle { mode: ClipMode::Clip, .. } => {
+                    panic!("bug: xf rects should not be on new clip path yet");
+                }
+                ClipItemKind::BoxShadow { .. } => {
+                    panic!("bug: box-shadow clips not expected on non-legacy rect/quads");
+                }
+                ClipItemKind::Image { .. } => {
+                    panic!("bug: image-masks not expected on rect/quads");
+                }
+            }
+        }
+    }
+
+    QuadRenderStrategy {
+        render_mode,
+    }
 }
 
 fn prepare_prim_for_render(
@@ -254,6 +369,7 @@ fn prepare_prim_for_render(
         cluster,
         plane_split_anchor,
         pic_context,
+        pic_state,
         frame_context,
         frame_state,
         data_stores,
@@ -272,6 +388,7 @@ fn prepare_interned_prim_for_render(
     cluster: &mut PrimitiveCluster,
     plane_split_anchor: PlaneSplitAnchor,
     pic_context: &PictureContext,
+    pic_state: &mut PictureState,
     frame_context: &FrameBuildingContext,
     frame_state: &mut FrameBuildingState,
     data_stores: &mut DataStores,
@@ -544,10 +661,11 @@ fn prepare_interned_prim_for_render(
         }
         PrimitiveInstanceKind::Rectangle { data_handle, segment_instance_index, color_binding_index, use_legacy_path, .. } => {
             profile_scope!("Rectangle");
-            let prim_data = &mut data_stores.prim[*data_handle];
-            prim_data.common.may_need_repetition = false;
 
             if *use_legacy_path {
+                let prim_data = &mut data_stores.prim[*data_handle];
+                prim_data.common.may_need_repetition = false;
+
                 // TODO(gw): Legacy rect rendering path - remove once we support masks on quad prims
                 if *color_binding_index != ColorBindingIndex::INVALID {
                     match store.color_bindings[*color_binding_index] {
@@ -590,6 +708,14 @@ fn prepare_interned_prim_for_render(
                     }
                 );
             } else {
+                let strategy = get_prim_render_strategy(
+                    &prim_instance.vis.clip_chain,
+                    frame_state.clip_store,
+                    data_stores,
+                );
+
+                let prim_data = &data_stores.prim[*data_handle];
+
                 let (color, is_opaque) = match prim_data.kind {
                     PrimitiveTemplateKind::Clear => {
                         // Opaque black with operator dest out
@@ -614,6 +740,7 @@ fn prepare_interned_prim_for_render(
                 if is_opaque {
                     quad_flags |= QuadFlags::IS_OPAQUE;
                 }
+                quad_flags |= QuadFlags::APPLY_DEVICE_CLIP;
 
                 // TODO(gw): For now, we don't select per-edge AA at all if the primitive
                 //           has a 2d transform, which matches existing behavior. However,
@@ -639,19 +766,182 @@ fn prepare_interned_prim_for_render(
                     prim_data.common.prim_rect,
                     prim_instance.vis.clip_chain.local_clip_rect,
                     premul_color,
+                    &[],
                 );
 
-                frame_state.push_prim(
-                    &PrimitiveCommand::quad(
-                        prim_instance_index,
-                        main_prim_address,
-                        transform_id,
-                        quad_flags,
-                        aa_flags,
-                    ),
-                    prim_spatial_node_index,
-                    targets,
-                );
+                match strategy.render_mode {
+                    QuadRenderMode::Direct => {
+                        frame_state.push_prim(
+                            &PrimitiveCommand::quad(
+                                prim_instance_index,
+                                main_prim_address,
+                                transform_id,
+                                quad_flags,
+                                aa_flags,
+                            ),
+                            prim_spatial_node_index,
+                            targets,
+                        );
+                    }
+                    QuadRenderMode::Indirect => {
+                        let surface = &frame_state.surfaces[pic_context.surface_index.0];
+                        let clipped_surface_rect = surface.get_surface_rect(
+                            &prim_instance.vis.clip_chain.pic_coverage_rect,
+                            frame_context.spatial_tree,
+                        ).expect("bug: what can cause this?");
+
+                        let p0 = clipped_surface_rect.min.floor();
+                        let p1 = clipped_surface_rect.max.ceil();
+
+                        let x0 = p0.x;
+                        let y0 = p0.y;
+                        let x1 = p1.x;
+                        let y1 = p1.y;
+
+                        let segment = add_segment(
+                            x0,
+                            y0,
+                            x1,
+                            y1,
+                            true,
+                            prim_instance,
+                            prim_spatial_node_index,
+                            main_prim_address,
+                            transform_id,
+                            aa_flags,
+                            quad_flags,
+                            device_pixel_scale,
+                            frame_state,
+                        );
+
+                        add_composite_prim(
+                            prim_instance_index,
+                            LayoutRect::new(LayoutPoint::new(x0, y0), LayoutPoint::new(x1, y1)),
+                            premul_color,
+                            quad_flags,
+                            frame_state,
+                            targets,
+                            &[segment],
+                        );
+                    }
+                    QuadRenderMode::NinePatch { clip_rect, radius, clip_out } => {
+                        let surface = &frame_state.surfaces[pic_context.surface_index.0];
+                        let clipped_surface_rect = surface.get_surface_rect(
+                            &prim_instance.vis.clip_chain.pic_coverage_rect,
+                            frame_context.spatial_tree,
+                        ).expect("bug: what can cause this?");
+
+                        let unclipped_surface_rect = surface.map_to_device_rect(
+                            &prim_instance.vis.clip_chain.pic_coverage_rect,
+                            frame_context.spatial_tree,
+                        );
+
+                        let local_corner_0 = LayoutRect::new(
+                            clip_rect.min,
+                            clip_rect.min + LayoutVector2D::new(radius, radius),
+                        );
+
+                        let local_corner_1 = LayoutRect::new(
+                            clip_rect.max - LayoutVector2D::new(radius, radius),
+                            clip_rect.max,
+                        );
+
+                        let pic_corner_0 = pic_state.map_local_to_pic.map(&local_corner_0).unwrap();
+                        let pic_corner_1 = pic_state.map_local_to_pic.map(&local_corner_1).unwrap();
+
+                        let surface_rect_0 = surface.map_to_device_rect(
+                            &pic_corner_0,
+                            frame_context.spatial_tree,
+                        );
+
+                        let surface_rect_1 = surface.map_to_device_rect(
+                            &pic_corner_1,
+                            frame_context.spatial_tree,
+                        );
+
+                        let p0 = surface_rect_0.min.floor();
+                        let p1 = surface_rect_0.max.ceil();
+                        let p2 = surface_rect_1.min.floor();
+                        let p3 = surface_rect_1.max.ceil();
+
+                        let mut x_coords = [p0.x, p1.x, p2.x, p3.x];
+                        let mut y_coords = [p0.y, p1.y, p2.y, p3.y];
+
+                        x_coords.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                        y_coords.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+                        scratch.quad_segments.clear();
+
+                        for y in 0 .. y_coords.len()-1 {
+                            let y0 = y_coords[y];
+                            let y1 = y_coords[y+1];
+
+                            if y1 <= y0 {
+                                continue;
+                            }
+
+                            for x in 0 .. x_coords.len()-1 {
+                                let x0 = x_coords[x];
+                                let x1 = x_coords[x+1];
+
+                                if x1 <= x0 {
+                                    continue;
+                                }
+
+                                let create_task = if x == 1 || y == 1 {
+                                    if clip_out {
+                                        continue;
+                                    } else {
+                                        false
+                                    }
+                                } else {
+                                    true
+                                };
+
+                                let r = DeviceRect::new(DevicePoint::new(x0, y0), DevicePoint::new(x1, y1));
+
+                                let r = match r.intersection(&clipped_surface_rect) {
+                                    Some(r) => r,
+                                    None => {
+                                        continue;
+                                    }
+                                };
+
+                                let x0 = r.min.x;
+                                let y0 = r.min.y;
+                                let x1 = r.max.x;
+                                let y1 = r.max.y;
+
+                                let segment = add_segment(
+                                    x0,
+                                    y0,
+                                    x1,
+                                    y1,
+                                    create_task,
+                                    prim_instance,
+                                    prim_spatial_node_index,
+                                    main_prim_address,
+                                    transform_id,
+                                    aa_flags,
+                                    quad_flags,
+                                    device_pixel_scale,
+                                    frame_state,
+                                );
+                                scratch.quad_segments.push(segment);
+                            }
+                        }
+
+                        add_composite_prim(
+                            prim_instance_index,
+                            unclipped_surface_rect.cast_unit(),
+                            premul_color,
+                            quad_flags,
+                            frame_state,
+                            targets,
+                            &scratch.quad_segments,
+                        );
+                    }
+                }
 
                 return;
             }
@@ -1620,12 +1910,119 @@ fn write_prim_blocks(
     prim_rect: LayoutRect,
     clip_rect: LayoutRect,
     color: PremultipliedColorF,
+    segments: &[QuadSegment],
 ) -> GpuBufferAddress {
-    let mut writer = builder.write_blocks(3);
+    let mut writer = builder.write_blocks(3 + segments.len() * 2);
 
     writer.push_one(prim_rect);
     writer.push_one(clip_rect);
     writer.push_one(color);
 
+    for segment in segments {
+        writer.push_one(segment.rect);
+        match segment.task_id {
+            RenderTaskId::INVALID => {
+                writer.push_one([0.0; 4]);
+            }
+            task_id => {
+                writer.push_render_task(task_id);
+            }
+        }
+    }
+
     writer.finish()
+}
+
+fn add_segment(
+    x0: f32,
+    y0: f32,
+    x1: f32,
+    y1: f32,
+    create_task: bool,
+    prim_instance: &PrimitiveInstance,
+    prim_spatial_node_index: SpatialNodeIndex,
+    main_prim_address: GpuBufferAddress,
+    transform_id: TransformPaletteId,
+    aa_flags: EdgeAaSegmentMask,
+    quad_flags: QuadFlags,
+    device_pixel_scale: DevicePixelScale,
+    frame_state: &mut FrameBuildingState,
+) -> QuadSegment {
+    let task_size = DeviceSize::new(x1 - x0, y1 - y0).round().to_i32();
+    let content_origin = DevicePoint::new(x0, y0);
+
+    let rect = LayoutRect::new(
+        LayoutPoint::new(x0, y0),
+        LayoutPoint::new(x1, y1),
+    );
+
+    let task_id = if create_task {
+        let task_id = frame_state.rg_builder.add().init(RenderTask::new_dynamic(
+            task_size,
+            RenderTaskKind::new_prim(
+                prim_spatial_node_index,
+                device_pixel_scale,
+                content_origin,
+                main_prim_address,
+                transform_id,
+                aa_flags,
+                quad_flags,
+                prim_instance.vis.clip_chain.clips_range,
+            ),
+        ));
+
+        frame_state.surface_builder.add_child_render_task(
+            task_id,
+            frame_state.rg_builder,
+        );
+
+        task_id
+    } else {
+        RenderTaskId::INVALID
+    };
+
+    QuadSegment {
+        rect,
+        task_id,
+    }
+}
+
+fn add_composite_prim(
+    prim_instance_index: PrimitiveInstanceIndex,
+    rect: LayoutRect,
+    color: PremultipliedColorF,
+    quad_flags: QuadFlags,
+    frame_state: &mut FrameBuildingState,
+    targets: &[CommandBufferIndex],
+    segments: &[QuadSegment],
+) {
+    let composite_prim_address = write_prim_blocks(
+        frame_state.frame_gpu_data,
+        rect,
+        LayoutRect::max_rect(),
+        color,
+        segments,
+    );
+
+    frame_state.set_segments(
+        segments,
+        targets,
+    );
+
+    let mut composite_quad_flags = QuadFlags::empty();
+    if quad_flags.contains(QuadFlags::IS_OPAQUE) {
+        composite_quad_flags |= QuadFlags::IS_OPAQUE;
+    }
+
+    frame_state.push_cmd(
+        &PrimitiveCommand::quad(
+            prim_instance_index,
+            composite_prim_address,
+            TransformPaletteId::IDENTITY,
+            composite_quad_flags,
+            // TODO(gw): No AA on composite, unless we use it to apply 2d clips
+            EdgeAaSegmentMask::empty(),
+        ),
+        targets,
+    );
 }

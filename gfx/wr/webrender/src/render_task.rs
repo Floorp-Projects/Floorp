@@ -7,12 +7,12 @@ use api::{LineStyle, LineOrientation, ClipMode, MixBlendMode, ColorF, ColorSpace
 use api::MAX_RENDER_TASK_SIZE;
 use api::units::*;
 use crate::clip::{ClipDataStore, ClipItemKind, ClipStore, ClipNodeRange};
-use crate::command_buffer::CommandBufferIndex;
+use crate::command_buffer::{CommandBufferIndex, QuadFlags};
 use crate::spatial_tree::SpatialNodeIndex;
 use crate::filterdata::SFilterData;
 use crate::frame_builder::{FrameBuilderConfig};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
-use crate::gpu_types::{BorderInstance, ImageSource, UvRectKind};
+use crate::gpu_types::{BorderInstance, ImageSource, UvRectKind, TransformPaletteId};
 use crate::internal_types::{CacheTextureId, FastHashMap, TextureSource, Swizzle};
 use crate::picture::ResolvedSurfaceTexture;
 use crate::prim_store::ClipData;
@@ -22,10 +22,11 @@ use crate::prim_store::gradient::{
 };
 use crate::resource_cache::{ResourceCache, ImageRequest};
 use std::{usize, f32, i32, u32};
-use crate::renderer::GpuBufferBuilder;
+use crate::renderer::{GpuBufferAddress, GpuBufferBuilder};
 use crate::render_target::{ResolveOp, RenderTargetKind};
 use crate::render_task_graph::{PassId, RenderTaskId, RenderTaskGraphBuilder};
 use crate::render_task_cache::{RenderTaskCacheEntryHandle, RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskParent};
+use crate::segment::EdgeAaSegmentMask;
 use crate::surface::SurfaceBuilder;
 use smallvec::SmallVec;
 
@@ -170,6 +171,19 @@ pub struct ClipRegionTask {
     pub device_pixel_scale: DevicePixelScale,
     pub clip_data: ClipData,
     pub clear_to_one: bool,
+}
+
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct PrimTask {
+    pub device_pixel_scale: DevicePixelScale,
+    pub content_origin: DevicePoint,
+    pub prim_address: GpuBufferAddress,
+    pub prim_spatial_node_index: SpatialNodeIndex,
+    pub transform_id: TransformPaletteId,
+    pub edge_flags: EdgeAaSegmentMask,
+    pub quad_flags: QuadFlags,
+    pub clip_node_range: ClipNodeRange,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -346,6 +360,7 @@ pub enum RenderTaskKind {
     ConicGradient(ConicGradientTask),
     SvgFilter(SvgFilterTask),
     TileComposite(TileCompositeTask),
+    Prim(PrimTask),
     #[cfg(test)]
     Test(RenderTargetKind),
 }
@@ -395,6 +410,7 @@ impl RenderTaskKind {
             RenderTaskKind::ConicGradient(..) => "ConicGradient",
             RenderTaskKind::SvgFilter(..) => "SvgFilter",
             RenderTaskKind::TileComposite(..) => "TileComposite",
+            RenderTaskKind::Prim(..) => "Prim",
             #[cfg(test)]
             RenderTaskKind::Test(..) => "Test",
         }
@@ -413,6 +429,7 @@ impl RenderTaskKind {
             RenderTaskKind::Picture(..) |
             RenderTaskKind::Blit(..) |
             RenderTaskKind::TileComposite(..) |
+            RenderTaskKind::Prim(..) |
             RenderTaskKind::SvgFilter(..) => {
                 RenderTargetKind::Color
             }
@@ -482,6 +499,28 @@ impl RenderTaskKind {
             cmd_buffer_index,
             resolve_op: None,
             can_use_shared_surface,
+        })
+    }
+
+    pub fn new_prim(
+        prim_spatial_node_index: SpatialNodeIndex,
+        device_pixel_scale: DevicePixelScale,
+        content_origin: DevicePoint,
+        prim_address: GpuBufferAddress,
+        transform_id: TransformPaletteId,
+        edge_flags: EdgeAaSegmentMask,
+        quad_flags: QuadFlags,
+        clip_node_range: ClipNodeRange,
+    ) -> Self {
+        RenderTaskKind::Prim(PrimTask {
+            prim_spatial_node_index,
+            device_pixel_scale,
+            content_origin,
+            prim_address,
+            transform_id,
+            edge_flags,
+            quad_flags,
+            clip_node_range,
         })
     }
 
@@ -657,6 +696,15 @@ impl RenderTaskKind {
             RenderTaskKind::Picture(ref task) => {
                 // Note: has to match `PICTURE_TYPE_*` in shaders
                 [
+                    task.device_pixel_scale.0,
+                    task.content_origin.x,
+                    task.content_origin.y,
+                    0.0,
+                ]
+            }
+            RenderTaskKind::Prim(ref task) => {
+                [
+                    // NOTE: This must match the render task data format for Picture tasks currently
                     task.device_pixel_scale.0,
                     task.content_origin.x,
                     task.content_origin.y,
