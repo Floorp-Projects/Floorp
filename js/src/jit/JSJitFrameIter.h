@@ -76,9 +76,6 @@ enum class FrameType {
 };
 
 enum ReadFrameArgsBehavior {
-  // Only read formals (i.e. [0 ... callee()->nargs]
-  ReadFrame_Formals,
-
   // Only read overflown args (i.e. [callee()->nargs ... numActuals()]
   ReadFrame_Overflown,
 
@@ -240,10 +237,6 @@ class JSJitFrameIter {
     unsigned nactual = numActualArgs();
     unsigned start, end;
     switch (behavior) {
-      case ReadFrame_Formals:
-        start = 0;
-        end = callee()->nargs();
-        break;
       case ReadFrame_Overflown:
         start = callee()->nargs();
         end = nactual;
@@ -690,7 +683,7 @@ class InlineFrameIterator {
                                 fallback);
       }
 
-      if (behavior != ReadFrame_Formals) {
+      if (nactual > nformal) {
         if (more()) {
           // There is still a parent frame of this inlined frame.  All
           // arguments (also the overflown) are the last pushed values
