@@ -1,0 +1,93 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html:template id="template-translations-panel">
+<panel id="translations-panel"
+       class="panel-no-padding translations-panel"
+       type="arrow"
+       role="alertdialog"
+       noautofocus="true"
+       aria-labelledby="translations-panel-main-header-label"
+       orient="vertical">
+
+  <panelmultiview id="translations-panel-multiview">
+    <!-- Dual language selection view -->
+    <panelview id="translations-panel-view-dual"
+               class="PanelUI-subView"
+               role="document"
+               showheader="true">
+      <hbox class="panel-header">
+        <html:h1 id="translations-panel-main-header-label">
+          <html:span data-l10n-id="translations-panel-dual-header"></html:span>
+        </html:h1>
+      </hbox>
+
+      <toolbarseparator/>
+
+      <vbox class="translations-panel-content">
+        <label data-l10n-id="translations-panel-dual-from-label"></label>
+        <menulist id="translations-panel-from"
+                  flex="1"
+                  value="detect"
+                  size="large"
+                  class="translations-panel-menulist">
+          <menupopup id="translations-panel-from-menupopup">
+            <!-- The list of <menuitem> will be dynamically inserted. -->
+          </menupopup>
+        </menulist>
+
+        <label data-l10n-id="translations-panel-dual-to-label"></label>
+        <menulist id="translations-panel-to"
+                  flex="1"
+                  value="detect"
+                  size="large"
+                  class="translations-panel-menulist">
+          <menupopup id="translations-panel-to-menupopup">
+            <!-- The list of <menuitem> will be dynamically inserted. -->
+          </menupopup>
+        </menulist>
+      </vbox>
+
+      <hbox class="panel-footer">
+        <button default="true"
+                class="subviewbutton panel-subview-footer-button"
+                oncommand="TranslationsPanel.onTranslate(event);"
+                data-l10n-id="translations-panel-dual-translate-button"
+                tabindex="0">
+        </button>
+      </hbox>
+    </panelview>
+
+    <!-- Restore page -->
+    <panelview id="translations-panel-view-restore"
+               class="PanelUI-subView"
+               role="document"
+               showheader="true">
+      <hbox class="panel-header">
+        <html:h1 id="translations-panel-main-header-label">
+          <html:span data-l10n-id="translations-panel-restore-header"></html:span>
+        </html:h1>
+      </hbox>
+
+      <toolbarseparator/>
+
+      <vbox class="translations-panel-content">
+        <label id="translations-panel-restore-label"
+               data-l10n-id="translations-panel-restore-label"
+               data-l10n-args='{"fromLanguage": "", "toLanguage": ""}'>
+        </label>
+      </vbox>
+
+      <hbox class="panel-footer">
+        <button default="true"
+                class="subviewbutton panel-subview-footer-button"
+                oncommand="TranslationsPanel.onRestore(event);"
+                data-l10n-id="translations-panel-restore-button"
+                tabindex="0">
+        </button>
+      </hbox>
+    </panelview>
+  </panelmultiview>
+</panel>
+</html:template>

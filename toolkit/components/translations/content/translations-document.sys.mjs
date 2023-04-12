@@ -226,7 +226,8 @@ export class TranslationsDocument {
     this.documentLanguage = documentLanguage;
     if (documentLanguage.length !== 2) {
       throw new Error(
-        "Expected the language to be a valid 2 letter BCP 47 language tag."
+        "Expected the language to be a valid 2 letter BCP 47 language tag: " +
+          documentLanguage
       );
     }
 

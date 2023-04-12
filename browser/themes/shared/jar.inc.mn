@@ -128,6 +128,7 @@
   skin/classic/browser/preferences/vpn-logo.svg                (../shared/preferences/vpn-logo.svg)
   skin/classic/browser/preferences/search.css                  (../shared/preferences/search.css)
   skin/classic/browser/preferences/siteDataSettings.css        (../shared/preferences/siteDataSettings.css)
+  skin/classic/browser/translations/panel.css                  (../shared/translations/panel.css)
   skin/classic/browser/fxa/fxa-spinner.svg                     (../shared/fxa/fxa-spinner.svg)
   skin/classic/browser/fxa/sync-illustration.svg               (../shared/fxa/sync-illustration.svg)
   skin/classic/browser/fxa/sync-illustration-issue.svg         (../shared/fxa/sync-illustration-issue.svg)
