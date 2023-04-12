@@ -44,13 +44,16 @@ const locale = Cc["@mozilla.org/intl/ospreferences;1"].getService(Ci.mozIOSPrefe
 const options = { month: 'short', day: 'numeric', weekday: 'short'}
 
 function ClockFirst() {
-   let vanilla = "--:--"
-   CustomizableUI.createWidget({
-     id: 'toolbarItemClock',
-     label: vanilla,
-     tooltiptext: vanilla,
-    })
-    setInterval(setNowTime, 1000);
+  const id = "toolbarItemClock";
+  if (!CustomizableUI.getWidget(id)) {
+    let vanilla = "--:--"
+    CustomizableUI.createWidget({
+      id: id,
+      label: vanilla,
+      tooltiptext: vanilla,
+    });
+  }
+  setInterval(setNowTime, 1000);
 }
  
 function checkBrowserLangForLabel() {
