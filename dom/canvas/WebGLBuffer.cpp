@@ -212,10 +212,11 @@ void WebGLBuffer::BufferSubData(GLenum target, uint64_t rawDstByteOffset,
     GLbitfield access = LOCAL_GL_MAP_WRITE_BIT |
                         LOCAL_GL_MAP_UNSYNCHRONIZED_BIT |
                         LOCAL_GL_MAP_INVALIDATE_RANGE_BIT;
-    // On some Mali devices there are known performance issues with the
-    // combination of GL_MAP_UNSYNCHRONIZED_BIT and GL_MAP_INVALIDATE_RANGE_BIT,
-    // so omit the latter.
-    if (gl->Renderer() == gl::GLRenderer::MaliT) {
+    // On some devices there are known performance issues with the combination
+    // of GL_MAP_UNSYNCHRONIZED_BIT and GL_MAP_INVALIDATE_RANGE_BIT, so omit the
+    // latter.
+    if (gl->Renderer() == gl::GLRenderer::MaliT ||
+        gl->Vendor() == gl::GLVendor::Qualcomm) {
       access &= ~LOCAL_GL_MAP_INVALIDATE_RANGE_BIT;
     }
     mapping = gl->fMapBufferRange(target, dstByteOffset.value(),
