@@ -890,7 +890,7 @@ static inline void draw_quad_spans(int nump, Point2D p[4], uint32_t z,
   // Find the start y, clip to within the clip rect, and round to row center.
   // If AA is enabled, round out conservatively rather than round to nearest.
   float aaRound = swgl_ClipFlags & SWGL_CLIP_FLAG_AA ? 0.0f : 0.5f;
-  float y = floor(max(l0.y, clipRect.y0) + aaRound) + 0.5f;
+  float y = floor(max(min(l0.y, clipRect.y1), clipRect.y0) + aaRound) + 0.5f;
   // Initialize left and right edges from end points and start Y
   Edge left(y, l0, l1, interp_outs[l0i], interp_outs[l1i], l1i);
   Edge right(y, r0, r1, interp_outs[r0i], interp_outs[r1i], r0i);
@@ -1158,7 +1158,7 @@ static inline void draw_perspective_spans(int nump, Point3D* p,
   // Find the start y, clip to within the clip rect, and round to row center.
   // If AA is enabled, round out conservatively rather than round to nearest.
   float aaRound = swgl_ClipFlags & SWGL_CLIP_FLAG_AA ? 0.0f : 0.5f;
-  float y = floor(max(l0.y, clipRect.y0) + aaRound) + 0.5f;
+  float y = floor(max(min(l0.y, clipRect.y1), clipRect.y0) + aaRound) + 0.5f;
   // Initialize left and right edges from end points and start Y
   Edge left(y, l0, l1, interp_outs[l0i], interp_outs[l1i], l1i);
   Edge right(y, r0, r1, interp_outs[r0i], interp_outs[r1i], r0i);
