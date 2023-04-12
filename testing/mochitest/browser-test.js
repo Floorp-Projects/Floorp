@@ -1355,11 +1355,14 @@ Tester.prototype = {
 };
 
 // Note: duplicated in SimpleTest.js . See also bug 1820150.
-function isError(err) {
+function isErrorOrException(err) {
   // It'd be nice if we had either `Error.isError(err)` or `Error.isInstance(err)`
   // but we don't, so do it ourselves:
   if (!err) {
     return false;
+  }
+  if (err instanceof Ci.nsIException) {
+    return true;
   }
   try {
     let glob = Cu.getGlobalForObject(err);
@@ -1424,7 +1427,10 @@ function testResult({ name, pass, todo, ex, stack, allowFailure }) {
       this.msg += "at " + ex.fileName + ":" + ex.lineNumber + " - ";
     }
 
-    if (typeof ex == "string" || (typeof ex == "object" && isError(ex))) {
+    if (
+      typeof ex == "string" ||
+      (typeof ex == "object" && isErrorOrException(ex))
+    ) {
       this.msg += String(ex);
     } else {
       try {
