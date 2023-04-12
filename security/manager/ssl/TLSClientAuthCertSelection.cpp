@@ -98,6 +98,34 @@ static bool hasExplicitKeyUsageNonRepudiation(CERTCertificate* cert) {
   return !!(keyUsage & KU_NON_REPUDIATION);
 }
 
+// This class is used to store the needed information for invoking the client
+// cert selection UI.
+class ClientAuthInfo final {
+ public:
+  explicit ClientAuthInfo(const nsACString& hostName,
+                          const mozilla::OriginAttributes& originAttributes,
+                          int32_t port, uint32_t providerFlags,
+                          uint32_t providerTlsFlags);
+  ~ClientAuthInfo() = default;
+  ClientAuthInfo(ClientAuthInfo&& aOther) noexcept;
+
+  const nsACString& HostName() const;
+  const mozilla::OriginAttributes& OriginAttributesRef() const;
+  int32_t Port() const;
+  uint32_t ProviderFlags() const;
+  uint32_t ProviderTlsFlags() const;
+
+  ClientAuthInfo(const ClientAuthInfo&) = delete;
+  void operator=(const ClientAuthInfo&) = delete;
+
+ private:
+  nsCString mHostName;
+  mozilla::OriginAttributes mOriginAttributes;
+  int32_t mPort;
+  uint32_t mProviderFlags;
+  uint32_t mProviderTlsFlags;
+};
+
 ClientAuthInfo::ClientAuthInfo(const nsACString& hostName,
                                const OriginAttributes& originAttributes,
                                int32_t port, uint32_t providerFlags,
@@ -406,6 +434,41 @@ ClientAuthCertificateSelected::Run() {
                                              mSelectedCertChainBytes);
   return NS_OK;
 }
+
+// Helper runnable to select a client authentication certificate. Gets created
+// on the socket thread or an IPC thread, runs on the main thread, and then runs
+// its continuation on the socket thread.
+class SelectClientAuthCertificate : public Runnable {
+ public:
+  SelectClientAuthCertificate(ClientAuthInfo&& info,
+                              UniqueCERTCertificate&& serverCert,
+                              nsTArray<nsTArray<uint8_t>>&& caNames,
+                              UniqueCERTCertList&& potentialClientCertificates,
+                              ClientAuthCertificateSelectedBase* continuation)
+      : Runnable("SelectClientAuthCertificate"),
+        mInfo(std::move(info)),
+        mServerCert(std::move(serverCert)),
+        mCANames(std::move(caNames)),
+        mPotentialClientCertificates(std::move(potentialClientCertificates)),
+        mContinuation(continuation) {}
+
+  NS_IMETHOD Run() override;
+
+ private:
+  mozilla::pkix::Result BuildChainForCertificate(
+      nsTArray<uint8_t>& certBytes,
+      nsTArray<nsTArray<uint8_t>>& certChainBytes);
+  void DoSelectClientAuthCertificate();
+
+  ClientAuthInfo mInfo;
+  UniqueCERTCertificate mServerCert;
+  nsTArray<nsTArray<uint8_t>> mCANames;
+  UniqueCERTCertList mPotentialClientCertificates;
+  RefPtr<ClientAuthCertificateSelectedBase> mContinuation;
+
+  nsTArray<nsTArray<uint8_t>> mEnterpriseCertificates;
+  nsTArray<uint8_t> mSelectedCertBytes;
+};
 
 NS_IMETHODIMP
 SelectClientAuthCertificate::Run() {
@@ -730,6 +793,12 @@ SECStatus SSLGetClientAuthDataHook(void* arg, PRFileDesc* socket,
   // appropriate information to the NSSSocketControl, which then calls
   // SSL_ClientCertCallbackComplete to continue the connection.
   if (XRE_IsSocketProcess()) {
+    mozilla::ipc::PBackgroundChild* actorChild = mozilla::ipc::BackgroundChild::
+        GetOrCreateForSocketParentBridgeForCurrentThread();
+    if (!actorChild) {
+      PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
+      return SECFailure;
+    }
     RefPtr<SelectTLSClientAuthCertChild> selectClientAuthCertificate(
         new SelectTLSClientAuthCertChild(continuation));
     nsAutoCString hostname(info->GetHostName());
@@ -740,41 +809,26 @@ SECStatus SSLGetClientAuthDataHook(void* arg, PRFileDesc* socket,
     }
     serverCertBytes.AppendElements(serverCert->derCert.data,
                                    serverCert->derCert.len);
-    OriginAttributes originAttributes(info->GetOriginAttributes());
-    int32_t port(info->GetPort());
-    uint32_t providerFlags(info->GetProviderFlags());
-    uint32_t providerTlsFlags(info->GetProviderTlsFlags());
-    nsCOMPtr<nsIRunnable> remoteSelectClientAuthCertificate(
-        NS_NewRunnableFunction(
-            "RemoteSelectClientAuthCertificate",
-            [selectClientAuthCertificate(
-                 std::move(selectClientAuthCertificate)),
-             hostname(std::move(hostname)),
-             originAttributes(std::move(originAttributes)), port, providerFlags,
-             providerTlsFlags, serverCertBytes(std::move(serverCertBytes)),
-             caNamesBytes(std::move(caNamesBytes))]() {
-              mozilla::ipc::PBackgroundChild* actorChild =
-                  mozilla::ipc::BackgroundChild::
-                      GetOrCreateForSocketParentBridgeForCurrentThread();
-              if (actorChild) {
-                Unused << actorChild->SendPSelectTLSClientAuthCertConstructor(
-                    selectClientAuthCertificate, hostname, originAttributes,
-                    port, providerFlags, providerTlsFlags,
-                    ByteArray(serverCertBytes), caNamesBytes);
-              }
-            }));
-    info->SetPendingSelectClientAuthCertificate(
-        std::move(remoteSelectClientAuthCertificate));
+    if (!actorChild->SendPSelectTLSClientAuthCertConstructor(
+            selectClientAuthCertificate, hostname, info->GetOriginAttributes(),
+            info->GetPort(), info->GetProviderFlags(),
+            info->GetProviderTlsFlags(), ByteArray(serverCertBytes),
+            caNamesBytes)) {
+      PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
+      return SECFailure;
+    }
   } else {
     ClientAuthInfo authInfo(info->GetHostName(), info->GetOriginAttributes(),
                             info->GetPort(), info->GetProviderFlags(),
                             info->GetProviderTlsFlags());
-    nsCOMPtr<nsIRunnable> selectClientAuthCertificate(
+    RefPtr<SelectClientAuthCertificate> selectClientAuthCertificate(
         new SelectClientAuthCertificate(
             std::move(authInfo), std::move(serverCert), std::move(caNames),
             std::move(potentialClientCertificates), continuation));
-    info->SetPendingSelectClientAuthCertificate(
-        std::move(selectClientAuthCertificate));
+    if (NS_FAILED(NS_DispatchToMainThread(selectClientAuthCertificate))) {
+      PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
+      return SECFailure;
+    }
   }
 
   // Meanwhile, tell NSS this connection is blocking for now.

@@ -24,7 +24,7 @@ NSSSocketControl::NSSSocketControl(const nsCString& aHostName, int32_t aPort,
                                    uint32_t providerTlsFlags)
     : CommonSocketControl(aHostName, aPort, providerFlags),
       mFd(nullptr),
-      mCertVerificationState(BeforeCertVerification),
+      mCertVerificationState(before_cert_verification),
       mSharedState(aState),
       mForSTARTTLS(false),
       mTLSVersionRange{0, 0},
@@ -45,8 +45,7 @@ NSSSocketControl::NSSSocketControl(const nsCString& aHostName, int32_t aPort,
       mMACAlgorithmUsed(nsITLSSocketControl::SSL_MAC_UNKNOWN),
       mProviderTlsFlags(providerTlsFlags),
       mSocketCreationTimestamp(TimeStamp::Now()),
-      mPlaintextBytesRead(0),
-      mPendingSelectClientAuthCertificate(nullptr) {}
+      mPlaintextBytesRead(0) {}
 
 NS_IMETHODIMP
 NSSSocketControl::GetKEAUsed(int16_t* aKea) {
@@ -337,12 +336,12 @@ nsresult NSSSocketControl::SetFileDescPtr(PRFileDesc* aFilePtr) {
 
 void NSSSocketControl::SetCertVerificationWaiting() {
   COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
-  // mCertVerificationState may be BeforeCertVerification for the first
-  // handshake on the connection, or AfterCertVerification for subsequent
+  // mCertVerificationState may be before_cert_verification for the first
+  // handshake on the connection, or after_cert_verification for subsequent
   // renegotiation handshakes.
-  MOZ_ASSERT(mCertVerificationState != WaitingForCertVerification,
-             "Invalid state transition to WaitingForCertVerification");
-  mCertVerificationState = WaitingForCertVerification;
+  MOZ_ASSERT(mCertVerificationState != waiting_for_cert_verification,
+             "Invalid state transition to waiting_for_cert_verification");
+  mCertVerificationState = waiting_for_cert_verification;
 }
 
 // Be careful that SetCertVerificationResult does NOT get called while we are
@@ -352,8 +351,8 @@ void NSSSocketControl::SetCertVerificationWaiting() {
 void NSSSocketControl::SetCertVerificationResult(PRErrorCode errorCode) {
   COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
   SetUsedPrivateDNS(GetProviderFlags() & nsISocketProvider::USED_PRIVATE_DNS);
-  MOZ_ASSERT(mCertVerificationState == WaitingForCertVerification,
-             "Invalid state transition to AfterCertVerification");
+  MOZ_ASSERT(mCertVerificationState == waiting_for_cert_verification,
+             "Invalid state transition to cert_verification_finished");
 
   if (mFd) {
     SECStatus rv = SSL_AuthCertificateComplete(mFd, errorCode);
@@ -381,7 +380,7 @@ void NSSSocketControl::SetCertVerificationResult(PRErrorCode errorCode) {
                           AssertedCast<uint32_t>(mPlaintextBytesRead));
   }
 
-  mCertVerificationState = AfterCertVerification;
+  mCertVerificationState = after_cert_verification;
 }
 
 void NSSSocketControl::ClientAuthCertificateSelected(
@@ -471,9 +470,6 @@ NSSSocketControl::SetHandshakeCallbackListener(
 
 PRStatus NSSSocketControl::CloseSocketAndDestroy() {
   COMMON_SOCKET_CONTROL_ASSERT_ON_OWNING_THREAD();
-
-  mPendingSelectClientAuthCertificate = nullptr;
-
   PRFileDesc* popped = PR_PopIOLayer(mFd, PR_TOP_IO_LAYER);
   MOZ_ASSERT(
       popped && popped->identity == nsSSLIOLayerHelpers::nsSSLIOLayerIdentity,
