@@ -94,6 +94,7 @@ add_task(async function test_backgroundtask_debugger() {
     waitForSelectedSource,
     waitForState,
     waitUntil,
+    createLocation,
     log: (msg, data) =>
       console.log(`${msg} ${!data ? "" : JSON.stringify(data)}`),
     info: (msg, data) =>

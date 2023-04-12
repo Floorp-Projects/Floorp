@@ -16,6 +16,7 @@ import { createLocation } from "../../utils/location";
 
 import actions from "../../actions";
 import {
+  getSelectedLocation,
   getSelectedSource,
   getSelectedSourceTextContent,
   getSymbols,
@@ -341,7 +342,7 @@ export class Outline extends Component {
 
 const mapStateToProps = state => {
   const selectedSource = getSelectedSource(state);
-  const symbols = selectedSource ? getSymbols(state, selectedSource) : null;
+  const symbols = getSymbols(state, getSelectedLocation(state));
 
   return {
     cx: getContext(state),

@@ -206,6 +206,7 @@ function waitForSelectedSource(dbg, sourceOrUrl) {
     getBreakableLines,
     getSourceActorsForSource,
     getSourceActorBreakableLines,
+    getFirstSourceActorForGeneratedSource,
   } = dbg.selectors;
 
   return waitForState(
@@ -229,8 +230,14 @@ function waitForSelectedSource(dbg, sourceOrUrl) {
         }
       }
 
+      const firstSourceActor = getFirstSourceActorForGeneratedSource(source.id);
+      const location = createLocation({
+        source,
+        sourceActor: firstSourceActor,
+      });
+
       // Wait for symbols/AST to be parsed
-      if (!getSymbols(source)) {
+      if (!getSymbols(location)) {
         return false;
       }
 
