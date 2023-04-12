@@ -50,6 +50,13 @@ class ViewTimeline final : public ScrollTimeline {
         mSubjectPseudoType(aSubjectPseudoType),
         mInset(aInset) {}
 
+  Maybe<ScrollOffsets> ComputeOffsets(
+      const nsIScrollableFrame* aScrollFrame,
+      layers::ScrollDirection aOrientation) const override;
+
+  ScrollOffsets ComputeInsets(const nsIScrollableFrame* aScrollFrame,
+                              layers::ScrollDirection aOrientation) const;
+
   // The subject element.
   // 1. For view(), the subject element is the animation target.
   // 2. For view-timeline property, the subject element is the element who

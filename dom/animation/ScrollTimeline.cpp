@@ -132,20 +132,21 @@ Nullable<TimeDuration> ScrollTimeline::GetCurrentTimeAsDuration() const {
     return nullptr;
   }
 
-  const nsPoint& scrollOffset = scrollFrame->GetScrollPosition();
-  const nsRect& scrollRange = scrollFrame->GetScrollRange();
   const bool isHorizontal = orientation == layers::ScrollDirection::eHorizontal;
+  const nsPoint& scrollPosition = scrollFrame->GetScrollPosition();
+  const Maybe<ScrollOffsets>& offsets =
+      ComputeOffsets(scrollFrame, orientation);
+  if (!offsets) {
+    return nullptr;
+  }
 
-  // Note: For RTL, scrollOffset.x or scrollOffset.y may be negative, e.g. the
-  // range of its value is [0, -range], so we have to use the absolute value.
-  double position = std::abs(isHorizontal ? scrollOffset.x : scrollOffset.y);
-  double range = isHorizontal ? scrollRange.width : scrollRange.height;
-  MOZ_ASSERT(range > 0.0);
-  // Use the definition of interval progress to compute the progress.
-  // Note: We simplify the scroll offsets to [0%, 100%], so offset weight and
-  // offset index are ignored here.
-  // https://drafts.csswg.org/scroll-animations-1/#progress-calculation-algorithm
-  double progress = position / range;
+  // Note: For RTL, scrollPosition.x or scrollPosition.y may be negative,
+  // e.g. the range of its value is [0, -range], so we have to use the
+  // absolute value.
+  nscoord position =
+      std::abs(isHorizontal ? scrollPosition.x : scrollPosition.y);
+  double progress = static_cast<double>(position - offsets->mStart) /
+                    static_cast<double>(offsets->mEnd - offsets->mStart);
   return TimeDuration::FromMilliseconds(progress *
                                         PROGRESS_TIMELINE_DURATION_MILLISEC);
 }
@@ -200,6 +201,17 @@ void ScrollTimeline::ReplacePropertiesWith(const Element* aReferenceElement,
     // Set this so we just PostUpdate() for this animation.
     anim->SetTimeline(this);
   }
+}
+
+Maybe<ScrollTimeline::ScrollOffsets> ScrollTimeline::ComputeOffsets(
+    const nsIScrollableFrame* aScrollFrame,
+    layers::ScrollDirection aOrientation) const {
+  const nsRect& scrollRange = aScrollFrame->GetScrollRange();
+  nscoord range = aOrientation == layers::ScrollDirection::eHorizontal
+                      ? scrollRange.width
+                      : scrollRange.height;
+  MOZ_ASSERT(range > 0);
+  return Some(ScrollOffsets{0, range});
 }
 
 void ScrollTimeline::RegisterWithScrollSource() {
