@@ -5,13 +5,7 @@
 // This library came from https://github.com/andreasgal/PhoneNumber.js but will
 // be further maintained by our own in Form Autofill codebase.
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["PhoneNumber"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const { PHONE_NUMBER_META_DATA } = ChromeUtils.import(
   "resource://autofill/phonenumberutils/PhoneNumberMetaData.jsm"
@@ -24,7 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
     "resource://autofill/phonenumberutils/PhoneNumberNormalizer.jsm",
 });
 
-var PhoneNumber = (function(dataBase) {
+export var PhoneNumber = (function(dataBase) {
   const MAX_PHONE_NUMBER_LENGTH = 50;
   const NON_ALPHA_CHARS = /[^a-zA-Z]/g;
   const NON_DIALABLE_CHARS = /[^,#+\*\d]/g;

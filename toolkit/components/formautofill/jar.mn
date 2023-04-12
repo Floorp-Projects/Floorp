@@ -9,9 +9,9 @@ toolkit.jar:
   res/autofill/addressmetadata/ (./addressmetadata/*)
   res/autofill/content/ (./content/*)
 #ifdef ANDROID
-  res/autofill/FormAutofillPrompter.jsm (./android/FormAutofillPrompter.jsm)
-  res/autofill/FormAutofillStorage.jsm (./android/FormAutofillStorage.jsm)
+  res/autofill/FormAutofillPrompter.sys.mjs (./android/FormAutofillPrompter.sys.mjs)
+  res/autofill/FormAutofillStorage.sys.mjs (./android/FormAutofillStorage.sys.mjs)
 #else
-  res/autofill/FormAutofillPrompter.jsm (./default/FormAutofillPrompter.jsm)
-  res/autofill/FormAutofillStorage.jsm (./default/FormAutofillStorage.jsm)
+  res/autofill/FormAutofillPrompter.sys.mjs (./default/FormAutofillPrompter.sys.mjs)
+  res/autofill/FormAutofillStorage.sys.mjs (./default/FormAutofillStorage.sys.mjs)
 #endif

@@ -2,13 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["FormAutofill"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -69,7 +63,7 @@ function debug() {
   }
 }
 
-var FormAutofill = {
+export var FormAutofill = {
   ENABLED_AUTOFILL_ADDRESSES_PREF,
   ENABLED_AUTOFILL_ADDRESSES_CAPTURE_PREF,
   ENABLED_AUTOFILL_ADDRESSES_CAPTURE_V2_PREF,

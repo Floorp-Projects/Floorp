@@ -8,18 +8,10 @@
 
 /* eslint-disable no-use-before-define */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["FormAutofillContent"];
-
 const Cm = Components.manager;
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
@@ -443,7 +435,7 @@ let ProfileAutocomplete = {
  *
  * NOTE: Declares it by "var" to make it accessible in unit tests.
  */
-var FormAutofillContent = {
+export var FormAutofillContent = {
   /**
    * @type {WeakMap} mapping FormLike root HTML elements to FormAutofillHandler objects.
    */
