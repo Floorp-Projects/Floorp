@@ -27,7 +27,7 @@ self.addEventListener("message", async function(event) {
       ],
     });
     pass.executeBundles([bundle]);
-    pass.endPass();
+    pass.end();
     const command_buffer = encoder.finish();
 
     device.queue.submit([command_buffer]);

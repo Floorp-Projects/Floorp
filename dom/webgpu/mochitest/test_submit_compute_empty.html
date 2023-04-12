@@ -15,7 +15,7 @@ const func = async function() {
   const device = await adapter.requestDevice();
   const encoder = device.createCommandEncoder();
   const pass = encoder.beginComputePass();
-  pass.endPass();
+  pass.end();
   const command_buffer = encoder.finish();
   device.queue.submit([command_buffer]);
   ok(command_buffer !== undefined, 'command_buffer !== undefined');

@@ -304,7 +304,7 @@ void RenderPassEncoder::InsertDebugMarker(const nsAString& aString) {
   }
 }
 
-void RenderPassEncoder::EndPass(ErrorResult& aRv) {
+void RenderPassEncoder::End(ErrorResult& aRv) {
   if (mValid) {
     mValid = false;
     auto* pass = mPass.forget();

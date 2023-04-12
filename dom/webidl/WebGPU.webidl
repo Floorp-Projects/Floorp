@@ -885,7 +885,7 @@ interface GPUComputePassEncoder {
     undefined dispatchWorkgroupsIndirect(GPUBuffer indirectBuffer, GPUSize64 indirectOffset);
 
     [Throws]
-    undefined endPass();
+    undefined end();
 };
 GPUComputePassEncoder includes GPUObjectBase;
 GPUComputePassEncoder includes GPUProgrammablePassEncoder;
@@ -939,7 +939,7 @@ interface GPURenderPassEncoder {
     undefined executeBundles(sequence<GPURenderBundle> bundles);
 
     [Throws]
-    undefined endPass();
+    undefined end();
 };
 GPURenderPassEncoder includes GPUObjectBase;
 GPURenderPassEncoder includes GPUProgrammablePassEncoder;
