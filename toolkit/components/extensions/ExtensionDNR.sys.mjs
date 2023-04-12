@@ -1294,7 +1294,8 @@ class RequestDetails {
   /**
    * @param {object} options
    * @param {nsIURI} options.requestURI - URL of the requested resource.
-   * @param {nsIURI} [options.initiatorURI] - URL of triggering principal (non-null).
+   * @param {nsIURI} [options.initiatorURI] - URL of triggering principal,
+   *   provided that it is a content principal. Otherwise null.
    * @param {string} options.type - ResourceType (MozContentPolicyType).
    * @param {string} [options.method] - HTTP method
    * @param {integer} [options.tabId]
@@ -1430,10 +1431,22 @@ class RequestDetails {
   }
 
   #domainFromURI(uri) {
-    let hostname = uri.host;
-    // nsIURI omits brackets from IPv6 addresses. But the canonical form of an
-    // IPv6 address is with brackets, so add them.
-    return hostname.includes(":") ? `[${hostname}]` : hostname;
+    try {
+      let hostname = uri.host;
+      // nsIURI omits brackets from IPv6 addresses. But the canonical form of an
+      // IPv6 address is with brackets, so add them.
+      return hostname.includes(":") ? `[${hostname}]` : hostname;
+    } catch (e) {
+      // uri.host throws for some schemes (e.g. about:). In practice we won't
+      // encounter this for network (via NetworkIntegration.startDNREvaluation)
+      // because isRestrictedPrincipalURI filters the initiatorURI. Furthermore,
+      // because only http(s) requests are observed, requestURI is http(s).
+      //
+      // declarativeNetRequest.testMatchOutcome can pass arbitrary URIs and thus
+      // trigger the error in nsIURI::GetHost.
+      Cu.reportError(e);
+      return null;
+    }
   }
 }
 
@@ -1817,6 +1830,67 @@ class RequestEvaluator {
   }
 }
 
+/**
+ * Checks whether a request from a document with the given URI is allowed to
+ * be modified by an unprivileged extension (e.g. an extension without host
+ * permissions but the "declarativeNetRequest" permission).
+ * The output is comparable to WebExtensionPolicy::CanAccessURI for an extension
+ * with the `<all_urls>` permission, for consistency with the webRequest API.
+ *
+ * @param {nsIURI} [uri] The URI of a request's loadingPrincipal. May be void
+ *   if missing (e.g. top-level requests) or not a content principal.
+ * @returns {boolean} Whether there is any extension that is allowed to see
+ *   requests from a document with the given URI. Callers are expected to:
+ *   - check system requests (and treat as true).
+ *   - check WebExtensionPolicy.isRestrictedURI (and treat as true).
+ */
+function isRestrictedPrincipalURI(uri) {
+  if (!uri) {
+    // No URI, could be:
+    // - System principal (caller should have checked and disallowed access).
+    // - Expanded principal, typically content script in documents. If an
+    //   extension content script managed to run there, that implies that an
+    //   extension was able to access it.
+    // - Null principal (e.g. sandboxed document, about:blank, data:).
+    return false;
+  }
+
+  // An unprivileged extension with maximal host permissions has allowedOrigins
+  // set to [`<all_urls>`, `moz-extension://extensions-own-uuid-here`].
+  // `<all_urls>` matches PermittedSchemes from MatchPattern.cpp:
+  // https://searchfox.org/mozilla-central/rev/55d5c4b9dffe5e59eb6b019c1a930ec9ada47e10/toolkit/components/extensions/MatchPattern.cpp#209-211
+  // i.e. "http", "https", "ws", "wss", "file", "ftp", "data".
+  // - It is not possible to have a loadingPrincipal for: ws, wss, ftp.
+  // - data:-URIs always have an opaque origin, i.e. the principal is not a
+  //   content principal, thus void here.
+  // - The remaining schemes from `<all_urls>` are: http, https, file, data,
+  //   and checked below.
+  //
+  // Privileged addons can also access resource: and about:, but we do not need
+  // to support these now.
+
+  // http(s) are common, and allowed, except for some restricted domains. The
+  // caller is expected to check WebExtensionPolicy.isRestrictedURI.
+  if (uri.schemeIs("http") || uri.schemeIs("https")) {
+    return false; // Very common.
+  }
+
+  // moz-extension: is not restricted because an extension always has permission
+  // to its own moz-extension:-origin. The caller is expected to verify that an
+  // extension can only access its own URI.
+  if (uri.schemeIs("moz-extension")) {
+    return false;
+  }
+
+  // Requests from local files are intentionally allowed (bug 1621935).
+  if (uri.schemeIs("file")) {
+    return false;
+  }
+
+  // Anything else (e.g. resource:, about:newtab, etc.) is not allowed.
+  return true;
+}
+
 const NetworkIntegration = {
   maxEvaluatedRulesCount: 0,
 
@@ -1834,7 +1908,8 @@ const NetworkIntegration = {
 
   startDNREvaluation(channel) {
     let ruleManagers = gRuleManagers;
-    if (!channel.canModify) {
+    // TODO bug 1827422: Merge isRestrictedPrincipalURI with canModify.
+    if (!channel.canModify || isRestrictedPrincipalURI(channel.documentURI)) {
       // Ignore system requests or requests to restricted domains.
       ruleManagers = [];
     }
@@ -2132,17 +2207,22 @@ function clearRuleManager(extension) {
  */
 function getMatchedRulesForRequest(request, extension) {
   let requestDetails = new RequestDetails(request);
+  const { requestURI, initiatorURI } = requestDetails;
   let ruleManagers = gRuleManagers;
   if (extension) {
     ruleManagers = ruleManagers.filter(rm => rm.extension === extension);
   }
   if (
-    WebExtensionPolicy.isRestrictedURI(requestDetails.requestURI) ||
-    (requestDetails.initiatorURI &&
-      WebExtensionPolicy.isRestrictedURI(requestDetails.initiatorURI))
-  ) {
+    // NetworkIntegration.startDNREvaluation does not check requestURI, but we
+    // do that here to filter URIs that are obviously disallowed. In practice,
+    // anything other than http(s) is bogus and unsupported in DNR.
+    isRestrictedPrincipalURI(requestURI) ||
     // Equivalent to NetworkIntegration.startDNREvaluation's channel.canModify
     // check, which excludes system requests and restricted domains.
+    WebExtensionPolicy.isRestrictedURI(requestURI) ||
+    (initiatorURI && WebExtensionPolicy.isRestrictedURI(initiatorURI)) ||
+    isRestrictedPrincipalURI(initiatorURI)
+  ) {
     ruleManagers = [];
   }
   // While this simulated request is not really from another extension, apply
@@ -2150,9 +2230,9 @@ function getMatchedRulesForRequest(request, extension) {
   // for consistency.
   if (
     !lazy.gMatchRequestsFromOtherExtensions &&
-    requestDetails.initiatorURI?.schemeIs("moz-extension")
+    initiatorURI?.schemeIs("moz-extension")
   ) {
-    const extUuid = requestDetails.initiatorURI.host;
+    const extUuid = initiatorURI.host;
     ruleManagers = ruleManagers.filter(rm => rm.extension.uuid === extUuid);
   }
   return RequestEvaluator.evaluateRequest(requestDetails, ruleManagers);

@@ -180,6 +180,96 @@ add_task(async function resource_type_validation() {
   });
 });
 
+add_task(async function url_validation() {
+  await runAsDNRExtension({
+    background: async dnrTestUtils => {
+      const dnr = browser.declarativeNetRequest;
+      const { testMatchesRequest } = dnrTestUtils;
+
+      const type = "other"; // Dummy resource type.
+      await dnr.updateSessionRules({
+        addRules: [{ id: 1, condition: {}, action: { type: "block" } }],
+      });
+
+      const supportedUrls = [
+        // All schemes that are potentially hooked up to the network are here.
+        "http://example.com/",
+        "https://example.com/",
+        // While host permissions permits more (e.g. file:, moz-extension:),
+        // we don't list them here since they are not hooked up to the network.
+        // Trying to match such URLs is undefined behavior for now.
+      ];
+      const supportedInitiators = [
+        // Supported URLs are also supported initiators.
+        ...supportedUrls,
+        // Note: moz-extension: has more tests in match_initiator_moz_extension.
+        `moz-extension://${location.host}`,
+        "file:///tmp/",
+        // data:-URIs have a null principal.
+        "data:text/plain,",
+      ];
+      const disallowedUrlsOrInitiators = [
+        // about:-URI with system principal:
+        "about:config",
+        // Unprivileged about:-URL:
+        "about:logo",
+        "chrome://extensions/content/dummy.xhtml",
+        "resource://pdf.js/web/viewer.html",
+        // Extensions cannot see "view-source", only the result: bug 1683646.
+        "view-source:http://example.com/",
+        "view-source:about:config",
+        // blob:-URLs do not go through the network. An actual network request
+        // will never have a blob-URI as initiator, always the actual principal
+        // URI. We don't try to extract the actual principal from the blob:-URI
+        // because that is expensive and also performs a validation that the
+        // blob:-URI is still valid, so testMatchOutcome could then return
+        // inconsistent results.
+        URL.createObjectURL(new Blob([])),
+      ];
+      const disallowedUrls = [
+        ...disallowedUrlsOrInitiators,
+        // data:-URIs are not hooked up to the network (bug 1631933), so we do
+        // not support it in the testMatchOutcome API, even though the URL
+        // matches "<all_urls>".
+        "data:text/plain,",
+      ];
+      const disallowedInitiator = [
+        ...disallowedUrlsOrInitiators,
+        // "about:blank" inherits the principal or is null. testMatchOutcome
+        // does not offer a way to specify it more precisely.
+        "about:blank",
+        // This is bogus: A principal URL can never be about:srcdoc. It is
+        // always inherit from something.
+        "about:srcdoc",
+        "moz-extension://someone-elses-extension-here",
+      ];
+
+      for (let url of supportedUrls) {
+        await testMatchesRequest({ url, type }, [1], `Supported url: ${url}`);
+      }
+      for (let initiator of supportedInitiators) {
+        await testMatchesRequest(
+          { url: "http://example.com/", type, initiator },
+          [1],
+          `Supported initiator: ${initiator}`
+        );
+      }
+      for (let url of disallowedUrls) {
+        await testMatchesRequest({ type, url }, [], `Disallowed url: ${url}`);
+      }
+      for (let initiator of disallowedInitiator) {
+        await testMatchesRequest(
+          { url: "http://example.com/", type, initiator },
+          [],
+          `Disallowed initiator: ${initiator}`
+        );
+      }
+
+      browser.test.notifyPass();
+    },
+  });
+});
+
 add_task(async function rule_priority_and_action_type_precedence() {
   await runAsDNRExtension({
     background: async dnrTestUtils => {
