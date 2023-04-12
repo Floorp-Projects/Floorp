@@ -526,6 +526,9 @@ add_task(async function allowAllRequests_initiatorDomains_dnrWithHostAccess() {
     {
       id: 1,
       condition: {
+        // This test shows that it does not matter whether initiatorDomains is
+        // in host_permissions; it only matters if the frame's URL is matched
+        // by host_permissions.
         initiatorDomains: ["example.net"], // Not in host_permissions.
         resourceTypes: ["sub_frame"],
       },
@@ -539,26 +542,45 @@ add_task(async function allowAllRequests_initiatorDomains_dnrWithHostAccess() {
   ];
 
   const extension = await loadExtensionWithDNRRules(rules, {
-    host_permissions: ["*://example.com/*", "*://example.org/*"],
+    host_permissions: ["*://example.org/*"],
     permissions: ["declarativeNetRequestWithHostAccess"],
   });
 
+  const testCanFetch = async () => {
+    // example.org is in host_permissions above so "xmlhttprequest" rule is
+    // always expected to match this, unless "allowAllRequests" applied.
+    // If "allowAllRequests" applies, then expectedResult: "fetchAllowed".
+    // If "allowAllRequests" did not apply, then expectedError: FETCH_BLOCKED.
+    return (await fetch("http://example.org/allowed")).text();
+  };
+
   await testLoadInFrame({
-    description: "sub_frame loaded by initiator not in host_permissions",
+    description:
+      "frame URL in host_permissions despite initiator not in host_permissions",
     domains: ["example.com", "example.net", "example.org"],
-    jsForFrame: async () => {
-      try {
-        await (await fetch("http://example.com/allowed")).text();
-        return true; // Result if the allowAllRequests rule applied.
-      } catch (e) {
-        return false; // Result if the allowAllRequests rule did not apply.
-      }
-    },
+    jsForFrame: testCanFetch,
     // The "xmlhttprequest" block rule applies because the request URL
-    // (example.com) and initiator (example.org) are part of host_permissions.
-    // The "allowAllRequests" rule does not apply, because "example.net" is not
-    // part of host_permissions.
-    expectedResult: false,
+    // (example.org) and initiator (example.org) are part of host_permissions.
+    //
+    // The "allowAllRequests" rule applies and overrides the block because the
+    // "example.org" frame has "example.net" as initiator (as specified in the
+    // initiatorDomains DNR rule). Despite the lack of host_permissions for
+    // "example.net", the DNR rule is matched because navigation requests do
+    // not require host permissions.
+    expectedResult: "fetchAllowed",
+  });
+
+  await testLoadInFrame({
+    description: "frame URL and initiator not in host_permissions",
+    domains: ["example.net", "example.com", "example.org"],
+    jsForFrame: testCanFetch,
+    // The "xmlhttprequest" block rule applies because the request URL
+    // (example.org) and initiator (example.org) are part of host_permissions.
+    //
+    // The "allowAllRequests" rule does not apply because it would only apply
+    // to the "example.com" frame (that frame has "example.net" as initiator),
+    // but the DNR extension does not have host permissions for example.com.
+    expectedError: FETCH_BLOCKED,
   });
 
   await extension.unload();
