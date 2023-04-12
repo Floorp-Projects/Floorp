@@ -19,7 +19,7 @@
 
 #include "CamerasChild.h"
 
-#include "base/thread.h"
+class nsIThread;
 
 namespace mozilla::camera {
 
@@ -120,7 +120,6 @@ class CamerasParent final : public PCamerasParent,
   void CloseEngines();
   void StopIPC();
   void StopVideoCapture();
-  nsresult DispatchToVideoCaptureThread(RefPtr<Runnable> event);
 
   void OnShutdown();
 
@@ -139,9 +138,10 @@ class CamerasParent final : public PCamerasParent,
   static StaticMutex sMutex;
   static Monitor* sThreadMonitor;
   // video processing thread - where webrtc.org capturer code runs
-  static base::Thread* sVideoCaptureThread;
+  static StaticRefPtr<nsIThread> sVideoCaptureThread;
 
   nsTArray<CallbackHelper*> mCallbacks;
+  nsCOMPtr<nsISerialEventTarget> mVideoCaptureThread;
   // If existent, blocks xpcom shutdown while alive.
   // Note that this makes a reference cycle that gets broken in ActorDestroy().
   const UniquePtr<media::ShutdownBlockingTicket> mShutdownBlocker;
