@@ -50,7 +50,11 @@ const AVAILABLE_UA_OVERRIDES = [
     domain: "directv.com",
     bug: "1577519",
     config: {
-      matches: ["*://*.directv.com/*", "*://*.attwatchtv.com/*"],
+      matches: [
+        "*://*.attwatchtv.com/*",
+        "*://*.directv.com.ec/*", // bug 1827706
+        "*://*.directv.com/*",
+      ],
       uaTransformer: originalUA => {
         return (
           UAHelpers.getPrefix(originalUA) +
@@ -644,25 +648,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1743745 - Add UA override for www.automesseweb.jp
-     * Webcompat issue #70386 - https://github.com/webcompat/web-bugs/issues/70386
-     *
-     * On Firefox Android, the browser is receiving the desktop layout.
-     *
-     */
-    id: "bug1743745",
-    platform: "android",
-    domain: "automesseweb.jp",
-    bug: "1743745",
-    config: {
-      matches: ["*://*.automesseweb.jp/*"],
-      uaTransformer: () => {
-        return UAHelpers.getDeviceAppropriateChromeUA();
-      },
-    },
-  },
-  {
-    /*
      * Bug 1743751 - Add UA override for slrclub.com
      * Webcompat issue #91373 - https://github.com/webcompat/web-bugs/issues/91373
      *
@@ -942,6 +927,326 @@ const AVAILABLE_UA_OVERRIDES = [
     bug: "1819702",
     config: {
       matches: ["*://*.feelgoodcontacts.com/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1823966 - UA override for elearning.dmv.ca.gov
+     * Original report: https://bugzilla.mozilla.org/show_bug.cgi?id=1823785
+     */
+    id: "bug1823966",
+    platform: "all",
+    domain: "elearning.dmv.ca.gov",
+    bug: "1823966",
+    config: {
+      matches: ["*://*.elearning.dmv.ca.gov/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1827678 - UA override for admissions.nid.edu
+     * Webcompat issue #65753 - https://webcompat.com/issues/65753
+     */
+    id: "bug1827678-webc65753",
+    platform: "all",
+    domain: "admissions.nid.edu",
+    bug: "1827678",
+    config: {
+      matches: ["*://*.admissions.nid.edu/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1827678 - UA override for www.hepsiburada.com
+     * Webcompat issue #66888 - https://webcompat.com/issues/66888
+     */
+    id: "bug1827678-webc66888",
+    platform: "android",
+    domain: "www.hepsiburada.com",
+    bug: "1827678",
+    config: {
+      matches: ["*://www.hepsiburada.com/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1827678 - UA override for bankmandiri.co.id
+     * Webcompat issue #67924 - https://webcompat.com/issues/67924
+     */
+    id: "bug1827678-webc67924",
+    platform: "android",
+    domain: "bankmandiri.co.id",
+    bug: "1827678",
+    config: {
+      matches: ["*://*.bankmandiri.co.id/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1827678 - UA override for frankfred.com
+     * Webcompat issue #68007 - https://webcompat.com/issues/68007
+     */
+    id: "bug1827678-webc68007",
+    platform: "android",
+    domain: "frankfred.com",
+    bug: "1827678",
+    config: {
+      matches: ["*://*.frankfred.com/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1827678 - UA override for static.slots.lv
+     * Webcompat issue #68379 - https://webcompat.com/issues/68379
+     */
+    id: "bug1827678-webc68379",
+    platform: "android",
+    domain: "static.slots.lv",
+    bug: "1827678",
+    config: {
+      matches: ["*://static.slots.lv/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1827678 - UA override for mobile.onvue.com
+     * Webcompat issue #68520 - https://webcompat.com/issues/68520
+     */
+    id: "bug1827678-webc68520",
+    platform: "android",
+    domain: "mobile.onvue.com",
+    bug: "1827678",
+    config: {
+      matches: ["*://mobile.onvue.com/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1827678 - UA override for avizia.com
+     * Webcompat issue #68635 - https://webcompat.com/issues/68635
+     */
+    id: "bug1827678-webc68635",
+    platform: "all",
+    domain: "avizia.com",
+    bug: "1827678",
+    config: {
+      matches: ["*://*.avizia.com/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1827678 - UA override for www.yourtexasbenefits.com
+     * Webcompat issue #76785 - https://webcompat.com/issues/76785
+     */
+    id: "bug1827678-webc76785",
+    platform: "android",
+    domain: "www.yourtexasbenefits.com",
+    bug: "1827678",
+    config: {
+      matches: ["*://www.yourtexasbenefits.com/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1827678 - UA override for www.free4talk.com
+     * Webcompat issue #77727 - https://webcompat.com/issues/77727
+     */
+    id: "bug1827678-webc77727",
+    platform: "android",
+    domain: "www.free4talk.com",
+    bug: "1827678",
+    config: {
+      matches: ["*://www.free4talk.com/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1827678 - UA override for watch.indee.tv
+     * Webcompat issue #77912 - https://webcompat.com/issues/77912
+     */
+    id: "bug1827678-webc77912",
+    platform: "all",
+    domain: "watch.indee.tv",
+    bug: "1827678",
+    config: {
+      matches: ["*://watch.indee.tv/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1827678 - UA override for captainjackcasino.com
+     * Webcompat issue #79490 - https://webcompat.com/issues/79490
+     */
+    id: "bug1827678-webc79490",
+    platform: "android",
+    domain: "captainjackcasino.com",
+    bug: "1827678",
+    config: {
+      matches: ["*://*.captainjackcasino.com/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1827678 - UA override for viewer-ebook.books.com.tw
+     * Webcompat issue #80180 - https://webcompat.com/issues/80180
+     */
+    id: "bug1827678-webc80180",
+    platform: "all",
+    domain: "viewer-ebook.books.com.tw",
+    bug: "1827678",
+    config: {
+      matches: ["*://viewer-ebook.books.com.tw/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1827678 - UA override for jelly.jd.com
+     * Webcompat issue #83269 - https://webcompat.com/issues/83269
+     */
+    id: "bug1827678-webc83269",
+    platform: "android",
+    domain: "jelly.jd.com",
+    bug: "1827678",
+    config: {
+      matches: ["*://jelly.jd.com/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1827678 - UA override for f2bbs.com
+     * Webcompat issue #84932 - https://webcompat.com/issues/84932
+     */
+    id: "bug1827678-webc84932",
+    platform: "android",
+    domain: "f2bbs.com",
+    bug: "1827678",
+    config: {
+      matches: ["*://f2bbs.com/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1827678 - UA override for kt.com
+     * Webcompat issue #119012 - https://webcompat.com/issues/119012
+     */
+    id: "bug1827678-webc119012",
+    platform: "all",
+    domain: "kt.com",
+    bug: "1827678",
+    config: {
+      matches: ["*://*.kt.com/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1827678 - UA override for dns-shop.ru
+     * Webcompat issue #119307 - https://webcompat.com/issues/119307
+     */
+    id: "bug1827678-webc119307",
+    platform: "all",
+    domain: "dns-shop.ru",
+    bug: "1827678",
+    config: {
+      matches: ["*://www.dns-shop.ru/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1827678 - UA override for oirsa.org
+     * Webcompat issue #119402 - https://webcompat.com/issues/119402
+     */
+    id: "bug1827678-webc119402",
+    platform: "all",
+    domain: "oirsa.org",
+    bug: "1827678",
+    config: {
+      matches: ["*://*.oirsa.org/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1827678 - UA override for sistema.ibglbrasil.com.br
+     * Webcompat issue #119785 - https://webcompat.com/issues/119785
+     */
+    id: "bug1827678-webc119785",
+    platform: "all",
+    domain: "sistema.ibglbrasil.com.br",
+    bug: "1827678",
+    config: {
+      matches: ["*://sistema.ibglbrasil.com.br/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1827678 - UA override for onp.cloud.waterloo.ca
+     * Webcompat issue #120450 - https://webcompat.com/issues/120450
+     */
+    id: "bug1827678-webc120450",
+    platform: "all",
+    domain: "onp.cloud.waterloo.ca",
+    bug: "1827678",
+    config: {
+      matches: ["*://onp.cloud.waterloo.ca/*"],
       uaTransformer: originalUA => {
         return UAHelpers.getDeviceAppropriateChromeUA();
       },
