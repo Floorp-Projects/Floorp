@@ -78,17 +78,17 @@ MARKUPMAP(
         return new HyperTextAccessibleWrap(aElement, aContext->Document());
       }
       // Never create an accessible if the div is not display:block; or
-      // display:inline-block;
-      StyleInfo styleInfo(aElement);
-      RefPtr<nsAtom> displayValue = styleInfo.Display();
-      if (displayValue != nsGkAtoms::block &&
-          !displayValue->Equals(u"inline-block"_ns)) {
+      // display:inline-block or the like.
+      nsIFrame* f = aElement->GetPrimaryFrame();
+      if (!f || !f->IsBlockFrameOrSubclass()) {
         return nullptr;
       }
       // Check for various conditions to determine if this is a block
       // break and needs to be rendered.
       // If its previous sibling is an inline element, we probably want
       // to break, so render.
+      // FIXME: This looks extremely incorrect in presence of shadow DOM,
+      // display: contents, and what not.
       nsIContent* prevSibling = aElement->GetPreviousSibling();
       if (prevSibling) {
         nsIFrame* prevSiblingFrame = prevSibling->GetPrimaryFrame();
