@@ -492,11 +492,11 @@ export class QuickOpenModal extends Component {
 /* istanbul ignore next: ignoring testing of redux connection stuff */
 function mapStateToProps(state) {
   const selectedSource = getSelectedSource(state);
+  const location = getSelectedLocation(state);
   const displayedSources = getDisplayedSourcesList(state);
   const tabs = getTabs(state);
   const tabUrls = [...new Set(tabs.map(tab => tab.url))];
-  const symbols = getSymbols(state, selectedSource);
-  const location = getSelectedLocation(state);
+  const symbols = getSymbols(state, location);
 
   return {
     cx: getContext(state),
