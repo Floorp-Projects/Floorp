@@ -1412,7 +1412,7 @@ nsresult nsHttpChannel::SetupTransaction() {
   EnsureRequestContext();
 
   HttpTrafficCategory category = CreateTrafficCategory();
-  std::function<void(TransactionObserverResult &&)> observer;
+  std::function<void(TransactionObserverResult&&)> observer;
   if (mTransactionObserver) {
     observer = [transactionObserver{std::move(mTransactionObserver)}](
                    TransactionObserverResult&& aResult) {
@@ -5244,6 +5244,15 @@ nsresult nsHttpChannel::AsyncProcessRedirection(uint32_t redirectType) {
   if (NS_FAILED(rv)) {
     LOG(("Invalid URI for redirect: Location: %s\n", location.get()));
     return NS_ERROR_CORRUPTED_CONTENT;
+  }
+
+  if (!StaticPrefs::network_allow_redirect_to_data() &&
+      !mLoadInfo->GetAllowInsecureRedirectToDataURI() &&
+      mRedirectURI->SchemeIs("data")) {
+    LOG(("Invalid data URI for redirect!"));
+    nsContentSecurityManager::ReportBlockedDataURI(mRedirectURI, mLoadInfo,
+                                                   true);
+    return NS_ERROR_DOM_BAD_URI;
   }
 
   // Perform the URL query string stripping for redirects. We will only strip
