@@ -2383,17 +2383,21 @@ void SnapshotIterator::warnUnreadableAllocation() {
           "f.arguments).\n");
 }
 
-struct DumpOp {
-  explicit DumpOp(unsigned int i) : i_(i) {}
+struct DumpOverflownOp {
+  const unsigned numFormals_;
+  unsigned i_ = 0;
 
-  unsigned int i_;
+  explicit DumpOverflownOp(unsigned numFormals) : numFormals_(numFormals) {}
+
   void operator()(const Value& v) {
-    fprintf(stderr, "  actual (arg %u): ", i_);
+    if (i_ >= numFormals_) {
+      fprintf(stderr, "  actual (arg %u): ", i_);
 #if defined(DEBUG) || defined(JS_JITSPEW)
-    DumpValue(v);
+      DumpValue(v);
 #else
-    fprintf(stderr, "?\n");
+      fprintf(stderr, "?\n");
 #endif
+    }
     i_++;
   }
 };
@@ -2443,9 +2447,8 @@ void InlineFrameIterator::dump() const {
       } else {
         if (i - 2 == calleeTemplate()->nargs() &&
             numActualArgs() > calleeTemplate()->nargs()) {
-          DumpOp d(calleeTemplate()->nargs());
-          unaliasedForEachActual(TlsContext.get(), d, ReadFrame_Overflown,
-                                 fallback);
+          DumpOverflownOp d(calleeTemplate()->nargs());
+          unaliasedForEachActual(TlsContext.get(), d, fallback);
         }
 
         fprintf(stderr, "  slot %d: ", int(i - 2 - calleeTemplate()->nargs()));

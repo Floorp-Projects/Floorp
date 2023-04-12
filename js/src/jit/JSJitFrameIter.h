@@ -76,9 +76,6 @@ enum class FrameType {
 };
 
 enum ReadFrameArgsBehavior {
-  // Only read overflown args (i.e. [callee()->nargs ... numActuals()]
-  ReadFrame_Overflown,
-
   // Read all args (i.e. [0 ... numActuals()])
   ReadFrame_Actuals
 };
@@ -231,23 +228,12 @@ class JSJitFrameIter {
   MachineState machineState() const;
 
   template <class Op>
-  void unaliasedForEachActual(Op op, ReadFrameArgsBehavior behavior) const {
+  void unaliasedForEachActual(Op op) const {
     MOZ_ASSERT(isBaselineJS());
 
     unsigned nactual = numActualArgs();
-    unsigned start, end;
-    switch (behavior) {
-      case ReadFrame_Overflown:
-        start = callee()->nargs();
-        end = nactual;
-        break;
-      case ReadFrame_Actuals:
-        start = 0;
-        end = nactual;
-    }
-
     Value* argv = actualArgs();
-    for (unsigned i = start; i < end; i++) {
+    for (unsigned i = 0; i < nactual; i++) {
       op(argv[i]);
     }
   }
@@ -678,10 +664,8 @@ class InlineFrameIterator {
       // Get the non overflown arguments, which are taken from the inlined
       // frame, because it will have the updated value when JSOp::SetArg is
       // done.
-      if (behavior != ReadFrame_Overflown) {
-        s.readFunctionFrameArgs(argOp, argsObj, thisv, 0, nformal, script(),
-                                fallback);
-      }
+      s.readFunctionFrameArgs(argOp, argsObj, thisv, 0, nformal, script(),
+                              fallback);
 
       if (nactual > nformal) {
         if (more()) {
@@ -735,11 +719,10 @@ class InlineFrameIterator {
 
   template <class Op>
   void unaliasedForEachActual(JSContext* cx, Op op,
-                              ReadFrameArgsBehavior behavior,
                               MaybeReadFallback& fallback) const {
     Nop nop;
     readFrameArgsAndLocals(cx, op, nop, nullptr, nullptr, nullptr, nullptr,
-                           nullptr, behavior, fallback);
+                           nullptr, ReadFrame_Actuals, fallback);
   }
 
   JSScript* script() const { return script_; }
