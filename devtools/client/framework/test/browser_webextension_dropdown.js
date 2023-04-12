@@ -55,7 +55,7 @@ add_task(async function runTest() {
     menu.dispatchEvent(event);
   });
 
-  let popup = await popupShownPromise;
+  const popup = await popupShownPromise;
   info("popup is shown");
 
   popup.hidePopup();
