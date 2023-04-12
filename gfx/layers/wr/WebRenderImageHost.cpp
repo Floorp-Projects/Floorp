@@ -34,10 +34,7 @@ WebRenderImageHost::WebRenderImageHost(const TextureInfo& aTextureInfo)
       ImageComposite(),
       mCurrentAsyncImageManager(nullptr) {}
 
-WebRenderImageHost::~WebRenderImageHost() {
-  MOZ_ASSERT(!mRemoteTextureHost);
-  MOZ_ASSERT(mWrBridges.empty());
-}
+WebRenderImageHost::~WebRenderImageHost() { MOZ_ASSERT(mWrBridges.empty()); }
 
 void WebRenderImageHost::OnReleased() {
   if (mRemoteTextureOwnerIdOfPushCallback) {
@@ -47,20 +44,12 @@ void WebRenderImageHost::OnReleased() {
     mSizeOfPushCallback = gfx::IntSize();
     mFlagsOfPushCallback = TextureFlags::NO_FLAGS;
   }
-
-  if (mRemoteTextureHost) {
-    mRemoteTextureHost = nullptr;
-  }
 }
 
 void WebRenderImageHost::UseTextureHost(
     const nsTArray<TimedTexture>& aTextures) {
   CompositableHost::UseTextureHost(aTextures);
   MOZ_ASSERT(aTextures.Length() >= 1);
-
-  if (mRemoteTextureHost) {
-    mRemoteTextureHost = nullptr;
-  }
 
   nsTArray<TimedImage> newImages;
 
@@ -127,13 +116,11 @@ void WebRenderImageHost::UseRemoteTexture(const RemoteTextureId aTextureId,
   RefPtr<TextureHost> texture =
       RemoteTextureMap::Get()->GetOrCreateRemoteTextureHostWrapper(
           aTextureId, aOwnerId, aForPid, aSize, aFlags);
-  mRemoteTextureHost = texture;
-  if (mRemoteTextureHost) {
-    mRemoteTextureHost->AsRemoteTextureHostWrapper()
-        ->CheckIsReadyForRendering();
+  if (texture) {
+    texture->AsRemoteTextureHostWrapper()->CheckIsReadyForRendering();
   }
 
-  SetCurrentTextureHost(mRemoteTextureHost);
+  SetCurrentTextureHost(texture);
 
   if (GetAsyncRef()) {
     for (const auto& it : mWrBridges) {
@@ -220,7 +207,8 @@ void WebRenderImageHost::AppendImageCompositeNotification(
 
 TextureHost* WebRenderImageHost::GetAsTextureHostForComposite(
     AsyncImagePipelineManager* aAsyncImageManager) {
-  if (mRemoteTextureHost) {
+  if (mCurrentTextureHost &&
+      mCurrentTextureHost->AsRemoteTextureHostWrapper()) {
     return mCurrentTextureHost;
   }
 
