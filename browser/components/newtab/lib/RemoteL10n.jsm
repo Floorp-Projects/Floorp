@@ -202,11 +202,11 @@ class _RemoteL10n {
 
     return new DOMLocalization(
       [
-        "browser/newtab/asrouter.ftl",
-        "toolkit/branding/brandings.ftl",
-        "browser/branding/sync-brand.ftl",
         "branding/brand.ftl",
         "browser/defaultBrowserNotification.ftl",
+        "browser/newtab/asrouter.ftl",
+        "toolkit/branding/accounts.ftl",
+        "toolkit/branding/brandings.ftl",
       ],
       false
     );

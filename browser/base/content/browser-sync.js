@@ -361,7 +361,7 @@ var gSync = {
         "browser/accounts.ftl",
         "browser/appmenu.ftl",
         "browser/sync.ftl",
-        "browser/branding/sync-brand.ftl",
+        "toolkit/branding/accounts.ftl",
       ],
       true
     ));
