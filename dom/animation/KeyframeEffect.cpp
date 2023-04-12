@@ -2068,6 +2068,13 @@ KeyframeEffect::MatchForCompositor KeyframeEffect::IsMatchForCompositor(
         scrollTimeline->SourceScrollStyle() == StyleOverflow::Hidden) {
       return KeyframeEffect::MatchForCompositor::No;
     }
+
+    // FIXME: Bug 1818346. Support OMTA for view-timeline. We disable it for now
+    // because we need to make view-timeline-inset animations run on the OMTA as
+    // well before enable this.
+    if (scrollTimeline->IsViewTimeline()) {
+      return KeyframeEffect::MatchForCompositor::No;
+    }
   }
 
   if (!HasEffectiveAnimationOfPropertySet(aPropertySet, aEffects)) {

@@ -35,6 +35,8 @@ class ViewTimeline final : public ScrollTimeline {
     return nullptr;
   }
 
+  bool IsViewTimeline() const override { return true; }
+
   void ReplacePropertiesWith(Element* aSubjectElement,
                              PseudoStyleType aPseudoType,
                              const StyleViewTimeline& aNew);
