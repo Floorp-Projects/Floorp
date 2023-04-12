@@ -1,0 +1,113 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>DNR and tabs.create from other extension</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<script>
+"use strict";
+
+
+// While most DNR tests are xpcshell tests, this one is a mochitest because the
+// tabs.create API does not work in a xpcshell test.
+
+add_setup(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["extensions.manifestV3.enabled", true],
+      ["extensions.dnr.enabled", true],
+    ],
+  });
+});
+
+
+add_task(async function tabs_create_can_be_redirected_by_other_dnr_extension() {
+  let dnrExtension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["declarativeNetRequestWithHostAccess"],
+      // redirect action requires host permissions:
+      host_permissions: ["*://example.com/*"],
+    },
+    async background() {
+      await browser.declarativeNetRequest.updateSessionRules({
+        addRules: [
+          {
+            id: 1,
+            condition: {
+              resourceTypes: ["main_frame"],
+              urlFilter: "?dnr_redir_me_pls",
+            },
+            action: {
+              type: "redirect",
+              redirect: {
+                transform: {
+                  query: "?dnr_redir_target"
+                },
+              },
+            },
+          },
+        ],
+      });
+      browser.test.sendMessage("dnr_registered");
+    },
+  });
+  await dnrExtension.startup();
+  await dnrExtension.awaitMessage("dnr_registered");
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["webNavigation"],
+    },
+    async background() {
+      async function createTabAndGetFinalUrl(url) {
+        let navigationDonePromise = new Promise(resolve => {
+          browser.webNavigation.onDOMContentLoaded.addListener(
+            function listener(details) {
+              browser.webNavigation.onDOMContentLoaded.removeListener(listener);
+              resolve(details);
+            },
+            // All input URLs and redirection targets match this URL filter:
+            { url: [{ queryPrefix: "dnr_redir_" }] }
+          );
+        });
+        const tab = await browser.tabs.create({ url });
+        browser.test.log(`Waiting for navigation done, starting from ${url}`);
+        const result = await navigationDonePromise;
+        browser.test.assertEq(
+          tab.id,
+          result.tabId,
+          `Observed load completion for navigation tab with initial URL ${url}`
+        );
+        await browser.tabs.remove(tab.id);
+        return result.url;
+      }
+
+      browser.test.assertEq(
+        "https://example.com/?dnr_redir_target",
+        await createTabAndGetFinalUrl("https://example.com/?dnr_redir_me_pls"),
+        "DNR rule from other extension should have redirected the navigation"
+      );
+
+      browser.test.assertEq(
+        "https://example.org/?dnr_redir_me_pls",
+        await createTabAndGetFinalUrl("https://example.org/?dnr_redir_me_pls"),
+        "DNR redirect ignored for URLs without host permission"
+      );
+      browser.test.sendMessage("done");
+    }
+  });
+  await extension.startup();
+  await extension.awaitMessage("done");
+
+  await dnrExtension.unload();
+  await extension.unload();
+});
+
+</script>
+</body>
+</html>

@@ -1413,10 +1413,20 @@ class RequestDetails {
 
   canExtensionModify(extension) {
     const policy = extension.policy;
-    return (
-      (!this.initiatorURI || policy.canAccessURI(this.initiatorURI)) &&
-      policy.canAccessURI(this.requestURI)
-    );
+    if (!policy.canAccessURI(this.requestURI)) {
+      return false;
+    }
+    if (
+      this.initiatorURI &&
+      this.type !== "main_frame" &&
+      this.type !== "sub_frame" &&
+      !policy.canAccessURI(this.initiatorURI)
+    ) {
+      // Host permissions for the initiator is required except for navigation
+      // requests: https://bugzilla.mozilla.org/show_bug.cgi?id=1825824#c2
+      return false;
+    }
+    return true;
   }
 
   #domainFromURI(uri) {

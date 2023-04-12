@@ -47,6 +47,33 @@ function makeDnrTestUtils() {
       description
     );
   }
+  async function testCanMatchAnyBlock({ matchedRequests, nonMatchedRequests }) {
+    await dnr.updateSessionRules({
+      addRules: [
+        {
+          // A rule that is supposed to match everything.
+          id: 1,
+          condition: { excludedResourceTypes: [] },
+          action: { type: "block" },
+        },
+      ],
+    });
+    for (let request of matchedRequests) {
+      await testMatchesRequest(
+        request,
+        [1],
+        `${JSON.stringify(request)} - should match wildcard DNR block rule`
+      );
+    }
+    for (let request of nonMatchedRequests) {
+      await testMatchesRequest(
+        request,
+        [],
+        `${JSON.stringify(request)} - should not match any DNR rule`
+      );
+    }
+    await dnr.updateSessionRules({ removeRuleIds: [1] });
+  }
   async function testCanUseAction(type, canUse) {
     await dnr.updateSessionRules({ addRules: [makeDummyRule(1, type)] });
     await testMatchesRequest(
@@ -61,6 +88,7 @@ function makeDnrTestUtils() {
     makeDummyRequest,
     makeDummyRule,
     testMatchesRequest,
+    testCanMatchAnyBlock,
     testCanUseAction,
   });
   return dnrTestUtils;
@@ -255,7 +283,7 @@ add_task(async function rule_priority_and_action_type_precedence() {
 add_task(async function declarativeNetRequest_and_host_permissions() {
   await runAsDNRExtension({
     background: async dnrTestUtils => {
-      const { testCanUseAction } = dnrTestUtils;
+      const { testCanUseAction, testCanMatchAnyBlock } = dnrTestUtils;
 
       // Unlocked by declarativeNetRequest permission:
       await testCanUseAction("allow", true);
@@ -265,6 +293,19 @@ add_task(async function declarativeNetRequest_and_host_permissions() {
       // Unlocked by host permissions:
       await testCanUseAction("redirect", true);
       await testCanUseAction("modifyHeaders", true);
+
+      const url = "https://example.com/";
+      await testCanMatchAnyBlock({
+        matchedRequests: [
+          { url, type: "other" },
+          { url, type: "main_frame" },
+          { url, type: "sub_frame" },
+          { url, initiator: url, type: "other" },
+          { url, initiator: url, type: "main_frame" },
+          { url, initiator: url, type: "sub_frame" },
+        ],
+        nonMatchedRequests: [],
+      });
 
       browser.test.notifyPass();
     },
@@ -277,7 +318,7 @@ add_task(async function declarativeNetRequest_permission_only() {
       host_permissions: [],
     },
     background: async dnrTestUtils => {
-      const { testCanUseAction } = dnrTestUtils;
+      const { testCanUseAction, testCanMatchAnyBlock } = dnrTestUtils;
 
       // Unlocked by declarativeNetRequest permission:
       await testCanUseAction("allow", true);
@@ -287,6 +328,19 @@ add_task(async function declarativeNetRequest_permission_only() {
       // These require host permissions, which we don't have:
       await testCanUseAction("redirect", false);
       await testCanUseAction("modifyHeaders", false);
+
+      const url = "https://example.com/";
+      await testCanMatchAnyBlock({
+        matchedRequests: [
+          { url, type: "other" },
+          { url, type: "main_frame" },
+          { url, type: "sub_frame" },
+          { url, initiator: url, type: "other" },
+          { url, initiator: url, type: "main_frame" },
+          { url, initiator: url, type: "sub_frame" },
+        ],
+        nonMatchedRequests: [],
+      });
 
       browser.test.notifyPass();
     },
@@ -319,7 +373,7 @@ add_task(async function declarativeNetRequestWithHostAccess_only() {
   });
 });
 
-add_task(async function declarativeNetRequestWithHostAccess_only() {
+add_task(async function declarativeNetRequestWithHostAccess_and_host_perm() {
   await runAsDNRExtension({
     manifest: {
       permissions: [
@@ -330,7 +384,7 @@ add_task(async function declarativeNetRequestWithHostAccess_only() {
       host_permissions: ["https://example.com/"],
     },
     background: async dnrTestUtils => {
-      const { testCanUseAction } = dnrTestUtils;
+      const { testCanUseAction, testCanMatchAnyBlock } = dnrTestUtils;
 
       // declarativeNetRequestWithHostAccess + host permissions allows all:
       await testCanUseAction("allow", true);
@@ -339,6 +393,25 @@ add_task(async function declarativeNetRequestWithHostAccess_only() {
       await testCanUseAction("upgradeScheme", true);
       await testCanUseAction("redirect", true);
       await testCanUseAction("modifyHeaders", true);
+
+      const url = "https://example.com/";
+      const urlNoPerm = "https://example.net/?not_in:host_permissions";
+      await testCanMatchAnyBlock({
+        matchedRequests: [
+          { url, type: "other" },
+          { url, type: "main_frame" },
+          { url, type: "sub_frame" },
+          // Navigations do no require host permissions for initiator.
+          { url, initiator: urlNoPerm, type: "main_frame" },
+          { url, initiator: urlNoPerm, type: "sub_frame" },
+        ],
+        nonMatchedRequests: [
+          // url always requires declarativeNetRequest or host permissions.
+          { url: urlNoPerm, type: "other" },
+          // Non-navigations require host permissions for initiator.
+          { url, initiator: urlNoPerm, type: "other" },
+        ],
+      });
 
       browser.test.notifyPass();
     },
