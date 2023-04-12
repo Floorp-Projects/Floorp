@@ -1543,10 +1543,12 @@ var PanelView = class extends AssociatedToNode {
       if (arrowKey && isNavigableWithTabOnly) {
         return NodeFilter.FILTER_REJECT;
       }
+      let localName = node.localName.toLowerCase();
       if (
-        node.tagName == "button" ||
-        node.tagName == "toolbarbutton" ||
-        node.tagName == "checkbox" ||
+        localName == "button" ||
+        localName == "toolbarbutton" ||
+        localName == "checkbox" ||
+        localName == "a" ||
         node.classList.contains("text-link") ||
         (!arrowKey && isNavigableWithTabOnly)
       ) {
@@ -1554,8 +1556,8 @@ var PanelView = class extends AssociatedToNode {
         // Don't do this for browser and iframe elements because this breaks
         // tabbing behavior. They're already focusable anyway.
         if (
-          node.tagName != "browser" &&
-          node.tagName != "iframe" &&
+          localName != "browser" &&
+          localName != "iframe" &&
           !node.hasAttribute("tabindex")
         ) {
           node.setAttribute("tabindex", "-1");

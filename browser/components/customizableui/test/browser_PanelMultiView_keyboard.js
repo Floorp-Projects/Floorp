@@ -22,6 +22,8 @@ let gMainTextbox;
 let gMainButton2;
 let gMainButton3;
 let gCheckbox;
+let gNamespacedLink;
+let gLink;
 let gMainTabOrder;
 let gMainArrowOrder;
 let gSubView;
@@ -130,6 +132,24 @@ add_setup(async function() {
   gCheckbox = document.createXULElement("checkbox");
   gCheckbox.id = "gCheckbox";
   gMainView.appendChild(gCheckbox);
+
+  // moz-support-links in XUL documents are created with the
+  // <html:a> tag and so we need to test this separately from
+  // <a> tags.
+  gNamespacedLink = document.createElementNS(
+    "http://www.w3.org/1999/xhtml",
+    "html:a"
+  );
+  gNamespacedLink.href = "www.mozilla.org";
+  gNamespacedLink.innerText = "gNamespacedLink";
+  gNamespacedLink.id = "gNamespacedLink";
+  gMainView.appendChild(gNamespacedLink);
+  gLink = document.createElement("a");
+  gLink.href = "www.mozilla.org";
+  gLink.innerText = "gLink";
+  gLink.id = "gLink";
+  gMainView.appendChild(gLink);
+
   gMainTabOrder = [
     gMainButton1,
     gMainMenulist,
@@ -138,8 +158,17 @@ add_setup(async function() {
     gMainButton2,
     gMainButton3,
     gCheckbox,
+    gNamespacedLink,
+    gLink,
   ];
-  gMainArrowOrder = [gMainButton1, gMainButton2, gMainButton3, gCheckbox];
+  gMainArrowOrder = [
+    gMainButton1,
+    gMainButton2,
+    gMainButton3,
+    gCheckbox,
+    gNamespacedLink,
+    gLink,
+  ];
 
   gSubView = document.createXULElement("panelview");
   gSubView.id = "testSubView";
