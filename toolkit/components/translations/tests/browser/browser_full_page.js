@@ -2,70 +2,44 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
-const URL_PREFIX = "https://example.com/browser/";
-const DIR_PATH = "toolkit/components/translations/tests/browser/";
-const TRANSLATIONS_TESTER_EN =
-  URL_PREFIX + DIR_PATH + "translations-tester-en.html";
-const TRANSLATIONS_TESTER_ES =
-  URL_PREFIX + DIR_PATH + "translations-tester-es.html";
-const TRANSLATIONS_TESTER_NO_TAG =
-  URL_PREFIX + DIR_PATH + "translations-tester-no-tag.html";
 
 /**
  * Check that the full page translation feature works.
  */
 add_task(async function test_full_page_translation() {
-  await loadTestPage({
+  await loadTestPageAndRun({
     page: TRANSLATIONS_TESTER_ES,
     prefs: [["browser.translations.autoTranslate", true]],
     languagePairs: [
       { fromLang: "es", toLang: "en" },
       { fromLang: "en", toLang: "es" },
     ],
-    runInPage: async () => {
-      const { document } = content;
+    runInPage: async TranslationsTest => {
+      const selectors = TranslationsTest.getSelectors();
 
-      async function assertTranslationResult(message, getNode, translation) {
-        try {
-          await ContentTaskUtils.waitForCondition(
-            () => translation === getNode()?.innerText,
-            `Waiting for: "${translation}"`
-          );
-        } catch (error) {
-          // The result wasn't found, but the assertion below will report the error.
-          console.error(error);
-        }
-
-        is(translation, getNode()?.innerText, message);
-      }
-
-      const getH1 = () => document.querySelector("h1");
-      const getLastParagraph = () => document.querySelector("p:last-child");
-      const getHeader = () => document.querySelector("header");
-
-      await assertTranslationResult(
+      await TranslationsTest.assertTranslationResult(
         "The main title gets translated.",
-        getH1,
+        selectors.getH1,
         "DON QUIJOTE DE LA MANCHA [es to en, html]"
       );
 
-      await assertTranslationResult(
+      await TranslationsTest.assertTranslationResult(
         "The last paragraph gets translated. It is out of the viewport.",
-        getLastParagraph,
+        selectors.getLastParagraph,
         "— PUES, AUNQUE MOVÁIS MÁS BRAZOS QUE LOS DEL GIGANTE BRIAREO, ME LO HABÉIS DE PAGAR. [es to en, html]"
       );
 
-      getH1().innerText = "Este es un titulo";
+      selectors.getH1().innerText = "Este es un titulo";
 
-      await assertTranslationResult(
+      await TranslationsTest.assertTranslationResult(
         "Mutations get tracked",
-        getH1,
+        selectors.getH1,
         "ESTE ES UN TITULO [es to en]"
       );
 
-      await assertTranslationResult(
+      await TranslationsTest.assertTranslationResult(
         "Other languages do not get translated.",
-        getHeader,
+        selectors.getHeader,
         "The following is an excerpt from Don Quijote de la Mancha, which is in the public domain"
       );
     },
@@ -87,7 +61,7 @@ add_task(async function test_about_translations_enabled() {
     return;
   }
 
-  await loadTestPage({
+  await loadTestPageAndRun({
     page: TRANSLATIONS_TESTER_EN,
     prefs: [["browser.translations.autoTranslate", true]],
     languagePairs: [
@@ -124,7 +98,7 @@ add_task(async function test_about_translations_enabled() {
  * Check that the full page translation feature works.
  */
 add_task(async function test_language_identification_for_page_translation() {
-  await loadTestPage({
+  await loadTestPageAndRun({
     page: TRANSLATIONS_TESTER_NO_TAG,
     prefs: [["browser.translations.autoTranslate", true]],
     detectedLanguageLabel: "es",
@@ -133,50 +107,32 @@ add_task(async function test_language_identification_for_page_translation() {
       { fromLang: "es", toLang: "en" },
       { fromLang: "en", toLang: "es" },
     ],
-    runInPage: async () => {
-      const { document } = content;
+    runInPage: async TranslationsTest => {
+      const selectors = TranslationsTest.getSelectors();
 
-      async function assertTranslationResult(message, getNode, translation) {
-        try {
-          await ContentTaskUtils.waitForCondition(
-            () => translation === getNode()?.innerText,
-            `Waiting for: "${translation}"`
-          );
-        } catch (error) {
-          // The result wasn't found, but the assertion below will report the error.
-          console.error(error);
-        }
-
-        is(translation, getNode()?.innerText, message);
-      }
-
-      const getH1 = () => document.querySelector("h1");
-      const getLastParagraph = () => document.querySelector("p:last-child");
-      const getHeader = () => document.querySelector("header");
-
-      await assertTranslationResult(
+      await TranslationsTest.assertTranslationResult(
         "The main title gets translated.",
-        getH1,
+        selectors.getH1,
         "DON QUIJOTE DE LA MANCHA [es to en, html]"
       );
 
-      await assertTranslationResult(
+      await TranslationsTest.assertTranslationResult(
         "The last paragraph gets translated. It is out of the viewport.",
-        getLastParagraph,
+        selectors.getLastParagraph,
         "— PUES, AUNQUE MOVÁIS MÁS BRAZOS QUE LOS DEL GIGANTE BRIAREO, ME LO HABÉIS DE PAGAR. [es to en, html]"
       );
 
-      getH1().innerText = "Este es un titulo";
+      selectors.getH1().innerText = "Este es un titulo";
 
-      await assertTranslationResult(
+      await TranslationsTest.assertTranslationResult(
         "Mutations get tracked",
-        getH1,
+        selectors.getH1,
         "ESTE ES UN TITULO [es to en]"
       );
 
-      await assertTranslationResult(
+      await TranslationsTest.assertTranslationResult(
         "Other languages do not get translated.",
-        getHeader,
+        selectors.getHeader,
         "The following is an excerpt from Don Quijote de la Mancha, which is in the public domain"
       );
     },

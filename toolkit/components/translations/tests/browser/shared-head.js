@@ -7,6 +7,16 @@
 const BLANK_PAGE =
   "data:text/html;charset=utf-8,<!DOCTYPE html><title>Blank</title>Blank page";
 
+const URL_PREFIX = "https://example.com/browser/";
+const CHROME_URL_PREFIX = "chrome://mochitests/content/browser/";
+const DIR_PATH = "toolkit/components/translations/tests/browser/";
+const TRANSLATIONS_TESTER_EN =
+  URL_PREFIX + DIR_PATH + "translations-tester-en.html";
+const TRANSLATIONS_TESTER_ES =
+  URL_PREFIX + DIR_PATH + "translations-tester-es.html";
+const TRANSLATIONS_TESTER_NO_TAG =
+  URL_PREFIX + DIR_PATH + "translations-tester-no-tag.html";
+
 /**
  * The mochitest runs in the parent process. This function opens up a new tab,
  * opens up about:translations, and passes the test requirements into the content process.
@@ -257,7 +267,6 @@ async function reorderingTranslator(message) {
 }
 
 async function loadTestPage({
-  runInPage,
   languagePairs,
   detectedLanguageConfidence,
   detectedLanguageLabel,
@@ -295,20 +304,62 @@ async function loadTestPage({
   BrowserTestUtils.loadURIString(tab.linkedBrowser, page);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-  await ContentTask.spawn(
-    tab.linkedBrowser,
-    {}, // Data to inject.
-    runInPage
-  );
+  return {
+    tab,
 
-  if (languagePairs) {
-    TranslationsParent.mockLanguagePairs(null);
-  }
+    /**
+     * @returns {Promise<void>}
+     */
+    cleanup() {
+      if (languagePairs) {
+        TranslationsParent.mockLanguagePairs(null);
+      }
 
-  if (detectedLanguageLabel && detectedLanguageConfidence) {
-    TranslationsParent.mockLanguageIdentification(null, null);
-  }
+      if (detectedLanguageLabel && detectedLanguageConfidence) {
+        TranslationsParent.mockLanguageIdentification(null, null);
+      }
 
-  BrowserTestUtils.removeTab(tab);
-  await SpecialPowers.popPrefEnv();
+      BrowserTestUtils.removeTab(tab);
+      return SpecialPowers.popPrefEnv();
+    },
+
+    /**
+     * Runs a callback in the content page. The function's contents are serialized as
+     * a string, and run in the page. The `translations-test.mjs` module is made
+     * available to the page.
+     *
+     * @param {(TranslationsTest: import("./translations-test.mjs")) => any} callback
+     * @returns {Promise<void>}
+     */
+    runInPage(callback) {
+      // ContentTask.spawn runs the `Function.prototype.toString` on this function in
+      // order to send it into the content process. The following function is doing its
+      // own string manipulation in order to load in the TranslationsTest module.
+      const fn = new Function(/* js */ `
+        const TranslationsTest = ChromeUtils.importESModule(
+          "chrome://mochitests/content/browser/toolkit/components/translations/tests/browser/translations-test.mjs"
+        );
+
+        // Pass in the values that get injected by the task runner.
+        TranslationsTest.setup({Assert, ContentTaskUtils, content});
+
+        return (${callback.toString()})(TranslationsTest);
+      `);
+
+      return ContentTask.spawn(
+        tab.linkedBrowser,
+        {}, // Data to inject.
+        fn
+      );
+    },
+  };
+}
+
+/**
+ * @param {Object} options - The options for `loadTestPage` plus a `runInPage` function.
+ */
+async function loadTestPageAndRun(options) {
+  const { cleanup, runInPage } = await loadTestPage(options);
+  await runInPage(options.runInPage);
+  await cleanup();
 }
