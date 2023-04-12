@@ -110,6 +110,8 @@ waitUntilApzStable().then(() => {
     var onAbort = function() {
       if (gDiv) {
         done_div();
+      }
+      if (gScroller) {
         done_scroller();
       }
     };
@@ -315,6 +317,75 @@ addAsyncAnimTest(async function() {
 
   gDiv = null;
   iframe.remove();
+});
+
+// FIXME: Bug 1818346. Support OMTA for view-timeline.
+addAsyncAnimTest(async function() {
+  let scroller = document.createElement("div");
+  scroller.style.width = "100px";
+  scroller.style.height = "100px";
+  // Use hidden so we don't have scrollbar, to make sure the scrollport size
+  // is 100px x 100px, so view progress visibility range is 100px on block axis.
+  scroller.style.overflow = "hidden";
+
+  let content1 = document.createElement("div");
+  content1.style.height = "150px";
+  scroller.appendChild(content1);
+
+  let subject = document.createElement("div");
+  subject.style.width = "50px";
+  subject.style.height = "50px";
+  subject.style.viewTimelineName = "view_timeline";
+  scroller.appendChild(subject);
+
+  // Let |target| be the child of |subject|, so view-timeline-name property of
+  // |subject| is referenceable.
+  let target = document.createElement("div");
+  target.style.width = "10px";
+  target.style.height = "10px";
+  subject.appendChild(target);
+  gDiv = target;
+
+  let content2 = document.createElement("div");
+  content2.style.height = "150px";
+  scroller.appendChild(content2);
+
+  // So the DOM tree looks like this:
+  // <div class=scroller>  <!-- "scroller", height: 100px; -->
+  //   <div></div>         <!-- "",         height: 150px -->
+  //   <div></div>         <!-- "subject",  height: 50px; -->
+  //   <div></div>         <!-- "",         height: 150px; -->
+  // </div>
+  // The subject is in view when scroller.scrollTop is [50px, 200px].
+  document.getElementById("display").appendChild(scroller);
+  await waitForPaintsFlushed();
+
+  scroller.scrollTop = 0;
+  target.style.animation = "transform_anim 10s linear";
+  target.style.animationTimeline = "view_timeline";
+  await waitForPaintsFlushed();
+
+  omta_is_approx("transform", { tx: 0 }, 0.1, RunningOn.OnMainThread,
+                 "The scroll animation is out of view");
+
+  scroller.scrollTop = 50;
+  await waitForPaintsFlushed();
+
+  omta_is_approx("transform", { tx: 50 }, 0.1, RunningOn.OnMainThread,
+                 "The scroll animation is 0%");
+
+  scroller.scrollTop = 125;
+  await waitForPaintsFlushed();
+
+  omta_is_approx("transform", { tx: 100 }, 0.1, RunningOn.OnMainThread,
+                 "The scroll animation is 50%");
+
+  target.remove();
+  content2.remove();
+  subject.remove();
+  content1.remove();
+  scroller.remove();
+  gDiv = null;
 });
 
 </script>
