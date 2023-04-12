@@ -14,11 +14,9 @@ ChromeUtils.defineModuleGetter(
   "SiteDataManager",
   "resource:///modules/SiteDataManager.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "DownloadUtils",
-  "resource://gre/modules/DownloadUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  DownloadUtils: "resource://gre/modules/DownloadUtils.sys.mjs",
+});
 
 let gSiteDataSettings = {
   // Array of metadata of sites. Each array element is object holding:

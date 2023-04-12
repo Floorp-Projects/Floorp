@@ -3,10 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["DownloadUtils"];
-
 /**
  * This module provides the DownloadUtils object which contains useful methods
  * for downloads such as displaying file sizes, transfer times, and download
@@ -78,7 +74,7 @@ const l10n = new Localization(["toolkit/downloads/downloadUtils.ftl"], true);
 const kCachedLastMaxSize = 10;
 var gCachedLast = [];
 
-var DownloadUtils = {
+export var DownloadUtils = {
   /**
    * Generate a full status string for a download given its current progress,
    * total size, speed, last time remaining

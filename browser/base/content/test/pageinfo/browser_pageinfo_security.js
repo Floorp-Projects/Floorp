@@ -1,11 +1,7 @@
 ChromeUtils.defineESModuleGetters(this, {
+  DownloadUtils: "resource://gre/modules/DownloadUtils.sys.mjs",
   SiteDataTestUtils: "resource://testing-common/SiteDataTestUtils.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  this,
-  "DownloadUtils",
-  "resource://gre/modules/DownloadUtils.jsm"
-);
 
 const TEST_ORIGIN = "https://example.com";
 // eslint-disable-next-line @microsoft/sdl/no-insecure-url

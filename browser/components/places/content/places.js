@@ -16,6 +16,7 @@ ChromeUtils.defineESModuleGetters(this, {
   MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
   PlacesBackups: "resource://gre/modules/PlacesBackups.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  DownloadUtils: "resource://gre/modules/DownloadUtils.sys.mjs",
 });
 XPCOMUtils.defineLazyScriptGetter(
   this,
@@ -31,12 +32,6 @@ XPCOMUtils.defineLazyScriptGetter(
 
 var { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "DownloadUtils",
-  "resource://gre/modules/DownloadUtils.jsm"
 );
 
 const RESTORE_FILEPICKER_FILTER_EXT = "*.json;*.jsonlz4";

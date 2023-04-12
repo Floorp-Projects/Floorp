@@ -32,6 +32,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   DownloadHistory: "resource://gre/modules/DownloadHistory.sys.mjs",
+  DownloadUtils: "resource://gre/modules/DownloadUtils.sys.mjs",
   Downloads: "resource://gre/modules/Downloads.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
@@ -40,7 +41,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  DownloadUtils: "resource://gre/modules/DownloadUtils.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
