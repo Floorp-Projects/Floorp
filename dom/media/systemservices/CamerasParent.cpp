@@ -114,24 +114,17 @@ StaticMutex CamerasParent::sMutex;
 //   called "VideoCapture". On Windows this is a thread with an event loop
 //   suitable for UI access.
 
-// InputObserver is owned by CamerasParent, and it has a ref to CamerasParent
-void InputObserver::OnDeviceChange() {
+void CamerasParent::OnDeviceChange() {
   LOG_FUNCTION();
-  MOZ_ASSERT(mParent);
 
-  RefPtr<InputObserver> self(this);
-  RefPtr<nsIRunnable> ipc_runnable = NewRunnableFrom([self]() {
-    if (self->mParent->IsShuttingDown()) {
-      LOG("OnDeviceChanged failure: parent shutting down.");
-      return NS_ERROR_FAILURE;
-    }
-    Unused << self->mParent->SendDeviceChange();
-    return NS_OK;
-  });
-
-  nsIEventTarget* target = mParent->GetBackgroundEventTarget();
-  MOZ_ASSERT(target != nullptr);
-  target->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
+  mPBackgroundEventTarget->Dispatch(
+      NS_NewRunnableFunction(__func__, [this, self = RefPtr(this)]() {
+        if (IsShuttingDown()) {
+          LOG("OnDeviceChanged failure: parent shutting down.");
+          return;
+        }
+        Unused << SendDeviceChange();
+      }));
 };
 
 class DeliverFrameRunnable : public mozilla::Runnable {
@@ -384,12 +377,11 @@ bool CamerasParent::SetupEngine(CaptureEngine aCapEngine) {
     }
   }
 
-  if (aCapEngine == CameraEngine && !mCameraObserver) {
-    mCameraObserver = new InputObserver(this);
+  if (aCapEngine == CameraEngine) {
     auto device_info = engine->GetOrCreateVideoCaptureDeviceInfo();
     MOZ_ASSERT(device_info);
     if (device_info) {
-      device_info->RegisterVideoInputFeedBack(mCameraObserver);
+      device_info->RegisterVideoInputFeedBack(this);
     }
   }
 
@@ -414,13 +406,12 @@ void CamerasParent::CloseEngines() {
   }
 
   StaticRefPtr<VideoEngine>& engine = sEngines[CameraEngine];
-  if (engine && mCameraObserver) {
+  if (engine) {
     auto device_info = engine->GetOrCreateVideoCaptureDeviceInfo();
     MOZ_ASSERT(device_info);
     if (device_info) {
-      device_info->DeRegisterVideoInputFeedBack(mCameraObserver);
+      device_info->DeRegisterVideoInputFeedBack(this);
     }
-    mCameraObserver = nullptr;
   }
 
   // CloseEngines() is protected by sThreadMonitor
