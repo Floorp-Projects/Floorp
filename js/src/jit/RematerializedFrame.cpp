@@ -51,9 +51,9 @@ RematerializedFrame::RematerializedFrame(JSContext* cx, uint8_t* top,
   }
 
   CopyValueToRematerializedFrame op(slots_);
-  iter.readFrameArgsAndLocals(cx, op, op, &envChain_, &hasInitialEnv_,
-                              &returnValue_, &argsObj_, &thisArgument_,
-                              ReadFrame_Actuals, fallback);
+  iter.readFrameArgsAndLocals(
+      cx, op, op, &envChain_, &hasInitialEnv_, &returnValue_, &argsObj_,
+      &thisArgument_, ReadFrameArgsBehavior::ActualsAndFormals, fallback);
 }
 
 /* static */
