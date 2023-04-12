@@ -40,7 +40,7 @@ use crate::segment::EdgeAaSegmentMask;
 const OPAQUE_TASK_ADDRESS: RenderTaskAddress = RenderTaskAddress(0x7fff);
 
 /// Used to signal there are no segments provided with this primitive.
-const INVALID_SEGMENT_INDEX: i32 = 0xffff;
+pub const INVALID_SEGMENT_INDEX: i32 = 0xffff;
 
 /// Size in device pixels for tiles that clip masks are drawn in.
 const CLIP_RECTANGLE_TILE_SIZE: i32 = 128;
@@ -820,8 +820,11 @@ impl BatchBuilder {
         gpu_buffer_address: GpuBufferAddress,
         quad_flags: QuadFlags,
         edge_flags: EdgeAaSegmentMask,
+        segment_index: u8,
+        task_id: RenderTaskId,
         z_generator: &mut ZBufferIdGenerator,
         prim_instances: &[PrimitiveInstance],
+        render_tasks: &RenderTaskGraph,
     ) {
         let prim_instance = &prim_instances[prim_instance_index.0 as usize];
         let prim_info = &prim_instance.vis;
@@ -834,7 +837,10 @@ impl BatchBuilder {
             gpu_buffer_address,
             quad_flags,
             edge_flags,
+            segment_index,
+            task_id,
             z_id,
+            render_tasks,
             |key, instance| {
                 let batch = self.batcher.set_params_and_get_batch(
                     key,
@@ -866,6 +872,7 @@ impl BatchBuilder {
         z_generator: &mut ZBufferIdGenerator,
         prim_instances: &[PrimitiveInstance],
         _gpu_buffer_builder: &mut GpuBufferBuilder,
+        segments: &[RenderTaskId],
     ) {
         let (prim_instance_index, extra_prim_gpu_address) = match cmd {
             PrimitiveCommand::Simple { prim_instance_index } => {
@@ -878,16 +885,38 @@ impl BatchBuilder {
                 (prim_instance_index, Some(gpu_buffer_address.as_int()))
             }
             PrimitiveCommand::Quad { prim_instance_index, gpu_buffer_address, quad_flags, edge_flags, transform_id } => {
+                if segments.is_empty() {
+                    self.add_quad_to_batch(
+                        *prim_instance_index,
+                        *transform_id,
+                        *gpu_buffer_address,
+                        *quad_flags,
+                        *edge_flags,
+                        INVALID_SEGMENT_INDEX as u8,
+                        RenderTaskId::INVALID,
+                        z_generator,
+                        prim_instances,
+                        render_tasks,
+                    );
+                } else {
+                    for (i, task_id) in segments.iter().enumerate() {
+                        // TODO(gw): edge_flags should be per-segment, when used for more than composites
+                        debug_assert!(edge_flags.is_empty());
 
-                self.add_quad_to_batch(
-                    *prim_instance_index,
-                    *transform_id,
-                    *gpu_buffer_address,
-                    *quad_flags,
-                    *edge_flags,
-                    z_generator,
-                    prim_instances,
-                );
+                        self.add_quad_to_batch(
+                            *prim_instance_index,
+                            *transform_id,
+                            *gpu_buffer_address,
+                            *quad_flags,
+                            *edge_flags,
+                            i as u8,
+                            *task_id,
+                            z_generator,
+                            prim_instances,
+                            render_tasks,
+                        );
+                    }
+                }
 
                 return;
             }
@@ -3841,7 +3870,10 @@ pub fn add_quad_to_batch<F>(
     gpu_buffer_address: GpuBufferAddress,
     quad_flags: QuadFlags,
     edge_flags: EdgeAaSegmentMask,
+    segment_index: u8,
+    task_id: RenderTaskId,
     z_id: ZBufferId,
+    render_tasks: &RenderTaskGraph,
     mut f: F,
 ) where F: FnMut(BatchKey, PrimitiveInstanceData) {
 
@@ -3854,9 +3886,25 @@ pub fn add_quad_to_batch<F>(
         Bottom = 4,
     }
 
-    let textures = BatchTextures::empty();
+    let texture = match task_id {
+        RenderTaskId::INVALID => {
+            TextureSource::Invalid
+        }
+        _ => {
+            let texture = render_tasks
+                .resolve_texture(task_id)
+                .expect("bug: valid task id must be resolvable");
 
-    let default_blend_mode = if quad_flags.contains(QuadFlags::IS_OPAQUE) {
+            texture
+        }
+    };
+
+    let textures = BatchTextures::prim_textured(
+        texture,
+        TextureSource::Invalid,
+    );
+
+    let default_blend_mode = if quad_flags.contains(QuadFlags::IS_OPAQUE) && task_id == RenderTaskId::INVALID {
         BlendMode::None
     } else {
         BlendMode::PremultipliedAlpha
@@ -3884,6 +3932,7 @@ pub fn add_quad_to_batch<F>(
         edge_flags: edge_flags_bits,
         quad_flags: quad_flags.bits(),
         part_index: PartIndex::Center as u8,
+        segment_index,
     };
 
     if edge_flags.contains(EdgeAaSegmentMask::LEFT) {

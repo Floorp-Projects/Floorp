@@ -82,7 +82,7 @@ random-if(winWidget) fuzzy(0-255,0-610) == corner-joins-2.xhtml corner-joins-2-r
 
 fuzzy(0-59,0-146) == scroll-1.html scroll-1-ref.html # see bug 732535 #Bug 959166
 
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-35,0-194) == transforms-1.html transforms-1-ref.html # bug 1507152
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-35,0-194) fuzzy-if(swgl,0-1,0-2) == transforms-1.html transforms-1-ref.html # bug 1507152
 
 == zero-radius-clip-1.html zero-radius-clip-ref.html
 
