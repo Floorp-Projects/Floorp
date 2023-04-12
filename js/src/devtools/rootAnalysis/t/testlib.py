@@ -54,8 +54,6 @@ class Test(object):
     def compile(self, source, options=""):
         env = os.environ
         env["CCACHE_DISABLE"] = "1"
-        if "-fexceptions" not in options and "-fno-exceptions" not in options:
-            options += " -fno-exceptions"
         cmd = "{CXX} -c {source} -O3 -std=c++17 -fplugin={sixgill} -fplugin-arg-xgill-mangle=1 {options}".format(  # NOQA: E501
             source=self.infile(source),
             CXX=self.cfg.cxx,

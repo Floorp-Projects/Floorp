@@ -6,27 +6,23 @@ source directory.
 
 To run the analysis on SpiderMonkey:
 
-1. Unset your $MOZCONFIG
-
-        unset MOZCONFIG
-
-2. Install prerequisites.
+1. Install prerequisites.
 
         mach hazards bootstrap
 
-3. Build the shell to run the analysis.
+2. Build the shell to run the analysis.
 
         mach hazards build-shell
 
-4. Compile all the code to gather info.
+3. Compile all the code to gather info.
 
         mach hazards gather --project=js
 
-5. Analyze the gathered info.
+4. Analyze the gathered info.
 
         mach hazards analyze --project=js
 
-Output goes to `$srctop/haz-js/hazards.txt`. This will run the analysis on the js/src
+Output goes to `haz-js/hazards.txt`. This will run the analysis on the js/src
 tree only; if you wish to analyze the full browser, use
 
         --project=browser
@@ -35,11 +31,11 @@ tree only; if you wish to analyze the full browser, use
 
 After running the analysis once, you can reuse the `*.xdb` database files
 generated, using modified analysis scripts, by running either the `mach hazards
-analyze` command above, or by adding on `mach hazards analyze <step>` to
-run a subset of the analysis steps; `mach hazards analyze -- --list` to see
-step names.
+analyze` command above, or with `haz-js/run-analysis.sh` (pass `--list` to see
+ways to select even more restrictive parts of the overall analysis; the default
+is `gcTypes` which will do everything but regenerate the xdb files).
 
-Also, you can pass `-- -v` to get exact command lines to cut & paste for running
+Also, you can pass `-v` to get exact command lines to cut & paste for running
 the various stages, which is helpful for running under a debugger.
 
 ## Overview of what is going on here
