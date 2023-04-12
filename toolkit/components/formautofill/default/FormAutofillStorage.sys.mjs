@@ -8,28 +8,20 @@
 
 // We expose a singleton from this module. Some tests may import the
 // constructor via a backstage pass.
-const { FormAutofill } = ChromeUtils.import(
-  "resource://autofill/FormAutofill.jsm"
-);
-
-const {
-  FormAutofillStorageBase,
-  CreditCardsBase,
+import {
   AddressesBase,
-} = ChromeUtils.import("resource://autofill/FormAutofillStorageBase.jsm");
-
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+  CreditCardsBase,
+  FormAutofillStorageBase,
+} from "resource://autofill/FormAutofillStorageBase.sys.mjs";
+import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
+  FormAutofillUtils: "resource://autofill/FormAutofillUtils.sys.mjs",
   JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
 });
 
 const PROFILE_JSON_FILE_NAME = "autofill-profiles.json";

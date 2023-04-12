@@ -7,22 +7,16 @@
  */
 
 export let FormAutofillHeuristics;
+import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
-const { FormAutofill } = ChromeUtils.import(
-  "resource://autofill/FormAutofill.jsm"
-);
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  creditCardRulesets: "resource://autofill/CreditCardRuleset.jsm",
-  FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
-  LabelUtils: "resource://autofill/FormAutofillUtils.jsm",
+  FormAutofillUtils: "resource://autofill/FormAutofillUtils.sys.mjs",
+  LabelUtils: "resource://autofill/FormAutofillUtils.sys.mjs",
+  creditCardRulesets: "resource://autofill/CreditCardRuleset.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () =>

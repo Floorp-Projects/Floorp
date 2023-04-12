@@ -2,17 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { FormAutofill } = ChromeUtils.import(
-  "resource://autofill/FormAutofill.jsm"
-);
-
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  FormAutofillUtils: "resource://autofill/FormAutofillUtils.jsm",
-  PhoneNumber: "resource://autofill/phonenumberutils/PhoneNumber.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  FormAutofillUtils: "resource://autofill/FormAutofillUtils.sys.mjs",
+  PhoneNumber: "resource://autofill/phonenumberutils/PhoneNumber.sys.mjs",
 });
 
 class AddressField {
