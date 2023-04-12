@@ -37,9 +37,6 @@ class nsStyleUtil {
                                const nsAString& aSelectorValue,
                                const nsStringComparator& aComparator);
 
-  static bool LangTagCompare(const nsACString& aAttributeValue,
-                             const nsACString& aSelectorValue);
-
   static bool ValueIncludes(const nsAString& aValueList,
                             const nsAString& aValue,
                             const nsStringComparator& aComparator);
