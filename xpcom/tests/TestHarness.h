@@ -26,7 +26,6 @@
 #include "nsIDirectoryService.h"
 #include "nsIFile.h"
 #include "nsIObserverService.h"
-#include "nsIServiceManager.h"
 #include "nsXULAppAPI.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -78,15 +77,14 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2 {
 
   explicit ScopedXPCOM(const char* testName,
                        nsIDirectoryServiceProvider* dirSvcProvider = nullptr)
-      : mServMgr(nullptr), mDirSvcProvider(dirSvcProvider) {
+      : mDirSvcProvider(dirSvcProvider) {
     mTestName = testName;
     printf("Running %s tests...\n", mTestName);
 
-    nsresult rv = NS_InitXPCOM(&mServMgr, nullptr, this);
-    if (NS_FAILED(rv)) {
+    mInitRv = NS_InitXPCOM(nullptr, nullptr, this);
+    if (NS_FAILED(mInitRv)) {
       fail("NS_InitXPCOM returned failure code 0x%" PRIx32,
-           static_cast<uint32_t>(rv));
-      mServMgr = nullptr;
+           static_cast<uint32_t>(mInitRv));
       return;
     }
   }
@@ -112,8 +110,7 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2 {
       mProfD = nullptr;
     }
 
-    if (mServMgr) {
-      NS_RELEASE(mServMgr);
+    if (NS_SUCCEEDED(mInitRv)) {
       nsresult rv = NS_ShutdownXPCOM(nullptr);
       if (NS_FAILED(rv)) {
         fail("XPCOM shutdown failed with code 0x%" PRIx32,
@@ -125,7 +122,7 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2 {
     printf("Finished running %s tests.\n", mTestName);
   }
 
-  bool failed() { return mServMgr == nullptr; }
+  bool failed() { return NS_FAILED(mInitRv); }
 
   already_AddRefed<nsIFile> GetProfileDirectory() {
     if (mProfD) {
@@ -252,7 +249,7 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2 {
 
  private:
   const char* mTestName;
-  nsIServiceManager* mServMgr;
+  nsresult mInitRv = NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIDirectoryServiceProvider> mDirSvcProvider;
   nsCOMPtr<nsIFile> mProfD;
   nsCOMPtr<nsIFile> mGRED;
