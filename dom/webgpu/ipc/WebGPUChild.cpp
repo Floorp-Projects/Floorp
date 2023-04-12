@@ -14,6 +14,7 @@
 #include "mozilla/webgpu/ffi/wgpu.h"
 #include "Adapter.h"
 #include "DeviceLostInfo.h"
+#include "PipelineLayout.h"
 #include "Sampler.h"
 #include "CompilationInfo.h"
 #include "mozilla/ipc/RawShmem.h"
@@ -743,8 +744,12 @@ RawId WebGPUChild::DeviceCreateComputePipelineImpl(
     CopyUTF16toUTF8(aDesc.mLabel.Value(), label);
     desc.label = label.get();
   }
-  if (aDesc.mLayout.WasPassed()) {
-    desc.layout = aDesc.mLayout.Value().mId;
+  if (aDesc.mLayout.IsGPUAutoLayoutMode()) {
+    desc.layout = 0;
+  } else if (aDesc.mLayout.IsGPUPipelineLayout()) {
+    desc.layout = aDesc.mLayout.GetAsGPUPipelineLayout()->mId;
+  } else {
+    MOZ_ASSERT_UNREACHABLE();
   }
   desc.stage.module = aDesc.mCompute.mModule->mId;
   CopyUTF16toUTF8(aDesc.mCompute.mEntryPoint, entryPoint);
@@ -855,8 +860,12 @@ RawId WebGPUChild::DeviceCreateRenderPipelineImpl(
   webgpu::StringHelper label(aDesc.mLabel);
   desc.label = label.Get();
 
-  if (aDesc.mLayout.WasPassed()) {
-    desc.layout = aDesc.mLayout.Value().mId;
+  if (aDesc.mLayout.IsGPUAutoLayoutMode()) {
+    desc.layout = 0;
+  } else if (aDesc.mLayout.IsGPUPipelineLayout()) {
+    desc.layout = aDesc.mLayout.GetAsGPUPipelineLayout()->mId;
+  } else {
+    MOZ_ASSERT_UNREACHABLE();
   }
 
   {

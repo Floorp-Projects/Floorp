@@ -17,6 +17,7 @@
 #include "Buffer.h"
 #include "ComputePipeline.h"
 #include "DeviceLostInfo.h"
+#include "PipelineLayout.h"
 #include "Queue.h"
 #include "RenderBundleEncoder.h"
 #include "RenderPipeline.h"
