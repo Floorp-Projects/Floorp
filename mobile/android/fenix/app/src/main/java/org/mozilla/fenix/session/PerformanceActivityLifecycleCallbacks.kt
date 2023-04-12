@@ -31,7 +31,7 @@ class PerformanceActivityLifecycleCallbacks(
      */
     private fun isTransientActivity(activity: Activity): Boolean {
         // These are the current list of non terminal activites.
-        // They have been whitelisted in case new activities are added to the application
+        // They have been allow-listed in case new activities are added to the application
         // to ensure these new activities would not crash the application.
         return isTransientActivityInMigrationVariant(activity) ||
             (activity is IntentReceiverActivity) ||

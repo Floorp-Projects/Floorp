@@ -5,13 +5,13 @@ Focus is using the same technology as Firefox for desktop, all the content block
 
 We use the disconnect tracking protection lists, these consist of:
 
-- The blacklist: a list of domains to block
+- The deny-list: a list of domains to block
 - The entitylist: an override list to unblock certain domains for certain other domains.
-- The google_mapping: a list of modifications for the blacklist.
+- The google_mapping: a list of modifications for the deny-list.
 
-### The blacklist
+### The deny-list
 
-The blacklist contains list of domains that should be blocked. Any resources that are hosted
+The deny-list contains list of domains that should be blocked. Any resources that are hosted
 on these domains should be blocked.
 
 The source lists contain multiple categories, we use **Advertising**, **Social**, **Analytics**, **Content** (aka. "other content trackers").
