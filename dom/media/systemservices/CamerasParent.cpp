@@ -43,6 +43,9 @@
 mozilla::LazyLogModule gCamerasParentLog("CamerasParent");
 #define LOG(...) \
   MOZ_LOG(gCamerasParentLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
+#define LOG_FUNCTION()                                 \
+  MOZ_LOG(gCamerasParentLog, mozilla::LogLevel::Debug, \
+          ("CamerasParent(%p)::%s", this, __func__))
 #define LOG_VERBOSE(...) \
   MOZ_LOG(gCamerasParentLog, mozilla::LogLevel::Verbose, (__VA_ARGS__))
 #define LOG_ENABLED() MOZ_LOG_TEST(gCamerasParentLog, mozilla::LogLevel::Debug)
@@ -113,7 +116,7 @@ StaticMutex CamerasParent::sMutex;
 
 // InputObserver is owned by CamerasParent, and it has a ref to CamerasParent
 void InputObserver::OnDeviceChange() {
-  LOG("%s", __PRETTY_FUNCTION__);
+  LOG_FUNCTION();
   MOZ_ASSERT(mParent);
 
   RefPtr<InputObserver> self(this);
@@ -219,7 +222,7 @@ nsresult CamerasParent::DispatchToVideoCaptureThread(RefPtr<Runnable> event) {
 }
 
 void CamerasParent::StopVideoCapture() {
-  LOG("%s", __PRETTY_FUNCTION__);
+  LOG_FUNCTION();
   // Called when the actor is destroyed.
   ipc::AssertIsOnBackgroundThread();
   // Shut down the WebRTC stack (on the capture thread)
@@ -300,7 +303,7 @@ ShmemBuffer CamerasParent::GetBuffer(size_t aSize) {
 }
 
 void CallbackHelper::OnFrame(const webrtc::VideoFrame& aVideoFrame) {
-  LOG_VERBOSE("%s", __PRETTY_FUNCTION__);
+  LOG_VERBOSE("CamerasParent(%p)::%s", mParent, __func__);
   if (profiler_thread_is_being_profiled_for_markers()) {
     PROFILER_MARKER_UNTYPED(
         nsPrintfCString("CaptureVideoFrame %dx%d %s %s", aVideoFrame.width(),
@@ -350,7 +353,7 @@ mozilla::ipc::IPCResult CamerasParent::RecvReleaseFrame(
 }
 
 bool CamerasParent::SetupEngine(CaptureEngine aCapEngine) {
-  LOG("%s", __PRETTY_FUNCTION__);
+  LOG_FUNCTION();
   StaticRefPtr<VideoEngine>& engine = sEngines[aCapEngine];
 
   if (!engine) {
@@ -395,7 +398,7 @@ bool CamerasParent::SetupEngine(CaptureEngine aCapEngine) {
 
 void CamerasParent::CloseEngines() {
   sThreadMonitor->AssertCurrentThreadOwns();
-  LOG("%s", __PRETTY_FUNCTION__);
+  LOG_FUNCTION();
   if (!mWebRTCAlive) {
     return;
   }
@@ -435,7 +438,7 @@ void CamerasParent::CloseEngines() {
 }
 
 VideoEngine* CamerasParent::EnsureInitialized(int aEngine) {
-  LOG_VERBOSE("%s", __PRETTY_FUNCTION__);
+  LOG_FUNCTION();
   // We're shutting down, don't try to do new WebRTC ops.
   if (!mWebRTCAlive) {
     return nullptr;
@@ -456,7 +459,7 @@ VideoEngine* CamerasParent::EnsureInitialized(int aEngine) {
 // perhaps via Promises.
 mozilla::ipc::IPCResult CamerasParent::RecvNumberOfCaptureDevices(
     const CaptureEngine& aCapEngine) {
-  LOG("%s", __PRETTY_FUNCTION__);
+  LOG_FUNCTION();
   LOG("CaptureEngine=%d", aCapEngine);
   RefPtr<CamerasParent> self(this);
   RefPtr<Runnable> webrtc_runnable = NewRunnableFrom([self, aCapEngine]() {
@@ -491,7 +494,7 @@ mozilla::ipc::IPCResult CamerasParent::RecvNumberOfCaptureDevices(
 
 mozilla::ipc::IPCResult CamerasParent::RecvEnsureInitialized(
     const CaptureEngine& aCapEngine) {
-  LOG("%s", __PRETTY_FUNCTION__);
+  LOG_FUNCTION();
 
   RefPtr<CamerasParent> self(this);
   RefPtr<Runnable> webrtc_runnable = NewRunnableFrom([self, aCapEngine]() {
@@ -522,7 +525,7 @@ mozilla::ipc::IPCResult CamerasParent::RecvEnsureInitialized(
 
 mozilla::ipc::IPCResult CamerasParent::RecvNumberOfCapabilities(
     const CaptureEngine& aCapEngine, const nsACString& unique_id) {
-  LOG("%s", __PRETTY_FUNCTION__);
+  LOG_FUNCTION();
   LOG("Getting caps for %s", PromiseFlatCString(unique_id).get());
 
   RefPtr<CamerasParent> self(this);
@@ -561,7 +564,7 @@ mozilla::ipc::IPCResult CamerasParent::RecvNumberOfCapabilities(
 mozilla::ipc::IPCResult CamerasParent::RecvGetCaptureCapability(
     const CaptureEngine& aCapEngine, const nsACString& unique_id,
     const int& num) {
-  LOG("%s", __PRETTY_FUNCTION__);
+  LOG_FUNCTION();
   LOG("RecvGetCaptureCapability: %s %d", PromiseFlatCString(unique_id).get(),
       num);
 
@@ -618,7 +621,7 @@ mozilla::ipc::IPCResult CamerasParent::RecvGetCaptureCapability(
 
 mozilla::ipc::IPCResult CamerasParent::RecvGetCaptureDevice(
     const CaptureEngine& aCapEngine, const int& aDeviceIndex) {
-  LOG("%s", __PRETTY_FUNCTION__);
+  LOG_FUNCTION();
 
   RefPtr<CamerasParent> self(this);
   RefPtr<Runnable> webrtc_runnable = NewRunnableFrom([self, aCapEngine,
@@ -730,7 +733,7 @@ static bool HasCameraPermission(const uint64_t& aWindowId) {
 mozilla::ipc::IPCResult CamerasParent::RecvAllocateCapture(
     const CaptureEngine& aCapEngine, const nsACString& unique_id,
     const uint64_t& aWindowID) {
-  LOG("%s: Verifying permissions", __PRETTY_FUNCTION__);
+  LOG_FUNCTION();
   RefPtr<CamerasParent> self(this);
   RefPtr<Runnable> mainthread_runnable = NewRunnableFrom(
       [self, aCapEngine, unique_id = nsCString(unique_id), aWindowID]() {
@@ -803,7 +806,7 @@ int CamerasParent::ReleaseCapture(const CaptureEngine& aCapEngine,
 
 mozilla::ipc::IPCResult CamerasParent::RecvReleaseCapture(
     const CaptureEngine& aCapEngine, const int& aCaptureId) {
-  LOG("%s", __PRETTY_FUNCTION__);
+  LOG_FUNCTION();
   LOG("RecvReleaseCamera device nr %d", aCaptureId);
 
   RefPtr<CamerasParent> self(this);
@@ -837,12 +840,12 @@ mozilla::ipc::IPCResult CamerasParent::RecvReleaseCapture(
 mozilla::ipc::IPCResult CamerasParent::RecvStartCapture(
     const CaptureEngine& aCapEngine, const int& aCaptureId,
     const VideoCaptureCapability& ipcCaps) {
-  LOG("%s", __PRETTY_FUNCTION__);
+  LOG_FUNCTION();
 
   RefPtr<CamerasParent> self(this);
   RefPtr<Runnable> webrtc_runnable = NewRunnableFrom([self, aCapEngine,
                                                       aCaptureId, ipcCaps]() {
-    LOG("%s", __PRETTY_FUNCTION__);
+    LOG("CamerasParent(%p)::%s", self.get(), __func__);
     CallbackHelper** cbh;
     int error = -1;
     if (self->EnsureInitialized(aCapEngine)) {
@@ -972,7 +975,7 @@ mozilla::ipc::IPCResult CamerasParent::RecvStartCapture(
 
 mozilla::ipc::IPCResult CamerasParent::RecvFocusOnSelectedSource(
     const CaptureEngine& aCapEngine, const int& aCaptureId) {
-  LOG("%s", __PRETTY_FUNCTION__);
+  LOG_FUNCTION();
   RefPtr<Runnable> webrtc_runnable = NewRunnableFrom(
       [self = RefPtr<CamerasParent>(this), aCapEngine, aCaptureId]() {
         if (auto engine = self->EnsureInitialized(aCapEngine)) {
@@ -1037,7 +1040,7 @@ void CamerasParent::StopCapture(const CaptureEngine& aCapEngine,
 
 mozilla::ipc::IPCResult CamerasParent::RecvStopCapture(
     const CaptureEngine& aCapEngine, const int& aCaptureId) {
-  LOG("%s", __PRETTY_FUNCTION__);
+  LOG_FUNCTION();
 
   RefPtr<CamerasParent> self(this);
   RefPtr<Runnable> webrtc_runnable =
@@ -1076,7 +1079,7 @@ void CamerasParent::StopIPC() {
 
 void CamerasParent::ActorDestroy(ActorDestroyReason aWhy) {
   // No more IPC from here
-  LOG("%s", __PRETTY_FUNCTION__);
+  LOG_FUNCTION();
   StopIPC();
   // Shut down WebRTC (if we're not in full shutdown, else this
   // will already have happened)
@@ -1167,7 +1170,7 @@ ipc::IPCResult CamerasParent::RecvPCamerasConstructor() {
 }
 
 CamerasParent::~CamerasParent() {
-  LOG("~CamerasParent: %p", this);
+  LOG_FUNCTION();
   StaticMutexAutoLock slock(sMutex);
   if (--sNumOfCamerasParents == 0) {
     delete sThreadMonitor;
