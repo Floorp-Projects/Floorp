@@ -63,8 +63,7 @@ if CONFIG["OS_TARGET"] == "Android":
     ]
 
     UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/modules/utility/source/helpers_android.cc",
-        "/third_party/libwebrtc/modules/utility/source/jvm_android.cc"
+        "/third_party/libwebrtc/modules/utility/source/helpers_android.cc"
     ]
 
 if CONFIG["OS_TARGET"] == "Darwin":
