@@ -68,9 +68,7 @@ static void SetupCapitalization(const char16_t* aWord, uint32_t aLength,
       case GeneralCategory::Line_Separator:
       case GeneralCategory::Paragraph_Separator:
       case GeneralCategory::Dash_Punctuation:
-      case GeneralCategory::Other_Punctuation:
       case GeneralCategory::Initial_Punctuation:
-      case GeneralCategory::Final_Punctuation:
         /* These punctuation categories are excluded, for examples like
          *   "what colo[u]r" -> "What Colo[u]r?" (rather than "What Colo[U]R?")
          * and
@@ -80,6 +78,19 @@ static void SetupCapitalization(const char16_t* aWord, uint32_t aLength,
         case GeneralCategory::Connector_Punctuation:
          */
         capitalizeNextChar = true;
+        break;
+      case GeneralCategory::Final_Punctuation:
+        /* Special-case: exclude Unicode single-close-quote/apostrophe,
+           for examples like "Lowe’s" etc. */
+        if (ch != 0x2019) {
+          capitalizeNextChar = true;
+        }
+        break;
+      case GeneralCategory::Other_Punctuation:
+        /* Special-case: exclude ASCII apostrophe, for "Lowe's" etc. */
+        if (ch != '\'') {
+          capitalizeNextChar = true;
+        }
         break;
       default:
         break;
