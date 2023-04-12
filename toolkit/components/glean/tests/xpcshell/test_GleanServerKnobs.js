@@ -21,7 +21,7 @@ add_task(function test_fog_metrics_disabled_remotely() {
 
   // Create and set a feature configuration that disables the test metric.
   const feature_config = {
-    "test_only.cheesy_string": true,
+    "test_only.cheesy_string": false,
   };
   Services.fog.setMetricsFeatureConfig(JSON.stringify(feature_config));
 
@@ -49,8 +49,8 @@ add_task(function test_fog_multiple_metrics_disabled_remotely() {
   // Create and set a feature configuration that disables multiple test
   // metrics.
   var feature_config = {
-    "test_only.cheesy_string": true,
-    "test_only.meaning_of_life": true,
+    "test_only.cheesy_string": false,
+    "test_only.meaning_of_life": false,
   };
   Services.fog.setMetricsFeatureConfig(JSON.stringify(feature_config));
 
@@ -65,8 +65,8 @@ add_task(function test_fog_multiple_metrics_disabled_remotely() {
 
   // Change the feature configuration to re-enable the `cheesy_string` metric.
   feature_config = {
-    "test_only.cheesy_string": false,
-    "test_only.meaning_of_life": true,
+    "test_only.cheesy_string": true,
+    "test_only.meaning_of_life": false,
   };
   Services.fog.setMetricsFeatureConfig(JSON.stringify(feature_config));
 
@@ -102,7 +102,7 @@ add_task(function test_fog_metrics_feature_config_api_handles_null_values() {
 
   // Create and set a feature configuration that disables the test metric.
   const feature_config = {
-    "test_only.cheesy_string": true,
+    "test_only.cheesy_string": false,
   };
   Services.fog.setMetricsFeatureConfig(JSON.stringify(feature_config));
 
@@ -150,7 +150,7 @@ add_task(function test_fog_metrics_disabled_reset_fog_behavior() {
 
   // Create and set a feature configuration that disables the test metric.
   const feature_config = {
-    "test_only.cheesy_string": true,
+    "test_only.cheesy_string": false,
   };
   Services.fog.setMetricsFeatureConfig(JSON.stringify(feature_config));
 
