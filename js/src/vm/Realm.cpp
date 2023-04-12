@@ -587,18 +587,12 @@ mozilla::HashCodeScrambler Realm::randomHashCodeScrambler() {
                                     randomKeyGenerator_.next());
 }
 
-AutoSetNewObjectMetadata::AutoSetNewObjectMetadata(JSContext* cx)
-    : cx_(cx), prevState_(cx, cx->realm()->objectMetadataState_) {
-  MOZ_ASSERT(cx_->isMainThreadContext());
-  cx_->realm()->objectMetadataState_ = NewObjectMetadataState(DelayMetadata());
-}
-
-AutoSetNewObjectMetadata::~AutoSetNewObjectMetadata() {
+void AutoSetNewObjectMetadata::setPendingMetadata() {
   if (!cx_->isExceptionPending() && cx_->realm()->hasObjectPendingMetadata()) {
-    // This destructor often runs upon exit from a function that is
-    // returning an unrooted pointer to a Cell. The allocation metadata
-    // callback often allocates; if it causes a GC, then the Cell pointer
-    // being returned won't be traced or relocated.
+    // This function is called from a destructor that often runs upon exit from
+    // a function that is returning an unrooted pointer to a Cell. The
+    // allocation metadata callback often allocates; if it causes a GC, then the
+    // Cell pointer being returned won't be traced or relocated.
     //
     // The only extant callbacks are those internal to SpiderMonkey that
     // capture the JS stack. In fact, we're considering removing general
@@ -612,11 +606,13 @@ AutoSetNewObjectMetadata::~AutoSetNewObjectMetadata() {
     // metadata. SetNewObjectMetadata asserts that the state is not
     // PendingMetadata in order to ensure that metadata callbacks are called
     // in order.
-    cx_->realm()->objectMetadataState_ = prevState_;
+    cx_->realm()->objectMetadataState_ =
+        NewObjectMetadataState(ImmediateMetadata());
 
-    obj = SetNewObjectMetadata(cx_, obj);
+    (void)SetNewObjectMetadata(cx_, obj);
   } else {
-    cx_->realm()->objectMetadataState_ = prevState_;
+    cx_->realm()->objectMetadataState_ =
+        NewObjectMetadataState(ImmediateMetadata());
   }
 }
 
