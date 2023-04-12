@@ -55,5 +55,6 @@ fuzzy(0-2,0-40000) skip-if(!asyncPan) == 1464288-1.html 1464288-ref.html
 fuzzy-if(swgl,0-1,0-1) == 1551053-1.html 1551053-1-ref.html
 == 1553828-1.html 1553828-1-ref.html
 fuzzy-if(browserIsFission,0-1,0-300) == 1619370-1.html 1619370-1-ref.html
+== 1677568-1.html 1677568-1-ref.html
 == 1709452-1.html 1709452-ref.html
 == 1719346-1.html 1719346-1-ref.html
