@@ -13,6 +13,8 @@
 #include "nsThreadUtils.h"
 #include "ssl.h"
 
+class NSSSocketControl;
+
 // NSS callback to select a client authentication certificate. See documentation
 // at the top of TLSClientAuthCertSelection.cpp.
 SECStatus SSLGetClientAuthDataHook(void* arg, PRFileDesc* socket,
@@ -50,6 +52,69 @@ class ClientAuthCertificateSelected : public ClientAuthCertificateSelectedBase {
 
  private:
   RefPtr<NSSSocketControl> mSocketInfo;
+};
+
+// This class is used to store the needed information for invoking the client
+// cert selection UI.
+class ClientAuthInfo final {
+ public:
+  explicit ClientAuthInfo(const nsACString& hostName,
+                          const mozilla::OriginAttributes& originAttributes,
+                          int32_t port, uint32_t providerFlags,
+                          uint32_t providerTlsFlags);
+  ~ClientAuthInfo() = default;
+  ClientAuthInfo(ClientAuthInfo&& aOther) noexcept;
+
+  const nsACString& HostName() const;
+  const mozilla::OriginAttributes& OriginAttributesRef() const;
+  int32_t Port() const;
+  uint32_t ProviderFlags() const;
+  uint32_t ProviderTlsFlags() const;
+
+  ClientAuthInfo(const ClientAuthInfo&) = delete;
+  void operator=(const ClientAuthInfo&) = delete;
+
+ private:
+  nsCString mHostName;
+  mozilla::OriginAttributes mOriginAttributes;
+  int32_t mPort;
+  uint32_t mProviderFlags;
+  uint32_t mProviderTlsFlags;
+};
+
+// Helper runnable to select a client authentication certificate. Gets created
+// on the socket thread or an IPC thread, runs on the main thread, and then runs
+// its continuation on the socket thread.
+class SelectClientAuthCertificate : public mozilla::Runnable {
+ public:
+  SelectClientAuthCertificate(
+      ClientAuthInfo&& info, mozilla::UniqueCERTCertificate&& serverCert,
+      nsTArray<nsTArray<uint8_t>>&& caNames,
+      mozilla::UniqueCERTCertList&& potentialClientCertificates,
+      ClientAuthCertificateSelectedBase* continuation)
+      : Runnable("SelectClientAuthCertificate"),
+        mInfo(std::move(info)),
+        mServerCert(std::move(serverCert)),
+        mCANames(std::move(caNames)),
+        mPotentialClientCertificates(std::move(potentialClientCertificates)),
+        mContinuation(continuation) {}
+
+  NS_IMETHOD Run() override;
+
+ private:
+  mozilla::pkix::Result BuildChainForCertificate(
+      nsTArray<uint8_t>& certBytes,
+      nsTArray<nsTArray<uint8_t>>& certChainBytes);
+  void DoSelectClientAuthCertificate();
+
+  ClientAuthInfo mInfo;
+  mozilla::UniqueCERTCertificate mServerCert;
+  nsTArray<nsTArray<uint8_t>> mCANames;
+  mozilla::UniqueCERTCertList mPotentialClientCertificates;
+  RefPtr<ClientAuthCertificateSelectedBase> mContinuation;
+
+  nsTArray<nsTArray<uint8_t>> mEnterpriseCertificates;
+  nsTArray<uint8_t> mSelectedCertBytes;
 };
 
 #endif  // SECURITY_MANAGER_SSL_TLSCLIENTAUTHCERTSELECTION_H_
