@@ -81,8 +81,6 @@ class WebRenderImageHost : public CompositableHost, public ImageComposite {
 
   CompositableTextureHostRef mCurrentTextureHost;
 
-  CompositableTextureHostRef mRemoteTextureHost;
-
   Maybe<RemoteTextureOwnerId> mRemoteTextureOwnerIdOfPushCallback;
   base::ProcessId mForPidOfPushCallback;
   gfx::IntSize mSizeOfPushCallback;
