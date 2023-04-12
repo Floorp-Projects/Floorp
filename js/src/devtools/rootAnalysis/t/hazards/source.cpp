@@ -71,8 +71,6 @@ void GC() {
 
 extern void usecell(Cell*);
 
-extern bool flipcoin();
-
 void suppressedFunction() {
   GC();  // Calls GC, but is always called within AutoSuppressGC
 }
@@ -414,14 +412,10 @@ void safevals() {
     use(safe18);
   }
   {
-    // A use after a GC, but not before. (This does not initialize safe19 by
-    // setting it to a value, because assignment would start its live range, and
-    // this test is to see if a variable with no known live range start requires
-    // a use before the GC or not. It should.)
-    Cell* safe19;
-    GC();
-    extern void initCellPtr(Cell**);
-    initCellPtr(&safe19);
+    Cell* unsafe19 = &cell;
+    void (*f)() = GC;
+    f();
+    use(unsafe19);
   }
 }
 
@@ -531,18 +525,6 @@ Cell* refptr_test9() {
     v9.assign_with_AddRef(&somefloat);
   }
   return ref_safe9;
-}
-
-Cell* refptr_test10() {
-  static Cell cell;
-  RefPtr<float> v10;
-  Cell* ref_unsafe10 = &cell;
-  // The destructor has a backwards path that skips the loop body.
-  v10.assign_with_AddRef(&somefloat);
-  while (flipcoin()) {
-    v10.forget();
-  }
-  return ref_unsafe10;
 }
 
 std::pair<bool, AutoCheckCannotGC> pair_returning_function() {

@@ -503,12 +503,7 @@ function findGCBeforeValueUse(start_body, start_point, funcAttrs, variable)
         };
     };
 
-    const result = BFS_upwards(start_body, start_point, functionBodies, visitor, new Path());
-    if (result && result.gcInfo && result.anyUse) {
-        return result;
-    } else {
-        return bestPathWithAnyUse;
-    }
+    return BFS_upwards(start_body, start_point, functionBodies, visitor, new Path()) || bestPathWithAnyUse;
 }
 
 function variableLiveAcrossGC(funcAttrs, variable, liveToEnd=false)
