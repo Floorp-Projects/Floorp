@@ -9,6 +9,8 @@
 
 #include "mozilla/dom/Document.h"
 #include "mozilla/ExpandedPrincipal.h"
+#include "mozilla/intl/MozLocaleBindings.h"
+#include "mozilla/TextUtils.h"
 #include "nsIContent.h"
 #include "nsCSSProps.h"
 #include "nsContentUtils.h"
@@ -49,6 +51,63 @@ bool nsStyleUtil::DashMatchCompare(const nsAString& aAttributeValue,
     }
   }
   return result;
+}
+
+bool nsStyleUtil::LangTagCompare(const nsACString& aAttributeValue,
+                                 const nsACString& aSelectorValue) {
+  class AutoLangId {
+   public:
+    AutoLangId() = delete;
+    AutoLangId(const AutoLangId& aOther) = delete;
+    explicit AutoLangId(const nsACString& aLangTag) : mIsValid(false) {
+      mLangId = intl::ffi::unic_langid_new(&aLangTag, &mIsValid);
+    }
+
+    ~AutoLangId() { intl::ffi::unic_langid_destroy(mLangId); }
+
+    operator intl::ffi::LanguageIdentifier*() const { return mLangId; }
+    bool IsValid() const { return mIsValid; }
+
+    void Reset(const nsACString& aLangTag) {
+      intl::ffi::unic_langid_destroy(mLangId);
+      mLangId = intl::ffi::unic_langid_new(&aLangTag, &mIsValid);
+    }
+
+   private:
+    intl::ffi::LanguageIdentifier* mLangId;
+    bool mIsValid;
+  };
+
+  if (aAttributeValue.IsEmpty() || aSelectorValue.IsEmpty()) {
+    return false;
+  }
+
+  AutoLangId attrLangId(aAttributeValue);
+  if (!attrLangId.IsValid()) {
+    return false;
+  }
+
+  AutoLangId selectorId(aSelectorValue);
+  if (!selectorId.IsValid()) {
+    // If it was "invalid" because of a wildcard language subtag, replace that
+    // with 'und' and try again.
+    // XXX Should unic_langid_new handle the wildcard internally?
+    if (aSelectorValue[0] == '*') {
+      nsAutoCString temp(aSelectorValue);
+      temp.Replace(0, 1, "und");
+      selectorId.Reset(temp);
+      if (!selectorId.IsValid()) {
+        return false;
+      }
+      intl::ffi::unic_langid_clear_language(selectorId);
+    } else {
+      return false;
+    }
+  }
+
+  return intl::ffi::unic_langid_matches(attrLangId, selectorId,
+                                        /* match addrLangId as range */ false,
+                                        /* match selectorId as range */ true);
 }
 
 bool nsStyleUtil::ValueIncludes(const nsAString& aValueList,
