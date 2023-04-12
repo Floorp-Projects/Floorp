@@ -28,7 +28,7 @@ add_task(async function test_ie_edge_bookmarks_success_strings() {
     let migration = waitForTestMigration(
       [MigrationUtils.resourceTypes.BOOKMARKS],
       [MigrationUtils.resourceTypes.BOOKMARKS],
-      null
+      InternalTestingProfileMigrator.testProfile
     );
 
     await withMigrationWizardDialog(async prefsWin => {
