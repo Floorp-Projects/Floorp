@@ -271,7 +271,11 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             it.start()
         }
 
-        if (settings().shouldShowJunoOnboarding(intent.toSafeIntent().isLauncherIntent)) {
+        if (settings().shouldShowJunoOnboarding(
+                hasUserBeenOnboarded = onboarding.userHasBeenOnboarded(),
+                isLauncherIntent = intent.toSafeIntent().isLauncherIntent,
+            )
+        ) {
             // Unless activity is recreated due to config change, navigate to onboarding
             if (savedInstanceState == null) {
                 navHost.navController.navigate(NavGraphDirections.actionGlobalHomeJunoOnboarding())

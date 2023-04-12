@@ -342,7 +342,4 @@
     <!-- Notification Pre Permission Prompt -->
     <string name="pref_key_notification_pre_permission_prompt_enabled">pref_key_notification_pre_permission_prompt_enabled</string>
     <string name="pref_key_is_notification_pre_permission_prompt_shown">pref_key_is_notification_pre_permission_prompt_shown</string>
-
-    <!-- Juno Onboarding -->
-    <string name="pref_key_is_juno_onboarding_shown">pref_key_is_juno_onboarding_shown</string>
 </resources>

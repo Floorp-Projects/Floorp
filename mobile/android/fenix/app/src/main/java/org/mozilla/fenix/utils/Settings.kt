@@ -1596,20 +1596,12 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         get() = FxNimbus.features.junoOnboarding.value().enabled
 
     /**
-     * Indicates if the juno onboarding has been shown to the user.
-     */
-    var isJunoOnboardingShown by booleanPreference(
-        key = appContext.getPreferenceKey(R.string.pref_key_is_juno_onboarding_shown),
-        default = false,
-    )
-
-    /**
      * Returns whether juno onboarding should be shown to the user.
      * @param isLauncherIntent Boolean to indicate whether the app was launched on tapping on the
      * app icon.
      */
-    fun shouldShowJunoOnboarding(isLauncherIntent: Boolean): Boolean {
-        return if (!isJunoOnboardingShown && isLauncherIntent) {
+    fun shouldShowJunoOnboarding(hasUserBeenOnboarded: Boolean, isLauncherIntent: Boolean): Boolean {
+        return if (!hasUserBeenOnboarded && isLauncherIntent) {
             FxNimbus.features.junoOnboarding.recordExposure()
             junoOnboardingEnabled
         } else {

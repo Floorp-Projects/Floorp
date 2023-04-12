@@ -316,6 +316,9 @@ features:
       - channel: developer
         value:
           enabled: false
+      - channel: nightly
+        value:
+          enabled: true
 
   onboarding:
     description: "A feature that configures the new user onboarding page.
