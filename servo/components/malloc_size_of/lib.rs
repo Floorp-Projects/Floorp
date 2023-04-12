@@ -427,6 +427,26 @@ where
     }
 }
 
+impl<T> MallocShallowSizeOf for thin_vec::ThinVec<T> {
+    fn shallow_size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
+        if self.is_empty() {
+            // If it's the singleton we might not be a heap pointer.
+            return 0;
+        }
+        unsafe { ops.malloc_size_of(self.as_ptr()) }
+    }
+}
+
+impl<T: MallocSizeOf> MallocSizeOf for thin_vec::ThinVec<T> {
+    fn size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
+        let mut n = self.shallow_size_of(ops);
+        for elem in self.iter() {
+            n += elem.size_of(ops);
+        }
+        n
+    }
+}
+
 macro_rules! malloc_size_of_hash_set {
     ($ty:ty) => {
         impl<T, S> MallocShallowSizeOf for $ty
