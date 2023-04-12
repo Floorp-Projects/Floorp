@@ -8,20 +8,19 @@ export function getSymbols(state, location) {
   if (!location) {
     return null;
   }
-
-  return state.ast.symbols[location.source.id] || null;
-}
-
-export function getSourceActorForSymbols(state, location) {
-  if (!location) {
-    return null;
+  if (location.source.isOriginal) {
+    return state.ast.mutableOriginalSourcesSymbols[location.source.id] || null;
   }
-
-  return state.ast.actors[location.source.id] || null;
+  if (!location.sourceActor) {
+    throw new Error(
+      "Expects a location with a source actor when passing non-original sources to getSymbols"
+    );
+  }
+  return state.ast.mutableSourceActorSymbols[location.sourceActor.id] || null;
 }
 
 export function getInScopeLines(state, location) {
-  return state.ast.inScopeLines[makeBreakpointId(location)];
+  return state.ast.mutableInScopeLines[makeBreakpointId(location)];
 }
 
 export function hasInScopeLines(state, location) {

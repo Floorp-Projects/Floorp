@@ -11,11 +11,18 @@ import { makeBreakpointId } from "../utils/breakpoint";
 
 export function initialASTState() {
   return {
-    // Internal map of the source id to the specific source actor
-    // that loads the text for these symbols.
-    actors: {},
-    symbols: {},
-    inScopeLines: {},
+    // We are using mutable objects as we never return the dictionary as-is from the selectors
+    // but only their values .
+
+    // We have two maps, a first one for original sources.
+    // This is keyed by source id.
+    mutableOriginalSourcesSymbols: {},
+
+    // And another one, for generated sources.
+    // This is keyed by source actor id.
+    mutableSourceActorSymbols: {},
+
+    mutableInScopeLines: {},
   };
 }
 
@@ -28,26 +35,31 @@ function update(state = initialASTState(), action) {
       }
 
       const value = action.value;
-      const { source, sourceActor } = location;
+      if (location.source.isOriginal) {
+        state.mutableOriginalSourcesSymbols[location.source.id] = value;
+      } else {
+        if (!location.sourceActor) {
+          throw new Error(
+            "Expects a location with a source actor when adding symbols for non-original sources"
+          );
+        }
+        state.mutableSourceActorSymbols[location.sourceActor.id] = value;
+      }
       return {
         ...state,
-        actors: { ...state.actors, [source.id]: sourceActor.id },
-        symbols: { ...state.symbols, [source.id]: value },
       };
     }
 
     case "IN_SCOPE_LINES": {
+      state.mutableInScopeLines[makeBreakpointId(action.location)] =
+        action.lines;
       return {
         ...state,
-        inScopeLines: {
-          ...state.inScopeLines,
-          [makeBreakpointId(action.location)]: action.lines,
-        },
       };
     }
 
     case "RESUME": {
-      return { ...state, inScopeLines: {} };
+      return { ...state, mutableInScopeLines: {} };
     }
 
     case "NAVIGATE": {
