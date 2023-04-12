@@ -4,6 +4,16 @@
 
 "use strict";
 
+// Bug 1827382, as this module can be used from the worker thread,
+// the following JSM may be loaded by the worker loader until
+// we have proper support for ESM from workers.
+const {
+  startTracing,
+  stopTracing,
+  addTracingListener,
+  removeTracingListener,
+} = require("resource://devtools/server/tracer/tracer.jsm");
+
 const { Actor } = require("resource://devtools/shared/protocol.js");
 const { tracerSpec } = require("resource://devtools/shared/specs/tracer.js");
 
@@ -38,8 +48,6 @@ class TracerActor extends Actor {
       this.targetActor.actorID
     );
 
-    this.onEnterFrame = this.onEnterFrame.bind(this);
-
     this.throttledConsoleMessages = [];
     this.throttleLogMessages = throttle(
       this.flushConsoleMessages.bind(this),
@@ -47,8 +55,8 @@ class TracerActor extends Actor {
     );
   }
 
-  isTracing() {
-    return !!this.dbg;
+  destroy() {
+    this.stopTracing();
   }
 
   getLogMethod() {
@@ -57,120 +65,98 @@ class TracerActor extends Actor {
 
   startTracing(logMethod = LOG_METHODS.STDOUT) {
     this.logMethod = logMethod;
-
-    // If we are already recording traces, only change the log method and notify about
-    // the new log method to the client.
-    if (!this.isTracing()) {
-      // Instantiate a brand new Debugger API so that we can trace independently
-      // of all other debugger operations. i.e. we can pause while tracing without any interference.
-      this.dbg = this.targetActor.makeDebugger();
-
-      this.depth = 0;
-
-      if (this.logMethod == LOG_METHODS.STDOUT) {
-        dump("Start tracing JavaScript\n");
-      }
-      this.dbg.onEnterFrame = this.onEnterFrame;
-      this.dbg.enable();
-    }
-
-    const tracingStateWatcher = getResourceWatcher(
-      this.targetActor,
-      TYPES.TRACING_STATE
-    );
-    if (tracingStateWatcher) {
-      tracingStateWatcher.onTracingToggled(true, logMethod);
-    }
+    this.tracingListener = {
+      onTracingFrame: this.onTracingFrame.bind(this),
+      onTracingInfiniteLoop: this.onTracingInfiniteLoop.bind(this),
+    };
+    addTracingListener(this.tracingListener);
+    startTracing({
+      global: this.targetActor.window || this.targetActor.workerGlobal,
+    });
   }
 
   stopTracing() {
-    if (!this.isTracing()) {
+    if (!this.tracingListener) {
       return;
     }
-    if (this.logMethod == LOG_METHODS.STDOUT) {
-      dump("Stop tracing JavaScript\n");
-    }
-
-    this.dbg.onEnterFrame = undefined;
-    this.dbg.disable();
-    this.dbg = null;
-    this.depth = 0;
-
-    const tracingStateWatcher = getResourceWatcher(
-      this.targetActor,
-      TYPES.TRACING_STATE
-    );
-    if (tracingStateWatcher) {
-      tracingStateWatcher.onTracingToggled(false);
-    }
+    stopTracing();
+    removeTracingListener(this.tracingListener);
+    this.logMethod = null;
+    this.tracingListener = null;
   }
 
-  onEnterFrame(frame) {
-    // Safe check, just in case we keep being notified, but the tracer has been stopped
-    if (!this.dbg) {
-      return;
+  onTracingInfiniteLoop() {
+    if (this.logMethod == LOG_METHODS.STDOUT) {
+      return true;
     }
-    try {
-      if (this.depth == 100) {
-        const message =
-          "Looks like an infinite recursion? We stopped the JavaScript tracer, but code may still be running!";
-        if (this.logMethod == LOG_METHODS.STDOUT) {
-          dump(message + "\n");
-        } else if (this.logMethod == LOG_METHODS.CONSOLE) {
-          this.throttledConsoleMessages.push({
-            arguments: [message],
-            styles: [],
-            level: "logTrace",
-            chromeContext: this.isChromeContext,
-            timeStamp: ChromeUtils.dateNow(),
-          });
-          this.throttleLogMessages();
-        }
-        this.stopTracing();
-        return;
-      }
-
-      const { script } = frame;
-      const { lineNumber, columnNumber } = script.getOffsetMetadata(
-        frame.offset
-      );
-
-      if (this.logMethod == LOG_METHODS.STDOUT) {
-        const padding = "—".repeat(this.depth + 1);
-        const message = `${padding}[${frame.implementation}]—> ${
-          script.source.url
-        } @ ${lineNumber}:${columnNumber} - ${formatDisplayName(frame)}`;
-        dump(message + "\n");
-      } else if (this.logMethod == LOG_METHODS.CONSOLE) {
-        const args = [
-          "—".repeat(this.depth + 1),
-          frame.implementation,
-          "⟶",
-          formatDisplayName(frame),
-        ];
-
-        // Create a message object that fits Console Message Watcher expectations
-        this.throttledConsoleMessages.push({
-          filename: script.source.url,
-          lineNumber,
-          columnNumber,
-          arguments: args,
-          styles: CONSOLE_ARGS_STYLES,
-          level: "logTrace",
-          chromeContext: this.isChromeContext,
-          timeStamp: ChromeUtils.dateNow(),
-          sourceId: script.source.id,
-        });
-        this.throttleLogMessages();
-      }
-
-      this.depth++;
-      frame.onPop = () => {
-        this.depth--;
-      };
-    } catch (e) {
-      console.error("Exception while tracing javascript", e);
+    const consoleMessageWatcher = getResourceWatcher(
+      this.targetActor,
+      TYPES.CONSOLE_MESSAGE
+    );
+    if (!consoleMessageWatcher) {
+      return true;
     }
+
+    const message =
+      "Looks like an infinite recursion? We stopped the JavaScript tracer, but code may still be running!";
+    consoleMessageWatcher.emitMessages([
+      {
+        arguments: [message],
+        styles: [],
+        level: "logTrace",
+        chromeContext: this.isChromeContext,
+        timeStamp: ChromeUtils.dateNow(),
+      },
+    ]);
+
+    return false;
+  }
+
+  /**
+   * Called by JavaScriptTracer class when a new JavaScript frame is executed.
+   *
+   * @param {Debugger.Frame} frame
+   *        A descriptor object for the JavaScript frame.
+   * @param {Number} depth
+   *        Represents the depth of the frame in the call stack.
+   * @param {String} formatedDisplayName
+   *        A human readable name for the current frame.
+   * @param {String} prefix
+   *        A string to be displayed as a prefix of any logged frame.
+   * @return {Boolean}
+   *         Return true, if the JavaScriptTracer should log the frame to stdout.
+   */
+  onTracingFrame({ frame, depth, formatedDisplayName, prefix }) {
+    if (this.logMethod == LOG_METHODS.STDOUT) {
+      // By returning true, we let JavaScriptTracer class log the message to stdout.
+      return true;
+    }
+
+    const { script } = frame;
+    const { lineNumber, columnNumber } = script.getOffsetMetadata(frame.offset);
+
+    const args = [
+      prefix + "—".repeat(depth + 1),
+      frame.implementation,
+      "⟶",
+      formatedDisplayName,
+    ];
+
+    // Create a message object that fits Console Message Watcher expectations
+    this.throttledConsoleMessages.push({
+      filename: script.source.url,
+      lineNumber,
+      columnNumber,
+      arguments: args,
+      styles: CONSOLE_ARGS_STYLES,
+      level: "logTrace",
+      chromeContext: this.isChromeContext,
+      sourceId: script.source.id,
+      timeStamp: ChromeUtils.dateNow(),
+    });
+    this.throttleLogMessages();
+
+    return false;
   }
 
   /**
@@ -193,21 +179,3 @@ class TracerActor extends Actor {
   }
 }
 exports.TracerActor = TracerActor;
-
-/**
- * Try to describe the current frame we are tracing
- *
- * This will typically log the name of the method being called.
- *
- * @param {Debugger.Frame} frame
- *        The frame which is currently being executed.
- */
-function formatDisplayName(frame) {
-  if (frame.type === "call") {
-    const callee = frame.callee;
-    // Anonymous function will have undefined name and displayName.
-    return "λ " + (callee.name || callee.displayName || "anonymous");
-  }
-
-  return `(${frame.type})`;
-}

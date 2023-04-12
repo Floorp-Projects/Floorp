@@ -8,6 +8,14 @@ const {
   TYPES: { TRACING_STATE },
 } = require("resource://devtools/server/actors/resources/index.js");
 
+// Bug 1827382, as this module can be used from the worker thread,
+// the following JSM may be loaded by the worker loader until
+// we have proper support for ESM from workers.
+const {
+  addTracingListener,
+  removeTracingListener,
+} = require("resource://devtools/server/tracer/tracer.jsm");
+
 class TracingStateWatcher {
   /**
    * Start watching for tracing state changes for a given target actor.
@@ -20,27 +28,28 @@ class TracingStateWatcher {
    *          This will be called for each resource.
    */
   async watch(targetActor, { onAvailable }) {
+    this.targetActor = targetActor;
     this.onAvailable = onAvailable;
 
-    // Ensure dispatching the existing state, only if a tracer is enabled.
-    const tracerActor = targetActor.getTargetScopedActor("tracer");
-    if (!tracerActor || !tracerActor.isTracing()) {
-      return;
-    }
-
-    this.onTracingToggled(true, tracerActor.getLogMethod());
+    this.tracingListener = {
+      onTracingToggled: this.onTracingToggled.bind(this),
+    };
+    addTracingListener(this.tracingListener);
   }
 
   /**
    * Stop watching for tracing state
    */
-  destroy() {}
+  destroy() {
+    removeTracingListener(this.tracingListener);
+  }
 
   // Emit a TRACING_STATE resource with:
   //   enabled = true|false
-  //   logMethod = console|stdout
   // When Javascript tracing is enabled or disabled.
-  onTracingToggled(enabled, logMethod) {
+  onTracingToggled(enabled) {
+    const tracerActor = this.targetActor.getTargetScopedActor("tracer");
+    const logMethod = tracerActor?.getLogMethod() | "stdout";
     this.onAvailable([
       {
         resourceType: TRACING_STATE,
