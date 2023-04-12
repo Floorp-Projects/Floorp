@@ -4,10 +4,9 @@
 
 import React, { Component } from "react";
 import PropTypes from "prop-types";
+import classnames from "classnames";
 
 import AccessibleImage from "./AccessibleImage";
-
-const classnames = require("devtools/client/shared/classnames");
 
 import "./ResultList.css";
 

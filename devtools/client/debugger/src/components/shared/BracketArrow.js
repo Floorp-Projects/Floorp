@@ -4,15 +4,14 @@
 
 import React from "react";
 import PropTypes from "prop-types";
-
-const classnames = require("devtools/client/shared/classnames");
+import classNames from "classnames";
 
 import "./BracketArrow.css";
 
 const BracketArrow = ({ orientation, left, top, bottom }) => {
   return (
     <div
-      className={classnames("bracket-arrow", orientation || "up")}
+      className={classNames("bracket-arrow", orientation || "up")}
       style={{ left, top, bottom }}
     />
   );
