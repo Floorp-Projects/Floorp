@@ -188,6 +188,12 @@ template <typename T>
   MOZ_ASSERT(cx->isMainThreadContext());
   MOZ_ASSERT(!cx->realm()->hasObjectPendingMetadata());
 
+  // Assert we're not using delayed metadata via AutoSetNewObjectMetadata at
+  // this point. This also ensures we're not using AutoSetNewObjectMetadata
+  // without the JSCLASS_DELAY_METADATA_BUILDER JSClass flag.
+  MOZ_ASSERT_IF(!cx->zone()->suppressAllocationMetadataBuilder,
+                cx->realm()->hasObjectImmediateMetadata());
+
   // The metadata builder is invoked for each object created on the main thread,
   // except when it's suppressed.
   if (MOZ_UNLIKELY(cx->realm()->hasAllocationMetadataBuilder()) &&

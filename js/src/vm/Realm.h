@@ -576,6 +576,9 @@ class JS::Realm : public JS::shadow::Realm {
   void forgetAllocationMetadataBuilder();
   void setNewObjectMetadata(JSContext* cx, JS::HandleObject obj);
 
+  bool hasObjectImmediateMetadata() const {
+    return objectMetadataState_.is<js::ImmediateMetadata>();
+  }
   bool hasObjectPendingMetadata() const {
     return objectMetadataState_.is<js::PendingMetadata>();
   }
