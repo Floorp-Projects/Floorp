@@ -12,7 +12,7 @@
 import { prefs, features } from "../utils/prefs";
 import { searchKeys } from "../constants";
 
-export const initialUIState = ({ supportsJavascriptTracing = false } = {}) => ({
+export const initialUIState = () => ({
   selectedPrimaryPaneTab: "sources",
   activeSearch: null,
   startPanelCollapsed: prefs.startPanelCollapsed,
@@ -27,7 +27,6 @@ export const initialUIState = ({ supportsJavascriptTracing = false } = {}) => ({
   inlinePreviewEnabled: features.inlinePreview,
   editorWrappingEnabled: prefs.editorWrapping,
   javascriptEnabled: true,
-  supportsJavascriptTracing,
   javascriptTracingLogMethod: prefs.javascriptTracingLogMethod,
   mutableSearchOptions: prefs.searchOptions || {
     [searchKeys.FILE_SEARCH]: {

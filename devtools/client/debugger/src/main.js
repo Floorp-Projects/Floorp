@@ -68,10 +68,7 @@ async function loadInitialState(commands, toolbox) {
   const breakpoints = initialBreakpointsState(xhrBreakpoints);
   const sourceBlackBox = initialSourceBlackBoxState({ blackboxedRanges });
   const sources = initialSourcesState();
-  const ui = initialUIState({
-    supportsJavascriptTracing:
-      commands.client.mainRoot.traits.supportsJavascriptTracing,
-  });
+  const ui = initialUIState();
 
   return {
     pendingBreakpoints,
