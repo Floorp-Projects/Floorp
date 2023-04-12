@@ -7,8 +7,8 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-const { FormAutofill } = ChromeUtils.import(
-  "resource://autofill/FormAutofill.jsm"
+const { FormAutofill } = ChromeUtils.importESModule(
+  "resource://autofill/FormAutofill.sys.mjs"
 );
 
 add_task(async function test_defaultTestEnvironment() {

@@ -4,8 +4,8 @@
 
 toolkit.jar:
 % resource autofill %res/autofill/
-  res/autofill/ (./*.jsm)
-  res/autofill/phonenumberutils/ (./phonenumberutils/*.jsm)
+  res/autofill/ (./*.sys.mjs)
+  res/autofill/phonenumberutils/ (./phonenumberutils/*.sys.mjs)
   res/autofill/addressmetadata/ (./addressmetadata/*)
   res/autofill/content/ (./content/*)
 #ifdef ANDROID

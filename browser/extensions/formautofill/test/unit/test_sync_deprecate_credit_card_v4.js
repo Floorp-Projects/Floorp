@@ -13,8 +13,8 @@ const { Service } = ChromeUtils.importESModule(
   "resource://services-sync/service.sys.mjs"
 );
 
-const { CreditCardsEngine } = ChromeUtils.import(
-  "resource://autofill/FormAutofillSync.jsm"
+const { CreditCardsEngine } = ChromeUtils.importESModule(
+  "resource://autofill/FormAutofillSync.sys.mjs"
 );
 
 Services.prefs.setCharPref("extensions.formautofill.loglevel", "Trace");

@@ -7,8 +7,8 @@
 let FormAutofillStatus;
 
 add_setup(async () => {
-  ({ FormAutofillStatus } = ChromeUtils.import(
-    "resource://autofill/FormAutofillParent.jsm"
+  ({ FormAutofillStatus } = ChromeUtils.importESModule(
+    "resource://autofill/FormAutofillParent.sys.mjs"
   ));
 });
 

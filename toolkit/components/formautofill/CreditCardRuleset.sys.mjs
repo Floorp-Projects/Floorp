@@ -37,15 +37,9 @@ import {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  FormAutofillUtils: "resource://autofill/FormAutofillUtils.sys.mjs",
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
-});
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FormAutofillUtils",
-  "resource://autofill/FormAutofillUtils.jsm"
-);
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  LabelUtils: "resource://autofill/FormAutofillUtils.jsm",
+  LabelUtils: "resource://autofill/FormAutofillUtils.sys.mjs",
 });
 
 /**

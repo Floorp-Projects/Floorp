@@ -7,11 +7,9 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "formAutofillStorage",
-  "resource://autofill/FormAutofillStorage.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  formAutofillStorage: "resource://autofill/FormAutofillStorage.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   this,
   "AutofillTelemetry",
