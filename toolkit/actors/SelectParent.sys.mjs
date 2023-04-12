@@ -283,7 +283,7 @@ export var SelectParentHelper = {
     this._currentBrowser = browser;
     this._closedWithEnter = false;
     this._selectRect = rect;
-    this._registerListeners(browser, menulist.menupopup);
+    this._registerListeners(menulist.menupopup);
 
     let win = browser.ownerGlobal;
 
@@ -309,7 +309,11 @@ export var SelectParentHelper = {
 
     menupopup.classList.toggle("isOpenedViaTouch", isOpenedViaTouch);
 
-    browser.constrainPopup(menupopup);
+    if (browser) {
+      browser.constrainPopup(menupopup);
+    } else {
+      menupopup.setConstraintRect(new win.DOMRect(0, 0, 0, 0));
+    }
     menupopup.openPopupAtScreenRect(
       AppConstants.platform == "macosx" ? "selection" : "after_start",
       rect.left,
@@ -390,7 +394,7 @@ export var SelectParentHelper = {
       case "popuphidden":
         this._actor.sendAsyncMessage("Forms:DismissedDropDown", {});
         let popup = event.target;
-        this._unregisterListeners(this._currentBrowser, popup);
+        this._unregisterListeners(popup);
         popup.parentNode.hidden = true;
         this._currentBrowser = null;
         this._currentMenulist = null;
@@ -402,17 +406,13 @@ export var SelectParentHelper = {
   },
 
   receiveMessage(msg) {
-    if (!this._currentBrowser) {
+    // Sanity check - we'd better know what the currently
+    // opened menulist is, and what browser it belongs to...
+    if (!this._currentMenulist) {
       return;
     }
 
     if (msg.name == "Forms:UpdateDropDown") {
-      // Sanity check - we'd better know what the currently
-      // opened menulist is, and what browser it belongs to...
-      if (!this._currentMenulist) {
-        return;
-      }
-
       let scrollBox = this._currentMenulist.menupopup.scrollBox.scrollbox;
       let scrollTop = scrollBox.scrollTop;
 
@@ -437,24 +437,24 @@ export var SelectParentHelper = {
     }
   },
 
-  _registerListeners(browser, popup) {
+  _registerListeners(popup) {
     popup.addEventListener("command", this);
     popup.addEventListener("popuphidden", this);
     popup.addEventListener("mouseover", this);
     popup.addEventListener("mouseout", this);
-    browser.ownerGlobal.addEventListener("mouseup", this, true);
-    browser.ownerGlobal.addEventListener("keydown", this, true);
-    browser.ownerGlobal.addEventListener("fullscreen", this, true);
+    popup.ownerGlobal.addEventListener("mouseup", this, true);
+    popup.ownerGlobal.addEventListener("keydown", this, true);
+    popup.ownerGlobal.addEventListener("fullscreen", this, true);
   },
 
-  _unregisterListeners(browser, popup) {
+  _unregisterListeners(popup) {
     popup.removeEventListener("command", this);
     popup.removeEventListener("popuphidden", this);
     popup.removeEventListener("mouseover", this);
     popup.removeEventListener("mouseout", this);
-    browser.ownerGlobal.removeEventListener("mouseup", this, true);
-    browser.ownerGlobal.removeEventListener("keydown", this, true);
-    browser.ownerGlobal.removeEventListener("fullscreen", this, true);
+    popup.ownerGlobal.removeEventListener("mouseup", this, true);
+    popup.ownerGlobal.removeEventListener("keydown", this, true);
+    popup.ownerGlobal.removeEventListener("fullscreen", this, true);
   },
 
   /**
@@ -489,7 +489,7 @@ export var SelectParentHelper = {
 
     let ariaOwns = "";
     for (let option of options) {
-      let isOptGroup = option.tagName == "OPTGROUP";
+      let isOptGroup = option.isOptGroup;
       let item = element.ownerDocument.createXULElement(
         isOptGroup ? "menucaption" : "menuitem"
       );
@@ -761,7 +761,6 @@ export class SelectParent extends JSWindowActorParent {
   receiveMessage(message) {
     switch (message.name) {
       case "Forms:ShowDropDown": {
-        let browser = this.relevantBrowser;
         let menulist = this._menulist || this._createMenulist();
 
         let data = message.data;
@@ -780,7 +779,7 @@ export class SelectParent extends JSWindowActorParent {
           data.style
         );
         SelectParentHelper.open(
-          browser,
+          this.relevantBrowser,
           menulist,
           data.rect,
           data.isOpenedViaTouch,
@@ -790,8 +789,7 @@ export class SelectParent extends JSWindowActorParent {
       }
 
       case "Forms:HideDropDown": {
-        let browser = this.relevantBrowser;
-        SelectParentHelper.hide(this._menulist, browser);
+        SelectParentHelper.hide(this._menulist, this.relevantBrowser);
         break;
       }
 

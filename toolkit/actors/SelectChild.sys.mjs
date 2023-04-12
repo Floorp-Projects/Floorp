@@ -384,41 +384,40 @@ function buildOptionListForChildren(node, uniqueStyles) {
   let result = [];
 
   for (let child of node.children) {
-    let tagName = child.tagName.toUpperCase();
-
-    if (tagName == "OPTION" || tagName == "OPTGROUP") {
-      if (child.hidden) {
-        continue;
-      }
-
-      // The option code-path should match HTMLOptionElement::GetRenderedLabel.
-      let textContent =
-        tagName == "OPTGROUP"
-          ? child.getAttribute("label")
-          : child.label || child.text;
-      if (textContent == null) {
-        textContent = "";
-      }
-
-      let cs = getComputedStyles(child);
-      let info = {
-        index: child.index,
-        tagName,
-        textContent,
-        disabled: child.disabled,
-        display: cs.display,
-        tooltip: child.title,
-        children:
-          tagName == "OPTGROUP"
-            ? buildOptionListForChildren(child, uniqueStyles)
-            : [],
-        // Most options have the same style. In order to reduce the size of the
-        // IPC message, coalesce them in uniqueStyles.
-        styleIndex: uniqueStylesIndex(cs, uniqueStyles),
-      };
-
-      result.push(info);
+    let className = ChromeUtils.getClassName(child);
+    let isOption = className == "HTMLOptionElement";
+    let isOptGroup = className == "HTMLOptGroupElement";
+    if (!isOption && !isOptGroup) {
+      continue;
     }
+    if (child.hidden) {
+      continue;
+    }
+
+    // The option code-path should match HTMLOptionElement::GetRenderedLabel.
+    let textContent = isOptGroup
+      ? child.getAttribute("label")
+      : child.label || child.text;
+    if (textContent == null) {
+      textContent = "";
+    }
+
+    let cs = getComputedStyles(child);
+    let info = {
+      index: child.index,
+      isOptGroup,
+      textContent,
+      disabled: child.disabled,
+      display: cs.display,
+      tooltip: child.title,
+      children: isOptGroup
+        ? buildOptionListForChildren(child, uniqueStyles)
+        : [],
+      // Most options have the same style. In order to reduce the size of the
+      // IPC message, coalesce them in uniqueStyles.
+      styleIndex: uniqueStylesIndex(cs, uniqueStyles),
+    };
+    result.push(info);
   }
   return result;
 }
