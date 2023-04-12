@@ -47,25 +47,10 @@ class CallbackHelper : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
   CamerasParent* const mParent;
 };
 
-class InputObserver : public webrtc::VideoInputFeedBack {
- public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(InputObserver)
-
-  explicit InputObserver(CamerasParent* aParent) : mParent(aParent){};
-
-  virtual void OnDeviceChange() override;
-
-  friend CamerasParent;
-
- private:
-  ~InputObserver() = default;
-
-  const RefPtr<CamerasParent> mParent;
-};
-
 class DeliverFrameRunnable;
 
-class CamerasParent final : public PCamerasParent {
+class CamerasParent final : public PCamerasParent,
+                            private webrtc::VideoInputFeedBack {
   using ShutdownMozPromise = media::ShutdownBlockingTicket::ShutdownMozPromise;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CamerasParent)
@@ -119,7 +104,7 @@ class CamerasParent final : public PCamerasParent {
 
   CamerasParent();
 
- protected:
+ private:
   virtual ~CamerasParent();
 
   // We use these helpers for shutdown and for the respective IPC commands.
@@ -127,6 +112,10 @@ class CamerasParent final : public PCamerasParent {
   int ReleaseCapture(const CaptureEngine& aCapEngine, int aCaptureId);
 
   bool SetupEngine(CaptureEngine aCapEngine);
+
+  // VideoInputFeedBack
+  void OnDeviceChange() override;
+
   VideoEngine* EnsureInitialized(int aEngine);
   void CloseEngines();
   void StopIPC();
@@ -171,7 +160,6 @@ class CamerasParent final : public PCamerasParent {
   // Above 2 are PBackground only, but this is potentially
   // read cross-thread.
   Atomic<bool> mWebRTCAlive;
-  RefPtr<InputObserver> mCameraObserver;
   std::map<nsCString, std::map<uint32_t, webrtc::VideoCaptureCapability>>
       mAllCandidateCapabilities;
 };
