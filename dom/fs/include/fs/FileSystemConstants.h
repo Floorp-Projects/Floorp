@@ -11,7 +11,9 @@
 
 namespace mozilla::dom::fs {
 
-constexpr nsLiteralString kRootName = u"root"_ns;
+constexpr nsLiteralString kRootName = u""_ns;
+
+constexpr nsLiteralString kRootString = u"root"_ns;
 
 constexpr uint32_t kStreamCopyBlockSize = 1024 * 1024;
 

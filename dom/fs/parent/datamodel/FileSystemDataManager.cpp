@@ -139,7 +139,7 @@ Result<ResultConnection, QMResult> GetStorageConnection(
 Result<EntryId, QMResult> GetRootHandle(const Origin& origin) {
   MOZ_ASSERT(!origin.IsEmpty());
 
-  return FileSystemHashSource::GenerateHash(origin, kRootName);
+  return FileSystemHashSource::GenerateHash(origin, kRootString);
 }
 
 Result<EntryId, QMResult> GetEntryHandle(

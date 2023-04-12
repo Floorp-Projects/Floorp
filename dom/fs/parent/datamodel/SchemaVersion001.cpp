@@ -112,7 +112,7 @@ nsresult CreateRootEntry(ResultConnection& aConn, const Origin& aOrigin) {
       "VALUES ( :handle, :name );"_ns;
 
   QM_TRY_UNWRAP(EntryId rootId,
-                data::FileSystemHashSource::GenerateHash(aOrigin, kRootName));
+                data::FileSystemHashSource::GenerateHash(aOrigin, kRootString));
 
   mozStorageTransaction transaction(
       aConn.get(), false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
@@ -128,7 +128,7 @@ nsresult CreateRootEntry(ResultConnection& aConn, const Origin& aOrigin) {
     QM_TRY_UNWRAP(ResultStatement stmt,
                   ResultStatement::Create(aConn, flagRootAsDirectoryQuery));
     QM_TRY(MOZ_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, rootId)));
-    QM_TRY(MOZ_TO_RESULT(stmt.BindNameByName("name"_ns, kRootName)));
+    QM_TRY(MOZ_TO_RESULT(stmt.BindNameByName("name"_ns, kRootString)));
     QM_TRY(MOZ_TO_RESULT(stmt.Execute()));
   }
 
