@@ -96,7 +96,7 @@ void ComputePassEncoder::InsertDebugMarker(const nsAString& aString) {
   }
 }
 
-void ComputePassEncoder::EndPass(ErrorResult& aRv) {
+void ComputePassEncoder::End(ErrorResult& aRv) {
   if (mValid) {
     mValid = false;
     auto* pass = mPass.forget();

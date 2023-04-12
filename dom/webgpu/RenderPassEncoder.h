@@ -95,7 +95,7 @@ class RenderPassEncoder final : public ObjectBase,
   void ExecuteBundles(
       const dom::Sequence<OwningNonNull<RenderBundle>>& aBundles);
 
-  void EndPass(ErrorResult& aRv);
+  void End(ErrorResult& aRv);
 };
 
 }  // namespace webgpu

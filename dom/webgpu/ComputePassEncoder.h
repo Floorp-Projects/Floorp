@@ -66,7 +66,7 @@ class ComputePassEncoder final : public ObjectBase,
   void PopDebugGroup();
   void InsertDebugMarker(const nsAString& aString);
 
-  void EndPass(ErrorResult& aRv);
+  void End(ErrorResult& aRv);
 };
 
 }  // namespace webgpu
