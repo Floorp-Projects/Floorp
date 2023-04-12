@@ -121,8 +121,6 @@ class CamerasParent final : public PCamerasParent,
 
   VideoEngine* EnsureInitialized(int aEngine);
   void CloseEngines();
-  void StopIPC();
-  void StopVideoCapture();
 
   void OnShutdown();
 

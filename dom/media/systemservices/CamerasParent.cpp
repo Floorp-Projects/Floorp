@@ -52,7 +52,6 @@ mozilla::LazyLogModule gCamerasParentLog("CamerasParent");
 #define LOG_ENABLED() MOZ_LOG_TEST(gCamerasParentLog, mozilla::LogLevel::Debug)
 
 namespace mozilla {
-using media::NewRunnableFrom;
 using media::ShutdownBlockingTicket;
 namespace camera {
 
@@ -200,39 +199,6 @@ class DeliverFrameRunnable : public mozilla::Runnable {
   int mResult;
 };
 
-void CamerasParent::StopVideoCapture() {
-  LOG_FUNCTION();
-  // Called when the actor is destroyed.
-  MOZ_ASSERT(mPBackgroundEventTarget->IsOnCurrentThread());
-  // Shut down the WebRTC stack (on the capture thread)
-  RefPtr<CamerasParent> self(this);
-  DebugOnly<nsresult> rv =
-      mVideoCaptureThread->Dispatch(NewRunnableFrom([self]() {
-        MonitorAutoLock lock(*(self->sThreadMonitor));
-        self->CloseEngines();
-        // After closing the WebRTC stack, clean up the
-        // VideoCapture thread.
-        nsCOMPtr<nsIThread> thread = nullptr;
-        if (sNumOfOpenCamerasParentEngines == 0) {
-          thread = std::move(self->sVideoCaptureThread);
-        }
-        nsresult rv = NS_DispatchToMainThread(NewRunnableFrom([self, thread]() {
-          if (thread) {
-            thread->AsyncShutdown();
-          }
-          return NS_OK;
-        }));
-        MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
-                              "dispatch for video thread shutdown");
-        return rv;
-      }));
-#ifdef DEBUG
-  // It's ok for the dispatch to fail if the cleanup it has to do
-  // has been done already.
-  MOZ_ASSERT(NS_SUCCEEDED(rv) || !mWebRTCAlive);
-#endif
-}
-
 int CamerasParent::DeliverFrameOverIPC(CaptureEngine aCapEngine,
                                        uint32_t aStreamId,
                                        const TrackingId& aTrackingId,
@@ -376,12 +342,11 @@ bool CamerasParent::SetupEngine(CaptureEngine aCapEngine) {
 }
 
 void CamerasParent::CloseEngines() {
-  sThreadMonitor->AssertCurrentThreadOwns();
+  MOZ_ASSERT(mVideoCaptureThread->IsOnCurrentThread());
   LOG_FUNCTION();
   if (!mWebRTCAlive) {
     return;
   }
-  MOZ_ASSERT(mVideoCaptureThread->IsOnCurrentThread());
 
   // Stop the callers
   while (!mCallbacks.IsEmpty()) {
@@ -398,17 +363,6 @@ void CamerasParent::CloseEngines() {
     MOZ_ASSERT(device_info);
     if (device_info) {
       device_info->DeRegisterVideoInputFeedBack(this);
-    }
-  }
-
-  // CloseEngines() is protected by sThreadMonitor
-  sNumOfOpenCamerasParentEngines--;
-  if (sNumOfOpenCamerasParentEngines == 0) {
-    for (StaticRefPtr<VideoEngine>& engine : sEngines) {
-      if (engine) {
-        VideoEngine::Delete(engine);
-        engine = nullptr;
-      }
     }
   }
 
@@ -1103,28 +1057,44 @@ ipc::IPCResult CamerasParent::RecvStopCapture(const CaptureEngine& aCapEngine,
   return IPC_OK();
 }
 
-void CamerasParent::StopIPC() {
-  MOZ_ASSERT(!mDestroyed);
+void CamerasParent::ActorDestroy(ActorDestroyReason aWhy) {
+  MOZ_ASSERT(mPBackgroundEventTarget->IsOnCurrentThread());
+  LOG_FUNCTION();
+
   // Release shared memory now, it's our last chance
   mShmemPool.Cleanup(this);
   // We don't want to receive callbacks or anything if we can't
   // forward them anymore anyway.
   mChildIsAlive = false;
   mDestroyed = true;
-}
-
-void CamerasParent::ActorDestroy(ActorDestroyReason aWhy) {
-  MOZ_ASSERT(mPBackgroundEventTarget->IsOnCurrentThread());
-  // No more IPC from here
-  LOG_FUNCTION();
-  StopIPC();
-  // Shut down WebRTC (if we're not in full shutdown, else this
-  // will already have happened)
-  StopVideoCapture();
   // We don't need to listen for shutdown any longer. Disconnect the request.
   // This breaks the reference cycle between CamerasParent and the shutdown
   // promise's Then handler.
   mShutdownRequest.DisconnectIfExists();
+  if (mVideoCaptureThread) {
+    // Shut down the WebRTC stack, on the video capture thread.
+    MOZ_ALWAYS_SUCCEEDS(mVideoCaptureThread->Dispatch(
+        NewRunnableMethod(__func__, this, &CamerasParent::CloseEngines)));
+
+    // Shut down the VideoCapture thread if necessary.
+    MonitorAutoLock lock(*sThreadMonitor);
+    if (--sNumOfOpenCamerasParentEngines == 0) {
+      LOG("Shutting down VideoEngines and the VideoCapture thread");
+      MOZ_ALWAYS_SUCCEEDS(
+          sVideoCaptureThread->Dispatch(NS_NewRunnableFunction(__func__, [] {
+            for (StaticRefPtr<VideoEngine>& engine : sEngines) {
+              if (engine) {
+                VideoEngine::Delete(engine);
+                engine = nullptr;
+              }
+            }
+          })));
+      MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(NS_NewRunnableFunction(
+          __func__, [thread = RefPtr(sVideoCaptureThread.forget())] {
+            MOZ_ALWAYS_SUCCEEDS(thread->AsyncShutdown());
+          })));
+    }
+  }
 }
 
 void CamerasParent::OnShutdown() {
