@@ -240,3 +240,28 @@ serp:
           Number of ads hidden for this component. These are ads that
           are loaded in the DOM but hidden via CSS and/or Javascript.
         type: quantity
+
+  abandonment:
+    type: event
+    description: >
+      Recorded when there is no engagement with the SERP before the tab is
+      closed, the window is closed, the app is closed, or the tab is navigated
+      away from.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1814776
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1814776
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+      - rev-data@mozilla.com
+    expires: never
+    extra_keys:
+      impression_id: *impression_id
+      reason:
+        description: >
+          Why the SERP is deemed abandoned.
+          Possible values are:
+          `tab_close`, `window_close`, `navigation`
+        type: string
