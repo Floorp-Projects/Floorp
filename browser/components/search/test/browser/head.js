@@ -346,3 +346,13 @@ function assertAdImpressionEvents(expectedAdImpressions) {
     );
   }
 }
+
+async function assertAbandonmentEvent(expectedAbandonment) {
+  let recordedAbandonment = Glean.serp.abandonment.testGetValue() ?? [];
+
+  Assert.equal(
+    recordedAbandonment[0].extra.reason,
+    expectedAbandonment.abandonment.reason,
+    "Should have the correct abandonment reason."
+  );
+}

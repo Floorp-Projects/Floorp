@@ -21,6 +21,8 @@ const SEARCH_TELEMETRY_PRIVATE_BROWSING_KEY_SUFFIX = "pb";
 
 const TELEMETRY_SETTINGS_KEY = "search-telemetry-v2";
 
+const impressionIdsWithoutEngagementsSet = new Set();
+
 XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {
   return console.createInstance({
     prefix: "SearchTelemetry",
@@ -46,6 +48,11 @@ export var SearchSERPTelemetryUtils = {
     AD_SITELINK: "ad_sitelink",
     REFINED_SEARCH_BUTTONS: "refined_search_buttons",
     SHOPPING_TAB: "shopping_tab",
+  },
+  ABANDONMENTS: {
+    TAB_CLOSE: "tab_close",
+    WINDOW_CLOSE: "window_close",
+    NAVIGATION: "navigation",
   },
 };
 
@@ -181,6 +188,28 @@ class TelemetryHandler {
   }
 
   /**
+   * Helper function for recording the reason for a Glean abandonment event.
+   *
+   * @param {string} impressionId
+   *    The impression id for the abandonment event about to be recorded.
+   * @param {string} reason
+   *    The reason the SERP is deemed abandoned.
+   *    One of SearchSERPTelemetryUtils.ABANDONMENTS.
+   */
+  recordAbandonmentTelemetry(impressionId, reason) {
+    impressionIdsWithoutEngagementsSet.delete(impressionId);
+
+    lazy.logConsole.debug(
+      `Recording an abandonment event for impression id ${impressionId} with reason: ${reason}`
+    );
+
+    Glean.serp.abandonment.record({
+      impression_id: impressionId,
+      reason,
+    });
+  }
+
+  /**
    * Handles the TabClose event received from the listeners.
    *
    * @param {object} event
@@ -193,7 +222,10 @@ class TelemetryHandler {
     }
 
     this._browserNewtabSessionMap.delete(event.target.linkedBrowser);
-    this.stopTrackingBrowser(event.target.linkedBrowser);
+    this.stopTrackingBrowser(
+      event.target.linkedBrowser,
+      SearchSERPTelemetryUtils.ABANDONMENTS.TAB_CLOSE
+    );
   }
 
   /**
@@ -294,6 +326,8 @@ class TelemetryHandler {
         .generateUUID()
         .toString()
         .slice(1, -1);
+
+      impressionIdsWithoutEngagementsSet.add(impressionId);
     }
 
     this._reportSerpPage(info, source, url, impressionId);
@@ -326,13 +360,24 @@ class TelemetryHandler {
 
   /**
    * Stops tracking of a tab, for example the tab has loaded a different URL.
+   * Also records a Glean abandonment event if appropriate.
    *
    * @param {object} browser The browser associated with the tab to stop being
-   *                         tracked.
+   *   tracked.
+   * @param {string} abandonmentReason
+   *   An optional parameter that specifies why the browser is deemed abandoned.
+   *   The reason will be recorded as part of Glean abandonment telemetry.
+   *   One of SearchSERPTelemetryUtils.ABANDONMENTS.
    */
-  stopTrackingBrowser(browser) {
+  stopTrackingBrowser(browser, abandonmentReason) {
     for (let [url, item] of this._browserInfoByURL) {
       if (item.browserTelemetryStateMap.has(browser)) {
+        let impressionId = item.browserTelemetryStateMap.get(browser)
+          .impressionId;
+        if (impressionIdsWithoutEngagementsSet.has(impressionId)) {
+          this.recordAbandonmentTelemetry(impressionId, abandonmentReason);
+        }
+
         item.browserTelemetryStateMap.delete(browser);
         item.count--;
       }
@@ -486,7 +531,10 @@ class TelemetryHandler {
    */
   _unregisterWindow(win) {
     for (let tab of win.gBrowser.tabs) {
-      this.stopTrackingBrowser(tab);
+      this.stopTrackingBrowser(
+        tab.linkedBrowser,
+        SearchSERPTelemetryUtils.ABANDONMENTS.WINDOW_CLOSE
+      );
     }
 
     win.gBrowser.tabContainer.removeEventListener("TabClose", this);
@@ -839,6 +887,8 @@ class ContentHandler {
           }
 
           if (impressionId) {
+            impressionIdsWithoutEngagementsSet.delete(impressionId);
+
             Glean.serp.engagement.record({
               impression_id: impressionId,
               action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
