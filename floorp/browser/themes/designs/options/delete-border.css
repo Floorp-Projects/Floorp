@@ -11,6 +11,18 @@
     border: solid 5px var(--toolbar-bgcolor);
     border-top: none;
   }
+
+  :root[inDOMFullscreen] :is(.browserContainer),
+  :root[inFullscreen]:not([macOSNativeFullscreen]) :is(.browserContainer) {
+    border: none !important;
+  }
+
+  :root[inDOMFullscreen] :is(.browserContainer) > .browserStack > *,
+  :root[inFullscreen]:not([macOSNativeFullscreen]) :is(.browserContainer) > .browserStack > * {
+    border: none !important;
+    border-radius: 0 !important;
+  }
+
    #tabbrowser-tabpanels[flex] {
     background: var(--toolbar-bgcolor) !important;
     background-color: var(--toolbar-bgcolor) !important;
