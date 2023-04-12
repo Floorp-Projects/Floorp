@@ -40,7 +40,7 @@ add_task(async function runTest() {
 
   const iframe = panel.firstChild;
   const popupShownPromise = BrowserTestUtils.waitForSelectPopupShown(
-    iframe.contentWindow
+    toolbox.win.browsingContext.topChromeWindow
   );
 
   const browser = iframe.contentDocument.getElementById(
@@ -48,14 +48,17 @@ add_task(async function runTest() {
   );
   ok(browser, "found extension panel browser");
 
+  info("Waiting for menu");
   await ContentTask.spawn(browser, null, async function() {
     const menu = content.document.getElementById("menu");
     const event = new content.MouseEvent("mousedown");
     menu.dispatchEvent(event);
   });
 
-  await popupShownPromise;
+  let popup = await popupShownPromise;
   info("popup is shown");
+
+  popup.hidePopup();
 
   await toolbox.destroy();
 
