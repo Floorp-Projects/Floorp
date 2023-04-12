@@ -38,7 +38,7 @@ class BrowsingContextModule extends Module {
       // See https://bugzilla.mozilla.org/show_bug.cgi?id=1763122
       navigation: null,
       timestamp: Date.now(),
-      url: data.target.baseURI,
+      url: data.target.URL,
     };
   }
 
