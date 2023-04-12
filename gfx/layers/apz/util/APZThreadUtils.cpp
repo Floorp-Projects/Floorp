@@ -115,7 +115,5 @@ void APZThreadUtils::DelayedDispatch(already_AddRefed<Runnable> aRunnable,
   }
 }
 
-NS_IMPL_ISUPPORTS(GenericNamedTimerCallbackBase, nsITimerCallback, nsINamed)
-
 }  // namespace layers
 }  // namespace mozilla

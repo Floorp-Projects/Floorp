@@ -69,51 +69,6 @@ class APZThreadUtils {
                               int aDelayMs);
 };
 
-// A base class for GenericNamedTimerCallback<Function>.
-// This is necessary because NS_IMPL_ISUPPORTS doesn't work for a class
-// template.
-class GenericNamedTimerCallbackBase : public nsITimerCallback, public nsINamed {
- public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-
- protected:
-  virtual ~GenericNamedTimerCallbackBase() = default;
-};
-
-// An nsITimerCallback implementation with nsINamed that can be used with any
-// function object that's callable with no arguments.
-template <typename Function>
-class GenericNamedTimerCallback final : public GenericNamedTimerCallbackBase {
- public:
-  GenericNamedTimerCallback(const Function& aFunction, const char* aName)
-      : mFunction(aFunction), mName(aName) {}
-
-  NS_IMETHOD Notify(nsITimer*) override {
-    mFunction();
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetName(nsACString& aName) override {
-    aName = mName;
-    return NS_OK;
-  }
-
- private:
-  Function mFunction;
-  nsCString mName;
-};
-
-// Convenience function for constructing a GenericNamedTimerCallback.
-// Returns a raw pointer, suitable for passing directly as an argument to
-// nsITimer::InitWithCallback(). The intention is to enable the following
-// terse inline usage:
-//    timer->InitWithCallback(NewNamedTimerCallback([](){ ... }, name), delay);
-template <typename Function>
-GenericNamedTimerCallback<Function>* NewNamedTimerCallback(
-    const Function& aFunction, const char* aName) {
-  return new GenericNamedTimerCallback<Function>(aFunction, aName);
-}
-
 }  // namespace layers
 }  // namespace mozilla
 
