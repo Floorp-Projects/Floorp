@@ -4,7 +4,7 @@
 
 use api::units::PictureRect;
 use crate::{spatial_tree::SpatialNodeIndex, render_task_graph::RenderTaskId, surface::SurfaceTileDescriptor, picture::TileKey, renderer::GpuBufferAddress, FastHashMap, prim_store::PrimitiveInstanceIndex, gpu_cache::GpuCacheAddress};
-use crate::gpu_types::{QuadSegment, TransformPaletteId};
+use crate::gpu_types::TransformPaletteId;
 use crate::segment::EdgeAaSegmentMask;
 
 /// A tightly packed command stored in a command buffer
@@ -24,8 +24,6 @@ impl Command {
     const CMD_DRAW_INSTANCE: u32 = 0x30000000;
     /// Draw a generic quad primitive
     const CMD_DRAW_QUAD: u32 = 0x40000000;
-    /// Set a list of variable-length segments
-    const CMD_SET_SEGMENTS: u32 = 0x50000000;
 
     /// Bitmask for command bits of the command.
     const CMD_MASK: u32 = 0xf0000000;
@@ -40,11 +38,6 @@ impl Command {
     /// Encode changing spatial node.
     fn set_spatial_node(spatial_node_index: SpatialNodeIndex) -> Self {
         Command(Command::CMD_SET_SPATIAL_NODE | spatial_node_index.0)
-    }
-
-    /// Encode a list of segments that follow
-    fn set_segments(count: usize) -> Self {
-        Command(Command::CMD_SET_SEGMENTS | count as u32)
     }
 
     /// Encode drawing a complex prim.
@@ -73,9 +66,6 @@ bitflags! {
     #[cfg_attr(feature = "replay", derive(Deserialize))]
     pub struct QuadFlags : u8 {
         const IS_OPAQUE = 1 << 0;
-
-        /// If true, the prim is 2d and we can apply a clip to the task rect in vertex shader
-        const APPLY_DEVICE_CLIP = 1 << 1;
     }
 }
 
@@ -179,17 +169,6 @@ impl CommandBuffer {
         }
     }
 
-    /// Push a list of segments in to the cmd buffer
-    pub fn set_segments(
-        &mut self,
-        segments: &[QuadSegment],
-    ) {
-        self.commands.push(Command::set_segments(segments.len()));
-        for segment in segments {
-            self.commands.push(Command::data(segment.task_id.index));
-        }
-    }
-
     /// Add a primitive to the command buffer.
     pub fn add_prim(
         &mut self,
@@ -201,14 +180,6 @@ impl CommandBuffer {
             self.current_spatial_node_index = spatial_node_index;
         }
 
-        self.add_cmd(prim_cmd);
-    }
-
-    /// Add a cmd to the command buffer.
-    pub fn add_cmd(
-        &mut self,
-        prim_cmd: &PrimitiveCommand,
-    ) {
         match *prim_cmd {
             PrimitiveCommand::Simple { prim_instance_index } => {
                 self.commands.push(Command::draw_simple_prim(prim_instance_index));
@@ -234,11 +205,9 @@ impl CommandBuffer {
     pub fn iter_prims<F>(
         &self,
         f: &mut F,
-    ) where F: FnMut(&PrimitiveCommand, SpatialNodeIndex, &[RenderTaskId]) {
+    ) where F: FnMut(&PrimitiveCommand, SpatialNodeIndex) {
         let mut current_spatial_node_index = SpatialNodeIndex::INVALID;
         let mut cmd_iter = self.commands.iter();
-        // TODO(gw): Consider pre-allocating this / Smallvec if it shows up in profiles.
-        let mut segments = Vec::new();
 
         while let Some(cmd) = cmd_iter.next() {
             let command = cmd.0 & Command::CMD_MASK;
@@ -248,7 +217,7 @@ impl CommandBuffer {
                 Command::CMD_DRAW_SIMPLE_PRIM => {
                     let prim_instance_index = PrimitiveInstanceIndex(param);
                     let cmd = PrimitiveCommand::simple(prim_instance_index);
-                    f(&cmd, current_spatial_node_index, &[]);
+                    f(&cmd, current_spatial_node_index);
                 }
                 Command::CMD_SET_SPATIAL_NODE => {
                     current_spatial_node_index = SpatialNodeIndex(param);
@@ -264,7 +233,7 @@ impl CommandBuffer {
                         prim_instance_index,
                         gpu_address,
                     );
-                    f(&cmd, current_spatial_node_index, &[]);
+                    f(&cmd, current_spatial_node_index);
                 }
                 Command::CMD_DRAW_QUAD => {
                     let prim_instance_index = PrimitiveInstanceIndex(param);
@@ -284,8 +253,7 @@ impl CommandBuffer {
                         quad_flags,
                         edge_flags,
                     );
-                    f(&cmd, current_spatial_node_index, &segments);
-                    segments.clear()
+                    f(&cmd, current_spatial_node_index);
                 }
                 Command::CMD_DRAW_INSTANCE => {
                     let prim_instance_index = PrimitiveInstanceIndex(param);
@@ -298,13 +266,7 @@ impl CommandBuffer {
                         prim_instance_index,
                         gpu_buffer_address,
                     );
-                    f(&cmd, current_spatial_node_index, &[]);
-                }
-                Command::CMD_SET_SEGMENTS => {
-                    let count = param;
-                    for _ in 0 .. count {
-                        segments.push(RenderTaskId { index: cmd_iter.next().unwrap().0 });
-                    }
+                    f(&cmd, current_spatial_node_index);
                 }
                 _ => {
                     unreachable!();
