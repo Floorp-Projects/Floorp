@@ -3072,6 +3072,7 @@ dependencies = [
  "servo_arc",
  "smallbitvec",
  "smallvec",
+ "thin-vec",
  "void",
 ]
 
@@ -4998,6 +4999,7 @@ dependencies = [
  "static_prefs",
  "style_derive",
  "style_traits",
+ "thin-vec",
  "time 0.1.45",
  "to_shmem",
  "to_shmem_derive",
@@ -5273,6 +5275,7 @@ dependencies = [
  "servo_arc",
  "smallbitvec",
  "smallvec",
+ "thin-vec",
 ]
 
 [[package]]
