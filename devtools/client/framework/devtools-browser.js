@@ -320,6 +320,19 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
           trigger: "shortcut",
         });
         break;
+      case "javascriptTracingToggle":
+        const toolbox = await gDevTools.getToolboxForTab(
+          window.gBrowser.selectedTab
+        );
+        if (!toolbox) {
+          break;
+        }
+        const dbg = await toolbox.getPanel("jsdebugger");
+        if (!dbg) {
+          break;
+        }
+        dbg.toggleJavascriptTracing();
+        break;
     }
   },
 
