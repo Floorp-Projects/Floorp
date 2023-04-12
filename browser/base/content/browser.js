@@ -193,6 +193,11 @@ XPCOMUtils.defineLazyScriptGetter(
 );
 XPCOMUtils.defineLazyScriptGetter(
   this,
+  "TranslationsPanel",
+  "chrome://browser/content/translations/translationsPanel.js"
+);
+XPCOMUtils.defineLazyScriptGetter(
+  this,
   "gProtectionsHandler",
   "chrome://browser/content/browser-siteProtections.js"
 );
@@ -1666,6 +1671,10 @@ var gBrowserInit = {
 
   onLoad() {
     gBrowser.addEventListener("DOMUpdateBlockedPopups", gPopupBlockerObserver);
+    gBrowser.addEventListener(
+      "TranslationsParent:LanguageState",
+      TranslationsPanel
+    );
 
     window.addEventListener("AppCommand", HandleAppCommandEvent, true);
 
@@ -5358,7 +5367,7 @@ var XULBrowserWindow = {
     CFRPageActions.updatePageActions(gBrowser.selectedBrowser);
 
     AboutReaderParent.updateReaderButton(gBrowser.selectedBrowser);
-    TranslationsParent.updateButtonFromLocationChange(gBrowser.selectedBrowser);
+    TranslationsParent.onLocationChange(gBrowser.selectedBrowser);
 
     PictureInPicture.updateUrlbarToggle(gBrowser.selectedBrowser);
 

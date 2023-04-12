@@ -57,12 +57,6 @@ XPCOMUtils.defineLazyGetter(lazy, "console", () => {
   });
 });
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "autoTranslatePagePref",
-  "browser.translations.autoTranslate"
-);
-
 export class LanguageIdEngine {
   /** @type {Worker} */
   #languageIdWorker;
@@ -540,6 +534,7 @@ export class TranslationsChild extends JSWindowActorChild {
   }
 
   /**
+   * @overrides JSWindowActorChild.prototype.handleEvent
    * @param {{ type: string }} event
    */
   handleEvent(event) {
@@ -559,17 +554,18 @@ export class TranslationsChild extends JSWindowActorChild {
           this.contentWindow.location,
           this.#langTags
         );
-        this.reportLangTagsToParent(null);
+        this.reportDetectedLangTagsToParent(null);
         break;
     }
+    return undefined;
   }
 
   /**
    * This is used to conditionally add the translations button.
    * @param {null | { appLangTag: string, docLangTag: string }} langTags
    */
-  reportLangTagsToParent(langTags) {
-    this.sendAsyncMessage("Translations:ReportLangTags", {
+  reportDetectedLangTagsToParent(langTags) {
+    this.sendAsyncMessage("Translations:ReportDetectedLangTags", {
       langTags,
     });
   }
@@ -687,10 +683,17 @@ export class TranslationsChild extends JSWindowActorChild {
     const langTags = await this.getLangTagsForTranslation(translationsStart);
 
     this.#langTags = langTags;
-    this.reportLangTagsToParent(langTags);
+    this.reportDetectedLangTagsToParent(langTags);
 
-    if (langTags && lazy.autoTranslatePagePref) {
-      this.translatePage(langTags, translationsStart);
+    if (
+      langTags &&
+      (await this.sendQuery("Translations:MaybeAutoTranslate", langTags))
+    ) {
+      this.translatePage(
+        langTags.docLangTag,
+        langTags.appLangTag,
+        translationsStart
+      );
     }
   }
 
@@ -711,12 +714,13 @@ export class TranslationsChild extends JSWindowActorChild {
   /**
    * Load the translation engine and translate the page.
    *
-   * @param {{docLangTag: string, appLangTag: string}} langTags
+   * @param {{fromLanguage: string, toLanguage: string}} langTags
    * @param {number} [translationsStart]
    * @returns {Promise<void>}
    */
   async translatePage(
-    { docLangTag, appLangTag },
+    fromLanguage,
+    toLanguage,
     translationsStart = this.docShell.now()
   ) {
     if (this.translatedDoc) {
@@ -725,14 +729,13 @@ export class TranslationsChild extends JSWindowActorChild {
     }
     try {
       const engineLoadStart = this.docShell.now();
-
       // Create a function to get an engine. These engines are pretty heavy in terms
       // of memory usage, so they will be destroyed when not in use, and attempt to
       // be re-used when loading a new page.
       this.#getTranslationsEngine = await translationsEngineCache.createGetter(
         this,
-        docLangTag,
-        appLangTag
+        fromLanguage,
+        toLanguage
       );
       if (this.#isDestroyed) {
         return;
@@ -760,9 +763,18 @@ export class TranslationsChild extends JSWindowActorChild {
       return;
     }
 
+    // Ensure the translation engine loads correctly at least once before instantiating
+    // the TranslationsDocument.
+    try {
+      await this.#getTranslationsEngine();
+    } catch (error) {
+      this.sendAsyncMessage("Translations:FullPageTranslationFailed");
+      return;
+    }
+
     this.translatedDoc = new lazy.TranslationsDocument(
       this.document,
-      docLangTag,
+      fromLanguage,
       this.innerWindowId,
       html =>
         this.#getTranslationsEngine().then(engine =>
@@ -808,20 +820,24 @@ export class TranslationsChild extends JSWindowActorChild {
    *
    * @param {{ name: string, data: any }} message
    */
-  receiveMessage(message) {
-    switch (message.name) {
+  receiveMessage({ name, data }) {
+    switch (name) {
       case "Translations:TranslatePage":
-        if (!this.#langTags) {
+        const langTags = data ?? this.#langTags;
+        if (!langTags) {
           lazy.console.warn(
-            "Attempting to translate a page, but no language tags were present."
+            "Attempting to translate a page, but no language tags were given."
           );
           break;
         }
-        this.translatePage(this.#langTags);
+        this.translatePage(langTags.fromLanguage, langTags.toLanguage);
         break;
+      case "Translations:GetLangTagsForTranslation":
+        return this.getLangTagsForTranslation();
       default:
         lazy.console.warn("Unknown message.");
     }
+    return undefined;
   }
 
   /**
