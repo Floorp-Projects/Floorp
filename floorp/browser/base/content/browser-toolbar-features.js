@@ -7,10 +7,12 @@ const { CustomizableUI } = ChromeUtils.import("resource:///modules/CustomizableU
 const { SessionStore } = ChromeUtils.import("resource:///modules/sessionstore/SessionStore.jsm")
 
 async function UCTFirst(){
+  const widgetId = "undo-closed-tab";
+  if (CustomizableUI.getWidget(widgetId)) return;
   const l10n = new Localization(["browser/floorp.ftl"])
   const l10n_text = await l10n.formatValue("undo-closed-tab") ?? "Undo close tab"
   CustomizableUI.createWidget({
-    id: 'undo-closed-tab',
+    id: widgetId,
     type: 'button',
     label: l10n_text,
     tooltiptext: l10n_text,
