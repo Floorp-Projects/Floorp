@@ -26,6 +26,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_permissions.h"
 #include "nsIPermissionManager.h"
+#include "nsIThread.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
 
@@ -101,7 +102,7 @@ uint32_t FeasibilityDistance(int32_t candidate, int32_t requested) {
 StaticRefPtr<VideoEngine> CamerasParent::sEngines[CaptureEngine::MaxEngine];
 int32_t CamerasParent::sNumOfOpenCamerasParentEngines = 0;
 int32_t CamerasParent::sNumOfCamerasParents = 0;
-base::Thread* CamerasParent::sVideoCaptureThread = nullptr;
+StaticRefPtr<nsIThread> CamerasParent::sVideoCaptureThread;
 Monitor* CamerasParent::sThreadMonitor = nullptr;
 StaticMutex CamerasParent::sMutex;
 
@@ -199,21 +200,6 @@ class DeliverFrameRunnable : public mozilla::Runnable {
   int mResult;
 };
 
-nsresult CamerasParent::DispatchToVideoCaptureThread(RefPtr<Runnable> event) {
-  // Don't try to dispatch if we're already on the right thread.
-  // There's a potential deadlock because the sThreadMonitor is likely
-  // to be taken already.
-  MonitorAutoLock lock(*sThreadMonitor);
-  if (!sVideoCaptureThread) {
-    LOG("Can't dispatch to video capture thread: thread not present");
-    return NS_ERROR_FAILURE;
-  }
-  MOZ_ASSERT(sVideoCaptureThread->thread_id() != PlatformThread::CurrentId());
-
-  sVideoCaptureThread->message_loop()->PostTask(event.forget());
-  return NS_OK;
-}
-
 void CamerasParent::StopVideoCapture() {
   LOG_FUNCTION();
   // Called when the actor is destroyed.
@@ -221,20 +207,18 @@ void CamerasParent::StopVideoCapture() {
   // Shut down the WebRTC stack (on the capture thread)
   RefPtr<CamerasParent> self(this);
   DebugOnly<nsresult> rv =
-      DispatchToVideoCaptureThread(NewRunnableFrom([self]() {
+      mVideoCaptureThread->Dispatch(NewRunnableFrom([self]() {
         MonitorAutoLock lock(*(self->sThreadMonitor));
         self->CloseEngines();
         // After closing the WebRTC stack, clean up the
         // VideoCapture thread.
-        base::Thread* thread = nullptr;
-        if (sNumOfOpenCamerasParentEngines == 0 && self->sVideoCaptureThread) {
-          thread = self->sVideoCaptureThread;
-          self->sVideoCaptureThread = nullptr;
+        nsCOMPtr<nsIThread> thread = nullptr;
+        if (sNumOfOpenCamerasParentEngines == 0) {
+          thread = std::move(self->sVideoCaptureThread);
         }
         nsresult rv = NS_DispatchToMainThread(NewRunnableFrom([self, thread]() {
           if (thread) {
-            thread->Stop();
-            delete thread;
+            thread->AsyncShutdown();
           }
           return NS_OK;
         }));
@@ -394,7 +378,7 @@ void CamerasParent::CloseEngines() {
   if (!mWebRTCAlive) {
     return;
   }
-  MOZ_ASSERT(sVideoCaptureThread->thread_id() == PlatformThread::CurrentId());
+  MOZ_ASSERT(mVideoCaptureThread->IsOnCurrentThread());
 
   // Stop the callers
   while (mCallbacks.Length()) {
@@ -479,7 +463,7 @@ mozilla::ipc::IPCResult CamerasParent::RecvNumberOfCaptureDevices(
     self->mPBackgroundEventTarget->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
     return NS_OK;
   });
-  DispatchToVideoCaptureThread(webrtc_runnable);
+  MOZ_ALWAYS_SUCCEEDS(mVideoCaptureThread->Dispatch(webrtc_runnable.forget()));
   return IPC_OK();
 }
 
@@ -510,7 +494,7 @@ mozilla::ipc::IPCResult CamerasParent::RecvEnsureInitialized(
     self->mPBackgroundEventTarget->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
     return NS_OK;
   });
-  DispatchToVideoCaptureThread(webrtc_runnable);
+  MOZ_ALWAYS_SUCCEEDS(mVideoCaptureThread->Dispatch(webrtc_runnable.forget()));
   return IPC_OK();
 }
 
@@ -548,7 +532,7 @@ mozilla::ipc::IPCResult CamerasParent::RecvNumberOfCapabilities(
                                                 NS_DISPATCH_NORMAL);
         return NS_OK;
       });
-  DispatchToVideoCaptureThread(webrtc_runnable);
+  MOZ_ALWAYS_SUCCEEDS(mVideoCaptureThread->Dispatch(webrtc_runnable.forget()));
   return IPC_OK();
 }
 
@@ -606,7 +590,7 @@ mozilla::ipc::IPCResult CamerasParent::RecvGetCaptureCapability(
                                                 NS_DISPATCH_NORMAL);
         return NS_OK;
       });
-  DispatchToVideoCaptureThread(webrtc_runnable);
+  MOZ_ALWAYS_SUCCEEDS(mVideoCaptureThread->Dispatch(webrtc_runnable.forget()));
   return IPC_OK();
 }
 
@@ -654,7 +638,7 @@ mozilla::ipc::IPCResult CamerasParent::RecvGetCaptureDevice(
     self->mPBackgroundEventTarget->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
     return NS_OK;
   });
-  DispatchToVideoCaptureThread(webrtc_runnable);
+  MOZ_ALWAYS_SUCCEEDS(mVideoCaptureThread->Dispatch(webrtc_runnable.forget()));
   return IPC_OK();
 }
 
@@ -779,7 +763,8 @@ mozilla::ipc::IPCResult CamerasParent::RecvAllocateCapture(
                                                       NS_DISPATCH_NORMAL);
               return NS_OK;
             });
-        self->DispatchToVideoCaptureThread(webrtc_runnable);
+        MOZ_ALWAYS_SUCCEEDS(
+            self->mVideoCaptureThread->Dispatch(webrtc_runnable.forget()));
         return NS_OK;
       });
   NS_DispatchToMainThread(mainthread_runnable);
@@ -824,7 +809,7 @@ mozilla::ipc::IPCResult CamerasParent::RecvReleaseCapture(
     self->mPBackgroundEventTarget->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
     return NS_OK;
   });
-  DispatchToVideoCaptureThread(webrtc_runnable);
+  MOZ_ALWAYS_SUCCEEDS(mVideoCaptureThread->Dispatch(webrtc_runnable.forget()));
   return IPC_OK();
 }
 
@@ -960,7 +945,7 @@ mozilla::ipc::IPCResult CamerasParent::RecvStartCapture(
     self->mPBackgroundEventTarget->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
     return NS_OK;
   });
-  DispatchToVideoCaptureThread(webrtc_runnable);
+  MOZ_ALWAYS_SUCCEEDS(mVideoCaptureThread->Dispatch(webrtc_runnable.forget()));
   return IPC_OK();
 }
 
@@ -997,7 +982,7 @@ mozilla::ipc::IPCResult CamerasParent::RecvFocusOnSelectedSource(
         LOG("RecvFocusOnSelectedSource CameraParent not initialized");
         return NS_ERROR_FAILURE;
       });
-  DispatchToVideoCaptureThread(webrtc_runnable);
+  MOZ_ALWAYS_SUCCEEDS(mVideoCaptureThread->Dispatch(webrtc_runnable.forget()));
   return IPC_OK();
 }
 
@@ -1039,8 +1024,8 @@ mozilla::ipc::IPCResult CamerasParent::RecvStopCapture(
         self->StopCapture(aCapEngine, aCaptureId);
         return NS_OK;
       });
-  nsresult rv = DispatchToVideoCaptureThread(webrtc_runnable);
-  if (!self->mChildIsAlive) {
+  nsresult rv = mVideoCaptureThread->Dispatch(webrtc_runnable.forget());
+  if (!mChildIsAlive) {
     if (NS_FAILED(rv)) {
       return IPC_FAIL_NO_REASON(this);
     }
@@ -1141,20 +1126,24 @@ ipc::IPCResult CamerasParent::RecvPCamerasConstructor() {
       ->Track(mShutdownRequest);
 
   MonitorAutoLock lock(*sThreadMonitor);
-  if (sVideoCaptureThread == nullptr) {
+  if (!sVideoCaptureThread) {
     LOG("Spinning up WebRTC Cameras Thread");
     MOZ_ASSERT(sNumOfOpenCamerasParentEngines == 0);
-    sVideoCaptureThread = new base::Thread("VideoCapture");
-    base::Thread::Options options;
-#if defined(_WIN32)
-    options.message_loop_type = MessageLoop::TYPE_MOZILLA_NONMAINUITHREAD;
-#else
-    options.message_loop_type = MessageLoop::TYPE_MOZILLA_NONMAINTHREAD;
+    nsIThreadManager::ThreadCreationOptions options;
+#ifdef XP_WIN
+    // Windows desktop capture needs a UI thread
+    options.isUiThread = true;
 #endif
-    if (!sVideoCaptureThread->StartWithOptions(options)) {
-      MOZ_CRASH();
+    nsCOMPtr<nsIThread> videoCaptureThread;
+    nsresult rv = NS_NewNamedThread(
+        "VideoCapture", getter_AddRefs(videoCaptureThread), nullptr, options);
+    sVideoCaptureThread = videoCaptureThread.forget();
+
+    if (NS_FAILED(rv)) {
+      return Send__delete__(this) ? IPC_OK() : IPC_FAIL(this, "Failed to send");
     }
   }
+  mVideoCaptureThread = sVideoCaptureThread;
   mWebRTCAlive = true;
   sNumOfOpenCamerasParentEngines++;
   return IPC_OK();
