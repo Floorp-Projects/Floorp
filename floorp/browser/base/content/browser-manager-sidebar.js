@@ -131,10 +131,10 @@
                  document.getElementById(clickedWebpanel)?.remove();
              },
              muteWebpanel:()=>{
-                 if (contextWebpanel.audioMuted == false) {
-                     contextWebpanel.mute();
-                 } else {
+                 if (contextWebpanel.audioMuted) {
                      contextWebpanel.unmute();
+                 } else {
+                    contextWebpanel.mute();
                  }
              }
          }
