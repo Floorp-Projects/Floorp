@@ -137,6 +137,14 @@ this.declarativeNetRequest = class extends ExtensionAPI {
           req.requestURI = Services.io.newURI(url);
           if (initiator) {
             req.initiatorURI = Services.io.newURI(initiator);
+            if (req.initiatorURI.schemeIs("data")) {
+              // data:-URIs are always opaque, i.e. a null principal. We should
+              // therefore ignore them here.
+              // ExtensionDNR's NetworkIntegration.startDNREvaluation does not
+              // encounter data:-URIs because opaque principals are mapped to a
+              // null initiatorURI. For consistency, we do the same here.
+              req.initiatorURI = null;
+            }
           }
           const matchedRules = ExtensionDNR.getMatchedRulesForRequest(
             req,
