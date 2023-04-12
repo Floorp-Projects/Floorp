@@ -404,10 +404,10 @@ export var SelectParentHelper = {
     }
   },
 
-  receiveMessage(msg) {
-    // Sanity check - we'd better know what the currently
-    // opened menulist is, and what browser it belongs to...
-    if (!this._currentMenulist) {
+  receiveMessage(browser, msg) {
+    // Sanity check - we'd better know what the currently opened menulist is,
+    // and what browser it belongs to...
+    if (!this._currentMenulist || this._currentBrowser != browser) {
       return;
     }
 
@@ -792,7 +792,7 @@ export class SelectParent extends JSWindowActorParent {
       }
 
       default:
-        SelectParentHelper.receiveMessage(message);
+        SelectParentHelper.receiveMessage(this.relevantBrowser, message);
     }
   }
 }
