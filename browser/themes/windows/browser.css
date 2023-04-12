@@ -313,7 +313,8 @@ menuitem.bookmark-item {
   }
 
   #urlbar:not(:-moz-lwtheme, [focused="true"]) > #urlbar-background,
-  #searchbar:not(:-moz-lwtheme, :focus-within) {
+  #searchbar:not(:-moz-lwtheme, :focus-within),
+  .findbar-textbox:not(:-moz-lwtheme, :focus) {
     border-color: ThreeDShadow;
   }
 }

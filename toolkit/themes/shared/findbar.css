@@ -8,22 +8,25 @@
 findbar {
   border-top: 1px solid ThreeDShadow;
   min-width: 1px;
-  transition-property: margin-bottom, opacity, visibility;
-  transition-duration: 150ms, 150ms, 0s;
-  transition-timing-function: ease-in-out, ease-in-out, linear;
+  transition-property: margin-bottom, visibility;
+  transition-duration: 150ms, 0s;
+  transition-timing-function: ease-in-out, linear;
   padding-block: 6px;
+  background-color: -moz-dialog;
+  color: -moz-dialogtext;
 }
 
 findbar[hidden] {
   /* Override display:none to make the transition work. */
   display: flex;
+  margin-bottom: calc(-1 * (28px + 12px + 1px)); /* findbar-container's height + padding-block + top border */
   visibility: collapse;
-  margin-bottom: -1em;
-  opacity: 0;
-  transition-delay: 0s, 0s, 150ms;
+  transition-delay: 0s, 150ms;
 }
 
-findbar[noanim] {
+findbar[noanim],
+findbar[noanim] > .findbar-container,
+findbar[noanim] > .findbar-closebutton {
   transition-duration: 0s !important;
   transition-delay: 0s !important;
 }
@@ -32,6 +35,11 @@ findbar[noanim] {
   margin-inline-start: 8px;
   height: 28px;
   overflow-inline: hidden; /* Ensures the close button stays visible. */
+  transition: opacity 150ms ease-in-out;
+}
+
+findbar[hidden] > .findbar-container {
+  opacity: 0;
 }
 
 /* Remove start margin when close button is on the left side (on macOS) */
@@ -41,19 +49,10 @@ findbar[noanim] {
 
 /* Search field */
 
-/* Don't apply theme colors on findbar when header image is applied to avoid
-contrast issues, see bug 1506913 */
-html|html[lwtheme-image] findbar {
-  --toolbar-field-background-color: initial;
-  --toolbar-field-color: initial;
-  --toolbar-field-border-color: initial;
-  --toolbar-field-focus-background-color: initial;
-  --toolbar-field-focus-color: initial;
-}
-
 html|input.findbar-textbox {
   appearance: none;
-  background-color: Field;
+  background-color: var(--input-bgcolor, var(--toolbar-field-background-color));
+  color: var(--input-color, var(--toolbar-field-color));
   border: 1px solid var(--input-border-color, var(--toolbar-field-border-color));
   border-radius: 4px;
   outline: none;
@@ -64,20 +63,17 @@ html|input.findbar-textbox {
   box-sizing: border-box;
 }
 
-html|input.findbar-textbox:-moz-lwtheme {
-  background-color: var(--input-bgcolor, var(--toolbar-field-background-color));
-  color: var(--input-color, var(--toolbar-field-color));
-  color-scheme: light;
-}
-
-:root[lwt-toolbar-field-focus-brighttext] html|input.findbar-textbox {
-  color-scheme: dark;
+html|input.findbar-textbox::placeholder {
+  opacity: 0.69;
 }
 
 html|input.findbar-textbox:focus {
+  background-color: var(--toolbar-field-focus-background-color);
+  color: var(--toolbar-field-focus-color);
   border-color: transparent;
   outline: var(--focus-outline);
   outline-offset: var(--focus-outline-inset);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.23);
 }
 
 html|input.findbar-textbox:-moz-lwtheme::selection {
@@ -103,39 +99,32 @@ html|input.findbar-textbox[flash="true"] {
 
 .findbar-find-previous,
 .findbar-find-next {
-  margin-inline-start: 0;
   appearance: none;
   padding: 4px 7px;
   -moz-context-properties: fill;
-  fill: currentColor;
+  fill: var(--toolbarbutton-icon-fill);
   color: inherit;
   border-radius: 4px;
 }
 
 .findbar-find-previous:not([disabled]):hover,
 .findbar-find-next:not([disabled]):hover {
-  background: var(--button-hover-bgcolor, rgba(190,190,190,.2));
+  background-color: var(--toolbarbutton-hover-background, rgba(190,190,190,.2));
 }
 
 .findbar-find-previous:not([disabled]):hover:active,
 .findbar-find-next:not([disabled]):hover:active {
-  background: var(--button-active-bgcolor, rgba(190,190,190,.4));
+  background-color: var(--toolbarbutton-active-background, rgba(190,190,190,.4));
 }
 
 .findbar-find-previous {
   list-style-image: url(chrome://global/skin/icons/arrow-up.svg);
-  border-inline-width: 0;
   margin-inline: 8px 0;
 }
 
 .findbar-find-next {
-  margin-inline-end: 8px;
   list-style-image: url(chrome://global/skin/icons/arrow-down.svg);
-}
-
-.findbar-find-previous > .toolbarbutton-icon,
-.findbar-find-next > .toolbarbutton-icon {
-  margin: 0;
+  margin-inline: 0 8px;
 }
 
 .findbar-find-previous[disabled="true"] > .toolbarbutton-icon,
@@ -145,10 +134,7 @@ html|input.findbar-textbox[flash="true"] {
 
 /* Checkboxes & Labels */
 
-.findbar-highlight,
-.findbar-case-sensitive,
-.findbar-match-diacritics,
-.findbar-entire-word,
+.findbar-container > checkbox,
 .findbar-label {
   margin: 0 8px;
 }
@@ -172,4 +158,19 @@ html|input.findbar-textbox[flash="true"] {
 .close-icon.findbar-closebutton {
   margin: 2px 8px;
   width: 24px;
+  fill: var(--toolbarbutton-icon-fill);
+  transition: opacity 150ms ease-in-out;
+}
+
+findbar[hidden] > .findbar-closebutton {
+  opacity: 0;
+}
+
+.close-icon.findbar-closebutton:hover {
+  background-color: var(--toolbarbutton-hover-background, rgba(190,190,190,.2));
+  outline: none;
+}
+
+.close-icon.findbar-closebutton:hover:active {
+  background-color: var(--toolbarbutton-active-background, rgba(190,190,190,.4));
 }
