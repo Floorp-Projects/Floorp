@@ -751,6 +751,7 @@ test_setting_description_schema = Schema(
                 "domstreams",
                 "lite",
                 "mingwclang",
+                "nightlyasrelease",
                 "shippable",
                 "tsan",
             ): bool,
