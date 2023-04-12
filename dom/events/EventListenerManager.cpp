@@ -33,8 +33,6 @@
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_dom.h"
-#include "mozilla/TimelineConsumers.h"
-#include "mozilla/EventTimelineMarker.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/ChromeUtils.h"
 
@@ -1482,27 +1480,6 @@ void EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
               legacyAutoOverride.emplace(*aDOMEvent, eventMessage);
             }
 
-            // Maybe add a marker to the docshell's timeline, but only
-            // bother with all the logic if some docshell is recording.
-            nsCOMPtr<nsIDocShell> docShell;
-            bool needsEndEventMarker = false;
-
-            if (mIsMainThreadELM &&
-                listener->mListenerType != Listener::eNativeListener) {
-              docShell = nsContentUtils::GetDocShellForEventTarget(mTarget);
-              if (docShell) {
-                if (TimelineConsumers::HasConsumer(docShell)) {
-                  needsEndEventMarker = true;
-                  nsAutoString typeStr;
-                  (*aDOMEvent)->GetType(typeStr);
-                  uint16_t phase = (*aDOMEvent)->EventPhase();
-                  TimelineConsumers::AddMarkerForDocShell(
-                      docShell, MakeUnique<EventTimelineMarker>(
-                                    typeStr, phase, MarkerTracingType::START));
-                }
-              }
-            }
-
             aEvent->mFlags.mInPassiveListener = listener->mFlags.mPassive;
             Maybe<Listener> listenerHolder;
             if (listener->mFlags.mOnce) {
@@ -1532,11 +1509,6 @@ void EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
               aEvent->mFlags.mExceptionWasRaised = true;
             }
             aEvent->mFlags.mInPassiveListener = false;
-
-            if (needsEndEventMarker) {
-              TimelineConsumers::AddMarkerForDocShell(docShell, "DOMEvent",
-                                                      MarkerTracingType::END);
-            }
           }
         }
       }
