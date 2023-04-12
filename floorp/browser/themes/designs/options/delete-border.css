@@ -8,7 +8,7 @@
   }
   
   .browserContainer {
-    border: solid 5px var(--toolbar-bgcolor);
+    border: solid 3px var(--toolbar-bgcolor);
     border-top: none;
   }
 
@@ -60,3 +60,10 @@
     box-shadow: none !important;
   }
   
+  :root[customizing] #statusBar, :root[customizing] #nav-bar {
+    border-top: 1px solid var(--chrome-content-separator-color) !important;
+  }
+
+  :root[customizing] #navigator-toolbox {
+    border-bottom: 1px solid var(--chrome-content-separator-color) !important;
+  }
