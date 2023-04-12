@@ -40,7 +40,7 @@ add_task(async function runTest() {
 
   const iframe = panel.firstChild;
   const popupShownPromise = BrowserTestUtils.waitForSelectPopupShown(
-    iframe.contentWindow
+    toolbox.win.browsingContext.topChromeWindow
   );
 
   const browser = iframe.contentDocument.getElementById(
