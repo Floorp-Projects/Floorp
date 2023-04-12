@@ -8,12 +8,11 @@ import platform
 import six
 from mozlog.commandline import add_logging_group
 
-(FIREFOX, CHROME, CHROMIUM, SAFARI, CHROMIUM_RELEASE) = DESKTOP_APPS = [
+(FIREFOX, CHROME, CHROMIUM, SAFARI) = DESKTOP_APPS = [
     "firefox",
     "chrome",
     "chromium",
     "safari",
-    "custom-car",
 ]
 (GECKOVIEW, REFBROW, FENIX, CHROME_ANDROID) = FIREFOX_ANDROID_APPS = [
     "geckoview",
@@ -28,7 +27,6 @@ APPS = {
     CHROME: {"long_name": "Google Chrome Desktop"},
     CHROMIUM: {"long_name": "Google Chromium Desktop"},
     SAFARI: {"long_name": "Safari Desktop"},
-    CHROMIUM_RELEASE: {"long_name": "Custom Chromium-as-Release desktop"},
     GECKOVIEW: {
         "long_name": "Firefox GeckoView on Android",
         "default_activity": "org.mozilla.geckoview_example.GeckoViewActivity",
