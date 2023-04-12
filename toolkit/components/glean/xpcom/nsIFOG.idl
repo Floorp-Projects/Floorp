@@ -105,7 +105,7 @@ interface nsIFOG : nsISupports
   /**
    * Set remote-configuration for metrics' disabled property.
    *
-   * See [`glean_core::Glean::set_metrics_disabled_config`]
+   * See [`glean_core::Glean::set_metrics_enabled_config`]
    *
    * Logs on error, but does not throw.
    *
