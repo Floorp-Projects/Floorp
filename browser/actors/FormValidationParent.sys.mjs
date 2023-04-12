@@ -96,7 +96,7 @@ export class FormValidationParent extends JSWindowActorParent {
           return;
         }
 
-        this._showPopup(data);
+        this._showPopup(browser, data);
         break;
       case "FormValidation:HidePopup":
         this._hidePopup();
@@ -137,21 +137,17 @@ export class FormValidationParent extends JSWindowActorParent {
    * Shows the form validation popup at a specified position or updates the
    * messaging and position if the popup is already displayed.
    *
+   * @aBrowser - Browser element that requests the popup.
    * @aPanelData - Object that contains popup information
    *  aPanelData stucture detail:
    *   screenRect - the screen rect of the target element.
    *   position - popup positional string constants.
    *   message - the form element validation message text.
    */
-  _showPopup(aPanelData) {
+  _showPopup(aBrowser, aPanelData) {
     let previouslyShown = !!this._panel;
     this._panel = this._getAndMaybeCreatePanel();
     this._panel.firstChild.textContent = aPanelData.message;
-
-    let browser = this.browsingContext.top.embedderElement;
-    let window = browser.ownerGlobal;
-
-    let tabBrowser = window.gBrowser;
 
     // Display the panel if it isn't already visible.
     if (previouslyShown) {
@@ -164,9 +160,11 @@ export class FormValidationParent extends JSWindowActorParent {
     Services.obs.addObserver(this._obs, "popup-shown", true);
 
     // Hide if the user scrolls the page
-    tabBrowser.selectedBrowser.addEventListener("scroll", this, true);
-    tabBrowser.selectedBrowser.addEventListener("FullZoomChange", this);
-    tabBrowser.selectedBrowser.addEventListener("TextZoomChange", this);
+    aBrowser.addEventListener("scroll", this, true);
+    aBrowser.addEventListener("FullZoomChange", this);
+    aBrowser.addEventListener("TextZoomChange", this);
+
+    aBrowser.constrainPopup(this._panel);
 
     // Open the popup
     let rect = aPanelData.screenRect;
