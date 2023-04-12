@@ -1,5 +1,5 @@
-/* -*- js-indent-level: 4; tab-width: 4; indent-tabs-mode: nil -*- */
-/* vim:set ts=4 sw=4 sts=4 et: */
+/* -*- js-indent-level: 2; tab-width: 2; indent-tabs-mode: nil -*- */
+/* vim:set ts=2 sw=2 sts=2 et: */
 
 // Generally gTestPath should be set by the harness.
 /* global gTestPath */
@@ -27,11 +27,14 @@ let isSameOrigin = function(w) {
 let isXOrigin = !isSameOrigin(window);
 
 // Note: duplicated in browser-test.js . See also bug 1820150.
-function isErrorObj(err) {
+function isErrorOrException(err) {
   // It'd be nice if we had either `Error.isError(err)` or `Error.isInstance(err)`
   // but we don't, so do it ourselves:
   if (!err) {
     return false;
+  }
+  if (err instanceof Ci.nsIException) {
+    return true;
   }
   try {
     let glob = SpecialPowers.Cu.getGlobalForObject(err);
@@ -2148,7 +2151,7 @@ var add_task = (function() {
               let serializedEx;
               if (
                 typeof ex == "string" ||
-                (typeof ex == "object" && isErrorObj(ex))
+                (typeof ex == "object" && isErrorOrException(ex))
               ) {
                 serializedEx = `${ex}`;
               } else {
