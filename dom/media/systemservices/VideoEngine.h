@@ -50,7 +50,7 @@ struct CaptureDeviceInfo {
 // it was removed (and reimplemented in Talk)
 class VideoEngine {
  private:
-  virtual ~VideoEngine() = default;
+  virtual ~VideoEngine();
 
   // Base cache expiration period
   // Note because cameras use HW plug event detection, this

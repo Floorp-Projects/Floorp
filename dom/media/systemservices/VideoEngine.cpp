@@ -240,4 +240,9 @@ VideoEngine::VideoEngine(const CaptureDeviceType& aCaptureDeviceType)
        mCaptureDevInfo.TypeName()));
 }
 
+VideoEngine::~VideoEngine() {
+  MOZ_ASSERT(mCaps.empty());
+  MOZ_ASSERT(mIdMap.empty());
+}
+
 }  // namespace mozilla::camera

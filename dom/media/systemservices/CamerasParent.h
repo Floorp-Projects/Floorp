@@ -13,7 +13,6 @@
 #include "mozilla/camera/PCamerasParent.h"
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/ShmemPool.h"
-#include "mozilla/StaticMutex.h"
 #include "api/video/video_sink_interface.h"
 #include "modules/video_capture/video_capture.h"
 #include "modules/video_capture/video_capture_defines.h"
@@ -53,7 +52,8 @@ class CamerasParent final : public PCamerasParent,
                             private webrtc::VideoInputFeedBack {
   using ShutdownMozPromise = media::ShutdownBlockingTicket::ShutdownMozPromise;
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CamerasParent)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DELETE_ON_EVENT_TARGET(
+      CamerasParent, mPBackgroundEventTarget)
 
  public:
   friend DeliverFrameRunnable;
@@ -95,7 +95,7 @@ class CamerasParent final : public PCamerasParent,
   bool IsShuttingDown() {
     // the first 2 are pBackground only, the last is atomic
     MOZ_ASSERT(mPBackgroundEventTarget->IsOnCurrentThread());
-    return !mChildIsAlive || mDestroyed || !mWebRTCAlive;
+    return mDestroyed;
   };
   ShmemBuffer GetBuffer(size_t aSize);
 
@@ -118,34 +118,22 @@ class CamerasParent final : public PCamerasParent,
   void OnDeviceChange() override;
 
   VideoEngine* EnsureInitialized(int aEngine);
+
+  // Stops any ongoing capturing and releases resources. Called on
+  // mVideoCaptureThread. Idempotent.
   void CloseEngines();
 
   void OnShutdown();
 
-  // sEngines will be accessed by VideoCapture thread only
-  // sNumOfCamerasParents, sNumOfOpenCamerasParentEngines, and
-  // sVideoCaptureThread will be accessed by main thread / PBackground thread /
-  // VideoCapture thread
-  // sNumOfCamerasParents and sThreadMonitor create & delete are protected by
-  // sMutex
-  // sNumOfOpenCamerasParentEngines and sVideoCaptureThread are protected by
-  // sThreadMonitor
-  static StaticRefPtr<VideoEngine> sEngines[CaptureEngine::MaxEngine];
-  // Number of CamerasParents for which mWebRTCAlive is true.
-  static int32_t sNumOfOpenCamerasParentEngines;
-  static int32_t sNumOfCamerasParents;
-  static StaticMutex sMutex;
-  static Monitor* sThreadMonitor;
-  // video processing thread - where webrtc.org capturer code runs
-  static StaticRefPtr<nsIThread> sVideoCaptureThread;
-
   nsTArray<CallbackHelper*> mCallbacks;
-  nsCOMPtr<nsISerialEventTarget> mVideoCaptureThread;
   // If existent, blocks xpcom shutdown while alive.
   // Note that this makes a reference cycle that gets broken in ActorDestroy().
   const UniquePtr<media::ShutdownBlockingTicket> mShutdownBlocker;
   // Tracks the mShutdownBlocker shutdown handler. mPBackgroundEventTarget only.
   MozPromiseRequestHolder<ShutdownMozPromise> mShutdownRequest;
+
+  // Local copy of sVideoCaptureThread. Guaranteed alive if non-null.
+  const nsCOMPtr<nsISerialEventTarget> mVideoCaptureThread;
 
   // image buffers
   ShmemPool mShmemPool;
@@ -153,17 +141,12 @@ class CamerasParent final : public PCamerasParent,
   // PBackgroundParent thread
   const nsCOMPtr<nsISerialEventTarget> mPBackgroundEventTarget;
 
-  // Shutdown handling
-  bool mChildIsAlive;
+  // Set to true in ActorDestroy. PBackground only.
   bool mDestroyed;
-  // Above 2 are PBackground only, but this is potentially
-  // read cross-thread.
-  Atomic<bool> mWebRTCAlive;
+
   std::map<nsCString, std::map<uint32_t, webrtc::VideoCaptureCapability>>
       mAllCandidateCapabilities;
 };
-
-PCamerasParent* CreateCamerasParent();
 
 }  // namespace mozilla::camera
 
