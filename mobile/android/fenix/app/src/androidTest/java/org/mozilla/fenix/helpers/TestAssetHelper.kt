@@ -127,6 +127,14 @@ object TestAssetHelper {
         return TestAsset(url, content, title)
     }
 
+    fun getMutedVideoPageAsset(server: MockWebServer): TestAsset {
+        val url = server.url("pages/mutedVideoPage.html").toString().toUri()!!
+        val title = "Muted_Video_Test_Page"
+        val content = "Page content: muted video player"
+
+        return TestAsset(url, content, title)
+    }
+
     fun getStorageTestAsset(server: MockWebServer, pageAsset: String): TestAsset {
         val url = server.url("pages/$pageAsset").toString().toUri()!!
 

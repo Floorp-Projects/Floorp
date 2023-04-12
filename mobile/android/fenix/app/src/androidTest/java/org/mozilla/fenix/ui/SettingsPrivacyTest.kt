@@ -144,15 +144,4 @@ class SettingsPrivacyTest {
             verifySitePermissionOption("Exceptions")
         }
     }
-
-    @Test
-    fun notificationPermissionsItemsTest() {
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openSettingsSubMenuSitePermissions {
-        }.openNotification {
-            verifyNotificationSubMenuItems()
-        }
-    }
 }

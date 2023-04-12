@@ -30,7 +30,7 @@ import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.helpers.TestHelper.assertNativeAppOpens
 import org.mozilla.fenix.helpers.TestHelper.denyPermission
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
-import org.mozilla.fenix.helpers.TestHelper.grantPermission
+import org.mozilla.fenix.helpers.TestHelper.grantSystemPermission
 import org.mozilla.fenix.helpers.TestHelper.longTapSelectItem
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.setCustomSearchEngine
@@ -117,7 +117,7 @@ class SearchTest {
         homeScreen {
         }.openSearch {
             clickScanButton()
-            grantPermission()
+            grantSystemPermission()
             verifyScannerOpen()
         }
     }

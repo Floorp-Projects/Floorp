@@ -1262,8 +1262,28 @@ class BrowserRobot {
         }
 
         fun clickRequestStorageAccessButton(interact: SitePermissionsRobot.() -> Unit): SitePermissionsRobot.Transition {
+            // Clicks the "request storage access" button from the "cross-site-cookies.html" local asset
             webPageItemContainingText("requestStorageAccess()").waitForExists(waitingTime)
             clickPageObject(webPageItemContainingText("requestStorageAccess()"))
+
+            SitePermissionsRobot().interact()
+            return SitePermissionsRobot.Transition()
+        }
+
+        fun clickRequestPersistentStorageAccessButton(interact: SitePermissionsRobot.() -> Unit): SitePermissionsRobot.Transition {
+            // Clicks the "Persistent storage" button from "https://mozilla-mobile.github.io/testapp/permissions"
+            webPageItemWithResourceId("persistentStorageButton").waitForExists(waitingTime)
+            clickPageObject(webPageItemWithResourceId("persistentStorageButton"))
+
+            SitePermissionsRobot().interact()
+            return SitePermissionsRobot.Transition()
+        }
+
+        fun clickRequestDRMControlledContentAccessButton(interact: SitePermissionsRobot.() -> Unit): SitePermissionsRobot.Transition {
+            // Clicks the "DRM-controlled content" button from "https://mozilla-mobile.github.io/testapp/permissions"
+
+            webPageItemWithResourceId("drmPermissionButton").waitForExists(waitingTime)
+            clickPageObject(webPageItemWithResourceId("drmPermissionButton"))
 
             SitePermissionsRobot().interact()
             return SitePermissionsRobot.Transition()

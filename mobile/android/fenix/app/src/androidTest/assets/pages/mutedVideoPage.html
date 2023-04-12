@@ -4,10 +4,10 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <html>
 <head>
-    <title>Video_Test_Page</title>
+    <title>Muted_Video_Test_Page</title>
 </head>
 <body>
-<p id="testContent">Page content: video player</p>
+<p id="testContent">Page content: muted video player</p>
 <div class="playbackState">
     <p>Media file not playing</p>
 </div>
@@ -16,33 +16,33 @@
     <button onclick="pause()">Pause</button>
     <button onclick="fullscreen()">Full Screen</button>
     <br><br>
-    <video id="video" width="420" autoplay controls loop>
+    <video id="mutedVideo" width="420" autoplay muted controls loop>
         <source src="../resources/clip.mp4" type="video/mp4">
         Your browser does not support HTML video.
     </video>
 </div>
 
 <script>
-    const video = document.getElementById("video");
+    const mutedVideo = document.getElementById("mutedVideo");
 
     function play() {
-        video.play();
+        mutedVideo.play();
     }
 
     function pause() {
-        video.pause();
+        mutedVideo.pause();
     }
 
     function fullscreen() {
-        video.requestFullscreen();
+        mutedVideo.requestFullscreen();
     }
 
-    video.addEventListener('playing', (event) => {
-        document.querySelector('.playbackState').innerHTML="Media file is playing";
+    mutedVideo.addEventListener('playing', (event) => {
+     document.querySelector('.playbackState').innerHTML="Media file is playing";
     });
 
-    video.addEventListener('pause', (event) => {
-         document.querySelector('.playbackState').innerHTML="Media file is paused";
+    mutedVideo.addEventListener('pause', (event) => {
+        document.querySelector('.playbackState').innerHTML="Media file is paused";
     });
 </script>
 </body>

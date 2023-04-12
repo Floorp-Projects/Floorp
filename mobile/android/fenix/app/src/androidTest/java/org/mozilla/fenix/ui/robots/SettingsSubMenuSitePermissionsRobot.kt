@@ -139,6 +139,21 @@ class SettingsSubMenuSitePermissionsRobot {
             return SettingsSubMenuSitePermissionsCommonRobot.Transition()
         }
 
+        fun openDRMControlledContent(
+            interact: SettingsSubMenuSitePermissionsCommonRobot.() -> Unit,
+        ): SettingsSubMenuSitePermissionsCommonRobot.Transition {
+            onView(withId(R.id.recycler_view)).perform(
+                RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+                    hasDescendant(withText("DRM-controlled content")),
+                ),
+            )
+
+            openDrmControlledContent().click()
+
+            SettingsSubMenuSitePermissionsCommonRobot().interact()
+            return SettingsSubMenuSitePermissionsCommonRobot.Transition()
+        }
+
         fun openExceptions(
             interact: SettingsSubMenuSitePermissionsExceptionsRobot.() -> Unit,
         ): SettingsSubMenuSitePermissionsExceptionsRobot.Transition {
@@ -176,6 +191,9 @@ private fun openNotification() =
 
 private fun openPersistentStorage() =
     onView(allOf(withText("Persistent Storage")))
+
+private fun openDrmControlledContent() =
+    onView(allOf(withText("DRM-controlled content")))
 
 private fun openExceptions() =
     onView(allOf(withText("Exceptions")))

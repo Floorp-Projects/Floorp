@@ -6,26 +6,107 @@ package org.mozilla.fenix.ui.robots
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers.Visibility
+import androidx.test.espresso.matcher.ViewMatchers.hasSibling
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
-import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
+import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.uiautomator.UiSelector
 import org.hamcrest.CoreMatchers.allOf
+import org.hamcrest.CoreMatchers.containsString
+import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestHelper.getStringResource
+import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
 
 /**
  * Implementation of Robot Pattern for the settings Site Permissions Notification sub menu.
  */
 class SettingsSubMenuSitePermissionsExceptionsRobot {
-
-    fun verifyNavigationToolBarHeader() = assertNavigationToolBarHeader()
-
-    fun verifyExceptionDefault() = assertExceptionDefault()!!
-
-    fun verifySitePermissionsExceptionSubMenuItems() {
-        verifyExceptionDefault()
+    fun verifyExceptionsEmptyList() {
+        mDevice.findObject(UiSelector().text(getStringResource(R.string.no_site_exceptions)))
+            .waitForExists(waitingTime)
+        onView(withText(R.string.no_site_exceptions)).check(matches(isDisplayed()))
     }
+
+    fun verifyExceptionCreated(url: String, shouldBeDisplayed: Boolean) {
+        if (shouldBeDisplayed) {
+            exceptionsList.waitForExists(waitingTime)
+            onView(withText(containsString(url))).check(matches(isDisplayed()))
+        } else {
+            assertTrue(
+                mDevice.findObject(UiSelector().textContains(url)).waitUntilGone(waitingTime),
+            )
+        }
+    }
+
+    fun verifyClearPermissionsDialog() {
+        onView(withText(R.string.clear_permissions)).check(matches(isDisplayed()))
+        onView(withText(R.string.confirm_clear_permissions_on_all_sites)).check(matches(isDisplayed()))
+        onView(withText(R.string.clear_permissions_positive)).check(matches(isDisplayed()))
+        onView(withText(R.string.clear_permissions_negative)).check(matches(isDisplayed()))
+    }
+
+    // Click button for resetting all of one site's permissions to default
+    fun clickClearPermissionsForOneSite() {
+        swipeToBottom()
+        onView(withText(R.string.clear_permissions))
+            .check(matches(isDisplayed()))
+            .click()
+    }
+    fun verifyClearPermissionsForOneSiteDialog() {
+        onView(withText(R.string.clear_permissions)).check(matches(isDisplayed()))
+        onView(withText(R.string.confirm_clear_permissions_site)).check(matches(isDisplayed()))
+        onView(withText(R.string.clear_permissions_positive)).check(matches(isDisplayed()))
+        onView(withText(R.string.clear_permissions_negative)).check(matches(isDisplayed()))
+    }
+
+    fun openSiteExceptionsDetails(url: String) {
+        exceptionsList.waitForExists(waitingTime)
+        onView(withText(containsString(url))).click()
+    }
+
+    fun verifyPermissionSettingSummary(setting: String, summary: String) {
+        onView(
+            allOf(
+                withText(setting),
+                hasSibling(withText(summary)),
+            ),
+        ).check(matches(isDisplayed()))
+    }
+
+    fun openChangePermissionSettingsMenu(permissionSetting: String) {
+        onView(withText(containsString(permissionSetting))).click()
+    }
+
+    // Click button for resetting all permissions for all websites
+    fun clickClearPermissionsOnAllSites() {
+        exceptionsList.waitForExists(waitingTime)
+        onView(withId(R.id.delete_all_site_permissions_button))
+            .check(matches(isDisplayed()))
+            .click()
+    }
+
+    // Click button for resetting one site permission to default
+    fun clickClearOnePermissionForOneSite() {
+        onView(withText(R.string.clear_permission))
+            .check(matches(isDisplayed()))
+            .click()
+    }
+
+    fun verifyResetPermissionDefaultForThisSiteDialog() {
+        onView(withText(R.string.clear_permission)).check(matches(isDisplayed()))
+        onView(withText(R.string.confirm_clear_permission_site)).check(matches(isDisplayed()))
+        onView(withText(R.string.clear_permissions_positive)).check(matches(isDisplayed()))
+        onView(withText(R.string.clear_permissions_negative)).check(matches(isDisplayed()))
+    }
+
+    fun clickOK() = onView(withText(R.string.clear_permissions_positive)).click()
+
+    fun clickCancel() = onView(withText(R.string.clear_permissions_negative)).click()
 
     class Transition {
         fun goBack(interact: SettingsSubMenuSitePermissionsRobot.() -> Unit): SettingsSubMenuSitePermissionsRobot.Transition {
@@ -40,10 +121,5 @@ class SettingsSubMenuSitePermissionsExceptionsRobot {
 private fun goBackButton() =
     onView(allOf(withContentDescription("Navigate up")))
 
-private fun assertNavigationToolBarHeader() {
-    onView(withText(R.string.preference_exceptions))
-        .check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
-}
-
-private fun assertExceptionDefault() =
-    onView(allOf(withText(R.string.no_site_exceptions)))
+private val exceptionsList =
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/exceptions"))

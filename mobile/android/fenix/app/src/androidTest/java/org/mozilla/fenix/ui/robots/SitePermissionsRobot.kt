@@ -14,37 +14,55 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
-import org.mozilla.fenix.helpers.TestHelper
-import org.mozilla.fenix.helpers.TestHelper.getPermissionAllowID
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
 
 class SitePermissionsRobot {
-    fun clickGrantAppPermissionButton() {
-        TestHelper.grantPermission()
-    }
-
-    fun clickDenyAppPermissionButton() {
-        TestHelper.denyPermission()
-    }
-
     fun verifyMicrophonePermissionPrompt(url: String) {
-        assertTrue(
-            mDevice.findObject(UiSelector().text("Allow $url to use your microphone?"))
-                .waitForExists(waitingTime),
-        )
-        assertTrue(denyPagePermissionButton.text.equals("Don’t allow"))
-        assertTrue(allowPagePermissionButton.text.equals("Allow"))
+        try {
+            assertTrue(
+                mDevice.findObject(UiSelector().text("Allow $url to use your microphone?"))
+                    .waitForExists(waitingTime),
+            )
+            assertTrue(denyPagePermissionButton.text.equals("Don’t allow"))
+            assertTrue(allowPagePermissionButton.text.equals("Allow"))
+        } catch (e: AssertionError) {
+            browserScreen {
+            }.openThreeDotMenu {
+            }.refreshPage {
+            }.clickStartMicrophoneButton {
+                assertTrue(
+                    mDevice.findObject(UiSelector().text("Allow $url to use your microphone?"))
+                        .waitForExists(waitingTime),
+                )
+                assertTrue(denyPagePermissionButton.text.equals("Don’t allow"))
+                assertTrue(allowPagePermissionButton.text.equals("Allow"))
+            }
+        }
     }
 
     fun verifyCameraPermissionPrompt(url: String) {
-        assertTrue(
-            mDevice.findObject(UiSelector().text("Allow $url to use your camera?"))
-                .waitForExists(waitingTime),
-        )
-        assertTrue(denyPagePermissionButton.text.equals("Don’t allow"))
-        assertTrue(allowPagePermissionButton.text.equals("Allow"))
+        try {
+            assertTrue(
+                mDevice.findObject(UiSelector().text("Allow $url to use your camera?"))
+                    .waitForExists(waitingTime),
+            )
+            assertTrue(denyPagePermissionButton.text.equals("Don’t allow"))
+            assertTrue(allowPagePermissionButton.text.equals("Allow"))
+        } catch (e: AssertionError) {
+            browserScreen {
+            }.openThreeDotMenu {
+            }.refreshPage {
+            }.clickStartCameraButton {
+                assertTrue(
+                    mDevice.findObject(UiSelector().text("Allow $url to use your camera?"))
+                        .waitForExists(waitingTime),
+                )
+                assertTrue(denyPagePermissionButton.text.equals("Don’t allow"))
+                assertTrue(allowPagePermissionButton.text.equals("Allow"))
+            }
+        }
     }
 
     fun verifyAudioVideoPermissionPrompt(url: String) {
@@ -57,22 +75,50 @@ class SitePermissionsRobot {
     }
 
     fun verifyLocationPermissionPrompt(url: String) {
-        assertTrue(
-            mDevice.findObject(UiSelector().text("Allow $url to use your location?"))
-                .waitForExists(waitingTime),
-        )
-        assertTrue(denyPagePermissionButton.text.equals("Don’t allow"))
-        assertTrue(allowPagePermissionButton.text.equals("Allow"))
+        try {
+            assertTrue(
+                mDevice.findObject(UiSelector().text("Allow $url to use your location?"))
+                    .waitForExists(waitingTime),
+            )
+            assertTrue(denyPagePermissionButton.text.equals("Don’t allow"))
+            assertTrue(allowPagePermissionButton.text.equals("Allow"))
+        } catch (e: AssertionError) {
+            browserScreen {
+            }.openThreeDotMenu {
+            }.refreshPage {
+            }.clickGetLocationButton {
+                assertTrue(
+                    mDevice.findObject(UiSelector().text("Allow $url to use your location?"))
+                        .waitForExists(waitingTime),
+                )
+                assertTrue(denyPagePermissionButton.text.equals("Don’t allow"))
+                assertTrue(allowPagePermissionButton.text.equals("Allow"))
+            }
+        }
     }
 
     fun verifyNotificationsPermissionPrompt(url: String, blocked: Boolean = false) {
         if (!blocked) {
-            assertTrue(
-                mDevice.findObject(UiSelector().text("Allow $url to send notifications?"))
-                    .waitForExists(waitingTime),
-            )
-            assertTrue(denyPagePermissionButton.text.equals("Never"))
-            assertTrue(allowPagePermissionButton.text.equals("Always"))
+            try {
+                assertTrue(
+                    mDevice.findObject(UiSelector().text("Allow $url to send notifications?"))
+                        .waitForExists(waitingTime),
+                )
+                assertTrue(denyPagePermissionButton.text.equals("Never"))
+                assertTrue(allowPagePermissionButton.text.equals("Always"))
+            } catch (e: AssertionError) {
+                browserScreen {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                }.clickOpenNotificationButton {
+                    assertTrue(
+                        mDevice.findObject(UiSelector().text("Allow $url to send notifications?"))
+                            .waitForExists(waitingTime),
+                    )
+                    assertTrue(denyPagePermissionButton.text.equals("Never"))
+                    assertTrue(allowPagePermissionButton.text.equals("Always"))
+                }
+            }
         } else {
             /* if "Never" was selected in a previous step, or if the app is not allowed,
                the Notifications permission prompt won't be displayed anymore */
@@ -80,6 +126,52 @@ class SitePermissionsRobot {
                 mDevice.findObject(UiSelector().text("Allow $url to send notifications?"))
                     .exists(),
             )
+        }
+    }
+
+    fun verifyPersistentStoragePermissionPrompt(url: String) {
+        try {
+            assertTrue(
+                mDevice.findObject(UiSelector().text("Allow $url to store data in persistent storage?"))
+                    .waitForExists(waitingTime),
+            )
+            assertTrue(denyPagePermissionButton.text.equals("Don’t allow"))
+            assertTrue(allowPagePermissionButton.text.equals("Allow"))
+        } catch (e: AssertionError) {
+            browserScreen {
+            }.openThreeDotMenu {
+            }.refreshPage {
+            }.clickRequestPersistentStorageAccessButton {
+                assertTrue(
+                    mDevice.findObject(UiSelector().text("Allow $url to store data in persistent storage?"))
+                        .waitForExists(waitingTime),
+                )
+                assertTrue(denyPagePermissionButton.text.equals("Don’t allow"))
+                assertTrue(allowPagePermissionButton.text.equals("Allow"))
+            }
+        }
+    }
+
+    fun verifyDRMContentPermissionPrompt(url: String) {
+        try {
+            assertTrue(
+                mDevice.findObject(UiSelector().text("Allow $url to play DRM-controlled content?"))
+                    .waitForExists(waitingTime),
+            )
+            assertTrue(denyPagePermissionButton.text.equals("Don’t allow"))
+            assertTrue(allowPagePermissionButton.text.equals("Allow"))
+        } catch (e: AssertionError) {
+            browserScreen {
+            }.openThreeDotMenu {
+            }.refreshPage {
+            }.clickRequestDRMControlledContentAccessButton {
+                assertTrue(
+                    mDevice.findObject(UiSelector().text("Allow $url to play DRM-controlled content?"))
+                        .waitForExists(waitingTime),
+                )
+                assertTrue(denyPagePermissionButton.text.equals("Don’t allow"))
+                assertTrue(allowPagePermissionButton.text.equals("Allow"))
+            }
         }
     }
 
@@ -94,6 +186,8 @@ class SitePermissionsRobot {
     }
 
     fun selectRememberPermissionDecision() {
+        mDevice.findObject(UiSelector().resourceId("$packageName:id/do_not_ask_again"))
+            .waitForExists(waitingTime)
         onView(withId(R.id.do_not_ask_again))
             .check(matches(isDisplayed()))
             .click()
@@ -122,13 +216,6 @@ class SitePermissionsRobot {
         }
     }
 }
-
-// App permission prompts buttons
-private val allowSystemPermissionButton =
-    mDevice.findObject(UiSelector().resourceId(getPermissionAllowID() + ":id/permission_allow_button"))
-
-private val denySystemPermissionButton =
-    mDevice.findObject(UiSelector().resourceId(getPermissionAllowID() + ":id/permission_deny_button"))
 
 // Page permission prompts buttons
 private val allowPagePermissionButton =
