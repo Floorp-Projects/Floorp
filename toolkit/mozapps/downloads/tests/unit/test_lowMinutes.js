@@ -7,8 +7,8 @@
  * and seconds; but continue to show only minutes when we have plenty.
  */
 
-const { DownloadUtils } = ChromeUtils.import(
-  "resource://gre/modules/DownloadUtils.jsm"
+const { DownloadUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/DownloadUtils.sys.mjs"
 );
 
 /**

@@ -2,15 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { BrowserUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/BrowserUtils.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { BrowserUtils } from "resource://gre/modules/BrowserUtils.sys.mjs";
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -30,9 +25,8 @@ XPCOMUtils.defineLazyServiceGetter(
   Ci.nsIMIMEService
 );
 
-const { Integration } = ChromeUtils.importESModule(
-  "resource://gre/modules/Integration.sys.mjs"
-);
+import { Integration } from "resource://gre/modules/Integration.sys.mjs";
+
 Integration.downloads.defineESModuleGetter(
   lazy,
   "DownloadIntegration",
@@ -123,25 +117,16 @@ nsUnknownContentTypeDialogProgressListener.prototype = {
 const PREF_BD_USEDOWNLOADDIR = "browser.download.useDownloadDir";
 const nsITimer = Ci.nsITimer;
 
-var downloadModule = ChromeUtils.import(
-  "resource://gre/modules/DownloadLastDir.jsm"
-);
-const { DownloadPaths } = ChromeUtils.importESModule(
-  "resource://gre/modules/DownloadPaths.sys.mjs"
-);
-const { DownloadUtils } = ChromeUtils.import(
-  "resource://gre/modules/DownloadUtils.jsm"
-);
-const { Downloads } = ChromeUtils.importESModule(
-  "resource://gre/modules/Downloads.sys.mjs"
-);
-const { FileUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/FileUtils.sys.mjs"
-);
+import * as downloadModule from "resource://gre/modules/DownloadLastDir.sys.mjs";
+import { DownloadPaths } from "resource://gre/modules/DownloadPaths.sys.mjs";
+
+import { DownloadUtils } from "resource://gre/modules/DownloadUtils.sys.mjs";
+import { Downloads } from "resource://gre/modules/Downloads.sys.mjs";
+import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
 
 /* ctor
  */
-function nsUnknownContentTypeDialog() {
+export function nsUnknownContentTypeDialog() {
   // Initialize data properties.
   this.mLauncher = null;
   this.mContext = null;
@@ -1356,5 +1341,3 @@ nsUnknownContentTypeDialog.prototype = {
     }
   },
 };
-
-var EXPORTED_SYMBOLS = ["nsUnknownContentTypeDialog"];

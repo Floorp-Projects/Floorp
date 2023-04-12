@@ -28,11 +28,7 @@ const LAST_DIR_PREF = "browser.download.lastDir";
 const SAVE_PER_SITE_PREF = LAST_DIR_PREF + ".savePerSite";
 const nsIFile = Ci.nsIFile;
 
-var EXPORTED_SYMBOLS = ["DownloadLastDir"];
-
-const { PrivateBrowsingUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PrivateBrowsingUtils.sys.mjs"
-);
+import { PrivateBrowsingUtils } from "resource://gre/modules/PrivateBrowsingUtils.sys.mjs";
 
 let nonPrivateLoadContext = Cu.createLoadContext();
 let privateLoadContext = Cu.createPrivateLoadContext();
@@ -88,7 +84,7 @@ function isContentPrefEnabled() {
 var gDownloadLastDirFile = readLastDirPref();
 
 // aForcePrivate is only used when aWindow is null.
-function DownloadLastDir(aWindow, aForcePrivate) {
+export function DownloadLastDir(aWindow, aForcePrivate) {
   let isPrivate = false;
   if (aWindow === null) {
     isPrivate = aForcePrivate || PrivateBrowsingUtils.permanentPrivateBrowsing;

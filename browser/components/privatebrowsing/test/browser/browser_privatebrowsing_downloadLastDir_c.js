@@ -9,8 +9,8 @@ function test() {
   let { FileUtils } = ChromeUtils.importESModule(
     "resource://gre/modules/FileUtils.sys.mjs"
   );
-  let { DownloadLastDir } = ChromeUtils.import(
-    "resource://gre/modules/DownloadLastDir.jsm"
+  let { DownloadLastDir } = ChromeUtils.importESModule(
+    "resource://gre/modules/DownloadLastDir.sys.mjs"
   );
   let MockFilePicker = SpecialPowers.MockFilePicker;
 
