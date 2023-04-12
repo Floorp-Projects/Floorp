@@ -107,12 +107,6 @@ function forEachThread(iteratee) {
  *        Where to log the traces. Can be stdout or console.
  */
 async function startTracing(logMethod) {
-  // Ignore the request if the server doesn't support this feature yet
-  // @backward-compat { version 112 } Fx 112 started implementing JS tracing.
-  // The trait can be removed once this version is released.
-  if (!commands.client.mainRoot.traits.supportsJavascriptTracing) {
-    return;
-  }
   const targets = commands.targetCommand.getAllTargets(
     commands.targetCommand.ALL_TYPES
   );
@@ -128,12 +122,6 @@ async function startTracing(logMethod) {
  * Stop JavaScript tracing for all targets.
  */
 async function stopTracing() {
-  // Ignore the request if the server doesn't support this feature yet
-  // @backward-compat { version 112 } Fx 112 started implementing JS tracing.
-  // The trait can be removed once this version is released.
-  if (!commands.client.mainRoot.traits.supportsJavascriptTracing) {
-    return;
-  }
   const targets = commands.targetCommand.getAllTargets(
     commands.targetCommand.ALL_TYPES
   );

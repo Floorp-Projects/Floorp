@@ -54,10 +54,6 @@ export function getEditorWrapping(state) {
   return state.ui.editorWrappingEnabled;
 }
 
-export function getSupportsJavascriptTracing(state) {
-  return state.ui.supportsJavascriptTracing;
-}
-
 export function getJavascriptTracingLogMethod(state) {
   return state.ui.javascriptTracingLogMethod;
 }

@@ -16,7 +16,6 @@ import {
   getThreadContext,
   getIsCurrentThreadPaused,
   getIsThreadCurrentlyTracing,
-  getSupportsJavascriptTracing,
   getJavascriptTracingLogMethod,
 } from "../../selectors";
 import { formatKeyShortcut } from "../../utils/text";
@@ -95,6 +94,7 @@ class CommandBar extends Component {
       cx: PropTypes.object.isRequired,
       horizontal: PropTypes.bool.isRequired,
       isPaused: PropTypes.bool.isRequired,
+      isTracingEnabled: PropTypes.bool.isRequired,
       isWaitingOnBreak: PropTypes.bool.isRequired,
       javascriptEnabled: PropTypes.bool.isRequired,
       trace: PropTypes.func.isRequired,
@@ -191,7 +191,7 @@ class CommandBar extends Component {
   }
 
   renderTraceButton() {
-    if (!features.javascriptTracing || !this.props.supportsJavascriptTracing) {
+    if (!features.javascriptTracing) {
       return null;
     }
     // Display a button which:
@@ -386,7 +386,6 @@ const mapStateToProps = state => ({
   javascriptEnabled: state.ui.javascriptEnabled,
   isPaused: getIsCurrentThreadPaused(state),
   isTracingEnabled: getIsThreadCurrentlyTracing(state, getCurrentThread(state)),
-  supportsJavascriptTracing: getSupportsJavascriptTracing(state),
   logMethod: getJavascriptTracingLogMethod(state),
 });
 
