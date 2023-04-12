@@ -58,18 +58,18 @@ function addPrefixToDB(list, url) {
 function setup404() {
   shouldLoad = true;
 
-  classifierHelper.allowCompletion([MALWARE_LIST, UNWANTED_LIST], NOTEXIST_URL);
-
   return Promise.all([
+    classifierHelper.allowCompletion(
+      [MALWARE_LIST, UNWANTED_LIST], NOTEXIST_URL),
     addPrefixToDB(MALWARE_LIST, MALWARE_HOST),
     addPrefixToDB(UNWANTED_LIST, UNWANTED_HOST),
   ]);
 }
 
 function setup() {
-  classifierHelper.allowCompletion([MALWARE_LIST, UNWANTED_LIST], GETHASH_URL);
-
   return Promise.all([
+    classifierHelper.allowCompletion(
+      [MALWARE_LIST, UNWANTED_LIST], GETHASH_URL),
     addPrefixToDB(MALWARE_LIST, MALWARE_HOST),
     addPrefixToDB(UNWANTED_LIST, UNWANTED_HOST),
     addCompletionToServer(MALWARE_LIST, MALWARE_HOST, GETHASH_URL),
