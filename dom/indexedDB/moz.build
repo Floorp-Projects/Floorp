@@ -9,7 +9,8 @@ with Files("**"):
 
 MOCHITEST_MANIFESTS += [
     "test/mochitest-intl-api.ini",
-    "test/mochitest.ini",
+    "test/mochitest-private.ini",
+    "test/mochitest-regular.ini",
 ]
 
 BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
