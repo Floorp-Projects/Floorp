@@ -908,22 +908,58 @@ function basicBlockEatsVariable(variable, body, startpoint)
     return false;
 }
 
-var PROP_REFCNT = 1 << 0;
+var PROP_REFCNT          = 1 << 0;
+var PROP_SHARED_PTR_DTOR = 1 << 1;
 
 function getCalleeProperties(calleeName) {
     let props = 0;
 
     if (isRefcountedDtor(calleeName)) {
-        props = props | PROP_REFCNT;
+        props |= PROP_REFCNT;
+    }
+    if (calleeName.includes("~shared_ptr()")) {
+        props |= PROP_SHARED_PTR_DTOR;
     }
     return props;
 }
 
+// Basic C++ ABI mangling: prefix an identifier with its length, in decimal.
+function mangle(name) {
+    return name.length + name;
+}
+
+var TriviallyDestructibleTypes = new Set([
+    // Single-token types from
+    // https://itanium-cxx-abi.github.io/cxx-abi/abi.html#mangling-builtin
+    "void", "wchar_t", "bool", "char", "short", "int", "long", "float", "double",
+    "__int64", "__int128", "__float128", "char32_t", "char16_t", "char8_t",
+    // Remaining observed cases. These are types T in shared_ptr<T> that have
+    // been observed, where the types themselves have trivial destructors, and
+    // the custom deleter doesn't do anything nontrivial that we might care about.
+    "_IO_FILE"
+]);
+function synthesizeDestructorName(className) {
+    if (className.includes("<") || className.includes(" ") || className.includes("{")) {
+        return;
+    }
+    if (TriviallyDestructibleTypes.has(className)) {
+        return;
+    }
+    const parts = className.split("::");
+    const mangled_dtor = "_ZN" + parts.map(p => mangle(p)).join("") + "D2Ev";
+    const pretty_dtor = `void ${className}::~${parts.at(-1)}()`;
+    // Note that there will be a later check to verify that the function name
+    // synthesized here is an actual function, and assert if not (see
+    // assertFunctionExists() in computeCallgraph.js.)
+    return mangled_dtor + "$" + pretty_dtor;
+}
+
 function getCallEdgeProperties(body, edge, calleeName, functionBodies) {
     let attrs = 0;
+    let extraCalls = [];
 
     if (edge.Kind !== "Call") {
-        return { attrs };
+        return { attrs, extraCalls };
     }
 
     const props = getCalleeProperties(calleeName);
@@ -938,8 +974,36 @@ function getCallEdgeProperties(body, edge, calleeName, functionBodies) {
         }
     }
 
+    if (props & PROP_SHARED_PTR_DTOR) {
+        // Replace shared_ptr<T>::~shared_ptr() calls to T::~T() calls.
+        // Note that this will only apply to simple cases.
+        // Any templatized type, in particular, will be ignored and the original
+        // call tree will be left alone. If this triggers a hazard, then we can
+        // consider extending the mangling support.
+        //
+        // If the call to ~shared_ptr is not replaced, then it might end up calling
+        // an unknown function pointer. This does not always happen-- in some cases,
+        // the call tree below ~shared_ptr will invoke the correct destructor without
+        // going through function pointers.
+        const m = calleeName.match(/shared_ptr<(.*?)>::~shared_ptr\(\)(?: \[with T = ([\w:]+))?/);
+        assert(m);
+        let className = m[1] == "T" ? m[2] : m[1];
+        assert(className != "");
+        // cv qualification does not apply to destructors.
+        className = className.replace("const ", "");
+        className = className.replace("volatile ", "");
+        const dtor = synthesizeDestructorName(className);
+        if (dtor) {
+            attrs |= ATTR_REPLACED;
+            extraCalls.push({
+                attrs: ATTR_SYNTHETIC,
+                name: dtor,
+            });
+        }
+    }
+
     if ((props & PROP_REFCNT) == 0) {
-        return { attrs };
+        return { attrs, extraCalls };
     }
 
     let callee = edge.Exp[0];
@@ -950,7 +1014,7 @@ function getCallEdgeProperties(body, edge, calleeName, functionBodies) {
     const instance = edge.PEdgeCallInstance.Exp;
     if (instance.Kind !== "Var") {
         // TODO: handle field destructors
-        return { attrs };
+        return { attrs, extraCalls };
     }
 
     // Test whether the dtor call is dominated by operations on the variable
@@ -1006,7 +1070,7 @@ function getCallEdgeProperties(body, edge, calleeName, functionBodies) {
     if (edgeIsNonReleasingDtor) {
         attrs |= ATTR_GC_SUPPRESSED | ATTR_NONRELEASING;
     }
-    return { attrs };
+    return { attrs, extraCalls };
 }
 
 // gcc uses something like "__dt_del " for virtual destructors that it
