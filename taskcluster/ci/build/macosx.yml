@@ -553,6 +553,39 @@ macosx64-add-on-devel/opt:
             - macosx64-sdk
             - sysroot-wasm32-wasi
 
+macosx64-nightlyasrelease/opt:
+    description: "MacOS X Nightly-As-Release"
+    worker-type: b-linux-gcp
+    use-pgo: macosx64-shippable/opt
+    attributes:
+        enable-full-crashsymbols: true
+        skip-verify-test-packaging: true
+        upload-generated-sources: true
+    index:
+        job-name: macosx64-nightlyasrelease-opt
+    treeherder:
+        platform: osx-nightlyasrelease/opt
+        symbol: Bpgo(Bnar)
+        tier: 1
+    run-on-projects: [trunk-only]
+    worker:
+        max-run-time: 7200
+        env:
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
+            PERFHERDER_EXTRA_OPTIONS: nightly-as-release
+    run:
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_mac_64_cross_builds.py
+            - taskcluster_nightly.py
+        mozconfig-variant: nightly-as-release
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang
+            - macosx64-sdk
+            - sysroot-wasm32-wasi
+
 macosx64-x64-shippable/opt:
     description: "MacOS X x64 Cross-compile"
     worker-type: b-linux-gcp

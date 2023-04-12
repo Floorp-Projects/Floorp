@@ -552,6 +552,55 @@ win64-shippable/opt:
         fetch:
             - upx-3.95-win
 
+win64-nightlyasrelease/opt:
+    description: "Win64 Opt Nightly-As-Release"
+    use-pgo: win64-shippable/opt
+    attributes:
+        enable-full-crashsymbols: true
+    index:
+        product: firefox
+        job-name: win64-nightlyasrelease-opt
+    treeherder:
+        platform: win64-nightlyasrelease/opt
+        symbol: Bpgo(Bnar)
+    worker-type: b-linux-gcp
+    worker:
+        max-run-time: 10800
+        env:
+            PERFHERDER_EXTRA_OPTIONS: "nightly-as-release"
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
+    run:
+        actions: [get-secrets, build]
+        options: [append-env-variables-from-configs]
+        script: mozharness/scripts/fx_desktop_build.py
+        secrets: true
+        config:
+            - builds/releng_base_firefox.py
+            - builds/releng_base_linux_64_builds.py
+            - taskcluster_nightly.py
+        extra-config:
+            stage_platform: win64
+            mozconfig_platform: win64
+        mozconfig-variant: nightly-as-release
+    run-on-projects: [trunk-only]
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-rust-cross
+            - linux64-rust-size
+            - linux64-nasm
+            - linux64-node
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-wine
+            - linux64-winchecksec
+            - nsis
+            - sysroot-x86_64-linux-gnu
+            - sysroot-wasm32-wasi
+            - win64-vs2017
+        fetch:
+            - upx-3.95-win
+
 win32-add-on-devel/opt:
     description: "Windows32 add-on-devel"
     index:
