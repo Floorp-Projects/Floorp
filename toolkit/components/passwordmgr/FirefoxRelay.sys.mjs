@@ -44,9 +44,9 @@ XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () =>
 XPCOMUtils.defineLazyGetter(lazy, "strings", function() {
   return new Localization([
     "branding/brand.ftl",
-    "browser/branding/sync-brand.ftl",
-    "toolkit/branding/brandings.ftl",
     "browser/firefoxRelay.ftl",
+    "toolkit/branding/accounts.ftl",
+    "toolkit/branding/brandings.ftl",
   ]);
 });
 
