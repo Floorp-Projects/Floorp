@@ -22,9 +22,21 @@ export class InternalTestingProfileMigrator extends MigratorBase {
     return "Internal Testing Migrator";
   }
 
+  getSourceProfiles() {
+    return Promise.resolve([InternalTestingProfileMigrator.testProfile]);
+  }
+
   // We will create a single MigratorResource for each resource type that
   // just immediately reports a successful migration.
-  getResources() {
+  getResources(aProfile) {
+    if (
+      !aProfile ||
+      aProfile.id != InternalTestingProfileMigrator.testProfile.id
+    ) {
+      throw new Error(
+        "InternalTestingProfileMigrator.getResources expects test profile."
+      );
+    }
     return Object.values(lazy.MigrationUtils.resourceTypes).map(type => {
       return {
         type,
@@ -43,5 +55,9 @@ export class InternalTestingProfileMigrator extends MigratorBase {
    */
   flushResourceCache() {
     this._resourcesByProfile = null;
+  }
+
+  static get testProfile() {
+    return { id: "test-profile", name: "Some test profile" };
   }
 }

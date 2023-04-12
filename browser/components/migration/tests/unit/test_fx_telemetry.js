@@ -5,6 +5,9 @@
 const { FirefoxProfileMigrator } = ChromeUtils.importESModule(
   "resource:///modules/FirefoxProfileMigrator.sys.mjs"
 );
+const { InternalTestingProfileMigrator } = ChromeUtils.importESModule(
+  "resource:///modules/InternalTestingProfileMigrator.sys.mjs"
+);
 
 // These preferences are set to true anytime MigratorBase.migrate
 // successfully completes a migration of their type.
@@ -280,7 +283,9 @@ add_task(async function test_times_migration() {
  * TelemetryEnvironment.sys.mjs.
  */
 add_task(async function test_interaction_telemetry() {
-  let testingMigrator = await MigrationUtils.getMigrator("internal-testing");
+  let testingMigrator = await MigrationUtils.getMigrator(
+    InternalTestingProfileMigrator.key
+  );
 
   Services.prefs.clearUserPref(BOOKMARKS_PREF);
   Services.prefs.clearUserPref(HISTORY_PREF);
@@ -294,7 +299,7 @@ add_task(async function test_interaction_telemetry() {
   await testingMigrator.migrate(
     MigrationUtils.resourceTypes.BOOKMARKS,
     false,
-    {}
+    InternalTestingProfileMigrator.testProfile
   );
   Assert.ok(
     Services.prefs.getBoolPref(BOOKMARKS_PREF),
@@ -306,7 +311,7 @@ add_task(async function test_interaction_telemetry() {
   await testingMigrator.migrate(
     MigrationUtils.resourceTypes.HISTORY,
     false,
-    {}
+    InternalTestingProfileMigrator.testProfile
   );
   Assert.ok(
     Services.prefs.getBoolPref(BOOKMARKS_PREF),
@@ -321,7 +326,7 @@ add_task(async function test_interaction_telemetry() {
   await testingMigrator.migrate(
     MigrationUtils.resourceTypes.PASSWORDS,
     false,
-    {}
+    InternalTestingProfileMigrator.testProfile
   );
   Assert.ok(
     Services.prefs.getBoolPref(BOOKMARKS_PREF),
@@ -342,7 +347,11 @@ add_task(async function test_interaction_telemetry() {
   Services.prefs.clearUserPref(HISTORY_PREF);
   Services.prefs.clearUserPref(PASSWORDS_PREF);
 
-  await testingMigrator.migrate(MigrationUtils.resourceTypes.ALL, false, {});
+  await testingMigrator.migrate(
+    MigrationUtils.resourceTypes.ALL,
+    false,
+    InternalTestingProfileMigrator.testProfile
+  );
   Assert.ok(
     Services.prefs.getBoolPref(BOOKMARKS_PREF),
     "Bookmarks pref should have been set."

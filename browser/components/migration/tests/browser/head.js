@@ -122,7 +122,12 @@ async function waitForTestMigration(
   // a single fake MigratorResource per availableResourceType.
   sandbox
     .stub(InternalTestingProfileMigrator.prototype, "getResources")
-    .callsFake(() => {
+    .callsFake(aProfile => {
+      Assert.deepEqual(
+        aProfile,
+        expectedProfile,
+        "Should have gotten the expected profile."
+      );
       return Promise.resolve(
         availableResourceTypes.map(resourceType => {
           return {

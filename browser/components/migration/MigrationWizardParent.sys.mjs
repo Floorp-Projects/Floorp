@@ -159,7 +159,7 @@ export class MigrationWizardParent extends JSWindowActorParent {
    */
   async #doMigration(migratorKey, resourceTypeNames, profileObj) {
     let migrator = await MigrationUtils.getMigrator(migratorKey);
-    let availableResourceTypes = await migrator.getMigrateData();
+    let availableResourceTypes = await migrator.getMigrateData(profileObj);
     let resourceTypesToMigrate = 0;
     let progress = {};
 
