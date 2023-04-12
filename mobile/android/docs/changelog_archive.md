@@ -1339,7 +1339,7 @@ permalink: /changelog/archive
   * Preventing JavaScript `confirm()` and `prompt()` until providing proper implementation #1816.
 
 * **feature-search**, **feature-session**
-  * `SessionUseCases` and `SearchUseCases` now take an optional `onNoSession: String -> Session` lambda parameter. This function will be invoked when executing a use case that requires a (selected) `Session` and no such session is available. This makes using the use cases and feature components useable in browsers that may not always have sessions. The default implementation creates a new `Session` and adds it to the `SessionManager`.
+  * `SessionUseCases` and `SearchUseCases` now take an optional `onNoSession: String -> Session` lambda parameter. This function will be invoked when executing a use case that requires a (selected) `Session` and no such session is available. This makes using the use cases and feature components usable in browsers that may not always have sessions. The default implementation creates a new `Session` and adds it to the `SessionManager`.
 
 * **support-rustlog**
   * 🆕 New component: This component allows consumers of [megazorded](https://mozilla.github.io/application-services/docs/applications/consuming-megazord-libraries.html) Rust libraries produced by application-services to redirect their log output to the base component's log system as follows:
@@ -1496,9 +1496,9 @@ permalink: /changelog/archive
   * `BrowserMenuItemToolbar` now allows overriding the `visible` lambda.
 
 * **service-sync-logins**, **service-firefox-accounts**, **concept-storage**
-  * Updated underlying library from 0.12.1 to 0.13.3, see the [release notes for 0.13.0](https://github.com/mozilla/application-services/blob/master/CHANGELOG.md#0130-2019-01-09) for futher details on the most substantial changes. ([#1690](https://github.com/mozilla-mobile/android-components/issues/1690))
+  * Updated underlying library from 0.12.1 to 0.13.3, see the [release notes for 0.13.0](https://github.com/mozilla/application-services/blob/master/CHANGELOG.md#0130-2019-01-09) for further details on the most substantial changes. ([#1690](https://github.com/mozilla-mobile/android-components/issues/1690))
     * sync-logins: Added a new `wipeLocal` method, for clearing all local data.
-    * sync-logins: Removed `reset` because it served a nonexistant use case, callers almost certainly want `wipeLocal` or `wipe` instead.
+    * sync-logins: Removed `reset` because it served a nonexistent use case, callers almost certainly want `wipeLocal` or `wipe` instead.
     * sync-logins: Added `ensureLocked` and `ensureUnlocked` for cases where checking `isLocked` is inconvenient or requires additional locking.
     * sync-logins: Allow storage to be unlocked using a `ByteArray` instead of a `String`.
     * firefox-accounts: Network errors will now be reported as instances of FxaException.Network, instead of `FxaException.Unspecified`.
@@ -2252,7 +2252,7 @@ permalink: /changelog/archive
     val (start, top, end, bottom) = padding
     ```
 * **support-ktx**:
-  * A new extention function that allows you to set `Padding` object to a `View`.
+  * A new extension function that allows you to set `Padding` object to a `View`.
     ```kotlin
     val padding = Padding(16, 24, 32, 40)
     val view = View(context)
@@ -2503,7 +2503,7 @@ Release date: 2018-10-05
 
 * ⚠️ **Releases are now getting published on [maven.mozilla.org](http://maven.mozilla.org/?prefix=maven2/org/mozilla/components/)**.
   * Additionally all artifacts published now use an artifact name that matches the gradle module name (e.g. `browser-toolbar` instead of just `toolbar`).
-  * All artifcats are published with the group id `org.mozilla.components` (`org.mozilla.photon` is not being used anymore).
+  * All artifacts are published with the group id `org.mozilla.components` (`org.mozilla.photon` is not being used anymore).
   * For a smooth transition all artifacts still get published on JCenter with the old group ids and artifact ids. In the near future releases will only be published on maven.mozilla.org. Old releases will remain on JCenter and not get removed.
 * **browser-domains**
   * Removed `microsoftonline.com` from the global and localized domain lists. No content is being served from that domain. Only subdomains like `login.microsoftonline.com` are used.
@@ -2695,7 +2695,7 @@ Release date: 2018-10-05
 
 * **support-ktx**:
 
-   * Now you can easily query if the OS is under low memory conditions, just by using `isOSOnLowMemory()` extention function on `Context`.
+   * Now you can easily query if the OS is under low memory conditions, just by using `isOSOnLowMemory()` extension function on `Context`.
 
   ```Kotlin
   val shouldReduceMemoryUsage = context.isOSOnLowMemory()

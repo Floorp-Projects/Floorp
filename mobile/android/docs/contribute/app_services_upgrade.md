@@ -18,7 +18,7 @@ This will run the `test-ui-browser` task, which will execute on-device tests of 
 
 ## Fenix
 
-The next step is to build a [local version of Android Components][local_build] against [Fenix][fenix] and test the followings items:
+The next step is to build a [local version of Android Components][local_build] against [Fenix][fenix] and test the following items:
  - Check general storage components works by adding/editing/removing: bookmarks, history
  - Sign-in/Sign-up for Sync
  - QR code pairing for Sync

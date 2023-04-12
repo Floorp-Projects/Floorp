@@ -8,7 +8,7 @@ permalink: /contributing/architecture
 
 Our main design goal is to provide independently reusable Android components. We strive to keep dependencies between components as minimal as possible. However, standalone components aren't always feasible, which is why we have grouped components based on their interactions and dependencies.
 
-On the lowest level, we provide standalone UI components (e.g. autocomplete, progressbar, colors) as well as independent service and suppport libraries (e.g. Telemetry, Kotlin extensions and Utilities).
+On the lowest level, we provide standalone UI components (e.g. autocomplete, progressbar, colors) as well as independent service and support libraries (e.g. Telemetry, Kotlin extensions and Utilities).
 
 The second level consist of so called `Concept` modules. These are abstractions that describe contracts for component implementations such as `Engine` or `Session Storage`, which may in turn have multiple implementations. The purpose of these concepts is to allow for customization and pluggability. Therefore, where available, components should always depend on concept modules (not their implementations) to support bringing in alternative implementations.
 

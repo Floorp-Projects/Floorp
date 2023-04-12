@@ -286,7 +286,7 @@ We should also support persisting tab partitions and groups using our `BrowserSt
 
 ## Future Work
 
-* We have discussed separating private tabs into their own collection in `BrowserState`. This work could also be combined with the proposal here to have normal and private tab groups within a partition. Alternatively, we could also introduce new top level types for `PrivateTabs` and `NormalTabs` with the corresponding parititions nested inside. Then the data structure described here wouldn't need to change. This discussion and refactoring may be best done separately though.
+* We have discussed separating private tabs into their own collection in `BrowserState`. This work could also be combined with the proposal here to have normal and private tab groups within a partition. Alternatively, we could also introduce new top level types for `PrivateTabs` and `NormalTabs` with the corresponding partitions nested inside. Then the data structure described here wouldn't need to change. This discussion and refactoring may be best done separately though.
 
 * We have recently introduced actions to move / re-order tabs [2]. Today these actions can not be used in combination with tab groups. The proposal here would allow for it though, as we could introduce versions of these actions that apply to partitions/groups.
 
@@ -296,6 +296,6 @@ We should also support persisting tab partitions and groups using our `BrowserSt
 ## Questions
 
 * Is this design too simple? Does it cover all use cases we currently anticipate?
-	* We worked through this in this RFC and decided that this would cover our current use cases as far as we know. One case that is not covered with this is supporting an ordered but mixed display of tabs and groups. We have no way of positining a group withing a list of tabs and vice versa, but this is outside the scope of this RFC.
+	* We worked through this in this RFC and decided that this would cover our current use cases as far as we know. One case that is not covered with this is supporting an ordered but mixed display of tabs and groups. We have no way of positioning a group within a list of tabs and vice versa, but this is outside the scope of this RFC.
 * Do we need to implement persistence now or should we punt on this and handle in a later iteration?
 	* We decided to make persistence configurable on a group level. The actual implementation of this can land in multiple iterations as we currently don't need to persist groups.

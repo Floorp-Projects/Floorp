@@ -34,7 +34,7 @@ The *Android components* team releases frequently (currently weekly) and the pro
 
 Release artifacts are automatically published on maven.mozilla.org and are immediately available to consumers.
 
-The *Android components* team is planning to release SNAPSHOT builds for every successfull *main* merge. This will allow consuming apps to test approved changes immediately after merge without needing to wait for a release.
+The *Android components* team is planning to release SNAPSHOT builds for every successful *main* merge. This will allow consuming apps to test approved changes immediately after merge without needing to wait for a release.
 
 #### Consistent versioning and compatibility
 

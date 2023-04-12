@@ -60,7 +60,7 @@ author: jonathan
 
 * **support-ktx**:
 
-   * Now you can easily query if the OS is under low memory conditions, just by using `isOSOnLowMemory()` extention function on `Context`.
+   * Now you can easily query if the OS is under low memory conditions, just by using `isOSOnLowMemory()` extension function on `Context`.
 
   ```Kotlin
   val shouldReduceMemoryUsage = context.isOSOnLowMemory()

@@ -1,11 +1,11 @@
 # Automated UI Testing
-_This document is intended to explain how various technologies are used together to conduct automated UI testing for Android at Mozila. This document is accessible for all developers including those that are new to the Mozilla community._
+_This document is intended to explain how various technologies are used together to conduct automated UI testing for Android at Mozilla. This document is accessible for all developers including those that are new to the Mozilla community._
 
-Recall, that the primary problem we try to solve with automated testing is preventing unintended changes, which offten lead to bugs or poor user experiences. This problem is most common -- thus we benefit the most from throrough testing.
+Recall, that the primary problem we try to solve with automated testing is preventing unintended changes, which often lead to bugs or poor user experiences. This problem is most common -- thus we benefit the most from thorough testing.
 
 When a Pull Request or merge request is created, we want to ensure that the changes are tested before they are merged. This is done by running a series of UI tests on the code. These tests are ran on Firebase Test Lab on virtual devices.
 
-_Recall that on Pull Requests, the status badge on Github will let you know wether it is green, running, or broken (red)._
+_Recall that on Pull Requests, the status badge on Github will let you know whether it is green, running, or broken (red)._
 
 But what is the flow of this process from creating a Pull Request to seeing UI test results?
 

@@ -58,7 +58,7 @@ After that we update `Gecko.kt` to use the latest GeckoView release version (use
 vi buildSrc/src/main/java/Gecko.kt
 ```
 
-Finally we build and test the component to see wether there are any issues.
+Finally we build and test the component to see whether there are any issues.
 
 ```
 ./gradlew browser-engine-gecko:test
@@ -92,7 +92,7 @@ After that we update `Gecko.kt` to use the latest GeckoView beta version (previo
 vi buildSrc/src/main/java/Gecko.kt
 ```
 
-Finally we build and test the component to see wether there are any issues.
+Finally we build and test the component to see whether there are any issues.
 
 ```
 ./gradlew browser-engine-gecko-beta:test
@@ -143,5 +143,5 @@ Finally add an entry to the changelog:
 
 * ***Gradle***: A common reason for build failures is changes in the Gradle configuration or the list of dependencies. Since we do not copy `build.gradle` (because it contains channel specific configuration) we need to manually compare the files to see if there's something to change.
 
-* ***Breaking API changes***: Especially when updating the Nighlty component it can happen that there are breaking API changes that landed in GeckoView just right after the new version was started. So the first time we see them is after merge day when updating the major version of the dependency. In this case we need to fix those breaking changes manually like other breaking changes that happen in "normal" development phases.
+* ***Breaking API changes***: Especially when updating the Nightly component it can happen that there are breaking API changes that landed in GeckoView just right after the new version was started. So the first time we see them is after merge day when updating the major version of the dependency. In this case we need to fix those breaking changes manually like other breaking changes that happen in "normal" development phases.
 

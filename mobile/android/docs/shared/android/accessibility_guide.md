@@ -42,7 +42,7 @@ This is both inefficient and confusing for the user, since they will encounter e
 ## Automated testing
 You can regularly use [the Accessibility Scanner][scanner] to get a cursory overview of how the accessibility of your app is doing.
 
-When adding specialized accessibility logic, it is encouraged to add as much testing as possible since these code paths are not excercised in typical use and the chance of regression is high. Below is an example Mockito and Robolectric test that validates accessibility events that are resulted from a [loading progress update](https://github.com/mozilla-mobile/android-components/pull/2526).
+When adding specialized accessibility logic, it is encouraged to add as much testing as possible since these code paths are not exercised in typical use and the chance of regression is high. Below is an example Mockito and Robolectric test that validates accessibility events that are resulted from a [loading progress update](https://github.com/mozilla-mobile/android-components/pull/2526).
 
 ```kotlin
 @Test

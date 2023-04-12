@@ -18,7 +18,7 @@ In general if possible we try to keep "compile compatibility" when an app projec
 
 ## When to Deprecate
 
-Deprecating a public API is needed whenever we introduce a new API and at the same time keep the old API around so that app teams have time to migrate. The goal of deperecating an API should always be to eventually remove it.
+Deprecating a public API is needed whenever we introduce a new API and at the same time keep the old API around so that app teams have time to migrate. The goal of deprecating an API should always be to eventually remove it.
 
 No API guarantees are made for snapshot releases and so far unreleased/unused components. Unreleased APIs can break/change before they are released or used.
 
@@ -34,5 +34,5 @@ No API guarantees are made for snapshot releases and so far unreleased/unused co
   ```
 
 * Mention the deprecated API and the new API (if there's one) in the **changelog**.
-* **File a new issue** about removing the deprecated API. Mention the target version for the removal in the issue title. The default time for removal is 2 releases after the release that introduced the deprecation warning. For exmaple when deprecating an API in release 12.0.0 then file an issue to remove the API in release 14.0.0. For larger changes that require a major refactoring in app projects (e.g. migrating to a whole new component) a longer deprecation cycle can be chosen. The [cross-repo search engine "SearchFox"](https://searchfox.org/mozilla-mobile/source) is a helpful tool to find API usage in other Mozilla mobile projects.
-* For larger API changes and breakage consider **sending a mail to the [android-components mailing list](https://lists.mozilla.org/listinfo/android-components)** to notify all consumers of the upcoming change. If a specific team at Mozilla will be required to do a large refactoring to accomodate the API change then try to coordinate the deprecation process and timing with that team.
+* **File a new issue** about removing the deprecated API. Mention the target version for the removal in the issue title. The default time for removal is 2 releases after the release that introduced the deprecation warning. For example when deprecating an API in release 12.0.0 then file an issue to remove the API in release 14.0.0. For larger changes that require a major refactoring in app projects (e.g. migrating to a whole new component) a longer deprecation cycle can be chosen. The [cross-repo search engine "SearchFox"](https://searchfox.org/mozilla-mobile/source) is a helpful tool to find API usage in other Mozilla mobile projects.
+* For larger API changes and breakage consider **sending a mail to the [android-components mailing list](https://lists.mozilla.org/listinfo/android-components)** to notify all consumers of the upcoming change. If a specific team at Mozilla will be required to do a large refactoring to accommodate the API change then try to coordinate the deprecation process and timing with that team.
