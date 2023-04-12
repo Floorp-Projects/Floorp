@@ -298,49 +298,6 @@ ipc::IPCResult CamerasParent::RecvReleaseFrame(ipc::Shmem&& aShmem) {
   return IPC_OK();
 }
 
-bool CamerasParent::SetupEngine(CaptureEngine aCapEngine) {
-  LOG_FUNCTION();
-  StaticRefPtr<VideoEngine>& engine = sEngines[aCapEngine];
-
-  if (!engine) {
-    CaptureDeviceType captureDeviceType = CaptureDeviceType::Camera;
-    switch (aCapEngine) {
-      case ScreenEngine:
-        captureDeviceType = CaptureDeviceType::Screen;
-        break;
-      case BrowserEngine:
-        captureDeviceType = CaptureDeviceType::Browser;
-        break;
-      case WinEngine:
-        captureDeviceType = CaptureDeviceType::Window;
-        break;
-      case CameraEngine:
-        captureDeviceType = CaptureDeviceType::Camera;
-        break;
-      default:
-        LOG("Invalid webrtc Video engine");
-        return false;
-    }
-
-    engine = VideoEngine::Create(captureDeviceType);
-
-    if (!engine) {
-      LOG("VideoEngine::Create failed");
-      return false;
-    }
-  }
-
-  if (aCapEngine == CameraEngine) {
-    auto device_info = engine->GetOrCreateVideoCaptureDeviceInfo();
-    MOZ_ASSERT(device_info);
-    if (device_info) {
-      device_info->RegisterVideoInputFeedBack(this);
-    }
-  }
-
-  return true;
-}
-
 void CamerasParent::CloseEngines() {
   MOZ_ASSERT(mVideoCaptureThread->IsOnCurrentThread());
   LOG_FUNCTION();
@@ -371,18 +328,54 @@ void CamerasParent::CloseEngines() {
 
 VideoEngine* CamerasParent::EnsureInitialized(int aEngine) {
   MOZ_ASSERT(mVideoCaptureThread->IsOnCurrentThread());
-  LOG_FUNCTION();
+  LOG_VERBOSE("CamerasParent(%p)::%s", this, __func__);
   // We're shutting down, don't try to do new WebRTC ops.
   if (!mWebRTCAlive) {
     return nullptr;
   }
   CaptureEngine capEngine = static_cast<CaptureEngine>(aEngine);
-  if (!SetupEngine(capEngine)) {
-    LOG("CamerasParent failed to initialize engine");
+
+  {
+    VideoEngine* engine = sEngines[capEngine];
+    if (engine) {
+      return engine;
+    }
+  }
+
+  CaptureDeviceType captureDeviceType = CaptureDeviceType::Camera;
+  switch (capEngine) {
+    case ScreenEngine:
+      captureDeviceType = CaptureDeviceType::Screen;
+      break;
+    case BrowserEngine:
+      captureDeviceType = CaptureDeviceType::Browser;
+      break;
+    case WinEngine:
+      captureDeviceType = CaptureDeviceType::Window;
+      break;
+    case CameraEngine:
+      captureDeviceType = CaptureDeviceType::Camera;
+      break;
+    default:
+      LOG("Invalid webrtc Video engine");
+      return nullptr;
+  }
+
+  RefPtr<VideoEngine> engine = VideoEngine::Create(captureDeviceType);
+  if (!engine) {
+    LOG("VideoEngine::Create failed");
     return nullptr;
   }
 
-  return sEngines[aEngine];
+  if (capEngine == CameraEngine) {
+    auto device_info = engine->GetOrCreateVideoCaptureDeviceInfo();
+    MOZ_ASSERT(device_info);
+    if (device_info) {
+      device_info->RegisterVideoInputFeedBack(this);
+    }
+  }
+
+  return sEngines[capEngine] = engine;
 }
 
 // Dispatch the runnable to do the camera operation on the
