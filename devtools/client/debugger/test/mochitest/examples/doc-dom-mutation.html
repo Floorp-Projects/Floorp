@@ -11,9 +11,11 @@
   <body>
     <button title="Hello" id="attribute" onclick="changeAttribute()">Click me!</button>
     <button id="style-attribute" onclick="changeStyleAttribute()">Click me!</button>
+    <button id="shadow-attribute" onclick="changeAttributeInShadow()">remove attr in shadow</button>
     <button id="add-in-subtree" onclick="addDivToBody()">add div to body</button>
     <button id="remove-in-subtree" onclick="removeDivInBody()">remove div in body</button>
     <button id="blackbox" onclick="changeAttribute();&#xA;debugger;&#xA;//# sourceURL=click.js">Click me!</button>
+    <div id="host"></div>
     <script src="dom-mutation.js"></script>
   </body>
 </html>

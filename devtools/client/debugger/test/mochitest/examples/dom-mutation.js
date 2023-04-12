@@ -8,11 +8,19 @@ function changeStyleAttribute() {
 }
 
 function addDivToBody() {
-  document.body.appendChild(document.createElement("div"));
+  let div = document.createElement("div");
+  div.id = "dynamic";
+  document.body.appendChild(div);
 }
 
 function removeDivInBody() {
-  document.body.querySelector("div").remove();
+  document.body.querySelector("#dynamic").remove();
 }
+
+function changeAttributeInShadow() {
+  document.getElementById("host").shadowRoot.querySelector("div").classList.toggle("red");
+}
+
+document.getElementById("host").attachShadow({ mode: "open" }).innerHTML = `<div></div>`;
 
 //# sourceMappingURL=dom-mutation.js.map

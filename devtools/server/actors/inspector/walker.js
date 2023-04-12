@@ -1779,7 +1779,10 @@ class WalkerActor extends Actor {
     }
     const rawNode = node.rawNode;
 
-    if (rawNode.ownerDocument && !rawNode.ownerDocument.contains(rawNode)) {
+    if (
+      rawNode.ownerDocument &&
+      rawNode.getRootNode({ composed: true }) != rawNode.ownerDocument
+    ) {
       // We only allow watching for mutations on nodes that are attached to
       // documents. That allows us to clean up our mutation listeners when all
       // of the watched nodes have been removed from the document.

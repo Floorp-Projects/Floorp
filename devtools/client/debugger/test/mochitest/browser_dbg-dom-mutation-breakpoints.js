@@ -28,21 +28,45 @@ add_task(async function() {
 
   const { inspector, toolbox } = await openInspectorForURL(DMB_TEST_URL);
 
-  info("Selecting the body node");
-  await selectNode("body", inspector);
+  {
+    info("Selecting the body node");
+    await selectNode("body", inspector);
 
-  info("Adding DOM mutation breakpoints to body");
-  const allMenuItems = openContextMenuAndGetAllItems(inspector);
+    info("Adding DOM mutation breakpoints to body");
+    const allMenuItems = openContextMenuAndGetAllItems(inspector);
 
-  const attributeMenuItem = allMenuItems.find(
-    item => item.id === "node-menu-mutation-breakpoint-attribute"
-  );
-  attributeMenuItem.click();
+    const attributeMenuItem = allMenuItems.find(
+      item => item.id === "node-menu-mutation-breakpoint-attribute"
+    );
+    attributeMenuItem.click();
 
-  const subtreeMenuItem = allMenuItems.find(
-    item => item.id === "node-menu-mutation-breakpoint-subtree"
-  );
-  subtreeMenuItem.click();
+    const subtreeMenuItem = allMenuItems.find(
+      item => item.id === "node-menu-mutation-breakpoint-subtree"
+    );
+    subtreeMenuItem.click();
+  }
+
+  {
+    info("Find and expand the shadow host.");
+    const hostFront = await getNodeFront("#host", inspector);
+    const hostContainer = inspector.markup.getContainer(hostFront);
+    await expandContainer(inspector, hostContainer);
+
+    info("Expand the shadow root");
+    const shadowRootContainer = hostContainer.getChildContainers()[0];
+    await expandContainer(inspector, shadowRootContainer);
+
+    info("Select the div under the shadow root");
+    const divContainer = shadowRootContainer.getChildContainers()[0];
+    await selectNode(divContainer.node, inspector);
+
+    const allMenuItems = openContextMenuAndGetAllItems(inspector);
+    info("Adding attribute breakpoint.");
+    const attributeMenuItem = allMenuItems.find(
+      item => item.id === "node-menu-mutation-breakpoint-attribute"
+    );
+    attributeMenuItem.click();
+  }
 
   info("Switches over to the debugger pane");
   await toolbox.selectTool("jsdebugger");
@@ -84,6 +108,13 @@ add_task(async function() {
   await waitForPaused(dbg);
   await resume(dbg);
 
+  info("Changing attribute in shadow dom to trigger debugger pause");
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+    content.document.querySelector("#shadow-attribute").click();
+  });
+  await waitForPaused(dbg);
+  await resume(dbg);
+
   info("Adding element in subtree to trigger debugger pause");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.document.querySelector("#add-in-subtree").click();
@@ -94,7 +125,7 @@ add_task(async function() {
   );
   is(
     whyPaused,
-    `Paused on DOM mutation\nDOM Mutation: 'subtreeModified'\nbodyAdded:div`
+    `Paused on DOM mutation\nDOM Mutation: 'subtreeModified'\nbodyAdded:div#dynamic`
   );
 
   await resume(dbg);
@@ -109,7 +140,7 @@ add_task(async function() {
   );
   is(
     whyPaused,
-    `Paused on DOM mutation\nDOM Mutation: 'subtreeModified'\nbodyRemoved:div`
+    `Paused on DOM mutation\nDOM Mutation: 'subtreeModified'\nbodyRemoved:div#dynamic`
   );
 
   await resume(dbg);
@@ -136,5 +167,5 @@ add_task(async function() {
 
   info("Removing breakpoints works");
   dbg.win.document.querySelector(".dom-mutation-list .close-btn").click();
-  await waitForAllElements(dbg, "domMutationItem", 1, true);
+  await waitForAllElements(dbg, "domMutationItem", 2, true);
 });
