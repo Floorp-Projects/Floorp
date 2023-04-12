@@ -479,6 +479,8 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "GPUAdapter", nightly: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "GPUAdapterInfo", nightly: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "GPUBindGroup", nightly: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "GPUBindGroupLayout", nightly: true },

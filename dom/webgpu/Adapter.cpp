@@ -16,6 +16,14 @@
 
 namespace mozilla::webgpu {
 
+bool AdapterInfo::WrapObject(JSContext* const cx,
+                             JS::Handle<JSObject*> givenProto,
+                             JS::MutableHandle<JSObject*> reflector) {
+  return dom::GPUAdapterInfo_Binding::Wrap(cx, this, givenProto, reflector);
+}
+
+// -
+
 GPU_IMPL_CYCLE_COLLECTION(Adapter, mParent, mBridge, mFeatures, mLimits)
 GPU_IMPL_JS_WRAP(Adapter)
 
@@ -128,6 +136,20 @@ already_AddRefed<dom::Promise> Adapter::RequestDevice(
     promise->MaybeRejectWithNotSupportedError("Unable to instantiate a Device");
   }
 
+  return promise.forget();
+}
+
+// -
+
+already_AddRefed<dom::Promise> Adapter::RequestAdapterInfo(
+    const dom::Sequence<nsString>& /*aUnmaskHints*/, ErrorResult& aRv) const {
+  RefPtr<dom::Promise> promise = dom::Promise::Create(GetParentObject(), aRv);
+  if (!promise) return nullptr;
+
+  auto rai = UniquePtr<AdapterInfo>{new AdapterInfo};
+  // E.g. rai.mDevice = SanitizeRenderer(deviceName);
+
+  promise->MaybeResolve(std::move(rai));
   return promise.forget();
 }
 
