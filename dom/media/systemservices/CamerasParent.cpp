@@ -8,7 +8,6 @@
 
 #include <atomic>
 #include "MediaEngineSource.h"
-#include "MediaUtils.h"
 #include "PerformanceRecorder.h"
 #include "VideoFrameUtils.h"
 
@@ -23,6 +22,7 @@
 #include "mozilla/ipc/PBackgroundParent.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/WindowGlobalParent.h"
+#include "mozilla/media/MediaUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_permissions.h"
 #include "nsIPermissionManager.h"
@@ -98,8 +98,14 @@ uint32_t FeasibilityDistance(int32_t candidate, int32_t requested) {
          std::max(candidate, requested);
 }
 
-// Singleton video engines. Video capture thread only.
-static StaticRefPtr<VideoEngine> sEngines[CaptureEngine::MaxEngine];
+class CamerasParent::VideoEngineArray
+    : public media::Refcountable<nsTArray<RefPtr<VideoEngine>>> {};
+
+// Singleton video engines. The sEngines RefPtr is IPC background thread only
+// and outlives the CamerasParent instances. The array elements are video
+// capture thread only.
+using VideoEngineArray = CamerasParent::VideoEngineArray;
+static StaticRefPtr<VideoEngineArray> sEngines;
 // Number of CamerasParents instances in the current process for which
 // mVideoCaptureThread has been set. IPC background thread only.
 static int32_t sNumCamerasParents = 0;
@@ -108,7 +114,7 @@ static int32_t sNumCamerasParents = 0;
 static StaticRefPtr<nsIThread> sVideoCaptureThread;
 
 static already_AddRefed<nsISerialEventTarget>
-MakeAndAddRefVideoCaptureThread() {
+MakeAndAddRefVideoCaptureThreadAndSingletons() {
   ipc::AssertIsOnBackgroundThread();
 
   MOZ_ASSERT_IF(sVideoCaptureThread, sNumCamerasParents > 0);
@@ -128,6 +134,9 @@ MakeAndAddRefVideoCaptureThread() {
       return nullptr;
     }
     sVideoCaptureThread = videoCaptureThread.forget();
+
+    sEngines = MakeRefPtr<VideoEngineArray>();
+    sEngines->AppendElements(CaptureEngine::MaxEngine);
   }
 
   ++sNumCamerasParents;
@@ -146,9 +155,9 @@ static void ReleaseVideoCaptureThreadAndSingletons() {
 
   // No other CamerasParent instances alive. Clean up.
   LOG("Shutting down VideoEngines and the VideoCapture thread");
-  MOZ_ALWAYS_SUCCEEDS(
-      sVideoCaptureThread->Dispatch(NS_NewRunnableFunction(__func__, [] {
-        for (StaticRefPtr<VideoEngine>& engine : sEngines) {
+  MOZ_ALWAYS_SUCCEEDS(sVideoCaptureThread->Dispatch(
+      NS_NewRunnableFunction(__func__, [engines = RefPtr(sEngines.forget())] {
+        for (RefPtr<VideoEngine>& engine : *engines) {
           if (engine) {
             VideoEngine::Delete(engine);
             engine = nullptr;
@@ -365,8 +374,7 @@ void CamerasParent::CloseEngines() {
     Unused << ReleaseCapture(capEngine, streamNum);
   }
 
-  StaticRefPtr<VideoEngine>& engine = sEngines[CameraEngine];
-  if (engine) {
+  if (VideoEngine* engine = mEngines->ElementAt(CameraEngine); engine) {
     auto device_info = engine->GetOrCreateVideoCaptureDeviceInfo();
     MOZ_ASSERT(device_info);
     if (device_info) {
@@ -380,11 +388,8 @@ VideoEngine* CamerasParent::EnsureInitialized(int aEngine) {
   LOG_VERBOSE("CamerasParent(%p)::%s", this, __func__);
   CaptureEngine capEngine = static_cast<CaptureEngine>(aEngine);
 
-  {
-    VideoEngine* engine = sEngines[capEngine];
-    if (engine) {
-      return engine;
-    }
+  if (VideoEngine* engine = mEngines->ElementAt(capEngine); engine) {
+    return engine;
   }
 
   CaptureDeviceType captureDeviceType = CaptureDeviceType::Camera;
@@ -420,7 +425,7 @@ VideoEngine* CamerasParent::EnsureInitialized(int aEngine) {
     }
   }
 
-  return sEngines[capEngine] = engine;
+  return mEngines->ElementAt(capEngine) = std::move(engine);
 }
 
 // Dispatch the runnable to do the camera operation on the
@@ -774,7 +779,7 @@ ipc::IPCResult CamerasParent::RecvAllocateCapture(
                int captureId = -1;
                int error = -1;
                if (allowed && EnsureInitialized(aCapEngine)) {
-                 StaticRefPtr<VideoEngine>& engine = sEngines[aCapEngine];
+                 VideoEngine* engine = mEngines->ElementAt(aCapEngine);
                  captureId = engine->CreateVideoCapture(unique_id.get());
                  engine->WithEntry(captureId,
                                    [&error](VideoEngine::CaptureEntry& cap) {
@@ -880,8 +885,8 @@ ipc::IPCResult CamerasParent::RecvStartCapture(
         cbh = mCallbacks.AppendElement(new CallbackHelper(
             static_cast<CaptureEngine>(aCapEngine), aCaptureId, this));
 
-        sEngines[aCapEngine]->WithEntry(
-            aCaptureId, [&](VideoEngine::CaptureEntry& cap) {
+        mEngines->ElementAt(aCapEngine)
+            ->WithEntry(aCaptureId, [&](VideoEngine::CaptureEntry& cap) {
               webrtc::VideoCaptureCapability capability;
               capability.width = aIpcCaps.width();
               capability.height = aIpcCaps.height();
@@ -1137,8 +1142,10 @@ CamerasParent::CamerasParent()
     : mShutdownBlocker(ShutdownBlockingTicket::Create(
           u"CamerasParent"_ns, NS_LITERAL_STRING_FROM_CSTRING(__FILE__),
           __LINE__)),
-      mVideoCaptureThread(mShutdownBlocker ? MakeAndAddRefVideoCaptureThread()
-                                           : nullptr),
+      mVideoCaptureThread(mShutdownBlocker
+                              ? MakeAndAddRefVideoCaptureThreadAndSingletons()
+                              : nullptr),
+      mEngines(sEngines),
       mShmemPool(CaptureEngine::MaxEngine),
       mPBackgroundEventTarget(GetCurrentSerialEventTarget()),
       mDestroyed(false) {
@@ -1172,6 +1179,8 @@ ipc::IPCResult CamerasParent::RecvPCamerasConstructor() {
   if (!mVideoCaptureThread) {
     return Send__delete__(this) ? IPC_OK() : IPC_FAIL(this, "Failed to send");
   }
+
+  MOZ_ASSERT(mEngines);
 
   mShutdownBlocker->ShutdownPromise()
       ->Then(mPBackgroundEventTarget, "CamerasParent OnShutdown",
