@@ -176,6 +176,11 @@ static Result CheckCandidates(TrustDomain& trustDomain,
                               nsTArray<Input>& candidates,
                               Input* nameConstraintsInputPtr, bool& keepGoing) {
   for (Input candidate : candidates) {
+    // Stop path building if the program is shutting down.
+    if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+      keepGoing = false;
+      return Success;
+    }
     if (ShouldSkipSelfSignedNonTrustAnchor(trustDomain, candidate)) {
       continue;
     }
@@ -331,6 +336,9 @@ Result NSSCertDBTrustDomain::FindIssuer(Input encodedIssuerName,
   nsTArray<nsTArray<uint8_t>> nssIntermediateCandidates;
   RefPtr<Runnable> getCandidatesTask =
       NS_NewRunnableFunction("NSSCertDBTrustDomain::FindIssuer", [&]() {
+        if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+          return;
+        }
         // NSS seems not to differentiate between "no potential issuers found"
         // and "there was an error trying to retrieve the potential issuers." We
         // assume there was no error if CERT_CreateSubjectCertList returns
@@ -449,6 +457,10 @@ Result NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
   Result result = Result::FATAL_ERROR_LIBRARY_FAILURE;
   RefPtr<Runnable> getTrustTask =
       NS_NewRunnableFunction("NSSCertDBTrustDomain::GetCertTrust", [&]() {
+        if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+          result = Result::FATAL_ERROR_LIBRARY_FAILURE;
+          return;
+        }
         // This would be cleaner and more efficient if we could get the trust
         // information without constructing a CERTCertificate here, but NSS
         // doesn't expose it in any other easy-to-use fashion. The use of
@@ -1017,9 +1029,12 @@ Result NSSCertDBTrustDomain::SynchronousCheckRevocationWithServer(
     uint16_t maxOCSPLifetimeInDays, const Result cachedResponseResult,
     const Result stapledOCSPResponseResult, const bool crliteCoversCertificate,
     const Result crliteResult, /*out*/ bool& softFailure) {
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+
   uint8_t ocspRequestBytes[OCSP_REQUEST_MAX_LENGTH];
   size_t ocspRequestLength;
-
   Result rv = CreateEncodedOCSPRequest(*this, certID, ocspRequestBytes,
                                        ocspRequestLength);
   if (rv != Success) {
@@ -1290,6 +1305,10 @@ nsresult isDistrustedCertificateChain(
 
   RefPtr<Runnable> isDistrustedChainTask =
       NS_NewRunnableFunction("isDistrustedCertificateChain", [&]() {
+        if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+          runnableRV = SECFailure;
+          return;
+        }
         // Allocate objects and retreive the root and end-entity certificates.
         CERTCertDBHandle* certDB(CERT_GetDefaultCertDB());
         const nsTArray<uint8_t>& certRootDER = certArray.LastElement();
