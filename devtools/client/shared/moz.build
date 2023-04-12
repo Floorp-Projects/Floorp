@@ -24,7 +24,6 @@ DIRS += [
 DevToolsModules(
     "async-store-helper.js",
     "autocomplete-popup.js",
-    "classnames.js",
     "css-angle.js",
     "curl.js",
     "devices.js",

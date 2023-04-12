@@ -4,6 +4,7 @@
 
 import React, { Component } from "react";
 import PropTypes from "prop-types";
+import classnames from "classnames";
 import { connect } from "../../../utils/connect";
 
 import ExceptionOption from "./ExceptionOption";
@@ -18,8 +19,6 @@ import { createHeadlessEditor } from "../../../utils/editor/create-editor";
 import { makeBreakpointId } from "../../../utils/breakpoint";
 
 import { getSelectedSource, getBreakpointSources } from "../../../selectors";
-
-const classnames = require("devtools/client/shared/classnames");
 
 import "./Breakpoints.css";
 

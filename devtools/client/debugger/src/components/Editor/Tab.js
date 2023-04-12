@@ -33,7 +33,7 @@ import {
   getContext,
 } from "../../selectors";
 
-const classnames = require("devtools/client/shared/classnames");
+import classnames from "classnames";
 
 class Tab extends PureComponent {
   static get propTypes() {

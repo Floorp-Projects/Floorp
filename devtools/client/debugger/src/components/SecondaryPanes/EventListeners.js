@@ -4,6 +4,7 @@
 
 import React, { Component } from "react";
 import PropTypes from "prop-types";
+import classnames from "classnames";
 
 import { connect } from "../../utils/connect";
 import actions from "../../actions";
@@ -14,8 +15,6 @@ import {
 } from "../../selectors";
 
 import AccessibleImage from "../shared/AccessibleImage";
-
-const classnames = require("devtools/client/shared/classnames");
 
 import "./EventListeners.css";
 

@@ -4,10 +4,9 @@
 
 import React, { Component } from "react";
 import PropTypes from "prop-types";
+import classNames from "classnames";
 import BracketArrow from "./BracketArrow";
 import SmartGap from "./SmartGap";
-
-const classnames = require("devtools/client/shared/classnames");
 
 import "./Popover.css";
 
@@ -260,7 +259,7 @@ class Popover extends Component {
 
     return (
       <div
-        className={classnames("popover", `orientation-${orientation}`, {
+        className={classNames("popover", `orientation-${orientation}`, {
           up: orientation === "up",
         })}
         style={{ top, left }}
@@ -276,7 +275,7 @@ class Popover extends Component {
     const { top, left, orientation } = this.state.coords;
     return (
       <div
-        className={`tooltip orientation-${orientation}`}
+        className={classNames("tooltip", `orientation-${orientation}`)}
         style={{ top, left }}
         ref={c => (this.$tooltip = c)}
       >

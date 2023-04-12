@@ -4,6 +4,7 @@
 
 import React, { Component } from "react";
 import PropTypes from "prop-types";
+import classNames from "classnames";
 
 import { getLibraryFromUrl } from "../../../utils/pause/frames";
 
@@ -16,15 +17,13 @@ import "./Group.css";
 import Badge from "../../shared/Badge";
 import FrameIndent from "./FrameIndent";
 
-const classnames = require("devtools/client/shared/classnames");
-
 function FrameLocation({ frame, expanded }) {
   const library = frame.library || getLibraryFromUrl(frame);
   if (!library) {
     return null;
   }
 
-  const arrowClassName = classnames("arrow", { expanded });
+  const arrowClassName = classNames("arrow", { expanded });
   return (
     <span className="group-description">
       <AccessibleImage className={arrowClassName} />
@@ -164,7 +163,7 @@ export default class Group extends Component {
       <div
         role="listitem"
         key={frame.id}
-        className="group"
+        className={classNames("group")}
         onClick={this.toggleFrames}
         tabIndex={0}
         title={title}
@@ -183,7 +182,7 @@ export default class Group extends Component {
     const { disableContextMenu } = this.props;
     return (
       <div
-        className={classnames("frames-group", { expanded })}
+        className={classNames("frames-group", { expanded })}
         onContextMenu={disableContextMenu ? null : e => this.onContextMenu(e)}
       >
         {this.renderDescription()}

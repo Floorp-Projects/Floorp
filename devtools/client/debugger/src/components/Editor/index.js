@@ -7,6 +7,7 @@ import React, { PureComponent } from "react";
 import { bindActionCreators } from "redux";
 import ReactDOM from "react-dom";
 import { connect } from "../../utils/connect";
+import classnames from "classnames";
 
 import { getLineText } from "./../../utils/source";
 import { createLocation } from "./../../utils/location";
@@ -85,7 +86,6 @@ import {
 import { resizeToggleButton, resizeBreakpointGutter } from "../../utils/ui";
 
 const { debounce } = require("devtools/shared/debounce");
-const classnames = require("devtools/client/shared/classnames");
 
 const { appinfo } = Services;
 const isMacOS = appinfo.OS === "Darwin";
