@@ -114,8 +114,6 @@ class CamerasParent final : public PCamerasParent,
   void StopCapture(const CaptureEngine& aCapEngine, int aCaptureId);
   int ReleaseCapture(const CaptureEngine& aCapEngine, int aCaptureId);
 
-  bool SetupEngine(CaptureEngine aCapEngine);
-
   // VideoInputFeedBack
   void OnDeviceChange() override;
 
