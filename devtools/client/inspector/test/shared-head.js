@@ -261,6 +261,48 @@ var selectNode = async function(
 };
 
 /**
+ * Using the markupview's _waitForChildren function, wait for all queued
+ * children updates to be handled.
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently
+ * loaded in the toolbox
+ * @return a promise that resolves when all queued children updates have been
+ * handled
+ */
+function waitForChildrenUpdated({ markup }) {
+  info("Waiting for queued children updates to be handled");
+  return new Promise(resolve => {
+    markup._waitForChildren().then(() => {
+      executeSoon(resolve);
+    });
+  });
+}
+
+// The expand all operation of the markup-view calls itself recursively and
+// there's not one event we can wait for to know when it's done, so use this
+// helper function to wait until all recursive children updates are done.
+async function waitForMultipleChildrenUpdates(inspector) {
+  // As long as child updates are queued up while we wait for an update already
+  // wait again
+  if (
+    inspector.markup._queuedChildUpdates &&
+    inspector.markup._queuedChildUpdates.size
+  ) {
+    await waitForChildrenUpdated(inspector);
+    return waitForMultipleChildrenUpdates(inspector);
+  }
+  return null;
+}
+
+/**
+ * Expand the provided markup container programmatically and  wait for all
+ * children to update.
+ */
+async function expandContainer(inspector, container) {
+  await inspector.markup.expandNode(container.node);
+  await waitForMultipleChildrenUpdates(inspector);
+}
+
+/**
  * Get the NodeFront for a node that matches a given css selector inside a
  * given iframe.
  *
