@@ -194,8 +194,8 @@ class ShutdownBlockingTicket {
    * Note that __FILE__ needs to be made wide, typically through
    * NS_LITERAL_STRING_FROM_CSTRING(__FILE__).
    */
-  static UniquePtr<ShutdownBlockingTicket> Create(nsString aName,
-                                                  nsString aFileName,
+  static UniquePtr<ShutdownBlockingTicket> Create(const nsAString& aName,
+                                                  const nsAString& aFileName,
                                                   int32_t aLineNr);
 
   virtual ~ShutdownBlockingTicket() = default;

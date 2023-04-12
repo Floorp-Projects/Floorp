@@ -89,15 +89,15 @@ class ShutdownBlockingTicketImpl : public ShutdownBlockingTicket {
   RefPtr<RefCountedTicket> mTicket;
 
  public:
-  ShutdownBlockingTicketImpl(nsString aName, nsString aFileName,
+  ShutdownBlockingTicketImpl(const nsAString& aName, const nsAString& aFileName,
                              int32_t aLineNr)
       : mTicket(MakeAndAddRef<RefCountedTicket>()) {
-    aName.AppendPrintf(" - %p", this);
+    nsString name(aName);
+    name.AppendPrintf(" - %p", this);
     NS_DispatchToMainThread(NS_NewRunnableFunction(
-        __func__, [ticket = mTicket, name = std::move(aName),
-                   fileName = std::move(aFileName), lineNr = aLineNr] {
-          ticket->AddBlocker(name, fileName, lineNr);
-        }));
+        __func__,
+        [ticket = mTicket, name = std::move(name), file = nsString(aFileName),
+         lineNr = aLineNr] { ticket->AddBlocker(name, file, lineNr); }));
   }
 
   ~ShutdownBlockingTicketImpl() {
@@ -111,9 +111,8 @@ class ShutdownBlockingTicketImpl : public ShutdownBlockingTicket {
 }  // namespace
 
 UniquePtr<ShutdownBlockingTicket> ShutdownBlockingTicket::Create(
-    nsString aName, nsString aFileName, int32_t aLineNr) {
-  return WrapUnique(new ShutdownBlockingTicketImpl(
-      std::move(aName), std::move(aFileName), aLineNr));
+    const nsAString& aName, const nsAString& aFileName, int32_t aLineNr) {
+  return WrapUnique(new ShutdownBlockingTicketImpl(aName, aFileName, aLineNr));
 }
 
 }  // namespace mozilla::media
