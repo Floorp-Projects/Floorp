@@ -3478,23 +3478,31 @@ export class UrlbarInput {
     }
     let oldEnd = oldValue.substring(this.selectionEnd);
 
-    let isURLAssumed = true;
+    let fixedURI, keywordAsSent;
     try {
-      const { keywordAsSent } = Services.uriFixup.getFixupURIInfo(
+      ({ fixedURI, keywordAsSent } = Services.uriFixup.getFixupURIInfo(
         originalPasteData,
         Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
           Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP
-      );
-      isURLAssumed = !keywordAsSent;
+      ));
     } catch (e) {}
 
-    // In some cases, the data pasted will contain newline codes. In order to
-    // achive the behavior expected by user, remove newline codes when URL is
-    // assumed. When keywords are assumed, replace all whitespace characters
-    // including newline with a space.
-    let pasteData = isURLAssumed
-      ? originalPasteData.replace(/[\r\n]/g, "")
-      : originalPasteData.replace(/\s/g, " ");
+    let pasteData;
+    if (keywordAsSent) {
+      // For only keywords, replace any white spaces including line break with
+      // white space.
+      pasteData = originalPasteData.replace(/\s/g, " ");
+    } else if (
+      fixedURI?.scheme === "data" &&
+      !fixedURI.spec.match(/^data:.+;base64,/)
+    ) {
+      // For data url without base64, replace line break with white space.
+      pasteData = originalPasteData.replace(/[\r\n]/g, " ");
+    } else {
+      // For normal url or data url having basic64, or if fixup failed, just
+      // remove line breaks.
+      pasteData = originalPasteData.replace(/[\r\n]/g, "");
+    }
 
     pasteData = lazy.UrlbarUtils.stripUnsafeProtocolOnPaste(pasteData);
 
