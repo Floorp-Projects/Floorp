@@ -350,10 +350,10 @@ static bool TestFunctionReferenceDeleter() {
   // These bits use a custom deleter so we can instrument deletion.
   {
     UniquePtr<int, FreeSignature> i2 =
-        UniquePtr<int, FreeSignature>(new int(42), DeleteIntFunction);
+        UniquePtr<int, FreeSignature>(new int[42], DeleteIntFunction);
     CHECK(DeleteIntFunctionCallCount == 0);
 
-    i2.reset(new int(76));
+    i2.reset(new int[76]);
     CHECK(DeleteIntFunctionCallCount == 1);
   }
 
