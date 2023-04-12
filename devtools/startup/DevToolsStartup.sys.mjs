@@ -220,6 +220,23 @@ XPCOMUtils.defineLazyGetter(lazy, "KeyShortcuts", function() {
     shortcuts.push(...getProfilerKeyShortcuts());
   }
 
+  // Allow toggling the JavaScript tracing not only from DevTools UI,
+  // but also from the web page when it is focused.
+  if (
+    Services.prefs.getBoolPref(
+      "devtools.debugger.features.javascript-tracing",
+      false
+    )
+  ) {
+    shortcuts.push({
+      id: "javascriptTracingToggle",
+      shortcut: getLocalizedKeyShortcut(
+        "devtools-commandkey-javascript-tracing-toggle"
+      ),
+      modifiers: "control,shift",
+    });
+  }
+
   return shortcuts;
 });
 
@@ -776,6 +793,13 @@ DevToolsStartup.prototype = {
           lazy.ProfilerPopupBackground.captureProfile("aboutprofiling");
           return;
         }
+      }
+
+      // Ignore the following key shortcut if DevTools aren't yet opened.
+      // The key shortcut is registered in this core component in order to
+      // work even when the web page is focused.
+      if (key.id == "javascriptTracingToggle" && !this.initialized) {
+        return;
       }
 
       // Record the timing at which this event started in order to compute later in
