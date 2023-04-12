@@ -25,15 +25,10 @@
  * ]
  */
 
-"use strict";
-
 // We expose a singleton from this module. Some tests may import the
 // constructor via a backstage pass.
-var EXPORTED_SYMBOLS = ["FormAutofillParent", "FormAutofillStatus"];
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const { FormAutofill } = ChromeUtils.import(
   "resource://autofill/FormAutofill.jsm"
 );
@@ -56,7 +51,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () =>
-  FormAutofill.defineLogGetter(lazy, EXPORTED_SYMBOLS[0])
+  FormAutofill.defineLogGetter(lazy, "FormAutofillParent")
 );
 
 const {
@@ -71,7 +66,7 @@ const {
 
 let gMessageObservers = new Set();
 
-let FormAutofillStatus = {
+export let FormAutofillStatus = {
   _initialized: false,
 
   /**
@@ -291,7 +286,7 @@ XPCOMUtils.defineLazyGetter(lazy, "gFormAutofillStorage", () => {
   return formAutofillStorage;
 });
 
-class FormAutofillParent extends JSWindowActorParent {
+export class FormAutofillParent extends JSWindowActorParent {
   constructor() {
     super();
     FormAutofillStatus.init();
