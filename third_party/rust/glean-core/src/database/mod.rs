@@ -52,15 +52,12 @@ pub fn rkv_new(path: &Path) -> std::result::Result<Rkv, rkv::StoreError> {
             // Now try again, we only handle that error once.
             Rkv::new::<rkv::backend::SafeMode>(path)
         }
-        // This code is currently disabled but intended to be turned on in the
-        // near future. Please reference this bug for more details:
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=1820792#c2
-        // Err(rkv::StoreError::DatabaseCorrupted) => {
-        //     let safebin = path.join("data.safe.bin");
-        //     fs::remove_file(safebin).map_err(|_| rkv::StoreError::DatabaseCorrupted)?;
-        //     // Try again, only allowing the error once.
-        //     Rkv::new::<rkv::backend::SafeMode>(path)
-        // }
+        Err(rkv::StoreError::DatabaseCorrupted) => {
+            let safebin = path.join("data.safe.bin");
+            fs::remove_file(safebin).map_err(|_| rkv::StoreError::DatabaseCorrupted)?;
+            // Try again, only allowing the error once.
+            Rkv::new::<rkv::backend::SafeMode>(path)
+        }
         other => other,
     }
 }

@@ -21,7 +21,7 @@ mod experiment;
 pub(crate) mod labeled;
 mod memory_distribution;
 mod memory_unit;
-mod metrics_disabled_config;
+mod metrics_enabled_config;
 mod numerator;
 mod ping;
 mod quantity;
@@ -69,7 +69,7 @@ pub use self::uuid::UuidMetric;
 pub use crate::histogram::HistogramType;
 pub use recorded_experiment::RecordedExperiment;
 
-pub use self::metrics_disabled_config::MetricsDisabledConfig;
+pub use self::metrics_enabled_config::MetricsEnabledConfig;
 
 /// A snapshot of all buckets and the accumulated sum of a distribution.
 //
@@ -195,11 +195,11 @@ pub trait MetricType {
         }
         // The epoch's didn't match so we need to look up the disabled flag
         // by the base_identifier from the in-memory HashMap
-        let metrics_disabled = &glean
+        let metrics_enabled = &glean
             .remote_settings_metrics_config
             .lock()
             .unwrap()
-            .metrics_disabled;
+            .metrics_enabled;
         // Get the value from the remote configuration if it is there, otherwise return the default value.
         let current_disabled = {
             let base_id = self.meta().base_identifier();
@@ -207,8 +207,11 @@ pub trait MetricType {
                 .split_once('/')
                 .map(|split| split.0)
                 .unwrap_or(&base_id);
-            if let Some(is_disabled) = metrics_disabled.get(identifier) {
-                u8::from(*is_disabled)
+            // NOTE: The `!` preceding the `*is_enabled` is important for inverting the logic since the
+            // underlying property in the metrics.yaml is `disabled` and the outward API is treating it as
+            // if it were `enabled` to make it easier to understand.
+            if let Some(is_enabled) = metrics_enabled.get(identifier) {
+                u8::from(!*is_enabled)
             } else {
                 u8::from(self.meta().inner.disabled)
             }

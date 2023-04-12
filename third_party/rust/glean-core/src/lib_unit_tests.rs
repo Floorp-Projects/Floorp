@@ -852,15 +852,15 @@ fn test_set_metrics_disabled() {
     );
 
     // 2. Set a configuration to disable the metrics
-    let mut metrics_disabled_config = json!(
+    let mut metrics_enabled_config = json!(
         {
-            "category.string_metric": true,
-            "category.labeled_string_metric": true,
+            "category.string_metric": false,
+            "category.labeled_string_metric": false,
         }
     )
     .to_string();
-    glean.set_metrics_disabled_config(
-        MetricsDisabledConfig::try_from(metrics_disabled_config).unwrap(),
+    glean.set_metrics_enabled_config(
+        MetricsEnabledConfig::try_from(metrics_enabled_config).unwrap(),
     );
 
     // 3. Since the metrics were disabled, setting a new value will be ignored
@@ -883,9 +883,9 @@ fn test_set_metrics_disabled() {
     );
 
     // 4. Set a new configuration where the metrics are enabled
-    metrics_disabled_config = json!({}).to_string();
-    glean.set_metrics_disabled_config(
-        MetricsDisabledConfig::try_from(metrics_disabled_config).unwrap(),
+    metrics_enabled_config = json!({}).to_string();
+    glean.set_metrics_enabled_config(
+        MetricsEnabledConfig::try_from(metrics_enabled_config).unwrap(),
     );
 
     // 5. Since the metrics are now enabled, setting a new value should work
@@ -917,14 +917,14 @@ fn test_remote_settings_epoch() {
     assert_eq!(0u8, current_epoch, "Current epoch must start at 0");
 
     // 2. Set a configuration which will trigger incrementing the epoch
-    let metrics_disabled_config = json!(
+    let metrics_enabled_config = json!(
         {
-            "category.string_metric": true
+            "category.string_metric": false
         }
     )
     .to_string();
-    glean.set_metrics_disabled_config(
-        MetricsDisabledConfig::try_from(metrics_disabled_config).unwrap(),
+    glean.set_metrics_enabled_config(
+        MetricsEnabledConfig::try_from(metrics_enabled_config).unwrap(),
     );
 
     // 3. Ensure the epoch updated
@@ -951,14 +951,14 @@ fn test_remote_settings_epoch_updates_in_metric() {
     );
 
     // 2. Set a configuration to disable the `category.string_metric`
-    let metrics_disabled_config = json!(
+    let metrics_enabled_config = json!(
         {
-            "category.string_metric": true
+            "category.string_metric": false
         }
     )
     .to_string();
-    glean.set_metrics_disabled_config(
-        MetricsDisabledConfig::try_from(metrics_disabled_config).unwrap(),
+    glean.set_metrics_enabled_config(
+        MetricsEnabledConfig::try_from(metrics_enabled_config).unwrap(),
     );
 
     // 3. Ensure the epoch was updated

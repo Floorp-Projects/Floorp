@@ -115,6 +115,10 @@ fn validate_against_schema() {
     stringlist_metric.add("one".into());
     stringlist_metric.add("two".into());
 
+    // Let's make sure an empty array is accepted.
+    let stringlist_metric2 = StringListMetric::new(common("stringlist2"));
+    stringlist_metric2.set(vec![]);
+
     let timespan_metric = TimespanMetric::new(common("timespan"), TimeUnit::Nanosecond);
     timespan_metric.start();
     timespan_metric.stop();

@@ -112,9 +112,14 @@ impl MemoryDistributionMetric {
             sample = MAX_BYTES;
         }
 
-        glean
-            .storage()
-            .record_with(glean, &self.meta, |old_value| match old_value {
+        // Let's be defensive here:
+        // The uploader tries to store some memory distribution metrics,
+        // but in tests that storage might be gone already.
+        // Let's just ignore those.
+        // We do the same for counters and timing distributions.
+        // This should never happen in real app usage.
+        if let Some(storage) = glean.storage_opt() {
+            storage.record_with(glean, &self.meta, |old_value| match old_value {
                 Some(Metric::MemoryDistribution(mut hist)) => {
                     hist.accumulate(sample);
                     Metric::MemoryDistribution(hist)
@@ -125,6 +130,12 @@ impl MemoryDistributionMetric {
                     Metric::MemoryDistribution(hist)
                 }
             });
+        } else {
+            log::warn!(
+                "Couldn't get storage. Can't record memory distribution '{}'.",
+                self.meta.base_identifier()
+            );
+        }
     }
 
     /// Accumulates the provided signed samples in the metric.

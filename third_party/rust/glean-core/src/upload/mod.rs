@@ -21,11 +21,15 @@ use std::sync::{Arc, RwLock, RwLockWriteGuard};
 use std::thread;
 use std::time::{Duration, Instant};
 
+use chrono::Utc;
+
 use crate::error::ErrorKind;
 use crate::TimerId;
 use crate::{internal_metrics::UploadMetrics, Glean};
 use directory::{PingDirectoryManager, PingPayloadsByDirectory};
 use policy::Policy;
+use request::create_date_header_value;
+
 pub use request::{HeaderMap, PingRequest};
 pub use result::{UploadResult, UploadTaskAction};
 
@@ -605,9 +609,14 @@ impl PingUploadManager {
                     in_flight.insert(request.document_id.clone(), (success_id, failure_id));
                 }
 
-                PingUploadTask::Upload {
-                    request: queue.pop_front().unwrap(),
-                }
+                let mut request = queue.pop_front().unwrap();
+
+                // Adding the `Date` header just before actual upload happens.
+                request
+                    .headers
+                    .insert("Date".to_string(), create_date_header_value(Utc::now()));
+
+                PingUploadTask::Upload { request }
             }
             None => {
                 log::info!("No more pings to upload! You are done.");

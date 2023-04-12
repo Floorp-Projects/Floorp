@@ -18,7 +18,7 @@ use crate::system;
 pub type HeaderMap = HashMap<String, String>;
 
 /// Creates a formatted date string that can be used with Date headers.
-fn create_date_header_value(current_time: DateTime<Utc>) -> String {
+pub(crate) fn create_date_header_value(current_time: DateTime<Utc>) -> String {
     // Date headers are required to be in the following format:
     //
     // <day-name>, <day> <month> <year> <hour>:<minute>:<second> GMT
@@ -68,7 +68,6 @@ impl Builder {
     /// Creates a new builder for a PingRequest.
     pub fn new(language_binding_name: &str, body_max_size: usize) -> Self {
         let mut headers = HashMap::new();
-        headers.insert("Date".to_string(), create_date_header_value(Utc::now()));
         headers.insert(
             "X-Telemetry-Agent".to_string(),
             create_x_telemetry_agent_header_value(
@@ -265,10 +264,12 @@ mod test {
         assert_eq!(request.path, "/random/path/doesnt/matter");
 
         // Make sure all the expected headers were added.
-        assert!(request.headers.contains_key("Date"));
         assert!(request.headers.contains_key("X-Telemetry-Agent"));
         assert!(request.headers.contains_key("Content-Type"));
         assert!(request.headers.contains_key("Content-Length"));
+
+        // the `Date` header is added by the `get_upload_task` just before
+        // returning the upload request
     }
 
     #[test]
