@@ -119,7 +119,7 @@ add_task(async function test_successful_migrations() {
   let migration = waitForTestMigration(
     [MigrationUtils.resourceTypes.BOOKMARKS],
     [MigrationUtils.resourceTypes.BOOKMARKS],
-    null
+    InternalTestingProfileMigrator.testProfile
   );
 
   await withMigrationWizardDialog(async prefsWin => {
@@ -167,7 +167,7 @@ add_task(async function test_successful_migrations() {
       MigrationUtils.resourceTypes.PASSWORDS,
     ],
     [MigrationUtils.resourceTypes.PASSWORDS],
-    null
+    InternalTestingProfileMigrator.testProfile
   );
 
   await withMigrationWizardDialog(async prefsWin => {
@@ -215,7 +215,11 @@ add_task(async function test_successful_migrations() {
     return MigrationUtils.resourceTypes[resourceTypeStr];
   });
 
-  migration = waitForTestMigration(allResourceTypes, allResourceTypes, null);
+  migration = waitForTestMigration(
+    allResourceTypes,
+    allResourceTypes,
+    InternalTestingProfileMigrator.testProfile
+  );
 
   await withMigrationWizardDialog(async prefsWin => {
     let dialogBody = prefsWin.document.body;
@@ -246,7 +250,7 @@ add_task(async function test_invalid_resource_type() {
   let migration = waitForTestMigration(
     [MigrationUtils.resourceTypes.BOOKMARKS],
     [MigrationUtils.resourceTypes.BOOKMARKS],
-    null
+    InternalTestingProfileMigrator.testProfile
   );
 
   await withMigrationWizardDialog(async prefsWin => {
