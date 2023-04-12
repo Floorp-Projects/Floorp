@@ -73,6 +73,7 @@ servo_url = {path = "../url", optional = true}
 to_shmem = {path = "../to_shmem"}
 to_shmem_derive = {path = "../to_shmem_derive"}
 time = "0.1"
+thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
 uluru = "3.0"
 unicode-bidi = "0.3"
 unicode-segmentation = "1.0"
