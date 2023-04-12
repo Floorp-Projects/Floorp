@@ -22,8 +22,6 @@
 #include "modules/desktop_capture/win/window_capture_utils.h"
 #include "rtc_base/logging.h"
 
-#include <windows.h>
-
 namespace webrtc {
 
 namespace {

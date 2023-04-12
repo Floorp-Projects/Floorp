@@ -31,7 +31,7 @@ class MockDesktopCapturerCallback : public DesktopCapturer::Callback {
               (DesktopCapturer::Result result,
                std::unique_ptr<DesktopFrame>* frame));
   void OnCaptureResult(DesktopCapturer::Result result,
-                       std::unique_ptr<DesktopFrame> frame) final override;
+                       std::unique_ptr<DesktopFrame> frame) final;
 };
 
 }  // namespace webrtc

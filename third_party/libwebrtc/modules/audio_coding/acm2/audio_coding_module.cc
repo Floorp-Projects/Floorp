@@ -74,8 +74,6 @@ class AudioCodingModuleImpl final : public AudioCodingModule {
 
   void SetReceiveCodecs(const std::map<int, SdpAudioFormat>& codecs) override;
 
-  int ReceiveSampleRate() const override;
-
   // Incoming packet from network parsed and ready for decode.
   int IncomingPacket(const uint8_t* incoming_payload,
                      const size_t payload_length,
@@ -556,10 +554,6 @@ void AudioCodingModuleImpl::SetReceiveCodecs(
     const std::map<int, SdpAudioFormat>& codecs) {
   MutexLock lock(&acm_mutex_);
   receiver_.SetCodecs(codecs);
-}
-
-int AudioCodingModuleImpl::ReceiveSampleRate() const {
-  return receiver_.LastAudioSampleRate();
 }
 
 // Incoming packet from network parsed and ready for decode.

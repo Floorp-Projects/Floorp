@@ -54,18 +54,6 @@ struct VideoCaptureCapability {
   }
 };
 
-// Callback class to be implemented by module user
-class VideoCaptureDataCallback
-{
-public:
-  virtual void OnIncomingCapturedFrame(const int32_t id,
-                                       const VideoFrame& videoFrame) = 0;
-  virtual void OnCaptureDelayChanged(const int32_t id,
-                                     const int32_t delay) = 0;
-protected:
-  virtual ~VideoCaptureDataCallback() {}
-};
-
 }  // namespace webrtc
 
 #endif  // MODULES_VIDEO_CAPTURE_VIDEO_CAPTURE_DEFINES_H_

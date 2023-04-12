@@ -49,9 +49,7 @@ ScreenCapturerWinGdi::ScreenCapturerWinGdi(
 
     if (dwmapi_library_) {
       composition_func_ = reinterpret_cast<DwmEnableCompositionFunc>(
-        GetProcAddress(dwmapi_library_, "DwmEnableComposition"));
-      composition_enabled_func_ = reinterpret_cast<DwmIsCompositionEnabledFunc>
-        (GetProcAddress(dwmapi_library_, "DwmIsCompositionEnabled"));
+          GetProcAddress(dwmapi_library_, "DwmEnableComposition"));
     }
   }
 }
