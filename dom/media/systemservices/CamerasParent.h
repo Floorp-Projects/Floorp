@@ -65,9 +65,10 @@ class InputObserver : public webrtc::VideoInputFeedBack {
 
 class DeliverFrameRunnable;
 
-class CamerasParent final : public PCamerasParent,
-                            public nsIAsyncShutdownBlocker {
-  NS_DECL_THREADSAFE_ISUPPORTS
+class CamerasParent final : public PCamerasParent {
+  using ShutdownMozPromise = media::ShutdownBlockingTicket::ShutdownMozPromise;
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CamerasParent)
 
  public:
   friend DeliverFrameRunnable;
@@ -131,13 +132,8 @@ class CamerasParent final : public PCamerasParent,
   void StopIPC();
   void StopVideoCapture();
   nsresult DispatchToVideoCaptureThread(RefPtr<Runnable> event);
-  NS_IMETHOD BlockShutdown(nsIAsyncShutdownClient*) override;
-  NS_IMETHOD GetName(nsAString& aName) override {
-    aName = mName;
-    return NS_OK;
-  }
-  NS_IMETHOD GetState(nsIPropertyBag**) override { return NS_OK; }
-  static nsString GetNewName();
+
+  void OnShutdown();
 
   // sEngines will be accessed by VideoCapture thread only
   // sNumOfCamerasParents, sNumOfOpenCamerasParentEngines, and
@@ -157,7 +153,11 @@ class CamerasParent final : public PCamerasParent,
   static base::Thread* sVideoCaptureThread;
 
   nsTArray<CallbackHelper*> mCallbacks;
-  nsString mName;
+  // If existent, blocks xpcom shutdown while alive.
+  // Note that this makes a reference cycle that gets broken in ActorDestroy().
+  const UniquePtr<media::ShutdownBlockingTicket> mShutdownBlocker;
+  // Tracks the mShutdownBlocker shutdown handler. mPBackgroundEventTarget only.
+  MozPromiseRequestHolder<ShutdownMozPromise> mShutdownRequest;
 
   // image buffers
   ShmemPool mShmemPool;
