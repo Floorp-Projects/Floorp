@@ -38,17 +38,16 @@ assert hazmap["cell3"].GCFunction in (
 returnval_hazards = set(
     haz.function for haz in hazards if haz.variable == "<returnvalue>"
 )
-assert returnval_hazards == set(
-    [
-        "Cell* f()",
-        "Cell* refptr_test1()",
-        "Cell* refptr_test3()",
-        "Cell* refptr_test4()",
-        "Cell* refptr_test6()",
-        "Cell* refptr_test7()",
-        "Cell* refptr_test8()",
-    ]
-)
+assert "Cell* f()" in returnval_hazards
+assert "Cell* refptr_test1()" in returnval_hazards
+assert "Cell* refptr_test2()" not in returnval_hazards
+assert "Cell* refptr_test3()" in returnval_hazards
+assert "Cell* refptr_test4()" in returnval_hazards
+assert "Cell* refptr_test5()" not in returnval_hazards
+assert "Cell* refptr_test6()" in returnval_hazards
+assert "Cell* refptr_test7()" in returnval_hazards
+assert "Cell* refptr_test8()" in returnval_hazards
+assert "Cell* refptr_test9()" not in returnval_hazards
 
 assert "container1" in hazmap
 assert "container2" not in hazmap
@@ -88,7 +87,7 @@ assert "unsafe15" in hazmap
 assert "safe16" not in hazmap
 assert "safe17" not in hazmap
 assert "safe18" not in hazmap
-assert "unsafe19" in hazmap
+assert "safe19" not in hazmap
 
 # method hazard.
 
