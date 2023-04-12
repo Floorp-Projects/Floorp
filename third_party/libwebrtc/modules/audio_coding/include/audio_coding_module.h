@@ -176,17 +176,6 @@ class AudioCodingModule {
       const std::map<int, SdpAudioFormat>& codecs) = 0;
 
   ///////////////////////////////////////////////////////////////////////////
-  // int ReceiveSampleRate()
-  //
-  // Mozilla extension.
-  // Return the sample-rate of the inbound audio stream.
-  //
-  // Return value:
-  // 0 if no audio has been received, the sample-rate of the inbound audio
-  // otherwise.
-  virtual int ReceiveSampleRate() const = 0;
-
-  ///////////////////////////////////////////////////////////////////////////
   // int32_t IncomingPacket()
   // Call this function to insert a parsed RTP packet into ACM.
   //

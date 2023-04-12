@@ -147,7 +147,7 @@ class FakeMouseMonitor : public MouseCursorMonitor {
     hotspot_ = hotspot;
   }
 
-  void Init(Callback* callback, Mode mode) { callback_ = callback; }
+  void Init(Callback* callback, Mode mode) override { callback_ = callback; }
 
   void Capture() override {
     if (changed_) {

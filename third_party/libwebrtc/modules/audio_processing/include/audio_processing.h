@@ -693,7 +693,6 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
     kSampleRate8kHz = 8000,
     kSampleRate16kHz = 16000,
     kSampleRate32kHz = 32000,
-    kSampleRate44_1kHz = 44100,
     kSampleRate48kHz = 48000
   };
 

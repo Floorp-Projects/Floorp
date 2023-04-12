@@ -30,8 +30,7 @@ enum VCMJitterBufferEnum {
   // overshoot bitrate target.
   kMaxPacketsInSession = 1400,      // Allows ~2MB frames.
   kBufferIncStepSizeBytes = 30000,  // >20 packets.
-  kMaxJBFrameSizeBytes            = 4000000, // sanity don't go above 4Mbyte.
-  kBufferSafetyMargin             = 100      // enough for ~50 NALs in a STAP-A
+  kMaxJBFrameSizeBytes = 4000000    // sanity don't go above 4Mbyte.
 };
 
 enum VCMFrameBufferEnum {

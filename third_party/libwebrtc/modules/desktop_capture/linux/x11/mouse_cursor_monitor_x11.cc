@@ -245,8 +245,8 @@ MouseCursorMonitor* MouseCursorMonitorX11::CreateForScreen(
     ScreenId screen) {
   if (!options.x_display())
     return NULL;
-  WindowId window = DefaultRootWindow(options.x_display()->display());
-  return new MouseCursorMonitorX11(options, window);
+  return new MouseCursorMonitorX11(
+      options, DefaultRootWindow(options.x_display()->display()));
 }
 
 std::unique_ptr<MouseCursorMonitor> MouseCursorMonitorX11::Create(

@@ -173,8 +173,6 @@ class AcmReceiver {
   //
   absl::optional<std::pair<int, SdpAudioFormat>> LastDecoder() const;
 
-  int LastAudioSampleRate() const;
-
   //
   // Enable NACK and set the maximum size of the NACK list. If NACK is already
   // enabled then the maximum NACK list size is modified accordingly.
@@ -227,7 +225,6 @@ class AcmReceiver {
   const std::unique_ptr<NetEq> neteq_;  // NetEq is thread-safe; no lock needed.
   Clock* const clock_;
   std::atomic<bool> resampled_last_output_frame_;
-  std::atomic<int> last_audio_format_clockrate_hz_;
 };
 
 }  // namespace acm2

@@ -215,11 +215,6 @@ class RTC_EXPORT DesktopCapturer {
   static std::unique_ptr<DesktopCapturer> CreateRawScreenCapturer(
       const DesktopCaptureOptions& options);
 
-  // Creates a platform specific DesktopCapturer instance which targets to
-  // capture apps.
-  static std::unique_ptr<DesktopCapturer> CreateRawAppCapturer(
-      const DesktopCaptureOptions& options);
-
   // Creates a DesktopCapturer instance which targets to capture tabs
   static std::unique_ptr<DesktopCapturer> CreateRawTabCapturer(
       const DesktopCaptureOptions& options);
