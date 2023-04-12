@@ -411,12 +411,6 @@ fn main() -> std::io::Result<()> {
         _ => unreachable!(),
     });
 
-    let root_list_label = attr(root_lists[0], "CKA_LABEL");
-    writeln!(
-        out,
-        "pub const ROOT_LIST_LABEL: &[u8] = b{root_list_label};"
-    )?;
-
     // Write out arrays for the DER encoded certificate, serial number, and subject of each root.
     // As of Rust 1.64, we can construct subslices of a static array at compile time using
     // slice::from_raw_parts. Since the serial number and the subject are in the DER cert, we don't
@@ -454,6 +448,7 @@ fn main() -> std::io::Result<()> {
                 out,
                 format!("Certificate {i} in certdata.txt has a CKA_SERIAL_NUMBER that does not match its CKA_VALUE.")
             );
+            return Ok(());
         }
 
         let subject_len = subject_data.len();
@@ -467,8 +462,15 @@ fn main() -> std::io::Result<()> {
                 out,
                 format!("Certificate {i} in certdata.txt has a CKA_SUBJECT that does not match its CKA_VALUE.")
             );
+            return Ok(());
         }
     }
+
+    let root_list_label = attr(root_lists[0], "CKA_LABEL");
+    writeln!(
+        out,
+        "pub const ROOT_LIST_LABEL: &[u8] = b{root_list_label};"
+    )?;
 
     writeln!(out, "pub static BUILTINS: &[Root] = &[")?;
     for (i, cert) in certs.iter().enumerate() {
