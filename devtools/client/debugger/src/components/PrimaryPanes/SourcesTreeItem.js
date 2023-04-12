@@ -16,7 +16,6 @@ import {
   getContext,
   getFirstSourceActorForGeneratedSource,
   isSourceOverridden,
-  getOverridesSupport,
 } from "../../selectors";
 import actions from "../../actions";
 
@@ -51,7 +50,6 @@ class SourceTreeItem extends Component {
       setOverrideSource: PropTypes.func.isRequired,
       removeOverrideSource: PropTypes.func.isRequired,
       isOverridden: PropTypes.bool,
-      isOverridesSupported: PropTypes.bool,
     };
   }
 
@@ -83,7 +81,7 @@ class SourceTreeItem extends Component {
 
     const menuOptions = [];
 
-    const { item, isOverridden, isOverridesSupported } = this.props;
+    const { item, isOverridden } = this.props;
     if (item.type == "source") {
       const { source } = item;
       const copySourceUri2 = {
@@ -120,15 +118,12 @@ class SourceTreeItem extends Component {
         click: () => this.handleLocalOverride(cx, source, isOverridden),
       };
 
-      menuOptions.push(copySourceUri2, blackBoxMenuItem, downloadFileItem);
-
-      // Show the overrides context menu item if the server
-      // does not support overrides
-      // @backward-compat { version 112 } isOverridesSupported can be
-      // removed.
-      if (isOverridesSupported) {
-        menuOptions.push(overridesItem);
-      }
+      menuOptions.push(
+        copySourceUri2,
+        blackBoxMenuItem,
+        downloadFileItem,
+        overridesItem
+      );
     }
 
     // All other types other than source are folder-like
@@ -420,16 +415,12 @@ const mapStateToProps = (state, props) => {
       getFirstSourceActorForGeneratedSource: (sourceId, threadId) =>
         getFirstSourceActorForGeneratedSource(state, sourceId, threadId),
       isOverridden: isSourceOverridden(state, source),
-      // @backward-compat { version 112 } Remove after full support for overrides on server
-      isOverridesSupported: getOverridesSupport(state),
     };
   }
   return {
     cx: getContext(state),
     getFirstSourceActorForGeneratedSource: (sourceId, threadId) =>
       getFirstSourceActorForGeneratedSource(state, sourceId, threadId),
-    // @backward-compat { version 112 } Remove after full support for overrides on server
-    isOverridesSupported: getOverridesSupport(state),
   };
 };
 
