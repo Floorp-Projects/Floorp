@@ -70,6 +70,7 @@ static void set_good_speed_feature_framesize_dependent(VP9_COMP *cpi,
   const int is_720p_or_larger = min_frame_size >= 720;
   const int is_1080p_or_larger = min_frame_size >= 1080;
   const int is_2160p_or_larger = min_frame_size >= 2160;
+  const int boosted = frame_is_boosted(cpi);
 
   // speed 0 features
   sf->partition_search_breakout_thr.dist = (1 << 20);
@@ -100,6 +101,13 @@ static void set_good_speed_feature_framesize_dependent(VP9_COMP *cpi,
       sf->rd_ml_partition.search_breakout_thresh[1] = 1.5f;
       sf->rd_ml_partition.search_breakout_thresh[2] = 1.5f;
     }
+  }
+
+  if (!is_720p_or_larger) {
+    if (is_480p_or_larger)
+      sf->prune_single_mode_based_on_mv_diff_mode_rate = boosted ? 0 : 1;
+    else
+      sf->prune_single_mode_based_on_mv_diff_mode_rate = 1;
   }
 
   if (speed >= 1) {
@@ -926,6 +934,7 @@ void vp9_set_speed_features_framesize_independent(VP9_COMP *cpi, int speed) {
   sf->enhanced_full_pixel_motion_search = 1;
   sf->adaptive_pred_interp_filter = 0;
   sf->adaptive_mode_search = 0;
+  sf->prune_single_mode_based_on_mv_diff_mode_rate = 0;
   sf->cb_pred_filter_search = 0;
   sf->early_term_interp_search_plane_rd = 0;
   sf->cb_partition_search = 0;

@@ -140,53 +140,43 @@ static INLINE void sad16_neon(uint8x16_t src, uint8x16_t ref,
 static INLINE void sad64xhx4d_neon(const uint8_t *src, int src_stride,
                                    const uint8_t *const ref[4], int ref_stride,
                                    uint32_t res[4], int h) {
-  int h_tmp = h > 64 ? 64 : h;
+  uint16x8_t sum_lo[4] = { vdupq_n_u16(0), vdupq_n_u16(0), vdupq_n_u16(0),
+                           vdupq_n_u16(0) };
+  uint16x8_t sum_hi[4] = { vdupq_n_u16(0), vdupq_n_u16(0), vdupq_n_u16(0),
+                           vdupq_n_u16(0) };
+
   int i = 0;
-  vst1q_u32(res, vdupq_n_u32(0));
-
   do {
-    uint16x8_t sum_lo[4] = { vdupq_n_u16(0), vdupq_n_u16(0), vdupq_n_u16(0),
-                             vdupq_n_u16(0) };
-    uint16x8_t sum_hi[4] = { vdupq_n_u16(0), vdupq_n_u16(0), vdupq_n_u16(0),
-                             vdupq_n_u16(0) };
+    uint8x16_t s0, s1, s2, s3;
 
-    do {
-      uint8x16_t s0, s1, s2, s3;
+    s0 = vld1q_u8(src + i * src_stride);
+    sad16_neon(s0, vld1q_u8(ref[0] + i * ref_stride), &sum_lo[0]);
+    sad16_neon(s0, vld1q_u8(ref[1] + i * ref_stride), &sum_lo[1]);
+    sad16_neon(s0, vld1q_u8(ref[2] + i * ref_stride), &sum_lo[2]);
+    sad16_neon(s0, vld1q_u8(ref[3] + i * ref_stride), &sum_lo[3]);
 
-      s0 = vld1q_u8(src + i * src_stride);
-      sad16_neon(s0, vld1q_u8(ref[0] + i * ref_stride), &sum_lo[0]);
-      sad16_neon(s0, vld1q_u8(ref[1] + i * ref_stride), &sum_lo[1]);
-      sad16_neon(s0, vld1q_u8(ref[2] + i * ref_stride), &sum_lo[2]);
-      sad16_neon(s0, vld1q_u8(ref[3] + i * ref_stride), &sum_lo[3]);
+    s1 = vld1q_u8(src + i * src_stride + 16);
+    sad16_neon(s1, vld1q_u8(ref[0] + i * ref_stride + 16), &sum_hi[0]);
+    sad16_neon(s1, vld1q_u8(ref[1] + i * ref_stride + 16), &sum_hi[1]);
+    sad16_neon(s1, vld1q_u8(ref[2] + i * ref_stride + 16), &sum_hi[2]);
+    sad16_neon(s1, vld1q_u8(ref[3] + i * ref_stride + 16), &sum_hi[3]);
 
-      s1 = vld1q_u8(src + i * src_stride + 16);
-      sad16_neon(s1, vld1q_u8(ref[0] + i * ref_stride + 16), &sum_hi[0]);
-      sad16_neon(s1, vld1q_u8(ref[1] + i * ref_stride + 16), &sum_hi[1]);
-      sad16_neon(s1, vld1q_u8(ref[2] + i * ref_stride + 16), &sum_hi[2]);
-      sad16_neon(s1, vld1q_u8(ref[3] + i * ref_stride + 16), &sum_hi[3]);
+    s2 = vld1q_u8(src + i * src_stride + 32);
+    sad16_neon(s2, vld1q_u8(ref[0] + i * ref_stride + 32), &sum_lo[0]);
+    sad16_neon(s2, vld1q_u8(ref[1] + i * ref_stride + 32), &sum_lo[1]);
+    sad16_neon(s2, vld1q_u8(ref[2] + i * ref_stride + 32), &sum_lo[2]);
+    sad16_neon(s2, vld1q_u8(ref[3] + i * ref_stride + 32), &sum_lo[3]);
 
-      s2 = vld1q_u8(src + i * src_stride + 32);
-      sad16_neon(s2, vld1q_u8(ref[0] + i * ref_stride + 32), &sum_lo[0]);
-      sad16_neon(s2, vld1q_u8(ref[1] + i * ref_stride + 32), &sum_lo[1]);
-      sad16_neon(s2, vld1q_u8(ref[2] + i * ref_stride + 32), &sum_lo[2]);
-      sad16_neon(s2, vld1q_u8(ref[3] + i * ref_stride + 32), &sum_lo[3]);
+    s3 = vld1q_u8(src + i * src_stride + 48);
+    sad16_neon(s3, vld1q_u8(ref[0] + i * ref_stride + 48), &sum_hi[0]);
+    sad16_neon(s3, vld1q_u8(ref[1] + i * ref_stride + 48), &sum_hi[1]);
+    sad16_neon(s3, vld1q_u8(ref[2] + i * ref_stride + 48), &sum_hi[2]);
+    sad16_neon(s3, vld1q_u8(ref[3] + i * ref_stride + 48), &sum_hi[3]);
 
-      s3 = vld1q_u8(src + i * src_stride + 48);
-      sad16_neon(s3, vld1q_u8(ref[0] + i * ref_stride + 48), &sum_hi[0]);
-      sad16_neon(s3, vld1q_u8(ref[1] + i * ref_stride + 48), &sum_hi[1]);
-      sad16_neon(s3, vld1q_u8(ref[2] + i * ref_stride + 48), &sum_hi[2]);
-      sad16_neon(s3, vld1q_u8(ref[3] + i * ref_stride + 48), &sum_hi[3]);
-
-      i++;
-    } while (i < h_tmp);
-
-    res[0] += horizontal_long_add_uint16x8(sum_lo[0], sum_hi[0]);
-    res[1] += horizontal_long_add_uint16x8(sum_lo[1], sum_hi[1]);
-    res[2] += horizontal_long_add_uint16x8(sum_lo[2], sum_hi[2]);
-    res[3] += horizontal_long_add_uint16x8(sum_lo[3], sum_hi[3]);
-
-    h_tmp += 64;
+    i++;
   } while (i < h);
+
+  vst1q_u32(res, horizontal_long_add_4d_uint16x8(sum_lo, sum_hi));
 }
 
 static INLINE void sad32xhx4d_neon(const uint8_t *src, int src_stride,
@@ -216,10 +206,7 @@ static INLINE void sad32xhx4d_neon(const uint8_t *src, int src_stride,
     i++;
   } while (i < h);
 
-  res[0] = horizontal_long_add_uint16x8(sum_lo[0], sum_hi[0]);
-  res[1] = horizontal_long_add_uint16x8(sum_lo[1], sum_hi[1]);
-  res[2] = horizontal_long_add_uint16x8(sum_lo[2], sum_hi[2]);
-  res[3] = horizontal_long_add_uint16x8(sum_lo[3], sum_hi[3]);
+  vst1q_u32(res, horizontal_long_add_4d_uint16x8(sum_lo, sum_hi));
 }
 
 static INLINE void sad16xhx4d_neon(const uint8_t *src, int src_stride,
@@ -239,10 +226,7 @@ static INLINE void sad16xhx4d_neon(const uint8_t *src, int src_stride,
     i++;
   } while (i < h);
 
-  res[0] = horizontal_add_uint16x8(sum[0]);
-  res[1] = horizontal_add_uint16x8(sum[1]);
-  res[2] = horizontal_add_uint16x8(sum[2]);
-  res[3] = horizontal_add_uint16x8(sum[3]);
+  vst1q_u32(res, horizontal_add_4d_uint16x8(sum));
 }
 
 #endif  // defined(__ARM_FEATURE_DOTPROD)
@@ -270,10 +254,7 @@ static INLINE void sad8xhx4d_neon(const uint8_t *src, int src_stride,
     i++;
   } while (i < h);
 
-  res[0] = horizontal_add_uint16x8(sum[0]);
-  res[1] = horizontal_add_uint16x8(sum[1]);
-  res[2] = horizontal_add_uint16x8(sum[2]);
-  res[3] = horizontal_add_uint16x8(sum[3]);
+  vst1q_u32(res, horizontal_add_4d_uint16x8(sum));
 }
 
 static INLINE void sad4xhx4d_neon(const uint8_t *src, int src_stride,
@@ -298,10 +279,7 @@ static INLINE void sad4xhx4d_neon(const uint8_t *src, int src_stride,
     i += 2;
   } while (i < h);
 
-  res[0] = horizontal_add_uint16x8(sum[0]);
-  res[1] = horizontal_add_uint16x8(sum[1]);
-  res[2] = horizontal_add_uint16x8(sum[2]);
-  res[3] = horizontal_add_uint16x8(sum[3]);
+  vst1q_u32(res, horizontal_add_4d_uint16x8(sum));
 }
 
 #define SAD_WXH_4D_NEON(w, h)                                                  \

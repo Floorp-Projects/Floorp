@@ -44,20 +44,19 @@ static INLINE uint32_t highbd_sad8xh_neon(const uint8_t *src_ptr,
                                           int ref_stride, int h) {
   const uint16_t *src16_ptr = CONVERT_TO_SHORTPTR(src_ptr);
   const uint16_t *ref16_ptr = CONVERT_TO_SHORTPTR(ref_ptr);
-  uint32x4_t sum = vdupq_n_u32(0);
+  uint16x8_t sum = vdupq_n_u16(0);
 
   int i = h;
   do {
     uint16x8_t s = vld1q_u16(src16_ptr);
     uint16x8_t r = vld1q_u16(ref16_ptr);
-    uint16x8_t diff = vabdq_u16(s, r);
-    sum = vpadalq_u16(sum, diff);
+    sum = vabaq_u16(sum, s, r);
 
     src16_ptr += src_stride;
     ref16_ptr += ref_stride;
   } while (--i != 0);
 
-  return horizontal_add_uint32x4(sum);
+  return horizontal_add_uint16x8(sum);
 }
 
 static INLINE uint32_t highbd_sad16xh_neon(const uint8_t *src_ptr,

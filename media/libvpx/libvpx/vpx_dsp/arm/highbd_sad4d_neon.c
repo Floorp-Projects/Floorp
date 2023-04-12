@@ -48,12 +48,6 @@ static INLINE void highbd_sad4xhx4d_neon(const uint8_t *src_ptr, int src_stride,
   vst1q_u32(res, horizontal_add_4d_uint32x4(sum));
 }
 
-static INLINE void sad8_neon(uint16x8_t src, uint16x8_t ref,
-                             uint32x4_t *const sad_sum) {
-  uint16x8_t abs_diff = vabdq_u16(src, ref);
-  *sad_sum = vpadalq_u16(*sad_sum, abs_diff);
-}
-
 static INLINE void highbd_sad8xhx4d_neon(const uint8_t *src_ptr, int src_stride,
                                          const uint8_t *const ref_ptr[4],
                                          int ref_stride, uint32_t res[4],
@@ -64,21 +58,32 @@ static INLINE void highbd_sad8xhx4d_neon(const uint8_t *src_ptr, int src_stride,
   const uint16_t *ref16_ptr2 = CONVERT_TO_SHORTPTR(ref_ptr[2]);
   const uint16_t *ref16_ptr3 = CONVERT_TO_SHORTPTR(ref_ptr[3]);
 
-  uint32x4_t sum[4] = { vdupq_n_u32(0), vdupq_n_u32(0), vdupq_n_u32(0),
-                        vdupq_n_u32(0) };
+  uint16x8_t sum[4] = { vdupq_n_u16(0), vdupq_n_u16(0), vdupq_n_u16(0),
+                        vdupq_n_u16(0) };
+  uint32x4_t sum_u32[4];
 
   int i = 0;
   do {
     uint16x8_t s = vld1q_u16(src16_ptr + i * src_stride);
 
-    sad8_neon(s, vld1q_u16(ref16_ptr0 + i * ref_stride), &sum[0]);
-    sad8_neon(s, vld1q_u16(ref16_ptr1 + i * ref_stride), &sum[1]);
-    sad8_neon(s, vld1q_u16(ref16_ptr2 + i * ref_stride), &sum[2]);
-    sad8_neon(s, vld1q_u16(ref16_ptr3 + i * ref_stride), &sum[3]);
+    sum[0] = vabaq_u16(sum[0], s, vld1q_u16(ref16_ptr0 + i * ref_stride));
+    sum[1] = vabaq_u16(sum[1], s, vld1q_u16(ref16_ptr1 + i * ref_stride));
+    sum[2] = vabaq_u16(sum[2], s, vld1q_u16(ref16_ptr2 + i * ref_stride));
+    sum[3] = vabaq_u16(sum[3], s, vld1q_u16(ref16_ptr3 + i * ref_stride));
 
   } while (++i < h);
 
-  vst1q_u32(res, horizontal_add_4d_uint32x4(sum));
+  sum_u32[0] = vpaddlq_u16(sum[0]);
+  sum_u32[1] = vpaddlq_u16(sum[1]);
+  sum_u32[2] = vpaddlq_u16(sum[2]);
+  sum_u32[3] = vpaddlq_u16(sum[3]);
+  vst1q_u32(res, horizontal_add_4d_uint32x4(sum_u32));
+}
+
+static INLINE void sad8_neon(uint16x8_t src, uint16x8_t ref,
+                             uint32x4_t *const sad_sum) {
+  uint16x8_t abs_diff = vabdq_u16(src, ref);
+  *sad_sum = vpadalq_u16(*sad_sum, abs_diff);
 }
 
 static INLINE void highbd_sad16xhx4d_neon(const uint8_t *src_ptr,

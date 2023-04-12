@@ -3495,7 +3495,6 @@ void vp9_rc_get_second_pass_params(VP9_COMP *cpi) {
   const int show_idx = cm->current_video_frame;
 
   if (cpi->common.current_frame_coding_index == 0) {
-    VP9_COMMON *cm = &cpi->common;
     const vpx_codec_err_t codec_status = vp9_extrc_send_firstpass_stats(
         &cpi->ext_ratectrl, &cpi->twopass.first_pass_info);
     if (codec_status != VPX_CODEC_OK) {

@@ -256,13 +256,13 @@ class DatarateOnePassCbrSvc : public OnePassCbrSvc {
       temporal_layer_id_ = layer_id.temporal_layer_id;
       for (int i = 0; i < number_spatial_layers_; i++) {
         layer_id.temporal_layer_id_per_spatial[i] = temporal_layer_id_;
-        ref_frame_config.duration[i] = 1;
+        ref_frame_config_.duration[i] = 1;
       }
       encoder->Control(VP9E_SET_SVC_LAYER_ID, &layer_id);
       set_frame_flags_bypass_mode(layer_id.temporal_layer_id,
-                                  number_spatial_layers_, 0, &ref_frame_config,
+                                  number_spatial_layers_, 0, &ref_frame_config_,
                                   1);
-      encoder->Control(VP9E_SET_SVC_REF_FRAME_CONFIG, &ref_frame_config);
+      encoder->Control(VP9E_SET_SVC_REF_FRAME_CONFIG, &ref_frame_config_);
     }
 
     if (update_pattern_ && video->frame() >= 100) {
@@ -277,13 +277,13 @@ class DatarateOnePassCbrSvc : public OnePassCbrSvc {
       temporal_layer_id_ = layer_id.temporal_layer_id;
       for (int i = 0; i < number_spatial_layers_; i++) {
         layer_id.temporal_layer_id_per_spatial[i] = temporal_layer_id_;
-        ref_frame_config.duration[i] = 1;
+        ref_frame_config_.duration[i] = 1;
       }
       encoder->Control(VP9E_SET_SVC_LAYER_ID, &layer_id);
       set_frame_flags_bypass_mode(layer_id.temporal_layer_id,
-                                  number_spatial_layers_, 0, &ref_frame_config,
+                                  number_spatial_layers_, 0, &ref_frame_config_,
                                   0);
-      encoder->Control(VP9E_SET_SVC_REF_FRAME_CONFIG, &ref_frame_config);
+      encoder->Control(VP9E_SET_SVC_REF_FRAME_CONFIG, &ref_frame_config_);
     }
 
     if (change_bitrate_ && video->frame() == 200) {
@@ -611,7 +611,7 @@ class DatarateOnePassCbrSvc : public OnePassCbrSvc {
   bool single_layer_resize_;
   unsigned int top_sl_width_;
   unsigned int top_sl_height_;
-  vpx_svc_ref_frame_config_t ref_frame_config;
+  vpx_svc_ref_frame_config_t ref_frame_config_;
   int update_pattern_;
   bool change_bitrate_;
   vpx_codec_pts_t last_pts_ref_;

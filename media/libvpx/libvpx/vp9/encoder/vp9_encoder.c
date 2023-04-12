@@ -2465,11 +2465,11 @@ VP9_COMP *vp9_create_compressor(const VP9EncoderConfig *oxcf,
         cpi->svc.number_temporal_layers > 1) {
       FIRSTPASS_STATS *const stats = oxcf->two_pass_stats_in.buf;
       FIRSTPASS_STATS *stats_copy[VPX_SS_MAX_LAYERS] = { 0 };
-      int i;
+      int n;
 
-      for (i = 0; i < oxcf->ss_number_layers; ++i) {
+      for (n = 0; n < oxcf->ss_number_layers; ++n) {
         FIRSTPASS_STATS *const last_packet_for_layer =
-            &stats[packets - oxcf->ss_number_layers + i];
+            &stats[packets - oxcf->ss_number_layers + n];
         const int layer_id = (int)last_packet_for_layer->spatial_layer_id;
         const int packets_in_layer = (int)last_packet_for_layer->count + 1;
         if (layer_id >= 0 && layer_id < oxcf->ss_number_layers) {
@@ -2494,11 +2494,11 @@ VP9_COMP *vp9_create_compressor(const VP9EncoderConfig *oxcf,
         }
       }
 
-      for (i = 0; i < packets; ++i) {
-        const int layer_id = (int)stats[i].spatial_layer_id;
+      for (n = 0; n < packets; ++n) {
+        const int layer_id = (int)stats[n].spatial_layer_id;
         if (layer_id >= 0 && layer_id < oxcf->ss_number_layers &&
             stats_copy[layer_id] != NULL) {
-          *stats_copy[layer_id] = stats[i];
+          *stats_copy[layer_id] = stats[n];
           ++stats_copy[layer_id];
         }
       }
