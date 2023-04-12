@@ -4,6 +4,7 @@
 
 browser.jar:
     content/browser/firefoxview.html
+    content/browser/firefoxview-next.html
     content/browser/firefoxview.mjs
     content/browser/firefoxview.css
     content/browser/helpers.mjs
