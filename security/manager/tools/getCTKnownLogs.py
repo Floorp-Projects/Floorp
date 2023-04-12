@@ -24,7 +24,7 @@ import textwrap
 from string import Template
 
 import six
-import urllib2
+import urllib3
 
 
 def decodebytes(s):
@@ -96,24 +96,24 @@ def get_disqualification_time(time_str):
 
 def get_hex_lines(blob, width):
     """Convert a binary string to a multiline text of C escape sequences."""
-    text = "".join(["\\x{:02x}".format(ord(c)) for c in blob])
+    text = "".join(["\\x{:02x}".format(c) for c in blob])
     # When escaped, a single byte takes 4 chars (e.g. "\x00").
     # Make sure we don't break an escaped byte between the lines.
     return textwrap.wrap(text, width - width % 4)
 
 
-def get_operator_and_index(json_data, operator_id):
+def get_operator_index(json_data, target_name):
     """Return operator's entry from the JSON along with its array index."""
     matches = [
         (operator, index)
         for (index, operator) in enumerate(json_data["operators"])
-        if operator["id"] == operator_id
+        if operator["name"] == target_name
     ]
-    assert len(matches) != 0, "No operators with id {0} defined.".format(operator_id)
+    assert len(matches) != 0, "No operators with id {0} defined.".format(target_name)
     assert len(matches) == 1, "Found multiple operators with id {0}.".format(
-        operator_id
+        target_name
     )
-    return matches[0]
+    return matches[0][1]
 
 
 def get_log_info_structs(json_data):
@@ -130,48 +130,47 @@ def get_log_info_structs(json_data):
         )
     )
     initializers = []
-    for log in json_data["logs"]:
-        log_key = decodebytes(log["key"])
-        # "operated_by" is a list, we assume here it always contains one item.
-        operated_by = log["operated_by"]
-        assert len(operated_by) == 1, "operated_by must contain one item."
-        operator, operator_index = get_operator_and_index(json_data, operated_by[0])
-        if "disqualification_time" in log:
-            status = "mozilla::ct::CTLogStatus::Disqualified"
-            disqualification_time = get_disqualification_time(
-                log["disqualification_time"]
+    for operator in json_data["operators"]:
+        operator_name = operator["name"]
+        for log in operator["logs"]:
+            log_key = decodebytes(log["key"])
+            operator_index = get_operator_index(json_data, operator_name)
+            if "disqualification_time" in log:
+                status = "mozilla::ct::CTLogStatus::Disqualified"
+                disqualification_time = get_disqualification_time(
+                    log["disqualification_time"]
+                )
+                disqualification_time_comment = 'Date.parse("{0}")'.format(
+                    log["disqualification_time"]
+                )
+            else:
+                status = "mozilla::ct::CTLogStatus::Included"
+                disqualification_time = 0
+                disqualification_time_comment = "no disqualification time"
+            is_test_log = "test_only" in operator and operator["test_only"]
+            prefix = ""
+            suffix = ","
+            if is_test_log:
+                prefix = "#ifdef DEBUG\n"
+                suffix = ",\n#endif // DEBUG"
+            toappend = tmpl.substitute(
+                # Use json.dumps for C-escaping strings.
+                # Not perfect but close enough.
+                description=json.dumps(log["description"]),
+                operator_index=operator_index,
+                operator_comment="operated by {0}".
+                # The comment must not contain "/".
+                format(operator_name).replace("/", "|"),
+                status=status,
+                disqualification_time=disqualification_time,
+                disqualification_time_comment=disqualification_time_comment,
+                # Maximum line width is 80.
+                indented_log_key="\n".join(
+                    ['    "{0}"'.format(l) for l in get_hex_lines(log_key, 74)]
+                ),
+                log_key_len=len(log_key),
             )
-            disqualification_time_comment = 'Date.parse("{0}")'.format(
-                log["disqualification_time"]
-            )
-        else:
-            status = "mozilla::ct::CTLogStatus::Included"
-            disqualification_time = 0
-            disqualification_time_comment = "no disqualification time"
-        is_test_log = "test_only" in operator and operator["test_only"]
-        prefix = ""
-        suffix = ","
-        if is_test_log:
-            prefix = "#ifdef DEBUG\n"
-            suffix = ",\n#endif // DEBUG"
-        toappend = tmpl.substitute(
-            # Use json.dumps for C-escaping strings.
-            # Not perfect but close enough.
-            description=json.dumps(log["description"]),
-            operator_index=operator_index,
-            operator_comment="operated by {0}".
-            # The comment must not contain "/".
-            format(operator["name"]).replace("/", "|"),
-            status=status,
-            disqualification_time=disqualification_time,
-            disqualification_time_comment=disqualification_time_comment,
-            # Maximum line width is 80.
-            indented_log_key="\n".join(
-                ['    "{0}"'.format(l) for l in get_hex_lines(log_key, 74)]
-            ),
-            log_key_len=len(log_key),
-        )
-        initializers.append(prefix + toappend + suffix)
+            initializers.append(prefix + toappend + suffix)
     return initializers
 
 
@@ -179,6 +178,7 @@ def get_log_operator_structs(json_data):
     """Return array of CTLogOperatorInfo initializers."""
     tmpl = Template("  { $name, $id }")
     initializers = []
+    currentId = 0
     for operator in json_data["operators"]:
         prefix = ""
         suffix = ","
@@ -186,7 +186,8 @@ def get_log_operator_structs(json_data):
         if is_test_log:
             prefix = "#ifdef DEBUG\n"
             suffix = ",\n#endif // DEBUG"
-        toappend = tmpl.substitute(name=json.dumps(operator["name"]), id=operator["id"])
+        toappend = tmpl.substitute(name=json.dumps(operator["name"]), id=currentId)
+        currentId += 1
         initializers.append(prefix + toappend + suffix)
     return initializers
 
@@ -209,27 +210,16 @@ def generate_cpp_header_file(json_data, out_file):
 
 def patch_in_test_logs(json_data):
     """Insert Mozilla-specific test log data."""
-    max_id = 0
-    for operator in json_data["operators"]:
-        if operator["id"] > max_id:
-            max_id = operator["id"]
+    max_id = len(json_data["operators"])
     mozilla_test_operator_1 = {
         "name": "Mozilla Test Org 1",
         "id": max_id + 1,
         "test_only": True,
-    }
-    mozilla_test_operator_2 = {
-        "name": "Mozilla Test Org 2",
-        "id": max_id + 2,
-        "test_only": True,
-    }
-    json_data["operators"].append(mozilla_test_operator_1)
-    json_data["operators"].append(mozilla_test_operator_2)
-    # The easiest way to get this is
-    # `openssl x509 -noout -pubkey -in <path/to/default-ee.pem>`
-    mozilla_rsa_log_1 = {
-        "description": "Mozilla Test RSA Log 1",
-        "key": """
+        "logs": [
+            {
+                "description": "Mozilla Test RSA Log 1",
+                # `openssl x509 -noout -pubkey -in <path/to/default-ee.pem>`
+                "key": """
             MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuohRqESOFtZB/W62iAY2
             ED08E9nq5DVKtOz1aFdsJHvBxyWo4NgfvbGcBptuGobya+KvWnVramRxCHqlWqdF
             h/cc1SScAn7NQ/weadA4ICmTqyDDSeTbuUzCa2wO7RWCD/F+rWkasdMCOosqQe6n
@@ -238,13 +228,28 @@ def patch_in_test_logs(json_data):
             tIqVYR3uJtYlnauRCE42yxwkBCy/Fosv5fGPmRcxuLP+SSP6clHEMdUDrNoYCjXt
             jQIDAQAB
         """,
-        "operated_by": [max_id + 1],
+                "operated_by": [max_id + 1],
+            },
+            {
+                "description": "Mozilla Test EC Log",
+                # `openssl x509 -noout -pubkey -in <path/to/root_secp256r1_256.pem`
+                "key": """
+            MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAET7+7u2Hg+PmxpgpZrIcE4uwFC0I+
+            PPcukj8sT3lLRVwqadIzRWw2xBGdBwbgDu3I0ZOQ15kbey0HowTqoEqmwA==
+        """,
+                "operated_by": [max_id + 1],
+            },
+        ],
     }
-    # Similarly,
-    # `openssl x509 -noout -pubkey -in <path/to/other-test-ca.pem>`
-    mozilla_rsa_log_2 = {
-        "description": "Mozilla Test RSA Log 2",
-        "key": """
+    mozilla_test_operator_2 = {
+        "name": "Mozilla Test Org 2",
+        "id": max_id + 2,
+        "test_only": True,
+        "logs": [
+            {
+                "description": "Mozilla Test RSA Log 2",
+                # `openssl x509 -noout -pubkey -in <path/to/other-test-ca.pem>`
+                "key": """
             MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwXXGUmYJn3cIKmeR8bh2
             w39c5TiwbErNIrHL1G+mWtoq3UHIwkmKxKOzwfYUh/QbaYlBvYClHDwSAkTFhKTE
             SDMF5ROMAQbPCL6ahidguuai6PNvI8XZgxO53683g0XazlHU1tzSpss8xwbrzTBw
@@ -253,20 +258,12 @@ def patch_in_test_logs(json_data):
             gys1uJMPdLqQqovHYWckKrH9bWIUDRjEwLjGj8N0hFcyStfehuZVLx0eGR1xIWjT
             uwIDAQAB
         """,
-        "operated_by": [max_id + 2],
+                "operated_by": [max_id + 2],
+            }
+        ],
     }
-    # `openssl x509 -noout -pubkey -in <path/to/root_secp256r1_256.pem`
-    mozilla_ec_log = {
-        "description": "Mozilla Test EC Log",
-        "key": """
-            MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAET7+7u2Hg+PmxpgpZrIcE4uwFC0I+
-            PPcukj8sT3lLRVwqadIzRWw2xBGdBwbgDu3I0ZOQ15kbey0HowTqoEqmwA==
-        """,
-        "operated_by": [max_id + 1],
-    }
-    json_data["logs"].append(mozilla_rsa_log_1)
-    json_data["logs"].append(mozilla_rsa_log_2)
-    json_data["logs"].append(mozilla_ec_log)
+    json_data["operators"].append(mozilla_test_operator_1)
+    json_data["operators"].append(mozilla_test_operator_2)
 
 
 def run(args):
@@ -280,7 +277,7 @@ def run(args):
             json_text = json_file.read()
     elif args.url:
         print("Fetching URL: ", args.url)
-        json_request = urllib2.urlopen(args.url)
+        json_request = urllib3.urlopen(args.url)
         try:
             json_text = json_request.read()
         finally:
