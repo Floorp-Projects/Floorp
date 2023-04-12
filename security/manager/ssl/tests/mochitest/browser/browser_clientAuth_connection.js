@@ -159,8 +159,6 @@ add_setup(async function() {
  *
  * @param {string} prefValue
  *        Value to set the "security.default_personal_cert" pref to.
- * @param {string} urlToNavigate
- *        The URL to navigate to.
  * @param {string} expectedURL
  *        If the connection is expected to load successfully, the URL that
  *        should load. If the connection is expected to fail and result in an
@@ -175,7 +173,6 @@ add_setup(async function() {
  */
 async function testHelper(
   prefValue,
-  urlToNavigate,
   expectedURL,
   expectCallingChooseCertificate,
   options = undefined,
@@ -188,7 +185,10 @@ async function testHelper(
 
   let win = await BrowserTestUtils.openNewBrowserWindow(options);
 
-  BrowserTestUtils.loadURIString(win.gBrowser.selectedBrowser, urlToNavigate);
+  BrowserTestUtils.loadURIString(
+    win.gBrowser.selectedBrowser,
+    "https://requireclientcert.example.com:443"
+  );
   if (expectedURL) {
     await BrowserTestUtils.browserLoaded(
       win.gBrowser.selectedBrowser,
@@ -250,7 +250,6 @@ add_task(async function testCertChosenAutomatically() {
   await testHelper(
     "Select Automatically",
     "https://requireclientcert.example.com/",
-    "https://requireclientcert.example.com/",
     false
   );
   // This clears all saved client auth certificate state so we don't influence
@@ -264,7 +263,6 @@ add_task(async function testCertNotChosenByUser() {
   gClientAuthDialogs.state = DialogState.RETURN_CERT_NOT_SELECTED;
   await testHelper(
     "Ask Every Time",
-    "https://requireclientcert.example.com/",
     undefined,
     true,
     undefined,
@@ -282,7 +280,6 @@ add_task(async function testCertChosenByUser() {
   await testHelper(
     "Ask Every Time",
     "https://requireclientcert.example.com/",
-    "https://requireclientcert.example.com/",
     true
   );
   cars.clearRememberedDecisions();
@@ -292,18 +289,8 @@ add_task(async function testCertChosenByUser() {
 add_task(async function testEmptyCertChosenByUser() {
   gClientAuthDialogs.state = DialogState.RETURN_CERT_NOT_SELECTED;
   gClientAuthDialogs.rememberClientAuthCertificate = true;
-  await testHelper(
-    "Ask Every Time",
-    "https://requireclientcert.example.com/",
-    undefined,
-    true
-  );
-  await testHelper(
-    "Ask Every Time",
-    "https://requireclientcert.example.com/",
-    undefined,
-    false
-  );
+  await testHelper("Ask Every Time", undefined, true);
+  await testHelper("Ask Every Time", undefined, false);
   cars.clearRememberedDecisions();
 });
 
@@ -321,7 +308,6 @@ add_task(async function testClearPrivateBrowsingState() {
   await testHelper(
     "Ask Every Time",
     "https://requireclientcert.example.com/",
-    "https://requireclientcert.example.com/",
     true,
     {
       private: true,
@@ -330,7 +316,6 @@ add_task(async function testClearPrivateBrowsingState() {
   await testHelper(
     "Ask Every Time",
     "https://requireclientcert.example.com/",
-    "https://requireclientcert.example.com/",
     true,
     {
       private: true,
@@ -338,7 +323,6 @@ add_task(async function testClearPrivateBrowsingState() {
   );
   await testHelper(
     "Ask Every Time",
-    "https://requireclientcert.example.com/",
     "https://requireclientcert.example.com/",
     true
   );
@@ -375,7 +359,6 @@ add_task(async function testCertFilteringWithIntermediate() {
   await testHelper(
     "Ask Every Time",
     "https://requireclientcert.example.com/",
-    "https://requireclientcert.example.com/",
     true
   );
   cars.clearRememberedDecisions();
@@ -383,19 +366,4 @@ add_task(async function testCertFilteringWithIntermediate() {
   await SpecialPowers.pushPrefEnv({
     set: [["security.enterprise_roots.enabled", true]],
   });
-});
-
-// Test that if the server certificate does not validate successfully,
-// nsIClientAuthDialogs.chooseCertificate() is never called.
-add_task(async function testNoDialogForUntrustedServerCertificate() {
-  gClientAuthDialogs.state = DialogState.ASSERT_NOT_CALLED;
-  await testHelper(
-    "Ask Every Time",
-    "https://requireclientcert-untrusted.example.com/",
-    undefined,
-    false
-  );
-  // This clears all saved client auth certificate state so we don't influence
-  // subsequent tests.
-  cars.clearRememberedDecisions();
 });
