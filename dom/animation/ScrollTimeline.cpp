@@ -35,10 +35,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ScrollTimeline,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSource.mElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ScrollTimeline,
-                                               AnimationTimeline)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(ScrollTimeline,
                                                AnimationTimeline)
 
@@ -53,8 +49,9 @@ ScrollTimeline::ScrollTimeline(Document* aDocument, const Scroller& aScroller,
   RegisterWithScrollSource();
 }
 
-static std::pair<const Element*, PseudoStyleType> FindNearestScroller(
-    Element* aSubject, PseudoStyleType aPseudoType) {
+/* static */ std::pair<const Element*, PseudoStyleType>
+ScrollTimeline::FindNearestScroller(Element* aSubject,
+                                    PseudoStyleType aPseudoType) {
   MOZ_ASSERT(aSubject);
   Element* subject =
       AnimationUtils::GetElementForRestyle(aSubject, aPseudoType);

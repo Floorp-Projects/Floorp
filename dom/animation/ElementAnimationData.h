@@ -25,10 +25,12 @@ class CSSAnimation;
 class CSSTransition;
 class ProgressTimelineScheduler;
 class ScrollTimeline;
+class ViewTimeline;
 }  // namespace dom
 using CSSAnimationCollection = AnimationCollection<dom::CSSAnimation>;
 using CSSTransitionCollection = AnimationCollection<dom::CSSTransition>;
 using ScrollTimelineCollection = TimelineCollection<dom::ScrollTimeline>;
+using ViewTimelineCollection = TimelineCollection<dom::ViewTimeline>;
 
 // The animation data for a given element (and its pseudo-elements).
 class ElementAnimationData {
@@ -46,7 +48,7 @@ class ElementAnimationData {
     // So it should be fine to create timeline objects only on the elements and
     // pseudo elements which support animations.
     UniquePtr<ScrollTimelineCollection> mScrollTimelines;
-    // TODO: Bug 1737920. Add support for ViewTimeline.
+    UniquePtr<ViewTimelineCollection> mViewTimelines;
 
     // This is different from |mScrollTimelines|. We use this to schedule all
     // scroll-driven animations (which use anonymous/named scroll timelines or
@@ -79,12 +81,16 @@ class ElementAnimationData {
     CSSAnimationCollection& DoEnsureAnimations(dom::Element&, PseudoStyleType);
     ScrollTimelineCollection& DoEnsureScrollTimelines(dom::Element&,
                                                       PseudoStyleType);
+    ViewTimelineCollection& DoEnsureViewTimelines(dom::Element&,
+                                                  PseudoStyleType);
     dom::ProgressTimelineScheduler& DoEnsureProgressTimelineScheduler(
         dom::Element&, PseudoStyleType);
+
     void DoClearEffectSet();
     void DoClearTransitions();
     void DoClearAnimations();
     void DoClearScrollTimelines();
+    void DoClearViewTimelines();
     void DoClearProgressTimelineScheduler();
 
     void Traverse(nsCycleCollectionTraversalCallback&);
@@ -205,6 +211,26 @@ class ElementAnimationData {
       return *collection;
     }
     return data.DoEnsureScrollTimelines(aOwner, aType);
+  }
+
+  ViewTimelineCollection* GetViewTimelineCollection(PseudoStyleType aType) {
+    return DataFor(aType).mViewTimelines.get();
+  }
+
+  void ClearViewTimelineCollectionFor(PseudoStyleType aType) {
+    auto& data = DataFor(aType);
+    if (data.mViewTimelines) {
+      data.DoClearViewTimelines();
+    }
+  }
+
+  ViewTimelineCollection& EnsureViewTimelineCollection(dom::Element& aOwner,
+                                                       PseudoStyleType aType) {
+    auto& data = DataFor(aType);
+    if (auto* collection = data.mViewTimelines.get()) {
+      return *collection;
+    }
+    return data.DoEnsureViewTimelines(aOwner, aType);
   }
 
   dom::ProgressTimelineScheduler* GetProgressTimelineScheduler(

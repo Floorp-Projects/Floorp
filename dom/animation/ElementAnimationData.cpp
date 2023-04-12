@@ -11,6 +11,7 @@
 #include "mozilla/dom/CSSTransition.h"
 #include "mozilla/dom/CSSAnimation.h"
 #include "mozilla/dom/ScrollTimeline.h"
+#include "mozilla/dom/ViewTimeline.h"
 
 namespace mozilla {
 
@@ -26,6 +27,7 @@ void ElementAnimationData::ClearAllAnimationCollections() {
     data->mAnimations = nullptr;
     data->mTransitions = nullptr;
     data->mScrollTimelines = nullptr;
+    data->mViewTimelines = nullptr;
     data->mProgressTimelineScheduler = nullptr;
   }
 }
@@ -74,6 +76,14 @@ ElementAnimationData::PerElementOrPseudoData::DoEnsureScrollTimelines(
   return *mScrollTimelines;
 }
 
+ViewTimelineCollection&
+ElementAnimationData::PerElementOrPseudoData::DoEnsureViewTimelines(
+    dom::Element& aOwner, PseudoStyleType aType) {
+  MOZ_ASSERT(!mViewTimelines);
+  mViewTimelines = MakeUnique<ViewTimelineCollection>(aOwner, aType);
+  return *mViewTimelines;
+}
+
 dom::ProgressTimelineScheduler&
 ElementAnimationData::PerElementOrPseudoData::DoEnsureProgressTimelineScheduler(
     dom::Element& aOwner, PseudoStyleType aType) {
@@ -100,6 +110,11 @@ void ElementAnimationData::PerElementOrPseudoData::DoClearAnimations() {
 void ElementAnimationData::PerElementOrPseudoData::DoClearScrollTimelines() {
   MOZ_ASSERT(mScrollTimelines);
   mScrollTimelines = nullptr;
+}
+
+void ElementAnimationData::PerElementOrPseudoData::DoClearViewTimelines() {
+  MOZ_ASSERT(mViewTimelines);
+  mViewTimelines = nullptr;
 }
 
 void ElementAnimationData::PerElementOrPseudoData::

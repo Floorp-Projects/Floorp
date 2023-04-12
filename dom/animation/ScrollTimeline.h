@@ -62,7 +62,7 @@ class Element;
  *     ScrollTimelineSet, and iterates the set to schedule the animations
  *     linked to the ScrollTimelines.
  */
-class ScrollTimeline final : public AnimationTimeline {
+class ScrollTimeline : public AnimationTimeline {
   template <typename T, typename... Args>
   friend already_AddRefed<T> mozilla::MakeAndAddRef(Args&&... aArgs);
 
@@ -111,6 +111,8 @@ class ScrollTimeline final : public AnimationTimeline {
       Document* aDocument, const NonOwningAnimationTarget& aTarget,
       StyleScrollAxis aAxis, StyleScroller aScroller);
 
+  // Note: |aReferfenceElement| is used as the scroller which specifies
+  // scroll-timeline-name property.
   static already_AddRefed<ScrollTimeline> MakeNamed(
       Document* aDocument, Element* aReferenceElement,
       PseudoStyleType aPseudoType, const StyleScrollTimeline& aStyleTimeline);
@@ -121,8 +123,7 @@ class ScrollTimeline final : public AnimationTimeline {
   }
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(ScrollTimeline,
-                                                         AnimationTimeline)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ScrollTimeline, AnimationTimeline)
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override {
@@ -191,8 +192,6 @@ class ScrollTimeline final : public AnimationTimeline {
 
  protected:
   virtual ~ScrollTimeline() { Teardown(); }
-
- private:
   ScrollTimeline() = delete;
   ScrollTimeline(Document* aDocument, const Scroller& aScroller,
                  StyleScrollAxis aAxis);
@@ -209,6 +208,9 @@ class ScrollTimeline final : public AnimationTimeline {
   void UnregisterFromScrollSource();
 
   const nsIScrollableFrame* GetScrollFrame() const;
+
+  static std::pair<const Element*, PseudoStyleType> FindNearestScroller(
+      Element* aSubject, PseudoStyleType aPseudoType);
 
   RefPtr<Document> mDocument;
 

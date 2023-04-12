@@ -215,6 +215,7 @@ static already_AddRefed<dom::AnimationTimeline> GetNamedProgressTimeline(
   // 2. that element’s descendants
   // 3. that element’s following siblings and their descendants
   // https://drafts.csswg.org/scroll-animations-1/#timeline-scope
+  // FIXME: Bug 1823500. Reduce default scoping to ancestors only.
   for (Element* curr = AnimationUtils::GetElementForRestyle(
            aTarget.mElement, aTarget.mPseudoType);
        curr; curr = curr->GetParentElement()) {
@@ -235,7 +236,7 @@ static already_AddRefed<dom::AnimationTimeline> GetNamedProgressTimeline(
         }
       }
 
-      // TODO: Bug 1737920. Support view-timeline.
+      // TODO: Look up view-timeline in the following patches.
     }
   }
 
