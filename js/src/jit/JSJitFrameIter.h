@@ -75,9 +75,13 @@ enum class FrameType {
   JSJitToWasm,
 };
 
-enum ReadFrameArgsBehavior {
-  // Read all args (i.e. [0 ... numActuals()])
-  ReadFrame_Actuals
+enum class ReadFrameArgsBehavior {
+  // Read all actual arguments. Will invoke the callback numActualArgs times.
+  Actuals,
+
+  // Read all argument values in the stack frame. Will invoke the callback
+  // max(numFormalArgs, numActualArgs) times.
+  ActualsAndFormals,
 };
 
 class CommonFrameLayout;
@@ -661,11 +665,22 @@ class InlineFrameIterator {
       unsigned nactual = numActualArgs();
       unsigned nformal = calleeTemplate()->nargs();
 
-      // Get the non overflown arguments, which are taken from the inlined
-      // frame, because it will have the updated value when JSOp::SetArg is
-      // done.
-      s.readFunctionFrameArgs(argOp, argsObj, thisv, 0, nformal, script(),
-                              fallback);
+      // Read the formal arguments, which are taken from the inlined frame,
+      // because it will have the updated value when JSOp::SetArg is used.
+      unsigned numFormalsToRead;
+      if (behavior == ReadFrameArgsBehavior::Actuals) {
+        numFormalsToRead = std::min(nactual, nformal);
+      } else {
+        MOZ_ASSERT(behavior == ReadFrameArgsBehavior::ActualsAndFormals);
+        numFormalsToRead = nformal;
+      }
+      s.readFunctionFrameArgs(argOp, argsObj, thisv, 0, numFormalsToRead,
+                              script(), fallback);
+
+      // Skip formals we didn't read.
+      for (unsigned i = numFormalsToRead; i < nformal; i++) {
+        s.skip();
+      }
 
       if (nactual > nformal) {
         if (more()) {
@@ -722,7 +737,7 @@ class InlineFrameIterator {
                               MaybeReadFallback& fallback) const {
     Nop nop;
     readFrameArgsAndLocals(cx, op, nop, nullptr, nullptr, nullptr, nullptr,
-                           nullptr, ReadFrame_Actuals, fallback);
+                           nullptr, ReadFrameArgsBehavior::Actuals, fallback);
   }
 
   JSScript* script() const { return script_; }
