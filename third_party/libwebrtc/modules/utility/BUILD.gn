@@ -47,6 +47,10 @@ rtc_source_set("utility") {
       "../../rtc_base:platform_thread",
       "../../rtc_base/system:arch",
     ]
+
+    if (build_with_mozilla) {
+      sources -= [ "source/jvm_android.cc" ]
+    }
   }
 }
 
