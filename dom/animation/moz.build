@@ -20,6 +20,7 @@ EXPORTS.mozilla.dom += [
     "DocumentTimeline.h",
     "KeyframeEffect.h",
     "ScrollTimeline.h",
+    "ViewTimeline.h",
 ]
 
 EXPORTS.mozilla += [
@@ -63,6 +64,7 @@ UNIFIED_SOURCES += [
     "ScrollTimeline.cpp",
     "ScrollTimelineAnimationTracker.cpp",
     "TimingParams.cpp",
+    "ViewTimeline.cpp",
 ]
 
 LOCAL_INCLUDES += [

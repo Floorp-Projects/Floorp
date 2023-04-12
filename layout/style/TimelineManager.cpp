@@ -9,11 +9,13 @@
 #include "mozilla/ElementAnimationData.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScrollTimeline.h"
+#include "mozilla/dom/ViewTimeline.h"
 #include "nsPresContext.h"
 
 namespace mozilla {
 using dom::Element;
 using dom::ScrollTimeline;
+using dom::ViewTimeline;
 
 template <typename TimelineType>
 void TryDestroyTimeline(Element* aElement, PseudoStyleType aPseudoType) {
@@ -54,7 +56,14 @@ void TimelineManager::UpdateTimelines(Element* aElement,
       break;
 
     case ProgressTimelineType::View:
-      // TODO: Bug 1737920. Support view-timeline.
+      if (shouldDestroyTimelines) {
+        TryDestroyTimeline<ViewTimeline>(aElement, aPseudoType);
+        return;
+      }
+      DoUpdateTimelines<StyleViewTimeline, ViewTimeline>(
+          mPresContext, aElement, aPseudoType,
+          aComputedStyle->StyleUIReset()->mViewTimelines,
+          aComputedStyle->StyleUIReset()->mViewTimelineNameCount);
       break;
   }
 }
@@ -109,6 +118,13 @@ template <>
 ScrollTimelineCollection& EnsureTimelineCollection<ScrollTimeline>(
     Element& aElement, PseudoStyleType aPseudoType) {
   return aElement.EnsureAnimationData().EnsureScrollTimelineCollection(
+      aElement, aPseudoType);
+}
+
+template <>
+ViewTimelineCollection& EnsureTimelineCollection<ViewTimeline>(
+    Element& aElement, PseudoStyleType aPseudoType) {
+  return aElement.EnsureAnimationData().EnsureViewTimelineCollection(
       aElement, aPseudoType);
 }
 

@@ -1255,6 +1255,10 @@ struct StyleViewTimeline {
   // elements.
   void SetInitialValues() {}
 
+  const nsAtom* GetName() const { return mName._0.AsAtom(); }
+  StyleScrollAxis GetAxis() const { return mAxis; }
+  const StyleViewTimelineInset& GetInset() const { return mInset; }
+
   bool operator==(const StyleViewTimeline& aOther) const {
     return mName == aOther.mName && mAxis == aOther.mAxis &&
            mInset == aOther.mInset;
