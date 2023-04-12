@@ -60,6 +60,7 @@ DIRS += [
     "tabunloader",
     "textrecognition",
     "translation",
+    "translations",
     "uitour",
     "urlbar",
 ]
