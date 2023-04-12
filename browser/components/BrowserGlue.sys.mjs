@@ -2711,19 +2711,12 @@ BrowserGlue.prototype = {
         task: () => {
           Services.fog.initializeFOG();
 
-          // Grabbing the configuration here in case the registration of the
-          // callback below doesn't trigger invoking the callback if we are
-          // already enrolled. See Bug 1818738 for more info.
-          Services.fog.setMetricsFeatureConfig(
-            JSON.stringify(
-              lazy.NimbusFeatures.glean.getVariable("metricsDisabled")
-            )
-          );
-
           // Register Glean to listen for experiment updates releated to the
           // "glean" feature defined in the t/c/nimbus/FeatureManifest.yaml
           lazy.NimbusFeatures.glean.onUpdate(() => {
-            let cfg = lazy.NimbusFeatures.glean.getVariable("metricsDisabled");
+            let cfg = lazy.NimbusFeatures.glean.getVariable(
+              "gleanMetricConfiguration"
+            );
             Services.fog.setMetricsFeatureConfig(JSON.stringify(cfg));
           });
         },
