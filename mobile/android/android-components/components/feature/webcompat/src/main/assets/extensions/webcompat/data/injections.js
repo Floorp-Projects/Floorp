@@ -73,7 +73,10 @@ const AVAILABLE_INJECTIONS = [
     domain: "bankofamerica.com",
     bug: "1472075",
     contentScripts: {
-      matches: ["*://*.bankofamerica.com/*"],
+      matches: [
+        "*://*.bankofamerica.com/*",
+        "*://*.ml.com/*", // #120104
+      ],
       js: [
         {
           file: "injections/js/bug1472075-bankofamerica.com-ua-change.js",
@@ -168,7 +171,10 @@ const AVAILABLE_INJECTIONS = [
     domain: "directv.com.co",
     bug: "1610344",
     contentScripts: {
-      matches: ["https://*.directv.com.co/*"],
+      matches: [
+        "https://*.directv.com.co/*",
+        "https://*.directv.com.ec/*", // bug 1827706
+      ],
       css: [
         {
           file:
@@ -447,6 +453,20 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
+    id: "bug11769762",
+    platform: "all",
+    domain: "tiktok.com",
+    bug: "1769762",
+    contentScripts: {
+      matches: ["https://www.tiktok.com/*"],
+      js: [
+        {
+          file: "injections/js/bug1769762-tiktok.com-plugins-shim.js",
+        },
+      ],
+    },
+  },
+  {
     id: "bug1770962",
     platform: "all",
     domain: "coldwellbankerhomes.com",
@@ -483,14 +503,15 @@ const AVAILABLE_INJECTIONS = [
     contentScripts: {
       matches: [
         "*://*.crunchyroll.com/*", // Bug 1777597
+        "*://*.ersthelfer.tv/*", // Bug 1817520
         "*://*.pixiv.net/*", // Bug 1774006
         "*://*.webex.com/*", // Bug 1788934
         "*://business.help.royalmail.com/app/webforms/*", // Bug 1786404
         "*://ifcinema.institutfrancais.com/*", // Bug 1806423
+        "*://islamionline.islamicbank.ps/*", // Bug 1821439
         "*://mobilevikings.be/*/registration/*", // Bug 1797400
         "*://www.northcountrypublicradio.org/contact/subscribe.html*", // Bug 1778382,
         "*://www.schoolnutritionandfitness.com/*", // Bug 1793761
-        "*://*.ersthelfer.tv/*", // Bug 1817520
       ],
       js: [
         {
@@ -618,6 +639,7 @@ const AVAILABLE_INJECTIONS = [
         "*://*.prospectportal.com/*", // #115206
         "*://*.securityproperties.com/*",
         "*://*.theloftsorlando.com/*",
+        "*://*.vanallenapartments.com/*", // #120056
       ],
       css: [
         {
@@ -710,21 +732,6 @@ const AVAILABLE_INJECTIONS = [
         {
           file:
             "injections/css/bug1800000-www.honda.co.uk-choose-dealer-button-fix.css",
-        },
-      ],
-    },
-  },
-  {
-    id: "bug1800131",
-    platform: "all",
-    domain: "www.almosafer.com",
-    bug: "1800131",
-    contentScripts: {
-      matches: ["*://www.almosafer.com/mweb/flights-home*"],
-      js: [
-        {
-          file:
-            "injections/js/bug1800131-www.almosafer.com-undisable-date-fields.js",
         },
       ],
     },
@@ -857,6 +864,49 @@ const AVAILABLE_INJECTIONS = [
       js: [
         {
           file: "injections/js/bug1819678-cnki.net-undisable-search-field.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1827678-webc77727",
+    platform: "android",
+    domain: "free4talk.com",
+    bug: "1827678",
+    contentScripts: {
+      matches: ["*://www.free4talk.com/*"],
+      js: [
+        {
+          file: "injections/js/bug1819678-free4talk.com-window-chrome-shim.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1827678-85474",
+    platform: "desktop",
+    domain: "elal.com",
+    bug: "1827678",
+    contentScripts: {
+      matches: ["*://*.elal.com/*"],
+      css: [
+        {
+          file: "injections/css/bug1819678-elal.com-unsupported-banner.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1827678-webc119017",
+    platform: "desktop",
+    domain: "nppes.cms.hhs.gov",
+    bug: "1827678",
+    contentScripts: {
+      matches: ["*://nppes.cms.hhs.gov/*"],
+      css: [
+        {
+          file:
+            "injections/css/bug1819678-nppes.cms.hhs.gov-unsupported-banner.css",
         },
       ],
     },

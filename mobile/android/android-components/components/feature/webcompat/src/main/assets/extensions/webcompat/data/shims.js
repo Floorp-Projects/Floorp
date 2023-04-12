@@ -862,7 +862,7 @@ const AVAILABLE_SHIMS = [
     contentScripts: [
       {
         js: "spotify-embed.js",
-        matches: ["*://open.spotify.com/embed/track/*"],
+        matches: ["*://open.spotify.com/embed/*"],
         runAt: "document_start",
         allFrames: true,
       },

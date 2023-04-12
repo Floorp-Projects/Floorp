@@ -7,7 +7,7 @@
  * to make sure `FastClick.notNeeded` returns `true`.
  * This allows to disable FastClick and fix various breakage caused
  * by the library (mainly non-functioning drop-down lists).
- **/
+ */
 
 /* globals exportFunction */
 
