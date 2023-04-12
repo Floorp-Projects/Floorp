@@ -288,6 +288,7 @@ void nsTreeBodyFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     if (tree->GetAttr(nsGkAtoms::rows, rows)) {
       nsresult err;
       mPageLength = rows.ToInteger(&err);
+      mHasFixedRowCount = true;
     }
   }
 
@@ -380,7 +381,7 @@ void nsTreeBodyFrame::ManageReflowCallback(const nsRect& aRect,
 }
 
 nscoord nsTreeBodyFrame::GetIntrinsicBSize() {
-  return mRowHeight * mPageLength;
+  return mHasFixedRowCount ? mRowHeight * mPageLength : 0;
 }
 
 void nsTreeBodyFrame::DidReflow(nsPresContext* aPresContext,
@@ -2597,14 +2598,15 @@ ImgDrawResult nsTreeBodyFrame::PaintTreeBody(gfxContext& aRenderingContext,
   aRenderingContext.Clip(NSRectToSnappedRect(
       mInnerBox + aPt, PresContext()->AppUnitsPerDevPixel(), *drawTarget));
   int32_t oldPageCount = mPageLength;
-  if (!mHasFixedRowCount)
+  if (!mHasFixedRowCount) {
     mPageLength =
         (mRowHeight > 0) ? (mInnerBox.height / mRowHeight) : mRowCount;
+  }
 
   if (oldPageCount != mPageLength ||
       mHorzWidth != CalcHorzWidth(GetScrollParts())) {
     // Schedule a ResizeReflow that will update our info properly.
-    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::None,
+    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::FrameAndAncestors,
                                   NS_FRAME_IS_DIRTY);
   }
 #ifdef DEBUG
@@ -3692,7 +3694,9 @@ nsresult nsTreeBodyFrame::EnsureRowIsVisible(int32_t aRow) {
 
 nsresult nsTreeBodyFrame::EnsureRowIsVisibleInternal(const ScrollParts& aParts,
                                                      int32_t aRow) {
-  if (!mView || !mPageLength) return NS_OK;
+  if (!mView || !mPageLength) {
+    return NS_OK;
+  }
 
   if (mTopRowIndex <= aRow && mTopRowIndex + mPageLength > aRow) return NS_OK;
 
