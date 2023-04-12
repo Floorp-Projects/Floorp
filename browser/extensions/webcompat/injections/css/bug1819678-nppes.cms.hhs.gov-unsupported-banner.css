@@ -1,0 +1,11 @@
+/**
+ * nppes.cms.hhs.gov - Firefox is an unsupported browser
+ * WebCompat issue #119017 - https://github.com/webcompat/web-bugs/issues/119017
+ *
+ * As everything seems to work just fine, this intervention simply hides the
+ * banner.
+ */
+
+#unsupportedDiv {
+  display: none !important;
+}

@@ -66,6 +66,8 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["css"] += [
     "injections/css/bug1799994-www.vivobarefoot.com-product-filters-fix.css",
     "injections/css/bug1800000-www.honda.co.uk-choose-dealer-button-fix.css",
     "injections/css/bug1800143-www.nintendo.co.jp-zoomed-in-image-scrolling-fix.css",
+    "injections/css/bug1819678-elal.com-unsupported-banner.css",
+    "injections/css/bug1819678-nppes.cms.hhs.gov-unsupported-banner.css",
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
@@ -82,17 +84,18 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
     "injections/js/bug1724868-news.yahoo.co.jp-ua-override.js",
     "injections/js/bug1731825-office365-email-handling-prompt-autohide.js",
     "injections/js/bug1739489-draftjs-beforeinput.js",
+    "injections/js/bug1769762-tiktok.com-plugins-shim.js",
     "injections/js/bug1774005-installtrigger-shim.js",
     "injections/js/bug1784302-effectiveType-shim.js",
     "injections/js/bug1795490-www.china-airlines.com-undisable-date-fields-on-mobile.js",
     "injections/js/bug1799968-www.samsung.com-appVersion-linux-fix.js",
     "injections/js/bug1799980-healow.com-infinite-loop-fix.js",
-    "injections/js/bug1800131-www.almosafer.com-undisable-date-fields.js",
     "injections/js/bug1803976-www.youtube.com-performance-now-precision.js",
     "injections/js/bug1818818-fastclick-legacy-shim.js",
     "injections/js/bug1819450-cmbchina.com-ua-change.js",
     "injections/js/bug1819476-axisbank.com-webkitSpeechRecognition-shim.js",
     "injections/js/bug1819678-cnki.net-undisable-search-field.js",
+    "injections/js/bug1819678-free4talk.com-window-chrome-shim.js",
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [
