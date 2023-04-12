@@ -20,8 +20,6 @@ job-defaults:
                 - .*shippable.*
             safari:
                 - .*macos.*shippable.*
-            custom-car:
-                - linux.*shippable.*
             default: []
     test-manifest-loader: null  # don't load tests in the taskgraph
     tier: 3
@@ -38,21 +36,6 @@ job-defaults:
                     - raptor/linux_config.py
         extra-options:
             - --conditioned-profile=settled
-    fetches:
-        toolchain:
-            by-app:
-                custom-car:
-                    by-test-platform:
-                        # this satisfied taskgraph for now, but once mac/win is implemented
-                        # then linux will be the default
-                        linux.*:
-                            - linux64-custom-car
-                            - linux64-minidump-stackwalk
-                            - linux64-fix-stacks
-                        default: []
-                default:
-                    - linux64-minidump-stackwalk
-                    - linux64-fix-stacks
 
 browsertime-tp6:
     <<: &tp6-defaults
@@ -193,7 +176,7 @@ browsertime-tp6-essential:
                         - --extra-profiler-run
                         - --extra-summary-methods=geomean
         raptor:
-            apps: [firefox, chrome, chromium, custom-car]
+            apps: [firefox, chrome, chromium]
             test: tp6
             run-visual-metrics: true
             subtests:
@@ -265,7 +248,7 @@ browsertime-tp6-bytecode:
 browsertime-benchmark:
     description: Raptor (browsertime) Benchmark tests
     raptor:
-        apps: [firefox, chrome, chromium, safari, custom-car]
+        apps: [firefox, chrome, chromium, safari]
         subtests:
             by-app:
                 firefox:
@@ -295,9 +278,6 @@ browsertime-benchmark:
                     - [sunspider, ss]
                     - [unity-webgl, ugl]
                     # - [webaudio, wa] (Bug 1802922)
-                custom-car:
-                    - [speedometer, sp]
-                    - [speedometer3, sp3]
                 default:
                     - ares6
                     - [assorted-dom, dom]
