@@ -1234,18 +1234,15 @@ this.VideoControlsImplWidget = class {
         }
         this.log("durationMs is " + durationMs + "ms.\n");
 
-        let scrubberProgress = Math.abs(
-          currentTimeMs / durationMs - this.scrubber.value / this.scrubber.max
-        );
-        let devPxProgress =
-          scrubberProgress *
-          this.reflowedDimensions.scrubberWidth *
-          this.window.devicePixelRatio;
         // Update the scrubber only if it will move by at least 1 pixel
-        // Note that this.scrubber.max can be "" if unitialized,
-        // and either or both of currentTimeMs or durationMs can be 0, leading
-        // to NaN or Infinity values for devPxProgress.
-        if (!this.scrubber.max || isNaN(devPxProgress) || devPxProgress > 0.5) {
+        if (
+          Math.abs(
+            currentTimeMs / durationMs - this.scrubber.value / this.scrubber.max
+          ) *
+            this.reflowedDimensions.scrubberWidth *
+            this.window.devicePixelRatio >
+          0.5
+        ) {
           this.scrubber.max = durationMs;
           this.scrubber.value = currentTimeMs;
           this.updateScrubberProgress();
@@ -2879,7 +2876,7 @@ this.VideoControlsImplWidget = class {
                     <progress id="progressBar" class="progressBar" value="0" max="100" aria-hidden="true"></progress>
                   </div>
                 </div>
-                <input type="range" id="scrubber" class="scrubber" tabindex="-1" data-l10n-attrs="aria-valuetext" value="0"/>
+                <input type="range" id="scrubber" class="scrubber" tabindex="-1" data-l10n-attrs="aria-valuetext"/>
               </div>
               <bdi id="positionLabel" class="positionLabel" role="presentation"></bdi>
               <bdi id="durationLabel" class="durationLabel" role="presentation"></bdi>
