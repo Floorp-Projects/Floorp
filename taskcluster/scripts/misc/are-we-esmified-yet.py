@@ -14,17 +14,26 @@ TBPL_FAILURE = 2
 
 excluded_files = [
     # Testcase for loader.
-    "js/xpconnect/tests/unit/environment_script.js"
     "js/xpconnect/tests/chrome/file_expandosharing.jsm",
+    "js/xpconnect/tests/unit/environment_script.js",
     "js/xpconnect/tests/unit/bogus_element_type.jsm",
     "js/xpconnect/tests/unit/bogus_exports_type.jsm",
+    "js/xpconnect/tests/unit/envChain.jsm",
+    "js/xpconnect/tests/unit/envChain_subscript.jsm",
     "js/xpconnect/tests/unit/environment_checkscript.jsm",
     "js/xpconnect/tests/unit/environment_loadscript.jsm",
+    "js/xpconnect/tests/unit/import_stack.jsm",
     "js/xpconnect/tests/unit/importer.jsm",
+    "js/xpconnect/tests/unit/jsm_loaded-1.jsm",
+    "js/xpconnect/tests/unit/jsm_loaded-2.jsm",
+    "js/xpconnect/tests/unit/jsm_loaded-3.jsm",
     "js/xpconnect/tests/unit/not-esmified-not-exported.jsm",
     "js/xpconnect/tests/unit/recursive_importA.jsm",
     "js/xpconnect/tests/unit/recursive_importB.jsm",
+    "js/xpconnect/tests/unit/ReturnCodeChild.jsm",
     "js/xpconnect/tests/unit/syntax_error.jsm",
+    "js/xpconnect/tests/unit/TestBlob.jsm",
+    "js/xpconnect/tests/unit/TestFile.jsm",
     "js/xpconnect/tests/unit/uninitialized_lexical.jsm",
     "dom/url/tests/file_url.jsm",
     "dom/url/tests/file_worker_url.jsm",
@@ -32,6 +41,10 @@ excluded_files = [
     "dom/workers/test/WorkerTest.jsm",
     "dom/encoding/test/file_stringencoding.jsm",
     "remote/shared/messagehandler/test/browser/resources/modules/root/invalid.jsm",
+    "toolkit/actors/TestProcessActorChild.jsm",
+    "toolkit/actors/TestProcessActorParent.jsm",
+    "toolkit/actors/TestWindowChild.jsm",
+    "toolkit/actors/TestWindowParent.jsm",
     # Testcase for build system.
     "python/mozbuild/mozbuild/test/backend/data/build/bar.jsm",
     "python/mozbuild/mozbuild/test/backend/data/build/baz.jsm",
