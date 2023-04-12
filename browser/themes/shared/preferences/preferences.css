@@ -856,6 +856,7 @@ dialog > .sync-engines-list + hbox {
 
 .sync-engines-list > div:not([hidden]) {
   display: flex;
+  break-inside: avoid;
 }
 
 .sync-engine-bookmarks .checkbox-icon,
