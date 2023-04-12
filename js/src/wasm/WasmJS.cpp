@@ -3455,7 +3455,6 @@ void WasmGlobalObject::finalize(JS::GCContext* gcx, JSObject* obj) {
 /* static */
 WasmGlobalObject* WasmGlobalObject::create(JSContext* cx, HandleVal value,
                                            bool isMutable, HandleObject proto) {
-  AutoSetNewObjectMetadata metadata(cx);
   Rooted<WasmGlobalObject*> obj(
       cx, NewObjectWithGivenProto<WasmGlobalObject>(cx, proto));
   if (!obj) {
@@ -3759,7 +3758,6 @@ bool WasmTagObject::construct(JSContext* cx, unsigned argc, Value* vp) {
 WasmTagObject* WasmTagObject::create(JSContext* cx,
                                      const wasm::SharedTagType& tagType,
                                      HandleObject proto) {
-  AutoSetNewObjectMetadata metadata(cx);
   Rooted<WasmTagObject*> obj(cx,
                              NewObjectWithGivenProto<WasmTagObject>(cx, proto));
   if (!obj) {
@@ -4005,7 +4003,6 @@ WasmExceptionObject* WasmExceptionObject::create(JSContext* cx,
                                                  Handle<WasmTagObject*> tag,
                                                  HandleObject stack,
                                                  HandleObject proto) {
-  AutoSetNewObjectMetadata metadata(cx);
   Rooted<WasmExceptionObject*> obj(
       cx, NewObjectWithGivenProto<WasmExceptionObject>(cx, proto));
   if (!obj) {
