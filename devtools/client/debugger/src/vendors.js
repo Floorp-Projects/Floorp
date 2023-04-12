@@ -18,15 +18,11 @@ import * as fuzzaldrinPlus from "fuzzaldrin-plus";
 import * as transition from "react-transition-group/Transition";
 import * as reactAriaComponentsTabs from "react-aria-components/src/tabs";
 
-// Modules imported without destructuring
-import classnames from "classnames";
-
 // We cannot directly export literals containing special characters
 // (eg. "my-module/Test") which is why they are nested in "vendored".
 // The keys of the vendored object should match the module names
 // !!! Should remain synchronized with .babel/transform-mc.js !!!
 export const vendored = {
-  classnames,
   "fuzzaldrin-plus": fuzzaldrinPlus,
   "react-aria-components/src/tabs": reactAriaComponentsTabs,
   "react-transition-group/Transition": transition,

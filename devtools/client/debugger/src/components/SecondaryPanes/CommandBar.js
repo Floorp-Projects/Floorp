@@ -6,7 +6,6 @@ import React, { Component } from "react";
 import PropTypes from "prop-types";
 
 import { connect } from "../../utils/connect";
-import classnames from "classnames";
 import { features, prefs } from "../../utils/prefs";
 import {
   getIsWaitingOnBreak,
@@ -25,6 +24,7 @@ import AccessibleImage from "../shared/AccessibleImage";
 import "./CommandBar.css";
 import { showMenu } from "../../context-menu/menu";
 
+const classnames = require("devtools/client/shared/classnames");
 const MenuButton = require("devtools/client/shared/components/menu/MenuButton");
 const MenuItem = require("devtools/client/shared/components/menu/MenuItem");
 const MenuList = require("devtools/client/shared/components/menu/MenuList");
