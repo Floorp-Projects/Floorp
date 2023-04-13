@@ -13,7 +13,8 @@
                         "geckoview",
                         "refbrow",
                         "fenix",
-                        "safari"
+                        "safari",
+                        "custom-car"
                     ],
                     "maxLength": 10,
                     "type": "string"
