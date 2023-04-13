@@ -2,17 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   RemoteSettingsWorker:
     "resource://services-settings/RemoteSettingsWorker.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Utils: "resource://services-settings/Utils.jsm",
+  Utils: "resource://services-settings/Utils.sys.mjs",
 });
 
 class DownloadError extends Error {

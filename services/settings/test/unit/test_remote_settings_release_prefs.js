@@ -4,14 +4,18 @@ const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
 
-const UTILS_MODULE = "resource://services-settings/Utils.jsm";
+var nextUniqId = 0;
+function getNewUtils() {
+  const { Utils } = ChromeUtils.importESModule(
+    `resource://services-settings/Utils.sys.mjs?_${++nextUniqId}`
+  );
+  return Utils;
+}
 
 function clear_state() {
   Services.env.set("MOZ_REMOTE_SETTINGS_DEVTOOLS", "0");
   Services.prefs.clearUserPref("services.settings.server");
   Services.prefs.clearUserPref("services.settings.preview_enabled");
-  Cu.unload(UTILS_MODULE);
-  Assert.ok(!Cu.isModuleLoaded(UTILS_MODULE), "Utils was unloaded before test");
 }
 
 add_setup(async function() {
@@ -39,7 +43,7 @@ add_task(
       "http://localhost:8888/v1"
     );
 
-    const { Utils } = ChromeUtils.import(UTILS_MODULE);
+    const Utils = getNewUtils();
 
     Assert.equal(
       Utils.SERVER_URL,
@@ -59,7 +63,7 @@ add_task(
       "http://localhost:8888/v1"
     );
 
-    const { Utils } = ChromeUtils.import(UTILS_MODULE);
+    const Utils = getNewUtils();
 
     Assert.notEqual(
       Utils.SERVER_URL,
@@ -77,7 +81,7 @@ add_task(
   async function test_preview_mode_cannot_be_toggled_in_release() {
     Services.prefs.setBoolPref("services.settings.preview_enabled", true);
 
-    const { Utils } = ChromeUtils.import(UTILS_MODULE);
+    const Utils = getNewUtils();
 
     Assert.ok(!Utils.PREVIEW_MODE, "Preview mode pref was not read in release");
   }
@@ -91,7 +95,7 @@ add_task(
   async function test_preview_mode_cannot_be_toggled_in_dev_nightly() {
     Services.prefs.setBoolPref("services.settings.preview_enabled", true);
 
-    const { Utils } = ChromeUtils.import(UTILS_MODULE);
+    const Utils = getNewUtils();
 
     Assert.ok(Utils.PREVIEW_MODE, "Preview mode pref is read in dev/nightly");
   }
@@ -108,7 +112,7 @@ add_task(
       "http://localhost:8888/v1"
     );
 
-    const { Utils } = ChromeUtils.import(UTILS_MODULE);
+    const Utils = getNewUtils();
 
     Assert.equal(
       Utils.SERVER_URL,
@@ -129,7 +133,7 @@ add_task(
       "http://localhost:8888/v1"
     );
 
-    const { Utils } = ChromeUtils.import(UTILS_MODULE);
+    const Utils = getNewUtils();
 
     Assert.notEqual(
       Utils.SERVER_URL,
@@ -149,7 +153,7 @@ add_task(
       "http://localhost:8888/v1"
     );
 
-    const { Utils } = ChromeUtils.import(UTILS_MODULE);
+    const Utils = getNewUtils();
 
     Assert.notEqual(
       Utils.SERVER_URL,
@@ -165,7 +169,7 @@ add_task(
     Services.env.set("MOZ_REMOTE_SETTINGS_DEVTOOLS", "1");
     Services.prefs.setBoolPref("services.settings.preview_enabled", true);
 
-    const { Utils } = ChromeUtils.import(UTILS_MODULE);
+    const Utils = getNewUtils();
 
     Assert.ok(Utils.PREVIEW_MODE, "Preview mode pref was read");
   }
@@ -180,7 +184,7 @@ add_task(
       "http://localhost:8888/v1"
     );
 
-    const { Utils } = ChromeUtils.import(UTILS_MODULE);
+    const Utils = getNewUtils();
     Assert.ok(!Utils.LOAD_DUMPS, "Dumps won't be loaded");
   }
 );
@@ -194,7 +198,7 @@ add_task(
       AppConstants.REMOTE_SETTINGS_SERVER_URL
     );
 
-    const { Utils } = ChromeUtils.import(UTILS_MODULE);
+    const Utils = getNewUtils();
 
     Assert.ok(Utils.LOAD_DUMPS, "dumps are loaded if prod");
   }

@@ -26,7 +26,9 @@ const {
 } = ChromeUtils.importESModule(
   "resource://services-settings/remote-settings.sys.mjs"
 );
-const { Utils } = ChromeUtils.import("resource://services-settings/Utils.jsm");
+const { Utils } = ChromeUtils.importESModule(
+  "resource://services-settings/Utils.sys.mjs"
+);
 const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );

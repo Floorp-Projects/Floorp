@@ -11,7 +11,9 @@ const { TelemetryController } = ChromeUtils.importESModule(
 const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
-const { Utils } = ChromeUtils.import("resource://services-settings/Utils.jsm");
+const { Utils } = ChromeUtils.importESModule(
+  "resource://services-settings/Utils.sys.mjs"
+);
 
 const server = new HttpServer();
 server.start(-1);
