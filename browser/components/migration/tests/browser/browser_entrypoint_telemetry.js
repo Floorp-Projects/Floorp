@@ -11,18 +11,7 @@ const HISTOGRAM_ID = "FX_MIGRATION_ENTRY_POINT_CATEGORICAL";
 const LEGACY_HISTOGRAM_ID = "FX_MIGRATION_ENTRY_POINT";
 
 async function showThenCloseMigrationWizardViaEntrypoint(entrypoint) {
-  const LEGACY_DIALOG = !Services.prefs.getBoolPref(CONTENT_MODAL_ENABLED_PREF);
-  let openedPromise = LEGACY_DIALOG
-    ? BrowserTestUtils.domWindowOpenedAndLoaded(null, win => {
-        let type = win.document.documentElement.getAttribute("windowtype");
-        if (type == "Browser:MigrationWizard") {
-          Assert.ok(true, "Saw legacy Migration Wizard window open.");
-          return true;
-        }
-
-        return false;
-      })
-    : waitForMigrationWizardDialogTab();
+  let openedPromise = BrowserTestUtils.waitForMigrationWizard(window);
 
   // On some platforms, this call blocks, so in order to let the test proceed, we
   // run it on the next tick of the event loop.
@@ -32,16 +21,21 @@ async function showThenCloseMigrationWizardViaEntrypoint(entrypoint) {
     });
   });
 
-  let result = await openedPromise;
-  if (LEGACY_DIALOG) {
-    await BrowserTestUtils.closeWindow(result);
-  } else if (gBrowser.tabs.length > 1) {
-    BrowserTestUtils.removeTab(gBrowser.getTabForBrowser(result));
-  } else {
-    BrowserTestUtils.loadURIString(result, "about:blank");
-    await BrowserTestUtils.browserLoaded(result);
-  }
+  let wizard = await openedPromise;
+  Assert.ok(wizard, "Migration wizard opened.");
+  await BrowserTestUtils.closeMigrationWizard(wizard);
 }
+
+add_setup(async () => {
+  // Load the initial tab at example.com. This makes it so that if
+  // we're using the new migration wizard, we'll load the about:preferences
+  // page in a new tab rather than overtaking the initial one. This
+  // makes it easier to be consistent with closing and opening
+  // behaviours between the two kinds of migration wizards.
+  let browser = gBrowser.selectedBrowser;
+  BrowserTestUtils.loadURIString(browser, "https://example.com");
+  await BrowserTestUtils.browserLoaded(browser);
+});
 
 /**
  * Tests that the entrypoint passed to MigrationUtils.showMigrationWizard gets
