@@ -28,8 +28,9 @@ GleanEvent::Record(JS::Handle<JS::Value> aExtra, JSContext* aCx) {
   }
 
   if (!aExtra.isObject()) {
-    LogToBrowserConsole(nsIScriptError::warningFlag,
-                        u"Extras need to be an object"_ns);
+    LogToBrowserConsole(
+        nsIScriptError::warningFlag,
+        u"Extras need to be an object. Event will not be recorded."_ns);
     return NS_OK;
   }
 
@@ -40,8 +41,9 @@ GleanEvent::Record(JS::Handle<JS::Value> aExtra, JSContext* aCx) {
   JS::Rooted<JSObject*> obj(aCx, &aExtra.toObject());
   JS::Rooted<JS::IdVector> ids(aCx, JS::IdVector(aCx));
   if (!JS_Enumerate(aCx, obj, &ids)) {
-    LogToBrowserConsole(nsIScriptError::warningFlag,
-                        u"Failed to enumerate object."_ns);
+    LogToBrowserConsole(
+        nsIScriptError::warningFlag,
+        u"Failed to enumerate object. Event will not be recorded."_ns);
     return NS_OK;
   }
 
@@ -50,14 +52,15 @@ GleanEvent::Record(JS::Handle<JS::Value> aExtra, JSContext* aCx) {
     if (!jsKey.init(aCx, ids[i])) {
       LogToBrowserConsole(
           nsIScriptError::warningFlag,
-          u"Extra dictionary should only contain string keys."_ns);
+          u"Extra dictionary should only contain string keys. Event will not be recorded."_ns);
       return NS_OK;
     }
 
     JS::Rooted<JS::Value> value(aCx);
     if (!JS_GetPropertyById(aCx, obj, ids[i], &value)) {
-      LogToBrowserConsole(nsIScriptError::warningFlag,
-                          u"Failed to get extra property."_ns);
+      LogToBrowserConsole(
+          nsIScriptError::warningFlag,
+          u"Failed to get extra property. Event will not be recorded."_ns);
       return NS_OK;
     }
 
@@ -65,8 +68,9 @@ GleanEvent::Record(JS::Handle<JS::Value> aExtra, JSContext* aCx) {
     if (value.isString() || (value.isInt32() && value.toInt32() >= 0) ||
         value.isBoolean()) {
       if (!jsValue.init(aCx, value)) {
-        LogToBrowserConsole(nsIScriptError::warningFlag,
-                            u"Can't extract extra property"_ns);
+        LogToBrowserConsole(
+            nsIScriptError::warningFlag,
+            u"Can't extract extra property. Event will not be recorded."_ns);
         return NS_OK;
       }
     } else if (value.isNullOrUndefined()) {
@@ -76,7 +80,7 @@ GleanEvent::Record(JS::Handle<JS::Value> aExtra, JSContext* aCx) {
     } else {
       LogToBrowserConsole(
           nsIScriptError::warningFlag,
-          u"Extra properties should have string, bool or non-negative integer values."_ns);
+          u"Extra properties should have string, bool or non-negative integer values. Event will not be recorded."_ns);
       return NS_OK;
     }
 
