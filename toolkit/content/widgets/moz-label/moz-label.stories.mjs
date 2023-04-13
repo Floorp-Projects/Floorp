@@ -9,7 +9,7 @@ import "./moz-label.mjs";
 MozXULElement.insertFTLIfNeeded("locales-preview/moz-label.storybook.ftl");
 
 export default {
-  title: "Design System/Experiments/MozLabel",
+  title: "Label",
   component: "moz-label",
   argTypes: {
     inputType: {
