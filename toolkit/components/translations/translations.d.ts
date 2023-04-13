@@ -25,32 +25,57 @@ export interface Attachment {
 }
 
 /**
+ * The JSON that is synced from Remote Settings for the language-id models.
+ */
+export interface LanguageIdModelRecord {
+  // e.g. "0d4db293-a17c-4085-9bd8-e2e146c85000"
+  id: string;
+  // The full model name, e.g. "lid.176.ftz"
+  name: string;
+  // The semver number, used for handling future format changes. e.g. 1.0
+  version: string;
+  // The file attachment for this record
+  attachment: Attachment;
+  // e.g. 1673455932527
+  last_modified: string;
+  // A JEXL expression to determine whether this record should be pulled from Remote Settings
+  // See: https://remote-settings.readthedocs.io/en/latest/target-filters.html#filter-expressions
+  filter_expression: string;
+}
+
+/**
  * The JSON that is synced from Remote Settings for the translation models.
  */
 export interface TranslationModelRecord {
+  // e.g. "0d4db293-a17c-4085-9bd8-e2e146c85000"
+  id: string;
   // The full model name, e.g. "lex.50.50.deen.s2t.bin"
   name: string;
   // The BCP 47 language tag, e.g. "de"
   fromLang: string;
   // The BCP 47 language tag, e.g. "en"
   toLang: string;
-  // The model record version number, used for handling future format changes. e.g. 1
-  version: number;
-  //
-  fileType: string; // e.g. "lex"
+  // The semver number, used for handling future format changes. e.g. 1.0
+  version: string;
+  // e.g. "lex"
+  fileType: string;
+  // The file attachment for this record
   attachment: Attachment;
-  // e.g. "0d4db293-a17c-4085-9bd8-e2e146c85000"
-  id: string;
   // e.g. 1673023100578
   schema: number;
   // e.g. 1673455932527
   last_modified: string;
+  // A JEXL expression to determine whether this record should be pulled from Remote Settings
+  // See: https://remote-settings.readthedocs.io/en/latest/target-filters.html#filter-expressions
+  filter_expression: string;
 }
 
 /**
  * The JSON that is synced from Remote Settings for the wasm binaries.
  */
 export interface WasmRecord {
+  // e.g. "0d4db293-a17c-4085-9bd8-e2e146c85000"
+  id: string;
   // The name of the project, e.g. "bergamot-translator"
   name: string;
   // The human readable identifier for the release. e.g. "v0.4.4"
@@ -59,6 +84,15 @@ export interface WasmRecord {
   revision: string;
   // The license of the wasm, as a https://spdx.org/licenses/
   license: string;
+  // The semver number, used for handling future format changes. e.g. 1.0
+  version: string;
+  // The file attachment for this record
+  attachment: Attachment;
+  // e.g. 1673455932527
+  last_modified: string;
+  // A JEXL expression to determine whether this record should be pulled from Remote Settings
+  // See: https://remote-settings.readthedocs.io/en/latest/target-filters.html#filter-expressions
+  filter_expression: string;
 }
 
 /**
