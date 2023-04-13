@@ -17,7 +17,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 var gMigrators = null;
-var gFileMigrators = null;
 var gProfileStartup = null;
 var gL10n = null;
 var gPreviousDefaultBrowserKey = "";
@@ -105,12 +104,6 @@ const MIGRATOR_MODULES = Object.freeze({
   InternalTestingProfileMigrator: {
     moduleURI: "resource:///modules/InternalTestingProfileMigrator.sys.mjs",
     platforms: ["linux", "macosx", "win"],
-  },
-});
-
-const FILE_MIGRATOR_MODULES = Object.freeze({
-  PasswordFileMigrator: {
-    moduleURI: "resource:///modules/FileMigrators.sys.mjs",
   },
 });
 
@@ -308,26 +301,6 @@ class MigrationUtils {
     return gMigrators;
   }
 
-  get #fileMigrators() {
-    if (!gFileMigrators) {
-      gFileMigrators = new Map();
-      for (let [symbol, { moduleURI }] of Object.entries(
-        FILE_MIGRATOR_MODULES
-      )) {
-        let { [symbol]: migratorClass } = ChromeUtils.importESModule(moduleURI);
-        if (gFileMigrators.has(migratorClass.key)) {
-          console.error(
-            "A pre-existing file migrator exists with key " +
-              `${migratorClass.key}. Not registering.`
-          );
-          continue;
-        }
-        gFileMigrators.set(migratorClass.key, new migratorClass());
-      }
-    }
-    return gFileMigrators;
-  }
-
   forceExitSpinResolve() {
     gForceExitSpinResolve = true;
   }
@@ -392,15 +365,6 @@ class MigrationUtils {
       console.error(ex);
       return null;
     }
-  }
-
-  getFileMigrator(aKey) {
-    let migrator = this.#fileMigrators.get(aKey);
-    if (!migrator) {
-      console.error(`Could not find a file migrator class for key ${aKey}`);
-      return null;
-    }
-    return migrator;
   }
 
   /**
@@ -992,10 +956,6 @@ class MigrationUtils {
 
   get availableMigratorKeys() {
     return [...this.#migrators.keys()];
-  }
-
-  get availableFileMigrators() {
-    return [...this.#fileMigrators.values()];
   }
 
   /**

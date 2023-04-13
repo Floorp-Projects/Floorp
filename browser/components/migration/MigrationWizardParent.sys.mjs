@@ -66,14 +66,8 @@ export class MigrationWizardParent extends JSWindowActorParent {
         for (const key of MigrationUtils.availableMigratorKeys) {
           availableMigrators.push(this.#getMigratorAndProfiles(key));
         }
-
         // Wait for all getMigrator calls to resolve in parallel
         let results = await Promise.all(availableMigrators);
-
-        for (const migrator of MigrationUtils.availableFileMigrators.values()) {
-          results.push(await this.#serializeFileMigrator(migrator));
-        }
-
         // Each migrator might give us a single MigratorProfileInstance,
         // or an Array of them, so we flatten them out and filter out
         // any that ended up going wrong and returning null from the
@@ -96,33 +90,17 @@ export class MigrationWizardParent extends JSWindowActorParent {
       }
 
       case "Migrate": {
-        if (
-          message.data.type ==
-          lazy.MigrationWizardConstants.MIGRATOR_TYPES.BROWSER
-        ) {
-          await this.#doBrowserMigration(
-            message.data.key,
-            message.data.resourceTypes,
-            message.data.profile
-          );
-        } else if (
-          message.data.type == lazy.MigrationWizardConstants.MIGRATOR_TYPES.FILE
-        ) {
-          let window = this.browsingContext.topChromeWindow;
-          await this.#doFileMigration(window, message.data.key);
-        }
+        await this.#doMigration(
+          message.data.key,
+          message.data.resourceTypes,
+          message.data.profile
+        );
         break;
       }
 
       case "CheckPermissions": {
-        if (
-          message.data.type ==
-          lazy.MigrationWizardConstants.MIGRATOR_TYPES.BROWSER
-        ) {
-          let migrator = await MigrationUtils.getMigrator(message.data.key);
-          return migrator.hasPermissions();
-        }
-        return true;
+        let migrator = await MigrationUtils.getMigrator(message.data.key);
+        return migrator.hasPermissions();
       }
 
       case "RequestSafariPermissions": {
@@ -160,82 +138,6 @@ export class MigrationWizardParent extends JSWindowActorParent {
   }
 
   /**
-   * Gets the FileMigrator associated with the passed in key, and then opens
-   * a native file picker configured for that migrator. Once the user selects
-   * a file from the native file picker, this is then passed to the
-   * FileMigrator.migrate method.
-   *
-   * As the migration occurs, this will send UpdateProgress messages to the
-   * MigrationWizardChild to show the beginning and then the ending state of
-   * the migration.
-   *
-   * @param {DOMWindow} window
-   *   The window that the native file picker should be associated with. This
-   *   cannot be null. See nsIFilePicker.init for more details.
-   * @param {string} key
-   *   The unique identification key for a file migrator.
-   * @returns {Promise<undefined>}
-   *   Resolves once the file migrator's migrate method has resolved.
-   */
-  async #doFileMigration(window, key) {
-    let fileMigrator = MigrationUtils.getFileMigrator(key);
-    let filePickerConfig = await fileMigrator.getFilePickerConfig();
-
-    let { result, path } = await new Promise(resolve => {
-      let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-      fp.init(window, filePickerConfig.title, Ci.nsIFilePicker.modeOpen);
-
-      for (let filter of filePickerConfig.filters) {
-        fp.appendFilter(filter.title, filter.extensionPattern);
-      }
-      fp.appendFilters(Ci.nsIFilePicker.filterAll);
-      fp.open(async fileOpenResult => {
-        resolve({ result: fileOpenResult, path: fp.file.path });
-      });
-    });
-
-    if (result == Ci.nsIFilePicker.returnCancel) {
-      // If the user cancels out of the file picker, the migration wizard should
-      // still be in the state that lets the user re-open the file picker if
-      // they closed it by accident, so we don't have to do anything else here.
-      return;
-    }
-
-    let progress = {};
-    for (let resourceType of fileMigrator.displayedResourceTypes) {
-      progress[resourceType] = {
-        inProgress: true,
-        message: "",
-      };
-    }
-
-    let [
-      progressHeaderString,
-      successHeaderString,
-    ] = await lazy.gFluentStrings.formatValues([
-      fileMigrator.progressHeaderL10nID,
-      fileMigrator.successHeaderL10nID,
-    ]);
-
-    this.sendAsyncMessage("UpdateFileImportProgress", {
-      title: progressHeaderString,
-      progress,
-    });
-    let migrationResult = await fileMigrator.migrate(path);
-    let successProgress = {};
-    for (let resourceType in migrationResult) {
-      successProgress[resourceType] = {
-        inProgress: false,
-        message: migrationResult[resourceType],
-      };
-    }
-    this.sendAsyncMessage("UpdateFileImportProgress", {
-      title: successHeaderString,
-      progress: successProgress,
-    });
-  }
-
-  /**
    * Calls into MigrationUtils to perform a migration given the parameters
    * sent via the wizard.
    *
@@ -255,7 +157,7 @@ export class MigrationWizardParent extends JSWindowActorParent {
    * @returns {Promise<undefined>}
    *   Resolves once the Migration:Ended observer notification has fired.
    */
-  async #doBrowserMigration(migratorKey, resourceTypeNames, profileObj) {
+  async #doMigration(migratorKey, resourceTypeNames, profileObj) {
     let migrator = await MigrationUtils.getMigrator(migratorKey);
     let availableResourceTypes = await migrator.getMigrateData(profileObj);
     let resourceTypesToMigrate = 0;
@@ -424,7 +326,6 @@ export class MigrationWizardParent extends JSWindowActorParent {
     }
 
     return {
-      type: lazy.MigrationWizardConstants.MIGRATOR_TYPES.BROWSER,
       key: migrator.constructor.key,
       displayName,
       brandImage: migrator.constructor.brandImage,
@@ -488,26 +389,5 @@ export class MigrationWizardParent extends JSWindowActorParent {
         return "";
       }
     }
-  }
-
-  /**
-   * Returns a Promise that resolves to a serializable representation of a
-   * FileMigrator for sending down to the MigrationWizard.
-   *
-   * @param {FileMigrator} fileMigrator
-   *   The FileMigrator to serialize.
-   * @returns {Promise<object>}
-   *   The serializable representation of the FileMigrator.
-   */
-  async #serializeFileMigrator(fileMigrator) {
-    return {
-      type: lazy.MigrationWizardConstants.MIGRATOR_TYPES.FILE,
-      key: fileMigrator.constructor.key,
-      displayName: await lazy.gFluentStrings.formatValue(
-        fileMigrator.constructor.displayNameL10nID
-      ),
-      brandImage: fileMigrator.constructor.brandImage,
-      resourceTypes: [],
-    };
   }
 }

@@ -142,9 +142,7 @@ add_task(async function test_successful_migrations() {
     await wizardDone;
 
     let dialog = prefsWin.document.querySelector("#migrationWizardDialog");
-    let doneButton = shadow.querySelector(
-      "div[name='page-progress'] .done-button"
-    );
+    let doneButton = shadow.querySelector("#done-button");
 
     await new Promise(resolve => prefsWin.requestAnimationFrame(resolve));
     Assert.equal(
@@ -192,9 +190,7 @@ add_task(async function test_successful_migrations() {
     await wizardDone;
 
     let dialog = prefsWin.document.querySelector("#migrationWizardDialog");
-    let doneButton = shadow.querySelector(
-      "div[name='page-progress'] .done-button"
-    );
+    let doneButton = shadow.querySelector("#done-button");
 
     await new Promise(resolve => prefsWin.requestAnimationFrame(resolve));
     Assert.equal(
@@ -280,9 +276,7 @@ add_task(async function test_invalid_resource_type() {
 
     let dialog = prefsWin.document.querySelector("#migrationWizardDialog");
     let shadow = wizard.openOrClosedShadowRoot;
-    let doneButton = shadow.querySelector(
-      "div[name='page-progress'] .done-button"
-    );
+    let doneButton = shadow.querySelector("#done-button");
 
     await new Promise(resolve => prefsWin.requestAnimationFrame(resolve));
     Assert.equal(
