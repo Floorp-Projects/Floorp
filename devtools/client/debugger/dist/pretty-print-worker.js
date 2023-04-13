@@ -9412,6 +9412,7 @@
       // The difference between "[" and "[\n" is that "[\n" is used when we are
       // treating "[" and "]" tokens as line delimiters and should increment and
       // decrement the indent level when we find them.
+      // "[" can represent either a property access (e.g. `x["hi"]`), or an empty array literal
       #stack = [];
 
       /**
@@ -9646,19 +9647,18 @@
 
         if (belongsOnStack(token)) {
           if (token.isArrayLiteral) {
-            this.#stack.push("[\n");
+            // Don't add new lines for empty array literals
+            if (nextToken?.type?.label === "]") {
+              this.#stack.push("[");
+            } else {
+              this.#stack.push("[\n");
+            }
           } else {
             this.#stack.push(ttl || ttk);
           }
         }
 
-        if (decrementsIndent(ttl, this.#stack)) {
-          this.#indentLevel--;
-          if (ttl == "}" && this.#stack.at(-2) == "switch") {
-            this.#indentLevel--;
-          }
-        }
-
+        this.#maybeDecrementIndent(token);
         this.#prependWhiteSpace(token);
         this.#writeToken(token);
         this.#addedSpace = false;
@@ -9673,15 +9673,58 @@
           this.#maybeAppendNewline(token);
         }
 
-        if (shouldStackPop(token, this.#stack)) {
+        this.#maybePopStack(token);
+        this.#maybeIncrementIndent(token);
+      }
+
+      /**
+       * Returns true if the given token should cause us to pop the stack.
+       */
+      #maybePopStack(token) {
+        const ttl = token.type.label;
+        const ttk = token.type.keyword;
+        const top = this.#stack.at(-1);
+
+        if (
+          ttl == "]" ||
+          ttl == ")" ||
+          ttl == "}" ||
+          (ttl == ":" && (top == "case" || top == "default" || top == "?")) ||
+          (ttk == "while" && top == "do")
+        ) {
           this.#stack.pop();
           if (ttl == "}" && this.#stack.at(-1) == "switch") {
             this.#stack.pop();
           }
         }
+      }
 
-        if (incrementsIndent(token)) {
+      #maybeIncrementIndent(token) {
+        if (
+          token.type.label == "{" ||
+          // Don't increment indent for empty array literals
+          (token.isArrayLiteral && this.#stack.at(-1) === "[\n") ||
+          token.type.keyword == "switch"
+        ) {
           this.#indentLevel++;
+        }
+      }
+
+      #shouldDecrementIndent(token) {
+        const top = this.#stack.at(-1);
+        const ttl = token.type.label;
+        return (ttl == "}" && top != "${") || (ttl == "]" && top == "[\n");
+      }
+
+      #maybeDecrementIndent(token) {
+        if (!this.#shouldDecrementIndent(token)) {
+          return;
+        }
+
+        const ttl = token.type.label;
+        this.#indentLevel--;
+        if (ttl == "}" && this.#stack.at(-2) == "switch") {
+          this.#indentLevel--;
         }
       }
 
@@ -9775,7 +9818,7 @@
           ensureNewline();
         }
 
-        if (decrementsIndent(ttl, this.#stack)) {
+        if (this.#shouldDecrementIndent(token)) {
           ensureNewline();
         }
 
@@ -9997,9 +10040,11 @@
      *          True if we should add a newline.
      */
     function isLineDelimiter(token, stack) {
-      if (token.isArrayLiteral) {
+      // Only add a new line for array literals when they're not empty
+      if (token.isArrayLiteral && stack.at(-1) === "[\n") {
         return true;
       }
+
       const ttl = token.type.label;
       const top = stack.at(-1);
       return (
@@ -10216,45 +10261,6 @@
         ttk == "switch" ||
         ttk == "case" ||
         ttk == "default"
-      );
-    }
-
-    /**
-     * Returns true if the given token should cause us to pop the stack.
-     */
-    function shouldStackPop(token, stack) {
-      const ttl = token.type.label;
-      const ttk = token.type.keyword;
-      const top = stack.at(-1);
-      return (
-        ttl == "]" ||
-        ttl == ")" ||
-        ttl == "}" ||
-        (ttl == ":" && (top == "case" || top == "default" || top == "?")) ||
-        (ttk == "while" && top == "do")
-      );
-    }
-
-    /**
-     * Returns true if the given token type should cause us to decrement the
-     * indent level.
-     */
-    function decrementsIndent(tokenType, stack) {
-      const top = stack.at(-1);
-      return (
-        (tokenType == "}" && top != "${") || (tokenType == "]" && top == "[\n")
-      );
-    }
-
-    /**
-     * Returns true if the given token should cause us to increment the indent
-     * level.
-     */
-    function incrementsIndent(token) {
-      return (
-        token.type.label == "{" ||
-        token.isArrayLiteral ||
-        token.type.keyword == "switch"
       );
     }
 
