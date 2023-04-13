@@ -25,6 +25,7 @@ XPIDL_MODULE = "migration"
 EXTRA_JS_MODULES += [
     "ChromeMigrationUtils.sys.mjs",
     "ChromeProfileMigrator.sys.mjs",
+    "FileMigrators.sys.mjs",
     "FirefoxProfileMigrator.sys.mjs",
     "InternalTestingProfileMigrator.sys.mjs",
     "MigrationUtils.sys.mjs",

@@ -116,7 +116,9 @@ add_task(async function test_safari_permissions() {
     Assert.ok(true, "Completed migration");
 
     let dialog = prefsWin.document.querySelector("#migrationWizardDialog");
-    let doneButton = shadow.querySelector("#done-button");
+    let doneButton = shadow.querySelector(
+      "div[name='page-progress'] .done-button"
+    );
     let dialogClosed = BrowserTestUtils.waitForEvent(dialog, "close");
 
     doneButton.click();

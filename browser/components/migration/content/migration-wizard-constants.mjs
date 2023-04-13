@@ -3,6 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 export const MigrationWizardConstants = Object.freeze({
+  MIGRATOR_TYPES: Object.freeze({
+    BROWSER: "browser",
+    FILE: "file",
+  }),
+
   /**
    * A mapping of a page identification string to the IDs used by the
    * various wizard pages. These are used by MigrationWizard.setState
@@ -14,6 +19,7 @@ export const MigrationWizardConstants = Object.freeze({
     LOADING: "loading",
     SELECTION: "selection",
     PROGRESS: "progress",
+    FILE_IMPORT_PROGRESS: "file-import-progress",
     SAFARI_PERMISSION: "safari-permission",
     SAFARI_PASSWORD_PERMISSION: "safari-password-permission",
     NO_BROWSERS_FOUND: "no-browsers-found",
@@ -31,9 +37,6 @@ export const MigrationWizardConstants = Object.freeze({
     // The DISPLAYED_RESOURCE_TYPES should have their keys match those
     // in MigrationUtils.resourceTypes.
 
-    // COOKIE resource migration is going to be removed, so we don't include
-    // it here.
-
     // This is a little silly, but JavaScript doesn't have a notion of
     // enums. The advantage of this set-up is that these constants values
     // can be used to access the MigrationUtils.resourceTypes constants,
@@ -45,6 +48,17 @@ export const MigrationWizardConstants = Object.freeze({
     BOOKMARKS: "BOOKMARKS",
 
     // We don't yet show OTHERDATA or SESSION resources.
+  }),
+
+  DISPLAYED_FILE_RESOURCE_TYPES: Object.freeze({
+    // When migrating passwords from a file, we first show the progress
+    // for a single PASSWORDS_FROM_FILE resource type, and then upon
+    // completion, show two different resource types - one for new
+    // passwords imported from the file, and one for existing passwords
+    // that were updated from the file.
+    PASSWORDS_FROM_FILE: "PASSWORDS_FROM_FILE",
+    PASSWORDS_NEW: "PASSWORDS_NEW",
+    PASSWORDS_UPDATED: "PASSWORDS_UPDATED",
   }),
 
   /**
