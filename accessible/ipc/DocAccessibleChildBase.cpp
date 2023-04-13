@@ -244,6 +244,19 @@ mozilla::ipc::IPCResult DocAccessibleChildBase::RecvSetTextSelection(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult DocAccessibleChildBase::RecvScrollTextLeafRangeIntoView(
+    const uint64_t& aStartID, const int32_t& aStartOffset,
+    const uint64_t& aEndID, const int32_t& aEndOffset,
+    const uint32_t& aScrollType) {
+  TextLeafRange range(TextLeafPoint(IdToAccessible(aStartID), aStartOffset),
+                      TextLeafPoint(IdToAccessible(aEndID), aEndOffset));
+  if (range) {
+    range.ScrollIntoView(aScrollType);
+  }
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult DocAccessibleChildBase::RecvRemoveTextSelection(
     const uint64_t& aID, const int32_t& aSelectionNum) {
   HyperTextAccessible* acc = IdToHyperTextAccessible(aID);

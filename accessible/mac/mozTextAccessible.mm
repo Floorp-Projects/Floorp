@@ -236,16 +236,9 @@ inline NSString* ToNSString(id aValue) {
     return;
   }
 
-  if (mGeckoAccessible->IsLocal()) {
-    if (HyperTextAccessible* textAcc =
-            mGeckoAccessible->AsLocal()->AsHyperText()) {
-      textAcc->ScrollSubstringTo(range.location, range.location + range.length,
-                                 nsIAccessibleScrollType::SCROLL_TYPE_TOP_EDGE);
-    }
-  } else {
-    mGeckoAccessible->AsRemote()->ScrollSubstringTo(
-        range.location, range.location + range.length,
-        nsIAccessibleScrollType::SCROLL_TYPE_TOP_EDGE);
+  if (HyperTextAccessibleBase* textAcc = mGeckoAccessible->AsHyperTextBase()) {
+    textAcc->ScrollSubstringTo(range.location, range.location + range.length,
+                               nsIAccessibleScrollType::SCROLL_TYPE_TOP_EDGE);
   }
 }
 

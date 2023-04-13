@@ -82,6 +82,7 @@ const SEAMONKEY = navigator.userAgent.match(/ SeaMonkey\//);
 
 const STATE_BUSY = nsIAccessibleStates.STATE_BUSY;
 
+const SCROLL_TYPE_TOP_EDGE = nsIAccessibleScrollType.SCROLL_TYPE_TOP_EDGE;
 const SCROLL_TYPE_ANYWHERE = nsIAccessibleScrollType.SCROLL_TYPE_ANYWHERE;
 
 const COORDTYPE_SCREEN_RELATIVE =

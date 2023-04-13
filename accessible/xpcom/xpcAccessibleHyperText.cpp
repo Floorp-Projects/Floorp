@@ -388,11 +388,7 @@ xpcAccessibleHyperText::ScrollSubstringTo(int32_t aStartOffset,
                                           uint32_t aScrollType) {
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  if (mIntl->IsLocal()) {
-    IntlLocal()->ScrollSubstringTo(aStartOffset, aEndOffset, aScrollType);
-  } else {
-    mIntl->AsRemote()->ScrollSubstringTo(aStartOffset, aEndOffset, aScrollType);
-  }
+  Intl()->ScrollSubstringTo(aStartOffset, aEndOffset, aScrollType);
   return NS_OK;
 }
 

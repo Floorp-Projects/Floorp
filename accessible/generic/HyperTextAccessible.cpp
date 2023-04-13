@@ -1943,13 +1943,6 @@ bool HyperTextAccessible::RemoveFromSelection(int32_t aSelectionNum) {
   return true;
 }
 
-void HyperTextAccessible::ScrollSubstringTo(int32_t aStartOffset,
-                                            int32_t aEndOffset,
-                                            uint32_t aScrollType) {
-  TextRange range(this, this, aStartOffset, this, aEndOffset);
-  range.ScrollIntoView(aScrollType);
-}
-
 void HyperTextAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
                                                  int32_t aEndOffset,
                                                  uint32_t aCoordinateType,

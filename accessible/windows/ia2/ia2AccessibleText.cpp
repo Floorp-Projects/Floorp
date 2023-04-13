@@ -380,9 +380,9 @@ ia2AccessibleText::get_nCharacters(long* aNCharacters) {
 STDMETHODIMP
 ia2AccessibleText::scrollSubstringTo(long aStartIndex, long aEndIndex,
                                      enum IA2ScrollType aScrollType) {
-  auto [textAcc, hr] = LocalTextAcc();
+  HyperTextAccessibleBase* textAcc = TextAcc();
   if (!textAcc) {
-    return hr;
+    return CO_E_OBJNOTCONNECTED;
   }
 
   if (!textAcc->IsValidRange(aStartIndex, aEndIndex)) return E_INVALIDARG;
