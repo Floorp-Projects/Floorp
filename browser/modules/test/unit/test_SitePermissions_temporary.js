@@ -529,6 +529,8 @@ add_task(async function testTemporaryPermissionScope() {
         "https://test1.example.com",
         "http://example.com",
         "http://example.org",
+        "file:///tmp/localPageA.html",
+        "file:///tmp/localPageB.html",
       ],
     },
     nonStrict: {
