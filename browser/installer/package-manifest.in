@@ -104,12 +104,12 @@
 #endif
 #endif
 #ifdef MOZ_GTK
+@BINPATH@/glxtest
 @BINPATH@/@DLL_PREFIX@mozgtk@DLL_SUFFIX@
 #ifdef MOZ_WAYLAND
 @BINPATH@/@DLL_PREFIX@mozwayland@DLL_SUFFIX@
-#endif
 @BINPATH@/vaapitest
-@BINPATH@/glxtest
+#endif
 #endif
 
 ; We don't have a complete view of which dlls to expect when doing an artifact
