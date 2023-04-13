@@ -39,22 +39,24 @@ export class WebSocketConnection {
   }
 
   _log(direction, data) {
-    function replacer(key, value) {
-      if (typeof value === "string") {
-        return lazy.truncate`${value}`;
+    if (lazy.Log.isDebugLevelOrAbove) {
+      function replacer(key, value) {
+        if (typeof value === "string") {
+          return lazy.truncate`${value}`;
+        }
+        return value;
       }
-      return value;
+
+      const payload = JSON.stringify(
+        data,
+        replacer,
+        lazy.Log.verbose ? "\t" : null
+      );
+
+      lazy.logger.debug(
+        `${this.constructor.name} ${this.id} ${direction} ${payload}`
+      );
     }
-
-    const payload = JSON.stringify(
-      data,
-      replacer,
-      lazy.Log.verbose ? "\t" : null
-    );
-
-    lazy.logger.trace(
-      `${this.constructor.name} ${this.id} ${direction} ${payload}`
-    );
   }
 
   /**

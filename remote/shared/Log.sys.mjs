@@ -34,11 +34,22 @@ export class Log {
   }
 
   /**
-   * Check if the current log level matches the Trace log level. This should be
-   * used to guard logger.trace calls and avoid instanciating logger instances
-   * unnecessarily.
+   * Check if the current log level matches the Debug log level, or any level
+   * above that. This should be used to guard logger.debug calls and avoid
+   * instanciating logger instances unnecessarily.
    */
-  static get isTraceLevel() {
+  static get isDebugLevelOrAbove() {
+    return [StdLog.Level.All, StdLog.Level.Trace, StdLog.Level.Debug].includes(
+      PREF_REMOTE_LOG_LEVEL
+    );
+  }
+
+  /**
+   * Check if the current log level matches the Trace log level, or any level
+   * above that. This should be used to guard logger.trace calls and avoid
+   * instanciating logger instances unnecessarily.
+   */
+  static get isTraceLevelOrAbove() {
     return [StdLog.Level.All, StdLog.Level.Trace].includes(
       PREF_REMOTE_LOG_LEVEL
     );
