@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<meta name="timeout" content="long">
+<title>WebTransport API: bfcache closed</title>
+<link rel=help href="https://w3c.github.io/webtransport/">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="/common/utils.js"></script>
+<script src="/common/dispatcher/dispatcher.js"></script>
+<script src="/html/browsers/browsing-the-web/back-forward-cache/resources/helper.sub.js"></script>
+<script src="/common/get-host-info.sub.js"></script>
+<script type="module">
+
+import { runWebTransportBfcacheTest } from "./helpers.js";
+import { webtransport_url } from "./ports.sub.js";
+import { worker_function } from "./worker.js";
+
+const id = token();
+const url = webtransport_url(`client-close.py?token=${id}`);
+
+// We can't load ./worker.js in runWebTransportBfcacheTest, because it uses
+// execute_script, and so the baseurl is helper.sub.js's baseurl.
+// We also can't pass a worker to it.  So, load the worker as a string, and pass
+// the string and turn it into a worker via a Blob.  Fun!
+const worker_string = worker_function.toString().replace(/^async function .+\{?|\}$/g, '');
+
+runWebTransportBfcacheTest({
+  funcBeforeNavigation: async (url) => {
+    window.wt = new WebTransport(url);
+    await window.wt.ready;
+    window.wt.close();
+    await window.wt.closed;
+  },
+  argsBeforeNavigation: [url],
+  shouldBeCached: true
+}, "A closed WebTransport on MainThread must allow bfcache");
+
+// we can't have runWebTransportBfcacheTest use [scripts] to load the helper.js
+// script into the test, due to the same baseurl issue, so just do this inline
+
+runWebTransportBfcacheTest({
+  funcBeforeNavigation: async (worker_string, url) => {
+    let next_request_id = 0;
+    function postToWorkerAndWait(worker, data) {
+      return new Promise(resolve => {
+        data.rqid = next_request_id++;
+        worker.postMessage(data);
+        const listener = event => {
+          if (event.data.rqid !== data.rqid)
+            return;
+          worker.removeEventListener('message', listener);
+          resolve(event.data);
+        };
+        worker.addEventListener('message', listener);
+      });
+    };
+
+    let workerBlob = new Blob([worker_string],  { type:'text/javascript' });
+    window.worker = new SharedWorker(URL.createObjectURL(workerBlob));
+    worker.port.start();
+    await postToWorkerAndWait(worker.port, { op: "openandclose", url: url });
+  },
+  argsBeforeNavigation: [worker_string, url],
+  shouldBeCached: true
+}, "A closed WebTransport in a shared worker must allow bfcache");
+
+runWebTransportBfcacheTest({
+  funcBeforeNavigation: async (worker_string, url) => {
+    let next_request_id = 0;
+    function postToWorkerAndWait(worker, data) {
+      return new Promise(resolve => {
+        data.rqid = next_request_id++;
+        worker.postMessage(data);
+        const listener = event => {
+          if (event.data.rqid !== data.rqid)
+            return;
+          worker.removeEventListener('message', listener);
+          resolve(event.data);
+        };
+        worker.addEventListener('message', listener);
+      });
+    };
+
+    let workerBlob = new Blob([worker_string],  { type:'text/javascript' });
+    window.worker = new Worker(URL.createObjectURL(workerBlob));
+    await postToWorkerAndWait(window.worker, { op: "open", url: url });
+    await postToWorkerAndWait(window.worker, { op: "close" });
+  },
+  argsBeforeNavigation: [worker_string, url],
+  shouldBeCached: true
+}, "A closed WebTransport in a worker must allow bfcache");
+
+runWebTransportBfcacheTest({
+  funcBeforeNavigation: async (worker_string, url) => {
+    let next_request_id = 0;
+    function postToWorkerAndWait(worker, data) {
+      return new Promise(resolve => {
+        data.rqid = next_request_id++;
+        worker.postMessage(data);
+        const listener = event => {
+          if (event.data.rqid !== data.rqid)
+            return;
+          worker.removeEventListener('message', listener);
+          resolve(event.data);
+        };
+        worker.addEventListener('message', listener);
+      });
+    };
+
+    let workerBlob = new Blob([worker_string],  { type:'text/javascript' });
+    window.worker = new Worker(URL.createObjectURL(workerBlob));
+    await postToWorkerAndWait(window.worker, { op: "open", url: url });
+    await postToWorkerAndWait(window.worker, { op: "close" });
+  },
+  argsBeforeNavigation: [worker_string, url],
+  shouldBeCached: true
+}, "A closed WebTransport in a nested worker must allow bfcache");
+
+</script>

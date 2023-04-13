@@ -69,6 +69,8 @@ parent:
 
   async NotifyLock(bool aCreated);
 
+  async NotifyWebTransport(bool aCreated);
+
   async Close();
 
   async SetServiceWorkerSkipWaitingFlag() returns (bool aOk);

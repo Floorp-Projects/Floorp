@@ -124,6 +124,10 @@ void SharedWorkerManager::AddActor(SharedWorkerParent* aParent) {
     Unused << aParent->SendNotifyLock(true);
   }
 
+  if (mWebTransportCount) {
+    Unused << aParent->SendNotifyWebTransport(true);
+  }
+
   // NB: We don't update our Suspended/Frozen state here, yet. The aParent is
   // responsible for doing so from SharedWorkerParent::ManagerCreated.
   // XXX But we could avoid iterating all of our actors because if aParent is
@@ -250,6 +254,22 @@ void SharedWorkerManager::LockNotified(bool aCreated) {
   if ((aCreated && mLockCount == 1) || !mLockCount) {
     for (SharedWorkerParent* actor : mActors) {
       Unused << actor->SendNotifyLock(aCreated);
+    }
+  }
+};
+
+void SharedWorkerManager::WebTransportNotified(bool aCreated) {
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
+  MOZ_ASSERT_IF(!aCreated, mWebTransportCount > 0);
+
+  mWebTransportCount += aCreated ? 1 : -1;
+
+  // Notify only when we either:
+  // 1. Got a first WebTransport
+  // 2. The last WebTransport goes away
+  if ((aCreated && mWebTransportCount == 1) || mWebTransportCount == 0) {
+    for (SharedWorkerParent* actor : mActors) {
+      Unused << actor->SendNotifyWebTransport(aCreated);
     }
   }
 };
