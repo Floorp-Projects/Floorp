@@ -412,6 +412,10 @@ class BrowserRobot {
         mDevice.waitForIdle(waitingTimeLong)
     }
 
+    fun clickUploadButton() {
+        clickPageObject(webPageItemWithResourceId("upload_file"))
+    }
+
     fun verifyUpdateLoginPromptIsShown() = mDevice.waitNotNull(Until.findObjects(text("Update")))
 
     fun saveLoginFromPrompt(optionToSaveLogin: String) {

@@ -8,16 +8,24 @@ import android.Manifest
 import android.content.Context
 import android.hardware.camera2.CameraManager
 import android.media.AudioManager
+import android.os.Build
 import androidx.core.net.toUri
 import androidx.test.rule.GrantPermissionRule
+import okhttp3.mockwebserver.MockWebServer
+import org.junit.After
 import org.junit.Assume.assumeTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
-import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.AndroidAssetDispatcher
+import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MockLocationUpdatesRule
 import org.mozilla.fenix.helpers.RetryTestRule
+import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.appContext
+import org.mozilla.fenix.helpers.TestHelper.assertExternalAppOpens
+import org.mozilla.fenix.helpers.TestHelper.grantSystemPermission
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
@@ -27,13 +35,14 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
  */
 class SitePermissionsTest {
     /* Test page created and handled by the Mozilla mobile test-eng team */
+    private lateinit var mockWebServer: MockWebServer
     private val testPage = "https://mozilla-mobile.github.io/testapp/permissions"
     private val testPageSubstring = "https://mozilla-mobile.github.io:443"
     private val cameraManager = appContext.getSystemService(Context.CAMERA_SERVICE) as CameraManager
     private val micManager = appContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
     @get:Rule
-    val activityTestRule = HomeActivityTestRule(
+    val activityTestRule = HomeActivityIntentTestRule(
         isJumpBackInCFREnabled = false,
         isPWAsPromptEnabled = false,
         isTCPCFREnabled = false,
@@ -52,6 +61,19 @@ class SitePermissionsTest {
 
     @get: Rule
     val retryTestRule = RetryTestRule(3)
+
+    @Before
+    fun setUp() {
+        mockWebServer = MockWebServer().apply {
+            dispatcher = AndroidAssetDispatcher()
+            start()
+        }
+    }
+
+    @After
+    fun tearDown() {
+        mockWebServer.shutdown()
+    }
 
     @SmokeTest
     @Test
@@ -284,6 +306,23 @@ class SitePermissionsTest {
             verifyLocationPermissionPrompt(testPageSubstring)
         }.clickPagePermissionButton(false) {
             verifyPageContent("User denied geolocation prompt")
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun fileUploadPermissionTest() {
+        val testPage = TestAssetHelper.getHTMLControlsFormAsset(mockWebServer)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(testPage.url) {
+            clickUploadButton()
+            grantSystemPermission()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                assertExternalAppOpens("com.google.android.documentsui")
+            } else {
+                assertExternalAppOpens("com.android.documentsui")
+            }
         }
     }
 }

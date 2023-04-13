@@ -35,6 +35,15 @@
 <button onclick="printOption()" id="submitOption"> Submit drop down option </button>
 <div id="displayOption"></div>
 
+</br>
+<form method="post" enctype="multipart/form-data">
+    <div>
+        <label>Choose file to upload</label>
+        </br>
+        <input type="file" id="upload_file"/>
+    </div>
+</form>
+
 <script>
     function printOption() {
       let dropDown = document.querySelector("#dropDown");

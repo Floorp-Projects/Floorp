@@ -338,7 +338,7 @@ object TestHelper {
         }
     }
 
-    // Method used to press allow on the different system permission dialogs
+    // Permission allow dialogs differ on various Android APIs
     fun grantSystemPermission() {
         if (Build.VERSION.SDK_INT >= 23) {
             if (mDevice.findObject(UiSelector().textContains("While using the app")).waitForExists(
@@ -356,6 +356,7 @@ object TestHelper {
         }
     }
 
+    // Permission deny dialogs differ on various Android APIs
     fun denyPermission() {
         if (Build.VERSION.SDK_INT >= 23) {
             mDevice.findObject(
