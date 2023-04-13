@@ -333,6 +333,7 @@ define(function(require, exports, module) {
                 role: "tab",
                 onClick: this.onClickTab.bind(this, index),
                 onMouseDown: this.onMouseDown.bind(this),
+                "data-tab-index": index,
               },
               title,
               badge && !isTabSelected && showBadge()

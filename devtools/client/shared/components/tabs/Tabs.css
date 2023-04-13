@@ -35,6 +35,7 @@ div[hidetabs=true] .tabs .tabs-navigation {
   list-style: none;
   padding: 0;
   margin: 0;
+  margin-inline-end: 15px;
   flex-grow: 1;
 }
 
@@ -45,6 +46,8 @@ div[hidetabs=true] .tabs .tabs-navigation {
 .tabs .tabs-navigation .tabs-menu {
   overflow: hidden;
   display: flex;
+  overflow-x: scroll;
+  scrollbar-width: none;
 }
 
 .tabs .tabs-menu-item {

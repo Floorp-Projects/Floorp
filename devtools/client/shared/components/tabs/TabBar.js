@@ -9,6 +9,7 @@
 const {
   Component,
   createFactory,
+  createRef,
 } = require("resource://devtools/client/shared/vendor/react.js");
 const PropTypes = require("resource://devtools/client/shared/vendor/react-prop-types.js");
 const dom = require("resource://devtools/client/shared/vendor/react-dom-factories.js");
@@ -95,6 +96,7 @@ class Tabbar extends Component {
     this.onTabChanged = this.onTabChanged.bind(this);
     this.onAllTabsMenuClick = this.onAllTabsMenuClick.bind(this);
     this.renderTab = this.renderTab.bind(this);
+    this.tabbarRef = createRef();
   }
 
   // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
@@ -253,6 +255,8 @@ class Tabbar extends Component {
   }
 
   select(tabId) {
+    const docRef = this.tabbarRef.current.ownerDocument;
+
     const index = this.getTabIndex(tabId);
     if (index < 0) {
       return;
@@ -261,6 +265,12 @@ class Tabbar extends Component {
     const newState = Object.assign({}, this.state, {
       activeTab: index,
     });
+
+    const tabDomElement = docRef.querySelector(`[data-tab-index="${index}"]`);
+
+    if (tabDomElement) {
+      tabDomElement.scrollIntoView();
+    }
 
     this.setState(newState, () => {
       if (this.props.onSelect) {
@@ -345,7 +355,10 @@ class Tabbar extends Component {
     const tabs = this.state.tabs.map(tab => this.renderTab(tab));
 
     return div(
-      { className: "devtools-sidebar-tabs" },
+      {
+        className: "devtools-sidebar-tabs",
+        ref: this.tabbarRef,
+      },
       Sidebar(
         {
           onAllTabsMenuClick: this.onAllTabsMenuClick,
