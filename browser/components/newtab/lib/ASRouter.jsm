@@ -1146,21 +1146,27 @@ class _ASRouter {
   async getTargetingParameters(environment, localContext) {
     // Resolve objects that may contain promises.
     async function resolve(object) {
-      const target = {};
-
-      for (const param of Object.keys(object)) {
-        target[param] = await object[param];
-
-        if (
-          typeof target[param] === "object" &&
-          target[param] !== null &&
-          !(target[param] instanceof Date)
-        ) {
-          target[param] = await resolve(target[param]);
+      if (typeof object === "object" && object !== null) {
+        if (Array.isArray(object)) {
+          return Promise.all(object.map(async item => resolve(await item)));
         }
+
+        if (object instanceof Date) {
+          return object;
+        }
+
+        const target = {};
+        const promises = Object.entries(object).map(async ([key, value]) => [
+          key,
+          await resolve(await value),
+        ]);
+        for (const [key, value] of await Promise.all(promises)) {
+          target[key] = value;
+        }
+        return target;
       }
 
-      return target;
+      return object;
     }
 
     const targetingParameters = {
