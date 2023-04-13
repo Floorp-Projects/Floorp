@@ -29,6 +29,7 @@ const PRE_ARRAY_LITERAL_TOKENS = new Set([
   "=",
   "in",
   "of",
+  "...",
   "{",
   "*",
   "/",

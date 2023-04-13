@@ -142,6 +142,10 @@ const cases = [
     input: "var a=[1,2,3];",
   },
   {
+    name: "Arrays and spread operator",
+    input: "var a=[1,...[2,3],...[], 4];",
+  },
+  {
     name: "Empty object/array literals",
     input: `let a=[];const b={};c={...{},d: 42};for(let x of []){for(let y in {}){}}`,
   },
