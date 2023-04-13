@@ -789,4 +789,12 @@ bool HyperTextAccessibleBase::SetSelectionBoundsAt(int32_t aSelectionNum,
   return range.SetSelection(aSelectionNum);
 }
 
+void HyperTextAccessibleBase::ScrollSubstringTo(int32_t aStartOffset,
+                                                int32_t aEndOffset,
+                                                uint32_t aScrollType) {
+  TextLeafRange range(ToTextLeafPoint(aStartOffset),
+                      ToTextLeafPoint(aEndOffset, true));
+  range.ScrollIntoView(aScrollType);
+}
+
 }  // namespace mozilla::a11y

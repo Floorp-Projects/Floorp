@@ -1858,6 +1858,42 @@ bool TextLeafRange::SetSelection(int32_t aSelectionNum) const {
   return false;
 }
 
+void TextLeafRange::ScrollIntoView(uint32_t aScrollType) const {
+  if (!mStart || !mEnd || mStart.mAcc->IsLocal() != mEnd.mAcc->IsLocal()) {
+    return;
+  }
+
+  if (mStart.mAcc->IsRemote()) {
+    DocAccessibleParent* doc = mStart.mAcc->AsRemote()->Document();
+    if (doc != mEnd.mAcc->AsRemote()->Document()) {
+      // Can't scroll range that spans docs.
+      return;
+    }
+
+    Unused << doc->SendScrollTextLeafRangeIntoView(
+        mStart.mAcc->ID(), mStart.mOffset, mEnd.mAcc->ID(), mEnd.mOffset,
+        aScrollType);
+    return;
+  }
+
+  auto [startContent, startContentOffset] = mStart.ToDOMPoint();
+  auto [endContent, endContentOffset] = mEnd.ToDOMPoint();
+
+  if (!startContent || !endContent) {
+    return;
+  }
+
+  ErrorResult er;
+  RefPtr<nsRange> domRange = nsRange::Create(startContent, startContentOffset,
+                                             endContent, endContentOffset, er);
+  if (er.Failed()) {
+    return;
+  }
+
+  nsCoreUtils::ScrollSubstringTo(mStart.mAcc->AsLocal()->GetFrame(), domRange,
+                                 aScrollType);
+}
+
 TextLeafRange::Iterator TextLeafRange::Iterator::BeginIterator(
     const TextLeafRange& aRange) {
   Iterator result(aRange);

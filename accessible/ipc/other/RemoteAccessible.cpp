@@ -346,6 +346,13 @@ bool RemoteAccessible::RemoveFromSelection(int32_t aSelectionNum) {
 void RemoteAccessible::ScrollSubstringTo(int32_t aStartOffset,
                                          int32_t aEndOffset,
                                          uint32_t aScrollType) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    MOZ_ASSERT(IsHyperText(), "is not hypertext?");
+    RemoteAccessibleBase<RemoteAccessible>::ScrollSubstringTo(
+        aStartOffset, aEndOffset, aScrollType);
+    return;
+  }
+
   Unused << mDoc->SendScrollSubstringTo(mID, aStartOffset, aEndOffset,
                                         aScrollType);
 }
