@@ -764,6 +764,10 @@ AsyncImagePipelineManager::GetPendingRemoteTextures() {
   for (const auto& entry : mAsyncImagePipelines) {
     AsyncImagePipeline* pipeline = entry.GetWeak();
 
+    if (pipeline->mImageHost->GetAsyncRef()) {
+      continue;
+    }
+
     if (!pipeline->mImageHost->GetCurrentTextureHost()) {
       continue;
     }

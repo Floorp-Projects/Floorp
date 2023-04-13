@@ -183,14 +183,6 @@ TextureHostType RemoteTextureHostWrapper::GetTextureHostType() {
   return mRemoteTextureForDisplayList->GetTextureHostType();
 }
 
-bool RemoteTextureHostWrapper::CheckIsReadyForRendering() {
-  if (!mRemoteTextureForDisplayList) {
-    // mRemoteTextureForDisplayList might be updated.
-    RemoteTextureMap::Get()->GetRemoteTextureForDisplayList(this);
-  }
-  return !!mRemoteTextureForDisplayList;
-}
-
 bool RemoteTextureHostWrapper::IsReadyForRendering() {
   return !!mRemoteTextureForDisplayList;
 }
