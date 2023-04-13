@@ -19,7 +19,7 @@ use style::global_style_data::GLOBAL_STYLE_DATA;
 use style::media_queries::MediaList;
 use style::parser::ParserContext;
 use style::shared_lock::{Locked, SharedRwLock};
-use style::stylesheets::import_rule::{ImportLayer, ImportSheet};
+use style::stylesheets::import_rule::{ImportLayer, ImportSupportsCondition, ImportSheet};
 use style::stylesheets::AllowImportRules;
 use style::stylesheets::{ImportRule, Origin, StylesheetLoader as StyleStylesheetLoader};
 use style::stylesheets::{StylesheetContents, UrlExtraData};
@@ -52,8 +52,20 @@ impl StyleStylesheetLoader for StylesheetLoader {
         _context: &ParserContext,
         lock: &SharedRwLock,
         media: Arc<Locked<MediaList>>,
+        supports: Option<ImportSupportsCondition>,
         layer: Option<ImportLayer>,
     ) -> Arc<Locked<ImportRule>> {
+        // Ensure the supports conditions for this @import are true, if not, refuse to load
+        if !supports.as_ref().map_or(true, |s| s.enabled) {
+            return Arc::new(lock.wrap(ImportRule {
+                url,
+                stylesheet: ImportSheet::new_refused(),
+                supports,
+                layer,
+                source_location,
+            }));
+        }
+
         // After we get this raw pointer ImportRule will be moved into a lock and Arc
         // and so the Arc<Url> pointer inside will also move,
         // but the Url it points to or the allocating backing the String inside that Url won’t,
@@ -72,6 +84,7 @@ impl StyleStylesheetLoader for StylesheetLoader {
         Arc::new(lock.wrap(ImportRule {
             url,
             stylesheet,
+            supports,
             layer,
             source_location,
         }))
@@ -161,12 +174,25 @@ impl StyleStylesheetLoader for AsyncStylesheetParser {
         _context: &ParserContext,
         lock: &SharedRwLock,
         media: Arc<Locked<MediaList>>,
+        supports: Option<ImportSupportsCondition>,
         layer: Option<ImportLayer>,
     ) -> Arc<Locked<ImportRule>> {
+        // Ensure the supports conditions for this @import are true, if not, refuse to load
+        if !supports.as_ref().map_or(true, |s| s.enabled) {
+            return Arc::new(lock.wrap(ImportRule {
+                url: url.clone(),
+                stylesheet: ImportSheet::new_refused(),
+                supports,
+                layer,
+                source_location,
+            }));
+        }
+
         let stylesheet = ImportSheet::new_pending();
         let rule = Arc::new(lock.wrap(ImportRule {
             url: url.clone(),
             stylesheet,
+            supports,
             layer,
             source_location,
         }));
