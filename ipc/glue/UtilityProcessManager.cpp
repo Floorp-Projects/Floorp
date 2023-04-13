@@ -281,10 +281,10 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessManager::StartUtility(
         return GenericNonExclusivePromise::CreateAndResolve(true, __func__);
       },
       [self](nsresult aError) {
-        if (!self->IsShutdown()) {
-          MOZ_ASSERT_UNREACHABLE("Failure when starting actor");
-        }
         NS_WARNING("Reject StartUtility() for LaunchProcess() rejection");
+        if (!self->IsShutdown()) {
+          NS_WARNING("Reject StartUtility() when !IsShutdown()");
+        }
         return GenericNonExclusivePromise::CreateAndReject(aError, __func__);
       });
 }
