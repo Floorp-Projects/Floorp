@@ -36,6 +36,7 @@ PERFHERDER_BASE_URL = (
     "https://treeherder.mozilla.org/perfherder/"
     "compare?originalProject=try&originalRevision=%s&newProject=try&newRevision=%s"
 )
+TREEHERDER_TRY_BASE_URL = "https://treeherder.mozilla.org/jobs?repo=try&revision=%s"
 
 # Prevent users from running more than 300 tests at once. It's possible, but
 # it's more likely that a query is broken and is selecting far too much.
@@ -1563,11 +1564,18 @@ def run(**kwargs):
     # Provide link to perfherder for comparisons now
     if not kwargs.get("single_run", False):
         perfcompare_url = PERFHERDER_BASE_URL % revisions
+        original_try_url = TREEHERDER_TRY_BASE_URL % revisions[0]
+        local_change_try_url = TREEHERDER_TRY_BASE_URL % revisions[1]
         print(
             "\n!!!NOTE!!!\n You'll be able to find a performance comparison here "
             "once the tests are complete (ensure you select the right "
             "framework): %s\n" % perfcompare_url
         )
+        print("\n*******************************************************")
+        print("*          2 commits/try-runs are created...          *")
+        print("*******************************************************")
+        print(f"Base revision's try run: {original_try_url}")
+        print(f"Local revision's try run: {local_change_try_url}\n")
     print(
         "If you need any help, you can find us in the #perf-help Matrix channel:\n"
         "https://matrix.to/#/#perf-help:mozilla.org\n"

@@ -48,10 +48,19 @@ def run(compare_commit=None, **kwargs):
     compare_commit, current_revision_ref = CompareParser.get_revisions_to_run(
         vcs, compare_commit
     )
+    print("********************************************")
+    print("* 2 commits are created with this command *")
+    print("********************************************")
 
     try:
         fuzzy_run(**kwargs)
+        print("********************************************")
+        print("*    The base commit can be found above    *")
+        print("********************************************")
         vcs.update(compare_commit)
         again_run()
+        print("*****************************************")
+        print("* The compare commit can be found above *")
+        print("*****************************************")
     finally:
         vcs.update(current_revision_ref)

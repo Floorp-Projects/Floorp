@@ -742,7 +742,7 @@ def test_category_expansion(
     [
         (
             {},
-            [8, 2, 2, 5, 2, 1],
+            [8, 2, 2, 10, 2, 1],
             2,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
@@ -753,7 +753,7 @@ def test_category_expansion(
         ),
         (
             {"query": "'Pageload 'linux 'firefox"},
-            [8, 2, 2, 5, 2, 1],
+            [8, 2, 2, 10, 2, 1],
             2,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
@@ -764,7 +764,7 @@ def test_category_expansion(
         ),
         (
             {"cached_revision": "cached_base_revision"},
-            [8, 1, 1, 5, 2, 0],
+            [8, 1, 1, 10, 2, 0],
             2,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
@@ -775,7 +775,7 @@ def test_category_expansion(
         ),
         (
             {"dry_run": True},
-            [8, 1, 1, 5, 2, 0],
+            [8, 1, 1, 10, 2, 0],
             2,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
@@ -786,7 +786,7 @@ def test_category_expansion(
         ),
         (
             {"show_all": True},
-            [1, 2, 2, 3, 2, 1],
+            [1, 2, 2, 8, 2, 1],
             0,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
@@ -797,7 +797,7 @@ def test_category_expansion(
         ),
         (
             {"show_all": True, "query": "'shippable !32 speedometer 'firefox"},
-            [1, 2, 2, 3, 2, 1],
+            [1, 2, 2, 8, 2, 1],
             0,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
@@ -817,7 +817,7 @@ def test_category_expansion(
         ),
         (
             {"detect_changes": True},
-            [9, 2, 2, 5, 2, 1],
+            [9, 2, 2, 10, 2, 1],
             2,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
