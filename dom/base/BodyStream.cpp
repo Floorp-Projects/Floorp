@@ -279,7 +279,9 @@ void BodyStream::WriteIntoReadRequestBuffer(JSContext* aCx,
     return;
   }
 
-  rv = mInputStream->AsyncWait(this, nsIAsyncOutputStream::WAIT_CLOSURE_ONLY, 0,
+  // Subscribe WAIT_CLOSURE_ONLY so that OnInputStreamReady can be called when
+  // mInputStream is closed.
+  rv = mInputStream->AsyncWait(this, nsIAsyncInputStream::WAIT_CLOSURE_ONLY, 0,
                                mOwningEventTarget);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     ErrorPropagation(aCx, aStream, rv);
@@ -453,9 +455,9 @@ BodyStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
     return NS_OK;
   }
 
-  // Not having a promise means we are pinged by stream closure, but here we
-  // still have more data to read. Let's wait for the next read request in that
-  // case.
+  // Not having a promise means we are pinged by stream closure
+  // (WAIT_CLOSURE_ONLY below), but here we still have more data to read. Let's
+  // wait for the next read request in that case.
   if (!mPullPromise) {
     return NS_OK;
   }
