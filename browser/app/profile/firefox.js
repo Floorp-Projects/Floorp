@@ -468,13 +468,9 @@ pref("browser.urlbar.quicksuggest.impressionCaps.nonSponsoredEnabled", false);
 // caps.
 pref("browser.urlbar.quicksuggest.impressionCaps.sponsoredEnabled", false);
 
-#ifdef EARLY_BETA_OR_EARLIER
 // Whether the usual non-best-match quick suggest results can be blocked. This
 // pref is a fallback for the Nimbus variable `quickSuggestBlockingEnabled`.
 pref("browser.urlbar.quicksuggest.blockingEnabled", true);
-#else
-pref("browser.urlbar.quicksuggest.blockingEnabled", false);
-#endif
 
 // Whether unit conversion is enabled.
 #ifdef NIGHTLY_BUILD
@@ -506,11 +502,7 @@ pref("browser.urlbar.switchTabs.adoptIntoActiveWindow", false);
 pref("browser.urlbar.openintab", false);
 
 // Enable three-dot options button and menu for eligible results.
-#ifdef EARLY_BETA_OR_EARLIER
 pref("browser.urlbar.resultMenu", true);
-#else
-pref("browser.urlbar.resultMenu", false);
-#endif
 // Allow the result menu button to be reached with the Tab key.
 pref("browser.urlbar.resultMenu.keyboardAccessible", true);
 
@@ -589,11 +581,7 @@ pref("browser.urlbar.bestMatch.enabled", false);
 
 // Whether best match results can be blocked. This pref is a fallback for the
 // Nimbus variable `bestMatchBlockingEnabled`.
-#ifdef EARLY_BETA_OR_EARLIER
 pref("browser.urlbar.bestMatch.blockingEnabled", true);
-#else
-pref("browser.urlbar.bestMatch.blockingEnabled", false);
-#endif
 
 // Enable site specific search result.
 pref("browser.urlbar.contextualSearch.enabled", false);
