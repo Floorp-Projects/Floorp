@@ -9290,6 +9290,7 @@
       "do",
       "=",
       "in",
+      "of",
       "{",
       "*",
       "/",
@@ -9915,8 +9916,12 @@
       if (lastToken.type.isAssign) {
         return true;
       }
+
       return PRE_ARRAY_LITERAL_TOKENS.has(
-        lastToken.type.keyword || lastToken.type.label
+        lastToken.type.keyword ||
+          // Some tokens ('of', 'yield', …) have a `token.type.keyword` of 'name' and their
+          // actual value in `token.value`
+          (lastToken.type.label == "name" ? lastToken.value : lastToken.type.label)
       );
     }
 
@@ -10155,6 +10160,9 @@
         return true;
       }
       if (lastToken.type.binop != null) {
+        return true;
+      }
+      if (lastToken.value == "of") {
         return true;
       }
 
