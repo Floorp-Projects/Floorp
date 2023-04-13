@@ -1,0 +1,33 @@
+<?xml version="1.0" standalone="no"?>
+<svg width="315px" height="445px" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+   <svg viewBox="0 0 21000 29700" id="thetarget">
+<script>
+// <![CDATA[
+function insertRect(x,y,w,h) {
+      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      rect.setAttribute("x", x.toString());
+      rect.setAttribute("y", y.toString());
+      rect.setAttribute("height", h.toString());
+      rect.setAttribute("width", w.toString());
+      document.getElementById("thetarget").appendChild(rect);      
+}
+function place() {
+      let baseleft = 2000;
+      let basetop = 2000;
+      let width = 18;
+      let height = 539;
+      let coldiff = 66;
+      let rowdiff = 600;
+      for (let row = 0; row <= 60; row++) {
+            for (let col = 0; col <= 360; col++) {
+                  insertRect(baseleft + col*coldiff + row, basetop + rowdiff*row, width, height);
+            }      
+      }
+}
+place();
+// ]]>
+</script>
+
+
+   </svg>
+</svg>
