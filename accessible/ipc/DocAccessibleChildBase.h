@@ -84,6 +84,12 @@ class DocAccessibleChildBase : public PDocAccessibleChild {
       const uint64_t& aEndID, const int32_t& aEndOffset,
       const int32_t& aSelectionNum) override;
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  virtual mozilla::ipc::IPCResult RecvScrollTextLeafRangeIntoView(
+      const uint64_t& aStartID, const int32_t& aStartOffset,
+      const uint64_t& aEndID, const int32_t& aEndOffset,
+      const uint32_t& aScrollType) override;
+
   virtual mozilla::ipc::IPCResult RecvRemoveTextSelection(
       const uint64_t& aID, const int32_t& aSelectionNum) override;
 

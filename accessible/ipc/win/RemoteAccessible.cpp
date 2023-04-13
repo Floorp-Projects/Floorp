@@ -733,9 +733,12 @@ void RemoteAccessible::ScrollSubstringTo(int32_t aStartOffset,
                                          int32_t aEndOffset,
                                          uint32_t aScrollType) {
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    // Not yet supported by the cache.
+    MOZ_ASSERT(IsHyperText(), "is not hypertext?");
+    RemoteAccessibleBase<RemoteAccessible>::ScrollSubstringTo(
+        aStartOffset, aEndOffset, aScrollType);
     return;
   }
+
   RefPtr<IAccessibleText> acc = QueryInterface<IAccessibleText>(this);
   if (!acc) {
     return;

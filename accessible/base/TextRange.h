@@ -112,11 +112,6 @@ class TextRange final {
   bool Crop(Accessible* aContainer);
 
   /**
-   * Scroll the text range into view.
-   */
-  void ScrollIntoView(uint32_t aScrollType) const;
-
-  /**
    * Convert stored hypertext offsets into DOM offsets and assign it to DOM
    * range.
    *

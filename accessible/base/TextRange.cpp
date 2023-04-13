@@ -263,19 +263,6 @@ bool TextRange::Crop(Accessible* aContainer) {
   return true;
 }
 
-void TextRange::ScrollIntoView(uint32_t aScrollType) const {
-  LocalAccessible* root = mRoot->AsLocal();
-  if (!root) {
-    MOZ_ASSERT_UNREACHABLE("Not supported for RemoteAccessible");
-    return;
-  }
-  RefPtr<nsRange> range = nsRange::Create(root->GetContent());
-  if (AssignDOMRange(range)) {
-    nsCoreUtils::ScrollSubstringTo(mStartContainer->AsLocal()->GetFrame(),
-                                   range, aScrollType);
-  }
-}
-
 /**
  * Convert the given DOM point to a DOM point in non-generated contents.
  *
