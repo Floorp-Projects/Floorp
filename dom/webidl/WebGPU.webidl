@@ -1085,6 +1085,8 @@ enum GPUQueryType {
 [Pref="dom.webgpu.enabled",
  Exposed=(Window /* ,DedicatedWorker */), SecureContext]
 interface GPUCanvasContext {
+    readonly attribute (HTMLCanvasElement or OffscreenCanvas) canvas;
+
     // Calling configure() a second time invalidates the previous one,
     // and all of the textures it's produced.
     undefined configure(GPUCanvasConfiguration descriptor);

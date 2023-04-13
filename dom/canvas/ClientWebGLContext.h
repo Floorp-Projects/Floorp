@@ -34,8 +34,9 @@ class ClientWebGLExtensionBase;
 class HostWebGLContext;
 
 namespace dom {
+class OwningHTMLCanvasElementOrOffscreenCanvas;
 class WebGLChild;
-}
+}  // namespace dom
 
 namespace gfx {
 class DrawTargetWebgl;
