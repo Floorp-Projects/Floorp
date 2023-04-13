@@ -10,12 +10,7 @@ import { connect } from "../../utils/connect";
 import AccessibleImage from "./AccessibleImage";
 
 import { getSourceClassnames } from "../../utils/source";
-import {
-  getSymbols,
-  getSelectedLocation,
-  isSourceBlackBoxed,
-  hasPrettyTab,
-} from "../../selectors";
+import { getSymbols, isSourceBlackBoxed, hasPrettyTab } from "../../selectors";
 
 import "./SourceIcon.css";
 
@@ -47,7 +42,7 @@ class SourceIcon extends PureComponent {
 
 export default connect((state, props) => {
   const { forTab, source } = props;
-  const symbols = getSymbols(state, getSelectedLocation(state));
+  const symbols = getSymbols(state, source);
   const isBlackBoxed = isSourceBlackBoxed(state, source);
   // For the tab icon, we don't want to show the pretty icon for the non-pretty tab
   const hasMatchingPrettyTab = !forTab && hasPrettyTab(state, source.url);

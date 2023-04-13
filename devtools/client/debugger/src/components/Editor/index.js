@@ -739,11 +739,10 @@ Editor.contextTypes = {
 
 const mapStateToProps = state => {
   const selectedSource = getSelectedSource(state);
-  const selectedLocation = getSelectedLocation(state);
 
   return {
     cx: getThreadContext(state),
-    selectedLocation,
+    selectedLocation: getSelectedLocation(state),
     selectedSource,
     selectedSourceTextContent: getSelectedSourceTextContent(state),
     selectedSourceIsBlackBoxed: selectedSource
@@ -751,7 +750,7 @@ const mapStateToProps = state => {
       : null,
     searchOn: getActiveSearch(state) === "file",
     conditionalPanelLocation: getConditionalPanelLocation(state),
-    symbols: getSymbols(state, selectedLocation),
+    symbols: getSymbols(state, selectedSource),
     isPaused: getIsCurrentThreadPaused(state),
     skipPausing: getSkipPausing(state),
     inlinePreviewEnabled: getInlinePreview(state),
