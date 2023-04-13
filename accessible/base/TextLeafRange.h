@@ -195,6 +195,12 @@ class TextLeafPoint final {
            FindParagraphSameAcc(eDirPrevious, true, aIgnoreListItemMarker);
   }
 
+  /**
+   * Translate given TextLeafPoint into a DOM point.
+   */
+  MOZ_CAN_RUN_SCRIPT std::pair<nsIContent*, int32_t> ToDOMPoint(
+      bool aIncludeGenerated = true) const;
+
  private:
   bool IsEmptyLastLine() const;
 
