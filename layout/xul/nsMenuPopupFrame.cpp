@@ -44,6 +44,7 @@
 #include "nsTransitionManager.h"
 #include "nsDisplayList.h"
 #include "nsIDOMXULSelectCntrlEl.h"
+#include "mozilla/widget/ScreenManager.h"
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/EventDispatcher.h"
@@ -1435,7 +1436,7 @@ auto nsMenuPopupFrame::GetRects(const nsSize& aPrefSize) const -> Rects {
   const nsMargin margin = GetMargin();
 
   // the screen rectangle of the root frame, in dev pixels.
-  nsRect rootScreenRect = rootFrame->GetScreenRectInAppUnits();
+  const nsRect rootScreenRect = rootFrame->GetScreenRectInAppUnits();
 
   const bool isNoAutoHide = IsNoAutoHide();
   const PopupLevel popupLevel = GetPopupLevel(isNoAutoHide);
@@ -1544,8 +1545,23 @@ auto nsMenuPopupFrame::GetRects(const nsSize& aPrefSize) const -> Rects {
   // If a panel has flip="none", don't constrain or flip it.
   // Also, always do this for content shells, so that the popup doesn't extend
   // outside the containing frame.
-  if (IS_WAYLAND_DISPLAY()) {
-    if (widget) {
+  if (mInContentShell || mFlip != FlipType_None) {
+    const Maybe<nsRect> constraintRect =
+        GetConstraintRect(result.mAnchorRect, rootScreenRect, popupLevel);
+
+    if (constraintRect) {
+      // Ensure that anchorRect is on the constraint rect.
+      result.mAnchorRect = result.mAnchorRect.Intersect(*constraintRect);
+      // Shrink the popup down if it is larger than the constraint size
+      if (result.mUsedRect.width > constraintRect->width) {
+        result.mUsedRect.width = constraintRect->width;
+      }
+      if (result.mUsedRect.height > constraintRect->height) {
+        result.mUsedRect.height = constraintRect->height;
+      }
+    }
+
+    if (IS_WAYLAND_DISPLAY() && widget) {
       // Shrink the popup down if it's larger than popup size received from
       // Wayland compositor. We don't know screen size on Wayland so this is the
       // only info we have there.
@@ -1563,92 +1579,68 @@ auto nsMenuPopupFrame::GetRects(const nsSize& aPrefSize) const -> Rects {
         result.mUsedRect.height = waylandSize.height;
       }
     }
-  } else if (mInContentShell || mFlip != FlipType_None) {
-    const nsRect screenRect = [&] {
-      auto anchorRectDevPix =
-          LayoutDeviceIntRect::FromAppUnitsToNearest(result.mAnchorRect, a2d);
-      auto rootScreenRectDevPix =
-          LayoutDeviceIntRect::FromAppUnitsToNearest(rootScreenRect, a2d);
-      auto screenRectDevPix =
-          GetConstraintRect(anchorRectDevPix, rootScreenRectDevPix, popupLevel);
-
-      nsRect sr = LayoutDeviceIntRect::ToAppUnits(screenRectDevPix, a2d);
-
-      // Expand the allowable screen rect by the input margin (which can't be
-      // interacted with).
-      const nscoord inputMargin =
-          StyleUIReset()->mMozWindowInputRegionMargin.ToAppUnits();
-      sr.Inflate(inputMargin);
-      return sr;
-    }();
-
-    // Ensure that anchorRect is on screen.
-    result.mAnchorRect = result.mAnchorRect.Intersect(screenRect);
-
-    // Shrink the popup down if it is larger than the screen size
-    if (result.mUsedRect.width > screenRect.width) {
-      result.mUsedRect.width = screenRect.width;
-    }
-    if (result.mUsedRect.height > screenRect.height) {
-      result.mUsedRect.height = screenRect.height;
-    }
 
     // At this point the anchor (anchorRect) is within the available screen
-    // area (screenRect) and the popup is known to be no larger than the
+    // area (constraintRect) and the popup is known to be no larger than the
     // screen.
+    if (constraintRect) {
+      // We might want to "slide" an arrow if the panel is of the correct type -
+      // but we can only slide on one axis - the other axis must be "flipped or
+      // resized" as normal.
+      bool slideHorizontal = false, slideVertical = false;
+      if (mFlip == FlipType_Slide) {
+        int8_t position = GetAlignmentPosition();
+        slideHorizontal = position >= POPUPPOSITION_BEFORESTART &&
+                          position <= POPUPPOSITION_AFTEREND;
+        slideVertical = position >= POPUPPOSITION_STARTBEFORE &&
+                        position <= POPUPPOSITION_ENDAFTER;
+      }
 
-    // We might want to "slide" an arrow if the panel is of the correct type -
-    // but we can only slide on one axis - the other axis must be "flipped or
-    // resized" as normal.
-    bool slideHorizontal = false, slideVertical = false;
-    if (mFlip == FlipType_Slide) {
-      int8_t position = GetAlignmentPosition();
-      slideHorizontal = position >= POPUPPOSITION_BEFORESTART &&
-                        position <= POPUPPOSITION_AFTEREND;
-      slideVertical = position >= POPUPPOSITION_STARTBEFORE &&
-                      position <= POPUPPOSITION_ENDAFTER;
-    }
-
-    // Next, check if there is enough space to show the popup at full size
-    // when positioned at screenPoint. If not, flip the popups to the opposite
-    // side of their anchor point, or resize them as necessary.
-    if (slideHorizontal) {
-      result.mUsedRect.width = SlideOrResize(
-          result.mUsedRect.x, result.mUsedRect.width, screenRect.x,
-          screenRect.XMost(), &result.mAlignmentOffset);
-    } else {
-      const bool endAligned =
-          IsDirectionRTL() ? mPopupAlignment == POPUPALIGNMENT_TOPLEFT ||
-                                 mPopupAlignment == POPUPALIGNMENT_BOTTOMLEFT
-                           : mPopupAlignment == POPUPALIGNMENT_TOPRIGHT ||
-                                 mPopupAlignment == POPUPALIGNMENT_BOTTOMRIGHT;
-      result.mUsedRect.width = FlipOrResize(
-          result.mUsedRect.x, result.mUsedRect.width, screenRect.x,
-          screenRect.XMost(), result.mAnchorRect.x, result.mAnchorRect.XMost(),
-          margin.left, margin.right, hFlip, endAligned, &result.mHFlip);
-    }
-    if (slideVertical) {
-      result.mUsedRect.height = SlideOrResize(
-          result.mUsedRect.y, result.mUsedRect.height, screenRect.y,
-          screenRect.YMost(), &result.mAlignmentOffset);
-    } else {
-      bool endAligned = mPopupAlignment == POPUPALIGNMENT_BOTTOMLEFT ||
-                        mPopupAlignment == POPUPALIGNMENT_BOTTOMRIGHT;
-      result.mUsedRect.height = FlipOrResize(
-          result.mUsedRect.y, result.mUsedRect.height, screenRect.y,
-          screenRect.YMost(), result.mAnchorRect.y, result.mAnchorRect.YMost(),
-          margin.top, margin.bottom, vFlip, endAligned, &result.mVFlip);
-    }
+      // Next, check if there is enough space to show the popup at full size
+      // when positioned at screenPoint. If not, flip the popups to the opposite
+      // side of their anchor point, or resize them as necessary.
+      if (slideHorizontal) {
+        result.mUsedRect.width = SlideOrResize(
+            result.mUsedRect.x, result.mUsedRect.width, constraintRect->x,
+            constraintRect->XMost(), &result.mAlignmentOffset);
+      } else {
+        const bool endAligned =
+            IsDirectionRTL()
+                ? mPopupAlignment == POPUPALIGNMENT_TOPLEFT ||
+                      mPopupAlignment == POPUPALIGNMENT_BOTTOMLEFT
+                : mPopupAlignment == POPUPALIGNMENT_TOPRIGHT ||
+                      mPopupAlignment == POPUPALIGNMENT_BOTTOMRIGHT;
+        result.mUsedRect.width = FlipOrResize(
+            result.mUsedRect.x, result.mUsedRect.width, constraintRect->x,
+            constraintRect->XMost(), result.mAnchorRect.x,
+            result.mAnchorRect.XMost(), margin.left, margin.right, hFlip,
+            endAligned, &result.mHFlip);
+      }
+      if (slideVertical) {
+        result.mUsedRect.height = SlideOrResize(
+            result.mUsedRect.y, result.mUsedRect.height, constraintRect->y,
+            constraintRect->YMost(), &result.mAlignmentOffset);
+      } else {
+        bool endAligned = mPopupAlignment == POPUPALIGNMENT_BOTTOMLEFT ||
+                          mPopupAlignment == POPUPALIGNMENT_BOTTOMRIGHT;
+        result.mUsedRect.height = FlipOrResize(
+            result.mUsedRect.y, result.mUsedRect.height, constraintRect->y,
+            constraintRect->YMost(), result.mAnchorRect.y,
+            result.mAnchorRect.YMost(), margin.top, margin.bottom, vFlip,
+            endAligned, &result.mVFlip);
+      }
 
 #ifdef DEBUG
-    NS_ASSERTION(screenRect.Contains(result.mUsedRect), "Popup is offscreen");
-    if (!screenRect.Contains(result.mUsedRect)) {
-      NS_WARNING(nsPrintfCString("Popup is offscreen (%s vs. %s)",
-                                 ToString(screenRect).c_str(),
-                                 ToString(result.mUsedRect).c_str())
-                     .get());
-    }
+      NS_ASSERTION(constraintRect->Contains(result.mUsedRect),
+                   "Popup is offscreen");
+      if (!constraintRect->Contains(result.mUsedRect)) {
+        NS_WARNING(nsPrintfCString("Popup is offscreen (%s vs. %s)",
+                                   ToString(constraintRect).c_str(),
+                                   ToString(result.mUsedRect).c_str())
+                       .get());
+      }
 #endif
+    }
   }
   // snap the popup's position in screen coordinates to device pixels, see
   // bug 622507, bug 961431
@@ -1786,61 +1778,76 @@ void nsMenuPopupFrame::WidgetPositionOrSizeDidChange() {
   }
 }
 
-LayoutDeviceIntRect nsMenuPopupFrame::GetConstraintRect(
-    const LayoutDeviceIntRect& aAnchorRect,
-    const LayoutDeviceIntRect& aRootScreenRect, PopupLevel aPopupLevel) const {
-  // GetConstraintRect() does not work on Wayland as we can't get absolute
-  // window position there.
-  MOZ_ASSERT(!IS_WAYLAND_DISPLAY(),
-             "GetConstraintRect does not work on Wayland");
+Maybe<nsRect> nsMenuPopupFrame::GetConstraintRect(
+    const nsRect& aAnchorRect, const nsRect& aRootScreenRect,
+    PopupLevel aPopupLevel) const {
+  const nsPresContext* pc = PresContext();
+  const int32_t a2d = PresContext()->AppUnitsPerDevPixel();
+  Maybe<nsRect> result;
 
-  // determine the available screen space. It will be reduced by the OS chrome
+  auto AddConstraint = [&result](const nsRect& aConstraint) {
+    if (result) {
+      *result = result->Intersect(aConstraint);
+    } else {
+      result.emplace(aConstraint);
+    }
+  };
+
+  // Determine the available screen space. It will be reduced by the OS chrome
   // such as menubars. It addition, for content shells, it will be the area of
   // the content rather than the screen.
-  LayoutDeviceIntRect screenRectPixels;
-  nsCOMPtr<nsIScreenManager> sm(
-      do_GetService("@mozilla.org/gfx/screenmanager;1"));
-  if (sm) {
-    // for content shells, get the screen where the root frame is located.
-    // This is because we need to constrain the content to this content area,
-    // so we should use the same screen. Otherwise, use the screen where the
-    // anchor is located.
-    DesktopToLayoutDeviceScale scale =
-        PresContext()->DeviceContext()->GetDesktopToDeviceScale();
-    DesktopRect rect =
-        (mInContentShell ? aRootScreenRect : aAnchorRect) / scale;
-    int32_t width = std::max(1, NSToIntRound(rect.width));
-    int32_t height = std::max(1, NSToIntRound(rect.height));
-    nsCOMPtr<nsIScreen> screen;
-    sm->ScreenForRect(rect.x, rect.y, width, height, getter_AddRefs(screen));
-    if (screen) {
-      // Non-top-level popups (which will always be panels) should never overlap
-      // the OS bar.
-      const bool canOverlapOSBar =
-          aPopupLevel == PopupLevel::Top &&
-          LookAndFeel::GetInt(LookAndFeel::IntID::MenusCanOverlapOSBar) &&
-          !mInContentShell;
-      // Get the total screen area if the popup is allowed to overlap it.
-      screenRectPixels =
-          canOverlapOSBar ? screen->GetRect() : screen->GetAvailRect();
-    }
+  // In Wayland we can't use the screen rect because we can't know absolute
+  // window position.
+  if (!IS_WAYLAND_DISPLAY()) {
+    const DesktopToLayoutDeviceScale scale =
+        pc->DeviceContext()->GetDesktopToDeviceScale();
+    // For content shells, get the screen where the root frame is located. This
+    // is because we need to constrain the content to this content area, so we
+    // should use the same screen. Otherwise, use the screen where the anchor is
+    // located.
+    const nsRect& rect = mInContentShell ? aRootScreenRect : aAnchorRect;
+    auto desktopRect = DesktopIntRect::RoundOut(
+        LayoutDeviceRect::FromAppUnits(rect, a2d) / scale);
+    desktopRect.width = std::max(1, desktopRect.width);
+    desktopRect.height = std::max(1, desktopRect.height);
+
+    RefPtr<nsIScreen> screen =
+        widget::ScreenManager::GetSingleton().ScreenForRect(desktopRect);
+    MOZ_ASSERT(screen, "We always fall back to the primary screen");
+    // Non-top-level popups (which will always be panels) should never overlap
+    // the OS bar.
+    const bool canOverlapOSBar =
+        aPopupLevel == PopupLevel::Top &&
+        LookAndFeel::GetInt(LookAndFeel::IntID::MenusCanOverlapOSBar) &&
+        !mInContentShell;
+    // Get the total screen area if the popup is allowed to overlap it.
+    const auto screenRect =
+        canOverlapOSBar ? screen->GetRect() : screen->GetAvailRect();
+    AddConstraint(LayoutDeviceRect::ToAppUnits(screenRect, a2d));
   }
 
   if (mInContentShell) {
-    // for content shells, clip to the client area rather than the screen area
-    screenRectPixels.IntersectRect(screenRectPixels, aRootScreenRect);
+    // For content shells, clip to the client area rather than the screen area
+    AddConstraint(aRootScreenRect);
   } else if (!mOverrideConstraintRect.IsEmpty()) {
-    auto overrideConstrainRect = LayoutDeviceIntRect::FromAppUnitsToNearest(
-        mOverrideConstraintRect, PresContext()->AppUnitsPerDevPixel());
+    AddConstraint(mOverrideConstraintRect);
     // This is currently only used for <select> elements where we want to
     // constrain vertically to the screen but not horizontally, so do the
     // intersection and then reset the horizontal values.
-    screenRectPixels.IntersectRect(screenRectPixels, overrideConstrainRect);
-    screenRectPixels.x = overrideConstrainRect.x;
-    screenRectPixels.width = overrideConstrainRect.width;
+    //
+    // FIXME(emilio): This doesn't make any sense to me...
+    result->x = mOverrideConstraintRect.x;
+    result->width = mOverrideConstraintRect.width;
   }
 
-  return screenRectPixels;
+  // Expand the allowable screen rect by the input margin (which can't be
+  // interacted with).
+  if (result) {
+    const nscoord inputMargin =
+        StyleUIReset()->mMozWindowInputRegionMargin.ToAppUnits();
+    result->Inflate(inputMargin);
+  }
+  return result;
 }
 
 ConsumeOutsideClicksResult nsMenuPopupFrame::ConsumeOutsideClicks() {
