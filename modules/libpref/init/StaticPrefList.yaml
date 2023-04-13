@@ -9312,6 +9312,13 @@
   mirror: always
   rust: true
 
+# Whether supports() conditions in @import is enabled
+- name: layout.css.import-supports.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
+
 # Whether frame visibility tracking is enabled globally.
 - name: layout.framevisibility.enabled
   type: bool
