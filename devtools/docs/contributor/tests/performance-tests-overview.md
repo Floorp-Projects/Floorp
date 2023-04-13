@@ -64,7 +64,7 @@ toolbox:parent-process measures the number of objects allocated by DevTools afte
 ./mach test devtools/client/framework/test/allocations/browser_allocations_toolbox.js --headless
 ```
 
-The test will record allocations while opening and closing the Toolbox several times. The `PERFHERDER_DATA` entry in the logs will contain 3 measures. objects-with-stacks is the number of allocated objects for which the allocation site is known and should be easy to fix for developers. objects-with-no-stacks is for objects for which there is no stack. memory attempts to record the memory, but the results are very noisy. You can refer to devtools/client/framework/test/allocations/README.md for a more detailed description of this test and how to use it to investigate and fix memory issues.
+The test will record allocations while opening and closing the Toolbox several times. The `PERFHERDER_DATA` entry in the logs will contain 3 measures. objects-with-stacks is the number of allocated objects for which the allocation site is known and should be easy to fix for developers. You can refer to devtools/client/framework/test/allocations/README.md for a more detailed description of this test and how to use it to investigate and fix memory issues.
 
 A regression here may indicate a leak, for instance a module which no longer cleans its dependencies. It can also indicate that DevTools is loading more singletons or other objects which are not tied to the lifecycle of the DevTools objects.
 
