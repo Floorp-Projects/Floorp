@@ -77,6 +77,7 @@ def split_apps(config, tests):
         "fenix": "fenix",
         "refbrow": "refbrow",
         "safari": "Saf",
+        "custom-car": "CaR",
     }
 
     for test in tests:
