@@ -364,6 +364,11 @@ body:not(:fullscreen) #fullscreen {
   direction: rtl;
 }
 
+.a11y-only {
+  visibility: hidden;
+  position: absolute;
+}
+
 .hide {
   display: none;
 }
@@ -378,11 +383,13 @@ body:not(:fullscreen) #fullscreen {
 }
 
 .box label:not(.switch) {
-  display: flex;
-  align-items: center;
   color: white;
-  padding: 8px;
   font-family: sans-serif;
+}
+
+#subtitles-toggle-label {
+  width: fit-content;
+  padding: 8px;
 }
 
 .panel {
@@ -390,6 +397,19 @@ body:not(:fullscreen) #fullscreen {
   bottom: 40px;
   user-select: none;
   right: 24px;
+}
+
+.panel-fieldset {
+  border: none;
+  margin-top: 8px;
+  padding-inline-start: 0;
+}
+
+.panel-legend {
+  font-family: sans-serif;
+  color: white;
+  margin-top: 8px;
+  padding-inline-start: 0;
 }
 
 .arrow {
@@ -401,22 +421,29 @@ body:not(:fullscreen) #fullscreen {
   position: relative;
 }
 
-.font-size-selection {
-  padding: 8px;
-}
-
 .grey-line {
   width: 100%;
   height: 1px;
   background: #8F8F9D;
 }
 
-.font-size-selection > label {
+.font-size-selection {
+  margin-inline-start: 8px;
+  padding-inline-start: 8px;
+}
+
+.font-size-selection-radio {
+  display: flex;
   width: fit-content;
+  cursor: pointer;
+  padding-block: 8px;
+}
+
+.font-size-selection-radio label {
   cursor: pointer;
 }
 
-.font-size-selection > label > input[type="radio"] {
+.font-size-selection-radio > input[type="radio"] {
   appearance: none;
   width: 16px;
   height: 16px;
@@ -426,7 +453,7 @@ body:not(:fullscreen) #fullscreen {
   margin-inline-end: 6px;
 }
 
-.font-size-selection > label > input[type="radio"]:checked {
+.font-size-selection-radio > input[type="radio"]:checked {
   border: 4px solid #00ddff;
 }
 
