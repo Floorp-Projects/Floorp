@@ -692,7 +692,7 @@ nsresult nsGenericHTMLElement::AfterSetAttr(
           PopoverPseudoStateUpdate(false, true);
         } else {
           ClearPopoverData();
-          RemoveStates(ElementState::OPEN | ElementState::CLOSED);
+          RemoveStates(ElementState::POPOVER_OPEN);
         }
       }
     } else if (aName == nsGkAtoms::dir) {
@@ -3208,17 +3208,14 @@ PopoverState nsGenericHTMLElement::GetPopoverState() const {
 }
 
 void nsGenericHTMLElement::PopoverPseudoStateUpdate(bool aOpen, bool aNotify) {
-  ElementState popoverStates;
+  ElementState newPopoverState;
   if (aOpen) {
-    popoverStates |= ElementState::OPEN;
-    popoverStates &= ~ElementState::CLOSED;
-  } else {
-    popoverStates |= ElementState::CLOSED;
-    popoverStates &= ~ElementState::OPEN;
+    newPopoverState = ElementState::POPOVER_OPEN;
   }
-  ElementState oldPopoverStates = State() & ElementState::POPOVER_STATES;
-  ElementState changedStates = popoverStates ^ oldPopoverStates;
-  ToggleStates(changedStates, aNotify);
+
+  ElementState oldPopoverState = State() & ElementState::POPOVER_OPEN;
+  ElementState changedState = newPopoverState ^ oldPopoverState;
+  ToggleStates(changedState, aNotify);
 }
 
 bool nsGenericHTMLElement::FireBeforeToggle(bool aIsOpen) {
