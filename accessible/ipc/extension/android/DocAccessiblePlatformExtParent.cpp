@@ -12,7 +12,5 @@
 #include "mozilla/a11y/DocAccessibleParent.h"
 
 namespace mozilla {
-namespace a11y {
-
-}  // namespace a11y
+namespace a11y {}  // namespace a11y
 }  // namespace mozilla
