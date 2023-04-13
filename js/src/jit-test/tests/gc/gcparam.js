@@ -55,6 +55,7 @@ testChangeParam("compactingEnabled");
 testChangeParam("mallocThresholdBase");
 testChangeParam("urgentThreshold");
 testChangeParam("nurseryTimeoutForIdleCollectionMS");
+testChangeParam("parallelMarkingThresholdKB");
 
 testMBParamValue("smallHeapSizeMax");
 testMBParamValue("largeHeapSizeMin");

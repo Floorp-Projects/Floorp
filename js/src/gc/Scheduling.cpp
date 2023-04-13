@@ -76,7 +76,9 @@ GCSchedulingTunables::GCSchedulingTunables()
       minLastDitchGCPeriod_(
           TimeDuration::FromSeconds(TuningDefaults::MinLastDitchGCPeriod)),
       mallocThresholdBase_(TuningDefaults::MallocThresholdBase),
-      urgentThresholdBytes_(TuningDefaults::UrgentThresholdBytes) {}
+      urgentThresholdBytes_(TuningDefaults::UrgentThresholdBytes),
+      parallelMarkingThresholdBytes_(
+          TuningDefaults::ParallelMarkingThresholdBytes) {}
 
 bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value) {
   // Limit various parameters to reasonable levels to catch errors.
@@ -251,6 +253,14 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value) {
       urgentThresholdBytes_ = threshold;
       break;
     }
+    case JSGC_PARALLEL_MARKING_THRESHOLD_KB: {
+      size_t threshold;
+      if (!kilobytesToBytes(value, &threshold)) {
+        return false;
+      }
+      parallelMarkingThresholdBytes_ = threshold;
+      break;
+    }
     default:
       MOZ_CRASH("Unknown GC parameter.");
   }
@@ -405,6 +415,10 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key) {
       break;
     case JSGC_URGENT_THRESHOLD_MB:
       urgentThresholdBytes_ = TuningDefaults::UrgentThresholdBytes;
+      break;
+    case JSGC_PARALLEL_MARKING_THRESHOLD_KB:
+      parallelMarkingThresholdBytes_ =
+          TuningDefaults::ParallelMarkingThresholdBytes;
       break;
     default:
       MOZ_CRASH("Unknown GC parameter.");

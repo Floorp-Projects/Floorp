@@ -413,6 +413,7 @@ class GCRuntime {
   // Internal public interface
   ZoneVector& zones() { return zones_.ref(); }
   gcstats::Statistics& stats() { return stats_.ref(); }
+  const gcstats::Statistics& stats() const { return stats_.ref(); }
   State state() const { return incrementalState; }
   bool isHeapCompacting() const { return state() == State::Compact; }
   bool isForegroundSweeping() const { return state() == State::Sweep; }

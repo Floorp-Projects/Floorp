@@ -24,3 +24,6 @@ for (const name of ["gczeal",
     }
     hasFunction[name] = present;
 }
+
+// Set the minimum heap size for parallel marking to zero for testing purposes.
+gcparam('parallelMarkingThresholdKB', 0);

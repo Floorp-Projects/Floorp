@@ -1274,6 +1274,8 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
       return tunables.mallocThresholdBase() / 1024 / 1024;
     case JSGC_URGENT_THRESHOLD_MB:
       return tunables.urgentThresholdBytes() / 1024 / 1024;
+    case JSGC_PARALLEL_MARKING_THRESHOLD_KB:
+      return tunables.parallelMarkingThresholdBytes() / 1024;
     case JSGC_CHUNK_BYTES:
       return ChunkSize;
     case JSGC_HELPER_THREAD_RATIO:
@@ -2987,7 +2989,8 @@ inline bool GCRuntime::canMarkInParallel() const {
   }
 #endif
 
-  return markers.length() > 1;
+  return markers.length() > 1 && stats().initialCollectedBytes() >=
+                                     tunables.parallelMarkingThresholdBytes();
 }
 
 IncrementalProgress GCRuntime::markUntilBudgetExhausted(

@@ -578,4 +578,7 @@
     shellOptionsClear();
 })(this);
 
+// Set the minimum heap size for parallel marking to zero for testing purposes.
+gcparam('parallelMarkingThresholdKB', 0);
+
 var DESCRIPTION;
