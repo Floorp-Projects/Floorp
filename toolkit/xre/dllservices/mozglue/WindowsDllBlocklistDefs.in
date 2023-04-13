@@ -48,7 +48,13 @@ ALL_PROCESSES += [
 
     # GoogleDesktopNetwork3.dll - Extremely old, unversioned instances
     # of this DLL cause crashes
-    DllBlocklistEntry("googledesktopnetwork3.dll", UNVERSIONED),
+    # GoogleDesktopNetwork3.dll - Discontinued product but seems to crash at
+    # least on Win7 32-bits
+    #
+    # Since it was already blocked for all processes but unversioned DLLs, it
+    # looks like one cannot have this and a second block declaration for
+    # utility processes but limiting versions / windows targets
+    DllBlocklistEntry("googledesktopnetwork3.dll", ALL_VERSIONS),
 
     # rdolib.dll - Suspected malware
     DllBlocklistEntry("rdolib.dll", (6,0,88,4)),
