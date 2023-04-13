@@ -31,7 +31,7 @@ export class MigrationWizard extends HTMLElement {
     return `
       <template>
         <link rel="stylesheet" href="chrome://browser/skin/migration/migration-wizard.css">
-        <named-deck id="wizard-deck" selected-view="page-loading" aria-live="polite" aria-busy="true">
+        <named-deck id="wizard-deck" selected-view="page-loading" aria-busy="true">
           <div name="page-loading">
             <h1 data-l10n-id="migration-wizard-selection-header"></h1>
             <div class="loading-block large"></div>
