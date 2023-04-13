@@ -385,7 +385,7 @@
             data-l10n-id="protections-panel-sendreportview-error"
             hidden="true" role="alert"></label>
         </vbox>
-        <hbox id="protections-popup-sendReportView-footer"
+        <html:moz-button-group id="protections-popup-sendReportView-footer"
               class="panel-footer">
           <button id="protections-popup-sendReportView-cancel"
                   data-l10n-id="protections-panel-content-blocking-breakage-report-view-cancel"
@@ -394,7 +394,7 @@
                   default="true"
                   data-l10n-id="protections-panel-content-blocking-breakage-report-view-send-report"
                   oncommand="gProtectionsHandler.onSendReportClicked(); gProtectionsHandler.recordClick('send_report_submit');"/>
-        </hbox>
+        </html:moz-button-group>
     </panelview>
 
     <!-- Cookie Banner SubView -->
