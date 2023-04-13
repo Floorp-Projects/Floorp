@@ -1746,6 +1746,8 @@ var gProtectionsHandler = {
 
   onPopupShown(event) {
     if (event.target == this._protectionsPopup) {
+      window.ensureCustomElements("moz-button-group");
+
       PopupNotifications.suppressWhileOpen(this._protectionsPopup);
 
       window.addEventListener("focus", this, true);

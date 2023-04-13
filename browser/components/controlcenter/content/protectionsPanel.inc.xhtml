@@ -409,7 +409,7 @@
           <description id="cookieBannerView-disable-site-warning" data-l10n-id="protections-panel-cookie-banner-view-cookie-clear-warning"></description>
           <description id="cookieBannerView-enable-site-description" data-l10n-id="protections-panel-cookie-banner-view-turn-on-description"></description>
         </vbox>
-        <hbox class="panel-footer protections-popup-cookieBannerView-footer">
+        <html:moz-button-group class="panel-footer protections-popup-cookieBannerView-footer">
           <button id="protections-popup-cookieBannerView-cancel"
                     data-l10n-id="protections-panel-cookie-banner-view-cancel"
                     oncommand="gProtectionsHandler._protectionsPopupMultiView.goBack();"
@@ -424,7 +424,7 @@
                     oncommand="gProtectionsHandler.onCookieBannerToggleCommand()"
                     default="true"
                     class="subviewbutton panel-subview-footer-button" />
-        </hbox>
+        </html:moz-button-group>
     </panelview>
   </panelmultiview>
 </panel>
