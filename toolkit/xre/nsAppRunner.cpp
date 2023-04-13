@@ -3683,20 +3683,30 @@ void fire_glxtest_process() {
   }
   exePath->Append(FILE_GLX_TEST);
 
-  char* argv[] = {strdup(exePath->NativePath().get()),
+  int pfd[2];
+  if (pipe(pfd) == -1) {
+    Output(true, "Failed to create pipe\n");
+    return;
+  }
+
+  mozilla::widget::glxtest_pipe = pfd[0];
+
+  char* argv[] = {strdup(exePath->NativePath().get()), strdup("-f"),
+                  strdup(std::to_string(pfd[1]).c_str()),
                   IsWaylandEnabled() ? strdup("-w") : nullptr, nullptr};
-  auto freeArgv = mozilla::MakeScopeExit([&] {
+  auto cleanup = mozilla::MakeScopeExit([&] {
     for (auto& arg : argv) {
       free(arg);
     }
+    close(pfd[1]);
   });
 
   GUniquePtr<GError> err;
   g_spawn_async_with_pipes(
       nullptr, argv, nullptr,
-      GSpawnFlags(G_SPAWN_CLOEXEC_PIPES | G_SPAWN_DO_NOT_REAP_CHILD), nullptr,
-      nullptr, &mozilla::widget::glxtest_pid, nullptr,
-      &mozilla::widget::glxtest_pipe, nullptr, getter_Transfers(err));
+      GSpawnFlags(G_SPAWN_LEAVE_DESCRIPTORS_OPEN | G_SPAWN_DO_NOT_REAP_CHILD),
+      nullptr, nullptr, &mozilla::widget::glxtest_pid, nullptr, nullptr,
+      nullptr, getter_Transfers(err));
   if (err) {
     Output(true, "Failed to probe graphics hardware! %s\n", err->message);
   }

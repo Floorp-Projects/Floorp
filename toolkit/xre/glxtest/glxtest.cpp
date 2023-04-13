@@ -175,20 +175,11 @@ typedef struct _drmDevice {
     }                    \
   } while (0)
 
-// Print VA-API test results to stdout and logging to stderr
-#define OUTPUT_PIPE 1
+// Print log to stderr
 #define LOG_PIPE 2
 
-namespace mozilla {
-namespace widget {
-// the read end of the pipe, which will be used by GfxInfo
-extern int glxtest_pipe;
-// the PID of the glxtest process, to pass to waitpid()
-extern pid_t glxtest_pid;
-}  // namespace widget
-}  // namespace mozilla
-
 // our buffer, size and used length
+static int glxtest_out_pipe = 1;
 static char* glxtest_buf = nullptr;
 static int glxtest_bufsize = 0;
 static int glxtest_length = 0;
@@ -232,7 +223,7 @@ static void record_warning(const char* str) {
 }
 
 static void record_flush() {
-  MOZ_UNUSED(write(OUTPUT_PIPE, glxtest_buf, glxtest_length));
+  MOZ_UNUSED(write(glxtest_out_pipe, glxtest_buf, glxtest_length));
   if (getenv("MOZ_GFX_DEBUG")) {
     MOZ_UNUSED(write(LOG_PIPE, glxtest_buf, glxtest_length));
   }
@@ -1028,22 +1019,28 @@ static void PrintUsage() {
       "Options:\n"
       "\n"
       "  -h --help                 show this message\n"
+      "  -f --fd num               where to print output, default it stdout\n"
       "  -w --wayland              probe OpenGL/EGL on Wayland (default is "
       "X11)\n"
       "\n");
 }
 
 int main(int argc, char** argv) {
-  struct option longOptions[] = {{"help", no_argument, NULL, 'h'},
-                                 {"wayland", no_argument, NULL, 'w'},
-                                 {NULL, 0, NULL, 0}};
-  const char* shortOptions = "hw";
+  struct option longOptions[] = {{"help", no_argument, nullptr, 'h'},
+                                 {"fd", required_argument, nullptr, 'f'},
+                                 {"wayland", no_argument, nullptr, 'w'},
+                                 {nullptr, 0, nullptr, 0}};
+  const char* shortOptions = "hf:w";
   int c;
   bool wayland = false;
-  while ((c = getopt_long(argc, argv, shortOptions, longOptions, NULL)) != -1) {
+  while ((c = getopt_long(argc, argv, shortOptions, longOptions, nullptr)) !=
+         -1) {
     switch (c) {
       case 'w':
         wayland = true;
+        break;
+      case 'f':
+        glxtest_out_pipe = atoi(optarg);
         break;
       case 'h':
         PrintUsage();
@@ -1054,7 +1051,7 @@ int main(int argc, char** argv) {
   }
   if (getenv("MOZ_AVOID_OPENGL_ALTOGETHER")) {
     const char* msg = "ERROR\nMOZ_AVOID_OPENGL_ALTOGETHER envvar set";
-    MOZ_UNUSED(write(OUTPUT_PIPE, msg, strlen(msg)));
+    MOZ_UNUSED(write(glxtest_out_pipe, msg, strlen(msg)));
     exit(EXIT_FAILURE);
   }
 #if defined(MOZ_ASAN) || defined(FUZZING)
