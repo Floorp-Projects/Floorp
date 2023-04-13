@@ -2119,6 +2119,8 @@ skip-if(Android) test-pref(ui.textScaleFactor,150) test-pref(browser.display.os-
 skip-if(Android) test-pref(ui.textScaleFactor,50) test-pref(browser.display.os-zoom-behavior,1) != 1773633.html 1773633.html
 pref(widget.disable-dark-scrollbar,false) == 1777135.html 1777135-ref.html
 test-pref(widget.non-native-theme.use-theme-accent,false) == 1778834.html 1778834-ref.html
+# do not adjust the fuzz without looking, this test was written as fuzzy on purpose (because that was the only way to make a test work)
+fuzzy(16-47,26939-44425) == 1780191-1.svg 1780191-1-ref.svg
 pref(layout.css.prefers-color-scheme.content-override,0) == 1787127.html 1787127-ref.html
 pref(layout.css.prefers-color-scheme.content-override,1) == 1787127.html 1787127-ref.html
 pref(layout.css.prefers-color-scheme.content-override,2) == 1787127.html 1787127-ref.html
