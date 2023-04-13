@@ -52,10 +52,11 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.translations.simulateUnsupportedEngine"
 );
 
-// Do the slow/safe thing of always verifying the signature when the data is
-// loaded from the file system. This restriction could be eased in the future if it
-// proves to be a performance problem, and the security risk is acceptable.
-const VERIFY_SIGNATURES_FROM_FS = true;
+// At this time the signatures of the files are not being checked when they are being
+// loaded from disk. This signature check involves hitting the network, and translations
+// are explicitly an offline-capable feature. See Bug 1827265 for re-enabling this
+// check.
+const VERIFY_SIGNATURES_FROM_FS = false;
 
 /**
  * @typedef {import("../translations").TranslationModelRecord} TranslationModelRecord
