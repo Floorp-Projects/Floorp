@@ -247,7 +247,7 @@ button.text-link .button-text {
 @media (-moz-platform: windows) {
   /* Swap the primary and secondary action, because Windows
    * platform conventions put the primary action on the left. */
-  .panel-footer > button[default] {
+  .panel-footer:not(moz-button-group) > button[default] {
     order: -1;
   }
 }
