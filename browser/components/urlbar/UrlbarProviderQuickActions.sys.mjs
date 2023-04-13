@@ -223,7 +223,7 @@ class ProviderQuickActions extends UrlbarProvider {
     return viewUpdate;
   }
 
-  pickResult(result, itemPicked) {
+  #pickResult(result, itemPicked) {
     let { key, inputLength } = itemPicked.dataset;
     // We clamp the input length to limit the number of keys to
     // the number of actions * 10.
@@ -257,27 +257,18 @@ class ProviderQuickActions extends UrlbarProvider {
    *   it describes the search string and picked result.
    */
   onEngagement(isPrivate, state, queryContext, details) {
-    let result = this.#resultFromLastQuery;
-    this.#resultFromLastQuery = null;
-    if (state == "engagement" && queryContext) {
-      // Find the quickaction result that's currently visible in the view.
-      // It's probably the result from the last query so check it first, but due
-      // to the async nature of how results are added to the view and made
-      // visible, it may not be.
-      if (
-        result &&
-        (result.rowIndex < 0 ||
-          queryContext.view?.visibleResults?.[result.rowIndex] != result)
-      ) {
-        // The result from the last query isn't visible.
-        result = null;
-      }
+    // Ignore engagements on other results that didn't end the session.
+    if (details.result?.providerName != this.name && details.isSessionOngoing) {
+      return;
+    }
 
-      // If the result isn't visible, find a visible one.
-      if (!result) {
-        result = queryContext.view?.visibleResults?.find(
-          r => r.providerName == this.name
-        );
+    if (state == "engagement" && queryContext) {
+      // Get the result that's visible in the view. `details.result` is the
+      // engaged result, if any; if it's from this provider, then that's the
+      // visible result. Otherwise fall back to #getVisibleResultFromLastQuery.
+      let { result } = details;
+      if (result?.providerName != this.name) {
+        result = this.#getVisibleResultFromLastQuery(queryContext.view);
       }
 
       result?.payload.results.forEach(({ key }) => {
@@ -288,6 +279,13 @@ class ProviderQuickActions extends UrlbarProvider {
         );
       });
     }
+
+    // Handle picks.
+    if (details.result?.providerName == this.name) {
+      this.#pickResult(details.result, details.element);
+    }
+
+    this.#resultFromLastQuery = null;
   }
 
   /**
@@ -353,6 +351,21 @@ class ProviderQuickActions extends UrlbarProvider {
         fun(prefix);
       }
     }
+  }
+
+  #getVisibleResultFromLastQuery(view) {
+    let result = this.#resultFromLastQuery;
+
+    if (
+      result?.rowIndex >= 0 &&
+      view?.visibleResults?.[result.rowIndex] == result
+    ) {
+      // The result was visible.
+      return result;
+    }
+
+    // Find a visible result.
+    return view?.visibleResults?.find(r => r.providerName == this.name);
   }
 }
 

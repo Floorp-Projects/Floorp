@@ -235,17 +235,7 @@ export class UrlbarProviderExtension extends UrlbarProvider {
     this._notifyListener("queryCanceled", makeSerializable(context));
   }
 
-  /**
-   * This method is called when a result from the provider without a URL is
-   * picked, but currently only for tip results.  The provider should handle the
-   * pick.
-   *
-   * @param {UrlbarResult} result
-   *   The result that was picked.
-   * @param {Element} element
-   *   The element in the result's view that was picked.
-   */
-  pickResult(result, element) {
+  #pickResult(result, element) {
     let dynamicElementName = "";
     if (element && result.type == UrlbarUtils.RESULT_TYPE.DYNAMIC) {
       dynamicElementName = element.getAttribute("name");
@@ -271,6 +261,13 @@ export class UrlbarProviderExtension extends UrlbarProvider {
    *   it describes the search string and picked result.
    */
   onEngagement(isPrivate, state, queryContext, details) {
+    let { result, element } = details;
+    // By design, the "resultPicked" extension event should not be fired when
+    // the picked element has a URL.
+    if (result?.providerName == this.name && !element?.dataset.url) {
+      this.#pickResult(result, element);
+    }
+
     this._notifyListener("engagement", isPrivate, state);
   }
 

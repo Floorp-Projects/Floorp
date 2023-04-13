@@ -15,6 +15,7 @@ import {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
   SearchSuggestionController:
     "resource://gre/modules/SearchSuggestionController.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
@@ -314,6 +315,24 @@ class ProviderSearchSuggestions extends UrlbarProvider {
     if (this._suggestionsController) {
       this._suggestionsController.stop();
       this._suggestionsController = null;
+    }
+  }
+
+  onEngagement(isPrivate, state, queryContext, details) {
+    let { result } = details;
+    if (result?.providerName != this.name) {
+      return;
+    }
+
+    if (details.selType == "dismiss" && queryContext.formHistoryName) {
+      lazy.FormHistory.update({
+        op: "remove",
+        fieldname: queryContext.formHistoryName,
+        value: result.payload.suggestion,
+      }).catch(error =>
+        console.error(`Removing form history failed: ${error}`)
+      );
+      queryContext.view.controller.removeResult(result);
     }
   }
 

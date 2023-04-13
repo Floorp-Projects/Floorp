@@ -118,7 +118,7 @@ export var UrlbarTestUtils = {
     window,
     value,
     waitForFocus,
-    fireInputEvent = false,
+    fireInputEvent = true,
     selectionStart = -1,
     selectionEnd = -1,
   } = {}) {

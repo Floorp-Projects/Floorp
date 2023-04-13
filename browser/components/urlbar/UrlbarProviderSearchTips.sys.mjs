@@ -253,7 +253,7 @@ class ProviderSearchTips extends UrlbarProvider {
    * @param {UrlbarResult} result
    *   The result that was picked.
    */
-  pickResult(result) {
+  #pickResult(result) {
     let tip = result.payload.type;
     let window = lazy.BrowserWindowTracker.getTopWindow();
     switch (tip) {
@@ -268,6 +268,12 @@ class ProviderSearchTips extends UrlbarProvider {
         window.gURLBar.focus();
         break;
     }
+
+    // The user either clicked the tip's "Okay, Got It" button, or they clicked
+    // in the urlbar while the tip was showing. We treat both as the user's
+    // acknowledgment of the tip, and we don't show tips again in any session.
+    // Set the shown count to the max.
+    lazy.UrlbarPrefs.set(`tipShownCount.${tip}`, MAX_SHOWN_COUNT);
   }
 
   /**
@@ -288,19 +294,16 @@ class ProviderSearchTips extends UrlbarProvider {
    *   it describes the search string and picked result.
    */
   onEngagement(isPrivate, state, queryContext, details) {
-    if (
-      this.showedTipTypeInCurrentEngagement != TIPS.NONE &&
-      state == "engagement"
-    ) {
-      // The user either clicked the tip's "Okay, Got It" button, or they
-      // engaged with the urlbar while the tip was showing. We treat both as the
-      // user's acknowledgment of the tip, and we don't show tips again in any
-      // session. Set the shown count to the max.
-      lazy.UrlbarPrefs.set(
-        `tipShownCount.${this.showedTipTypeInCurrentEngagement}`,
-        MAX_SHOWN_COUNT
-      );
+    // Ignore engagements on other results that didn't end the session.
+    let { result } = details;
+    if (result?.providerName != this.name && details.isSessionOngoing) {
+      return;
     }
+
+    if (result?.providerName == this.name) {
+      this.#pickResult(result);
+    }
+
     this.showedTipTypeInCurrentEngagement = TIPS.NONE;
   }
 

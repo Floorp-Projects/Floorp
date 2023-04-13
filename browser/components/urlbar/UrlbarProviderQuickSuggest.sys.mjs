@@ -339,34 +339,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
   }
 
   /**
-   * Called when the result's block button is picked. If the provider can block
-   * the result, it should do so and return true. If the provider cannot block
-   * the result, it should return false. The meaning of "blocked" depends on the
-   * provider and the type of result.
-   *
-   * @param {UrlbarQueryContext} queryContext
-   *   The query context.
-   * @param {UrlbarResult} result
-   *   The result that should be blocked.
-   * @returns {boolean}
-   *   Whether the result was blocked.
-   */
-  blockResult(queryContext, result) {
-    if (!result.payload.isBlockable) {
-      this.logger.info("Blocking disabled, ignoring block");
-      return false;
-    }
-
-    this.logger.info("Blocking result: " + JSON.stringify(result));
-    lazy.QuickSuggest.blockedSuggestions.add(result.payload.originalUrl);
-    this.#recordEngagement(queryContext, queryContext.isPrivate, result, {
-      selType: "block",
-      selIndex: result.rowIndex,
-    });
-    return true;
-  }
-
-  /**
    * Called when the user starts and ends an engagement with the urlbar.  For
    * details on parameters, see UrlbarProvider.onEngagement().
    *
@@ -384,13 +356,14 @@ class ProviderQuickSuggest extends UrlbarProvider {
    *   it describes the search string and picked result.
    */
   onEngagement(isPrivate, state, queryContext, details) {
-    let result = this.#resultFromLastQuery;
+    // Ignore engagements on other results that didn't end the session.
+    if (details.result?.providerName != this.name && details.isSessionOngoing) {
+      return;
+    }
 
-    // Reset the Merino session ID when an engagement ends. Per spec, for the
-    // user's privacy, we don't keep it around between engagements. It wouldn't
-    // hurt to do this on start too, it's just not necessary if we always do it
-    // on end.
-    if (state != "start") {
+    // Reset the Merino session ID when a session ends. By design for the user's
+    // privacy, we don't keep it around between engagements.
+    if (state != "start" && !details.isSessionOngoing) {
       this.#merino?.resetSession();
     }
 
@@ -398,37 +371,59 @@ class ProviderQuickSuggest extends UrlbarProvider {
     // define "impression" to mean a quick suggest result was present in the
     // view when any result was picked.
     if (state == "engagement" && queryContext) {
-      // Find the quick suggest result that's currently visible in the view.
-      // It's probably the result from the last query so check it first, but due
-      // to the async nature of how results are added to the view and made
-      // visible, it may not be.
-      if (
-        result &&
-        (result.rowIndex < 0 ||
-          queryContext.view?.visibleResults?.[result.rowIndex] != result)
-      ) {
-        // The result from the last query isn't visible.
-        result = null;
-      }
-
-      // If the result isn't visible, find a visible one. Quick suggest results
-      // typically appear last in the view, so do a reverse search.
-      if (!result) {
-        result = queryContext.view?.visibleResults?.findLast(
-          r => r.providerName == this.name
-        );
+      // Get the result that's visible in the view. `details.result` is the
+      // engaged result, if any; if it's from this provider, then that's the
+      // visible result. Otherwise fall back to #getVisibleResultFromLastQuery.
+      let { result } = details;
+      if (result?.providerName != this.name) {
+        result = this.#getVisibleResultFromLastQuery(queryContext.view);
       }
 
       this.#recordEngagement(queryContext, isPrivate, result, details);
     }
 
+    // Handle dismissals.
+    if (
+      details.result?.providerName == this.name &&
+      details.selType == "dismiss"
+    ) {
+      this.#dismissResult(queryContext, details.result);
+    }
+
     this.#resultFromLastQuery = null;
+  }
+
+  #getVisibleResultFromLastQuery(view) {
+    let result = this.#resultFromLastQuery;
+
+    if (
+      result?.rowIndex >= 0 &&
+      view?.visibleResults?.[result.rowIndex] == result
+    ) {
+      // The result was visible.
+      return result;
+    }
+
+    // Find a visible result. Quick suggest results typically appear last in the
+    // view, so do a reverse search.
+    return view?.visibleResults?.findLast(r => r.providerName == this.name);
+  }
+
+  #dismissResult(queryContext, result) {
+    if (!result.payload.isBlockable) {
+      this.logger.info("Dismissals disabled, ignoring dismissal");
+      return;
+    }
+
+    this.logger.info("Dismissing result: " + JSON.stringify(result));
+    lazy.QuickSuggest.blockedSuggestions.add(result.payload.originalUrl);
+    queryContext.view.controller.removeResult(result);
   }
 
   /**
    * Records engagement telemetry. This should be called only at the end of an
    * engagement when a quick suggest result is present or when a quick suggest
-   * result is blocked.
+   * result is dismissed.
    *
    * @param {UrlbarQueryContext} queryContext
    *   The query context.
@@ -436,20 +431,19 @@ class ProviderQuickSuggest extends UrlbarProvider {
    *   Whether the engagement is in a private context.
    * @param {UrlbarResult} result
    *   The quick suggest result that was present (and possibly picked) at the
-   *   end of the engagement or that was blocked. Null if no quick suggest
+   *   end of the engagement or that was dismissed. Null if no quick suggest
    *   result was present.
    * @param {object} details
    *   The `details` object that was passed to `onEngagement()`. It must look
    *   like this: `{ selType, selIndex }`
    */
   #recordEngagement(queryContext, isPrivate, result, details) {
-    // If an element in the result's row was picked, set `resultSelType` to it.
-    // Otherwise set it to an empty string.
-    let resultSelType =
-      result && details.selIndex == result.rowIndex ? details.selType : "";
+    // This is the `selType` of `result` if it was the engaged result. Otherwise
+    // it's an empty string.
+    let resultSelType = details.result == result ? details.selType : "";
 
     // Determine if the main part of the row was clicked, as opposed to a button
-    // like help or block. When the main part of sponsored and non-sponsored
+    // like help or dismiss. When the main part of sponsored and non-sponsored
     // rows is clicked, `selType` will be "quicksuggest". For other rows it will
     // be one of the `RESULT_SUBTYPE` values.
     let resultClicked =
@@ -579,7 +573,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
             break;
         }
         break;
-      case "block":
+      case "dismiss":
         switch (result.payload.subtype) {
           case RESULT_SUBTYPE.DYNAMIC_WIKIPEDIA:
             clickScalars.push(TELEMETRY_SCALARS.BLOCK_DYNAMIC_WIKIPEDIA);
@@ -625,17 +619,19 @@ class ProviderQuickSuggest extends UrlbarProvider {
    *   `selType`. Otherwise it should be an empty string.
    * @param {boolean} options.resultClicked
    *   True if the main part of the result's row was clicked; false if a button
-   *   like help or block was clicked or if no part of the row was clicked.
+   *   like help or dismiss was clicked or if no part of the row was clicked.
    */
   #recordEngagementEvent({ result, resultSelType, resultClicked }) {
     // Determine the event type we should record:
     //
     // * "click": The main part of the row was clicked
-    // * `resultSelType`: A button in the row was clicked ("help" or "block")
+    // * `resultSelType`: A button in the row was clicked ("help" or "dismiss")
     // * "impression_only": No part of the row was clicked
     let eventType;
     if (resultClicked) {
       eventType = "click";
+    } else if (resultSelType == "dismiss") {
+      eventType = "block";
     } else {
       eventType = resultSelType || "impression_only";
     }
@@ -684,7 +680,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
    *   `selType`. Otherwise it should be an empty string.
    * @param {boolean} options.resultClicked
    *   True if the main part of the result's row was clicked; false if a button
-   *   like help or block was clicked or if no part of the row was clicked.
+   *   like help or dismiss was clicked or if no part of the row was clicked.
    */
   #recordEngagementPings({ result, resultSelType, resultClicked }) {
     // Custom engagement pings are sent only for the main sponsored and non-
@@ -729,8 +725,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
       );
     }
 
-    // block
-    if (resultSelType == "block") {
+    // dismiss
+    if (resultSelType == "dismiss") {
       lazy.PartnerLinkAttribution.sendContextualServicesPing(
         {
           ...payload,
@@ -757,7 +753,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
    *   `selType`. Otherwise it should be an empty string.
    * @param {boolean} options.resultClicked
    *   True if the main part of the result's row was clicked; false if a button
-   *   like help or block was clicked or if no part of the row was clicked.
+   *   like help or dismiss was clicked or if no part of the row was clicked.
    * @param {object} options.details
    *   The `details` object that was passed to `onEngagement()`. It must look
    *   like this: `{ selType, selIndex }`

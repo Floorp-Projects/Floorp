@@ -98,8 +98,8 @@ add_task(async function mouse_insideTipButNotOnButtons() {
  *   Pass true to trigger a click, false to trigger an enter key.
  * @param {string} [options.buttonUrl]
  *   Pass a URL if picking the main button should open a URL.  Pass nothing if
- *   picking it should call provider.pickResult instead, or if you want to pick
- *   the help button instead of the main button.
+ *   a URL shouldn't be opened or if you want to pick the help button instead of
+ *   the main button.
  * @param {string} [options.helpUrl]
  *   Pass a URL if you want to pick the help button.  Pass nothing if you want
  *   to pick the main button instead.
@@ -121,12 +121,9 @@ async function doTest({ click, buttonUrl = undefined, helpUrl = undefined }) {
   });
   UrlbarProvidersManager.registerProvider(provider);
 
-  // If we don't expect to load a URL, then override provider.pickResult so we
-  // can make sure it's called.
-  let pickedPromise =
-    !buttonUrl && !helpUrl
-      ? new Promise(resolve => (provider.pickResult = resolve))
-      : null;
+  let onEngagementPromise = new Promise(
+    resolve => (provider.onEngagement = resolve)
+  );
 
   // Do a search to show our tip result.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -151,23 +148,26 @@ async function doTest({ click, buttonUrl = undefined, helpUrl = undefined }) {
     );
   }
 
-  // Now pick the target and wait for provider.pickResult to be called if we
-  // don't expect to load a URL, or wait for the URL to load otherwise.
-  await Promise.all([
-    pickedPromise || BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser),
-    UrlbarTestUtils.promisePopupClose(window, () => {
-      if (helpUrl && UrlbarPrefs.get("resultMenu")) {
-        UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "h", {
-          openByMouse: click,
-          resultIndex: 0,
-        });
-      } else if (click) {
-        EventUtils.synthesizeMouseAtCenter(target, {});
-      } else {
-        EventUtils.synthesizeKey("KEY_Enter");
-      }
-    }),
-  ]);
+  // Now pick the target and wait for provider.onEngagement to be called and
+  // the URL to load if necessary.
+  let loadPromise;
+  if (buttonUrl || helpUrl) {
+    loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  }
+  await UrlbarTestUtils.promisePopupClose(window, () => {
+    if (helpUrl && UrlbarPrefs.get("resultMenu")) {
+      UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "h", {
+        openByMouse: click,
+        resultIndex: 0,
+      });
+    } else if (click) {
+      EventUtils.synthesizeMouseAtCenter(target, {});
+    } else {
+      EventUtils.synthesizeKey("KEY_Enter");
+    }
+  });
+  await onEngagementPromise;
+  await loadPromise;
 
   // Check telemetry.
   let scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);

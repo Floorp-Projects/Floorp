@@ -482,6 +482,8 @@ add_task(async function closeView() {
 
 // Tests the onEngagement events.
 add_task(async function onEngagement() {
+  gURLBar.blur();
+
   // Enable engagement telemetry.
   Services.prefs.setBoolPref("browser.urlbar.eventTelemetry.enabled", true);
 

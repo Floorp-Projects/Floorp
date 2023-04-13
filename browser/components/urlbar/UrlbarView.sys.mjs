@@ -1375,12 +1375,14 @@ export class UrlbarView {
       if (result.payload.isBlockable) {
         this.#addRowButton(item, {
           name: "block",
+          command: "dismiss",
           l10n: result.payload.blockL10n,
         });
       }
       if (result.payload.helpUrl) {
         this.#addRowButton(item, {
           name: "help",
+          command: "help",
           url: result.payload.helpUrl,
           l10n: result.payload.helpL10n,
         });
@@ -1398,7 +1400,7 @@ export class UrlbarView {
     }
   }
 
-  #addRowButton(item, { name, l10n, url, attributes }) {
+  #addRowButton(item, { name, command, l10n, url, attributes }) {
     let button = this.#createElement("span");
     this.#setDynamicAttributes(button, attributes);
     button.id = `${item.id}-button-${name}`;
@@ -1407,6 +1409,9 @@ export class UrlbarView {
     button.dataset.name = name;
     if (l10n) {
       this.#setElementL10n(button, l10n);
+    }
+    if (command) {
+      button.dataset.command = command;
     }
     if (url) {
       button.dataset.url = url;

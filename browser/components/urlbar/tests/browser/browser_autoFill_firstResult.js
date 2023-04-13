@@ -79,6 +79,7 @@ add_task(async function caretNotAtEndOfSearchString() {
     value: "exam",
     selectionStart: "exa".length,
     selectionEnd: "exa".length,
+    fireInputEvent: false,
   });
 
   // The first result should be an autofill result, but it should not have been

@@ -404,14 +404,15 @@ async function doImpressionOnlyTest({
   await loadPromise;
 
   // Check telemetry.
-  info("Checking scalars");
+  info("Checking scalars. Expected: " + JSON.stringify(expected.scalars));
   QuickSuggestTestUtils.assertScalars(expected.scalars);
 
-  info("Checking events");
+  info("Checking events. Expected: " + JSON.stringify([expected.event]));
   QuickSuggestTestUtils.assertEvents([expected.event]);
 
-  info("Checking pings");
-  QuickSuggestTestUtils.assertPings(spy, expected.ping ? [expected.ping] : []);
+  let expectedPings = expected.ping ? [expected.ping] : [];
+  info("Checking pings. Expected: " + JSON.stringify(expectedPings));
+  QuickSuggestTestUtils.assertPings(spy, expectedPings);
 
   // Clean up.
   await PlacesUtils.history.clear();
@@ -500,13 +501,13 @@ async function doSelectableTest({
     }
   }
 
-  info("Checking scalars");
+  info("Checking scalars. Expected: " + JSON.stringify(expected.scalars));
   QuickSuggestTestUtils.assertScalars(expected.scalars);
 
-  info("Checking events");
+  info("Checking events. Expected: " + JSON.stringify([expected.event]));
   QuickSuggestTestUtils.assertEvents([expected.event]);
 
-  info("Checking pings");
+  info("Checking pings. Expected: " + JSON.stringify(expected.pings));
   QuickSuggestTestUtils.assertPings(spy, expected.pings);
 
   if (className == "urlbarView-button-block") {

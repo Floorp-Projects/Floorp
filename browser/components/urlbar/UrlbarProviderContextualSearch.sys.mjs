@@ -249,15 +249,14 @@ class ProviderContextualSearch extends UrlbarProvider {
     };
   }
 
-  /**
-   * Called when any selectable element in a dynamic result's view is picked.
-   *
-   * @param {UrlbarResult} result
-   *   The result that was picked.
-   * @param {Element} element
-   *   The element in the result's view that was picked.
-   */
-  async pickResult(result, element) {
+  onEngagement(isPrivate, state, queryContext, details) {
+    let { result } = details;
+    if (result?.providerName == this.name) {
+      this.#pickResult(result);
+    }
+  }
+
+  async #pickResult(result) {
     // If we have an engine to add, first create a new OpenSearchEngine, then
     // get and open a url to execute a search for the term in the url bar.
     // In cases where we don't have to create a new engine, navigation is

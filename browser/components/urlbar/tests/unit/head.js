@@ -132,6 +132,9 @@ function createContext(searchString = "foo", properties = {}) {
     get visibleResults() {
       return context.results;
     },
+    controller: {
+      removeResult() {},
+    },
   };
   UrlbarTokenizer.tokenize(context);
   return context;
