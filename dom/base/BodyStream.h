@@ -149,6 +149,9 @@ class BodyStream final : public nsIInputStreamCallback,
   nsCOMPtr<nsIEventTarget> mOwningEventTarget;
   // Same as mGlobal but set to nullptr on OnInputStreamReady (on the owning
   // thread).
+  // This promise is created by PullCallback and resolved when
+  // OnInputStreamReady succeeds. No need to try hard to settle it though, see
+  // also ReleaseObjects() for the reason.
   RefPtr<Promise> mPullPromise;
 
   // This is the original inputStream received during the CTOR. It will be

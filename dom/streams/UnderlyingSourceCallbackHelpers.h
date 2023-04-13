@@ -251,20 +251,8 @@ class InputToReadableStreamAlgorithms final
     // This is the beginning state before any reading operation.
     eInitializing,
 
-    // RequestDataCallback has not been called yet. We haven't started to read
-    // data from the stream yet.
-    eWaiting,
-
-    // We are reading data in a separate I/O thread.
-    eReading,
-
-    // We are ready to write something in the JS Buffer.
-    eWriting,
-
-    // After a writing, we want to check if the stream is closed. After the
-    // check, we go back to eWaiting. If a reading request happens in the
-    // meantime, we move to eReading state.
-    eChecking,
+    // Stream is initialized and being consumed.
+    eInitialized,
 
     // Operation completed.
     eClosed,
@@ -273,6 +261,11 @@ class InputToReadableStreamAlgorithms final
   State mState;
 
   nsCOMPtr<nsIEventTarget> mOwningEventTarget;
+
+  // This promise is created by PullCallback and resolved when
+  // OnInputStreamReady succeeds. No need to try hard to settle it though, see
+  // also ReleaseObjects() for the reason.
+  RefPtr<Promise> mPullPromise;
 
   RefPtr<InputStreamHolder> mInput;
   RefPtr<ReadableStream> mStream;
