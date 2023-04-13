@@ -79,31 +79,32 @@
           <button id="audio" class="control-item control-button tooltip-over-controls center-tooltip" hidden="true" data-l10n-attrs="tooltip" tabindex="3"/>
           <button id="closed-caption" class="control-item control-button tooltip-over-controls center-tooltip closed-caption" hidden="true" disabled="true" data-l10n-id="pictureinpicture-subtitles-btn" data-l10n-attrs="tooltip" tabindex="4"></button>
           <div id="settings" class="hide panel">
-            <div class="box">
+            <fieldset class="box panel-fieldset">
+              <legend class="a11y-only panel-legend" data-l10n-id="pictureinpicture-subtitles-panel-accessible"></legend>
               <div class="subtitle-grid">
-                <label data-l10n-id="pictureinpicture-subtitles-label" class="bold"></label>
+                <label id="subtitles-toggle-label" data-l10n-id="pictureinpicture-subtitles-label" class="bold" for="subtitles-toggle"></label>
                 <label class="switch">
                   <input id="subtitles-toggle" type="checkbox" tabindex="5" checked=""/>
                   <span class="slider" role="presentation"></span>
                 </label>
               </div>
               <div class="grey-line"></div>
-              <div class="font-size-selection">
-                <label data-l10n-id="pictureinpicture-font-size-label" class="bold"></label>
-                <label>
+              <fieldset class="font-size-selection panel-fieldset">
+                <legend data-l10n-id="pictureinpicture-font-size-label" class="bold panel-legend"></legend>
+                <div id="font-size-selection-radio-small" class="font-size-selection-radio">
                   <input id="small" type="radio" name="cc-size" tabindex="6"/>
-                  <span data-l10n-id="pictureinpicture-font-size-small"></span>
-                </label>
-                <label>
+                  <label data-l10n-id="pictureinpicture-font-size-small" for="small"></label>
+                </div>
+                <div id="font-size-selection-radio-medium" class="font-size-selection-radio">
                   <input id="medium" type="radio" name="cc-size" tabindex="6"/>
-                  <span data-l10n-id="pictureinpicture-font-size-medium"></span>
-                </label>
-                <label>
+                  <label data-l10n-id="pictureinpicture-font-size-medium" for="medium"></label>
+                </div>
+                <div id="font-size-selection-radio-large" class="font-size-selection-radio">
                   <input id="large" type="radio" name="cc-size" tabindex="6"/>
-                  <span data-l10n-id="pictureinpicture-font-size-large"></span>
-                </label>
-              </div>
-            </div>
+                  <label data-l10n-id="pictureinpicture-font-size-large" for="large"></label>
+                </div>
+              </fieldset>
+            </fieldset>
             <div class="arrow"></div>
           </div>
           <button id="fullscreen" class="control-item control-button tooltip-over-controls inline-end-tooltip" hidden="true" data-l10n-id="pictureinpicture-fullscreen-btn" data-l10n-attrs="tooltip" tabindex="7"></button>

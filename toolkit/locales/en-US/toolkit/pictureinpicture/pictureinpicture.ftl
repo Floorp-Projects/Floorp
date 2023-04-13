@@ -51,6 +51,11 @@ pictureinpicture-seekforward-btn =
   .aria-label = Forward
   .tooltip = Forward (→)
 
+# This string is never displayed on the window. Is intended to be announced by
+# a screen reader whenever a user opens the subtitles settings panel
+# after selecting the subtitles button.
+pictureinpicture-subtitles-panel-accessible = Subtitles settings
+
 pictureinpicture-subtitles-label = Subtitles
 
 pictureinpicture-font-size-label = Font size
