@@ -1420,86 +1420,44 @@ const PreflightCacheCleaner = {
 
 const IdentityCredentialStorageCleaner = {
   async deleteAll() {
-    if (
-      Services.prefs.getBoolPref(
-        "dom.security.credentialmanagement.identity.enabled",
-        false
-      )
-    ) {
-      lazy.IdentityCredentialStorageService.clear();
-    }
+    lazy.IdentityCredentialStorageService.clear();
   },
 
   async deleteByPrincipal(aPrincipal, aIsUserRequest) {
-    if (
-      Services.prefs.getBoolPref(
-        "dom.security.credentialmanagement.identity.enabled",
-        false
-      )
-    ) {
-      lazy.IdentityCredentialStorageService.deleteFromPrincipal(aPrincipal);
-    }
+    lazy.IdentityCredentialStorageService.deleteFromPrincipal(aPrincipal);
   },
 
   async deleteByBaseDomain(aBaseDomain, aIsUserRequest) {
     if (!aIsUserRequest) {
       return;
     }
-    if (
-      Services.prefs.getBoolPref(
-        "dom.security.credentialmanagement.identity.enabled",
-        false
-      )
-    ) {
-      lazy.IdentityCredentialStorageService.deleteFromBaseDomain(aBaseDomain);
-    }
+    lazy.IdentityCredentialStorageService.deleteFromBaseDomain(aBaseDomain);
   },
 
   async deleteByRange(aFrom, aTo) {
-    if (
-      Services.prefs.getBoolPref(
-        "dom.security.credentialmanagement.identity.enabled",
-        false
-      )
-    ) {
-      lazy.IdentityCredentialStorageService.deleteFromTimeRange(aFrom, aTo);
-    }
+    lazy.IdentityCredentialStorageService.deleteFromTimeRange(aFrom, aTo);
   },
 
   async deleteByHost(aHost, aOriginAttributes) {
-    if (
-      Services.prefs.getBoolPref(
-        "dom.security.credentialmanagement.identity.enabled",
-        false
-      )
-    ) {
-      // Delete data from both HTTP and HTTPS sites.
-      let httpURI = Services.io.newURI("http://" + aHost);
-      let httpsURI = Services.io.newURI("https://" + aHost);
-      let httpPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-        httpURI,
-        aOriginAttributes
-      );
-      let httpsPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-        httpsURI,
-        aOriginAttributes
-      );
-      lazy.IdentityCredentialStorageService.deleteFromPrincipal(httpPrincipal);
-      lazy.IdentityCredentialStorageService.deleteFromPrincipal(httpsPrincipal);
-    }
+    // Delete data from both HTTP and HTTPS sites.
+    let httpURI = Services.io.newURI("http://" + aHost);
+    let httpsURI = Services.io.newURI("https://" + aHost);
+    let httpPrincipal = Services.scriptSecurityManager.createContentPrincipal(
+      httpURI,
+      aOriginAttributes
+    );
+    let httpsPrincipal = Services.scriptSecurityManager.createContentPrincipal(
+      httpsURI,
+      aOriginAttributes
+    );
+    lazy.IdentityCredentialStorageService.deleteFromPrincipal(httpPrincipal);
+    lazy.IdentityCredentialStorageService.deleteFromPrincipal(httpsPrincipal);
   },
 
   async deleteByOriginAttributes(aOriginAttributesString) {
-    if (
-      Services.prefs.getBoolPref(
-        "dom.security.credentialmanagement.identity.enabled",
-        false
-      )
-    ) {
-      lazy.IdentityCredentialStorageService.deleteFromOriginAttributesPattern(
-        aOriginAttributesString
-      );
-    }
+    lazy.IdentityCredentialStorageService.deleteFromOriginAttributesPattern(
+      aOriginAttributesString
+    );
   },
 };
 
