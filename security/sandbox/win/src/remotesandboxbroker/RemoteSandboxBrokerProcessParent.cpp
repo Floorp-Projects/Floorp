@@ -7,6 +7,8 @@
 #include "RemoteSandboxBrokerProcessParent.h"
 #include <windows.h>
 
+#include "mozilla/ipc/LaunchError.h"
+
 using mozilla::ipc::GeckoChildProcessHost;
 using mozilla::ipc::LaunchError;
 using mozilla::ipc::ProcessHandlePromise;
@@ -24,7 +26,8 @@ RemoteSandboxBrokerProcessParent::~RemoteSandboxBrokerProcessParent() {
 
 RefPtr<ProcessHandlePromise> RemoteSandboxBrokerProcessParent::AsyncLaunch() {
   if (!GeckoChildProcessHost::AsyncLaunch()) {
-    return ProcessHandlePromise::CreateAndReject(LaunchError{}, __func__);
+    return ProcessHandlePromise::CreateAndReject(
+        LaunchError("RSBPP::AsyncLaunch"), __func__);
   }
   return WhenProcessHandleReady();
 }

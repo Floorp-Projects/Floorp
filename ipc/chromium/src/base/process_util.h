@@ -33,6 +33,10 @@
 #include "base/process.h"
 
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Result.h"
+#include "mozilla/ResultVariant.h"
+
+#include "mozilla/ipc/LaunchError.h"
 
 #if defined(MOZ_ENABLE_FORKSERVER)
 #  include "nsStringFwd.h"
@@ -52,6 +56,11 @@ struct kinfo_proc;
 class CommandLine;
 
 namespace base {
+
+using mozilla::Err;
+using mozilla::Ok;
+using mozilla::Result;
+using mozilla::ipc::LaunchError;
 
 enum ProcessArchitecture {
   PROCESS_ARCH_INVALID = 0x0,
@@ -191,8 +200,9 @@ struct LaunchOptions {
 // stored there on a successful launch.
 // NOTE: In this case, the caller is responsible for closing the handle so
 //       that it doesn't leak!
-bool LaunchApp(const std::wstring& cmdline, const LaunchOptions& options,
-               ProcessHandle* process_handle);
+Result<Ok, LaunchError> LaunchApp(const std::wstring& cmdline,
+                                  const LaunchOptions& options,
+                                  ProcessHandle* process_handle);
 
 #elif defined(OS_POSIX)
 // Runs the application specified in argv[0] with the command line argv.
@@ -202,8 +212,9 @@ bool LaunchApp(const std::wstring& cmdline, const LaunchOptions& options,
 //
 // Note that the first argument in argv must point to the filename,
 // and must be fully specified (i.e., this will not search $PATH).
-bool LaunchApp(const std::vector<std::string>& argv,
-               const LaunchOptions& options, ProcessHandle* process_handle);
+Result<Ok, LaunchError> LaunchApp(const std::vector<std::string>& argv,
+                                  const LaunchOptions& options,
+                                  ProcessHandle* process_handle);
 
 // Merge an environment map with the current environment.
 // Existing variables are overwritten by env_vars_to_set.
@@ -261,8 +272,8 @@ void RegisterForkServerNoCloseFD(int aFd);
 
 // Executes the application specified by cl. This function delegates to one
 // of the above two platform-specific functions.
-bool LaunchApp(const CommandLine& cl, const LaunchOptions&,
-               ProcessHandle* process_handle);
+Result<Ok, LaunchError> LaunchApp(const CommandLine& cl, const LaunchOptions&,
+                                  ProcessHandle* process_handle);
 
 // Attempts to kill the process identified by the given process
 // entry structure, giving it the specified exit code.

@@ -78,10 +78,11 @@ mozilla::ipc::IPCResult RemoteSandboxBrokerChild::RecvLaunchApp(
   }
 
   HANDLE p;
-  *aOutOk =
+  mozilla::Result<mozilla::Ok, LaunchError> err =
       mSandboxBroker.LaunchApp(aParams.path().get(), aParams.args().get(),
                                envmap, GeckoProcessType(aParams.processType()),
                                aParams.enableLogging(), nullptr, (void**)&p);
+  *aOutOk = err.isOk();
   if (*aOutOk) {
     *aOutHandle = uint64_t(p);
   }

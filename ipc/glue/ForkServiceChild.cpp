@@ -71,7 +71,7 @@ ForkServiceChild::~ForkServiceChild() {
   close(mTcver->GetFD());
 }
 
-bool ForkServiceChild::SendForkNewSubprocess(
+Result<Ok, LaunchError> ForkServiceChild::SendForkNewSubprocess(
     const nsTArray<nsCString>& aArgv, const nsTArray<EnvVar>& aEnvMap,
     const nsTArray<FdMapping>& aFdsRemap, pid_t* aPid) {
   mRecvPid = -1;
@@ -85,7 +85,7 @@ bool ForkServiceChild::SendForkNewSubprocess(
     MOZ_LOG(gForkServiceLog, LogLevel::Verbose,
             ("the pipe to the fork server is closed or having errors"));
     OnError();
-    return false;
+    return Err(LaunchError("FSC::SFNS::Send"));
   }
 
   UniquePtr<IPC::Message> reply;
@@ -93,13 +93,13 @@ bool ForkServiceChild::SendForkNewSubprocess(
     MOZ_LOG(gForkServiceLog, LogLevel::Verbose,
             ("the pipe to the fork server is closed or having errors"));
     OnError();
-    return false;
+    return Err(LaunchError("FSC::SFNS::Recv"));
   }
   OnMessageReceived(std::move(reply));
 
   MOZ_ASSERT(mRecvPid != -1);
   *aPid = mRecvPid;
-  return true;
+  return Ok();
 }
 
 void ForkServiceChild::OnMessageReceived(UniquePtr<IPC::Message> message) {

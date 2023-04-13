@@ -23,6 +23,9 @@
 #include "base/logging.h"
 #include "base/win_util.h"
 
+#include "mozilla/ipc/LaunchError.h"
+#include "mozilla/Result.h"
+
 #include <algorithm>
 #include <stdio.h>
 #include <stdlib.h>
@@ -235,8 +238,9 @@ std::wstring AlterEnvironment(const wchar_t* env,
   return result;
 }
 
-bool LaunchApp(const std::wstring& cmdline, const LaunchOptions& options,
-               ProcessHandle* process_handle) {
+Result<Ok, LaunchError> LaunchApp(const std::wstring& cmdline,
+                                  const LaunchOptions& options,
+                                  ProcessHandle* process_handle) {
   // We want to inherit the std handles so dump() statements and assertion
   // messages in the child process can be seen - but we *do not* want to
   // blindly have all handles inherited.  Vista and later has a technique
@@ -262,7 +266,7 @@ bool LaunchApp(const std::wstring& cmdline, const LaunchOptions& options,
     if (SetHandleInformation(h, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT) ==
         0) {
       MOZ_DIAGNOSTIC_ASSERT(false, "SetHandleInformation failed");
-      return false;
+      return Err(LaunchError("SetHandleInformation", GetLastError()));
     }
     handlesToInherit.push_back(h);
   }
@@ -305,13 +309,14 @@ bool LaunchApp(const std::wstring& cmdline, const LaunchOptions& options,
   LPVOID new_env_ptr = (void*)new_environment.data();
 
   PROCESS_INFORMATION process_info;
+
   BOOL createdOK = CreateProcess(
       NULL, const_cast<wchar_t*>(cmdline.c_str()), NULL, NULL, bInheritHandles,
       dwCreationFlags, new_env_ptr, NULL, &startup_info, &process_info);
   if (lpAttributeList) FreeThreadAttributeList(lpAttributeList);
   if (!createdOK) {
     DLOG(WARNING) << "CreateProcess Failed: " << GetLastError();
-    return false;
+    return Err(LaunchError("CreateProcess", GetLastError()));
   }
 
   gProcessLog.print("==> process %d launched child process %d (%S)\n",
@@ -329,11 +334,12 @@ bool LaunchApp(const std::wstring& cmdline, const LaunchOptions& options,
   } else {
     CloseHandle(process_info.hProcess);
   }
-  return true;
+  return Ok();
 }
 
-bool LaunchApp(const CommandLine& cl, const LaunchOptions& options,
-               ProcessHandle* process_handle) {
+Result<Ok, LaunchError> LaunchApp(const CommandLine& cl,
+                                  const LaunchOptions& options,
+                                  ProcessHandle* process_handle) {
   return LaunchApp(cl.command_line_string(), options, process_handle);
 }
 

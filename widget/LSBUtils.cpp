@@ -9,6 +9,9 @@
 #include <unistd.h>
 #include "base/process_util.h"
 #include "mozilla/FileUtils.h"
+#include "mozilla/Result.h"
+#include "mozilla/ResultVariant.h"
+#include "mozilla/ipc/LaunchError.h"
 
 namespace mozilla::widget::lsb {
 
@@ -31,9 +34,9 @@ bool GetLSBRelease(nsACString& aDistributor, nsACString& aDescription,
   options.wait = true;
 
   base::ProcessHandle process;
-  bool ok = base::LaunchApp(argv, options, &process);
+  Result<Ok, ipc::LaunchError> err = base::LaunchApp(argv, options, &process);
   close(pipefd[1]);
-  if (!ok) {
+  if (err.isErr()) {
     NS_WARNING("Failed to spawn lsb_release!");
     close(pipefd[0]);
     return false;

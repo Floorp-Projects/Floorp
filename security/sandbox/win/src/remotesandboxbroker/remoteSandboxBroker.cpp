@@ -38,7 +38,7 @@ void RemoteSandboxBroker::Shutdown() {
       }));
 }
 
-bool RemoteSandboxBroker::LaunchApp(
+Result<Ok, mozilla::ipc::LaunchError> RemoteSandboxBroker::LaunchApp(
     const wchar_t* aPath, const wchar_t* aArguments,
     base::EnvironmentMap& aEnvironment, GeckoProcessType aProcessType,
     const bool aEnableLogging, const IMAGE_THUNK_DATA*, void** aProcessHandle) {
@@ -95,7 +95,7 @@ bool RemoteSandboxBroker::LaunchApp(
                      [&]() { return res != Pending; });
 
   if (res == Failed) {
-    return false;
+    return Err(mozilla::ipc::LaunchError("RSB::LaunchApp"));
   }
 
   uint64_t handle = 0;
@@ -104,7 +104,7 @@ bool RemoteSandboxBroker::LaunchApp(
   mParameters.shareHandles().Clear();
   if (!rv) {
     mParent.Shutdown();
-    return false;
+    return Err(mozilla::ipc::LaunchError("RSB::SendLaunchApp"));
   }
 
   // Duplicate the handle of the child process that the launcher launched from
@@ -113,7 +113,7 @@ bool RemoteSandboxBroker::LaunchApp(
   bool dh = mParent.DuplicateFromLauncher((HANDLE)handle, &ourChildHandle);
   if (!dh) {
     mParent.Shutdown();
-    return false;
+    return Err(mozilla::ipc::LaunchError("RSB::DuplicateFromLauncher"));
   }
 
   *aProcessHandle = (void**)(ourChildHandle);
@@ -121,7 +121,7 @@ bool RemoteSandboxBroker::LaunchApp(
   base::ProcessHandle process = *aProcessHandle;
   SandboxBroker::AddTargetPeer(process);
 
-  return true;
+  return Ok();
 }
 
 bool RemoteSandboxBroker::SetSecurityLevelForGMPlugin(SandboxLevel aLevel,

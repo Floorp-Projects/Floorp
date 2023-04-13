@@ -17,6 +17,7 @@
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/ipc/NodeChannel.h"
+#include "mozilla/ipc/LaunchError.h"
 #include "mozilla/ipc/ScopedPort.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Buffer.h"
@@ -56,7 +57,6 @@ typedef _MacSandboxInfo MacSandboxInfo;
 namespace mozilla {
 namespace ipc {
 
-struct LaunchError {};
 typedef mozilla::MozPromise<base::ProcessHandle, LaunchError, false>
     ProcessHandlePromise;
 
