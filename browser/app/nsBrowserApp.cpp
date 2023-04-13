@@ -308,22 +308,25 @@ int main(int argc, char* argv[], char* envp[]) {
     // process type has been set.
     CrashReporter::RegisterRuntimeExceptionModule();
 
+#  if defined(XP_WIN) && defined(MOZ_SANDBOX)
+    // We need to set whether our process is supposed to have win32k locked down
+    // from the command line setting before DllBlocklist_Initialize,
+    // GetInitializedTargetServices and WindowsDpiInitialization.
+    Maybe<bool> win32kLockedDown =
+        mozilla::geckoargs::sWin32kLockedDown.Get(argc, argv);
+    if (win32kLockedDown.isSome() && *win32kLockedDown) {
+      mozilla::SetWin32kLockedDownInPolicy();
+    }
+#  endif
+
 #  ifdef HAS_DLL_BLOCKLIST
     uint32_t initFlags =
         gBlocklistInitFlags | eDllBlocklistInitFlagIsChildProcess;
     SetDllBlocklistProcessTypeFlags(initFlags, GetGeckoProcessType());
     DllBlocklist_Initialize(initFlags);
 #  endif  // HAS_DLL_BLOCKLIST
-#  if defined(XP_WIN) && defined(MOZ_SANDBOX)
-    // We need to set whether our process is supposed to have win32k locked down
-    // from the command line setting before GetInitializedTargetServices and
-    // WindowsDpiInitialization.
-    Maybe<bool> win32kLockedDown =
-        mozilla::geckoargs::sWin32kLockedDown.Get(argc, argv);
-    if (win32kLockedDown.isSome() && *win32kLockedDown) {
-      mozilla::SetWin32kLockedDownInPolicy();
-    }
 
+#  if defined(XP_WIN) && defined(MOZ_SANDBOX)
     // We need to initialize the sandbox TargetServices before InitXPCOMGlue
     // because we might need the sandbox broker to give access to some files.
     if (IsSandboxedProcess() && !sandboxing::GetInitializedTargetServices()) {
