@@ -139,6 +139,33 @@ bool TaskManager::
   return false;
 }
 
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+class MOZ_RAII AutoSetMainThreadRunnableName {
+ public:
+  explicit AutoSetMainThreadRunnableName(const nsCString& aName) {
+    MOZ_ASSERT(NS_IsMainThread());
+    // We want to record our current runnable's name in a static so
+    // that BHR can record it.
+    mRestoreRunnableName = nsThread::sMainThreadRunnableName;
+
+    // Copy the name into sMainThreadRunnableName's buffer, and append a
+    // terminating null.
+    uint32_t length = std::min((uint32_t)nsThread::kRunnableNameBufSize - 1,
+                               (uint32_t)aName.Length());
+    memcpy(nsThread::sMainThreadRunnableName.begin(), aName.BeginReading(),
+           length);
+    nsThread::sMainThreadRunnableName[length] = '\0';
+  }
+
+  ~AutoSetMainThreadRunnableName() {
+    nsThread::sMainThreadRunnableName = mRestoreRunnableName;
+  }
+
+ private:
+  Array<char, nsThread::kRunnableNameBufSize> mRestoreRunnableName;
+};
+#endif
+
 Task* Task::GetHighestPriorityDependency() {
   Task* currentTask = this;
 
@@ -525,31 +552,6 @@ class RunnableTask : public Task {
       : Task(aMainThread, aPriority), mRunnable(aRunnable) {}
 
   virtual bool Run() override {
-#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
-    MOZ_ASSERT(NS_IsMainThread());
-    // If we're on the main thread, we want to record our current
-    // runnable's name in a static so that BHR can record it.
-    Array<char, nsThread::kRunnableNameBufSize> restoreRunnableName;
-    restoreRunnableName[0] = '\0';
-    auto clear = MakeScopeExit([&] {
-      MOZ_ASSERT(NS_IsMainThread());
-      nsThread::sMainThreadRunnableName = restoreRunnableName;
-    });
-    nsAutoCString name;
-    nsThread::GetLabeledRunnableName(mRunnable, name,
-                                     EventQueuePriority(GetPriority()));
-
-    restoreRunnableName = nsThread::sMainThreadRunnableName;
-
-    // Copy the name into sMainThreadRunnableName's buffer, and append a
-    // terminating null.
-    uint32_t length = std::min((uint32_t)nsThread::kRunnableNameBufSize - 1,
-                               (uint32_t)name.Length());
-    memcpy(nsThread::sMainThreadRunnableName.begin(), name.BeginReading(),
-           length);
-    nsThread::sMainThreadRunnableName[length] = '\0';
-#endif
-
     mRunnable->Run();
     mRunnable = nullptr;
     return true;
@@ -858,6 +860,11 @@ bool TaskController::DoExecuteNextTaskOnlyMainThreadInternal(
           }
         }
 
+        nsAutoCString name;
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+        task->GetName(name);
+#endif
+
         PerformanceCounterState::Snapshot snapshot =
             mPerformanceCounterState->RunnableWillRun(
                 task->GetPerformanceCounter(), now,
@@ -865,6 +872,9 @@ bool TaskController::DoExecuteNextTaskOnlyMainThreadInternal(
 
         {
           LogTask::Run log(task);
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+          AutoSetMainThreadRunnableName nameGuard(name);
+#endif
           AUTO_PROFILE_FOLLOWING_TASK(task);
           result = task->Run();
         }
@@ -874,7 +884,7 @@ bool TaskController::DoExecuteNextTaskOnlyMainThreadInternal(
           manager->DidRunTask();
         }
 
-        mPerformanceCounterState->RunnableDidRun(std::move(snapshot));
+        mPerformanceCounterState->RunnableDidRun(name, std::move(snapshot));
       }
 
       // Task itself should keep manager alive.

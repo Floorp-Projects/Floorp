@@ -1242,7 +1242,8 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
       if (usingTaskController) {
         *aResult = TaskController::Get()->MTTaskRunnableProcessedTask();
       } else {
-        mPerformanceCounterState.RunnableDidRun(std::move(snapshot.ref()));
+        mPerformanceCounterState.RunnableDidRun(EmptyCString(),
+                                                std::move(snapshot.ref()));
       }
 
       // To cover the event's destructor code inside the LogRunnable span.
@@ -1501,7 +1502,7 @@ PerformanceCounterState::Snapshot PerformanceCounterState::RunnableWillRun(
   if (IsNestedRunnable()) {
     // Flush out any accumulated time that should be accounted to the
     // current runnable before we start running a nested runnable.
-    MaybeReportAccumulatedTime(aNow);
+    MaybeReportAccumulatedTime("nested runnable"_ns, aNow);
   }
 
   Snapshot snapshot(mCurrentEventLoopDepth, mCurrentPerformanceCounter,
@@ -1515,7 +1516,8 @@ PerformanceCounterState::Snapshot PerformanceCounterState::RunnableWillRun(
   return snapshot;
 }
 
-void PerformanceCounterState::RunnableDidRun(Snapshot&& aSnapshot) {
+void PerformanceCounterState::RunnableDidRun(const nsCString& aName,
+                                             Snapshot&& aSnapshot) {
   // First thing: Restore our mCurrentEventLoopDepth so we can use
   // IsNestedRunnable().
   mCurrentEventLoopDepth = aSnapshot.mOldEventLoopDepth;
@@ -1527,7 +1529,7 @@ void PerformanceCounterState::RunnableDidRun(Snapshot&& aSnapshot) {
     now = TimeStamp::Now();
   }
   if (mCurrentPerformanceCounter || mIsMainThread) {
-    MaybeReportAccumulatedTime(now);
+    MaybeReportAccumulatedTime(aName, now);
   }
 
   // And now restore the rest of our state.
@@ -1543,7 +1545,8 @@ void PerformanceCounterState::RunnableDidRun(Snapshot&& aSnapshot) {
   }
 }
 
-void PerformanceCounterState::MaybeReportAccumulatedTime(TimeStamp aNow) {
+void PerformanceCounterState::MaybeReportAccumulatedTime(const nsCString& aName,
+                                                         TimeStamp aNow) {
   MOZ_ASSERT(mCurrentTimeSliceStart,
              "How did we get here if we're not in a timeslice?");
 
@@ -1557,6 +1560,13 @@ void PerformanceCounterState::MaybeReportAccumulatedTime(TimeStamp aNow) {
     mCurrentPerformanceCounter->IncrementExecutionDuration(
         duration.ToMicroseconds());
   }
+
+#ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
+  if (mIsMainThread && duration.ToMilliseconds() > LONGTASK_TELEMETRY_MS) {
+    Telemetry::Accumulate(Telemetry::EVENT_LONGTASK, aName,
+                          duration.ToMilliseconds());
+  }
+#endif
 
   // Long tasks only matter on the main thread.
   if (mIsMainThread && duration.ToMilliseconds() > LONGTASK_BUSY_WINDOW_MS) {
