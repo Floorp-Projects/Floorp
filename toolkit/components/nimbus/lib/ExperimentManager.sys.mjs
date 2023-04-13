@@ -414,8 +414,11 @@ export class _ExperimentManager {
       lastSeen: new Date().toJSON(),
       featureIds,
       prefs,
-      localizations,
     };
+
+    if (localizations) {
+      experiment.localizations = localizations;
+    }
 
     if (typeof isRollout !== "undefined") {
       experiment.isRollout = isRollout;
