@@ -163,6 +163,12 @@ using mozilla::DebugOnly;
 #      define R03_sig(p) ((p)->uc_mcontext.__gregs[3])
 #      define RFP_sig(p) ((p)->uc_mcontext.__gregs[22])
 #    endif
+#    if defined(__linux__) && defined(__riscv)
+#      define RPC_sig(p) ((p)->uc_mcontext.__gregs[REG_PC])
+#      define RRA_sig(p) ((p)->uc_mcontext.__gregs[REG_RA])
+#      define RFP_sig(p) ((p)->uc_mcontext.__gregs[REG_S0])
+#      define R02_sig(p) ((p)->uc_mcontext.__gregs[REG_SP])
+#    endif
 #    if defined(__sun__) && defined(__sparc__)
 #      define PC_sig(p) ((p)->uc_mcontext.gregs[REG_PC])
 #      define FP_sig(p) ((p)->uc_mcontext.gregs[REG_FPRS])
@@ -410,6 +416,11 @@ struct macos_aarch64_context {
 #    define FP_sig(p) RFP_sig(p)
 #    define SP_sig(p) R03_sig(p)
 #    define LR_sig(p) RRA_sig(p)
+#  elif defined(__riscv)
+#    define PC_sig(p) RPC_sig(p)
+#    define FP_sig(p) RFP_sig(p)
+#    define SP_sig(p) R02_sig(p)
+#    define LR_sig(p) RRA_sig(p)
 #  endif
 
 static void SetContextPC(CONTEXT* context, uint8_t* pc) {
@@ -445,7 +456,7 @@ static uint8_t* ContextToSP(CONTEXT* context) {
 }
 
 #  if defined(__arm__) || defined(__aarch64__) || defined(__mips__) || \
-      defined(__loongarch__)
+      defined(__loongarch__) || defined(__riscv)
 static uint8_t* ContextToLR(CONTEXT* context) {
 #    ifdef LR_sig
   return reinterpret_cast<uint8_t*>(LR_sig(context));
@@ -462,7 +473,7 @@ static JS::ProfilingFrameIterator::RegisterState ToRegisterState(
   state.pc = ContextToPC(context);
   state.sp = ContextToSP(context);
 #  if defined(__arm__) || defined(__aarch64__) || defined(__mips__) || \
-      defined(__loongarch__)
+      defined(__loongarch__) || defined(__riscv)
   state.lr = ContextToLR(context);
 #  else
   state.lr = (void*)UINTPTR_MAX;
