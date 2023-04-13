@@ -338,7 +338,7 @@ Maybe<wr::WrSpatialId> ClipManager::DefineScrollLayers(
   nsIFrame* scrollFrame = do_QueryFrame(scrollableFrame);
   nsPoint offset = scrollFrame->GetOffsetToCrossDoc(aItem->Frame()) +
                    aItem->ToReferenceFrame();
-  float auPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
+  int32_t auPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
   nsRect scrollPort = scrollableFrame->GetScrollPortRect() + offset;
   LayoutDeviceRect clipBounds =
       LayoutDeviceRect::FromAppUnits(scrollPort, auPerDevPixel);
@@ -366,8 +366,14 @@ Maybe<wr::WrSpatialId> ClipManager::DefineScrollLayers(
   // auPerDevPixel is not a round value, round here directly from app units.
   // This guarantees we won't introduce any inaccuracy in the external scroll
   // offset passed to WR.
-  LayoutDevicePoint scrollOffset = LayoutDevicePoint::FromAppUnitsRounded(
-      scrollableFrame->GetScrollPosition(), auPerDevPixel);
+  const bool useRoundedOffset =
+      StaticPrefs::apz_rounded_external_scroll_offset();
+  LayoutDevicePoint scrollOffset =
+      useRoundedOffset
+          ? LayoutDevicePoint::FromAppUnitsRounded(
+                scrollableFrame->GetScrollPosition(), auPerDevPixel)
+          : LayoutDevicePoint::FromAppUnits(
+                scrollableFrame->GetScrollPosition(), auPerDevPixel);
 
   // Currently we track scroll-linked effects at the granularity of documents,
   // not scroll frames, so we consider a scroll frame to have a scroll-linked
