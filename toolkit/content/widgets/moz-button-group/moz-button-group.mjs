@@ -60,10 +60,33 @@ export default class MozButtonGroup extends MozLitElement {
         child.localName == "button" &&
         (child.classList.contains("primary") ||
           child.getAttribute("type") == "submit" ||
-          child.hasAttribute("autofocus"))
+          child.hasAttribute("autofocus") ||
+          child.hasAttribute("default"))
       ) {
         child.slot = "primary";
       }
+    }
+    this.#reorderLightDom();
+  }
+
+  #reorderLightDom() {
+    let primarySlottedChildren = [...this.primarySlotEl.assignedNodes()];
+    if (this.platform == PLATFORM_WINDOWS) {
+      primarySlottedChildren.reverse();
+      for (let child of primarySlottedChildren) {
+        child.parentElement.prepend(child);
+      }
+    } else {
+      for (let child of primarySlottedChildren) {
+        // Ensure the primary buttons are at the end of the light DOM.
+        child.parentElement.append(child);
+      }
+    }
+  }
+
+  updated(changedProperties) {
+    if (changedProperties.has("platform")) {
+      this.#reorderLightDom();
     }
   }
 

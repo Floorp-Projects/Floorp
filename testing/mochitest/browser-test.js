@@ -338,6 +338,10 @@ Tester.prototype = {
       // Thunderbird
       "MailMigrator",
       "SearchIntegration",
+      // lit
+      "reactiveElementVersions",
+      "litHtmlVersions",
+      "litElementVersions",
     ];
 
     this.PerTestCoverageUtils.beforeTestSync();
