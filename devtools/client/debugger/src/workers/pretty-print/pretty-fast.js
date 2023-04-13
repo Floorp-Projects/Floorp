@@ -28,6 +28,7 @@ const PRE_ARRAY_LITERAL_TOKENS = new Set([
   "do",
   "=",
   "in",
+  "of",
   "{",
   "*",
   "/",
@@ -653,8 +654,12 @@ function isArrayLiteral(token, lastToken) {
   if (lastToken.type.isAssign) {
     return true;
   }
+
   return PRE_ARRAY_LITERAL_TOKENS.has(
-    lastToken.type.keyword || lastToken.type.label
+    lastToken.type.keyword ||
+      // Some tokens ('of', 'yield', …) have a `token.type.keyword` of 'name' and their
+      // actual value in `token.value`
+      (lastToken.type.label == "name" ? lastToken.value : lastToken.type.label)
   );
 }
 
@@ -893,6 +898,9 @@ function needsSpaceBeforeLastToken(lastToken) {
     return true;
   }
   if (lastToken.type.binop != null) {
+    return true;
+  }
+  if (lastToken.value == "of") {
     return true;
   }
 

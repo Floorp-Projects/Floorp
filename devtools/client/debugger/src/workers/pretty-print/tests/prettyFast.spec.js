@@ -61,6 +61,11 @@ const cases = [
   },
 
   {
+    name: "for..of loop",
+    input: "for (const x of [1,2,3]) { console.log(x) }",
+  },
+
+  {
     name: "String with semicolon",
     input: "var foo = ';';\n",
   },
