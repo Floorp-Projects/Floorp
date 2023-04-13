@@ -138,7 +138,7 @@ const cases = [
   },
   {
     name: "Empty object/array literals",
-    input: "let a=[];const b={};for(let x of []){for(let y in {}){}}",
+    input: `let a=[];const b={};c={...{},d: 42};for(let x of []){for(let y in {}){}}`,
   },
   {
     name: "Code that relies on ASI",
