@@ -152,7 +152,7 @@ class StructuredTerminalFormatter(StructuredHumanFormatter):
         self._sgr0 = terminal.normal if terminal else ""
 
     def format(self, record):
-        formatted_msg = record.msg.format(**record.params)
+        formatted_msg = record.msg.format(**getattr(record, "params", {}))
         elapsed_time = (
             self.terminal.blue(format_seconds(self._time(record))) + " "
             if self.write_times
