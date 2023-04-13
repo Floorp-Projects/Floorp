@@ -597,6 +597,7 @@ def get_raptor_test_list(args, oskey):
             "subtest_lower_is_better",
             "accept_zero_vismet",
             "interactive",
+            "host_from_parent",
         ]
         for setting in bool_settings:
             if next_test.get(setting, None) is not None:
