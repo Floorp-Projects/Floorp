@@ -864,6 +864,12 @@
   value: 500
   mirror: always
 
+# Whether to use rounded external scroll offsets.
+- name: apz.rounded_external_scroll_offset
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "beacon."
 #---------------------------------------------------------------------------
