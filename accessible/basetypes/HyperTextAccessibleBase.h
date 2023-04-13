@@ -233,6 +233,12 @@ class HyperTextAccessibleBase {
   MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual bool RemoveFromSelection(
       int32_t aSelectionNum) = 0;
 
+  /**
+   * Scroll the given text range into view.
+   */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void ScrollSubstringTo(
+      int32_t aStartOffset, int32_t aEndOffset, uint32_t aScrollType);
+
  protected:
   virtual const Accessible* Acc() const = 0;
   Accessible* Acc() {

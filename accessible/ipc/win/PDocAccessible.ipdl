@@ -142,6 +142,10 @@ child:
                      int32_t aSelectionNum);
   async RemoveTextSelection(uint64_t aID, int32_t aSelectionNum);
 
+  async ScrollTextLeafRangeIntoView(uint64_t aStartID, int32_t aStartOffset,
+                                    uint64_t aEndID, int32_t aEndOffset,
+                                    uint32_t aScrollType);
+
   /*
    * Verify the cache. Used for testing purposes.
    */

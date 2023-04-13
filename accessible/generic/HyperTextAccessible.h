@@ -212,12 +212,6 @@ class HyperTextAccessible : public AccessibleWrap,
       int32_t aSelectionNum) override;
 
   /**
-   * Scroll the given text range into view.
-   */
-  void ScrollSubstringTo(int32_t aStartOffset, int32_t aEndOffset,
-                         uint32_t aScrollType);
-
-  /**
    * Scroll the given text range to the given point.
    */
   void ScrollSubstringToPoint(int32_t aStartOffset, int32_t aEndOffset,
