@@ -17365,5 +17365,17 @@
     "kind": "boolean",
     "bug_numbers": [1812051],
     "description": "If any opaque response was blocked for a given top-level window context."
+  },
+  "EVENT_LONGTASK": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "expires_in_version": "never",
+    "alert_emails": ["rjesup@mozilla.com", "perf-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [12345678],
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 50,
+    "keyed": true,
+    "description": "LongTask events for parent process (keys: event name): time the event ran in ms"
   }
 }

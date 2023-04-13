@@ -50,6 +50,9 @@ class nsThreadShutdownContext;
 // See https://www.w3.org/TR/longtasks
 #define LONGTASK_BUSY_WINDOW_MS 50
 
+// Time a Runnable executes before we accumulate telemetry on it
+#define LONGTASK_TELEMETRY_MS 30
+
 // A class for managing performance counter state.
 namespace mozilla {
 class PerformanceCounterState {
@@ -96,7 +99,7 @@ class PerformanceCounterState {
   // snapshot that RunnableWillRun returned for the same runnable.  This must be
   // called before mNestedEventLoopDepth is decremented after the runnable's
   // execution.
-  void RunnableDidRun(Snapshot&& aSnapshot);
+  void RunnableDidRun(const nsCString& aName, Snapshot&& aSnapshot);
 
   const TimeStamp& LastLongTaskEnd() const { return mLastLongTaskEnd; }
   const TimeStamp& LastLongNonIdleTaskEnd() const {
@@ -106,7 +109,7 @@ class PerformanceCounterState {
  private:
   // Called to report accumulated time, as needed, when we're about to run a
   // runnable or just finished running one.
-  void MaybeReportAccumulatedTime(TimeStamp aNow);
+  void MaybeReportAccumulatedTime(const nsCString& aName, TimeStamp aNow);
 
   // Whether the runnable we are about to run, or just ran, is a nested
   // runnable, in the sense that there is some other runnable up the stack
