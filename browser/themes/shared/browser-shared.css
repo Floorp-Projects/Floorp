@@ -541,6 +541,12 @@ menupopup::part(drop-indicator) {
   margin-inline-end: 12px;
 }
 
+#contextual-feature-recommendation-notification .cfr-doorhanger-medium-icon {
+  width: 50px;
+  height: 50px;
+  margin-inline-end: 12px;
+}
+
 #contextual-feature-recommendation-notification .popup-notification-body-container {
   width: 100%;
   padding-bottom: 2px;
@@ -564,6 +570,23 @@ menupopup::part(drop-indicator) {
   display: none;
 }
 
+#contextual-feature-recommendation-notification[data-notification-category="addon_recommendation"] .popup-notification-description > b {
+  font-weight: 300;
+  padding-inline-start: 5px;
+}
+
+#contextual-feature-recommendation-notification[data-notification-category="addon_recommendation"] #cfr-notification-footer-learn-more-link {
+  margin-inline-start: 5px;
+}
+
+#contextual-feature-recommendation-notification[data-notification-category="addon_recommendation"] #cfr-notification-header-image {
+  display: none;
+}
+
+#contextual-feature-recommendation-notification[data-notification-category="addon_recommendation"] #cfr-notification-header-label {
+  margin-block-end: 9px;
+}
+
 /*
  * `icon_and_message` CFR doorhanger with: icon, title and subtitle.
  * No panel header is shown
@@ -580,7 +603,6 @@ menupopup::part(drop-indicator) {
 #contextual-feature-recommendation-notification[data-notification-category="icon_and_message"] popupnotificationcontent {
   display: block; /* This forces the subtitle content to wrap */
 }
-
 
 #cfr-notification-feature-steps {
   display: flex;
