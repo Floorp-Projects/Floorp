@@ -10997,6 +10997,16 @@ void nsContentUtils::RequestGeckoTaskBurst() {
   }
 }
 
+nsIContent* nsContentUtils::GetClosestLinkInFlatTree(nsIContent* aContent) {
+  for (nsIContent* content = aContent; content;
+       content = content->GetFlattenedTreeParent()) {
+    if (nsContentUtils::IsDraggableLink(content)) {
+      return content;
+    }
+  }
+  return nullptr;
+}
+
 namespace mozilla {
 std::ostream& operator<<(std::ostream& aOut,
                          const PreventDefaultResult aPreventDefaultResult) {

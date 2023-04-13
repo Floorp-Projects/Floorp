@@ -3389,6 +3389,12 @@ class nsContentUtils {
     return sMayHaveFormRadioStateChangeListeners;
   }
 
+  /**
+   * Returns the closest link element in the flat tree of aContent if there's
+   * one, otherwise returns nullptr.
+   */
+  static nsIContent* GetClosestLinkInFlatTree(nsIContent* aContent);
+
  private:
   static bool InitializeEventTable();
 
