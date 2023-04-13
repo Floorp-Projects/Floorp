@@ -221,11 +221,9 @@ already_AddRefed<Promise> InputToReadableStreamAlgorithms::PullCallbackImpl(
 
   MOZ_DIAGNOSTIC_ASSERT(stream->Disturbed());
 
-  MOZ_DIAGNOSTIC_ASSERT(mState == eInitializing || mState == eInitialized);
+  MOZ_DIAGNOSTIC_ASSERT(!IsClosed());
   MOZ_ASSERT(!mPullPromise);
   mPullPromise = Promise::CreateInfallible(aController.GetParentObject());
-
-  mState = eInitialized;
 
   MOZ_DIAGNOSTIC_ASSERT(mInput);
 
@@ -245,7 +243,7 @@ InputToReadableStreamAlgorithms::OnInputStreamReady(
   MOZ_DIAGNOSTIC_ASSERT(aStream);
 
   // Already closed. We have nothing else to do here.
-  if (mState == eClosed || !mStream) {
+  if (IsClosed()) {
     return NS_OK;
   }
 
@@ -253,7 +251,6 @@ InputToReadableStreamAlgorithms::OnInputStreamReady(
                       "InputToReadableStream data available");
 
   MOZ_DIAGNOSTIC_ASSERT(mInput);
-  MOZ_DIAGNOSTIC_ASSERT(mState == eInitialized);
 
   JSContext* cx = aes.cx();
 
@@ -312,7 +309,7 @@ void InputToReadableStreamAlgorithms::WriteIntoReadRequestBuffer(
   MOZ_DIAGNOSTIC_ASSERT(aBuffer);
   MOZ_DIAGNOSTIC_ASSERT(aByteWritten);
   MOZ_DIAGNOSTIC_ASSERT(mInput);
-  MOZ_DIAGNOSTIC_ASSERT(mState == eInitialized);
+  MOZ_DIAGNOSTIC_ASSERT(!IsClosed());
   MOZ_DIAGNOSTIC_ASSERT(mPullPromise->State() ==
                         Promise::PromiseState::Pending);
 
@@ -404,9 +401,8 @@ void InputToReadableStreamAlgorithms::EnqueueChunkWithSizeIntoStream(
 
 void InputToReadableStreamAlgorithms::CloseAndReleaseObjects(
     JSContext* aCx, ReadableStream* aStream) {
-  MOZ_DIAGNOSTIC_ASSERT(mState != eClosed);
+  MOZ_DIAGNOSTIC_ASSERT(!IsClosed());
 
-  mState = eClosed;
   ReleaseObjects();
 
   if (aStream->State() == ReadableStream::ReaderState::Readable) {
@@ -433,7 +429,7 @@ void InputToReadableStreamAlgorithms::ErrorPropagation(JSContext* aCx,
                                                        ReadableStream* aStream,
                                                        nsresult aError) {
   // Nothing to do.
-  if (mState == eClosed) {
+  if (IsClosed()) {
     return;
   }
 
