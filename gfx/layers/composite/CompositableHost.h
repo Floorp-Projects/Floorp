@@ -86,11 +86,6 @@ class CompositableHost {
     int32_t mProducerID;
   };
   virtual void UseTextureHost(const nsTArray<TimedTexture>& aTextures);
-  virtual void UseRemoteTexture(const RemoteTextureId aTextureId,
-                                const RemoteTextureOwnerId aOwnerId,
-                                const base::ProcessId aForPid,
-                                const gfx::IntSize aSize,
-                                const TextureFlags aFlags) = 0;
   virtual void RemoveTextureHost(TextureHost* aTexture);
 
   // Enable remote texture push callback

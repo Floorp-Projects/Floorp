@@ -407,7 +407,7 @@ bool RenderThread::CheckIsRemoteTextureReady(
   MOZ_ASSERT(StaticPrefs::webgl_out_of_process_async_present());
   MOZ_ASSERT(!gfx::gfxVars::WebglOopAsyncPresentForceSync());
 
-  auto callback = [windowId = aWindowId]() {
+  auto callback = [windowId = aWindowId](const layers::RemoteTextureInfo&) {
     RefPtr<nsIRunnable> runnable = NewRunnableMethod<WrWindowId>(
         "RenderThread::HandleWrNotifierEvents", RenderThread::Get(),
         &RenderThread::HandleWrNotifierEvents, windowId);

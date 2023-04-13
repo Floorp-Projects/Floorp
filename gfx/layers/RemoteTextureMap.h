@@ -140,8 +140,11 @@ class RemoteTextureMap {
   // In sync mode, mRemoteTextureForDisplayList holds TextureHost of mTextureId.
   // In async mode, it could be previous remote texture's TextureHost that is
   // compatible to the mTextureId's TextureHost.
-  void GetRemoteTextureForDisplayList(
-      RemoteTextureHostWrapper* aTextureHostWrapper);
+  //
+  // return true when aReadyCallback will be called.
+  bool GetRemoteTextureForDisplayList(
+      RemoteTextureHostWrapper* aTextureHostWrapper,
+      std::function<void(const RemoteTextureInfo&)>&& aReadyCallback);
 
   // Get ExternalImageId of remote texture for WebRender rendering.
   wr::MaybeExternalImageId GetExternalImageIdOfRemoteTexture(
@@ -168,8 +171,9 @@ class RemoteTextureMap {
                                            const base::ProcessId aForPid,
                                            CompositableHost* aListener);
 
-  bool CheckRemoteTextureReady(const RemoteTextureInfo& aInfo,
-                               std::function<void(void)>&& aCallback);
+  bool CheckRemoteTextureReady(
+      const RemoteTextureInfo& aInfo,
+      std::function<void(const RemoteTextureInfo&)>&& aCallback);
 
   UniquePtr<TextureData> GetRecycledBufferTextureData(
       const RemoteTextureOwnerId aOwnerId, const base::ProcessId aForPid,
@@ -202,12 +206,13 @@ class RemoteTextureMap {
   };
 
   struct RenderingReadyCallbackHolder {
-    RenderingReadyCallbackHolder(const RemoteTextureId aTextureId,
-                                 std::function<void(void)>&& aCallback);
+    RenderingReadyCallbackHolder(
+        const RemoteTextureId aTextureId,
+        std::function<void(const RemoteTextureInfo&)>&& aCallback);
 
     const RemoteTextureId mTextureId;
     // callback of async RemoteTexture ready
-    std::function<void(void)> mCallback;
+    std::function<void(const RemoteTextureInfo&)> mCallback;
   };
 
   struct TextureOwner {
@@ -244,13 +249,14 @@ class RemoteTextureMap {
                      RemoteTextureMap::TextureOwner* aOwner,
                      const RemoteTextureId aTextureId);
 
-  std::vector<std::function<void(void)>> GetRenderingReadyCallbacks(
-      const MonitorAutoLock& aProofOfLock,
-      RemoteTextureMap::TextureOwner* aOwner, const RemoteTextureId aTextureId);
+  std::vector<std::function<void(const RemoteTextureInfo&)>>
+  GetRenderingReadyCallbacks(const MonitorAutoLock& aProofOfLock,
+                             RemoteTextureMap::TextureOwner* aOwner,
+                             const RemoteTextureId aTextureId);
 
-  std::vector<std::function<void(void)>> GetAllRenderingReadyCallbacks(
-      const MonitorAutoLock& aProofOfLock,
-      RemoteTextureMap::TextureOwner* aOwner);
+  std::vector<std::function<void(const RemoteTextureInfo&)>>
+  GetAllRenderingReadyCallbacks(const MonitorAutoLock& aProofOfLock,
+                                RemoteTextureMap::TextureOwner* aOwner);
 
   void KeepTextureDataAliveForTextureHostIfNecessary(
       const MonitorAutoLock& aProofOfLock,

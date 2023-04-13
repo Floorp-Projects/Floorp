@@ -165,7 +165,7 @@ void RemoteTextureMap::PushTexture(
     const std::shared_ptr<gl::SharedSurface>& aSharedSurface) {
   MOZ_RELEASE_ASSERT(aTextureHost);
 
-  std::vector<std::function<void(void)>>
+  std::vector<std::function<void(const RemoteTextureInfo&)>>
       renderingReadyCallbacks;  // Call outside the monitor
   {
     MonitorAutoLock lock(mMonitor);
@@ -244,8 +244,9 @@ void RemoteTextureMap::PushTexture(
     }
   }
 
+  const auto info = RemoteTextureInfo(aTextureId, aOwnerId, aForPid);
   for (auto& callback : renderingReadyCallbacks) {
-    callback();
+    callback(info);
   }
 }
 
@@ -364,7 +365,7 @@ void RemoteTextureMap::UnregisterTextureOwner(
   UniquePtr<TextureOwner> releasingOwner;  // Release outside the monitor
   std::vector<RefPtr<TextureHost>>
       releasingTextures;  // Release outside the monitor
-  std::vector<std::function<void(void)>>
+  std::vector<std::function<void(const RemoteTextureInfo&)>>
       renderingReadyCallbacks;  // Call outside the monitor
   {
     MonitorAutoLock lock(mMonitor);
@@ -403,8 +404,10 @@ void RemoteTextureMap::UnregisterTextureOwner(
     mMonitor.Notify();
   }
 
+  const auto info =
+      RemoteTextureInfo(RemoteTextureId{0}, RemoteTextureOwnerId{0}, 0);
   for (auto& callback : renderingReadyCallbacks) {
-    callback();
+    callback(info);
   }
 }
 
@@ -416,7 +419,7 @@ void RemoteTextureMap::UnregisterTextureOwners(
       releasingOwners;  // Release outside the monitor
   std::vector<RefPtr<TextureHost>>
       releasingTextures;  // Release outside the monitor
-  std::vector<std::function<void(void)>>
+  std::vector<std::function<void(const RemoteTextureInfo&)>>
       renderingReadyCallbacks;  // Call outside the monitor
   {
     MonitorAutoLock lock(mMonitor);
@@ -457,8 +460,10 @@ void RemoteTextureMap::UnregisterTextureOwners(
     mMonitor.Notify();
   }
 
+  const auto info =
+      RemoteTextureInfo(RemoteTextureId{0}, RemoteTextureOwnerId{0}, 0);
   for (auto& callback : renderingReadyCallbacks) {
-    callback();
+    callback(info);
   }
 }
 
@@ -514,13 +519,13 @@ void RemoteTextureMap::UpdateTexture(const MonitorAutoLock& aProofOfLock,
   }
 }
 
-std::vector<std::function<void(void)>>
+std::vector<std::function<void(const RemoteTextureInfo&)>>
 RemoteTextureMap::GetRenderingReadyCallbacks(
     const MonitorAutoLock& aProofOfLock, RemoteTextureMap::TextureOwner* aOwner,
     const RemoteTextureId aTextureId) {
   MOZ_ASSERT(aOwner);
 
-  std::vector<std::function<void(void)>> functions;
+  std::vector<std::function<void(const RemoteTextureInfo&)>> functions;
 
   while (!aOwner->mRenderingReadyCallbackHolders.empty()) {
     auto& front = aOwner->mRenderingReadyCallbackHolders.front();
@@ -536,7 +541,7 @@ RemoteTextureMap::GetRenderingReadyCallbacks(
   return functions;
 }
 
-std::vector<std::function<void(void)>>
+std::vector<std::function<void(const RemoteTextureInfo&)>>
 RemoteTextureMap::GetAllRenderingReadyCallbacks(
     const MonitorAutoLock& aProofOfLock,
     RemoteTextureMap::TextureOwner* aOwner) {
@@ -547,10 +552,15 @@ RemoteTextureMap::GetAllRenderingReadyCallbacks(
   return functions;
 }
 
-void RemoteTextureMap::GetRemoteTextureForDisplayList(
-    RemoteTextureHostWrapper* aTextureHostWrapper) {
+bool RemoteTextureMap::GetRemoteTextureForDisplayList(
+    RemoteTextureHostWrapper* aTextureHostWrapper,
+    std::function<void(const RemoteTextureInfo&)>&& aReadyCallback) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   MOZ_ASSERT(aTextureHostWrapper);
+
+  if (aTextureHostWrapper->IsReadyForRendering()) {
+    return false;
+  }
 
   const auto& textureId = aTextureHostWrapper->mTextureId;
   const auto& ownerId = aTextureHostWrapper->mOwnerId;
@@ -563,7 +573,7 @@ void RemoteTextureMap::GetRemoteTextureForDisplayList(
 
     auto* owner = GetTextureOwner(lock, ownerId, forPid);
     if (!owner) {
-      return;
+      return false;
     }
 
     UpdateTexture(lock, owner, textureId);
@@ -571,10 +581,12 @@ void RemoteTextureMap::GetRemoteTextureForDisplayList(
     if (owner->mLatestTextureHost &&
         (owner->mLatestTextureHost->GetFlags() & TextureFlags::DUMMY_TEXTURE)) {
       // Remote texture allocation was failed.
-      return;
+      return false;
     }
 
-    if (owner->mIsSyncMode) {
+    bool syncMode = owner->mIsSyncMode || bool(aReadyCallback);
+
+    if (syncMode) {
       // remote texture sync ipc
       if (textureId == owner->mLatestTextureId) {
         MOZ_ASSERT(owner->mLatestTextureHost);
@@ -586,7 +598,15 @@ void RemoteTextureMap::GetRemoteTextureForDisplayList(
         }
         textureHost = owner->mLatestTextureHost;
       } else {
-        MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+        if (aReadyCallback) {
+          auto callbackHolder = MakeUnique<RenderingReadyCallbackHolder>(
+              textureId, std::move(aReadyCallback));
+          owner->mRenderingReadyCallbackHolders.push_back(
+              std::move(callbackHolder));
+          return true;
+        } else {
+          MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+        }
       }
     } else {
       // remote texture async ipc
@@ -619,11 +639,13 @@ void RemoteTextureMap::GetRemoteTextureForDisplayList(
     }
 
     if (textureHost) {
-      aTextureHostWrapper->SetRemoteTextureHostForDisplayList(
-          lock, textureHost, owner->mIsSyncMode);
+      aTextureHostWrapper->SetRemoteTextureHostForDisplayList(lock, textureHost,
+                                                              syncMode);
       aTextureHostWrapper->ApplyTextureFlagsToRemoteTexture();
     }
   }
+
+  return false;
 }
 
 wr::MaybeExternalImageId RemoteTextureMap::GetExternalImageIdOfRemoteTexture(
@@ -811,7 +833,8 @@ void RemoteTextureMap::UnregisterRemoteTexturePushListener(
 }
 
 bool RemoteTextureMap::CheckRemoteTextureReady(
-    const RemoteTextureInfo& aInfo, std::function<void(void)>&& aCallback) {
+    const RemoteTextureInfo& aInfo,
+    std::function<void(const RemoteTextureInfo&)>&& aCallback) {
   MOZ_ASSERT(wr::RenderThread::IsInRenderThread());
 
   MonitorAutoLock lock(mMonitor);
@@ -928,7 +951,8 @@ RemoteTextureMap::TextureDataHolder::TextureDataHolder(
       mSharedSurface(aSharedSurface) {}
 
 RemoteTextureMap::RenderingReadyCallbackHolder::RenderingReadyCallbackHolder(
-    const RemoteTextureId aTextureId, std::function<void(void)>&& aCallback)
+    const RemoteTextureId aTextureId,
+    std::function<void(const RemoteTextureInfo&)>&& aCallback)
     : mTextureId(aTextureId), mCallback(aCallback) {}
 
 RemoteTextureMap::RemoteTextureHostWrapperHolder::
