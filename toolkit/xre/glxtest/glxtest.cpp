@@ -183,6 +183,17 @@ static int glxtest_out_pipe = 1;
 static char* glxtest_buf = nullptr;
 static int glxtest_bufsize = 0;
 static int glxtest_length = 0;
+static bool enable_logging = false;
+
+static void log(const char* format, ...) {
+  if (!enable_logging) {
+    return;
+  }
+  va_list args;
+  va_start(args, format);
+  vfprintf(stderr, format, args);
+  va_end(args);
+}
 
 // C++ standard collides with C standard in that it doesn't allow casting void*
 // to function pointer types. So the work-around is to convert first to size_t.
@@ -224,7 +235,7 @@ static void record_warning(const char* str) {
 
 static void record_flush() {
   MOZ_UNUSED(write(glxtest_out_pipe, glxtest_buf, glxtest_length));
-  if (getenv("MOZ_GFX_DEBUG")) {
+  if (enable_logging) {
     MOZ_UNUSED(write(LOG_PIPE, glxtest_buf, glxtest_length));
   }
 }
@@ -251,6 +262,8 @@ extern "C" {
 #define PCI_BASE_CLASS_DISPLAY 0x03
 
 static void get_pci_status() {
+  log("GLX_TEST: get_pci_status start\n");
+
   if (access("/sys/bus/pci/", F_OK) != 0 &&
       access("/sys/bus/pci_express/", F_OK) != 0) {
     record_warning("cannot access /sys/bus/pci");
@@ -331,6 +344,8 @@ static void get_pci_status() {
   }
 
   pci_cleanup(pacc);
+
+  log("GLX_TEST: get_pci_status finished\n");
 }
 
 #ifdef MOZ_WAYLAND
@@ -477,10 +492,12 @@ static bool get_egl_gl_status(EGLDisplay dpy,
           eglGetProcAddress("eglQueryDeviceStringEXT"));
 
   typedef EGLBoolean (*PFNEGLQUERYDISPLAYATTRIBEXTPROC)(
-      EGLDisplay dpy, EGLint name, EGLAttrib * value);
+      EGLDisplay dpy, EGLint name, EGLAttrib* value);
   PFNEGLQUERYDISPLAYATTRIBEXTPROC eglQueryDisplayAttribEXT =
       cast<PFNEGLQUERYDISPLAYATTRIBEXTPROC>(
           eglGetProcAddress("eglQueryDisplayAttribEXT"));
+
+  log("GLX_TEST: get_egl_gl_status start\n");
 
   if (!eglChooseConfig || !eglCreateContext || !eglDestroyContext ||
       !eglMakeCurrent || !eglQueryDeviceStringEXT) {
@@ -604,10 +621,14 @@ static bool get_egl_gl_status(EGLDisplay dpy,
 #endif
     }
   }
+
+  log("GLX_TEST: get_egl_gl_status finished\n");
   return true;
 }
 
 static bool get_egl_status(EGLNativeDisplayType native_dpy) {
+  log("GLX_TEST: get_egl_status start\n");
+
   EGLDisplay dpy = nullptr;
 
   typedef EGLBoolean (*PFNEGLTERMINATEPROC)(EGLDisplay dpy);
@@ -640,8 +661,8 @@ static bool get_egl_status(EGLNativeDisplayType native_dpy) {
   PFNEGLGETDISPLAYPROC eglGetDisplay =
       cast<PFNEGLGETDISPLAYPROC>(eglGetProcAddress("eglGetDisplay"));
 
-  typedef EGLBoolean (*PFNEGLINITIALIZEPROC)(EGLDisplay dpy, EGLint * major,
-                                             EGLint * minor);
+  typedef EGLBoolean (*PFNEGLINITIALIZEPROC)(EGLDisplay dpy, EGLint* major,
+                                             EGLint* minor);
   PFNEGLINITIALIZEPROC eglInitialize =
       cast<PFNEGLINITIALIZEPROC>(eglGetProcAddress("eglInitialize"));
   eglTerminate = cast<PFNEGLTERMINATEPROC>(eglGetProcAddress("eglTerminate"));
@@ -674,11 +695,16 @@ static bool get_egl_status(EGLNativeDisplayType native_dpy) {
     }
   }
 
-  return get_egl_gl_status(dpy, eglGetProcAddress);
+  bool ret = get_egl_gl_status(dpy, eglGetProcAddress);
+  log("GLX_TEST: get_egl_status finished with return: %d\n", ret);
+
+  return ret;
 }
 
 #ifdef MOZ_X11
 static void get_xrandr_info(Display* dpy) {
+  log("GLX_TEST: get_xrandr_info start\n");
+
   // When running on remote X11 the xrandr version may be stuck on an ancient
   // version. There are still setups using remote X11 out there, so make sure we
   // don't crash.
@@ -686,6 +712,7 @@ static void get_xrandr_info(Display* dpy) {
   if (!XRRQueryExtension(dpy, &eventBase, &errorBase) ||
       !XRRQueryVersion(dpy, &major, &minor) ||
       !(major > 1 || (major == 1 && minor >= 4))) {
+    log("GLX_TEST: get_xrandr_info failed, old version.\n");
     return;
   }
 
@@ -711,9 +738,13 @@ static void get_xrandr_info(Display* dpy) {
   }
   XRRFreeScreenResources(res);
   XRRFreeProviderResources(pr);
+
+  log("GLX_TEST: get_xrandr_info finished\n");
 }
 
 void glxtest() {
+  log("GLX_TEST: glxtest start\n");
+
   Display* dpy = nullptr;
   void* libgl = dlopen(LIBGL_FILENAME, RTLD_LAZY);
   if (!libgl) {
@@ -873,7 +904,7 @@ void glxtest() {
   }
 
   // From Mesa's GL/internal/dri_interface.h, to be used by DRI clients.
-  typedef const char* (*PFNGLXGETSCREENDRIVERPROC)(Display * dpy, int scrNum);
+  typedef const char* (*PFNGLXGETSCREENDRIVERPROC)(Display* dpy, int scrNum);
   PFNGLXGETSCREENDRIVERPROC glXGetScreenDriverProc =
       cast<PFNGLXGETSCREENDRIVERPROC>(glXGetProcAddress("glXGetScreenDriver"));
   if (glXGetScreenDriverProc) {
@@ -899,9 +930,12 @@ void glxtest() {
   XFree(vInfo);
 
   record_value("TEST_TYPE\nGLX\n");
+  log("GLX_TEST: glxtest finished\n");
 }
 
 bool x11_egltest() {
+  log("GLX_TEST: x11_egltest start\n");
+
   Display* dpy = XOpenDisplay(nullptr);
   if (!dpy) {
     return false;
@@ -933,12 +967,16 @@ bool x11_egltest() {
   get_xrandr_info(dpy);
 
   record_value("TEST_TYPE\nEGL\n");
+
+  log("GLX_TEST: x11_egltest finished\n");
   return true;
 }
 #endif
 
 #ifdef MOZ_WAYLAND
 void wayland_egltest() {
+  log("GLX_TEST: wayland_egltest start\n");
+
   static auto sWlDisplayConnect = (struct wl_display * (*)(const char*))
       dlsym(RTLD_DEFAULT, "wl_display_connect");
   static auto sWlDisplayRoundtrip =
@@ -969,6 +1007,7 @@ void wayland_egltest() {
 
   sWlDisplayDisconnect(dpy);
   record_value("TEST_TYPE\nEGL\n");
+  log("GLX_TEST: wayland_egltest finished\n");
 }
 #endif
 
@@ -980,6 +1019,8 @@ int childgltest(bool aWayland) {
   // before early exiting.
   glxtest_buf = buf;
   glxtest_bufsize = bufsize;
+
+  log("GLX_TEST: childgltest start\n");
 
   // Get a list of all GPUs from the PCI bus.
   get_pci_status();
@@ -1005,10 +1046,25 @@ int childgltest(bool aWayland) {
     return EXIT_FAILURE_BUFFER_TOO_SMALL;
   }
 
+  log("GLX_TEST: childgltest finished\n");
   return EXIT_SUCCESS;
 }
 
 }  // extern "C"
+
+static void close_logging() {
+  // we want to redirect to /dev/null stdout, stderr, and while we're at it,
+  // any PR logging file descriptors. To that effect, we redirect all positive
+  // file descriptors up to what open() returns here. In particular, 1 is stdout
+  // and 2 is stderr.
+  int fd = open("/dev/null", O_WRONLY);
+  for (int i = 1; i < fd; i++) {
+    if (glxtest_out_pipe != i) {
+      dup2(fd, i);
+    }
+  }
+  close(fd);
+}
 
 static void PrintUsage() {
   printf(
@@ -1053,6 +1109,11 @@ int main(int argc, char** argv) {
     const char* msg = "ERROR\nMOZ_AVOID_OPENGL_ALTOGETHER envvar set";
     MOZ_UNUSED(write(glxtest_out_pipe, msg, strlen(msg)));
     exit(EXIT_FAILURE);
+  }
+  const char* env = getenv("MOZ_GFX_DEBUG");
+  enable_logging = env && *env == '1';
+  if (!enable_logging) {
+    close_logging();
   }
 #if defined(MOZ_ASAN) || defined(FUZZING)
   // If handle_segv=1 (default), then glxtest crash will print a sanitizer
