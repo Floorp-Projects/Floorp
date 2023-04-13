@@ -41,7 +41,7 @@ origin:
 
     In order to generate code that is usable by Firefox, you need to add the following
     directive to the EMCXXFLAGS variable in the Makefile before running `make wasm`:
-    
+
     -s "DYNAMIC_EXECUTION=0"
 
     The fasttext.js file is modified by adding the `loadModelBinary()` function.
