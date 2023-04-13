@@ -4879,11 +4879,7 @@ SurfaceFromElementResult CanvasRenderingContext2D::CachedSurfaceFromElement(
     return res;
   }
 
-  int32_t corsmode = CORS_NONE;
-  if (NS_SUCCEEDED(imgRequest->GetCORSMode(&corsmode))) {
-    res.mCORSUsed = corsmode != CORS_NONE;
-  }
-
+  res.mCORSUsed = nsLayoutUtils::ImageRequestUsesCORS(imgRequest);
   res.mSize = res.mIntrinsicSize = res.mSourceSurface->GetSize();
   res.mPrincipal = std::move(principal);
   res.mImageRequest = std::move(imgRequest);

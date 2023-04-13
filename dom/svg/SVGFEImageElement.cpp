@@ -286,10 +286,8 @@ bool SVGFEImageElement::OutputIsTainted(const nsTArray<bool>& aInputsAreTainted,
     return true;
   }
 
-  int32_t corsmode;
-  if (NS_SUCCEEDED(currentRequest->GetCORSMode(&corsmode)) &&
-      corsmode != CORS_NONE) {
-    // If CORS was used to load the image, the page is allowed to read from it.
+  // If CORS was used to load the image, the page is allowed to read from it.
+  if (nsLayoutUtils::ImageRequestUsesCORS(currentRequest)) {
     return false;
   }
 
