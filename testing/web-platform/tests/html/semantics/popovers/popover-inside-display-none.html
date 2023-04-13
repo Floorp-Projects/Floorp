@@ -14,6 +14,6 @@ No popover should be displayed here.<p>
 <script>
   const popover = document.querySelector('[popover]');
   popover.showPopover();
-  if (!popover.matches(':popover-open'))
+  if (!popover.matches(':open'))
     document.body.appendChild(document.createTextNode('FAIL'));
 </script>
