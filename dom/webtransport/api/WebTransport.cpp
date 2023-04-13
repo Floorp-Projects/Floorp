@@ -374,16 +374,6 @@ void WebTransport::ResolveWaitingConnection(
 
   mChild = aChild;
   mDatagrams->SetChild(aChild);
-  uint64_t maxDatagramSize = 1024;
-  mChild->SendGetMaxDatagramSize(
-      [&maxDatagramSize](uint64_t&& aMaxDatagramSize) {
-        maxDatagramSize = std::move(aMaxDatagramSize);
-      },
-      [](mozilla::ipc::ResponseRejectReason&&) {
-        LOG(("GetMaxDatagramSize failed"));
-      });
-  // initialize the maximum datagram size for the session
-  mDatagrams->SetMaxDatagramSize(maxDatagramSize);
   // Step 17.2: Set transport.[[State]] to "connected".
   mState = WebTransportState::CONNECTED;
   // Step 17.3: Set transport.[[Session]] to session.
