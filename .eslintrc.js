@@ -239,7 +239,6 @@ module.exports = {
         "browser/components/Browser*",
         "browser/components/aboutlogins/**",
         "browser/components/attribution/**",
-        "browser/components/colorways/**",
         "browser/components/customizableui/**",
         "browser/components/downloads/**",
         "browser/components/enterprisepolicies/**",
