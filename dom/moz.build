@@ -91,7 +91,6 @@ DIRS += [
     "xul",
     "manifest",
     "vr",
-    "u2f",
     "console",
     "performance",
     "webbrowserpersist",

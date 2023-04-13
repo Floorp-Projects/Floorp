@@ -19,11 +19,6 @@
 
 namespace mozilla::dom {
 
-// Bug 1737205: we need to continue to support the legacy U2F interface until ~
-// FX 114, but we don't want to add an extra compatibility layer to our new
-// CTAP2-compatible controller. So the Register and Sign methods below use the
-// U2FTokenManager when the request is from the legacy U2F api.
-
 mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestRegister(
     const uint64_t& aTransactionId,
     const WebAuthnMakeCredentialInfo& aTransactionInfo) {
@@ -41,10 +36,7 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestRegister(
   bool androidFido2 =
       StaticPrefs::security_webauth_webauthn_enable_android_fido2();
 
-  // Remove as part of Bug 1737205.
-  bool legacyReq = aTransactionInfo.Extra().isNothing();
-
-  if (allowCtap2 && !androidFido2 && !legacyReq) {
+  if (allowCtap2 && !androidFido2) {
     WebAuthnController* ctrl = WebAuthnController::Get();
     ctrl->Register(this, aTransactionId, aTransactionInfo);
   } else {
@@ -72,10 +64,7 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestSign(
   bool androidFido2 =
       StaticPrefs::security_webauth_webauthn_enable_android_fido2();
 
-  // Remove as part of Bug 1737205.
-  bool legacyReq = aTransactionInfo.Extra().isNothing();
-
-  if (allowCtap2 && !androidFido2 && !legacyReq) {
+  if (allowCtap2 && !androidFido2) {
     WebAuthnController* ctrl = WebAuthnController::Get();
     ctrl->Sign(this, aTransactionId, aTransactionInfo);
   } else {
