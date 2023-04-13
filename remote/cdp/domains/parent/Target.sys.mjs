@@ -99,13 +99,13 @@ export class Target extends Domain {
     if (discover) {
       targetList.on("target-created", this._onTargetCreated);
       targetList.on("target-destroyed", this._onTargetDestroyed);
+
+      for (const target of targetList) {
+        this._onTargetCreated("target-created", target);
+      }
     } else {
       targetList.off("target-created", this._onTargetCreated);
       targetList.off("target-destroyed", this._onTargetDestroyed);
-    }
-
-    for (const target of targetList) {
-      this._onTargetCreated("target-created", target);
     }
   }
 

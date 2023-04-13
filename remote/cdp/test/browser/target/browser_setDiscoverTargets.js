@@ -139,6 +139,45 @@ add_task(
 );
 
 add_task(
+  async function noTargetsWithDiscoverFalse({ client }) {
+    const { Target } = client;
+
+    await loadURL(PAGE_TEST);
+
+    const targets = await getDiscoveredTargets(Target, { discover: false });
+    is(targets.length, 0, "Got 0 targets with discover false");
+  },
+  { createTab: false }
+);
+
+add_task(
+  async function noEventsWithDiscoverFalse({ client }) {
+    const { Target } = client;
+
+    await loadURL(PAGE_TEST);
+
+    const targets = [];
+    const unsubscribe = Target.targetCreated(target => {
+      targets.push(target.targetInfo);
+    });
+
+    await Target.setDiscoverTargets({
+      discover: false,
+    });
+
+    // Cannot use openTab() helper as it relies on the event
+    await BrowserTestUtils.openNewForegroundTab(gBrowser);
+
+    // Wait 1s for the event to possibly dispatch
+    await timeoutPromise(1000);
+
+    unsubscribe();
+    is(targets.length, 0, "Got 0 target created events with discover false");
+  },
+  { createTab: false }
+);
+
+add_task(
   async function targetInfoValues({ client }) {
     const { Target, target } = client;
 
