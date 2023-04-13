@@ -261,6 +261,8 @@ def jit_codegen(jit_enabled, simulator, target):
         return namespace(x64=True)
     elif target.cpu == "loongarch64":
         return namespace(loong64=True)
+    elif target.cpu == "riscv64":
+        return namespace(riscv64=True)
 
     return namespace(**{str(target.cpu): True})
 
