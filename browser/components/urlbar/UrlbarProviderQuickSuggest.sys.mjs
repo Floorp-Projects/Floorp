@@ -270,15 +270,11 @@ class ProviderQuickSuggest extends UrlbarProvider {
         UrlbarUtils.HIGHLIGHT.SUGGESTED,
       ];
     }
-    payload.isBlockable =
-      lazy.UrlbarPrefs.get(
-        isResultBestMatch
-          ? "bestMatchBlockingEnabled"
-          : "quickSuggestBlockingEnabled"
-      ) ||
-      // For Nimbus, we enable blocking when the result menu is enabled. We
-      // don't do this in automation so we can test all pref combinations.
-      (lazy.UrlbarPrefs.get("resultMenu") && !Cu.isInAutomation);
+    payload.isBlockable = lazy.UrlbarPrefs.get(
+      isResultBestMatch
+        ? "bestMatchBlockingEnabled"
+        : "quickSuggestBlockingEnabled"
+    );
 
     let result = new lazy.UrlbarResult(
       UrlbarUtils.RESULT_TYPE.URL,
