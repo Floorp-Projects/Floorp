@@ -11,7 +11,11 @@ function mapDisplayName(frame, { getState }) {
     return frame;
   }
 
-  const symbols = getSymbols(getState(), frame.location);
+  if (!frame.location.source) {
+    return frame;
+  }
+
+  const symbols = getSymbols(getState(), frame.location.source);
 
   if (!symbols || !symbols.functions) {
     return frame;

@@ -13,7 +13,6 @@ import {
   isLineInScope,
   isSelectedFrameVisible,
   getSelectedSource,
-  getSelectedLocation,
   getSelectedFrame,
   getSymbols,
   getCurrentThread,
@@ -24,12 +23,12 @@ import {
 import { getMappedExpression } from "./expressions";
 
 function findExpressionMatch(state, codeMirror, tokenPos) {
-  const location = getSelectedLocation(state);
-  if (!location) {
+  const source = getSelectedSource(state);
+  if (!source) {
     return null;
   }
 
-  const symbols = getSymbols(state, location);
+  const symbols = getSymbols(state, source);
 
   let match;
   if (!symbols) {

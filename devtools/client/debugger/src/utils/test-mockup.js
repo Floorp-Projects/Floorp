@@ -158,13 +158,7 @@ function makeMockFrame(
   displayName = `display-${id}`,
   index = 0
 ) {
-  const sourceActor = {
-    id: `${source.id}-actor`,
-    actor: `${source.id}-actor`,
-    source: source.id,
-    sourceObject: source,
-  };
-  const location = createLocation({ source, sourceActor, line });
+  const location = createLocation({ source, line });
   return {
     id,
     thread: "FakeThread",

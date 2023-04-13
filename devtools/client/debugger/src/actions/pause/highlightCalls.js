@@ -45,7 +45,11 @@ export function highlightCalls(cx) {
       return null;
     }
 
-    const symbols = getSymbols(getState(), frame.location);
+    if (!frame.location.source) {
+      return null;
+    }
+
+    const symbols = getSymbols(getState(), frame.location.source);
 
     if (!symbols) {
       return null;
