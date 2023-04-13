@@ -352,12 +352,59 @@ add_task(async function test_regExpMatch() {
 add_task(async function test_versionCompare() {
   let val;
 
+  // 1.0.0 === 1
   val = await FilterExpressions.eval('"1.0.0"|versionCompare("1")');
   ok(val === 0);
 
+  // 1.0.0 < 1.1
   val = await FilterExpressions.eval('"1.0.0"|versionCompare("1.1")');
   ok(val < 0);
 
+  // 1.0.0 > 0.1
   val = await FilterExpressions.eval('"1.0.0"|versionCompare("0.1")');
   ok(val > 0);
+
+  // 111.0.1 < 110
+  val = await FilterExpressions.eval(`'111.0.1'|versionCompare('110') < 0`);
+  ok(val === false);
+
+  // 111.0.1 < 111
+  val = await FilterExpressions.eval(`'111.0.1'|versionCompare('111') < 0`);
+  ok(val === false);
+
+  // 111.0.1 < 111.0.1
+  val = await FilterExpressions.eval(`'111.0.1'|versionCompare('111.0.1') < 0`);
+  ok(val === false);
+
+  // 111.0.1 < 111.0.2
+  val = await FilterExpressions.eval(`'111.0.1'|versionCompare('111.0.2') < 0`);
+  ok(val === true);
+
+  // 111.0.1 is < 112
+  val = await FilterExpressions.eval(`'111.0.1'|versionCompare('112') < 0`);
+  ok(val === true);
+
+  // 113.0a1 < 113
+  val = await FilterExpressions.eval(`'113.0a1'|versionCompare('113') < 0`);
+  ok(val === true);
+
+  // 113.0a1 < 113.0a1
+  val = await FilterExpressions.eval(`'113.0a1'|versionCompare('113.0a1') < 0`);
+  ok(val === false);
+
+  // 113.0a1 > 113.0a0
+  val = await FilterExpressions.eval(`'113.0a1'|versionCompare('113.0a0') > 0`);
+  ok(val === true);
+
+  // 113 > 113.0a0
+  val = await FilterExpressions.eval(`'113'|versionCompare('113.0a0') > 0`);
+  ok(val === true);
+
+  // 114 > 113.0a0
+  val = await FilterExpressions.eval(`'114'|versionCompare('113.0a0') > 0`);
+  ok(val === true);
+
+  // 112 > 113.0a0
+  val = await FilterExpressions.eval(`'112'|versionCompare('113.0a0') > 0`);
+  ok(val === false);
 });

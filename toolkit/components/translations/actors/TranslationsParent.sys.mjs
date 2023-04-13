@@ -147,6 +147,14 @@ export class TranslationsParent extends JSWindowActorParent {
   static #mockedLanguageIdConfidence = null;
 
   /**
+   * The RemoteSettings client can be mocked for testing to ensure
+   * that logic for filtering records is behaving correctly.
+   *
+   * @type {RemoteSettingsClient | null}
+   */
+  static #mockedRemoteSettingsClient = null;
+
+  /**
    * @type {null | Promise<boolean>}
    */
   static #isTranslationsEngineSupported = null;
@@ -286,12 +294,8 @@ export class TranslationsParent extends JSWindowActorParent {
     const now = Date.now();
     const client = this.#getLanguageIdModelRemoteClient();
 
-    /** @type {ModelRecord[]} */
-    const modelRecords = await client.get({
-      // Pull the records from the network so that we never get an empty list.
-      syncIfEmpty: true,
-      verifySignature: VERIFY_SIGNATURES_FROM_FS,
-    });
+    /** @type {LanguageIdModelRecord[]} */
+    const modelRecords = await TranslationsParent.getMaxVersionRecords(client);
 
     if (modelRecords.length === 0) {
       throw new Error(
@@ -348,11 +352,7 @@ export class TranslationsParent extends JSWindowActorParent {
     lazy.console.log(`Getting remote language-identification wasm binary.`);
 
     /** @type {WasmRecord[]} */
-    const wasmRecords = await client.get({
-      // Pull the records from the network so that we never get an empty list.
-      syncIfEmpty: true,
-      verifySignature: VERIFY_SIGNATURES_FROM_FS,
-      // Only get the fasttext-wasm record.
+    const wasmRecords = await TranslationsParent.getMaxVersionRecords(client, {
       filters: { name: "fasttext-wasm" },
     });
 
@@ -483,6 +483,59 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   /**
+   * Retrieves the maximum version of each record in the RemoteSettingsClient.
+   *
+   * If the client contains two different-version copies of the same record (e.g. 1.0 and 1.1)
+   * then only the 1.1-version record will be returned in the resulting collection.
+   *
+   * @param {RemoteSettingsClient} remoteSettingsClient
+   * @param {Object} [options]
+   *   @param {Object} [options.filters={}]
+   *     The filters to apply when retrieving the records from RemoteSettings.
+   *     Filters should correspond to properties on the RemoteSettings records themselves.
+   *     For example, A filter to retrieve only records with a `fromLang` value of "en" and a `toLang` value of "es":
+   *     { filters: { fromLang: "en", toLang: "es" } }
+   *   @param {Function} [options.lookupKey=(record => record.name)]
+   *     The function to use to extract a lookup key from each record.
+   *     This function should take a record as input and return a string that represents the lookup key for the record.
+   *     For most record types, the name (default) is sufficient, however if a collection contains records with
+   *     non-unique name values, it may be necessary to provide an alternative function here.
+   * @returns {Array<TranslationModelRecord | LanguageIdModelRecord | WasmRecord>}
+   */
+  static async getMaxVersionRecords(
+    remoteSettingsClient,
+    { filters = {}, lookupKey = record => record.name } = {}
+  ) {
+    const retrievedRecords = await remoteSettingsClient.get({
+      // Pull the records from the network.
+      syncIfEmpty: true,
+      // Don't verify the signature if the client is mocked.
+      verifySignature: TranslationsParent.#mockedRemoteSettingsClient
+        ? false
+        : VERIFY_SIGNATURES_FROM_FS,
+      // Apply any filters for retrieving the records.
+      filters,
+    });
+
+    // Create a mapping to only the max version of each record discriminated by
+    // the result of the lookupKey() function.
+    const maxVersionRecordMap = retrievedRecords.reduce((records, record) => {
+      const key = lookupKey(record);
+      const existing = records.get(key);
+      if (
+        !existing ||
+        // existing version less than record version
+        Services.vc.compare(existing.version, record.version) < 0
+      ) {
+        records.set(key, record);
+      }
+      return records;
+    }, new Map());
+
+    return Array.from(maxVersionRecordMap.values());
+  }
+
+  /**
    * Lazily initializes the model records, and returns the cached ones if they
    * were already retrieved.
    *
@@ -501,11 +554,14 @@ export class TranslationsParent extends JSWindowActorParent {
     lazy.console.log(`Getting remote language models.`);
 
     /** @type {TranslationModelRecord[]} */
-    const translationModelRecords = await client.get({
-      // Pull the records from the network so that we never get an empty list.
-      syncIfEmpty: true,
-      verifySignature: VERIFY_SIGNATURES_FROM_FS,
-    });
+    const translationModelRecords = await TranslationsParent.getMaxVersionRecords(
+      client,
+      {
+        // Names in this collection are not unique, so we are appending the
+        // fromLang and toLang to the name which will guarantee uniqueness
+        lookupKey: record => `${record.name}${record.fromLang}${record.toLang}`,
+      }
+    );
 
     for (const record of translationModelRecords) {
       this.#translationModelRecords.set(record.id, record);
@@ -514,7 +570,7 @@ export class TranslationsParent extends JSWindowActorParent {
     const duration = (Date.now() - now) / 1000;
     lazy.console.log(
       `Remote language models loaded in ${duration} seconds.`,
-      translationModelRecords
+      this.#translationModelRecords
     );
 
     return this.#translationModelRecords;
@@ -575,11 +631,7 @@ export class TranslationsParent extends JSWindowActorParent {
     lazy.console.log(`Getting remote bergamot-translator wasm records.`);
 
     /** @type {WasmRecord[]} */
-    const wasmRecords = await client.get({
-      // Pull the records from the network so that we never get an empty list.
-      syncIfEmpty: true,
-      verifySignature: VERIFY_SIGNATURES_FROM_FS,
-      // Only get the bergamot-translator record.
+    const wasmRecords = await TranslationsParent.getMaxVersionRecords(client, {
       filters: { name: "bergamot-translator" },
     });
 
@@ -739,6 +791,21 @@ export class TranslationsParent extends JSWindowActorParent {
       lazy.console.log("Mocking language pairs", languagePairs);
     } else {
       lazy.console.log("Removing language pair mocks");
+    }
+  }
+
+  /**
+   * For testing purposes, allow the RemoteSettingsClient to be mocked. If called
+   * with `null` the mock is removed.
+   *
+   * @param {null | RemoteSettingsClient>} client
+   */
+  static mockRemoteSettingsClient(client) {
+    TranslationsParent.#mockedRemoteSettingsClient = client;
+    if (client) {
+      console.log("Mocking RemoteSettings client");
+    } else {
+      console.log("Removing RemoteSettings client mock");
     }
   }
 
