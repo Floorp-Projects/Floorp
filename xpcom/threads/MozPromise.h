@@ -10,6 +10,7 @@
 #  include <type_traits>
 #  include <utility>
 
+#  include "mozilla/ErrorNames.h"
 #  include "mozilla/Logging.h"
 #  include "mozilla/Maybe.h"
 #  include "mozilla/Monitor.h"
@@ -523,7 +524,16 @@ class MozPromise : public MozPromiseBase {
       if (MozPromiseBase* p = CompletionPromise()) {
         p->AssertIsDead();
       } else {
-        MOZ_DIAGNOSTIC_ASSERT(Request::mDisconnected);
+#  ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+        if (MOZ_UNLIKELY(!Request::mDisconnected)) {
+          MOZ_CRASH_UNSAFE_PRINTF(
+              "MozPromise::ThenValue created from '%s' destroyed without being "
+              "either disconnected, resolved, or rejected (dispatchRv: %s)",
+              mCallSite,
+              mDispatchRv ? GetStaticErrorName(*mDispatchRv)
+                          : "not dispatched");
+        }
+#  endif
       }
     }
 
@@ -558,7 +568,7 @@ class MozPromise : public MozPromiseBase {
         nsCOMPtr<nsIDirectTaskDispatcher> dispatcher =
             do_QueryInterface(mResponseTarget);
         if (dispatcher) {
-          dispatcher->DispatchDirectTask(r.forget());
+          SetDispatchRv(dispatcher->DispatchDirectTask(r.forget()));
           return;
         }
         NS_WARNING(
@@ -576,7 +586,10 @@ class MozPromise : public MozPromiseBase {
       // then shut down the thread or task queue that the promise result would
       // be dispatched on. So we unfortunately can't assert that promise
       // dispatch succeeds. :-(
-      mResponseTarget->Dispatch(r.forget());
+      // We do record whether or not it succeeds so that if the ThenValueBase is
+      // then destroyed and it was not disconnected, we can include that
+      // information in the assertion message.
+      SetDispatchRv(mResponseTarget->Dispatch(r.forget()));
     }
 
     void Disconnect() override {
@@ -610,6 +623,12 @@ class MozPromise : public MozPromiseBase {
       DoResolveOrRejectInternal(aValue);
     }
 
+    void SetDispatchRv(nsresult aRv) {
+#  ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+      mDispatchRv = Some(aRv);
+#  endif
+    }
+
     nsCOMPtr<nsISerialEventTarget>
         mResponseTarget;  // May be released on any thread.
 #  ifdef PROMISE_DEBUG
@@ -618,6 +637,9 @@ class MozPromise : public MozPromiseBase {
     const char* mCallSite;
 #  ifdef PROMISE_DEBUG
     uint32_t mMagic2 = sMagic;
+#  endif
+#  ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+    Maybe<nsresult> mDispatchRv;
 #  endif
   };
 
