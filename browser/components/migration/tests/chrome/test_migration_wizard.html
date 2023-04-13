@@ -27,12 +27,14 @@
       const MIGRATOR_PROFILE_INSTANCES = [
         {
           key: "some-browser-0",
+          type: MigrationWizardConstants.MIGRATOR_TYPES.BROWSER,
           displayName: "Some Browser 0",
           resourceTypes: ["HISTORY", "FORMDATA", "PASSWORDS", "BOOKMARKS"],
           profile: { id: "person-2", name: "Person 2" },
         },
         {
           key: "some-browser-1",
+          type: MigrationWizardConstants.MIGRATOR_TYPES.BROWSER,
           displayName: "Some Browser 1",
           resourceTypes: ["HISTORY", "BOOKMARKS"],
           profile: null,
@@ -213,6 +215,7 @@
           page: MigrationWizardConstants.PAGES.SELECTION,
           migrators: [{
             key: "some-browser-0",
+            type: MigrationWizardConstants.MIGRATOR_TYPES.BROWSER,
             displayName: "Some Browser 0 with no resources",
             resourceTypes: [],
             profile: { id: "person-1", name: "Person 1" },
@@ -376,11 +379,13 @@
           page: MigrationWizardConstants.PAGES.SELECTION,
           migrators: [{
             key: "some-browser-0",
+            type: MigrationWizardConstants.MIGRATOR_TYPES.BROWSER,
             displayName: "Some Browser 0 with a single resource",
             resourceTypes: ["HISTORY"],
             profile: { id: "person-1", name: "Person 1" },
           }, {
             key: "some-browser-1",
+            type: MigrationWizardConstants.MIGRATOR_TYPES.BROWSER,
             displayName: "Some Browser 1 with a two resources",
             resourceTypes: ["HISTORY", "BOOKMARKS"],
             profile: { id: "person-2", name: "Person 2" },
@@ -527,7 +532,7 @@
         );
 
         let progressPage = gShadowRoot.querySelector("div[name='page-progress']");
-        let doneButton = progressPage.querySelector("#done-button");
+        let doneButton = progressPage.querySelector(".done-button");
         ok(isHidden(doneButton), "Done button should be hidden");
         let cancelButton = progressPage.querySelector(".cancel-close");
         ok(!isHidden(cancelButton), "Cancel button should be visible");
@@ -627,7 +632,146 @@
         );
 
         let progressPage = gShadowRoot.querySelector("div[name='page-progress']");
-        let doneButton = progressPage.querySelector("#done-button");
+        let doneButton = progressPage.querySelector(".done-button");
+        ok(!isHidden(doneButton), "Done button should be visible and enabled");
+        let cancelButton = progressPage.querySelector(".cancel-close");
+        ok(isHidden(cancelButton), "Cancel button should be hidden");
+      });
+
+      /**
+       * Tests that the wizard can show partial progress during file migration.
+       */
+      add_task(async function test_partial_file_progress() {
+        const PASSWORDS_SUCCESS_STRING = "Some passwords success string";
+        const TITLE = "Partial progress";
+
+        gWiz.setState({
+          page: MigrationWizardConstants.PAGES.FILE_IMPORT_PROGRESS,
+          title: "Partial progress",
+          progress: {
+            [MigrationWizardConstants.DISPLAYED_FILE_RESOURCE_TYPES.PASSWORDS_FROM_FILE]: {
+              inProgress: false,
+              message: PASSWORDS_SUCCESS_STRING,
+            },
+            [MigrationWizardConstants.DISPLAYED_FILE_RESOURCE_TYPES.PASSWORDS_NEW]: {
+              inProgress: true,
+            },
+          },
+        });
+
+        is(
+          gDeck.selectedViewName,
+          "page-file-import-progress",
+          "Should have the file progress page selected"
+        );
+
+        let header = gShadowRoot.querySelector("#file-import-progress-header");
+        is(header.textContent, TITLE, "Title is set correctly.");
+
+        let passwordsFromFileGroup = getResourceGroup(
+          MigrationWizardConstants.DISPLAYED_FILE_RESOURCE_TYPES.PASSWORDS_FROM_FILE
+        );
+        ok(!isHidden(passwordsFromFileGroup), "Passwords from file group should be visible");
+        let progressIcon = passwordsFromFileGroup.querySelector(".progress-icon");
+        ok(
+          progressIcon.classList.contains("completed"),
+          "Progress should be completed"
+        );
+        is(
+          passwordsFromFileGroup.querySelector(".success-text").textContent,
+          PASSWORDS_SUCCESS_STRING
+        );
+
+        let passwordsUpdatedGroup = getResourceGroup(
+          MigrationWizardConstants.DISPLAYED_FILE_RESOURCE_TYPES.PASSWORDS_UPDATED
+        );
+        ok(isHidden(passwordsUpdatedGroup), "Passwords updated group should be hidden");
+
+        let passwordsNewGroup = getResourceGroup(
+          MigrationWizardConstants.DISPLAYED_FILE_RESOURCE_TYPES.PASSWORDS_NEW
+        );
+        ok(!isHidden(passwordsNewGroup), "Passwords new group should be visible");
+        progressIcon = passwordsNewGroup.querySelector(".progress-icon");
+        ok(
+          !progressIcon.classList.contains("completed"),
+          "Progress should be still be underway"
+        );
+        is(passwordsNewGroup.querySelector(".success-text").textContent.trim(), "");
+
+        let progressPage = gShadowRoot.querySelector("div[name='page-file-import-progress']");
+        let doneButton = progressPage.querySelector(".done-button");
+        ok(isHidden(doneButton), "Done button should be hidden");
+        let cancelButton = progressPage.querySelector(".cancel-close");
+        ok(!isHidden(cancelButton), "Cancel button should be visible");
+        ok(cancelButton.disabled, "Cancel button should be disabled");
+      });
+
+      /**
+       * Tests that the wizard can show completed migration progress.
+       */
+      add_task(async function test_completed_file_progress() {
+        const PASSWORDS_NEW_SUCCESS_STRING = "2 added";
+        const PASSWORDS_UPDATED_SUCCESS_STRING = "5 updated";
+        const TITLE = "Done doing file import";
+
+        gWiz.setState({
+          page: MigrationWizardConstants.PAGES.FILE_IMPORT_PROGRESS,
+          title: TITLE,
+          progress: {
+            [MigrationWizardConstants.DISPLAYED_FILE_RESOURCE_TYPES.PASSWORDS_NEW]: {
+              inProgress: false,
+              message: PASSWORDS_NEW_SUCCESS_STRING,
+            },
+            [MigrationWizardConstants.DISPLAYED_FILE_RESOURCE_TYPES.PASSWORDS_UPDATED]: {
+              inProgress: false,
+              message: PASSWORDS_UPDATED_SUCCESS_STRING,
+            },
+          },
+        });
+        is(
+          gDeck.selectedViewName,
+          "page-file-import-progress",
+          "Should have the file progress page selected"
+        );
+
+        let header = gShadowRoot.querySelector("#file-import-progress-header");
+        is(header.textContent, TITLE, "Title is set correctly.");
+
+        let passwordsNewGroup = getResourceGroup(
+          MigrationWizardConstants.DISPLAYED_FILE_RESOURCE_TYPES.PASSWORDS_NEW
+        );
+        ok(!isHidden(passwordsNewGroup), "Passwords new group should be visible");
+        let progressIcon = passwordsNewGroup.querySelector(".progress-icon");
+        ok(
+          progressIcon.classList.contains("completed"),
+          "Progress should be completed"
+        );
+        is(
+          passwordsNewGroup.querySelector(".success-text").textContent,
+          PASSWORDS_NEW_SUCCESS_STRING
+        );
+
+        let passwordsUpdatedGroup = getResourceGroup(
+          MigrationWizardConstants.DISPLAYED_FILE_RESOURCE_TYPES.PASSWORDS_UPDATED
+        );
+        ok(!isHidden(passwordsUpdatedGroup), "Passwords updated group should be visible");
+        progressIcon = passwordsUpdatedGroup.querySelector(".progress-icon");
+        ok(
+          progressIcon.classList.contains("completed"),
+          "Progress should be completed"
+        );
+        is(
+          passwordsUpdatedGroup.querySelector(".success-text").textContent,
+          PASSWORDS_UPDATED_SUCCESS_STRING
+        );
+
+        let passwordsFromFileGroup = getResourceGroup(
+          MigrationWizardConstants.DISPLAYED_FILE_RESOURCE_TYPES.PASSWORDS_FROM_FILE
+        );
+        ok(isHidden(passwordsFromFileGroup), "Passwords from file group should be hidden");
+
+        let progressPage = gShadowRoot.querySelector("div[name='page-file-import-progress']");
+        let doneButton = progressPage.querySelector(".done-button");
         ok(!isHidden(doneButton), "Done button should be visible and enabled");
         let cancelButton = progressPage.querySelector(".cancel-close");
         ok(isHidden(cancelButton), "Cancel button should be hidden");
