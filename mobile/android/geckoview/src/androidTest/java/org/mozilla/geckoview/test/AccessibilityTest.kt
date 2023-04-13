@@ -24,7 +24,6 @@ import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
 import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
 import org.junit.After
-import org.junit.Assume.assumeThat
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
@@ -35,7 +34,6 @@ import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.Setting
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ShouldContinue
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 
@@ -1314,7 +1312,6 @@ class AccessibilityTest : BaseSessionTest() {
         })
     }
 
-    @Setting(key = Setting.Key.FULL_ACCESSIBILITY_TREE, value = "true")
     @Test
     fun autoFill() {
         // Wait for the accessibility nodes to populate.
@@ -1429,7 +1426,6 @@ class AccessibilityTest : BaseSessionTest() {
         }
     }
 
-    @Setting(key = Setting.Key.FULL_ACCESSIBILITY_TREE, value = "true")
     @Test
     fun autoFill_navigation() {
         // Fails with BFCache in the parent.
@@ -1544,7 +1540,6 @@ class AccessibilityTest : BaseSessionTest() {
         )
     }
 
-    @Setting(key = Setting.Key.FULL_ACCESSIBILITY_TREE, value = "true")
     @Test
     fun testTree() {
         loadTestPage("test-tree")
@@ -1658,14 +1653,10 @@ class AccessibilityTest : BaseSessionTest() {
     }
 
     @Test fun testRemoteAccessibilityFocusIframe() {
-        var cacheEnabled = (sessionRule.getPrefs("accessibility.cache.enabled")[0] as Boolean)
-        assumeThat("Cache is enabled", cacheEnabled, equalTo(true))
         testAccessibilityFocusIframe(REMOTE_IFRAME)
     }
 
     @Test fun testLocalAccessibilityFocusIframe() {
-        var cacheEnabled = (sessionRule.getPrefs("accessibility.cache.enabled")[0] as Boolean)
-        assumeThat("Cache is enabled", cacheEnabled, equalTo(true))
         testAccessibilityFocusIframe(LOCAL_IFRAME)
     }
 
@@ -1705,19 +1696,16 @@ class AccessibilityTest : BaseSessionTest() {
         assertThat("inner node in inner doc bounds", innerDocBounds.contains(nodeBounds), equalTo(true))
     }
 
-    @Setting(key = Setting.Key.FULL_ACCESSIBILITY_TREE, value = "true")
     @Test
     fun testRemoteIframeTree() {
         testIframeTree(REMOTE_IFRAME)
     }
 
-    @Setting(key = Setting.Key.FULL_ACCESSIBILITY_TREE, value = "true")
     @Test
     fun testLocalIframeTree() {
         testIframeTree(LOCAL_IFRAME)
     }
 
-    @Setting(key = Setting.Key.FULL_ACCESSIBILITY_TREE, value = "true")
     @Test
     fun testCollection() {
         loadTestPage("test-collection")
@@ -1806,7 +1794,6 @@ class AccessibilityTest : BaseSessionTest() {
         })
     }
 
-    @Setting(key = Setting.Key.FULL_ACCESSIBILITY_TREE, value = "true")
     @Test
     fun testRange() {
         loadTestPage("test-range")
