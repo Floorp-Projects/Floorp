@@ -1048,8 +1048,9 @@ class InactivePropertyHelper {
    * Check if the given node's writing mode is vertical
    */
   hasVerticalWritingMode(node) {
-    const writingMode = computedStyle(node).writingMode;
-    return writingMode.includes("vertical") || writingMode.includes("sideways");
+    // Only 'horizontal-tb' has a horizontal writing mode.
+    // See https://drafts.csswg.org/css-writing-modes-4/#propdef-writing-mode
+    return computedStyle(node).writingMode !== "horizontal-tb";
   }
 
   /**
