@@ -121,8 +121,6 @@ protections-panel-cookie-banner-handling-undetected = Site currently not support
 
 protections-panel-cookie-banner-view-title =
   .title = Cookie Banner Reduction
-protections-panel-cookie-banner-view-go-back =
-  .aria-label = Back
 # Variables
 #  $host (String): the hostname of the site that is being displayed.
 protections-panel-cookie-banner-view-turn-off-for-site = Turn off Cookie Banner Reduction for { $host }?
