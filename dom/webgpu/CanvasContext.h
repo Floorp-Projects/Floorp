@@ -14,6 +14,7 @@
 
 namespace mozilla {
 namespace dom {
+class OwningHTMLCanvasElementOrOffscreenCanvas;
 class Promise;
 struct GPUCanvasConfiguration;
 enum class GPUTextureFormat : uint8_t;
@@ -82,6 +83,8 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
   }
 
  public:
+  void GetCanvas(dom::OwningHTMLCanvasElementOrOffscreenCanvas&) const;
+
   void Configure(const dom::GPUCanvasConfiguration& aDesc);
   void Unconfigure();
 

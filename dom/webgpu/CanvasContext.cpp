@@ -46,6 +46,21 @@ JSObject* CanvasContext::WrapObject(JSContext* aCx,
   return dom::GPUCanvasContext_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+// -
+
+void CanvasContext::GetCanvas(
+    dom::OwningHTMLCanvasElementOrOffscreenCanvas& aRetVal) const {
+  if (mCanvasElement) {
+    aRetVal.SetAsHTMLCanvasElement() = mCanvasElement;
+  } else if (mOffscreenCanvas) {
+    aRetVal.SetAsOffscreenCanvas() = mOffscreenCanvas;
+  } else {
+    MOZ_CRASH(
+        "This should only happen briefly during CC Unlink, and no JS should "
+        "happen then.");
+  }
+}
+
 void CanvasContext::Configure(const dom::GPUCanvasConfiguration& aDesc) {
   Unconfigure();
 
