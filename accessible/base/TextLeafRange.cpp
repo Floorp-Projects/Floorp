@@ -508,22 +508,18 @@ static dom::Selection* GetDOMSelection(const nsIContent* aStartContent,
                        : nullptr;
 }
 
-/**
- * Translate given TextLeafPoint into a DOM point that is kosher
- * for text selection.
- */
-MOZ_CAN_RUN_SCRIPT static std::pair<nsIContent*, int32_t> DOMPointForSelection(
-    const TextLeafPoint& aPoint) {
-  if (!aPoint || !aPoint.mAcc->IsLocal()) {
+std::pair<nsIContent*, int32_t> TextLeafPoint::ToDOMPoint(
+    bool aIncludeGenerated) const {
+  if (!(*this) || !mAcc->IsLocal()) {
     MOZ_ASSERT_UNREACHABLE("Invalid point");
     return {nullptr, 0};
   }
 
-  nsIContent* content = aPoint.mAcc->AsLocal()->GetContent();
+  nsIContent* content = mAcc->AsLocal()->GetContent();
   nsIFrame* frame = content ? content->GetPrimaryFrame() : nullptr;
   MOZ_ASSERT(frame);
 
-  if (frame && frame->IsGeneratedContentFrame()) {
+  if (!aIncludeGenerated && frame && frame->IsGeneratedContentFrame()) {
     // List markers accessibles represent the generated content element,
     // before/after text accessibles represent the child text nodes.
     auto generatedElement = content->IsGeneratedContentContainerForMarker()
@@ -549,18 +545,17 @@ MOZ_CAN_RUN_SCRIPT static std::pair<nsIContent*, int32_t> DOMPointForSelection(
     }
   }
 
-  if (!aPoint.mAcc->IsTextLeaf() && !aPoint.mAcc->IsHTMLBr() &&
-      !aPoint.mAcc->HasChildren()) {
+  if (!mAcc->IsTextLeaf() && !mAcc->IsHTMLBr() && !mAcc->HasChildren()) {
     // If this is not a text leaf it can be an empty editable container,
     // whitespace, or an empty doc. In any case, the offset inside should be 0.
-    MOZ_ASSERT(aPoint.mOffset == 0);
+    MOZ_ASSERT(mOffset == 0);
 
     if (RefPtr<TextControlElement> textControlElement =
             TextControlElement::FromNodeOrNull(content)) {
       // This is an empty input, use the shadow root's element.
       if (RefPtr<TextEditor> textEditor = textControlElement->GetTextEditor()) {
         if (textEditor->IsEmpty()) {
-          MOZ_ASSERT(aPoint.mOffset == 0);
+          MOZ_ASSERT(mOffset == 0);
           return {textEditor->GetRoot(), 0};
         }
       }
@@ -569,8 +564,7 @@ MOZ_CAN_RUN_SCRIPT static std::pair<nsIContent*, int32_t> DOMPointForSelection(
     return {content, 0};
   }
 
-  return {content,
-          RenderedToContentOffset(aPoint.mAcc->AsLocal(), aPoint.mOffset)};
+  return {content, RenderedToContentOffset(mAcc->AsLocal(), mOffset)};
 }
 
 /*** TextLeafPoint ***/
@@ -1818,9 +1812,9 @@ bool TextLeafRange::SetSelection(int32_t aSelectionNum) const {
 
   bool reversed = mEnd < mStart;
   auto [startContent, startContentOffset] =
-      DOMPointForSelection(!reversed ? mStart : mEnd);
+      !reversed ? mStart.ToDOMPoint(false) : mEnd.ToDOMPoint(false);
   auto [endContent, endContentOffset] =
-      DOMPointForSelection(!reversed ? mEnd : mStart);
+      !reversed ? mEnd.ToDOMPoint(false) : mStart.ToDOMPoint(false);
 
   if (!startContent || !endContent) {
     return false;
