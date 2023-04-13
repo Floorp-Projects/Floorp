@@ -262,7 +262,12 @@ event.sendKeys = function(keyString, win) {
     const data = lazy.keyData.getData(keyValue);
     const key = { ...data, ...modifiers };
     if (data.modifier) {
-      modifiers[data.modifier] = true;
+      // Negating the state of the modifier here is not spec compliant but
+      // makes us compatible to Chrome's behavior for now. That's fine unless
+      // we know the correct behavior.
+      //
+      // @see: https://github.com/w3c/webdriver/issues/1734
+      modifiers[data.modifier] = !modifiers[data.modifier];
     }
     event.sendSingleKey(key, win);
   }
