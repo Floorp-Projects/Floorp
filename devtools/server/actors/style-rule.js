@@ -312,16 +312,25 @@ class StyleRuleActor extends Actor {
         this._parentSheet
       );
 
-      // If the rule is in a imported stylesheet with a specified layer, put it at the top
-      // of the ancestor data array.
-      if (
-        this._parentSheet.ownerRule &&
-        this._parentSheet.ownerRule.layerName !== null
-      ) {
-        form.ancestorData.unshift({
-          type: "layer",
-          value: this._parentSheet.ownerRule.layerName,
-        });
+      if (this._parentSheet.ownerRule) {
+        // If the rule is in a imported stylesheet with a specified layer, put it at the top
+        // of the ancestor data array.
+        if (this._parentSheet.ownerRule.layerName !== null) {
+          form.ancestorData.unshift({
+            type: "layer",
+            value: this._parentSheet.ownerRule.layerName,
+          });
+        }
+
+        // If the rule is in a imported stylesheet with specified media conditions,
+        // put them at the top of the ancestor data array.
+        // XXX We should also handle `supports()` when it gets implemented (See Bug 1827886).
+        if (this._parentSheet.ownerRule.media?.mediaText) {
+          form.ancestorData.unshift({
+            type: "import",
+            value: this._parentSheet.ownerRule.media.mediaText,
+          });
+        }
       }
     }
 
