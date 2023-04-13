@@ -241,8 +241,6 @@
     "browser/components/migration/ChromeProfileMigrator.jsm",
   "resource:///modules/ChromeWindowsLoginCrypto.jsm":
     "browser/components/migration/ChromeWindowsLoginCrypto.jsm",
-  "resource:///modules/ColorwayClosetOpener.jsm":
-    "browser/components/colorways/ColorwayClosetOpener.jsm",
   "resource:///modules/CommonNames.jsm":
     "browser/components/places/CommonNames.jsm",
   "resource:///modules/ContentCrashHandlers.jsm":

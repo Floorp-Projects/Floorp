@@ -3,14 +3,7 @@
 
 "use strict";
 
-const { ColorwayClosetOpener } = ChromeUtils.import(
-  "resource:///modules/ColorwayClosetOpener.jsm"
-);
-
-add_task(async function test_open_firefoxview_and_colorways_modal() {
-  const sandbox = sinon.createSandbox();
-  const spy = sandbox.spy(ColorwayClosetOpener, "openModal");
-
+add_task(async function test_open_firefoxview() {
   const tabPromise = BrowserTestUtils.waitForNewTab(
     gBrowser,
     "about:firefoxview"
@@ -22,8 +15,6 @@ add_task(async function test_open_firefoxview_and_colorways_modal() {
   const tab = await tabPromise;
 
   ok(tab, "should open about:firefoxview in a new tab");
-  ok(spy.calledOnce, "ColorwayClosetOpener's openModal was called once");
 
   BrowserTestUtils.removeTab(tab);
-  sandbox.restore();
 });
