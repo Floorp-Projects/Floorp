@@ -101,13 +101,15 @@ ping.centre:
       The number of PingCentre send failures.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1800079
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1827767
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1800079
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1827767
     data_sensitivity:
       - technical
     notification_emails:
       - chutten@mozilla.com
-    expires: 115
+    expires: 120
 
   send_failures_by_namespace:
     type: labeled_counter
@@ -116,13 +118,15 @@ ping.centre:
       broken down by structured ingestion namespace.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1814922
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1827767
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1814922
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1827767
     data_sensitivity:
       - technical
     notification_emails:
       - chutten@mozilla.com
-    expires: 115
+    expires: 120
     labels: &structured_ingestion_namespaces
       - activity_stream
       - messaging_system
@@ -137,13 +141,15 @@ ping.centre:
       broken down by structured ingestion namespace.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1814922
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1827767
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1814922
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1827767
     data_sensitivity:
       - technical
     notification_emails:
       - chutten@mozilla.com
-    expires: 115
+    expires: 120
     labels: *structured_ingestion_namespaces
     no_lint:
       - COMMON_PREFIX
