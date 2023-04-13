@@ -10,6 +10,8 @@
 #include "nsIObserver.h"
 #include "nsString.h"
 #include "mozilla/ipc/MiniTransceiver.h"
+#include "mozilla/ipc/LaunchError.h"
+#include "mozilla/Result.h"
 
 #include <sys/types.h>
 #include <poll.h>
@@ -43,9 +45,9 @@ class ForkServiceChild {
    * \param aPid returns the PID of the content process created.
    * \return true if success.
    */
-  bool SendForkNewSubprocess(const nsTArray<nsCString>& aArgv,
-                             const nsTArray<EnvVar>& aEnvMap,
-                             const nsTArray<FdMapping>& aFdsRemap, pid_t* aPid);
+  Result<Ok, LaunchError> SendForkNewSubprocess(
+      const nsTArray<nsCString>& aArgv, const nsTArray<EnvVar>& aEnvMap,
+      const nsTArray<FdMapping>& aFdsRemap, pid_t* aPid);
 
   /**
    * Create a fork server process and the singleton of this class.

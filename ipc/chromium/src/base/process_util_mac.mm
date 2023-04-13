@@ -19,6 +19,9 @@
 #include "base/logging.h"
 #include "mozilla/ipc/FileDescriptorShuffle.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/Result.h"
+
+#include "mozilla/ipc/LaunchError.h"
 
 extern "C" {
 // N.B. the syscalls are available back to 10.5, but the C wrappers
@@ -38,9 +41,9 @@ static mozilla::EnvironmentLog gProcessLog("MOZ_PROCESS_LOG");
 
 namespace base {
 
-bool LaunchApp(const std::vector<std::string>& argv, const LaunchOptions& options,
-               ProcessHandle* process_handle) {
-  bool retval = true;
+Result<Ok, LaunchError> LaunchApp(const std::vector<std::string>& argv,
+                                  const LaunchOptions& options, ProcessHandle* process_handle) {
+  Result<Ok, LaunchError> retval = Ok();
 
   char* argv_copy[argv.size() + 1];
   for (size_t i = 0; i < argv.size(); i++) {
@@ -53,26 +56,32 @@ bool LaunchApp(const std::vector<std::string>& argv, const LaunchOptions& option
       options.full_env ? options.full_env : (env_storage = BuildEnvironmentArray(options.env_map));
 
   posix_spawn_file_actions_t file_actions;
-  if (posix_spawn_file_actions_init(&file_actions) != 0) {
+  int err = posix_spawn_file_actions_init(&file_actions);
+  if (err != 0) {
     DLOG(WARNING) << "posix_spawn_file_actions_init failed";
-    return false;
+    return Err(LaunchError("posix_spawn_file_actions_init", err));
   }
   auto file_actions_guard =
       mozilla::MakeScopeExit([&file_actions] { posix_spawn_file_actions_destroy(&file_actions); });
 
   // Turn fds_to_remap array into a set of dup2 calls.
+  //
+  // Init() there will call fcntl(F_DUPFD/F_DUPFD_CLOEXEC) under the hood in
+  // https://searchfox.org/mozilla-central/rev/55d5c4b9dffe5e59eb6b019c1a930ec9ada47e10/ipc/glue/FileDescriptorShuffle.cpp#72
+  // so it will set errno.
   mozilla::ipc::FileDescriptorShuffle shuffle;
   if (!shuffle.Init(options.fds_to_remap)) {
     DLOG(WARNING) << "FileDescriptorShuffle::Init failed";
-    return false;
+    return Err(LaunchError("FileDescriptorShuffle", errno));
   }
   for (const auto& fd_map : shuffle.Dup2Sequence()) {
     int src_fd = fd_map.first;
     int dest_fd = fd_map.second;
 
-    if (posix_spawn_file_actions_adddup2(&file_actions, src_fd, dest_fd) != 0) {
+    int rv = posix_spawn_file_actions_adddup2(&file_actions, src_fd, dest_fd);
+    if (rv != 0) {
       DLOG(WARNING) << "posix_spawn_file_actions_adddup2 failed";
-      return false;
+      return Err(LaunchError("posix_spawn_file_actions_adddup2", rv));
     }
   }
 
@@ -85,19 +94,20 @@ bool LaunchApp(const std::vector<std::string>& argv, const LaunchOptions& option
   int old_cwd_fd = -1;
   if (!options.workdir.empty()) {
     if (@available(macOS 10.15, *)) {
-      if (posix_spawn_file_actions_addchdir_np(&file_actions, options.workdir.c_str()) != 0) {
+      int rv = posix_spawn_file_actions_addchdir_np(&file_actions, options.workdir.c_str());
+      if (rv != 0) {
         DLOG(WARNING) << "posix_spawn_file_actions_addchdir_np failed";
-        return false;
+        return Err(LaunchError("posix_spawn_file_actions_addchdir", rv));
       }
     } else {
       old_cwd_fd = open(".", O_RDONLY | O_CLOEXEC | O_DIRECTORY);
       if (old_cwd_fd < 0) {
         DLOG(WARNING) << "open(\".\") failed";
-        return false;
+        return Err(LaunchError("open", errno));
       }
       if (pthread_chdir_np(options.workdir.c_str()) != 0) {
         DLOG(WARNING) << "pthread_chdir_np failed";
-        return false;
+        return Err(LaunchError("pthread_chdir_np", errno));
       }
     }
   }
@@ -112,9 +122,10 @@ bool LaunchApp(const std::vector<std::string>& argv, const LaunchOptions& option
 
   // Initialize spawn attributes.
   posix_spawnattr_t spawnattr;
-  if (posix_spawnattr_init(&spawnattr) != 0) {
+  err = posix_spawnattr_init(&spawnattr);
+  if (err != 0) {
     DLOG(WARNING) << "posix_spawnattr_init failed";
-    return false;
+    return Err(LaunchError("posix_spawnattr_init", err));
   }
   auto spawnattr_guard =
       mozilla::MakeScopeExit([&spawnattr] { posix_spawnattr_destroy(&spawnattr); });
@@ -124,20 +135,20 @@ bool LaunchApp(const std::vector<std::string>& argv, const LaunchOptions& option
     cpu_type_t cpu_pref = CPU_TYPE_X86_64;
     size_t count = 1;
     size_t ocount = 0;
-    int rv;
-    rv = posix_spawnattr_setbinpref_np(&spawnattr, count, &cpu_pref, &ocount);
+    int rv = posix_spawnattr_setbinpref_np(&spawnattr, count, &cpu_pref, &ocount);
     if ((rv != 0) || (ocount != count)) {
       DLOG(WARNING) << "posix_spawnattr_setbinpref_np failed";
-      return false;
+      return Err(LaunchError("posix_spawnattr_setbinpref_np", rv));
     }
   }
 #endif
 
   if (options.disclaim) {
     if (@available(macOS 10.14, *)) {
-      if (responsibility_spawnattrs_setdisclaim(&spawnattr, 1) != 0) {
+      int err = responsibility_spawnattrs_setdisclaim(&spawnattr, 1);
+      if (err != 0) {
         DLOG(WARNING) << "responsibility_spawnattrs_setdisclaim failed";
-        return false;
+        return Err(LaunchError("responsibility_spawnattrs_setdisclaim", err));
       }
     }
   }
@@ -145,16 +156,18 @@ bool LaunchApp(const std::vector<std::string>& argv, const LaunchOptions& option
   // Prevent the child process from inheriting any file descriptors
   // that aren't named in `file_actions`.  (This is an Apple-specific
   // extension to posix_spawn.)
-  if (posix_spawnattr_setflags(&spawnattr, POSIX_SPAWN_CLOEXEC_DEFAULT) != 0) {
+  err = posix_spawnattr_setflags(&spawnattr, POSIX_SPAWN_CLOEXEC_DEFAULT);
+  if (err != 0) {
     DLOG(WARNING) << "posix_spawnattr_setflags failed";
-    return false;
+    return Err(LaunchError("posix_spawnattr_setflags", err));
   }
 
   // Exempt std{in,out,err} from being closed by POSIX_SPAWN_CLOEXEC_DEFAULT.
   for (int fd = 0; fd <= STDERR_FILENO; ++fd) {
-    if (posix_spawn_file_actions_addinherit_np(&file_actions, fd) != 0) {
+    err = posix_spawn_file_actions_addinherit_np(&file_actions, fd);
+    if (err != 0) {
       DLOG(WARNING) << "posix_spawn_file_actions_addinherit_np failed";
-      return false;
+      return Err(LaunchError("posix_spawn_file_actions_addinherit_np", err));
     }
   }
 
@@ -165,7 +178,7 @@ bool LaunchApp(const std::vector<std::string>& argv, const LaunchOptions& option
   bool process_handle_valid = pid > 0;
   if (!spawn_succeeded || !process_handle_valid) {
     DLOG(WARNING) << "posix_spawnp failed";
-    retval = false;
+    retval = Err(LaunchError("posix_spawnp", spawn_succeeded));
   } else {
     gProcessLog.print("==> process %d launched child process %d\n", GetCurrentProcId(), pid);
     if (options.wait) HANDLE_EINTR(waitpid(pid, 0, 0));
@@ -176,7 +189,8 @@ bool LaunchApp(const std::vector<std::string>& argv, const LaunchOptions& option
   return retval;
 }
 
-bool LaunchApp(const CommandLine& cl, const LaunchOptions& options, ProcessHandle* process_handle) {
+Result<Ok, LaunchError> LaunchApp(const CommandLine& cl, const LaunchOptions& options,
+                                  ProcessHandle* process_handle) {
   return LaunchApp(cl.argv(), options, process_handle);
 }
 

@@ -352,9 +352,7 @@ void PreallocatedProcessManagerImpl::AllocateNow() {
               }
             }
           },
-          [self, this, process](ContentParent::LaunchError) {
-            Erase(process);
-          });
+          [self, this, process]() { Erase(process); });
 }
 
 void PreallocatedProcessManagerImpl::Disable() {

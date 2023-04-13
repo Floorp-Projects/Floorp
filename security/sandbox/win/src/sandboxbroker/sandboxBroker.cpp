@@ -30,6 +30,7 @@
 #include "mozilla/WinDllServices.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
+#include "mozilla/ipc/LaunchError.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsCOMPtr.h"
 #include "nsDirectoryServiceDefs.h"
@@ -259,14 +260,17 @@ static void AddDeveloperRepoDirToPolicy(sandbox::TargetPolicy* aPolicy) {
 
 #undef WSTRING
 
-bool SandboxBroker::LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
-                              base::EnvironmentMap& aEnvironment,
-                              GeckoProcessType aProcessType,
-                              const bool aEnableLogging,
-                              const IMAGE_THUNK_DATA* aCachedNtdllThunk,
-                              void** aProcessHandle) {
-  if (!sBrokerService || !mPolicy) {
-    return false;
+Result<Ok, mozilla::ipc::LaunchError> SandboxBroker::LaunchApp(
+    const wchar_t* aPath, const wchar_t* aArguments,
+    base::EnvironmentMap& aEnvironment, GeckoProcessType aProcessType,
+    const bool aEnableLogging, const IMAGE_THUNK_DATA* aCachedNtdllThunk,
+    void** aProcessHandle) {
+  if (!sBrokerService) {
+    return Err(mozilla::ipc::LaunchError("SB::LA::sBrokerService"));
+  }
+
+  if (!mPolicy) {
+    return Err(mozilla::ipc::LaunchError("SB::LA::mPolicy"));
   }
 
   // Set stdout and stderr, to allow inheritance for logging.
@@ -331,7 +335,7 @@ bool SandboxBroker::LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
         "last_warning=%d",
         result, last_error, last_warning);
 
-    return false;
+    return Err(mozilla::ipc::LaunchError("SB::LA::SpawnTarget", last_error));
   } else if (sandbox::SBOX_ALL_OK != last_warning) {
     // If there was a warning (but the result was still ok), log it and proceed.
     LOG_W("Warning on SpawnTarget with last_error=%lu, last_warning=%d",
@@ -362,7 +366,9 @@ bool SandboxBroker::LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
       TerminateProcess(targetInfo.hProcess, 1);
       CloseHandle(targetInfo.hThread);
       CloseHandle(targetInfo.hProcess);
-      return false;
+      return Err(mozilla::ipc::LaunchError(
+          "InitDllBlocklistOOP",
+          blocklistInitOk.unwrapErr().mError.AsHResult()));
     }
   } else {
     // Load the child executable as a datafile so that we can examine its
@@ -385,7 +391,9 @@ bool SandboxBroker::LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
           TerminateProcess(targetInfo.hProcess, 1);
           CloseHandle(targetInfo.hThread);
           CloseHandle(targetInfo.hProcess);
-          return false;
+          return Err(mozilla::ipc::LaunchError(
+              "RestoreImportDirectory",
+              importsRestored.unwrapErr().mError.AsHResult()));
         }
       }
     }
@@ -399,7 +407,7 @@ bool SandboxBroker::LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
   // Return the process handle to the caller
   *aProcessHandle = targetInfo.hProcess;
 
-  return true;
+  return Ok();
 }
 
 static void AddCachedDirRule(sandbox::TargetPolicy* aPolicy,

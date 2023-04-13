@@ -35,6 +35,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerRef.h"
+#include "mozilla/ipc/LaunchError.h"
 #include "PathUtils.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
@@ -2884,8 +2885,9 @@ uint32_t IOUtils::LaunchProcess(GlobalObject& aGlobal,
   base::ProcessHandle pid;
   static_assert(sizeof(pid) <= sizeof(uint32_t),
                 "WebIDL long should be large enough for a pid");
-  bool ok = base::LaunchApp(argv, options, &pid);
-  if (!ok) {
+  Result<Ok, mozilla::ipc::LaunchError> err =
+      base::LaunchApp(argv, options, &pid);
+  if (err.isErr()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return 0;
   }

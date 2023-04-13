@@ -131,9 +131,8 @@ class ContentParent final : public PContentParent,
   friend class mozilla::dom::RemoteWorkerManager;
 
  public:
-  using LaunchError = mozilla::ipc::LaunchError;
   using LaunchPromise =
-      mozilla::MozPromise<RefPtr<ContentParent>, LaunchError, false>;
+      mozilla::MozPromise<RefPtr<ContentParent>, nsresult, false>;
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_CONTENTPARENT_IID)
 

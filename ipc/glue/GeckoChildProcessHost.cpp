@@ -28,6 +28,7 @@
 #include "mozilla/Sprintf.h"
 #include "nsXPCOMPrivate.h"
 #include "prenv.h"
+#include "prerror.h"
 
 #if defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxSettings.h"
@@ -206,9 +207,9 @@ class BaseProcessLauncher {
   // Overrideable hooks. If superclass behavior is invoked, it's always at the
   // top of the override.
   virtual bool SetChannel(IPC::Channel*) = 0;
-  virtual bool DoSetup();
+  virtual Result<Ok, LaunchError> DoSetup();
   virtual RefPtr<ProcessHandlePromise> DoLaunch() = 0;
-  virtual bool DoFinishLaunch() { return true; };
+  virtual Result<Ok, LaunchError> DoFinishLaunch() { return Ok(); };
 
   void MapChildLogging();
 
@@ -267,9 +268,9 @@ class WindowsProcessLauncher : public BaseProcessLauncher {
 
  protected:
   bool SetChannel(IPC::Channel*) override { return true; }
-  virtual bool DoSetup() override;
+  virtual Result<Ok, LaunchError> DoSetup() override;
   virtual RefPtr<ProcessHandlePromise> DoLaunch() override;
-  virtual bool DoFinishLaunch() override;
+  virtual Result<Ok, LaunchError> DoFinishLaunch() override;
 
   mozilla::Maybe<CommandLine> mCmdLine;
   bool mUseSandbox = false;
@@ -308,9 +309,9 @@ class PosixProcessLauncher : public BaseProcessLauncher {
     return true;
   }
 
-  virtual bool DoSetup() override;
+  virtual Result<Ok, LaunchError> DoSetup() override;
   virtual RefPtr<ProcessHandlePromise> DoLaunch() override;
-  virtual bool DoFinishLaunch() override;
+  virtual Result<Ok, LaunchError> DoFinishLaunch() override;
 
   nsCOMPtr<nsIFile> mProfileDir;
 
@@ -335,7 +336,7 @@ class MacProcessLauncher : public PosixProcessLauncher {
   }
 
  protected:
-  virtual bool DoFinishLaunch() override;
+  virtual Result<Ok, LaunchError> DoFinishLaunch() override;
 
   std::string mMachConnectionName;
   // We add a mach port to the command line so the child can communicate its
@@ -371,7 +372,7 @@ class LinuxProcessLauncher : public PosixProcessLauncher {
       : PosixProcessLauncher(aHost, std::move(aExtraOpts)) {}
 
  protected:
-  virtual bool DoSetup() override;
+  virtual Result<Ok, LaunchError> DoSetup() override;
 };
 typedef LinuxProcessLauncher ProcessLauncher;
 #  elif
@@ -533,7 +534,8 @@ void GeckoChildProcessHost::Destroy() {
 
   if (!whenReady) {
     // AsyncLaunch not called yet, so dispatch immediately.
-    whenReady = ProcessHandlePromise::CreateAndReject(LaunchError{}, __func__);
+    whenReady = ProcessHandlePromise::CreateAndReject(
+        LaunchError("DestroyEarly"), __func__);
   }
 
   using Value = ProcessHandlePromise::ResolveOrRejectValue;
@@ -805,6 +807,26 @@ bool GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts) {
                     Telemetry::SUBPROCESS_LAUNCH_FAILURE,
                     nsDependentCString(
                         XRE_GeckoProcessTypeToString(mProcessType)));
+                nsCString telemetryKey = nsPrintfCString(
+#if defined(XP_WIN)
+                    "%s,0x%lx,%s",
+#else
+                    "%s,%d,%s",
+#endif
+                    aError.FunctionName(), aError.ErrorCode(),
+                    XRE_GeckoProcessTypeToString(mProcessType));
+                // Max telemetry key is 72 chars
+                // https://searchfox.org/mozilla-central/rev/c244b16815d1fc827d141472b9faac5610f250e7/toolkit/components/telemetry/core/TelemetryScalar.cpp#105
+                if (telemetryKey.Length() > 72) {
+                  NS_WARNING(nsPrintfCString("Truncating telemetry key: %s",
+                                             telemetryKey.get())
+                                 .get());
+                  telemetryKey.Truncate(72);
+                }
+                Telemetry::ScalarAdd(
+                    Telemetry::ScalarID::
+                        DOM_PARENTPROCESS_PROCESS_LAUNCH_ERRORS,
+                    NS_ConvertUTF8toUTF16(telemetryKey), 1);
                 {
                   MonitorAutoLock lock(mMonitor);
                   mProcessState = PROCESS_ERROR;
@@ -1049,8 +1071,9 @@ static bool Contains(const std::vector<std::string>& aExtraOpts,
 #endif  // defined(XP_WIN) && (defined(MOZ_SANDBOX) || defined(_ARM64_))
 
 RefPtr<ProcessLaunchPromise> BaseProcessLauncher::PerformAsyncLaunch() {
-  if (!DoSetup()) {
-    return ProcessLaunchPromise::CreateAndReject(LaunchError{}, __func__);
+  Result<Ok, LaunchError> aError = DoSetup();
+  if (aError.isErr()) {
+    return ProcessLaunchPromise::CreateAndReject(aError.unwrapErr(), __func__);
   }
   RefPtr<BaseProcessLauncher> self = this;
   return DoLaunch()->Then(
@@ -1064,7 +1087,7 @@ RefPtr<ProcessLaunchPromise> BaseProcessLauncher::PerformAsyncLaunch() {
       });
 }
 
-bool BaseProcessLauncher::DoSetup() {
+Result<Ok, LaunchError> BaseProcessLauncher::DoSetup() {
   RefPtr<BaseProcessLauncher> self = this;
   GetProfilerEnvVarsForChildProcess([self](const char* key, const char* value) {
     self->mLaunchOptions->env_map[ENVIRONMENT_STRING(key)] =
@@ -1082,8 +1105,12 @@ bool BaseProcessLauncher::DoSetup() {
 
   MapChildLogging();
 
-  return PR_CreatePipe(&mCrashAnnotationReadPipe.rwget(),
-                       &mCrashAnnotationWritePipe.rwget()) == PR_SUCCESS;
+  PRStatus status = PR_CreatePipe(&mCrashAnnotationReadPipe.rwget(),
+                                  &mCrashAnnotationWritePipe.rwget());
+  if (status != PR_SUCCESS) {
+    return Err(LaunchError("PR_CreatePipe", PR_GetError()));
+  }
+  return Ok();
 }
 
 void BaseProcessLauncher::MapChildLogging() {
@@ -1112,9 +1139,10 @@ void BaseProcessLauncher::MapChildLogging() {
 }
 
 #if defined(MOZ_WIDGET_GTK)
-bool LinuxProcessLauncher::DoSetup() {
-  if (!PosixProcessLauncher::DoSetup()) {
-    return false;
+Result<Ok, LaunchError> LinuxProcessLauncher::DoSetup() {
+  Result<Ok, LaunchError> aError = PosixProcessLauncher::DoSetup();
+  if (aError.isErr()) {
+    return aError;
   }
 
   if (mProcessType == GeckoProcessType_Content) {
@@ -1139,14 +1167,15 @@ bool LinuxProcessLauncher::DoSetup() {
   }
 #  endif  // MOZ_SANDBOX
 
-  return true;
+  return Ok();
 }
 #endif  // MOZ_WIDGET_GTK
 
 #ifdef OS_POSIX
-bool PosixProcessLauncher::DoSetup() {
-  if (!BaseProcessLauncher::DoSetup()) {
-    return false;
+Result<Ok, LaunchError> PosixProcessLauncher::DoSetup() {
+  Result<Ok, LaunchError> aError = BaseProcessLauncher::DoSetup();
+  if (aError.isErr()) {
+    return aError;
   }
 
   // XPCOM may not be initialized in some subprocesses.  We don't want
@@ -1258,7 +1287,7 @@ bool PosixProcessLauncher::DoSetup() {
     int childCrashFd, childCrashRemapFd;
     if (NS_WARN_IF(!CrashReporter::CreateNotificationPipeForChild(
             &childCrashFd, &childCrashRemapFd))) {
-      return false;
+      return Err(LaunchError("CR::CreateNotificationPipeForChild"));
     }
 
     if (0 <= childCrashFd) {
@@ -1289,14 +1318,14 @@ bool PosixProcessLauncher::DoSetup() {
     if (kr != KERN_SUCCESS) {
       CHROMIUM_LOG(ERROR) << "parent bootstrap_check_in failed: "
                           << mach_error_string(kr);
-      return false;
+      return Err(LaunchError("bootstrap_check_in", kr));
     }
     mChildArgv.push_back(thisMac->mMachConnectionName.c_str());
   }
 #  endif  // MOZ_WIDGET_COCOA
 
   mChildArgv.push_back(ChildProcessType());
-  return true;
+  return Ok();
 }
 #endif  // OS_POSIX
 
@@ -1310,15 +1339,18 @@ RefPtr<ProcessHandlePromise> AndroidProcessLauncher::DoLaunch() {
 #ifdef OS_POSIX
 RefPtr<ProcessHandlePromise> PosixProcessLauncher::DoLaunch() {
   ProcessHandle handle = 0;
-  if (!base::LaunchApp(mChildArgv, *mLaunchOptions, &handle)) {
-    return ProcessHandlePromise::CreateAndReject(LaunchError{}, __func__);
+  Result<Ok, LaunchError> aError =
+      base::LaunchApp(mChildArgv, *mLaunchOptions, &handle);
+  if (aError.isErr()) {
+    return ProcessHandlePromise::CreateAndReject(aError.unwrapErr(), __func__);
   }
   return ProcessHandlePromise::CreateAndResolve(handle, __func__);
 }
 
-bool PosixProcessLauncher::DoFinishLaunch() {
-  if (!BaseProcessLauncher::DoFinishLaunch()) {
-    return false;
+Result<Ok, LaunchError> PosixProcessLauncher::DoFinishLaunch() {
+  Result<Ok, LaunchError> aError = BaseProcessLauncher::DoFinishLaunch();
+  if (aError.isErr()) {
+    return aError;
   }
 
   // We're in the parent and the child was launched. Close the child FD in the
@@ -1326,14 +1358,15 @@ bool PosixProcessLauncher::DoFinishLaunch() {
   // child closes its FD (either due to normal exit or due to crash).
   mChannelSrcFd = nullptr;
 
-  return true;
+  return Ok();
 }
 #endif  // OS_POSIX
 
 #ifdef XP_MACOSX
-bool MacProcessLauncher::DoFinishLaunch() {
-  if (!PosixProcessLauncher::DoFinishLaunch()) {
-    return false;
+Result<Ok, LaunchError> MacProcessLauncher::DoFinishLaunch() {
+  Result<Ok, LaunchError> aError = PosixProcessLauncher::DoFinishLaunch();
+  if (aError.isErr()) {
+    return aError;
   }
 
   MOZ_ASSERT(mParentRecvPort, "should have been configured during DoSetup()");
@@ -1349,13 +1382,13 @@ bool MacProcessLauncher::DoFinishLaunch() {
     std::string errString = StringPrintf("0x%x %s", kr, mach_error_string(kr));
     CHROMIUM_LOG(ERROR) << "parent MachReceivePortSendRight failed: "
                         << errString;
-    return false;
+    return Err(LaunchError("MachReceivePortSendRight", kr));
   }
 
   // Ensure the message was sent by the newly spawned child process.
   if (audit_token_to_pid(audit_token) != base::GetProcId(mResults.mHandle)) {
     CHROMIUM_LOG(ERROR) << "task_t was not sent by child process";
-    return false;
+    return Err(LaunchError("audit_token_to_pid"));
   }
 
   // Ensure the task_t corresponds to the newly spawned child process.
@@ -1363,23 +1396,24 @@ bool MacProcessLauncher::DoFinishLaunch() {
   kr = pid_for_task(child_task.get(), &task_pid);
   if (kr != KERN_SUCCESS) {
     CHROMIUM_LOG(ERROR) << "pid_for_task failed: " << mach_error_string(kr);
-    return false;
+    return Err(LaunchError("pid_for_task", kr));
   }
   if (task_pid != base::GetProcId(mResults.mHandle)) {
     CHROMIUM_LOG(ERROR) << "task_t is not for child process";
-    return false;
+    return Err(LaunchError("task_pid"));
   }
 
   mResults.mChildTask = child_task.release();
 
-  return true;
+  return Ok();
 }
 #endif  // XP_MACOSX
 
 #ifdef XP_WIN
-bool WindowsProcessLauncher::DoSetup() {
-  if (!BaseProcessLauncher::DoSetup()) {
-    return false;
+Result<Ok, LaunchError> WindowsProcessLauncher::DoSetup() {
+  Result<Ok, LaunchError> aError = BaseProcessLauncher::DoSetup();
+  if (aError.isErr()) {
+    return aError;
   }
 
   FilePath exePath;
@@ -1461,7 +1495,7 @@ bool WindowsProcessLauncher::DoSetup() {
             isWidevine ? SandboxBroker::Restricted : SandboxBroker::LockDown;
         if (NS_WARN_IF(
                 !mResults.mSandboxBroker->SetSecurityLevelForGMPlugin(level))) {
-          return false;
+          return Err(LaunchError("SetSecurityLevelForGMPlugin"));
         }
         mUseSandbox = true;
       }
@@ -1484,7 +1518,7 @@ bool WindowsProcessLauncher::DoSetup() {
       if (!PR_GetEnv("MOZ_DISABLE_RDD_SANDBOX")) {
         if (NS_WARN_IF(
                 !mResults.mSandboxBroker->SetSecurityLevelForRDDProcess())) {
-          return false;
+          return Err(LaunchError("SetSecurityLevelForRDDProcess"));
         }
         mUseSandbox = true;
       }
@@ -1493,7 +1527,7 @@ bool WindowsProcessLauncher::DoSetup() {
       if (!PR_GetEnv("MOZ_DISABLE_SOCKET_PROCESS_SANDBOX")) {
         if (NS_WARN_IF(
                 !mResults.mSandboxBroker->SetSecurityLevelForSocketProcess())) {
-          return false;
+          return Err(LaunchError("SetSecurityLevelForSocketProcess"));
         }
         mUseSandbox = true;
       }
@@ -1502,7 +1536,7 @@ bool WindowsProcessLauncher::DoSetup() {
       if (!PR_GetEnv("MOZ_DISABLE_UTILITY_SANDBOX")) {
         if (!mResults.mSandboxBroker->SetSecurityLevelForUtilityProcess(
                 mSandbox)) {
-          return false;
+          return Err(LaunchError("SetSecurityLevelForUtilityProcess"));
         }
         mUseSandbox = true;
       }
@@ -1571,7 +1605,7 @@ bool WindowsProcessLauncher::DoSetup() {
   }
 #  endif  // MOZ_SANDBOX
 
-  return true;
+  return Ok();
 }
 
 RefPtr<ProcessHandlePromise> WindowsProcessLauncher::DoLaunch() {
@@ -1580,29 +1614,34 @@ RefPtr<ProcessHandlePromise> WindowsProcessLauncher::DoLaunch() {
   if (mUseSandbox) {
     const IMAGE_THUNK_DATA* cachedNtdllThunk =
         mCachedNtdllThunk ? mCachedNtdllThunk->begin() : nullptr;
-    if (mResults.mSandboxBroker->LaunchApp(
-            mCmdLine->program().c_str(),
-            mCmdLine->command_line_string().c_str(), mLaunchOptions->env_map,
-            mProcessType, mEnableSandboxLogging, cachedNtdllThunk, &handle)) {
+    Result<Ok, LaunchError> err = mResults.mSandboxBroker->LaunchApp(
+        mCmdLine->program().c_str(), mCmdLine->command_line_string().c_str(),
+        mLaunchOptions->env_map, mProcessType, mEnableSandboxLogging,
+        cachedNtdllThunk, &handle);
+    if (err.isOk()) {
       EnvironmentLog("MOZ_PROCESS_LOG")
           .print("==> process %d launched child process %d (%S)\n",
                  base::GetCurrentProcId(), base::GetProcId(handle),
                  mCmdLine->command_line_string().c_str());
       return ProcessHandlePromise::CreateAndResolve(handle, __func__);
     }
-    return ProcessHandlePromise::CreateAndReject(LaunchError{}, __func__);
+    return ProcessHandlePromise::CreateAndReject(err.unwrapErr(), __func__);
   }
 #  endif  // defined(MOZ_SANDBOX)
 
-  if (!base::LaunchApp(mCmdLine.ref(), *mLaunchOptions, &handle)) {
-    return ProcessHandlePromise::CreateAndReject(LaunchError{}, __func__);
+  Result<Ok, LaunchError> launchErr =
+      base::LaunchApp(mCmdLine.ref(), *mLaunchOptions, &handle);
+  if (launchErr.isErr()) {
+    return ProcessHandlePromise::CreateAndReject(launchErr.unwrapErr(),
+                                                 __func__);
   }
   return ProcessHandlePromise::CreateAndResolve(handle, __func__);
 }
 
-bool WindowsProcessLauncher::DoFinishLaunch() {
-  if (!BaseProcessLauncher::DoFinishLaunch()) {
-    return false;
+Result<Ok, LaunchError> WindowsProcessLauncher::DoFinishLaunch() {
+  Result<Ok, LaunchError> err = BaseProcessLauncher::DoFinishLaunch();
+  if (err.isErr()) {
+    return err;
   }
 
 #  ifdef MOZ_SANDBOX
@@ -1624,13 +1663,14 @@ bool WindowsProcessLauncher::DoFinishLaunch() {
   }
 #  endif  // MOZ_SANDBOX
 
-  return true;
+  return Ok();
 }
 #endif  // XP_WIN
 
 RefPtr<ProcessLaunchPromise> BaseProcessLauncher::FinishLaunch() {
-  if (!DoFinishLaunch()) {
-    return ProcessLaunchPromise::CreateAndReject(LaunchError{}, __func__);
+  Result<Ok, LaunchError> aError = DoFinishLaunch();
+  if (aError.isErr()) {
+    return ProcessLaunchPromise::CreateAndReject(aError.unwrapErr(), __func__);
   }
 
   MOZ_DIAGNOSTIC_ASSERT(mResults.mHandle);
@@ -1842,7 +1882,8 @@ RefPtr<ProcessLaunchPromise> BaseProcessLauncher::Launch(
       }
     });
     if (failed) {
-      return ProcessLaunchPromise::CreateAndReject(LaunchError{}, __func__);
+      return ProcessLaunchPromise::CreateAndReject(LaunchError("SetChannel"),
+                                                   __func__);
     }
     mChannelId = aHost->GetChannelId();
   }

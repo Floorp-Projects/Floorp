@@ -2127,7 +2127,7 @@ CanonicalBrowsingContext::ChangeRemoteness(
     change->mContentParent->WaitForLaunchAsync()->Then(
         GetMainThreadSerialEventTarget(), __func__,
         [change](ContentParent*) { change->ProcessLaunched(); },
-        [change](LaunchError) { change->Cancel(NS_ERROR_FAILURE); });
+        [change]() { change->Cancel(NS_ERROR_FAILURE); });
   } else {
     change->ProcessLaunched();
   }

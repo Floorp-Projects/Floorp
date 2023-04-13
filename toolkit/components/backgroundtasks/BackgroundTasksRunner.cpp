@@ -13,6 +13,8 @@
 #  include "mozilla/AssembleCmdLine.h"
 #endif
 
+#include "mozilla/ResultVariant.h"
+
 namespace mozilla {
 
 NS_IMPL_ISUPPORTS(BackgroundTasksRunner, nsIBackgroundTasksRunner);
@@ -47,7 +49,7 @@ NS_IMETHODIMP BackgroundTasksRunner::RunInDetachedProcess(
     return NS_ERROR_FAILURE;
   }
 
-  if (!base::LaunchApp(assembledCmdLine, options, nullptr)) {
+  if (base::LaunchApp(assembledCmdLine, options, nullptr).isErr()) {
     return NS_ERROR_FAILURE;
   }
 #else
@@ -57,7 +59,7 @@ NS_IMETHODIMP BackgroundTasksRunner::RunInDetachedProcess(
     argv.push_back(str.get());
   }
 
-  if (!base::LaunchApp(argv, options, nullptr)) {
+  if (base::LaunchApp(argv, options, nullptr).isErr()) {
     return NS_ERROR_FAILURE;
   }
 #endif

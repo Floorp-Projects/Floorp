@@ -1126,7 +1126,8 @@ ContentParent::GetNewOrUsedBrowserProcessAsync(const nsACString& aRemoteType,
       aRemoteType, aGroup, aPriority, aPreferUsed);
   if (!contentParent) {
     // In case of launch error, stop here.
-    return LaunchPromise::CreateAndReject(LaunchError(), __func__);
+    return LaunchPromise::CreateAndReject(NS_ERROR_ILLEGAL_DURING_SHUTDOWN,
+                                          __func__);
   }
   return contentParent->WaitForLaunchAsync(aPriority);
 }
@@ -1162,7 +1163,7 @@ RefPtr<ContentParent::LaunchPromise> ContentParent::WaitForLaunchAsync(
   // other `WaitForLaunchAsync` callbacks.
   return mSubprocess->WhenProcessHandleReady()->Then(
       GetCurrentSerialEventTarget(), __func__,
-      [self = RefPtr{this}, aPriority] {
+      [self = RefPtr{this}, aPriority]() {
         if (self->LaunchSubprocessResolve(/* aIsSync = */ false, aPriority)) {
           MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
                   ("WaitForLaunchAsync: async, now launched"));
@@ -1171,13 +1172,13 @@ RefPtr<ContentParent::LaunchPromise> ContentParent::WaitForLaunchAsync(
         }
 
         self->LaunchSubprocessReject();
-        return LaunchPromise::CreateAndReject(LaunchError(), __func__);
+        return LaunchPromise::CreateAndReject(NS_ERROR_INVALID_ARG, __func__);
       },
-      [self = RefPtr{this}] {
+      [self = RefPtr{this}]() {
         MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
                 ("WaitForLaunchAsync: async, rejected"));
         self->LaunchSubprocessReject();
-        return LaunchPromise::CreateAndReject(LaunchError(), __func__);
+        return LaunchPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
       });
 }
 
@@ -2848,7 +2849,8 @@ RefPtr<ContentParent::LaunchPromise> ContentParent::LaunchSubprocessAsync(
   if (!BeginSubprocessLaunch(aInitialPriority)) {
     // Launch aborted because of shutdown. Bailout.
     LaunchSubprocessReject();
-    return LaunchPromise::CreateAndReject(LaunchError(), __func__);
+    return LaunchPromise::CreateAndReject(NS_ERROR_ILLEGAL_DURING_SHUTDOWN,
+                                          __func__);
   }
 
   // Otherwise, wait until the process is ready.
@@ -2866,7 +2868,7 @@ RefPtr<ContentParent::LaunchPromise> ContentParent::LaunchSubprocessAsync(
           return LaunchPromise::CreateAndResolve(self, __func__);
         }
         self->LaunchSubprocessReject();
-        return LaunchPromise::CreateAndReject(LaunchError(), __func__);
+        return LaunchPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
       });
 }
 

@@ -14,6 +14,8 @@
 #  include "nsString.h"
 #endif
 
+#include "mozilla/ipc/LaunchError.h"
+
 #if defined(MOZ_ENABLE_FORKSERVER)
 #  include <stdlib.h>
 #  include <fcntl.h>
@@ -41,6 +43,7 @@ using namespace mozilla::ipc;
 #include "mozilla/ipc/FileDescriptorShuffle.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/Result.h"
 
 // WARNING: despite the name, this file is also used on the BSDs and
 // Solaris (basically, Unixes that aren't Mac OS), not just Linux.
@@ -199,9 +202,9 @@ void InitForkServerProcess() {
   SetThisProcessName("forkserver");
 }
 
-static bool LaunchAppWithForkServer(const std::vector<std::string>& argv,
-                                    const LaunchOptions& options,
-                                    ProcessHandle* process_handle) {
+static Result<Ok, LaunchError> LaunchAppWithForkServer(
+    const std::vector<std::string>& argv, const LaunchOptions& options,
+    ProcessHandle* process_handle) {
   MOZ_ASSERT(ForkServiceChild::Get());
 
   nsTArray<nsCString> _argv(argv.size());
@@ -225,8 +228,9 @@ static bool LaunchAppWithForkServer(const std::vector<std::string>& argv,
 }
 #endif  // MOZ_ENABLE_FORKSERVER
 
-bool LaunchApp(const std::vector<std::string>& argv,
-               const LaunchOptions& options, ProcessHandle* process_handle) {
+Result<Ok, LaunchError> LaunchApp(const std::vector<std::string>& argv,
+                                  const LaunchOptions& options,
+                                  ProcessHandle* process_handle) {
 #if defined(MOZ_ENABLE_FORKSERVER)
   if (options.use_forkserver && ForkServiceChild::Get()) {
     return LaunchAppWithForkServer(argv, options, process_handle);
@@ -240,10 +244,13 @@ bool LaunchApp(const std::vector<std::string>& argv,
       options.full_env ? options.full_env
                        : (env_storage = BuildEnvironmentArray(options.env_map));
 
+  // Init() there will call fcntl(F_DUPFD/F_DUPFD_CLOEXEC) under the hood in
+  // https://searchfox.org/mozilla-central/rev/55d5c4b9dffe5e59eb6b019c1a930ec9ada47e10/ipc/glue/FileDescriptorShuffle.cpp#72
+  // so it will set errno.
   mozilla::ipc::FileDescriptorShuffle shuffle;
   if (!shuffle.Init(options.fds_to_remap)) {
     CHROMIUM_LOG(WARNING) << "FileDescriptorShuffle::Init failed";
-    return false;
+    return Err(LaunchError("FileDescriptorShuffle", errno));
   }
 
 #ifdef MOZ_CODE_COVERAGE
@@ -271,7 +278,7 @@ bool LaunchApp(const std::vector<std::string>& argv,
 
   if (pid < 0) {
     CHROMIUM_LOG(WARNING) << "fork() failed: " << strerror(errno);
-    return false;
+    return Err(LaunchError("fork", errno));
   }
 
   if (pid == 0) {
@@ -337,11 +344,12 @@ bool LaunchApp(const std::vector<std::string>& argv,
 
   if (process_handle) *process_handle = pid;
 
-  return true;
+  return Ok();
 }
 
-bool LaunchApp(const CommandLine& cl, const LaunchOptions& options,
-               ProcessHandle* process_handle) {
+Result<Ok, LaunchError> LaunchApp(const CommandLine& cl,
+                                  const LaunchOptions& options,
+                                  ProcessHandle* process_handle) {
   return LaunchApp(cl.argv(), options, process_handle);
 }
 
