@@ -65,6 +65,10 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">رد کردن</string>
 
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">قوی‌ترین قابلیت حفظ حریم خصوصی ما هم‌اکنون، ردیاب‌های میان‌پایگاهی را منزوی می‌کند.</string>
+
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">دسترسی به دوربین مورد نیاز است. به تنظیمات اندروید بروید، روی مجوزها ضربه بزنید و بعد روی اجازه ضربه بزنید.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -1086,21 +1090,21 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">محافظت پیشرفته در برابر ردیابی</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">بدون دنبال شدن مرور کنید</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">بدون دنبال شدن مرور کنید</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">داده‌های خود را نزد خود نگه دارید.%s شما را از بسیاری از متداول‌ ترین ردیاب‌هایی که شما را به صورت آنلاین دنبال می‌کنند محافظت می‌کند.</string>
+    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">داده‌های خود را نزد خود نگه دارید.%s شما را از بسیاری از متداول‌ ترین ردیاب‌هایی که شما را به صورت آنلاین دنبال می‌کنند محافظت می‌کند.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">بیشتر بدانید</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">استاندارد (پیش فرض)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">تعادل بین کارآیی و حریم‌خصوصی. بارگیری صفحات با سرعتی عادی.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">تعادل بین کارآیی و حریم‌خصوصی. بارگیری صفحات با سرعتی عادی.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">آنچه توسط حفاظت ردیابی استاندارد مسدود شده است</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">سخت گیرانه</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">مسدودسازی ردیاب‌های بیشتر، اما برخی امکانات داخل صفحات ممکن است از کار بیافتند.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">مسدودسازی ردیاب‌های بیشتر، اما برخی امکانات داخل صفحات ممکن است از کار بیافتند.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">آنچه توسط حفاظت ردیابی سخت‌گیرانه مسدود شده است</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1122,7 +1126,7 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">تمام کلوچک‌ها (باعث خرابی وبگاه‌ها خواهد شد)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_5">قرنطینهٔ کلوچک‌های میان‌پایگاهی</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">منزوی کردن کلوچک‌های میان‌پایگاهی</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">محتوای ردیابی</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1149,6 +1153,8 @@
     <string name="etp_cookies_title_2">کلوچک‌های میان‌پایگاهی</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">کلوچک‌هایی را که شبکه‌های تبلیغاتی و شرکت‌های تحلیلی از آن‌ها استفاده می‌کنند، برای گردآوری داده‌های مرور شما در بسیاری از پایگاه‌ها مسدود می‌کند.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">محافظت کامل در برابر کلوچک‌ها، کلوچک‌ها را در پایگاهی که در آن هستید، منزوی می‌کند، پس ردیاب‌هایی مانند شبکه‌های تبلیغاتی نمی‌توانند از آن‌ها برای دنبال کردن شما در میان پایگاه‌ها استفاده کنند.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">استخراج کننده‌های رمزارزها</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
