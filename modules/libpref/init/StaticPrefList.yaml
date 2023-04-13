@@ -14264,6 +14264,14 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
+
+# If the process priority is set to background, put the main thread in the background.
+# Currently off by default.
+- name: threads.lower_mainthread_priority_in_background.enabled
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "timer."
 #---------------------------------------------------------------------------

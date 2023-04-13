@@ -2111,7 +2111,7 @@ pref("browser.tabs.crashReporting.includeURL", false);
 // nightly and developer edition.
 pref("extensions.experiments.enabled", false);
 
-#if defined(XP_LINUX) || defined(XP_WIN)
+#if defined(XP_LINUX) || defined(XP_WIN) || defined(XP_MACOSX)
   // Allows us to adjust the priority of child processes at the OS level
   pref("dom.ipc.processPriorityManager.enabled", true);
 #endif
