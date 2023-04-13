@@ -73,7 +73,6 @@
     "babel-plugin-module-resolver": "^4.1.0",
     "babel-plugin-transform-amd-to-commonjs": "1.4.0",
     "buffer": "^6.0.3",
-    "classnames": "^2.2.5",
     "copy-webpack-plugin": "^4.5.2",
     "css-loader": "^0.26.1",
     "enzyme": "^3.10.0",

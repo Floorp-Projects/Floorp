@@ -8,11 +8,11 @@ import { connect } from "../../utils/connect";
 import { CloseButton } from "./Button";
 
 import AccessibleImage from "./AccessibleImage";
-import classnames from "classnames";
 import actions from "../../actions";
 import "./SearchInput.css";
 import { getSearchOptions } from "../../selectors";
 
+const classnames = require("devtools/client/shared/classnames.js");
 const SearchModifiers = require("devtools/client/shared/components/SearchModifiers");
 
 const arrowBtn = (onClick, type, className, tooltip) => {

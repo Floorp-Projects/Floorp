@@ -5,11 +5,12 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
-import classnames from "classnames";
 
 import actions from "../../actions";
 import { getCurrentThread, getIsPaused, getContext } from "../../selectors";
 import AccessibleImage from "../shared/AccessibleImage";
+
+const classnames = require("devtools/client/shared/classnames.js");
 
 export class Thread extends Component {
   static get propTypes() {

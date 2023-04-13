@@ -5,8 +5,8 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import Modal from "./shared/Modal";
-import classnames from "classnames";
 import { formatKeyShortcut } from "../utils/text";
+const classnames = require("devtools/client/shared/classnames.js");
 
 import "./ShortcutsModal.css";
 

@@ -4,8 +4,6 @@
 
 import React, { Component } from "react";
 import PropTypes from "prop-types";
-import classnames from "classnames";
-
 import { connect } from "../utils/connect";
 import { prefs, features } from "../utils/prefs";
 import { primaryPaneTabs } from "../constants";
@@ -308,7 +306,7 @@ class App extends Component {
   render() {
     const { quickOpenEnabled } = this.props;
     return (
-      <div className={classnames("debugger")}>
+      <div className="debugger">
         <AppErrorBoundary
           componentName="Debugger"
           panel={L10N.getStr("ToolboxDebugger.label")}

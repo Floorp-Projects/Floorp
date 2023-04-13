@@ -6,7 +6,6 @@ const SplitBox = require("devtools/client/shared/components/splitter/SplitBox");
 
 import React, { Component } from "react";
 import PropTypes from "prop-types";
-import classnames from "classnames";
 import { isGeneratedId } from "devtools/client/shared/source-map-loader/index";
 import { connect } from "../../utils/connect";
 
@@ -43,6 +42,8 @@ import DOMMutationBreakpoints from "./DOMMutationBreakpoints";
 import WhyPaused from "./WhyPaused";
 
 import Scopes from "./Scopes";
+
+const classnames = require("devtools/client/shared/classnames.js");
 
 import "./SecondaryPanes.css";
 

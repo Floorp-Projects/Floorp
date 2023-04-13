@@ -4,7 +4,6 @@
 
 import React, { Component } from "react";
 import PropTypes from "prop-types";
-import classnames from "classnames";
 import { Tab, Tabs, TabList, TabPanels } from "react-aria-components/src/tabs";
 
 import actions from "../../actions";
@@ -22,6 +21,8 @@ import Outline from "./Outline";
 import SourcesTree from "./SourcesTree";
 import ProjectSearch from "./ProjectSearch";
 import AccessibleImage from "../shared/AccessibleImage";
+
+const classnames = require("devtools/client/shared/classnames.js");
 
 import "./Sources.css";
 

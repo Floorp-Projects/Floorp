@@ -6,7 +6,6 @@ import React, { PureComponent } from "react";
 import PropTypes from "prop-types";
 import { connect } from "../../../utils/connect";
 import { createSelector } from "reselect";
-import classnames from "classnames";
 import actions from "../../../actions";
 
 import showContextMenu from "./BreakpointsContextMenu";
@@ -27,6 +26,8 @@ import {
   getCurrentThread,
   getContext,
 } from "../../../selectors";
+
+const classnames = require("devtools/client/shared/classnames.js");
 
 class Breakpoint extends PureComponent {
   static get propTypes() {

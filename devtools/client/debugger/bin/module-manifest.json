@@ -215,7 +215,6 @@
       "../../babel-loader/lib/index.js??ref--1!../../../packages/devtools-source-map/src/utils/index.js": 64,
       "../../babel-loader/lib/index.js??ref--1!../../devtools-modules/src/utils/event-emitter.js": 65,
       "../../fuzzaldrin-plus/lib/scorer.js": 66,
-      "../../classnames/index.js": 67,
       "../../@babel/types/lib/utils/shallowEqual.js": 68,
       "../../lodash/_Stack.js": 69,
       "../../lodash/_Map.js": 70,
@@ -1092,7 +1091,6 @@
       "../node_modules/extract-text-webpack-plugin/dist/loader.js??ref--3-0!../node_modules/css-loader/index.js??ref--3-1!../node_modules/postcss-loader/lib/index.js!../node_modules/react-aria-components/src/tabs/tab-list.css": 940,
       "../node_modules/babel-loader/lib/index.js??ref--1!../node_modules/react-aria-components/src/tabs/tabs.js": 941,
       "../node_modules/babel-loader/lib/index.js??ref--1!../node_modules/react-aria-components/src/utils/unique-id.js": 942,
-      "../node_modules/classnames/index.js": 943,
       "../node_modules/babel-loader/lib/index.js??ref--1!../packages/devtools-splitter/index.js": 944,
       "../node_modules/babel-loader/lib/index.js??ref--1!../packages/devtools-splitter/src/SplitBox.js": 945,
       "../node_modules/babel-loader/lib/index.js??ref--1!../packages/devtools-splitter/src/Draggable.js": 946,
@@ -2538,7 +2536,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "0": 0
+          "1": 1
         }
       }
     }
@@ -2559,7 +2557,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "0": 0
+          "1": 1
         }
       }
     }

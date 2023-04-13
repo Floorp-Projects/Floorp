@@ -5,7 +5,6 @@
 // Dependencies
 import React, { Component } from "react";
 import PropTypes from "prop-types";
-import classnames from "classnames";
 import { connect } from "../../utils/connect";
 
 // Selectors
@@ -31,6 +30,8 @@ import ManagedTree from "../shared/ManagedTree";
 // Utils
 import { getRawSourceURL } from "../../utils/source";
 import { createLocation } from "../../utils/location";
+
+const classnames = require("devtools/client/shared/classnames.js");
 
 function shouldAutoExpand(item, mainThreadHost) {
   // There is only one case where we want to force auto expand,
