@@ -14,32 +14,5 @@
 namespace mozilla {
 namespace a11y {
 
-mozilla::ipc::IPCResult DocAccessiblePlatformExtParent::RecvSetPivotBoundaries(
-    PDocAccessibleParent* aFirstDoc, uint64_t aFirst,
-    PDocAccessibleParent* aLastDoc, uint64_t aLast) {
-  MOZ_ASSERT(aFirstDoc);
-  MOZ_ASSERT(aLastDoc);
-
-  RefPtr<SessionAccessibility> sessionAcc =
-      SessionAccessibility::GetInstanceFor(
-          static_cast<DocAccessibleParent*>(Manager()));
-  if (!sessionAcc) {
-    return IPC_OK();
-  }
-
-  RemoteAccessible* first =
-      static_cast<DocAccessibleParent*>(aFirstDoc)->GetAccessible(aFirst);
-  RemoteAccessible* last =
-      static_cast<DocAccessibleParent*>(aLastDoc)->GetAccessible(aLast);
-
-  // We may not have proxy accessibles available yet for those accessibles
-  // in the parent process.
-  if (first && last) {
-    sessionAcc->UpdateAccessibleFocusBoundaries(first, last);
-  }
-
-  return IPC_OK();
-}
-
 }  // namespace a11y
 }  // namespace mozilla

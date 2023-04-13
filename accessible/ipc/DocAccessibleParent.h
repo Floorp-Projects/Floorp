@@ -281,9 +281,6 @@ class DocAccessibleParent : public RemoteAccessible,
 #endif
 
 #if !defined(XP_WIN)
-  virtual mozilla::ipc::IPCResult RecvBatch(
-      const uint64_t& aBatchType, nsTArray<BatchData>&& aData) override;
-
   virtual bool DeallocPDocAccessiblePlatformExtParent(
       PDocAccessiblePlatformExtParent* aActor) override;
 

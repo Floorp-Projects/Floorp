@@ -180,8 +180,8 @@ void SessionAccessibility::Click(int32_t aID) {
   FORWARD_ACTION_TO_ACCESSIBLE(DoAction, 0);
 }
 
-bool SessionAccessibility::CachedPivot(int32_t aID, int32_t aGranularity,
-                                       bool aForward, bool aInclusive) {
+bool SessionAccessibility::Pivot(int32_t aID, int32_t aGranularity,
+                                 bool aForward, bool aInclusive) {
   MOZ_ASSERT(IsCacheEnabled(), "Cache is enabled");
   MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
   MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
@@ -190,7 +190,14 @@ bool SessionAccessibility::CachedPivot(int32_t aID, int32_t aGranularity,
     if (acc->IsLocal()) {
       nsAppShell::PostEvent(
           [this, self, aID, aGranularity, aForward, aInclusive] {
-            Pivot(aID, aGranularity, aForward, aInclusive);
+            MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
+            if (Accessible* _acc = GetAccessibleByID(aID)) {
+              MOZ_ASSERT(_acc && _acc->IsLocal());
+              if (LocalAccessible* localAcc = _acc->AsLocal()) {
+                static_cast<AccessibleWrap*>(localAcc)->PivotTo(
+                    aGranularity, aForward, aInclusive);
+              }
+            }
           });
       return true;
     }
@@ -209,11 +216,6 @@ bool SessionAccessibility::CachedPivot(int32_t aID, int32_t aGranularity,
   }
 
   return false;
-}
-
-void SessionAccessibility::Pivot(int32_t aID, int32_t aGranularity,
-                                 bool aForward, bool aInclusive) {
-  FORWARD_EXT_ACTION_TO_ACCESSIBLE(PivotTo, aGranularity, aForward, aInclusive);
 }
 
 void SessionAccessibility::ExploreByTouch(int32_t aID, float aX, float aY) {
@@ -561,310 +563,6 @@ void SessionAccessibility::SendAnnouncementEvent(Accessible* aAccessible,
   mSessionAccessibility->SendEvent(
       java::sdk::AccessibilityEvent::TYPE_ANNOUNCEMENT, kNoID,
       java::SessionAccessibility::CLASSNAME_WEBVIEW, eventInfo);
-}
-
-void SessionAccessibility::ReplaceViewportCache(
-    const nsTArray<Accessible*>& aAccessibles,
-    const nsTArray<BatchData>& aData) {
-  auto infos = jni::ObjectArray::New<java::GeckoBundle>(aAccessibles.Length());
-  for (size_t i = 0; i < aAccessibles.Length(); i++) {
-    Accessible* acc = aAccessibles.ElementAt(i);
-    if (!acc) {
-      MOZ_ASSERT_UNREACHABLE("Updated accessible is gone.");
-      continue;
-    }
-
-    if (aData.Length() == aAccessibles.Length()) {
-      const BatchData& data = aData.ElementAt(i);
-      auto bundle = ToBundle(acc, data.State(), data.Bounds(),
-                             data.ActionCount(), data.Name(), data.TextValue(),
-                             data.DOMNodeID(), data.Description());
-      infos->SetElement(i, bundle);
-    } else {
-      infos->SetElement(i, ToBundle(acc, true));
-    }
-  }
-
-  mSessionAccessibility->ReplaceViewportCache(infos);
-  SendWindowContentChangedEvent();
-}
-
-void SessionAccessibility::ReplaceFocusPathCache(
-    const nsTArray<Accessible*>& aAccessibles,
-    const nsTArray<BatchData>& aData) {
-  auto infos = jni::ObjectArray::New<java::GeckoBundle>(aAccessibles.Length());
-  for (size_t i = 0; i < aAccessibles.Length(); i++) {
-    Accessible* acc = aAccessibles.ElementAt(i);
-    if (!acc) {
-      MOZ_ASSERT_UNREACHABLE("Updated accessible is gone.");
-      continue;
-    }
-
-    if (aData.Length() == aAccessibles.Length()) {
-      const BatchData& data = aData.ElementAt(i);
-      auto bundle =
-          ToBundle(acc, data.State(), data.Bounds(), data.ActionCount(),
-                   data.Name(), data.TextValue(), data.DOMNodeID(),
-                   data.Description(), data.CurValue(), data.MinValue(),
-                   data.MaxValue(), data.Step(), data.Attributes());
-      infos->SetElement(i, bundle);
-    } else {
-      infos->SetElement(i, ToBundle(acc));
-    }
-  }
-
-  mSessionAccessibility->ReplaceFocusPathCache(infos);
-}
-
-void SessionAccessibility::UpdateCachedBounds(
-    const nsTArray<Accessible*>& aAccessibles,
-    const nsTArray<BatchData>& aData) {
-  auto infos = jni::ObjectArray::New<java::GeckoBundle>(aAccessibles.Length());
-  for (size_t i = 0; i < aAccessibles.Length(); i++) {
-    Accessible* acc = aAccessibles.ElementAt(i);
-    if (!acc) {
-      MOZ_ASSERT_UNREACHABLE("Updated accessible is gone.");
-      continue;
-    }
-
-    if (aData.Length() == aAccessibles.Length()) {
-      const BatchData& data = aData.ElementAt(i);
-      auto bundle = ToBundle(acc, data.State(), data.Bounds(),
-                             data.ActionCount(), data.Name(), data.TextValue(),
-                             data.DOMNodeID(), data.Description());
-      infos->SetElement(i, bundle);
-    } else {
-      infos->SetElement(i, ToBundle(acc, true));
-    }
-  }
-
-  mSessionAccessibility->UpdateCachedBounds(infos);
-}
-
-void SessionAccessibility::UpdateAccessibleFocusBoundaries(Accessible* aFirst,
-                                                           Accessible* aLast) {
-  mSessionAccessibility->UpdateAccessibleFocusBoundaries(
-      aFirst ? AccessibleWrap::GetVirtualViewID(aFirst) : kNoID,
-      aLast ? AccessibleWrap::GetVirtualViewID(aLast) : kNoID);
-}
-
-mozilla::java::GeckoBundle::LocalRef SessionAccessibility::ToBundle(
-    Accessible* aAccessible, bool aSmall) {
-  nsAutoString name;
-  aAccessible->Name(name);
-  nsAutoString textValue;
-  aAccessible->Value(textValue);
-  nsAutoString nodeID;
-  aAccessible->DOMNodeID(nodeID);
-  nsAutoString description;
-  aAccessible->Description(description);
-  uint64_t state = aAccessible->State();
-  LayoutDeviceIntRect bounds = aAccessible->Bounds();
-  uint8_t actionCount = aAccessible->ActionCount();
-
-  if (aSmall) {
-    return ToBundle(aAccessible, state, bounds, actionCount, name, textValue,
-                    nodeID, description);
-  }
-
-  double curValue = UnspecifiedNaN<double>();
-  double minValue = UnspecifiedNaN<double>();
-  double maxValue = UnspecifiedNaN<double>();
-  double step = UnspecifiedNaN<double>();
-  if (aAccessible->HasNumericValue()) {
-    curValue = aAccessible->CurValue();
-    minValue = aAccessible->MinValue();
-    maxValue = aAccessible->MaxValue();
-    step = aAccessible->Step();
-  }
-
-  RefPtr<AccAttributes> attributes = aAccessible->Attributes();
-
-  return ToBundle(aAccessible, state, bounds, actionCount, name, textValue,
-                  nodeID, description, curValue, minValue, maxValue, step,
-                  attributes);
-}
-
-mozilla::java::GeckoBundle::LocalRef SessionAccessibility::ToBundle(
-    Accessible* aAccessible, const uint64_t aState,
-    const LayoutDeviceIntRect& aBounds, const uint8_t aActionCount,
-    const nsString& aName, const nsString& aTextValue,
-    const nsString& aDOMNodeID, const nsString& aDescription,
-    const double& aCurVal, const double& aMinVal, const double& aMaxVal,
-    const double& aStep, AccAttributes* aAttributes) {
-  MOZ_ASSERT(NS_IsMainThread());
-  int32_t virtualViewID = AccessibleWrap::GetVirtualViewID(aAccessible);
-  GECKOBUNDLE_START(nodeInfo);
-  GECKOBUNDLE_PUT(nodeInfo, "id", java::sdk::Integer::ValueOf(virtualViewID));
-
-  Accessible* parent = virtualViewID != kNoID ? aAccessible->Parent() : nullptr;
-  GECKOBUNDLE_PUT(nodeInfo, "parentId",
-                  java::sdk::Integer::ValueOf(
-                      parent ? AccessibleWrap::GetVirtualViewID(parent) : 0));
-
-  role role = aAccessible->Role();
-  if (role == roles::LINK && !(aState & states::LINKED)) {
-    // A link without the linked state (<a> with no href) shouldn't be presented
-    // as a link.
-    role = roles::TEXT;
-  }
-
-  uint32_t flags = AccessibleWrap::GetFlags(role, aState, aActionCount);
-  GECKOBUNDLE_PUT(nodeInfo, "flags", java::sdk::Integer::ValueOf(flags));
-  GECKOBUNDLE_PUT(
-      nodeInfo, "className",
-      java::sdk::Integer::ValueOf(AccessibleWrap::AndroidClass(aAccessible)));
-
-  nsAutoString hint;
-  if (aState & states::EDITABLE) {
-    // An editable field's name is populated in the hint.
-    hint.Assign(aName);
-    GECKOBUNDLE_PUT(nodeInfo, "text", jni::StringParam(aTextValue));
-  } else {
-    if (role == roles::LINK || role == roles::HEADING) {
-      GECKOBUNDLE_PUT(nodeInfo, "description", jni::StringParam(aName));
-    } else {
-      GECKOBUNDLE_PUT(nodeInfo, "text", jni::StringParam(aName));
-    }
-  }
-
-  if (!aDescription.IsEmpty()) {
-    if (!hint.IsEmpty()) {
-      // If this is an editable, the description is concatenated with a
-      // whitespace directly after the name.
-      hint.AppendLiteral(" ");
-    }
-    hint.Append(aDescription);
-  }
-
-  if ((aState & states::REQUIRED) != 0) {
-    nsAutoString requiredString;
-    if (LocalizeString(u"stateRequired"_ns, requiredString)) {
-      if (!hint.IsEmpty()) {
-        // If the hint is non-empty, concatenate with a comma for a brief pause.
-        hint.AppendLiteral(", ");
-      }
-      hint.Append(requiredString);
-    }
-  }
-
-  if (!hint.IsEmpty()) {
-    GECKOBUNDLE_PUT(nodeInfo, "hint", jni::StringParam(hint));
-  }
-
-  nsAutoString geckoRole;
-  nsAutoString roleDescription;
-  if (virtualViewID != kNoID) {
-    AccessibleWrap::GetRoleDescription(role, aAttributes, geckoRole,
-                                       roleDescription);
-  }
-
-  GECKOBUNDLE_PUT(nodeInfo, "roleDescription",
-                  jni::StringParam(roleDescription));
-  GECKOBUNDLE_PUT(nodeInfo, "geckoRole", jni::StringParam(geckoRole));
-
-  if (!aDOMNodeID.IsEmpty()) {
-    GECKOBUNDLE_PUT(nodeInfo, "viewIdResourceName",
-                    jni::StringParam(aDOMNodeID));
-  }
-
-  const int32_t data[4] = {aBounds.x, aBounds.y, aBounds.x + aBounds.width,
-                           aBounds.y + aBounds.height};
-  GECKOBUNDLE_PUT(nodeInfo, "bounds", jni::IntArray::New(data, 4));
-
-  if (aAccessible->HasNumericValue()) {
-    GECKOBUNDLE_START(rangeInfo);
-    if (aMaxVal == 1 && aMinVal == 0) {
-      GECKOBUNDLE_PUT(rangeInfo, "type",
-                      java::sdk::Integer::ValueOf(2));  // percent
-    } else if (std::round(aStep) != aStep) {
-      GECKOBUNDLE_PUT(rangeInfo, "type",
-                      java::sdk::Integer::ValueOf(1));  // float
-    } else {
-      GECKOBUNDLE_PUT(rangeInfo, "type",
-                      java::sdk::Integer::ValueOf(0));  // integer
-    }
-
-    if (!std::isnan(aCurVal)) {
-      GECKOBUNDLE_PUT(rangeInfo, "current", java::sdk::Double::New(aCurVal));
-    }
-    if (!std::isnan(aMinVal)) {
-      GECKOBUNDLE_PUT(rangeInfo, "min", java::sdk::Double::New(aMinVal));
-    }
-    if (!std::isnan(aMaxVal)) {
-      GECKOBUNDLE_PUT(rangeInfo, "max", java::sdk::Double::New(aMaxVal));
-    }
-
-    GECKOBUNDLE_FINISH(rangeInfo);
-    GECKOBUNDLE_PUT(nodeInfo, "rangeInfo", rangeInfo);
-  }
-
-  if (aAttributes) {
-    nsString inputTypeAttr;
-    aAttributes->GetAttribute(nsGkAtoms::textInputType, inputTypeAttr);
-    int32_t inputType = AccessibleWrap::GetInputType(inputTypeAttr);
-    if (inputType) {
-      GECKOBUNDLE_PUT(nodeInfo, "inputType",
-                      java::sdk::Integer::ValueOf(inputType));
-    }
-
-    Maybe<int32_t> rowIndex =
-        aAttributes->GetAttribute<int32_t>(nsGkAtoms::posinset);
-    if (rowIndex) {
-      GECKOBUNDLE_START(collectionItemInfo);
-      GECKOBUNDLE_PUT(collectionItemInfo, "rowIndex",
-                      java::sdk::Integer::ValueOf(*rowIndex - 1));
-      GECKOBUNDLE_PUT(collectionItemInfo, "columnIndex",
-                      java::sdk::Integer::ValueOf(0));
-      GECKOBUNDLE_PUT(collectionItemInfo, "rowSpan",
-                      java::sdk::Integer::ValueOf(1));
-      GECKOBUNDLE_PUT(collectionItemInfo, "columnSpan",
-                      java::sdk::Integer::ValueOf(1));
-      GECKOBUNDLE_FINISH(collectionItemInfo);
-
-      GECKOBUNDLE_PUT(nodeInfo, "collectionItemInfo", collectionItemInfo);
-    }
-
-    Maybe<int32_t> rowCount =
-        aAttributes->GetAttribute<int32_t>(nsGkAtoms::child_item_count);
-    if (rowCount) {
-      GECKOBUNDLE_START(collectionInfo);
-      GECKOBUNDLE_PUT(collectionInfo, "rowCount",
-                      java::sdk::Integer::ValueOf(*rowCount));
-      GECKOBUNDLE_PUT(collectionInfo, "columnCount",
-                      java::sdk::Integer::ValueOf(1));
-
-      if (aAttributes->HasAttribute(nsGkAtoms::tree)) {
-        GECKOBUNDLE_PUT(collectionInfo, "isHierarchical",
-                        java::sdk::Boolean::TRUE());
-      }
-
-      if (aAccessible->IsSelect()) {
-        int32_t selectionMode = (aState & states::MULTISELECTABLE) ? 2 : 1;
-        GECKOBUNDLE_PUT(collectionInfo, "selectionMode",
-                        java::sdk::Integer::ValueOf(selectionMode));
-      }
-
-      GECKOBUNDLE_FINISH(collectionInfo);
-      GECKOBUNDLE_PUT(nodeInfo, "collectionInfo", collectionInfo);
-    }
-  }
-
-  if (!nsAccUtils::MustPrune(aAccessible)) {
-    auto childCount = aAccessible->ChildCount();
-    nsTArray<int32_t> children(childCount);
-    for (uint32_t i = 0; i < childCount; i++) {
-      auto child = aAccessible->ChildAt(i);
-      children.AppendElement(AccessibleWrap::GetVirtualViewID(child));
-    }
-
-    GECKOBUNDLE_PUT(nodeInfo, "children",
-                    jni::IntArray::New(children.Elements(), children.Length()));
-  }
-
-  GECKOBUNDLE_FINISH(nodeInfo);
-
-  return nodeInfo;
 }
 
 void SessionAccessibility::PopulateNodeInfo(

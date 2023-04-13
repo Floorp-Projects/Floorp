@@ -56,9 +56,7 @@ class SessionAccessibility final
   int GetNodeClassName(int32_t aID);
   void SetText(int32_t aID, jni::String::Param aText);
   void Click(int32_t aID);
-  void Pivot(int32_t aID, int32_t aGranularity, bool aForward, bool aInclusive);
-  bool CachedPivot(int32_t aID, int32_t aGranularity, bool aForward,
-                   bool aInclusive);
+  bool Pivot(int32_t aID, int32_t aGranularity, bool aForward, bool aInclusive);
   void ExploreByTouch(int32_t aID, float aX, float aY);
   void NavigateText(int32_t aID, int32_t aGranularity, int32_t aStartOffset,
                     int32_t aEndOffset, bool aForward, bool aSelect);
@@ -91,21 +89,6 @@ class SessionAccessibility final
                              const nsAString& aAnnouncement,
                              uint16_t aPriority);
 
-  // Cache methods
-  void ReplaceViewportCache(
-      const nsTArray<Accessible*>& aAccessibles,
-      const nsTArray<BatchData>& aData = nsTArray<BatchData>());
-
-  void ReplaceFocusPathCache(
-      const nsTArray<Accessible*>& aAccessibles,
-      const nsTArray<BatchData>& aData = nsTArray<BatchData>());
-
-  void UpdateCachedBounds(
-      const nsTArray<Accessible*>& aAccessibles,
-      const nsTArray<BatchData>& aData = nsTArray<BatchData>());
-
-  void UpdateAccessibleFocusBoundaries(Accessible* aFirst, Accessible* aLast);
-
   Accessible* GetAccessibleByID(int32_t aID) const;
 
   static const int32_t kNoID = -1;
@@ -119,20 +102,6 @@ class SessionAccessibility final
 
  private:
   ~SessionAccessibility() {}
-
-  mozilla::java::GeckoBundle::LocalRef ToBundle(Accessible* aAccessible,
-                                                bool aSmall = false);
-
-  mozilla::java::GeckoBundle::LocalRef ToBundle(
-      Accessible* aAccessible, const uint64_t aState,
-      const LayoutDeviceIntRect& aBounds, const uint8_t aActionCount,
-      const nsString& aName, const nsString& aTextValue,
-      const nsString& aDOMNodeID, const nsString& aDescription,
-      const double& aCurVal = UnspecifiedNaN<double>(),
-      const double& aMinVal = UnspecifiedNaN<double>(),
-      const double& aMaxVal = UnspecifiedNaN<double>(),
-      const double& aStep = UnspecifiedNaN<double>(),
-      AccAttributes* aAttributes = nullptr);
 
   void PopulateNodeInfo(Accessible* aAccessible,
                         mozilla::jni::Object::Param aNodeInfo);

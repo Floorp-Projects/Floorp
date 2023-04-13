@@ -40,24 +40,6 @@ union OriginDocument
   PDocAccessible;
 };
 
-struct BatchData
-{
-  OriginDocument Document;
-  uint64_t ID;
-  uint64_t State;
-  LayoutDeviceIntRect Bounds;
-  uint8_t ActionCount;
-  nsString Name;
-  nsString TextValue;
-  nsString DOMNodeID;
-  nsString Description;
-  double CurValue;
-  double MinValue;
-  double MaxValue;
-  double Step;
-  nullable AccAttributes Attributes;
-};
-
 struct ShowEventData
 {
   uint64_t ID;
@@ -125,9 +107,6 @@ parent:
    * document.
    */
   async BindChildDoc(PDocAccessible aChildDoc, uint64_t aID);
-
-  // Android
-  async Batch(uint64_t aBatchType, BatchData[] aData);
 
   /*
    * Cache The World

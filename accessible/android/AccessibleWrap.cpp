@@ -62,32 +62,6 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
       static_cast<DocAccessibleWrap*>(accessible->Document());
   if (doc) {
     switch (aEvent->GetEventType()) {
-      case nsIAccessibleEvent::EVENT_FOCUS: {
-        if (DocAccessibleWrap* topContentDoc =
-                doc->GetTopLevelContentDoc(accessible)) {
-          topContentDoc->CacheFocusPath(accessible);
-        }
-        break;
-      }
-      case nsIAccessibleEvent::EVENT_VIRTUALCURSOR_CHANGED: {
-        AccVCChangeEvent* vcEvent = downcast_accEvent(aEvent);
-        auto newPosition =
-            static_cast<AccessibleWrap*>(vcEvent->NewAccessible());
-        if (newPosition) {
-          if (DocAccessibleWrap* topContentDoc =
-                  doc->GetTopLevelContentDoc(accessible)) {
-            topContentDoc->CacheFocusPath(newPosition);
-          }
-        }
-        break;
-      }
-      case nsIAccessibleEvent::EVENT_REORDER: {
-        if (DocAccessibleWrap* topContentDoc =
-                doc->GetTopLevelContentDoc(accessible)) {
-          topContentDoc->CacheViewport(true);
-        }
-        break;
-      }
       case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED: {
         if (accessible != aEvent->Document() && !aEvent->IsFromUserInput()) {
           AccCaretMoveEvent* caretEvent = downcast_accEvent(aEvent);

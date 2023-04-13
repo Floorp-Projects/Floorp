@@ -22,35 +22,9 @@ class DocAccessibleWrap : public DocAccessible {
 
   virtual void Shutdown() override;
 
-  virtual nsresult HandleAccEvent(AccEvent* aEvent) override;
-
   DocAccessibleWrap* GetTopLevelContentDoc(AccessibleWrap* aAccessible);
 
   bool IsTopLevelContentDoc();
-
-  void CacheFocusPath(AccessibleWrap* aAccessible);
-
-  void CacheViewport(bool aCachePivotBoundaries);
-
-  enum {
-    eBatch_Viewport = 0,
-    eBatch_FocusPath = 1,
-    eBatch_BoundsUpdate = 2,
-  };
-
- protected:
-  virtual void DoInitialUpdate() override;
-
- private:
-  void UpdateFocusPathBounds();
-
-  static void CacheViewportCallback(nsITimer* aTimer, void* aDocAccParam);
-
-  nsCOMPtr<nsITimer> mCacheRefreshTimer;
-
-  bool mCachePivotBoundaries;
-
-  AccessibleHashtable mFocusPath;
 };
 
 }  // namespace a11y

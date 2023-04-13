@@ -1265,37 +1265,6 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvFocusEvent(
 #endif  // defined(XP_WIN)
 
 #if !defined(XP_WIN)
-mozilla::ipc::IPCResult DocAccessibleParent::RecvBatch(
-    const uint64_t& aBatchType, nsTArray<BatchData>&& aData) {
-  // Only do something in Android. We can't ifdef the entire protocol out in
-  // the ipdl because it doesn't allow preprocessing.
-#  if defined(ANDROID)
-  if (mShutdown) {
-    return IPC_OK();
-  }
-  nsTArray<RemoteAccessible*> proxies(aData.Length());
-  for (size_t i = 0; i < aData.Length(); i++) {
-    DocAccessibleParent* doc = static_cast<DocAccessibleParent*>(
-        aData.ElementAt(i).Document().get_PDocAccessible().AsParent().get());
-    MOZ_ASSERT(doc);
-
-    if (doc->IsShutdown()) {
-      continue;
-    }
-
-    RemoteAccessible* proxy = doc->GetAccessible(aData.ElementAt(i).ID());
-    if (!proxy) {
-      MOZ_ASSERT_UNREACHABLE("No proxy found!");
-      continue;
-    }
-
-    proxies.AppendElement(proxy);
-  }
-  ProxyBatch(this, aBatchType, proxies, aData);
-#  endif  // defined(XP_WIN)
-  return IPC_OK();
-}
-
 bool DocAccessibleParent::DeallocPDocAccessiblePlatformExtParent(
     PDocAccessiblePlatformExtParent* aActor) {
   delete aActor;
