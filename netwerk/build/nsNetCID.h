@@ -423,7 +423,7 @@
   }
 
 /******************************************************************************
- * netwerk/cache/ classes
+ * netwerk/cache2/ classes
  */
 
 // service implementing nsICacheService.

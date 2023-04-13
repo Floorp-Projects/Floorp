@@ -14,7 +14,6 @@ DIRS += [
     "socket",
     "mime",
     "streamconv",
-    "cache",
     "cache2",
     "protocol",
     "system",

@@ -12,7 +12,6 @@
 #include "CacheFileUtils.h"
 #include "nsILoadContextInfo.h"
 #include "nsICacheEntry.h"  // for nsICacheEntryMetaDataVisitor
-#include "../cache/nsCacheUtils.h"
 #include "nsIFile.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Telemetry.h"

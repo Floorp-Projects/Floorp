@@ -221,7 +221,6 @@ src:*/gfx/skia/skia/include/private/SkChecksum.h
 src:*/intl/icu/source/common/unifiedcache.h
 src:*/mfbt/SHA1.cpp
 src:*/modules/zlib/src/adler32.c
-src:*/netwerk/cache/nsDiskCacheDevice.cpp
 src:*/netwerk/cache2/CacheHashUtils.cpp
 src:*/netwerk/sctp/src/netinet/sctp_sha1.c
 src:*/netwerk/srtp/src/crypto/hash/sha1.c

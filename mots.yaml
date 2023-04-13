@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-04-04T10:50:59.346928'
+updated_at: '2023-04-12T14:39:57.947364'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -2152,7 +2152,7 @@ modules:
       - netwerk/**/*
       - netwerk/base/**/*
       - netwerk/build/**/*
-      - netwerk/cache/**/*
+      - netwerk/cache2/**/*
       - netwerk/dns/**/*
       - netwerk/locales/**/*
       - netwerk/mime/**/*
@@ -4083,5 +4083,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 6dcd6203d12824b5ee47fcb31ea5bbdca588d06e
-  export: 4e8ece19caf52a866630717755b1006885b07f63
+  config: ae2d574be8b71032afd58d06fdada016eff41c68
+  export: fbbc9a293c177a87694878b68cfedbf12670e835
