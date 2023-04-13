@@ -130,7 +130,6 @@ class WebTaskScheduler;
 class WebTaskSchedulerMainThread;
 class SpeechSynthesis;
 class Timeout;
-class U2F;
 class VisualViewport;
 class VRDisplay;
 enum class VRDisplayEventReason : uint8_t;
@@ -871,7 +870,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   void SizeToContentConstrained(const mozilla::dom::SizeToContentConstraints&,
                                 mozilla::ErrorResult&);
   mozilla::dom::Crypto* GetCrypto(mozilla::ErrorResult& aError);
-  mozilla::dom::U2F* GetU2f(mozilla::ErrorResult& aError);
   nsIControllers* GetControllers(mozilla::ErrorResult& aError);
   nsresult GetControllers(nsIControllers** aControllers) override;
   mozilla::dom::Element* GetRealFrameElement(mozilla::ErrorResult& aError);
@@ -1447,7 +1445,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   RefPtr<nsGlobalWindowObserver> mObserver;
   RefPtr<mozilla::dom::Crypto> mCrypto;
-  RefPtr<mozilla::dom::U2F> mU2F;
   RefPtr<mozilla::dom::cache::CacheStorage> mCacheStorage;
   RefPtr<mozilla::dom::Console> mConsole;
   RefPtr<mozilla::dom::Worklet> mPaintWorklet;
