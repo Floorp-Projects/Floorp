@@ -129,7 +129,11 @@ class Benchmark(object):
         )
 
     def _copy_or_link_files(
-        self, benchmark_path, benchmark_dest, skip_files_and_hidden=True
+        self,
+        benchmark_path,
+        benchmark_dest,
+        skip_files_and_hidden=True,
+        host_from_parent=True,
     ):
         if not benchmark_dest.exists():
             benchmark_dest.mkdir(parents=True, exist_ok=True)
@@ -143,7 +147,9 @@ class Benchmark(object):
             mozfile.remove(str(dest.resolve()))
             shutil.copytree(benchmark_path, dest)
 
-        if any(path.is_file() for path in benchmark_path.iterdir()):
+        if host_from_parent and any(
+            path.is_file() for path in benchmark_path.iterdir()
+        ):
             # Host the parent of this directory to prevent hosting issues
             # (e.g. linked files ending up with different routes)
             host_folder = dest.parent
@@ -272,6 +278,7 @@ class Benchmark(object):
             pathlib.Path(external_repo_path, benchmark_repo_path),
             benchmark_dest,
             skip_files_and_hidden=False,
+            host_from_parent=self.test.get("host_from_parent", True),
         )
 
         return benchmark_dest
