@@ -1888,6 +1888,8 @@ void CacheOutputCloseListener::OnOutputClosed() {
   // We need this class and to redispatch since this callback is invoked
   // under the file's lock and to do the job we need to enter the entry's
   // lock too.  That would lead to potential deadlocks.
+  // This function may be reached while XPCOM is already shutting down,
+  // and we might be unable to obtain the main thread or the sts. #1826661
 
   if (NS_IsMainThread()) {
     // If we're already on the main thread, dispatch to the main thread instead
@@ -1896,14 +1898,21 @@ void CacheOutputCloseListener::OnOutputClosed() {
     //
     // This may also avoid some unnecessary thread-hops when invoking callbacks,
     // which can require that they be called on the main thread.
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(do_AddRef(this)));
+
+    nsCOMPtr<nsIThread> thread;
+    nsresult rv = NS_GetMainThread(getter_AddRefs(thread));
+    if (NS_SUCCEEDED(rv)) {
+      MOZ_ALWAYS_SUCCEEDS(thread->Dispatch(do_AddRef(this)));
+    }
     return;
   }
 
   nsCOMPtr<nsIEventTarget> sts =
       do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
   MOZ_DIAGNOSTIC_ASSERT(sts);
-  MOZ_ALWAYS_SUCCEEDS(sts->Dispatch(do_AddRef(this)));
+  if (sts) {
+    MOZ_ALWAYS_SUCCEEDS(sts->Dispatch(do_AddRef(this)));
+  }
 }
 
 NS_IMETHODIMP CacheOutputCloseListener::Run() {
