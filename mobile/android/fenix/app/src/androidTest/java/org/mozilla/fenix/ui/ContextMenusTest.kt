@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.ui
 
+import androidx.core.net.toUri
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
@@ -241,12 +242,31 @@ class ContextMenusTest {
             mDevice.waitForIdle()
             longClickLink("Link 1")
             verifyLinkContextMenuItems(genericURL.url)
-            dismissContentContextMenu(genericURL.url)
+            dismissContentContextMenu()
             longClickLink("test_link_image")
             verifyLinkImageContextMenuItems(imageResource.url)
-            dismissContentContextMenu(imageResource.url)
+            dismissContentContextMenu()
             longClickLink("test_no_link_image")
             verifyNoLinkImageContextMenuItems(imageResource.url)
+        }
+    }
+
+    @Test
+    fun verifyContextMixedVariationsInPDFTest() {
+        val genericURL =
+            TestAssetHelper.getGenericAsset(mockWebServer, 3)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(genericURL.url) {
+            clickLinkMatchingText("PDF file")
+            longClickLink("Wikipedia link")
+            verifyLinkContextMenuItems("wikipedia.org".toUri(), false)
+            dismissContentContextMenu()
+            // Some options are missing from the linked and non liked images context menus in PDF files
+            // See https://bugzilla.mozilla.org/show_bug.cgi?id=1012805 for more details
+            longClickPDFImage()
+            verifyLinkContextMenuItems("wikipedia.org".toUri())
+            dismissContentContextMenu()
         }
     }
 }
