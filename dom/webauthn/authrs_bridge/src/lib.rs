@@ -19,7 +19,7 @@ use authenticator::{
     },
     errors::{AuthenticatorError, PinError, U2FTokenError},
     statecallback::StateCallback,
-    Assertion, Pin, RegisterResult, SignResult, StatusUpdate,
+    Assertion, Pin, RegisterResult, SignResult, StatusPinUv, StatusUpdate,
 };
 use moz_task::RunnableBuilder;
 use nserror::{
@@ -78,20 +78,13 @@ fn make_pin_required_prompt(
 
 fn authrs_to_nserror(e: &AuthenticatorError) -> nsresult {
     match e {
-        AuthenticatorError::U2FToken(U2FTokenError::Unknown) => NS_ERROR_DOM_UNKNOWN_ERR,
         AuthenticatorError::U2FToken(U2FTokenError::NotSupported) => NS_ERROR_DOM_NOT_SUPPORTED_ERR,
         AuthenticatorError::U2FToken(U2FTokenError::InvalidState) => NS_ERROR_DOM_INVALID_STATE_ERR,
-        AuthenticatorError::U2FToken(U2FTokenError::ConstraintError) => NS_ERROR_DOM_UNKNOWN_ERR,
         AuthenticatorError::U2FToken(U2FTokenError::NotAllowed) => NS_ERROR_DOM_NOT_ALLOWED_ERR,
         AuthenticatorError::PinError(PinError::PinRequired) => NS_ERROR_DOM_OPERATION_ERR,
-        AuthenticatorError::PinError(PinError::PinIsTooShort) => NS_ERROR_DOM_UNKNOWN_ERR,
-        AuthenticatorError::PinError(PinError::PinIsTooLong(_)) => NS_ERROR_DOM_UNKNOWN_ERR,
-        AuthenticatorError::PinError(PinError::InvalidKeyLen) => NS_ERROR_DOM_UNKNOWN_ERR,
         AuthenticatorError::PinError(PinError::InvalidPin(_)) => NS_ERROR_DOM_OPERATION_ERR,
         AuthenticatorError::PinError(PinError::PinAuthBlocked) => NS_ERROR_DOM_OPERATION_ERR,
         AuthenticatorError::PinError(PinError::PinBlocked) => NS_ERROR_DOM_OPERATION_ERR,
-        AuthenticatorError::PinError(PinError::PinNotSet) => NS_ERROR_DOM_UNKNOWN_ERR,
-        AuthenticatorError::PinError(PinError::Crypto(_)) => NS_ERROR_DOM_UNKNOWN_ERR,
         _ => NS_ERROR_DOM_UNKNOWN_ERR,
     }
 }
@@ -358,50 +351,46 @@ fn status_callback(
                 };
                 controller.send_prompt(tid, &notification_str);
             }
-            Ok(StatusUpdate::PinError(error, sender)) => match error {
-                PinError::PinRequired => {
-                    let guard = pin_receiver.lock();
-                    if let Ok(mut entry) = guard {
-                        entry.replace((tid, sender));
-                    } else {
-                        return;
-                    }
-                    let notification_str =
-                        make_pin_required_prompt(tid, origin, browsing_context_id, false, -1);
-                    controller.send_prompt(tid, &notification_str);
-                    continue;
+            Ok(StatusUpdate::PinUvError(StatusPinUv::PinRequired(sender))) => {
+                let guard = pin_receiver.lock();
+                if let Ok(mut entry) = guard {
+                    entry.replace((tid, sender));
+                } else {
+                    return;
                 }
-                PinError::InvalidPin(attempts) => {
-                    let guard = pin_receiver.lock();
-                    if let Ok(mut entry) = guard {
-                        entry.replace((tid, sender));
-                    } else {
-                        return;
-                    }
-                    let notification_str = make_pin_required_prompt(
-                        tid,
-                        origin,
-                        browsing_context_id,
-                        true,
-                        attempts.map_or(-1, |x| x as i64),
-                    );
-                    controller.send_prompt(tid, &notification_str);
-                    continue;
+                let notification_str =
+                    make_pin_required_prompt(tid, origin, browsing_context_id, false, -1);
+                controller.send_prompt(tid, &notification_str);
+            }
+            Ok(StatusUpdate::PinUvError(StatusPinUv::InvalidPin(sender, attempts))) => {
+                let guard = pin_receiver.lock();
+                if let Ok(mut entry) = guard {
+                    entry.replace((tid, sender));
+                } else {
+                    return;
                 }
-                PinError::PinAuthBlocked => {
-                    let notification_str =
-                        make_pin_error_prompt("pin-auth-blocked", tid, origin, browsing_context_id);
-                    controller.send_prompt(tid, &notification_str);
-                }
-                PinError::PinBlocked => {
-                    let notification_str =
-                        make_pin_error_prompt("device-blocked", tid, origin, browsing_context_id);
-                    controller.send_prompt(tid, &notification_str);
-                }
-                e => {
-                    warn!("Unexpected error: {:?}", e)
-                }
-            },
+                let notification_str = make_pin_required_prompt(
+                    tid,
+                    origin,
+                    browsing_context_id,
+                    true,
+                    attempts.map_or(-1, |x| x as i64),
+                );
+                controller.send_prompt(tid, &notification_str);
+            }
+            Ok(StatusUpdate::PinUvError(StatusPinUv::PinAuthBlocked)) => {
+                let notification_str =
+                    make_pin_error_prompt("pin-auth-blocked", tid, origin, browsing_context_id);
+                controller.send_prompt(tid, &notification_str);
+            }
+            Ok(StatusUpdate::PinUvError(StatusPinUv::PinBlocked)) => {
+                let notification_str =
+                    make_pin_error_prompt("device-blocked", tid, origin, browsing_context_id);
+                controller.send_prompt(tid, &notification_str);
+            }
+            Ok(StatusUpdate::PinUvError(e)) => {
+                warn!("Unexpected error: {:?}", e)
+            }
             Err(RecvError) => {
                 debug!("STATUS: end");
                 return;
