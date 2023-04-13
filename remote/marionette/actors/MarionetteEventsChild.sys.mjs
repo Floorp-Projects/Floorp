@@ -26,7 +26,7 @@ export class MarionetteEventsChild extends JSWindowActorChild {
     // Prevent the logger from being created if the current log level
     // isn't set to 'trace'. This is important for a faster content process
     // creation when Marionette is running.
-    if (lazy.Log.isTraceLevel) {
+    if (lazy.Log.isTraceLevelOrAbove) {
       lazy.logger.trace(
         `[${this.browsingContext.id}] MarionetteEvents actor created ` +
           `for window id ${this.innerWindowId}`
