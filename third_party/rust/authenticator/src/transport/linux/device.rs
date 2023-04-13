@@ -4,9 +4,10 @@
 
 extern crate libc;
 use crate::consts::CID_BROADCAST;
+use crate::ctap2::commands::get_info::AuthenticatorInfo;
 use crate::transport::hid::HIDDevice;
 use crate::transport::platform::{hidraw, monitor};
-use crate::transport::{AuthenticatorInfo, FidoDevice, HIDError, SharedSecret};
+use crate::transport::{FidoDevice, HIDError, SharedSecret};
 use crate::u2ftypes::{U2FDevice, U2FDeviceInfo};
 use crate::util::from_unix_result;
 use std::fs::OpenOptions;

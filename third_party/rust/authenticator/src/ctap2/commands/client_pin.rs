@@ -1,5 +1,9 @@
+#![allow(non_upper_case_globals)]
+// Note: Needed for PinUvAuthTokenPermission
+//       The current version of `bitflags` doesn't seem to allow
+//       to set this for an individual bitflag-struct.
 use super::{get_info::AuthenticatorInfo, Command, CommandError, RequestCtap2, StatusCode};
-use crate::crypto::{COSEKey, CryptoError, PinToken, PinUvAuthProtocol, SharedSecret};
+use crate::crypto::{COSEKey, CryptoError, PinUvAuthProtocol, PinUvAuthToken, SharedSecret};
 use crate::transport::errors::HIDError;
 use crate::u2ftypes::U2FDevice;
 use serde::{
@@ -19,25 +23,34 @@ use std::fmt;
 #[derive(Debug, Copy, Clone)]
 #[repr(u8)]
 pub enum PINSubcommand {
-    GetRetries = 0x01,
+    GetPinRetries = 0x01,
     GetKeyAgreement = 0x02,
     SetPIN = 0x03,
     ChangePIN = 0x04,
     GetPINToken = 0x05, // superseded by GetPinUvAuth*
     GetPinUvAuthTokenUsingUvWithPermissions = 0x06,
-    GetUVRetries = 0x07,
+    GetUvRetries = 0x07,
     GetPinUvAuthTokenUsingPinWithPermissions = 0x09, // Yes, 0x08 is missing
 }
 
-#[derive(Debug, Copy, Clone)]
-#[repr(u8)]
-pub enum PinUvAuthTokenPermission {
-    MakeCredential = 0x01,             // rp_id required
-    GetAssertion = 0x02,               // rp_id required
-    CredentialManagement = 0x04,       // rp_id optional
-    BioEnrollment = 0x08,              // rp_id ignored
-    LargeBlobWrite = 0x10,             // rp_id ignored
-    AuthenticatorConfiguration = 0x20, // rp_id ignored
+bitflags! {
+    pub struct PinUvAuthTokenPermission: u8 {
+        const MakeCredential = 0x01;             // rp_id required
+        const GetAssertion = 0x02;               // rp_id required
+        const CredentialManagement = 0x04;       // rp_id optional
+        const BioEnrollment = 0x08;              // rp_id ignored
+        const LargeBlobWrite = 0x10;             // rp_id ignored
+        const AuthenticatorConfiguration = 0x20; // rp_id ignored
+    }
+}
+
+impl Default for PinUvAuthTokenPermission {
+    fn default() -> Self {
+        // CTAP 2.1 spec:
+        // If authenticatorClientPIN's getPinToken subcommand is invoked, default permissions
+        // of `mc` and `ga` (value 0x03) are granted for the returned pinUvAuthToken.
+        PinUvAuthTokenPermission::MakeCredential | PinUvAuthTokenPermission::GetAssertion
+    }
 }
 
 #[derive(Debug)]
@@ -56,7 +69,7 @@ impl Default for ClientPIN {
     fn default() -> Self {
         ClientPIN {
             pin_protocol: None,
-            subcommand: PINSubcommand::GetRetries,
+            subcommand: PINSubcommand::GetPinRetries,
             key_agreement: None,
             pin_auth: None,
             new_pin_enc: None,
@@ -222,10 +235,8 @@ pub struct GetKeyAgreement {
 }
 
 impl GetKeyAgreement {
-    pub fn new(info: &AuthenticatorInfo) -> Result<Self, CommandError> {
-        Ok(GetKeyAgreement {
-            pin_protocol: PinUvAuthProtocol::try_from(info)?,
-        })
+    pub fn new(pin_protocol: PinUvAuthProtocol) -> Self {
+        GetKeyAgreement { pin_protocol }
     }
 }
 
@@ -272,7 +283,7 @@ impl<'sc, 'pin> GetPinToken<'sc, 'pin> {
 }
 
 impl<'sc, 'pin> ClientPINSubCommand for GetPinToken<'sc, 'pin> {
-    type Output = PinToken;
+    type Output = PinUvAuthToken;
 
     fn as_client_pin(&self) -> Result<ClientPIN, CommandError> {
         let input = self.pin.for_pin_token();
@@ -297,9 +308,13 @@ impl<'sc, 'pin> ClientPINSubCommand for GetPinToken<'sc, 'pin> {
             from_slice(input).map_err(CommandError::Deserializing)?;
         match get_pin_response.pin_token {
             Some(encrypted_pin_token) => {
+                // CTAP 2.1 spec:
+                // If authenticatorClientPIN's getPinToken subcommand is invoked, default permissions
+                // of `mc` and `ga` (value 0x03) are granted for the returned pinUvAuthToken.
+                let default_permissions = PinUvAuthTokenPermission::default();
                 let pin_token = self
                     .shared_secret
-                    .decrypt_pin_token(encrypted_pin_token.as_ref())?;
+                    .decrypt_pin_token(default_permissions, encrypted_pin_token.as_ref())?;
                 Ok(pin_token)
             }
             None => Err(CommandError::MissingRequiredField("key_agreement")),
@@ -332,7 +347,7 @@ impl<'sc, 'pin> GetPinUvAuthTokenUsingPinWithPermissions<'sc, 'pin> {
 }
 
 impl<'sc, 'pin> ClientPINSubCommand for GetPinUvAuthTokenUsingPinWithPermissions<'sc, 'pin> {
-    type Output = PinToken;
+    type Output = PinUvAuthToken;
 
     fn as_client_pin(&self) -> Result<ClientPIN, CommandError> {
         let input = self.pin.for_pin_token();
@@ -343,7 +358,103 @@ impl<'sc, 'pin> ClientPINSubCommand for GetPinUvAuthTokenUsingPinWithPermissions
             subcommand: PINSubcommand::GetPinUvAuthTokenUsingPinWithPermissions,
             key_agreement: Some(self.shared_secret.client_input().clone()),
             pin_hash_enc: Some(ByteBuf::from(pin_hash_enc)),
-            permissions: Some(self.permissions as u8),
+            permissions: Some(self.permissions.bits()),
+            rp_id: self.rp_id.clone(), /* TODO: This could probably be done less wasteful with
+                                        * &str all the way */
+            ..ClientPIN::default()
+        })
+    }
+
+    fn parse_response_payload(&self, input: &[u8]) -> Result<Self::Output, CommandError> {
+        let value: Value = from_slice(input).map_err(CommandError::Deserializing)?;
+        debug!(
+            "GetPinUvAuthTokenUsingPinWithPermissions::parse_response_payload {:?}",
+            value
+        );
+
+        let get_pin_response: ClientPinResponse =
+            from_slice(input).map_err(CommandError::Deserializing)?;
+        match get_pin_response.pin_token {
+            Some(encrypted_pin_token) => {
+                let pin_token = self
+                    .shared_secret
+                    .decrypt_pin_token(self.permissions, encrypted_pin_token.as_ref())?;
+                Ok(pin_token)
+            }
+            None => Err(CommandError::MissingRequiredField("key_agreement")),
+        }
+    }
+}
+
+macro_rules! implementRetries {
+    ($name:ident, $getter:ident) => {
+        #[derive(Debug)]
+        pub struct $name {}
+
+        impl $name {
+            pub fn new() -> Self {
+                Self {}
+            }
+        }
+
+        impl ClientPINSubCommand for $name {
+            type Output = u8;
+
+            fn as_client_pin(&self) -> Result<ClientPIN, CommandError> {
+                Ok(ClientPIN {
+                    subcommand: PINSubcommand::$name,
+                    ..ClientPIN::default()
+                })
+            }
+
+            fn parse_response_payload(&self, input: &[u8]) -> Result<Self::Output, CommandError> {
+                let value: Value = from_slice(input).map_err(CommandError::Deserializing)?;
+                debug!("{}::parse_response_payload {:?}", stringify!($name), value);
+
+                let get_pin_response: ClientPinResponse =
+                    from_slice(input).map_err(CommandError::Deserializing)?;
+                match get_pin_response.$getter {
+                    Some($getter) => Ok($getter),
+                    None => Err(CommandError::MissingRequiredField(stringify!($getter))),
+                }
+            }
+        }
+    };
+}
+
+implementRetries!(GetPinRetries, pin_retries);
+implementRetries!(GetUvRetries, uv_retries);
+
+#[derive(Debug)]
+pub struct GetPinUvAuthTokenUsingUvWithPermissions<'sc> {
+    shared_secret: &'sc SharedSecret,
+    permissions: PinUvAuthTokenPermission,
+    rp_id: Option<String>,
+}
+
+impl<'sc> GetPinUvAuthTokenUsingUvWithPermissions<'sc> {
+    pub fn new(
+        shared_secret: &'sc SharedSecret,
+        permissions: PinUvAuthTokenPermission,
+        rp_id: Option<String>,
+    ) -> Self {
+        GetPinUvAuthTokenUsingUvWithPermissions {
+            shared_secret,
+            permissions,
+            rp_id,
+        }
+    }
+}
+
+impl<'sc> ClientPINSubCommand for GetPinUvAuthTokenUsingUvWithPermissions<'sc> {
+    type Output = PinUvAuthToken;
+
+    fn as_client_pin(&self) -> Result<ClientPIN, CommandError> {
+        Ok(ClientPIN {
+            pin_protocol: Some(self.shared_secret.pin_protocol.clone()),
+            subcommand: PINSubcommand::GetPinUvAuthTokenUsingUvWithPermissions,
+            key_agreement: Some(self.shared_secret.client_input().clone()),
+            permissions: Some(self.permissions.bits()),
             rp_id: self.rp_id.clone(), /* TODO: This could probably be done less wasteful with
                                         * &str all the way */
             ..ClientPIN::default()
@@ -360,42 +471,10 @@ impl<'sc, 'pin> ClientPINSubCommand for GetPinUvAuthTokenUsingPinWithPermissions
             Some(encrypted_pin_token) => {
                 let pin_token = self
                     .shared_secret
-                    .decrypt_pin_token(encrypted_pin_token.as_ref())?;
+                    .decrypt_pin_token(self.permissions, encrypted_pin_token.as_ref())?;
                 Ok(pin_token)
             }
             None => Err(CommandError::MissingRequiredField("key_agreement")),
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct GetRetries {}
-
-impl GetRetries {
-    pub fn new() -> Self {
-        GetRetries {}
-    }
-}
-
-impl ClientPINSubCommand for GetRetries {
-    type Output = u8;
-
-    fn as_client_pin(&self) -> Result<ClientPIN, CommandError> {
-        Ok(ClientPIN {
-            subcommand: PINSubcommand::GetRetries,
-            ..ClientPIN::default()
-        })
-    }
-
-    fn parse_response_payload(&self, input: &[u8]) -> Result<Self::Output, CommandError> {
-        let value: Value = from_slice(input).map_err(CommandError::Deserializing)?;
-        debug!("GetKeyAgreement::parse_response_payload {:?}", value);
-
-        let get_pin_response: ClientPinResponse =
-            from_slice(input).map_err(CommandError::Deserializing)?;
-        match get_pin_response.pin_retries {
-            Some(pin_retries) => Ok(pin_retries),
-            None => Err(CommandError::MissingRequiredField("pin_retries")),
         }
     }
 }
@@ -641,38 +720,45 @@ pub enum PinError {
     PinRequired,
     PinIsTooShort,
     PinIsTooLong(usize),
-    InvalidKeyLen,
     InvalidPin(Option<u8>),
+    InvalidUv(Option<u8>),
     PinAuthBlocked,
     PinBlocked,
     PinNotSet,
+    UvBlocked,
+    /// Used for CTAP2.0 UV (fingerprints)
+    PinAuthInvalid,
     Crypto(CryptoError),
 }
 
 impl fmt::Display for PinError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            PinError::PinRequired => write!(f, "PinError: Pin required."),
-            PinError::PinIsTooShort => write!(f, "PinError: pin is too short"),
-            PinError::PinIsTooLong(len) => write!(f, "PinError: pin is too long ({len})"),
-            PinError::InvalidKeyLen => write!(f, "PinError: invalid key len"),
+            PinError::PinRequired => write!(f, "Pin required."),
+            PinError::PinIsTooShort => write!(f, "pin is too short"),
+            PinError::PinIsTooLong(len) => write!(f, "pin is too long ({len})"),
             PinError::InvalidPin(ref e) => {
-                let mut res = write!(f, "PinError: Invalid Pin.");
+                let mut res = write!(f, "Invalid Pin.");
                 if let Some(pin_retries) = e {
                     res = write!(f, " Retries left: {pin_retries:?}")
                 }
                 res
             }
-            PinError::PinAuthBlocked => write!(
-                f,
-                "PinError: Pin authentication blocked. Device needs power cycle."
-            ),
-            PinError::PinBlocked => write!(
-                f,
-                "PinError: No retries left. Pin blocked. Device needs reset."
-            ),
-            PinError::PinNotSet => write!(f, "PinError: Pin needed but not set on device."),
-            PinError::Crypto(ref e) => write!(f, "PinError: Crypto backend error: {e:?}"),
+            PinError::InvalidUv(ref e) => {
+                let mut res = write!(f, "Invalid Uv.");
+                if let Some(uv_retries) = e {
+                    res = write!(f, " Retries left: {uv_retries:?}")
+                }
+                res
+            }
+            PinError::PinAuthBlocked => {
+                write!(f, "Pin authentication blocked. Device needs power cycle.")
+            }
+            PinError::PinBlocked => write!(f, "No retries left. Pin blocked. Device needs reset."),
+            PinError::PinNotSet => write!(f, "Pin needed but not set on device."),
+            PinError::UvBlocked => write!(f, "No retries left. Uv blocked. Device needs reset."),
+            PinError::PinAuthInvalid => write!(f, "PinAuth invalid."),
+            PinError::Crypto(ref e) => write!(f, "Crypto backend error: {e:?}"),
         }
     }
 }

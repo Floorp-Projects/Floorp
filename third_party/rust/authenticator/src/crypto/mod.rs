@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use crate::ctap2::commands::client_pin::PinUvAuthTokenPermission;
 use crate::ctap2::commands::get_info::AuthenticatorInfo;
 use crate::errors::AuthenticatorError;
 use crate::{ctap2::commands::CommandError, transport::errors::HIDError};
@@ -314,11 +315,16 @@ impl SharedSecret {
     pub fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>, CryptoError> {
         self.pin_protocol.0.decrypt(&self.key, ciphertext)
     }
-    pub fn decrypt_pin_token(&self, encrypted_pin_token: &[u8]) -> Result<PinToken, CryptoError> {
+    pub fn decrypt_pin_token(
+        &self,
+        permissions: PinUvAuthTokenPermission,
+        encrypted_pin_token: &[u8],
+    ) -> Result<PinUvAuthToken, CryptoError> {
         let pin_token = self.decrypt(encrypted_pin_token)?;
-        Ok(PinToken {
+        Ok(PinUvAuthToken {
             pin_protocol: self.pin_protocol.clone(),
             pin_token,
+            permissions,
         })
     }
     pub fn authenticate(&self, message: &[u8]) -> Result<Vec<u8>, CryptoError> {
@@ -333,13 +339,14 @@ impl SharedSecret {
 }
 
 #[derive(Clone)]
-pub struct PinToken {
+pub struct PinUvAuthToken {
     pub pin_protocol: PinUvAuthProtocol,
     pin_token: Vec<u8>,
-    // TODO(jms): add permissions
+    #[allow(dead_code)] // Not yet used
+    permissions: PinUvAuthTokenPermission,
 }
 
-impl PinToken {
+impl PinUvAuthToken {
     pub fn derive(&self, message: &[u8]) -> Result<PinUvAuthParam, CryptoError> {
         let pin_auth = self.pin_protocol.0.authenticate(&self.pin_token, message)?;
         Ok(PinUvAuthParam {

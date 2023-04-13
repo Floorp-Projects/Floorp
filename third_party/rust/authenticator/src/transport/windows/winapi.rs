@@ -216,7 +216,7 @@ impl DeviceInterfaceDetailData {
     }
 
     fn path(&self) -> String {
-        unsafe { from_wide_ptr((*self.data).DevicePath.as_ptr(), self.path_len - 2) }
+        unsafe { from_wide_ptr(ptr::addr_of!((*self.data).DevicePath[0]), self.path_len - 2) }
     }
 }
 

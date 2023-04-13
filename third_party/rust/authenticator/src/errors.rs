@@ -33,6 +33,7 @@ pub enum AuthenticatorError {
     CryptoError,
     PinError(PinError),
     UnsupportedOption(UnsupportedOption),
+    CancelledByUser,
 }
 
 impl AuthenticatorError {
@@ -69,10 +70,9 @@ impl fmt::Display for AuthenticatorError {
                 write!(f, "A u2f token error occurred {err:?}")
             }
             AuthenticatorError::Custom(ref err) => write!(f, "A custom error occurred {err:?}"),
-            AuthenticatorError::VersionMismatch(manager, version) => write!(
-                f,
-                "{manager} expected arguments of version CTAP{version}"
-            ),
+            AuthenticatorError::VersionMismatch(manager, version) => {
+                write!(f, "{manager} expected arguments of version CTAP{version}")
+            }
             AuthenticatorError::HIDError(ref e) => write!(f, "Device error: {e}"),
             AuthenticatorError::CryptoError => {
                 write!(f, "The cryptography implementation encountered an error")
@@ -80,6 +80,9 @@ impl fmt::Display for AuthenticatorError {
             AuthenticatorError::PinError(ref e) => write!(f, "PIN Error: {e}"),
             AuthenticatorError::UnsupportedOption(ref e) => {
                 write!(f, "Unsupported option: {e:?}")
+            }
+            AuthenticatorError::CancelledByUser => {
+                write!(f, "Cancelled by user.")
             }
         }
     }

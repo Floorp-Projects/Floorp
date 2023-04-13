@@ -1,6 +1,6 @@
-use crate::crypto::{CryptoError, PinUvAuthParam};
+use crate::crypto::{CryptoError, PinUvAuthToken};
 use crate::ctap2::client_data::ClientDataHash;
-use crate::ctap2::commands::client_pin::{GetPinToken, GetRetries, Pin, PinError};
+use crate::ctap2::commands::client_pin::{GetPinRetries, GetUvRetries, Pin, PinError};
 use crate::errors::AuthenticatorError;
 use crate::transport::errors::{ApduErrorStatus, HIDError};
 use crate::transport::FidoDevice;
@@ -92,66 +92,85 @@ pub trait RequestCtap2: fmt::Debug {
         Dev: FidoDevice + Read + Write + fmt::Debug;
 }
 
-pub(crate) trait PinAuthCommand {
+#[derive(Debug, PartialEq, Clone)]
+pub(crate) enum PinUvAuthResult {
+    /// Request is CTAP1 and does not need PinUvAuth
+    RequestIsCtap1,
+    /// Device is not capable of CTAP2
+    DeviceIsCtap1,
+    /// Device does not support UV or PINs
+    NoAuthTypeSupported,
+    /// Request doesn't want user verification (uv = "discouraged")
+    NoAuthRequired,
+    /// Device is CTAP2.0 and has internal UV capability
+    UsingInternalUv,
+    /// Successfully established PinUvAuthToken via GetPinToken (CTAP2.0)
+    SuccessGetPinToken,
+    /// Successfully established PinUvAuthToken via UV (CTAP2.1)
+    SuccessGetPinUvAuthTokenUsingUvWithPermissions,
+    /// Successfully established PinUvAuthToken via Pin (CTAP2.1)
+    SuccessGetPinUvAuthTokenUsingPinWithPermissions,
+}
+
+/// Helper-trait to determine pin_uv_auth_param from PIN or UV.
+pub(crate) trait PinUvAuthCommand: RequestCtap2 {
     fn pin(&self) -> &Option<Pin>;
     fn set_pin(&mut self, pin: Option<Pin>);
-    fn pin_auth(&self) -> &Option<PinUvAuthParam>;
-    fn set_pin_auth(&mut self, pin_auth: Option<PinUvAuthParam>);
+    fn set_pin_uv_auth_param(
+        &mut self,
+        pin_uv_auth_token: Option<PinUvAuthToken>,
+    ) -> Result<(), AuthenticatorError>;
     fn client_data_hash(&self) -> ClientDataHash;
-    fn unset_uv_option(&mut self);
-    fn determine_pin_auth<D: FidoDevice>(&mut self, dev: &mut D) -> Result<(), AuthenticatorError> {
-        if !dev.supports_ctap2() {
-            self.set_pin_auth(None);
-            return Ok(());
-        }
-
-        let client_data_hash = self.client_data_hash();
-        let pin_auth = calculate_pin_auth(dev, &client_data_hash, self.pin())
-            .map_err(|e| repackage_pin_errors(dev, e))?;
-        self.set_pin_auth(pin_auth);
-        Ok(())
-    }
+    fn set_uv_option(&mut self, uv: Option<bool>);
+    fn get_uv_option(&mut self) -> Option<bool>;
+    fn get_rp_id(&self) -> Option<&String>;
+    fn set_discouraged_uv_option(&mut self);
 }
 
 pub(crate) fn repackage_pin_errors<D: FidoDevice>(
     dev: &mut D,
-    error: AuthenticatorError,
+    error: HIDError,
 ) -> AuthenticatorError {
     match error {
-        AuthenticatorError::HIDError(HIDError::Command(CommandError::StatusCode(
-            StatusCode::PinInvalid,
-            _,
-        ))) => {
+        HIDError::Command(CommandError::StatusCode(StatusCode::PinInvalid, _)) => {
             // If the given PIN was wrong, determine no. of left retries
-            let cmd = GetRetries::new();
+            let cmd = GetPinRetries::new();
             let retries = dev.send_cbor(&cmd).ok(); // If we got retries, wrap it in Some, otherwise ignore err
             AuthenticatorError::PinError(PinError::InvalidPin(retries))
         }
-        AuthenticatorError::HIDError(HIDError::Command(CommandError::StatusCode(
-            StatusCode::PinAuthBlocked,
-            _,
-        ))) => AuthenticatorError::PinError(PinError::PinAuthBlocked),
-        AuthenticatorError::HIDError(HIDError::Command(CommandError::StatusCode(
-            StatusCode::PinBlocked,
-            _,
-        ))) => AuthenticatorError::PinError(PinError::PinBlocked),
-        AuthenticatorError::HIDError(HIDError::Command(CommandError::StatusCode(
-            StatusCode::PinRequired,
-            _,
-        ))) => AuthenticatorError::PinError(PinError::PinRequired),
-        AuthenticatorError::HIDError(HIDError::Command(CommandError::StatusCode(
-            StatusCode::PinNotSet,
-            _,
-        ))) => AuthenticatorError::PinError(PinError::PinNotSet),
+        HIDError::Command(CommandError::StatusCode(StatusCode::PinAuthBlocked, _)) => {
+            AuthenticatorError::PinError(PinError::PinAuthBlocked)
+        }
+        HIDError::Command(CommandError::StatusCode(StatusCode::PinBlocked, _)) => {
+            AuthenticatorError::PinError(PinError::PinBlocked)
+        }
+        HIDError::Command(CommandError::StatusCode(StatusCode::PinRequired, _)) => {
+            AuthenticatorError::PinError(PinError::PinRequired)
+        }
+        HIDError::Command(CommandError::StatusCode(StatusCode::PinNotSet, _)) => {
+            AuthenticatorError::PinError(PinError::PinNotSet)
+        }
+        HIDError::Command(CommandError::StatusCode(StatusCode::PinAuthInvalid, _)) => {
+            AuthenticatorError::PinError(PinError::PinAuthInvalid)
+        }
+        HIDError::Command(CommandError::StatusCode(StatusCode::UvInvalid, _)) => {
+            // If the internal UV failed, determine no. of left retries
+            let cmd = GetUvRetries::new();
+            let retries = dev.send_cbor(&cmd).ok(); // If we got retries, wrap it in Some, otherwise ignore err
+            AuthenticatorError::PinError(PinError::InvalidUv(retries))
+        }
+        HIDError::Command(CommandError::StatusCode(StatusCode::UvBlocked, _)) => {
+            AuthenticatorError::PinError(PinError::UvBlocked)
+        }
         // TODO(MS): Add "PinPolicyViolated"
-        err => err,
+        err => AuthenticatorError::HIDError(err),
     }
 }
 
 // Spec: https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html#authenticator-api
 // and: https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#authenticator-api
 #[repr(u8)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Command {
     MakeCredentials = 0x01,
     GetAssertion = 0x02,
@@ -262,6 +281,18 @@ pub enum StatusCode {
     ActionTimeout,
     /// User presence is required for the requested operation.
     UpRequired,
+    /// built-in user verification is disabled.
+    UvBlocked,
+    /// A checksum did not match.
+    IntegrityFailure,
+    /// The requested subcommand is either invalid or not implemented.
+    InvalidSubcommand,
+    /// built-in user verification unsuccessful. The platform SHOULD retry.
+    UvInvalid,
+    /// The permissions parameter contains an unauthorized permission.
+    UnauthorizedPermission,
+    /// Other unspecified error.
+    Other,
 
     /// Unknown status.
     Unknown(u8),
@@ -321,7 +352,12 @@ impl From<u8> for StatusCode {
             0x39 => StatusCode::RequestTooLarge,
             0x3A => StatusCode::ActionTimeout,
             0x3B => StatusCode::UpRequired,
-
+            0x3C => StatusCode::UvBlocked,
+            0x3D => StatusCode::IntegrityFailure,
+            0x3E => StatusCode::InvalidSubcommand,
+            0x3F => StatusCode::UvInvalid,
+            0x40 => StatusCode::UnauthorizedPermission,
+            0x7F => StatusCode::Other,
             othr => StatusCode::Unknown(othr),
         }
     }
@@ -372,6 +408,12 @@ impl From<StatusCode> for u8 {
             StatusCode::RequestTooLarge => 0x39,
             StatusCode::ActionTimeout => 0x3A,
             StatusCode::UpRequired => 0x3B,
+            StatusCode::UvBlocked => 0x3C,
+            StatusCode::IntegrityFailure => 0x3D,
+            StatusCode::InvalidSubcommand => 0x3E,
+            StatusCode::UvInvalid => 0x3F,
+            StatusCode::UnauthorizedPermission => 0x40,
+            StatusCode::Other => 0x7F,
 
             StatusCode::Unknown(othr) => othr,
         }
@@ -416,38 +458,3 @@ impl fmt::Display for CommandError {
 }
 
 impl StdErrorT for CommandError {}
-
-pub(crate) fn calculate_pin_auth<Dev>(
-    dev: &mut Dev,
-    client_data_hash: &ClientDataHash,
-    pin: &Option<Pin>,
-) -> Result<Option<PinUvAuthParam>, AuthenticatorError>
-where
-    Dev: FidoDevice,
-{
-    // Not reusing the shared secret here, if it exists, since we might start again
-    // with a different PIN (e.g. if the last one was wrong)
-    let (shared_secret, info) = dev.establish_shared_secret()?;
-
-    // TODO(MS): What to do if token supports client_pin, but none has been set: Some(false)
-    //           AND a Pin is not None?
-    if info.options.client_pin == Some(true) {
-        let pin = pin
-            .as_ref()
-            .ok_or(HIDError::Command(CommandError::StatusCode(
-                StatusCode::PinRequired,
-                None,
-            )))?;
-
-        let pin_command = GetPinToken::new(&shared_secret, pin);
-        let pin_token = dev.send_cbor(&pin_command)?;
-
-        Ok(Some(
-            pin_token
-                .derive(client_data_hash.as_ref())
-                .map_err(CommandError::Crypto)?,
-        ))
-    } else {
-        Ok(None)
-    }
-}

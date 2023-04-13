@@ -1,11 +1,11 @@
 use super::{
-    Command, CommandError, PinAuthCommand, Request, RequestCtap1, RequestCtap2, Retryable,
+    Command, CommandError, PinUvAuthCommand, Request, RequestCtap1, RequestCtap2, Retryable,
     StatusCode,
 };
 use crate::consts::{
     PARAMETER_SIZE, U2F_AUTHENTICATE, U2F_CHECK_IS_REGISTERED, U2F_REQUEST_USER_PRESENCE,
 };
-use crate::crypto::{COSEKey, CryptoError, PinUvAuthParam, SharedSecret};
+use crate::crypto::{COSEKey, CryptoError, PinUvAuthParam, PinUvAuthToken, SharedSecret};
 use crate::ctap2::attestation::{AuthenticatorData, AuthenticatorDataFlags};
 use crate::ctap2::client_data::{ClientDataHash, CollectedClientData, CollectedClientDataWrapper};
 use crate::ctap2::commands::client_pin::Pin;
@@ -176,7 +176,7 @@ pub struct GetAssertion {
     pub(crate) extensions: GetAssertionExtensions,
     pub(crate) options: GetAssertionOptions,
     pub(crate) pin: Option<Pin>,
-    pub(crate) pin_auth: Option<PinUvAuthParam>,
+    pub(crate) pin_uv_auth_param: Option<PinUvAuthParam>,
 
     // This is used to implement the FIDO AppID extension.
     pub(crate) alternate_rp_id: Option<String>,
@@ -200,13 +200,13 @@ impl GetAssertion {
             extensions,
             options,
             pin,
-            pin_auth: None,
+            pin_uv_auth_param: None,
             alternate_rp_id,
         })
     }
 }
 
-impl PinAuthCommand for GetAssertion {
+impl PinUvAuthCommand for GetAssertion {
     fn pin(&self) -> &Option<Pin> {
         &self.pin
     }
@@ -215,20 +215,47 @@ impl PinAuthCommand for GetAssertion {
         self.pin = pin;
     }
 
-    fn pin_auth(&self) -> &Option<PinUvAuthParam> {
-        &self.pin_auth
-    }
-
-    fn set_pin_auth(&mut self, pin_auth: Option<PinUvAuthParam>) {
-        self.pin_auth = pin_auth;
+    fn set_pin_uv_auth_param(
+        &mut self,
+        pin_uv_auth_token: Option<PinUvAuthToken>,
+    ) -> Result<(), AuthenticatorError> {
+        let mut param = None;
+        if let Some(token) = pin_uv_auth_token {
+            param = Some(
+                token
+                    .derive(self.client_data_hash().as_ref())
+                    .map_err(CommandError::Crypto)?,
+            );
+        }
+        self.pin_uv_auth_param = param;
+        Ok(())
     }
 
     fn client_data_hash(&self) -> ClientDataHash {
         self.client_data_wrapper.hash()
     }
 
-    fn unset_uv_option(&mut self) {
-        self.options.user_verification = None;
+    fn set_uv_option(&mut self, uv: Option<bool>) {
+        self.options.user_verification = uv;
+    }
+
+    fn get_uv_option(&mut self) -> Option<bool> {
+        self.options.user_verification
+    }
+
+    fn get_rp_id(&self) -> Option<&String> {
+        match &self.rp {
+            // CTAP1 case: We only have the hash, not the entire RpID
+            RelyingPartyWrapper::Hash(..) => None,
+            RelyingPartyWrapper::Data(r) => Some(&r.id),
+        }
+    }
+
+    fn set_discouraged_uv_option(&mut self) {
+        // "[..] the Relying Party does not wish to require user verification (e.g., by setting options.userVerification
+        // to "discouraged" in the WebAuthn API), the platform invokes the authenticatorGetAssertion operation using
+        // the marshalled input parameters along with an absent "uv" option key."
+        self.set_uv_option(None);
     }
 }
 
@@ -249,7 +276,7 @@ impl Serialize for GetAssertion {
         if self.options.has_some() {
             map_len += 1;
         }
-        if self.pin_auth.is_some() {
+        if self.pin_uv_auth_param.is_some() {
             map_len += 2;
         }
 
@@ -276,9 +303,9 @@ impl Serialize for GetAssertion {
         if self.options.has_some() {
             map.serialize_entry(&5, &self.options)?;
         }
-        if let Some(pin_auth) = &self.pin_auth {
-            map.serialize_entry(&6, &pin_auth)?;
-            map.serialize_entry(&7, &pin_auth.pin_protocol.id())?;
+        if let Some(pin_uv_auth_param) = &self.pin_uv_auth_param {
+            map.serialize_entry(&6, &pin_uv_auth_param)?;
+            map.serialize_entry(&7, &pin_uv_auth_param.pin_protocol.id())?;
         }
         map.end()
     }

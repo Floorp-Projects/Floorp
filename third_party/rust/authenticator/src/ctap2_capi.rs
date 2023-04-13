@@ -13,7 +13,7 @@ use crate::ctap2::server::{
 };
 use crate::errors::{AuthenticatorError, U2FTokenError};
 use crate::statecallback::StateCallback;
-use crate::{AttestationObject, CollectedClientDataWrapper, Pin, StatusUpdate};
+use crate::{AttestationObject, CollectedClientDataWrapper, Pin, StatusPinUv, StatusUpdate};
 use crate::{RegisterResult, SignResult};
 use libc::size_t;
 use rand::{thread_rng, Rng};
@@ -338,7 +338,11 @@ pub unsafe extern "C" fn rust_ctap2_mgr_sign(
     let alternate_rp_id = if alternate_relying_party_id.is_null() {
         None
     } else {
-        Some(CStr::from_ptr(alternate_relying_party_id).to_string_lossy().to_string())
+        Some(
+            CStr::from_ptr(alternate_relying_party_id)
+                .to_string_lossy()
+                .to_string(),
+        )
     };
     let origin = CStr::from_ptr(origin_ptr).to_string_lossy().to_string();
     let challenge = from_raw(challenge.ptr, challenge.len);
@@ -972,7 +976,8 @@ pub unsafe extern "C" fn rust_ctap2_status_update_send_pin(
     }
 
     match &*res {
-        StatusUpdate::PinError(_, sender) => {
+        StatusUpdate::PinUvError(StatusPinUv::PinRequired(sender))
+        | StatusUpdate::PinUvError(StatusPinUv::InvalidPin(sender, _)) => {
             if let Ok(pin) = CStr::from_ptr(c_pin).to_str() {
                 sender
                     .send(Pin::new(pin))

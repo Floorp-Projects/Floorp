@@ -4,8 +4,9 @@
 
 use super::winapi::DeviceCapabilities;
 use crate::consts::{CID_BROADCAST, FIDO_USAGE_PAGE, FIDO_USAGE_U2FHID, MAX_HID_RPT_SIZE};
+use crate::ctap2::commands::get_info::AuthenticatorInfo;
 use crate::transport::hid::HIDDevice;
-use crate::transport::{AuthenticatorInfo, FidoDevice, HIDError, SharedSecret};
+use crate::transport::{FidoDevice, HIDError, SharedSecret};
 use crate::u2ftypes::{U2FDevice, U2FDeviceInfo};
 use std::fs::{File, OpenOptions};
 use std::hash::{Hash, Hasher};
