@@ -11,6 +11,7 @@ browser.jar:
   content/branding/about-logo-private.png
   content/branding/about-logo-private@2x.png
   content/branding/about-wordmark.svg
+  content/branding/document.ico                  (../document.ico)
   content/branding/firefox-wordmark.svg
   content/branding/icon16.png                    (../default16.png)
   content/branding/icon32.png                    (../default32.png)
