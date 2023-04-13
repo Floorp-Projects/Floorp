@@ -25,7 +25,7 @@ EXTRA_JS_MODULES["services-settings"] += [
     "RemoteSettingsWorker.sys.mjs",
     "SharedUtils.jsm",
     "SyncHistory.sys.mjs",
-    "Utils.jsm",
+    "Utils.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [

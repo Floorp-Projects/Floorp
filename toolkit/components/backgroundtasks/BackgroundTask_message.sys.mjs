@@ -68,12 +68,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   RemoteSettingsClient:
     "resource://services-settings/RemoteSettingsClient.sys.mjs",
+  Utils: "resource://services-settings/Utils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
   ToastNotification: "resource://activity-stream/lib/ToastNotification.jsm",
-  Utils: "resource://services-settings/Utils.jsm",
 });
 
 const SERVER_STAGE = "https://settings-cdn.stage.mozaws.net/v1";

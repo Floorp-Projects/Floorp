@@ -13,7 +13,9 @@ const { setTimeout } = ChromeUtils.importESModule(
 const { RemoteSettings } = ChromeUtils.importESModule(
   "resource://services-settings/remote-settings.sys.mjs"
 );
-const { Utils } = ChromeUtils.import("resource://services-settings/Utils.jsm");
+const { Utils } = ChromeUtils.importESModule(
+  "resource://services-settings/Utils.sys.mjs"
+);
 const { UptakeTelemetry, Policy } = ChromeUtils.importESModule(
   "resource://services-common/uptake-telemetry.sys.mjs"
 );

@@ -16,10 +16,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Downloader: "resource://services-settings/Attachments.sys.mjs",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   MacAttribution: "resource:///modules/MacAttribution.sys.mjs",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
   TargetingContext: "resource://messaging-system/targeting/Targeting.sys.mjs",
+  Utils: "resource://services-settings/Utils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -41,8 +41,9 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   KintoHttpClient: "resource://services-common/kinto-http-client.js",
   RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
-  Utils: "resource://services-settings/Utils.jsm",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
+
 XPCOMUtils.defineLazyServiceGetters(lazy, {
   BrowserHandler: ["@mozilla.org/browser/clh;1", "nsIBrowserHandler"],
 });

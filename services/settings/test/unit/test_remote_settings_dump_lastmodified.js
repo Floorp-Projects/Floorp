@@ -1,6 +1,8 @@
 "use strict";
 
-const { Utils } = ChromeUtils.import("resource://services-settings/Utils.jsm");
+const { Utils } = ChromeUtils.importESModule(
+  "resource://services-settings/Utils.sys.mjs"
+);
 
 Cu.importGlobalProperties(["fetch"]);
 

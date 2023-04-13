@@ -1,8 +1,8 @@
 const { BlocklistPrivate } = ChromeUtils.import(
   "resource://gre/modules/Blocklist.jsm"
 );
-const { Utils: RemoteSettingsUtils } = ChromeUtils.import(
-  "resource://services-settings/Utils.jsm"
+const { Utils: RemoteSettingsUtils } = ChromeUtils.importESModule(
+  "resource://services-settings/Utils.sys.mjs"
 );
 const { RemoteSettings } = ChromeUtils.importESModule(
   "resource://services-settings/remote-settings.sys.mjs"
