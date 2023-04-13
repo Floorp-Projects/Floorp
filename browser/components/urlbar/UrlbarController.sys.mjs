@@ -11,8 +11,6 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.sys.mjs",
-  FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
@@ -127,7 +125,7 @@ export class UrlbarController {
     // the external consumer reuses the same context multiple times.
     // This also allows to add properties without polluting the context.
     // Note this can't be null-ed or deleted once a query is done, because it's
-    // used by handleDeleteEntry and handleKeyNavigation, that can run after
+    // used by #dismissSelectedResult and handleKeyNavigation, that can run after
     // a query is cancelled or finished.
     let contextWrapper = (this._lastQueryContextWrapper = { queryContext });
 
@@ -442,7 +440,7 @@ export class UrlbarController {
           break;
         }
         if (event.shiftKey) {
-          if (!executeAction || this.handleDeleteEntry(event)) {
+          if (!executeAction || this.#dismissSelectedResult(event)) {
             event.preventDefault();
           }
         } else if (executeAction) {
@@ -594,109 +592,72 @@ export class UrlbarController {
   }
 
   /**
-   * Handles deletion of results from the last query context and the view. There
-   * are two kinds of results that can be deleted:
+   * Triggers a "dismiss" engagement for the selected result if one is selected
+   * and it's not the heuristic. Providers that can respond to dismissals of
+   * their results should implement `onEngagement()`, handle the dismissal, and
+   * call `controller.removeResult()`.
    *
-   * - Results for which `provider.blockResult()` returns true
-   * - Results whose source is `HISTORY` are handled specially by this method
-   *   and can always be removed
-   *
-   * No other results can be deleted and this method will ignore them.
-   *
-   * @param {Event} event The event that triggered deletion.
-   * @param {UrlbarResult} [result]
-   *   The result to delete. If given, it must be present in the controller's
-   *   most recent query context. If not given, the currently selected result
-   *   in the view is used.
+   * @param {Event} event
+   *   The event that triggered dismissal.
    * @returns {boolean}
-   *   Returns true if the result was deleted and false if not.
+   *   Whether providers were notified about the engagement. Providers will not
+   *   be notified if there is no selected result or the selected result is the
+   *   heuristic, since the heuristic result cannot be dismissed.
    */
-  handleDeleteEntry(event, result = undefined) {
+  #dismissSelectedResult(event) {
     if (!this._lastQueryContextWrapper) {
-      console.error("Cannot delete - the latest query is not present");
+      console.error("Cannot dismiss selected result, last query not present");
       return false;
     }
     let { queryContext } = this._lastQueryContextWrapper;
 
-    if (!result) {
-      // No result specified, so use the currently selected result.
-      let { selectedElement } = this.input.view;
-      if (selectedElement?.classList.contains("urlbarView-button")) {
-        // For results with buttons, delete them only when the main part of the
-        // row is selected, not a button.
-        return false;
-      }
-      result = this.input.view.selectedResult;
+    let { selectedElement } = this.input.view;
+    if (selectedElement?.classList.contains("urlbarView-button")) {
+      // For results with buttons, delete them only when the main part of the
+      // row is selected, not a button.
+      return false;
     }
 
-    if (result && event) {
-      this.engagementEvent.record(event, {
-        searchString: queryContext.searchString,
-        selIndex: result.rowIndex,
-        selType: "dismiss",
-        provider: result.providerName,
-      });
-    }
-
+    let result = this.input.view.selectedResult;
     if (!result || result.heuristic) {
       return false;
     }
 
-    // First call `provider.blockResult()`.
-    let provider = lazy.UrlbarProvidersManager.getProvider(result.providerName);
-    if (!provider) {
-      console.error(`Provider not found: ${result.providerName}`);
-    }
-    let blockedByProvider = provider?.tryMethod(
-      "blockResult",
-      queryContext,
-      result
-    );
+    this.engagementEvent.record(event, {
+      result,
+      selType: "dismiss",
+      searchString: queryContext.searchString,
+    });
 
-    // If the provider didn't block the result, then continue only if the result
-    // is from history.
-    if (
-      !blockedByProvider &&
-      result.source != lazy.UrlbarUtils.RESULT_SOURCE.HISTORY
-    ) {
-      return false;
+    return true;
+  }
+
+  /**
+   * Removes a result from the current query context and notifies listeners.
+   * Heuristic results cannot be removed.
+   *
+   * @param {UrlbarResult} result
+   *   The result to remove.
+   */
+  removeResult(result) {
+    if (!result || result.heuristic) {
+      return;
     }
+
+    if (!this._lastQueryContextWrapper) {
+      console.error("Cannot remove result, last query not present");
+      return;
+    }
+    let { queryContext } = this._lastQueryContextWrapper;
 
     let index = queryContext.results.indexOf(result);
     if (index < 0) {
       console.error("Failed to find the selected result in the results");
-      return false;
+      return;
     }
 
     queryContext.results.splice(index, 1);
     this.notify(NOTIFICATIONS.QUERY_RESULT_REMOVED, index);
-
-    if (blockedByProvider) {
-      return true;
-    }
-
-    // Form history or url restyled as search.
-    if (result.type == lazy.UrlbarUtils.RESULT_TYPE.SEARCH) {
-      if (!queryContext.formHistoryName) {
-        return false;
-      }
-      // Generate the search url to remove it from browsing history.
-      let { url } = lazy.UrlbarUtils.getUrlFromResult(result);
-      lazy.PlacesUtils.history.remove(url).catch(console.error);
-      // Now remove form history.
-      lazy.FormHistory.update({
-        op: "remove",
-        fieldname: queryContext.formHistoryName,
-        value: result.payload.suggestion,
-      }).catch(error =>
-        console.error(`Removing form history failed: ${error}`)
-      );
-      return true;
-    }
-
-    // Remove browsing history entries from Places.
-    lazy.PlacesUtils.history.remove(result.payload.url).catch(console.error);
-    return true;
   }
 
   /**
@@ -831,6 +792,11 @@ class TelemetryEvent {
    * an engagement event is recorded. If instead the user abandons a search, by
    * blurring the input field, an abandonment event is recorded.
    *
+   * On return, `details.isSessionOngoing` will be set to true if the engagement
+   * did not end the search session. Not all engagements end the session.
+   * Currently, the session remains ongoing when dismissing results or picking
+   * results that enter search mode.
+   *
    * @param {event} [event]
    *        A DOM event.
    *        Note: event can be null, that usually happens for paste&go or drop&go.
@@ -840,17 +806,13 @@ class TelemetryEvent {
    *        this string is not sent with telemetry data. It is only used
    *        locally to discern other data, such as the number of characters and
    *        words in the string.
-   * @param {string} [details.selIndex] Index of the selected result, undefined
-   *        for "blur".
    * @param {string} [details.selType] type of the selected element, undefined
    *        for "blur". One of "unknown", "autofill", "visiturl", "bookmark",
    *        "help", "history", "keyword", "searchengine", "searchsuggestion",
    *        "switchtab", "remotetab", "extension", "oneoff", "dismiss".
-   * @param {string} [details.provider] The name of the provider for the selected
-   *        result.
+   * @param {UrlbarResult} [details.result] The engaged result. This should be
+   *        set to the result related to the picked element.
    * @param {DOMElement} [details.element] The picked view element.
-   * @param {object} [details.startEventInfo] Additional info about the start
-   *        event.
    */
   record(event, details) {
     this.clearPauseImpressionTimer();
@@ -861,10 +823,12 @@ class TelemetryEvent {
     } catch (ex) {
       console.error("Could not record event: ", ex);
     } finally {
-      // The view remains open when results are dismissed, making it possible to
-      // record multiple engagements per session. Each should use the same start
-      // event info. Reset it only for non-dismissal engagements.
-      if (details.selType != "dismiss") {
+      // Reset the start event info except for engagements that do not end the
+      // search session. In that case, the view stays open and further
+      // engagements are possible and should be recorded when they occur.
+      // (`details.isSessionOngoing` is not a param; rather, it's set by
+      // `_internalRecord()`.)
+      if (!details.isSessionOngoing) {
         this._startEventInfo = null;
         this._discarded = false;
       }
@@ -918,7 +882,7 @@ class TelemetryEvent {
   }
 
   _internalRecord(event, details) {
-    const startEventInfo = details.startEventInfo ?? this._startEventInfo;
+    const startEventInfo = this._startEventInfo;
 
     if (!this._category || !startEventInfo) {
       if (this._discarded && this._category && details?.selType !== "dismiss") {
@@ -944,11 +908,24 @@ class TelemetryEvent {
     }
 
     let action;
+    let skipLegacyTelemetry = false;
     if (!event) {
       action =
         startEventInfo.interactionType == "dropped" ? "drop_go" : "paste_go";
     } else if (event.type == "blur") {
       action = "blur";
+    } else if (
+      details.element?.dataset.command &&
+      // The "help" selType is recognized by legacy telemetry, and `action`
+      // should be set to either "click" or "enter" depending on whether the
+      // event is a mouse event, so ignore "help" here.
+      details.element.dataset.command != "help"
+    ) {
+      action = details.element.dataset.command;
+      skipLegacyTelemetry = true;
+    } else if (details.selType == "dismiss") {
+      action = "dismiss";
+      skipLegacyTelemetry = true;
     } else if (MouseEvent.isInstance(event)) {
       action = event.target.id == "urlbar-go-button" ? "go_button" : "click";
     } else {
@@ -957,12 +934,26 @@ class TelemetryEvent {
 
     let method = action == "blur" ? "abandonment" : "engagement";
 
+    if (method == "engagement") {
+      // Not all engagements end the search session. Currently, the session
+      // remains ongoing when dismissing results or picking results that enter
+      // search mode. We should find a generalized way to determine this instead
+      // of listing all the cases like this.
+      details.isSessionOngoing = !!(
+        details.selType == "dismiss" ||
+        details.result?.payload.providesSearchMode
+      );
+    }
+
     // numWords is not a perfect measurement, since it will return an incorrect
     // value for languages that do not use spaces or URLs containing spaces in
     // its query parameters, for example.
     let { numChars, numWords, searchWords } = this._parseSearchString(
       details.searchString
     );
+
+    details.provider = details.result?.providerName;
+    details.selIndex = details.result?.rowIndex ?? -1;
 
     let { queryContext } = this._controller._lastQueryContextWrapper || {};
 
@@ -984,8 +975,13 @@ class TelemetryEvent {
       }
     );
 
-    if (details.selType === "dismiss") {
-      // The conventional telemetry doesn't support "dismiss" event.
+    if (skipLegacyTelemetry) {
+      this._controller.manager.notifyEngagementChange(
+        this._isPrivate,
+        method,
+        queryContext,
+        details
+      );
       return;
     }
 

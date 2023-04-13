@@ -525,20 +525,38 @@ const tests = [
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
 
-    return {
-      category: "urlbar",
-      method: "engagement",
-      object: "enter",
-      value: "typed",
-      extra: {
-        elapsed: val => parseInt(val) > 0,
-        numChars: "3",
-        numWords: "1",
-        selIndex: "0",
-        selType: "searchengine",
-        provider: "HeuristicFallback",
+    return [
+      // engagement on the keyword offer result to enter search mode
+      {
+        category: "urlbar",
+        method: "engagement",
+        object: "enter",
+        value: "typed",
+        extra: {
+          elapsed: val => parseInt(val) > 0,
+          numChars: "1",
+          numWords: "1",
+          selIndex: "6",
+          selType: "searchengine",
+          provider: "TokenAliasEngines",
+        },
       },
-    };
+      // engagement on the search heuristic
+      {
+        category: "urlbar",
+        method: "engagement",
+        object: "enter",
+        value: "typed",
+        extra: {
+          elapsed: val => parseInt(val) > 0,
+          numChars: "3",
+          numWords: "1",
+          selIndex: "0",
+          selType: "searchengine",
+          provider: "HeuristicFallback",
+        },
+      },
+    ];
   },
 
   async function(win) {
@@ -976,20 +994,38 @@ const tests = [
     await PlacesUtils.history.clear();
     await SpecialPowers.popPrefEnv();
 
-    return {
-      category: "urlbar",
-      method: "engagement",
-      object: "enter",
-      value: "typed",
-      extra: {
-        elapsed: val => parseInt(val) > 0,
-        numChars: "3",
-        numWords: "1",
-        selIndex: "0",
-        selType: "searchengine",
-        provider: "HeuristicFallback",
+    return [
+      // engagement on the tab-to-search to enter search mode
+      {
+        category: "urlbar",
+        method: "engagement",
+        object: "enter",
+        value: "typed",
+        extra: {
+          elapsed: val => parseInt(val) > 0,
+          numChars: "4",
+          numWords: "1",
+          selIndex: "1",
+          selType: "tabtosearch",
+          provider: "TabToSearch",
+        },
       },
-    };
+      // engagement on the search heuristic
+      {
+        category: "urlbar",
+        method: "engagement",
+        object: "enter",
+        value: "typed",
+        extra: {
+          elapsed: val => parseInt(val) > 0,
+          numChars: "3",
+          numWords: "1",
+          selIndex: "0",
+          selType: "searchengine",
+          provider: "HeuristicFallback",
+        },
+      },
+    ];
   },
 
   async function(win) {

@@ -195,25 +195,10 @@ class ProviderTabToSearch extends UrlbarProvider {
   }
 
   /**
-   * Called when any selectable element in a dynamic result's view is picked.
-   *
-   * @param {UrlbarResult} result
-   *   The result that was picked.
-   * @param {Element} element
-   *   The element in the result's view that was picked.
-   */
-  pickResult(result, element) {
-    element.ownerGlobal.gURLBar.maybeConfirmSearchModeFromResult({
-      result,
-      checkValue: false,
-    });
-  }
-
-  /**
    * Called when a result from the provider is selected. "Selected" refers to
    * the user highlighing the result with the arrow keys/Tab, before it is
    * picked. onSelection is also called when a user clicks a result. In the
-   * event of a click, onSelection is called just before pickResult.
+   * event of a click, onSelection is called just before onEngagement.
    *
    * @param {UrlbarResult} result
    *   The result that was selected.
@@ -265,6 +250,20 @@ class ProviderTabToSearch extends UrlbarProvider {
    *   it describes the search string and picked result.
    */
   onEngagement(isPrivate, state, queryContext, details) {
+    let { result, element } = details;
+    if (
+      result?.providerName == this.name &&
+      result.type == UrlbarUtils.RESULT_TYPE.DYNAMIC
+    ) {
+      // Confirm search mode, but only for the onboarding (dynamic) result. The
+      // input will handle confirming search mode for the non-onboarding
+      // `RESULT_TYPE.SEARCH` result since it sets `providesSearchMode`.
+      element.ownerGlobal.gURLBar.maybeConfirmSearchModeFromResult({
+        result,
+        checkValue: false,
+      });
+    }
+
     if (!this.enginesShown.regular.size && !this.enginesShown.onboarding.size) {
       return;
     }

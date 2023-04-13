@@ -239,12 +239,11 @@ add_task(async function blockButton() {
     ],
   });
 
-  // Implement the provider's `blockResult()`. Return true from it so the view
-  // removes the row after it's called.
-  let blockResultCallCount = 0;
-  provider.blockResult = () => {
-    blockResultCallCount++;
-    return true;
+  // Implement the provider's `onEngagement()` so it removes the result.
+  let onEngagementCallCount = 0;
+  provider.onEngagement = (isPrivate, state, queryContext, details) => {
+    onEngagementCallCount++;
+    queryContext.view.controller.removeResult(details.result);
   };
 
   UrlbarProvidersManager.registerProvider(provider);
@@ -283,9 +282,9 @@ add_task(async function blockButton() {
   EventUtils.synthesizeKey("KEY_Enter");
 
   Assert.equal(
-    blockResultCallCount,
+    onEngagementCallCount,
     1,
-    "blockResult() should have been called once"
+    "onEngagement() should have been called once"
   );
   Assert.equal(
     UrlbarTestUtils.getResultCount(window),

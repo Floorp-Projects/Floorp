@@ -490,9 +490,7 @@ add_task(async function clickInInput_persist() {
     await checkTip(window, UrlbarProviderSearchTips.TIP_TYPE.PERSIST, false);
 
     // Click in the input.
-    // The popup should be shown because the search term shouldn't be
-    // cleared when the user focuses on the urlbar.
-    await UrlbarTestUtils.promisePopupOpen(window, () => {
+    await UrlbarTestUtils.promisePopupClose(window, () => {
       EventUtils.synthesizeMouseAtCenter(gURLBar.textbox.parentNode, {});
     });
     gURLBar.blur();
@@ -511,9 +509,6 @@ add_task(async function clickInInput_persist() {
     `${UrlbarProviderSearchTips.TIP_TYPE.PERSIST}-picked`,
     1
   );
-  // This includes the abandonment engagement event whereas the others don't.
-  // It might be because the persist tip keeps the existing search term
-  // whereas onboard and redirect don't.
   TelemetryTestUtils.assertEvents(
     [
       {
@@ -521,12 +516,6 @@ add_task(async function clickInInput_persist() {
         method: "engagement",
         object: "click",
         value: "typed",
-      },
-      {
-        category: "urlbar",
-        method: "abandonment",
-        object: "blur",
-        value: "returned",
       },
     ],
     { category: "urlbar" }

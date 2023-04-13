@@ -284,42 +284,20 @@ function makeUrlbarResult(tokens, info) {
   let action = lazy.PlacesUtils.parseActionUrl(info.url);
   if (action) {
     switch (action.type) {
-      case "searchengine": {
-        if (action.params.isSearchHistory) {
-          // Return a form history result.
-          return new lazy.UrlbarResult(
-            UrlbarUtils.RESULT_TYPE.SEARCH,
-            UrlbarUtils.RESULT_SOURCE.HISTORY,
-            ...lazy.UrlbarResult.payloadAndSimpleHighlights(tokens, {
-              engine: action.params.engineName,
-              suggestion: [
-                action.params.searchSuggestion,
-                UrlbarUtils.HIGHLIGHT.SUGGESTED,
-              ],
-              lowerCaseSuggestion: action.params.searchSuggestion.toLocaleLowerCase(),
-            })
-          );
-        }
-
+      case "searchengine":
+        // Return a form history result.
         return new lazy.UrlbarResult(
           UrlbarUtils.RESULT_TYPE.SEARCH,
-          UrlbarUtils.RESULT_SOURCE.SEARCH,
+          UrlbarUtils.RESULT_SOURCE.HISTORY,
           ...lazy.UrlbarResult.payloadAndSimpleHighlights(tokens, {
-            engine: [action.params.engineName, UrlbarUtils.HIGHLIGHT.TYPED],
+            engine: action.params.engineName,
             suggestion: [
               action.params.searchSuggestion,
               UrlbarUtils.HIGHLIGHT.SUGGESTED,
             ],
-            lowerCaseSuggestion: action.params.searchSuggestion?.toLocaleLowerCase(),
-            keyword: action.params.alias,
-            query: [
-              action.params.searchQuery.trim(),
-              UrlbarUtils.HIGHLIGHT.NONE,
-            ],
-            icon: info.icon,
+            lowerCaseSuggestion: action.params.searchSuggestion.toLocaleLowerCase(),
           })
         );
-      }
       case "switchtab":
         return new lazy.UrlbarResult(
           UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
@@ -752,57 +730,6 @@ Search.prototype = {
     }
 
     return false;
-  },
-
-  /**
-   * Adds a search engine match.
-   *
-   * @param {object} options
-   *   The options object.
-   * @param {nsISearchEngine} options.engine
-   *        The search engine associated with the match.
-   * @param {string} [options.query]
-   *        The search query string.
-   * @param {string} [options.alias]
-   *        The search engine alias associated with the match, if any.
-   * @param {boolean} [options.historical]
-   *        True if you're adding a suggestion match and the suggestion is from
-   *        the user's local history (and not the search engine).
-   */
-  _addSearchEngineMatch({
-    engine,
-    query = "",
-    alias = undefined,
-    historical = false,
-  }) {
-    let actionURLParams = {
-      engineName: engine.name,
-      searchQuery: query,
-    };
-
-    if (alias && !query) {
-      // `input` should have a trailing space so that when the user selects the
-      // result, they can start typing their query without first having to enter
-      // a space between the alias and query.
-      actionURLParams.input = `${alias} `;
-    } else {
-      actionURLParams.input = this._originalSearchString;
-    }
-
-    let match = {
-      comment: engine.name,
-      icon: engine.iconURI ? engine.iconURI.spec : null,
-      style: "action searchengine",
-      frecency: FRECENCY_DEFAULT,
-    };
-
-    if (alias) {
-      actionURLParams.alias = alias;
-      match.style += " alias";
-    }
-
-    match.value = makeActionUrl("searchengine", actionURLParams);
-    this._addMatch(match);
   },
 
   _onResultRow(row, cancel) {
@@ -1539,6 +1466,32 @@ class ProviderPlaces extends UrlbarProvider {
     // Thus, ensure that notifyResult is the last call in this method,
     // otherwise you might be touching the wrong search.
     search.notifyResult(false);
+  }
+
+  onEngagement(isPrivate, state, queryContext, details) {
+    let { result } = details;
+    if (result?.providerName != this.name) {
+      return;
+    }
+
+    if (details.selType == "dismiss") {
+      switch (result.type) {
+        case UrlbarUtils.RESULT_TYPE.SEARCH:
+          // URL restyled as a search suggestion. Generate the URL and remove it
+          // from browsing history.
+          let { url } = UrlbarUtils.getUrlFromResult(result);
+          lazy.PlacesUtils.history.remove(url).catch(console.error);
+          queryContext.view.controller.removeResult(result);
+          break;
+        case UrlbarUtils.RESULT_TYPE.URL:
+          // Remove browsing history entries from Places.
+          lazy.PlacesUtils.history
+            .remove(result.payload.url)
+            .catch(console.error);
+          queryContext.view.controller.removeResult(result);
+          break;
+      }
+    }
   }
 
   _startLegacyQuery(queryContext, callback) {

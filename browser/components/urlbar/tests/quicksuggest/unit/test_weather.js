@@ -914,7 +914,11 @@ add_task(async function block() {
   });
 
   // Block the result.
-  UrlbarProviderWeather.blockResult(context, context.results[0]);
+  UrlbarProviderWeather.onEngagement(false, "engagement", context, {
+    result: context.results[0],
+    selType: "dismiss",
+    selIndex: context.results[0].rowIndex,
+  });
   Assert.ok(
     !UrlbarPrefs.get("suggest.weather"),
     "suggest.weather is false after blocking the result"

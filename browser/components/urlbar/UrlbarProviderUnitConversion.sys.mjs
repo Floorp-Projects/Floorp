@@ -169,11 +169,14 @@ class ProviderUnitConversion extends UrlbarProvider {
     addCallback(this, result);
   }
 
-  pickResult(result, element) {
-    const { textContent } = element.querySelector(
-      ".urlbarView-dynamic-unitConversion-output"
-    );
-    lazy.ClipboardHelper.copyString(textContent);
+  onEngagement(isPrivate, state, queryContext, details) {
+    let { result, element } = details;
+    if (result?.providerName == this.name) {
+      const { textContent } = element.querySelector(
+        ".urlbarView-dynamic-unitConversion-output"
+      );
+      lazy.ClipboardHelper.copyString(textContent);
+    }
   }
 }
 

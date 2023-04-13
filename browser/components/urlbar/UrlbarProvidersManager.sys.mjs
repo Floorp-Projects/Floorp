@@ -339,7 +339,7 @@ class ProvidersManager {
    * @param {object} details
    *   An object that describes the search string and the picked result, if any.
    */
-  notifyEngagementChange(isPrivate, state, queryContext, details) {
+  notifyEngagementChange(isPrivate, state, queryContext, details = {}) {
     for (let provider of this.providers) {
       provider.tryMethod(
         "onEngagement",

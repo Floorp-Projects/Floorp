@@ -23,7 +23,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarController: "resource:///modules/UrlbarController.sys.mjs",
   UrlbarEventBufferer: "resource:///modules/UrlbarEventBufferer.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
-  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
   UrlbarQueryContext: "resource:///modules/UrlbarUtils.sys.mjs",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
@@ -698,10 +697,10 @@ export class UrlbarInput {
     url = this._maybeCanonizeURL(event, url) || url.trim();
 
     this.controller.engagementEvent.record(event, {
-      searchString: typedValue,
-      selIndex: selectedResult?.rowIndex ?? -1,
+      element,
       selType,
-      provider: selectedResult?.providerName,
+      searchString: typedValue,
+      result: selectedResult,
     });
 
     let isValidUrl = false;
@@ -856,6 +855,32 @@ export class UrlbarInput {
     element = null,
     browser = this.window.gBrowser.selectedBrowser
   ) {
+    if (element?.classList.contains("urlbarView-button-menu")) {
+      this.view.openResultMenu(result, element);
+      return;
+    }
+
+    let urlOverride;
+    if (element?.dataset.command) {
+      this.controller.engagementEvent.record(event, {
+        result,
+        element,
+        searchString: this._lastSearchString,
+        selType:
+          element.dataset.command == "help" &&
+          result.type == lazy.UrlbarUtils.RESULT_TYPE.TIP
+            ? "tiphelp"
+            : element.dataset.command,
+      });
+      if (element.dataset.command == "help") {
+        urlOverride = result.payload.helpUrl;
+      }
+      urlOverride ||= element.dataset.url;
+      if (!urlOverride) {
+        return;
+      }
+    }
+
     // When a one-off is selected, we restyle heuristic results to look like
     // search results. In the unlikely event that they are clicked, instead of
     // picking the results as usual, we confirm search mode, same as if the user
@@ -872,20 +897,7 @@ export class UrlbarInput {
       return;
     }
 
-    if (element?.classList.contains("urlbarView-button-menu")) {
-      this.view.openResultMenu(result, element);
-      return;
-    }
-
-    if (
-      element?.classList.contains("urlbarView-button-block") ||
-      element?.dataset.command == "dismiss"
-    ) {
-      this.controller.handleDeleteEntry(event, result);
-      return;
-    }
-
-    let urlOverride = element?.dataset.url;
+    urlOverride ||= element?.dataset.url;
     let originalUntrimmedValue = this.untrimmedValue;
     let isCanonized = this.setValueFromResult({ result, event, urlOverride });
     let where = this._whereToOpen(event);
@@ -910,27 +922,18 @@ export class UrlbarInput {
       where = "tab";
     }
 
-    let selIndex = result.rowIndex;
     if (!result.payload.providesSearchMode) {
       this.view.close({ elementPicked: true });
     }
 
     this.controller.recordSelectedResult(event, result);
 
-    if (result.providerName === "TabToSearch") {
-      this.controller.engagementEvent.record(event, {
-        searchString: this._lastSearchString,
-        selIndex: result.rowIndex,
-        provider: result.providerName,
-      });
-    }
-
     if (isCanonized) {
       this.controller.engagementEvent.record(event, {
-        searchString: this._lastSearchString,
-        selIndex,
+        result,
+        element,
         selType: "canonized",
-        provider: result.providerName,
+        searchString: this._lastSearchString,
       });
       this._loadURL(this.value, event, where, openParams, browser);
       return;
@@ -995,11 +998,11 @@ export class UrlbarInput {
         // We cache the search string because switching tab may clear it.
         let searchString = this._lastSearchString;
         this.controller.engagementEvent.record(event, {
+          result,
+          element,
           searchString,
           searchMode,
-          selIndex,
           selType: "tabswitch",
-          provider: result.providerName,
         });
 
         let switched = this.window.switchToTabHavingURI(
@@ -1023,11 +1026,19 @@ export class UrlbarInput {
       }
       case lazy.UrlbarUtils.RESULT_TYPE.SEARCH: {
         if (result.payload.providesSearchMode) {
-          let searchModeParams = this._searchModeForResult(result);
-          if (searchModeParams) {
-            this.searchMode = searchModeParams;
-            this.search("");
-          }
+          this.controller.engagementEvent.record(event, {
+            result,
+            element,
+            searchString: this._lastSearchString,
+            selType: this.controller.engagementEvent.typeFromElement(
+              result,
+              element
+            ),
+          });
+          this.maybeConfirmSearchModeFromResult({
+            result,
+            checkValue: false,
+          });
           return;
         }
 
@@ -1094,15 +1105,11 @@ export class UrlbarInput {
         }
         this.handleRevert();
         this.controller.engagementEvent.record(event, {
-          searchString: this._lastSearchString,
-          selIndex,
+          result,
+          element,
           selType: "tip",
-          provider: result.providerName,
+          searchString: this._lastSearchString,
         });
-        let provider = lazy.UrlbarProvidersManager.getProvider(
-          result.providerName
-        );
-        provider?.tryMethod("pickResult", result, element);
         return;
       }
       case lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC: {
@@ -1117,28 +1124,17 @@ export class UrlbarInput {
         if (!url || !result.payload.shouldNavigate) {
           this.handleRevert();
         }
-        let provider = lazy.UrlbarProvidersManager.getProvider(
-          result.providerName
-        );
-
-        // Keep startEventInfo for telemetry since the startEventInfo state might
-        // be changed if the URL Bar loses focus on pickResult.
-        const startEventInfo = this.controller.engagementEvent._startEventInfo;
-        provider?.tryMethod("pickResult", result, element);
-
         // If we won't be navigating, this is the end of the engagement.
         if (!url || !result.payload.shouldNavigate) {
           this.controller.engagementEvent.record(event, {
-            selIndex,
-            searchString: this._lastSearchString,
+            result,
+            element,
             searchMode,
+            searchString: this._lastSearchString,
             selType: this.controller.engagementEvent.typeFromElement(
               result,
               element
             ),
-            provider: result.providerName,
-            element,
-            startEventInfo,
           });
           return;
         }
@@ -1146,10 +1142,10 @@ export class UrlbarInput {
       }
       case lazy.UrlbarUtils.RESULT_TYPE.OMNIBOX: {
         this.controller.engagementEvent.record(event, {
-          searchString: this._lastSearchString,
-          selIndex,
+          result,
+          element,
           selType: "extension",
-          provider: result.providerName,
+          searchString: this._lastSearchString,
         });
 
         // The urlbar needs to revert to the loaded url when a command is
@@ -1191,10 +1187,10 @@ export class UrlbarInput {
     }
 
     this.controller.engagementEvent.record(event, {
+      result,
+      element,
       searchString: this._lastSearchString,
-      selIndex,
       selType: this.controller.engagementEvent.typeFromElement(result, element),
-      provider: result.providerName,
       searchSource: this.getSearchSource(event),
     });
 
@@ -1208,7 +1204,7 @@ export class UrlbarInput {
       });
       if (!this.isPrivate && result.providerName === "UrlbarProviderTopSites") {
         // The position is 1-based for telemetry
-        const position = selIndex + 1;
+        const position = result.rowIndex + 1;
         Services.telemetry.keyedScalarAdd(
           SCALAR_CATEGORY_TOPSITES,
           `urlbar_${position}`,
