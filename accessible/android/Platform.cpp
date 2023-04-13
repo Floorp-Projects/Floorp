@@ -224,36 +224,6 @@ void a11y::ProxyAnnouncementEvent(RemoteAccessible* aTarget,
   }
 }
 
-void a11y::ProxyBatch(RemoteAccessible* aDocument, const uint64_t aBatchType,
-                      const nsTArray<RemoteAccessible*>& aAccessibles,
-                      const nsTArray<BatchData>& aData) {
-  RefPtr<SessionAccessibility> sessionAcc =
-      SessionAccessibility::GetInstanceFor(aDocument);
-  if (!sessionAcc) {
-    return;
-  }
-
-  nsTArray<Accessible*> accessibles(aAccessibles.Length());
-  for (size_t i = 0; i < aAccessibles.Length(); i++) {
-    accessibles.AppendElement(aAccessibles.ElementAt(i));
-  }
-
-  switch (aBatchType) {
-    case DocAccessibleWrap::eBatch_Viewport:
-      sessionAcc->ReplaceViewportCache(accessibles, aData);
-      break;
-    case DocAccessibleWrap::eBatch_FocusPath:
-      sessionAcc->ReplaceFocusPathCache(accessibles, aData);
-      break;
-    case DocAccessibleWrap::eBatch_BoundsUpdate:
-      sessionAcc->UpdateCachedBounds(accessibles, aData);
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unknown batch type.");
-      break;
-  }
-}
-
 bool a11y::LocalizeString(const nsAString& aToken, nsAString& aLocalized) {
   MOZ_ASSERT(XRE_IsParentProcess());
 

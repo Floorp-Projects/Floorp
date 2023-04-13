@@ -16,8 +16,6 @@ protocol PDocAccessiblePlatformExt {
 child:
   async __delete__();
 
-  async PivotTo(uint64_t aID, int32_t aGranularity, bool aForward, bool aInclusive);
-
   async NavigateText(uint64_t aID, int32_t aGranularity, int32_t aStartOffset, int32_t aEndOffset, bool aForward, bool aSelect);
 
   async SetSelection(uint64_t aID, int32_t aStart, int32_t aEnd);
@@ -27,9 +25,6 @@ child:
   async Copy(uint64_t aID);
 
   async Paste(uint64_t aID);
-
-parent:
-  async SetPivotBoundaries(PDocAccessible aFirstDoc, uint64_t aFirst, PDocAccessible aLastDoc, uint64_t aLast);
   };
 }
 }

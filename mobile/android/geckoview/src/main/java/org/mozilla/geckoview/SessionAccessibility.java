@@ -675,13 +675,8 @@ public class SessionAccessibility {
       return false;
     }
 
-    return cachedPivot(id, granularity, forward, inclusive);
-  }
-
-  private boolean cachedPivot(
-      final int id, final String granularity, final boolean forward, final boolean inclusive) {
     final int gran = java.util.Arrays.asList(sHtmlGranularities).indexOf(granularity);
-    final boolean success = nativeProvider.cachedPivotNative(id, gran, forward, inclusive);
+    final boolean success = nativeProvider.pivotNative(id, gran, forward, inclusive);
     if (!success && !forward) {
       // If we failed to pivot backwards set the root view as the a11y focus.
       sendEvent(
@@ -723,12 +718,8 @@ public class SessionAccessibility {
     @WrapForJNI(dispatchTo = "gecko")
     public native void click(int id);
 
-    @WrapForJNI(dispatchTo = "gecko", stubName = "Pivot")
-    public native void pivotNative(int id, int granularity, boolean forward, boolean inclusive);
-
-    @WrapForJNI(dispatchTo = "current", stubName = "CachedPivot")
-    public native boolean cachedPivotNative(
-        int id, int granularity, boolean forward, boolean inclusive);
+    @WrapForJNI(dispatchTo = "current", stubName = "Pivot")
+    public native boolean pivotNative(int id, int granularity, boolean forward, boolean inclusive);
 
     @WrapForJNI(dispatchTo = "gecko")
     public native void exploreByTouch(int id, float x, float y);
@@ -759,26 +750,6 @@ public class SessionAccessibility {
               sendEvent(eventType, sourceId, className, eventData);
             }
           });
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
-    private void replaceViewportCache(final GeckoBundle[] bundles) {
-      // XXX: Will be removed
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
-    private void replaceFocusPathCache(final GeckoBundle[] bundles) {
-      // XXX: Will be removed
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
-    private void updateCachedBounds(final GeckoBundle[] bundles) {
-      // XXX: Will be removed
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
-    private void updateAccessibleFocusBoundaries(final int firstNode, final int lastNode) {
-      // XXX: Will be removed
     }
 
     @WrapForJNI

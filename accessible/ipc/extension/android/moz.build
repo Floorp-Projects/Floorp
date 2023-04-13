@@ -14,7 +14,6 @@ if CONFIG["ACCESSIBILITY"]:
 
     SOURCES += [
         "DocAccessiblePlatformExtChild.cpp",
-        "DocAccessiblePlatformExtParent.cpp",
     ]
 
     LOCAL_INCLUDES += [
