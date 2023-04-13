@@ -7,6 +7,7 @@ from typing import (Any,
                     MutableMapping,
                     Optional,
                     Sequence,
+                    Set,
                     Type,
                     TypeVar,
                     Union)
@@ -304,7 +305,7 @@ class WheelInputSource(InputSource):
 class Actions:
     def __init__(self) -> None:
         self.input_sources: List[InputSource] = []
-        self.seen_names: MutableMapping[str, set[str]] = defaultdict(set)
+        self.seen_names: MutableMapping[str, Set[str]] = defaultdict(set)
 
     def _add_source(self,
                     cls: Type[InputSourceType],
