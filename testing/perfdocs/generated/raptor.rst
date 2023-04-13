@@ -2260,11 +2260,12 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
+   * **host from parent**: false
    * **lower is better**: false
    * **page cycles**: 5
    * **page timeout**: 180000
    * **repository**: https://github.com/WebKit/Speedometer
-   * **repository revision**: c1ed921716b6ddcbd2c9556512eb4e56ffb41676
+   * **repository revision**: 75cddea7ce4a95c5738a0dd47a2dea7fa56d8db9
    * **submetric summary method**: median
    * **subtest lower is better**: true
    * **subtest name filters**: tests/,s3/
@@ -2558,11 +2559,12 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **expected**: pass
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
+   * **host from parent**: false
    * **lower is better**: false
    * **page cycles**: 5
    * **page timeout**: 420000
    * **repository**: https://github.com/WebKit/Speedometer
-   * **repository revision**: c1ed921716b6ddcbd2c9556512eb4e56ffb41676
+   * **repository revision**: 75cddea7ce4a95c5738a0dd47a2dea7fa56d8db9
    * **submetric summary method**: median
    * **subtest lower is better**: true
    * **subtest name filters**: tests/,s3/
