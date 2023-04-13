@@ -7,7 +7,6 @@ import PropTypes from "prop-types";
 import { showMenu } from "../../context-menu/menu";
 import { connect } from "../../utils/connect";
 import { score as fuzzaldrinScore } from "fuzzaldrin-plus";
-const classnames = require("classnames");
 
 import { containsPosition, positionAfter } from "../../utils/ast";
 import { copyToTheClipboard } from "../../utils/clipboard";
@@ -26,6 +25,8 @@ import {
 import OutlineFilter from "./OutlineFilter";
 import "./Outline.css";
 import PreviewFunction from "../shared/PreviewFunction";
+
+const classnames = require("devtools/client/shared/classnames.js");
 
 // Set higher to make the fuzzaldrin filter more specific
 const FUZZALDRIN_FILTER_THRESHOLD = 15000;

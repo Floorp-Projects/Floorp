@@ -5,7 +5,6 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
-import classnames from "classnames";
 import actions from "../../actions";
 
 import { getEditor } from "../../utils/editor";
@@ -26,6 +25,7 @@ import SearchInput from "../shared/SearchInput";
 import AccessibleImage from "../shared/AccessibleImage";
 
 const { PluralForm } = require("devtools/shared/plural-form");
+const classnames = require("devtools/client/shared/classnames.js");
 
 import "./ProjectSearch.css";
 

@@ -5,7 +5,6 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
-import classnames from "classnames";
 import { features } from "../../utils/prefs";
 
 import { objectInspector } from "devtools/client/shared/components/reps/index";
@@ -25,6 +24,7 @@ import { CloseButton } from "../shared/Button";
 import "./Expressions.css";
 
 const { debounce } = require("devtools/shared/debounce");
+const classnames = require("devtools/client/shared/classnames.js");
 
 const { ObjectInspector } = objectInspector;
 

@@ -5,13 +5,12 @@
 import React, { Component, memo } from "react";
 import PropTypes from "prop-types";
 
-import classNames from "classnames";
-
 import AccessibleImage from "../../shared/AccessibleImage";
 import { formatDisplayName } from "../../../utils/pause/frames";
 import { getFilename, getFileURL } from "../../../utils/source";
 import FrameMenu from "./FrameMenu";
 import FrameIndent from "./FrameIndent";
+const classnames = require("devtools/client/shared/classnames.js");
 
 function FrameTitle({ frame, options = {}, l10n }) {
   const displayName = formatDisplayName(frame, options, l10n);
@@ -142,7 +141,7 @@ export default class FrameComponent extends Component {
     } = this.props;
     const { l10n } = this.context;
 
-    const className = classNames("frame", {
+    const className = classnames("frame", {
       selected: selectedFrame && selectedFrame.id === frame.id,
     });
 

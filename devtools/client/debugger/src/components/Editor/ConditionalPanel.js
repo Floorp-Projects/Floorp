@@ -6,7 +6,6 @@ import React, { PureComponent } from "react";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
-import classNames from "classnames";
 import "./ConditionalPanel.css";
 import { toEditorLine } from "../../utils/editor";
 import { prefs } from "../../utils/prefs";
@@ -18,6 +17,8 @@ import {
   getLogPointStatus,
   getContext,
 } from "../../selectors";
+
+const classnames = require("devtools/client/shared/classnames.js");
 
 function addNewLine(doc) {
   const cursor = doc.getCursor();
@@ -222,7 +223,7 @@ export class ConditionalPanel extends PureComponent {
     const panel = document.createElement("div");
     ReactDOM.render(
       <div
-        className={classNames("conditional-breakpoint-panel", {
+        className={classnames("conditional-breakpoint-panel", {
           "log-point": log,
         })}
         onClick={() => this.keepFocusOnInput()}

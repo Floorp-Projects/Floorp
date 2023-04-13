@@ -5,7 +5,6 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
-import classnames from "classnames";
 import { showMenu } from "../../context-menu/menu";
 
 import SourceIcon from "../shared/SourceIcon";
@@ -23,6 +22,8 @@ import { shouldBlackbox, sourceTypes } from "../../utils/source";
 import { copyToTheClipboard } from "../../utils/clipboard";
 import { features } from "../../utils/prefs";
 import { saveAsLocalFile } from "../../utils/utils";
+
+const classnames = require("devtools/client/shared/classnames.js");
 
 class SourceTreeItem extends Component {
   static get propTypes() {

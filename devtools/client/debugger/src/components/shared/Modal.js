@@ -4,8 +4,8 @@
 
 import PropTypes from "prop-types";
 import React from "react";
-import classnames from "classnames";
 import Transition from "react-transition-group/Transition";
+const classnames = require("devtools/client/shared/classnames.js");
 import "./Modal.css";
 
 export const transitionTimeout = 50;

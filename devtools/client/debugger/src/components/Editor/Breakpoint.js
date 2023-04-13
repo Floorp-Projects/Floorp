@@ -4,13 +4,13 @@
 
 import { PureComponent } from "react";
 import PropTypes from "prop-types";
-import classnames from "classnames";
 
 import { getDocument, toEditorLine } from "../../utils/editor";
 import { getSelectedLocation } from "../../utils/selected-location";
 import { features } from "../../utils/prefs";
 import { showMenu } from "../../context-menu/menu";
 import { breakpointItems } from "./menus/breakpoints";
+const classnames = require("devtools/client/shared/classnames.js");
 
 const breakpointSvg = document.createElement("div");
 breakpointSvg.innerHTML =

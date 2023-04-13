@@ -4,9 +4,11 @@
 
 import React, { PureComponent } from "react";
 import PropTypes from "prop-types";
-import classnames from "classnames";
 import AccessibleImage from "../AccessibleImage";
 import { CommandBarButton } from "./";
+
+const classnames = require("devtools/client/shared/classnames.js");
+
 import "./styles/PaneToggleButton.css";
 
 class PaneToggleButton extends PureComponent {

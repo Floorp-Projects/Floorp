@@ -5,7 +5,6 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { connect } from "../../../utils/connect";
-import classnames from "classnames";
 
 import Reps from "devtools/client/shared/components/reps/index";
 const {
@@ -19,6 +18,7 @@ import { getThreadContext } from "../../../selectors";
 import AccessibleImage from "../../shared/AccessibleImage";
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const classnames = require("devtools/client/shared/classnames.js");
 
 const POPUP_SELECTOR = ".preview-popup.exception-popup";
 const ANONYMOUS_FN_NAME = "<anonymous>";
