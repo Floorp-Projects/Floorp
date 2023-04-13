@@ -554,7 +554,8 @@ void GfxInfo::GetData() {
   AddCrashReportAnnotations();
 }
 
-int fire_vaapi_process(const char* aRenderDevicePath, int* aOutPipe) {
+#ifdef MOZ_WAYLAND
+static int fire_vaapi_process(const char* aRenderDevicePath, int* aOutPipe) {
   nsCOMPtr<nsIFile> appFile;
   nsresult rv = XRE_GetBinaryPath(getter_AddRefs(appFile));
   if (NS_FAILED(rv)) {
@@ -705,6 +706,7 @@ void GfxInfo::GetDataVAAPI() {
     }
   }
 }
+#endif
 
 const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
   if (!sDriverInfo->Length()) {
@@ -1132,7 +1134,9 @@ nsresult GfxInfo::GetFeatureStatusImpl(
   // Probe VA-API on supported devices only
   if (aFeature == nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING &&
       *aStatus == nsIGfxInfo::FEATURE_STATUS_OK) {
+#ifdef MOZ_WAYLAND
     GetDataVAAPI();
+#endif
     if (!mIsVAAPISupported.value()) {
       *aStatus = nsIGfxInfo::FEATURE_BLOCKED_PLATFORM_TEST;
       aFailureId = "FEATURE_FAILURE_VIDEO_DECODING_TEST_FAILED";
