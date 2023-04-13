@@ -188,7 +188,6 @@ LOCAL_INCLUDES += [
     "/layout/forms",
     "/layout/painting",
     "/netwerk/base",
-    "/netwerk/cache",
     "/toolkit/components/telemetry",
     "/widget",
     "/widget/headless",

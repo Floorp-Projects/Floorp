@@ -1500,7 +1500,7 @@ The Mozilla Networking Library
         | `netwerk/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=netwerk/\*\*/\*>`__
         | `netwerk/base/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=netwerk/base/\*\*/\*>`__
         | `netwerk/build/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=netwerk/build/\*\*/\*>`__
-        | `netwerk/cache/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=netwerk/cache/\*\*/\*>`__
+        | `netwerk/cache2/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=netwerk/cache2/\*\*/\*>`__
         | `netwerk/dns/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=netwerk/dns/\*\*/\*>`__
         | `netwerk/locales/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=netwerk/locales/\*\*/\*>`__
         | `netwerk/mime/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=netwerk/mime/\*\*/\*>`__

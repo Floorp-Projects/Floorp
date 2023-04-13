@@ -59,7 +59,6 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
 
 LOCAL_INCLUDES += [
     "/netwerk/base",
-    "/netwerk/cache",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
