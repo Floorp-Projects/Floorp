@@ -452,6 +452,9 @@ static const size_t MaxHelperThreads = 8;
 /* JSGC_URGENT_THRESHOLD_MB */
 static const size_t UrgentThresholdBytes = 16 * 1024 * 1024;
 
+/* JSGC_PARALLEL_MARKING_THRESHOLD_KB */
+static const size_t ParallelMarkingThresholdBytes = 10 * 1024 * 1024;
+
 }  // namespace TuningDefaults
 
 /*
@@ -617,6 +620,11 @@ class GCSchedulingTunables {
    */
   MainThreadData<size_t> urgentThresholdBytes_;
 
+  /*
+   * JSGC_PARALLEL_MARKING_THRESHOLD_KB
+   */
+  MainThreadData<size_t> parallelMarkingThresholdBytes_;
+
  public:
   GCSchedulingTunables();
 
@@ -670,6 +678,10 @@ class GCSchedulingTunables {
   size_t mallocThresholdBase() const { return mallocThresholdBase_; }
 
   size_t urgentThresholdBytes() const { return urgentThresholdBytes_; }
+
+  size_t parallelMarkingThresholdBytes() const {
+    return parallelMarkingThresholdBytes_;
+  }
 
   [[nodiscard]] bool setParameter(JSGCParamKey key, uint32_t value);
   void resetParameter(JSGCParamKey key);

@@ -35,54 +35,55 @@ class TenuredChunk;
 } /* namespace gc */
 
 // Define name, key and writability for the GC parameters.
-#define FOR_EACH_GC_PARAM(_)                                               \
-  _("maxBytes", JSGC_MAX_BYTES, true)                                      \
-  _("minNurseryBytes", JSGC_MIN_NURSERY_BYTES, true)                       \
-  _("maxNurseryBytes", JSGC_MAX_NURSERY_BYTES, true)                       \
-  _("gcBytes", JSGC_BYTES, false)                                          \
-  _("nurseryBytes", JSGC_NURSERY_BYTES, false)                             \
-  _("gcNumber", JSGC_NUMBER, false)                                        \
-  _("majorGCNumber", JSGC_MAJOR_GC_NUMBER, false)                          \
-  _("minorGCNumber", JSGC_MINOR_GC_NUMBER, false)                          \
-  _("incrementalGCEnabled", JSGC_INCREMENTAL_GC_ENABLED, true)             \
-  _("perZoneGCEnabled", JSGC_PER_ZONE_GC_ENABLED, true)                    \
-  _("unusedChunks", JSGC_UNUSED_CHUNKS, false)                             \
-  _("totalChunks", JSGC_TOTAL_CHUNKS, false)                               \
-  _("sliceTimeBudgetMS", JSGC_SLICE_TIME_BUDGET_MS, true)                  \
-  _("highFrequencyTimeLimit", JSGC_HIGH_FREQUENCY_TIME_LIMIT, true)        \
-  _("smallHeapSizeMax", JSGC_SMALL_HEAP_SIZE_MAX, true)                    \
-  _("largeHeapSizeMin", JSGC_LARGE_HEAP_SIZE_MIN, true)                    \
-  _("highFrequencySmallHeapGrowth", JSGC_HIGH_FREQUENCY_SMALL_HEAP_GROWTH, \
-    true)                                                                  \
-  _("highFrequencyLargeHeapGrowth", JSGC_HIGH_FREQUENCY_LARGE_HEAP_GROWTH, \
-    true)                                                                  \
-  _("lowFrequencyHeapGrowth", JSGC_LOW_FREQUENCY_HEAP_GROWTH, true)        \
-  _("balancedHeapLimitsEnabled", JSGC_BALANCED_HEAP_LIMITS_ENABLED, true)  \
-  _("heapGrowthFactor", JSGC_HEAP_GROWTH_FACTOR, true)                     \
-  _("allocationThreshold", JSGC_ALLOCATION_THRESHOLD, true)                \
-  _("smallHeapIncrementalLimit", JSGC_SMALL_HEAP_INCREMENTAL_LIMIT, true)  \
-  _("largeHeapIncrementalLimit", JSGC_LARGE_HEAP_INCREMENTAL_LIMIT, true)  \
-  _("minEmptyChunkCount", JSGC_MIN_EMPTY_CHUNK_COUNT, true)                \
-  _("maxEmptyChunkCount", JSGC_MAX_EMPTY_CHUNK_COUNT, true)                \
-  _("compactingEnabled", JSGC_COMPACTING_ENABLED, true)                    \
-  _("parallelMarkingEnabled", JSGC_PARALLEL_MARKING_ENABLED, true)         \
-  _("minLastDitchGCPeriod", JSGC_MIN_LAST_DITCH_GC_PERIOD, true)           \
-  _("nurseryFreeThresholdForIdleCollection",                               \
-    JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION, true)                 \
-  _("nurseryFreeThresholdForIdleCollectionPercent",                        \
-    JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_PERCENT, true)         \
-  _("nurseryTimeoutForIdleCollectionMS",                                   \
-    JSGC_NURSERY_TIMEOUT_FOR_IDLE_COLLECTION_MS, true)                     \
-  _("pretenureThreshold", JSGC_PRETENURE_THRESHOLD, true)                  \
-  _("pretenureGroupThreshold", JSGC_PRETENURE_GROUP_THRESHOLD, true)       \
-  _("zoneAllocDelayKB", JSGC_ZONE_ALLOC_DELAY_KB, true)                    \
-  _("mallocThresholdBase", JSGC_MALLOC_THRESHOLD_BASE, true)               \
-  _("urgentThreshold", JSGC_URGENT_THRESHOLD_MB, true)                     \
-  _("chunkBytes", JSGC_CHUNK_BYTES, false)                                 \
-  _("helperThreadRatio", JSGC_HELPER_THREAD_RATIO, true)                   \
-  _("maxHelperThreads", JSGC_MAX_HELPER_THREADS, true)                     \
-  _("helperThreadCount", JSGC_HELPER_THREAD_COUNT, false)                  \
-  _("markingThreadCount", JSGC_MARKING_THREAD_COUNT, true)                 \
+#define FOR_EACH_GC_PARAM(_)                                                \
+  _("maxBytes", JSGC_MAX_BYTES, true)                                       \
+  _("minNurseryBytes", JSGC_MIN_NURSERY_BYTES, true)                        \
+  _("maxNurseryBytes", JSGC_MAX_NURSERY_BYTES, true)                        \
+  _("gcBytes", JSGC_BYTES, false)                                           \
+  _("nurseryBytes", JSGC_NURSERY_BYTES, false)                              \
+  _("gcNumber", JSGC_NUMBER, false)                                         \
+  _("majorGCNumber", JSGC_MAJOR_GC_NUMBER, false)                           \
+  _("minorGCNumber", JSGC_MINOR_GC_NUMBER, false)                           \
+  _("incrementalGCEnabled", JSGC_INCREMENTAL_GC_ENABLED, true)              \
+  _("perZoneGCEnabled", JSGC_PER_ZONE_GC_ENABLED, true)                     \
+  _("unusedChunks", JSGC_UNUSED_CHUNKS, false)                              \
+  _("totalChunks", JSGC_TOTAL_CHUNKS, false)                                \
+  _("sliceTimeBudgetMS", JSGC_SLICE_TIME_BUDGET_MS, true)                   \
+  _("highFrequencyTimeLimit", JSGC_HIGH_FREQUENCY_TIME_LIMIT, true)         \
+  _("smallHeapSizeMax", JSGC_SMALL_HEAP_SIZE_MAX, true)                     \
+  _("largeHeapSizeMin", JSGC_LARGE_HEAP_SIZE_MIN, true)                     \
+  _("highFrequencySmallHeapGrowth", JSGC_HIGH_FREQUENCY_SMALL_HEAP_GROWTH,  \
+    true)                                                                   \
+  _("highFrequencyLargeHeapGrowth", JSGC_HIGH_FREQUENCY_LARGE_HEAP_GROWTH,  \
+    true)                                                                   \
+  _("lowFrequencyHeapGrowth", JSGC_LOW_FREQUENCY_HEAP_GROWTH, true)         \
+  _("balancedHeapLimitsEnabled", JSGC_BALANCED_HEAP_LIMITS_ENABLED, true)   \
+  _("heapGrowthFactor", JSGC_HEAP_GROWTH_FACTOR, true)                      \
+  _("allocationThreshold", JSGC_ALLOCATION_THRESHOLD, true)                 \
+  _("smallHeapIncrementalLimit", JSGC_SMALL_HEAP_INCREMENTAL_LIMIT, true)   \
+  _("largeHeapIncrementalLimit", JSGC_LARGE_HEAP_INCREMENTAL_LIMIT, true)   \
+  _("minEmptyChunkCount", JSGC_MIN_EMPTY_CHUNK_COUNT, true)                 \
+  _("maxEmptyChunkCount", JSGC_MAX_EMPTY_CHUNK_COUNT, true)                 \
+  _("compactingEnabled", JSGC_COMPACTING_ENABLED, true)                     \
+  _("parallelMarkingEnabled", JSGC_PARALLEL_MARKING_ENABLED, true)          \
+  _("parallelMarkingThresholdKB", JSGC_PARALLEL_MARKING_THRESHOLD_KB, true) \
+  _("minLastDitchGCPeriod", JSGC_MIN_LAST_DITCH_GC_PERIOD, true)            \
+  _("nurseryFreeThresholdForIdleCollection",                                \
+    JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION, true)                  \
+  _("nurseryFreeThresholdForIdleCollectionPercent",                         \
+    JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_PERCENT, true)          \
+  _("nurseryTimeoutForIdleCollectionMS",                                    \
+    JSGC_NURSERY_TIMEOUT_FOR_IDLE_COLLECTION_MS, true)                      \
+  _("pretenureThreshold", JSGC_PRETENURE_THRESHOLD, true)                   \
+  _("pretenureGroupThreshold", JSGC_PRETENURE_GROUP_THRESHOLD, true)        \
+  _("zoneAllocDelayKB", JSGC_ZONE_ALLOC_DELAY_KB, true)                     \
+  _("mallocThresholdBase", JSGC_MALLOC_THRESHOLD_BASE, true)                \
+  _("urgentThreshold", JSGC_URGENT_THRESHOLD_MB, true)                      \
+  _("chunkBytes", JSGC_CHUNK_BYTES, false)                                  \
+  _("helperThreadRatio", JSGC_HELPER_THREAD_RATIO, true)                    \
+  _("maxHelperThreads", JSGC_MAX_HELPER_THREADS, true)                      \
+  _("helperThreadCount", JSGC_HELPER_THREAD_COUNT, false)                   \
+  _("markingThreadCount", JSGC_MARKING_THREAD_COUNT, true)                  \
   _("systemPageSizeKB", JSGC_SYSTEM_PAGE_SIZE_KB, false)
 
 // Get the key and writability give a GC parameter name.
