@@ -63,6 +63,42 @@ const PRE_ARRAY_LITERAL_TOKENS = new Set([
   "}",
 ]);
 
+// If any of these tokens are seen before a "{" token, we know that "{" token
+// is the start of an object literal, rather than the start of a block.
+const PRE_OBJECT_LITERAL_TOKENS = new Set([
+  "typeof",
+  "void",
+  "delete",
+  "=",
+  "in",
+  "of",
+  "...",
+  "*",
+  "/",
+  "%",
+  "++",
+  "--",
+  "+",
+  "-",
+  "~",
+  "!",
+  ">>",
+  ">>>",
+  "<<",
+  "<",
+  ">",
+  "<=",
+  ">=",
+  "instanceof",
+  "&",
+  "^",
+  "|",
+  "==",
+  "!=",
+  "===",
+  "!==",
+]);
+
 class PrettyFast {
   /**
    * @param {Object} options: Provides configurability of the pretty printing.
@@ -138,6 +174,7 @@ class PrettyFast {
   // Strings that go on the stack:
   //
   //   - "{"
+  //   - "{\n"
   //   - "("
   //   - "["
   //   - "[\n"
@@ -147,10 +184,11 @@ class PrettyFast {
   //   - "case"
   //   - "default"
   //
-  // The difference between "[" and "[\n" is that "[\n" is used when we are
-  // treating "[" and "]" tokens as line delimiters and should increment and
+  // The difference between "[" and "[\n" (as well as "{" and "{\n") is that "\n" is used
+  // when we are treating (curly) brackets as line delimiters and should increment and
   // decrement the indent level when we find them.
   // "[" can represent either a property access (e.g. `x["hi"]`), or an empty array literal
+  // "{" only represents an empty object literals
   #stack = [];
 
   /**
@@ -199,7 +237,6 @@ class PrettyFast {
       this.#lastToken.loc.end.column = token.loc.end.column;
       this.#lastToken.type = token.type;
       this.#lastToken.value = token.value;
-      this.#lastToken.isArrayLiteral = token.isArrayLiteral;
     }
 
     return { code: this.#currentCode, map: this.#sourceMapGenerator };
@@ -381,19 +418,23 @@ class PrettyFast {
       return;
     }
 
-    token.isArrayLiteral = isArrayLiteral(token, this.#lastToken);
-
     if (belongsOnStack(token)) {
-      if (token.isArrayLiteral) {
+      let stackEntry;
+
+      if (isArrayLiteral(token, this.#lastToken)) {
         // Don't add new lines for empty array literals
-        if (nextToken?.type?.label === "]") {
-          this.#stack.push("[");
-        } else {
-          this.#stack.push("[\n");
-        }
+        stackEntry = nextToken?.type?.label === "]" ? "[" : "[\n";
+      } else if (isObjectLiteral(token, this.#lastToken)) {
+        // Don't add new lines for empty object literals
+        stackEntry = nextToken?.type?.label === "}" ? "{" : "{\n";
+      } else if (ttl == "{") {
+        // We need to add a line break for "{" which are not empty object literals
+        stackEntry = "{\n";
       } else {
-        this.#stack.push(ttl || ttk);
+        stackEntry = ttl || ttk;
       }
+
+      this.#stack.push(stackEntry);
     }
 
     this.#maybeDecrementIndent(token);
@@ -439,9 +480,10 @@ class PrettyFast {
 
   #maybeIncrementIndent(token) {
     if (
-      token.type.label == "{" ||
+      // Don't increment indent for empty object literals
+      (token.type.label == "{" && this.#stack.at(-1) === "{\n") ||
       // Don't increment indent for empty array literals
-      (token.isArrayLiteral && this.#stack.at(-1) === "[\n") ||
+      (token.type.label == "[" && this.#stack.at(-1) === "[\n") ||
       token.type.keyword == "switch"
     ) {
       this.#indentLevel++;
@@ -451,7 +493,7 @@ class PrettyFast {
   #shouldDecrementIndent(token) {
     const top = this.#stack.at(-1);
     const ttl = token.type.label;
-    return (ttl == "}" && top != "${") || (ttl == "]" && top == "[\n");
+    return (ttl == "}" && top == "{\n") || (ttl == "]" && top == "[\n");
   }
 
   #maybeDecrementIndent(token) {
@@ -612,6 +654,32 @@ function isArrayLiteral(token, lastToken) {
     return true;
   }
   return PRE_ARRAY_LITERAL_TOKENS.has(
+    lastToken.type.keyword || lastToken.type.label
+  );
+}
+
+/**
+ * Determines if we think that the given token starts an object literal.
+ *
+ * @param Object token
+ *        The token we want to determine if it is an object literal.
+ * @param Object lastToken
+ *        The last token we added to the pretty printed results.
+ *
+ * @returns Boolean
+ *          True if we believe it is an object literal, false otherwise.
+ */
+function isObjectLiteral(token, lastToken) {
+  if (token.type.label != "{") {
+    return false;
+  }
+  if (!lastToken) {
+    return false;
+  }
+  if (lastToken.type.isAssign) {
+    return true;
+  }
+  return PRE_OBJECT_LITERAL_TOKENS.has(
     lastToken.type.keyword || lastToken.type.label
   );
 }
@@ -778,16 +846,14 @@ function isASI(token, lastToken) {
  *          True if we should add a newline.
  */
 function isLineDelimiter(token, stack) {
-  // Only add a new line for array literals when they're not empty
-  if (token.isArrayLiteral && stack.at(-1) === "[\n") {
-    return true;
-  }
-
   const ttl = token.type.label;
   const top = stack.at(-1);
   return (
     (ttl == ";" && top != "(") ||
-    ttl == "{" ||
+    // Don't add a new line for empty object literals
+    (ttl == "{" && top == "{\n") ||
+    // Don't add a new line for empty array literals
+    (ttl == "[" && top == "[\n") ||
     (ttl == "," && top != "(") ||
     (ttl == ":" && (top == "case" || top == "default"))
   );
