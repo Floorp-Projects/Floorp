@@ -66,9 +66,7 @@ export class MigrationWizardChild extends JSWindowActorChild {
 
         let hasPermissions = await this.sendQuery("CheckPermissions", {
           key: event.detail.key,
-          type: event.detail.type,
         });
-
         if (!hasPermissions) {
           if (event.detail.key == "safari") {
             this.#sendTelemetryEvent("safari_perms");
@@ -236,23 +234,12 @@ export class MigrationWizardChild extends JSWindowActorChild {
    *   The message received from the MigrationWizardParent.
    */
   receiveMessage(message) {
-    switch (message.name) {
-      case "UpdateProgress": {
-        this.setComponentState({
-          page: MigrationWizardConstants.PAGES.PROGRESS,
-          progress: message.data.progress,
-          key: message.data.key,
-        });
-        break;
-      }
-      case "UpdateFileImportProgress": {
-        this.setComponentState({
-          page: MigrationWizardConstants.PAGES.FILE_IMPORT_PROGRESS,
-          progress: message.data.progress,
-          title: message.data.title,
-        });
-        break;
-      }
+    if (message.name == "UpdateProgress") {
+      this.setComponentState({
+        page: MigrationWizardConstants.PAGES.PROGRESS,
+        progress: message.data.progress,
+        key: message.data.key,
+      });
     }
   }
 
