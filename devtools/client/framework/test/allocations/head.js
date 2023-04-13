@@ -203,10 +203,6 @@ async function stopRecordingAllocations(
         name: recordName + ":parent-process",
         subtests: [
           {
-            name: "objects-with-no-stacks",
-            value: parentProcessData.objectsWithoutStack,
-          },
-          {
             name: "objects-with-stacks",
             value: parentProcessData.objectsWithStack,
           },
@@ -225,10 +221,6 @@ async function stopRecordingAllocations(
     PERFHERDER_DATA.suites.push({
       name: recordName + ":content-process",
       subtests: [
-        {
-          name: "objects-with-no-stacks",
-          value: contentProcessData.objectsWithoutStack,
-        },
         {
           name: "objects-with-stacks",
           value: contentProcessData.objectsWithStack,
