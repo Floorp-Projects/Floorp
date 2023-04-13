@@ -30,3 +30,4 @@ This is the nascent documentation of the Toolkit code that is shared across Fire
    /extensions/spellcheck/index
    mozapps/update/docs/index
    components/antitracking/anti-tracking/index
+   components/translations/index
