@@ -2036,6 +2036,11 @@ class nsLayoutUtils {
       const mozilla::StyleImageOrientation& aOrientation);
 
   /**
+   * Given an image request, determine if the request uses CORS.
+   */
+  static bool ImageRequestUsesCORS(imgIRequest* aRequest);
+
+  /**
    * Determine if any corner radius is of nonzero size
    *   @param aCorners the |BorderRadius| object to check
    *   @return true unless all the coordinates are 0%, 0 or null.

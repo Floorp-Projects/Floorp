@@ -2776,10 +2776,10 @@ StyleImageOrientation nsStyleVisibility::UsedImageOrientation(
   bool isSameOrigin =
       uri->SchemeIs("data") || triggeringPrincipal->IsSameOrigin(uri);
 
-  // If the image request is a cross-origin request, do not enforce the
-  // image orientation found in the style. Use the image orientation found
-  // in the exif data.
-  if (!isSameOrigin) {
+  // If the image request is a cross-origin request that does not use CORS,
+  // do not enforce the image orientation found in the style. Use the image
+  // orientation found in the exif data.
+  if (!isSameOrigin && !nsLayoutUtils::ImageRequestUsesCORS(aRequest)) {
     return StyleImageOrientation::FromImage;
   }
 
