@@ -168,6 +168,7 @@ const allowList = [
   getter(DataView.prototype, "buffer"),
   getter(DataView.prototype, "byteLength"),
   getter(DataView.prototype, "byteOffset"),
+  getter(Error.prototype, "stack"),
   getter(Map.prototype, "size"),
   getter(Map, Symbol.species),
   // NOTE: Object.prototype.__proto__ is not safe, because it can internally

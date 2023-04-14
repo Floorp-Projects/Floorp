@@ -629,6 +629,9 @@ async function doEagerEvalESGetters(commands) {
     ["testDataView.byteLength", 1],
     ["testDataView.byteOffset", 2],
 
+    // Error
+    ["typeof new Error().stack", "string"],
+
     // Map
     ["testMap.size", 4],
 
