@@ -218,10 +218,6 @@ already_AddRefed<Promise> BodyStream::PullCallback(
   MOZ_DIAGNOSTIC_ASSERT(mInputStream);
   MOZ_DIAGNOSTIC_ASSERT(!mOriginalInputStream);
 
-  // Cancel previous wait if we were observing closure, because waiting twice
-  // may cause an error for some streams
-  mInputStream->AsyncWait(nullptr, 0, 0, nullptr);
-  // And then wait for data
   nsresult rv = mInputStream->AsyncWait(this, 0, 0, mOwningEventTarget);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     ErrorPropagation(aCx, stream, rv);
