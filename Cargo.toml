@@ -115,9 +115,6 @@ parking_lot = { path = "build/rust/parking_lot" }
 # Override tinyvec with smallvec
 tinyvec = { path = "build/rust/tinyvec" }
 
-# Patch base64 0.13 to 0.21
-base64 = { path = "build/rust/base64" }
-
 # Patch wasi 0.10 to 0.11
 wasi = { path = "build/rust/wasi" }
 
