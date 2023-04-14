@@ -621,15 +621,15 @@ class GCRuntime {
   static JSObject* tryNewTenuredObject(JSContext* cx, AllocKind kind,
                                        size_t thingSize, size_t nDynamicSlots);
   template <AllowGC allowGC>
-  static TenuredCell* tryNewTenuredThing(JSContext* cx, AllocKind kind,
-                                         size_t thingSize);
+  static void* tryNewTenuredThing(JSContext* cx, AllocKind kind,
+                                  size_t thingSize);
   template <AllowGC allowGC>
-  Cell* tryNewNurseryStringCell(JSContext* cx, size_t thingSize,
+  void* tryNewNurseryStringCell(JSContext* cx, size_t thingSize,
                                 AllocKind kind);
   template <AllowGC allowGC>
-  Cell* tryNewNurseryBigIntCell(JSContext* cx, size_t thingSize,
+  void* tryNewNurseryBigIntCell(JSContext* cx, size_t thingSize,
                                 AllocKind kind);
-  static TenuredCell* refillFreeListInGC(Zone* zone, AllocKind thingKind);
+  static void* refillFreeListInGC(Zone* zone, AllocKind thingKind);
 
   // Delayed marking.
   void delayMarkingChildren(gc::Cell* cell, MarkColor color);
@@ -691,10 +691,11 @@ class GCRuntime {
 
   // Allocator internals
   [[nodiscard]] bool gcIfNeededAtAllocation(JSContext* cx);
-  template <typename T>
-  static void checkIncrementalZoneState(JSContext* cx, T* t);
-  static TenuredCell* refillFreeList(JSContext* cx, AllocKind thingKind);
+  static void* refillFreeList(JSContext* cx, AllocKind thingKind);
   void attemptLastDitchGC(JSContext* cx);
+#ifdef DEBUG
+  static void checkIncrementalZoneState(JSContext* cx, void* ptr);
+#endif
 
   /*
    * Return the list of chunks that can be released outside the GC lock.

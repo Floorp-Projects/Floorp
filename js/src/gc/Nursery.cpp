@@ -491,7 +491,7 @@ JSObject* js::Nursery::allocateObject(gc::AllocSite* site, size_t size,
   return obj;
 }
 
-Cell* js::Nursery::allocateCell(gc::AllocSite* site, size_t size,
+void* js::Nursery::allocateCell(gc::AllocSite* site, size_t size,
                                 JS::TraceKind kind) {
   // Ensure there's enough space to replace the contents with a
   // RelocationOverlay.
@@ -505,8 +505,8 @@ Cell* js::Nursery::allocateCell(gc::AllocSite* site, size_t size,
 
   new (ptr) NurseryCellHeader(site, kind);
 
-  auto cell =
-      reinterpret_cast<Cell*>(uintptr_t(ptr) + sizeof(NurseryCellHeader));
+  void* cell =
+      reinterpret_cast<void*>(uintptr_t(ptr) + sizeof(NurseryCellHeader));
 
   // Update the allocation site. This code is also inlined in
   // MacroAssembler::updateAllocSite.
@@ -519,12 +519,12 @@ Cell* js::Nursery::allocateCell(gc::AllocSite* site, size_t size,
   return cell;
 }
 
-Cell* js::Nursery::allocateString(gc::AllocSite* site, size_t size) {
-  Cell* cell = allocateCell(site, size, JS::TraceKind::String);
-  if (cell) {
+void* js::Nursery::allocateString(gc::AllocSite* site, size_t size) {
+  void* ptr = allocateCell(site, size, JS::TraceKind::String);
+  if (ptr) {
     site->zone()->nurseryAllocatedStrings++;
   }
-  return cell;
+  return ptr;
 }
 
 inline void* js::Nursery::allocate(size_t size) {
