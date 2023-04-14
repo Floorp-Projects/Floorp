@@ -459,13 +459,15 @@ export var SessionStore = {
     aBrowser,
     aBrowsingContext,
     aPermanentKey,
-    aData
+    aData,
+    aForStorage
   ) {
     return SessionStoreInternal.updateSessionStoreFromTablistener(
       aBrowser,
       aBrowsingContext,
       aPermanentKey,
-      aData
+      aData,
+      aForStorage
     );
   },
 
@@ -1357,7 +1359,8 @@ var SessionStoreInternal = {
     browser,
     browsingContext,
     permanentKey,
-    update
+    update,
+    forStorage = false
   ) {
     permanentKey = browser?.permanentKey ?? permanentKey;
     if (!permanentKey) {
@@ -1380,10 +1383,18 @@ var SessionStoreInternal = {
       );
 
       if (listener) {
-        let historychange = listener.collect(permanentKey, browsingContext, {
-          collectFull: !!update.sHistoryNeeded,
-          writeToCache: false,
-        });
+        let historychange =
+          // If it is not the scheduled update (tab closed, window closed etc),
+          // try to store the loading non-web-controlled page opened in _blank
+          // first.
+          (forStorage &&
+            lazy.SessionHistory.collectNonWebControlledBlankLoadingSession(
+              browsingContext
+            )) ||
+          listener.collect(permanentKey, browsingContext, {
+            collectFull: !!update.sHistoryNeeded,
+            writeToCache: false,
+          });
 
         if (historychange) {
           update.data.historychange = historychange;

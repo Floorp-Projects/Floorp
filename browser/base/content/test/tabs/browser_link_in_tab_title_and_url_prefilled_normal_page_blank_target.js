@@ -69,7 +69,7 @@ add_task(async function normal_page__foreground__abort() {
     finalState: {
       tab: WAIT_A_BIT_LOADING_TITLE,
       urlbar: WAIT_A_BIT_URL,
-      history: [],
+      history: [WAIT_A_BIT_URL],
     },
   });
 });
@@ -92,6 +92,16 @@ add_task(async function normal_page__foreground__timeout() {
       urlbar: REQUEST_TIMEOUT_URL,
       history: [REQUEST_TIMEOUT_URL],
     },
+  });
+});
+
+add_task(async function normal_page__foreground__session_restore() {
+  await doSessionRestoreTest({
+    link: "wait-a-bit--blank-target",
+    openBy: OPEN_BY.CLICK,
+    openAs: OPEN_AS.FOREGROUND,
+    expectedSessionHistory: [WAIT_A_BIT_URL],
+    expectedSessionRestored: true,
   });
 });
 
@@ -176,5 +186,14 @@ add_task(async function normal_page__background__timeout() {
       urlbar: HOME_URL,
       history: [REQUEST_TIMEOUT_URL],
     },
+  });
+});
+
+add_task(async function normal_page__background__session_restore() {
+  await doSessionRestoreTest({
+    link: "wait-a-bit--blank-target",
+    openBy: OPEN_BY.CLICK,
+    openAs: OPEN_AS.BACKGROUND,
+    expectedSessionRestored: false,
   });
 });

@@ -54,22 +54,12 @@ async function doTestInSameWindow({
       HOME_URL
     );
 
-    const onLoadStarted = new Promise(resolve =>
-      gBrowser.addTabsProgressListener({
-        onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
-          if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
-            gBrowser.removeTabsProgressListener(this);
-            resolve(gBrowser.getTabForBrowser(aBrowser));
-          }
-        },
-      })
-    );
-
     info(`Open link for ${link} by ${openBy} as ${openAs}`);
+    const onNewTabCreated = waitForNewTabWithLoadRequest();
     const href = await openLink(browser, link, openBy, openAs);
 
     info("Wait until starting to load in the target tab");
-    const target = await onLoadStarted;
+    const target = await onNewTabCreated;
     Assert.equal(target.selected, openAs === OPEN_AS.FOREGROUND);
     Assert.equal(gURLBar.value, loadingState.urlbar);
     Assert.equal(target.textLabel.textContent, loadingState.tab);
@@ -119,7 +109,10 @@ async function doTestWithNewWindow({ link, expectedSetURICalled }) {
     });
     let isSetURIWhileLoading = false;
     sandbox.stub(win.gURLBar, "setURI").callsFake(uri => {
-      if (!uri && win.gBrowser.selectedBrowser._initialURI) {
+      if (
+        !uri &&
+        win.gBrowser.selectedBrowser.browsingContext.nonWebControlledBlankURI
+      ) {
         isSetURIWhileLoading = true;
       }
     });
@@ -132,7 +125,7 @@ async function doTestWithNewWindow({ link, expectedSetURICalled }) {
 
     Assert.equal(isSetURIWhileLoading, expectedSetURICalled);
     Assert.equal(
-      !!win.gBrowser.selectedBrowser._initialURI,
+      !!win.gBrowser.selectedBrowser.browsingContext.nonWebControlledBlankURI,
       expectedSetURICalled
     );
 
@@ -140,6 +133,61 @@ async function doTestWithNewWindow({ link, expectedSetURICalled }) {
   });
 
   await SpecialPowers.popPrefEnv();
+}
+
+async function doSessionRestoreTest({
+  link,
+  openBy,
+  openAs,
+  expectedSessionHistory,
+  expectedSessionRestored,
+}) {
+  await BrowserTestUtils.withNewTab("about:blank", async browser => {
+    BrowserTestUtils.loadURIString(browser, HOME_URL);
+    await BrowserTestUtils.browserLoaded(
+      gBrowser.selectedBrowser,
+      false,
+      HOME_URL
+    );
+
+    info(`Open link for ${link} by ${openBy} as ${openAs}`);
+    const onNewTabCreated = waitForNewTabWithLoadRequest();
+    const href = await openLink(browser, link, openBy, openAs);
+    const target = await onNewTabCreated;
+    await BrowserTestUtils.waitForCondition(
+      () =>
+        target.linkedBrowser.browsingContext
+          .mostRecentLoadingSessionHistoryEntry
+    );
+
+    info("Close the session");
+    const sessionPromise = BrowserTestUtils.waitForSessionStoreUpdate(target);
+    BrowserTestUtils.removeTab(target);
+    await sessionPromise;
+
+    info("Restore the session");
+    const restoredTab = SessionStore.undoCloseTab(window, 0);
+    await BrowserTestUtils.browserLoaded(restoredTab.linkedBrowser);
+
+    info("Check the loaded URL of restored tab");
+    Assert.equal(
+      restoredTab.linkedBrowser.currentURI.spec === href,
+      expectedSessionRestored
+    );
+
+    if (expectedSessionRestored) {
+      info("Check the session history of restored tab");
+      const sessionHistory = await new Promise(r =>
+        SessionStore.getSessionHistory(restoredTab, r)
+      );
+      Assert.deepEqual(
+        sessionHistory.entries.map(e => e.url),
+        expectedSessionHistory
+      );
+    }
+
+    BrowserTestUtils.removeTab(restoredTab);
+  });
 }
 
 async function openLink(browser, link, openBy, openAs) {
@@ -193,5 +241,18 @@ async function synthesizeMouse(browser, link, event) {
       EventUtils.synthesizeMouseAtCenter(target, eventInContent, content);
       return target.href;
     }
+  );
+}
+
+async function waitForNewTabWithLoadRequest() {
+  return new Promise(resolve =>
+    gBrowser.addTabsProgressListener({
+      onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+        if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
+          gBrowser.removeTabsProgressListener(this);
+          resolve(gBrowser.getTabForBrowser(aBrowser));
+        }
+      },
+    })
   );
 }

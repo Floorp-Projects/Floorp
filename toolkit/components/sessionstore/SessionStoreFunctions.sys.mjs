@@ -69,7 +69,7 @@ var SessionStoreFuncInternal = {
     );
   },
 
-  updateSessionStoreForStorage: function SSF_updateSessionStoreForWindow(
+  updateSessionStoreForStorage: function SSF_updateSessionStoreForStorage(
     aBrowser,
     aBrowsingContext,
     aPermanentKey,
@@ -80,7 +80,8 @@ var SessionStoreFuncInternal = {
       aBrowser,
       aBrowsingContext,
       aPermanentKey,
-      { data: { storage: aData }, epoch: aEpoch }
+      { data: { storage: aData }, epoch: aEpoch },
+      true
     );
   },
 };

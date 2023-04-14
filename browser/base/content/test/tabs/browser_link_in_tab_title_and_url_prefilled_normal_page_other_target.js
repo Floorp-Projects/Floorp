@@ -74,6 +74,15 @@ add_task(async function normal_page__other_target__foreground__timeout() {
   });
 });
 
+add_task(async function normal_page__foreground__session_restore() {
+  await doSessionRestoreTest({
+    link: "wait-a-bit--other-target",
+    openBy: OPEN_BY.CLICK,
+    openAs: OPEN_AS.FOREGROUND,
+    expectedSessionRestored: false,
+  });
+});
+
 add_task(async function normal_page__other_target__background() {
   await doTestInSameWindow({
     link: "wait-a-bit--other-target",
@@ -134,5 +143,14 @@ add_task(async function normal_page__other_target__background__timeout() {
       urlbar: HOME_URL,
       history: [REQUEST_TIMEOUT_URL],
     },
+  });
+});
+
+add_task(async function normal_page__foreground__session_restore() {
+  await doSessionRestoreTest({
+    link: "wait-a-bit--other-target",
+    openBy: OPEN_BY.CLICK,
+    openAs: OPEN_AS.BACKGROUND,
+    expectedSessionRestored: false,
   });
 });

@@ -6651,7 +6651,7 @@
                 isURL: true,
               });
 
-              this.mBrowser._initialURI = originalLocation;
+              this.mBrowser.browsingContext.nonWebControlledBlankURI = originalLocation;
               if (this.mTab.selected && !gBrowser.userTypedValue) {
                 gURLBar.setURI();
               }
