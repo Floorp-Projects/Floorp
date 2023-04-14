@@ -178,8 +178,8 @@ pref("app.update.langpack.enabled", true);
   // By default, check for updates when the browser is not running every 7 hours.
   pref("app.update.background.interval", 25200);
   // By default, snapshot Firefox Messaging System targeting for use by the
-  // background update task every 30 minutes.
-  pref("app.update.background.messaging.targeting.snapshot.intervalSec", 1800);
+  // background update task every 60 minutes.
+  pref("app.update.background.messaging.targeting.snapshot.intervalSec", 3600);
 #endif
 
 #ifdef XP_MACOSX

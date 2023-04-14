@@ -43,12 +43,13 @@ XPCOMUtils.defineLazyGetter(lazy, "localization", () => {
   );
 });
 
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "UpdateService",
-  "@mozilla.org/updates/update-service;1",
-  "nsIApplicationUpdateService"
-);
+XPCOMUtils.defineLazyServiceGetters(lazy, {
+  idleService: ["@mozilla.org/widget/useridleservice;1", "nsIUserIdleService"],
+  UpdateService: [
+    "@mozilla.org/updates/update-service;1",
+    "nsIApplicationUpdateService",
+  ],
+});
 
 // We may want to change the definition of the task over time. When we do this,
 // we need to remove and re-register the task. We will make sure this happens
@@ -60,6 +61,13 @@ const TASK_INSTALLED_VERSION_PREF =
   "app.update.background.lastInstalledTaskVersion";
 
 export var BackgroundUpdate = {
+  QueryInterface: ChromeUtils.generateQI([
+    "nsINamed",
+    "nsIObserver",
+    "nsITimerCallback",
+  ]),
+  name: "BackgroundUpdate",
+
   _initialized: false,
 
   get taskId() {
@@ -348,9 +356,22 @@ export var BackgroundUpdate = {
     Services.prefs.clearUserPref("app.update.background.scheduling.enabled");
   },
 
-  async observe(subject, topic, data) {
+  observe(subject, topic, data) {
     let whatChanged;
     switch (topic) {
+      case "idle-daily":
+        this._snapshot.saveSoon();
+        return;
+
+      case "user-interaction-active":
+        this._startTargetingSnapshottingTimer();
+        Services.obs.removeObserver(this, "idle-daily");
+        Services.obs.removeObserver(this, "user-interaction-active");
+        lazy.log.debug(
+          `observe: ${topic}; started targeting snapshotting timer`
+        );
+        return;
+
       case "nsPref:changed":
         whatChanged = `per-profile pref ${data}`;
         break;
@@ -367,7 +388,7 @@ export var BackgroundUpdate = {
     lazy.log.debug(
       `observe: ${whatChanged} may have changed; invoking maybeScheduleBackgroundUpdateTask`
     );
-    return this.maybeScheduleBackgroundUpdateTask();
+    this.maybeScheduleBackgroundUpdateTask();
   },
 
   /**
@@ -674,36 +695,61 @@ export var BackgroundUpdate = {
     // Persist.
     snapshot.saveSoon();
 
+    this._snapshot = snapshot;
+
     // Continue persisting periodically.  `JSONFile.sys.mjs` will also persist one
     // last time before shutdown.
+    // Hold a reference to prevent GC.
     this._targetingSnapshottingTimer = Cc[
       "@mozilla.org/timer;1"
     ].createInstance(Ci.nsITimer);
+    // By default, snapshot Firefox Messaging System targeting for use by the
+    // background update task every 60 minutes.
+    this._targetingSnapshottingTimerIntervalSec = Services.prefs.getIntPref(
+      "app.update.background.messaging.targeting.snapshot.intervalSec",
+      3600
+    );
+    this._startTargetingSnapshottingTimer();
+  },
 
-    // Hold a reference to prevent GC.
+  // nsITimerCallback
+  notify() {
+    const SLUG = "_targetingSnapshottingTimerCallback";
+
+    if (Services.startup.shuttingDown) {
+      // Collecting targeting information can be slow and cause shutdown
+      // crashes, so if we're shutting down, don't try to collect.  During
+      // shutdown, the regular log apparatus is not available, so use `dump`.
+      if (lazy.log.shouldLog("debug")) {
+        dump(
+          `${SLUG}: shutting down, so not updating Firefox Messaging System targeting information from timer\n`
+        );
+      }
+      return;
+    }
+
+    this._snapshot.saveSoon();
+
+    if (
+      lazy.idleService.idleTime >
+      this._targetingSnapshottingTimerIntervalSec * 1000
+    ) {
+      lazy.log.debug(
+        `${SLUG}: idle time longer than interval, adding observers`
+      );
+      Services.obs.addObserver(this, "idle-daily");
+      Services.obs.addObserver(this, "user-interaction-active");
+    } else {
+      lazy.log.debug(`${SLUG}: restarting timer`);
+      this._startTargetingSnapshottingTimer();
+    }
+  },
+
+  _startTargetingSnapshottingTimer() {
     this._targetingSnapshottingTimer.initWithCallback(
-      () => {
-        if (Services.startup.shuttingDown) {
-          // Collecting targeting information can be slow and cause shutdown
-          // crashes, so if we're shutting down, don't try to collect.  During
-          // shutdown, the regular log apparatus is not available, so use `dump`.
-          if (lazy.log.shouldLog("debug")) {
-            dump(
-              `${SLUG}: shutting down, so not updating Firefox Messaging System targeting information from timer\n`
-            );
-          }
-          return;
-        }
-
-        snapshot.saveSoon();
-      },
-      // By default, snapshot Firefox Messaging System targeting for use by the
-      // background update task every 30 minutes.
-      Services.prefs.getIntPref(
-        "app.update.background.messaging.targeting.snapshot.intervalSec",
-        1800
-      ) * 1000,
-      Ci.nsITimer.TYPE_REPEATING_SLACK_LOW_PRIORITY
+      this,
+      this._targetingSnapshottingTimerIntervalSec * 1000,
+      Ci.nsITimer.TYPE_ONE_SHOT
     );
   },
 
