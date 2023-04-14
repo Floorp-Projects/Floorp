@@ -22,6 +22,7 @@ export class MigrationWizard extends HTMLElement {
   #shadowRoot = null;
   #importButton = null;
   #importFromFileButton = null;
+  #chooseImportFromFile = null;
   #safariPermissionButton = null;
   #selectAllCheckbox = null;
   #resourceSummary = null;
@@ -191,6 +192,7 @@ export class MigrationWizard extends HTMLElement {
             </div>
             <moz-button-group class="buttons">
               <button class="cancel-close" data-l10n-id="migration-cancel-button-label"></button>
+              <button id="choose-import-from-file" class="primary" data-l10n-id="migration-choose-to-import-from-file-button-label"></button>
             </moz-button-group>
           </div>
         </named-deck>
@@ -251,6 +253,10 @@ export class MigrationWizard extends HTMLElement {
     this.#importButton.addEventListener("click", this);
     this.#importFromFileButton = shadow.querySelector("#import-from-file");
     this.#importFromFileButton.addEventListener("click", this);
+    this.#chooseImportFromFile = shadow.querySelector(
+      "#choose-import-from-file"
+    );
+    this.#chooseImportFromFile.addEventListener("click", this);
 
     this.#browserProfileSelector.addEventListener("click", this);
     this.#resourceTypeList = shadow.querySelector("#resource-type-list");
@@ -922,6 +928,15 @@ export class MigrationWizard extends HTMLElement {
           this.#requestSafariPermissions();
         } else if (event.currentTarget == this.#resourceSummary) {
           this.#expandedDetails = true;
+        } else if (event.target == this.#chooseImportFromFile) {
+          this.dispatchEvent(
+            new CustomEvent("MigrationWizard:RequestState", {
+              bubbles: true,
+              detail: {
+                allowOnlyFileMigrators: true,
+              },
+            })
+          );
         }
         break;
       }
