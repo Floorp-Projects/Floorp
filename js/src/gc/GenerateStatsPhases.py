@@ -112,7 +112,6 @@ PhaseKindGraphRoots = [
         [
             addPhaseKind("UNMARK", "Unmark", 7),
             addPhaseKind("UNMARK_WEAKMAPS", "Unmark WeakMaps", 76),
-            addPhaseKind("BUFFER_GRAY_ROOTS", "Buffer Gray Roots", 49),
             addPhaseKind("MARK_DISCARD_CODE", "Mark Discard Code", 3),
             addPhaseKind("RELAZIFY_FUNCTIONS", "Relazify Functions", 4),
             addPhaseKind("PURGE", "Purge", 5),
@@ -128,6 +127,17 @@ PhaseKindGraphRoots = [
         [
             getPhaseKind("MARK_ROOTS"),
             addPhaseKind("MARK_DELAYED", "Mark Delayed", 8),
+            addPhaseKind(
+                "MARK_WEAK",
+                "Mark Weak",
+                13,
+                [
+                    getPhaseKind("MARK_DELAYED"),
+                    addPhaseKind("MARK_GRAY_WEAK", "Mark Gray and Weak", 16),
+                ],
+            ),
+            addPhaseKind("MARK_INCOMING_GRAY", "Mark Incoming Gray Pointers", 14),
+            addPhaseKind("MARK_GRAY", "Mark Gray", 15),
             addPhaseKind(
                 "PARALLEL_MARK",
                 "Parallel marking",
@@ -146,30 +156,7 @@ PhaseKindGraphRoots = [
         "Sweep",
         9,
         [
-            addPhaseKind(
-                "SWEEP_MARK",
-                "Mark During Sweeping",
-                10,
-                [
-                    getPhaseKind("MARK_DELAYED"),
-                    addPhaseKind(
-                        "SWEEP_MARK_WEAK",
-                        "Mark Weak",
-                        13,
-                        [
-                            getPhaseKind("MARK_DELAYED"),
-                            addPhaseKind(
-                                "SWEEP_MARK_GRAY_WEAK", "Mark Gray and Weak", 16
-                            ),
-                        ],
-                    ),
-                    addPhaseKind(
-                        "SWEEP_MARK_INCOMING_GRAY", "Mark Incoming Gray Pointers", 14
-                    ),
-                    addPhaseKind("SWEEP_MARK_GRAY", "Mark Gray", 15),
-                    getPhaseKind("PARALLEL_MARK"),
-                ],
-            ),
+            getPhaseKind("MARK"),
             addPhaseKind(
                 "FINALIZE_START",
                 "Finalize Start Callbacks",

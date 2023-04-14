@@ -604,7 +604,7 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
   gc->incrementalState = State::Sweep;
   {
     gcstats::AutoPhase ap1(gc->stats(), gcstats::PhaseKind::SWEEP);
-    gcstats::AutoPhase ap2(gc->stats(), gcstats::PhaseKind::SWEEP_MARK);
+    gcstats::AutoPhase ap2(gc->stats(), gcstats::PhaseKind::MARK);
 
     gc->markAllWeakReferences();
 
@@ -615,7 +615,7 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
 
     AutoSetMarkColor setColorGray(*gcmarker, MarkColor::Gray);
 
-    gc->markAllGrayReferences(gcstats::PhaseKind::SWEEP_MARK_GRAY);
+    gc->markAllGrayReferences(gcstats::PhaseKind::MARK_GRAY);
     gc->markAllWeakReferences();
 
     /* Restore zone state. */
