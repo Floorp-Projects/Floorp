@@ -106,15 +106,18 @@ NSPrintInfo* nsPrintSettingsX::CreateOrCopyPrintInfo(bool aWithScaling) {
 
   NSSize paperSize;
   if (GetSheetOrientation() == kPortraitOrientation) {
-    [printInfo setOrientation:NSPaperOrientationPortrait];
     paperSize.width = CocoaPointsFromPaperSize(mPaperWidth);
     paperSize.height = CocoaPointsFromPaperSize(mPaperHeight);
-    [printInfo setPaperSize:paperSize];
   } else {
-    [printInfo setOrientation:NSPaperOrientationLandscape];
     paperSize.width = CocoaPointsFromPaperSize(mPaperHeight);
     paperSize.height = CocoaPointsFromPaperSize(mPaperWidth);
-    [printInfo setPaperSize:paperSize];
+  }
+  [printInfo setPaperSize:paperSize];
+
+  if (paperSize.width > paperSize.height) {
+    [printInfo setOrientation:NSPaperOrientationLandscape];
+  } else {
+    [printInfo setOrientation:NSPaperOrientationPortrait];
   }
 
   [printInfo setTopMargin:mUnwriteableMargin.top];
