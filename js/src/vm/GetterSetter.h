@@ -7,7 +7,6 @@
 #ifndef vm_GetterSetter_h
 #define vm_GetterSetter_h
 
-#include "gc/Allocator.h"  // js::gc::CellAllocator
 #include "gc/Barrier.h"    // js::GCPtr<JSObject*>
 #include "gc/Cell.h"       // js::gc::TenuredCellWithGCPointer
 
