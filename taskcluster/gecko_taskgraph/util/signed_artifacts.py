@@ -27,6 +27,10 @@ def is_notarization_kind(kind):
         return True
 
 
+def is_mac_signing_king(kind):
+    return kind and "mac-signing" in kind
+
+
 def generate_specifications_of_artifacts_to_sign(
     config, job, keep_locale_template=True, kind=None, dep_kind=None
 ):
@@ -51,19 +55,24 @@ def generate_specifications_of_artifacts_to_sign(
     # XXX: Mars aren't signed here (on any platform) because internals will be
     # signed at after this stage of the release
     elif "macosx" in build_platform:
-        if is_notarization_kind(dep_kind):
+        langpack_formats = []
+        if is_notarization_kind(dep_kind) or is_mac_signing_king(dep_kind):
             # This task is notarization part 3: download signed bits,
-            # and staple notarization.
+            #   and staple notarization.
+            # OR dep kind is mac-signing
+            formats = []
+            if config.kind.endswith("-mac-notarization"):
+                # If task is a mac-notarization kind, then notarize
+                formats = ["apple_notarization"]
             artifacts_specifications = [
                 {
                     "artifacts": [
                         get_artifact_path(job, "{locale}/target.tar.gz"),
                         get_artifact_path(job, "{locale}/target.pkg"),
                     ],
-                    "formats": [],
+                    "formats": formats,
                 }
             ]
-            langpack_formats = []
         else:
             # This task is either depsigning, or notarization part 1:
             # download unsigned bits, and sign. If notarization part 1,

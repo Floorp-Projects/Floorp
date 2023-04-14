@@ -98,6 +98,16 @@ job (usually chunked).
 
 For mac notarization, we download the signed bits that have been notarized by Apple, and we staple the notarization to the app and pkg.
 
+shippable-l10n-mac-signing
+--------------------------
+
+Mac signing without notarization
+
+shippable-l10n-mac-notarization
+-------------------------------
+
+Mac notarization on signinscript (linux) using rcodesign
+
 shippable-l10n-notarization-part-1
 ----------------------------------
 
@@ -468,6 +478,16 @@ release-partner-repack-notarization-poller
 
 We switched to a 3-part mac notarization workflow in bug 1562412. This is the second task, which polls Apple for notarization status. Because this is run in a separate, special notarization poller pool, we free up the mac notarization pool for actual signing work.
 
+release-partner-repack-mac-signing
+----------------------------------
+
+Mac signing without notarization
+
+release-partner-repack-mac-notarization
+---------------------------------------
+
+Mac notarization on signinscript (linux) using rcodesign
+
 release-partner-repack-repackage
 --------------------------------
 Repackaging of partner repacks.
@@ -527,6 +547,16 @@ Moves the eme-free repacks to S3 buckets.
 release-eme-free-repack-beetmover-checksums
 -------------------------------------------
 Moves the beetmover checksum for eme-free repacks to S3 buckets.
+
+release-eme-free-repack-mac-signing
+-----------------------------------
+
+Mac signing without notarization
+
+release-eme-free-repack-mac-notarization
+----------------------------------------
+
+Mac notarization on signinscript (linux) using rcodesign
 
 repackage
 ---------
