@@ -37,11 +37,7 @@ function test_deleted_iframe(perSitePref, windowOptions = {}) {
 
     let someDir = "blah";
     try {
-      someDir = await new Promise((resolve, reject) => {
-        gDownloadLastDir.getFileAsync("http://www.mozilla.org/", function(dir) {
-          resolve(dir);
-        });
-      });
+      someDir = await gDownloadLastDir.getFileAsync("http://www.mozilla.org/");
     } catch (ex) {
       ok(
         false,

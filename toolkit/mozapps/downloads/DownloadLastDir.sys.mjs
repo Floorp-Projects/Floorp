@@ -29,6 +29,15 @@ const SAVE_PER_SITE_PREF = LAST_DIR_PREF + ".savePerSite";
 const nsIFile = Ci.nsIFile;
 
 import { PrivateBrowsingUtils } from "resource://gre/modules/PrivateBrowsingUtils.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
+const lazy = {};
+XPCOMUtils.defineLazyServiceGetter(
+  lazy,
+  "cps2",
+  "@mozilla.org/content-pref/service;1",
+  "nsIContentPrefService2"
+);
 
 let nonPrivateLoadContext = Cu.createLoadContext();
 let privateLoadContext = Cu.createPrivateLoadContext();
@@ -51,12 +60,22 @@ var observer = {
         }
         // Ensure that purging session history causes both the session-only PB cache
         // and persistent prefs to be cleared.
-        let cps2 = Cc["@mozilla.org/content-pref/service;1"].getService(
-          Ci.nsIContentPrefService2
-        );
-
-        cps2.removeByName(LAST_DIR_PREF, nonPrivateLoadContext);
-        cps2.removeByName(LAST_DIR_PREF, privateLoadContext);
+        let promises = [
+          new Promise(resolve =>
+            lazy.cps2.removeByName(LAST_DIR_PREF, nonPrivateLoadContext, {
+              handleCompletion: resolve,
+            })
+          ),
+          new Promise(resolve =>
+            lazy.cps2.removeByName(LAST_DIR_PREF, privateLoadContext, {
+              handleCompletion: resolve,
+            })
+          ),
+        ];
+        // This is for testing purposes.
+        if (aSubject && typeof subject == "object") {
+          aSubject.promise = Promise.all(promises);
+        }
         break;
     }
   },
@@ -73,50 +92,52 @@ function readLastDirPref() {
   }
 }
 
-function isContentPrefEnabled() {
-  try {
-    return Services.prefs.getBoolPref(SAVE_PER_SITE_PREF);
-  } catch (e) {
-    return true;
-  }
-}
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "isContentPrefEnabled",
+  SAVE_PER_SITE_PREF,
+  true
+);
 
 var gDownloadLastDirFile = readLastDirPref();
 
-// aForcePrivate is only used when aWindow is null.
-export function DownloadLastDir(aWindow, aForcePrivate) {
-  let isPrivate = false;
-  if (aWindow === null) {
-    isPrivate = aForcePrivate || PrivateBrowsingUtils.permanentPrivateBrowsing;
-  } else {
-    let loadContext = aWindow.docShell.QueryInterface(Ci.nsILoadContext);
-    isPrivate = loadContext.usePrivateBrowsing;
+export class DownloadLastDir {
+  // aForcePrivate is only used when aWindow is null.
+  constructor(aWindow, aForcePrivate) {
+    let isPrivate = false;
+    if (aWindow === null) {
+      isPrivate =
+        aForcePrivate || PrivateBrowsingUtils.permanentPrivateBrowsing;
+    } else {
+      let loadContext = aWindow.docShell.QueryInterface(Ci.nsILoadContext);
+      isPrivate = loadContext.usePrivateBrowsing;
+    }
+
+    // We always use a fake load context because we may not have one (i.e.,
+    // in the aWindow == null case) and because the load context associated
+    // with aWindow may disappear by the time we need it. This approach is
+    // safe because we only care about the private browsing state. All the
+    // rest of the load context isn't of interest to the content pref service.
+    this.fakeContext = isPrivate ? privateLoadContext : nonPrivateLoadContext;
   }
 
-  // We always use a fake load context because we may not have one (i.e.,
-  // in the aWindow == null case) and because the load context associated
-  // with aWindow may disappear by the time we need it. This approach is
-  // safe because we only care about the private browsing state. All the
-  // rest of the load context isn't of interest to the content pref service.
-  this.fakeContext = isPrivate ? privateLoadContext : nonPrivateLoadContext;
-}
-
-DownloadLastDir.prototype = {
-  isPrivate: function DownloadLastDir_isPrivate() {
+  isPrivate() {
     return this.fakeContext.usePrivateBrowsing;
-  },
+  }
+
   // compat shims
   get file() {
-    return this._getLastFile();
-  },
+    return this.#getLastFile();
+  }
   set file(val) {
     this.setFile(null, val);
-  },
+  }
+
   cleanupPrivateFile() {
     gDownloadLastDirFile = null;
-  },
+  }
 
-  _getLastFile() {
+  #getLastFile() {
     if (gDownloadLastDirFile && !gDownloadLastDirFile.exists()) {
       gDownloadLastDirFile = null;
     }
@@ -128,50 +149,61 @@ DownloadLastDir.prototype = {
       return gDownloadLastDirFile;
     }
     return readLastDirPref();
-  },
+  }
 
-  getFileAsync(aURI, aCallback) {
-    let plainPrefFile = this._getLastFile();
-    if (!aURI || !isContentPrefEnabled()) {
-      Services.tm.dispatchToMainThread(() => aCallback(plainPrefFile));
-      return;
+  async getFileAsync(aURI) {
+    let plainPrefFile = this.#getLastFile();
+    if (!aURI || !lazy.isContentPrefEnabled) {
+      return plainPrefFile;
     }
 
-    let uri = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
-    let cps2 = Cc["@mozilla.org/content-pref/service;1"].getService(
-      Ci.nsIContentPrefService2
-    );
-    let result = null;
-    cps2.getByDomainAndName(uri, LAST_DIR_PREF, this.fakeContext, {
-      handleResult: aResult => (result = aResult),
-      handleCompletion(aReason) {
-        let file = plainPrefFile;
-        if (
-          aReason == Ci.nsIContentPrefCallback2.COMPLETE_OK &&
-          result instanceof Ci.nsIContentPref
-        ) {
-          try {
-            file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-            file.initWithPath(result.value);
-          } catch (e) {
-            file = plainPrefFile;
-          }
+    return new Promise(resolve => {
+      lazy.cps2.getByDomainAndName(
+        this.#cpsGroupFromURL(aURI),
+        LAST_DIR_PREF,
+        this.fakeContext,
+        {
+          _result: null,
+          handleResult(aResult) {
+            this._result = aResult;
+          },
+          handleCompletion(aReason) {
+            let file = plainPrefFile;
+            if (
+              aReason == Ci.nsIContentPrefCallback2.COMPLETE_OK &&
+              this._result instanceof Ci.nsIContentPref
+            ) {
+              try {
+                file = Cc["@mozilla.org/file/local;1"].createInstance(
+                  Ci.nsIFile
+                );
+                file.initWithPath(this._result.value);
+              } catch (e) {
+                file = plainPrefFile;
+              }
+            }
+            resolve(file);
+          },
         }
-        aCallback(file);
-      },
+      );
     });
-  },
+  }
 
   setFile(aURI, aFile) {
-    if (aURI && isContentPrefEnabled()) {
-      let uri = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
-      let cps2 = Cc["@mozilla.org/content-pref/service;1"].getService(
-        Ci.nsIContentPrefService2
-      );
+    if (aURI && lazy.isContentPrefEnabled) {
       if (aFile instanceof Ci.nsIFile) {
-        cps2.set(uri, LAST_DIR_PREF, aFile.path, this.fakeContext);
+        lazy.cps2.set(
+          this.#cpsGroupFromURL(aURI),
+          LAST_DIR_PREF,
+          aFile.path,
+          this.fakeContext
+        );
       } else {
-        cps2.removeByDomainAndName(uri, LAST_DIR_PREF, this.fakeContext);
+        lazy.cps2.removeByDomainAndName(
+          this.#cpsGroupFromURL(aURI),
+          LAST_DIR_PREF,
+          this.fakeContext
+        );
       }
     }
     if (this.isPrivate()) {
@@ -185,5 +217,36 @@ DownloadLastDir.prototype = {
     } else if (Services.prefs.prefHasUserValue(LAST_DIR_PREF)) {
       Services.prefs.clearUserPref(LAST_DIR_PREF);
     }
-  },
-};
+  }
+
+  /**
+   * Pre-processor to extract a domain name to be used with the content-prefs
+   * service. This specially handles data and file URIs so that the download
+   * dirs are recalled in a more consistent way:
+   *  - all file:/// URIs share the same folder
+   *  - data: URIs share a folder per mime-type. If a mime-type is not
+   *    specified text/plain is assumed.
+   * In any other case the original URL is returned as a string and ContentPrefs
+   * will do its usual parsing.
+   *
+   * @param {string|nsIURI|URL} url The URL to parse
+   * @returns {string} the domain name to use, or the original url.
+   */
+  #cpsGroupFromURL(url) {
+    if (typeof url == "string") {
+      url = new URL(url);
+    } else if (url instanceof Ci.nsIURI) {
+      url = URL.fromURI(url);
+    }
+    if (!URL.isInstance(url)) {
+      return url;
+    }
+    if (url.protocol == "data:") {
+      return url.href.match(/^data:[^;,]*/i)[0].replace(/:$/, ":text/plain");
+    }
+    if (url.protocol == "file:") {
+      return "file:///";
+    }
+    return url.href;
+  }
+}
