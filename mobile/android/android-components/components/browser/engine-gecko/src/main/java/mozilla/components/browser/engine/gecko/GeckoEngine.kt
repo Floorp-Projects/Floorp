@@ -274,7 +274,6 @@ class GeckoEngine(
     ) {
         runtime.webExtensionController.uninstall((ext as GeckoWebExtension).nativeExtension).then(
             {
-                webExtensionDelegate?.onUninstalled(ext)
                 onSuccess()
                 GeckoResult<Void>()
             },
@@ -364,6 +363,10 @@ class GeckoEngine(
 
             override fun onEnabled(extension: org.mozilla.geckoview.WebExtension) {
                 webExtensionDelegate.onEnabled(GeckoWebExtension(extension, runtime))
+            }
+
+            override fun onUninstalled(extension: org.mozilla.geckoview.WebExtension) {
+                webExtensionDelegate.onUninstalled(GeckoWebExtension(extension, runtime))
             }
         }
 

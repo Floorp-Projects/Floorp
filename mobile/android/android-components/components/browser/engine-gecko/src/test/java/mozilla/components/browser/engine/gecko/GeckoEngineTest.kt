@@ -916,8 +916,6 @@ class GeckoEngineTest {
 
         shadowOf(getMainLooper()).idle()
 
-        verify(webExtensionsDelegate).onUninstalled(ext)
-
         val extCaptor = argumentCaptor<GeckoWebExtension>()
         verify(extensionController).uninstall(extCaptor.capture())
         assertSame(nativeExtension, extCaptor.value)
@@ -957,8 +955,6 @@ class GeckoEngineTest {
         result.completeExceptionally(expected)
 
         shadowOf(getMainLooper()).idle()
-
-        verify(webExtensionsDelegate, never()).onUninstalled(ext)
 
         assertTrue(onErrorCalled)
         assertEquals(expected, throwable)
@@ -2257,6 +2253,28 @@ class GeckoEngineTest {
         assertEquals(Unit, geckoDelegateCaptor.value.onDisabled(extension))
         val extensionCaptor = argumentCaptor<WebExtension>()
         verify(webExtensionsDelegate).onDisabled(extensionCaptor.capture())
+        val capturedExtension =
+            extensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
+        assertEquals(extension, capturedExtension.nativeExtension)
+    }
+
+    @Test
+    fun `web extension delegate handles add-on onUninstalled event`() {
+        val runtime: GeckoRuntime = mock()
+        val webExtensionController: WebExtensionController = mock()
+        whenever(runtime.webExtensionController).thenReturn(webExtensionController)
+
+        val extension = mockNativeWebExtension("test", "uri")
+        val webExtensionsDelegate: WebExtensionDelegate = mock()
+        val engine = GeckoEngine(context, runtime = runtime)
+        engine.registerWebExtensionDelegate(webExtensionsDelegate)
+
+        val geckoDelegateCaptor = argumentCaptor<WebExtensionController.AddonManagerDelegate>()
+        verify(webExtensionController).setAddonManagerDelegate(geckoDelegateCaptor.capture())
+
+        assertEquals(Unit, geckoDelegateCaptor.value.onUninstalled(extension))
+        val extensionCaptor = argumentCaptor<WebExtension>()
+        verify(webExtensionsDelegate).onUninstalled(extensionCaptor.capture())
         val capturedExtension =
             extensionCaptor.value as mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
         assertEquals(extension, capturedExtension.nativeExtension)
