@@ -855,9 +855,7 @@ const PDFViewerApplication = {
       });
     }
     if (appConfig.toolbar) {
-      if (_app_options.AppOptions.get("enableFloatingToolbar")) {
-        this.toolbar = new _webToolbar.Toolbar(appConfig.toolbar, eventBus, this.l10n);
-      }
+      this.toolbar = new _webToolbar.Toolbar(appConfig.toolbar, eventBus, this.l10n);
     }
     if (appConfig.secondaryToolbar) {
       this.secondaryToolbar = new _webSecondary_toolbar.SecondaryToolbar(appConfig.secondaryToolbar, eventBus, this.externalServices);
@@ -2340,6 +2338,9 @@ function webViewerTouchEnd(evt) {
   PDFViewerApplication._touchUnusedFactor = 1;
 }
 function webViewerClick(evt) {
+  if (document.activeElement === PDFViewerApplication.appConfig.mainContainer) {
+    PDFViewerApplication.toolbar?.toggle();
+  }
   if (!PDFViewerApplication.secondaryToolbar?.isOpen) {
     return;
   }
@@ -3184,10 +3185,6 @@ const defaultOptions = {
     kind: OptionKind.VIEWER
   },
   disablePageLabels: {
-    value: false,
-    kind: OptionKind.VIEWER + OptionKind.PREFERENCE
-  },
-  enableFloatingToolbar: {
     value: false,
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE
   },
@@ -4377,7 +4374,7 @@ function getOriginalIndex(diffs, pos, len) {
     return [pos, len];
   }
   const start = pos;
-  const end = pos + len - 1;
+  const end = pos + len;
   let i = (0, _ui_utils.binarySearchFirstItem)(diffs, x => x[0] >= start);
   if (diffs[i][0] > start) {
     --i;
@@ -4386,10 +4383,7 @@ function getOriginalIndex(diffs, pos, len) {
   if (diffs[j][0] > end) {
     --j;
   }
-  const oldStart = start + diffs[i][1];
-  const oldEnd = end + diffs[j][1];
-  const oldLen = oldEnd + 1 - oldStart;
-  return [oldStart, oldLen];
+  return [start + diffs[i][1], len + diffs[j][1] - diffs[i][1]];
 }
 class PDFFindController {
   #updateMatchesCountOnProgress = true;
@@ -6030,7 +6024,7 @@ class PDFViewer {
   #onVisibilityChange = null;
   #scaleTimeoutId = null;
   constructor(options) {
-    const viewerVersion = '3.6.35';
+    const viewerVersion = '3.6.25';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -9167,16 +9161,12 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.Toolbar = void 0;
-const TIME_BEFORE_SHOWING_TOOLBAR = 200;
 class Toolbar {
   #buttons;
-  #checkForScrollEndBound = this.#checkForScrollEnd.bind(this);
   #eventBus;
-  #hideBound = this.#hide.bind(this);
-  #mainContainer;
-  #scrollEndTimeoutId = null;
-  #showBound = this.#show.bind(this);
   #toolbar;
+  #mainContainer;
+  #toggleBound = this.toggle.bind(this);
   constructor(options, eventBus, _l10n) {
     this.#toolbar = options.container;
     this.#mainContainer = options.mainContainer;
@@ -9186,7 +9176,6 @@ class Toolbar {
       eventName: "download"
     }];
     this.#bindListeners(options);
-    this.#checkForScrollEnd();
   }
   setPageNumber(pageNumber, pageLabel) {}
   setPagesCount(pagesCount, hasPageLabels) {}
@@ -9209,23 +9198,12 @@ class Toolbar {
     }
   }
   updateLoadingIndicatorState(loading = false) {}
-  #checkForScrollEnd() {
-    if (this.#scrollEndTimeoutId !== null) {
-      clearTimeout(this.#scrollEndTimeoutId);
+  toggle() {
+    if (this.#toolbar.classList.toggle("show")) {
+      this.#mainContainer.addEventListener("scroll", this.#toggleBound);
+    } else {
+      this.#mainContainer.removeEventListener("scroll", this.#toggleBound);
     }
-    this.#scrollEndTimeoutId = setTimeout(this.#showBound, TIME_BEFORE_SHOWING_TOOLBAR);
-  }
-  #show() {
-    this.#toolbar.classList.toggle("show", true);
-    this.#mainContainer.removeEventListener("scroll", this.#checkForScrollEndBound);
-    this.#scrollEndTimeoutId = null;
-    this.#mainContainer.addEventListener("scroll", this.#hideBound);
-  }
-  #hide() {
-    this.#toolbar.classList.toggle("show", false);
-    this.#mainContainer.removeEventListener("scroll", this.#hideBound);
-    this.#mainContainer.addEventListener("scroll", this.#checkForScrollEndBound);
-    this.#checkForScrollEnd();
   }
 }
 exports.Toolbar = Toolbar;
@@ -9326,7 +9304,6 @@ class BasePreferences {
     "defaultZoomDelay": 400,
     "defaultZoomValue": "",
     "disablePageLabels": false,
-    "enableFloatingToolbar": false,
     "enablePermissions": false,
     "enablePrintAutoRotate": true,
     "enableScripting": true,
@@ -9482,8 +9459,8 @@ var _ui_utils = __webpack_require__(4);
 var _app_options = __webpack_require__(6);
 var _pdf_link_service = __webpack_require__(8);
 var _app = __webpack_require__(3);
-const pdfjsVersion = '3.6.35';
-const pdfjsBuild = '342dc760d';
+const pdfjsVersion = '3.6.25';
+const pdfjsBuild = 'a43151103';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;
