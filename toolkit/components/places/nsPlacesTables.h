@@ -151,14 +151,17 @@
       ", post_data TEXT"                       \
       ")")
 
-#define CREATE_MOZ_ORIGINS          \
-  nsLiteralCString(                 \
-      "CREATE TABLE moz_origins ( " \
-      "id INTEGER PRIMARY KEY, "    \
-      "prefix TEXT NOT NULL, "      \
-      "host TEXT NOT NULL, "        \
-      "frecency INTEGER NOT NULL, " \
-      "UNIQUE (prefix, host) "      \
+#define CREATE_MOZ_ORIGINS                               \
+  nsLiteralCString(                                      \
+      "CREATE TABLE moz_origins ( "                      \
+      "id INTEGER PRIMARY KEY, "                         \
+      "prefix TEXT NOT NULL, "                           \
+      "host TEXT NOT NULL, "                             \
+      "frecency INTEGER NOT NULL, "                      \
+      "recalc_frecency INTEGER NOT NULL DEFAULT 0, "     \
+      "alt_frecency INTEGER, "                           \
+      "recalc_alt_frecency INTEGER NOT NULL DEFAULT 0, " \
+      "UNIQUE (prefix, host) "                           \
       ")")
 
 // Note: this should be kept up-to-date with the definition in
