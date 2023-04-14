@@ -774,7 +774,7 @@ class alignas(gc::CellAlignBytes) TenuredCellWithNonGCPointer
 // for GC.
 class alignas(gc::CellAlignBytes) TenuredCellWithFlags : public TenuredCell {
  protected:
-  TenuredCellWithFlags() = default;
+  TenuredCellWithFlags() { header_.set(0); }
   explicit TenuredCellWithFlags(uintptr_t initial) { header_.set(initial); }
 
   uintptr_t headerFlagsField() const {

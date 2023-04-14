@@ -137,36 +137,36 @@ JSObject* GCRuntime::tryNewTenuredObject(JSContext* cx, AllocKind kind,
     Debug_SetSlotRangeToCrashOnTouch(slotsHeader->slots(), nDynamicSlots);
   }
 
-  TenuredCell* cell = tryNewTenuredThing<allowGC>(cx, kind, thingSize);
-  if (!cell) {
+  void* ptr = tryNewTenuredThing<allowGC>(cx, kind, thingSize);
+  if (!ptr) {
     js_free(slotsHeader);
     return nullptr;
   }
 
   if (nDynamicSlots) {
-    NativeObject* nobj = new (mozilla::KnownNotNull, cell) NativeObject();
+    NativeObject* nobj = new (mozilla::KnownNotNull, ptr) NativeObject();
     nobj->initSlots(slotsHeader->slots());
     AddCellMemory(nobj, ObjectSlots::allocSize(nDynamicSlots),
                   MemoryUse::ObjectSlots);
     return nobj;
   }
 
-  return new (mozilla::KnownNotNull, cell) JSObject();
+  return new (mozilla::KnownNotNull, ptr) JSObject();
 }
 
 // Attempt to allocate a new string out of the nursery. If there is not enough
 // room in the nursery or there is an OOM, this method will return nullptr.
 template <AllowGC allowGC>
-Cell* GCRuntime::tryNewNurseryStringCell(JSContext* cx, size_t thingSize,
+void* GCRuntime::tryNewNurseryStringCell(JSContext* cx, size_t thingSize,
                                          AllocKind kind) {
   MOZ_ASSERT(IsNurseryAllocable(kind));
   MOZ_ASSERT(cx->isNurseryAllocAllowed());
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
   AllocSite* site = cx->zone()->unknownAllocSite();
-  Cell* cell = cx->nursery().allocateString(site, thingSize);
-  if (cell) {
-    return cell;
+  void* ptr = cx->nursery().allocateString(site, thingSize);
+  if (ptr) {
+    return ptr;
   }
 
   if (allowGC && !cx->suppressGC) {
@@ -178,11 +178,12 @@ Cell* GCRuntime::tryNewNurseryStringCell(JSContext* cx, size_t thingSize,
       return cx->nursery().allocateString(site, thingSize);
     }
   }
+
   return nullptr;
 }
 
 template <AllowGC allowGC /* = CanGC */>
-Cell* gc::CellAllocator::AllocateStringCell(JSContext* cx, AllocKind kind,
+void* gc::CellAllocator::AllocateStringCell(JSContext* cx, AllocKind kind,
                                             size_t size, InitialHeap heap) {
   MOZ_ASSERT(!cx->isHelperThreadContext());
   MOZ_ASSERT(size == Arena::thingSize(kind));
@@ -197,9 +198,9 @@ Cell* gc::CellAllocator::AllocateStringCell(JSContext* cx, AllocKind kind,
 
   if (cx->nursery().isEnabled() && heap != TenuredHeap &&
       cx->nursery().canAllocateStrings() && cx->zone()->allocNurseryStrings) {
-    Cell* cell = rt->gc.tryNewNurseryStringCell<allowGC>(cx, size, kind);
-    if (cell) {
-      return cell;
+    void* ptr = rt->gc.tryNewNurseryStringCell<allowGC>(cx, size, kind);
+    if (ptr) {
+      return ptr;
     }
 
     // Our most common non-jit allocation path is NoGC; thus, if we fail the
@@ -215,26 +216,26 @@ Cell* gc::CellAllocator::AllocateStringCell(JSContext* cx, AllocKind kind,
   return GCRuntime::tryNewTenuredThing<allowGC>(cx, kind, size);
 }
 
-template Cell* gc::CellAllocator::AllocateStringCell<NoGC>(JSContext*,
+template void* gc::CellAllocator::AllocateStringCell<NoGC>(JSContext*,
                                                            AllocKind, size_t,
                                                            InitialHeap);
-template Cell* gc::CellAllocator::AllocateStringCell<CanGC>(JSContext*,
+template void* gc::CellAllocator::AllocateStringCell<CanGC>(JSContext*,
                                                             AllocKind, size_t,
                                                             InitialHeap);
 
 // Attempt to allocate a new BigInt out of the nursery. If there is not enough
 // room in the nursery or there is an OOM, this method will return nullptr.
 template <AllowGC allowGC>
-Cell* GCRuntime::tryNewNurseryBigIntCell(JSContext* cx, size_t thingSize,
+void* GCRuntime::tryNewNurseryBigIntCell(JSContext* cx, size_t thingSize,
                                          AllocKind kind) {
   MOZ_ASSERT(IsNurseryAllocable(kind));
   MOZ_ASSERT(cx->isNurseryAllocAllowed());
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
   AllocSite* site = cx->zone()->unknownAllocSite();
-  Cell* cell = cx->nursery().allocateBigInt(site, thingSize);
-  if (cell) {
-    return cell;
+  void* ptr = cx->nursery().allocateBigInt(site, thingSize);
+  if (ptr) {
+    return ptr;
   }
 
   if (allowGC && !cx->suppressGC) {
@@ -243,17 +244,15 @@ Cell* GCRuntime::tryNewNurseryBigIntCell(JSContext* cx, size_t thingSize,
     // Exceeding gcMaxBytes while tenuring can disable the Nursery, and
     // other heuristics can disable nursery BigInts for this zone.
     if (cx->nursery().isEnabled() && cx->zone()->allocNurseryBigInts) {
-      Cell* cell = cx->nursery().allocateBigInt(site, thingSize);
-      if (cell) {
-        return cell;
-      }
+      return cx->nursery().allocateBigInt(site, thingSize);
     }
   }
+
   return nullptr;
 }
 
 template <AllowGC allowGC /* = CanGC */>
-static Cell* AllocateBigIntCell(JSContext* cx, InitialHeap heap) {
+static void* AllocateBigIntCell(JSContext* cx, InitialHeap heap) {
   MOZ_ASSERT(!cx->isHelperThreadContext());
 
   AllocKind kind = MapTypeToAllocKind<JS::BigInt>::kind;
@@ -267,9 +266,9 @@ static Cell* AllocateBigIntCell(JSContext* cx, InitialHeap heap) {
 
   if (cx->nursery().isEnabled() && heap != TenuredHeap &&
       cx->nursery().canAllocateBigInts() && cx->zone()->allocNurseryBigInts) {
-    Cell* cell = rt->gc.tryNewNurseryBigIntCell<allowGC>(cx, size, kind);
-    if (cell) {
-      return cell;
+    void* ptr = rt->gc.tryNewNurseryBigIntCell<allowGC>(cx, size, kind);
+    if (ptr) {
+      return ptr;
     }
 
     // Our most common non-jit allocation path is NoGC; thus, if we fail the
@@ -287,9 +286,9 @@ static Cell* AllocateBigIntCell(JSContext* cx, InitialHeap heap) {
 
 template <AllowGC allowGC /* = CanGC */>
 JS::BigInt* gc::CellAllocator::AllocateBigInt(JSContext* cx, InitialHeap heap) {
-  Cell* cell = AllocateBigIntCell<allowGC>(cx, heap);
-  if (cell) {
-    return new (mozilla::KnownNotNull, cell) JS::BigInt();
+  void* ptr = AllocateBigIntCell<allowGC>(cx, heap);
+  if (ptr) {
+    return new (mozilla::KnownNotNull, ptr) JS::BigInt();
   }
   return nullptr;
 }
@@ -299,7 +298,7 @@ template JS::BigInt* gc::CellAllocator::AllocateBigInt<CanGC>(
     JSContext* cx, gc::InitialHeap heap);
 
 template <AllowGC allowGC /* = CanGC */>
-TenuredCell* gc::detail::AllocateTenuredCell(JSContext* cx, gc::AllocKind kind,
+void* gc::CellAllocator::AllocateTenuredCell(JSContext* cx, gc::AllocKind kind,
                                              size_t size) {
   MOZ_ASSERT(!cx->isHelperThreadContext());
   MOZ_ASSERT(!IsNurseryAllocable(kind));
@@ -314,31 +313,30 @@ TenuredCell* gc::detail::AllocateTenuredCell(JSContext* cx, gc::AllocKind kind,
 
   return GCRuntime::tryNewTenuredThing<allowGC>(cx, kind, size);
 }
-
-template TenuredCell* gc::detail::AllocateTenuredCell<NoGC>(JSContext*,
+template void* gc::CellAllocator::AllocateTenuredCell<NoGC>(JSContext*,
                                                             AllocKind, size_t);
-template TenuredCell* gc::detail::AllocateTenuredCell<CanGC>(JSContext*,
+template void* gc::CellAllocator::AllocateTenuredCell<CanGC>(JSContext*,
                                                              AllocKind, size_t);
 
 template <AllowGC allowGC>
 /* static */
-TenuredCell* GCRuntime::tryNewTenuredThing(JSContext* cx, AllocKind kind,
-                                           size_t thingSize) {
+void* GCRuntime::tryNewTenuredThing(JSContext* cx, AllocKind kind,
+                                    size_t thingSize) {
   // Bump allocate in the arena's current free-list span.
   Zone* zone = cx->zone();
-  void* t = zone->arenas.freeLists().allocate(kind);
-  if (MOZ_UNLIKELY(!t)) {
+  void* ptr = zone->arenas.freeLists().allocate(kind);
+  if (MOZ_UNLIKELY(!ptr)) {
     // Get the next available free list and allocate out of it. This may
     // acquire a new arena, which will lock the chunk list. If there are no
     // chunks available it may also allocate new memory directly.
-    t = refillFreeList(cx, kind);
+    ptr = refillFreeList(cx, kind);
 
-    if (MOZ_UNLIKELY(!t)) {
+    if (MOZ_UNLIKELY(!ptr)) {
       if constexpr (allowGC) {
         cx->runtime()->gc.attemptLastDitchGC(cx);
-        TenuredCell* cell = tryNewTenuredThing<NoGC>(cx, kind, thingSize);
-        if (cell) {
-          return cell;
+        ptr = tryNewTenuredThing<NoGC>(cx, kind, thingSize);
+        if (ptr) {
+          return ptr;
         }
         ReportOutOfMemory(cx);
       }
@@ -347,14 +345,18 @@ TenuredCell* GCRuntime::tryNewTenuredThing(JSContext* cx, AllocKind kind,
     }
   }
 
-  TenuredCell* cell = new (mozilla::KnownNotNull, t) TenuredCell();
-  checkIncrementalZoneState(cx, cell);
-  gcprobes::TenuredAlloc(cell, kind);
+#ifdef DEBUG
+  checkIncrementalZoneState(cx, ptr);
+#endif
+
+  gcprobes::TenuredAlloc(ptr, kind);
+
   // We count this regardless of the profiler's state, assuming that it costs
   // just as much to count it, as to check the profiler's state and decide not
   // to count it.
   zone->noteTenuredAlloc();
-  return cell;
+
+  return ptr;
 }
 
 void GCRuntime::attemptLastDitchGC(JSContext* cx) {
@@ -427,31 +429,29 @@ inline bool GCRuntime::gcIfNeededAtAllocation(JSContext* cx) {
   return true;
 }
 
-template <typename T>
-/* static */
-void GCRuntime::checkIncrementalZoneState(JSContext* cx, T* t) {
 #ifdef DEBUG
-  MOZ_ASSERT(t);
-  TenuredCell* cell = &t->asTenured();
-  Zone* zone = cell->zone();
-  if (zone->isGCMarkingOrSweeping()) {
-    MOZ_ASSERT(cell->isMarkedBlack());
+void GCRuntime::checkIncrementalZoneState(JSContext* cx, void* ptr) {
+  MOZ_ASSERT(ptr);
+  TenuredCell* cell = reinterpret_cast<TenuredCell*>(ptr);
+  TenuredChunkBase* chunk = detail::GetCellChunkBase(cell);
+  if (cx->zone()->isGCMarkingOrSweeping()) {
+    MOZ_ASSERT(chunk->markBits.isMarkedBlack(cell));
   } else {
-    MOZ_ASSERT(!cell->isMarkedAny());
+    MOZ_ASSERT(!chunk->markBits.isMarkedAny(cell));
   }
-#endif
 }
+#endif
 
-TenuredCell* js::gc::AllocateCellInGC(Zone* zone, AllocKind thingKind) {
-  TenuredCell* cell = zone->arenas.allocateFromFreeList(thingKind);
-  if (!cell) {
+void* js::gc::AllocateCellInGC(Zone* zone, AllocKind thingKind) {
+  void* ptr = zone->arenas.allocateFromFreeList(thingKind);
+  if (!ptr) {
     AutoEnterOOMUnsafeRegion oomUnsafe;
-    cell = GCRuntime::refillFreeListInGC(zone, thingKind);
-    if (!cell) {
+    ptr = GCRuntime::refillFreeListInGC(zone, thingKind);
+    if (!ptr) {
       oomUnsafe.crash(ChunkSize, "Failed to allocate new chunk during GC");
     }
   }
-  return cell;
+  return ptr;
 }
 
 // ///////////  Arena -> Thing Allocator  //////////////////////////////////////
@@ -467,7 +467,7 @@ void GCRuntime::startBackgroundAllocTaskIfIdle() {
 }
 
 /* static */
-TenuredCell* GCRuntime::refillFreeList(JSContext* cx, AllocKind thingKind) {
+void* GCRuntime::refillFreeList(JSContext* cx, AllocKind thingKind) {
   MOZ_ASSERT(cx->zone()->arenas.freeLists().isEmpty(thingKind));
   MOZ_ASSERT(!cx->isHelperThreadContext());
 
@@ -480,7 +480,7 @@ TenuredCell* GCRuntime::refillFreeList(JSContext* cx, AllocKind thingKind) {
 }
 
 /* static */
-TenuredCell* GCRuntime::refillFreeListInGC(Zone* zone, AllocKind thingKind) {
+void* GCRuntime::refillFreeListInGC(Zone* zone, AllocKind thingKind) {
   // Called by compacting GC to refill a free list while we are in a GC.
   MOZ_ASSERT(JS::RuntimeHeapIsCollecting());
   MOZ_ASSERT_IF(!JS::RuntimeHeapIsMinorCollecting(),
@@ -490,7 +490,7 @@ TenuredCell* GCRuntime::refillFreeListInGC(Zone* zone, AllocKind thingKind) {
       thingKind, ShouldCheckThresholds::DontCheckThresholds);
 }
 
-TenuredCell* ArenaLists::refillFreeListAndAllocate(
+void* ArenaLists::refillFreeListAndAllocate(
     AllocKind thingKind, ShouldCheckThresholds checkThresholds) {
   MOZ_ASSERT(freeLists().isEmpty(thingKind));
 
@@ -537,8 +537,7 @@ TenuredCell* ArenaLists::refillFreeListAndAllocate(
   return freeLists().setArenaAndAllocate(arena, thingKind);
 }
 
-inline TenuredCell* FreeLists::setArenaAndAllocate(Arena* arena,
-                                                   AllocKind kind) {
+inline void* FreeLists::setArenaAndAllocate(Arena* arena, AllocKind kind) {
 #ifdef DEBUG
   auto old = freeLists_[kind];
   if (!old->isEmpty()) {

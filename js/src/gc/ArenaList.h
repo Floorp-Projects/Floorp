@@ -248,7 +248,7 @@ class FreeLists {
 
   MOZ_ALWAYS_INLINE TenuredCell* allocate(AllocKind kind);
 
-  inline TenuredCell* setArenaAndAllocate(Arena* arena, AllocKind kind);
+  inline void* setArenaAndAllocate(Arena* arena, AllocKind kind);
 
   inline void unmarkPreMarkedFreeCells(AllocKind kind);
 
@@ -371,8 +371,8 @@ class ArenaLists {
 
   void initBackgroundSweep(AllocKind thingKind);
 
-  TenuredCell* refillFreeListAndAllocate(AllocKind thingKind,
-                                         ShouldCheckThresholds checkThresholds);
+  void* refillFreeListAndAllocate(AllocKind thingKind,
+                                  ShouldCheckThresholds checkThresholds);
 
   friend class BackgroundUnmarkTask;
   friend class GCRuntime;

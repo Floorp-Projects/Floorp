@@ -33,17 +33,32 @@ namespace js {
 enum AllowGC { NoGC = 0, CanGC = 1 };
 
 namespace gc {
+
 class AllocSite;
 struct Cell;
 class TenuredCell;
 
+// Allocator implementation functions. SpiderMonkey code outside this file
+// should use:
+//
+//     cx->newCell<T>(...)
+//
+// or optionally:
+//
+//     cx->newCell<T, AllowGC::NoGC>(...)
+//
 // `friend` js::gc::CellAllocator in a subtype T of Cell in order to allow it to
 // be allocated with cx->newCell<T>(...). The friend declaration will allow
 // calling T's constructor.
+//
+// The parameters will be passed to a type-specific function or constructor. For
+// nursery-allocatable types, see e.g. the AllocateString, AllocateObject, and
+// AllocateBigInt methods. For all other types, the parameters will be forwarded
+// to the constructor.
 class CellAllocator {
   template <AllowGC allowGC = CanGC>
-  static gc::Cell* AllocateStringCell(JSContext* cx, gc::AllocKind kind,
-                                      size_t size, gc::InitialHeap heap);
+  static void* AllocateStringCell(JSContext* cx, gc::AllocKind kind,
+                                  size_t size, gc::InitialHeap heap);
 
   // Allocate a string. Use cx->newCell<StringT>([heap]).
   //
@@ -55,12 +70,11 @@ class CellAllocator {
                                  Args&&... args) {
     static_assert(std::is_base_of_v<JSString, StringT>);
     gc::AllocKind kind = gc::MapTypeToAllocKind<StringT>::kind;
-    gc::Cell* cell =
-        AllocateStringCell<allowGC>(cx, kind, sizeof(StringT), heap);
-    if (!cell) {
+    void* ptr = AllocateStringCell<allowGC>(cx, kind, sizeof(StringT), heap);
+    if (!ptr) {
       return nullptr;
     }
-    return new (mozilla::KnownNotNull, cell)
+    return new (mozilla::KnownNotNull, ptr)
         StringT(std::forward<Args>(args)...);
   }
 
@@ -79,32 +93,26 @@ class CellAllocator {
                                   const JSClass* clasp,
                                   gc::AllocSite* site = nullptr);
 
+  template <AllowGC allowGC = CanGC>
+  static void* AllocateTenuredCell(JSContext* cx, gc::AllocKind kind,
+                                   size_t size);
+
+  // Allocate all other kinds of GC thing.
+  template <typename T, AllowGC allowGC = CanGC, typename... Args>
+  static T* AllocateTenured(JSContext* cx, Args&&... args) {
+    gc::AllocKind kind = gc::MapTypeToAllocKind<T>::kind;
+    void* cell = AllocateTenuredCell<allowGC>(cx, kind, sizeof(T));
+    if (!cell) {
+      return nullptr;
+    }
+    return new (mozilla::KnownNotNull, cell) T(std::forward<Args>(args)...);
+  }
+
  public:
   template <typename T, js::AllowGC allowGC = CanGC, typename... Args>
   static T* NewCell(JSContext* cx, Args&&... args);
 };
 
-namespace detail {
-
-// Allocator implementation functions. SpiderMonkey code outside this file
-// should use
-//
-//     cx->newCell<T>(...)
-//
-// or optionally
-//
-//     cx->newCell<T, AllowGC::NoGC>(...)
-//
-// The parameters will be passed to a type-specific function or constructor. For
-// nursery-allocatable types, see eg AllocateString, AllocateObject, and
-// AllocateBigInt in the CellAllocator class. For all other types, the
-// parameters will be forwarded to the constructor.
-
-template <AllowGC allowGC = CanGC>
-gc::TenuredCell* AllocateTenuredCell(JSContext* cx, gc::AllocKind kind,
-                                     size_t size);
-
-}  // namespace detail
 }  // namespace gc
 
 // This is the entry point for all allocation, though callers should still not
@@ -143,13 +151,7 @@ T* gc::CellAllocator::NewCell(JSContext* cx, Args&&... args) {
     // Allocate a new tenured GC thing that's not nursery-allocatable. Use
     // cx->newCell<T>(...), where the parameters are forwarded to the type's
     // constructor.
-    gc::AllocKind kind = gc::MapTypeToAllocKind<T>::kind;
-    gc::TenuredCell* cell =
-        gc::detail::AllocateTenuredCell<allowGC>(cx, kind, sizeof(T));
-    if (!cell) {
-      return nullptr;
-    }
-    return new (mozilla::KnownNotNull, cell) T(std::forward<Args>(args)...);
+    return AllocateTenured<T, allowGC>(cx, std::forward<Args>(args)...);
   }
 }
 
