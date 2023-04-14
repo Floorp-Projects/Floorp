@@ -206,7 +206,7 @@
 
 - name: accessibility.ARIAReflection.enabled
   type: bool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Whether form controls and images should be focusable with mouse, in content
