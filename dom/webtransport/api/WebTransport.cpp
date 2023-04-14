@@ -374,18 +374,6 @@ void WebTransport::ResolveWaitingConnection(
 
   mChild = aChild;
   mDatagrams->SetChild(aChild);
-  mChild->SendGetMaxDatagramSize()->Then(
-      GetCurrentSerialEventTarget(), __func__,
-      [self = RefPtr{this}](uint64_t&& aMaxDatagramSize) {
-        MOZ_ASSERT(self->mDatagrams);
-        self->mDatagrams->SetMaxDatagramSize(aMaxDatagramSize);
-        LOG(("max datagram size for the session is %" PRIu64,
-             aMaxDatagramSize));
-      },
-      [](const mozilla::ipc::ResponseRejectReason& aReason) {
-        LOG(("WebTransport fetching maxDatagramSize failed"));
-      });
-
   // Step 17.2: Set transport.[[State]] to "connected".
   mState = WebTransportState::CONNECTED;
   // Step 17.3: Set transport.[[Session]] to session.
