@@ -445,6 +445,18 @@ class AlternativeFrecencyHelper {
         RETURNING id`
       );
       affectedCount += affected.length;
+
+      // Calculate and store the alternative frecency threshold. Origins above
+      // this threshold will be considered meaningful and autofilled.
+      if (affected.length) {
+        let threshold = (
+          await db.executeCached(`SELECT avg(frecency) FROM moz_origins`)
+        )[0].getResultByIndex(0);
+        await lazy.PlacesUtils.metadata.set(
+          "origin_alt_frecency_threshold",
+          threshold
+        );
+      }
     });
 
     return affectedCount;

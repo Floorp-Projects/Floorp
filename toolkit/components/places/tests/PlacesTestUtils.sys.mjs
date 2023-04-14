@@ -451,12 +451,20 @@ export var PlacesTestUtils = Object.freeze({
   /**
    * A debugging helper that dumps the contents of an SQLite table.
    *
-   * @param {Sqlite.OpenedConnection} db
-   *        The mirror database connection.
    * @param {String} table
    *        The table name.
+   * @param {Sqlite.OpenedConnection} [db]
+   *        The mirror database connection.
+   * @param {String[]} [columns]
+   *        Clumns to be printed, defaults to all.
    */
-  async dumpTable(db, table, columns = null) {
+  async dumpTable({ table, db, columns }) {
+    if (!table) {
+      throw new Error("Must pass a `table` name");
+    }
+    if (!db) {
+      db = await lazy.PlacesUtils.promiseDBConnection();
+    }
     if (!columns) {
       columns = (await db.execute(`PRAGMA table_info('${table}')`)).map(r =>
         r.getResultByName("name")
