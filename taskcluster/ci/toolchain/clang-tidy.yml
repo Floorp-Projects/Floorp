@@ -107,7 +107,6 @@ win64-clang-tidy:
 linux64-clang-tidy-external:
     attributes:
         local-toolchain: false
-        artifact_prefix: project/civet
     index:
         job-name: linux64-clang-tidy-external
     treeherder:
