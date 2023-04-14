@@ -336,6 +336,27 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                 }
                 // Other "as" values will be supported later.
               }
+            } else if (mozilla::StaticPrefs::network_modulepreload() &&
+                       rel.LowerCaseEqualsASCII("modulepreload")) {
+              nsHtml5String url =
+                  aAttributes->getValue(nsHtml5AttributeName::ATTR_HREF);
+              if (url && url.Length() != 0) {
+                nsHtml5String charset =
+                    aAttributes->getValue(nsHtml5AttributeName::ATTR_CHARSET);
+                nsHtml5String type = nsHtml5String::FromLiteral("module");
+                nsHtml5String crossOrigin = aAttributes->getValue(
+                    nsHtml5AttributeName::ATTR_CROSSORIGIN);
+                nsHtml5String media =
+                    aAttributes->getValue(nsHtml5AttributeName::ATTR_MEDIA);
+                nsHtml5String integrity =
+                    aAttributes->getValue(nsHtml5AttributeName::ATTR_INTEGRITY);
+                nsHtml5String referrerPolicy = aAttributes->getValue(
+                    nsHtml5AttributeName::ATTR_REFERRERPOLICY);
+                mSpeculativeLoadQueue.AppendElement()->InitScript(
+                    url, charset, type, crossOrigin, media, integrity,
+                    referrerPolicy, mode == nsHtml5TreeBuilder::IN_HEAD, false,
+                    false, false, true);
+              }
             }
           }
         } else if (nsGkAtoms::video == aName) {
