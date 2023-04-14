@@ -12,6 +12,7 @@ import {
   waitForState,
   waitATick,
 } from "../../utils/test-head";
+import { createLocation } from "../../utils/location";
 
 function waitForPreview(store, expression) {
   return waitForState(store, state => {
@@ -60,7 +61,8 @@ async function pause(store, client) {
   );
 
   await dispatch(actions.selectSource(cx, base));
-  await waitForState(store, state => selectors.getSymbols(state, base));
+  const location = createLocation({ source: base });
+  await waitForState(store, state => selectors.getSymbols(state, location));
 
   const { thread } = cx;
   const frames = [makeFrame({ id: "frame1", sourceId: base.id, thread })];
@@ -85,7 +87,8 @@ describe("preview", () => {
     );
 
     await dispatch(actions.selectSource(cx, base));
-    await waitForState(store, state => selectors.getSymbols(state, base));
+    const location = createLocation({ source: base });
+    await waitForState(store, state => selectors.getSymbols(state, location));
     const frames = [makeFrame({ id: "f1", sourceId: base.id })];
 
     await dispatch(

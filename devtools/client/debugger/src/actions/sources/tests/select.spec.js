@@ -219,16 +219,12 @@ describe("sources", () => {
       actions.newGeneratedSource(makeSource("base.js"))
     );
 
-    await dispatch(
-      actions.selectLocation(
-        cx,
-        createLocation({ source: baseSource, line: 1 })
-      )
-    );
+    const location = createLocation({ source: baseSource, line: 1 });
+    await dispatch(actions.selectLocation(cx, location));
 
     const selected = getSelectedSource(getState());
     expect(selected && selected.id).toBe(baseSource.id);
-    await waitForState(store, state => getSymbols(state, baseSource));
+    await waitForState(store, state => getSymbols(state, location));
   });
 
   it("should change the original the viewing context", async () => {

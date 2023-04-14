@@ -22,16 +22,17 @@ export function initialASTState() {
 function update(state = initialASTState(), action) {
   switch (action.type) {
     case "SET_SYMBOLS": {
-      const { sourceId, sourceActorId } = action;
+      const { location } = action;
       if (action.status === "start") {
         return state;
       }
 
       const value = action.value;
+      const { source, sourceActor } = location;
       return {
         ...state,
-        actors: { ...state.actors, [sourceId]: sourceActorId },
-        symbols: { ...state.symbols, [sourceId]: value },
+        actors: { ...state.actors, [source.id]: sourceActor.id },
+        symbols: { ...state.symbols, [source.id]: value },
       };
     }
 

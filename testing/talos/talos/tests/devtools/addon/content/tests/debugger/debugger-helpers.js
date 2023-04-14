@@ -111,8 +111,8 @@ exports.waitForText = waitForText;
 function waitForSymbols(dbg) {
   return waitUntil(() => {
     const state = dbg.store.getState();
-    const source = dbg.selectors.getSelectedSource(state);
-    return dbg.selectors.getSymbols(state, source);
+    const location = dbg.selectors.getSelectedLocation(state);
+    return dbg.selectors.getSymbols(state, location);
   }, "has file metadata");
 }
 
@@ -187,8 +187,8 @@ function selectSource(dbg, url) {
   return waitForState(
     dbg,
     state => {
-      const source = dbg.selectors.getSelectedSource(state);
-      if (!source) {
+      const location = dbg.selectors.getSelectedLocation(state);
+      if (!location) {
         return false;
       }
       const sourceTextContent = dbg.selectors.getSelectedSourceTextContent(
@@ -200,7 +200,7 @@ function selectSource(dbg, url) {
 
       // wait for symbols -- a flat map of all named variables in a file -- to be calculated.
       // this is a slow process and becomes slower the larger the file is
-      return dbg.selectors.getSymbols(state, source);
+      return dbg.selectors.getSymbols(state, location);
     },
     "selected source"
   );
