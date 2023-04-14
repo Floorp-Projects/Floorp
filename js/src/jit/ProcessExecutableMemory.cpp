@@ -897,9 +897,10 @@ bool js::jit::ReprotectRegion(void* start, size_t size,
   std::atomic_thread_fence(std::memory_order_seq_cst);
 
 #  ifdef XP_WIN
-  DWORD oldProtect;
   DWORD flags = ProtectionSettingToFlags(protection);
-  if (!VirtualProtect(pageStart, size, flags, &oldProtect)) {
+  // This is a essentially a VirtualProtect, but with lighter impact on
+  // antivirus analysis. See bug 1823634.
+  if (!VirtualAlloc(pageStart, size, MEM_COMMIT, flags)) {
     return false;
   }
 #  else
