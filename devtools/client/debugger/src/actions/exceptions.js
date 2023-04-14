@@ -20,6 +20,7 @@ export function addExceptionFromResources(resources) {
         sourceActorId: sourceId,
         errorMessage,
         stacktrace,
+        threadActorId: resource.targetFront.targetForm.threadActor,
       };
 
       dispatch(addException(exception));
