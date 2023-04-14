@@ -248,19 +248,23 @@ export var BackgroundUpdate = {
       }
     }
 
-    let serviceRegKeyExists;
-    try {
-      serviceRegKeyExists = Cc["@mozilla.org/updates/update-processor;1"]
-        .createInstance(Ci.nsIUpdateProcessor)
-        .getServiceRegKeyExists();
-    } catch (ex) {
-      lazy.log.error(
-        `${SLUG}: Failed to check for Maintenance Service Registry Key: ${ex}`
-      );
-      serviceRegKeyExists = false;
-    }
-    if (!serviceRegKeyExists) {
-      reasons.push(this.REASON.SERVICE_REGISTRY_KEY_MISSING);
+    if (AppConstants.platform == "win") {
+      let serviceRegKeyExists;
+      try {
+        serviceRegKeyExists = Cc["@mozilla.org/updates/update-processor;1"]
+          .createInstance(Ci.nsIUpdateProcessor)
+          .getServiceRegKeyExists();
+      } catch (ex) {
+        lazy.log.error(
+          `${SLUG}: Failed to check for Maintenance Service Registry Key: ${ex}`
+        );
+        serviceRegKeyExists = false;
+      }
+      if (!serviceRegKeyExists) {
+        reasons.push(this.REASON.SERVICE_REGISTRY_KEY_MISSING);
+      }
+    } else {
+      reasons.push(this.REASON.UNSUPPORTED_OS);
     }
 
     this._recordGleanMetrics(reasons);
@@ -864,6 +868,7 @@ BackgroundUpdate.REASON = {
   NO_OMNIJAR: "no omnijar",
   SERVICE_REGISTRY_KEY_MISSING:
     "the maintenance service registry key is not present",
+  UNSUPPORTED_OS: "unsupported OS",
   WINDOWS_CANNOT_USUALLY_USE_BITS: "on Windows but cannot usually use BITS",
 };
 
