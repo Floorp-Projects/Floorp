@@ -136,7 +136,7 @@ var whitelist = [
   { file: "chrome://global/content/third_party/d3/d3.js" },
 
   // SpiderMonkey parser API, currently unused in browser/ and toolkit/
-  { file: "resource://gre/modules/reflect.jsm" },
+  { file: "resource://gre/modules/reflect.sys.mjs" },
 
   // extensions/pref/autoconfig/src/nsReadConfig.cpp
   { file: "resource://gre/defaults/autoconfig/prefcalls.js" },
