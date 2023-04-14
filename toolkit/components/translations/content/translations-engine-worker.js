@@ -671,6 +671,8 @@ class MockedEngine {
       return `${message} [${this.fromLanguage} to ${this.toLanguage}${html}]`;
     });
   }
+
+  discardTranslations() {}
 }
 
 /**

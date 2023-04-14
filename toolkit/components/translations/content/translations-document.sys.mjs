@@ -708,7 +708,7 @@ export class TranslationsDocument {
           // in the addon which set the innerHTML directly. We can't set the innerHTML
           // here, but perhaps there is another way to get back some of the performance.
           const translationsDocument = this.domParser.parseFromString(
-            `<div>${translatedHTML}</div>`,
+            `<!DOCTYPE html><div>${translatedHTML}</div>`,
             "text/html"
           );
           updateElement(translationsDocument, node);
