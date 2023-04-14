@@ -120,8 +120,9 @@ export class LoginCSVImport {
    */
   static async importFromCSV(filePath) {
     TelemetryStopwatch.start("PWMGR_IMPORT_LOGINS_FROM_FILE_MS");
+    let responsivenessMonitor;
     try {
-      let responsivenessMonitor = new lazy.ResponsivenessMonitor();
+      responsivenessMonitor = new lazy.ResponsivenessMonitor();
       let csvColumnToFieldMap = LoginCSVImport._getCSVColumnToFieldMap();
       let csvFieldToColumnMap = new Map();
 
@@ -214,6 +215,7 @@ export class LoginCSVImport {
       if (TelemetryStopwatch.running("PWMGR_IMPORT_LOGINS_FROM_FILE_MS")) {
         TelemetryStopwatch.cancel("PWMGR_IMPORT_LOGINS_FROM_FILE_MS");
       }
+      responsivenessMonitor.abort();
     }
   }
 }
