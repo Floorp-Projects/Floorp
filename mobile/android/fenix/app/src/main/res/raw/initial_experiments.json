@@ -1,7 +1,7 @@
 {
   "data": [
     {
-      "schemaVersion": "1.11.0",
+      "schemaVersion": "1.12.0",
       "slug": "android-onboarding-redesign",
       "id": "android-onboarding-redesign",
       "arguments": {},
@@ -59,7 +59,7 @@
       "featureValidationOptOut": false
     },
     {
-      "schemaVersion": "1.11.0",
+      "schemaVersion": "1.12.0",
       "slug": "fx-release-android-re-engagement-notifications-ab-experiment-v112",
       "id": "fx-release-android-re-engagement-notifications-ab-experiment-v112",
       "arguments": {},
@@ -69,7 +69,7 @@
       "channel": "release",
       "userFacingName": "Fx Release - Android re-engagement notifications A/B experiment v112",
       "userFacingDescription": "A/B message content test for Firefox 112",
-      "isEnrollmentPaused": false,
+      "isEnrollmentPaused": true,
       "isRollout": false,
       "bucketConfig": {
         "randomizationUnit": "nimbus_id",
@@ -123,7 +123,7 @@
       ],
       "targeting": "(app_version|versionCompare('112.*') <= 0) && ((is_already_enrolled) || ((isFirstRun == 'true') && (app_version|versionCompare('112.!') >= 0)))",
       "startDate": "2023-03-28",
-      "enrollmentEndDate": "2023-04-11",
+      "enrollmentEndDate": "2023-04-12",
       "endDate": null,
       "proposedDuration": 28,
       "proposedEnrollment": 14,
@@ -131,7 +131,7 @@
       "featureValidationOptOut": false
     },
     {
-      "schemaVersion": "1.11.0",
+      "schemaVersion": "1.12.0",
       "slug": "release-android-sign-to-sync-onboarding-page",
       "id": "release-android-sign-to-sync-onboarding-page",
       "arguments": {},
