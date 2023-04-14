@@ -3497,7 +3497,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     // to remove any existing content that isn't wrapped in the blend container,
     // and then we need to build content infront/behind the blend container
     // to get correct positioning during merging.
-    if ((aBuilder->ContainsBlendMode()) && aBuilder->IsRetainingDisplayList()) {
+    if (aBuilder->ContainsBlendMode() && aBuilder->IsRetainingDisplayList()) {
       if (aBuilder->IsPartialUpdate()) {
         aBuilder->SetPartialBuildFailed(true);
       } else {
@@ -3539,13 +3539,12 @@ void nsIFrame::BuildDisplayListForStackingContext(
 
   bool createdContainer = false;
 
-  /* If adding both a nsDisplayBlendContainer and a nsDisplayBlendMode to the
-   * same list, the nsDisplayBlendContainer should be added first. This only
-   * happens when the element creating this stacking context has mix-blend-mode
-   * and also contains a child which has mix-blend-mode.
-   * The nsDisplayBlendContainer must be added to the list first, so it does not
-   * isolate the containing element blending as well.
-   */
+  // If adding both a nsDisplayBlendContainer and a nsDisplayBlendMode to the
+  // same list, the nsDisplayBlendContainer should be added first. This only
+  // happens when the element creating this stacking context has mix-blend-mode
+  // and also contains a child which has mix-blend-mode.
+  // The nsDisplayBlendContainer must be added to the list first, so it does not
+  // isolate the containing element blending as well.
   if (aBuilder->ContainsBlendMode()) {
     resultList.AppendToTop(nsDisplayBlendContainer::CreateForMixBlendMode(
         aBuilder, this, &resultList, containerItemASR));
@@ -3560,11 +3559,10 @@ void nsIFrame::BuildDisplayListForStackingContext(
     createdContainer = true;
   }
 
-  /* If there are any SVG effects, wrap the list up in an SVG effects item
-   * (which also handles CSS group opacity). Note that we create an SVG effects
-   * item even if resultList is empty, since a filter can produce graphical
-   * output even if the element being filtered wouldn't otherwise do so.
-   */
+  // If there are any SVG effects, wrap the list up in an SVG effects item
+  // (which also handles CSS group opacity). Note that we create an SVG effects
+  // item even if resultList is empty, since a filter can produce graphical
+  // output even if the element being filtered wouldn't otherwise do so.
   if (usingSVGEffects) {
     MOZ_ASSERT(usingFilter || usingMask,
                "Beside filter & mask/clip-path, what else effect do we have?");
@@ -3612,9 +3610,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
     resultList.AppendToTop(&hoistedScrollInfoItemsStorage);
   }
 
-  /* If the list is non-empty and there is CSS group opacity without SVG
-   * effects, wrap it up in an opacity item.
-   */
+  // If the list is non-empty and there is CSS group opacity without SVG
+  // effects, wrap it up in an opacity item.
   if (useOpacity) {
     const bool needsActiveOpacityLayer =
         nsDisplayOpacity::NeedsActiveLayer(aBuilder, this);
@@ -3624,18 +3621,17 @@ void nsIFrame::BuildDisplayListForStackingContext(
     createdContainer = true;
   }
 
-  /* If we're going to apply a transformation and don't have preserve-3d set,
-   * wrap everything in an nsDisplayTransform. If there's nothing in the list,
-   * don't add anything.
-   *
-   * For the preserve-3d case we want to individually wrap every child in the
-   * list with a separate nsDisplayTransform instead. When the child is already
-   * an nsDisplayTransform, we can skip this step, as the computed transform
-   * will already include our own.
-   *
-   * We also traverse into sublists created by nsDisplayWrapList, so that we
-   * find all the correct children.
-   */
+  // If we're going to apply a transformation and don't have preserve-3d set,
+  // wrap everything in an nsDisplayTransform. If there's nothing in the list,
+  // don't add anything.
+  //
+  // For the preserve-3d case we want to individually wrap every child in the
+  // list with a separate nsDisplayTransform instead. When the child is already
+  // an nsDisplayTransform, we can skip this step, as the computed transform
+  // will already include our own.
+  //
+  // We also traverse into sublists created by nsDisplayWrapList, so that we
+  // find all the correct children.
   if (isTransformed && extend3DContext) {
     // Install dummy nsDisplayTransform as a leaf containing
     // descendants not participating this 3D rendering context.
@@ -3745,8 +3741,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     createdContainer = true;
   }
 
-  /* If we have sticky positioning, wrap it in a sticky position item.
-   */
+  // If we have sticky positioning, wrap it in a sticky position item.
   if (useFixedPosition) {
     if (clipCapturedBy == ContainerItemType::FixedPosition) {
       clipState.Restore();
@@ -3809,11 +3804,9 @@ void nsIFrame::BuildDisplayListForStackingContext(
     }
   }
 
-  /* If there's blending, wrap up the list in a blend-mode item. Note
-   * that opacity can be applied before blending as the blend color is
-   * not affected by foreground opacity (only background alpha).
-   */
-
+  // If there's blending, wrap up the list in a blend-mode item. Note that
+  // opacity can be applied before blending as the blend color is not affected
+  // by foreground opacity (only background alpha).
   if (useBlendMode) {
     DisplayListClipState::AutoSaveRestore blendModeClipState(aBuilder);
     resultList.AppendNewToTop<nsDisplayBlendMode>(aBuilder, this, &resultList,
