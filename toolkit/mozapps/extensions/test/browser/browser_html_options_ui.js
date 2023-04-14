@@ -473,6 +473,20 @@ add_task(async function testReloadExtension() {
   await addon.uninstall();
 });
 
+async function testSelectPosition(optionsBrowser, zoom) {
+  let popupShownPromise = BrowserTestUtils.waitForSelectPopupShown(window);
+  await BrowserTestUtils.synthesizeMouseAtCenter("select", {}, optionsBrowser);
+  let popup = await popupShownPromise;
+  let popupLeft = popup.shadowRoot.querySelector(".menupopup-arrowscrollbox")
+    .screenX;
+  let browserLeft = optionsBrowser.screenX * zoom;
+  ok(
+    Math.abs(popupLeft - browserLeft) < 1,
+    `Popup should be correctly positioned: ${popupLeft} vs. ${browserLeft}`
+  );
+  popup.hidePopup();
+}
+
 async function testOptionsZoom(type = "full") {
   let id = `${type}-zoom@mochi.test`;
   let zoomProp = `${type}Zoom`;
@@ -485,12 +499,23 @@ async function testOptionsZoom(type = "full") {
     },
     files: {
       "options.html": `
-        <html>
-          <body>
-            <p>Some text</p>
-          </body>
-        </html>
+        <!doctype html>
+        <script src="options.js"></script>
+        <body style="height: 500px">
+          <p>Some text</p>
+          <p>
+            <select>
+              <option>A</option>
+              <option>B</option>
+            </select>
+          </p>
+        </body>
       `,
+      "options.js": () => {
+        window.addEventListener("load", function() {
+          browser.test.sendMessage("options-loaded");
+        });
+      },
     },
     useAddonManager: "permanent",
   });
@@ -511,8 +536,12 @@ async function testOptionsZoom(type = "full") {
   let browserAdded = waitOptionsBrowserInserted();
   card.querySelector('.tab-button[name="preferences"]').click();
   let optionsBrowser = await browserAdded;
+  // Wait for the browser to load.
+  await extension.awaitMessage("options-loaded");
 
   is(optionsBrowser[zoomProp], 2, `Options browser inherited ${zoomProp}`);
+
+  await testSelectPosition(optionsBrowser, type == "full" ? 2 : 1);
 
   gBrowser.selectedBrowser[zoomProp] = 0.5;
 
