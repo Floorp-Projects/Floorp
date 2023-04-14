@@ -434,7 +434,7 @@ def prune_final_dir_for_clang_tidy(final_dir, target):
             shutil.rmtree(os.path.join(final_dir, "x86_64-unknown-linux-gnu"))
 
     # In lib/, only keep lib/clang/N.M.O/include and the LLVM shared library.
-    re_ver_num = re.compile(r"^\d+\.\d+\.\d+$", re.I)
+    re_ver_num = re.compile(r"^\d+(?:\.\d+\.\d+)?$", re.I)
     for f in glob.glob("%s/lib/*" % final_dir):
         name = os.path.basename(f)
         if name == "clang":
