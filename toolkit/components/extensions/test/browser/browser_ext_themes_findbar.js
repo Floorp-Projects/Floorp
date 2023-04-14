@@ -124,7 +124,7 @@ add_task(async function test_support_toolbar_field_properties_on_findbar() {
   await extension.unload();
 });
 
-// Test that theme properties are *not* applied with a theme_frame (see bug 1506913)
+// Test that theme properties are applied with a theme_frame
 add_task(async function test_toolbar_properties_on_findbar_with_theme_frame() {
   const TOOLBAR_COLOR = "#ff00ff";
   const TOOLBAR_TEXT_COLOR = "#9400ff";
@@ -155,25 +155,23 @@ add_task(async function test_toolbar_properties_on_findbar_with_theme_frame() {
 
   let findbar_button = gFindBar.getElement("highlight");
 
-  info("Checking findbar background is *not* set as toolbar color");
-  Assert.notEqual(
+  info("Checking findbar background is set as toolbar color");
+  Assert.equal(
     window.getComputedStyle(gFindBar).backgroundColor,
     hexToCSS(ACCENT_COLOR),
-    "Findbar background color should not be set by theme."
+    "Findbar background color should be set by theme."
   );
 
-  info(
-    "Checking findbar and button text color is *not* set as toolbar text color"
-  );
-  Assert.notEqual(
+  info("Checking findbar and button text color is set as toolbar text color");
+  Assert.equal(
     window.getComputedStyle(gFindBar).color,
     hexToCSS(TOOLBAR_TEXT_COLOR),
-    "Findbar text color should not be set by theme."
+    "Findbar text color should be set by theme."
   );
-  Assert.notEqual(
+  Assert.equal(
     window.getComputedStyle(findbar_button).color,
     hexToCSS(TOOLBAR_TEXT_COLOR),
-    "Findbar button text color should not be set by theme."
+    "Findbar button text color should be set by theme."
   );
 
   await extension.unload();
@@ -212,16 +210,16 @@ add_task(
 
     let findbar_textbox = gFindBar.getElement("findbar-textbox");
 
-    Assert.notEqual(
+    Assert.equal(
       window.getComputedStyle(findbar_textbox).backgroundColor,
       hexToCSS(TOOLBAR_FIELD_COLOR),
-      "Findbar textbox background color should not be set by theme."
+      "Findbar textbox background color should be set by theme."
     );
 
-    Assert.notEqual(
+    Assert.equal(
       window.getComputedStyle(findbar_textbox).color,
       hexToCSS(TOOLBAR_FIELD_TEXT_COLOR),
-      "Findbar textbox text color should not be set by theme."
+      "Findbar textbox text color should be set by theme."
     );
 
     await extension.unload();
