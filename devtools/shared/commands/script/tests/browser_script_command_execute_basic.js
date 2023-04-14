@@ -66,6 +66,8 @@ add_task(async () => {
     async function * testAsyncGenAwait() { await 1; return 10; }
 
     function testFunc() {}
+
+    var testLocale = new Intl.Locale("de-latn-de-u-ca-gregory-co-phonebk-hc-h23-kf-true-kn-false-nu-latn");
   </script>
   <body id="body1" class="class2"><h1>Body text</h1></body>
   </html>`);
@@ -637,6 +639,18 @@ async function doEagerEvalESGetters(commands) {
     // Function
     ["typeof testFunc.arguments", "object"],
     ["typeof testFunc.caller", "object"],
+
+    // Intl.Locale
+    ["testLocale.baseName", "de-Latn-DE"],
+    ["testLocale.calendar", "gregory"],
+    ["testLocale.caseFirst", ""],
+    ["testLocale.collation", "phonebk"],
+    ["testLocale.hourCycle", "h23"],
+    ["testLocale.numeric", false],
+    ["testLocale.numberingSystem", "latn"],
+    ["testLocale.language", "de"],
+    ["testLocale.script", "Latn"],
+    ["testLocale.region", "DE"],
 
     // Map
     ["testMap.size", 4],
