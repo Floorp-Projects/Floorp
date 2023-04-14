@@ -927,14 +927,6 @@ var gIdentityHandler = {
       });
     }
 
-    // Update "Learn More" for Mixed Content Blocking and Insecure Login Forms.
-    let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
-
-    this._identityPopupCustomRootLearnMore.setAttribute(
-      "href",
-      baseURL + "enterprise-roots"
-    );
-
     let customRoot = false;
 
     // Determine connection security information.
