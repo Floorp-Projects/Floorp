@@ -28,8 +28,6 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using mozilla::dom::DocGroup;
-using mozilla::dom::HTMLSlotElement;
 
 AutoTArray<RefPtr<nsDOMMutationObserver>, 4>*
     nsDOMMutationObserver::sScheduledMutationObservers = nullptr;
@@ -76,7 +74,7 @@ bool nsMutationReceiverBase::IsObservable(nsIContent* aContent) {
 }
 
 bool nsMutationReceiverBase::ObservesAttr(nsINode* aRegisterTarget,
-                                          mozilla::dom::Element* aElement,
+                                          Element* aElement,
                                           int32_t aNameSpaceID, nsAtom* aAttr) {
   if (mParent) {
     return mParent->ObservesAttr(aRegisterTarget, aElement, aNameSpaceID,
@@ -170,7 +168,7 @@ void nsMutationReceiver::NativeAnonymousChildListChange(nsIContent* aContent,
   }
 }
 
-void nsMutationReceiver::AttributeWillChange(mozilla::dom::Element* aElement,
+void nsMutationReceiver::AttributeWillChange(Element* aElement,
                                              int32_t aNameSpaceID,
                                              nsAtom* aAttribute,
                                              int32_t aModType) {
@@ -381,12 +379,12 @@ void nsMutationReceiver::NodeWillBeDestroyed(nsINode* aNode) {
 
 void nsAnimationReceiver::RecordAnimationMutation(
     Animation* aAnimation, AnimationMutation aMutationType) {
-  mozilla::dom::AnimationEffect* effect = aAnimation->GetEffect();
+  AnimationEffect* effect = aAnimation->GetEffect();
   if (!effect) {
     return;
   }
 
-  mozilla::dom::KeyframeEffect* keyframeEffect = effect->AsKeyframeEffect();
+  KeyframeEffect* keyframeEffect = effect->AsKeyframeEffect();
   if (!keyframeEffect) {
     return;
   }
@@ -596,8 +594,7 @@ void nsDOMMutationObserver::QueueMutationObserverMicroTask() {
 }
 
 void nsDOMMutationObserver::HandleMutations(mozilla::AutoSlowOperation& aAso) {
-  if (sScheduledMutationObservers ||
-      mozilla::dom::DocGroup::sPendingDocGroups) {
+  if (sScheduledMutationObservers || DocGroup::sPendingDocGroups) {
     HandleMutationsInternal(aAso);
   }
 }
@@ -629,9 +626,10 @@ void nsDOMMutationObserver::RescheduleForRun() {
   }
 }
 
-void nsDOMMutationObserver::Observe(
-    nsINode& aTarget, const mozilla::dom::MutationObserverInit& aOptions,
-    nsIPrincipal& aSubjectPrincipal, mozilla::ErrorResult& aRv) {
+void nsDOMMutationObserver::Observe(nsINode& aTarget,
+                                    const MutationObserverInit& aOptions,
+                                    nsIPrincipal& aSubjectPrincipal,
+                                    mozilla::ErrorResult& aRv) {
   bool childList = aOptions.mChildList;
   bool attributes =
       aOptions.mAttributes.WasPassed() && aOptions.mAttributes.Value();
@@ -688,7 +686,7 @@ void nsDOMMutationObserver::Observe(
   bool allAttrs = true;
   if (aOptions.mAttributeFilter.WasPassed()) {
     allAttrs = false;
-    const mozilla::dom::Sequence<nsString>& filtersAsString =
+    const Sequence<nsString>& filtersAsString =
         aOptions.mAttributeFilter.Value();
     uint32_t len = filtersAsString.Length();
     filters.SetCapacity(len);
@@ -771,8 +769,7 @@ void nsDOMMutationObserver::GetObservingInfo(
     nsTArray<RefPtr<nsAtom>>& filters = mr->AttributeFilter();
     if (filters.Length()) {
       info.mAttributeFilter.Construct();
-      mozilla::dom::Sequence<nsString>& filtersAsStrings =
-          info.mAttributeFilter.Value();
+      Sequence<nsString>& filtersAsStrings = info.mAttributeFilter.Value();
       nsString* strings =
           filtersAsStrings.AppendElements(filters.Length(), mozilla::fallible);
       if (!strings) {
@@ -789,8 +786,7 @@ void nsDOMMutationObserver::GetObservingInfo(
 
 // static
 already_AddRefed<nsDOMMutationObserver> nsDOMMutationObserver::Constructor(
-    const mozilla::dom::GlobalObject& aGlobal,
-    mozilla::dom::MutationCallback& aCb, mozilla::ErrorResult& aRv) {
+    const GlobalObject& aGlobal, dom::MutationCallback& aCb, ErrorResult& aRv) {
   nsCOMPtr<nsPIDOMWindowInner> window =
       do_QueryInterface(aGlobal.GetAsSupports());
   if (!window) {

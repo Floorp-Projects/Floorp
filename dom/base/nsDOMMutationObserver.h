@@ -429,14 +429,14 @@ class nsDOMMutationObserver final : public nsISupports, public nsWrapperCache {
       const mozilla::dom::GlobalObject& aGlobal,
       mozilla::dom::MutationCallback& aCb, mozilla::ErrorResult& aRv);
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override {
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override {
     return mozilla::dom::MutationObserver_Binding::Wrap(aCx, this, aGivenProto);
   }
 
   nsISupports* GetParentObject() const { return mOwner; }
 
-  bool IsChrome() { return mIsChrome; }
+  bool IsChrome() const { return mIsChrome; }
 
   void Observe(nsINode& aTarget,
                const mozilla::dom::MutationObserverInit& aOptions,
@@ -561,7 +561,7 @@ class nsDOMMutationObserver final : public nsISupports, public nsWrapperCache {
   RefPtr<mozilla::dom::MutationCallback> mCallback;
 
   bool mWaitingForRun;
-  bool mIsChrome;
+  const bool mIsChrome;
   bool mMergeAttributeRecords;
 
   uint64_t mId;
