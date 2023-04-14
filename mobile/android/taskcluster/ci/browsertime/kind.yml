@@ -133,6 +133,13 @@ tasks:
             - [youtube-watch, youtube-w]
             - allrecipes
 
+    speedometer:
+        description: "Raptor Speedometer 2.1 Benchmark tests on Fenix"
+        subtest-symbol: sp
+        test-name: speedometer
+        run-visual-metrics: False
+        chimera: False
+
     speedometer3:
         description: "Raptor Speedometer 3 Benchmark tests on Fenix"
         subtest-symbol: sp3
