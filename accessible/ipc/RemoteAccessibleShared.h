@@ -119,8 +119,6 @@ RemoteAccessible* AnchorAt(uint32_t aIndex);
 
 uint32_t LinkCount();
 
-RemoteAccessible* LinkAt(const uint32_t& aIndex);
-
 RemoteAccessible* TableOfACell();
 
 uint32_t ColIdx();
