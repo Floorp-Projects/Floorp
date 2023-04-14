@@ -620,7 +620,7 @@ export class TranslationsParent extends JSWindowActorParent {
       }
     );
 
-    for (const record of this.#ensureLanguagePairsHavePivots(
+    for (const record of TranslationsParent.ensureLanguagePairsHavePivots(
       translationModelRecords
     )) {
       this.#translationModelRecords.set(record.id, record);
@@ -644,7 +644,7 @@ export class TranslationsParent extends JSWindowActorParent {
    *
    * @param {TranslationModelRecord[] | LanguagePair[]} records
    */
-  static #ensureLanguagePairsHavePivots(records) {
+  static ensureLanguagePairsHavePivots(records) {
     // lang -> pivot
     const hasToPivot = new Set();
     // pivot -> en
@@ -921,7 +921,7 @@ export class TranslationsParent extends JSWindowActorParent {
     if (languagePairs) {
       // Apply the same pivot logic to mocked language pairs so that this behavior
       // gets tested.
-      TranslationsParent.#mockedLanguagePairs = this.#ensureLanguagePairsHavePivots(
+      TranslationsParent.#mockedLanguagePairs = TranslationsParent.ensureLanguagePairsHavePivots(
         languagePairs
       );
     } else {
