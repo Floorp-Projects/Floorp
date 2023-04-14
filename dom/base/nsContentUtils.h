@@ -1118,11 +1118,8 @@ class nsContentUtils {
   static bool IsInPrivateBrowsing(nsILoadGroup* aLoadGroup);
 
   /**
-   * If aNode is not an element, return true exactly when aContent's binding
-   * parent is null.
-   *
-   * If aNode is an element, return true exactly when aContent's binding parent
-   * is the same as aNode's.
+   * Returns whether a node is in the same tree as another one, accounting for
+   * anonymous roots.
    *
    * This method is particularly useful for callers who are trying to ensure
    * that they are working with a non-anonymous descendant of a given node.  If
@@ -1132,7 +1129,7 @@ class nsContentUtils {
    * Both arguments to this method must be non-null.
    */
   static bool IsInSameAnonymousTree(const nsINode* aNode,
-                                    const nsIContent* aContent);
+                                    const nsINode* aOtherNode);
 
   /*
    * Traverse the parent chain from aElement up to aStop, and return true if
