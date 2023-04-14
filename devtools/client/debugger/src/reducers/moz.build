@@ -7,7 +7,6 @@ DIRS += []
 
 CompiledModules(
     "ast.js",
-    "async-requests.js",
     "breakpoints.js",
     "event-listeners.js",
     "exceptions.js",
