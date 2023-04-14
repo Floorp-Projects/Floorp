@@ -484,6 +484,30 @@ async function getAutofillRecords(data) {
   return records?.length ?? 0;
 }
 
+// Attribution data can be encoded multiple times so we need this function to
+// get a cleartext value.
+function decodeAttributionValue(value) {
+  if (!value) {
+    return null;
+  }
+
+  let decodedValue = value;
+
+  while (decodedValue.includes("%")) {
+    try {
+      const result = decodeURIComponent(decodedValue);
+      if (result === decodedValue) {
+        break;
+      }
+      decodedValue = result;
+    } catch (e) {
+      break;
+    }
+  }
+
+  return decodedValue;
+}
+
 const TargetingGetters = {
   get locale() {
     return Services.locale.appLocaleAsBCP47;
@@ -930,6 +954,20 @@ const TargetingGetters = {
    */
   get hasMigratedPasswords() {
     return lazy.hasMigratedPasswords;
+  },
+
+  /**
+   * Whether the user installed Firefox via the RTAMO flow.
+   * @return {boolean} `true` when RTAMO has been used to download Firefox,
+   * `false` otherwise.
+   */
+  get isRTAMO() {
+    const { attributionData } = this;
+
+    return (
+      attributionData?.source === "addons.mozilla.org" &&
+      !!decodeAttributionValue(attributionData?.content)?.startsWith("rta:")
+    );
   },
 };
 

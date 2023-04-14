@@ -1520,3 +1520,110 @@ add_task(async function test_migrationInteractions() {
   ok(await ASRouterTargeting.Environment.hasMigratedHistory);
   ok(await ASRouterTargeting.Environment.hasMigratedPasswords);
 });
+
+add_task(async function check_isRTAMO() {
+  is(
+    typeof ASRouterTargeting.Environment.isRTAMO,
+    "boolean",
+    "Should return a boolean"
+  );
+
+  const TEST_CASES = [
+    {
+      title: "no attribution data",
+      attributionData: {},
+      expected: false,
+    },
+    {
+      title: "null attribution data",
+      attributionData: null,
+      expected: false,
+    },
+    {
+      title: "no content",
+      attributionData: {
+        source: "addons.mozilla.org",
+      },
+      expected: false,
+    },
+    {
+      title: "empty content",
+      attributionData: {
+        source: "addons.mozilla.org",
+        content: "",
+      },
+      expected: false,
+    },
+    {
+      title: "null content",
+      attributionData: {
+        source: "addons.mozilla.org",
+        content: null,
+      },
+      expected: false,
+    },
+    {
+      title: "empty source",
+      attributionData: {
+        source: "",
+      },
+      expected: false,
+    },
+    {
+      title: "null source",
+      attributionData: {
+        source: null,
+      },
+      expected: false,
+    },
+    {
+      title: "valid attribution data for RTAMO with content not encoded",
+      attributionData: {
+        source: "addons.mozilla.org",
+        content: "rta:<encoded-addon-id>",
+      },
+      expected: true,
+    },
+    {
+      title: "valid attribution data for RTAMO with content encoded once",
+      attributionData: {
+        source: "addons.mozilla.org",
+        content: "rta%3A<encoded-addon-id>",
+      },
+      expected: true,
+    },
+    {
+      title: "valid attribution data for RTAMO with content encoded twice",
+      attributionData: {
+        source: "addons.mozilla.org",
+        content: "rta%253A<encoded-addon-id>",
+      },
+      expected: true,
+    },
+    {
+      title: "invalid source",
+      attributionData: {
+        source: "www.mozilla.org",
+        content: "rta%3A<encoded-addon-id>",
+      },
+      expected: false,
+    },
+  ];
+
+  const sandbox = sinon.createSandbox();
+  registerCleanupFunction(async () => {
+    sandbox.restore();
+  });
+
+  const stub = sandbox.stub(AttributionCode, "getCachedAttributionData");
+
+  for (const { title, attributionData, expected } of TEST_CASES) {
+    stub.returns(attributionData);
+
+    is(
+      ASRouterTargeting.Environment.isRTAMO,
+      expected,
+      `${title} - Expected isRTAMO to have the expected value`
+    );
+  }
+});

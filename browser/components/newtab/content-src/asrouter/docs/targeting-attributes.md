@@ -68,6 +68,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [hasMigratedBookmarks](#hasmigratedbookmarks)
 * [hasMigratedHistory](#hasmigratedhistory)
 * [hasMigratedPasswords](#hasmigratedpasswords)
+* [isRTAMO](#isrtamo)
 
 ## Detailed usage
 
@@ -968,3 +969,7 @@ A boolean. `true` if the user ever used the Migration Wizard to migrate history.
 ### `hasMigratedPasswords`
 
 A boolean. `true` if the user ever used the Migration Wizard to migrate passwords.
+
+### `isRTAMO`
+
+A boolean. `true` when [RTAMO](first-run.md#return-to-amo-rtamo) has been used to download Firefox, `false` otherwise.

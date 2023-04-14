@@ -25,7 +25,7 @@ A full-page multistep experience that shows a large splash screen and several su
 
 #### Return to AMO (RTAMO)
 
-Special custom onboarding experience shown to users when they try to download an addon from addons.mozilla.org but don’t have Firefox installed. This experience allows them to install the addon they were trying to install directly from a button on RTAMO.
+Special custom onboarding experience shown to users when they try to download an addon from addons.mozilla.org but don’t have Firefox installed. This experience allows them to install the addon they were trying to install directly from a button on [RTAMO](https://docs.google.com/document/d/1QOJ8P0xQbdynAmEzOIx8I5qARwA-VqmOMpHzK9h9msg/edit?usp=sharing).
 
 Note that this uses [attribution data](https://docs.google.com/document/d/1zB5zwiyNVOiTD4I3aZ-Wm8KFai9nnWuRHsPg-NW4tcc/edit#heading=h.szk066tfte4n) added to the browser during the download process, which is only currently implemented for Windows.
 
