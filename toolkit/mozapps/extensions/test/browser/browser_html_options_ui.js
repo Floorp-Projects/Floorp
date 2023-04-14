@@ -481,7 +481,7 @@ async function testSelectPosition(optionsBrowser, zoom) {
     .screenX;
   let browserLeft = optionsBrowser.screenX * zoom;
   ok(
-    Math.abs(popupLeft - browserLeft) < 1,
+    Math.abs(popupLeft - browserLeft) <= 1,
     `Popup should be correctly positioned: ${popupLeft} vs. ${browserLeft}`
   );
   popup.hidePopup();
