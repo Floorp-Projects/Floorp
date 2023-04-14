@@ -680,24 +680,6 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvLinkCount(const uint64_t& aID,
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult DocAccessibleChild::RecvLinkAt(const uint64_t& aID,
-                                                       const uint32_t& aIndex,
-                                                       uint64_t* aIDOfLink,
-                                                       bool* aOk) {
-  *aIDOfLink = 0;
-  *aOk = false;
-  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
-  if (acc) {
-    LocalAccessible* link = acc->LinkAt(aIndex);
-    if (link) {
-      *aIDOfLink = reinterpret_cast<uint64_t>(link->UniqueID());
-      *aOk = true;
-    }
-  }
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult DocAccessibleChild::RecvLinkIndexAtOffset(
     const uint64_t& aID, const uint32_t& aOffset, int32_t* aIndex) {
   HyperTextAccessible* acc = IdToHyperTextAccessible(aID);

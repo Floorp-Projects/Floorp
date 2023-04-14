@@ -458,13 +458,6 @@ uint32_t RemoteAccessible::LinkCount() {
   return retVal;
 }
 
-RemoteAccessible* RemoteAccessible::LinkAt(const uint32_t& aIndex) {
-  uint64_t linkID = 0;
-  bool ok = false;
-  Unused << mDoc->SendLinkAt(mID, aIndex, &linkID, &ok);
-  return ok ? mDoc->GetAccessible(linkID) : nullptr;
-}
-
 int32_t RemoteAccessible::LinkIndexAtOffset(uint32_t aOffset) {
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return RemoteAccessibleBase<RemoteAccessible>::LinkIndexAtOffset(aOffset);
