@@ -38,22 +38,22 @@ namespace js {
   MOZ_ASSERT(shape->numFixedSlots() == 0);
 
   size_t nDynamicSlots = calculateDynamicSlots(0, slotSpan, clasp);
-  ArrayObject* aobj =
-      cx->newCell<ArrayObject>(kind, nDynamicSlots, heap, clasp, site);
+  ArrayObject* aobj = cx->newCell<ArrayObject>(kind, heap, clasp, site);
   if (!aobj) {
     return nullptr;
   }
 
   aobj->initShape(shape);
-  // NOTE: Dynamic slots are created internally by Allocate<JSObject>.
+  aobj->initFixedElements(kind, length);
+
   if (!nDynamicSlots) {
     aobj->initEmptyDynamicSlots();
+  } else if (!aobj->allocateInitialSlots(cx, nDynamicSlots)) {
+    return nullptr;
   }
 
   MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
   cx->realm()->setObjectPendingMetadata(cx, aobj);
-
-  aobj->initFixedElements(kind, length);
 
   if (slotSpan > 0) {
     aobj->initDynamicSlots(slotSpan);

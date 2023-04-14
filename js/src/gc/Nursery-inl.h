@@ -109,7 +109,8 @@ static inline T* AllocateObjectBuffer(JSContext* cx, JSObject* obj,
   MOZ_ASSERT(cx->isMainThreadContext());
 
   size_t nbytes = RoundUp(count * sizeof(T), sizeof(Value));
-  auto* buffer = static_cast<T*>(cx->nursery().allocateBuffer(obj, nbytes));
+  auto* buffer =
+      static_cast<T*>(cx->nursery().allocateBuffer(cx->zone(), obj, nbytes));
   if (!buffer) {
     ReportOutOfMemory(cx);
   }

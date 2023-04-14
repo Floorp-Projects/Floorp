@@ -450,7 +450,6 @@ void js::Nursery::leaveZealMode() {
 #endif  // JS_GC_ZEAL
 
 JSObject* js::Nursery::allocateObject(gc::AllocSite* site, size_t size,
-                                      size_t nDynamicSlots,
                                       const JSClass* clasp) {
   // Ensure there's enough space to replace the contents with a
   // RelocationOverlay.
@@ -464,27 +463,6 @@ JSObject* js::Nursery::allocateObject(gc::AllocSite* site, size_t size,
       allocateCell(site, size, JS::TraceKind::Object));
   if (!obj) {
     return nullptr;
-  }
-
-  // If we want external slots, add them.
-  ObjectSlots* slotsHeader = nullptr;
-  if (nDynamicSlots) {
-    MOZ_ASSERT(clasp->isNativeObject());
-    void* allocation =
-        allocateBuffer(site->zone(), ObjectSlots::allocSize(nDynamicSlots));
-    if (!allocation) {
-      // It is safe to leave the allocated object uninitialized, since we
-      // do not visit unallocated things in the nursery.
-      return nullptr;
-    }
-    slotsHeader = new (allocation) ObjectSlots(nDynamicSlots, 0);
-  }
-
-  // Store slots pointer directly in new object. If no dynamic slots were
-  // requested, caller must initialize slots_ field itself as needed. We
-  // don't know if the caller was a native object or not.
-  if (nDynamicSlots) {
-    static_cast<NativeObject*>(obj)->initSlots(slotsHeader->slots());
   }
 
   gcprobes::NurseryAlloc(obj, size);
@@ -629,14 +607,15 @@ void* js::Nursery::allocateBuffer(Zone* zone, size_t nbytes) {
   return buffer;
 }
 
-void* js::Nursery::allocateBuffer(JSObject* obj, size_t nbytes) {
+void* js::Nursery::allocateBuffer(Zone* zone, JSObject* obj, size_t nbytes) {
   MOZ_ASSERT(obj);
   MOZ_ASSERT(nbytes > 0);
 
   if (!IsInsideNursery(obj)) {
-    return obj->zone()->pod_malloc<uint8_t>(nbytes);
+    return zone->pod_malloc<uint8_t>(nbytes);
   }
-  return allocateBuffer(obj->zone(), nbytes);
+
+  return allocateBuffer(zone, nbytes);
 }
 
 void* js::Nursery::allocateBufferSameLocation(JSObject* obj, size_t nbytes) {

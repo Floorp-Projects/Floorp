@@ -34,7 +34,6 @@ using namespace gc;
 
 template <AllowGC allowGC /* = CanGC */>
 JSObject* gc::CellAllocator::AllocateObject(JSContext* cx, AllocKind kind,
-                                            size_t nDynamicSlots,
                                             gc::InitialHeap heap,
                                             const JSClass* clasp,
                                             AllocSite* site /* = nullptr */) {
@@ -47,8 +46,6 @@ JSObject* gc::CellAllocator::AllocateObject(JSContext* cx, AllocKind kind,
   static_assert(
       sizeof(JSObject_Slots0) >= MinCellSize,
       "All allocations must be at least the allocator-imposed minimum size.");
-
-  MOZ_ASSERT_IF(nDynamicSlots != 0, clasp->isNativeObject());
 
   MOZ_ASSERT_IF(site && site->initialHeap() == TenuredHeap,
                 heap == TenuredHeap);
@@ -63,8 +60,8 @@ JSObject* gc::CellAllocator::AllocateObject(JSContext* cx, AllocKind kind,
       site = cx->zone()->unknownAllocSite();
     }
 
-    JSObject* obj = rt->gc.tryNewNurseryObject<allowGC>(
-        cx, thingSize, nDynamicSlots, clasp, site);
+    JSObject* obj =
+        rt->gc.tryNewNurseryObject<allowGC>(cx, thingSize, clasp, site);
     if (obj) {
       return obj;
     }
@@ -79,29 +76,28 @@ JSObject* gc::CellAllocator::AllocateObject(JSContext* cx, AllocKind kind,
     }
   }
 
-  return GCRuntime::tryNewTenuredObject<allowGC>(cx, kind, thingSize,
-                                                 nDynamicSlots);
+  return GCRuntime::tryNewTenuredObject<allowGC>(cx, kind, thingSize);
 }
-template JSObject* gc::CellAllocator::AllocateObject<NoGC>(
-    JSContext* cx, gc::AllocKind kind, size_t nDynamicSlots,
-    gc::InitialHeap heap, const JSClass* clasp, gc::AllocSite* site);
+template JSObject* gc::CellAllocator::AllocateObject<NoGC>(JSContext* cx,
+                                                           gc::AllocKind kind,
+                                                           gc::InitialHeap heap,
+                                                           const JSClass* clasp,
+                                                           gc::AllocSite* site);
 template JSObject* gc::CellAllocator::AllocateObject<CanGC>(
-    JSContext* cx, gc::AllocKind kind, size_t nDynamicSlots,
-    gc::InitialHeap heap, const JSClass* clasp, gc::AllocSite* site);
+    JSContext* cx, gc::AllocKind kind, gc::InitialHeap heap,
+    const JSClass* clasp, gc::AllocSite* site);
 
 // Attempt to allocate a new JSObject out of the nursery. If there is not
 // enough room in the nursery or there is an OOM, this method will return
 // nullptr.
 template <AllowGC allowGC>
 JSObject* GCRuntime::tryNewNurseryObject(JSContext* cx, size_t thingSize,
-                                         size_t nDynamicSlots,
                                          const JSClass* clasp,
                                          AllocSite* site) {
   MOZ_ASSERT(cx->isNurseryAllocAllowed());
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
-  JSObject* obj =
-      cx->nursery().allocateObject(site, thingSize, nDynamicSlots, clasp);
+  JSObject* obj = cx->nursery().allocateObject(site, thingSize, clasp);
   if (obj) {
     return obj;
   }
@@ -111,8 +107,7 @@ JSObject* GCRuntime::tryNewNurseryObject(JSContext* cx, size_t thingSize,
 
     // Exceeding gcMaxBytes while tenuring can disable the Nursery.
     if (cx->nursery().isEnabled()) {
-      return cx->nursery().allocateObject(site, thingSize, nDynamicSlots,
-                                          clasp);
+      return cx->nursery().allocateObject(site, thingSize, clasp);
     }
   }
   return nullptr;
@@ -120,35 +115,10 @@ JSObject* GCRuntime::tryNewNurseryObject(JSContext* cx, size_t thingSize,
 
 template <AllowGC allowGC>
 JSObject* GCRuntime::tryNewTenuredObject(JSContext* cx, AllocKind kind,
-                                         size_t thingSize,
-                                         size_t nDynamicSlots) {
-  ObjectSlots* slotsHeader = nullptr;
-  if (nDynamicSlots) {
-    HeapSlot* allocation =
-        cx->maybe_pod_malloc<HeapSlot>(ObjectSlots::allocCount(nDynamicSlots));
-    if (MOZ_UNLIKELY(!allocation)) {
-      if (allowGC) {
-        ReportOutOfMemory(cx);
-      }
-      return nullptr;
-    }
-
-    slotsHeader = new (allocation) ObjectSlots(nDynamicSlots, 0);
-    Debug_SetSlotRangeToCrashOnTouch(slotsHeader->slots(), nDynamicSlots);
-  }
-
+                                         size_t thingSize) {
   void* ptr = tryNewTenuredThing<allowGC>(cx, kind, thingSize);
   if (!ptr) {
-    js_free(slotsHeader);
     return nullptr;
-  }
-
-  if (nDynamicSlots) {
-    NativeObject* nobj = new (mozilla::KnownNotNull, ptr) NativeObject();
-    nobj->initSlots(slotsHeader->slots());
-    AddCellMemory(nobj, ObjectSlots::allocSize(nDynamicSlots),
-                  MemoryUse::ObjectSlots);
-    return nobj;
   }
 
   return new (mozilla::KnownNotNull, ptr) JSObject();

@@ -118,8 +118,7 @@ ProxyObject* ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler,
 
   debugCheckNewObject(shape, allocKind, heap);
 
-  ProxyObject* proxy =
-      cx->newCell<ProxyObject>(allocKind, /* nDynamicSlots = */ 0, heap, clasp);
+  ProxyObject* proxy = cx->newCell<ProxyObject>(allocKind, heap, clasp);
   if (!proxy) {
     return nullptr;
   }
