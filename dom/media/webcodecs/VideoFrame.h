@@ -11,7 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/NotNull.h"
-#include "mozilla/RangedPtr.h"
+#include "mozilla/Span.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/VideoColorSpaceBinding.h"
@@ -221,8 +221,7 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
     ~Resource() = default;
     uint32_t Stride(const Format::Plane& aPlane) const;
     bool CopyTo(const Format::Plane& aPlane, const gfx::IntRect& aRect,
-                RangedPtr<uint8_t>&& aPlaneDest,
-                size_t aDestinationStride) const;
+                Span<uint8_t>&& aPlaneDest, size_t aDestinationStride) const;
 
     const RefPtr<layers::Image> mImage;
     const Format mFormat;

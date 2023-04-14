@@ -53,8 +53,7 @@ NS_INTERFACE_MAP_END
  * The below are helpers to operate ArrayBuffer or ArrayBufferView.
  */
 template <class T>
-static Result<std::tuple<RangedPtr<uint8_t>, size_t>, nsresult>
-GetArrayBufferData(const T& aBuffer) {
+static Result<Span<uint8_t>, nsresult> GetArrayBufferData(const T& aBuffer) {
   // Get buffer's data and length before using it.
   aBuffer.ComputeState();
 
@@ -64,12 +63,10 @@ GetArrayBufferData(const T& aBuffer) {
     return Err(NS_ERROR_INVALID_ARG);
   }
 
-  return std::make_tuple(RangedPtr(aBuffer.Data(), byteLength.value()),
-                         byteLength.value());
+  return Span<uint8_t>(aBuffer.Data(), byteLength.value());
 }
 
-static Result<std::tuple<RangedPtr<uint8_t>, size_t>, nsresult>
-GetSharedArrayBufferData(
+static Result<Span<uint8_t>, nsresult> GetSharedArrayBufferData(
     const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer) {
   if (aBuffer.IsArrayBufferView()) {
     return GetArrayBufferData(aBuffer.GetAsArrayBufferView());
@@ -192,12 +189,12 @@ static int32_t CeilingOfHalf(int32_t aValue) {
 
 class YUVBufferReaderBase {
  public:
-  YUVBufferReaderBase(const RangedPtr<uint8_t>& aPtr, int32_t aWidth,
+  YUVBufferReaderBase(const Span<uint8_t>& aBuffer, int32_t aWidth,
                       int32_t aHeight)
-      : mWidth(aWidth), mHeight(aHeight), mStrideY(aWidth), mPtr(aPtr) {}
+      : mWidth(aWidth), mHeight(aHeight), mStrideY(aWidth), mBuffer(aBuffer) {}
   virtual ~YUVBufferReaderBase() = default;
 
-  const uint8_t* DataY() const { return mPtr.get(); }
+  const uint8_t* DataY() const { return mBuffer.data(); }
   const int32_t mWidth;
   const int32_t mHeight;
   const int32_t mStrideY;
@@ -207,26 +204,22 @@ class YUVBufferReaderBase {
     return CheckedInt<size_t>(mStrideY) * mHeight;
   }
 
-  const RangedPtr<uint8_t> mPtr;
+  const Span<uint8_t> mBuffer;
 };
 
 class I420ABufferReader;
 class I420BufferReader : public YUVBufferReaderBase {
  public:
-  I420BufferReader(const RangedPtr<uint8_t>& aPtr, int32_t aWidth,
+  I420BufferReader(const Span<uint8_t>& aBuffer, int32_t aWidth,
                    int32_t aHeight)
-      : YUVBufferReaderBase(aPtr, aWidth, aHeight),
+      : YUVBufferReaderBase(aBuffer, aWidth, aHeight),
         mStrideU(CeilingOfHalf(aWidth)),
         mStrideV(CeilingOfHalf(aWidth)) {}
   virtual ~I420BufferReader() = default;
 
-  const uint8_t* DataU() const {
-    return &mPtr[CheckedInt<ptrdiff_t>(YByteSize().value()).value()];
-  }
+  const uint8_t* DataU() const { return &mBuffer[YByteSize().value()]; }
   const uint8_t* DataV() const {
-    return &mPtr[(CheckedInt<ptrdiff_t>(YByteSize().value()) +
-                  UByteSize().value())
-                     .value()];
+    return &mBuffer[YByteSize().value() + UByteSize().value()];
   }
   virtual I420ABufferReader* AsI420ABufferReader() { return nullptr; }
 
@@ -245,17 +238,16 @@ class I420BufferReader : public YUVBufferReaderBase {
 
 class I420ABufferReader final : public I420BufferReader {
  public:
-  I420ABufferReader(const RangedPtr<uint8_t>& aPtr, int32_t aWidth,
+  I420ABufferReader(const Span<uint8_t>& aBuffer, int32_t aWidth,
                     int32_t aHeight)
-      : I420BufferReader(aPtr, aWidth, aHeight), mStrideA(aWidth) {
+      : I420BufferReader(aBuffer, aWidth, aHeight), mStrideA(aWidth) {
     MOZ_ASSERT(mStrideA == mStrideY);
   }
   virtual ~I420ABufferReader() = default;
 
   const uint8_t* DataA() const {
-    return &mPtr[(CheckedInt<ptrdiff_t>(YByteSize().value()) +
-                  UByteSize().value() + VSize().value())
-                     .value()];
+    return &mBuffer[YByteSize().value() + UByteSize().value() +
+                    VSize().value()];
   }
 
   virtual I420ABufferReader* AsI420ABufferReader() override { return this; }
@@ -265,15 +257,13 @@ class I420ABufferReader final : public I420BufferReader {
 
 class NV12BufferReader final : public YUVBufferReaderBase {
  public:
-  NV12BufferReader(const RangedPtr<uint8_t>& aPtr, int32_t aWidth,
+  NV12BufferReader(const Span<uint8_t>& aBuffer, int32_t aWidth,
                    int32_t aHeight)
-      : YUVBufferReaderBase(aPtr, aWidth, aHeight),
+      : YUVBufferReaderBase(aBuffer, aWidth, aHeight),
         mStrideUV(aWidth + aWidth % 2) {}
   virtual ~NV12BufferReader() = default;
 
-  const uint8_t* DataUV() const {
-    return &mPtr[static_cast<ptrdiff_t>(YByteSize().value())];
-  }
+  const uint8_t* DataUV() const { return &mBuffer[YByteSize().value()]; }
 
   const int32_t mStrideUV;
 };
@@ -806,13 +796,13 @@ static Result<RefPtr<gfx::DataSourceSurface>, nsCString> AllocateBGRASurface(
 
 static Result<RefPtr<layers::Image>, nsCString> CreateImageFromRawData(
     const gfx::IntSize& aSize, int32_t aStride, gfx::SurfaceFormat aFormat,
-    const RangedPtr<uint8_t>& aPtr) {
+    const Span<uint8_t>& aBuffer) {
   MOZ_ASSERT(!aSize.IsEmpty());
 
   // Wrap the source buffer into a DataSourceSurface.
   RefPtr<gfx::DataSourceSurface> surface =
-      gfx::Factory::CreateWrappingDataSourceSurface(aPtr.get(), aStride, aSize,
-                                                    aFormat);
+      gfx::Factory::CreateWrappingDataSourceSurface(aBuffer.data(), aStride,
+                                                    aSize, aFormat);
   if (!surface) {
     return Err(nsCString("Failed to wrap the raw data into a surface"));
   }
@@ -828,7 +818,7 @@ static Result<RefPtr<layers::Image>, nsCString> CreateImageFromRawData(
 
 static Result<RefPtr<layers::Image>, nsCString> CreateRGBAImageFromBuffer(
     const VideoFrame::Format& aFormat, const gfx::IntSize& aSize,
-    const RangedPtr<uint8_t>& aPtr) {
+    const Span<uint8_t>& aBuffer) {
   const gfx::SurfaceFormat format = aFormat.ToSurfaceFormat();
   MOZ_ASSERT(format == gfx::SurfaceFormat::R8G8B8A8 ||
              format == gfx::SurfaceFormat::R8G8B8X8 ||
@@ -840,19 +830,21 @@ static Result<RefPtr<layers::Image>, nsCString> CreateRGBAImageFromBuffer(
   if (!stride.isValid()) {
     return Err(nsCString("Image size exceeds implementation's limit"));
   }
-  return CreateImageFromRawData(aSize, stride.value(), format, aPtr);
+  return CreateImageFromRawData(aSize, stride.value(), format, aBuffer);
 }
 
 static Result<RefPtr<layers::Image>, nsCString> CreateYUVImageFromBuffer(
     const VideoFrame::Format& aFormat, const VideoColorSpaceInit& aColorSpace,
-    const gfx::IntSize& aSize, const RangedPtr<uint8_t>& aPtr) {
+    const gfx::IntSize& aSize, const Span<uint8_t>& aBuffer) {
   if (aFormat.PixelFormat() == VideoPixelFormat::I420 ||
       aFormat.PixelFormat() == VideoPixelFormat::I420A) {
     UniquePtr<I420BufferReader> reader;
     if (aFormat.PixelFormat() == VideoPixelFormat::I420) {
-      reader.reset(new I420BufferReader(aPtr, aSize.Width(), aSize.Height()));
+      reader.reset(
+          new I420BufferReader(aBuffer, aSize.Width(), aSize.Height()));
     } else {
-      reader.reset(new I420ABufferReader(aPtr, aSize.Width(), aSize.Height()));
+      reader.reset(
+          new I420ABufferReader(aBuffer, aSize.Width(), aSize.Height()));
     }
 
     layers::PlanarYCbCrData data;
@@ -907,7 +899,7 @@ static Result<RefPtr<layers::Image>, nsCString> CreateYUVImageFromBuffer(
   }
 
   if (aFormat.PixelFormat() == VideoPixelFormat::NV12) {
-    NV12BufferReader reader(aPtr, aSize.Width(), aSize.Height());
+    NV12BufferReader reader(aBuffer, aSize.Width(), aSize.Height());
 
     layers::PlanarYCbCrData data;
     data.mPictureRect = gfx::IntRect(0, 0, reader.mWidth, reader.mHeight);
@@ -952,12 +944,12 @@ static Result<RefPtr<layers::Image>, nsCString> CreateYUVImageFromBuffer(
 
 static Result<RefPtr<layers::Image>, nsCString> CreateImageFromBuffer(
     const VideoFrame::Format& aFormat, const VideoColorSpaceInit& aColorSpace,
-    const gfx::IntSize& aSize, const RangedPtr<uint8_t>& aPtr) {
+    const gfx::IntSize& aSize, const Span<uint8_t>& aBuffer) {
   switch (aFormat.PixelFormat()) {
     case VideoPixelFormat::I420:
     case VideoPixelFormat::I420A:
     case VideoPixelFormat::NV12:
-      return CreateYUVImageFromBuffer(aFormat, aColorSpace, aSize, aPtr);
+      return CreateYUVImageFromBuffer(aFormat, aColorSpace, aSize, aBuffer);
     case VideoPixelFormat::I422:
     case VideoPixelFormat::I444:
       // Not yet support for now.
@@ -966,7 +958,7 @@ static Result<RefPtr<layers::Image>, nsCString> CreateImageFromBuffer(
     case VideoPixelFormat::RGBX:
     case VideoPixelFormat::BGRA:
     case VideoPixelFormat::BGRX:
-      return CreateRGBAImageFromBuffer(aFormat, aSize, aPtr);
+      return CreateRGBAImageFromBuffer(aFormat, aSize, aBuffer);
     case VideoPixelFormat::EndGuard_:
       MOZ_ASSERT_UNREACHABLE("unsupported format");
   }
@@ -1012,24 +1004,21 @@ static Result<RefPtr<VideoFrame>, nsCString> CreateVideoFrameFromBuffer(
   MOZ_TRY_VAR(combinedLayout,
               ComputeLayoutAndAllocationSize(parsedRect, format, optLayout));
 
-  // RangedPtr's range won't change once it's set so no good default RangedPtr
-  // value for using MOZ_TRY_VAR.
-  auto r = GetArrayBufferData(aBuffer);
-  if (r.isErr()) {
-    return Err(nsCString("data is too large"));
-  }
-  std::tuple<RangedPtr<uint8_t>, size_t> bufInfo = r.unwrap();
-  RangedPtr<uint8_t> ptr(std::get<0>(bufInfo));
-  size_t byteLength = std::get<1>(bufInfo);
+  Span<uint8_t> buffer;
+  MOZ_TRY_VAR(buffer, GetArrayBufferData(aBuffer).mapErr([](nsresult aError) {
+    return nsPrintfCString("Failed to get buffer data: %x",
+                           static_cast<uint32_t>(aError));
+  }));
 
-  if (byteLength < static_cast<size_t>(combinedLayout.mAllocationSize)) {
+  if (buffer.size_bytes() <
+      static_cast<size_t>(combinedLayout.mAllocationSize)) {
     return Err(nsCString("data is too small"));
   }
 
   // TODO: If codedSize is (3, 3) and visibleRect is (0, 0, 1, 1) but the data
   // is 2 x 2 RGBA buffer (2 x 2 x 4 bytes), it pass the above check. In this
   // case, we can crop it to a 1 x 1-codedSize image (Bug 1782128).
-  if (byteLength < format.SampleCount(codedSize)) {  // 1 byte/sample
+  if (buffer.size_bytes() < format.SampleCount(codedSize)) {  // 1 byte/sample
     return Err(nsCString("data is too small"));
   }
 
@@ -1045,7 +1034,8 @@ static Result<RefPtr<VideoFrame>, nsCString> CreateVideoFrameFromBuffer(
       aInit.mFormat);
 
   RefPtr<layers::Image> data;
-  MOZ_TRY_VAR(data, CreateImageFromBuffer(format, colorSpace, codedSize, ptr));
+  MOZ_TRY_VAR(data,
+              CreateImageFromBuffer(format, colorSpace, codedSize, buffer));
   MOZ_ASSERT(data);
   MOZ_ASSERT(data->GetSize() == codedSize);
 
@@ -1762,11 +1752,9 @@ already_AddRefed<Promise> VideoFrame::CopyTo(
     p->MaybeRejectWithTypeError("Failed to get buffer");
     return p.forget();
   }
-  std::tuple<RangedPtr<uint8_t>, size_t> bufInfo = r2.unwrap();
-  RangedPtr<uint8_t> ptr(std::get<0>(bufInfo));
-  size_t byteLength = std::get<1>(bufInfo);
+  Span<uint8_t> buffer = r2.unwrap();
 
-  if (byteLength < layout.mAllocationSize) {
+  if (buffer.size_bytes() < layout.mAllocationSize) {
     p->MaybeRejectWithTypeError("Destination buffer is too small");
     return p.forget();
   }
@@ -1799,7 +1787,7 @@ already_AddRefed<Promise> VideoFrame::CopyTo(
         l.mSourceWidthBytes / mResource->mFormat.SampleBytes(planes[i]),
         l.mSourceHeight);
     if (!mResource->CopyTo(planes[i], {origin, size},
-                           ptr + static_cast<size_t>(destinationOffset),
+                           buffer.From(destinationOffset),
                            static_cast<size_t>(l.mDestinationStride))) {
       p->MaybeRejectWithTypeError(
           nsPrintfCString("Failed to copy image data in %s plane",
@@ -2276,7 +2264,7 @@ uint32_t VideoFrame::Resource::Stride(const Format::Plane& aPlane) const {
 
 bool VideoFrame::Resource::CopyTo(const Format::Plane& aPlane,
                                   const gfx::IntRect& aRect,
-                                  RangedPtr<uint8_t>&& aPlaneDest,
+                                  Span<uint8_t>&& aPlaneDest,
                                   size_t aDestinationStride) const {
   auto copyPlane = [&](const uint8_t* aPlaneData) {
     MOZ_ASSERT(aPlaneData);
@@ -2296,11 +2284,11 @@ bool VideoFrame::Resource::CopyTo(const Format::Plane& aPlane,
 
     aPlaneData += offset.value();
     for (int32_t row = 0; row < aRect.Height(); ++row) {
-      PodCopy(aPlaneDest.get(), aPlaneData, elementsBytes.value());
+      PodCopy(aPlaneDest.data(), aPlaneData, elementsBytes.value());
       aPlaneData += Stride(aPlane);
       // Spec asks to move `aDestinationStride` bytes instead of
       // `Stride(aPlane)` forward.
-      aPlaneDest += aDestinationStride;
+      aPlaneDest = aPlaneDest.From(aDestinationStride);
     }
     return true;
   };
