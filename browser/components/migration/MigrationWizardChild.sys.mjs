@@ -40,7 +40,12 @@ export class MigrationWizardChild extends JSWindowActorChild {
         });
 
         let migrators = await this.sendQuery("GetAvailableMigrators");
-        if (!migrators.length) {
+        let hasBrowserMigrators = migrators.some(migrator => {
+          return (
+            migrator.type == MigrationWizardConstants.MIGRATOR_TYPES.BROWSER
+          );
+        });
+        if (!hasBrowserMigrators && !event.detail?.allowOnlyFileMigrators) {
           this.setComponentState({
             page: MigrationWizardConstants.PAGES.NO_BROWSERS_FOUND,
           });
