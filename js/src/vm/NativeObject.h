@@ -819,11 +819,6 @@ class NativeObject : public JSObject {
   }
 
  public:
-  /* Object allocation may directly initialize slots so this is public. */
-  void initSlots(HeapSlot* slots) {
-    MOZ_ASSERT(slots);
-    slots_ = slots;
-  }
   inline void initEmptyDynamicSlots();
 
   [[nodiscard]] static bool generateNewDictionaryShape(
@@ -913,6 +908,8 @@ class NativeObject : public JSObject {
   bool hadGetterSetterChange() const {
     return hasFlag(ObjectFlag::HadGetterSetterChange);
   }
+
+  bool allocateInitialSlots(JSContext* cx, uint32_t capacity);
 
   /*
    * Grow or shrink slots immediately before changing the slot span.

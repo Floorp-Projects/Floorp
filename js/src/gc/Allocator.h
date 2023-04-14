@@ -89,8 +89,7 @@ class CellAllocator {
   // |NativeObject::slots_|.
   template <AllowGC allowGC = CanGC>
   static JSObject* AllocateObject(JSContext* cx, gc::AllocKind kind,
-                                  size_t nDynamicSlots, gc::InitialHeap heap,
-                                  const JSClass* clasp,
+                                  gc::InitialHeap heap, const JSClass* clasp,
                                   gc::AllocSite* site = nullptr);
 
   template <AllowGC allowGC = CanGC>
