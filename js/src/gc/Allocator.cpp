@@ -33,10 +33,10 @@ using namespace js;
 using namespace gc;
 
 template <AllowGC allowGC /* = CanGC */>
-JSObject* gc::CellAllocator::AllocateObject(JSContext* cx, AllocKind kind,
+void* gc::CellAllocator::AllocateObjectCell(JSContext* cx, AllocKind kind,
                                             gc::InitialHeap heap,
                                             const JSClass* clasp,
-                                            AllocSite* site /* = nullptr */) {
+                                            AllocSite* site) {
   MOZ_ASSERT(!cx->isHelperThreadContext());
   MOZ_ASSERT(IsObjectAllocKind(kind));
   size_t thingSize = Arena::thingSize(kind);
@@ -60,8 +60,7 @@ JSObject* gc::CellAllocator::AllocateObject(JSContext* cx, AllocKind kind,
       site = cx->zone()->unknownAllocSite();
     }
 
-    JSObject* obj =
-        rt->gc.tryNewNurseryObject<allowGC>(cx, thingSize, clasp, site);
+    void* obj = rt->gc.tryNewNurseryObject<allowGC>(cx, thingSize, clasp, site);
     if (obj) {
       return obj;
     }
@@ -76,14 +75,14 @@ JSObject* gc::CellAllocator::AllocateObject(JSContext* cx, AllocKind kind,
     }
   }
 
-  return GCRuntime::tryNewTenuredObject<allowGC>(cx, kind, thingSize);
+  return GCRuntime::tryNewTenuredThing<allowGC>(cx, kind, thingSize);
 }
-template JSObject* gc::CellAllocator::AllocateObject<NoGC>(JSContext* cx,
+template void* gc::CellAllocator::AllocateObjectCell<NoGC>(JSContext* cx,
                                                            gc::AllocKind kind,
                                                            gc::InitialHeap heap,
                                                            const JSClass* clasp,
                                                            gc::AllocSite* site);
-template JSObject* gc::CellAllocator::AllocateObject<CanGC>(
+template void* gc::CellAllocator::AllocateObjectCell<CanGC>(
     JSContext* cx, gc::AllocKind kind, gc::InitialHeap heap,
     const JSClass* clasp, gc::AllocSite* site);
 
@@ -91,15 +90,14 @@ template JSObject* gc::CellAllocator::AllocateObject<CanGC>(
 // enough room in the nursery or there is an OOM, this method will return
 // nullptr.
 template <AllowGC allowGC>
-JSObject* GCRuntime::tryNewNurseryObject(JSContext* cx, size_t thingSize,
-                                         const JSClass* clasp,
-                                         AllocSite* site) {
+void* GCRuntime::tryNewNurseryObject(JSContext* cx, size_t thingSize,
+                                     const JSClass* clasp, AllocSite* site) {
   MOZ_ASSERT(cx->isNurseryAllocAllowed());
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
-  JSObject* obj = cx->nursery().allocateObject(site, thingSize, clasp);
-  if (obj) {
-    return obj;
+  void* ptr = cx->nursery().allocateObject(site, thingSize, clasp);
+  if (ptr) {
+    return ptr;
   }
 
   if (allowGC && !cx->suppressGC) {
@@ -110,18 +108,8 @@ JSObject* GCRuntime::tryNewNurseryObject(JSContext* cx, size_t thingSize,
       return cx->nursery().allocateObject(site, thingSize, clasp);
     }
   }
+
   return nullptr;
-}
-
-template <AllowGC allowGC>
-JSObject* GCRuntime::tryNewTenuredObject(JSContext* cx, AllocKind kind,
-                                         size_t thingSize) {
-  void* ptr = tryNewTenuredThing<allowGC>(cx, kind, thingSize);
-  if (!ptr) {
-    return nullptr;
-  }
-
-  return new (mozilla::KnownNotNull, ptr) JSObject();
 }
 
 // Attempt to allocate a new string out of the nursery. If there is not enough

@@ -88,9 +88,20 @@ class CellAllocator {
   // they will be allocated and the pointer stored directly in
   // |NativeObject::slots_|.
   template <AllowGC allowGC = CanGC>
-  static JSObject* AllocateObject(JSContext* cx, gc::AllocKind kind,
+  static void* AllocateObjectCell(JSContext* cx, gc::AllocKind kind,
                                   gc::InitialHeap heap, const JSClass* clasp,
-                                  gc::AllocSite* site = nullptr);
+                                  gc::AllocSite* site);
+
+  template <typename T, AllowGC allowGC = CanGC>
+  static T* AllocateObject(JSContext* cx, gc::AllocKind kind,
+                           gc::InitialHeap heap, const JSClass* clasp,
+                           gc::AllocSite* site = nullptr) {
+    void* cell = AllocateObjectCell<allowGC>(cx, kind, heap, clasp, site);
+    if (!cell) {
+      return nullptr;
+    }
+    return new (mozilla::KnownNotNull, cell) T();
+  }
 
   template <AllowGC allowGC = CanGC>
   static void* AllocateTenuredCell(JSContext* cx, gc::AllocKind kind,
@@ -127,8 +138,7 @@ T* gc::CellAllocator::NewCell(JSContext* cx, Args&&... args) {
 
   // Objects. See the valid parameter list in AllocateObject, above.
   if constexpr (std::is_base_of_v<JSObject, T>) {
-    return static_cast<T*>(
-        AllocateObject<allowGC>(cx, std::forward<Args>(args)...));
+    return AllocateObject<T, allowGC>(cx, std::forward<Args>(args)...);
   }
 
   // BigInt
