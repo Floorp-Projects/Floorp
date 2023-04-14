@@ -8224,13 +8224,6 @@
   value: -1
   mirror: always
 
-# Whether @layer is enabled
-- name: layout.css.cascade-layers.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
-
 # Whether Container Queries are enabled
 - name: layout.css.container-queries.enabled
   type: RelaxedAtomicBool
