@@ -574,6 +574,10 @@ bool SetElementMegamorphic(JSContext* cx, HandleObject obj, HandleValue index,
                            HandleValue value, HandleValue receiver,
                            bool strict);
 
+bool SetElementMegamorphicCached(JSContext* cx, HandleObject obj,
+                                 HandleValue index, HandleValue value,
+                                 HandleValue receiver, bool strict);
+
 JSString* TypeOfNameObject(JSObject* obj, JSRuntime* rt);
 
 bool GetPrototypeOf(JSContext* cx, HandleObject target,
