@@ -809,10 +809,10 @@ let JSWINDOWACTORS = {
 
   WebRTC: {
     parent: {
-      moduleURI: "resource:///actors/WebRTCParent.jsm",
+      esModuleURI: "resource:///actors/WebRTCParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/WebRTCChild.jsm",
+      esModuleURI: "resource:///actors/WebRTCChild.sys.mjs",
     },
 
     allFrames: true,

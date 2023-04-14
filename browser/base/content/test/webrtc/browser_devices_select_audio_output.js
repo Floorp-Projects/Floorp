@@ -60,8 +60,8 @@ async function simulateAudioOutputRequest(options) {
         isSecure: true,
         isHandlingUserInput: true,
       };
-      const { WebRTCChild } = SpecialPowers.ChromeUtils.import(
-        "resource:///actors/WebRTCChild.jsm"
+      const { WebRTCChild } = SpecialPowers.ChromeUtils.importESModule(
+        "resource:///actors/WebRTCChild.sys.mjs"
       );
       WebRTCChild.observe(req, "getUserMedia:request");
     }

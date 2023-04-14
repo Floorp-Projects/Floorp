@@ -4,11 +4,9 @@
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "WebRTCChild",
-  "resource:///actors/WebRTCChild.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  WebRTCChild: "resource:///actors/WebRTCChild.sys.mjs",
+});
 
 ChromeUtils.defineModuleGetter(
   lazy,
