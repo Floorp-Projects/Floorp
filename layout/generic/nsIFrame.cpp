@@ -3547,14 +3547,12 @@ void nsIFrame::BuildDisplayListForStackingContext(
    * isolate the containing element blending as well.
    */
   if (aBuilder->ContainsBlendMode()) {
-    DisplayListClipState::AutoSaveRestore blendContainerClipState(aBuilder);
     resultList.AppendToTop(nsDisplayBlendContainer::CreateForMixBlendMode(
         aBuilder, this, &resultList, containerItemASR));
     createdContainer = true;
   }
 
   if (usingBackdropFilter) {
-    DisplayListClipState::AutoSaveRestore clipState(aBuilder);
     nsRect backdropRect =
         GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(this);
     resultList.AppendNewToTop<nsDisplayBackdropFilters>(
@@ -3586,7 +3584,6 @@ void nsIFrame::BuildDisplayListForStackingContext(
     }
 
     if (usingMask) {
-      DisplayListClipState::AutoSaveRestore maskClipState(aBuilder);
       // The mask should move with aBuilder->CurrentActiveScrolledRoot(), so
       // that's the ASR we prefer to use for the mask item. However, we can
       // only do this if the mask if clipped with respect to that ASR, because
@@ -3619,13 +3616,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
    * effects, wrap it up in an opacity item.
    */
   if (useOpacity) {
-    // Don't clip nsDisplayOpacity items. We clip their descendants instead.
-    // The clip we would set on an element with opacity would clip
-    // all descendant content, but some should not be clipped.
-    DisplayListClipState::AutoSaveRestore opacityClipState(aBuilder);
     const bool needsActiveOpacityLayer =
         nsDisplayOpacity::NeedsActiveLayer(aBuilder, this);
-
     resultList.AppendNewToTop<nsDisplayOpacity>(
         aBuilder, this, &resultList, containerItemASR, opacityItemForEventsOnly,
         needsActiveOpacityLayer, usingBackdropFilter);
