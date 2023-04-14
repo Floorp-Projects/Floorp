@@ -131,58 +131,6 @@ interface nsICookieManager : nsISupports
            in int32_t aSameSite,
            in nsICookie_schemeType aSchemeMap);
 
-/**
-   * Add a cookie with a custom creation time, purpose is for test cases only.
-   *
-   * @param aHost
-   *        the host or domain for which the cookie is set. presence of a
-   *        leading dot indicates a domain cookie; otherwise, the cookie
-   *        is treated as a non-domain cookie (see RFC2109). The host string
-   *        will be normalized to ASCII or ACE; any trailing dot will be
-   *        stripped. To be a domain cookie, the host must have at least two
-   *        subdomain parts (e.g. '.foo.com', not '.com'), otherwise an
-   *        exception will be thrown. An empty string is acceptable
-   *        (e.g. file:// URI's).
-   * @param aPath
-   *        path within the domain for which the cookie is valid
-   * @param aName
-   *        cookie name
-   * @param aValue
-   *        cookie data
-   * @param aIsSecure
-   *        true if the cookie should only be sent over a secure connection.
-   * @param aIsHttpOnly
-   *        true if the cookie should only be sent to, and can only be
-   *        modified by, an http connection.
-   * @param aIsSession
-   *        true if the cookie should exist for the current session only.
-   *        see aExpiry.
-   * @param aExpiry
-   *        expiration date, in seconds since midnight (00:00:00), January 1,
-   *        1970 UTC. note that expiry time will also be honored for session cookies;
-   *        in this way, the more restrictive of the two will take effect.
-   * @param aOriginAttributes
-   *        the originAttributes of this cookie.
-   * @param aSameSite
-   *        the SameSite attribute.
-   * @param aCreationTimeOverrideUsec
-   *        custom creation time that will be set on the cookie,
-   *        passing -1 indicates that no custom creation time is provided.
-   */
-  [implicit_jscontext]
-  void addForTest(in AUTF8String aHost,
-                  in AUTF8String aPath,
-                  in ACString    aName,
-                  in AUTF8String aValue,
-                  in boolean     aIsSecure,
-                  in boolean     aIsHttpOnly,
-                  in boolean     aIsSession,
-                  in int64_t     aExpiry,
-                  in jsval aOriginAttributes,
-                  in int32_t aSameSite,
-                  in nsICookie_schemeType aSchemeMap,
-                  in int64_t     aCreationTimeOverrideUsec);
-
   [notxpcom]
   nsresult addNative(in AUTF8String aHost,
                      in AUTF8String aPath,
@@ -194,8 +142,7 @@ interface nsICookieManager : nsISupports
                      in int64_t     aExpiry,
                      in OriginAttributesPtr aOriginAttributes,
                      in int32_t aSameSite,
-                     in nsICookie_schemeType aSchemeMap,
-                     in int64_t aCreationTimeOverrideUsec);
+                     in nsICookie_schemeType aSchemeMap);
 
   /**
    * Find whether a given cookie already exists.
