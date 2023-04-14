@@ -19,7 +19,7 @@
     <!-- Text for context menu item to save / download the image. -->
     <string name="mozac_feature_contextmenu_save_image">ذخیره تصویر</string>
     <!-- Text for context menu item to save / download the file. -->
-    <string name="mozac_feature_contextmenu_save_file_to_device">ذخیره فایل در دستگاه</string>
+    <string name="mozac_feature_contextmenu_save_file_to_device">ذخیرهٔ پرونده در افزاره</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
     <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">زبانهٔ جدید باز شد</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->

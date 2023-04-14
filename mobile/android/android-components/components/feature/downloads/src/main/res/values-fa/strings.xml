@@ -24,7 +24,7 @@
     <string name="mozac_feature_downloads_could_not_open_file">پرونده باز نشد</string>
 
     <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
-    <string name="mozac_feature_downloads_open_not_supported1">هیچ برنامه‌ای برای باز کردن فایل‌های%1$s یافت نشد</string>
+    <string name="mozac_feature_downloads_open_not_supported1">هیچ کاره‌ای برای گشودن پرونده‌های %1$s یافت نشد</string>
 
     <!-- Button that pauses the download when pressed -->
     <string name="mozac_feature_downloads_button_pause">مکث</string>
@@ -45,4 +45,5 @@
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">امکان بازکردن %1$s وجود ندارد</string>
     <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
     <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">برای دریافت پرونده‌ها، نیاز به اجازهٔ دسترسی به پرونده‌ها و رسانه لازم است. به تنطیمات Android بروید، و بر روی اجازه دادن ضربه بزنید.</string>
-</resources>
+
+    </resources>

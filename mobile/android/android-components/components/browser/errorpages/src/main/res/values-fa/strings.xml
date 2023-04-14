@@ -27,8 +27,8 @@
     <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
       <ul>
-        <li>علت می‌تواند اشکالی در پیکربندی کارگزار، یا تلاش فردی برای وانمود کردن خود به جای این کارگزار باشد.</li>
-        <li>اگر در گذشته با موفقیت به این کارگزار متصل شده‌اید، امکان دارد این اشکال موقتی باشد، و می‌توانید بعداً دوباره تلاش کنید.</li>
+        <li>علت می‌تواند اشکالی در پیکربندی کارساز، یا تلاش فردی برای وانمود کردن خود به جای این کارساز باشد.</li>
+        <li>اگر در گذشته با موفقیت به این کارساز متصل شده‌اید، امکان دارد این اشکال موقتی باشد، و می‌توانید بعداً دوباره تلاش کنید.</li>
       </ul>
     ]]></string>
 
@@ -61,10 +61,6 @@
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">پیش‌رفته…</string>
 
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
-    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
- <label> <b>%1$s</b> یک خط‌مشی امنیتی به نام HTTP Strict Transport Security (HSTS) دارد، به این معنی که <b>%2$s</b> فقط می‌تواند به صورت ایمن به آن متصل شود. شما نمی‌توانید استثنایی برای بازدید از این پایگاه اضافه کنید.
- ]]></string>
-    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
  <label> <b>%1$s</b> یک خط‌مشی امنیتی به نام HTTP Strict Transport Security (HSTS) دارد، به این معنی که <b>%2$s</b> فقط می‌تواند به صورت ایمن به آن متصل شود. شما نمی‌توانید استثنایی برای بازدید از این پایگاه اضافه کنید. </label>
  ]]></string>
@@ -86,12 +82,12 @@
     <string name="mozac_browser_errorpages_net_timeout_title">مهلت اتّصال تمام شد</string>
     <!-- The error message shown when a website took long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
-      <p>سایت درخواست شده به تقاضای اتّصال مرورگر پاسخ نداد و مرورگر انتظار برای پاسخ را متوقف کرد.</p>
+      <p>پایگاه درخواست شده به تقاضای اتّصال مرورگر پاسخ نداد و مرورگر انتظار برای پاسخ را متوقف کرد.</p>
       <ul>
-        <li>آیا ممکن است کارگزار دچار تقاضای بیش از حد شده باشد یا موقتاً دارای مشکلی باشد؟ لطفاً بعداً دوباره تلاش کنید.</li>
-        <li>آیا قادر به مرور سایت‌های دیگر نیز نیستید؟ اتّصال شبکهٔ دستگاه‌تان را بررسی کنید.</li>
-        <li>آیا دستگاه یا شبکهٔ شما توسط  دیوار آتش یا پیشکار محافظت می‌شود؟ تنظیمات نادرست آن مانع از مرور وب می‌شود.</li>
-        <li>هنوز هم مشکل دارید؟ برای دریافت کمک با مدیر سامانه یا فراهم‌کنندهٔ اینترنت خود مشورت کنید.</li>
+        <li>آیا ممکن است کارساز دچار تقاضای بیش از حد شده باشد یا موقتاً دارای مشکلی باشد؟ لطفاً بعداً دوباره تلاش کنید.</li>
+        <li>آیا قادر به مرور پایگاه‌های دیگر نیز نیستید؟ اتّصال شبکهٔ افزاره‌تان را بررسی کنید.</li>
+        <li>آیا افزاره یا شبکهٔ شما توسط  دیوار آتش یا پیشکار محافظت می‌شود؟ تنظیمات نادرست آن مانع از مرور وب می‌شود.</li>
+        <li>هنوز هم مشکل دارید؟ برای دریافت کمک با مدیر دستگاه یا فراهم‌کنندهٔ اینترنت خود مشورت کنید.</li>
       </ul>
     ]]></string>
 
@@ -106,7 +102,7 @@
     ]]></string>
 
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
-    <string name="mozac_browser_errorpages_unknown_socket_type_title">جواب غیرمنتظره از کارگزار</string>
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">جواب غیرمنتظره از کارساز</string>
     <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
       <p>این سایت به شیوهٔ غیر منتظره‌ای به درخواست شبکه پاسخ داد و مرورگر قادر به ادامه نیست.</p>
@@ -116,10 +112,10 @@
     <string name="mozac_browser_errorpages_redirect_loop_title">این صفحه درست تغییر مسیر نمی‌دهد</string>
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
- <p>مرورگر تلاش برای دریافت مورد درخواستی را پایان داده است. وب‌گاه به صورتی درخواست را تغییر مسیر می‌دهد که این کار هیچ‌گاه به پایان نخواهد رسید.</p>
+ <p>مرورگر تلاش برای دریافت مورد درخواستی را پایان داده است. وبگاه به صورتی درخواست را تغییر مسیر می‌دهد که این کار هیچ‌گاه به پایان نخواهد رسید.</p>
  <ul>
  <li>آیا کلوچک‌های احتمالی مورد نیاز این وبگاه را غیرفعال ساخته‌اید؟</li>
- <li>اگر پذیرفتن کلوچک‌های وبگاه مشکل را حل نکرد، به احتمال زیاد این مشکلی در تنظیمات کارگزار است و به رایانه شما مربوط نیست.</li>
+ <li>اگر پذیرفتن کلوچک‌های وبگاه مشکل را حل نکرد، به احتمال زیاد این مشکلی در تنظیمات کارساز است و به رایانهٔ شما مربوط نیست.</li>
  </ul>
  ]]></string>
 
@@ -204,7 +200,7 @@
     <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[<ul><li>ممکن است حذف،‌منتقل شده باشد یا مجوز‌های آن از دسترسی جلوگیری‌ می‌کند.</li></ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_proxy_connection_refused_title">کارگزار پیشکار از اتصال خودداری می‌کند</string>
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">کارساز پیشکار از اتصال خودداری می‌کند</string>
     <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[<p>مرورگر برای استفاده از یک کارگزار پیش‌کار پیکربندی شده است، ولی پیشکار از اتصال خودداری می‌کند.</p><ul><li>آیا تنظیمات کارگزار پیشکار مرورگر صحیح است؟ تنظیمات را کنترل کنید و دوباره تلاش نمایید.</li><li>آیا پیشکار اجازهٔ اتصال از این شبکه را می‌دهد؟</li><li>هنوز هم مشکل دارید؟  برای دریافت کمک با مدیر سیستم یا فراهم‌کنندهٔ اتصال اینترنت خود مشورت کنید.</li></ul>]]></string>
 
     <!-- The document title and heading of an error page. -->

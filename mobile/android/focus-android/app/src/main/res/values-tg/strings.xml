@@ -386,6 +386,9 @@
 
     <string name="external_app_prompt_title">Кушодани пайванд дар барномаи дигар</string>
 
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">«%1$s» анҷом ёфт</string>
+
     <!-- Snackbar action to immediately open the successfully downloaded file. -->
     <string name="download_snackbar_open">Кушодан</string>
 
@@ -545,8 +548,6 @@
     <!-- Label for cookie banner item from tracking protection, after the user reports with success a website where cookie banner reducer did not work -->
     <string name="cookie_banner_the_site_was_reported">Дархост барои дастгирӣ кардани сомонаи пешниҳодшуда.</string>
 
-    <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
-    <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">танзимот</string>
     <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
     <string name="cfr_cookie_banner_link">танзимот</string>
 
@@ -716,9 +717,6 @@
     <string name="preference_auto_battery_theme">Аз ҷониби сарфаи батарея муқаррар карда шудааст</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Дар мавзуи дастгоҳ асос меёбад</string>
-
-    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">Сомонае, ки шумо дархост кардед, пайвасти «HTTPS»-ро дастгирӣ намекунад</string>
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
     <string name="errorpage_httpsonly_title2">Ин сомона пайвасти «HTTPS»-ро дастгирӣ намекунад</string>
