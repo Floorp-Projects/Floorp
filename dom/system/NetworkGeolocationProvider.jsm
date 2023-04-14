@@ -278,11 +278,13 @@ function NetworkGeolocationProvider() {
 
 NetworkGeolocationProvider.prototype = {
   classID: Components.ID("{77DA64D3-7458-4920-9491-86CC9914F904}"),
+  name: "NetworkGeolocationProvider",
   QueryInterface: ChromeUtils.generateQI([
     "nsIGeolocationProvider",
     "nsIWifiListener",
     "nsITimerCallback",
     "nsIObserver",
+    "nsINamed",
   ]),
   listener: null,
 

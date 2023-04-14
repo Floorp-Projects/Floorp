@@ -110,7 +110,7 @@ already_AddRefed<nsAvailableMemoryWatcherBase> CreateAvailableMemoryWatcher() {
 
 NS_IMPL_ISUPPORTS_INHERITED(nsAvailableMemoryWatcher,
                             nsAvailableMemoryWatcherBase, nsITimerCallback,
-                            nsIObserver);
+                            nsIObserver, nsINamed);
 
 void nsAvailableMemoryWatcher::StopPolling(const MutexAutoLock&)
     MOZ_REQUIRES(mMutex) {

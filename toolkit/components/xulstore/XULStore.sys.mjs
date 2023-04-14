@@ -20,7 +20,9 @@ export function XULStore() {
 
 XULStore.prototype = {
   classID: XULSTORE_CID,
+  name: "XULStore",
   QueryInterface: ChromeUtils.generateQI([
+    "nsINamed",
     "nsIObserver",
     "nsIXULStore",
     "nsISupportsWeakReference",

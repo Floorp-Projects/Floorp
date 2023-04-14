@@ -15,6 +15,10 @@ export function ResponsivenessMonitor(intervalMS = 100) {
 }
 
 ResponsivenessMonitor.prototype = {
+  QueryInterface: ChromeUtils.generateQI(["nsINamed", "nsITimerCallback"]),
+
+  name: "ResponsivenessMonitor",
+
   notify() {
     let now = Date.now();
     this._accumulatedDelay += Math.max(
