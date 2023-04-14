@@ -14,6 +14,22 @@
       }
     };
   </script>
+  <script id='sharedWorkerCode' type='javascript/worker'>
+    let received = new Map();
+    self.onconnect = function (event) {
+      const port = event.ports[0];
+      port.onmessage = function (e) {
+        if (e.data.hasOwnProperty('id')) {
+          port.postMessage(
+            received.get(e.data.id) ? 'RECEIVED' : 'NOT_RECEIVED');
+          return;
+        }
+        if (e.data.toString() == '[object ImageBitmap]') {
+          received.set(e.data.width, e.data);
+        }
+      };
+    };
+  </script>
 </head>
 <body>
 <script>
@@ -50,15 +66,29 @@ promise_test(async () => {
 }, 'Verify imagebitmap can be passed back and forth between main and worker');
 
 promise_test(async () => {
-  const target = (await appendIframe(SAMEORIGIN_HELPER)).contentWindow;
+  const blob = new Blob([document.querySelector('#sharedWorkerCode').textContent], {
+    type: 'text/javascript',
+  });
+  const worker = new SharedWorker(window.URL.createObjectURL(blob));
   let img = createImageBitmap(40, 40);
+  worker.port.postMessage(img);
+  worker.port.postMessage({'id': 40});
+  const received = await new Promise(resolve => worker.port.onmessage = e => {
+    resolve(e.data);
+  });
+  assert_equals(received, 'RECEIVED');
+}, 'Verify imagebitmap can be passed to sharedworker');
+
+promise_test(async () => {
+  const target = (await appendIframe(SAMEORIGIN_HELPER)).contentWindow;
+  let img = createImageBitmap(50, 50);
   assert_true(await canTransferImageBitmap(target, img));
   assert_true(isImageBitmapClosed(img));
 }, 'Verify imagebitmap can be transferred within the same agent clusters');
 
 promise_test(async () => {
   const target = (await appendIframe(CROSSORIGIN_HELPER)).contentWindow;
-  let img = createImageBitmap(50, 50);
+  let img = createImageBitmap(60, 60);
   assert_false(await canTransferImageBitmap(target, img));
 }, 'Verify imagebitmap cannot be transferred accross the different agent clusters');
 
@@ -67,15 +97,28 @@ promise_test(async () => {
     type: 'text/javascript',
   });
   const worker = new Worker(window.URL.createObjectURL(blob));
-  let img = createImageBitmap(60, 60);
+  let img = createImageBitmap(70, 70);
   worker.postMessage({img: img, transfer: true}, [img]);
   const received = await new Promise(resolve => worker.onmessage = e => {
     resolve(e.data);
   });
   assert_equals(received.toString(), '[object ImageBitmap]');
-  assert_equals(received.width, 60);
+  assert_equals(received.width, 70);
 }, 'Verify imagebitmap can be transferred back and forth between main and worker');
 
+promise_test(async () => {
+  const blob = new Blob([document.querySelector('#sharedWorkerCode').textContent], {
+    type: 'text/javascript',
+  });
+  const worker = new SharedWorker(window.URL.createObjectURL(blob));
+  let img = createImageBitmap(80, 80);
+  worker.port.postMessage(img, [img]);
+  worker.port.postMessage({'id': 80});
+  const received = await new Promise(resolve => worker.port.onmessage = e => {
+    resolve(e.data);
+  });
+  assert_equals(received, 'RECEIVED');
+}, 'Verify imagebitmap can be transferred to a sharedworker');
 
 function appendIframe(src) {
   const frame = document.createElement('iframe');
