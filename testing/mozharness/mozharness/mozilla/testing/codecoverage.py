@@ -329,6 +329,13 @@ class CodeCoverageMixin(SingleTestMixin):
         if filter_covered:
             grcov_command += ["--filter", "covered"]
 
+        def skip_cannot_normalize(output_to_filter):
+            return "\n".join(
+                line
+                for line in output_to_filter.rstrip().splitlines()
+                if "cannot be normalized because" not in line
+            )
+
         # 'grcov_output' will be a tuple, the first variable is the path to the lcov output,
         # the other is the path to the standard error output.
         tmp_output_file, _ = self.get_output_from_command(
@@ -337,6 +344,7 @@ class CodeCoverageMixin(SingleTestMixin):
             save_tmpfiles=True,
             return_type="files",
             throw_exception=True,
+            output_filter=skip_cannot_normalize,
         )
         shutil.move(tmp_output_file, grcov_output_file)
 

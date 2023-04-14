@@ -1709,6 +1709,7 @@ class ScriptMixin(PlatformMixin):
         fatal_exit_code=2,
         ignore_errors=False,
         success_codes=None,
+        output_filter=None,
     ):
         """Similar to run_command, but where run_command is an
         os.system(command) analog, get_output_from_command is a `command`
@@ -1756,6 +1757,8 @@ class ScriptMixin(PlatformMixin):
               level to `ERROR` for the output of stderr. Defaults to False.
             success_codes (int, optional): numeric value to compare against
               the command return value.
+            output_filter (func, optional): provide a function to filter output
+              so that noise is reduced and lines are sanitized.  default: None
 
         Returns:
             None: if the cwd is not a directory.
@@ -1839,6 +1842,8 @@ class ScriptMixin(PlatformMixin):
                 tmp_stdout_filename
             ):
                 output = self.read_from_file(tmp_stdout_filename, verbose=False)
+                if output_filter:
+                    output = output_filter(output)
                 if not silent:
                     self.log("Output received:", level=log_level)
                     output_lines = output.rstrip().splitlines()
@@ -1850,16 +1855,19 @@ class ScriptMixin(PlatformMixin):
                         self.log(" %s" % line, level=log_level)
                     output = "\n".join(output_lines)
         if os.path.exists(tmp_stderr_filename) and os.path.getsize(tmp_stderr_filename):
-            if not ignore_errors:
-                return_level = ERROR
-            self.log("Errors received:", level=return_level)
             errors = self.read_from_file(tmp_stderr_filename, verbose=False)
-            for line in errors.rstrip().splitlines():
-                if not line or line.isspace():
-                    continue
-                if isinstance(line, binary_type):
-                    line = line.decode("utf-8")
-                self.log(" %s" % line, level=return_level)
+            if output_filter:
+                errors = output_filter(errors)
+            if errors:
+                if not ignore_errors:
+                    return_level = ERROR
+                self.log("Errors received:", level=return_level)
+                for line in errors.rstrip().splitlines():
+                    if not line or line.isspace():
+                        continue
+                    if isinstance(line, binary_type):
+                        line = line.decode("utf-8")
+                    self.log(" %s" % line, level=return_level)
         elif p.returncode not in success_codes and not ignore_errors:
             return_level = ERROR
         # Clean up.
