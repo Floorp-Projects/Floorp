@@ -31,6 +31,11 @@ ruleTester.run("valid-lazy", rule, {
     `,
     `
       const lazy = {};
+      ChromeUtils.defineLazyGetter(lazy, "foo", () => {});
+      if (x) { lazy.foo.bar(); }
+    `,
+    `
+      const lazy = {};
       XPCOMUtils.defineLazyModuleGetters(lazy, {
         foo: "foo.jsm",
       });
@@ -110,6 +115,26 @@ ruleTester.run("valid-lazy", rule, {
         const lazy = {};
         XPCOMUtils.defineLazyGetter(lazy, "foo", "foo.jsm");
         XPCOMUtils.defineLazyGetter(lazy, "foo", "foo1.jsm");
+        if (x) { lazy.foo.bar(); }
+      `,
+      "foo",
+      "duplicateSymbol"
+    ),
+    invalidCode(
+      `
+        const lazy = {};
+        XPCOMUtils.defineLazyGetter(lazy, "foo", "foo.jsm");
+        ChromeUtils.defineLazyGetter(lazy, "foo", "foo1.jsm");
+        if (x) { lazy.foo.bar(); }
+      `,
+      "foo",
+      "duplicateSymbol"
+    ),
+    invalidCode(
+      `
+        const lazy = {};
+        ChromeUtils.defineLazyGetter(lazy, "foo", "foo.jsm");
+        ChromeUtils.defineLazyGetter(lazy, "foo", "foo1.jsm");
         if (x) { lazy.foo.bar(); }
       `,
       "foo",

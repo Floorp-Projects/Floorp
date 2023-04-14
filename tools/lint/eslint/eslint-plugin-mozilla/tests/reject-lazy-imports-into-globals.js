@@ -28,10 +28,16 @@ ruleTester.run("reject-lazy-imports-into-globals", rule, {
       const lazy = {};
       XPCOMUtils.defineLazyGetter(lazy, "foo", () => {});
     `,
+    `
+      const lazy = {};
+      ChromeUtils.defineLazyGetter(lazy, "foo", () => {});
+    `,
   ],
   invalid: [
     invalidCode(`XPCOMUtils.defineLazyGetter(globalThis, "foo", () => {});`),
     invalidCode(`XPCOMUtils.defineLazyGetter(window, "foo", () => {});`),
+    invalidCode(`ChromeUtils.defineLazyGetter(globalThis, "foo", () => {});`),
+    invalidCode(`ChromeUtils.defineLazyGetter(window, "foo", () => {});`),
     invalidCode(
       `XPCOMUtils.defineLazyModuleGetter(globalThis, "foo", "foo.jsm");`
     ),

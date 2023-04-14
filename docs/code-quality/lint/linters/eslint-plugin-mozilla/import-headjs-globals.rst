@@ -25,3 +25,4 @@ The following patterns are supported:
 -  ``XPCOMUtils.defineLazyModuleGetter(this, "setNamedTimeout", ...)``
 -  ``loader.lazyGetter(this, "toolboxStrings"``
 -  ``XPCOMUtils.defineLazyGetter(this, "clipboardHelper"``
+-  ``ChromeUtils.defineLazyGetter(this, "clipboardHelper"``
