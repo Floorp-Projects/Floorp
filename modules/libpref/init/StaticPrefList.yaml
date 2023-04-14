@@ -3471,7 +3471,12 @@
 # Use a Background Task to delete files at shutdown.
 - name: dom.quotaManager.backgroundTask.enabled
   type: bool
+#ifdef XP_MACOSX
+# Needs to figure out how to prevent bug 1827486.
+  value: false
+#else
   value: true
+#endif
   mirror: never
 #endif
 
