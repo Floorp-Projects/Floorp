@@ -683,6 +683,64 @@ async function doEagerEvalESGetters(commands) {
     ok(!response.helperResult, "no helper result");
   }
 
+  // Test RegExp static properties.
+  // Run preparation code here to avoid interference with other tests,
+  // given RegExp static properties are global state.
+  const regexpPreparationCode = `
+/b(c)(d)(e)(f)(g)(h)(i)(j)(k)l/.test("abcdefghijklm")
+`;
+
+  const prepResponse = await commands.scriptCommand.execute(
+    regexpPreparationCode
+  );
+  checkObject(prepResponse, {
+    input: regexpPreparationCode,
+    result: true,
+  });
+
+  ok(!prepResponse.exception, "no eval exception");
+  ok(!prepResponse.helperResult, "no helper result");
+
+  const testDataRegExp = [
+    // RegExp static
+    ["RegExp.input", "abcdefghijklm"],
+    ["RegExp.lastMatch", "bcdefghijkl"],
+    ["RegExp.lastParen", "k"],
+    ["RegExp.leftContext", "a"],
+    ["RegExp.rightContext", "m"],
+    ["RegExp.$1", "c"],
+    ["RegExp.$2", "d"],
+    ["RegExp.$3", "e"],
+    ["RegExp.$4", "f"],
+    ["RegExp.$5", "g"],
+    ["RegExp.$6", "h"],
+    ["RegExp.$7", "i"],
+    ["RegExp.$8", "j"],
+    ["RegExp.$9", "k"],
+    ["RegExp.$_", "abcdefghijklm"], // input
+    ["RegExp['$&']", "bcdefghijkl"], // lastMatch
+    ["RegExp['$+']", "k"], // lastParen
+    ["RegExp['$`']", "a"], // leftContext
+    ["RegExp[`$'`]", "m"], // rightContext
+  ];
+
+  for (const [code, expectedResult] of testDataRegExp) {
+    const response = await commands.scriptCommand.execute(code, {
+      eager: true,
+    });
+    checkObject(
+      response,
+      {
+        input: code,
+        result: expectedResult,
+      },
+      code
+    );
+
+    ok(!response.exception, "no eval exception");
+    ok(!response.helperResult, "no helper result");
+  }
+
   const testDataWithSideEffect = [
     // get Object.prototype.__proto__
     //
