@@ -101,7 +101,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.6.25';
+    const workerVersion = '3.6.35';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -8419,6 +8419,7 @@ class PartialEvaluator {
     this.globalImageCache = globalImageCache;
     this.options = options || DefaultPartialEvaluatorOptions;
     this.parsingType3Font = false;
+    this._regionalImageCache = new _image_utils.RegionalImageCache();
     this._fetchBuiltInCMapBound = this.fetchBuiltInCMap.bind(this);
     _image_resizer.ImageResizer.setMaxArea(this.options.canvasMaxAreaInBytes);
   }
@@ -8712,11 +8713,15 @@ class PartialEvaluator {
         args = [imgData];
         operatorList.addImageOps(_util.OPS.paintImageMaskXObject, args, optionalContent);
         if (cacheKey) {
-          localImageCache.set(cacheKey, imageRef, {
+          const cacheData = {
             fn: _util.OPS.paintImageMaskXObject,
             args,
             optionalContent
-          });
+          };
+          localImageCache.set(cacheKey, imageRef, cacheData);
+          if (imageRef) {
+            this._regionalImageCache.set(null, imageRef, cacheData);
+          }
         }
         return;
       }
@@ -8732,11 +8737,15 @@ class PartialEvaluator {
       if (imgData.isSingleOpaquePixel) {
         operatorList.addImageOps(_util.OPS.paintSolidColorImageMask, [], optionalContent);
         if (cacheKey) {
-          localImageCache.set(cacheKey, imageRef, {
+          const cacheData = {
             fn: _util.OPS.paintSolidColorImageMask,
             args: [],
             optionalContent
-          });
+          };
+          localImageCache.set(cacheKey, imageRef, cacheData);
+          if (imageRef) {
+            this._regionalImageCache.set(null, imageRef, cacheData);
+          }
         }
         return;
       }
@@ -8752,11 +8761,15 @@ class PartialEvaluator {
       }];
       operatorList.addImageOps(_util.OPS.paintImageMaskXObject, args, optionalContent);
       if (cacheKey) {
-        localImageCache.set(cacheKey, imageRef, {
+        const cacheData = {
           fn: _util.OPS.paintImageMaskXObject,
           args,
           optionalContent
-        });
+        };
+        localImageCache.set(cacheKey, imageRef, cacheData);
+        if (imageRef) {
+          this._regionalImageCache.set(null, imageRef, cacheData);
+        }
       }
       return;
     }
@@ -8814,12 +8827,14 @@ class PartialEvaluator {
     });
     operatorList.addImageOps(_util.OPS.paintImageXObject, args, optionalContent);
     if (cacheKey) {
-      localImageCache.set(cacheKey, imageRef, {
+      const cacheData = {
         fn: _util.OPS.paintImageXObject,
         args,
         optionalContent
-      });
+      };
+      localImageCache.set(cacheKey, imageRef, cacheData);
       if (imageRef) {
+        this._regionalImageCache.set(null, imageRef, cacheData);
         (0, _util.assert)(!isInline, "Cannot cache an inline image globally.");
         this.globalImageCache.addPageIndex(imageRef, this.pageIndex);
         if (cacheGlobally) {
@@ -9470,7 +9485,7 @@ class PartialEvaluator {
               }
               let xobj = xobjs.getRaw(name);
               if (xobj instanceof _primitives.Ref) {
-                const localImage = localImageCache.getByRef(xobj);
+                const localImage = localImageCache.getByRef(xobj) || self._regionalImageCache.getByRef(xobj);
                 if (localImage) {
                   operatorList.addImageOps(localImage.fn, localImage.args, localImage.optionalContent);
                   incrementCachedImageMaskCount(localImage);
@@ -9885,6 +9900,9 @@ class PartialEvaluator {
       twoLastCharsPos = nextPos;
       return ret;
     }
+    function shouldAddWhitepsace() {
+      return twoLastChars[twoLastCharsPos] !== " " && twoLastChars[(twoLastCharsPos + 1) % 2] === " ";
+    }
     function resetLastChars() {
       twoLastChars[0] = twoLastChars[1] = " ";
       twoLastCharsPos = 0;
@@ -9903,6 +9921,22 @@ class PartialEvaluator {
     const emptyGStateCache = new _image_utils.LocalGStateCache();
     const preprocessor = new EvaluatorPreprocessor(stream, xref, stateManager);
     let textState;
+    function pushWhitespace({
+      width = 0,
+      height = 0,
+      transform = textContentItem.prevTransform,
+      fontName = textContentItem.fontName
+    }) {
+      textContent.items.push({
+        str: " ",
+        dir: "ltr",
+        width,
+        height,
+        transform,
+        fontName,
+        hasEOL: false
+      });
+    }
     function getCurrentTextTransform() {
       const font = textState.font;
       const tsm = [textState.fontSize * textState.textHScale, 0, 0, textState.fontSize, 0, textState.textRise];
@@ -10069,18 +10103,20 @@ class PartialEvaluator {
           resetLastChars();
         }
         if (advanceY <= textOrientation * textContentItem.trackingSpaceMin) {
-          textContentItem.height += advanceY;
+          if (shouldAddWhitepsace()) {
+            resetLastChars();
+            flushTextContentItem();
+            pushWhitespace({
+              height: Math.abs(advanceY)
+            });
+          } else {
+            textContentItem.height += advanceY;
+          }
         } else if (!addFakeSpaces(advanceY, textContentItem.prevTransform, textOrientation)) {
           if (textContentItem.str.length === 0) {
             resetLastChars();
-            textContent.items.push({
-              str: " ",
-              dir: "ltr",
-              width: 0,
-              height: Math.abs(advanceY),
-              transform: textContentItem.prevTransform,
-              fontName: textContentItem.fontName,
-              hasEOL: false
+            pushWhitespace({
+              height: Math.abs(advanceY)
             });
           } else {
             textContentItem.height += advanceY;
@@ -10111,18 +10147,20 @@ class PartialEvaluator {
         resetLastChars();
       }
       if (advanceX <= textOrientation * textContentItem.trackingSpaceMin) {
-        textContentItem.width += advanceX;
+        if (shouldAddWhitepsace()) {
+          resetLastChars();
+          flushTextContentItem();
+          pushWhitespace({
+            width: Math.abs(advanceX)
+          });
+        } else {
+          textContentItem.width += advanceX;
+        }
       } else if (!addFakeSpaces(advanceX, textContentItem.prevTransform, textOrientation)) {
         if (textContentItem.str.length === 0) {
           resetLastChars();
-          textContent.items.push({
-            str: " ",
-            dir: "ltr",
-            width: Math.abs(advanceX),
-            height: 0,
-            transform: textContentItem.prevTransform,
-            fontName: textContentItem.fontName,
-            hasEOL: false
+          pushWhitespace({
+            width: Math.abs(advanceX)
           });
         } else {
           textContentItem.width += advanceX;
@@ -10242,14 +10280,11 @@ class PartialEvaluator {
       }
       flushTextContentItem();
       resetLastChars();
-      textContent.items.push({
-        str: " ",
-        dir: "ltr",
+      pushWhitespace({
         width: Math.abs(width),
         height: Math.abs(height),
         transform: transf || getCurrentTextTransform(),
-        fontName,
-        hasEOL: false
+        fontName
       });
       return true;
     }
@@ -34276,7 +34311,7 @@ exports.PostScriptLexer = PostScriptLexer;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.LocalTilingPatternCache = exports.LocalImageCache = exports.LocalGStateCache = exports.LocalFunctionCache = exports.LocalColorSpaceCache = exports.GlobalImageCache = void 0;
+exports.RegionalImageCache = exports.LocalTilingPatternCache = exports.LocalImageCache = exports.LocalGStateCache = exports.LocalFunctionCache = exports.LocalColorSpaceCache = exports.GlobalImageCache = void 0;
 var _util = __w_pdfjs_require__(2);
 var _primitives = __w_pdfjs_require__(4);
 class BaseLocalCache {
@@ -34404,6 +34439,23 @@ class LocalTilingPatternCache extends BaseLocalCache {
   }
 }
 exports.LocalTilingPatternCache = LocalTilingPatternCache;
+class RegionalImageCache extends BaseLocalCache {
+  constructor(options) {
+    super({
+      onlyRefs: true
+    });
+  }
+  set(name = null, ref, data) {
+    if (!ref) {
+      throw new Error('RegionalImageCache.set - expected "ref" argument.');
+    }
+    if (this._imageCache.has(ref)) {
+      return;
+    }
+    this._imageCache.put(ref, data);
+  }
+}
+exports.RegionalImageCache = RegionalImageCache;
 class GlobalImageCache {
   static get NUM_PAGES_THRESHOLD() {
     return (0, _util.shadow)(this, "NUM_PAGES_THRESHOLD", 2);
@@ -53029,8 +53081,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
   }
 }));
 var _worker = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.6.25';
-const pdfjsBuild = 'a43151103';
+const pdfjsVersion = '3.6.35';
+const pdfjsBuild = '342dc760d';
 })();
 
 /******/ 	return __webpack_exports__;
