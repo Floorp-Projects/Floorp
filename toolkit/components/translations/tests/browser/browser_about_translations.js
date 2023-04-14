@@ -141,7 +141,7 @@ add_task(async function test_about_translations_dropdowns() {
         message:
           'The "to" options do not have "detect" in the list, and nothing is selected.',
         select: toSelect,
-        availableOptions: ["", "en", "is", "es"],
+        availableOptions: ["", "en", "es"],
         selectedValue: "",
       });
 
@@ -159,7 +159,7 @@ add_task(async function test_about_translations_dropdowns() {
       assertOptions({
         message: 'The "to" options remain the same, but "es" is selected.',
         select: toSelect,
-        availableOptions: ["", "en", "is", "es"],
+        availableOptions: ["", "en", "es"],
         selectedValue: "es",
       });
 
@@ -170,7 +170,7 @@ add_task(async function test_about_translations_dropdowns() {
       assertOptions({
         message: 'The "to" languages no longer suggest "en".',
         select: toSelect,
-        availableOptions: ["", "is", "es"],
+        availableOptions: ["", "es"],
         selectedValue: "es",
       });
 

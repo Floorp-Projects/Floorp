@@ -16,6 +16,7 @@ XPCOMUtils.defineLazyGetter(lazy, "console", () => {
 /**
  * @typedef {import("./TranslationsChild.sys.mjs").LanguageIdEngine} LanguageIdEngine
  * @typedef {import("./TranslationsChild.sys.mjs").TranslationsEngine} TranslationsEngine
+ * @typedef {import("./TranslationsChild.sys.mjs").SupportedLanguages} SupportedLanguages
  */
 
 /**
@@ -162,7 +163,7 @@ export class AboutTranslationsChild extends JSWindowActorChild {
   /**
    * Wire this function to the TranslationsChild.
    *
-   * @returns {Promise<Array<{ langTag: string, displayName }>>}
+   * @returns {Promise<SupportedLanguages>}
    */
   AT_getSupportedLanguages() {
     return this.#convertToContentPromise(

@@ -64,7 +64,10 @@ const VERIFY_SIGNATURES_FROM_FS = false;
  * @typedef {import("../translations").LanguageIdEngineMockedPayload} LanguageIdEngineMockedPayload
  * @typedef {import("../translations").LanguageTranslationModelFiles} LanguageTranslationModelFiles
  * @typedef {import("../translations").WasmRecord} WasmRecord
- * @typedef {import("../translations").LangTags} LangTags
+ * @typedef {import("../translations").DetectedLanguages} DetectedLanguages
+ * @typedef {import("../translations").LanguagePair} LanguagePair
+ * @typedef {import("../translations").SupportedLanguages} SupportedLanguages
+ *
  */
 
 /**
@@ -126,7 +129,7 @@ export class TranslationsParent extends JSWindowActorParent {
   /**
    * The translation engine can be mocked for testing.
    *
-   * @type {Array<{ fromLang: string, toLang: string }>}
+   * @type {LanguagePair[]>}
    */
   static #mockedLanguagePairs = null;
 
@@ -254,6 +257,9 @@ export class TranslationsParent extends JSWindowActorParent {
       }
       case "Translations:GetSupportedLanguages": {
         return this.getSupportedLanguages();
+      }
+      case "Translations:GetLanguagePairs": {
+        return this.getLanguagePairs();
       }
       case "Translations:MaybeAutoTranslate": {
         if (!lazy.autoTranslatePagePref) {
@@ -407,29 +413,80 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   /**
-   * Get the list of languages and their display names, sorted by their display names.
+   * Get the list of translation pairs supported by the translations engine.
    *
-   * @returns {Promise<Array<{ langTag: string, displayName: string }>>}
+   * @returns {Promise<Array<LanguagePair>>}
    */
-  async getSupportedLanguages() {
-    const languages = new Set();
-    const languagePairs =
-      TranslationsParent.#mockedLanguagePairs ??
-      (await this.#getTranslationModelRecords()).values();
-    for (const { fromLang } of languagePairs) {
-      languages.add(fromLang);
+  async getLanguagePairs() {
+    if (TranslationsParent.#mockedLanguagePairs) {
+      return TranslationsParent.#mockedLanguagePairs;
+    }
+    const records = await this.#getTranslationModelRecords();
+    const languagePairKeys = new Set();
+    for (const { fromLang, toLang } of records.values()) {
+      languagePairKeys.add(fromLang + toLang);
     }
 
-    const displayNames = new Services.intl.DisplayNames(undefined, {
-      type: "language",
+    const languagePairs = [];
+    for (const key of languagePairKeys) {
+      languagePairs.push({
+        fromLang: key[0] + key[1],
+        toLang: key[2] + key[3],
+      });
+    }
+
+    return languagePairs;
+  }
+
+  /**
+   * Returns all of the information needed to render dropdowns for translation
+   * language selection.
+   *
+   * @returns {Promise<SupportedLanguages>}
+   */
+  async getSupportedLanguages() {
+    const languagePairs = await this.getLanguagePairs();
+
+    /** @type {Set<string>} */
+    const fromLanguages = new Set();
+    /** @type {Set<string>} */
+    const toLanguages = new Set();
+
+    for (const { fromLang, toLang } of languagePairs) {
+      fromLanguages.add(fromLang);
+      toLanguages.add(toLang);
+    }
+
+    // Build a map of the langTag to the display name.
+    /** @type {Map<string, string>} */
+    const displayNames = new Map();
+    {
+      const dn = new Services.intl.DisplayNames(undefined, {
+        type: "language",
+      });
+
+      for (const langTagSet of [fromLanguages, toLanguages]) {
+        for (const langTag of langTagSet) {
+          if (displayNames.has(langTag)) {
+            continue;
+          }
+          displayNames.set(langTag, dn.of(langTag));
+        }
+      }
+    }
+
+    const addDisplayName = langTag => ({
+      langTag,
+      displayName: displayNames.get(langTag),
     });
 
-    return [...languages]
-      .map(langTag => ({
-        langTag,
-        displayName: displayNames.of(langTag),
-      }))
-      .sort((a, b) => a.displayName.localeCompare(b.displayName));
+    const sort = (a, b) => a.displayName.localeCompare(b.displayName);
+
+    return {
+      languagePairs,
+      fromLanguages: [...fromLanguages].map(addDisplayName).sort(sort),
+      toLanguages: [...toLanguages].map(addDisplayName).sort(sort),
+    };
   }
 
   /**
@@ -563,7 +620,9 @@ export class TranslationsParent extends JSWindowActorParent {
       }
     );
 
-    for (const record of translationModelRecords) {
+    for (const record of this.#ensureLanguagePairsHavePivots(
+      translationModelRecords
+    )) {
       this.#translationModelRecords.set(record.id, record);
     }
 
@@ -574,6 +633,79 @@ export class TranslationsParent extends JSWindowActorParent {
     );
 
     return this.#translationModelRecords;
+  }
+
+  /**
+   * This implementation assumes that every language pair has access to the
+   * pivot language. If any languages are added without a pivot language, or the
+   * pivot language is changed, then this implementation will need a more complicated
+   * language solver. This means that any UI pickers would need to be updated, and
+   * the pivot language selection would need a solver.
+   *
+   * @param {TranslationModelRecord[] | LanguagePair[]} records
+   */
+  static #ensureLanguagePairsHavePivots(records) {
+    // lang -> pivot
+    const hasToPivot = new Set();
+    // pivot -> en
+    const hasFromPivot = new Set();
+
+    const fromLangs = new Set();
+    const toLangs = new Set();
+
+    for (const { fromLang, toLang } of records) {
+      fromLangs.add(fromLang);
+      toLangs.add(toLang);
+
+      if (toLang === PIVOT_LANGUAGE) {
+        // lang -> pivot
+        hasToPivot.add(fromLang);
+      }
+      if (fromLang === PIVOT_LANGUAGE) {
+        // pivot -> en
+        hasFromPivot.add(toLang);
+      }
+    }
+
+    const fromLangsToRemove = new Set();
+    const toLangsToRemove = new Set();
+
+    for (const lang of fromLangs) {
+      if (lang === PIVOT_LANGUAGE) {
+        continue;
+      }
+      // Check for "lang -> pivot"
+      if (!hasToPivot.has(lang)) {
+        lazy.console.error(
+          `The "from" language model "${lang}" is being discarded as it doesn't have a pivot language.`
+        );
+        fromLangsToRemove.add(lang);
+      }
+    }
+
+    for (const lang of toLangs) {
+      if (lang === PIVOT_LANGUAGE) {
+        continue;
+      }
+      // Check for "pivot -> lang"
+      if (!hasFromPivot.has(lang)) {
+        lazy.console.error(
+          `The "to" language model "${lang}" is being discarded as it doesn't have a pivot language.`
+        );
+        toLangsToRemove.add(lang);
+      }
+    }
+
+    const after = records.filter(record => {
+      if (fromLangsToRemove.has(record.fromLang)) {
+        return false;
+      }
+      if (toLangsToRemove.has(record.toLang)) {
+        return false;
+      }
+      return true;
+    });
+    return after;
   }
 
   /**
@@ -786,9 +918,21 @@ export class TranslationsParent extends JSWindowActorParent {
    * @param {null | Array<{ fromLang: string, toLang: string }>} languagePairs
    */
   static mockLanguagePairs(languagePairs) {
-    TranslationsParent.#mockedLanguagePairs = languagePairs;
     if (languagePairs) {
-      lazy.console.log("Mocking language pairs", languagePairs);
+      // Apply the same pivot logic to mocked language pairs so that this behavior
+      // gets tested.
+      TranslationsParent.#mockedLanguagePairs = this.#ensureLanguagePairsHavePivots(
+        languagePairs
+      );
+    } else {
+      TranslationsParent.#mockedLanguagePairs = null;
+    }
+
+    if (languagePairs) {
+      lazy.console.log(
+        "Mocking language pairs",
+        TranslationsParent.#mockedLanguagePairs
+      );
     } else {
       lazy.console.log("Removing language pair mocks");
     }
@@ -971,14 +1115,14 @@ class TranslationsLanguageState {
     this.dispatch();
   }
 
-  /** @type {LangTags | null} */
+  /** @type {DetectedLanguages | null} */
   #detectedLanguages = null;
 
   /**
    * The TranslationsChild will detect languages and offer them up for translation.
    * The results are stored here.
    *
-   * @returns {LangTags | null}
+   * @returns {DetectedLanguages | null}
    */
   get detectedLanguages() {
     return this.#detectedLanguages;

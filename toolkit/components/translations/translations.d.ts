@@ -292,3 +292,15 @@ export interface LangTags {
   appLangTag: string,
   docLangTag: string,
 }
+
+export interface LanguagePair { fromLang: string, toLang: string };
+
+/**
+ * A structure that contains all of the information needed to render dropdowns
+ * for translation language selection.
+ */
+export interface SupportedLanguages {
+  langPairs: LanguagePair[],
+  fromLanguages: Array<{ langTag: string, displayName: string }>,
+  toLanguages: Array<{ langTag: string, displayName: string }>,
+}

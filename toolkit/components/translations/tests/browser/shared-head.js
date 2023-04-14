@@ -266,6 +266,47 @@ async function reorderingTranslator(message) {
   return [translatedDoc.body.innerHTML];
 }
 
+/**
+ * This is for tests that don't need a browser page to run.
+ */
+async function setupActorTest({
+  languagePairs,
+  prefs,
+  detectedLanguageConfidence,
+  detectedLanguageLabel,
+}) {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      // Enabled by default.
+      ["browser.translations.enable", true],
+      ["browser.translations.logLevel", "All"],
+      ...(prefs ?? []),
+    ],
+  });
+
+  if (languagePairs) {
+    TranslationsParent.mockLanguagePairs(languagePairs);
+  }
+
+  if (detectedLanguageLabel && detectedLanguageConfidence) {
+    TranslationsParent.mockLanguageIdentification(
+      detectedLanguageLabel,
+      detectedLanguageConfidence
+    );
+  }
+
+  return {
+    actor: gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getActor(
+      "Translations"
+    ),
+    cleanup() {
+      TranslationsParent.mockLanguagePairs(null);
+      TranslationsParent.mockLanguageIdentification(null, null);
+      return SpecialPowers.popPrefEnv();
+    },
+  };
+}
+
 async function loadTestPage({
   languagePairs,
   detectedLanguageConfidence,
