@@ -6,6 +6,8 @@ Support for running toolchain-building jobs via dedicated scripts
 """
 
 
+import os
+
 import taskgraph
 from mozbuild.shellutil import quote as shell_quote
 from taskgraph.util.schema import Schema, optionally_keyed_by, resolve_keyed_by
@@ -113,15 +115,6 @@ def common_toolchain(config, job, taskdesc, is_docker):
         # If the task doesn't have a docker-image, set a default
         worker.setdefault("docker-image", {"in-tree": "deb11-toolchain-build"})
 
-    # Allow the job to specify where artifacts come from, but add
-    # public/build if it's not there already.
-    artifacts = worker.setdefault("artifacts", [])
-    if not artifacts:
-        if is_docker:
-            docker_worker_add_artifacts(config, job, taskdesc)
-        else:
-            generic_worker_add_artifacts(config, job, taskdesc)
-
     if job["worker"]["os"] == "windows":
         # There were no caches on generic-worker before bug 1519472, and they cause
         # all sorts of problems with Windows toolchain tasks, disable them until
@@ -144,6 +137,15 @@ def common_toolchain(config, job, taskdesc, is_docker):
 
     attributes = taskdesc.setdefault("attributes", {})
     attributes["toolchain-artifact"] = run.pop("toolchain-artifact")
+    toolchain_artifact = attributes["toolchain-artifact"]
+    if not toolchain_artifact.startswith("public/build/"):
+        if "artifact_prefix" in attributes:
+            raise Exception(
+                "Toolchain {} has an artifact_prefix attribute. That is not"
+                " allowed on toolchain tasks.".format(taskdesc["label"])
+            )
+        attributes["artifact_prefix"] = os.path.dirname(toolchain_artifact)
+
     resolve_keyed_by(
         run,
         "toolchain-alias",
@@ -155,6 +157,15 @@ def common_toolchain(config, job, taskdesc, is_docker):
         attributes["toolchain-alias"] = alias
     if "toolchain-env" in run:
         attributes["toolchain-env"] = run.pop("toolchain-env")
+
+    # Allow the job to specify where artifacts come from, but add
+    # public/build if it's not there already.
+    artifacts = worker.setdefault("artifacts", [])
+    if not artifacts:
+        if is_docker:
+            docker_worker_add_artifacts(config, job, taskdesc)
+        else:
+            generic_worker_add_artifacts(config, job, taskdesc)
 
     digest_data = get_digest_data(config, run, taskdesc)
 

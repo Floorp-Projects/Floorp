@@ -345,8 +345,6 @@ nsis:
 
 win64-vs2017:
     description: "VS 2017"
-    attributes:
-        artifact_prefix: project/gecko/vs
     treeherder:
         symbol: TW64(msvc2017)
     worker:
@@ -363,8 +361,6 @@ win64-vs2017:
 
 win64-vs2019:
     description: "VS 2019"
-    attributes:
-        artifact_prefix: project/gecko/vs
     treeherder:
         symbol: TW64(msvc2019)
     worker:
