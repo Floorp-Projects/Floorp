@@ -14,10 +14,12 @@ const {
   "resource:///modules/SearchSERPTelemetry.sys.mjs"
 );
 
+// Note: example.org is used for the SERP page, and example.com is used to serve
+// the ads. This is done to simulate different domains like the real servers.
 const TEST_PROVIDER_INFO = [
   {
     telemetryId: "example",
-    searchPageRegexp: /^http:\/\/mochi.test:.+\/browser\/browser\/components\/search\/test\/browser\/searchTelemetry(?:Ad)?.html/,
+    searchPageRegexp: /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetry(?:Ad)?.html/,
     queryParamName: "s",
     codeParamName: "abc",
     taggedCodes: ["ff"],
@@ -26,7 +28,7 @@ const TEST_PROVIDER_INFO = [
   },
   {
     telemetryId: "example-data-attributes",
-    searchPageRegexp: /^http:\/\/mochi.test:.+\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd_dataAttributes(?:_none|_href)?.html/,
+    searchPageRegexp: /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd_dataAttributes(?:_none|_href)?.html/,
     queryParamName: "s",
     codeParamName: "abc",
     taggedCodes: ["ff"],
@@ -35,7 +37,7 @@ const TEST_PROVIDER_INFO = [
   },
   {
     telemetryId: "slow-page-load",
-    searchPageRegexp: /^http:\/\/mochi.test:.+\/browser\/browser\/components\/search\/test\/browser\/slow_loading_page_with_ads(_on_load_event)?.html/,
+    searchPageRegexp: /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/slow_loading_page_with_ads(_on_load_event)?.html/,
     queryParamName: "s",
     codeParamName: "abc",
     taggedCodes: ["ff"],
@@ -44,10 +46,9 @@ const TEST_PROVIDER_INFO = [
   },
 ];
 
-function getPageUrl(useExample = false, useAdPage = false) {
-  let server = useExample ? "example.com" : "mochi.test:8888";
+function getPageUrl(useAdPage = false) {
   let page = useAdPage ? "searchTelemetryAd.html" : "searchTelemetry.html";
-  return `http://${server}/browser/browser/components/search/test/browser/${page}`;
+  return `https://example.org/browser/browser/components/search/test/browser/${page}`;
 }
 
 function getSERPUrl(page, organic = false) {
@@ -197,7 +198,7 @@ add_task(async function test_track_ad() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    getSERPUrl(getPageUrl(false, true))
+    getSERPUrl(getPageUrl(true))
   );
 
   await assertSearchSourcesTelemetry(
@@ -228,7 +229,7 @@ add_task(async function test_track_ad_on_data_attributes() {
   let url =
     getRootDirectory(gTestPath).replace(
       "chrome://mochitests/content",
-      "http://mochi.test:8888"
+      "https://example.org"
     ) + "searchTelemetryAd_dataAttributes.html";
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
@@ -268,7 +269,7 @@ add_task(async function test_track_ad_on_data_attributes_and_hrefs() {
   let url =
     getRootDirectory(gTestPath).replace(
       "chrome://mochitests/content",
-      "http://mochi.test:8888"
+      "https://example.org"
     ) + "searchTelemetryAd_dataAttributes_href.html";
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
@@ -308,7 +309,7 @@ add_task(async function test_track_no_ad_on_data_attributes_and_hrefs() {
   let url =
     getRootDirectory(gTestPath).replace(
       "chrome://mochitests/content",
-      "http://mochi.test:8888"
+      "https://example.org"
     ) + "searchTelemetryAd_dataAttributes_none.html";
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
@@ -345,7 +346,7 @@ add_task(async function test_track_ad_on_DOMContentLoaded() {
   let url =
     getRootDirectory(gTestPath).replace(
       "chrome://mochitests/content",
-      "http://mochi.test:8888"
+      "https://example.org"
     ) + "slow_loading_page_with_ads.html";
 
   let observeAdPreviouslyRecorded = TestUtils.consoleMessageObserved(msg => {
@@ -394,7 +395,7 @@ add_task(async function test_track_ad_on_load_event() {
   let url =
     getRootDirectory(gTestPath).replace(
       "chrome://mochitests/content",
-      "http://mochi.test:8888"
+      "https://example.org"
     ) + "slow_loading_page_with_ads_on_load_event.html";
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
@@ -429,7 +430,7 @@ add_task(async function test_track_ad_organic() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    getSERPUrl(getPageUrl(false, true), true)
+    getSERPUrl(getPageUrl(true), true)
   );
 
   await assertSearchSourcesTelemetry(
@@ -459,7 +460,7 @@ add_task(async function test_track_ad_new_window() {
 
   let win = await BrowserTestUtils.openNewBrowserWindow();
 
-  let url = getSERPUrl(getPageUrl(false, true));
+  let url = getSERPUrl(getPageUrl(true));
   BrowserTestUtils.loadURIString(win.gBrowser.selectedBrowser, url);
   await BrowserTestUtils.browserLoaded(
     win.gBrowser.selectedBrowser,
@@ -498,13 +499,13 @@ add_task(async function test_track_ad_pages_without_ads() {
   tabs.push(
     await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
-      getSERPUrl(getPageUrl(false, false))
+      getSERPUrl(getPageUrl(false))
     )
   );
   tabs.push(
     await BrowserTestUtils.openNewForegroundTab(
       gBrowser,
-      getSERPUrl(getPageUrl(false, true))
+      getSERPUrl(getPageUrl(true))
     )
   );
 
@@ -553,7 +554,7 @@ async function track_ad_click(testOrganic) {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    getSERPUrl(getPageUrl(false, true), testOrganic)
+    getSERPUrl(getPageUrl(true), testOrganic)
   );
 
   await assertSearchSourcesTelemetry(
@@ -712,7 +713,7 @@ add_task(async function test_track_ad_click_organic() {
 
 add_task(async function test_track_ad_click_with_location_change_other_tab() {
   resetTelemetry();
-  const url = getSERPUrl(getPageUrl(false, true));
+  const url = getSERPUrl(getPageUrl(true));
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
   await assertSearchSourcesTelemetry(
