@@ -1962,6 +1962,7 @@ bool HasNativeElementPure(JSContext* cx, NativeObject* obj, int32_t index,
 
 // Fast path for setting/adding a plain object property. This is the common case
 // for megamorphic SetProp/SetElem.
+template <bool UseCache>
 static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
                                            Handle<PlainObject*> obj,
                                            HandleValue keyVal,
@@ -1979,21 +1980,25 @@ static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
   MegamorphicSetPropCache& cache = cx->caches().megamorphicSetPropCache;
 
 #ifdef DEBUG
-  MegamorphicSetPropCache::Entry* entry;
-  if (cache.lookup(receiverShape, key, &entry)) {
-    if (entry->afterShape() != nullptr) {  // AddProp
-      NativeObject* holder = nullptr;
-      PropertyResult prop;
-      MOZ_ASSERT(LookupPropertyPure(cx, obj, key, &holder, &prop));
-      MOZ_ASSERT(obj != holder);
-      MOZ_ASSERT_IF(prop.isFound(), prop.isNativeProperty() &&
-                                        prop.propertyInfo().isDataProperty() &&
-                                        prop.propertyInfo().writable());
-    } else {  // SetProp
-      mozilla::Maybe<PropertyInfo> prop = obj->lookupPure(key);
-      MOZ_ASSERT(prop.isSome());
-      MOZ_ASSERT(prop->isDataProperty());
-      MOZ_ASSERT(obj->getTaggedSlotOffset(prop->slot()) == entry->slotOffset());
+  if constexpr (UseCache) {
+    MegamorphicSetPropCache::Entry* entry;
+    if (cache.lookup(receiverShape, key, &entry)) {
+      if (entry->afterShape() != nullptr) {  // AddProp
+        NativeObject* holder = nullptr;
+        PropertyResult prop;
+        MOZ_ASSERT(LookupPropertyPure(cx, obj, key, &holder, &prop));
+        MOZ_ASSERT(obj != holder);
+        MOZ_ASSERT_IF(prop.isFound(),
+                      prop.isNativeProperty() &&
+                          prop.propertyInfo().isDataProperty() &&
+                          prop.propertyInfo().writable());
+      } else {  // SetProp
+        mozilla::Maybe<PropertyInfo> prop = obj->lookupPure(key);
+        MOZ_ASSERT(prop.isSome());
+        MOZ_ASSERT(prop->isDataProperty());
+        MOZ_ASSERT(obj->getTaggedSlotOffset(prop->slot()) ==
+                   entry->slotOffset());
+      }
     }
   }
 #endif
@@ -2008,8 +2013,10 @@ static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
     obj->setSlot(prop.slot(), value);
     *optimized = true;
 
-    TaggedSlotOffset offset = obj->getTaggedSlotOffset(prop.slot());
-    cache.set(receiverShape, nullptr, key, offset);
+    if constexpr (UseCache) {
+      TaggedSlotOffset offset = obj->getTaggedSlotOffset(prop.slot());
+      cache.set(receiverShape, nullptr, key, offset, 0);
+    }
     return true;
   }
 
@@ -2062,12 +2069,14 @@ static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
   size_t numDynamic = obj->numDynamicSlots();
   bool res = AddDataPropertyToPlainObject(cx, obj, keyRoot, value, &resultSlot);
 
-  if (res && obj->shape()->isShared() &&
-      resultSlot < SharedPropMap::MaxPropsForNonDictionary &&
-      (resultSlot < obj->numFixedSlots() ||
-       (resultSlot - obj->numFixedSlots()) < numDynamic)) {
-    TaggedSlotOffset offset = obj->getTaggedSlotOffset(resultSlot);
-    cache.set(receiverShapeRoot, obj->shape(), keyRoot, offset);
+  if constexpr (UseCache) {
+    if (res && obj->shape()->isShared() &&
+        resultSlot < SharedPropMap::MaxPropsForNonDictionary &&
+        (resultSlot < obj->numFixedSlots() ||
+         (resultSlot - obj->numFixedSlots()) < numDynamic)) {
+      TaggedSlotOffset offset = obj->getTaggedSlotOffset(resultSlot);
+      cache.set(receiverShapeRoot, obj->shape(), keyRoot, offset);
+    }
   }
 
   return res;
@@ -2078,8 +2087,24 @@ bool SetElementMegamorphic(JSContext* cx, HandleObject obj, HandleValue index,
                            bool strict) {
   if (obj->is<PlainObject>()) {
     bool optimized = false;
-    if (!TryAddOrSetPlainObjectProperty(cx, obj.as<PlainObject>(), index, value,
-                                        &optimized)) {
+    if (!TryAddOrSetPlainObjectProperty<false>(cx, obj.as<PlainObject>(), index,
+                                               value, &optimized)) {
+      return false;
+    }
+    if (optimized) {
+      return true;
+    }
+  }
+  return SetObjectElementWithReceiver(cx, obj, index, value, receiver, strict);
+}
+
+bool SetElementMegamorphicCached(JSContext* cx, HandleObject obj,
+                                 HandleValue index, HandleValue value,
+                                 HandleValue receiver, bool strict) {
+  if (obj->is<PlainObject>()) {
+    bool optimized = false;
+    if (!TryAddOrSetPlainObjectProperty<true>(cx, obj.as<PlainObject>(), index,
+                                              value, &optimized)) {
       return false;
     }
     if (optimized) {

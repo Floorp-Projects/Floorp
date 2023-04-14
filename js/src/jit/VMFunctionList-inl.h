@@ -252,6 +252,7 @@ namespace jit {
   _(SameValue, js::SameValue)                                                  \
   _(SetArrayLength, js::jit::SetArrayLength)                                   \
   _(SetElementMegamorphic, js::jit::SetElementMegamorphic)                     \
+  _(SetElementMegamorphicCached, js::jit::SetElementMegamorphicCached)         \
   _(SetElementSuper, js::SetElementSuper)                                      \
   _(SetFunctionName, js::SetFunctionName)                                      \
   _(SetIntrinsicOperation, js::SetIntrinsicOperation)                          \
