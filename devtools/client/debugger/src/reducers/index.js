@@ -15,7 +15,6 @@ import sourcesContent, { initialSourcesContentState } from "./sources-content";
 import tabs, { initialTabState } from "./tabs";
 import breakpoints, { initialBreakpointsState } from "./breakpoints";
 import pendingBreakpoints from "./pending-breakpoints";
-import asyncRequests from "./async-requests";
 import pause, { initialPauseState } from "./pause";
 import ui, { initialUIState } from "./ui";
 import fileSearch, { initialFileSearchState } from "./file-search";
@@ -49,7 +48,6 @@ export function initialState() {
     tabs: initialTabState(),
     breakpoints: initialBreakpointsState(),
     pendingBreakpoints: {},
-    asyncRequests: [],
     pause: initialPauseState(),
     ui: initialUIState(),
     fileSearch: initialFileSearchState(),
@@ -74,7 +72,6 @@ export default {
   tabs,
   breakpoints,
   pendingBreakpoints,
-  asyncRequests,
   pause,
   ui,
   fileSearch,
