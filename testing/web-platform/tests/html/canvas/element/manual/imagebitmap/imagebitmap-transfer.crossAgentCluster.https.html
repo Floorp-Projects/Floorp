@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src='/resources/testharness.js'></script>
+  <script src='/resources/testharnessreport.js'></script>
+  <script src='/common/get-host-info.sub.js'></script>
+</head>
+<body>
+<script>
+const HELPER = '/html/canvas/element/manual/imagebitmap/imagebitmap-transfer.crossAgentCluster.helper.html';
+const CROSSORIGIN_BASE = get_host_info().HTTPS_NOTSAMESITE_ORIGIN;
+const CROSSORIGIN_HELPER = CROSSORIGIN_BASE + HELPER;
+
+promise_test(async () => {
+  const target = (await appendIframe(CROSSORIGIN_HELPER)).contentWindow;
+  let img = createImageBitmap(10, 10)
+  assert_false(await canTransferImageBitmap(target, img));
+}, 'Verify ImageBitmaps cannot be transferred accross the different agent clusters');
+
+function appendIframe(src) {
+  const frame = document.createElement('iframe');
+  document.body.appendChild(frame);
+  frame.src = src;
+  return new Promise(resolve => frame.onload = () => resolve(frame));
+};
+
+function createImageBitmap(w, h) {
+  let canvas = new OffscreenCanvas(w, h);
+  let ctx = canvas.getContext('2d');
+  ctx.fillStyle = 'rgba(50, 100, 150, 255)';
+  ctx.fillRect(0, 0, w, h);
+  return canvas.transferToImageBitmap();
+}
+
+function canTransferImageBitmap(target, image) {
+  target.postMessage(image, '*', [image]);
+  target.postMessage({'id': image.width}, '*');
+  return new Promise(resolve => window.onmessage = e => {
+    resolve(e.data == 'RECEIVED');
+  });
+};
+</script>
+</body>
+</html>
