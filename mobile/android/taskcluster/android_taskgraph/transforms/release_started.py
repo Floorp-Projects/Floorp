@@ -68,6 +68,8 @@ def add_github_link(config, tasks):
     version = MobileVersion.parse(config.params["version"])
     repo = get_repository(".")
     git_tags = repo.run("tag", "-l", TAG_PREFIX + "*").splitlines()
+    if not git_tags:
+        raise Exception("Git tags not found! Try running: git pull <remote> --tags")
     previous_version = get_previous_tag_version(version, git_tags)
     current_revision = config.params["head_rev"]
     repo_url = config.params["base_repository"]
