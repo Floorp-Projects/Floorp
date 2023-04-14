@@ -30,11 +30,30 @@ const QUERYTYPE = {
   AUTOFILL_ADAPTIVE: 3,
 };
 
+// Constants to support an alternative frecency algorithm.
+const ORIGIN_USE_ALT_FRECENCY = Services.prefs.getBoolPref(
+  "places.frecency.origins.alternative.featureGate",
+  false
+);
+const ORIGIN_FRECENCY_FIELD = ORIGIN_USE_ALT_FRECENCY
+  ? "alt_frecency"
+  : "frecency";
+
 // `WITH` clause for the autofill queries.  autofill_frecency_threshold.value is
 // the mean of all moz_origins.frecency values + stddevMultiplier * one standard
 // deviation.  This is inlined directly in the SQL (as opposed to being a custom
 // Sqlite function for example) in order to be as efficient as possible.
-const SQL_AUTOFILL_WITH = `
+const SQL_AUTOFILL_WITH = ORIGIN_USE_ALT_FRECENCY
+  ? `
+    WITH
+    autofill_frecency_threshold(value) AS (
+      SELECT IFNULL(
+        (SELECT value FROM moz_meta WHERE key = 'origin_alt_frecency_threshold'),
+        0.0
+      )
+    )
+    `
+  : `
     WITH
     frecency_stats(count, sum, squares) AS (
       SELECT
@@ -82,12 +101,14 @@ function originQuery(where) {
       id,
       prefix,
       first_value(prefix) OVER (
-        PARTITION BY host ORDER BY frecency DESC, prefix = "https://" DESC, id DESC
+        PARTITION BY host ORDER BY ${ORIGIN_FRECENCY_FIELD} DESC, prefix = "https://" DESC, id DESC
       ),
       host,
       fixup_url(host),
-      TOTAL(frecency) OVER (PARTITION BY fixup_url(host)),
-      frecency,
+      IFNULL(${
+        ORIGIN_USE_ALT_FRECENCY ? "avg(alt_frecency)" : "total(frecency)"
+      } OVER (PARTITION BY fixup_url(host)), 0.0),
+      ${ORIGIN_FRECENCY_FIELD},
       MAX(EXISTS(
         SELECT 1 FROM moz_places WHERE origin_id = o.id AND foreign_count > 0
       )) OVER (PARTITION BY fixup_url(host)),
@@ -448,7 +469,10 @@ class ProviderAutofill extends UrlbarProvider {
     let db = await lazy.PlacesUtils.promiseLargeCacheDBConnection();
     let conditions = [];
     // Pay attention to the order of params, since they are not named.
-    let params = [lazy.UrlbarPrefs.get("autoFill.stddevMultiplier"), ...hosts];
+    let params = [...hosts];
+    if (!ORIGIN_USE_ALT_FRECENCY) {
+      params.unshift(lazy.UrlbarPrefs.get("autoFill.stddevMultiplier"));
+    }
     let sources = queryContext.sources;
     if (
       sources.includes(UrlbarUtils.RESULT_SOURCE.HISTORY) &&
@@ -469,12 +493,14 @@ class ProviderAutofill extends UrlbarProvider {
           id,
           prefix,
           first_value(prefix) OVER (
-            PARTITION BY host ORDER BY frecency DESC, prefix = "https://" DESC, id DESC
+            PARTITION BY host ORDER BY ${ORIGIN_FRECENCY_FIELD} DESC, prefix = "https://" DESC, id DESC
           ),
           host,
           fixup_url(host),
-          TOTAL(frecency) OVER (PARTITION BY fixup_url(host)),
-          frecency,
+          IFNULL(${
+            ORIGIN_USE_ALT_FRECENCY ? "avg(alt_frecency)" : "total(frecency)"
+          } OVER (PARTITION BY fixup_url(host)), 0.0),
+          ${ORIGIN_FRECENCY_FIELD},
           MAX(EXISTS(
             SELECT 1 FROM moz_places WHERE origin_id = o.id AND foreign_count > 0
           )) OVER (PARTITION BY fixup_url(host)),
@@ -518,8 +544,10 @@ class ProviderAutofill extends UrlbarProvider {
     let opts = {
       query_type: QUERYTYPE.AUTOFILL_ORIGIN,
       searchString: searchStr.toLowerCase(),
-      stddevMultiplier: lazy.UrlbarPrefs.get("autoFill.stddevMultiplier"),
     };
+    if (!ORIGIN_USE_ALT_FRECENCY) {
+      opts.stddevMultiplier = lazy.UrlbarPrefs.get("autoFill.stddevMultiplier");
+    }
     if (this._strippedPrefix) {
       opts.prefix = this._strippedPrefix;
     }
