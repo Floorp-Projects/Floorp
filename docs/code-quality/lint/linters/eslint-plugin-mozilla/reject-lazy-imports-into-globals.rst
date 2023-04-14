@@ -23,6 +23,8 @@ Examples of incorrect code for this rule:
     XPCOMUtils.defineLazyModuleGetter(window, "foo", "foo.jsm");
     XPCOMUtils.defineLazyGetter(globalThis, "foo", () => {});
     XPCOMUtils.defineLazyGetter(window, "foo", () => {});
+    ChromeUtils.defineLazyGetter(globalThis, "foo", () => {});
+    ChromeUtils.defineLazyGetter(window, "foo", () => {});
 
 Examples of correct code for this rule:
 ---------------------------------------
@@ -31,3 +33,4 @@ Examples of correct code for this rule:
 
     const lazy = {};
     XPCOMUtils.defineLazyGetter(lazy, "foo", () => {});
+    ChromeUtils.defineLazyGetter(lazy, "bar", () => {});
