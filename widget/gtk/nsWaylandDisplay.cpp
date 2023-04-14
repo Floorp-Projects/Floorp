@@ -18,6 +18,7 @@
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/Sprintf.h"
 #include "WidgetUtilsGtk.h"
+#include "nsGtkKeyUtils.h"
 
 namespace mozilla::widget {
 
@@ -196,11 +197,18 @@ static void global_registry_handler(void* data, wl_registry* registry,
     auto* activation = WaylandRegistryBind<xdg_activation_v1>(
         registry, id, &xdg_activation_v1_interface, 1);
     display->SetXdgActivation(activation);
+    // Install keyboard handlers for main thread only
+  } else if (NS_IsMainThread() && strcmp(interface, "wl_seat") == 0) {
+    auto* seat =
+        WaylandRegistryBind<wl_seat>(registry, id, &wl_seat_interface, 1);
+    KeymapWrapper::SetSeat(seat, id);
   }
 }
 
 static void global_registry_remover(void* data, wl_registry* registry,
-                                    uint32_t id) {}
+                                    uint32_t id) {
+  KeymapWrapper::ClearSeat(id);
+}
 
 static const struct wl_registry_listener registry_listener = {
     global_registry_handler, global_registry_remover};

@@ -63,6 +63,12 @@ Time KeymapWrapper::sLastRepeatableKeyTime = 0;
 KeymapWrapper::RepeatState KeymapWrapper::sRepeatState =
     KeymapWrapper::NOT_PRESSED;
 
+#ifdef MOZ_WAYLAND
+wl_seat* KeymapWrapper::sSeat = nullptr;
+int KeymapWrapper::sSeatID = -1;
+wl_keyboard* KeymapWrapper::sKeyboard = nullptr;
+#endif
+
 static const char* GetBoolName(bool aBool) { return aBool ? "TRUE" : "FALSE"; }
 
 static const char* GetStatusName(nsEventStatus aStatus) {
@@ -326,17 +332,19 @@ KeymapWrapper::ModifierKey* KeymapWrapper::GetModifierKey(
 
 /* static */
 KeymapWrapper* KeymapWrapper::GetInstance() {
-  if (sInstance) {
+  if (!sInstance) {
+    sInstance = new KeymapWrapper();
     sInstance->Init();
-    return sInstance;
   }
-
-  sInstance = new KeymapWrapper();
   return sInstance;
 }
 
 #ifdef MOZ_WAYLAND
 void KeymapWrapper::EnsureInstance() { (void)GetInstance(); }
+
+void KeymapWrapper::InitBySystemSettingsWayland() {
+  MOZ_UNUSED(WaylandDisplayGet());
+}
 #endif
 
 /* static */
@@ -363,8 +371,6 @@ KeymapWrapper::KeymapWrapper()
     InitXKBExtension();
   }
 #endif
-
-  Init();
 }
 
 void KeymapWrapper::Init() {
@@ -760,14 +766,13 @@ static const struct wl_keyboard_listener keyboard_listener = {
 
 static void seat_handle_capabilities(void* data, struct wl_seat* seat,
                                      unsigned int caps) {
-  static wl_keyboard* keyboard = nullptr;
-
+  wl_keyboard* keyboard = KeymapWrapper::GetKeyboard();
   if ((caps & WL_SEAT_CAPABILITY_KEYBOARD) && !keyboard) {
     keyboard = wl_seat_get_keyboard(seat);
     wl_keyboard_add_listener(keyboard, &keyboard_listener, nullptr);
+    KeymapWrapper::SetKeyboard(keyboard);
   } else if (!(caps & WL_SEAT_CAPABILITY_KEYBOARD) && keyboard) {
-    wl_keyboard_destroy(keyboard);
-    keyboard = nullptr;
+    KeymapWrapper::ClearKeyboard();
   }
 }
 
@@ -775,29 +780,6 @@ static const struct wl_seat_listener seat_listener = {
     seat_handle_capabilities,
 };
 
-static void gdk_registry_handle_global(void* data, struct wl_registry* registry,
-                                       uint32_t id, const char* interface,
-                                       uint32_t version) {
-  if (strcmp(interface, "wl_seat") == 0) {
-    auto* seat =
-        WaylandRegistryBind<wl_seat>(registry, id, &wl_seat_interface, 1);
-    KeymapWrapper::SetSeat(seat);
-    wl_seat_add_listener(seat, &seat_listener, data);
-  }
-}
-
-static void gdk_registry_handle_global_remove(void* data,
-                                              struct wl_registry* registry,
-                                              uint32_t id) {}
-
-static const struct wl_registry_listener keyboard_registry_listener = {
-    gdk_registry_handle_global, gdk_registry_handle_global_remove};
-
-void KeymapWrapper::InitBySystemSettingsWayland() {
-  wl_display* display = WaylandDisplayGetWLDisplay();
-  wl_registry_add_listener(wl_display_get_registry(display),
-                           &keyboard_registry_listener, this);
-}
 #endif
 
 KeymapWrapper::~KeymapWrapper() {
@@ -2473,14 +2455,33 @@ void KeymapWrapper::GetFocusInfo(wl_surface** aFocusSurface,
   *aFocusSerial = keymapWrapper->mFocusSerial;
 }
 
-void KeymapWrapper::SetSeat(wl_seat* aSeat) {
-  KeymapWrapper* keymapWrapper = KeymapWrapper::GetInstance();
-  keymapWrapper->mSeat = aSeat;
+void KeymapWrapper::SetSeat(wl_seat* aSeat, int aId) {
+  sSeat = aSeat;
+  sSeatID = aId;
+  wl_seat_add_listener(aSeat, &seat_listener, nullptr);
 }
 
-wl_seat* KeymapWrapper::GetSeat() {
-  KeymapWrapper* keymapWrapper = KeymapWrapper::GetInstance();
-  return keymapWrapper->mSeat;
+void KeymapWrapper::ClearSeat(int aId) {
+  if (sSeatID == aId) {
+    ClearKeyboard();
+    sSeat = nullptr;
+    sSeatID = -1;
+  }
+}
+
+wl_seat* KeymapWrapper::GetSeat() { return sSeat; }
+
+void KeymapWrapper::SetKeyboard(wl_keyboard* aKeyboard) {
+  sKeyboard = aKeyboard;
+}
+
+wl_keyboard* KeymapWrapper::GetKeyboard() { return sKeyboard; }
+
+void KeymapWrapper::ClearKeyboard() {
+  if (sKeyboard) {
+    wl_keyboard_destroy(sKeyboard);
+    sKeyboard = nullptr;
+  }
 }
 #endif
 
