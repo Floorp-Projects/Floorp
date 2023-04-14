@@ -9789,6 +9789,21 @@ places:
     record_in_processes:
       - main
 
+  previousday_visits:
+    bug_numbers:
+      - 1824380
+    description: >
+      Number of history entries for the previous day.
+    expires: never
+    kind: uint
+    notification_emails:
+      - firefox-view-engineers@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
 firstStartup:
   statusCode:
     bug_numbers:
