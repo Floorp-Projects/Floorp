@@ -1064,7 +1064,7 @@ export class FeatureCallout {
         for (const name of FeatureCallout.themePropNames) {
           this._setThemeVariable(
             `--fc-${name}-${type}`,
-            scheme?.[name] || this.theme.all[name]
+            scheme?.[name] || this.theme.all?.[name]
           );
         }
       }
