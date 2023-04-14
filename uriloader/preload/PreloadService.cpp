@@ -72,10 +72,11 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
     return nullptr;
   }
 
-  nsAutoString as, charset, crossOrigin, integrity, referrerPolicy, rel, srcset,
+  nsAutoString as, charset, crossOrigin, integrity, referrerPolicy, srcset,
       sizes, type, url;
 
   nsCOMPtr<nsIURI> uri = aLinkElement->GetURI();
+  aLinkElement->GetAs(as);
   aLinkElement->GetCharset(charset);
   aLinkElement->GetImageSrcset(srcset);
   aLinkElement->GetImageSizes(sizes);
@@ -83,15 +84,7 @@ already_AddRefed<PreloaderBase> PreloadService::PreloadLinkElement(
   aLinkElement->GetCrossOrigin(crossOrigin);
   aLinkElement->GetIntegrity(integrity);
   aLinkElement->GetReferrerPolicy(referrerPolicy);
-  aLinkElement->GetRel(rel);
-
-  if (rel.LowerCaseEqualsASCII("modulepreload")) {
-    as = u"script"_ns;
-    type = u"module"_ns;
-  } else {
-    aLinkElement->GetAs(as);
-    aLinkElement->GetType(type);
-  }
+  aLinkElement->GetType(type);
 
   auto result = PreloadOrCoalesce(uri, url, aPolicyType, as, type, charset,
                                   srcset, sizes, integrity, crossOrigin,
