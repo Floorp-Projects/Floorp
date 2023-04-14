@@ -63,12 +63,6 @@ the environment's terminal information when asked. Does its stated purpose and
 no more.
 """
 
-[[audits.bytecode-alliance.audits.base64]]
-who = "Pat Hickey <phickey@fastly.com>"
-criteria = "safe-to-deploy"
-version = "0.21.0"
-notes = "This crate has no dependencies, no build.rs, and contains no unsafe code."
-
 [[audits.bytecode-alliance.audits.block-buffer]]
 who = "Benjamin Bouvier <public@benj.me>"
 criteria = "safe-to-deploy"

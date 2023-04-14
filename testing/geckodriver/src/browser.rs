@@ -391,8 +391,6 @@ mod tests {
     use super::set_prefs;
     use crate::browser::read_marionette_port;
     use crate::capabilities::{FirefoxOptions, ProfileType};
-    use base64::prelude::BASE64_STANDARD;
-    use base64::Engine;
     use mozprofile::preferences::{Pref, PrefValue};
     use mozprofile::profile::Profile;
     use serde_json::{Map, Value};
@@ -405,7 +403,7 @@ mod tests {
         let mut profile_data = Vec::with_capacity(1024);
         let mut profile = File::open("src/tests/profile.zip").unwrap();
         profile.read_to_end(&mut profile_data).unwrap();
-        Value::String(BASE64_STANDARD.encode(&profile_data))
+        Value::String(base64::encode(&profile_data))
     }
 
     // This is not a pretty test, mostly due to the nature of

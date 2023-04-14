@@ -4,28 +4,37 @@ use std::path::PathBuf;
 use std::process;
 use std::str::FromStr;
 
-use base64::{alphabet, engine, read, write};
+use base64::{read, write};
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
-enum Alphabet {
+enum CharacterSet {
     Standard,
     UrlSafe,
 }
 
-impl Default for Alphabet {
+impl Default for CharacterSet {
     fn default() -> Self {
-        Self::Standard
+        CharacterSet::Standard
     }
 }
 
-impl FromStr for Alphabet {
+impl Into<base64::Config> for CharacterSet {
+    fn into(self) -> base64::Config {
+        match self {
+            CharacterSet::Standard => base64::STANDARD,
+            CharacterSet::UrlSafe => base64::URL_SAFE,
+        }
+    }
+}
+
+impl FromStr for CharacterSet {
     type Err = String;
-    fn from_str(s: &str) -> Result<Self, String> {
+    fn from_str(s: &str) -> Result<CharacterSet, String> {
         match s {
-            "standard" => Ok(Self::Standard),
-            "urlsafe" => Ok(Self::UrlSafe),
-            _ => Err(format!("alphabet '{}' unrecognized", s)),
+            "standard" => Ok(CharacterSet::Standard),
+            "urlsafe" => Ok(CharacterSet::UrlSafe),
+            _ => Err(format!("charset '{}' unrecognized", s)),
         }
     }
 }
@@ -36,10 +45,10 @@ struct Opt {
     /// decode data
     #[structopt(short = "d", long = "decode")]
     decode: bool,
-    /// The alphabet to choose. Defaults to the standard base64 alphabet.
-    /// Supported alphabets include "standard" and "urlsafe".
-    #[structopt(long = "alphabet")]
-    alphabet: Option<Alphabet>,
+    /// The character set to choose. Defaults to the standard base64 character set.
+    /// Supported character sets include "standard" and "urlsafe".
+    #[structopt(long = "charset")]
+    charset: Option<CharacterSet>,
     /// The file to encode/decode.
     #[structopt(parse(from_os_str))]
     file: Option<PathBuf>,
@@ -59,23 +68,14 @@ fn main() {
         }
         Some(f) => Box::new(File::open(f).unwrap()),
     };
-
-    let alphabet = opt.alphabet.unwrap_or_default();
-    let engine = engine::GeneralPurpose::new(
-        &match alphabet {
-            Alphabet::Standard => alphabet::STANDARD,
-            Alphabet::UrlSafe => alphabet::URL_SAFE,
-        },
-        engine::general_purpose::PAD,
-    );
-
+    let config = opt.charset.unwrap_or_default().into();
     let stdout = io::stdout();
     let mut stdout = stdout.lock();
     let r = if opt.decode {
-        let mut decoder = read::DecoderReader::new(&mut input, &engine);
+        let mut decoder = read::DecoderReader::new(&mut input, config);
         io::copy(&mut decoder, &mut stdout)
     } else {
-        let mut encoder = write::EncoderWriter::new(&mut stdout, &engine);
+        let mut encoder = write::EncoderWriter::new(&mut stdout, config);
         io::copy(&mut input, &mut encoder)
     };
     if let Err(e) = r {
