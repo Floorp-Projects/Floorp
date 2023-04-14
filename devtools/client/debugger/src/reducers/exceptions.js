@@ -9,7 +9,9 @@
 
 export function initialExceptionsState() {
   return {
-    exceptions: {},
+    // Store exception objects created by actions/exceptions.js's addExceptionFromResources()
+    // This is keyed by source actor id, and values are arrays of exception objects.
+    mutableExceptionsMap: new Map(),
   };
 }
 
@@ -23,24 +25,21 @@ function update(state = initialExceptionsState(), action) {
 
 function updateExceptions(state, action) {
   const { exception } = action;
-  const sourceActorId = exception.sourceActorId;
+  const { sourceActorId } = exception;
 
-  if (state.exceptions[sourceActorId]) {
-    const sourceExceptions = state.exceptions[sourceActorId];
-    return {
-      ...state,
-      exceptions: {
-        ...state.exceptions,
-        [sourceActorId]: [...sourceExceptions, exception],
-      },
-    };
+  let exceptions = state.mutableExceptionsMap.get(sourceActorId);
+  if (!exceptions) {
+    exceptions = [];
+    state.mutableExceptionsMap.set(sourceActorId, exceptions);
   }
+
+  // As these arrays are only used by getSelectedSourceExceptions selector method,
+  // which coalesce multiple arrays and always return new array instance,
+  // it isn't important to clone these array in case of modification.
+  exceptions.push(exception);
+
   return {
     ...state,
-    exceptions: {
-      ...state.exceptions,
-      [sourceActorId]: [exception],
-    },
   };
 }
 
