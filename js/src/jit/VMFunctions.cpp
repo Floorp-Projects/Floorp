@@ -2071,11 +2071,14 @@ static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
 
   if constexpr (UseCache) {
     if (res && obj->shape()->isShared() &&
-        resultSlot < SharedPropMap::MaxPropsForNonDictionary &&
-        (resultSlot < obj->numFixedSlots() ||
-         (resultSlot - obj->numFixedSlots()) < numDynamic)) {
+        resultSlot < SharedPropMap::MaxPropsForNonDictionary) {
       TaggedSlotOffset offset = obj->getTaggedSlotOffset(resultSlot);
-      cache.set(receiverShapeRoot, obj->shape(), keyRoot, offset);
+      uint32_t newCapacity = 0;
+      if (!(resultSlot < obj->numFixedSlots() ||
+            (resultSlot - obj->numFixedSlots()) < numDynamic)) {
+        newCapacity = obj->numDynamicSlots();
+      }
+      cache.set(receiverShapeRoot, obj->shape(), keyRoot, offset, newCapacity);
     }
   }
 
