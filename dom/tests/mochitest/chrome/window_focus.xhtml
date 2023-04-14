@@ -14,6 +14,13 @@
 
   <script type="application/javascript"><![CDATA[
 
+const { BrowserTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/BrowserTestUtils.sys.mjs"
+);
+const { ContentTask } = ChromeUtils.import(
+  "resource://testing-common/ContentTask.jsm"
+);
+
 var fm = Cc["@mozilla.org/focus-manager;1"].
            getService(Ci.nsIFocusManager);
 
@@ -1506,18 +1513,41 @@ function doFrameSwitchingTests()
 
 function doFrameHistoryTests()
 {
-  var t20 = getById("t20");
-  t20.focus();
-
-  gChildWindow.addEventListener("focus",
-    function(event) {
-      if (event.target == t20) {
-        is(fm.focusedElement, t20, "focus restored after history back"); done();
+  let frame = $("childframe");
+  frame.setAttribute("maychangeremoteness", "true");
+  let loaded = BrowserTestUtils.browserLoaded(frame, true);
+  let firstLocation = "https://example.org/chrome/dom/tests/mochitest/chrome/child_focus_frame.html";
+  frame.src = firstLocation;
+  loaded.then(() => {
+    return ContentTask.spawn(frame, {}, () => {
+      let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
+      let t20 = content.document.getElementById("t20");
+      t20.focus();
+      let goneBack = new Promise(resolve => {
+        content.addEventListener("pageshow", ({ persisted }) => {
+          resolve({ location: content.location.href, persisted });
+        }, { once: true });
+      });
+      // make sure that loading a new page and then going back maintains the focus
+      content.location = "data:text/html,<script>window.onload=function() {setTimeout(function () { history.back() }, 0);}</script>";
+      return goneBack;
+    });
+  }).then(({ location, persisted }) => {
+    is(location, firstLocation, "should go back to the right page");
+    ok(persisted, "test relies on BFCache");
+    return ContentTask.spawn(frame, {}, () => {
+      let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
+      let t20 = content.document.getElementById("t20");
+      return fm.focusedElement === t20;
+    });
+  }).then((focusCorrect) => {
+    if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
+      todo(focusCorrect, "focus restored after history back");
+    } else {
+      ok(focusCorrect, "focus restored after history back");
     }
-  }, true);
-
-  // make sure that loading a new page and then going back maintains the focus
-  gChildWindow.location = "data:text/html,<script>window.onload=function() {setTimeout(function () { history.back() }, 0);}</script>";
+    done();
+  });
 }
 
 function addFrameSwitchingListeners(frame)

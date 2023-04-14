@@ -37,7 +37,11 @@ function runTest() {
   var webrenderWindows = 0;
   var layerManagerLog = [];
   while (windows.hasMoreElements()) {
-    windowutils = windows.getNext().windowUtils;
+    try {
+      windowutils = windows.getNext().windowUtils;
+    } catch (e) {
+      todo(false, "Bug X - don't expose BFCached pages through window enumerator");
+    }
     try {
       var layerManager = windowutils.layerManagerType;
       if (layerManager != "Basic" && layerManager != "WebRender (Software)") {
