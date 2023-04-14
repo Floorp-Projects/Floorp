@@ -1242,10 +1242,10 @@ static gcstats::PhaseKind GrayMarkingPhaseForCurrentPhase(
     const gcstats::Statistics& stats) {
   using namespace gcstats;
   switch (stats.currentPhaseKind()) {
-    case PhaseKind::SWEEP_MARK:
-      return PhaseKind::SWEEP_MARK_GRAY;
-    case PhaseKind::SWEEP_MARK_WEAK:
-      return PhaseKind::SWEEP_MARK_GRAY_WEAK;
+    case PhaseKind::MARK:
+      return PhaseKind::MARK_GRAY;
+    case PhaseKind::MARK_WEAK:
+      return PhaseKind::MARK_GRAY_WEAK;
     default:
       MOZ_CRASH("Unexpected current phase");
   }
