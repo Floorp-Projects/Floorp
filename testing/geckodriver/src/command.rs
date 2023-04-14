@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::logging;
+use base64::prelude::BASE64_STANDARD;
+use base64::Engine;
 use hyper::Method;
 use serde::de::{self, Deserialize, Deserializer};
 use serde_json::{self, Value};
@@ -142,7 +144,9 @@ impl<'de> Deserialize<'de> for AddonInstallParameters {
                 temporary: data.temporary,
             },
             Helper::Base64(ref mut data) => {
-                let content = base64::decode(&data.addon).map_err(de::Error::custom)?;
+                let content = BASE64_STANDARD
+                    .decode(&data.addon)
+                    .map_err(de::Error::custom)?;
 
                 let path = env::temp_dir()
                     .as_path()

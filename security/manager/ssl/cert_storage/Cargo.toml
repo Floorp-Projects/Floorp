@@ -5,7 +5,7 @@ authors = ["Dana Keeler <dkeeler@mozilla.com>", "Mark Goodwin <mgoodwin@mozilla.
 license = "MPL-2.0"
 
 [dependencies]
-base64 = "0.13"
+base64 = "0.21.0"
 byteorder = "1.2.7"
 crossbeam-utils = "0.8"
 cstr = "0.2"

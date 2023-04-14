@@ -6,6 +6,7 @@
 
 #![deny(warnings)]
 
+use base64::prelude::*;
 use neqo_common::{event::Provider, qdebug, qinfo, qtrace, Datagram, Header};
 use neqo_crypto::{generate_ech_keys, init_db, AllowZeroRtt, AntiReplay};
 use neqo_http3::{
@@ -49,8 +50,6 @@ use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
 use std::mem;
 use std::net::SocketAddr;
-
-extern crate base64;
 
 const MAX_TABLE_SIZE: u64 = 65536;
 const MAX_BLOCKED_STREAMS: u16 = 10;
@@ -1094,7 +1093,7 @@ impl ServersRunner {
             self.hosts[2].port(),
             self.hosts[3].port(),
             self.hosts[4].port(),
-            base64::encode(&self.ech_config)
+            BASE64_STANDARD.encode(&self.ech_config)
         );
         self.poll
             .register(&self.timer, TIMER_TOKEN, Ready::readable(), PollOpt::edge())
