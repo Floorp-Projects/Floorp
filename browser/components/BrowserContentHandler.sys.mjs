@@ -9,18 +9,18 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   FirstStartup: "resource://gre/modules/FirstStartup.sys.mjs",
+  HeadlessShell: "resource:///modules/HeadlessShell.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.sys.mjs",
+  ShellService: "resource:///modules/ShellService.sys.mjs",
   UpdatePing: "resource://gre/modules/UpdatePing.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  HeadlessShell: "resource:///modules/HeadlessShell.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
   LaterRun: "resource:///modules/LaterRun.jsm",
-  ShellService: "resource:///modules/ShellService.jsm",
 });
 XPCOMUtils.defineLazyServiceGetters(lazy, {
   UpdateManager: ["@mozilla.org/updates/update-manager;1", "nsIUpdateManager"],

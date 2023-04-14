@@ -19,10 +19,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ShellService: "resource:///modules/ShellService.jsm",
+  ShellService: "resource:///modules/ShellService.sys.mjs",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(

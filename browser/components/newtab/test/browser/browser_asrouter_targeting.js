@@ -7,7 +7,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   CFRMessageProvider: "resource://activity-stream/lib/CFRMessageProvider.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
   QueryCache: "resource://activity-stream/lib/ASRouterTargeting.jsm",
-  ShellService: "resource:///modules/ShellService.jsm",
 });
 ChromeUtils.defineESModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
@@ -21,6 +20,7 @@ ChromeUtils.defineESModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
   ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
+  ShellService: "resource:///modules/ShellService.sys.mjs",
   TargetingContext: "resource://messaging-system/targeting/Targeting.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
   TelemetrySession: "resource://gre/modules/TelemetrySession.sys.mjs",

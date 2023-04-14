@@ -16,17 +16,21 @@ ChromeUtils.defineESModuleGetters(lazy, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
   FxAccounts: "resource://gre/modules/FxAccounts.sys.mjs",
+  ShellService: "resource:///modules/ShellService.sys.mjs",
+
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
+
   AboutWelcomeTelemetry:
     "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm",
+
   AboutWelcomeDefaults:
     "resource://activity-stream/aboutwelcome/lib/AboutWelcomeDefaults.jsm",
-  ShellService: "resource:///modules/ShellService.jsm",
+
   LangPackMatcher: "resource://gre/modules/LangPackMatcher.jsm",
   AWScreenUtils: "resource://activity-stream/lib/AWScreenUtils.jsm",
 });

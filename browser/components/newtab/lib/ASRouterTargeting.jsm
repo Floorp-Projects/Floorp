@@ -15,8 +15,8 @@ const { AppConstants } = ChromeUtils.importESModule(
 const { NewTabUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/NewTabUtils.sys.mjs"
 );
-const { ShellService } = ChromeUtils.import(
-  "resource:///modules/ShellService.jsm"
+const { ShellService } = ChromeUtils.importESModule(
+  "resource:///modules/ShellService.sys.mjs"
 );
 
 const lazy = {};
