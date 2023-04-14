@@ -5,9 +5,8 @@ set -x -e -v
 # Linux), the tools required to produce Android packages.
 
 AVD_JSON_CONFIG="$1"
-UPLOAD_DIR=$HOME/project/gecko/android-system-images
 
-mkdir -p $HOME/artifacts $UPLOAD_DIR
+mkdir -p $UPLOAD_DIR
 
 # Populate /builds/worker/.mozbuild/android-sdk-linux.
 cd $GECKO_PATH

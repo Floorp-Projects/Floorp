@@ -4,9 +4,7 @@ set -x -e -v
 # This script is for fetching and repacking the Android emulator (for
 # Linux), the tools required to produce Android packages.
 
-UPLOAD_DIR=$HOME/project/gecko/android-emulator
-
-mkdir -p $HOME/artifacts $UPLOAD_DIR
+mkdir -p $UPLOAD_DIR
 
 # Populate /builds/worker/.mozbuild/android-emulator-linux.
 cd $GECKO_PATH

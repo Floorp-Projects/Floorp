@@ -1,9 +1,6 @@
 #!/bin/bash
 set -x
 
-# Because we specify a private artifact, UPLOAD_DIR is not populated for us
-export UPLOAD_DIR="/builds/worker/private-artifacts/"
-
 # # Delete the external directory
 rm -rf $GECKO_PATH/build/clang-plugin/external/*
 

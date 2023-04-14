@@ -4,9 +4,7 @@ set -x -e -v
 # This script is for fetching and repacking the Android NDK (for
 # Linux), the tools required to produce native Android programs.
 
-UPLOAD_DIR=$HOME/project/gecko/android-ndk
-
-mkdir -p $HOME/artifacts $UPLOAD_DIR
+mkdir -p $UPLOAD_DIR
 
 # Populate /builds/worker/.mozbuild/android-ndk-$VER.
 cd $GECKO_PATH
