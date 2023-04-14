@@ -19,11 +19,9 @@ if (!isWorker) {
   );
 }
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Reflect",
-  "resource://gre/modules/reflect.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  Reflect: "resource://gre/modules/reflect.sys.mjs",
+});
 loader.lazyRequireGetter(
   this,
   [
@@ -555,7 +553,7 @@ function prepareReturnedObject({
     matches = wrapMatchesInQuotes(matches, elementAccessQuote);
   } else if (!isWorker) {
     // If we're not performing an element access, we need to check that the property
-    // are suited for a dot access. (Reflect.jsm is not available in worker context yet,
+    // are suited for a dot access. (reflect.sys.mjs is not available in worker context yet,
     // see Bug 1507181).
     for (const match of matches) {
       try {
