@@ -11417,13 +11417,6 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest,
       aBFCacheCombo |= BFCacheStatus::ACTIVE_LOCK;
       ret = false;
     }
-
-    if (win->HasActiveWebTransports()) {
-      MOZ_LOG(gPageCacheLog, mozilla::LogLevel::Verbose,
-              ("Save of %s blocked due to WebTransport", uri.get()));
-      aBFCacheCombo |= BFCacheStatus::ACTIVE_WEBTRANSPORT;
-      ret = false;
-    }
   }
 
   return ret;

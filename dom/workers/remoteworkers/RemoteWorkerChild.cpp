@@ -582,19 +582,6 @@ void RemoteWorkerChild::NotifyLock(bool aCreated) {
   GetActorEventTarget()->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
-void RemoteWorkerChild::NotifyWebTransport(bool aCreated) {
-  nsCOMPtr<nsIRunnable> r =
-      NS_NewRunnableFunction(__func__, [self = RefPtr(this), aCreated] {
-        if (!self->CanSend()) {
-          return;
-        }
-
-        Unused << self->SendNotifyWebTransport(aCreated);
-      });
-
-  GetActorEventTarget()->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
-}
-
 void RemoteWorkerChild::FlushReportsOnMainThread(
     nsIConsoleReportCollector* aReporter) {
   AssertIsOnMainThread();

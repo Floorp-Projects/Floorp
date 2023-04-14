@@ -316,7 +316,6 @@ enum BFCacheStatus {
   RESTORING = 1 << 14,                   // Status 14
   BEFOREUNLOAD_LISTENER = 1 << 15,       // Status 15
   ACTIVE_LOCK = 1 << 16,                 // Status 16
-  ACTIVE_WEBTRANSPORT = 1 << 17,         // Status 17
 };
 
 }  // namespace dom

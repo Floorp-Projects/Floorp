@@ -44,8 +44,6 @@ class RemoteWorkerParent final : public PRemoteWorkerParent {
 
   mozilla::ipc::IPCResult RecvNotifyLock(const bool& aCreated);
 
-  mozilla::ipc::IPCResult RecvNotifyWebTransport(const bool& aCreated);
-
   mozilla::ipc::IPCResult RecvClose();
 
   mozilla::ipc::IPCResult RecvCreated(const bool& aStatus);
