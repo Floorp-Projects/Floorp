@@ -17,6 +17,10 @@ window.DEBOUNCE_DELAY = 200;
 window.DEBOUNCE_RUN_COUNT = 0;
 
 /**
+ * @typedef {import("../translations").SupportedLanguages} SupportedLanguages
+ */
+
+/**
  * The model and controller for initializing about:translations.
  */
 class TranslationsState {
@@ -83,6 +87,9 @@ class TranslationsState {
       ? AT_createLanguageIdEngine()
       : Promise.resolve();
 
+    /**
+     * @type {SupportedLanguages}
+     */
     this.supportedLanguages = isSupported
       ? AT_getSupportedLanguages()
       : Promise.resolve([]);
@@ -275,7 +282,7 @@ class TranslationsState {
 
     // Only update the language if the detected language matches
     // one of our supported languages.
-    const entry = supportedLanguages.find(
+    const entry = supportedLanguages.fromLanguages.find(
       ({ langTag }) => langTag === languageLabel
     );
     if (entry) {
@@ -381,14 +388,17 @@ class TranslationsUI {
    */
   async setupDropdowns() {
     const supportedLanguages = await this.state.supportedLanguages;
+
     // Update the DOM elements with the display names.
-    for (const { langTag, displayName } of supportedLanguages) {
-      let option = document.createElement("option");
+    for (const { langTag, displayName } of supportedLanguages.toLanguages) {
+      const option = document.createElement("option");
       option.value = langTag;
       option.text = displayName;
       this.languageTo.add(option);
+    }
 
-      option = document.createElement("option");
+    for (const { langTag, displayName } of supportedLanguages.fromLanguages) {
+      const option = document.createElement("option");
       option.value = langTag;
       option.text = displayName;
       this.languageFrom.add(option);

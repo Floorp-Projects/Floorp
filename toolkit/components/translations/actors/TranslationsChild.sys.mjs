@@ -8,6 +8,8 @@
  * @typedef {import("../translations").LanguageIdEnginePayload} LanguageIdEnginePayload
  * @typedef {import("../translations").LanguageTranslationModelFiles} LanguageTranslationModelFiles
  * @typedef {import("../translations").TranslationsEnginePayload} TranslationsEnginePayload
+ * @typedef {import("../translations").LanguagePair} LanguagePair
+ * @typedef {import("../translations").SupportedLanguages} SupportedLanguages
  */
 
 /**
@@ -641,25 +643,27 @@ export class TranslationsChild extends JSWindowActorChild {
       return null;
     }
 
-    // There is no reason to look at supported languages if the engine is already in
+    // There is no reason to look at the language pairs if the engine is already in
     // the cache.
     if (!translationsEngineCache.isInCache(docLangTag, appLangTag)) {
-      // TODO - This is wrong for non-bidirectional translation pairs.
-      const supportedLanguages = await this.getSupportedLanguages();
+      const languagePairs = await this.getLanguagePairs();
       if (this.#isDestroyed) {
         return null;
       }
       if (
-        !supportedLanguages.some(({ langTag }) => langTag === appLangTag) ||
-        !supportedLanguages.some(({ langTag }) => langTag === docLangTag)
+        !languagePairs.some(
+          ({ fromLang, toLang }) =>
+            fromLang === docLangTag && toLang === appLangTag
+        )
       ) {
+        // No language pairs match.
         const message = `Translating from "${docLangTag}" to "${appLangTag}" is not supported.`;
         ChromeUtils.addProfilerMarker(
           "TranslationsChild",
           { innerWindowId: this.innerWindowId },
           message
         );
-        lazy.console.log(message, supportedLanguages);
+        lazy.console.log(message, languagePairs);
         return null;
       }
     }
@@ -842,16 +846,24 @@ export class TranslationsChild extends JSWindowActorChild {
 
   /**
    * Get the list of languages and their display names, sorted by their display names.
+   * This is more expensive of a call than getLanguagePairs since the display names
+   * are looked up.
    *
-   * TODO (Bug 1813775) - Not all languages have bi-directional translations, like
-   * Icelandic. These are listed as "Beta" in the addon. This list should be changed into
-   * a "from" and "to" list, and the logic enhanced in the dropdowns to only allow valid
-   * translations.
-   *
-   * @returns {Promise<Array<{ langTag: string, displayName }>>}
+   * @returns {Promise<Array<SupportedLanguages>>}
    */
   getSupportedLanguages() {
     return this.sendQuery("Translations:GetSupportedLanguages");
+  }
+
+  /**
+   * Get the language pairs that can be used for translations. This is cheaper than
+   * the getSupportedLanguages call, since the localized display names of the languages
+   * are not needed.
+   *
+   * @returns {Promise<Array<LanguagePair>>}
+   */
+  getLanguagePairs() {
+    return this.sendQuery("Translations:GetLanguagePairs");
   }
 
   /**
