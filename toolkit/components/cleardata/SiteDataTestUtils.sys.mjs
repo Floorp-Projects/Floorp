@@ -81,9 +81,6 @@ export var SiteDataTestUtils = {
    * set cookie for.
    * @param {String} [options.name] - Cookie name
    * @param {String} [options.value] - Cookie value
-   * @param {Number} [optins.creationTime] - Optional custom creation time in usec that will be set on the cookie.
-   * If creationTime is not provided the cookieService will set the current time
-   * as the cookies creation time instead.
    */
   addToCookies({
     origin,
@@ -92,7 +89,6 @@ export var SiteDataTestUtils = {
     originAttributes = {},
     name = "foo",
     value = "bar",
-    creationTime = -1,
   }) {
     if (origin) {
       let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
@@ -104,7 +100,8 @@ export var SiteDataTestUtils = {
         ? originAttributes
         : principal.originAttributes;
     }
-    Services.cookies.addForTest(
+
+    Services.cookies.add(
       host,
       path,
       name,
@@ -115,8 +112,7 @@ export var SiteDataTestUtils = {
       Math.floor(Date.now() / 1000) + 24 * 60 * 60,
       originAttributes,
       Ci.nsICookie.SAMESITE_NONE,
-      Ci.nsICookie.SCHEME_UNSET,
-      creationTime
+      Ci.nsICookie.SCHEME_UNSET
     );
   },
 
