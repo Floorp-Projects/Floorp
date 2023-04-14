@@ -210,7 +210,7 @@ void* GCRuntime::tryNewNurseryBigIntCell(JSContext* cx, size_t thingSize,
 }
 
 template <AllowGC allowGC /* = CanGC */>
-static void* AllocateBigIntCell(JSContext* cx, InitialHeap heap) {
+void* gc::CellAllocator::AllocateBigIntCell(JSContext* cx, InitialHeap heap) {
   MOZ_ASSERT(!cx->isHelperThreadContext());
 
   AllocKind kind = MapTypeToAllocKind<JS::BigInt>::kind;
@@ -241,18 +241,9 @@ static void* AllocateBigIntCell(JSContext* cx, InitialHeap heap) {
 
   return GCRuntime::tryNewTenuredThing<allowGC>(cx, kind, size);
 }
-
-template <AllowGC allowGC /* = CanGC */>
-JS::BigInt* gc::CellAllocator::AllocateBigInt(JSContext* cx, InitialHeap heap) {
-  void* ptr = AllocateBigIntCell<allowGC>(cx, heap);
-  if (ptr) {
-    return new (mozilla::KnownNotNull, ptr) JS::BigInt();
-  }
-  return nullptr;
-}
-template JS::BigInt* gc::CellAllocator::AllocateBigInt<NoGC>(
+template void* gc::CellAllocator::AllocateBigIntCell<NoGC>(
     JSContext* cx, gc::InitialHeap heap);
-template JS::BigInt* gc::CellAllocator::AllocateBigInt<CanGC>(
+template void* gc::CellAllocator::AllocateBigIntCell<CanGC>(
     JSContext* cx, gc::InitialHeap heap);
 
 template <AllowGC allowGC /* = CanGC */>
