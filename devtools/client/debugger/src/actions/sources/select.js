@@ -196,7 +196,7 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
       dispatch(closeTab(cx, loadedSource));
     }
 
-    await dispatch(setSymbols({ cx, source: loadedSource, sourceActor }));
+    await dispatch(setSymbols({ cx, location }));
     dispatch(setInScopeLines(cx));
 
     if (getIsCurrentThreadPaused(getState())) {

@@ -4,20 +4,20 @@
 
 import { makeBreakpointId } from "../utils/breakpoint";
 
-export function getSymbols(state, source) {
-  if (!source) {
+export function getSymbols(state, location) {
+  if (!location) {
     return null;
   }
 
-  return state.ast.symbols[source.id] || null;
+  return state.ast.symbols[location.source.id] || null;
 }
 
-export function getSourceActorForSymbols(state, source) {
-  if (!source) {
+export function getSourceActorForSymbols(state, location) {
+  if (!location) {
     return null;
   }
 
-  return state.ast.actors[source.id] || null;
+  return state.ast.actors[location.source.id] || null;
 }
 
 export function getInScopeLines(state, location) {
