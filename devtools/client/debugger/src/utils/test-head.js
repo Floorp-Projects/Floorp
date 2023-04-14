@@ -83,10 +83,17 @@ function commonLog(msg, data = {}) {
 }
 
 function makeFrame({ id, sourceId, thread }, opts = {}) {
+  const source = createSourceObject(sourceId);
+  const sourceActor = {
+    id: `${sourceId}-actor`,
+    actor: `${sourceId}-actor`,
+    source: sourceId,
+    sourceObject: source,
+  };
   return {
     id,
     scope: { bindings: { variables: {}, arguments: [] } },
-    location: createLocation({ source: createSourceObject(sourceId), line: 4 }),
+    location: createLocation({ source, sourceActor, line: 4 }),
     thread: thread || "FakeThread",
     ...opts,
   };
