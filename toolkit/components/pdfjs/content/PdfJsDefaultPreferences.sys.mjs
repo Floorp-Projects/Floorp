@@ -24,6 +24,7 @@ export const PdfJsDefaultPreferences = Object.freeze({
  "defaultZoomDelay": 400,
  "defaultZoomValue": "",
  "disablePageLabels": false,
+ "enableFloatingToolbar": false,
  "enablePermissions": false,
  "enablePrintAutoRotate": true,
  "enableScripting": true,

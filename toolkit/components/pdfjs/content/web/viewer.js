@@ -3225,6 +3225,10 @@ const defaultOptions = {
     value: false,
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE
   },
+  enableFloatingToolbar: {
+    value: false,
+    kind: OptionKind.VIEWER + OptionKind.PREFERENCE
+  },
   enablePermissions: {
     value: false,
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE
@@ -5291,7 +5295,7 @@ function getOriginalIndex(diffs, pos, len) {
     return [pos, len];
   }
   const start = pos;
-  const end = pos + len;
+  const end = pos + len - 1;
   let i = (0, _ui_utils.binarySearchFirstItem)(diffs, x => x[0] >= start);
   if (diffs[i][0] > start) {
     --i;
@@ -5300,7 +5304,10 @@ function getOriginalIndex(diffs, pos, len) {
   if (diffs[j][0] > end) {
     --j;
   }
-  return [start + diffs[i][1], len + diffs[j][1] - diffs[i][1]];
+  const oldStart = start + diffs[i][1];
+  const oldEnd = end + diffs[j][1];
+  const oldLen = oldEnd + 1 - oldStart;
+  return [oldStart, oldLen];
 }
 class PDFFindController {
   #updateMatchesCountOnProgress = true;
@@ -8614,7 +8621,7 @@ class PDFViewer {
   #onVisibilityChange = null;
   #scaleTimeoutId = null;
   constructor(options) {
-    const viewerVersion = '3.6.25';
+    const viewerVersion = '3.6.35';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -12419,6 +12426,7 @@ class BasePreferences {
     "defaultZoomDelay": 400,
     "defaultZoomValue": "",
     "disablePageLabels": false,
+    "enableFloatingToolbar": false,
     "enablePermissions": false,
     "enablePrintAutoRotate": true,
     "enableScripting": true,
@@ -12739,8 +12747,8 @@ var _ui_utils = __webpack_require__(4);
 var _app_options = __webpack_require__(6);
 var _pdf_link_service = __webpack_require__(8);
 var _app = __webpack_require__(3);
-const pdfjsVersion = '3.6.25';
-const pdfjsBuild = 'a43151103';
+const pdfjsVersion = '3.6.35';
+const pdfjsBuild = '342dc760d';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;
