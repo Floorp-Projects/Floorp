@@ -12,7 +12,9 @@ import { makeBreakpointId } from "../utils/breakpoint";
 export function initialASTState() {
   return {
     // We are using mutable objects as we never return the dictionary as-is from the selectors
-    // but only their values .
+    // but only their values.
+    // Note that all these dictionaries are storing objects as values
+    // which all will have a threadActorId attribute.
 
     // We have two maps, a first one for original sources.
     // This is keyed by source id.
@@ -34,16 +36,19 @@ function update(state = initialASTState(), action) {
         return state;
       }
 
-      const value = action.value;
+      const entry = {
+        value: action.value,
+        threadActorId: location.sourceActor?.thread,
+      };
       if (location.source.isOriginal) {
-        state.mutableOriginalSourcesSymbols[location.source.id] = value;
+        state.mutableOriginalSourcesSymbols[location.source.id] = entry;
       } else {
         if (!location.sourceActor) {
           throw new Error(
             "Expects a location with a source actor when adding symbols for non-original sources"
           );
         }
-        state.mutableSourceActorSymbols[location.sourceActor.id] = value;
+        state.mutableSourceActorSymbols[location.sourceActor.id] = entry;
       }
       return {
         ...state,
@@ -51,8 +56,10 @@ function update(state = initialASTState(), action) {
     }
 
     case "IN_SCOPE_LINES": {
-      state.mutableInScopeLines[makeBreakpointId(action.location)] =
-        action.lines;
+      state.mutableInScopeLines[makeBreakpointId(action.location)] = {
+        lines: action.lines,
+        threadActorId: action.location.sourceActor?.thread,
+      };
       return {
         ...state,
       };
@@ -60,6 +67,20 @@ function update(state = initialASTState(), action) {
 
     case "RESUME": {
       return { ...state, mutableInScopeLines: {} };
+    }
+
+    case "REMOVE_THREAD": {
+      function clearDict(dict, threadId) {
+        for (const key in dict) {
+          if (dict[key].threadActorId == threadId) {
+            delete dict[key];
+          }
+        }
+      }
+      clearDict(state.mutableSourceActorSymbols, action.threadActorID);
+      clearDict(state.mutableOriginalSourcesSymbols, action.threadActorID);
+      clearDict(state.mutableInScopeLines, action.threadActorID);
+      return { ...state };
     }
 
     case "NAVIGATE": {
