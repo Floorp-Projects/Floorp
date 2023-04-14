@@ -7,8 +7,8 @@
 #ifndef vm_GetterSetter_h
 #define vm_GetterSetter_h
 
-#include "gc/Barrier.h"    // js::GCPtr<JSObject*>
-#include "gc/Cell.h"       // js::gc::TenuredCellWithGCPointer
+#include "gc/Barrier.h"  // js::GCPtr<JSObject*>
+#include "gc/Cell.h"     // js::gc::TenuredCellWithGCPointer
 
 #include "js/TypeDecls.h"  // JS::HandleObject
 #include "js/UbiNode.h"    // JS::ubi::TracerConcrete
