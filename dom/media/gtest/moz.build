@@ -53,6 +53,7 @@ UNIFIED_SOURCES += [
     "TestMediaMIMETypes.cpp",
     "TestMediaQueue.cpp",
     "TestMediaSpan.cpp",
+    "TestMediaUtils.cpp",
     "TestMP3Demuxer.cpp",
     "TestMP4Demuxer.cpp",
     "TestMuxer.cpp",
