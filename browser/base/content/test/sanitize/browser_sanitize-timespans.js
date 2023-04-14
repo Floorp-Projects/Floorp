@@ -37,7 +37,6 @@ add_task(async function test() {
   await setupDownloads();
   await setupFormHistory();
   await setupHistory();
-  await setUpCookies();
   await onHistoryReady();
 });
 
@@ -54,11 +53,14 @@ async function onHistoryReady() {
   var hoursSinceMidnight = new Date().getHours();
   var minutesSinceMidnight = hoursSinceMidnight * 60 + new Date().getMinutes();
 
+  // Should test cookies here, but nsICookieManager/nsICookieService
+  // doesn't let us fake creation times.  bug 463127
+
   var itemPrefs = Services.prefs.getBranch("privacy.cpd.");
   itemPrefs.setBoolPref("history", true);
   itemPrefs.setBoolPref("downloads", true);
   itemPrefs.setBoolPref("cache", false);
-  itemPrefs.setBoolPref("cookies", true);
+  itemPrefs.setBoolPref("cookies", false);
   itemPrefs.setBoolPref("formdata", true);
   itemPrefs.setBoolPref("offlineApps", false);
   itemPrefs.setBoolPref("passwords", false);
@@ -198,46 +200,6 @@ async function onHistoryReady() {
     );
   }
 
-  // cookies
-  ok(
-    !SiteDataTestUtils.hasCookies("https://10minutes.com/"),
-    "Cookie from 10 minutes ago should be deleted"
-  );
-  ok(
-    SiteDataTestUtils.hasCookies("https://1hour.com"),
-    "Cookie from 1 hour ago should still be present"
-  );
-  ok(
-    SiteDataTestUtils.hasCookies("https://1hour10mins.com"),
-    "Cookie from 1 hour 10 minutes ago should still be present"
-  );
-  ok(
-    SiteDataTestUtils.hasCookies("https://2hour.com"),
-    "Cookie from 2 hours ago should still be present"
-  );
-  ok(
-    SiteDataTestUtils.hasCookies("https://2hour10mins.com"),
-    "Cookie from 2 hours 10 minutes ago should still be present"
-  );
-  ok(
-    SiteDataTestUtils.hasCookies("https://4hour.com"),
-    "Cookie from 4 hours ago should still be present"
-  );
-  ok(
-    SiteDataTestUtils.hasCookies("https://4hour10mins.com"),
-    "Cookie from 4 hours 10 minutes ago should still be present"
-  );
-  if (hoursSinceMidnight > 1) {
-    ok(
-      SiteDataTestUtils.hasCookies("https://today.com"),
-      "Cookie from today should still be present"
-    );
-  }
-  ok(
-    SiteDataTestUtils.hasCookies("https://last-year.com"),
-    "Cookie from last year should still be present"
-  );
-
   downloadPromise = promiseDownloadRemoved(publicList);
   formHistoryPromise = promiseFormHistoryRemoved();
 
@@ -350,42 +312,6 @@ async function onHistoryReady() {
     );
   }
 
-  // cookies
-  ok(
-    !SiteDataTestUtils.hasCookies("https://1hour.com"),
-    "Cookie from 1 hour ago should be deleted"
-  );
-  ok(
-    SiteDataTestUtils.hasCookies("https://1hour10mins.com"),
-    "Cookie from 1 hour 10 minutes ago should still be present"
-  );
-  ok(
-    SiteDataTestUtils.hasCookies("https://2hour.com"),
-    "Cookie from 2 hours ago should still be present"
-  );
-  ok(
-    SiteDataTestUtils.hasCookies("https://2hour10mins.com"),
-    "Cookie from 2 hours 10 minutes ago should still be present"
-  );
-  ok(
-    SiteDataTestUtils.hasCookies("https://4hour.com"),
-    "Cookie from 4 hours ago should still be present"
-  );
-  ok(
-    SiteDataTestUtils.hasCookies("https://4hour10mins.com"),
-    "Cookie from 4 hours 10 minutes ago should still be present"
-  );
-  if (hoursSinceMidnight > 1) {
-    ok(
-      SiteDataTestUtils.hasCookies("https://today.com"),
-      "Cookie from today should still be present"
-    );
-  }
-  ok(
-    SiteDataTestUtils.hasCookies("https://last-year.com"),
-    "Cookie from last year should still be present"
-  );
-
   downloadPromise = promiseDownloadRemoved(publicList);
   formHistoryPromise = promiseFormHistoryRemoved();
 
@@ -488,38 +414,6 @@ async function onHistoryReady() {
     );
   }
 
-  // cookies
-  ok(
-    !SiteDataTestUtils.hasCookies("https://1hour10mins.com"),
-    "Cookie from 1 hour 10 minutes ago should be deleted"
-  );
-  ok(
-    SiteDataTestUtils.hasCookies("https://2hour.com"),
-    "Cookie from 2 hours ago should still be present"
-  );
-  ok(
-    SiteDataTestUtils.hasCookies("https://2hour10mins.com"),
-    "Cookie from 2 hours 10 minutes ago should still be present"
-  );
-  ok(
-    SiteDataTestUtils.hasCookies("https://4hour.com"),
-    "Cookie from 4 hours ago should still be present"
-  );
-  ok(
-    SiteDataTestUtils.hasCookies("https://4hour10mins.com"),
-    "Cookie from 4 hours 10 minutes ago should still be present"
-  );
-  if (minutesSinceMidnight > 70) {
-    ok(
-      SiteDataTestUtils.hasCookies("https://today.com"),
-      "Cookie from today should still be present"
-    );
-  }
-  ok(
-    SiteDataTestUtils.hasCookies("https://last-year.com"),
-    "Cookie from last year should still be present"
-  );
-
   downloadPromise = promiseDownloadRemoved(publicList);
   formHistoryPromise = promiseFormHistoryRemoved();
 
@@ -609,34 +503,6 @@ async function onHistoryReady() {
     );
   }
 
-  // cookies
-  ok(
-    !SiteDataTestUtils.hasCookies("https://2hour.com"),
-    "Cookie from 2 hours ago should be deleted"
-  );
-  ok(
-    SiteDataTestUtils.hasCookies("https://2hour10mins.com"),
-    "Cookie from 2 hours 10 minutes ago should still be present"
-  );
-  ok(
-    SiteDataTestUtils.hasCookies("https://4hour.com"),
-    "Cookie from 4 hours ago should still be present"
-  );
-  ok(
-    SiteDataTestUtils.hasCookies("https://4hour10mins.com"),
-    "Cookie from 4 hours 10 minutes ago should still be present"
-  );
-  if (hoursSinceMidnight > 2) {
-    ok(
-      SiteDataTestUtils.hasCookies("https://today.com"),
-      "Cookie from today should still be present"
-    );
-  }
-  ok(
-    SiteDataTestUtils.hasCookies("https://last-year.com"),
-    "Cookie from last year should still be present"
-  );
-
   downloadPromise = promiseDownloadRemoved(publicList);
   formHistoryPromise = promiseFormHistoryRemoved();
 
@@ -717,30 +583,6 @@ async function onHistoryReady() {
     );
   }
 
-  // cookies
-  ok(
-    !SiteDataTestUtils.hasCookies("https://2hour10mins.com"),
-    "Cookie from 2 hours 10 minutes ago should be deleted"
-  );
-  ok(
-    SiteDataTestUtils.hasCookies("https://4hour.com"),
-    "Cookie from 4 hours ago should still be present"
-  );
-  ok(
-    SiteDataTestUtils.hasCookies("https://4hour10mins.com"),
-    "Cookie from 4 hours 10 minutes ago should still be present"
-  );
-  if (minutesSinceMidnight > 130) {
-    ok(
-      SiteDataTestUtils.hasCookies("https://today.com"),
-      "Cookie from today should still be present"
-    );
-  }
-  ok(
-    SiteDataTestUtils.hasCookies("https://last-year.com"),
-    "Cookie from last year should still be present"
-  );
-
   downloadPromise = promiseDownloadRemoved(publicList);
   formHistoryPromise = promiseFormHistoryRemoved();
 
@@ -808,26 +650,6 @@ async function onHistoryReady() {
     );
   }
 
-  // cookies
-  ok(
-    !SiteDataTestUtils.hasCookies("https://4hour.com"),
-    "Cookie from 4 hours ago should be deleted"
-  );
-  ok(
-    SiteDataTestUtils.hasCookies("https://4hour10mins.com"),
-    "Cookie from 4 hours 10 minutes ago should still be present"
-  );
-  if (hoursSinceMidnight > 4) {
-    ok(
-      SiteDataTestUtils.hasCookies("https://today.com"),
-      "Cookie from today should still be present"
-    );
-  }
-  ok(
-    SiteDataTestUtils.hasCookies("https://last-year.com"),
-    "Cookie from last year should still be present"
-  );
-
   downloadPromise = promiseDownloadRemoved(publicList);
   formHistoryPromise = promiseFormHistoryRemoved();
 
@@ -886,22 +708,6 @@ async function onHistoryReady() {
     );
   }
 
-  // cookies
-  ok(
-    !SiteDataTestUtils.hasCookies("https://4hour10mins.com"),
-    "Cookie from 4 hours 10 minutes ago should be deleted"
-  );
-  if (minutesSinceMidnight > 250) {
-    ok(
-      SiteDataTestUtils.hasCookies("https://today.com"),
-      "Cookie from today should still be present"
-    );
-  }
-  ok(
-    SiteDataTestUtils.hasCookies("https://last-year.com"),
-    "Cookie from last year should still be present"
-  );
-
   // The 'Today' download might have been already deleted, in which case we
   // should not wait for a download removal notification.
   if (minutesSinceMidnight > 250) {
@@ -915,7 +721,6 @@ async function onHistoryReady() {
   Services.prefs.setIntPref(Sanitizer.PREF_TIMESPAN, 4);
   let progress = await Sanitizer.sanitize(null, { ignoreTimespan: false });
   Assert.deepEqual(progress, {
-    cookies: "cleared",
     history: "cleared",
     formdata: "cleared",
     downloads: "cleared",
@@ -945,10 +750,6 @@ async function onHistoryReady() {
       !(await downloadExists(publicList, "fakefile-today")),
       "'Today' download should now be deleted"
     );
-    ok(
-      !SiteDataTestUtils.hasCookies("https://today.com"),
-      "Cookie from today should be deleted"
-    );
   }
 
   ok(
@@ -963,10 +764,6 @@ async function onHistoryReady() {
   ok(
     await downloadExists(publicList, "fakefile-old"),
     "Year old download should still be present"
-  );
-  ok(
-    SiteDataTestUtils.hasCookies("https://last-year.com"),
-    "Cookie from last year should still be present"
   );
 
   downloadPromise = promiseDownloadRemoved(publicList);
@@ -994,39 +791,8 @@ async function onHistoryReady() {
     !(await downloadExists(publicList, "fakefile-old")),
     "Year old download should now be deleted"
   );
-  ok(
-    !SiteDataTestUtils.hasCookies("https://last-year.com"),
-    "Cookie from last year should be deleted"
-  );
 }
 
-async function setUpCookies() {
-  let today = new Date();
-  today.setHours(0);
-  today.setMinutes(0);
-  today.setSeconds(0);
-  today.setMilliseconds(1);
-  let lastYear = new Date();
-  lastYear.setFullYear(lastYear.getFullYear() - 1);
-  let origins = {
-    "https://10minutes.com/": now_uSec - 9 * kUsecPerMin,
-    "https://1hour.com/": now_uSec - 45 * kUsecPerMin,
-    "https://1hour10mins.com/": now_uSec - 69 * kUsecPerMin,
-    "https://2hour.com/": now_uSec - 90 * kUsecPerMin,
-    "https://2hour10mins.com/": now_uSec - 129 * kUsecPerMin,
-    "https://4hour.com/": now_uSec - 180 * kUsecPerMin,
-    "https://4hour10mins.com/": now_uSec - 249 * kUsecPerMin,
-    "https://today.com/": today.getTime() * 1000,
-    "https://last-year.com/": lastYear.getTime() * 1000,
-  };
-  for (let [url, time] of Object.entries(origins)) {
-    SiteDataTestUtils.addToCookies({
-      origin: url,
-      creationTime: time,
-    });
-    ok(SiteDataTestUtils.hasCookies(url), "we have cookies for " + url);
-  }
-}
 async function setupHistory() {
   let places = [];
 
