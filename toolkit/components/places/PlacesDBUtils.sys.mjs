@@ -1170,6 +1170,13 @@ export var PlacesDBUtils = {
         scalar: "places.pages_need_frecency_recalculation",
         query: "SELECT count(*) FROM moz_places WHERE recalc_frecency = 1",
       },
+      {
+        scalar: "places.previousday_visits",
+        query: `SELECT COUNT(*) from moz_places
+                      WHERE hidden=0 AND last_visit_date < (strftime('%s', 'now', 'start of day') * 1000000)
+                      AND last_visit_date > (strftime('%s', 'now', 'start of day', '-1 day') * 1000000)
+                      AND last_visit_date IS NOT NULL;`,
+      },
     ];
 
     for (let probe of probes) {
