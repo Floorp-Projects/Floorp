@@ -120,8 +120,8 @@
   "BEGIN " \
     /* Deduct the origin's current contribution to frecency stats */ \
     UPDATE_ORIGIN_FRECENCY_STATS("-") "; " \
-    "INSERT INTO moz_origins (prefix, host, frecency) " \
-    "VALUES (OLD.prefix, OLD.host, MAX(OLD.frecency, 0)) " \
+    "INSERT INTO moz_origins (prefix, host, frecency, recalc_alt_frecency) " \
+    "VALUES (OLD.prefix, OLD.host, MAX(OLD.frecency, 0), 1) " \
     "ON CONFLICT(prefix, host) DO UPDATE " \
     "SET frecency = frecency + OLD.frecency " \
     "WHERE OLD.frecency > 0; " \
@@ -179,7 +179,8 @@
   "BEGIN " \
     /* Deduct the origin's current contribution to frecency stats */ \
     UPDATE_ORIGIN_FRECENCY_STATS("-") "; " \
-    "UPDATE moz_origins SET frecency = frecency + OLD.frecency_delta " \
+    "UPDATE moz_origins SET frecency = frecency + OLD.frecency_delta, " \
+                           "recalc_frecency = 0 " \
     "WHERE prefix = OLD.prefix AND host = OLD.host; " \
     "DELETE FROM moz_origins " \
     "WHERE prefix = OLD.prefix AND host = OLD.host AND NOT EXISTS ( " \
@@ -207,19 +208,21 @@
 // (1) decay updates all frecencies at once, so this trigger would run for each
 // moz_place, which would be expensive; and (2) decay does not change the
 // ordering of frecencies since all frecencies decay by the same percentage.
-#  define CREATE_PLACES_AFTERUPDATE_FRECENCY_TRIGGER                      \
-    nsLiteralCString(                                                     \
-        "CREATE TEMP TRIGGER moz_places_afterupdate_frecency_trigger "    \
-        "AFTER UPDATE OF frecency ON moz_places FOR EACH ROW "            \
-        "WHEN NOT is_frecency_decaying() "                                \
-        "BEGIN "                                                          \
-        "INSERT INTO moz_updateoriginsupdate_temp (prefix, host, "        \
-        "frecency_delta) "                                                \
-        "VALUES (get_prefix(NEW.url), get_host_and_port(NEW.url), "       \
-        "MAX(NEW.frecency, 0) - MAX(OLD.frecency, 0)) "                   \
-        "ON CONFLICT(prefix, host) DO UPDATE "                            \
-        "SET frecency_delta = frecency_delta + EXCLUDED.frecency_delta; " \
-        "UPDATE moz_places SET recalc_frecency = 0 WHERE id = NEW.id; "   \
+#  define CREATE_PLACES_AFTERUPDATE_FRECENCY_TRIGGER                           \
+    nsLiteralCString(                                                          \
+        "CREATE TEMP TRIGGER moz_places_afterupdate_frecency_trigger "         \
+        "AFTER UPDATE OF frecency ON moz_places FOR EACH ROW "                 \
+        "WHEN NOT is_frecency_decaying() "                                     \
+        "BEGIN "                                                               \
+        "INSERT INTO moz_updateoriginsupdate_temp (prefix, host, "             \
+        "frecency_delta) "                                                     \
+        "VALUES (get_prefix(NEW.url), get_host_and_port(NEW.url), "            \
+        "MAX(NEW.frecency, 0) - MAX(OLD.frecency, 0)) "                        \
+        "ON CONFLICT(prefix, host) DO UPDATE "                                 \
+        "SET frecency_delta = frecency_delta + EXCLUDED.frecency_delta; "      \
+        "UPDATE moz_places SET recalc_frecency = 0 WHERE id = NEW.id; "        \
+        "UPDATE moz_origins SET recalc_frecency = 1, recalc_alt_frecency = 1 " \
+        "WHERE id = NEW.origin_id; "                                           \
         "END ")
 // This trigger corresponds to the previous trigger.  It runs on deletes on
 // moz_updateoriginsupdate_temp -- logically, after updates to
@@ -232,7 +235,8 @@
     /* Deduct the origin's current contribution to frecency stats */ \
     UPDATE_ORIGIN_FRECENCY_STATS("-") "; " \
     "UPDATE moz_origins " \
-    "SET frecency = frecency + OLD.frecency_delta " \
+    "SET frecency = frecency + OLD.frecency_delta, " \
+        "recalc_frecency = 0 " \
     "WHERE prefix = OLD.prefix AND host = OLD.host; " \
     /* Add the origin's new contribution to frecency stats */ \
     UPDATE_ORIGIN_FRECENCY_STATS("+") "; " \

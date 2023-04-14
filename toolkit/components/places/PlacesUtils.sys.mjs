@@ -2366,7 +2366,7 @@ PlacesUtils.metadata = {
   },
 
   canonicalizeKey(key) {
-    if (typeof key != "string" || !/^[a-zA-Z0-9\/]+$/.test(key)) {
+    if (typeof key != "string" || !/^[a-zA-Z0-9\/_]+$/.test(key)) {
       throw new TypeError("Invalid metadata key: " + key);
     }
     return key.toLowerCase();
