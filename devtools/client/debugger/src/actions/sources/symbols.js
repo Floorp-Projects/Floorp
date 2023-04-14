@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { getSymbols, getSourceActorForSymbols } from "../../selectors";
+import { getSymbols } from "../../selectors";
 
 import { PROMISE } from "../utils/middleware/promise";
 import { loadSourceText } from "./loadSourceText";
@@ -33,14 +33,6 @@ export const setSymbols = memoizeableAction("setSymbols", {
 
     const symbols = getSymbols(getState(), location);
     if (!symbols) {
-      return null;
-    }
-
-    // Also check the spcific actor for the cached symbols
-    if (
-      location.sourceActor?.id &&
-      getSourceActorForSymbols(getState(), location) !== location.sourceActor.id
-    ) {
       return null;
     }
 

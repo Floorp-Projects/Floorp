@@ -55,13 +55,16 @@ function dispatchSetPreview(dispatch, context, expression, target) {
 }
 
 async function pause(store, client) {
-  const { dispatch, cx } = store;
-  const base = await dispatch(
-    actions.newGeneratedSource(makeSource("base.js"))
+  const { dispatch, cx, getState } = store;
+  const source = makeSource("base.js");
+  const base = await dispatch(actions.newGeneratedSource(source));
+  const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
+    getState(),
+    base.id
   );
 
-  await dispatch(actions.selectSource(cx, base));
-  const location = createLocation({ source: base });
+  await dispatch(actions.selectSource(cx, base, sourceActor));
+  const location = createLocation({ source: base, sourceActor });
   await waitForState(store, state => selectors.getSymbols(state, location));
 
   const { thread } = cx;
@@ -82,12 +85,16 @@ describe("preview", () => {
   it("should generate previews", async () => {
     const store = createStore(mockThreadFront());
     const { dispatch, getState, cx } = store;
-    const base = await dispatch(
-      actions.newGeneratedSource(makeSource("base.js"))
-    );
+    const source = makeSource("base.js");
+    const base = await dispatch(actions.newGeneratedSource(source));
 
     await dispatch(actions.selectSource(cx, base));
-    const location = createLocation({ source: base });
+    const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
+      getState(),
+      base.id
+    );
+    const location = createLocation({ source: base, sourceActor });
+
     await waitForState(store, state => selectors.getSymbols(state, location));
     const frames = [makeFrame({ id: "f1", sourceId: base.id })];
 

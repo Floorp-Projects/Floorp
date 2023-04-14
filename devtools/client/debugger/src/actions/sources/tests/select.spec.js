@@ -218,8 +218,16 @@ describe("sources", () => {
     const baseSource = await dispatch(
       actions.newGeneratedSource(makeSource("base.js"))
     );
+    const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
+      getState(),
+      baseSource.id
+    );
 
-    const location = createLocation({ source: baseSource, line: 1 });
+    const location = createLocation({
+      source: baseSource,
+      line: 1,
+      sourceActor,
+    });
     await dispatch(actions.selectLocation(cx, location));
 
     const selected = getSelectedSource(getState());

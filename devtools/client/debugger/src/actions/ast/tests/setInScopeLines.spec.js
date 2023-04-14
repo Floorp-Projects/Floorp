@@ -45,12 +45,17 @@ describe("getInScopeLine", () => {
     const baseSource = await dispatch(
       actions.newGeneratedSource(makeSource("scopes.js"))
     );
+    const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
+      getState(),
+      baseSource.id
+    );
 
     await dispatch(
       actions.selectLocation(
         selectors.getContext(getState()),
         createLocation({
           source: baseSource,
+          sourceActor,
           line: 5,
         })
       )
