@@ -1191,7 +1191,7 @@ impl CSSWideKeyword {
             "inherit" => CSSWideKeyword::Inherit,
             "unset" => CSSWideKeyword::Unset,
             "revert" => CSSWideKeyword::Revert,
-            "revert-layer" if static_prefs::pref!("layout.css.cascade-layers.enabled") => CSSWideKeyword::RevertLayer,
+            "revert-layer" => CSSWideKeyword::RevertLayer,
             _ => return Err(()),
         })
     }

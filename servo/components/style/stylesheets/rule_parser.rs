@@ -259,9 +259,7 @@ impl<'a, 'i> AtRuleParser<'i> for TopLevelRuleParser<'a> {
                     }).ok()
                 };
 
-                let layer = if !static_prefs::pref!("layout.css.cascade-layers.enabled") {
-                    None
-                } else if input.try_parse(|input| input.expect_ident_matching("layer")).is_ok() {
+                let layer = if input.try_parse(|input| input.expect_ident_matching("layer")).is_ok() {
                     Some(ImportLayer {
                         name: None,
                     })
@@ -495,7 +493,7 @@ impl<'a, 'b, 'i> AtRuleParser<'i> for NestedRuleParser<'a, 'b> {
                 let condition = Arc::new(ContainerCondition::parse(self.context, input)?);
                 AtRulePrelude::Container(condition)
             },
-            "layer" if static_prefs::pref!("layout.css.cascade-layers.enabled") => {
+            "layer" => {
                 let names = input.try_parse(|input| {
                     input.parse_comma_separated(|input| {
                         LayerName::parse(self.context, input)

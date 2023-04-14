@@ -23,6 +23,5 @@ interface CSSImportRule : CSSRule {
 
 // https://drafts.csswg.org/css-cascade-5/#extensions-to-cssimportrule-interface
 partial interface CSSImportRule {
-  [Pref="layout.css.cascade-layers.enabled"]
   readonly attribute UTF8String? layerName;
 };

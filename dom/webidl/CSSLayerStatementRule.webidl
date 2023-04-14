@@ -6,7 +6,7 @@
  * The origin of this IDL file is
  * https://drafts.csswg.org/css-cascade-5/#the-csslayerstatementrule-interface
  */
-[Exposed=Window, Pref="layout.css.cascade-layers.enabled"]
+[Exposed=Window]
 interface CSSLayerStatementRule : CSSRule {
   // readonly attribute FrozenArray<CSSOMString> nameList;
   [Frozen, Cached, Pure]

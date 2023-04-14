@@ -6,7 +6,7 @@
  * The origin of this IDL file is
  * https://drafts.csswg.org/css-cascade-5/#the-csslayerblockrule-interface
  */
-[Exposed=Window, Pref="layout.css.cascade-layers.enabled"]
+[Exposed=Window]
 interface CSSLayerBlockRule : CSSGroupingRule {
   readonly attribute UTF8String name;
 };
