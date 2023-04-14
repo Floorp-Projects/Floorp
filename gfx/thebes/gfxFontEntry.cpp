@@ -284,11 +284,14 @@ uint16_t gfxFontEntry::UnitsPerEm() {
           reinterpret_cast<const HeadTable*>(hb_blob_get_data(headTable, &len));
       if (len >= sizeof(HeadTable)) {
         mUnitsPerEm = head->unitsPerEm;
+        if (int16_t(head->xMax) > int16_t(head->xMin) &&
+            int16_t(head->yMax) > int16_t(head->yMin)) {
+          mXMin = head->xMin;
+          mYMin = head->yMin;
+          mXMax = head->xMax;
+          mYMax = head->yMax;
+        }
       }
-      mXMin = head->xMin;
-      mYMin = head->yMin;
-      mXMax = head->xMax;
-      mYMax = head->yMax;
     }
 
     // if we didn't find a usable 'head' table, or if the value was
