@@ -61,6 +61,11 @@ ShadowRoot::ShadowRoot(Element* aElement, ShadowRootMode aMode,
       mSlotAssignment(aSlotAssignment),
       mIsDetailsShadowTree(aElement->IsHTMLElement(nsGkAtoms::details)),
       mIsAvailableToElementInternals(false) {
+  // nsINode.h relies on this.
+  MOZ_ASSERT(static_cast<nsINode*>(this) == reinterpret_cast<nsINode*>(this));
+  MOZ_ASSERT(static_cast<nsIContent*>(this) ==
+             reinterpret_cast<nsIContent*>(this));
+
   SetHost(aElement);
 
   // Nodes in a shadow tree should never store a value
