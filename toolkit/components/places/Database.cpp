@@ -1275,6 +1275,13 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
 
       // Firefox 111 uses schema version 72
 
+      if (currentSchemaVersion < 73) {
+        rv = MigrateV73Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 114  uses schema version 73
+
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
       // NEVER MIX UP SYNC AND ASYNC EXECUTION IN MIGRATORS, YOU MAY LOCK THE
@@ -2484,6 +2491,28 @@ nsresult Database::MigrateV72Up() {
       "SET recalc_frecency = 1 "
       "WHERE foreign_count > 0 AND visit_count = 0"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+nsresult Database::MigrateV73Up() {
+  // Add recalc_frecency, alt_frecency and recalc_alt_frecency to moz_origins.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mMainConn->CreateStatement(
+      "SELECT recalc_frecency FROM moz_origins"_ns, getter_AddRefs(stmt));
+  if (NS_FAILED(rv)) {
+    rv = mMainConn->ExecuteSimpleSQL(
+        "ALTER TABLE moz_origins "
+        "ADD COLUMN recalc_frecency INTEGER NOT NULL DEFAULT 0"_ns);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mMainConn->ExecuteSimpleSQL(
+        "ALTER TABLE moz_origins "
+        "ADD COLUMN alt_frecency INTEGER"_ns);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mMainConn->ExecuteSimpleSQL(
+        "ALTER TABLE moz_origins "
+        "ADD COLUMN recalc_alt_frecency INTEGER NOT NULL DEFAULT 0"_ns);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   return NS_OK;
 }
 
