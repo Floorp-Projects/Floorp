@@ -2,16 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["WebRTCChild"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
 const lazy = {};
 XPCOMUtils.defineLazyServiceGetter(
   lazy,
@@ -74,7 +67,7 @@ const GlobalMuteListener = {
   },
 };
 
-class WebRTCChild extends JSWindowActorChild {
+export class WebRTCChild extends JSWindowActorChild {
   actorCreated() {
     // The user might request that DOM notifications be silenced
     // when sharing the screen. There doesn't seem to be a great

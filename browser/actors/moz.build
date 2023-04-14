@@ -28,7 +28,7 @@ with Files("PluginChild.sys.mjs"):
 with Files("ScreenshotsComponentChild.sys.mjs"):
     BUG_COMPONENT = ("Firefox", "Screenshots")
 
-with Files("WebRTCChild.jsm"):
+with Files("WebRTCChild.sys.mjs"):
     BUG_COMPONENT = ("Firefox", "Site Permissions")
 
 FINAL_TARGET_FILES.actors += [
@@ -83,8 +83,8 @@ FINAL_TARGET_FILES.actors += [
     "SearchSERPTelemetryChild.sys.mjs",
     "SearchSERPTelemetryParent.sys.mjs",
     "SwitchDocumentDirectionChild.sys.mjs",
-    "WebRTCChild.jsm",
-    "WebRTCParent.jsm",
+    "WebRTCChild.sys.mjs",
+    "WebRTCParent.sys.mjs",
 ]
 
 BROWSER_CHROME_MANIFESTS += [
