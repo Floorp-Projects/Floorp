@@ -4,6 +4,16 @@
   <script src='/resources/testharness.js'></script>
   <script src='/resources/testharnessreport.js'></script>
   <script src='/common/get-host-info.sub.js'></script>
+  <script id='workerCode' type='javascript/worker'>
+    self.onmessage = (e) => {
+      let img = e.data.img;
+      if (e.data.transfer) {
+        postMessage(img, [img]);
+      } else {
+        postMessage(img);
+      }
+    };
+  </script>
 </head>
 <body>
 <script>
@@ -26,17 +36,46 @@ promise_test(async () => {
 }, 'Verify imagebitmap cannot be passed accross the different agent clusters');
 
 promise_test(async () => {
-  const target = (await appendIframe(SAMEORIGIN_HELPER)).contentWindow;
+  const blob = new Blob([document.querySelector('#workerCode').textContent], {
+    type: 'text/javascript',
+  });
+  const worker = new Worker(window.URL.createObjectURL(blob));
   let img = createImageBitmap(30, 30);
+  worker.postMessage({img: img, transfer: false});
+  const received = await new Promise(resolve => worker.onmessage = e => {
+    resolve(e.data);
+  });
+  assert_equals(received.toString(), '[object ImageBitmap]');
+  assert_equals(received.width, 30);
+}, 'Verify imagebitmap can be passed back and forth between main and worker');
+
+promise_test(async () => {
+  const target = (await appendIframe(SAMEORIGIN_HELPER)).contentWindow;
+  let img = createImageBitmap(40, 40);
   assert_true(await canTransferImageBitmap(target, img));
   assert_true(isImageBitmapClosed(img));
 }, 'Verify imagebitmap can be transferred within the same agent clusters');
 
 promise_test(async () => {
   const target = (await appendIframe(CROSSORIGIN_HELPER)).contentWindow;
-  let img = createImageBitmap(40, 40);
+  let img = createImageBitmap(50, 50);
   assert_false(await canTransferImageBitmap(target, img));
 }, 'Verify imagebitmap cannot be transferred accross the different agent clusters');
+
+promise_test(async () => {
+  const blob = new Blob([document.querySelector('#workerCode').textContent], {
+    type: 'text/javascript',
+  });
+  const worker = new Worker(window.URL.createObjectURL(blob));
+  let img = createImageBitmap(60, 60);
+  worker.postMessage({img: img, transfer: true}, [img]);
+  const received = await new Promise(resolve => worker.onmessage = e => {
+    resolve(e.data);
+  });
+  assert_equals(received.toString(), '[object ImageBitmap]');
+  assert_equals(received.width, 60);
+}, 'Verify imagebitmap can be transferred back and forth between main and worker');
+
 
 function appendIframe(src) {
   const frame = document.createElement('iframe');
