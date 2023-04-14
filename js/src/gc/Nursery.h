@@ -175,8 +175,7 @@ class Nursery {
 
   // Allocate and return a pointer to a new GC object with its |slots|
   // pointer pre-filled. Returns nullptr if the Nursery is full.
-  JSObject* allocateObject(gc::AllocSite* site, size_t size,
-                           const JSClass* clasp);
+  void* allocateObject(gc::AllocSite* site, size_t size, const JSClass* clasp);
 
   // Allocate and return a pointer to a new GC thing. Returns nullptr if the
   // Nursery is full.
