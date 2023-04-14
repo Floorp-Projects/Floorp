@@ -11,6 +11,7 @@ pytestmark = pytest.mark.asyncio
         ({"width": 4.5}, {"width": 4.5, "height": 27.94}),
         ({"height": 23}, {"width": 21.59, "height": 23}),
         ({"width": 4.5, "height": 12}, {"width": 4.5, "height": 12}),
+        ({"height": 12}, {"width": 21.59, "height": 12}),
     ],
 )
 async def test_page(
