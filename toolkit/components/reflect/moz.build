@@ -12,7 +12,7 @@ SOURCES += [
 ]
 
 EXTRA_JS_MODULES += [
-    "reflect.jsm",
+    "reflect.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [
