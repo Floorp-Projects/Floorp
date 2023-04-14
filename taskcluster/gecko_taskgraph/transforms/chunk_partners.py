@@ -42,6 +42,8 @@ def chunk_partners(config, jobs):
             if config.kind in (
                 "release-partner-repack-signing",
                 "release-eme-free-repack-signing",
+                "release-eme-free-repack-mac-signing",
+                "release-eme-free-repack-mac-notarization",
                 "release-partner-repack-notarization-part-1",
                 "release-eme-free-repack-notarization-part-1",
             ):

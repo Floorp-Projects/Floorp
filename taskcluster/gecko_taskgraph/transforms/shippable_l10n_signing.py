@@ -55,13 +55,13 @@ def define_upstream_artifacts(config, jobs):
 
         upstream_artifacts = []
         for spec in locale_specifications:
-            task_type = "l10n"
+            upstream_task_type = "l10n"
             if "notarization" in upstream_artifact_task.kind:
-                task_type = "scriptworker"
+                upstream_task_type = "scriptworker"
             upstream_artifacts.append(
                 {
                     "taskId": {"task-reference": f"<{upstream_artifact_task.kind}>"},
-                    "taskType": task_type,
+                    "taskType": upstream_task_type,
                     # Set paths based on artifacts in the specs (above) one per
                     # locale present in the chunk this is signing stuff for.
                     # Pass paths through set and sorted() so we get a list back

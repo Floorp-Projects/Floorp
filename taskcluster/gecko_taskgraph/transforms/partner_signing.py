@@ -20,7 +20,11 @@ transforms = TransformSequence()
 def set_mac_label(config, jobs):
     for job in jobs:
         dep_job = job["primary-dependency"]
-        job.setdefault("label", dep_job.label.replace("notarization-part-1", "signing"))
+        if "mac-notarization" in config.kind:
+            default_label = dep_job.label.replace("mac-signing", "mac-notarization")
+        else:
+            default_label = dep_job.label.replace("notarization-part-1", "signing")
+        job.setdefault("label", default_label)
         assert job["label"] != dep_job.label, "Unable to determine label for {}".format(
             config.kind
         )
@@ -46,7 +50,7 @@ def define_upstream_artifacts(config, jobs):
             kind=config.kind,
         )
         task_type = "build"
-        if "notarization" in job["depname"]:
+        if "notarization" in job["depname"] or "mac-signing" in job["depname"]:
             task_type = "scriptworker"
         job["upstream-artifacts"] = [
             {
@@ -61,5 +65,9 @@ def define_upstream_artifacts(config, jobs):
             }
             for spec in artifacts_specifications
         ]
+        # Override the format for signingscript notarization
+        if "mac-notarization" in config.kind:
+            for artifact in job["upstream-artifacts"]:
+                artifact["formats"] = ["apple_notarization"]
 
         yield job

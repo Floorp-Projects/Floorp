@@ -17,7 +17,7 @@ def find_upstream_artifact_task(config, jobs):
         if job.get("dependent-tasks"):
             dep_labels = [l for l in job["dependent-tasks"].keys()]
             for label in dep_labels:
-                if "notarization-part-1" in label:
+                if "notarization-part-1" in label or "mac-signing" in label:
                     assert (
                         dep_job is None
                     ), "Can't determine whether " "{} or {} is dep_job!".format(
