@@ -9,6 +9,7 @@
 
 #include <math.h>
 #include <limits>
+#include <utility>
 
 #include "ImageContainer.h"
 #include "VideoColorSpace.h"
@@ -727,7 +728,7 @@ static VideoColorSpaceInit PickColorSpace(
 }
 
 // https://w3c.github.io/webcodecs/#validate-videoframeinit
-static Result<std::tuple<Maybe<gfx::IntRect>, Maybe<gfx::IntSize>>, nsCString>
+static Result<std::pair<Maybe<gfx::IntRect>, Maybe<gfx::IntSize>>, nsCString>
 ValidateVideoFrameInit(const VideoFrameInit& aInit,
                        const VideoFrame::Format& aFormat,
                        const gfx::IntSize& aCodedSize) {
@@ -752,7 +753,7 @@ ValidateVideoFrameInit(const VideoFrameInit& aInit,
   Maybe<gfx::IntSize> displaySize;
   MOZ_TRY_VAR(displaySize, MaybeGetDisplaySize(aInit));
 
-  return std::make_tuple(visibleRect, displaySize);
+  return std::make_pair(visibleRect, displaySize);
 }
 
 /*
@@ -1106,11 +1107,11 @@ InitializeFrameWithResourceAndSize(
     return Err(nsCString("This image has unsupport format"));
   }
 
-  std::tuple<Maybe<gfx::IntRect>, Maybe<gfx::IntSize>> init;
+  std::pair<Maybe<gfx::IntRect>, Maybe<gfx::IntSize>> init;
   MOZ_TRY_VAR(init,
               ValidateVideoFrameInit(aInit, format.ref(), image->GetSize()));
-  Maybe<gfx::IntRect> visibleRect = std::get<0>(init);
-  Maybe<gfx::IntSize> displaySize = std::get<1>(init);
+  Maybe<gfx::IntRect> visibleRect = init.first;
+  Maybe<gfx::IntSize> displaySize = init.second;
 
   if (aInit.mAlpha == AlphaOption::Discard) {
     format->MakeOpaque();
@@ -1145,11 +1146,11 @@ InitializeFrameFromOtherFrame(nsIGlobalObject* aGlobal, VideoFrameData&& aData,
     // Keep the alpha data in image for now until it's being rendered.
   }
 
-  std::tuple<Maybe<gfx::IntRect>, Maybe<gfx::IntSize>> init;
+  std::pair<Maybe<gfx::IntRect>, Maybe<gfx::IntSize>> init;
   MOZ_TRY_VAR(init,
               ValidateVideoFrameInit(aInit, format, aData.mImage->GetSize()));
-  Maybe<gfx::IntRect> visibleRect = std::get<0>(init);
-  Maybe<gfx::IntSize> displaySize = std::get<1>(init);
+  Maybe<gfx::IntRect> visibleRect = init.first;
+  Maybe<gfx::IntSize> displaySize = init.second;
 
   InitializeVisibleRectAndDisplaySize(visibleRect, displaySize,
                                       aData.mVisibleRect, aData.mDisplaySize);
