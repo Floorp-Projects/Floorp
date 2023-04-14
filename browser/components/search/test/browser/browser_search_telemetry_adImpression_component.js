@@ -13,10 +13,12 @@ const {
 const WINDOW_HEIGHT = 768;
 const WINDOW_WIDTH = 1024;
 
+// Note: example.org is used for the SERP page, and example.com is used to serve
+// the ads. This is done to simulate different domains like the real servers.
 const TEST_PROVIDER_INFO = [
   {
     telemetryId: "example",
-    searchPageRegexp: /^http:\/\/mochi.test:.+\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd_components_/,
+    searchPageRegexp: /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd_components_/,
     queryParamName: "s",
     codeParamName: "abc",
     taggedCodes: ["ff"],
@@ -128,7 +130,7 @@ function getSERPUrl(page, organic = false) {
   let url =
     getRootDirectory(gTestPath).replace(
       "chrome://mochitests/content",
-      "http://mochi.test:8888"
+      "https://example.org"
     ) + page;
   return `${url}?s=test${organic ? "" : "&abc=ff"}`;
 }

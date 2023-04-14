@@ -734,7 +734,7 @@ let JSWINDOWACTORS = {
         load: { mozSystemGroup: true, capture: true },
       },
     },
-    matches: ["http://*/*", "https://*/*"],
+    matches: ["https://*/*"],
   },
 
   ShieldFrame: {
