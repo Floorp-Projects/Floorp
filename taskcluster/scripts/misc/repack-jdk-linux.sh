@@ -4,10 +4,9 @@ set -x -e -v
 # This script is for fetching and repacking the OpenJDK (for
 # Linux)
 
-UPLOAD_DIR=$HOME/project/gecko/jdk
 AVD_JSON_CONFIG="$1"
 
-mkdir -p $HOME/artifacts $UPLOAD_DIR
+mkdir -p $UPLOAD_DIR
 
 # Populate /builds/worker/.mozbuild/jdk
 cd $GECKO_PATH

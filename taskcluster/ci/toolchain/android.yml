@@ -77,11 +77,8 @@ linux64-android-system-image-x86_64-repack:
     description: "Android System Images (Linux) repack toolchain build"
     treeherder:
         symbol: TL(x86_64-avd-img-linux)
-    worker:
-        artifacts:
-            - name: project/gecko/android-system-images
-              path: /builds/worker/project/gecko/android-system-images/
-              type: directory
+    attributes:
+        artifact_prefix: project/gecko/android-system-images
     run:
         script: repack-android-system-images-linux.sh
         arguments:
@@ -99,11 +96,8 @@ linux64-jdk-repack:
     description: "Java JDK (Linux) repack toolchain build"
     treeherder:
         symbol: TL(jdk)
-    worker:
-        artifacts:
-            - name: project/gecko/jdk
-              path: /builds/worker/project/gecko/jdk/
-              type: directory
+    attributes:
+        artifact_prefix: project/gecko/jdk
     run:
         script: repack-jdk-linux.sh
         resources:
@@ -115,13 +109,10 @@ linux64-jdk-repack:
 
 linux64-android-sdk-linux-repack:
     description: "Android SDK (Linux) repack toolchain build"
+    attributes:
+        artifact_prefix: project/gecko/android-sdk
     treeherder:
         symbol: TL(android-sdk-linux)
-    worker:
-        artifacts:
-            - name: project/gecko/android-sdk
-              path: /builds/worker/project/gecko/android-sdk/
-              type: directory
     run:
         script: repack-android-sdk-linux.sh
         resources:
@@ -137,11 +128,8 @@ linux64-android-emulator-linux-repack:
     description: "Android Emulator (Linux) repack toolchain build"
     treeherder:
         symbol: TL(android-emulator-linux)
-    worker:
-        artifacts:
-            - name: project/gecko/android-emulator
-              path: /builds/worker/project/gecko/android-emulator/
-              type: directory
+    attributes:
+        artifact_prefix: project/gecko/android-emulator
     run:
         script: repack-android-emulator-linux.sh
         resources:
@@ -157,11 +145,8 @@ linux64-android-ndk-linux-repack:
     description: "Android NDK (Linux) repack toolchain build"
     treeherder:
         symbol: TL(android-ndk-linux)
-    worker:
-        artifacts:
-            - name: project/gecko/android-ndk
-              path: /builds/worker/project/gecko/android-ndk/
-              type: directory
+    attributes:
+        artifact_prefix: project/gecko/android-ndk
     run:
         script: repack-android-ndk-linux.sh
         resources:
