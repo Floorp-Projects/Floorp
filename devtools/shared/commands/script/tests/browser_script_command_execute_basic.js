@@ -64,6 +64,8 @@ add_task(async () => {
     async function testAsyncAwait() { await 1; return 10; }
     async function * testAsyncGen() { return 10; }
     async function * testAsyncGenAwait() { await 1; return 10; }
+
+    function testFunc() {}
   </script>
   <body id="body1" class="class2"><h1>Body text</h1></body>
   </html>`);
@@ -631,6 +633,10 @@ async function doEagerEvalESGetters(commands) {
 
     // Error
     ["typeof new Error().stack", "string"],
+
+    // Function
+    ["typeof testFunc.arguments", "object"],
+    ["typeof testFunc.caller", "object"],
 
     // Map
     ["testMap.size", 4],
