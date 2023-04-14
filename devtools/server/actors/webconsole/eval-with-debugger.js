@@ -8,11 +8,9 @@ const Debugger = require("Debugger");
 const DevToolsUtils = require("resource://devtools/shared/DevToolsUtils.js");
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Reflect",
-  "resource://gre/modules/reflect.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  Reflect: "resource://gre/modules/reflect.sys.mjs",
+});
 loader.lazyRequireGetter(
   this,
   "formatCommand",
