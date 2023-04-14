@@ -98,12 +98,13 @@ export const FAKE_RECOMMENDATION = {
       sumo_path: "a_help_path_fragment",
     },
     heading_text: "Fake Heading Text",
+    icon_class: "Fake Icon class",
     addon: {
       title: "Fake Addon Title",
       author: "Fake Addon Author",
       icon: "a_path_to_some_icon",
-      rating: 4.2,
-      users: 1234,
+      rating: "4.2",
+      users: "1234",
       amo_url: "a_path_to_amo",
     },
     descriptionDetails: {
