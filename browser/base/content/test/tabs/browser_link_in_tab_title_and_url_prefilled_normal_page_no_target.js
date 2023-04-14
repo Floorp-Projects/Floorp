@@ -75,3 +75,12 @@ add_task(async function normal_page__no_target__timeout() {
     },
   });
 });
+
+add_task(async function normal_page__no_target__session_restore() {
+  await doSessionRestoreTest({
+    link: "wait-a-bit--no-target",
+    openBy: OPEN_BY.CLICK,
+    openAs: OPEN_AS.FOREGROUND,
+    expectedSessionRestored: false,
+  });
+});

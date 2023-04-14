@@ -36,6 +36,12 @@ export var SessionHistory = Object.freeze({
     );
   },
 
+  collectNonWebControlledBlankLoadingSession(browsingContext) {
+    return SessionHistoryInternal.collectNonWebControlledBlankLoadingSession(
+      browsingContext
+    );
+  },
+
   restore(docShell, tabData) {
     if (Services.appinfo.sessionHistoryInParent) {
       throw new Error("Use SessionHistory.restoreFromParent instead");
@@ -149,6 +155,27 @@ var SessionHistoryInternal = {
     data.fromIdx = aFromIdx;
 
     return data;
+  },
+
+  collectNonWebControlledBlankLoadingSession(browsingContext) {
+    if (
+      browsingContext.sessionHistory?.count === 0 &&
+      browsingContext.nonWebControlledBlankURI &&
+      browsingContext.mostRecentLoadingSessionHistoryEntry
+    ) {
+      return {
+        entries: [
+          this.serializeEntry(
+            browsingContext.mostRecentLoadingSessionHistoryEntry
+          ),
+        ],
+        index: 0,
+        fromIdx: -1,
+        requestedIndex: browsingContext.sessionHistory.requestedIndex + 1,
+      };
+    }
+
+    return null;
   },
 
   /**

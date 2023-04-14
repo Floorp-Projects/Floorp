@@ -3015,6 +3015,16 @@ void CanonicalBrowsingContext::StopApzAutoscroll(nsViewID aScrollId,
   widget->StopAsyncAutoscroll(guid);
 }
 
+already_AddRefed<nsISHEntry>
+CanonicalBrowsingContext::GetMostRecentLoadingSessionHistoryEntry() {
+  if (mLoadingEntries.IsEmpty()) {
+    return nullptr;
+  }
+
+  RefPtr<SessionHistoryEntry> entry = mLoadingEntries.LastElement().mEntry;
+  return entry.forget();
+}
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(CanonicalBrowsingContext)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(CanonicalBrowsingContext,

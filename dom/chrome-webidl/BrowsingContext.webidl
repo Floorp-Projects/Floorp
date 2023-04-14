@@ -411,6 +411,8 @@ interface CanonicalBrowsingContext : BrowsingContext {
    */
   undefined stopApzAutoscroll(unsigned long long aScrollId,
                               unsigned long aPresShellId);
+
+  readonly attribute nsISHEntry? mostRecentLoadingSessionHistoryEntry;
 };
 
 [Exposed=Window, ChromeOnly]
