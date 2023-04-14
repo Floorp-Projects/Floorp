@@ -6,6 +6,7 @@ LOADER_CSS = ".loader-container"
 VPN_TEXT = "ONLY AVAILABLE INSIDE THE US"
 
 
+@pytest.mark.skip_platforms("android")
 @pytest.mark.asyncio
 @pytest.mark.with_interventions
 async def test_enabled(client):
@@ -17,6 +18,7 @@ async def test_enabled(client):
     assert not client.find_css(INCOMPATIBLE_CSS)
 
 
+@pytest.mark.skip_platforms("android")
 @pytest.mark.asyncio
 @pytest.mark.without_interventions
 async def test_disabled(client):

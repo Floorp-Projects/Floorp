@@ -6,6 +6,7 @@ SUPPORTED_CSS = "#playerWrapper"
 UNSUPPORTED_CSS = ".end_player_unavailable .download_links"
 
 
+@pytest.mark.skip_platforms("android")
 @pytest.mark.asyncio
 @pytest.mark.with_interventions
 async def test_enabled(client):
@@ -13,6 +14,7 @@ async def test_enabled(client):
     assert client.await_css(SUPPORTED_CSS)
 
 
+@pytest.mark.skip_platforms("android")
 @pytest.mark.asyncio
 @pytest.mark.without_interventions
 async def test_disabled(client):

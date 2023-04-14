@@ -4,6 +4,7 @@ URL = "http://histography.io/"
 SUPPORT_URL = "http://histography.io/browser_support.htm"
 
 
+@pytest.mark.skip_platforms("android")
 @pytest.mark.asyncio
 @pytest.mark.with_interventions
 async def test_enabled(client):
@@ -11,6 +12,7 @@ async def test_enabled(client):
     assert client.current_url == URL
 
 
+@pytest.mark.skip_platforms("android")
 @pytest.mark.asyncio
 @pytest.mark.without_interventions
 async def test_disabled(client):

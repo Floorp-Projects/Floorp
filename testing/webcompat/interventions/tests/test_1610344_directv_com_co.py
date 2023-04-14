@@ -31,12 +31,14 @@ async def check_unsupported_visibility(client, should_show):
     assert (should_show and shown) or (not should_show and not shown)
 
 
+@pytest.mark.skip_platforms("android")
 @pytest.mark.asyncio
 @pytest.mark.with_interventions
 async def test_enabled(client):
     await check_unsupported_visibility(client, should_show=False)
 
 
+@pytest.mark.skip_platforms("android")
 @pytest.mark.asyncio
 @pytest.mark.without_interventions
 async def test_disabled(client):

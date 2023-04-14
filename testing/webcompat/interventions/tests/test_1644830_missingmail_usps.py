@@ -49,12 +49,14 @@ async def are_checkboxes_clickable(client, credentials):
     return tc.selected
 
 
+@pytest.mark.skip_platforms("android")
 @pytest.mark.asyncio
 @pytest.mark.with_interventions
 async def test_enabled(client, credentials):
     assert await are_checkboxes_clickable(client, credentials)
 
 
+@pytest.mark.skip_platforms("android")
 @pytest.mark.asyncio
 @pytest.mark.without_interventions
 async def test_disabled(client, credentials):
