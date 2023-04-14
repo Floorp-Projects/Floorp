@@ -9,10 +9,14 @@ NO_CSS = "[data-selector='existingCustomer-toggle-button-no']"
 CONT_CSS = "[data-selector='ib-yes-continue-without-login-not-existing-customer-continue-button']"
 CONT2_CSS = "[data-selector='beforeYouStart-continue-button']"
 RADIO_CSS = "[name='aboutYou-gender-radio'] + span"
+ACCEPT_COOKIES_CSS = "#lbganalyticsCookies [title*='Accept cookies']"
 
 
 async def get_radio_position(client):
     await client.navigate(URL)
+    accept = client.await_css(ACCEPT_COOKIES_CSS, timeout=2)
+    if accept:
+        accept.click()
     client.await_css(NO_CSS).click()
     client.await_css(CONT_CSS).click()
     client.await_css(CONT2_CSS).click()

@@ -4,7 +4,7 @@ URL = "https://www.bankofamerica.com/"
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip_platforms("windows")
+@pytest.mark.skip_platforms("android", "windows")
 @pytest.mark.with_interventions
 async def test_enabled(client):
     await client.navigate(URL)
@@ -12,7 +12,7 @@ async def test_enabled(client):
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip_platforms("windows")
+@pytest.mark.skip_platforms("android", "windows")
 @pytest.mark.without_interventions
 async def test_disabled(client):
     await client.navigate(URL)

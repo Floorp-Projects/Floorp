@@ -9,14 +9,18 @@ import tempfile
 
 import pytest
 
+GVE = "org.mozilla.geckoview_example"
+
 
 def run(
     logger,
     path,
-    browser_binary,
     webdriver_binary,
     webdriver_port,
     webdriver_ws_port,
+    browser_binary=None,
+    device_serial=None,
+    package_name=None,
     environ=None,
     bug=None,
     debug=False,
@@ -24,6 +28,7 @@ def run(
     shims=None,
     config=None,
     headless=False,
+    addon=None,
     do2fa=False,
 ):
     """"""
@@ -53,8 +58,6 @@ def run(
                 "-o=console_output_style=classic",  # disable test progress bar
                 "--browser",
                 "firefox",
-                "--browser-binary",
-                browser_binary,
                 "--webdriver-binary",
                 webdriver_binary,
                 "--webdriver-port",
@@ -68,6 +71,22 @@ def run(
 
             if headless:
                 args.append("--headless")
+
+            if browser_binary:
+                args.append("--browser-binary")
+                args.append(browser_binary)
+
+            if device_serial:
+                args.append("--device-serial")
+                args.append(device_serial)
+
+            if package_name:
+                args.append("--package-name")
+                args.append(package_name)
+
+            if addon:
+                args.append("--addon")
+                args.append(addon)
 
             if bug:
                 args.append("--bug")
@@ -157,6 +176,22 @@ class WDConfig:
             "--config",
             action="store",
             help="Path to JSON file containing logins and other settings",
+        )
+        parser.addoption(
+            "--addon",
+            action="store",
+            help="Path to the webcompat addon XPI to use",
+        )
+        parser.addoption(
+            "--device-serial",
+            action="store",
+            help="Emulator device serial number",
+        )
+        parser.addoption(
+            "--package-name",
+            action="store",
+            default=GVE,
+            help="Android package to run/connect to",
         )
         parser.addoption(
             "--headless", action="store_true", help="Run browser in headless mode"

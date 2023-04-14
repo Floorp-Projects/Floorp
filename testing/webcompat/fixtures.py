@@ -26,6 +26,9 @@ UA_OVERRIDES_PREF = "extensions.webcompat.perform_ua_overrides"
 class WebDriver:
     def __init__(self, config):
         self.browser_binary = config.getoption("browser_binary")
+        self.device_serial = config.getoption("device_serial")
+        self.package_name = config.getoption("package_name")
+        self.addon = config.getoption("addon")
         self.webdriver_binary = config.getoption("webdriver_binary")
         self.port = config.getoption("webdriver_port")
         self.wsPort = config.getoption("webdriver_ws_port")
@@ -84,10 +87,20 @@ class FirefoxWebDriver(WebDriver):
             prefs[CB_PREF] = cookieBehavior
             prefs[CB_PBM_PREF] = cookieBehavior
 
-        fx_options = {"binary": self.browser_binary, "prefs": prefs}
+        fx_options = {"prefs": prefs}
 
-        if self.headless:
-            fx_options["args"] = ["--headless"]
+        if self.browser_binary:
+            fx_options["binary"] = self.browser_binary
+            if self.headless:
+                fx_options["args"] = ["--headless"]
+
+        if self.device_serial:
+            fx_options["androidDeviceSerial"] = self.device_serial
+            fx_options["androidPackage"] = self.package_name
+
+        if self.addon:
+            prefs["xpinstall.signatures.required"] = False
+            prefs["extensions.experiments.enabled"] = True
 
         return {
             "pageLoadStrategy": "normal",
@@ -150,6 +163,39 @@ async def client(session, event_loop):
     return Client(session, event_loop)
 
 
+def install_addon(session, addon_file_path):
+    context = session.send_session_command("GET", "moz/context")
+    session.send_session_command("POST", "moz/context", {"context": "chrome"})
+    session.execute_async_script(
+        """
+        const addon_file_path = arguments[0];
+        const cb = arguments[1];
+        const { AddonManager } = ChromeUtils.import(
+            "resource://gre/modules/AddonManager.jsm"
+        );
+        const { ExtensionPermissions } = ChromeUtils.import(
+            "resource://gre/modules/ExtensionPermissions.jsm"
+        );
+        const { FileUtils } = ChromeUtils.importESModule(
+            "resource://gre/modules/FileUtils.sys.mjs"
+        );
+        const file = new FileUtils.File(arguments[0]);
+        AddonManager.installTemporaryAddon(file).then(addon => {
+            // also make sure the addon works in private browsing mode
+            const incognitoPermission = {
+                permissions: ["internal:privateBrowsingAllowed"],
+                origins: [],
+            };
+            ExtensionPermissions.add(addon.id, incognitoPermission).then(() => {
+                addon.reload().then(cb);
+            });
+        });
+        """,
+        [addon_file_path],
+    )
+    session.send_session_command("POST", "moz/context", {"context": context})
+
+
 @pytest.fixture(scope="function")
 async def session(driver, test_config):
     caps = driver.capabilities(test_config)
@@ -172,10 +218,13 @@ async def session(driver, test_config):
                 session.test_config = test_config
             session.start()
             break
-        except ConnectionRefusedError:
+        except (ConnectionRefusedError, webdriver.error.TimeoutException):
             await asyncio.sleep(0.5)
 
     await session.bidi_session.start()
+
+    if driver.addon:
+        install_addon(session, driver.addon)
 
     yield session
 
@@ -184,8 +233,13 @@ async def session(driver, test_config):
 
 
 @pytest.fixture(autouse=True)
-def skip_platforms(bug_number, request, session):
-    platform = session.capabilities["platformName"]
+def platform(session):
+    return session.capabilities["platformName"]
+
+
+@pytest.fixture(autouse=True)
+def skip_platforms(bug_number, platform, request, session):
     if request.node.get_closest_marker("skip_platforms"):
-        if request.node.get_closest_marker("skip_platforms").args[0] == platform:
-            pytest.skip(f"Bug #{bug_number} skipped on platform ({platform})")
+        for skipped in request.node.get_closest_marker("skip_platforms").args:
+            if skipped == platform:
+                pytest.skip(f"Bug #{bug_number} skipped on platform ({platform})")

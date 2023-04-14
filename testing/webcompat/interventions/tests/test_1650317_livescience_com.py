@@ -26,14 +26,14 @@ async def is_text_visible(client):
     )
 
 
-@pytest.mark.skip_platforms("mac")
+@pytest.mark.skip_platforms("android", "mac")
 @pytest.mark.asyncio
 @pytest.mark.with_interventions
 async def test_enabled(client):
     assert await is_text_visible(client)
 
 
-@pytest.mark.skip_platforms("mac")
+@pytest.mark.skip_platforms("android", "mac")
 @pytest.mark.asyncio
 @pytest.mark.without_interventions
 async def test_disabled(client):

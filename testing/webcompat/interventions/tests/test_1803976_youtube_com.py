@@ -36,6 +36,7 @@ async def search_for_term(client):
     time.sleep(2)
 
 
+@pytest.mark.skip_platforms("android")
 @pytest.mark.asyncio
 @pytest.mark.with_interventions
 async def test_enabled(client):
@@ -48,6 +49,7 @@ async def test_enabled(client):
 
 
 @pytest.mark.skip(reason="results are intermittent, so skipping this test for now")
+@pytest.mark.skip_platforms("android")
 @pytest.mark.asyncio
 @pytest.mark.without_interventions
 async def test_disabled(client):

@@ -9,6 +9,7 @@ NOT_A_ROBOT_TEXT = (
 )
 
 
+@pytest.mark.skip_platforms("android")
 @pytest.mark.asyncio
 @pytest.mark.with_interventions
 async def test_enabled(client):
@@ -32,6 +33,7 @@ async def test_enabled(client):
     assert client.is_displayed(loaded)
 
 
+@pytest.mark.skip_platforms("android")
 @pytest.mark.asyncio
 @pytest.mark.without_interventions
 async def test_disabled(client):

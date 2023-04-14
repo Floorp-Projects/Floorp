@@ -108,6 +108,7 @@ async def load_mic_test(client, credentials, should_do_2fa):
     return mic_test
 
 
+@pytest.mark.skip_platforms("android")
 @pytest.mark.asyncio
 @pytest.mark.with_interventions
 async def test_enabled(client, credentials, should_do_2fa):
@@ -121,6 +122,7 @@ async def test_enabled(client, credentials, should_do_2fa):
     assert not client.find_text(UNSUPPORTED_TEXT)
 
 
+@pytest.mark.skip_platforms("android")
 @pytest.mark.asyncio
 @pytest.mark.without_interventions
 async def test_disabled(client, credentials, should_do_2fa):
