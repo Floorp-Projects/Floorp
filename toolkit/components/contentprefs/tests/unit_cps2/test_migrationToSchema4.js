@@ -49,7 +49,7 @@ add_task(async function resetBeforeTests() {
 // and so migration will be run only once.
 add_task(async function testMigration() {
   // Test migrated db content.
-  await schemaVersionIs(4);
+  await schemaVersionIs(CURRENT_DB_VERSION);
   let dbExpectedState = [
     [null, "zoom-setting", 0.1],
     ["bar.com", "zoom-setting", 0.3],

@@ -754,7 +754,7 @@ ConnectionData.prototype = Object.freeze({
     let caller = new Error().stack
       .split("\n", 3)
       .pop()
-      .match(/^([^@]+@).*\/([^\/:]+)[:0-9]*$/);
+      .match(/^([^@]*@).*\/([^\/:]+)[:0-9]*$/);
     caller = caller[1] + caller[2];
     this._log.debug(`Transaction (type ${type}) requested by: ${caller}`);
 

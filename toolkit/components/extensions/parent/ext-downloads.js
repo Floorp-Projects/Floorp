@@ -880,11 +880,7 @@ this.downloads = class extends ExtensionAPIPersistent {
             );
 
             async function getLastDirectory() {
-              return new Promise(resolve => {
-                downloadLastDir.getFileAsync(extension.baseURI, file => {
-                  resolve(file);
-                });
-              });
+              return downloadLastDir.getFileAsync(extension.baseURI);
             }
 
             function appendFilterForFileExtension(picker, ext) {

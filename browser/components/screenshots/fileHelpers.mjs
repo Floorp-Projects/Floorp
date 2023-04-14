@@ -231,11 +231,7 @@ function promiseTargetFile(aFpP, win) {
 
     // We must prompt for the file name explicitly.
     // If we must prompt because we were asked to...
-    let file = await new Promise(resolve => {
-      downloadLastDir.getFileAsync(null, function getFileAsyncCB(aFile) {
-        resolve(aFile);
-      });
-    });
+    let file = await downloadLastDir.getFileAsync(null);
     if (file && (await IOUtils.exists(file.path))) {
       dir = file;
       dirExists = true;

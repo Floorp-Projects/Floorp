@@ -5,6 +5,8 @@
 let loadContext = Cu.createLoadContext();
 let privateLoadContext = Cu.createPrivateLoadContext();
 
+const CURRENT_DB_VERSION = 5;
+
 // There has to be a profile directory before the CPS service is gotten.
 do_get_profile();
 let cps = Cc["@mozilla.org/content-pref/service;1"].getService(

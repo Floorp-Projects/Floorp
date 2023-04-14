@@ -341,7 +341,7 @@ nsUnknownContentTypeDialog.prototype = {
       let preferredDir = await Downloads.getPreferredDownloadsDirectory();
       picker.displayDirectory = new FileUtils.File(preferredDir);
 
-      gDownloadLastDir.getFileAsync(aLauncher.source, lastDir => {
+      gDownloadLastDir.getFileAsync(aLauncher.source).then(lastDir => {
         if (lastDir && isUsableDirectory(lastDir)) {
           picker.displayDirectory = lastDir;
         }

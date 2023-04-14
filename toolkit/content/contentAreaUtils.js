@@ -674,20 +674,10 @@ function promiseTargetFile(
 
     // We must prompt for the file name explicitly.
     // If we must prompt because we were asked to...
-    let file = await new Promise(resolve => {
-      if (useDownloadDir) {
-        // Keep async behavior in both branches
-        Services.tm.dispatchToMainThread(function() {
-          resolve(null);
-        });
-      } else {
-        downloadLastDir.getFileAsync(aRelatedURI, function getFileAsyncCB(
-          aFile
-        ) {
-          resolve(aFile);
-        });
-      }
-    });
+    let file = null;
+    if (!useDownloadDir) {
+      file = await downloadLastDir.getFileAsync(aRelatedURI);
+    }
     if (file && (await IOUtils.exists(file.path))) {
       dir = file;
       dirExists = true;

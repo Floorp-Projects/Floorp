@@ -1115,7 +1115,7 @@ ContentPrefService2.prototype = {
 
   // Database Creation & Access
 
-  _dbVersion: 4,
+  _dbVersion: 5,
 
   _dbSchema: {
     tables: {
@@ -1349,6 +1349,29 @@ ContentPrefService2.prototype = {
     for (let name in this._dbSchema.indices) {
       await this._createIndex(aConn, name);
     }
+  },
+
+  async _dbMigrate4To5(conn) {
+    // This is a data migration for browser.download.lastDir. While it may not
+    // affect all consumers, it's simpler and safer to do it here than elsewhere.
+    await conn.execute(`
+      DELETE FROM prefs
+      WHERE id IN (
+        SELECT p.id FROM prefs p
+        JOIN groups g ON g.id = p.groupID
+        JOIN settings s ON s.id = p.settingID
+        WHERE s.name = 'browser.download.lastDir'
+          AND (
+          (g.name BETWEEN 'data:' AND 'data:' || X'FFFF') OR
+          (g.name BETWEEN 'file:' AND 'file:' || X'FFFF')
+        )
+      )
+    `);
+    await conn.execute(`
+      DELETE FROM groups WHERE NOT EXISTS (
+        SELECT 1 FROM prefs WHERE groupId = groups.id
+      )
+    `);
   },
 };
 

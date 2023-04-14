@@ -21,7 +21,7 @@ function createWindow(aOptions) {
 }
 
 function getFile(downloadLastDir, aURI) {
-  return new Promise(resolve => downloadLastDir.getFileAsync(aURI, resolve));
+  return downloadLastDir.getFileAsync(aURI);
 }
 
 function setFile(downloadLastDir, aURI, aValue) {
