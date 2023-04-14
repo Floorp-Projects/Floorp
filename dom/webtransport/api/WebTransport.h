@@ -11,7 +11,6 @@
 #include "nsTArray.h"
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
-#include "nsPIDOMWindow.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WebTransportBinding.h"
 #include "mozilla/dom/WebTransportChild.h"
@@ -53,10 +52,6 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(WebTransport)
 
   enum class WebTransportState { CONNECTING, CONNECTED, CLOSED, FAILED };
-
-  static void NotifyBFCacheOnMainThread(nsPIDOMWindowInner* aInner,
-                                        bool aCreated);
-  void NotifyToWindow(bool aCreated) const;
 
   // this calls CreateReadableStream(), which in this case doesn't actually run
   // script.   See also bug 1810942

@@ -103,8 +103,6 @@ class RemoteWorkerObserver {
 
   virtual void LockNotified(bool aCreated) = 0;
 
-  virtual void WebTransportNotified(bool aCreated) = 0;
-
   virtual void Terminated() = 0;
 };
 
@@ -158,8 +156,6 @@ class RemoteWorkerController final {
   RefPtr<GenericPromise> SetServiceWorkerSkipWaitingFlag() const;
 
   bool IsTerminated() const;
-
-  void NotifyWebTransport(bool aCreated);
 
  private:
   RemoteWorkerController(const RemoteWorkerData& aData,

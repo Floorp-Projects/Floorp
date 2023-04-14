@@ -198,10 +198,6 @@ class ServiceWorkerPrivate final : public RemoteWorkerObserver {
     // no-op for service workers
   }
 
-  void WebTransportNotified(bool aCreated) final {
-    // no-op for service workers
-  }
-
   void Terminated() override;
 
   // Refreshes only the parts of mRemoteWorkerData that may change over time.

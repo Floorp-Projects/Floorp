@@ -62,8 +62,6 @@ class RemoteWorkerChild final : public PRemoteWorkerChild {
 
   void NotifyLock(bool aCreated);
 
-  void NotifyWebTransport(bool aCreated);
-
   void FlushReportsOnMainThread(nsIConsoleReportCollector* aReporter);
 
   void AddPortIdentifier(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
