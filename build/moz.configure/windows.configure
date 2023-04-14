@@ -380,7 +380,10 @@ def lib_path_for(host_or_target):
                 onerror=lambda: None
             ).strip()
             if runtime_dir and os.path.exists(runtime_dir):
-                libs.append(runtime_dir)
+                # Put the clang runtime directory first, in case there is
+                # a different version in some of the other directories (notably,
+                # some versions of MSVC come with clang runtimes)
+                libs.insert(0, runtime_dir)
         return libs
 
     return lib_path
