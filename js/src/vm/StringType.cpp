@@ -395,19 +395,6 @@ void JSString::dumpRepresentationHeader(js::GenericPrinter& out,
   out.putChar('\n');
 }
 
-JSExtensibleString& JSLinearString::makeExtensible(size_t capacity) {
-  MOZ_ASSERT(!isDependent());
-  MOZ_ASSERT(!isInline());
-  MOZ_ASSERT(!isAtom());
-  MOZ_ASSERT(!isExternal());
-  MOZ_ASSERT(capacity >= length());
-  js::RemoveCellMemory(this, allocSize(), js::MemoryUse::StringContents);
-  setLengthAndFlags(length(), flags() | EXTENSIBLE_FLAGS);
-  d.s.u3.capacity = capacity;
-  js::AddCellMemory(this, allocSize(), js::MemoryUse::StringContents);
-  return asExtensible();
-}
-
 void JSLinearString::dumpRepresentationChars(js::GenericPrinter& out,
                                              int indent) const {
   if (hasLatin1Chars()) {
