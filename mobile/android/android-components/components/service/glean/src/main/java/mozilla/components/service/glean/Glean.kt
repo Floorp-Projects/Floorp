@@ -9,6 +9,7 @@ import androidx.annotation.MainThread
 import androidx.annotation.VisibleForTesting
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.private.RecordedExperiment
+import org.json.JSONObject
 import mozilla.telemetry.glean.Glean as GleanCore
 
 typealias BuildInfo = mozilla.telemetry.glean.BuildInfo
@@ -107,6 +108,16 @@ object Glean {
      */
     fun setExperimentInactive(experimentId: String) {
         GleanCore.setExperimentInactive(experimentId = experimentId)
+    }
+
+    /**
+     * Set configuration to override metrics' enabled state, typically from a remote_settings
+     * experiment or rollout.
+     *
+     * @param enabled Map of metrics' enabled state.
+     */
+    fun setMetricsEnabledConfig(enabled: Map<String, Boolean>) {
+        GleanCore.setMetricsEnabledConfig(JSONObject(enabled).toString())
     }
 
     /**

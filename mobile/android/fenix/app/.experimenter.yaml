@@ -15,6 +15,14 @@ cookie-banners:
     sections-enabled:
       type: json
       description: This property provides a lookup table of whether or not the given section should be enabled.
+glean:
+  description: A feature that provides server-side configurations for Glean metrics (aka Server Knobs).
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    metrics-enabled:
+      type: json
+      description: "A map of metric base-identifiers to booleans representing the state of the 'enabled' flag for that metric."
 growth-data:
   description: A feature measuring campaign growth data
   hasExposure: true

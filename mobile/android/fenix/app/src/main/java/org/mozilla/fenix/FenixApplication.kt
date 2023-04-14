@@ -197,6 +197,9 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             buildInfo = GleanBuildInfo.buildInfo,
         )
 
+        // Set the metric configuration from Nimbus.
+        Glean.setMetricsEnabledConfig(FxNimbus.features.glean.value().metricsEnabled)
+
         // We avoid blocking the main thread on startup by setting startup metrics on the background thread.
         val store = components.core.store
         GlobalScope.launch(Dispatchers.IO) {
