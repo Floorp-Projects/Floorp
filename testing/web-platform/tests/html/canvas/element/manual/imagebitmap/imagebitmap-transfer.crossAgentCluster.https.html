@@ -8,14 +8,35 @@
 <body>
 <script>
 const HELPER = '/html/canvas/element/manual/imagebitmap/imagebitmap-transfer.crossAgentCluster.helper.html';
+const SAMEORIGIN_BASE = get_host_info().HTTPS_ORIGIN;
 const CROSSORIGIN_BASE = get_host_info().HTTPS_NOTSAMESITE_ORIGIN;
+const SAMEORIGIN_HELPER = SAMEORIGIN_BASE + HELPER;
 const CROSSORIGIN_HELPER = CROSSORIGIN_BASE + HELPER;
 
 promise_test(async () => {
+  const target = (await appendIframe(SAMEORIGIN_HELPER)).contentWindow;
+  let img = createImageBitmap(10, 10);
+  assert_true(await canSerializeImageBitmap(target, img));
+}, 'Verify imagebitmap can be passed within the same agent clusters');
+
+promise_test(async () => {
   const target = (await appendIframe(CROSSORIGIN_HELPER)).contentWindow;
-  let img = createImageBitmap(10, 10)
+  let img = createImageBitmap(20, 20);
+  assert_false(await canSerializeImageBitmap(target, img));
+}, 'Verify imagebitmap cannot be passed accross the different agent clusters');
+
+promise_test(async () => {
+  const target = (await appendIframe(SAMEORIGIN_HELPER)).contentWindow;
+  let img = createImageBitmap(30, 30);
+  assert_true(await canTransferImageBitmap(target, img));
+  assert_true(isImageBitmapClosed(img));
+}, 'Verify imagebitmap can be transferred within the same agent clusters');
+
+promise_test(async () => {
+  const target = (await appendIframe(CROSSORIGIN_HELPER)).contentWindow;
+  let img = createImageBitmap(40, 40);
   assert_false(await canTransferImageBitmap(target, img));
-}, 'Verify ImageBitmaps cannot be transferred accross the different agent clusters');
+}, 'Verify imagebitmap cannot be transferred accross the different agent clusters');
 
 function appendIframe(src) {
   const frame = document.createElement('iframe');
@@ -32,13 +53,31 @@ function createImageBitmap(w, h) {
   return canvas.transferToImageBitmap();
 }
 
-function canTransferImageBitmap(target, image) {
-  target.postMessage(image, '*', [image]);
-  target.postMessage({'id': image.width}, '*');
+function canSerializeImageBitmap(target, img) {
+  return canPostImageBitmap(target, img, false);
+};
+
+function canTransferImageBitmap(target, img) {
+  return canPostImageBitmap(target, img, true);
+};
+
+function canPostImageBitmap(target, img, transfer) {
+  let id = img.width;
+  if (transfer) {
+    target.postMessage(img, '*', [img]);
+    assert_true(isImageBitmapClosed(img));
+  } else {
+    target.postMessage(img, '*');
+  }
+  target.postMessage({'id': id}, '*');
   return new Promise(resolve => window.onmessage = e => {
     resolve(e.data == 'RECEIVED');
   });
 };
+
+function isImageBitmapClosed(img) {
+  return img.width == 0 && img.height == 0;
+}
 </script>
 </body>
 </html>
