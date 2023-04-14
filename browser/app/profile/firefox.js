@@ -1204,6 +1204,9 @@ pref("places.frecency.defaultVisitBonus", 0);
 pref("places.frecency.unvisitedBookmarkBonus", 140);
 pref("places.frecency.unvisitedTypedBonus", 200);
 
+// Enables alternative frecency calculation for origins.
+pref("places.frecency.origins.alternative.featureGate", false);
+
 // Clear data by base domain (including partitioned storage) when the user
 // selects "Forget About This Site".
 pref("places.forgetThisSite.clearByBaseDomain", true);
