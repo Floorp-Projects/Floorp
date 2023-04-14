@@ -952,6 +952,7 @@ ContentPrefService2.prototype = {
    * @return          If groupStr is a valid URL string, returns the domain of
    *                  that URL.  If groupStr is some other nonempty string,
    *                  returns groupStr itself.  Otherwise returns null.
+   *                  The return value is truncated at GROUP_NAME_MAX_LENGTH.
    */
   _parseGroup: function CPS2__parseGroup(groupStr) {
     if (!groupStr) {
@@ -959,10 +960,12 @@ ContentPrefService2.prototype = {
     }
     try {
       var groupURI = Services.io.newURI(groupStr);
-    } catch (err) {
-      return groupStr;
-    }
-    return HostnameGrouper_group(groupURI);
+      groupStr = HostnameGrouper_group(groupURI);
+    } catch (err) {}
+    return groupStr.substring(
+      0,
+      Ci.nsIContentPrefService2.GROUP_NAME_MAX_LENGTH - 1
+    );
   },
 
   _schedule: function CPS2__schedule(fn) {
@@ -1372,6 +1375,17 @@ ContentPrefService2.prototype = {
         SELECT 1 FROM prefs WHERE groupId = groups.id
       )
     `);
+    // Trim group names longer than MAX_GROUP_LENGTH.
+    await conn.execute(
+      `
+      UPDATE groups
+      SET name = substr(name, 0, :maxlen)
+      WHERE LENGTH(name) > :maxlen
+      `,
+      {
+        maxlen: Ci.nsIContentPrefService2.GROUP_NAME_MAX_LENGTH,
+      }
+    );
   },
 };
 

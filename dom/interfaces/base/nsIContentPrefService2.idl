@@ -102,6 +102,12 @@ interface nsIContentPrefObserver : nsISupports
 interface nsIContentPrefService2 : nsISupports
 {
   /**
+   * Group (called "domain" in this interface) names longer than this will be
+   * truncated automatically.
+   */
+  const unsigned short GROUP_NAME_MAX_LENGTH = 2000;
+
+  /**
    * Gets all the preferences with the given name.
    *
    * @param name      The preferences' name.

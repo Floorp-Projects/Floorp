@@ -219,3 +219,14 @@ add_task(async function setSetsCurrentDate() {
   );
   await reset();
 });
+
+add_task(async function maxLength() {
+  const MAX_LENGTH = Ci.nsIContentPrefService2.GROUP_NAME_MAX_LENGTH;
+  const LONG_DATA_URL = `data:,${new Array(MAX_LENGTH).fill("x").join("")}`;
+  await set(LONG_DATA_URL, "foo", 1);
+  await getOK(
+    [LONG_DATA_URL, "foo"],
+    1,
+    LONG_DATA_URL.substring(0, MAX_LENGTH - 1)
+  );
+});

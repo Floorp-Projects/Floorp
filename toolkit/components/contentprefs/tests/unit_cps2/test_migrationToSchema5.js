@@ -6,6 +6,9 @@ ChromeUtils.defineESModuleGetters(this, {
   Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
 });
 
+const MAX_LENGTH = Ci.nsIContentPrefService2.GROUP_NAME_MAX_LENGTH;
+const LONG_DATA_URL = `data:,${new Array(MAX_LENGTH).fill("x").join("")}`;
+
 // Dump of version we migrate from
 const schema_queries = [
   "PRAGMA foreign_keys=OFF",
@@ -13,7 +16,8 @@ const schema_queries = [
   `INSERT INTO groups VALUES (1,'foo.com'),
                              (2,'bar.com'),
                              (3,'data:image/png;base64,1234'),
-                             (4,'file:///d/test.file')`,
+                             (4,'file:///d/test.file'),
+                             (5,'${LONG_DATA_URL}')`,
   "CREATE TABLE settings (id INTEGER PRIMARY KEY, name TEXT NOT NULL)",
   `INSERT INTO settings VALUES (1,'zoom-setting'),
                                (2,'browser.download.lastDir')`,
@@ -27,7 +31,8 @@ const schema_queries = [
                             (3,2,1,0.3,0),
                             (4,NULL,1,0.1,0),
                             (5,3,2,'/download/dir',0),
-                            (6,4,2,'/download/dir',0)`,
+                            (6,4,2,'/download/dir',0),
+                            (7,5,1,0.7,0)`,
   "CREATE INDEX groups_idx ON groups(name)",
   "CREATE INDEX settings_idx ON settings(name)",
   "CREATE INDEX prefs_idx ON prefs(timestamp, groupID, settingID)",
@@ -54,6 +59,7 @@ add_task(async function test() {
     [null, "zoom-setting", 0.1],
     ["bar.com", "zoom-setting", 0.3],
     ["foo.com", "zoom-setting", 0.5],
+    [LONG_DATA_URL.substring(0, MAX_LENGTH - 1), "zoom-setting", 0.7],
     ["foo.com", "browser.download.lastDir", "/download/dir"],
   ];
   await dbOK(dbExpectedState);
