@@ -213,8 +213,13 @@ class KeymapWrapper {
   static void SetFocusOut(wl_surface* aFocusSurface);
   static void GetFocusInfo(wl_surface** aFocusSurface, uint32_t* aFocusSerial);
 
-  static void SetSeat(wl_seat* aSeat);
+  static void SetSeat(wl_seat* aSeat, int aId);
+  static void ClearSeat(int aId);
   static wl_seat* GetSeat();
+
+  static void SetKeyboard(wl_keyboard* aKeyboard);
+  static wl_keyboard* GetKeyboard();
+  static void ClearKeyboard();
 
   /**
    * EnsureInstance() is provided on Wayland to register Wayland callbacks
@@ -234,7 +239,7 @@ class KeymapWrapper {
    */
   static void Shutdown();
 
- protected:
+ private:
   /**
    * GetInstance() returns a KeymapWrapper instance.
    *
@@ -496,7 +501,9 @@ class KeymapWrapper {
 #endif
 
 #ifdef MOZ_WAYLAND
-  wl_seat* mSeat = nullptr;
+  static wl_seat* sSeat;
+  static int sSeatID;
+  static wl_keyboard* sKeyboard;
   wl_surface* mFocusSurface = nullptr;
   uint32_t mFocusSerial = 0;
 #endif
