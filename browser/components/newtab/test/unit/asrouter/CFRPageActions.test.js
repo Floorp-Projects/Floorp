@@ -576,7 +576,7 @@ describe("CFRPageActions", () => {
         assert.isNull(footerUsers.getAttribute("hidden"));
         assert.equal(
           footerUsers.getAttribute("value"),
-          `${fakeRecommendation.content.addon.users} users`
+          `${fakeRecommendation.content.addon.users}`
         );
       });
       it("should send the right telemetry", async () => {
@@ -735,6 +735,11 @@ describe("CFRPageActions", () => {
             eventCallback: pageAction._popupStateChange,
             persistent: false,
             persistWhileVisible: false,
+            popupIconClass: fakeRecommendation.content.icon_class,
+            name: {
+              string_id: "cfr-doorhanger-extension-author",
+              args: { name: fakeRecommendation.content.addon.author },
+            },
           }
         );
       });

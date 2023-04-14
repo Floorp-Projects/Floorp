@@ -120,14 +120,11 @@
               "description": "The icon displayed in the pop-over. Should be 64x64px and png/svg."
             },
             "rating": {
-              "type": "number",
-              "minimum": 0,
-              "maximum": 5,
+              "type": "string",
               "description": "Star rating"
             },
             "users": {
-              "type": "integer",
-              "minimum": 0,
+              "type": "string",
               "description": "Installed users"
             },
             "amo_url": {

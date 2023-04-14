@@ -354,10 +354,7 @@ class PageAction {
     return subAttribute ? mainString.attributes[subAttribute] : mainString;
   }
 
-  async _setAddonAuthorAndRating(document, content) {
-    const author = this.window.document.getElementById(
-      "cfr-notification-author"
-    );
+  async _setAddonRating(document, content) {
     const footerFilledStars = this.window.document.getElementById(
       "cfr-notification-footer-filled-stars"
     );
@@ -367,14 +364,6 @@ class PageAction {
     const footerUsers = this.window.document.getElementById(
       "cfr-notification-footer-users"
     );
-    const footerSpacer = this.window.document.getElementById(
-      "cfr-notification-footer-spacer"
-    );
-
-    author.textContent = await this.getStrings({
-      string_id: "cfr-doorhanger-extension-author",
-      args: { name: content.addon.author },
-    });
 
     const { rating } = content.addon;
     if (rating) {
@@ -407,23 +396,13 @@ class PageAction {
 
     const { users } = content.addon;
     if (users) {
-      footerUsers.setAttribute(
-        "value",
-        await this.getStrings({
-          string_id: "cfr-doorhanger-extension-total-users",
-          args: { total: users },
-        })
-      );
+      footerUsers.setAttribute("value", users);
       footerUsers.hidden = false;
     } else {
       // Prevent whitespace around empty label from affecting other spacing
       footerUsers.hidden = true;
       footerUsers.removeAttribute("value");
     }
-
-    // Spacer pushes the link to the opposite end when there's other content
-
-    footerSpacer.hidden = !rating && !users;
   }
 
   _createElementAndAppend({ type, id }, parent) {
@@ -638,18 +617,25 @@ class PageAction {
         };
         break;
       default:
+        const authorText = await this.getStrings({
+          string_id: "cfr-doorhanger-extension-author",
+          args: { name: content.addon.author },
+        });
         panelTitle = await this.getStrings(content.addon.title);
-        await this._setAddonAuthorAndRating(this.window.document, content);
+        await this._setAddonRating(this.window.document, content);
         if (footerText.firstChild) {
           footerText.firstChild.remove();
         }
+        if (footerText.lastChild) {
+          footerText.lastChild.remove();
+        }
+
         // Main body content of the dropdown
         footerText.appendChild(
           lazy.RemoteL10n.createElement(this.window.document, "span", {
             content: content.text,
           })
         );
-        options = { popupIconURL: content.addon.icon, ...options };
 
         footerLink.value = await this.getStrings({
           string_id: "cfr-doorhanger-extension-learn-more-link",
@@ -661,6 +647,14 @@ class PageAction {
             bucket_id: content.bucket_id,
             event: "LEARN_MORE",
           });
+
+        footerText.appendChild(footerLink);
+        options = {
+          popupIconURL: content.addon.icon,
+          popupIconClass: content.icon_class,
+          name: authorText,
+          ...options,
+        };
 
         primaryActionCallback = async () => {
           // eslint-disable-next-line no-use-before-define

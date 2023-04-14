@@ -157,18 +157,19 @@
         </stack>
       </popupnotificationheader>
       <popupnotificationcontent>
+      <hbox>
         <description id="cfr-notification-author"></description>
+        <hbox id="cfr-notification-footer-addon-info">
+            <hbox id="cfr-notification-footer-filled-stars"/>
+            <hbox id="cfr-notification-footer-empty-stars"/>
+            <label id="cfr-notification-footer-users"/>
+          </hbox>
+      </hbox>
       </popupnotificationcontent>
       <popupnotificationfooter id="cfr-notification-footer" orient="vertical">
         <vbox id="cfr-notification-footer-text-and-addon-info">
           <description id="cfr-notification-footer-text"/>
-          <hbox id="cfr-notification-footer-addon-info">
-            <hbox id="cfr-notification-footer-filled-stars"/>
-            <hbox id="cfr-notification-footer-empty-stars"/>
-            <label id="cfr-notification-footer-users"/>
-            <spacer id="cfr-notification-footer-spacer" hidden="true"/>
-            <label id="cfr-notification-footer-learn-more-link" is="text-link"/>
-          </hbox>
+          <label id="cfr-notification-footer-learn-more-link" is="text-link"/>
         </vbox>
       </popupnotificationfooter>
     </popupnotification>
