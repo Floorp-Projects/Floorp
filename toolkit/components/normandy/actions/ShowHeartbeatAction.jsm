@@ -17,12 +17,12 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
   Heartbeat: "resource://normandy/lib/Heartbeat.jsm",
-  ShellService: "resource:///modules/ShellService.jsm",
   Storage: "resource://normandy/lib/Storage.jsm",
   NormandyUtils: "resource://normandy/lib/NormandyUtils.jsm",
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ShellService: "resource:///modules/ShellService.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
 

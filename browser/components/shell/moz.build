@@ -69,9 +69,9 @@ if SOURCES:
     FINAL_LIBRARY = "browsercomps"
 
 EXTRA_JS_MODULES += [
-    "HeadlessShell.jsm",
-    "ScreenshotChild.jsm",
-    "ShellService.jsm",
+    "HeadlessShell.sys.mjs",
+    "ScreenshotChild.sys.mjs",
+    "ShellService.sys.mjs",
 ]
 
 for var in (

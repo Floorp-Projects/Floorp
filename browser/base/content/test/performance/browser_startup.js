@@ -59,7 +59,7 @@ const startupPhases = {
         "resource:///modules/AboutNewTab.jsm",
         "resource:///modules/BrowserUsageTelemetry.jsm",
         "resource:///modules/ContentCrashHandlers.jsm",
-        "resource:///modules/ShellService.jsm",
+        "resource:///modules/ShellService.sys.mjs",
         "resource://gre/modules/NewTabUtils.sys.mjs",
         "resource://gre/modules/PageThumbs.jsm",
         "resource://gre/modules/PlacesUtils.sys.mjs",

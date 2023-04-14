@@ -2,22 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["HeadlessShell", "ScreenshotParent"];
-
-const { E10SUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/E10SUtils.sys.mjs"
-);
-const { HiddenFrame } = ChromeUtils.importESModule(
-  "resource://gre/modules/HiddenFrame.sys.mjs"
-);
+import { E10SUtils } from "resource://gre/modules/E10SUtils.sys.mjs";
+import { HiddenFrame } from "resource://gre/modules/HiddenFrame.sys.mjs";
 
 // Refrences to the progress listeners to keep them from being gc'ed
 // before they are called.
 const progressListeners = new Set();
 
-class ScreenshotParent extends JSWindowActorParent {
+export class ScreenshotParent extends JSWindowActorParent {
   getDimensions(params) {
     return this.sendQuery("GetDimensions", params);
   }
@@ -25,10 +17,10 @@ class ScreenshotParent extends JSWindowActorParent {
 
 ChromeUtils.registerWindowActor("Screenshot", {
   parent: {
-    moduleURI: "resource:///modules/HeadlessShell.jsm",
+    esModuleURI: "resource:///modules/HeadlessShell.sys.mjs",
   },
   child: {
-    moduleURI: "resource:///modules/ScreenshotChild.jsm",
+    esModuleURI: "resource:///modules/ScreenshotChild.sys.mjs",
   },
 });
 
@@ -169,7 +161,7 @@ async function takeScreenshot(
   }
 }
 
-let HeadlessShell = {
+export let HeadlessShell = {
   async handleCmdLineArgs(cmdLine, URLlist) {
     try {
       // Don't quit even though we don't create a window

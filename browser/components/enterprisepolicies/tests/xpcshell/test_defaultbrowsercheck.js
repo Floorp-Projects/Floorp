@@ -2,8 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
-const { ShellService } = ChromeUtils.import(
-  "resource:///modules/ShellService.jsm"
+const { ShellService } = ChromeUtils.importESModule(
+  "resource:///modules/ShellService.sys.mjs"
 );
 
 add_task(async function test_default_browser_check() {

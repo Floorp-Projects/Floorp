@@ -8,11 +8,6 @@ const lazy = {};
 
 ChromeUtils.defineModuleGetter(
   lazy,
-  "ShellService",
-  "resource:///modules/ShellService.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
   "AddonManager",
   "resource://gre/modules/AddonManager.jsm"
 );
@@ -23,6 +18,7 @@ ChromeUtils.defineModuleGetter(
 );
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ShellService: "resource:///modules/ShellService.sys.mjs",
   TelemetryArchive: "resource://gre/modules/TelemetryArchive.sys.mjs",
   TelemetryController: "resource://gre/modules/TelemetryController.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
