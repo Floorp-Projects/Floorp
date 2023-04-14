@@ -10,26 +10,8 @@ const { SyncScheduler } = ChromeUtils.importESModule(
   "resource://services-sync/policies.sys.mjs"
 );
 
-const { ExperimentFakes } = ChromeUtils.importESModule(
-  "resource://testing-common/NimbusTestUtils.sys.mjs"
-);
-
-const { ExperimentAPI } = ChromeUtils.importESModule(
-  "resource://nimbus/ExperimentAPI.sys.mjs"
-);
-
 var scheduler = new SyncScheduler(Service);
 let clientsEngine;
-
-async function setupForExperimentFeature() {
-  const sandbox = sinon.createSandbox();
-  const manager = ExperimentFakes.manager();
-  await manager.onStartup();
-
-  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
-
-  return { sandbox, manager };
-}
 
 add_task(async function setup() {
   await Service.promiseInitialized;
@@ -195,14 +177,9 @@ add_task(async function run_test() {
 });
 
 add_task(async function run_sync_on_tab_change_test() {
-  let { manager } = await setupForExperimentFeature();
-  await manager.onStartup();
-  await ExperimentAPI.ready();
+  let testPrefDelay = 20000;
 
-  let testExperimentDelay = 20000;
-  let testPrefDelay = 5000;
-
-  // This is the fallback pref if we don't have a experiment running
+  // This is the pref that determines sync delay after tab change
   Svc.Prefs.set("syncedTabs.syncDelayAfterTabChange", testPrefDelay);
   // We should only be syncing on tab change if
   // the user has > 1 client
@@ -210,24 +187,6 @@ add_task(async function run_sync_on_tab_change_test() {
   Svc.Prefs.set("clients.devices.mobile", 1);
   scheduler.updateClientMode();
   Assert.equal(scheduler.numClients, 2);
-
-  let doEnrollmentCleanup = await ExperimentFakes.enrollWithFeatureConfig(
-    {
-      enabled: true,
-      featureId: "syncAfterTabChange",
-      value: {
-        syncDelayAfterTabChange: testExperimentDelay,
-        syncDelayAfterTabChangeOverride: true,
-      },
-    },
-    {
-      manager,
-    }
-  );
-  Assert.ok(
-    manager.store.getExperimentForFeature("syncAfterTabChange"),
-    "Should be enrolled in the experiment"
-  );
 
   let engine = Service.engineManager.get("tabs");
 
@@ -242,7 +201,7 @@ add_task(async function run_sync_on_tab_change_test() {
     ])
   );
 
-  _("Test sync is scheduled after a tab change if experiment is enabled");
+  _("Test sync is scheduled after a tab change");
   for (let evttype of ["TabOpen", "TabClose"]) {
     // Pretend we just synced
     await tracker.clearChangedIDs();
@@ -256,12 +215,9 @@ add_task(async function run_sync_on_tab_change_test() {
     });
     // Ensure the tracker fired
     Assert.ok(tracker.modified);
-    // We should be more delayed than the pref value because the experiment
-    // is enabled
+    // We should be more delayed at or more than what the pref is set at
     let nextSchedule = tracker.tabsQuickWriteTimer.delay;
-    Assert.ok(
-      nextSchedule <= testExperimentDelay && nextSchedule > testPrefDelay
-    );
+    Assert.ok(nextSchedule >= testPrefDelay);
   }
 
   _("Test sync is NOT scheduled after an unsupported tab open");
@@ -274,8 +230,8 @@ add_task(async function run_sync_on_tab_change_test() {
     });
     // Ensure the tracker fired
     Assert.ok(tracker.modified);
-    // We should be scheduling <= experiment value
-    Assert.ok(scheduler.nextSync - Date.now() <= testExperimentDelay);
+    // We should be scheduling <= pref value
+    Assert.ok(scheduler.nextSync - Date.now() <= testPrefDelay);
   }
 
   _("Test navigating within the same tab does NOT trigger a sync");
@@ -359,12 +315,11 @@ add_task(async function run_sync_on_tab_change_test() {
     "We should NOT be syncing shortly because there is only one client"
   );
 
-  await doEnrollmentCleanup();
-
-  _("If there is no experiment, fallback to the pref");
+  _("Changing the pref adjusts the sync schedule");
+  Svc.Prefs.set("syncedTabs.syncDelayAfterTabChange", 10000); // 10seconds
   let delayPref = Svc.Prefs.get("syncedTabs.syncDelayAfterTabChange");
   let evttype = "TabOpen";
-  Assert.equal(delayPref, testPrefDelay);
+  Assert.equal(delayPref, 10000); // ensure our pref is at 10s
   // Only have task continuity if we have more than 1 device
   Svc.Prefs.set("clients.devices.desktop", 1);
   Svc.Prefs.set("clients.devices.mobile", 1);
@@ -384,22 +339,9 @@ add_task(async function run_sync_on_tab_change_test() {
   // We should be scheduling <= preference value
   Assert.equal(tracker.tabsQuickWriteTimer.delay, delayPref);
 
-  _("We should not have a sync if experiment if off and pref is 0");
+  _("We should not have a sync scheduled if pref is at 0");
 
   Svc.Prefs.set("syncedTabs.syncDelayAfterTabChange", 0);
-  let doEnrollmentCleanup2 = await ExperimentFakes.enrollWithFeatureConfig(
-    {
-      enabled: true,
-      featureId: "syncAfterTabChange",
-      value: {
-        syncDelayAfterTabChange: 0,
-        syncDelayAfterTabChangeOverride: true,
-      },
-    },
-    {
-      manager,
-    }
-  );
   // Pretend we just synced
   await tracker.clearChangedIDs();
   clearQuickWriteTimer(tracker);
@@ -416,46 +358,6 @@ add_task(async function run_sync_on_tab_change_test() {
 
   // We should NOT be scheduled for a sync soon
   Assert.ok(!tracker.tabsQuickWriteTimer);
-
-  // cleanup
-  await doEnrollmentCleanup2();
-
-  _("If the experiment is on but override is off, we use the pref value");
-
-  Svc.Prefs.set("syncedTabs.syncDelayAfterTabChange", testPrefDelay);
-  let doEnrollmentCleanup3 = await ExperimentFakes.enrollWithFeatureConfig(
-    {
-      enabled: true,
-      featureId: "syncAfterTabChange",
-      value: {
-        syncDelayAfterTabChange: 500000,
-        syncDelayAfterTabChangeOverride: false,
-      },
-    },
-    {
-      manager,
-    }
-  );
-  // Pretend we just synced
-  await tracker.clearChangedIDs();
-  clearQuickWriteTimer(tracker);
-
-  // Fire ontab event
-  evttype = "TabOpen";
-  tracker.onTab({
-    type: evttype,
-    originalTarget: evttype,
-    target: { entries: [], currentURI: "about:config" },
-  });
-  // Ensure the tracker fired
-  Assert.ok(tracker.modified);
-
-  // We should NOT be scheduled for a sync soon
-  Assert.ok(tracker.tabsQuickWriteTimer);
-  Assert.equal(tracker.tabsQuickWriteTimer.delay, testPrefDelay);
-
-  // cleanup
-  await doEnrollmentCleanup3();
 
   scheduler.setDefaults();
   Svc.Prefs.resetBranch("");
