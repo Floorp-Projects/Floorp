@@ -843,16 +843,10 @@ class JSLinearString : public JSString {
       JSContext* cx, js::UniquePtr<CharT[], JS::FreePolicy> chars,
       size_t length, js::gc::InitialHeap heap);
 
-  JSExtensibleString& makeExtensible(size_t capacity) {
-    MOZ_ASSERT(!isDependent());
-    MOZ_ASSERT(!isInline());
-    MOZ_ASSERT(!isAtom());
-    MOZ_ASSERT(!isExternal());
-    MOZ_ASSERT(capacity >= length());
-    setLengthAndFlags(length(), flags() | EXTENSIBLE_FLAGS);
-    d.s.u3.capacity = capacity;
-    return asExtensible();
-  }
+  // Convert a plain linear string to an extensible string. For testing. The
+  // caller must ensure that it is a plain or extensible string already, and
+  // that `capacity` is adequate.
+  JSExtensibleString& makeExtensible(size_t capacity);
 
   template <typename CharT>
   MOZ_ALWAYS_INLINE const CharT* nonInlineChars(
