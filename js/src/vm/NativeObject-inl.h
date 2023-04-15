@@ -460,10 +460,12 @@ inline NativeObject* NativeObject::create(
     nobj->initSlots(nfixed, slotSpan);
   }
 
-  if (clasp->shouldDelayMetadataBuilder()) {
-    cx->realm()->setObjectPendingMetadata(cx, nobj);
-  } else {
-    nobj = SetNewObjectMetadata(cx, nobj);
+  if (MOZ_UNLIKELY(cx->realm()->hasAllocationMetadataBuilder())) {
+    if (clasp->shouldDelayMetadataBuilder()) {
+      cx->realm()->setObjectPendingMetadata(nobj);
+    } else {
+      nobj = SetNewObjectMetadata(cx, nobj);
+    }
   }
 
   js::gc::gcprobes::CreateObject(nobj);

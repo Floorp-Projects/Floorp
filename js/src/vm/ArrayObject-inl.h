@@ -53,7 +53,7 @@ namespace js {
   }
 
   MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
-  cx->realm()->setObjectPendingMetadata(cx, aobj);
+  cx->realm()->setObjectPendingMetadata(aobj);
 
   if (slotSpan > 0) {
     aobj->initDynamicSlots(slotSpan);
