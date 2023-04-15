@@ -68,6 +68,7 @@ UNIFIED_SOURCES += [
 
 if CONFIG["CC_TYPE"] in ("clang", "clang-cl"):
     CXXFLAGS += ["-Werror=implicit-int-conversion"]
+    CXXFLAGS += ["-Werror=switch"]
 
 include("/ipc/chromium/chromium-config.mozbuild")
 

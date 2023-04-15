@@ -26,27 +26,31 @@ void ScopedFfiRenderTraits::release(ffi::WGPURenderPass* raw) {
   }
 }
 
-ffi::WGPULoadOp ConvertLoadOp(const dom::GPULoadOp& aOp) {
+static ffi::WGPULoadOp ConvertLoadOp(const dom::GPULoadOp& aOp) {
   switch (aOp) {
     case dom::GPULoadOp::Load:
       return ffi::WGPULoadOp_Load;
-    default:
-      MOZ_CRASH("Unexpected load op");
+    case dom::GPULoadOp::Clear:
+      return ffi::WGPULoadOp_Clear;
+    case dom::GPULoadOp::EndGuard_:
+      break;
   }
+  MOZ_CRASH("bad GPULoadOp");
 }
 
-ffi::WGPUStoreOp ConvertStoreOp(const dom::GPUStoreOp& aOp) {
+static ffi::WGPUStoreOp ConvertStoreOp(const dom::GPUStoreOp& aOp) {
   switch (aOp) {
     case dom::GPUStoreOp::Store:
       return ffi::WGPUStoreOp_Store;
     case dom::GPUStoreOp::Discard:
       return ffi::WGPUStoreOp_Discard;
-    default:
-      MOZ_CRASH("Unexpected load op");
+    case dom::GPUStoreOp::EndGuard_:
+      break;
   }
+  MOZ_CRASH("bad GPUStoreOp");
 }
 
-ffi::WGPUColor ConvertColor(const dom::Sequence<double>& aSeq) {
+static ffi::WGPUColor ConvertColor(const dom::Sequence<double>& aSeq) {
   ffi::WGPUColor color;
   color.r = aSeq.SafeElementAt(0, 0.0);
   color.g = aSeq.SafeElementAt(1, 0.0);
@@ -55,21 +59,34 @@ ffi::WGPUColor ConvertColor(const dom::Sequence<double>& aSeq) {
   return color;
 }
 
-ffi::WGPUColor ConvertColor(const dom::GPUColorDict& aColor) {
+static ffi::WGPUColor ConvertColor(const dom::GPUColorDict& aColor) {
   ffi::WGPUColor color = {aColor.mR, aColor.mG, aColor.mB, aColor.mA};
   return color;
 }
 
-ffi::WGPUColor ConvertColor(const dom::DoubleSequenceOrGPUColorDict& aColor) {
+static ffi::WGPUColor ConvertColor(
+    const dom::DoubleSequenceOrGPUColorDict& aColor) {
   if (aColor.IsDoubleSequence()) {
     return ConvertColor(aColor.GetAsDoubleSequence());
-  } else if (aColor.IsGPUColorDict()) {
-    return ConvertColor(aColor.GetAsGPUColorDict());
-  } else {
-    MOZ_ASSERT_UNREACHABLE(
-        "Unexpected dom::DoubleSequenceOrGPUColorDict variant");
-    return ffi::WGPUColor();
   }
+  if (aColor.IsGPUColorDict()) {
+    return ConvertColor(aColor.GetAsGPUColorDict());
+  }
+  MOZ_ASSERT_UNREACHABLE(
+      "Unexpected dom::DoubleSequenceOrGPUColorDict variant");
+  return ffi::WGPUColor();
+}
+static ffi::WGPUColor ConvertColor(
+    const dom::OwningDoubleSequenceOrGPUColorDict& aColor) {
+  if (aColor.IsDoubleSequence()) {
+    return ConvertColor(aColor.GetAsDoubleSequence());
+  }
+  if (aColor.IsGPUColorDict()) {
+    return ConvertColor(aColor.GetAsGPUColorDict());
+  }
+  MOZ_ASSERT_UNREACHABLE(
+      "Unexpected dom::OwningDoubleSequenceOrGPUColorDict variant");
+  return ffi::WGPUColor();
 }
 
 ffi::WGPURenderPass* BeginRenderPass(
@@ -84,26 +101,31 @@ ffi::WGPURenderPass* BeginRenderPass(
     const auto& dsa = aDesc.mDepthStencilAttachment.Value();
     dsDesc.view = dsa.mView->mId;
 
-    if (dsa.mDepthLoadValue.IsFloat()) {
-      dsDesc.depth.load_op = ffi::WGPULoadOp_Clear;
-      dsDesc.depth.clear_value = dsa.mDepthLoadValue.GetAsFloat();
-    }
-    if (dsa.mDepthLoadValue.IsGPULoadOp()) {
-      dsDesc.depth.load_op =
-          ConvertLoadOp(dsa.mDepthLoadValue.GetAsGPULoadOp());
-    }
-    dsDesc.depth.store_op = ConvertStoreOp(dsa.mDepthStoreOp);
+    // -
 
-    if (dsa.mStencilLoadValue.IsRangeEnforcedUnsignedLong()) {
-      dsDesc.stencil.load_op = ffi::WGPULoadOp_Clear;
-      dsDesc.stencil.clear_value =
-          dsa.mStencilLoadValue.GetAsRangeEnforcedUnsignedLong();
+    if (dsa.mDepthClearValue.WasPassed()) {
+      dsDesc.depth.clear_value = dsa.mDepthClearValue.Value();
     }
-    if (dsa.mStencilLoadValue.IsGPULoadOp()) {
-      dsDesc.stencil.load_op =
-          ConvertLoadOp(dsa.mStencilLoadValue.GetAsGPULoadOp());
+    if (dsa.mDepthLoadOp.WasPassed()) {
+      dsDesc.depth.load_op = ConvertLoadOp(dsa.mDepthLoadOp.Value());
     }
-    dsDesc.stencil.store_op = ConvertStoreOp(dsa.mStencilStoreOp);
+    if (dsa.mDepthStoreOp.WasPassed()) {
+      dsDesc.depth.store_op = ConvertStoreOp(dsa.mDepthStoreOp.Value());
+    }
+    dsDesc.depth.read_only = dsa.mDepthReadOnly;
+
+    // -
+
+    dsDesc.stencil.clear_value = dsa.mStencilClearValue;
+    if (dsa.mStencilLoadOp.WasPassed()) {
+      dsDesc.stencil.load_op = ConvertLoadOp(dsa.mStencilLoadOp.Value());
+    }
+    if (dsa.mStencilStoreOp.WasPassed()) {
+      dsDesc.stencil.store_op = ConvertStoreOp(dsa.mStencilStoreOp.Value());
+    }
+    dsDesc.stencil.read_only = dsa.mStencilReadOnly;
+
+    // -
 
     desc.depth_stencil_attachment = &dsDesc;
   }
@@ -128,18 +150,10 @@ ffi::WGPURenderPass* BeginRenderPass(
     if (ca.mResolveTarget.WasPassed()) {
       cd.resolve_target = ca.mResolveTarget.Value().mId;
     }
-    if (ca.mLoadValue.IsGPULoadOp()) {
-      cd.channel.load_op = ConvertLoadOp(ca.mLoadValue.GetAsGPULoadOp());
-    } else {
-      cd.channel.load_op = ffi::WGPULoadOp_Clear;
-      if (ca.mLoadValue.IsDoubleSequence()) {
-        cd.channel.clear_value =
-            ConvertColor(ca.mLoadValue.GetAsDoubleSequence());
-      }
-      if (ca.mLoadValue.IsGPUColorDict()) {
-        cd.channel.clear_value =
-            ConvertColor(ca.mLoadValue.GetAsGPUColorDict());
-      }
+
+    cd.channel.load_op = ConvertLoadOp(ca.mLoadOp);
+    if (ca.mClearValue.WasPassed()) {
+      cd.channel.clear_value = ConvertColor(ca.mClearValue.Value());
     }
   }
 
