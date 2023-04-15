@@ -3358,6 +3358,10 @@ static bool NewString(JSContext* cx, unsigned argc, Value* vp) {
       if (capacity < len) {
         capacity = len;
       }
+      if (len == 0) {
+        JS_ReportErrorASCII(cx, "Cannot set capacity of empty string");
+        return false;
+      }
       if (stable.isLatin1()) {
         auto news = cx->make_pod_arena_array<JS::Latin1Char>(
             js::StringBufferArena, capacity);
