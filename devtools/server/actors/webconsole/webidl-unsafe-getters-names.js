@@ -9,7 +9,6 @@
 module.exports = [
   "InstallTrigger",
   "farthestViewportElement",
-  "mozImageSmoothingEnabled",
   "mozPreservesPitch",
   "mozPressure",
   "nearestViewportElement",
