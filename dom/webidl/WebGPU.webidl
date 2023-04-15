@@ -968,22 +968,28 @@ dictionary GPURenderPassColorAttachment {
     required GPUTextureView view;
     GPUTextureView resolveTarget;
 
-    required (GPULoadOp or GPUColor) loadValue;
+    GPUColor clearValue;
+    required GPULoadOp loadOp;
     required GPUStoreOp storeOp;
 };
 
 dictionary GPURenderPassDepthStencilAttachment {
     required GPUTextureView view;
 
-    required (GPULoadOp or float) depthLoadValue;
-    required GPUStoreOp depthStoreOp;
+    float depthClearValue;
+    GPULoadOp depthLoadOp;
+    GPUStoreOp depthStoreOp;
+    boolean depthReadOnly = false;
 
-    required (GPULoadOp or GPUStencilValue) stencilLoadValue;
-    required GPUStoreOp stencilStoreOp;
+    GPUStencilValue stencilClearValue = 0;
+    GPULoadOp stencilLoadOp;
+    GPUStoreOp stencilStoreOp;
+    boolean stencilReadOnly = false;
 };
 
 enum GPULoadOp {
-    "load"
+    "load",
+    "clear"
 };
 
 enum GPUStoreOp {
