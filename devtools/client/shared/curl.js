@@ -126,6 +126,11 @@ const Curl = {
     // curl generates the host header itself based on the given URL
     ignoredHeaders.add("host");
 
+    // Add --compressed if the response is compressed
+    if (utils.isContentEncodedResponse(data)) {
+      addParam("--compressed");
+    }
+
     // Add -I (HEAD)
     // For servers that supports HEAD.
     // This will fetch the header of a document only.
@@ -220,6 +225,18 @@ const CurlUtils = {
     return (
       contentType && contentType.toLowerCase().includes("multipart/form-data;")
     );
+  },
+
+  /**
+   * Check if the response of an URL has content encoding header.
+   *
+   * @param object data
+   *        The data source. See the description in the Curl object.
+   * @return boolean
+   *         True if the response is compressed, false otherwise.
+   */
+  isContentEncodedResponse(data) {
+    return !!this.findHeader(data.responseHeaders, "content-encoding");
   },
 
   /**
