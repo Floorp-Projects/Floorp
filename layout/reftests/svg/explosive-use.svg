@@ -1,0 +1,413 @@
+<svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <g id="thing">
+      <g id="t0a">
+        <use href="#t1a"/>
+        <use href="#t1b"/>
+      </g>
+      <g id="t0b">
+        <use href="#t1a"/>
+        <use href="#t1b"/>
+      </g>
+      <g id="t1a">
+        <use href="#t2a"/>
+        <use href="#t2b"/>
+      </g>
+      <g id="t1b">
+        <use href="#t2a"/>
+        <use href="#t2b"/>
+      </g>
+      <g id="t2a">
+        <use href="#t3a"/>
+        <use href="#t3b"/>
+      </g>
+      <g id="t2b">
+        <use href="#t3a"/>
+        <use href="#t3b"/>
+      </g>
+      <g id="t3a">
+        <use href="#t4a"/>
+        <use href="#t4b"/>
+      </g>
+      <g id="t3b">
+        <use href="#t4a"/>
+        <use href="#t4b"/>
+      </g>
+      <g id="t4a">
+        <use href="#t5a"/>
+        <use href="#t5b"/>
+      </g>
+      <g id="t4b">
+        <use href="#t5a"/>
+        <use href="#t5b"/>
+      </g>
+      <g id="t5a">
+        <use href="#t6a"/>
+        <use href="#t6b"/>
+      </g>
+      <g id="t5b">
+        <use href="#t6a"/>
+        <use href="#t6b"/>
+      </g>
+      <g id="t6a">
+        <use href="#t7a"/>
+        <use href="#t7b"/>
+      </g>
+      <g id="t6b">
+        <use href="#t7a"/>
+        <use href="#t7b"/>
+      </g>
+      <g id="t7a">
+        <use href="#t8a"/>
+        <use href="#t8b"/>
+      </g>
+      <g id="t7b">
+        <use href="#t8a"/>
+        <use href="#t8b"/>
+      </g>
+      <g id="t8a">
+        <use href="#t9a"/>
+        <use href="#t9b"/>
+      </g>
+      <g id="t8b">
+        <use href="#t9a"/>
+        <use href="#t9b"/>
+      </g>
+      <g id="t9a">
+        <use href="#t10a"/>
+        <use href="#t10b"/>
+      </g>
+      <g id="t9b">
+        <use href="#t10a"/>
+        <use href="#t10b"/>
+      </g>
+      <g id="t10a">
+        <use href="#t11a"/>
+        <use href="#t11b"/>
+      </g>
+      <g id="t10b">
+        <use href="#t11a"/>
+        <use href="#t11b"/>
+      </g>
+      <g id="t11a">
+        <use href="#t12a"/>
+        <use href="#t12b"/>
+      </g>
+      <g id="t11b">
+        <use href="#t12a"/>
+        <use href="#t12b"/>
+      </g>
+      <g id="t12a">
+        <use href="#t13a"/>
+        <use href="#t13b"/>
+      </g>
+      <g id="t12b">
+        <use href="#t13a"/>
+        <use href="#t13b"/>
+      </g>
+      <g id="t13a">
+        <use href="#t14a"/>
+        <use href="#t14b"/>
+      </g>
+      <g id="t13b">
+        <use href="#t14a"/>
+        <use href="#t14b"/>
+      </g>
+      <g id="t14a">
+        <use href="#t15a"/>
+        <use href="#t15b"/>
+      </g>
+      <g id="t14b">
+        <use href="#t15a"/>
+        <use href="#t15b"/>
+      </g>
+      <g id="t15a">
+        <use href="#t16a"/>
+        <use href="#t16b"/>
+      </g>
+      <g id="t15b">
+        <use href="#t16a"/>
+        <use href="#t16b"/>
+      </g>
+      <g id="t16a">
+        <use href="#t17a"/>
+        <use href="#t17b"/>
+      </g>
+      <g id="t16b">
+        <use href="#t17a"/>
+        <use href="#t17b"/>
+      </g>
+      <g id="t17a">
+        <use href="#t18a"/>
+        <use href="#t18b"/>
+      </g>
+      <g id="t17b">
+        <use href="#t18a"/>
+        <use href="#t18b"/>
+      </g>
+      <g id="t18a">
+        <use href="#t19a"/>
+        <use href="#t19b"/>
+      </g>
+      <g id="t18b">
+        <use href="#t19a"/>
+        <use href="#t19b"/>
+      </g>
+      <g id="t19a">
+        <use href="#t20a"/>
+        <use href="#t20b"/>
+      </g>
+      <g id="t19b">
+        <use href="#t20a"/>
+        <use href="#t20b"/>
+      </g>
+      <g id="t20a">
+        <use href="#t21a"/>
+        <use href="#t21b"/>
+      </g>
+      <g id="t20b">
+        <use href="#t21a"/>
+        <use href="#t21b"/>
+      </g>
+      <g id="t21a">
+        <use href="#t22a"/>
+        <use href="#t22b"/>
+      </g>
+      <g id="t21b">
+        <use href="#t22a"/>
+        <use href="#t22b"/>
+      </g>
+      <g id="t22a">
+        <use href="#t23a"/>
+        <use href="#t23b"/>
+      </g>
+      <g id="t22b">
+        <use href="#t23a"/>
+        <use href="#t23b"/>
+      </g>
+      <g id="t23a">
+        <use href="#t24a"/>
+        <use href="#t24b"/>
+      </g>
+      <g id="t23b">
+        <use href="#t24a"/>
+        <use href="#t24b"/>
+      </g>
+      <g id="t24a">
+        <use href="#t25a"/>
+        <use href="#t25b"/>
+      </g>
+      <g id="t24b">
+        <use href="#t25a"/>
+        <use href="#t25b"/>
+      </g>
+      <g id="t25a">
+        <use href="#t26a"/>
+        <use href="#t26b"/>
+      </g>
+      <g id="t25b">
+        <use href="#t26a"/>
+        <use href="#t26b"/>
+      </g>
+      <g id="t26a">
+        <use href="#t27a"/>
+        <use href="#t27b"/>
+      </g>
+      <g id="t26b">
+        <use href="#t27a"/>
+        <use href="#t27b"/>
+      </g>
+      <g id="t27a">
+        <use href="#t28a"/>
+        <use href="#t28b"/>
+      </g>
+      <g id="t27b">
+        <use href="#t28a"/>
+        <use href="#t28b"/>
+      </g>
+      <g id="t28a">
+        <use href="#t29a"/>
+        <use href="#t29b"/>
+      </g>
+      <g id="t28b">
+        <use href="#t29a"/>
+        <use href="#t29b"/>
+      </g>
+      <g id="t29a">
+        <use href="#t30a"/>
+        <use href="#t30b"/>
+      </g>
+      <g id="t29b">
+        <use href="#t30a"/>
+        <use href="#t30b"/>
+      </g>
+      <g id="t30a">
+        <use href="#t31a"/>
+        <use href="#t31b"/>
+      </g>
+      <g id="t30b">
+        <use href="#t31a"/>
+        <use href="#t31b"/>
+      </g>
+      <g id="t31a">
+        <use href="#t32a"/>
+        <use href="#t32b"/>
+      </g>
+      <g id="t31b">
+        <use href="#t32a"/>
+        <use href="#t32b"/>
+      </g>
+      <g id="t32a">
+        <use href="#t33a"/>
+        <use href="#t33b"/>
+      </g>
+      <g id="t32b">
+        <use href="#t33a"/>
+        <use href="#t33b"/>
+      </g>
+      <g id="t33a">
+        <use href="#t34a"/>
+        <use href="#t34b"/>
+      </g>
+      <g id="t33b">
+        <use href="#t34a"/>
+        <use href="#t34b"/>
+      </g>
+      <g id="t34a">
+        <use href="#t35a"/>
+        <use href="#t35b"/>
+      </g>
+      <g id="t34b">
+        <use href="#t35a"/>
+        <use href="#t35b"/>
+      </g>
+      <g id="t35a">
+        <use href="#t36a"/>
+        <use href="#t36b"/>
+      </g>
+      <g id="t35b">
+        <use href="#t36a"/>
+        <use href="#t36b"/>
+      </g>
+      <g id="t36a">
+        <use href="#t37a"/>
+        <use href="#t37b"/>
+      </g>
+      <g id="t36b">
+        <use href="#t37a"/>
+        <use href="#t37b"/>
+      </g>
+      <g id="t37a">
+        <use href="#t38a"/>
+        <use href="#t38b"/>
+      </g>
+      <g id="t37b">
+        <use href="#t38a"/>
+        <use href="#t38b"/>
+      </g>
+      <g id="t38a">
+        <use href="#t39a"/>
+        <use href="#t39b"/>
+      </g>
+      <g id="t38b">
+        <use href="#t39a"/>
+        <use href="#t39b"/>
+      </g>
+      <g id="t39a">
+        <use href="#t40a"/>
+        <use href="#t40b"/>
+      </g>
+      <g id="t39b">
+        <use href="#t40a"/>
+        <use href="#t40b"/>
+      </g>
+      <g id="t40a">
+        <use href="#t41a"/>
+        <use href="#t41b"/>
+      </g>
+      <g id="t40b">
+        <use href="#t41a"/>
+        <use href="#t41b"/>
+      </g>
+      <g id="t41a">
+        <use href="#t42a"/>
+        <use href="#t42b"/>
+      </g>
+      <g id="t41b">
+        <use href="#t42a"/>
+        <use href="#t42b"/>
+      </g>
+      <g id="t42a">
+        <use href="#t43a"/>
+        <use href="#t43b"/>
+      </g>
+      <g id="t42b">
+        <use href="#t43a"/>
+        <use href="#t43b"/>
+      </g>
+      <g id="t43a">
+        <use href="#t44a"/>
+        <use href="#t44b"/>
+      </g>
+      <g id="t43b">
+        <use href="#t44a"/>
+        <use href="#t44b"/>
+      </g>
+      <g id="t44a">
+        <use href="#t45a"/>
+        <use href="#t45b"/>
+      </g>
+      <g id="t44b">
+        <use href="#t45a"/>
+        <use href="#t45b"/>
+      </g>
+      <g id="t45a">
+        <use href="#t46a"/>
+        <use href="#t46b"/>
+      </g>
+      <g id="t45b">
+        <use href="#t46a"/>
+        <use href="#t46b"/>
+      </g>
+      <g id="t46a">
+        <use href="#t47a"/>
+        <use href="#t47b"/>
+      </g>
+      <g id="t46b">
+        <use href="#t47a"/>
+        <use href="#t47b"/>
+      </g>
+      <g id="t47a">
+        <use href="#t48a"/>
+        <use href="#t48b"/>
+      </g>
+      <g id="t47b">
+        <use href="#t48a"/>
+        <use href="#t48b"/>
+      </g>
+      <g id="t48a">
+        <use href="#t49a"/>
+        <use href="#t49b"/>
+      </g>
+      <g id="t48b">
+        <use href="#t49a"/>
+        <use href="#t49b"/>
+      </g>
+      <g id="t49a">
+        <use href="#t50a"/>
+        <use href="#t50b"/>
+      </g>
+      <g id="t49b">
+        <use href="#t50a"/>
+        <use href="#t50b"/>
+      </g>
+      <g id="t50a">
+        <circle  cx="0" cy="0" r="5" />
+      </g>
+      <g id="t50b">
+        <circle cx="0" cy="0" r="5" />
+      </g>
+    </g>
+  </defs>
+  <use x="5" y="5" href="#thing"/>
+</svg>

@@ -251,16 +251,53 @@ static bool NodeCouldBeRendered(const nsINode& aNode) {
   return true;
 }
 
+// <svg:use> can be used (no pun intended) to trivially cause an explosion of
+// clones that could potentially DoS the browser. We have a configurable limit
+// to control this.
+static bool IsTooMuchRecursion(uint32_t aCount) {
+  switch (StaticPrefs::svg_use_element_recursive_clone_limit_enabled()) {
+    case 0:
+      return false;
+    case 1:
+      break;
+    default:
+      if (!XRE_IsParentProcess()) {
+        return false;
+      }
+      break;
+  }
+  return NS_WARN_IF(aCount >=
+                    StaticPrefs::svg_use_element_recursive_clone_limit());
+}
+
 // Circular loop detection, plus detection of whether this shadow tree is
 // rendered at all.
 auto SVGUseElement::ScanAncestors(const Element& aTarget) const -> ScanResult {
+  uint32_t count = 0;
+  return ScanAncestorsInternal(aTarget, count);
+}
+
+auto SVGUseElement::ScanAncestorsInternal(const Element& aTarget,
+                                          uint32_t& aCount) const
+    -> ScanResult {
   if (&aTarget == this) {
     return ScanResult::CyclicReference;
   }
-  if (mOriginal &&
-      mOriginal->ScanAncestors(aTarget) == ScanResult::CyclicReference) {
-    return ScanResult::CyclicReference;
+  if (mOriginal) {
+    if (IsTooMuchRecursion(++aCount)) {
+      return ScanResult::TooDeep;
+    }
+    auto result = mOriginal->ScanAncestorsInternal(aTarget, aCount);
+    switch (result) {
+      case ScanResult::TooDeep:
+      case ScanResult::CyclicReference:
+        return result;
+      case ScanResult::Ok:
+      case ScanResult::Invisible:
+        break;
+    }
   }
+
   auto result = ScanResult::Ok;
   for (nsINode* parent = GetParentOrShadowHostNode(); parent;
        parent = parent->GetParentOrShadowHostNode()) {
@@ -268,6 +305,9 @@ auto SVGUseElement::ScanAncestors(const Element& aTarget) const -> ScanResult {
       return ScanResult::CyclicReference;
     }
     if (auto* use = SVGUseElement::FromNode(*parent)) {
+      if (IsTooMuchRecursion(++aCount)) {
+        return ScanResult::TooDeep;
+      }
       if (mOriginal && use->mOriginal == mOriginal) {
         return ScanResult::CyclicReference;
       }
