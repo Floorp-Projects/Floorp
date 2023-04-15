@@ -43,13 +43,6 @@ interface CanvasRenderingContext2D {
   // associated with a canvas.
   readonly attribute HTMLCanvasElement? canvas;
 
-  // image smoothing mode -- if disabled, images won't be smoothed
-  // if scaled.
-  [Deprecated="PrefixedImageSmoothingEnabled",
-   Pref="dom.mozImageSmoothingEnabled.enabled",
-   BinaryName="imageSmoothingEnabled"]
-  attribute boolean mozImageSmoothingEnabled;
-
   // Show the caret if appropriate when drawing
   [Func="CanvasUtils::HasDrawWindowPrivilege"]
   const unsigned long DRAWWINDOW_DRAW_CARET   = 0x01;
