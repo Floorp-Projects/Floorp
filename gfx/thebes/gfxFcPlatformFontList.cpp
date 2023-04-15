@@ -1896,22 +1896,38 @@ void gfxFcPlatformFontList::InitSharedFontListForPlatform() {
       }
 #endif
 
+      // Clone the pattern, because we can't operate on the one belonging to
+      // the FcFontSet directly.
+      FcPattern* clone = FcPatternDuplicate(pattern);
+
+      // Pick up any configuration options applicable to the font (e.g. custom
+      // fontfeatures settings).
+      if (!FcConfigSubstitute(nullptr, clone, FcMatchFont)) {
+        // Out of memory?! We're probably doomed, but just skip this font.
+        FcPatternDestroy(clone);
+        continue;
+      }
+      // But ignore hinting settings from FcConfigSubstitute, as we don't want
+      // to bake them into the pattern in the font list.
+      FcPatternDel(clone, FC_HINT_STYLE);
+      FcPatternDel(clone, FC_HINTING);
+
       // If this is a TrueType or OpenType font, discard the FC_CHARSET object
       // (which may be very large), because we'll read the 'cmap' directly.
       // This substantially reduces the pressure on shared memory (bug 1664151)
       // due to the large font descriptors (serialized patterns).
       FcChar8* fontFormat;
-      if (FcPatternGetString(pattern, FC_FONTFORMAT, 0, &fontFormat) ==
+      if (FcPatternGetString(clone, FC_FONTFORMAT, 0, &fontFormat) ==
               FcResultMatch &&
           (!FcStrCmp(fontFormat, (const FcChar8*)"TrueType") ||
            !FcStrCmp(fontFormat, (const FcChar8*)"CFF"))) {
-        FcPattern* clone = FcPatternDuplicate(pattern);
         FcPatternDel(clone, FC_CHARSET);
         addPattern(clone, lastFamilyName, familyName, aAppFonts);
-        FcPatternDestroy(clone);
       } else {
-        addPattern(pattern, lastFamilyName, familyName, aAppFonts);
+        addPattern(clone, lastFamilyName, familyName, aAppFonts);
       }
+
+      FcPatternDestroy(clone);
     }
   };
 
