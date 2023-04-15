@@ -335,17 +335,6 @@ function disableTabSleep() {
     }
 }
 
-// Migrate pref
-const TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF = "floorp.tabsleep.tabTimeoutSeconds";
-if (Services.prefs.prefHasUserValue(TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF)) {
-    let oldPrefValue = Services.prefs.getIntPref(TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF, null);
-    if (oldPrefValue) {
-        let newPrefValue = Math.floor(oldPrefValue / 60);
-        Services.prefs.setIntPref(TAB_SLEEP_TAB_TIMEOUT_MINUTES_PREF, newPrefValue);
-        Services.prefs.clearUserPref(TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF);
-    }
-}
-
 {
     isEnabled = Services.prefs.getBoolPref(TAB_SLEEP_ENABLED_PREF, false);
     isTestMode = Services.prefs.getBoolPref(TAB_SLEEP_TESTMODE_ENABLED_PREF, false);
