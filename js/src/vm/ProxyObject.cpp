@@ -126,7 +126,7 @@ ProxyObject* ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler,
   proxy->initShape(shape);
 
   MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
-  realm->setObjectPendingMetadata(cx, proxy);
+  realm->setObjectPendingMetadata(proxy);
 
   gc::gcprobes::CreateObject(proxy);
 

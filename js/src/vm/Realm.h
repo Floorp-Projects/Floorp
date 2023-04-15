@@ -153,53 +153,11 @@ class NewPlainObjectWithPropsCache {
 // stack makes a promise that it will ensure that the new object has its
 // metadata set after the object is initialized.
 //
-// To help those constructor functions keep their promise of setting metadata,
-// each compartment is in one of three states at any given time:
-//
-// * ImmediateMetadata: Allocators should set new object metadata immediately,
-//                      as usual.
-//
-// * DelayMetadata: Allocators should *not* set new object metadata, it will be
-//                  handled after reserved slots are initialized by custom code
-//                  for the object's JSClass. The newly allocated object's
-//                  JSClass *must* have the JSCLASS_DELAY_METADATA_BUILDER flag
-//                  set.
-//
-// * PendingMetadata: This object has been allocated and is still pending its
-//                    metadata. This should never be the case when we begin an
-//                    allocation, as a constructor function was supposed to have
-//                    set the metadata of the previous object *before*
-//                    allocating another object.
-//
 // The js::AutoSetNewObjectMetadata RAII class provides an ergonomic way for
-// constructor functions to navigate state transitions. The initial (and
-// intuitively most common) state is ImmediateMetadata.
-//
-// Without the presence of internal errors (such as OOM), transitions between
-// the states are as follows:
-//
-//     ImmediateMetadata <--------------------------+
-//           |                                      |
-//           |                                      |
-//           | via constructor                      | via setting the new
-//           |                                      | object's metadata
-//           |                                      |
-//           |                                      |
-//           V                                      |
-//     DelayMetadata -------------------------> PendingMetadata
-//                         via allocation
+// constructor functions to do this.
 //
 // In the presence of internal errors, we do not set the new object's metadata
-// (if it was even allocated) and reset to ImmediateMetadata.
-
-// See below in namespace JS for the template specialization for
-// ImmediateMetadata and DelayMetadata.
-struct ImmediateMetadata {};
-struct DelayMetadata {};
-using PendingMetadata = JSObject*;
-
-using NewObjectMetadataState =
-    mozilla::Variant<ImmediateMetadata, DelayMetadata, PendingMetadata>;
+// (if it was even allocated).
 
 class PropertyIteratorObject;
 
@@ -273,15 +231,6 @@ class ObjectRealm {
 
 }  // namespace js
 
-namespace JS {
-template <>
-struct GCPolicy<js::ImmediateMetadata>
-    : public IgnoreGCPolicy<js::ImmediateMetadata> {};
-template <>
-struct GCPolicy<js::DelayMetadata> : public IgnoreGCPolicy<js::DelayMetadata> {
-};
-}  // namespace JS
-
 class JS::Realm : public JS::shadow::Realm {
   JS::Zone* zone_;
   JSRuntime* runtime_;
@@ -296,10 +245,10 @@ class JS::Realm : public JS::shadow::Realm {
   js::ObjectRealm objects_;
   friend js::ObjectRealm& js::ObjectRealm::get(const JSObject*);
 
-  friend class js::AutoSetNewObjectMetadata;
-  js::NewObjectMetadataState objectMetadataState_{js::ImmediateMetadata()};
+  // See the "Object MetadataBuilder API" comment.
+  JSObject* objectPendingMetadata_ = nullptr;
 #ifdef DEBUG
-  bool hasActiveAutoSetNewObjectMetadata_ = false;
+  uint32_t numActiveAutoSetNewObjectMetadata_ = 0;
 #endif
 
   // Random number generator for Math.random().
@@ -564,23 +513,36 @@ class JS::Realm : public JS::shadow::Realm {
   void forgetAllocationMetadataBuilder();
   void setNewObjectMetadata(JSContext* cx, JS::HandleObject obj);
 
-  bool hasObjectImmediateMetadata() const {
-    return objectMetadataState_.is<js::ImmediateMetadata>();
-  }
   bool hasObjectPendingMetadata() const {
-    return objectMetadataState_.is<js::PendingMetadata>();
+    MOZ_ASSERT_IF(objectPendingMetadata_, hasAllocationMetadataBuilder());
+    return objectPendingMetadata_ != nullptr;
   }
-  void setObjectPendingMetadata(JSContext* cx, JSObject* obj) {
-    MOZ_ASSERT(cx->isMainThreadContext());
-    MOZ_ASSERT(hasActiveAutoSetNewObjectMetadata_,
+  void setObjectPendingMetadata(JSObject* obj) {
+    MOZ_ASSERT(numActiveAutoSetNewObjectMetadata_ > 0,
                "Must not use JSCLASS_DELAY_METADATA_BUILDER without "
                "AutoSetNewObjectMetadata");
-    if (MOZ_UNLIKELY(cx->realm()->hasAllocationMetadataBuilder())) {
-      MOZ_ASSERT(objectMetadataState_.is<js::DelayMetadata>());
-      objectMetadataState_ =
-          js::NewObjectMetadataState(js::PendingMetadata(obj));
+    MOZ_ASSERT(!objectPendingMetadata_);
+    MOZ_ASSERT(obj);
+    if (MOZ_UNLIKELY(hasAllocationMetadataBuilder())) {
+      objectPendingMetadata_ = obj;
     }
   }
+  JSObject* getAndClearObjectPendingMetadata() {
+    MOZ_ASSERT(hasAllocationMetadataBuilder());
+    JSObject* obj = objectPendingMetadata_;
+    objectPendingMetadata_ = nullptr;
+    return obj;
+  }
+
+#ifdef DEBUG
+  void incNumActiveAutoSetNewObjectMetadata() {
+    numActiveAutoSetNewObjectMetadata_++;
+  }
+  void decNumActiveAutoSetNewObjectMetadata() {
+    MOZ_ASSERT(numActiveAutoSetNewObjectMetadata_ > 0);
+    numActiveAutoSetNewObjectMetadata_--;
+  }
+#endif
 
   void* realmPrivate() const { return realmPrivate_; }
   void setRealmPrivate(void* p) { realmPrivate_ = p; }
@@ -883,10 +845,7 @@ class ErrorCopier {
 
 // See the "Object MetadataBuilder API" comment.
 class MOZ_RAII AutoSetNewObjectMetadata {
-  JSContext* cx_ = nullptr;
-#ifdef DEBUG
-  Realm* realm_;
-#endif
+  JSContext* cx_;
 
   AutoSetNewObjectMetadata(const AutoSetNewObjectMetadata& aOther) = delete;
   void operator=(const AutoSetNewObjectMetadata& aOther) = delete;
@@ -894,29 +853,18 @@ class MOZ_RAII AutoSetNewObjectMetadata {
   void setPendingMetadata();
 
  public:
-  explicit inline AutoSetNewObjectMetadata(JSContext* cx) {
-    MOZ_ASSERT(cx->isMainThreadContext());
-    MOZ_ASSERT(cx->realm()->objectMetadataState_.is<ImmediateMetadata>());
-
+  explicit inline AutoSetNewObjectMetadata(JSContext* cx) : cx_(cx) {
 #ifdef DEBUG
-    realm_ = cx->realm();
-    MOZ_ASSERT(!realm_->hasActiveAutoSetNewObjectMetadata_,
-               "Shouldn't nest AutoSetNewObjectMetadata");
-    realm_->hasActiveAutoSetNewObjectMetadata_ = true;
+    MOZ_ASSERT(cx->isMainThreadContext());
+    MOZ_ASSERT(!cx->realm()->hasObjectPendingMetadata());
+    cx_->realm()->incNumActiveAutoSetNewObjectMetadata();
 #endif
-
-    if (MOZ_UNLIKELY(cx->realm()->hasAllocationMetadataBuilder())) {
-      cx_ = cx;
-      cx_->realm()->objectMetadataState_ =
-          NewObjectMetadataState(DelayMetadata());
-    }
   }
   inline ~AutoSetNewObjectMetadata() {
 #ifdef DEBUG
-    MOZ_ASSERT(realm_->hasActiveAutoSetNewObjectMetadata_);
-    realm_->hasActiveAutoSetNewObjectMetadata_ = false;
+    cx_->realm()->decNumActiveAutoSetNewObjectMetadata();
 #endif
-    if (MOZ_UNLIKELY(cx_)) {
+    if (MOZ_UNLIKELY(cx_->realm()->hasAllocationMetadataBuilder())) {
       setPendingMetadata();
     }
   }
