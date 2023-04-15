@@ -26,6 +26,10 @@ typedef int (*guarded_open_np_t)(const char*, const guardid_t*, u_int, int,
                                  ...);
 #endif
 
+#ifndef XP_WIN
+#  include <pthread.h>
+#endif
+
 #ifdef MOZ_PHC
 #  include "replace_malloc_bridge.h"
 #endif

@@ -5,6 +5,8 @@
 #include "RiceDeltaDecoder.h"
 #include "mozilla/Logging.h"
 
+#include <limits>
+
 extern mozilla::LazyLogModule gUrlClassifierDbServiceLog;
 #define LOG(args) \
   MOZ_LOG(gUrlClassifierDbServiceLog, mozilla::LogLevel::Debug, args)
