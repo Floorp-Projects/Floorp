@@ -227,6 +227,7 @@ function enableTabSleep() {
             console.log(`Tab Sleep: event type => ${event.type}`);
         }
         let nativeTab = event.target;
+        let currentTime = (new Date()).getTime();
         switch (event.type) {
             case "TabAttrModified":
                 let changed = event.detail.changed;
@@ -236,7 +237,7 @@ function enableTabSleep() {
                     changed.includes("label") ||
                     changed.includes("attention")
                 ) {
-                    nativeTab.lastActivity = (new Date()).getTime();
+                    nativeTab.lastActivity = currentTime;
                 }
                 break;
             case "TabPinned":
@@ -255,28 +256,28 @@ function enableTabSleep() {
                 if (!tabs.includes(nativeTab)) {
                     tabs.push(nativeTab);
                 }
-                nativeTab.lastActivity = (new Date()).getTime();
+                nativeTab.lastActivity = currentTime;
                 break;
             case "TabClose":
                 tabs = tabs.filter(nativeTab_ => nativeTab_ !== nativeTab);
                 break;
             case "TabSelect":
-                nativeTab.lastActivity = (new Date()).getTime();
+                nativeTab.lastActivity = currentTime;
                 break;
             case "TabMultiSelect":
                 break;
             case "TabStateChange":
-                nativeTab.lastActivity = (new Date()).getTime();
+                nativeTab.lastActivity = currentTime;
                 break;
             case "TabLocationChange":
-                nativeTab.lastActivity = (new Date()).getTime();
+                nativeTab.lastActivity = currentTime;
                 break;
             case "WindowOpen":
                 for (let nativeTab of event.targets) {
                     if (!tabs.includes(nativeTab)) {
                         tabs.push(nativeTab);
                     }
-                    nativeTab.lastActivity = (new Date()).getTime();
+                    nativeTab.lastActivity = currentTime;
                 }
                 break;
             case "WindowClose":
@@ -291,6 +292,7 @@ function enableTabSleep() {
     });
 
     interval = setInterval(function() {
+        let currentTime = (new Date()).getTime();
         for (let nativeTab of tabs) {
             if (nativeTab.selected) continue;
             if (nativeTab.multiselected) continue;
@@ -308,10 +310,10 @@ function enableTabSleep() {
             }
             if (!target) continue;
             if (
-                ((new Date()).getTime() - nativeTab.lastAccessed) > (TAB_TIMEOUT_MINUTES * 60 * 1000) &&
+                (currentTime - nativeTab.lastAccessed) > (TAB_TIMEOUT_MINUTES * 60 * 1000) &&
                 (
                     typeof nativeTab.lastActivity === "undefined" ||
-                    ((new Date()).getTime() - nativeTab.lastActivity) > (TAB_TIMEOUT_MINUTES * 60 * 1000)
+                    (currentTime - nativeTab.lastActivity) > (TAB_TIMEOUT_MINUTES * 60 * 1000)
                 )
             ) {
                 let linkedPanel = nativeTab.linkedPanel;
