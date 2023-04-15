@@ -55,6 +55,7 @@ function getBrowsersOnWindows() {
         }
         for (let i = 0; i < key.childCount; i++) {
             let keyname = key.getChildName(i);
+            if (keyname == "IEXPLORE.EXE") continue;
             if (browsers.filter(browser => browser.keyName === keyname).length >= 1) continue;
 
             let keyBrowserName = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
