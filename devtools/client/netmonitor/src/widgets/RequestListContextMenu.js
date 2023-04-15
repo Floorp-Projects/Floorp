@@ -132,6 +132,7 @@ class RequestListContextMenu {
             httpVersion,
             requestHeaders,
             requestPostData,
+            responseHeaders,
             "WINNT"
           ),
       });
@@ -154,6 +155,7 @@ class RequestListContextMenu {
             httpVersion,
             requestHeaders,
             requestPostData,
+            responseHeaders,
             "Linux"
           ),
       });
@@ -172,7 +174,8 @@ class RequestListContextMenu {
             method,
             httpVersion,
             requestHeaders,
-            requestPostData
+            requestPostData,
+            responseHeaders
           ),
       });
     }
@@ -537,6 +540,7 @@ class RequestListContextMenu {
     httpVersion,
     requestHeaders,
     requestPostData,
+    responseHeaders,
     platform
   ) {
     requestHeaders =
@@ -547,11 +551,16 @@ class RequestListContextMenu {
       requestPostData ||
       (await this.props.connector.requestData(id, "requestPostData"));
 
+    responseHeaders =
+      responseHeaders ||
+      (await this.props.connector.requestData(id, "responseHeaders"));
+
     // Create a sanitized object for the Curl command generator.
     const data = {
       url,
       method,
       headers: requestHeaders.headers,
+      responseHeaders: responseHeaders.headers,
       httpVersion,
       postDataText: requestPostData ? requestPostData.postData.text : "",
     };
