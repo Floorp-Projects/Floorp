@@ -30,6 +30,7 @@ parent:
 child:
   async Error(ErrorValue value);
   async NotifyLock(bool aCreated);
+  async NotifyWebTransport(bool aCreated);
   async Terminate();
 
   async __delete__();
