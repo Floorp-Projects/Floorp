@@ -419,6 +419,19 @@ bool JSString::equals(const char* s) {
 }
 #endif /* defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_CACHEIR_SPEW) */
 
+JSExtensibleString& JSLinearString::makeExtensible(size_t capacity) {
+  MOZ_ASSERT(!isDependent());
+  MOZ_ASSERT(!isInline());
+  MOZ_ASSERT(!isAtom());
+  MOZ_ASSERT(!isExternal());
+  MOZ_ASSERT(capacity >= length());
+  js::RemoveCellMemory(this, allocSize(), js::MemoryUse::StringContents);
+  setLengthAndFlags(length(), flags() | EXTENSIBLE_FLAGS);
+  d.s.u3.capacity = capacity;
+  js::AddCellMemory(this, allocSize(), js::MemoryUse::StringContents);
+  return asExtensible();
+}
+
 template <typename CharT>
 static MOZ_ALWAYS_INLINE bool AllocChars(JSString* str, size_t length,
                                          CharT** chars, size_t* capacity) {
