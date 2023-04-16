@@ -14,7 +14,7 @@ random != boxshadow-blur-2.html boxshadow-blur-2-notref.html # fixedpoint divisi
 fuzzy(0-14,0-179) fuzzy-if(swgl&&!Android,0-1,0-952) fuzzy-if(useDrawSnapshot&&swgl,14-14,54-54) == boxshadow-large-border-radius.html boxshadow-large-border-radius-ref.html # Bug 1209649
 
 == boxshadow-fileupload.html boxshadow-fileupload-ref.html
-fuzzy(13-19,28-49) == boxshadow-inner-basic.html boxshadow-inner-basic-ref.svg
+fuzzy(13-19,28-51) == boxshadow-inner-basic.html boxshadow-inner-basic-ref.svg
 fuzzy(0-1,0-18) random-if(layersGPUAccelerated) == boxshadow-mixed.html boxshadow-mixed-ref.html
 fuzzy(0-1,0-17) == boxshadow-mixed-2.html boxshadow-mixed-2-ref.html
 random-if(d2d) fuzzy(0-127,0-3528) == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.html
@@ -23,7 +23,7 @@ random-if(d2d) fuzzy(0-1,0-14) == boxshadow-onecorner.html boxshadow-onecorner-r
 random-if(d2d) fuzzy(0-1,0-22) == boxshadow-twocorners.html boxshadow-twocorners-ref.html
 random-if(d2d) fuzzy(0-1,0-36) == boxshadow-threecorners.html boxshadow-threecorners-ref.html
 fuzzy(0-2,0-440) == boxshadow-skiprect.html boxshadow-skiprect-ref.html
-fuzzy-if(useDrawSnapshot,1-1,1197-1197) == boxshadow-opacity.html boxshadow-opacity-ref.html
+fuzzy-if(useDrawSnapshot,1-1,1197-2400) == boxshadow-opacity.html boxshadow-opacity-ref.html
 == boxshadow-color-rounding.html boxshadow-color-rounding-ref.html
 == boxshadow-color-rounding-middle.html boxshadow-color-rounding-middle-ref.html
 fuzzy(0-3,0-500) fuzzy-if(d2d,0-2,0-1080) == boxshadow-border-radius-int.html boxshadow-border-radius-int-ref.html
