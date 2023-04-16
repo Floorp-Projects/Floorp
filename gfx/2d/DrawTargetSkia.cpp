@@ -460,26 +460,6 @@ static bool ExtractAlphaBitmap(const sk_sp<SkImage>& aImage,
   return false;
 }
 
-static sk_sp<SkImage> ExtractAlphaForSurface(SourceSurface* aSurface,
-                                             Maybe<MutexAutoLock>* aLock) {
-  sk_sp<SkImage> image = GetSkImageForSurface(aSurface, aLock);
-  if (!image) {
-    return nullptr;
-  }
-  if (image->isAlphaOnly()) {
-    return image;
-  }
-
-  SkBitmap bitmap;
-  if (!ExtractAlphaBitmap(image, &bitmap)) {
-    return nullptr;
-  }
-
-  // Mark the bitmap immutable so that it will be shared rather than copied.
-  bitmap.setImmutable();
-  return SkImage::MakeFromBitmap(bitmap);
-}
-
 static void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern,
                             Maybe<MutexAutoLock>& aLock, Float aAlpha = 1.0,
                             const SkMatrix* aMatrix = nullptr,
@@ -628,7 +608,7 @@ static void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern,
                                     : SkFilterMode::kLinear;
 
       sk_sp<SkShader> shader =
-          image->makeShader(xTile, yTile, SkSamplingOptions(filterMode), &mat);
+          image->makeShader(xTile, yTile, SkSamplingOptions(filterMode), mat);
       if (shader) {
         aPaint.setShader(shader);
       } else {
@@ -1405,61 +1385,59 @@ void DrawTargetSkia::StrokeGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
 
 void DrawTargetSkia::Mask(const Pattern& aSource, const Pattern& aMask,
                           const DrawOptions& aOptions) {
-  SkIRect maskBounds;
-  if (!mCanvas->getDeviceClipBounds(&maskBounds)) {
-    return;
-  }
-  SkPoint maskOrigin;
-  maskOrigin.iset(maskBounds.fLeft, maskBounds.fTop);
-
-  SkMatrix maskMatrix = mCanvas->getTotalMatrix();
-  maskMatrix.postTranslate(-maskOrigin.fX, -maskOrigin.fY);
-
-  MarkChanged();
-  AutoPaintSetup paint(mCanvas, aOptions, aSource, nullptr, &maskMatrix);
-
   Maybe<MutexAutoLock> lock;
   SkPaint maskPaint;
   SetPaintPattern(maskPaint, aMask, lock);
 
-  SkBitmap maskBitmap;
-  if (!maskBitmap.tryAllocPixelsFlags(
-          SkImageInfo::MakeA8(maskBounds.width(), maskBounds.height()),
-          SkBitmap::kZeroPixels_AllocFlag)) {
-    return;
+  sk_sp<SkShader> maskShader(maskPaint.getShader());
+  if (!maskShader && maskPaint.getAlpha() != 0xFF) {
+    if (maskPaint.getAlpha() == 0) {
+      return;
+    }
+    maskShader = SkShaders::Color(maskPaint.getColor());
+    if (!maskShader) {
+      gfxDebug() << "Failed creating Skia clip shader for Mask";
+      return;
+    }
   }
 
-  SkCanvas maskCanvas(maskBitmap);
-  maskCanvas.setMatrix(maskMatrix);
-  maskCanvas.drawPaint(maskPaint);
+  MarkChanged();
+  AutoPaintSetup paint(mCanvas, aOptions, aSource);
 
   mCanvas->save();
-  mCanvas->resetMatrix();
+  if (maskShader) {
+    mCanvas->clipShader(maskShader);
+  }
 
-  mCanvas->drawImage(maskBitmap.asImage(), maskOrigin.fX, maskOrigin.fY,
-                     SkSamplingOptions(SkFilterMode::kLinear), &paint.mPaint);
+  mCanvas->drawPaint(paint.mPaint);
 
   mCanvas->restore();
 }
 
 void DrawTargetSkia::MaskSurface(const Pattern& aSource, SourceSurface* aMask,
                                  Point aOffset, const DrawOptions& aOptions) {
-  MarkChanged();
-
-  SkMatrix invOffset = SkMatrix::Translate(SkFloatToScalar(-aOffset.x),
-                                           SkFloatToScalar(-aOffset.y));
-  AutoPaintSetup paint(mCanvas, aOptions, aSource, nullptr, &invOffset);
-
   Maybe<MutexAutoLock> lock;
-  sk_sp<SkImage> alphaMask = ExtractAlphaForSurface(aMask, &lock);
-  if (!alphaMask) {
-    gfxDebug() << *this << ": MaskSurface() failed to extract alpha for mask";
+  sk_sp<SkImage> maskImage = GetSkImageForSurface(aMask, &lock);
+  SkMatrix maskOffset = SkMatrix::Translate(
+      PointToSkPoint(aOffset + Point(aMask->GetRect().TopLeft())));
+  sk_sp<SkShader> maskShader = maskImage->makeShader(
+      SkTileMode::kClamp, SkTileMode::kClamp,
+      SkSamplingOptions(SkFilterMode::kLinear), maskOffset);
+  if (!maskShader) {
+    gfxDebug() << "Failed creating Skia clip shader for MaskSurface";
     return;
   }
 
-  mCanvas->drawImage(alphaMask, aOffset.x + aMask->GetRect().x,
-                     aOffset.y + aMask->GetRect().y,
-                     SkSamplingOptions(SkFilterMode::kLinear), &paint.mPaint);
+  MarkChanged();
+  AutoPaintSetup paint(mCanvas, aOptions, aSource);
+
+  mCanvas->save();
+  mCanvas->clipShader(maskShader);
+
+  mCanvas->drawRect(RectToSkRect(Rect(aMask->GetRect()) + aOffset),
+                    paint.mPaint);
+
+  mCanvas->restore();
 }
 
 bool DrawTarget::Draw3DTransformedSurface(SourceSurface* aSurface,
@@ -1956,22 +1934,17 @@ void DrawTargetSkia::PushLayerWithBlend(bool aOpaque, Float aOpacity,
                                         const IntRect& aBounds,
                                         bool aCopyBackground,
                                         CompositionOp aCompositionOp) {
-  PushedLayer layer(GetPermitSubpixelAA(), aMask);
-  mPushedLayers.push_back(layer);
-
   SkPaint paint;
 
   paint.setAlpha(ColorFloatToByte(aOpacity));
   paint.setBlendMode(GfxOpToSkiaOp(aCompositionOp));
 
   // aBounds is supplied in device space, but SaveLayerRec wants local space.
-  SkRect bounds = IntRectToSkRect(aBounds);
-  if (!bounds.isEmpty()) {
-    SkMatrix inverseCTM;
-    if (mCanvas->getTotalMatrix().invert(&inverseCTM)) {
-      inverseCTM.mapRect(&bounds);
-    } else {
-      bounds.setEmpty();
+  SkRect bounds = SkRect::MakeEmpty();
+  if (!aBounds.IsEmpty()) {
+    Matrix inverseTransform = mTransform;
+    if (inverseTransform.Invert()) {
+      bounds = RectToSkRect(inverseTransform.TransformBounds(Rect(aBounds)));
     }
   }
 
@@ -1979,21 +1952,34 @@ void DrawTargetSkia::PushLayerWithBlend(bool aOpaque, Float aOpacity,
   // copy of the data if this is a copy-on-write snapshot. If we instead held
   // the lock until the corresponding PopLayer, we'd risk deadlocking if someone
   // tried to touch the originating DrawTarget while the layer was pushed.
-  sk_sp<SkImage> clipImage =
-      aMask ? ExtractAlphaForSurface(aMask, nullptr) : nullptr;
+  sk_sp<SkImage> clipImage = GetSkImageForSurface(aMask, nullptr);
+  bool usedMask = false;
   if (bool(clipImage)) {
-    SkMatrix clipMatrix;
-    GfxMatrixToSkiaMatrix(aMaskTransform, clipMatrix);
-    clipMatrix.preTranslate(aMask->GetRect().X(), aMask->GetRect().Y());
+    Rect maskBounds(aMask->GetRect());
     sk_sp<SkShader> shader = clipImage->makeShader(
-        SkTileMode::kDecal, SkTileMode::kDecal,
-        SkSamplingOptions(SkFilterMode::kLinear), clipMatrix);
+        SkTileMode::kClamp, SkTileMode::kClamp,
+        SkSamplingOptions(SkFilterMode::kLinear),
+        SkMatrix::Translate(PointToSkPoint(maskBounds.TopLeft())));
     if (shader) {
-      paint.setShader(shader);
+      usedMask = true;
+      mCanvas->save();
+
+      auto oldMatrix = mCanvas->getLocalToDevice();
+      SkMatrix clipMatrix;
+      GfxMatrixToSkiaMatrix(aMaskTransform, clipMatrix);
+      mCanvas->concat(clipMatrix);
+
+      mCanvas->clipRect(RectToSkRect(maskBounds));
+      mCanvas->clipShader(shader);
+
+      mCanvas->setMatrix(oldMatrix);
     } else {
-      paint.setColor(SK_ColorTRANSPARENT);
+      gfxDebug() << "Failed to create Skia clip shader for PushLayerWithBlend";
     }
   }
+
+  PushedLayer layer(GetPermitSubpixelAA(), usedMask ? aMask : nullptr);
+  mPushedLayers.push_back(layer);
 
   SkCanvas::SaveLayerRec saveRec(
       aBounds.IsEmpty() ? nullptr : &bounds, &paint, nullptr,
@@ -2017,6 +2003,10 @@ void DrawTargetSkia::PopLayer() {
   const PushedLayer& layer = mPushedLayers.back();
 
   mCanvas->restore();
+
+  if (layer.mMask) {
+    mCanvas->restore();
+  }
 
   SetTransform(GetTransform());
   SetPermitSubpixelAA(layer.mOldPermitSubpixelAA);
