@@ -18,8 +18,6 @@ ChromeUtils.defineESModuleGetters(this, {
   DoHTestUtils: "resource://testing-common/DoHTestUtils.sys.mjs",
 });
 
-const SUBDIALOG_URL =
-  "chrome://browser/content/preferences/dialogs/connection.xhtml";
 const TRR_MODE_PREF = "network.trr.mode";
 const TRR_URI_PREF = "network.trr.uri";
 const TRR_CUSTOM_URI_PREF = "network.trr.custom_uri";
@@ -30,9 +28,6 @@ const FIRST_RESOLVER_VALUE = DoHTestUtils.providers[0].uri;
 const SECOND_RESOLVER_VALUE = DoHTestUtils.providers[1].uri;
 const DEFAULT_RESOLVER_VALUE = FIRST_RESOLVER_VALUE;
 
-const modeCheckboxSelector = "#networkDnsOverHttps";
-const uriTextboxSelector = "#networkCustomDnsOverHttpsInput";
-const resolverMenulistSelector = "#networkDnsOverHttpsResolverChoices";
 const defaultPrefValues = Object.freeze({
   [TRR_MODE_PREF]: 0,
   [TRR_CUSTOM_URI_PREF]: "",
@@ -62,23 +57,15 @@ async function resetPrefs() {
   await DoHController.init();
 }
 Services.prefs.setStringPref("network.trr.confirmationNS", "skip");
-let preferencesOpen = new Promise(res => open_preferences(res));
 
 registerCleanupFunction(async () => {
   await resetPrefs();
-  gBrowser.removeCurrentTab();
   Services.prefs.clearUserPref("network.trr.confirmationNS");
 });
 
-async function openConnectionsSubDialog() {
-  /*
-    The connection dialog has type="child", So it has to be opened as a sub dialog
-    of the main pref tab. Prefs only get updated after the subdialog is confirmed & closed
-  */
-  let dialog = await openAndLoadSubDialog(SUBDIALOG_URL);
-  ok(dialog, "connection window opened");
-  return dialog;
-}
+add_setup(async function setup() {
+  await DoHTestUtils.resetRemoteSettingsConfig();
+});
 
 function waitForPrefObserver(name) {
   return new Promise(resolve => {
@@ -139,33 +126,27 @@ async function testWithProperties(props, startTime) {
     Services.prefs.setStringPref(TRR_URI_PREF, props[TRR_URI_PREF]);
   }
 
-  let dialog = await openConnectionsSubDialog();
-  await dialog.uiReady;
-  info(
-    Date.now() - startTime + ": testWithProperties: connections dialog now open"
-  );
-  let doc = dialog.document;
-  let win = doc.ownerGlobal;
-  let dialogElement = doc.getElementById("ConnectionsDialog");
-  let dialogClosingPromise = BrowserTestUtils.waitForEvent(
-    dialogElement,
-    "dialogclosing"
-  );
-  let modeCheckbox = doc.querySelector(modeCheckboxSelector);
-  let uriTextbox = doc.querySelector(uriTextboxSelector);
-  let resolverMenulist = doc.querySelector(resolverMenulistSelector);
-  let uriPrefChangedPromise;
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  let doc = gBrowser.selectedBrowser.contentDocument;
+
+  info(Date.now() - startTime + ": testWithProperties: tab now open");
+  let modeRadioGroup = doc.getElementById("dohCategoryRadioGroup");
+  let uriTextbox = doc.getElementById("dohEnabledInputField");
+  let resolverMenulist = doc.getElementById("dohStrictResolverChoices");
   let modePrefChangedPromise;
+  let uriPrefChangedPromise;
   let disableHeuristicsPrefChangedPromise;
 
-  if (props.hasOwnProperty("expectedModeChecked")) {
+  modeRadioGroup.scrollIntoView();
+
+  if (props.hasOwnProperty("expectedSelectedIndex")) {
     await TestUtils.waitForCondition(
-      () => modeCheckbox.checked === props.expectedModeChecked
+      () => modeRadioGroup.selectedIndex === props.expectedSelectedIndex
     );
     is(
-      modeCheckbox.checked,
-      props.expectedModeChecked,
-      "mode checkbox has expected checked state"
+      modeRadioGroup.selectedIndex,
+      props.expectedSelectedIndex,
+      "dohCategoryRadioGroup has expected selected index"
     );
   }
   if (props.hasOwnProperty("expectedUriValue")) {
@@ -188,6 +169,7 @@ async function testWithProperties(props, startTime) {
       "resolver menulist has expected value"
     );
   }
+
   if (props.clickMode) {
     info(
       Date.now() -
@@ -203,8 +185,10 @@ async function testWithProperties(props, startTime) {
     info(
       Date.now() - startTime + ": testWithProperties: clickMode, pref changed"
     );
-    modeCheckbox.scrollIntoView();
-    EventUtils.synthesizeMouseAtCenter(modeCheckbox, {}, win);
+    let option = doc.getElementById(props.clickMode);
+    option.scrollIntoView();
+    let win = doc.ownerGlobal;
+    EventUtils.synthesizeMouseAtCenter(option, {}, win);
     info(
       Date.now() -
         startTime +
@@ -220,14 +204,13 @@ async function testWithProperties(props, startTime) {
     resolverMenulist.focus();
     resolverMenulist.value = props.selectResolver;
     resolverMenulist.dispatchEvent(new Event("input", { bubbles: true }));
-    resolverMenulist.dispatchEvent(new Event("change", { bubbles: true }));
+    resolverMenulist.dispatchEvent(new Event("command", { bubbles: true }));
     info(
       Date.now() -
         startTime +
         ": testWithProperties: selectResolver, item value set and events dispatched"
     );
   }
-
   if (props.hasOwnProperty("inputUriKeys")) {
     info(
       Date.now() -
@@ -240,6 +223,7 @@ async function testWithProperties(props, startTime) {
         startTime +
         ": testWithProperties: inputUriKeys, pref changed, now enter the new value"
     );
+    let win = doc.ownerGlobal;
     uriTextbox.focus();
     uriTextbox.value = props.inputUriKeys;
     uriTextbox.dispatchEvent(new win.Event("input", { bubbles: true }));
@@ -250,17 +234,6 @@ async function testWithProperties(props, startTime) {
         ": testWithProperties: inputUriKeys, input and change events dispatched"
     );
   }
-
-  info(Date.now() - startTime + ": testWithProperties: calling acceptDialog");
-  dialogElement.acceptDialog();
-
-  info(
-    Date.now() -
-      startTime +
-      ": testWithProperties: waiting for the dialogClosingPromise"
-  );
-  let dialogClosingEvent = await dialogClosingPromise;
-  ok(dialogClosingEvent, "connection window closed");
 
   info(
     Date.now() -
@@ -285,7 +258,9 @@ async function testWithProperties(props, startTime) {
     } else {
       ok(
         !Services.prefs.prefHasUserValue(TRR_URI_PREF),
-        "uri pref ended up with the expected value (unset)"
+        `uri pref ended up with the expected value (unset) got ${Services.prefs.getStringPref(
+          TRR_URI_PREF
+        )}`
       );
     }
   }
@@ -310,7 +285,7 @@ async function testWithProperties(props, startTime) {
     );
   }
 
-  if (props.hasOwnProperty("expectedFinalCusomUriPref")) {
+  if (props.hasOwnProperty("expectedFinalCustomUriPref")) {
     let customUriPref = Services.prefs.getStringPref(TRR_CUSTOM_URI_PREF);
     is(
       customUriPref,
@@ -319,6 +294,12 @@ async function testWithProperties(props, startTime) {
     );
   }
 
+  if (props.hasOwnProperty("expectedModeValue")) {
+    let modeValue = Services.prefs.getIntPref(TRR_MODE_PREF);
+    is(modeValue, props.expectedModeValue, "mode pref has expected value");
+  }
+
+  gBrowser.removeCurrentTab();
   info(Date.now() - startTime + ": testWithProperties: fin");
 }
 
@@ -342,40 +323,58 @@ add_task(async function default_values() {
   );
 });
 
+const DEFAULT_OPTION_INDEX = 0;
+const ENABLED_OPTION_INDEX = 1;
+const STRICT_OPTION_INDEX = 2;
+const OFF_OPTION_INDEX = 3;
+
 let testVariations = [
   // verify state with defaults
-  { name: "default", expectedModePref: 5, expectedUriValue: "" },
+  {
+    name: "default",
+    expectedModePref: 0,
+    expectedSelectedIndex: DEFAULT_OPTION_INDEX,
+    expectedUriValue: "",
+  },
 
   // verify each of the modes maps to the correct checked state
-  { name: "mode 0", [TRR_MODE_PREF]: 0, expectedModeChecked: false },
+  {
+    name: "mode 0",
+    [TRR_MODE_PREF]: 0,
+    expectedSelectedIndex: DEFAULT_OPTION_INDEX,
+  },
   {
     name: "mode 1",
     [TRR_MODE_PREF]: 1,
-    expectedModeChecked: false,
+    expectedSelectedIndex: OFF_OPTION_INDEX,
   },
   {
     name: "mode 2",
     [TRR_MODE_PREF]: 2,
-    expectedModeChecked: true,
-    expectedFinalUriPref: DEFAULT_RESOLVER_VALUE,
+    expectedSelectedIndex: ENABLED_OPTION_INDEX,
+    expectedFinalUriPref: "",
   },
   {
     name: "mode 3",
     [TRR_MODE_PREF]: 3,
-    expectedModeChecked: true,
-    expectedFinalUriPref: DEFAULT_RESOLVER_VALUE,
+    expectedSelectedIndex: STRICT_OPTION_INDEX,
+    expectedFinalUriPref: "",
   },
   {
     name: "mode 4",
     [TRR_MODE_PREF]: 4,
-    expectedModeChecked: false,
+    expectedSelectedIndex: OFF_OPTION_INDEX,
   },
-  { name: "mode 5", [TRR_MODE_PREF]: 5, expectedModeChecked: false },
+  {
+    name: "mode 5",
+    [TRR_MODE_PREF]: 5,
+    expectedSelectedIndex: OFF_OPTION_INDEX,
+  },
   // verify an out of bounds mode value maps to the correct checked state
   {
     name: "mode out-of-bounds",
     [TRR_MODE_PREF]: 77,
-    expectedModeChecked: false,
+    expectedSelectedIndex: OFF_OPTION_INDEX,
   },
 
   // verify automatic heuristics states
@@ -383,48 +382,48 @@ let testVariations = [
     name: "heuristics on and mode unset",
     [TRR_MODE_PREF]: 0,
     [ROLLOUT_ENABLED_PREF]: true,
-    expectedModeChecked: true,
+    expectedSelectedIndex: DEFAULT_OPTION_INDEX,
   },
   {
     name: "heuristics on and mode set to 2",
     [TRR_MODE_PREF]: 2,
     [ROLLOUT_ENABLED_PREF]: true,
-    expectedModeChecked: true,
+    expectedSelectedIndex: ENABLED_OPTION_INDEX,
   },
   {
     name: "heuristics on but disabled, mode unset",
     [TRR_MODE_PREF]: 5,
     [ROLLOUT_ENABLED_PREF]: true,
-    expectedModeChecked: false,
+    expectedSelectedIndex: OFF_OPTION_INDEX,
   },
   {
     name: "heuristics on but disabled, mode set to 2",
     [TRR_MODE_PREF]: 2,
     [ROLLOUT_ENABLED_PREF]: true,
-    expectedModeChecked: true,
+    expectedSelectedIndex: ENABLED_OPTION_INDEX,
   },
 
-  // verify toggling the checkbox gives the right outcomes
+  // verify picking each radio button option gives the right outcomes
   {
     name: "toggle mode on",
-    clickMode: true,
+    clickMode: "dohEnabledRadio",
     expectedModeValue: 2,
     expectedUriValue: "",
-    expectedFinalUriPref: DEFAULT_RESOLVER_VALUE,
+    expectedFinalUriPref: "",
   },
   {
     name: "toggle mode off",
     [TRR_MODE_PREF]: 2,
-    expectedModeChecked: true,
-    clickMode: true,
+    expectedSelectedIndex: ENABLED_OPTION_INDEX,
+    clickMode: "dohOffRadio",
     expectedModePref: 5,
   },
   {
     name: "toggle mode off when on due to heuristics",
     [TRR_MODE_PREF]: 0,
     [ROLLOUT_ENABLED_PREF]: true,
-    expectedModeChecked: true,
-    clickMode: true,
+    expectedSelectedIndex: DEFAULT_OPTION_INDEX,
+    clickMode: "dohOffRadio",
     expectedModePref: 5,
     expectedDisabledHeuristics: true,
   },
@@ -449,14 +448,15 @@ let testVariations = [
     [TRR_URI_PREF]: SECOND_RESOLVER_VALUE,
     expectedResolverListValue: SECOND_RESOLVER_VALUE,
     selectResolver: DEFAULT_RESOLVER_VALUE,
-    expectedFinalUriPref: DEFAULT_RESOLVER_VALUE,
+    expectedFinalUriPref: FIRST_RESOLVER_VALUE,
   },
   // test that selecting Custom, when we have a TRR_CUSTOM_URI_PREF subsequently changes TRR_URI_PREF
   {
     name: "select custom with existing custom_uri pref value",
     [TRR_MODE_PREF]: 2,
     [TRR_CUSTOM_URI_PREF]: "https://example.com",
-    expectedModeValue: true,
+    expectedModeValue: 2,
+    expectedSelectedIndex: ENABLED_OPTION_INDEX,
     selectResolver: "custom",
     expectedUriValue: "https://example.com",
     expectedFinalUriPref: "https://example.com",
@@ -466,19 +466,19 @@ let testVariations = [
     name: "select custom and enter new custom_uri pref value",
     [TRR_URI_PREF]: "",
     [TRR_CUSTOM_URI_PREF]: "",
-    clickMode: true,
+    clickMode: "dohEnabledRadio",
     selectResolver: "custom",
-    inputUriKeys: "https://example.com",
+    inputUriKeys: "https://custom.com",
     expectedModePref: 2,
-    expectedFinalUriPref: "https://example.com",
-    expectedFinalCustomUriPref: "https://example.com",
+    expectedFinalUriPref: "https://custom.com",
+    expectedFinalCustomUriPref: "https://custom.com",
   },
 
   {
     name: "return to default from custom",
     [TRR_MODE_PREF]: 2,
     [TRR_URI_PREF]: "https://example.com",
-    [TRR_CUSTOM_URI_PREF]: "https://example.com",
+    [TRR_CUSTOM_URI_PREF]: "https://custom.com",
     expectedUriValue: "https://example.com",
     expectedResolverListValue: "custom",
     selectResolver: DEFAULT_RESOLVER_VALUE,
@@ -493,7 +493,7 @@ let testVariations = [
     expectedUriValue: "https://example.com",
     expectedResolverListValue: "custom",
     inputUriKeys: "",
-    expectedFinalUriPref: DEFAULT_RESOLVER_VALUE,
+    expectedFinalUriPref: " ",
     expectedFinalCustomUriPref: "",
   },
   {
@@ -510,7 +510,6 @@ let testVariations = [
 
 for (let props of testVariations) {
   add_task(async function testVariation() {
-    await preferencesOpen;
     let startTime = Date.now();
     info("starting test: " + props.name);
     await testWithProperties(props, startTime);
@@ -519,6 +518,7 @@ for (let props of testVariations) {
 }
 
 add_task(async function testRemoteSettingsEnable() {
+  let startTime = Date.now();
   // Enable the rollout.
   await DoHTestUtils.loadRemoteSettingsConfig({
     providers: "example-1, example-2",
@@ -530,95 +530,101 @@ add_task(async function testRemoteSettingsEnable() {
     id: "global",
   });
 
-  let doTest = async (cancelOrAccept = "cancel") => {
-    let dialog = await openConnectionsSubDialog();
-    await dialog.uiReady;
-    let doc = dialog.document;
-    let dialogElement = doc.getElementById("ConnectionsDialog");
-    let modeCheckbox = doc.querySelector(modeCheckboxSelector);
-    ok(modeCheckbox.checked, "The mode checkbox should be checked.");
-    let dialogClosingPromise = BrowserTestUtils.waitForEvent(
-      dialogElement,
-      "dialogclosing"
-    );
-    if (cancelOrAccept == "cancel") {
-      dialogElement.cancelDialog();
-    } else {
-      dialogElement.acceptDialog();
-    }
-    await dialogClosingPromise;
-    if (cancelOrAccept == "cancel") {
-      try {
-        await TestUtils.waitForCondition(() =>
-          Services.prefs.prefHasUserValue("doh-rollout.disable-heuristics")
-        );
-        ok(false, "Heuristics were disabled when they shouldn't have been!");
-      } catch (e) {
-        ok(true, "Heuristics remained enabled.");
-      }
-      is(Services.prefs.getStringPref("network.trr.uri"), "");
-      ok(!Services.prefs.prefHasUserValue("network.trr.mode"));
-    } else {
-      // If accepting, the chosen provider is persisted to network.trr.uri
-      // and heuristics should get disabled.
-      await TestUtils.waitForCondition(() =>
-        Services.prefs.prefHasUserValue("doh-rollout.disable-heuristics")
-      );
-      ok(
-        Services.prefs.getBoolPref("doh-rollout.disable-heuristics"),
-        "Heurstics were disabled."
-      );
-      is(
-        Services.prefs.getStringPref("network.trr.uri"),
-        DEFAULT_RESOLVER_VALUE
-      );
-      is(Services.prefs.getIntPref("network.trr.mode"), 2);
-    }
-  };
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  let doc = gBrowser.selectedBrowser.contentDocument;
 
-  for (let action of ["cancel", "accept"]) {
-    await doTest(action);
-  }
+  info(Date.now() - startTime + ": testWithProperties: tab now open");
+  let modeRadioGroup = doc.getElementById("dohCategoryRadioGroup");
+
+  is(modeRadioGroup.value, "0", "expecting default mode");
+
+  let status = doc.getElementById("dohStatus");
+  await TestUtils.waitForCondition(
+    () => document.l10n.getAttributes(status).args.status == "Active"
+  );
+  is(
+    document.l10n.getAttributes(status).args.status,
+    "Active",
+    "expecting status active"
+  );
+
+  let provider = doc.getElementById("dohResolver");
+  is(
+    provider.hidden,
+    false,
+    "Provider should not be hidden when status is active"
+  );
+  await TestUtils.waitForCondition(
+    () =>
+      document.l10n.getAttributes(provider).args.name ==
+      DoHConfigController.currentConfig.providerList[0].UIName
+  );
+  is(
+    document.l10n.getAttributes(provider).args.name,
+    DoHConfigController.currentConfig.providerList[0].UIName,
+    "expecting the right provider name"
+  );
+
+  let option = doc.getElementById("dohEnabledRadio");
+  option.scrollIntoView();
+  let win = doc.ownerGlobal;
+  EventUtils.synthesizeMouseAtCenter(option, {}, win);
+
+  await TestUtils.waitForCondition(() =>
+    Services.prefs.prefHasUserValue("doh-rollout.disable-heuristics")
+  );
+  is(provider.hidden, false);
+  await TestUtils.waitForCondition(
+    () =>
+      document.l10n.getAttributes(provider).args.name ==
+      DoHConfigController.currentConfig.providerList[0].UIName
+  );
+  is(
+    document.l10n.getAttributes(provider).args.name,
+    DoHConfigController.currentConfig.providerList[0].UIName,
+    "expecting the right provider name"
+  );
+  is(
+    Services.prefs.getIntPref("network.trr.mode"),
+    Ci.nsIDNSService.MODE_TRRFIRST
+  );
+
+  option = doc.getElementById("dohOffRadio");
+  option.scrollIntoView();
+  win = doc.ownerGlobal;
+  EventUtils.synthesizeMouseAtCenter(option, {}, win);
+  await TestUtils.waitForCondition(() => status.innerHTML == "Status: Off");
+  is(
+    Services.prefs.getIntPref("network.trr.mode"),
+    Ci.nsIDNSService.MODE_TRROFF
+  );
+  is(provider.hidden, true, "Expecting provider to be hidden when DoH is off");
+
+  gBrowser.removeCurrentTab();
 });
 
 add_task(async function testEnterprisePolicy() {
-  async function closeDialog(dialog) {
-    let dialogClosingPromise = BrowserTestUtils.waitForEvent(
-      dialog,
-      "dialogclosing"
-    );
-
-    dialog.cancelDialog();
-    await dialogClosingPromise;
-  }
-
   async function withPolicy(policy, fn, preFn = () => {}) {
     await resetPrefs();
     PoliciesPrefTracker.start();
     await EnterprisePolicyTesting.setupPolicyEngineWithJson(policy);
-
     await preFn();
 
-    let dialog = await openConnectionsSubDialog();
-    await dialog.uiReady;
+    await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+    let doc = gBrowser.selectedBrowser.contentDocument;
 
-    let doc = dialog.document;
-
-    let dialogElement = doc.getElementById("ConnectionsDialog");
-    let modeCheckbox = doc.querySelector(modeCheckboxSelector);
-    let resolverMenulist = doc.querySelector(resolverMenulistSelector);
-    let uriTextbox = doc.querySelector(uriTextboxSelector);
+    let modeRadioGroup = doc.getElementById("dohCategoryRadioGroup");
+    let resolverMenulist = doc.getElementById("dohEnabledResolverChoices");
+    let uriTextbox = doc.getElementById("dohEnabledInputField");
 
     await fn({
-      dialog,
-      dialogElement,
-      modeCheckbox,
+      modeRadioGroup,
       resolverMenulist,
       doc,
       uriTextbox,
     });
 
-    await closeDialog(dialogElement);
+    gBrowser.removeCurrentTab();
     EnterprisePolicyTesting.resetRunOnceState();
     PoliciesPrefTracker.stop();
   }
@@ -636,17 +642,14 @@ add_task(async function testEnterprisePolicy() {
       },
     },
     async res => {
-      ok(res.modeCheckbox.checked, "The mode checkbox should be checked.");
-      is(res.modeCheckbox.disabled, true, "The checkbox should be locked.");
-
+      is(res.modeRadioGroup.disabled, true, "The mode menu should be locked.");
+      is(res.modeRadioGroup.value, "2", "Should be enabled");
       is(res.resolverMenulist.value, "custom", "Resolver list shows custom");
       is(
-        res.resolverMenulist.disabled,
-        true,
-        "The resolver list should be locked."
+        res.uriTextbox.value,
+        "https://examplelocked.com/provider",
+        "Custom URI should be set"
       );
-
-      is(res.uriTextbox.disabled, true, "The custom URI should be locked.");
     }
   );
 
@@ -662,29 +665,17 @@ add_task(async function testEnterprisePolicy() {
       },
     },
     async res => {
-      ok(res.modeCheckbox.checked, "The mode checkbox should be checked.");
       is(
-        res.modeCheckbox.disabled,
+        res.modeRadioGroup.disabled,
         false,
-        "The checkbox should not be locked."
+        "The mode menu should not be locked."
       );
-
+      is(res.modeRadioGroup.value, "2", "Should be enabled");
       is(res.resolverMenulist.value, "custom", "Resolver list shows custom");
-      is(
-        res.resolverMenulist.disabled,
-        false,
-        "The resolver list should not be locked."
-      );
-
       is(
         res.uriTextbox.value,
         "https://example.com/provider",
         "Expected custom resolver"
-      );
-      is(
-        res.uriTextbox.disabled,
-        false,
-        "The custom URI should not be locked."
       );
     }
   );
@@ -702,17 +693,8 @@ add_task(async function testEnterprisePolicy() {
       },
     },
     async res => {
-      ok(!res.modeCheckbox.checked, "The mode checkbox should be unchecked.");
-      is(res.modeCheckbox.disabled, true, "The checkbox should be locked.");
-
-      is(res.resolverMenulist.value, "custom", "Resolver list shows custom");
-      is(
-        res.resolverMenulist.disabled,
-        true,
-        "The resolver list should be locked."
-      );
-
-      is(res.uriTextbox.disabled, true, "The custom URI should be locked.");
+      is(res.modeRadioGroup.disabled, true, "The mode menu should be locked.");
+      is(res.modeRadioGroup.value, "5", "Should be disabled");
     }
   );
 
@@ -728,21 +710,12 @@ add_task(async function testEnterprisePolicy() {
       },
     },
     async res => {
-      ok(!res.modeCheckbox.checked, "The mode checkbox should be unchecked.");
       is(
-        res.modeCheckbox.disabled,
+        res.modeRadioGroup.disabled,
         false,
-        "The checkbox should not be locked."
+        "The mode menu should not be locked."
       );
-
-      is(res.resolverMenulist.value, "custom", "Resolver list shows custom");
-      is(
-        res.resolverMenulist.disabled,
-        true,
-        "The resolver list should be locked."
-      );
-
-      is(res.uriTextbox.disabled, true, "The custom URI should be locked.");
+      is(res.modeRadioGroup.value, "5", "Should be disabled");
     }
   );
 
@@ -758,29 +731,16 @@ add_task(async function testEnterprisePolicy() {
       },
     },
     async res => {
-      ok(res.modeCheckbox.checked, "The mode checkbox should be checked.");
       is(
-        res.modeCheckbox.disabled,
+        res.modeRadioGroup.disabled,
         false,
-        "The checkbox should not be locked."
+        "The mode menu should not be locked."
       );
-
       is(res.resolverMenulist.value, "custom", "Resolver list shows custom");
-      is(
-        res.resolverMenulist.disabled,
-        false,
-        "The resolver list should not be locked."
-      );
-
       is(
         res.uriTextbox.value,
         "https://example.com/provider",
         "Expected custom resolver"
-      );
-      is(
-        res.uriTextbox.disabled,
-        false,
-        "The custom URI should not be locked."
       );
     },
     async function runAfterSettingPolicy() {
