@@ -4,10 +4,6 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-
-#include "include/core/SkTypes.h"
-
-#ifdef SK_SUPPORT_LEGACY_DRAWLOOPER
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColor.h"
 #include "include/core/SkMaskFilter.h"
@@ -15,7 +11,7 @@
 #include "include/core/SkUnPreMultiply.h"
 #include "include/effects/SkBlurDrawLooper.h"
 #include "include/effects/SkLayerDrawLooper.h"
-#include "src/base/SkArenaAlloc.h"
+#include "src/core/SkArenaAlloc.h"
 #include "src/core/SkBlendModePriv.h"
 #include "src/core/SkColorSpacePriv.h"
 #include "src/core/SkMaskFilterBase.h"
@@ -64,7 +60,7 @@ static SkColor4f xferColor(const SkColor4f& src, const SkColor4f& dst, SkBlendMo
     }
 }
 
-// Even with kEntirePaint_Bits, we always ensure that the base paint's
+// Even with kEntirePaint_Bits, we always ensure that the master paint's
 // text-encoding is respected, since that controls how we interpret the
 // text/length parameters of a draw[Pos]Text call.
 void SkLayerDrawLooper::LayerDrawLooperContext::ApplyInfo(
@@ -118,7 +114,7 @@ void SkLayerDrawLooper::LayerDrawLooperContext::ApplyInfo(
         dst->setColorFilter(src.refColorFilter());
     }
     if (bits & kXfermode_Bit) {
-        dst->setBlender(src.refBlender());
+        dst->setBlendMode(src.getBlendMode());
     }
 
     // we don't override these
@@ -217,11 +213,6 @@ void SkLayerDrawLooper::flatten(SkWriteBuffer& buffer) const {
 sk_sp<SkFlattenable> SkLayerDrawLooper::CreateProc(SkReadBuffer& buffer) {
     int count = buffer.readInt();
 
-#if defined(SK_BUILD_FOR_FUZZER)
-    if (count > 100) {
-        count = 100;
-    }
-#endif
     Builder builder;
     for (int i = 0; i < count; i++) {
         LayerInfo info;
@@ -232,7 +223,7 @@ sk_sp<SkFlattenable> SkLayerDrawLooper::CreateProc(SkReadBuffer& buffer) {
         info.fColorMode = (SkBlendMode)buffer.readInt();
         buffer.readPoint(&info.fOffset);
         info.fPostTranslate = buffer.readBool();
-        *builder.addLayerOnTop(info) = buffer.readPaint();
+        buffer.readPaint(builder.addLayerOnTop(info), nullptr);
         if (!buffer.isValid()) {
             return nullptr;
         }
@@ -335,5 +326,3 @@ sk_sp<SkDrawLooper> SkBlurDrawLooper::Make(SkColor4f color, SkColorSpace* cs,
 
     return builder.detach();
 }
-
-#endif

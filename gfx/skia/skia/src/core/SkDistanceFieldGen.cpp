@@ -6,18 +6,13 @@
  */
 
 #include "include/private/SkColorData.h"
-#include "include/private/base/SkTPin.h"
-#include "include/private/base/SkTemplates.h"
-#include "src/base/SkAutoMalloc.h"
+#include "include/private/SkTemplates.h"
+#include "src/core/SkAutoMalloc.h"
 #include "src/core/SkDistanceFieldGen.h"
 #include "src/core/SkMask.h"
 #include "src/core/SkPointPriv.h"
 
 #include <utility>
-
-using namespace skia_private;
-
-#if !defined(SK_DISABLE_SDF_TEXT)
 
 struct DFData {
     float   fAlpha;      // alpha value of source texel
@@ -332,7 +327,7 @@ static unsigned char pack_distance_field_val(float dist) {
     // The distance field is constructed as unsigned char values, so that the zero value is at 128,
     // Beside 128, we have 128 values in range [0, 128), but only 127 values in range (128, 255].
     // So we multiply distanceMagnitude by 127/128 at the latter range to avoid overflow.
-    dist = SkTPin<float>(-dist, -distanceMagnitude, distanceMagnitude * 127.0f / 128.0f);
+    dist = SkScalarPin(-dist, -distanceMagnitude, distanceMagnitude * 127.0f / 128.0f);
 
     // Scale into the positive range for unsigned distance.
     dist += distanceMagnitude;
@@ -361,7 +356,7 @@ static bool generate_distance_field_from_image(unsigned char* distanceField,
     int dataHeight = height + 2*pad;
 
     // create zeroed temp DFData+edge storage
-    UniqueVoidPtr storage(sk_calloc_throw(dataWidth*dataHeight*(sizeof(DFData) + 1)));
+    SkAutoFree storage(sk_calloc_throw(dataWidth*dataHeight*(sizeof(DFData) + 1)));
     DFData*        dataPtr = (DFData*)storage.get();
     unsigned char* edgePtr = (unsigned char*)storage.get() + dataWidth*dataHeight*sizeof(DFData);
 
@@ -547,15 +542,17 @@ bool SkGenerateDistanceFieldFromBWImage(unsigned char* distanceField,
     for (int i = 0; i < height; ++i) {
         *currDestPtr++ = 0;
 
+
         int rowWritesLeft = width;
         const unsigned char *maskPtr = currSrcScanLine;
         while (rowWritesLeft > 0) {
             unsigned mask = *maskPtr++;
-            for (int j = 7; j >= 0 && rowWritesLeft; --j, --rowWritesLeft) {
-                *currDestPtr++ = (mask & (1 << j)) ? 0xff : 0;
+            for (int i = 7; i >= 0 && rowWritesLeft; --i, --rowWritesLeft) {
+                *currDestPtr++ = (mask & (1 << i)) ? 0xff : 0;
             }
         }
         currSrcScanLine += rowBytes;
+
 
         *currDestPtr++ = 0;
     }
@@ -563,5 +560,3 @@ bool SkGenerateDistanceFieldFromBWImage(unsigned char* distanceField,
 
     return generate_distance_field_from_image(distanceField, copyPtr, width, height);
 }
-
-#endif // !defined(SK_DISABLE_SDF_TEXT)

@@ -8,8 +8,10 @@
 #ifndef SkScalar_DEFINED
 #define SkScalar_DEFINED
 
-#include "include/private/base/SkAssert.h"
-#include "include/private/base/SkFloatingPoint.h"
+#include "include/private/SkFloatingPoint.h"
+
+#undef SK_SCALAR_IS_FLOAT
+#define SK_SCALAR_IS_FLOAT  1
 
 typedef float SkScalar;
 
@@ -20,14 +22,13 @@ typedef float SkScalar;
 #define SK_ScalarTanPIOver8         0.414213562f
 #define SK_ScalarRoot2Over2         0.707106781f
 #define SK_ScalarMax                3.402823466e+38f
-#define SK_ScalarMin                (-SK_ScalarMax)
 #define SK_ScalarInfinity           SK_FloatInfinity
 #define SK_ScalarNegativeInfinity   SK_FloatNegativeInfinity
 #define SK_ScalarNaN                SK_FloatNaN
 
 #define SkScalarFloorToScalar(x)    sk_float_floor(x)
 #define SkScalarCeilToScalar(x)     sk_float_ceil(x)
-#define SkScalarRoundToScalar(x)    sk_float_round(x)
+#define SkScalarRoundToScalar(x)    sk_float_floor((x) + 0.5f)
 #define SkScalarTruncToScalar(x)    sk_float_trunc(x)
 
 #define SkScalarFloorToInt(x)       sk_float_floor2int(x)
@@ -61,6 +62,8 @@ typedef float SkScalar;
 #define SkScalarToDouble(x)     static_cast<double>(x)
 #define SkDoubleToScalar(x)     sk_double_to_float(x)
 
+#define SK_ScalarMin            (-SK_ScalarMax)
+
 static inline bool SkScalarIsNaN(SkScalar x) { return x != x; }
 
 /** Returns true if x is not NaN and not infinite
@@ -75,9 +78,39 @@ static inline bool SkScalarsAreFinite(const SkScalar array[], int count) {
     return sk_floats_are_finite(array, count);
 }
 
+/**
+ *  Variant of SkScalarRoundToInt, that performs the rounding step (adding 0.5) explicitly using
+ *  double, to avoid possibly losing the low bit(s) of the answer before calling floor().
+ *
+ *  This routine will likely be slower than SkScalarRoundToInt(), and should only be used when the
+ *  extra precision is known to be valuable.
+ *
+ *  In particular, this catches the following case:
+ *      SkScalar x = 0.49999997;
+ *      int ix = SkScalarRoundToInt(x);
+ *      SkASSERT(0 == ix);    // <--- fails
+ *      ix = SkDScalarRoundToInt(x);
+ *      SkASSERT(0 == ix);    // <--- succeeds
+ */
+static inline int SkDScalarRoundToInt(SkScalar x) {
+    double xx = x;
+    xx += 0.5;
+    return (int)floor(xx);
+}
+
 /** Returns the fractional part of the scalar. */
 static inline SkScalar SkScalarFraction(SkScalar x) {
     return x - SkScalarTruncToScalar(x);
+}
+
+static inline SkScalar SkScalarClampMax(SkScalar x, SkScalar max) {
+    x = SkTMin(x, max);
+    x = SkTMax<SkScalar>(x, 0);
+    return x;
+}
+
+static inline SkScalar SkScalarPin(SkScalar x, SkScalar min, SkScalar max) {
+    return SkTPin(x, min, max);
 }
 
 static inline SkScalar SkScalarSquare(SkScalar x) { return x * x; }
@@ -88,6 +121,9 @@ static inline SkScalar SkScalarSquare(SkScalar x) { return x * x; }
 
 #define SkDegreesToRadians(degrees) ((degrees) * (SK_ScalarPI / 180))
 #define SkRadiansToDegrees(radians) ((radians) * (180 / SK_ScalarPI))
+
+static inline SkScalar SkMaxScalar(SkScalar a, SkScalar b) { return a > b ? a : b; }
+static inline SkScalar SkMinScalar(SkScalar a, SkScalar b) { return a < b ? a : b; }
 
 static inline bool SkScalarIsInt(SkScalar x) {
     return x == SkScalarFloorToScalar(x);
@@ -122,16 +158,14 @@ static inline bool SkScalarNearlyEqual(SkScalar x, SkScalar y,
     return SkScalarAbs(x-y) <= tolerance;
 }
 
-#define SK_ScalarSinCosNearlyZero   (SK_Scalar1 / (1 << 16))
-
 static inline float SkScalarSinSnapToZero(SkScalar radians) {
     float v = SkScalarSin(radians);
-    return SkScalarNearlyZero(v, SK_ScalarSinCosNearlyZero) ? 0.0f : v;
+    return SkScalarNearlyZero(v) ? 0.0f : v;
 }
 
 static inline float SkScalarCosSnapToZero(SkScalar radians) {
     float v = SkScalarCos(radians);
-    return SkScalarNearlyZero(v, SK_ScalarSinCosNearlyZero) ? 0.0f : v;
+    return SkScalarNearlyZero(v) ? 0.0f : v;
 }
 
 /** Linearly interpolate between A and B, based on t.
@@ -146,13 +180,14 @@ static inline SkScalar SkScalarInterp(SkScalar A, SkScalar B, SkScalar t) {
 }
 
 /** Interpolate along the function described by (keys[length], values[length])
-    for the passed searchKey. SearchKeys outside the range keys[0]-keys[Length]
-    clamp to the min or max value. This function assumes the number of pairs
-    (length) will be small and a linear search is used.
-
+    for the passed searchKey.  SearchKeys outside the range keys[0]-keys[Length]
+    clamp to the min or max value.  This function was inspired by a desire
+    to change the multiplier for thickness in fakeBold; therefore it assumes
+    the number of pairs (length) will be small, and a linear search is used.
     Repeated keys are allowed for discontinuous functions (so long as keys is
-    monotonically increasing). If key is the value of a repeated scalar in
-    keys the first one will be used.
+    monotonically increasing), and if key is the value of a repeated scalar in
+    keys, the first one will be used.  However, that may change if a binary
+    search is used.
 */
 SkScalar SkScalarInterpFunc(SkScalar searchKey, const SkScalar keys[],
                             const SkScalar values[], int length);

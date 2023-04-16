@@ -9,13 +9,6 @@
 #define SkAnimCodecPlayer_DEFINED
 
 #include "include/codec/SkCodec.h"
-#include "include/core/SkImageInfo.h"
-#include "include/core/SkRefCnt.h"
-#include "include/core/SkSize.h"
-
-#include <cstdint>
-#include <memory>
-#include <vector>
 
 class SkImage;
 
@@ -34,13 +27,13 @@ public:
     /**
      *  Return the size of the image(s) that will be returned by getFrame().
      */
-    SkISize dimensions() const;
+    SkISize dimensions();
 
     /**
      *  Returns the total duration of the animation in milliseconds. Returns 0 for a single-frame
      *  image.
      */
-    uint32_t duration() const { return fTotalDuration; }
+    uint32_t duration() { return fTotalDuration; }
 
     /**
      *  Finds the closest frame associated with the time code (in milliseconds) and sets that

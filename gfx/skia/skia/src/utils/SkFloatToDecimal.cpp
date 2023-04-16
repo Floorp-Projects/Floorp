@@ -7,14 +7,11 @@
 
 #include "src/utils/SkFloatToDecimal.h"
 
-#include "include/core/SkTypes.h"
-
 #include <cfloat>
+#include <climits>
 #include <cmath>
 
-#ifdef SK_DEBUG
-#include <limits.h>
-#endif
+#include "include/core/SkTypes.h"
 
 // returns `value * pow(base, e)`, assuming `e` is positive.
 static double pow_by_squaring(double value, double base, int e) {

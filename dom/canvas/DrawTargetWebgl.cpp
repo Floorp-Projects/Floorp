@@ -2666,10 +2666,10 @@ static Maybe<QuantizedPath> GenerateQuantizedPath(const SkPath& aPath,
   if (!pb) {
     return Nothing();
   }
-  WGR::wgr_builder_set_fill_mode(pb,
-                                 aPath.getFillType() == SkPathFillType::kWinding
-                                     ? WGR::FillMode::Winding
-                                     : WGR::FillMode::EvenOdd);
+  WGR::wgr_builder_set_fill_mode(
+      pb, aPath.getFillType() == SkPath::kWinding_FillType
+              ? WGR::FillMode::Winding
+              : WGR::FillMode::EvenOdd);
 
   SkPath::RawIter iter(aPath);
   SkPoint params[4];
@@ -3077,26 +3077,30 @@ bool DrawTargetWebgl::SharedContext::DrawPathAccel(
         //  path will need to be quantized again because it differs from the
         //  path used for the cache entry, but this allows us to avoid
         //  generating a fill path on a cache hit.
-        Maybe<Rect> cullRect;
-        Matrix invTransform = currentTransform;
-        if (invTransform.Invert()) {
-          // Transform the stroking clip rect from device space to local
-          // space.
-          Rect invRect = invTransform.TransformBounds(Rect(mClipRect));
-          invRect.RoundOut();
-          cullRect = Some(invRect);
-        }
-        SkPath fillPath;
-        if (pathSkia->GetFillPath(*aStrokeOptions, currentTransform, fillPath,
-                                  cullRect)) {
-          // printf_stderr("    stroke fill... verbs %d, points %d\n",
-          //     int(fillPath.countVerbs()),
-          //     int(fillPath.countPoints()));
-          if (Maybe<QuantizedPath> qp = GenerateQuantizedPath(
-                  fillPath, quantBounds, currentTransform)) {
-            wgrVB = GeneratePathVertexBuffer(
-                *qp, IntRect(-intBounds.TopLeft(), mViewportSize),
-                mRasterizationTruncates, outputBuffer, outputBufferCapacity);
+        SkPaint paint;
+        if (StrokeOptionsToPaint(paint, *aStrokeOptions)) {
+          Maybe<SkRect> cullRect;
+          Matrix invTransform = currentTransform;
+          if (invTransform.Invert()) {
+            // Transform the stroking clip rect from device space to local
+            // space.
+            Rect invRect = invTransform.TransformBounds(Rect(mClipRect));
+            invRect.RoundOut();
+            cullRect = Some(RectToSkRect(invRect));
+          }
+          SkPath fillPath;
+          if (paint.getFillPath(pathSkia->GetPath(), &fillPath,
+                                cullRect.ptrOr(nullptr),
+                                ComputeResScaleForStroking(currentTransform))) {
+            // printf_stderr("    stroke fill... verbs %d, points %d\n",
+            //     int(fillPath.countVerbs()),
+            //     int(fillPath.countPoints()));
+            if (Maybe<QuantizedPath> qp = GenerateQuantizedPath(
+                    fillPath, quantBounds, currentTransform)) {
+              wgrVB = GeneratePathVertexBuffer(
+                  *qp, IntRect(-intBounds.TopLeft(), mViewportSize),
+                  mRasterizationTruncates, outputBuffer, outputBufferCapacity);
+            }
           }
         }
       }

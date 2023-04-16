@@ -7,10 +7,6 @@
 
 #include "src/utils/SkOSPath.h"
 
-#include "include/core/SkTypes.h"
-
-#include <string.h>
-
 SkString SkOSPath::Join(const char *rootPath, const char *relativePath) {
     SkString result(rootPath);
     if (!result.endsWith(SEPARATOR) && !result.isEmpty()) {

@@ -8,14 +8,10 @@
 #ifndef SkImageEncoder_DEFINED
 #define SkImageEncoder_DEFINED
 
-#include "include/core/SkRefCnt.h"
-#include "include/core/SkTypes.h"
-
-class SkBitmap;
-class SkData;
-class SkPixmap;
-class SkWStream;
-enum class SkEncodedImageFormat;
+#include "include/core/SkBitmap.h"
+#include "include/core/SkData.h"
+#include "include/core/SkEncodedImageFormat.h"
+#include "include/core/SkStream.h"
 
 /**
  * Encode SkPixmap in the given binary image format.
@@ -43,7 +39,10 @@ SK_API bool SkEncodeImage(SkWStream* dst, const SkPixmap& src,
 /**
  * The following helper function wraps SkEncodeImage().
  */
-SK_API bool SkEncodeImage(SkWStream* dst, const SkBitmap& src, SkEncodedImageFormat f, int q);
+inline bool SkEncodeImage(SkWStream* dst, const SkBitmap& src, SkEncodedImageFormat f, int q) {
+    SkPixmap pixmap;
+    return src.peekPixels(&pixmap) && SkEncodeImage(dst, pixmap, f, q);
+}
 
 /**
  * Encode SkPixmap in the given binary image format.

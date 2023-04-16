@@ -64,7 +64,7 @@ protected:
 
     // note: subclasses must call close() in their destructor, as the base class
     // cannot do this for them.
-    ~SkDocument() override;
+    virtual ~SkDocument();
 
     virtual SkCanvas* onBeginPage(SkScalar width, SkScalar height) = 0;
     virtual void onEndPage() = 0;
@@ -85,7 +85,7 @@ private:
     SkWStream* fStream;
     State      fState;
 
-    using INHERITED = SkRefCnt;
+    typedef SkRefCnt INHERITED;
 };
 
 #endif

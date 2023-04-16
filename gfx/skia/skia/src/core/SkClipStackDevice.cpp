@@ -9,7 +9,7 @@
 #include "src/core/SkDraw.h"
 #include "src/core/SkRasterClip.h"
 
-SkIRect SkClipStackDevice::onDevClipBounds() const {
+SkIRect SkClipStackDevice::devClipBounds() const {
     SkIRect r = fClipStack.bounds(this->imageInfo().bounds()).roundOut();
     if (!r.isEmpty()) {
         SkASSERT(this->imageInfo().bounds().contains(r));
@@ -28,33 +28,38 @@ void SkClipStackDevice::onRestore() {
 }
 
 void SkClipStackDevice::onClipRect(const SkRect& rect, SkClipOp op, bool aa) {
-    fClipStack.clipRect(rect, this->localToDevice(), op, aa);
+    fClipStack.clipRect(rect, this->ctm(), op, aa);
 }
 
 void SkClipStackDevice::onClipRRect(const SkRRect& rrect, SkClipOp op, bool aa) {
-    fClipStack.clipRRect(rrect, this->localToDevice(), op, aa);
+    fClipStack.clipRRect(rrect, this->ctm(), op, aa);
 }
 
 void SkClipStackDevice::onClipPath(const SkPath& path, SkClipOp op, bool aa) {
-    fClipStack.clipPath(path, this->localToDevice(), op, aa);
-}
-
-void SkClipStackDevice::onClipShader(sk_sp<SkShader> shader) {
-    fClipStack.clipShader(std::move(shader));
+    fClipStack.clipPath(path, this->ctm(), op, aa);
 }
 
 void SkClipStackDevice::onClipRegion(const SkRegion& rgn, SkClipOp op) {
     SkIPoint origin = this->getOrigin();
     SkRegion tmp;
-    SkPath path;
-    rgn.getBoundaryPath(&path);
-    path.transform(SkMatrix::Translate(-origin));
-    fClipStack.clipPath(path, SkMatrix::I(), op, false);
+    const SkRegion* ptr = &rgn;
+    if (origin.fX | origin.fY) {
+        // translate from "global/canvas" coordinates to relative to this device
+        rgn.translate(-origin.fX, -origin.fY, &tmp);
+        ptr = &tmp;
+    }
+    fClipStack.clipDevRect(ptr->getBounds(), op);
 }
 
-void SkClipStackDevice::onReplaceClip(const SkIRect& rect) {
-    SkRect deviceRect = SkMatrixPriv::MapRect(this->globalToDevice(), SkRect::Make(rect));
-    fClipStack.replaceClip(deviceRect, /*doAA=*/false);
+void SkClipStackDevice::onSetDeviceClipRestriction(SkIRect* clipRestriction) {
+    if (clipRestriction->isEmpty()) {
+        fClipStack.setDeviceClipRestriction(*clipRestriction);
+    } else {
+        SkIPoint origin = this->getOrigin();
+        SkIRect rect = clipRestriction->makeOffset(-origin);
+        fClipStack.setDeviceClipRestriction(rect);
+        fClipStack.clipDevRect(rect, SkClipOp::kIntersect);
+    }
 }
 
 bool SkClipStackDevice::onClipIsAA() const {
@@ -69,10 +74,6 @@ bool SkClipStackDevice::onClipIsAA() const {
     return false;
 }
 
-bool SkClipStackDevice::onClipIsWideOpen() const {
-    return fClipStack.quickContains(SkRect::MakeIWH(this->width(), this->height()));
-}
-
 void SkClipStackDevice::onAsRgnClip(SkRegion* rgn) const {
     SkClipStack::BoundsType boundType;
     bool isIntersectionOfRects;
@@ -81,26 +82,9 @@ void SkClipStackDevice::onAsRgnClip(SkRegion* rgn) const {
     if (isIntersectionOfRects && SkClipStack::kNormal_BoundsType == boundType) {
         rgn->setRect(bounds.round());
     } else {
-        SkRegion boundsRgn({0, 0, this->width(), this->height()});
-        SkPath tmpPath;
-
-        *rgn = boundsRgn;
-        SkClipStack::B2TIter iter(fClipStack);
-        while (auto elem = iter.next()) {
-            tmpPath.rewind();
-            elem->asDeviceSpacePath(&tmpPath);
-            SkRegion tmpRgn;
-            tmpRgn.setPath(tmpPath, boundsRgn);
-            if (elem->isReplaceOp()) {
-                // All replace elements are rectangles
-                // TODO: SkClipStack can be simplified to be I,D,R ops now, which means element
-                // iteration can be from top of the stack to the most recent replace element.
-                // When that's done, this loop will be simplifiable.
-                rgn->setRect(elem->getDeviceSpaceRect().round());
-            } else {
-                rgn->op(tmpRgn, static_cast<SkRegion::Op>(elem->getOp()));
-            }
-        }
+        SkPath path;
+        fClipStack.asPath(&path);
+        rgn->setPath(path, SkRegion(SkIRect::MakeWH(this->width(), this->height())));
     }
 }
 

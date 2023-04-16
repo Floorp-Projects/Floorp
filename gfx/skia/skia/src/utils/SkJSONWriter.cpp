@@ -10,11 +10,10 @@
 #define __STDC_FORMAT_MACROS
 #endif
 
-#include "src/utils/SkJSONWriter.h"
-
 #include <inttypes.h>
 #include <stdarg.h>
-#include <stdio.h>
+
+#include "src/utils/SkJSONWriter.h"
 
 void SkJSONWriter::appendS64(int64_t value) {
     this->beginValue();

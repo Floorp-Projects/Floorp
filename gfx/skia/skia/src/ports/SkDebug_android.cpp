@@ -10,9 +10,6 @@
 
 #include <stdio.h>
 
-#ifdef LOG_TAG
-  #undef LOG_TAG
-#endif
 #define LOG_TAG "skia"
 #include <android/log.h>
 

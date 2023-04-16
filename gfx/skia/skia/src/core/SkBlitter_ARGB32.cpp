@@ -7,9 +7,9 @@
 
 #include "include/core/SkShader.h"
 #include "include/private/SkColorData.h"
-#include "src/base/SkVx.h"
+#include "include/private/SkVx.h"
 #include "src/core/SkCoreBlitters.h"
-#include "src/core/SkOpts.h"
+#include "src/core/SkUtils.h"
 #include "src/core/SkXfermodePriv.h"
 
 static inline int upscale_31_to_32(int value) {
@@ -721,7 +721,7 @@ void SkARGB32_Blitter::blitAntiH(int x, int y, const SkAlpha antialias[],
         unsigned aa = antialias[0];
         if (aa) {
             if ((opaqueMask & aa) == 255) {
-                SkOpts::memset32(device, color, count);
+                sk_memset32(device, color, count);
             } else {
                 uint32_t sc = SkAlphaMulQ(color, SkAlpha255To256(aa));
                 SkBlitRow::Color32(device, device, count, sc);
@@ -914,7 +914,7 @@ void SkARGB32_Black_Blitter::blitAntiH(int x, int y, const SkAlpha antialias[],
         unsigned aa = antialias[0];
         if (aa) {
             if (aa == 255) {
-                SkOpts::memset32(device, black, count);
+                sk_memset32(device, black, count);
             } else {
                 SkPMColor src = aa << SK_A32_SHIFT;
                 unsigned dst_scale = 256 - aa;
@@ -967,7 +967,7 @@ SkARGB32_Shader_Blitter::SkARGB32_Shader_Blitter(const SkPixmap& device,
 {
     fBuffer = (SkPMColor*)sk_malloc_throw(device.width() * (sizeof(SkPMColor)));
 
-    fXfermode = SkXfermode::Peek(paint.getBlendMode_or(SkBlendMode::kSrcOver));
+    fXfermode = SkXfermode::Peek(paint.getBlendMode());
 
     int flags = 0;
     if (!(shaderContext->getFlags() & SkShaderBase::kOpaqueAlpha_Flag)) {
@@ -984,7 +984,7 @@ SkARGB32_Shader_Blitter::SkARGB32_Shader_Blitter(const SkPixmap& device,
             fShadeDirectlyIntoDevice = true;
         }
     } else {
-        if (SkBlendMode::kSrc == paint.asBlendMode()) {
+        if (SkBlendMode::kSrc == paint.getBlendMode()) {
             fShadeDirectlyIntoDevice = true;
             fProc32Blend = blend_srcmode;
         }

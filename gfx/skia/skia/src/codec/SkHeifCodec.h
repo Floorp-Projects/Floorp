@@ -23,19 +23,13 @@
 
 class SkHeifCodec : public SkCodec {
 public:
-    /*
-     * Returns true if one of kHEIF or kAVIF images were detected. If |format|
-     * is not nullptr, it will contain the detected format. Returns false
-     * otherwise.
-     */
-    static bool IsSupported(const void*, size_t, SkEncodedImageFormat* format);
+    static bool IsHeif(const void*, size_t);
 
     /*
-     * Assumes IsSupported was called and it returned a non-nullopt value.
+     * Assumes IsHeif was called and returned true.
      */
     static std::unique_ptr<SkCodec> MakeFromStream(
-            std::unique_ptr<SkStream>, SkCodec::SelectionPolicy selectionPolicy,
-            SkEncodedImageFormat, Result*);
+            std::unique_ptr<SkStream>, SkCodec::SelectionPolicy selectionPolicy, Result*);
 
 protected:
 
@@ -46,7 +40,7 @@ protected:
             int* rowsDecoded) override;
 
     SkEncodedImageFormat onGetEncodedFormat() const override {
-        return fFormat;
+        return SkEncodedImageFormat::kHEIF;
     }
 
     int onGetFrameCount() override;
@@ -65,8 +59,7 @@ private:
      * Creates an instance of the decoder
      * Called only by NewFromStream
      */
-    SkHeifCodec(SkEncodedInfo&&, HeifDecoder*, SkEncodedOrigin, bool animation,
-            SkEncodedImageFormat);
+    SkHeifCodec(SkEncodedInfo&&, HeifDecoder*, SkEncodedOrigin, bool animation);
 
     void initializeSwizzler(const SkImageInfo& dstInfo, const Options& options);
     void allocateStorage(const SkImageInfo& dstInfo);
@@ -84,13 +77,12 @@ private:
 
     std::unique_ptr<HeifDecoder>       fHeifDecoder;
     HeifFrameInfo                      fFrameInfo;
-    skia_private::AutoTMalloc<uint8_t>             fStorage;
+    SkAutoTMalloc<uint8_t>             fStorage;
     uint8_t*                           fSwizzleSrcRow;
     uint32_t*                          fColorXformSrcRow;
 
     std::unique_ptr<SkSwizzler>        fSwizzler;
     bool                               fUseAnimation;
-    const SkEncodedImageFormat         fFormat;
 
     class Frame : public SkFrame {
     public:
@@ -102,7 +94,7 @@ private:
         }
 
     private:
-        using INHERITED = SkFrame;
+        typedef SkFrame INHERITED;
     };
 
     class FrameHolder : public SkFrameHolder {
@@ -130,7 +122,7 @@ private:
     };
 
     FrameHolder fFrameHolder;
-    using INHERITED = SkCodec;
+    typedef SkCodec INHERITED;
 };
 
 #endif // SkHeifCodec_DEFINED

@@ -5,65 +5,56 @@
  * found in the LICENSE file.
  */
 
-#include "include/effects/SkTrimPathEffect.h"
-
-#include "include/core/SkFlattenable.h"
-#include "include/core/SkPath.h"
-#include "include/core/SkPathEffect.h"
 #include "include/core/SkPathMeasure.h"
-#include "include/core/SkRefCnt.h"
-#include "include/core/SkScalar.h"
-#include "include/core/SkTypes.h"
-#include "include/private/base/SkTPin.h"
+#include "include/effects/SkTrimPathEffect.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
 #include "src/effects/SkTrimPE.h"
 
-#include <cstddef>
-#include <cstdint>
-
-class SkMatrix;
-class SkStrokeRec;
-struct SkRect;
-
 namespace {
 
-// Returns the number of contours iterated to satisfy the request.
-static size_t add_segments(const SkPath& src, SkScalar start, SkScalar stop, SkPath* dst,
-                           bool requires_moveto = true) {
-    SkASSERT(start < stop);
+class Segmentator : public SkNoncopyable {
+public:
+    Segmentator(const SkPath& src, SkPath* dst)
+        : fMeasure(src, false)
+        , fDst(dst) {}
 
-    SkPathMeasure measure(src, false);
+    void add(SkScalar start, SkScalar stop) {
+        SkASSERT(start < stop);
 
-    SkScalar current_segment_offset = 0;
-    size_t            contour_count = 1;
+        // TODO: we appear to skip zero-length contours.
+        do {
+            const auto nextOffset = fCurrentSegmentOffset + fMeasure.getLength();
 
-    do {
-        const auto next_offset = current_segment_offset + measure.getLength();
+            if (start < nextOffset) {
+                fMeasure.getSegment(start - fCurrentSegmentOffset,
+                                    stop  - fCurrentSegmentOffset,
+                                    fDst, true);
 
-        if (start < next_offset) {
-            measure.getSegment(start - current_segment_offset,
-                               stop  - current_segment_offset,
-                               dst, requires_moveto);
+                if (stop < nextOffset)
+                    break;
+            }
 
-            if (stop <= next_offset)
-                break;
-        }
+            fCurrentSegmentOffset = nextOffset;
+        } while (fMeasure.nextContour());
+    }
 
-        contour_count++;
-        current_segment_offset = next_offset;
-    } while (measure.nextContour());
+private:
+    SkPathMeasure fMeasure;
+    SkPath*       fDst;
 
-    return contour_count;
-}
+    SkScalar fCurrentSegmentOffset = 0;
+
+    using INHERITED = SkNoncopyable;
+};
 
 } // namespace
 
 SkTrimPE::SkTrimPE(SkScalar startT, SkScalar stopT, SkTrimPathEffect::Mode mode)
     : fStartT(startT), fStopT(stopT), fMode(mode) {}
 
-bool SkTrimPE::onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec*, const SkRect*,
-                            const SkMatrix&) const {
+bool SkTrimPE::onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec* rec,
+                            const SkRect* cullRect) const {
     if (fStartT >= fStopT) {
         SkASSERT(fMode == SkTrimPathEffect::Mode::kNormal);
         return true;
@@ -80,33 +71,12 @@ bool SkTrimPE::onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec*, const 
                arcStop  = len * fStopT;
 
     // Second pass: actually add segments.
+    Segmentator segmentator(src, dst);
     if (fMode == SkTrimPathEffect::Mode::kNormal) {
-        // Normal mode -> one span.
-        if (arcStart < arcStop) {
-            add_segments(src, arcStart, arcStop, dst);
-        }
+        if (arcStart < arcStop) segmentator.add(arcStart, arcStop);
     } else {
-        // Inverted mode -> one logical span which wraps around at the end -> two actual spans.
-        // In order to preserve closed path continuity:
-        //
-        //   1) add the second/tail span first
-        //
-        //   2) skip the head span move-to for single-closed-contour paths
-
-        bool requires_moveto = true;
-        if (arcStop < len) {
-            // since we're adding the "tail" first, this is the total number of contours
-            const auto contour_count = add_segments(src, arcStop, len, dst);
-
-            // if the path consists of a single closed contour, we don't want to disconnect
-            // the two parts with a moveto.
-            if (contour_count == 1 && src.isLastContourClosed()) {
-                requires_moveto = false;
-            }
-        }
-        if (0 <  arcStart) {
-            add_segments(src, 0, arcStart, dst, requires_moveto);
-        }
+        if (0 <  arcStart) segmentator.add(0,  arcStart);
+        if (arcStop < len) segmentator.add(arcStop, len);
     }
 
     return true;

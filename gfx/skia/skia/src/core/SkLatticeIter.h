@@ -10,7 +10,7 @@
 
 #include "include/core/SkCanvas.h"
 #include "include/core/SkScalar.h"
-#include "include/private/base/SkTArray.h"
+#include "include/private/SkTArray.h"
 
 struct SkIRect;
 struct SkRect;
@@ -18,7 +18,7 @@ struct SkRect;
 /**
  *  Disect a lattice request into an sequence of src-rect / dst-rect pairs
  */
-class SK_SPI SkLatticeIter {
+class SK_API SkLatticeIter {
 public:
 
     static bool Valid(int imageWidth, int imageHeight, const SkCanvas::Lattice& lattice);
@@ -61,12 +61,12 @@ public:
     }
 
 private:
-    skia_private::TArray<int> fSrcX;
-    skia_private::TArray<int> fSrcY;
-    skia_private::TArray<SkScalar> fDstX;
-    skia_private::TArray<SkScalar> fDstY;
-    skia_private::TArray<SkCanvas::Lattice::RectType> fRectTypes;
-    skia_private::TArray<SkColor> fColors;
+    SkTArray<int> fSrcX;
+    SkTArray<int> fSrcY;
+    SkTArray<SkScalar> fDstX;
+    SkTArray<SkScalar> fDstY;
+    SkTArray<SkCanvas::Lattice::RectType> fRectTypes;
+    SkTArray<SkColor> fColors;
 
     int  fCurrX;
     int  fCurrY;

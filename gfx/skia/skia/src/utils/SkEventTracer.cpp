@@ -5,12 +5,11 @@
  * found in the LICENSE file.
  */
 
+#include "include/private/SkOnce.h"
 #include "include/utils/SkEventTracer.h"
-
-#include "include/private/base/SkOnce.h"
+#include <atomic>
 
 #include <stdlib.h>
-#include <atomic>
 
 class SkDefaultEventTracer : public SkEventTracer {
     SkEventTracer::Handle
@@ -35,28 +34,21 @@ class SkDefaultEventTracer : public SkEventTracer {
     }
     const char* getCategoryGroupName(
       const uint8_t* categoryEnabledFlag) override {
-        static const char* stub = "stub";
-        return stub;
+        static const char* dummy = "dummy";
+        return dummy;
     }
-
-    // The default tracer does not yet support splitting up trace output into sections.
-    void newTracingSection(const char* name) override {}
 };
 
 // We prefer gUserTracer if it's been set, otherwise we fall back on a default tracer;
 static std::atomic<SkEventTracer*> gUserTracer{nullptr};
 
-bool SkEventTracer::SetInstance(SkEventTracer* tracer, bool leakTracer) {
+bool SkEventTracer::SetInstance(SkEventTracer* tracer) {
     SkEventTracer* expected = nullptr;
     if (!gUserTracer.compare_exchange_strong(expected, tracer)) {
         delete tracer;
         return false;
     }
-    // If leaking the tracer is accepted then there is no need to install
-    // the atexit.
-    if (!leakTracer) {
-        atexit([]() { delete gUserTracer.load(); });
-    }
+    atexit([]() { delete gUserTracer.load(); });
     return true;
 }
 

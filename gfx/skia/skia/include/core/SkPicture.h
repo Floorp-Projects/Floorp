@@ -10,8 +10,6 @@
 
 #include "include/core/SkRect.h"
 #include "include/core/SkRefCnt.h"
-#include "include/core/SkSamplingOptions.h"
-#include "include/core/SkShader.h"
 #include "include/core/SkTileMode.h"
 #include "include/core/SkTypes.h"
 
@@ -21,6 +19,7 @@ struct SkDeserialProcs;
 class SkImage;
 class SkMatrix;
 struct SkSerialProcs;
+class SkShader;
 class SkStream;
 class SkWStream;
 
@@ -38,7 +37,6 @@ class SkWStream;
 */
 class SK_API SkPicture : public SkRefCnt {
 public:
-    ~SkPicture() override;
 
     /** Recreates SkPicture that was serialized into a stream. Returns constructed SkPicture
         if successful; otherwise, returns nullptr. Fails if data does not permit
@@ -91,9 +89,16 @@ public:
     */
     class SK_API AbortCallback {
     public:
+
+        /** Has no effect.
+
+            @return  abstract class cannot be instantiated
+        */
+        AbortCallback() {}
+
         /** Has no effect.
         */
-        virtual ~AbortCallback() = default;
+        virtual ~AbortCallback() {}
 
         /** Stops SkPicture playback when some condition is met. A subclass of
             AbortCallback provides an override for abort() that can stop SkPicture::playback.
@@ -106,15 +111,8 @@ public:
             SkPicture::playback was called.
 
             @return  true to stop playback
-
-        example: https://fiddle.skia.org/c/@Picture_AbortCallback_abort
         */
         virtual bool abort() = 0;
-
-    protected:
-        AbortCallback() = default;
-        AbortCallback(const AbortCallback&) = delete;
-        AbortCallback& operator=(const AbortCallback&) = delete;
     };
 
     /** Replays the drawing commands on the specified canvas. In the case that the
@@ -125,8 +123,6 @@ public:
 
         @param canvas    receiver of drawing commands
         @param callback  allows interruption of playback
-
-        example: https://fiddle.skia.org/c/@Picture_playback
     */
     virtual void playback(SkCanvas* canvas, AbortCallback* callback = nullptr) const = 0;
 
@@ -138,8 +134,6 @@ public:
         cull.
 
         @return  bounds passed when SkPicture was created
-
-        example: https://fiddle.skia.org/c/@Picture_cullRect
     */
     virtual SkRect cullRect() const = 0;
 
@@ -159,8 +153,6 @@ public:
 
         @param procs  custom serial data encoders; may be nullptr
         @return       storage containing serialized SkPicture
-
-        example: https://fiddle.skia.org/c/@Picture_serialize
     */
     sk_sp<SkData> serialize(const SkSerialProcs* procs = nullptr) const;
 
@@ -173,8 +165,6 @@ public:
 
         @param stream  writable serial data stream
         @param procs   custom serial data encoders; may be nullptr
-
-        example: https://fiddle.skia.org/c/@Picture_serialize_2
     */
     void serialize(SkWStream* stream, const SkSerialProcs* procs = nullptr) const;
 
@@ -187,8 +177,6 @@ public:
 
         @param cull  placeholder dimensions
         @return      placeholder with unique identifier
-
-        example: https://fiddle.skia.org/c/@Picture_MakePlaceholder
     */
     static sk_sp<SkPicture> MakePlaceholder(SkRect cull);
 
@@ -197,20 +185,14 @@ public:
         recorded: some calls may be recorded as more than one operation, other
         calls may be optimized away.
 
-        @param nested  if true, include the op-counts of nested pictures as well, else
-                       just return count the ops in the top-level picture.
         @return  approximate operation count
-
-        example: https://fiddle.skia.org/c/@Picture_approximateOpCount
     */
-    virtual int approximateOpCount(bool nested = false) const = 0;
+    virtual int approximateOpCount() const = 0;
 
     /** Returns the approximate byte size of SkPicture. Does not include large objects
         referenced by SkPicture.
 
         @return  approximate size
-
-        example: https://fiddle.skia.org/c/@Picture_approximateBytesUsed
     */
     virtual size_t approximateBytesUsed() const = 0;
 
@@ -218,7 +200,6 @@ public:
      *
      *  @param tmx  The tiling mode to use when sampling in the x-direction.
      *  @param tmy  The tiling mode to use when sampling in the y-direction.
-     *  @param mode How to filter the tiles
      *  @param localMatrix Optional matrix used when sampling
      *  @param tile The tile rectangle in picture coordinates: this represents the subset
      *              (or superset) of the picture used when building a tile. It is not
@@ -227,25 +208,23 @@ public:
      *              bounds.
      *  @return     Returns a new shader object. Note: this function never returns null.
      */
-    sk_sp<SkShader> makeShader(SkTileMode tmx, SkTileMode tmy, SkFilterMode mode,
+    sk_sp<SkShader> makeShader(SkTileMode tmx, SkTileMode tmy,
                                const SkMatrix* localMatrix, const SkRect* tileRect) const;
-
-    sk_sp<SkShader> makeShader(SkTileMode tmx, SkTileMode tmy, SkFilterMode mode) const {
-        return this->makeShader(tmx, tmy, mode, nullptr, nullptr);
-    }
+    sk_sp<SkShader> makeShader(SkTileMode tmx, SkTileMode tmy,
+                               const SkMatrix* localMatrix = nullptr) const;
 
 private:
-    // Allowed subclasses.
+    // Subclass whitelist.
     SkPicture();
     friend class SkBigPicture;
     friend class SkEmptyPicture;
     friend class SkPicturePriv;
+    template <typename> friend class SkMiniPicture;
 
     void serialize(SkWStream*, const SkSerialProcs*, class SkRefCntSet* typefaces,
         bool textBlobsOnly=false) const;
-    static sk_sp<SkPicture> MakeFromStreamPriv(SkStream*, const SkDeserialProcs*,
-                                               class SkTypefacePlayback*,
-                                               int recursionLimit);
+    static sk_sp<SkPicture> MakeFromStream(SkStream*, const SkDeserialProcs*,
+                                           class SkTypefacePlayback*);
     friend class SkPictureData;
 
     /** Return true if the SkStream/Buffer represents a serialized picture, and
@@ -263,6 +242,8 @@ private:
     // Returns NULL if this is not an SkBigPicture.
     virtual const class SkBigPicture* asSkBigPicture() const { return nullptr; }
 
+    friend struct SkPathCounter;
+
     static bool IsValidPictInfo(const struct SkPictInfo& info);
     static sk_sp<SkPicture> Forwardport(const struct SkPictInfo&,
                                         const class SkPictureData*,
@@ -272,7 +253,6 @@ private:
     class SkPictureData* backport() const;
 
     uint32_t fUniqueID;
-    mutable std::atomic<bool> fAddedToCache{false};
 };
 
 #endif

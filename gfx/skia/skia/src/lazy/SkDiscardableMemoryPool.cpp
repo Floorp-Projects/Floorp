@@ -5,14 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "include/private/base/SkMalloc.h"
-#include "include/private/base/SkMutex.h"
-#include "include/private/base/SkTemplates.h"
-#include "include/private/chromium/SkDiscardableMemory.h"
-#include "src/base/SkTInternalLList.h"
+#include "include/private/SkMalloc.h"
+#include "include/private/SkMutex.h"
+#include "include/private/SkTemplates.h"
+#include "src/core/SkDiscardableMemory.h"
+#include "src/core/SkMakeUnique.h"
+#include "src/core/SkTInternalLList.h"
 #include "src/lazy/SkDiscardableMemoryPool.h"
-
-using namespace skia_private;
 
 // Note:
 // A PoolDiscardableMemory is memory that is counted in a pool.
@@ -70,7 +69,7 @@ private:
 
     friend class PoolDiscardableMemory;
 
-    using INHERITED = SkDiscardableMemory::Factory;
+    typedef SkDiscardableMemory::Factory INHERITED;
 };
 
 /**
@@ -79,7 +78,7 @@ private:
  */
 class PoolDiscardableMemory : public SkDiscardableMemory {
 public:
-    PoolDiscardableMemory(sk_sp<DiscardableMemoryPool> pool, UniqueVoidPtr pointer, size_t bytes);
+    PoolDiscardableMemory(sk_sp<DiscardableMemoryPool> pool, SkAutoFree pointer, size_t bytes);
     ~PoolDiscardableMemory() override;
     bool lock() override;
     void* data() override;
@@ -89,12 +88,12 @@ private:
     SK_DECLARE_INTERNAL_LLIST_INTERFACE(PoolDiscardableMemory);
     sk_sp<DiscardableMemoryPool> fPool;
     bool                         fLocked;
-    UniqueVoidPtr                   fPointer;
+    SkAutoFree                   fPointer;
     const size_t                 fBytes;
 };
 
 PoolDiscardableMemory::PoolDiscardableMemory(sk_sp<DiscardableMemoryPool> pool,
-                                             UniqueVoidPtr pointer,
+                                             SkAutoFree pointer,
                                              size_t bytes)
         : fPool(std::move(pool)), fLocked(true), fPointer(std::move(pointer)), fBytes(bytes) {
     SkASSERT(fPool != nullptr);
@@ -165,16 +164,16 @@ void DiscardableMemoryPool::dumpDownTo(size_t budget) {
 }
 
 std::unique_ptr<SkDiscardableMemory> DiscardableMemoryPool::make(size_t bytes) {
-    UniqueVoidPtr addr(sk_malloc_canfail(bytes));
+    SkAutoFree addr(sk_malloc_canfail(bytes));
     if (nullptr == addr) {
         return nullptr;
     }
-    auto dm = std::make_unique<PoolDiscardableMemory>(sk_ref_sp(this), std::move(addr), bytes);
+    auto dm = skstd::make_unique<PoolDiscardableMemory>(sk_ref_sp(this), std::move(addr), bytes);
     SkAutoMutexExclusive autoMutexAcquire(fMutex);
     fList.addToHead(dm.get());
     fUsed += bytes;
     this->dumpDownTo(fBudget);
-    return std::move(dm);
+    return dm;
 }
 
 void DiscardableMemoryPool::removeFromPool(PoolDiscardableMemory* dm) {

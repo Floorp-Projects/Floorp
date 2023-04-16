@@ -12,11 +12,9 @@
 #include "include/private/SkChecksum.h"
 #include "src/core/SkPictureFlat.h"
 
-#include <memory>
-
 ///////////////////////////////////////////////////////////////////////////////
 
 void SkTypefacePlayback::setCount(size_t count) {
     fCount = count;
-    fArray = std::make_unique<sk_sp<SkTypeface>[]>(count);
+    fArray.reset(new sk_sp<SkTypeface>[count]);
 }

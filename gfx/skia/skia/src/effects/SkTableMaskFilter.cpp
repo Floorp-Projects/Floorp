@@ -5,29 +5,11 @@
  * found in the LICENSE file.
  */
 
+#include "include/core/SkString.h"
 #include "include/effects/SkTableMaskFilter.h"
-
-#include "include/core/SkFlattenable.h"
-#include "include/core/SkMaskFilter.h"
-#include "include/core/SkPoint.h"
-#include "include/core/SkRect.h"
-#include "include/core/SkRefCnt.h"
-#include "include/core/SkScalar.h"
-#include "include/core/SkTypes.h"
-#include "include/private/base/SkAlign.h"
-#include "include/private/base/SkFixed.h"
-#include "include/private/base/SkFloatingPoint.h"
-#include "include/private/base/SkTPin.h"
-#include "src/core/SkMask.h"
-#include "src/core/SkMaskFilterBase.h"
+#include "include/private/SkFixed.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
-
-#include <cmath>
-#include <cstdint>
-#include <cstring>
-
-class SkMatrix;
 
 class SkTableMaskFilterImpl : public SkMaskFilterBase {
 public:
@@ -48,7 +30,7 @@ private:
 
     uint8_t fTable[256];
 
-    using INHERITED = SkMaskFilter;
+    typedef SkMaskFilter INHERITED;
 };
 
 SkTableMaskFilterImpl::SkTableMaskFilterImpl() {

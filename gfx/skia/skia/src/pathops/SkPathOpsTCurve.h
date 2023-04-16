@@ -12,7 +12,6 @@
 
 class SkArenaAlloc;
 class SkIntersections;
-struct SkDRect;
 
 class SkTCurve {
 public:

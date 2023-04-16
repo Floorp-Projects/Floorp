@@ -10,7 +10,7 @@ class SkPDFGlyphUse {
 public:
     SkPDFGlyphUse() : fBitSet(0) {}
     SkPDFGlyphUse(SkGlyphID firstNonZero, SkGlyphID lastGlyph)
-        : fBitSet(lastGlyph - firstNonZero + 2)
+        : fBitSet((int)lastGlyph - firstNonZero + 2)
         , fFirstNonZero(firstNonZero)
         , fLastGlyph(lastGlyph) { SkASSERT(firstNonZero >= 1); }
     ~SkPDFGlyphUse() = default;
@@ -20,15 +20,15 @@ public:
     SkGlyphID firstNonZero() const { return fFirstNonZero; }
     SkGlyphID lastGlyph() const { return fLastGlyph; }
     void set(SkGlyphID gid) { fBitSet.set(this->toCode(gid)); }
-    bool has(SkGlyphID gid) const { return fBitSet.test(this->toCode(gid)); }
+    bool has(SkGlyphID gid) const { return fBitSet.has(this->toCode(gid)); }
 
     template<typename FN>
     void getSetValues(FN f) const {
         if (fFirstNonZero == 1) {
-            return fBitSet.forEachSetIndex(std::move(f));
+            return fBitSet.getSetValues(std::move(f));
         }
         uint16_t offset = fFirstNonZero - 1;
-        fBitSet.forEachSetIndex([&f, offset](unsigned v) { f(v == 0 ? v : v + offset); });
+        fBitSet.getSetValues([&f, offset](unsigned v) { f(v == 0 ? v : v + offset); });
     }
 
 private:

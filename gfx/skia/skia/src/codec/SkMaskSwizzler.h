@@ -7,14 +7,10 @@
 #ifndef SkMaskSwizzler_DEFINED
 #define SkMaskSwizzler_DEFINED
 
-#include "include/codec/SkCodec.h"
 #include "include/core/SkTypes.h"
+#include "src/codec/SkMasks.h"
 #include "src/codec/SkSampler.h"
-
-#include <cstdint>
-
-class SkMasks;
-struct SkImageInfo;
+#include "src/codec/SkSwizzler.h"
 
 /*
  *

@@ -8,16 +8,13 @@
 #ifndef SkPatchUtils_DEFINED
 #define SkPatchUtils_DEFINED
 
-#include "include/core/SkColor.h"
-#include "include/core/SkRefCnt.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkVertices.h"
+#include "include/private/SkColorData.h"
 
 class SkColorSpace;
-class SkMatrix;
-class SkVertices;
-struct SkISize;
-struct SkPoint;
 
-class SkPatchUtils {
+class SK_API SkPatchUtils {
 
 public:
     // Enums for control points based on the order specified in the constructor (clockwise).

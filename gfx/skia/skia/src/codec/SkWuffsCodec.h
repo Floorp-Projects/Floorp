@@ -10,12 +10,6 @@
 
 #include "include/codec/SkCodec.h"
 
-#include <cstddef>
-#include <memory>
-
-class SkStream;
-
-
 // These functions' types match DecoderProc in SkCodec.cpp.
 bool                     SkWuffsCodec_IsFormat(const void*, size_t);
 std::unique_ptr<SkCodec> SkWuffsCodec_MakeFromStream(std::unique_ptr<SkStream>, SkCodec::Result*);
