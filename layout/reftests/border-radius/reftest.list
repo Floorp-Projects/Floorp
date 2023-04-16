@@ -24,7 +24,7 @@ fuzzy(0-1,0-343) == percent-3.html percent-3-ref.html
 
 # more serious tests, using SVG reference
 fuzzy(17-30,58-70) == border-circle-2.html border-circle-2-ref.xhtml
-fuzzy(61-63,507-1013) == curved-stripe-border.html curved-stripe-border-ref.svg # bug 459945
+fuzzy(61-63,248-1013) == curved-stripe-border.html curved-stripe-border-ref.svg # bug 459945
 
 # Corners
 fuzzy(17-30,47-58) == corner-1.html corner-1-ref.svg # bottom corners different radius than top corners
