@@ -724,8 +724,105 @@
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site. -->
     <string name="cookie_banner_exception_panel_title_state_off_for_site">Patari exepakuaeri ayankperata %1$s jimpo?</string>
 
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
+    <string name="cookie_banner_exception_panel_site_is_not_supported_cancel_button">Áamkutaru</string>
+
+    <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
+    <string name="cfr_cookie_banner_link">perakurhikuecha</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Kustakurhikua</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Jiankuni:</string>
+
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Android pekurhintskuecha</string>
+
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Puchastsïku <b>jiankukuecha</b>]]></string>
+
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Pékurhintskuarhu niarani</string>
+
+    <!-- Third step for allowing a permission. The placeholder will be updated by, for example, "Camera" -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Mojtaku <b>%1$s</b> ETSKUNI]]></string>
+
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Pitani</string>
+
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Arhinhatarakua</string>
+
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Nani jaraski</string>
+
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Eyankperakua</string>
+
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">DRM-jimpo xanhatakata</string>
+
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Sesikua kurhajkurhini</string>
+
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Kuarhukukata</string>
+
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Jiankukata</string>
+
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Android jimpo kuarhukukata</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Jiankuni eska kustaaka</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Kustakuanijku jiankuni</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Mintsinharikua</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Kustakua kuarhukuni</string>
+
+    <!-- Preference for studies -->
+    <string name="preference_studies">Jurenkurikua</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">Menhechani firefox jatsïraati jurenkuarikua ampe.</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Sánteru mítini</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">Uratarakua mikurintaati jimpoka jimpankikurintaati</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Kéntitani</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Etskukata</string>
+
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">Jayarakata</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">USB/Wi-Fi weratini ampakerant\'ani</string>
+
+    <!-- Text Button for show biometric prompt -->
+    <string name="show_biometric_button_text">Mitakata</string>
+
+    <!-- Title text for biometric prompt pop-up -->
+    <string name="biometric_prompt_title">Cheeti mitintskua jinkoni jiankuni</string>
+
+    <!-- Subtitle text for biometric prompt pop-up -->
+    <string name="biometric_prompt_subtitle">Cheeti mitintskua jinkoni uakari utasï maruatani jarani.</string>
+
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">Miyurakuani mitani jumpanki eranharhikukuarhu</string>
 
     <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
     <string name="biometric_auth_image_description">Mítitarantskwaeri p\'ítakata</string>
@@ -737,6 +834,9 @@
     <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
     This is displayed during the authentication flow as the app launches.-->
     <string name="biometric_auth_moved_too_quickly">Manak\'uarhaskari. Tsek\'utantsï.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title2">Ari jirinhantskuecha xarhatani?</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Áamku</string>
@@ -793,6 +893,56 @@
     <string name="crash_report_send_crash_label">Mozillani ayankuni íni xerekurhikwa</string>
 
     <!-- Tracking protection bottom sheet -->
+
+     <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">Estakukuecha kuarhukukata jarastiksï %s jimpo</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">Jatakata</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">Ayankperakuecha</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">Wanhacharhu</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">Erakuni</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">Sesimintu kuatakua</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">PATANHASTI kuatakuechani ini eranharhikukuarhu</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">ETSKUNHASTI kuatakuechani ini eranharhikukuarhu</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">Kuatakata inchaparhatanhasti</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">Aamku kuatakata inchaparhatanhasti</string>
+
+     <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">Estakuecha ka maruatatarakuechani kuarhukuni</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">Kuanhatsïntani</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Kéntitani</string>
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">Jakankuntani</string>
+    <!-- Text for the dialog title for renaming a top site -->
+    <string name="rename_top_site">Jakankuntani</string>
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">Jurhikutarakuani jakani</string>
+
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note2">Patsakurhikataecha &lt;b&gt;áamku kéntitanhaa&lt;/b&gt; énkari miatskuani %1$s kéntitaka</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference category for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Monharhitani</string>
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Niranti</string>
+
+     <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Turhiperani</string>
 
      <!-- Promote SearchWidget Dialog -->
 
