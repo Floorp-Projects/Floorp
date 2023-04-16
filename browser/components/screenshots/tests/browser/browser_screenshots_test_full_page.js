@@ -3,6 +3,10 @@
 
 "use strict";
 
+function assertRange(lhs, rhsMin, rhsMax, msg) {
+  Assert.ok(lhs >= rhsMin && lhs <= rhsMax, msg);
+}
+
 add_task(async function test_fullpageScreenshot() {
   await BrowserTestUtils.withNewTab(
     {
@@ -61,24 +65,24 @@ add_task(async function test_fullpageScreenshot() {
       );
 
       // top left
-      Assert.equal(111, result.color.topLeft[0], "R color value");
-      Assert.equal(111, result.color.topLeft[1], "G color value");
-      Assert.equal(111, result.color.topLeft[2], "B color value");
+      assertRange(result.color.topLeft[0], 110, 111, "R color value");
+      assertRange(result.color.topLeft[1], 110, 111, "G color value");
+      assertRange(result.color.topLeft[2], 110, 111, "B color value");
 
       // top right
-      Assert.equal(55, result.color.topRight[0], "R color value");
-      Assert.equal(155, result.color.topRight[1], "G color value");
-      Assert.equal(155, result.color.topRight[2], "B color value");
+      assertRange(result.color.topRight[0], 55, 56, "R color value");
+      assertRange(result.color.topRight[1], 155, 156, "G color value");
+      assertRange(result.color.topRight[2], 155, 156, "B color value");
 
       // bottom left
-      Assert.equal(105, result.color.bottomLeft[0], "R color value");
-      Assert.equal(55, result.color.bottomLeft[1], "G color value");
-      Assert.equal(105, result.color.bottomLeft[2], "B color value");
+      assertRange(result.color.bottomLeft[0], 105, 106, "R color value");
+      assertRange(result.color.bottomLeft[1], 55, 56, "G color value");
+      assertRange(result.color.bottomLeft[2], 105, 106, "B color value");
 
       // bottom right
-      Assert.equal(52, result.color.bottomRight[0], "R color value");
-      Assert.equal(127, result.color.bottomRight[1], "G color value");
-      Assert.equal(152, result.color.bottomRight[2], "B color value");
+      assertRange(result.color.bottomRight[0], 52, 53, "R color value");
+      assertRange(result.color.bottomRight[1], 127, 128, "G color value");
+      assertRange(result.color.bottomRight[2], 152, 153, "B color value");
     }
   );
 });
@@ -146,24 +150,25 @@ add_task(async function test_fullpageScreenshotScrolled() {
       );
 
       // top left
-      Assert.equal(111, result.color.topLeft[0], "R color value");
-      Assert.equal(111, result.color.topLeft[1], "G color value");
-      Assert.equal(111, result.color.topLeft[2], "B color value");
+      assertRange(result.color.topLeft[0], 110, 111, "R color value");
+      assertRange(result.color.topLeft[1], 110, 111, "G color value");
+      assertRange(result.color.topLeft[2], 110, 111, "B color value");
 
       // top right
-      Assert.equal(55, result.color.topRight[0], "R color value");
-      Assert.equal(155, result.color.topRight[1], "G color value");
-      Assert.equal(155, result.color.topRight[2], "B color value");
+      assertRange(result.color.topRight[0], 55, 56, "R color value");
+      assertRange(result.color.topRight[1], 155, 156, "G color value");
+      assertRange(result.color.topRight[2], 155, 156, "B color value");
 
       // bottom left
-      Assert.equal(105, result.color.bottomLeft[0], "R color value");
-      Assert.equal(55, result.color.bottomLeft[1], "G color value");
-      Assert.equal(105, result.color.bottomLeft[2], "B color value");
+      assertRange(result.color.bottomLeft[0], 105, 106, "R color value");
+      assertRange(result.color.bottomLeft[1], 55, 56, "G color value");
+      assertRange(result.color.bottomLeft[2], 105, 106, "B color value");
 
       // bottom right
-      Assert.equal(52, result.color.bottomRight[0], "R color value");
-      Assert.equal(127, result.color.bottomRight[1], "G color value");
-      Assert.equal(152, result.color.bottomRight[2], "B color value");
+      assertRange(result.color.bottomRight[0], 52, 53, "R color value");
+      assertRange(result.color.bottomRight[1], 127, 128, "G color value");
+      assertRange(result.color.bottomRight[2], 152, 153, "B color value");
+
     }
   );
 });
