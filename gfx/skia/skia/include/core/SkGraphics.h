@@ -10,8 +10,12 @@
 
 #include "include/core/SkRefCnt.h"
 
+#include <memory>
+
 class SkData;
 class SkImageGenerator;
+class SkOpenTypeSVGDecoder;
+class SkPath;
 class SkTraceMemoryDump;
 
 class SK_API SkGraphics {
@@ -22,9 +26,6 @@ public:
      *  Init() is thread-safe and idempotent.
      */
     static void Init();
-
-    // We're in the middle of cleaning this up.
-    static void Term() {}
 
     /**
      *  Return the max number of bytes that should be used by the font cache.
@@ -66,30 +67,6 @@ public:
      */
     static int SetFontCacheCountLimit(int count);
 
-    /*
-     *  Returns the maximum point size for text that may be cached.
-     *
-     *  Sizes above this will be drawn directly from the font's outline.
-     *  Setting this to a large value may speed up drawing larger text (repeatedly),
-     *  but could cause the cache to purge other sizes more often.
-     *
-     *  This value is a hint to the font engine, and the actual limit may be different due to
-     *  implementation specific details.
-     */
-    static int GetFontCachePointSizeLimit();
-
-    /*
-     *  Set the maximum point size for text that may be cached, returning the previous value.
-     *
-     *  Sizes above this will be drawn directly from the font's outline.
-     *  Setting this to a large value may speed up drawing larger text (repeatedly),
-     *  but could cause the cache to purge other sizes more often.
-     *
-     *  This value is a hint to the font engine, and the actual limit may be different due to
-     *  implementation specific details.
-     */
-    static int SetFontCachePointSizeLimit(int maxPointSize);
-
     /**
      *  For debugging purposes, this will attempt to purge the font cache. It
      *  does not change the limit, but will cause subsequent font measures and
@@ -98,11 +75,7 @@ public:
     static void PurgeFontCache();
 
     /**
-     *  Scaling bitmaps with the kHigh_SkFilterQuality setting is
-     *  expensive, so the result is saved in the global Scaled Image
-     *  Cache.
-     *
-     *  This function returns the memory usage of the Scaled Image Cache.
+     *  This function returns the memory used for temporary images and other resources.
      */
     static size_t GetResourceCacheTotalBytesUsed();
 
@@ -145,16 +118,6 @@ public:
      */
     static void PurgeAllCaches();
 
-    /**
-     *  Applications with command line options may pass optional state, such
-     *  as cache sizes, here, for instance:
-     *  font-cache-limit=12345678
-     *
-     *  The flags format is name=value[;name=value...] with no spaces.
-     *  This format is subject to change.
-     */
-    static void SetFlags(const char* flags);
-
     typedef std::unique_ptr<SkImageGenerator>
                                             (*ImageGeneratorFromEncodedDataFactory)(sk_sp<SkData>);
 
@@ -167,6 +130,33 @@ public:
      */
     static ImageGeneratorFromEncodedDataFactory
                     SetImageGeneratorFromEncodedDataFactory(ImageGeneratorFromEncodedDataFactory);
+
+    /**
+     *  To draw OpenType SVG data, Skia will look at this runtime function pointer. If this function
+     *  pointer is set, the SkTypeface implementations which support OpenType SVG will call this
+     *  function to create an SkOpenTypeSVGDecoder to decode the OpenType SVG and draw it as needed.
+     *  If this function is not set, the SkTypeface implementations will generally not support
+     *  OpenType SVG and attempt to use other glyph representations if available.
+     */
+    using OpenTypeSVGDecoderFactory =
+            std::unique_ptr<SkOpenTypeSVGDecoder> (*)(const uint8_t* svg, size_t length);
+    static OpenTypeSVGDecoderFactory SetOpenTypeSVGDecoderFactory(OpenTypeSVGDecoderFactory);
+    static OpenTypeSVGDecoderFactory GetOpenTypeSVGDecoderFactory();
+
+    /**
+     *  Call early in main() to allow Skia to use a JIT to accelerate CPU-bound operations.
+     */
+    static void AllowJIT();
+
+    /**
+     *  To override the default AA algorithm choice in the CPU backend, provide a function that
+     *  returns whether to use analytic (true) or supersampled (false) for a given path.
+     *
+     *  NOTE: This is a temporary API, intended for migration of all clients to one algorithm,
+     *        and should not be used.
+     */
+    typedef bool (*PathAnalyticAADeciderProc)(const SkPath&);
+    static void SetPathAnalyticAADecider(PathAnalyticAADeciderProc);
 };
 
 class SkAutoGraphics {

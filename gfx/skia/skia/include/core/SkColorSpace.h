@@ -8,12 +8,14 @@
 #ifndef SkColorSpace_DEFINED
 #define SkColorSpace_DEFINED
 
-#include "include/core/SkMatrix44.h"
 #include "include/core/SkRefCnt.h"
-#include "include/private/SkFixed.h"
-#include "include/private/SkOnce.h"
-#include "include/third_party/skcms/skcms.h"
-#include <memory>
+#include "include/core/SkTypes.h"
+#include "include/private/base/SkFixed.h"
+#include "include/private/base/SkOnce.h"
+#include "modules/skcms/skcms.h"
+
+#include <cstddef>
+#include <cstdint>
 
 class SkData;
 
@@ -58,7 +60,7 @@ static constexpr skcms_TransferFunction kPQ =
 static constexpr skcms_TransferFunction kHLG =
     {-3.0f, 2.0f, 2.0f, 1/0.17883277f, 0.28466892f, 0.55991073f, 0.0f };
 
-}
+}  // namespace SkNamedTransferFn
 
 namespace SkNamedGamut {
 
@@ -82,7 +84,7 @@ static constexpr skcms_Matrix3x3 kAdobeRGB = {{
     { SkFixedToFloat(0x04fc), SkFixedToFloat(0x0f95), SkFixedToFloat(0xbe9c) },
 }};
 
-static constexpr skcms_Matrix3x3 kDCIP3 = {{
+static constexpr skcms_Matrix3x3 kDisplayP3 = {{
     {  0.515102f,   0.291965f,  0.157153f  },
     {  0.241182f,   0.692236f,  0.0665819f },
     { -0.00104941f, 0.0418818f, 0.784378f  },
@@ -100,7 +102,7 @@ static constexpr skcms_Matrix3x3 kXYZ = {{
     { 0.0f, 0.0f, 1.0f },
 }};
 
-}
+}  // namespace SkNamedGamut
 
 class SK_API SkColorSpace : public SkNVRefCnt<SkColorSpace> {
 public:
@@ -141,19 +143,15 @@ public:
     bool gammaIsLinear() const;
 
     /**
-     *  If the transfer function can be represented as coefficients to the standard
-     *  equation, returns true and sets |fn| to the proper values.
-     *
-     *  If not, returns false.
+     *  Sets |fn| to the transfer function from this color space. Returns true if the transfer
+     *  function can be represented as coefficients to the standard ICC 7-parameter equation.
+     *  Returns false otherwise (eg, PQ, HLG).
      */
     bool isNumericalTransferFn(skcms_TransferFunction* fn) const;
 
     /**
-     *  Returns true and sets |toXYZD50| if the color gamut can be described as a matrix.
-     *  Returns false otherwise.
+     *  Returns true and sets |toXYZD50|.
      */
-    bool toXYZD50(SkMatrix44* toXYZD50) const;
-
     bool toXYZD50(skcms_Matrix3x3* toXYZD50) const;
 
     /**
@@ -164,23 +162,19 @@ public:
 
     /**
      *  Returns a color space with the same gamut as this one, but with a linear gamma.
-     *  For color spaces whose gamut can not be described in terms of XYZ D50, returns
-     *  linear sRGB.
      */
     sk_sp<SkColorSpace> makeLinearGamma() const;
 
     /**
-     *  Returns a color space with the same gamut as this one, with with the sRGB transfer
-     *  function. For color spaces whose gamut can not be described in terms of XYZ D50, returns
-     *  sRGB.
+     *  Returns a color space with the same gamut as this one, but with the sRGB transfer
+     *  function.
      */
     sk_sp<SkColorSpace> makeSRGBGamma() const;
 
     /**
      *  Returns a color space with the same transfer function as this one, but with the primary
-     *  colors rotated. For any XYZ space, this produces a new color space that maps RGB to GBR
-     *  (when applied to a source), and maps RGB to BRG (when applied to a destination). For other
-     *  types of color spaces, returns nullptr.
+     *  colors rotated. In other words, this produces a new color space that maps RGB to GBR
+     *  (when applied to a source), and maps RGB to BRG (when applied to a destination).
      *
      *  This is used for testing, to construct color spaces that have severe and testable behavior.
      */
@@ -194,15 +188,14 @@ public:
      *  in some cases: converting ICC fixed point to float, converting white point to D50,
      *  rounding decisions on transfer function and matrix.
      *
-     *  This does not consider a 2.2f exponential transfer function to be sRGB.  While these
+     *  This does not consider a 2.2f exponential transfer function to be sRGB. While these
      *  functions are similar (and it is sometimes useful to consider them together), this
      *  function checks for logical equality.
      */
     bool isSRGB() const;
 
     /**
-     *  Returns nullptr on failure.  Fails when we fallback to serializing ICC data and
-     *  the data is too large to serialize.
+     *  Returns a serialized representation of this color space.
      */
     sk_sp<SkData> serialize() const;
 
@@ -215,14 +208,15 @@ public:
     static sk_sp<SkColorSpace> Deserialize(const void* data, size_t length);
 
     /**
-     *  If both are null, we return true.  If one is null and the other is not, we return false.
+     *  If both are null, we return true. If one is null and the other is not, we return false.
      *  If both are non-null, we do a deeper compare.
      */
     static bool Equals(const SkColorSpace*, const SkColorSpace*);
 
-    void       transferFn(float gabcdef[7]) const;
-    void    invTransferFn(float gabcdef[7]) const;
-    void gamutTransformTo(const SkColorSpace* dst, float src_to_dst_row_major[9]) const;
+    void       transferFn(float gabcdef[7]) const;  // DEPRECATED: Remove when webview usage is gone
+    void       transferFn(skcms_TransferFunction* fn) const;
+    void    invTransferFn(skcms_TransferFunction* fn) const;
+    void gamutTransformTo(const SkColorSpace* dst, skcms_Matrix3x3* src_to_dst) const;
 
     uint32_t transferFnHash() const { return fTransferFnHash; }
     uint64_t           hash() const { return (uint64_t)fTransferFnHash << 32 | fToXYZD50Hash; }
@@ -230,19 +224,18 @@ public:
 private:
     friend class SkColorSpaceSingletonFactory;
 
-    SkColorSpace(const float transferFn[7],
-                 const skcms_Matrix3x3& toXYZ);
+    SkColorSpace(const skcms_TransferFunction& transferFn, const skcms_Matrix3x3& toXYZ);
 
     void computeLazyDstFields() const;
 
     uint32_t                            fTransferFnHash;
     uint32_t                            fToXYZD50Hash;
 
-    float                               fTransferFn[7];
-    float                               fToXYZD50_3x3[9];    // row-major
+    skcms_TransferFunction              fTransferFn;
+    skcms_Matrix3x3                     fToXYZD50;
 
-    mutable float                       fInvTransferFn[7];
-    mutable float                       fFromXYZD50_3x3[9];  // row-major
+    mutable skcms_TransferFunction      fInvTransferFn;
+    mutable skcms_Matrix3x3             fFromXYZD50;
     mutable SkOnce                      fLazyDstFieldsOnce;
 };
 

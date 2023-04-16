@@ -8,10 +8,10 @@
 #include "include/core/SkTypes.h"
 #if defined(SK_BUILD_FOR_WIN)
 
-#include "include/private/SkMalloc.h"
-#include "include/private/SkNoncopyable.h"
-#include "include/private/SkTFitsIn.h"
-#include "src/core/SkLeanWindows.h"
+#include "include/private/base/SkMalloc.h"
+#include "include/private/base/SkNoncopyable.h"
+#include "include/private/base/SkTFitsIn.h"
+#include "src/base/SkLeanWindows.h"
 #include "src/core/SkOSFile.h"
 #include "src/core/SkStringUtils.h"
 
@@ -19,6 +19,10 @@
 #include <new>
 #include <stdio.h>
 #include <sys/stat.h>
+
+void sk_fsync(FILE* f) {
+    _commit(sk_fileno(f));
+}
 
 bool sk_exists(const char *path, SkFILE_Flags flags) {
     int mode = 0; // existence
@@ -190,15 +194,15 @@ static uint16_t* concat_to_16(const char src[], const char suffix[]) {
     return dst;
 }
 
-SkOSFile::Iter::Iter() { new (fSelf.get()) SkOSFileIterData; }
+SkOSFile::Iter::Iter() { new (fSelf) SkOSFileIterData; }
 
 SkOSFile::Iter::Iter(const char path[], const char suffix[]) {
-    new (fSelf.get()) SkOSFileIterData;
+    new (fSelf) SkOSFileIterData;
     this->reset(path, suffix);
 }
 
 SkOSFile::Iter::~Iter() {
-    SkOSFileIterData& self = *static_cast<SkOSFileIterData*>(fSelf.get());
+    SkOSFileIterData& self = *reinterpret_cast<SkOSFileIterData*>(fSelf);
     sk_free(self.fPath16);
     if (self.fHandle) {
         ::FindClose(self.fHandle);
@@ -207,7 +211,7 @@ SkOSFile::Iter::~Iter() {
 }
 
 void SkOSFile::Iter::reset(const char path[], const char suffix[]) {
-    SkOSFileIterData& self = *static_cast<SkOSFileIterData*>(fSelf.get());
+    SkOSFileIterData& self = *reinterpret_cast<SkOSFileIterData*>(fSelf);
     if (self.fHandle) {
         ::FindClose(self.fHandle);
         self.fHandle = 0;
@@ -262,7 +266,7 @@ static bool get_the_file(HANDLE handle, SkString* name, WIN32_FIND_DATAW* dataPt
 }
 
 bool SkOSFile::Iter::next(SkString* name, bool getDir) {
-    SkOSFileIterData& self = *static_cast<SkOSFileIterData*>(fSelf.get());
+    SkOSFileIterData& self = *reinterpret_cast<SkOSFileIterData*>(fSelf);
     WIN32_FIND_DATAW    data;
     WIN32_FIND_DATAW*   dataPtr = nullptr;
 

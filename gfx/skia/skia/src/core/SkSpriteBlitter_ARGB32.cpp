@@ -8,12 +8,11 @@
 #include "include/core/SkColorFilter.h"
 #include "include/core/SkPaint.h"
 #include "include/private/SkColorData.h"
-#include "include/private/SkTemplates.h"
-#include "src/core/SkArenaAlloc.h"
+#include "include/private/base/SkTemplates.h"
+#include "src/base/SkArenaAlloc.h"
 #include "src/core/SkBlitRow.h"
 #include "src/core/SkSpriteBlitter.h"
 #include "src/core/SkXfermodePriv.h"
-#include "src/utils/SkUTF.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -54,7 +53,7 @@ private:
     SkBlitRow::Proc32   fProc32;
     U8CPU               fAlpha;
 
-    typedef SkSpriteBlitter INHERITED;
+    using INHERITED = SkSpriteBlitter;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -62,7 +61,7 @@ private:
 class Sprite_D32_S32A_Xfer: public SkSpriteBlitter {
 public:
     Sprite_D32_S32A_Xfer(const SkPixmap& source, const SkPaint& paint) : SkSpriteBlitter(source) {
-        fXfermode = SkXfermode::Peek(paint.getBlendMode());
+        fXfermode = SkXfermode::Peek(paint.getBlendMode_or(SkBlendMode::kSrcOver));
         SkASSERT(fXfermode);
     }
 
@@ -86,7 +85,7 @@ protected:
     SkXfermode* fXfermode;
 
 private:
-    typedef SkSpriteBlitter INHERITED;
+    using INHERITED = SkSpriteBlitter;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -99,6 +98,9 @@ SkSpriteBlitter* SkSpriteBlitter::ChooseL32(const SkPixmap& source, const SkPain
         return nullptr;
     }
     if (paint.getMaskFilter() != nullptr) {
+        return nullptr;
+    }
+    if (!paint.asBlendMode()) {
         return nullptr;
     }
 

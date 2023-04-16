@@ -8,15 +8,18 @@
 #ifndef SkOffsetPolygon_DEFINED
 #define SkOffsetPolygon_DEFINED
 
-#include <functional>
-
 #include "include/core/SkPoint.h"
-#include "include/private/SkTDArray.h"
+#include "include/core/SkScalar.h"
 
+#include <cstdint>
+
+#if !defined(SK_ENABLE_OPTIMIZE_SIZE)
 struct SkRect;
+template <typename T> class SkTDArray;
 
 /**
  * Generates a polygon that is inset a constant from the boundary of a given convex polygon.
+ * The input polygon is expected to have values clamped to the nearest 1/16th.
  *
  * @param inputPolygonVerts  Array of points representing the vertices of the original polygon.
  *  It should be convex and have no coincident points.
@@ -31,7 +34,8 @@ bool SkInsetConvexPolygon(const SkPoint* inputPolygonVerts, int inputPolygonSize
 /**
  * Generates a simple polygon (if possible) that is offset a constant distance from the boundary
  * of a given simple polygon.
- * The input polygon must be simple and have no coincident vertices or collinear edges.
+ * The input polygon must be simple, have no coincident vertices or collinear edges, and have
+ * values clamped to the nearest 1/16th.
  *
  * @param inputPolygonVerts  Array of points representing the vertices of the original polygon.
  * @param inputPolygonSize  Number of vertices in the original polygon.
@@ -85,6 +89,7 @@ bool SkIsConvexPolygon(const SkPoint* polygonVerts, int polygonSize);
 /**
  * Determine whether a polygon is simple (i.e., not self-intersecting) or not.
  * The input polygon must have no coincident vertices or the test will fail.
+ * The polygon is also expected to have values clamped to the nearest 1/16th.
  *
  * @param polygonVerts  Array of points representing the vertices of the polygon.
  * @param polygonSize  Number of vertices in the polygon.
@@ -106,7 +111,6 @@ bool SkIsConvexPolygon(const SkPoint* polygonVerts, int polygonSize);
  bool SkTriangulateSimplePolygon(const SkPoint* polygonVerts, uint16_t* indexMap, int polygonSize,
                                  SkTDArray<uint16_t>* triangleIndices);
 
-// Experiment: doesn't handle really big floats (returns false), always returns true for count <= 3
-bool SkIsPolyConvex_experimental(const SkPoint[], int count);
+#endif // !defined(SK_ENABLE_OPTIMIZE_SIZE)
 
 #endif

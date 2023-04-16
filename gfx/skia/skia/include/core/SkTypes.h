@@ -8,130 +8,162 @@
 #ifndef SkTypes_DEFINED
 #define SkTypes_DEFINED
 
+// All of these files should be independent of things users can set via the user config file.
+// They should also be able to be included in any order.
 // IWYU pragma: begin_exports
-#include "include/core/SkPreConfig.h"
-#if defined (SK_USER_CONFIG_HEADER)
-    #include SK_USER_CONFIG_HEADER
-#else
-    #include "include/config/SkUserConfig.h"
-#endif
-#include "include/core/SkPostConfig.h"
-#include <stddef.h>
-#include <stdint.h>
+#include "include/private/base/SkFeatures.h"
+
+// Load and verify defines from the user config file.
+#include "include/private/base/SkLoadUserConfig.h"
+
+// Any includes or defines below can be configured by the user config file.
+#include "include/private/base/SkAPI.h"
+#include "include/private/base/SkAssert.h"
+#include "include/private/base/SkAttributes.h"
+#include "include/private/base/SkDebug.h"
 // IWYU pragma: end_exports
 
-/** \file SkTypes.h
-*/
+#include <climits>
+#include <cstdint>
 
-/** Called internally if we hit an unrecoverable error.
-    The platform implementation must not return, but should either throw
-    an exception or otherwise exit.
-*/
-SK_API extern void sk_abort_no_print(void);
-SK_API extern bool sk_abort_is_enabled();
-
-#ifndef SkDebugf
-    SK_API void SkDebugf(const char format[], ...);
-#endif
-
-// SkASSERT, SkASSERTF and SkASSERT_RELEASE can be used as stand alone assertion expressions, e.g.
-//    uint32_t foo(int x) {
-//        SkASSERT(x > 4);
-//        return x - 4;
-//    }
-// and are also written to be compatible with constexpr functions:
-//    constexpr uint32_t foo(int x) {
-//        return SkASSERT(x > 4),
-//               x - 4;
-//    }
-#define SkASSERT_RELEASE(cond) \
-        static_cast<void>( (cond) ? (void)0 : []{ SK_ABORT("assert(" #cond ")"); }() )
-
-#ifdef SK_DEBUG
-    #define SkASSERT(cond) SkASSERT_RELEASE(cond)
-    #define SkASSERTF(cond, fmt, ...) static_cast<void>( (cond) ? (void)0 : [&]{ \
-                                          SkDebugf(fmt"\n", __VA_ARGS__);        \
-                                          SK_ABORT("assert(" #cond ")");         \
-                                      }() )
-    #define SkDEBUGFAIL(message)        SK_ABORT(message)
-    #define SkDEBUGFAILF(fmt, ...)      SkASSERTF(false, fmt, ##__VA_ARGS__)
-    #define SkDEBUGCODE(...)            __VA_ARGS__
-    #define SkDEBUGF(...)               SkDebugf(__VA_ARGS__)
-    #define SkAssertResult(cond)        SkASSERT(cond)
+#if defined(SK_GANESH) || defined(SK_GRAPHITE)
+#  if !defined(SK_ENABLE_SKSL)
+#    define SK_ENABLE_SKSL
+#  endif
 #else
-    #define SkASSERT(cond)            static_cast<void>(0)
-    #define SkASSERTF(cond, fmt, ...) static_cast<void>(0)
-    #define SkDEBUGFAIL(message)
-    #define SkDEBUGFAILF(fmt, ...)
-    #define SkDEBUGCODE(...)
-    #define SkDEBUGF(...)
+#  undef SK_GL
+#  undef SK_VULKAN
+#  undef SK_METAL
+#  undef SK_DAWN
+#  undef SK_DIRECT3D
+#endif
 
-    // unlike SkASSERT, this macro executes its condition in the non-debug build.
-    // The if is present so that this can be used with functions marked SK_WARN_UNUSED_RESULT.
-    #define SkAssertResult(cond)         if (cond) {} do {} while(false)
+// If SK_R32_SHIFT is set, we'll use that to choose RGBA or BGRA.
+// If not, we'll default to RGBA everywhere except BGRA on Windows.
+#if defined(SK_R32_SHIFT)
+    static_assert(SK_R32_SHIFT == 0 || SK_R32_SHIFT == 16, "");
+#elif defined(SK_BUILD_FOR_WIN)
+    #define SK_R32_SHIFT 16
+#else
+    #define SK_R32_SHIFT 0
+#endif
+
+#if defined(SK_B32_SHIFT)
+    static_assert(SK_B32_SHIFT == (16-SK_R32_SHIFT), "");
+#else
+    #define SK_B32_SHIFT (16-SK_R32_SHIFT)
+#endif
+
+#define SK_G32_SHIFT 8
+#define SK_A32_SHIFT 24
+
+/**
+ * SK_PMCOLOR_BYTE_ORDER can be used to query the byte order of SkPMColor at compile time.
+ */
+#ifdef SK_CPU_BENDIAN
+#  define SK_PMCOLOR_BYTE_ORDER(C0, C1, C2, C3)     \
+        (SK_ ## C3 ## 32_SHIFT == 0  &&             \
+         SK_ ## C2 ## 32_SHIFT == 8  &&             \
+         SK_ ## C1 ## 32_SHIFT == 16 &&             \
+         SK_ ## C0 ## 32_SHIFT == 24)
+#else
+#  define SK_PMCOLOR_BYTE_ORDER(C0, C1, C2, C3)     \
+        (SK_ ## C0 ## 32_SHIFT == 0  &&             \
+         SK_ ## C1 ## 32_SHIFT == 8  &&             \
+         SK_ ## C2 ## 32_SHIFT == 16 &&             \
+         SK_ ## C3 ## 32_SHIFT == 24)
+#endif
+
+#if defined SK_DEBUG && defined SK_BUILD_FOR_WIN
+    #ifdef free
+        #undef free
+    #endif
+    #include <crtdbg.h>
+    #undef free
+#endif
+
+#ifndef SK_ALLOW_STATIC_GLOBAL_INITIALIZERS
+    #define SK_ALLOW_STATIC_GLOBAL_INITIALIZERS 0
+#endif
+
+#if !defined(SK_GAMMA_EXPONENT)
+    #define SK_GAMMA_EXPONENT (0.0f)  // SRGB
+#endif
+
+#ifndef GR_TEST_UTILS
+#  define GR_TEST_UTILS 0
+#endif
+
+
+#if defined(SK_HISTOGRAM_ENUMERATION)  || \
+    defined(SK_HISTOGRAM_BOOLEAN)      || \
+    defined(SK_HISTOGRAM_EXACT_LINEAR) || \
+    defined(SK_HISTOGRAM_MEMORY_KB)
+#  define SK_HISTOGRAMS_ENABLED 1
+#else
+#  define SK_HISTOGRAMS_ENABLED 0
+#endif
+
+#ifndef SK_HISTOGRAM_BOOLEAN
+#  define SK_HISTOGRAM_BOOLEAN(name, sample)
+#endif
+
+#ifndef SK_HISTOGRAM_ENUMERATION
+#  define SK_HISTOGRAM_ENUMERATION(name, sample, enum_size)
+#endif
+
+#ifndef SK_HISTOGRAM_EXACT_LINEAR
+#  define SK_HISTOGRAM_EXACT_LINEAR(name, sample, value_max)
+#endif
+
+#ifndef SK_HISTOGRAM_MEMORY_KB
+#  define SK_HISTOGRAM_MEMORY_KB(name, sample)
+#endif
+
+#define SK_HISTOGRAM_PERCENTAGE(name, percent_as_int) \
+    SK_HISTOGRAM_EXACT_LINEAR(name, percent_as_int, 101)
+
+// The top-level define SK_ENABLE_OPTIMIZE_SIZE can be used to remove several large features at once
+#if defined(SK_ENABLE_OPTIMIZE_SIZE)
+#   define SK_FORCE_RASTER_PIPELINE_BLITTER
+#   define SK_DISABLE_SDF_TEXT
+#endif
+
+#ifndef SK_DISABLE_LEGACY_SHADERCONTEXT
+#   define SK_ENABLE_LEGACY_SHADERCONTEXT
+#endif
+
+#if defined(SK_BUILD_FOR_LIBFUZZER) || defined(SK_BUILD_FOR_AFL_FUZZ)
+#if !defined(SK_BUILD_FOR_FUZZER)
+    #define SK_BUILD_FOR_FUZZER
+#endif
+#endif
+
+/**
+ *  Gr defines are set to 0 or 1, rather than being undefined or defined
+ */
+
+#if !defined(GR_CACHE_STATS)
+  #if defined(SK_DEBUG) || defined(SK_DUMP_STATS)
+      #define GR_CACHE_STATS  1
+  #else
+      #define GR_CACHE_STATS  0
+  #endif
+#endif
+
+#if !defined(GR_GPU_STATS)
+  #if defined(SK_DEBUG) || defined(SK_DUMP_STATS) || GR_TEST_UTILS
+      #define GR_GPU_STATS    1
+  #else
+      #define GR_GPU_STATS    0
+  #endif
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
-
-/** Fast type for unsigned 8 bits. Use for parameter passing and local
-    variables, not for storage
-*/
-typedef unsigned U8CPU;
-
-/** Fast type for unsigned 16 bits. Use for parameter passing and local
-    variables, not for storage
-*/
-typedef unsigned U16CPU;
-
-/** @return false or true based on the condition
-*/
-template <typename T> static constexpr bool SkToBool(const T& x) { return 0 != x; }
-
-static constexpr int16_t SK_MaxS16 = INT16_MAX;
-static constexpr int16_t SK_MinS16 = -SK_MaxS16;
-
-static constexpr int32_t SK_MaxS32 = INT32_MAX;
-static constexpr int32_t SK_MinS32 = -SK_MaxS32;
-static constexpr int32_t SK_NaN32  = INT32_MIN;
-
-static constexpr int64_t SK_MaxS64 = INT64_MAX;
-static constexpr int64_t SK_MinS64 = -SK_MaxS64;
-
-static inline constexpr int32_t SkLeftShift(int32_t value, int32_t shift) {
-    return (int32_t) ((uint32_t) value << shift);
-}
-
-static inline constexpr int64_t SkLeftShift(int64_t value, int32_t shift) {
-    return (int64_t) ((uint64_t) value << shift);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-/** @return the number of entries in an array (not a pointer)
-*/
-template <typename T, size_t N> char (&SkArrayCountHelper(T (&array)[N]))[N];
-#define SK_ARRAY_COUNT(array) (sizeof(SkArrayCountHelper(array)))
-
-////////////////////////////////////////////////////////////////////////////////
-
-template <typename T> static constexpr T SkAlign2(T x) { return (x + 1) >> 1 << 1; }
-template <typename T> static constexpr T SkAlign4(T x) { return (x + 3) >> 2 << 2; }
-template <typename T> static constexpr T SkAlign8(T x) { return (x + 7) >> 3 << 3; }
-
-template <typename T> static constexpr bool SkIsAlign2(T x) { return 0 == (x & 1); }
-template <typename T> static constexpr bool SkIsAlign4(T x) { return 0 == (x & 3); }
-template <typename T> static constexpr bool SkIsAlign8(T x) { return 0 == (x & 7); }
-
-template <typename T> static constexpr T SkAlignPtr(T x) {
-    return sizeof(void*) == 8 ? SkAlign8(x) : SkAlign4(x);
-}
-template <typename T> static constexpr bool SkIsAlignPtr(T x) {
-    return sizeof(void*) == 8 ? SkIsAlign8(x) : SkIsAlign4(x);
-}
 
 typedef uint32_t SkFourByteTag;
 static inline constexpr SkFourByteTag SkSetFourByteTag(char a, char b, char c, char d) {
-    return (((uint8_t)a << 24) | ((uint8_t)b << 16) | ((uint8_t)c << 8) | (uint8_t)d);
+    return (((uint32_t)a << 24) | ((uint32_t)b << 16) | ((uint32_t)c << 8) | (uint32_t)d);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -161,66 +193,5 @@ static constexpr uint32_t SK_InvalidGenID = 0;
 */
 static constexpr uint32_t SK_InvalidUniqueID = 0;
 
-static inline int32_t SkAbs32(int32_t value) {
-    SkASSERT(value != SK_NaN32);  // The most negative int32_t can't be negated.
-    if (value < 0) {
-        value = -value;
-    }
-    return value;
-}
-
-template <typename T> static inline T SkTAbs(T value) {
-    if (value < 0) {
-        value = -value;
-    }
-    return value;
-}
-
-static inline int32_t SkMax32(int32_t a, int32_t b) {
-    if (a < b)
-        a = b;
-    return a;
-}
-
-static inline int32_t SkMin32(int32_t a, int32_t b) {
-    if (a > b)
-        a = b;
-    return a;
-}
-
-template <typename T> constexpr const T& SkTMin(const T& a, const T& b) {
-    return (a < b) ? a : b;
-}
-
-template <typename T> constexpr const T& SkTMax(const T& a, const T& b) {
-    return (b < a) ? a : b;
-}
-
-template <typename T> constexpr const T& SkTClamp(const T& x, const T& lo, const T& hi) {
-    return (x < lo) ? lo : SkTMin(x, hi);
-}
-
-/** @return value pinned (clamped) between min and max, inclusively.
-*/
-template <typename T> static constexpr const T& SkTPin(const T& value, const T& min, const T& max) {
-    return SkTMax(SkTMin(value, max), min);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-/** Indicates whether an allocation should count against a cache budget.
-*/
-enum class SkBudgeted : bool {
-    kNo  = false,
-    kYes = true
-};
-
-/** Indicates whether a backing store needs to be an exact match or can be
-    larger than is strictly necessary
-*/
-enum class SkBackingFit {
-    kApprox,
-    kExact
-};
 
 #endif

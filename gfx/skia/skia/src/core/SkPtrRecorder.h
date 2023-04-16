@@ -11,7 +11,7 @@
 
 #include "include/core/SkFlattenable.h"
 #include "include/core/SkRefCnt.h"
-#include "include/private/SkTDArray.h"
+#include "include/private/base/SkTDArray.h"
 
 /**
  *  Maintains a set of ptrs, assigning each a unique ID [1...N]. Duplicate ptrs
@@ -40,7 +40,7 @@ public:
     /**
      *  Return the number of (non-null) ptrs in the set.
      */
-    int count() const { return fList.count(); }
+    int count() const { return fList.size(); }
 
     /**
      *  Copy the ptrs in the set into the specified array (allocated by the
@@ -70,7 +70,7 @@ public:
          * Return the next ptr in the set or null if the end was reached.
          */
         void* next() {
-            return fIndex < fSet.fList.count() ? fSet.fList[fIndex++].fPtr : nullptr;
+            return fIndex < fSet.fList.size() ? fSet.fList[fIndex++].fPtr : nullptr;
         }
 
     private:
@@ -96,7 +96,7 @@ private:
 
     static bool Less(const Pair& a, const Pair& b);
 
-    typedef SkRefCnt INHERITED;
+    using INHERITED = SkRefCnt;
 };
 
 /**
@@ -117,7 +117,7 @@ public:
     }
 
 private:
-    typedef SkPtrSet INHERITED;
+    using INHERITED = SkPtrSet;
 };
 
 /**
@@ -127,12 +127,12 @@ private:
  */
 class SkRefCntSet : public SkTPtrSet<SkRefCnt*> {
 public:
-    virtual ~SkRefCntSet();
+    ~SkRefCntSet() override;
 
 protected:
     // overrides
-    virtual void incPtr(void*);
-    virtual void decPtr(void*);
+    void incPtr(void*) override;
+    void decPtr(void*) override;
 };
 
 class SkFactorySet : public SkTPtrSet<SkFlattenable::Factory> {};
@@ -165,7 +165,7 @@ private:
     SkFactorySet           fFactorySet;
     SkTDArray<const char*> fNames;
 
-    typedef SkRefCnt INHERITED;
+    using INHERITED = SkRefCnt;
 };
 
 #endif

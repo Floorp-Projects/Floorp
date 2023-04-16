@@ -3,11 +3,14 @@
 
 #include "src/pdf/SkPDFType1Font.h"
 
-#include "include/private/SkTemplates.h"
-#include "include/private/SkTo.h"
+#include "include/private/base/SkTemplates.h"
+#include "include/private/base/SkTo.h"
+#include "src/core/SkStrike.h"
 #include "src/core/SkStrikeSpec.h"
 
 #include <ctype.h>
+
+using namespace skia_private;
 
 /*
   "A standard Type 1 font program, as described in the Adobe Type 1
@@ -141,7 +144,7 @@ static sk_sp<SkData> convert_type1_font_stream(std::unique_ptr<SkStreamAsset> sr
     }
     // Flatten and Nul-terminate the source stream so that we can use
     // strstr() to search it.
-    SkAutoTMalloc<uint8_t> sourceBuffer(SkToInt(srcLen + 1));
+    AutoTMalloc<uint8_t> sourceBuffer(SkToInt(srcLen + 1));
     (void)srcStream->read(sourceBuffer.get(), srcLen);
     sourceBuffer[SkToInt(srcLen)] = 0;
     const uint8_t* src = sourceBuffer.get();
@@ -245,8 +248,9 @@ static SkPDFIndirectReference make_type1_font_descriptor(SkPDFDocument* doc,
                 dict->insertInt("Length2", data);
                 dict->insertInt("Length3", trailer);
                 auto fontStream = SkMemoryStream::Make(std::move(fontData));
-                descriptor.insertRef("FontFile", SkPDFStreamOut(std::move(dict),
-                                                                std::move(fontStream), doc, true));
+                descriptor.insertRef("FontFile",
+                                     SkPDFStreamOut(std::move(dict), std::move(fontStream),
+                                                    doc, SkPDFSteamCompressionEnabled::Yes));
             }
         }
     }
@@ -256,12 +260,12 @@ static SkPDFIndirectReference make_type1_font_descriptor(SkPDFDocument* doc,
 
 static const std::vector<SkString>& type_1_glyphnames(SkPDFDocument* canon,
                                                       const SkTypeface* typeface) {
-    SkFontID fontID = typeface->uniqueID();
-    const std::vector<SkString>* glyphNames = canon->fType1GlyphNames.find(fontID);
+    SkTypefaceID typefaceID = typeface->uniqueID();
+    const std::vector<SkString>* glyphNames = canon->fType1GlyphNames.find(typefaceID);
     if (!glyphNames) {
         std::vector<SkString> names(typeface->countGlyphs());
         SkPDFFont::GetType1GlyphNames(*typeface, names.data());
-        glyphNames = canon->fType1GlyphNames.set(fontID, std::move(names));
+        glyphNames = canon->fType1GlyphNames.set(typefaceID, std::move(names));
     }
     SkASSERT(glyphNames);
     return *glyphNames;
@@ -269,20 +273,20 @@ static const std::vector<SkString>& type_1_glyphnames(SkPDFDocument* canon,
 
 static SkPDFIndirectReference type1_font_descriptor(SkPDFDocument* doc,
                                                     const SkTypeface* typeface) {
-    SkFontID fontID = typeface->uniqueID();
-    if (SkPDFIndirectReference* ptr = doc->fFontDescriptors.find(fontID)) {
+    SkTypefaceID typefaceID = typeface->uniqueID();
+    if (SkPDFIndirectReference* ptr = doc->fFontDescriptors.find(typefaceID)) {
         return *ptr;
     }
     const SkAdvancedTypefaceMetrics* info = SkPDFFont::GetMetrics(typeface, doc);
     auto fontDescriptor = make_type1_font_descriptor(doc, typeface, info);
-    doc->fFontDescriptors.set(fontID, fontDescriptor);
+    doc->fFontDescriptors.set(typefaceID, fontDescriptor);
     return fontDescriptor;
 }
 
 
 void SkPDFEmitType1Font(const SkPDFFont& pdfFont, SkPDFDocument* doc) {
     SkTypeface* typeface = pdfFont.typeface();
-    const std::vector<SkString> glyphNames = type_1_glyphnames(doc, typeface);
+    const std::vector<SkString>& glyphNames = type_1_glyphnames(doc, typeface);
     SkGlyphID firstGlyphID = pdfFont.firstGlyphID();
     SkGlyphID lastGlyphID = pdfFont.lastGlyphID();
 
@@ -303,14 +307,14 @@ void SkPDFEmitType1Font(const SkPDFFont& pdfFont, SkPDFDocument* doc) {
         auto widths = SkPDFMakeArray();
 
         int glyphRangeSize = lastGlyphID - firstGlyphID + 2;
-        SkAutoTArray<SkGlyphID> glyphIDs{glyphRangeSize};
+        AutoTArray<SkGlyphID> glyphIDs{glyphRangeSize};
         glyphIDs[0] = 0;
         for (unsigned gId = firstGlyphID; gId <= lastGlyphID; gId++) {
             glyphIDs[gId - firstGlyphID + 1] = gId;
         }
         SkStrikeSpec strikeSpec = SkStrikeSpec::MakePDFVector(*typeface, &emSize);
         SkBulkGlyphMetrics metrics{strikeSpec};
-        auto glyphs = metrics.glyphs(SkMakeSpan(glyphIDs.get(), glyphRangeSize));
+        auto glyphs = metrics.glyphs(SkSpan(glyphIDs.get(), glyphRangeSize));
         for (int i = 0; i < glyphRangeSize; ++i) {
             widths->appendScalar(from_font_units(glyphs[i]->advanceX(), SkToU16(emSize)));
         }

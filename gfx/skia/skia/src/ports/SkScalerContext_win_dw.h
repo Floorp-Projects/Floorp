@@ -10,6 +10,7 @@
 
 #include "include/core/SkScalar.h"
 #include "include/core/SkTypes.h"
+#include "include/private/base/SkTDArray.h"
 #include "src/core/SkScalerContext.h"
 #include "src/ports/SkTypeface_win_dw.h"
 
@@ -26,19 +27,27 @@ public:
                        const SkDescriptor*);
     ~SkScalerContext_DW() override;
 
-    // The IDWriteFontFace4 interface is only available in DWrite 3,
-    // so checking if it was found is sufficient to detect DWrite 3.
-    bool isDWrite3() { return bool(getDWriteTypeface()->fDWriteFontFace4); }
-
 protected:
-    unsigned generateGlyphCount() override;
     bool generateAdvance(SkGlyph* glyph) override;
-    void generateMetrics(SkGlyph* glyph) override;
+    void generateMetrics(SkGlyph* glyph, SkArenaAlloc*) override;
     void generateImage(const SkGlyph& glyph) override;
-    bool generatePath(SkGlyphID glyph, SkPath* path) override;
+    bool generatePath(const SkGlyph&, SkPath*) override;
+    sk_sp<SkDrawable> generateDrawable(const SkGlyph&) override;
     void generateFontMetrics(SkFontMetrics*) override;
 
 private:
+    struct ScalerContextBits {
+        using value_type = decltype(SkGlyph::fScalerContextBits);
+        static const constexpr value_type ForceBW = 1 << 0;
+
+        static const constexpr value_type DW   = 0 << 1;
+        static const constexpr value_type PNG  = 1 << 1;
+        static const constexpr value_type SVG  = 2 << 1;
+        static const constexpr value_type COLR = 3 << 1;
+        static const constexpr value_type PATH = 4 << 1;
+        static const constexpr value_type FormatMask = 0x7 << 1;
+    };
+
     static void BilevelToBW(const uint8_t* SK_RESTRICT src, const SkGlyph& glyph);
 
     template<bool APPLY_PREBLEND>
@@ -65,24 +74,27 @@ private:
                            DWRITE_TEXTURE_TYPE textureType,
                            RECT* bbox);
 
-    bool isColorGlyph(const SkGlyph& glyph);
-
-    bool isPngGlyph(const SkGlyph& glyph);
-
     DWriteFontTypeface* getDWriteTypeface() {
         return static_cast<DWriteFontTypeface*>(this->getTypeface());
     }
 
-    bool getColorGlyphRun(const SkGlyph& glyph, IDWriteColorGlyphRunEnumerator** colorGlyph);
+    bool isColorGlyph(const SkGlyph&);
+    bool getColorGlyphRun(const SkGlyph&, IDWriteColorGlyphRunEnumerator**);
+    bool generateColorMetrics(SkGlyph*);
+    bool generateColorGlyphImage(const SkGlyph&);
+    bool drawColorGlyphImage(const SkGlyph&, SkCanvas&);
 
-    void generateColorMetrics(SkGlyph* glyph);
+    bool isSVGGlyph(const SkGlyph&);
+    bool generateSVGMetrics(SkGlyph*);
+    bool generateSVGGlyphImage(const SkGlyph&);
+    bool drawSVGGlyphImage(const SkGlyph&, SkCanvas&);
 
-    void generateColorGlyphImage(const SkGlyph& glyph);
+    bool isPngGlyph(const SkGlyph&);
+    bool generatePngMetrics(SkGlyph*);
+    bool generatePngGlyphImage(const SkGlyph&);
+    bool drawPngGlyphImage(const SkGlyph&, SkCanvas&);
 
-    void generatePngMetrics(SkGlyph* glyph);
-
-    void generatePngGlyphImage(const SkGlyph& glyph);
-
+    static void SetGlyphBounds(SkGlyph* glyph, const SkRect& bounds);
 
     SkTDArray<uint8_t> fBits;
     /** The total matrix without the text height scale. */
@@ -99,7 +111,6 @@ private:
     DWRITE_MEASURING_MODE fMeasuringMode;
     DWRITE_TEXT_ANTIALIAS_MODE fAntiAliasMode;
     DWRITE_GRID_FIT_MODE fGridFitMode;
-    bool fIsColorFont;
     int fClearTypeLevel;
 };
 

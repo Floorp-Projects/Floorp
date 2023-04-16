@@ -14,15 +14,13 @@
 
 #else
 
-    #include "include/core/SkColorFilter.h"
-    #include "src/effects/SkDashImpl.h"
-    #include "include/effects/SkGradientShader.h"
     #include "include/core/SkMaskFilter.h"
+    #include "src/core/SkColorFilterBase.h"
+    #include "src/core/SkImageFilter_Base.h"
+    #include "src/effects/SkDashImpl.h"
+    #include "src/shaders/gradients/SkGradientShaderBase.h"
 
-    #include "include/effects/SkBlurImageFilter.h"
-    #include "include/effects/SkComposeImageFilter.h"
-
-    /*
+    /**
      *  Register most effects for deserialization.
      *
      *  None of these are strictly required for Skia to operate, so if you're
@@ -31,10 +29,16 @@
      */
     void SkFlattenable::PrivateInitializer::InitEffects() {
         // Shaders.
-        SkGradientShader::RegisterFlattenables();
+        SkRegisterLinearGradientShaderFlattenable();
+        SkRegisterRadialGradientShaderFlattenable();
+        SkRegisterSweepGradientShaderFlattenable();
+        SkRegisterTwoPointConicalGradientShaderFlattenable();
 
         // Color filters.
-        SkColorFilter::RegisterFlattenables();
+        SkRegisterComposeColorFilterFlattenable();
+        SkRegisterModeColorFilterFlattenable();
+        SkRegisterColorSpaceXformColorFilterFlattenable();
+        SkRegisterWorkingFormatColorFilterFlattenable();
 
         // Mask filters.
         SkMaskFilter::RegisterFlattenables();
@@ -51,8 +55,8 @@
      *  SK_DISABLE_EFFECT_SERIALIZATION, or modify/replace this file as needed.
      */
     void SkFlattenable::PrivateInitializer::InitImageFilters() {
-        SkBlurImageFilter::RegisterFlattenables();
-        SkComposeImageFilter::RegisterFlattenables();
+        SkRegisterBlurImageFilterFlattenable();
+        SkRegisterComposeImageFilterFlattenable();
     }
 
 #endif

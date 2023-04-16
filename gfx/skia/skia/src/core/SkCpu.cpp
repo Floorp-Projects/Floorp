@@ -7,11 +7,11 @@
 
 #include "include/core/SkStream.h"
 #include "include/core/SkString.h"
-#include "include/private/SkOnce.h"
+#include "include/private/base/SkOnce.h"
 #include "src/core/SkCpu.h"
 
 #if defined(SK_CPU_X86)
-    #if defined(SK_BUILD_FOR_WIN) && !defined(__MINGW32__)
+    #if defined(_MSC_VER)
         #include <intrin.h>
         static void cpuid (uint32_t abcd[4]) { __cpuid  ((int*)abcd, 1);    }
         static void cpuid7(uint32_t abcd[4]) { __cpuidex((int*)abcd, 7, 0); }
@@ -57,6 +57,7 @@
             if (abcd[1] & (1<<5)) { features |= SkCpu::AVX2; }
             if (abcd[1] & (1<<3)) { features |= SkCpu::BMI1; }
             if (abcd[1] & (1<<8)) { features |= SkCpu::BMI2; }
+            if (abcd[1] & (1<<9)) { features |= SkCpu::ERMS; }
 
             if ((xgetbv(0) & (7<<5)) == (7<<5)) {  // All ZMM state bits enabled too.
                 if (abcd[1] & (1<<16)) { features |= SkCpu::AVX512F; }
@@ -104,10 +105,10 @@
             }
 
             const char kMongoose3[] = "0x00000000531f0020";  // 53 == Samsung.
-            char buf[SK_ARRAY_COUNT(kMongoose3) - 1];  // No need for the terminating \0.
+            char buf[std::size(kMongoose3) - 1];  // No need for the terminating \0.
 
-            if (SK_ARRAY_COUNT(buf) != midr_el1.read(buf, SK_ARRAY_COUNT(buf))
-                          || 0 == memcmp(kMongoose3, buf, SK_ARRAY_COUNT(buf))) {
+            if (std::size(buf) != midr_el1.read(buf, std::size(buf))
+                          || 0 == memcmp(kMongoose3, buf, std::size(buf))) {
                 features &= ~(SkCpu::ASIMDHP);
             }
         }

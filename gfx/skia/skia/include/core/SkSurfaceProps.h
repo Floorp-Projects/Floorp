@@ -9,6 +9,7 @@
 #define SkSurfaceProps_DEFINED
 
 #include "include/core/SkTypes.h"
+#include "include/private/base/SkTo.h"
 
 /**
  *  Description of how the LCD strips are arranged for each pixel. If this is unknown, or the
@@ -52,18 +53,22 @@ class SK_API SkSurfaceProps {
 public:
     enum Flags {
         kUseDeviceIndependentFonts_Flag = 1 << 0,
+        // Use internal MSAA to render to non-MSAA GPU surfaces.
+        kDynamicMSAA_Flag               = 1 << 1
     };
     /** Deprecated alias used by Chromium. Will be removed. */
     static const Flags kUseDistanceFieldFonts_Flag = kUseDeviceIndependentFonts_Flag;
 
+    /** No flags, unknown pixel geometry. */
+    SkSurfaceProps();
     SkSurfaceProps(uint32_t flags, SkPixelGeometry);
 
-    enum InitType {
-        kLegacyFontHost_InitType
-    };
-    SkSurfaceProps(InitType);
-    SkSurfaceProps(uint32_t flags, InitType);
-    SkSurfaceProps(const SkSurfaceProps& other);
+    SkSurfaceProps(const SkSurfaceProps&);
+    SkSurfaceProps& operator=(const SkSurfaceProps&);
+
+    SkSurfaceProps cloneWithPixelGeometry(SkPixelGeometry newPixelGeometry) const {
+        return SkSurfaceProps(fFlags, newPixelGeometry);
+    }
 
     uint32_t flags() const { return fFlags; }
     SkPixelGeometry pixelGeometry() const { return fPixelGeometry; }
@@ -79,9 +84,8 @@ public:
     bool operator!=(const SkSurfaceProps& that) const {
         return !(*this == that);
     }
-private:
-    SkSurfaceProps();
 
+private:
     uint32_t        fFlags;
     SkPixelGeometry fPixelGeometry;
 };

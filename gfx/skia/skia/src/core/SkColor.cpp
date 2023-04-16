@@ -6,8 +6,13 @@
  */
 
 #include "include/core/SkColor.h"
+#include "include/core/SkColorPriv.h"
 #include "include/private/SkColorData.h"
-#include "include/private/SkFixed.h"
+#include "include/private/base/SkTPin.h"
+#include "src/base/SkVx.h"
+#include "src/core/SkSwizzlePriv.h"
+
+#include <algorithm>
 
 SkPMColor SkPreMultiplyARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU b) {
     return SkPremultiplyARGBInline(a, r, g, b);
@@ -33,8 +38,8 @@ static inline SkScalar ByteDivToScalar(int numer, U8CPU denom) {
 void SkRGBToHSV(U8CPU r, U8CPU g, U8CPU b, SkScalar hsv[3]) {
     SkASSERT(hsv);
 
-    unsigned min = SkMin32(r, SkMin32(g, b));
-    unsigned max = SkMax32(r, SkMax32(g, b));
+    unsigned min = std::min(r, std::min(g, b));
+    unsigned max = std::max(r, std::max(g, b));
     unsigned delta = max - min;
 
     SkScalar v = ByteToScalar(max);
@@ -73,8 +78,8 @@ void SkRGBToHSV(U8CPU r, U8CPU g, U8CPU b, SkScalar hsv[3]) {
 SkColor SkHSVToColor(U8CPU a, const SkScalar hsv[3]) {
     SkASSERT(hsv);
 
-    SkScalar s = SkScalarPin(hsv[1], 0, 1);
-    SkScalar v = SkScalarPin(hsv[2], 0, 1);
+    SkScalar s = SkTPin(hsv[1], 0.0f, 1.0f);
+    SkScalar v = SkTPin(hsv[2], 0.0f, 1.0f);
 
     U8CPU v_byte = SkScalarRoundToInt(v * 255);
 
@@ -108,10 +113,10 @@ SkColor SkHSVToColor(U8CPU a, const SkScalar hsv[3]) {
 template <>
 SkColor4f SkColor4f::FromColor(SkColor bgra) {
     SkColor4f rgba;
-    Sk4f c4f = Sk4f_fromL32(bgra);
+    auto c4f = Sk4f_fromL32(bgra);
 #ifdef SK_CPU_BENDIAN
     // ARGB -> RGBA
-    c4f = SkNx_shuffle<1, 2, 3, 0>(c4f);
+    c4f = skvx::shuffle<1, 2, 3, 0>(c4f);
 #else
     // BGRA -> RGBA
     c4f = swizzle_rb(c4f);
@@ -122,10 +127,10 @@ SkColor4f SkColor4f::FromColor(SkColor bgra) {
 
 template <>
 SkColor SkColor4f::toSkColor() const {
-    Sk4f c4f = Sk4f::Load(this->vec());
+    auto c4f = skvx::float4::Load(this->vec());
 #ifdef SK_CPU_BENDIAN
     // RGBA -> ARGB
-    c4f = SkNx_shuffle<3, 0, 1, 2>(c4f);
+    c4f = skvx::shuffle<3, 0, 1, 2>(c4f);
 #else
     // RGBA -> BGRA
     c4f = swizzle_rb(c4f);
@@ -135,7 +140,7 @@ SkColor SkColor4f::toSkColor() const {
 
 template <>
 uint32_t SkColor4f::toBytes_RGBA() const {
-    return Sk4f_toL32(Sk4f::Load(this->vec()));
+    return Sk4f_toL32(skvx::float4::Load(this->vec()));
 }
 
 template <>
@@ -154,7 +159,7 @@ SkPMColor4f SkPMColor4f::FromPMColor(SkPMColor c) {
 
 template <>
 uint32_t SkPMColor4f::toBytes_RGBA() const {
-    return Sk4f_toL32(Sk4f::Load(this->vec()));
+    return Sk4f_toL32(skvx::float4::Load(this->vec()));
 }
 
 template <>

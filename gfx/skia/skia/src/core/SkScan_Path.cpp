@@ -7,9 +7,10 @@
 
 #include "include/core/SkPath.h"
 #include "include/core/SkRegion.h"
-#include "include/private/SkMacros.h"
-#include "include/private/SkSafe32.h"
-#include "include/private/SkTemplates.h"
+#include "include/private/base/SkMacros.h"
+#include "include/private/base/SkSafe32.h"
+#include "include/private/base/SkTemplates.h"
+#include "src/base/SkTSort.h"
 #include "src/core/SkBlitter.h"
 #include "src/core/SkEdge.h"
 #include "src/core/SkEdgeBuilder.h"
@@ -18,7 +19,6 @@
 #include "src/core/SkRasterClip.h"
 #include "src/core/SkRectPriv.h"
 #include "src/core/SkScanPriv.h"
-#include "src/core/SkTSort.h"
 
 #include <utility>
 
@@ -97,14 +97,13 @@ typedef void (*PrePostProc)(SkBlitter* blitter, int y, bool isStartOfScanline);
 #define PREPOST_START   true
 #define PREPOST_END     false
 
-static void walk_edges(SkEdge* prevHead, SkPath::FillType fillType,
+static void walk_edges(SkEdge* prevHead, SkPathFillType fillType,
                        SkBlitter* blitter, int start_y, int stop_y,
                        PrePostProc proc, int rightClip) {
     validate_sort(prevHead->fNext);
 
     int curr_y = start_y;
-    // returns 1 for evenodd, -1 for winding, regardless of inverse-ness
-    int windingMask = (fillType & 1) ? 1 : -1;
+    int windingMask = SkPathFillType_IsEvenOdd(fillType) ? 1 : -1;
 
     for (;;) {
         int     w = 0;
@@ -211,12 +210,12 @@ static bool update_edge(SkEdge* edge, int last_y) {
 }
 
 // Unexpected conditions for which we need to return
-#define ASSERT_RETURN(cond)     \
-    do {                        \
-        if (!(cond)) {          \
-            SkASSERT(false);    \
-            return;             \
-        }                       \
+#define ASSERT_RETURN(cond)                    \
+    do {                                       \
+        if (!(cond)) {                         \
+            SkDEBUGFAILF("assert(%s)", #cond); \
+            return;                            \
+        }                                      \
     } while (0)
 
 // Needs Y to only change once (looser than convex in X)
@@ -229,15 +228,15 @@ static void walk_simple_edges(SkEdge* prevHead, SkBlitter* blitter, int start_y,
 
     // our edge choppers for curves can result in the initial edges
     // not lining up, so we take the max.
-    int local_top = SkMax32(leftE->fFirstY, riteE->fFirstY);
+    int local_top = std::max(leftE->fFirstY, riteE->fFirstY);
     ASSERT_RETURN(local_top >= start_y);
 
     while (local_top < stop_y) {
         SkASSERT(leftE->fFirstY <= stop_y);
         SkASSERT(riteE->fFirstY <= stop_y);
 
-        int local_bot = SkMin32(leftE->fLastY, riteE->fLastY);
-        local_bot = SkMin32(local_bot, stop_y - 1);
+        int local_bot = std::min(leftE->fLastY, riteE->fLastY);
+        local_bot = std::min(local_bot, stop_y - 1);
         ASSERT_RETURN(local_top <= local_bot);
 
         SkFixed left = leftE->fX;
@@ -302,7 +301,7 @@ static void walk_simple_edges(SkEdge* prevHead, SkBlitter* blitter, int start_y,
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// this guy overrides blitH, and will call its proxy blitter with the inverse
+// this overrides blitH, and will call its proxy blitter with the inverse
 // of the spans it is given (clipped to the left/right of the cliprect)
 //
 // used to implement inverse filltypes on paths
@@ -380,7 +379,7 @@ static bool operator<(const SkEdge& a, const SkEdge& b) {
 }
 
 static SkEdge* sort_edges(SkEdge* list[], int count, SkEdge** last) {
-    SkTQSort(list, list + count - 1);
+    SkTQSort(list, list + count);
 
     // now make the edges linked in sorted order
     for (int i = 1; i < count; i++) {
@@ -472,7 +471,7 @@ void sk_fill_path(const SkPath& path, const SkIRect& clipRect, SkBlitter* blitte
         walk_simple_edges(&headEdge, blitter, start_y, stop_y);
     } else {
         walk_edges(&headEdge, path.getFillType(), blitter, start_y, stop_y, proc,
-                shiftedClip.right());
+                   shiftedClip.right());
     }
 }
 
@@ -675,6 +674,11 @@ void SkScan::FillPath(const SkPath& path, const SkIRect& ir,
                       SkBlitter* blitter) {
     SkRegion rgn(ir);
     FillPath(path, rgn, blitter);
+}
+
+bool SkScan::PathRequiresTiling(const SkIRect& bounds) {
+    SkRegion out;  // ignored
+    return clip_to_limit(SkRegion(bounds), &out);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

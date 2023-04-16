@@ -7,17 +7,27 @@
 #ifndef SkOpAngle_DEFINED
 #define SkOpAngle_DEFINED
 
+#include "include/core/SkPath.h"
+#include "include/core/SkTypes.h"
+#include "include/private/base/SkDebug.h"
 #include "src/pathops/SkLineParameters.h"
 #include "src/pathops/SkPathOpsCurve.h"
+#include "src/pathops/SkPathOpsTypes.h"
+
 #if DEBUG_ANGLE
 #include "include/core/SkString.h"
 #endif
 
+#include <cstdint>
+
+class SkOpCoincidence;
 class SkOpContour;
 class SkOpPtT;
 class SkOpSegment;
-class SkOpSpanBase;
 class SkOpSpan;
+class SkOpSpanBase;
+struct SkDPoint;
+struct SkDVector;
 
 class SkOpAngle {
 public:

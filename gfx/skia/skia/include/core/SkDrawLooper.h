@@ -16,19 +16,18 @@
 #include "include/core/SkPoint.h"
 #include <functional>  // std::function
 
+#ifndef SK_SUPPORT_LEGACY_DRAWLOOPER
+#error "SkDrawLooper is unsupported"
+#endif
+
 class  SkArenaAlloc;
 class  SkCanvas;
+class  SkMatrix;
 class  SkPaint;
 struct SkRect;
-class  SkString;
 
 /** \class SkDrawLooper
-    Subclasses of SkDrawLooper can be attached to a SkPaint. Where they are,
-    and something is drawn to a canvas with that paint, the looper subclass will
-    be called, allowing it to modify the canvas and/or paint for that draw call.
-    More than that, via the next() method, the looper can modify the draw to be
-    invoked multiple times (hence the name loop-er), allow it to perform effects
-    like shadows or frame/fills, that require more than one pass.
+    DEPRECATED: No longer supported in Skia.
 */
 class SK_API SkDrawLooper : public SkFlattenable {
 public:
@@ -130,7 +129,7 @@ protected:
     SkDrawLooper() {}
 
 private:
-    typedef SkFlattenable INHERITED;
+    using INHERITED = SkFlattenable;
 };
 
 #endif
