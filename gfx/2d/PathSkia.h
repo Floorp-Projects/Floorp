@@ -91,6 +91,10 @@ class PathSkia : public Path {
 
   Maybe<Rect> AsRect() const override;
 
+  bool GetFillPath(const StrokeOptions& aStrokeOptions,
+                   const Matrix& aTransform, SkPath& aFillPath,
+                   const Maybe<Rect>& aClipRect = Nothing()) const;
+
  private:
   friend class DrawTargetSkia;
 
