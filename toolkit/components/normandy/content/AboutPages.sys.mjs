@@ -6,28 +6,14 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonStudies",
-  "resource://normandy/lib/AddonStudies.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "BranchedAddonStudyAction",
-  "resource://normandy/actions/BranchedAddonStudyAction.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PreferenceExperiments",
-  "resource://normandy/lib/PreferenceExperiments.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "RecipeRunner",
-  "resource://normandy/lib/RecipeRunner.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonStudies: "resource://normandy/lib/AddonStudies.sys.mjs",
+  BranchedAddonStudyAction:
+    "resource://normandy/actions/BranchedAddonStudyAction.sys.mjs",
   ExperimentManager: "resource://nimbus/lib/ExperimentManager.sys.mjs",
+  PreferenceExperiments:
+    "resource://normandy/lib/PreferenceExperiments.sys.mjs",
+  RecipeRunner: "resource://normandy/lib/RecipeRunner.sys.mjs",
   RemoteSettingsExperimentLoader:
     "resource://nimbus/lib/RemoteSettingsExperimentLoader.sys.mjs",
 });

@@ -2,29 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { LogManager } = ChromeUtils.import(
-  "resource://normandy/lib/LogManager.jsm"
-);
+import { LogManager } from "resource://normandy/lib/LogManager.sys.mjs";
+
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
+  CleanupManager: "resource://normandy/lib/CleanupManager.sys.mjs",
   IndexedDB: "resource://gre/modules/IndexedDB.sys.mjs",
+  PrefUtils: "resource://normandy/lib/PrefUtils.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
+  TelemetryEvents: "resource://normandy/lib/TelemetryEvents.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CleanupManager",
-  "resource://normandy/lib/CleanupManager.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PrefUtils",
-  "resource://normandy/lib/PrefUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TelemetryEvents",
-  "resource://normandy/lib/TelemetryEvents.jsm"
-);
 
 const log = LogManager.getLogger("recipe-runner");
 

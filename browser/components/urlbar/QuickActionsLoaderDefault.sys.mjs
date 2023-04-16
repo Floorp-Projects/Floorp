@@ -7,6 +7,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ClientEnvironment: "resource://normandy/lib/ClientEnvironment.sys.mjs",
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.sys.mjs",
   ResetProfile: "resource://gre/modules/ResetProfile.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
@@ -18,7 +19,6 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
 });
 
 if (AppConstants.MOZ_UPDATER) {

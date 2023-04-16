@@ -7,18 +7,15 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ClientEnvironment: "resource://normandy/lib/ClientEnvironment.sys.mjs",
   ExperimentStore: "resource://nimbus/lib/ExperimentStore.sys.mjs",
   FirstStartup: "resource://gre/modules/FirstStartup.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
+  NormandyUtils: "resource://normandy/lib/NormandyUtils.sys.mjs",
+  PrefUtils: "resource://normandy/lib/PrefUtils.sys.mjs",
   Sampling: "resource://gre/modules/components-utils/Sampling.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
-  NormandyUtils: "resource://normandy/lib/NormandyUtils.jsm",
-  TelemetryEvents: "resource://normandy/lib/TelemetryEvents.jsm",
-  PrefUtils: "resource://normandy/lib/PrefUtils.jsm",
+  TelemetryEvents: "resource://normandy/lib/TelemetryEvents.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {

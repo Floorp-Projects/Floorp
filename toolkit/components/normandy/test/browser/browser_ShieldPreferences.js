@@ -1,16 +1,16 @@
 "use strict";
 
-const { PreferenceExperiments } = ChromeUtils.import(
-  "resource://normandy/lib/PreferenceExperiments.jsm"
+const { PreferenceExperiments } = ChromeUtils.importESModule(
+  "resource://normandy/lib/PreferenceExperiments.sys.mjs"
 );
-const { ShieldPreferences } = ChromeUtils.import(
-  "resource://normandy/lib/ShieldPreferences.jsm"
+const { ShieldPreferences } = ChromeUtils.importESModule(
+  "resource://normandy/lib/ShieldPreferences.sys.mjs"
 );
 
 const OPT_OUT_STUDIES_ENABLED_PREF = "app.shield.optoutstudies.enabled";
 
-const { NormandyTestUtils } = ChromeUtils.import(
-  "resource://testing-common/NormandyTestUtils.jsm"
+const { NormandyTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/NormandyTestUtils.sys.mjs"
 );
 const {
   addonStudyFactory,

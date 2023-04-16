@@ -1,14 +1,16 @@
 "use strict";
 
-const { BaseAction } = ChromeUtils.import(
-  "resource://normandy/actions/BaseAction.jsm"
+const { BaseAction } = ChromeUtils.importESModule(
+  "resource://normandy/actions/BaseAction.sys.mjs"
 );
-const { ActionsManager } = ChromeUtils.import(
-  "resource://normandy/lib/ActionsManager.jsm"
+const { ActionsManager } = ChromeUtils.importESModule(
+  "resource://normandy/lib/ActionsManager.sys.mjs"
 );
-const { Uptake } = ChromeUtils.import("resource://normandy/lib/Uptake.jsm");
-const { ActionSchemas } = ChromeUtils.import(
-  "resource://normandy/actions/schemas/index.js"
+const { Uptake } = ChromeUtils.importESModule(
+  "resource://normandy/lib/Uptake.sys.mjs"
+);
+const { ActionSchemas } = ChromeUtils.importESModule(
+  "resource://normandy/actions/schemas/index.sys.mjs"
 );
 
 // Test life cycle methods for actions

@@ -2,31 +2,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
-const { LogManager } = ChromeUtils.import(
-  "resource://normandy/lib/LogManager.jsm"
-);
+import { LogManager } from "resource://normandy/lib/LogManager.sys.mjs";
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AddonRollbackAction: "resource://normandy/actions/AddonRollbackAction.jsm",
-  AddonRolloutAction: "resource://normandy/actions/AddonRolloutAction.jsm",
-  BaseAction: "resource://normandy/actions/BaseAction.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  AddonRollbackAction:
+    "resource://normandy/actions/AddonRollbackAction.sys.mjs",
+  AddonRolloutAction: "resource://normandy/actions/AddonRolloutAction.sys.mjs",
+  BaseAction: "resource://normandy/actions/BaseAction.sys.mjs",
   BranchedAddonStudyAction:
-    "resource://normandy/actions/BranchedAddonStudyAction.jsm",
-  ConsoleLogAction: "resource://normandy/actions/ConsoleLogAction.jsm",
+    "resource://normandy/actions/BranchedAddonStudyAction.sys.mjs",
+  ConsoleLogAction: "resource://normandy/actions/ConsoleLogAction.sys.mjs",
   MessagingExperimentAction:
-    "resource://normandy/actions/MessagingExperimentAction.jsm",
+    "resource://normandy/actions/MessagingExperimentAction.sys.mjs",
   PreferenceExperimentAction:
-    "resource://normandy/actions/PreferenceExperimentAction.jsm",
+    "resource://normandy/actions/PreferenceExperimentAction.sys.mjs",
   PreferenceRollbackAction:
-    "resource://normandy/actions/PreferenceRollbackAction.jsm",
+    "resource://normandy/actions/PreferenceRollbackAction.sys.mjs",
   PreferenceRolloutAction:
-    "resource://normandy/actions/PreferenceRolloutAction.jsm",
-  ShowHeartbeatAction: "resource://normandy/actions/ShowHeartbeatAction.jsm",
-  Uptake: "resource://normandy/lib/Uptake.jsm",
+    "resource://normandy/actions/PreferenceRolloutAction.sys.mjs",
+  ShowHeartbeatAction:
+    "resource://normandy/actions/ShowHeartbeatAction.sys.mjs",
+  Uptake: "resource://normandy/lib/Uptake.sys.mjs",
 });
 
 const log = LogManager.getLogger("recipe-runner");

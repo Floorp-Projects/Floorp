@@ -3,32 +3,27 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { Log } from "resource://gre/modules/Log.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
 import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AddonRollouts: "resource://normandy/lib/AddonRollouts.sys.mjs",
+  AddonStudies: "resource://normandy/lib/AddonStudies.sys.mjs",
+  CleanupManager: "resource://normandy/lib/CleanupManager.sys.mjs",
   ExperimentManager: "resource://nimbus/lib/ExperimentManager.sys.mjs",
-
+  LogManager: "resource://normandy/lib/LogManager.sys.mjs",
+  NormandyMigrations: "resource://normandy/NormandyMigrations.sys.mjs",
+  PreferenceExperiments:
+    "resource://normandy/lib/PreferenceExperiments.sys.mjs",
+  PreferenceRollouts: "resource://normandy/lib/PreferenceRollouts.sys.mjs",
+  RecipeRunner: "resource://normandy/lib/RecipeRunner.sys.mjs",
   RemoteSettingsExperimentLoader:
     "resource://nimbus/lib/RemoteSettingsExperimentLoader.sys.mjs",
-
+  ShieldPreferences: "resource://normandy/lib/ShieldPreferences.sys.mjs",
+  TelemetryEvents: "resource://normandy/lib/TelemetryEvents.sys.mjs",
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AddonRollouts: "resource://normandy/lib/AddonRollouts.jsm",
-  AddonStudies: "resource://normandy/lib/AddonStudies.jsm",
-  CleanupManager: "resource://normandy/lib/CleanupManager.jsm",
-  LogManager: "resource://normandy/lib/LogManager.jsm",
-  NormandyMigrations: "resource://normandy/NormandyMigrations.jsm",
-  PreferenceExperiments: "resource://normandy/lib/PreferenceExperiments.jsm",
-  PreferenceRollouts: "resource://normandy/lib/PreferenceRollouts.jsm",
-  RecipeRunner: "resource://normandy/lib/RecipeRunner.jsm",
-  ShieldPreferences: "resource://normandy/lib/ShieldPreferences.jsm",
-  TelemetryEvents: "resource://normandy/lib/TelemetryEvents.jsm",
 });
 
 const UI_AVAILABLE_NOTIFICATION = "sessionstore-windows-restored";

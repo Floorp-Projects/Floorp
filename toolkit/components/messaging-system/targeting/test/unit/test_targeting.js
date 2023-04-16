@@ -1,5 +1,5 @@
-const { ClientEnvironment } = ChromeUtils.import(
-  "resource://normandy/lib/ClientEnvironment.jsm"
+const { ClientEnvironment } = ChromeUtils.importESModule(
+  "resource://normandy/lib/ClientEnvironment.sys.mjs"
 );
 const { TargetingContext } = ChromeUtils.importESModule(
   "resource://messaging-system/targeting/Targeting.sys.mjs"

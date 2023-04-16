@@ -11,14 +11,11 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const frameGlobal = {};
-ChromeUtils.defineModuleGetter(
-  frameGlobal,
-  "AboutPages",
-  "resource://normandy-content/AboutPages.jsm"
-);
-
 const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  AboutPages: "resource://normandy-content/AboutPages.sys.mjs",
+});
 
 XPCOMUtils.defineLazyGetter(lazy, "gBrandBundle", function() {
   return Services.strings.createBundle(
@@ -111,7 +108,7 @@ export class ShieldFrameChild extends JSWindowActorChild {
       case "GetRemoteValue:ShieldLearnMoreHref":
         this.triggerPageCallback(
           "ReceiveRemoteValue:ShieldLearnMoreHref",
-          frameGlobal.AboutPages.aboutStudies.getShieldLearnMoreHref()
+          lazy.AboutPages.aboutStudies.getShieldLearnMoreHref()
         );
         break;
       case "GetRemoteValue:ShieldTranslations":

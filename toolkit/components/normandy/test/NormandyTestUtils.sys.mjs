@@ -3,16 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { Preferences } from "resource://gre/modules/Preferences.sys.mjs";
-
-const { AddonStudies } = ChromeUtils.import(
-  "resource://normandy/lib/AddonStudies.jsm"
-);
-const { NormandyUtils } = ChromeUtils.import(
-  "resource://normandy/lib/NormandyUtils.jsm"
-);
-const { RecipeRunner } = ChromeUtils.import(
-  "resource://normandy/lib/RecipeRunner.jsm"
-);
+import { AddonStudies } from "resource://normandy/lib/AddonStudies.sys.mjs";
+import { NormandyUtils } from "resource://normandy/lib/NormandyUtils.sys.mjs";
+import { RecipeRunner } from "resource://normandy/lib/RecipeRunner.sys.mjs";
 import { sinon } from "resource://testing-common/Sinon.sys.mjs";
 
 const FIXTURE_ADDON_ID = "normandydriver-a@example.com";

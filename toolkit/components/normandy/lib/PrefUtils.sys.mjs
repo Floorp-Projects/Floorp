@@ -5,11 +5,9 @@
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "LogManager",
-  "resource://normandy/lib/LogManager.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  LogManager: "resource://normandy/lib/LogManager.sys.mjs",
+});
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   return lazy.LogManager.getLogger("preference-experiments");

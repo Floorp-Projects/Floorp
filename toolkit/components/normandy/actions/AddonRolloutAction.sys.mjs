@@ -2,25 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
-const { BaseAction } = ChromeUtils.import(
-  "resource://normandy/actions/BaseAction.jsm"
-);
+import { BaseAction } from "resource://normandy/actions/BaseAction.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ActionSchemas: "resource://normandy/actions/schemas/index.sys.mjs",
+  AddonRollouts: "resource://normandy/lib/AddonRollouts.sys.mjs",
+  NormandyAddonManager: "resource://normandy/lib/NormandyAddonManager.sys.mjs",
+  NormandyApi: "resource://normandy/lib/NormandyApi.sys.mjs",
+  NormandyUtils: "resource://normandy/lib/NormandyUtils.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ActionSchemas: "resource://normandy/actions/schemas/index.js",
-  AddonRollouts: "resource://normandy/lib/AddonRollouts.jsm",
-  NormandyAddonManager: "resource://normandy/lib/NormandyAddonManager.jsm",
-  NormandyApi: "resource://normandy/lib/NormandyApi.jsm",
-  NormandyUtils: "resource://normandy/lib/NormandyUtils.jsm",
-  TelemetryEvents: "resource://normandy/lib/TelemetryEvents.jsm",
+  TelemetryEvents: "resource://normandy/lib/TelemetryEvents.sys.mjs",
 });
 
 class AddonRolloutError extends Error {

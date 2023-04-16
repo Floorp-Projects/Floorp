@@ -2,16 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
+ChromeUtils.defineESModuleGetters(lazy, {
   BranchedAddonStudyAction:
-    "resource://normandy/actions/BranchedAddonStudyAction.jsm",
-  AddonStudies: "resource://normandy/lib/AddonStudies.jsm",
-  CleanupManager: "resource://normandy/lib/CleanupManager.jsm",
-  PreferenceExperiments: "resource://normandy/lib/PreferenceExperiments.jsm",
+    "resource://normandy/actions/BranchedAddonStudyAction.sys.mjs",
+  AddonStudies: "resource://normandy/lib/AddonStudies.sys.mjs",
+  CleanupManager: "resource://normandy/lib/CleanupManager.sys.mjs",
+  PreferenceExperiments:
+    "resource://normandy/lib/PreferenceExperiments.sys.mjs",
 });
 
 const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed"; // from modules/libpref/nsIPrefBranch.idl

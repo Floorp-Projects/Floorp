@@ -2,33 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { BaseStudyAction } = ChromeUtils.import(
-  "resource://normandy/actions/BaseStudyAction.jsm"
-);
+import { BaseStudyAction } from "resource://normandy/actions/BaseStudyAction.sys.mjs";
+
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
+  ActionSchemas: "resource://normandy/actions/schemas/index.sys.mjs",
+  BaseAction: "resource://normandy/actions/BaseAction.sys.mjs",
+  ClientEnvironment: "resource://normandy/lib/ClientEnvironment.sys.mjs",
+  PreferenceExperiments:
+    "resource://normandy/lib/PreferenceExperiments.sys.mjs",
   Sampling: "resource://gre/modules/components-utils/Sampling.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ActionSchemas",
-  "resource://normandy/actions/schemas/index.js"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "BaseAction",
-  "resource://normandy/actions/BaseAction.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ClientEnvironment",
-  "resource://normandy/lib/ClientEnvironment.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PreferenceExperiments",
-  "resource://normandy/lib/PreferenceExperiments.jsm"
-);
 
 /**
  * Enrolls a user in a preference experiment, in which we assign the

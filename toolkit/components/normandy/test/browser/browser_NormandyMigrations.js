@@ -1,5 +1,5 @@
-const { NormandyMigrations } = ChromeUtils.import(
-  "resource://normandy/NormandyMigrations.jsm"
+const { NormandyMigrations } = ChromeUtils.importESModule(
+  "resource://normandy/NormandyMigrations.sys.mjs"
 );
 
 decorate_task(withMockPreferences(), async function testApplyMigrations({

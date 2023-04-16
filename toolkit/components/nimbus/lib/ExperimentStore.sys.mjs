@@ -7,9 +7,13 @@ import { SharedDataMap } from "resource://nimbus/lib/SharedDataMap.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  PrefUtils: "resource://normandy/lib/PrefUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   FeatureManifest: "resource://nimbus/FeatureManifest.js",
-  PrefUtils: "resource://normandy/lib/PrefUtils.jsm",
 });
 
 const IS_MAIN_PROCESS =

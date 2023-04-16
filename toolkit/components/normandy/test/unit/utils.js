@@ -9,11 +9,11 @@ const { Preferences } = ChromeUtils.importESModule(
 );
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
-const { NormandyApi } = ChromeUtils.import(
-  "resource://normandy/lib/NormandyApi.jsm"
+const { NormandyApi } = ChromeUtils.importESModule(
+  "resource://normandy/lib/NormandyApi.sys.mjs"
 );
-const { NormandyTestUtils } = ChromeUtils.import(
-  "resource://testing-common/NormandyTestUtils.jsm"
+const { NormandyTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/NormandyTestUtils.sys.mjs"
 );
 
 const CryptoHash = Components.Constructor(

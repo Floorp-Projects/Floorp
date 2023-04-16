@@ -6,31 +6,14 @@ import { ClientEnvironmentBase } from "resource://gre/modules/components-utils/C
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "NormandyApi",
-  "resource://normandy/lib/NormandyApi.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PreferenceExperiments",
-  "resource://normandy/lib/PreferenceExperiments.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PreferenceRollouts",
-  "resource://normandy/lib/PreferenceRollouts.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonStudies",
-  "resource://normandy/lib/AddonStudies.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "AddonRollouts",
-  "resource://normandy/lib/AddonRollouts.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  AddonRollouts: "resource://normandy/lib/AddonRollouts.sys.mjs",
+  AddonStudies: "resource://normandy/lib/AddonStudies.sys.mjs",
+  NormandyApi: "resource://normandy/lib/NormandyApi.sys.mjs",
+  PreferenceExperiments:
+    "resource://normandy/lib/PreferenceExperiments.sys.mjs",
+  PreferenceRollouts: "resource://normandy/lib/PreferenceRollouts.sys.mjs",
+});
 
 // Cached API request for client attributes that are determined by the Normandy
 // service.

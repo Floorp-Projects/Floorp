@@ -1,12 +1,14 @@
 "use strict";
 
-const { BaseAction } = ChromeUtils.import(
-  "resource://normandy/actions/BaseAction.jsm"
+const { BaseAction } = ChromeUtils.importESModule(
+  "resource://normandy/actions/BaseAction.sys.mjs"
 );
-const { ConsoleLogAction } = ChromeUtils.import(
-  "resource://normandy/actions/ConsoleLogAction.jsm"
+const { ConsoleLogAction } = ChromeUtils.importESModule(
+  "resource://normandy/actions/ConsoleLogAction.sys.mjs"
 );
-const { Uptake } = ChromeUtils.import("resource://normandy/lib/Uptake.jsm");
+const { Uptake } = ChromeUtils.importESModule(
+  "resource://normandy/lib/Uptake.sys.mjs"
+);
 
 // Test that logging works
 add_task(async function logging_works() {

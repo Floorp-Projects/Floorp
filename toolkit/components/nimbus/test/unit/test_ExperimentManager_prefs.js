@@ -6,15 +6,15 @@ const {
   NimbusFeatures,
 } = ChromeUtils.importESModule("resource://nimbus/ExperimentAPI.sys.mjs");
 
-const { PrefUtils } = ChromeUtils.import(
-  "resource://normandy/lib/PrefUtils.jsm"
+const { PrefUtils } = ChromeUtils.importESModule(
+  "resource://normandy/lib/PrefUtils.sys.mjs"
 );
 
 const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
-const { TelemetryEvents } = ChromeUtils.import(
-  "resource://normandy/lib/TelemetryEvents.jsm"
+const { TelemetryEvents } = ChromeUtils.importESModule(
+  "resource://normandy/lib/TelemetryEvents.sys.mjs"
 );
 
 /**
