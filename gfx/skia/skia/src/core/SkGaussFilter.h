@@ -14,7 +14,7 @@
 // Produces values as defined in "Scale-Space for Discrete Signals" by Tony Lindeberg.
 class SkGaussFilter {
 public:
-    inline static constexpr int kGaussArrayMax = 6;
+    static constexpr int kGaussArrayMax = 6;
 
     explicit SkGaussFilter(double sigma);
 

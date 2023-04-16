@@ -7,22 +7,15 @@
 #ifndef SkPathOpsTSect_DEFINED
 #define SkPathOpsTSect_DEFINED
 
-#include "include/core/SkScalar.h"
-#include "include/core/SkTypes.h"
-#include "include/private/base/SkDebug.h"
-#include "include/private/base/SkTo.h"
-#include "src/base/SkArenaAlloc.h"
-#include "src/pathops/SkPathOpsPoint.h"
+#include "include/private/SkMacros.h"
+#include "src/core/SkArenaAlloc.h"
+#include "src/core/SkTSort.h"
+#include "src/pathops/SkIntersections.h"
+#include "src/pathops/SkPathOpsBounds.h"
 #include "src/pathops/SkPathOpsRect.h"
 #include "src/pathops/SkPathOpsTCurve.h"
-#include "src/pathops/SkPathOpsTypes.h"
 
-#include <cstdint>
-
-class SkIntersections;
-class SkTSect;
-class SkTSpan;
-struct SkDLine;
+#include <utility>
 
 #ifdef SK_DEBUG
 typedef uint8_t SkOpDebugBool;
@@ -83,6 +76,9 @@ private:
     SkOpDebugBool fMatch;
 };
 
+class SkTSect;
+class SkTSpan;
+
 struct SkTSpanBounded {
     SkTSpan* fBounded;
     SkTSpanBounded* fNext;
@@ -100,10 +96,10 @@ public:
 
     void debugInit(const SkTCurve& curve, SkArenaAlloc& heap) {
 #ifdef SK_DEBUG
-        SkTCurve* fake = curve.make(heap);
-        fake->debugInit();
-        init(*fake);
-        initBounds(*fake);
+        SkTCurve* dummy = curve.make(heap);
+        dummy->debugInit();
+        init(*dummy);
+        initBounds(*dummy);
         fCoinStart.init();
         fCoinEnd.init();
 #endif

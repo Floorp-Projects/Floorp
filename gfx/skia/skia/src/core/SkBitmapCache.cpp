@@ -9,7 +9,7 @@
 #include "include/core/SkPixelRef.h"
 #include "include/core/SkRect.h"
 #include "src/core/SkBitmapCache.h"
-#include "src/core/SkMipmap.h"
+#include "src/core/SkMipMap.h"
 #include "src/core/SkResourceCache.h"
 #include "src/image/SkImage_Base.h"
 
@@ -50,10 +50,10 @@ public:
 
     const SkBitmapCacheDesc fDesc;
 };
-}  // namespace
+}
 
 //////////////////////
-#include "include/private/chromium/SkDiscardableMemory.h"
+#include "src/core/SkDiscardableMemory.h"
 #include "src/core/SkNextID.h"
 
 void SkBitmapCache_setImmutableWithID(SkPixelRef* pr, uint32_t id) {
@@ -230,7 +230,7 @@ public:
 };
 
 struct MipMapRec : public SkResourceCache::Rec {
-    MipMapRec(const SkBitmapCacheDesc& desc, const SkMipmap* result)
+    MipMapRec(const SkBitmapCacheDesc& desc, const SkMipMap* result)
         : fKey(desc)
         , fMipMap(result)
     {
@@ -250,7 +250,7 @@ struct MipMapRec : public SkResourceCache::Rec {
 
     static bool Finder(const SkResourceCache::Rec& baseRec, void* contextMip) {
         const MipMapRec& rec = static_cast<const MipMapRec&>(baseRec);
-        const SkMipmap* mm = SkRef(rec.fMipMap);
+        const SkMipMap* mm = SkRef(rec.fMipMap);
         // the call to ref() above triggers a "lock" in the case of discardable memory,
         // which means we can now check for null (in case the lock failed).
         if (nullptr == mm->data()) {
@@ -258,20 +258,20 @@ struct MipMapRec : public SkResourceCache::Rec {
             return false;
         }
         // the call must call unref() when they are done.
-        *(const SkMipmap**)contextMip = mm;
+        *(const SkMipMap**)contextMip = mm;
         return true;
     }
 
 private:
     MipMapKey       fKey;
-    const SkMipmap* fMipMap;
+    const SkMipMap* fMipMap;
 };
-}  // namespace
+}
 
-const SkMipmap* SkMipmapCache::FindAndRef(const SkBitmapCacheDesc& desc,
+const SkMipMap* SkMipMapCache::FindAndRef(const SkBitmapCacheDesc& desc,
                                           SkResourceCache* localCache) {
     MipMapKey key(desc);
-    const SkMipmap* result;
+    const SkMipMap* result;
 
     if (!CHECK_LOCAL(localCache, find, Find, key, MipMapRec::Finder, &result)) {
         result = nullptr;
@@ -280,17 +280,17 @@ const SkMipmap* SkMipmapCache::FindAndRef(const SkBitmapCacheDesc& desc,
 }
 
 static SkResourceCache::DiscardableFactory get_fact(SkResourceCache* localCache) {
-    return localCache ? localCache->discardableFactory()
+    return localCache ? localCache->GetDiscardableFactory()
                       : SkResourceCache::GetDiscardableFactory();
 }
 
-const SkMipmap* SkMipmapCache::AddAndRef(const SkImage_Base* image, SkResourceCache* localCache) {
+const SkMipMap* SkMipMapCache::AddAndRef(const SkImage_Base* image, SkResourceCache* localCache) {
     SkBitmap src;
-    if (!image->getROPixels(nullptr, &src)) {
+    if (!image->getROPixels(&src)) {
         return nullptr;
     }
 
-    SkMipmap* mipmap = SkMipmap::Build(src, get_fact(localCache));
+    SkMipMap* mipmap = SkMipMap::Build(src, get_fact(localCache));
     if (mipmap) {
         MipMapRec* rec = new MipMapRec(SkBitmapCacheDesc::Make(image), mipmap);
         CHECK_LOCAL(localCache, add, Add, rec);

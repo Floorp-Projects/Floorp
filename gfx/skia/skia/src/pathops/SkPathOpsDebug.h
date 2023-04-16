@@ -7,12 +7,15 @@
 #ifndef SkPathOpsDebug_DEFINED
 #define SkPathOpsDebug_DEFINED
 
+#include "include/core/SkString.h"
 #include "include/core/SkTypes.h"
 #include "include/pathops/SkPathOps.h"
-#include "include/private/base/SkTDArray.h"
 
-#include <cstddef>
+#include <stdlib.h>
+#include <stdio.h>
 
+enum class SkOpPhase : char;
+struct SkDQuad;
 class SkOpAngle;
 class SkOpCoincidence;
 class SkOpContour;
@@ -21,15 +24,30 @@ class SkOpPtT;
 class SkOpSegment;
 class SkOpSpan;
 class SkOpSpanBase;
-class SkPath;
+struct SkDPoint;
+struct SkDLine;
+struct SkDQuad;
 struct SkDConic;
 struct SkDCubic;
-struct SkDLine;
-struct SkDPoint;
-struct SkDQuad;
+class SkTSect;
 
 // define this when running fuzz
-// #define SK_BUILD_FOR_FUZZER
+// #define IS_FUZZING_WITH_LIBFUZZER
+
+// dummy classes to fool msvs Visual Studio 2018 Immediate Window
+#define DummyClasses(a, b) \
+class SkDebugTCoincident##a##b; \
+class SkDebugTSect##a##b; \
+class SkDebugTSpan##a##b
+
+DummyClasses(Quad, Quad);
+DummyClasses(Conic, Quad);
+DummyClasses(Conic, Conic);
+DummyClasses(Cubic, Quad);
+DummyClasses(Cubic, Conic);
+DummyClasses(Cubic, Cubic);
+
+#undef DummyClasses
 
 #ifdef SK_RELEASE
 #define FORCE_RELEASE 1
@@ -47,10 +65,15 @@ struct SkDQuad;
 #else
     #define SK_RAND(seed) rand_r(&seed)
 #endif
+#ifdef SK_BUILD_FOR_WIN
+    #define SK_SNPRINTF _snprintf
+#else
+    #define SK_SNPRINTF snprintf
+#endif
 
 #define WIND_AS_STRING(x) char x##Str[12]; \
         if (!SkPathOpsDebug::ValidWind(x)) strcpy(x##Str, "?"); \
-        else snprintf(x##Str, sizeof(x##Str), "%d", x)
+        else SK_SNPRINTF(x##Str, sizeof(x##Str), "%d", x)
 
 #if FORCE_RELEASE
 
@@ -61,7 +84,7 @@ struct SkDQuad;
 #define DEBUG_ALIGNMENT 0
 #define DEBUG_ANGLE 0
 #define DEBUG_ASSEMBLE 0
-#define DEBUG_COINCIDENCE 0
+#define DEBUG_COINCIDENCE 0  // sanity checking
 #define DEBUG_COINCIDENCE_DUMP 0  // accumulate and dump which algorithms fired
 #define DEBUG_COINCIDENCE_ORDER 0  // for well behaved curves, check if pairs match up in t-order
 #define DEBUG_COINCIDENCE_VERBOSE 0  // usually whether the next function generates coincidence
@@ -74,6 +97,7 @@ struct SkDQuad;
 #define DEBUG_MARK_DONE 0
 #define DEBUG_PATH_CONSTRUCTION 0
 #define DEBUG_PERP 0
+#define DEBUG_SHOW_TEST_NAME 0
 #define DEBUG_SORT 0
 #define DEBUG_T_SECT 0
 #define DEBUG_T_SECT_DUMP 0
@@ -92,18 +116,19 @@ struct SkDQuad;
 #define DEBUG_ANGLE 1
 #define DEBUG_ASSEMBLE 1
 #define DEBUG_COINCIDENCE 1
-#define DEBUG_COINCIDENCE_DUMP 1
-#define DEBUG_COINCIDENCE_ORDER 1  // tight arc quads may generate out-of-order coincidence spans
+#define DEBUG_COINCIDENCE_DUMP 0
+#define DEBUG_COINCIDENCE_ORDER 0  // tight arc quads may generate out-of-order coincidence spans
 #define DEBUG_COINCIDENCE_VERBOSE 1
 #define DEBUG_CUBIC_BINARY_SEARCH 0
 #define DEBUG_CUBIC_SPLIT 1
-#define DEBUG_DUMP_VERIFY 1
+#define DEBUG_DUMP_VERIFY 0
 #define DEBUG_DUMP_SEGMENTS 1
 #define DEBUG_FLOW 1
 #define DEBUG_LIMIT_WIND_SUM 15
 #define DEBUG_MARK_DONE 1
 #define DEBUG_PATH_CONSTRUCTION 1
 #define DEBUG_PERP 1
+#define DEBUG_SHOW_TEST_NAME 1
 #define DEBUG_SORT 1
 #define DEBUG_T_SECT 0        // enabling may trigger validate asserts even though op does not fail
 #define DEBUG_T_SECT_DUMP 0  // Use 1 normally. Use 2 to number segments, 3 for script output
@@ -149,8 +174,6 @@ struct SkDQuad;
 #endif
 
 #if DEBUG_COIN
-enum class SkOpPhase : char;
-
     #define DEBUG_COIN_DECLARE_ONLY_PARAMS() \
             int lineNo, SkOpPhase phase, int iteration
     #define DEBUG_COIN_DECLARE_PARAMS() \
@@ -223,12 +246,23 @@ enum class SkOpPhase : char;
 #define DEBUG_TEST 0
 #endif
 
+#if DEBUG_SHOW_TEST_NAME
+#include "src/core/SkTLS.h"
+#endif
+
 // Tests with extreme numbers may fail, but all other tests should never fail.
 #define FAIL_IF(cond) \
         do { bool fail = (cond); SkOPASSERT(!fail); if (fail) return false; } while (false)
 
 #define FAIL_WITH_NULL_IF(cond) \
         do { bool fail = (cond); SkOPASSERT(!fail); if (fail) return nullptr; } while (false)
+
+// Some functions serve two masters: one allows the function to fail, the other expects success
+// always. If abort is true, tests with normal numbers may not fail and assert if they do so.
+// If abort is false, both normal and extreme numbers may return false without asserting.
+#define RETURN_FALSE_IF(abort, cond) \
+        do { bool fail = (cond); SkOPASSERT(!(abort) || !fail); if (fail) return false; \
+        } while (false)
 
 class SkPathOpsDebug {
 public:
@@ -324,6 +358,14 @@ public:
     static bool ValidWind(int winding);
     static void WindingPrintf(int winding);
 
+#if DEBUG_SHOW_TEST_NAME
+    static void* CreateNameStr();
+    static void DeleteNameStr(void* v);
+#define DEBUG_FILENAME_STRING_LENGTH 64
+#define DEBUG_FILENAME_STRING (reinterpret_cast<char* >(SkTLS::Get(SkPathOpsDebug::CreateNameStr, \
+        SkPathOpsDebug::DeleteNameStr)))
+    static void BumpTestName(char* );
+#endif
     static void ShowActiveSpans(SkOpContourHead* contourList);
     static void ShowOnePath(const SkPath& path, const char* name, bool includeDeclaration);
     static void ShowPath(const SkPath& one, const SkPath& two, SkPathOp op, const char* name);

@@ -5,16 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "src/codec/SkMaskSwizzler.h"
-
-#include "include/core/SkAlphaType.h"
-#include "include/core/SkColor.h"
-#include "include/core/SkColorType.h"
-#include "include/core/SkImageInfo.h"
-#include "include/core/SkRect.h"
 #include "include/private/SkColorData.h"
 #include "src/codec/SkCodecPriv.h"
-#include "src/codec/SkMasks.h"
+#include "src/codec/SkMaskSwizzler.h"
 
 static void swizzle_mask16_to_rgba_opaque(
         void* dstRow, const uint8_t* srcRow, int width, SkMasks* masks,

@@ -4,20 +4,10 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "include/core/SkPath.h"
-#include "include/core/SkPathTypes.h"
-#include "include/core/SkTypes.h"
-#include "include/pathops/SkPathOps.h"
-#include "include/private/base/SkTDArray.h"
-#include "src/base/SkArenaAlloc.h"
 #include "src/pathops/SkAddIntersections.h"
 #include "src/pathops/SkOpCoincidence.h"
-#include "src/pathops/SkOpContour.h"
 #include "src/pathops/SkOpEdgeBuilder.h"
-#include "src/pathops/SkOpSegment.h"
-#include "src/pathops/SkOpSpan.h"
 #include "src/pathops/SkPathOpsCommon.h"
-#include "src/pathops/SkPathOpsTypes.h"
 #include "src/pathops/SkPathWriter.h"
 
 static bool bridgeWinding(SkOpContourHead* contourList, SkPathWriter* writer) {
@@ -150,8 +140,8 @@ static bool bridgeXor(SkOpContourHead* contourList, SkPathWriter* writer) {
 bool SimplifyDebug(const SkPath& path, SkPath* result
         SkDEBUGPARAMS(bool skipAssert) SkDEBUGPARAMS(const char* testName)) {
     // returns 1 for evenodd, -1 for winding, regardless of inverse-ness
-    SkPathFillType fillType = path.isInverseFillType() ? SkPathFillType::kInverseEvenOdd
-            : SkPathFillType::kEvenOdd;
+    SkPath::FillType fillType = path.isInverseFillType() ? SkPath::kInverseEvenOdd_FillType
+            : SkPath::kEvenOdd_FillType;
     if (path.isConvex()) {
         if (result != &path) {
             *result = path;
@@ -171,7 +161,7 @@ bool SimplifyDebug(const SkPath& path, SkPath* result
     const char* testName = "release";
 #endif
     if (SkPathOpsDebug::gDumpOp) {
-        DumpSimplify(path, testName);
+        SkPathOpsDebug::DumpSimplify(path, testName);
     }
 #endif
 #if DEBUG_SORT
@@ -225,10 +215,10 @@ bool Simplify(const SkPath& path, SkPath* result) {
 #if DEBUG_DUMP_VERIFY
     if (SkPathOpsDebug::gVerifyOp) {
         if (!SimplifyDebug(path, result  SkDEBUGPARAMS(false) SkDEBUGPARAMS(nullptr))) {
-            ReportSimplifyFail(path);
+            SkPathOpsDebug::ReportSimplifyFail(path);
             return false;
         }
-        VerifySimplify(path, *result);
+        SkPathOpsDebug::VerifySimplify(path, *result);
         return true;
     }
 #endif

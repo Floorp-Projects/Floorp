@@ -5,12 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkLocalMatrixImageFilter.h"
-
 #include "include/core/SkString.h"
+#include "src/core/SkLocalMatrixImageFilter.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkSpecialImage.h"
-#include "src/core/SkWriteBuffer.h"
 
 sk_sp<SkImageFilter> SkLocalMatrixImageFilter::Make(const SkMatrix& localM,
                                                     sk_sp<SkImageFilter> input) {
@@ -20,9 +18,7 @@ sk_sp<SkImageFilter> SkLocalMatrixImageFilter::Make(const SkMatrix& localM,
     if (localM.isIdentity()) {
         return input;
     }
-    MatrixCapability inputCapability = as_IFB(input)->getCTMCapability();
-    if ((inputCapability == MatrixCapability::kTranslate && !localM.isTranslate()) ||
-        (inputCapability == MatrixCapability::kScaleTranslate && !localM.isScaleTranslate())) {
+    if (!as_IFB(input)->canHandleComplexCTM() && !localM.isScaleTranslate()) {
         // Nothing we can do at this point
         return nullptr;
     }
@@ -49,25 +45,11 @@ void SkLocalMatrixImageFilter::flatten(SkWriteBuffer& buffer) const {
 
 sk_sp<SkSpecialImage> SkLocalMatrixImageFilter::onFilterImage(const Context& ctx,
                                                               SkIPoint* offset) const {
-    skif::Mapping newMapping = ctx.mapping();
-    newMapping.concatLocal(fLocalM);
-    Context localCtx = ctx.withNewMapping(newMapping);
+    Context localCtx = ctx.withNewMapping(ctx.mapping().concatLocal(fLocalM));
     return this->filterInput(0, localCtx, offset);
 }
 
 SkIRect SkLocalMatrixImageFilter::onFilterBounds(const SkIRect& src, const SkMatrix& ctm,
                                                  MapDirection dir, const SkIRect* inputRect) const {
     return this->getInput(0)->filterBounds(src, SkMatrix::Concat(ctm, fLocalM), dir, inputRect);
-}
-
-SkRect SkLocalMatrixImageFilter::computeFastBounds(const SkRect& bounds) const {
-    // In order to match the behavior of onFilterBounds, we map 'bounds' by the inverse of our
-    // local matrix, pass that to our child, and then map the result by our local matrix.
-    SkMatrix localInv;
-    if (!fLocalM.invert(&localInv)) {
-        return this->getInput(0)->computeFastBounds(bounds);
-    }
-
-    SkRect localBounds = localInv.mapRect(bounds);
-    return fLocalM.mapRect(this->getInput(0)->computeFastBounds(localBounds));
 }

@@ -7,21 +7,13 @@
 
 #include "src/utils/SkJSON.h"
 
-#include "include/core/SkData.h"
-#include "include/core/SkRefCnt.h"
 #include "include/core/SkStream.h"
 #include "include/core/SkString.h"
-#include "include/private/base/SkDebug.h"
-#include "include/private/base/SkMalloc.h"
-#include "include/private/base/SkTo.h"
+#include "include/private/SkMalloc.h"
 #include "include/utils/SkParse.h"
-#include "src/base/SkUTF.h"
+#include "src/utils/SkUTF.h"
 
 #include <cmath>
-#include <cstdint>
-#include <cstdlib>
-#include <limits>
-#include <new>
 #include <tuple>
 #include <vector>
 
@@ -36,22 +28,23 @@ static constexpr size_t kRecAlign = alignof(Value);
 
 void Value::init_tagged(Tag t) {
     memset(fData8, 0, sizeof(fData8));
-    fData8[0] = SkTo<uint8_t>(t);
+    fData8[Value::kTagOffset] = SkTo<uint8_t>(t);
     SkASSERT(this->getTag() == t);
 }
 
-// Pointer values store a type (in the lower kTagBits bits) and a pointer.
+// Pointer values store a type (in the upper kTagBits bits) and a pointer.
 void Value::init_tagged_pointer(Tag t, void* p) {
+    *this->cast<uintptr_t>() = reinterpret_cast<uintptr_t>(p);
+
     if (sizeof(Value) == sizeof(uintptr_t)) {
-        *this->cast<uintptr_t>() = reinterpret_cast<uintptr_t>(p);
-        // For 64-bit, we rely on the pointer lower bits being zero.
-        SkASSERT(!(fData8[0] & kTagMask));
-        fData8[0] |= SkTo<uint8_t>(t);
+        // For 64-bit, we rely on the pointer upper bits being unused/zero.
+        SkASSERT(!(fData8[kTagOffset] & kTagMask));
+        fData8[kTagOffset] |= SkTo<uint8_t>(t);
     } else {
-        // For 32-bit, we store the pointer in the upper word
+        // For 32-bit, we need to zero-initialize the upper 32 bits
         SkASSERT(sizeof(Value) == sizeof(uintptr_t) * 2);
-        this->init_tagged(t);
-        *this->cast<uintptr_t>() = reinterpret_cast<uintptr_t>(p);
+        this->cast<uintptr_t>()[kTagOffset >> 2] = 0;
+        fData8[kTagOffset] = SkTo<uint8_t>(t);
     }
 
     SkASSERT(this->getTag()    == t);
@@ -133,8 +126,11 @@ public:
             return;
         }
 
-        // initFastShortString is faster (doh), but requires access to 6 chars past src.
-        if (src && src + 6 <= eos) {
+        static_assert(static_cast<uint8_t>(Tag::kShortString) == 0, "please don't break this");
+        static_assert(sizeof(Value) == 8, "");
+
+        // TODO: LIKELY
+        if (src + 7 <= eos) {
             this->initFastShortString(src, size);
         } else {
             this->initShortString(src, size);
@@ -144,8 +140,7 @@ public:
     }
 
 private:
-    // first byte reserved for tagging, \0 terminator => 6 usable chars
-    inline static constexpr size_t kMaxInlineStringSize = sizeof(Value) - 2;
+    static constexpr size_t kMaxInlineStringSize = sizeof(Value) - 1;
 
     void initLongString(const char* src, size_t size, SkArenaAlloc& alloc) {
         SkASSERT(size > kMaxInlineStringSize);
@@ -167,23 +162,12 @@ private:
     void initFastShortString(const char* src, size_t size) {
         SkASSERT(size <= kMaxInlineStringSize);
 
-        uint64_t* s64 = this->cast<uint64_t>();
-
         // Load 8 chars and mask out the tag and \0 terminator.
-        // Note: we picked kShortString == 0 to avoid setting explicitly below.
-        static_assert(SkToU8(Tag::kShortString) == 0, "please don't break this");
-
-        // Since the first byte is occupied by the tag, we want the string chars [0..5] to land
-        // on bytes [1..6] => the fastest way is to read8 @(src - 1) (always safe, because the
-        // string requires a " prefix at the very least).
-        memcpy(s64, src - 1, 8);
+        uint64_t* s64 = this->cast<uint64_t>();
+        memcpy(s64, src, 8);
 
 #if defined(SK_CPU_LENDIAN)
-        // The mask for a max-length string (6), with a leading tag and trailing \0 is
-        // 0x00ffffffffffff00.  Accounting for the final left-shift, this becomes
-        // 0x0000ffffffffffff.
-        *s64 &= (0x0000ffffffffffffULL >> ((kMaxInlineStringSize - size) * 8)) // trailing \0s
-                    << 8;                                                      // tag byte
+        *s64 &= 0x00ffffffffffffffULL >> ((kMaxInlineStringSize - size) * 8);
 #else
         static_assert(false, "Big-endian builds are not supported at this time.");
 #endif
@@ -290,7 +274,7 @@ static inline float pow10(int32_t exp) {
        1.e+025f, 1.e+026f, 1.e+027f, 1.e+028f, 1.e+029f, 1.e+030f, 1.e+031f
     };
 
-    static constexpr int32_t k_exp_offset = std::size(g_pow10_table) / 2;
+    static constexpr int32_t k_exp_offset = SK_ARRAY_COUNT(g_pow10_table) / 2;
 
     // We only support negative exponents for now.
     SkASSERT(exp <= 0);
@@ -307,7 +291,7 @@ public:
         fUnescapeBuffer.reserve(kUnescapeBufferReserve);
     }
 
-    Value parse(const char* p, size_t size) {
+    const Value parse(const char* p, size_t size) {
         if (!size) {
             return this->error(NullValue(), p, "invalid empty input");
         }
@@ -476,11 +460,11 @@ private:
     SkArenaAlloc&         fAlloc;
 
     // Pending values stack.
-    inline static constexpr size_t kValueStackReserve = 256;
+    static constexpr size_t kValueStackReserve = 256;
     std::vector<Value>    fValueStack;
 
     // String unescape buffer.
-    inline static constexpr size_t kUnescapeBufferReserve = 512;
+    static constexpr size_t kUnescapeBufferReserve = 512;
     std::vector<char>     fUnescapeBuffer;
 
     // Tracks the current object/array scope, as an index into fStack:
@@ -882,9 +866,9 @@ void Write(const Value& v, SkWStream* stream) {
         const auto& array = v.as<ArrayValue>();
         stream->writeText("[");
         bool first_value = true;
-        for (const auto& entry : array) {
+        for (const auto& v : array) {
             if (!first_value) stream->writeText(",");
-            Write(entry, stream);
+            Write(v, stream);
             first_value = false;
         }
         stream->writeText("]");

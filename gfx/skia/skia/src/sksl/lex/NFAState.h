@@ -75,11 +75,10 @@ struct NFAState {
                 return value != fInverse;
             }
             default:
-                SkUNREACHABLE;
+                ABORT("unreachable");
         }
     }
 
-#ifdef SK_DEBUG
     std::string description() const {
         switch (fKind) {
             case kAccept_Kind:
@@ -132,10 +131,9 @@ struct NFAState {
                 return result;
             }
             default:
-                SkUNREACHABLE;
+                ABORT("unreachable");
         }
     }
-#endif
 
     Kind fKind;
 

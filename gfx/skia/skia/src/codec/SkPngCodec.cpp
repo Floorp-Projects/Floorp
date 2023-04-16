@@ -5,45 +5,31 @@
  * found in the LICENSE file.
  */
 
-#include "src/codec/SkPngCodec.h"
-
-#include "include/codec/SkPngChunkReader.h"
-#include "include/core/SkAlphaType.h"
-#include "include/core/SkColor.h"
-#include "include/core/SkColorType.h"
-#include "include/core/SkData.h"
-#include "include/core/SkImageInfo.h"
-#include "include/core/SkRect.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkColorSpace.h"
+#include "include/core/SkMath.h"
+#include "include/core/SkPoint3.h"
 #include "include/core/SkSize.h"
 #include "include/core/SkStream.h"
-#include "include/core/SkTypes.h"
-#include "include/private/SkEncodedInfo.h"
-#include "include/private/base/SkNoncopyable.h"
-#include "include/private/base/SkTemplates.h"
-#include "modules/skcms/skcms.h"
+#include "include/private/SkColorData.h"
+#include "include/private/SkMacros.h"
+#include "include/private/SkTemplates.h"
 #include "src/codec/SkCodecPriv.h"
 #include "src/codec/SkColorTable.h"
+#include "src/codec/SkPngCodec.h"
 #include "src/codec/SkPngPriv.h"
 #include "src/codec/SkSwizzler.h"
 #include "src/core/SkOpts.h"
+#include "src/core/SkUtils.h"
 
-#include <csetjmp>
+#include "png.h"
 #include <algorithm>
-#include <cstring>
-#include <utility>
-
-#include <png.h>
-#include <pngconf.h>
-
-using namespace skia_private;
-
-class SkSampler;
 
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
     #include "include/android/SkAndroidFrameworkUtils.h"
 #endif
 
-// This warning triggers false positives way too often in here.
+// This warning triggers false postives way too often in here.
 #if defined(__GNUC__) && !defined(__clang__)
     #pragma GCC diagnostic ignored "-Wclobbered"
 #endif
@@ -141,6 +127,7 @@ private:
         fInfo_ptr = nullptr;
     }
 };
+#define AutoCleanPng(...) SK_REQUIRE_LOCAL_VAR(AutoCleanPng)
 
 static inline bool is_chunk(const png_byte* chunk, const char* tag) {
     return memcmp(chunk + 4, tag, 4) == 0;
@@ -327,7 +314,7 @@ bool SkPngCodec::createColorTable(const SkImageInfo& dstInfo) {
     const int maxColors = 1 << fBitDepth;
     if (numColors < maxColors) {
         SkPMColor lastColor = numColors > 0 ? colorTable[numColors - 1] : SK_ColorBLACK;
-        SkOpts::memset32(colorTable + numColors, lastColor, maxColors - numColors);
+        sk_memset32(colorTable + numColors, lastColor, maxColors - numColors);
     }
 
     fColorTable.reset(new SkColorTable(colorTable, maxColors));
@@ -338,7 +325,7 @@ bool SkPngCodec::createColorTable(const SkImageInfo& dstInfo) {
 // Creation
 ///////////////////////////////////////////////////////////////////////////////
 
-bool SkPngCodec::IsPng(const void* buf, size_t bytesRead) {
+bool SkPngCodec::IsPng(const char* buf, size_t bytesRead) {
     return !png_sig_cmp((png_bytep) buf, (png_size_t)0, bytesRead);
 }
 
@@ -533,7 +520,7 @@ private:
     int                         fLastRow;
     int                         fRowsNeeded;
 
-    using INHERITED = SkPngCodec;
+    typedef SkPngCodec INHERITED;
 
     static SkPngNormalDecoder* GetDecoder(png_structp png_ptr) {
         return static_cast<SkPngNormalDecoder*>(png_get_progressive_ptr(png_ptr));
@@ -647,9 +634,9 @@ private:
     int                     fLinesDecoded;
     bool                    fInterlacedComplete;
     size_t                  fPng_rowbytes;
-    AutoTMalloc<png_byte> fInterlaceBuffer;
+    SkAutoTMalloc<png_byte> fInterlaceBuffer;
 
-    using INHERITED = SkPngCodec;
+    typedef SkPngCodec INHERITED;
 
     // FIXME: Currently sharing interlaced callback for all rows and subset. It's not
     // as expensive as the subset version of non-interlaced, but it still does extra
@@ -947,39 +934,22 @@ void AutoCleanPng::infoCallback(size_t idatLength) {
             }
         }
 
-        switch (encodedColorType) {
-            case PNG_COLOR_TYPE_GRAY_ALPHA:{
-                png_color_8p sigBits;
-                if (png_get_sBIT(fPng_ptr, fInfo_ptr, &sigBits)) {
-                    if (8 == sigBits->alpha && kGraySigBit_GrayAlphaIsJustAlpha == sigBits->gray) {
-                        color = SkEncodedInfo::kXAlpha_Color;
-                    }
+        if (encodedColorType == PNG_COLOR_TYPE_GRAY_ALPHA) {
+            png_color_8p sigBits;
+            if (png_get_sBIT(fPng_ptr, fInfo_ptr, &sigBits)) {
+                if (8 == sigBits->alpha && kGraySigBit_GrayAlphaIsJustAlpha == sigBits->gray) {
+                    color = SkEncodedInfo::kXAlpha_Color;
                 }
-                break;
             }
-            case PNG_COLOR_TYPE_RGB:{
-                png_color_8p sigBits;
-                if (png_get_sBIT(fPng_ptr, fInfo_ptr, &sigBits)) {
-                    if (5 == sigBits->red && 6 == sigBits->green && 5 == sigBits->blue) {
-                        // Recommend a decode to 565 if the sBIT indicates 565.
-                        color = SkEncodedInfo::k565_Color;
-                    }
-                }
-                break;
-            }
-        }
-
-#ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
-        if (encodedColorType != PNG_COLOR_TYPE_GRAY_ALPHA
-            && SkEncodedInfo::kOpaque_Alpha == alpha) {
+        } else if (SkEncodedInfo::kOpaque_Alpha == alpha) {
             png_color_8p sigBits;
             if (png_get_sBIT(fPng_ptr, fInfo_ptr, &sigBits)) {
                 if (5 == sigBits->red && 6 == sigBits->green && 5 == sigBits->blue) {
-                    SkAndroidFrameworkUtils::SafetyNetLog("190188264");
+                    // Recommend a decode to 565 if the sBIT indicates 565.
+                    color = SkEncodedInfo::k565_Color;
                 }
             }
         }
-#endif // SK_BUILD_FOR_ANDROID_FRAMEWORK
 
         SkEncodedInfo encodedInfo = SkEncodedInfo::Make(origWidth, origHeight, color, alpha,
                                                         bitDepth, std::move(profile));
@@ -1048,7 +1018,8 @@ SkCodec::Result SkPngCodec::initializeXforms(const SkImageInfo& dstInfo, const O
             if (this->getEncodedInfo().bitsPerComponent() != 16) {
                 break;
             }
-            [[fallthrough]];
+
+            // Fall through
         case SkEncodedInfo::kRGBA_Color:
         case SkEncodedInfo::kGray_Color:
             skipFormatConversion = this->colorXform();

@@ -31,8 +31,8 @@
  */
 class NFAtoDFA {
 public:
-    inline static constexpr char START_CHAR = 9;
-    inline static constexpr char END_CHAR = 126;
+    static constexpr char START_CHAR = 9;
+    static constexpr char END_CHAR = 126;
 
     NFAtoDFA(NFA* nfa)
     : fNFA(*nfa) {}
@@ -80,8 +80,8 @@ private:
                 this->add(next, states);
             }
         } else {
-            for (int entry : *states) {
-                if (nfaState == entry) {
+            for (int state : *states) {
+                if (nfaState == state) {
                     return;
                 }
             }

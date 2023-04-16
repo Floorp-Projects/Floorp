@@ -13,8 +13,7 @@
 #ifdef SK_GPU_WORKAROUNDS_HEADER
 #include SK_GPU_WORKAROUNDS_HEADER
 #else
-// To regenerate this file, set gn arg "skia_generate_workarounds = true"
-// or invoke `bazel run //tools:generate_workarounds`
+// To regenerate this file, set gn arg "skia_generate_workarounds = true".
 // This is not rebuilt by default to avoid embedders having to have extra
 // build steps.
 #include "include/gpu/GrDriverBugWorkaroundsAutogen.h"
@@ -35,7 +34,6 @@ enum GrDriverBugWorkaroundType {
 class SK_API GrDriverBugWorkarounds {
  public:
   GrDriverBugWorkarounds();
-  GrDriverBugWorkarounds(const GrDriverBugWorkarounds&) = default;
   explicit GrDriverBugWorkarounds(const std::vector<int32_t>& workarounds);
 
   GrDriverBugWorkarounds& operator=(const GrDriverBugWorkarounds&) = default;

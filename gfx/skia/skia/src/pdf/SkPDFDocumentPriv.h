@@ -10,8 +10,8 @@
 #include "include/core/SkCanvas.h"
 #include "include/core/SkStream.h"
 #include "include/docs/SkPDFDocument.h"
-#include "include/private/base/SkMutex.h"
-#include "src/core/SkTHash.h"
+#include "include/private/SkMutex.h"
+#include "include/private/SkTHash.h"
 #include "src/pdf/SkPDFMetadata.h"
 #include "src/pdf/SkPDFTag.h"
 
@@ -31,7 +31,7 @@ struct SkPDFStrokeGraphicState;
 namespace SkPDFGradientShader {
 struct Key;
 struct KeyHash;
-}  // namespace SkPDFGradientShader
+}
 
 const char* SkPDFGetNodeIdKey();
 
@@ -53,27 +53,6 @@ struct SkPDFNamedDestination {
     SkPoint fPoint;
     SkPDFIndirectReference fPage;
 };
-
-
-struct SkPDFLink {
-    enum class Type {
-        kNone,
-        kUrl,
-        kNamedDestination,
-    };
-
-    SkPDFLink(Type type, SkData* data, const SkRect& rect, int nodeId)
-        : fType(type)
-        , fData(sk_ref_sp(data))
-        , fRect(rect)
-        , fNodeId(nodeId) {}
-    const Type fType;
-    // The url or named destination, depending on |fType|.
-    const sk_sp<SkData> fData;
-    const SkRect fRect;
-    const int fNodeId;
-};
-
 
 /** Concrete implementation of SkDocument that creates PDF files. This
     class does not produced linearized or optimized PDFs; instead it
@@ -116,21 +95,10 @@ public:
     SkPDFIndirectReference currentPage() const {
         return SkASSERT(!fPageRefs.empty()), fPageRefs.back();
     }
-    // Used to allow marked content to refer to its corresponding structure
-    // tree node, via a page entry in the parent tree. Returns -1 if no
-    // mark ID.
-    int createMarkIdForNodeId(int nodeId);
-    // Used to allow annotations to refer to their corresponding structure
-    // tree node, via the struct parent tree. Returns -1 if no struct parent
-    // key.
-    int createStructParentKeyForNodeId(int nodeId);
-
-    std::unique_ptr<SkPDFArray> getAnnotations();
+    // Returns -1 if no mark ID.
+    int getMarkIdForNodeId(int nodeId);
 
     SkPDFIndirectReference reserveRef() { return SkPDFIndirectReference{fNextObjectNumber++}; }
-
-    // Returns a tag to prepend to a PostScript name of a subset font. Includes the '+'.
-    SkString nextFontSubsetTag();
 
     SkExecutor* executor() const { return fExecutor; }
     void incrementJobCount();
@@ -155,7 +123,9 @@ public:
     SkTHashMap<SkPDFFillGraphicState, SkPDFIndirectReference> fFillGSMap;
     SkPDFIndirectReference fInvertFunction;
     SkPDFIndirectReference fNoSmaskGraphicState;
-    std::vector<std::unique_ptr<SkPDFLink>> fCurrentPageLinks;
+
+    std::vector<std::pair<sk_sp<SkData>, SkRect>> fCurrentPageLinkToURLs;
+    std::vector<std::pair<sk_sp<SkData>, SkRect>> fCurrentPageLinkToDestinations;
     std::vector<SkPDFNamedDestination> fNamedDestinations;
 
 private:
@@ -167,7 +137,6 @@ private:
     sk_sp<SkPDFDevice> fPageDevice;
     std::atomic<int> fNextObjectNumber = {1};
     std::atomic<int> fJobCount = {0};
-    uint32_t fNextFontSubsetTag = {0};
     SkUUID fUUID;
     SkPDFIndirectReference fInfoDict;
     SkPDFIndirectReference fXMP;

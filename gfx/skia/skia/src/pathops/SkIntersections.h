@@ -7,24 +7,11 @@
 #ifndef SkIntersections_DEFINE
 #define SkIntersections_DEFINE
 
-#include "include/core/SkPoint.h"
-#include "include/core/SkScalar.h"
-#include "include/core/SkTypes.h"
-#include "include/private/base/SkDebug.h"
-#include "include/private/base/SkMalloc.h"
 #include "src/pathops/SkPathOpsConic.h"
 #include "src/pathops/SkPathOpsCubic.h"
-#include "src/pathops/SkPathOpsDebug.h"
 #include "src/pathops/SkPathOpsLine.h"
 #include "src/pathops/SkPathOpsPoint.h"
 #include "src/pathops/SkPathOpsQuad.h"
-#include "src/pathops/SkPathOpsTCurve.h"
-#include "src/pathops/SkPathOpsTypes.h"
-
-#include <array>
-#include <cstdint>
-
-struct SkDRect;
 
 class SkIntersections {
 public:
@@ -213,7 +200,7 @@ public:
     }
 
     void setMax(int max) {
-        SkASSERT(max <= (int) std::size(fPt));
+        SkASSERT(max <= (int) SK_ARRAY_COUNT(fPt));
         fMax = max;
     }
 

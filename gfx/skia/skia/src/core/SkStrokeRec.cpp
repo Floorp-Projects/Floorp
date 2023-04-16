@@ -6,11 +6,7 @@
  */
 
 #include "include/core/SkStrokeRec.h"
-
 #include "src/core/SkPaintDefaults.h"
-#include "src/core/SkStroke.h"
-
-#include <algorithm>
 
 // must be < 0, since ==0 means hairline, and >0 means normal stroke
 #define kStrokeRec_FillStyleWidth     (-SK_Scalar1)
@@ -98,6 +94,8 @@ void SkStrokeRec::setStrokeStyle(SkScalar width, bool strokeAndFill) {
     }
 }
 
+#include "src/core/SkStroke.h"
+
 #ifdef SK_DEBUG
     // enables tweaking these values at runtime from Viewer
     bool gDebugStrokerErrorSet = false;
@@ -162,10 +160,10 @@ SkScalar SkStrokeRec::GetInflationRadius(SkPaint::Join join, SkScalar miterLimit
     // since we're stroked, outset the rect by the radius (and join type, caps)
     SkScalar multiplier = SK_Scalar1;
     if (SkPaint::kMiter_Join == join) {
-        multiplier = std::max(multiplier, miterLimit);
+        multiplier = SkTMax(multiplier, miterLimit);
     }
     if (SkPaint::kSquare_Cap == cap) {
-        multiplier = std::max(multiplier, SK_ScalarSqrt2);
+        multiplier = SkTMax(multiplier, SK_ScalarSqrt2);
     }
     return strokeWidth/2 * multiplier;
 }

@@ -18,6 +18,7 @@
 #include <vector>
 
 class SkPDFDocument;
+class SkStrike;
 class SkString;
 
 /** \class SkPDFFont
@@ -29,6 +30,7 @@ class SkString;
 */
 class SkPDFFont {
 public:
+    SkPDFFont() {}
     ~SkPDFFont();
     SkPDFFont(SkPDFFont&&);
     SkPDFFont& operator=(SkPDFFont&&);
@@ -43,8 +45,7 @@ public:
      */
     SkAdvancedTypefaceMetrics::FontType getType() const { return fFontType; }
 
-    static SkAdvancedTypefaceMetrics::FontType FontType(const SkTypeface&,
-                                                        const SkAdvancedTypefaceMetrics&);
+    static SkAdvancedTypefaceMetrics::FontType FontType(const SkAdvancedTypefaceMetrics&);
     static void GetType1GlyphNames(const SkTypeface&, SkString*);
 
     static bool IsMultiByte(SkAdvancedTypefaceMetrics::FontType type) {
@@ -123,7 +124,7 @@ private:
     sk_sp<SkTypeface> fTypeface;
     SkPDFGlyphUse fGlyphUsage;
     SkPDFIndirectReference fIndirectReference;
-    SkAdvancedTypefaceMetrics::FontType fFontType;
+    SkAdvancedTypefaceMetrics::FontType fFontType = (SkAdvancedTypefaceMetrics::FontType)(-1);
 
     SkPDFFont(sk_sp<SkTypeface>,
               SkGlyphID firstGlyphID,
@@ -133,7 +134,6 @@ private:
     // The glyph IDs accessible with this font.  For Type1 (non CID) fonts,
     // this will be a subset if the font has more than 255 glyphs.
 
-    SkPDFFont() = delete;
     SkPDFFont(const SkPDFFont&) = delete;
     SkPDFFont& operator=(const SkPDFFont&) = delete;
 };

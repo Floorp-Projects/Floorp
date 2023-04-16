@@ -5,12 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkYUVPlanesCache.h"
-
-#include "include/core/SkYUVAPixmaps.h"
 #include "src/core/SkBitmapCache.h"
-#include "src/core/SkCachedData.h"
 #include "src/core/SkResourceCache.h"
+#include "src/core/SkYUVPlanesCache.h"
 
 #define CHECK_LOCAL(localCache, localName, globalName, ...) \
     ((localCache) ? localCache->localName(__VA_ARGS__) : SkResourceCache::globalName(__VA_ARGS__))
@@ -19,8 +16,8 @@ namespace {
 static unsigned gYUVPlanesKeyNamespaceLabel;
 
 struct YUVValue {
-    SkYUVAPixmaps fPixmaps;
-    SkCachedData* fData;
+    SkYUVPlanesCache::Info fInfo;
+    SkCachedData*          fData;
 };
 
 struct YUVPlanesKey : public SkResourceCache::Key {
@@ -35,11 +32,11 @@ struct YUVPlanesKey : public SkResourceCache::Key {
 };
 
 struct YUVPlanesRec : public SkResourceCache::Rec {
-    YUVPlanesRec(YUVPlanesKey key, SkCachedData* data, const SkYUVAPixmaps& pixmaps)
+    YUVPlanesRec(YUVPlanesKey key, SkCachedData* data, SkYUVPlanesCache::Info* info)
         : fKey(key)
     {
         fValue.fData = data;
-        fValue.fPixmaps = pixmaps;
+        fValue.fInfo = *info;
         fValue.fData->attachToCacheAndRef();
     }
     ~YUVPlanesRec() override {
@@ -67,14 +64,13 @@ struct YUVPlanesRec : public SkResourceCache::Rec {
             return false;
         }
         result->fData = tmpData;
-        result->fPixmaps = rec.fValue.fPixmaps;
+        result->fInfo = rec.fValue.fInfo;
         return true;
     }
 };
 } // namespace
 
-SkCachedData* SkYUVPlanesCache::FindAndRef(uint32_t genID,
-                                           SkYUVAPixmaps* pixmaps,
+SkCachedData* SkYUVPlanesCache::FindAndRef(uint32_t genID, Info* info,
                                            SkResourceCache* localCache) {
     YUVValue result;
     YUVPlanesKey key(genID);
@@ -82,12 +78,12 @@ SkCachedData* SkYUVPlanesCache::FindAndRef(uint32_t genID,
         return nullptr;
     }
 
-    *pixmaps = result.fPixmaps;
+    *info = result.fInfo;
     return result.fData;
 }
 
-void SkYUVPlanesCache::Add(uint32_t genID, SkCachedData* data, const SkYUVAPixmaps& pixmaps,
+void SkYUVPlanesCache::Add(uint32_t genID, SkCachedData* data, Info* info,
                            SkResourceCache* localCache) {
     YUVPlanesKey key(genID);
-    return CHECK_LOCAL(localCache, add, Add, new YUVPlanesRec(key, data, pixmaps));
+    return CHECK_LOCAL(localCache, add, Add, new YUVPlanesRec(key, data, info));
 }

@@ -1034,17 +1034,3 @@
    ...
    fun:_ZN7mozilla3dom7Element7SetAttrEiP6nsAtomS3_RK12nsTSubstringIDsEP12nsIPrincipalb
 }
-
-# Skia's SkSTArenaAlloc can sometimes confuse valgrind. April 15, 2023. See bug 1821512.
-# Upstream Chrome/Skia issue 14254, https://bugs.chromium.org/p/skia/issues/detail?id=14254
-{
-   Bug 1821512
-   Memcheck:Addr8
-   fun:_ZN23SkRasterPipelineBlitter6CreateE*
-   fun:_Z29SkCreateRasterPipelineBlitter*
-   fun:_ZZN9SkBlitter6ChooseE*
-   fun:_ZN9SkBlitter6ChooseE*
-   fun:choose
-   fun:_ZN19SkAutoBlitterChooseC2E*
-   ...
-}

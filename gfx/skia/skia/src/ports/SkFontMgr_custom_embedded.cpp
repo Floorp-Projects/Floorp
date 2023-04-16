@@ -6,15 +6,15 @@
  */
 
 #include "include/core/SkStream.h"
-#include "include/ports/SkFontMgr_data.h"
 #include "src/core/SkFontDescriptor.h"
+#include "src/core/SkMakeUnique.h"
 #include "src/ports/SkFontMgr_custom.h"
 
 struct SkEmbeddedResource { const uint8_t* data; size_t size; };
 struct SkEmbeddedResourceHeader { const SkEmbeddedResource* entries; int count; };
 
 static void load_font_from_data(const SkTypeface_FreeType::Scanner& scanner,
-                                std::unique_ptr<SkMemoryStream> stream, int index,
+                                const uint8_t* data, size_t size, int index,
                                 SkFontMgr_Custom::Families* families);
 
 class EmbeddedSystemFontLoader : public SkFontMgr_Custom::SystemFontLoader {
@@ -26,8 +26,7 @@ public:
     {
         for (int i = 0; i < fHeader->count; ++i) {
             const SkEmbeddedResource& fontEntry = fHeader->entries[i];
-            auto stream = std::make_unique<SkMemoryStream>(fontEntry.data, fontEntry.size, false);
-            load_font_from_data(scanner, std::move(stream), i, families);
+            load_font_from_data(scanner, fontEntry.data, fontEntry.size, i, families);
         }
 
         if (families->empty()) {
@@ -42,14 +41,13 @@ public:
 
 class DataFontLoader : public SkFontMgr_Custom::SystemFontLoader {
 public:
-    DataFontLoader(sk_sp<SkData>* datas, int n) : fDatas(datas), fNum(n) { }
+    DataFontLoader(const uint8_t** datas, const size_t* sizes, int n) : fDatas(datas), fSizes(sizes), fNum(n) { }
 
     void loadSystemFonts(const SkTypeface_FreeType::Scanner& scanner,
                          SkFontMgr_Custom::Families* families) const override
     {
         for (int i = 0; i < fNum; ++i) {
-            auto stream = std::make_unique<SkMemoryStream>(fDatas[i]);
-            load_font_from_data(scanner, std::move(stream), i, families);
+            load_font_from_data(scanner, fDatas[i], fSizes[i], i, families);
         }
 
         if (families->empty()) {
@@ -59,14 +57,15 @@ public:
         }
     }
 
-    const sk_sp<SkData>* fDatas;
+    const uint8_t** fDatas;
+    const size_t* fSizes;
     const int fNum;
 };
 
 static SkFontStyleSet_Custom* find_family(SkFontMgr_Custom::Families& families,
                                           const char familyName[])
 {
-   for (int i = 0; i < families.size(); ++i) {
+   for (int i = 0; i < families.count(); ++i) {
         if (families[i]->getFamilyName().equals(familyName)) {
             return families[i].get();
         }
@@ -75,9 +74,11 @@ static SkFontStyleSet_Custom* find_family(SkFontMgr_Custom::Families& families,
 }
 
 static void load_font_from_data(const SkTypeface_FreeType::Scanner& scanner,
-                                std::unique_ptr<SkMemoryStream> stream, int index,
+                                const uint8_t* data, size_t size, int index,
                                 SkFontMgr_Custom::Families* families)
 {
+    auto stream = skstd::make_unique<SkMemoryStream>(data, size, false);
+
     int numFaces;
     if (!scanner.recognizedFont(stream.get(), &numFaces)) {
         SkDebugf("---- failed to open <%d> as a font\n", index);
@@ -100,10 +101,10 @@ static void load_font_from_data(const SkTypeface_FreeType::Scanner& scanner,
             addTo = new SkFontStyleSet_Custom(realname);
             families->push_back().reset(addTo);
         }
-        auto data = std::make_unique<SkFontData>(stream->duplicate(), faceIndex, 0,
-                                                 nullptr, 0, nullptr, 0);
-        addTo->appendTypeface(sk_make_sp<SkTypeface_FreeTypeStream>(
-            std::move(data), realname, style, isFixedPitch));
+        auto data = skstd::make_unique<SkFontData>(std::move(stream), faceIndex, nullptr, 0);
+        addTo->appendTypeface(sk_make_sp<SkTypeface_Stream>(std::move(data),
+                                                            style, isFixedPitch,
+                                                            true, realname));
     }
 }
 
@@ -111,7 +112,11 @@ sk_sp<SkFontMgr> SkFontMgr_New_Custom_Embedded(const SkEmbeddedResourceHeader* h
     return sk_make_sp<SkFontMgr_Custom>(EmbeddedSystemFontLoader(header));
 }
 
-sk_sp<SkFontMgr> SkFontMgr_New_Custom_Data(SkSpan<sk_sp<SkData>> datas) {
-    SkASSERT(!datas.empty());
-    return sk_make_sp<SkFontMgr_Custom>(DataFontLoader(datas.data(), datas.size()));
+// SkFontMgr_New_Custom_Data expects to be called with the data for n font files. datas and sizes
+// are parallel arrays of bytes and byte lengths.
+sk_sp<SkFontMgr> SkFontMgr_New_Custom_Data(const uint8_t** datas, const size_t* sizes, int n) {
+    SkASSERT(datas != nullptr);
+    SkASSERT(sizes != nullptr);
+    SkASSERT(n > 0);
+    return sk_make_sp<SkFontMgr_Custom>(DataFontLoader(datas, sizes, n));
 }

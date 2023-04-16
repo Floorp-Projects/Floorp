@@ -59,7 +59,7 @@ struct SkPathOpsBounds : public SkRect {
                fRight >= pt.fX && fBottom >= pt.fY;
     }
 
-    using INHERITED = SkRect;
+    typedef SkRect INHERITED;
 };
 
 #endif

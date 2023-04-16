@@ -9,25 +9,12 @@
 #define SkJpegCodec_DEFINED
 
 #include "include/codec/SkCodec.h"
-#include "include/codec/SkEncodedImageFormat.h"
-#include "include/codec/SkEncodedOrigin.h"
-#include "include/core/SkRect.h"
-#include "include/core/SkSize.h"
-#include "include/core/SkTypes.h"
-#include "include/core/SkYUVAPixmaps.h"
-#include "include/private/SkEncodedInfo.h"
-#include "include/private/base/SkTemplates.h"
-
-#include <cstddef>
-#include <cstdint>
-#include <memory>
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkStream.h"
+#include "include/private/SkTemplates.h"
+#include "src/codec/SkSwizzler.h"
 
 class JpegDecoderMgr;
-class SkSampler;
-class SkStream;
-class SkSwizzler;
-struct SkGainmapInfo;
-struct SkImageInfo;
 
 /*
  *
@@ -36,8 +23,6 @@ struct SkImageInfo;
  */
 class SkJpegCodec : public SkCodec {
 public:
-    ~SkJpegCodec() override;
-
     static bool IsJpeg(const void*, size_t);
 
     /*
@@ -59,10 +44,10 @@ protected:
     Result onGetPixels(const SkImageInfo& dstInfo, void* dst, size_t dstRowBytes, const Options&,
             int*) override;
 
-    bool onQueryYUVAInfo(const SkYUVAPixmapInfo::SupportedDataTypes&,
-                         SkYUVAPixmapInfo*) const override;
+    bool onQueryYUV8(SkYUVASizeInfo* sizeInfo, SkYUVColorSpace* colorSpace) const override;
 
-    Result onGetYUVAPlanes(const SkYUVAPixmaps& yuvaPixmaps) override;
+    Result onGetYUV8Planes(const SkYUVASizeInfo& sizeInfo,
+                           void* planes[SkYUVASizeInfo::kMaxCount]) override;
 
     SkEncodedImageFormat onGetEncodedFormat() const override {
         return SkEncodedImageFormat::kJPEG;
@@ -73,9 +58,6 @@ protected:
     bool onDimensionsSupported(const SkISize&) override;
 
     bool conversionSupported(const SkImageInfo&, bool, bool) override;
-
-    bool onGetGainmapInfo(SkGainmapInfo* info,
-                          std::unique_ptr<SkStream>* gainmapImageStream) override;
 
 private:
     /*
@@ -118,17 +100,13 @@ private:
      * @param stream the encoded image data
      * @param decoderMgr holds decompress struct, src manager, and error manager
      *                   takes ownership
-     * @param origin indicates the image orientation as specified in Exif metadata.
-     * @param xmpMetadata holds the XMP metadata included in the image, if any.
      */
-    SkJpegCodec(SkEncodedInfo&& info,
-                std::unique_ptr<SkStream> stream,
-                JpegDecoderMgr* decoderMgr,
-                SkEncodedOrigin origin);
+    SkJpegCodec(SkEncodedInfo&& info, std::unique_ptr<SkStream> stream,
+            JpegDecoderMgr* decoderMgr, SkEncodedOrigin origin);
 
     void initializeSwizzler(const SkImageInfo& dstInfo, const Options& options,
                             bool needsCMYKToRGB);
-    bool SK_WARN_UNUSED_RESULT allocateStorage(const SkImageInfo& dstInfo);
+    void allocateStorage(const SkImageInfo& dstInfo);
     int readRows(const SkImageInfo& dstInfo, void* dst, size_t rowBytes, int count, const Options&);
 
     /*
@@ -147,20 +125,20 @@ private:
     const int                          fReadyState;
 
 
-    skia_private::AutoTMalloc<uint8_t>             fStorage;
-    uint8_t* fSwizzleSrcRow = nullptr;
-    uint32_t* fColorXformSrcRow = nullptr;
+    SkAutoTMalloc<uint8_t>             fStorage;
+    uint8_t*                           fSwizzleSrcRow;
+    uint32_t*                          fColorXformSrcRow;
 
     // libjpeg-turbo provides some subsetting.  In the case that libjpeg-turbo
     // cannot take the exact the subset that we need, we will use the swizzler
     // to further subset the output from libjpeg-turbo.
-    SkIRect fSwizzlerSubset = SkIRect::MakeEmpty();
+    SkIRect                            fSwizzlerSubset;
 
     std::unique_ptr<SkSwizzler>        fSwizzler;
 
     friend class SkRawCodec;
 
-    using INHERITED = SkCodec;
+    typedef SkCodec INHERITED;
 };
 
 #endif

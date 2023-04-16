@@ -8,17 +8,15 @@
 #ifndef SkShadowTessellator_DEFINED
 #define SkShadowTessellator_DEFINED
 
-#if !defined(SK_ENABLE_OPTIMIZE_SIZE)
-
+#include "include/core/SkColor.h"
+#include "include/core/SkPoint.h"
 #include "include/core/SkRefCnt.h"
-#include "include/core/SkScalar.h"
-
-#include <functional>
+#include <functional>  // std::function
 
 class SkMatrix;
 class SkPath;
-class SkVertices;
 struct SkPoint3;
+class SkVertices;
 
 namespace SkShadowTessellator {
 
@@ -38,12 +36,9 @@ sk_sp<SkVertices> MakeAmbient(const SkPath& path, const SkMatrix& ctm,
  * The center will be clipped against the original path unless transparent is true.
  */
 sk_sp<SkVertices> MakeSpot(const SkPath& path, const SkMatrix& ctm, const SkPoint3& zPlane,
-                           const SkPoint3& lightPos, SkScalar lightRadius, bool transparent,
-                           bool directional);
+                           const SkPoint3& lightPos, SkScalar lightRadius, bool transparent);
 
 
-}  // namespace SkShadowTessellator
-
-#endif // SK_ENABLE_OPTIMIZE_SIZE
+}
 
 #endif

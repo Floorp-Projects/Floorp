@@ -21,7 +21,7 @@ class SkSpriteBlitter : public SkBlitter {
 public:
     SkSpriteBlitter(const SkPixmap& source);
 
-    virtual bool setup(const SkPixmap& dst, int left, int top, const SkPaint&);
+    virtual void setup(const SkPixmap& dst, int left, int top, const SkPaint&);
 
     // blitH, blitAntiH, blitV and blitMask should not be called on an SkSpriteBlitter.
     void blitH(int x, int y, int width) override;
@@ -33,6 +33,8 @@ public:
     void blitRect(int x, int y, int width, int height) override = 0;
 
     static SkSpriteBlitter* ChooseL32(const SkPixmap& source, const SkPaint&, SkArenaAlloc*);
+    static SkSpriteBlitter* ChooseL565(const SkPixmap& source, const SkPaint&, SkArenaAlloc*);
+    static SkSpriteBlitter* ChooseLA8(const SkPixmap& source, const SkPaint&, SkArenaAlloc*);
 
 protected:
     SkPixmap        fDst;
@@ -41,7 +43,7 @@ protected:
     const SkPaint*  fPaint;
 
 private:
-    using INHERITED = SkBlitter;
+    typedef SkBlitter INHERITED;
 };
 
 #endif

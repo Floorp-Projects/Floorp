@@ -5,29 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "include/utils/SkAnimCodecPlayer.h"
-
 #include "include/codec/SkCodec.h"
-#include "include/codec/SkEncodedOrigin.h"
-#include "include/core/SkAlphaType.h"
-#include "include/core/SkBlendMode.h"
-#include "include/core/SkCanvas.h"
 #include "include/core/SkData.h"
 #include "include/core/SkImage.h"
-#include "include/core/SkImageInfo.h"
-#include "include/core/SkMatrix.h"
-#include "include/core/SkPaint.h"
-#include "include/core/SkRefCnt.h"
-#include "include/core/SkSamplingOptions.h"
-#include "include/core/SkSize.h"
-#include "include/core/SkTypes.h"
+#include "include/utils/SkAnimCodecPlayer.h"
 #include "src/codec/SkCodecImageGenerator.h"
-
 #include <algorithm>
-#include <cstddef>
-#include <memory>
-#include <utility>
-#include <vector>
 
 SkAnimCodecPlayer::SkAnimCodecPlayer(std::unique_ptr<SkCodec> codec) : fCodec(std::move(codec)) {
     fImageInfo = fCodec->getInfo();
@@ -53,14 +36,7 @@ SkAnimCodecPlayer::SkAnimCodecPlayer(std::unique_ptr<SkCodec> codec) : fCodec(st
 
 SkAnimCodecPlayer::~SkAnimCodecPlayer() {}
 
-SkISize SkAnimCodecPlayer::dimensions() const {
-    if (!fCodec) {
-        auto image = fImages.front();
-        return image ? image->dimensions() : SkISize::MakeEmpty();
-    }
-    if (SkEncodedOriginSwapsWidthHeight(fCodec->getOrigin())) {
-        return { fImageInfo.height(), fImageInfo.width() };
-    }
+SkISize SkAnimCodecPlayer::dimensions() {
     return { fImageInfo.width(), fImageInfo.height() };
 }
 
@@ -78,54 +54,19 @@ sk_sp<SkImage> SkAnimCodecPlayer::getFrameAt(int index) {
     SkCodec::Options opts;
     opts.fFrameIndex = index;
 
-    const auto origin = fCodec->getOrigin();
-    const auto orientedDims = this->dimensions();
-    const auto originMatrix = SkEncodedOriginToMatrix(origin, orientedDims.width(),
-                                                              orientedDims.height());
-
-    SkPaint paint;
-    paint.setBlendMode(SkBlendMode::kSrc);
-
-    auto imageInfo = fImageInfo;
-    if (fFrameInfos[index].fAlphaType != kOpaque_SkAlphaType && imageInfo.isOpaque()) {
-        imageInfo = imageInfo.makeAlphaType(kPremul_SkAlphaType);
-    }
     const int requiredFrame = fFrameInfos[index].fRequiredFrame;
-    if (requiredFrame != SkCodec::kNoFrame && fImages[requiredFrame]) {
+    if (requiredFrame != SkCodec::kNoFrame) {
         auto requiredImage = fImages[requiredFrame];
-        auto canvas = SkCanvas::MakeRasterDirect(imageInfo, data->writable_data(), rb);
-        if (origin != kDefault_SkEncodedOrigin) {
-            // The required frame is stored after applying the origin. Undo that,
-            // because the codec decodes prior to applying the origin.
-            // FIXME: Another approach would be to decode the frame's delta on top
-            // of transparent black, and then draw that through the origin matrix
-            // onto the required frame. To do that, SkCodec needs to expose the
-            // rectangle of the delta and the blend mode, so we can handle
-            // kRestoreBGColor frames and Blend::kSrc.
-            SkMatrix inverse;
-            SkAssertResult(originMatrix.invert(&inverse));
-            canvas->concat(inverse);
+        SkPixmap requiredPM;
+        if (requiredImage && requiredImage->peekPixels(&requiredPM)) {
+            sk_careful_memcpy(data->writable_data(), requiredPM.addr(), size);
+            opts.fPriorFrame = requiredFrame;
         }
-        canvas->drawImage(requiredImage, 0, 0, SkSamplingOptions(), &paint);
-        opts.fPriorFrame = requiredFrame;
     }
-
-    if (SkCodec::kSuccess != fCodec->getPixels(imageInfo, data->writable_data(), rb, &opts)) {
-        return nullptr;
+    if (SkCodec::kSuccess == fCodec->getPixels(fImageInfo, data->writable_data(), rb, &opts)) {
+        return fImages[index] = SkImage::MakeRasterData(fImageInfo, std::move(data), rb);
     }
-
-    auto image = SkImage::MakeRasterData(imageInfo, std::move(data), rb);
-    if (origin != kDefault_SkEncodedOrigin) {
-        imageInfo = imageInfo.makeDimensions(orientedDims);
-        rb = imageInfo.minRowBytes();
-        size = imageInfo.computeByteSize(rb);
-        data = SkData::MakeUninitialized(size);
-        auto canvas = SkCanvas::MakeRasterDirect(imageInfo, data->writable_data(), rb);
-        canvas->concat(originMatrix);
-        canvas->drawImage(image, 0, 0, SkSamplingOptions(), &paint);
-        image = SkImage::MakeRasterData(imageInfo, std::move(data), rb);
-    }
-    return fImages[index] = image;
+    return nullptr;
 }
 
 sk_sp<SkImage> SkAnimCodecPlayer::getFrame() {
@@ -145,7 +86,7 @@ bool SkAnimCodecPlayer::seek(uint32_t msec) {
 
     auto lower = std::lower_bound(fFrameInfos.begin(), fFrameInfos.end(), msec,
                                   [](const SkCodec::FrameInfo& info, uint32_t msec) {
-                                      return (uint32_t)info.fDuration <= msec;
+                                      return (uint32_t)info.fDuration < msec;
                                   });
     int prevIndex = fCurrIndex;
     fCurrIndex = lower - fFrameInfos.begin();

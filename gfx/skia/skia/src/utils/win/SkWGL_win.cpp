@@ -6,14 +6,14 @@
  */
 
 #include "include/core/SkTypes.h"
-#if defined(SK_BUILD_FOR_WIN) && !defined(_M_ARM64) && !defined(WINUWP)
+#if defined(SK_BUILD_FOR_WIN) && !defined(_M_ARM64)
 
 #include "src/utils/win/SkWGL.h"
 
-#include "include/private/base/SkOnce.h"
-#include "include/private/base/SkTDArray.h"
-#include "src/base/SkTSearch.h"
-#include "src/base/SkTSort.h"
+#include "include/private/SkOnce.h"
+#include "include/private/SkTDArray.h"
+#include "src/core/SkTSearch.h"
+#include "src/core/SkTSort.h"
 
 bool SkWGLExtensions::hasExtension(HDC dc, const char* ext) const {
     if (nullptr == this->fGetExtensionsString) {
@@ -35,6 +35,8 @@ bool SkWGLExtensions::hasExtension(HDC dc, const char* ext) const {
         }
         extensionString += n+1;
     }
+
+    return false;
 }
 
 const char* SkWGLExtensions::getExtensionsString(HDC hdc) const {
@@ -134,7 +136,7 @@ int SkWGLExtensions::selectFormat(const int formats[],
         0,
     };
     SkTDArray<PixelFormat> rankedFormats;
-    rankedFormats.resize(formatCount);
+    rankedFormats.setCount(formatCount);
     for (int i = 0; i < formatCount; ++i) {
         static const int kQueryAttr = SK_WGL_SAMPLES;
         int numSamples;
@@ -145,12 +147,14 @@ int SkWGLExtensions::selectFormat(const int formats[],
                                      &kQueryAttr,
                                      &numSamples);
         rankedFormats[i].fFormat =  formats[i];
-        rankedFormats[i].fSampleCnt = std::max(1, numSamples);
+        rankedFormats[i].fSampleCnt = SkTMax(1, numSamples);
         rankedFormats[i].fChoosePixelFormatRank = i;
     }
-    SkTQSort(rankedFormats.begin(), rankedFormats.end(), pf_less);
+    SkTQSort(rankedFormats.begin(),
+             rankedFormats.begin() + rankedFormats.count() - 1,
+             SkTLessFunctionToFunctorAdaptor<PixelFormat, pf_less>());
     int idx = SkTSearch<PixelFormat, pf_less>(rankedFormats.begin(),
-                                              rankedFormats.size(),
+                                              rankedFormats.count(),
                                               desiredFormat,
                                               sizeof(PixelFormat));
     if (idx < 0) {
@@ -172,11 +176,11 @@ namespace {
     #define STR_LIT(X) #X
 #endif
 
-#define TEMP_CLASS STR_LIT("TempClass")
+#define DUMMY_CLASS STR_LIT("DummyClass")
 
-HWND create_temp_window() {
+HWND create_dummy_window() {
     HMODULE module = GetModuleHandle(nullptr);
-    HWND wnd;
+    HWND dummy;
     RECT windowRect;
     windowRect.left = 0;
     windowRect.right = 8;
@@ -194,7 +198,7 @@ HWND create_temp_window() {
     wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
     wc.hbrBackground = nullptr;
     wc.lpszMenuName = nullptr;
-    wc.lpszClassName = TEMP_CLASS;
+    wc.lpszClassName = DUMMY_CLASS;
 
     if(!RegisterClass(&wc)) {
         return 0;
@@ -205,28 +209,28 @@ HWND create_temp_window() {
     style = WS_SYSMENU;
 
     AdjustWindowRectEx(&windowRect, style, false, exStyle);
-    if(!(wnd = CreateWindowEx(exStyle,
-                              TEMP_CLASS,
-                              STR_LIT("PlaceholderWindow"),
-                              WS_CLIPSIBLINGS | WS_CLIPCHILDREN | style,
-                              0, 0,
-                              windowRect.right-windowRect.left,
-                              windowRect.bottom-windowRect.top,
-                              nullptr, nullptr,
-                              module,
-                              nullptr))) {
-        UnregisterClass(TEMP_CLASS, module);
+    if(!(dummy = CreateWindowEx(exStyle,
+                                DUMMY_CLASS,
+                                STR_LIT("DummyWindow"),
+                                WS_CLIPSIBLINGS | WS_CLIPCHILDREN | style,
+                                0, 0,
+                                windowRect.right-windowRect.left,
+                                windowRect.bottom-windowRect.top,
+                                nullptr, nullptr,
+                                module,
+                                nullptr))) {
+        UnregisterClass(DUMMY_CLASS, module);
         return nullptr;
     }
-    ShowWindow(wnd, SW_HIDE);
+    ShowWindow(dummy, SW_HIDE);
 
-    return wnd;
+    return dummy;
 }
 
-void destroy_temp_window(HWND wnd) {
-    DestroyWindow(wnd);
+void destroy_dummy_window(HWND dummy) {
+    DestroyWindow(dummy);
     HMODULE module = GetModuleHandle(nullptr);
-    UnregisterClass(TEMP_CLASS, module);
+    UnregisterClass(DUMMY_CLASS, module);
 }
 }
 
@@ -254,30 +258,25 @@ SkWGLExtensions::SkWGLExtensions() {
         HDC prevDC = wglGetCurrentDC();
         HGLRC prevGLRC = wglGetCurrentContext();
 
-        PIXELFORMATDESCRIPTOR tempPFD;
+        PIXELFORMATDESCRIPTOR dummyPFD;
 
-        ZeroMemory(&tempPFD, sizeof(tempPFD));
-        tempPFD.nSize = sizeof(tempPFD);
-        tempPFD.nVersion = 1;
-        tempPFD.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
-        tempPFD.iPixelType = PFD_TYPE_RGBA;
-        tempPFD.cColorBits  = 32;
-        tempPFD.cDepthBits  = 0;
-        tempPFD.cStencilBits = 8;
-        tempPFD.iLayerType = PFD_MAIN_PLANE;
-        HWND tempWND = create_temp_window();
-        if (tempWND) {
-            HDC tempDC = GetDC(tempWND);
-            int tempFormat = ChoosePixelFormat(tempDC, &tempPFD);
-            SetPixelFormat(tempDC, tempFormat, &tempPFD);
-            HGLRC tempGLRC = wglCreateContext(tempDC);
-            SkASSERT(tempGLRC);
-            wglMakeCurrent(tempDC, tempGLRC);
-
-            #if defined(__clang__)
-                #pragma clang diagnostic push
-                #pragma clang diagnostic ignored "-Wcast-function-type"
-            #endif
+        ZeroMemory(&dummyPFD, sizeof(dummyPFD));
+        dummyPFD.nSize = sizeof(dummyPFD);
+        dummyPFD.nVersion = 1;
+        dummyPFD.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
+        dummyPFD.iPixelType = PFD_TYPE_RGBA;
+        dummyPFD.cColorBits  = 32;
+        dummyPFD.cDepthBits  = 0;
+        dummyPFD.cStencilBits = 8;
+        dummyPFD.iLayerType = PFD_MAIN_PLANE;
+        HWND dummyWND = create_dummy_window();
+        if (dummyWND) {
+            HDC dummyDC = GetDC(dummyWND);
+            int dummyFormat = ChoosePixelFormat(dummyDC, &dummyPFD);
+            SetPixelFormat(dummyDC, dummyFormat, &dummyPFD);
+            HGLRC dummyGLRC = wglCreateContext(dummyDC);
+            SkASSERT(dummyGLRC);
+            wglMakeCurrent(dummyDC, dummyGLRC);
 
             GET_PROC(GetExtensionsString, ARB);
             GET_PROC(ChoosePixelFormat, ARB);
@@ -290,13 +289,9 @@ SkWGLExtensions::SkWGLExtensions() {
             GET_PROC(ReleasePbufferDC, ARB);
             GET_PROC(DestroyPbuffer, ARB);
 
-            #if defined(__clang__)
-                #pragma clang diagnostic pop
-            #endif
-
-            wglMakeCurrent(tempDC, nullptr);
-            wglDeleteContext(tempGLRC);
-            destroy_temp_window(tempWND);
+            wglMakeCurrent(dummyDC, nullptr);
+            wglDeleteContext(dummyGLRC);
+            destroy_dummy_window(dummyWND);
         }
 
         wglMakeCurrent(prevDC, prevGLRC);
@@ -341,7 +336,7 @@ static void get_pixel_formats_to_try(HDC dc, const SkWGLExtensions& extensions,
         unsigned int num;
         int formats[64];
         extensions.choosePixelFormat(dc, msaaIAttrs.begin(), fAttrs, 64, formats, &num);
-        num = std::min(num, 64U);
+        num = SkTMin(num, 64U);
         formatsToTry[0] = extensions.selectFormat(formats, num, dc, msaaSampleCount);
     }
 
@@ -391,7 +386,7 @@ static HGLRC create_gl_context(HDC dc, const SkWGLExtensions& extensions,
                 SK_WGL_CONTEXT_PROFILE_MASK,  SK_WGL_CONTEXT_CORE_PROFILE_BIT,
                 0,
             };
-            for (size_t v = 0; v < std::size(kCoreGLVersions) / 2; ++v) {
+            for (size_t v = 0; v < SK_ARRAY_COUNT(kCoreGLVersions) / 2; ++v) {
                 coreProfileAttribs[1] = kCoreGLVersions[2 * v];
                 coreProfileAttribs[3] = kCoreGLVersions[2 * v + 1];
                 glrc = extensions.createContextAttribs(dc, shareContext, coreProfileAttribs);
@@ -430,7 +425,7 @@ HGLRC SkCreateWGLContext(HDC dc, int msaaSampleCount, bool deepColor,
     int pixelFormatsToTry[] = { -1, -1 };
     get_pixel_formats_to_try(dc, extensions, true, msaaSampleCount, deepColor, pixelFormatsToTry);
     for (size_t f = 0;
-         !set && -1 != pixelFormatsToTry[f] && f < std::size(pixelFormatsToTry);
+         !set && -1 != pixelFormatsToTry[f] && f < SK_ARRAY_COUNT(pixelFormatsToTry);
          ++f) {
         PIXELFORMATDESCRIPTOR pfd;
         DescribePixelFormat(dc, pixelFormatsToTry[f], sizeof(pfd), &pfd);

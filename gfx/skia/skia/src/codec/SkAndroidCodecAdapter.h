@@ -8,13 +8,6 @@
 #define SkAndroidCodecAdapter_DEFINED
 
 #include "include/codec/SkAndroidCodec.h"
-#include "include/codec/SkCodec.h"
-#include "include/core/SkSize.h"
-
-#include <cstddef>
-
-struct SkIRect;
-struct SkImageInfo;
 
 /**
  *  This class wraps SkCodec to implement the functionality of SkAndroidCodec.
@@ -24,7 +17,7 @@ struct SkImageInfo;
 class SkAndroidCodecAdapter : public SkAndroidCodec {
 public:
 
-    explicit SkAndroidCodecAdapter(SkCodec*);
+    explicit SkAndroidCodecAdapter(SkCodec*, ExifOrientationBehavior);
 
     ~SkAndroidCodecAdapter() override {}
 
@@ -39,6 +32,6 @@ protected:
 
 private:
 
-    using INHERITED = SkAndroidCodec;
+    typedef SkAndroidCodec INHERITED;
 };
 #endif // SkAndroidCodecAdapter_DEFINED

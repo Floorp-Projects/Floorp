@@ -15,7 +15,7 @@ class SkBitmap;
 class SkImage;
 class SkImage_Base;
 struct SkImageInfo;
-class SkMipmap;
+class SkMipMap;
 class SkPixmap;
 class SkResourceCache;
 
@@ -56,11 +56,11 @@ private:
     static void PrivateDeleteRec(Rec*);
 };
 
-class SkMipmapCache {
+class SkMipMapCache {
 public:
-    static const SkMipmap* FindAndRef(const SkBitmapCacheDesc&,
+    static const SkMipMap* FindAndRef(const SkBitmapCacheDesc&,
                                       SkResourceCache* localCache = nullptr);
-    static const SkMipmap* AddAndRef(const SkImage_Base*,
+    static const SkMipMap* AddAndRef(const SkImage_Base*,
                                      SkResourceCache* localCache = nullptr);
 };
 
