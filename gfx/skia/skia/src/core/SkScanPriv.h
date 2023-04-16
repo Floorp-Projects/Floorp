@@ -56,7 +56,7 @@ static inline void insert_edge_after(EdgeType* edge, EdgeType* afterMe) {
 }
 
 template<class EdgeType>
-static void backward_insert_edge_based_on_x(EdgeType* edge) {
+void backward_insert_edge_based_on_x(EdgeType* edge) {
     SkFixed x = edge->fX;
     EdgeType* prev = edge->fPrev;
     while (prev->fPrev && prev->fX > x) {
@@ -73,28 +73,11 @@ static void backward_insert_edge_based_on_x(EdgeType* edge) {
 // of the prior insertion, and search to the right, or with some additional caching, binary
 // search the starting point. More work could be done to determine optimal new edge insertion.
 template<class EdgeType>
-static EdgeType* backward_insert_start(EdgeType* prev, SkFixed x) {
+EdgeType* backward_insert_start(EdgeType* prev, SkFixed x) {
     while (prev->fPrev && prev->fX > x) {
         prev = prev->fPrev;
     }
     return prev;
-}
-
-// Check if the path is a rect and fat enough after clipping; if so, blit it.
-static inline bool TryBlitFatAntiRect(SkBlitter* blitter, const SkPath& path, const SkIRect& clip) {
-    SkRect rect;
-    if (!path.isRect(&rect)) {
-        return false; // not rect
-    }
-    if (!rect.intersect(SkRect::Make(clip))) {
-        return true; // The intersection is empty. Hence consider it done.
-    }
-    SkIRect bounds = rect.roundOut();
-    if (bounds.width() < 3) {
-        return false; // not fat
-    }
-    blitter->blitFatAntiRect(rect);
-    return true;
 }
 
 #endif

@@ -8,7 +8,6 @@
 #include "include/private/SkColorData.h"
 #include "src/core/SkBlitRow.h"
 #include "src/core/SkOpts.h"
-#include "src/core/SkUtils.h"
 
 // Everyone agrees memcpy() is the best way to do this.
 static void blit_row_s32_opaque(SkPMColor* dst,
@@ -298,8 +297,8 @@ SkBlitRow::Proc32 SkBlitRow::Factory32(unsigned flags) {
         blit_row_s32a_blend
     };
 
-    SkASSERT(flags < SK_ARRAY_COUNT(kProcs));
-    flags &= SK_ARRAY_COUNT(kProcs) - 1;  // just to be safe
+    SkASSERT(flags < std::size(kProcs));
+    flags &= std::size(kProcs) - 1;  // just to be safe
 
     return flags == 2 ? SkOpts::blit_row_s32a_opaque
                       : kProcs[flags];
@@ -308,7 +307,7 @@ SkBlitRow::Proc32 SkBlitRow::Factory32(unsigned flags) {
 void SkBlitRow::Color32(SkPMColor dst[], const SkPMColor src[], int count, SkPMColor color) {
     switch (SkGetPackedA32(color)) {
         case   0: memmove(dst, src, count * sizeof(SkPMColor)); return;
-        case 255: sk_memset32(dst, color, count);               return;
+        case 255: SkOpts::memset32(dst, color, count);               return;
     }
     return SkOpts::blit_row_color32(dst, src, count, color);
 }

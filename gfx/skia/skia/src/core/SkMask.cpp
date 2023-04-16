@@ -7,9 +7,11 @@
 
 #include "src/core/SkMask.h"
 
-#include "include/private/SkMalloc.h"
-#include "include/private/SkTo.h"
-#include "src/core/SkSafeMath.h"
+#include "include/private/base/SkMalloc.h"
+#include "include/private/base/SkTo.h"
+#include "src/base/SkSafeMath.h"
+
+#include <climits>
 
 /** returns the product if it is positive and fits in 31 bits. Otherwise this
     returns 0.
@@ -57,27 +59,29 @@ SkMask SkMask::PrepareDestination(int radiusX, int radiusY, const SkMask& src) {
     SkSafeMath safe;
 
     SkMask dst;
+    dst.fImage = nullptr;
+    dst.fFormat = SkMask::kA8_Format;
+
     // dstW = srcW + 2 * radiusX;
     size_t dstW = safe.add(src.fBounds.width(), safe.add(radiusX, radiusX));
     // dstH = srcH + 2 * radiusY;
     size_t dstH = safe.add(src.fBounds.height(), safe.add(radiusY, radiusY));
 
-    if (!SkTFitsIn<int>(dstW) || !SkTFitsIn<int>(dstH)) {
-        dst.fBounds.setEmpty();
-        dst.fRowBytes = 0;
-    } else {
-        dst.fBounds.setWH(SkTo<int>(dstW), SkTo<int>(dstH));
-        dst.fBounds.offset(src.fBounds.x(), src.fBounds.y());
-        dst.fBounds.offset(-radiusX, -radiusY);
-        dst.fRowBytes = SkTo<uint32_t>(dstW);
-    }
-
-    dst.fImage = nullptr;
-    dst.fFormat = SkMask::kA8_Format;
-
     size_t toAlloc = safe.mul(dstW, dstH);
 
-    if (safe && src.fImage != nullptr) {
+    // We can only deal with masks that fit in INT_MAX and sides that fit in int.
+    if (!SkTFitsIn<int>(dstW) || !SkTFitsIn<int>(dstH) || toAlloc > INT_MAX || !safe) {
+        dst.fBounds.setEmpty();
+        dst.fRowBytes = 0;
+        return dst;
+    }
+
+    dst.fBounds.setWH(SkTo<int>(dstW), SkTo<int>(dstH));
+    dst.fBounds.offset(src.fBounds.x(), src.fBounds.y());
+    dst.fBounds.offset(-radiusX, -radiusY);
+    dst.fRowBytes = SkTo<uint32_t>(dstW);
+
+    if (src.fImage != nullptr) {
         dst.fImage = SkMask::AllocImage(toAlloc);
     }
 
@@ -97,7 +101,7 @@ static const int gMaskFormatToShift[] = {
 };
 
 static int maskFormatToShift(SkMask::Format format) {
-    SkASSERT((unsigned)format < SK_ARRAY_COUNT(gMaskFormatToShift));
+    SkASSERT((unsigned)format < std::size(gMaskFormatToShift));
     SkASSERT(SkMask::kBW_Format != format);
     return gMaskFormatToShift[format];
 }

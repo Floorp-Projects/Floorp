@@ -8,14 +8,16 @@
 #ifndef SkMaskFilter_DEFINED
 #define SkMaskFilter_DEFINED
 
-#include "include/core/SkBlurTypes.h"
-#include "include/core/SkCoverageMode.h"
 #include "include/core/SkFlattenable.h"
+#include "include/core/SkRefCnt.h"
 #include "include/core/SkScalar.h"
+#include "include/core/SkTypes.h"
 
-class SkMatrix;
+#include <cstddef>
+
+enum SkBlurStyle : int;
+struct SkDeserialProcs;
 struct SkRect;
-class SkString;
 
 /** \class SkMaskFilter
 
@@ -34,40 +36,14 @@ public:
                                         bool respectCTM = true);
 
     /**
-     *  Construct a maskfilter whose effect is to first apply the inner filter and then apply
-     *  the outer filter to the result of the inner's. Returns nullptr on failure.
+     *  Returns the approximate bounds that would result from filtering the src rect.
+     *  The actual result may be different, but it should be contained within the
+     *  returned bounds.
      */
-    static sk_sp<SkMaskFilter> MakeCompose(sk_sp<SkMaskFilter> outer, sk_sp<SkMaskFilter> inner);
-
-    /**
-     *  Compose two maskfilters together using a coverage mode. Returns nullptr on failure.
-     */
-    static sk_sp<SkMaskFilter> MakeCombine(sk_sp<SkMaskFilter> filterA, sk_sp<SkMaskFilter> filterB,
-                                           SkCoverageMode mode);
-
-    /**
-     *  Construct a maskfilter with an additional transform.
-     *
-     *  Note: unlike shader local matrices, this transform composes next to the CTM.
-     *
-     *    TotalMatrix = CTM x MaskFilterMatrix x (optional/downstream) ShaderLocalMatrix
-     */
-    sk_sp<SkMaskFilter> makeWithMatrix(const SkMatrix&) const;
-
-    static SkFlattenable::Type GetFlattenableType() {
-        return kSkMaskFilter_Type;
-    }
-
-    SkFlattenable::Type getFlattenableType() const override {
-        return kSkMaskFilter_Type;
-    }
+    SkRect approximateFilteredBounds(const SkRect& src) const;
 
     static sk_sp<SkMaskFilter> Deserialize(const void* data, size_t size,
-                                          const SkDeserialProcs* procs = nullptr) {
-        return sk_sp<SkMaskFilter>(static_cast<SkMaskFilter*>(
-                                  SkFlattenable::Deserialize(
-                                  kSkMaskFilter_Type, data, size, procs).release()));
-    }
+                                           const SkDeserialProcs* procs = nullptr);
 
 private:
     static void RegisterFlattenables();

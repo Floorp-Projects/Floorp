@@ -5,23 +5,22 @@
  * found in the LICENSE file.
  */
 
-#include "src/core/SkBBoxHierarchy.h"
+#include "include/core/SkBBHFactory.h"
 #include "src/core/SkBigPicture.h"
-#include "src/core/SkPictureCommon.h"
 #include "src/core/SkRecord.h"
 #include "src/core/SkRecordDraw.h"
 #include "src/core/SkTraceEvent.h"
 
 SkBigPicture::SkBigPicture(const SkRect& cull,
-                           SkRecord* record,
-                           SnapshotArray* drawablePicts,
-                           SkBBoxHierarchy* bbh,
+                           sk_sp<SkRecord> record,
+                           std::unique_ptr<SnapshotArray> drawablePicts,
+                           sk_sp<SkBBoxHierarchy> bbh,
                            size_t approxBytesUsedBySubPictures)
     : fCullRect(cull)
     , fApproxBytesUsedBySubPictures(approxBytesUsedBySubPictures)
-    , fRecord(record)               // Take ownership of caller's ref.
-    , fDrawablePicts(drawablePicts) // Take ownership.
-    , fBBH(bbh)                     // Take ownership of caller's ref.
+    , fRecord(std::move(record))
+    , fDrawablePicts(std::move(drawablePicts))
+    , fBBH(std::move(bbh))
 {}
 
 void SkBigPicture::playback(SkCanvas* canvas, AbortCallback* callback) const {
@@ -42,7 +41,7 @@ void SkBigPicture::playback(SkCanvas* canvas, AbortCallback* callback) const {
 void SkBigPicture::partialPlayback(SkCanvas* canvas,
                                    int start,
                                    int stop,
-                                   const SkMatrix& initialCTM) const {
+                                   const SkM44& initialCTM) const {
     SkASSERT(canvas);
     SkRecordPartialDraw(*fRecord,
                         canvas,
@@ -53,8 +52,29 @@ void SkBigPicture::partialPlayback(SkCanvas* canvas,
                         initialCTM);
 }
 
+struct NestedApproxOpCounter {
+    int fCount = 0;
+
+    template <typename T> void operator()(const T& op) {
+        fCount += 1;
+    }
+    void operator()(const SkRecords::DrawPicture& op) {
+        fCount += op.picture->approximateOpCount(true);
+    }
+};
+
 SkRect SkBigPicture::cullRect()            const { return fCullRect; }
-int    SkBigPicture::approximateOpCount()   const { return fRecord->count(); }
+int SkBigPicture::approximateOpCount(bool nested) const {
+    if (nested) {
+        NestedApproxOpCounter visitor;
+        for (int i = 0; i < fRecord->count(); i++) {
+            fRecord->visit(i, visitor);
+        }
+        return visitor.fCount;
+    } else {
+        return fRecord->count();
+    }
+}
 size_t SkBigPicture::approximateBytesUsed() const {
     size_t bytes = sizeof(*this) + fRecord->bytesUsed() + fApproxBytesUsedBySubPictures;
     if (fBBH) { bytes += fBBH->bytesUsed(); }

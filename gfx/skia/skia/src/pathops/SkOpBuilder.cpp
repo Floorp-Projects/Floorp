@@ -5,12 +5,27 @@
  * found in the LICENSE file.
  */
 
-#include "include/core/SkMatrix.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPathTypes.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkTypes.h"
 #include "include/pathops/SkPathOps.h"
-#include "src/core/SkArenaAlloc.h"
+#include "include/private/base/SkPathEnums.h"
+#include "include/private/base/SkTArray.h"
+#include "include/private/base/SkTDArray.h"
+#include "include/private/base/SkTo.h"
+#include "src/base/SkArenaAlloc.h"
 #include "src/core/SkPathPriv.h"
+#include "src/pathops/SkOpContour.h"
 #include "src/pathops/SkOpEdgeBuilder.h"
+#include "src/pathops/SkOpSegment.h"
+#include "src/pathops/SkOpSpan.h"
 #include "src/pathops/SkPathOpsCommon.h"
+#include "src/pathops/SkPathOpsTypes.h"
+#include "src/pathops/SkPathWriter.h"
+
+#include <cstdint>
 
 static bool one_contour(const SkPath& path) {
     SkSTArenaAlloc<256> allocator;
@@ -36,19 +51,21 @@ void SkOpBuilder::ReversePath(SkPath* path) {
 }
 
 bool SkOpBuilder::FixWinding(SkPath* path) {
-    SkPath::FillType fillType = path->getFillType();
-    if (fillType == SkPath::kInverseEvenOdd_FillType) {
-        fillType = SkPath::kInverseWinding_FillType;
-    } else if (fillType == SkPath::kEvenOdd_FillType) {
-        fillType = SkPath::kWinding_FillType;
+    SkPathFillType fillType = path->getFillType();
+    if (fillType == SkPathFillType::kInverseEvenOdd) {
+        fillType = SkPathFillType::kInverseWinding;
+    } else if (fillType == SkPathFillType::kEvenOdd) {
+        fillType = SkPathFillType::kWinding;
     }
-    SkPathPriv::FirstDirection dir;
-    if (one_contour(*path) && SkPathPriv::CheapComputeFirstDirection(*path, &dir)) {
-        if (dir != SkPathPriv::kCCW_FirstDirection) {
-            ReversePath(path);
+    if (one_contour(*path)) {
+        SkPathFirstDirection dir = SkPathPriv::ComputeFirstDirection(*path);
+        if (dir != SkPathFirstDirection::kUnknown) {
+            if (dir == SkPathFirstDirection::kCW) {
+                ReversePath(path);
+            }
+            path->setFillType(fillType);
+            return true;
         }
-        path->setFillType(fillType);
-        return true;
     }
     SkSTArenaAlloc<4096> allocator;
     SkOpContourHead contourHead;
@@ -107,7 +124,7 @@ bool SkOpBuilder::FixWinding(SkPath* path) {
 }
 
 void SkOpBuilder::add(const SkPath& path, SkPathOp op) {
-    if (0 == fOps.count() && op != kUnion_SkPathOp) {
+    if (fOps.empty() && op != kUnion_SkPathOp) {
         fPathRefs.push_back() = SkPath();
         *fOps.append() = kUnion_SkPathOp;
     }
@@ -116,7 +133,7 @@ void SkOpBuilder::add(const SkPath& path, SkPathOp op) {
 }
 
 void SkOpBuilder::reset() {
-    fPathRefs.reset();
+    fPathRefs.clear();
     fOps.reset();
 }
 
@@ -125,9 +142,9 @@ void SkOpBuilder::reset() {
    ops one at a time. */
 bool SkOpBuilder::resolve(SkPath* result) {
     SkPath original = *result;
-    int count = fOps.count();
+    int count = fOps.size();
     bool allUnion = true;
-    SkPathPriv::FirstDirection firstDir = SkPathPriv::kUnknown_FirstDirection;
+    SkPathFirstDirection firstDir = SkPathFirstDirection::kUnknown;
     for (int index = 0; index < count; ++index) {
         SkPath* test = &fPathRefs[index];
         if (kUnion_SkPathOp != fOps[index] || test->isInverseFillType()) {
@@ -136,12 +153,12 @@ bool SkOpBuilder::resolve(SkPath* result) {
         }
         // If all paths are convex, track direction, reversing as needed.
         if (test->isConvex()) {
-            SkPathPriv::FirstDirection dir;
-            if (!SkPathPriv::CheapComputeFirstDirection(*test, &dir)) {
+            SkPathFirstDirection dir = SkPathPriv::ComputeFirstDirection(*test);
+            if (dir == SkPathFirstDirection::kUnknown) {
                 allUnion = false;
                 break;
             }
-            if (firstDir == SkPathPriv::kUnknown_FirstDirection) {
+            if (firstDir == SkPathFirstDirection::kUnknown) {
                 firstDir = dir;
             } else if (firstDir != dir) {
                 ReversePath(test);

@@ -7,8 +7,8 @@
 
 #include "include/core/SkString.h"
 #include "include/core/SkTypes.h"
-#include "include/private/SkTFitsIn.h"
-#include "include/private/SkTemplates.h"
+#include "include/private/base/SkTFitsIn.h"
+#include "include/private/base/SkTemplates.h"
 #include "src/core/SkOSFile.h"
 
 #include <dirent.h>
@@ -23,6 +23,13 @@
 #ifdef SK_BUILD_FOR_IOS
 #include "src/ports/SkOSFile_ios.h"
 #endif
+
+void sk_fsync(FILE* f) {
+#if !defined(SK_BUILD_FOR_ANDROID) && !defined(__UCLIBC__) && !defined(_NEWLIB_VERSION)
+    int fd = fileno(f);
+    fsync(fd);
+#endif
+}
 
 bool sk_exists(const char *path, SkFILE_Flags flags) {
     int mode = F_OK;
@@ -130,15 +137,15 @@ struct SkOSFileIterData {
 };
 static_assert(sizeof(SkOSFileIterData) <= SkOSFile::Iter::kStorageSize, "not_enough_space");
 
-SkOSFile::Iter::Iter() { new (fSelf.get()) SkOSFileIterData; }
+SkOSFile::Iter::Iter() { new (fSelf) SkOSFileIterData; }
 
 SkOSFile::Iter::Iter(const char path[], const char suffix[]) {
-    new (fSelf.get()) SkOSFileIterData;
+    new (fSelf) SkOSFileIterData;
     this->reset(path, suffix);
 }
 
 SkOSFile::Iter::~Iter() {
-    SkOSFileIterData& self = *static_cast<SkOSFileIterData*>(fSelf.get());
+    SkOSFileIterData& self = *reinterpret_cast<SkOSFileIterData*>(fSelf);
     if (self.fDIR) {
         ::closedir(self.fDIR);
     }
@@ -146,7 +153,7 @@ SkOSFile::Iter::~Iter() {
 }
 
 void SkOSFile::Iter::reset(const char path[], const char suffix[]) {
-    SkOSFileIterData& self = *static_cast<SkOSFileIterData*>(fSelf.get());
+    SkOSFileIterData& self = *reinterpret_cast<SkOSFileIterData*>(fSelf);
     if (self.fDIR) {
         ::closedir(self.fDIR);
         self.fDIR = nullptr;
@@ -177,7 +184,7 @@ static bool issuffixfor(const SkString& suffix, const char str[]) {
 }
 
 bool SkOSFile::Iter::next(SkString* name, bool getDir) {
-    SkOSFileIterData& self = *static_cast<SkOSFileIterData*>(fSelf.get());
+    SkOSFileIterData& self = *reinterpret_cast<SkOSFileIterData*>(fSelf);
     if (self.fDIR) {
         dirent* entry;
 

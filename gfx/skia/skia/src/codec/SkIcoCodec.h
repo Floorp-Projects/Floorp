@@ -8,10 +8,18 @@
 #define SkIcoCodec_DEFINED
 
 #include "include/codec/SkCodec.h"
-#include "include/core/SkImageInfo.h"
-#include "include/core/SkStream.h"
+#include "include/codec/SkEncodedImageFormat.h"
+#include "include/core/SkSize.h"
 #include "include/core/SkTypes.h"
-#include "include/private/SkTArray.h"
+#include "include/private/base/SkTArray.h"
+
+#include <cstddef>
+#include <memory>
+
+class SkSampler;
+class SkStream;
+struct SkEncodedInfo;
+struct SkImageInfo;
 
 /*
  * This class implements the decoding for bmp images
@@ -86,7 +94,8 @@ private:
      * Constructor called by NewFromStream
      * @param embeddedCodecs codecs for the embedded images, takes ownership
      */
-    SkIcoCodec(SkEncodedInfo&& info, SkTArray<std::unique_ptr<SkCodec>, true>* embeddedCodecs);
+    SkIcoCodec(SkEncodedInfo&& info, std::unique_ptr<SkStream>,
+               SkTArray<std::unique_ptr<SkCodec>, true>* embeddedCodecs);
 
     std::unique_ptr<SkTArray<std::unique_ptr<SkCodec>, true>> fEmbeddedCodecs;
 
@@ -94,6 +103,6 @@ private:
     // std::unique_ptr.  It will be deleted by the destructor of fEmbeddedCodecs.
     SkCodec* fCurrCodec;
 
-    typedef SkCodec INHERITED;
+    using INHERITED = SkCodec;
 };
 #endif  // SkIcoCodec_DEFINED

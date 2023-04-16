@@ -8,57 +8,82 @@
 #ifndef SKSL_FUNCTIONCALL
 #define SKSL_FUNCTIONCALL
 
+#include "include/private/SkSLDefines.h"
+#include "include/private/SkSLIRNode.h"
+#include "include/sksl/SkSLPosition.h"
 #include "src/sksl/ir/SkSLExpression.h"
-#include "src/sksl/ir/SkSLFunctionDeclaration.h"
+
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <utility>
 
 namespace SkSL {
+
+class Context;
+class FunctionDeclaration;
+class Type;
+enum class OperatorPrecedence : uint8_t;
 
 /**
  * A function invocation.
  */
-struct FunctionCall : public Expression {
-    FunctionCall(int offset, const Type& type, const FunctionDeclaration& function,
-                 std::vector<std::unique_ptr<Expression>> arguments)
-    : INHERITED(offset, kFunctionCall_Kind, type)
-    , fFunction(std::move(function))
-    , fArguments(std::move(arguments)) {}
+class FunctionCall final : public Expression {
+public:
+    inline static constexpr Kind kIRNodeKind = Kind::kFunctionCall;
 
-    bool hasSideEffects() const override {
-        for (const auto& arg : fArguments) {
-            if (arg->hasSideEffects()) {
-                return true;
-            }
-        }
-        return fFunction.fModifiers.fFlags & Modifiers::kHasSideEffects_Flag;
+    FunctionCall(Position pos, const Type* type, const FunctionDeclaration* function,
+                 ExpressionArray arguments)
+        : INHERITED(pos, kIRNodeKind, type)
+        , fFunction(*function)
+        , fArguments(std::move(arguments)) {}
+
+    // Resolves generic types, performs type conversion on arguments, determines return type, and
+    // reports errors via the ErrorReporter.
+    static std::unique_ptr<Expression> Convert(const Context& context,
+                                               Position pos,
+                                               const FunctionDeclaration& function,
+                                               ExpressionArray arguments);
+
+    static std::unique_ptr<Expression> Convert(const Context& context,
+                                               Position pos,
+                                               std::unique_ptr<Expression> functionValue,
+                                               ExpressionArray arguments);
+
+    // Creates the function call; reports errors via ASSERT.
+    static std::unique_ptr<Expression> Make(const Context& context,
+                                            Position pos,
+                                            const Type* returnType,
+                                            const FunctionDeclaration& function,
+                                            ExpressionArray arguments);
+
+    static const FunctionDeclaration* FindBestFunctionForCall(const Context& context,
+                                                              const FunctionDeclaration* overloads,
+                                                              const ExpressionArray& arguments);
+
+    const FunctionDeclaration& function() const {
+        return fFunction;
     }
 
-    std::unique_ptr<Expression> clone() const override {
-        std::vector<std::unique_ptr<Expression>> cloned;
-        for (const auto& arg : fArguments) {
-            cloned.push_back(arg->clone());
-        }
-        return std::unique_ptr<Expression>(new FunctionCall(fOffset, fType, fFunction,
-                                                            std::move(cloned)));
+    ExpressionArray& arguments() {
+        return fArguments;
     }
 
-    String description() const override {
-        String result = String(fFunction.fName) + "(";
-        String separator;
-        for (size_t i = 0; i < fArguments.size(); i++) {
-            result += separator;
-            result += fArguments[i]->description();
-            separator = ", ";
-        }
-        result += ")";
-        return result;
+    const ExpressionArray& arguments() const {
+        return fArguments;
     }
 
+    std::unique_ptr<Expression> clone(Position pos) const override;
+
+    std::string description(OperatorPrecedence) const override;
+
+private:
     const FunctionDeclaration& fFunction;
-    std::vector<std::unique_ptr<Expression>> fArguments;
+    ExpressionArray fArguments;
 
-    typedef Expression INHERITED;
+    using INHERITED = Expression;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif
