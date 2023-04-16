@@ -4,12 +4,12 @@
 
 toolkit.jar:
 % resource normandy %res/normandy/
-  res/normandy/Normandy.jsm (./Normandy.jsm)
-  res/normandy/NormandyMigrations.jsm (./NormandyMigrations.jsm)
+  res/normandy/Normandy.sys.mjs (./Normandy.sys.mjs)
+  res/normandy/NormandyMigrations.sys.mjs (./NormandyMigrations.sys.mjs)
   res/normandy/lib/ (./lib/*)
   res/normandy/skin/  (./skin/*)
-  res/normandy/actions/ (./actions/*.jsm)
-  res/normandy/actions/schemas/index.js (./actions/schemas/index.js)
+  res/normandy/actions/ (./actions/*.sys.mjs)
+  res/normandy/actions/schemas/index.sys.mjs (./actions/schemas/index.sys.mjs)
   res/normandy/schemas/ (./schemas/*.schema.json)
 
 % resource normandy-content %res/normandy/content/ contentaccessible=yes
