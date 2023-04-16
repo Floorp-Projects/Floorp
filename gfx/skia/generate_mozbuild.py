@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import locale
 import subprocess
@@ -39,7 +39,6 @@ AllowCompilerWarnings()
 FINAL_LIBRARY = 'gkmedias'
 LOCAL_INCLUDES += [
     'skia',
-    'skia/include/third_party/skcms',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
@@ -54,10 +53,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 
 if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES['skia/src/opts/SkOpts_ssse3.cpp'].flags += ['-mssse3']
-    SOURCES['skia/src/opts/SkOpts_sse41.cpp'].flags += ['-msse4.1']
     SOURCES['skia/src/opts/SkOpts_sse42.cpp'].flags += ['-msse4.2']
     SOURCES['skia/src/opts/SkOpts_avx.cpp'].flags += ['-mavx']
     SOURCES['skia/src/opts/SkOpts_hsw.cpp'].flags += ['-mavx2', '-mf16c', '-mfma']
+    SOURCES['skia/src/opts/SkOpts_skx.cpp'].flags += ['-mavx512f', '-mavx512dq', '-mavx512cd', '-mavx512bw', '-mavx512vl']
 elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     SOURCES['skia/src/opts/SkOpts_crc32.cpp'].flags += ['-march=armv8-a+crc']
 
@@ -104,13 +103,11 @@ import json
 platforms = ['linux', 'mac', 'android', 'win']
 
 def parse_sources(output):
-  return set(v.replace('//', 'skia/') for v in output.split() if v.endswith('.cpp') or v.endswith('.S'))
+  return set(v.replace('//', 'skia/') for v in output.decode('utf-8').split() if v.endswith('.cpp') or v.endswith('.S'))
 
 def generate_opt_sources():
-  cpus = [('intel', 'x86', [':sse2', ':ssse3', ':sse41', ':sse42', ':avx', ':hsw']),
-          ('arm', 'arm', [':armv7']),
-          ('arm64', 'arm64', [':arm64', ':crc32']),
-          ('none', 'none', [':none'])]
+  cpus = [('intel', 'x86', [':ssse3', ':sse42', ':avx', ':hsw', ':skx']),
+          ('arm64', 'arm64', [':crc32'])]
 
   opt_sources = {}
   for key, cpu, deps in cpus:
@@ -122,7 +119,7 @@ def generate_opt_sources():
             if output:
                 opt_sources[key].update(parse_sources(output))
         except subprocess.CalledProcessError as e:
-            if e.output.find('source_set') < 0:
+            if e.output.find(b'source_set') < 0:
                 raise
 
   return opt_sources
@@ -138,7 +135,11 @@ def generate_platform_sources():
     if output:
       sources[plat] = parse_sources(output)
 
-  plat_deps = {':fontmgr_win' : 'win', ':fontmgr_win_gdi' : 'win'}
+  plat_deps = {
+    ':fontmgr_win' : 'win',
+    ':fontmgr_win_gdi' : 'win',
+    ':fontmgr_mac_ct' : 'mac',
+  }
   for dep, key in plat_deps.items():
     output = subprocess.check_output('cd skia && bin/gn desc out/{1} {0} sources'.format(dep, key), shell=True)
     if output:
@@ -150,33 +151,26 @@ def generate_platform_sources():
     if output:
       sources[key] = parse_sources(output)
 
-  return dict(sources.items() + generate_opt_sources().items())
+  sources.update(generate_opt_sources())
+  return sources
 
 
 def generate_separated_sources(platform_sources):
   ignorelist = [
     'skia/src/android/',
-    'skia/src/atlastext/',
-    'skia/src/c/',
     'skia/src/effects/',
     'skia/src/fonts/',
     'skia/src/ports/SkImageEncoder',
     'skia/src/ports/SkImageGenerator',
-    'SkBitmapRegion',
-    'SkLite',
     'SkLight',
-    'SkNormal',
     'codec',
     'SkWGL',
     'SkMemory_malloc',
     'third_party',
-    'Sk3D',
     'SkAnimCodecPlayer',
     'SkCamera',
     'SkCanvasStack',
     'SkCanvasStateUtils',
-    'SkFrontBufferedStream',
-    'SkInterpolator',
     'JSON',
     'SkMultiPictureDocument',
     'SkNullCanvas',
@@ -184,11 +178,9 @@ def generate_separated_sources(platform_sources):
     'SkOverdrawCanvas',
     'SkPaintFilterCanvas',
     'SkParseColor',
-    'SkWhitelistTypefaces',
     'SkXPS',
     'SkCreateCGImageRef',
     'skia/src/ports/SkGlobalInitialization',
-    'skia/src/sksl/SkSLJIT',
   ]
 
   def isignorelisted(value):
@@ -208,11 +200,9 @@ def generate_separated_sources(platform_sources):
       'skia/src/ports/SkGlobalInitialization_default.cpp',
       'skia/src/ports/SkMemory_mozalloc.cpp',
       'skia/src/ports/SkImageGenerator_none.cpp',
-      'skia/third_party/skcms/skcms.cc',
-      'skia/src/core/SkBitmapScaler.cpp',
-      'skia/src/core/SkGlyphBuffer.cpp',
-      'skia/src/core/SkConvolver.cpp',
+      'skia/modules/skcms/skcms.cc',
       'skia/src/core/SkImageFilterTypes.cpp',
+      'skia/src/ports/SkFontMgr_empty_factory.cpp',
     },
     'android': {
       # 'skia/src/ports/SkDebug_android.cpp',
@@ -285,7 +275,6 @@ def write_cflags(f, values, subsearch, cflag, indent):
 opt_allowlist = [
   'SkOpts',
   'SkBitmapProcState',
-  'SkBitmapScaler',
   'SkBlitRow',
   'SkBlitter',
   'SkSpriteBlitter',
@@ -300,26 +289,23 @@ unified_ignorelist = [
   'SkBitmapProcState_matrixProcs.cpp',
   'SkBlitter_A8.cpp',
   'SkBlitter_ARGB32.cpp',
-  'SkBlitter_RGB16.cpp',
   'SkBlitter_Sprite.cpp',
+  'SkCpu.cpp',
   'SkScan_Antihair.cpp',
   'SkScan_AntiPath.cpp',
-  'SkScan_DAAPath.cpp',
   'SkParse.cpp',
   'SkPDFFont.cpp',
   'SkPDFDevice.cpp',
   'SkPDFType1Font.cpp',
   'SkPictureData.cpp',
   'SkColorSpace',
+  'SkPath.cpp',
   'SkPathOpsDebug.cpp',
   'SkParsePath.cpp',
   'SkRecorder.cpp',
-  'SkMiniRecorder.cpp',
   'SkXfermode',
-  'SkMatrix44.cpp',
   'SkRTree.cpp',
   'SkVertices.cpp',
-  'SkSLHCodeGenerator.cpp',
   'SkSLLexer.cpp',
 ] + opt_allowlist
 
