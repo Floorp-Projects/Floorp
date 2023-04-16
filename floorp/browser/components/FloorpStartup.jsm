@@ -46,6 +46,9 @@ let isUpdated = false;
     Services.prefs.setStringPref("floorp.startup.oldVersion", nowVersion);
 }
 
+const isMainBrowser =
+    !Services.dirsvc.get("ProfD", Ci.nsIFile).path.endsWith("chrome_debugger_profile");
+
 
 // Optimize the notification function.
 {
@@ -178,7 +181,9 @@ NOTE: You can use the userContent.css file without change preferences (about:con
         }, 5000);
     }
 }
-Services.obs.addObserver(onFinalUIStartup, "final-ui-startup");
+if (isMainBrowser) {
+    Services.obs.addObserver(onFinalUIStartup, "final-ui-startup");
+}
 
 
 // Optimize for portable version
@@ -214,21 +219,23 @@ if (Services.prefs.getBoolPref("floorp.isPortable", false)) {
 }
 
 
-// Load Tab Sleep feature
-try {
-    ChromeUtils.import("resource:///modules/TabSleep.jsm");
-} catch (e) { console.error(e) }
+if (isMainBrowser) {
+    // Load Tab Sleep feature
+    try {
+        ChromeUtils.import("resource:///modules/TabSleep.jsm");
+    } catch (e) { console.error(e) }
 
-// Load OpenLinkInExternal feature
-try {
-    // Disable it in the Flatpak version because it does not work.
-    // https://gitlab.gnome.org/GNOME/gtk/-/blob/4300a5c609306ce77cbc8a3580c19201dccd8d13/gdk/gdk.c#L472
-    if (AppConstants.platform === "linux" && FileUtils.File("/.flatpak-info").exists()) {
-        Services.prefs.lockPref("floorp.openLinkInExternal.enabled");
-    }
-    if (AppConstants.platform === "win" || AppConstants.platform === "linux") {
-        if (Services.prefs.getBoolPref("floorp.openLinkInExternal.enabled", false)) {
-            ChromeUtils.import("resource:///modules/OpenLinkInExternal.jsm");
+    // Load OpenLinkInExternal feature
+    try {
+        // Disable it in the Flatpak version because it does not work.
+        // https://gitlab.gnome.org/GNOME/gtk/-/blob/4300a5c609306ce77cbc8a3580c19201dccd8d13/gdk/gdk.c#L472
+        if (AppConstants.platform === "linux" && FileUtils.File("/.flatpak-info").exists()) {
+            Services.prefs.lockPref("floorp.openLinkInExternal.enabled");
         }
-    }
-} catch (e) { console.error(e) }
+        if (AppConstants.platform === "win" || AppConstants.platform === "linux") {
+            if (Services.prefs.getBoolPref("floorp.openLinkInExternal.enabled", false)) {
+                ChromeUtils.import("resource:///modules/OpenLinkInExternal.jsm");
+            }
+        }
+    } catch (e) { console.error(e) }
+}
