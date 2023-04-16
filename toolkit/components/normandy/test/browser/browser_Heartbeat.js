@@ -1,7 +1,7 @@
 "use strict";
 
-const { Heartbeat } = ChromeUtils.import(
-  "resource://normandy/lib/Heartbeat.jsm"
+const { Heartbeat } = ChromeUtils.importESModule(
+  "resource://normandy/lib/Heartbeat.sys.mjs"
 );
 
 /**

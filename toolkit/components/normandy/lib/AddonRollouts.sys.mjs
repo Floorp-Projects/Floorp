@@ -7,12 +7,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   IndexedDB: "resource://gre/modules/IndexedDB.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
+  TelemetryEvents: "resource://normandy/lib/TelemetryEvents.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TelemetryEvents",
-  "resource://normandy/lib/TelemetryEvents.jsm"
-);
 
 /**
  * AddonRollouts store info about an active or expired addon rollouts.

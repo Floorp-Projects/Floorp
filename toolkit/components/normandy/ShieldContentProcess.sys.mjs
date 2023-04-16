@@ -10,9 +10,7 @@
  * process, including the parent one.
  */
 
-const { AboutPages } = ChromeUtils.import(
-  "resource://normandy-content/AboutPages.jsm"
-);
+import { AboutPages } from "resource://normandy-content/AboutPages.sys.mjs";
 
 export function AboutStudies() {
   return AboutPages.aboutStudies;

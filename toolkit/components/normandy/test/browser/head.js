@@ -4,26 +4,28 @@ const { Preferences } = ChromeUtils.importESModule(
 const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
-const { AboutPages } = ChromeUtils.import(
-  "resource://normandy-content/AboutPages.jsm"
+const { AboutPages } = ChromeUtils.importESModule(
+  "resource://normandy-content/AboutPages.sys.mjs"
 );
-const { AddonStudies } = ChromeUtils.import(
-  "resource://normandy/lib/AddonStudies.jsm"
+const { AddonStudies } = ChromeUtils.importESModule(
+  "resource://normandy/lib/AddonStudies.sys.mjs"
 );
-const { NormandyApi } = ChromeUtils.import(
-  "resource://normandy/lib/NormandyApi.jsm"
+const { NormandyApi } = ChromeUtils.importESModule(
+  "resource://normandy/lib/NormandyApi.sys.mjs"
 );
-const { TelemetryEvents } = ChromeUtils.import(
-  "resource://normandy/lib/TelemetryEvents.jsm"
+const { TelemetryEvents } = ChromeUtils.importESModule(
+  "resource://normandy/lib/TelemetryEvents.sys.mjs"
 );
-const { ShowHeartbeatAction } = ChromeUtils.import(
-  "resource://normandy/actions/ShowHeartbeatAction.jsm"
+const { ShowHeartbeatAction } = ChromeUtils.importESModule(
+  "resource://normandy/actions/ShowHeartbeatAction.sys.mjs"
 );
 
 // The name of this module conflicts with the window.Storage
 // DOM global - https://developer.mozilla.org/en-US/docs/Web/API/Storage .
 // eslint-disable-next-line mozilla/no-redeclare-with-import-autofix
-const { Storage } = ChromeUtils.import("resource://normandy/lib/Storage.jsm");
+const { Storage } = ChromeUtils.importESModule(
+  "resource://normandy/lib/Storage.sys.mjs"
+);
 
 ChromeUtils.defineESModuleGetters(this, {
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",

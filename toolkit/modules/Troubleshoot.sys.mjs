@@ -966,13 +966,17 @@ var dataProviders = {
 
     const {
       PreferenceExperiments: NormandyPreferenceStudies,
-    } = ChromeUtils.import("resource://normandy/lib/PreferenceExperiments.jsm");
-    const { AddonStudies: NormandyAddonStudies } = ChromeUtils.import(
-      "resource://normandy/lib/AddonStudies.jsm"
+    } = ChromeUtils.importESModule(
+      "resource://normandy/lib/PreferenceExperiments.sys.mjs"
+    );
+    const { AddonStudies: NormandyAddonStudies } = ChromeUtils.importESModule(
+      "resource://normandy/lib/AddonStudies.sys.mjs"
     );
     const {
       PreferenceRollouts: NormandyPreferenceRollouts,
-    } = ChromeUtils.import("resource://normandy/lib/PreferenceRollouts.jsm");
+    } = ChromeUtils.importESModule(
+      "resource://normandy/lib/PreferenceRollouts.sys.mjs"
+    );
     const { ExperimentManager } = ChromeUtils.importESModule(
       "resource://nimbus/lib/ExperimentManager.sys.mjs"
     );

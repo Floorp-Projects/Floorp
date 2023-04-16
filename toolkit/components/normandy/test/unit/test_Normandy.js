@@ -3,9 +3,11 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-const { Normandy } = ChromeUtils.import("resource://normandy/Normandy.jsm");
-const { NormandyMigrations } = ChromeUtils.import(
-  "resource://normandy/NormandyMigrations.jsm"
+const { Normandy } = ChromeUtils.importESModule(
+  "resource://normandy/Normandy.sys.mjs"
+);
+const { NormandyMigrations } = ChromeUtils.importESModule(
+  "resource://normandy/NormandyMigrations.sys.mjs"
 );
 const { PromiseUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/PromiseUtils.sys.mjs"

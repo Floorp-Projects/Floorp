@@ -4,14 +4,16 @@ const { IndexedDB } = ChromeUtils.importESModule(
   "resource://gre/modules/IndexedDB.sys.mjs"
 );
 
-const { PreferenceRollouts } = ChromeUtils.import(
-  "resource://normandy/lib/PreferenceRollouts.jsm"
+const { PreferenceRollouts } = ChromeUtils.importESModule(
+  "resource://normandy/lib/PreferenceRollouts.sys.mjs"
 );
 const {
   NormandyTestUtils: {
     factories: { preferenceRolloutFactory },
   },
-} = ChromeUtils.import("resource://testing-common/NormandyTestUtils.jsm");
+} = ChromeUtils.importESModule(
+  "resource://testing-common/NormandyTestUtils.sys.mjs"
+);
 
 decorate_task(
   PreferenceRollouts.withTestMock(),

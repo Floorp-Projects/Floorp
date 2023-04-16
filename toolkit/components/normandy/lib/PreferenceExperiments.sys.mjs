@@ -77,34 +77,17 @@
  */
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-
-const { CleanupManager } = ChromeUtils.import(
-  "resource://normandy/lib/CleanupManager.jsm"
-);
-const { LogManager } = ChromeUtils.import(
-  "resource://normandy/lib/LogManager.jsm"
-);
+import { CleanupManager } from "resource://normandy/lib/CleanupManager.sys.mjs";
+import { LogManager } from "resource://normandy/lib/LogManager.sys.mjs";
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
+  NormandyUtils: "resource://normandy/lib/NormandyUtils.sys.mjs",
+  PrefUtils: "resource://normandy/lib/PrefUtils.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
+  TelemetryEvents: "resource://normandy/lib/TelemetryEvents.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TelemetryEvents",
-  "resource://normandy/lib/TelemetryEvents.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "NormandyUtils",
-  "resource://normandy/lib/NormandyUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PrefUtils",
-  "resource://normandy/lib/PrefUtils.jsm"
-);
 
 const EXPERIMENT_FILE = "shield-preference-experiments.json";
 const STARTUP_EXPERIMENT_PREFS_BRANCH = "app.normandy.startupExperimentPrefs.";

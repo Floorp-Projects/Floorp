@@ -3,16 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { Log } from "resource://gre/modules/Log.sys.mjs";
-
-const { AddonStudies } = ChromeUtils.import(
-  "resource://normandy/lib/AddonStudies.jsm"
-);
-const { PreferenceExperiments } = ChromeUtils.import(
-  "resource://normandy/lib/PreferenceExperiments.jsm"
-);
-const { RecipeRunner } = ChromeUtils.import(
-  "resource://normandy/lib/RecipeRunner.jsm"
-);
+import { AddonStudies } from "resource://normandy/lib/AddonStudies.sys.mjs";
+import { PreferenceExperiments } from "resource://normandy/lib/PreferenceExperiments.sys.mjs";
+import { RecipeRunner } from "resource://normandy/lib/RecipeRunner.sys.mjs";
 
 const BOOTSTRAP_LOGGER_NAME = "app.normandy.bootstrap";
 

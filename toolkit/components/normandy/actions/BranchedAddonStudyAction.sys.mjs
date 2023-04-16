@@ -10,28 +10,25 @@
  */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
-const { BaseStudyAction } = ChromeUtils.import(
-  "resource://normandy/actions/BaseStudyAction.jsm"
-);
+import { BaseStudyAction } from "resource://normandy/actions/BaseStudyAction.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ActionSchemas: "resource://normandy/actions/schemas/index.sys.mjs",
+  AddonStudies: "resource://normandy/lib/AddonStudies.sys.mjs",
+  BaseAction: "resource://normandy/actions/BaseAction.sys.mjs",
+  ClientEnvironment: "resource://normandy/lib/ClientEnvironment.sys.mjs",
+  NormandyApi: "resource://normandy/lib/NormandyApi.sys.mjs",
+  NormandyUtils: "resource://normandy/lib/NormandyUtils.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   Sampling: "resource://gre/modules/components-utils/Sampling.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
+  TelemetryEvents: "resource://normandy/lib/TelemetryEvents.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ActionSchemas: "resource://normandy/actions/schemas/index.js",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
-  AddonStudies: "resource://normandy/lib/AddonStudies.jsm",
-  BaseAction: "resource://normandy/actions/BaseAction.jsm",
-  ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
-  NormandyApi: "resource://normandy/lib/NormandyApi.jsm",
-  NormandyUtils: "resource://normandy/lib/NormandyUtils.jsm",
-  TelemetryEvents: "resource://normandy/lib/TelemetryEvents.jsm",
 });
 
 class AddonStudyEnrollError extends Error {

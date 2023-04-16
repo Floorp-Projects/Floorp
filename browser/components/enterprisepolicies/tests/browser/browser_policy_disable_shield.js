@@ -4,14 +4,14 @@
 "use strict";
 
 add_task(async function test_policy_disable_shield() {
-  const { RecipeRunner } = ChromeUtils.import(
-    "resource://normandy/lib/RecipeRunner.jsm"
+  const { RecipeRunner } = ChromeUtils.importESModule(
+    "resource://normandy/lib/RecipeRunner.sys.mjs"
   );
-  const { BaseAction } = ChromeUtils.import(
-    "resource://normandy/actions/BaseAction.jsm"
+  const { BaseAction } = ChromeUtils.importESModule(
+    "resource://normandy/actions/BaseAction.sys.mjs"
   );
-  const { BaseStudyAction } = ChromeUtils.import(
-    "resource://normandy/actions/BaseStudyAction.jsm"
+  const { BaseStudyAction } = ChromeUtils.importESModule(
+    "resource://normandy/actions/BaseStudyAction.sys.mjs"
   );
 
   const baseAction = new BaseAction();

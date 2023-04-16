@@ -3,22 +3,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
-const { BaseAction } = ChromeUtils.import(
-  "resource://normandy/actions/BaseAction.jsm"
-);
+import { BaseAction } from "resource://normandy/actions/BaseAction.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ActionSchemas: "resource://normandy/actions/schemas/index.sys.mjs",
+  AddonRollouts: "resource://normandy/lib/AddonRollouts.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
+  TelemetryEvents: "resource://normandy/lib/TelemetryEvents.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ActionSchemas: "resource://normandy/actions/schemas/index.js",
   AddonManager: "resource://gre/modules/AddonManager.jsm",
-  AddonRollouts: "resource://normandy/lib/AddonRollouts.jsm",
-  TelemetryEvents: "resource://normandy/lib/TelemetryEvents.jsm",
 });
 
 export class AddonRollbackAction extends BaseAction {

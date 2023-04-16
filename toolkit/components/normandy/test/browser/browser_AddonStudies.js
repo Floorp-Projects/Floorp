@@ -4,8 +4,8 @@ const { IndexedDB } = ChromeUtils.importESModule(
   "resource://gre/modules/IndexedDB.sys.mjs"
 );
 
-const { NormandyTestUtils } = ChromeUtils.import(
-  "resource://testing-common/NormandyTestUtils.jsm"
+const { NormandyTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/NormandyTestUtils.sys.mjs"
 );
 const {
   addonStudyFactory,

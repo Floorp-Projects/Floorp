@@ -38,6 +38,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   LoginBreaches: "resource:///modules/LoginBreaches.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
+  Normandy: "resource://normandy/Normandy.sys.mjs",
   OsEnvironment: "resource://gre/modules/OsEnvironment.sys.mjs",
   PageDataService: "resource:///modules/pagedata/PageDataService.sys.mjs",
   PdfJs: "resource://pdf.js/PdfJs.sys.mjs",
@@ -97,8 +98,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
-  Normandy: "resource://normandy/Normandy.jsm",
-
   OnboardingMessageProvider:
     "resource://activity-stream/lib/OnboardingMessageProvider.jsm",
 
@@ -739,10 +738,10 @@ let JSWINDOWACTORS = {
 
   ShieldFrame: {
     parent: {
-      moduleURI: "resource://normandy-content/ShieldFrameParent.jsm",
+      esModuleURI: "resource://normandy-content/ShieldFrameParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource://normandy-content/ShieldFrameChild.jsm",
+      esModuleURI: "resource://normandy-content/ShieldFrameChild.sys.mjs",
       events: {
         pageshow: {},
         pagehide: {},

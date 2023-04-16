@@ -3,18 +3,13 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
   ClientEnvironmentBase:
     "resource://gre/modules/components-utils/ClientEnvironment.sys.mjs",
+  NormandyTestUtils: "resource://testing-common/NormandyTestUtils.sys.mjs",
   TelemetryController: "resource://gre/modules/TelemetryController.sys.mjs",
-  AppConstants: "resource://gre/modules/AppConstants.sys.mjs",
   updateAppInfo: "resource://testing-common/AppInfo.sys.mjs",
 });
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "NormandyTestUtils",
-  "resource://testing-common/NormandyTestUtils.jsm"
-);
 
 add_setup(() => {
   updateAppInfo();

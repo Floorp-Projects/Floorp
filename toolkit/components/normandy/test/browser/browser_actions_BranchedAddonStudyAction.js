@@ -1,15 +1,17 @@
 "use strict";
 
-const { BaseAction } = ChromeUtils.import(
-  "resource://normandy/actions/BaseAction.jsm"
+const { BaseAction } = ChromeUtils.importESModule(
+  "resource://normandy/actions/BaseAction.sys.mjs"
 );
-const { BranchedAddonStudyAction } = ChromeUtils.import(
-  "resource://normandy/actions/BranchedAddonStudyAction.jsm"
+const { BranchedAddonStudyAction } = ChromeUtils.importESModule(
+  "resource://normandy/actions/BranchedAddonStudyAction.sys.mjs"
 );
-const { Uptake } = ChromeUtils.import("resource://normandy/lib/Uptake.jsm");
+const { Uptake } = ChromeUtils.importESModule(
+  "resource://normandy/lib/Uptake.sys.mjs"
+);
 
-const { NormandyTestUtils } = ChromeUtils.import(
-  "resource://testing-common/NormandyTestUtils.jsm"
+const { NormandyTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/NormandyTestUtils.sys.mjs"
 );
 const { branchedAddonStudyFactory } = NormandyTestUtils.factories;
 

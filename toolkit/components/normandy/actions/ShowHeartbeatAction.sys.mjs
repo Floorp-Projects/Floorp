@@ -3,23 +3,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { BaseAction } from "resource://normandy/actions/BaseAction.sys.mjs";
 
-const { BaseAction } = ChromeUtils.import(
-  "resource://normandy/actions/BaseAction.jsm"
-);
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ActionSchemas: "resource://normandy/actions/schemas/index.js",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
-  Heartbeat: "resource://normandy/lib/Heartbeat.jsm",
-  Storage: "resource://normandy/lib/Storage.jsm",
-  NormandyUtils: "resource://normandy/lib/NormandyUtils.jsm",
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ActionSchemas: "resource://normandy/actions/schemas/index.sys.mjs",
+  ClientEnvironment: "resource://normandy/lib/ClientEnvironment.sys.mjs",
+  Heartbeat: "resource://normandy/lib/Heartbeat.sys.mjs",
+  NormandyUtils: "resource://normandy/lib/NormandyUtils.sys.mjs",
   ShellService: "resource:///modules/ShellService.sys.mjs",
+  Storage: "resource://normandy/lib/Storage.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
 

@@ -1,7 +1,7 @@
 "use strict";
 
-const { EventEmitter } = ChromeUtils.import(
-  "resource://normandy/lib/EventEmitter.jsm"
+const { EventEmitter } = ChromeUtils.importESModule(
+  "resource://normandy/lib/EventEmitter.sys.mjs"
 );
 
 const evidence = {

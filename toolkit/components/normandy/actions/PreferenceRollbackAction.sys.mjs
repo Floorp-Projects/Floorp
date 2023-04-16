@@ -2,33 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { BaseAction } = ChromeUtils.import(
-  "resource://normandy/actions/BaseAction.jsm"
-);
+import { BaseAction } from "resource://normandy/actions/BaseAction.sys.mjs";
+
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
+  ActionSchemas: "resource://normandy/actions/schemas/index.sys.mjs",
+  PrefUtils: "resource://normandy/lib/PrefUtils.sys.mjs",
+  PreferenceRollouts: "resource://normandy/lib/PreferenceRollouts.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
+  TelemetryEvents: "resource://normandy/lib/TelemetryEvents.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PreferenceRollouts",
-  "resource://normandy/lib/PreferenceRollouts.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PrefUtils",
-  "resource://normandy/lib/PrefUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ActionSchemas",
-  "resource://normandy/actions/schemas/index.js"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TelemetryEvents",
-  "resource://normandy/lib/TelemetryEvents.jsm"
-);
 
 export class PreferenceRollbackAction extends BaseAction {
   get schema() {

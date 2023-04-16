@@ -11,18 +11,14 @@ ChromeUtils.defineModuleGetter(
   "AddonManager",
   "resource://gre/modules/AddonManager.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "NormandyUtils",
-  "resource://normandy/lib/NormandyUtils.jsm"
-);
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AttributionCode: "resource:///modules/AttributionCode.sys.mjs",
+  NormandyUtils: "resource://normandy/lib/NormandyUtils.sys.mjs",
   ShellService: "resource:///modules/ShellService.sys.mjs",
   TelemetryArchive: "resource://gre/modules/TelemetryArchive.sys.mjs",
   TelemetryController: "resource://gre/modules/TelemetryController.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
-  AttributionCode: "resource:///modules/AttributionCode.sys.mjs",
   WindowsVersionInfo:
     "resource://gre/modules/components-utils/WindowsVersionInfo.sys.mjs",
 });

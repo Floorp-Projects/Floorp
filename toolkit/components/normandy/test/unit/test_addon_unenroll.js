@@ -4,20 +4,20 @@ const { AddonTestUtils } = ChromeUtils.import(
 const { ExtensionTestUtils } = ChromeUtils.import(
   "resource://testing-common/ExtensionXPCShellUtils.jsm"
 );
-const { BranchedAddonStudyAction } = ChromeUtils.import(
-  "resource://normandy/actions/BranchedAddonStudyAction.jsm"
+const { BranchedAddonStudyAction } = ChromeUtils.importESModule(
+  "resource://normandy/actions/BranchedAddonStudyAction.sys.mjs"
 );
-const { BaseAction } = ChromeUtils.import(
-  "resource://normandy/actions/BaseAction.jsm"
+const { BaseAction } = ChromeUtils.importESModule(
+  "resource://normandy/actions/BaseAction.sys.mjs"
 );
-const { TelemetryEvents } = ChromeUtils.import(
-  "resource://normandy/lib/TelemetryEvents.jsm"
+const { TelemetryEvents } = ChromeUtils.importESModule(
+  "resource://normandy/lib/TelemetryEvents.sys.mjs"
 );
 const { AddonManager } = ChromeUtils.import(
   "resource://gre/modules/AddonManager.jsm"
 );
-const { AddonStudies } = ChromeUtils.import(
-  "resource://normandy/lib/AddonStudies.jsm"
+const { AddonStudies } = ChromeUtils.importESModule(
+  "resource://normandy/lib/AddonStudies.sys.mjs"
 );
 const { PromiseUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/PromiseUtils.sys.mjs"
@@ -94,8 +94,8 @@ decorate_task(
           // the following two lines avoid false eslint warnings:
           /* globals browser, ExtensionAPI */
           /* eslint-disable-next-line no-shadow */
-          const { AddonStudies } = ChromeUtils.import(
-            "resource://normandy/lib/AddonStudies.jsm"
+          const { AddonStudies } = ChromeUtils.importESModule(
+            "resource://normandy/lib/AddonStudies.sys.mjs"
           );
           const { ExtensionCommon } = ChromeUtils.import(
             "resource://gre/modules/ExtensionCommon.jsm"

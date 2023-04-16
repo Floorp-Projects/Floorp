@@ -3,10 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
-const { LogManager } = ChromeUtils.import(
-  "resource://normandy/lib/LogManager.jsm"
-);
+import { LogManager } from "resource://normandy/lib/LogManager.sys.mjs";
 import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
 
 const lazy = {};
@@ -19,26 +16,23 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ActionsManager: "resource://normandy/lib/ActionsManager.sys.mjs",
+  BaseAction: "resource://normandy/actions/BaseAction.sys.mjs",
+  CleanupManager: "resource://normandy/lib/CleanupManager.sys.mjs",
+  ClientEnvironment: "resource://normandy/lib/ClientEnvironment.sys.mjs",
   FilterExpressions:
     "resource://gre/modules/components-utils/FilterExpressions.sys.mjs",
   LegacyHeartbeat: "resource://normandy/lib/LegacyHeartbeat.sys.mjs",
+  Normandy: "resource://normandy/Normandy.sys.mjs",
+  NormandyApi: "resource://normandy/lib/NormandyApi.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   RemoteSettingsClient:
     "resource://services-settings/RemoteSettingsClient.sys.mjs",
+  Storage: "resource://normandy/lib/Storage.sys.mjs",
   TargetingContext: "resource://messaging-system/targeting/Targeting.sys.mjs",
+  Uptake: "resource://normandy/lib/Uptake.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Storage: "resource://normandy/lib/Storage.jsm",
-  Normandy: "resource://normandy/Normandy.jsm",
-  NormandyApi: "resource://normandy/lib/NormandyApi.jsm",
-  ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
-  CleanupManager: "resource://normandy/lib/CleanupManager.jsm",
-  Uptake: "resource://normandy/lib/Uptake.jsm",
-  ActionsManager: "resource://normandy/lib/ActionsManager.jsm",
-  BaseAction: "resource://normandy/actions/BaseAction.jsm",
 });
 
 const log = LogManager.getLogger("recipe-runner");

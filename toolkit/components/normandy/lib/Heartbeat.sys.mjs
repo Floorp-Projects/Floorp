@@ -5,16 +5,9 @@
 import { Preferences } from "resource://gre/modules/Preferences.sys.mjs";
 import { TelemetryController } from "resource://gre/modules/TelemetryController.sys.mjs";
 import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
-
-const { CleanupManager } = ChromeUtils.import(
-  "resource://normandy/lib/CleanupManager.jsm"
-);
-const { EventEmitter } = ChromeUtils.import(
-  "resource://normandy/lib/EventEmitter.jsm"
-);
-const { LogManager } = ChromeUtils.import(
-  "resource://normandy/lib/LogManager.jsm"
-);
+import { CleanupManager } from "resource://normandy/lib/CleanupManager.sys.mjs";
+import { EventEmitter } from "resource://normandy/lib/EventEmitter.sys.mjs";
+import { LogManager } from "resource://normandy/lib/LogManager.sys.mjs";
 
 const PREF_SURVEY_DURATION = "browser.uitour.surveyDuration";
 const NOTIFICATION_TIME = 3000;

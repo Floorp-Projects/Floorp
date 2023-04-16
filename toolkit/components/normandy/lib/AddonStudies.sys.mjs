@@ -43,35 +43,23 @@
  *   or any other purpose. May be null on old study.
  */
 
-const { LogManager } = ChromeUtils.import(
-  "resource://normandy/lib/LogManager.jsm"
-);
+import { LogManager } from "resource://normandy/lib/LogManager.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  BranchedAddonStudyAction:
+    "resource://normandy/actions/BranchedAddonStudyAction.sys.mjs",
+  CleanupManager: "resource://normandy/lib/CleanupManager.sys.mjs",
   IndexedDB: "resource://gre/modules/IndexedDB.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
+  TelemetryEvents: "resource://normandy/lib/TelemetryEvents.sys.mjs",
 });
+
 ChromeUtils.defineModuleGetter(
   lazy,
   "AddonManager",
   "resource://gre/modules/AddonManager.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "BranchedAddonStudyAction",
-  "resource://normandy/actions/BranchedAddonStudyAction.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CleanupManager",
-  "resource://normandy/lib/CleanupManager.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "TelemetryEvents",
-  "resource://normandy/lib/TelemetryEvents.jsm"
 );
 
 const DB_NAME = "shield";
