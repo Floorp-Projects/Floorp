@@ -249,7 +249,7 @@ export const DoHController = {
         console.error(`Error getting dooh.ohttpURI: ${e.message}`);
       }
 
-      lazy.Preferences.set(ROLLOUT_URI_PREF, uri);
+      lazy.Preferences.set(ROLLOUT_URI_PREF, uri || "");
     }
     this.runHeuristicsThrottled("startup");
     Services.obs.addObserver(this, kLinkStatusChangedTopic);
