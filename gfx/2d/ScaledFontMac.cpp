@@ -164,7 +164,7 @@ ScaledFontMac::~ScaledFontMac() {
 }
 
 SkTypeface* ScaledFontMac::CreateSkTypeface() {
-  return SkCreateTypefaceFromCTFont(mCTFont);
+  return SkMakeTypefaceFromCTFont(mCTFont).release();
 }
 
 void ScaledFontMac::SetupSkFontDrawOptions(SkFont& aFont) {

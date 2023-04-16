@@ -7,7 +7,7 @@
 #include "PathSkia.h"
 #include "HelpersSkia.h"
 #include "PathHelpers.h"
-#include "skia/src/core/SkDraw.h"
+#include "skia/include/core/SkPathUtils.h"
 #include "skia/src/core/SkGeometry.h"
 
 namespace mozilla::gfx {
@@ -30,9 +30,9 @@ PathBuilderSkia::PathBuilderSkia(FillRule aFillRule) { SetFillRule(aFillRule); }
 void PathBuilderSkia::SetFillRule(FillRule aFillRule) {
   mFillRule = aFillRule;
   if (mFillRule == FillRule::FILL_WINDING) {
-    mPath.setFillType(SkPath::kWinding_FillType);
+    mPath.setFillType(SkPathFillType::kWinding);
   } else {
-    mPath.setFillType(SkPath::kEvenOdd_FillType);
+    mPath.setFillType(SkPathFillType::kEvenOdd);
   }
 }
 
@@ -129,10 +129,24 @@ bool PathSkia::ContainsPoint(const Point& aPoint,
   return SkPathContainsPoint(mPath, aPoint, aTransform);
 }
 
-float ComputeResScaleForStroking(const Matrix& aTransform) {
+bool PathSkia::GetFillPath(const StrokeOptions& aStrokeOptions,
+                           const Matrix& aTransform, SkPath& aFillPath,
+                           const Maybe<Rect>& aClipRect) const {
+  SkPaint paint;
+  if (!StrokeOptionsToPaint(paint, aStrokeOptions)) {
+    return false;
+  }
+
   SkMatrix skiaMatrix;
   GfxMatrixToSkiaMatrix(aTransform, skiaMatrix);
-  return SkDraw::ComputeResScaleForStroking(skiaMatrix);
+
+  Maybe<SkRect> cullRect;
+  if (aClipRect.isSome()) {
+    cullRect = Some(RectToSkRect(aClipRect.ref()));
+  }
+
+  return skpathutils::FillPathWithPaint(mPath, paint, &aFillPath,
+                                        cullRect.ptrOr(nullptr), skiaMatrix);
 }
 
 bool PathSkia::StrokeContainsPoint(const StrokeOptions& aStrokeOptions,
@@ -142,14 +156,10 @@ bool PathSkia::StrokeContainsPoint(const StrokeOptions& aStrokeOptions,
     return false;
   }
 
-  SkPaint paint;
-  if (!StrokeOptionsToPaint(paint, aStrokeOptions)) {
+  SkPath strokePath;
+  if (!GetFillPath(aStrokeOptions, aTransform, strokePath)) {
     return false;
   }
-
-  SkPath strokePath;
-  paint.getFillPath(mPath, &strokePath, nullptr,
-                    ComputeResScaleForStroking(aTransform));
 
   return SkPathContainsPoint(strokePath, aPoint, aTransform);
 }
@@ -169,15 +179,12 @@ Rect PathSkia::GetStrokedBounds(const StrokeOptions& aStrokeOptions,
     return Rect();
   }
 
-  SkPaint paint;
-  if (!StrokeOptionsToPaint(paint, aStrokeOptions)) {
+  SkPath fillPath;
+  if (!GetFillPath(aStrokeOptions, aTransform, fillPath)) {
     return Rect();
   }
 
-  SkPath result;
-  paint.getFillPath(mPath, &result);
-
-  Rect bounds = SkRectToRect(result.computeTightBounds());
+  Rect bounds = SkRectToRect(fillPath.computeTightBounds());
   return aTransform.TransformBounds(bounds);
 }
 
