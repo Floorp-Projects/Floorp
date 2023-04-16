@@ -10,8 +10,7 @@
 
 #include "include/core/SkColor.h"
 #include "include/core/SkColorPriv.h"
-#include "include/private/SkNx.h"
-#include "include/private/SkTo.h"
+#include "include/private/base/SkTo.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Convert a 16bit pixel to a 32bit pixel
@@ -50,7 +49,7 @@ static inline unsigned SkB16ToB32(unsigned b) {
 
 //////////////////////////////////////////////////////////////////////////////
 
-#define SkASSERT_IS_BYTE(x)     SkASSERT(0 == ((x) & ~0xFF))
+#define SkASSERT_IS_BYTE(x)     SkASSERT(0 == ((x) & ~0xFFu))
 
 // Reverse the bytes coorsponding to RED and BLUE in a packed pixels. Note the
 // pair of them are in the same 2 slots in both RGBA and BGRA, thus there is
@@ -158,14 +157,13 @@ static inline uint16_t SkPackRGB16(unsigned r, unsigned g, unsigned b) {
  * utility functions. Third parameter controls blending of the first two:
  *   (src, dst, 0) returns dst
  *   (src, dst, 0xFF) returns src
- *   srcWeight is [0..256], unlike SkFourByteInterp which takes [0..255]
+ *   scale is [0..256], unlike SkFourByteInterp which takes [0..255]
  */
-static inline SkPMColor SkFourByteInterp256(SkPMColor src, SkPMColor dst,
-                                         unsigned scale) {
-    unsigned a = SkAlphaBlend(SkGetPackedA32(src), SkGetPackedA32(dst), scale);
-    unsigned r = SkAlphaBlend(SkGetPackedR32(src), SkGetPackedR32(dst), scale);
-    unsigned g = SkAlphaBlend(SkGetPackedG32(src), SkGetPackedG32(dst), scale);
-    unsigned b = SkAlphaBlend(SkGetPackedB32(src), SkGetPackedB32(dst), scale);
+static inline SkPMColor SkFourByteInterp256(SkPMColor src, SkPMColor dst, int scale) {
+    unsigned a = SkTo<uint8_t>(SkAlphaBlend(SkGetPackedA32(src), SkGetPackedA32(dst), scale));
+    unsigned r = SkTo<uint8_t>(SkAlphaBlend(SkGetPackedR32(src), SkGetPackedR32(dst), scale));
+    unsigned g = SkTo<uint8_t>(SkAlphaBlend(SkGetPackedG32(src), SkGetPackedG32(dst), scale));
+    unsigned b = SkTo<uint8_t>(SkAlphaBlend(SkGetPackedB32(src), SkGetPackedB32(dst), scale));
 
     return SkPackARGB32(a, r, g, b);
 }
@@ -176,9 +174,8 @@ static inline SkPMColor SkFourByteInterp256(SkPMColor src, SkPMColor dst,
  *   (src, dst, 0) returns dst
  *   (src, dst, 0xFF) returns src
  */
-static inline SkPMColor SkFourByteInterp(SkPMColor src, SkPMColor dst,
-                                         U8CPU srcWeight) {
-    unsigned scale = SkAlpha255To256(srcWeight);
+static inline SkPMColor SkFourByteInterp(SkPMColor src, SkPMColor dst, U8CPU srcWeight) {
+    int scale = (int)SkAlpha255To256(srcWeight);
     return SkFourByteInterp256(src, dst, scale);
 }
 
@@ -260,9 +257,7 @@ static inline SkPMColor SkFastFourByteInterp256(SkPMColor src, SkPMColor dst, un
  * Nearly the same as SkFourByteInterp, but faster and a touch more accurate, due to better
  * srcWeight scaling to [0, 256].
  */
-static inline SkPMColor SkFastFourByteInterp(SkPMColor src,
-                                             SkPMColor dst,
-                                             U8CPU srcWeight) {
+static inline SkPMColor SkFastFourByteInterp(SkPMColor src, SkPMColor dst, U8CPU srcWeight) {
     SkASSERT(srcWeight <= 255);
     // scale = srcWeight + (srcWeight >> 7) is more accurate than
     // scale = srcWeight + 1, but 7% slower
@@ -334,27 +329,6 @@ static inline U16CPU SkPack888ToRGB16(U8CPU r, U8CPU g, U8CPU b) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-/*  SrcOver the 32bit src color with the 16bit dst, returning a 16bit value
-    (with dirt in the high 16bits, so caller beware).
-*/
-static inline U16CPU SkSrcOver32To16(SkPMColor src, uint16_t dst) {
-    unsigned sr = SkGetPackedR32(src);
-    unsigned sg = SkGetPackedG32(src);
-    unsigned sb = SkGetPackedB32(src);
-
-    unsigned dr = SkGetPackedR16(dst);
-    unsigned dg = SkGetPackedG16(dst);
-    unsigned db = SkGetPackedB16(dst);
-
-    unsigned isa = 255 - SkGetPackedA32(src);
-
-    dr = (sr + SkMul16ShiftRound(dr, isa, SK_R16_BITS)) >> (8 - SK_R16_BITS);
-    dg = (sg + SkMul16ShiftRound(dg, isa, SK_G16_BITS)) >> (8 - SK_G16_BITS);
-    db = (sb + SkMul16ShiftRound(db, isa, SK_B16_BITS)) >> (8 - SK_B16_BITS);
-
-    return SkPackRGB16(dr, dg, db);
-}
-
 static inline SkColor SkPixel16ToColor(U16CPU src) {
     SkASSERT(src == SkToU16(src));
 
@@ -399,46 +373,14 @@ static inline SkPMColor SkPixel4444ToPixel32(U16CPU c) {
     return d | (d << 4);
 }
 
-static inline Sk4f swizzle_rb(const Sk4f& x) {
-    return SkNx_shuffle<2, 1, 0, 3>(x);
-}
-
-static inline Sk4f swizzle_rb_if_bgra(const Sk4f& x) {
-#ifdef SK_PMCOLOR_IS_BGRA
-    return swizzle_rb(x);
-#else
-    return x;
-#endif
-}
-
-static inline Sk4f Sk4f_fromL32(uint32_t px) {
-    return SkNx_cast<float>(Sk4b::Load(&px)) * (1 / 255.0f);
-}
-
-static inline uint32_t Sk4f_toL32(const Sk4f& px) {
-    Sk4f v = px;
-
-#if !defined(SKNX_NO_SIMD) && SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
-    // SkNx_cast<uint8_t, int32_t>() pins, and we don't anticipate giant floats
-#elif !defined(SKNX_NO_SIMD) && defined(SK_ARM_HAS_NEON)
-    // SkNx_cast<uint8_t, int32_t>() pins, and so does Sk4f_round().
-#else
-    // No guarantee of a pin.
-    v = Sk4f::Max(0, Sk4f::Min(v, 1));
-#endif
-
-    uint32_t l32;
-    SkNx_cast<uint8_t>(Sk4f_round(v * 255.0f)).store(&l32);
-    return l32;
-}
-
 using SkPMColor4f = SkRGBA4f<kPremul_SkAlphaType>;
 
 constexpr SkPMColor4f SK_PMColor4fTRANSPARENT = { 0, 0, 0, 0 };
+constexpr SkPMColor4f SK_PMColor4fBLACK = { 0, 0, 0, 1 };
 constexpr SkPMColor4f SK_PMColor4fWHITE = { 1, 1, 1, 1 };
 constexpr SkPMColor4f SK_PMColor4fILLEGAL = { SK_FloatNegativeInfinity,
-                                                  SK_FloatNegativeInfinity,
-                                                  SK_FloatNegativeInfinity,
-                                                  SK_FloatNegativeInfinity };
+                                              SK_FloatNegativeInfinity,
+                                              SK_FloatNegativeInfinity,
+                                              SK_FloatNegativeInfinity };
 
 #endif

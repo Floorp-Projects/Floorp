@@ -10,17 +10,19 @@
 
 #include "include/core/SkString.h"
 #include "include/core/SkTypes.h"
-#include "include/private/SkNoncopyable.h"
-#include "include/private/SkTLogic.h"
+#include "include/private/SkOpts_spi.h"
+#include "include/private/base/SkTLogic.h"
 
-// #include "src/core/SkOpts.h"
-// It's sort of pesky to be able to include SkOpts.h here, so we'll just re-declare what we need.
-namespace SkOpts {
-    extern uint32_t (*hash_fn)(const void*, size_t, uint32_t);
-}
+#include <string>
+#include <string_view>
 
-class SkChecksum : SkNoncopyable {
+class SkChecksum {
 public:
+    SkChecksum() = default;
+    // Make noncopyable
+    SkChecksum(const SkChecksum&) = delete;
+    SkChecksum& operator=(const SkChecksum&) = delete;
+
     /**
      * uint32_t -> uint32_t hash, useful for when you're about to trucate this hash but you
      * suspect its low bits aren't well mixed.
@@ -54,17 +56,25 @@ public:
 // It should be both reasonably fast and high quality.
 struct SkGoodHash {
     template <typename K>
-    SK_WHEN(sizeof(K) == 4, uint32_t) operator()(const K& k) const {
+    std::enable_if_t<sizeof(K) == 4, uint32_t> operator()(const K& k) const {
         return SkChecksum::Mix(*(const uint32_t*)&k);
     }
 
     template <typename K>
-    SK_WHEN(sizeof(K) != 4, uint32_t) operator()(const K& k) const {
+    std::enable_if_t<sizeof(K) != 4, uint32_t> operator()(const K& k) const {
         return SkOpts::hash_fn(&k, sizeof(K), 0);
     }
 
     uint32_t operator()(const SkString& k) const {
         return SkOpts::hash_fn(k.c_str(), k.size(), 0);
+    }
+
+    uint32_t operator()(const std::string& k) const {
+        return SkOpts::hash_fn(k.c_str(), k.size(), 0);
+    }
+
+    uint32_t operator()(std::string_view k) const {
+        return SkOpts::hash_fn(k.data(), k.size(), 0);
     }
 };
 

@@ -9,10 +9,21 @@
 #define SkPixmap_DEFINED
 
 #include "include/core/SkColor.h"
-#include "include/core/SkFilterQuality.h"
+#include "include/core/SkColorType.h"
 #include "include/core/SkImageInfo.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkSamplingOptions.h"
+#include "include/core/SkSize.h"
+#include "include/private/base/SkAPI.h"
+#include "include/private/base/SkAssert.h"
+#include "include/private/base/SkAttributes.h"
 
-class SkData;
+#include <cstddef>
+#include <cstdint>
+
+class SkColorSpace;
+enum SkAlphaType : int;
 struct SkMask;
 
 /** \class SkPixmap
@@ -68,6 +79,8 @@ public:
 
         The prior pixels are unaffected; it is up to the caller to release pixels
         memory if desired.
+
+        example: https://fiddle.skia.org/c/@Pixmap_reset
     */
     void reset();
 
@@ -85,6 +98,8 @@ public:
         @param info      width, height, SkAlphaType, SkColorType of SkImageInfo
         @param addr      pointer to pixels allocated by caller; may be nullptr
         @param rowBytes  size of one row of addr; width times pixel size, or larger
+
+        example: https://fiddle.skia.org/c/@Pixmap_reset_2
     */
     void reset(const SkImageInfo& info, const void* addr, size_t rowBytes);
 
@@ -93,6 +108,8 @@ public:
         SkColorSpace reference count is incremented.
 
         @param colorSpace  SkColorSpace moved to SkImageInfo
+
+        example: https://fiddle.skia.org/c/@Pixmap_setColorSpace
     */
     void setColorSpace(sk_sp<SkColorSpace> colorSpace);
 
@@ -154,22 +171,8 @@ public:
      */
     SkISize dimensions() const { return fInfo.dimensions(); }
 
-    /** Returns SkColorType, one of:
-        kUnknown_SkColorType, kAlpha_8_SkColorType, kRGB_565_SkColorType,
-        kARGB_4444_SkColorType, kRGBA_8888_SkColorType, kRGB_888x_SkColorType,
-        kBGRA_8888_SkColorType, kRGBA_1010102_SkColorType, kRGB_101010x_SkColorType,
-        kGray_8_SkColorType, kRGBA_F16_SkColorType.
-
-        @return  SkColorType in SkImageInfo
-    */
     SkColorType colorType() const { return fInfo.colorType(); }
 
-    /** Returns SkAlphaType, one of:
-        kUnknown_SkAlphaType, kOpaque_SkAlphaType, kPremul_SkAlphaType,
-        kUnpremul_SkAlphaType.
-
-        @return  SkAlphaType in SkImageInfo
-    */
     SkAlphaType alphaType() const { return fInfo.alphaType(); }
 
     /** Returns SkColorSpace, the range of colors, associated with SkImageInfo. The
@@ -178,7 +181,7 @@ public:
 
         @return  SkColorSpace in SkImageInfo, or nullptr
     */
-    SkColorSpace* colorSpace() const { return fInfo.colorSpace(); }
+    SkColorSpace* colorSpace() const;
 
     /** Returns smart pointer to SkColorSpace, the range of colors, associated with
         SkImageInfo. The smart pointer tracks the number of objects sharing this
@@ -188,7 +191,7 @@ public:
 
         @return  SkColorSpace in SkImageInfo wrapped in a smart pointer
     */
-    sk_sp<SkColorSpace> refColorSpace() const { return fInfo.refColorSpace(); }
+    sk_sp<SkColorSpace> refColorSpace() const;
 
     /** Returns true if SkAlphaType is kOpaque_SkAlphaType.
         Does not check if SkColorType allows alpha, or if any pixel value has
@@ -243,6 +246,8 @@ public:
         Returns false for kUnknown_SkColorType.
 
         @return  true if all pixels have opaque values or SkColorType is opaque
+
+        example: https://fiddle.skia.org/c/@Pixmap_computeIsOpaque
     */
     bool computeIsOpaque() const;
 
@@ -261,8 +266,29 @@ public:
         @param x  column index, zero or greater, and less than width()
         @param y  row index, zero or greater, and less than height()
         @return   pixel converted to unpremultiplied color
+
+        example: https://fiddle.skia.org/c/@Pixmap_getColor
     */
     SkColor getColor(int x, int y) const;
+
+    /** Returns pixel at (x, y) as unpremultiplied color as an SkColor4f.
+        Returns black with alpha if SkColorType is kAlpha_8_SkColorType.
+
+        Input is not validated: out of bounds values of x or y trigger an assert() if
+        built with SK_DEBUG defined; and returns undefined values or may crash if
+        SK_RELEASE is defined. Fails if SkColorType is kUnknown_SkColorType or
+        pixel address is nullptr.
+
+        SkColorSpace in SkImageInfo is ignored. Some color precision may be lost in the
+        conversion to unpremultiplied color; original pixel data may have additional
+        precision, though this is less likely than for getColor(). Rounding errors may
+        occur if the underlying type has lower precision.
+
+        @param x  column index, zero or greater, and less than width()
+        @param y  row index, zero or greater, and less than height()
+        @return   pixel converted to unpremultiplied float color
+    */
+    SkColor4f getColor4f(int x, int y) const;
 
     /** Look up the pixel at (x,y) and return its alpha component, normalized to [0..1].
         This is roughly equivalent to SkGetColorA(getColor()), but can be more efficent
@@ -373,7 +399,7 @@ public:
     const uint8_t* addr8(int x, int y) const {
         SkASSERT((unsigned)x < (unsigned)fInfo.width());
         SkASSERT((unsigned)y < (unsigned)fInfo.height());
-        return (const uint8_t*)((const char*)this->addr8() + y * fRowBytes + (x << 0));
+        return (const uint8_t*)((const char*)this->addr8() + (size_t)y * fRowBytes + (x << 0));
     }
 
     /** Returns readable pixel address at (x, y).
@@ -391,7 +417,7 @@ public:
     const uint16_t* addr16(int x, int y) const {
         SkASSERT((unsigned)x < (unsigned)fInfo.width());
         SkASSERT((unsigned)y < (unsigned)fInfo.height());
-        return (const uint16_t*)((const char*)this->addr16() + y * fRowBytes + (x << 1));
+        return (const uint16_t*)((const char*)this->addr16() + (size_t)y * fRowBytes + (x << 1));
     }
 
     /** Returns readable pixel address at (x, y).
@@ -409,7 +435,7 @@ public:
     const uint32_t* addr32(int x, int y) const {
         SkASSERT((unsigned)x < (unsigned)fInfo.width());
         SkASSERT((unsigned)y < (unsigned)fInfo.height());
-        return (const uint32_t*)((const char*)this->addr32() + y * fRowBytes + (x << 2));
+        return (const uint32_t*)((const char*)this->addr32() + (size_t)y * fRowBytes + (x << 2));
     }
 
     /** Returns readable pixel address at (x, y).
@@ -427,7 +453,7 @@ public:
     const uint64_t* addr64(int x, int y) const {
         SkASSERT((unsigned)x < (unsigned)fInfo.width());
         SkASSERT((unsigned)y < (unsigned)fInfo.height());
-        return (const uint64_t*)((const char*)this->addr64() + y * fRowBytes + (x << 3));
+        return (const uint64_t*)((const char*)this->addr64() + (size_t)y * fRowBytes + (x << 3));
     }
 
     /** Returns readable pixel address at (x, y).
@@ -658,27 +684,22 @@ public:
 
         Returns false if SkBitmap width() or height() is zero or negative.
 
-        Scales the image, with filterQuality, to match dst.width() and dst.height().
-        filterQuality kNone_SkFilterQuality is fastest, typically implemented with
-        nearest neighbor filter. kLow_SkFilterQuality is typically implemented with
-        bilerp filter. kMedium_SkFilterQuality is typically implemented with
-        bilerp filter, and mip-map filter when size is reduced.
-        kHigh_SkFilterQuality is slowest, typically implemented with bicubic filter.
-
         @param dst            SkImageInfo and pixel address to write to
-        @param filterQuality  one of: kNone_SkFilterQuality, kLow_SkFilterQuality,
-                              kMedium_SkFilterQuality, kHigh_SkFilterQuality
         @return               true if pixels are scaled to fit dst
+
+        example: https://fiddle.skia.org/c/@Pixmap_scalePixels
     */
-    bool scalePixels(const SkPixmap& dst, SkFilterQuality filterQuality) const;
+    bool scalePixels(const SkPixmap& dst, const SkSamplingOptions&) const;
 
     /** Writes color to pixels bounded by subset; returns true on success.
         Returns false if colorType() is kUnknown_SkColorType, or if subset does
         not intersect bounds().
 
-        @param color   unpremultiplied color to write
+        @param color   sRGB unpremultiplied color to write
         @param subset  bounding integer SkRect of written pixels
         @return        true if pixels are changed
+
+        example: https://fiddle.skia.org/c/@Pixmap_erase
     */
     bool erase(SkColor color, const SkIRect& subset) const;
 
@@ -686,7 +707,7 @@ public:
         Returns false if colorType() is kUnknown_SkColorType, or if bounds()
         is empty.
 
-        @param color  unpremultiplied color to write
+        @param color  sRGB unpremultiplied color to write
         @return       true if pixels are changed
     */
     bool erase(SkColor color) const { return this->erase(color, this->bounds()); }
@@ -696,18 +717,32 @@ public:
         colorType() is kUnknown_SkColorType, if subset is not nullptr and does
         not intersect bounds(), or if subset is nullptr and bounds() is empty.
 
+        @param color   sRGB unpremultiplied color to write
+        @param subset  bounding integer SkRect of pixels to write; may be nullptr
+        @return        true if pixels are changed
+
+        example: https://fiddle.skia.org/c/@Pixmap_erase_3
+    */
+    bool erase(const SkColor4f& color, const SkIRect* subset = nullptr) const {
+        return this->erase(color, nullptr, subset);
+    }
+
+    /** Writes color to pixels bounded by subset; returns true on success.
+        if subset is nullptr, writes colors pixels inside bounds(). Returns false if
+        colorType() is kUnknown_SkColorType, if subset is not nullptr and does
+        not intersect bounds(), or if subset is nullptr and bounds() is empty.
+
         @param color   unpremultiplied color to write
+        @param cs      SkColorSpace of color
         @param subset  bounding integer SkRect of pixels to write; may be nullptr
         @return        true if pixels are changed
     */
-    bool erase(const SkColor4f& color, const SkIRect* subset = nullptr) const;
+    bool erase(const SkColor4f& color, SkColorSpace* cs, const SkIRect* subset = nullptr) const;
 
 private:
     const void*     fPixels;
     size_t          fRowBytes;
     SkImageInfo     fInfo;
-
-    friend class SkPixmapPriv;
 };
 
 #endif

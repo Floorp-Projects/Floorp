@@ -7,8 +7,8 @@
 
 #include "src/core/SkStrokerPriv.h"
 
-#include "include/private/SkMacros.h"
-#include "include/private/SkTo.h"
+#include "include/private/base/SkMacros.h"
+#include "include/private/base/SkTo.h"
 #include "src/core/SkGeometry.h"
 #include "src/core/SkPathPriv.h"
 #include "src/core/SkPointPriv.h"
@@ -25,15 +25,19 @@ enum {
 // quads with extreme widths (e.g. (0,1) (1,6) (0,3) width=5e7) recurse to point of failure
 // largest seen for normal cubics : 5, 26
 // largest seen for normal quads : 11
-static const int kRecursiveLimits[] = { 5*3, 26*3, 11*3, 11*3 }; // 3x limits seen in practice
+// 3x limits seen in practice, except for cubics (3x limit would be ~75).
+// For cubics, we never get close to 75 when running through dm. The limit of 24
+// was chosen because it's close to the peak in a count of cubic recursion depths visited
+// (define DEBUG_CUBIC_RECURSION_DEPTHS) and no diffs were produced on gold when using it.
+static const int kRecursiveLimits[] = { 5*3, 24, 11*3, 11*3 };
 
 static_assert(0 == kTangent_RecursiveLimit, "cubic_stroke_relies_on_tangent_equalling_zero");
 static_assert(1 == kCubic_RecursiveLimit, "cubic_stroke_relies_on_cubic_equalling_one");
-static_assert(SK_ARRAY_COUNT(kRecursiveLimits) == kQuad_RecursiveLimit + 1,
+static_assert(std::size(kRecursiveLimits) == kQuad_RecursiveLimit + 1,
               "recursive_limits_mismatch");
 
 #if defined SK_DEBUG && QUAD_STROKE_APPROX_EXTENDED_DEBUGGING
-    int gMaxRecursion[SK_ARRAY_COUNT(kRecursiveLimits)] = { 0 };
+    int gMaxRecursion[std::size(kRecursiveLimits)] = { 0 };
 #endif
 #ifndef DEBUG_QUAD_STROKER
     #define DEBUG_QUAD_STROKER 0
@@ -51,6 +55,35 @@ static_assert(SK_ARRAY_COUNT(kRecursiveLimits) == kQuad_RecursiveLimit + 1,
     #define STROKER_RESULT(resultType, depth, quadPts, format, ...) \
             resultType
     #define STROKER_DEBUG_PARAMS(...)
+#endif
+
+#ifndef DEBUG_CUBIC_RECURSION_DEPTHS
+#define DEBUG_CUBIC_RECURSION_DEPTHS 0
+#endif
+#if DEBUG_CUBIC_RECURSION_DEPTHS
+    /* Prints a histogram of recursion depths at process termination. */
+    static struct DepthHistogram {
+        inline static constexpr int kMaxDepth = 75;
+        int fCubicDepths[kMaxDepth + 1];
+
+        DepthHistogram() { memset(fCubicDepths, 0, sizeof(fCubicDepths)); }
+
+        ~DepthHistogram() {
+            SkDebugf("# times recursion terminated per depth:\n");
+            for (int i = 0; i <= kMaxDepth; i++) {
+                SkDebugf("  depth %d: %d\n", i, fCubicDepths[i]);
+            }
+        }
+
+        inline void incDepth(int depth) {
+            SkASSERT(depth >= 0 && depth <= kMaxDepth);
+            fCubicDepths[depth]++;
+        }
+    } sCubicDepthHistogram;
+
+#define DEBUG_CUBIC_RECURSION_TRACK_DEPTH(depth) sCubicDepthHistogram.incDepth(depth)
+#else
+#define DEBUG_CUBIC_RECURSION_TRACK_DEPTH(depth) (void)(depth)
 #endif
 
 static inline bool degenerate_vector(const SkVector& v) {
@@ -543,7 +576,7 @@ static bool cubic_in_line(const SkPoint cubic[4]) {
     for (int index = 0; index < 3; ++index) {
         for (int inner = index + 1; inner < 4; ++inner) {
             SkVector testDiff = cubic[inner] - cubic[index];
-            SkScalar testMax = SkTMax(SkScalarAbs(testDiff.fX), SkScalarAbs(testDiff.fY));
+            SkScalar testMax = std::max(SkScalarAbs(testDiff.fX), SkScalarAbs(testDiff.fY));
             if (ptMax < testMax) {
                 outer1 = index;
                 outer2 = inner;
@@ -580,7 +613,7 @@ static bool quad_in_line(const SkPoint quad[3]) {
     for (int index = 0; index < 2; ++index) {
         for (int inner = index + 1; inner < 3; ++inner) {
             SkVector testDiff = quad[inner] - quad[index];
-            SkScalar testMax = SkTMax(SkScalarAbs(testDiff.fX), SkScalarAbs(testDiff.fY));
+            SkScalar testMax = std::max(SkScalarAbs(testDiff.fX), SkScalarAbs(testDiff.fY));
             if (ptMax < testMax) {
                 outer1 = index;
                 outer2 = inner;
@@ -897,9 +930,9 @@ SkPathStroker::ResultType SkPathStroker::intersectRay(SkQuadConstruct* quadPts,
         // are small, a straight line is good enough
         SkScalar dist1 = pt_to_line(start, end, quadPts->fTangentEnd);
         SkScalar dist2 = pt_to_line(end, start, quadPts->fTangentStart);
-        if (SkTMax(dist1, dist2) <= fInvResScaleSquared) {
+        if (std::max(dist1, dist2) <= fInvResScaleSquared) {
             return STROKER_RESULT(kDegenerate_ResultType, depth, quadPts,
-                    "SkTMax(dist1=%g, dist2=%g) <= fInvResScaleSquared", dist1, dist2);
+                    "std::max(dist1=%g, dist2=%g) <= fInvResScaleSquared", dist1, dist2);
         }
         return STROKER_RESULT(kSplit_ResultType, depth, quadPts,
                 "(numerA=%g >= 0) == (numerB=%g >= 0)", numerA, numerB);
@@ -949,19 +982,19 @@ static int intersect_quad_ray(const SkPoint line[2], const SkPoint quad[3], SkSc
 
 // Return true if the point is close to the bounds of the quad. This is used as a quick reject.
 bool SkPathStroker::ptInQuadBounds(const SkPoint quad[3], const SkPoint& pt) const {
-    SkScalar xMin = SkTMin(SkTMin(quad[0].fX, quad[1].fX), quad[2].fX);
+    SkScalar xMin = std::min(std::min(quad[0].fX, quad[1].fX), quad[2].fX);
     if (pt.fX + fInvResScale < xMin) {
         return false;
     }
-    SkScalar xMax = SkTMax(SkTMax(quad[0].fX, quad[1].fX), quad[2].fX);
+    SkScalar xMax = std::max(std::max(quad[0].fX, quad[1].fX), quad[2].fX);
     if (pt.fX - fInvResScale > xMax) {
         return false;
     }
-    SkScalar yMin = SkTMin(SkTMin(quad[0].fY, quad[1].fY), quad[2].fY);
+    SkScalar yMin = std::min(std::min(quad[0].fY, quad[1].fY), quad[2].fY);
     if (pt.fY + fInvResScale < yMin) {
         return false;
     }
-    SkScalar yMax = SkTMax(SkTMax(quad[0].fY, quad[1].fY), quad[2].fY);
+    SkScalar yMax = std::max(std::max(quad[0].fY, quad[1].fY), quad[2].fY);
     if (pt.fY - fInvResScale > yMax) {
         return false;
     }
@@ -1118,6 +1151,7 @@ bool SkPathStroker::cubicStroke(const SkPoint cubic[4], SkQuadConstruct* quadPts
                     || points_within_dist(quadPts->fQuad[0], quadPts->fQuad[2],
                     fInvResScale)) && cubicMidOnLine(cubic, quadPts)) {
                 addDegenerateLine(quadPts);
+                DEBUG_CUBIC_RECURSION_TRACK_DEPTH(fRecursionDepth);
                 return true;
             }
         } else {
@@ -1130,28 +1164,33 @@ bool SkPathStroker::cubicStroke(const SkPoint cubic[4], SkQuadConstruct* quadPts
             SkPath* path = fStrokeType == kOuter_StrokeType ? &fOuter : &fInner;
             const SkPoint* stroke = quadPts->fQuad;
             path->quadTo(stroke[1].fX, stroke[1].fY, stroke[2].fX, stroke[2].fY);
+            DEBUG_CUBIC_RECURSION_TRACK_DEPTH(fRecursionDepth);
             return true;
         }
         if (kDegenerate_ResultType == resultType) {
             if (!quadPts->fOppositeTangents) {
               addDegenerateLine(quadPts);
+              DEBUG_CUBIC_RECURSION_TRACK_DEPTH(fRecursionDepth);
               return true;
             }
         }
     }
     if (!SkScalarIsFinite(quadPts->fQuad[2].fX) || !SkScalarIsFinite(quadPts->fQuad[2].fY)) {
+        DEBUG_CUBIC_RECURSION_TRACK_DEPTH(fRecursionDepth);
         return false;  // just abort if projected quad isn't representable
     }
 #if QUAD_STROKE_APPROX_EXTENDED_DEBUGGING
-    SkDEBUGCODE(gMaxRecursion[fFoundTangents] = SkTMax(gMaxRecursion[fFoundTangents],
+    SkDEBUGCODE(gMaxRecursion[fFoundTangents] = std::max(gMaxRecursion[fFoundTangents],
             fRecursionDepth + 1));
 #endif
     if (++fRecursionDepth > kRecursiveLimits[fFoundTangents]) {
+        DEBUG_CUBIC_RECURSION_TRACK_DEPTH(fRecursionDepth);
         return false;  // just abort if projected quad isn't representable
     }
     SkQuadConstruct half;
     if (!half.initWithStart(quadPts)) {
         addDegenerateLine(quadPts);
+        DEBUG_CUBIC_RECURSION_TRACK_DEPTH(fRecursionDepth);
         --fRecursionDepth;
         return true;
     }
@@ -1160,6 +1199,7 @@ bool SkPathStroker::cubicStroke(const SkPoint cubic[4], SkQuadConstruct* quadPts
     }
     if (!half.initWithEnd(quadPts)) {
         addDegenerateLine(quadPts);
+        DEBUG_CUBIC_RECURSION_TRACK_DEPTH(fRecursionDepth);
         --fRecursionDepth;
         return true;
     }
@@ -1183,7 +1223,7 @@ bool SkPathStroker::conicStroke(const SkConic& conic, SkQuadConstruct* quadPts) 
         return true;
     }
 #if QUAD_STROKE_APPROX_EXTENDED_DEBUGGING
-    SkDEBUGCODE(gMaxRecursion[kConic_RecursiveLimit] = SkTMax(gMaxRecursion[kConic_RecursiveLimit],
+    SkDEBUGCODE(gMaxRecursion[kConic_RecursiveLimit] = std::max(gMaxRecursion[kConic_RecursiveLimit],
             fRecursionDepth + 1));
 #endif
     if (++fRecursionDepth > kRecursiveLimits[kConic_RecursiveLimit]) {
@@ -1215,7 +1255,7 @@ bool SkPathStroker::quadStroke(const SkPoint quad[3], SkQuadConstruct* quadPts) 
         return true;
     }
 #if QUAD_STROKE_APPROX_EXTENDED_DEBUGGING
-    SkDEBUGCODE(gMaxRecursion[kQuad_RecursiveLimit] = SkTMax(gMaxRecursion[kQuad_RecursiveLimit],
+    SkDEBUGCODE(gMaxRecursion[kQuad_RecursiveLimit] = std::max(gMaxRecursion[kQuad_RecursiveLimit],
             fRecursionDepth + 1));
 #endif
     if (++fRecursionDepth > kRecursiveLimits[kQuad_RecursiveLimit]) {
@@ -1390,8 +1430,8 @@ void SkStroke::strokePath(const SkPath& src, SkPath* dst) const {
     // If src is really a rect, call our specialty strokeRect() method
     {
         SkRect rect;
-        bool isClosed;
-        SkPath::Direction dir;
+        bool isClosed = false;
+        SkPathDirection dir;
         if (src.isRect(&rect, &isClosed, &dir) && isClosed) {
             this->strokeRect(rect, dst, dir);
             // our answer should preserve the inverseness of the src
@@ -1430,7 +1470,6 @@ void SkStroke::strokePath(const SkPath& src, SkPath* dst) const {
             case SkPath::kConic_Verb: {
                 stroker.conicTo(pts[1], pts[2], iter.conicWeight());
                 lastSegment = SkPath::kConic_Verb;
-                break;
             } break;
             case SkPath::kCubic_Verb:
                 stroker.cubicTo(pts[1], pts[2], pts[3]);
@@ -1464,7 +1503,7 @@ DONE:
     stroker.done(dst, lastSegment == SkPath::kLine_Verb);
 
     if (fDoFill && !ignoreCenter) {
-        if (SkPathPriv::CheapIsFirstDirection(src, SkPathPriv::kCCW_FirstDirection)) {
+        if (SkPathPriv::ComputeFirstDirection(src) == SkPathFirstDirection::kCCW) {
             dst->reverseAddPath(src);
         } else {
             dst->addPath(src);
@@ -1498,15 +1537,15 @@ DONE:
     }
 }
 
-static SkPath::Direction reverse_direction(SkPath::Direction dir) {
-    static const SkPath::Direction gOpposite[] = { SkPath::kCCW_Direction, SkPath::kCW_Direction };
-    return gOpposite[dir];
+static SkPathDirection reverse_direction(SkPathDirection dir) {
+    static const SkPathDirection gOpposite[] = { SkPathDirection::kCCW, SkPathDirection::kCW };
+    return gOpposite[(int)dir];
 }
 
-static void addBevel(SkPath* path, const SkRect& r, const SkRect& outer, SkPath::Direction dir) {
+static void addBevel(SkPath* path, const SkRect& r, const SkRect& outer, SkPathDirection dir) {
     SkPoint pts[8];
 
-    if (SkPath::kCW_Direction == dir) {
+    if (SkPathDirection::kCW == dir) {
         pts[0].set(r.fLeft, outer.fTop);
         pts[1].set(r.fRight, outer.fTop);
         pts[2].set(outer.fRight, r.fTop);
@@ -1529,7 +1568,7 @@ static void addBevel(SkPath* path, const SkRect& r, const SkRect& outer, SkPath:
 }
 
 void SkStroke::strokeRect(const SkRect& origRect, SkPath* dst,
-                          SkPath::Direction dir) const {
+                          SkPathDirection dir) const {
     SkASSERT(dst != nullptr);
     dst->reset();
 
@@ -1571,7 +1610,7 @@ void SkStroke::strokeRect(const SkRect& origRect, SkPath* dst,
             break;
     }
 
-    if (fWidth < SkMinScalar(rw, rh) && !fDoFill) {
+    if (fWidth < std::min(rw, rh) && !fDoFill) {
         r = rect;
         r.inset(radius, radius);
         dst->addRect(r, reverse_direction(dir));

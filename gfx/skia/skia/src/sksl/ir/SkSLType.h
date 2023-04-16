@@ -5,307 +5,357 @@
  * found in the LICENSE file.
  */
 
-#ifndef SKIASL_TYPE
-#define SKIASL_TYPE
+#ifndef SKSL_TYPE
+#define SKSL_TYPE
 
-#include "src/sksl/SkSLPosition.h"
-#include "src/sksl/SkSLUtil.h"
-#include "src/sksl/ir/SkSLModifiers.h"
-#include "src/sksl/ir/SkSLSymbol.h"
+#include "include/core/SkSpan.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkSLDefines.h"
+#include "include/private/SkSLIRNode.h"
+#include "include/private/SkSLModifiers.h"
+#include "include/private/SkSLSymbol.h"
+#include "include/sksl/SkSLPosition.h"
 #include "src/sksl/spirv.h"
-#include <climits>
-#include <vector>
+
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <memory>
+#include <string>
+#include <string_view>
+#include <tuple>
+#include <vector>
 
 namespace SkSL {
 
 class Context;
+class Expression;
+class SymbolTable;
+
+struct CoercionCost {
+    static CoercionCost Free()              { return {    0,    0, false }; }
+    static CoercionCost Normal(int cost)    { return { cost,    0, false }; }
+    static CoercionCost Narrowing(int cost) { return {    0, cost, false }; }
+    static CoercionCost Impossible()        { return {    0,    0,  true }; }
+
+    bool isPossible(bool allowNarrowing) const {
+        return !fImpossible && (fNarrowingCost == 0 || allowNarrowing);
+    }
+
+    // Addition of two costs. Saturates at Impossible().
+    CoercionCost operator+(CoercionCost rhs) const {
+        if (fImpossible || rhs.fImpossible) {
+            return Impossible();
+        }
+        return { fNormalCost + rhs.fNormalCost, fNarrowingCost + rhs.fNarrowingCost, false };
+    }
+
+    bool operator<(CoercionCost rhs) const {
+        return std::tie(    fImpossible,     fNarrowingCost,     fNormalCost) <
+               std::tie(rhs.fImpossible, rhs.fNarrowingCost, rhs.fNormalCost);
+    }
+
+    bool operator<=(CoercionCost rhs) const {
+        return std::tie(    fImpossible,     fNarrowingCost,     fNormalCost) <=
+               std::tie(rhs.fImpossible, rhs.fNarrowingCost, rhs.fNormalCost);
+    }
+
+    int  fNormalCost;
+    int  fNarrowingCost;
+    bool fImpossible;
+};
 
 /**
  * Represents a type, such as int or float4.
  */
 class Type : public Symbol {
 public:
+    inline static constexpr Kind kIRNodeKind = Kind::kType;
+    inline static constexpr int kMaxAbbrevLength = 3;
+    // Represents unspecified array dimensions, as in `int[]`.
+    inline static constexpr int kUnsizedArray = -1;
     struct Field {
-        Field(Modifiers modifiers, StringFragment name, const Type* type)
-        : fModifiers(modifiers)
-        , fName(name)
-        , fType(std::move(type)) {}
+        Field(Position pos, Modifiers modifiers, std::string_view name, const Type* type)
+                : fPosition(pos)
+                , fModifiers(modifiers)
+                , fName(name)
+                , fType(type) {}
 
-        const String description() const {
-            return fType->description() + " " + fName + ";";
-        }
+        std::string description() const;
 
+        Position fPosition;
         Modifiers fModifiers;
-        StringFragment fName;
+        std::string_view fName;
         const Type* fType;
     };
 
-    enum Kind {
-        kArray_Kind,
-        kEnum_Kind,
-        kGeneric_Kind,
-        kNullable_Kind,
-        kMatrix_Kind,
-        kOther_Kind,
-        kSampler_Kind,
-        kSeparateSampler_Kind,
-        kScalar_Kind,
-        kStruct_Kind,
-        kTexture_Kind,
-        kVector_Kind
+    enum class TypeKind : int8_t {
+        kArray,
+        kAtomic,
+        kGeneric,
+        kLiteral,
+        kMatrix,
+        kOther,
+        kSampler,
+        kSeparateSampler,
+        kScalar,
+        kStruct,
+        kTexture,
+        kVector,
+        kVoid,
+
+        // Types that represent stages in the Skia pipeline
+        kColorFilter,
+        kShader,
+        kBlender,
     };
 
-    enum NumberKind {
-        kFloat_NumberKind,
-        kSigned_NumberKind,
-        kUnsigned_NumberKind,
-        kNonnumeric_NumberKind
+    enum class NumberKind : int8_t {
+        kFloat,
+        kSigned,
+        kUnsigned,
+        kBoolean,
+        kNonnumeric
     };
 
-    // Create an "other" (special) type with the given name. These types cannot be directly
-    // referenced from user code.
-    Type(const char* name)
-    : INHERITED(-1, kType_Kind, StringFragment())
-    , fNameString(name)
-    , fTypeKind(kOther_Kind)
-    , fNumberKind(kNonnumeric_NumberKind) {
-        fName.fChars = fNameString.c_str();
-        fName.fLength = fNameString.size();
+    enum class TextureAccess : int8_t {
+        kSample,  // `kSample` access level allows both sampling and reading
+        kRead,
+        kWrite,
+        kReadWrite,
+    };
+
+    Type(const Type& other) = delete;
+
+    /** Creates an array type. `columns` may be kUnsizedArray. */
+    static std::unique_ptr<Type> MakeArrayType(std::string_view name, const Type& componentType,
+                                               int columns);
+
+    /** Converts a component type and a size (float, 10) into an array name ("float[10]"). */
+    std::string getArrayName(int arraySize) const;
+
+    /**
+     * Creates an alias which maps to another type.
+     */
+    static std::unique_ptr<Type> MakeAliasType(std::string_view name, const Type& targetType);
+
+    /**
+     * Create a generic type which maps to the listed types--e.g. $genType is a generic type which
+     * can match float, float2, float3 or float4.
+     */
+    static std::unique_ptr<Type> MakeGenericType(const char* name, SkSpan<const Type* const> types);
+
+    /** Create a type for literal scalars. */
+    static std::unique_ptr<Type> MakeLiteralType(const char* name, const Type& scalarType,
+                                                 int8_t priority);
+
+    /** Create a matrix type. */
+    static std::unique_ptr<Type> MakeMatrixType(std::string_view name, const char* abbrev,
+                                                const Type& componentType, int columns,
+                                                int8_t rows);
+
+    /** Create a sampler type. */
+    static std::unique_ptr<Type> MakeSamplerType(const char* name, const Type& textureType);
+
+    /** Create a scalar type. */
+    static std::unique_ptr<Type> MakeScalarType(std::string_view name, const char* abbrev,
+                                                Type::NumberKind numberKind, int8_t priority,
+                                                int8_t bitWidth);
+
+    /**
+     * Create a "special" type with the given name, abbreviation, and TypeKind.
+     */
+    static std::unique_ptr<Type> MakeSpecialType(const char* name, const char* abbrev,
+                                                 Type::TypeKind typeKind);
+
+    /**
+     * Creates a struct type with the given fields. Reports an error if the struct is not
+     * well-formed.
+     */
+    static std::unique_ptr<Type> MakeStructType(const Context& context,
+                                                Position pos,
+                                                std::string_view name,
+                                                std::vector<Field> fields,
+                                                bool interfaceBlock = false);
+
+    /** Create a texture type. */
+    static std::unique_ptr<Type> MakeTextureType(const char* name, SpvDim_ dimensions, bool isDepth,
+                                                 bool isArrayedTexture, bool isMultisampled,
+                                                 TextureAccess textureAccess);
+
+    /** Create a vector type. */
+    static std::unique_ptr<Type> MakeVectorType(std::string_view name, const char* abbrev,
+                                                const Type& componentType, int columns);
+
+    /** Create an atomic type. */
+    static std::unique_ptr<Type> MakeAtomicType(std::string_view name, const char* abbrev);
+
+    template <typename T>
+    bool is() const {
+        return this->typeKind() == T::kTypeKind;
     }
 
-    // Create an "other" (special) type that supports field access.
-    Type(const char* name, std::vector<Field> fields)
-    : INHERITED(-1, kType_Kind, StringFragment())
-    , fNameString(name)
-    , fTypeKind(kOther_Kind)
-    , fNumberKind(kNonnumeric_NumberKind)
-    , fFields(std::move(fields)) {
-        fName.fChars = fNameString.c_str();
-        fName.fLength = fNameString.size();
+    template <typename T>
+    const T& as() const {
+        SkASSERT(this->is<T>());
+        return static_cast<const T&>(*this);
     }
 
-    // Create a simple type.
-    Type(String name, Kind kind)
-    : INHERITED(-1, kType_Kind, StringFragment())
-    , fNameString(std::move(name))
-    , fTypeKind(kind)
-    , fNumberKind(kNonnumeric_NumberKind) {
-        fName.fChars = fNameString.c_str();
-        fName.fLength = fNameString.size();
+    template <typename T>
+    T& as() {
+        SkASSERT(this->is<T>());
+        return static_cast<T&>(*this);
     }
 
-    // Create a generic type which maps to the listed types.
-    Type(const char* name, std::vector<const Type*> types)
-    : INHERITED(-1, kType_Kind, StringFragment())
-    , fNameString(name)
-    , fTypeKind(kGeneric_Kind)
-    , fNumberKind(kNonnumeric_NumberKind)
-    , fCoercibleTypes(std::move(types)) {
-        fName.fChars = fNameString.c_str();
-        fName.fLength = fNameString.size();
+    /** Creates a clone of this Type, if needed, and inserts it into a different symbol table. */
+    const Type* clone(SymbolTable* symbolTable) const;
+
+    /**
+     * Returns true if this type is known to come from BuiltinTypes. If this returns true, the Type
+     * will always be available in the root SymbolTable and never needs to be copied to migrate an
+     * Expression from one location to another. If it returns false, the Type might not exist in a
+     * separate SymbolTable and you'll need to consider copying it.
+     */
+    bool isInBuiltinTypes() const {
+        return !(this->isArray() || this->isStruct());
     }
 
-    // Create a struct type with the given fields.
-    Type(int offset, String name, std::vector<Field> fields)
-    : INHERITED(offset, kType_Kind, StringFragment())
-    , fNameString(std::move(name))
-    , fTypeKind(kStruct_Kind)
-    , fNumberKind(kNonnumeric_NumberKind)
-    , fFields(std::move(fields)) {
-        fName.fChars = fNameString.c_str();
-        fName.fLength = fNameString.size();
+    std::string displayName() const {
+        return std::string(this->scalarTypeForLiteral().name());
     }
 
-    // Create a scalar type.
-    Type(const char* name, NumberKind numberKind, int priority, bool highPrecision = false)
-    : INHERITED(-1, kType_Kind, StringFragment())
-    , fNameString(name)
-    , fTypeKind(kScalar_Kind)
-    , fNumberKind(numberKind)
-    , fPriority(priority)
-    , fColumns(1)
-    , fRows(1)
-    , fHighPrecision(highPrecision) {
-        fName.fChars = fNameString.c_str();
-        fName.fLength = fNameString.size();
+    std::string description() const override {
+        return this->displayName();
     }
 
-    // Create a scalar type which can be coerced to the listed types.
-    Type(const char* name,
-         NumberKind numberKind,
-         int priority,
-         std::vector<const Type*> coercibleTypes)
-    : INHERITED(-1, kType_Kind, StringFragment())
-    , fNameString(name)
-    , fTypeKind(kScalar_Kind)
-    , fNumberKind(numberKind)
-    , fPriority(priority)
-    , fCoercibleTypes(std::move(coercibleTypes))
-    , fColumns(1)
-    , fRows(1) {
-        fName.fChars = fNameString.c_str();
-        fName.fLength = fNameString.size();
+    /** Returns true if the program supports this type. Strict ES2 programs can't use ES3 types. */
+    bool isAllowedInES2(const Context& context) const;
+
+    /** Returns true if this type is legal to use in a strict-ES2 program. */
+    virtual bool isAllowedInES2() const {
+        return true;
     }
 
-    // Create a nullable type.
-    Type(String name, Kind kind, const Type& componentType)
-    : INHERITED(-1, kType_Kind, StringFragment())
-    , fNameString(std::move(name))
-    , fTypeKind(kind)
-    , fNumberKind(kNonnumeric_NumberKind)
-    , fComponentType(&componentType)
-    , fColumns(1)
-    , fRows(1)
-    , fDimensions(SpvDim1D) {
-        fName.fChars = fNameString.c_str();
-        fName.fLength = fNameString.size();
+    /** If this is an alias, returns the underlying type, otherwise returns this. */
+    virtual const Type& resolve() const {
+        return *this;
     }
 
-    // Create a vector type.
-    Type(const char* name, const Type& componentType, int columns)
-    : Type(name, kVector_Kind, componentType, columns) {}
-
-    // Create a vector or array type.
-    Type(String name, Kind kind, const Type& componentType, int columns)
-    : INHERITED(-1, kType_Kind, StringFragment())
-    , fNameString(std::move(name))
-    , fTypeKind(kind)
-    , fNumberKind(kNonnumeric_NumberKind)
-    , fComponentType(&componentType)
-    , fColumns(columns)
-    , fRows(1)
-    , fDimensions(SpvDim1D) {
-        fName.fChars = fNameString.c_str();
-        fName.fLength = fNameString.size();
+    /** Returns true if these types are equal after alias resolution. */
+    bool matches(const Type& other) const {
+        return this->resolve().name() == other.resolve().name();
     }
 
-    // Create a matrix type.
-    Type(const char* name, const Type& componentType, int columns, int rows)
-    : INHERITED(-1, kType_Kind, StringFragment())
-    , fNameString(name)
-    , fTypeKind(kMatrix_Kind)
-    , fNumberKind(kNonnumeric_NumberKind)
-    , fComponentType(&componentType)
-    , fColumns(columns)
-    , fRows(rows)
-    , fDimensions(SpvDim1D) {
-        fName.fChars = fNameString.c_str();
-        fName.fLength = fNameString.size();
-    }
-
-    // Create a texture type.
-    Type(const char* name, SpvDim_ dimensions, bool isDepth, bool isArrayed, bool isMultisampled,
-         bool isSampled)
-    : INHERITED(-1, kType_Kind, StringFragment())
-    , fNameString(name)
-    , fTypeKind(kTexture_Kind)
-    , fNumberKind(kNonnumeric_NumberKind)
-    , fDimensions(dimensions)
-    , fIsDepth(isDepth)
-    , fIsArrayed(isArrayed)
-    , fIsMultisampled(isMultisampled)
-    , fIsSampled(isSampled)
-    {
-        fName.fChars = fNameString.c_str();
-        fName.fLength = fNameString.size();
-    }
-
-    // Create a sampler type.
-    Type(const char* name, const Type& textureType)
-    : INHERITED(-1, kType_Kind, StringFragment())
-    , fNameString(name)
-    , fTypeKind(kSampler_Kind)
-    , fNumberKind(kNonnumeric_NumberKind)
-    , fDimensions(textureType.dimensions())
-    , fIsDepth(textureType.isDepth())
-    , fIsArrayed(textureType.isArrayed())
-    , fIsMultisampled(textureType.isMultisampled())
-    , fIsSampled(textureType.isSampled())
-    , fTextureType(&textureType)
-    {
-        fName.fChars = fNameString.c_str();
-        fName.fLength = fNameString.size();
-    }
-
-    const String& name() const {
-        return fNameString;
-    }
-
-    String description() const override {
-        if (fNameString == "$floatLiteral") {
-            return "float";
-        }
-        if (fNameString == "$intLiteral") {
-            return "int";
-        }
-        return fNameString;
-    }
-
-    bool operator==(const Type& other) const {
-        return fName == other.fName;
-    }
-
-    bool operator!=(const Type& other) const {
-        return fName != other.fName;
+    /**
+     * Returns an abbreviated name of the type, meant for name-mangling. (e.g. float4x4 -> f44)
+     */
+    const char* abbreviatedName() const {
+        return fAbbreviatedName;
     }
 
     /**
      * Returns the category (scalar, vector, matrix, etc.) of this type.
      */
-    Kind kind() const {
+    TypeKind typeKind() const {
         return fTypeKind;
+    }
+
+    /**
+     * Returns the NumberKind of this type (always kNonnumeric for non-scalar values).
+     */
+    virtual NumberKind numberKind() const {
+        return NumberKind::kNonnumeric;
+    }
+
+    /**
+     * Returns true if this type is a bool.
+     */
+    bool isBoolean() const {
+        return this->numberKind() == NumberKind::kBoolean;
     }
 
     /**
      * Returns true if this is a numeric scalar type.
      */
     bool isNumber() const {
-        return fNumberKind != kNonnumeric_NumberKind;
+        switch (this->numberKind()) {
+            case NumberKind::kFloat:
+            case NumberKind::kSigned:
+            case NumberKind::kUnsigned:
+                return true;
+            default:
+                return false;
+        }
     }
 
     /**
-     * Returns true if this is a floating-point scalar type (float, half, or double).
+     * Returns true if this is a floating-point scalar type (float or half).
      */
     bool isFloat() const {
-        return fNumberKind == kFloat_NumberKind;
+        return this->numberKind() == NumberKind::kFloat;
     }
 
     /**
      * Returns true if this is a signed scalar type (int or short).
      */
     bool isSigned() const {
-        return fNumberKind == kSigned_NumberKind;
+        return this->numberKind() == NumberKind::kSigned;
     }
 
     /**
      * Returns true if this is an unsigned scalar type (uint or ushort).
      */
     bool isUnsigned() const {
-        return fNumberKind == kUnsigned_NumberKind;
+        return this->numberKind() == NumberKind::kUnsigned;
     }
 
     /**
      * Returns true if this is a signed or unsigned integer.
      */
     bool isInteger() const {
-        return isSigned() || isUnsigned();
+        switch (this->numberKind()) {
+            case NumberKind::kSigned:
+            case NumberKind::kUnsigned:
+                return true;
+            default:
+                return false;
+        }
     }
 
     /**
-     * Returns the "priority" of a number type, in order of double > float > half > int > short.
+     * Returns true if this is an "opaque type" (an external object which the shader references in
+     * some fashion). https://www.khronos.org/opengl/wiki/Data_Type_(GLSL)#Opaque_types
+     */
+    bool isOpaque() const {
+        switch (fTypeKind) {
+            case TypeKind::kAtomic:
+            case TypeKind::kBlender:
+            case TypeKind::kColorFilter:
+            case TypeKind::kSampler:
+            case TypeKind::kSeparateSampler:
+            case TypeKind::kShader:
+            case TypeKind::kTexture:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * Returns the "priority" of a number type, in order of float > half > int > short.
      * When operating on two number types, the result is the higher-priority type.
      */
-    int priority() const {
-        return fPriority;
+    virtual int priority() const {
+        SkDEBUGFAIL("not a number type");
+        return -1;
     }
 
     /**
      * Returns true if an instance of this type can be freely coerced (implicitly converted) to
      * another type.
      */
-    bool canCoerceTo(const Type& other) const {
-        return coercionCost(other) != INT_MAX;
+    bool canCoerceTo(const Type& other, bool allowNarrowing) const {
+        return this->coercionCost(other).isPossible(allowNarrowing);
     }
 
     /**
@@ -313,101 +363,169 @@ public:
      * is a number with no particular meaning other than that lower costs are preferable to higher
      * costs. Returns INT_MAX if the coercion is not possible.
      */
-    int coercionCost(const Type& other) const;
+    CoercionCost coercionCost(const Type& other) const;
 
     /**
      * For matrices and vectors, returns the type of individual cells (e.g. mat2 has a component
-     * type of kFloat_Type). For all other types, causes an SkASSERTion failure.
+     * type of Float). For arrays, returns the base type. For all other types, returns the type
+     * itself.
      */
-    const Type& componentType() const {
-        SkASSERT(fComponentType);
-        return *fComponentType;
-    }
-
-    /**
-     * For texturesamplers, returns the type of texture it samples (e.g., sampler2D has
-     * a texture type of texture2D).
-     */
-    const Type& textureType() const {
-        SkASSERT(fTextureType);
-        return *fTextureType;
-    }
-
-    /**
-     * For nullable types, returns the base type, otherwise returns the type itself.
-     */
-    const Type& nonnullable() const {
-        if (fTypeKind == kNullable_Kind) {
-            return this->componentType();
-        }
+    virtual const Type& componentType() const {
         return *this;
     }
 
     /**
-     * For matrices and vectors, returns the number of columns (e.g. both mat3 and float3return 3).
-     * For scalars, returns 1. For arrays, returns either the size of the array (if known) or -1.
-     * For all other types, causes an SkASSERTion failure.
+     * For texture samplers, returns the type of texture it samples (e.g., sampler2D has
+     * a texture type of texture2D).
      */
-    int columns() const {
-        SkASSERT(fTypeKind == kScalar_Kind || fTypeKind == kVector_Kind ||
-                 fTypeKind == kMatrix_Kind || fTypeKind == kArray_Kind);
-        return fColumns;
+    virtual const Type& textureType() const {
+        SkDEBUGFAIL("not a sampler type");
+        return *this;
+    }
+
+    /**
+     * For matrices and vectors, returns the number of columns (e.g. both mat3 and float3 return 3).
+     * For scalars, returns 1. For arrays, returns either the size of the array (if known) or -1.
+     * For all other types, causes an assertion failure.
+     */
+    virtual int columns() const {
+        SkDEBUGFAIL("type does not have columns");
+        return -1;
     }
 
     /**
      * For matrices, returns the number of rows (e.g. mat2x4 returns 4). For vectors and scalars,
-     * returns 1. For all other types, causes an SkASSERTion failure.
+     * returns 1. For all other types, causes an assertion failure.
      */
-    int rows() const {
-        SkASSERT(fRows > 0);
-        return fRows;
+    virtual int rows() const {
+        SkDEBUGFAIL("type does not have rows");
+        return -1;
     }
 
-    const std::vector<Field>& fields() const {
-        SkASSERT(fTypeKind == kStruct_Kind || fTypeKind == kOther_Kind);
-        return fFields;
+    /** Returns the minimum value that can fit in the type. */
+    virtual double minimumValue() const {
+        SkDEBUGFAIL("type does not have a minimum value");
+        return -INFINITY;
+    }
+
+    virtual double maximumValue() const {
+        SkDEBUGFAIL("type does not have a maximum value");
+        return +INFINITY;
     }
 
     /**
-     * For generic types, returns the types that this generic type can substitute for. For other
-     * types, returns a list of other types that this type can be coerced into.
+     * Returns the number of scalars needed to hold this type.
      */
-    const std::vector<const Type*>& coercibleTypes() const {
-        SkASSERT(fCoercibleTypes.size() > 0);
-        return fCoercibleTypes;
+    virtual size_t slotCount() const {
+        return 0;
     }
 
-    SpvDim_ dimensions() const {
-        SkASSERT(kSampler_Kind == fTypeKind || kTexture_Kind == fTypeKind);
-        return fDimensions;
+    virtual const std::vector<Field>& fields() const {
+        SK_ABORT("Internal error: not a struct");
     }
 
-    bool isDepth() const {
-        SkASSERT(kSampler_Kind == fTypeKind || kTexture_Kind == fTypeKind);
-        return fIsDepth;
+    /**
+     * For generic types, returns the types that this generic type can substitute for.
+     */
+    virtual SkSpan<const Type* const> coercibleTypes() const {
+        SkDEBUGFAIL("Internal error: not a generic type");
+        return {};
     }
 
-    bool isArrayed() const {
-        SkASSERT(kSampler_Kind == fTypeKind || kTexture_Kind == fTypeKind);
-        return fIsArrayed;
+    virtual SpvDim_ dimensions() const {
+        SkASSERT(false);
+        return SpvDim1D;
     }
 
-    bool isMultisampled() const {
-        SkASSERT(kSampler_Kind == fTypeKind || kTexture_Kind == fTypeKind);
-        return fIsMultisampled;
+    virtual bool isDepth() const {
+        SkASSERT(false);
+        return false;
     }
 
-    bool isSampled() const {
-        SkASSERT(kSampler_Kind == fTypeKind || kTexture_Kind == fTypeKind);
-        return fIsSampled;
+    virtual bool isArrayedTexture() const {
+        SkASSERT(false);
+        return false;
+    }
+
+    bool isVoid() const {
+        return fTypeKind == TypeKind::kVoid;
+    }
+
+    bool isGeneric() const {
+        return fTypeKind == TypeKind::kGeneric;
+    }
+
+    bool isAtomic() const { return this->typeKind() == TypeKind::kAtomic; }
+
+    virtual bool isScalar() const {
+        return false;
+    }
+
+    virtual bool isLiteral() const {
+        return false;
+    }
+
+    virtual const Type& scalarTypeForLiteral() const {
+        return *this;
+    }
+
+    virtual bool isVector() const {
+        return false;
+    }
+
+    virtual bool isMatrix() const {
+        return false;
+    }
+
+    virtual bool isArray() const {
+        return false;
+    }
+
+    virtual bool isUnsizedArray() const {
+        return false;
+    }
+
+    virtual bool isStruct() const {
+        return false;
+    }
+
+    virtual bool isInterfaceBlock() const {
+        return false;
+    }
+
+    // Is this type something that can be bound & sampled from an SkRuntimeEffect?
+    // Includes types that represent stages of the Skia pipeline (colorFilter, shader, blender).
+    bool isEffectChild() const {
+        return fTypeKind == TypeKind::kColorFilter ||
+               fTypeKind == TypeKind::kShader ||
+               fTypeKind == TypeKind::kBlender;
+    }
+
+    virtual bool isMultisampled() const {
+        SkDEBUGFAIL("not a texture type");
+        return false;
+    }
+
+    virtual TextureAccess textureAccess() const {
+        SkDEBUGFAIL("not a texture type");
+        return TextureAccess::kSample;
+    }
+
+    bool hasPrecision() const {
+        return this->componentType().isNumber() || fTypeKind == TypeKind::kSampler;
     }
 
     bool highPrecision() const {
-        if (fComponentType) {
-            return fComponentType->highPrecision();
-        }
-        return fHighPrecision;
+        return this->bitWidth() >= 32;
     }
+
+    virtual int bitWidth() const {
+        return 0;
+    }
+
+    bool isOrContainsArray() const;
+    bool isOrContainsUnsizedArray() const;
+    bool isOrContainsAtomic() const;
 
     /**
      * Returns the corresponding vector or matrix type with the specified number of columns and
@@ -415,28 +533,68 @@ public:
      */
     const Type& toCompound(const Context& context, int columns, int rows) const;
 
-private:
-    typedef Symbol INHERITED;
+    /**
+     * Returns a type which honors the precision and access-level qualifiers set in Modifiers. e.g.:
+     *  - Modifier `mediump` + Type `float2`:     Type `half2`
+     *  - Modifier `readonly` + Type `texture2D`: Type `readonlyTexture2D`
+     * Generates an error if the qualifiers don't make sense (`highp bool`, `writeonly MyStruct`)
+     */
+    const Type* applyQualifiers(const Context& context,
+                                Modifiers* modifiers,
+                                SymbolTable* symbols,
+                                Position pos) const;
 
-    String fNameString;
-    Kind fTypeKind;
-    // always kNonnumeric_NumberKind for non-scalar values
-    NumberKind fNumberKind;
-    int fPriority = -1;
-    const Type* fComponentType = nullptr;
-    std::vector<const Type*> fCoercibleTypes;
-    int fColumns = -1;
-    int fRows = -1;
-    std::vector<Field> fFields;
-    SpvDim_ fDimensions = SpvDim1D;
-    bool fIsDepth = false;
-    bool fIsArrayed = false;
-    bool fIsMultisampled = false;
-    bool fIsSampled = false;
-    bool fHighPrecision = false;
-    const Type* fTextureType = nullptr;
+    /**
+     * Coerces the passed-in expression to this type. If the types are incompatible, reports an
+     * error and returns null.
+     */
+    std::unique_ptr<Expression> coerceExpression(std::unique_ptr<Expression> expr,
+                                                 const Context& context) const;
+
+    /** Detects any IntLiterals in the expression which can't fit in this type. */
+    bool checkForOutOfRangeLiteral(const Context& context, const Expression& expr) const;
+
+    /** Checks if `value` can fit in this type. The type must be scalar. */
+    bool checkForOutOfRangeLiteral(const Context& context, double value, Position pos) const;
+
+    /**
+     * Reports errors and returns false if this type cannot be used as the base type for an array.
+     */
+    bool checkIfUsableInArray(const Context& context, Position arrayPos) const;
+
+    /**
+     * Verifies that the expression is a valid constant array size for this type. Returns the array
+     * size, or reports errors and returns zero if the expression isn't a valid literal value.
+     */
+    SKSL_INT convertArraySize(const Context& context, Position arrayPos,
+            std::unique_ptr<Expression> size) const;
+
+protected:
+    Type(std::string_view name, const char* abbrev, TypeKind kind,
+            Position pos = Position())
+        : INHERITED(pos, kIRNodeKind, name)
+        , fTypeKind(kind) {
+        SkASSERT(strlen(abbrev) <= kMaxAbbrevLength);
+        strcpy(fAbbreviatedName, abbrev);
+    }
+
+    const Type* applyPrecisionQualifiers(const Context& context,
+                                         Modifiers* modifiers,
+                                         SymbolTable* symbols,
+                                         Position pos) const;
+
+    const Type* applyAccessQualifiers(const Context& context,
+                                      Modifiers* modifiers,
+                                      SymbolTable* symbols,
+                                      Position pos) const;
+
+private:
+    using INHERITED = Symbol;
+
+    char fAbbreviatedName[kMaxAbbrevLength + 1] = {};
+    TypeKind fTypeKind;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

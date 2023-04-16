@@ -8,8 +8,8 @@
 #ifndef SkDiscardableMemoryPool_DEFINED
 #define SkDiscardableMemoryPool_DEFINED
 
-#include "include/private/SkMutex.h"
-#include "src/core/SkDiscardableMemory.h"
+#include "include/private/base/SkMutex.h"
+#include "include/private/chromium/SkDiscardableMemory.h"
 
 #ifndef SK_LAZY_CACHE_STATS
     #ifdef SK_DEBUG
@@ -27,8 +27,6 @@
  */
 class SkDiscardableMemoryPool : public SkDiscardableMemory::Factory {
 public:
-    virtual ~SkDiscardableMemoryPool() { }
-
     virtual size_t getRAMUsed() = 0;
     virtual void setRAMBudget(size_t budget) = 0;
     virtual size_t getRAMBudget() = 0;

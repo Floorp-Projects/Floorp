@@ -8,7 +8,6 @@
 #ifndef SkTMultiMap_DEFINED
 #define SkTMultiMap_DEFINED
 
-#include "include/gpu/GrTypes.h"
 #include "src/core/SkTDynamicHash.h"
 
 /** A set that contains pointers to instances of T. Instances can be looked up with key Key.
@@ -30,15 +29,20 @@ public:
     SkTMultiMap() : fCount(0) {}
 
     ~SkTMultiMap() {
-        typename SkTDynamicHash<ValueList, Key>::Iter iter(&fHash);
-        for ( ; !iter.done(); ++iter) {
+        this->reset();
+    }
+
+    void reset() {
+        fHash.foreach([&](ValueList* vl) {
             ValueList* next;
-            for (ValueList* cur = &(*iter); cur; cur = next) {
-                HashTraits::OnFree(cur->fValue);
-                next = cur->fNext;
-                delete cur;
+            for (ValueList* it = vl; it; it = next) {
+                HashTraits::OnFree(it->fValue);
+                next = it->fNext;
+                delete it;
             }
-        }
+        });
+        fHash.reset();
+        fCount = 0;
     }
 
     void insert(const Key& key, T* value) {
@@ -127,41 +131,14 @@ public:
     int count() const { return fCount; }
 
 #ifdef SK_DEBUG
-    class ConstIter {
-    public:
-        explicit ConstIter(const SkTMultiMap* mmap)
-            : fIter(&(mmap->fHash))
-            , fList(nullptr) {
-            if (!fIter.done()) {
-                fList = &(*fIter);
+    template <typename Fn>  // f(T) or f(const T&)
+    void foreach(Fn&& fn) const {
+        fHash.foreach([&](const ValueList& vl) {
+            for (const ValueList* it = &vl; it; it = it->fNext) {
+                fn(*it->fValue);
             }
-        }
-
-        bool done() const {
-            return fIter.done();
-        }
-
-        const T* operator*() {
-            SkASSERT(fList);
-            return fList->fValue;
-        }
-
-        void operator++() {
-            if (fList) {
-                fList = fList->fNext;
-            }
-            if (!fList) {
-                ++fIter;
-                if (!fIter.done()) {
-                    fList = &(*fIter);
-                }
-            }
-        }
-
-    private:
-        typename SkTDynamicHash<ValueList, Key>::ConstIter fIter;
-        const ValueList* fList;
-    };
+        });
+    }
 
     bool has(const T* value, const Key& key) const {
         for (ValueList* list = fHash.find(key); list; list = list->fNext) {

@@ -8,7 +8,10 @@
 #ifndef SkGradientShader_DEFINED
 #define SkGradientShader_DEFINED
 
+#include "include/core/SkColorSpace.h"
+#include "include/core/SkRefCnt.h"
 #include "include/core/SkShader.h"
+#include "include/core/SkTileMode.h"
 
 /** \class SkGradientShader
 
@@ -51,8 +54,58 @@ public:
          *  and then premultiply each of the results. By setting this flag, the
          *  gradients will premultiply their colors first, and then interpolate
          *  between them.
+         *  example: https://fiddle.skia.org/c/@GradientShader_MakeLinear
          */
         kInterpolateColorsInPremul_Flag = 1 << 0,
+    };
+
+    struct Interpolation {
+        enum class InPremul : bool { kNo = false, kYes = true };
+
+        enum class ColorSpace : uint8_t {
+            // Default Skia behavior: interpolate in the color space of the destination surface
+            kDestination,
+
+            // https://www.w3.org/TR/css-color-4/#interpolation-space
+            kSRGBLinear,
+            kLab,
+            kOKLab,
+            kLCH,
+            kOKLCH,
+            kSRGB,
+            kHSL,
+            kHWB,
+
+            kLastColorSpace = kHWB,
+        };
+        static constexpr int kColorSpaceCount = static_cast<int>(ColorSpace::kLastColorSpace) + 1;
+
+        enum class HueMethod : uint8_t {
+            // https://www.w3.org/TR/css-color-4/#hue-interpolation
+            kShorter,
+            kLonger,
+            kIncreasing,
+            kDecreasing,
+
+            kLastHueMethod = kDecreasing,
+        };
+        static constexpr int kHueMethodCount = static_cast<int>(HueMethod::kLastHueMethod) + 1;
+
+        InPremul fInPremul = InPremul::kNo;
+
+        /*
+         * NOTE: Do not use fColorSpace or fHueMethod (yet). These features are in development and
+         * incomplete. This comment (and RELEASE_NOTES.txt) will be updated once the features are
+         * ready to be used.
+         */
+        ColorSpace fColorSpace = ColorSpace::kDestination;
+        HueMethod  fHueMethod  = HueMethod::kShorter;  // Only relevant for LCH, OKLCH, HSL, or HWB
+
+        static Interpolation FromFlags(uint32_t flags) {
+            return {flags & kInterpolateColorsInPremul_Flag ? InPremul::kYes : InPremul::kNo,
+                    ColorSpace::kDestination,
+                    HueMethod::kShorter};
+        }
     };
 
     /** Returns a shader that generates a linear gradient between the two specified points.
@@ -62,20 +115,20 @@ public:
         @param  pos     May be NULL. array[count] of SkScalars, or NULL, of the relative position of
                         each corresponding color in the colors array. If this is NULL,
                         the the colors are distributed evenly between the start and end point.
-                        If this is not null, the values must begin with 0, end with 1.0, and
-                        intermediate values must be strictly increasing.
+                        If this is not null, the values must lie between 0.0 and 1.0, and be
+                        strictly increasing. If the first value is not 0.0, then an additional
+                        color stop is added at position 0.0, with the same color as colors[0].
+                        If the the last value is not 1.0, then an additional color stop is added
+                        at position 1.0, with the same color as colors[count - 1].
         @param  count   Must be >=2. The number of colors (and pos if not NULL) entries.
         @param  mode    The tiling mode
+
+        example: https://fiddle.skia.org/c/@GradientShader_MakeLinear
     */
     static sk_sp<SkShader> MakeLinear(const SkPoint pts[2],
                                       const SkColor colors[], const SkScalar pos[], int count,
                                       SkTileMode mode,
-                                      uint32_t flags, const SkMatrix* localMatrix);
-    static sk_sp<SkShader> MakeLinear(const SkPoint pts[2],
-                                      const SkColor colors[], const SkScalar pos[], int count,
-                                      SkTileMode mode) {
-        return MakeLinear(pts, colors, pos, count, mode, 0, nullptr);
-    }
+                                      uint32_t flags = 0, const SkMatrix* localMatrix = nullptr);
 
     /** Returns a shader that generates a linear gradient between the two specified points.
         <p />
@@ -84,19 +137,27 @@ public:
         @param  pos     May be NULL. array[count] of SkScalars, or NULL, of the relative position of
                         each corresponding color in the colors array. If this is NULL,
                         the the colors are distributed evenly between the start and end point.
-                        If this is not null, the values must begin with 0, end with 1.0, and
-                        intermediate values must be strictly increasing.
+                        If this is not null, the values must lie between 0.0 and 1.0, and be
+                        strictly increasing. If the first value is not 0.0, then an additional
+                        color stop is added at position 0.0, with the same color as colors[0].
+                        If the the last value is not 1.0, then an additional color stop is added
+                        at position 1.0, with the same color as colors[count - 1].
         @param  count   Must be >=2. The number of colors (and pos if not NULL) entries.
         @param  mode    The tiling mode
+
+        example: https://fiddle.skia.org/c/@GradientShader_MakeLinear
     */
     static sk_sp<SkShader> MakeLinear(const SkPoint pts[2],
                                       const SkColor4f colors[], sk_sp<SkColorSpace> colorSpace,
                                       const SkScalar pos[], int count, SkTileMode mode,
-                                      uint32_t flags, const SkMatrix* localMatrix);
+                                      const Interpolation& interpolation,
+                                      const SkMatrix* localMatrix);
     static sk_sp<SkShader> MakeLinear(const SkPoint pts[2],
                                       const SkColor4f colors[], sk_sp<SkColorSpace> colorSpace,
-                                      const SkScalar pos[], int count, SkTileMode mode) {
-        return MakeLinear(pts, colors, std::move(colorSpace), pos, count, mode, 0, nullptr);
+                                      const SkScalar pos[], int count, SkTileMode mode,
+                                      uint32_t flags = 0, const SkMatrix* localMatrix = nullptr) {
+        return MakeLinear(pts, colors, std::move(colorSpace), pos, count, mode,
+                          Interpolation::FromFlags(flags), localMatrix);
     }
 
     /** Returns a shader that generates a radial gradient given the center and radius.
@@ -107,20 +168,18 @@ public:
         @param  pos     May be NULL. The array[count] of SkScalars, or NULL, of the relative position of
                         each corresponding color in the colors array. If this is NULL,
                         the the colors are distributed evenly between the center and edge of the circle.
-                        If this is not null, the values must begin with 0, end with 1.0, and
-                        intermediate values must be strictly increasing.
+                        If this is not null, the values must lie between 0.0 and 1.0, and be
+                        strictly increasing. If the first value is not 0.0, then an additional
+                        color stop is added at position 0.0, with the same color as colors[0].
+                        If the the last value is not 1.0, then an additional color stop is added
+                        at position 1.0, with the same color as colors[count - 1].
         @param  count   Must be >= 2. The number of colors (and pos if not NULL) entries
         @param  mode    The tiling mode
     */
     static sk_sp<SkShader> MakeRadial(const SkPoint& center, SkScalar radius,
                                       const SkColor colors[], const SkScalar pos[], int count,
                                       SkTileMode mode,
-                                      uint32_t flags, const SkMatrix* localMatrix);
-    static sk_sp<SkShader> MakeRadial(const SkPoint& center, SkScalar radius,
-                                      const SkColor colors[], const SkScalar pos[], int count,
-                                      SkTileMode mode) {
-        return MakeRadial(center, radius, colors, pos, count, mode, 0, nullptr);
-    }
+                                      uint32_t flags = 0, const SkMatrix* localMatrix = nullptr);
 
     /** Returns a shader that generates a radial gradient given the center and radius.
         <p />
@@ -130,20 +189,25 @@ public:
         @param  pos     May be NULL. The array[count] of SkScalars, or NULL, of the relative position of
                         each corresponding color in the colors array. If this is NULL,
                         the the colors are distributed evenly between the center and edge of the circle.
-                        If this is not null, the values must begin with 0, end with 1.0, and
-                        intermediate values must be strictly increasing.
+                        If this is not null, the values must lie between 0.0 and 1.0, and be
+                        strictly increasing. If the first value is not 0.0, then an additional
+                        color stop is added at position 0.0, with the same color as colors[0].
+                        If the the last value is not 1.0, then an additional color stop is added
+                        at position 1.0, with the same color as colors[count - 1].
         @param  count   Must be >= 2. The number of colors (and pos if not NULL) entries
         @param  mode    The tiling mode
     */
     static sk_sp<SkShader> MakeRadial(const SkPoint& center, SkScalar radius,
                                       const SkColor4f colors[], sk_sp<SkColorSpace> colorSpace,
                                       const SkScalar pos[], int count, SkTileMode mode,
-                                      uint32_t flags, const SkMatrix* localMatrix);
+                                      const Interpolation& interpolation,
+                                      const SkMatrix* localMatrix);
     static sk_sp<SkShader> MakeRadial(const SkPoint& center, SkScalar radius,
                                       const SkColor4f colors[], sk_sp<SkColorSpace> colorSpace,
-                                      const SkScalar pos[], int count, SkTileMode mode) {
+                                      const SkScalar pos[], int count, SkTileMode mode,
+                                      uint32_t flags = 0, const SkMatrix* localMatrix = nullptr) {
         return MakeRadial(center, radius, colors, std::move(colorSpace), pos, count, mode,
-                          0, nullptr);
+                          Interpolation::FromFlags(flags), localMatrix);
     }
 
     /**
@@ -156,14 +220,8 @@ public:
                                                const SkPoint& end, SkScalar endRadius,
                                                const SkColor colors[], const SkScalar pos[],
                                                int count, SkTileMode mode,
-                                               uint32_t flags, const SkMatrix* localMatrix);
-    static sk_sp<SkShader> MakeTwoPointConical(const SkPoint& start, SkScalar startRadius,
-                                               const SkPoint& end, SkScalar endRadius,
-                                               const SkColor colors[], const SkScalar pos[],
-                                               int count, SkTileMode mode) {
-        return MakeTwoPointConical(start, startRadius, end, endRadius, colors, pos, count, mode,
-                                   0, nullptr);
-    }
+                                               uint32_t flags = 0,
+                                               const SkMatrix* localMatrix = nullptr);
 
     /**
      *  Returns a shader that generates a conical gradient given two circles, or
@@ -176,17 +234,29 @@ public:
                                                const SkColor4f colors[],
                                                sk_sp<SkColorSpace> colorSpace, const SkScalar pos[],
                                                int count, SkTileMode mode,
-                                               uint32_t flags, const SkMatrix* localMatrix);
+                                               const Interpolation& interpolation,
+                                               const SkMatrix* localMatrix);
     static sk_sp<SkShader> MakeTwoPointConical(const SkPoint& start, SkScalar startRadius,
                                                const SkPoint& end, SkScalar endRadius,
                                                const SkColor4f colors[],
                                                sk_sp<SkColorSpace> colorSpace, const SkScalar pos[],
-                                               int count, SkTileMode mode) {
+                                               int count, SkTileMode mode,
+                                               uint32_t flags = 0,
+                                               const SkMatrix* localMatrix = nullptr) {
         return MakeTwoPointConical(start, startRadius, end, endRadius, colors,
-                                   std::move(colorSpace), pos, count, mode, 0, nullptr);
+                                   std::move(colorSpace), pos, count, mode,
+                                   Interpolation::FromFlags(flags), localMatrix);
     }
 
     /** Returns a shader that generates a sweep gradient given a center.
+
+        The shader accepts negative angles and angles larger than 360, draws
+        between 0 and 360 degrees, similar to the CSS conic-gradient
+        semantics. 0 degrees means horizontal positive x axis. The start angle
+        must be less than the end angle, otherwise a null pointer is
+        returned. If color stops do not contain 0 and 1 but are within this
+        range, the respective outer color stop is repeated for 0 and 1. Color
+        stops less than 0 are clamped to 0, and greater than 1 are clamped to 1.
         <p />
         @param  cx         The X coordinate of the center of the sweep
         @param  cx         The Y coordinate of the center of the sweep
@@ -195,8 +265,11 @@ public:
         @param  pos        May be NULL. The array[count] of SkScalars, or NULL, of the relative
                            position of each corresponding color in the colors array. If this is
                            NULL, then the colors are distributed evenly within the angular range.
-                           If this is not null, the values must begin with 0, end with 1.0, and
-                           intermediate values must be strictly increasing.
+                           If this is not null, the values must lie between 0.0 and 1.0, and be
+                           strictly increasing. If the first value is not 0.0, then an additional
+                           color stop is added at position 0.0, with the same color as colors[0].
+                           If the the last value is not 1.0, then an additional color stop is added
+                           at position 1.0, with the same color as colors[count - 1].
         @param  count      Must be >= 2. The number of colors (and pos if not NULL) entries
         @param  mode       Tiling mode: controls drawing outside of the gradient angular range.
         @param  startAngle Start of the angular range, corresponding to pos == 0.
@@ -209,16 +282,20 @@ public:
                                      uint32_t flags, const SkMatrix* localMatrix);
     static sk_sp<SkShader> MakeSweep(SkScalar cx, SkScalar cy,
                                      const SkColor colors[], const SkScalar pos[], int count,
-                                     uint32_t flags, const SkMatrix* localMatrix) {
+                                     uint32_t flags = 0, const SkMatrix* localMatrix = nullptr) {
         return MakeSweep(cx, cy, colors, pos, count, SkTileMode::kClamp, 0, 360, flags,
                          localMatrix);
     }
-    static sk_sp<SkShader> MakeSweep(SkScalar cx, SkScalar cy,
-                                     const SkColor colors[], const SkScalar pos[], int count) {
-        return MakeSweep(cx, cy, colors, pos, count, 0, nullptr);
-    }
 
     /** Returns a shader that generates a sweep gradient given a center.
+
+        The shader accepts negative angles and angles larger than 360, draws
+        between 0 and 360 degrees, similar to the CSS conic-gradient
+        semantics. 0 degrees means horizontal positive x axis. The start angle
+        must be less than the end angle, otherwise a null pointer is
+        returned. If color stops do not contain 0 and 1 but are within this
+        range, the respective outer color stop is repeated for 0 and 1. Color
+        stops less than 0 are clamped to 0, and greater than 1 are clamped to 1.
         <p />
         @param  cx         The X coordinate of the center of the sweep
         @param  cx         The Y coordinate of the center of the sweep
@@ -227,8 +304,11 @@ public:
         @param  pos        May be NULL. The array[count] of SkScalars, or NULL, of the relative
                            position of each corresponding color in the colors array. If this is
                            NULL, then the colors are distributed evenly within the angular range.
-                           If this is not null, the values must begin with 0, end with 1.0, and
-                           intermediate values must be strictly increasing.
+                           If this is not null, the values must lie between 0.0 and 1.0, and be
+                           strictly increasing. If the first value is not 0.0, then an additional
+                           color stop is added at position 0.0, with the same color as colors[0].
+                           If the the last value is not 1.0, then an additional color stop is added
+                           at position 1.0, with the same color as colors[count - 1].
         @param  count      Must be >= 2. The number of colors (and pos if not NULL) entries
         @param  mode       Tiling mode: controls drawing outside of the gradient angular range.
         @param  startAngle Start of the angular range, corresponding to pos == 0.
@@ -239,21 +319,24 @@ public:
                                      const SkScalar pos[], int count,
                                      SkTileMode mode,
                                      SkScalar startAngle, SkScalar endAngle,
-                                     uint32_t flags, const SkMatrix* localMatrix);
+                                     const Interpolation& interpolation,
+                                     const SkMatrix* localMatrix);
     static sk_sp<SkShader> MakeSweep(SkScalar cx, SkScalar cy,
                                      const SkColor4f colors[], sk_sp<SkColorSpace> colorSpace,
                                      const SkScalar pos[], int count,
+                                     SkTileMode mode,
+                                     SkScalar startAngle, SkScalar endAngle,
                                      uint32_t flags, const SkMatrix* localMatrix) {
-        return MakeSweep(cx, cy, colors, std::move(colorSpace), pos, count,
-                         SkTileMode::kClamp, 0, 360, flags, localMatrix);
+        return MakeSweep(cx, cy, colors, std::move(colorSpace), pos, count, mode, startAngle,
+                         endAngle, Interpolation::FromFlags(flags), localMatrix);
     }
     static sk_sp<SkShader> MakeSweep(SkScalar cx, SkScalar cy,
                                      const SkColor4f colors[], sk_sp<SkColorSpace> colorSpace,
-                                     const SkScalar pos[], int count) {
-        return MakeSweep(cx, cy, colors, std::move(colorSpace), pos, count, 0, nullptr);
+                                     const SkScalar pos[], int count,
+                                     uint32_t flags = 0, const SkMatrix* localMatrix = nullptr) {
+        return MakeSweep(cx, cy, colors, std::move(colorSpace), pos, count, SkTileMode::kClamp,
+                         0, 360, flags, localMatrix);
     }
-
-    static void RegisterFlattenables();
 };
 
 #endif

@@ -8,9 +8,9 @@
 #ifndef SkRecordDraw_DEFINED
 #define SkRecordDraw_DEFINED
 
+#include "include/core/SkBBHFactory.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkMatrix.h"
-#include "src/core/SkBBoxHierarchy.h"
 #include "src/core/SkBigPicture.h"
 #include "src/core/SkRecord.h"
 
@@ -18,7 +18,8 @@ class SkDrawable;
 class SkLayerInfo;
 
 // Calculate conservative identity space bounds for each op in the record.
-void SkRecordFillBounds(const SkRect& cullRect, const SkRecord&, SkRect bounds[]);
+void SkRecordFillBounds(const SkRect& cullRect, const SkRecord&,
+                        SkRect bounds[], SkBBoxHierarchy::Metadata[]);
 
 // SkRecordFillBounds(), and gathers information about saveLayers and stores it for later
 // use (e.g., layer hoisting). The gathered information is sufficient to determine
@@ -38,7 +39,7 @@ void SkRecordDraw(const SkRecord&, SkCanvas*, SkPicture const* const drawablePic
 // the initialCTM parameter must set to just the replay matrix.
 void SkRecordPartialDraw(const SkRecord&, SkCanvas*,
                          SkPicture const* const drawablePicts[], int drawableCount,
-                         int start, int stop, const SkMatrix& initialCTM);
+                         int start, int stop, const SkM44& initialCTM);
 
 namespace SkRecords {
 
@@ -47,8 +48,8 @@ class Draw : SkNoncopyable {
 public:
     explicit Draw(SkCanvas* canvas, SkPicture const* const drawablePicts[],
                   SkDrawable* const drawables[], int drawableCount,
-                  const SkMatrix* initialCTM = nullptr)
-        : fInitialCTM(initialCTM ? *initialCTM : canvas->getTotalMatrix())
+                  const SkM44* initialCTM = nullptr)
+        : fInitialCTM(initialCTM ? *initialCTM : canvas->getLocalToDevice())
         , fCanvas(canvas)
         , fDrawablePicts(drawablePicts)
         , fDrawables(drawables)
@@ -70,7 +71,7 @@ private:
     // No base case, so we'll be compile-time checked that we implement all possibilities.
     template <typename T> void draw(const T&);
 
-    const SkMatrix fInitialCTM;
+    const SkM44 fInitialCTM;
     SkCanvas* fCanvas;
     SkPicture const* const* fDrawablePicts;
     SkDrawable* const* fDrawables;

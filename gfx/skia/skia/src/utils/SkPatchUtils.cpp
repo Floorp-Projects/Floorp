@@ -7,12 +7,30 @@
 
 #include "src/utils/SkPatchUtils.h"
 
+#include "include/core/SkAlphaType.h"
+#include "include/core/SkColorSpace.h"
+#include "include/core/SkColorType.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkTypes.h"
+#include "include/core/SkVertices.h"
 #include "include/private/SkColorData.h"
-#include "include/private/SkTo.h"
-#include "src/core/SkArenaAlloc.h"
+#include "include/private/base/SkFloatingPoint.h"
+#include "include/private/base/SkMath.h"
+#include "include/private/base/SkTPin.h"
+#include "include/private/base/SkTo.h"
+#include "src/base/SkArenaAlloc.h"
+#include "src/base/SkVx.h"
 #include "src/core/SkColorSpacePriv.h"
 #include "src/core/SkConvertPixels.h"
 #include "src/core/SkGeometry.h"
+
+#include <algorithm>
+#include <cstdint>
+#include <cstring>
 
 namespace {
     enum CubicCtrlPts {
@@ -44,7 +62,7 @@ namespace {
         kBottomRight_Corner,
         kBottomLeft_Corner
     };
-}
+}  // namespace
 
 /**
  * Evaluator to sample the values of a cubic bezier using forward differences.
@@ -85,10 +103,10 @@ public:
         fDivisions = divisions;
         fCurrent    = 0;
         fMax        = fDivisions + 1;
-        Sk2s h  = Sk2s(1.f / fDivisions);
-        Sk2s h2 = h * h;
-        Sk2s h3 = h2 * h;
-        Sk2s fwDiff3 = Sk2s(6) * fCoefs.fA * h3;
+        skvx::float2 h = 1.f / fDivisions;
+        skvx::float2 h2 = h * h;
+        skvx::float2 h3 = h2 * h;
+        skvx::float2 fwDiff3 = 6 * fCoefs.fA * h3;
         fFwDiff[3] = to_point(fwDiff3);
         fFwDiff[2] = to_point(fwDiff3 + times_2(fCoefs.fB) * h2);
         fFwDiff[1] = to_point(fCoefs.fA * h3 + fCoefs.fB * h2 + fCoefs.fC * h);
@@ -151,10 +169,13 @@ static SkScalar bilerp(SkScalar tx, SkScalar ty, SkScalar c00, SkScalar c10, SkS
     return a * (1.f - ty) + b * ty;
 }
 
-static Sk4f bilerp(SkScalar tx, SkScalar ty,
-                   const Sk4f& c00, const Sk4f& c10, const Sk4f& c01, const Sk4f& c11) {
-    Sk4f a = c00 * (1.f - tx) + c10 * tx;
-    Sk4f b = c01 * (1.f - tx) + c11 * tx;
+static skvx::float4 bilerp(SkScalar tx, SkScalar ty,
+                           const skvx::float4& c00,
+                           const skvx::float4& c10,
+                           const skvx::float4& c01,
+                           const skvx::float4& c11) {
+    auto a = c00 * (1.f - tx) + c10 * tx;
+    auto b = c01 * (1.f - tx) + c11 * tx;
     return a * (1.f - ty) + b * ty;
 }
 
@@ -182,10 +203,10 @@ SkISize SkPatchUtils::GetLevelOfDetail(const SkPoint cubics[12], const SkMatrix*
     }
 
     // Level of detail per axis, based on the larger side between top and bottom or left and right
-    int lodX = static_cast<int>(SkMaxScalar(topLength, bottomLength) / kPartitionSize);
-    int lodY = static_cast<int>(SkMaxScalar(leftLength, rightLength) / kPartitionSize);
+    int lodX = static_cast<int>(std::max(topLength, bottomLength) / kPartitionSize);
+    int lodY = static_cast<int>(std::max(leftLength, rightLength) / kPartitionSize);
 
-    return SkISize::Make(SkMax32(8, lodX), SkMax32(8, lodY));
+    return SkISize::Make(std::max(8, lodX), std::max(8, lodY));
 }
 
 void SkPatchUtils::GetTopCubic(const SkPoint cubics[12], SkPoint points[4]) {
@@ -221,7 +242,7 @@ static void skcolor_to_float(SkPMColor4f* dst, const SkColor* src, int count, Sk
                                             kUnpremul_SkAlphaType, SkColorSpace::MakeSRGB());
     SkImageInfo dstInfo = SkImageInfo::Make(count, 1, kRGBA_F32_SkColorType,
                                             kPremul_SkAlphaType, sk_ref_sp(dstCS));
-    SkConvertPixels(dstInfo, dst, 0, srcInfo, src, 0);
+    SkAssertResult(SkConvertPixels(dstInfo, dst, 0, srcInfo, src, 0));
 }
 
 static void float_to_skcolor(SkColor* dst, const SkPMColor4f* src, int count, SkColorSpace* srcCS) {
@@ -229,7 +250,7 @@ static void float_to_skcolor(SkColor* dst, const SkPMColor4f* src, int count, Sk
                                             kPremul_SkAlphaType, sk_ref_sp(srcCS));
     SkImageInfo dstInfo = SkImageInfo::Make(count, 1, kBGRA_8888_SkColorType,
                                             kUnpremul_SkAlphaType, SkColorSpace::MakeSRGB());
-    SkConvertPixels(dstInfo, dst, 0, srcInfo, src, 0);
+    SkAssertResult(SkConvertPixels(dstInfo, dst, 0, srcInfo, src, 0));
 }
 
 sk_sp<SkVertices> SkPatchUtils::MakeVertices(const SkPoint cubics[12], const SkColor srcColors[4],
@@ -329,10 +350,10 @@ sk_sp<SkVertices> SkPatchUtils::MakeVertices(const SkPoint cubics[12], const SkC
             pos[dataIndex] = s0 + s1 - s2;
 
             if (cornerColors) {
-                bilerp(u, v, Sk4f::Load(cornerColors[kTopLeft_Corner].vec()),
-                             Sk4f::Load(cornerColors[kTopRight_Corner].vec()),
-                             Sk4f::Load(cornerColors[kBottomLeft_Corner].vec()),
-                             Sk4f::Load(cornerColors[kBottomRight_Corner].vec()))
+                bilerp(u, v, skvx::float4::Load(cornerColors[kTopLeft_Corner].vec()),
+                             skvx::float4::Load(cornerColors[kTopRight_Corner].vec()),
+                             skvx::float4::Load(cornerColors[kBottomLeft_Corner].vec()),
+                             skvx::float4::Load(cornerColors[kBottomRight_Corner].vec()))
                     .store(tmpColors[dataIndex].vec());
             }
 
@@ -357,9 +378,9 @@ sk_sp<SkVertices> SkPatchUtils::MakeVertices(const SkPoint cubics[12], const SkC
                 indices[i + 4] = indices[i + 2];
                 indices[i + 5] = (x + 1) * stride + y;
             }
-            v = SkScalarClampMax(v + 1.f / lodY, 1);
+            v = SkTPin(v + 1.f / lodY, 0.0f, 1.0f);
         }
-        u = SkScalarClampMax(u + 1.f / lodX, 1);
+        u = SkTPin(u + 1.f / lodX, 0.0f, 1.0f);
     }
 
     if (tmpColors) {

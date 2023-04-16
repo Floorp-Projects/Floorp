@@ -4,10 +4,16 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
+#include "include/core/SkPoint.h"
+#include "include/core/SkTypes.h"
+#include "include/private/base/SkTemplates.h"
 #include "src/pathops/SkOpCoincidence.h"
 #include "src/pathops/SkOpContour.h"
 #include "src/pathops/SkOpSegment.h"
-#include "src/pathops/SkPathWriter.h"
+#include "src/pathops/SkOpSpan.h"
+#include "src/pathops/SkPathOpsTypes.h"
+
+#include <algorithm>
 
 bool SkOpPtT::alias() const {
     return this->span()->ptT() != this;
@@ -178,8 +184,8 @@ SkOpSpanBase::Collapsed SkOpSpanBase::collapsed(double s, double e) const {
         if (walk->segment() != segment) {
             continue;
         }
-        min = SkTMin(min, walk->fT);
-        max = SkTMax(max, walk->fT);
+        min = std::min(min, walk->fT);
+        max = std::max(max, walk->fT);
         if (between(min, s, max) && between(min, e, max)) {
             return Collapsed::kYes;
         }

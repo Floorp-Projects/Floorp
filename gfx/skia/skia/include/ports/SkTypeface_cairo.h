@@ -15,4 +15,3 @@ SK_API extern SkTypeface* SkCreateTypefaceFromCairoFTFont(
     uint8_t lcdFilter = 0);
 
 #endif
-

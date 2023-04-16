@@ -9,13 +9,14 @@
 #define SkRefCnt_DEFINED
 
 #include "include/core/SkTypes.h"
+#include "include/private/base/SkDebug.h"
 
-#include <atomic>       // std::atomic, std::memory_order_*
-#include <cstddef>      // std::nullptr_t
-#include <iosfwd>       // std::basic_ostream
-#include <memory>       // TODO: unused
-#include <type_traits>  // std::enable_if, std::is_convertible
-#include <utility>      // std::forward, std::swap
+#include <atomic>
+#include <cstddef>
+#include <cstdint>
+#include <iosfwd>
+#include <type_traits>
+#include <utility>
 
 /** \class SkRefCntBase
 
@@ -173,7 +174,7 @@ public:
 
     bool unique() const { return 1 == fRefCnt.load(std::memory_order_acquire); }
     void ref() const { (void)fRefCnt.fetch_add(+1, std::memory_order_relaxed); }
-    void  unref() const {
+    void unref() const {
         if (1 == fRefCnt.fetch_add(-1, std::memory_order_acq_rel)) {
             // restore the 1 for our destructor's assert
             SkDEBUGCODE(fRefCnt.store(1, std::memory_order_relaxed));
@@ -181,6 +182,18 @@ public:
         }
     }
     void  deref() const { this->unref(); }
+
+    // This must be used with caution. It is only valid to call this when 'threadIsolatedTestCnt'
+    // refs are known to be isolated to the current thread. That is, it is known that there are at
+    // least 'threadIsolatedTestCnt' refs for which no other thread may make a balancing unref()
+    // call. Assuming the contract is followed, if this returns false then no other thread has
+    // ownership of this. If it returns true then another thread *may* have ownership.
+    bool refCntGreaterThan(int32_t threadIsolatedTestCnt) const {
+        int cnt = fRefCnt.load(std::memory_order_acquire);
+        // If this fails then the above contract has been violated.
+        SkASSERT(cnt >= threadIsolatedTestCnt);
+        return cnt > threadIsolatedTestCnt;
+    }
 
 private:
     mutable std::atomic<int32_t> fRefCnt;
@@ -199,8 +212,12 @@ private:
  *  This can be used for classes inheriting from SkRefCnt, but it also works for other
  *  classes that match the interface, but have different internal choices: e.g. the hosted class
  *  may have its ref/unref be thread-safe, but that is not assumed/imposed by sk_sp.
+ *
+ *  Declared with the trivial_abi attribute where supported so that sk_sp and types containing it
+ *  may be considered as trivially relocatable by the compiler so that destroying-move operations
+ *  i.e. move constructor followed by destructor can be optimized to memcpy.
  */
-template <typename T> class sk_sp {
+template <typename T> class SK_TRIVIAL_ABI sk_sp {
 public:
     using element_type = T;
 
@@ -314,6 +331,8 @@ public:
         using std::swap;
         swap(fPtr, that.fPtr);
     }
+
+    using sk_is_trivially_relocatable = std::true_type;
 
 private:
     T*  fPtr;

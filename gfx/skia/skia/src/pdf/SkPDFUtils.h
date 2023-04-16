@@ -11,7 +11,8 @@
 #include "include/core/SkPath.h"
 #include "include/core/SkShader.h"
 #include "include/core/SkStream.h"
-#include "src/core/SkUtils.h"
+#include "src/base/SkUTF.h"
+#include "src/base/SkUtils.h"
 #include "src/pdf/SkPDFTypes.h"
 #include "src/shaders/SkShaderBase.h"
 #include "src/utils/SkFloatToDecimal.h"
@@ -58,8 +59,7 @@ inline void EmitPath(const SkPath& path, SkPaint::Style paintStyle,
     SkPDFUtils::EmitPath(path, paintStyle, true, content, tolerance);
 }
 void ClosePath(SkWStream* content);
-void PaintPath(SkPaint::Style style, SkPath::FillType fill,
-                      SkWStream* content);
+void PaintPath(SkPaint::Style style, SkPathFillType fill, SkWStream* content);
 void StrokePath(SkWStream* content);
 void ApplyGraphicState(int objectIndex, SkWStream* content);
 void ApplyPattern(int objectIndex, SkWStream* content);
@@ -88,7 +88,7 @@ inline void AppendScalar(SkScalar value, SkWStream* stream) {
     stream->write(result, len);
 }
 
-inline void WriteUInt16BE(SkDynamicMemoryWStream* wStream, uint16_t value) {
+inline void WriteUInt16BE(SkWStream* wStream, uint16_t value) {
     char result[4] = { SkHexadecimalDigits::gUpper[       value >> 12 ],
                        SkHexadecimalDigits::gUpper[0xF & (value >> 8 )],
                        SkHexadecimalDigits::gUpper[0xF & (value >> 4 )],
@@ -96,13 +96,13 @@ inline void WriteUInt16BE(SkDynamicMemoryWStream* wStream, uint16_t value) {
     wStream->write(result, 4);
 }
 
-inline void WriteUInt8(SkDynamicMemoryWStream* wStream, uint8_t value) {
+inline void WriteUInt8(SkWStream* wStream, uint8_t value) {
     char result[2] = { SkHexadecimalDigits::gUpper[value >> 4],
                        SkHexadecimalDigits::gUpper[value & 0xF] };
     wStream->write(result, 2);
 }
 
-inline void WriteUTF16beHex(SkDynamicMemoryWStream* wStream, SkUnichar utf32) {
+inline void WriteUTF16beHex(SkWStream* wStream, SkUnichar utf32) {
     uint16_t utf16[2] = {0, 0};
     size_t len = SkUTF::ToUTF16(utf32, utf16);
     SkASSERT(len == 1 || len == 2);
@@ -115,9 +115,9 @@ inline void WriteUTF16beHex(SkDynamicMemoryWStream* wStream, SkUnichar utf32) {
 inline SkMatrix GetShaderLocalMatrix(const SkShader* shader) {
     SkMatrix localMatrix;
     if (sk_sp<SkShader> s = as_SB(shader)->makeAsALocalMatrixShader(&localMatrix)) {
-        return SkMatrix::Concat(as_SB(s)->getLocalMatrix(), localMatrix);
+        return localMatrix;
     }
-    return as_SB(shader)->getLocalMatrix();
+    return SkMatrix::I();
 }
 bool InverseTransformBBox(const SkMatrix& matrix, SkRect* bbox);
 void PopulateTilingPatternDict(SkPDFDict* pattern,

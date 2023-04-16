@@ -10,6 +10,7 @@
 
 #include "include/core/SkColor.h"
 #include "include/core/SkRefCnt.h"
+#include "include/core/SkTypes.h"
 
 /** \class SkColorTable
 
@@ -44,7 +45,7 @@ private:
     SkPMColor*  fColors;
     int         fCount;
 
-    typedef SkRefCnt INHERITED;
+    using INHERITED = SkRefCnt;
 };
 
 #endif

@@ -9,9 +9,28 @@
 #define SkAndroidCodec_DEFINED
 
 #include "include/codec/SkCodec.h"
-#include "include/core/SkEncodedImageFormat.h"
-#include "include/core/SkStream.h"
+#include "include/core/SkColorSpace.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkSize.h"
 #include "include/core/SkTypes.h"
+#include "include/private/SkEncodedInfo.h"
+#include "include/private/base/SkNoncopyable.h"
+#include "modules/skcms/skcms.h"
+
+// TODO(kjlubick, bungeman) Replace these includes with forward declares
+#include "include/codec/SkEncodedImageFormat.h" // IWYU pragma: keep
+#include "include/core/SkAlphaType.h" // IWYU pragma: keep
+#include "include/core/SkColorType.h" // IWYU pragma: keep
+
+#include <cstddef>
+#include <memory>
+
+class SkData;
+class SkPngChunkReader;
+class SkStream;
+struct SkGainmapInfo;
+struct SkIRect;
 
 /**
  *  Abstract interface defining image codec functionality that is necessary for
@@ -19,31 +38,23 @@
  */
 class SK_API SkAndroidCodec : SkNoncopyable {
 public:
+    /**
+     * Deprecated.
+     *
+     * Now that SkAndroidCodec supports multiframe images, there are multiple
+     * ways to handle compositing an oriented frame on top of an oriented frame
+     * with different tradeoffs. SkAndroidCodec now ignores the orientation and
+     * forces the client to handle it.
+     */
     enum class ExifOrientationBehavior {
-        /**
-         *  Ignore any exif orientation markers in the data.
-         *
-         *  getInfo's width and height will match the header of the image, and
-         *  no processing will be done to match the marker.
-         */
         kIgnore,
-
-        /**
-         *  Respect the exif orientation marker.
-         *
-         *  getInfo's width and height will represent what they should be after
-         *  applying the orientation. For example, if the marker specifies a
-         *  rotation by 90 degrees, they will be swapped relative to the header.
-         *  getAndroidPixels will apply the orientation as well.
-         */
         kRespect,
     };
 
     /**
      *  Pass ownership of an SkCodec to a newly-created SkAndroidCodec.
      */
-    static std::unique_ptr<SkAndroidCodec> MakeFromCodec(std::unique_ptr<SkCodec>,
-            ExifOrientationBehavior = ExifOrientationBehavior::kIgnore);
+    static std::unique_ptr<SkAndroidCodec> MakeFromCodec(std::unique_ptr<SkCodec>);
 
     /**
      *  If this stream represents an encoded image that we know how to decode,
@@ -54,8 +65,6 @@ public:
      *
      *  If NULL is returned, the stream is deleted immediately. Otherwise, the
      *  SkCodec takes ownership of it, and will delete it when done with it.
-     *
-     *  ExifOrientationBehavior is set to kIgnore.
      */
     static std::unique_ptr<SkAndroidCodec> MakeFromStream(std::unique_ptr<SkStream>,
                                                           SkPngChunkReader* = nullptr);
@@ -66,14 +75,21 @@ public:
      *
      *  The SkPngChunkReader handles unknown chunks in PNGs.
      *  See SkCodec.h for more details.
-     *
-     *  ExifOrientationBehavior is set to kIgnore.
      */
     static std::unique_ptr<SkAndroidCodec> MakeFromData(sk_sp<SkData>, SkPngChunkReader* = nullptr);
 
     virtual ~SkAndroidCodec();
 
+    // TODO: fInfo is now just a cache of SkCodec's SkImageInfo. No need to
+    // cache and return a reference here, once Android call-sites are updated.
     const SkImageInfo& getInfo() const { return fInfo; }
+
+    /**
+     * Return the ICC profile of the encoded data.
+     */
+    const skcms_ICCProfile* getICCProfile() const {
+        return fCodec->getEncodedInfo().profile();
+    }
 
     /**
      *  Format of the encoded data.
@@ -105,10 +121,8 @@ public:
     /**
      *  @param outputColorType Color type that the client will decode to.
      *  @param prefColorSpace  Preferred color space to decode to.
-     *                         This may not return |prefColorSpace| for a couple reasons.
-     *                         (1) Android Principles: 565 must be sRGB, F16 must be
-     *                             linear sRGB, transfer function must be parametric.
-     *                         (2) Codec Limitations: F16 requires a linear color space.
+     *                         This may not return |prefColorSpace| for
+     *                         specific color types.
      *
      *  Returns the appropriate color space to decode to.
      */
@@ -188,31 +202,11 @@ public:
     //        called SkAndroidCodec.  On the other hand, it's may be a bit confusing to call
     //        these Options when SkCodec has a slightly different set of Options.  Maybe these
     //        should be DecodeOptions or SamplingOptions?
-    struct AndroidOptions {
+    struct AndroidOptions : public SkCodec::Options {
         AndroidOptions()
-            : fZeroInitialized(SkCodec::kNo_ZeroInitialized)
-            , fSubset(nullptr)
+            : SkCodec::Options()
             , fSampleSize(1)
         {}
-
-        /**
-         *  Indicates is destination pixel memory is zero initialized.
-         *
-         *  The default is SkCodec::kNo_ZeroInitialized.
-         */
-        SkCodec::ZeroInitialized fZeroInitialized;
-
-        /**
-         *  If not NULL, represents a subset of the original image to decode.
-         *
-         *  Must be within the bounds returned by getInfo().
-         *
-         *  If the EncodedFormat is SkEncodedImageFormat::kWEBP, the top and left
-         *  values must be even.
-         *
-         *  The default is NULL, meaning a decode of the entire image.
-         */
-        SkIRect* fSubset;
 
         /**
          *  The client may provide an integer downscale factor for the decode.
@@ -269,8 +263,25 @@ public:
 
     SkCodec* codec() const { return fCodec.get(); }
 
+    /**
+     *  Retrieve the gainmap for an image.
+     *
+     *  @param outInfo                On success, this is populated with the parameters for
+     *                                rendering this gainmap. This parameter must be non-nullptr.
+     *
+     *  @param outGainmapImageStream  On success, this is populated with a stream from which the
+     *                                gainmap image may be decoded. This parameter is optional, and
+     *                                may be set to nullptr.
+     *
+     *  @return                       If this has a gainmap image and that gainmap image was
+     *                                successfully extracted then return true. Otherwise return
+     *                                false.
+     */
+    bool getAndroidGainmap(SkGainmapInfo* outInfo,
+                           std::unique_ptr<SkStream>* outGainmapImageStream);
+
 protected:
-    SkAndroidCodec(SkCodec*, ExifOrientationBehavior = ExifOrientationBehavior::kIgnore);
+    SkAndroidCodec(SkCodec*);
 
     virtual SkISize onGetSampledDimensions(int sampleSize) const = 0;
 
@@ -281,7 +292,6 @@ protected:
 
 private:
     const SkImageInfo               fInfo;
-    const ExifOrientationBehavior   fOrientationBehavior;
     std::unique_ptr<SkCodec>        fCodec;
 };
 #endif // SkAndroidCodec_DEFINED

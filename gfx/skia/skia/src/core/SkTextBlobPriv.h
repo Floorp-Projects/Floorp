@@ -16,8 +16,8 @@
 #include "include/core/SkShader.h"
 #include "include/core/SkTextBlob.h"
 #include "include/core/SkTypeface.h"
+#include "src/base/SkSafeMath.h"
 #include "src/core/SkPaintPriv.h"
-#include "src/core/SkSafeMath.h"
 
 class SkReadBuffer;
 class SkWriteBuffer;
@@ -37,25 +37,8 @@ public:
      *          invalid.
      */
     static sk_sp<SkTextBlob> MakeFromBuffer(SkReadBuffer&);
-};
 
-class SkTextBlobBuilderPriv {
-public:
-    static const SkTextBlobBuilder::RunBuffer& AllocRunText(SkTextBlobBuilder* builder,
-            const SkFont& font, int count, SkScalar x, SkScalar y, int textByteCount,
-            SkString lang, const SkRect* bounds = nullptr) {
-        return builder->allocRunText(font, count, x, y, textByteCount, lang, bounds);
-    }
-    static const SkTextBlobBuilder::RunBuffer& AllocRunTextPosH(SkTextBlobBuilder* builder,
-            const SkFont& font, int count, SkScalar y, int textByteCount, SkString lang,
-            const SkRect* bounds = nullptr) {
-        return builder->allocRunTextPosH(font, count, y, textByteCount, lang, bounds);
-    }
-    static const SkTextBlobBuilder::RunBuffer& AllocRunTextPos(SkTextBlobBuilder* builder,
-            const SkFont& font, int count, int textByteCount, SkString lang,
-            const SkRect* bounds = nullptr) {
-        return builder->allocRunTextPos(font, count, textByteCount, lang, bounds);
-    }
+    static bool HasRSXForm(const SkTextBlob& blob);
 };
 
 //
@@ -244,6 +227,7 @@ public:
         return fCurrentRun->font();
     }
     GlyphPositioning positioning() const;
+    unsigned scalarsPerGlyph() const;
     uint32_t* clusters() const {
         SkASSERT(!this->done());
         return fCurrentRun->clusterBuffer();
@@ -264,5 +248,14 @@ private:
 
     SkDEBUGCODE(uint8_t* fStorageTop;)
 };
+
+inline bool SkTextBlobPriv::HasRSXForm(const SkTextBlob& blob) {
+    for (SkTextBlobRunIterator i{&blob}; !i.done(); i.next()) {
+        if (i.positioning() == SkTextBlobRunIterator::kRSXform_Positioning) {
+            return true;
+        }
+    }
+    return false;
+}
 
 #endif // SkTextBlobPriv_DEFINED

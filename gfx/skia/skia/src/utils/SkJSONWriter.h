@@ -9,8 +9,16 @@
 #define SkJSONWriter_DEFINED
 
 #include "include/core/SkStream.h"
-#include "include/private/SkNoncopyable.h"
-#include "include/private/SkTArray.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
+#include "include/private/base/SkNoncopyable.h"
+#include "include/private/base/SkTArray.h"
+#include "src/base/SkUTF.h"
+
+#include <cstring>
+#include <cstdint>
+#include <string>
+#include <type_traits>
 
 /**
  *  Lightweight class for writing properly structured JSON data. No random-access, everything must
@@ -60,8 +68,8 @@ public:
     ~SkJSONWriter() {
         this->flush();
         delete[] fBlock;
-        SkASSERT(fScopeStack.count() == 1);
-        SkASSERT(fNewlineStack.count() == 1);
+        SkASSERT(fScopeStack.size() == 1);
+        SkASSERT(fNewlineStack.size() == 1);
     }
 
     /**
@@ -165,12 +173,15 @@ public:
      *  - Between beginArray() and endArray()                                -or-
      *  - Between beginObject() and endObject(), after calling appendName()
      */
-    void appendString(const char* value) {
+    void appendString(const char* value, size_t size) {
         this->beginValue();
         this->write("\"", 1);
         if (value) {
-            while (*value) {
-                switch (*value) {
+            char const * const end = value + size;
+            while (value < end) {
+                char const * next = value;
+                SkUnichar u = SkUTF::NextUTF8(&next, end);
+                switch (u) {
                     case '"': this->write("\\\"", 2); break;
                     case '\\': this->write("\\\\", 2); break;
                     case '\b': this->write("\\b", 2); break;
@@ -178,12 +189,40 @@ public:
                     case '\n': this->write("\\n", 2); break;
                     case '\r': this->write("\\r", 2); break;
                     case '\t': this->write("\\t", 2); break;
-                    default: this->write(value, 1); break;
+                    default: {
+                        if (u < 0) {
+                            next = value + 1;
+                            SkString s("\\u");
+                            s.appendHex((unsigned char)*value, 4);
+                            this->write(s.c_str(), s.size());
+                        } else if (u < 0x20) {
+                            SkString s("\\u");
+                            s.appendHex(u, 4);
+                            this->write(s.c_str(), s.size());
+                        } else {
+                            this->write(value, next - value);
+                        }
+                    } break;
                 }
-                value++;
+                value = next;
             }
         }
         this->write("\"", 1);
+    }
+    void appendString(const SkString& value) {
+        this->appendString(value.c_str(), value.size());
+    }
+    // Avoid the non-explicit converting constructor from char*
+    template <class T, std::enable_if_t<std::is_same_v<T,std::string>,bool> = false>
+    void appendString(const T& value) {
+        this->appendString(value.data(), value.size());
+    }
+    template <size_t N> inline void appendNString(char const (&value)[N]) {
+        static_assert(N > 0);
+        this->appendString(value, N-1);
+    }
+    void appendCString(const char* value) {
+        this->appendString(value, value ? strlen(value) : 0);
     }
 
     void appendPointer(const void* value) { this->beginValue(); this->appendf("\"%p\"", value); }
@@ -212,6 +251,29 @@ public:
     void appendHexU32(uint32_t value) { this->beginValue(); this->appendf("\"0x%x\"", value); }
     void appendHexU64(uint64_t value);
 
+    void appendString(const char* name, const char* value, size_t size) {
+        this->appendName(name);
+        this->appendString(value, size);
+    }
+    void appendString(const char* name, const SkString& value) {
+        this->appendName(name);
+        this->appendString(value.c_str(), value.size());
+    }
+    // Avoid the non-explicit converting constructor from char*
+    template <class T, std::enable_if_t<std::is_same_v<T,std::string>,bool> = false>
+    void appendString(const char* name, const T& value) {
+        this->appendName(name);
+        this->appendString(value.data(), value.size());
+    }
+    template <size_t N> inline void appendNString(const char* name, char const (&value)[N]) {
+        static_assert(N > 0);
+        this->appendName(name);
+        this->appendString(value, N-1);
+    }
+    void appendCString(const char* name, const char* value) {
+        this->appendName(name);
+        this->appendString(value, value ? strlen(value) : 0);
+    }
 #define DEFINE_NAMED_APPEND(function, type) \
     void function(const char* name, type value) { this->appendName(name); this->function(value); }
 
@@ -219,7 +281,6 @@ public:
      *  Functions for adding named values of various types. These add a name field, so must be
      *  called between beginObject() and endObject().
      */
-    DEFINE_NAMED_APPEND(appendString, const char *)
     DEFINE_NAMED_APPEND(appendPointer, const void *)
     DEFINE_NAMED_APPEND(appendBool, bool)
     DEFINE_NAMED_APPEND(appendS32, int32_t)
@@ -266,7 +327,7 @@ private:
         kArrayValue,
     };
 
-    void appendf(const char* fmt, ...);
+    void appendf(const char* fmt, ...) SK_PRINTF_LIKE(2, 3);
 
     void beginValue(bool structure = false) {
         SkASSERT(State::kObjectName == fState ||
@@ -292,7 +353,7 @@ private:
         if (Mode::kPretty == fMode) {
             if (multiline) {
                 this->write("\n", 1);
-                for (int i = 0; i < fScopeStack.count() - 1; ++i) {
+                for (int i = 0; i < fScopeStack.size() - 1; ++i) {
                     this->write("   ", 3);
                 }
             } else {

@@ -5,54 +5,67 @@
  * found in the LICENSE file.
  */
 
-#include "include/effects/SkArithmeticImageFilter.h"
-
+#include "include/core/SkAlphaType.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkBlendMode.h"
 #include "include/core/SkCanvas.h"
-#include "include/effects/SkXfermodeImageFilter.h"
-#include "include/private/SkNx.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkFlattenable.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkM44.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPixmap.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkRegion.h"
+#include "include/core/SkSamplingOptions.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkTypes.h"
+#include "include/effects/SkImageFilters.h"
+#include "include/effects/SkRuntimeEffect.h"
+#include "include/private/SkColorData.h"
+#include "src/base/SkVx.h"
 #include "src/core/SkImageFilter_Base.h"
 #include "src/core/SkReadBuffer.h"
+#include "src/core/SkRuntimeEffectPriv.h"
 #include "src/core/SkSpecialImage.h"
 #include "src/core/SkSpecialSurface.h"
 #include "src/core/SkWriteBuffer.h"
-#if SK_SUPPORT_GPU
-#include "include/private/GrRecordingContext.h"
-#include "src/gpu/GrClip.h"
-#include "src/gpu/GrColorSpaceXform.h"
-#include "src/gpu/GrRecordingContextPriv.h"
-#include "src/gpu/GrRenderTargetContext.h"
-#include "src/gpu/GrTextureProxy.h"
-#include "src/gpu/SkGr.h"
-#include "src/gpu/effects/GrSkSLFP.h"
-#include "src/gpu/effects/GrTextureDomain.h"
-#include "src/gpu/effects/generated/GrConstColorProcessor.h"
-#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
-#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
-#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
-#include "src/gpu/glsl/GrGLSLUniformHandler.h"
 
-GR_FP_SRC_STRING SKSL_ARITHMETIC_SRC = R"(
-uniform float4 k;
-in bool enforcePMColor;
-in fragmentProcessor child;
+#include <algorithm>
+#include <cstdint>
+#include <memory>
+#include <utility>
 
-void main(inout half4 color) {
-    half4 dst = sample(child);
-    color = saturate(half(k.x) * color * dst + half(k.y) * color + half(k.z) * dst + half(k.w));
-    @if (enforcePMColor) {
-        color.rgb = min(color.rgb, color.a);
-    }
-}
-)";
+#if defined(SK_GANESH)
+#include "include/gpu/GpuTypes.h"
+#include "include/gpu/GrRecordingContext.h"
+#include "include/gpu/GrTypes.h"
+#include "src/gpu/SkBackingFit.h"
+#include "src/gpu/ganesh/GrColorSpaceXform.h"
+#include "src/gpu/ganesh/GrFragmentProcessor.h"
+#include "src/gpu/ganesh/GrImageInfo.h"
+#include "src/gpu/ganesh/GrRecordingContextPriv.h"
+#include "src/gpu/ganesh/GrSamplerState.h"
+#include "src/gpu/ganesh/GrSurfaceProxy.h"
+#include "src/gpu/ganesh/GrSurfaceProxyView.h"
+#include "src/gpu/ganesh/SurfaceFillContext.h"
+#include "src/gpu/ganesh/effects/GrSkSLFP.h"
+#include "src/gpu/ganesh/effects/GrTextureEffect.h"
 #endif
 
 namespace {
 
-class ArithmeticImageFilterImpl final : public SkImageFilter_Base {
+class SkArithmeticImageFilter final : public SkImageFilter_Base {
 public:
-    ArithmeticImageFilterImpl(float k1, float k2, float k3, float k4, bool enforcePMColor,
-                              sk_sp<SkImageFilter> inputs[2], const CropRect* cropRect)
-            : INHERITED(inputs, 2, cropRect), fK{k1, k2, k3, k4}, fEnforcePMColor(enforcePMColor) {}
+    SkArithmeticImageFilter(float k1, float k2, float k3, float k4, bool enforcePMColor,
+                            sk_sp<SkImageFilter> inputs[2], const SkRect* cropRect)
+            : INHERITED(inputs, 2, cropRect)
+            , fK{k1, k2, k3, k4}
+            , fEnforcePMColor(enforcePMColor) {}
 
 protected:
     sk_sp<SkSpecialImage> onFilterImage(const Context&, SkIPoint* offset) const override;
@@ -60,7 +73,7 @@ protected:
     SkIRect onFilterBounds(const SkIRect&, const SkMatrix& ctm,
                            MapDirection, const SkIRect* inputRect) const override;
 
-#if SK_SUPPORT_GPU
+#if defined(SK_GANESH)
     sk_sp<SkSpecialImage> filterImageGPU(const Context& ctx,
                                          sk_sp<SkSpecialImage> background,
                                          const SkIPoint& backgroundOffset,
@@ -74,24 +87,23 @@ protected:
     void drawForeground(SkCanvas* canvas, SkSpecialImage*, const SkIRect&) const;
 
 private:
-    friend void SkArithmeticImageFilter::RegisterFlattenables();
-    SK_FLATTENABLE_HOOKS(ArithmeticImageFilterImpl)
+    friend void ::SkRegisterArithmeticImageFilterFlattenable();
+    SK_FLATTENABLE_HOOKS(SkArithmeticImageFilter)
 
-    bool affectsTransparentBlack() const override { return !SkScalarNearlyZero(fK[3]); }
+    bool onAffectsTransparentBlack() const override { return !SkScalarNearlyZero(fK[3]); }
 
-    const float fK[4];
-    const bool fEnforcePMColor;
+    SkV4 fK;
+    bool fEnforcePMColor;
 
-    typedef SkImageFilter_Base INHERITED;
+    using INHERITED = SkImageFilter_Base;
 };
 
-}; // end namespace
+} // end namespace
 
-sk_sp<SkImageFilter> SkArithmeticImageFilter::Make(float k1, float k2, float k3, float k4,
-                                                   bool enforcePMColor,
-                                                   sk_sp<SkImageFilter> background,
-                                                   sk_sp<SkImageFilter> foreground,
-                                                   const SkImageFilter::CropRect* crop) {
+sk_sp<SkImageFilter> SkImageFilters::Arithmetic(
+        SkScalar k1, SkScalar k2, SkScalar k3, SkScalar k4, bool enforcePMColor,
+        sk_sp<SkImageFilter> background, sk_sp<SkImageFilter> foreground,
+        const CropRect& cropRect) {
     if (!SkScalarIsFinite(k1) || !SkScalarIsFinite(k2) || !SkScalarIsFinite(k3) ||
         !SkScalarIsFinite(k4)) {
         return nullptr;
@@ -110,22 +122,21 @@ sk_sp<SkImageFilter> SkArithmeticImageFilter::Make(float k1, float k2, float k3,
         mode = (int)SkBlendMode::kClear;
     }
     if (mode >= 0) {
-        return SkXfermodeImageFilter::Make((SkBlendMode)mode, std::move(background),
-                                           std::move(foreground), crop);
+        return SkImageFilters::Blend((SkBlendMode)mode, std::move(background),
+                                     std::move(foreground), cropRect);
     }
 
     sk_sp<SkImageFilter> inputs[2] = {std::move(background), std::move(foreground)};
     return sk_sp<SkImageFilter>(
-            new ArithmeticImageFilterImpl(k1, k2, k3, k4, enforcePMColor, inputs, crop));
+            new SkArithmeticImageFilter(k1, k2, k3, k4, enforcePMColor, inputs, cropRect));
 }
 
-void SkArithmeticImageFilter::RegisterFlattenables() {
-    SK_REGISTER_FLATTENABLE(ArithmeticImageFilterImpl);
+void SkRegisterArithmeticImageFilterFlattenable() {
+    SK_REGISTER_FLATTENABLE(SkArithmeticImageFilter);
+    SkFlattenable::Register("ArithmeticImageFilterImpl", SkArithmeticImageFilter::CreateProc);
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-sk_sp<SkFlattenable> ArithmeticImageFilterImpl::CreateProc(SkReadBuffer& buffer) {
+sk_sp<SkFlattenable> SkArithmeticImageFilter::CreateProc(SkReadBuffer& buffer) {
     SK_IMAGEFILTER_UNFLATTEN_COMMON(common, 2);
     float k[4];
     for (int i = 0; i < 4; ++i) {
@@ -135,11 +146,11 @@ sk_sp<SkFlattenable> ArithmeticImageFilterImpl::CreateProc(SkReadBuffer& buffer)
     if (!buffer.isValid()) {
         return nullptr;
     }
-    return SkArithmeticImageFilter::Make(k[0], k[1], k[2], k[3], enforcePMColor, common.getInput(0),
-                                         common.getInput(1), &common.cropRect());
+    return SkImageFilters::Arithmetic(k[0], k[1], k[2], k[3], enforcePMColor, common.getInput(0),
+                                      common.getInput(1), common.cropRect());
 }
 
-void ArithmeticImageFilterImpl::flatten(SkWriteBuffer& buffer) const {
+void SkArithmeticImageFilter::flatten(SkWriteBuffer& buffer) const {
     this->INHERITED::flatten(buffer);
     for (int i = 0; i < 4; ++i) {
         buffer.writeScalar(fK[i]);
@@ -147,42 +158,40 @@ void ArithmeticImageFilterImpl::flatten(SkWriteBuffer& buffer) const {
     buffer.writeBool(fEnforcePMColor);
 }
 
-static Sk4f pin(float min, const Sk4f& val, float max) {
-    return Sk4f::Max(min, Sk4f::Min(val, max));
-}
+///////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <bool EnforcePMColor>
-void arith_span(const float k[], SkPMColor dst[], const SkPMColor src[], int count) {
-    const Sk4f k1 = k[0] * (1/255.0f),
-               k2 = k[1],
-               k3 = k[2],
-               k4 = k[3] * 255.0f + 0.5f;
+void arith_span(const SkV4& k, SkPMColor dst[], const SkPMColor src[], int count) {
+    const skvx::float4 k1 = k[0] * (1/255.0f),
+                       k2 = k[1],
+                       k3 = k[2],
+                       k4 = k[3] * 255.0f + 0.5f;
 
     for (int i = 0; i < count; i++) {
-        Sk4f s = SkNx_cast<float>(Sk4b::Load(src+i)),
-             d = SkNx_cast<float>(Sk4b::Load(dst+i)),
-             r = pin(0, k1*s*d + k2*s + k3*d + k4, 255);
+        skvx::float4 s = skvx::cast<float>(skvx::byte4::Load(src+i)),
+                     d = skvx::cast<float>(skvx::byte4::Load(dst+i)),
+                     r = pin(k1*s*d + k2*s + k3*d + k4, skvx::float4(0.f), skvx::float4(255.f));
         if (EnforcePMColor) {
-            Sk4f a = SkNx_shuffle<3,3,3,3>(r);
-            r = Sk4f::Min(a, r);
+            auto a = skvx::shuffle<3,3,3,3>(r);
+            r = min(a, r);
         }
-        SkNx_cast<uint8_t>(r).store(dst+i);
+        skvx::cast<uint8_t>(r).store(dst+i);
     }
 }
 
 // apply mode to src==transparent (0)
-template<bool EnforcePMColor> void arith_transparent(const float k[], SkPMColor dst[], int count) {
-    const Sk4f k3 = k[2],
-               k4 = k[3] * 255.0f + 0.5f;
+template<bool EnforcePMColor> void arith_transparent(const SkV4& k, SkPMColor dst[], int count) {
+    const skvx::float4 k3 = k[2],
+                       k4 = k[3] * 255.0f + 0.5f;
 
     for (int i = 0; i < count; i++) {
-        Sk4f d = SkNx_cast<float>(Sk4b::Load(dst+i)),
-             r = pin(0, k3*d + k4, 255);
+        skvx::float4 d = skvx::cast<float>(skvx::byte4::Load(dst+i)),
+                     r = pin(k3*d + k4, skvx::float4(0.f), skvx::float4(255.f));
         if (EnforcePMColor) {
-            Sk4f a = SkNx_shuffle<3,3,3,3>(r);
-            r = Sk4f::Min(a, r);
+            auto a = skvx::shuffle<3,3,3,3>(r);
+            r = min(a, r);
         }
-        SkNx_cast<uint8_t>(r).store(dst+i);
+        skvx::cast<uint8_t>(r).store(dst+i);
     }
 }
 
@@ -197,26 +206,26 @@ static bool intersect(SkPixmap* dst, SkPixmap* src, int srcDx, int srcDy) {
                     dst->addr(sect.fLeft, sect.fTop),
                     dst->rowBytes());
     *src = SkPixmap(src->info().makeDimensions(sect.size()),
-                    src->addr(SkTMax(0, -srcDx), SkTMax(0, -srcDy)),
+                    src->addr(std::max(0, -srcDx), std::max(0, -srcDy)),
                     src->rowBytes());
     return true;
 }
 
-sk_sp<SkSpecialImage> ArithmeticImageFilterImpl::onFilterImage(const Context& ctx,
-                                                               SkIPoint* offset) const {
+sk_sp<SkSpecialImage> SkArithmeticImageFilter::onFilterImage(const Context& ctx,
+                                                             SkIPoint* offset) const {
     SkIPoint backgroundOffset = SkIPoint::Make(0, 0);
     sk_sp<SkSpecialImage> background(this->filterInput(0, ctx, &backgroundOffset));
 
     SkIPoint foregroundOffset = SkIPoint::Make(0, 0);
     sk_sp<SkSpecialImage> foreground(this->filterInput(1, ctx, &foregroundOffset));
 
-    SkIRect foregroundBounds = SkIRect::EmptyIRect();
+    SkIRect foregroundBounds = SkIRect::MakeEmpty();
     if (foreground) {
         foregroundBounds = SkIRect::MakeXYWH(foregroundOffset.x(), foregroundOffset.y(),
                                              foreground->width(), foreground->height());
     }
 
-    SkIRect srcBounds = SkIRect::EmptyIRect();
+    SkIRect srcBounds = SkIRect::MakeEmpty();
     if (background) {
         srcBounds = SkIRect::MakeXYWH(backgroundOffset.x(), backgroundOffset.y(),
                                       background->width(), background->height());
@@ -235,7 +244,7 @@ sk_sp<SkSpecialImage> ArithmeticImageFilterImpl::onFilterImage(const Context& ct
     offset->fX = bounds.left();
     offset->fY = bounds.top();
 
-#if SK_SUPPORT_GPU
+#if defined(SK_GANESH)
     if (ctx.gpuBacked()) {
         return this->filterImageGPU(ctx, background, backgroundOffset, foreground,
                                     foregroundOffset, bounds);
@@ -257,7 +266,7 @@ sk_sp<SkSpecialImage> ArithmeticImageFilterImpl::onFilterImage(const Context& ct
         SkPaint paint;
         paint.setBlendMode(SkBlendMode::kSrc);
         background->draw(canvas, SkIntToScalar(backgroundOffset.fX),
-                         SkIntToScalar(backgroundOffset.fY), &paint);
+                         SkIntToScalar(backgroundOffset.fY), SkSamplingOptions(), &paint);
     }
 
     this->drawForeground(canvas, foreground.get(), foregroundBounds);
@@ -265,10 +274,10 @@ sk_sp<SkSpecialImage> ArithmeticImageFilterImpl::onFilterImage(const Context& ct
     return surf->makeImageSnapshot();
 }
 
-SkIRect ArithmeticImageFilterImpl::onFilterBounds(const SkIRect& src,
-                                                  const SkMatrix& ctm,
-                                                  MapDirection dir,
-                                                  const SkIRect* inputRect) const {
+SkIRect SkArithmeticImageFilter::onFilterBounds(const SkIRect& src,
+                                                const SkMatrix& ctm,
+                                                MapDirection dir,
+                                                const SkIRect* inputRect) const {
     if (kReverse_MapDirection == dir) {
         return INHERITED::onFilterBounds(src, ctm, dir, inputRect);
     }
@@ -319,9 +328,37 @@ SkIRect ArithmeticImageFilterImpl::onFilterBounds(const SkIRect& src,
     return SkIRect::MakeEmpty();
 }
 
-#if SK_SUPPORT_GPU
+#if defined(SK_GANESH)
 
-sk_sp<SkSpecialImage> ArithmeticImageFilterImpl::filterImageGPU(
+std::unique_ptr<GrFragmentProcessor> make_arithmetic_fp(
+        std::unique_ptr<GrFragmentProcessor> srcFP,
+        std::unique_ptr<GrFragmentProcessor> dstFP,
+        const SkV4& k,
+        bool enforcePMColor) {
+    static const SkRuntimeEffect* effect = SkMakeRuntimeEffect(SkRuntimeEffect::MakeForShader,
+        "uniform shader srcFP;"
+        "uniform shader dstFP;"
+        "uniform half4 k;"
+        "uniform half pmClamp;"
+        "half4 main(float2 xy) {"
+            "half4 src = srcFP.eval(xy);"
+            "half4 dst = dstFP.eval(xy);"
+            "half4 color = saturate(k.x * src * dst +"
+                                   "k.y * src +"
+                                   "k.z * dst +"
+                                   "k.w);"
+            "color.rgb = min(color.rgb, max(color.a, pmClamp));"
+            "return color;"
+        "}"
+    );
+    return GrSkSLFP::Make(effect, "arithmetic_fp", /*inputFP=*/nullptr, GrSkSLFP::OptFlags::kNone,
+                          "srcFP", std::move(srcFP),
+                          "dstFP", std::move(dstFP),
+                          "k", k,
+                          "pmClamp", enforcePMColor ? 0.0f : 1.0f);
+}
+
+sk_sp<SkSpecialImage> SkArithmeticImageFilter::filterImageGPU(
         const Context& ctx,
         sk_sp<SkSpecialImage> background,
         const SkIPoint& backgroundOffset,
@@ -330,111 +367,92 @@ sk_sp<SkSpecialImage> ArithmeticImageFilterImpl::filterImageGPU(
         const SkIRect& bounds) const {
     SkASSERT(ctx.gpuBacked());
 
-    auto context = ctx.getContext();
+    auto rContext = ctx.getContext();
 
-    sk_sp<GrTextureProxy> backgroundProxy, foregroundProxy;
+    GrSurfaceProxyView backgroundView, foregroundView;
 
     GrProtected isProtected = GrProtected::kNo;
     if (background) {
-        backgroundProxy = background->asTextureProxyRef(context);
-        isProtected = backgroundProxy->isProtected() ? GrProtected::kYes : GrProtected::kNo;
+        backgroundView = background->view(rContext);
+        SkASSERT(backgroundView.proxy());
+        isProtected = backgroundView.proxy()->isProtected();
     }
 
     if (foreground) {
-        foregroundProxy = foreground->asTextureProxyRef(context);
-        isProtected = foregroundProxy->isProtected() ? GrProtected::kYes : GrProtected::kNo;
+        foregroundView = foreground->view(rContext);
+        SkASSERT(foregroundView.proxy());
+        isProtected = foregroundView.proxy()->isProtected();
     }
 
-    GrPaint paint;
-    std::unique_ptr<GrFragmentProcessor> bgFP;
+    std::unique_ptr<GrFragmentProcessor> fp;
+    const auto& caps = *ctx.getContext()->priv().caps();
+    GrSamplerState sampler(GrSamplerState::WrapMode::kClampToBorder,
+                           GrSamplerState::Filter::kNearest);
 
-    if (backgroundProxy) {
-        SkIRect bgSubset = background->subset();
-        SkMatrix backgroundMatrix = SkMatrix::MakeTrans(
+    if (background) {
+        SkRect bgSubset = SkRect::Make(background->subset());
+        SkMatrix backgroundMatrix = SkMatrix::Translate(
                 SkIntToScalar(bgSubset.left() - backgroundOffset.fX),
                 SkIntToScalar(bgSubset.top()  - backgroundOffset.fY));
-        GrColorType bgColorType = SkColorTypeToGrColorType(background->colorType());
-        bgFP = GrTextureDomainEffect::Make(
-                std::move(backgroundProxy), bgColorType, backgroundMatrix,
-                GrTextureDomain::MakeTexelDomain(bgSubset, GrTextureDomain::kDecal_Mode),
-                GrTextureDomain::kDecal_Mode, GrSamplerState::Filter::kNearest);
-        bgFP = GrColorSpaceXformEffect::Make(std::move(bgFP), background->getColorSpace(),
-                                             background->alphaType(),
-                                             ctx.colorSpace());
+        fp = GrTextureEffect::MakeSubset(std::move(backgroundView),
+                                         background->alphaType(),
+                                         backgroundMatrix,
+                                         sampler,
+                                         bgSubset,
+                                         caps);
+        fp = GrColorSpaceXformEffect::Make(std::move(fp),
+                                           background->getColorSpace(),
+                                           background->alphaType(),
+                                           ctx.colorSpace(),
+                                           kPremul_SkAlphaType);
     } else {
-        bgFP = GrConstColorProcessor::Make(SK_PMColor4fTRANSPARENT,
-                                           GrConstColorProcessor::InputMode::kIgnore);
+        fp = GrFragmentProcessor::MakeColor(SK_PMColor4fTRANSPARENT);
     }
 
-    if (foregroundProxy) {
-        SkIRect fgSubset = foreground->subset();
-        SkMatrix foregroundMatrix = SkMatrix::MakeTrans(
+    if (foreground) {
+        SkRect fgSubset = SkRect::Make(foreground->subset());
+        SkMatrix foregroundMatrix = SkMatrix::Translate(
                 SkIntToScalar(fgSubset.left() - foregroundOffset.fX),
                 SkIntToScalar(fgSubset.top()  - foregroundOffset.fY));
-        GrColorType fgColorType = SkColorTypeToGrColorType(foreground->colorType());
-        auto foregroundFP = GrTextureDomainEffect::Make(
-                std::move(foregroundProxy), fgColorType, foregroundMatrix,
-                GrTextureDomain::MakeTexelDomain(fgSubset, GrTextureDomain::kDecal_Mode),
-                GrTextureDomain::kDecal_Mode, GrSamplerState::Filter::kNearest);
-        foregroundFP = GrColorSpaceXformEffect::Make(std::move(foregroundFP),
-                                                     foreground->getColorSpace(),
-                                                     foreground->alphaType(),
-                                                     ctx.colorSpace());
-        paint.addColorFragmentProcessor(std::move(foregroundFP));
-
-        static int arithmeticIndex = GrSkSLFP::NewIndex();
-        ArithmeticFPInputs inputs;
-        static_assert(sizeof(inputs.k) == sizeof(fK), "struct size mismatch");
-        memcpy(inputs.k, fK, sizeof(inputs.k));
-        inputs.enforcePMColor = fEnforcePMColor;
-        std::unique_ptr<GrFragmentProcessor> xferFP = GrSkSLFP::Make(context,
-                                                                     arithmeticIndex,
-                                                                     "Arithmetic",
-                                                                     SKSL_ARITHMETIC_SRC,
-                                                                     &inputs,
-                                                                     sizeof(inputs));
-        if (xferFP) {
-            ((GrSkSLFP&) *xferFP).addChild(std::move(bgFP));
-            paint.addColorFragmentProcessor(std::move(xferFP));
-        }
-    } else {
-        paint.addColorFragmentProcessor(std::move(bgFP));
+        auto fgFP = GrTextureEffect::MakeSubset(std::move(foregroundView),
+                                                foreground->alphaType(),
+                                                foregroundMatrix,
+                                                sampler,
+                                                fgSubset,
+                                                caps);
+        fgFP = GrColorSpaceXformEffect::Make(std::move(fgFP),
+                                             foreground->getColorSpace(),
+                                             foreground->alphaType(),
+                                             ctx.colorSpace(),
+                                             kPremul_SkAlphaType);
+        fp = make_arithmetic_fp(std::move(fgFP), std::move(fp), fK, fEnforcePMColor);
     }
 
-    paint.setPorterDuffXPFactory(SkBlendMode::kSrc);
-
-    auto renderTargetContext =
-            context->priv().makeDeferredRenderTargetContext(SkBackingFit::kApprox,
-                                                            bounds.width(),
-                                                            bounds.height(),
-                                                            ctx.grColorType(),
-                                                            ctx.refColorSpace(),
-                                                            1,
-                                                            GrMipMapped::kNo,
-                                                            kBottomLeft_GrSurfaceOrigin,
-                                                            nullptr,
-                                                            SkBudgeted::kYes,
-                                                            isProtected);
-    if (!renderTargetContext) {
+    GrImageInfo info(ctx.grColorType(), kPremul_SkAlphaType, ctx.refColorSpace(), bounds.size());
+    auto sfc = rContext->priv().makeSFC(info,
+                                        "ArithmeticImageFilter_FilterImageGPU",
+                                        SkBackingFit::kApprox,
+                                        1,
+                                        GrMipmapped::kNo,
+                                        isProtected,
+                                        kBottomLeft_GrSurfaceOrigin);
+    if (!sfc) {
         return nullptr;
     }
 
-    SkMatrix matrix;
-    matrix.setTranslate(SkIntToScalar(-bounds.left()), SkIntToScalar(-bounds.top()));
-    renderTargetContext->drawRect(GrNoClip(), std::move(paint), GrAA::kNo, matrix,
-                                  SkRect::Make(bounds));
+    sfc->fillRectToRectWithFP(bounds, SkIRect::MakeSize(bounds.size()), std::move(fp));
 
-    return SkSpecialImage::MakeDeferredFromGpu(context,
+    return SkSpecialImage::MakeDeferredFromGpu(rContext,
                                                SkIRect::MakeWH(bounds.width(), bounds.height()),
                                                kNeedNewImageUniqueID_SpecialImage,
-                                               renderTargetContext->asTextureProxyRef(),
-                                               renderTargetContext->colorInfo().colorType(),
-                                               renderTargetContext->colorInfo().refColorSpace());
+                                               sfc->readSurfaceView(),
+                                               sfc->colorInfo(),
+                                               ctx.surfaceProps());
 }
 #endif
 
-void ArithmeticImageFilterImpl::drawForeground(SkCanvas* canvas, SkSpecialImage* img,
-                                               const SkIRect& fgBounds) const {
+void SkArithmeticImageFilter::drawForeground(SkCanvas* canvas, SkSpecialImage* img,
+                                             const SkIRect& fgBounds) const {
     SkPixmap dst;
     if (!canvas->peekPixels(&dst)) {
         return;
