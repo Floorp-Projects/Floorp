@@ -10,51 +10,56 @@
 
 #include "include/core/SkColor.h"
 #include "include/private/SkColorData.h"
-#include "include/private/SkNx.h"
-
-// This file may be included multiple times by .cpp files with different flags, leading
-// to different definitions.  Usually that doesn't matter because it's all inlined, but
-// in Debug modes the compilers may not inline everything.  So wrap everything in an
-// anonymous namespace to give each includer their own silo of this code (or the linker
-// will probably pick one randomly for us, which is rarely correct).
-namespace {  // NOLINT(google-build-namespaces)
+#include "src/base/SkVx.h"
 
 // 1, 2 or 4 SkPMColors, generally vectorized.
-class Sk4px : public Sk16b {
+class Sk4px {
 public:
-    Sk4px(const Sk16b& v) : INHERITED(v) {}
+    Sk4px(const skvx::byte16& v) : fV(v) {}
 
     static Sk4px DupPMColor(SkPMColor c) {
-        Sk4u splat(c);
+        skvx::uint4 splat(c);
 
         Sk4px v;
-        memcpy(&v, &splat, 16);
+        memcpy((void*)&v, &splat, 16);
         return v;
     }
 
-    Sk4px alphas() const;  // ARGB argb XYZW xyzw -> AAAA aaaa XXXX xxxx
-    Sk4px inv() const { return Sk16b(255) - *this; }
+    // RGBA rgba XYZW xyzw -> AAAA aaaa WWWW wwww
+    Sk4px alphas() const {
+        static_assert(SK_A32_SHIFT == 24, "This method assumes little-endian.");
+        return Sk4px(skvx::shuffle<3,3,3,3, 7,7,7,7, 11,11,11,11, 15,15,15,15>(fV));
+    }
+    Sk4px inv() const { return Sk4px(skvx::byte16(255) - fV); }
 
     // When loading or storing fewer than 4 SkPMColors, we use the low lanes.
     static Sk4px Load4(const SkPMColor px[4]) {
         Sk4px v;
-        memcpy(&v, px, 16);
+        memcpy((void*)&v, px, 16);
         return v;
     }
     static Sk4px Load2(const SkPMColor px[2]) {
         Sk4px v;
-        memcpy(&v, px, 8);
+        memcpy((void*)&v, px, 8);
         return v;
     }
     static Sk4px Load1(const SkPMColor px[1]) {
         Sk4px v;
-        memcpy(&v, px, 4);
+        memcpy((void*)&v, px, 4);
         return v;
     }
 
     // Ditto for Alphas... Load2Alphas fills the low two lanes of Sk4px.
-    static Sk4px Load4Alphas(const SkAlpha[4]);  // AaXx -> AAAA aaaa XXXX xxxx
-    static Sk4px Load2Alphas(const SkAlpha[2]);  // Aa   -> AAAA aaaa ???? ????
+    // AaXx -> AAAA aaaa XXXX xxxx
+    static Sk4px Load4Alphas(const SkAlpha alphas[4]) {
+        skvx::byte4 a = skvx::byte4::Load(alphas);
+        return Sk4px(skvx::shuffle<0,0,0,0, 1,1,1,1, 2,2,2,2, 3,3,3,3>(a));
+    }
+    // Aa   -> AAAA aaaa ???? ????
+    static Sk4px Load2Alphas(const SkAlpha alphas[2]) {
+        skvx::byte2 a = skvx::byte2::Load(alphas);
+        return Sk4px(join(skvx::shuffle<0,0,0,0, 1,1,1,1>(a), skvx::byte8()));
+    }
 
     void store4(SkPMColor px[4]) const { memcpy(px, this, 16); }
     void store2(SkPMColor px[2]) const { memcpy(px, this,  8); }
@@ -62,51 +67,53 @@ public:
 
     // 1, 2, or 4 SkPMColors with 16-bit components.
     // This is most useful as the result of a multiply, e.g. from mulWiden().
-    class Wide : public Sk16h {
+    class Wide {
     public:
-        Wide(const Sk16h& v) : Sk16h(v) {}
-
-        // Add, then pack the top byte of each component back down into 4 SkPMColors.
-        Sk4px addNarrowHi(const Sk16h&) const;
+        Wide(const skvx::Vec<16, uint16_t>& v) : fV(v) {}
 
         // Rounds, i.e. (x+127) / 255.
-        Sk4px div255() const;
+        Sk4px div255() const { return Sk4px(skvx::div255(fV)); }
 
-        // These just keep the types as Wide so the user doesn't have to keep casting.
-        Wide operator * (const Wide& o) const { return INHERITED::operator*(o); }
-        Wide operator + (const Wide& o) const { return INHERITED::operator+(o); }
-        Wide operator - (const Wide& o) const { return INHERITED::operator-(o); }
-        Wide operator >> (int bits) const { return INHERITED::operator>>(bits); }
-        Wide operator << (int bits) const { return INHERITED::operator<<(bits); }
+        Wide operator * (const Wide& o) const { return Wide(fV * o.fV); }
+        Wide operator + (const Wide& o) const { return Wide(fV + o.fV); }
+        Wide operator - (const Wide& o) const { return Wide(fV - o.fV); }
+        Wide operator >> (int bits) const { return Wide(fV >> bits); }
+        Wide operator << (int bits) const { return Wide(fV << bits); }
 
     private:
-        typedef Sk16h INHERITED;
+        skvx::Vec<16, uint16_t> fV;
     };
 
-    Wide widen() const;               // Widen 8-bit values to low 8-bits of 16-bit lanes.
-    Wide mulWiden(const Sk16b&) const;  // 8-bit x 8-bit -> 16-bit components.
+    // Widen 8-bit values to low 8-bits of 16-bit lanes.
+    Wide widen() const { return Wide(skvx::cast<uint16_t>(fV)); }
+    // 8-bit x 8-bit -> 16-bit components.
+    Wide mulWiden(const skvx::byte16& o) const { return Wide(mull(fV, o)); }
 
     // The only 8-bit multiply we use is 8-bit x 8-bit -> 16-bit.  Might as well make it pithy.
-    Wide operator * (const Sk4px& o) const { return this->mulWiden(o); }
+    Wide operator * (const Sk4px& o) const { return this->mulWiden(o.fV); }
 
-    // These just keep the types as Sk4px so the user doesn't have to keep casting.
-    Sk4px operator + (const Sk4px& o) const { return INHERITED::operator+(o); }
-    Sk4px operator - (const Sk4px& o) const { return INHERITED::operator-(o); }
-    Sk4px operator < (const Sk4px& o) const { return INHERITED::operator<(o); }
-    Sk4px thenElse(const Sk4px& t, const Sk4px& e) const { return INHERITED::thenElse(t,e); }
+    Sk4px operator + (const Sk4px& o) const { return Sk4px(fV + o.fV); }
+    Sk4px operator - (const Sk4px& o) const { return Sk4px(fV - o.fV); }
+    Sk4px operator < (const Sk4px& o) const { return Sk4px(fV < o.fV); }
+    Sk4px operator & (const Sk4px& o) const { return Sk4px(fV & o.fV); }
+    Sk4px thenElse(const Sk4px& t, const Sk4px& e) const {
+        return Sk4px(if_then_else(fV, t.fV, e.fV));
+    }
 
     // Generally faster than (*this * o).div255().
     // May be incorrect by +-1, but is always exactly correct when *this or o is 0 or 255.
-    Sk4px approxMulDiv255(const Sk16b& o) const {
-        // (x*y + x) / 256 meets these criteria.  (As of course does (x*y + y) / 256 by symmetry.)
-        // FYI: (x*y + 255) / 256 also meets these criteria.  In my brief testing, it was slower.
-        return this->widen().addNarrowHi(*this * o);
+    Sk4px approxMulDiv255(const Sk4px& o) const {
+        return Sk4px(approx_scale(fV, o.fV));
+    }
+
+    Sk4px saturatedAdd(const Sk4px& o) const {
+        return Sk4px(saturated_add(fV, o.fV));
     }
 
     // A generic driver that maps fn over a src array into a dst array.
     // fn should take an Sk4px (4 src pixels) and return an Sk4px (4 dst pixels).
     template <typename Fn>
-    static void MapSrc(int n, SkPMColor* dst, const SkPMColor* src, const Fn& fn) {
+    [[maybe_unused]] static void MapSrc(int n, SkPMColor* dst, const SkPMColor* src, const Fn& fn) {
         SkASSERT(dst);
         SkASSERT(src);
         // This looks a bit odd, but it helps loop-invariant hoisting across different calls to fn.
@@ -138,7 +145,8 @@ public:
 
     // As above, but with dst4' = fn(dst4, src4).
     template <typename Fn>
-    static void MapDstSrc(int n, SkPMColor* dst, const SkPMColor* src, const Fn& fn) {
+    [[maybe_unused]] static void MapDstSrc(int n, SkPMColor* dst, const SkPMColor* src,
+                                           const Fn& fn) {
         SkASSERT(dst);
         SkASSERT(src);
         while (n > 0) {
@@ -168,7 +176,8 @@ public:
 
     // As above, but with dst4' = fn(dst4, alpha4).
     template <typename Fn>
-    static void MapDstAlpha(int n, SkPMColor* dst, const SkAlpha* a, const Fn& fn) {
+    [[maybe_unused]] static void MapDstAlpha(int n, SkPMColor* dst, const SkAlpha* a,
+                                             const Fn& fn) {
         SkASSERT(dst);
         SkASSERT(a);
         while (n > 0) {
@@ -190,7 +199,7 @@ public:
                 dst += 2; a += 2; n -= 2;
             }
             if (n >= 1) {
-                fn(Load1(dst), Sk16b(*a)).store1(dst);
+                fn(Load1(dst), skvx::byte16(*a)).store1(dst);
             }
             break;
         }
@@ -198,8 +207,8 @@ public:
 
     // As above, but with dst4' = fn(dst4, src4, alpha4).
     template <typename Fn>
-    static void MapDstSrcAlpha(int n, SkPMColor* dst, const SkPMColor* src, const SkAlpha* a,
-                               const Fn& fn) {
+    [[maybe_unused]] static void MapDstSrcAlpha(int n, SkPMColor* dst, const SkPMColor* src,
+                                                const SkAlpha* a, const Fn& fn) {
         SkASSERT(dst);
         SkASSERT(src);
         SkASSERT(a);
@@ -222,7 +231,7 @@ public:
                 dst += 2; src += 2; a += 2; n -= 2;
             }
             if (n >= 1) {
-                fn(Load1(dst), Load1(src), Sk16b(*a)).store1(dst);
+                fn(Load1(dst), Load1(src), skvx::byte16(*a)).store1(dst);
             }
             break;
         }
@@ -231,21 +240,10 @@ public:
 private:
     Sk4px() = default;
 
-    typedef Sk16b INHERITED;
+    skvx::byte16 fV;
 };
 
-}  // namespace
+static_assert(sizeof(Sk4px) == sizeof(skvx::byte16));
+static_assert(alignof(Sk4px) == alignof(skvx::byte16));
 
-#ifdef SKNX_NO_SIMD
-    #include "src/opts/Sk4px_none.h"
-#else
-    #if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
-        #include "src/opts/Sk4px_SSE2.h"
-    #elif defined(SK_ARM_HAS_NEON)
-        #include "src/opts/Sk4px_NEON.h"
-    #else
-        #include "src/opts/Sk4px_none.h"
-    #endif
-#endif
-
-#endif//Sk4px_DEFINED
+#endif // Sk4px_DEFINED

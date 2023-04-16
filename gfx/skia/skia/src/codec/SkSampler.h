@@ -9,7 +9,12 @@
 
 #include "include/codec/SkCodec.h"
 #include "include/core/SkTypes.h"
+#include "include/private/base/SkNoncopyable.h"
 #include "src/codec/SkCodecPriv.h"
+
+#include <cstddef>
+
+struct SkImageInfo;
 
 class SkSampler : public SkNoncopyable {
 public:

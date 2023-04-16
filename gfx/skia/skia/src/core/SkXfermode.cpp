@@ -7,20 +7,19 @@
 
 #include "include/core/SkString.h"
 #include "include/private/SkColorData.h"
-#include "include/private/SkOnce.h"
+#include "include/private/base/SkOnce.h"
+#include "src/base/SkMathPriv.h"
 #include "src/core/SkBlendModePriv.h"
-#include "src/core/SkMathPriv.h"
 #include "src/core/SkOpts.h"
 #include "src/core/SkRasterPipeline.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
 #include "src/core/SkXfermodePriv.h"
 
-#if SK_SUPPORT_GPU
-#include "src/gpu/GrFragmentProcessor.h"
-#include "src/gpu/effects/GrCustomXfermode.h"
-#include "src/gpu/effects/GrPorterDuffXferProcessor.h"
-#include "src/gpu/effects/GrXfermodeFragmentProcessor.h"
+#if defined(SK_GANESH)
+#include "src/gpu/ganesh/GrFragmentProcessor.h"
+#include "src/gpu/ganesh/effects/GrCustomXfermode.h"
+#include "src/gpu/ganesh/effects/GrPorterDuffXferProcessor.h"
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -44,13 +43,13 @@ public:
 
         if (SkBlendMode_ShouldPreScaleCoverage(fMode, /*rgb_coverage=*/false)) {
             if (aa) {
-                p.append(SkRasterPipeline::scale_u8, &aa_ctx);
+                p.append(SkRasterPipelineOp::scale_u8, &aa_ctx);
             }
             SkBlendMode_AppendStages(fMode, &p);
         } else {
             SkBlendMode_AppendStages(fMode, &p);
             if (aa) {
-                p.append(SkRasterPipeline::lerp_u8, &aa_ctx);
+                p.append(SkRasterPipelineOp::lerp_u8, &aa_ctx);
             }
         }
 
@@ -61,20 +60,44 @@ public:
 private:
     const SkBlendMode fMode;
 
-    typedef SkXfermode INHERITED;
+    using INHERITED = SkXfermode;
 };
 
-const char* SkBlendMode_Name(SkBlendMode mode) {
-    SkASSERT((unsigned) mode <= (unsigned)SkBlendMode::kLastMode);
-    const char* gModeStrings[] = {
-        "Clear", "Src", "Dst", "SrcOver", "DstOver", "SrcIn", "DstIn",
-        "SrcOut", "DstOut", "SrcATop", "DstATop", "Xor", "Plus",
-        "Modulate", "Screen", "Overlay", "Darken", "Lighten", "ColorDodge",
-        "ColorBurn", "HardLight", "SoftLight", "Difference", "Exclusion",
-        "Multiply", "Hue", "Saturation", "Color",  "Luminosity"
-    };
-    return gModeStrings[(int)mode];
-    static_assert(SK_ARRAY_COUNT(gModeStrings) == (size_t)SkBlendMode::kLastMode + 1, "mode_count");
+const char* SkBlendMode_Name(SkBlendMode bm) {
+    switch (bm) {
+        case SkBlendMode::kClear:      return "Clear";
+        case SkBlendMode::kSrc:        return "Src";
+        case SkBlendMode::kDst:        return "Dst";
+        case SkBlendMode::kSrcOver:    return "SrcOver";
+        case SkBlendMode::kDstOver:    return "DstOver";
+        case SkBlendMode::kSrcIn:      return "SrcIn";
+        case SkBlendMode::kDstIn:      return "DstIn";
+        case SkBlendMode::kSrcOut:     return "SrcOut";
+        case SkBlendMode::kDstOut:     return "DstOut";
+        case SkBlendMode::kSrcATop:    return "SrcATop";
+        case SkBlendMode::kDstATop:    return "DstATop";
+        case SkBlendMode::kXor:        return "Xor";
+        case SkBlendMode::kPlus:       return "Plus";
+        case SkBlendMode::kModulate:   return "Modulate";
+        case SkBlendMode::kScreen:     return "Screen";
+
+        case SkBlendMode::kOverlay:    return "Overlay";
+        case SkBlendMode::kDarken:     return "Darken";
+        case SkBlendMode::kLighten:    return "Lighten";
+        case SkBlendMode::kColorDodge: return "ColorDodge";
+        case SkBlendMode::kColorBurn:  return "ColorBurn";
+        case SkBlendMode::kHardLight:  return "HardLight";
+        case SkBlendMode::kSoftLight:  return "SoftLight";
+        case SkBlendMode::kDifference: return "Difference";
+        case SkBlendMode::kExclusion:  return "Exclusion";
+        case SkBlendMode::kMultiply:   return "Multiply";
+
+        case SkBlendMode::kHue:        return "Hue";
+        case SkBlendMode::kSaturation: return "Saturation";
+        case SkBlendMode::kColor:      return "Color";
+        case SkBlendMode::kLuminosity: return "Luminosity";
+    }
+    SkUNREACHABLE;
 }
 
 sk_sp<SkXfermode> SkXfermode::Make(SkBlendMode mode) {
@@ -89,10 +112,8 @@ sk_sp<SkXfermode> SkXfermode::Make(SkBlendMode mode) {
         return nullptr;
     }
 
-    const int COUNT_BLENDMODES = (int)SkBlendMode::kLastMode + 1;
-
-    static SkOnce        once[COUNT_BLENDMODES];
-    static SkXfermode* cached[COUNT_BLENDMODES];
+    static SkOnce        once[kSkBlendModeCount];
+    static SkXfermode* cached[kSkBlendModeCount];
 
     once[(int)mode]([mode] {
         if (auto xfermode = SkOpts::create_xfermode(mode)) {
@@ -135,10 +156,9 @@ bool SkXfermode::IsOpaque(SkBlendMode mode, SrcColorOpacity opacityType) {
         default:
             return false;
     }
-    return false;
 }
 
-#if SK_SUPPORT_GPU
+#if defined(SK_GANESH)
 const GrXPFactory* SkBlendMode_AsXPFactory(SkBlendMode mode) {
     if (SkBlendMode_AsCoeff(mode, nullptr, nullptr)) {
         const GrXPFactory* result = GrPorterDuffXPFactory::Get(mode);
@@ -150,4 +170,3 @@ const GrXPFactory* SkBlendMode_AsXPFactory(SkBlendMode mode) {
     return GrCustomXfermode::Get(mode);
 }
 #endif
-

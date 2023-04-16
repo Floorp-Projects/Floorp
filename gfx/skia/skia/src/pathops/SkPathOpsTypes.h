@@ -7,14 +7,13 @@
 #ifndef SkPathOpsTypes_DEFINED
 #define SkPathOpsTypes_DEFINED
 
-#include <float.h>  // for FLT_EPSILON
-
 #include "include/core/SkPath.h"
 #include "include/core/SkScalar.h"
-#include "include/pathops/SkPathOps.h"
-#include "include/private/SkFloatingPoint.h"
-#include "include/private/SkSafe_math.h"
+#include "include/core/SkTypes.h"
 #include "src/pathops/SkPathOpsDebug.h"
+
+#include <cfloat>
+#include <cmath>
 
 enum SkPathOpsMask {
     kWinding_PathOpsMask = -1,
@@ -26,8 +25,6 @@ class SkArenaAlloc;
 class SkOpCoincidence;
 class SkOpContour;
 class SkOpContourHead;
-class SkIntersections;
-class SkIntersectionHelper;
 
 enum class SkOpPhase : char {
     kNoChange,
@@ -343,10 +340,6 @@ inline bool approximately_zero(float x) {
     return fabs(x) < FLT_EPSILON;
 }
 
-inline bool approximately_zero_cubed(double x) {
-    return fabs(x) < FLT_EPSILON_CUBED;
-}
-
 inline bool approximately_zero_half(double x) {
     return fabs(x) < FLT_EPSILON_HALF;
 }
@@ -557,14 +550,6 @@ inline bool more_roughly_equal(double x, double y) {
     return fabs(x - y) < MORE_ROUGH_EPSILON;
 }
 
-struct SkDPoint;
-struct SkDVector;
-struct SkDLine;
-struct SkDQuad;
-struct SkDConic;
-struct SkDCubic;
-struct SkDRect;
-
 inline SkPath::Verb SkPathOpsPointsToVerb(int points) {
     int verb = (1 << points) >> 1;
 #ifdef SK_DEBUG
@@ -596,8 +581,6 @@ inline int SkPathOpsVerbToPoints(SkPath::Verb verb) {
 inline double SkDInterp(double A, double B, double t) {
     return A + (B - A) * t;
 }
-
-double SkDCubeRoot(double x);
 
 /* Returns -1 if negative, 0 if zero, 1 if positive
 */

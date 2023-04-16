@@ -11,13 +11,13 @@
 
 #include "include/core/SkImageFilter.h"
 #include "include/core/SkRefCnt.h"
-#include "include/private/SkMutex.h"
-#include "include/private/SkOnce.h"
-#include "include/private/SkTHash.h"
+#include "include/private/base/SkMutex.h"
+#include "include/private/base/SkOnce.h"
+#include "src/base/SkTInternalLList.h"
 #include "src/core/SkOpts.h"
 #include "src/core/SkSpecialImage.h"
 #include "src/core/SkTDynamicHash.h"
-#include "src/core/SkTInternalLList.h"
+#include "src/core/SkTHash.h"
 
 #ifdef SK_BUILD_FOR_IOS
   enum { kDefaultCacheSize = 2 * 1024 * 1024 };
@@ -32,21 +32,15 @@ public:
     typedef SkImageFilterCacheKey Key;
     CacheImpl(size_t maxBytes) : fMaxBytes(maxBytes), fCurrentBytes(0) { }
     ~CacheImpl() override {
-        SkTDynamicHash<Value, Key>::Iter iter(&fLookup);
-
-        while (!iter.done()) {
-            Value* v = &*iter;
-            ++iter;
-            delete v;
-        }
+        fLookup.foreach([&](Value* v) { delete v; });
     }
     struct Value {
-        Value(const Key& key, const skif::FilterResult<For::kOutput>& image,
+        Value(const Key& key, const skif::FilterResult& image,
               const SkImageFilter* filter)
             : fKey(key), fImage(image), fFilter(filter) {}
 
         Key fKey;
-        skif::FilterResult<For::kOutput> fImage;
+        skif::FilterResult fImage;
         const SkImageFilter* fFilter;
         static const Key& GetKey(const Value& v) {
             return v.fKey;
@@ -57,7 +51,7 @@ public:
         SK_DECLARE_INTERNAL_LLIST_INTERFACE(Value);
     };
 
-    bool get(const Key& key, skif::FilterResult<For::kOutput>* result) const override {
+    bool get(const Key& key, skif::FilterResult* result) const override {
         SkASSERT(result);
 
         SkAutoMutexExclusive mutex(fMutex);
@@ -74,7 +68,7 @@ public:
     }
 
     void set(const Key& key, const SkImageFilter* filter,
-             const skif::FilterResult<For::kOutput>& result) override {
+             const skif::FilterResult& result) override {
         SkAutoMutexExclusive mutex(fMutex);
         if (Value* v = fLookup.find(key)) {
             this->removeInternal(v);

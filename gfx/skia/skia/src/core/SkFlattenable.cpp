@@ -4,12 +4,24 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-
 #include "include/core/SkFlattenable.h"
+
+#include "include/core/SkData.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkTypes.h"
+#include "include/private/base/SkTDArray.h"
 #include "src/core/SkPtrRecorder.h"
 #include "src/core/SkReadBuffer.h"
+#include "src/core/SkWriteBuffer.h"
 
 #include <algorithm>
+#include <cstdint>
+#include <cstring>
+#include <iterator>
+#include <utility>
+
+struct SkDeserialProcs;
+struct SkSerialProcs;
 
 SkNamedFactorySet::SkNamedFactorySet() : fNextAddedFactory(0) {}
 
@@ -27,7 +39,7 @@ uint32_t SkNamedFactorySet::find(SkFlattenable::Factory factory) {
 }
 
 const char* SkNamedFactorySet::getNextAddedFactoryName() {
-    if (fNextAddedFactory < fNames.count()) {
+    if (fNextAddedFactory < fNames.size()) {
         return fNames[fNextAddedFactory++];
     }
     return nullptr;
@@ -81,7 +93,7 @@ void SkFlattenable::Finalize() {
 void SkFlattenable::Register(const char name[], Factory factory) {
     SkASSERT(name);
     SkASSERT(factory);
-    SkASSERT(gCount < (int)SK_ARRAY_COUNT(gEntries));
+    SkASSERT(gCount < (int)std::size(gEntries));
 
     gEntries[gCount].fName = name;
     gEntries[gCount].fFactory = factory;

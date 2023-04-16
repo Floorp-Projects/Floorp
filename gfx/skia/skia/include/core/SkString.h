@@ -11,13 +11,16 @@
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkScalar.h"
 #include "include/core/SkTypes.h"
-#include "include/private/SkMalloc.h"
-#include "include/private/SkTArray.h"
-#include "include/private/SkTo.h"
+#include "include/private/base/SkTo.h"
+#include "include/private/base/SkTypeTraits.h"
 
-#include <stdarg.h>
-#include <string.h>
 #include <atomic>
+#include <cstdarg>
+#include <cstddef>
+#include <cstdint>
+#include <string>
+#include <string_view>
+#include <type_traits>
 
 /*  Some helper functions for C strings */
 static inline bool SkStrStartsWith(const char string[], const char prefixStr[]) {
@@ -60,38 +63,32 @@ static inline bool SkStrContains(const char string[], const char subchar) {
     return (-1 != SkStrFind(string, tmp));
 }
 
-static inline char *SkStrDup(const char string[]) {
-    char *ret = (char *) sk_malloc_throw(strlen(string)+1);
-    memcpy(ret,string,strlen(string)+1);
-    return ret;
-}
-
 /*
  *  The SkStrAppend... methods will write into the provided buffer, assuming it is large enough.
- *  Each method has an associated const (e.g. SkStrAppendU32_MaxSize) which will be the largest
+ *  Each method has an associated const (e.g. kSkStrAppendU32_MaxSize) which will be the largest
  *  value needed for that method's buffer.
  *
- *  char storage[SkStrAppendU32_MaxSize];
+ *  char storage[kSkStrAppendU32_MaxSize];
  *  SkStrAppendU32(storage, value);
  *
  *  Note : none of the SkStrAppend... methods write a terminating 0 to their buffers. Instead,
  *  the methods return the ptr to the end of the written part of the buffer. This can be used
  *  to compute the length, and/or know where to write a 0 if that is desired.
  *
- *  char storage[SkStrAppendU32_MaxSize + 1];
+ *  char storage[kSkStrAppendU32_MaxSize + 1];
  *  char* stop = SkStrAppendU32(storage, value);
  *  size_t len = stop - storage;
  *  *stop = 0;   // valid, since storage was 1 byte larger than the max.
  */
 
-#define SkStrAppendU32_MaxSize  10
+static constexpr int kSkStrAppendU32_MaxSize = 10;
 char*   SkStrAppendU32(char buffer[], uint32_t);
-#define SkStrAppendU64_MaxSize  20
+static constexpr int kSkStrAppendU64_MaxSize = 20;
 char*   SkStrAppendU64(char buffer[], uint64_t, int minDigits);
 
-#define SkStrAppendS32_MaxSize  (SkStrAppendU32_MaxSize + 1)
+static constexpr int kSkStrAppendS32_MaxSize = kSkStrAppendU32_MaxSize + 1;
 char*   SkStrAppendS32(char buffer[], int32_t);
-#define SkStrAppendS64_MaxSize  (SkStrAppendU64_MaxSize + 1)
+static constexpr int kSkStrAppendS64_MaxSize = kSkStrAppendU64_MaxSize + 1;
 char*   SkStrAppendS64(char buffer[], int64_t, int minDigits);
 
 /**
@@ -101,18 +98,16 @@ char*   SkStrAppendS64(char buffer[], int64_t, int minDigits);
  *  In theory we should only expect up to 2 digits for the exponent, but on
  *  some platforms we have seen 3 (as in the example above).
  */
-#define SkStrAppendScalar_MaxSize  15
+static constexpr int kSkStrAppendScalar_MaxSize = 15;
 
 /**
- *  Write the scaler in decimal format into buffer, and return a pointer to
+ *  Write the scalar in decimal format into buffer, and return a pointer to
  *  the next char after the last one written. Note: a terminating 0 is not
- *  written into buffer, which must be at least SkStrAppendScalar_MaxSize.
+ *  written into buffer, which must be at least kSkStrAppendScalar_MaxSize.
  *  Thus if the caller wants to add a 0 at the end, buffer must be at least
- *  SkStrAppendScalar_MaxSize + 1 bytes large.
+ *  kSkStrAppendScalar_MaxSize + 1 bytes large.
  */
-#define SkStrAppendScalar SkStrAppendFloat
-
-char* SkStrAppendFloat(char buffer[], float);
+char* SkStrAppendScalar(char buffer[], SkScalar);
 
 /** \class SkString
 
@@ -128,10 +123,13 @@ public:
                 SkString(const char text[], size_t len);
                 SkString(const SkString&);
                 SkString(SkString&&);
+    explicit    SkString(const std::string&);
+    explicit    SkString(std::string_view);
                 ~SkString();
 
     bool        isEmpty() const { return 0 == fRec->fLength; }
     size_t      size() const { return (size_t) fRec->fLength; }
+    const char* data() const { return fRec->data(); }
     const char* c_str() const { return fRec->data(); }
     char operator[](size_t n) const { return this->c_str()[n]; }
 
@@ -177,19 +175,23 @@ public:
     SkString& operator=(SkString&&);
     SkString& operator=(const char text[]);
 
-    char* writable_str();
-    char& operator[](size_t n) { return this->writable_str()[n]; }
+    char* data();
+    char& operator[](size_t n) { return this->data()[n]; }
 
     void reset();
-    /** Destructive resize, does not preserve contents. */
-    void resize(size_t len) { this->set(nullptr, len); }
+    /** String contents are preserved on resize. (For destructive resize, `set(nullptr, length)`.)
+     * `resize` automatically reserves an extra byte at the end of the buffer for a null terminator.
+     */
+    void resize(size_t len);
     void set(const SkString& src) { *this = src; }
     void set(const char text[]);
     void set(const char text[], size_t len);
+    void set(std::string_view str) { this->set(str.data(), str.size()); }
 
-    void insert(size_t offset, const SkString& src) { this->insert(offset, src.c_str(), src.size()); }
     void insert(size_t offset, const char text[]);
     void insert(size_t offset, const char text[], size_t len);
+    void insert(size_t offset, const SkString& str) { this->insert(offset, str.c_str(), str.size()); }
+    void insert(size_t offset, std::string_view str) { this->insert(offset, str.data(), str.size()); }
     void insertUnichar(size_t offset, SkUnichar);
     void insertS32(size_t offset, int32_t value);
     void insertS64(size_t offset, int64_t value, int minDigits = 0);
@@ -198,9 +200,10 @@ public:
     void insertHex(size_t offset, uint32_t value, int minDigits = 0);
     void insertScalar(size_t offset, SkScalar);
 
-    void append(const SkString& str) { this->insert((size_t)-1, str); }
     void append(const char text[]) { this->insert((size_t)-1, text); }
     void append(const char text[], size_t len) { this->insert((size_t)-1, text, len); }
+    void append(const SkString& str) { this->insert((size_t)-1, str.c_str(), str.size()); }
+    void append(std::string_view str) { this->insert((size_t)-1, str.data(), str.size()); }
     void appendUnichar(SkUnichar uni) { this->insertUnichar((size_t)-1, uni); }
     void appendS32(int32_t value) { this->insertS32((size_t)-1, value); }
     void appendS64(int64_t value, int minDigits = 0) { this->insertS64((size_t)-1, value, minDigits); }
@@ -209,9 +212,10 @@ public:
     void appendHex(uint32_t value, int minDigits = 0) { this->insertHex((size_t)-1, value, minDigits); }
     void appendScalar(SkScalar value) { this->insertScalar((size_t)-1, value); }
 
-    void prepend(const SkString& str) { this->insert(0, str); }
     void prepend(const char text[]) { this->insert(0, text); }
     void prepend(const char text[], size_t len) { this->insert(0, text, len); }
+    void prepend(const SkString& str) { this->insert(0, str.c_str(), str.size()); }
+    void prepend(std::string_view str) { this->insert(0, str.data(), str.size()); }
     void prependUnichar(SkUnichar uni) { this->insertUnichar(0, uni); }
     void prependS32(int32_t value) { this->insertS32(0, value); }
     void prependS64(int32_t value, int minDigits = 0) { this->insertS64(0, value, minDigits); }
@@ -219,10 +223,11 @@ public:
     void prependScalar(SkScalar value) { this->insertScalar((size_t)-1, value); }
 
     void printf(const char format[], ...) SK_PRINTF_LIKE(2, 3);
+    void printVAList(const char format[], va_list) SK_PRINTF_LIKE(2, 0);
     void appendf(const char format[], ...) SK_PRINTF_LIKE(2, 3);
-    void appendVAList(const char format[], va_list);
+    void appendVAList(const char format[], va_list) SK_PRINTF_LIKE(2, 0);
     void prependf(const char format[], ...) SK_PRINTF_LIKE(2, 3);
-    void prependVAList(const char format[], va_list);
+    void prependVAList(const char format[], va_list) SK_PRINTF_LIKE(2, 0);
 
     void remove(size_t offset, size_t length);
 
@@ -236,28 +241,33 @@ public:
      */
     void swap(SkString& other);
 
+    using sk_is_trivially_relocatable = std::true_type;
+
 private:
     struct Rec {
     public:
-        constexpr Rec(uint32_t len, int32_t refCnt)
-            : fLength(len), fRefCnt(refCnt), fBeginningOfData(0)
-        { }
+        constexpr Rec(uint32_t len, int32_t refCnt) : fLength(len), fRefCnt(refCnt) {}
         static sk_sp<Rec> Make(const char text[], size_t len);
-        uint32_t    fLength; // logically size_t, but we want it to stay 32bits
-        mutable std::atomic<int32_t> fRefCnt;
-        char        fBeginningOfData;
-
-        char* data() { return &fBeginningOfData; }
-        const char* data() const { return &fBeginningOfData; }
-
+        char* data() { return fBeginningOfData; }
+        const char* data() const { return fBeginningOfData; }
         void ref() const;
         void unref() const;
         bool unique() const;
+#ifdef SK_DEBUG
+        int32_t getRefCnt() const;
+#endif
+        uint32_t fLength; // logically size_t, but we want it to stay 32 bits
+
     private:
+        mutable std::atomic<int32_t> fRefCnt;
+        char fBeginningOfData[1] = {'\0'};
+
         // Ensure the unsized delete is called.
         void operator delete(void* p) { ::operator delete(p); }
     };
     sk_sp<Rec> fRec;
+
+    static_assert(::sk_is_trivially_relocatable<decltype(fRec)>::value);
 
 #ifdef SK_DEBUG
     const SkString& validate() const;
@@ -269,31 +279,13 @@ private:
 };
 
 /// Creates a new string and writes into it using a printf()-style format.
-SkString SkStringPrintf(const char* format, ...);
+SkString SkStringPrintf(const char* format, ...) SK_PRINTF_LIKE(1, 2);
 /// This makes it easier to write a caller as a VAR_ARGS function where the format string is
 /// optional.
 static inline SkString SkStringPrintf() { return SkString(); }
 
 static inline void swap(SkString& a, SkString& b) {
     a.swap(b);
-}
-
-enum SkStrSplitMode {
-    // Strictly return all results. If the input is ",," and the separator is ',' this will return
-    // an array of three empty strings.
-    kStrict_SkStrSplitMode,
-
-    // Only nonempty results will be added to the results. Multiple separators will be
-    // coalesced. Separators at the beginning and end of the input will be ignored.  If the input is
-    // ",," and the separator is ',', this will return an empty vector.
-    kCoalesce_SkStrSplitMode
-};
-
-// Split str on any characters in delimiters into out.  (Think, strtok with a sane API.)
-void SkStrSplit(const char* str, const char* delimiters, SkStrSplitMode splitMode,
-                SkTArray<SkString>* out);
-inline void SkStrSplit(const char* str, const char* delimiters, SkTArray<SkString>* out) {
-    SkStrSplit(str, delimiters, kCoalesce_SkStrSplitMode, out);
 }
 
 #endif

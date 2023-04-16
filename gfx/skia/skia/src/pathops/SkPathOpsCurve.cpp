@@ -4,9 +4,14 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "src/pathops/SkPathOpsBounds.h"
 #include "src/pathops/SkPathOpsCurve.h"
+
+#include "include/private/base/SkTemplates.h"
+#include "src/pathops/SkPathOpsBounds.h"
 #include "src/pathops/SkPathOpsRect.h"
+
+#include <algorithm>
+#include <cfloat>
 
  // this cheats and assumes that the perpendicular to the point is the closest ray to the curve
  // this case (where the line and the curve are nearly coincident) may be the only case that counts
@@ -15,8 +20,8 @@ double SkDCurve::nearPoint(SkPath::Verb verb, const SkDPoint& xy, const SkDPoint
     double minX = fCubic.fPts[0].fX;
     double maxX = minX;
     for (int index = 1; index <= count; ++index) {
-        minX = SkTMin(minX, fCubic.fPts[index].fX);
-        maxX = SkTMax(maxX, fCubic.fPts[index].fX);
+        minX = std::min(minX, fCubic.fPts[index].fX);
+        maxX = std::max(maxX, fCubic.fPts[index].fX);
     }
     if (!AlmostBetweenUlps(minX, xy.fX, maxX)) {
         return -1;
@@ -24,8 +29,8 @@ double SkDCurve::nearPoint(SkPath::Verb verb, const SkDPoint& xy, const SkDPoint
     double minY = fCubic.fPts[0].fY;
     double maxY = minY;
     for (int index = 1; index <= count; ++index) {
-        minY = SkTMin(minY, fCubic.fPts[index].fY);
-        maxY = SkTMax(maxY, fCubic.fPts[index].fY);
+        minY = std::min(minY, fCubic.fPts[index].fY);
+        maxY = std::max(maxY, fCubic.fPts[index].fY);
     }
     if (!AlmostBetweenUlps(minY, xy.fY, maxY)) {
         return -1;
@@ -45,18 +50,11 @@ double SkDCurve::nearPoint(SkPath::Verb verb, const SkDPoint& xy, const SkDPoint
     if (minIndex < 0) {
         return -1;
     }
-    double largest = SkTMax(SkTMax(maxX, maxY), -SkTMin(minX, minY));
+    double largest = std::max(std::max(maxX, maxY), -std::min(minX, minY));
     if (!AlmostEqualUlps_Pin(largest, largest + minDist)) { // is distance within ULPS tolerance?
         return -1;
     }
     return SkPinT(i[0][minIndex]);
-}
-
-void SkDCurve::offset(SkPath::Verb verb, const SkDVector& off) {
-    int count = SkPathOpsVerbToPoints(verb);
-    for (int index = 0; index <= count; ++index) {
-        fCubic.fPts[index] += off;
-    }
 }
 
 void SkDCurve::setConicBounds(const SkPoint curve[3], SkScalar curveWeight,
@@ -102,7 +100,7 @@ void SkDCurveSweep::setCurveHullSweep(SkPath::Verb verb) {
     // central place for this val-is-small-compared-to-curve check
     double maxVal = 0;
     for (int index = 0; index <= SkPathOpsVerbToPoints(verb); ++index) {
-        maxVal = SkTMax(maxVal, SkTMax(SkTAbs(fCurve[index].fX),
+        maxVal = std::max(maxVal, std::max(SkTAbs(fCurve[index].fX),
                 SkTAbs(fCurve[index].fY)));
     }
     {

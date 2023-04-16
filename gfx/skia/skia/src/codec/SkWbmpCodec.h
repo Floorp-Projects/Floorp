@@ -9,8 +9,19 @@
 #define SkCodec_wbmp_DEFINED
 
 #include "include/codec/SkCodec.h"
-#include "include/core/SkColorSpace.h"
+#include "include/core/SkTypes.h"
+#include "include/private/base/SkTemplates.h"
 #include "src/codec/SkSwizzler.h"
+
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+
+class SkSampler;
+class SkStream;
+enum class SkEncodedImageFormat;
+struct SkEncodedInfo;
+struct SkImageInfo;
 
 class SkWbmpCodec final : public SkCodec {
 public:
@@ -49,14 +60,14 @@ private:
 
     // Used for scanline decodes:
     std::unique_ptr<SkSwizzler> fSwizzler;
-    SkAutoTMalloc<uint8_t>      fSrcBuffer;
+    skia_private::AutoTMalloc<uint8_t>      fSrcBuffer;
 
     int onGetScanlines(void* dst, int count, size_t dstRowBytes) override;
     bool onSkipScanlines(int count) override;
     Result onStartScanlineDecode(const SkImageInfo& dstInfo,
             const Options& options) override;
 
-    typedef SkCodec INHERITED;
+    using INHERITED = SkCodec;
 };
 
 #endif  // SkCodec_wbmp_DEFINED

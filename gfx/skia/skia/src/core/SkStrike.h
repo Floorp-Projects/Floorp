@@ -9,165 +9,146 @@
 
 #include "include/core/SkFontMetrics.h"
 #include "include/core/SkFontTypes.h"
-#include "include/core/SkPaint.h"
-#include "include/private/SkTHash.h"
-#include "include/private/SkTemplates.h"
-#include "src/core/SkArenaAlloc.h"
+#include "include/core/SkRefCnt.h"
+#include "include/private/base/SkMutex.h"
+#include "include/private/base/SkTemplates.h"
+#include "src/base/SkArenaAlloc.h"
 #include "src/core/SkDescriptor.h"
 #include "src/core/SkGlyph.h"
 #include "src/core/SkGlyphRunPainter.h"
-#include "src/core/SkScalerContext.h"
-#include "src/core/SkStrikeForGPU.h"
+#include "src/core/SkStrikeSpec.h"
+#include "src/core/SkTHash.h"
+
 #include <memory>
 
-/** \class SkGlyphCache
+class SkScalerContext;
+class SkStrikeCache;
+class SkTraceMemoryDump;
 
-    This class represents a strike: a specific combination of typeface, size, matrix, etc., and
-    holds the glyphs for that strike. Calling any of the getGlyphID... methods will
-    return the requested glyph, either instantly if it is already cached, or by first generating
-    it and then adding it to the strike.
+namespace sktext {
+union IDOrPath;
+union IDOrDrawable;
+}  // namespace sktext
 
-    The strikes are held in a global list, available to all threads. To interact with one, call
-    either Find{OrCreate}Exclusive().
-
-    The Find*Exclusive() method returns SkExclusiveStrikePtr, which releases exclusive ownership
-    when they go out of scope.
-*/
-class SkStrike final : public SkStrikeForGPU {
+class SkStrikePinner {
 public:
-    SkStrike(const SkDescriptor& desc,
+    virtual ~SkStrikePinner() = default;
+    virtual bool canDelete() = 0;
+    virtual void assertValid() {}
+};
+
+// This class holds the results of an SkScalerContext, and owns a references to that scaler.
+class SkStrike final : public sktext::StrikeForGPU {
+public:
+    SkStrike(SkStrikeCache* strikeCache,
+             const SkStrikeSpec& strikeSpec,
              std::unique_ptr<SkScalerContext> scaler,
-             const SkFontMetrics&);
+             const SkFontMetrics* metrics,
+             std::unique_ptr<SkStrikePinner> pinner);
 
-    // Return a glyph. Create it if it doesn't exist, and initialize the glyph with metrics and
-    // advances using a scaler.
-    SkGlyph* glyph(SkPackedGlyphID packedID);
-    SkGlyph* glyph(SkGlyphID glyphID);
-    SkGlyph* glyph(SkGlyphID, SkPoint);
+    void lock() override SK_ACQUIRE(fStrikeLock);
+    void unlock() override SK_RELEASE_CAPABILITY(fStrikeLock);
+    SkGlyphDigest digestFor(skglyph::ActionType, SkPackedGlyphID) override SK_REQUIRES(fStrikeLock);
+    bool prepareForImage(SkGlyph* glyph) override SK_REQUIRES(fStrikeLock);
+    bool prepareForPath(SkGlyph*) override SK_REQUIRES(fStrikeLock);
+    bool prepareForDrawable(SkGlyph*) override SK_REQUIRES(fStrikeLock);
 
-    // Return a glyph.  Create it if it doesn't exist, and initialize with the prototype.
-    SkGlyph* glyphFromPrototype(const SkGlyphPrototype& p, void* image = nullptr);
+    bool mergeFromBuffer(SkReadBuffer& buffer) SK_EXCLUDES(fStrikeLock);
+    static void FlattenGlyphsByType(SkWriteBuffer& buffer,
+                                    SkSpan<SkGlyph> images,
+                                    SkSpan<SkGlyph> paths,
+                                    SkSpan<SkGlyph> drawables);
 
-    // Return a glyph or nullptr if it does not exits in the strike.
-    SkGlyph* glyphOrNull(SkPackedGlyphID id) const;
+    // Lookup (or create if needed) the returned glyph using toID. If that glyph is not initialized
+    // with an image, then use the information in fromGlyph to initialize the width, height top,
+    // left, format and image of the glyph. This is mainly used preserving the glyph if it was
+    // created by a search of desperation. This is deprecated.
+    SkGlyph* mergeGlyphAndImage(
+            SkPackedGlyphID toID, const SkGlyph& fromGlyph) SK_EXCLUDES(fStrikeLock);
 
-    const void* prepareImage(SkGlyph* glyph);
+    // If the path has never been set, then add a path to glyph. This is deprecated.
+    const SkPath* mergePath(
+            SkGlyph* glyph, const SkPath* path, bool hairline) SK_EXCLUDES(fStrikeLock);
 
-    // Lookup (or create if needed) the toGlyph using toID. If that glyph is not initialized with
-    // an image, then use the information in from to initialize the width, height top, left,
-    // format and image of the toGlyph. This is mainly used preserving the glyph if it was
-    // created by a search of desperation.
-    SkGlyph* mergeGlyphAndImage(SkPackedGlyphID toID, const SkGlyph& from);
+    // If the drawable has never been set, then add a drawable to glyph. This is deprecated.
+    const SkDrawable* mergeDrawable(
+            SkGlyph* glyph, sk_sp<SkDrawable> drawable) SK_EXCLUDES(fStrikeLock);
 
-    // If the path has never been set, then use the scaler context to add the glyph.
-    const SkPath* preparePath(SkGlyph*);
-
-    // If the path has never been set, then add a path to glyph.
-    const SkPath* preparePath(SkGlyph* glyph, const SkPath* path);
-
-    /** Returns the number of glyphs for this strike.
-    */
-    unsigned getGlyphCount() const;
-
-    /** Return the number of glyphs currently cached. */
-    int countCachedGlyphs() const;
-
-    /** If the advance axis intersects the glyph's path, append the positions scaled and offset
-        to the array (if non-null), and set the count to the updated array length.
-    */
+    // If the advance axis intersects the glyph's path, append the positions scaled and offset
+    // to the array (if non-null), and set the count to the updated array length.
+    // TODO: track memory usage.
     void findIntercepts(const SkScalar bounds[2], SkScalar scale, SkScalar xPos,
-                        SkGlyph* , SkScalar* array, int* count);
+                        SkGlyph*, SkScalar* array, int* count) SK_EXCLUDES(fStrikeLock);
 
-    /** Fallback glyphs used during font remoting if the original glyph can't be found.
-     */
-    bool belongsToCache(const SkGlyph* glyph) const;
-    /** Find any glyph in this cache with the given ID, regardless of subpixel positioning.
-     *  If set and present, skip over the glyph with vetoID.
-     */
-    const SkGlyph* getCachedGlyphAnySubPix(SkGlyphID,
-                                           SkPackedGlyphID vetoID = SkPackedGlyphID()) const;
-
-    /** Return the vertical metrics for this strike.
-    */
     const SkFontMetrics& getFontMetrics() const {
         return fFontMetrics;
     }
 
-    SkMask::Format getMaskFormat() const {
-        return fScalerContext->getMaskFormat();
+    SkSpan<const SkGlyph*> metrics(
+            SkSpan<const SkGlyphID> glyphIDs, const SkGlyph* results[]) SK_EXCLUDES(fStrikeLock);
+
+    SkSpan<const SkGlyph*> preparePaths(
+            SkSpan<const SkGlyphID> glyphIDs, const SkGlyph* results[]) SK_EXCLUDES(fStrikeLock);
+
+    SkSpan<const SkGlyph*> prepareImages(SkSpan<const SkPackedGlyphID> glyphIDs,
+                                         const SkGlyph* results[]) SK_EXCLUDES(fStrikeLock);
+
+    SkSpan<const SkGlyph*> prepareDrawables(
+            SkSpan<const SkGlyphID> glyphIDs, const SkGlyph* results[]) SK_EXCLUDES(fStrikeLock);
+
+    // SkStrikeForGPU APIs
+    const SkDescriptor& getDescriptor() const override {
+        return fStrikeSpec.descriptor();
     }
 
     const SkGlyphPositionRoundingSpec& roundingSpec() const override {
         return fRoundingSpec;
     }
 
-    const SkDescriptor& getDescriptor() const override;
+    sktext::SkStrikePromise strikePromise() override {
+        return sktext::SkStrikePromise(sk_ref_sp<SkStrike>(this));
+    }
 
-    SkSpan<const SkGlyph*> metrics(SkSpan<const SkGlyphID> glyphIDs,
-                                   const SkGlyph* results[]);
+    // Convert all the IDs into SkPaths in the span.
+    void glyphIDsToPaths(SkSpan<sktext::IDOrPath> idsOrPaths) SK_EXCLUDES(fStrikeLock);
 
-    SkSpan<const SkGlyph*> preparePaths(SkSpan<const SkGlyphID> glyphIDs,
-                                        const SkGlyph* results[]);
+    // Convert all the IDs into SkDrawables in the span.
+    void glyphIDsToDrawables(SkSpan<sktext::IDOrDrawable> idsOrDrawables) SK_EXCLUDES(fStrikeLock);
 
-    SkSpan<const SkGlyph*> prepareImages(SkSpan<const SkPackedGlyphID> glyphIDs,
-                                         const SkGlyph* results[]);
+    const SkStrikeSpec& strikeSpec() const {
+        return fStrikeSpec;
+    }
 
-    void prepareForDrawingMasksCPU(SkDrawableGlyphBuffer* drawables);
-
-    void prepareForDrawingPathsCPU(SkDrawableGlyphBuffer* drawables);
-    SkSpan<const SkGlyphPos> prepareForDrawingRemoveEmpty(const SkPackedGlyphID packedGlyphIDs[],
-                                                          const SkPoint positions[],
-                                                          size_t n,
-                                                          int maxDimension,
-                                                          SkGlyphPos results[]) override;
-
-    void onAboutToExitScope() override;
-
-    /** Return the approx RAM usage for this cache. */
-    size_t getMemoryUsed() const { return fMemoryUsed; }
-
-    void dump() const;
-
-    SkScalerContext* getScalerContext() const { return fScalerContext.get(); }
-
-#ifdef SK_DEBUG
-    void forceValidate() const;
-    void validate() const;
-#else
-    void validate() const {}
-#endif
-
-    class AutoValidate : SkNoncopyable {
-    public:
-        AutoValidate(const SkStrike* cache) : fCache(cache) {
-            if (fCache) {
-                fCache->validate();
-            }
+    void verifyPinnedStrike() const {
+        if (fPinner != nullptr) {
+            fPinner->assertValid();
         }
-        ~AutoValidate() {
-            if (fCache) {
-                fCache->validate();
-            }
-        }
-        void forget() {
-            fCache = nullptr;
-        }
-    private:
-        const SkStrike* fCache;
-    };
+    }
+
+    void dump() const SK_EXCLUDES(fStrikeLock);
+    void dumpMemoryStatistics(SkTraceMemoryDump* dump) const SK_EXCLUDES(fStrikeLock);
+
+    SkGlyph* glyph(SkGlyphDigest) SK_REQUIRES(fStrikeLock);
 
 private:
-    class GlyphMapHashTraits {
-    public:
-        static SkPackedGlyphID GetKey(const SkGlyph* glyph) {
-            return glyph->getPackedID();
-        }
-        static uint32_t Hash(SkPackedGlyphID glyphId) {
-            return glyphId.hash();
-        }
-    };
+    friend class SkStrikeCache;
+    friend class SkStrikeTestingPeer;
+    class Monitor;
 
-    SkGlyph* makeGlyph(SkPackedGlyphID);
+    // Return a glyph. Create it if it doesn't exist, and initialize the glyph with metrics and
+    // advances using a scaler.
+    SkGlyph* glyph(SkPackedGlyphID) SK_REQUIRES(fStrikeLock);
+
+    // Generate the glyph digest information and update structures to add the glyph.
+    SkGlyphDigest* addGlyphAndDigest(SkGlyph* glyph) SK_REQUIRES(fStrikeLock);
+
+    SkGlyph* mergeGlyphFromBuffer(SkReadBuffer& buffer) SK_REQUIRES(fStrikeLock);
+    bool mergeGlyphAndImageFromBuffer(SkReadBuffer& buffer) SK_REQUIRES(fStrikeLock);
+    bool mergeGlyphAndPathFromBuffer(SkReadBuffer& buffer) SK_REQUIRES(fStrikeLock);
+    bool mergeGlyphAndDrawableFromBuffer(SkReadBuffer& buffer) SK_REQUIRES(fStrikeLock);
+
+    // Maintain memory use statistics.
+    void updateMemoryUsage(size_t increase) SK_EXCLUDES(fStrikeLock);
 
     enum PathDetail {
         kMetricsOnly,
@@ -178,28 +159,47 @@ private:
     SkSpan<const SkGlyph*> internalPrepare(
             SkSpan<const SkGlyphID> glyphIDs,
             PathDetail pathDetail,
-            const SkGlyph** results);
+            const SkGlyph** results) SK_REQUIRES(fStrikeLock);
 
-    const SkAutoDescriptor                 fDesc;
-    const std::unique_ptr<SkScalerContext> fScalerContext;
-    SkFontMetrics                          fFontMetrics;
-
-    // Map from a combined GlyphID and sub-pixel position to a SkGlyph*.
-    // The actual glyph is stored in the fAlloc. This structure provides an
-    // unchanging pointer as long as the strike is alive.
-    SkTHashTable<SkGlyph*, SkPackedGlyphID, GlyphMapHashTraits> fGlyphMap;
-
-    // so we don't grow our arrays a lot
-    static constexpr size_t kMinGlyphCount = 8;
-    static constexpr size_t kMinGlyphImageSize = 16 /* height */ * 8 /* width */;
-    static constexpr size_t kMinAllocAmount = kMinGlyphImageSize * kMinGlyphCount;
-
-    SkArenaAlloc            fAlloc {kMinAllocAmount};
-
-    // Tracks (approx) how much ram is tied-up in this strike.
-    size_t                  fMemoryUsed;
-
+    // The following are const and need no mutex protection.
+    const SkFontMetrics               fFontMetrics;
     const SkGlyphPositionRoundingSpec fRoundingSpec;
+    const SkStrikeSpec                fStrikeSpec;
+    SkStrikeCache* const              fStrikeCache;
+
+    // This mutex provides protection for this specific SkStrike.
+    mutable SkMutex fStrikeLock;
+
+    // Maps from a combined GlyphID and sub-pixel position to a SkGlyphDigest. The actual glyph is
+    // stored in the fAlloc. The pointer to the glyph is stored fGlyphForIndex. The
+    // SkGlyphDigest's fIndex field stores the index. This pointer provides an unchanging
+    // reference to the SkGlyph as long as the strike is alive, and fGlyphForIndex
+    // provides a dense index for glyphs.
+    SkTHashTable<SkGlyphDigest, SkPackedGlyphID, SkGlyphDigest>
+            fDigestForPackedGlyphID SK_GUARDED_BY(fStrikeLock);
+
+    // Maps from a glyphIndex to a glyph
+    std::vector<SkGlyph*> fGlyphForIndex SK_GUARDED_BY(fStrikeLock);
+
+    // Context that corresponds to the glyph information in this strike.
+    const std::unique_ptr<SkScalerContext> fScalerContext SK_GUARDED_BY(fStrikeLock);
+
+    // Used while changing the strike to track memory increase.
+    size_t fMemoryIncrease SK_GUARDED_BY(fStrikeLock) {0};
+
+    // So, we don't grow our arrays a lot.
+    inline static constexpr size_t kMinGlyphCount = 8;
+    inline static constexpr size_t kMinGlyphImageSize = 16 /* height */ * 8 /* width */;
+    inline static constexpr size_t kMinAllocAmount = kMinGlyphImageSize * kMinGlyphCount;
+
+    SkArenaAlloc            fAlloc SK_GUARDED_BY(fStrikeLock) {kMinAllocAmount};
+
+    // The following are protected by the SkStrikeCache's mutex.
+    SkStrike*                       fNext{nullptr};
+    SkStrike*                       fPrev{nullptr};
+    std::unique_ptr<SkStrikePinner> fPinner;
+    size_t                          fMemoryUsed{sizeof(SkStrike)};
+    bool                            fRemoved{false};
 };
 
 #endif  // SkStrike_DEFINED

@@ -19,6 +19,7 @@ enum HeifColorFormat {
     kHeifColorFormat_RGB565,
     kHeifColorFormat_RGBA_8888,
     kHeifColorFormat_BGRA_8888,
+    kHeifColorFormat_RGBA_1010102,
 };
 
 struct HeifStream {
@@ -67,6 +68,10 @@ struct HeifDecoder {
     }
 
     int skipScanlines(int) {
+        return 0;
+    }
+
+    uint32_t getColorDepth() {
         return 0;
     }
 };

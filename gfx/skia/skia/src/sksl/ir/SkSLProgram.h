@@ -8,291 +8,164 @@
 #ifndef SKSL_PROGRAM
 #define SKSL_PROGRAM
 
-#include <vector>
+#include "src/sksl/ir/SkSLType.h"
+
 #include <memory>
+#include <string>
+#include <vector>
 
-#include "src/sksl/ir/SkSLBoolLiteral.h"
-#include "src/sksl/ir/SkSLExpression.h"
-#include "src/sksl/ir/SkSLFloatLiteral.h"
-#include "src/sksl/ir/SkSLIntLiteral.h"
-#include "src/sksl/ir/SkSLModifiers.h"
-#include "src/sksl/ir/SkSLProgramElement.h"
-#include "src/sksl/ir/SkSLSymbolTable.h"
-
-#ifdef SK_VULKAN
-#include "src/gpu/vk/GrVkCaps.h"
-#endif
-
-// name of the render target width uniform
-#define SKSL_RTWIDTH_NAME "u_skRTWidth"
-
-// name of the render target height uniform
-#define SKSL_RTHEIGHT_NAME "u_skRTHeight"
+// name of the uniform used to handle features that are sensitive to whether Y is flipped.
+// TODO: find a better home for this constant
+#define SKSL_RTFLIP_NAME "u_skRTFlip"
 
 namespace SkSL {
 
 class Context;
+class FunctionDeclaration;
+class ModifiersPool;
+class Pool;
+class ProgramElement;
+class ProgramUsage;
+class SymbolTable;
+struct ProgramConfig;
+
+/** Represents a list the Uniforms contained within a Program. */
+struct UniformInfo {
+    struct Uniform {
+        std::string fName;
+        SkSL::Type::NumberKind fKind;
+        int fColumns;
+        int fRows;
+        int fSlot;
+    };
+    std::vector<Uniform> fUniforms;
+    int fUniformSlotCount = 0;
+};
 
 /**
  * Represents a fully-digested program, ready for code generation.
  */
 struct Program {
-    struct Settings {
-        struct Value {
-            Value(bool b)
-            : fKind(kBool_Kind)
-            , fValue(b) {}
+    struct Inputs {
+        bool fUseFlipRTUniform = false;
+        bool operator==(const Inputs& that) const {
+            return fUseFlipRTUniform == that.fUseFlipRTUniform;
+        }
+        bool operator!=(const Inputs& that) const { return !(*this == that); }
+    };
 
-            Value(int i)
-            : fKind(kInt_Kind)
-            , fValue(i) {}
+    Program(std::unique_ptr<std::string> source,
+            std::unique_ptr<ProgramConfig> config,
+            std::shared_ptr<Context> context,
+            std::vector<std::unique_ptr<ProgramElement>> elements,
+            std::vector<const ProgramElement*> sharedElements,
+            std::unique_ptr<ModifiersPool> modifiers,
+            std::shared_ptr<SymbolTable> symbols,
+            std::unique_ptr<Pool> pool,
+            Inputs inputs);
 
-            Value(unsigned int i)
-            : fKind(kInt_Kind)
-            , fValue(i) {}
+    ~Program();
 
-            Value(float f)
-            : fKind(kFloat_Kind)
-            , fValue(f) {}
-
-            std::unique_ptr<Expression> literal(const Context& context, int offset) const {
-                switch (fKind) {
-                    case Program::Settings::Value::kBool_Kind:
-                        return std::unique_ptr<Expression>(new BoolLiteral(context,
-                                                                           offset,
-                                                                           fValue));
-                    case Program::Settings::Value::kInt_Kind:
-                        return std::unique_ptr<Expression>(new IntLiteral(context,
-                                                                          offset,
-                                                                          fValue));
-                    case Program::Settings::Value::kFloat_Kind:
-                        return std::unique_ptr<Expression>(new FloatLiteral(context,
-                                                                          offset,
-                                                                          fValue));
-                    default:
-                        SkASSERT(false);
-                        return nullptr;
+    class ElementsCollection {
+    public:
+        class iterator {
+        public:
+            const ProgramElement* operator*() {
+                if (fShared != fSharedEnd) {
+                    return *fShared;
+                } else {
+                    return fOwned->get();
                 }
             }
 
-            enum {
-                kBool_Kind,
-                kInt_Kind,
-                kFloat_Kind,
-            } fKind;
+            iterator& operator++() {
+                if (fShared != fSharedEnd) {
+                    ++fShared;
+                } else {
+                    ++fOwned;
+                }
+                return *this;
+            }
 
-            int fValue;
+            bool operator==(const iterator& other) const {
+                return fOwned == other.fOwned && fShared == other.fShared;
+            }
+
+            bool operator!=(const iterator& other) const {
+                return !(*this == other);
+            }
+
+        private:
+            using Owned  = std::vector<std::unique_ptr<ProgramElement>>::const_iterator;
+            using Shared = std::vector<const ProgramElement*>::const_iterator;
+            friend class ElementsCollection;
+
+            iterator(Owned owned, Owned ownedEnd, Shared shared, Shared sharedEnd)
+                    : fOwned(owned), fOwnedEnd(ownedEnd), fShared(shared), fSharedEnd(sharedEnd) {}
+
+            Owned  fOwned;
+            Owned  fOwnedEnd;
+            Shared fShared;
+            Shared fSharedEnd;
         };
 
-#if defined(SKSL_STANDALONE) || !SK_SUPPORT_GPU
-        const StandaloneShaderCaps* fCaps = &standaloneCaps;
-#else
-        const GrShaderCaps* fCaps = nullptr;
-#ifdef SK_VULKAN
-        const GrVkCaps* fVkCaps = nullptr;
-#endif
-#endif
-        // if false, sk_FragCoord is exactly the same as gl_FragCoord. If true, the y coordinate
-        // must be flipped.
-        bool fFlipY = false;
-        // If true the destination fragment color is read sk_FragColor. It must be declared inout.
-        bool fFragColorIsInOut = false;
-        // if true, Setting objects (e.g. sk_Caps.fbFetchSupport) should be replaced with their
-        // constant equivalents during compilation
-        bool fReplaceSettings = true;
-        // if true, all halfs are forced to be floats
-        bool fForceHighPrecision = false;
-        // if true, add -0.5 bias to LOD of all texture lookups
-        bool fSharpenTextures = false;
-        // if the program needs to create an RTHeight uniform, this is its offset in the uniform
-        // buffer
-        int fRTHeightOffset = -1;
-        std::unordered_map<String, Value> fArgs;
-    };
-
-    struct Inputs {
-        // if true, this program requires the render target width uniform to be defined
-        bool fRTWidth;
-
-        // if true, this program requires the render target height uniform to be defined
-        bool fRTHeight;
-
-        // if true, this program must be recompiled if the flipY setting changes. If false, the
-        // program will compile to the same code regardless of the flipY setting.
-        bool fFlipY;
-
-        void reset() {
-            fRTWidth = false;
-            fRTHeight = false;
-            fFlipY = false;
+        iterator begin() const {
+            return iterator(fProgram.fOwnedElements.begin(), fProgram.fOwnedElements.end(),
+                            fProgram.fSharedElements.begin(), fProgram.fSharedElements.end());
         }
 
-        bool isEmpty() {
-            return !fRTWidth && !fRTHeight && !fFlipY;
-        }
-    };
-
-    class iterator {
-    public:
-        ProgramElement& operator*() {
-            if (fIter1 != fEnd1) {
-                return **fIter1;
-            }
-            return **fIter2;
-        }
-
-        iterator& operator++() {
-            if (fIter1 != fEnd1) {
-                ++fIter1;
-                return *this;
-            }
-            ++fIter2;
-            return *this;
-        }
-
-        bool operator==(const iterator& other) const {
-            return fIter1 == other.fIter1 && fIter2 == other.fIter2;
-        }
-
-        bool operator!=(const iterator& other) const {
-            return !(*this == other);
+        iterator end() const {
+            return iterator(fProgram.fOwnedElements.end(), fProgram.fOwnedElements.end(),
+                            fProgram.fSharedElements.end(), fProgram.fSharedElements.end());
         }
 
     private:
-        using inner = std::vector<std::unique_ptr<ProgramElement>>::iterator;
-
-        iterator(inner begin1, inner end1, inner begin2, inner end2)
-        : fIter1(begin1)
-        , fEnd1(end1)
-        , fIter2(begin2)
-        , fEnd2(end2) {}
-
-        inner fIter1;
-        inner fEnd1;
-        inner fIter2;
-        inner fEnd2;
-
         friend struct Program;
+
+        ElementsCollection(const Program& program) : fProgram(program) {}
+        const Program& fProgram;
     };
 
-    class const_iterator {
-    public:
-        const ProgramElement& operator*() {
-            if (fIter1 != fEnd1) {
-                return **fIter1;
-            }
-            return **fIter2;
-        }
+    /**
+     * Iterates over *all* elements in this Program, both owned and shared (builtin). The iterator's
+     * value type is `const ProgramElement*`, so it's clear that you *must not* modify anything (as
+     * you might be mutating shared data).
+     */
+    ElementsCollection elements() const { return ElementsCollection(*this); }
 
-        const_iterator& operator++() {
-            if (fIter1 != fEnd1) {
-                ++fIter1;
-                return *this;
-            }
-            ++fIter2;
-            return *this;
-        }
+    /**
+     * Returns a function declaration with the given name; null is returned if the function doesn't
+     * exist or has no definition. If the function might have overloads, you can use nextOverload()
+     * to search for the function with the expected parameter list.
+     */
+    const FunctionDeclaration* getFunction(const char* functionName) const;
 
-        bool operator==(const const_iterator& other) const {
-            return fIter1 == other.fIter1 && fIter2 == other.fIter2;
-        }
+    /**
+     * Returns a list of uniforms used by this Program. The uniform list will exclude opaque types
+     * like textures, samplers, or child effects.
+     */
+    std::unique_ptr<UniformInfo> getUniformInfo();
 
-        bool operator!=(const const_iterator& other) const {
-            return !(*this == other);
-        }
+    std::string description() const;
+    const ProgramUsage* usage() const { return fUsage.get(); }
 
-    private:
-        using inner = std::vector<std::unique_ptr<ProgramElement>>::const_iterator;
-
-        const_iterator(inner begin1, inner end1, inner begin2, inner end2)
-        : fIter1(begin1)
-        , fEnd1(end1)
-        , fIter2(begin2)
-        , fEnd2(end2) {}
-
-        inner fIter1;
-        inner fEnd1;
-        inner fIter2;
-        inner fEnd2;
-
-        friend struct Program;
-    };
-
-    enum Kind {
-        kFragment_Kind,
-        kVertex_Kind,
-        kGeometry_Kind,
-        kFragmentProcessor_Kind,
-        kPipelineStage_Kind,
-        kGeneric_Kind,
-    };
-
-    Program(Kind kind,
-            std::unique_ptr<String> source,
-            Settings settings,
-            std::shared_ptr<Context> context,
-            std::vector<std::unique_ptr<ProgramElement>>* inheritedElements,
-            std::vector<std::unique_ptr<ProgramElement>> elements,
-            std::shared_ptr<SymbolTable> symbols,
-            Inputs inputs)
-    : fKind(kind)
-    , fSource(std::move(source))
-    , fSettings(settings)
-    , fContext(context)
-    , fSymbols(symbols)
-    , fInputs(inputs)
-    , fInheritedElements(inheritedElements)
-    , fElements(std::move(elements)) {}
-
-    iterator begin() {
-        if (fInheritedElements) {
-            return iterator(fInheritedElements->begin(), fInheritedElements->end(),
-                            fElements.begin(), fElements.end());
-        }
-        return iterator(fElements.begin(), fElements.end(), fElements.end(), fElements.end());
-    }
-
-    iterator end() {
-        if (fInheritedElements) {
-            return iterator(fInheritedElements->end(), fInheritedElements->end(),
-                            fElements.end(), fElements.end());
-        }
-        return iterator(fElements.end(), fElements.end(), fElements.end(), fElements.end());
-    }
-
-    const_iterator begin() const {
-        if (fInheritedElements) {
-            return const_iterator(fInheritedElements->begin(), fInheritedElements->end(),
-                                  fElements.begin(), fElements.end());
-        }
-        return const_iterator(fElements.begin(), fElements.end(), fElements.end(), fElements.end());
-    }
-
-    const_iterator end() const {
-        if (fInheritedElements) {
-            return const_iterator(fInheritedElements->end(), fInheritedElements->end(),
-                                  fElements.end(), fElements.end());
-        }
-        return const_iterator(fElements.end(), fElements.end(), fElements.end(), fElements.end());
-    }
-
-    Kind fKind;
-    std::unique_ptr<String> fSource;
-    Settings fSettings;
+    std::unique_ptr<std::string> fSource;
+    std::unique_ptr<ProgramConfig> fConfig;
     std::shared_ptr<Context> fContext;
-    // it's important to keep fElements defined after (and thus destroyed before) fSymbols,
+    std::unique_ptr<ProgramUsage> fUsage;
+    std::unique_ptr<ModifiersPool> fModifiers;
+    // it's important to keep fOwnedElements defined after (and thus destroyed before) fSymbols,
     // because destroying elements can modify reference counts in symbols
     std::shared_ptr<SymbolTable> fSymbols;
+    std::unique_ptr<Pool> fPool;
+    // Contains *only* elements owned exclusively by this program.
+    std::vector<std::unique_ptr<ProgramElement>> fOwnedElements;
+    // Contains *only* elements owned by a built-in module that are included in this program.
+    // Use elements() to iterate over the combined set of owned + shared elements.
+    std::vector<const ProgramElement*> fSharedElements;
     Inputs fInputs;
-    bool fIsOptimized = false;
-
-private:
-    std::vector<std::unique_ptr<ProgramElement>>* fInheritedElements;
-    std::vector<std::unique_ptr<ProgramElement>> fElements;
-
-    friend class Compiler;
 };
 
-} // namespace
+}  // namespace SkSL
 
 #endif

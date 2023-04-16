@@ -7,13 +7,23 @@
 #ifndef SkOpContour_DEFINED
 #define SkOpContour_DEFINED
 
-#include "include/private/SkTDArray.h"
-#include "src/core/SkTSort.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkTypes.h"
+#include "include/pathops/SkPathOps.h"
+#include "include/private/base/SkDebug.h"
+#include "src/base/SkArenaAlloc.h"
 #include "src/pathops/SkOpSegment.h"
+#include "src/pathops/SkOpSpan.h"
+#include "src/pathops/SkPathOpsBounds.h"
+#include "src/pathops/SkPathOpsTypes.h"
 
+class SkOpAngle;
+class SkOpCoincidence;
+class SkPathWriter;
 enum class SkOpRayDir;
 struct SkOpRayHit;
-class SkPathWriter;
 
 class SkOpContour {
 public:

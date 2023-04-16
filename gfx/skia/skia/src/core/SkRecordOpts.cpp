@@ -7,7 +7,7 @@
 
 #include "src/core/SkRecordOpts.h"
 
-#include "include/private/SkTDArray.h"
+#include "include/private/base/SkTDArray.h"
 #include "src/core/SkCanvasPriv.h"
 #include "src/core/SkRecordPattern.h"
 #include "src/core/SkRecords.h"
@@ -176,7 +176,7 @@ static bool effectively_srcover(const SkPaint* paint) {
     }
     // src-mode with opaque and no effects (which might change opaqueness) is ok too.
     return !paint->getShader() && !paint->getColorFilter() && !paint->getImageFilter() &&
-           0xFF == paint->getAlpha() && paint->getBlendMode() == SkBlendMode::kSrc;
+           0xFF == paint->getAlpha() && paint->asBlendMode() == SkBlendMode::kSrc;
 }
 
 // For some SaveLayer-[drawing command]-Restore patterns, merge the SaveLayer's alpha into the
@@ -185,14 +185,8 @@ struct SaveLayerDrawRestoreNooper {
     typedef Pattern<Is<SaveLayer>, IsDraw, Is<Restore>> Match;
 
     bool onMatch(SkRecord* record, Match* match, int begin, int end) {
-        if (match->first<SaveLayer>()->backdrop || match->first<SaveLayer>()->clipMask) {
-            // can't throw away the layer if we have a backdrop or clip mask
-            return false;
-        }
-
-        if (match->first<SaveLayer>()->saveLayerFlags &
-                SkCanvasPriv::kDontClipToLayer_SaveLayerFlag) {
-            // can't throw away the layer if set
+        if (match->first<SaveLayer>()->backdrop) {
+            // can't throw away the layer if we have a backdrop
             return false;
         }
 

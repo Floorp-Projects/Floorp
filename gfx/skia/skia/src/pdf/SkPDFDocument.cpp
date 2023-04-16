@@ -10,8 +10,8 @@
 
 #include "include/core/SkStream.h"
 #include "include/docs/SkPDFDocument.h"
-#include "include/private/SkTo.h"
-#include "src/core/SkMakeUnique.h"
+#include "include/private/base/SkTo.h"
+#include "src/base/SkUTF.h"
 #include "src/pdf/SkPDFDevice.h"
 #include "src/pdf/SkPDFFont.h"
 #include "src/pdf/SkPDFGradientShader.h"
@@ -26,6 +26,28 @@
 const char* SkPDFGetNodeIdKey() {
     static constexpr char key[] = "PDF_Node_Key";
     return key;
+}
+
+static SkString ToValidUtf8String(const SkData& d) {
+    if (d.size() == 0) {
+        SkDEBUGFAIL("Not a valid string, data length is zero.");
+        return SkString();
+    }
+
+    const char* c_str = static_cast<const char*>(d.data());
+    if (c_str[d.size() - 1] != 0) {
+        SkDEBUGFAIL("Not a valid string, not null-terminated.");
+        return SkString();
+    }
+
+    // CountUTF8 returns -1 if there's an invalid UTF-8 byte sequence.
+    int valid_utf8_chars_count = SkUTF::CountUTF8(c_str, d.size() - 1);
+    if (valid_utf8_chars_count == -1) {
+        SkDEBUGFAIL("Not a valid UTF-8 string.");
+        return SkString();
+    }
+
+    return SkString(c_str, d.size() - 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -197,7 +219,7 @@ SkPDFDocument::SkPDFDocument(SkWStream* stream,
     if (fMetadata.fStructureElementTreeRoot) {
         fTagTree.init(fMetadata.fStructureElementTreeRoot);
     }
-    fExecutor = metadata.fExecutor;
+    fExecutor = fMetadata.fExecutor;
 }
 
 SkPDFDocument::~SkPDFDocument() {
@@ -215,11 +237,11 @@ SkPDFIndirectReference SkPDFDocument::emit(const SkPDFObject& object, SkPDFIndir
 SkWStream* SkPDFDocument::beginObject(SkPDFIndirectReference ref) SK_REQUIRES(fMutex) {
     begin_indirect_object(&fOffsetMap, ref, this->getStream());
     return this->getStream();
-};
+}
 
 void SkPDFDocument::endObject() SK_REQUIRES(fMutex) {
     end_indirect_object(this->getStream());
-};
+}
 
 static SkSize operator*(SkISize u, SkScalar s) { return SkSize{u.width() * s, u.height() * s}; }
 static SkSize operator*(SkSize u, SkScalar s) { return SkSize{u.width() * s, u.height() * s}; }
@@ -272,40 +294,6 @@ static void populate_link_annotation(SkPDFDict* annotation, const SkRect& r) {
     annotation->insertObject("Rect", SkPDFMakeArray(r.fLeft, r.fTop, r.fRight, r.fBottom));
 }
 
-static SkString to_string(const SkData& d) {
-    return SkString(static_cast<const char*>(d.data()), d.size() - 1);
-}
-
-static std::unique_ptr<SkPDFArray> get_annotations(
-        SkPDFDocument* doc,
-        const std::vector<std::pair<sk_sp<SkData>, SkRect>>& linkToURLs,
-        const std::vector<std::pair<sk_sp<SkData>, SkRect>>& linkToDestinations)
-{
-    std::unique_ptr<SkPDFArray> array;
-    size_t count = linkToURLs.size() + linkToDestinations.size();
-    if (0 == count) {
-        return array;  // is nullptr
-    }
-    array = SkPDFMakeArray();
-    array->reserve(count);
-    for (const auto& rectWithURL : linkToURLs) {
-        SkPDFDict annotation("Annot");
-        populate_link_annotation(&annotation, rectWithURL.second);
-        std::unique_ptr<SkPDFDict> action = SkPDFMakeDict("Action");
-        action->insertName("S", "URI");
-        action->insertString("URI", to_string(*rectWithURL.first));
-        annotation.insertObject("A", std::move(action));
-        array->appendRef(doc->emit(annotation));
-    }
-    for (const auto& linkToDestination : linkToDestinations) {
-        SkPDFDict annotation("Annot");
-        populate_link_annotation(&annotation, linkToDestination.second);
-        annotation.insertName("Dest", to_string(*linkToDestination.first));
-        array->appendRef(doc->emit(annotation));
-    }
-    return array;
-}
-
 static SkPDFIndirectReference append_destinations(
         SkPDFDocument* doc,
         const std::vector<SkPDFNamedDestination>& namedDestinations)
@@ -319,9 +307,48 @@ static SkPDFIndirectReference append_destinations(
         pdfDest->appendScalar(dest.fPoint.x());
         pdfDest->appendScalar(dest.fPoint.y());
         pdfDest->appendInt(0);  // Leave zoom unchanged
-        destinations.insertObject(SkString((const char*)dest.fName->data()), std::move(pdfDest));
+        destinations.insertObject(ToValidUtf8String(*dest.fName), std::move(pdfDest));
     }
     return doc->emit(destinations);
+}
+
+std::unique_ptr<SkPDFArray> SkPDFDocument::getAnnotations() {
+    std::unique_ptr<SkPDFArray> array;
+    size_t count = fCurrentPageLinks.size();
+    if (0 == count) {
+        return array;  // is nullptr
+    }
+    array = SkPDFMakeArray();
+    array->reserve(count);
+    for (const auto& link : fCurrentPageLinks) {
+        SkPDFDict annotation("Annot");
+        populate_link_annotation(&annotation, link->fRect);
+        if (link->fType == SkPDFLink::Type::kUrl) {
+            std::unique_ptr<SkPDFDict> action = SkPDFMakeDict("Action");
+            action->insertName("S", "URI");
+            // This is documented to be a 7 bit ASCII (byte) string.
+            action->insertByteString("URI", ToValidUtf8String(*link->fData));
+            annotation.insertObject("A", std::move(action));
+        } else if (link->fType == SkPDFLink::Type::kNamedDestination) {
+            annotation.insertName("Dest", ToValidUtf8String(*link->fData));
+        } else {
+            SkDEBUGFAIL("Unknown link type.");
+        }
+
+        if (link->fNodeId) {
+            int structParentKey = createStructParentKeyForNodeId(link->fNodeId);
+            if (structParentKey != -1) {
+                annotation.insertInt("StructParent", structParentKey);
+            }
+        }
+
+        SkPDFIndirectReference annotationRef = emit(annotation);
+        array->appendRef(annotationRef);
+        if (link->fNodeId) {
+            fTagTree.addNodeAnnotation(link->fNodeId, annotationRef, SkToUInt(this->currentPageIndex()));
+        }
+    }
+    return array;
 }
 
 void SkPDFDocument::onEndPage() {
@@ -340,11 +367,9 @@ void SkPDFDocument::onEndPage() {
     page->insertObject("Resources", std::move(resourceDict));
     page->insertObject("MediaBox", SkPDFUtils::RectToArray(SkRect::MakeSize(mediaSize)));
 
-    if (std::unique_ptr<SkPDFArray> annotations =
-            get_annotations(this, fCurrentPageLinkToURLs, fCurrentPageLinkToDestinations)) {
+    if (std::unique_ptr<SkPDFArray> annotations = getAnnotations()) {
         page->insertObject("Annots", std::move(annotations));
-        fCurrentPageLinkToURLs.clear();
-        fCurrentPageLinkToDestinations.clear();
+        fCurrentPageLinks.clear();
     }
 
     page->insertRef("Contents", SkPDFStreamOut(nullptr, std::move(pageContent), this));
@@ -476,17 +501,17 @@ static SkPDFIndirectReference make_srgb_color_profile(SkPDFDocument* doc) {
     std::unique_ptr<SkPDFDict> dict = SkPDFMakeDict();
     dict->insertInt("N", 3);
     dict->insertObject("Range", SkPDFMakeArray(0, 1, 0, 1, 0, 1));
-    return SkPDFStreamOut(std::move(dict), SkMemoryStream::Make(SkSrgbIcm()), doc, true);
+    return SkPDFStreamOut(std::move(dict), SkMemoryStream::Make(SkSrgbIcm()),
+                          doc, SkPDFSteamCompressionEnabled::Yes);
 }
 
 static std::unique_ptr<SkPDFArray> make_srgb_output_intents(SkPDFDocument* doc) {
     // sRGB is specified by HTML, CSS, and SVG.
     auto outputIntent = SkPDFMakeDict("OutputIntent");
     outputIntent->insertName("S", "GTS_PDFA1");
-    outputIntent->insertString("RegistryName", "http://www.color.org");
-    outputIntent->insertString("OutputConditionIdentifier",
-                               "Custom");
-    outputIntent->insertString("Info","sRGB IEC61966-2.1");
+    outputIntent->insertTextString("RegistryName", "http://www.color.org");
+    outputIntent->insertTextString("OutputConditionIdentifier", "Custom");
+    outputIntent->insertTextString("Info", "sRGB IEC61966-2.1");
     outputIntent->insertRef("DestOutputProfile", make_srgb_color_profile(doc));
     auto intentArray = SkPDFMakeArray();
     intentArray->appendObject(std::move(outputIntent));
@@ -502,19 +527,42 @@ const SkMatrix& SkPDFDocument::currentPageTransform() const {
     return fPageDevice->initialTransform();
 }
 
-int SkPDFDocument::getMarkIdForNodeId(int nodeId) {
-    return fTagTree.getMarkIdForNodeId(nodeId, SkToUInt(this->currentPageIndex()));
+int SkPDFDocument::createMarkIdForNodeId(int nodeId) {
+    return fTagTree.createMarkIdForNodeId(nodeId, SkToUInt(this->currentPageIndex()));
+}
+
+int SkPDFDocument::createStructParentKeyForNodeId(int nodeId) {
+    return fTagTree.createStructParentKeyForNodeId(nodeId, SkToUInt(this->currentPageIndex()));
 }
 
 static std::vector<const SkPDFFont*> get_fonts(const SkPDFDocument& canon) {
     std::vector<const SkPDFFont*> fonts;
     fonts.reserve(canon.fFontMap.count());
     // Sort so the output PDF is reproducible.
-    canon.fFontMap.foreach([&fonts](uint64_t, const SkPDFFont& font) { fonts.push_back(&font); });
+    for (const auto& [unused, font] : canon.fFontMap) {
+        fonts.push_back(&font);
+    }
     std::sort(fonts.begin(), fonts.end(), [](const SkPDFFont* u, const SkPDFFont* v) {
         return u->indirectReference().fValue < v->indirectReference().fValue;
     });
     return fonts;
+}
+
+SkString SkPDFDocument::nextFontSubsetTag() {
+    // PDF 32000-1:2008 Section 9.6.4 FontSubsets "The tag shall consist of six uppercase letters"
+    // "followed by a plus sign" "different subsets in the same PDF file shall have different tags."
+    // There are 26^6 or 308,915,776 possible values. So start in range then increment and mod.
+    uint32_t thisFontSubsetTag = fNextFontSubsetTag;
+    fNextFontSubsetTag = (fNextFontSubsetTag + 1u) % 308915776u;
+
+    SkString subsetTag(7);
+    char* subsetTagData = subsetTag.data();
+    for (size_t i = 0; i < 6; ++i) {
+        subsetTagData[i] = 'A' + (thisFontSubsetTag % 26);
+        thisFontSubsetTag /= 26;
+    }
+    subsetTagData[6] = '+';
+    return subsetTag;
 }
 
 void SkPDFDocument::onClose(SkWStream* stream) {
@@ -591,4 +639,3 @@ sk_sp<SkDocument> SkPDF::MakeDocument(SkWStream* stream, const SkPDF::Metadata& 
     }
     return stream ? sk_make_sp<SkPDFDocument>(stream, std::move(meta)) : nullptr;
 }
-
