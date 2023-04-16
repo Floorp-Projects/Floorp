@@ -168,7 +168,6 @@ add_task(async function test_fullpageScreenshotScrolled() {
       assertRange(result.color.bottomRight[0], 52, 53, "R color value");
       assertRange(result.color.bottomRight[1], 127, 128, "G color value");
       assertRange(result.color.bottomRight[2], 152, 153, "B color value");
-
     }
   );
 });
