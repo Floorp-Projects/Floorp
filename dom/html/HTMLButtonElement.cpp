@@ -253,6 +253,7 @@ nsresult HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
         // NS_FORM_BUTTON_BUTTON do nothing.
         return rv;
       }
+      HandlePopoverTargetAction();
     }
   }
 
