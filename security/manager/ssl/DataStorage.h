@@ -136,6 +136,7 @@ class DataStorage : public nsIObserver {
   // Return true if this data storage is ready to be used.
   bool IsReady();
 
+  void ArmTimer(const MutexAutoLock& aProofOfLock);
   void ShutdownTimer();
 
  private:
@@ -201,13 +202,15 @@ class DataStorage : public nsIObserver {
   nsCOMPtr<nsIFile> mBackingFile MOZ_GUARDED_BY(mMutex);
   bool mPendingWrite MOZ_GUARDED_BY(
       mMutex);  // true if a write is needed but hasn't been dispatched
+  bool mTimerArmed MOZ_GUARDED_BY(mMutex);
   bool mShuttingDown MOZ_GUARDED_BY(mMutex);
   RefPtr<TaskQueue> mBackgroundTaskQueue MOZ_GUARDED_BY(mMutex);
   // (End list of members protected by mMutex)
 
-  nsCOMPtr<nsITimer> mTimer;  // Must only be accessed on the main thread
+  nsCOMPtr<nsITimer> mTimer;
 
   mozilla::Atomic<bool> mInitCalled;  // Indicates that Init() has been called.
+  uint32_t mTimerDelayMS;
 
   Monitor mReadyMonitor;  // Do not acquire this at the same time as mMutex.
   bool mReady MOZ_GUARDED_BY(mReadyMonitor);  // Indicates that saved data has
