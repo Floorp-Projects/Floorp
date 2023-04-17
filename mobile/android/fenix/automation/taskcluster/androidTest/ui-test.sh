@@ -118,6 +118,10 @@ function failure_check() {
         --results "${RESULTS_DIR}" \
         --output-md "${ARTIFACT_DIR}/github/customCheckRunText.md" \
 	--device-type "${device_type}"
+
+    chmod +x $PATH_TEST/parse-ui-test-fromfile.py
+    $PATH_TEST/parse-ui-test-fromfile.py \
+        --results "${RESULTS_DIR}"
 }
 
 echo

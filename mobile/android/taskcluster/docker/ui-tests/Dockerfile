@@ -33,5 +33,9 @@ RUN URL_FLANK_BIN="$($CURL --silent 'https://api.github.com/repos/Flank/flank/re
     && $CURL --output "${TEST_TOOLS}/flank.jar" "${URL_FLANK_BIN}" \
     && chmod +x "${TEST_TOOLS}/flank.jar"
 
+# Used in parse-ui-test-fromfile.py
+RUN pip3 install junitparser
+RUN pip3 install beautifultable
+
 # run-task expects to run as root
 USER root
