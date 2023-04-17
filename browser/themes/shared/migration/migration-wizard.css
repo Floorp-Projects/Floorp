@@ -72,7 +72,6 @@ label:not([hidden]) {
 #browser-profile-selector {
   display: flex;
   align-items: center;
-  border: 0;
   padding: 8px;
   margin: 0;
   font-weight: unset;
@@ -95,7 +94,7 @@ label:not([hidden]) {
 .dropdown-icon {
   content: url("chrome://global/skin/icons/arrow-down.svg");
   -moz-context-properties: fill;
-  fill: var(--in-content-icon-color);
+  fill: currentColor;
   height: 16px;
   width: 16px;
 }
