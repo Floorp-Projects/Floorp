@@ -1,0 +1,6 @@
+<script>
+  // This test allocates >= 4GB of memory even if it succeeds.
+  let a = new ArrayBuffer(4294967296)
+  let b = new Uint32Array(a)
+  self.indexedDB.cmp(b, undefined)
+</script>
