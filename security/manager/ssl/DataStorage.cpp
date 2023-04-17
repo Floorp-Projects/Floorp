@@ -85,6 +85,7 @@ mozilla::StaticAutoPtr<DataStorage::DataStorages> DataStorage::sDataStorages;
 DataStorage::DataStorage(const nsString& aFilename)
     : mMutex("DataStorage::mMutex"),
       mPendingWrite(false),
+      mTimerArmed(false),
       mShuttingDown(false),
       mInitCalled(false),
       mReadyMonitor("DataStorage::mReadyMonitor"),
@@ -174,15 +175,8 @@ nsresult DataStorage::Init() {
   mBackgroundTaskQueue = TaskQueue::Create(target.forget(), "PSM DataStorage");
 
   // For test purposes, we can set the write timer to be very fast.
-  uint32_t timerDelayMS = Preferences::GetInt("test.datastorage.write_timer_ms",
-                                              sDataStorageDefaultTimerDelay);
-  rv = NS_NewTimerWithFuncCallback(
-      getter_AddRefs(mTimer), DataStorage::TimerCallback, this, timerDelayMS,
-      nsITimer::TYPE_REPEATING_SLACK_LOW_PRIORITY, "DataStorageTimer",
-      mBackgroundTaskQueue);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  mTimerDelayMS = Preferences::GetInt("test.datastorage.write_timer_ms",
+                                      sDataStorageDefaultTimerDelay);
 
   rv = AsyncReadData(lock);
   if (NS_FAILED(rv)) {
@@ -589,6 +583,7 @@ nsresult DataStorage::PutInternal(const nsCString& aKey, Entry& aEntry,
 
   if (aType == DataStorage_Persistent) {
     mPendingWrite = true;
+    ArmTimer(aProofOfLock);
   }
 
   return NS_OK;
@@ -603,6 +598,7 @@ void DataStorage::Remove(const nsCString& aKey, DataStorageType aType) {
 
   if (aType == DataStorage_Persistent) {
     mPendingWrite = true;
+    ArmTimer(lock);
   }
 }
 
@@ -707,6 +703,11 @@ nsresult DataStorage::AsyncWriteData(const MutexAutoLock& /*aProofOfLock*/) {
   nsCOMPtr<nsIRunnable> job(new Writer(output, this));
   nsresult rv = mBackgroundTaskQueue->Dispatch(job.forget());
   mPendingWrite = false;
+  if (mTimerArmed) {
+    rv = mTimer->Cancel();
+    Unused << NS_WARN_IF(NS_FAILED(rv));
+    mTimerArmed = false;
+  }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -732,6 +733,7 @@ nsresult DataStorage::Clear() {
 void DataStorage::TimerCallback(nsITimer* aTimer, void* aClosure) {
   RefPtr<DataStorage> aDataStorage = (DataStorage*)aClosure;
   MutexAutoLock lock(aDataStorage->mMutex);
+  aDataStorage->mTimerArmed = false;
   Unused << aDataStorage->AsyncWriteData(lock);
 }
 
@@ -747,6 +749,27 @@ void DataStorage::NotifyObservers(const char* aTopic) {
   if (os) {
     os->NotifyObservers(nullptr, aTopic, mFilename.get());
   }
+}
+
+void DataStorage::ArmTimer(const MutexAutoLock& /*aProofOfLock*/) {
+  mMutex.AssertCurrentThreadOwns();
+  if (mTimerArmed) {
+    return;
+  }
+
+  if (!mTimer) {
+    mTimer = NS_NewTimer(mBackgroundTaskQueue);
+    if (NS_WARN_IF(!mTimer)) {
+      return;
+    }
+  }
+
+  nsresult rv = mTimer->InitWithNamedFuncCallback(
+      DataStorage::TimerCallback, this, mTimerDelayMS, nsITimer::TYPE_ONE_SHOT,
+      "DataStorageTimer");
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+
+  mTimerArmed = true;
 }
 
 void DataStorage::ShutdownTimer() {
