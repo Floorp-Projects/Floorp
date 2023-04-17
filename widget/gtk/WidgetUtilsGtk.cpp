@@ -28,6 +28,7 @@
 #include <dlfcn.h>
 #include <glib.h>
 
+#undef LOGW
 #ifdef MOZ_LOGGING
 #  include "mozilla/Logging.h"
 extern mozilla::LazyLogModule gWidgetLog;
@@ -247,9 +248,11 @@ static gboolean token_failed(gpointer aData);
 class XDGTokenRequest {
  public:
   void SetTokenID(const char* aTokenID) {
+    LOGW("RequestWaylandFocusPromise() SetTokenID %s", aTokenID);
     mTransferPromise->Resolve(aTokenID, __func__);
   }
   void Cancel() {
+    LOGW("RequestWaylandFocusPromise() canceled");
     mTransferPromise->Reject(false, __func__);
     mActivationTimeoutID = 0;
   }
@@ -297,16 +300,19 @@ static const struct xdg_activation_token_v1_listener token_listener = {
 RefPtr<FocusRequestPromise> RequestWaylandFocusPromise() {
 #ifdef MOZ_WAYLAND
   if (!GdkIsWaylandDisplay() || !KeymapWrapper::GetSeat()) {
+    LOGW("RequestWaylandFocusPromise() failed.");
     return nullptr;
   }
 
   RefPtr<nsWindow> sourceWindow = nsWindow::GetFocusedWindow();
   if (!sourceWindow || sourceWindow->IsDestroyed()) {
+    LOGW("RequestWaylandFocusPromise() missing source window");
     return nullptr;
   }
 
   xdg_activation_v1* xdg_activation = WaylandDisplayGet()->GetXdgActivation();
   if (!xdg_activation) {
+    LOGW("RequestWaylandFocusPromise() missing xdg_activation");
     return nullptr;
   }
 
@@ -314,6 +320,7 @@ RefPtr<FocusRequestPromise> RequestWaylandFocusPromise() {
   uint32_t focusSerial;
   KeymapWrapper::GetFocusInfo(&focusSurface, &focusSerial);
   if (!focusSurface) {
+    LOGW("RequestWaylandFocusPromise() missing focusSurface");
     return nullptr;
   }
 
@@ -323,6 +330,7 @@ RefPtr<FocusRequestPromise> RequestWaylandFocusPromise() {
   }
   wl_surface* surface = gdk_wayland_window_get_wl_surface(gdkWindow);
   if (focusSurface != surface) {
+    LOGW("RequestWaylandFocusPromise() missing wl_surface");
     return nullptr;
   }
 
@@ -338,6 +346,8 @@ RefPtr<FocusRequestPromise> RequestWaylandFocusPromise() {
                                      KeymapWrapper::GetSeat());
   xdg_activation_token_v1_set_surface(aXdgToken, focusSurface);
   xdg_activation_token_v1_commit(aXdgToken);
+
+  LOGW("RequestWaylandFocusPromise() XDG Token sent");
 
   return transferPromise.forget();
 #else  // !defined(MOZ_WAYLAND)
