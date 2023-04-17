@@ -158,6 +158,7 @@ int32_t VideoCaptureAvFoundation::StartCapture(const VideoCaptureCapability& aCa
                                format:format
                                   fps:aCapability.maxFPS
                     completionHandler:^(NSError* error) {
+                      MonitorAutoLock lock2(*copyableMonitor);
                       MOZ_RELEASE_ASSERT(!rv);
                       rv = Some(error ? -1 : 0);
                       copyableMonitor->Notify();
@@ -224,6 +225,7 @@ int32_t VideoCaptureAvFoundation::StopCapture() {
   __block bool done = false;
 
   [mCapturer stopCaptureWithCompletionHandler:^(void) {
+    MonitorAutoLock lock2(*copyableMonitor);
     MOZ_RELEASE_ASSERT(!done);
     done = true;
     copyableMonitor->Notify();
