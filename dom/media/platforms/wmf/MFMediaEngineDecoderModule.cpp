@@ -4,11 +4,13 @@
 
 #include "MFMediaEngineDecoderModule.h"
 
+#include "MFTDecoder.h"
 #include "VideoUtils.h"
 #include "mozilla/MFMediaEngineParent.h"
 #include "mozilla/MFMediaEngineUtils.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/WindowsVersion.h"
+#include "mozilla/mscom/EnsureMTA.h"
 
 namespace mozilla {
 

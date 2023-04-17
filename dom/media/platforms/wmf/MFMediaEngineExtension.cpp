@@ -4,8 +4,12 @@
 
 #include "MFMediaEngineExtension.h"
 
+#include <mfapi.h>
+#include <mferror.h>
+
 #include "MFMediaSource.h"
 #include "MFMediaEngineUtils.h"
+#include "WMF.h"
 
 namespace mozilla {
 
