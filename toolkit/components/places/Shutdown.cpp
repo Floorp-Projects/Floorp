@@ -4,9 +4,14 @@
 
 #include "Shutdown.h"
 #include "mozilla/Unused.h"
+#include "mozilla/Services.h"
 #include "mozilla/SimpleEnumerator.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIProperty.h"
+#include "nsIObserverService.h"
 #include "nsIWritablePropertyBag.h"
+#include "nsVariant.h"
+#include "Database.h"
 
 namespace mozilla {
 namespace places {

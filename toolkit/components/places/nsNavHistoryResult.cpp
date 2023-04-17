@@ -16,17 +16,22 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "prtime.h"
+#include "mozIStorageRow.h"
+#include "mozIStorageResultSet.h"
 #include "nsQueryObject.h"
 #include "mozilla/dom/PlacesObservers.h"
 #include "mozilla/dom/PlacesVisit.h"
 #include "mozilla/dom/PlacesVisitRemoved.h"
 #include "mozilla/dom/PlacesVisitTitle.h"
+#include "mozilla/dom/PlacesBookmarkAddition.h"
+#include "mozilla/dom/PlacesBookmarkRemoved.h"
 #include "mozilla/dom/PlacesBookmarkMoved.h"
 #include "mozilla/dom/PlacesBookmarkKeyword.h"
 #include "mozilla/dom/PlacesBookmarkTags.h"
 #include "mozilla/dom/PlacesBookmarkTime.h"
 #include "mozilla/dom/PlacesBookmarkTitle.h"
 #include "mozilla/dom/PlacesBookmarkUrl.h"
+#include "mozilla/dom/PlacesFavicon.h"
 
 #include "nsCycleCollectionParticipant.h"
 
@@ -71,6 +76,7 @@
 #define MAX_PAGE_REMOVES_BEFORE_REFRESH 10
 
 using namespace mozilla;
+using namespace mozilla::dom;
 using namespace mozilla::places;
 
 namespace {
