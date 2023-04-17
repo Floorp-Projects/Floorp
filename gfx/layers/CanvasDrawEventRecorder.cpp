@@ -514,18 +514,5 @@ void CanvasDrawEventRecorder::StoreSourceSurfaceRecording(
   StoreExternalSurfaceRecording(aSurface, wr::AsUint64(extId));
 }
 
-void CanvasDrawEventRecorder::RecordSourceSurfaceDestruction(void* aSurface) {
-  // We must only record things on the main thread and surfaces that have been
-  // recorded can sometimes be destroyed off the main thread.
-  if (NS_IsMainThread()) {
-    DrawEventRecorderPrivate::RecordSourceSurfaceDestruction(aSurface);
-    return;
-  }
-
-  NS_DispatchToMainThread(NewRunnableMethod<void*>(
-      "DrawEventRecorderPrivate::RecordSourceSurfaceDestruction", this,
-      &DrawEventRecorderPrivate::RecordSourceSurfaceDestruction, aSurface));
-}
-
 }  // namespace layers
 }  // namespace mozilla
