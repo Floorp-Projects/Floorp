@@ -21,8 +21,8 @@ async function test_math(rfp_pref, fdlibm_pref) {
   );
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    // prettier-ignore
     function test() {
-      /* eslint-disable */
       //
       // Tests adapted from https://github.com/arkenfox/TZP/blob/5e3f5ff2c64b4edc7beecd8308aa4f7a3efb49e3/tests/math.html#L158-L319
       //
@@ -98,7 +98,6 @@ async function test_math(rfp_pref, fdlibm_pref) {
       is(Math.exp(1), 2.718281828459045, "Math.exp(1)");
       is(Math.expm1(1), 1.718281828459045, "Math.expm1(1)");
       is(Math.log1p(10), 2.3978952727983707, "Math.log1p(10)");
-      /* eslint-enable */
     }
 
     // Run test in the context of the page.

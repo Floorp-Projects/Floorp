@@ -50,7 +50,7 @@ function Promise_finally(onFinally) {
     };
 
     // CatchFinally Function.
-    // eslint-disable-next-line prettier/prettier
+    // prettier-ignore
     (catchFinally) = function(reason) {
       // Steps 1-2 (implicit).
 
