@@ -154,7 +154,7 @@ ia2AccessibleHyperlink::get_valid(boolean* aValid) {
 
   *aValid = false;
 
-  LocalAccessible* thisObj = LocalAcc();
+  Accessible* thisObj = Acc();
   if (!thisObj) {
     return CO_E_OBJNOTCONNECTED;
   }

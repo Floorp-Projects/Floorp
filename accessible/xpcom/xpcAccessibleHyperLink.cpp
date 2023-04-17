@@ -140,15 +140,7 @@ xpcAccessibleHyperLink::GetValid(bool* aValid) {
 
   if (!Intl()) return NS_ERROR_FAILURE;
 
-  if (Intl()->IsLocal()) {
-    *aValid = Intl()->AsLocal()->IsLinkValid();
-  } else {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    *aValid = Intl()->AsRemote()->IsLinkValid();
-#endif
-  }
+  *aValid = Intl()->IsLinkValid();
 
   return NS_OK;
 }
