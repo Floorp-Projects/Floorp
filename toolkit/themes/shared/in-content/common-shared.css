@@ -690,14 +690,12 @@ xul|search-textbox[disabled="true"] {
 html|a,
 .text-link {
   color: var(--in-content-link-color);
-  text-decoration: none;
 }
 
 html|a:hover,
 .text-link:hover,
 button.text-link:is(:not([disabled="true"]), :enabled):hover {
   color: var(--in-content-link-color-hover);
-  text-decoration: underline;
 }
 
 html|a:visited {

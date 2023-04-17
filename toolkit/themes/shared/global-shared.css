@@ -151,15 +151,11 @@ xul|label[disabled="true"] {
 a {
   color: -moz-nativehyperlinktext;
   cursor: pointer;
-}
-
-:is(a, .text-link):hover {
   text-decoration: underline;
 }
 
 :is(a, .text-link):-moz-lwtheme {
   color: inherit;
-  text-decoration: underline;
 }
 
 :is(a, .text-link):focus-visible {
