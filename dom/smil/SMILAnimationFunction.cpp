@@ -76,6 +76,15 @@ void SMILAnimationFunction::SetAnimationElement(
 bool SMILAnimationFunction::SetAttr(nsAtom* aAttribute, const nsAString& aValue,
                                     nsAttrValue& aResult,
                                     nsresult* aParseResult) {
+  // Some elements such as set and discard don't support all possible attributes
+  if (IsDisallowedAttribute(aAttribute)) {
+    aResult.SetTo(aValue);
+    if (aParseResult) {
+      *aParseResult = NS_OK;
+    }
+    return true;
+  }
+
   bool foundMatch = true;
   nsresult parseResult = NS_OK;
 
@@ -111,6 +120,10 @@ bool SMILAnimationFunction::SetAttr(nsAtom* aAttribute, const nsAString& aValue,
 }
 
 bool SMILAnimationFunction::UnsetAttr(nsAtom* aAttribute) {
+  if (IsDisallowedAttribute(aAttribute)) {
+    return true;
+  }
+
   bool foundMatch = true;
 
   if (aAttribute == nsGkAtoms::by || aAttribute == nsGkAtoms::from ||
@@ -641,15 +654,24 @@ double SMILAnimationFunction::ScaleIntervalProgress(double aProgress,
 }
 
 bool SMILAnimationFunction::HasAttr(nsAtom* aAttName) const {
+  if (IsDisallowedAttribute(aAttName)) {
+    return false;
+  }
   return mAnimationElement->HasAttr(aAttName);
 }
 
 const nsAttrValue* SMILAnimationFunction::GetAttr(nsAtom* aAttName) const {
+  if (IsDisallowedAttribute(aAttName)) {
+    return nullptr;
+  }
   return mAnimationElement->GetParsedAttr(aAttName);
 }
 
 bool SMILAnimationFunction::GetAttr(nsAtom* aAttName,
                                     nsAString& aResult) const {
+  if (IsDisallowedAttribute(aAttName)) {
+    return false;
+  }
   return mAnimationElement->GetAttr(aAttName, aResult);
 }
 
