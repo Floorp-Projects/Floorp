@@ -48,7 +48,7 @@ class FirebasePush : AbstractFirebasePushService()
 
 Place your keys file (`google-services.json`) for FCM in the app module of the project.
 
-~Optionally, add meta tags to your `AndroidManifest.xml` to disable the push service from automatically starting.~ This is not support ed yet (see [#2603](https://github.com/mozilla-mobile/android-components/issues/2603)).
+Optionally, add meta tags to your `AndroidManifest.xml` to disable the push service from automatically starting.
 
 See the [concept-push documentation](../../concept/push/README.md) for generic examples of using the API of components implementing `concept-push`.
 
