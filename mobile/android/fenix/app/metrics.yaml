@@ -568,6 +568,26 @@ events:
     metadata:
       tags:
         - Performance
+  default_engine_selected:
+    type: event
+    description: |
+      A user selected a new default search engine to use
+    extra_keys:
+      engine:
+        type: string
+        description: |
+          The name of the default search engine the user selected as a string.
+          Custom search engine user created will have the name `Custom`.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1827686
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/1674
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 127
+    metadata:
+      tags:
+        - Search
 
 onboarding:
   syn_cfr_shown:

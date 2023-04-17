@@ -25,13 +25,11 @@ import org.mozilla.fenix.GleanMetrics.UnifiedSearch
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Core
-import org.mozilla.fenix.components.Core.Companion.BOOKMARKS_SEARCH_ENGINE_ID
-import org.mozilla.fenix.components.Core.Companion.HISTORY_SEARCH_ENGINE_ID
-import org.mozilla.fenix.components.Core.Companion.TABS_SEARCH_ENGINE_ID
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.crashes.CrashListActivity
 import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.telemetryName
 import org.mozilla.fenix.search.toolbar.SearchSelectorInteractor
 import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
 import org.mozilla.fenix.settings.SupportUtils
@@ -238,22 +236,10 @@ class SearchDialogController(
             }
         }
 
-        val engine = when (searchEngine.type) {
-            SearchEngine.Type.CUSTOM -> "custom"
-            SearchEngine.Type.APPLICATION ->
-                when (searchEngine.id) {
-                    HISTORY_SEARCH_ENGINE_ID -> "history"
-                    BOOKMARKS_SEARCH_ENGINE_ID -> "bookmarks"
-                    TABS_SEARCH_ENGINE_ID -> "tabs"
-                    else -> "application"
-                }
-            else -> searchEngine.name
-        }
-
         if (settings.showUnifiedSearchFeature) {
-            UnifiedSearch.engineSelected.record(UnifiedSearch.EngineSelectedExtra(engine))
+            UnifiedSearch.engineSelected.record(UnifiedSearch.EngineSelectedExtra(searchEngine.telemetryName()))
         } else {
-            SearchShortcuts.selected.record(SearchShortcuts.SelectedExtra(engine))
+            SearchShortcuts.selected.record(SearchShortcuts.SelectedExtra(searchEngine.telemetryName()))
         }
     }
 

@@ -5,6 +5,9 @@
 package org.mozilla.fenix.ext
 
 import mozilla.components.browser.state.search.SearchEngine
+import org.mozilla.fenix.components.Core.Companion.BOOKMARKS_SEARCH_ENGINE_ID
+import org.mozilla.fenix.components.Core.Companion.HISTORY_SEARCH_ENGINE_ID
+import org.mozilla.fenix.components.Core.Companion.TABS_SEARCH_ENGINE_ID
 
 // List of well known search domains, taken from
 // https://searchfox.org/mozilla-central/source/toolkit/components/search/SearchService.jsm#2405
@@ -31,3 +34,19 @@ fun SearchEngine.isCustomEngine(): Boolean =
  */
 fun SearchEngine.isKnownSearchDomain(): Boolean =
     this.resultUrls[0].findAnyOf(wellKnownSearchDomains, 0, true) != null
+
+/**
+ * Return safe search engine name for telemetry purposes.
+ */
+fun SearchEngine.telemetryName(): String =
+    when (type) {
+        SearchEngine.Type.CUSTOM -> "custom"
+        SearchEngine.Type.APPLICATION ->
+            when (id) {
+                HISTORY_SEARCH_ENGINE_ID -> "history"
+                BOOKMARKS_SEARCH_ENGINE_ID -> "bookmarks"
+                TABS_SEARCH_ENGINE_ID -> "tabs"
+                else -> "application"
+            }
+        else -> name
+    }
