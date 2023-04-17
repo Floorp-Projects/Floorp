@@ -687,9 +687,11 @@ export const LoginHelper = {
     } catch (e) {
       // bug 159484 - disallow url types that don't support a hostPort.
       // (although we handle "javascript:..." as a special case above.)
-      lazy.log.warn(
-        `Couldn't parse specified uri ${uriString} with error ${e.name}`
-      );
+      if (uriString && !uriString.startsWith("data")) {
+        lazy.log.warn(
+          `Couldn't parse specified uri ${uriString} with error ${e.name}`
+        );
+      }
       realm = null;
     }
 
