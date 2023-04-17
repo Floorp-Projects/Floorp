@@ -665,48 +665,34 @@ StyleSheet* ServoStyleSet::SheetAt(Origin aOrigin, size_t aIndex) const {
       Servo_StyleSet_GetSheetAt(mRawSet.get(), aOrigin, aIndex));
 }
 
-Maybe<StylePageSizeOrientation> ServoStyleSet::GetDefaultPageSizeOrientation(
-    const nsAtom* aFirstPageName) {
+ServoStyleSet::FirstPageSizeAndOrientation
+ServoStyleSet::GetFirstPageSizeAndOrientation(const nsAtom* aFirstPageName) {
+  FirstPageSizeAndOrientation retval;
   const RefPtr<ComputedStyle> style = ResolvePageContentStyle(aFirstPageName);
   const StylePageSize& pageSize = style->StylePage()->mSize;
-  if (pageSize.IsOrientation()) {
-    return Some(pageSize.AsOrientation());
-  }
-  if (pageSize.IsSize()) {
-    const CSSCoord w = pageSize.AsSize().width.ToCSSPixels();
-    const CSSCoord h = pageSize.AsSize().height.ToCSSPixels();
-    // Sizes that include a zero width or height will be ignored
-    // when getting the page size.
-    if (w > 0 && h > 0) {
-      if (w > h) {
-        return Some(StylePageSizeOrientation::Landscape);
-      }
-      if (w < h) {
-        return Some(StylePageSizeOrientation::Portrait);
-      }
-    }
-  } else {
-    MOZ_ASSERT(pageSize.IsAuto(), "Impossible page size");
-  }
-  return Nothing();
-}
 
-Maybe<nsSize> ServoStyleSet::GetPageSizeForPageName(const nsAtom* aPageName) {
-  const RefPtr<ComputedStyle> style = ResolvePageContentStyle(aPageName);
-  const StylePageSize& pageSize = style->StylePage()->mSize;
   if (pageSize.IsSize()) {
-    nscoord cssPageWidth = pageSize.AsSize().width.ToAppUnits();
-    nscoord cssPageHeight = pageSize.AsSize().height.ToAppUnits();
+    const nscoord w = pageSize.AsSize().width.ToAppUnits();
+    const nscoord h = pageSize.AsSize().height.ToAppUnits();
     // Ignoring sizes that include a zero width or height.
     // These are also ignored in nsPageFrame::ComputePageSize()
     // when calculating the scaling for a page size.
     // In bug 1807985, we might add similar handling for @page margin/size
     // combinations that produce a zero-sized page-content box.
-    if (cssPageWidth > 0 && cssPageHeight > 0) {
-      return Some(nsSize{cssPageWidth, cssPageHeight});
+    if (w > 0 && h > 0) {
+      retval.size.emplace(w, h);
+      if (w > h) {
+        retval.orientation.emplace(StylePageSizeOrientation::Landscape);
+      } else if (w < h) {
+        retval.orientation.emplace(StylePageSizeOrientation::Portrait);
+      }
     }
+  } else if (pageSize.IsOrientation()) {
+    retval.orientation.emplace(pageSize.AsOrientation());
+  } else {
+    MOZ_ASSERT(pageSize.IsAuto(), "Impossible page size");
   }
-  return Nothing();
+  return retval;
 }
 
 void ServoStyleSet::AppendAllNonDocumentAuthorSheets(
