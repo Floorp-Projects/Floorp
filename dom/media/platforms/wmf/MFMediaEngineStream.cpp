@@ -11,8 +11,6 @@
 #include "TimeUnits.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ProfilerMarkerTypes.h"
-#include "WMF.h"
-#include "WMFUtils.h"
 
 namespace mozilla {
 

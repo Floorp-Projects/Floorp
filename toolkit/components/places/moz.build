@@ -86,3 +86,5 @@ include("/ipc/chromium/chromium-config.mozbuild")
 
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Places")
+
+REQUIRES_UNIFIED_BUILD = True

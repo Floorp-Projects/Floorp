@@ -9,7 +9,6 @@
 #include "xpcprivate.h"
 #include "js/Object.h"  // JS::SetReservedSlot
 #include "pratom.h"
-#include "XPCMaps.h"
 
 using namespace mozilla;
 

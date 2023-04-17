@@ -4,12 +4,7 @@
 
 #include "MFMediaEngineAudioStream.h"
 
-#include <mferror.h>
-#include <mfapi.h>
-
 #include "MFMediaEngineUtils.h"
-#include "WMFUtils.h"
-#include "mozilla/StaticPrefs_media.h"
 
 namespace mozilla {
 

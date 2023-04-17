@@ -19,7 +19,6 @@
 
 #include "gtest/gtest.h"
 
-#include "mozilla/Array.h"
 #include "mozilla/Span.h"
 
 #include "nsString.h"

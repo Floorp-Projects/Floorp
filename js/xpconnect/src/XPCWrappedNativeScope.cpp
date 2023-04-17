@@ -15,7 +15,6 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
-#include "XPCMaps.h"
 #include "mozilla/Unused.h"
 #include "js/Object.h"              // JS::GetCompartment
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_DefinePropertyById

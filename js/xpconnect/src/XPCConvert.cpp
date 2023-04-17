@@ -392,6 +392,7 @@ bool XPCConvert::NativeData2JS(JSContext* cx, MutableHandleValue d,
       NS_ERROR("bad type");
       return false;
   }
+  return true;
 }
 
 /***************************************************************************/

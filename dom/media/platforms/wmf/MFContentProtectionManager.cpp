@@ -8,7 +8,6 @@
 #include <winnt.h>
 
 #include "MFMediaEngineUtils.h"
-#include "WMF.h"
 
 namespace mozilla {
 
