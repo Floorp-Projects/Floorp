@@ -625,10 +625,6 @@ Miscellaneous
      - ``std::chrono::time_point``
      -
    * -
-     - mozilla/TypeTraits.h
-     - ``<type_traits>``
-     -
-   * -
      - mozilla/PodOperations.h
      -
      - C++ versions of ``memset``, ``memcpy``, etc.
