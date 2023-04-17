@@ -291,6 +291,9 @@ class SMILAnimationFunction {
   void UnsetKeySplines();
 
   // Helpers
+  virtual bool IsDisallowedAttribute(const nsAtom* aAttribute) const {
+    return false;
+  }
   virtual nsresult InterpolateResult(const SMILValueArray& aValues,
                                      SMILValue& aResult, SMILValue& aBaseValue);
   nsresult AccumulateResult(const SMILValueArray& aValues, SMILValue& aResult);
@@ -312,11 +315,10 @@ class SMILAnimationFunction {
    */
   double ScaleIntervalProgress(double aProgress, uint32_t aIntervalIndex);
 
-  // Convenience attribute getters -- use these instead of querying
-  // mAnimationElement as these may need to be overridden by subclasses
-  virtual bool HasAttr(nsAtom* aAttName) const;
-  virtual const nsAttrValue* GetAttr(nsAtom* aAttName) const;
-  virtual bool GetAttr(nsAtom* aAttName, nsAString& aResult) const;
+  // Convenience attribute getters
+  bool HasAttr(nsAtom* aAttName) const;
+  const nsAttrValue* GetAttr(nsAtom* aAttName) const;
+  bool GetAttr(nsAtom* aAttName, nsAString& aResult) const;
 
   bool ParseAttr(nsAtom* aAttName, const SMILAttr& aSMILAttr,
                  SMILValue& aResult, bool& aPreventCachingOfSandwich) const;

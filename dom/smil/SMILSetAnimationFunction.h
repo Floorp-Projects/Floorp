@@ -19,32 +19,9 @@ namespace mozilla {
 // by a <set> element.
 //
 class SMILSetAnimationFunction : public SMILAnimationFunction {
- public:
-  /*
-   * Sets animation-specific attributes (or marks them dirty, in the case
-   * of from/to/by/values).
-   *
-   * @param aAttribute The attribute being set
-   * @param aValue     The updated value of the attribute.
-   * @param aResult    The nsAttrValue object that may be used for storing the
-   *                   parsed result.
-   * @param aParseResult  Outparam used for reporting parse errors. Will be set
-   *                      to NS_OK if everything succeeds.
-   * @returns true if aAttribute is a recognized animation-related
-   *          attribute; false otherwise.
-   */
-  bool SetAttr(nsAtom* aAttribute, const nsAString& aValue,
-               nsAttrValue& aResult, nsresult* aParseResult = nullptr) override;
-
-  /*
-   * Unsets the given attribute.
-   *
-   * @returns true if aAttribute is a recognized animation-related
-   *          attribute; false otherwise.
-   */
-  bool UnsetAttr(nsAtom* aAttribute) override;
-
  protected:
+  bool IsDisallowedAttribute(const nsAtom* aAttribute) const override;
+
   // Although <set> animation might look like to-animation, unlike to-animation,
   // it never interpolates values.
   // Returning false here will mean this animation function gets treated as
@@ -53,12 +30,7 @@ class SMILSetAnimationFunction : public SMILAnimationFunction {
 
   // <set> applies the exact same value across the simple duration.
   bool IsValueFixedForSimpleDuration() const override { return true; }
-  bool HasAttr(nsAtom* aAttName) const override;
-  const nsAttrValue* GetAttr(nsAtom* aAttName) const override;
-  bool GetAttr(nsAtom* aAttName, nsAString& aResult) const override;
-  bool WillReplace() const override;
-
-  bool IsDisallowedAttribute(const nsAtom* aAttribute) const;
+  bool WillReplace() const override { return true; }
 };
 
 }  // namespace mozilla
