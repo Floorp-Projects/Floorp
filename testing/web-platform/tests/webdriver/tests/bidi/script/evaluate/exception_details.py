@@ -144,7 +144,6 @@ async def test_invalid_script(bidi_session, top_context):
                 'value': {
                     'attributes': {},
                     'childNodeCount': 0,
-                    'children': [],
                     'localName': 'div',
                     'namespaceURI': 'http://www.w3.org/1999/xhtml',
                     'nodeType': 1,
