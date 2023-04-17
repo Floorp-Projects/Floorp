@@ -76,7 +76,7 @@ static string Escape(const string& str) {
   return ret;
 }
 
-static bool WriteStrings(ostream& out, const string& header,
+static bool WriteStrings(std::ostream& out, const string& header,
                          StringTable& strings, bool escape) {
   out << "[" << header << "]" << std::endl;
   for (const auto& iter : strings) {
@@ -95,7 +95,7 @@ static bool WriteStrings(ostream& out, const string& header,
 
 static bool WriteStringsToFile(const string& path, const string& header,
                                StringTable& strings, bool escape) {
-  ofstream* f = UIOpenWrite(path, ios::trunc);
+  std::ofstream* f = UIOpenWrite(path, ios::trunc);
   bool success = false;
   if (f->is_open()) {
     success = WriteStrings(*f, header, strings, escape);
