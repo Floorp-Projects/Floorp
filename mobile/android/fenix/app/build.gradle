@@ -583,12 +583,13 @@ dependencies {
     implementation project(':lib-dataprotect')
 
     debugImplementation FenixDependencies.leakcanary
+    debugImplementation FenixDependencies.androidx_compose_ui_tooling
 
     implementation FenixDependencies.androidx_activity_compose
     implementation FenixDependencies.androidx_activity_ktx
     implementation FenixDependencies.androidx_annotation
     implementation FenixDependencies.androidx_compose_ui
-    implementation FenixDependencies.androidx_compose_ui_tooling
+    implementation FenixDependencies.androidx_compose_ui_tooling_preview
     implementation FenixDependencies.androidx_compose_foundation
     implementation FenixDependencies.androidx_compose_material
     implementation FenixDependencies.androidx_legacy

@@ -80,6 +80,7 @@ object FenixDependencies {
     const val androidx_compose_ui_test = "androidx.compose.ui:ui-test-junit4:${FenixVersions.androidx_compose}"
     const val androidx_compose_ui_test_manifest = "androidx.compose.ui:ui-test-manifest:${FenixVersions.androidx_compose}"
     const val androidx_compose_ui_tooling = "androidx.compose.ui:ui-tooling:${FenixVersions.androidx_compose}"
+    const val androidx_compose_ui_tooling_preview = "androidx.compose.ui:ui-tooling-preview:${FenixVersions.androidx_compose}"
     const val androidx_compose_foundation = "androidx.compose.foundation:foundation:${FenixVersions.androidx_compose}"
     const val androidx_compose_material = "androidx.compose.material:material:${FenixVersions.androidx_compose}"
     const val androidx_annotation = "androidx.annotation:annotation:${FenixVersions.androidx_annotation}"

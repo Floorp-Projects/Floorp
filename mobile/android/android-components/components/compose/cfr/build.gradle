@@ -41,13 +41,15 @@ dependencies {
     implementation project(':ui-icons')
 
     implementation ComponentsDependencies.androidx_compose_ui
-    implementation ComponentsDependencies.androidx_compose_ui_tooling
+    implementation ComponentsDependencies.androidx_compose_ui_tooling_preview
     implementation ComponentsDependencies.androidx_compose_foundation
     implementation ComponentsDependencies.androidx_compose_material
     implementation ComponentsDependencies.androidx_core
     implementation ComponentsDependencies.androidx_core_ktx
     implementation ComponentsDependencies.androidx_lifecycle_runtime
     implementation ComponentsDependencies.androidx_savedstate
+
+    debugImplementation ComponentsDependencies.androidx_compose_ui_tooling
 
     testImplementation project(':support-test')
     testImplementation ComponentsDependencies.androidx_test_core

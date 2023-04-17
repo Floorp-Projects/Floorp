@@ -37,9 +37,11 @@ dependencies {
     implementation project(":feature-session")
     implementation project(":ui-icons")
     implementation ComponentsDependencies.androidx_compose_ui
-    implementation ComponentsDependencies.androidx_compose_ui_tooling
+    implementation ComponentsDependencies.androidx_compose_ui_tooling_preview
     implementation ComponentsDependencies.androidx_compose_foundation
     implementation ComponentsDependencies.androidx_compose_material
+
+    debugImplementation ComponentsDependencies.androidx_compose_ui_tooling
 
     testImplementation project(':support-test')
     testImplementation ComponentsDependencies.androidx_compose_ui_test
