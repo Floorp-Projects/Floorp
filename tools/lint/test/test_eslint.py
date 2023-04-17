@@ -9,7 +9,13 @@ fixed = 0
 @pytest.fixture
 def eslint(lint):
     def inner(*args, **kwargs):
-        kwargs["extra_args"] = ["--no-ignore"]
+        # --no-ignore is for ESLint to avoid the .eslintignore file.
+        # --ignore-path is because Prettier doesn't have the --no-ignore option
+        # and therefore needs to be given an empty file for the tests to work.
+        kwargs["extra_args"] = [
+            "--no-ignore",
+            "--ignore-path=tools/lint/test/files/eslint/testprettierignore",
+        ]
         return lint(*args, **kwargs)
 
     return inner
@@ -37,10 +43,9 @@ def test_bad_import(eslint, config, paths):
     assert results == 1
 
 
-def test_rule(eslint, config, create_temp_file):
+def test_eslint_rule(eslint, config, create_temp_file):
     contents = """var re = /foo   bar/;
-    var re = new RegExp("foo   bar");
-
+var re = new RegExp("foo   bar");
 """
     path = create_temp_file(contents, "bad.js")
     results = eslint(
@@ -50,24 +55,43 @@ def test_rule(eslint, config, create_temp_file):
     assert len(results) == 2
 
 
-def test_fix(eslint, config, create_temp_file):
+def test_eslint_fix(eslint, config, create_temp_file):
     contents = """/*eslint no-regex-spaces: "error"*/
 
-    var re = /foo   bar/;
-    var re = new RegExp("foo   bar");
+var re = /foo   bar/;
+var re = new RegExp("foo   bar");
 
+var re = /foo   bar/;
+var re = new RegExp("foo   bar");
 
-    var re = /foo   bar/;
-    var re = new RegExp("foo   bar");
-
-    var re = /foo   bar/;
-    var re = new RegExp("foo   bar");
-
+var re = /foo   bar/;
+var re = new RegExp("foo   bar");
 """
     path = create_temp_file(contents, "bad.js")
     eslint([path], config=config, root=build.topsrcdir, fix=True)
 
     # ESLint returns counts of files fixed, not errors fixed.
+    assert fixed == 1
+
+
+def test_prettier_rule(eslint, config, create_temp_file):
+    contents = """var re = /foobar/;
+    var re = "foo";
+"""
+    path = create_temp_file(contents, "bad.js")
+    results = eslint([path], config=config, root=build.topsrcdir)
+
+    assert len(results) == 1
+
+
+def test_prettier_fix(eslint, config, create_temp_file):
+    contents = """var re = /foobar/;
+    var re = "foo";
+"""
+    path = create_temp_file(contents, "bad.js")
+    eslint([path], config=config, root=build.topsrcdir, fix=True)
+
+    # Prettier returns counts of files fixed, not errors fixed.
     assert fixed == 1
 
 

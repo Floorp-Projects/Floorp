@@ -2,12 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-let prettierRules = { "prettier/prettier": "error" };
-
-if (process.env.MOZ_SEPARATE_PRETTIER) {
-  prettierRules = { "prettier/prettier": "off" };
-}
-
 module.exports = {
   plugins: ["react", "mozilla", "@babel", "prettier", "import", "file-header"],
   globals: {
@@ -53,7 +47,7 @@ module.exports = {
     jest: true,
   },
   rules: {
-    ...prettierRules,
+    "prettier/prettier": "off",
 
     // These are the rules that have been configured so far to match the
     // devtools coding style.

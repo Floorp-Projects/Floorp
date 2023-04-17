@@ -117,6 +117,10 @@ def lint(config, root, request):
     This will automatically pass in the 'config' and 'root' arguments if not
     specified.
     """
+
+    if hasattr(request.module, "fixed"):
+        request.module.fixed = 0
+
     try:
         func = findobject(config["payload"])
     except (ImportError, ValueError):
