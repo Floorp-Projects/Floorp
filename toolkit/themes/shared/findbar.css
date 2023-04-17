@@ -146,12 +146,6 @@ html|input.findbar-textbox[flash="true"] {
   margin-inline-start: 12px;
 }
 
-.findbar-find-status {
-  /* Don't allow the status to shrink: having it overflow horizontally is
-   * better than vertically centering it but missing the start of the status */
-  flex-shrink: 0;
-}
-
 .findbar-find-status[status="notfound"] {
   font-weight: bold;
 }
