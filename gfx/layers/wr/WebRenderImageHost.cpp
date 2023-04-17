@@ -37,7 +37,6 @@ WebRenderImageHost::WebRenderImageHost(const TextureInfo& aTextureInfo)
       mCurrentAsyncImageManager(nullptr) {}
 
 WebRenderImageHost::~WebRenderImageHost() {
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   MOZ_ASSERT(mPendingRemoteTextureWrappers.empty());
   MOZ_ASSERT(mWrBridges.empty());
 }
