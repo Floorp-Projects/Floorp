@@ -30,5 +30,3 @@ if not CONFIG["MOZILLA_OFFICIAL"]:
 # ]
 
 FINAL_LIBRARY = "xul-gtest"
-
-REQUIRES_UNIFIED_BUILD = True
