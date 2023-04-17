@@ -12,6 +12,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   getFramesFromStack: "chrome://remote/content/shared/Stack.sys.mjs",
   isChromeFrame: "chrome://remote/content/shared/Stack.sys.mjs",
   serialize: "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
+  setDefaultSerializationOptions:
+    "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
   stringify: "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
   WindowRealm: "chrome://remote/content/webdriver-bidi/Realm.sys.mjs",
 });
@@ -76,13 +78,7 @@ class ScriptModule extends Module {
     }
   }
 
-  #buildExceptionDetails(
-    exception,
-    stack,
-    realm,
-    resultOwnership,
-    serializeOptions
-  ) {
+  #buildExceptionDetails(exception, stack, realm, resultOwnership, options) {
     exception = this.#toRawObject(exception);
     const frames = lazy.getFramesFromStack(stack) || [];
 
@@ -104,11 +100,11 @@ class ScriptModule extends Module {
       columnNumber: stack.column - 1,
       exception: lazy.serialize(
         exception,
-        1,
+        lazy.setDefaultSerializationOptions(),
         resultOwnership,
         new Map(),
         realm,
-        serializeOptions
+        options
       ),
       lineNumber: stack.line - 1,
       stackTrace: { callFrames },
@@ -121,7 +117,8 @@ class ScriptModule extends Module {
     realm,
     awaitPromise,
     resultOwnership,
-    serializeOptions
+    serializationOptions,
+    options
   ) {
     let evaluationStatus, exception, result, stack;
 
@@ -163,11 +160,11 @@ class ScriptModule extends Module {
           evaluationStatus,
           result: lazy.serialize(
             this.#toRawObject(result),
-            1,
+            serializationOptions,
             resultOwnership,
             new Map(),
             realm,
-            serializeOptions
+            options
           ),
           realmId: realm.id,
         };
@@ -179,7 +176,7 @@ class ScriptModule extends Module {
             stack,
             realm,
             resultOwnership,
-            serializeOptions
+            options
           ),
           realmId: realm.id,
         };
@@ -302,6 +299,9 @@ class ScriptModule extends Module {
    *     The ownership model to use for the results of this evaluation.
    * @param {string=} options.sandbox
    *     The name of the sandbox.
+   * @param {SerializationOptions=} options.serializationOptions
+   *     An object which holds the information of how the result of evaluation
+   *     in case of ECMAScript objects should be serialized.
    * @param {RemoteValue=} options.thisParameter
    *     The value of the this keyword for the function call.
    *
@@ -320,6 +320,7 @@ class ScriptModule extends Module {
       realmId = null,
       resultOwnership,
       sandbox: sandboxName = null,
+      serializationOptions,
       thisParameter = null,
     } = options;
 
@@ -344,9 +345,16 @@ class ScriptModule extends Module {
       deserializedThis
     );
 
-    return this.#buildReturnValue(rv, realm, awaitPromise, resultOwnership, {
-      nodeCache,
-    });
+    return this.#buildReturnValue(
+      rv,
+      realm,
+      awaitPromise,
+      resultOwnership,
+      serializationOptions,
+      {
+        nodeCache,
+      }
+    );
   }
 
   /**
@@ -399,6 +407,7 @@ class ScriptModule extends Module {
       realmId = null,
       resultOwnership,
       sandbox: sandboxName = null,
+      serializationOptions,
     } = options;
 
     const realm = this.#getRealm(realmId, sandboxName);
@@ -406,9 +415,16 @@ class ScriptModule extends Module {
 
     const rv = realm.executeInGlobal(expression);
 
-    return this.#buildReturnValue(rv, realm, awaitPromise, resultOwnership, {
-      nodeCache,
-    });
+    return this.#buildReturnValue(
+      rv,
+      realm,
+      awaitPromise,
+      resultOwnership,
+      serializationOptions,
+      {
+        nodeCache,
+      }
+    );
   }
 
   /**

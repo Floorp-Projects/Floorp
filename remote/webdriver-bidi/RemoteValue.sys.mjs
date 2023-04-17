@@ -17,6 +17,22 @@ XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
 );
 
 /**
+ * @typedef {object} IncludeShadowTreeMode
+ */
+
+/**
+ * Enum of include shadow tree modes supported by the serialization.
+ *
+ * @readonly
+ * @enum {IncludeShadowTreeMode}
+ */
+export const IncludeShadowTreeMode = {
+  All: "all",
+  None: "none",
+  Open: "open",
+};
+
+/**
  * @typedef {object} OwnershipModel
  */
 
@@ -30,6 +46,20 @@ export const OwnershipModel = {
   None: "none",
   Root: "root",
 };
+
+/**
+ * An object which holds the information of how
+ * ECMAScript objects should be serialized.
+ *
+ * @typedef {object} SerializationOptions
+ *
+ * @property {number} [maxDomDepth=0]
+ *     Depth of a serialization of DOM Nodes. Defaults to 0.
+ * @property {number} [maxObjectDepth=null]
+ *     Depth of a serialization of objects. Defaults to null.
+ * @property {IncludeShadowTreeMode} [includeShadowTree=IncludeShadowTreeMode.None]
+ *     Mode of a serialization of shadow dom. Defaults to "none".
+ */
 
 function getUUID() {
   return Services.uuid
@@ -475,8 +505,8 @@ function isShadowRoot(node) {
  *     Indicates if the <var>value</var> has already been serialized.
  * @param {object} value
  *     The Array-like object to serialize.
- * @param {number|null} maxDepth
- *     Depth of a serialization.
+ * @param {SerializationOptions} serializationOptions
+ *     Options which define how ECMAScript objects should be serialized.
  * @param {OwnershipModel} ownershipType
  *     The ownership model to use for this serialization.
  * @param {Map} serializationInternalMap
@@ -494,7 +524,7 @@ function serializeArrayLike(
   handleId,
   knownObject,
   value,
-  maxDepth,
+  serializationOptions,
   ownershipType,
   serializationInternalMap,
   realm,
@@ -503,10 +533,10 @@ function serializeArrayLike(
   const serialized = buildSerialized(production, handleId);
   setInternalIdsIfNeeded(serializationInternalMap, serialized, value);
 
-  if (!knownObject && maxDepth !== null && maxDepth > 0) {
+  if (!knownObject && serializationOptions.maxObjectDepth !== 0) {
     serialized.value = serializeList(
       value,
-      maxDepth,
+      serializationOptions,
       ownershipType,
       serializationInternalMap,
       realm,
@@ -524,8 +554,8 @@ function serializeArrayLike(
  *
  * @param {Iterable} iterable
  *     List of values to be serialized.
- * @param {number|null} maxDepth
- *     Depth of a serialization.
+ * @param {SerializationOptions} serializationOptions
+ *     Options which define how ECMAScript objects should be serialized.
  * @param {OwnershipModel} ownershipType
  *     The ownership model to use for this serialization.
  * @param {Map} serializationInternalMap
@@ -540,20 +570,26 @@ function serializeArrayLike(
  */
 function serializeList(
   iterable,
-  maxDepth,
+  serializationOptions,
   ownershipType,
   serializationInternalMap,
   realm,
   options
 ) {
+  const { maxObjectDepth } = serializationOptions;
   const serialized = [];
-  const childDepth = maxDepth !== null ? maxDepth - 1 : null;
+  const childSerializationOptions = {
+    ...serializationOptions,
+  };
+  if (maxObjectDepth !== null) {
+    childSerializationOptions.maxObjectDepth = maxObjectDepth - 1;
+  }
 
   for (const item of iterable) {
     serialized.push(
       serialize(
         item,
-        childDepth,
+        childSerializationOptions,
         ownershipType,
         serializationInternalMap,
         realm,
@@ -572,8 +608,8 @@ function serializeList(
  *
  * @param {Iterable} iterable
  *     List of values to be serialized.
- * @param {number|null} maxDepth
- *     Depth of a serialization.
+ * @param {SerializationOptions} serializationOptions
+ *     Options which define how ECMAScript objects should be serialized.
  * @param {OwnershipModel} ownershipType
  *     The ownership model to use for this serialization.
  * @param {Map} serializationInternalMap
@@ -588,14 +624,20 @@ function serializeList(
  */
 function serializeMapping(
   iterable,
-  maxDepth,
+  serializationOptions,
   ownershipType,
   serializationInternalMap,
   realm,
   options
 ) {
+  const { maxObjectDepth } = serializationOptions;
   const serialized = [];
-  const childDepth = maxDepth !== null ? maxDepth - 1 : null;
+  const childSerializationOptions = {
+    ...serializationOptions,
+  };
+  if (maxObjectDepth !== null) {
+    childSerializationOptions.maxObjectDepth = maxObjectDepth - 1;
+  }
 
   for (const [key, item] of iterable) {
     const serializedKey =
@@ -603,7 +645,7 @@ function serializeMapping(
         ? key
         : serialize(
             key,
-            childDepth,
+            childSerializationOptions,
             ownershipType,
             serializationInternalMap,
             realm,
@@ -611,7 +653,7 @@ function serializeMapping(
           );
     const serializedValue = serialize(
       item,
-      childDepth,
+      childSerializationOptions,
       ownershipType,
       serializationInternalMap,
       realm,
@@ -629,8 +671,8 @@ function serializeMapping(
  *
  * @param {Node} node
  *     Node to be serialized.
- * @param {number|null} maxDepth
- *     Depth of a serialization.
+ * @param {SerializationOptions} serializationOptions
+ *     Options which define how ECMAScript objects should be serialized.
  * @param {OwnershipModel} ownershipType
  *     The ownership model to use for this serialization.
  * @param {Map} serializationInternalMap
@@ -645,12 +687,13 @@ function serializeMapping(
  */
 function serializeNode(
   node,
-  maxDepth,
+  serializationOptions,
   ownershipType,
   serializationInternalMap,
   realm,
   options
 ) {
+  const { includeShadowTree, maxDomDepth } = serializationOptions;
   const isAttribute = Attr.isInstance(node);
   const isElement = Element.isInstance(node);
 
@@ -668,16 +711,25 @@ function serializeNode(
   }
 
   serialized.childNodeCount = node.childNodes.length;
-
-  // Bug 1824953: Add support for shadow root children serialization.
-  if (maxDepth !== 0 && !isShadowRoot(node)) {
+  if (
+    maxDomDepth !== 0 &&
+    (!isShadowRoot(node) ||
+      (includeShadowTree === IncludeShadowTreeMode.Open &&
+        node.mode === "open") ||
+      includeShadowTree === IncludeShadowTreeMode.All)
+  ) {
     const children = [];
-    const childDepth = maxDepth !== null ? maxDepth - 1 : null;
+    const childSerializationOptions = {
+      ...serializationOptions,
+    };
+    if (maxDomDepth !== null) {
+      childSerializationOptions.maxDomDepth = maxDomDepth - 1;
+    }
     for (const child of node.childNodes) {
       children.push(
         serialize(
           child,
-          childDepth,
+          childSerializationOptions,
           ownershipType,
           serializationInternalMap,
           realm,
@@ -700,7 +752,7 @@ function serializeNode(
     if (shadowRoot !== null) {
       serialized.shadowRoot = serialize(
         shadowRoot,
-        maxDepth,
+        serializationOptions,
         ownershipType,
         serializationInternalMap,
         realm,
@@ -723,8 +775,8 @@ function serializeNode(
  *
  * @param {object} value
  *     Value of any type to be serialized.
- * @param {number|null} maxDepth
- *     Depth of a serialization.
+ * @param {SerializationOptions} serializationOptions
+ *     Options which define how ECMAScript objects should be serialized.
  * @param {OwnershipModel} ownershipType
  *     The ownership model to use for this serialization.
  * @param {Map} serializationInternalMap
@@ -739,12 +791,13 @@ function serializeNode(
  */
 export function serialize(
   value,
-  maxDepth,
+  serializationOptions,
   ownershipType,
   serializationInternalMap,
   realm,
   options
 ) {
+  const { maxObjectDepth } = serializationOptions;
   const type = typeof value;
 
   // Primitive protocol values
@@ -789,7 +842,7 @@ export function serialize(
       handleId,
       knownObject,
       value,
-      maxDepth,
+      serializationOptions,
       ownershipType,
       serializationInternalMap,
       realm,
@@ -807,10 +860,10 @@ export function serialize(
     const serialized = buildSerialized("map", handleId);
     setInternalIdsIfNeeded(serializationInternalMap, serialized, value);
 
-    if (!knownObject && maxDepth !== null && maxDepth > 0) {
+    if (!knownObject && maxObjectDepth !== 0) {
       serialized.value = serializeMapping(
         value.entries(),
-        maxDepth,
+        serializationOptions,
         ownershipType,
         serializationInternalMap,
         realm
@@ -821,10 +874,10 @@ export function serialize(
     const serialized = buildSerialized("set", handleId);
     setInternalIdsIfNeeded(serializationInternalMap, serialized, value);
 
-    if (!knownObject && maxDepth !== null && maxDepth > 0) {
+    if (!knownObject && maxObjectDepth !== 0) {
       serialized.value = serializeList(
         value.values(),
-        maxDepth,
+        serializationOptions,
         ownershipType,
         serializationInternalMap,
         realm
@@ -860,7 +913,7 @@ export function serialize(
     if (!knownObject) {
       serialized.value = serializeNode(
         value,
-        maxDepth,
+        serializationOptions,
         ownershipType,
         serializationInternalMap,
         realm,
@@ -878,10 +931,10 @@ export function serialize(
   const serialized = buildSerialized("object", handleId);
   setInternalIdsIfNeeded(serializationInternalMap, serialized, value);
 
-  if (!knownObject && maxDepth !== null && maxDepth > 0) {
+  if (!knownObject && maxObjectDepth !== 0) {
     serialized.value = serializeMapping(
       Object.entries(value),
-      maxDepth,
+      serializationOptions,
       ownershipType,
       serializationInternalMap,
       realm,
@@ -889,6 +942,67 @@ export function serialize(
     );
   }
   return serialized;
+}
+
+/**
+ * Set default serialization options.
+ *
+ * @param {SerializationOptions} options
+ *    Options which define how ECMAScript objects should be serialized.
+ * @returns {SerializationOptions}
+ *    Serialiation options with default value added.
+ */
+export function setDefaultSerializationOptions(options = {}) {
+  const serializationOptions = { ...options };
+  if (!("maxDomDepth" in serializationOptions)) {
+    serializationOptions.maxDomDepth = 0;
+  }
+  if (!("maxObjectDepth" in serializationOptions)) {
+    serializationOptions.maxObjectDepth = null;
+  }
+  if (!("includeShadowTree" in serializationOptions)) {
+    serializationOptions.includeShadowTree = IncludeShadowTreeMode.None;
+  }
+
+  return serializationOptions;
+}
+
+/**
+ * Set default values and assert if serialization options have
+ * expected types.
+ *
+ * @param {SerializationOptions} options
+ *    Options which define how ECMAScript objects should be serialized.
+ * @returns {SerializationOptions}
+ *    Serialiation options with default value added.
+ */
+export function setDefaultAndAssertSerializationOptions(options = {}) {
+  lazy.assert.object(options);
+
+  const serializationOptions = setDefaultSerializationOptions(options);
+
+  const {
+    includeShadowTree,
+    maxDomDepth,
+    maxObjectDepth,
+  } = serializationOptions;
+
+  if (maxDomDepth !== null) {
+    lazy.assert.positiveNumber(maxDomDepth);
+  }
+  if (maxObjectDepth !== null) {
+    lazy.assert.positiveNumber(maxObjectDepth);
+  }
+  const includeShadowTreeModesValues = Object.values(IncludeShadowTreeMode);
+  lazy.assert.that(
+    includeShadowTree =>
+      includeShadowTreeModesValues.includes(includeShadowTree),
+    `includeShadowTree ${includeShadowTree} doesn't match allowed values "${includeShadowTreeModesValues.join(
+      "/"
+    )}"`
+  )(includeShadowTree);
+
+  return serializationOptions;
 }
 
 /**

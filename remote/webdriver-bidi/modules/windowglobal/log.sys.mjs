@@ -14,6 +14,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   isChromeFrame: "chrome://remote/content/shared/Stack.sys.mjs",
   OwnershipModel: "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
   serialize: "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
+  setDefaultSerializationOptions:
+    "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
 });
 
 class LogModule extends Module {
@@ -142,9 +144,16 @@ class LogModule extends Module {
       // involved when creating object references, which will not happen with
       // OwnershipModel.None. This will be revisited in Bug 1731589.
       serializedArgs.push(
-        lazy.serialize(arg, 1, lazy.OwnershipModel.None, new Map(), null, {
-          nodeCache,
-        })
+        lazy.serialize(
+          arg,
+          lazy.setDefaultSerializationOptions(),
+          lazy.OwnershipModel.None,
+          new Map(),
+          null,
+          {
+            nodeCache,
+          }
+        )
       );
     }
 
