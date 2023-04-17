@@ -182,12 +182,6 @@ class nsIFormControl : public nsISupports {
   inline bool IsConceptButton() const;
 
   /**
-   * Returns whether this is an ordinal button or a concept button that has no
-   * form associated.
-   */
-  inline bool IsButtonControl() const;
-
-  /**
    * Returns whether this form control can have draggable children.
    * @return whether this form control can have draggable children.
    */
@@ -271,10 +265,6 @@ bool nsIFormControl::IsSubmittableControl() const {
 
 bool nsIFormControl::IsConceptButton() const {
   return IsSubmitControl() || IsButtonElement(ControlType());
-}
-
-bool nsIFormControl::IsButtonControl() const {
-  return IsConceptButton() && (!GetForm() || !IsSubmitControl());
 }
 
 bool nsIFormControl::AllowDraggableChildren() const {

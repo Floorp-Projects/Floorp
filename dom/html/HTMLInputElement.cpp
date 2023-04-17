@@ -4083,10 +4083,7 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
           default:
             break;
         }  // switch
-        if (IsButtonControl()) {
-          HandlePopoverTargetAction();
-        }
-      }  // click or outer activate event
+      }    // click or outer activate event
     } else if ((aVisitor.mItemFlags & NS_IN_SUBMIT_CLICK) &&
                (oldType == FormControlType::InputSubmit ||
                 oldType == FormControlType::InputImage)) {
