@@ -948,6 +948,15 @@
   transform: rotate(270deg) translateX(-100%);
 }
 
+#hiddenCopyElement {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  display: none;
+}
+
 .pdfViewer {
   /* Define this variable here and not in :root to avoid to reflow all the UI
      when scaling (see #15929). */
@@ -1262,11 +1271,6 @@ body {
   opacity: 0.5;
 }
 
-.toolbarButton:hover,
-.toolbarButton:focus-visible {
-  backdrop-filter: blur(20px) contrast(200%) invert(100%);
-}
-
 .toolbarButton::before {
   display: inline-block;
   width: 100%;
@@ -1279,10 +1283,6 @@ body {
 
 .toolbarButton::before {
   opacity: var(--toolbar-icon-opacity);
-}
-
-.toolbarButton:hover::before {
-  backdrop-filter: invert(60%);
 }
 
 #download::before {
