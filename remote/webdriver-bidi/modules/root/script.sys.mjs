@@ -13,6 +13,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   OwnershipModel: "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
   RealmType: "chrome://remote/content/webdriver-bidi/Realm.sys.mjs",
+  setDefaultAndAssertSerializationOptions:
+    "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   WindowGlobalMessageHandler:
     "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs",
@@ -224,6 +226,9 @@ class ScriptModule extends Module {
    * @param {OwnershipModel=} options.resultOwnership
    *     The ownership model to use for the results of this evaluation. Defaults
    *     to `OwnershipModel.None`.
+   * @param {SerializationOptions=} options.serializationOptions
+   *     An object which holds the information of how the result of evaluation
+   *     in case of ECMAScript objects should be serialized.
    * @param {object} options.target
    *     The target for the evaluation, which either matches the definition for
    *     a RealmTarget or for ContextTarget.
@@ -243,6 +248,7 @@ class ScriptModule extends Module {
       awaitPromise,
       functionDeclaration,
       resultOwnership = lazy.OwnershipModel.None,
+      serializationOptions,
       target = {},
       this: thisParameter = null,
     } = options;
@@ -268,6 +274,9 @@ class ScriptModule extends Module {
 
     const { contextId, realmId, sandbox } = this.#assertTarget(target);
     const context = await this.#getContextFromTarget({ contextId, realmId });
+    const serializationOptionsWithDefaults = lazy.setDefaultAndAssertSerializationOptions(
+      serializationOptions
+    );
     const evaluationResult = await this.messageHandler.forwardCommand({
       moduleName: "script",
       commandName: "callFunctionDeclaration",
@@ -282,6 +291,7 @@ class ScriptModule extends Module {
         realmId,
         resultOwnership,
         sandbox,
+        serializationOptions: serializationOptionsWithDefaults,
         thisParameter,
       },
     });
@@ -345,6 +355,9 @@ class ScriptModule extends Module {
    * @param {OwnershipModel=} options.resultOwnership
    *     The ownership model to use for the results of this evaluation. Defaults
    *     to `OwnershipModel.None`.
+   * @param {SerializationOptions=} options.serializationOptions
+   *     An object which holds the information of how the result of evaluation
+   *     in case of ECMAScript objects should be serialized.
    * @param {object} options.target
    *     The target for the evaluation, which either matches the definition for
    *     a RealmTarget or for ContextTarget.
@@ -361,6 +374,7 @@ class ScriptModule extends Module {
       awaitPromise,
       expression: source,
       resultOwnership = lazy.OwnershipModel.None,
+      serializationOptions,
       target = {},
     } = options;
 
@@ -378,6 +392,9 @@ class ScriptModule extends Module {
 
     const { contextId, realmId, sandbox } = this.#assertTarget(target);
     const context = await this.#getContextFromTarget({ contextId, realmId });
+    const serializationOptionsWithDefaults = lazy.setDefaultAndAssertSerializationOptions(
+      serializationOptions
+    );
     const evaluationResult = await this.messageHandler.forwardCommand({
       moduleName: "script",
       commandName: "evaluateExpression",
@@ -391,6 +408,7 @@ class ScriptModule extends Module {
         realmId,
         resultOwnership,
         sandbox,
+        serializationOptions: serializationOptionsWithDefaults,
       },
     });
 

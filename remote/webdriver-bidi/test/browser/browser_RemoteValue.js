@@ -9,7 +9,12 @@ const { NodeCache } = ChromeUtils.importESModule(
 const { Realm, WindowRealm } = ChromeUtils.importESModule(
   "chrome://remote/content/webdriver-bidi/Realm.sys.mjs"
 );
-const { deserialize, serialize, stringify } = ChromeUtils.importESModule(
+const {
+  deserialize,
+  serialize,
+  setDefaultSerializationOptions,
+  stringify,
+} = ChromeUtils.importESModule(
   "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs"
 );
 
@@ -78,18 +83,23 @@ const REMOTE_COMPLEX_VALUES = [
     value: [1],
     serialized: {
       type: "array",
+      value: [{ type: "number", value: 1 }],
     },
   },
   {
     value: [1],
-    maxDepth: 0,
+    serializationOptions: {
+      maxObjectDepth: 0,
+    },
     serialized: {
       type: "array",
     },
   },
   {
     value: [1, "2", true, new RegExp(/foo/g)],
-    maxDepth: 1,
+    serializationOptions: {
+      maxObjectDepth: 1,
+    },
     serialized: {
       type: "array",
       value: [
@@ -109,7 +119,9 @@ const REMOTE_COMPLEX_VALUES = [
   },
   {
     value: [1, [3, "4"]],
-    maxDepth: 1,
+    serializationOptions: {
+      maxObjectDepth: 1,
+    },
     serialized: {
       type: "array",
       value: [{ type: "number", value: 1 }, { type: "array" }],
@@ -117,7 +129,9 @@ const REMOTE_COMPLEX_VALUES = [
   },
   {
     value: [1, [3, "4"]],
-    maxDepth: 2,
+    serializationOptions: {
+      maxObjectDepth: 2,
+    },
     serialized: {
       type: "array",
       value: [
@@ -135,7 +149,9 @@ const REMOTE_COMPLEX_VALUES = [
   },
   {
     value: new Map(),
-    maxDepth: 1,
+    serializationOptions: {
+      maxObjectDepth: 1,
+    },
     serialized: {
       type: "map",
       value: [],
@@ -144,7 +160,9 @@ const REMOTE_COMPLEX_VALUES = [
   },
   {
     value: new Map([]),
-    maxDepth: 1,
+    serializationOptions: {
+      maxObjectDepth: 1,
+    },
     serialized: {
       type: "map",
       value: [],
@@ -159,6 +177,17 @@ const REMOTE_COMPLEX_VALUES = [
     ]),
     serialized: {
       type: "map",
+      value: [
+        [
+          { type: "number", value: 1 },
+          { type: "number", value: 2 },
+        ],
+        ["2", { type: "string", value: "3" }],
+        [
+          { type: "boolean", value: true },
+          { type: "boolean", value: false },
+        ],
+      ],
     },
   },
   {
@@ -167,7 +196,9 @@ const REMOTE_COMPLEX_VALUES = [
       ["2", "3"],
       [true, false],
     ]),
-    maxDepth: 0,
+    serializationOptions: {
+      maxObjectDepth: 0,
+    },
     serialized: {
       type: "map",
     },
@@ -178,7 +209,9 @@ const REMOTE_COMPLEX_VALUES = [
       ["2", "3"],
       [true, false],
     ]),
-    maxDepth: 1,
+    serializationOptions: {
+      maxObjectDepth: 1,
+    },
     serialized: {
       type: "map",
       value: [
@@ -197,7 +230,9 @@ const REMOTE_COMPLEX_VALUES = [
   },
   {
     value: new Set(),
-    maxDepth: 1,
+    serializationOptions: {
+      maxObjectDepth: 1,
+    },
     serialized: {
       type: "set",
       value: [],
@@ -206,7 +241,9 @@ const REMOTE_COMPLEX_VALUES = [
   },
   {
     value: new Set([]),
-    maxDepth: 1,
+    serializationOptions: {
+      maxObjectDepth: 1,
+    },
     serialized: {
       type: "set",
       value: [],
@@ -217,18 +254,27 @@ const REMOTE_COMPLEX_VALUES = [
     value: new Set([1, "2", true]),
     serialized: {
       type: "set",
+      value: [
+        { type: "number", value: 1 },
+        { type: "string", value: "2" },
+        { type: "boolean", value: true },
+      ],
     },
   },
   {
     value: new Set([1, "2", true]),
-    maxDepth: 0,
+    serializationOptions: {
+      maxObjectDepth: 0,
+    },
     serialized: {
       type: "set",
     },
   },
   {
     value: new Set([1, "2", true]),
-    maxDepth: 1,
+    serializationOptions: {
+      maxObjectDepth: 1,
+    },
     serialized: {
       type: "set",
       value: [
@@ -255,11 +301,41 @@ const REMOTE_COMPLEX_VALUES = [
   { value: new ArrayBuffer(), serialized: { type: "arraybuffer" } },
   {
     value: browser.document.querySelectorAll("div"),
-    serialized: { type: "nodelist" },
+    serialized: {
+      type: "nodelist",
+      value: [
+        {
+          type: "node",
+          value: {
+            nodeType: 1,
+            localName: "div",
+            namespaceURI: "http://www.w3.org/1999/xhtml",
+            childNodeCount: 0,
+            attributes: {},
+            shadowRoot: null,
+          },
+        },
+      ],
+    },
   },
   {
     value: browser.document.getElementsByTagName("div"),
-    serialized: { type: "htmlcollection" },
+    serialized: {
+      type: "htmlcollection",
+      value: [
+        {
+          type: "node",
+          value: {
+            nodeType: 1,
+            localName: "div",
+            namespaceURI: "http://www.w3.org/1999/xhtml",
+            childNodeCount: 0,
+            attributes: {},
+            shadowRoot: null,
+          },
+        },
+      ],
+    },
   },
   {
     value: domEl,
@@ -268,7 +344,6 @@ const REMOTE_COMPLEX_VALUES = [
       value: {
         attributes: {},
         childNodeCount: 0,
-        children: [],
         localName: "div",
         namespaceURI: "http://www.w3.org/1999/xhtml",
         nodeType: 1,
@@ -282,7 +357,9 @@ const REMOTE_COMPLEX_VALUES = [
   { value() {}, serialized: { type: "function" } },
   {
     value: {},
-    maxDepth: 1,
+    serializationOptions: {
+      maxObjectDepth: 1,
+    },
     serialized: {
       type: "object",
       value: [],
@@ -297,6 +374,11 @@ const REMOTE_COMPLEX_VALUES = [
     },
     serialized: {
       type: "object",
+      value: [
+        ["1", { type: "number", value: 1 }],
+        ["2", { type: "string", value: "2" }],
+        ["foo", { type: "boolean", value: true }],
+      ],
     },
   },
   {
@@ -305,7 +387,9 @@ const REMOTE_COMPLEX_VALUES = [
       "2": "2",
       foo: true,
     },
-    maxDepth: 0,
+    serializationOptions: {
+      maxObjectDepth: 0,
+    },
     serialized: {
       type: "object",
     },
@@ -316,7 +400,9 @@ const REMOTE_COMPLEX_VALUES = [
       "2": "2",
       foo: true,
     },
-    maxDepth: 1,
+    serializationOptions: {
+      maxObjectDepth: 1,
+    },
     serialized: {
       type: "object",
       value: [
@@ -336,7 +422,9 @@ const REMOTE_COMPLEX_VALUES = [
       },
       foo: true,
     },
-    maxDepth: 2,
+    serializationOptions: {
+      maxObjectDepth: 2,
+    },
     serialized: {
       type: "object",
       value: [
@@ -453,7 +541,7 @@ add_task(function test_deserializeLocalValuesByHandle() {
     // Serialize the value once to get a handle.
     const serializedValue = serialize(
       expectedValue,
-      0,
+      { maxObjectDepth: 0 },
       "root",
       new Map(),
       realm1
@@ -817,11 +905,12 @@ add_task(function test_serializePrimitiveTypes() {
 
   for (const type of PRIMITIVE_TYPES) {
     const { value, serialized } = type;
+    const defaultSerializationOptions = setDefaultSerializationOptions();
 
     const serializationInternalMap = new Map();
     const serializedValue = serialize(
       value,
-      0,
+      defaultSerializationOptions,
       "none",
       serializationInternalMap,
       realm
@@ -834,7 +923,7 @@ add_task(function test_serializePrimitiveTypes() {
     const serializationInternalMapWithRoot = new Map();
     const serializedWithRoot = serialize(
       value,
-      0,
+      defaultSerializationOptions,
       "root",
       serializationInternalMapWithRoot,
       realm
@@ -849,12 +938,13 @@ add_task(function test_serializeRemoteSimpleValues() {
 
   for (const type of REMOTE_SIMPLE_VALUES) {
     const { value, serialized } = type;
+    const defaultSerializationOptions = setDefaultSerializationOptions();
 
     info(`Checking '${serialized.type}' with none ownershipType`);
     const serializationInternalMapWithNone = new Map();
     const serializedValue = serialize(
       value,
-      0,
+      defaultSerializationOptions,
       "none",
       serializationInternalMapWithNone,
       realm
@@ -867,7 +957,7 @@ add_task(function test_serializeRemoteSimpleValues() {
     const serializationInternalMapWithRoot = new Map();
     const serializedWithRoot = serialize(
       value,
-      0,
+      defaultSerializationOptions,
       "root",
       serializationInternalMapWithRoot,
       realm
@@ -891,13 +981,16 @@ add_task(function test_serializeRemoteComplexValues() {
   const realm = new Realm();
 
   for (const type of REMOTE_COMPLEX_VALUES) {
-    const { value, serialized, maxDepth } = type;
+    const { value, serialized, serializationOptions } = type;
+    const serializationOptionsWithDefaults = setDefaultSerializationOptions(
+      serializationOptions
+    );
 
     info(`Checking '${serialized.type}' with none ownershipType`);
     const serializationInternalMapWithNone = new Map();
     const serializedValue = serialize(
       value,
-      maxDepth,
+      serializationOptionsWithDefaults,
       "none",
       serializationInternalMapWithNone,
       realm
@@ -910,7 +1003,7 @@ add_task(function test_serializeRemoteComplexValues() {
     const serializationInternalMapWithRoot = new Map();
     const serializedWithRoot = serialize(
       value,
-      maxDepth,
+      serializationOptionsWithDefaults,
       "root",
       serializationInternalMapWithRoot,
       realm
@@ -942,7 +1035,55 @@ add_task(function test_serializeNodeChildren() {
   const dataSet = [
     {
       node: bodyEl,
-      maxDepth: 0,
+      serializationOptions: {
+        maxDomDepth: null,
+      },
+      serialized: {
+        type: "node",
+        sharedId: bodyElRef,
+        value: {
+          nodeType: 1,
+          localName: "body",
+          namespaceURI: "http://www.w3.org/1999/xhtml",
+          childNodeCount: 2,
+          children: [
+            {
+              type: "node",
+              sharedId: domElRef,
+              value: {
+                nodeType: 1,
+                localName: "div",
+                namespaceURI: "http://www.w3.org/1999/xhtml",
+                childNodeCount: 0,
+                children: [],
+                attributes: {},
+                shadowRoot: null,
+              },
+            },
+            {
+              type: "node",
+              sharedId: iframeElRef,
+              value: {
+                nodeType: 1,
+                localName: "iframe",
+                namespaceURI: "http://www.w3.org/1999/xhtml",
+                childNodeCount: 0,
+                children: [],
+                attributes: {},
+                shadowRoot: null,
+              },
+            },
+          ],
+          attributes: {},
+          shadowRoot: null,
+        },
+      },
+    },
+    {
+      node: bodyEl,
+      serializationOptions: {
+        maxDomDepth: 0,
+      },
       serialized: {
         type: "node",
         sharedId: bodyElRef,
@@ -958,7 +1099,9 @@ add_task(function test_serializeNodeChildren() {
     },
     {
       node: bodyEl,
-      maxDepth: 1,
+      serializationOptions: {
+        maxDomDepth: 1,
+      },
       serialized: {
         type: "node",
         sharedId: bodyElRef,
@@ -1000,7 +1143,9 @@ add_task(function test_serializeNodeChildren() {
     },
     {
       node: domEl,
-      maxDepth: 0,
+      serializationOptions: {
+        maxDomDepth: 0,
+      },
       serialized: {
         type: "node",
         sharedId: domElRef,
@@ -1016,7 +1161,9 @@ add_task(function test_serializeNodeChildren() {
     },
     {
       node: domEl,
-      maxDepth: 1,
+      serializationOptions: {
+        maxDomDepth: 1,
+      },
       serialized: {
         type: "node",
         sharedId: domElRef,
@@ -1033,14 +1180,15 @@ add_task(function test_serializeNodeChildren() {
     },
   ];
 
-  for (const { node, maxDepth, serialized } of dataSet) {
-    info(`Checking '${node.localName}' with maxDepth ${maxDepth}`);
+  for (const { node, serializationOptions, serialized } of dataSet) {
+    const { maxDomDepth } = serializationOptions;
+    info(`Checking '${node.localName}' with maxDomDepth ${maxDomDepth}`);
 
     const serializationInternalMap = new Map();
 
     const serializedValue = serialize(
       node,
-      maxDepth,
+      serializationOptions,
       "none",
       serializationInternalMap,
       realm,
@@ -1068,11 +1216,16 @@ add_task(function test_serializeShadowRoot() {
     // Add the used elements to the cache so that we know the unique reference.
     const customElementRef = nodeCache.getOrCreateNodeReference(customElement);
     const shadowRootRef = nodeCache.getOrCreateNodeReference(shadowRoot);
+    const insideShadowRootElementRef = nodeCache.getOrCreateNodeReference(
+      insideShadowRootElement
+    );
 
     const dataSet = [
       {
         node: customElement,
-        maxDepth: 1,
+        serializationOptions: {
+          maxDomDepth: 1,
+        },
         serialized: {
           type: "node",
           sharedId: customElementRef,
@@ -1095,16 +1248,107 @@ add_task(function test_serializeShadowRoot() {
           },
         },
       },
+      {
+        node: customElement,
+        serializationOptions: {
+          includeShadowTree: "open",
+          maxDomDepth: 1,
+        },
+        serialized: {
+          type: "node",
+          sharedId: customElementRef,
+          value: {
+            attributes: {},
+            childNodeCount: 0,
+            children: [],
+            localName: `${mode}-custom-element`,
+            namespaceURI: "http://www.w3.org/1999/xhtml",
+            nodeType: 1,
+            shadowRoot: {
+              sharedId: shadowRootRef,
+              type: "node",
+              value: {
+                childNodeCount: 1,
+                mode,
+                nodeType: 11,
+                ...(mode === "open"
+                  ? {
+                      children: [
+                        {
+                          type: "node",
+                          sharedId: insideShadowRootElementRef,
+                          value: {
+                            nodeType: 1,
+                            localName: "input",
+                            namespaceURI: "http://www.w3.org/1999/xhtml",
+                            childNodeCount: 0,
+                            attributes: {},
+                            shadowRoot: null,
+                          },
+                        },
+                      ],
+                    }
+                  : {}),
+              },
+            },
+          },
+        },
+      },
+      {
+        node: customElement,
+        serializationOptions: {
+          includeShadowTree: "all",
+          maxDomDepth: 1,
+        },
+        serialized: {
+          type: "node",
+          sharedId: customElementRef,
+          value: {
+            attributes: {},
+            childNodeCount: 0,
+            children: [],
+            localName: `${mode}-custom-element`,
+            namespaceURI: "http://www.w3.org/1999/xhtml",
+            nodeType: 1,
+            shadowRoot: {
+              sharedId: shadowRootRef,
+              type: "node",
+              value: {
+                childNodeCount: 1,
+                mode,
+                nodeType: 11,
+                children: [
+                  {
+                    type: "node",
+                    sharedId: insideShadowRootElementRef,
+                    value: {
+                      nodeType: 1,
+                      localName: "input",
+                      namespaceURI: "http://www.w3.org/1999/xhtml",
+                      childNodeCount: 0,
+                      attributes: {},
+                      shadowRoot: null,
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
     ];
 
-    for (const { node, maxDepth, serialized } of dataSet) {
-      info(`Checking shadow root with maxDepth ${maxDepth}`);
+    for (const { node, serializationOptions, serialized } of dataSet) {
+      const { maxDomDepth, includeShadowTree } = serializationOptions;
+      info(
+        `Checking shadow root with maxDomDepth ${maxDomDepth} and includeShadowTree ${includeShadowTree}`
+      );
 
       const serializationInternalMap = new Map();
 
       const serializedValue = serialize(
         node,
-        maxDepth,
+        serializationOptions,
         "none",
         serializationInternalMap,
         realm,
@@ -1161,7 +1405,7 @@ add_task(function test_serializeWithSerializationInternalMap() {
 
     const serializedValue = serialize(
       value,
-      2,
+      { maxObjectDepth: 2 },
       "none",
       serializationInternalMap,
       realm
@@ -1213,7 +1457,13 @@ add_task(function test_serializeMultipleValuesWithSerializationInternalMap() {
   const obj2 = [1, 2];
   const value = [obj1, obj2, obj1, obj2];
 
-  serialize(value, 2, "none", serializationInternalMap, realm);
+  serialize(
+    value,
+    { maxObjectDepth: 2 },
+    "none",
+    serializationInternalMap,
+    realm
+  );
 
   assertInternalIds(serializationInternalMap, 2);
 
@@ -1237,7 +1487,7 @@ add_task(function test_serializeNodeSharedId() {
 
   const serializedValue = serialize(
     domEl,
-    0,
+    { maxDomDepth: 0 },
     "root",
     serializationInternalMap,
     realm,
@@ -1258,7 +1508,7 @@ add_task(function test_serializeNodeSharedId_noWindowRealm() {
 
   const serializedValue = serialize(
     domEl,
-    0,
+    { maxDomDepth: 0 },
     "none",
     serializationInternalMap,
     realm,
