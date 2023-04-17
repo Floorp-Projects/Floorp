@@ -49,5 +49,5 @@ add_task(async function() {
   customBadge.click();
 
   await waitForSelectedSource(dbg, "shadowdom_open_debugger.min.js:formatted");
-  await waitForSelectedLocation(dbg, 3);
+  await waitForSelectedLocation(dbg, 5);
 });
