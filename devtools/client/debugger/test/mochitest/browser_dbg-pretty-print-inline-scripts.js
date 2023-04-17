@@ -92,7 +92,7 @@ add_task(async function() {
   const secondMessageLink = secondMessage.querySelector(".frame-link-source");
   is(
     secondMessageLink.innerText,
-    `${PRETTY_PRINTED_FILENAME}:38:12`,
+    `${PRETTY_PRINTED_FILENAME}:41:12`,
     "second console message has expected location"
   );
   info(
@@ -101,7 +101,7 @@ add_task(async function() {
   secondMessageLink.click();
   await waitForSelectedSource(dbg, PRETTY_PRINTED_FILENAME);
   ok(true, "pretty printed file was selected in debugger…");
-  await waitForSelectedLocation(dbg, 38);
+  await waitForSelectedLocation(dbg, 41);
   ok(true, "…at the expected location");
 
   info("Check that event listener popup is pointing to pretty-printed file");
@@ -132,7 +132,7 @@ add_task(async function() {
   const headerFilename = header.querySelector(".event-tooltip-filename")
     .innerText;
   ok(
-    headerFilename.endsWith(`${PRETTY_PRINTED_FILENAME}:48`),
+    headerFilename.endsWith(`${PRETTY_PRINTED_FILENAME}:51`),
     `Location in event tooltip is the pretty printed one (${headerFilename})`
   );
   info(
@@ -141,7 +141,7 @@ add_task(async function() {
   header.querySelector(".event-tooltip-debugger-icon").click();
   await waitForSelectedSource(dbg, PRETTY_PRINTED_FILENAME);
   ok(true, "pretty printed file was selected in debugger…");
-  await waitForSelectedLocation(dbg, 48);
+  await waitForSelectedLocation(dbg, 51);
   ok(true, "…at the expected location");
 });
 
@@ -199,12 +199,15 @@ function getExpectedPrettyPrintedHtml() {
     <script id="inline" type="application/javascript">
 ➤const userInfo = JSON.parse(document.getElementById('json-data').text);
 ➤console.log('User information: %o', userInfo);
-➤document.addEventListener('click', function onClick(e) {
-➤  console.log('in inline script');
-  // this is
-  // something
-➤  e.target;
-➤});
+➤document.addEventListener(
+  'click',
+  function onClick(e) {
+➤    console.log('in inline script');
+    // this is
+    // something
+➤    e.target;
+➤  }
+);
 </script>
   </head>
 
