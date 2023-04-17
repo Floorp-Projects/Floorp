@@ -165,11 +165,6 @@ toolbar[brighttext] :is(a, .text-link):-moz-lwtheme,
   color: var(--lwt-brighttext-url-color);
 }
 
-:is(toolbar, panel) :is(a, .text-link):-moz-lwtheme:not(:hover) {
-  text-decoration: none;
-}
-
-
 /* Toolbar / content area border */
 
 #navigator-toolbox {
