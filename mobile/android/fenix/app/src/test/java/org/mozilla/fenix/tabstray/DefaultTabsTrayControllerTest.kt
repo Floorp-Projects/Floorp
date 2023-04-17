@@ -47,6 +47,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.HomeActivity
@@ -943,6 +944,53 @@ class DefaultTabsTrayControllerTest {
 
         assertTrue(showUndoSnackbarForTabInvoked)
         assertFalse(navigateToHomeAndDeleteSessionInvoked)
+    }
+
+    @Test
+    fun `GIVEN no tabs are currently selected WHEN a normal tab is long clicked THEN the tab is selected and the metric is reported`() {
+        val normalTab = TabSessionState(
+            content = ContentState(url = "https://simulate.com", private = false),
+            id = "normalTab",
+        )
+        every { trayStore.state.mode.selectedTabs } returns emptySet()
+
+        assertNull(Collections.longPress.testGetValue())
+
+        createController().handleTabLongClick(normalTab)
+
+        assertNotNull(Collections.longPress.testGetValue())
+        verify { trayStore.dispatch(TabsTrayAction.AddSelectTab(normalTab)) }
+    }
+
+    @Test
+    fun `GIVEN at least one tab is selected WHEN a normal tab is long clicked THEN the long click is ignored`() {
+        val normalTabClicked = TabSessionState(
+            content = ContentState(url = "https://simulate.com", private = false),
+            id = "normalTab",
+        )
+        val alreadySelectedTab = TabSessionState(
+            content = ContentState(url = "https://simulate.com", private = false),
+            id = "selectedTab",
+        )
+        every { trayStore.state.mode.selectedTabs } returns setOf(alreadySelectedTab)
+
+        createController().handleTabLongClick(normalTabClicked)
+
+        assertNull(Collections.longPress.testGetValue())
+        verify(exactly = 0) { trayStore.dispatch(any()) }
+    }
+
+    @Test
+    fun `WHEN a private tab is long clicked THEN the long click is ignored`() {
+        val privateTab = TabSessionState(
+            content = ContentState(url = "https://simulate.com", private = true),
+            id = "privateTab",
+        )
+
+        createController().handleTabLongClick(privateTab)
+
+        assertNull(Collections.longPress.testGetValue())
+        verify(exactly = 0) { trayStore.dispatch(any()) }
     }
 
     private fun createController(

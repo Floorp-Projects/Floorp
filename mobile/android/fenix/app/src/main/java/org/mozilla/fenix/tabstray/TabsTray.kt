@@ -27,8 +27,10 @@ import androidx.compose.ui.unit.dp
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
+import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppState
@@ -41,6 +43,8 @@ import org.mozilla.fenix.theme.FirefoxTheme
 /**
  * Top-level UI for displaying the Tabs Tray feature.
  *
+ * @param appStore [AppStore] used to listen for changes to [AppState].
+ * @param browserStore [BrowserStore] used to listen for changes to [BrowserState].
  * @param tabsTrayStore [TabsTrayStore] used to listen for changes to [TabsTrayState].
  * @param displayTabsInGrid Whether the normal and private tabs should be displayed in a grid.
  * @param onTabClose Invoked when the user clicks to close a tab.
@@ -64,6 +68,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
 @Composable
 fun TabsTray(
     appStore: AppStore,
+    browserStore: BrowserStore,
     tabsTrayStore: TabsTrayStore,
     displayTabsInGrid: Boolean,
     shouldShowInactiveTabsAutoCloseDialog: (Int) -> Boolean,
@@ -81,6 +86,8 @@ fun TabsTray(
     onInactiveTabClick: (TabSessionState) -> Unit,
     onInactiveTabClose: (TabSessionState) -> Unit,
 ) {
+    val selectedTabId = browserStore
+        .observeAsComposableState { state -> state.selectedTabId }.value
     val multiselectMode = tabsTrayStore
         .observeAsComposableState { state -> state.mode }.value ?: TabsTrayState.Mode.Normal
     val selectedPage = tabsTrayStore
@@ -168,6 +175,8 @@ fun TabsTray(
                         TabLayout(
                             tabs = normalTabs,
                             displayTabsInGrid = displayTabsInGrid,
+                            selectedTabId = selectedTabId,
+                            selectionMode = multiselectMode,
                             onTabClose = onTabClose,
                             onTabMediaClick = onTabMediaClick,
                             onTabClick = handleTabClick,
@@ -179,6 +188,8 @@ fun TabsTray(
                         TabLayout(
                             tabs = privateTabs,
                             displayTabsInGrid = displayTabsInGrid,
+                            selectedTabId = selectedTabId,
+                            selectionMode = multiselectMode,
                             onTabClose = onTabClose,
                             onTabMediaClick = onTabMediaClick,
                             onTabClick = handleTabClick,
@@ -202,9 +213,11 @@ fun TabsTray(
 @LightDarkPreview
 @Composable
 private fun TabsTrayPreview() {
+    val tabs = generateFakeTabsList()
     TabsTrayPreviewRoot(
         displayTabsInGrid = false,
-        normalTabs = generateFakeTabsList(),
+        selectedTabId = tabs[0].id,
+        normalTabs = tabs,
         privateTabs = generateFakeTabsList(
             tabCount = 7,
             isPrivate = true,
@@ -212,12 +225,15 @@ private fun TabsTrayPreview() {
     )
 }
 
+@Suppress("MagicNumber")
 @LightDarkPreview
 @Composable
 private fun TabsTrayMultiSelectPreview() {
+    val tabs = generateFakeTabsList()
     TabsTrayPreviewRoot(
-        mode = TabsTrayState.Mode.Select(setOf()),
-        normalTabs = generateFakeTabsList(),
+        selectedTabId = tabs[0].id,
+        mode = TabsTrayState.Mode.Select(tabs.take(4).toSet()),
+        normalTabs = tabs,
     )
 }
 
@@ -237,7 +253,7 @@ private fun TabsTrayInactiveTabsPreview() {
 private fun TabsTrayPrivateTabsPreview() {
     TabsTrayPreviewRoot(
         selectedPage = Page.PrivateTabs,
-        privateTabs = generateFakeTabsList(),
+        privateTabs = generateFakeTabsList(isPrivate = true),
     )
 }
 
@@ -253,6 +269,7 @@ private fun TabsTraySyncedTabsPreview() {
 private fun TabsTrayPreviewRoot(
     displayTabsInGrid: Boolean = true,
     selectedPage: Page = Page.NormalTabs,
+    selectedTabId: String? = null,
     mode: TabsTrayState.Mode = TabsTrayState.Mode.Normal,
     normalTabs: List<TabSessionState> = emptyList(),
     inactiveTabs: List<TabSessionState> = emptyList(),
@@ -272,19 +289,26 @@ private fun TabsTrayPreviewRoot(
             inactiveTabsExpanded = inactiveTabsExpandedState,
         ),
     )
+    val browserStore = BrowserStore(
+        initialState = BrowserState(
+            tabs = normalTabs + privateTabs,
+            selectedTabId = selectedTabId,
+        ),
+    )
     val tabsTrayStore = TabsTrayStore(
         initialState = TabsTrayState(
             selectedPage = selectedPageState,
             mode = mode,
             inactiveTabs = inactiveTabsState,
             normalTabs = normalTabsState,
-            privateTabs = privateTabs,
+            privateTabs = privateTabsState,
         ),
     )
 
     FirefoxTheme {
         TabsTray(
             appStore = appStore,
+            browserStore = browserStore,
             tabsTrayStore = tabsTrayStore,
             displayTabsInGrid = displayTabsInGrid,
             shouldShowInactiveTabsAutoCloseDialog = { true },
@@ -300,8 +324,16 @@ private fun TabsTrayPreviewRoot(
             },
             onTabMediaClick = {},
             onTabClick = {},
-            onTabMultiSelectClick = {},
-            onTabLongClick = {},
+            onTabMultiSelectClick = { tab ->
+                if (tabsTrayStore.state.mode.selectedTabs.contains(tab)) {
+                    tabsTrayStore.dispatch(TabsTrayAction.RemoveSelectTab(tab))
+                } else {
+                    tabsTrayStore.dispatch(TabsTrayAction.AddSelectTab(tab))
+                }
+            },
+            onTabLongClick = { tab ->
+                tabsTrayStore.dispatch(TabsTrayAction.AddSelectTab(tab))
+            },
             onInactiveTabsHeaderClick = {
                 inactiveTabsExpandedState = !inactiveTabsExpandedState
             },

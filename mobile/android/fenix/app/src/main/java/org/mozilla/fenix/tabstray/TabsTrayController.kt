@@ -37,6 +37,7 @@ import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.tabstray.browser.InactiveTabsController
 import org.mozilla.fenix.tabstray.browser.TabsTrayFabController
 import org.mozilla.fenix.tabstray.ext.isActiveDownload
+import org.mozilla.fenix.tabstray.ext.isNormalTab
 import org.mozilla.fenix.tabstray.ext.isSelect
 import org.mozilla.fenix.utils.Settings
 import java.util.concurrent.TimeUnit
@@ -404,7 +405,7 @@ class DefaultTabsTrayController(
     }
 
     override fun handleTabLongClick(tab: TabSessionState): Boolean {
-        return if (tabsTrayStore.state.mode.selectedTabs.isEmpty()) {
+        return if (tab.isNormalTab() && tabsTrayStore.state.mode.selectedTabs.isEmpty()) {
             Collections.longPress.record(NoExtras())
             tabsTrayStore.dispatch(TabsTrayAction.AddSelectTab(tab))
             true

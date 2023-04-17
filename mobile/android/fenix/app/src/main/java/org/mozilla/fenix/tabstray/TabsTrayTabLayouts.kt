@@ -37,6 +37,9 @@ import org.mozilla.fenix.theme.FirefoxTheme
  *
  * @param tabs The list of [TabSessionState] to display.
  * @param displayTabsInGrid Whether the tabs should be displayed in a grid.
+ * @param selectedTabId The ID of the currently selected tab.
+ * @param selectionMode [TabsTrayState.Mode] indicating whether the Tabs Tray is in single selection
+ * or multi-selection and contains the set of selected tabs.
  * @param onTabClose Invoked when the user clicks to close a tab.
  * @param onTabMediaClick Invoked when the user interacts with a tab's media controls.
  * @param onTabClick Invoked when the user clicks on a tab.
@@ -48,6 +51,8 @@ import org.mozilla.fenix.theme.FirefoxTheme
 fun TabLayout(
     tabs: List<TabSessionState>,
     displayTabsInGrid: Boolean,
+    selectedTabId: String?,
+    selectionMode: TabsTrayState.Mode,
     onTabClose: (TabSessionState) -> Unit,
     onTabMediaClick: (TabSessionState) -> Unit,
     onTabClick: (TabSessionState) -> Unit,
@@ -57,6 +62,8 @@ fun TabLayout(
     if (displayTabsInGrid) {
         TabGrid(
             tabs = tabs,
+            selectedTabId = selectedTabId,
+            selectionMode = selectionMode,
             onTabClose = onTabClose,
             onTabMediaClick = onTabMediaClick,
             onTabClick = onTabClick,
@@ -66,6 +73,8 @@ fun TabLayout(
     } else {
         TabList(
             tabs = tabs,
+            selectedTabId = selectedTabId,
+            selectionMode = selectionMode,
             onTabClose = onTabClose,
             onTabMediaClick = onTabMediaClick,
             onTabClick = onTabClick,
@@ -75,9 +84,12 @@ fun TabLayout(
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun TabGrid(
     tabs: List<TabSessionState>,
+    selectedTabId: String?,
+    selectionMode: TabsTrayState.Mode,
     onTabClose: (TabSessionState) -> Unit,
     onTabMediaClick: (TabSessionState) -> Unit,
     onTabClick: (TabSessionState) -> Unit,
@@ -86,6 +98,7 @@ private fun TabGrid(
 ) {
     val state = rememberLazyGridState()
     val tabListBottomPadding = dimensionResource(id = R.dimen.tab_tray_list_bottom_padding)
+    val isInMultiSelectMode = selectionMode is TabsTrayState.Mode.Select
 
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = MIN_COLUMN_WIDTH_DP.dp),
@@ -104,6 +117,9 @@ private fun TabGrid(
         ) { tab ->
             TabGridItem(
                 tab = tab,
+                isSelected = tab.id == selectedTabId,
+                multiSelectionEnabled = isInMultiSelectMode,
+                multiSelectionSelected = selectionMode.selectedTabs.contains(tab),
                 onCloseClick = onTabClose,
                 onMediaClick = onTabMediaClick,
                 onClick = onTabClick,
@@ -117,9 +133,12 @@ private fun TabGrid(
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun TabList(
     tabs: List<TabSessionState>,
+    selectedTabId: String?,
+    selectionMode: TabsTrayState.Mode,
     onTabClose: (TabSessionState) -> Unit,
     onTabMediaClick: (TabSessionState) -> Unit,
     onTabClick: (TabSessionState) -> Unit,
@@ -128,6 +147,7 @@ private fun TabList(
 ) {
     val state = rememberLazyListState()
     val tabListBottomPadding = dimensionResource(id = R.dimen.tab_tray_list_bottom_padding)
+    val isInMultiSelectMode = selectionMode is TabsTrayState.Mode.Select
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -145,6 +165,9 @@ private fun TabList(
         ) { tab ->
             TabListItem(
                 tab = tab,
+                isSelected = tab.id == selectedTabId,
+                multiSelectionEnabled = isInMultiSelectMode,
+                multiSelectionSelected = selectionMode.selectedTabs.contains(tab),
                 onCloseClick = onTabClose,
                 onMediaClick = onTabMediaClick,
                 onClick = onTabClick,
@@ -171,6 +194,8 @@ private fun TabListPreview() {
         ) {
             TabLayout(
                 tabs = tabs,
+                selectedTabId = tabs[1].id,
+                selectionMode = TabsTrayState.Mode.Normal,
                 displayTabsInGrid = false,
                 onTabClose = tabs::remove,
                 onTabMediaClick = {},
@@ -194,10 +219,45 @@ private fun TabGridPreview() {
         ) {
             TabLayout(
                 tabs = tabs,
+                selectedTabId = tabs[0].id,
+                selectionMode = TabsTrayState.Mode.Normal,
                 displayTabsInGrid = true,
                 onTabClose = tabs::remove,
                 onTabMediaClick = {},
                 onTabClick = {},
+                onTabLongClick = {},
+            )
+        }
+    }
+}
+
+@Suppress("MagicNumber")
+@LightDarkPreview
+@Composable
+private fun TabGridMultiSelectPreview() {
+    val tabs = generateFakeTabsList()
+    val selectedTabs = remember { tabs.take(4).toMutableStateList() }
+
+    FirefoxTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(FirefoxTheme.colors.layer1),
+        ) {
+            TabLayout(
+                tabs = tabs,
+                selectedTabId = tabs[0].id,
+                selectionMode = TabsTrayState.Mode.Select(selectedTabs.toSet()),
+                displayTabsInGrid = false,
+                onTabClose = {},
+                onTabMediaClick = {},
+                onTabClick = { tab ->
+                    if (selectedTabs.contains(tab)) {
+                        selectedTabs.remove(tab)
+                    } else {
+                        selectedTabs.add(tab)
+                    }
+                },
                 onTabLongClick = {},
             )
         }
