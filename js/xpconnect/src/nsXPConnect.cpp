@@ -49,7 +49,11 @@
 #include "nsJSUtils.h"
 #include "prsystem.h"
 
-#ifndef XP_WIN
+#include "xpcprivate.h"
+
+#ifdef XP_WIN
+#  include "mozilla/WinHeaderOnlyUtils.h"
+#else
 #  include <sys/mman.h>
 #endif
 

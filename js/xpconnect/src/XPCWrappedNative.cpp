@@ -7,6 +7,7 @@
 /* Wrapper object for reflecting native xpcom objects into JavaScript. */
 
 #include "xpcprivate.h"
+#include "XPCMaps.h"
 #include "nsWrapperCacheInlines.h"
 #include "XPCLog.h"
 #include "js/Array.h"                   // JS::GetArrayLength, JS::IsArrayObject
