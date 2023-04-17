@@ -405,8 +405,12 @@
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s آپݨے آپ سہارا تھیاں سائٹاں تے ساریاں کوکی ارداساں کوں مسترد کرݨ دی کوشش کریندا ہے۔</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">کوکی بینرز شروع تھی ڳئے!</string>
+    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_title">بھلا %1$s کوں کوکی بینراں مسترد کرݨ دی اجازت ݙیوں؟</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">ڄݙݨ ممکن ہووے تاں %1$s کوں کوکی اردساں آپݨے آپ مسترد کرݨ دی اجازت ݙیووں؟</string>
+    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_body">%1$s آپݨے آپ ٻہوں ساریاں کوکی بینر ارداساں مسترد کر سڳدے۔</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">ہݨ نہ</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->

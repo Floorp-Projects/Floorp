@@ -18,6 +18,8 @@
     <string name="mozac_feature_contextmenu_copy_image_location">Copia la ubicació de la imatge</string>
     <!-- Text for context menu item to save / download the image. -->
     <string name="mozac_feature_contextmenu_save_image">Desa la imatge</string>
+    <!-- Text for context menu item to copy the image to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_image">Copia la imatge</string>
     <!-- Text for context menu item to save / download the file. -->
     <string name="mozac_feature_contextmenu_save_file_to_device">Desa el fitxer al dispositiu</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->

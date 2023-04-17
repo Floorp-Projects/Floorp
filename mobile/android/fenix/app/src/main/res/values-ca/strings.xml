@@ -14,8 +14,10 @@
     <string name="content_description_private_browsing_button">Activa la navegació privada</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">Desactiva la navegació privada</string>
-    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
     <string name="search_hint">Escriviu una cerca o adreça</string>
+    <!-- Placeholder text shown in the search bar before a user enters text for a general engine -->
+    <string name="search_hint_general_engine">Cerca al web</string>
     <!-- Placeholder text shown in search bar when using history search -->
     <string name="history_search_hint">Cerca en l’historial</string>
     <!-- Placeholder text shown in search bar when using bookmarks search -->
@@ -65,8 +67,6 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">Obriu la següent pestanya privada amb un sol toc.</string>
-    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">Obriu la següent pestanya privada amb un sol toc.</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Afegeix a la pantalla d’inici</string>
@@ -80,9 +80,6 @@
     <string name="open_in_app_cfr_positive_button_text">Vés als paràmetres</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Descarta</string>
-
-    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
-    <string name="cfr_dismiss_button_default_content_description" moz:removedIn="110" tools:ignore="UnusedResources">Descarta</string>
 
     <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
     <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
@@ -262,8 +259,6 @@
     <string name="search_settings_menu_item">Paràmetres de cerca</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">Aquesta vegada, cerca amb:</string>
-    <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Aquesta vegada, cerca en:</string>
 
     <!-- Home onboarding -->
@@ -300,6 +295,41 @@
     <string name="onboarding_home_enable_notifications_positive_button">Continua</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Ara no</string>
+
+    <!-- Juno first user onboarding flow experiment -->
+    <!-- Title for set firefox as default browser screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_default_browser_title">Feu que el %s sigui el vostre navegador per defecte.</string>
+    <!-- Description for set firefox as default browser screen.
+        The first parameter is the Firefox brand name.
+        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
+    <string name="juno_onboarding_default_browser_description">El %1$s prioritza les persones sobre els beneficis i defensa la vostra privadesa blocant els elements de seguiment entre llocs.\n\nTrobareu més informació en l’%2$s.</string>
+    <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
+    This is part of the string with the key "juno_onboarding_default_browser_description". -->
+    <string name="juno_onboarding_default_browser_description_link_text">avís de privadesa</string>
+
+    <!-- Text for the button to set firefox as default browser on the device -->
+    <string name="juno_onboarding_default_browser_positive_button">Defineix com a navegador per defecte</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_default_browser_negative_button">Ara no</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title">Salteu del telèfon al portàtil, i viceversa</string>
+    <!-- Description for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_description">Recupereu les pestanyes i les contrasenyes dels altres dispositius per continuar des d’on ho havíeu deixat.</string>
+    <!-- Text for the button to sign in to sync on the device -->
+    <string name="juno_onboarding_sign_in_positive_button">Inicia la sessió</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_sign_in_negative_button">Ara no</string>
+    <!-- Title for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_title">Les notificacions us ajuden a fer més coses amb el %s</string>
+    <!-- Description for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_description">Envieu pestanyes entre dispositius, gestioneu les baixades i obteniu consells per a treure el màxim profit del %s.</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="juno_onboarding_enable_notifications_positive_button">Activa les notificacions</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_enable_notifications_negative_button">Ara no</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -362,67 +392,69 @@
     <string name="reduce_cookie_banner_option_off">Desactivada</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
     <string name="reduce_cookie_banner_option_on">Activada</string>
-    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">El Firefox intenta rebutjar automàticament les sol·licituds de galetes que es mostren com a bàners de galetes. Si no hi ha l’opció de rebutjar-les, el Firefox podria acceptar totes les galetes per tancar el bàner.</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
     <string name="reduce_cookie_banner_summary_1">El %1$s intenta rebutjar automàticament les sol·licituds de galetes que es mostren com a bàners de galetes.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Desactivada en aquest lloc</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Cancel·la</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button">Sol·licita que sigui compatible</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title">Reducció de bàners de galetes</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text">S’ha enviat la sol·licitud per a fer que aquest lloc sigui compatible.</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Activada en aquest lloc</string>
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted">S’ha enviat la sol·licitud per a fer que aquest lloc sigui compatible</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">Aquest lloc no és compatible ara per ara</string>
+    <string name="reduce_cookie_banner_unsupported_site">Aquest lloc no és compatible ara per ara</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Voleu activar la reducció de bàners de galetes per a %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">Voleu desactivar la reducció de bàners de galetes per a %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request">Actualment, aquest lloc web no és compatible amb la Reducció de bàners de galetes. Voleu que el nostre equip ho revisi i el faci compatible en el futur?</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">El %1$s esborrarà les galetes d’aquest lloc i actualitzarà la pàgina. En esborrar totes les galetes, pot ser que se us tanquin les sessions o que se us buidin els carros de la compra.</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">El %1$s pot intentar rebutjar automàticament les sol·licituds de galetes. Si no hi ha l’opció de rebutjar-les, el %2$s podria acceptar totes les galetes per tancar el bàner.</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">El %1$s pot intentar rebutjar automàticament les sol·licituds de galetes.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">El %1$s intenta rebutjar automàticament totes les sol·licituds de galetes de tots els llocs compatibles.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title">Adeu als bàners de galetes!</string>
-    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Rebutja automàticament les sol·licituds de galetes, quan sigui possible. Si no es pot, accepta totes les galetes per tancar els bàners de galetes.</string>
-    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Rebutja automàticament les sol·licituds de galetes, quan sigui possible.</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Adeu als bàners de galetes!</string>
+    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_title">Voleu el %1$s rebutgi els bàners de galetes?</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_2">Voleu permetre que el %1$s rebutgi automàticament les sol·licituds de galetes quan sigui possible?</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">Voleu permetre que el %1$s rebutgi automàticament les sol·licituds de galetes quan sigui possible?</string>
+    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_body">El %1$s pot rebutjar automàticament moltes sol·licituds de bàners de galetes.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Ara no</string>
 
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button">Tanca els bàners</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Tanca els bàners</string>
 
     <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
     <string name="reduce_cookie_banner_dialog_snackbar_text">Veureu menys sol·licituds de galetes</string>
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Vegeu menys finestres emergents de galetes</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Vegeu menys finestres emergents de galetes</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Respon automàticament les finestres emergents de galetes per a una navegació sense distraccions. El %1$s rebutjarà totes les sol·licituds, si és possible; si no, les acceptarà totes.</string>
-    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1">Respon automàticament les finestres emergents de galetes per a una navegació sense distraccions. El %1$s rebutjarà totes les sol·licituds, si és possible.</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Respon automàticament les finestres emergents de galetes per a una navegació sense distraccions. El %1$s rebutjarà totes les sol·licituds, si és possible.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Tanca les finestres emergents</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Tanca les finestres emergents</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Reducció de bàners de galetes</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Reducció de bàners de galetes</string>
 
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Voleu permetre que el %1$s rebutgi la sol·licitud de consentiment de galetes d’un lloc si és possible o que accepti l’accés a les galetes quan no sigui possible?</string>
-
-    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1">Voleu permetre que el %1$s rebutgi la sol·licitud de consentiment de galetes d’un lloc, si és possible?</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Voleu permetre que el %1$s rebutgi la sol·licitud de consentiment de galetes d’un lloc, si és possible?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Permet</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Permet</string>
+
+    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
+    <string name="reduce_cookie_banner_dialog_change_setting_button">Permet</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Intenta connectar-se als llocs mitjançant el protocol de xifratge HTTPS automàticament per millorar la seguretat.</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Activat</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Desactivat</string>
     <!-- Summary of https only preference if https only is set to on in all tabs -->
@@ -498,6 +530,12 @@
     <string name="preferences_enable_autocomplete_urls">Emplenament automàtic dels URL</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Obre els enllaços en les aplicacions</string>
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">Sempre</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">Demana-ho abans d’obrir-lo</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">Mai</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Gestor de baixades extern</string>
     <!-- Preference for add_ons -->
@@ -727,15 +765,9 @@
     <!-- Dialog button text for canceling open all tabs -->
     <string name="open_all_warning_cancel">Cancel·la</string>
 
-    <!-- Text to show users they have one site in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%d lloc</string>
     <!-- Text to show users they have one page in the history group section of the History fragment.
     %d is a placeholder for the number of pages in the group. -->
     <string name="history_search_group_site_1">%d pàgina</string>
-    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_sites" moz:RemovedIn="111" tools:ignore="UnusedResources">%d llocs</string>
 
     <!-- Text to show users they have multiple pages in the history group section of the History fragment.
     %d is a placeholder for the number of pages in the group. -->
@@ -1065,8 +1097,6 @@
     <string name="phone_feature_blocked_by_android">Blocat per l’Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Excepcions</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Activada</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Desactivada</string>
     <!-- Summary of tracking protection preference if tracking protection is set to standard -->
@@ -1215,6 +1245,26 @@
     <!-- Text shown in the notification that pops up to re-engage the user.
     %1$s is a placeholder that will be replaced by the app name. -->
     <string name="notification_re_engagement_text">Navegueu sense desar cap galeta ni historial en el %1$s</string>
+
+    <!-- Title A shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_A_title">Navegueu sense deixar rastre</string>
+    <!-- Text A shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_A_text">La navegació privada en el %1$s no desa informació vostra.</string>
+
+    <!-- Title B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_title">Feu la primera cerca</string>
+    <!-- Text B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_text">Trobeu alguna cosa a prop. O descobriu alguna cosa divertida.</string>
+
+    <!-- Survey -->
+    <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_survey_message_text">Us agrairíem que ajudeu a millorar el Firefox fent una breu enquesta.</string>
+    <!-- Preference for taking the short survey. -->
+    <string name="preferences_take_survey">Fes l’enquesta</string>
+    <!-- Preference for not taking the short survey. -->
+    <string name="preferences_not_take_survey">No, gràcies</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
@@ -1432,21 +1482,29 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Protecció contra el seguiment millorada</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Navegueu sense sentir-vos observat</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Navegueu sense sentir-vos observat</string>
+    <!-- Preference summary for enhanced tracking protection settings on/off switch -->
+    <string name="preference_enhanced_tracking_protection_summary">Ara inclou la Protecció total de galetes, la nostra barrera més potent fins ara contra els elements de seguiment entre llocs.</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Protegiu les vostres dades. El %s us protegeix de molts dels elements de seguiment més habituals que recopilen dades sobre allò que feu a Internet.</string>
+    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Protegiu les vostres dades. El %s us protegeix de molts dels elements de seguiment més habituals que recopilen dades sobre allò que feu a Internet.</string>
+    <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation_2">El %s us protegeix de molts dels elements de seguiment més habituals que recopilen dades sobre allò que feu a Internet.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Més informació</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Estàndard (per defecte)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">Equilibri entre privadesa i rendiment. Les pàgines es carreguen amb normalitat.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Equilibri entre privadesa i rendiment. Les pàgines es carreguen amb normalitat.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_5">Les pàgines es carregaran amb normalitat, però es blocaran menys elements de seguiment.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Què es bloca en la protecció contra el seguiment estàndard</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Estricta</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">Bloca més elements de seguiment i fa que les pàgines es carreguin més ràpidament, però podria causar problemes amb algunes funcions de la pàgina.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Bloca més elements de seguiment i fa que les pàgines es carreguin més ràpidament, però podria causar problemes amb algunes funcions de la pàgina.</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_4">Més protecció i millor rendiment, però pot fer que alguns llocs no funcionin correctament.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Què es bloca en la protecció contra el seguiment estricta</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1534,6 +1592,10 @@
     <string name="preference_etp_smartblock_description">Alguns elements de seguiment marcats a continuació s’han desblocat parcialment en aquesta pàgina perquè hi heu interactuat.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">Més informació</string>
+
+    <!-- Content description (not visible, for screen readers etc.):
+    Enhanced tracking protection exception preference icon for ETP settings. -->
+    <string name="preference_etp_exceptions_icon_description">Icona de la preferència d’excepció de protecció contra el seguiment millorada</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Assistència</string>

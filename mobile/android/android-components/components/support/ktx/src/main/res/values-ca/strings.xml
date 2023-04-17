@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://schemas.android.com/apk/res-auto">
     <!-- Text displayed when choosing which app to call with after selecting a phone number-->
     <string name="mozac_support_ktx_menu_call_with">Truca amb…</string>
     <!-- Text displayed when choosing which app to email with after selecting an email address-->
     <string name="mozac_support_ktx_menu_email_with">Envia un correu electrònic amb…</string>
     <string name="mozac_support_ktx_menu_share_with">Comparteix amb…</string>
     <string name="mozac_support_ktx_share_dialog_title">Comparteix mitjançant</string>
+    <!-- Text for confirmation "snackbar" shown after copying an image to the clipboard. -->
+    <string name="mozac_support_ktx_snackbar_delegate_image_copied" moz:removedIn="114" tools:ignore="UnusedResources">S’ha copiat la imatge al porta-retalls</string>
 </resources>
