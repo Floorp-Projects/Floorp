@@ -78,15 +78,18 @@ document.addEventListener('click', e=>{
 
   is(
     prettyEvalSourceValue.trim(),
-    `setTimeout(() =>{
-  debugger;
-  document.addEventListener('click', e=>{
+    `
+setTimeout(
+  () =>{
     debugger;
-  }, {
-    once: true
-  })
-}, 100)
-`.trim(),
+    document.addEventListener('click', e=>{
+      debugger;
+    }, {
+      once: true
+    })
+  },
+  100
+)`.trim(),
     "script was pretty printed as expected"
   );
   await resume(dbg);
@@ -96,7 +99,7 @@ document.addEventListener('click', e=>{
     content.document.body.click();
   });
   await waitForPaused(dbg);
-  await assertPausedAtSourceAndLine(dbg, prettyEvalSource.id, 4);
+  await assertPausedAtSourceAndLine(dbg, prettyEvalSource.id, 5);
   await resume(dbg);
 
   info("Check that pretty printing works in `new Function` source");
