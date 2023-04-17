@@ -73,7 +73,7 @@ policy-DisablePrimaryPasswordCreation = If true, a Primary Password can’t be c
 
 policy-DisablePasswordReveal = Do not allow passwords to be revealed in saved logins.
 
-policy-DisablePocket = Disable the feature to save webpages to Pocket.
+policy-DisablePocket2 = Disable the feature to save webpages to { -pocket-brand-name }.
 
 policy-DisablePrivateBrowsing = Disable Private Browsing.
 
