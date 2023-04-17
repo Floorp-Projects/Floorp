@@ -93,7 +93,7 @@ class SVGGeometryFrame : public nsIFrame, public ISVGDisplayableFrame {
   // SVGGeometryFrame methods
   gfxMatrix GetCanvasTM();
 
-  bool IsInvisible() const;
+  virtual bool IsInvisible() const;
 
  protected:
   // ISVGDisplayableFrame interface:
