@@ -24,6 +24,8 @@ const TEST_PAGE_WITH_NAN_VIDEO_DURATION =
 const TEST_PAGE_WITH_WEBVTT = TEST_ROOT + "test-page-with-webvtt.html";
 const TEST_PAGE_MULTIPLE_CONTEXTS =
   TEST_ROOT + "test-page-multiple-contexts.html";
+const TEST_PAGE_TRANSPARENT_NESTED_IFRAMES =
+  TEST_ROOT + "test-transparent-nested-iframes.html";
 const WINDOW_TYPE = "Toolkit:PictureInPicture";
 const TOGGLE_POSITION_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.position";
