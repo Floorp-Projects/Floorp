@@ -5,8 +5,6 @@
 
 #include "mozilla/storage.h"
 #include "nsString.h"
-#include "nsFaviconService.h"
-#include "nsNavBookmarks.h"
 #include "nsUnicharUtils.h"
 #include "nsWhitespaceTokenizer.h"
 #include "nsEscape.h"
@@ -1015,7 +1013,7 @@ HashFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
 
   RefPtr<nsVariant> result = new nsVariant();
   uint64_t hash;
-  rv = mozilla::places::HashURL(str, mode, &hash);
+  rv = HashURL(str, mode, &hash);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = result->SetAsInt64((int64_t)hash);
   NS_ENSURE_SUCCESS(rv, rv);

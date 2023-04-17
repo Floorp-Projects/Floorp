@@ -84,7 +84,6 @@
 #endif
 
 using namespace mozilla;
-using namespace mozilla::dom;
 using namespace xpc;
 using namespace JS;
 

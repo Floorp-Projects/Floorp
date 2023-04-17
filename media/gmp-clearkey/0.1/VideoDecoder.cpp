@@ -22,7 +22,6 @@
 #include "ClearKeyUtils.h"
 #include "ClearKeyDecryptionManager.h"
 #include "VideoDecoder.h"
-#include "content_decryption_module.h"
 #include "mozilla/CheckedInt.h"
 
 using namespace wmf;
@@ -86,7 +85,7 @@ cdm::Status VideoDecoder::Decode(const cdm::InputBuffer_2& aInputBuffer,
   std::vector<uint8_t>& buffer = data->mBuffer;
 
   if (data->mCrypto.IsValid()) {
-    cdm::Status rv =
+    Status rv =
         ClearKeyDecryptionManager::Get()->Decrypt(buffer, data->mCrypto);
 
     if (STATUS_FAILED(rv)) {
@@ -184,7 +183,7 @@ VideoDecoder::SampleToVideoFrame(IMFSample* aSample, int32_t aPictureWidth,
   HRESULT hr;
   CComPtr<IMFMediaBuffer> mediaBuffer;
 
-  aVideoFrame->SetFormat(cdm::kI420);
+  aVideoFrame->SetFormat(kI420);
 
   // Must convert to contiguous mediaBuffer to use IMD2DBuffer interface.
   hr = aSample->ConvertToContiguousBuffer(&mediaBuffer);
@@ -304,7 +303,7 @@ cdm::Status VideoDecoder::Drain(cdm::VideoFrame* aVideoFrame) {
 
   if (!mDecoder) {
     CK_LOGD("Drain failed! Decoder was not initialized");
-    return cdm::Status::kDecodeError;
+    return Status::kDecodeError;
   }
 
   mDecoder->Drain();

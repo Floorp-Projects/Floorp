@@ -5,7 +5,6 @@
 #ifndef DOM_MEDIA_PLATFORM_WMF_MFCDMPROXY_H
 #define DOM_MEDIA_PLATFORM_WMF_MFCDMPROXY_H
 
-#include <map>
 #include <mfobjects.h>
 #include <unknwn.h>
 #include <windef.h>

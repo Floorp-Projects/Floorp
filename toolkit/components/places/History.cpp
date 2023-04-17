@@ -26,7 +26,6 @@
 #include "mozilla/dom/Link.h"
 #include "nsDocShellCID.h"
 #include "mozilla/Components.h"
-#include "nsAppDirectoryServiceDefs.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
 #include "nsIWidget.h"

@@ -17,7 +17,6 @@
 #include "mozilla/Unused.h"
 #include "mozilla/WinDllServices.h"
 #include "ModuleEvaluator.h"
-#include "ModuleVersionInfo.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsXULAppAPI.h"
