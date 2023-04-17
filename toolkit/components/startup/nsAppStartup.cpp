@@ -401,7 +401,13 @@ nsAppStartup::Quit(uint32_t aMode, int aExitCode, bool* aUserAllowedQuit) {
     auto shutdownMode = ((aMode & eRestart) != 0)
                             ? mozilla::AppShutdownMode::Restart
                             : mozilla::AppShutdownMode::Normal;
-    mozilla::AppShutdown::Init(shutdownMode, aExitCode);
+    // TODO: Add (or pass in) more reasons here for Mac and Linux, see
+    // bug 1827643 and bug 1827644.
+    // See as example the Windows WM_ENDSESSION handling.
+    auto shutdownReason = ((aMode & eRestart) != 0)
+                              ? mozilla::AppShutdownReason::AppRestart
+                              : mozilla::AppShutdownReason::AppClose;
+    mozilla::AppShutdown::Init(shutdownMode, aExitCode, shutdownReason);
 
     if (mozilla::AppShutdown::IsRestarting()) {
       // Mark the next startup as a restart.

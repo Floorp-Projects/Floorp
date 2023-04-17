@@ -5141,6 +5141,7 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
   static const bool sSwitchKeyboardLayout =
       Preferences::GetBool("intl.keyboard.per_window_layout", false);
   static Maybe<bool> sCanQuit;
+  AppShutdownReason shutdownReason = AppShutdownReason::Unknown;
 
   // (Large blocks of code should be broken out into OnEvent handlers.)
   switch (msg) {
@@ -5177,45 +5178,77 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
 #endif
       break;
 
-    case WM_ENDSESSION:
-    case MOZ_WM_APP_QUIT:
-      // For WM_ENDSESSION, wParam indicates whether the session is being ended
-      // (TRUE) or not (FALSE)
-      if (msg == MOZ_WM_APP_QUIT || (wParam && sCanQuit.valueOr(false))) {
-        // Let's fake a shutdown sequence without actually closing windows etc.
-        // to avoid Windows killing us in the middle. A proper shutdown would
-        // require having a chance to pump some messages. Unfortunately
-        // Windows won't let us do that. Bug 212316.
-        nsCOMPtr<nsIObserverService> obsServ =
-            mozilla::services::GetObserverService();
-        const char16_t* syncShutdown = u"syncShutdown";
-        const char16_t* quitType = GetQuitType();
-
-        AppShutdown::Init(AppShutdownMode::Normal, 0);
-
-        obsServ->NotifyObservers(nullptr, "quit-application-granted",
-                                 syncShutdown);
-        obsServ->NotifyObservers(nullptr, "quit-application-forced", nullptr);
-
-        AppShutdown::OnShutdownConfirmed();
-
-        AppShutdown::AdvanceShutdownPhase(ShutdownPhase::AppShutdownConfirmed,
-                                          quitType);
-        AppShutdown::AdvanceShutdownPhase(ShutdownPhase::AppShutdownNetTeardown,
-                                          nullptr);
-        AppShutdown::AdvanceShutdownPhase(ShutdownPhase::AppShutdownTeardown,
-                                          nullptr);
-        AppShutdown::AdvanceShutdownPhase(ShutdownPhase::AppShutdown, nullptr);
-        AppShutdown::AdvanceShutdownPhase(ShutdownPhase::AppShutdownQM,
-                                          nullptr);
-        AppShutdown::AdvanceShutdownPhase(ShutdownPhase::AppShutdownTelemetry,
-                                          nullptr);
-
-        AppShutdown::DoImmediateExit();
+    case WM_ENDSESSION: {
+      // For WM_ENDSESSION, wParam indicates whether we need to shutdown
+      // (TRUE) or not (FALSE).
+      //
+      // TODO: It is not clear if checking sCanQuit here is the right thing
+      // to do. From the WM_ENDSESSION documentation it seems there are cases
+      // where we just need to quit, always. Windows might even have ignored
+      // the WM_QUERYENDSESSION result or sCanQuit might be unset if we did
+      // not pass through WM_QUERYENDSESSION at all ?
+      if (!(wParam && sCanQuit.valueOr(false))) {
+        sCanQuit.reset();
+        result = true;
+        break;
       }
-      sCanQuit.reset();
-      result = true;
+      // According to WM_ENDSESSION lParam documentation:
+      //   0 -> OS shutdown or restart (no way to distinguish)
+      //   ENDSESSION_LOGOFF -> User is logging off
+      //   ENDSESSION_CLOSEAPP -> Application must shutdown
+      //   ENDSESSION_CRITICAL -> Application is forced to shutdown
+      // The difference of the last two is not very clear.
+      if (lParam == 0) {
+        shutdownReason = AppShutdownReason::OSShutdown;
+      } else if (lParam & ENDSESSION_LOGOFF) {
+        shutdownReason = AppShutdownReason::OSSessionEnd;
+      } else if (lParam & (ENDSESSION_CLOSEAPP | ENDSESSION_CRITICAL)) {
+        shutdownReason = AppShutdownReason::OSForceClose;
+      } else {
+        MOZ_DIAGNOSTIC_ASSERT(false,
+                              "Received WM_ENDSESSION with unknown flags.");
+        shutdownReason = AppShutdownReason::OSForceClose;
+      }
+    }
+      [[fallthrough]];
+    case MOZ_WM_APP_QUIT: {
+      if (shutdownReason == AppShutdownReason::Unknown) {
+        // TODO: We do not expect that these days anybody sends us
+        // MOZ_WM_APP_QUIT, see bug 1827807.
+        shutdownReason = AppShutdownReason::WinUnexpectedMozQuit;
+      }
+      // Let's fake a shutdown sequence without actually closing windows etc.
+      // to avoid Windows killing us in the middle. A proper shutdown would
+      // require having a chance to pump some messages. Unfortunately
+      // Windows won't let us do that. Bug 212316.
+      nsCOMPtr<nsIObserverService> obsServ =
+          mozilla::services::GetObserverService();
+      const char16_t* syncShutdown = u"syncShutdown";
+      const char16_t* quitType = GetQuitType();
+
+      AppShutdown::Init(AppShutdownMode::Normal, 0, shutdownReason);
+
+      obsServ->NotifyObservers(nullptr, "quit-application-granted",
+                               syncShutdown);
+      obsServ->NotifyObservers(nullptr, "quit-application-forced", nullptr);
+
+      AppShutdown::OnShutdownConfirmed();
+
+      AppShutdown::AdvanceShutdownPhase(ShutdownPhase::AppShutdownConfirmed,
+                                        quitType);
+      AppShutdown::AdvanceShutdownPhase(ShutdownPhase::AppShutdownNetTeardown,
+                                        nullptr);
+      AppShutdown::AdvanceShutdownPhase(ShutdownPhase::AppShutdownTeardown,
+                                        nullptr);
+      AppShutdown::AdvanceShutdownPhase(ShutdownPhase::AppShutdown, nullptr);
+      AppShutdown::AdvanceShutdownPhase(ShutdownPhase::AppShutdownQM, nullptr);
+      AppShutdown::AdvanceShutdownPhase(ShutdownPhase::AppShutdownTelemetry,
+                                        nullptr);
+
+      AppShutdown::DoImmediateExit();
+      MOZ_ASSERT_UNREACHABLE("Our process was supposed to exit.");
       break;
+    }
 
     case WM_SYSCOLORCHANGE:
       // No need to invalidate layout for system color changes, but we need to

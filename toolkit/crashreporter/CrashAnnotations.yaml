@@ -824,6 +824,13 @@ ShutdownProgress:
   type: string
   ping: true
 
+ShutdownReason:
+  description: >
+    One out of "Unknown", "AppClose", "AppRestart", "OSForceClose",
+    "OSSessionEnd", "OSShutdown" or "WinUnexpectedMozQuit".
+  type: string
+  ping: true
+
 StartupCrash:
   description: >
     If set to 1 then this crash occurred during startup.
