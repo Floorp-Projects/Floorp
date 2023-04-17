@@ -169,14 +169,12 @@ AtkObject* getObjectCB(AtkHyperlink* aLink, gint aLinkIndex) {
     return nullptr;
   }
 
-  if (LocalAccessible* hyperlink = maiLink->GetAccHyperlink()) {
-    LocalAccessible* anchor = hyperlink->AnchorAt(aLinkIndex);
-    NS_ENSURE_TRUE(anchor, nullptr);
-
-    return AccessibleWrap::GetAtkObject(anchor);
+  Accessible* acc = maiLink->Acc();
+  if (!acc) {
+    return nullptr;
   }
 
-  RemoteAccessible* anchor = maiLink->Proxy()->AnchorAt(aLinkIndex);
+  Accessible* anchor = acc->AnchorAt(aLinkIndex);
   return anchor ? GetWrapperFor(anchor) : nullptr;
 }
 

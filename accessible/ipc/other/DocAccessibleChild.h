@@ -224,10 +224,6 @@ class DocAccessibleChild : public DocAccessibleChildBase {
                                                   const uint32_t& aIndex,
                                                   nsCString* aURI,
                                                   bool* aOk) override;
-  virtual mozilla::ipc::IPCResult RecvAnchorAt(const uint64_t& aID,
-                                               const uint32_t& aIndex,
-                                               uint64_t* aIDOfAnchor,
-                                               bool* aOk) override;
 
   virtual mozilla::ipc::IPCResult RecvLinkCount(const uint64_t& aID,
                                                 uint32_t* aCount) override;

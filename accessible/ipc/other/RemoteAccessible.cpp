@@ -433,13 +433,6 @@ void RemoteAccessible::AnchorURIAt(uint32_t aIndex, nsCString& aURI,
   Unused << mDoc->SendAnchorURIAt(mID, aIndex, &aURI, aOk);
 }
 
-RemoteAccessible* RemoteAccessible::AnchorAt(uint32_t aIndex) {
-  uint64_t id = 0;
-  bool ok = false;
-  Unused << mDoc->SendAnchorAt(mID, aIndex, &id, &ok);
-  return ok ? mDoc->GetAccessible(id) : nullptr;
-}
-
 uint32_t RemoteAccessible::LinkCount() {
   uint32_t retVal = 0;
   Unused << mDoc->SendLinkCount(mID, &retVal);

@@ -781,28 +781,6 @@ void RemoteAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
                               static_cast<long>(aX), static_cast<long>(aY));
 }
 
-RemoteAccessible* RemoteAccessible::AnchorAt(uint32_t aIdx) {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    // Not yet supported by the cache.
-    return nullptr;
-  }
-  RefPtr<IAccessibleHyperlink> link =
-      QueryInterface<IAccessibleHyperlink>(this);
-  if (!link) {
-    return nullptr;
-  }
-
-  VARIANT anchor;
-  if (FAILED(link->get_anchor(aIdx, &anchor))) {
-    return nullptr;
-  }
-
-  MOZ_ASSERT(anchor.vt == VT_UNKNOWN);
-  RemoteAccessible* proxyAnchor = GetProxyFor(Document(), anchor.punkVal);
-  anchor.punkVal->Release();
-  return proxyAnchor;
-}
-
 void RemoteAccessible::DOMNodeID(nsString& aID) const {
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return RemoteAccessibleBase<RemoteAccessible>::DOMNodeID(aID);

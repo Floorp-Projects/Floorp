@@ -40,10 +40,6 @@ role HTMLImageMapAccessible::NativeRole() const { return roles::IMAGE_MAP; }
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLImageMapAccessible: HyperLinkAccessible
 
-LocalAccessible* HTMLImageMapAccessible::AnchorAt(uint32_t aAnchorIndex) {
-  return LocalChildAt(aAnchorIndex);
-}
-
 already_AddRefed<nsIURI> HTMLImageMapAccessible::AnchorURIAt(
     uint32_t aAnchorIndex) const {
   LocalAccessible* area = LocalChildAt(aAnchorIndex);

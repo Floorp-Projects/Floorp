@@ -570,6 +570,11 @@ class Accessible {
    */
   uint32_t AnchorCount();
 
+  /**
+   * Returns an anchor accessible at the given index.
+   */
+  Accessible* AnchorAt(uint32_t aAnchorIndex);
+
   // Remote/Local types
 
   virtual bool IsRemote() const = 0;

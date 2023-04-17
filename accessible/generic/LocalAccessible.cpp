@@ -2776,11 +2776,6 @@ bool LocalAccessible::IsLink() const {
   return mParent && mParent->IsHyperText() && !IsText();
 }
 
-LocalAccessible* LocalAccessible::AnchorAt(uint32_t aAnchorIndex) {
-  MOZ_ASSERT(IsLink(), "GetAnchor is called on not hyper link!");
-  return aAnchorIndex == 0 ? this : nullptr;
-}
-
 already_AddRefed<nsIURI> LocalAccessible::AnchorURIAt(
     uint32_t aAnchorIndex) const {
   MOZ_ASSERT(IsLink(), "AnchorURIAt is called on not hyper link!");
