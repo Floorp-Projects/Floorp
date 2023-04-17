@@ -4,12 +4,6 @@
 
 "use strict";
 
-let prettierRules = { "prettier/prettier": "error" };
-
-if (process.env.MOZ_SEPARATE_PRETTIER) {
-  prettierRules = { "prettier/prettier": "off" };
-}
-
 /**
  * The configuration is based on eslint:recommended config. The details for all
  * the ESLint rules, and which ones are in the recommended configuration can
@@ -124,8 +118,6 @@ module.exports = {
   // When adding items to this file please check for effects on all of toolkit
   // and browser
   rules: {
-    ...prettierRules,
-
     // This may conflict with prettier, so we turn it off.
     "arrow-body-style": "off",
 
@@ -346,6 +338,8 @@ module.exports = {
 
     // This may conflict with prettier, so turn it off.
     "prefer-arrow-callback": "off",
+
+    "prettier/prettier": "off",
 
     // This generates too many false positives that are not easy to work around,
     // and false positives seem to be inherent in the rule.

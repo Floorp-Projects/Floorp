@@ -21,7 +21,8 @@ VS Code provides number of extensions for JavaScript, Rust, etc. By default,
 Firefox source tree comes with its own set of recommendations of Visual Studio
 Code extensions. They will be offered when you first open the project.
 
-They are listed in `.vscode/extensions.json <https://searchfox.org/mozilla-central/source/.vscode/extensions.json>`__.
+If you need to refer to them later, the extensions are listed in
+`.vscode/extensions.json <https://searchfox.org/mozilla-central/source/.vscode/extensions.json>`__.
 
 For Rust development, the `rust-analyzer <https://marketplace.visualstudio.com/items?itemName=matklad.rust-analyzer>`__ extension is recommended.
 `See the manual <https://rust-analyzer.github.io/manual.html>`__ for more information.
@@ -73,21 +74,15 @@ Recommended Preferences
 .. note::
 
    These are automatically set when running ``./mach ide vscode`` but may be
-   changed manually.
+   changed manually. These are set only for particular file types.
 
-Code Formatting
-~~~~~~~~~~~~~~~
+* ``"editor.formatOnSave": true``
+    * This will turn on automatically fixing formatting issues when you save a file.
+* ``"editor.defaultFormatter": "esbenp.prettier-vscode"``
+   * This sets the default formatter to prettier using the recommended prettier
+     extension.
 
-This will turn on automatically fixing formatting issues when you save a file:
-
-.. code::
-
-  "editor.formatOnSave": true
-
-File Associations
-~~~~~~~~~~~~~~~~~
-
-``*.jsm`` and ``*.sjs`` file extensions should be associated with JavaScript:
+``*.jsm`` and ``*.sjs`` file extensions should also be associated with JavaScript:
 
 .. code::
 

@@ -107,43 +107,38 @@ def lint(paths, config, binary=None, fix=None, rules=[], setup=None, **lintargs)
         return result
 
     # Then run Prettier
-    if "MOZ_SEPARATE_PRETTIER" in os.environ:
-        patterns = []
-        for p in paths:
-            filename, file_extension = os.path.splitext(p)
-            if file_extension:
-                patterns.append(p)
-            else:
-                patterns.append(
-                    p + "/**/*.+({})".format("|".join(config["extensions"]))
-                )
+    patterns = []
+    for p in paths:
+        filename, file_extension = os.path.splitext(p)
+        if file_extension:
+            patterns.append(p)
+        else:
+            patterns.append(p + "/**/*.+({})".format("|".join(config["extensions"])))
 
-        cmd_args = (
-            [
-                binary,
-                os.path.join(
-                    module_path, "node_modules", "prettier", "bin-prettier.js"
-                ),
-                "--list-different",
-            ]
-            + extra_args
-            # Prettier does not support exclude arguments.
-            # + exclude_args
-            # Prettier only supports this from 2.3 and above (bug 1826062).
-            # + "--no-error-on-unmatched-pattern",
-            + patterns
-        )
-        log.debug("Prettier command: {}".format(" ".join(cmd_args)))
+    cmd_args = (
+        [
+            binary,
+            os.path.join(module_path, "node_modules", "prettier", "bin-prettier.js"),
+            "--list-different",
+        ]
+        + extra_args
+        # Prettier does not support exclude arguments.
+        # + exclude_args
+        # Prettier only supports this from 2.3 and above (bug 1826062).
+        # + "--no-error-on-unmatched-pattern",
+        + patterns
+    )
+    log.debug("Prettier command: {}".format(" ".join(cmd_args)))
 
-        if fix:
-            cmd_args.append("--write")
+    if fix:
+        cmd_args.append("--write")
 
-        prettier_result = run_prettier(cmd_args, config, fix)
-        if prettier_result == 1:
-            return prettier_result
+    prettier_result = run_prettier(cmd_args, config, fix)
+    if prettier_result == 1:
+        return prettier_result
 
-        result["results"].extend(prettier_result["results"])
-        result["fixed"] = result["fixed"] + prettier_result["fixed"]
+    result["results"].extend(prettier_result["results"])
+    result["fixed"] = result["fixed"] + prettier_result["fixed"]
     return result
 
 

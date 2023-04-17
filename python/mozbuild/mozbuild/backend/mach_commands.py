@@ -148,6 +148,12 @@ def setup_vscode(command_context, vscode_cmd):
             "*.jsm": "javascript",
             "*.sjs": "javascript",
         },
+        # Note, the top-level editor settings are left as default to allow the
+        # user's defaults (if any) to take effect.
+        "[javascript][javascriptreact][typescript][typescriptreact]": {
+            "editor.defaultFormatter": "esbenp.prettier-vscode",
+            "editor.formatOnSave": True,
+        },
     }
 
     import difflib
@@ -324,7 +330,6 @@ def setup_clangd_rust_in_vscode(command_context):
 
 
 def get_clang_tools(command_context, clang_tools_path):
-
     import shutil
 
     if os.path.isdir(clang_tools_path):
