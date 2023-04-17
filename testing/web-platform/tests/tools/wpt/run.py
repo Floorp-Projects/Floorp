@@ -265,6 +265,9 @@ Consider installing certutil via your OS package manager or directly.""")
             kwargs["headless"] = True
             logger.info("Running in headless mode, pass --no-headless to disable")
 
+        if kwargs["browser_channel"] == "nightly" and kwargs["enable_webtransport_h3"] is None:
+            kwargs["enable_webtransport_h3"] = True
+
         # Turn off Firefox WebRTC ICE logging on WPT (turned on by mozrunner)
         safe_unsetenv('R_LOG_LEVEL')
         safe_unsetenv('R_LOG_DESTINATION')
