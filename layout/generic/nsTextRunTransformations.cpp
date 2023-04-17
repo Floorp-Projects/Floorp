@@ -12,6 +12,7 @@
 #include "IrishCasing.h"
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/gfx/2D.h"
 #include "nsGkAtoms.h"
@@ -620,6 +621,16 @@ bool nsCaseTransformTextRunFactory::TransformString(
             }
             // If we didn't have any special action to perform, fall through
             // to check for special uppercase (ß)
+          }
+
+          // Updated mapping for German eszett, not currently reflected in the
+          // Unicode data files. This is behind a pref, as it may not work well
+          // with many (esp. older) fonts.
+          if (ch == 0x00DF &&
+              StaticPrefs::
+                  layout_css_text_transform_uppercase_eszett_enabled()) {
+            ch = 0x1E9E;
+            break;
           }
 
           mcm = mozilla::unicode::SpecialUpper(ch);

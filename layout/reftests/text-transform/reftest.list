@@ -42,5 +42,8 @@ fuzzy(0-1,0-80) == all-title.html all-title-ref.html
 == fullwidth-2.html fullwidth-2-ref.html
 == fullwidth-all.html fullwidth-all-ref.html
 
+pref(layout.css.text-transform.uppercase-eszett.enabled,false) == uppercase-eszett-1.html uppercase-eszett-1a-ref.html
+pref(layout.css.text-transform.uppercase-eszett.enabled,true)  == uppercase-eszett-1.html uppercase-eszett-1b-ref.html
+
 # Reset default prefs
 defaults
