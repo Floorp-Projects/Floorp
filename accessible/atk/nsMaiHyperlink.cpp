@@ -210,11 +210,10 @@ gint getAnchorCountCB(AtkHyperlink* aLink) {
   MaiHyperlink* maiLink = GetMaiHyperlink(aLink);
   if (!maiLink) return -1;
 
-  if (LocalAccessible* hyperlink = maiLink->GetAccHyperlink()) {
-    return static_cast<gint>(hyperlink->AnchorCount());
+  Accessible* acc = maiLink->Acc();
+  if (!acc) {
+    return -1;
   }
 
-  bool valid = false;
-  uint32_t anchorCount = maiLink->Proxy()->AnchorCount(&valid);
-  return valid ? static_cast<gint>(anchorCount) : -1;
+  return static_cast<gint>(acc->AnchorCount());
 }

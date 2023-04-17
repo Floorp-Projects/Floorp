@@ -428,12 +428,6 @@ uint32_t RemoteAccessible::EndOffset() {
   return retVal;
 }
 
-uint32_t RemoteAccessible::AnchorCount(bool* aOk) {
-  uint32_t retVal = 0;
-  Unused << mDoc->SendAnchorCount(mID, &retVal, aOk);
-  return retVal;
-}
-
 void RemoteAccessible::AnchorURIAt(uint32_t aIndex, nsCString& aURI,
                                    bool* aOk) {
   Unused << mDoc->SendAnchorURIAt(mID, aIndex, &aURI, aOk);

@@ -56,19 +56,7 @@ xpcAccessibleHyperLink::GetAnchorCount(int32_t* aAnchorCount) {
 
   if (!Intl()) return NS_ERROR_FAILURE;
 
-  if (Intl()->IsLocal()) {
-    *aAnchorCount = Intl()->AsLocal()->AnchorCount();
-  } else {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    bool isCountValid = false;
-    uint32_t anchorCount = Intl()->AsRemote()->AnchorCount(&isCountValid);
-    if (!isCountValid) return NS_ERROR_FAILURE;
-
-    *aAnchorCount = anchorCount;
-#endif
-  }
+  *aAnchorCount = Intl()->AnchorCount();
 
   return NS_OK;
 }

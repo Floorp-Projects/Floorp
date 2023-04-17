@@ -40,8 +40,6 @@ role HTMLImageMapAccessible::NativeRole() const { return roles::IMAGE_MAP; }
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLImageMapAccessible: HyperLinkAccessible
 
-uint32_t HTMLImageMapAccessible::AnchorCount() { return ChildCount(); }
-
 LocalAccessible* HTMLImageMapAccessible::AnchorAt(uint32_t aAnchorIndex) {
   return LocalChildAt(aAnchorIndex);
 }

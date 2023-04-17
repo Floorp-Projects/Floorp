@@ -373,6 +373,15 @@ bool Accessible::IsLinkValid() {
   return (0 == (State() & mozilla::a11y::states::INVALID));
 }
 
+uint32_t Accessible::AnchorCount() {
+  if (IsImageMap()) {
+    return ChildCount();
+  }
+
+  MOZ_ASSERT(IsLink(), "AnchorCount is called on not hyper link!");
+  return 1;
+}
+
 #ifdef A11Y_LOG
 void Accessible::DebugDescription(nsCString& aDesc) const {
   aDesc.Truncate();
