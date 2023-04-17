@@ -41,5 +41,3 @@ if CONFIG["OS_TARGET"] != "WINNT":
     DisableStlWrapping()
 
 include("/toolkit/crashreporter/crashreporter.mozbuild")
-
-REQUIRES_UNIFIED_BUILD = True
