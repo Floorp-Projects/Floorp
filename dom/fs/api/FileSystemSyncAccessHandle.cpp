@@ -342,12 +342,19 @@ void FileSystemSyncAccessHandle::Truncate(uint64_t aSize, ErrorResult& aError) {
                CreateAndRejectBoolPromise);
 
         LOG(("%p: Truncate to %" PRIu64, selfHolder->mStream.get(), aSize));
-
+        int64_t offset = 0;
+        QM_TRY(MOZ_TO_RESULT(selfHolder->mStream->Tell(&offset)),
+               CreateAndRejectBoolPromise);
         QM_TRY(MOZ_TO_RESULT(selfHolder->mStream->Seek(
                    nsISeekableStream::NS_SEEK_SET, aSize)),
                CreateAndRejectBoolPromise);
 
         QM_TRY(MOZ_TO_RESULT(selfHolder->mStream->SetEOF()),
+               CreateAndRejectBoolPromise);
+        // restore cursor position (clamp to end of file)
+        QM_TRY(MOZ_TO_RESULT(selfHolder->mStream->Seek(
+                   nsISeekableStream::NS_SEEK_SET,
+                   std::min((uint64_t)offset, aSize))),
                CreateAndRejectBoolPromise);
 
         return BoolPromise::CreateAndResolve(true, __func__);
@@ -541,18 +548,12 @@ uint64_t FileSystemSyncAccessHandle::ReadOrWrite(
     return Span{buffer.Data(), buffer.Length()};
   }();
 
-  // Handle seek before read ('at')
-  const auto at = [&aOptions]() -> uint64_t {
-    if (aOptions.mAt.WasPassed()) {
-      return aOptions.mAt.Value();
-    }
-    // Spec says default for at is 0 (2.6)
-    return 0;
-  }();
-
-  const auto offset = CheckedInt<int64_t>(at);
-  QM_TRY(MOZ_TO_RESULT(offset.isValid()), throwAndReturn);
-
+  CheckedInt<int64_t> offset = 0;
+  if (aOptions.mAt.WasPassed()) {
+    // Handle seek before read ('at')
+    offset = CheckedInt<int64_t>(aOptions.mAt.Value());
+    QM_TRY(MOZ_TO_RESULT(offset.isValid()), throwAndReturn);
+  }
   AutoSyncLoopHolder syncLoop(mWorkerRef->Private(), Canceling);
 
   nsCOMPtr<nsISerialEventTarget> syncLoopTarget =
@@ -566,17 +567,19 @@ uint64_t FileSystemSyncAccessHandle::ReadOrWrite(
 
   InvokeAsync(
       mIOTaskQueue, __func__,
-      [selfHolder = fs::TargetPtrHolder(this), dataSpan, offset, aRead,
-       &totalCount]() {
+      [selfHolder = fs::TargetPtrHolder(this), dataSpan,
+       use_offset = aOptions.mAt.WasPassed(), offset, aRead, &totalCount]() {
         QM_TRY(MOZ_TO_RESULT(selfHolder->EnsureStream()),
                CreateAndRejectBoolPromise);
 
-        LOG_VERBOSE(("%p: Seeking to %" PRIu64, selfHolder->mStream.get(),
-                     offset.value()));
+        if (use_offset) {
+          LOG_VERBOSE(("%p: Seeking to %" PRIu64, selfHolder->mStream.get(),
+                       offset.value()));
 
-        QM_TRY(MOZ_TO_RESULT(selfHolder->mStream->Seek(
-                   nsISeekableStream::NS_SEEK_SET, offset.value())),
-               CreateAndRejectBoolPromise);
+          QM_TRY(MOZ_TO_RESULT(selfHolder->mStream->Seek(
+                     nsISeekableStream::NS_SEEK_SET, offset.value())),
+                 CreateAndRejectBoolPromise);
+        }
 
         nsCOMPtr<nsIInputStream> inputStream;
         nsCOMPtr<nsIOutputStream> outputStream;
