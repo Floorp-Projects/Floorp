@@ -1982,6 +1982,9 @@ class WalkerActor extends Actor {
   onSubtreeModified(evt) {
     const action = evt.type === "devtoolschildinserted" ? "add" : "remove";
     let node = evt.target;
+    if (node.isNativeAnonymous && !this.showAllAnonymousContent) {
+      return;
+    }
     while ((node = node.parentNode) !== null) {
       const mutationBpInfo = this._breakpointInfoForNode(node);
       if (mutationBpInfo?.subtree) {
