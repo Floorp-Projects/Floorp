@@ -14,7 +14,6 @@
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/RWLock.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/WeakPtr.h"
@@ -1123,7 +1122,8 @@ namespace detail {
 // JNI ref arguments as global refs to avoid the arguments going out of scope.
 template <typename T>
 struct ProxyArg {
-  static_assert(mozilla::IsPod<T>::value, "T must be primitive type");
+  static_assert(std::is_trivial_v<T> && std::is_standard_layout_v<T>,
+                "T must be primitive type");
 
   // Primitive types can be saved by value.
   typedef T Type;

@@ -16,7 +16,6 @@
 #include "mozilla/ipc/SharedMemoryBasic.h"
 #include "mozilla/Logging.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/TypeTraits.h"
 #include "nsExceptionHandler.h"
 #include "nsString.h"
 #include "WebGLTypes.h"

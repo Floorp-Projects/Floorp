@@ -9,7 +9,6 @@
 #include "mozilla/Alignment.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EndianUtils.h"
-#include "mozilla/TypeTraits.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 
@@ -18,6 +17,7 @@
 #include <limits>
 #include <string>
 #include <algorithm>
+#include <type_traits>
 
 #include "nsDebug.h"
 
@@ -90,7 +90,8 @@ PickleIterator::PickleIterator(const Pickle& pickle)
 
 template <typename T>
 void PickleIterator::CopyInto(T* dest) {
-  static_assert(mozilla::IsPod<T>::value, "Copied type must be a POD type");
+  static_assert(std::is_trivially_copyable<T>::value,
+                "Copied type must be a POD type");
   Copier<T, sizeof(T),
          (MOZ_ALIGNOF(T) <=
           sizeof(Pickle::memberAlignmentType))>::Copy(dest, iter_.Data());

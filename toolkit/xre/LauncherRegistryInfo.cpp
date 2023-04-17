@@ -15,6 +15,7 @@
 #include <cwctype>
 #include <shlobj.h>
 #include <string>
+#include <type_traits>
 
 #define EXPAND_STRING_MACRO2(t) t
 #define EXPAND_STRING_MACRO(t) EXPAND_STRING_MACRO2(t)
@@ -47,7 +48,7 @@ static mozilla::LauncherResult<DWORD> GetCurrentImageTimestamp() {
 template <typename T>
 static mozilla::LauncherResult<mozilla::Maybe<T>> ReadRegistryValueData(
     const nsAutoRegKey& key, const std::wstring& name, DWORD expectedType) {
-  static_assert(mozilla::IsPod<T>::value,
+  static_assert(std::is_trivial_v<T> && std::is_standard_layout_v<T>,
                 "Registry value type must be primitive.");
   T data;
   DWORD dataLen = sizeof(data);
@@ -111,7 +112,7 @@ static mozilla::LauncherVoidResult WriteRegistryValueString(
 template <typename T>
 static mozilla::LauncherVoidResult WriteRegistryValueData(
     const nsAutoRegKey& key, const std::wstring& name, DWORD type, T data) {
-  static_assert(mozilla::IsPod<T>::value,
+  static_assert(std::is_trivial_v<T> && std::is_standard_layout_v<T>,
                 "Registry value type must be primitive.");
   LSTATUS status =
       ::RegSetValueExW(key.get(), name.c_str(), 0, type,
