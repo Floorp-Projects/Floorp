@@ -363,6 +363,16 @@ void Accessible::GetPositionAndSetSize(int32_t* aPosInSet, int32_t* aSetSize) {
   }
 }
 
+bool Accessible::IsLinkValid() {
+  MOZ_ASSERT(IsLink(), "IsLinkValid is called on not hyper link!");
+
+  // XXX In order to implement this we would need to follow every link
+  // Perhaps we can get information about invalid links from the cache
+  // In the mean time authors can use role="link" aria-invalid="true"
+  // to force it for links they internally know to be invalid
+  return (0 == (State() & mozilla::a11y::states::INVALID));
+}
+
 #ifdef A11Y_LOG
 void Accessible::DebugDescription(nsCString& aDesc) const {
   aDesc.Truncate();

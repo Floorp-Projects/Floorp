@@ -781,24 +781,6 @@ void RemoteAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
                               static_cast<long>(aX), static_cast<long>(aY));
 }
 
-bool RemoteAccessible::IsLinkValid() {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    // Not yet supported by the cache.
-    return false;
-  }
-  RefPtr<IAccessibleHyperlink> acc = QueryInterface<IAccessibleHyperlink>(this);
-  if (!acc) {
-    return false;
-  }
-
-  boolean valid;
-  if (FAILED(acc->get_valid(&valid))) {
-    return false;
-  }
-
-  return valid;
-}
-
 uint32_t RemoteAccessible::AnchorCount(bool* aOk) {
   *aOk = false;
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {

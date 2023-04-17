@@ -560,6 +560,11 @@ class Accessible {
 
   virtual bool HasNumericValue() const = 0;
 
+  /**
+   * Return true if the link is valid (e. g. points to a valid URL).
+   */
+  bool IsLinkValid();
+
   // Remote/Local types
 
   virtual bool IsRemote() const = 0;

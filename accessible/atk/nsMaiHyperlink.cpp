@@ -198,11 +198,12 @@ gboolean isValidCB(AtkHyperlink* aLink) {
   MaiHyperlink* maiLink = GetMaiHyperlink(aLink);
   if (!maiLink) return false;
 
-  if (LocalAccessible* hyperlink = maiLink->GetAccHyperlink()) {
-    return static_cast<gboolean>(hyperlink->IsLinkValid());
+  Accessible* acc = maiLink->Acc();
+  if (!acc) {
+    return false;
   }
 
-  return static_cast<gboolean>(maiLink->Proxy()->IsLinkValid());
+  return static_cast<gboolean>(acc->IsLinkValid());
 }
 
 gint getAnchorCountCB(AtkHyperlink* aLink) {

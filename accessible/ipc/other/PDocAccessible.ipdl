@@ -240,7 +240,6 @@ child:
 
   [Nested=inside_sync] sync StartOffset(uint64_t aID) returns(uint32_t aRetVal, bool aOk);
   [Nested=inside_sync] sync EndOffset(uint64_t aID) returns(uint32_t aRetVal, bool aOk);
-  [Nested=inside_sync] sync IsLinkValid(uint64_t aID) returns(bool aRetVal);
   [Nested=inside_sync] sync AnchorCount(uint64_t aID) returns(uint32_t aRetVal, bool aOk);
   [Nested=inside_sync] sync AnchorURIAt(uint64_t aID, uint32_t aIndex) returns(nsCString aURI, bool aOk);
   [Nested=inside_sync] sync AnchorAt(uint64_t aID, uint32_t aIndex) returns(uint64_t aIDOfAnchor, bool aOk);
