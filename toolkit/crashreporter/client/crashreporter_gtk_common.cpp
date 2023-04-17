@@ -89,7 +89,7 @@ static bool RestartApplication() {
 }
 
 // Quit the app, used as a timeout callback
-static gboolean CloseApp(gpointer data) {
+gboolean CloseApp(gpointer data) {
   if (!gAutoSubmit) {
     gtk_main_quit();
   }

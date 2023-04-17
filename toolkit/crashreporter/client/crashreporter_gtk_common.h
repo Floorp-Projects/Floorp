@@ -37,6 +37,7 @@ extern std::string gSendURL;
 extern std::string gURLParameter;
 
 void LoadProxyinfo();
+gboolean CloseApp(gpointer data);
 gpointer SendThread(gpointer args);
 gboolean WindowDeleted(GtkWidget* window, GdkEvent* event, gpointer userData);
 gboolean check_escape(GtkWidget* window, GdkEventKey* event, gpointer data);

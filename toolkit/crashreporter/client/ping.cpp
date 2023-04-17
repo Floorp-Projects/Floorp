@@ -6,6 +6,7 @@
 #include "crashreporter.h"
 
 #include <cstring>
+#include <ctime>
 #include <string>
 
 #if defined(XP_LINUX)
@@ -143,7 +144,7 @@ static Json::Value CreatePayloadNode(const Json::Value& aExtra,
   payload["crashDate"] = CurrentDate(kISO8601Date);
   payload["crashTime"] = CurrentDate(kISO8601DateHours);
   payload["hasCrashEnvironment"] = true;
-  payload["crashId"] = GetDumpLocalID();
+  payload["crashId"] = CrashReporter::GetDumpLocalID();
   payload["minidumpSha256Hash"] = aHash;
   payload["processType"] = "main";  // This is always a main crash
   if (aExtra.isMember("StackTraces")) {
@@ -245,7 +246,7 @@ string GenerateSubmissionUrl(const string& aUrl, const string& aId,
 //
 // Returns true if the ping was written out successfully, false otherwise.
 static bool WritePing(const string& aPath, const string& aPing) {
-  ofstream* f = UIOpenWrite(aPath, ios::trunc);
+  std::ofstream* f = UIOpenWrite(aPath, std::ios::trunc);
   bool success = false;
 
   if (f->is_open()) {
@@ -310,8 +311,9 @@ bool SendCrashPing(Json::Value& aExtra, const string& aHash, string& aPingUuid,
   }
 
   // Hand over the ping to the sender
-  vector<string> args = {url, pingPath};
-  if (UIRunProgram(GetProgramPath(UI_PING_SENDER_FILENAME), args)) {
+  std::vector<string> args = {url, pingPath};
+  if (UIRunProgram(CrashReporter::GetProgramPath(UI_PING_SENDER_FILENAME),
+                   args)) {
     aPingUuid = uuid;
     return true;
   } else {
