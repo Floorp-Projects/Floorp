@@ -49,8 +49,8 @@ const uint32_t kButtonUsagePage = 0x9;
 const uint32_t kDevicesChangedStableDelay = 200;
 // Both DirectInput and XInput are polling-driven here,
 // so we need to poll it periodically.
-// 50ms is arbitrarily chosen.
-const uint32_t kWindowsGamepadPollInterval = 50;
+// 4ms, or 250 Hz, is consistent with Chrome's gamepad implementation.
+const uint32_t kWindowsGamepadPollInterval = 4;
 
 const UINT kRawInputError = (UINT)-1;
 
