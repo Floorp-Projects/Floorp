@@ -25,6 +25,7 @@ extern crate tempfile;
 extern crate wr_malloc_size_of;
 use wr_malloc_size_of as malloc_size_of;
 
+use base64::prelude::*;
 use byteorder::{LittleEndian, NetworkEndian, ReadBytesExt, WriteBytesExt};
 use crossbeam_utils::atomic::AtomicCell;
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
@@ -228,12 +229,12 @@ impl SecurityState {
             // errors and attempt to continue.
             // Check if we have a new DN
             if leading_char != '\t' && leading_char != ' ' {
-                if let Ok(decoded_dn) = base64::decode(&l) {
+                if let Ok(decoded_dn) = BASE64_STANDARD.decode(&l) {
                     dn = Some(decoded_dn);
                 }
                 continue;
             }
-            let l_sans_prefix = match base64::decode(&l[1..]) {
+            let l_sans_prefix = match BASE64_STANDARD.decode(&l[1..]) {
                 Ok(decoded) => decoded,
                 Err(_) => continue,
             };
@@ -484,7 +485,7 @@ impl SecurityState {
             Vec::with_capacity(size_of::<u8>() + coverage_entries.len() * COVERAGE_V1_ENTRY_BYTES);
         coverage_bytes.push(COVERAGE_SERIALIZATION_VERSION);
         for (b64_log_id, min_t, max_t) in coverage_entries {
-            let log_id = match base64::decode(&b64_log_id) {
+            let log_id = match BASE64_STANDARD.decode(&b64_log_id) {
                 Ok(log_id) if log_id.len() == 32 => log_id,
                 _ => {
                     warn!("malformed log ID - skipping: {}", b64_log_id);
@@ -510,7 +511,7 @@ impl SecurityState {
         );
         enrollment_bytes.push(ENROLLMENT_SERIALIZATION_VERSION);
         for b64_issuer_id in enrolled_issuers {
-            let issuer_id = match base64::decode(&b64_issuer_id) {
+            let issuer_id = match BASE64_STANDARD.decode(&b64_issuer_id) {
                 Ok(issuer_id) if issuer_id.len() == 32 => issuer_id,
                 _ => {
                     warn!("malformed issuer ID - skipping: {}", b64_issuer_id);
@@ -727,14 +728,14 @@ impl SecurityState {
         )?;
 
         for (cert_der_base64, subject_base64, trust) in certs {
-            let cert_der = match base64::decode(&cert_der_base64) {
+            let cert_der = match BASE64_STANDARD.decode(&cert_der_base64) {
                 Ok(cert_der) => cert_der,
                 Err(e) => {
                     warn!("error base64-decoding cert - skipping: {}", e);
                     continue;
                 }
             };
-            let subject = match base64::decode(&subject_base64) {
+            let subject = match BASE64_STANDARD.decode(&subject_base64) {
                 Ok(subject) => subject,
                 Err(e) => {
                     warn!("error base64-decoding subject - skipping: {}", e);
@@ -786,7 +787,7 @@ impl SecurityState {
         let reader = env_and_store.env.read()?;
 
         for hash in hashes_base64 {
-            let hash = match base64::decode(&hash) {
+            let hash = match BASE64_STANDARD.decode(&hash) {
                 Ok(hash) => hash,
                 Err(e) => {
                     warn!("error decoding hash - ignoring: {}", e);
@@ -1072,8 +1073,8 @@ impl EncodedSecurityState {
     }
 
     fn key(&self) -> Result<Vec<u8>, SecurityStateError> {
-        let key_part_1 = base64::decode(&self.key_part_1_base64)?;
-        let key_part_2 = base64::decode(&self.key_part_2_base64)?;
+        let key_part_1 = BASE64_STANDARD.decode(&self.key_part_1_base64)?;
+        let key_part_2 = BASE64_STANDARD.decode(&self.key_part_2_base64)?;
         Ok(make_key!(self.prefix, &key_part_1, &key_part_2))
     }
 
