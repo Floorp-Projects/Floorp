@@ -289,7 +289,24 @@ class WindowGlobalTargetActor extends BaseTargetActor {
 
     this.makeDebugger = makeDebugger.bind(null, {
       findDebuggees: () => {
-        return this.windows.concat(this.webextensionsContentScriptGlobals);
+        const result = [];
+        const inspectUAWidgets = Services.prefs.getBoolPref(
+          "devtools.inspector.showAllAnonymousContent",
+          false
+        );
+        for (const win of this.windows) {
+          result.push(win);
+          // Only expose User Agent internal (like <video controls>) when the
+          // related pref is set.
+          if (inspectUAWidgets) {
+            const principal = win.document.nodePrincipal;
+            // We don't use UA widgets for the system principal.
+            if (!principal.isSystemPrincipal) {
+              result.push(Cu.getUAWidgetScope(principal));
+            }
+          }
+        }
+        return result.concat(this.webextensionsContentScriptGlobals);
       },
       shouldAddNewGlobalAsDebuggee: this._shouldAddNewGlobalAsDebuggee,
     });
