@@ -33,7 +33,7 @@ MBwxGjAYBgNVBAMMEVRlc3QgSW50ZXJtZWRpYXRl
 # subject is base-64 encoded subject DN "CN=EE Revoked By Subject and PubKey"
 # pubKeyHash is the base-64 encoded sha256 hash of the shared RSA SPKI
 MCsxKTAnBgNVBAMMIEVFIFJldm9rZWQgQnkgU3ViamVjdCBhbmQgUHViS2V5
-	VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8
+	VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=
 # and some more data to ensure that mixed items don't cause parsing failure
 a DN
  a serial

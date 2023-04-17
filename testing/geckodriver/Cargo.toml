@@ -21,7 +21,7 @@ license = "MPL-2.0"
 repository = "https://hg.mozilla.org/mozilla-central/file/tip/testing/geckodriver"
 
 [dependencies]
-base64 = "0.13"
+base64 = "0.21"
 chrono = "0.4.6"
 clap = { version = "~3.1", default-features = false, features = ["cargo", "std", "suggestions", "wrap_help"] }
 hyper = "0.14"
