@@ -11,6 +11,7 @@ use crate::gpu_cache::{GpuCacheAddress, GpuDataRequest};
 use crate::internal_types::FastHashMap;
 use crate::prim_store::ClipData;
 use crate::render_task::RenderTaskAddress;
+use crate::render_task_graph::RenderTaskId;
 use crate::renderer::{ShaderColorMode, GpuBufferAddress};
 use std::i32;
 use crate::util::{TransformedRectKind, MatrixHelpers};
@@ -542,6 +543,8 @@ impl From<SplitCompositeInstance> for PrimitiveInstanceData {
 }
 
 #[derive(Copy, Clone)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct QuadInstance {
     pub render_task_address: RenderTaskAddress,
     pub prim_address: GpuBufferAddress,
@@ -550,6 +553,7 @@ pub struct QuadInstance {
     pub quad_flags: u8,
     pub edge_flags: u8,
     pub part_index: u8,
+    pub segment_index: u8,
 }
 
 impl From<QuadInstance> for PrimitiveInstanceData {
@@ -558,7 +562,7 @@ impl From<QuadInstance> for PrimitiveInstanceData {
             [32 bits prim address]
             [8 bits quad flags] [8 bits edge flags] [16 bits render task address]
             [8 bits segment flags] [24 bits z_id]
-            [8 bits spare] [24 bits xf_id]
+            [8 bits segment index] [24 bits xf_id]
          */
         PrimitiveInstanceData {
             data: [
@@ -567,11 +571,29 @@ impl From<QuadInstance> for PrimitiveInstanceData {
                 ((instance.edge_flags as i32) << 16) |
                 instance.render_task_address.0 as i32,
                 ((instance.part_index as i32) << 24) | instance.z_id.0,
-                instance.transform_id.0 as i32,
+                ((instance.segment_index as i32) << 24) | instance.transform_id.0 as i32,
             ],
         }
     }
 }
+
+#[cfg_attr(feature = "capture", derive(Serialize))]
+pub struct QuadSegment {
+    pub rect: LayoutRect,
+    pub task_id: RenderTaskId,
+}
+
+#[repr(C)]
+#[derive(Clone)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct MaskInstance {
+    pub prim: PrimitiveInstanceData,
+    pub clip_transform_id: TransformPaletteId,
+    pub clip_address: i32,
+    pub info: [i32; 2],
+}
+
 
 bitflags! {
     // Note: This can use up to 12 bits due to how it will
