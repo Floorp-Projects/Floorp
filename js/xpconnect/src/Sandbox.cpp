@@ -102,6 +102,7 @@
 #include "mozilla/StaticPrefs_extensions.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 using namespace JS;
 using namespace JS::loader;
 using namespace xpc;
