@@ -82,25 +82,22 @@ export class DateTimePickerParent extends JSWindowActorParent {
 
     let window = aBrowser.ownerGlobal;
     let tabbrowser = window.gBrowser;
+    if (!tabbrowser) {
+      // TODO(bug 1828477): Support non-<tabbrowser> windows
+      debug("no tabbrowser, exiting now.");
+      return;
+    }
+
     if (
       Services.focus.activeWindow != window ||
-      (tabbrowser && tabbrowser.selectedBrowser != aBrowser)
+      tabbrowser.selectedBrowser != aBrowser
     ) {
       // We were sent a message from a window or tab that went into the
       // background, so we'll ignore it for now.
       return;
     }
 
-    let panel;
-    if (tabbrowser) {
-      panel = tabbrowser._getAndMaybeCreateDateTimePickerPanel();
-    } else {
-      panel = aBrowser.dateTimePicker;
-    }
-    if (!panel) {
-      debug("aBrowser.dateTimePicker not found, exiting now.");
-      return;
-    }
+    let panel = tabbrowser._getAndMaybeCreateDateTimePickerPanel();
     this.oldFocus = window.document.activeElement;
     this._picker = new lazy.DateTimePickerPanel(panel);
     this._picker.openPicker(type, rect, detail);
