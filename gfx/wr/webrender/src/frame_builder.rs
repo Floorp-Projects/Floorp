@@ -13,12 +13,12 @@ use crate::composite::{CompositorKind, CompositeState, CompositeStatePreallocato
 use crate::debug_item::DebugItem;
 use crate::gpu_cache::{GpuCache, GpuCacheHandle};
 use crate::gpu_types::{PrimitiveHeaders, TransformPalette, ZBufferIdGenerator};
-use crate::gpu_types::TransformData;
+use crate::gpu_types::{QuadSegment, TransformData};
 use crate::internal_types::{FastHashMap, PlaneSplitter, FrameId, FrameStamp};
 use crate::picture::{DirtyRegion, SliceId, TileCacheInstance};
 use crate::picture::{SurfaceInfo, SurfaceIndex};
 use crate::picture::{SubpixelMode, RasterConfig, PictureCompositeMode};
-use crate::prepare::prepare_primitives;
+use crate::prepare::{prepare_primitives};
 use crate::prim_store::{PictureIndex};
 use crate::prim_store::{DeferredResolve, PrimitiveInstance};
 use crate::profiler::{self, TransactionProfile};
@@ -198,6 +198,30 @@ impl<'a> FrameBuildingState<'a> {
         for cmd_buffer_index in targets {
             let cmd_buffer = self.cmd_buffers.get_mut(*cmd_buffer_index);
             cmd_buffer.add_prim(cmd, spatial_node_index);
+        }
+    }
+
+    /// Push a command to a set of command buffers
+    pub fn push_cmd(
+        &mut self,
+        cmd: &PrimitiveCommand,
+        targets: &[CommandBufferIndex],
+    ) {
+        for cmd_buffer_index in targets {
+            let cmd_buffer = self.cmd_buffers.get_mut(*cmd_buffer_index);
+            cmd_buffer.add_cmd(cmd);
+        }
+    }
+
+    /// Set the active list of segments in a set of command buffers
+    pub fn set_segments(
+        &mut self,
+        segments: &[QuadSegment],
+        targets: &[CommandBufferIndex],
+    ) {
+        for cmd_buffer_index in targets {
+            let cmd_buffer = self.cmd_buffers.get_mut(*cmd_buffer_index);
+            cmd_buffer.set_segments(segments);
         }
     }
 }
@@ -581,6 +605,7 @@ impl FrameBuilder {
                 let mut ctx = RenderTargetContext {
                     global_device_pixel_scale,
                     prim_store: &scene.prim_store,
+                    clip_store: &scene.clip_store,
                     resource_cache,
                     use_dual_source_blending,
                     use_advanced_blending: scene.config.gpu_supports_advanced_blend,
@@ -601,6 +626,7 @@ impl FrameBuilder {
                     output_size,
                     &mut ctx,
                     gpu_cache,
+                    &mut gpu_buffer_builder,
                     &render_tasks,
                     &scene.clip_store,
                     &mut transform_palette,
@@ -619,6 +645,7 @@ impl FrameBuilder {
 
             let mut ctx = RenderTargetContext {
                 global_device_pixel_scale,
+                clip_store: &scene.clip_store,
                 prim_store: &scene.prim_store,
                 resource_cache,
                 use_dual_source_blending,
@@ -732,6 +759,7 @@ pub fn build_render_pass(
     screen_size: DeviceIntSize,
     ctx: &mut RenderTargetContext,
     gpu_cache: &mut GpuCache,
+    gpu_buffer_builder: &mut GpuBufferBuilder,
     render_tasks: &RenderTaskGraph,
     clip_store: &ClipStore,
     transforms: &mut TransformPalette,
@@ -766,6 +794,7 @@ pub fn build_render_pass(
                                 *task_id,
                                 ctx,
                                 gpu_cache,
+                                gpu_buffer_builder,
                                 render_tasks,
                                 clip_store,
                                 transforms,
@@ -787,6 +816,7 @@ pub fn build_render_pass(
                                 *task_id,
                                 ctx,
                                 gpu_cache,
+                                gpu_buffer_builder,
                                 render_tasks,
                                 clip_store,
                                 transforms,
@@ -820,7 +850,7 @@ pub fn build_render_pass(
 
                         let mut batch_builder = BatchBuilder::new(batcher);
 
-                        cmd_buffer.iter_prims(&mut |cmd, spatial_node_index| {
+                        cmd_buffer.iter_prims(&mut |cmd, spatial_node_index, segments| {
                             batch_builder.add_prim_to_batch(
                                 cmd,
                                 spatial_node_index,
@@ -834,6 +864,7 @@ pub fn build_render_pass(
                                 z_generator,
                                 prim_instances,
                                 &mut gpu_buffer_builder,
+                                segments,
                             );
                         });
 

@@ -262,6 +262,7 @@ impl LazilyCompiledShader {
                 VertexArrayKind::Composite => &desc::COMPOSITE,
                 VertexArrayKind::Clear => &desc::CLEAR,
                 VertexArrayKind::Copy => &desc::COPY,
+                VertexArrayKind::Mask => &desc::MASK,
             };
 
             device.link_program(program, vertex_descriptor)?;
@@ -627,6 +628,8 @@ pub struct Shaders {
 
     ps_split_composite: LazilyCompiledShader,
     pub ps_quad_textured: LazilyCompiledShader,
+    pub ps_mask: LazilyCompiledShader,
+    pub ps_mask_fast: LazilyCompiledShader,
     pub ps_clear: LazilyCompiledShader,
     pub ps_copy: LazilyCompiledShader,
 
@@ -755,6 +758,26 @@ impl Shaders {
             ShaderKind::Cache(VertexArrayKind::SvgFilter),
             "cs_svg_filter",
             &[],
+            device,
+            options.precache_flags,
+            &shader_list,
+            profile,
+        )?;
+
+        let ps_mask = LazilyCompiledShader::new(
+            ShaderKind::Cache(VertexArrayKind::Mask),
+            "ps_quad_mask",
+            &[],
+            device,
+            options.precache_flags,
+            &shader_list,
+            profile,
+        )?;
+
+        let ps_mask_fast = LazilyCompiledShader::new(
+            ShaderKind::Cache(VertexArrayKind::Mask),
+            "ps_quad_mask",
+            &[FAST_PATH_FEATURE],
             device,
             options.precache_flags,
             &shader_list,
@@ -1106,6 +1129,8 @@ impl Shaders {
             ps_text_run,
             ps_text_run_dual_source,
             ps_quad_textured,
+            ps_mask,
+            ps_mask_fast,
             ps_split_composite,
             ps_clear,
             ps_copy,
@@ -1275,6 +1300,8 @@ impl Shaders {
         self.cs_border_segment.deinit(device);
         self.ps_split_composite.deinit(device);
         self.ps_quad_textured.deinit(device);
+        self.ps_mask.deinit(device);
+        self.ps_mask_fast.deinit(device);
         self.ps_clear.deinit(device);
         self.ps_copy.deinit(device);
         self.composite.deinit(device);

@@ -18,7 +18,7 @@ use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::FrameBuildingState;
 use glyph_rasterizer::GlyphKey;
 use crate::gpu_cache::{GpuCacheAddress, GpuCacheHandle, GpuDataRequest};
-use crate::gpu_types::{BrushFlags};
+use crate::gpu_types::{BrushFlags, QuadSegment};
 use crate::intern;
 use crate::picture::PicturePrimitive;
 use crate::render_task_graph::RenderTaskId;
@@ -1212,6 +1212,9 @@ pub struct PrimitiveScratchBuffer {
 
     /// Set of sub-graphs that are required, determined during visibility pass
     pub required_sub_graphs: FastHashSet<PictureIndex>,
+
+    /// Temporary buffer for building segments in to during prepare pass
+    pub quad_segments: Vec<QuadSegment>,
 }
 
 impl Default for PrimitiveScratchBuffer {
@@ -1226,6 +1229,7 @@ impl Default for PrimitiveScratchBuffer {
             debug_items: Vec::new(),
             messages: Vec::new(),
             required_sub_graphs: FastHashSet::default(),
+            quad_segments: Vec::new(),
         }
     }
 }
@@ -1239,6 +1243,7 @@ impl PrimitiveScratchBuffer {
         self.segment_instances.recycle(recycler);
         self.gradient_tiles.recycle(recycler);
         recycler.recycle_vec(&mut self.debug_items);
+        recycler.recycle_vec(&mut self.quad_segments);
     }
 
     pub fn begin_frame(&mut self) {
@@ -1247,6 +1252,7 @@ impl PrimitiveScratchBuffer {
         // location.
         self.clip_mask_instances.clear();
         self.clip_mask_instances.push(ClipMaskKind::None);
+        self.quad_segments.clear();
 
         self.border_cache_handles.clear();
 

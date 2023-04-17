@@ -67,7 +67,7 @@ use crate::frame_builder::Frame;
 use glyph_rasterizer::GlyphFormat;
 use crate::gpu_cache::{GpuCacheUpdate, GpuCacheUpdateList};
 use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
-use crate::gpu_types::{ScalingInstance, SvgFilterInstance, CopyInstance};
+use crate::gpu_types::{ScalingInstance, SvgFilterInstance, CopyInstance, MaskInstance, PrimitiveInstanceData};
 use crate::gpu_types::{BlurInstance, ClearInstance, CompositeInstance, CompositorTransform};
 use crate::internal_types::{TextureSource, TextureCacheCategory, FrameId};
 #[cfg(any(feature = "capture", feature = "replay"))]
@@ -80,8 +80,8 @@ use crate::prim_store::DeferredResolve;
 use crate::profiler::{self, GpuProfileTag, TransactionProfile};
 use crate::profiler::{Profiler, add_event_marker, add_text_marker, thread_is_being_profiled};
 use crate::device::query::GpuProfiler;
-use crate::render_target::ResolveOp;
-use crate::render_task_graph::RenderTaskGraph;
+use crate::render_target::{ResolveOp};
+use crate::render_task_graph::{RenderTaskGraph};
 use crate::render_task::{RenderTask, RenderTaskKind, ReadbackTask};
 use crate::screen_capture::AsyncScreenshotGrabber;
 use crate::render_target::{AlphaRenderTarget, ColorRenderTarget, PictureCacheTarget, PictureCacheTargetKind};
@@ -218,6 +218,14 @@ const GPU_TAG_PRIM_TEXT_RUN: GpuProfileTag = GpuProfileTag {
 const GPU_TAG_PRIMITIVE: GpuProfileTag = GpuProfileTag {
     label: "Primitive",
     color: debug_colors::RED,
+};
+const GPU_TAG_INDIRECT_PRIM: GpuProfileTag = GpuProfileTag {
+    label: "Primitive (indirect)",
+    color: debug_colors::YELLOWGREEN,
+};
+const GPU_TAG_INDIRECT_MASK: GpuProfileTag = GpuProfileTag {
+    label: "Mask (indirect)",
+    color: debug_colors::IVORY,
 };
 const GPU_TAG_BLUR: GpuProfileTag = GpuProfileTag {
     label: "Blur",
@@ -2162,6 +2170,81 @@ impl Renderer {
         self.device.reset_read_target();
     }
 
+    fn handle_prims(
+        &mut self,
+        prim_instances: &[PrimitiveInstanceData],
+        mask_instances_fast: &[MaskInstance],
+        mask_instances_slow: &[MaskInstance],
+        projection: &default::Transform3D<f32>,
+        stats: &mut RendererStats,
+    ) {
+        if prim_instances.is_empty() {
+            return;
+        }
+
+        {
+            let _timer = self.gpu_profiler.start_timer(GPU_TAG_INDIRECT_PRIM);
+
+            self.device.disable_depth_write();
+            self.set_blend(false, FramebufferKind::Other);
+
+            self.shaders.borrow_mut().ps_quad_textured.bind(
+                &mut self.device,
+                projection,
+                None,
+                &mut self.renderer_errors,
+                &mut self.profile,
+            );
+
+            self.draw_instanced_batch(
+                prim_instances,
+                VertexArrayKind::Primitive,
+                &BatchTextures::empty(),
+                stats,
+            );
+        }
+
+        {
+            let _timer = self.gpu_profiler.start_timer(GPU_TAG_INDIRECT_MASK);
+
+            self.set_blend(true, FramebufferKind::Other);
+            self.set_blend_mode_multiply(FramebufferKind::Other);
+
+            if !mask_instances_fast.is_empty() {
+                self.shaders.borrow_mut().ps_mask_fast.bind(
+                    &mut self.device,
+                    projection,
+                    None,
+                    &mut self.renderer_errors,
+                    &mut self.profile,
+                );
+
+                self.draw_instanced_batch(
+                    mask_instances_fast,
+                    VertexArrayKind::Mask,
+                    &BatchTextures::empty(),
+                    stats,
+                );
+            }
+
+            if !mask_instances_slow.is_empty() {
+                self.shaders.borrow_mut().ps_mask.bind(
+                    &mut self.device,
+                    projection,
+                    None,
+                    &mut self.renderer_errors,
+                    &mut self.profile,
+                );
+
+                self.draw_instanced_batch(
+                    mask_instances_slow,
+                    VertexArrayKind::Mask,
+                    &BatchTextures::empty(),
+                    stats,
+                );
+            }
+        }
+    }
 
     fn handle_blits(
         &mut self,
@@ -3384,6 +3467,14 @@ impl Renderer {
                 stats,
             );
         }
+
+        self.handle_prims(
+            &target.prim_instances,
+            &target.mask_instances_fast,
+            &target.mask_instances_slow,
+            projection,
+            stats,
+        );
 
         if clear_depth.is_some() {
             self.device.invalidate_depth_target();

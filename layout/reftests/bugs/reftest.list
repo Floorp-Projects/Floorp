@@ -2018,8 +2018,8 @@ fuzzy(0-255,0-4054) == 1415987-1.html 1415987-1-ref.html # this is a large fuzz,
 skip-if(winWidget&&isCoverageBuild) == 1424177.html 1424177-ref.html
 == 1424680.html 1424680-ref.html
 == 1424798-1.html 1424798-ref.html
-== 1425243-1.html 1425243-1-ref.html
-fuzzy-if(Android,0-66,0-574) fuzzy-if(d2d,0-89,0-777) fuzzy-if(!Android&&!d2d,0-1,0-31412) fuzzy-if(winWidget,1-1,31240-31412) == 1425243-2.html 1425243-2-ref.html
+fuzzy-if(swgl,0-1,0-31430) == 1425243-1.html 1425243-1-ref.html
+fuzzy-if(Android,0-66,0-574) fuzzy-if(d2d,0-89,0-777) fuzzy-if(!Android&&!d2d,0-1,0-31430) fuzzy-if(winWidget,1-1,31240-31412) == 1425243-2.html 1425243-2-ref.html
 == 1430869.html 1430869-ref.html
 == 1432541.html 1432541-ref.html
 == 1446470.html 1035091-ref.html
