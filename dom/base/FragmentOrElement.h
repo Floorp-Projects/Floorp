@@ -226,8 +226,10 @@ class FragmentOrElement : public nsIContent {
      */
     Maybe<bool> mVisibleForContentVisibility;
 
-    // Explicitly set attr-elements, see
-    // https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#explicitly-set-attr-element
+    /**
+     * Explicitly set attr-elements, see
+     * https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#explicitly-set-attr-element
+     */
     nsTHashMap<nsRefPtrHashKey<nsAtom>, nsWeakPtr> mExplicitlySetAttrElements;
   };
 

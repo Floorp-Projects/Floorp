@@ -15002,6 +15002,9 @@ void Document::HidePopover(Element& aPopover, bool aFocusPreviousElement,
   }
 
   // TODO: Run auto popover steps.
+
+  aPopover.SetHasPopoverInvoker(false);
+
   // Fire beforetoggle event and re-check popover validity.
   if (aFireEvents) {
     // Intentionally ignore the return value here as only on open event the
