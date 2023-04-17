@@ -538,9 +538,6 @@ pref("browser.urlbar.shortcuts.history", true);
 
 pref("browser.urlbar.eventTelemetry.enabled", false);
 
-// Whether search engagement telemetry should be recorded.
-pref("browser.urlbar.searchEngagementTelemetry.enabled", false);
-
 // When we send events to Urlbar extensions, we wait this amount of time in
 // milliseconds for them to respond before timing out.
 pref("browser.urlbar.extension.timeout", 400);
