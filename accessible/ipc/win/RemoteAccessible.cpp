@@ -781,26 +781,6 @@ void RemoteAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
                               static_cast<long>(aX), static_cast<long>(aY));
 }
 
-uint32_t RemoteAccessible::AnchorCount(bool* aOk) {
-  *aOk = false;
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    // Not yet supported by the cache.
-    return 0;
-  }
-  RefPtr<IGeckoCustom> custom = QueryInterface<IGeckoCustom>(this);
-  if (!custom) {
-    return 0;
-  }
-
-  long count;
-  if (FAILED(custom->get_anchorCount(&count))) {
-    return 0;
-  }
-
-  *aOk = true;
-  return count;
-}
-
 RemoteAccessible* RemoteAccessible::AnchorAt(uint32_t aIdx) {
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     // Not yet supported by the cache.

@@ -613,21 +613,6 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvEndOffset(const uint64_t& aID,
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult DocAccessibleChild::RecvAnchorCount(const uint64_t& aID,
-                                                            uint32_t* aRetVal,
-                                                            bool* aOk) {
-  LocalAccessible* acc = IdToAccessibleLink(aID);
-  if (acc) {
-    *aRetVal = acc->AnchorCount();
-    *aOk = true;
-  } else {
-    *aRetVal = 0;
-    *aOk = false;
-  }
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult DocAccessibleChild::RecvAnchorURIAt(
     const uint64_t& aID, const uint32_t& aIndex, nsCString* aURI, bool* aOk) {
   LocalAccessible* acc = IdToAccessibleLink(aID);

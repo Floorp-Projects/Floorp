@@ -565,6 +565,11 @@ class Accessible {
    */
   bool IsLinkValid();
 
+  /**
+   * Return the number of anchors within the link.
+   */
+  uint32_t AnchorCount();
+
   // Remote/Local types
 
   virtual bool IsRemote() const = 0;

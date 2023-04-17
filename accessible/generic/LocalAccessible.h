@@ -516,11 +516,6 @@ class LocalAccessible : public nsISupports, public Accessible {
   virtual bool IsLink() const override;
 
   /**
-   * Return the number of anchors within the link.
-   */
-  virtual uint32_t AnchorCount();
-
-  /**
    * Returns an anchor accessible at the given index.
    */
   virtual LocalAccessible* AnchorAt(uint32_t aAnchorIndex);
