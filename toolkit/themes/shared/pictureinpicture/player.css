@@ -162,6 +162,14 @@ body:not(:fullscreen) #controls:hover .control-button:disabled {
   pointer-events: none;
 }
 
+/* Since #controls is set to LTR, button tooltips would normally appear
+ * as LTR also for RTL locales. To fix this, set the .control-item's ::after
+ * to RTL based on the root directionality.
+ * Because of that, don't set logical properties for the next set of rules. */
+:root:dir(rtl) .control-item::after {
+  direction: rtl;
+}
+
 /* Set the tooltip position for different playback controls */
 
 .tooltip-under-controls:focus-visible::after,
@@ -173,7 +181,7 @@ body:not(:fullscreen) #controls:hover .control-button:disabled {
 #close:hover::after,
 #unpip[mac="true"]:focus-visible::after,
 #unpip[mac="true"]:hover::after {
-  float: inline-end;
+  float: right;
   transform: translateX(1em);
 }
 
@@ -181,7 +189,7 @@ body:not(:fullscreen) #controls:hover .control-button:disabled {
 #unpip:hover::after,
 #close[mac="true"]:focus-visible::after,
 #close[mac="true"]:hover::after {
-  float: inline-start;
+  float: left;
   transform: translateX(-1em);
 }
 
@@ -192,19 +200,19 @@ body:not(:fullscreen) #controls:hover .control-button:disabled {
 
 .inline-end-tooltip:focus-visible::after,
 .inline-end-tooltip:hover::after {
-  float: inline-end;
-  inset-inline-end: -1em;
+  float: right;
+  right: -1em;
 }
 
 .inline-start-tooltip:focus-visible::after,
 .inline-start-tooltip:hover::after {
-  float: inline-start;
-  inset-inline-start: -1em;
+  float: left;
+  left: -1em;
 }
 
 .center-tooltip:focus-visible::after,
 .center-tooltip:hover::after {
-  inset-inline-end: 0.8em;
+  right: 0.8em;
   translate: calc(-50% + var(--player-control-item-half-width));
 }
 
