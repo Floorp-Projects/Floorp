@@ -491,10 +491,12 @@ export var PictureInPicture = {
     let pipToggle = win.document.getElementById("picture-in-picture-button");
     pipToggle.hidden = !(totalPipCount === 1);
 
-    let dataL10nId = pipToggle.getAttribute("pipactive")
-      ? "picture-in-picture-urlbar-button-close"
-      : "picture-in-picture-urlbar-button-open";
-    this.updateUrlbarHoverText(win.document, pipToggle, dataL10nId);
+    let browserHasPip = !!this.browserWeakMap.get(browser);
+    if (browserHasPip) {
+      this.setUrlbarPipIconActive(browser.ownerGlobal);
+    } else {
+      this.setUrlbarPipIconInactive(browser.ownerGlobal);
+    }
   },
 
   /**
@@ -539,14 +541,12 @@ export var PictureInPicture = {
   /**
    * Sets the PiP urlbar to an inactive state. This changes the icon in the
    * urlbar button to the open pip icon.
-   * @param {Window} pipWin The PiP window
+   * @param {Window} win The current window
    */
-  setUrlbarPipIconInactive(pipWin) {
-    let browser = this.weakWinToBrowser.get(pipWin);
-    if (!browser) {
+  setUrlbarPipIconInactive(win) {
+    if (!win) {
       return;
     }
-    let win = browser.ownerGlobal;
     let pipToggle = win.document.getElementById("picture-in-picture-button");
     pipToggle.toggleAttribute("pipactive", false);
 
@@ -745,13 +745,14 @@ export var PictureInPicture = {
       TelemetryStopwatch.finish(FOREGROUND_DURATION_HISTOGRAM_ID, window);
     }
 
-    this.removeOriginatingWinFromWeakMap(this.weakWinToBrowser.get(window));
+    let browser = this.weakWinToBrowser.get(window);
+    this.removeOriginatingWinFromWeakMap(browser);
 
     gCurrentPlayerCount -= 1;
     // Saves the location of the Picture in Picture window
     this.savePosition(window);
     this.clearPipTabIcon(window);
-    this.setUrlbarPipIconInactive(window);
+    this.setUrlbarPipIconInactive(browser?.ownerGlobal);
   },
 
   /**
