@@ -516,11 +516,6 @@ class LocalAccessible : public nsISupports, public Accessible {
   virtual bool IsLink() const override;
 
   /**
-   * Returns an anchor accessible at the given index.
-   */
-  virtual LocalAccessible* AnchorAt(uint32_t aAnchorIndex);
-
-  /**
    * Returns an anchor URI at the given index.
    */
   virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex) const;

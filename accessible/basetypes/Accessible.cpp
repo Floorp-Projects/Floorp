@@ -382,6 +382,15 @@ uint32_t Accessible::AnchorCount() {
   return 1;
 }
 
+Accessible* Accessible::AnchorAt(uint32_t aAnchorIndex) {
+  if (IsImageMap()) {
+    return ChildAt(aAnchorIndex);
+  }
+
+  MOZ_ASSERT(IsLink(), "GetAnchor is called on not hyper link!");
+  return aAnchorIndex == 0 ? this : nullptr;
+}
+
 #ifdef A11Y_LOG
 void Accessible::DebugDescription(nsCString& aDesc) const {
   aDesc.Truncate();

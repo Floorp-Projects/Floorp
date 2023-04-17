@@ -52,7 +52,7 @@ ia2AccessibleHyperlink::get_anchor(long aIndex, VARIANT* aAnchor) {
 
   VariantInit(aAnchor);
 
-  LocalAccessible* thisObj = LocalAcc();
+  Accessible* thisObj = Acc();
   if (!thisObj) {
     return CO_E_OBJNOTCONNECTED;
   }
@@ -62,12 +62,10 @@ ia2AccessibleHyperlink::get_anchor(long aIndex, VARIANT* aAnchor) {
 
   if (!thisObj->IsLink()) return S_FALSE;
 
-  AccessibleWrap* anchor =
-      static_cast<AccessibleWrap*>(thisObj->AnchorAt(aIndex));
+  Accessible* anchor = thisObj->AnchorAt(aIndex);
   if (!anchor) return S_FALSE;
 
-  RefPtr<IAccessible> result;
-  anchor->GetNativeInterface(getter_AddRefs(result));
+  RefPtr<IAccessible> result = MsaaAccessible::GetFrom(anchor);
   result.forget(&aAnchor->punkVal);
   aAnchor->vt = VT_UNKNOWN;
   return S_OK;

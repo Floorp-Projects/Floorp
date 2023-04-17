@@ -104,19 +104,11 @@ xpcAccessibleHyperLink::GetAnchor(int32_t aIndex, nsIAccessible** aAccessible) {
 
   if (aIndex < 0) return NS_ERROR_INVALID_ARG;
 
-  if (Intl()->IsLocal()) {
-    if (aIndex >= static_cast<int32_t>(Intl()->AsLocal()->AnchorCount())) {
-      return NS_ERROR_INVALID_ARG;
-    }
-
-    NS_IF_ADDREF(*aAccessible = ToXPC(Intl()->AsLocal()->AnchorAt(aIndex)));
-  } else {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    NS_IF_ADDREF(*aAccessible = ToXPC(Intl()->AsRemote()->AnchorAt(aIndex)));
-#endif
+  if (aIndex >= static_cast<int32_t>(Intl()->AnchorCount())) {
+    return NS_ERROR_INVALID_ARG;
   }
+
+  NS_IF_ADDREF(*aAccessible = ToXPC(Intl()->AnchorAt(aIndex)));
 
   return NS_OK;
 }
