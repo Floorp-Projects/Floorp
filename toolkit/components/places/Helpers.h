@@ -165,7 +165,7 @@ PRTime RoundToMilliseconds(PRTime aTime);
  */
 PRTime RoundedPRNow();
 
-nsresult HashURL(const nsAString& aSpec, const nsACString& aMode,
+nsresult HashURL(const nsACString& aSpec, const nsACString& aMode,
                  uint64_t* _hash);
 
 class QueryKeyValuePair final {

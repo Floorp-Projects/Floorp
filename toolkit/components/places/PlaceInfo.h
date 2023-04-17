@@ -6,11 +6,12 @@
 #define mozilla_places_PlaceInfo_h__
 
 #include "mozIAsyncHistory.h"
+#include "nsCOMPtr.h"
+#include "nsIURI.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
 
-class nsIURI;
 class mozIVisitInfo;
 
 namespace mozilla {

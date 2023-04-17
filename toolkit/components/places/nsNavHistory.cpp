@@ -23,6 +23,7 @@
 #include "Helpers.h"
 #include "NotifyRankingChanged.h"
 
+#include "mozIStorageValueArray.h"
 #include "nsTArray.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"

@@ -8,6 +8,8 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Components.h"
 #include "nsFaviconService.h"
+#include "nsStringStream.h"
+#include "nsStreamUtils.h"
 #include "nsIChannel.h"
 #include "nsIFaviconService.h"
 #include "nsIIOService.h"
