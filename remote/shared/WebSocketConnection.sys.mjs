@@ -39,7 +39,7 @@ export class WebSocketConnection {
   }
 
   _log(direction, data) {
-    if (lazy.Log.isDebugLevelOrAbove) {
+    if (lazy.Log.isDebugLevelOrMore) {
       function replacer(key, value) {
         if (typeof value === "string") {
           return lazy.truncate`${value}`;
