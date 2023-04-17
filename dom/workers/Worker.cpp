@@ -86,7 +86,6 @@ void Worker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   if (!mWorkerPrivate || mWorkerPrivate->ParentStatusProtected() > Running) {
     return;
   }
-  RefPtr<WorkerPrivate> workerPrivate = mWorkerPrivate;
 
   JS::Rooted<JS::Value> transferable(aCx, JS::UndefinedValue());
 
@@ -145,10 +144,6 @@ void Worker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   }
 
   runnable->Write(aCx, aMessage, transferable, clonePolicy, aRv);
-
-  if (!mWorkerPrivate || mWorkerPrivate->ParentStatusProtected() > Running) {
-    return;
-  }
 
   if (isTimelineRecording) {
     end = MakeUnique<WorkerTimelineMarker>(
