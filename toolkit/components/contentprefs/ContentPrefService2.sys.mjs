@@ -1193,7 +1193,11 @@ ContentPrefService2.prototype = {
       return this._getConnection(++aAttemptNum);
     };
     try {
-      conn = await lazy.Sqlite.openConnection({ path });
+      conn = await lazy.Sqlite.openConnection({
+        path,
+        incrementalVacuum: true,
+        vacuumOnIdle: true,
+      });
       try {
         lazy.Sqlite.shutdown.addBlocker(
           "Closing ContentPrefService2 connection.",
