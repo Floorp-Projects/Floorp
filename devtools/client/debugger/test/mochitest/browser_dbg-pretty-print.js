@@ -31,7 +31,7 @@ add_task(async function() {
 
   await stepOver(dbg);
 
-  assertPausedAtSourceAndLine(dbg, ppSrc.id, 39);
+  assertPausedAtSourceAndLine(dbg, ppSrc.id, 27);
 
   await resume(dbg);
 

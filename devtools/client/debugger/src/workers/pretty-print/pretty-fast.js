@@ -165,10 +165,6 @@ class PrettyFast {
   #currentCode = "";
   #currentLine = 1;
   #currentColumn = 0;
-  // The tokens parsed by acorn.
-  #tokenQueue;
-  // The index of the current token in this.#tokenQueue.
-  #currentTokenIndex;
   // The last token we added to the pretty printed code.
   #lastToken;
   // Stack of token types/keywords that can affect whether we want to add a
@@ -182,7 +178,6 @@ class PrettyFast {
   //   - "{"
   //   - "{\n"
   //   - "("
-  //   - "(\n"
   //   - "["
   //   - "[\n"
   //   - "do"
@@ -191,12 +186,11 @@ class PrettyFast {
   //   - "case"
   //   - "default"
   //
-  // The difference between "[" and "[\n" (as well as "{" and "{\n", and "(" and "(\n")
-  // is that "\n" is used when we are treating (curly) brackets/parens as line delimiters
-  // and should increment and decrement the indent level when we find them.
+  // The difference between "[" and "[\n" (as well as "{" and "{\n") is that "\n" is used
+  // when we are treating (curly) brackets as line delimiters and should increment and
+  // decrement the indent level when we find them.
   // "[" can represent either a property access (e.g. `x["hi"]`), or an empty array literal
   // "{" only represents an empty object literals
-  // "(" can represent lots of different things (wrapping expression, if/loop condition, function call, …)
   #stack = [];
 
   /**
@@ -223,12 +217,11 @@ class PrettyFast {
     // After this process, tokenQueue has the following token stream:
     //
     //     [ foo, '// a', '// b', bar]
-    this.#tokenQueue = this.#getTokens(input);
+    const tokenQueue = this.#getTokens(input);
 
-    for (let i = 0, len = this.#tokenQueue.length; i < len; i++) {
-      this.#currentTokenIndex = i;
-      const token = this.#tokenQueue[i];
-      const nextToken = this.#tokenQueue[i + 1];
+    for (let i = 0, len = tokenQueue.length; i < len; i++) {
+      const token = tokenQueue[i];
+      const nextToken = tokenQueue[i + 1];
       this.#handleToken(token, nextToken);
 
       // Acorn's tokenizer re-uses tokens, so we have to copy the last token on
@@ -436,14 +429,6 @@ class PrettyFast {
       } else if (isObjectLiteral(token, this.#lastToken)) {
         // Don't add new lines for empty object literals
         stackEntry = nextToken?.type?.label === "}" ? "{" : "{\n";
-      } else if (
-        isRoundBracketStartingLongParenthesis(
-          token,
-          this.#tokenQueue,
-          this.#currentTokenIndex
-        )
-      ) {
-        stackEntry = "(\n";
       } else if (ttl == "{") {
         // We need to add a line break for "{" which are not empty object literals
         stackEntry = "{\n";
@@ -501,8 +486,7 @@ class PrettyFast {
       (token.type.label == "{" && this.#stack.at(-1) === "{\n") ||
       // Don't increment indent for empty array literals
       (token.type.label == "[" && this.#stack.at(-1) === "[\n") ||
-      token.type.keyword == "switch" ||
-      (token.type.label == "(" && this.#stack.at(-1) === "(\n")
+      token.type.keyword == "switch"
     ) {
       this.#indentLevel++;
     }
@@ -511,11 +495,7 @@ class PrettyFast {
   #shouldDecrementIndent(token) {
     const top = this.#stack.at(-1);
     const ttl = token.type.label;
-    return (
-      (ttl == "}" && top == "{\n") ||
-      (ttl == "]" && top == "[\n") ||
-      (ttl == ")" && top == "(\n")
-    );
+    return (ttl == "}" && top == "{\n") || (ttl == "]" && top == "[\n");
   }
 
   #maybeDecrementIndent(token) {
@@ -710,75 +690,6 @@ function isObjectLiteral(token, lastToken) {
   );
 }
 
-/**
- * Determines if we think that the given token starts a long parenthesis
- *
- * @param {Object} token
- *        The token we want to determine if it is the beginning of a long paren.
- * @param {Array<Object>} tokenQueue
- *        The whole list of tokens parsed by acorn
- * @param {Integer} currentTokenIndex
- *        The index of `token` in `tokenQueue`
- * @returns
- */
-function isRoundBracketStartingLongParenthesis(
-  token,
-  tokenQueue,
-  currentTokenIndex
-) {
-  if (token.type.label !== "(") {
-    return false;
-  }
-
-  // If we're just wrapping an object, we'll have a new line right after
-  if (tokenQueue[currentTokenIndex + 1].type.label == "{") {
-    return false;
-  }
-
-  // We're going to iterate through the following tokens until :
-  // - we find the closing parent
-  // - or we reached the maximum character we think should be in parenthesis
-  const longParentContentLength = 60;
-
-  // Keep track of other parens so we know when we get the closing one for `token`
-  let parenCount = 0;
-  let parenContentLength = 0;
-  for (let i = currentTokenIndex + 1, len = tokenQueue.length; i < len; i++) {
-    const currToken = tokenQueue[i];
-    const ttl = currToken.type.label;
-
-    if (ttl == "(") {
-      parenCount++;
-    } else if (ttl == ")") {
-      if (parenCount == 0) {
-        // Matching closing paren, if we got here, we didn't reach the length limit,
-        // as we return when parenContentLength is greater than the limit.
-        return false;
-      }
-      parenCount--;
-    }
-
-    // Aside block comments, all tokens start and end location are on the same line, so
-    // we can use `start` and `end` to deduce the token length.
-    const tokenLength = currToken.comment
-      ? currToken.text.length
-      : currToken.end - currToken.start;
-    parenContentLength += tokenLength;
-
-    // If we didn't find the matching closing paren yet and the characters from the
-    // tokens we evaluated so far are longer than the limit, so consider the token
-    // a long paren.
-    if (parenContentLength > longParentContentLength) {
-      return true;
-    }
-  }
-
-  // if we get to here, we didn't found a closing paren, which shouldn't happen
-  // (scripts with syntax error are not displayed in the debugger), but just to
-  // be safe, return false.
-  return false;
-}
-
 // If any of these tokens are followed by a token on a new line, we know that
 // ASI cannot happen.
 const PREVENT_ASI_AFTER_TOKENS = new Set([
@@ -949,9 +860,8 @@ function isLineDelimiter(token, stack) {
     (ttl == "{" && top == "{\n") ||
     // Don't add a new line for empty array literals
     (ttl == "[" && top == "[\n") ||
-    ((ttl == "," || ttl == "||" || ttl == "&&") && top != "(") ||
-    (ttl == ":" && (top == "case" || top == "default")) ||
-    (ttl == "(" && top == "(\n")
+    (ttl == "," && top != "(") ||
+    (ttl == ":" && (top == "case" || top == "default"))
   );
 }
 
