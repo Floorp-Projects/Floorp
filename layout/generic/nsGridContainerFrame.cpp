@@ -304,10 +304,12 @@ struct nsGridContainerFrame::TrackSize {
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(TrackSize::StateBits)
 
-namespace mozilla {
-template <>
-struct IsPod<nsGridContainerFrame::TrackSize> : std::true_type {};
-}  // namespace mozilla
+static_assert(
+    std::is_trivially_copyable<nsGridContainerFrame::TrackSize>::value,
+    "Must be trivially copyable");
+static_assert(
+    std::is_trivially_destructible<nsGridContainerFrame::TrackSize>::value,
+    "Must be trivially destructible");
 
 TrackSize::StateBits nsGridContainerFrame::TrackSize::Initialize(
     nscoord aPercentageBasis, const StyleTrackSize& aSize) {

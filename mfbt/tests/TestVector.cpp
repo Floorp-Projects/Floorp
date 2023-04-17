@@ -685,14 +685,6 @@ void mozilla::detail::VectorTesting::testAppend() {
   }
 }
 
-// Declare but leave (permanently) incomplete.
-struct Incomplete;
-
-// We could even *construct* a Vector<Incomplete, 0> if we wanted.  But we can't
-// destruct it, so it's not worth the trouble.
-static_assert(sizeof(Vector<Incomplete, 0>) > 0,
-              "Vector of an incomplete type will compile");
-
 // Vector with no inline storage should occupy the absolute minimum space in
 // non-debug builds.  (Debug adds a laundry list of other constraints, none
 // directly relevant to shipping builds, that aren't worth precisely modeling.)
@@ -720,11 +712,6 @@ static_assert(sizeof(Vector<bool, 0>) == sizeof(NoInlineStorageLayout<bool>),
 static_assert(sizeof(Vector<S, 0>) == sizeof(NoInlineStorageLayout<S>),
               "Vector of S without inline storage shouldn't occupy dead "
               "space for that absence of storage");
-
-static_assert(sizeof(Vector<Incomplete, 0>) ==
-                  sizeof(NoInlineStorageLayout<Incomplete>),
-              "Vector of an incomplete class without inline storage shouldn't "
-              "occupy dead space for that absence of storage");
 
 #endif  // DEBUG
 

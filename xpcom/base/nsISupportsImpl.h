@@ -27,10 +27,9 @@
 #include "mozilla/Likely.h"
 #include "mozilla/MacroArgs.h"
 #include "mozilla/MacroForEach.h"
-#include "mozilla/TypeTraits.h"
 
 #define MOZ_ASSERT_TYPE_OK_FOR_REFCOUNTING(X)            \
-  static_assert(!mozilla::IsDestructible<X>::value,      \
+  static_assert(!std::is_destructible_v<X>,              \
                 "Reference-counted class " #X            \
                 " should not have a public destructor. " \
                 "Make this class's destructor non-public");

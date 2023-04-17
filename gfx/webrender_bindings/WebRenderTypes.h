@@ -19,7 +19,6 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Range.h"
 #include "mozilla/ScrollGeneration.h"
-#include "mozilla/TypeTraits.h"
 #include "Units.h"
 #include "nsIWidgetListener.h"
 

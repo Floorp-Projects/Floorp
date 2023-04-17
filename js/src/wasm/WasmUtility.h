@@ -17,19 +17,15 @@ static inline bool EqualContainers(const Container1& lhs,
   return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
 }
 
-// To call Vector::shrinkStorageToFit , a type must specialize mozilla::IsPod
-// which is pretty verbose to do within js::wasm, so factor that process out
-// into a macro.
-
-#define WASM_DECLARE_POD_VECTOR(Type, VectorName)   \
-  }                                                 \
-  }                                                 \
-  namespace mozilla {                               \
-  template <>                                       \
-  struct IsPod<js::wasm::Type> : std::true_type {}; \
-  }                                                 \
-  namespace js {                                    \
-  namespace wasm {                                  \
+#define WASM_DECLARE_POD_VECTOR(Type, VectorName)                      \
+  }                                                                    \
+  }                                                                    \
+  static_assert(std::is_trivially_copyable<js::wasm::Type>::value,     \
+                "Must be trivially copyable");                         \
+  static_assert(std::is_trivially_destructible<js::wasm::Type>::value, \
+                "Must be trivially destructible");                     \
+  namespace js {                                                       \
+  namespace wasm {                                                     \
   typedef Vector<Type, 0, SystemAllocPolicy> VectorName;
 
 using mozilla::MallocSizeOf;
