@@ -19,6 +19,23 @@ enum class AppShutdownMode {
   Restart,
 };
 
+enum class AppShutdownReason {
+  // No reason.
+  Unknown,
+  // Normal application shutdown.
+  AppClose,
+  // The application wants to restart.
+  AppRestart,
+  // The OS is force closing us.
+  OSForceClose,
+  // The user is logging off from the OS session, the system may stay alive.
+  OSSessionEnd,
+  // The system is shutting down (and maybe restarting).
+  OSShutdown,
+  // We unexpectedly received MOZ_WM_APP_QUIT, see bug 1827807.
+  WinUnexpectedMozQuit,
+};
+
 class AppShutdown {
  public:
   static ShutdownPhase GetCurrentShutdownPhase();
@@ -36,9 +53,11 @@ class AppShutdown {
   static void SaveEnvVarsForPotentialRestart();
 
   /**
-   * Init the shutdown with the requested shutdown mode and exit code.
+   * Init the shutdown with the requested shutdown mode, exit code and optional
+   * a reason (if missing it will be derived from aMode).
    */
-  static void Init(AppShutdownMode aMode, int aExitCode);
+  static void Init(AppShutdownMode aMode, int aExitCode,
+                   AppShutdownReason aReason);
 
   /**
    * Confirm that we are in fact going to be shutting down.
@@ -109,6 +128,11 @@ class AppShutdown {
 #endif
 
  private:
+  /**
+   * Set the shutdown reason annotation.
+   */
+  static void AnnotateShutdownReason(AppShutdownReason aReason);
+
   /**
    * This will perform a fast shutdown via _exit(0) or similar if the user's
    * prefs are configured to do so at this phase.
