@@ -669,10 +669,6 @@ bool SVGGeometryFrame::IsInvisible() const {
     return true;
   }
 
-  if (IsSVGImageFrame()) {
-    return false;
-  }
-
   const nsStyleSVG* style = StyleSVG();
   SVGContextPaint* contextPaint =
       SVGContextPaint::GetContextPaint(GetContent());

@@ -94,6 +94,9 @@ class SVGImageFrame final : public SVGGeometryFrame, public nsIReflowCallback {
   /// Always sync decode our image when painting if @aForce is true.
   void SetForceSyncDecoding(bool aForce) { mForceSyncDecoding = aForce; }
 
+  // SVGImageFrame methods:
+  bool IsInvisible() const override;
+
  private:
   uint16_t GetHitTestFlags();
 
