@@ -218,8 +218,8 @@ Status ClearKeyDecryptor::Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
       if (!data.isValid()) {
         return Status::kDecryptError;
       }
-      return Status::kSuccess;
     }
+    return Status::kSuccess;
   }
 
   // Decrypt CENC case:
