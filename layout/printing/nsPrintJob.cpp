@@ -1379,12 +1379,12 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
       }
     }
 
+    const ServoStyleSet::FirstPageSizeAndOrientation sizeAndOrientation =
+        presShell->StyleSet()->GetFirstPageSizeAndOrientation(firstPageName);
     if (mPrintSettings->GetUsePageRuleSizeAsPaperSize()) {
-      mMaybeCSSPageSize =
-          aPO->mDocument->GetPresShell()->StyleSet()->GetPageSizeForPageName(
-              firstPageName);
-      if (mMaybeCSSPageSize) {
-        pageSize = *mMaybeCSSPageSize;
+      mMaybeCSSPageSize = sizeAndOrientation.size;
+      if (sizeAndOrientation.size) {
+        pageSize = sizeAndOrientation.size.value();
         aPO->mPresContext->SetPageSize(pageSize);
       }
     }
@@ -1394,10 +1394,8 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
     // FinishPrintPreview, so that the frontend can reflect this.
     // The new document has not yet been reflowed, so we have to query the
     // original document for any CSS page-size.
-    if (const Maybe<StylePageSizeOrientation> maybeOrientation =
-            presShell->StyleSet()->GetDefaultPageSizeOrientation(
-                firstPageName)) {
-      switch (maybeOrientation.value()) {
+    if (sizeAndOrientation.orientation) {
+      switch (sizeAndOrientation.orientation.value()) {
         case StylePageSizeOrientation::Landscape:
           if (pageSize.width < pageSize.height) {
             // Paper is in portrait, CSS page size is landscape.
@@ -1411,8 +1409,8 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
           }
           break;
       }
-      mMaybeCSSPageLandscape =
-          Some(maybeOrientation.value() == StylePageSizeOrientation::Landscape);
+      mMaybeCSSPageLandscape = Some(sizeAndOrientation.orientation.value() ==
+                                    StylePageSizeOrientation::Landscape);
       aPO->mPresContext->SetPageSize(pageSize);
     }
   }

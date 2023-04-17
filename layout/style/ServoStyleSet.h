@@ -267,18 +267,21 @@ class ServoStyleSet {
   size_t SheetCount(Origin) const;
   StyleSheet* SheetAt(Origin, size_t aIndex) const;
 
-  // Gets the default orientation of CSS pages.
-  // This will return portrait or landscape both for a landscape/portrait
-  // value to page-size, as well as for an explicit size or paper name which
-  // is not square.
-  // If the value is auto or square, then returns nothing.
-  Maybe<StylePageSizeOrientation> GetDefaultPageSizeOrientation(
+  struct FirstPageSizeAndOrientation {
+    Maybe<StylePageSizeOrientation> orientation;
+    Maybe<nsSize> size;
+  };
+  // Gets the specified orientation and size used when the first page printed
+  // has the name |aFirstPageName|, based on the page-size property.
+  //
+  // If the specified size is just an orientation, then the size will be set to
+  // nothing and the orientation will be set accordingly.
+  // If the specified size is auto or square, then the orientation will be set
+  // to nothing.
+  // Otherwise, the size will and orientation is determined by the specified
+  // page size.
+  FirstPageSizeAndOrientation GetFirstPageSizeAndOrientation(
       const nsAtom* aFirstPageName);
-
-  // Gets the page size specified in CSS pages of a given page name.
-  // Return the page size width and height as app units.
-  // If the value is auto, then returns nothing.
-  Maybe<nsSize> GetPageSizeForPageName(const nsAtom* aPageName);
 
   void AppendAllNonDocumentAuthorSheets(nsTArray<StyleSheet*>& aArray) const;
 
