@@ -13,7 +13,9 @@ Once you have a clone of [mozilla-unified], you can set up your
 development environment by running this command and following the
 on-screen instructions:
 
-  % ./mach bootstrap
+```shell
+./mach bootstrap
+```
 
 When you're getting asked to choose the version of Firefox you want to build,
 you may want to consider choosing "Firefox for Desktop Artifact Mode".  This
@@ -22,11 +24,15 @@ significantly reduces the time it takes to build Firefox on your machine
 
 To perform a regular build, simply do:
 
-  % ./mach build
+```shell
+./mach build
+```
 
 You can clean out the objdir using this command:
 
-  % ./mach clobber
+```shell
+./mach clobber
+```
 
 Occasionally a clean build will be required after you fetch the
 latest changes from mozilla-central.  You will find that the the
@@ -34,19 +40,25 @@ build will error when this is the case.  To automatically do clean
 builds when this happens you may optionally add this line to the
 [mozconfig] file in your top source directory:
 
-  mk_add_options AUTOCLOBBER=1
+```
+mk_add_options AUTOCLOBBER=1
+```
 
 If you compile Firefox frequently you will also want to enable
 [ccache] and [sccache] if you develop on a macOS or Linux system:
 
-  mk_add_options 'export RUSTC_WRAPPER=sccache'
-  mk_add_options 'export CCACHE_CPP2=yes'
-  ac_add_options --with-ccache
+```
+mk_add_options 'export RUSTC_WRAPPER=sccache'
+mk_add_options 'export CCACHE_CPP2=yes'
+ac_add_options --with-ccache
+```
 
 You may also opt out of building all the WebDriver specific components
 (Marionette, and the [Remote Agent]) by setting the following flag:
 
-  ac_add_options --disable-webdriver
+```
+ac_add_options --disable-webdriver
+```
 
 [mozilla-unified]: https://mozilla-version-control-tools.readthedocs.io/en/latest/hgmozilla/unifiedrepo.html
 [artifact builds]: /contributing/build/artifact_builds.rst
