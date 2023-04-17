@@ -296,18 +296,16 @@ static const struct xdg_activation_token_v1_listener token_listener = {
 
 RefPtr<FocusRequestPromise> RequestWaylandFocusPromise() {
 #ifdef MOZ_WAYLAND
-  if (!GdkIsWaylandDisplay() || !nsWindow::GetFocusedWindow() ||
-      nsWindow::GetFocusedWindow()->IsDestroyed()) {
+  if (!GdkIsWaylandDisplay() || !KeymapWrapper::GetSeat()) {
     return nullptr;
   }
 
   RefPtr<nsWindow> sourceWindow = nsWindow::GetFocusedWindow();
-  if (!sourceWindow) {
+  if (!sourceWindow || sourceWindow->IsDestroyed()) {
     return nullptr;
   }
 
-  RefPtr<nsWaylandDisplay> display = WaylandDisplayGet();
-  xdg_activation_v1* xdg_activation = display->GetXdgActivation();
+  xdg_activation_v1* xdg_activation = WaylandDisplayGet()->GetXdgActivation();
   if (!xdg_activation) {
     return nullptr;
   }
