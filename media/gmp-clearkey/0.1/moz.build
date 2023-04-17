@@ -75,5 +75,3 @@ elif CONFIG["CC_TYPE"] == "clang-cl":
         "-FI",
         "stdio.h",  # for sprintf() prototype
     ]
-
-REQUIRES_UNIFIED_BUILD = True
