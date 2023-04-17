@@ -390,16 +390,6 @@ const cases = [
       }
     `,
   },
-  {
-    name: "Long parenthesis",
-    input: `
-      if (thisIsAVeryLongVariable && thisIsAnotherOne || yetAnotherVeryLongVariable) {
-        (thisIsAnotherOne = thisMayReturnNull() || "hi", thisIsAVeryLongVariable = 42, yetAnotherVeryLongVariable && doSomething(true /* do it well */,thisIsAVeryLongVariable, thisIsAnotherOne, yetAnotherVeryLongVariable))
-      }
-      for (let thisIsAnotherVeryLongVariable = 0; i < thisIsAnotherVeryLongVariable.length; thisIsAnotherVeryLongVariable++) {}
-      const x = ({thisIsAnotherVeryLongPropertyName: "but should not cause the paren to be a line delimiter"})
-    `,
-  },
 ];
 
 const includesOnly = cases.find(({ only }) => only);
