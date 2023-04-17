@@ -27,6 +27,9 @@ const { setTimeout, setInterval, clearTimeout, clearInterval } = ChromeUtils.imp
 const { FileUtils } = ChromeUtils.import(
     "resource://gre/modules/FileUtils.jsm"
 );
+const env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
+);
 
 // Check information about startup.
 let isFirstRun = false;
@@ -43,7 +46,7 @@ let isUpdated = false;
     Services.prefs.setStringPref("floorp.startup.oldVersion", nowVersion);
 }
 
-const isMainBrowser = true;
+const isMainBrowser = env.get("MOZ_BROWSER_TOOLBOX_PORT") === "";
 
 
 // Optimize the notification function.
