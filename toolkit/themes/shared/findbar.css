@@ -151,6 +151,7 @@ html|input.findbar-textbox[flash="true"] {
 .findbar-entire-word,
 .findbar-label {
   margin: 0 8px;
+  flex-shrink: 0;
 }
 
 .findbar-find-status,
