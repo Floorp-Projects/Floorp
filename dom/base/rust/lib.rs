@@ -124,13 +124,9 @@ bitflags! {
         const VALUE_EMPTY = 1u64 << 47;
         /// For :-moz-revealed.
         const REVEALED = 1u64 << 48;
-        /// https://html.spec.whatwg.org/#selector-open
+        /// https://html.spec.whatwg.org/#selector-popover-open
         /// Match element's popover visibility state of showing
-        const OPEN = 1u64 << 49;
-        /// https://html.spec.whatwg.org/#selector-closed
-        /// Match element's popover visibility state of hidden
-        const CLOSED = 1u64 << 50;
-
+        const POPOVER_OPEN = 1u64 << 49;
 
         /// Some convenience unions.
         const DIR_STATES = Self::LTR.bits | Self::RTL.bits;
@@ -141,8 +137,6 @@ bitflags! {
                                 Self::HAS_DIR_ATTR_LIKE_AUTO.bits;
 
         const DISABLED_STATES = Self::DISABLED.bits | Self::ENABLED.bits;
-
-        const POPOVER_STATES = Self::OPEN.bits | Self::CLOSED.bits;
 
         const REQUIRED_STATES = Self::REQUIRED.bits | Self::OPTIONAL_.bits;
 
@@ -171,7 +165,7 @@ bitflags! {
             Self::FOCUSRING.bits |
             Self::FOCUS_WITHIN.bits |
             Self::FULLSCREEN.bits |
-            Self::POPOVER_STATES.bits |
+            Self::POPOVER_OPEN.bits |
             Self::HOVER.bits |
             Self::URLTARGET.bits |
             Self::MODAL.bits |

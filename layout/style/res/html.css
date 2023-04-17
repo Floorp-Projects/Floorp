@@ -906,12 +906,12 @@ slot {
 
 /* Popover UA style, https://html.spec.whatwg.org/#flow-content-3 */
 @media (-moz-popover-enabled) {
-  [popover]:closed:not(dialog[open]) {
-    display: none;
+  [popover]:not(:popover-open):not(dialog[open]) {
+    display:none;
   }
 
-  dialog[popover]:not(:closed) {
-    display: block;
+  dialog:popover-open {
+    display:block;
   }
 
   [popover] {
@@ -927,7 +927,7 @@ slot {
     background-color: Canvas;
   }
 
-  [popover]:open::backdrop {
+  :popover-open::backdrop {
     position: fixed;
     inset: 0;
     pointer-events: none !important;
