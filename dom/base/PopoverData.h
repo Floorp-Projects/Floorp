@@ -45,6 +45,11 @@ class PopoverData {
     mPreviouslyFocusedElement = aPreviouslyFocusedElement;
   }
 
+  bool HasPopoverInvoker() const { return mHasPopoverInvoker; }
+  void SetHasPopoverInvoker(bool aHasPopoverInvoker) {
+    mHasPopoverInvoker = aHasPopoverInvoker;
+  }
+
  private:
   PopoverVisibilityState mVisibilityState = PopoverVisibilityState::Hidden;
   PopoverState mState = PopoverState::None;
@@ -52,6 +57,10 @@ class PopoverData {
   // chances to lose the previously focused element.
   // See, https://github.com/whatwg/html/issues/9063
   nsWeakPtr mPreviouslyFocusedElement = nullptr;
+
+  // https://html.spec.whatwg.org/multipage/popover.html#popover-invoker, also
+  // see https://github.com/whatwg/html/issues/9168.
+  bool mHasPopoverInvoker = false;
 };
 }  // namespace mozilla::dom
 
