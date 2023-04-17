@@ -17,7 +17,7 @@ ac_add_options --enable-perf
 
 Environment variables that must be defined for perf JIT profiling:
 
-`PERF_SPEW_OUTPUT`: Location of jitdump output files.  Making this directory a tmpfs filesystem could help reduce overhead.\
+`PERF_SPEW_DIR`: Location of jitdump output files.  Making this directory a tmpfs filesystem could help reduce overhead.\
 `IONPERF`: Valid options include: `func`, `src`, `ir`, `ir-ops`.
 
 `IONPERF=func` will disable all annotation and only function names will be available. It is the fastest option.\
