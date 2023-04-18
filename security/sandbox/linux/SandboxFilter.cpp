@@ -147,7 +147,9 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
 
   template <typename... Args>
   static intptr_t DoSyscall(long nr, Args... args) {
-    static_assert(tl::And<(sizeof(Args) <= sizeof(void*))...>::value,
+    static_assert(std::conjunction_v<
+                      std::conditional_t<(sizeof(Args) <= sizeof(void*)),
+                                         std::true_type, std::false_type>...>,
                   "each syscall arg is at most one word");
     return ConvertError(syscall(nr, args...));
   }
