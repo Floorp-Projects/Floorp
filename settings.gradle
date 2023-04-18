@@ -55,14 +55,12 @@ include ':geckoview'
 include ':geckoview_example'
 include ':test_runner'
 include ':exoplayer2'
-include ':omnijar'
 
 project(':annotations').projectDir = new File("${json.topsrcdir}/mobile/android/annotations")
 project(':geckoview').projectDir = new File("${json.topsrcdir}/mobile/android/geckoview")
 project(':geckoview_example').projectDir = new File("${json.topsrcdir}/mobile/android/geckoview_example")
 project(':test_runner').projectDir = new File("${json.topsrcdir}/mobile/android/test_runner")
 project(':exoplayer2').projectDir = new File("${json.topsrcdir}/mobile/android/exoplayer2")
-project(':omnijar').projectDir = new File("${json.topsrcdir}/mobile/android/app/omnijar")
 
 if (hasProperty("androidFormatLintTest")) {
     include ':androidFormatLintTest'
