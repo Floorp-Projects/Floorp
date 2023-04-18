@@ -21,6 +21,13 @@ const { MigrationWizardConstants } = ChromeUtils.importESModule(
  * and delegates to the LoginCSVImport module.
  */
 add_task(async function test_PasswordFileMigrator() {
+  Services.prefs.setBoolPref("signon.management.page.fileImport.enabled", true);
+  let sandbox = sinon.createSandbox();
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("signon.management.page.fileImport.enabled");
+    sandbox.restore();
+  });
+
   let migrator = new PasswordFileMigrator();
   Assert.ok(
     migrator.constructor.key,
@@ -38,11 +45,7 @@ add_task(async function test_PasswordFileMigrator() {
     migrator.displayedResourceTypes,
     "PasswordFileMigrator returns something for displayedResourceTypes"
   );
-
-  let sandbox = sinon.createSandbox();
-  registerCleanupFunction(() => {
-    sandbox.restore();
-  });
+  Assert.ok(migrator.enabled, "PasswordFileMigrator is enabled.");
 
   const IMPORT_SUMMARY = [
     {
