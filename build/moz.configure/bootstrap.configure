@@ -155,6 +155,7 @@ def bootstrap_path(path, **kwargs):
     @imports("sys")
     @imports(_from="mozbuild.util", _import="ensureParentDir")
     @imports(_from="importlib", _import="import_module")
+    @imports(_from="shutil", _import="rmtree")
     @imports(_from="__builtin__", _import="open")
     @imports(_from="__builtin__", _import="Exception")
     def bootstrap_path(
@@ -247,6 +248,12 @@ def bootstrap_path(path, **kwargs):
                     ]
                     + command["arguments"]
                     + [path_parts[0]]
+                )
+                # Clean up anything that was bootstrapped previously before going
+                # forward. In other cases, that's taken care of by mach artifact toolchain.
+                rmtree(
+                    os.path.join(toolchains_base_dir, path_prefix, path_parts[0]),
+                    ignore_errors=True,
                 )
             else:
                 # Otherwise, use the slower path, which will print a better error than

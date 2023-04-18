@@ -376,6 +376,7 @@ win64-vs2019:
         resources:
             - build/vs/vs2019.yaml
         toolchain-artifact: project/gecko/vs/vs.tar.zst
+        toolchain-alias: vs
 
 linux64-afl-instrumentation-2.5:
     description: "AFL instrumentation toolchain build"

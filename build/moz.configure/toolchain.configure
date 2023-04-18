@@ -573,9 +573,19 @@ option(
 )
 
 
-@depends_if("WINSYSROOT", when=is_windows)
-def winsysroot(winsysroot):
-    return winsysroot[0]
+@depends(
+    "WINSYSROOT",
+    bootstrap_path(
+        "vs",
+        when=depends("WINSYSROOT", when=is_windows)(lambda x: not x),
+    ),
+    when=is_windows,
+)
+def winsysroot(winsysroot, bootstrapped):
+    if bootstrapped:
+        return bootstrapped
+    if winsysroot:
+        return winsysroot[0]
 
 
 option(

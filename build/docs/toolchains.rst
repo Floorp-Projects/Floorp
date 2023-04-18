@@ -153,7 +153,8 @@ install the required Visual Studio components given on the command line.
 The ``taskcluster/scripts/misc/get_vs.py`` script takes a YAML file as
 input and fills a directory with the corresponding Visual Studio components.
 
-Both scripts should be run via ``mach python --virtualenv build``.
+Both scripts should be run via ``mach python --virtualenv build``. The
+latter is automatically invoked by the boostrapping mechanism.
 
 
 Firefox for Android with Gradle
