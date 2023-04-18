@@ -45,7 +45,7 @@ const TRANSLATIONS_TESTER_NO_TAG =
  * This is the two-letter language label for the MockedLanguageIdEngine to return as
  * the mocked detected language.
  *
- * @param {Array<{ fromLang: string, toLang: string}>} options.languagePairs
+ * @param {Array<{ fromLang: string, toLang: string, isBeta: boolean }>} options.languagePairs
  * The translation languages pairs to mock for the test.
  *
  * @param {Array<[string, string]>} options.prefs

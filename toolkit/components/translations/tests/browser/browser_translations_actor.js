@@ -19,13 +19,13 @@ add_task(async function test_pivot_language_behavior() {
 
   const { actor, cleanup } = await setupActorTest({
     languagePairs: [
-      { fromLang: "en", toLang: "es" },
-      { fromLang: "es", toLang: "en" },
+      { fromLang: "en", toLang: "es", isBeta: false },
+      { fromLang: "es", toLang: "en", isBeta: false },
       // This is not a bi-directional translation.
-      { fromLang: "is", toLang: "en" },
+      { fromLang: "is", toLang: "en", isBeta: false },
       // These are non-pivot languages.
-      { fromLang: "zh", toLang: "ja" },
-      { fromLang: "ja", toLang: "zh" },
+      { fromLang: "zh", toLang: "ja", isBeta: true },
+      { fromLang: "ja", toLang: "zh", isBeta: true },
     ],
   });
 
@@ -34,9 +34,9 @@ add_task(async function test_pivot_language_behavior() {
   Assert.deepEqual(
     languagePairs,
     [
-      { fromLang: "en", toLang: "es" },
-      { fromLang: "es", toLang: "en" },
-      { fromLang: "is", toLang: "en" },
+      { fromLang: "en", toLang: "es", isBeta: false },
+      { fromLang: "es", toLang: "en", isBeta: false },
+      { fromLang: "is", toLang: "en", isBeta: false },
     ],
     "Non-pivot languages were removed."
   );

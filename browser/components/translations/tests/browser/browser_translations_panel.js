@@ -4,10 +4,12 @@
 "use strict";
 
 const languagePairs = [
-  { fromLang: "es", toLang: "en" },
-  { fromLang: "en", toLang: "es" },
-  { fromLang: "fr", toLang: "en" },
-  { fromLang: "en", toLang: "fr" },
+  { fromLang: "es", toLang: "en", isBeta: false },
+  { fromLang: "en", toLang: "es", isBeta: false },
+  { fromLang: "fr", toLang: "en", isBeta: false },
+  { fromLang: "en", toLang: "fr", isBeta: false },
+  { fromLang: "en", toLang: "uk", isBeta: true },
+  { fromLang: "uk", toLang: "en", isBeta: true },
 ];
 
 const spanishPageUrl = TRANSLATIONS_TESTER_ES;
@@ -223,6 +225,52 @@ add_task(async function test_translations_panel_switch_language() {
       "DON QUIJOTE DE LA MANCHA [en to fr, html]"
     );
   });
+
+  await cleanup();
+});
+
+/**
+ * Tests that languages are displayed correctly as being in beta or not.
+ */
+add_task(async function test_translations_panel_display_beta_languages() {
+  const { cleanup } = await loadTestPage({
+    page: spanishPageUrl,
+    languagePairs,
+  });
+
+  function assertBetaDisplay(selectElement) {
+    const betaL10nId = "translations-panel-displayname-beta";
+    const options = selectElement.firstChild.getElementsByTagName("menuitem");
+    for (const option of options) {
+      for (const languagePair of languagePairs) {
+        if (
+          languagePair.fromLang === option.value ||
+          languagePair.toLang === option.value
+        ) {
+          if (option.getAttribute("data-l10n-id") === betaL10nId) {
+            is(
+              languagePair.isBeta,
+              true,
+              `Since data-l10n-id was ${betaL10nId} for ${option.value}, then it must be part of a beta language pair, but it was not.`
+            );
+          }
+          if (!languagePair.isBeta) {
+            is(
+              option.getAttribute("data-l10n-id") === betaL10nId,
+              false,
+              `Since the languagePair is non-beta, the language option ${option.value} should not have a data-l10-id of ${betaL10nId}, but it does.`
+            );
+          }
+        }
+      }
+    }
+  }
+
+  const fromSelect = document.getElementById("translations-panel-from");
+  const toSelect = document.getElementById("translations-panel-to");
+
+  assertBetaDisplay(fromSelect);
+  assertBetaDisplay(toSelect);
 
   await cleanup();
 });

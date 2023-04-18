@@ -301,6 +301,6 @@ export interface LanguagePair { fromLang: string, toLang: string };
  */
 export interface SupportedLanguages {
   langPairs: LanguagePair[],
-  fromLanguages: Array<{ langTag: string, displayName: string }>,
-  toLanguages: Array<{ langTag: string, displayName: string }>,
+  fromLanguages: Array<{ langTag: string, isBeta: boolean, displayName: string, }>,
+  toLanguages: Array<{ langTag: string, isBeta: boolean, displayName: string }>,
 }
