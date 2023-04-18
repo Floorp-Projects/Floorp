@@ -257,8 +257,17 @@ urlbar:
       engagement_type:
         description: >
           Records how the user selected the result. The possible values are:
-          `click`, `enter`, `go_button`, `drop_go`, `paste_go`, `dismiss`,
-          `help`.
+          `click`,
+          `dismiss`,
+          `drop_go`,
+          `enter`,
+          `go_button`,
+          `help`,
+          `inaccurate_location`,
+          `not_interested`,
+          `not_relevant`,
+          `paste_go`,
+          `show_less_frequently`
         type: string
       groups:
         description: >

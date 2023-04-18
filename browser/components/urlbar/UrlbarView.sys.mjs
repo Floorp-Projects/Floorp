@@ -2671,8 +2671,8 @@ export class UrlbarView {
   /**
    * @param {UrlbarResult} result
    *   The result to get menu commands for.
-   * @returns {Map}
-   *   Map of menu commands available for the result, null if there are none.
+   * @returns {Array}
+   *   Array of menu commands available for the result, null if there are none.
    */
   #getResultMenuCommands(result) {
     if (!lazy.UrlbarPrefs.get("resultMenu")) {
@@ -2681,46 +2681,72 @@ export class UrlbarView {
     if (this.#resultMenuCommands.has(result)) {
       return this.#resultMenuCommands.get(result);
     }
-    let commands = new Map();
+
+    let commands = lazy.UrlbarProvidersManager.getProvider(
+      result.providerName
+    ).tryMethod("getResultCommands", result);
+    if (commands) {
+      this.#resultMenuCommands.set(result, commands);
+      return commands;
+    }
+
+    commands = [];
     if (
       result.source == lazy.UrlbarUtils.RESULT_SOURCE.HISTORY &&
       !result.autofill
     ) {
-      commands.set(RESULT_MENU_COMMANDS.DISMISS, {
-        l10n: { id: "urlbar-result-menu-remove-from-history" },
-      });
-      commands.set(RESULT_MENU_COMMANDS.HELP, {
-        l10n: { id: "urlbar-result-menu-learn-more" },
-      });
+      commands.push(
+        {
+          name: RESULT_MENU_COMMANDS.DISMISS,
+          l10n: { id: "urlbar-result-menu-remove-from-history" },
+        },
+        {
+          name: RESULT_MENU_COMMANDS.HELP,
+          l10n: { id: "urlbar-result-menu-learn-more" },
+        }
+      );
     }
     if (result.payload.isBlockable) {
-      commands.set(RESULT_MENU_COMMANDS.DISMISS, {
+      commands.push({
+        name: RESULT_MENU_COMMANDS.DISMISS,
         l10n: result.payload.blockL10n,
       });
     }
     if (result.payload.helpUrl) {
-      commands.set(RESULT_MENU_COMMANDS.HELP, {
+      commands.push({
+        name: RESULT_MENU_COMMANDS.HELP,
         l10n: result.payload.helpL10n,
       });
     }
-    let rv = commands.size ? commands : null;
+    let rv = commands.length ? commands : null;
     this.#resultMenuCommands.set(result, rv);
     return rv;
   }
 
-  #populateResultMenu() {
-    this.resultMenu.textContent = "";
-    for (const [command, data] of this.#getResultMenuCommands(
-      this.#resultMenuResult
-    )) {
-      let menuitem = this.document.createElementNS(
-        "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-        "menuitem"
-      );
-      menuitem.dataset.command = command;
+  #populateResultMenu(
+    menupopup = this.resultMenu,
+    commands = this.#getResultMenuCommands(this.#resultMenuResult)
+  ) {
+    menupopup.textContent = "";
+    for (let data of commands) {
+      if (data.children) {
+        let popup = this.document.createXULElement("menupopup");
+        this.#populateResultMenu(popup, data.children);
+        let menu = this.document.createXULElement("menu");
+        this.#setElementL10n(menu, data.l10n);
+        menu.appendChild(popup);
+        menupopup.appendChild(menu);
+        continue;
+      }
+      if (data.name == "separator") {
+        menupopup.appendChild(this.document.createXULElement("menuseparator"));
+        continue;
+      }
+      let menuitem = this.document.createXULElement("menuitem");
+      menuitem.dataset.command = data.name;
       menuitem.classList.add("urlbarView-result-menuitem");
       this.#setElementL10n(menuitem, data.l10n);
-      this.resultMenu.appendChild(menuitem);
+      menupopup.appendChild(menuitem);
     }
   }
 
@@ -3008,7 +3034,7 @@ export class UrlbarView {
   }
 
   on_popupshowing(event) {
-    if (event.currentTarget == this.resultMenu) {
+    if (event.target == this.resultMenu) {
       this.#populateResultMenu();
     }
   }

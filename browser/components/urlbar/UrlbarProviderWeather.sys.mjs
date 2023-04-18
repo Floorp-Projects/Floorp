@@ -29,6 +29,14 @@ const TELEMETRY_SCALARS = {
   IMPRESSION: `${TELEMETRY_PREFIX}.impression_weather`,
 };
 
+const RESULT_MENU_COMMAND = {
+  HELP: "help",
+  INACCURATE_LOCATION: "inaccurate_location",
+  NOT_INTERESTED: "not_interested",
+  NOT_RELEVANT: "not_relevant",
+  SHOW_LESS_FREQUENTLY: "show_less_frequently",
+};
+
 const WEATHER_DYNAMIC_TYPE = "weather";
 const WEATHER_VIEW_TEMPLATE = {
   attributes: {
@@ -235,6 +243,8 @@ class ProviderWeather extends UrlbarProvider {
         url: suggestion.url,
         iconId: suggestion.current_conditions.icon_id,
         helpUrl: lazy.QuickSuggest.HELP_URL,
+        // TODO: Remove helpL10n, isBlockable, and blockL10n once the telemetry
+        // test is updated for the result menu.
         helpL10n: {
           id: lazy.UrlbarPrefs.get("resultMenu")
             ? "urlbar-result-menu-learn-more-about-firefox-suggest"
@@ -265,6 +275,49 @@ class ProviderWeather extends UrlbarProvider {
 
     addCallback(this, result);
     this.#resultFromLastQuery = result;
+  }
+
+  getResultCommands(result) {
+    return [
+      {
+        name: RESULT_MENU_COMMAND.INACCURATE_LOCATION,
+        l10n: {
+          id: "firefox-suggest-weather-command-inaccurate-location",
+        },
+      },
+      {
+        name: RESULT_MENU_COMMAND.SHOW_LESS_FREQUENTLY,
+        l10n: {
+          id: "firefox-suggest-weather-command-show-less-frequently",
+        },
+      },
+      {
+        l10n: {
+          id: "firefox-suggest-weather-command-dont-show-this",
+        },
+        children: [
+          {
+            name: RESULT_MENU_COMMAND.NOT_RELEVANT,
+            l10n: {
+              id: "firefox-suggest-weather-command-not-relevant",
+            },
+          },
+          {
+            name: RESULT_MENU_COMMAND.NOT_INTERESTED,
+            l10n: {
+              id: "firefox-suggest-weather-command-not-interested",
+            },
+          },
+        ],
+      },
+      { name: "separator" },
+      {
+        name: RESULT_MENU_COMMAND.HELP,
+        l10n: {
+          id: "urlbar-result-menu-learn-more-about-firefox-suggest",
+        },
+      },
+    ];
   }
 
   /**
@@ -394,14 +447,13 @@ class ProviderWeather extends UrlbarProvider {
       }
     }
 
-    // Handle dismissals.
-    if (
-      details.result?.providerName == this.name &&
-      details.selType == "dismiss"
-    ) {
-      this.logger.info("Dismissing weather result");
-      lazy.UrlbarPrefs.set("suggest.weather", false);
-      queryContext.view.controller.removeResult(details.result);
+    // Handle commands.
+    if (details.result?.providerName == this.name) {
+      this.#handlePossibleCommand(
+        queryContext,
+        details.result,
+        details.selType
+      );
     }
 
     this.#resultFromLastQuery = null;
@@ -480,9 +532,7 @@ class ProviderWeather extends UrlbarProvider {
         break;
       default:
         if (selType) {
-          this.logger.error(
-            "Engagement telemetry error, unknown selType: " + selType
-          );
+          eventObject = "other";
         }
         break;
     }
@@ -503,6 +553,28 @@ class ProviderWeather extends UrlbarProvider {
         source: result.payload.source,
       }
     );
+  }
+
+  #handlePossibleCommand(queryContext, result, selType) {
+    switch (selType) {
+      case RESULT_MENU_COMMAND.HELP:
+        // "help" is handled by UrlbarInput, no need to do anything here.
+        break;
+      // selType == "dismiss" when the user presses the dismiss key shortcut.
+      case "dismiss":
+      case RESULT_MENU_COMMAND.NOT_INTERESTED:
+      case RESULT_MENU_COMMAND.NOT_RELEVANT:
+        this.logger.info("Dismissing weather result");
+        lazy.UrlbarPrefs.set("suggest.weather", false);
+        queryContext.view.controller.removeResult(result);
+        break;
+      case RESULT_MENU_COMMAND.INACCURATE_LOCATION:
+        // TODO
+        break;
+      case RESULT_MENU_COMMAND.SHOW_LESS_FREQUENTLY:
+        // TODO
+        break;
+    }
   }
 
   // The result we added during the most recent query.

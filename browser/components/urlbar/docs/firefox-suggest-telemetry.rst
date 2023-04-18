@@ -839,6 +839,10 @@ The event's objects are the following possible values:
   The user picked the suggestion's help button.
 :impression_only:
   The user picked some other row.
+:other:
+  The user engaged with the suggestion in some other way, for example by picking
+  a command in the result menu. This is a catch-all category and going forward
+  Glean telemetry should be preferred.
 
 The event's ``extra`` contains the following properties:
 
@@ -864,9 +868,13 @@ Changelog
   Firefox 112.0
     ``navigational`` is added as a value of ``suggestion_type``. [Bug 1819797_]
 
+  Firefox 114.0
+    ``other`` is added as a value of the event object. [Bug 1827943_]
+
 .. _1761059: https://bugzilla.mozilla.org/show_bug.cgi?id=1761059
 .. _1800993: https://bugzilla.mozilla.org/show_bug.cgi?id=1800993
 .. _1819797: https://bugzilla.mozilla.org/show_bug.cgi?id=1819797
+.. _1827943: https://bugzilla.mozilla.org/show_bug.cgi?id=1827943
 
 contextservices.quicksuggest.impression_cap
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

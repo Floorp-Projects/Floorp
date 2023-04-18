@@ -68,6 +68,17 @@ firefox-suggest-weather-high-low = High: { $high }°{ $unit } · Low: { $low }°
 #   $provider (String) - The name of the weather provider
 firefox-suggest-weather-sponsored = { $provider } · Sponsored
 
+firefox-suggest-weather-command-inaccurate-location =
+  .label = Report inaccurate location
+firefox-suggest-weather-command-show-less-frequently =
+  .label = Show less frequently
+firefox-suggest-weather-command-dont-show-this =
+  .label = Don’t show this
+firefox-suggest-weather-command-not-relevant =
+  .label = Not relevant
+firefox-suggest-weather-command-not-interested =
+  .label = Not interested
+
 ## These strings are used in the preferences UI (about:preferences). Their names
 ## follow the naming conventions of other strings used in the preferences UI.
 
