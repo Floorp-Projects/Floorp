@@ -390,7 +390,7 @@ class MessageType(SendSemanticsType):
         return len(self.returns) or self.isSync() or self.isInterrupt()
 
     def hasImplicitActorParam(self):
-        return self.isCtor() or self.isDtor()
+        return self.isCtor()
 
 
 class ProtocolType(SendSemanticsType):
