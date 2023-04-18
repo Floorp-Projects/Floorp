@@ -636,12 +636,19 @@ void EventTargetChainItem::HandleEventTargetChain(
   }
 }
 
-static nsTArray<EventTargetChainItem>* sCachedMainThreadChain = nullptr;
+// There are often 2 nested event dispatches ongoing at the same time, so
+// have 2 separate caches.
+static const uint32_t kCachedMainThreadChainSize = 128;
+struct CachedChains {
+  nsTArray<EventTargetChainItem> mChain1;
+  nsTArray<EventTargetChainItem> mChain2;
+};
+static CachedChains* sCachedMainThreadChains = nullptr;
 
 /* static */
 void EventDispatcher::Shutdown() {
-  delete sCachedMainThreadChain;
-  sCachedMainThreadChain = nullptr;
+  delete sCachedMainThreadChains;
+  sCachedMainThreadChains = nullptr;
 }
 
 EventTargetChainItem* EventTargetChainItemForChromeTarget(
@@ -848,11 +855,19 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
   ELMCreationDetector cd;
   nsTArray<EventTargetChainItem> chain;
   if (cd.IsMainThread()) {
-    if (!sCachedMainThreadChain) {
-      sCachedMainThreadChain = new nsTArray<EventTargetChainItem>();
+    if (!sCachedMainThreadChains) {
+      sCachedMainThreadChains = new CachedChains();
     }
-    chain = std::move(*sCachedMainThreadChain);
-    chain.SetCapacity(128);
+
+    if (sCachedMainThreadChains->mChain1.Capacity() ==
+        kCachedMainThreadChainSize) {
+      chain = std::move(sCachedMainThreadChains->mChain1);
+    } else if (sCachedMainThreadChains->mChain2.Capacity() ==
+               kCachedMainThreadChainSize) {
+      chain = std::move(sCachedMainThreadChains->mChain2);
+    } else {
+      chain.SetCapacity(kCachedMainThreadChainSize);
+    }
   }
 
   // Create the event target chain item for the event target.
@@ -1197,9 +1212,17 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
     *aEventStatus = preVisitor.mEventStatus;
   }
 
-  if (cd.IsMainThread() && chain.Capacity() == 128 && sCachedMainThreadChain) {
-    chain.ClearAndRetainStorage();
-    chain.SwapElements(*sCachedMainThreadChain);
+  if (cd.IsMainThread() && chain.Capacity() == kCachedMainThreadChainSize &&
+      sCachedMainThreadChains) {
+    if (sCachedMainThreadChains->mChain1.Capacity() !=
+        kCachedMainThreadChainSize) {
+      chain.ClearAndRetainStorage();
+      chain.SwapElements(sCachedMainThreadChains->mChain1);
+    } else if (sCachedMainThreadChains->mChain2.Capacity() !=
+               kCachedMainThreadChainSize) {
+      chain.ClearAndRetainStorage();
+      chain.SwapElements(sCachedMainThreadChains->mChain2);
+    }
   }
 
   return rv;
