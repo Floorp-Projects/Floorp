@@ -9,6 +9,7 @@
 #include "mozilla/JSONStringWriteFuncs.h"
 #include "mozilla/mscom/Utils.h"
 #include "mozilla/NotNull.h"
+#include "mozilla/RefPtr.h"
 #include "nsExceptionHandler.h"
 #include "nsPrintfCString.h"
 #include "nsWindowsHelpers.h"

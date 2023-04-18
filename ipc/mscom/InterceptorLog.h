@@ -9,6 +9,7 @@
 
 #include "mozilla/TimeStamp.h"
 #include "nsString.h"
+#include <windows.h>
 
 struct ICallFrame;
 struct IUnknown;

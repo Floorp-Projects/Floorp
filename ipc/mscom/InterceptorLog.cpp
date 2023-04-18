@@ -27,6 +27,7 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIOutputStream.h"
+#include "nsIThread.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
@@ -35,6 +36,7 @@
 #include "nsXPCOMPrivate.h"
 #include "nsXULAppAPI.h"
 #include "prenv.h"
+#include "prio.h"
 
 using mozilla::DebugOnly;
 using mozilla::Mutex;

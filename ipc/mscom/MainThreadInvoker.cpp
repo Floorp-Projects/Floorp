@@ -35,7 +35,7 @@ class SyncRunnable : public mozilla::Runnable {
       : mozilla::Runnable("MainThreadInvoker"), mRunnable(aRunnable) {
     static const bool gotStatics = InitStatics();
     MOZ_ASSERT(gotStatics);
-    Unused << gotStatics;
+    mozilla::Unused << gotStatics;
   }
 
   ~SyncRunnable() = default;
@@ -56,9 +56,9 @@ class SyncRunnable : public mozilla::Runnable {
   void APCRun() {
     mHasRun = true;
 
-    TimeStamp runStart(TimeStamp::Now());
+    mozilla::TimeStamp runStart{mozilla::TimeStamp::Now()};
     mRunnable->Run();
-    TimeStamp runEnd(TimeStamp::Now());
+    mozilla::TimeStamp runEnd{mozilla::TimeStamp::Now()};
 
     mDuration = runEnd - runStart;
 
@@ -119,7 +119,7 @@ bool MainThreadInvoker::InitStatics() {
 MainThreadInvoker::MainThreadInvoker() {
   static const bool gotStatics = InitStatics();
   MOZ_ASSERT(gotStatics);
-  Unused << gotStatics;
+  mozilla::Unused << gotStatics;
 }
 
 bool MainThreadInvoker::Invoke(already_AddRefed<nsIRunnable>&& aRunnable) {
