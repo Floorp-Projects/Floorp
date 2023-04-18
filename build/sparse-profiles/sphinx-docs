@@ -43,3 +43,6 @@ glob:**/package*.json
 
 # Read to set the version of the docs.
 path:config/milestone.txt
+
+# mots configuration
+path:mots.yaml

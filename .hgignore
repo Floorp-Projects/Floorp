@@ -290,3 +290,6 @@ gfx/wr/target/
 ^extensions/spellcheck/locales/en-US/hunspell/dictionary-sources/scowl
 ^extensions/spellcheck/locales/en-US/hunspell/dictionary-sources/support_files/
 ^extensions/spellcheck/locales/en-US/hunspell/dictionary-sources/*en_US-mozilla*
+
+# Ignore automatically generated mots documentation
+^docs/mots/index.rst
