@@ -24,7 +24,6 @@ use servo_arc::{Arc, ThinArc};
 use smallbitvec::{InternalStorage, SmallBitVec};
 use smallvec::{Array, SmallVec};
 use std::alloc::Layout;
-#[cfg(debug_assertions)]
 use std::collections::HashSet;
 use std::ffi::CString;
 use std::isize;
@@ -414,6 +413,21 @@ impl<T: ToShmem> ToShmem for Option<T> {
         };
 
         Ok(ManuallyDrop::new(v))
+    }
+}
+
+impl<T: ToShmem, S> ToShmem for HashSet<T, S>
+where
+    Self: Default,
+{
+    fn to_shmem(&self, _builder: &mut SharedMemoryBuilder) -> Result<Self> {
+        if !self.is_empty() {
+            return Err(format!(
+                "ToShmem failed for HashSet: We only support empty sets \
+                 (we don't expect custom properties in UA sheets, they're observable by content)",
+            ))
+        }
+        Ok(ManuallyDrop::new(Self::default()))
     }
 }
 
