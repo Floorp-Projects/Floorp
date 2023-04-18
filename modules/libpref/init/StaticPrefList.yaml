@@ -8964,6 +8964,12 @@
   value: 50 # 50%
   mirror: always
 
+# Whether the "modern" uppercase mapping of ß to ẞ (rather than SS) is used.
+- name: layout.css.text-transform.uppercase-eszett.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Whether to block large cursors intersecting UI.
 - name: layout.cursor.block.enabled
   type: bool

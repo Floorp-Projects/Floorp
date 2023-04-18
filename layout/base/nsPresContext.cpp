@@ -333,6 +333,7 @@ static const char* gExactCallbackPrefs[] = {
     "intl.accept_languages",
     "layout.css.devPixelsPerPx",
     "layout.css.dpi",
+    "layout.css.text-transform.uppercase-eszett.enabled",
     "privacy.trackingprotection.enabled",
     "ui.use_standins_for_native_colors",
     nullptr,
@@ -611,6 +612,11 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
     if (StyleSet()->UsesFontMetrics()) {
       restyleHint |= RestyleHint::RecascadeSubtree();
     }
+  }
+
+  if (prefName.EqualsLiteral(
+          "layout.css.text-transform.uppercase-eszett.enabled")) {
+    changeHint |= NS_STYLE_HINT_REFLOW;
   }
 
   // We will end up calling InvalidatePreferenceSheets one from each pres
