@@ -11,6 +11,7 @@
 #include "mozilla/Unused.h"
 #include "../DllBlocklistInit.h"
 #include "../ErrorHandler.h"
+#include "SharedSection.h"
 
 using GlobalInitializerFn = void(__cdecl*)(void);
 
