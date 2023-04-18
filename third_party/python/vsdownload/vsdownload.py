@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Copyright (c) 2019 Martin Storsjo
 #
@@ -511,9 +511,12 @@ def unpackWin10SDK(src, payloads, dest):
         if name.endswith(".msi"):
             print("Extracting " + name)
             srcfile = os.path.join(src, name)
-            log = open(os.path.join(dest, "WinSDK-" + getPayloadName(payload) + "-listing.txt"), "w")
-            subprocess.check_call(["msiextract", "-C", dest, srcfile], stdout=log)
-            log.close()
+            if sys.platform == "win32":
+                cmd = ["msiexec", "/a", srcfile, "/qn", "TARGETDIR=" + os.path.abspath(dest)]
+            else:
+                cmd = ["msiextract", "-C", dest, srcfile]
+            with open(os.path.join(dest, "WinSDK-" + getPayloadName(payload) + "-listing.txt"), "w") as log:
+                subprocess.check_call(cmd, stdout=log)
 
 def extractPackages(selected, cache, dest):
     makedirs(dest)
@@ -538,7 +541,12 @@ def moveVCSDK(unpack, dest):
     # files to be removed.
     makedirs(os.path.join(dest, "kits"))
     mergeTrees(os.path.join(unpack, "VC"), os.path.join(dest, "VC"))
-    mergeTrees(os.path.join(unpack, "Program Files", "Windows Kits", "10"), os.path.join(dest, "kits", "10"))
+    kitsPath = unpack
+    # msiexec extracts to Windows Kits rather than Program Files\Windows Kits
+    if sys.platform != "win32":
+        kitsPath = os.path.join(kitsPath, "Program Files")
+    kitsPath = os.path.join(kitsPath, "Windows Kits", "10")
+    mergeTrees(kitsPath, os.path.join(dest, "kits", "10"))
     # The DIA SDK isn't necessary for normal use, but can be used when e.g.
     # compiling LLVM.
     mergeTrees(os.path.join(unpack, "DIA SDK"), os.path.join(dest, "DIA SDK"))
