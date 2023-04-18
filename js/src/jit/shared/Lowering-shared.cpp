@@ -97,7 +97,7 @@ void LIRGeneratorShared::definePhiTwoRegisters(MPhi* phi, size_t lirIndex) {
   phi->setVirtualRegister(typeVreg);
 
   uint32_t payloadVreg = getVirtualRegister();
-  MOZ_ASSERT(typeVreg + 1 == payloadVreg);
+  MOZ_ASSERT_IF(!errored(), typeVreg + 1 == payloadVreg);
 
   type->setDef(0, LDefinition(typeVreg, LDefinition::TYPE));
   payload->setDef(0, LDefinition(payloadVreg, LDefinition::PAYLOAD));

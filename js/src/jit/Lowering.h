@@ -64,7 +64,7 @@ class LIRGenerator final : public LIRGeneratorSpecific {
   void lowerBitOp(JSOp op, MBinaryInstruction* ins);
   void lowerShiftOp(JSOp op, MShiftInstruction* ins);
   LInstructionHelper<1, 1, 0>* allocateAbs(MAbs* ins, LAllocation input);
-  void definePhis();
+  bool definePhis();
 
   template <typename T>
   [[nodiscard]] bool lowerCallArguments(T* call);
