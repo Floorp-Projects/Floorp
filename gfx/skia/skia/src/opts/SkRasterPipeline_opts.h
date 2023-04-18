@@ -1890,7 +1890,7 @@ BLEND_MODE(overlay) {
 }
 
 BLEND_MODE(softlight) {
-    F m  = if_then_else(da > 0, d / da, 0),
+    F m  = if_then_else(da > 0, d / da, F(0)),
       s2 = two(s),
       m4 = two(two(m));
 
@@ -1929,7 +1929,7 @@ SI void set_sat(F* r, F* g, F* b, F s) {
 
     // Map min channel to 0, max channel to s, and scale the middle proportionally.
     auto scale = [=](F c) {
-        return if_then_else(sat == 0, 0, (c - mn) * s / sat);
+        return if_then_else(sat == 0, F(0), (c - mn) * s / sat);
     };
     *r = scale(*r);
     *g = scale(*g);
@@ -2107,14 +2107,14 @@ STAGE(premul_dst, NoCtx) {
 }
 STAGE(unpremul, NoCtx) {
     float inf = sk_bit_cast<float>(0x7f800000);
-    auto scale = if_then_else(1.0f/a < inf, 1.0f/a, 0);
+    auto scale = if_then_else(1.0f/a < inf, 1.0f/a, F(0));
     r *= scale;
     g *= scale;
     b *= scale;
 }
 STAGE(unpremul_polar, NoCtx) {
     float inf = sk_bit_cast<float>(0x7f800000);
-    auto scale = if_then_else(1.0f/a < inf, 1.0f/a, 0);
+    auto scale = if_then_else(1.0f/a < inf, 1.0f/a, F(0));
     g *= scale;
     b *= scale;
 }
@@ -2130,12 +2130,12 @@ STAGE(rgb_to_hsl, NoCtx) {
 
     F h = (1/6.0f) *
           if_then_else(mx == mn, 0,
-          if_then_else(mx ==  r, (g-b)*d_rcp + if_then_else(g < b, F(6.0f), 0),
+          if_then_else(mx ==  r, (g-b)*d_rcp + if_then_else(g < b, F(6.0f), F(0)),
           if_then_else(mx ==  g, (b-r)*d_rcp + 2.0f,
                                  (r-g)*d_rcp + 4.0f)));
 
     F l = (mx + mn) * 0.5f;
-    F s = if_then_else(mx == mn, 0,
+    F s = if_then_else(mx == mn, F(0),
                        d / if_then_else(l > 0.5f, 2.0f-mx-mn, mx+mn));
 
     r = h;
@@ -3086,7 +3086,7 @@ STAGE(xy_to_unit_angle, NoCtx) {
     phi = if_then_else(xabs < yabs, 1.0f/4.0f - phi, phi);
     phi = if_then_else(X < 0.0f   , 1.0f/2.0f - phi, phi);
     phi = if_then_else(Y < 0.0f   , 1.0f - phi     , phi);
-    phi = if_then_else(phi != phi , 0              , phi);  // Check for NaN.
+    phi = if_then_else(phi != phi , F(0)           , phi);  // Check for NaN.
     r = phi;
 }
 
@@ -4061,7 +4061,7 @@ STAGE_TAIL(refract_4_floats, F* dst) {
     for (int idx = 0; idx < 4; ++idx) {
         dst[idx] = if_then_else(k >= 0,
                                 eta * incident[idx] - (eta * dotNI + sqrt_k) * normal[idx],
-                                0.0);
+                                F(0));
     }
 }
 
@@ -5606,7 +5606,7 @@ STAGE_GG(xy_to_unit_angle, NoCtx) {
     phi = if_then_else(xabs < yabs, 1.0f/4.0f - phi, phi);
     phi = if_then_else(x < 0.0f   , 1.0f/2.0f - phi, phi);
     phi = if_then_else(y < 0.0f   , 1.0f - phi     , phi);
-    phi = if_then_else(phi != phi , 0              , phi);  // Check for NaN.
+    phi = if_then_else(phi != phi , F(0)           , phi);  // Check for NaN.
     x = phi;
 }
 STAGE_GG(xy_to_radius, NoCtx) {
