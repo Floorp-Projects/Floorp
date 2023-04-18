@@ -1167,7 +1167,9 @@ class TelemetryEvent {
       `${method} event: ${JSON.stringify(eventInfo)}`
     );
 
-    Glean.urlbar[method].record(eventInfo);
+    if (lazy.UrlbarPrefs.get("searchEngagementTelemetryEnabled")) {
+      Glean.urlbar[method].record(eventInfo);
+    }
   }
 
   #getInteractionType(
@@ -1346,16 +1348,31 @@ class TelemetryEvent {
   };
 
   #beginObservingPingPrefs() {
-    for (const p of Object.keys(this.#PING_PREFS)) {
-      this.onPrefChanged(p);
-    }
+    this.onPrefChanged("searchEngagementTelemetry.enabled");
     lazy.UrlbarPrefs.addObserver(this);
   }
 
   onPrefChanged(pref) {
+    if (pref === "searchEngagementTelemetry.enabled") {
+      for (const p of Object.keys(this.#PING_PREFS)) {
+        this.onPrefChanged(p);
+      }
+      return;
+    }
+
+    if (!lazy.UrlbarPrefs.get("searchEngagementTelemetryEnabled")) {
+      return;
+    }
+
     const metric = this.#PING_PREFS[pref];
     if (metric) {
       metric.set(lazy.UrlbarPrefs.get(pref));
+    }
+  }
+
+  onNimbusChanged(variable) {
+    if (variable === "searchEngagementTelemetryEnabled") {
+      this.onPrefChanged("searchEngagementTelemetry.enabled");
     }
   }
 
