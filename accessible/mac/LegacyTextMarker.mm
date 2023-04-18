@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #import "LegacyTextMarker.h"
+#import "MacUtils.h"
 
 #include "DocAccessible.h"
 #include "DocAccessibleParent.h"

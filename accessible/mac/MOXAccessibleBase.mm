@@ -12,7 +12,9 @@
 #include "nsObjCExceptions.h"
 #include "xpcAccessibleMacInterface.h"
 #include "mozilla/Logging.h"
+#include "gfxPlatform.h"
 
+using namespace mozilla;
 using namespace mozilla::a11y;
 
 #undef LOG

@@ -9,6 +9,8 @@
 
 #import "MacUtils.h"
 
+#include "nsAccUtils.h"
+#include "DocAccessible.h"
 #include "DocAccessibleParent.h"
 #include "mozilla/StaticPrefs_accessibility.h"
 

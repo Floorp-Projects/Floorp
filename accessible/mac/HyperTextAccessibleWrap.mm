@@ -12,6 +12,7 @@
 #include "nsAccUtils.h"
 #include "nsFrameSelection.h"
 #include "TextLeafRange.h"
+#include "TextRange.h"
 #include "TreeWalker.h"
 
 using namespace mozilla;
