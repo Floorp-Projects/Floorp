@@ -136,42 +136,42 @@ ModuleGenerator::~ModuleGenerator() {
 
 // This is the highest offset into Instance::globalArea that will not overflow
 // a signed 32-bit integer.
-static const uint32_t MaxInstanceDataOffset =
-    INT32_MAX - Instance::offsetOfData();
+static const uint32_t MaxGlobalDataOffset =
+    INT32_MAX - Instance::offsetOfGlobalArea();
 
-bool ModuleGenerator::allocateInstanceDataBytes(uint32_t bytes, uint32_t align,
-                                                uint32_t* instanceDataOffset) {
-  CheckedInt<uint32_t> newInstanceDataLength(metadata_->instanceDataLength);
+bool ModuleGenerator::allocateGlobalBytes(uint32_t bytes, uint32_t align,
+                                          uint32_t* globalDataOffset) {
+  CheckedInt<uint32_t> newGlobalDataLength(metadata_->globalDataLength);
 
   // Adjust the current global data length so that it's aligned to `align`
-  newInstanceDataLength +=
-      ComputeByteAlignment(newInstanceDataLength.value(), align);
-  if (!newInstanceDataLength.isValid()) {
+  newGlobalDataLength +=
+      ComputeByteAlignment(newGlobalDataLength.value(), align);
+  if (!newGlobalDataLength.isValid()) {
     return false;
   }
 
   // The allocated data is given by the aligned length
-  *instanceDataOffset = newInstanceDataLength.value();
+  *globalDataOffset = newGlobalDataLength.value();
 
   // Advance the length for `bytes` being allocated
-  newInstanceDataLength += bytes;
-  if (!newInstanceDataLength.isValid()) {
+  newGlobalDataLength += bytes;
+  if (!newGlobalDataLength.isValid()) {
     return false;
   }
 
   // Check that the highest offset into this allocated space would not overflow
   // a signed 32-bit integer.
-  if (newInstanceDataLength.value() > MaxInstanceDataOffset + 1) {
+  if (newGlobalDataLength.value() > MaxGlobalDataOffset + 1) {
     return false;
   }
 
-  metadata_->instanceDataLength = newInstanceDataLength.value();
+  metadata_->globalDataLength = newGlobalDataLength.value();
   return true;
 }
 
-bool ModuleGenerator::allocateInstanceDataBytesN(uint32_t bytes, uint32_t align,
-                                                 uint32_t count,
-                                                 uint32_t* instanceDataOffset) {
+bool ModuleGenerator::allocateGlobalBytesN(uint32_t bytes, uint32_t align,
+                                           uint32_t count,
+                                           uint32_t* globalDataOffset) {
   // The size of each allocation should be a multiple of alignment so that a
   // contiguous array of allocations will be aligned
   MOZ_ASSERT(bytes % align == 0);
@@ -184,8 +184,7 @@ bool ModuleGenerator::allocateInstanceDataBytesN(uint32_t bytes, uint32_t align,
   }
 
   // Allocate the bytes
-  return allocateInstanceDataBytes(totalBytes.value(), align,
-                                   instanceDataOffset);
+  return allocateGlobalBytes(totalBytes.value(), align, globalDataOffset);
 }
 
 bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
@@ -262,38 +261,30 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
       codeSectionSize / ByteCodesPerOOBTrap);
 
   // Allocate space in instance for declarations that need it
-  MOZ_ASSERT(metadata_->instanceDataLength == 0);
+  MOZ_ASSERT(metadata_->globalDataLength == 0);
 
   // Allocate space for type definitions
-  if (!allocateInstanceDataBytesN(
+  if (!allocateGlobalBytesN(
           sizeof(TypeDefInstanceData), alignof(TypeDefInstanceData),
-          moduleEnv_->types->length(), &moduleEnv_->typeDefsOffsetStart)) {
+          moduleEnv_->types->length(), &moduleEnv_->typeIdsOffsetStart)) {
     return false;
   }
-  metadata_->typeDefsOffsetStart = moduleEnv_->typeDefsOffsetStart;
+  metadata_->typeIdsOffsetStart = moduleEnv_->typeIdsOffsetStart;
 
   // Allocate space for every function import
-  if (!allocateInstanceDataBytesN(
+  if (!allocateGlobalBytesN(
           sizeof(FuncImportInstanceData), alignof(FuncImportInstanceData),
           moduleEnv_->numFuncImports, &moduleEnv_->funcImportsOffsetStart)) {
     return false;
   }
 
   // Allocate space for every table
-  if (!allocateInstanceDataBytesN(
-          sizeof(TableInstanceData), alignof(TableInstanceData),
-          moduleEnv_->tables.length(), &moduleEnv_->tablesOffsetStart)) {
-    return false;
+  for (TableDesc& table : moduleEnv_->tables) {
+    if (!allocateGlobalBytes(sizeof(TableInstanceData), sizeof(void*),
+                             &table.globalDataOffset)) {
+      return false;
+    }
   }
-  metadata_->tablesOffsetStart = moduleEnv_->tablesOffsetStart;
-
-  // Allocate space for every tag
-  if (!allocateInstanceDataBytesN(
-          sizeof(TagInstanceData), alignof(TagInstanceData),
-          moduleEnv_->tags.length(), &moduleEnv_->tagsOffsetStart)) {
-    return false;
-  }
-  metadata_->tagsOffsetStart = moduleEnv_->tagsOffsetStart;
 
   // Allocate space for every global that requires it
   for (GlobalDesc& global : moduleEnv_->globals) {
@@ -303,12 +294,20 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
 
     uint32_t width = global.isIndirect() ? sizeof(void*) : global.type().size();
 
-    uint32_t instanceDataOffset;
-    if (!allocateInstanceDataBytes(width, width, &instanceDataOffset)) {
+    uint32_t globalDataOffset;
+    if (!allocateGlobalBytes(width, width, &globalDataOffset)) {
       return false;
     }
 
-    global.setOffset(instanceDataOffset);
+    global.setOffset(globalDataOffset);
+  }
+
+  // Allocate space for every tag
+  for (TagDesc& tag : moduleEnv_->tags) {
+    if (!allocateGlobalBytes(sizeof(void*), sizeof(void*),
+                             &tag.globalDataOffset)) {
+      return false;
+    }
   }
 
   // Initialize function import metadata

@@ -353,28 +353,21 @@ using FuncImportVector = Vector<FuncImport, 0, SystemAllocPolicy>;
 struct MetadataCacheablePod {
   ModuleKind kind;
   Maybe<MemoryDesc> memory;
-  uint32_t instanceDataLength;
+  uint32_t globalDataLength;
   Maybe<uint32_t> startFuncIndex;
   Maybe<uint32_t> nameCustomSectionIndex;
   bool filenameIsURL;
   bool omitsBoundsChecks;
-  uint32_t typeDefsOffsetStart;
-  uint32_t tablesOffsetStart;
-  uint32_t tagsOffsetStart;
 
-  WASM_CHECK_CACHEABLE_POD(kind, memory, instanceDataLength, startFuncIndex,
+  WASM_CHECK_CACHEABLE_POD(kind, memory, globalDataLength, startFuncIndex,
                            nameCustomSectionIndex, filenameIsURL,
-                           omitsBoundsChecks, typeDefsOffsetStart,
-                           tablesOffsetStart, tagsOffsetStart)
+                           omitsBoundsChecks)
 
   explicit MetadataCacheablePod(ModuleKind kind)
       : kind(kind),
-        instanceDataLength(0),
+        globalDataLength(0),
         filenameIsURL(false),
-        omitsBoundsChecks(false),
-        typeDefsOffsetStart(UINT32_MAX),
-        tablesOffsetStart(UINT32_MAX),
-        tagsOffsetStart(UINT32_MAX) {}
+        omitsBoundsChecks(false) {}
 };
 
 WASM_DECLARE_CACHEABLE_POD(MetadataCacheablePod)
@@ -383,6 +376,7 @@ using ModuleHash = uint8_t[8];
 
 struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod {
   SharedTypeContext types;
+  uint32_t typeIdsOffsetStart;
   GlobalDescVector globals;
   TableDescVector tables;
   TagDescVector tags;

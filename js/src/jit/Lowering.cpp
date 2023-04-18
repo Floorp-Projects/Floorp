@@ -5448,9 +5448,8 @@ void LIRGenerator::visitWasmAlignmentCheck(MWasmAlignmentCheck* ins) {
   }
 }
 
-void LIRGenerator::visitWasmLoadInstanceDataField(
-    MWasmLoadInstanceDataField* ins) {
-  size_t offs = wasm::Instance::offsetInData(ins->instanceDataOffset());
+void LIRGenerator::visitWasmLoadGlobalVar(MWasmLoadGlobalVar* ins) {
+  size_t offs = wasm::Instance::offsetOfGlobalArea() + ins->globalDataOffset();
   if (ins->type() == MIRType::Int64) {
 #ifdef JS_PUNBOX64
     LAllocation instance = useRegisterAtStart(ins->instance());
@@ -5496,10 +5495,9 @@ void LIRGenerator::visitWasmLoadTableElement(MWasmLoadTableElement* ins) {
   define(new (alloc()) LWasmLoadTableElement(elements, index), ins);
 }
 
-void LIRGenerator::visitWasmStoreInstanceDataField(
-    MWasmStoreInstanceDataField* ins) {
+void LIRGenerator::visitWasmStoreGlobalVar(MWasmStoreGlobalVar* ins) {
   MDefinition* value = ins->value();
-  size_t offs = wasm::Instance::offsetInData(ins->instanceDataOffset());
+  size_t offs = wasm::Instance::offsetOfGlobalArea() + ins->globalDataOffset();
   if (value->type() == MIRType::Int64) {
 #ifdef JS_PUNBOX64
     LAllocation instance = useRegisterAtStart(ins->instance());
