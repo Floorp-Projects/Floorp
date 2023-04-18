@@ -391,6 +391,16 @@ Accessible* Accessible::AnchorAt(uint32_t aAnchorIndex) {
   return aAnchorIndex == 0 ? this : nullptr;
 }
 
+bool Accessible::IsSearchbox() const {
+  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
+  if (roleMapEntry && roleMapEntry->Is(nsGkAtoms::searchbox)) {
+    return true;
+  }
+
+  RefPtr<nsAtom> inputType = InputType();
+  return inputType == nsGkAtoms::search;
+}
+
 #ifdef A11Y_LOG
 void Accessible::DebugDescription(nsCString& aDesc) const {
   aDesc.Truncate();
