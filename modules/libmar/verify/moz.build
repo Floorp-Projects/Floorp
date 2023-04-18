@@ -47,5 +47,3 @@ c11_flags = ["-std=gnu11"]
 if CONFIG["CC_TYPE"] == "clang-cl":
     c11_flags.insert(0, "-Xclang")
 CFLAGS += c11_flags
-
-REQUIRES_UNIFIED_BUILD = True
