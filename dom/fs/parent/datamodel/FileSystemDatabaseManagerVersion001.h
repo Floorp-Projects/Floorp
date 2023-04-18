@@ -99,6 +99,23 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
   nsresult UpdateCachedQuotaUsage(const EntryId& aEntryId, Usage aOldUsage,
                                   Usage aNewUsage);
 
+  nsresult ClearDestinationIfNotLocked(
+      const FileSystemConnection& aConnection,
+      const FileSystemDataManager* const aDataManager,
+      const FileSystemEntryMetadata& aHandle,
+      const FileSystemChildMetadata& aNewDesignation);
+
+  nsresult PrepareMoveEntry(const FileSystemConnection& aConnection,
+                            const FileSystemDataManager* const aDataManager,
+                            const FileSystemEntryMetadata& aHandle,
+                            const FileSystemChildMetadata& aNewDesignation,
+                            bool aIsFile);
+
+  nsresult PrepareRenameEntry(const FileSystemConnection& aConnection,
+                              const FileSystemDataManager* const aDataManager,
+                              const FileSystemEntryMetadata& aHandle,
+                              const Name& aNewName, bool aIsFile);
+
   // This is a raw pointer since we're owned by the FileSystemDataManager.
   FileSystemDataManager* MOZ_NON_OWNING_REF mDataManager;
 
