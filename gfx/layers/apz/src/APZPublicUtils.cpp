@@ -32,13 +32,13 @@ namespace apz {
 }
 
 ScrollAnimationBezierPhysicsSettings ComputeBezierAnimationSettingsForOrigin(
-    ScrollOrigin aOrigin, bool aSmoothScrollingEnabled) {
+    ScrollOrigin aOrigin) {
   int32_t minMS = 0;
   int32_t maxMS = 0;
   bool isOriginSmoothnessEnabled = false;
 
 #define READ_DURATIONS(prefbase)                                              \
-  isOriginSmoothnessEnabled = aSmoothScrollingEnabled &&                      \
+  isOriginSmoothnessEnabled = StaticPrefs::general_smoothScroll() &&          \
                               StaticPrefs::general_smoothScroll_##prefbase(); \
   if (isOriginSmoothnessEnabled) {                                            \
     minMS = StaticPrefs::general_smoothScroll_##prefbase##_durationMinMS();   \
@@ -87,9 +87,8 @@ ScrollAnimationBezierPhysicsSettings ComputeBezierAnimationSettingsForOrigin(
   return ScrollAnimationBezierPhysicsSettings{minMS, maxMS, intervalRatio};
 }
 
-ScrollMode GetScrollModeForOrigin(ScrollOrigin origin,
-                                  bool aSmoothScrollingEnabled) {
-  if (!aSmoothScrollingEnabled) return ScrollMode::Instant;
+ScrollMode GetScrollModeForOrigin(ScrollOrigin origin) {
+  if (!StaticPrefs::general_smoothScroll()) return ScrollMode::Instant;
   switch (origin) {
     case ScrollOrigin::Lines:
       return StaticPrefs::general_smoothScroll_lines() ? ScrollMode::Smooth
@@ -102,7 +101,8 @@ ScrollMode GetScrollModeForOrigin(ScrollOrigin origin,
                                                        : ScrollMode::Instant;
     default:
       MOZ_ASSERT(false, "Unknown keyboard scroll origin");
-      return ScrollMode::Instant;
+      return StaticPrefs::general_smoothScroll() ? ScrollMode::Smooth
+                                                 : ScrollMode::Instant;
   }
 }
 

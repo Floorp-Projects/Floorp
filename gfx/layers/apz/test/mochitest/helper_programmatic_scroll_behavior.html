@@ -62,12 +62,10 @@ async function test() {
 
   await scrollendPromise;
 
-  // If general.smoothScroll is set and the user does not prefer reduced motion,
-  // the behavior of the scroll should be "smooth". If general.smoothScroll is
-  // disabled, we should respect it and the scrolls should instant regardless of
-  // the specified behavior.
-  if (SpecialPowers.getBoolPref("general.smoothScroll") &&
-      SpecialPowers.getIntPref("ui.prefersReducedMotion") == 0) {
+  // If general.smoothScroll is set, the behavior of the scroll should be
+  // "smooth". If general.smoothScroll is disabled, we should respect it and
+  // the scrolls should instant regardless of the specified behavior.
+  if (SpecialPowers.getBoolPref("general.smoothScroll")) {
     info("final enabled scroll count: " + scrollCount);
     ok(scrollCount > 1, "The programmatic scroll should create more than one scroll event");
   } else {

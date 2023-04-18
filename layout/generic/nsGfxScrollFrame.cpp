@@ -2222,8 +2222,7 @@ void nsHTMLScrollFrame::AsyncScroll::InitSmoothScroll(
           MakeUnique<ScrollAnimationMSDPhysics>(aInitialPosition);
     } else {
       ScrollAnimationBezierPhysicsSettings settings =
-          layers::apz::ComputeBezierAnimationSettingsForOrigin(
-              mOrigin, nsLayoutUtils::IsSmoothScrollingEnabled());
+          layers::apz::ComputeBezierAnimationSettingsForOrigin(mOrigin);
       mAnimationPhysics =
           MakeUnique<ScrollAnimationBezierPhysics>(aInitialPosition, settings);
     }
@@ -2233,6 +2232,11 @@ void nsHTMLScrollFrame::AsyncScroll::InitSmoothScroll(
   mRange = aRange;
 
   mAnimationPhysics->Update(aTime, aDestination, aCurrentVelocity);
+}
+
+/* static */
+bool nsHTMLScrollFrame::IsSmoothScrollingEnabled() {
+  return StaticPrefs::general_smoothScroll();
 }
 
 /*
@@ -2556,8 +2560,7 @@ void nsHTMLScrollFrame::ScrollToWithOrigin(nsPoint aScrollPosition,
     mAsyncScroll->SetRefreshObserver(this);
   }
 
-  const bool isSmoothScroll =
-      aParams.IsSmooth() && nsLayoutUtils::IsSmoothScrollingEnabled();
+  const bool isSmoothScroll = aParams.IsSmooth() && IsSmoothScrollingEnabled();
   if (isSmoothScroll) {
     mAsyncScroll->InitSmoothScroll(now, GetScrollPosition(), mDestination,
                                    aParams.mOrigin, range, currentVelocity);
@@ -7913,7 +7916,7 @@ bool nsHTMLScrollFrame::IsSmoothScroll(dom::ScrollBehavior aBehavior) const {
   // smooth scrolls. A requested smooth scroll when smooth scrolling is
   // disabled should be equivalent to an instant scroll.
   if (aBehavior == dom::ScrollBehavior::Instant ||
-      !nsLayoutUtils::IsSmoothScrollingEnabled()) {
+      !nsHTMLScrollFrame::IsSmoothScrollingEnabled()) {
     return false;
   }
 
