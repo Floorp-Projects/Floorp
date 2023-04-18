@@ -339,5 +339,26 @@ pref(layout.css.moz-control-character-visibility.enabled,true) pref(layout.css.c
 # sub and sup elements should be influenced by their container's line-height - bug 1524897
 == sub-sup-and-line-height.html sub-sup-and-line-height-ref.html
 
+# Basic rendering tests for the (nonstandard/compatibility) -webkit-text-security property.
+== webkit-text-security-1.html?test#none   webkit-text-security-1.html?ref#none
+!= webkit-text-security-1.html?test#none   webkit-text-security-1.html?ref#square
+== webkit-text-security-1.html?test#circle webkit-text-security-1.html?ref#circle
+== webkit-text-security-1.html?test#disc   webkit-text-security-1.html?ref#disc
+== webkit-text-security-1.html?test#square webkit-text-security-1.html?ref#square
+!= webkit-text-security-1.html?test#circle webkit-text-security-1.html?ref#square
+# Exact matching to a reference is trickier for these, but we can mismatch-test that the property has an effect.
+!= webkit-text-security-2.html?circle webkit-text-security-2.html?none
+!= webkit-text-security-2.html?disc   webkit-text-security-2.html?circle
+!= webkit-text-security-2.html?square webkit-text-security-2.html?circle
+!= webkit-text-security-3.html?circle webkit-text-security-3.html?none
+!= webkit-text-security-3.html?disc   webkit-text-security-3.html?circle
+!= webkit-text-security-3.html?square webkit-text-security-3.html?circle
+!= webkit-text-security-4.html?circle webkit-text-security-4.html?none
+!= webkit-text-security-4.html?disc   webkit-text-security-4.html?circle
+!= webkit-text-security-4.html?square webkit-text-security-4.html?circle
+!= webkit-text-security-5.html?circle webkit-text-security-5.html?none
+!= webkit-text-security-5.html?disc   webkit-text-security-5.html?circle
+!= webkit-text-security-5.html?square webkit-text-security-5.html?circle
+
 # Reset default prefs.
 defaults
