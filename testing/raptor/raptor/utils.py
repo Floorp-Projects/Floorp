@@ -3,7 +3,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import importlib
+import inspect
 import os
+import pathlib
 from collections.abc import Iterable
 from distutils.util import strtobool
 
@@ -144,3 +147,36 @@ def write_yml_file(yml_file, yml_data):
 
 def bool_from_str(boolean_string):
     return bool(strtobool(boolean_string))
+
+
+def import_support_class(path):
+    """This function returns a Transformer class with the given path.
+
+    :param str path: The path points to the custom transformer.
+    :param bool ret_members: If true then return inspect.getmembers().
+    :return Transformer if not ret_members else inspect.getmembers().
+    """
+    file = pathlib.Path(path)
+
+    if not file.exists():
+        raise Exception(f"The support_class path {path} does not exist.")
+
+    # Importing a source file directly
+    spec = importlib.util.spec_from_file_location(name=file.name, location=path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    # TODO: Add checks for methods that can be used for results/output parsing
+    members = inspect.getmembers(
+        module,
+        lambda c: inspect.isclass(c)
+        and hasattr(c, "modify_command")
+        and callable(c.modify_command),
+    )
+
+    if not members:
+        raise Exception(
+            f"The path {path} was found but it was not a valid support_class."
+        )
+
+    return members[0][-1]
