@@ -3,13 +3,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import json
 import os
+import pathlib
 import re
 
 from constants.raptor_tests_constants import YOUTUBE_PLAYBACK_MEASURE
 from logger.logger import RaptorLogger
 from manifestparser import TestManifest
 from six.moves.urllib.parse import parse_qs, unquote, urlencode, urlsplit, urlunsplit
-from utils import bool_from_str, transform_platform, transform_subtest
+from utils import (
+    bool_from_str,
+    import_support_class,
+    transform_platform,
+    transform_subtest,
+)
 
 here = os.path.abspath(os.path.dirname(__file__))
 raptor_ini = os.path.join(here, "raptor.ini")
@@ -591,6 +597,18 @@ def get_raptor_test_list(args, oskey):
                 next_test["measure"].remove("hero")
                 # remove the 'hero =' line since no longer measuring hero
                 del next_test["hero"]
+
+        if next_test.get("support_class", None) is not None:
+            support_class = import_support_class(
+                pathlib.Path(
+                    here,
+                    "..",
+                    "browsertime",
+                    "support-scripts",
+                    next_test["support_class"],
+                ).resolve()
+            )
+            next_test["support_class"] = support_class()
 
         bool_settings = [
             "lower_is_better",

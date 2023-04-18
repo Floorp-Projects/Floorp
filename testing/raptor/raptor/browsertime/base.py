@@ -689,6 +689,10 @@ class Browsertime(Perftest):
         # this will be used for btime --timeouts.pageLoad
         cmd = self._compose_cmd(test, timeout)
 
+        if test.get("support_class", None):
+            LOG.info("Test support class is modifying the command...")
+            test.get("support_class").modify_command(cmd)
+
         output_timeout = BROWSERTIME_PAGELOAD_OUTPUT_TIMEOUT
         if test.get("type", "") == "scenario":
             # Change the timeout for scenarios since they

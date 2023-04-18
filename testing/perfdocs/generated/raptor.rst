@@ -8797,6 +8797,35 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
 
 
+.. dropdown:: sample-python-support
+   :class-container: anchor-id-sample-python-support-c
+
+   **Owner**: PerfTest Team
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox
+   * **browser cycles**: 1
+   * **browsertime args**: --browsertime.constant_value={replace-with-constant-value}
+   * **custom data**: true
+   * **expected**: pass
+   * **fore window**: 1
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **max back window**: 3
+   * **min back window**: 2
+   * **output timeout**: 2000000
+   * **page cycles**: 1
+   * **page timeout**: 1800000
+   * **subtest unit**: ms
+   * **support class**: sample_python_support.py
+   * **test script**: constant_regression_test.js
+   * **test summary**: flatten
+   * **test url**: `<None>`__
+   * **type**: pageload
+   * **unit**: score
+   * **use live sites**: true
+
 .. dropdown:: upload
    :class-container: anchor-id-upload-c
 
