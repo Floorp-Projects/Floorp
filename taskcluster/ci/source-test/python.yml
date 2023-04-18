@@ -45,6 +45,7 @@ firefox-ci:
         subsuite: ci
     when:
         files-changed:
+            - '.taskcluster.yml'
             - 'taskcluster/ci/**'
             - 'taskcluster/**/*.py'
             - 'tools/tryselect/selectors/auto.py'
