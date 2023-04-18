@@ -129,75 +129,11 @@ bool nsGbmLib::Load() {
 
 gbm_device* nsDMABufDevice::GetGbmDevice() { return mGbmDevice; }
 
-static void dmabuf_modifiers(void* data,
-                             struct zwp_linux_dmabuf_v1* zwp_linux_dmabuf,
-                             uint32_t format, uint32_t modifier_hi,
-                             uint32_t modifier_lo) {
-  // skip modifiers marked as invalid
-  if (modifier_hi == (DRM_FORMAT_MOD_INVALID >> 32) &&
-      modifier_lo == (DRM_FORMAT_MOD_INVALID & 0xffffffff)) {
-    return;
-  }
-
-  auto* device = static_cast<nsDMABufDevice*>(data);
-  switch (format) {
-    case GBM_FORMAT_ARGB8888:
-      device->AddFormatModifier(true, format, modifier_hi, modifier_lo);
-      break;
-    case GBM_FORMAT_XRGB8888:
-      device->AddFormatModifier(false, format, modifier_hi, modifier_lo);
-      break;
-    default:
-      break;
-  }
-}
-
-static void dmabuf_format(void* data,
-                          struct zwp_linux_dmabuf_v1* zwp_linux_dmabuf,
-                          uint32_t format) {
-  // XXX: deprecated
-}
-
-static const struct zwp_linux_dmabuf_v1_listener dmabuf_listener = {
-    dmabuf_format, dmabuf_modifiers};
-
-static void global_registry_handler(void* data, wl_registry* registry,
-                                    uint32_t id, const char* interface,
-                                    uint32_t version) {
-  auto* device = static_cast<nsDMABufDevice*>(data);
-  if (strcmp(interface, "zwp_linux_dmabuf_v1") == 0 && version > 2) {
-    auto* dmabuf = WaylandRegistryBind<zwp_linux_dmabuf_v1>(
-        registry, id, &zwp_linux_dmabuf_v1_interface, 3);
-    LOGDMABUF(("zwp_linux_dmabuf_v1 is available."));
-    device->ResetFormatsModifiers();
-    zwp_linux_dmabuf_v1_add_listener(dmabuf, &dmabuf_listener, data);
-  } else if (strcmp(interface, "wl_drm") == 0) {
-    LOGDMABUF(("wl_drm is available."));
-  }
-}
-
-static void global_registry_remover(void* data, wl_registry* registry,
-                                    uint32_t id) {}
-
-static const struct wl_registry_listener registry_listener = {
-    global_registry_handler, global_registry_remover};
-
 nsDMABufDevice::nsDMABufDevice()
     : mUseWebGLDmabufBackend(true),
-      mXRGBFormat({true, false, GBM_FORMAT_XRGB8888, nullptr, 0}),
-      mARGBFormat({true, true, GBM_FORMAT_ARGB8888, nullptr, 0}),
       mDRMFd(-1),
       mGbmDevice(nullptr),
       mInitialized(false) {
-  if (GdkIsWaylandDisplay()) {
-    wl_display* display = WaylandDisplayGetWLDisplay();
-    wl_registry* registry = wl_display_get_registry(display);
-    wl_registry_add_listener(registry, &registry_listener, this);
-    wl_display_roundtrip(display);
-    wl_display_roundtrip(display);
-    wl_registry_destroy(registry);
-  }
-
   nsAutoCString drm_render_node(getenv("MOZ_DRM_DEVICE"));
   if (drm_render_node.IsEmpty()) {
     drm_render_node.Assign(gfx::gfxVars::DrmRenderDevice());
@@ -276,46 +212,7 @@ bool nsDMABufDevice::IsDMABufWebGLEnabled() {
 
 void nsDMABufDevice::DisableDMABufWebGL() { mUseWebGLDmabufBackend = false; }
 
-GbmFormat* nsDMABufDevice::GetGbmFormat(bool aHasAlpha) {
-  GbmFormat* format = aHasAlpha ? &mARGBFormat : &mXRGBFormat;
-  return format->mIsSupported ? format : nullptr;
-}
-
-GbmFormat* nsDMABufDevice::GetExactGbmFormat(int aFormat) {
-  if (aFormat == mARGBFormat.mFormat) {
-    return &mARGBFormat;
-  } else if (aFormat == mXRGBFormat.mFormat) {
-    return &mXRGBFormat;
-  }
-
-  return nullptr;
-}
-
-void nsDMABufDevice::AddFormatModifier(bool aHasAlpha, int aFormat,
-                                       uint32_t mModifierHi,
-                                       uint32_t mModifierLo) {
-  GbmFormat* format = aHasAlpha ? &mARGBFormat : &mXRGBFormat;
-  format->mIsSupported = true;
-  format->mHasAlpha = aHasAlpha;
-  format->mFormat = aFormat;
-  format->mModifiersCount++;
-  format->mModifiers =
-      (uint64_t*)realloc(format->mModifiers,
-                         format->mModifiersCount * sizeof(*format->mModifiers));
-  format->mModifiers[format->mModifiersCount - 1] =
-      ((uint64_t)mModifierHi << 32) | mModifierLo;
-}
-
-void nsDMABufDevice::ResetFormatsModifiers() {
-  mARGBFormat.mModifiersCount = 0;
-  free(mARGBFormat.mModifiers);
-  mARGBFormat.mModifiers = nullptr;
-
-  mXRGBFormat.mModifiersCount = 0;
-  free(mXRGBFormat.mModifiers);
-  mXRGBFormat.mModifiers = nullptr;
-}
-
+// TODO: Make private or make sure it's configured
 nsDMABufDevice* GetDMABufDevice() {
   static nsDMABufDevice dmaBufDevice;
   return &dmaBufDevice;

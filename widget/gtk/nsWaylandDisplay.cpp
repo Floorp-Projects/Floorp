@@ -26,6 +26,11 @@ namespace mozilla::widget {
 // compositor thread and render thread)
 #define MAX_DISPLAY_CONNECTIONS 10
 
+GbmFormat nsWaylandDisplay::sXRGBFormat = {true, false, GBM_FORMAT_XRGB8888,
+                                           nullptr, 0};
+GbmFormat nsWaylandDisplay::sARGBFormat = {true, true, GBM_FORMAT_ARGB8888,
+                                           nullptr, 0};
+
 // An array of active Wayland displays. We need a display for every thread
 // where Wayland interface used as we need to dispatch Wayland's events there.
 static StaticDataMutex<
@@ -139,6 +144,58 @@ void nsWaylandDisplay::SetXdgActivation(xdg_activation_v1* aXdgActivation) {
   mXdgActivation = aXdgActivation;
 }
 
+GbmFormat* nsWaylandDisplay::GetGbmFormat(bool aHasAlpha) {
+  return aHasAlpha ? &sARGBFormat : &sXRGBFormat;
+}
+
+void nsWaylandDisplay::AddFormatModifier(bool aHasAlpha, int aFormat,
+                                         uint32_t aModifierHi,
+                                         uint32_t aModifierLo) {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  GbmFormat* format = aHasAlpha ? &sARGBFormat : &sXRGBFormat;
+  format->mIsSupported = true;
+  format->mHasAlpha = aHasAlpha;
+  format->mFormat = aFormat;
+  format->mModifiersCount++;
+  format->mModifiers =
+      (uint64_t*)realloc(format->mModifiers,
+                         format->mModifiersCount * sizeof(*format->mModifiers));
+  format->mModifiers[format->mModifiersCount - 1] =
+      ((uint64_t)aModifierHi << 32) | aModifierLo;
+}
+
+static void dmabuf_modifiers(void* data,
+                             struct zwp_linux_dmabuf_v1* zwp_linux_dmabuf,
+                             uint32_t format, uint32_t modifier_hi,
+                             uint32_t modifier_lo) {
+  // skip modifiers marked as invalid
+  if (modifier_hi == (DRM_FORMAT_MOD_INVALID >> 32) &&
+      modifier_lo == (DRM_FORMAT_MOD_INVALID & 0xffffffff)) {
+    return;
+  }
+  switch (format) {
+    case GBM_FORMAT_ARGB8888:
+      nsWaylandDisplay::AddFormatModifier(true, format, modifier_hi,
+                                          modifier_lo);
+      break;
+    case GBM_FORMAT_XRGB8888:
+      nsWaylandDisplay::AddFormatModifier(false, format, modifier_hi,
+                                          modifier_lo);
+      break;
+    default:
+      break;
+  }
+}
+
+static void dmabuf_format(void* data,
+                          struct zwp_linux_dmabuf_v1* zwp_linux_dmabuf,
+                          uint32_t format) {
+  // XXX: deprecated
+}
+
+static const struct zwp_linux_dmabuf_v1_listener dmabuf_listener = {
+    dmabuf_format, dmabuf_modifiers};
+
 static void global_registry_handler(void* data, wl_registry* registry,
                                     uint32_t id, const char* interface,
                                     uint32_t version) {
@@ -193,6 +250,9 @@ static void global_registry_handler(void* data, wl_registry* registry,
         registry, id, &zwp_linux_dmabuf_v1_interface, 3);
     wl_proxy_set_queue((struct wl_proxy*)dmabuf, display->GetEventQueue());
     display->SetDmabuf(dmabuf);
+    if (NS_IsMainThread()) {
+      zwp_linux_dmabuf_v1_add_listener(dmabuf, &dmabuf_listener, nullptr);
+    }
   } else if (strcmp(interface, "xdg_activation_v1") == 0) {
     auto* activation = WaylandRegistryBind<xdg_activation_v1>(
         registry, id, &xdg_activation_v1_interface, 1);
@@ -306,6 +366,8 @@ static void WlLogHandler(const char* format, va_list args) {
   gfxCriticalNote << "Wayland protocol error: " << error;
 }
 
+// TODO: Make sure we always have nsWaylandDisplay for main thread
+// and we keep it around.
 nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
     : mThreadId(PR_GetCurrentThread()), mDisplay(aDisplay) {
   // GTK sets the log handler on display creation, thus we overwrite it here
@@ -335,6 +397,14 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
                         "We're missing subcompositor interface!");
 }
 
-nsWaylandDisplay::~nsWaylandDisplay() { ShutdownEventQueue(); }
+nsWaylandDisplay::~nsWaylandDisplay() {
+  ShutdownEventQueue();
+  if (NS_IsMainThread()) {
+    free(sARGBFormat.mModifiers);
+    sARGBFormat.mModifiers = nullptr;
+    free(sXRGBFormat.mModifiers);
+    sXRGBFormat.mModifiers = nullptr;
+  }
+}
 
 }  // namespace mozilla::widget
