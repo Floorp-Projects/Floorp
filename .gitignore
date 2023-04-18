@@ -208,3 +208,6 @@ tools/esmify/jscodeshift
 tools/esmify/jscodeshift.cmd
 tools/esmify/jscodeshift.ps1
 tools/esmify/package-lock.json
+
+# Ignore automatically generated mots documentation
+docs/mots/index.rst
