@@ -25,13 +25,16 @@ export class DateTimePickerParent extends JSWindowActorParent {
     debug("receiveMessage: " + aMessage.name);
     switch (aMessage.name) {
       case "FormDateTime:OpenPicker": {
-        this.showPicker(aMessage.data);
+        let topBrowsingContext = this.manager.browsingContext.top;
+        let browser = topBrowsingContext.embedderElement;
+        this.showPicker(browser, aMessage.data);
         break;
       }
       case "FormDateTime:ClosePicker": {
         if (!this._picker) {
           return;
         }
+        this._picker.closePicker();
         this.close();
         break;
       }
@@ -60,6 +63,7 @@ export class DateTimePickerParent extends JSWindowActorParent {
       }
       case "popuphidden": {
         this.sendAsyncMessage("FormDateTime:PickerClosed", {});
+        this._picker.closePicker();
         this.close();
         break;
       }
@@ -69,62 +73,45 @@ export class DateTimePickerParent extends JSWindowActorParent {
   }
 
   // Get picker from browser and show it anchored to the input box.
-  showPicker(aData) {
+  showPicker(aBrowser, aData) {
     let rect = aData.rect;
     let type = aData.type;
     let detail = aData.detail;
 
     debug("Opening picker with details: " + JSON.stringify(detail));
-    let topBC = this.browsingContext.top;
-    let window = topBC.topChromeWindow;
-    if (Services.focus.activeWindow != window) {
-      debug("Not in the active window");
+
+    let window = aBrowser.ownerGlobal;
+    let tabbrowser = window.gBrowser;
+    if (!tabbrowser) {
+      // TODO(bug 1828477): Support non-<tabbrowser> windows
+      debug("no tabbrowser, exiting now.");
       return;
     }
 
-    {
-      let browser = topBC.embedderElement;
-      if (
-        browser &&
-        browser.ownerGlobal.gBrowser &&
-        browser.ownerGlobal.gBrowser.selectedBrowser != browser
-      ) {
-        debug("In background tab");
-        return;
-      }
+    if (
+      Services.focus.activeWindow != window ||
+      tabbrowser.selectedBrowser != aBrowser
+    ) {
+      // We were sent a message from a window or tab that went into the
+      // background, so we'll ignore it for now.
+      return;
     }
 
-    let doc = window.document;
-    let panel = doc.getElementById("DateTimePickerPanel");
-    if (!panel) {
-      panel = doc.createXULElement("panel");
-      panel.id = "DateTimePickerPanel";
-      panel.setAttribute("type", "arrow");
-      panel.setAttribute("orient", "vertical");
-      panel.setAttribute("ignorekeys", "true");
-      panel.setAttribute("noautofocus", "true");
-      // This ensures that clicks on the anchored input box are never consumed.
-      panel.setAttribute("consumeoutsideclicks", "never");
-      panel.setAttribute("level", "parent");
-      panel.setAttribute("tabspecific", "true");
-      let container =
-        doc.getElementById("mainPopupSet") ||
-        doc.querySelector("popupset") ||
-        doc.documentElement.appendChild(doc.createXULElement("popupset"));
-      container.appendChild(panel);
-    }
-    this._oldFocus = doc.activeElement;
+    let panel = tabbrowser._getAndMaybeCreateDateTimePickerPanel();
+    this.oldFocus = window.document.activeElement;
     this._picker = new lazy.DateTimePickerPanel(panel);
     this._picker.openPicker(type, rect, detail);
+
     this.addPickerListeners();
   }
 
-  // Close the picker and do some cleanup.
+  // Picker is closed, do some cleanup.
   close() {
-    this._picker.closePicker();
-    // Restore focus to where it was before the picker opened.
-    this._oldFocus?.focus();
-    this._oldFocus = null;
+    if (this.oldFocus) {
+      // Restore focus to where it was before the picker opened.
+      this.oldFocus.focus();
+      this.oldFocus = null;
+    }
     this.removePickerListeners();
     this._picker = null;
   }
