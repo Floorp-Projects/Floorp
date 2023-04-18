@@ -4286,6 +4286,45 @@ bool Element::IsPopoverOpen() const {
   return htmlElement && htmlElement->PopoverOpen();
 }
 
+Element* Element::GetTopmostPopoverAncestor() const {
+  const Element* newPopover = this;
+
+  nsTHashMap<nsPtrHashKey<const Element>, size_t> popoverPositions;
+  size_t index = 0;
+  for (Element* popover : OwnerDoc()->AutoPopoverList()) {
+    popoverPositions.LookupOrInsert(popover, index++);
+  }
+  popoverPositions.LookupOrInsert(newPopover, index);
+
+  Element* topmostPopoverAncestor = nullptr;
+
+  auto checkAncestor = [&](const Element* candidate) {
+    if (!candidate) {
+      return;
+    }
+    Element* candidateAncestor = candidate->GetNearestInclusiveOpenPopover();
+    if (!candidateAncestor) {
+      return;
+    }
+    size_t candidatePosition;
+    if (popoverPositions.Get(candidateAncestor, &candidatePosition)) {
+      size_t topmostPosition;
+      if (!topmostPopoverAncestor ||
+          (popoverPositions.Get(topmostPopoverAncestor, &topmostPosition) &&
+           topmostPosition < candidatePosition)) {
+        topmostPopoverAncestor = candidateAncestor;
+      }
+    }
+  };
+
+  checkAncestor(newPopover->GetFlattenedTreeParentElement());
+
+  // TODO: To handle the button invokers
+  // https://github.com/whatwg/html/issues/9160
+
+  return topmostPopoverAncestor;
+}
+
 ElementAnimationData& Element::CreateAnimationData() {
   MOZ_ASSERT(!GetAnimationData());
   SetMayHaveAnimations();

@@ -588,6 +588,11 @@ class Element : public FragmentOrElement {
   bool IsAutoPopover() const;
   bool IsPopoverOpen() const;
 
+  /**
+   * https://html.spec.whatwg.org/multipage/popover.html#topmost-popover-ancestor
+   */
+  mozilla::dom::Element* GetTopmostPopoverAncestor() const;
+
   ElementAnimationData* GetAnimationData() const {
     if (!MayHaveAnimations()) {
       return nullptr;
