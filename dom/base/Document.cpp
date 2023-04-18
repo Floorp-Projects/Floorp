@@ -15009,9 +15009,11 @@ void Document::HidePopover(Element& aPopover, bool aFocusPreviousElement,
 
   // Fire beforetoggle event and re-check popover validity.
   if (aFireEvents) {
-    // Intentionally ignore the return value here as only on open event the
-    // cancelable attribute is initialized to true.
-    popoverHTMLEl->FireBeforeToggle(true);
+    // Intentionally ignore the return value here as only on open event for
+    // beforetoggle the cancelable attribute is initialized to true.
+    popoverHTMLEl->FireToggleEvent(PopoverVisibilityState::Showing,
+                                   PopoverVisibilityState::Hidden,
+                                   u"beforetoggle"_ns);
     if (!popoverHTMLEl->CheckPopoverValidity(PopoverVisibilityState::Showing,
                                              aRv)) {
       return;
@@ -15024,7 +15026,11 @@ void Document::HidePopover(Element& aPopover, bool aFocusPreviousElement,
   popoverHTMLEl->GetPopoverData()->SetPopoverVisibilityState(
       PopoverVisibilityState::Hidden);
 
-  // TODO: Queue popover toggle event task.
+  // Queue popover toggle event task.
+  if (aFireEvents) {
+    popoverHTMLEl->QueuePopoverEventTask(PopoverVisibilityState::Showing);
+  }
+
   popoverHTMLEl->HandleFocusAfterHidingPopover(aFocusPreviousElement);
 }
 

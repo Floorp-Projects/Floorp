@@ -442,6 +442,7 @@ UNIFIED_SOURCES += [
     "nsWrapperCache.cpp",
     "ParentProcessMessageManager.cpp",
     "PointerLockManager.cpp",
+    "PopoverData.cpp",
     "PopupBlocker.cpp",
     "Pose.cpp",
     "PostMessageEvent.cpp",
