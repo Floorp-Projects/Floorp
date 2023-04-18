@@ -252,7 +252,7 @@ load eventSource_invalid_scheme_worker_shutdown.html
 load 1291535.html
 skip-if(!isDebugBuild||xulRuntime.OS!="Linux") load 1611853.html
 load 1619322.html
-asserts(0-1) load 1623918.html # May hit an assertion if the <input> element's anonymous tree hasn't been flushed when IMEContentObserver handles focus
+asserts(0-2) load 1623918.html # May hit an assertion if the <input> element's anonymous tree hasn't been flushed when IMEContentObserver handles focus
 load 1656925.html
 skip-if(Android) load 1665792.html # Print preview on android doesn't fly
 skip-if(ThreadSanitizer) load 1681729.html
