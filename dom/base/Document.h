@@ -5529,6 +5529,10 @@ class MOZ_RAII IgnoreOpensDuringUnload final {
   Document* mDoc;
 };
 
+bool IsInFocusedTab(Document* aDoc);
+
+// This covers all cases covered by IsInFocusedTab, but also ensures that
+// focused tab is "active" meaning not occluded.
 bool IsInActiveTab(Document* aDoc);
 
 }  // namespace mozilla::dom

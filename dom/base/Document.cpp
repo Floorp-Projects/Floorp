@@ -15066,14 +15066,10 @@ void Document::RemoveFromAutoPopoverList(Element& aElement) {
   TopLayerPop(aElement);
 }
 
-// Returns true if aDoc is in the focused tab in the active window.
-bool IsInActiveTab(Document* aDoc) {
+// Returns true if aDoc browsing context is focused.
+bool IsInFocusedTab(Document* aDoc) {
   BrowsingContext* bc = aDoc->GetBrowsingContext();
   if (!bc) {
-    return false;
-  }
-
-  if (!bc->IsActive()) {
     return false;
   }
 
@@ -15109,6 +15105,17 @@ bool IsInActiveTab(Document* aDoc) {
   }
 
   return fm->GetActiveBrowsingContext() == bc->Top();
+}
+
+// Returns true if aDoc browsing context is focused and is also active.
+bool IsInActiveTab(Document* aDoc) {
+  if (!IsInFocusedTab(aDoc)) {
+    return false;
+  }
+
+  BrowsingContext* bc = aDoc->GetBrowsingContext();
+  MOZ_ASSERT(bc, "With no BrowsingContext, we should have failed earlier.");
+  return bc->IsActive();
 }
 
 void Document::RemoteFrameFullscreenChanged(Element* aFrameElement) {
@@ -15208,7 +15215,7 @@ bool Document::FullscreenElementReadyCheck(FullscreenRequest& aRequest) {
     aRequest.Reject("FullscreenDeniedNotDescendant");
     return false;
   }
-  if (!nsContentUtils::IsChromeDoc(this) && !IsInActiveTab(this)) {
+  if (!nsContentUtils::IsChromeDoc(this) && !IsInFocusedTab(this)) {
     aRequest.Reject("FullscreenDeniedNotFocusedTab");
     return false;
   }
