@@ -233,7 +233,7 @@ namespace SK_OPTS_NS {
     SI F   abs_  (F v)   { return vabsq_f32(v); }
     SI I32 abs_  (I32 v) { return vabsq_s32(v); }
     SI F   rcp_fast(F v) { auto e = vrecpeq_f32 (v); return vrecpsq_f32 (v,e  ) * e; }
-    SI F   rcp_precise (F v) { auto e = rcp_fast(v); return vrecpsq_f32 (v,e  ) * F(e); }
+    SI F   rcp_precise (F v) { float32x4_t e = rcp_fast(v); return vrecpsq_f32(v,e) * e; }
     SI F   rsqrt (F v)   { auto e = vrsqrteq_f32(v); return vrsqrtsq_f32(v,e*e) * e; }
 
     SI U16 pack(U32 v)       { return SK_CONVERTVECTOR(v, U16); }
