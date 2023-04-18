@@ -140,8 +140,8 @@ not packaged for all patch versions, so there might be a slight delta there.
 Windows
 =======
 
-The ``build/vs/generate_yaml.py`` and ``build/vs/pack_vs.py`` scripts are
-used to manage and build Windows toolchain archives containing Visual
+The ``build/vs/generate_yaml.py`` and ``taskcluster/scripts/misc/get_vs.py``
+scripts are used to manage and get Windows toolchains containing Visual
 Studio executables, SDKs, etc.
 
 The ``build/vs/generate_yaml.py`` script is used to generate one of the
@@ -150,10 +150,10 @@ used to generate the file is stored in the header of the YAML file itself.
 Each YAML file records the necessary downloads from Microsoft servers to
 install the required Visual Studio components given on the command line.
 
-The ``build/vs/pack_vs.py`` script takes a YAML file as input and generates
-the corresponding toolchain artifact.
+The ``taskcluster/scripts/misc/get_vs.py`` script takes a YAML file as
+input and fills a directory with the corresponding Visual Studio components.
 
-Both scripts should be run via ``mach python``.
+Both scripts should be run via ``mach python --virtualenv build``.
 
 
 Firefox for Android with Gradle

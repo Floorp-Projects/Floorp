@@ -345,33 +345,35 @@ nsis:
 
 win64-vs2017:
     description: "VS 2017"
+    attributes:
+        local-toolchain: true
     treeherder:
         symbol: TW64(msvc2017)
     worker:
         env:
             MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: system
     run:
-        script: pack-vs.sh
+        script: get_vs.py
         arguments:
             - build/vs/vs2017.yaml
         resources:
-            - build/vs/pack_vs.py
             - build/vs/vs2017.yaml
         toolchain-artifact: project/gecko/vs/vs.tar.zst
 
 win64-vs2019:
     description: "VS 2019"
+    attributes:
+        local-toolchain: true
     treeherder:
         symbol: TW64(msvc2019)
     worker:
         env:
             MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: system
     run:
-        script: pack-vs.sh
+        script: get_vs.py
         arguments:
             - build/vs/vs2019.yaml
         resources:
-            - build/vs/pack_vs.py
             - build/vs/vs2019.yaml
         toolchain-artifact: project/gecko/vs/vs.tar.zst
 
