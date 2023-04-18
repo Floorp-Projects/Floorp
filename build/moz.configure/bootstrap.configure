@@ -29,9 +29,30 @@ def bootstrap_default(vcs_checkout_type, is_nightly, automation):
 
 option(
     "--enable-bootstrap",
+    nargs="*",
     default=bootstrap_default,
     help="{Automatically bootstrap or update some toolchains|Disable bootstrap or update of toolchains}",
 )
+
+
+@depends_if("--enable-bootstrap")
+def enable_bootstrap(bootstrap):
+    include = set()
+    exclude = set()
+    for item in bootstrap:
+        if item.startswith("-"):
+            exclude.add(item.lstrip("-"))
+        else:
+            include.add(item)
+
+    def match(name):
+        if name in exclude:
+            return False
+        if include and name in include:
+            return True
+        return not bool(include)
+
+    return match
 
 
 @depends(developer_options, "--enable-bootstrap", moz_fetches_dir)
@@ -45,7 +66,7 @@ def bootstrap_search_path_order(developer_options, bootstrap, moz_fetches_dir):
             "Prioritizing mozbuild state dir in toolchain paths because "
             "bootstrap mode is enabled."
         )
-        return "prepend"
+        return "maybe-prepend"
 
     if developer_options:
         log.debug(
@@ -121,7 +142,7 @@ def bootstrap_path(path, **kwargs):
         configure_error("bootstrap_path only takes `when` as a keyword argument")
 
     @depends(
-        "--enable-bootstrap",
+        enable_bootstrap,
         toolchains_base_dir,
         moz_fetches_dir,
         bootstrap_toolchain_tasks,
@@ -252,7 +273,7 @@ def bootstrap_path(path, **kwargs):
             return True
 
         path = os.path.join(toolchains_base_dir, path_prefix, *path_parts)
-        if bootstrap:
+        if bootstrap and bootstrap(path_parts[0]):
             try:
                 if not try_bootstrap(os.path.exists(path)):
                     # If there aren't toolchain artifacts to use for this build,
@@ -273,16 +294,22 @@ def bootstrap_path(path, **kwargs):
 @template
 def bootstrap_search_path(path, paths=original_path, **kwargs):
     @depends(
+        enable_bootstrap,
         bootstrap_path(path, **kwargs),
         bootstrap_search_path_order,
         paths,
         original_path,
     )
-    def bootstrap_search_path(path, order, paths, original_path):
+    def bootstrap_search_path(bootstrap, path, order, paths, original_path):
         if paths is None:
             paths = original_path
         if not path:
             return paths
+        if order == "maybe-prepend":
+            if bootstrap(path.split("/")[0]):
+                order = "prepend"
+            else:
+                order = "append"
         if order == "prepend":
             return [path] + paths
         return paths + [path]
