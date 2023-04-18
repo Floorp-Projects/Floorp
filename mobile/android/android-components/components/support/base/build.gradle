@@ -26,7 +26,7 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        def appServicesVersion = Versions.mozilla_appservices
+        def appServicesVersion = ApplicationServicesConfig.version
         if (gradle.hasProperty("localProperties.branchBuild.application-services.version")) {
             appServicesVersion = gradle["localProperties.branchBuild.application-services.version"]
         }

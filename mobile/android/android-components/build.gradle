@@ -63,6 +63,13 @@ allprojects {
             name "Mozilla"
             url "https://maven.mozilla.org/maven2"
         }
+
+        if (ExtraRepositories.mozillaStaging) {
+            maven {
+                name "Mozilla Staging"
+                url "https://maven-default.stage.mozaws.net/maven2"
+            }
+        }
     }
 }
 

@@ -7,8 +7,16 @@ buildscript {
         maven {
             url "https://maven.mozilla.org/maven2"
         }
+
+        if (ExtraRepositories.mozillaStaging) {
+            maven {
+                name "Mozilla Staging"
+                url "https://maven-default.stage.mozaws.net/maven2"
+            }
+        }
+
         dependencies {
-            classpath "org.mozilla.appservices:tooling-nimbus-gradle:${Versions.mozilla_appservices}"
+            classpath "${ApplicationServicesConfig.groupId}:tooling-nimbus-gradle:${ApplicationServicesConfig.version}"
             classpath "org.mozilla.telemetry:glean-gradle-plugin:${Versions.mozilla_glean}"
         }
     }

@@ -23,6 +23,17 @@ buildscript {
             }
         }
 
+        if (ExtraRepositories.mozillaStaging) {
+            maven {
+                name "Mozilla Staging"
+                url "https://maven-default.stage.mozaws.net/maven2"
+                content {
+                    // Improve performance: only check moz maven for mozilla deps.
+                    includeGroupByRegex RepoMatching.mozilla
+                }
+            }
+        }
+
         if (project.hasProperty("googleRepo")) {
             maven {
                 name "Google"
@@ -59,15 +70,13 @@ buildscript {
     }
 
     dependencies {
-        classpath "org.mozilla.appservices:tooling-nimbus-gradle:${Versions.mozilla_appservices}"
-
         classpath FenixDependencies.tools_androidgradle
         classpath FenixDependencies.tools_kotlingradle
         classpath FenixDependencies.tools_benchmarkgradle
         classpath FenixDependencies.androidx_safeargs
         classpath FenixDependencies.osslicenses_plugin
         classpath "org.mozilla.telemetry:glean-gradle-plugin:${Versions.mozilla_glean}"
-        classpath "org.mozilla.appservices:tooling-nimbus-gradle:${Versions.mozilla_appservices}"
+        classpath "${ApplicationServicesConfig.groupId}:tooling-nimbus-gradle:${ApplicationServicesConfig.version}"
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -96,6 +105,17 @@ allprojects {
             content {
                 // Improve performance: only check moz maven for mozilla deps.
                 includeGroupByRegex RepoMatching.mozilla
+            }
+        }
+
+        if (ExtraRepositories.mozillaStaging) {
+            maven {
+                name "Mozilla Staging"
+                url "https://maven-default.stage.mozaws.net/maven2"
+                content {
+                    // Improve performance: only check moz maven for mozilla deps.
+                    includeGroupByRegex RepoMatching.mozilla
+                }
             }
         }
 
