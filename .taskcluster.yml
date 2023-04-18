@@ -131,7 +131,11 @@ tasks:
                             # Send a notification email if the push comes from try
                             - $if: 'repository.project == "try"'
                               then:
-                                  "notify.email.${ownerEmail}.on-completed"
+                                  - "notify.email.${ownerEmail}.on-completed"
+                            - $if: 'repository.project == "mozilla-central"'
+                              then:
+                                  # Notify #thunderbird-ci
+                                  - "notify.matrix-room.!TWztIhgqLawNpRBZTC:mozilla.org.on-completed"
                         else:
                             $if: 'tasks_for == "action"'
                             then:
@@ -310,13 +314,16 @@ tasks:
                       - $if: 'tasks_for == "hg-push"'
                         then:
                             notify:
-                                email:
-                                    $merge:
-                                        - link:
-                                              text: "Treeherder Jobs"
-                                              href: "https://treeherder.mozilla.org/#/jobs?repo=${repository.project}&revision=${push.revision}"
-                                        # Email for try pushes should thank you for your revision
-                                        - $if: 'repository.project == "try"'
-                                          then:
-                                              subject: "Thank you for your try submission of ${push.revision}. It's the best!"
-                                              content: "Your try push has been submitted. It's the best! Use the link to view the status of your jobs."
+                                $merge:
+                                    - email:
+                                          $merge:
+                                              - link:
+                                                    text: "Treeherder Jobs"
+                                                    href: "https://treeherder.mozilla.org/#/jobs?repo=${repository.project}&revision=${push.revision}"
+                                              - $if: 'repository.project == "try"'
+                                                then:
+                                                    subject: "Thank you for your try submission of ${push.revision}. It's the best!"
+                                                    content: "Your try push has been submitted. It's the best! Use the link to view the status of your jobs."
+                                    - $if: 'repository.project == "mozilla-central"'
+                                      then:
+                                          matrixBody: "${repository.project} push notification: https://treeherder.mozilla.org/#/jobs?repo=${repository.project}&revision=${push.revision}"
