@@ -53,9 +53,9 @@ if CONFIG["MOZ_LAUNCHER_PROCESS"]:
 for var in ("MOZ_APP_BASENAME", "MOZ_APP_VENDOR", "MOZ_APP_DISPLAYNAME"):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
+DEFINES["MOZ_USE_LAUNCHER_ERROR"] = 1
+
 DisableStlWrapping()
 
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Launcher Process")
-
-REQUIRES_UNIFIED_BUILD = True
