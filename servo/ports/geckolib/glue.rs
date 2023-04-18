@@ -5199,9 +5199,7 @@ macro_rules! get_longhand_from_id {
     ($id:expr) => {
         match PropertyId::from_nscsspropertyid($id) {
             Ok(PropertyId::Longhand(long)) => long,
-            _ => {
-                panic!("stylo: unknown presentation property with id");
-            },
+            _ => panic!("stylo: unknown presentation property with id"),
         }
     };
 }
@@ -5225,7 +5223,7 @@ pub extern "C" fn Servo_DeclarationBlock_PropertyIsSet(
     property: nsCSSPropertyID,
 ) -> bool {
     read_locked_arc(declarations, |decls: &PropertyDeclarationBlock| {
-        decls.contains(get_longhand_from_id!(property))
+        decls.contains(PropertyDeclarationId::Longhand(get_longhand_from_id!(property)))
     })
 }
 
