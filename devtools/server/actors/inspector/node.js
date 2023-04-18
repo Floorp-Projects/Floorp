@@ -265,7 +265,6 @@ class NodeActor extends Actor {
     const observer = new doc.defaultView.MutationObserver(callback);
     observer.mergeAttributeRecords = true;
     observer.observe(node, {
-      nativeAnonymousChildList: true,
       attributes: true,
       characterData: true,
       characterDataOldValue: true,

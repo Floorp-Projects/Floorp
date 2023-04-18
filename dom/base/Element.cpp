@@ -1275,10 +1275,10 @@ already_AddRefed<ShadowRoot> Element::AttachShadowWithoutNameChecks(
     SlotAssignmentMode aSlotAssignment) {
   nsAutoScriptBlocker scriptBlocker;
 
+  auto* nim = mNodeInfo->NodeInfoManager();
   RefPtr<mozilla::dom::NodeInfo> nodeInfo =
-      mNodeInfo->NodeInfoManager()->GetNodeInfo(
-          nsGkAtoms::documentFragmentNodeName, nullptr, kNameSpaceID_None,
-          DOCUMENT_FRAGMENT_NODE);
+      nim->GetNodeInfo(nsGkAtoms::documentFragmentNodeName, nullptr,
+                       kNameSpaceID_None, DOCUMENT_FRAGMENT_NODE);
 
   // If there are no children, the flat tree is not changing due to the presence
   // of the shadow root, so we don't need to invalidate style / layout.
@@ -1296,7 +1296,6 @@ already_AddRefed<ShadowRoot> Element::AttachShadowWithoutNameChecks(
    *    context object's node document, host is context object,
    *    and mode is init's mode.
    */
-  auto* nim = nodeInfo->NodeInfoManager();
   RefPtr<ShadowRoot> shadowRoot = new (nim) ShadowRoot(
       this, aMode, aDelegatesFocus, aSlotAssignment, nodeInfo.forget());
 
@@ -1320,7 +1319,8 @@ already_AddRefed<ShadowRoot> Element::AttachShadowWithoutNameChecks(
   SetShadowRoot(shadowRoot);
 
   // Dispatch a "shadowrootattached" event for devtools if needed.
-  if (MOZ_UNLIKELY(nim->GetDocument()->ShadowRootAttachedEventEnabled())) {
+  if (MOZ_UNLIKELY(
+          nim->GetDocument()->DevToolsAnonymousAndShadowEventsEnabled())) {
     AsyncEventDispatcher* dispatcher = new AsyncEventDispatcher(
         this, u"shadowrootattached"_ns, CanBubble::eYes,
         ChromeOnlyDispatch::eYes, Composed::eYes);
@@ -1899,9 +1899,6 @@ nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
   }
 
   MutationObservers::NotifyParentChainChanged(this);
-  if (!hadParent && IsRootOfNativeAnonymousSubtree()) {
-    MutationObservers::NotifyNativeAnonymousChildListChange(this, false);
-  }
 
   // Ensure we only run this once, in the case we move the ShadowRoot around.
   if (aContext.SubtreeRootChanges()) {
@@ -2012,10 +2009,6 @@ void Element::UnbindFromTree(bool aNullParent) {
   }
 
   if (aNullParent) {
-    if (IsRootOfNativeAnonymousSubtree()) {
-      MutationObservers::NotifyNativeAnonymousChildListChange(this, true);
-    }
-
     if (GetParent()) {
       RefPtr<nsINode> p;
       p.swap(mParent);

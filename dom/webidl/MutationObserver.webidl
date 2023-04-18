@@ -66,8 +66,6 @@ dictionary MutationObserverInit {
   boolean attributeOldValue;
   boolean characterDataOldValue;
   [ChromeOnly]
-  boolean nativeAnonymousChildList = false;
-  [ChromeOnly]
   boolean chromeOnlyNodes = false;
   [ChromeOnly]
   boolean animations = false;

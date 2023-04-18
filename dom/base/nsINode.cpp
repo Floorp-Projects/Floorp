@@ -443,6 +443,15 @@ Element* nsINode::GetAnonymousRootElementOfTextEditor(
   return rootElement;
 }
 
+void nsINode::QueueDevtoolsAnonymousEvent(bool aIsRemove) {
+  MOZ_ASSERT(IsRootOfNativeAnonymousSubtree());
+  MOZ_ASSERT(OwnerDoc()->DevToolsAnonymousAndShadowEventsEnabled());
+  AsyncEventDispatcher* dispatcher = new AsyncEventDispatcher(
+      this, aIsRemove ? u"anonymousrootremoved"_ns : u"anonymousrootcreated"_ns,
+      CanBubble::eYes, ChromeOnlyDispatch::eYes, Composed::eYes);
+  dispatcher->PostDOMEvent();
+}
+
 nsINode* nsINode::GetRootNode(const GetRootNodeOptions& aOptions) {
   if (aOptions.mComposed) {
     if (Document* doc = GetComposedDoc()) {
@@ -3615,10 +3624,16 @@ ParentObject nsINode::GetParentObject() const {
   ParentObject p(OwnerDoc());
   // Note that mReflectionScope is a no-op for chrome, and other places where we
   // don't check this value.
-  if (ShouldUseUAWidgetScope(this)) {
-    p.mReflectionScope = ReflectionScope::UAWidget;
-  } else if (ShouldUseNACScope(this)) {
-    p.mReflectionScope = ReflectionScope::NAC;
+  if (IsInNativeAnonymousSubtree()) {
+    if (ShouldUseUAWidgetScope(this)) {
+      p.mReflectionScope = ReflectionScope::UAWidget;
+    } else {
+      MOZ_ASSERT(ShouldUseNACScope(this));
+      p.mReflectionScope = ReflectionScope::NAC;
+    }
+  } else {
+    MOZ_ASSERT(!ShouldUseNACScope(this));
+    MOZ_ASSERT(!ShouldUseUAWidgetScope(this));
   }
   return p;
 }

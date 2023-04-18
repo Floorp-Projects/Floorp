@@ -796,21 +796,6 @@ void DocAccessible::AttributeWillChange(dom::Element* aElement,
   }
 }
 
-void DocAccessible::NativeAnonymousChildListChange(nsIContent* aContent,
-                                                   bool aIsRemove) {
-  if (aIsRemove) {
-#ifdef A11Y_LOG
-    if (logging::IsEnabled(logging::eTree)) {
-      logging::MsgBegin("TREE", "Anonymous content removed; doc: %p", this);
-      logging::Node("node", aContent);
-      logging::MsgEnd();
-    }
-#endif
-
-    ContentRemoved(aContent);
-  }
-}
-
 void DocAccessible::AttributeChanged(dom::Element* aElement,
                                      int32_t aNameSpaceID, nsAtom* aAttribute,
                                      int32_t aModType,

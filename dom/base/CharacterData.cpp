@@ -459,9 +459,6 @@ nsresult CharacterData::BindToTree(BindContext& aContext, nsINode& aParent) {
   }
 
   MutationObservers::NotifyParentChainChanged(this);
-  if (!hadParent && IsRootOfNativeAnonymousSubtree()) {
-    MutationObservers::NotifyNativeAnonymousChildListChange(this, false);
-  }
 
   UpdateEditableState(false);
 
@@ -488,9 +485,6 @@ void CharacterData::UnbindFromTree(bool aNullParent) {
   HandleShadowDOMRelatedRemovalSteps(aNullParent);
 
   if (aNullParent) {
-    if (IsRootOfNativeAnonymousSubtree()) {
-      MutationObservers::NotifyNativeAnonymousChildListChange(this, true);
-    }
     if (GetParent()) {
       NS_RELEASE(mParent);
     } else {

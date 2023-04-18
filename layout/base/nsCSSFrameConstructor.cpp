@@ -1896,6 +1896,10 @@ void nsCSSFrameConstructor::CreateGeneratedContentItem(
     return;
   }
 
+  if (mDocument->DevToolsAnonymousAndShadowEventsEnabled()) {
+    container->QueueDevtoolsAnonymousEvent(/* aIsRemove = */ false);
+  }
+
   // Servo has already eagerly computed the style for the container, so we can
   // just stick the style on the element and avoid an additional traversal.
   //
@@ -3999,6 +4003,13 @@ nsresult nsCSSFrameConstructor::GetAnonymousContent(
     return rv;
   }
 
+  if (aContent.IsEmpty()) {
+    return NS_OK;
+  }
+
+  const bool devtoolsEventsEnabled =
+      mDocument->DevToolsAnonymousAndShadowEventsEnabled();
+
   MOZ_ASSERT(aParent->IsElement());
   for (const auto& info : aContent) {
     // get our child's content and set its parent to our content
@@ -4011,6 +4022,10 @@ nsresult nsCSSFrameConstructor::GetAnonymousContent(
     if (NS_FAILED(rv)) {
       content->UnbindFromTree();
       return rv;
+    }
+
+    if (devtoolsEventsEnabled) {
+      content->QueueDevtoolsAnonymousEvent(/* aIsRemove = */ false);
     }
   }
 

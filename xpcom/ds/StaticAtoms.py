@@ -707,7 +707,6 @@ STATIC_ATOMS = [
     Atom("namespaceUri", "namespace-uri"),
     Atom("NaN", "NaN"),
     Atom("n", "n"),
-    Atom("nativeAnonymousChildList", "nativeAnonymousChildList"),
     Atom("nav", "nav"),
     Atom("ne", "ne"),
     Atom("never", "never"),

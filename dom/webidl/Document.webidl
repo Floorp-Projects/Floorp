@@ -441,7 +441,7 @@ partial interface Document {
   attribute boolean styleSheetChangeEventsEnabled;
 
   [ChromeOnly]
-  attribute boolean shadowRootAttachedEventEnabled;
+  attribute boolean devToolsAnonymousAndShadowEventsEnabled;
 
   [ChromeOnly] readonly attribute DOMString contentLanguage;
 

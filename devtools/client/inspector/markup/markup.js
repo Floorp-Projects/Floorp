@@ -1571,7 +1571,6 @@ MarkupView.prototype = {
         container.update();
       } else if (
         type === "childList" ||
-        type === "nativeAnonymousChildList" ||
         type === "slotchange" ||
         type === "shadowRootAttached"
       ) {

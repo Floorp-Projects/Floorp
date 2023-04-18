@@ -153,15 +153,6 @@ class nsMutationReceiverBase : public nsStubAnimationObserver {
     mCharacterDataOldValue = aOldValue;
   }
 
-  bool NativeAnonymousChildList() const {
-    return mParent ? mParent->NativeAnonymousChildList()
-                   : mNativeAnonymousChildList;
-  }
-  void SetNativeAnonymousChildList(bool aOldValue) {
-    NS_ASSERTION(!mParent, "Shouldn't have parent");
-    mNativeAnonymousChildList = aOldValue;
-  }
-
   bool Attributes() const {
     return mParent ? mParent->Attributes() : mAttributes;
   }
@@ -227,7 +218,6 @@ class nsMutationReceiverBase : public nsStubAnimationObserver {
         mChildList(false),
         mCharacterData(false),
         mCharacterDataOldValue(false),
-        mNativeAnonymousChildList(false),
         mAttributes(false),
         mAllAttributes(false),
         mAttributeOldValue(false),
@@ -244,7 +234,6 @@ class nsMutationReceiverBase : public nsStubAnimationObserver {
         mChildList(false),
         mCharacterData(false),
         mCharacterDataOldValue(false),
-        mNativeAnonymousChildList(false),
         mAttributes(false),
         mAllAttributes(false),
         mAttributeOldValue(false),
@@ -284,7 +273,6 @@ class nsMutationReceiverBase : public nsStubAnimationObserver {
   bool mChildList : 1;
   bool mCharacterData : 1;
   bool mCharacterDataOldValue : 1;
-  bool mNativeAnonymousChildList : 1;
   bool mAttributes : 1;
   bool mAllAttributes : 1;
   bool mAttributeOldValue : 1;
@@ -341,7 +329,6 @@ class nsMutationReceiver : public nsMutationReceiverBase {
   NS_DECL_ISUPPORTS
 
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTEWILLCHANGE
-  NS_DECL_NSIMUTATIONOBSERVER_NATIVEANONYMOUSCHILDLISTCHANGE
   NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATAWILLCHANGE
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED

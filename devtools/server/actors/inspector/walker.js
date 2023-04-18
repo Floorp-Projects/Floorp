@@ -215,6 +215,7 @@ class WalkerActor extends Actor {
     this._pendingMutations = [];
     this._activePseudoClassLocks = new Set();
     this._mutationBreakpoints = new WeakMap();
+    this._anonParents = new WeakMap();
     this.customElementWatcher = new CustomElementWatcher(
       targetActor.chromeEventHandler
     );
@@ -247,6 +248,8 @@ class WalkerActor extends Actor {
     this.onMutations = this.onMutations.bind(this);
     this.onSlotchange = this.onSlotchange.bind(this);
     this.onShadowrootattached = this.onShadowrootattached.bind(this);
+    this.onAnonymousrootcreated = this.onAnonymousrootcreated.bind(this);
+    this.onAnonymousrootremoved = this.onAnonymousrootremoved.bind(this);
     this.onFrameLoad = this.onFrameLoad.bind(this);
     this.onFrameUnload = this.onFrameUnload.bind(this);
     this.onCustomElementDefined = this.onCustomElementDefined.bind(this);
@@ -271,9 +274,17 @@ class WalkerActor extends Actor {
       "shadowrootattached",
       this.onShadowrootattached
     );
-
+    // anonymousrootcreated is a chrome-only event. We enable it below.
+    this.chromeEventHandler.addEventListener(
+      "anonymousrootcreated",
+      this.onAnonymousrootcreated
+    );
+    this.chromeEventHandler.addEventListener(
+      "anonymousrootremoved",
+      this.onAnonymousrootremoved
+    );
     for (const { document } of this.targetActor.windows) {
-      document.shadowRootAttachedEventEnabled = true;
+      document.devToolsAnonymousAndShadowEventsEnabled = true;
     }
 
     // Ensure that the root document node actor is ready and
@@ -384,10 +395,18 @@ class WalkerActor extends Actor {
         "shadowrootattached",
         this.onShadowrootattached
       );
+      this.chromeEventHandler.removeEventListener(
+        "anonymousrootcreated",
+        this.onAnonymousrootcreated
+      );
+      this.chromeEventHandler.removeEventListener(
+        "anonymousrootremoved",
+        this.onAnonymousrootremoved
+      );
 
-      // This event is just for devtools, so we can unset once we're done.
+      // This attribute is just for devtools, so we can unset once we're done.
       for (const { document } of this.targetActor.windows) {
-        document.shadowRootAttachedEventEnabled = false;
+        document.devToolsAnonymousAndShadowEventsEnabled = false;
       }
 
       this.onFrameLoad = null;
@@ -2169,7 +2188,7 @@ class WalkerActor extends Actor {
       } else if (type === "characterData") {
         mutation.newValue = targetNode.nodeValue;
         this._maybeQueueInlineTextChildMutation(change, targetNode);
-      } else if (type === "childList" || type === "nativeAnonymousChildList") {
+      } else if (type === "childList") {
         // Get the list of removed and added actors that the client has seen
         // so that it can keep its ownership tree up to date.
         const removedActors = [];
@@ -2260,6 +2279,52 @@ class WalkerActor extends Actor {
       type: "slotchange",
       target: targetActor.actorID,
     });
+  }
+
+  /**
+   * Fires when an anonymous root is created.
+   * This is needed because regular mutation observers don't fire on some kinds
+   * of NAC creation. We want to treat this like a regular insertion.
+   */
+  onAnonymousrootcreated(event) {
+    const root = event.target;
+    const parent = this.rawParentNode(root);
+    if (!parent) {
+      // These events are async. The node might have been removed already, in
+      // which case there's nothing to do anymore.
+      return;
+    }
+    // By the time onAnonymousrootremoved fires, the node is already detached
+    // from its parent, so we need to remember it by hand.
+    this._anonParents.set(root, parent);
+    this.onMutations([
+      {
+        type: "childList",
+        target: parent,
+        addedNodes: [root],
+        removedNodes: [],
+      },
+    ]);
+  }
+
+  /**
+   * @see onAnonymousrootcreated
+   */
+  onAnonymousrootremoved(event) {
+    const root = event.target;
+    const parent = this._anonParents.get(root);
+    if (!parent) {
+      return;
+    }
+    this._anonParents.delete(root);
+    this.onMutations([
+      {
+        type: "childList",
+        target: parent,
+        addedNodes: [],
+        removedNodes: [root],
+      },
+    ]);
   }
 
   onShadowrootattached(event) {
