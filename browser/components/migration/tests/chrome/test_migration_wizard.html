@@ -161,11 +161,11 @@
           panelItem.click();
 
           is(
-            selector.querySelector(".migrator-name").textContent,
+            selector.querySelector("#migrator-name").textContent,
             migratorInstance.displayName,
             "Selector should show display name"
           );
-          let profileName = selector.querySelector(".profile-name");
+          let profileName = selector.querySelector("#profile-name");
 
           if (migratorInstance.profile) {
             ok(!isHidden(profileName), "Profile name element should be displayed.");
