@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for rapid cycling of Fullscreen API requests</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script>
+
+// There are two ways that web content should be able to reliably
+// request and respond to fullscreen:
+//
+// 1) Wait on the requestFullscreen() and exitFullscreen() promises.
+// 2) Respond to the "fullscreenchange" and "fullscreenerror" events
+//    after calling requestFullscreen() or exitFullscreen().
+//
+// This test exercises both methods rapidly, while checking to see
+// if any expected signal is taking too long. If awaiting a promise
+// or waiting for an event takes longer than some number of seconds,
+// the test will fail instead of timing out. This is to help detect
+// vulnerabilities in the implementation which would slow down the
+// test harness waiting for the timeout.
+
+// How many enter-exit cycles we run for each method of detecting a
+// fullscreen transition.
+const CYCLE_COUNT = 3;
+
+// How long do we wait for one transition before considering it as
+// an error.
+const TOO_LONG_SECONDS = 3;
+
+SimpleTest.requestFlakyTimeout("We race against Promises to turn possible timeouts into errors.");
+
+function rejectAfterTooLong() {
+  return new Promise((resolve, reject) => {
+    const fail = () => {
+      reject(`timeout after ${TOO_LONG_SECONDS} seconds`);
+    }
+    setTimeout(fail, TOO_LONG_SECONDS * 1000);
+  });
+}
+
+add_setup(async () => {
+  await SpecialPowers.pushPrefEnv({
+    "set": [
+      // Keep the test structure simple.
+      ["full-screen-api.allow-trusted-requests-only", false],
+
+      // Make macOS fullscreen transitions asynchronous.
+      ["full-screen-api.macos-native-full-screen", true],
+
+      // Clarify that even no-duration async transitions are vulnerable.
+      ["full-screen-api.transition-duration.enter", "0 0"],
+      ["full-screen-api.transition-duration.leave", "0 0"],
+    ]
+  });
+});
+
+add_task(ensureOutOfFullscreen);
+
+// It is an implementation detail that promises resolve first, and
+// then events are fired on a later event loop. For this reason,
+// it's very important that we do the rapidCycleAwaitEvents task
+// first, because we don't want to have any "stray" fullscreenchange
+// events in the pipeline when we start that task. Conversely,
+// there's really no way for the rapidCycleAwaitEvents to poison
+// the environment for the next task, which waits on promises.
+add_task(rapidCycleAwaitEvents);
+
+add_task(ensureOutOfFullscreen);
+
+add_task(rapidCycleAwaitPromises);
+
+add_task(() => { ok(true, "Completed test with one expected result."); });
+
+// This is a helper function to repeatedly invoke a Promise generator
+// until the Promise resolves, delaying by one event loop on each
+// attempt.
+async function repeatUntilSuccessful(f) {
+  let successful = false;
+  do {
+    try {
+      // Delay one event loop.
+      await new Promise(r => SimpleTest.executeSoon(r));
+      await f();
+      successful = true;
+    } catch (error) {
+      info(`repeatUntilSuccessful: error ${error}.`);
+    }
+  } while(!successful);
+}
+
+async function ensureOutOfFullscreen() {
+  // Repeatedly call exitFullscreen until we get out.
+  await repeatUntilSuccessful(async () => {
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+    }
+    if (document.fullscreenElement) {
+      throw new Error("still in fullscreen");
+    }
+  });
+}
+
+async function rapidCycleAwaitEvents() {
+  const receiveOneFullscreenchange = () => {
+    return new Promise(resolve => {
+      document.addEventListener("fullscreenchange", resolve, { once: true });
+    });
+  };
+
+  let gotError = false;
+  for (let cycle = 0; cycle < CYCLE_COUNT; cycle++) {
+    info(`Event cycle ${cycle} request fullscreen.`);
+    const enterPromise = receiveOneFullscreenchange();
+    document.documentElement.requestFullscreen();
+    await Promise.race([enterPromise, rejectAfterTooLong()]).catch(error => {
+      ok(false, `Event cycle ${cycle} requestFullscreen errored with ${error}.`);
+      gotError = true;
+    });
+    if (gotError) {
+      break;
+    }
+
+    info(`Event cycle ${cycle} exit fullscreen.`);
+    const exitPromise = receiveOneFullscreenchange();
+    document.exitFullscreen();
+    await Promise.race([exitPromise, rejectAfterTooLong()]).catch(error => {
+      ok(false, `Event cycle ${cycle} exitFullscreen errored with ${error}.`);
+      gotError = true;
+    });
+    if (gotError) {
+      break;
+    }
+  }
+}
+
+async function rapidCycleAwaitPromises() {
+  let gotError = false;
+  for (let cycle = 0; cycle < CYCLE_COUNT; cycle++) {
+    info(`Promise cycle ${cycle} request fullscreen.`);
+    const enterPromise = document.documentElement.requestFullscreen();
+    await Promise.race([enterPromise, rejectAfterTooLong()]).catch(error => {
+      ok(false, `Promise cycle ${cycle} requestFullscreen errored with ${error}.`);
+      gotError = true;
+    });
+    if (gotError) {
+      break;
+    }
+
+    info(`Promise cycle ${cycle} exit fullscreen.`);
+    const exitPromise = document.exitFullscreen();
+    await Promise.race([exitPromise, rejectAfterTooLong()]).catch(error => {
+      ok(false, `Promise cycle ${cycle} exitFullscreen errored with ${error}.`);
+      gotError = true;
+    });
+    if (gotError) {
+      break;
+    }
+  }
+}
+
+</script>
+</body>
+</html>
