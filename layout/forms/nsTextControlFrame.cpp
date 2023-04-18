@@ -631,16 +631,14 @@ Maybe<nscoord> nsTextControlFrame::ComputeBaseline(
   }
   WritingMode wm = aReflowInput.GetWritingMode();
 
-  // Calculate the baseline and store it in mFirstBaseline.
   nscoord lineHeight = aReflowInput.ComputedBSize();
-  float inflation = nsLayoutUtils::FontSizeInflationFor(aFrame);
   if (!aForSingleLineControl || lineHeight == NS_UNCONSTRAINEDSIZE) {
-    lineHeight = ReflowInput::CalcLineHeight(
-        *aFrame->Style(), aFrame->PresContext(), aFrame->GetContent(),
-        NS_UNCONSTRAINEDSIZE, inflation);
+    lineHeight = NS_CSS_MINMAX(aReflowInput.GetLineHeight(),
+                               aReflowInput.ComputedMinBSize(),
+                               aReflowInput.ComputedMaxBSize());
   }
   RefPtr<nsFontMetrics> fontMet =
-      nsLayoutUtils::GetFontMetricsForFrame(aFrame, inflation);
+      nsLayoutUtils::GetInflatedFontMetricsForFrame(aFrame);
   return Some(nsLayoutUtils::GetCenteredFontBaseline(fontMet, lineHeight,
                                                      wm.IsLineInverted()) +
               aReflowInput.ComputedLogicalBorderPadding(wm).BStart(wm));
@@ -667,6 +665,7 @@ void nsTextControlFrame::Reflow(nsPresContext* aPresContext,
   aDesiredSize.SetSize(wm, aReflowInput.ComputedSizeWithBorderPadding(wm));
 
   {
+    // Calculate the baseline and store it in mFirstBaseline.
     auto baseline =
         ComputeBaseline(this, aReflowInput, IsSingleLineTextControl());
     mFirstBaseline = baseline.valueOr(NS_INTRINSIC_ISIZE_UNKNOWN);

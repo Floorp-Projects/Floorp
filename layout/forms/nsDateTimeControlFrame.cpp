@@ -186,7 +186,6 @@ void nsDateTimeControlFrame::Reflow(nsPresContext* aPresContext,
 
   LogicalSize logicalDesiredSize(myWM, borderBoxISize, borderBoxBSize);
   aDesiredSize.SetSize(myWM, logicalDesiredSize);
-
   aDesiredSize.SetOverflowAreasToDesiredBounds();
 
   if (inputAreaFrame) {
