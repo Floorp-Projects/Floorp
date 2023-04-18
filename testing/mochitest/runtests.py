@@ -3320,7 +3320,10 @@ toolbar#nav-bar {
                 # overridden with --setpref).
                 "serviceworker_e10s": True,
                 "sessionHistoryInParent": not options.disable_fission
-                or self.extraPrefs.get("fission.sessionHistoryInParent", False),
+                or not self.extraPrefs.get(
+                    "fission.disableSessionHistoryInParent",
+                    mozinfo.info["os"] == "android",
+                ),
                 "socketprocess_e10s": self.extraPrefs.get(
                     "network.process.enabled", False
                 ),
