@@ -28,6 +28,7 @@ GMPVideoi420FrameImpl::GMPVideoi420FrameImpl(
       mWidth(aFrameData.mWidth()),
       mHeight(aFrameData.mHeight()),
       mTimestamp(aFrameData.mTimestamp()),
+      mUpdatedTimestamp(aFrameData.mUpdatedTimestamp()),
       mDuration(aFrameData.mDuration()) {
   MOZ_ASSERT(aHost);
 }
@@ -41,6 +42,7 @@ bool GMPVideoi420FrameImpl::InitFrameData(GMPVideoi420FrameData& aFrameData) {
   aFrameData.mWidth() = mWidth;
   aFrameData.mHeight() = mHeight;
   aFrameData.mTimestamp() = mTimestamp;
+  aFrameData.mUpdatedTimestamp() = mUpdatedTimestamp;
   aFrameData.mDuration() = mDuration;
   return true;
 }
@@ -158,6 +160,7 @@ GMPErr GMPVideoi420FrameImpl::CreateEmptyFrame(int32_t aWidth, int32_t aHeight,
   mWidth = aWidth;
   mHeight = aHeight;
   mTimestamp = 0ll;
+  mUpdatedTimestamp.reset();
   mDuration = 0ll;
 
   return GMPNoErr;
@@ -220,6 +223,7 @@ GMPErr GMPVideoi420FrameImpl::CopyFrame(const GMPVideoi420Frame& aFrame) {
   mWidth = f.mWidth;
   mHeight = f.mHeight;
   mTimestamp = f.mTimestamp;
+  mUpdatedTimestamp = f.mUpdatedTimestamp;
   mDuration = f.mDuration;
 
   return GMPNoErr;
@@ -233,6 +237,7 @@ void GMPVideoi420FrameImpl::SwapFrame(GMPVideoi420Frame* aFrame) {
   std::swap(mWidth, f->mWidth);
   std::swap(mHeight, f->mHeight);
   std::swap(mTimestamp, f->mTimestamp);
+  std::swap(mUpdatedTimestamp, f->mUpdatedTimestamp);
   std::swap(mDuration, f->mDuration);
 }
 
@@ -295,6 +300,14 @@ void GMPVideoi420FrameImpl::SetTimestamp(uint64_t aTimestamp) {
 }
 
 uint64_t GMPVideoi420FrameImpl::Timestamp() const { return mTimestamp; }
+
+void GMPVideoi420FrameImpl::SetUpdatedTimestamp(uint64_t aTimestamp) {
+  mUpdatedTimestamp = Some(aTimestamp);
+}
+
+uint64_t GMPVideoi420FrameImpl::UpdatedTimestamp() const {
+  return mUpdatedTimestamp ? *mUpdatedTimestamp : mTimestamp;
+}
 
 void GMPVideoi420FrameImpl::SetDuration(uint64_t aDuration) {
   mDuration = aDuration;

@@ -14,8 +14,9 @@
 #  include "MediaInfo.h"
 #  include "PerformanceRecorder.h"
 #  include "PlatformDecoderModule.h"
+#  include "ReorderQueue.h"
 #  include "mozIGeckoMediaPluginService.h"
-#  include "nsHashtablesFwd.h"
+#  include "nsClassHashtable.h"
 
 namespace mozilla {
 
@@ -31,9 +32,9 @@ struct MOZ_STACK_CLASS GMPVideoDecoderParams {
 
 DDLoggedTypeDeclNameAndBase(GMPVideoDecoder, MediaDataDecoder);
 
-class GMPVideoDecoder : public MediaDataDecoder,
-                        public GMPVideoDecoderCallbackProxy,
-                        public DecoderDoctorLifeLogger<GMPVideoDecoder> {
+class GMPVideoDecoder final : public MediaDataDecoder,
+                              public GMPVideoDecoderCallbackProxy,
+                              public DecoderDoctorLifeLogger<GMPVideoDecoder> {
  public:
   explicit GMPVideoDecoder(const GMPVideoDecoderParams& aParams);
 
@@ -50,6 +51,7 @@ class GMPVideoDecoder : public MediaDataDecoder,
     return mConvertToAnnexB ? ConversionRequired::kNeedAnnexB
                             : ConversionRequired::kNeedAVCC;
   }
+  bool CanDecodeBatch() const override { return mCanDecodeBatch; }
 
   // GMPVideoDecoderCallbackProxy
   // All those methods are called on the GMP thread.
@@ -67,6 +69,8 @@ class GMPVideoDecoder : public MediaDataDecoder,
   virtual nsCString GetNodeId();
   virtual GMPUniquePtr<GMPVideoEncodedFrame> CreateFrame(MediaRawData* aSample);
   virtual const VideoInfo& GetConfig() const;
+  void ProcessReorderQueue(MozPromiseHolder<DecodePromise>& aPromise,
+                           const char* aMethodName);
 
  private:
   class GMPInitDoneCallback : public GetGMPVideoDecoderCallback {
@@ -91,18 +95,28 @@ class GMPVideoDecoder : public MediaDataDecoder,
   MozPromiseHolder<InitPromise> mInitPromise;
   RefPtr<GMPCrashHelper> mCrashHelper;
 
-  int64_t mLastStreamOffset = 0;
-  nsTHashMap<nsUint64HashKey, int64_t> mStreamOffsets;
+  struct SampleMetadata {
+    explicit SampleMetadata(MediaRawData* aSample)
+        : mOffset(aSample->mOffset), mKeyframe(aSample->mKeyframe) {}
+    int64_t mOffset;
+    bool mKeyframe;
+  };
+
+  nsClassHashtable<nsUint64HashKey, SampleMetadata> mSamples;
   RefPtr<layers::ImageContainer> mImageContainer;
   RefPtr<layers::KnowsCompositor> mKnowsCompositor;
   PerformanceRecorderMulti<DecodeStage> mPerformanceRecorder;
   const Maybe<TrackingId> mTrackingId;
+
+  uint32_t mMaxRefFrames = 0;
+  ReorderQueue mReorderQueue;
 
   MozPromiseHolder<DecodePromise> mDecodePromise;
   MozPromiseHolder<DecodePromise> mDrainPromise;
   MozPromiseHolder<FlushPromise> mFlushPromise;
   DecodedData mDecodedData;
   bool mConvertToAnnexB = false;
+  bool mCanDecodeBatch = false;
 };
 
 }  // namespace mozilla

@@ -10337,8 +10337,20 @@
   value: 2500
   mirror: always
 
+# True if we want to decode in batches.
+- name: media.gmp.decoder.decode_batch
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # True if we allow use of any decoders found in GMP plugins.
 - name: media.gmp.decoder.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# True if we want to request the multithreaded GMP decoder.
+- name: media.gmp.decoder.multithreaded
   type: RelaxedAtomicBool
   value: false
   mirror: always

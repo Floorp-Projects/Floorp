@@ -129,6 +129,14 @@ class GMPVideoi420Frame : public GMPVideoFrame {
   // Reset underlying plane buffers sizes to 0. This function doesn't clear
   // memory.
   virtual void ResetSize() = 0;
+
+  // -- These methods have been added in kGMPVersion34 --
+
+  // Set an updated frame timestamp (microseconds) from decoder
+  virtual void SetUpdatedTimestamp(uint64_t aTimestamp) = 0;
+
+  // Get an updated frame timestamp (microseconds) from decoder
+  virtual uint64_t UpdatedTimestamp() const = 0;
 };
 
 #endif  // GMP_VIDEO_FRAME_I420_h_

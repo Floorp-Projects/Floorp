@@ -134,10 +134,24 @@ enum GMPVideoCodecMode {
   kGMPCodecModeInvalid  // Should always be last.
 };
 
+enum GMPLogLevel {
+  kGMPLogDefault,
+  kGMPLogQuiet,
+  kGMPLogError,
+  kGMPLogWarning,
+  kGMPLogInfo,
+  kGMPLogDebug,
+  kGMPLogDetail,
+  kGMPLogInvalid  // Should always be last.
+};
+
 enum GMPApiVersion {
   kGMPVersion32 =
       1,  // leveraging that V32 had mCodecType first, and only supported H264
   kGMPVersion33 = 33,
+
+  // Adds GMPVideoi420Frame::SetUpdatedTimestamp/UpdatedTimestamp
+  kGMPVersion34 = 34,
 };
 
 struct GMPVideoCodec {
@@ -163,6 +177,9 @@ struct GMPVideoCodec {
   GMPSimulcastStream mSimulcastStream[kGMPMaxSimulcastStreams];
 
   GMPVideoCodecMode mMode;
+
+  bool mUseThreadedDecode;
+  GMPLogLevel mLogLevel;
 };
 
 // Either single encoded unit, or multiple units separated by 8/16/24/32

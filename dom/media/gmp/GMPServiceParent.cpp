@@ -662,8 +662,8 @@ void GeckoMediaPluginServiceParent::SendFlushFOGData(
                           ipc::RejectCallback&&>(
             "GMPParent::SendFlushFOGData", gmp,
             static_cast<void (GMPParent::*)(
-                mozilla::ipc::ResolveCallback<ipc::ByteBuf> && aResolve,
-                mozilla::ipc::RejectCallback && aReject)>(
+                mozilla::ipc::ResolveCallback<ipc::ByteBuf>&& aResolve,
+                mozilla::ipc::RejectCallback&& aReject)>(
                 &GMPParent::SendFlushFOGData),
 
             [promise](ipc::ByteBuf&& aValue) {
@@ -700,8 +700,8 @@ GeckoMediaPluginServiceParent::TestTriggerMetrics() {
                             ipc::RejectCallback&&>(
               "GMPParent::SendTestTriggerMetrics", gmp,
               static_cast<void (GMPParent::*)(
-                  mozilla::ipc::ResolveCallback<bool> && aResolve,
-                  mozilla::ipc::RejectCallback && aReject)>(
+                  mozilla::ipc::ResolveCallback<bool>&& aResolve,
+                  mozilla::ipc::RejectCallback&& aReject)>(
                   &PGMPParent::SendTestTriggerMetrics),
 
               [promise](bool aValue) {
