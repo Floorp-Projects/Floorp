@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "XPCSelfHostedShmem.h"
+#include "xpcprivate.h"
 
 // static
 mozilla::StaticRefPtr<xpc::SelfHostedShmem>
