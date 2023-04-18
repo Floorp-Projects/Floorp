@@ -149,15 +149,6 @@ static string Basename(const string& file) {
   return file;
 }
 
-static string GetDumpLocalID() {
-  string localId = Basename(gReporterDumpFile);
-  string::size_type dot = localId.rfind('.');
-
-  if (dot == string::npos) return "";
-
-  return localId.substr(0, dot);
-}
-
 static bool ReadEventFile(const string& aPath, string& aEventVersion,
                           string& aTime, string& aUuid, Json::Value& aData) {
   bool res = false;
@@ -207,7 +198,7 @@ static void UpdateEventFile(const Json::Value& aExtraData, const string& aHash,
     return;
   }
 
-  string localId = GetDumpLocalID();
+  string localId = CrashReporter::GetDumpLocalID();
   string path = gEventsPath + UI_DIR_SEPARATOR + localId;
   string eventVersion;
   string crashTime;
@@ -240,7 +231,7 @@ static void WriteSubmissionEvent(SubmissionResult result,
     return;
   }
 
-  string localId = GetDumpLocalID();
+  string localId = CrashReporter::GetDumpLocalID();
   string fpath = gEventsPath + UI_DIR_SEPARATOR + localId + "-submission";
   ofstream* f = UIOpenWrite(fpath, ios::binary);
   time_t tm;
@@ -532,6 +523,34 @@ static string ComputeDumpHash() {
   return "";  // If we encountered an error, return an empty hash
 }
 
+string GetDumpLocalID() {
+  string localId = Basename(gReporterDumpFile);
+  string::size_type dot = localId.rfind('.');
+
+  if (dot == string::npos) return "";
+
+  return localId.substr(0, dot);
+}
+
+string GetProgramPath(const string& exename) {
+  string path = gArgv[0];
+  size_t pos = path.rfind(UI_CRASH_REPORTER_FILENAME BIN_SUFFIX);
+  path.erase(pos);
+#ifdef XP_MACOSX
+  // On macOS the crash reporter client is shipped as an application bundle
+  // contained within Firefox' main application bundle. So when it's invoked
+  // its current working directory looks like:
+  // Firefox.app/Contents/MacOS/crashreporter.app/Contents/MacOS/
+  // The other applications we ship with Firefox are stored in the main bundle
+  // (Firefox.app/Contents/MacOS/) so we we need to go back three directories
+  // to reach them.
+  path.append("../../../");
+#endif  // XP_MACOSX
+  path.append(exename + BIN_SUFFIX);
+
+  return path;
+}
+
 }  // namespace CrashReporter
 
 using namespace CrashReporter;
@@ -593,25 +612,6 @@ bool CheckEndOfLifed(const Json::Value& aVersion) {
   return UIFileExists(reportPath);
 }
 
-static string GetProgramPath(const string& exename) {
-  string path = gArgv[0];
-  size_t pos = path.rfind(UI_CRASH_REPORTER_FILENAME BIN_SUFFIX);
-  path.erase(pos);
-#ifdef XP_MACOSX
-  // On macOS the crash reporter client is shipped as an application bundle
-  // contained within Firefox' main application bundle. So when it's invoked
-  // its current working directory looks like:
-  // Firefox.app/Contents/MacOS/crashreporter.app/Contents/MacOS/
-  // The other applications we ship with Firefox are stored in the main bundle
-  // (Firefox.app/Contents/MacOS/) so we we need to go back three directories
-  // to reach them.
-  path.append("../../../");
-#endif  // XP_MACOSX
-  path.append(exename + BIN_SUFFIX);
-
-  return path;
-}
-
 int main(int argc, char** argv) {
   gArgc = argc;
   gArgv = argv;
@@ -645,7 +645,8 @@ int main(int argc, char** argv) {
     if (!dumpAllThreadsEnv.empty()) {
       args.insert(args.begin(), "--full");
     }
-    UIRunProgram(GetProgramPath(UI_MINIDUMP_ANALYZER_FILENAME), args,
+    UIRunProgram(CrashReporter::GetProgramPath(UI_MINIDUMP_ANALYZER_FILENAME),
+                 args,
                  /* wait */ true);
 
     // go ahead with the crash reporter
