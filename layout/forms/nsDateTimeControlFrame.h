@@ -16,10 +16,7 @@
 #ifndef nsDateTimeControlFrame_h__
 #define nsDateTimeControlFrame_h__
 
-#include "mozilla/Attributes.h"
-#include "nsContainerFrame.h"
-#include "nsIAnonymousContentCreator.h"
-#include "nsCOMPtr.h"
+#include "nsTextControlFrame.h"
 
 namespace mozilla {
 class PresShell;
@@ -28,7 +25,7 @@ struct DateTimeValue;
 }  // namespace dom
 }  // namespace mozilla
 
-class nsDateTimeControlFrame final : public nsContainerFrame {
+class nsDateTimeControlFrame final : public nsTextControlFrame {
   typedef mozilla::dom::DateTimeValue DateTimeValue;
 
   explicit nsDateTimeControlFrame(ComputedStyle* aStyle,
@@ -47,25 +44,9 @@ class nsDateTimeControlFrame final : public nsContainerFrame {
   }
 #endif
 
-  bool IsFrameOfType(uint32_t aFlags) const override {
-    return nsContainerFrame::IsFrameOfType(
-        aFlags & ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
-  }
-
   // Reflow
   nscoord GetMinISize(gfxContext* aRenderingContext) override;
-
   nscoord GetPrefISize(gfxContext* aRenderingContext) override;
-
-  void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
-              const ReflowInput& aReflowInput,
-              nsReflowStatus& aStatus) override;
-
-  Maybe<nscoord> GetNaturalBaselineBOffset(
-      mozilla::WritingMode aWM,
-      BaselineSharingGroup aBaselineGroup) const override;
-
-  nscoord mFirstBaseline = NS_INTRINSIC_ISIZE_UNKNOWN;
 };
 
 #endif  // nsDateTimeControlFrame_h__
