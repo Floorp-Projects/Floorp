@@ -23,6 +23,8 @@ HTTP_200_OKAY = 200
 def before_iterations(kw):
     product = kw["AndroidStartUp_product"]
     architecture = "arm64-v8a"
+    if product == "geckoview_example":
+        architecture = "aarch64"
     commit_info = subprocess.getoutput("hg log -l 1")
     commit_date = re.search(r"date:\s+([:\s\w]+)\s+", str(commit_info)).group(1)
     download_date = datetime.strptime(commit_date, "%a %b %d %H:%M:%S %Y").strftime(
