@@ -59,8 +59,6 @@ static Vector<nsString> GetKeyboardLayoutDlls() {
       Unused << result.emplaceBack(std::move(ws));
     }
   }
-
-  return result;
 }
 
 /* static */
