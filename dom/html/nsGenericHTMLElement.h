@@ -18,6 +18,7 @@
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/ValidityState.h"
 #include "mozilla/dom/PopoverData.h"
+#include "mozilla/dom/ToggleEvent.h"
 
 class nsDOMTokenList;
 class nsIFormControlFrame;
@@ -156,7 +157,14 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   bool CheckPopoverValidity(mozilla::dom::PopoverVisibilityState aExpectedState,
                             ErrorResult& aRv);
   /** Returns true if the event has been cancelled. */
-  MOZ_CAN_RUN_SCRIPT bool FireBeforeToggle(bool aIsOpen);
+  MOZ_CAN_RUN_SCRIPT bool FireToggleEvent(
+      mozilla::dom::PopoverVisibilityState aOldState,
+      mozilla::dom::PopoverVisibilityState aNewState, const nsAString& aType);
+  MOZ_CAN_RUN_SCRIPT void QueuePopoverEventTask(
+      mozilla::dom::PopoverVisibilityState aOldState);
+  MOZ_CAN_RUN_SCRIPT void RunPopoverToggleEventTask(
+      mozilla::dom::PopoverToggleEventTask* aTask,
+      mozilla::dom::PopoverVisibilityState aOldState);
   MOZ_CAN_RUN_SCRIPT void ShowPopover(ErrorResult& aRv);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void HidePopoverWithoutRunningScript();
   MOZ_CAN_RUN_SCRIPT void HidePopoverInternal(bool aFocusPreviousElement,

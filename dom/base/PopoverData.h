@@ -8,6 +8,9 @@
 #define mozilla_dom_PopoverData_h
 
 #include "nsStringFwd.h"
+#include "nsIRunnable.h"
+#include "nsThreadUtils.h"
+#include "nsIWeakReferenceUtils.h"
 
 namespace mozilla::dom {
 
@@ -21,6 +24,22 @@ enum class PopoverState : uint8_t {
 enum class PopoverVisibilityState : uint8_t {
   Hidden,
   Showing,
+};
+
+class PopoverToggleEventTask : public Runnable {
+ public:
+  explicit PopoverToggleEventTask(nsWeakPtr aElement,
+                                  PopoverVisibilityState aOldState);
+
+  // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is MOZ_CAN_RUN_SCRIPT.  See
+  // bug 1535398.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override;
+
+  PopoverVisibilityState GetOldState() const { return mOldState; }
+
+ private:
+  nsWeakPtr mElement;
+  PopoverVisibilityState mOldState;
 };
 
 class PopoverData {
@@ -49,6 +68,9 @@ class PopoverData {
   void SetHasPopoverInvoker(bool aHasPopoverInvoker) {
     mHasPopoverInvoker = aHasPopoverInvoker;
   }
+  PopoverToggleEventTask* GetToggleEventTask() const { return mTask; }
+  void SetToggleEventTask(PopoverToggleEventTask* aTask) { mTask = aTask; }
+  void ClearToggleEventTask() { mTask = nullptr; }
 
  private:
   PopoverVisibilityState mVisibilityState = PopoverVisibilityState::Hidden;
@@ -61,6 +83,7 @@ class PopoverData {
   // https://html.spec.whatwg.org/multipage/popover.html#popover-invoker, also
   // see https://github.com/whatwg/html/issues/9168.
   bool mHasPopoverInvoker = false;
+  RefPtr<PopoverToggleEventTask> mTask;
 };
 }  // namespace mozilla::dom
 
