@@ -1673,7 +1673,7 @@ bool BaseCompiler::throwFrom(RegRef exn) {
 
 void BaseCompiler::loadTag(RegPtr instance, uint32_t tagIndex, RegRef tagDst) {
   const TagDesc& tagDesc = moduleEnv_.tags[tagIndex];
-  size_t offset = Instance::offsetOfGlobalArea() + tagDesc.globalDataOffset;
+  size_t offset = Instance::offsetInGlobalArea(tagDesc.globalDataOffset);
   masm.loadPtr(Address(instance, offset), tagDst);
 }
 
@@ -2188,7 +2188,7 @@ void BaseCompiler::convertI64ToF64(RegI64 src, bool isUnsigned, RegF64 dest,
 
 Address BaseCompiler::addressOfGlobalVar(const GlobalDesc& global, RegPtr tmp) {
   uint32_t globalToInstanceOffset =
-      Instance::offsetOfGlobalArea() + global.offset();
+      Instance::offsetInGlobalArea(global.offset());
 #ifdef RABALDR_PIN_INSTANCE
   movePtr(RegPtr(InstanceReg), tmp);
 #else
@@ -2208,8 +2208,8 @@ Address BaseCompiler::addressOfGlobalVar(const GlobalDesc& global, RegPtr tmp) {
 Address BaseCompiler::addressOfTableField(const TableDesc& table,
                                           uint32_t fieldOffset,
                                           RegPtr instance) {
-  uint32_t tableToInstanceOffset = wasm::Instance::offsetOfGlobalArea() +
-                                   table.globalDataOffset + fieldOffset;
+  uint32_t tableToInstanceOffset =
+      wasm::Instance::offsetInGlobalArea(table.globalDataOffset + fieldOffset);
   return Address(instance, tableToInstanceOffset);
 }
 
@@ -6366,23 +6366,37 @@ void BaseCompiler::emitBarrieredClear(RegPtr valueAddr) {
 
 RegPtr BaseCompiler::loadTypeDefInstanceData(uint32_t typeIndex) {
   RegPtr rp = needPtr();
+  RegPtr instance;
 #  ifndef RABALDR_PIN_INSTANCE
-  fr.loadInstancePtr(InstanceReg);
+  instance = rp;
+  fr.loadInstancePtr(instance);
+#  else
+  // We can use the pinned instance register.
+  instance = RegPtr(InstanceReg);
 #  endif
   masm.computeEffectiveAddress(
-      Address(InstanceReg,
-              Instance::offsetOfGlobalArea() +
-                  moduleEnv_.offsetOfTypeDefInstanceData(typeIndex)),
+      Address(instance,
+              Instance::offsetInGlobalArea(
+                  moduleEnv_.offsetOfTypeDefInstanceData(typeIndex))),
       rp);
   return rp;
 }
 
 RegPtr BaseCompiler::loadSuperTypeVector(uint32_t typeIndex) {
   RegPtr rp = needPtr();
+  RegPtr instance;
 #  ifndef RABALDR_PIN_INSTANCE
-  fr.loadInstancePtr(InstanceReg);
+  // We need to load the instance register, but can use the destination
+  // register as a temporary.
+  instance = rp;
+  fr.loadInstancePtr(rp);
+#  else
+  // We can use the pinned instance register.
+  instance = RegPtr(InstanceReg);
 #  endif
-  masm.loadWasmGlobalPtr(moduleEnv_.offsetOfSuperTypeVector(typeIndex), rp);
+  masm.loadPtr(Address(instance, Instance::offsetInGlobalArea(
+                                     moduleEnv_.offsetOfSuperTypeVector(typeIndex))),
+               rp);
   return rp;
 }
 
