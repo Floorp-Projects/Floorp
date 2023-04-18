@@ -265,7 +265,7 @@ class ControlStackEntry {
   }
 
   void switchToCatch() {
-    MOZ_ASSERT(kind() == LabelKind::Try || kind() == LabelKind::Catch);
+    MOZ_ASSERT(kind() == LabelKind::Try);
     kind_ = LabelKind::Catch;
     polymorphicBase_ = false;
   }
@@ -1587,9 +1587,9 @@ inline bool OpIter<Policy>::readCatch(LabelKind* kind, uint32_t* tagIndex,
   }
 
   valueStack_.shrinkTo(block.valueStackBase());
-  block.switchToCatch();
-  // Reset local state to the beginning of the 'try' block.
-  unsetLocals_.resetToBlock(controlStack_.length() - 1);
+  if (block.kind() == LabelKind::Try) {
+    block.switchToCatch();
+  }
 
   return push(env_.tags[*tagIndex].type->resultType());
 }
@@ -1613,8 +1613,6 @@ inline bool OpIter<Policy>::readCatchAll(LabelKind* kind, ResultType* paramType,
 
   valueStack_.shrinkTo(block.valueStackBase());
   block.switchToCatchAll();
-  // Reset local state to the beginning of the 'try' block.
-  unsetLocals_.resetToBlock(controlStack_.length() - 1);
 
   return true;
 }
