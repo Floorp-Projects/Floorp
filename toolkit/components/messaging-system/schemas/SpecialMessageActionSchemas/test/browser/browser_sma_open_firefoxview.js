@@ -9,7 +9,7 @@ add_task(async function test_open_firefoxview() {
     "about:firefoxview"
   );
   await SMATestUtils.executeAndValidateAction({
-    type: "OPEN_FIREFOX_VIEW_AND_COLORWAYS_MODAL",
+    type: "OPEN_FIREFOX_VIEW",
   });
 
   const tab = await tabPromise;

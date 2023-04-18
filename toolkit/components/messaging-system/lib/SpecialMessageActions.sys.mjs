@@ -404,9 +404,6 @@ export const SpecialMessageActions = {
         );
         clickElement?.click();
         break;
-      case "OPEN_FIREFOX_VIEW_AND_COLORWAYS_MODAL":
-        window.FirefoxViewHandler.openTab();
-        break;
       case "RELOAD_BROWSER":
         browser.reload();
         break;
