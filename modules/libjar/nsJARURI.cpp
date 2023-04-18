@@ -21,8 +21,6 @@
 
 using namespace mozilla::ipc;
 
-static NS_DEFINE_CID(kJARURICID, NS_JARURI_CID);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMPL_CLASSINFO(nsJARURI, nullptr, nsIClassInfo::THREADSAFE, NS_JARURI_CID)
@@ -488,7 +486,7 @@ nsresult nsJARURI::SetQuery(const nsACString& query) {
 }
 
 nsresult nsJARURI::SetQueryWithEncoding(const nsACString& query,
-                                        const Encoding* encoding) {
+                                        const mozilla::Encoding* encoding) {
   return NS_MutateURI(mJAREntry)
       .SetQueryWithEncoding(query, encoding)
       .Finalize(mJAREntry);
