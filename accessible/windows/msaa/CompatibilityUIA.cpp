@@ -6,13 +6,16 @@
 
 #include "Compatibility.h"
 
+#include "mozilla/a11y/Platform.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WindowsVersion.h"
+#include "mozilla/UniquePtr.h"
 #include "nsdefs.h"
 #include "nspr/prenv.h"
 
+#include "nsIFile.h"
 #include "nsTHashMap.h"
 #include "nsTHashSet.h"
 #include "nsPrintfCString.h"
@@ -20,6 +23,7 @@
 #include "nsString.h"
 #include "nsTHashtable.h"
 #include "nsUnicharUtils.h"
+#include "nsWindowsHelpers.h"
 #include "nsWinUtils.h"
 
 #include "NtUndoc.h"
@@ -38,6 +42,8 @@
 #  define LOG_ERROR(FuncName)
 
 #endif  // defined(UIA_LOGGING)
+
+using namespace mozilla;
 
 struct ByteArrayDeleter {
   void operator()(void* aBuf) { delete[] reinterpret_cast<char*>(aBuf); }

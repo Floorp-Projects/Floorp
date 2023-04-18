@@ -8,6 +8,7 @@
 
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "nsExceptionHandler.h"
 #include "nsIXULRuntime.h"
 #include "nsPrintfCString.h"
@@ -15,6 +16,7 @@
 #include "nsWindowsDllInterceptor.h"
 #include "nsWinUtils.h"
 #include "Statistics.h"
+#include "AccessibleWrap.h"
 
 #include "mozilla/Preferences.h"
 

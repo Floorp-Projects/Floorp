@@ -17,6 +17,7 @@
 #include "mozilla/a11y/RemoteAccessible.h"
 #include "ServiceProvider.h"
 #include "sdnAccessible.h"
+#include "LocalAccessible-inl.h"
 
 #include "mozilla/mscom/AsyncInvoker.h"
 #include "mozilla/StaticPrefs_accessibility.h"

@@ -8,6 +8,7 @@
 #define mozilla_a11y_MsaaDocAccessible_h__
 
 #include "ia2AccessibleHypertext.h"
+#include "nsTHashMap.h"
 
 namespace mozilla {
 

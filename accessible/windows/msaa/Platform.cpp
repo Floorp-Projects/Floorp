@@ -28,6 +28,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "WinUtils.h"
+#include "ia2AccessibleText.h"
 
 #include <tuple>
 

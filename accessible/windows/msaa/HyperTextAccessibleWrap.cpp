@@ -11,6 +11,7 @@
 #include "nsEventShell.h"
 
 #include "mozilla/StaticPtr.h"
+#include "ia2AccessibleText.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;

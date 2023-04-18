@@ -6,11 +6,16 @@
 
 #include "MsaaDocAccessible.h"
 
+#include "MsaaDocAccessible.h"
 #include "DocAccessibleChild.h"
+#include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/StaticPrefs_accessibility.h"
 #include "nsAccUtils.h"
 #include "nsWinUtils.h"
+#include "Statistics.h"
+#include "sdnDocAccessible.h"
 #include "Role.h"
+#include "ISimpleDOM.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
