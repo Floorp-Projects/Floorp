@@ -114,7 +114,7 @@ bool UtilityProcessHost::Launch(StringVector aExtraOpts) {
                 // can abort.
                 return;
               }
-              InitAfterConnect(false);
+              InitAfterConnect(false, "UtilityProcessHost::LaunchTimeout");
               MOZ_ASSERT(mTimerChecked,
                          "InitAfterConnect must have acted on the promise");
             }),
@@ -153,7 +153,19 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessHost::LaunchPromise() {
         }
         mTimerChecked = true;
         if (aResult.IsReject()) {
-          RejectPromise();
+#if defined(DEBUG)
+          ipc::LaunchError aError = aResult.RejectValue();
+          NS_WARNING(nsPrintfCString("UtilityProcessHost::LaunchPromise() will "
+                                     "reject with '%s' returning "
+#  if defined(XP_WIN)
+                                     "'%lx'",
+#  else
+                                     "'%d'",
+#  endif  // defined(XP_WIN)
+                                     aError.FunctionName(), aError.ErrorCode())
+                         .get());
+#endif  // defined(DEBUG)
+          RejectPromise("UtilityProcessHost::LaunchPromise()");
         }
         // If aResult.IsResolve() then we have succeeded in launching the
         // Utility process. The promise will be resolved once the channel has
@@ -188,12 +200,13 @@ void UtilityProcessHost::OnChannelError() {
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "UtilityProcessHost::OnChannelError", [this, liveToken = mLiveToken]() {
         if (*liveToken && mLaunchPhase == LaunchPhase::Waiting) {
-          InitAfterConnect(false);
+          InitAfterConnect(false, "UtilityProcessHost::OnChannelError");
         }
       }));
 }
 
-void UtilityProcessHost::InitAfterConnect(bool aSucceeded) {
+void UtilityProcessHost::InitAfterConnect(bool aSucceeded,
+                                          const char* aCallSite) {
   MOZ_ASSERT(NS_IsMainThread());
 
   MOZ_ASSERT(mLaunchPhase == LaunchPhase::Waiting);
@@ -202,7 +215,7 @@ void UtilityProcessHost::InitAfterConnect(bool aSucceeded) {
   mLaunchPhase = LaunchPhase::Complete;
 
   if (!aSucceeded) {
-    RejectPromise();
+    RejectPromise(aCallSite);
     return;
   }
 
@@ -264,7 +277,7 @@ void UtilityProcessHost::Shutdown() {
   MOZ_ASSERT(!mShutdownRequested);
   LOGD("[%p] UtilityProcessHost::Shutdown", this);
 
-  RejectPromise();
+  RejectPromise("UtilityProcessHost::Shutdown");
 
   if (mUtilityProcessParent) {
     LOGD("[%p] UtilityProcessHost::Shutdown not destroying utility process.",
@@ -301,7 +314,7 @@ void UtilityProcessHost::OnChannelClosed() {
   MOZ_ASSERT(NS_IsMainThread());
   LOGD("[%p] UtilityProcessHost::OnChannelClosed", this);
 
-  RejectPromise();
+  RejectPromise("UtilityProcessHost::OnChannelClosed");
 
   if (!mShutdownRequested && mListener) {
     // This is an unclean shutdown. Notify our listener that we're going away.
@@ -330,7 +343,7 @@ void UtilityProcessHost::DestroyProcess() {
   MOZ_ASSERT(NS_IsMainThread());
   LOGD("[%p] UtilityProcessHost::DestroyProcess", this);
 
-  RejectPromise();
+  RejectPromise("UtilityProcessHost::DestroyProcess");
 
   // Any pending tasks will be cancelled from now on.
   *mLiveToken = false;
@@ -352,12 +365,16 @@ void UtilityProcessHost::ResolvePromise() {
   mTimerChecked = true;
 }
 
-void UtilityProcessHost::RejectPromise() {
+void UtilityProcessHost::RejectPromise(const char* aCallSite) {
   MOZ_ASSERT(NS_IsMainThread());
   LOGD("[%p] UtilityProcessHost connection failed - rejecting launch promise",
        this);
 
   if (!mLaunchPromiseSettled) {
+    NS_WARNING(
+        nsPrintfCString("Rejecting UtilityProcess launch promise due to %s",
+                        aCallSite)
+            .get());
     mLaunchPromise->Reject(NS_ERROR_FAILURE, __func__);
     mLaunchPromiseSettled = true;
   }
