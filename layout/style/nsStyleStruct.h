@@ -935,6 +935,25 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
   mozilla::StyleHyphenateCharacter mHyphenateCharacter =
       mozilla::StyleHyphenateCharacter::Auto();
 
+  mozilla::StyleTextSecurity mWebkitTextSecurity =
+      mozilla::StyleTextSecurity::None;
+
+  char16_t TextSecurityMaskChar() const {
+    switch (mWebkitTextSecurity) {
+      case mozilla::StyleTextSecurity::None:
+        return 0;
+      case mozilla::StyleTextSecurity::Circle:
+        return 0x25E6;
+      case mozilla::StyleTextSecurity::Disc:
+        return 0x2022;
+      case mozilla::StyleTextSecurity::Square:
+        return 0x25A0;
+      default:
+        MOZ_ASSERT_UNREACHABLE("unknown StyleTextSecurity value!");
+        return 0;
+    }
+  }
+
   mozilla::StyleWordBreak EffectiveWordBreak() const {
     if (mWordBreak == mozilla::StyleWordBreak::BreakWord) {
       return mozilla::StyleWordBreak::Normal;

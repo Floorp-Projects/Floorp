@@ -2479,6 +2479,24 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "-webkit-text-security": {
+    "isInherited": true,
+    "subproperties": [
+      "-webkit-text-security"
+    ],
+    "supports": [],
+    "values": [
+      "circle",
+      "disc",
+      "inherit",
+      "initial",
+      "none",
+      "revert",
+      "revert-layer",
+      "square",
+      "unset"
+    ]
+  },
   "-webkit-text-size-adjust": {
     "isInherited": true,
     "subproperties": [
@@ -3153,6 +3171,7 @@ exports.CSS_PROPERTIES = {
       "text-decoration-skip-ink",
       "hyphenate-character",
       "forced-color-adjust",
+      "-webkit-text-security",
       "cursor",
       "pointer-events",
       "-moz-user-input",

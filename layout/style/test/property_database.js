@@ -11182,6 +11182,17 @@ var gCSSProperties = {
     alias_for: "filter",
     subproperties: ["filter"],
   },
+  "-webkit-text-security": {
+    domProp: "webkitTextSecurity",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    applies_to_placeholder: true,
+    initial_values: ["none"],
+    other_values: ["circle", "disc", "square"],
+    invalid_values: ["0", "auto", "true", "'*'"],
+  },
   "-webkit-text-fill-color": {
     domProp: "webkitTextFillColor",
     inherited: true,
