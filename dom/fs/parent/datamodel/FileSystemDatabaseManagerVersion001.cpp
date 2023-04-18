@@ -1201,55 +1201,110 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RemoveFile(
   return true;
 }
 
+nsresult FileSystemDatabaseManagerVersion001::ClearDestinationIfNotLocked(
+    const FileSystemConnection& aConnection,
+    const FileSystemDataManager* const aDataManager,
+    const FileSystemEntryMetadata& aHandle,
+    const FileSystemChildMetadata& aNewDesignation) {
+  // If the destination file exists, fail explicitly.  Spec author plans to
+  // revise the spec
+  QM_TRY_UNWRAP(bool exists, DoesFileExist(aConnection, aNewDesignation));
+  if (exists) {
+    QM_TRY_INSPECT(const EntryId& destId,
+                   FindEntryId(aConnection, aNewDesignation, true));
+    if (aDataManager->IsLocked(destId)) {
+      LOG(("Trying to overwrite in-use file"));
+      return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+    }
+
+    QM_TRY_UNWRAP(DebugOnly<bool> isRemoved, RemoveFile(aNewDesignation));
+    MOZ_ASSERT(isRemoved);
+  } else {
+    QM_TRY_UNWRAP(exists, DoesDirectoryExist(aConnection, aNewDesignation));
+    if (exists) {
+      // Fails if directory contains locked files, otherwise total wipeout
+      QM_TRY_UNWRAP(DebugOnly<bool> isRemoved,
+                    MOZ_TO_RESULT(RemoveDirectory(aNewDesignation,
+                                                  /* recursive */ true)));
+      MOZ_ASSERT(isRemoved);
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult FileSystemDatabaseManagerVersion001::PrepareMoveEntry(
+    const FileSystemConnection& aConnection,
+    const FileSystemDataManager* const aDataManager,
+    const FileSystemEntryMetadata& aHandle,
+    const FileSystemChildMetadata& aNewDesignation, bool aIsFile) {
+  const EntryId& entryId = aHandle.entryId();
+
+  // At this point, entry exists
+  if (aIsFile && aDataManager->IsLocked(entryId)) {
+    LOG(("Trying to move in-use file"));
+    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+  }
+
+  QM_TRY(QM_TO_RESULT(ClearDestinationIfNotLocked(aConnection, aDataManager,
+                                                  aHandle, aNewDesignation)));
+
+  // To prevent cyclic paths, we check that there is no path from
+  // the item to be moved to the destination folder.
+  QM_TRY_UNWRAP(const bool isDestinationUnderSelf,
+                IsAncestor(aConnection, {entryId, aNewDesignation.parentId()}));
+  if (isDestinationUnderSelf) {
+    return NS_ERROR_DOM_INVALID_MODIFICATION_ERR;
+  }
+
+  return NS_OK;
+}
+
+nsresult FileSystemDatabaseManagerVersion001::PrepareRenameEntry(
+    const FileSystemConnection& aConnection,
+    const FileSystemDataManager* const aDataManager,
+    const FileSystemEntryMetadata& aHandle, const Name& aNewName,
+    bool aIsFile) {
+  const EntryId& entryId = aHandle.entryId();
+
+  // At this point, entry exists
+  if (aIsFile && mDataManager->IsLocked(entryId)) {
+    LOG(("Trying to move in-use file"));
+    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+  }
+
+  // If the destination file exists, fail explicitly.
+  FileSystemChildMetadata destination;
+  QM_TRY_UNWRAP(EntryId parent, FindParent(mConnection, entryId));
+  destination.parentId() = parent;
+  destination.childName() = aNewName;
+
+  QM_TRY(MOZ_TO_RESULT(ClearDestinationIfNotLocked(mConnection, mDataManager,
+                                                   aHandle, destination)));
+
+  return NS_OK;
+}
+
 Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RenameEntry(
     const FileSystemEntryMetadata& aHandle, const Name& aNewName) {
+  const auto& entryId = aHandle.entryId();
+
   // Can't rename root
-  if (mRootEntry == aHandle.entryId()) {
+  if (mRootEntry == entryId) {
     return Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR));
   }
 
   // Verify the source exists
-  QM_TRY_UNWRAP(bool isFile, IsFile(mConnection, aHandle.entryId()), false);
-
-  // At this point, entry exists
-  if (isFile && mDataManager->IsLocked(aHandle.entryId())) {
-    LOG(("Trying to move in-use file"));
-    return Err(QMResult(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR));
-  }
+  QM_TRY_UNWRAP(bool isFile, IsFile(mConnection, entryId),
+                Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR)));
 
   // Are we actually renaming?
   if (aHandle.entryName() == aNewName) {
     return true;
   }
 
-  // If the destination file exists, fail explicitly.
-  FileSystemChildMetadata destination;
-  QM_TRY_UNWRAP(EntryId parent, FindParent(mConnection, aHandle.entryId()));
-  destination.parentId() = parent;
-  destination.childName() = aNewName;
-
-  QM_TRY_UNWRAP(bool exists, DoesFileExist(mConnection, destination));
-  if (exists) {
-    // If the destination file exists, check if it is in use
-    QM_TRY_INSPECT(const EntryId& destId,
-                   FindEntryId(mConnection, destination, true));
-    if (mDataManager->IsLocked(destId)) {
-      LOG(("Trying to overwrite in-use file"));
-      return Err(QMResult(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR));
-    }
-
-    QM_TRY_UNWRAP(DebugOnly<bool> isRemoved, RemoveFile(destination));
-    MOZ_ASSERT(isRemoved);
-  } else {
-    QM_TRY_UNWRAP(exists, DoesDirectoryExist(mConnection, destination));
-    if (exists) {
-      // Fails if directory contains locked files, otherwise total wipeout
-      QM_TRY_UNWRAP(DebugOnly<bool> isRemoved,
-                    MOZ_TO_RESULT(RemoveDirectory(destination,
-                                                  /* recursive */ true)));
-      MOZ_ASSERT(isRemoved);
-    }
-  }
+  QM_TRY(QM_TO_RESULT(PrepareRenameEntry(mConnection, mDataManager, aHandle,
+                                         aNewName, isFile)));
 
   mozStorageTransaction transaction(
       mConnection.get(), false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
@@ -1269,17 +1324,16 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RenameEntry(
 Result<bool, QMResult> FileSystemDatabaseManagerVersion001::MoveEntry(
     const FileSystemEntryMetadata& aHandle,
     const FileSystemChildMetadata& aNewDesignation) {
-  MOZ_ASSERT(!aHandle.entryId().IsEmpty());
-
-  const EntryId& entryId = aHandle.entryId();
-  const Name& newName = aNewDesignation.childName();
+  const auto& entryId = aHandle.entryId();
+  MOZ_ASSERT(!entryId.IsEmpty());
 
   if (mRootEntry == entryId) {
     return Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR));
   }
 
   // Verify the source exists
-  QM_TRY_UNWRAP(bool isFile, IsFile(mConnection, entryId), false);
+  QM_TRY_UNWRAP(bool isFile, IsFile(mConnection, entryId),
+                Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR)));
 
   // If the rename doesn't change the name or directory, just return success.
   // XXX Needs to be added to the spec
@@ -1287,44 +1341,8 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::MoveEntry(
     return true;
   }
 
-  // At this point, entry exists
-  if (isFile && mDataManager->IsLocked(entryId)) {
-    LOG(("Trying to move in-use file"));
-    return Err(QMResult(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR));
-  }
-
-  // If the destination file exists, fail explicitly.  Spec author plans to
-  // revise the spec
-  QM_TRY_UNWRAP(bool exists, DoesFileExist(mConnection, aNewDesignation));
-  if (exists) {
-    QM_TRY_INSPECT(const EntryId& destId,
-                   FindEntryId(mConnection, aNewDesignation, true));
-    if (mDataManager->IsLocked(destId)) {
-      LOG(("Trying to overwrite in-use file"));
-      return Err(QMResult(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR));
-    }
-
-    QM_TRY_UNWRAP(DebugOnly<bool> isRemoved, RemoveFile(aNewDesignation));
-    MOZ_ASSERT(isRemoved);
-  } else {
-    QM_TRY_UNWRAP(exists, DoesDirectoryExist(mConnection, aNewDesignation));
-    if (exists) {
-      // Fails if directory contains locked files, otherwise total wipeout
-      QM_TRY_UNWRAP(DebugOnly<bool> isRemoved,
-                    MOZ_TO_RESULT(RemoveDirectory(aNewDesignation,
-                                                  /* recursive */ true)));
-      MOZ_ASSERT(isRemoved);
-    }
-  }
-
-  // To prevent cyclic paths, we check that there is no path from
-  // the item to be moved to the destination folder.
-  QM_TRY_UNWRAP(
-      const bool isDestinationUnderSelf,
-      IsAncestor(mConnection, {aHandle.entryId(), aNewDesignation.parentId()}));
-  if (isDestinationUnderSelf) {
-    return Err(QMResult(NS_ERROR_DOM_INVALID_MODIFICATION_ERR));
-  }
+  QM_TRY(QM_TO_RESULT(PrepareMoveEntry(mConnection, mDataManager, aHandle,
+                                       aNewDesignation, isFile)));
 
   const nsLiteralCString updateEntryParentQuery =
       "UPDATE Entries "
@@ -1345,6 +1363,8 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::MoveEntry(
     QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, entryId)));
     QM_TRY(QM_TO_RESULT(stmt.Execute()));
   }
+
+  const Name& newName = aNewDesignation.childName();
 
   // Are we actually renaming?
   if (aHandle.entryName() == newName) {
