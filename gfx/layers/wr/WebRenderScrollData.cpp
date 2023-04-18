@@ -8,6 +8,7 @@
 
 #include <ostream>
 
+#include "Units.h"
 #include "mozilla/layers/LayersMessageUtils.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/ToString.h"
@@ -224,6 +225,24 @@ WebRenderScrollData::WebRenderScrollData(WebRenderLayerManager* aManager,
       mIsFirstPaint(false),
       mPaintSequenceNumber(0) {}
 
+bool WebRenderScrollData::Validate() const {
+  // Attempt to traverse the tree structure encoded by the descendant counts,
+  // validating as we go that everything is within bounds and properly nested.
+  // In addition, check that the traversal visits every node exactly once.
+  std::vector<size_t> visitCounts(mLayerScrollData.Length(), 0);
+  if (mLayerScrollData.Length() > 0) {
+    if (!mLayerScrollData[0].ValidateSubtree(*this, visitCounts, 0)) {
+      return false;
+    }
+  }
+  for (size_t visitCount : visitCounts) {
+    if (visitCount != 1) {
+      return false;
+    }
+  }
+  return true;
+}
+
 WebRenderLayerManager* WebRenderScrollData::GetManager() const {
   return mManager;
 }
@@ -251,6 +270,53 @@ size_t WebRenderScrollData::AddLayerData(WebRenderLayerScrollData&& aData) {
 
 size_t WebRenderScrollData::GetLayerCount() const {
   return mLayerScrollData.Length();
+}
+
+bool WebRenderLayerScrollData::ValidateSubtree(
+    const WebRenderScrollData& aParent, std::vector<size_t>& aVisitCounts,
+    size_t aCurrentIndex) const {
+  ++aVisitCounts[aCurrentIndex];
+
+  // All scroll ids must be in bounds.
+  for (size_t scrollMetadataIndex : mScrollIds) {
+    if (scrollMetadataIndex >= aParent.mScrollMetadatas.Length()) {
+      return false;
+    }
+  }
+
+  // Descendant count must be nonnegative.
+  if (mDescendantCount < 0) {
+    return false;
+  }
+  size_t descendantCount = static_cast<size_t>(mDescendantCount);
+
+  // Bounds check: for every layer, its index + its mDescendantCount
+  // must be within bounds.
+  if (aCurrentIndex + descendantCount >= aParent.mLayerScrollData.Length()) {
+    return false;
+  }
+
+  // Recurse over our children, accumulating a count of our children
+  // and their descendants as we go.
+  size_t childCount = 0;
+  size_t childDescendantCounts = 0;
+  size_t currentChildIndex = aCurrentIndex + 1;
+  while (currentChildIndex < (aCurrentIndex + descendantCount + 1)) {
+    ++childCount;
+
+    const WebRenderLayerScrollData* currentChild =
+        &aParent.mLayerScrollData[currentChildIndex];
+    childDescendantCounts += currentChild->mDescendantCount;
+    currentChild->ValidateSubtree(aParent, aVisitCounts, currentChildIndex);
+
+    // The current child's descendants come first in the array, and the next
+    // element after that is our next child.
+    currentChildIndex += (currentChild->mDescendantCount + 1);
+  }
+
+  // For a given layer, its descendant count must equal the number of
+  // children + the descendant counts of its children added together.
+  return descendantCount == (childCount + childDescendantCounts);
 }
 
 const WebRenderLayerScrollData* WebRenderScrollData::GetLayerData(
