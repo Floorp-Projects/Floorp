@@ -12,6 +12,7 @@ $tags:
 
 urlbar:
   abandonment:
+    disabled: true
     type: event
     description: Recorded when the user abandons a search (blurring the urlbar).
     extra_keys:
@@ -129,6 +130,7 @@ urlbar:
       - fx-search-telemetry@mozilla.com
     expires: never
   engagement:
+    disabled: true
     type: event
     description: Recorded when the user executes an action on a result.
     extra_keys:
@@ -323,6 +325,7 @@ urlbar:
       - fx-search-telemetry@mozilla.com
     expires: never
   impression:
+    disabled: true
     type: event
     description: Recorded when urlbar results are shown to the user.
     extra_keys:
