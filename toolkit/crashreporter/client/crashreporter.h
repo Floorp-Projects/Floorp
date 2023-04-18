@@ -100,6 +100,9 @@ bool ReadStringsFromFile(const std::string& path, StringTable& strings,
 void LogMessage(const std::string& message);
 void DeleteDump();
 
+std::string GetDumpLocalID();
+std::string GetProgramPath(const std::string& exename);
+
 // Telemetry ping
 bool SendCrashPing(Json::Value& extra, const std::string& hash,
                    std::string& pingUuid, const std::string& pingDir);
