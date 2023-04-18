@@ -12,6 +12,7 @@
 #include "PlatformEncoderModule.h"
 #include "TimeUnits.h"
 #include "WMFDataEncoderUtils.h"
+#include "WMFUtils.h"
 
 namespace mozilla {
 

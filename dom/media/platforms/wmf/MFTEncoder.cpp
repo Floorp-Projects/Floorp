@@ -7,7 +7,9 @@
 #include "MFTEncoder.h"
 #include "mozilla/Logging.h"
 #include "mozilla/WindowsProcessMitigations.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/mscom/Utils.h"
+#include "WMFUtils.h"
 
 // Missing from MinGW.
 #ifndef CODECAPI_AVEncAdaptiveMode
