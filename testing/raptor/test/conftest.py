@@ -91,7 +91,7 @@ def get_binary():
 def create_args():
     args = Namespace(
         app="firefox",
-        test="raptor-tp6-unittest",
+        test="browsertime-tp6-unittest",
         binary="path/to/binary",
         gecko_profile=False,
         extra_profiler_run=False,
