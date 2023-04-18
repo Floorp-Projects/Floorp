@@ -1383,20 +1383,53 @@ inline ColorPattern DrawTargetWebgl::GetClearPattern() const {
       DeviceColor(0.0f, 0.0f, 0.0f, IsOpaque(mFormat) ? 1.0f : 0.0f));
 }
 
+// Check if the transformed rect would contain the entire viewport.
+inline bool DrawTargetWebgl::RectContainsViewport(const Rect& aRect) const {
+  return mTransform.PreservesAxisAlignedRectangles() &&
+         MatrixDouble(mTransform)
+             .TransformBounds(
+                 RectDouble(aRect.x, aRect.y, aRect.width, aRect.height))
+             .Contains(RectDouble(GetRect()));
+}
+
+// Ensure that the rect, after transform, is within reasonable precision limits
+// such that when transformed and clipped in the shader it will not round bits
+// from the mantissa in a way that will diverge in a noticeable way from path
+// geometry calculated by the path fallback.
+static inline bool RectInsidePrecisionLimits(const Rect& aRect,
+                                             const Matrix& aTransform) {
+  return Rect(-(1 << 20), -(1 << 20), 2 << 20, 2 << 20)
+      .Contains(aTransform.TransformBounds(aRect));
+}
+
 void DrawTargetWebgl::ClearRect(const Rect& aRect) {
   if (mIsClear) {
     // No need to clear anything if the entire framebuffer is already clear.
     return;
   }
 
-  DrawRect(aRect, GetClearPattern(),
-           DrawOptions(1.0f, CompositionOp::OP_CLEAR));
+  bool containsViewport = RectContainsViewport(aRect);
+  if (containsViewport) {
+    // If the rect encompasses the entire viewport, just clear the viewport
+    // instead to avoid transform issues.
+    DrawRect(Rect(GetRect()), GetClearPattern(),
+             DrawOptions(1.0f, CompositionOp::OP_CLEAR), Nothing(), nullptr,
+             false);
+  } else if (RectInsidePrecisionLimits(aRect, mTransform)) {
+    // If the rect transform won't stress precision, then just use it.
+    DrawRect(aRect, GetClearPattern(),
+             DrawOptions(1.0f, CompositionOp::OP_CLEAR));
+  } else {
+    // Otherwise, using the transform in the shader may lead to inaccuracies, so
+    // just fall back.
+    MarkSkiaChanged();
+    mSkia->ClearRect(aRect);
+  }
 
   // If the clear rectangle encompasses the entire viewport and is not clipped,
   // then mark the target as entirely clear.
-  if (mTransform.PreservesAxisAlignedRectangles() &&
-      mTransform.TransformBounds(aRect).Contains(Rect(GetRect())) &&
-      mSharedContext->IsCurrentTarget(this) && !mSharedContext->HasClipMask() &&
+  if (containsViewport && mSharedContext->IsCurrentTarget(this) &&
+      !mSharedContext->HasClipMask() &&
       mSharedContext->mClipAARect.Contains(Rect(GetRect()))) {
     mIsClear = true;
   }
@@ -2456,22 +2489,23 @@ bool DrawTargetWebgl::SharedContext::PruneTextureMemory(size_t aMargin,
   return mNumTextureHandles < oldItems;
 }
 
-// Ensure that the rect, after transform, is within reasonable precision limits
-// such that when transformed and clipped in the shader it will not round bits
-// from the mantissa in a way that will diverge in a noticeable way from path
-// geometry calculated by the path fallback.
-static inline bool RectInsidePrecisionLimits(const Rect& aRect,
-                                             const Matrix& aTransform) {
-  return Rect(-(1 << 20), -(1 << 20), 2 << 20, 2 << 20)
-      .Contains(aTransform.TransformBounds(aRect));
-}
-
 void DrawTargetWebgl::FillRect(const Rect& aRect, const Pattern& aPattern,
                                const DrawOptions& aOptions) {
-  if (SupportsPattern(aPattern) &&
-      RectInsidePrecisionLimits(aRect, GetTransform())) {
-    DrawRect(aRect, aPattern, aOptions);
-  } else if (!mWebglValid) {
+  if (SupportsPattern(aPattern)) {
+    if (RectInsidePrecisionLimits(aRect, mTransform)) {
+      DrawRect(aRect, aPattern, aOptions);
+      return;
+    }
+    if (aPattern.GetType() == PatternType::COLOR &&
+        RectContainsViewport(aRect)) {
+      // If the pattern is transform-invariant and the rect encompasses the
+      // entire viewport, just clip drawing to the viewport to avoid transform
+      // issues.
+      DrawRect(Rect(GetRect()), aPattern, aOptions, Nothing(), nullptr, false);
+      return;
+    }
+  }
+  if (!mWebglValid) {
     MarkSkiaChanged(aOptions);
     mSkia->FillRect(aRect, aPattern, aOptions);
   } else {
@@ -2621,8 +2655,16 @@ void DrawTargetWebgl::Fill(const Path* aPath, const Pattern& aPattern,
   // Draw the path as a simple rectangle with a supported pattern when possible.
   if (skiaPath.isRect(&skiaRect) && SupportsPattern(aPattern)) {
     Rect rect = SkRectToRect(skiaRect);
-    if (RectInsidePrecisionLimits(rect, GetTransform())) {
+    if (RectInsidePrecisionLimits(rect, mTransform)) {
       DrawRect(rect, aPattern, aOptions);
+      return;
+    }
+    if (aPattern.GetType() == PatternType::COLOR &&
+        RectContainsViewport(rect)) {
+      // If the pattern is transform-invariant and the rect encompasses the
+      // entire viewport, just clip drawing to the viewport to avoid transform
+      // issues.
+      DrawRect(Rect(GetRect()), aPattern, aOptions, Nothing(), nullptr, false);
       return;
     }
   }

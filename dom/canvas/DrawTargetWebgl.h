@@ -513,8 +513,9 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
 
   void DrawRectFallback(const Rect& aRect, const Pattern& aPattern,
                         const DrawOptions& aOptions,
-                        Maybe<DeviceColor> aMaskColor, bool aTransform,
-                        bool aClipped, const StrokeOptions* aStrokeOptions);
+                        Maybe<DeviceColor> aMaskColor = Nothing(),
+                        bool aTransform = true, bool aClipped = true,
+                        const StrokeOptions* aStrokeOptions = nullptr);
   bool DrawRect(const Rect& aRect, const Pattern& aPattern,
                 const DrawOptions& aOptions,
                 Maybe<DeviceColor> aMaskColor = Nothing(),
@@ -524,6 +525,8 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
                 const StrokeOptions* aStrokeOptions = nullptr);
 
   ColorPattern GetClearPattern() const;
+
+  bool RectContainsViewport(const Rect& aRect) const;
 
   bool ShouldAccelPath(const DrawOptions& aOptions,
                        const StrokeOptions* aStrokeOptions);
