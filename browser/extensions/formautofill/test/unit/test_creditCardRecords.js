@@ -80,7 +80,7 @@ const TEST_CREDIT_CARD_WITH_2_DIGITS_YEAR = {
 const TEST_CREDIT_CARD_WITH_INVALID_FIELD = {
   "cc-name": "John Doe",
   "cc-number": "344060747836806",
-  invalidField: "INVALID",
+  "cc-type": { invalid: "invalid" },
 };
 
 const TEST_CREDIT_CARD_WITH_INVALID_EXPIRY_DATE = {
@@ -113,18 +113,21 @@ const MERGE_TESTCASES = [
       "cc-number": "4929001587121045",
       "cc-exp-month": 4,
       "cc-exp-year": 2017,
+      "unknown-1": "an unknown field from another client",
     },
     creditCardToMerge: {
       "cc-name": "John Doe",
       "cc-number": "4929001587121045",
       "cc-exp-month": 4,
       "cc-exp-year": 2017,
+      "unknown-1": "an unknown field from another client",
     },
     expectedCreditCard: {
       "cc-name": "John Doe",
       "cc-number": "4929001587121045",
       "cc-exp-month": 4,
       "cc-exp-year": 2017,
+      "unknown-1": "an unknown field from another client",
     },
   },
   {
@@ -353,7 +356,7 @@ add_task(async function test_add() {
 
   await Assert.rejects(
     profileStorage.creditCards.add(TEST_CREDIT_CARD_WITH_INVALID_FIELD),
-    /"invalidField" is not a valid field\./
+    /"cc-type" contains invalid data type: object/
   );
 
   await Assert.rejects(
@@ -495,7 +498,7 @@ add_task(async function test_update() {
       guid,
       TEST_CREDIT_CARD_WITH_INVALID_FIELD
     ),
-    /"invalidField" is not a valid field\./
+    /"cc-type" contains invalid data type: object/
   );
 
   await Assert.rejects(

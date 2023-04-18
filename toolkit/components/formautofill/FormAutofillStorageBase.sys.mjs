@@ -48,8 +48,10 @@
  *       timeCreated,          // in ms
  *       timeLastUsed,         // in ms
  *       timeLastModified,     // in ms
- *       timesUsed
+ *       timesUsed,
  *       _sync: { ... optional sync metadata },
+ *       ...unknown fields     // We keep fields we don't understand/expect from other clients
+ *                             // to prevent data loss for other clients, we roundtrip them for sync
  *     }
  *   ],
  *   creditCards: [
@@ -82,8 +84,10 @@
  *       timeCreated,          // in ms
  *       timeLastUsed,         // in ms
  *       timeLastModified,     // in ms
- *       timesUsed
+ *       timesUsed,
  *       _sync: { ... optional sync metadata },
+ *       ...unknown fields     // We keep fields we don't understand/expect from other clients
+ *                             // to prevent data loss for other clients, we roundtrip them for sync
  *     }
  *   ]
  * }
@@ -842,6 +846,14 @@ class AutofillRecords {
       }
     }
 
+    // When merging records, we shouldn't persist any unknown fields on the local and instead
+    // rely on the remote for unknown fields, so we filter the fields we know and keep the rest
+    Object.keys(remoteRecord)
+      .filter(
+        key =>
+          !this.VALID_FIELDS.includes(key) && !INTERNAL_FIELDS.includes(key)
+      )
+      .forEach(key => (mergedRecord[key] = remoteRecord[key]));
     return mergedRecord;
   }
 
@@ -1372,7 +1384,15 @@ class AutofillRecords {
 
     for (let key in record) {
       if (!this.VALID_FIELDS.includes(key)) {
-        throw new Error(`"${key}" is not a valid field.`);
+        // Though we allow unknown fields, certain fields are still protected
+        // from being changed
+        if (INTERNAL_FIELDS.includes(key)) {
+          throw new Error(`"${key}" is not a valid field.`);
+        } else {
+          // We shouldn't try to normalize unknown fields. We'll just roundtrip them
+          this.log.warn(`${key} is not a known field. Skipping normalization.`);
+          continue;
+        }
       }
       if (typeof record[key] !== "string" && typeof record[key] !== "number") {
         throw new Error(
