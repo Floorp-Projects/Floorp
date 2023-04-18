@@ -200,7 +200,6 @@ private fun Thumbnail(
             url = tab.content.url,
             key = tab.id,
             size = LocalConfiguration.current.screenWidthDp.dp,
-            backgroundColor = FirefoxTheme.colors.layer2,
             modifier = Modifier.fillMaxSize(),
         )
 

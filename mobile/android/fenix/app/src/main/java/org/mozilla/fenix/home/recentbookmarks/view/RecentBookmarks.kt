@@ -183,10 +183,7 @@ private fun RecentBookmarkImage(bookmark: RecentBookmark) {
                 WithIcon { icon ->
                     Box(
                         modifier = imageModifier.background(
-                            color = when (isSystemInDarkTheme()) {
-                                true -> PhotonColors.DarkGrey60
-                                false -> PhotonColors.LightGrey30
-                            },
+                            color = FirefoxTheme.colors.layer2,
                         ),
                         contentAlignment = Alignment.Center,
                     ) {
