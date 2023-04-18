@@ -30,6 +30,10 @@
 #include <string.h>
 #include <stdarg.h>
 
+#ifdef MOZ_WAYLAND
+#  include <gdk/gdk.h>
+#endif
+
 #if defined(MOZ_ASAN) || defined(FUZZING)
 #  include <signal.h>
 #endif
@@ -47,6 +51,7 @@
 #include <vector>
 #include <sys/wait.h>
 #include "mozilla/ScopeExit.h"
+#include "mozilla/Types.h"
 
 #ifdef MOZ_X11
 // stuff from glx.h
@@ -1099,6 +1104,12 @@ int main(int argc, char** argv) {
         glxtest_out_pipe = atoi(optarg);
         break;
       case 'h':
+#ifdef MOZ_WAYLAND
+        // Dummy call to mozgtk to prevent the linker from removing
+        // the dependency with --as-needed.
+        // see toolkit/library/moz.build for details.
+        gdk_display_get_default();
+#endif
         PrintUsage();
         return 0;
       default:
