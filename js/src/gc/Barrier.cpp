@@ -107,16 +107,14 @@ template <typename T>
 
 template <typename T>
 /* static */ bool MovableCellHasher<T>::match(const Key& k, const Lookup& l) {
-  // Return true if both are null or false if only one is null.
-  if (!k) {
-    return !l;
+  if (k == l) {
+    return true;
   }
-  if (!l) {
+
+  if (!k || !l) {
     return false;
   }
 
-  MOZ_ASSERT(k);
-  MOZ_ASSERT(l);
   MOZ_ASSERT(CurrentThreadCanAccessZone(l->zoneFromAnyThread()) ||
              CurrentThreadIsPerformingGC());
 
