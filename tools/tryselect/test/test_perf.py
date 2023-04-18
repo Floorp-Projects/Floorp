@@ -11,6 +11,7 @@ from unittest import mock
 import mozunit
 import pytest
 from tryselect.selectors.perf import (
+    MAX_PERF_TASKS,
     Apps,
     InvalidCategoryException,
     InvalidRegressionDetectorQuery,
@@ -964,6 +965,10 @@ def test_category_rules(query, should_fail):
     else:
         assert PerfParser.run_category_checks()
 
+    # Reset the categories, and variants to expand
+    PerfParser.categories = TEST_CATEGORIES
+    PerfParser.variants = TEST_VARIANTS
+
 
 @pytest.mark.parametrize(
     "apk_name, apk_content, should_fail, failure_message",
@@ -1090,6 +1095,87 @@ def test_save_revision_treeherder(args, call_counts, exists_cache_file):
 
         assert load.call_count == call_counts[0]
         assert dump.call_count == call_counts[1]
+
+
+@pytest.mark.parametrize(
+    "total_tasks, options, call_counts, expected_log_message, expected_failure",
+    [
+        (
+            MAX_PERF_TASKS + 1,
+            {},
+            [1, 0, 0, 1],
+            (
+                "That's a lot of tests selected (300)!\n"
+                "These tests won't be triggered. If this was unexpected, "
+                "please file a bug in Testing :: Performance."
+            ),
+            True,
+        ),
+        (
+            MAX_PERF_TASKS,
+            {"show_all": True},
+            [9, 0, 0, 8],
+            (
+                "For more information on the performance tests, see our "
+                "PerfDocs here:\nhttps://firefox-source-docs.mozilla.org/testing/perfdocs/"
+            ),
+            False,
+        ),
+        (
+            int((MAX_PERF_TASKS + 2) / 2),
+            {"show_all": True, "try_config": {"rebuild": 2}},
+            [1, 0, 0, 1],
+            (
+                "That's a lot of tests selected (300)!\n"
+                "These tests won't be triggered. If this was unexpected, "
+                "please file a bug in Testing :: Performance."
+            ),
+            True,
+        ),
+        (0, {}, [1, 0, 0, 1], ("No tasks selected"), True),
+    ],
+)
+def test_max_perf_tasks(
+    total_tasks,
+    options,
+    call_counts,
+    expected_log_message,
+    expected_failure,
+):
+    # Set the categories, and variants to expand
+    PerfParser.categories = TEST_CATEGORIES
+    PerfParser.variants = TEST_VARIANTS
+
+    with mock.patch("tryselect.selectors.perf.push_to_try") as ptt, mock.patch(
+        "tryselect.selectors.perf.print",
+    ) as perf_print, mock.patch(
+        "tryselect.selectors.perf.LogProcessor.revision",
+        new_callable=mock.PropertyMock,
+        return_value="revision",
+    ), mock.patch(
+        "tryselect.selectors.perf.PerfParser.perf_push_to_try",
+        new_callable=mock.MagicMock,
+        return_value=("revision1", "revision2"),
+    ) as perf_push_to_try_mock, mock.patch(
+        "tryselect.selectors.perf.PerfParser.get_perf_tasks"
+    ) as get_perf_tasks_mock, mock.patch(
+        "tryselect.selectors.perf.PerfParser.get_tasks"
+    ) as get_tasks_mock, mock.patch(
+        "tryselect.selectors.perf.run_fzf"
+    ) as fzf, mock.patch(
+        "tryselect.selectors.perf.fzf_bootstrap", return_value=mock.MagicMock()
+    ):
+        tasks = ["a-task"] * total_tasks
+        get_tasks_mock.return_value = tasks
+        get_perf_tasks_mock.return_value = tasks, [], []
+
+        run(**options)
+
+        assert perf_push_to_try_mock.call_count == 0 if expected_failure else 1
+        assert ptt.call_count == call_counts[1]
+        assert perf_print.call_count == call_counts[3]
+        assert fzf.call_count == 0
+        assert perf_print.call_args_list[-1][0][0] == expected_log_message
 
 
 if __name__ == "__main__":

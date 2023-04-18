@@ -682,14 +682,6 @@ class PerfParser(CompareParser):
                 # Add the new tasks to the currently selected ones
                 selected_tasks |= category_tasks
 
-        if len(selected_tasks) > MAX_PERF_TASKS:
-            print(
-                "That's a lot of tests selected (%s)!\n"
-                "These tests won't be triggered. If this was unexpected, "
-                "please file a bug in Testing :: Performance." % MAX_PERF_TASKS
-            )
-            return [], [], []
-
         return selected_tasks, selected_categories, queries
 
     def _check_app(app, target):
@@ -1382,6 +1374,7 @@ class PerfParser(CompareParser):
         single_run=False,
         query=None,
         detect_changes=False,
+        rebuild=1,
         **kwargs,
     ):
         # Setup fzf
@@ -1413,6 +1406,14 @@ class PerfParser(CompareParser):
 
         if len(selected_tasks) == 0:
             print("No tasks selected")
+            return None
+
+        if (len(selected_tasks) * rebuild) > MAX_PERF_TASKS:
+            print(
+                "That's a lot of tests selected (%s)!\n"
+                "These tests won't be triggered. If this was unexpected, "
+                "please file a bug in Testing :: Performance." % MAX_PERF_TASKS
+            )
             return None
 
         if detect_changes:
@@ -1555,6 +1556,7 @@ def run(**kwargs):
 
     revisions = PerfParser.run(
         profile=kwargs.get("try_config", {}).get("gecko-profile", False),
+        rebuild=kwargs.get("try_config", {}).get("rebuild", 1),
         **kwargs,
     )
 
