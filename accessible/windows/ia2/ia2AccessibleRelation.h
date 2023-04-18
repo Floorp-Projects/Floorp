@@ -14,6 +14,8 @@
 #include <utility>
 #include "nsTArray.h"
 
+#include "RelationType.h"
+#include "mozilla/a11y/Accessible.h"
 #include "AccessibleRelation.h"
 
 namespace mozilla {

@@ -8,6 +8,7 @@
 #ifndef _ACCESSIBLE_VALUE_H
 #define _ACCESSIBLE_VALUE_H
 
+#include "mozilla/a11y/Accessible.h"
 #include "AccessibleValue.h"
 
 namespace mozilla {

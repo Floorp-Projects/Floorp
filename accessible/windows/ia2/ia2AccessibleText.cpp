@@ -18,7 +18,7 @@
 using namespace mozilla::a11y;
 
 HyperTextAccessibleBase* ia2AccessibleText::sLastTextChangeAcc = nullptr;
-StaticAutoPtr<nsString> ia2AccessibleText::sLastTextChangeString;
+mozilla::StaticAutoPtr<nsString> ia2AccessibleText::sLastTextChangeString;
 uint32_t ia2AccessibleText::sLastTextChangeStart = 0;
 uint32_t ia2AccessibleText::sLastTextChangeEnd = 0;
 bool ia2AccessibleText::sLastTextChangeWasInsert = false;
