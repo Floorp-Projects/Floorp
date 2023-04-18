@@ -69,8 +69,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsDOMMutationRecord, mTarget,
 // Observer
 
 bool nsMutationReceiverBase::IsObservable(nsIContent* aContent) {
-  return !aContent->ChromeOnlyAccess() &&
-         (Observer()->IsChrome() || !aContent->IsInNativeAnonymousSubtree());
+  return !aContent->ChromeOnlyAccess() || ChromeOnlyNodes();
 }
 
 bool nsMutationReceiverBase::ObservesAttr(nsINode* aRegisterTarget,
@@ -629,7 +628,7 @@ void nsDOMMutationObserver::RescheduleForRun() {
 void nsDOMMutationObserver::Observe(nsINode& aTarget,
                                     const MutationObserverInit& aOptions,
                                     nsIPrincipal& aSubjectPrincipal,
-                                    mozilla::ErrorResult& aRv) {
+                                    ErrorResult& aRv) {
   bool childList = aOptions.mChildList;
   bool attributes =
       aOptions.mAttributes.WasPassed() && aOptions.mAttributes.Value();
@@ -642,6 +641,7 @@ void nsDOMMutationObserver::Observe(nsINode& aTarget,
   bool characterDataOldValue = aOptions.mCharacterDataOldValue.WasPassed() &&
                                aOptions.mCharacterDataOldValue.Value();
   bool animations = aOptions.mAnimations;
+  bool chromeOnlyNodes = aOptions.mChromeOnlyNodes;
 
   if (!aOptions.mAttributes.WasPassed() &&
       (aOptions.mAttributeOldValue.WasPassed() ||
@@ -707,6 +707,7 @@ void nsDOMMutationObserver::Observe(nsINode& aTarget,
   r->SetAttributeFilter(std::move(filters));
   r->SetAllAttributes(allAttrs);
   r->SetAnimations(animations);
+  r->SetChromeOnlyNodes(chromeOnlyNodes);
   r->RemoveClones();
 
   if (!aSubjectPrincipal.IsSystemPrincipal() &&
@@ -793,10 +794,7 @@ already_AddRefed<nsDOMMutationObserver> nsDOMMutationObserver::Constructor(
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-  bool isChrome = nsContentUtils::IsChromeDoc(window->GetExtantDoc());
-  RefPtr<nsDOMMutationObserver> observer =
-      new nsDOMMutationObserver(std::move(window), aCb, isChrome);
-  return observer.forget();
+  return MakeAndAddRef<nsDOMMutationObserver>(std::move(window), aCb);
 }
 
 bool nsDOMMutationObserver::MergeableAttributeRecord(

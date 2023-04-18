@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<title>UA Widget mutation observer test</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+<video controls id="video"></video>
+<div style="overflow: scroll; width: 100px; height: 100px" id="scroller"></div>
+<script>
+const video = document.getElementById("video");
+const scroller = document.getElementById("scroller");
+
+async function test_mutations_internal(observedNode, elementToMutate, expectMutations) {
+  let resolveMutations;
+  let mutations = new Promise(r => {
+    resolveMutations = r;
+  });
+
+  let observer = new MutationObserver(function(m) {
+    ok(expectMutations, "Mutations should be expected");
+    resolveMutations(m)
+  });
+
+  SpecialPowers.wrap(observer).observe(observedNode, {
+    subtree: true,
+    attributes: true,
+    chromeOnlyNodes: expectMutations,
+  });
+
+  elementToMutate.setAttribute("unlikely", `value-${expectMutations}`);
+
+  if (expectMutations) {
+    await mutations;
+  } else {
+    await new Promise(r => SimpleTest.executeSoon(r));
+  }
+
+  observer.disconnect();
+}
+
+async function test_mutations(observedNode, elementToMutate) {
+  for (let chromeOnlyNodes of [true, false]) {
+    info(`Testing chromeOnlyNodes: ${chromeOnlyNodes}`);
+    await test_mutations_internal(observedNode, elementToMutate, chromeOnlyNodes);
+  }
+}
+
+add_task(async function test_ua_mutations() {
+  let shadow = SpecialPowers.wrap(video).openOrClosedShadowRoot;
+  ok(!!shadow, "UA Widget ShadowRoot exists");
+
+  await test_mutations(shadow, shadow.querySelector("*"));
+});
+
+add_task(async function test_scrollbar_mutations_same_anon_tree() {
+  let scrollbar = SpecialPowers.wrap(window).InspectorUtils.getChildrenForNode(scroller, true, false)[0];
+  is(scrollbar.tagName, "scrollbar", "should find a scrollbar");
+  await test_mutations(scrollbar, scrollbar);
+});
+
+add_task(async function test_scrollbar_mutations_same_tree() {
+  let scrollbar = SpecialPowers.wrap(window).InspectorUtils.getChildrenForNode(scroller, true, false)[0];
+  is(scrollbar.tagName, "scrollbar", "should find a scrollbar");
+  await test_mutations(scroller, scrollbar);
+});
+</script>

@@ -68,6 +68,8 @@ dictionary MutationObserverInit {
   [ChromeOnly]
   boolean nativeAnonymousChildList = false;
   [ChromeOnly]
+  boolean chromeOnlyNodes = false;
+  [ChromeOnly]
   boolean animations = false;
   sequence<DOMString> attributeFilter;
 };

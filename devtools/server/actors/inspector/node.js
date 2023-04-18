@@ -271,6 +271,7 @@ class NodeActor extends Actor {
       characterDataOldValue: true,
       childList: true,
       subtree: true,
+      chromeOnlyNodes: true,
     });
     this.mutationObserver = observer;
   }
