@@ -14,6 +14,12 @@ translations-panel-dual-from-label = Choose the current page language
 translations-panel-dual-to-label = Choose the language to translate into
 translations-panel-dual-translate-button = Translate
 
+# Text displayed on a language dropdown when the language is in beta
+# Variables:
+#   $language (string) - The localized display name of the detected language
+translations-panel-displayname-beta =
+    .label = { $language } BETA
+
 ## The translation panel appears from the url bar, and this view is the "restore" view
 ## that lets a user restore a page to the original language.
 

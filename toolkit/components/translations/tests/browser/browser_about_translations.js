@@ -82,14 +82,16 @@ add_task(async function test_about_translations_disabled() {
 });
 
 add_task(async function test_about_translations_dropdowns() {
+  let languagePairs = [
+    { fromLang: "en", toLang: "es", isBeta: false },
+    { fromLang: "es", toLang: "en", isBeta: false },
+    // This is not a bi-directional translation.
+    { fromLang: "is", toLang: "en", isBeta: true },
+  ];
   await openAboutTranslations({
-    languagePairs: [
-      { fromLang: "en", toLang: "es" },
-      { fromLang: "es", toLang: "en" },
-      // This is not a bi-directional translation.
-      { fromLang: "is", toLang: "en" },
-    ],
-    runInPage: async ({ selectors }) => {
+    languagePairs,
+    dataForContent: languagePairs,
+    runInPage: async ({ dataForContent: languagePairs, selectors }) => {
       const { document } = content;
 
       await ContentTaskUtils.waitForCondition(() => {
@@ -112,16 +114,38 @@ add_task(async function test_about_translations_dropdowns() {
         availableOptions,
         selectedValue,
       }) {
-        const options = [...select.options]
-          .filter(option => !option.hidden)
-          .map(option => option.value);
-
+        const options = [...select.options];
+        const betaL10nId = "about-translations-displayname-beta";
+        for (const option of options) {
+          for (const languagePair of languagePairs) {
+            if (
+              languagePair.fromLang === option.value ||
+              languagePair.toLang === option.value
+            ) {
+              if (option.getAttribute("data-l10n-id") === betaL10nId) {
+                is(
+                  languagePair.isBeta,
+                  true,
+                  `Since data-l10n-id was ${betaL10nId} for ${option.value}, then it must be part of a beta language pair, but it was not.`
+                );
+              }
+              if (!languagePair.isBeta) {
+                is(
+                  option.getAttribute("data-l10n-id") === betaL10nId,
+                  false,
+                  `Since the languagePair is non-beta, the language option ${option.value} should not have a data-l10-id of ${betaL10nId}, but it does.`
+                );
+              }
+            }
+          }
+        }
         info(message);
         Assert.deepEqual(
-          options,
+          options.filter(option => !option.hidden).map(option => option.value),
           availableOptions,
           "The available options match."
         );
+
         is(selectedValue, select.value, "The selected value matches.");
       }
 
@@ -192,10 +216,10 @@ add_task(async function test_about_translations_dropdowns() {
 add_task(async function test_about_translations_translations() {
   await openAboutTranslations({
     languagePairs: [
-      { fromLang: "en", toLang: "fr" },
-      { fromLang: "fr", toLang: "en" },
+      { fromLang: "en", toLang: "fr", isBeta: false },
+      { fromLang: "fr", toLang: "en", isBeta: false },
       // This is not a bi-directional translation.
-      { fromLang: "is", toLang: "en" },
+      { fromLang: "is", toLang: "en", isBeta: true },
     ],
     runInPage: async ({ selectors }) => {
       const { document, window } = content;
@@ -280,8 +304,8 @@ add_task(async function test_about_translations_language_directions() {
   await openAboutTranslations({
     languagePairs: [
       // English (en) is LTR and Arabic (ar) is RTL.
-      { fromLang: "en", toLang: "ar" },
-      { fromLang: "ar", toLang: "en" },
+      { fromLang: "en", toLang: "ar", isBeta: true },
+      { fromLang: "ar", toLang: "en", isBeta: true },
     ],
     runInPage: async ({ selectors }) => {
       const { document, window } = content;
@@ -351,8 +375,8 @@ add_task(async function test_about_translations_language_directions() {
 add_task(async function test_about_translations_debounce() {
   await openAboutTranslations({
     languagePairs: [
-      { fromLang: "en", toLang: "fr" },
-      { fromLang: "fr", toLang: "en" },
+      { fromLang: "en", toLang: "fr", isBeta: false },
+      { fromLang: "fr", toLang: "en", isBeta: false },
     ],
     runInPage: async ({ selectors }) => {
       const { document, window } = content;
@@ -431,8 +455,8 @@ add_task(async function test_about_translations_debounce() {
 add_task(async function test_about_translations_html() {
   await openAboutTranslations({
     languagePairs: [
-      { fromLang: "en", toLang: "fr" },
-      { fromLang: "fr", toLang: "en" },
+      { fromLang: "en", toLang: "fr", isBeta: false },
+      { fromLang: "fr", toLang: "en", isBeta: false },
     ],
     prefs: [["browser.translations.useHTML", true]],
     runInPage: async ({ selectors }) => {
@@ -492,8 +516,8 @@ add_task(async function test_about_translations_language_identification() {
     detectedLanguageLabel: "en",
     detectedLanguageConfidence: "0.98",
     languagePairs: [
-      { fromLang: "en", toLang: "fr" },
-      { fromLang: "fr", toLang: "en" },
+      { fromLang: "en", toLang: "fr", isBeta: false },
+      { fromLang: "fr", toLang: "en", isBeta: false },
     ],
     runInPage: async ({ selectors }) => {
       const { document, window } = content;
