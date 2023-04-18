@@ -94,12 +94,9 @@ job-template:
                             # or nightly builds with proper certificates, so even on
                             # level 3 repositories, some build types are expected to
                             # be signed with our fake certificate.
-                            by-release-type:
-                                release-rc: "CN=Mozilla Corporation, OU=Firefox Engineering Operations, O=Mozilla Corporation, L=Mountain View, S=California, C=US"
-                                release: "CN=Mozilla Corporation, OU=Firefox Engineering Operations, O=Mozilla Corporation, L=Mountain View, S=California, C=US"
-                                beta: "CN=Mozilla Corporation, OU=Firefox Engineering Operations, O=Mozilla Corporation, L=Mountain View, S=California, C=US"
-                                esr.*: "CN=Mozilla Corporation, OU=Firefox Engineering Operations, O=Mozilla Corporation, L=Mountain View, S=California, C=US"
-                                nightly: "CN=Mozilla Corporation, OU=Firefox Engineering Operations, O=Mozilla Corporation, L=Mountain View, S=California, C=US"
+                            by-build-platform:
+                                .*-shippable: "CN=Mozilla Corporation, OU=Firefox Engineering Operations, O=Mozilla Corporation, L=Mountain View, S=California, C=US"
+                                .*-devedition: "CN=Mozilla Corporation, OU=Firefox Engineering Operations, O=Mozilla Corporation, L=Mountain View, S=California, C=US"
                                 default: "CN=Mozilla Fake SPC"
         publisher-display-name:
             by-package-format:
