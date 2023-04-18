@@ -10,6 +10,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/mscom/COMWrappers.h"
+#include "mozilla/mscom/ProcessRuntime.h"
 #include "mozilla/mscom/Utils.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticLocalPtr.h"
