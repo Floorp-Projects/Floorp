@@ -6,7 +6,41 @@
 // Test the impression telemetry behavior with its preferences.
 
 add_setup(async function() {
-  await setup();
+  await initPreferencesTest();
+});
+
+add_task(async function enabled() {
+  await doSearchEngagementTelemetryTest({
+    enabled: true,
+    trigger: () => waitForPauseImpression(),
+    assert: () =>
+      assertImpressionTelemetry([{ reason: "pause", sap: "urlbar_newtab" }]),
+  });
+});
+
+add_task(async function disabled() {
+  await doSearchEngagementTelemetryTest({
+    enabled: false,
+    trigger: () => waitForPauseImpression(),
+    assert: () => assertImpressionTelemetry([]),
+  });
+});
+
+add_task(async function nimbusEnabled() {
+  await doNimbusTest({
+    enabled: true,
+    trigger: () => waitForPauseImpression(),
+    assert: () =>
+      assertImpressionTelemetry([{ reason: "pause", sap: "urlbar_newtab" }]),
+  });
+});
+
+add_task(async function nimbusDisabled() {
+  await doNimbusTest({
+    enabled: false,
+    trigger: () => waitForPauseImpression(),
+    assert: () => assertImpressionTelemetry([]),
+  });
 });
 
 add_task(async function pauseImpressionIntervalMs() {
@@ -16,6 +50,7 @@ add_task(async function pauseImpressionIntervalMs() {
   );
   await SpecialPowers.pushPrefEnv({
     set: [
+      ["browser.urlbar.searchEngagementTelemetry.enabled", true],
       [
         "browser.urlbar.searchEngagementTelemetry.pauseImpressionIntervalMs",
         originalInterval + additionalInterval,

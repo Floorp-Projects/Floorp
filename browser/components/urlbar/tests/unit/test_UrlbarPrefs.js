@@ -358,7 +358,7 @@ add_task(function initializeShowSearchSuggestionsFirstPref() {
 // Tests whether observer.onNimbusChanged works.
 add_task(async function onNimbusChanged() {
   Services.prefs.setBoolPref(
-    "browser.urlbar.autoFill.adaptiveHistory.enabled",
+    "browser.urlbar.searchEngagementTelemetry.enabled",
     false
   );
 
@@ -387,11 +387,11 @@ add_task(async function onNimbusChanged() {
   UrlbarPrefs.addObserver(observer);
 
   const doCleanup = await UrlbarTestUtils.initNimbusFeature({
-    autoFillAdaptiveHistoryEnabled: true,
+    searchEngagementTelemetryEnabled: true,
   });
   Assert.equal(observer.prefChangedList.length, 0);
   Assert.ok(
-    observer.nimbusChangedList.includes("autoFillAdaptiveHistoryEnabled")
+    observer.nimbusChangedList.includes("searchEngagementTelemetryEnabled")
   );
   doCleanup();
 });
@@ -399,10 +399,10 @@ add_task(async function onNimbusChanged() {
 // Tests whether observer.onPrefChanged works.
 add_task(async function onPrefChanged() {
   const doCleanup = await UrlbarTestUtils.initNimbusFeature({
-    autoFillAdaptiveHistoryEnabled: false,
+    searchEngagementTelemetryEnabled: false,
   });
   Services.prefs.setBoolPref(
-    "browser.urlbar.autoFill.adaptiveHistory.enabled",
+    "browser.urlbar.searchEngagementTelemetry.enabled",
     false
   );
 
@@ -434,16 +434,19 @@ add_task(async function onPrefChanged() {
   UrlbarPrefs.addObserver(observer);
 
   Services.prefs.setBoolPref(
-    "browser.urlbar.autoFill.adaptiveHistory.enabled",
+    "browser.urlbar.searchEngagementTelemetry.enabled",
     true
   );
   await deferred.promise;
   Assert.equal(observer.prefChangedList.length, 1);
-  Assert.equal(observer.prefChangedList[0], "autoFill.adaptiveHistory.enabled");
+  Assert.equal(
+    observer.prefChangedList[0],
+    "searchEngagementTelemetry.enabled"
+  );
   Assert.equal(observer.nimbusChangedList.length, 0);
 
   Services.prefs.clearUserPref(
-    "browser.urlbar.autoFill.adaptiveHistory.enabled"
+    "browser.urlbar.searchEngagementTelemetry.enabled"
   );
   doCleanup();
 });
