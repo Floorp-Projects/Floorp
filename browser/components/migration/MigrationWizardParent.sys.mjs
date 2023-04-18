@@ -496,10 +496,15 @@ export class MigrationWizardParent extends JSWindowActorParent {
    *
    * @param {FileMigrator} fileMigrator
    *   The FileMigrator to serialize.
-   * @returns {Promise<object>}
-   *   The serializable representation of the FileMigrator.
+   * @returns {Promise<object|null>}
+   *   The serializable representation of the FileMigrator, or null if the
+   *   migrator is disabled.
    */
   async #serializeFileMigrator(fileMigrator) {
+    if (!fileMigrator.enabled) {
+      return null;
+    }
+
     return {
       type: lazy.MigrationWizardConstants.MIGRATOR_TYPES.FILE,
       key: fileMigrator.constructor.key,

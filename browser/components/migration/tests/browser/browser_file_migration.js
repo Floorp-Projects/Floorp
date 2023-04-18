@@ -33,6 +33,10 @@ class DummyFileMigrator extends FileMigratorBase {
     return "chrome://branding/content/document.ico";
   }
 
+  get enabled() {
+    return true;
+  }
+
   get progressHeaderL10nID() {
     return "migration-passwords-from-file-progress-header";
   }

@@ -60,6 +60,16 @@ export class FileMigratorBase {
   }
 
   /**
+   * Returns true if the migrator is configured to be enabled.
+   *
+   * @type {boolean}
+   *   true if the migrator should be shown in the migration wizard.
+   */
+  get enabled() {
+    throw new Error("FileMigrator.enabled must be overridden.");
+  }
+
+  /**
    * This getter should be overridden to return a Fluent string ID for what
    * the migration wizard header should be while the file migration is
    * underway.
@@ -155,6 +165,13 @@ export class PasswordFileMigrator extends FileMigratorBase {
 
   static get brandImage() {
     return "chrome://branding/content/document.ico";
+  }
+
+  get enabled() {
+    return Services.prefs.getBoolPref(
+      "signon.management.page.fileImport.enabled",
+      false
+    );
   }
 
   get displayedResourceTypes() {

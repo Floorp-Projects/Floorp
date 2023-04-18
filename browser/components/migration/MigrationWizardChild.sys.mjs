@@ -45,9 +45,13 @@ export class MigrationWizardChild extends JSWindowActorChild {
             migrator.type == MigrationWizardConstants.MIGRATOR_TYPES.BROWSER
           );
         });
+        let hasFileMigrators = migrators.some(migrator => {
+          return migrator.type == MigrationWizardConstants.MIGRATOR_TYPES.FILE;
+        });
         if (!hasBrowserMigrators && !event.detail?.allowOnlyFileMigrators) {
           this.setComponentState({
             page: MigrationWizardConstants.PAGES.NO_BROWSERS_FOUND,
+            hasFileMigrators,
           });
           this.#sendTelemetryEvent("no_browsers_found");
         } else {

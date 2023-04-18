@@ -319,6 +319,10 @@ export class MigrationWizard extends HTMLElement {
         this.#onShowingFileImportProgress(state);
         break;
       }
+      case MigrationWizardConstants.PAGES.NO_BROWSERS_FOUND: {
+        this.#onShowingNoBrowsersFound(state);
+        break;
+      }
     }
 
     this.#deck.toggleAttribute(
@@ -704,6 +708,19 @@ export class MigrationWizard extends HTMLElement {
         doneButton.focus({ focusVisible: false });
       });
     }
+  }
+
+  /**
+   * Called when showing the "no browsers found" page of the wizard.
+   *
+   * @param {object} state
+   *   The state object passed into setState. The following properties are
+   *   used:
+   * @param {string} state.hasFileMigrators
+   *   True if at least one FileMigrator is available for use.
+   */
+  #onShowingNoBrowsersFound(state) {
+    this.#chooseImportFromFile.hidden = !state.hasFileMigrators;
   }
 
   /**
