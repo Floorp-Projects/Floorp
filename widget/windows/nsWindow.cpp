@@ -5140,34 +5140,29 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
   // effect immediately.
   static const bool sSwitchKeyboardLayout =
       Preferences::GetBool("intl.keyboard.per_window_layout", false);
-  static Maybe<bool> sCanQuit;
   AppShutdownReason shutdownReason = AppShutdownReason::Unknown;
 
   // (Large blocks of code should be broken out into OnEvent handlers.)
   switch (msg) {
     // WM_QUERYENDSESSION must be handled by all windows.
     // Otherwise Windows thinks the window can just be killed at will.
-    case WM_QUERYENDSESSION:
-      if (sCanQuit.isNothing()) {
-        // Ask if it's ok to quit, and store the answer until we
-        // get WM_ENDSESSION signaling the round is complete.
-        nsCOMPtr<nsIObserverService> obsServ =
-            mozilla::services::GetObserverService();
-        nsCOMPtr<nsISupportsPRBool> cancelQuitWrapper =
-            do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID);
-        cancelQuitWrapper->SetData(false);
+    case WM_QUERYENDSESSION: {
+      // Ask around if it's ok to quit.
+      nsCOMPtr<nsIObserverService> obsServ =
+          mozilla::services::GetObserverService();
+      nsCOMPtr<nsISupportsPRBool> cancelQuitWrapper =
+          do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID);
+      cancelQuitWrapper->SetData(false);
 
-        const char16_t* quitType = GetQuitType();
-        obsServ->NotifyObservers(cancelQuitWrapper,
-                                 "quit-application-requested", quitType);
+      const char16_t* quitType = GetQuitType();
+      obsServ->NotifyObservers(cancelQuitWrapper, "quit-application-requested",
+                               quitType);
 
-        bool shouldCancelQuit;
-        cancelQuitWrapper->GetData(&shouldCancelQuit);
-        sCanQuit.emplace(!shouldCancelQuit);
-      }
-      *aRetValue = *sCanQuit;
+      bool shouldCancelQuit;
+      cancelQuitWrapper->GetData(&shouldCancelQuit);
+      *aRetValue = !shouldCancelQuit;
       result = true;
-      break;
+    } break;
 
     case MOZ_WM_STARTA11Y:
 #if defined(ACCESSIBILITY)
@@ -5181,14 +5176,7 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
     case WM_ENDSESSION: {
       // For WM_ENDSESSION, wParam indicates whether we need to shutdown
       // (TRUE) or not (FALSE).
-      //
-      // TODO: It is not clear if checking sCanQuit here is the right thing
-      // to do. From the WM_ENDSESSION documentation it seems there are cases
-      // where we just need to quit, always. Windows might even have ignored
-      // the WM_QUERYENDSESSION result or sCanQuit might be unset if we did
-      // not pass through WM_QUERYENDSESSION at all ?
-      if (!(wParam && sCanQuit.valueOr(false))) {
-        sCanQuit.reset();
+      if (!wParam) {
         result = true;
         break;
       }
@@ -5247,8 +5235,7 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
       AppShutdown::DoImmediateExit();
       MOZ_ASSERT_UNREACHABLE("Our process was supposed to exit.");
-      break;
-    }
+    } break;
 
     case WM_SYSCOLORCHANGE:
       // No need to invalidate layout for system color changes, but we need to
