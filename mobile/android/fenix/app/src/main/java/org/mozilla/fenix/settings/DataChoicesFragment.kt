@@ -9,6 +9,7 @@ import androidx.navigation.findNavController
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.MetricServiceType
 import org.mozilla.fenix.ext.components
@@ -71,8 +72,9 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
         }
 
         requirePreference<SwitchPreference>(R.string.pref_key_marketing_telemetry).apply {
-            isChecked = context.settings().isMarketingTelemetryEnabled
+            isChecked = (context.settings().isMarketingTelemetryEnabled) && (!Config.channel.isMozillaOnline)
             onPreferenceChangeListener = SharedPreferenceUpdater()
+            isVisible = !Config.channel.isMozillaOnline
         }
     }
 
