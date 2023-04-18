@@ -9,10 +9,7 @@
  * @param {Array<[HTMLElement, string]>} items An array of [element, value] where value is
  *                                       a fluent id starting with "fluent:" or plain text
  */
-async function translateElements(container, items) {
-  // We need to wait for fluent to initialize
-  await document.l10n.ready;
-
+function translateElements(container, items) {
   items.forEach(([element, value]) => {
     // Skip empty text or elements
     if (!element || !value) {
@@ -26,11 +23,9 @@ async function translateElements(container, items) {
       element.removeAttribute("data-l10n-id");
     }
   });
-
-  document.l10n.translateFragment(container);
 }
 
-async function renderInfo({
+function renderInfo({
   infoEnabled = false,
   infoTitle,
   infoTitleEnabled,
@@ -57,7 +52,7 @@ async function renderInfo({
     titleEl.remove();
   }
 
-  await translateElements(container, [
+  translateElements(container, [
     [titleEl, infoTitle],
     [bodyEl, infoBody],
     [linkEl, infoLinkText],
@@ -180,7 +175,7 @@ async function renderPromo({
     promoHeaderEl.remove();
   }
 
-  await translateElements(container, [
+  translateElements(container, [
     [titleEl, promoTitle],
     [linkEl, promoLinkText],
     [promoHeaderEl, promoHeader],
@@ -223,7 +218,7 @@ function recordOnceVisible(message) {
 }
 
 // The PB newtab may be pre-rendered. Once the tab is visible, check to make sure the message wasn't blocked after the initial render. If it was, remove the promo.
-async function handlePromoOnPreload(message) {
+function handlePromoOnPreload(message) {
   async function removePromoIfBlocked() {
     if (document.visibilityState === "visible") {
       let blocked = await RPMSendQuery("IsPromoBlocked", message);
@@ -256,11 +251,11 @@ async function setupMessageConfig(config = null) {
     } catch (e) {}
   }
 
-  await renderInfo(config);
-  let hasRendered = await renderPromo(config);
+  renderInfo(config);
+  let hasRendered = renderPromo(config);
   if (hasRendered && message) {
     recordOnceVisible(message);
-    await handlePromoOnPreload(message);
+    handlePromoOnPreload(message);
   }
   // For tests
   document.documentElement.setAttribute("PrivateBrowsingRenderComplete", true);
