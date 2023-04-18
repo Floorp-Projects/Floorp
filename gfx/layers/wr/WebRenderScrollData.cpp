@@ -212,7 +212,10 @@ void WebRenderLayerScrollData::Dump(std::ostream& aOut,
 }
 
 WebRenderScrollData::WebRenderScrollData()
-    : mManager(nullptr), mIsFirstPaint(false), mPaintSequenceNumber(0) {}
+    : mManager(nullptr),
+      mBuilder(nullptr),
+      mIsFirstPaint(false),
+      mPaintSequenceNumber(0) {}
 
 WebRenderScrollData::WebRenderScrollData(WebRenderLayerManager* aManager,
                                          nsDisplayListBuilder* aBuilder)
