@@ -19,6 +19,7 @@ const TEST_ADDRESS_1 = {
   country: "US",
   tel: "+1 617 253 5702",
   email: "timbl@w3.org",
+  "unknown-1": "an unknown field we roundtrip",
 };
 
 const TEST_ADDRESS_2 = {
