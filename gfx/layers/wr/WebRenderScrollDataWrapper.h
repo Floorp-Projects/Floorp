@@ -237,6 +237,9 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
     // its mContainingSubtreeLastIndex.
     if (mLayer->GetDescendantCount() > 0) {
       size_t prevSiblingIndex = mLayerIndex + 1 + mLayer->GetDescendantCount();
+      // TODO(botond): Replace the min() with just prevSiblingIndex (which
+      // should be <= mContainingSubtreeLastIndex).
+      MOZ_ASSERT(prevSiblingIndex <= mContainingSubtreeLastIndex);
       size_t subtreeLastIndex =
           std::min(mContainingSubtreeLastIndex, prevSiblingIndex);
       return WebRenderScrollDataWrapper(mUpdater, mData, mLayerIndex + 1,
