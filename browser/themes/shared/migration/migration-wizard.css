@@ -108,11 +108,11 @@ label:not([hidden]) {
   margin-inline-start: 11px;
 }
 
-.profile-name:empty {
+#profile-name:empty {
   display: none;
 }
 
-.profile-name {
+#profile-name {
   font-size: 0.73em;
   text-transform: uppercase;
 }
