@@ -9,6 +9,8 @@
 #include "zipstruct.h"  // defines ZIP compression codes
 #include "nsZipArchive.h"
 #include "mozilla/MmapFaultHandler.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 #include "nsEscape.h"
 #include "nsDebug.h"
@@ -81,7 +83,7 @@ nsresult nsJARInputStream::InitDirectory(nsJAR* aJar,
   // Keep the zipReader for getting the actual zipItems
   mJar = aJar;
   mJar->mLock.AssertCurrentThreadIn();
-  UniquePtr<nsZipFind> find;
+  mozilla::UniquePtr<nsZipFind> find;
   nsresult rv;
   // We can get aDir's contents as strings via FindEntries
   // with the following pattern (see nsIZipReader.findEntries docs)
@@ -309,7 +311,7 @@ nsresult nsJARInputStream::ReadDirectory(char* aBuffer, uint32_t aCount,
   uint32_t numRead = CopyDataToBuffer(aBuffer, aCount);
 
   if (aCount > 0) {
-    RecursiveMutexAutoLock lock(mJar->mLock);
+    mozilla::RecursiveMutexAutoLock lock(mJar->mLock);
     // empty the buffer and start writing directory entry lines to it
     mBuffer.Truncate();
     mCurPos = 0;

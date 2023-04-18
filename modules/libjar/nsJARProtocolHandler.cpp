@@ -21,7 +21,7 @@ static NS_DEFINE_CID(kZipReaderCacheCID, NS_ZIPREADERCACHE_CID);
 
 //-----------------------------------------------------------------------------
 
-StaticRefPtr<nsJARProtocolHandler> gJarHandler;
+mozilla::StaticRefPtr<nsJARProtocolHandler> gJarHandler;
 
 nsJARProtocolHandler::nsJARProtocolHandler() { MOZ_ASSERT(NS_IsMainThread()); }
 
