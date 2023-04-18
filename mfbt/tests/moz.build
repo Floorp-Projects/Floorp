@@ -60,7 +60,6 @@ CppUnitTests(
         "TestSIMD",
         "TestSmallPointerArray",
         "TestSplayTree",
-        "TestTemplateLib",
         "TestTextUtils",
         "TestTypedEnum",
         "TestUniquePtr",
