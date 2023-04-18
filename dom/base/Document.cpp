@@ -11552,7 +11552,9 @@ nsIContent* Document::GetContentInThisDocument(nsIFrame* aFrame) const {
   for (nsIFrame* f = aFrame; f;
        f = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(f)) {
     nsIContent* content = f->GetContent();
-    if (!content || content->IsInNativeAnonymousSubtree()) continue;
+    if (!content) {
+      continue;
+    }
 
     if (content->OwnerDoc() == this) {
       return content;

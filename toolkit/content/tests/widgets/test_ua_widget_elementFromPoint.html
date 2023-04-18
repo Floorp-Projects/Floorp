@@ -1,0 +1,22 @@
+<!doctype html>
+<title>UA Widget getElementFromPoint</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+<div id="host" style="width: 100px; height: 100px;"></div>
+<script>
+const host = document.getElementById("host");
+SpecialPowers.wrap(host.attachShadow({ mode: "open"})).setIsUAWidget();
+host.shadowRoot.innerHTML = `
+  <div style="width: 100px; height: 100px; background-color: green;"></div>
+`;
+let hostRect = host.getBoundingClientRect();
+let point = {
+  x: hostRect.x + 50,
+  y: hostRect.y + 50,
+};
+is(document.elementFromPoint(point.x, point.y), host,
+   "Host should be found from the document");
+is(host.shadowRoot.elementFromPoint(point.x, point.y), host.shadowRoot.firstElementChild,
+   "Should not have retargeted UA widget content to host unnecessarily");
+</script>
