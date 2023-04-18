@@ -306,12 +306,6 @@ Predictor::GetAllow1918(bool* allow1918) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-Predictor::GetIgnoreUserCertCheck(bool* ignore) {
-  *ignore = false;
-  return NS_OK;
-}
-
 // Predictor::nsIInterfaceRequestor
 
 NS_IMETHODIMP

@@ -283,12 +283,17 @@ interface nsISocketTransport : nsITransport
      * only set on CORS preflight request to allowed sending client certificates
      * on a connection for an anonymous request.
      */
-    const long ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT = (1 << 14);
+    const unsigned long ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT = (1 << 14);
 
     /**
      * If set, we've retrying after a failed connection attempt.
      */
-    const long IS_RETRY = (1 << 15);
+    const unsigned long IS_RETRY = (1 << 15);
+
+    /**
+     * If set, this is a speculative connection.
+     */
+    const unsigned long IS_SPECULATIVE_CONNECTION = (1 << 16);
 
     /**
      * An opaque flags for non-standard behavior of the TLS system.

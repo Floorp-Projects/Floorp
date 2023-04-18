@@ -528,10 +528,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   void SetHttpHandlerInitArgs(const HttpHandlerInitArgs& aArgs);
   void SetDeviceModelId(const nsACString& aModelId);
 
-  // Checks if there are any user certs or active smart cards on a different
-  // thread. Updates mSpeculativeConnectEnabled when done.
-  void MaybeEnableSpeculativeConnect();
-
   // We only allow DNSUtils and TRRServiceChannel itself to create
   // TRRServiceChannel.
   friend class TRRServiceChannel;
@@ -739,10 +735,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   // The ratio for dispatching transactions from the focused window.
   float mFocusedWindowTransactionRatio{0.9f};
-
-  // We may disable speculative connect if the browser has user certificates
-  // installed as that might randomly popup the certificate choosing window.
-  Atomic<bool, Relaxed> mSpeculativeConnectEnabled{false};
 
   // If true, the transactions from active tab will be dispatched first.
   bool mActiveTabPriority{true};
