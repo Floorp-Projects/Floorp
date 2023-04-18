@@ -353,8 +353,6 @@ static bool SkipObject(ParserContext& aCtx) {
     }
     EXPECT_SYMBOL(aCtx, ',');
   }
-
-  return false;
 }
 
 /**
@@ -409,8 +407,6 @@ static bool SkipToken(ParserContext& aCtx) {
     CK_LOGD("JWK parser skipping literal");
     return SkipLiteral(aCtx);
   }
-
-  return false;
 }
 
 static bool GetNextLabel(ParserContext& aCtx, string& aOutLabel) {
