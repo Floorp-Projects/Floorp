@@ -1514,7 +1514,12 @@ void RTCRtpSender::UpdateBaseConfig(BaseConfig* aConfig) {
       aConfig->mLocalRtpExtensions = extmaps;
     }
   }
-  aConfig->mTransmitting = GetJsepTransceiver().mSendTrack.GetActive();
+  // RTCRtpTransceiver::IsSending is updated after negotiation completes, in a
+  // queued task (which we may be in right now). Don't use
+  // JsepTrack::GetActive, because that updates before the queued task, which
+  // is too early for some of the things we interact with here (eg;
+  // RTCDTMFSender).
+  aConfig->mTransmitting = mTransceiver->IsSending();
 }
 
 void RTCRtpSender::ApplyVideoConfig(const VideoConfig& aConfig) {
