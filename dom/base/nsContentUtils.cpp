@@ -4736,6 +4736,13 @@ nsresult nsContentUtils::DispatchInputEvent(
     widgetEvent.mSpecifiedEventType = nsGkAtoms::oninput;
     widgetEvent.mFlags.mCancelable = false;
     widgetEvent.mFlags.mComposed = true;
+    if (IsSafeToRunScript()) {
+      RefPtr<nsPresContext> presContext =
+          aEventTargetElement->OwnerDoc()->GetPresContext();
+      return EventDispatcher::Dispatch(aEventTargetElement, presContext,
+                                       &widgetEvent, nullptr, aEventStatus);
+    }
+
     (new AsyncEventDispatcher(aEventTargetElement, widgetEvent))
         ->RunDOMEventWhenSafe();
     return NS_OK;
