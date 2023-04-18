@@ -1697,7 +1697,7 @@ class FunctionCompiler {
       // Compute the address of the ref-typed global
       auto* valueAddr = MWasmDerivedPointer::New(
           alloc(), instancePointer_,
-          wasm::Instance::offsetOfGlobalArea() + globalDataOffset);
+          wasm::Instance::offsetInGlobalArea(globalDataOffset));
       curBlock_->add(valueAddr);
 
       // Load the previous value for the post-write barrier
@@ -1724,8 +1724,8 @@ class FunctionCompiler {
 
   MDefinition* loadTableField(const TableDesc& table, unsigned fieldOffset,
                               MIRType type) {
-    uint32_t globalDataOffset = wasm::Instance::offsetOfGlobalArea() +
-                                table.globalDataOffset + fieldOffset;
+    uint32_t globalDataOffset = wasm::Instance::offsetInGlobalArea(
+        table.globalDataOffset + fieldOffset);
     auto* load =
         MWasmLoadInstance::New(alloc(), instancePointer_, globalDataOffset,
                                type, AliasSet::Load(AliasSet::WasmTableMeta));
@@ -3706,8 +3706,8 @@ class FunctionCompiler {
   }
 
   [[nodiscard]] MDefinition* loadTypeDefInstanceData(uint32_t typeIndex) {
-    size_t offset = Instance::offsetOfGlobalArea() +
-                    moduleEnv_.offsetOfTypeDefInstanceData(typeIndex);
+    size_t offset = Instance::offsetInGlobalArea(
+        moduleEnv_.offsetOfTypeDefInstanceData(typeIndex));
     auto* result = MWasmDerivedPointer::New(alloc(), instancePointer_, offset);
     if (!result) {
       return nullptr;
