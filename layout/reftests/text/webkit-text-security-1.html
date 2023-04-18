@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+
+<style>
+  .test {
+    color: blue;
+    font: 13px monospace;
+  }
+  .init {
+    -webkit-text-security: initial;
+  }
+  .before::before {
+    content: "before text";
+  }
+
+  /* these classes are added/used only in reference mode */
+  .before.circle::before {
+    content: "\25E6\25E6\25E6\25E6\25E6\25E6\25E6\25E6\25E6\25E6\25E6";
+  }
+  .before.disc::before {
+    content: "\2022\2022\2022\2022\2022\2022\2022\2022\2022\2022\2022";
+  }
+  .before.square::before {
+    content: "\25A0\25A0\25A0\25A0\25A0\25A0\25A0\25A0\25A0\25A0\25A0";
+  }
+  ol.circle {
+    list-style-type: "\25E6\25E6\25E6";
+  }
+  ol.disc {
+    list-style-type: "\2022\2022\2022";
+  }
+  ol.square {
+    list-style-type: "\25A0\25A0\25A0";
+  }
+</style>
+
+<script>
+function go() {
+  // In test mode, we just apply the requested -webkit-text-security setting.
+  maskOption = document.location.hash.substr(1);
+  if (document.location.search == "?test") {
+    document.styleSheets[0].cssRules[0].style.webkitTextSecurity = maskOption;
+    return;
+  }
+
+  if (document.location.search != "?ref") {
+    console.warn("Expected either ?test or ?ref request");
+    return;
+  }
+
+  // In reference mode, edit the content to replace text with the masking symbol.
+  // (This is hacky and incomplete, just enough to handle the things present in this example.)
+  if (maskOption == "circle") {
+    maskChar = "\u25E6";
+  } else if (maskOption == "disc") {
+    maskChar = "\u2022";
+  } else if (maskOption == "square") {
+    maskChar = "\u25A0";
+  } else if (maskOption == "none") {
+    return;
+  } else {
+    console.warn("Unknown mask character option: " +  maskOption);
+    return;
+  }
+
+  testElems = document.getElementsByClassName("test");
+  for (i = 0; i < testElems.length; ++i) {
+    e = testElems[i];
+    if (e.classList.contains("before") || e.tagName == "OL" || e.tagName == "UL") {
+      e.classList.add(maskOption);
+    }
+    if (e.tagName == "INPUT") {
+      if (e.type == "password") {
+        // leave untouched
+        continue;
+      }
+      e.value = e.value.replaceAll(/./g, maskChar);
+      continue;
+    }
+    function replaceInElem(elem) {
+      if (elem.classList && elem.classList.contains("init")) {
+        return;
+      }
+      if (elem.alt) {
+        elem.alt = elem.alt.replaceAll(/./g, maskChar);
+      }
+      if (elem.firstElementChild) {
+        for (c = elem.firstElementChild; c; c = c.nextElementSibling) {
+          replaceInElem(c);
+        }
+        return;
+      }
+      if (elem.textContent != " ") {
+        elem.textContent = elem.textContent.replaceAll(/./g, maskChar);
+      }
+    }
+    replaceInElem(e);
+  }
+}
+</script>
+
+<body onload="go()">
+div: <div class="test">a b c</div>
+div with single (collapsed-away) space character: <div class="test"> </div>
+div with nbsp: <div class="test">&nbsp;</div>
+div with ::before generated content text: <div class="test before"></div>
+implicitly inheriting into div: <div class="test"><div>div inherit</div></div>
+reset on child div: <div class="test"><div class="init">div reset</div></div>
+span: <span class="test">Hello</span><br>
+img with alt text and "title" hover-text:
+<img class="test" src="broken" alt="alt text" title="hover text"><br>
+Fieldset:
+<fieldset class="test"><legend>Legend</legend><span>Fieldset</span></fieldset>
+<h4>FORM FIELDS:</h4>
+button: <button class="test">Hello</button><br>
+input: <input class="test" value="Hello"><br>
+input type="password": <input class="test" type="password" value="please"><br>
+input type="submit": <input class="test" type="submit" value="Submit"><br>
+input type="reset": <input class="test" type="reset" value="Reset"><br>
+input type="button": <input class="test" type="button" value="button"><br>
+input type="tel": <input class="test" type="tel" value="12345"><br>
+<!-- skipping input types with browser-generated content that is hard to emulate
+     and can't just be overwritten with the masking character -->
+<!--input type="number": <input class="test" type="number" value="12345"><br>-->
+input type="search": <input class="test" type="search" value="12345"><br>
+input type="url": <input class="test" type="url" value="http://example.org"><br>
+input type="email": <input class="test" type="email" value="a@example.org"><br>
+<!--input type="date": <input class="test" type="date" value="2022-01-01"><br>-->
+<!--input type="time": <input class="test" type="time" value="12:00:00"><br>-->
+<!--input type="week": <input class="test" type="week" value="12:00:00"><br>-->
+<!--input type="file": <input class="test" type="file"><br>-->
+<!--input type="image": <input class="test" type="image"><br>-->
+select: <select class="test"><option>A</option><option>BB</option></select><br>
+SVG: <svg height="30px" class="test"><text y="20">SVG Text</text></svg><br>
+
+Ordered list, first item empty: <ol class="test"><li></li><li>a</li><li>bb</li></ol>
+<!-- unordered list is tricky because of the use of -moz-bullet-font for the markers -->
+<!--Unordered list, first item empty: <ul class="test"><li></li><li>a</li><li>bb</li></ul>-->
