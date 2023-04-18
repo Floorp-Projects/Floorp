@@ -154,7 +154,7 @@ The ``taskcluster/scripts/misc/get_vs.py`` script takes a YAML file as
 input and fills a directory with the corresponding Visual Studio components.
 
 Both scripts should be run via ``mach python --virtualenv build``. The
-latter is automatically invoked by the boostrapping mechanism.
+latter is automatically invoked by the bootstrapping mechanism.
 
 
 Firefox for Android with Gradle
