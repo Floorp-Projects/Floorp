@@ -46,6 +46,15 @@ macro_rules! bitflags {
             }
         }
 
+        impl $BitFlags {
+            /// Convert from underlying bit representation, preserving all
+            /// bits (even those not corresponding to a defined flag).
+            #[inline]
+            pub const fn from_bits_retain(bits: $T) -> Self {
+                Self { bits }
+            }
+        }
+
         bitflags! {
             $($t)*
         }
