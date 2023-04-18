@@ -70,7 +70,7 @@ __WalkerActor__
 - But only has a partial knowledge of the DOM (what is currently displayed/expanded in the MarkupView). It doesn't need to walk the whole tree when you first instantiate it.
 - Reflects some of the usual DOM APIs like querySelector.
 - Note that methods like querySelector return arbitrarily nested NodeActors, in which case the WalkerActor also sends the list of parents to link the returned nodes to the closest known nodes, so the UI can display the tree correctly.
-- Emits events when there are DOM mutations. These events are sent to the front-end and used to, for example refresh the markup-view. This uses an instance of MutationObserver (https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver) configured with, in particular, nativeAnonymousChildList set to true, so that mutation events are also sent when pseudo elements are added/removed via css.
+- Emits events when there are DOM mutations. These events are sent to the front-end and used to, for example refresh the markup-view. This uses an instance of MutationObserver (https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver) configured with, in particular, chromeOnlyNodes set to true, so that mutation events are also sent when pseudo elements are added/removed via css.
 
 __NodeActor__
 

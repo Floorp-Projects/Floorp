@@ -221,7 +221,6 @@ static void SetOrUpdateRectValuedProperty(
 void nsIFrame::DestroyAnonymousContent(
     nsPresContext* aPresContext, already_AddRefed<nsIContent>&& aContent) {
   if (nsCOMPtr<nsIContent> content = aContent) {
-    aPresContext->EventStateManager()->NativeAnonymousContentRemoved(content);
     aPresContext->PresShell()->NativeAnonymousContentRemoved(content);
     content->UnbindFromTree();
   }

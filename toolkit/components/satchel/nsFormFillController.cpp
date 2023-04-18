@@ -195,9 +195,6 @@ void nsFormFillController::AttributeWillChange(mozilla::dom::Element* aElement,
                                                nsAtom* aAttribute,
                                                int32_t aModType) {}
 
-void nsFormFillController::NativeAnonymousChildListChange(nsIContent* aContent,
-                                                          bool aIsRemove) {}
-
 void nsFormFillController::ParentChainChanged(nsIContent* aContent) {}
 
 void nsFormFillController::ARIAAttributeDefaultWillChange(

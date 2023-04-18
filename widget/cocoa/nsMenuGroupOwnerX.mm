@@ -58,8 +58,6 @@ void nsMenuGroupOwnerX::NodeWillBeDestroyed(nsINode* aNode) {}
 void nsMenuGroupOwnerX::AttributeWillChange(dom::Element* aElement, int32_t aNameSpaceID,
                                             nsAtom* aAttribute, int32_t aModType) {}
 
-void nsMenuGroupOwnerX::NativeAnonymousChildListChange(nsIContent* aContent, bool aIsRemove) {}
-
 void nsMenuGroupOwnerX::AttributeChanged(dom::Element* aElement, int32_t aNameSpaceID,
                                          nsAtom* aAttribute, int32_t aModType,
                                          const nsAttrValue* aOldValue) {

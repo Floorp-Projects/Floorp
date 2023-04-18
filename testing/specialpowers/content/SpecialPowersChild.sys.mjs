@@ -2144,13 +2144,6 @@ export class SpecialPowersChild extends JSWindowActorChild {
     };
   }
 
-  observeMutationEvents(mo, node, nativeAnonymousChildList, subtree) {
-    lazy.WrapPrivileged.unwrap(mo).observe(lazy.WrapPrivileged.unwrap(node), {
-      nativeAnonymousChildList,
-      subtree,
-    });
-  }
-
   /**
    * Which commands are available can be determined by checking which commands
    * are registered. See \ref

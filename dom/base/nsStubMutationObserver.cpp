@@ -71,12 +71,6 @@ class MutationObserverWrapper final : public nsIMutationObserver {
                              aOldValue);
   }
 
-  void NativeAnonymousChildListChange(nsIContent* aContent,
-                                      bool aIsRemove) override {
-    MOZ_ASSERT(mOwner);
-    mOwner->NativeAnonymousChildListChange(aContent, aIsRemove);
-  }
-
   void AttributeSetToCurrentValue(mozilla::dom::Element* aElement,
                                   int32_t aNameSpaceID,
                                   nsAtom* aAttribute) override {

@@ -1692,6 +1692,8 @@ class nsINode : public mozilla::dom::EventTarget {
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void FireNodeRemovedForChildren();
 
+  void QueueDevtoolsAnonymousEvent(bool aIsRemove);
+
  private:
   mozilla::dom::SVGUseElement* DoGetContainingSVGUseShadowHost() const;
 

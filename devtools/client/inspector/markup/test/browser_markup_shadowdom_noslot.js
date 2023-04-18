@@ -72,8 +72,7 @@ add_task(async function() {
   info(
     "Move the non-slotted element with class has-before and check the pseudo appears"
   );
-  const mutated = waitForNMutations(inspector, "childList", 2);
-  const pseudoMutated = waitForMutation(inspector, "nativeAnonymousChildList");
+  const mutated = waitForNMutations(inspector, "childList", 3);
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     const root = content.document.querySelector(".root");
     const hasBeforeEl = content.document.querySelector(
@@ -82,7 +81,6 @@ add_task(async function() {
     root.appendChild(hasBeforeEl);
   });
   await mutated;
-  await pseudoMutated;
 
   // As the non-slotted has-before is moved into the tree, the before pseudo is expected
   // to appear.

@@ -216,10 +216,7 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
 
       const emittedMutation = Object.assign(change, { target: targetFront });
 
-      if (
-        change.type === "childList" ||
-        change.type === "nativeAnonymousChildList"
-      ) {
+      if (change.type === "childList") {
         // Update the ownership tree according to the mutation record.
         const addedFronts = [];
         const removedFronts = [];
@@ -287,8 +284,7 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
       if (
         change.type === "inlineTextChild" ||
         change.type === "childList" ||
-        change.type === "shadowRootAttached" ||
-        change.type === "nativeAnonymousChildList"
+        change.type === "shadowRootAttached"
       ) {
         if (change.inlineTextChild) {
           targetFront.inlineTextChild = types
