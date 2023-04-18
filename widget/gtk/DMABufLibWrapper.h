@@ -184,19 +184,20 @@ class nsDMABufDevice {
   bool IsEnabled(nsACString& aFailureId);
 
   // Use dmabuf for WebRender general web content
-  bool IsDMABufTexturesEnabled();
+  static bool IsDMABufTexturesEnabled();
   // Use dmabuf for WebGL content
-  bool IsDMABufWebGLEnabled();
-  void DisableDMABufWebGL();
+  static bool IsDMABufWebGLEnabled();
+  static void DisableDMABufWebGL();
 
  private:
   void Configure();
 
-  bool mUseWebGLDmabufBackend;
   int mDRMFd;
   gbm_device* mGbmDevice;
   bool mInitialized;
   nsCString mFailureId;
+
+  static bool sUseWebGLDmabufBackend;
 };
 
 nsDMABufDevice* GetDMABufDevice();
