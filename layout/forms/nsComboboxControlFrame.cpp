@@ -322,21 +322,24 @@ nscoord nsComboboxControlFrame::GetLongestOptionISize(
   nsAutoString transformedLabel;
   RefPtr<nsFontMetrics> fm =
       nsLayoutUtils::GetInflatedFontMetricsForFrame(this);
-  auto textTransform = StyleText()->mTextTransform.IsNone()
+  const nsStyleText* textStyle = StyleText();
+  auto textTransform = textStyle->mTextTransform.IsNone()
                            ? Nothing()
-                           : Some(StyleText()->mTextTransform);
+                           : Some(textStyle->mTextTransform);
   nsAtom* language = StyleFont()->mLanguage;
   AutoTArray<bool, 50> charsToMergeArray;
   AutoTArray<bool, 50> deletedCharsArray;
   for (auto i : IntegerRange(Select().Options()->Length())) {
     GetOptionText(i, label);
     const nsAutoString* stringToUse = &label;
-    if (textTransform) {
+    if (textTransform ||
+        textStyle->mWebkitTextSecurity != StyleTextSecurity::None) {
       transformedLabel.Truncate();
       charsToMergeArray.SetLengthAndRetainStorage(0);
       deletedCharsArray.SetLengthAndRetainStorage(0);
       nsCaseTransformTextRunFactory::TransformString(
           label, transformedLabel, textTransform,
+          textStyle->TextSecurityMaskChar(),
           /* aCaseTransformsOnly = */ false, language, charsToMergeArray,
           deletedCharsArray);
       stringToUse = &transformedLabel;

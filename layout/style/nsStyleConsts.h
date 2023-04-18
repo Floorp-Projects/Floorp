@@ -462,6 +462,14 @@ enum class StyleTextDecorationStyle : uint8_t {
   Sentinel = Wavy
 };
 
+// See nsStyleText
+enum class StyleTextSecurity : uint8_t {
+  None,
+  Circle,
+  Disc,
+  Square,
+};
+
 // See nsStyleDisplay
 enum class StyleTopLayer : uint8_t {
   None,

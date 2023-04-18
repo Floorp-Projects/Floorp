@@ -2217,6 +2217,7 @@ already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
     // Detect use of text-transform or font-variant anywhere in the run
     textStyle = f->StyleText();
     if (!textStyle->mTextTransform.IsNone() ||
+        textStyle->mWebkitTextSecurity != StyleTextSecurity::None ||
         // text-combine-upright requires converting from full-width
         // characters to non-full-width correspendent in some cases.
         lastComputedStyle->IsTextCombined()) {
@@ -2424,8 +2425,10 @@ already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
   bool needsToMaskPassword = NeedsToMaskPassword(firstFrame);
   UniquePtr<nsTransformingTextRunFactory> transformingFactory;
   if (anyTextTransformStyle || needsToMaskPassword) {
+    char16_t maskChar =
+        needsToMaskPassword ? 0 : textStyle->TextSecurityMaskChar();
     transformingFactory = MakeUnique<nsCaseTransformTextRunFactory>(
-        std::move(transformingFactory));
+        std::move(transformingFactory), false, maskChar);
   }
   if (anyMathMLStyling) {
     transformingFactory = MakeUnique<MathMLTextRunFactory>(
@@ -9655,7 +9658,9 @@ static void TransformChars(nsTextFrame* aFrame, const nsStyleText* aStyle,
                            int32_t aFragLen, nsAString& aOut) {
   nsAutoString fragString;
   char16_t* out;
-  if (aStyle->mTextTransform.IsNone() && !NeedsToMaskPassword(aFrame)) {
+  bool needsToMaskPassword = NeedsToMaskPassword(aFrame);
+  if (aStyle->mTextTransform.IsNone() && !needsToMaskPassword &&
+      aStyle->mWebkitTextSecurity == StyleTextSecurity::None) {
     // No text-transform, so we can copy directly to the output string.
     aOut.SetLength(aOut.Length() + aFragLen);
     out = aOut.EndWriting() - aFragLen;
@@ -9676,10 +9681,13 @@ static void TransformChars(nsTextFrame* aFrame, const nsStyleText* aStyle,
     out[i] = ch;
   }
 
-  if (!aStyle->mTextTransform.IsNone() || NeedsToMaskPassword(aFrame)) {
+  if (!aStyle->mTextTransform.IsNone() || needsToMaskPassword ||
+      aStyle->mWebkitTextSecurity != StyleTextSecurity::None) {
     MOZ_ASSERT(aTextRun->GetFlags2() & nsTextFrameUtils::Flags::IsTransformed);
     if (aTextRun->GetFlags2() & nsTextFrameUtils::Flags::IsTransformed) {
       // Apply text-transform according to style in the transformed run.
+      char16_t maskChar =
+          needsToMaskPassword ? 0 : aStyle->TextSecurityMaskChar();
       auto transformedTextRun =
           static_cast<const nsTransformedTextRun*>(aTextRun);
       nsAutoString convertedString;
@@ -9687,8 +9695,9 @@ static void TransformChars(nsTextFrame* aFrame, const nsStyleText* aStyle,
       AutoTArray<bool, 50> deletedCharsArray;
       nsCaseTransformTextRunFactory::TransformString(
           fragString, convertedString, /* aGlobalTransform = */ Nothing(),
-          /* aCaseTransformsOnly = */ true, nullptr, charsToMergeArray,
-          deletedCharsArray, transformedTextRun, aSkippedOffset);
+          maskChar, /* aCaseTransformsOnly = */ true, nullptr,
+          charsToMergeArray, deletedCharsArray, transformedTextRun,
+          aSkippedOffset);
       aOut.Append(convertedString);
     } else {
       // Should not happen (see assertion above), but as a fallback...
