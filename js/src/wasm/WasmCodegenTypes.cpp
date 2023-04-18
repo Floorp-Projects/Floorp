@@ -201,20 +201,24 @@ CalleeDesc CalleeDesc::import(uint32_t instanceDataOffset) {
   c.u.import.instanceDataOffset_ = instanceDataOffset;
   return c;
 }
-CalleeDesc CalleeDesc::wasmTable(const TableDesc& desc,
+CalleeDesc CalleeDesc::wasmTable(const ModuleEnvironment& moduleEnv,
+                                 const TableDesc& desc, uint32_t tableIndex,
                                  CallIndirectId callIndirectId) {
   CalleeDesc c;
   c.which_ = WasmTable;
-  c.u.table.instanceDataOffset_ = desc.instanceDataOffset;
+  c.u.table.instanceDataOffset_ =
+      moduleEnv.offsetOfTableInstanceData(tableIndex);
   c.u.table.minLength_ = desc.initialLength;
   c.u.table.maxLength_ = desc.maximumLength;
   c.u.table.callIndirectId_ = callIndirectId;
   return c;
 }
-CalleeDesc CalleeDesc::asmJSTable(const TableDesc& desc) {
+CalleeDesc CalleeDesc::asmJSTable(const ModuleEnvironment& moduleEnv,
+                                  uint32_t tableIndex) {
   CalleeDesc c;
   c.which_ = AsmJSTable;
-  c.u.table.instanceDataOffset_ = desc.instanceDataOffset;
+  c.u.table.instanceDataOffset_ =
+      moduleEnv.offsetOfTableInstanceData(tableIndex);
   return c;
 }
 CalleeDesc CalleeDesc::builtin(SymbolicAddress callee) {
