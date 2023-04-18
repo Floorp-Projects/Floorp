@@ -17,6 +17,7 @@
 #include "nsCOMArray.h"
 #include "nsNetUtil.h"
 #include "nsTArray.h"
+#include "nsQueryObject.h"
 #include "prprf.h"
 #include "nsVariant.h"
 
