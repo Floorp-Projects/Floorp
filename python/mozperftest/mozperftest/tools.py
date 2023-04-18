@@ -86,16 +86,18 @@ def run_change_detector(artifacts, kwargs):
             platform, test_name = task.split(splitter)
             platform += splitter[:-1]
 
-            if kwargs["new_test_name"] is None:
-                kwargs["new_test_name"] = test_name
-            if kwargs["new_platform"] is None:
-                kwargs["new_platform"] = platform
+            new_test_name = test_name
+            new_platform_name = platform
+            if kwargs["new_test_name"] is not None:
+                new_test_name = kwargs["new_test_name"]
+            if kwargs["new_platform"] is not None:
+                new_platform_name = kwargs["new_platform_name"]
 
             all_changed_revisions, changed_metric_revisions = detector.detect_changes(
                 test_name=test_name,
-                new_test_name=kwargs["new_test_name"],
+                new_test_name=new_test_name,
                 platform=platform,
-                new_platform=kwargs["new_platform"],
+                new_platform=new_platform_name,
                 base_revision=kwargs["base_revision"],
                 new_revision=kwargs["new_revision"],
                 base_branch=kwargs["base_branch"],
