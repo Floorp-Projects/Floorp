@@ -118,7 +118,7 @@ OpaqueResponseBlockedReason GetOpaqueResponseBlockedReason(
 }
 
 OpaqueResponseBlockedReason GetOpaqueResponseBlockedReason(
-    const nsHttpResponseHead& aResponseHead) {
+    nsHttpResponseHead& aResponseHead) {
   nsAutoCString contentType;
   aResponseHead.ContentType(contentType);
 

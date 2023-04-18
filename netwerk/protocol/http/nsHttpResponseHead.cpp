@@ -1222,6 +1222,38 @@ nsresult nsHttpResponseHead::VisitHeaders(
   return rv;
 }
 
+namespace {
+class ContentTypeOptionsVisitor final : public nsIHttpHeaderVisitor {
+ public:
+  NS_DECL_ISUPPORTS
+
+  ContentTypeOptionsVisitor() = default;
+
+  NS_IMETHOD
+  VisitHeader(const nsACString& aHeader, const nsACString& aValue) override {
+    if (!mHeaderPresent) {
+      mHeaderPresent = true;
+    } else {
+      // multiple XCTO headers in response, merge them
+      mContentTypeOptionsHeader.Append(", "_ns);
+    }
+    mContentTypeOptionsHeader.Append(aValue);
+    return NS_OK;
+  }
+
+  void GetMergedHeader(nsACString& aValue) {
+    aValue = mContentTypeOptionsHeader;
+  }
+
+ private:
+  ~ContentTypeOptionsVisitor() = default;
+  bool mHeaderPresent{false};
+  nsAutoCString mContentTypeOptionsHeader;
+};
+
+NS_IMPL_ISUPPORTS(ContentTypeOptionsVisitor, nsIHttpHeaderVisitor)
+}  // namespace
+
 nsresult nsHttpResponseHead::GetOriginalHeader(const nsHttpAtom& aHeader,
                                                nsIHttpHeaderVisitor* aVisitor) {
   RecursiveMutexAutoLock monitor(mRecursiveMutex);
@@ -1241,12 +1273,15 @@ bool nsHttpResponseHead::HasContentCharset() {
   return !mContentCharset.IsEmpty();
 }
 
-bool nsHttpResponseHead::GetContentTypeOptionsHeader(
-    nsACString& aOutput) const {
+bool nsHttpResponseHead::GetContentTypeOptionsHeader(nsACString& aOutput) {
   aOutput.Truncate();
 
   nsAutoCString contentTypeOptionsHeader;
-  Unused << GetHeader(nsHttp::X_Content_Type_Options, contentTypeOptionsHeader);
+  // We need to fetch original headers and manually merge them because empty
+  // header values are not retrieved with GetHeader. Ref - Bug 1819642
+  RefPtr<ContentTypeOptionsVisitor> visitor = new ContentTypeOptionsVisitor();
+  Unused << GetOriginalHeader(nsHttp::X_Content_Type_Options, visitor);
+  visitor->GetMergedHeader(contentTypeOptionsHeader);
   if (contentTypeOptionsHeader.IsEmpty()) {
     // if there is no XCTO header, then there is nothing to do.
     return false;
@@ -1256,7 +1291,7 @@ bool nsHttpResponseHead::GetContentTypeOptionsHeader(
   // a) let's skip all subsequent values
   //     e.g. "   NoSniFF   , foo " will be "   NoSniFF   "
   int32_t idx = contentTypeOptionsHeader.Find(",");
-  if (idx > 0) {
+  if (idx >= 0) {
     contentTypeOptionsHeader = Substring(contentTypeOptionsHeader, 0, idx);
   }
   // b) let's trim all surrounding whitespace

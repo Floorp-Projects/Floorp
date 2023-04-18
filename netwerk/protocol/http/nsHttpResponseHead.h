@@ -144,7 +144,7 @@ class nsHttpResponseHead {
 
   bool HasContentType() const;
   bool HasContentCharset();
-  bool GetContentTypeOptionsHeader(nsACString& aOutput) const;
+  bool GetContentTypeOptionsHeader(nsACString& aOutput);
 
  private:
   [[nodiscard]] nsresult SetHeader_locked(const nsHttpAtom& atom,
