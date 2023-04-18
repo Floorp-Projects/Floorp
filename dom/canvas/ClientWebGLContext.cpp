@@ -474,7 +474,8 @@ Maybe<layers::SurfaceDescriptor> ClientWebGLContext::GetFrontBuffer(
   const auto& textureId = fb ? fb->mLastRemoteTextureId : mLastRemoteTextureId;
   auto& needsSync = fb ? fb->mNeedsRemoteTextureSync : mNeedsRemoteTextureSync;
   if (ownerId && textureId) {
-    if (gfx::gfxVars::WebglOopAsyncPresentForceSync() || needsSync) {
+    if (XRE_IsParentProcess() ||
+        gfx::gfxVars::WebglOopAsyncPresentForceSync() || needsSync) {
       needsSync = false;
       // Request the front buffer from IPDL to cause a sync, even though we
       // will continue to use the remote texture descriptor after.

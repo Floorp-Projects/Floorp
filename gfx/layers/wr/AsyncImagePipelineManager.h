@@ -111,7 +111,8 @@ class AsyncImagePipelineManager final {
                                      wr::TransactionBuilder& aFastTxn);
   void ApplyAsyncImageForPipeline(const wr::PipelineId& aPipelineId,
                                   wr::TransactionBuilder& aTxn,
-                                  wr::TransactionBuilder& aTxnForImageBridge);
+                                  wr::TransactionBuilder& aTxnForImageBridge,
+                                  RemoteTextureInfoList* aList);
 
   void SetEmptyDisplayList(const wr::PipelineId& aPipelineId,
                            wr::TransactionBuilder& aTxn,
@@ -129,8 +130,6 @@ class AsyncImagePipelineManager final {
 
   void SetWillGenerateFrame();
   bool GetAndResetWillGenerateFrame();
-
-  UniquePtr<RemoteTextureInfoList> GetPendingRemoteTextures();
 
   static wr::ExternalImageId GetNextExternalImageId();
 
@@ -213,12 +212,13 @@ class AsyncImagePipelineManager final {
                                   const wr::PipelineId& aPipelineId,
                                   AsyncImagePipeline* aPipeline,
                                   wr::TransactionBuilder& aSceneBuilderTxn,
-                                  wr::TransactionBuilder& aMaybeFastTxn);
+                                  wr::TransactionBuilder& aMaybeFastTxn,
+                                  RemoteTextureInfoList* aList);
   Maybe<TextureHost::ResourceUpdateOp> UpdateImageKeys(
       const wr::Epoch& aEpoch, const wr::PipelineId& aPipelineId,
       AsyncImagePipeline* aPipeline, nsTArray<wr::ImageKey>& aKeys,
       wr::TransactionBuilder& aSceneBuilderTxn,
-      wr::TransactionBuilder& aMaybeFastTxn);
+      wr::TransactionBuilder& aMaybeFastTxn, RemoteTextureInfoList* aList);
   Maybe<TextureHost::ResourceUpdateOp> UpdateWithoutExternalImage(
       TextureHost* aTexture, wr::ImageKey aKey, TextureHost::ResourceUpdateOp,
       wr::TransactionBuilder& aTxn);

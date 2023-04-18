@@ -7,6 +7,7 @@
 #ifndef MOZILLA_LAYERS_WEBRENDERAPI_H
 #define MOZILLA_LAYERS_WEBRENDERAPI_H
 
+#include <queue>
 #include <stdint.h>
 #include <vector>
 #include <unordered_map>
@@ -15,12 +16,14 @@
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/gfx/CompositorHitTestInfo.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
+#include "mozilla/layers/RemoteTextureMap.h"
 #include "mozilla/layers/ScrollableLayerGuid.h"
 #include "mozilla/layers/SyncObject.h"
 #include "mozilla/layers/CompositionRecorder.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/Range.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/VsyncDispatcher.h"
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/webrender/WebRenderTypes.h"
@@ -196,6 +199,8 @@ class TransactionBuilder final {
 
   void Clear();
 
+  Transaction* Take();
+
   bool UseSceneBuilderThread() const { return mUseSceneBuilderThread; }
   layers::WebRenderBackend GetBackendType() { return mApiBackend; }
   Transaction* Raw() { return mTxn; }
@@ -300,6 +305,11 @@ class WebRenderAPI final {
 
   RefPtr<EndRecordingPromise> EndRecording();
 
+  layers::RemoteTextureInfoList* GetPendingRemoteTextureInfoList();
+
+  void FlushPendingWrTransactionEventsWithoutWait();
+  void FlushPendingWrTransactionEventsWithWait();
+
  protected:
   WebRenderAPI(wr::DocumentHandle* aHandle, wr::WindowId aId,
                layers::WebRenderBackend aBackend,
@@ -313,6 +323,95 @@ class WebRenderAPI final {
   void WaitFlushed();
 
   void UpdateDebugFlags(uint32_t aFlags);
+  bool CheckIsRemoteTextureReady(layers::RemoteTextureInfoList* aList);
+  void WaitRemoteTextureReady(layers::RemoteTextureInfoList* aList);
+
+  enum class RemoteTextureWaitType : uint8_t {
+    AsyncWait = 0,
+    FlushWithWait = 1,
+    FlushWithoutWait = 2
+  };
+
+  void HandleWrTransactionEvents(RemoteTextureWaitType aType);
+
+  class WrTransactionEvent {
+   public:
+    enum class Tag {
+      Transaction,
+      PendingRemoteTextures,
+    };
+    const Tag mTag;
+
+    struct TransactionWrapper {
+      TransactionWrapper(wr::Transaction* aTxn, bool aUseSceneBuilderThread)
+          : mTxn(aTxn), mUseSceneBuilderThread(aUseSceneBuilderThread) {}
+
+      ~TransactionWrapper() {
+        if (mTxn) {
+          wr_transaction_delete(mTxn);
+        }
+      }
+
+      wr::Transaction* mTxn;
+      const bool mUseSceneBuilderThread;
+    };
+
+   private:
+    WrTransactionEvent(const Tag aTag,
+                       UniquePtr<TransactionWrapper>&& aTransaction)
+        : mTag(aTag), mTransaction(std::move(aTransaction)) {
+      MOZ_ASSERT(mTag == Tag::Transaction);
+    }
+    WrTransactionEvent(
+        const Tag aTag,
+        UniquePtr<layers::RemoteTextureInfoList>&& aPendingRemoteTextures)
+        : mTag(aTag),
+          mPendingRemoteTextures(std::move(aPendingRemoteTextures)) {
+      MOZ_ASSERT(mTag == Tag::PendingRemoteTextures);
+    }
+
+    UniquePtr<TransactionWrapper> mTransaction;
+    UniquePtr<layers::RemoteTextureInfoList> mPendingRemoteTextures;
+
+   public:
+    static WrTransactionEvent Transaction(wr::Transaction* aTxn,
+                                          bool aUseSceneBuilderThread) {
+      auto transaction =
+          MakeUnique<TransactionWrapper>(aTxn, aUseSceneBuilderThread);
+      return WrTransactionEvent(Tag::Transaction, std::move(transaction));
+    }
+
+    static WrTransactionEvent PendingRemoteTextures(
+        UniquePtr<layers::RemoteTextureInfoList>&& aPendingRemoteTextures) {
+      return WrTransactionEvent(Tag::PendingRemoteTextures,
+                                std::move(aPendingRemoteTextures));
+    }
+
+    wr::Transaction* Transaction() {
+      if (mTag == Tag::Transaction) {
+        return mTransaction->mTxn;
+      }
+      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+      return nullptr;
+    }
+
+    bool UseSceneBuilderThread() {
+      if (mTag == Tag::Transaction) {
+        return mTransaction->mUseSceneBuilderThread;
+      }
+      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+      return true;
+    }
+
+    layers::RemoteTextureInfoList* RemoteTextureInfoList() {
+      if (mTag == Tag::PendingRemoteTextures) {
+        MOZ_ASSERT(mPendingRemoteTextures);
+        return mPendingRemoteTextures.get();
+      }
+      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+      return nullptr;
+    }
+  };
 
   wr::DocumentHandle* mDocHandle;
   wr::WindowId mId;
@@ -326,6 +425,9 @@ class WebRenderAPI final {
   bool mCaptureSequence;
   layers::SyncHandle mSyncHandle;
   bool mRendererDestroyed;
+
+  UniquePtr<layers::RemoteTextureInfoList> mPendingRemoteTextureInfoList;
+  std::queue<WrTransactionEvent> mPendingWrTransactionEvents;
 
   // We maintain alive the root api to know when to shut the render backend
   // down, and the root api for the document to know when to delete the

@@ -6,15 +6,17 @@
 
 #include "WebRenderAPI.h"
 
-#include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/ipc/ByteBuf.h"
 #include "mozilla/webrender/RendererOGL.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/StaticPrefs_gfx.h"
+#include "mozilla/StaticPrefs_webgl.h"
 #include "mozilla/ToString.h"
 #include "mozilla/webrender/RenderCompositor.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/layers/SynchronousTask.h"
+#include "nsThreadUtils.h"
 #include "TextDrawTarget.h"
 #include "malloc_decls.h"
 #include "GLContext.h"
@@ -436,7 +438,126 @@ void WebRenderAPI::SendTransaction(TransactionBuilder& aTxn) {
   if (mRootApi && mRootApi->mRendererDestroyed) {
     return;
   }
-  wr_api_send_transaction(mDocHandle, aTxn.Raw(), aTxn.UseSceneBuilderThread());
+
+  if (mPendingRemoteTextureInfoList &&
+      !mPendingRemoteTextureInfoList->mList.empty()) {
+    mPendingWrTransactionEvents.emplace(
+        WrTransactionEvent::PendingRemoteTextures(
+            std::move(mPendingRemoteTextureInfoList)));
+  }
+
+  if (!mPendingWrTransactionEvents.empty()) {
+    mPendingWrTransactionEvents.emplace(WrTransactionEvent::Transaction(
+        aTxn.Take(), aTxn.UseSceneBuilderThread()));
+    HandleWrTransactionEvents(RemoteTextureWaitType::AsyncWait);
+  } else {
+    wr_api_send_transaction(mDocHandle, aTxn.Raw(),
+                            aTxn.UseSceneBuilderThread());
+  }
+}
+
+layers::RemoteTextureInfoList* WebRenderAPI::GetPendingRemoteTextureInfoList() {
+  if (!mRootApi) {
+    // root api does not support async wait RemoteTexture.
+    return nullptr;
+  }
+
+  if (!gfx::gfxVars::UseCanvasRenderThread() ||
+      !StaticPrefs::webgl_out_of_process_async_present() ||
+      gfx::gfxVars::WebglOopAsyncPresentForceSync()) {
+    return nullptr;
+  }
+
+  // async remote texture is enabled
+  MOZ_ASSERT(gfx::gfxVars::UseCanvasRenderThread());
+  MOZ_ASSERT(StaticPrefs::webgl_out_of_process_async_present());
+  MOZ_ASSERT(!gfx::gfxVars::WebglOopAsyncPresentForceSync());
+
+  if (!mPendingRemoteTextureInfoList) {
+    mPendingRemoteTextureInfoList = MakeUnique<layers::RemoteTextureInfoList>();
+  }
+  return mPendingRemoteTextureInfoList.get();
+}
+
+bool WebRenderAPI::CheckIsRemoteTextureReady(
+    layers::RemoteTextureInfoList* aList) {
+  MOZ_ASSERT(layers::CompositorThreadHolder::IsInCompositorThread());
+  MOZ_ASSERT(aList);
+  MOZ_ASSERT(gfx::gfxVars::UseCanvasRenderThread());
+  MOZ_ASSERT(StaticPrefs::webgl_out_of_process_async_present());
+  MOZ_ASSERT(!gfx::gfxVars::WebglOopAsyncPresentForceSync());
+
+  RefPtr<WebRenderAPI> self = this;
+  auto callback = [self](const layers::RemoteTextureInfo&) {
+    RefPtr<nsIRunnable> runnable = NewRunnableMethod<RemoteTextureWaitType>(
+        "WebRenderAPI::HandleWrTransactionEvents", self,
+        &WebRenderAPI::HandleWrTransactionEvents,
+        RemoteTextureWaitType::AsyncWait);
+    layers::CompositorThread()->Dispatch(runnable.forget());
+  };
+
+  bool isReady = true;
+  while (!aList->mList.empty() && isReady) {
+    auto& front = aList->mList.front();
+    isReady &= layers::RemoteTextureMap::Get()->CheckRemoteTextureReady(
+        front, callback);
+    if (isReady) {
+      aList->mList.pop();
+    }
+  }
+
+  return isReady;
+}
+
+void WebRenderAPI::WaitRemoteTextureReady(
+    layers::RemoteTextureInfoList* aList) {
+  MOZ_ASSERT(layers::CompositorThreadHolder::IsInCompositorThread());
+  MOZ_ASSERT(aList);
+  MOZ_ASSERT(gfx::gfxVars::UseCanvasRenderThread());
+  MOZ_ASSERT(StaticPrefs::webgl_out_of_process_async_present());
+  MOZ_ASSERT(!gfx::gfxVars::WebglOopAsyncPresentForceSync());
+
+  while (!aList->mList.empty()) {
+    auto& front = aList->mList.front();
+    layers::RemoteTextureMap::Get()->WaitRemoteTextureReady(front);
+    aList->mList.pop();
+  }
+}
+
+void WebRenderAPI::FlushPendingWrTransactionEventsWithoutWait() {
+  HandleWrTransactionEvents(RemoteTextureWaitType::FlushWithoutWait);
+}
+
+void WebRenderAPI::FlushPendingWrTransactionEventsWithWait() {
+  HandleWrTransactionEvents(RemoteTextureWaitType::FlushWithWait);
+}
+
+void WebRenderAPI::HandleWrTransactionEvents(RemoteTextureWaitType aType) {
+  auto& events = mPendingWrTransactionEvents;
+
+  while (!events.empty()) {
+    auto& front = events.front();
+    switch (front.mTag) {
+      case WrTransactionEvent::Tag::Transaction:
+        wr_api_send_transaction(mDocHandle, front.Transaction(),
+                                front.UseSceneBuilderThread());
+        break;
+      case WrTransactionEvent::Tag::PendingRemoteTextures:
+        bool isReady = true;
+        if (aType == RemoteTextureWaitType::AsyncWait) {
+          isReady = CheckIsRemoteTextureReady(front.RemoteTextureInfoList());
+        } else if (aType == RemoteTextureWaitType::FlushWithWait) {
+          WaitRemoteTextureReady(front.RemoteTextureInfoList());
+        } else {
+          MOZ_ASSERT(aType == RemoteTextureWaitType::FlushWithoutWait);
+        }
+        if (!isReady) {
+          return;
+        }
+        break;
+    }
+    events.pop();
+  }
 }
 
 std::vector<WrHitResult> WebRenderAPI::HitTest(const wr::WorldPoint& aPoint) {
@@ -732,6 +853,12 @@ RefPtr<WebRenderAPI::EndRecordingPromise> WebRenderAPI::EndRecording() {
 }
 
 void TransactionBuilder::Clear() { wr_resource_updates_clear(mTxn); }
+
+Transaction* TransactionBuilder::Take() {
+  Transaction* txn = mTxn;
+  mTxn = wr_transaction_new(mUseSceneBuilderThread);
+  return txn;
+}
 
 void TransactionBuilder::Notify(wr::Checkpoint aWhen,
                                 UniquePtr<NotificationHandler> aEvent) {

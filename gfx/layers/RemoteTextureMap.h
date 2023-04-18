@@ -16,8 +16,9 @@
 #include <unordered_set>
 #include <utility>
 
-#include "mozilla/gfx/Point.h"               // for IntSize
-#include "mozilla/gfx/Types.h"               // for SurfaceFormat
+#include "mozilla/gfx/Point.h"  // for IntSize
+#include "mozilla/gfx/Types.h"  // for SurfaceFormat
+#include "mozilla/ipc/Shmem.h"
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags, etc
 #include "mozilla/layers/LayersSurfaces.h"   // for SurfaceDescriptor
 #include "mozilla/layers/TextureHost.h"
@@ -78,7 +79,7 @@ class RemoteTextureOwnerClient final {
   void PushDummyTexture(const RemoteTextureId aTextureId,
                         const RemoteTextureOwnerId aOwnerId);
   void GetLatestBufferSnapshot(const RemoteTextureOwnerId aOwnerId,
-                               const ipc::Shmem& aDestShmem,
+                               const mozilla::ipc::Shmem& aDestShmem,
                                const gfx::IntSize& aSize);
   UniquePtr<TextureData> CreateOrRecycleBufferTextureData(
       const RemoteTextureOwnerId aOwnerId, gfx::IntSize aSize,
@@ -122,7 +123,7 @@ class RemoteTextureMap {
 
   void GetLatestBufferSnapshot(const RemoteTextureOwnerId aOwnerId,
                                const base::ProcessId aForPid,
-                               const ipc::Shmem& aDestShmem,
+                               const mozilla::ipc::Shmem& aDestShmem,
                                const gfx::IntSize& aSize);
 
   // aIsSyncMode defines if RemoteTextureMap::GetRemoteTextureForDisplayList()
@@ -174,6 +175,8 @@ class RemoteTextureMap {
   bool CheckRemoteTextureReady(
       const RemoteTextureInfo& aInfo,
       std::function<void(const RemoteTextureInfo&)>&& aCallback);
+
+  bool WaitRemoteTextureReady(const RemoteTextureInfo& aInfo);
 
   UniquePtr<TextureData> GetRecycledBufferTextureData(
       const RemoteTextureOwnerId aOwnerId, const base::ProcessId aForPid,
