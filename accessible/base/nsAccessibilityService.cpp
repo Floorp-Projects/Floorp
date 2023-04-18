@@ -197,6 +197,8 @@ static bool MustBeGenericAccessible(nsIContent* aContent,
                                     DocAccessible* aDocument) {
   nsIFrame* frame = aContent->GetPrimaryFrame();
   MOZ_ASSERT(frame);
+  nsAutoCString overflow;
+  frame->Style()->GetComputedPropertyValue(eCSSProperty_overflow, overflow);
   // If the frame has been transformed, and the content has any children, we
   // should create an Accessible so that we can account for the transform when
   // calculating the Accessible's bounds using the parent process cache.
@@ -207,7 +209,8 @@ static bool MustBeGenericAccessible(nsIContent* aContent,
   return aContent->HasChildren() && !aContent->IsXULElement() &&
          (frame->IsTransformed() || frame->IsStickyPositioned() ||
           (frame->StyleDisplay()->mPosition == StylePositionProperty::Fixed &&
-           nsLayoutUtils::IsReallyFixedPos(frame)));
+           nsLayoutUtils::IsReallyFixedPos(frame)) ||
+          overflow.Equals("hidden"_ns));
 }
 
 /**
