@@ -212,7 +212,7 @@ void gfxPlatformGtk::InitDmabufConfig() {
     gfxInfo->GetDrmRenderDevice(drmRenderDevice);
     gfxVars::SetDrmRenderDevice(drmRenderDevice);
 
-    if (GetDMABufDevice()->IsEnabled(failureId)) {
+    if (!GetDMABufDevice()->Configure(failureId)) {
       feature.ForceDisable(FeatureStatus::Failed, "Failed to configure",
                            failureId);
     }
