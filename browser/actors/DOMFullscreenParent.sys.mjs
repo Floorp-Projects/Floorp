@@ -239,7 +239,12 @@ export class DOMFullscreenParent extends JSWindowActorParent {
         }
         this.cleanupDomFullscreen(window);
         this.updateFullscreenWindowReference(window);
-        this.removeListeners(window);
+
+        // If the document is supposed to be in fullscreen, keep the listener to wait for
+        // further events.
+        if (!this.manager.fullscreen) {
+          this.removeListeners(window);
+        }
         break;
       }
     }
