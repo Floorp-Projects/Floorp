@@ -1977,8 +1977,8 @@ nsresult AppWindow::SetPersistentValue(const nsAtom* aAttr,
 void AppWindow::MaybeSavePersistentPositionAndSize(
     PersistentAttributes aAttributes, Element& aRootElement,
     const nsAString& aPersistString, bool aShouldPersist) {
-  if ((aAttributes & PersistentAttributes{PersistentAttribute::Position,
-                                          PersistentAttribute::Size})
+  if ((aAttributes& PersistentAttributes{PersistentAttribute::Position,
+                                         PersistentAttribute::Size})
           .isEmpty()) {
     return;
   }
@@ -2915,24 +2915,7 @@ void AppWindow::SizeModeChanged(nsSizeMode aSizeMode) {
   nsCOMPtr<nsPIDOMWindowOuter> ourWindow =
       mDocShell ? mDocShell->GetWindow() : nullptr;
   if (ourWindow) {
-    // Ensure that the fullscreen state is synchronized between
-    // the widget and the outer window object.
-    if (aSizeMode != nsSizeMode_Fullscreen &&
-        aSizeMode != nsSizeMode_Minimized) {
-      if (ourWindow->GetFullScreen()) {
-        // The first SetFullscreenInternal call below ensures that we do
-        // not trigger any fullscreen transition even if the window was
-        // put in fullscreen only for the Fullscreen API. The second
-        // SetFullScreen call ensures that the window really exit from
-        // fullscreen even if it entered fullscreen for both Fullscreen
-        // Mode and Fullscreen API.
-        ourWindow->SetFullscreenInternal(
-            FullscreenReason::ForForceExitFullscreen, false);
-        ourWindow->SetFullScreen(false);
-      }
-    }
-
-    // And always fire a user-defined sizemodechange event on the window
+    // Always fire a user-defined sizemodechange event on the window
     ourWindow->DispatchCustomEvent(u"sizemodechange"_ns);
   }
 
