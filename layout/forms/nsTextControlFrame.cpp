@@ -271,7 +271,8 @@ nsresult nsTextControlFrame::EnsureEditorInitialized() {
   // Make sure that editor init doesn't do things that would kill us off
   // (especially off the script blockers it'll create for its DOM mutations).
   {
-    RefPtr textControlElement = TextControlElement::FromNode(GetContent());
+    RefPtr<TextControlElement> textControlElement =
+        TextControlElement::FromNode(GetContent());
     MOZ_ASSERT(textControlElement);
 
     // Hide selection changes during the initialization, as webpages should not
@@ -388,11 +389,8 @@ nsresult nsTextControlFrame::CreateAnonymousContent(
 
   AddStateBits(NS_FRAME_INDEPENDENT_SELECTION);
 
-  if (IsDateTimeControlFrame()) {
-    return NS_OK;
-  }
-
-  RefPtr textControlElement = TextControlElement::FromNode(GetContent());
+  RefPtr<TextControlElement> textControlElement =
+      TextControlElement::FromNode(GetContent());
   MOZ_ASSERT(textControlElement);
   mRootNode = MakeAnonElement(PseudoStyleType::mozTextControlEditingRoot);
   if (NS_WARN_IF(!mRootNode)) {
@@ -454,7 +452,8 @@ bool nsTextControlFrame::ShouldInitializeEagerly() const {
 
   // Also, input elements which have a cached selection should get eager
   // editor initialization.
-  auto* textControlElement = TextControlElement::FromNode(GetContent());
+  TextControlElement* textControlElement =
+      TextControlElement::FromNode(GetContent());
   MOZ_ASSERT(textControlElement);
   if (textControlElement->HasCachedSelection()) {
     return true;
@@ -491,7 +490,7 @@ void nsTextControlFrame::InitializeEagerlyIfNeeded() {
     return;
   }
 
-  auto* initializer = new EditorInitializer(this);
+  EditorInitializer* initializer = new EditorInitializer(this);
   SetProperty(TextControlInitializer(), initializer);
   nsContentUtils::AddScriptRunner(initializer);
 }
@@ -614,7 +613,7 @@ LogicalSize nsTextControlFrame::ComputeAutoSize(
       LogicalSize ancestorAutoSize = nsContainerFrame::ComputeAutoSize(
           aRenderingContext, aWM, aCBSize, aAvailableISize, aMargin,
           aBorderPadding, aSizeOverrides, aFlags);
-      MOZ_ASSERT(IsDateTimeControlFrame() || inflation != 1.0f ||
+      MOZ_ASSERT(inflation != 1.0f ||
                      ancestorAutoSize.ISize(aWM) == autoSize.ISize(aWM),
                  "Incorrect size computed by ComputeAutoSize?");
     }
@@ -625,7 +624,7 @@ LogicalSize nsTextControlFrame::ComputeAutoSize(
 
 Maybe<nscoord> nsTextControlFrame::ComputeBaseline(
     const nsIFrame* aFrame, const ReflowInput& aReflowInput,
-    bool aForTextArea) {
+    bool aForSingleLineControl) {
   // If we're layout-contained, we have no baseline.
   if (aReflowInput.mStyleDisplay->IsContainLayout()) {
     return Nothing();
@@ -633,7 +632,7 @@ Maybe<nscoord> nsTextControlFrame::ComputeBaseline(
   WritingMode wm = aReflowInput.GetWritingMode();
 
   nscoord lineHeight = aReflowInput.ComputedBSize();
-  if (aForTextArea || lineHeight == NS_UNCONSTRAINEDSIZE) {
+  if (!aForSingleLineControl || lineHeight == NS_UNCONSTRAINEDSIZE) {
     lineHeight = NS_CSS_MINMAX(aReflowInput.GetLineHeight(),
                                aReflowInput.ComputedMinBSize(),
                                aReflowInput.ComputedMaxBSize());
@@ -667,7 +666,8 @@ void nsTextControlFrame::Reflow(nsPresContext* aPresContext,
 
   {
     // Calculate the baseline and store it in mFirstBaseline.
-    auto baseline = ComputeBaseline(this, aReflowInput, IsTextArea());
+    auto baseline =
+        ComputeBaseline(this, aReflowInput, IsSingleLineTextControl());
     mFirstBaseline = baseline.valueOr(NS_INTRINSIC_ISIZE_UNKNOWN);
     if (baseline) {
       aDesiredSize.SetBlockStartAscent(*baseline);
@@ -802,7 +802,8 @@ void nsTextControlFrame::ReflowTextControlChild(
 
 // IMPLEMENTING NS_IFORMCONTROLFRAME
 void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint) {
-  auto* textControlElement = TextControlElement::FromNode(GetContent());
+  TextControlElement* textControlElement =
+      TextControlElement::FromNode(GetContent());
   MOZ_ASSERT(textControlElement);
 
   // If 'dom.placeholeder.show_on_focus' preference is 'false', focusing or
@@ -1102,8 +1103,30 @@ nsresult nsTextControlFrame::AttributeChanged(int32_t aNameSpaceID,
   return nsContainerFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
 
+void nsTextControlFrame::GetText(nsString& aText) {
+  if (HTMLInputElement* inputElement = HTMLInputElement::FromNode(mContent)) {
+    if (IsSingleLineTextControl()) {
+      // There will be no line breaks so we can ignore the wrap property.
+      inputElement->GetTextEditorValue(aText, true);
+      return;
+    }
+    aText.Truncate();
+    return;
+  }
+
+  MOZ_ASSERT(!IsSingleLineTextControl());
+  if (HTMLTextAreaElement* textAreaElement =
+          HTMLTextAreaElement::FromNode(mContent)) {
+    textAreaElement->GetValue(aText);
+    return;
+  }
+
+  MOZ_ASSERT(aText.IsEmpty());
+  aText.Truncate();
+}
+
 bool nsTextControlFrame::TextEquals(const nsAString& aText) const {
-  if (auto* inputElement = HTMLInputElement::FromNode(mContent)) {
+  if (HTMLInputElement* inputElement = HTMLInputElement::FromNode(mContent)) {
     if (IsSingleLineTextControl()) {
       // There will be no line breaks so we can ignore the wrap property.
       return inputElement->TextEditorValueEquals(aText);
@@ -1112,7 +1135,8 @@ bool nsTextControlFrame::TextEquals(const nsAString& aText) const {
   }
 
   MOZ_ASSERT(!IsSingleLineTextControl());
-  if (auto* textAreaElement = HTMLTextAreaElement::FromNode(mContent)) {
+  if (HTMLTextAreaElement* textAreaElement =
+          HTMLTextAreaElement::FromNode(mContent)) {
     return textAreaElement->ValueEquals(aText);
   }
 
