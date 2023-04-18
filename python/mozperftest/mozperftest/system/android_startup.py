@@ -15,6 +15,7 @@ PAGE_START = re.compile("GeckoSession: handleMessage GeckoView:PageStart uri=")
 
 PROD_FENIX = "fenix"
 PROD_FOCUS = "focus"
+PROC_GVEX = "geckoview_example"
 
 KEY_NAME = "name"
 KEY_PRODUCT = "product"
@@ -57,6 +58,17 @@ BASE_URL_DICT = {
         "mobile.v3.firefox-android.apks.focus-nightly.latest.{architecture}"
         "/artifacts/public%2Fbuild%2Ffocus%2F{architecture}%2Ftarget.apk"
     ),
+    PROC_GVEX: (
+        "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
+        "gecko.v2.mozilla-central.pushdate.{date}.latest.mobile.android-"
+        "{architecture}-debug/artifacts/public%2Fbuild%2Fgeckoview_example.apk"
+    ),
+    PROC_GVEX
+    + "-latest": (
+        "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
+        "gecko.v2.mozilla-central.shippable.latest.mobile.android-"
+        "{architecture}-opt/artifacts/public/build/geckoview_example.apk"
+    ),
 }
 PROD_TO_CHANNEL_TO_PKGID = {
     PROD_FENIX: {
@@ -70,6 +82,9 @@ PROD_TO_CHANNEL_TO_PKGID = {
         "beta": "org.mozilla.focus.beta",  # only present since post-fenix update.
         "release": "org.mozilla.focus",
         "debug": "org.mozilla.focus.debug",
+    },
+    PROC_GVEX: {
+        "nightly": "org.mozilla.geckoview_example",
     },
 }
 TEST_LIST = [
@@ -158,7 +173,6 @@ class AndroidStartUp(AndroidDevice):
         super(AndroidStartUp, self).__init__(env, mach_cmd)
         self.android_activity = None
         self.capture_logcat = self.capture_file = self.app_name = None
-        self.architecture = "arm64-v8a"
         self.device = mozdevice.ADBDevice(use_root=False)
 
     def run(self, metadata):
