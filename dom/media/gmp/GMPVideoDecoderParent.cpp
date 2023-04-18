@@ -283,9 +283,19 @@ void GMPVideoDecoderParent::ActorDestroy(ActorDestroyReason aWhy) {
 mozilla::ipc::IPCResult GMPVideoDecoderParent::RecvDecoded(
     const GMPVideoi420FrameData& aDecodedFrame) {
   --mFrameCount;
-  GMP_LOG_VERBOSE("GMPVideoDecoderParent[%p]::RecvDecoded() timestamp=%" PRId64
-                  " frameCount=%d",
-                  this, aDecodedFrame.mTimestamp(), mFrameCount);
+  if (aDecodedFrame.mUpdatedTimestamp() &&
+      aDecodedFrame.mUpdatedTimestamp().value() != aDecodedFrame.mTimestamp()) {
+    GMP_LOG_VERBOSE(
+        "GMPVideoDecoderParent[%p]::RecvDecoded() timestamp=[%" PRId64
+        " -> %" PRId64 "] frameCount=%d",
+        this, aDecodedFrame.mTimestamp(),
+        aDecodedFrame.mUpdatedTimestamp().value(), mFrameCount);
+  } else {
+    GMP_LOG_VERBOSE(
+        "GMPVideoDecoderParent[%p]::RecvDecoded() timestamp=%" PRId64
+        " frameCount=%d",
+        this, aDecodedFrame.mTimestamp(), mFrameCount);
+  }
 
   if (mCallback) {
     if (GMPVideoi420FrameImpl::CheckFrameData(aDecodedFrame)) {

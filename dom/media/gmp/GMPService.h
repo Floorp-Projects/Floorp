@@ -8,6 +8,7 @@
 
 #include "GMPContentParent.h"
 #include "GMPCrashHelper.h"
+#include "gmp-video-codec.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/gmp/GMPTypes.h"
@@ -32,6 +33,8 @@ class GMPCrashHelper;
 class MediaResult;
 
 extern LogModule* GetGMPLog();
+extern LogModule* GetGMPLibraryLog();
+extern GMPLogLevel GetGMPLibraryLogLevel();
 
 namespace gmp {
 

@@ -44,6 +44,29 @@ LogModule* GetGMPLog() {
   return sLog;
 }
 
+LogModule* GetGMPLibraryLog() {
+  static LazyLogModule sLog("GMPLibrary");
+  return sLog;
+}
+
+GMPLogLevel GetGMPLibraryLogLevel() {
+  switch (GetGMPLibraryLog()->Level()) {
+    case LogLevel::Disabled:
+      return kGMPLogQuiet;
+    case LogLevel::Error:
+      return kGMPLogError;
+    case LogLevel::Warning:
+      return kGMPLogWarning;
+    case LogLevel::Info:
+      return kGMPLogInfo;
+    case LogLevel::Debug:
+      return kGMPLogDebug;
+    case LogLevel::Verbose:
+      return kGMPLogDetail;
+  }
+  return kGMPLogInvalid;
+}
+
 #ifdef __CLASS__
 #  undef __CLASS__
 #endif

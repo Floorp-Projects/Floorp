@@ -7,11 +7,14 @@
 #define DOM_MEDIA_GMPLOG_H_
 
 #include "content_decryption_module.h"
+#include "gmp-video-codec.h"
 #include "mozilla/Logging.h"
 
 namespace mozilla {
 
 extern LogModule* GetGMPLog();
+extern LogModule* GetGMPLibraryLog();
+extern GMPLogLevel GetGMPLibraryLogLevel();
 
 #define GMP_LOG_ERROR(msg, ...) \
   MOZ_LOG(GetGMPLog(), LogLevel::Error, (msg, ##__VA_ARGS__))

@@ -141,7 +141,7 @@ int32_t WebrtcGmpVideoEncoder::InitEncode(
   GMPVideoCodec codecParams;
   memset(&codecParams, 0, sizeof(codecParams));
 
-  codecParams.mGMPApiVersion = 33;
+  codecParams.mGMPApiVersion = kGMPVersion34;
   codecParams.mStartBitrate = aCodecSettings->startBitrate;
   codecParams.mMinBitrate = aCodecSettings->minBitrate;
   codecParams.mMaxBitrate = aCodecSettings->maxBitrate;
@@ -730,7 +730,7 @@ int32_t WebrtcGmpVideoDecoder::GmpInitDone(GMPVideoDecoderProxy* aGMP,
   // Bug XXXXXX: transfer settings from codecSettings to codec.
   GMPVideoCodec codec;
   memset(&codec, 0, sizeof(codec));
-  codec.mGMPApiVersion = 33;
+  codec.mGMPApiVersion = kGMPVersion34;
 
   // XXX this is currently a hack
   // GMPVideoCodecUnion codecSpecific;
@@ -1009,7 +1009,7 @@ void WebrtcGmpVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
               .set_video_frame_buffer(video_frame_buffer)
               .set_timestamp_rtp(
                   // round up
-                  (aDecodedFrame->Timestamp() * 90ll + 999) / 1000)
+                  (aDecodedFrame->UpdatedTimestamp() * 90ll + 999) / 1000)
               .build();
       mPerformanceRecorder.Record(
           static_cast<int64_t>(aDecodedFrame->Timestamp()),

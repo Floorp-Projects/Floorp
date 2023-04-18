@@ -45,6 +45,11 @@ struct ParamTraits<GMPVideoCodecMode>
                                       kGMPCodecModeInvalid> {};
 
 template <>
+struct ParamTraits<GMPLogLevel>
+    : public ContiguousEnumSerializerInclusive<GMPLogLevel, kGMPLogDefault,
+                                               kGMPLogInvalid> {};
+
+template <>
 struct ParamTraits<GMPBufferType>
     : public ContiguousEnumSerializer<GMPBufferType, GMP_BufferSingle,
                                       GMP_BufferInvalid> {};
@@ -113,12 +118,15 @@ struct ParamTraits<GMPVideoCodec> {
       WriteParam(aWriter, aParam.mSimulcastStream[i]);
     }
     WriteParam(aWriter, aParam.mMode);
+    WriteParam(aWriter, aParam.mUseThreadedDecode);
+    WriteParam(aWriter, aParam.mLogLevel);
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
     // NOTE: make sure this matches any versions supported
     if (!ReadParam(aReader, &(aResult->mGMPApiVersion)) ||
-        aResult->mGMPApiVersion != kGMPVersion33) {
+        (aResult->mGMPApiVersion != kGMPVersion33 &&
+         aResult->mGMPApiVersion != kGMPVersion34)) {
       return false;
     }
     if (!ReadParam(aReader, &(aResult->mCodecType))) {
@@ -161,7 +169,9 @@ struct ParamTraits<GMPVideoCodec> {
       }
     }
 
-    if (!ReadParam(aReader, &(aResult->mMode))) {
+    if (!ReadParam(aReader, &(aResult->mMode)) ||
+        !ReadParam(aReader, &(aResult->mUseThreadedDecode)) ||
+        !ReadParam(aReader, &(aResult->mLogLevel))) {
       return false;
     }
 

@@ -10,8 +10,10 @@
 #include "GMPLog.h"
 #include "MediaData.h"
 #include "mozilla/EndianUtils.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "nsServiceManagerUtils.h"
 #include "AnnexB.h"
+#include "H264.h"
 #include "MP4Decoder.h"
 #include "prsystem.h"
 #include "VPXDecoder.h"
@@ -74,19 +76,33 @@ void GMPVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
   b.mYUVColorSpace =
       DefaultColorSpace({decodedFrame->Width(), decodedFrame->Height()});
 
-  Maybe<int64_t> streamOffset =
-      mStreamOffsets.Extract(decodedFrame->Timestamp());
-  if (NS_WARN_IF(!streamOffset)) {
-    streamOffset.emplace(mLastStreamOffset);
+  UniquePtr<SampleMetadata> sampleData;
+  if (auto entryHandle = mSamples.Lookup(decodedFrame->Timestamp())) {
+    sampleData = std::move(entryHandle.Data());
+    entryHandle.Remove();
+  } else {
+    GMP_LOG_DEBUG(
+        "GMPVideoDecoder::Decoded(this=%p) missing sample metadata for "
+        "time %" PRIu64,
+        this, decodedFrame->Timestamp());
+    if (mSamples.IsEmpty()) {
+      // If we have no remaining samples in the table, then we have processed
+      // all outstanding decode requests.
+      ProcessReorderQueue(mDecodePromise, __func__);
+    }
+    return;
   }
+
+  MOZ_ASSERT(sampleData);
 
   gfx::IntRect pictureRegion(0, 0, decodedFrame->Width(),
                              decodedFrame->Height());
   RefPtr<VideoData> v = VideoData::CreateAndCopyData(
-      mConfig, mImageContainer, *streamOffset,
-      media::TimeUnit::FromMicroseconds(decodedFrame->Timestamp()),
-      media::TimeUnit::FromMicroseconds(decodedFrame->Duration()), b, false,
-      media::TimeUnit::FromMicroseconds(-1), pictureRegion, mKnowsCompositor);
+      mConfig, mImageContainer, sampleData->mOffset,
+      media::TimeUnit::FromMicroseconds(decodedFrame->UpdatedTimestamp()),
+      media::TimeUnit::FromMicroseconds(decodedFrame->Duration()), b,
+      sampleData->mKeyframe, media::TimeUnit::FromMicroseconds(-1),
+      pictureRegion, mKnowsCompositor);
   RefPtr<GMPVideoDecoder> self = this;
   if (v) {
     mPerformanceRecorder.Record(static_cast<int64_t>(decodedFrame->Timestamp()),
@@ -99,15 +115,16 @@ void GMPVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
                                   aStage.SetColorRange(b.mColorRange);
                                 });
 
-    mDecodedData.AppendElement(std::move(v));
+    mReorderQueue.Push(std::move(v));
 
-    if (mStreamOffsets.IsEmpty()) {
-      // If we have no remaining offsets in the table, then we have processed
+    if (mSamples.IsEmpty()) {
+      // If we have no remaining samples in the table, then we have processed
       // all outstanding decode requests.
-      mDecodePromise.ResolveIfExists(std::move(mDecodedData), __func__);
+      ProcessReorderQueue(mDecodePromise, __func__);
     }
   } else {
-    mDecodedData.Clear();
+    mReorderQueue.Clear();
+    mSamples.Clear();
     mDecodePromise.RejectIfExists(
         MediaResult(NS_ERROR_OUT_OF_MEMORY,
                     RESULT_DETAIL("CallBack::CreateAndCopyData")),
@@ -128,17 +145,15 @@ void GMPVideoDecoder::ReceivedDecodedFrame(const uint64_t aPictureId) {
 void GMPVideoDecoder::InputDataExhausted() {
   GMP_LOG_DEBUG("GMPVideoDecoder::InputDataExhausted");
   MOZ_ASSERT(IsOnGMPThread());
-  mStreamOffsets.Clear();
-  mDecodePromise.ResolveIfExists(std::move(mDecodedData), __func__);
-  mDecodedData = DecodedData();
+  mSamples.Clear();
+  ProcessReorderQueue(mDecodePromise, __func__);
 }
 
 void GMPVideoDecoder::DrainComplete() {
   GMP_LOG_DEBUG("GMPVideoDecoder::DrainComplete");
   MOZ_ASSERT(IsOnGMPThread());
-  mStreamOffsets.Clear();
-  mDrainPromise.ResolveIfExists(std::move(mDecodedData), __func__);
-  mDecodedData = DecodedData();
+  mSamples.Clear();
+  ProcessReorderQueue(mDrainPromise, __func__);
 }
 
 void GMPVideoDecoder::ResetComplete() {
@@ -165,6 +180,25 @@ void GMPVideoDecoder::Terminated() {
   Error(GMPErr::GMPAbortedErr);
 }
 
+void GMPVideoDecoder::ProcessReorderQueue(
+    MozPromiseHolder<DecodePromise>& aPromise, const char* aMethodName) {
+  if (aPromise.IsEmpty()) {
+    return;
+  }
+
+  DecodedData results;
+  size_t availableFrames = mReorderQueue.Length();
+  if (availableFrames > mMaxRefFrames) {
+    size_t resolvedFrames = availableFrames - mMaxRefFrames;
+    results.SetCapacity(resolvedFrames);
+    do {
+      results.AppendElement(mReorderQueue.Pop());
+    } while (--resolvedFrames > 0);
+  }
+
+  aPromise.ResolveIfExists(std::move(results), aMethodName);
+}
+
 GMPVideoDecoder::GMPVideoDecoder(const GMPVideoDecoderParams& aParams)
     : mConfig(aParams.mConfig),
       mGMP(nullptr),
@@ -173,7 +207,8 @@ GMPVideoDecoder::GMPVideoDecoder(const GMPVideoDecoderParams& aParams)
       mCrashHelper(aParams.mCrashHelper),
       mImageContainer(aParams.mImageContainer),
       mKnowsCompositor(aParams.mKnowsCompositor),
-      mTrackingId(aParams.mTrackingId) {}
+      mTrackingId(aParams.mTrackingId),
+      mCanDecodeBatch(StaticPrefs::media_gmp_decoder_decode_batch()) {}
 
 void GMPVideoDecoder::InitTags(nsTArray<nsCString>& aTags) {
   if (MP4Decoder::IsH264(mConfig.mMimeType)) {
@@ -252,7 +287,7 @@ void GMPVideoDecoder::GMPInitDone(GMPVideoDecoderProxy* aGMP,
   GMPVideoCodec codec;
   memset(&codec, 0, sizeof(codec));
 
-  codec.mGMPApiVersion = kGMPVersion33;
+  codec.mGMPApiVersion = kGMPVersion34;
   nsTArray<uint8_t> codecSpecific;
   if (MP4Decoder::IsH264(mConfig.mMimeType)) {
     codec.mCodecType = kGMPVideoCodecH264;
@@ -262,6 +297,7 @@ void GMPVideoDecoder::GMPInitDone(GMPVideoDecoderProxy* aGMP,
     // OpenH264 expects pseudo-AVCC, but others must be passed
     // AnnexB for H264.
     mConvertToAnnexB = !isOpenH264;
+    mMaxRefFrames = H264::ComputeMaxRefFrames(mConfig.mExtraData);
   } else if (VPXDecoder::IsVP8(mConfig.mMimeType)) {
     codec.mCodecType = kGMPVideoCodecVP8;
   } else if (VPXDecoder::IsVP9(mConfig.mMimeType)) {
@@ -274,6 +310,8 @@ void GMPVideoDecoder::GMPInitDone(GMPVideoDecoderProxy* aGMP,
   }
   codec.mWidth = mConfig.mImage.width;
   codec.mHeight = mConfig.mImage.height;
+  codec.mUseThreadedDecode = StaticPrefs::media_gmp_decoder_multithreaded();
+  codec.mLogLevel = GetGMPLibraryLogLevel();
 
   nsresult rv =
       aGMP->InitDecode(codec, codecSpecific, this, PR_GetNumberOfProcessors());
@@ -368,11 +406,12 @@ RefPtr<MediaDataDecoder::DecodePromise> GMPVideoDecoder::Decode(
   }
 
   // If we have multiple outstanding frames, we need to track which offset
-  // belongs to which frame.
-  mLastStreamOffset = sample->mOffset;
-  mStreamOffsets.WithEntryHandle(frameTimestamp, [&](auto entryHandle) {
-    MOZ_ASSERT(!entryHandle, "Duplicate sample with matching timestamp!");
-    entryHandle.InsertOrUpdate(sample->mOffset);
+  // belongs to which frame. During seek, it is possible to get the same frame
+  // requested twice, if the old frame is still outstanding. We will simply drop
+  // the extra decoded frame and request more input if the last outstanding.
+  mSamples.WithEntryHandle(frameTimestamp, [&](auto entryHandle) {
+    auto sampleData = MakeUnique<SampleMetadata>(sample);
+    entryHandle.InsertOrUpdate(std::move(sampleData));
   });
 
   return p;
