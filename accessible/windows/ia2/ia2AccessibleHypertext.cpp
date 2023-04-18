@@ -9,6 +9,8 @@
 
 #include "AccessibleHypertext_i.c"
 
+#include "mozilla/a11y/HyperTextAccessibleBase.h"
+
 #include "IUnknownImpl.h"
 
 using namespace mozilla::a11y;
