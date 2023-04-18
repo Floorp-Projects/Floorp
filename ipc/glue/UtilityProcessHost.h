@@ -96,7 +96,7 @@ class UtilityProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
 
   // Called on the main thread with true after a connection has been established
   // or false if it failed (including if it failed before the timeout kicked in)
-  void InitAfterConnect(bool aSucceeded);
+  void InitAfterConnect(bool aSucceeded, const char* aCallSite = "");
 
   // Called on the main thread when the mUtilityProcessParent actor is shutting
   // down.
@@ -131,7 +131,7 @@ class UtilityProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
 
   bool mShutdownRequested = false;
 
-  void RejectPromise();
+  void RejectPromise(const char* aCallSite);
   void ResolvePromise();
 
   // Set to true on construction and to false just prior deletion.
