@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { Module } from "chrome://remote/content/shared/messagehandler/Module.sys.mjs";
+import { WindowGlobalBiDiModule } from "chrome://remote/content/webdriver-bidi/modules/WindowGlobalBiDiModule.sys.mjs";
 
 const lazy = {};
 
@@ -18,7 +18,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
 });
 
-class LogModule extends Module {
+class LogModule extends WindowGlobalBiDiModule {
   #consoleAPIListener;
   #consoleMessageListener;
   #subscribedEvents;
@@ -137,7 +137,7 @@ class LogModule extends Module {
     text += args.map(String).join(" ");
 
     // Serialize each arg as remote value.
-    const nodeCache = this.messageHandler.processActor.getNodeCache();
+    const nodeCache = this.nodeCache;
     const serializedArgs = [];
     for (const arg of args) {
       // Note that we can pass a `null` realm for now since realms are only

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { Module } from "chrome://remote/content/shared/messagehandler/Module.sys.mjs";
+import { WindowGlobalBiDiModule } from "chrome://remote/content/webdriver-bidi/modules/WindowGlobalBiDiModule.sys.mjs";
 
 const lazy = {};
 
@@ -33,7 +33,7 @@ const EvaluationStatus = {
   Throw: "throw",
 };
 
-class ScriptModule extends Module {
+class ScriptModule extends WindowGlobalBiDiModule {
   #defaultRealm;
   #observerListening;
   #preloadScripts;
@@ -325,7 +325,7 @@ class ScriptModule extends Module {
     } = options;
 
     const realm = this.#getRealm(realmId, sandboxName);
-    const nodeCache = this.messageHandler.processActor.getNodeCache();
+    const nodeCache = this.nodeCache;
 
     const deserializedArguments =
       commandArguments !== null
@@ -411,7 +411,6 @@ class ScriptModule extends Module {
     } = options;
 
     const realm = this.#getRealm(realmId, sandboxName);
-    const nodeCache = this.messageHandler.processActor.getNodeCache();
 
     const rv = realm.executeInGlobal(expression);
 
@@ -422,7 +421,7 @@ class ScriptModule extends Module {
       resultOwnership,
       serializationOptions,
       {
-        nodeCache,
+        nodeCache: this.nodeCache,
       }
     );
   }
