@@ -86,16 +86,6 @@ interface nsINSSComponent : nsISupports {
   [noscript] void issuerMatchesMitmCanary(in string certIssuer);
 
   /**
-   * Returns true if the user has a PKCS#11 module with removable slots.
-   */
-  [noscript] bool hasActiveSmartCards();
-
-  /**
-   * Returns true if the user has any client authentication certificates.
-   */
-  [noscript] bool hasUserCertsInstalled();
-
-  /**
    * Returns an already-adrefed handle to the currently configured shared
    * certificate verifier.
    */

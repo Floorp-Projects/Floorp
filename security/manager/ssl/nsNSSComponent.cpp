@@ -846,46 +846,6 @@ void AsyncLoadOrUnloadOSClientCertsModule(bool load) {
   }
 }
 
-NS_IMETHODIMP
-nsNSSComponent::HasActiveSmartCards(bool* result) {
-  NS_ENSURE_ARG_POINTER(result);
-
-  BlockUntilLoadableCertsLoaded();
-
-#ifndef MOZ_NO_SMART_CARDS
-  AutoSECMODListReadLock secmodLock;
-  SECMODModuleList* list = SECMOD_GetDefaultModuleList();
-  while (list) {
-    SECMODModule* module = list->module;
-    if (SECMOD_LockedModuleHasRemovableSlots(module)) {
-      *result = true;
-      return NS_OK;
-    }
-    for (int i = 0; i < module->slotCount; i++) {
-      if (!PK11_IsFriendly(module->slots[i])) {
-        *result = true;
-        return NS_OK;
-      }
-    }
-    list = list->next;
-  }
-#endif
-  *result = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSComponent::HasUserCertsInstalled(bool* result) {
-  NS_ENSURE_ARG_POINTER(result);
-
-  // FindClientCertificatesWithPrivateKeys won't ever return an empty list, so
-  // all we need to do is check if this is null or not.
-  UniqueCERTCertList certList(FindClientCertificatesWithPrivateKeys());
-  *result = !!certList;
-
-  return NS_OK;
-}
-
 nsresult nsNSSComponent::BlockUntilLoadableCertsLoaded() {
   MonitorAutoLock rootsLoadedLock(mLoadableCertsLoadedMonitor);
   while (!mLoadableCertsLoaded) {

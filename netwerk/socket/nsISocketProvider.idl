@@ -121,6 +121,11 @@ interface nsISocketProvider : nsISupports
     const long ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT = 1 << 4;
 
     /**
+     * If set, indicates that this is a speculative connection.
+     */
+    const unsigned long IS_SPECULATIVE_CONNECTION = 1 << 5;
+
+    /**
      * If set, do not send an ECH extension (whether GREASE or 'real').
      * Currently false by default and is set when retrying failed connections.
      */
@@ -137,5 +142,4 @@ interface nsISocketProvider : nsISupports
      * set only when DoH is used via the TRR.
      */
     const unsigned long USED_PRIVATE_DNS = (1 << 12);
-
 };

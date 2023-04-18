@@ -155,12 +155,6 @@ SpeculativeConnectionOverrider::GetAllow1918(bool* aAllow) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-SpeculativeConnectionOverrider::GetIgnoreUserCertCheck(bool* aIgnore) {
-  *aIgnore = mArgs.ignoreUserCertCheck();
-  return NS_OK;
-}
-
 }  // anonymous namespace
 
 mozilla::ipc::IPCResult HttpConnectionMgrChild::RecvSpeculativeConnect(

@@ -1113,6 +1113,10 @@ nsresult nsSocketTransport::BuildSocket(PRFileDesc*& fd, bool& proxyTransparent,
     controlFlags |= nsISocketProvider::ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT;
   }
 
+  if (mConnectionFlags & nsISocketTransport::IS_SPECULATIVE_CONNECTION) {
+    controlFlags |= nsISocketProvider::IS_SPECULATIVE_CONNECTION;
+  }
+
   if (mResolvedByTRR) {
     controlFlags |= nsISocketProvider::USED_PRIVATE_DNS;
   }
