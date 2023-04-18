@@ -4478,10 +4478,10 @@ CodeOffset MacroAssembler::wasmCallImport(const wasm::CallSiteDesc& desc,
            Address(getStackPointer(), WasmCallerInstanceOffsetBeforeCall));
 
   // Load the callee, before the caller's registers are clobbered.
-  uint32_t globalDataOffset = callee.importGlobalDataOffset();
+  uint32_t instanceDataOffset = callee.importInstanceDataOffset();
   loadPtr(
-      Address(InstanceReg, wasm::Instance::offsetInGlobalArea(
-                               globalDataOffset +
+      Address(InstanceReg, wasm::Instance::offsetInData(
+                               instanceDataOffset +
                                offsetof(wasm::FuncImportInstanceData, code))),
       ABINonArgReg0);
 
@@ -4491,8 +4491,8 @@ CodeOffset MacroAssembler::wasmCallImport(const wasm::CallSiteDesc& desc,
 
   // Switch to the callee's realm.
   loadPtr(
-      Address(InstanceReg, wasm::Instance::offsetInGlobalArea(
-                               globalDataOffset +
+      Address(InstanceReg, wasm::Instance::offsetInData(
+                               instanceDataOffset +
                                offsetof(wasm::FuncImportInstanceData, realm))),
       ABINonArgReg1);
   loadPtr(Address(InstanceReg, wasm::Instance::offsetOfCx()), ABINonArgReg2);
@@ -4500,8 +4500,8 @@ CodeOffset MacroAssembler::wasmCallImport(const wasm::CallSiteDesc& desc,
 
   // Switch to the callee's instance and pinned registers and make the call.
   loadPtr(Address(InstanceReg,
-                  wasm::Instance::offsetInGlobalArea(
-                      globalDataOffset +
+                  wasm::Instance::offsetInData(
+                      instanceDataOffset +
                       offsetof(wasm::FuncImportInstanceData, instance))),
           InstanceReg);
 
@@ -4575,9 +4575,10 @@ CodeOffset MacroAssembler::asmCallIndirect(const wasm::CallSiteDesc& desc,
 
   // asm.js tables require no signature check, and have had their index
   // masked into range and thus need no bounds check.
-  loadPtr(Address(InstanceReg, wasm::Instance::offsetInGlobalArea(
-                                   callee.tableFunctionBaseGlobalDataOffset())),
-          scratch);
+  loadPtr(
+      Address(InstanceReg, wasm::Instance::offsetInData(
+                               callee.tableFunctionBaseInstanceDataOffset())),
+      scratch);
   if (sizeof(wasm::FunctionTableElem) == 8) {
     computeEffectiveAddress(BaseIndex(scratch, index, TimesEight), scratch);
   } else {
@@ -4631,10 +4632,11 @@ void MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
       branch32(Assembler::Condition::AboveOrEqual, index, Imm32(*tableSize),
                boundsCheckFailedLabel);
     } else {
-      branch32(Assembler::Condition::BelowOrEqual,
-               Address(InstanceReg, wasm::Instance::offsetInGlobalArea(
-                                        callee.tableLengthGlobalDataOffset())),
-               index, boundsCheckFailedLabel);
+      branch32(
+          Assembler::Condition::BelowOrEqual,
+          Address(InstanceReg, wasm::Instance::offsetInData(
+                                   callee.tableLengthInstanceDataOffset())),
+          index, boundsCheckFailedLabel);
     }
   }
 
@@ -4643,8 +4645,8 @@ void MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
   const wasm::CallIndirectId callIndirectId = callee.wasmTableSigId();
   switch (callIndirectId.kind()) {
     case wasm::CallIndirectIdKind::Global:
-      loadPtr(Address(InstanceReg, wasm::Instance::offsetInGlobalArea(
-                                       callIndirectId.globalDataOffset())),
+      loadPtr(Address(InstanceReg, wasm::Instance::offsetInData(
+                                       callIndirectId.instanceDataOffset())),
               WasmTableCallSigReg);
       break;
     case wasm::CallIndirectIdKind::Immediate:
@@ -4658,9 +4660,10 @@ void MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
   // Load the base pointer of the table and compute the address of the callee in
   // the table.
 
-  loadPtr(Address(InstanceReg, wasm::Instance::offsetInGlobalArea(
-                                   callee.tableFunctionBaseGlobalDataOffset())),
-          calleeScratch);
+  loadPtr(
+      Address(InstanceReg, wasm::Instance::offsetInData(
+                               callee.tableFunctionBaseInstanceDataOffset())),
+      calleeScratch);
   shiftIndex32AndAdd(index, shift, calleeScratch);
 
   // Load the callee instance and decide whether to take the fast path or the
