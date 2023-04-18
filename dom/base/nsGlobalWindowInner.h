@@ -134,7 +134,6 @@ class VisualViewport;
 class VRDisplay;
 enum class VRDisplayEventReason : uint8_t;
 class VREventObserver;
-class WakeLock;
 struct WindowPostMessageOptions;
 class Worklet;
 namespace cache {
@@ -1058,8 +1057,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   void SetOuterHeight(int32_t aOuterHeight,
                       mozilla::dom::CallerType aCallerType,
                       mozilla::ErrorResult& aError);
-
-  RefPtr<mozilla::dom::WakeLock> mWakeLock;
 
   friend class HashchangeCallback;
   friend class mozilla::dom::BarProp;
