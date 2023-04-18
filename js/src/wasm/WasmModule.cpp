@@ -1078,7 +1078,7 @@ bool Module::instantiate(JSContext* cx, ImportValues& imports,
   }
 
   instance.set(WasmInstanceObject::create(
-      cx, code_, dataSegments_, elemSegments_, metadata().globalDataLength,
+      cx, code_, dataSegments_, elemSegments_, metadata().instanceDataLength,
       memory, std::move(tables), imports.funcs, metadata().globals,
       imports.globalValues, imports.globalObjs, imports.tagObjs, instanceProto,
       std::move(maybeDebug)));

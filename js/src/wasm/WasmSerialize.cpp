@@ -680,7 +680,7 @@ CoderResult CodeTagDesc(Coder<mode>& coder, CoderArg<mode, TagDesc> item) {
   MOZ_TRY(CodePod(coder, &item->kind));
   MOZ_TRY((
       CodeRefPtr<mode, const TagType, &CodeTagType<mode>>(coder, &item->type)));
-  MOZ_TRY(CodePod(coder, &item->globalDataOffset));
+  MOZ_TRY(CodePod(coder, &item->instanceDataOffset));
   MOZ_TRY(CodePod(coder, &item->isExport));
   return Ok();
 }
@@ -725,7 +725,7 @@ CoderResult CodeTableDesc(Coder<mode>& coder, CoderArg<mode, TableDesc> item) {
   MOZ_TRY(CodePod(coder, &item->isImported));
   MOZ_TRY(CodePod(coder, &item->isExported));
   MOZ_TRY(CodePod(coder, &item->isAsmJS));
-  MOZ_TRY(CodePod(coder, &item->globalDataOffset));
+  MOZ_TRY(CodePod(coder, &item->instanceDataOffset));
   MOZ_TRY(CodePod(coder, &item->initialLength));
   MOZ_TRY(CodePod(coder, &item->maximumLength));
   MOZ_TRY(

@@ -950,7 +950,7 @@ struct BaseCompiler final {
   bool callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
                     const Stk& indexVal, const FunctionCall& call,
                     CodeOffset* fastCallOffset, CodeOffset* slowCallOffset);
-  CodeOffset callImport(unsigned globalDataOffset, const FunctionCall& call);
+  CodeOffset callImport(unsigned instanceDataOffset, const FunctionCall& call);
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
   void callRef(const Stk& calleeRef, const FunctionCall& call,
                CodeOffset* fastCallOffset, CodeOffset* slowCallOffset);

@@ -79,7 +79,7 @@ static_assert(alignof(Instance) >=
 // The globalArea must be aligned at least as much as an instance. This is
 // guaranteed to be sufficient for all data types we care about, including
 // SIMD values. See the above assertion.
-static_assert(Instance::offsetOfGlobalArea() % alignof(Instance) == 0);
+static_assert(Instance::offsetOfData() % alignof(Instance) == 0);
 
 // We want the memory base to be the first field, and accessible with no
 // offset. This incidentally is also an assertion that there is no superclass
@@ -97,12 +97,12 @@ static_assert(Instance::offsetOfLastCommonJitField() < 128);
 
 TypeDefInstanceData* Instance::typeDefInstanceData(uint32_t typeIndex) const {
   TypeDefInstanceData* instanceData =
-      (TypeDefInstanceData*)(globalData() + metadata().typeIdsOffsetStart);
+      (TypeDefInstanceData*)(data() + metadata().typeIdsOffsetStart);
   return &instanceData[typeIndex];
 }
 
 const void* Instance::addressOfGlobalCell(const GlobalDesc& global) const {
-  const void* cell = globalData() + global.offset();
+  const void* cell = data() + global.offset();
   // Indirect globals store a pointer to their cell in the instance global
   // data. Dereference it to find the real cell.
   if (global.isIndirect()) {
@@ -112,15 +112,15 @@ const void* Instance::addressOfGlobalCell(const GlobalDesc& global) const {
 }
 
 FuncImportInstanceData& Instance::funcImportInstanceData(const FuncImport& fi) {
-  return *(FuncImportInstanceData*)(globalData() + fi.instanceOffset());
+  return *(FuncImportInstanceData*)(data() + fi.instanceOffset());
 }
 
 TableInstanceData& Instance::tableInstanceData(const TableDesc& td) const {
-  return *(TableInstanceData*)(globalData() + td.globalDataOffset);
+  return *(TableInstanceData*)(data() + td.instanceDataOffset);
 }
 
 GCPtr<WasmTagObject*>& Instance::tagInstanceData(const TagDesc& td) const {
-  return *(GCPtr<WasmTagObject*>*)(globalData() + td.globalDataOffset);
+  return *(GCPtr<WasmTagObject*>*)(data() + td.instanceDataOffset);
 }
 
 static bool UnpackResults(JSContext* cx, const ValTypeVector& resultTypes,
@@ -1588,12 +1588,12 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
       maxInitializedGlobalsIndexPlus1_(0) {}
 
 Instance* Instance::create(JSContext* cx, Handle<WasmInstanceObject*> object,
-                           const SharedCode& code, uint32_t globalDataLength,
+                           const SharedCode& code, uint32_t instanceDataLength,
                            Handle<WasmMemoryObject*> memory,
                            SharedTableVector&& tables,
                            UniqueDebugState maybeDebug) {
-  void* base = js_calloc(alignof(Instance) + offsetof(Instance, globalArea_) +
-                         globalDataLength);
+  void* base = js_calloc(alignof(Instance) + offsetof(Instance, data_) +
+                         instanceDataLength);
   if (!base) {
     ReportOutOfMemory(cx);
     return nullptr;
@@ -1713,7 +1713,7 @@ bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
   // Initialize tags in the instance data
   for (size_t i = 0; i < metadata().tags.length(); i++) {
     const TagDesc& td = metadata().tags[i];
-    MOZ_ASSERT(td.globalDataOffset != UINT32_MAX);
+    MOZ_ASSERT(td.instanceDataOffset != UINT32_MAX);
     MOZ_ASSERT(tagObjs[i] != nullptr);
     tagInstanceData(td) = tagObjs[i];
   }
@@ -1817,7 +1817,7 @@ bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
       continue;
     }
 
-    uint8_t* globalAddr = globalData() + global.offset();
+    uint8_t* globalAddr = data() + global.offset();
     switch (global.kind()) {
       case GlobalKind::Import: {
         size_t imported = global.importIndex();
@@ -1963,7 +1963,7 @@ void Instance::tracePrivate(JSTracer* trc) {
         global.isIndirect()) {
       continue;
     }
-    GCPtr<JSObject*>* obj = (GCPtr<JSObject*>*)(globalData() + global.offset());
+    GCPtr<JSObject*>* obj = (GCPtr<JSObject*>*)(data() + global.offset());
     TraceNullableEdge(trc, obj, "wasm reference-typed global");
   }
 

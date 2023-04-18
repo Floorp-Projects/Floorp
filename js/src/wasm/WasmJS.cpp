@@ -1881,7 +1881,7 @@ void WasmInstanceObject::trace(JSTracer* trc, JSObject* obj) {
 WasmInstanceObject* WasmInstanceObject::create(
     JSContext* cx, const SharedCode& code,
     const DataSegmentVector& dataSegments,
-    const ElemSegmentVector& elemSegments, uint32_t globalDataLength,
+    const ElemSegmentVector& elemSegments, uint32_t instanceDataLength,
     Handle<WasmMemoryObject*> memory, SharedTableVector&& tables,
     const JSObjectVector& funcImports, const GlobalDescVector& globals,
     const ValVector& globalImportValues,
@@ -1960,7 +1960,7 @@ WasmInstanceObject* WasmInstanceObject::create(
     MOZ_ASSERT(obj->isNewborn());
 
     // Create this just before constructing Instance to avoid rooting hazards.
-    instance = Instance::create(cx, obj, code, globalDataLength, memory,
+    instance = Instance::create(cx, obj, code, instanceDataLength, memory,
                                 std::move(tables), std::move(maybeDebug));
     if (!instance) {
       return nullptr;
