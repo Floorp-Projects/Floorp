@@ -1493,177 +1493,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 
 
 
-.. dropdown:: raptor-speedometer-geckoview
-   :class-container: anchor-id-raptor-speedometer-geckoview-b
-
-   **Owner**: SpiderMonkey Team
-
-   * **alert threshold**: 2.0
-   * **apps**: geckoview
-   * **expected**: pass
-   * **gecko profile entries**: 14000000
-   * **gecko profile interval**: 1
-   * **lower is better**: false
-   * **page cycles**: 1
-   * **page timeout**: 420000
-   * **subtest lower is better**: true
-   * **subtest unit**: ms
-   * **test url**: `<http://\<host\>:\<port\>/Speedometer/index.html?raptor>`__
-   * **type**: benchmark
-   * **unit**: score
-
-.. dropdown:: raptor-youtube-playback-h264-1080p30-firefox
-   :class-container: anchor-id-raptor-youtube-playback-h264-1080p30-firefox-b
-
-   **Owner**: PerfTest Team
-
-   * **alert threshold**: 2.0
-   * **apps**: firefox
-   * **expected**: pass
-   * **lower is better**: true
-   * **page cycles**: 20
-   * **page timeout**: 2700000
-   * **preferences**: {"media.autoplay.default": 0, "media.autoplay.ask-permission": false, "media.autoplay.blocking_policy": 0, "media.autoplay.block-webaudio": false, "media.allowed-to-play.enabled": true, "media.block-autoplay-until-in-foreground": false}
-   * **subtest lower is better**: true
-   * **subtest unit**: score
-   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-h264-test&tests=18&raptor=true&muted=true&command=run&exclude=1,2>`__
-   * **type**: benchmark
-   * **unit**: score
-   * **use live sites**: true
-
-.. dropdown:: raptor-youtube-playback-h264-1080p60-firefox
-   :class-container: anchor-id-raptor-youtube-playback-h264-1080p60-firefox-b
-
-   **Owner**: PerfTest Team
-
-   * **alert threshold**: 2.0
-   * **apps**: firefox
-   * **expected**: pass
-   * **lower is better**: true
-   * **page cycles**: 20
-   * **page timeout**: 2700000
-   * **preferences**: {"media.autoplay.default": 0, "media.autoplay.ask-permission": false, "media.autoplay.blocking_policy": 0, "media.autoplay.block-webaudio": false, "media.allowed-to-play.enabled": true, "media.block-autoplay-until-in-foreground": false}
-   * **subtest lower is better**: true
-   * **subtest unit**: score
-   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&tests=46&muted=true&command=run&exclude=1,2>`__
-   * **type**: benchmark
-   * **unit**: score
-   * **use live sites**: true
-
-.. dropdown:: raptor-youtube-playback-h264-full-1080p30-firefox
-   :class-container: anchor-id-raptor-youtube-playback-h264-full-1080p30-firefox-b
-
-   **Owner**: PerfTest Team
-
-   * **alert threshold**: 2.0
-   * **apps**: firefox
-   * **expected**: pass
-   * **lower is better**: true
-   * **page cycles**: 20
-   * **page timeout**: 2700000
-   * **preferences**: {"media.autoplay.default": 0, "media.autoplay.ask-permission": false, "media.autoplay.blocking_policy": 0, "media.autoplay.block-webaudio": false, "media.allowed-to-play.enabled": true, "media.block-autoplay-until-in-foreground": false, "full-screen-api.allow-trusted-requests-only": false, "full-screen-api.warning.timeout": 0}
-   * **subtest lower is better**: true
-   * **subtest unit**: score
-   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-h264-test&tests=18&raptor=true&muted=true&command=run&fullscreen=true&exclude=1,2>`__
-   * **type**: benchmark
-   * **unit**: score
-   * **use live sites**: true
-
-.. dropdown:: raptor-youtube-playback-h264-full-1080p60-firefox
-   :class-container: anchor-id-raptor-youtube-playback-h264-full-1080p60-firefox-b
-
-   **Owner**: PerfTest Team
-
-   * **alert threshold**: 2.0
-   * **apps**: firefox
-   * **expected**: pass
-   * **lower is better**: true
-   * **page cycles**: 20
-   * **page timeout**: 2700000
-   * **preferences**: {"media.autoplay.default": 0, "media.autoplay.ask-permission": false, "media.autoplay.blocking_policy": 0, "media.autoplay.block-webaudio": false, "media.allowed-to-play.enabled": true, "media.block-autoplay-until-in-foreground": false, "full-screen-api.allow-trusted-requests-only": false, "full-screen-api.warning.timeout": 0}
-   * **subtest lower is better**: true
-   * **subtest unit**: score
-   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&tests=46&muted=true&command=run&fullscreen=true&exclude=1,2>`__
-   * **type**: benchmark
-   * **unit**: score
-   * **use live sites**: true
-
-.. dropdown:: raptor-youtube-playback-v9-1080p30-firefox
-   :class-container: anchor-id-raptor-youtube-playback-v9-1080p30-firefox-b
-
-   **Owner**: PerfTest Team
-
-   * **alert threshold**: 2.0
-   * **apps**: firefox
-   * **expected**: pass
-   * **lower is better**: true
-   * **page cycles**: 20
-   * **page timeout**: 2700000
-   * **preferences**: {"media.autoplay.default": 0, "media.autoplay.ask-permission": false, "media.autoplay.blocking_policy": 0, "media.autoplay.block-webaudio": false, "media.allowed-to-play.enabled": true, "media.block-autoplay-until-in-foreground": false}
-   * **subtest lower is better**: true
-   * **subtest unit**: score
-   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-vp9-test&raptor=true&tests=18&muted=true&command=run&exclude=1,2>`__
-   * **type**: benchmark
-   * **unit**: score
-   * **use live sites**: true
-
-.. dropdown:: raptor-youtube-playback-v9-1080p60-firefox
-   :class-container: anchor-id-raptor-youtube-playback-v9-1080p60-firefox-b
-
-   **Owner**: PerfTest Team
-
-   * **alert threshold**: 2.0
-   * **apps**: firefox
-   * **expected**: pass
-   * **lower is better**: true
-   * **page cycles**: 20
-   * **page timeout**: 2700000
-   * **preferences**: {"media.autoplay.default": 0, "media.autoplay.ask-permission": false, "media.autoplay.blocking_policy": 0, "media.autoplay.block-webaudio": false, "media.allowed-to-play.enabled": true, "media.block-autoplay-until-in-foreground": false}
-   * **subtest lower is better**: true
-   * **subtest unit**: score
-   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&tests=14&muted=true&command=run&exclude=1,2>`__
-   * **type**: benchmark
-   * **unit**: score
-   * **use live sites**: true
-
-.. dropdown:: raptor-youtube-playback-v9-full-1080p30-firefox
-   :class-container: anchor-id-raptor-youtube-playback-v9-full-1080p30-firefox-b
-
-   **Owner**: PerfTest Team
-
-   * **alert threshold**: 2.0
-   * **apps**: firefox
-   * **expected**: pass
-   * **lower is better**: true
-   * **page cycles**: 20
-   * **page timeout**: 2700000
-   * **preferences**: {"media.autoplay.default": 0, "media.autoplay.ask-permission": false, "media.autoplay.blocking_policy": 0, "media.autoplay.block-webaudio": false, "media.allowed-to-play.enabled": true, "media.block-autoplay-until-in-foreground": false, "full-screen-api.allow-trusted-requests-only": false, "full-screen-api.warning.timeout": 0}
-   * **subtest lower is better**: true
-   * **subtest unit**: score
-   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-sfr-vp9-test&raptor=true&tests=18&muted=true&command=run&fullscreen=true&exclude=1,2>`__
-   * **type**: benchmark
-   * **unit**: score
-   * **use live sites**: true
-
-.. dropdown:: raptor-youtube-playback-v9-full-1080p60-firefox
-   :class-container: anchor-id-raptor-youtube-playback-v9-full-1080p60-firefox-b
-
-   **Owner**: PerfTest Team
-
-   * **alert threshold**: 2.0
-   * **apps**: firefox
-   * **expected**: pass
-   * **lower is better**: true
-   * **page cycles**: 20
-   * **page timeout**: 2700000
-   * **preferences**: {"media.autoplay.default": 0, "media.autoplay.ask-permission": false, "media.autoplay.blocking_policy": 0, "media.autoplay.block-webaudio": false, "media.allowed-to-play.enabled": true, "media.block-autoplay-until-in-foreground": false, "full-screen-api.allow-trusted-requests-only": false, "full-screen-api.warning.timeout": 0}
-   * **subtest lower is better**: true
-   * **subtest unit**: score
-   * **test url**: `<https://yttest.prod.mozaws.net/2020/main.html?test_type=playbackperf-hfr-test&raptor=true&tests=14&muted=true&command=run&fullscreen=true&exclude=1,2>`__
-   * **type**: benchmark
-   * **unit**: score
-   * **use live sites**: true
-
 .. dropdown:: speedometer
    :class-container: anchor-id-speedometer-b
 
@@ -31101,118 +30930,13 @@ Tests that perform a specific action (a scenario), i.e. idle application, idle a
    * **type**: scenario
    * **unit**: scenarioComplete
 
-.. dropdown:: raptor-scn-power-idle-bg-fenix
-   :class-container: anchor-id-raptor-scn-power-idle-bg-fenix-s
-
-   **Owner**: PerfTest Team
-
-   * **alert threshold**: 2.0
-   * **apps**: fenix
-   * **background test**: true
-   * **expected**: pass
-   * **lower is better**: true
-   * **measure**: fakeMeasure
-   * **page cycles**: 1
-   * **page timeout**: 660000
-   * **scenario time**: 600000
-   * **test url**: `<about:blank>`__
-   * **type**: scenario
-   * **unit**: scenarioComplete
-
-.. dropdown:: raptor-scn-power-idle-bg-geckoview
-   :class-container: anchor-id-raptor-scn-power-idle-bg-geckoview-s
-
-   **Owner**: PerfTest Team
-
-   * **alert threshold**: 2.0
-   * **apps**: geckoview
-   * **background test**: true
-   * **expected**: pass
-   * **lower is better**: true
-   * **measure**: fakeMeasure
-   * **page cycles**: 1
-   * **page timeout**: 660000
-   * **scenario time**: 600000
-   * **test url**: `<about:blank>`__
-   * **type**: scenario
-   * **unit**: scenarioComplete
-
-.. dropdown:: raptor-scn-power-idle-bg-refbrow
-   :class-container: anchor-id-raptor-scn-power-idle-bg-refbrow-s
-
-   **Owner**: PerfTest Team
-
-   * **alert threshold**: 2.0
-   * **apps**: refbrow
-   * **background test**: true
-   * **expected**: pass
-   * **lower is better**: true
-   * **measure**: fakeMeasure
-   * **page cycles**: 1
-   * **page timeout**: 660000
-   * **scenario time**: 600000
-   * **test url**: `<about:blank>`__
-   * **type**: scenario
-   * **unit**: scenarioComplete
-
-.. dropdown:: raptor-scn-power-idle-fenix
-   :class-container: anchor-id-raptor-scn-power-idle-fenix-s
-
-   **Owner**: PerfTest Team
-
-   * **alert threshold**: 2.0
-   * **apps**: fenix
-   * **expected**: pass
-   * **lower is better**: true
-   * **measure**: fakeMeasure
-   * **page cycles**: 1
-   * **page timeout**: 1320000
-   * **scenario time**: 1200000
-   * **test url**: `<about:blank>`__
-   * **type**: scenario
-   * **unit**: scenarioComplete
-
-.. dropdown:: raptor-scn-power-idle-geckoview
-   :class-container: anchor-id-raptor-scn-power-idle-geckoview-s
-
-   **Owner**: PerfTest Team
-
-   * **alert threshold**: 2.0
-   * **apps**: geckoview
-   * **expected**: pass
-   * **lower is better**: true
-   * **measure**: fakeMeasure
-   * **page cycles**: 1
-   * **page timeout**: 1320000
-   * **scenario time**: 1200000
-   * **test url**: `<about:blank>`__
-   * **type**: scenario
-   * **unit**: scenarioComplete
-
-.. dropdown:: raptor-scn-power-idle-refbrow
-   :class-container: anchor-id-raptor-scn-power-idle-refbrow-s
-
-   **Owner**: PerfTest Team
-
-   * **alert threshold**: 2.0
-   * **apps**: refbrow
-   * **expected**: pass
-   * **lower is better**: true
-   * **measure**: fakeMeasure
-   * **page cycles**: 1
-   * **page timeout**: 1320000
-   * **scenario time**: 1200000
-   * **test url**: `<about:blank>`__
-   * **type**: scenario
-   * **unit**: scenarioComplete
-
 
 Unittests
 ---------
 These tests aren't used in standard testing, they are only used in the Raptor unit tests (they are similar to raptor-tp6 tests though).
 
-.. dropdown:: raptor-tp6-unittest-amazon-firefox
-   :class-container: anchor-id-raptor-tp6-unittest-amazon-firefox-u
+.. dropdown:: amazon
+   :class-container: anchor-id-amazon-u
 
    **Owner**: PerfTest Team
 
@@ -31223,17 +30947,562 @@ These tests aren't used in standard testing, they are only used in the Raptor un
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm5-linux-firefox-amazon.manifest
+   * **playback pageset manifest**: mitm7-linux-firefox-amazon.manifest
+   * **playback version**: 8.1.1
    * **test url**: `<https://www.amazon.com/s?k=laptop&ref=nb_sb_noss_1>`__
    * **type**: pageload
    * **unit**: ms
+   * **Test Task**:
 
-.. dropdown:: raptor-tp6-unittest-facebook-firefox
-   :class-container: anchor-id-raptor-tp6-unittest-facebook-firefox-u
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-fenix-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-fenix-amazon-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-geckoview-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-geckoview-amazon-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-live-fenix-amazon-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-live-geckoview-amazon-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-refbrow-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-chrome-m-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-chrome-m-amazon-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-fenix-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-fenix-amazon-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-geckoview-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-geckoview-amazon-nofis**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-live-chrome-m-amazon-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-live-fenix-amazon-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-live-geckoview-amazon-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-refbrow-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-clang-trunk-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-custom-car-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-custom-car-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-custom-car-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
+      * - **browsertime-tp6-essential-chrome-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-chromium-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-custom-car-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-firefox-amazon**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
+      * - **browsertime-tp6-live-chrome-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-chromium-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-profiling-firefox-amazon**
+        - ✅
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-custom-car-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
+      * - **browsertime-tp6-essential-chrome-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-chromium-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-custom-car-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-firefox-amazon**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
+      * - **browsertime-tp6-live-chrome-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-chromium-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-safari-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-profiling-firefox-amazon**
+        - ✅
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-custom-car-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-chrome-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-chromium-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-custom-car-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-chrome-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-chromium-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-custom-car-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-custom-car-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-bytecode-firefox-amazon**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
+      * - **browsertime-tp6-essential-chrome-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-chromium-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-custom-car-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-essential-firefox-amazon**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
+      * - **browsertime-tp6-live-chrome-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-chromium-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-amazon**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+
+.. dropdown:: facebook
+   :class-container: anchor-id-facebook-u
 
    **Owner**: PerfTest Team
 
@@ -31244,17 +31513,407 @@ These tests aren't used in standard testing, they are only used in the Raptor un
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm5-linux-firefox-facebook.manifest
+   * **playback pageset manifest**: mitm7-linux-firefox-facebook.manifest
+   * **playback version**: 8.1.1
    * **test url**: `<https://www.facebook.com>`__
    * **type**: pageload
    * **unit**: ms
+   * **Test Task**:
 
-.. dropdown:: raptor-tp6-unittest-google-firefox
-   :class-container: anchor-id-raptor-tp6-unittest-google-firefox-u
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-essential-fenix-facebook-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-essential-geckoview-facebook-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-live-fenix-facebook-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-live-geckoview-facebook-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-essential-chrome-m-facebook-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-essential-fenix-facebook-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-essential-geckoview-facebook-nofis**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-live-chrome-m-facebook-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-live-fenix-facebook-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-live-geckoview-facebook-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-clang-trunk-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-firefox-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-firefox-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-firefox-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-chrome-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-chromium-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-firefox-facebook**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
+      * - **browsertime-tp6-live-chrome-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-chromium-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-firefox-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-chrome-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-chromium-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-firefox-facebook**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
+      * - **browsertime-tp6-live-chrome-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-chromium-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-safari-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-firefox-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-chrome-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-chromium-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-firefox-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-chrome-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-chromium-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-firefox-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-firefox-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-chrome-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-chromium-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-firefox-facebook**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
+      * - **browsertime-tp6-live-chrome-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-chromium-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-facebook**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+
+.. dropdown:: google
+   :class-container: anchor-id-google-u
 
    **Owner**: PerfTest Team
 
@@ -31265,17 +31924,91 @@ These tests aren't used in standard testing, they are only used in the Raptor un
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm5-linux-firefox-google-search.manifest
+   * **playback pageset manifest**: mitm7-linux-firefox-google.manifest
+   * **playback version**: 8.1.1
    * **test url**: `<https://www.google.com/search?hl=en&q=barack+obama&cad=h>`__
    * **type**: pageload
    * **unit**: ms
+   * **Test Task**:
 
-.. dropdown:: raptor-tp6-unittest-youtube-firefox
-   :class-container: anchor-id-raptor-tp6-unittest-youtube-firefox-u
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-essential-fenix-google-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-essential-geckoview-google-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-live-fenix-google-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-live-geckoview-google-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-essential-chrome-m-google-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-essential-fenix-google-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-essential-geckoview-google-nofis**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-live-chrome-m-google-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-live-fenix-google-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-live-geckoview-google-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+
+.. dropdown:: youtube
+   :class-container: anchor-id-youtube-u
 
    **Owner**: PerfTest Team
 
@@ -31286,13 +32019,438 @@ These tests aren't used in standard testing, they are only used in the Raptor un
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm5-linux-firefox-youtube.manifest
+   * **playback pageset manifest**: mitm7-linux-firefox-youtube.manifest
+   * **playback version**: 8.1.1
    * **test url**: `<https://www.youtube.com>`__
    * **type**: pageload
    * **unit**: ms
+   * **Test Task**:
+
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-fenix-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-fenix-youtube-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-geckoview-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-geckoview-youtube-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-live-fenix-youtube-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-live-geckoview-youtube-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-refbrow-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a51-11-0-aarch64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6m-chrome-m-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-chrome-m-youtube-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-fenix-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-fenix-youtube-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-geckoview-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-geckoview-youtube-nofis**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-live-chrome-m-youtube-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-live-fenix-youtube-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-live-geckoview-youtube-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6m-refbrow-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-clang-trunk-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-firefox-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-firefox-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-firefox-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-chrome-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-chromium-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-firefox-youtube**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
+      * - **browsertime-tp6-live-chrome-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-chromium-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-firefox-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-chrome-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-chromium-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-firefox-youtube**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
+      * - **browsertime-tp6-live-chrome-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-chromium-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-safari-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-firefox-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-chrome-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-chromium-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-firefox-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-chrome-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-chromium-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-firefox-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-firefox-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-tp6-chrome-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-chromium-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-firefox-youtube**
+        - ✅
+        - ✅
+        - ✅
+        - ✅
+      * - **browsertime-tp6-live-chrome-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-chromium-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-tp6-live-firefox-youtube**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
 
 
