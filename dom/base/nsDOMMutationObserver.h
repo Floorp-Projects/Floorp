@@ -145,7 +145,7 @@ class nsMutationReceiverBase : public nsStubAnimationObserver {
     mCharacterData = aCharacterData;
   }
 
-  bool CharacterDataOldValue() {
+  bool CharacterDataOldValue() const {
     return mParent ? mParent->CharacterDataOldValue() : mCharacterDataOldValue;
   }
   void SetCharacterDataOldValue(bool aOldValue) {
@@ -153,7 +153,7 @@ class nsMutationReceiverBase : public nsStubAnimationObserver {
     mCharacterDataOldValue = aOldValue;
   }
 
-  bool NativeAnonymousChildList() {
+  bool NativeAnonymousChildList() const {
     return mParent ? mParent->NativeAnonymousChildList()
                    : mNativeAnonymousChildList;
   }
@@ -162,13 +162,15 @@ class nsMutationReceiverBase : public nsStubAnimationObserver {
     mNativeAnonymousChildList = aOldValue;
   }
 
-  bool Attributes() { return mParent ? mParent->Attributes() : mAttributes; }
+  bool Attributes() const {
+    return mParent ? mParent->Attributes() : mAttributes;
+  }
   void SetAttributes(bool aAttributes) {
     NS_ASSERTION(!mParent, "Shouldn't have parent");
     mAttributes = aAttributes;
   }
 
-  bool AllAttributes() {
+  bool AllAttributes() const {
     return mParent ? mParent->AllAttributes() : mAllAttributes;
   }
   void SetAllAttributes(bool aAll) {
@@ -176,18 +178,29 @@ class nsMutationReceiverBase : public nsStubAnimationObserver {
     mAllAttributes = aAll;
   }
 
-  bool Animations() { return mParent ? mParent->Animations() : mAnimations; }
+  bool Animations() const {
+    return mParent ? mParent->Animations() : mAnimations;
+  }
   void SetAnimations(bool aAnimations) {
     NS_ASSERTION(!mParent, "Shouldn't have parent");
     mAnimations = aAnimations;
   }
 
-  bool AttributeOldValue() {
+  bool AttributeOldValue() const {
     return mParent ? mParent->AttributeOldValue() : mAttributeOldValue;
   }
   void SetAttributeOldValue(bool aOldValue) {
     NS_ASSERTION(!mParent, "Shouldn't have parent");
     mAttributeOldValue = aOldValue;
+  }
+
+  bool ChromeOnlyNodes() const {
+    return mParent ? mParent->ChromeOnlyNodes() : mChromeOnlyNodes;
+  }
+
+  void SetChromeOnlyNodes(bool aChromeOnlyNodes) {
+    NS_ASSERTION(!mParent, "Shouldn't have parent");
+    mChromeOnlyNodes = aChromeOnlyNodes;
   }
 
   nsTArray<RefPtr<nsAtom>>& AttributeFilter() { return mAttributeFilter; }
@@ -235,7 +248,8 @@ class nsMutationReceiverBase : public nsStubAnimationObserver {
         mAttributes(false),
         mAllAttributes(false),
         mAttributeOldValue(false),
-        mAnimations(false) {
+        mAnimations(false),
+        mChromeOnlyNodes(false) {
     NS_ASSERTION(mParent->Subtree(), "Should clone a non-subtree observer!");
   }
 
@@ -265,16 +279,17 @@ class nsMutationReceiverBase : public nsStubAnimationObserver {
   nsCOMPtr<nsINode> mKungFuDeathGrip;
 
  private:
-  bool mSubtree;
-  bool mChildList;
-  bool mCharacterData;
-  bool mCharacterDataOldValue;
-  bool mNativeAnonymousChildList;
-  bool mAttributes;
-  bool mAllAttributes;
-  bool mAttributeOldValue;
-  bool mAnimations;
   nsTArray<RefPtr<nsAtom>> mAttributeFilter;
+  bool mSubtree : 1;
+  bool mChildList : 1;
+  bool mCharacterData : 1;
+  bool mCharacterDataOldValue : 1;
+  bool mNativeAnonymousChildList : 1;
+  bool mAttributes : 1;
+  bool mAllAttributes : 1;
+  bool mAttributeOldValue : 1;
+  bool mAnimations : 1;
+  bool mChromeOnlyNodes : 1;
 };
 
 class nsMutationReceiver : public nsMutationReceiverBase {
@@ -412,13 +427,12 @@ class nsAnimationReceiver : public nsMutationReceiver {
 class nsDOMMutationObserver final : public nsISupports, public nsWrapperCache {
  public:
   nsDOMMutationObserver(nsCOMPtr<nsPIDOMWindowInner>&& aOwner,
-                        mozilla::dom::MutationCallback& aCb, bool aChrome)
+                        mozilla::dom::MutationCallback& aCb)
       : mOwner(std::move(aOwner)),
         mLastPendingMutation(nullptr),
         mPendingMutationCount(0),
         mCallback(&aCb),
         mWaitingForRun(false),
-        mIsChrome(aChrome),
         mMergeAttributeRecords(false),
         mId(++sCount) {}
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -426,8 +440,8 @@ class nsDOMMutationObserver final : public nsISupports, public nsWrapperCache {
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOM_MUTATION_OBSERVER_IID)
 
   static already_AddRefed<nsDOMMutationObserver> Constructor(
-      const mozilla::dom::GlobalObject& aGlobal,
-      mozilla::dom::MutationCallback& aCb, mozilla::ErrorResult& aRv);
+      const mozilla::dom::GlobalObject&, mozilla::dom::MutationCallback&,
+      mozilla::ErrorResult&);
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override {
@@ -435,8 +449,6 @@ class nsDOMMutationObserver final : public nsISupports, public nsWrapperCache {
   }
 
   nsISupports* GetParentObject() const { return mOwner; }
-
-  bool IsChrome() const { return mIsChrome; }
 
   void Observe(nsINode& aTarget,
                const mozilla::dom::MutationObserverInit& aOptions,
@@ -561,7 +573,6 @@ class nsDOMMutationObserver final : public nsISupports, public nsWrapperCache {
   RefPtr<mozilla::dom::MutationCallback> mCallback;
 
   bool mWaitingForRun;
-  const bool mIsChrome;
   bool mMergeAttributeRecords;
 
   uint64_t mId;
