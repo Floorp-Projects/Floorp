@@ -432,7 +432,8 @@ bool DebugState::getGlobal(Instance& instance, uint32_t globalIndex,
     return true;
   }
 
-  void* dataPtr = instance.data() + global.offset();
+  uint8_t* globalData = instance.globalData();
+  void* dataPtr = globalData + global.offset();
   if (global.isIndirect()) {
     dataPtr = *static_cast<void**>(dataPtr);
   }

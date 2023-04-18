@@ -655,7 +655,7 @@ class CallIndirectId {
     MOZ_ASSERT(kind_ == CallIndirectIdKind::Immediate);
     return bits_;
   }
-  uint32_t instanceDataOffset() const {
+  uint32_t globalDataOffset() const {
     MOZ_ASSERT(kind_ == CallIndirectIdKind::Global);
     return bits_;
   }
@@ -699,10 +699,10 @@ class CalleeDesc {
     U() : funcIndex_(0) {}
     uint32_t funcIndex_;
     struct {
-      uint32_t instanceDataOffset_;
+      uint32_t globalDataOffset_;
     } import;
     struct {
-      uint32_t instanceDataOffset_;
+      uint32_t globalDataOffset_;
       uint32_t minLength_;
       Maybe<uint32_t> maxLength_;
       CallIndirectId callIndirectId_;
@@ -713,12 +713,10 @@ class CalleeDesc {
  public:
   CalleeDesc() = default;
   static CalleeDesc function(uint32_t funcIndex);
-  static CalleeDesc import(uint32_t instanceDataOffset);
-  static CalleeDesc wasmTable(const ModuleEnvironment& moduleEnv,
-                              const TableDesc& desc, uint32_t tableIndex,
+  static CalleeDesc import(uint32_t globalDataOffset);
+  static CalleeDesc wasmTable(const TableDesc& desc,
                               CallIndirectId callIndirectId);
-  static CalleeDesc asmJSTable(const ModuleEnvironment& moduleEnv,
-                               uint32_t tableIndex);
+  static CalleeDesc asmJSTable(const TableDesc& desc);
   static CalleeDesc builtin(SymbolicAddress callee);
   static CalleeDesc builtinInstanceMethod(SymbolicAddress callee);
   static CalleeDesc wasmFuncRef();
@@ -727,18 +725,18 @@ class CalleeDesc {
     MOZ_ASSERT(which_ == Func);
     return u.funcIndex_;
   }
-  uint32_t importInstanceDataOffset() const {
+  uint32_t importGlobalDataOffset() const {
     MOZ_ASSERT(which_ == Import);
-    return u.import.instanceDataOffset_;
+    return u.import.globalDataOffset_;
   }
   bool isTable() const { return which_ == WasmTable || which_ == AsmJSTable; }
-  uint32_t tableLengthInstanceDataOffset() const {
+  uint32_t tableLengthGlobalDataOffset() const {
     MOZ_ASSERT(isTable());
-    return u.table.instanceDataOffset_ + offsetof(TableInstanceData, length);
+    return u.table.globalDataOffset_ + offsetof(TableInstanceData, length);
   }
-  uint32_t tableFunctionBaseInstanceDataOffset() const {
+  uint32_t tableFunctionBaseGlobalDataOffset() const {
     MOZ_ASSERT(isTable());
-    return u.table.instanceDataOffset_ + offsetof(TableInstanceData, elements);
+    return u.table.globalDataOffset_ + offsetof(TableInstanceData, elements);
   }
   CallIndirectId wasmTableSigId() const {
     MOZ_ASSERT(which_ == WasmTable);

@@ -699,10 +699,7 @@ void wasm::GenerateFunctionPrologue(MacroAssembler& masm,
     switch (callIndirectId.kind()) {
       case CallIndirectIdKind::Global: {
         Register scratch = WasmTableCallScratchReg0;
-        masm.loadPtr(
-            Address(InstanceReg, Instance::offsetInData(
-                                     callIndirectId.instanceDataOffset())),
-            scratch);
+        masm.loadWasmGlobalPtr(callIndirectId.globalDataOffset(), scratch);
         masm.branchPtr(Assembler::Condition::Equal, WasmTableCallSigReg,
                        scratch, &functionBody);
         masm.wasmTrap(Trap::IndirectCallBadSig, BytecodeOffset(0));

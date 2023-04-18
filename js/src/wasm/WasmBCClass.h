@@ -950,7 +950,7 @@ struct BaseCompiler final {
   bool callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
                     const Stk& indexVal, const FunctionCall& call,
                     CodeOffset* fastCallOffset, CodeOffset* slowCallOffset);
-  CodeOffset callImport(unsigned instanceDataOffset, const FunctionCall& call);
+  CodeOffset callImport(unsigned globalDataOffset, const FunctionCall& call);
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
   void callRef(const Stk& calleeRef, const FunctionCall& call,
                CodeOffset* fastCallOffset, CodeOffset* slowCallOffset);
@@ -1103,10 +1103,11 @@ struct BaseCompiler final {
   //
   // Table access.
 
-  Address addressOfTableField(uint32_t tableIndex, uint32_t fieldOffset,
+  Address addressOfTableField(const TableDesc& table, uint32_t fieldOffset,
                               RegPtr instance);
-  void loadTableLength(uint32_t tableIndex, RegPtr instance, RegI32 length);
-  void loadTableElements(uint32_t tableIndex, RegPtr instance, RegPtr elements);
+  void loadTableLength(const TableDesc& table, RegPtr instance, RegI32 length);
+  void loadTableElements(const TableDesc& table, RegPtr instance,
+                         RegPtr elements);
 
   //////////////////////////////////////////////////////////////////////
   //
@@ -1627,7 +1628,8 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitTableSet();
   [[nodiscard]] bool emitTableSize();
 
-  void emitTableBoundsCheck(uint32_t tableIndex, RegI32 index, RegPtr instance);
+  void emitTableBoundsCheck(const TableDesc& table, RegI32 index,
+                            RegPtr instance);
   [[nodiscard]] bool emitTableGetAnyRef(uint32_t tableIndex);
   [[nodiscard]] bool emitTableSetAnyRef(uint32_t tableIndex);
 

@@ -234,7 +234,7 @@ static void GenPrintPtr(DebugChannel channel, MacroAssembler& masm,
     if (inWasm) {
       masm.callDebugWithABI(SymbolicAddress::PrintPtr);
     } else {
-      using Fn = void (*)(uint8_t* val);
+      using Fn = void (*)(uint8_t * val);
       masm.callWithABI<Fn, PrintPtr>(MoveOp::GENERAL,
                                      CheckUnsafeCallWithABI::DontCheckOther);
     }
@@ -2286,11 +2286,8 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
 
   // 2.1. Get the callee. This must be a JSFunction if we're using this JIT
   // exit.
-  masm.loadPtr(
-      Address(InstanceReg, Instance::offsetInData(
-                               fi.instanceOffset() +
-                               offsetof(FuncImportInstanceData, callable))),
-      callee);
+  masm.loadWasmGlobalPtr(
+      fi.instanceOffset() + offsetof(FuncImportInstanceData, callable), callee);
 
   // 2.2. Save callee.
   masm.storePtr(callee, Address(masm.getStackPointer(), calleeArgOffset));
