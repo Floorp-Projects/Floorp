@@ -3,14 +3,14 @@ that make rustc unable to read the profiles that `llvm-profdata merge`
 outputs, further causing some problems (e.g. bug 1811960).
 
 diff --git a/llvm/lib/ProfileData/InstrProfWriter.cpp b/llvm/lib/ProfileData/InstrProfWriter.cpp
-index e181228adb63..fe1e9b1bd50e 100644
+index 473fa35bfeec..3d324d91f10f 100644
 --- a/llvm/lib/ProfileData/InstrProfWriter.cpp
 +++ b/llvm/lib/ProfileData/InstrProfWriter.cpp
 @@ -356,9 +356,6 @@ void InstrProfWriter::mergeRecordsFromWriter(InstrProfWriter &&IPW,
    for (auto &I : IPW.BinaryIds)
      addBinaryIds(I);
  
--  addTemporalProfileTraces(std::move(IPW.TemporalProfTraces),
+-  addTemporalProfileTraces(IPW.TemporalProfTraces,
 -                           IPW.TemporalProfTraceStreamSize);
 -
    MemProfFrameData.reserve(IPW.MemProfFrameData.size());
@@ -44,7 +44,7 @@ index e181228adb63..fe1e9b1bd50e 100644
    // Reserve space to write profile summary data.
    uint32_t NumEntries = ProfileSummaryBuilder::DefaultCutoffs.size();
    uint32_t SummarySize = Summary::getSize(Summary::NumKinds, NumEntries);
-@@ -585,18 +579,6 @@ Error InstrProfWriter::writeImpl(ProfOStream &OS) {
+@@ -585,19 +579,6 @@ Error InstrProfWriter::writeImpl(ProfOStream &OS) {
        OS.writeByte(0);
    }
  
@@ -54,8 +54,9 @@ index e181228adb63..fe1e9b1bd50e 100644
 -    OS.write(TemporalProfTraces.size());
 -    OS.write(TemporalProfTraceStreamSize);
 -    for (auto &Trace : TemporalProfTraces) {
--      OS.write(Trace.size());
--      for (auto &NameRef : Trace)
+-      OS.write(Trace.Weight);
+-      OS.write(Trace.FunctionNameRefs.size());
+-      for (auto &NameRef : Trace.FunctionNameRefs)
 -        OS.write(NameRef);
 -    }
 -  }
@@ -63,7 +64,7 @@ index e181228adb63..fe1e9b1bd50e 100644
    // Allocate space for data to be serialized out.
    std::unique_ptr<IndexedInstrProf::Summary> TheSummary =
        IndexedInstrProf::allocSummary(SummarySize);
-@@ -624,9 +606,6 @@ Error InstrProfWriter::writeImpl(ProfOStream &OS) {
+@@ -625,9 +606,6 @@ Error InstrProfWriter::writeImpl(ProfOStream &OS) {
        {MemProfSectionOffset, &MemProfSectionStart, 1},
        // Patch the Header.BinaryIdSectionOffset.
        {BinaryIdSectionOffset, &BinaryIdSectionStart, 1},
