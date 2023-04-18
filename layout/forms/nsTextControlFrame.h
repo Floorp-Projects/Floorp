@@ -83,6 +83,7 @@ class nsTextControlFrame : public nsContainerFrame,
     if (!IsSingleLineTextControl()) {
       return Nothing{};
     }
+    NS_ASSERTION(!IsSubtreeDirty(), "frame must not be dirty");
     return GetSingleLineTextControlBaseline(this, mFirstBaseline, aWM,
                                             aBaselineGroup);
   }
@@ -115,13 +116,6 @@ class nsTextControlFrame : public nsContainerFrame,
     return nsContainerFrame::IsFrameOfType(
         aFlags & ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
-
-#ifdef DEBUG
-  void MarkIntrinsicISizesDirty() override {
-    // Need another Reflow to have a correct baseline value again.
-    mFirstBaseline = NS_INTRINSIC_ISIZE_UNKNOWN;
-  }
-#endif
 
   // nsIAnonymousContentCreator
   nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;
