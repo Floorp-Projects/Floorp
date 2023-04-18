@@ -21,10 +21,10 @@ GenericScrollAnimation::GenericScrollAnimation(
     AsyncPanZoomController& aApzc, const nsPoint& aInitialPosition,
     const ScrollAnimationBezierPhysicsSettings& aSettings)
     : mApzc(aApzc), mFinalDestination(aInitialPosition) {
-  // ScrollAnimationBezierPhysics (despite it's name) handles the case of
+  // ScrollAnimationBezierPhysics (despite its name) handles the case of
   // general.smoothScroll being disabled whereas ScrollAnimationMSDPhysics does
   // not (ie it scrolls smoothly).
-  if (StaticPrefs::general_smoothScroll() &&
+  if (aApzc.IsSmoothScrollingEnabled() &&
       StaticPrefs::general_smoothScroll_msdPhysics_enabled()) {
     mAnimationPhysics = MakeUnique<ScrollAnimationMSDPhysics>(aInitialPosition);
   } else {

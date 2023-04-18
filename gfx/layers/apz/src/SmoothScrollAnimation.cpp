@@ -7,6 +7,7 @@
 #include "SmoothScrollAnimation.h"
 #include "ScrollAnimationBezierPhysics.h"
 #include "mozilla/layers/APZPublicUtils.h"
+#include "AsyncPanZoomController.h"
 
 namespace mozilla {
 namespace layers {
@@ -14,9 +15,9 @@ namespace layers {
 SmoothScrollAnimation::SmoothScrollAnimation(AsyncPanZoomController& aApzc,
                                              const nsPoint& aInitialPosition,
                                              ScrollOrigin aOrigin)
-    : GenericScrollAnimation(
-          aApzc, aInitialPosition,
-          apz::ComputeBezierAnimationSettingsForOrigin(aOrigin)),
+    : GenericScrollAnimation(aApzc, aInitialPosition,
+                             apz::ComputeBezierAnimationSettingsForOrigin(
+                                 aOrigin, aApzc.IsSmoothScrollingEnabled())),
       mOrigin(aOrigin) {}
 
 SmoothScrollAnimation* SmoothScrollAnimation::AsSmoothScrollAnimation() {

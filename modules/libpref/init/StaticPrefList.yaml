@@ -5442,6 +5442,7 @@
   type: RelaxedAtomicBool
   value: true
   mirror: always
+  do_not_use_directly: true
 
 # This pref and general.smoothScroll.stopDecelerationWeighting determine
 # the timing function.

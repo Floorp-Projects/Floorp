@@ -571,6 +571,7 @@ struct ParamTraits<mozilla::layers::ScrollMetadata>
     WriteParam(aWriter, aParam.mForceMousewheelAutodir);
     WriteParam(aWriter, aParam.mForceMousewheelAutodirHonourRoot);
     WriteParam(aWriter, aParam.mIsPaginatedPresentation);
+    WriteParam(aWriter, aParam.mPrefersReducedMotion);
     WriteParam(aWriter, aParam.mDisregardedDirection);
     WriteParam(aWriter, aParam.mOverscrollBehavior);
     WriteParam(aWriter, aParam.mScrollUpdates);
@@ -614,6 +615,8 @@ struct ParamTraits<mozilla::layers::ScrollMetadata>
                &paramType::SetForceMousewheelAutodirHonourRoot) &&
            ReadBoolForBitfield(aReader, aResult,
                                &paramType::SetIsPaginatedPresentation) &&
+           ReadBoolForBitfield(aReader, aResult,
+                               &paramType::SetPrefersReducedMotion) &&
            ReadParam(aReader, &aResult->mDisregardedDirection) &&
            ReadParam(aReader, &aResult->mOverscrollBehavior) &&
            ReadParam(aReader, &aResult->mScrollUpdates);
