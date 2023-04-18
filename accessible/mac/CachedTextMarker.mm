@@ -11,6 +11,9 @@
 
 #include "AccAttributes.h"
 #include "nsCocoaUtils.h"
+#include "HyperTextAccessible.h"
+#include "States.h"
+#include "nsAccUtils.h"
 
 namespace mozilla {
 namespace a11y {

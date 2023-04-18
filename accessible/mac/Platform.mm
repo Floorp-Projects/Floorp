@@ -13,9 +13,11 @@
 #include "RemoteAccessible.h"
 #include "DocAccessibleParent.h"
 #include "mozTableAccessible.h"
+#include "mozTextAccessible.h"
 #include "MOXWebAreaAccessible.h"
 
 #include "nsAppShell.h"
+#include "nsCocoaUtils.h"
 #include "mozilla/Telemetry.h"
 
 // Available from 10.13 onwards; test availability at runtime before using
@@ -229,7 +231,8 @@ void ProxyRoleChangedEvent(RemoteAccessible* aTarget, const a11y::role& aRole,
       }
 
 #if defined(MOZ_TELEMETRY_REPORTING)
-      Telemetry::ScalarSet(Telemetry::ScalarID::A11Y_INSTANTIATORS, client);
+      mozilla::Telemetry::ScalarSet(
+          mozilla::Telemetry::ScalarID::A11Y_INSTANTIATORS, client);
 #endif  // defined(MOZ_TELEMETRY_REPORTING)
       CrashReporter::AnnotateCrashReport(
           CrashReporter::Annotation::AccessibilityClient,

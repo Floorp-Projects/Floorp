@@ -17,6 +17,7 @@
 
 #ifdef MOZ_WIDGET_COCOA
 #  include "mozilla/a11y/Role.h"
+#  include "nsTArray.h"
 #endif
 
 #if defined(XP_WIN)

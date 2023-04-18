@@ -9,6 +9,8 @@
 #define _MacUtils_H_
 
 #include "nsStringFwd.h"
+#include "mozAccessible.h"
+#include "MOXAccessibleBase.h"
 
 @class NSString;
 @class mozAccessible;

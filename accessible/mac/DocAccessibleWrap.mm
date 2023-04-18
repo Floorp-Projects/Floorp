@@ -7,6 +7,7 @@
 
 #include "DocAccessibleWrap.h"
 #include "DocAccessible-inl.h"
+#include "nsAccUtils.h"
 
 #import "mozAccessible.h"
 #import "MOXTextMarkerDelegate.h"

@@ -8,9 +8,11 @@
 #import "MOXWebAreaAccessible.h"
 
 #import "MOXSearchInfo.h"
+#import "MacUtils.h"
 
 #include "nsAccUtils.h"
 #include "nsCocoaUtils.h"
+#include "DocAccessible.h"
 #include "DocAccessibleParent.h"
 
 using namespace mozilla::a11y;

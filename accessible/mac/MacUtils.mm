@@ -8,6 +8,8 @@
 #import "MacUtils.h"
 
 #include "LocalAccessible.h"
+#include "DocAccessible.h"
+#include "DocAccessibleParent.h"
 #include "nsCocoaUtils.h"
 #include "mozilla/a11y/PDocAccessible.h"
 

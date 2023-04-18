@@ -9,9 +9,12 @@
 
 #include "nsCocoaUtils.h"
 #include "DocAccessibleParent.h"
+#include "nsIAccessiblePivot.h"
+#include "nsAccUtils.h"
 
 #include "mozilla/StaticPrefs_accessibility.h"
 
+using namespace mozilla;
 using namespace mozilla::a11y;
 
 // Generic Rotor Rule

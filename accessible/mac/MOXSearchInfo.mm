@@ -12,6 +12,7 @@
 #include "nsCocoaUtils.h"
 #include "DocAccessibleParent.h"
 #include "mozilla/StaticPrefs_accessibility.h"
+#include "mozilla/a11y/DocAccessiblePlatformExtParent.h"
 
 using namespace mozilla::a11y;
 
@@ -128,7 +129,7 @@ using namespace mozilla::a11y;
   // In that case, we should act as if no AXSearchText was given.
   // When caching is enabled we filter the tree in the pivot rule
   // and don't need to apply the post search filter.
-  return !StaticPrefs::accessibility_cache_enabled_AtStartup() &&
+  return !mozilla::StaticPrefs::accessibility_cache_enabled_AtStartup() &&
          !!mSearchText && [mSearchText length] > 0;
 }
 
@@ -179,11 +180,12 @@ using namespace mozilla::a11y;
       // of the current ipcDoc.
       nsTArray<uint64_t> matchIds;
       MOZ_ASSERT(
-          !StaticPrefs::accessibility_cache_enabled_AtStartup(),
+          !mozilla::StaticPrefs::accessibility_cache_enabled_AtStartup(),
           "Should call SendApplyPostSearchFilter when cache is enabled!");
-      Unused << ipcDoc->GetPlatformExtension()->SendApplyPostSearchFilter(
-          accIds, mResultLimit, EWhichPostFilter::eContainsText, searchText,
-          &matchIds);
+      mozilla::Unused
+          << ipcDoc->GetPlatformExtension()->SendApplyPostSearchFilter(
+                 accIds, mResultLimit, EWhichPostFilter::eContainsText,
+                 searchText, &matchIds);
       for (size_t i = 0; i < matchIds.Length(); i++) {
         if (RemoteAccessible* postMatch =
                 ipcDoc->GetAccessible(matchIds.ElementAt(i))) {

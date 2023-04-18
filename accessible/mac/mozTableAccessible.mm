@@ -16,6 +16,7 @@
 #include "mozilla/StaticPrefs_accessibility.h"
 #include "XULTreeAccessible.h"
 #include "Pivot.h"
+#include "nsAccUtils.h"
 #include "Relation.h"
 
 using namespace mozilla;
