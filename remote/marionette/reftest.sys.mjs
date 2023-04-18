@@ -795,8 +795,9 @@ browserRect.height: ${browserRect.height}`);
       const pdf = await this.loadPdf(binaryString);
       let pages = this.getPages(pageRanges, url, pdf.numPages);
       return [this.renderPages(pdf, pages), pages.size];
-    } finally {
+    } catch (e) {
       lazy.logger.warn(`Loading of pdf failed`);
+      throw e;
     }
   }
 
