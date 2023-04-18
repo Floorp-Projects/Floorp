@@ -6,6 +6,7 @@
 
 #include "mozilla/layers/DcompSurfaceImage.h"
 #include "MFMediaEngineUtils.h"
+#include "mozilla/StaticPrefs_media.h"
 
 namespace mozilla {
 
