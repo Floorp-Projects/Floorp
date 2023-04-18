@@ -9,13 +9,18 @@
 #include "js/LocaleSensitive.h"
 
 #include "nsIObserver.h"
+#include "nsIObserverService.h"
 #include "nsComponentManagerUtils.h"
+#include "nsIPrefService.h"
 #include "nsServiceManagerUtils.h"
+#include "mozilla/Services.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/Preferences.h"
 
 #include "xpcpublic.h"
+#include "xpcprivate.h"
 
 using namespace mozilla;
 using mozilla::intl::LocaleService;
