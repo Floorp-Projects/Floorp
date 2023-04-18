@@ -12,9 +12,12 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsITaggingService.h"
 #include "nsNetUtil.h"
+#include "nsIProtocolHandler.h"
+#include "nsIObserverService.h"
 #include "nsUnicharUtils.h"
 #include "nsPrintfCString.h"
 #include "nsQueryObject.h"
+#include "mozIStorageValueArray.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/storage.h"
@@ -35,6 +38,7 @@ const int32_t nsNavBookmarks::kGetChildrenIndex_Type = 20;
 const int32_t nsNavBookmarks::kGetChildrenIndex_PlaceID = 21;
 const int32_t nsNavBookmarks::kGetChildrenIndex_SyncStatus = 22;
 
+using namespace mozilla::dom;
 using namespace mozilla::places;
 
 extern "C" {

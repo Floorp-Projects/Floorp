@@ -30,6 +30,7 @@
 #include "mozilla/Preferences.h"
 #include "nsILoadInfo.h"
 #include "nsIContentPolicy.h"
+#include "nsIProtocolHandler.h"
 #include "nsIScriptError.h"
 #include "nsContentUtils.h"
 #include "imgICache.h"
