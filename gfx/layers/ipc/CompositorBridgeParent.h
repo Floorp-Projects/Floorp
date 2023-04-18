@@ -506,6 +506,8 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
 
   WebRenderBridgeParent* GetWrBridge() { return mWrBridge; }
 
+  void FlushPendingWrTransactionEventsWithWait();
+
  private:
   void Initialize();
 

@@ -17,7 +17,6 @@
 #include "mozilla/layers/SharedSurfacesParent.h"
 #include "mozilla/layers/WebRenderImageHost.h"
 #include "mozilla/layers/WebRenderTextureHost.h"
-#include "mozilla/StaticPrefs_webgl.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/webrender/WebRenderTypes.h"
@@ -212,7 +211,7 @@ Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
     const wr::Epoch& aEpoch, const wr::PipelineId& aPipelineId,
     AsyncImagePipeline* aPipeline, nsTArray<wr::ImageKey>& aKeys,
     wr::TransactionBuilder& aSceneBuilderTxn,
-    wr::TransactionBuilder& aMaybeFastTxn) {
+    wr::TransactionBuilder& aMaybeFastTxn, RemoteTextureInfoList* aList) {
   MOZ_ASSERT(aKeys.IsEmpty());
   MOZ_ASSERT(aPipeline);
 
@@ -231,6 +230,13 @@ Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
     // isn't much we can do.
     aKeys = aPipeline->mKeys.Clone();
     return Nothing();
+  }
+
+  // Check if pending Remote texture exists.
+  auto* wrapper = texture->AsRemoteTextureHostWrapper();
+  if (aList && wrapper && wrapper->IsReadyForRendering()) {
+    aList->mList.emplace(wrapper->mTextureId, wrapper->mOwnerId,
+                         wrapper->mForPid);
   }
 
   aPipeline->mCurrentTexture = texture;
@@ -366,7 +372,7 @@ void AsyncImagePipelineManager::ApplyAsyncImagesOfImageBridge(
       continue;
     }
     ApplyAsyncImageForPipeline(epoch, pipelineId, pipeline, aSceneBuilderTxn,
-                               aFastTxn);
+                               aFastTxn, /* aList */ nullptr);
   }
 }
 
@@ -387,10 +393,10 @@ wr::WrRotation ToWrRotation(VideoInfo::Rotation aRotation) {
 void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
     const wr::Epoch& aEpoch, const wr::PipelineId& aPipelineId,
     AsyncImagePipeline* aPipeline, wr::TransactionBuilder& aSceneBuilderTxn,
-    wr::TransactionBuilder& aMaybeFastTxn) {
+    wr::TransactionBuilder& aMaybeFastTxn, RemoteTextureInfoList* aList) {
   nsTArray<wr::ImageKey> keys;
   auto op = UpdateImageKeys(aEpoch, aPipelineId, aPipeline, keys,
-                            aSceneBuilderTxn, aMaybeFastTxn);
+                            aSceneBuilderTxn, aMaybeFastTxn, aList);
 
   bool updateDisplayList =
       aPipeline->mInitialised &&
@@ -481,12 +487,19 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
 
 void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
     const wr::PipelineId& aPipelineId, wr::TransactionBuilder& aTxn,
-    wr::TransactionBuilder& aTxnForImageBridge) {
+    wr::TransactionBuilder& aTxnForImageBridge, RemoteTextureInfoList* aList) {
   AsyncImagePipeline* pipeline =
       mAsyncImagePipelines.Get(wr::AsUint64(aPipelineId));
   if (!pipeline) {
     return;
   }
+
+  // ready event of RemoteTexture that uses ImageBridge do not need to be
+  // checked here.
+  if (pipeline->mImageHost->GetAsyncRef()) {
+    aList = nullptr;
+  }
+
   wr::TransactionBuilder fastTxn(mApi, /* aUseSceneBuilderThread */ false);
   wr::AutoTransactionSender sender(mApi, &fastTxn);
 
@@ -507,7 +520,7 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
   wr::Epoch epoch = GetNextImageEpoch();
 
   ApplyAsyncImageForPipeline(epoch, aPipelineId, pipeline, sceneBuilderTxn,
-                             maybeFastTxn);
+                             maybeFastTxn, aList);
 }
 
 void AsyncImagePipelineManager::SetEmptyDisplayList(
@@ -744,49 +757,6 @@ void AsyncImagePipelineManager::CheckForTextureHostsNotUsedByGPU() {
 wr::Epoch AsyncImagePipelineManager::GetNextImageEpoch() {
   mAsyncImageEpoch.mHandle++;
   return mAsyncImageEpoch;
-}
-
-UniquePtr<RemoteTextureInfoList>
-AsyncImagePipelineManager::GetPendingRemoteTextures() {
-  if (!gfx::gfxVars::UseCanvasRenderThread() ||
-      !StaticPrefs::webgl_out_of_process_async_present() ||
-      gfx::gfxVars::WebglOopAsyncPresentForceSync()) {
-    return nullptr;
-  }
-
-  // async remote texture is enabled
-  MOZ_ASSERT(gfx::gfxVars::UseCanvasRenderThread());
-  MOZ_ASSERT(StaticPrefs::webgl_out_of_process_async_present());
-  MOZ_ASSERT(!gfx::gfxVars::WebglOopAsyncPresentForceSync());
-
-  auto list = MakeUnique<RemoteTextureInfoList>();
-
-  for (const auto& entry : mAsyncImagePipelines) {
-    AsyncImagePipeline* pipeline = entry.GetWeak();
-
-    if (pipeline->mImageHost->GetAsyncRef()) {
-      continue;
-    }
-
-    if (!pipeline->mImageHost->GetCurrentTextureHost()) {
-      continue;
-    }
-
-    auto* wrapper = pipeline->mImageHost->GetCurrentTextureHost()
-                        ->AsRemoteTextureHostWrapper();
-    if (!wrapper || !wrapper->IsReadyForRendering()) {
-      continue;
-    }
-
-    list->mList.emplace(wrapper->mTextureId, wrapper->mOwnerId,
-                        wrapper->mForPid);
-  }
-
-  if (list->mList.empty()) {
-    return nullptr;
-  }
-
-  return list;
 }
 
 AsyncImagePipelineManager::WebRenderPipelineInfoHolder::

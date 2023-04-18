@@ -311,6 +311,8 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
 
   RefPtr<WebRenderBridgeParentRef> GetWebRenderBridgeParentRef();
 
+  void FlushPendingWrTransactionEventsWithWait();
+
  private:
   class ScheduleSharedSurfaceRelease;
 

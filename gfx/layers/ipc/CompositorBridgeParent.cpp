@@ -1901,6 +1901,26 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvEndRecording(
   return IPC_OK();
 }
 
+void CompositorBridgeParent::FlushPendingWrTransactionEventsWithWait() {
+  if (!mWrBridge) {
+    return;
+  }
+
+  std::vector<RefPtr<WebRenderBridgeParent>> bridgeParents;
+  {  // scope lock
+    MonitorAutoLock lock(*sIndirectLayerTreesLock);
+    ForEachIndirectLayerTree([&](LayerTreeState* lts, LayersId) -> void {
+      if (lts->mWrBridge) {
+        bridgeParents.emplace_back(lts->mWrBridge);
+      }
+    });
+  }
+
+  for (auto& bridge : bridgeParents) {
+    bridge->FlushPendingWrTransactionEventsWithWait();
+  }
+}
+
 void RecordCompositionPayloadsPresented(
     const TimeStamp& aCompositionEndTime,
     const nsTArray<CompositionPayload>& aPayloads) {
