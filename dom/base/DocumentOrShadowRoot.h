@@ -208,7 +208,7 @@ class DocumentOrShadowRoot : public RadioGroupManager {
   MOZ_CAN_RUN_SCRIPT
   void GetAnimations(nsTArray<RefPtr<Animation>>& aAnimations);
 
-  nsIContent* Retarget(nsIContent* aContent) const;
+  nsINode* Retarget(nsINode*) const;
 
   void OnSetAdoptedStyleSheets(StyleSheet&, uint32_t aIndex, ErrorResult&);
   void OnDeleteAdoptedStyleSheets(StyleSheet&, uint32_t aIndex, ErrorResult&);

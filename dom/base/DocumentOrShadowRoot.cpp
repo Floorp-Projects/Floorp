@@ -285,8 +285,8 @@ already_AddRefed<nsContentList> DocumentOrShadowRoot::GetElementsByClassName(
   return nsContentUtils::GetElementsByClassName(&AsNode(), aClasses);
 }
 
-nsIContent* DocumentOrShadowRoot::Retarget(nsIContent* aContent) const {
-  for (nsIContent* cur = aContent; cur; cur = cur->GetContainingShadowHost()) {
+nsINode* DocumentOrShadowRoot::Retarget(nsINode* aNode) const {
+  for (nsINode* cur = aNode; cur; cur = cur->GetContainingShadowHost()) {
     if (cur->SubtreeRoot() == &AsNode()) {
       return cur;
     }
@@ -299,7 +299,7 @@ Element* DocumentOrShadowRoot::GetRetargetedFocusedElement() {
   if (!content) {
     return nullptr;
   }
-  if (nsIContent* retarget = Retarget(content)) {
+  if (nsINode* retarget = Retarget(content)) {
     return retarget->AsElement();
   }
   return nullptr;
@@ -308,15 +308,7 @@ Element* DocumentOrShadowRoot::GetRetargetedFocusedElement() {
 Element* DocumentOrShadowRoot::GetPointerLockElement() {
   nsCOMPtr<Element> pointerLockedElement =
       PointerLockManager::GetLockedElement();
-  if (!pointerLockedElement) {
-    return nullptr;
-  }
-
-  nsIContent* retargetedPointerLockedElement = Retarget(pointerLockedElement);
-  return retargetedPointerLockedElement &&
-                 retargetedPointerLockedElement->IsElement()
-             ? retargetedPointerLockedElement->AsElement()
-             : nullptr;
+  return Element::FromNodeOrNull(Retarget(pointerLockedElement));
 }
 
 Element* DocumentOrShadowRoot::GetFullscreenElement() const {
@@ -327,13 +319,7 @@ Element* DocumentOrShadowRoot::GetFullscreenElement() const {
   Element* element = AsNode().OwnerDoc()->GetUnretargetedFullscreenElement();
   NS_ASSERTION(!element || element->State().HasState(ElementState::FULLSCREEN),
                "Fullscreen element should have fullscreen styles applied");
-
-  nsIContent* retargeted = Retarget(element);
-  if (retargeted && retargeted->IsElement()) {
-    return retargeted->AsElement();
-  }
-
-  return nullptr;
+  return Element::FromNodeOrNull(Retarget(element));
 }
 
 namespace {
@@ -359,16 +345,16 @@ enum class PerformRetargeting {
 };
 
 template <typename NodeOrElement>
-NodeOrElement* CastTo(nsIContent* aContent);
+NodeOrElement* CastTo(nsINode*);
 
 template <>
-Element* CastTo<Element>(nsIContent* aContent) {
-  return aContent->AsElement();
+Element* CastTo<Element>(nsINode* aNode) {
+  return aNode->AsElement();
 }
 
 template <>
-nsINode* CastTo<nsINode>(nsIContent* aContent) {
-  return aContent;
+nsINode* CastTo<nsINode>(nsINode* aNode) {
+  return aNode;
 }
 
 template <typename NodeOrElement>
@@ -413,12 +399,23 @@ static void QueryNodesFromRect(DocumentOrShadowRoot& aRoot, const nsRect& aRect,
                                   aOptions);
 
   for (nsIFrame* frame : frames) {
-    nsIContent* content = doc->GetContentInThisDocument(frame);
-    if (!content) {
+    nsINode* node = doc->GetContentInThisDocument(frame);
+    while (node && node->IsInNativeAnonymousSubtree()) {
+      nsIContent* root = node->GetClosestNativeAnonymousSubtreeRoot();
+      MOZ_ASSERT(root, "content is connected");
+      MOZ_ASSERT(root->IsRootOfNativeAnonymousSubtree(), "wat");
+      if (root == &aRoot.AsNode()) {
+        // If we're in the anonymous subtree root we care about, don't retarget.
+        break;
+      }
+      node = root->GetParentOrShadowHostNode();
+    }
+
+    if (!node) {
       continue;
     }
 
-    if (returningElements && !content->IsElement()) {
+    if (returningElements && !node->IsElement()) {
       // If this helper is called via ElementsFromPoint, we need to make sure
       // our frame is an element. Otherwise return whatever the top frame is
       // even if it isn't the top-painted element.
@@ -429,9 +426,9 @@ static void QueryNodesFromRect(DocumentOrShadowRoot& aRoot, const nsRect& aRect,
         continue;
       }
 
-      content = content->GetParent();
-      if (ShadowRoot* shadow = ShadowRoot::FromNodeOrNull(content)) {
-        content = shadow->Host();
+      node = node->GetParent();
+      if (ShadowRoot* shadow = ShadowRoot::FromNodeOrNull(node)) {
+        node = shadow->Host();
       }
     }
 
@@ -439,11 +436,11 @@ static void QueryNodesFromRect(DocumentOrShadowRoot& aRoot, const nsRect& aRect,
     //         https://github.com/w3c/webcomponents/issues/735
     //         https://github.com/w3c/webcomponents/issues/736
     if (retargeting) {
-      content = aRoot.Retarget(content);
+      node = aRoot.Retarget(node);
     }
 
-    if (content && content != aNodes.SafeLastElement(nullptr)) {
-      aNodes.AppendElement(CastTo<NodeOrElement>(content));
+    if (node && node != aNodes.SafeLastElement(nullptr)) {
+      aNodes.AppendElement(CastTo<NodeOrElement>(node));
       if (aMultiple == Multiple::No) {
         return;
       }
