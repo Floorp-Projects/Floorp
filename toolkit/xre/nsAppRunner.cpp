@@ -1022,8 +1022,8 @@ namespace mozilla {
 
 bool SessionHistoryInParent() {
   return FissionAutostart() ||
-         StaticPrefs::
-             fission_sessionHistoryInParent_AtStartup_DoNotUseDirectly();
+         !StaticPrefs::
+             fission_disableSessionHistoryInParent_AtStartup_DoNotUseDirectly();
 }
 
 bool BFCacheInParent() {
