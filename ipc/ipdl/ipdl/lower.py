@@ -4733,8 +4733,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         return helper
 
     def genAsyncDtor(self, md):
-        actorvar = ExprVar("actor")
-        method = MethodDefn(self.makeDtorMethodDecl(md, actorvar))
+        actor = md.actorDecl()
+        actorvar = actor.var()
+        method = MethodDefn(self.makeDtorMethodDecl(md))
 
         method.addstmt(self.dtorPrologue(actorvar))
 
@@ -4744,7 +4745,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             stmts
             + sendstmts
             + [Whitespace.NL]
-            + self.dtorEpilogue(md, actorvar)
+            + self.dtorEpilogue(md, actor.var())
             + [StmtReturn(sendok)]
         )
 
@@ -4757,8 +4758,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         return method, (lbl, case)
 
     def genBlockingDtorMethod(self, md):
-        actorvar = ExprVar("actor")
-        method = MethodDefn(self.makeDtorMethodDecl(md, actorvar))
+        actor = md.actorDecl()
+        actorvar = actor.var()
+        method = MethodDefn(self.makeDtorMethodDecl(md))
 
         method.addstmt(self.dtorPrologue(actorvar))
 
@@ -4784,7 +4786,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         method.addstmt(ifsendok)
 
         method.addstmts(
-            self.dtorEpilogue(md, actorvar) + [Whitespace.NL, StmtReturn(sendok)]
+            self.dtorEpilogue(md, actor.var()) + [Whitespace.NL, StmtReturn(sendok)]
         )
 
         return method
@@ -4901,10 +4903,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         return method, movemethod, promisemethod, (lbl, case)
 
-    def genBlockingSendMethod(self, md):
+    def genBlockingSendMethod(self, md, fromActor=None):
         method = MethodDefn(self.makeSendMethodDecl(md))
 
-        msgvar, serstmts = self.makeMessage(md, errfnSend)
+        msgvar, serstmts = self.makeMessage(md, errfnSend, fromActor)
         replyvar = self.replyvar
 
         sendok, sendstmts = self.sendBlocking(md, msgvar, replyvar)
@@ -4973,12 +4975,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 StmtDecl(Decl(r.bareType(self.side), r.var().name), initargs=[])
                 for r in md.returns
             ]
-            + self.invokeRecvHandler(md)
+            + self.invokeRecvHandler(md, implicit=False)
             + [Whitespace.NL]
             + saveIdStmts
             + self.makeReply(md, errfnRecv, routingId=idvar)
             + [Whitespace.NL]
-            + self.dtorEpilogue(md, ExprVar.THIS)
+            + self.dtorEpilogue(md, md.actorDecl().var())
             + [Whitespace.NL, StmtReturn(_Result.Processed)]
         )
 
@@ -5017,7 +5019,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         msgvar = self.msgvar
         writervar = ExprVar("writer__")
         routingId = self.protocol.routingId(fromActor)
-        this = fromActor or ExprVar.THIS
+        this = ExprVar.THIS
+        if md.decl.type.isDtor():
+            this = md.actorDecl().var()
 
         stmts = (
             [
@@ -5504,7 +5508,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         return StmtDecl(Decl(actortype, md.actorDecl().var().name), init=callalloc)
 
-    def invokeRecvHandler(self, md):
+    def invokeRecvHandler(self, md, implicit=True):
         retsems = "in"
         if md.decl.type.isAsync() and md.returns:
             retsems = "resolver"
@@ -5516,6 +5520,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     paramsems="move",
                     retsems=retsems,
                     retcallsems="out",
+                    implicit=implicit,
                 ),
             ),
         )
@@ -5531,18 +5536,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         )
         return [okdecl, failif]
 
-    def makeDtorMethodDecl(self, md, actorvar):
+    def makeDtorMethodDecl(self, md):
         decl = self.makeSendMethodDecl(md)
-        decl.params.insert(
-            0,
-            Decl(
-                _cxxInType(
-                    ipdl.type.ActorType(md.decl.type.constructedType()),
-                    side=self.side,
-                ),
-                actorvar.name,
-            ),
-        )
         decl.methodspec = MethodSpec.STATIC
         return decl
 
