@@ -51,7 +51,7 @@ OpaqueResponseBlockedReason GetOpaqueResponseBlockedReason(
     const nsACString& aContentType, uint16_t aStatus, bool aNoSniff);
 
 OpaqueResponseBlockedReason GetOpaqueResponseBlockedReason(
-    const nsHttpResponseHead& aResponseHead);
+    nsHttpResponseHead& aResponseHead);
 
 // Returns a tuple of (rangeStart, rangeEnd, rangeTotal) from the input range
 // header string if succeed.
