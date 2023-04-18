@@ -4,6 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MsaaXULMenuAccessible.h"
+#include "mozilla/dom/NameSpaceConstants.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/a11y/AccessibleWrap.h"
+#include "LocalAccessible-inl.h"
+#include "nsGkAtoms.h"
 
 using namespace mozilla::a11y;
 

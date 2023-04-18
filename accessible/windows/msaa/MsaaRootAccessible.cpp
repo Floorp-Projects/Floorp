@@ -9,6 +9,9 @@
 #include "MsaaRootAccessible.h"
 #include "Relation.h"
 #include "RootAccessible.h"
+#include "EnumVariant.h"
+
+#include <oleauto.h>
 
 using namespace mozilla;
 using namespace mozilla::a11y;

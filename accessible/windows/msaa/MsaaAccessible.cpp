@@ -29,6 +29,11 @@
 #include "sdnAccessible.h"
 #include "sdnTextAccessible.h"
 #include "HyperTextAccessible-inl.h"
+#include "ServiceProvider.h"
+#include "Statistics.h"
+#include "GeckoCustom.h"
+#include "ARIAMap.h"
+#include "mozilla/PresShell.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
