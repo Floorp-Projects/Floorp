@@ -250,6 +250,7 @@ let JSWINDOWACTORS = {
       },
     },
 
+    includeChrome: true,
     allFrames: true,
   },
 
@@ -524,6 +525,7 @@ let JSWINDOWACTORS = {
       },
     },
 
+    includeChrome: true,
     allFrames: true,
   },
 
