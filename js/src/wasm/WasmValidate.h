@@ -70,11 +70,17 @@ struct ModuleEnvironment {
   MaybeSectionRange codeSection;
 
   // The start offset of the FuncImportInstanceData[] section of the instance
-  // global data. There is one entry for every imported function.
+  // data. There is one entry for every imported function.
   uint32_t funcImportsOffsetStart;
-  // The start offset of the type id section of the instance
-  // global data. There is one entry for every type.
-  uint32_t typeIdsOffsetStart;
+  // The start offset of the TypeDefInstanceData[] section of the instance
+  // data. There is one entry for every type.
+  uint32_t typeDefsOffsetStart;
+  // The start offset of the TableInstanceData[] section of the instance data.
+  // There is one entry for every table.
+  uint32_t tablesOffsetStart;
+  // The start offset of the tag section of the instance data. There is one
+  // entry for every tag.
+  uint32_t tagsOffsetStart;
 
   // Fields decoded as part of the wasm module tail:
   DataSegmentEnvVector dataSegments;
@@ -89,8 +95,10 @@ struct ModuleEnvironment {
         features(features),
         memory(Nothing()),
         numFuncImports(0),
-        funcImportsOffsetStart(0),
-        typeIdsOffsetStart(0) {}
+        funcImportsOffsetStart(UINT32_MAX),
+        typeDefsOffsetStart(UINT32_MAX),
+        tablesOffsetStart(UINT32_MAX),
+        tagsOffsetStart(UINT32_MAX) {}
 
   [[nodiscard]] bool init() {
     types = js_new<TypeContext>(features);
@@ -150,7 +158,7 @@ struct ModuleEnvironment {
 
   uint32_t offsetOfTypeDefInstanceData(uint32_t typeIndex) const {
     MOZ_ASSERT(typeIndex < types->length());
-    return typeIdsOffsetStart + typeIndex * sizeof(TypeDefInstanceData);
+    return typeDefsOffsetStart + typeIndex * sizeof(TypeDefInstanceData);
   }
 
   uint32_t offsetOfTypeDef(uint32_t typeIndex) const {
@@ -160,6 +168,16 @@ struct ModuleEnvironment {
   uint32_t offsetOfSuperTypeVector(uint32_t typeIndex) const {
     return offsetOfTypeDefInstanceData(typeIndex) +
            offsetof(TypeDefInstanceData, superTypeVector);
+  }
+
+  uint32_t offsetOfTableInstanceData(uint32_t tableIndex) const {
+    MOZ_ASSERT(tableIndex < tables.length());
+    return tablesOffsetStart + tableIndex * sizeof(TableInstanceData);
+  }
+
+  uint32_t offsetOfTagInstanceData(uint32_t tagIndex) const {
+    MOZ_ASSERT(tagIndex < tags.length());
+    return tagsOffsetStart + tagIndex * sizeof(TagInstanceData);
   }
 };
 

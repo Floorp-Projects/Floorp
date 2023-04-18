@@ -369,15 +369,11 @@ using SharedTagType = RefPtr<const TagType>;
 struct TagDesc {
   TagKind kind;
   SharedTagType type;
-  uint32_t instanceDataOffset;
   bool isExport;
 
-  TagDesc() : instanceDataOffset(UINT32_MAX), isExport(false) {}
+  TagDesc() : isExport(false) {}
   TagDesc(TagKind kind, const SharedTagType& type, bool isExport = false)
-      : kind(kind),
-        type(type),
-        instanceDataOffset(UINT32_MAX),
-        isExport(isExport) {}
+      : kind(kind), type(type), isExport(isExport) {}
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
@@ -611,7 +607,6 @@ struct TableDesc {
   bool isImported;
   bool isExported;
   bool isAsmJS;
-  uint32_t instanceDataOffset;
   uint32_t initialLength;
   Maybe<uint32_t> maximumLength;
   Maybe<InitExpr> initExpr;
@@ -624,7 +619,6 @@ struct TableDesc {
         isImported(isImported),
         isExported(isExported),
         isAsmJS(isAsmJS),
-        instanceDataOffset(UINT32_MAX),
         initialLength(initialLength),
         maximumLength(maximumLength),
         initExpr(std::move(initExpr)) {}
