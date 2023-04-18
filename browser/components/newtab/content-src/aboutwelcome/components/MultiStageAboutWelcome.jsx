@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Localized } from "./MSLocalized";
 import { AboutWelcomeUtils } from "../../lib/aboutwelcome-utils";
 import { MultiStageProtonScreen } from "./MultiStageProtonScreen";
@@ -17,7 +17,6 @@ const TRANSITION_OUT_TIME = 1000;
 
 export const MultiStageAboutWelcome = props => {
   let { defaultScreens } = props;
-  const didFilter = useRef(false);
   const [screens, setScreens] = useState(defaultScreens);
 
   const [index, setScreenIndex] = useState(props.startScreen);
@@ -31,15 +30,11 @@ export const MultiStageAboutWelcome = props => {
       );
       if (filteredScreens) {
         setScreens(filteredScreens);
-        didFilter.current = true;
       }
     })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (!didFilter.current) {
-      return;
-    }
     const screenInitials = screens
       .map(({ id }) => id?.split("_")[1]?.[0])
       .join("");
@@ -51,9 +46,7 @@ export const MultiStageAboutWelcome = props => {
         );
       }
     });
-  }, [index, screens]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
     // Remember that a new screen has loaded for browser navigation
     if (props.updateHistory && index > window.history.state) {
       window.history.pushState(index, "");

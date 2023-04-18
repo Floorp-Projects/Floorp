@@ -3,10 +3,6 @@
 const { AboutWelcomeParent } = ChromeUtils.import(
   "resource:///actors/AboutWelcomeParent.jsm"
 );
-
-const { AboutWelcomeTelemetry } = ChromeUtils.import(
-  "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm"
-);
 const { AWScreenUtils } = ChromeUtils.import(
   "resource://activity-stream/lib/AWScreenUtils.jsm"
 );
@@ -48,7 +44,6 @@ add_task(async function test_aboutwelcome_mr_template_telemetry() {
 
   let { browser, cleanup } = await openMRAboutWelcome();
   let aboutWelcomeActor = await getAboutWelcomeParent(browser);
-
   // Stub AboutWelcomeParent's Content Message Handler
   const messageStub = sandbox.spy(aboutWelcomeActor, "onContentMessage");
   await clickVisibleButton(browser, ".action-buttons button.secondary");
@@ -75,44 +70,6 @@ add_task(async function test_aboutwelcome_mr_template_telemetry() {
 
   await cleanup();
   sandbox.restore();
-});
-
-/**
- * Telemetry Impression with Pin as First Screen
- */
-add_task(async function test_aboutwelcome_pin_screen_impression() {
-  await pushPrefs(["browser.shell.checkDefaultBrowser", true]);
-
-  const sandbox = initSandbox();
-
-  sandbox
-    .stub(AWScreenUtils, "evaluateScreenTargeting")
-    .resolves(true)
-    .withArgs(
-      "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin"
-    )
-    .resolves(false);
-
-  let impressionSpy = sandbox.spy(
-    AboutWelcomeTelemetry.prototype,
-    "sendTelemetry"
-  );
-
-  let { cleanup } = await openMRAboutWelcome();
-
-  registerCleanupFunction(() => {
-    sandbox.restore();
-  });
-
-  Assert.ok(
-    impressionSpy.lastCall.args[0].message_id.startsWith(
-      "MR_WELCOME_DEFAULT_0_AW_PIN_FIREFOX_P"
-    ),
-    "Impression telemetry includes correct message id"
-  );
-  await cleanup();
-  sandbox.restore();
-  await popPrefs();
 });
 
 /**
