@@ -3211,12 +3211,11 @@ Element* nsINode::GetNearestInclusiveTargetPopoverForInvoker() const {
 nsGenericHTMLElement* nsINode::GetEffectivePopoverTargetElement() const {
   const auto* formControl =
       nsGenericHTMLFormControlElementWithState::FromNode(this);
-  if (!formControl || !formControl->IsConceptButton() ||
-      formControl->IsDisabled() ||
-      (formControl->GetForm() && formControl->IsSubmitControl())) {
+  if (!formControl || formControl->IsDisabled() ||
+      !formControl->IsButtonControl()) {
     return nullptr;
   }
-  if (auto* popover = nsGenericHTMLElement::FromNode(
+  if (auto* popover = nsGenericHTMLElement::FromNodeOrNull(
           formControl->GetPopoverTargetElement())) {
     if (popover->GetPopoverState() != PopoverState::None) {
       return popover;
