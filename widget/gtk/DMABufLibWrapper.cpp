@@ -128,27 +128,21 @@ bool nsGbmLib::Load() {
 }
 
 gbm_device* nsDMABufDevice::GetGbmDevice() { return mGbmDevice; }
+int nsDMABufDevice::GetDRMFd() { return mDRMFd; }
+
+bool nsDMABufDevice::IsEnabled(nsACString& aFailureId) {
+  if (mDRMFd == -1) {
+    aFailureId = mFailureId;
+  }
+  return mDRMFd != -1;
+}
 
 nsDMABufDevice::nsDMABufDevice()
     : mUseWebGLDmabufBackend(true),
       mDRMFd(-1),
       mGbmDevice(nullptr),
       mInitialized(false) {
-  nsAutoCString drm_render_node(getenv("MOZ_DRM_DEVICE"));
-  if (drm_render_node.IsEmpty()) {
-    drm_render_node.Assign(gfx::gfxVars::DrmRenderDevice());
-  }
-
-  if (!drm_render_node.IsEmpty()) {
-    LOGDMABUF(("Using DRM device %s", drm_render_node.get()));
-    mDRMFd = open(drm_render_node.get(), O_RDWR);
-    if (mDRMFd < 0) {
-      LOGDMABUF(("Failed to open drm render node %s error %s\n",
-                 drm_render_node.get(), strerror(errno)));
-    }
-  } else {
-    LOGDMABUF(("We're missing DRM render device!\n"));
-  }
+  Configure();
 }
 
 nsDMABufDevice::~nsDMABufDevice() {
@@ -162,33 +156,54 @@ nsDMABufDevice::~nsDMABufDevice() {
   }
 }
 
-int nsDMABufDevice::GetDRMFd() { return mDRMFd; }
-
-bool nsDMABufDevice::Configure(nsACString& aFailureId) {
+void nsDMABufDevice::Configure() {
   if (mInitialized) {
-    return true;
+    return;
   }
+  mInitialized = true;
 
   LOGDMABUF(("nsDMABufDevice::Configure()"));
-  mInitialized = true;
 
   if (!nsGbmLib::IsAvailable()) {
     LOGDMABUF(("nsGbmLib is not available!"));
-    aFailureId = "FEATURE_FAILURE_NO_LIBGBM";
-    return false;
+    mFailureId = "FEATURE_FAILURE_NO_LIBGBM";
+    return;
   }
+
+  nsAutoCString drm_render_node(getenv("MOZ_DRM_DEVICE"));
+  if (drm_render_node.IsEmpty()) {
+    drm_render_node.Assign(gfx::gfxVars::DrmRenderDevice());
+  }
+
+  if (!drm_render_node.IsEmpty()) {
+    LOGDMABUF(("Using DRM device %s", drm_render_node.get()));
+    mDRMFd = open(drm_render_node.get(), O_RDWR);
+    if (mDRMFd < 0) {
+      LOGDMABUF(("Failed to open drm render node %s error %s\n",
+                 drm_render_node.get(), strerror(errno)));
+      return;
+    }
+  } else {
+    LOGDMABUF(("We're missing DRM render device!\n"));
+    mFailureId = "FEATURE_FAILURE_NO_DRM_DEVICE";
+    return;
+  }
+
+  // mGbmDevice is optional and it's used to create dmabuf surfaces
+  // directly on GPU. Some drivers (NVIDIA) doesn't support that
+  // but we still can use mDRMFd to operate with dmabuf surfaces
+  // created by GFX drivers and exported by OpenGL.
 
   // fd passed to gbm_create_device() should be kept open until
   // gbm_device_destroy() is called.
-  mGbmDevice = nsGbmLib::CreateDevice(GetDRMFd());
+  mGbmDevice = nsGbmLib::CreateDevice(mDRMFd);
   if (!mGbmDevice) {
-    LOGDMABUF(("Failed to create drm render device"));
-    aFailureId = "FEATURE_FAILURE_BAD_DRM_RENDER_NODE";
-    return false;
+    LOGDMABUF(
+        ("Failed to create drm render device. Direct dmabuf surface creation "
+         "will be disabled."));
   }
 
   LOGDMABUF(("DMABuf is enabled"));
-  return true;
 }
 
 #ifdef NIGHTLY_BUILD
@@ -216,14 +231,6 @@ void nsDMABufDevice::DisableDMABufWebGL() { mUseWebGLDmabufBackend = false; }
 nsDMABufDevice* GetDMABufDevice() {
   static nsDMABufDevice dmaBufDevice;
   return &dmaBufDevice;
-}
-
-nsDMABufDevice* GetAndConfigureDMABufDevice() {
-  nsCString failureId;
-  if (GetDMABufDevice()->Configure(failureId)) {
-    return GetDMABufDevice();
-  }
-  return nullptr;
 }
 
 }  // namespace widget

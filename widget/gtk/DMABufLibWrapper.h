@@ -178,7 +178,10 @@ class nsDMABufDevice {
   nsDMABufDevice();
   ~nsDMABufDevice();
 
+  int GetDRMFd();
   gbm_device* GetGbmDevice();
+
+  bool IsEnabled(nsACString& aFailureId);
 
   // Use dmabuf for WebRender general web content
   bool IsDMABufTexturesEnabled();
@@ -186,20 +189,17 @@ class nsDMABufDevice {
   bool IsDMABufWebGLEnabled();
   void DisableDMABufWebGL();
 
-  int GetDRMFd();
-  bool Configure(nsACString& aFailureId);
-
  private:
+  void Configure();
+
   bool mUseWebGLDmabufBackend;
-
- private:
   int mDRMFd;
   gbm_device* mGbmDevice;
   bool mInitialized;
+  nsCString mFailureId;
 };
 
 nsDMABufDevice* GetDMABufDevice();
-nsDMABufDevice* GetAndConfigureDMABufDevice();
 
 }  // namespace widget
 }  // namespace mozilla
