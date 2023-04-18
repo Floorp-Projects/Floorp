@@ -234,7 +234,7 @@ static void GenPrintPtr(DebugChannel channel, MacroAssembler& masm,
     if (inWasm) {
       masm.callDebugWithABI(SymbolicAddress::PrintPtr);
     } else {
-      using Fn = void (*)(uint8_t * val);
+      using Fn = void (*)(uint8_t* val);
       masm.callWithABI<Fn, PrintPtr>(MoveOp::GENERAL,
                                      CheckUnsafeCallWithABI::DontCheckOther);
     }
