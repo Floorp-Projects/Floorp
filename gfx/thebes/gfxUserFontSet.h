@@ -685,7 +685,7 @@ class gfxUserFontEntry : public gfxFontEntry {
   };
 
   const uint8_t* SanitizeOpenTypeData(const uint8_t* aData, uint32_t aLength,
-                                      uint32_t& aSaneLength,
+                                      uint32_t& aSanitaryLength,
                                       gfxUserFontType& aFontType,
                                       nsTArray<OTSMessage>& aMessages);
 

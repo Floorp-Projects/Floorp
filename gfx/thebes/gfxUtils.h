@@ -307,7 +307,7 @@ class gfxUtils {
    *
    * @param aOutputOptions Passed directly to imgIEncoder::InitFromData as
    *   the value of the |outputOptions| parameter. Callers are responsible
-   *   for making sure that this is a sane value for the passed MIME-type
+   *   for making sure that this is a reasonable value for the passed MIME-type
    *   (i.e. for the type of encoder that will be created).
    *
    * @aBinaryOrData Flag used to determine if the surface is simply encoded
@@ -338,7 +338,7 @@ class gfxUtils {
    *
    * @param aOutputOptions Passed directly to imgIEncoder::InitFromData as
    *   the value of the |outputOptions| parameter. Callers are responsible
-   *   for making sure that this is a sane value for the passed MIME-type
+   *   for making sure that this is a reasonable value for the passed MIME-type
    *   (i.e. for the type of encoder that will be created).
    *
    * @param aOutStream pointer to the output stream
@@ -358,7 +358,7 @@ class gfxUtils {
    *
    * @param aOutputOptions Passed directly to imgIEncoder::InitFromData as
    *   the value of the |outputOptions| parameter. Callers are responsible
-   *   for making sure that this is a sane value for the passed MIME-type
+   *   for making sure that this is a reasonable value for the passed MIME-type
    *   (i.e. for the type of encoder that will be created).
    *
    */

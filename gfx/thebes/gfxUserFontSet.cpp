@@ -166,14 +166,14 @@ class MOZ_STACK_CLASS gfxOTSMessageContext : public gfxOTSContext {
 // Call the OTS library to sanitize an sfnt before attempting to use it.
 // Returns a newly-allocated block, or nullptr in case of fatal errors.
 const uint8_t* gfxUserFontEntry::SanitizeOpenTypeData(
-    const uint8_t* aData, uint32_t aLength, uint32_t& aSaneLength,
+    const uint8_t* aData, uint32_t aLength, uint32_t& aSanitaryLength,
     gfxUserFontType& aFontType, nsTArray<OTSMessage>& aMessages) {
   aFontType = gfxFontUtils::DetermineFontDataType(aData, aLength);
   Telemetry::Accumulate(Telemetry::WEBFONT_FONTTYPE, uint32_t(aFontType));
 
   size_t lengthHint = gfxOTSContext::GuessSanitizedFontSize(aLength, aFontType);
   if (!lengthHint) {
-    aSaneLength = 0;
+    aSanitaryLength = 0;
     return nullptr;
   }
 
@@ -182,11 +182,11 @@ const uint8_t* gfxUserFontEntry::SanitizeOpenTypeData(
   gfxOTSMessageContext otsContext;
   if (!otsContext.Process(&output, aData, aLength, aMessages)) {
     // Failed to decode/sanitize the font, so discard it.
-    aSaneLength = 0;
+    aSanitaryLength = 0;
     return nullptr;
   }
 
-  aSaneLength = output.Tell();
+  aSanitaryLength = output.Tell();
   return static_cast<const uint8_t*>(output.forget());
 }
 
@@ -612,14 +612,14 @@ bool gfxUserFontEntry::LoadPlatformFontSync(uint32_t aSrcIndex,
 
   // Call the OTS sanitizer; this will also decode WOFF to sfnt
   // if necessary. The original data in aFontData is left unchanged.
-  uint32_t saneLen;
+  uint32_t sanitaryLen;
   gfxUserFontType fontType;
   nsTArray<OTSMessage> messages;
-  const uint8_t* saneData =
-      SanitizeOpenTypeData(aFontData, aLength, saneLen, fontType, messages);
+  const uint8_t* sanitaryData =
+      SanitizeOpenTypeData(aFontData, aLength, sanitaryLen, fontType, messages);
 
-  return LoadPlatformFont(aSrcIndex, aFontData, aLength, fontType, saneData,
-                          saneLen, std::move(messages));
+  return LoadPlatformFont(aSrcIndex, aFontData, aLength, fontType, sanitaryData,
+                          sanitaryLen, std::move(messages));
 }
 
 void gfxUserFontEntry::StartPlatformFontLoadOnBackgroundThread(
@@ -627,11 +627,11 @@ void gfxUserFontEntry::StartPlatformFontLoadOnBackgroundThread(
     nsMainThreadPtrHandle<nsIFontLoadCompleteCallback> aCallback) {
   MOZ_ASSERT(!NS_IsMainThread());
 
-  uint32_t saneLen;
+  uint32_t sanitaryLen;
   gfxUserFontType fontType;
   nsTArray<OTSMessage> messages;
-  const uint8_t* saneData =
-      SanitizeOpenTypeData(aFontData, aLength, saneLen, fontType, messages);
+  const uint8_t* sanitaryData =
+      SanitizeOpenTypeData(aFontData, aLength, sanitaryLen, fontType, messages);
 
   nsCOMPtr<nsIRunnable> event =
       NewRunnableMethod<uint32_t, const uint8_t*, uint32_t, gfxUserFontType,
@@ -639,8 +639,8 @@ void gfxUserFontEntry::StartPlatformFontLoadOnBackgroundThread(
                         nsMainThreadPtrHandle<nsIFontLoadCompleteCallback>>(
           "gfxUserFontEntry::ContinuePlatformFontLoadOnMainThread", this,
           &gfxUserFontEntry::ContinuePlatformFontLoadOnMainThread, aSrcIndex,
-          aFontData, aLength, fontType, saneData, saneLen, std::move(messages),
-          aCallback);
+          aFontData, aLength, fontType, sanitaryData, sanitaryLen,
+          std::move(messages), aCallback);
   NS_DispatchToMainThread(event.forget());
 }
 
