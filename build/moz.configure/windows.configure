@@ -31,17 +31,23 @@ def valid_windows_version(value):
 option(env="WINDOWSSDKDIR", nargs=1, help="Directory containing the Windows SDK")
 
 
-@depends("WINDOWSSDKDIR", "WINSYSROOT", target_windows_abi, host_windows_abi)
-def windows_sdk_dir(value, winsysroot, target_windows_abi, host_windows_abi):
+@depends(
+    "WINDOWSSDKDIR", "WINSYSROOT", winsysroot, target_windows_abi, host_windows_abi
+)
+def windows_sdk_dir(
+    value, winsysroot_env, winsysroot, target_windows_abi, host_windows_abi
+):
     if value:
-        if winsysroot:
+        if winsysroot_env:
             die("WINDOWSSDKDIR and WINSYSROOT cannot be set together.")
+        if winsysroot:
+            die("WINDOWSSDKDIR cannot be set when using the bootstrapped WINSYSROOT")
         return value
     if target_windows_abi != "msvc" and host_windows_abi != "msvc":
         return ()
 
     if winsysroot:
-        return [os.path.join(winsysroot[0], "Windows Kits", "10")]
+        return [os.path.join(winsysroot, "Windows Kits", "10")]
 
     return set(
         normalize_path(x[1])
