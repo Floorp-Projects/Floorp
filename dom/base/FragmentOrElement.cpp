@@ -731,23 +731,15 @@ static nsINode* FindChromeAccessOnlySubtreeOwner(nsINode* aNode) {
   if (!aNode->ChromeOnlyAccess()) {
     return aNode;
   }
-
-  while (aNode && !aNode->IsRootOfChromeAccessOnlySubtree()) {
-    aNode = aNode->GetParentNode();
-  }
-
-  return aNode ? aNode->GetParentOrShadowHostNode() : nullptr;
+  return const_cast<nsIContent*>(aNode->GetChromeOnlyAccessSubtreeRootParent());
 }
 
-already_AddRefed<nsINode> FindChromeAccessOnlySubtreeOwner(
-    EventTarget* aTarget) {
-  nsCOMPtr<nsINode> node = nsINode::FromEventTargetOrNull(aTarget);
-  if (!node || !node->ChromeOnlyAccess()) {
-    return node.forget();
+nsINode* FindChromeAccessOnlySubtreeOwner(EventTarget* aTarget) {
+  nsINode* node = nsINode::FromEventTargetOrNull(aTarget);
+  if (!node) {
+    return nullptr;
   }
-
-  node = FindChromeAccessOnlySubtreeOwner(node);
-  return node.forget();
+  return FindChromeAccessOnlySubtreeOwner(node);
 }
 
 void nsIContent::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
