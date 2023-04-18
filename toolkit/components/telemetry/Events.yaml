@@ -3633,7 +3633,10 @@ contextservices.quicksuggest:
       "click": The user picked the suggestion.
       "help": The user picked the suggestion's help button.
       "impression_only": The user picked some other row.
-    objects: ["block", "click", "help", "impression_only"]
+      "other": The user engaged with the suggestion in some other way, for
+        example by picking a command in the result menu. This is a catch-all
+        category and going forward Glean telemetry should be preferred.
+    objects: ["block", "click", "help", "impression_only", "other"]
     extra_keys:
       match_type: >
         "best-match" if the suggestion was a best match or "firefox-suggest" if
