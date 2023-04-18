@@ -265,7 +265,7 @@ class ControlStackEntry {
   }
 
   void switchToCatch() {
-    MOZ_ASSERT(kind() == LabelKind::Try);
+    MOZ_ASSERT(kind() == LabelKind::Try || kind() == LabelKind::Catch);
     kind_ = LabelKind::Catch;
     polymorphicBase_ = false;
   }
@@ -1587,9 +1587,7 @@ inline bool OpIter<Policy>::readCatch(LabelKind* kind, uint32_t* tagIndex,
   }
 
   valueStack_.shrinkTo(block.valueStackBase());
-  if (block.kind() == LabelKind::Try) {
-    block.switchToCatch();
-  }
+  block.switchToCatch();
 
   return push(env_.tags[*tagIndex].type->resultType());
 }
