@@ -66,14 +66,13 @@ gfx::IntSize GetDisplayportAlignmentMultiplier(const ScreenSize& aBaseSize);
  * given origin, based on pref values.
  */
 ScrollAnimationBezierPhysicsSettings ComputeBezierAnimationSettingsForOrigin(
-    ScrollOrigin aOrigin, bool aSmoothScrollingEnabled);
+    ScrollOrigin aOrigin);
 
 /**
  * Calculate if the scrolling should be instant or smooth based based on
  * preferences and the origin
  */
-ScrollMode GetScrollModeForOrigin(ScrollOrigin origin,
-                                  bool aSmoothScrollingEnabled);
+ScrollMode GetScrollModeForOrigin(ScrollOrigin origin);
 
 }  // namespace apz
 

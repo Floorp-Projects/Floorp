@@ -2367,8 +2367,7 @@ NS_IMETHODIMP
 PresShell::ScrollPage(bool aForward) {
   nsIScrollableFrame* scrollFrame =
       GetScrollableFrameToScroll(VerticalScrollDirection);
-  ScrollMode scrollMode = apz::GetScrollModeForOrigin(
-      ScrollOrigin::Pages, nsLayoutUtils::IsSmoothScrollingEnabled());
+  ScrollMode scrollMode = apz::GetScrollModeForOrigin(ScrollOrigin::Pages);
   if (scrollFrame) {
     scrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1), ScrollUnit::PAGES,
                           scrollMode, nullptr,
@@ -2384,8 +2383,7 @@ NS_IMETHODIMP
 PresShell::ScrollLine(bool aForward) {
   nsIScrollableFrame* scrollFrame =
       GetScrollableFrameToScroll(VerticalScrollDirection);
-  ScrollMode scrollMode = apz::GetScrollModeForOrigin(
-      ScrollOrigin::Lines, nsLayoutUtils::IsSmoothScrollingEnabled());
+  ScrollMode scrollMode = apz::GetScrollModeForOrigin(ScrollOrigin::Lines);
   if (scrollFrame) {
     nsRect scrollPort = scrollFrame->GetScrollPortRect();
     nsSize lineSize = scrollFrame->GetLineScrollAmount();
@@ -2405,8 +2403,7 @@ NS_IMETHODIMP
 PresShell::ScrollCharacter(bool aRight) {
   nsIScrollableFrame* scrollFrame =
       GetScrollableFrameToScroll(HorizontalScrollDirection);
-  ScrollMode scrollMode = apz::GetScrollModeForOrigin(
-      ScrollOrigin::Lines, nsLayoutUtils::IsSmoothScrollingEnabled());
+  ScrollMode scrollMode = apz::GetScrollModeForOrigin(ScrollOrigin::Lines);
   if (scrollFrame) {
     int32_t h = StaticPrefs::toolkit_scrollbox_horizontalScrollDistance();
     scrollFrame->ScrollBy(
@@ -2421,8 +2418,7 @@ NS_IMETHODIMP
 PresShell::CompleteScroll(bool aForward) {
   nsIScrollableFrame* scrollFrame =
       GetScrollableFrameToScroll(VerticalScrollDirection);
-  ScrollMode scrollMode = apz::GetScrollModeForOrigin(
-      ScrollOrigin::Other, nsLayoutUtils::IsSmoothScrollingEnabled());
+  ScrollMode scrollMode = apz::GetScrollModeForOrigin(ScrollOrigin::Other);
   if (scrollFrame) {
     scrollFrame->ScrollBy(
         nsIntPoint(0, aForward ? 1 : -1), ScrollUnit::WHOLE, scrollMode,

@@ -22,7 +22,6 @@
 #include "mozilla/TouchEvents.h"          // for WidgetTouchEvent
 #include "mozilla/WheelHandlingHelper.h"  // for WheelDeltaHorizontalizer,
                                           //     WheelDeltaAdjustmentStrategy
-#include "nsLayoutUtils.h"                // for IsSmoothScrollingEnabled
 
 namespace mozilla {
 namespace layers {
@@ -229,7 +228,7 @@ APZEventResult APZInputBridge::ReceiveInputEvent(
       if (Maybe<APZWheelAction> action = ActionForWheelEvent(&wheelEvent)) {
         ScrollWheelInput::ScrollMode scrollMode =
             ScrollWheelInput::SCROLLMODE_INSTANT;
-        if (nsLayoutUtils::IsSmoothScrollingEnabled() &&
+        if (StaticPrefs::general_smoothScroll() &&
             ((wheelEvent.mDeltaMode ==
                   dom::WheelEvent_Binding::DOM_DELTA_LINE &&
               StaticPrefs::general_smoothScroll_mouseWheel()) ||

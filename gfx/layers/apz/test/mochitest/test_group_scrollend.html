@@ -10,8 +10,6 @@
 
 var basePrefs = [
   ["apz.test.mac.synth_wheel_input", true],
-  ["general.smoothScroll", true],
-  ["ui.prefersReducedMotion", 0],
 ];
 
 var scrollendDisabledPrefs = [
@@ -25,8 +23,8 @@ var prefs = [
 ];
 
 var smoothScrollDisabled = [
-  ["apz.test.mac.synth_wheel_input", true],
-  ["general.smoothScroll", false],
+  ...basePrefs,
+  ["general.smoothScroll", true],
 ];
 
 var subtests = [

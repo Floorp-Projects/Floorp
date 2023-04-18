@@ -2041,8 +2041,7 @@ nsEventStatus AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent) {
       SmoothScrollAnimation::GetScrollOriginForAction(aEvent.mAction.mType);
   Maybe<CSSSnapTarget> snapTarget = MaybeAdjustDestinationForScrollSnapping(
       aEvent, destination, GetScrollSnapFlagsForKeyboardAction(aEvent.mAction));
-  ScrollMode scrollMode =
-      apz::GetScrollModeForOrigin(scrollOrigin, IsSmoothScrollingEnabled());
+  ScrollMode scrollMode = apz::GetScrollModeForOrigin(scrollOrigin);
 
   RecordScrollPayload(aEvent.mTimeStamp);
   // If the scrolling is instant, then scroll immediately to the destination
@@ -3553,12 +3552,6 @@ void AsyncPanZoomController::UpdateWithTouchAtDevicePoint(
   ParentLayerPoint point = touchData.mLocalScreenPoint;
   mX.UpdateWithTouchAtDevicePoint(point.x, aEvent.mTimeStamp);
   mY.UpdateWithTouchAtDevicePoint(point.y, aEvent.mTimeStamp);
-}
-
-bool AsyncPanZoomController::IsSmoothScrollingEnabled() const {
-  RecursiveMutexAutoLock lock(mRecursiveMutex);
-  return StaticPrefs::general_smoothScroll_DoNotUseDirectly() &&
-         !mScrollMetadata.PrefersReducedMotion();
 }
 
 Maybe<CompositionPayload> AsyncPanZoomController::NotifyScrollSampling() {
@@ -5449,8 +5442,6 @@ void AsyncPanZoomController::NotifyLayersUpdated(
         aScrollMetadata.GetDisregardedDirection());
     mScrollMetadata.SetOverscrollBehavior(
         aScrollMetadata.GetOverscrollBehavior());
-    mScrollMetadata.SetPrefersReducedMotion(
-        aScrollMetadata.PrefersReducedMotion());
   }
 
   bool scrollOffsetUpdated = false;

@@ -81,5 +81,3 @@ user_pref("layout.css.font-loading-api.workers.enabled", true);
 user_pref("remote.experimental.enabled", true);
 // Disable always partitioning storage with the Storage Access API
 user_pref("privacy.partition.always_partition_third_party_non_cookie_storage", false);
-// Disable prefers-reduced-motion to ensure that smooth scrolls can be tested.
-user_pref("ui.prefersReducedMotion", 0);
