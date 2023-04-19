@@ -1,6 +1,6 @@
 "use strict";
 
-/* exported AppConstants, TEST_ICON_ARRAYBUFFER */
+/* exported assertPersistentListeners, AppConstants, TEST_ICON_ARRAYBUFFER */
 
 var { AppConstants } = SpecialPowers.ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
@@ -12,6 +12,39 @@ var TEST_ICON_DATA =
 var TEST_ICON_ARRAYBUFFER = Uint8Array.from(atob(TEST_ICON_DATA), byte =>
   byte.charCodeAt(0)
 ).buffer;
+
+async function assertPersistentListeners(extension, expected) {
+  const EVENTS = ["onActivated", "onCreated", "onRemoved", "onUpdated"];
+  const stringErr = await SpecialPowers.spawnChrome(
+    [extension.id, EVENTS, expected],
+    async (id, EVENTS, expectedParam) => {
+      try {
+        const { ExtensionTestCommon } = ChromeUtils.import(
+          "resource://testing-common/ExtensionTestCommon.jsm"
+        );
+        const ext = { id };
+        for (const event of EVENTS) {
+          ExtensionTestCommon.testAssertions.assertPersistentListeners(
+            ext,
+            "tabs",
+            event,
+            {
+              primed: expectedParam.primed,
+              persisted: expectedParam.persisted,
+              primedListenersCount: expectedParam.primedListenersCount,
+            }
+          );
+        }
+      } catch (err) {
+        return String(err);
+      }
+    }
+  );
+  ok(
+    stringErr == undefined,
+    stringErr ? stringErr : `Found expected primed and persistent listeners`
+  );
+}
 
 {
   const chromeScript = SpecialPowers.loadChromeScript(
