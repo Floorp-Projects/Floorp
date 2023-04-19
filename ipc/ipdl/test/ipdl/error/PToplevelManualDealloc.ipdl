@@ -1,0 +1,6 @@
+//error: Toplevel protocols cannot be [ManualDealloc]
+
+[ManualDealloc] async protocol PToplevelManualDealloc {
+child:
+    async __delete__();
+};
