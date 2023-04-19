@@ -7,6 +7,7 @@
 #ifndef MainThreadUtils_h_
 #define MainThreadUtils_h_
 
+#include "mozilla/Assertions.h"
 #include "mozilla/ThreadSafety.h"
 #include "nscore.h"
 
@@ -46,6 +47,11 @@ void AssertIsOnMainThread() MOZ_ASSERT_CAPABILITY(sMainThreadCapability);
 inline void AssertIsOnMainThread()
     MOZ_ASSERT_CAPABILITY(sMainThreadCapability) {}
 #  endif
+
+inline void ReleaseAssertIsOnMainThread()
+    MOZ_ASSERT_CAPABILITY(sMainThreadCapability) {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+}
 
 }  // namespace mozilla
 
