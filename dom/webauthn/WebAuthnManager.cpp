@@ -394,10 +394,36 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
     authenticatorAttachment.emplace(attachment.Value());
   }
 
+  // The residentKey field was added in WebAuthn level 2. It takes precedent
+  // over the requireResidentKey field if and only if it is present and it is a
+  // member of the ResidentKeyRequirement enum.
+  static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
+  bool useResidentKeyValue =
+      selection.mResidentKey.WasPassed() &&
+      (selection.mResidentKey.Value().EqualsLiteral(
+           MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_REQUIRED) ||
+       selection.mResidentKey.Value().EqualsLiteral(
+           MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_PREFERRED) ||
+       selection.mResidentKey.Value().EqualsLiteral(
+           MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_DISCOURAGED));
+
+  nsString residentKey;
+  if (useResidentKeyValue) {
+    residentKey = selection.mResidentKey.Value();
+  } else {
+    // "If no value is given then the effective value is required if
+    // requireResidentKey is true or discouraged if it is false or absent."
+    if (selection.mRequireResidentKey) {
+      residentKey.AssignLiteral(MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_REQUIRED);
+    } else {
+      residentKey.AssignLiteral(
+          MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_DISCOURAGED);
+    }
+  }
+
   // Create and forward authenticator selection criteria.
-  WebAuthnAuthenticatorSelection authSelection(selection.mRequireResidentKey,
-                                               selection.mUserVerification,
-                                               authenticatorAttachment);
+  WebAuthnAuthenticatorSelection authSelection(
+      residentKey, selection.mUserVerification, authenticatorAttachment);
 
   nsString rpIcon;
   if (aOptions.mRp.mIcon.WasPassed()) {
