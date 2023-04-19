@@ -107,6 +107,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../../call:simulated_network",
       "../../call:video_stream_api",
       "../../common_video",
+      "../../media:media_constants",
       "../../media:rtc_audio_video",
       "../../media:rtc_internal_video_codecs",
       "../../media:rtc_media_base",
