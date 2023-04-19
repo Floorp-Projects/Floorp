@@ -101,7 +101,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.6.67';
+    const workerVersion = '3.6.74';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -10061,13 +10061,15 @@ class PartialEvaluator {
       const scale = Math.hypot(matrix[0], matrix[1]);
       return [(matrix[0] * x + matrix[1] * y) / scale, (matrix[2] * x + matrix[3] * y) / scale];
     }
-    function compareWithLastPosition() {
+    function compareWithLastPosition(glyphWidth) {
       const currentTransform = getCurrentTextTransform();
       let posX = currentTransform[4];
       let posY = currentTransform[5];
-      const shiftedX = posX - viewBox[0];
-      const shiftedY = posY - viewBox[1];
-      if (shiftedX < 0 || shiftedX > viewBox[2] || shiftedY < 0 || shiftedY > viewBox[3]) {
+      if (textState.font && textState.font.vertical) {
+        if (posX < viewBox[0] || posX > viewBox[2] || posY + glyphWidth < viewBox[1] || posY > viewBox[3]) {
+          return false;
+        }
+      } else if (posX + glyphWidth < viewBox[0] || posX > viewBox[2] || posY < viewBox[1] || posY > viewBox[3]) {
         return false;
       }
       if (!textState.font || !textContentItem.prevTransform) {
@@ -10234,7 +10236,12 @@ class PartialEvaluator {
           saveLastChar(" ");
           continue;
         }
-        if (!category.isZeroWidthDiacritic && !compareWithLastPosition()) {
+        if (!category.isZeroWidthDiacritic && !compareWithLastPosition(scaledDim)) {
+          if (!font.vertical) {
+            textState.translateTextMatrix(scaledDim * textState.textHScale, 0);
+          } else {
+            textState.translateTextMatrix(0, scaledDim);
+          }
           continue;
         }
         const textChunk = ensureTextContentItem();
@@ -52707,8 +52714,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
   }
 }));
 var _worker = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.6.67';
-const pdfjsBuild = 'f1b005d7b';
+const pdfjsVersion = '3.6.74';
+const pdfjsBuild = '42faecf31';
 })();
 
 /******/ 	return __webpack_exports__;
