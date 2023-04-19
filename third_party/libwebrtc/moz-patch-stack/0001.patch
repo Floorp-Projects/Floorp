@@ -1,130 +1,333 @@
-From: =?UTF-8?q?Erik=20Spr=C3=A5ng?= <sprang@webrtc.org>
-Date: Wed, 4 Jan 2023 13:58:31 +0100
-Subject: (cherry-pick-branch-heads/5481) M110 Merge: Make sure VP9 encoders
- are reconfigured on layer activation.
+From: Jeremy Leconte <jleconte@google.com>
+Date: Tue, 20 Dec 2022 09:45:30 +0000
+Subject: (tmp-cherry-pick) Revert "Report total and squared inter frame delays
+ measured in (6903f713d2) OnRenderedFrame"
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-When disabling a spatial layer, reconfiguration of the encoder is not
-necessary (bitrate will never be assigned to the inactive layer anway).
-This CL however makes sure we reconfigure the encoder when a spatial
-layer is activated. Some encoder implementations may encoder the wrong
-number of spatial layers if the active layers have not beens set
-correctly.
+This reverts commit d49d49ad89e67d1a3c63fbc638af445af5648875.
 
-(cherry picked from commit 17043b89ae6422eb055c13c5da191b73927ac99e)
+Reason for revert:
+# Check failed: total_freezes_duration_ms_double <= total_frames_duration_ms_double (196 vs. 0.044783)
+https://ci.chromium.org/p/webrtc/builders/perf/Perf%20Mac%20M1%20Arm64%2012
+it also breaks the metric 'freeze_duration_ratio':
+https://chromeperf.appspot.com/report?sid=6e919d271ff5885c3fa6363dd255b9793d5e79332a9f202b725c33cc7d3da31a
 
-Bug: webrtc:14809, b/261097903, chromium:1310794
-Change-Id: I8d34aaec95eb50a9717c06ea38f25088e5a96429
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/290560
-Commit-Queue: Philip Eliasson <philipel@webrtc.org>
-Auto-Submit: Erik Språng <sprang@webrtc.org>
-Reviewed-by: Philip Eliasson <philipel@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#38999}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/290780
-Commit-Queue: Erik Språng <sprang@webrtc.org>
-Cr-Commit-Position: refs/branch-heads/5481@{#1}
-Cr-Branched-From: 2e1a9a4ae0234d4b1ea7a6fd4188afa1fb20379d-refs/heads/main@{#38901}
+Original change's description:
+> Report total and squared inter frame delays measured in OnRenderedFrame
+>
+> After https://webrtc-review.googlesource.com/c/src/+/160042 we ended up with two sets of metrics representing total and total squared inter frame delays: old is measured in OnDecodedFrame and new in OnRenderedFrame. Reporting of old metrics was unshipped in https://webrtc-review.googlesource.com/c/src/+/278100. The metrics are used for calculation of harmonic frame rate and are desired to be measured as close as possible to rendering. This CL removes calculation of inter frame delay metrics from OnDecodedFrame and reports the metrics calculated in OnRenderedFrame to the stats.
+>
+> Bug: webrtc:11108, b/261512902
+> Change-Id: Ia21b321aab3a1ac0b6136dc0df7d95f2f0fd24c6
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/286842
+> Commit-Queue: Sergey Silkin <ssilkin@webrtc.org>
+> Reviewed-by: Erik Språng <sprang@webrtc.org>
+> Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+> Reviewed-by: Henrik Boström <hbos@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#38909}
+
+Bug: webrtc:11108, b/261512902, webrtc:14789
+Change-Id: Ie0da33c1071c48c50bff6608830c9e2a5a928fb4
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/288402
+Commit-Queue: Jeremy Leconte <jleconte@google.com>
+Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Cr-Commit-Position: refs/heads/main@{#38922}
 ---
- video/video_stream_encoder.cc          |  7 +++-
- video/video_stream_encoder_unittest.cc | 58 ++++++++++++++++++++++++++
- 2 files changed, 64 insertions(+), 1 deletion(-)
+ call/video_receive_stream.h                 |  2 +
+ media/base/media_channel.h                  |  2 +
+ video/g3doc/stats.md                        |  6 +-
+ video/receive_statistics_proxy2.cc          | 11 ++--
+ video/receive_statistics_proxy2_unittest.cc | 72 ++++++++++++++++++---
+ video/video_analyzer.cc                     | 37 ++++++-----
+ video/video_analyzer.h                      |  4 +-
+ 7 files changed, 99 insertions(+), 35 deletions(-)
 
-diff --git a/video/video_stream_encoder.cc b/video/video_stream_encoder.cc
-index 994173228b..c680fe12c8 100644
---- a/video/video_stream_encoder.cc
-+++ b/video/video_stream_encoder.cc
-@@ -150,6 +150,10 @@ bool RequiresEncoderReset(const VideoCodec& prev_send_codec,
-   if (new_send_codec.codecType == kVideoCodecVP9) {
-     size_t num_spatial_layers = new_send_codec.VP9().numberOfSpatialLayers;
-     for (unsigned char i = 0; i < num_spatial_layers; ++i) {
-+      if (!new_send_codec.spatialLayers[i].active) {
-+        // No need to reset when layer is inactive.
-+        continue;
-+      }
-       if (new_send_codec.spatialLayers[i].width !=
-               prev_send_codec.spatialLayers[i].width ||
-           new_send_codec.spatialLayers[i].height !=
-@@ -157,7 +161,8 @@ bool RequiresEncoderReset(const VideoCodec& prev_send_codec,
-           new_send_codec.spatialLayers[i].numberOfTemporalLayers !=
-               prev_send_codec.spatialLayers[i].numberOfTemporalLayers ||
-           new_send_codec.spatialLayers[i].qpMax !=
--              prev_send_codec.spatialLayers[i].qpMax) {
-+              prev_send_codec.spatialLayers[i].qpMax ||
-+          !prev_send_codec.spatialLayers[i].active) {
-         return true;
-       }
-     }
-diff --git a/video/video_stream_encoder_unittest.cc b/video/video_stream_encoder_unittest.cc
-index 1f328ccf81..cdd4c75ab7 100644
---- a/video/video_stream_encoder_unittest.cc
-+++ b/video/video_stream_encoder_unittest.cc
-@@ -8649,6 +8649,64 @@ TEST_F(VideoStreamEncoderTest,
-   video_stream_encoder_->Stop();
+diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
+index 0fa257e5ba..2e2742a814 100644
+--- a/call/video_receive_stream.h
++++ b/call/video_receive_stream.h
+@@ -132,6 +132,8 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
+     uint32_t pause_count = 0;
+     uint32_t total_freezes_duration_ms = 0;
+     uint32_t total_pauses_duration_ms = 0;
++    uint32_t total_frames_duration_ms = 0;
++    double sum_squared_frame_durations = 0.0;
+ 
+     VideoContentType content_type = VideoContentType::UNSPECIFIED;
+ 
+diff --git a/media/base/media_channel.h b/media/base/media_channel.h
+index 233f1185dc..ee9a4724b0 100644
+--- a/media/base/media_channel.h
++++ b/media/base/media_channel.h
+@@ -628,6 +628,8 @@ struct VideoReceiverInfo : public MediaReceiverInfo {
+   uint32_t pause_count = 0;
+   uint32_t total_freezes_duration_ms = 0;
+   uint32_t total_pauses_duration_ms = 0;
++  uint32_t total_frames_duration_ms = 0;
++  double sum_squared_frame_durations = 0.0;
+   uint32_t jitter_ms = 0;
+ 
+   webrtc::VideoContentType content_type = webrtc::VideoContentType::UNSPECIFIED;
+diff --git a/video/g3doc/stats.md b/video/g3doc/stats.md
+index 0a423e12ff..669651e262 100644
+--- a/video/g3doc/stats.md
++++ b/video/g3doc/stats.md
+@@ -148,6 +148,8 @@ Updated after a frame has been decoded, `VCMDecodedFrameCallback::Decoded`.
+ *   `qp_sum` - sum of quantizer values of decoded frames [[rtcinboundrtpstreamstats-qpsum]].
+ *   `content_type` - content type (UNSPECIFIED/SCREENSHARE).
+ *   `interframe_delay_max_ms` - max inter-frame delay within a time window between decoded frames.
++*   `total_inter_frame_delay` - sum of inter-frame delay in seconds between decoded frames [[rtcinboundrtpstreamstats-totalinterframedelay]].
++*   `total_squared_inter_frame_delay` - sum of squared inter-frame delays in seconds between decoded frames [[rtcinboundrtpstreamstats-totalsquaredinterframedelay]].
+ 
+ Updated before a frame is sent to the renderer, `VideoReceiveStream2::OnFrame`.
+ *   `frames_rendered` - total number of rendered frames.
+@@ -160,8 +162,8 @@ Updated before a frame is sent to the renderer, `VideoReceiveStream2::OnFrame`.
+ *   `pause_count` - total number of detected pauses.
+ *   `total_freezes_duration_ms` - total duration of freezes in ms.
+ *   `total_pauses_duration_ms` - total duration of pauses in ms.
+-*   `total_inter_frame_delay` - sum of inter-frame delay in seconds between rendered frames [[rtcinboundrtpstreamstats-totalinterframedelay]].
+-*   `total_squared_inter_frame_delay` - sum of squared inter-frame delays in seconds between rendered frames [[rtcinboundrtpstreamstats-totalsquaredinterframedelay]].
++*   `total_frames_duration_ms` - time in ms between the last rendered frame and the first rendered frame.
++*   `sum_squared_frame_durations` - sum of squared inter-frame delays in seconds between rendered frames.
+ 
+ `ReceiveStatisticsImpl::OnRtpPacket` is updated for received RTP packets. From `ReceiveStatistics`:
+ *   `total_bitrate_bps` - incoming bitrate in bps.
+diff --git a/video/receive_statistics_proxy2.cc b/video/receive_statistics_proxy2.cc
+index cb34f98023..297f5d3de9 100644
+--- a/video/receive_statistics_proxy2.cc
++++ b/video/receive_statistics_proxy2.cc
+@@ -624,11 +624,10 @@ VideoReceiveStreamInterface::Stats ReceiveStatisticsProxy::GetStats() const {
+       video_quality_observer_->TotalFreezesDurationMs();
+   stats_.total_pauses_duration_ms =
+       video_quality_observer_->TotalPausesDurationMs();
+-  stats_.total_inter_frame_delay =
+-      video_quality_observer_->TotalFramesDurationMs() / 1000.0;
+-  stats_.total_squared_inter_frame_delay =
++  stats_.total_frames_duration_ms =
++      video_quality_observer_->TotalFramesDurationMs();
++  stats_.sum_squared_frame_durations =
+       video_quality_observer_->SumSquaredFrameDurationsSec();
+-
+   stats_.content_type = last_content_type_;
+   stats_.timing_frame_info = timing_frame_info_counter_.Max(now_ms);
+   stats_.jitter_buffer_delay_seconds =
+@@ -840,6 +839,10 @@ void ReceiveStatisticsProxy::OnDecodedFrame(
+     int64_t interframe_delay_ms =
+         frame_meta.decode_timestamp.ms() - *last_decoded_frame_time_ms_;
+     RTC_DCHECK_GE(interframe_delay_ms, 0);
++    double interframe_delay = interframe_delay_ms / 1000.0;
++    stats_.total_inter_frame_delay += interframe_delay;
++    stats_.total_squared_inter_frame_delay +=
++        interframe_delay * interframe_delay;
+     interframe_delay_max_moving_.Add(interframe_delay_ms,
+                                      frame_meta.decode_timestamp.ms());
+     content_specific_stats->interframe_delay_counter.Add(interframe_delay_ms);
+diff --git a/video/receive_statistics_proxy2_unittest.cc b/video/receive_statistics_proxy2_unittest.cc
+index 0c628f7b83..f0869c4341 100644
+--- a/video/receive_statistics_proxy2_unittest.cc
++++ b/video/receive_statistics_proxy2_unittest.cc
+@@ -328,6 +328,62 @@ TEST_F(ReceiveStatisticsProxy2Test, ReportsContentType) {
+             videocontenttypehelpers::ToString(FlushAndGetStats().content_type));
  }
  
-+TEST_F(VideoStreamEncoderTest, RecreatesEncoderWhenEnableVp9SpatialLayer) {
-+  // Set up encoder to use VP9 SVC using two spatial layers.
-+  fake_encoder_.SetTemporalLayersSupported(/*spatial_idx=*/0, true);
-+  fake_encoder_.SetTemporalLayersSupported(/*spatial_idx*/ 1, true);
-+  VideoEncoderConfig video_encoder_config;
-+  test::FillEncoderConfiguration(VideoCodecType::kVideoCodecVP9,
-+                                 /* num_streams*/ 1, &video_encoder_config);
-+  video_encoder_config.max_bitrate_bps = 2 * kTargetBitrate.bps();
-+  video_encoder_config.content_type =
-+      VideoEncoderConfig::ContentType::kRealtimeVideo;
-+  VideoCodecVP9 vp9_settings = VideoEncoder::GetDefaultVp9Settings();
-+  vp9_settings.numberOfSpatialLayers = 2;
-+  vp9_settings.numberOfTemporalLayers = 2;
-+  vp9_settings.interLayerPred = InterLayerPredMode::kOn;
-+  vp9_settings.automaticResizeOn = false;
-+  video_encoder_config.encoder_specific_settings =
-+      rtc::make_ref_counted<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
-+          vp9_settings);
-+  video_encoder_config.spatial_layers = GetSvcConfig(1280, 720,
-+                                                     /*fps=*/30.0,
-+                                                     /*first_active_layer=*/0,
-+                                                     /*num_spatial_layers=*/2,
-+                                                     /*num_temporal_layers=*/3,
-+                                                     /*is_screenshare=*/false);
-+  ConfigureEncoder(video_encoder_config.Copy(),
-+                   VideoStreamEncoder::BitrateAllocationCallbackType::
-+                       kVideoLayersAllocation);
++TEST_F(ReceiveStatisticsProxy2Test, ReportsMaxTotalInterFrameDelay) {
++  webrtc::VideoFrame frame = CreateFrame(kWidth, kHeight);
++  const TimeDelta kInterFrameDelay1 = TimeDelta::Millis(100);
++  const TimeDelta kInterFrameDelay2 = TimeDelta::Millis(200);
++  const TimeDelta kInterFrameDelay3 = TimeDelta::Millis(300);
++  double expected_total_inter_frame_delay = 0;
++  double expected_total_squared_inter_frame_delay = 0;
++  EXPECT_EQ(expected_total_inter_frame_delay,
++            statistics_proxy_->GetStats().total_inter_frame_delay);
++  EXPECT_EQ(expected_total_squared_inter_frame_delay,
++            statistics_proxy_->GetStats().total_squared_inter_frame_delay);
 +
-+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
-+      kTargetBitrate, kTargetBitrate, kTargetBitrate, 0, 0, 0);
++  statistics_proxy_->OnDecodedFrame(frame, absl::nullopt, TimeDelta::Zero(),
++                                    VideoContentType::UNSPECIFIED);
++  EXPECT_DOUBLE_EQ(expected_total_inter_frame_delay,
++                   FlushAndGetStats().total_inter_frame_delay);
++  EXPECT_DOUBLE_EQ(expected_total_squared_inter_frame_delay,
++                   FlushAndGetStats().total_squared_inter_frame_delay);
 +
-+  video_source_.IncomingCapturedFrame(CreateFrame(CurrentTimeMs(), 1280, 720));
-+  WaitForEncodedFrame(CurrentTimeMs());
-+  EXPECT_EQ(fake_encoder_.GetNumInitializations(), 1);
++  time_controller_.AdvanceTime(kInterFrameDelay1);
++  statistics_proxy_->OnDecodedFrame(frame, absl::nullopt, TimeDelta::Zero(),
++                                    VideoContentType::UNSPECIFIED);
++  expected_total_inter_frame_delay += kInterFrameDelay1.seconds<double>();
++  expected_total_squared_inter_frame_delay +=
++      pow(kInterFrameDelay1.seconds<double>(), 2.0);
++  EXPECT_DOUBLE_EQ(expected_total_inter_frame_delay,
++                   FlushAndGetStats().total_inter_frame_delay);
++  EXPECT_DOUBLE_EQ(
++      expected_total_squared_inter_frame_delay,
++      statistics_proxy_->GetStats().total_squared_inter_frame_delay);
 +
-+  // Turn off the top spatial layer. This does not require an encoder reset.
-+  video_encoder_config.spatial_layers[1].active = false;
-+  video_stream_encoder_->ConfigureEncoder(video_encoder_config.Copy(),
-+                                          kMaxPayloadLength, nullptr);
++  time_controller_.AdvanceTime(kInterFrameDelay2);
++  statistics_proxy_->OnDecodedFrame(frame, absl::nullopt, TimeDelta::Zero(),
++                                    VideoContentType::UNSPECIFIED);
++  expected_total_inter_frame_delay += kInterFrameDelay2.seconds<double>();
++  expected_total_squared_inter_frame_delay +=
++      pow(kInterFrameDelay2.seconds<double>(), 2.0);
++  EXPECT_DOUBLE_EQ(expected_total_inter_frame_delay,
++                   FlushAndGetStats().total_inter_frame_delay);
++  EXPECT_DOUBLE_EQ(
++      expected_total_squared_inter_frame_delay,
++      statistics_proxy_->GetStats().total_squared_inter_frame_delay);
 +
-+  time_controller_.AdvanceTime(TimeDelta::Millis(33));
-+  video_source_.IncomingCapturedFrame(CreateFrame(CurrentTimeMs(), 1280, 720));
-+  WaitForEncodedFrame(CurrentTimeMs());
-+  EXPECT_EQ(fake_encoder_.GetNumInitializations(), 1);
-+
-+  // Turn on the top spatial layer again, this does require an encoder reset.
-+  video_encoder_config.spatial_layers[1].active = true;
-+  video_stream_encoder_->ConfigureEncoder(video_encoder_config.Copy(),
-+                                          kMaxPayloadLength, nullptr);
-+
-+  time_controller_.AdvanceTime(TimeDelta::Millis(33));
-+  video_source_.IncomingCapturedFrame(CreateFrame(CurrentTimeMs(), 1280, 720));
-+  WaitForEncodedFrame(CurrentTimeMs());
-+  EXPECT_EQ(fake_encoder_.GetNumInitializations(), 2);
-+
-+  video_stream_encoder_->Stop();
++  time_controller_.AdvanceTime(kInterFrameDelay3);
++  statistics_proxy_->OnDecodedFrame(frame, absl::nullopt, TimeDelta::Zero(),
++                                    VideoContentType::UNSPECIFIED);
++  expected_total_inter_frame_delay += kInterFrameDelay3.seconds<double>();
++  expected_total_squared_inter_frame_delay +=
++      pow(kInterFrameDelay3.seconds<double>(), 2.0);
++  EXPECT_DOUBLE_EQ(expected_total_inter_frame_delay,
++                   FlushAndGetStats().total_inter_frame_delay);
++  EXPECT_DOUBLE_EQ(
++      expected_total_squared_inter_frame_delay,
++      statistics_proxy_->GetStats().total_squared_inter_frame_delay);
 +}
 +
- #endif  // !defined(WEBRTC_IOS)
+ TEST_F(ReceiveStatisticsProxy2Test, ReportsMaxInterframeDelay) {
+   webrtc::VideoFrame frame = CreateFrame(kWidth, kHeight);
+   const TimeDelta kInterframeDelay1 = TimeDelta::Millis(100);
+@@ -447,9 +503,9 @@ TEST_F(ReceiveStatisticsProxy2Test, PauseBeforeFirstAndAfterLastFrameIgnored) {
+   EXPECT_EQ(0u, stats.total_pauses_duration_ms);
+ }
  
- // Test parameters: (VideoCodecType codec, bool allow_i420_conversion)
+-TEST_F(ReceiveStatisticsProxy2Test, ReportsTotalInterFrameDelay) {
++TEST_F(ReceiveStatisticsProxy2Test, ReportsFramesDuration) {
+   VideoReceiveStreamInterface::Stats stats = statistics_proxy_->GetStats();
+-  ASSERT_EQ(0.0, stats.total_inter_frame_delay);
++  ASSERT_EQ(0u, stats.total_frames_duration_ms);
+ 
+   webrtc::VideoFrame frame = CreateFrame(kWidth, kHeight);
+ 
+@@ -463,12 +519,12 @@ TEST_F(ReceiveStatisticsProxy2Test, ReportsTotalInterFrameDelay) {
+   }
+ 
+   stats = statistics_proxy_->GetStats();
+-  EXPECT_EQ(10 * 30 / 1000.0, stats.total_inter_frame_delay);
++  EXPECT_EQ(10 * 30u, stats.total_frames_duration_ms);
+ }
+ 
+-TEST_F(ReceiveStatisticsProxy2Test, ReportsTotalSquaredInterFrameDelay) {
++TEST_F(ReceiveStatisticsProxy2Test, ReportsSumSquaredFrameDurations) {
+   VideoReceiveStreamInterface::Stats stats = statistics_proxy_->GetStats();
+-  ASSERT_EQ(0.0, stats.total_squared_inter_frame_delay);
++  ASSERT_EQ(0u, stats.sum_squared_frame_durations);
+ 
+   webrtc::VideoFrame frame = CreateFrame(kWidth, kHeight);
+   for (int i = 0; i <= 10; ++i) {
+@@ -477,10 +533,10 @@ TEST_F(ReceiveStatisticsProxy2Test, ReportsTotalSquaredInterFrameDelay) {
+   }
+ 
+   stats = statistics_proxy_->GetStats();
+-  const double kExpectedTotalSquaredInterFrameDelaySecs =
++  const double kExpectedSumSquaredFrameDurationsSecs =
+       10 * (30 / 1000.0 * 30 / 1000.0);
+-  EXPECT_EQ(kExpectedTotalSquaredInterFrameDelaySecs,
+-            stats.total_squared_inter_frame_delay);
++  EXPECT_EQ(kExpectedSumSquaredFrameDurationsSecs,
++            stats.sum_squared_frame_durations);
+ }
+ 
+ TEST_F(ReceiveStatisticsProxy2Test, OnDecodedFrameWithoutQpQpSumWontExist) {
+diff --git a/video/video_analyzer.cc b/video/video_analyzer.cc
+index bc350c3ff3..3077a77b2c 100644
+--- a/video/video_analyzer.cc
++++ b/video/video_analyzer.cc
+@@ -99,8 +99,8 @@ VideoAnalyzer::VideoAnalyzer(test::LayerFilteringTransport* transport,
+       mean_decode_time_ms_(0.0),
+       freeze_count_(0),
+       total_freezes_duration_ms_(0),
+-      total_inter_frame_delay_(0),
+-      total_squared_inter_frame_delay_(0),
++      total_frames_duration_ms_(0),
++      sum_squared_frame_durations_(0),
+       decode_frame_rate_(0),
+       render_frame_rate_(0),
+       last_fec_bytes_(0),
+@@ -502,14 +502,6 @@ void VideoAnalyzer::PollStats() {
+   if (receive_stream_ != nullptr) {
+     VideoReceiveStreamInterface::Stats receive_stats =
+         receive_stream_->GetStats();
+-
+-    // Freeze metrics.
+-    freeze_count_ = receive_stats.freeze_count;
+-    total_freezes_duration_ms_ = receive_stats.total_freezes_duration_ms;
+-    total_inter_frame_delay_ = receive_stats.total_inter_frame_delay;
+-    total_squared_inter_frame_delay_ =
+-        receive_stats.total_squared_inter_frame_delay;
+-
+     // `total_decode_time_ms` gives a good estimate of the mean decode time,
+     // `decode_ms` is used to keep track of the standard deviation.
+     if (receive_stats.frames_decoded > 0)
+@@ -526,12 +518,20 @@ void VideoAnalyzer::PollStats() {
+     // `frames_decoded` and `frames_rendered` are used because they are more
+     // accurate than `decode_frame_rate` and `render_frame_rate`.
+     // The latter two are calculated on a momentary basis.
+-    if (total_inter_frame_delay_ > 0) {
+-      decode_frame_rate_ =
+-          receive_stats.frames_decoded / total_inter_frame_delay_;
+-      render_frame_rate_ =
+-          receive_stats.frames_rendered / total_inter_frame_delay_;
++    const double total_frames_duration_sec_double =
++        static_cast<double>(receive_stats.total_frames_duration_ms) / 1000.0;
++    if (total_frames_duration_sec_double > 0) {
++      decode_frame_rate_ = static_cast<double>(receive_stats.frames_decoded) /
++                           total_frames_duration_sec_double;
++      render_frame_rate_ = static_cast<double>(receive_stats.frames_rendered) /
++                           total_frames_duration_sec_double;
+     }
++
++    // Freeze metrics.
++    freeze_count_ = receive_stats.freeze_count;
++    total_freezes_duration_ms_ = receive_stats.total_freezes_duration_ms;
++    total_frames_duration_ms_ = receive_stats.total_frames_duration_ms;
++    sum_squared_frame_durations_ = receive_stats.sum_squared_frame_durations;
+   }
+ 
+   if (audio_receive_stream_ != nullptr) {
+@@ -673,7 +673,7 @@ void VideoAnalyzer::PrintResults() {
+   const double total_freezes_duration_ms_double =
+       static_cast<double>(total_freezes_duration_ms_);
+   const double total_frames_duration_ms_double =
+-      total_inter_frame_delay_ / rtc::kNumMillisecsPerSec;
++      static_cast<double>(total_frames_duration_ms_);
+ 
+   if (total_frames_duration_ms_double > 0) {
+     GetGlobalMetricsLogger()->LogSingleValueMetric(
+@@ -701,11 +701,10 @@ void VideoAnalyzer::PrintResults() {
+           : 0,
+       Unit::kMilliseconds, ImprovementDirection::kSmallerIsBetter);
+ 
+-  if (total_squared_inter_frame_delay_ > 0) {
++  if (1000 * sum_squared_frame_durations_ > 0) {
+     GetGlobalMetricsLogger()->LogSingleValueMetric(
+         "harmonic_frame_rate_fps", test_label_,
+-        total_frames_duration_ms_double /
+-            (1000 * total_squared_inter_frame_delay_),
++        total_frames_duration_ms_double / (1000 * sum_squared_frame_durations_),
+         Unit::kHertz, ImprovementDirection::kBiggerIsBetter);
+   }
+ 
+diff --git a/video/video_analyzer.h b/video/video_analyzer.h
+index 9186d78597..2cee5e1b92 100644
+--- a/video/video_analyzer.h
++++ b/video/video_analyzer.h
+@@ -263,8 +263,8 @@ class VideoAnalyzer : public PacketReceiver,
+   SamplesStatsCounter time_between_freezes_ RTC_GUARDED_BY(comparison_lock_);
+   uint32_t freeze_count_ RTC_GUARDED_BY(comparison_lock_);
+   uint32_t total_freezes_duration_ms_ RTC_GUARDED_BY(comparison_lock_);
+-  double total_inter_frame_delay_ RTC_GUARDED_BY(comparison_lock_);
+-  double total_squared_inter_frame_delay_ RTC_GUARDED_BY(comparison_lock_);
++  uint32_t total_frames_duration_ms_ RTC_GUARDED_BY(comparison_lock_);
++  double sum_squared_frame_durations_ RTC_GUARDED_BY(comparison_lock_);
+ 
+   double decode_frame_rate_ RTC_GUARDED_BY(comparison_lock_);
+   double render_frame_rate_ RTC_GUARDED_BY(comparison_lock_);
 -- 
 2.34.1
 
