@@ -53,7 +53,6 @@ VRManagerChild::VRManagerChild()
   MOZ_ASSERT(NS_IsMainThread());
 
   mStartTimeStamp = TimeStamp::Now();
-  AddRef();
 }
 
 VRManagerChild::~VRManagerChild() { MOZ_ASSERT(NS_IsMainThread()); }
@@ -148,8 +147,6 @@ void VRManagerChild::ShutDown() {
   sVRManagerChildSingleton->Close();
   sVRManagerChildSingleton = nullptr;
 }
-
-void VRManagerChild::ActorDealloc() { Release(); }
 
 void VRManagerChild::ActorDestroy(ActorDestroyReason aReason) {
   if (sVRManagerChildSingleton == this) {
