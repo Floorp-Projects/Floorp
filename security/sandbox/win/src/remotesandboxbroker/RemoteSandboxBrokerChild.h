@@ -16,11 +16,13 @@ class RemoteSandboxBrokerChild : public PRemoteSandboxBrokerChild {
   friend class PRemoteSandboxBrokerChild;
 
  public:
+  NS_INLINE_DECL_REFCOUNTING(RemoteSandboxBrokerChild, override)
+
   RemoteSandboxBrokerChild();
-  virtual ~RemoteSandboxBrokerChild();
   bool Init(mozilla::ipc::UntypedEndpoint&& aEndpoint);
 
  private:
+  virtual ~RemoteSandboxBrokerChild();
   mozilla::ipc::IPCResult RecvLaunchApp(LaunchParameters&& aParams,
                                         bool* aOutOk, uint64_t* aOutHandle);
 
