@@ -17,6 +17,10 @@ XPCOMUtils.defineLazyServiceGetter(
 do_get_profile();
 
 add_task(async function test_deleteByRange() {
+  Services.prefs.setBoolPref(
+    "dom.security.credentialmanagement.identity.enabled",
+    true
+  );
   const expiry = Date.now() + 24 * 60 * 60;
   let rpPrincipal = Services.scriptSecurityManager.createContentPrincipal(
     Services.io.newURI("https://rp.com/"),
@@ -110,4 +114,8 @@ add_task(async function test_deleteByRange() {
     allowLogout
   );
   Assert.ok(!registered.value, "Should not be existing");
+
+  Services.prefs.clearUserPref(
+    "dom.security.credentialmanagement.identity.enabled"
+  );
 });
