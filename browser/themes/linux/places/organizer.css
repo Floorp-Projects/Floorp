@@ -111,7 +111,9 @@
   grid-column: 2;
 }
 
-#editBookmarkPanelContent input {
+#editBookmarkPanelContent input,
+.expander-up,
+.expander-down {
   margin: 4px;
 }
 
