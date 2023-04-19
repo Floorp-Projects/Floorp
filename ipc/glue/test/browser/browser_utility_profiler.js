@@ -20,7 +20,7 @@ add_task(async () => {
   const utilityPid = await startUtilityProcess();
 
   info("Start the profiler");
-  startProfiler();
+  await startProfiler();
 
   let profile;
   await TestUtils.waitForCondition(async () => {
