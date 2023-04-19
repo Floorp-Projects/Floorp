@@ -145,7 +145,13 @@ class EventListenerManagerBase {
  protected:
   EventListenerManagerBase();
 
-  EventMessage mNoListenerForEvent;
+  void ClearNoListenersForEvents() {
+    mNoListenerForEvents[0] = eVoidEvent;
+    mNoListenerForEvents[1] = eVoidEvent;
+    mNoListenerForEvents[2] = eVoidEvent;
+  }
+
+  EventMessage mNoListenerForEvents[3];
   uint16_t mMayHavePaintEventListener : 1;
   uint16_t mMayHaveMutationListeners : 1;
   uint16_t mMayHaveCapturingListeners : 1;
@@ -387,9 +393,13 @@ class EventListenerManager final : public EventListenerManagerBase {
     }
 
     // Check if we already know that there is no event listener for the event.
-    if (mNoListenerForEvent == aEvent->mMessage &&
-        (mNoListenerForEvent != eUnidentifiedEvent ||
-         mNoListenerForEventAtom == aEvent->mSpecifiedEventType)) {
+    if (aEvent->mMessage == eUnidentifiedEvent) {
+      if (mNoListenerForEventAtom == aEvent->mSpecifiedEventType) {
+        return;
+      }
+    } else if (mNoListenerForEvents[0] == aEvent->mMessage ||
+               mNoListenerForEvents[1] == aEvent->mMessage ||
+               mNoListenerForEvents[2] == aEvent->mMessage) {
       return;
     }
     HandleEventInternal(aPresContext, aEvent, aDOMEvent, aCurrentTarget,
