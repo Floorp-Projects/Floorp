@@ -5,13 +5,16 @@
 package org.mozilla.fenix.ui
 
 import androidx.core.net.toUri
+import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
+import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.assertExternalAppOpens
 import org.mozilla.fenix.helpers.TestHelper.deleteDownloadedFileOnStorage
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -29,18 +32,23 @@ import org.mozilla.fenix.ui.robots.notificationShade
  *  - Verifies managing downloads inside the Downloads listing.
  **/
 class DownloadTest {
+    private lateinit var mockWebServer: MockWebServer
+
     /* Remote test page managed by Mozilla Mobile QA team at https://github.com/mozilla-mobile/testapp */
     private val downloadTestPage = "https://storage.googleapis.com/mobile_test_assets/test_app/downloads.html"
     private var downloadFile: String = ""
     private val pdfFileName = "washington.pdf"
-    private val pdfFileURL = "storage.googleapis.com/mobile_test_assets/public/washington.pdf"
-    private val pdfFileContent = "Washington Crossing the Delaware"
 
     @get:Rule
     val activityTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
 
     @Before
     fun setUp() {
+        mockWebServer = MockWebServer().apply {
+            dispatcher = AndroidAssetDispatcher()
+            start()
+        }
+
         // clear all existing notifications
         notificationShade {
             mDevice.openNotification()
@@ -53,6 +61,8 @@ class DownloadTest {
         notificationShade {
             cancelAllShownNotifications()
         }
+
+        mockWebServer.shutdown()
     }
 
     @Test
@@ -199,21 +209,25 @@ class DownloadTest {
     @SmokeTest
     @Test
     fun openPDFInBrowserTest() {
+        val genericURL =
+            TestAssetHelper.getGenericAsset(mockWebServer, 3)
+
         navigationToolbar {
-        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
-            clickLinkMatchingText(pdfFileName)
-            verifyUrl(pdfFileURL)
-            verifyPageContent(pdfFileContent)
+        }.enterURLAndEnterToBrowser(genericURL.url) {
+            clickLinkMatchingText("PDF file")
+            verifyPageContent("Washington Crossing the Delaware")
         }
     }
 
     @SmokeTest
     @Test
     fun saveAndOpenPdfTest() {
+        val genericURL =
+            TestAssetHelper.getGenericAsset(mockWebServer, 3)
+
         navigationToolbar {
-        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
-            clickLinkMatchingText(pdfFileName)
-            verifyPageContent(pdfFileContent)
+        }.enterURLAndEnterToBrowser(genericURL.url) {
+            clickLinkMatchingText("PDF file")
         }.openThreeDotMenu {
         }.clickShareButton {
         }.clickSaveAsPDF {
