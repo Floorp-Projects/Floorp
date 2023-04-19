@@ -684,7 +684,6 @@ class ContentParent final : public PContentParent,
                                     const char* aOperation) const;
 
   void ActorDestroy(ActorDestroyReason why) override;
-  void ActorDealloc() override;
 
   bool ShouldContinueFromReplyTimeout() override;
 
@@ -1485,9 +1484,6 @@ class ContentParent final : public PContentParent,
   void AssertAlive();
 
  private:
-  // Released in ActorDealloc; deliberately not exposed to the CC.
-  RefPtr<ContentParent> mSelfRef;
-
   // If you add strong pointers to cycle collected objects here, be sure to
   // release these objects in ShutDownProcess.  See the comment there for more
   // details.
