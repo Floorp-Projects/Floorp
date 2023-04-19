@@ -29,7 +29,7 @@ add_task(async function test_searchEngine_autoFill() {
   });
   await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   ok(
-    frecencyForUrl(uri) > 10000,
+    (await frecencyForUrl(uri)) > 10000,
     "Added URI should have expected high frecency"
   );
 
