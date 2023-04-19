@@ -50,7 +50,7 @@ class VRManagerChild : public PVRManagerChild {
   friend class PVRManagerChild;
 
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRManagerChild);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRManagerChild, override);
 
   static VRManagerChild* Get();
 
@@ -116,8 +116,6 @@ class VRManagerChild : public PVRManagerChild {
   PVRLayerChild* AllocPVRLayerChild(const uint32_t& aDisplayID,
                                     const uint32_t& aGroup);
   bool DeallocPVRLayerChild(PVRLayerChild* actor);
-
-  void ActorDealloc() override;
 
   // MOZ_CAN_RUN_SCRIPT_BOUNDARY until we can mark ipdl-generated things as
   // MOZ_CAN_RUN_SCRIPT.
