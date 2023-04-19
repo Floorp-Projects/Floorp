@@ -463,6 +463,11 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
 
   virtual nsTArray<int32_t>& GetCachedHyperTextOffsets() override;
 
+  // XXX: Declare ourselves as a template friend to work around a suspected gcc
+  // bug with calling protected functions. See Bug 1825516.
+  template <class>
+  friend class RemoteAccessibleBase;
+
  private:
   uintptr_t mParent;
   static const uintptr_t kNoParent = UINTPTR_MAX;
