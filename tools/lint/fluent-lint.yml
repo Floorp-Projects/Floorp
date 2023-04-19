@@ -6,5 +6,8 @@ fluent-lint:
     extensions: ['ftl']
     support-files:
         - 'tools/lint/fluent-lint**'
+    brand-files:
+        - 'browser/branding/official/locales/en-US/brand.ftl'
+        - 'toolkit/locales/en-US/toolkit/branding/brandings.ftl'
     type: external
     payload: fluent-lint:lint
