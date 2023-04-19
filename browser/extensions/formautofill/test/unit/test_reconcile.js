@@ -194,8 +194,6 @@ const ADDRESS_RECONCILE_TESTCASES = [
       "given-name": "Mark",
       "family-name": "Hammond",
       country: "NZ",
-      // We also had an unknown field we round-tripped
-      foo: "bar",
     },
     local: [
       {
@@ -212,16 +210,12 @@ const ADDRESS_RECONCILE_TESTCASES = [
       "given-name": "Mark",
       "family-name": "Hammond",
       country: "AU",
-      // This is a new unknown field that should send instead!
-      "unknown-1": "an unknown field from another client",
     },
     reconciled: {
       guid: "e087a06dfc57",
       "given-name": "Skip",
       "family-name": "Hammond",
       country: "AU",
-      // This is a new unknown field that should send instead!
-      "unknown-1": "an unknown field from another client",
     },
   },
   {
@@ -269,8 +263,6 @@ const ADDRESS_RECONCILE_TESTCASES = [
       version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
-      // unknown fields we previously roundtripped
-      foo: "bar",
     },
     local: [
       {
@@ -283,8 +275,6 @@ const ADDRESS_RECONCILE_TESTCASES = [
       version: 1,
       "given-name": "Skip",
       "family-name": "Hammond",
-      // New unknown field that should be the new round trip
-      "unknown-1": "an unknown field from another client",
     },
     reconciled: {
       guid: "0b3a72a1bea2",
@@ -300,7 +290,6 @@ const ADDRESS_RECONCILE_TESTCASES = [
       version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
-      "unknown-1": "an unknown field from another client",
     },
     local: [
       {
@@ -315,21 +304,18 @@ const ADDRESS_RECONCILE_TESTCASES = [
       version: 1,
       "given-name": "Kip",
       "family-name": "Hammond",
-      "unknown-1": "an unknown field from another client",
     },
     forked: {
       // So we've forked the local record to a new GUID (and the next sync is
       // going to write this as a new record)
       "given-name": "Skip",
       "family-name": "Hammond",
-      "unknown-1": "an unknown field from another client",
     },
     reconciled: {
       // And we've updated the local version of the record to be the remote version.
       guid: "62068784d089",
       "given-name": "Kip",
       "family-name": "Hammond",
-      "unknown-1": "an unknown field from another client",
     },
   },
   {
@@ -521,7 +507,6 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
       version: CREDIT_CARD_SCHEMA_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
-      "unknown-1": "an unknown field from another client",
     },
     local: [
       {
@@ -539,13 +524,11 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
       version: CREDIT_CARD_SCHEMA_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
-      "unknown-2": "a newer unknown field",
     },
     reconciled: {
       guid: "2bbd2d8fbc6b",
       "cc-name": "John Doe",
       "cc-number": "4929001587121045",
-      "unknown-2": "a newer unknown field",
     },
   },
   {
@@ -555,7 +538,6 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
       version: CREDIT_CARD_SCHEMA_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
-      "unknown-1": "unknown field",
     },
     local: [
       {
@@ -568,13 +550,11 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
       version: CREDIT_CARD_SCHEMA_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4929001587121045",
-      "unknown-1": "unknown field",
     },
     reconciled: {
       guid: "e3680e9f890d",
       "cc-name": "John Doe",
       "cc-number": "4929001587121045",
-      "unknown-1": "unknown field",
     },
   },
 
@@ -699,7 +679,6 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-month": 12,
-      "unknown-1": "unknown field",
     },
     local: [
       {
@@ -716,14 +695,12 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-month": 1,
-      "unknown-2": "a newer unknown field",
     },
     reconciled: {
       guid: "e087a06dfc57",
       "cc-name": "John Doe",
       "cc-number": "4929001587121045",
       "cc-exp-month": 1,
-      "unknown-2": "a newer unknown field",
     },
   },
   {
@@ -733,7 +710,6 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
       version: CREDIT_CARD_SCHEMA_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
-      "unknown-1": "unknown field",
     },
     local: [
       {
@@ -752,7 +728,6 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
       "cc-exp-year": 2000,
-      "unknown-1": "unknown field",
     },
     reconciled: {
       guid: "340a078c596f",
@@ -760,7 +735,6 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
       "cc-number": "4111111111111111",
       "cc-exp-month": 12,
       "cc-exp-year": 2000,
-      "unknown-1": "unknown field",
     },
   },
   {
@@ -799,7 +773,6 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
       version: CREDIT_CARD_SCHEMA_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4111111111111111",
-      "unknown-1": "unknown field",
     },
     local: [
       {
@@ -814,21 +787,18 @@ const CREDIT_CARD_RECONCILE_TESTCASES = [
       version: CREDIT_CARD_SCHEMA_VERSION,
       "cc-name": "John Doe",
       "cc-number": "4929001587121045",
-      "unknown-1": "unknown field",
     },
     forked: {
       // So we've forked the local record to a new GUID (and the next sync is
       // going to write this as a new record)
       "cc-name": "John Doe",
       "cc-number": "5103059495477870",
-      "unknown-1": "unknown field",
     },
     reconciled: {
       // And we've updated the local version of the record to be the remote version.
       guid: "62068784d089",
       "cc-name": "John Doe",
       "cc-number": "4929001587121045",
-      "unknown-1": "unknown field",
     },
   },
   {
@@ -1036,8 +1006,6 @@ add_task(async function test_reconcile_idempotent() {
       version: 1,
       "given-name": "Mark",
       "family-name": "Hammond",
-      // an unknown field from a previous sync
-      foo: "bar",
     },
     { sourceSync: true }
   );
@@ -1053,7 +1021,6 @@ add_task(async function test_reconcile_idempotent() {
     "given-name": "Mark",
     "family-name": "Hammond",
     tel: "123456",
-    "unknown-1": "an unknown field from another client",
   };
 
   {
@@ -1070,7 +1037,6 @@ add_task(async function test_reconcile_idempotent() {
         "family-name": "Hammond",
         organization: "Mozilla",
         tel: "123456",
-        "unknown-1": "an unknown field from another client",
       }),
       "First merge should merge local and remote changes"
     );
@@ -1090,7 +1056,6 @@ add_task(async function test_reconcile_idempotent() {
         "family-name": "Hammond",
         organization: "Mozilla",
         tel: "123456",
-        "unknown-1": "an unknown field from another client",
       }),
       "Second merge should not change record"
     );

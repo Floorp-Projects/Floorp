@@ -28,7 +28,6 @@ const address1 = [
     changes: {
       organization: "W3C",
     },
-    "unknown-1": "an unknown field from another client",
   },
 ];
 
@@ -45,7 +44,6 @@ const address1_after = [
     country: "US",
     tel: "+16172535702",
     email: "timbl@w3.org",
-    "unknown-1": "an unknown field from another client",
   },
 ];
 
