@@ -185,7 +185,6 @@ CompositorManagerChild::CompositorManagerChild(CompositorManagerParent* aParent,
   }
 
   mCanSend = true;
-  AddRef();
   SetReplyTimeout();
 }
 
@@ -202,13 +201,7 @@ CompositorManagerChild::CompositorManagerChild(
   }
 
   mCanSend = true;
-  AddRef();
   SetReplyTimeout();
-}
-
-void CompositorManagerChild::ActorDealloc() {
-  MOZ_ASSERT(!mCanSend);
-  Release();
 }
 
 void CompositorManagerChild::ActorDestroy(ActorDestroyReason aReason) {

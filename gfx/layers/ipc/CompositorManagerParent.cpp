@@ -134,10 +134,6 @@ void CompositorManagerParent::BindComplete(bool aIsRoot) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread() ||
              NS_IsMainThread());
 
-  // Add the IPDL reference to ourself, so we can't get freed until IPDL is
-  // done with us.
-  AddRef();
-
   StaticMutexAutoLock lock(sMutex);
   if (aIsRoot) {
     sInstance = this;
@@ -154,24 +150,20 @@ void CompositorManagerParent::BindComplete(bool aIsRoot) {
 void CompositorManagerParent::ActorDestroy(ActorDestroyReason aReason) {
   SharedSurfacesParent::DestroyProcess(OtherPid());
 
-  StaticMutexAutoLock lock(sMutex);
-  if (sInstance == this) {
-    sInstance = nullptr;
-  }
-}
-
-void CompositorManagerParent::ActorDealloc() {
   GetCurrentSerialEventTarget()->Dispatch(
       NewRunnableMethod("layers::CompositorManagerParent::DeferredDestroy",
                         this, &CompositorManagerParent::DeferredDestroy));
 
-#ifdef COMPOSITOR_MANAGER_PARENT_EXPLICIT_SHUTDOWN
   StaticMutexAutoLock lock(sMutex);
+  if (sInstance == this) {
+    sInstance = nullptr;
+  }
+
+#ifdef COMPOSITOR_MANAGER_PARENT_EXPLICIT_SHUTDOWN
   if (sActiveActors) {
     sActiveActors->RemoveElement(this);
   }
 #endif
-  Release();
 }
 
 void CompositorManagerParent::DeferredDestroy() {
