@@ -1026,10 +1026,10 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
         }
 
         RefPtr<nsRefreshDriver> refreshDriver;
-        if (aPresContext && aPresContext->GetRootPresContext() &&
-            aEvent->IsTrusted() &&
+        if (aEvent->IsTrusted() &&
             (aEvent->mMessage == eKeyPress ||
-             aEvent->mMessage == eMouseClick)) {
+             aEvent->mMessage == eMouseClick) &&
+            aPresContext && aPresContext->GetRootPresContext()) {
           refreshDriver = aPresContext->GetRootPresContext()->RefreshDriver();
           if (refreshDriver) {
             refreshDriver->EnterUserInputProcessing();
@@ -1139,8 +1139,10 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
         }
         aEvent->mPath = nullptr;
 
-        if (aPresContext && aPresContext->GetRootPresContext() &&
-            aEvent->IsTrusted()) {
+        if (aEvent->IsTrusted() &&
+            (aEvent->mMessage == eKeyPress ||
+             aEvent->mMessage == eMouseClick) &&
+            aPresContext && aPresContext->GetRootPresContext()) {
           nsRefreshDriver* driver =
               aPresContext->GetRootPresContext()->RefreshDriver();
           if (driver && driver->HasPendingTick()) {
