@@ -130,6 +130,34 @@ add_setup(function setup() {
   registerCleanupFunction(resetTelemetry);
 });
 
+add_task(async function test_schema() {
+  const recipe = ExperimentFakes.recipe("foo");
+
+  info("Testing recipe without a localizations entry");
+  await ExperimentTestUtils.validateExperiment(recipe);
+
+  info("Testing recipe with a 'null' localizations entry");
+  await ExperimentTestUtils.validateExperiment({
+    ...recipe,
+    localizations: null,
+  });
+
+  info("Testing recipe with a valid localizations entry");
+  await ExperimentTestUtils.validateExperiment({
+    ...recipe,
+    localizations: LOCALIZATIONS,
+  });
+
+  info("Testing recipe with an invalid localizations entry");
+  await Assert.rejects(
+    ExperimentTestUtils.validateExperiment({
+      ...recipe,
+      localizations: [],
+    }),
+    /Experiment foo not valid/
+  );
+});
+
 add_task(function test_substituteLocalizations() {
   Assert.equal(
     ExperimentFeature.substituteLocalizations("string", LOCALIZATIONS["en-US"]),
