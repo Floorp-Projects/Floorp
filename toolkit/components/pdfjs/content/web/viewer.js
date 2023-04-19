@@ -8643,15 +8643,12 @@ class PDFViewer {
   #onVisibilityChange = null;
   #scaleTimeoutId = null;
   constructor(options) {
-    const viewerVersion = '3.6.67';
+    const viewerVersion = '3.6.74';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
     this.container = options.container;
     this.viewer = options.viewer || options.container.firstElementChild;
-    const hiddenCopyElement = this.#hiddenCopyElement = document.createElement("div");
-    hiddenCopyElement.id = "hiddenCopyElement";
-    this.viewer.before(hiddenCopyElement);
     this.#resizeObserver.observe(this.container);
     this.eventBus = options.eventBus;
     this.linkService = options.linkService || new _pdf_link_service.SimpleLinkService();
@@ -8856,6 +8853,14 @@ class PDFViewer {
       }
     };
   }
+  #createHiddenCopyElement() {
+    if (this.#hiddenCopyElement) {
+      return;
+    }
+    const element = this.#hiddenCopyElement = document.createElement("div");
+    element.id = "hiddenCopyElement";
+    this.viewer.before(element);
+  }
   #initializePermissions(permissions) {
     const params = {
       annotationEditorMode: this.#annotationEditorMode,
@@ -8863,10 +8868,13 @@ class PDFViewer {
       textLayerMode: this.textLayerMode
     };
     if (!permissions) {
+      this.#createHiddenCopyElement();
       return params;
     }
     if (!permissions.includes(_pdfjsLib.PermissionFlag.COPY)) {
       this.viewer.classList.add(ENABLE_PERMISSIONS_CLASS);
+    } else {
+      this.#createHiddenCopyElement();
     }
     if (!permissions.includes(_pdfjsLib.PermissionFlag.MODIFY_CONTENTS)) {
       params.annotationEditorMode = _pdfjsLib.AnnotationEditorType.DISABLE;
@@ -9185,7 +9193,11 @@ class PDFViewer {
     this._updateScrollMode();
     this.viewer.removeAttribute("lang");
     this.viewer.classList.remove(ENABLE_PERMISSIONS_CLASS);
-    document.removeEventListener("copy", this.#copyCallbackBound);
+    if (this.#hiddenCopyElement) {
+      document.removeEventListener("copy", this.#copyCallbackBound);
+      this.#hiddenCopyElement.remove();
+      this.#hiddenCopyElement = null;
+    }
   }
   #ensurePageViewVisible() {
     if (this._scrollMode !== _ui_utils.ScrollMode.PAGE) {
@@ -12818,8 +12830,8 @@ var _ui_utils = __webpack_require__(4);
 var _app_options = __webpack_require__(6);
 var _pdf_link_service = __webpack_require__(8);
 var _app = __webpack_require__(3);
-const pdfjsVersion = '3.6.67';
-const pdfjsBuild = 'f1b005d7b';
+const pdfjsVersion = '3.6.74';
+const pdfjsBuild = '42faecf31';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;
