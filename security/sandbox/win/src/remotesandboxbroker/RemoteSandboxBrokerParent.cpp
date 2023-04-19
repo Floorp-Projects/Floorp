@@ -28,23 +28,21 @@ RefPtr<GenericPromise> RemoteSandboxBrokerParent::Launch(
     mProcess->AddHandleToShare(HANDLE(handle));
   }
 
-  // Note: we rely on the caller to keep this instance alive while we launch
-  // the process, so that these closures point to valid memory.
-  auto resolve = [this](base::ProcessHandle handle) {
-    mOpened = mProcess->TakeInitialEndpoint().Bind(this);
-    if (!mOpened) {
-      mProcess->Destroy();
-      mProcess = nullptr;
+  auto resolve = [self = RefPtr{this}](base::ProcessHandle handle) {
+    self->mOpened = self->mProcess->TakeInitialEndpoint().Bind(self);
+    if (!self->mOpened) {
+      self->mProcess->Destroy();
+      self->mProcess = nullptr;
       return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
     }
     return GenericPromise::CreateAndResolve(true, __func__);
   };
 
-  auto reject = [this]() {
+  auto reject = [self = RefPtr{this}]() {
     NS_ERROR("failed to launch child in the parent");
-    if (mProcess) {
-      mProcess->Destroy();
-      mProcess = nullptr;
+    if (self->mProcess) {
+      self->mProcess->Destroy();
+      self->mProcess = nullptr;
     }
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   };
