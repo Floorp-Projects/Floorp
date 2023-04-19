@@ -21,6 +21,7 @@ const DEFAULT_WIDGET_IDS = [
   "search-container",
   "sidebar-button",
 ];
+const OVERFLOWED_EXTENSIONS_LIST_ID = "overflowed-extensions-list";
 
 add_setup(async function() {
   // To make it easier to control things that will overflow, we'll start by
@@ -1111,4 +1112,108 @@ add_task(async function test_overflow_with_a_second_window() {
 
   await BrowserTestUtils.closeWindow(win);
   await BrowserTestUtils.closeWindow(secondWin);
+});
+
+add_task(async function test_overflow_with_extension_in_collapsed_area() {
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+  const bookmarksToolbar = win.document.getElementById(
+    CustomizableUI.AREA_BOOKMARKS
+  );
+
+  let movedNode;
+  let extensionWidgetID;
+  let extensionWidgetPosition;
+
+  await withWindowOverflowed(win, {
+    beforeOverflowed: async extensionIDs => {
+      // Before we overflow the toolbar, let's move the last item to the
+      // (visible) bookmarks toolbar.
+      extensionWidgetID = AppUiTestInternals.getBrowserActionWidgetId(
+        extensionIDs.at(-1)
+      );
+
+      movedNode = CustomizableUI.getWidget(extensionWidgetID).forWindow(win)
+        .node;
+
+      // Ensure that the toolbar is currently visible.
+      await promiseSetToolbarVisibility(bookmarksToolbar, true);
+
+      // Move an extension to the bookmarks toolbar.
+      CustomizableUI.addWidgetToArea(
+        extensionWidgetID,
+        CustomizableUI.AREA_BOOKMARKS
+      );
+
+      Assert.equal(
+        movedNode.parentElement.id,
+        CustomizableUI.AREA_BOOKMARKS,
+        "expected extension widget to be in the bookmarks toolbar"
+      );
+      Assert.ok(
+        !movedNode.hasAttribute("artificallyOverflowed"),
+        "expected node to not have any artificallyOverflowed prop"
+      );
+
+      extensionWidgetPosition = CustomizableUI.getPlacementOfWidget(
+        extensionWidgetID
+      ).position;
+
+      // At this point we have an extension in the bookmarks toolbar, and this
+      // toolbar is visible. We are going to resize the window (width) AND
+      // collapse the toolbar to verify that the extension placed in the
+      // bookmarks toolbar is overflowed in the panel without any side effects.
+    },
+    whenOverflowed: async () => {
+      // Ensure that the toolbar is currently collapsed.
+      await promiseSetToolbarVisibility(bookmarksToolbar, false);
+
+      Assert.equal(
+        movedNode.parentElement.id,
+        OVERFLOWED_EXTENSIONS_LIST_ID,
+        "expected extension widget to be in the extensions panel"
+      );
+      Assert.ok(
+        movedNode.getAttribute("artificallyOverflowed"),
+        "expected node to be artifically overflowed"
+      );
+
+      // At this point the extension is in the panel because it was overflowed
+      // after the bookmarks toolbar has been collapsed. The window is also
+      // narrow, but we are going to restore the initial window size. Since the
+      // visibility of the bookmarks toolbar hasn't changed, the extension
+      // should still be in the panel.
+    },
+    afterUnderflowed: async () => {
+      Assert.equal(
+        movedNode.parentElement.id,
+        OVERFLOWED_EXTENSIONS_LIST_ID,
+        "expected extension widget to still be in the extensions panel"
+      );
+      Assert.ok(
+        movedNode.getAttribute("artificallyOverflowed"),
+        "expected node to still be artifically overflowed"
+      );
+
+      // Ensure that the toolbar is visible again, which should move the
+      // extension back to where it was initially.
+      await promiseSetToolbarVisibility(bookmarksToolbar, true);
+
+      Assert.equal(
+        movedNode.parentElement.id,
+        CustomizableUI.AREA_BOOKMARKS,
+        "expected extension widget to be in the bookmarks toolbar"
+      );
+      Assert.ok(
+        !movedNode.hasAttribute("artificallyOverflowed"),
+        "expected node to not have any artificallyOverflowed prop"
+      );
+      Assert.equal(
+        CustomizableUI.getPlacementOfWidget(extensionWidgetID).position,
+        extensionWidgetPosition,
+        "expected the extension to be back at the same position in the bookmarks toolbar"
+      );
+    },
+  });
+
+  await BrowserTestUtils.closeWindow(win);
 });
