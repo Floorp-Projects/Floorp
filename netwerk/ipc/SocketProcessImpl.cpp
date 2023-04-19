@@ -67,10 +67,10 @@ bool SocketProcessImpl::Init(int aArgc, char* aArgv[]) {
     return false;
   }
 
-  return mSocketProcessChild.Init(TakeInitialEndpoint(), *parentBuildID);
+  return mSocketProcessChild->Init(TakeInitialEndpoint(), *parentBuildID);
 }
 
-void SocketProcessImpl::CleanUp() { mSocketProcessChild.CleanUp(); }
+void SocketProcessImpl::CleanUp() { mSocketProcessChild->CleanUp(); }
 
 }  // namespace net
 }  // namespace mozilla

@@ -295,9 +295,15 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvInitSocketProcessBridgeParent(
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mSocketProcessBridgeParentMap.Contains(aContentProcessId));
 
-  mSocketProcessBridgeParentMap.InsertOrUpdate(
-      aContentProcessId, MakeRefPtr<SocketProcessBridgeParent>(
-                             aContentProcessId, std::move(aEndpoint)));
+  if (NS_WARN_IF(!aEndpoint.IsValid())) {
+    return IPC_FAIL(this, "invalid endpoint");
+  }
+
+  auto bridge = MakeRefPtr<SocketProcessBridgeParent>(aContentProcessId);
+  MOZ_ALWAYS_TRUE(aEndpoint.Bind(bridge));
+
+  mSocketProcessBridgeParentMap.InsertOrUpdate(aContentProcessId,
+                                               std::move(bridge));
   return IPC_OK();
 }
 
