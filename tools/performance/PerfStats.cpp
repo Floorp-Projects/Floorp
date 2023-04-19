@@ -258,7 +258,7 @@ auto PerfStats::CollectPerfStatsJSONInternal() -> RefPtr<PerfStatsPromise> {
 
       if (gpuChild) {
         gpuChild->SendCollectPerfStatsJSON(
-            [collector, gpuChild](const nsCString& aString) {
+            [collector, gpuChild = RefPtr{gpuChild}](const nsCString& aString) {
               collector->AppendPerfStats(aString, gpuChild);
             },
             // The only feasible errors here are if something goes wrong in the

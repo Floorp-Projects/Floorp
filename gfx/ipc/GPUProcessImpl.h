@@ -27,7 +27,7 @@ class GPUProcessImpl final : public ipc::ProcessChild {
   void CleanUp() override;
 
  private:
-  GPUParent mGPU;
+  RefPtr<GPUParent> mGPU = new GPUParent;
 
 #if defined(XP_WIN)
   // This object initializes and configures COM.
