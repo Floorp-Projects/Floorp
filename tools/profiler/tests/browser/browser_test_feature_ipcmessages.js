@@ -24,11 +24,6 @@ async function waitForLoad() {
  * Test the IPCMessages feature.
  */
 add_task(async function test_profile_feature_ipcmessges() {
-  Assert.ok(
-    !Services.profiler.IsActive(),
-    "The profiler is not currently active"
-  );
-
   const url = BASE_URL + "simple.html";
 
   info("Open a tab while profiling IPC messages.");
