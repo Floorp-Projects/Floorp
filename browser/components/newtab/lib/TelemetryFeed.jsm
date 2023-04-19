@@ -854,10 +854,17 @@ class TelemetryFeed {
 
   handleTopSitesSponsoredImpressionStats(action) {
     const { data } = action;
-    const { type, position, source } = data;
+    const {
+      type,
+      position,
+      source,
+      advertiser: advertiser_name,
+      tile_id,
+    } = data;
     // Legacy telemetry (scalars and PingCentre payloads) expects 1-based tile
     // positions.
     const legacyTelemetryPosition = position + 1;
+
     let pingType;
 
     const session = this.sessions.get(au.getPortIdOfSender(action));
@@ -870,6 +877,8 @@ class TelemetryFeed {
       );
       if (session) {
         Glean.topsites.impression.record({
+          advertiser_name,
+          tile_id: tile_id.toString(),
           newtab_visit_id: session.session_id,
           is_sponsored: true,
           position,
@@ -884,6 +893,8 @@ class TelemetryFeed {
       );
       if (session) {
         Glean.topsites.click.record({
+          advertiser_name,
+          tile_id: tile_id.toString(),
           newtab_visit_id: session.session_id,
           is_sponsored: true,
           position,
