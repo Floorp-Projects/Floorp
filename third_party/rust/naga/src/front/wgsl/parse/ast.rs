@@ -229,6 +229,10 @@ pub enum Type<'a> {
     Sampler {
         comparison: bool,
     },
+    AccelerationStructure,
+    RayQuery,
+    RayDesc,
+    RayIntersection,
     BindingArray {
         base: Handle<Type<'a>>,
         size: ArraySize<'a>,

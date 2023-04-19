@@ -34,7 +34,7 @@ impl Frontend {
             ScalarKind::Uint => ScalarValue::Uint(value),
             ScalarKind::Sint => ScalarValue::Sint(value as i64),
             ScalarKind::Float => ScalarValue::Float(value as f64),
-            _ => unreachable!(),
+            ScalarKind::Bool => unreachable!(),
         };
 
         self.module.constants.fetch_or_append(
@@ -301,7 +301,6 @@ impl Frontend {
                             Expression::Compose {
                                 ty: vector_ty,
                                 components: (0..rows as u32)
-                                    .into_iter()
                                     .map(|r| match r == i {
                                         true => value,
                                         false => zero,
@@ -376,7 +375,6 @@ impl Frontend {
                         components.push(match ori_rows.cmp(&rows) {
                             Ordering::Less => {
                                 let components = (0..rows as u32)
-                                    .into_iter()
                                     .map(|r| {
                                         if r < ori_rows as u32 {
                                             ctx.add_expression(
@@ -415,7 +413,6 @@ impl Frontend {
                                 inner: ConstantInner::Composite {
                                     ty: vector_ty,
                                     components: (0..rows as u32)
-                                        .into_iter()
                                         .map(|r| match r == i {
                                             true => one_constant,
                                             false => zero_constant,
@@ -1326,7 +1323,7 @@ impl Frontend {
             } => {
                 let mut location = match binding {
                     crate::Binding::Location { location, .. } => location,
-                    _ => return,
+                    crate::Binding::BuiltIn(_) => return,
                 };
 
                 // TODO: Better error reporting
@@ -1375,7 +1372,7 @@ impl Frontend {
             TypeInner::Struct { ref members, .. } => {
                 let mut location = match binding {
                     crate::Binding::Location { location, .. } => location,
-                    _ => return,
+                    crate::Binding::BuiltIn(_) => return,
                 };
 
                 for (i, member) in members.iter().enumerate() {

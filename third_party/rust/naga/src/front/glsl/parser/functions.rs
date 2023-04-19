@@ -166,11 +166,14 @@ impl<'source> ParsingContext<'source> {
 
                 self.expect(frontend, TokenValue::LeftParen)?;
 
-                let selector = {
+                let (selector, uint) = {
                     let mut stmt = ctx.stmt_ctx();
                     let expr = self.parse_expression(frontend, ctx, &mut stmt, body)?;
-                    ctx.lower_expect(stmt, frontend, expr, ExprPos::Rhs, body)?
-                        .0
+                    let (root, meta) =
+                        ctx.lower_expect(stmt, frontend, expr, ExprPos::Rhs, body)?;
+                    let uint = frontend.resolve_type(ctx, root, meta)?.scalar_kind()
+                        == Some(crate::ScalarKind::Uint);
+                    (root, uint)
                 };
 
                 self.expect(frontend, TokenValue::RightParen)?;
@@ -186,35 +189,36 @@ impl<'source> ParsingContext<'source> {
                     let value = match self.expect_peek(frontend)?.value {
                         TokenValue::Case => {
                             self.bump(frontend)?;
-                            let value = {
-                                let mut stmt = ctx.stmt_ctx();
-                                let expr = self.parse_expression(frontend, ctx, &mut stmt, body)?;
-                                let (root, meta) =
-                                    ctx.lower_expect(stmt, frontend, expr, ExprPos::Rhs, body)?;
-                                let constant = frontend.solve_constant(ctx, root, meta)?;
 
-                                match frontend.module.constants[constant].inner {
-                                    ConstantInner::Scalar {
-                                        value: ScalarValue::Sint(int),
-                                        ..
-                                    } => int as i32,
-                                    ConstantInner::Scalar {
-                                        value: ScalarValue::Uint(int),
-                                        ..
-                                    } => int as i32,
-                                    _ => {
-                                        frontend.errors.push(Error {
-                                            kind: ErrorKind::SemanticError(
-                                                "Case values can only be integers".into(),
-                                            ),
-                                            meta,
-                                        });
+                            let mut stmt = ctx.stmt_ctx();
+                            let expr = self.parse_expression(frontend, ctx, &mut stmt, body)?;
+                            let (root, meta) =
+                                ctx.lower_expect(stmt, frontend, expr, ExprPos::Rhs, body)?;
+                            let constant = frontend.solve_constant(ctx, root, meta)?;
 
-                                        0
-                                    }
+                            match frontend.module.constants[constant].inner {
+                                ConstantInner::Scalar {
+                                    value: ScalarValue::Sint(int),
+                                    ..
+                                } => match uint {
+                                    true => crate::SwitchValue::U32(int as u32),
+                                    false => crate::SwitchValue::I32(int as i32),
+                                },
+                                ConstantInner::Scalar {
+                                    value: ScalarValue::Uint(int),
+                                    ..
+                                } => crate::SwitchValue::U32(int as u32),
+                                _ => {
+                                    frontend.errors.push(Error {
+                                        kind: ErrorKind::SemanticError(
+                                            "Case values can only be integers".into(),
+                                        ),
+                                        meta,
+                                    });
+
+                                    crate::SwitchValue::I32(0)
                                 }
-                            };
-                            crate::SwitchValue::Integer(value)
+                            }
                         }
                         TokenValue::Default => {
                             self.bump(frontend)?;

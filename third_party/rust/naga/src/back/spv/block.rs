@@ -1084,9 +1084,9 @@ impl<'w> BlockContext<'w> {
                 }
             }
             crate::Expression::FunctionArgument(index) => self.function.parameter_id(index),
-            crate::Expression::CallResult(_) | crate::Expression::AtomicResult { .. } => {
-                self.cached[expr_handle]
-            }
+            crate::Expression::CallResult(_)
+            | crate::Expression::AtomicResult { .. }
+            | crate::Expression::RayQueryProceedResult => self.cached[expr_handle],
             crate::Expression::As {
                 expr,
                 kind,
@@ -1334,15 +1334,29 @@ impl<'w> BlockContext<'w> {
                 block.body.push(instruction);
                 id
             }
-            crate::Expression::Derivative { axis, expr } => {
-                use crate::DerivativeAxis as Da;
-
+            crate::Expression::Derivative { axis, ctrl, expr } => {
+                use crate::{DerivativeAxis as Axis, DerivativeControl as Ctrl};
+                match ctrl {
+                    Ctrl::Coarse | Ctrl::Fine => {
+                        self.writer.require_any(
+                            "DerivativeControl",
+                            &[spirv::Capability::DerivativeControl],
+                        )?;
+                    }
+                    Ctrl::None => {}
+                }
                 let id = self.gen_id();
                 let expr_id = self.cached[expr];
-                let op = match axis {
-                    Da::X => spirv::Op::DPdx,
-                    Da::Y => spirv::Op::DPdy,
-                    Da::Width => spirv::Op::Fwidth,
+                let op = match (axis, ctrl) {
+                    (Axis::X, Ctrl::Coarse) => spirv::Op::DPdxCoarse,
+                    (Axis::X, Ctrl::Fine) => spirv::Op::DPdxFine,
+                    (Axis::X, Ctrl::None) => spirv::Op::DPdx,
+                    (Axis::Y, Ctrl::Coarse) => spirv::Op::DPdyCoarse,
+                    (Axis::Y, Ctrl::Fine) => spirv::Op::DPdyFine,
+                    (Axis::Y, Ctrl::None) => spirv::Op::DPdy,
+                    (Axis::Width, Ctrl::Coarse) => spirv::Op::FwidthCoarse,
+                    (Axis::Width, Ctrl::Fine) => spirv::Op::FwidthFine,
+                    (Axis::Width, Ctrl::None) => spirv::Op::Fwidth,
                 };
                 block
                     .body
@@ -1372,6 +1386,12 @@ impl<'w> BlockContext<'w> {
                 id
             }
             crate::Expression::ArrayLength(expr) => self.write_runtime_array_length(expr, block)?,
+            crate::Expression::RayQueryGetIntersection { query, committed } => {
+                if !committed {
+                    return Err(Error::FeatureNotImplemented("candidate intersection"));
+                }
+                self.write_ray_query_get_intersection(query, block)
+            }
         };
 
         self.cached[expr_handle] = id;
@@ -1607,12 +1627,7 @@ impl<'w> BlockContext<'w> {
         size: u32,
         block: &mut Block,
     ) {
-        let const_null = self.gen_id();
-        block
-            .body
-            .push(Instruction::constant_null(result_type_id, const_null));
-
-        let mut partial_sum = const_null;
+        let mut partial_sum = self.writer.write_constant_null(result_type_id);
         let last_component = size - 1;
         for index in 0..=last_component {
             // compute the product of the current components
@@ -1770,11 +1785,14 @@ impl<'w> BlockContext<'w> {
                         case_ids.push(label_id);
 
                         match case.value {
-                            crate::SwitchValue::Integer(value) => {
+                            crate::SwitchValue::I32(value) => {
                                 raw_cases.push(super::instructions::Case {
                                     value: value as Word,
                                     label_id,
                                 });
+                            }
+                            crate::SwitchValue::U32(value) => {
+                                raw_cases.push(super::instructions::Case { value, label_id });
                             }
                             crate::SwitchValue::Default => {
                                 default_id = Some(label_id);
@@ -2178,6 +2196,9 @@ impl<'w> BlockContext<'w> {
                     };
 
                     block.body.push(instruction);
+                }
+                crate::Statement::RayQuery { query, ref fun } => {
+                    self.write_ray_query_function(query, fun, &mut block);
                 }
             }
         }

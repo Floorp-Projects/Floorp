@@ -133,6 +133,13 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                     _ => {}
                 }
             }
+
+            if let Expression::Derivative { axis, ctrl, expr } = *expr {
+                use crate::{DerivativeAxis as Axis, DerivativeControl as Ctrl};
+                if axis == Axis::Width && (ctrl == Ctrl::Coarse || ctrl == Ctrl::Fine) {
+                    self.need_bake_expressions.insert(expr);
+                }
+            }
         }
     }
 
@@ -371,7 +378,7 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                     }
                 }
             }
-            _ => {}
+            crate::Binding::BuiltIn(_) => {}
         }
 
         Ok(())
@@ -1849,14 +1856,37 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                     }
                 };
 
-                let var_handle = self.fill_access_chain(module, pointer, func_ctx)?;
-                // working around the borrow checker in `self.write_expr`
-                let chain = mem::take(&mut self.temp_access_chain);
-                let var_name = &self.names[&NameKey::GlobalVariable(var_handle)];
+                // Validation ensures that `pointer` has a `Pointer` type.
+                let pointer_space = func_ctx.info[pointer]
+                    .ty
+                    .inner_with(&module.types)
+                    .pointer_space()
+                    .unwrap();
 
                 let fun_str = fun.to_hlsl_suffix();
-                write!(self.out, " {res_name}; {var_name}.Interlocked{fun_str}(")?;
-                self.write_storage_address(module, &chain, func_ctx)?;
+                write!(self.out, " {res_name}; ")?;
+                match pointer_space {
+                    crate::AddressSpace::WorkGroup => {
+                        write!(self.out, "Interlocked{fun_str}(")?;
+                        self.write_expr(module, pointer, func_ctx)?;
+                    }
+                    crate::AddressSpace::Storage { .. } => {
+                        let var_handle = self.fill_access_chain(module, pointer, func_ctx)?;
+                        // The call to `self.write_storage_address` wants
+                        // mutable access to all of `self`, so temporarily take
+                        // ownership of our reusable access chain buffer.
+                        let chain = mem::take(&mut self.temp_access_chain);
+                        let var_name = &self.names[&NameKey::GlobalVariable(var_handle)];
+                        write!(self.out, "{var_name}.Interlocked{fun_str}(")?;
+                        self.write_storage_address(module, &chain, func_ctx)?;
+                        self.temp_access_chain = chain;
+                    }
+                    ref other => {
+                        return Err(Error::Custom(format!(
+                            "invalid address space {other:?} for atomic statement"
+                        )))
+                    }
+                }
                 write!(self.out, ", ")?;
                 // handle the special cases
                 match *fun {
@@ -1871,7 +1901,6 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                 }
                 self.write_expr(module, value, func_ctx)?;
                 writeln!(self.out, ", {res_name});")?;
-                self.temp_access_chain = chain;
                 self.named_expressions.insert(result, res_name);
             }
             Statement::Switch {
@@ -1883,13 +1912,6 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                 write!(self.out, "switch(")?;
                 self.write_expr(module, selector, func_ctx)?;
                 writeln!(self.out, ") {{")?;
-                let type_postfix = match *func_ctx.info[selector].ty.inner_with(&module.types) {
-                    crate::TypeInner::Scalar {
-                        kind: crate::ScalarKind::Uint,
-                        ..
-                    } => "u",
-                    _ => "",
-                };
 
                 // Write all cases
                 let indent_level_1 = level.next();
@@ -1897,8 +1919,11 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
 
                 for (i, case) in cases.iter().enumerate() {
                     match case.value {
-                        crate::SwitchValue::Integer(value) => {
-                            write!(self.out, "{indent_level_1}case {value}{type_postfix}:")?
+                        crate::SwitchValue::I32(value) => {
+                            write!(self.out, "{indent_level_1}case {value}:")?
+                        }
+                        crate::SwitchValue::U32(value) => {
+                            write!(self.out, "{indent_level_1}case {value}u:")?
                         }
                         crate::SwitchValue::Default => {
                             write!(self.out, "{indent_level_1}default:")?
@@ -1977,6 +2002,7 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
 
                 writeln!(self.out, "{level}}}")?
             }
+            Statement::RayQuery { .. } => unreachable!(),
         }
 
         Ok(())
@@ -2805,17 +2831,34 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                 let var_name = &self.names[&NameKey::GlobalVariable(var_handle)];
                 write!(self.out, "({var_name}) - {offset}) / {stride})")?
             }
-            Expression::Derivative { axis, expr } => {
-                use crate::DerivativeAxis as Da;
-
-                let fun_str = match axis {
-                    Da::X => "ddx",
-                    Da::Y => "ddy",
-                    Da::Width => "fwidth",
-                };
-                write!(self.out, "{fun_str}(")?;
-                self.write_expr(module, expr, func_ctx)?;
-                write!(self.out, ")")?
+            Expression::Derivative { axis, ctrl, expr } => {
+                use crate::{DerivativeAxis as Axis, DerivativeControl as Ctrl};
+                if axis == Axis::Width && (ctrl == Ctrl::Coarse || ctrl == Ctrl::Fine) {
+                    let tail = match ctrl {
+                        Ctrl::Coarse => "coarse",
+                        Ctrl::Fine => "fine",
+                        Ctrl::None => unreachable!(),
+                    };
+                    write!(self.out, "abs(ddx_{tail}(")?;
+                    self.write_expr(module, expr, func_ctx)?;
+                    write!(self.out, ")) + abs(ddy_{tail}(")?;
+                    self.write_expr(module, expr, func_ctx)?;
+                    write!(self.out, "))")?
+                } else {
+                    let fun_str = match (axis, ctrl) {
+                        (Axis::X, Ctrl::Coarse) => "ddx_coarse",
+                        (Axis::X, Ctrl::Fine) => "ddx_fine",
+                        (Axis::X, Ctrl::None) => "ddx",
+                        (Axis::Y, Ctrl::Coarse) => "ddy_coarse",
+                        (Axis::Y, Ctrl::Fine) => "ddy_fine",
+                        (Axis::Y, Ctrl::None) => "ddy",
+                        (Axis::Width, Ctrl::Coarse | Ctrl::Fine) => unreachable!(),
+                        (Axis::Width, Ctrl::None) => "fwidth",
+                    };
+                    write!(self.out, "{fun_str}(")?;
+                    self.write_expr(module, expr, func_ctx)?;
+                    write!(self.out, ")")?
+                }
             }
             Expression::Relational { fun, argument } => {
                 use crate::RelationalFunction as Rf;
@@ -2858,8 +2901,12 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                 self.write_expr(module, reject, func_ctx)?;
                 write!(self.out, ")")?
             }
+            // Not supported yet
+            Expression::RayQueryGetIntersection { .. } => unreachable!(),
             // Nothing to do here, since call expression already cached
-            Expression::CallResult(_) | Expression::AtomicResult { .. } => {}
+            Expression::CallResult(_)
+            | Expression::AtomicResult { .. }
+            | Expression::RayQueryProceedResult => {}
         }
 
         if !closing_bracket.is_empty() {

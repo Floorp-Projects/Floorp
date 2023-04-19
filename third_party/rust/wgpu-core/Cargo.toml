@@ -38,11 +38,11 @@ targets = [
 [dependencies]
 arrayvec = "0.7"
 bit-vec = "0.6"
-bitflags = "1"
+bitflags = "2"
 codespan-reporting = "0.11"
-fxhash = "0.2.1"
 log = "0.4"
 parking_lot = ">=0.11,<0.13"
+rustc-hash = "1.1"
 smallvec = "1"
 thiserror = "1"
 
@@ -54,7 +54,7 @@ package = "wgpu-hal"
 [dependencies.naga]
 version = "0.11.0"
 git = "https://github.com/gfx-rs/naga"
-rev = "9742f1616c3e3dd2cc9a5880616fc886c391bb9f"
+rev = "f59668ccfaf7bdb3a7e43d84363a21c77357b2fe"
 features = [
     "clone",
     "span",

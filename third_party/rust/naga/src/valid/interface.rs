@@ -305,7 +305,7 @@ impl VaryingContext<'_> {
                 let needs_interpolation = match self.stage {
                     crate::ShaderStage::Vertex => self.output,
                     crate::ShaderStage::Fragment => !self.output,
-                    _ => false,
+                    crate::ShaderStage::Compute => false,
                 };
 
                 // It doesn't make sense to specify a sampling when `interpolation` is `Flat`, but
@@ -440,7 +440,9 @@ impl super::Validator {
                 match types[var.ty].inner {
                     crate::TypeInner::Image { .. }
                     | crate::TypeInner::Sampler { .. }
-                    | crate::TypeInner::BindingArray { .. } => {}
+                    | crate::TypeInner::BindingArray { .. }
+                    | crate::TypeInner::AccelerationStructure
+                    | crate::TypeInner::RayQuery => {}
                     _ => {
                         return Err(GlobalVariableError::InvalidType(var.space));
                     }

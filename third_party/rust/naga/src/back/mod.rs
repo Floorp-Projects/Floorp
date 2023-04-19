@@ -53,7 +53,7 @@ impl FunctionType {
             FunctionType::EntryPoint(index) => {
                 module.entry_points[index as usize].stage == crate::ShaderStage::Compute
             }
-            _ => false,
+            FunctionType::Function(_) => false,
         }
     }
 }
@@ -217,4 +217,34 @@ impl crate::Statement {
             _ => false,
         }
     }
+}
+
+bitflags::bitflags! {
+    /// Ray flags, for a [`RayDesc`]'s `flags` field.
+    ///
+    /// Note that these exactly correspond to the SPIR-V "Ray Flags" mask, and
+    /// the SPIR-V backend passes them directly through to the
+    /// `OpRayQueryInitializeKHR` instruction. (We have to choose something, so
+    /// we might as well make one back end's life easier.)
+    ///
+    /// [`RayDesc`]: crate::Module::generate_ray_desc_type
+    #[derive(Default)]
+    pub struct RayFlag: u32 {
+        const OPAQUE = 0x01;
+        const NO_OPAQUE = 0x02;
+        const TERMINATE_ON_FIRST_HIT = 0x04;
+        const SKIP_CLOSEST_HIT_SHADER = 0x08;
+        const CULL_BACK_FACING = 0x10;
+        const CULL_FRONT_FACING = 0x20;
+        const CULL_OPAQUE = 0x40;
+        const CULL_NO_OPAQUE = 0x80;
+        const SKIP_TRIANGLES = 0x100;
+        const SKIP_AABBS = 0x200;
+    }
+}
+
+#[repr(u32)]
+enum RayIntersectionType {
+    Triangle = 1,
+    BoundingBox = 4,
 }

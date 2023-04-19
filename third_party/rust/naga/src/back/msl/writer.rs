@@ -25,6 +25,13 @@ const WRAPPED_ARRAY_FIELD: &str = "inner";
 // Some more general handling of pointers is needed to be implemented here.
 const ATOMIC_REFERENCE: &str = "&";
 
+const RT_NAMESPACE: &str = "metal::raytracing";
+const RAY_QUERY_TYPE: &str = "_RayQuery";
+const RAY_QUERY_FIELD_INTERSECTOR: &str = "intersector";
+const RAY_QUERY_FIELD_INTERSECTION: &str = "intersection";
+const RAY_QUERY_FIELD_READY: &str = "ready";
+const RAY_QUERY_FUN_MAP_INTERSECTION: &str = "_map_intersection_type";
+
 /// Write the Metal name for a Naga numeric type: scalar, vector, or matrix.
 ///
 /// The `sizes` slice determines whether this function writes a
@@ -193,6 +200,12 @@ impl<'a> Display for TypeContext<'a> {
             }
             crate::TypeInner::Sampler { comparison: _ } => {
                 write!(out, "{NAMESPACE}::sampler")
+            }
+            crate::TypeInner::AccelerationStructure => {
+                write!(out, "{RT_NAMESPACE}::instance_acceleration_structure")
+            }
+            crate::TypeInner::RayQuery => {
+                write!(out, "{RAY_QUERY_TYPE}")
             }
             crate::TypeInner::BindingArray { base, size } => {
                 let base_tyname = Self {
@@ -485,7 +498,11 @@ impl crate::Type {
             // composite types are better to be aliased, regardless of the name
             Ti::Struct { .. } | Ti::Array { .. } => true,
             // handle types may be different, depending on the global var access, so we always inline them
-            Ti::Image { .. } | Ti::Sampler { .. } | Ti::BindingArray { .. } => false,
+            Ti::Image { .. }
+            | Ti::Sampler { .. }
+            | Ti::AccelerationStructure
+            | Ti::RayQuery
+            | Ti::BindingArray { .. } => false,
         }
     }
 }
@@ -1579,11 +1596,12 @@ impl<W: Write> Writer<W> {
                 }
                 _ => return Err(Error::Validation),
             },
-            crate::Expression::Derivative { axis, expr } => {
+            crate::Expression::Derivative { axis, expr, .. } => {
+                use crate::DerivativeAxis as Axis;
                 let op = match axis {
-                    crate::DerivativeAxis::X => "dfdx",
-                    crate::DerivativeAxis::Y => "dfdy",
-                    crate::DerivativeAxis::Width => "fwidth",
+                    Axis::X => "dfdx",
+                    Axis::Y => "dfdy",
+                    Axis::Width => "fwidth",
                 };
                 write!(self.out, "{NAMESPACE}::{op}")?;
                 self.put_call_parameters(iter::once(expr), context)?;
@@ -1830,7 +1848,9 @@ impl<W: Write> Writer<W> {
                 _ => return Err(Error::Validation),
             },
             // has to be a named expression
-            crate::Expression::CallResult(_) | crate::Expression::AtomicResult { .. } => {
+            crate::Expression::CallResult(_)
+            | crate::Expression::AtomicResult { .. }
+            | crate::Expression::RayQueryProceedResult => {
                 unreachable!()
             }
             crate::Expression::ArrayLength(expr) => {
@@ -1854,6 +1874,39 @@ impl<W: Write> Writer<W> {
                 if !is_scoped {
                     write!(self.out, ")")?;
                 }
+            }
+            crate::Expression::RayQueryGetIntersection { query, committed } => {
+                if !committed {
+                    unimplemented!()
+                }
+                let ty = context.module.special_types.ray_intersection.unwrap();
+                let type_name = &self.names[&NameKey::Type(ty)];
+                write!(self.out, "{type_name} {{{RAY_QUERY_FUN_MAP_INTERSECTION}(")?;
+                self.put_expression(query, context, true)?;
+                write!(self.out, ".{RAY_QUERY_FIELD_INTERSECTION}.type)")?;
+                let fields = [
+                    "distance",
+                    "user_instance_id",
+                    "instance_id",
+                    "", // SBT offset
+                    "geometry_id",
+                    "primitive_id",
+                    "triangle_barycentric_coord",
+                    "triangle_front_facing",
+                    "", // padding
+                    "object_to_world_transform",
+                    "world_to_object_transform",
+                ];
+                for field in fields {
+                    write!(self.out, ", ")?;
+                    if field.is_empty() {
+                        write!(self.out, "{{}}")?;
+                    } else {
+                        self.put_expression(query, context, true)?;
+                        write!(self.out, ".{RAY_QUERY_FIELD_INTERSECTION}.{field}")?;
+                    }
+                }
+                write!(self.out, "}}")?;
             }
         }
         Ok(())
@@ -2233,18 +2286,13 @@ impl<W: Write> Writer<W> {
                         let mut is_first = true;
 
                         for (index, member) in members.iter().enumerate() {
-                            match member.binding {
-                                Some(crate::Binding::BuiltIn(crate::BuiltIn::PointSize)) => {
-                                    has_point_size = true;
-                                    if !context.pipeline_options.allow_point_size {
-                                        continue;
-                                    }
-                                }
-                                Some(crate::Binding::BuiltIn(crate::BuiltIn::CullDistance)) => {
-                                    log::warn!("Ignoring CullDistance built-in");
+                            if let Some(crate::Binding::BuiltIn(crate::BuiltIn::PointSize)) =
+                                member.binding
+                            {
+                                has_point_size = true;
+                                if !context.pipeline_options.allow_point_size {
                                     continue;
                                 }
-                                _ => {}
                             }
 
                             let comma = if is_first { "" } else { "," };
@@ -2313,6 +2361,7 @@ impl<W: Write> Writer<W> {
     ) {
         use crate::Expression;
         self.need_bake_expressions.clear();
+
         for (expr_handle, expr) in func.expressions.iter() {
             // Expressions whose reference count is above the
             // threshold should always be stored in temporaries.
@@ -2320,6 +2369,16 @@ impl<W: Write> Writer<W> {
             let min_ref_count = func.expressions[expr_handle].bake_ref_count();
             if min_ref_count <= expr_info.ref_count {
                 self.need_bake_expressions.insert(expr_handle);
+            } else {
+                match expr_info.ty {
+                    // force ray desc to be baked: it's used multiple times internally
+                    TypeResolution::Handle(h)
+                        if Some(h) == context.module.special_types.ray_desc =>
+                    {
+                        self.need_bake_expressions.insert(expr_handle);
+                    }
+                    _ => {}
+                }
             }
 
             if let Expression::Math { fun, arg, arg1, .. } = *expr {
@@ -2331,11 +2390,11 @@ impl<W: Write> Writer<W> {
                         // times, once for each component (see `put_dot_product`), so to
                         // avoid duplicated evaluation, we must bake integer operands.
 
-                        use crate::TypeInner;
                         // check what kind of product this is depending
                         // on the resolve type of the Dot function itself
-                        let inner = context.resolve_type(expr_handle);
-                        if let TypeInner::Scalar { kind, .. } = *inner {
+                        if let crate::TypeInner::Scalar { kind, .. } =
+                            *context.resolve_type(expr_handle)
+                        {
                             match kind {
                                 crate::ScalarKind::Sint | crate::ScalarKind::Uint => {
                                     self.need_bake_expressions.insert(arg);
@@ -2551,19 +2610,15 @@ impl<W: Write> Writer<W> {
                 } => {
                     write!(self.out, "{level}switch(")?;
                     self.put_expression(selector, &context.expression, true)?;
-                    let type_postfix = match *context.expression.resolve_type(selector) {
-                        crate::TypeInner::Scalar {
-                            kind: crate::ScalarKind::Uint,
-                            ..
-                        } => "u",
-                        _ => "",
-                    };
                     writeln!(self.out, ") {{")?;
                     let lcase = level.next();
                     for case in cases.iter() {
                         match case.value {
-                            crate::SwitchValue::Integer(value) => {
-                                write!(self.out, "{lcase}case {value}{type_postfix}:")?;
+                            crate::SwitchValue::I32(value) => {
+                                write!(self.out, "{lcase}case {value}:")?;
+                            }
+                            crate::SwitchValue::U32(value) => {
+                                write!(self.out, "{lcase}case {value}u:")?;
                             }
                             crate::SwitchValue::Default => {
                                 write!(self.out, "{lcase}default:")?;
@@ -2760,6 +2815,100 @@ impl<W: Write> Writer<W> {
                     // done
                     writeln!(self.out, ";")?;
                 }
+                crate::Statement::RayQuery { query, ref fun } => {
+                    match *fun {
+                        crate::RayQueryFunction::Initialize {
+                            acceleration_structure,
+                            descriptor,
+                        } => {
+                            //TODO: how to deal with winding?
+                            write!(self.out, "{level}")?;
+                            self.put_expression(query, &context.expression, true)?;
+                            writeln!(self.out, ".{RAY_QUERY_FIELD_INTERSECTOR}.assume_geometry_type({RT_NAMESPACE}::geometry_type::triangle);")?;
+                            {
+                                let f_opaque = back::RayFlag::CULL_OPAQUE.bits();
+                                let f_no_opaque = back::RayFlag::CULL_NO_OPAQUE.bits();
+                                write!(self.out, "{level}")?;
+                                self.put_expression(query, &context.expression, true)?;
+                                write!(
+                                    self.out,
+                                    ".{RAY_QUERY_FIELD_INTERSECTOR}.set_opacity_cull_mode(("
+                                )?;
+                                self.put_expression(descriptor, &context.expression, true)?;
+                                write!(self.out, ".flags & {f_opaque}) != 0 ? {RT_NAMESPACE}::opacity_cull_mode::opaque : (")?;
+                                self.put_expression(descriptor, &context.expression, true)?;
+                                write!(self.out, ".flags & {f_no_opaque}) != 0 ? {RT_NAMESPACE}::opacity_cull_mode::non_opaque : ")?;
+                                writeln!(self.out, "{RT_NAMESPACE}::opacity_cull_mode::none);")?;
+                            }
+                            {
+                                let f_opaque = back::RayFlag::OPAQUE.bits();
+                                let f_no_opaque = back::RayFlag::NO_OPAQUE.bits();
+                                write!(self.out, "{level}")?;
+                                self.put_expression(query, &context.expression, true)?;
+                                write!(self.out, ".{RAY_QUERY_FIELD_INTERSECTOR}.force_opacity((")?;
+                                self.put_expression(descriptor, &context.expression, true)?;
+                                write!(self.out, ".flags & {f_opaque}) != 0 ? {RT_NAMESPACE}::forced_opacity::opaque : (")?;
+                                self.put_expression(descriptor, &context.expression, true)?;
+                                write!(self.out, ".flags & {f_no_opaque}) != 0 ? {RT_NAMESPACE}::forced_opacity::non_opaque : ")?;
+                                writeln!(self.out, "{RT_NAMESPACE}::forced_opacity::none);")?;
+                            }
+                            {
+                                let flag = back::RayFlag::TERMINATE_ON_FIRST_HIT.bits();
+                                write!(self.out, "{level}")?;
+                                self.put_expression(query, &context.expression, true)?;
+                                write!(
+                                    self.out,
+                                    ".{RAY_QUERY_FIELD_INTERSECTOR}.accept_any_intersection(("
+                                )?;
+                                self.put_expression(descriptor, &context.expression, true)?;
+                                writeln!(self.out, ".flags & {flag}) != 0);")?;
+                            }
+
+                            write!(self.out, "{level}")?;
+                            self.put_expression(query, &context.expression, true)?;
+                            write!(self.out, ".{RAY_QUERY_FIELD_INTERSECTION} = ")?;
+                            self.put_expression(query, &context.expression, true)?;
+                            write!(
+                                self.out,
+                                ".{RAY_QUERY_FIELD_INTERSECTOR}.intersect({RT_NAMESPACE}::ray("
+                            )?;
+                            self.put_expression(descriptor, &context.expression, true)?;
+                            write!(self.out, ".origin, ")?;
+                            self.put_expression(descriptor, &context.expression, true)?;
+                            write!(self.out, ".dir, ")?;
+                            self.put_expression(descriptor, &context.expression, true)?;
+                            write!(self.out, ".tmin, ")?;
+                            self.put_expression(descriptor, &context.expression, true)?;
+                            write!(self.out, ".tmax), ")?;
+                            self.put_expression(acceleration_structure, &context.expression, true)?;
+                            write!(self.out, ", ")?;
+                            self.put_expression(descriptor, &context.expression, true)?;
+                            write!(self.out, ".cull_mask);")?;
+
+                            write!(self.out, "{level}")?;
+                            self.put_expression(query, &context.expression, true)?;
+                            writeln!(self.out, ".{RAY_QUERY_FIELD_READY} = true;")?;
+                        }
+                        crate::RayQueryFunction::Proceed { result } => {
+                            write!(self.out, "{level}")?;
+                            let name = format!("{}{}", back::BAKE_PREFIX, result.index());
+                            self.start_baking_expression(result, &context.expression, &name)?;
+                            self.named_expressions.insert(result, name);
+                            self.put_expression(query, &context.expression, true)?;
+                            writeln!(self.out, ".{RAY_QUERY_FIELD_READY};")?;
+                            //TODO: actually proceed?
+
+                            write!(self.out, "{level}")?;
+                            self.put_expression(query, &context.expression, true)?;
+                            writeln!(self.out, ".{RAY_QUERY_FIELD_READY} = false;")?;
+                        }
+                        crate::RayQueryFunction::Terminate => {
+                            write!(self.out, "{level}")?;
+                            self.put_expression(query, &context.expression, true)?;
+                            writeln!(self.out, ".{RAY_QUERY_FIELD_INTERSECTION}.abort();")?;
+                        }
+                    }
+                }
             }
         }
 
@@ -2871,14 +3020,41 @@ impl<W: Write> Writer<W> {
         writeln!(self.out)?;
         // Work around Metal bug where `uint` is not available by default
         writeln!(self.out, "using {NAMESPACE}::uint;")?;
-        writeln!(self.out)?;
 
+        if module.types.iter().any(|(_, t)| match t.inner {
+            crate::TypeInner::RayQuery => true,
+            _ => false,
+        }) {
+            let tab = back::INDENT;
+            writeln!(self.out, "struct {RAY_QUERY_TYPE} {{")?;
+            let full_type = format!("{RT_NAMESPACE}::intersector<{RT_NAMESPACE}::instancing, {RT_NAMESPACE}::triangle_data, {RT_NAMESPACE}::world_space_data>");
+            writeln!(self.out, "{tab}{full_type} {RAY_QUERY_FIELD_INTERSECTOR};")?;
+            writeln!(
+                self.out,
+                "{tab}{full_type}::result_type {RAY_QUERY_FIELD_INTERSECTION};"
+            )?;
+            writeln!(self.out, "{tab}bool {RAY_QUERY_FIELD_READY} = false;")?;
+            writeln!(self.out, "}};")?;
+            writeln!(self.out, "constexpr {NAMESPACE}::uint {RAY_QUERY_FUN_MAP_INTERSECTION}(const {RT_NAMESPACE}::intersection_type ty) {{")?;
+            let v_triangle = back::RayIntersectionType::Triangle as u32;
+            let v_bbox = back::RayIntersectionType::BoundingBox as u32;
+            writeln!(
+                self.out,
+                "{tab}return ty=={RT_NAMESPACE}::intersection_type::triangle ? {v_triangle} : "
+            )?;
+            writeln!(
+                self.out,
+                "{tab}{tab}ty=={RT_NAMESPACE}::intersection_type::bounding_box ? {v_bbox} : 0;"
+            )?;
+            writeln!(self.out, "}}")?;
+        }
         if options
             .bounds_check_policies
             .contains(index::BoundsCheckPolicy::ReadZeroSkipWrite)
         {
             self.put_default_constructible()?;
         }
+        writeln!(self.out)?;
 
         {
             let mut indices = vec![];
@@ -2920,11 +3096,12 @@ impl<W: Write> Writer<W> {
     ///
     /// [`ReadZeroSkipWrite`]: index::BoundsCheckPolicy::ReadZeroSkipWrite
     fn put_default_constructible(&mut self) -> BackendResult {
+        let tab = back::INDENT;
         writeln!(self.out, "struct DefaultConstructible {{")?;
-        writeln!(self.out, "    template<typename T>")?;
-        writeln!(self.out, "    operator T() && {{")?;
-        writeln!(self.out, "        return T {{}};")?;
-        writeln!(self.out, "    }}")?;
+        writeln!(self.out, "{tab}template<typename T>")?;
+        writeln!(self.out, "{tab}operator T() && {{")?;
+        writeln!(self.out, "{tab}{tab}return T {{}};")?;
+        writeln!(self.out, "{tab}}}")?;
         writeln!(self.out, "}};")?;
         Ok(())
     }
@@ -3406,7 +3583,8 @@ impl<W: Write> Writer<W> {
                                     break;
                                 }
                             };
-                            let good = match options.per_stage_map[ep.stage].resources.get(br) {
+                            let target = options.get_resource_binding_target(ep, br);
+                            let good = match target {
                                 Some(target) => {
                                     let binding_ty = match module.types[var.ty].inner {
                                         crate::TypeInner::BindingArray { base, .. } => {
@@ -3431,7 +3609,7 @@ impl<W: Write> Writer<W> {
                             }
                         }
                         crate::AddressSpace::PushConstant => {
-                            if let Err(e) = options.resolve_push_constants(ep.stage) {
+                            if let Err(e) = options.resolve_push_constants(ep) {
                                 ep_error = Some(e);
                                 break;
                             }
@@ -3442,7 +3620,7 @@ impl<W: Write> Writer<W> {
                     }
                 }
                 if supports_array_length {
-                    if let Err(err) = options.resolve_sizes_buffer(ep.stage) {
+                    if let Err(err) = options.resolve_sizes_buffer(ep) {
                         ep_error = Some(err);
                     }
                 }
@@ -3566,24 +3744,11 @@ impl<W: Write> Writer<W> {
                         };
                         let binding = binding.ok_or(Error::Validation)?;
 
-                        match *binding {
-                            // Point size is only supported in VS of pipelines with
-                            // point primitive topology.
-                            crate::Binding::BuiltIn(crate::BuiltIn::PointSize) => {
-                                has_point_size = true;
-                                if !pipeline_options.allow_point_size {
-                                    continue;
-                                }
-                            }
-                            // Cull Distance is not supported in Metal.
-                            // But we can't return UnsupportedBuiltIn error to user.
-                            // Because otherwise we can't generate msl shader from any glslang SPIR-V shaders.
-                            // glslang generates gl_PerVertex struct with gl_CullDistance builtin inside by default.
-                            crate::Binding::BuiltIn(crate::BuiltIn::CullDistance) => {
-                                log::warn!("Ignoring CullDistance BuiltIn");
+                        if let crate::Binding::BuiltIn(crate::BuiltIn::PointSize) = *binding {
+                            has_point_size = true;
+                            if !pipeline_options.allow_point_size {
                                 continue;
                             }
-                            _ => {}
                         }
 
                         let array_len = match module.types[ty].inner {
@@ -3711,15 +3876,13 @@ impl<W: Write> Writer<W> {
                 }
                 // the resolves have already been checked for `!fake_missing_bindings` case
                 let resolved = match var.space {
-                    crate::AddressSpace::PushConstant => {
-                        options.resolve_push_constants(ep.stage).ok()
-                    }
+                    crate::AddressSpace::PushConstant => options.resolve_push_constants(ep).ok(),
                     crate::AddressSpace::WorkGroup => None,
                     crate::AddressSpace::Storage { .. } if options.lang_version < (2, 0) => {
                         return Err(Error::UnsupportedAddressSpace(var.space))
                     }
                     _ => options
-                        .resolve_resource_binding(ep.stage, var.binding.as_ref().unwrap())
+                        .resolve_resource_binding(ep, var.binding.as_ref().unwrap())
                         .ok(),
                 };
                 if let Some(ref resolved) = resolved {
@@ -3764,7 +3927,7 @@ impl<W: Write> Writer<W> {
             // passed as a final struct-typed argument.
             if supports_array_length {
                 // this is checked earlier
-                let resolved = options.resolve_sizes_buffer(ep.stage).unwrap();
+                let resolved = options.resolve_sizes_buffer(ep).unwrap();
                 let separator = if module.global_variables.is_empty() {
                     ' '
                 } else {
@@ -3824,7 +3987,7 @@ impl<W: Write> Writer<W> {
                     };
                 } else if let Some(ref binding) = var.binding {
                     // write an inline sampler
-                    let resolved = options.resolve_resource_binding(ep.stage, binding).unwrap();
+                    let resolved = options.resolve_resource_binding(ep, binding).unwrap();
                     if let Some(sampler) = resolved.as_inline_sampler(options) {
                         let name = &self.names[&NameKey::GlobalVariable(handle)];
                         writeln!(

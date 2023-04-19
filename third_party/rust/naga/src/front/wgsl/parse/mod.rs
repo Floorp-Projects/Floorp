@@ -622,6 +622,18 @@ impl Parser {
                 let num = res.map_err(|err| Error::BadNumber(span, err))?;
                 ast::Expression::Literal(ast::Literal::Number(num))
             }
+            (Token::Word("RAY_FLAG_NONE"), _) => {
+                let _ = lexer.next();
+                ast::Expression::Literal(ast::Literal::Number(Number::U32(0)))
+            }
+            (Token::Word("RAY_FLAG_TERMINATE_ON_FIRST_HIT"), _) => {
+                let _ = lexer.next();
+                ast::Expression::Literal(ast::Literal::Number(Number::U32(4)))
+            }
+            (Token::Word("RAY_QUERY_INTERSECTION_NONE"), _) => {
+                let _ = lexer.next();
+                ast::Expression::Literal(ast::Literal::Number(Number::U32(0)))
+            }
             (Token::Word(word), span) => {
                 let start = lexer.start_byte_offset();
                 let _ = lexer.next();
@@ -1367,6 +1379,10 @@ impl Parser {
                     class: crate::ImageClass::Storage { format, access },
                 }
             }
+            "acceleration_structure" => ast::Type::AccelerationStructure,
+            "ray_query" => ast::Type::RayQuery,
+            "RayDesc" => ast::Type::RayDesc,
+            "RayIntersection" => ast::Type::RayIntersection,
             _ => return Ok(None),
         }))
     }
@@ -2197,7 +2213,7 @@ impl Parser {
                 let members = self.struct_body(lexer, ctx)?;
                 Some(ast::GlobalDeclKind::Struct(ast::Struct { name, members }))
             }
-            (Token::Word("type"), _) => {
+            (Token::Word("alias"), _) => {
                 let name = lexer.next_ident()?;
 
                 lexer.expect(Token::Operation('='))?;
