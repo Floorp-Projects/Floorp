@@ -148,14 +148,14 @@ class BitBloomFilter {
     uint32_t index = aHash / 8;
     uint8_t shift = aHash % 8;
     uint8_t mask = 1 << shift;
-    return !!(mCounters[index] & mask);
+    return !!(mBits[index] & mask);
   }
 
   void setSlot(uint32_t aHash) {
     uint32_t index = aHash / 8;
     uint8_t shift = aHash % 8;
     uint8_t bit = 1 << shift;
-    mCounters[index] |= bit;
+    mBits[index] |= bit;
   }
 
   bool getFirstSlot(uint32_t aHash) const { return getSlot(hash1(aHash)); }
@@ -164,12 +164,12 @@ class BitBloomFilter {
   void setFirstSlot(uint32_t aHash) { setSlot(hash1(aHash)); }
   void setSecondSlot(uint32_t aHash) { setSlot(hash2(aHash)); }
 
-  uint8_t mCounters[kArraySize];
+  uint8_t mBits[kArraySize];
 };
 
 template <unsigned KeySize, class T>
 inline void BitBloomFilter<KeySize, T>::clear() {
-  memset(mCounters, 0, kArraySize);
+  memset(mBits, 0, kArraySize);
 }
 
 template <unsigned KeySize, class T>
