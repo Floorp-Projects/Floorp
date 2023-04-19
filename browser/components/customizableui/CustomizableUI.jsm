@@ -4631,7 +4631,7 @@ var CustomizableUI = {
    * @return true if the widget was provided by an extension, false otherwise.
    */
   isWebExtensionWidget(aWidgetId) {
-    let widget = this.getWidget(aWidgetId);
+    let widget = CustomizableUI.getWidget(aWidgetId);
     return widget?.webExtension || aWidgetId.endsWith("-browser-action");
   },
   /**

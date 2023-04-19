@@ -9,7 +9,8 @@
             ensureMaximizedWindow,
             getUnifiedExtensionsItem,
             openExtensionsPanel,
-            openUnifiedExtensionsContextMenu
+            openUnifiedExtensionsContextMenu,
+            promiseSetToolbarVisibility
 */
 
 const getListView = (win = window) => {
@@ -111,7 +112,7 @@ const clickUnifiedExtensionsItem = async (
 
 const createExtensions = (
   arrayOfManifestData,
-  { useAddonManager = true, incognitoOverride } = {}
+  { useAddonManager = true, incognitoOverride, files } = {}
 ) => {
   return arrayOfManifestData.map(manifestData =>
     ExtensionTestUtils.loadExtension({
@@ -121,6 +122,7 @@ const createExtensions = (
       },
       useAddonManager: useAddonManager ? "temporary" : undefined,
       incognitoOverride,
+      files,
     })
   );
 };
@@ -176,4 +178,14 @@ const ensureMaximizedWindow = async win => {
     sameSizeTimes = isSameSize ? sameSizeTimes + 1 : 0;
     return sameSizeTimes === 10;
   }, "Wait for the chrome window size to settle");
+};
+
+const promiseSetToolbarVisibility = (toolbar, visible) => {
+  const visibilityChanged = BrowserTestUtils.waitForMutationCondition(
+    toolbar,
+    { attributeFilter: ["collapsed"] },
+    () => toolbar.collapsed != visible
+  );
+  setToolbarVisibility(toolbar, visible, undefined, false);
+  return visibilityChanged;
 };
