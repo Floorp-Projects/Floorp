@@ -210,7 +210,6 @@ void WinWebAuthnManager::Register(
 
   // Resident Key
   BOOL winRequireResidentKey = FALSE;
-  BOOL winPreferResidentKey = FALSE;
 
   // AttestationConveyance
   DWORD winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_ANY;
@@ -272,26 +271,7 @@ void WinWebAuthnManager::Register(
       }
     }
 
-    const nsString& residentKey = sel.residentKey();
-    // This mapping needs to be reviewed if values are added to the
-    // ResidentKeyRequirement enum.
-    static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
-    if (residentKey.EqualsLiteral(
-            MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_REQUIRED)) {
-      winRequireResidentKey = TRUE;
-      winPreferResidentKey = TRUE;
-    } else if (residentKey.EqualsLiteral(
-                   MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_PREFERRED)) {
-      winRequireResidentKey = FALSE;
-      winPreferResidentKey = TRUE;
-    } else {
-      // https://w3c.github.io/webauthn/#dictionary-authenticatorSelection
-      // "[The client MUST treat] an unknown value as if the member does not
-      // exist. If no value is given then the effective value is required if
-      // requireResidentKey is true or discouraged if it is false or absent."
-      winRequireResidentKey = sel.requireResidentKey();
-      winPreferResidentKey = sel.requireResidentKey();
-    }
+    winRequireResidentKey = sel.requireResidentKey();
 
     // AttestationConveyance
     const nsString& attestation = extra.attestationConveyancePreference();
@@ -401,7 +381,7 @@ void WinWebAuthnManager::Register(
       pExcludeCredentialList,
       WEBAUTHN_ENTERPRISE_ATTESTATION_NONE,
       WEBAUTHN_LARGE_BLOB_SUPPORT_NONE,
-      winPreferResidentKey,  // PreferResidentKey
+      FALSE,  // PreferResidentKey
   };
 
   GUID cancellationId = {0};
