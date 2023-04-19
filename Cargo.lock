@@ -3487,7 +3487,7 @@ checksum = "a2983372caf4480544083767bf2d27defafe32af49ab4df3a0b7fc90793a3664"
 [[package]]
 name = "naga"
 version = "0.11.0"
-source = "git+https://github.com/gfx-rs/naga?rev=9742f1616c3e3dd2cc9a5880616fc886c391bb9f#9742f1616c3e3dd2cc9a5880616fc886c391bb9f"
+source = "git+https://github.com/gfx-rs/naga?rev=f59668ccfaf7bdb3a7e43d84363a21c77357b2fe#f59668ccfaf7bdb3a7e43d84363a21c77357b2fe"
 dependencies = [
  "bit-set",
  "bitflags 1.3.2",
@@ -6123,18 +6123,18 @@ dependencies = [
 [[package]]
 name = "wgpu-core"
 version = "0.15.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=73b4257b17cc62ecc8df6d6aa3730bd9c6cba4b9#73b4257b17cc62ecc8df6d6aa3730bd9c6cba4b9"
+source = "git+https://github.com/gfx-rs/wgpu?rev=f3bf0f782e4dfc561d48e758e1f1e04f77860925#f3bf0f782e4dfc561d48e758e1f1e04f77860925"
 dependencies = [
  "arrayvec",
  "bit-vec",
- "bitflags 1.3.2",
+ "bitflags 2.999.999",
  "codespan-reporting",
- "fxhash",
  "log",
  "naga",
  "parking_lot 0.12.999",
  "profiling",
  "ron",
+ "rustc-hash",
  "serde",
  "smallvec",
  "thiserror",
@@ -6146,18 +6146,17 @@ dependencies = [
 [[package]]
 name = "wgpu-hal"
 version = "0.15.1"
-source = "git+https://github.com/gfx-rs/wgpu?rev=73b4257b17cc62ecc8df6d6aa3730bd9c6cba4b9#73b4257b17cc62ecc8df6d6aa3730bd9c6cba4b9"
+source = "git+https://github.com/gfx-rs/wgpu?rev=f3bf0f782e4dfc561d48e758e1f1e04f77860925#f3bf0f782e4dfc561d48e758e1f1e04f77860925"
 dependencies = [
  "android_system_properties",
  "arrayvec",
  "ash",
  "bit-set",
- "bitflags 1.3.2",
+ "bitflags 2.999.999",
  "block",
  "core-graphics-types",
  "d3d12",
  "foreign-types",
- "fxhash",
  "gpu-alloc",
  "gpu-descriptor",
  "js-sys",
@@ -6172,6 +6171,7 @@ dependencies = [
  "profiling",
  "range-alloc",
  "raw-window-handle",
+ "rustc-hash",
  "smallvec",
  "thiserror",
  "wasm-bindgen",
@@ -6183,9 +6183,9 @@ dependencies = [
 [[package]]
 name = "wgpu-types"
 version = "0.15.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=73b4257b17cc62ecc8df6d6aa3730bd9c6cba4b9#73b4257b17cc62ecc8df6d6aa3730bd9c6cba4b9"
+source = "git+https://github.com/gfx-rs/wgpu?rev=f3bf0f782e4dfc561d48e758e1f1e04f77860925#f3bf0f782e4dfc561d48e758e1f1e04f77860925"
 dependencies = [
- "bitflags 1.3.2",
+ "bitflags 2.999.999",
  "js-sys",
  "serde",
  "web-sys",
