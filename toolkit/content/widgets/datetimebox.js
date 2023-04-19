@@ -617,13 +617,26 @@ this.DateTimeBoxWidget = class {
     let target = aEvent.originalTarget;
     target.setAttribute("typeBuffer", "");
     this.setInputValueFromFields();
-    // No need to set and unset the focus state if the focus is staying within
-    // our input. Same about closing the picker.
-    if (aEvent.relatedTarget != this.mInputElement) {
-      this.mInputElement.setFocusState(false);
-      if (this.mIsPickerOpen) {
-        this.closeDateTimePicker();
-      }
+    // No need to set and unset the focus state (or closing the picker) if the
+    // focus is staying within our input.
+    if (aEvent.relatedTarget == this.mInputElement) {
+      return;
+    }
+
+    // If we're in chrome and the focus moves to a separate document
+    // (relatedTarget is null) we also don't want to close it, since it
+    // could've moved to the datetime popup itself.
+    if (
+      !aEvent.relatedTarget &&
+      this.mInputElement.nodePrincipal.isSystemPrincipal &&
+      this.window == this.window.top
+    ) {
+      return;
+    }
+
+    this.mInputElement.setFocusState(false);
+    if (this.mIsPickerOpen) {
+      this.closeDateTimePicker();
     }
   }
 

@@ -172,8 +172,6 @@
 
     arrowKeysShouldWrap: AppConstants == "macosx",
 
-    _dateTimePicker: null,
-
     _previewMode: false,
 
     _lastFindValue: "",
@@ -804,16 +802,6 @@
         this.selectedTab = currentTab;
         this._previewMode = false;
       }
-    },
-
-    _getAndMaybeCreateDateTimePickerPanel() {
-      if (!this._dateTimePicker) {
-        let wrapper = document.getElementById("dateTimePickerTemplate");
-        wrapper.replaceWith(wrapper.content);
-        this._dateTimePicker = document.getElementById("DateTimePickerPanel");
-      }
-
-      return this._dateTimePicker;
     },
 
     syncThrobberAnimations(aTab) {

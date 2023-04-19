@@ -1413,6 +1413,87 @@ export var BrowserTestUtils = {
   },
 
   /**
+   * Waits for the datetime picker popup to be shown.
+   *
+   * @param {Window} win
+   *        A window to expect the popup in.
+   *
+   * @return {Promise}
+   *        Resolves when the popup has been fully opened. The resolution value
+   *        is the select popup.
+   */
+  async waitForDateTimePickerPanelShown(win) {
+    let getPanel = () => win.document.getElementById("DateTimePickerPanel");
+    let panel = getPanel();
+    let ensureReady = async () => {
+      let frame = panel.querySelector("#dateTimePopupFrame");
+      let isValidUrl = () => {
+        return (
+          frame.browsingContext?.currentURI?.spec ==
+            "chrome://global/content/datepicker.xhtml" ||
+          frame.browsingContext?.currentURI?.spec ==
+            "chrome://global/content/timepicker.xhtml"
+        );
+      };
+
+      // Ensure it's loaded.
+      if (!isValidUrl() || frame.contentDocument.readyState != "complete") {
+        await new Promise(resolve => {
+          frame.addEventListener(
+            "load",
+            function listener() {
+              if (isValidUrl()) {
+                frame.removeEventListener("load", listener, { capture: true });
+                resolve();
+              }
+            },
+            { capture: true }
+          );
+        });
+      }
+
+      // Ensure it's ready.
+      if (!frame.contentWindow.PICKER_READY) {
+        await new Promise(resolve => {
+          frame.contentDocument.addEventListener("PickerReady", resolve, {
+            once: true,
+          });
+        });
+      }
+      // And that l10n mutations are flushed.
+      // FIXME(bug 1828721): We should ideally localize everything before
+      // showing the panel.
+      if (frame.contentDocument.hasPendingL10nMutations) {
+        await new Promise(resolve => {
+          frame.contentDocument.addEventListener(
+            "L10nMutationsFinished",
+            resolve,
+            {
+              once: true,
+            }
+          );
+        });
+      }
+    };
+
+    if (!panel) {
+      await this.waitForMutationCondition(
+        win.document,
+        { childList: true, subtree: true },
+        getPanel
+      );
+      panel = getPanel();
+      if (panel.state == "open") {
+        await ensureReady();
+        return panel;
+      }
+    }
+    await this.waitForEvent(panel, "popupshown");
+    await ensureReady();
+    return panel;
+  },
+
+  /**
    * Adds a content event listener on the given browser
    * element. Similar to waitForContentEvent, but the listener will
    * fire until it is removed. A callable object is returned that,
