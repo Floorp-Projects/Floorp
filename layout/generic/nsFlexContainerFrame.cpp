@@ -5538,9 +5538,24 @@ void nsFlexContainerFrame::PopulateReflowOutput(
       desiredSizeInFlexWM.BSize(flexWM) = std::min(
           effectiveContentBSizeWithBStartBP, aMaxBlockEndEdgeOfChildren);
 
-      if (aMaxBlockEndEdgeOfChildren >= effectiveContentBSizeWithBStartBP) {
-        // Some unbreakable children force us to consume all of our content
-        // block-size, and make us complete.
+      if ((aReflowInput.ComputedBSize() != NS_UNCONSTRAINEDSIZE ||
+           !aAnyChildIncomplete) &&
+          aMaxBlockEndEdgeOfChildren >= effectiveContentBSizeWithBStartBP) {
+        // We have some tall unbreakable child that's sticking off the end of
+        // our fragment, *and* forcing us to consume all of our remaining
+        // content block-size and call ourselves complete.
+        //
+        // - If we have a definite block-size: we get here if the tall child
+        //   makes us reach that block-size.
+        // - If we have a content-based block-size: we get here if the tall
+        //   child makes us reach the content-based block-size from a
+        //   theoretical unfragmented layout, *and* all our children are
+        //   complete. (Note that if we have some incomplete child, then we
+        //   instead prefer to return an incomplete status, so we can get a
+        //   next-in-flow to include that child's requested next-in-flow, in the
+        //   spirit of having a block-size that fits the content.)
+        //
+        // TODO: the auto-height case might need more subtlety; see bug 1828977.
         isStatusIncomplete = false;
 
         // We also potentially need to get the unskipped block-end border and
