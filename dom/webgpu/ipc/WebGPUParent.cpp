@@ -935,8 +935,8 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
   };
   const ffi::WGPUImageDataLayout bufLayout = {
       0,
-      data->mSourcePitch,
-      0,
+      &data->mSourcePitch,
+      nullptr,
   };
   const ffi::WGPUImageCopyBuffer bufView = {
       bufferId,
