@@ -3324,6 +3324,9 @@ static void DumpMutableScriptFlags(js::JSONPrinter& json,
         case MutableScriptFlagsEnum::Uninlineable:
           json.value("Uninlineable");
           break;
+        case MutableScriptFlagsEnum::NoEagerBaselineHint:
+          json.value("NoEagerBaselineHint");
+          break;
         case MutableScriptFlagsEnum::FailedBoundsCheck:
           json.value("FailedBoundsCheck");
           break;
