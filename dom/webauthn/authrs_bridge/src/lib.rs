@@ -522,7 +522,7 @@ impl AuthrsTransport {
             },
             extensions: Default::default(),
             pin: None,
-            use_ctap1_fallback: false,
+            use_ctap1_fallback: static_prefs::pref!("security.webauthn.ctap2") == false,
         };
 
         let (status_tx, status_rx) = channel::<StatusUpdate>();
@@ -683,7 +683,7 @@ impl AuthrsTransport {
             extensions: Default::default(),
             pin: None,
             alternate_rp_id,
-            use_ctap1_fallback: false,
+            use_ctap1_fallback: static_prefs::pref!("security.webauthn.ctap2") == false,
         };
 
         self.auth_service
