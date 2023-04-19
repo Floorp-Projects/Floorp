@@ -468,7 +468,7 @@ void nsTableColGroupFrame::Dump(int32_t aIndent) {
       IsSynthetic() ? "true" : "false");
 
   // verify the colindices
-  int32_t j = GetStartColumnIndex();
+  DebugOnly<int32_t> j = GetStartColumnIndex();
   nsTableColFrame* col = GetFirstColumn();
   while (col) {
     NS_ASSERTION(j == col->GetColIndex(), "wrong colindex on col frame");
