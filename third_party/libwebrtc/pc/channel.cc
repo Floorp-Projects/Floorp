@@ -826,7 +826,9 @@ VoiceChannel::VoiceChannel(rtc::Thread* worker_thread,
                   mid,
                   srtp_required,
                   crypto_options,
-                  ssrc_generator) {}
+                  ssrc_generator),
+      send_channel_(this->media_channel()->AsVoiceChannel()),
+      receive_channel_(this->media_channel()->AsVoiceChannel()) {}
 
 VoiceChannel::~VoiceChannel() {
   TRACE_EVENT0("webrtc", "VoiceChannel::~VoiceChannel");
@@ -950,7 +952,9 @@ VideoChannel::VideoChannel(rtc::Thread* worker_thread,
                   mid,
                   srtp_required,
                   crypto_options,
-                  ssrc_generator) {}
+                  ssrc_generator),
+      send_channel_(this->media_channel()->AsVideoChannel()),
+      receive_channel_(this->media_channel()->AsVideoChannel()) {}
 
 VideoChannel::~VideoChannel() {
   TRACE_EVENT0("webrtc", "VideoChannel::~VideoChannel");

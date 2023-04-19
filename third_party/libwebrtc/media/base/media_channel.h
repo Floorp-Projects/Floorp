@@ -20,6 +20,7 @@
 #include "absl/types/optional.h"
 #include "api/audio_codecs/audio_encoder.h"
 #include "api/audio_options.h"
+#include "api/call/audio_sink.h"
 #include "api/crypto/frame_decryptor_interface.h"
 #include "api/crypto/frame_encryptor_interface.h"
 #include "api/frame_transformer_interface.h"
@@ -61,7 +62,6 @@ class Timing;
 }
 
 namespace webrtc {
-class AudioSinkInterface;
 class VideoFrame;
 }  // namespace webrtc
 
@@ -215,14 +215,9 @@ class MediaSendChannelInterface
  public:
   virtual ~MediaSendChannelInterface() = default;
 
-  virtual VideoMediaSendChannelInterface* AsVideoSendChannel() {
-    RTC_CHECK_NOTREACHED();
-    return nullptr;
-  }
-  virtual VoiceMediaSendChannelInterface* AsVoiceSendChannel() {
-    RTC_CHECK_NOTREACHED();
-    return nullptr;
-  }
+  virtual VideoMediaSendChannelInterface* AsVideoSendChannel() = 0;
+
+  virtual VoiceMediaSendChannelInterface* AsVoiceSendChannel() = 0;
 
   // Creates a new outgoing media stream with SSRCs and CNAME as described
   // by sp.

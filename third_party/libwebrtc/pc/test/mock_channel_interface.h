@@ -25,25 +25,13 @@ namespace cricket {
 class MockChannelInterface : public cricket::ChannelInterface {
  public:
   MOCK_METHOD(cricket::MediaType, media_type, (), (const, override));
-  MOCK_METHOD(MediaChannel*, media_channel, (), (const, override));
-  MOCK_METHOD(MediaChannel*, media_send_channel, (), (const, override));
-  MOCK_METHOD(VoiceMediaChannel*,
-              voice_media_send_channel,
-              (),
-              (const, override));
-  MOCK_METHOD(VideoMediaChannel*,
-              video_media_send_channel,
-              (),
-              (const, override));
-  MOCK_METHOD(MediaChannel*, media_receive_channel, (), (const, override));
-  MOCK_METHOD(VoiceMediaChannel*,
-              voice_media_receive_channel,
-              (),
-              (const, override));
-  MOCK_METHOD(VideoMediaChannel*,
-              video_media_receive_channel,
-              (),
-              (const, override));
+  MOCK_METHOD(MediaChannel*, media_channel, (), (override));
+  MOCK_METHOD(MediaChannel*, media_send_channel, (), (override));
+  MOCK_METHOD(VoiceMediaChannel*, voice_media_send_channel, (), (override));
+  MOCK_METHOD(VideoMediaChannel*, video_media_send_channel, (), (override));
+  MOCK_METHOD(MediaChannel*, media_receive_channel, (), (override));
+  MOCK_METHOD(VoiceMediaChannel*, voice_media_receive_channel, (), (override));
+  MOCK_METHOD(VideoMediaChannel*, video_media_receive_channel, (), (override));
   MOCK_METHOD(absl::string_view, transport_name, (), (const, override));
   MOCK_METHOD(const std::string&, mid, (), (const, override));
   MOCK_METHOD(void, Enable, (bool), (override));

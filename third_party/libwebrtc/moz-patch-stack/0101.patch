@@ -191,10 +191,10 @@ index 431c267e1e..de18fc7b92 100644
  #include "api/video/video_content_type.h"
  #include "api/video/video_frame.h"
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index f4d33389ad..02f5aa8a3a 100644
+index a309ed9b96..e882e0ed31 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
-@@ -57,7 +57,7 @@ rtc_library("rtc_media_base") {
+@@ -58,7 +58,7 @@ rtc_library("rtc_media_base") {
      "../api:media_stream_interface",
      "../api:rtc_error",
      "../api:rtp_parameters",
@@ -204,12 +204,12 @@ index f4d33389ad..02f5aa8a3a 100644
      "../api:sequence_checker",
      "../api:transport_api",
 diff --git a/media/base/media_channel.h b/media/base/media_channel.h
-index 77a5ba6d5c..2bccde104a 100644
+index ee9a4724b0..d5dd714467 100644
 --- a/media/base/media_channel.h
 +++ b/media/base/media_channel.h
 @@ -63,10 +63,6 @@ class Timing;
+ 
  namespace webrtc {
- class AudioSinkInterface;
  class VideoFrame;
 -
 -webrtc::RTCError InvokeSetParametersCallback(SetParametersCallback& callback,
@@ -219,10 +219,10 @@ index 77a5ba6d5c..2bccde104a 100644
  
  namespace cricket {
 diff --git a/media/base/media_channel_impl.cc b/media/base/media_channel_impl.cc
-index 626de3438f..02d8575356 100644
+index eeefea0bab..bf140cde22 100644
 --- a/media/base/media_channel_impl.cc
 +++ b/media/base/media_channel_impl.cc
-@@ -29,19 +29,6 @@
+@@ -31,19 +31,6 @@
  #include "modules/rtp_rtcp/include/report_block_data.h"
  #include "rtc_base/checks.h"
  
