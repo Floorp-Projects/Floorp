@@ -109,7 +109,7 @@ def watch(command_context, verbose=False):
 
 CARGO_CONFIG_NOT_FOUND_ERROR_MSG = """\
 The sub-command {subcommand} is not currently configured to be used with ./mach cargo.
-To do so, add the corresponding file in <mozilla-root-dir>/cargo/config, following the template provided in <mozilla-root-dir>/cargo/config/template.yaml """
+To do so, add the corresponding file in <mozilla-root-dir>/build/cargo, following other examples in this directory"""
 
 
 def _cargo_config_yaml_schema():
