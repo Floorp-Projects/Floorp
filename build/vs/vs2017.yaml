@@ -21,7 +21,11 @@
 #   Microsoft.VisualStudio.Component.VC.MFC.ARM64 \
 #   Win10SDK_10.0.17134 \
 #   -o \
-#   build/vs/vs2017.yaml
+#   build/vs/vs2017.yaml \
+#   --exclude \
+#   Contracts \
+#   'App Certification Kit Native Components' \
+#   Intellisense
 - id: Microsoft.VisualCpp.CRT.ARM64.Desktop
   payloads:
   - fileName: Microsoft.VisualCpp.CRT.ARM64.Desktop.vsix
@@ -1564,14 +1568,6 @@
     sha256: 44B3603F9BC70DA8410CC78D527FECBC7540B60BE0C8DA0313D379802D897522
     size: 839680
     url: https://download.visualstudio.microsoft.com/download/pr/12134536/1d4dd63878c15be36deb5e7106d37ce1/WinAppDeploy-x86_en-us.msi
-  - fileName: Installers\Windows App Certification Kit Native Components-x64_en-us.msi
-    sha256: 1A29E77440A0CE3C1AA68C880784822D66984CAF5B354F26716324208CA829A6
-    size: 446464
-    url: https://download.visualstudio.microsoft.com/download/pr/12134536/1d4dd63878c15be36deb5e7106d37ce1/Windows%20App%20Certification%20Kit%20Native%20Components-x64_en-us.msi
-  - fileName: Installers\Windows App Certification Kit Native Components-x86_en-us.msi
-    sha256: 528F8FBC1BAF87F131DD6920B9C61FD42473484606F5C282242E0BB2FD0C5E89
-    size: 446464
-    url: https://download.visualstudio.microsoft.com/download/pr/12134536/1d4dd63878c15be36deb5e7106d37ce1/Windows%20App%20Certification%20Kit%20Native%20Components-x86_en-us.msi
   - fileName: Installers\Windows App Certification Kit SupportedApiList ARM-arm_en-us.msi
     sha256: 8091FD19BC66F3823D3C6E65A50D04C4AE4FF34D09EE2CE49745AD800CD37BDF
     size: 368640
@@ -1588,26 +1584,14 @@
     sha256: 0061B1F837492AAE4A2E186AC0ED5F6623019911761C50CE7BBFB4FB1408D943
     size: 516096
     url: https://download.visualstudio.microsoft.com/download/pr/12134536/1d4dd63878c15be36deb5e7106d37ce1/Windows%20App%20Certification%20Kit%20x86-x86_en-us.msi
-  - fileName: Installers\Windows Desktop Extension SDK Contracts-x86_en-us.msi
-    sha256: DD005D5E70431A0C6D2DEA71A3383119051708342370A13779108789379D346F
-    size: 405504
-    url: https://download.visualstudio.microsoft.com/download/pr/12134536/1d4dd63878c15be36deb5e7106d37ce1/Windows%20Desktop%20Extension%20SDK%20Contracts-x86_en-us.msi
   - fileName: Installers\Windows Desktop Extension SDK-x86_en-us.msi
     sha256: E1A81CC3C0C4EEB1D40ED4E4F843560CF1EAC7078F5F2A33D8A8F655B5B53E0E
     size: 385024
     url: https://download.visualstudio.microsoft.com/download/pr/12134536/1d4dd63878c15be36deb5e7106d37ce1/Windows%20Desktop%20Extension%20SDK-x86_en-us.msi
-  - fileName: Installers\Windows IoT Extension SDK Contracts-x86_en-us.msi
-    sha256: D34F9C8D0B612E571701617B3802A5773A781940873AE3362E1EA337CAB750A3
-    size: 385024
-    url: https://download.visualstudio.microsoft.com/download/pr/12134536/1d4dd63878c15be36deb5e7106d37ce1/Windows%20IoT%20Extension%20SDK%20Contracts-x86_en-us.msi
   - fileName: Installers\Windows IoT Extension SDK-x86_en-us.msi
     sha256: 6620D9D7260FE5E4A5BFBE44F30BE091D1D2AD4C1D88E64A9F66ECD625212F44
     size: 385024
     url: https://download.visualstudio.microsoft.com/download/pr/12134536/1d4dd63878c15be36deb5e7106d37ce1/Windows%20IoT%20Extension%20SDK-x86_en-us.msi
-  - fileName: Installers\Windows Mobile Extension SDK Contracts-x86_en-us.msi
-    sha256: 30504220D3DFDDD8988F4BBDE53987C4CF921644C0CA9C617D4E35B039CDE74D
-    size: 389120
-    url: https://download.visualstudio.microsoft.com/download/pr/12134536/1d4dd63878c15be36deb5e7106d37ce1/Windows%20Mobile%20Extension%20SDK%20Contracts-x86_en-us.msi
   - fileName: Installers\Windows Mobile Extension SDK-x86_en-us.msi
     sha256: 9CE2E1C092ED6C9F6D5162AE50B0749100F530719D604296F1C6A961E2C92FF6
     size: 397312
@@ -1680,10 +1664,6 @@
     sha256: AEC037A8089F1DC29B111E0E1B6BBC00F709CA92E51FECA86598D5689FFB79DA
     size: 385024
     url: https://download.visualstudio.microsoft.com/download/pr/12134536/1d4dd63878c15be36deb5e7106d37ce1/Windows%20SDK%20Facade%20Windows%20WinMD%20Versioned-x86_en-us.msi
-  - fileName: Installers\Windows SDK for Windows Store Apps Contracts-x86_en-us.msi
-    sha256: A34D0B7078532FC95241723E7C753BBB55D6BBD7AE9F1A4DB941FBF9E29F80EE
-    size: 397312
-    url: https://download.visualstudio.microsoft.com/download/pr/12134536/1d4dd63878c15be36deb5e7106d37ce1/Windows%20SDK%20for%20Windows%20Store%20Apps%20Contracts-x86_en-us.msi
   - fileName: Installers\Windows SDK for Windows Store Apps DirectX ARM Remote-arm_en-us.msi
     sha256: 313C5C28F95C810FB6E2F7FF3C646F085C8F519E4CCE3111F7AA6B0E365C8F73
     size: 372736
@@ -1744,50 +1724,10 @@
     sha256: EDB50604DADCB481AD3F493F5E4EFC896A1B1ADFDB3979481A669D012D9F595E
     size: 397312
     url: https://download.visualstudio.microsoft.com/download/pr/12134536/1d4dd63878c15be36deb5e7106d37ce1/Windows%20SDK-x86_en-us.msi
-  - fileName: Installers\Windows Team Extension SDK Contracts-x86_en-us.msi
-    sha256: 39BE34F1C2E42B101FC507770FE596945464A30389E3CCB2801B995AE34591C2
-    size: 385024
-    url: https://download.visualstudio.microsoft.com/download/pr/12134536/1d4dd63878c15be36deb5e7106d37ce1/Windows%20Team%20Extension%20SDK%20Contracts-x86_en-us.msi
   - fileName: Installers\Windows Team Extension SDK-x86_en-us.msi
     sha256: F5F95E3D336397FFC5BA526AB7FBC8E40F5956BF487B0B1C5D55446477904137
     size: 385024
     url: https://download.visualstudio.microsoft.com/download/pr/12134536/1d4dd63878c15be36deb5e7106d37ce1/Windows%20Team%20Extension%20SDK-x86_en-us.msi
-  - fileName: Installers\WinRT Intellisense Desktop - en-us-x86_en-us.msi
-    sha256: C0FDC6839D4CE21169F3702C50706C10867E5E39E0864B488C88934FD1EA7245
-    size: 425984
-    url: https://download.visualstudio.microsoft.com/download/pr/12134536/1d4dd63878c15be36deb5e7106d37ce1/WinRT%20Intellisense%20Desktop%20-%20en-us-x86_en-us.msi
-  - fileName: Installers\WinRT Intellisense Desktop - Other Languages-x86_en-us.msi
-    sha256: EDF94690443F4E79CF7361870F80F9177D3F9069B26E7C400EE511C5471B8587
-    size: 520192
-    url: https://download.visualstudio.microsoft.com/download/pr/12134536/1d4dd63878c15be36deb5e7106d37ce1/WinRT%20Intellisense%20Desktop%20-%20Other%20Languages-x86_en-us.msi
-  - fileName: Installers\WinRT Intellisense IoT - en-us-x86_en-us.msi
-    sha256: C76E950E5DD097D72EE7DCC3693BEF51F290957F660D7768F8C98687589253E3
-    size: 385024
-    url: https://download.visualstudio.microsoft.com/download/pr/12134536/1d4dd63878c15be36deb5e7106d37ce1/WinRT%20Intellisense%20IoT%20-%20en-us-x86_en-us.msi
-  - fileName: Installers\WinRT Intellisense IoT - Other Languages-x86_en-us.msi
-    sha256: 1D9BAE28A52254DA33D995D6018173CD85637FD070057C66CEBCB2BB5675EC7A
-    size: 393216
-    url: https://download.visualstudio.microsoft.com/download/pr/12134536/1d4dd63878c15be36deb5e7106d37ce1/WinRT%20Intellisense%20IoT%20-%20Other%20Languages-x86_en-us.msi
-  - fileName: Installers\WinRT Intellisense Mobile - en-us-x86_en-us.msi
-    sha256: AD60F4465570CFEBA40DC0DE4AD3D0FF188EA52FAA23FB28C0BDE0ADF2B0D9E2
-    size: 389120
-    url: https://download.visualstudio.microsoft.com/download/pr/12134536/1d4dd63878c15be36deb5e7106d37ce1/WinRT%20Intellisense%20Mobile%20-%20en-us-x86_en-us.msi
-  - fileName: Installers\WinRT Intellisense PPI - en-us-x86_en-us.msi
-    sha256: AEBEA6403636146631C84A5562BAF89E8E6B4F184E3E154D4F0FF9E3C2A0B734
-    size: 385024
-    url: https://download.visualstudio.microsoft.com/download/pr/12134536/1d4dd63878c15be36deb5e7106d37ce1/WinRT%20Intellisense%20PPI%20-%20en-us-x86_en-us.msi
-  - fileName: Installers\WinRT Intellisense PPI - Other Languages-x86_en-us.msi
-    sha256: 04A78E9A74942E4C1FE24081347BBB77E2F32F72E939226641142AB5D05DB4AC
-    size: 397312
-    url: https://download.visualstudio.microsoft.com/download/pr/12134536/1d4dd63878c15be36deb5e7106d37ce1/WinRT%20Intellisense%20PPI%20-%20Other%20Languages-x86_en-us.msi
-  - fileName: Installers\WinRT Intellisense UAP - en-us-x86_en-us.msi
-    sha256: F02DD55A9E5FC4D137816BBBACBBCA4B3DBC6E3BBD89EC919910BFFF9EE9387A
-    size: 397312
-    url: https://download.visualstudio.microsoft.com/download/pr/12134536/1d4dd63878c15be36deb5e7106d37ce1/WinRT%20Intellisense%20UAP%20-%20en-us-x86_en-us.msi
-  - fileName: Installers\WinRT Intellisense UAP - Other Languages-x86_en-us.msi
-    sha256: 34EAE5EF7C4C70D18BEA53285716A48E801E823A4D6689958E5B47158812A820
-    size: 421888
-    url: https://download.visualstudio.microsoft.com/download/pr/12134536/1d4dd63878c15be36deb5e7106d37ce1/WinRT%20Intellisense%20UAP%20-%20Other%20Languages-x86_en-us.msi
   - fileName: Installers\WPT Redistributables-x86_en-us.msi
     sha256: E8257371402673462FBBF0F0CF10A42ED7450A6F3C67305038E433A6D4508B72
     size: 385024
