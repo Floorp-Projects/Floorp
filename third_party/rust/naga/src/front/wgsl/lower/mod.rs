@@ -234,14 +234,7 @@ impl<'a> ExpressionContext<'a, '_, '_> {
     /// [`self.resolved_inner(handle)`]: ExpressionContext::resolved_inner
     /// [`Typifier`]: Typifier
     fn grow_types(&mut self, handle: Handle<crate::Expression>) -> Result<&mut Self, Error<'a>> {
-        let resolve_ctx = ResolveContext {
-            constants: &self.module.constants,
-            types: &self.module.types,
-            global_vars: &self.module.global_variables,
-            local_vars: self.local_vars,
-            functions: &self.module.functions,
-            arguments: self.arguments,
-        };
+        let resolve_ctx = ResolveContext::with_locals(self.module, self.local_vars, self.arguments);
         self.typifier
             .grow(handle, self.naga_expressions, &resolve_ctx)
             .map_err(Error::InvalidResolve)?;
@@ -644,14 +637,14 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
             module: &mut module,
         };
 
-        for decl in self.index.visit_ordered() {
-            let span = tu.decls.get_span(decl);
-            let decl = &tu.decls[decl];
+        for decl_handle in self.index.visit_ordered() {
+            let span = tu.decls.get_span(decl_handle);
+            let decl = &tu.decls[decl_handle];
 
             match decl.kind {
                 ast::GlobalDeclKind::Fn(ref f) => {
-                    let decl = self.function(f, span, ctx.reborrow())?;
-                    ctx.globals.insert(f.name.name, decl);
+                    let lowered_decl = self.function(f, span, ctx.reborrow())?;
+                    ctx.globals.insert(f.name.name, lowered_decl);
                 }
                 ast::GlobalDeclKind::Var(ref v) => {
                     let ty = self.resolve_ast_type(v.ty, ctx.reborrow())?;
@@ -1006,11 +999,11 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
                     .map(|case| {
                         Ok(crate::SwitchCase {
                             value: match case.value {
-                                ast::SwitchValue::I32(num) if !uint => {
-                                    crate::SwitchValue::Integer(num)
+                                ast::SwitchValue::I32(value) if !uint => {
+                                    crate::SwitchValue::I32(value)
                                 }
-                                ast::SwitchValue::U32(num) if uint => {
-                                    crate::SwitchValue::Integer(num as i32)
+                                ast::SwitchValue::U32(value) if uint => {
+                                    crate::SwitchValue::U32(value)
                                 }
                                 ast::SwitchValue::Default => crate::SwitchValue::Default,
                                 _ => {
@@ -1572,12 +1565,12 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
                     args.finish()?;
 
                     crate::Expression::Relational { fun, argument }
-                } else if let Some(axis) = conv::map_derivative_axis(function.name) {
+                } else if let Some((axis, ctrl)) = conv::map_derivative(function.name) {
                     let mut args = ctx.prepare_args(arguments, 1, span);
                     let expr = self.expression(args.next()?, ctx.reborrow())?;
                     args.finish()?;
 
-                    crate::Expression::Derivative { axis, expr }
+                    crate::Expression::Derivative { axis, ctrl, expr }
                 } else if let Some(fun) = conv::map_standard_fun(function.name) {
                     let expected = fun.argument_count() as _;
                     let mut args = ctx.prepare_args(arguments, expected, span);
@@ -1733,50 +1726,11 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
 
                             let expression = match *ctx.resolved_inner(value) {
                                 crate::TypeInner::Scalar { kind, width } => {
-                                    let bool_ty = ctx.module.types.insert(
-                                        crate::Type {
-                                            name: None,
-                                            inner: crate::TypeInner::Scalar {
-                                                kind: crate::ScalarKind::Bool,
-                                                width: crate::BOOL_WIDTH,
-                                            },
-                                        },
-                                        Span::UNDEFINED,
-                                    );
-                                    let scalar_ty = ctx.module.types.insert(
-                                        crate::Type {
-                                            name: None,
-                                            inner: crate::TypeInner::Scalar { kind, width },
-                                        },
-                                        Span::UNDEFINED,
-                                    );
-                                    let struct_ty = ctx.module.types.insert(
-                                        crate::Type {
-                                            name: Some(
-                                                "__atomic_compare_exchange_result".to_string(),
-                                            ),
-                                            inner: crate::TypeInner::Struct {
-                                                members: vec![
-                                                    crate::StructMember {
-                                                        name: Some("old_value".to_string()),
-                                                        ty: scalar_ty,
-                                                        binding: None,
-                                                        offset: 0,
-                                                    },
-                                                    crate::StructMember {
-                                                        name: Some("exchanged".to_string()),
-                                                        ty: bool_ty,
-                                                        binding: None,
-                                                        offset: 4,
-                                                    },
-                                                ],
-                                                span: 8,
-                                            },
-                                        },
-                                        Span::UNDEFINED,
-                                    );
                                     crate::Expression::AtomicResult {
-                                        ty: struct_ty,
+                                        //TODO: cache this to avoid generating duplicate types
+                                        ty: ctx
+                                            .module
+                                            .generate_atomic_compare_exchange_result(kind, width),
                                         comparison: true,
                                     }
                                 }
@@ -1918,6 +1872,65 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
                                 image,
                                 query: crate::ImageQuery::NumSamples,
                             }
+                        }
+                        "rayQueryInitialize" => {
+                            let mut args = ctx.prepare_args(arguments, 3, span);
+                            let query = self.ray_query_pointer(args.next()?, ctx.reborrow())?;
+                            let acceleration_structure =
+                                self.expression(args.next()?, ctx.reborrow())?;
+                            let descriptor = self.expression(args.next()?, ctx.reborrow())?;
+                            args.finish()?;
+
+                            let _ = ctx.module.generate_ray_desc_type();
+                            let fun = crate::RayQueryFunction::Initialize {
+                                acceleration_structure,
+                                descriptor,
+                            };
+
+                            ctx.block.extend(ctx.emitter.finish(ctx.naga_expressions));
+                            ctx.emitter.start(ctx.naga_expressions);
+                            ctx.block
+                                .push(crate::Statement::RayQuery { query, fun }, span);
+                            return Ok(None);
+                        }
+                        "rayQueryProceed" => {
+                            let mut args = ctx.prepare_args(arguments, 1, span);
+                            let query = self.ray_query_pointer(args.next()?, ctx.reborrow())?;
+                            args.finish()?;
+
+                            ctx.block.extend(ctx.emitter.finish(ctx.naga_expressions));
+                            let result = ctx
+                                .naga_expressions
+                                .append(crate::Expression::RayQueryProceedResult, span);
+                            let fun = crate::RayQueryFunction::Proceed { result };
+
+                            ctx.emitter.start(ctx.naga_expressions);
+                            ctx.block
+                                .push(crate::Statement::RayQuery { query, fun }, span);
+                            return Ok(Some(result));
+                        }
+                        "rayQueryGetCommittedIntersection" => {
+                            let mut args = ctx.prepare_args(arguments, 1, span);
+                            let query = self.ray_query_pointer(args.next()?, ctx.reborrow())?;
+                            args.finish()?;
+
+                            let _ = ctx.module.generate_ray_intersection_type();
+
+                            crate::Expression::RayQueryGetIntersection {
+                                query,
+                                committed: true,
+                            }
+                        }
+                        "RayDesc" => {
+                            let ty = ctx.module.generate_ray_desc_type();
+                            let handle = self.construct(
+                                span,
+                                &ast::ConstructorType::Type(ty),
+                                function.span,
+                                arguments,
+                                ctx.reborrow(),
+                            )?;
+                            return Ok(Some(handle));
                         }
                         _ => return Err(Error::UnknownIdent(function.span, function.name)),
                     }
@@ -2245,6 +2258,8 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
                 class,
             },
             ast::Type::Sampler { comparison } => crate::TypeInner::Sampler { comparison },
+            ast::Type::AccelerationStructure => crate::TypeInner::AccelerationStructure,
+            ast::Type::RayQuery => crate::TypeInner::RayQuery,
             ast::Type::BindingArray { base, size } => {
                 let base = self.resolve_ast_type(base, ctx.reborrow())?;
 
@@ -2258,6 +2273,12 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
                         ast::ArraySize::Dynamic => crate::ArraySize::Dynamic,
                     },
                 }
+            }
+            ast::Type::RayDesc => {
+                return Ok(ctx.module.generate_ray_desc_type());
+            }
+            ast::Type::RayIntersection => {
+                return Ok(ctx.module.generate_ray_intersection_type());
             }
             ast::Type::User(ref ident) => {
                 return match ctx.globals.get(ident.name) {
@@ -2377,5 +2398,29 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
         }
 
         binding
+    }
+
+    fn ray_query_pointer(
+        &mut self,
+        expr: Handle<ast::Expression<'source>>,
+        mut ctx: ExpressionContext<'source, '_, '_>,
+    ) -> Result<Handle<crate::Expression>, Error<'source>> {
+        let span = ctx.ast_expressions.get_span(expr);
+        let pointer = self.expression(expr, ctx.reborrow())?;
+
+        ctx.grow_types(pointer)?;
+        match *ctx.resolved_inner(pointer) {
+            crate::TypeInner::Pointer { base, .. } => match ctx.module.types[base].inner {
+                crate::TypeInner::RayQuery => Ok(pointer),
+                ref other => {
+                    log::error!("Pointer type to {:?} passed to ray query op", other);
+                    Err(Error::InvalidRayQueryPointer(span))
+                }
+            },
+            ref other => {
+                log::error!("Type {:?} passed to ray query op", other);
+                Err(Error::InvalidRayQueryPointer(span))
+            }
+        }
     }
 }

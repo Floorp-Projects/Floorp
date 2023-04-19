@@ -185,6 +185,10 @@ impl Version {
     fn supports_integer_functions(&self) -> bool {
         *self >= Version::Desktop(400) || *self >= Version::new_gles(310)
     }
+
+    fn supports_derivative_control(&self) -> bool {
+        *self >= Version::Desktop(450)
+    }
 }
 
 impl PartialOrd for Version {
@@ -875,6 +879,8 @@ impl<'a, W: Write> Writer<'a, W> {
             | TypeInner::Struct { .. }
             | TypeInner::Image { .. }
             | TypeInner::Sampler { .. }
+            | TypeInner::AccelerationStructure
+            | TypeInner::RayQuery
             | TypeInner::BindingArray { .. } => {
                 return Err(Error::Custom(format!("Unable to write type {inner:?}")))
             }
@@ -1297,7 +1303,7 @@ impl<'a, W: Write> Writer<'a, W> {
         let emit_interpolation_and_auxiliary = match self.entry_point.stage {
             ShaderStage::Vertex => output,
             ShaderStage::Fragment => !output,
-            _ => false,
+            ShaderStage::Compute => false,
         };
 
         // Write the I/O locations, if allowed
@@ -1906,21 +1912,13 @@ impl<'a, W: Write> Writer<'a, W> {
                 write!(self.out, "switch(")?;
                 self.write_expr(selector, ctx)?;
                 writeln!(self.out, ") {{")?;
-                let type_postfix = match *ctx.info[selector].ty.inner_with(&self.module.types) {
-                    crate::TypeInner::Scalar {
-                        kind: crate::ScalarKind::Uint,
-                        ..
-                    } => "u",
-                    _ => "",
-                };
 
                 // Write all cases
                 let l2 = level.next();
                 for case in cases {
                     match case.value {
-                        crate::SwitchValue::Integer(value) => {
-                            write!(self.out, "{l2}case {value}{type_postfix}:")?
-                        }
+                        crate::SwitchValue::I32(value) => write!(self.out, "{l2}case {value}:")?,
+                        crate::SwitchValue::U32(value) => write!(self.out, "{l2}case {value}u:")?,
                         crate::SwitchValue::Default => write!(self.out, "{l2}default:")?,
                     }
 
@@ -2037,27 +2035,11 @@ impl<'a, W: Write> Writer<'a, W> {
                                     };
 
                                     for (index, member) in members.iter().enumerate() {
-                                        // TODO: handle builtin in better way
-                                        if let Some(crate::Binding::BuiltIn(builtin)) =
-                                            member.binding
+                                        if let Some(crate::Binding::BuiltIn(
+                                            crate::BuiltIn::PointSize,
+                                        )) = member.binding
                                         {
-                                            has_point_size |= builtin == crate::BuiltIn::PointSize;
-
-                                            match builtin {
-                                                crate::BuiltIn::ClipDistance
-                                                | crate::BuiltIn::CullDistance => {
-                                                    if self.options.version.is_es() {
-                                                        // Note that gl_ClipDistance and gl_CullDistance are listed in the GLSL ES 3.2 spec but shouldn't
-                                                        // See https://github.com/KhronosGroup/GLSL/issues/132#issuecomment-685818465
-                                                        log::warn!(
-                                                            "{:?} is not part of GLSL ES",
-                                                            builtin
-                                                        );
-                                                        continue;
-                                                    }
-                                                }
-                                                _ => {}
-                                            }
+                                            has_point_size = true;
                                         }
 
                                         let varying_name = VaryingName {
@@ -2215,6 +2197,7 @@ impl<'a, W: Write> Writer<'a, W> {
                 self.write_expr(value, ctx)?;
                 writeln!(self.out, ");")?;
             }
+            Statement::RayQuery { .. } => unreachable!(),
         }
 
         Ok(())
@@ -2836,18 +2819,28 @@ impl<'a, W: Write> Writer<'a, W> {
                 write!(self.out, ")")?
             }
             // `Derivative` is a function call to a glsl provided function
-            Expression::Derivative { axis, expr } => {
-                use crate::DerivativeAxis as Da;
-
-                write!(
-                    self.out,
-                    "{}(",
-                    match axis {
-                        Da::X => "dFdx",
-                        Da::Y => "dFdy",
-                        Da::Width => "fwidth",
+            Expression::Derivative { axis, ctrl, expr } => {
+                use crate::{DerivativeAxis as Axis, DerivativeControl as Ctrl};
+                let fun_name = if self.options.version.supports_derivative_control() {
+                    match (axis, ctrl) {
+                        (Axis::X, Ctrl::Coarse) => "dFdxCoarse",
+                        (Axis::X, Ctrl::Fine) => "dFdxFine",
+                        (Axis::X, Ctrl::None) => "dFdx",
+                        (Axis::Y, Ctrl::Coarse) => "dFdyCoarse",
+                        (Axis::Y, Ctrl::Fine) => "dFdyFine",
+                        (Axis::Y, Ctrl::None) => "dFdy",
+                        (Axis::Width, Ctrl::Coarse) => "fwidthCoarse",
+                        (Axis::Width, Ctrl::Fine) => "fwidthFine",
+                        (Axis::Width, Ctrl::None) => "fwidth",
                     }
-                )?;
+                } else {
+                    match axis {
+                        Axis::X => "dFdx",
+                        Axis::Y => "dFdy",
+                        Axis::Width => "fwidth",
+                    }
+                };
+                write!(self.out, "{fun_name}(")?;
                 self.write_expr(expr, ctx)?;
                 write!(self.out, ")")?
             }
@@ -3287,13 +3280,17 @@ impl<'a, W: Write> Writer<'a, W> {
                 }
             }
             // These expressions never show up in `Emit`.
-            Expression::CallResult(_) | Expression::AtomicResult { .. } => unreachable!(),
+            Expression::CallResult(_)
+            | Expression::AtomicResult { .. }
+            | Expression::RayQueryProceedResult => unreachable!(),
             // `ArrayLength` is written as `expr.length()` and we convert it to a uint
             Expression::ArrayLength(expr) => {
                 write!(self.out, "uint(")?;
                 self.write_expr(expr, ctx)?;
                 write!(self.out, ".length())")?
             }
+            // not supported yet
+            Expression::RayQueryGetIntersection { .. } => unreachable!(),
         }
 
         Ok(())

@@ -686,12 +686,19 @@ impl FunctionInfo {
                 requirements: UniformityRequirements::empty(),
             },
             E::CallResult(function) => other_functions[function.index()].uniformity.clone(),
-            E::AtomicResult { .. } => Uniformity {
+            E::AtomicResult { .. } | E::RayQueryProceedResult => Uniformity {
                 non_uniform_result: Some(handle),
                 requirements: UniformityRequirements::empty(),
             },
             E::ArrayLength(expr) => Uniformity {
                 non_uniform_result: self.add_ref_impl(expr, GlobalUse::QUERY),
+                requirements: UniformityRequirements::empty(),
+            },
+            E::RayQueryGetIntersection {
+                query,
+                committed: _,
+            } => Uniformity {
+                non_uniform_result: self.add_ref(query),
                 requirements: UniformityRequirements::empty(),
             },
         };
@@ -893,6 +900,18 @@ impl FunctionInfo {
                     }
                     FunctionUniformity::new()
                 }
+                S::RayQuery { query, ref fun } => {
+                    let _ = self.add_ref(query);
+                    if let crate::RayQueryFunction::Initialize {
+                        acceleration_structure,
+                        descriptor,
+                    } = *fun
+                    {
+                        let _ = self.add_ref(acceleration_structure);
+                        let _ = self.add_ref(descriptor);
+                    }
+                    FunctionUniformity::new()
+                }
             };
 
             disruptor = disruptor.or(uniformity.exit_disruptor());
@@ -922,14 +941,8 @@ impl ModuleInfo {
             expressions: vec![ExpressionInfo::new(); fun.expressions.len()].into_boxed_slice(),
             sampling: crate::FastHashSet::default(),
         };
-        let resolve_context = ResolveContext {
-            constants: &module.constants,
-            types: &module.types,
-            global_vars: &module.global_variables,
-            local_vars: &fun.local_variables,
-            functions: &module.functions,
-            arguments: &fun.arguments,
-        };
+        let resolve_context =
+            ResolveContext::with_locals(module, &fun.local_variables, &fun.arguments);
 
         for (handle, expr) in fun.expressions.iter() {
             if let Err(source) = info.process_expression(
@@ -1015,6 +1028,7 @@ fn uniform_control_flow() {
     let derivative_expr = expressions.append(
         E::Derivative {
             axis: crate::DerivativeAxis::X,
+            ctrl: crate::DerivativeControl::None,
             expr: constant_expr,
         },
         Default::default(),
@@ -1051,6 +1065,7 @@ fn uniform_control_flow() {
     let resolve_context = ResolveContext {
         constants: &constant_arena,
         types: &type_arena,
+        special_types: &crate::SpecialTypes::default(),
         global_vars: &global_var_arena,
         local_vars: &Arena::new(),
         functions: &Arena::new(),

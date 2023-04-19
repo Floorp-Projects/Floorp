@@ -157,8 +157,8 @@ impl StatementGraph {
                     for case in cases {
                         let (case_id, case_last) = self.add(&case.body, targets);
                         let label = match case.value {
-                            crate::SwitchValue::Integer(_) => "case",
                             crate::SwitchValue::Default => "default",
+                            _ => "case",
                         };
                         self.flow.push((id, case_id, label));
                         // Link the last node of the branch to the merge node
@@ -251,6 +251,28 @@ impl StatementGraph {
                         self.dependencies.push((id, cmp, "cmp"));
                     }
                     "Atomic"
+                }
+                S::RayQuery { query, ref fun } => {
+                    self.dependencies.push((id, query, "query"));
+                    match *fun {
+                        crate::RayQueryFunction::Initialize {
+                            acceleration_structure,
+                            descriptor,
+                        } => {
+                            self.dependencies.push((
+                                id,
+                                acceleration_structure,
+                                "acceleration_structure",
+                            ));
+                            self.dependencies.push((id, descriptor, "descriptor"));
+                            "RayQueryInitialize"
+                        }
+                        crate::RayQueryFunction::Proceed { result } => {
+                            self.emits.push((id, result));
+                            "RayQueryProceed"
+                        }
+                        crate::RayQueryFunction::Terminate => "RayQueryTerminate",
+                    }
                 }
             };
             // Set the last node to the merge node
@@ -505,9 +527,9 @@ fn write_function_expressions(
                 edges.insert("reject", reject);
                 ("Select".into(), 3)
             }
-            E::Derivative { axis, expr } => {
+            E::Derivative { axis, ctrl, expr } => {
                 edges.insert("", expr);
-                (format!("d{axis:?}").into(), 8)
+                (format!("d{axis:?}{ctrl:?}").into(), 8)
             }
             E::Relational { fun, argument } => {
                 edges.insert("arg", argument);
@@ -549,6 +571,12 @@ fn write_function_expressions(
             E::ArrayLength(expr) => {
                 edges.insert("", expr);
                 ("ArrayLength".into(), 7)
+            }
+            E::RayQueryProceedResult => ("rayQueryProceedResult".into(), 4),
+            E::RayQueryGetIntersection { query, committed } => {
+                edges.insert("", query);
+                let ty = if committed { "Committed" } else { "Candidate" };
+                (format!("rayQueryGet{}Intersection", ty).into(), 4)
             }
         };
 

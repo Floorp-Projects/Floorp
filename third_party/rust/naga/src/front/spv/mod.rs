@@ -560,9 +560,15 @@ pub struct Frontend<I> {
         std::hash::BuildHasherDefault<rustc_hash::FxHasher>,
     >,
 
-    /// Tracks usage of builtins, used to cull unused builtins since they can
-    /// have serious performance implications.
-    builtin_usage: FastHashSet<crate::BuiltIn>,
+    /// Tracks access to gl_PerVertex's builtins, it is used to cull unused builtins since initializing those can
+    /// affect performance and the mere presence of some of these builtins might cause backends to error since they
+    /// might be unsupported.
+    ///
+    /// The problematic builtins are: PointSize, ClipDistance and CullDistance.
+    ///
+    /// glslang declares those by default even though they are never written to
+    /// (see <https://github.com/KhronosGroup/glslang/issues/1868>)
+    gl_per_vertex_builtin_access: FastHashSet<crate::BuiltIn>,
 }
 
 impl<I: Iterator<Item = u32>> Frontend<I> {
@@ -596,7 +602,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
             index_constants: Vec::new(),
             index_constant_expressions: Vec::new(),
             switch_cases: indexmap::IndexMap::default(),
-            builtin_usage: FastHashSet::default(),
+            gl_per_vertex_builtin_access: FastHashSet::default(),
         }
     }
 
@@ -1123,7 +1129,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
         block: &mut crate::Block,
         block_id: spirv::Word,
         body_idx: usize,
-        axis: crate::DerivativeAxis,
+        (axis, ctrl): (crate::DerivativeAxis, crate::DerivativeControl),
     ) -> Result<(), Error> {
         let start = self.data_offset;
         let result_type_id = self.next()?;
@@ -1135,6 +1141,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
 
         let expr = crate::Expression::Derivative {
             axis,
+            ctrl,
             expr: arg_handle,
         };
         self.lookup_expression.insert(
@@ -1288,8 +1295,15 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
             ($op:expr, UNARY) => {
                 self.parse_expr_unary_op(ctx, &mut emitter, &mut block, block_id, body_idx, $op)
             };
-            ($axis:expr, DERIVATIVE) => {
-                self.parse_expr_derivative(ctx, &mut emitter, &mut block, block_id, body_idx, $axis)
+            ($axis:expr, $ctrl:expr, DERIVATIVE) => {
+                self.parse_expr_derivative(
+                    ctx,
+                    &mut emitter,
+                    &mut block,
+                    block_id,
+                    body_idx,
+                    ($axis, $ctrl),
+                )
             };
         }
 
@@ -1480,7 +1494,8 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
 
                         log::trace!("\t\t\tlooking up type {:?}", acex.type_id);
                         let type_lookup = self.lookup_type.lookup(acex.type_id)?;
-                        acex = match ctx.type_arena[type_lookup.handle].inner {
+                        let ty = &ctx.type_arena[type_lookup.handle];
+                        acex = match ty.inner {
                             // can only index a struct with a constant
                             crate::TypeInner::Struct { ref members, .. } => {
                                 let index = index_maybe
@@ -1498,10 +1513,12 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                                     span,
                                 );
 
-                                if let Some(crate::Binding::BuiltIn(built_in)) =
-                                    members[index as usize].binding
-                                {
-                                    self.builtin_usage.insert(built_in);
+                                if ty.name.as_deref() == Some("gl_PerVertex") {
+                                    if let Some(crate::Binding::BuiltIn(built_in)) =
+                                        members[index as usize].binding
+                                    {
+                                        self.gl_per_vertex_builtin_access.insert(built_in);
+                                    }
                                 }
 
                                 AccessExpression {
@@ -3337,14 +3354,68 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                     });
                     body_idx = loop_body_idx;
                 }
-                Op::DPdx | Op::DPdxFine | Op::DPdxCoarse => {
-                    parse_expr_op!(crate::DerivativeAxis::X, DERIVATIVE)?;
+                Op::DPdxCoarse => {
+                    parse_expr_op!(
+                        crate::DerivativeAxis::X,
+                        crate::DerivativeControl::Coarse,
+                        DERIVATIVE
+                    )?;
                 }
-                Op::DPdy | Op::DPdyFine | Op::DPdyCoarse => {
-                    parse_expr_op!(crate::DerivativeAxis::Y, DERIVATIVE)?;
+                Op::DPdyCoarse => {
+                    parse_expr_op!(
+                        crate::DerivativeAxis::Y,
+                        crate::DerivativeControl::Coarse,
+                        DERIVATIVE
+                    )?;
                 }
-                Op::Fwidth | Op::FwidthFine | Op::FwidthCoarse => {
-                    parse_expr_op!(crate::DerivativeAxis::Width, DERIVATIVE)?;
+                Op::FwidthCoarse => {
+                    parse_expr_op!(
+                        crate::DerivativeAxis::Width,
+                        crate::DerivativeControl::Coarse,
+                        DERIVATIVE
+                    )?;
+                }
+                Op::DPdxFine => {
+                    parse_expr_op!(
+                        crate::DerivativeAxis::X,
+                        crate::DerivativeControl::Fine,
+                        DERIVATIVE
+                    )?;
+                }
+                Op::DPdyFine => {
+                    parse_expr_op!(
+                        crate::DerivativeAxis::Y,
+                        crate::DerivativeControl::Fine,
+                        DERIVATIVE
+                    )?;
+                }
+                Op::FwidthFine => {
+                    parse_expr_op!(
+                        crate::DerivativeAxis::Width,
+                        crate::DerivativeControl::Fine,
+                        DERIVATIVE
+                    )?;
+                }
+                Op::DPdx => {
+                    parse_expr_op!(
+                        crate::DerivativeAxis::X,
+                        crate::DerivativeControl::None,
+                        DERIVATIVE
+                    )?;
+                }
+                Op::DPdy => {
+                    parse_expr_op!(
+                        crate::DerivativeAxis::Y,
+                        crate::DerivativeControl::None,
+                        DERIVATIVE
+                    )?;
+                }
+                Op::Fwidth => {
+                    parse_expr_op!(
+                        crate::DerivativeAxis::Width,
+                        crate::DerivativeControl::None,
+                        DERIVATIVE
+                    )?;
                 }
                 Op::ArrayLength => {
                     inst.expect(5)?;
@@ -3601,7 +3672,8 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                 | S::Barrier(_)
                 | S::Store { .. }
                 | S::ImageStore { .. }
-                | S::Atomic { .. } => {}
+                | S::Atomic { .. }
+                | S::RayQuery { .. } => {}
                 S::Call {
                     function: ref mut callee,
                     ref arguments,

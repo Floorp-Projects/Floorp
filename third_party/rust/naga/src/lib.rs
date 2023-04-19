@@ -107,6 +107,11 @@ Naga's rules for when `Expression`s are evaluated are as follows:
     [`Atomic`] statement, representing the result of the atomic operation, is
     evaluated when the `Atomic` statement is executed.
 
+-   A [`RayQueryProceedResult`] expression, which is a boolean
+    indicating if the ray query is finished, is evaluated when the
+    [`RayQuery`] statement whose [`Proceed::result`] points to it is
+    executed.
+
 -   All other expressions are evaluated when the (unique) [`Statement::Emit`]
     statement that covers them is executed.
 
@@ -166,6 +171,7 @@ need to be stored in a local variable to be carried upwards in the statement
 tree.
 
 [`AtomicResult`]: Expression::AtomicResult
+[`RayQueryProceedResult`]: Expression::RayQueryProceedResult
 [`CallResult`]: Expression::CallResult
 [`Constant`]: Expression::Constant
 [`Derivative`]: Expression::Derivative
@@ -180,6 +186,9 @@ tree.
 [`Call`]: Statement::Call
 [`Emit`]: Statement::Emit
 [`Store`]: Statement::Store
+[`RayQuery`]: Statement::RayQuery
+
+[`Proceed::result`]: RayQueryFunction::Proceed::result
 
 [`Validator::validate`]: valid::Validator::validate
 [`ModuleInfo`]: valid::ModuleInfo
@@ -189,7 +198,6 @@ tree.
     clippy::new_without_default,
     clippy::unneeded_field_pattern,
     clippy::match_like_matches_macro,
-    clippy::if_same_then_else,
     clippy::collapsible_if,
     clippy::derive_partial_eq_without_eq,
     clippy::needless_borrowed_reference
@@ -200,7 +208,9 @@ tree.
     unused_extern_crates,
     unused_qualifications,
     clippy::pattern_type_mismatch,
-    clippy::missing_const_for_fn
+    clippy::missing_const_for_fn,
+    clippy::rest_pat_in_fully_bound_structs,
+    clippy::match_wildcard_for_single_variants
 )]
 #![cfg_attr(not(test), deny(clippy::panic))]
 
@@ -720,6 +730,12 @@ pub enum TypeInner {
     /// Can be used to sample values from images.
     Sampler { comparison: bool },
 
+    /// Opaque object representing an acceleration structure of geometry.
+    AccelerationStructure,
+
+    /// Locally used handle for ray queries.
+    RayQuery,
+
     /// Array of bindings.
     ///
     /// A `BindingArray` represents an array where each element draws its value
@@ -974,6 +990,17 @@ pub enum AtomicFunction {
     Min,
     Max,
     Exchange { compare: Option<Handle<Expression>> },
+}
+
+/// Hint at which precision to compute a derivative.
+#[derive(Clone, Copy, Debug, Hash, Eq, Ord, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "deserialize", derive(Deserialize))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+pub enum DerivativeControl {
+    Coarse,
+    Fine,
+    None,
 }
 
 /// Axis on which to compute a derivative.
@@ -1387,6 +1414,7 @@ pub enum Expression {
     /// Compute the derivative on an axis.
     Derivative {
         axis: DerivativeAxis,
+        ctrl: DerivativeControl,
         //modifier,
         expr: Handle<Expression>,
     },
@@ -1423,18 +1451,33 @@ pub enum Expression {
     /// This doesn't match the semantics of spirv's `OpArrayLength`, which must be passed
     /// a pointer to a structure containing a runtime array in its' last field.
     ArrayLength(Handle<Expression>),
+
+    /// Result of a [`Proceed`] [`RayQuery`] statement.
+    ///
+    /// [`Proceed`]: RayQueryFunction::Proceed
+    /// [`RayQuery`]: Statement::RayQuery
+    RayQueryProceedResult,
+
+    /// Return an intersection found by `query`.
+    ///
+    /// If `committed` is true, return the committed result available when
+    RayQueryGetIntersection {
+        query: Handle<Expression>,
+        committed: bool,
+    },
 }
 
 pub use block::Block;
 
 /// The value of the switch case.
 // Clone is used only for error reporting and is not intended for end users
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum SwitchValue {
-    Integer(i32),
+    I32(i32),
+    U32(u32),
     Default,
 }
 
@@ -1452,6 +1495,48 @@ pub struct SwitchCase {
     /// If true, the control flow continues to the next case in the list,
     /// or default.
     pub fall_through: bool,
+}
+
+/// An operation that a [`RayQuery` statement] applies to its [`query`] operand.
+///
+/// [`RayQuery` statement]: Statement::RayQuery
+/// [`query`]: Statement::RayQuery::query
+#[derive(Clone, Debug)]
+#[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "deserialize", derive(Deserialize))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+pub enum RayQueryFunction {
+    /// Initialize the `RayQuery` object.
+    Initialize {
+        /// The acceleration structure within which this query should search for hits.
+        ///
+        /// The expression must be an [`AccelerationStructure`].
+        ///
+        /// [`AccelerationStructure`]: TypeInner::AccelerationStructure
+        acceleration_structure: Handle<Expression>,
+
+        #[allow(rustdoc::private_intra_doc_links)]
+        /// A struct of detailed parameters for the ray query.
+        ///
+        /// This expression should have the struct type given in
+        /// [`SpecialTypes::ray_desc`]. This is available in the WGSL
+        /// front end as the `RayDesc` type.
+        descriptor: Handle<Expression>,
+    },
+
+    /// Start or continue the query given by the statement's [`query`] operand.
+    ///
+    /// After executing this statement, the `result` expression is a
+    /// [`Bool`] scalar indicating whether there are more intersection
+    /// candidates to consider.
+    ///
+    /// [`query`]: Statement::RayQuery::query
+    /// [`Bool`]: ScalarKind::Bool
+    Proceed {
+        result: Handle<Expression>,
+    },
+
+    Terminate,
 }
 
 //TODO: consider removing `Clone`. It's not valid to clone `Statement::Emit` anyway.
@@ -1627,6 +1712,15 @@ pub enum Statement {
         arguments: Vec<Handle<Expression>>,
         result: Option<Handle<Expression>>,
     },
+    RayQuery {
+        /// The [`RayQuery`] object this statement operates on.
+        ///
+        /// [`RayQuery`]: TypeInner::RayQuery
+        query: Handle<Expression>,
+
+        /// The specific operation we're performing on `query`.
+        fun: RayQueryFunction,
+    },
 }
 
 /// A function argument.
@@ -1743,6 +1837,26 @@ pub struct EntryPoint {
     pub function: Function,
 }
 
+/// Set of special types that can be optionally generated by the frontends.
+#[derive(Debug, Default)]
+#[cfg_attr(feature = "clone", derive(Clone))]
+#[cfg_attr(feature = "serialize", derive(Serialize))]
+#[cfg_attr(feature = "deserialize", derive(Deserialize))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+pub struct SpecialTypes {
+    /// Type for `RayDesc`.
+    ///
+    /// Call [`Module::generate_ray_desc_type`] to populate this if
+    /// needed and return the handle.
+    pub ray_desc: Option<Handle<Type>>,
+
+    /// Type for `RayIntersection`.
+    ///
+    /// Call [`Module::generate_ray_intersection_type`] to populate
+    /// this if needed and return the handle.
+    pub ray_intersection: Option<Handle<Type>>,
+}
+
 /// Shader module.
 ///
 /// A module is a set of constants, global variables and functions, as well as
@@ -1762,6 +1876,8 @@ pub struct EntryPoint {
 pub struct Module {
     /// Arena for the types defined in this module.
     pub types: UniqueArena<Type>,
+    /// Dictionary of special type handles.
+    pub special_types: SpecialTypes,
     /// Arena for the constants defined in this module.
     pub constants: Arena<Constant>,
     /// Arena for the global variables defined in this module.

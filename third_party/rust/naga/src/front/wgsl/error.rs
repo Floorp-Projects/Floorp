@@ -188,6 +188,7 @@ pub enum Error<'a> {
     MissingAttribute(&'static str, Span),
     InvalidAtomicPointer(Span),
     InvalidAtomicOperandType(Span),
+    InvalidRayQueryPointer(Span),
     Pointer(&'static str, Span),
     NotPointer(Span),
     NotReference(&'static str, Span),
@@ -274,7 +275,7 @@ impl<'a> Error<'a> {
                     ExpectedToken::Assignment => "assignment or increment/decrement".to_string(),
                     ExpectedToken::SwitchItem => "switch item ('case' or 'default') or a closing curly bracket to signify the end of the switch statement ('}')".to_string(),
                     ExpectedToken::WorkgroupSizeSeparator => "workgroup size separator (',') or a closing parenthesis".to_string(),
-                    ExpectedToken::GlobalItem => "global item ('struct', 'const', 'var', 'type', ';', 'fn') or the end of the file".to_string(),
+                    ExpectedToken::GlobalItem => "global item ('struct', 'const', 'var', 'alias', ';', 'fn') or the end of the file".to_string(),
                     ExpectedToken::Type => "type".to_string(),
                     ExpectedToken::Variable => "variable access".to_string(),
                     ExpectedToken::Function => "function name".to_string(),
@@ -524,6 +525,11 @@ impl<'a> Error<'a> {
             Error::InvalidAtomicOperandType(span) => ParseError {
                 message: "atomic operand type is inconsistent with the operation".to_string(),
                 labels: vec![(span, "atomic operand type is invalid".into())],
+                notes: vec![],
+            },
+            Error::InvalidRayQueryPointer(span) => ParseError {
+                message: "ray query operation is done on a pointer to a non-ray-query".to_string(),
+                labels: vec![(span, "ray query pointer is invalid".into())],
                 notes: vec![],
             },
             Error::NotPointer(span) => ParseError {

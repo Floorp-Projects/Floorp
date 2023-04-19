@@ -111,6 +111,8 @@ bitflags::bitflags! {
         const EARLY_DEPTH_TEST = 0x400;
         /// Support for [`Builtin::SampleIndex`] and [`Sampling::Sample`].
         const MULTISAMPLED_SHADING = 0x800;
+        /// Support for ray queries and acceleration structures.
+        const RAY_QUERY = 0x1000;
     }
 }
 
@@ -163,7 +165,7 @@ pub struct Validator {
     location_mask: BitSet,
     bind_group_masks: Vec<BitSet>,
     #[allow(dead_code)]
-    select_cases: FastHashSet<i32>,
+    switch_values: FastHashSet<crate::SwitchValue>,
     valid_expression_list: Vec<Handle<crate::Expression>>,
     valid_expression_set: BitSet,
 }
@@ -238,6 +240,8 @@ impl crate::TypeInner {
             Self::Array { .. }
             | Self::Image { .. }
             | Self::Sampler { .. }
+            | Self::AccelerationStructure
+            | Self::RayQuery
             | Self::BindingArray { .. } => false,
         }
     }
@@ -275,7 +279,7 @@ impl Validator {
             layouter: Layouter::default(),
             location_mask: BitSet::new(),
             bind_group_masks: Vec::new(),
-            select_cases: FastHashSet::default(),
+            switch_values: FastHashSet::default(),
             valid_expression_list: Vec::new(),
             valid_expression_set: BitSet::new(),
         }
@@ -287,7 +291,7 @@ impl Validator {
         self.layouter.clear();
         self.location_mask.clear();
         self.bind_group_masks.clear();
-        self.select_cases.clear();
+        self.switch_values.clear();
         self.valid_expression_list.clear();
         self.valid_expression_set.clear();
     }
@@ -302,7 +306,7 @@ impl Validator {
         let con = &constants[handle];
         match con.inner {
             crate::ConstantInner::Scalar { width, ref value } => {
-                if !self.check_width(value.scalar_kind(), width) {
+                if self.check_width(value.scalar_kind(), width).is_err() {
                     return Err(ConstantError::InvalidType);
                 }
             }

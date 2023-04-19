@@ -35,6 +35,8 @@ pub enum ExpressionError {
     InvalidPointerType(Handle<crate::Expression>),
     #[error("Array length of {0:?} can't be done")]
     InvalidArrayType(Handle<crate::Expression>),
+    #[error("Get intersection of {0:?} can't be done")]
+    InvalidRayQueryType(Handle<crate::Expression>),
     #[error("Splatting {0:?} can't be done")]
     InvalidSplatType(Handle<crate::Expression>),
     #[error("Swizzling {0:?} can't be done")]
@@ -357,7 +359,7 @@ impl super::Validator {
                         if let Some(expr) = array_index {
                             match resolver[expr] {
                                 Ti::Scalar {
-                                    kind: Sk::Sint,
+                                    kind: Sk::Sint | Sk::Uint,
                                     width: _,
                                 } => {}
                                 _ => return Err(ExpressionError::InvalidImageArrayIndexType(expr)),
@@ -546,7 +548,7 @@ impl super::Validator {
                         if let Some(expr) = array_index {
                             match resolver[expr] {
                                 Ti::Scalar {
-                                    kind: Sk::Sint,
+                                    kind: Sk::Sint | Sk::Uint,
                                     width: _,
                                 } => {}
                                 _ => return Err(ExpressionError::InvalidImageArrayIndexType(expr)),
@@ -832,7 +834,7 @@ impl super::Validator {
                 }
                 ShaderStages::all()
             }
-            E::Derivative { axis: _, expr } => {
+            E::Derivative { expr, .. } => {
                 match resolver[expr] {
                     Ti::Scalar {
                         kind: Sk::Float, ..
@@ -1379,7 +1381,7 @@ impl super::Validator {
                     _ => return Err(ExpressionError::InvalidCastArgument),
                 };
                 let width = convert.unwrap_or(base_width);
-                if !self.check_width(kind, width) {
+                if self.check_width(kind, width).is_err() {
                     return Err(ExpressionError::InvalidCastArgument);
                 }
                 ShaderStages::all()
@@ -1390,7 +1392,7 @@ impl super::Validator {
                     &crate::TypeInner::Scalar {
                         kind: kind @ (crate::ScalarKind::Uint | crate::ScalarKind::Sint),
                         width,
-                    } => self.check_width(kind, width),
+                    } => self.check_width(kind, width).is_ok(),
                     _ => false,
                 };
                 let good = match &module.types[ty].inner {
@@ -1425,6 +1427,26 @@ impl super::Validator {
                 ref other => {
                     log::error!("Array length of {:?}", other);
                     return Err(ExpressionError::InvalidArrayType(expr));
+                }
+            },
+            E::RayQueryProceedResult => ShaderStages::all(),
+            E::RayQueryGetIntersection {
+                query,
+                committed: _,
+            } => match resolver[query] {
+                Ti::Pointer {
+                    base,
+                    space: crate::AddressSpace::Function,
+                } => match resolver.types[base].inner {
+                    Ti::RayQuery => ShaderStages::all(),
+                    ref other => {
+                        log::error!("Intersection result of a pointer to {:?}", other);
+                        return Err(ExpressionError::InvalidRayQueryType(query));
+                    }
+                },
+                ref other => {
+                    log::error!("Intersection result of {:?}", other);
+                    return Err(ExpressionError::InvalidRayQueryType(query));
                 }
             },
         };

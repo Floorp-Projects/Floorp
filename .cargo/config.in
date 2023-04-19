@@ -25,14 +25,14 @@ git = "https://github.com/gfx-rs/d3d12-rs"
 rev = "b940b1d71"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/gfx-rs/naga?rev=9742f1616c3e3dd2cc9a5880616fc886c391bb9f"]
+[source."git+https://github.com/gfx-rs/naga?rev=f59668ccfaf7bdb3a7e43d84363a21c77357b2fe"]
 git = "https://github.com/gfx-rs/naga"
-rev = "9742f1616c3e3dd2cc9a5880616fc886c391bb9f"
+rev = "f59668ccfaf7bdb3a7e43d84363a21c77357b2fe"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/gfx-rs/wgpu?rev=73b4257b17cc62ecc8df6d6aa3730bd9c6cba4b9"]
+[source."git+https://github.com/gfx-rs/wgpu?rev=f3bf0f782e4dfc561d48e758e1f1e04f77860925"]
 git = "https://github.com/gfx-rs/wgpu"
-rev = "73b4257b17cc62ecc8df6d6aa3730bd9c6cba4b9"
+rev = "f3bf0f782e4dfc561d48e758e1f1e04f77860925"
 replace-with = "vendored-sources"
 
 [source."git+https://github.com/glandium/warp?rev=4af45fae95bc98b0eba1ef0db17e1dac471bb23d"]

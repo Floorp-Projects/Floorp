@@ -1,4 +1,4 @@
-//! Implementation of [`super::Validator::validate_module_handles`].
+//! Implementation of `Validator::validate_module_handles`.
 
 use crate::{
     arena::{BadHandle, BadRangeError},
@@ -39,6 +39,7 @@ impl super::Validator {
             ref functions,
             ref global_variables,
             ref types,
+            ref special_types,
         } = module;
 
         // NOTE: Types being first is important. All other forms of validation depend on this.
@@ -76,7 +77,9 @@ impl super::Validator {
                 | crate::TypeInner::ValuePointer { .. }
                 | crate::TypeInner::Atomic { .. }
                 | crate::TypeInner::Image { .. }
-                | crate::TypeInner::Sampler { .. } => (),
+                | crate::TypeInner::Sampler { .. }
+                | crate::TypeInner::AccelerationStructure
+                | crate::TypeInner::RayQuery => (),
                 crate::TypeInner::Pointer { base, space: _ } => {
                     this_handle.check_dep(base)?;
                 }
@@ -190,6 +193,13 @@ impl super::Validator {
 
         for (function_handle, function) in functions.iter() {
             validate_function(Some(function_handle), function)?;
+        }
+
+        if let Some(ty) = special_types.ray_desc {
+            validate_type(ty)?;
+        }
+        if let Some(ty) = special_types.ray_intersection {
+            validate_type(ty)?;
         }
 
         Ok(())
@@ -345,10 +355,7 @@ impl super::Validator {
                     .check_dep(accept)?
                     .check_dep(reject)?;
             }
-            crate::Expression::Derivative {
-                axis: _,
-                expr: argument,
-            } => {
+            crate::Expression::Derivative { expr: argument, .. } => {
                 handle.check_dep(argument)?;
             }
             crate::Expression::Relational { fun: _, argument } => {
@@ -380,9 +387,15 @@ impl super::Validator {
                     handle.check_dep(function)?;
                 }
             }
-            crate::Expression::AtomicResult { .. } => (),
+            crate::Expression::AtomicResult { .. } | crate::Expression::RayQueryProceedResult => (),
             crate::Expression::ArrayLength(array) => {
                 handle.check_dep(array)?;
+            }
+            crate::Expression::RayQueryGetIntersection {
+                query,
+                committed: _,
+            } => {
+                handle.check_dep(query)?;
             }
         }
         Ok(())
@@ -495,6 +508,23 @@ impl super::Validator {
                     validate_expr(arg)?;
                 }
                 validate_expr_opt(result)?;
+                Ok(())
+            }
+            crate::Statement::RayQuery { query, ref fun } => {
+                validate_expr(query)?;
+                match *fun {
+                    crate::RayQueryFunction::Initialize {
+                        acceleration_structure,
+                        descriptor,
+                    } => {
+                        validate_expr(acceleration_structure)?;
+                        validate_expr(descriptor)?;
+                    }
+                    crate::RayQueryFunction::Proceed { result } => {
+                        validate_expr(result)?;
+                    }
+                    crate::RayQueryFunction::Terminate => {}
+                }
                 Ok(())
             }
             crate::Statement::Break

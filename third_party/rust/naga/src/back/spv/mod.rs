@@ -10,6 +10,7 @@ mod image;
 mod index;
 mod instructions;
 mod layout;
+mod ray;
 mod recyclable;
 mod selection;
 mod writer;
@@ -295,6 +296,8 @@ enum LocalType {
         base: Handle<crate::Type>,
         size: u64,
     },
+    AccelerationStructure,
+    RayQuery,
 }
 
 /// A type encountered during SPIR-V generation.
@@ -383,7 +386,11 @@ fn make_local(inner: &crate::TypeInner) -> Option<LocalType> {
             class,
         } => LocalType::Image(LocalImageType::from_inner(dim, arrayed, class)),
         crate::TypeInner::Sampler { comparison: _ } => LocalType::Sampler,
-        _ => return None,
+        crate::TypeInner::AccelerationStructure => LocalType::AccelerationStructure,
+        crate::TypeInner::RayQuery => LocalType::RayQuery,
+        crate::TypeInner::Array { .. }
+        | crate::TypeInner::Struct { .. }
+        | crate::TypeInner::BindingArray { .. } => return None,
     })
 }
 
