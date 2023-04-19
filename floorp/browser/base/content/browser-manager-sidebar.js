@@ -248,7 +248,7 @@
                 tooltip="aHTMLTooltip"
                 autoscroll="false"
                 disableglobalhistory="true"
-                messagemanagergroup="webext-browsers"
+                messagemanagergroup="browsers"
                 autocompletepopup="PopupAutoComplete"
                 initialBrowsingContextGroupId="40"
                 ${isWeb ? `
