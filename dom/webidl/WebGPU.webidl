@@ -790,8 +790,8 @@ dictionary GPUVertexAttribute {
 
 dictionary GPUImageDataLayout {
     GPUSize64 offset = 0;
-    required GPUSize32 bytesPerRow;
-    GPUSize32 rowsPerImage = 0;
+    GPUSize32 bytesPerRow;
+    GPUSize32 rowsPerImage;
 };
 
 dictionary GPUImageCopyBuffer : GPUImageDataLayout {

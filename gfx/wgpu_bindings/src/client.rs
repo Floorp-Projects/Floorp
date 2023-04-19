@@ -16,7 +16,7 @@ use parking_lot::Mutex;
 
 use nsstring::nsACString;
 
-use std::{borrow::Cow, num::NonZeroU8, ptr};
+use std::{borrow::Cow, ptr};
 
 // we can't call `from_raw_parts` unconditionally because the caller
 // may not even have a valid pointer (e.g. NULL) if the `length` is zero.
@@ -233,7 +233,7 @@ pub struct SamplerDescriptor<'a> {
     lod_min_clamp: f32,
     lod_max_clamp: f32,
     compare: Option<&'a wgt::CompareFunction>,
-    anisotropy_clamp: Option<NonZeroU8>,
+    anisotropy_clamp: Option<&'a u16>,
 }
 
 #[repr(C)]
@@ -558,7 +558,7 @@ pub extern "C" fn wgpu_client_create_sampler(
         lod_min_clamp: desc.lod_min_clamp,
         lod_max_clamp: desc.lod_max_clamp,
         compare: desc.compare.cloned(),
-        anisotropy_clamp: desc.anisotropy_clamp,
+        anisotropy_clamp: *desc.anisotropy_clamp.unwrap_or(&1),
         border_color: None,
     };
     let action = DeviceAction::CreateSampler(id, wgpu_desc);
@@ -1029,22 +1029,38 @@ pub unsafe extern "C" fn wgpu_command_encoder_copy_buffer_to_buffer(
 #[no_mangle]
 pub unsafe extern "C" fn wgpu_command_encoder_copy_texture_to_buffer(
     src: wgc::command::ImageCopyTexture,
-    dst: wgc::command::ImageCopyBuffer,
+    dst_buffer: wgc::id::BufferId,
+    dst_layout: &ImageDataLayout,
     size: wgt::Extent3d,
     bb: &mut ByteBuf,
 ) {
-    let action = CommandEncoderAction::CopyTextureToBuffer { src, dst, size };
+    let action = CommandEncoderAction::CopyTextureToBuffer {
+        src,
+        dst: wgc::command::ImageCopyBuffer {
+            buffer: dst_buffer,
+            layout: dst_layout.into_wgt(),
+        },
+        size,
+    };
     *bb = make_byte_buf(&action);
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn wgpu_command_encoder_copy_buffer_to_texture(
-    src: wgc::command::ImageCopyBuffer,
+    src_buffer: wgc::id::BufferId,
+    src_layout: &ImageDataLayout,
     dst: wgc::command::ImageCopyTexture,
     size: wgt::Extent3d,
     bb: &mut ByteBuf,
 ) {
-    let action = CommandEncoderAction::CopyBufferToTexture { src, dst, size };
+    let action = CommandEncoderAction::CopyBufferToTexture {
+        src: wgc::command::ImageCopyBuffer {
+            buffer: src_buffer,
+            layout: src_layout.into_wgt(),
+        },
+        dst,
+        size,
+    };
     *bb = make_byte_buf(&action);
 }
 
@@ -1092,13 +1108,33 @@ pub unsafe extern "C" fn wgpu_queue_write_buffer(
     *bb = make_byte_buf(&action);
 }
 
+
+
+#[repr(C)]
+pub struct ImageDataLayout<'a> {
+    pub offset: wgt::BufferAddress,
+    pub bytes_per_row: Option<&'a u32>,
+    pub rows_per_image: Option<&'a u32>,
+}
+
+impl<'a> ImageDataLayout<'a> {
+    fn into_wgt(&self) -> wgt::ImageDataLayout {
+        wgt::ImageDataLayout {
+            offset: self.offset,
+            bytes_per_row: self.bytes_per_row.map(|bpr| *bpr),
+            rows_per_image: self.rows_per_image.map(|rpi| *rpi),
+        }
+    }
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn wgpu_queue_write_texture(
     dst: wgt::ImageCopyTexture<id::TextureId>,
-    layout: wgt::ImageDataLayout,
+    layout: ImageDataLayout,
     size: wgt::Extent3d,
     bb: &mut ByteBuf,
 ) {
+    let layout = layout.into_wgt();
     let action = QueueWriteAction::Texture { dst, layout, size };
     *bb = make_byte_buf(&action);
 }

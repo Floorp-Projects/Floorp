@@ -328,11 +328,7 @@ pub extern "C" fn wgpu_server_device_create_buffer(
 ) {
     let utf8_label = label.map(|utf16| utf16.to_string());
     let label = utf8_label.as_ref().map(|s| Cow::from(&s[..]));
-
-    // This is actually not unsafe, the bitflags crate never ended up relying on the bit
-    // patterns for safety, and the next version will replace this method with an equivalent
-    // that isn't marked unsafe.
-    let usage = unsafe { wgt::BufferUsages::from_bits_unchecked(usage) };
+    let usage = wgt::BufferUsages::from_bits_retain(usage);
 
     // Don't trust the graphics driver with buffer sizes larger than our conservative max texture size.
     if size > MAX_BUFFER_SIZE {

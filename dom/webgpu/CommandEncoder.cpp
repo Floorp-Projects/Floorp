@@ -25,8 +25,18 @@ void CommandEncoder::ConvertTextureDataLayoutToFFI(
     ffi::WGPUImageDataLayout* aLayoutFFI) {
   *aLayoutFFI = {};
   aLayoutFFI->offset = aLayout.mOffset;
-  aLayoutFFI->bytes_per_row = aLayout.mBytesPerRow;
-  aLayoutFFI->rows_per_image = aLayout.mRowsPerImage;
+
+  if (aLayout.mBytesPerRow.WasPassed()) {
+    aLayoutFFI->bytes_per_row = &aLayout.mBytesPerRow.Value();
+  } else {
+    aLayoutFFI->bytes_per_row = nullptr;
+  }
+
+  if (aLayout.mRowsPerImage.WasPassed()) {
+    aLayoutFFI->rows_per_image = &aLayout.mRowsPerImage.Value();
+  } else {
+    aLayoutFFI->rows_per_image = nullptr;
+  }
 }
 
 void CommandEncoder::ConvertTextureCopyViewToFFI(
@@ -69,14 +79,6 @@ void CommandEncoder::ConvertExtent3DToFFI(const dom::GPUExtent3D& aExtent,
   } else {
     MOZ_CRASH("Unexptected extent type");
   }
-}
-
-static ffi::WGPUImageCopyBuffer ConvertBufferCopyView(
-    const dom::GPUImageCopyBuffer& aCopy) {
-  ffi::WGPUImageCopyBuffer view = {};
-  view.buffer = aCopy.mBuffer->mId;
-  CommandEncoder::ConvertTextureDataLayoutToFFI(aCopy, &view.layout);
-  return view;
 }
 
 static ffi::WGPUImageCopyTexture ConvertTextureCopyView(
@@ -127,8 +129,10 @@ void CommandEncoder::CopyBufferToTexture(
     const dom::GPUExtent3D& aCopySize) {
   if (mValid && mBridge->IsOpen()) {
     ipc::ByteBuf bb;
+    ffi::WGPUImageDataLayout src_layout = {};
+    CommandEncoder::ConvertTextureDataLayoutToFFI(aSource, &src_layout);
     ffi::wgpu_command_encoder_copy_buffer_to_texture(
-        ConvertBufferCopyView(aSource), ConvertTextureCopyView(aDestination),
+        aSource.mBuffer->mId, &src_layout, ConvertTextureCopyView(aDestination),
         ConvertExtent(aCopySize), ToFFI(&bb));
     mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
 
@@ -144,8 +148,10 @@ void CommandEncoder::CopyTextureToBuffer(
     const dom::GPUExtent3D& aCopySize) {
   if (mValid && mBridge->IsOpen()) {
     ipc::ByteBuf bb;
+    ffi::WGPUImageDataLayout dstLayout = {};
+    CommandEncoder::ConvertTextureDataLayoutToFFI(aDestination, &dstLayout);
     ffi::wgpu_command_encoder_copy_texture_to_buffer(
-        ConvertTextureCopyView(aSource), ConvertBufferCopyView(aDestination),
+        ConvertTextureCopyView(aSource), aDestination.mBuffer->mId, &dstLayout,
         ConvertExtent(aCopySize), ToFFI(&bb));
     mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
   }

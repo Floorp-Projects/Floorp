@@ -438,8 +438,10 @@ void Queue::CopyExternalImageToTexture(
       aSource.mFlipY ? gl::OriginPos::BottomLeft : gl::OriginPos::TopLeft;
   bool wasTrivial;
 
+  auto dstStrideVal = dstStride.value();
+
   if (!ConvertImage(dstWidth, dstHeight, srcBegin, srcStride, srcOriginPos,
-                    srcFormat, srcPremultiplied, dstBegin, dstStride.value(),
+                    srcFormat, srcPremultiplied, dstBegin, dstStrideVal,
                     dstOriginPos, dstFormat, aDestination.mPremultipliedAlpha,
                     &wasTrivial)) {
     MOZ_ASSERT_UNREACHABLE("ConvertImage failed!");
@@ -450,7 +452,7 @@ void Queue::CopyExternalImageToTexture(
     return;
   }
 
-  ffi::WGPUImageDataLayout dataLayout = {0, dstStride.value(), dstHeight};
+  ffi::WGPUImageDataLayout dataLayout = {0, &dstStrideVal, &dstHeight};
   ffi::WGPUImageCopyTexture copyView = {};
   CommandEncoder::ConvertTextureCopyViewToFFI(aDestination, &copyView);
   ipc::ByteBuf bb;
