@@ -2390,6 +2390,25 @@ bool CompartmentCheckTracer::edgeIsInCrossCompartmentMap(JS::GCCellPtr dst) {
          InCrossCompartmentMap(runtime(), static_cast<JSObject*>(src), dst);
 }
 
+static bool IsPartiallyInitializedObject(Cell* cell) {
+  if (!cell->is<JSObject>()) {
+    return false;
+  }
+
+  JSObject* obj = cell->as<JSObject>();
+  if (!obj->is<NativeObject>()) {
+    return false;
+  }
+
+  NativeObject* nobj = &obj->as<NativeObject>();
+
+  // Check for failed allocation of dynamic slots in
+  // NativeObject::allocateInitialSlots.
+  size_t nDynamicSlots = NativeObject::calculateDynamicSlots(
+      nobj->numFixedSlots(), nobj->slotSpan(), nobj->getClass());
+  return nDynamicSlots != 0 && !nobj->hasDynamicSlots();
+}
+
 void GCRuntime::checkForCompartmentMismatches() {
   JSContext* cx = rt->mainContextFromOwnThread();
   if (cx->disableStrictProxyCheckingCount) {
@@ -2403,6 +2422,12 @@ void GCRuntime::checkForCompartmentMismatches() {
     for (auto thingKind : AllAllocKinds()) {
       for (auto i = zone->cellIterUnsafe<TenuredCell>(thingKind, empty);
            !i.done(); i.next()) {
+        // We may encounter partially initialized objects. These are unreachable
+        // and it's safe to ignore them.
+        if (IsPartiallyInitializedObject(i.getCell())) {
+          continue;
+        }
+
         trc.src = i.getCell();
         trc.srcKind = MapAllocToTraceKind(thingKind);
         trc.compartment = MapGCThingTyped(

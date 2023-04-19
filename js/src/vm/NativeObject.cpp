@@ -296,7 +296,10 @@ bool NativeObject::allocateInitialSlots(JSContext* cx, uint32_t capacity) {
   uint32_t count = ObjectSlots::allocCount(capacity);
   HeapSlot* allocation = AllocateObjectBuffer<HeapSlot>(cx, this, count);
   if (!allocation) {
-    initEmptyDynamicSlots();  // Make object safe for finalization.
+    // The new object will be unreachable, but we still have to make it safe for
+    // finalization. Also we must check for it during GC compartment checks (see
+    // IsPartiallyInitializedObject).
+    initEmptyDynamicSlots();
     return false;
   }
 
