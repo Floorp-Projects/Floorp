@@ -755,7 +755,15 @@ NativeLayerCA::NativeLayerCA(const IntSize& aSize, bool aIsOpaque,
 }
 
 NativeLayerCA::NativeLayerCA(bool aIsOpaque)
-    : mMutex("NativeLayerCA"), mSurfacePoolHandle(nullptr), mIsOpaque(aIsOpaque) {}
+    : mMutex("NativeLayerCA"), mSurfacePoolHandle(nullptr), mIsOpaque(aIsOpaque) {
+#ifdef NIGHTLY_BUILD
+  if (StaticPrefs::gfx_core_animation_specialize_video_log()) {
+    NSLog(@"VIDEO_LOG: NativeLayerCA: %p is being created to host video, which will force a video "
+          @"layer rebuild.",
+          this);
+  }
+#endif
+}
 
 CGColorRef CGColorCreateForDeviceColor(gfx::DeviceColor aColor) {
   if (StaticPrefs::gfx_color_management_native_srgb()) {
