@@ -146,9 +146,11 @@ class PeerConnectionCtx {
   // This is a singleton, so don't copy construct it, etc.
   PeerConnectionCtx(const PeerConnectionCtx& other) = delete;
   void operator=(const PeerConnectionCtx& other) = delete;
-  virtual ~PeerConnectionCtx();
+  virtual ~PeerConnectionCtx() = default;
 
   nsresult Initialize();
+  nsresult StartTelemetryTimer();
+  void StopTelemetryTimer();
   nsresult Cleanup();
 
   void initGMP();
