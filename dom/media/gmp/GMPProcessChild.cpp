@@ -37,7 +37,7 @@ bool GMPProcessChild::Init(int aArgc, char* aArgv[]) {
 
   BackgroundHangMonitor::Startup();
 
-  return mPlugin.Init(pluginFilename, TakeInitialEndpoint());
+  return mPlugin->Init(pluginFilename, TakeInitialEndpoint());
 }
 
 void GMPProcessChild::CleanUp() { BackgroundHangMonitor::Shutdown(); }

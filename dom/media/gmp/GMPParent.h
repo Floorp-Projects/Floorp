@@ -58,7 +58,7 @@ class GMPParent final
   friend class PGMPParent;
 
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPParent)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPParent, final)
 
   GMPParent();
 
@@ -227,12 +227,6 @@ class GMPParent final
   uint32_t mGMPContentChildCount;
 
   int mChildPid;
-
-  // We hold a self reference to ourself while the child process is alive.
-  // This ensures that if the GMPService tries to shut us down and drops
-  // its reference to us, we stay alive long enough for the child process
-  // to terminate gracefully.
-  bool mHoldingSelfRef;
 
 #ifdef ALLOW_GECKO_CHILD_PROCESS_ARCH
   // The child process architecture to use.
