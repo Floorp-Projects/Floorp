@@ -118,7 +118,7 @@ def test_comment_resource(lint, paths):
 
 
 def test_brand_names(lint, paths):
-    results = lint(paths("brand-names.ftl"))
+    results = lint(paths("brand-names.ftl"), {"brand-files": ["test-brands.ftl"]})
     assert len(results) == 11
     assert results[0].rule == "CO01"
     assert results[0].lineno == 1

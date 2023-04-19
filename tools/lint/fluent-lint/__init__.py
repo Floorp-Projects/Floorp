@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import bisect
+import os
 import re
 from html.parser import HTMLParser
 
@@ -39,7 +40,9 @@ class Linter(visitor.Visitor):
     https://www.projectfluent.org/python-fluent/fluent.syntax/stable/usage.html
     """
 
-    def __init__(self, path, config, exclusions, contents, offsets_and_lines):
+    def __init__(
+        self, path, config, exclusions, contents, offsets_and_lines, brand_names=[]
+    ):
         super().__init__()
         self.path = path
         self.config = config
@@ -55,7 +58,7 @@ class Linter(visitor.Visitor):
         self.double_quote_re = re.compile(r"\".+\"")
         self.ellipsis_re = re.compile(r"\.\.\.")
 
-        self.brand_names = ["Firefox", "Mozilla", "Thunderbird"]
+        self.brand_names = brand_names
         self.minimum_id_length = 9
 
         self.state = {
@@ -417,14 +420,50 @@ def get_exclusions(root):
         return exclusions
 
 
+def get_branding_list(root, brand_files):
+    class MessageExtractor(visitor.Visitor):
+        def __init__(self):
+            self.brands = []
+            self.last_message_id = None
+
+        def visit_Term(self, node):
+            self.last_message_id = node.id.name
+            self.generic_visit(node)
+
+        def visit_TextElement(self, node):
+            if self.last_message_id:
+                self.brands += [node.value]
+                self.last_message_id = None
+            self.generic_visit(node)
+
+    extractor = MessageExtractor()
+
+    for brand_path in brand_files:
+        brand_file = mozpath.join(root, brand_path)
+        if os.path.exists(brand_file):
+            with open(brand_file) as f:
+                messages = parse(f.read())
+                extractor.visit(messages)
+
+    return list(set(extractor.brands))
+
+
 def lint(paths, config, fix=None, **lintargs):
-    files = list(expand_exclusions(paths, config, lintargs["root"]))
-    exclusions = get_exclusions(lintargs["root"])
+    root = lintargs["root"]
+    files = list(expand_exclusions(paths, config, root))
+    exclusions = get_exclusions(root)
+    brand_files = config.get("brand-files")
+    brand_names = get_branding_list(root, brand_files)
     results = []
     for path in files:
         contents = open(path, "r", encoding="utf-8").read()
         linter = Linter(
-            path, config, exclusions, contents, get_offsets_and_lines(contents)
+            path,
+            config,
+            exclusions,
+            contents,
+            get_offsets_and_lines(contents),
+            brand_names,
         )
         linter.visit(parse(contents))
         results.extend(linter.results)

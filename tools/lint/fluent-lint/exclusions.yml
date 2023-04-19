@@ -180,6 +180,7 @@ CO01:
         - rights-intro-point-2
         # toolkit/locales/en-US/toolkit/about/aboutSupport.ftl
         - app-basics-key-mozilla
+        - virtual-monitor-disp
         # toolkit/locales/en-US/toolkit/about/aboutTelemetry.ftl
         - about-telemetry-firefox-data-doc
         - about-telemetry-origins-explanation
