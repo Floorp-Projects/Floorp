@@ -32,7 +32,7 @@ add_task(async function() {
     prettySourceValue.trim(),
     `debugger;
 var foo;
-document.addEventListener('click', e=>{
+document.addEventListener('click', e => {
   debugger;
 }, {
   once: true
@@ -80,9 +80,9 @@ document.addEventListener('click', e=>{
     prettyEvalSourceValue.trim(),
     `
 setTimeout(
-  () =>{
+  () => {
     debugger;
-    document.addEventListener('click', e=>{
+    document.addEventListener('click', e => {
       debugger;
     }, {
       once: true
