@@ -1,259 +1,295 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Fri, 13 Jan 2023 21:18:00 +0000
-Subject: Bug 1731520 - libwebrtc: Cherry-pick commit 8bec181bfc. r=ng
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Date: Thu, 6 Jan 2022 00:16:00 +0000
+Subject: Bug 1748458 - Add TRACE_EVENTs for dropped frames and packets for
+ received video. r=bwc
 
-Upstream commit: https://webrtc.googlesource.com/src/+/8bec181bfc4f3e3fee422513c0f75f90e80e4ed6
-    Finish converting RTCCameraVideoCapturerTests to XCTest
+This lets us see in the profiler how many received frames and packets we decide
+to drop and the reasons why.
 
-    Failed gunit assertions in these XCTestCase classes cannot result in
-    failed tests.
+Differential Revision: https://phabricator.services.mozilla.com/D135062
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/08e252da94c4752eccfd845eef13d8517953cc6a
 
-    Bug: webrtc:8382
-    Change-Id: I47b50b74f60029fafeff4ca885775482a85dfdd3
-    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/288603
-    Reviewed-by: Kári Helgason <kthelgason@webrtc.org>
-    Commit-Queue: Kári Helgason <kthelgason@webrtc.org>
-    Cr-Commit-Position: refs/heads/main@{#38995}
+Also includes:
 
-Differential Revision: https://phabricator.services.mozilla.com/D166586
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e94499837a0ac4571ab06f87e5f0cd64fd13c69e
+Bug 1804288 - (fix-de7ae5755b) reimplement Bug 1748458 - Add TRACE_EVENTs for dropped frames and packets for received video. r=pehrsons
+
+Differential Revision: https://phabricator.services.mozilla.com/D163960
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8e9a326a99cd5eaa6e447ff57c01ad9d79a09744
 ---
- .../unittests/RTCCameraVideoCapturerTests.mm  | 72 ++++++++++++-------
- 1 file changed, 45 insertions(+), 27 deletions(-)
+ api/video/frame_buffer.cc               | 33 +++++++++++++++++++++++++
+ modules/video_coding/frame_buffer2.cc   | 25 +++++++++++++++++++
+ video/receive_statistics_proxy2.cc      | 11 +++++++++
+ video/rtp_video_stream_receiver2.cc     |  4 +++
+ video/video_stream_buffer_controller.cc |  7 ++++++
+ 5 files changed, 80 insertions(+)
 
-diff --git a/sdk/objc/unittests/RTCCameraVideoCapturerTests.mm b/sdk/objc/unittests/RTCCameraVideoCapturerTests.mm
-index aaea515bae..ee5c2d858d 100644
---- a/sdk/objc/unittests/RTCCameraVideoCapturerTests.mm
-+++ b/sdk/objc/unittests/RTCCameraVideoCapturerTests.mm
-@@ -15,14 +15,20 @@
- #import <UIKit/UIKit.h>
- #endif
+diff --git a/api/video/frame_buffer.cc b/api/video/frame_buffer.cc
+index 8267b8e6cb..f5d93f5f76 100644
+--- a/api/video/frame_buffer.cc
++++ b/api/video/frame_buffer.cc
+@@ -16,6 +16,7 @@
+ #include "absl/container/inlined_vector.h"
+ #include "rtc_base/logging.h"
+ #include "rtc_base/numerics/sequence_number_util.h"
++#include "rtc_base/trace_event.h"
  
--#include "rtc_base/gunit.h"
--
- #import "base/RTCVideoFrame.h"
- #import "components/capturer/RTCCameraVideoCapturer.h"
- #import "helpers/AVCaptureSession+DevicePosition.h"
- #import "helpers/RTCDispatcher.h"
- #import "helpers/scoped_cftyperef.h"
+ namespace webrtc {
+ namespace {
+@@ -68,7 +69,12 @@ FrameBuffer::FrameBuffer(int max_size,
+       decoded_frame_history_(max_decode_history) {}
  
-+#define WAIT(timeoutMs)                                                        \
-+  do {                                                                         \
-+    id expectation = [[XCTestExpectation alloc] initWithDescription:@"Dummy"]; \
-+    XCTWaiterResult res = [XCTWaiter waitForExpectations:@[ expectation ]      \
-+                                                 timeout:timeoutMs / 1000.0];  \
-+    XCTAssertEqual(XCTWaiterResultTimedOut, res);                              \
-+  } while (false);
+ bool FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
++  const uint32_t ssrc =
++      frame->PacketInfos().empty() ? 0 : frame->PacketInfos()[0].ssrc();
+   if (!ValidReferences(*frame)) {
++    TRACE_EVENT2("webrtc",
++                 "FrameBuffer::InsertFrame Frame dropped (Invalid references)",
++                 "remote_ssrc", ssrc, "frame_id", frame->Id());
+     RTC_DLOG(LS_WARNING) << "Frame " << frame->Id()
+                          << " has invalid references, dropping frame.";
+     return false;
+@@ -78,23 +84,35 @@ bool FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
+     if (legacy_frame_id_jump_behavior_ && frame->is_keyframe() &&
+         AheadOf(frame->Timestamp(),
+                 *decoded_frame_history_.GetLastDecodedFrameTimestamp())) {
++      TRACE_EVENT2("webrtc",
++                   "FrameBuffer::InsertFrame Frames dropped (OOO + PicId jump)",
++                   "remote_ssrc", ssrc, "frame_id", frame->Id());
+       RTC_DLOG(LS_WARNING)
+           << "Keyframe " << frame->Id()
+           << " has newer timestamp but older picture id, clearing buffer.";
+       Clear();
+     } else {
+       // Already decoded past this frame.
++      TRACE_EVENT2("webrtc",
++                   "FrameBuffer::InsertFrame Frame dropped (Out of order)",
++                   "remote_ssrc", ssrc, "frame_id", frame->Id());
+       return false;
+     }
+   }
+ 
+   if (frames_.size() == max_size_) {
+     if (frame->is_keyframe()) {
++      TRACE_EVENT2("webrtc",
++                   "FrameBuffer::InsertFrame Frames dropped (KF + Full buffer)",
++                   "remote_ssrc", ssrc, "frame_id", frame->Id());
+       RTC_DLOG(LS_WARNING) << "Keyframe " << frame->Id()
+                            << " inserted into full buffer, clearing buffer.";
+       Clear();
+     } else {
+       // No space for this frame.
++      TRACE_EVENT2("webrtc",
++                   "FrameBuffer::InsertFrame Frame dropped (Full buffer)",
++                   "remote_ssrc", ssrc, "frame_id", frame->Id());
+       return false;
+     }
+   }
+@@ -149,16 +167,31 @@ void FrameBuffer::DropNextDecodableTemporalUnit() {
+ 
+ void FrameBuffer::UpdateDroppedFramesAndDiscardedPackets(FrameIterator begin_it,
+                                                          FrameIterator end_it) {
++  uint32_t dropped_ssrc = 0;
++  int64_t dropped_frame_id = 0;
+   unsigned int num_discarded_packets = 0;
+   unsigned int num_dropped_frames =
+       std::count_if(begin_it, end_it, [&](const auto& f) {
+         if (f.second.encoded_frame) {
+           const auto& packetInfos = f.second.encoded_frame->PacketInfos();
++          dropped_frame_id = f.first;
++          if (!packetInfos.empty()) {
++            dropped_ssrc = packetInfos[0].ssrc();
++          }
+           num_discarded_packets += packetInfos.size();
+         }
+         return f.second.encoded_frame != nullptr;
+       });
+ 
++  if (num_dropped_frames > 0) {
++    TRACE_EVENT2("webrtc", "FrameBuffer Dropping Old Frames", "remote_ssrc",
++                 dropped_ssrc, "frame_id", dropped_frame_id);
++  }
++  if (num_discarded_packets > 0) {
++    TRACE_EVENT2("webrtc", "FrameBuffer Discarding Old Packets", "remote_ssrc",
++                 dropped_ssrc, "frame_id", dropped_frame_id);
++  }
 +
- #if TARGET_OS_IPHONE
- // Helper method.
- CMSampleBufferRef createTestSampleBufferRef() {
-@@ -107,19 +113,19 @@ CMSampleBufferRef createTestSampleBufferRef() {
- 
- - (void)testSetupSession {
-   AVCaptureSession *session = self.capturer.captureSession;
--  EXPECT_TRUE(session != nil);
-+  XCTAssertTrue(session != nil);
- 
- #if TARGET_OS_IPHONE
--  EXPECT_EQ(session.sessionPreset, AVCaptureSessionPresetInputPriority);
--  EXPECT_EQ(session.usesApplicationAudioSession, NO);
-+  XCTAssertEqual(session.sessionPreset, AVCaptureSessionPresetInputPriority);
-+  XCTAssertEqual(session.usesApplicationAudioSession, NO);
- #endif
--  EXPECT_EQ(session.outputs.count, 1u);
-+  XCTAssertEqual(session.outputs.count, 1u);
+   num_dropped_frames_ += num_dropped_frames;
+   num_discarded_packets_ += num_discarded_packets;
  }
+diff --git a/modules/video_coding/frame_buffer2.cc b/modules/video_coding/frame_buffer2.cc
+index b289663eec..a70b143a29 100644
+--- a/modules/video_coding/frame_buffer2.cc
++++ b/modules/video_coding/frame_buffer2.cc
+@@ -371,9 +371,14 @@ int64_t FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
  
- - (void)testSetupSessionOutput {
-   AVCaptureVideoDataOutput *videoOutput = self.capturer.captureSession.outputs[0];
--  EXPECT_EQ(videoOutput.alwaysDiscardsLateVideoFrames, NO);
--  EXPECT_EQ(videoOutput.sampleBufferDelegate, self.capturer);
-+  XCTAssertEqual(videoOutput.alwaysDiscardsLateVideoFrames, NO);
-+  XCTAssertEqual(videoOutput.sampleBufferDelegate, self.capturer);
- }
+   MutexLock lock(&mutex_);
  
- - (void)testSupportedFormatsForDevice {
-@@ -152,10 +158,10 @@ CMSampleBufferRef createTestSampleBufferRef() {
-       [RTC_OBJC_TYPE(RTCCameraVideoCapturer) supportedFormatsForDevice:self.deviceMock];
++  const auto& pis = frame->PacketInfos();
+   int64_t last_continuous_frame_id = last_continuous_frame_.value_or(-1);
  
-   // then
--  EXPECT_EQ(supportedFormats.count, 3u);
--  EXPECT_TRUE([supportedFormats containsObject:validFormat1]);
--  EXPECT_TRUE([supportedFormats containsObject:validFormat2]);
--  EXPECT_TRUE([supportedFormats containsObject:invalidFormat]);
-+  XCTAssertEqual(supportedFormats.count, 3u);
-+  XCTAssertTrue([supportedFormats containsObject:validFormat1]);
-+  XCTAssertTrue([supportedFormats containsObject:validFormat2]);
-+  XCTAssertTrue([supportedFormats containsObject:invalidFormat]);
+   if (!ValidReferences(*frame)) {
++    TRACE_EVENT2("webrtc",
++                 "FrameBuffer::InsertFrame Frame dropped (Invalid references)",
++                 "remote_ssrc", pis.empty() ? 0 : pis[0].ssrc(), "picture_id",
++                 frame->Id());
+     RTC_LOG(LS_WARNING) << "Frame " << frame->Id()
+                         << " has invalid frame references, dropping frame.";
+     return last_continuous_frame_id;
+@@ -381,11 +386,19 @@ int64_t FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
  
-   // cleanup
-   [validFormat1 stopMocking];
-@@ -180,9 +186,12 @@ CMSampleBufferRef createTestSampleBufferRef() {
-   [self.delegateMock verify];
- }
+   if (frames_.size() >= kMaxFramesBuffered) {
+     if (frame->is_keyframe()) {
++      TRACE_EVENT2("webrtc",
++                   "FrameBuffer::InsertFrame Frames dropped (KF + Full buffer)",
++                   "remote_ssrc", pis.empty() ? 0 : pis[0].ssrc(), "picture_id",
++                   frame->Id());
+       RTC_LOG(LS_WARNING) << "Inserting keyframe " << frame->Id()
+                           << " but buffer is full, clearing"
+                              " buffer and inserting the frame.";
+       ClearFramesAndHistory();
+     } else {
++      TRACE_EVENT2("webrtc",
++                   "FrameBuffer::InsertFrame Frame dropped (Full buffer)",
++                   "remote_ssrc", pis.empty() ? 0 : pis[0].ssrc(), "picture_id",
++                   frame->Id());
+       RTC_LOG(LS_WARNING) << "Frame " << frame->Id()
+                           << " could not be inserted due to the frame "
+                              "buffer being full, dropping frame.";
+@@ -404,11 +417,19 @@ int64_t FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
+       // reconfiguration or some other reason. Even though this is not according
+       // to spec we can still continue to decode from this frame if it is a
+       // keyframe.
++      TRACE_EVENT2("webrtc",
++                   "FrameBuffer::InsertFrame Frames dropped (OOO + PicId jump)",
++                   "remote_ssrc", pis.empty() ? 0 : pis[0].ssrc(), "picture_id",
++                   frame->Id());
+       RTC_LOG(LS_WARNING)
+           << "A jump in frame id was detected, clearing buffer.";
+       ClearFramesAndHistory();
+       last_continuous_frame_id = -1;
+     } else {
++      TRACE_EVENT2("webrtc",
++                   "FrameBuffer::InsertFrame Frame dropped (Out of order)",
++                   "remote_ssrc", pis.empty() ? 0 : pis[0].ssrc(), "picture_id",
++                   frame->Id());
+       RTC_LOG(LS_WARNING) << "Frame " << frame->Id() << " inserted after frame "
+                           << *last_decoded_frame
+                           << " was handed off for decoding, dropping frame.";
+@@ -421,6 +442,10 @@ int64_t FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
+   // when the frame id make large jumps mid stream.
+   if (!frames_.empty() && frame->Id() < frames_.begin()->first &&
+       frames_.rbegin()->first < frame->Id()) {
++    TRACE_EVENT2("webrtc",
++                 "FrameBuffer::InsertFrame Frames dropped (PicId big-jump)",
++                 "remote_ssrc", pis.empty() ? 0 : pis[0].ssrc(), "picture_id",
++                 frame->Id());
+     RTC_LOG(LS_WARNING) << "A jump in frame id was detected, clearing buffer.";
+     ClearFramesAndHistory();
+     last_continuous_frame_id = -1;
+diff --git a/video/receive_statistics_proxy2.cc b/video/receive_statistics_proxy2.cc
+index 29f1b557fa..18676f13ea 100644
+--- a/video/receive_statistics_proxy2.cc
++++ b/video/receive_statistics_proxy2.cc
+@@ -20,6 +20,7 @@
+ #include "rtc_base/strings/string_builder.h"
+ #include "rtc_base/thread.h"
+ #include "rtc_base/time_utils.h"
++#include "rtc_base/trace_event.h"
+ #include "system_wrappers/include/clock.h"
+ #include "system_wrappers/include/metrics.h"
+ #include "video/video_receive_stream2.h"
+@@ -923,6 +924,9 @@ void ReceiveStatisticsProxy::OnCompleteFrame(bool is_keyframe,
+                                              VideoContentType content_type) {
+   RTC_DCHECK_RUN_ON(&main_thread_);
  
-+#if 0
-+// See crbug.com/1404878 - XCTExpectFailure and XCTSkip are considered failures
- 
- - (void)testDelegateCallbackWithValidBufferAndOrientationUpdate {
- #if TARGET_OS_IPHONE
-+  XCTExpectFailure(@"Setting orientation on UIDevice is not supported");
-   [UIDevice.currentDevice setValue:@(UIDeviceOrientationPortraitUpsideDown) forKey:@"orientation"];
-   CMSampleBufferRef sampleBuffer = createTestSampleBufferRef();
- 
-@@ -190,7 +199,7 @@ CMSampleBufferRef createTestSampleBufferRef() {
-   [[self.delegateMock expect] capturer:self.capturer
-                   didCaptureVideoFrame:[OCMArg checkWithBlock:^BOOL(RTC_OBJC_TYPE(RTCVideoFrame) *
-                                                                     expectedFrame) {
--                    EXPECT_EQ(expectedFrame.rotation, RTCVideoRotation_270);
-+                    XCTAssertEqual(expectedFrame.rotation, RTCVideoRotation_270);
-                     return YES;
-                   }]];
- 
-@@ -199,7 +208,7 @@ CMSampleBufferRef createTestSampleBufferRef() {
-   [center postNotificationName:UIDeviceOrientationDidChangeNotification object:nil];
- 
-   // We need to wait for the dispatch to finish.
--  WAIT(0, 1000);
-+  WAIT(1000);
- 
-   [self.capturer captureOutput:self.capturer.captureSession.outputs[0]
-          didOutputSampleBuffer:sampleBuffer
-@@ -226,6 +235,7 @@ CMSampleBufferRef createTestSampleBufferRef() {
-   OCMStub(inputPortMock.device).andReturn(captureDeviceMock);
-   OCMStub(captureDeviceMock.position).andReturn(camera);
- 
-+  XCTExpectFailure(@"Setting orientation on UIDevice is not supported");
-   [UIDevice.currentDevice setValue:@(deviceOrientation) forKey:@"orientation"];
- 
-   CMSampleBufferRef sampleBuffer = createTestSampleBufferRef();
-@@ -235,15 +245,15 @@ CMSampleBufferRef createTestSampleBufferRef() {
-                                                                     expectedFrame) {
-                     if (camera == AVCaptureDevicePositionFront) {
-                       if (deviceOrientation == UIDeviceOrientationLandscapeLeft) {
--                        EXPECT_EQ(expectedFrame.rotation, RTCVideoRotation_180);
-+                        XCTAssertEqual(expectedFrame.rotation, RTCVideoRotation_180);
-                       } else if (deviceOrientation == UIDeviceOrientationLandscapeRight) {
--                        EXPECT_EQ(expectedFrame.rotation, RTCVideoRotation_0);
-+                        XCTAssertEqual(expectedFrame.rotation, RTCVideoRotation_0);
-                       }
-                     } else if (camera == AVCaptureDevicePositionBack) {
-                       if (deviceOrientation == UIDeviceOrientationLandscapeLeft) {
--                        EXPECT_EQ(expectedFrame.rotation, RTCVideoRotation_0);
-+                        XCTAssertEqual(expectedFrame.rotation, RTCVideoRotation_0);
-                       } else if (deviceOrientation == UIDeviceOrientationLandscapeRight) {
--                        EXPECT_EQ(expectedFrame.rotation, RTCVideoRotation_180);
-+                        XCTAssertEqual(expectedFrame.rotation, RTCVideoRotation_180);
-                       }
-                     }
-                     return YES;
-@@ -253,7 +263,7 @@ CMSampleBufferRef createTestSampleBufferRef() {
-   [center postNotificationName:UIDeviceOrientationDidChangeNotification object:nil];
- 
-   // We need to wait for the dispatch to finish.
--  WAIT(0, 1000);
-+  WAIT(1000);
- 
-   [self.capturer captureOutput:self.capturer.captureSession.outputs[0]
-          didOutputSampleBuffer:sampleBuffer
-@@ -285,6 +295,8 @@ CMSampleBufferRef createTestSampleBufferRef() {
-            withOrientation:UIDeviceOrientationLandscapeRight];
- }
- 
-+#endif
++  TRACE_EVENT2("webrtc", "ReceiveStatisticsProxy::OnCompleteFrame",
++               "remote_ssrc", remote_ssrc_, "is_keyframe", is_keyframe);
 +
- - (void)setExif:(CMSampleBufferRef)sampleBuffer {
-   rtc::ScopedCFTypeRef<CFMutableDictionaryRef> exif(CFDictionaryCreateMutable(
-       kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
-@@ -292,6 +304,9 @@ CMSampleBufferRef createTestSampleBufferRef() {
-   CMSetAttachment(sampleBuffer, CFSTR("{Exif}"), exif.get(), kCMAttachmentMode_ShouldPropagate);
+   if (is_keyframe) {
+     ++stats_.frame_counts.key_frames;
+   } else {
+@@ -954,6 +958,8 @@ void ReceiveStatisticsProxy::OnCompleteFrame(bool is_keyframe,
+ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
+   // Can be called on either the decode queue or the worker thread
+   // See FrameBuffer2 for more details.
++  TRACE_EVENT2("webrtc", "ReceiveStatisticsProxy::OnDroppedFrames",
++               "remote_ssrc", remote_ssrc_, "frames_dropped", frames_dropped);
+   worker_thread_->PostTask(
+       SafeTask(task_safety_.flag(), [frames_dropped, this]() {
+         RTC_DCHECK_RUN_ON(&main_thread_);
+@@ -964,6 +970,9 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
+ void ReceiveStatisticsProxy::OnDiscardedPackets(uint32_t packets_discarded) {
+   // Can be called on either the decode queue or the worker thread
+   // See FrameBuffer2 for more details.
++  TRACE_EVENT2("webrtc", "ReceiveStatisticsProxy::OnDiscardedPackets",
++               "remote_ssrc", remote_ssrc_, "packets_discarded",
++               packets_discarded);
+   worker_thread_->PostTask(
+       SafeTask(task_safety_.flag(), [packets_discarded, this]() {
+         RTC_DCHECK_RUN_ON(&main_thread_);
+@@ -993,6 +1002,8 @@ void ReceiveStatisticsProxy::OnStreamInactive() {
+ 
+ void ReceiveStatisticsProxy::OnRttUpdate(int64_t avg_rtt_ms) {
+   RTC_DCHECK_RUN_ON(&main_thread_);
++  TRACE_EVENT2("webrtc", "ReceiveStatisticsProxy::OnRttUpdate",
++               "remote_ssrc", remote_ssrc_, "avg_rtt_ms", avg_rtt_ms);
+   avg_rtt_ms_ = avg_rtt_ms;
  }
  
-+#if 0
-+// See crbug.com/1404878 - XCTExpectFailure and XCTSkip are considered failures
-+
- - (void)testRotationFrame {
- #if TARGET_OS_IPHONE
-   // Mock the AVCaptureConnection as we will get the camera position from the connection's
-@@ -306,6 +321,7 @@ CMSampleBufferRef createTestSampleBufferRef() {
-   OCMStub(inputPortMock.device).andReturn(captureDeviceMock);
-   OCMStub(captureDeviceMock.position).andReturn(AVCaptureDevicePositionFront);
+diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
+index 2f44d1679e..a66169e841 100644
+--- a/video/rtp_video_stream_receiver2.cc
++++ b/video/rtp_video_stream_receiver2.cc
+@@ -44,6 +44,7 @@
+ #include "rtc_base/checks.h"
+ #include "rtc_base/logging.h"
+ #include "rtc_base/strings/string_builder.h"
++#include "rtc_base/trace_event.h"
+ #include "system_wrappers/include/metrics.h"
+ #include "system_wrappers/include/ntp_time.h"
  
-+  XCTExpectFailure(@"Setting orientation on UIDevice is not supported");
-   [UIDevice.currentDevice setValue:@(UIDeviceOrientationLandscapeLeft) forKey:@"orientation"];
- 
-   CMSampleBufferRef sampleBuffer = createTestSampleBufferRef();
-@@ -315,7 +331,7 @@ CMSampleBufferRef createTestSampleBufferRef() {
-                                                                     expectedFrame) {
-                     // Front camera and landscape left should return 180. But the frame's exif
-                     // we add below says its from the back camera, so rotation should be 0.
--                    EXPECT_EQ(expectedFrame.rotation, RTCVideoRotation_0);
-+                    XCTAssertEqual(expectedFrame.rotation, RTCVideoRotation_0);
-                     return YES;
-                   }]];
- 
-@@ -323,7 +339,7 @@ CMSampleBufferRef createTestSampleBufferRef() {
-   [center postNotificationName:UIDeviceOrientationDidChangeNotification object:nil];
- 
-   // We need to wait for the dispatch to finish.
--  WAIT(0, 1000);
-+  WAIT(1000);
- 
-   [self setExif:sampleBuffer];
- 
-@@ -336,6 +352,8 @@ CMSampleBufferRef createTestSampleBufferRef() {
- #endif
- }
- 
-+#endif
-+
- - (void)testImageExif {
- #if TARGET_OS_IPHONE
-   CMSampleBufferRef sampleBuffer = createTestSampleBufferRef();
-@@ -343,7 +361,7 @@ CMSampleBufferRef createTestSampleBufferRef() {
- 
-   AVCaptureDevicePosition cameraPosition = [AVCaptureSession
-                                             devicePositionForSampleBuffer:sampleBuffer];
--  EXPECT_EQ(cameraPosition, AVCaptureDevicePositionBack);
-+  XCTAssertEqual(cameraPosition, AVCaptureDevicePositionBack);
- #endif
- }
- 
-@@ -450,7 +468,7 @@ CMSampleBufferRef createTestSampleBufferRef() {
-                                  format:format
-                                     fps:30
-                       completionHandler:^(NSError *error) {
--                        EXPECT_EQ(error, nil);
-+                        XCTAssertEqual(error, nil);
-                         completedStart = YES;
-                       }];
- 
-@@ -463,8 +481,8 @@ CMSampleBufferRef createTestSampleBufferRef() {
-   dispatch_semaphore_wait(completedStopSemaphore,
-                           dispatch_time(DISPATCH_TIME_NOW, 15.0 * NSEC_PER_SEC));
-   OCMVerifyAllWithDelay(_captureSessionMock, 15);
--  EXPECT_TRUE(completedStart);
--  EXPECT_TRUE(completedStop);
-+  XCTAssertTrue(completedStart);
-+  XCTAssertTrue(completedStop);
- }
- 
- - (void)testStartCaptureFailingToLockForConfigurationWithCallback {
-@@ -495,8 +513,8 @@ CMSampleBufferRef createTestSampleBufferRef() {
- 
-   long ret = dispatch_semaphore_wait(completedStartSemaphore,
-                                      dispatch_time(DISPATCH_TIME_NOW, 15.0 * NSEC_PER_SEC));
--  EXPECT_EQ(ret, 0);
--  EXPECT_EQ(callbackError, errorMock);
-+  XCTAssertEqual(ret, 0);
-+  XCTAssertEqual(callbackError, errorMock);
- }
- 
- @end
+@@ -1234,6 +1235,9 @@ void RtpVideoStreamReceiver2::FrameDecoded(int64_t picture_id) {
+                         packet_infos_.upper_bound(unwrapped_rtp_seq_num));
+     uint32_t num_packets_cleared = packet_buffer_.ClearTo(seq_num);
+     if (num_packets_cleared > 0) {
++      TRACE_EVENT2("webrtc",
++                   "RtpVideoStreamReceiver2::FrameDecoded Cleared Old Packets",
++                   "remote_ssrc", config_.rtp.remote_ssrc, "seq_num", seq_num);
+       vcm_receive_statistics_->OnDiscardedPackets(num_packets_cleared);
+     }
+     reference_finder_->ClearTo(seq_num);
+diff --git a/video/video_stream_buffer_controller.cc b/video/video_stream_buffer_controller.cc
+index 7e44eff39a..37724a8338 100644
+--- a/video/video_stream_buffer_controller.cc
++++ b/video/video_stream_buffer_controller.cc
+@@ -28,6 +28,7 @@
+ #include "rtc_base/checks.h"
+ #include "rtc_base/logging.h"
+ #include "rtc_base/thread_annotations.h"
++#include "rtc_base/trace_event.h"
+ #include "video/frame_decode_scheduler.h"
+ #include "video/frame_decode_timing.h"
+ #include "video/task_queue_frame_decode_scheduler.h"
+@@ -139,6 +140,9 @@ absl::optional<int64_t> VideoStreamBufferController::InsertFrame(
+     std::unique_ptr<EncodedFrame> frame) {
+   RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
+   FrameMetadata metadata(*frame);
++  const uint32_t ssrc =
++      frame->PacketInfos().empty() ? 0 : frame->PacketInfos()[0].ssrc();
++  const int64_t frameId = frame->Id();
+   int complete_units = buffer_->GetTotalNumberOfContinuousTemporalUnits();
+   if (buffer_->InsertFrame(std::move(frame))) {
+     RTC_DCHECK(metadata.receive_time) << "Frame receive time must be set!";
+@@ -149,6 +153,9 @@ absl::optional<int64_t> VideoStreamBufferController::InsertFrame(
+                                  *metadata.receive_time);
+     }
+     if (complete_units < buffer_->GetTotalNumberOfContinuousTemporalUnits()) {
++      TRACE_EVENT2("webrtc",
++                   "VideoStreamBufferController::InsertFrame Frame Complete",
++                   "remote_ssrc", ssrc, "frame_id", frameId);
+       stats_proxy_->OnCompleteFrame(metadata.is_keyframe, metadata.size,
+                                     metadata.contentType);
+       MaybeScheduleFrameForRelease();
 -- 
 2.34.1
 

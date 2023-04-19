@@ -1,69 +1,49 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Fri, 13 Jan 2023 21:18:00 +0000
-Subject: Bug 1731520 - libwebrtc: Cherry-pick commit 8ce2fc1448. r=ng
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Date: Thu, 6 Jan 2022 00:16:00 +0000
+Subject: Bug 1748478 - Propagate calculated discarded packets to stats. r=bwc
 
-Upstream commit: https://webrtc.googlesource.com/src/+/8ce2fc1448fb4d92480059957cb6c0b76896b59e
-    Add back lost RotationCamera tests
-
-    Lost in
-    https://webrtc.googlesource.com/src/+/c8a6fb2bb8762de17008dee97c5fb6e762f7e056
-
-    Bug: webrtc:8382
-    Change-Id: Ic9abd5d2b5d2593354e759c328b423ba272c8b9b
-    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/288700
-    Reviewed-by: Daniel.L (Byoungchan) Lee <daniel.l@hpcnt.com>
-    Reviewed-by: Kári Helgason <kthelgason@webrtc.org>
-    Commit-Queue: Daniel.L (Byoungchan) Lee <daniel.l@hpcnt.com>
-    Cr-Commit-Position: refs/heads/main@{#38991}
-
-Differential Revision: https://phabricator.services.mozilla.com/D166585
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5d8ab5be6952b18037e4370be439639507447e9b
+Differential Revision: https://phabricator.services.mozilla.com/D135061
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/56fbf0469e25fa0d589c51ca112ce534a7c0ab91
 ---
- .../unittests/RTCCameraVideoCapturerTests.mm  | 21 +++++++++++++++++++
- 1 file changed, 21 insertions(+)
+ video/receive_statistics_proxy2.cc  | 9 +++++++--
+ video/rtp_video_stream_receiver2.cc | 4 +++-
+ 2 files changed, 10 insertions(+), 3 deletions(-)
 
-diff --git a/sdk/objc/unittests/RTCCameraVideoCapturerTests.mm b/sdk/objc/unittests/RTCCameraVideoCapturerTests.mm
-index 4285eb5ca2..aaea515bae 100644
---- a/sdk/objc/unittests/RTCCameraVideoCapturerTests.mm
-+++ b/sdk/objc/unittests/RTCCameraVideoCapturerTests.mm
-@@ -210,6 +210,7 @@ CMSampleBufferRef createTestSampleBufferRef() {
- #endif
+diff --git a/video/receive_statistics_proxy2.cc b/video/receive_statistics_proxy2.cc
+index 2373fd6800..29f1b557fa 100644
+--- a/video/receive_statistics_proxy2.cc
++++ b/video/receive_statistics_proxy2.cc
+@@ -962,8 +962,13 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
  }
  
-+// The XCTest framework considers functions that don't take arguments tests. This is a helper.
- - (void)testRotationCamera:(AVCaptureDevicePosition)camera
-            withOrientation:(UIDeviceOrientation)deviceOrientation {
- #if TARGET_OS_IPHONE
-@@ -264,6 +265,26 @@ CMSampleBufferRef createTestSampleBufferRef() {
- #endif
+ void ReceiveStatisticsProxy::OnDiscardedPackets(uint32_t packets_discarded) {
+-  RTC_DCHECK_RUN_ON(&main_thread_);
+-  stats_.packets_discarded += packets_discarded;
++  // Can be called on either the decode queue or the worker thread
++  // See FrameBuffer2 for more details.
++  worker_thread_->PostTask(
++      SafeTask(task_safety_.flag(), [packets_discarded, this]() {
++        RTC_DCHECK_RUN_ON(&main_thread_);
++        stats_.packets_discarded += packets_discarded;
++      }));
  }
  
-+- (void)testRotationCameraBackLandscapeLeft {
-+  [self testRotationCamera:AVCaptureDevicePositionBack
-+           withOrientation:UIDeviceOrientationLandscapeLeft];
-+}
-+
-+- (void)testRotationCameraFrontLandscapeLeft {
-+  [self testRotationCamera:AVCaptureDevicePositionFront
-+           withOrientation:UIDeviceOrientationLandscapeLeft];
-+}
-+
-+- (void)testRotationCameraBackLandscapeRight {
-+  [self testRotationCamera:AVCaptureDevicePositionBack
-+           withOrientation:UIDeviceOrientationLandscapeRight];
-+}
-+
-+- (void)testRotationCameraFrontLandscapeRight {
-+  [self testRotationCamera:AVCaptureDevicePositionFront
-+           withOrientation:UIDeviceOrientationLandscapeRight];
-+}
-+
- - (void)setExif:(CMSampleBufferRef)sampleBuffer {
-   rtc::ScopedCFTypeRef<CFMutableDictionaryRef> exif(CFDictionaryCreateMutable(
-       kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
+ void ReceiveStatisticsProxy::OnPreDecode(VideoCodecType codec_type, int qp) {
+diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
+index d6f3afc7e6..2f44d1679e 100644
+--- a/video/rtp_video_stream_receiver2.cc
++++ b/video/rtp_video_stream_receiver2.cc
+@@ -1233,7 +1233,9 @@ void RtpVideoStreamReceiver2::FrameDecoded(int64_t picture_id) {
+     packet_infos_.erase(packet_infos_.begin(),
+                         packet_infos_.upper_bound(unwrapped_rtp_seq_num));
+     uint32_t num_packets_cleared = packet_buffer_.ClearTo(seq_num);
+-    vcm_receive_statistics_->OnDiscardedPackets(num_packets_cleared);
++    if (num_packets_cleared > 0) {
++      vcm_receive_statistics_->OnDiscardedPackets(num_packets_cleared);
++    }
+     reference_finder_->ClearTo(seq_num);
+   }
+ }
 -- 
 2.34.1
 

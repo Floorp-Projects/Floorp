@@ -1,148 +1,102 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Fri, 5 Jun 2020 11:41:00 +0000
-Subject: Bug 1615191 - P0 - implement remoteTimestamp for
- RTCRemoteOutboundRtpStreamStats in libwebrtc;r=dminor
+From: Dan Minor <dminor@mozilla.com>
+Date: Tue, 21 Aug 2018 13:39:00 -0400
+Subject: Bug 1376873 - Fix up logging in WebrtcLog.cpp; r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D78004
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/cd901e96d23e004e4bee19b96c8c2f1ca3b42830
+The webrtc::Trace code is removed by this update. We already had support for
+LOG (now RTC_LOG) in WebrtcLog.cpp. This removes the trace code from
+WebRtcLog.cpp and moves the aec logging code from webrtc::Trace to
+rtc::LogMessage.
 
-This patch also absorbs two additional patches that collapse into using ms for the remote timestamp:
-Bug 1654112 - Plumb RemoteRTCPSenderInfo through also for audio and change unit to ms. r=ng
-Bug 1654112 - Replace custom upstream code for remote received audio stats with cherry-pick. r=ng
+This also disables logging to stderr in rtc_base/logging.cc. We could disable
+it using the API, but that happens through peerconnection resulting in some
+logging occuring during getusermedia.
+
+The aec logs were testing with --disable-e10s. Rather than trying to
+work around sandboxing, I think it makes more sense to fix Bug 1404982 and
+store the logs in memory for retrieval from about:webrtc.
+
+Differential Revision: https://phabricator.services.mozilla.com/D7429
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e84c60e2c9373f4d2dc24e769375a92c17c2a0ad
 ---
- call/video_receive_stream.h                  | 1 +
- modules/rtp_rtcp/source/rtcp_receiver.cc     | 4 +++-
- modules/rtp_rtcp/source/rtcp_receiver.h      | 3 ++-
- modules/rtp_rtcp/source/rtp_rtcp_impl.cc     | 6 ++++--
- modules/rtp_rtcp/source/rtp_rtcp_impl.h      | 3 ++-
- modules/rtp_rtcp/source/rtp_rtcp_impl2.cc    | 6 ++++--
- modules/rtp_rtcp/source/rtp_rtcp_impl2.h     | 3 ++-
- modules/rtp_rtcp/source/rtp_rtcp_interface.h | 5 +++--
- 8 files changed, 21 insertions(+), 10 deletions(-)
+ .../audio_processing/logging/apm_data_dumper.cc    |  2 +-
+ rtc_base/logging.cc                                | 11 ++++++++++-
+ rtc_base/logging.h                                 | 14 ++++++++++++++
+ 3 files changed, 25 insertions(+), 2 deletions(-)
 
-diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
-index 1659634a43..97cbf2266e 100644
---- a/call/video_receive_stream.h
-+++ b/call/video_receive_stream.h
-@@ -148,6 +148,7 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
+diff --git a/modules/audio_processing/logging/apm_data_dumper.cc b/modules/audio_processing/logging/apm_data_dumper.cc
+index f787b65604..a15321ad48 100644
+--- a/modules/audio_processing/logging/apm_data_dumper.cc
++++ b/modules/audio_processing/logging/apm_data_dumper.cc
+@@ -42,7 +42,7 @@ std::string FormFileName(absl::string_view output_dir,
+ #endif
  
-     uint32_t rtcp_sender_packets_sent;
-     uint32_t rtcp_sender_octets_sent;
-+    int64_t rtcp_sender_ntp_timestamp_ms;
+   std::stringstream ss;
+-  std::string base = webrtc::Trace::aec_debug_filename();
++  std::string base = rtc::LogMessage::aec_debug_filename();
+   ss << base;
  
-     // Timing frame info: all important timestamps for a full lifetime of a
-     // single 'timing frame'.
-diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
-index 7dfe4f0b5d..68171d1c2a 100644
---- a/modules/rtp_rtcp/source/rtcp_receiver.cc
-+++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
-@@ -429,10 +429,12 @@ RTCPReceiver::ConsumeReceivedXrReferenceTimeInfo() {
- }
+   if (base.length() && base.back() != sep) {
+diff --git a/rtc_base/logging.cc b/rtc_base/logging.cc
+index 4bc9183d97..d71d6a3e1b 100644
+--- a/rtc_base/logging.cc
++++ b/rtc_base/logging.cc
+@@ -54,6 +54,15 @@ static const int kMaxLogLineSize = 1024 - 60;
+ #include "rtc_base/time_utils.h"
  
- void RTCPReceiver::RemoteRTCPSenderInfo(uint32_t* packet_count,
--                                        uint32_t* octet_count) const {
-+                                        uint32_t* octet_count,
-+                                        int64_t* ntp_timestamp_ms) const {
-   MutexLock lock(&rtcp_receiver_lock_);
-   *packet_count = remote_sender_packet_count_;
-   *octet_count = remote_sender_octet_count_;
-+  *ntp_timestamp_ms = remote_sender_ntp_time_.ToMs();
- }
+ namespace rtc {
++
++bool LogMessage::aec_debug_ = false;
++uint32_t LogMessage::aec_debug_size_ = 4*1024*1024;
++std::string LogMessage::aec_filename_base_;
++
++std::string LogMessage::aec_debug_filename() {
++  return aec_filename_base_;
++}
++
+ namespace {
  
- std::vector<ReportBlockData> RTCPReceiver::GetLatestReportBlockData() const {
-diff --git a/modules/rtp_rtcp/source/rtcp_receiver.h b/modules/rtp_rtcp/source/rtcp_receiver.h
-index f68e57479b..6912912cfc 100644
---- a/modules/rtp_rtcp/source/rtcp_receiver.h
-+++ b/modules/rtp_rtcp/source/rtcp_receiver.h
-@@ -134,7 +134,8 @@ class RTCPReceiver final {
+ // By default, release builds don't log, debug builds at info level
+@@ -114,7 +123,7 @@ std::string LogLineRef::DefaultLogLine() const {
+ // LogMessage
+ /////////////////////////////////////////////////////////////////////////////
  
-   // Get received sender packet and octet counts
-   void RemoteRTCPSenderInfo(uint32_t* packet_count,
--                            uint32_t* octet_count) const;
-+                            uint32_t* octet_count,
-+                            int64_t* ntp_timestamp_ms) const;
+-bool LogMessage::log_to_stderr_ = true;
++bool LogMessage::log_to_stderr_ = false;
  
-   // Get rtt.
-   int32_t RTT(uint32_t remote_ssrc,
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-index ab33d1ab40..ead2f879f0 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-@@ -530,8 +530,10 @@ void ModuleRtpRtcpImpl::GetSendStreamDataCounters(
+ // The list of logging streams currently configured.
+ // Note: we explicitly do not clean this up, because of the uncertain ordering
+diff --git a/rtc_base/logging.h b/rtc_base/logging.h
+index d59b9a0ef7..8f490c44a2 100644
+--- a/rtc_base/logging.h
++++ b/rtc_base/logging.h
+@@ -581,6 +581,16 @@ class LogMessage {
+   }
+ #endif  // RTC_LOG_ENABLED()
  
- // Received RTCP report.
- void ModuleRtpRtcpImpl::RemoteRTCPSenderInfo(uint32_t* packet_count,
--                                             uint32_t* octet_count) const {
--  return rtcp_receiver_.RemoteRTCPSenderInfo(packet_count, octet_count);
-+                                             uint32_t* octet_count,
-+                                             int64_t* ntp_timestamp_ms) const {
-+  return rtcp_receiver_.RemoteRTCPSenderInfo(packet_count, octet_count,
-+                                             ntp_timestamp_ms);
- }
++  // Enable dumping of AEC inputs and outputs.  Can be changed in mid-call
++  static void set_aec_debug(bool enable) { aec_debug_ = enable; }
++  static void set_aec_debug_size(uint32_t size) { aec_debug_size_ = size; }
++  static bool aec_debug() { return aec_debug_; }
++  static uint32_t aec_debug_size() { return aec_debug_size_; }
++  static std::string aec_debug_filename();
++  static void set_aec_debug_filename(const char* filename) {
++    aec_filename_base_ = filename;
++  }
++
+  private:
+   friend class LogMessageForTesting;
  
- std::vector<ReportBlockData> ModuleRtpRtcpImpl::GetLatestReportBlockData()
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.h b/modules/rtp_rtcp/source/rtp_rtcp_impl.h
-index dd916fbe40..5cf558717e 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_impl.h
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.h
-@@ -193,7 +193,8 @@ class ABSL_DEPRECATED("") ModuleRtpRtcpImpl
-       StreamDataCounters* rtx_counters) const override;
+@@ -636,6 +646,10 @@ class LogMessage {
  
-   void RemoteRTCPSenderInfo(uint32_t* packet_count,
--                            uint32_t* octet_count) const override;
-+                            uint32_t* octet_count,
-+                            int64_t* ntp_timestamp_ms) const override;
+   // The stringbuilder that buffers the formatted message before output
+   rtc::StringBuilder print_stream_;
++
++  static bool aec_debug_;
++  static uint32_t aec_debug_size_;
++  static std::string aec_filename_base_;
+ };
  
-   // A snapshot of the most recent Report Block with additional data of
-   // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-index d0f9c8ed1a..8378a76133 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-@@ -509,8 +509,10 @@ void ModuleRtpRtcpImpl2::GetSendStreamDataCounters(
- 
- // Received RTCP report.
- void ModuleRtpRtcpImpl2::RemoteRTCPSenderInfo(uint32_t* packet_count,
--                                              uint32_t* octet_count) const {
--  return rtcp_receiver_.RemoteRTCPSenderInfo(packet_count, octet_count);
-+                                             uint32_t* octet_count,
-+                                             int64_t* ntp_timestamp_ms) const {
-+  return rtcp_receiver_.RemoteRTCPSenderInfo(packet_count, octet_count,
-+                                             ntp_timestamp_ms);
- }
- 
- std::vector<ReportBlockData> ModuleRtpRtcpImpl2::GetLatestReportBlockData()
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
-index 3ef76ab66a..4ef67d4647 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
-@@ -205,7 +205,8 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
-       StreamDataCounters* rtx_counters) const override;
- 
-   void RemoteRTCPSenderInfo(uint32_t* packet_count,
--                            uint32_t* octet_count) const override;
-+                            uint32_t* octet_count,
-+                            int64_t* ntp_timestamp_ms) const override;
- 
-   // A snapshot of the most recent Report Block with additional data of
-   // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-index f23d4d0758..c6854937cb 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-@@ -400,9 +400,10 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
-       StreamDataCounters* rtx_counters) const = 0;
- 
- 
--  // Returns packet count and octet count from RTCP sender report.
-+  // Returns packet count, octet count, and timestamp from RTCP sender report.
-   virtual void RemoteRTCPSenderInfo(uint32_t* packet_count,
--                                    uint32_t* octet_count) const = 0;
-+                                    uint32_t* octet_count,
-+                                    int64_t* ntp_timestamp_ms) const = 0;
-   // A snapshot of Report Blocks with additional data of interest to statistics.
-   // Within this list, the sender-source SSRC pair is unique and per-pair the
-   // ReportBlockData represents the latest Report Block that was received for
+ //////////////////////////////////////////////////////////////////////
 -- 
 2.34.1
 

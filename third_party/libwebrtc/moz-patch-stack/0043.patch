@@ -1,50 +1,32 @@
-From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
-Date: Thu, 29 Apr 2021 18:25:00 +0000
-Subject: Bug 1654112 - Work around the old (<1.5) libxrandr headers on our
- build machines. r=mjf,ng
+From: Dan Minor <dminor@mozilla.com>
+Date: Tue, 1 Dec 2020 09:36:00 -0500
+Subject: Bug 1654112 - Disable creating av1 encoder and decoder. r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D113830
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c91f12b557a1d23b468c75c4f2fc00eb0f8d541a
+Differential Revision: https://phabricator.services.mozilla.com/D130089
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ef548d7758c7de6e78d38af299c2296bf9d20ec9
 ---
- X11/extensions/Xrandr.h | 29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
- create mode 100644 X11/extensions/Xrandr.h
+ media/engine/internal_decoder_factory.cc | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/X11/extensions/Xrandr.h b/X11/extensions/Xrandr.h
-new file mode 100644
-index 0000000000..876e8b4c7f
---- /dev/null
-+++ b/X11/extensions/Xrandr.h
-@@ -0,0 +1,29 @@
-+/* This Source Code Form is subject to the terms of the Mozilla Public
-+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
-+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
-+
-+// Hack to compensate for the old (<1.5) Xrandr development headers on
-+// Mozilla's build boxes.
-+
-+#ifndef _XRANDR_H_WRAPPER_HACK_
-+#define _XRANDR_H_WRAPPER_HACK_
-+
-+#include_next <X11/extensions/Xrandr.h>
-+
-+#if RANDR_MAJOR == 1 && RANDR_MINOR < 5 // defined in randr.h
-+typedef struct _XRRMonitorInfo {
-+    Atom name;
-+    Bool primary;
-+    Bool automatic;
-+    int noutput;
-+    int x;
-+    int y;
-+    int width;
-+    int height;
-+    int mwidth;
-+    int mheight;
-+    RROutput *outputs;
-+} XRRMonitorInfo;
+diff --git a/media/engine/internal_decoder_factory.cc b/media/engine/internal_decoder_factory.cc
+index 24d54aa83b..b3fc4412f1 100644
+--- a/media/engine/internal_decoder_factory.cc
++++ b/media/engine/internal_decoder_factory.cc
+@@ -50,12 +50,14 @@ std::vector<SdpVideoFormat> InternalDecoderFactory::GetSupportedFormats()
+   for (const SdpVideoFormat& h264_format : SupportedH264DecoderCodecs())
+     formats.push_back(h264_format);
+ 
++#if !defined(WEBRTC_MOZILLA_BUILD)
+   if (kDav1dIsIncluded && !field_trial::IsDisabled(kDav1dFieldTrial)) {
+     formats.push_back(SdpVideoFormat(cricket::kAv1CodecName));
+     formats.push_back(SdpVideoFormat(
+         cricket::kAv1CodecName,
+         {{kAV1FmtpProfile, AV1ProfileToString(AV1Profile::kProfile1).data()}}));
+   }
 +#endif
-+
-+#endif // _XRANDR_H_WRAPPER_HACK_
+ 
+   return formats;
+ }
 -- 
 2.34.1
 

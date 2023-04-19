@@ -1,31 +1,56 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Mon, 12 Dec 2022 15:47:00 +0000
-Subject: Bug 1451394 - Record video frame captures with PerformanceRecorder in
- the new mac camera backend. r=padenot
+Date: Mon, 5 Sep 2022 13:56:00 +0000
+Subject: Bug 1786502 - Lock access to DeviceInfo devicechange callbacks.
+ r=webrtc-reviewers,jib
 
-Also includes:
-Bug 1806605 - Pass TrackingId instead of nsCString to CaptureStage.
-
-Differential Revision: https://phabricator.services.mozilla.com/D163687
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a7362238c9e6fbe0d28200f6b41fc40a0c9a2158
+Differential Revision: https://phabricator.services.mozilla.com/D155365
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e826dfadfe1264c59d9b13e3c17d6f75a40f5c33
 ---
- modules/video_capture/video_capture.h | 3 +++
- 1 file changed, 3 insertions(+)
+ modules/video_capture/video_capture.h | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
 diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
-index 3948032041..f74491252f 100644
+index 2d2562036f..3948032041 100644
 --- a/modules/video_capture/video_capture.h
 +++ b/modules/video_capture/video_capture.h
-@@ -155,6 +155,9 @@ class VideoCaptureModule : public rtc::RefCountInterface {
-   // Return whether the rotation is applied or left pending.
-   virtual bool GetApplyRotation() = 0;
+@@ -15,6 +15,8 @@
+ #include "api/video/video_sink_interface.h"
+ #include "modules/desktop_capture/desktop_capture_types.h"
+ #include "modules/video_capture/video_capture_defines.h"
++#include "rtc_base/synchronization/mutex.h"
++#include "rtc_base/thread_annotations.h"
+ #include <set>
  
-+  // Mozilla: TrackingId setter for use in profiler markers.
-+  virtual void SetTrackingId(uint32_t aTrackingIdProcId) {}
-+
-  protected:
-   ~VideoCaptureModule() override {}
- };
+ #if defined(ANDROID)
+@@ -43,15 +45,18 @@ class VideoCaptureModule : public rtc::RefCountInterface {
+     virtual uint32_t NumberOfDevices() = 0;
+     virtual int32_t Refresh() = 0;
+     virtual void DeviceChange() {
++      MutexLock lock(&_inputCallbacksMutex);
+       for (auto inputCallBack : _inputCallBacks) {
+         inputCallBack->OnDeviceChange();
+       }
+     }
+     virtual void RegisterVideoInputFeedBack(VideoInputFeedBack* callBack) {
++      MutexLock lock(&_inputCallbacksMutex);
+       _inputCallBacks.insert(callBack);
+     }
+ 
+     virtual void DeRegisterVideoInputFeedBack(VideoInputFeedBack* callBack) {
++      MutexLock lock(&_inputCallbacksMutex);
+       auto it = _inputCallBacks.find(callBack);
+       if (it != _inputCallBacks.end()) {
+         _inputCallBacks.erase(it);
+@@ -105,7 +110,8 @@ class VideoCaptureModule : public rtc::RefCountInterface {
+ 
+     virtual ~DeviceInfo() {}
+    private:
+-    std::set<VideoInputFeedBack*> _inputCallBacks;
++    Mutex _inputCallbacksMutex;
++    std::set<VideoInputFeedBack*> _inputCallBacks RTC_GUARDED_BY(_inputCallbacksMutex);
+   };
+ 
+   //   Register capture data callback
 -- 
 2.34.1
 

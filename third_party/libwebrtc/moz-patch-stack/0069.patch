@@ -1,23 +1,26 @@
 From: Michael Froman <mjfroman@mac.com>
-Date: Wed, 13 Jul 2022 12:50:36 -0500
-Subject: Bug 1766646 - (fix-4d12174ca5) add missing include to fix build
+Date: Thu, 26 May 2022 11:14:40 -0500
+Subject: Bug 1766646 - (fix-3f418ccf99) disable a RTC_DCHECK_EQ for mozilla
+ builds
 
 ---
- modules/audio_processing/aec3/multi_channel_content_detector.h | 1 +
- 1 file changed, 1 insertion(+)
+ call/call.cc | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/modules/audio_processing/aec3/multi_channel_content_detector.h b/modules/audio_processing/aec3/multi_channel_content_detector.h
-index be8717f3af..1742c5fc17 100644
---- a/modules/audio_processing/aec3/multi_channel_content_detector.h
-+++ b/modules/audio_processing/aec3/multi_channel_content_detector.h
-@@ -11,6 +11,7 @@
- #ifndef MODULES_AUDIO_PROCESSING_AEC3_MULTI_CHANNEL_CONTENT_DETECTOR_H_
- #define MODULES_AUDIO_PROCESSING_AEC3_MULTI_CHANNEL_CONTENT_DETECTOR_H_
+diff --git a/call/call.cc b/call/call.cc
+index a51e153064..86410b12de 100644
+--- a/call/call.cc
++++ b/call/call.cc
+@@ -1393,7 +1393,9 @@ void Call::DeliverRtcp(MediaType media_type, rtc::CopyOnWriteBuffer packet) {
+   // and make sure that the flow of packets is consistent from the
+   // `RtpTransport` class, via the *Channel and *Engine classes and into Call.
+   // This way we'll also know more about the context of the packet.
++#if !defined(WEBRTC_MOZILLA_BUILD)
+   RTC_DCHECK_EQ(media_type, MediaType::ANY);
++#endif
  
-+#include <memory>
- #include <stddef.h>
- 
- #include <memory>
+   // TODO(bugs.webrtc.org/11993): This should execute directly on the network
+   // thread.
 -- 
 2.34.1
 

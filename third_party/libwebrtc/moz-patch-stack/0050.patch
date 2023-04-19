@@ -1,76 +1,61 @@
-From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
-Date: Fri, 12 Mar 2021 08:55:00 -0600
-Subject: Bug 1654112 - libwebrtc modification: Surface video RTCP SR stats
- again. r=ng
+From: Michael Froman <mfroman@mozilla.com>
+Date: Tue, 15 Jun 2021 12:18:00 -0500
+Subject: Bug 1654112 - suppress android lint warnings for WrongConstant in 2
+ libwebrtc java files. r=ng
 
-libwebrtc has stopped surfacing these, and Chromium does not support
-these stats at all.
-
-Differential Revision: https://phabricator.services.mozilla.com/D108674
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/edac9d01a9ac7594f4b22708a4690753638ca32c
+Differential Revision: https://phabricator.services.mozilla.com/D118050
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e60e2f295fb722f69a3a9fe9af34219880afe772
 ---
- video/rtp_video_stream_receiver2.cc | 10 ++++++++++
- video/rtp_video_stream_receiver2.h  |  6 ++++++
- video/video_receive_stream2.cc      |  8 ++++++++
- 3 files changed, 24 insertions(+)
+ .../java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java    | 5 +++++
+ sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java  | 5 +++++
+ 2 files changed, 10 insertions(+)
 
-diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index d4d8444c35..e656a6be84 100644
---- a/video/rtp_video_stream_receiver2.cc
-+++ b/video/rtp_video_stream_receiver2.cc
-@@ -1073,6 +1073,16 @@ absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedKeyframePacketMs()
-   return absl::nullopt;
- }
+diff --git a/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java b/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java
+index 0472114297..afd3d429af 100644
+--- a/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java
++++ b/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java
+@@ -15,6 +15,7 @@ import static android.media.AudioManager.MODE_IN_COMMUNICATION;
+ import static android.media.AudioManager.MODE_NORMAL;
+ import static android.media.AudioManager.MODE_RINGTONE;
  
-+// Mozilla modification: VideoReceiveStream2 and friends do not surface RTCP
-+// stats at all, and even on the most recent libwebrtc code there does not
-+// seem to be any support for these stats right now. So, we hack this in.
-+void RtpVideoStreamReceiver2::RemoteRTCPSenderInfo(
-+    uint32_t* packet_count, uint32_t* octet_count,
-+    int64_t* ntp_timestamp_ms) const {
-+  RTC_DCHECK_RUN_ON(&worker_task_checker_);
-+  rtp_rtcp_->RemoteRTCPSenderInfo(packet_count, octet_count, ntp_timestamp_ms);
-+}
-+
- void RtpVideoStreamReceiver2::ManageFrame(
-     std::unique_ptr<RtpFrameObject> frame) {
-   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-diff --git a/video/rtp_video_stream_receiver2.h b/video/rtp_video_stream_receiver2.h
-index cead2a3147..d9e1da33ed 100644
---- a/video/rtp_video_stream_receiver2.h
-+++ b/video/rtp_video_stream_receiver2.h
-@@ -211,6 +211,12 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
-   absl::optional<int64_t> LastReceivedPacketMs() const;
-   absl::optional<int64_t> LastReceivedKeyframePacketMs() const;
- 
-+  // Mozilla modification: VideoReceiveStream2 and friends do not surface RTCP
-+  // stats at all, and even on the most recent libwebrtc code there does not
-+  // seem to be any support for these stats right now. So, we hack this in.
-+  void RemoteRTCPSenderInfo(uint32_t* packet_count, uint32_t* octet_count,
-+                            int64_t* ntp_timestamp_ms) const;
-+
-  private:
-   // Implements RtpVideoFrameReceiver.
-   void ManageFrame(std::unique_ptr<RtpFrameObject> frame) override;
-diff --git a/video/video_receive_stream2.cc b/video/video_receive_stream2.cc
-index 9a95c58a93..9a88d5216c 100644
---- a/video/video_receive_stream2.cc
-+++ b/video/video_receive_stream2.cc
-@@ -608,6 +608,14 @@ VideoReceiveStreamInterface::Stats VideoReceiveStream2::GetStats() const {
-     if (rtx_statistician)
-       stats.total_bitrate_bps += rtx_statistician->BitrateReceived();
++import android.annotation.SuppressLint;
+ import android.content.Context;
+ import android.content.pm.PackageManager;
+ import android.media.AudioDeviceInfo;
+@@ -247,6 +248,10 @@ public final class WebRtcAudioUtils {
+     }
    }
-+
-+  // Mozilla modification: VideoReceiveStream2 and friends do not surface RTCP
-+  // stats at all, and even on the most recent libwebrtc code there does not
-+  // seem to be any support for these stats right now. So, we hack this in.
-+  rtp_video_stream_receiver_.RemoteRTCPSenderInfo(
-+      &stats.rtcp_sender_packets_sent, &stats.rtcp_sender_octets_sent,
-+      &stats.rtcp_sender_ntp_timestamp_ms);
-+
-   return stats;
- }
  
++  // Moz linting complains even though AudioManager.GET_DEVICES_ALL is
++  // listed in the docs here:
++  // https://developer.android.com/reference/android/media/AudioManager#GET_DEVICES_ALL
++  @SuppressLint("WrongConstant")
+   private static void logAudioDeviceInfo(String tag, AudioManager audioManager) {
+     if (Build.VERSION.SDK_INT < 23) {
+       return;
+diff --git a/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java b/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
+index 7894659926..7b4b809ab1 100644
+--- a/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
++++ b/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
+@@ -15,6 +15,7 @@ import static android.media.AudioManager.MODE_IN_COMMUNICATION;
+ import static android.media.AudioManager.MODE_NORMAL;
+ import static android.media.AudioManager.MODE_RINGTONE;
+ 
++import android.annotation.SuppressLint;
+ import android.annotation.TargetApi;
+ import android.content.Context;
+ import android.content.pm.PackageManager;
+@@ -229,6 +230,10 @@ final class WebRtcAudioUtils {
+     }
+   }
+ 
++  // Moz linting complains even though AudioManager.GET_DEVICES_ALL is
++  // listed in the docs here:
++  // https://developer.android.com/reference/android/media/AudioManager#GET_DEVICES_ALL
++  @SuppressLint("WrongConstant")
+   private static void logAudioDeviceInfo(String tag, AudioManager audioManager) {
+     if (Build.VERSION.SDK_INT < 23) {
+       return;
 -- 
 2.34.1
 

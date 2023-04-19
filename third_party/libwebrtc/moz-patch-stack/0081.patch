@@ -1,45 +1,31 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 11 Jan 2023 22:42:00 +0000
-Subject: Bug 1800942 - Add DCHECKs to
- TimestampExtrapolator::ExtrapolateLocalTime. r=mjf
+Date: Mon, 12 Dec 2022 15:47:00 +0000
+Subject: Bug 1451394 - Record video frame captures with PerformanceRecorder in
+ the new mac camera backend. r=padenot
 
-Differential Revision: https://phabricator.services.mozilla.com/D166536
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c5df7f40392464ffc63f44a53ddcaab2091741e0
+Also includes:
+Bug 1806605 - Pass TrackingId instead of nsCString to CaptureStage.
+
+Differential Revision: https://phabricator.services.mozilla.com/D163687
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a7362238c9e6fbe0d28200f6b41fc40a0c9a2158
 ---
- modules/video_coding/timing/timestamp_extrapolator.cc | 7 +++++++
- 1 file changed, 7 insertions(+)
+ modules/video_capture/video_capture.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/modules/video_coding/timing/timestamp_extrapolator.cc b/modules/video_coding/timing/timestamp_extrapolator.cc
-index d13fa7dd8c..0a147d52de 100644
---- a/modules/video_coding/timing/timestamp_extrapolator.cc
-+++ b/modules/video_coding/timing/timestamp_extrapolator.cc
-@@ -125,6 +125,7 @@ void TimestampExtrapolator::Update(Timestamp now, uint32_t ts90khz) {
- absl::optional<Timestamp> TimestampExtrapolator::ExtrapolateLocalTime(
-     uint32_t timestamp90khz) const {
-   int64_t unwrapped_ts90khz = unwrapper_.UnwrapWithoutUpdate(timestamp90khz);
-+  RTC_DCHECK_GE(unwrapped_ts90khz, 0);
+diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
+index 3948032041..f74491252f 100644
+--- a/modules/video_capture/video_capture.h
++++ b/modules/video_capture/video_capture.h
+@@ -155,6 +155,9 @@ class VideoCaptureModule : public rtc::RefCountInterface {
+   // Return whether the rotation is applied or left pending.
+   virtual bool GetApplyRotation() = 0;
  
-   if (!first_unwrapped_timestamp_) {
-     return absl::nullopt;
-@@ -132,12 +133,18 @@ absl::optional<Timestamp> TimestampExtrapolator::ExtrapolateLocalTime(
-     constexpr double kRtpTicksPerMs = 90;
-     TimeDelta diff = TimeDelta::Millis(
-         (unwrapped_ts90khz - *prev_unwrapped_timestamp_) / kRtpTicksPerMs);
-+    if (diff.ms() < 0) {
-+      RTC_DCHECK_GE(prev_.ms(), -diff.ms());
-+    }
-     return prev_ + diff;
-   } else if (w_[0] < 1e-3) {
-     return start_;
-   } else {
-     double timestampDiff = unwrapped_ts90khz - *first_unwrapped_timestamp_;
-     auto diff_ms = static_cast<int64_t>((timestampDiff - w_[1]) / w_[0] + 0.5);
-+    if (diff_ms < 0) {
-+      RTC_DCHECK_GE(start_.ms(), -diff_ms);
-+    }
-     return start_ + TimeDelta::Millis(diff_ms);
-   }
- }
++  // Mozilla: TrackingId setter for use in profiler markers.
++  virtual void SetTrackingId(uint32_t aTrackingIdProcId) {}
++
+  protected:
+   ~VideoCaptureModule() override {}
+ };
 -- 
 2.34.1
 

@@ -1,37 +1,57 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Fri, 9 Jul 2021 18:14:00 -0500
-Subject: Bug 1654112 - mutex changes to fix tsan errors. r=ng
+From: Danil Chapovalov <danilchap@webrtc.org>
+Date: Mon, 2 Jan 2023 10:44:27 +0100
+Subject: (cherry-pick-branch-heads/5481) Zero memory for FEC recovered packets
+ when size increases
 
-Differential Revision: https://phabricator.services.mozilla.com/D119674
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3d5503acf9a4b22e02c4300f29e4fbfed406ea2c
+rtc::CopyOnWriteBuffer::SetSize extends buffer with uninitialized memory by design.
+It is up to the user of the rtc::CopyOnWriteBuffer to ensure it is initialized.
+
+(cherry picked from commit 4f74385b4f568df77055f99b04de41557ffd022a)
+
+No-Try: true
+Bug: chromium:1404299
+Change-Id: I41f3f91bf20ff440984d78ed81e01f5db36ff509
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/290400
+Commit-Queue: Danil Chapovalov <danilchap@webrtc.org>
+Reviewed-by: Per Kjellander <perkj@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#38972}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291541
+Cr-Commit-Position: refs/branch-heads/5481@{#4}
+Cr-Branched-From: 2e1a9a4ae0234d4b1ea7a6fd4188afa1fb20379d-refs/heads/main@{#38901}
 ---
- rtc_base/logging.cc | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ modules/rtp_rtcp/source/forward_error_correction.cc | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/rtc_base/logging.cc b/rtc_base/logging.cc
-index d71d6a3e1b..d6ae7612fc 100644
---- a/rtc_base/logging.cc
-+++ b/rtc_base/logging.cc
-@@ -265,8 +265,8 @@ void LogMessage::LogTimestamps(bool on) {
- }
+diff --git a/modules/rtp_rtcp/source/forward_error_correction.cc b/modules/rtp_rtcp/source/forward_error_correction.cc
+index dbf6c361df..1462c2f481 100644
+--- a/modules/rtp_rtcp/source/forward_error_correction.cc
++++ b/modules/rtp_rtcp/source/forward_error_correction.cc
+@@ -225,10 +225,10 @@ void ForwardErrorCorrection::GenerateFecPayloads(
  
- void LogMessage::LogToDebug(LoggingSeverity min_sev) {
--  g_dbg_sev = min_sev;
-   webrtc::MutexLock lock(&GetLoggingLock());
-+  g_dbg_sev = min_sev;
-   UpdateMinLogSeverity();
- }
- 
-@@ -455,6 +455,9 @@ void LogMessage::OutputToDebug(const LogLineRef& log_line) {
- 
- // static
- bool LogMessage::IsNoop(LoggingSeverity severity) {
-+  // Added MutexLock to fix tsan warnings on accessing g_dbg_sev. (mjf)
-+  // See https://bugs.chromium.org/p/chromium/issues/detail?id=1228729
-+  webrtc::MutexLock lock(&GetLoggingLock());
-   if (severity >= g_dbg_sev || severity >= g_min_sev)
-     return false;
-   return streams_empty_.load(std::memory_order_relaxed);
+         size_t fec_packet_length = fec_header_size + media_payload_length;
+         if (fec_packet_length > fec_packet->data.size()) {
+-          // Recall that XORing with zero (which the FEC packets are prefilled
+-          // with) is the identity operator, thus all prior XORs are
+-          // still correct even though we expand the packet length here.
++          size_t old_size = fec_packet->data.size();
+           fec_packet->data.SetSize(fec_packet_length);
++          memset(fec_packet->data.MutableData() + old_size, 0,
++                 fec_packet_length - old_size);
+         }
+         XorHeaders(*media_packet, fec_packet);
+         XorPayloads(*media_packet, media_payload_length, fec_header_size,
+@@ -619,7 +619,10 @@ void ForwardErrorCorrection::XorPayloads(const Packet& src,
+   RTC_DCHECK_LE(kRtpHeaderSize + payload_length, src.data.size());
+   RTC_DCHECK_LE(dst_offset + payload_length, dst->data.capacity());
+   if (dst_offset + payload_length > dst->data.size()) {
+-    dst->data.SetSize(dst_offset + payload_length);
++    size_t old_size = dst->data.size();
++    size_t new_size = dst_offset + payload_length;
++    dst->data.SetSize(new_size);
++    memset(dst->data.MutableData() + old_size, 0, new_size - old_size);
+   }
+   uint8_t* dst_data = dst->data.MutableData();
+   const uint8_t* src_data = src.data.cdata();
 -- 
 2.34.1
 

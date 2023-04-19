@@ -1,49 +1,52 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Thu, 6 Jan 2022 00:16:00 +0000
-Subject: Bug 1748478 - Propagate calculated discarded packets to stats. r=bwc
+From: Michael Froman <mfroman@mozilla.com>
+Date: Mon, 24 Oct 2022 13:00:00 -0500
+Subject: Bug 1797161 - pt1 - tweak BUILD.gn around task_queue_win usage. r?ng!
 
-Differential Revision: https://phabricator.services.mozilla.com/D135061
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/56fbf0469e25fa0d589c51ca112ce534a7c0ab91
+Add assurance that we will not build task_queue_win.cc to avoid
+possible win32k API usage.
+
+Differential Revision: https://phabricator.services.mozilla.com/D160115
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/f097eb8cbd8b7686ce306a46a4db691194fd39c1
 ---
- video/receive_statistics_proxy2.cc  | 9 +++++++--
- video/rtp_video_stream_receiver2.cc | 4 +++-
- 2 files changed, 10 insertions(+), 3 deletions(-)
+ api/task_queue/BUILD.gn | 5 +++++
+ rtc_base/BUILD.gn       | 4 ++++
+ 2 files changed, 9 insertions(+)
 
-diff --git a/video/receive_statistics_proxy2.cc b/video/receive_statistics_proxy2.cc
-index 2373fd6800..29f1b557fa 100644
---- a/video/receive_statistics_proxy2.cc
-+++ b/video/receive_statistics_proxy2.cc
-@@ -962,8 +962,13 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
+diff --git a/api/task_queue/BUILD.gn b/api/task_queue/BUILD.gn
+index c80206430b..bc299feb96 100644
+--- a/api/task_queue/BUILD.gn
++++ b/api/task_queue/BUILD.gn
+@@ -30,6 +30,11 @@ rtc_library("task_queue") {
+   ]
  }
  
- void ReceiveStatisticsProxy::OnDiscardedPackets(uint32_t packets_discarded) {
--  RTC_DCHECK_RUN_ON(&main_thread_);
--  stats_.packets_discarded += packets_discarded;
-+  // Can be called on either the decode queue or the worker thread
-+  // See FrameBuffer2 for more details.
-+  worker_thread_->PostTask(
-+      SafeTask(task_safety_.flag(), [packets_discarded, this]() {
-+        RTC_DCHECK_RUN_ON(&main_thread_);
-+        stats_.packets_discarded += packets_discarded;
-+      }));
- }
- 
- void ReceiveStatisticsProxy::OnPreDecode(VideoCodecType codec_type, int qp) {
-diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index d6f3afc7e6..2f44d1679e 100644
---- a/video/rtp_video_stream_receiver2.cc
-+++ b/video/rtp_video_stream_receiver2.cc
-@@ -1233,7 +1233,9 @@ void RtpVideoStreamReceiver2::FrameDecoded(int64_t picture_id) {
-     packet_infos_.erase(packet_infos_.begin(),
-                         packet_infos_.upper_bound(unwrapped_rtp_seq_num));
-     uint32_t num_packets_cleared = packet_buffer_.ClearTo(seq_num);
--    vcm_receive_statistics_->OnDiscardedPackets(num_packets_cleared);
-+    if (num_packets_cleared > 0) {
-+      vcm_receive_statistics_->OnDiscardedPackets(num_packets_cleared);
-+    }
-     reference_finder_->ClearTo(seq_num);
-   }
- }
++# Mozilla - we want to ensure that rtc_include_tests is set to false
++# to guarantee that default_task_queue_factory is not used so we
++# know that remaining win32k code in task_queue_win.cc is not built.
++# See Bug 1797161 for more info.
++assert(!rtc_include_tests, "Mozilla - verify rtc_include_tests is off")
+ if (rtc_include_tests) {
+ rtc_library("task_queue_test") {
+   visibility = [ "*" ]
+diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
+index 2f80ae4165..9e3da1dd8f 100644
+--- a/rtc_base/BUILD.gn
++++ b/rtc_base/BUILD.gn
+@@ -686,10 +686,14 @@ if (is_mac || is_ios) {
+ if (is_win) {
+   rtc_library("rtc_task_queue_win") {
+     visibility = [ "../api/task_queue:default_task_queue_factory" ]
++# See Bug 1797161 for more info.  Remove from build until win32k
++# usage is removed.
++if (!build_with_mozilla) {
+     sources = [
+       "task_queue_win.cc",
+       "task_queue_win.h",
+     ]
++}
+     deps = [
+       ":checks",
+       ":logging",
 -- 
 2.34.1
 

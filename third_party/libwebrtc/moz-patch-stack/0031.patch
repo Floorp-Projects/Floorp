@@ -1,66 +1,148 @@
-From: Randell Jesup <rjesup@wgate.com>
-Date: Sat, 11 Jul 2020 12:31:00 +0000
-Subject: Bug 1112392 - Move webrtc Tab Sharing to work in e10s/fission
- r=dminor
+From: Gabriele Svelto <gsvelto@mozilla.com>
+Date: Mon, 28 Oct 2019 23:26:00 +0000
+Subject: Bug 1590984 - Use poll() instead of select() in WebRTC code r=drno
 
-Also we drop support for an independent-of-scroll/viewport capture, which
-the old Tab Sharing supported, for security reasons (and we don't need it).
+The use of select() was leading to crashes when the file descriptor value was
+larger than FD_SETSIZE. Recent versions of glibc have checks in the FD_CLR(),
+FD_SET() and FD_ISSET() macros that will abort() the program instead of doing
+an out-of-bounds access. poll() doesn't have limitations on the file
+descriptor values and provides behavior that is otherwise identical to
+select() thus solving the problem.
 
-Differential Revision: https://phabricator.services.mozilla.com/D80974
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d57a030e6e3ae9ff56f14e8cc732b0e1d3869858
+Differential Revision: https://phabricator.services.mozilla.com/D50798
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/59fb6760bb6785a6f8a51be6fc66bf04cfba3e16
 ---
- modules/desktop_capture/desktop_capturer.cc | 11 +++++++++++
- modules/desktop_capture/desktop_capturer.h  |  8 ++++++++
- 2 files changed, 19 insertions(+)
+ .../video_capture/linux/device_info_linux.cc  |  1 +
+ .../video_capture/linux/device_info_v4l2.cc   | 16 +++++-----
+ .../linux/video_capture_linux.cc              |  1 +
+ .../video_capture/linux/video_capture_v4l2.cc | 29 +++++++++++--------
+ 4 files changed, 26 insertions(+), 21 deletions(-)
 
-diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
-index dc24b387d5..4debc75394 100644
---- a/modules/desktop_capture/desktop_capturer.cc
-+++ b/modules/desktop_capture/desktop_capturer.cc
-@@ -95,6 +95,17 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
-   return capturer;
+diff --git a/modules/video_capture/linux/device_info_linux.cc b/modules/video_capture/linux/device_info_linux.cc
+index 9c12b2183e..4821cbccd5 100644
+--- a/modules/video_capture/linux/device_info_linux.cc
++++ b/modules/video_capture/linux/device_info_linux.cc
+@@ -10,6 +10,7 @@
+ 
+ #include <errno.h>
+ #include <fcntl.h>
++#include <poll.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
+index 77968b7eaf..f87fe53abe 100644
+--- a/modules/video_capture/linux/device_info_v4l2.cc
++++ b/modules/video_capture/linux/device_info_v4l2.cc
+@@ -12,6 +12,7 @@
+ 
+ #include <errno.h>
+ #include <fcntl.h>
++#include <poll.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+@@ -73,16 +74,13 @@ void DeviceInfoV4l2::HandleEvent(inotify_event* event, int fd)
+ 
+ int DeviceInfoV4l2::EventCheck(int fd)
+ {
+-    struct timeval timeout;
+-    fd_set rfds;
++    struct pollfd fds = {
++      .fd = fd,
++      .events = POLLIN,
++      .revents = 0
++    };
+ 
+-    timeout.tv_sec = 0;
+-    timeout.tv_usec = 100000;
+-
+-    FD_ZERO(&rfds);
+-    FD_SET(fd, &rfds);
+-
+-    return select(fd+1, &rfds, NULL, NULL, &timeout);
++    return poll(&fds, 1, 100);
  }
  
-+// static
-+std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateTabCapturer(
-+    const DesktopCaptureOptions& options) {
-+  std::unique_ptr<DesktopCapturer> capturer = CreateRawTabCapturer(options);
-+  if (capturer && options.detect_updated_region()) {
-+    capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
-+  }
-+
-+  return capturer;
-+}
-+
- #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
- bool DesktopCapturer::IsRunningUnderWayland() {
-   const char* xdg_session_type = getenv("XDG_SESSION_TYPE");
-diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
-index 558217badd..3fdcd2c5d0 100644
---- a/modules/desktop_capture/desktop_capturer.h
-+++ b/modules/desktop_capture/desktop_capturer.h
-@@ -176,6 +176,10 @@ class RTC_EXPORT DesktopCapturer {
-   static std::unique_ptr<DesktopCapturer> CreateScreenCapturer(
-       const DesktopCaptureOptions& options);
+ int DeviceInfoV4l2::HandleEvents(int fd)
+diff --git a/modules/video_capture/linux/video_capture_linux.cc b/modules/video_capture/linux/video_capture_linux.cc
+index 4895a1ab71..f3324a8e68 100644
+--- a/modules/video_capture/linux/video_capture_linux.cc
++++ b/modules/video_capture/linux/video_capture_linux.cc
+@@ -10,6 +10,7 @@
  
-+  // Creates a DesktopCapturer instance which targets to capture tab.
-+  static std::unique_ptr<DesktopCapturer> CreateTabCapturer(
-+      const DesktopCaptureOptions& options);
-+
- #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
-   static bool IsRunningUnderWayland();
+ #include <errno.h>
+ #include <fcntl.h>
++#include <poll.h>
+ #include <stdio.h>
+ #include <string.h>
+ #include <sys/ioctl.h>
+diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
+index 1dc13b01aa..b527a331e4 100644
+--- a/modules/video_capture/linux/video_capture_v4l2.cc
++++ b/modules/video_capture/linux/video_capture_v4l2.cc
+@@ -12,7 +12,7 @@
  
-@@ -201,6 +205,10 @@ class RTC_EXPORT DesktopCapturer {
-   // capture screens.
-   static std::unique_ptr<DesktopCapturer> CreateRawScreenCapturer(
-       const DesktopCaptureOptions& options);
-+
-+  // Creates a DesktopCapturer instance which targets to capture tabs
-+  static std::unique_ptr<DesktopCapturer> CreateRawTabCapturer(
-+      const DesktopCaptureOptions& options);
- };
+ #include <errno.h>
+ #include <fcntl.h>
+-#include <linux/videodev2.h>
++#include <poll.h>
+ #include <stdio.h>
+ #include <string.h>
+ #include <sys/ioctl.h>
+@@ -20,6 +20,14 @@
+ #include <sys/select.h>
+ #include <time.h>
+ #include <unistd.h>
++// v4l includes
++#if defined(__NetBSD__) || defined(__OpenBSD__) // WEBRTC_BSD
++#include <sys/videoio.h>
++#elif defined(__sun)
++#include <sys/videodev2.h>
++#else
++#include <linux/videodev2.h>
++#endif
  
- }  // namespace webrtc
+ #include <new>
+ #include <string>
+@@ -359,16 +367,13 @@ bool VideoCaptureModuleV4L2::CaptureStarted() {
+ 
+ bool VideoCaptureModuleV4L2::CaptureProcess() {
+   int retVal = 0;
+-  fd_set rSet;
+-  struct timeval timeout;
++  struct pollfd rSet;
+ 
+-  FD_ZERO(&rSet);
+-  FD_SET(_deviceFd, &rSet);
+-  timeout.tv_sec = 1;
+-  timeout.tv_usec = 0;
++  rSet.fd = _deviceFd;
++  rSet.events = POLLIN;
++  rSet.revents = 0;
+ 
+-  // _deviceFd written only in StartCapture, when this thread isn't running.
+-  retVal = select(_deviceFd + 1, &rSet, NULL, NULL, &timeout);
++  retVal = poll(&rSet, 1, 1000);
+ 
+   {
+     MutexLock lock(&capture_lock_);
+@@ -378,12 +383,12 @@ bool VideoCaptureModuleV4L2::CaptureProcess() {
+     }
+ 
+     if (retVal < 0 && errno != EINTR) {  // continue if interrupted
+-      // select failed
++      // poll failed
+       return false;
+     } else if (retVal == 0) {
+-      // select timed out
++      // poll timed out
+       return true;
+-    } else if (!FD_ISSET(_deviceFd, &rSet)) {
++    } else if (!(rSet.revents & POLLIN)) {
+       // not event on camera handle
+       return true;
+     }
 -- 
 2.34.1
 
