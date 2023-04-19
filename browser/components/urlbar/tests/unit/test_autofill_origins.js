@@ -342,9 +342,9 @@ add_task(async function groupByHost() {
     { uri: "https://mozilla.org/" },
   ]);
 
-  let httpFrec = frecencyForUrl("http://example.com/");
-  let httpsFrec = frecencyForUrl("https://example.com/");
-  let otherFrec = frecencyForUrl("https://mozilla.org/");
+  let httpFrec = await frecencyForUrl("http://example.com/");
+  let httpsFrec = await frecencyForUrl("https://example.com/");
+  let otherFrec = await frecencyForUrl("https://mozilla.org/");
   Assert.less(httpFrec, httpsFrec, "Sanity check");
   Assert.less(httpsFrec, otherFrec, "Sanity check");
 
@@ -407,9 +407,9 @@ add_task(async function groupByHostNonDefaultStddevMultiplier() {
     { uri: "https://mozilla.org/" },
   ]);
 
-  let httpFrec = frecencyForUrl("http://example.com/");
-  let httpsFrec = frecencyForUrl("https://example.com/");
-  let otherFrec = frecencyForUrl("https://mozilla.org/");
+  let httpFrec = await frecencyForUrl("http://example.com/");
+  let httpsFrec = await frecencyForUrl("https://example.com/");
+  let otherFrec = await frecencyForUrl("https://mozilla.org/");
   Assert.less(httpFrec, httpsFrec, "Sanity check");
   Assert.less(httpsFrec, otherFrec, "Sanity check");
 
