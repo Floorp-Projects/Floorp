@@ -6,8 +6,8 @@
 #include "GTestRunner.h"
 #include "gtest/gtest.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/FOG.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/glean/fog_ffi_generated.h"
 #include "nsICrashReporter.h"
 #include "nsString.h"
 #include "testing/TestHarness.h"
@@ -162,7 +162,7 @@ int RunGTestFunc(int* argc, char** argv) {
   // that these pings shouldn't actually be uploaded.
   Preferences::SetInt("telemetry.fog.test.localhost_port", -1);
   const nsCString empty;
-  glean::impl::fog_init(&empty, &empty);
+  RefPtr<FOG>(FOG::GetSingleton())->InitializeFOG(empty, empty);
 
   return RUN_ALL_TESTS();
 }
