@@ -758,19 +758,9 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
    * @param {object} event The event details.
    */
   handleEvent(event) {
-    const cancelCheck = () => {
-      if (this._waitForContentTimeout) {
-        lazy.clearTimeout(this._waitForContentTimeout);
-      }
-    };
-
-    const check = eventType => {
-      cancelCheck();
-      this._waitForContentTimeout = lazy.setTimeout(() => {
-        this._checkForAdLink(eventType);
-      }, ADLINK_CHECK_TIMEOUT_MS);
-    };
-
+    if (!this._getProviderInfoForUrl(this.document.documentURI)) {
+      return;
+    }
     switch (event.type) {
       case "pageshow": {
         // If a page is loaded from the bfcache, we won't get a "DOMContentLoaded"
@@ -778,12 +768,12 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
         // so that we remain consistent with the *.in-content:sap* count for the
         // SEARCH_COUNTS histogram.
         if (event.persisted) {
-          check(event.type);
+          this.#check(event.type);
         }
         break;
       }
       case "DOMContentLoaded": {
-        check(event.type);
+        this.#check(event.type);
         break;
       }
       case "load": {
@@ -792,13 +782,26 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
         // We still check at DOMContentLoaded because if the page hasn't
         // finished loading and the user navigates away, we still want to know
         // if there were ads on the page or not at that time.
-        check(event.type);
+        this.#check(event.type);
         break;
       }
-      case "unload": {
-        cancelCheck();
+      case "pagehide": {
+        this.#cancelCheck();
         break;
       }
     }
+  }
+
+  #cancelCheck() {
+    if (this._waitForContentTimeout) {
+      lazy.clearTimeout(this._waitForContentTimeout);
+    }
+  }
+
+  #check(eventType) {
+    this.#cancelCheck();
+    this._waitForContentTimeout = lazy.setTimeout(() => {
+      this._checkForAdLink(eventType);
+    }, ADLINK_CHECK_TIMEOUT_MS);
   }
 }
