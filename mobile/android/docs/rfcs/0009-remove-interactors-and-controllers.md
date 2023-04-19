@@ -49,7 +49,7 @@ This would address all the goals listed above:
 3. `State` management would happen within `Reducer`s and would still accomplish the usual goals around testability.
 4. Refactoring interactors/controllers to instead dispatch actions and react to state changes should be doable on a per-component basis.
 
-Additionally, there is tons of prior art discussing the benefits of a unidirectional data flow, including the [Redux documentation](https://redux.js.org/tutorials/fundamentals/part-2-concepts-data-flow).
+Additionally, there are tons of prior art discussing the benefits of a unidirectional data flow, including the [Redux documentation](https://redux.js.org/tutorials/fundamentals/part-2-concepts-data-flow).
 
 ## Reference-level explanation
 
@@ -157,7 +157,7 @@ class PocketCategoriesViewHolder(
 }
 ```
 
-Here, we already see a view registering Store observers appropriately. The only thing that would need to change is the line calling the interactor, `onCategoryClick = interactor::onCategoryClicked,`. Following this line leads down a similar chain of abstraction layers, and eventually leads to `DefaultPocketStoriesController::handleCategoryClicked`. This function contains business logic which would need to be moved to the reducer and telemetry side-effects that would need to be moved to a middleware, but the ultimate intent to to toggle the selected category. We skip many layers of indirection by dispatching that action directly from the view:
+Here, we already see a view registering Store observers appropriately. The only thing that would need to change is the line calling the interactor, `onCategoryClick = interactor::onCategoryClicked,`. Following this line leads down a similar chain of abstraction layers, and eventually leads to `DefaultPocketStoriesController::handleCategoryClicked`. This function contains business logic which would need to be moved to the reducer and telemetry side-effects that would need to be moved to a middleware, but the ultimate intent is to toggle the selected category. We skip many layers of indirection by dispatching that action directly from the view:
 
 ```kotlin
 class PocketCategoriesViewHolder(
@@ -187,6 +187,150 @@ class PocketCategoriesViewHolder(
 This should simplify the search for underlying logic by:
 - moving business logic into an expected and consistent component (the reducer)
 - moving side-effects into a consistent and centralized component (a middleware, which could even handle telemetry for the entire store)
+
+
+### Extending the example: separating state and side-effects
+
+To demonstrate the bullets above, here is the method definition in the `DefaultPocketStoriesController` that currently handles the business logic initiated from the `interactor::onCategoryClicked` call above. 
+
+```
+    override fun handleCategoryClick(categoryClicked: PocketRecommendedStoriesCategory) {
+        val initialCategoriesSelections = appStore.state.pocketStoriesCategoriesSelections
+
+        // First check whether the category is clicked to be deselected.
+        if (initialCategoriesSelections.map { it.name }.contains(categoryClicked.name)) {
+            appStore.dispatch(AppAction.DeselectPocketStoriesCategory(categoryClicked.name))
+            Pocket.homeRecsCategoryClicked.record(
+                Pocket.HomeRecsCategoryClickedExtra(
+                    categoryName = categoryClicked.name,
+                    newState = "deselected",
+                    selectedTotal = initialCategoriesSelections.size.toString(),
+                ),
+            )
+            return
+        }
+
+        // If a new category is clicked to be selected:
+        // Ensure the number of categories selected at a time is capped.
+        val oldestCategoryToDeselect =
+            if (initialCategoriesSelections.size == POCKET_CATEGORIES_SELECTED_AT_A_TIME_COUNT) {
+                initialCategoriesSelections.minByOrNull { it.selectionTimestamp }
+            } else {
+                null
+            }
+        oldestCategoryToDeselect?.let {
+            appStore.dispatch(AppAction.DeselectPocketStoriesCategory(it.name))
+        }
+
+        // Finally update the selection.
+        appStore.dispatch(AppAction.SelectPocketStoriesCategory(categoryClicked.name))
+
+        Pocket.homeRecsCategoryClicked.record(
+            Pocket.HomeRecsCategoryClickedExtra(
+                categoryName = categoryClicked.name,
+                newState = "selected",
+                selectedTotal = initialCategoriesSelections.size.toString(),
+            ),
+        )
+    }
+```
+
+If we break this down into a pseudocode algorithm, we get the following steps:
+1. Read the current state from the store
+2. If the category is being deselected
+    1. Dispatch an action to update the state
+    2. Record a metric that the category was deselected
+    3. Return early
+3. If the number of categories selected would be over max
+    1. Dispatch an action deselecting the oldest
+4. Dispatch an action with the newly selected category
+5. Record a metric that a category was selected
+
+In order to transform this algorithm into an appropriate usage of the Redux pattern, we can separate this list into two parts: steps that have side-effects and steps which can be represented by pure state updates. In this case, only the steps that record metrics represent side-effects. This will mean that those steps should be moved into a middleware, and the rest can be moved into a reducer.
+
+Here's how that might look:
+```kotlin
+// add a new AppAction
+data class TogglePocketStoriesCategory(val categoryName: String) : AppAction()
+
+// add a case to handle it in a middleware. For example, let's put the following in MetricsMiddleware:
+private fun handleAction(action: AppAction) = when (action) {
+    ...
+    is AppAction.TogglePocketStoriesCategory -> {
+        val currentCategoriesSelections = currentState.pocketStoriesCategoriesSelections.map { it.name }
+        // check if the category is being deselected
+        if (currentCategoriesSelections.contains(action.categoryName)) {
+            Pocket.homeRecsCategoryClicked.record(
+                Pocket.HomeRecsCategoryClickedExtra(
+                    categoryName = action.categoryName,
+                    newState = "deselected",
+                    selectedTotal = currentCategoriesSelections.size.toString(),
+                ),
+            )
+        } else {
+            Pocket.homeRecsCategoryClicked.record(
+                Pocket.HomeRecsCategoryClickedExtra(
+                    categoryName = action.categoryName,
+                    newState = "selected",
+                    selectedTotal = currentCategoriesSelections.size.toString(),
+                ),
+            )
+        }
+    }
+}
+
+
+// finally, we can shift all the state updating logic into the reducer
+fun reduce(state: AppState, action: AppAction): AppState = when (action) {
+    ...
+    is AppAction.TogglePocketStoriesCategory -> {
+        val currentCategoriesSelections = state.pocketStoriesCategoriesSelections.map { it.name }
+        val updatedCategoriesState = when {
+            currentCategoriesSelections.contains(action.categoryName) -> {
+                state.copy(
+                    pocketStoriesCategoriesSelections = state.pocketStoriesCategoriesSelections.filterNot {
+                        it.name == action.categoryName
+                    },
+                )
+            }
+            currentCategoriesSelections.size == POCKET_CATEGORIES_SELECTED_AT_A_TIME_COUNT -> {
+                state.copy(
+                    pocketStoriesCategoriesSelections = state.pocketStoriesCategoriesSelections
+                        .minusOldest()
+                        .plus(
+                            PocketRecommendedStoriesSelectedCategory(
+                                name = action.categoryName,
+                            )
+                        ),
+                )
+            }
+            else -> {
+                state.copy(
+                    pocketStoriesCategoriesSelections =
+                    state.pocketStoriesCategoriesSelections +
+                            PocketRecommendedStoriesSelectedCategory(action.categoryName)
+                )
+            }
+        }
+        // Selecting a category means the stories to be displayed needs to also be changed.
+        updatedCategoriesState.copy(
+            pocketStories = updatedCategoriesState.getFilteredStories(),
+        )
+    }
+}
+```
+
+### Interacting with the storage layer through middlewares
+
+What if a feature requires some async data for its initial state, or needs to write changes to disk? There are no restrictions on running impure methods in middleware, so we can respond to an actions that would imply changes to the storage layer from middlewares. A good example is [ContainerMiddleware](../../android-components/components/feature/containers/src/main/java/mozilla/components/feature/containers/ContainerMiddleware.kt)
+
+Note that the `InitAction` here subscribes to a `Flow` from the database, which will continue to collect updates from the storage layer and dispatch actions to change the state accordingly.
+
+
+Overall, this should convey the following improvements
+- All state updates are guaranteed to be pure and in a single component, allowing for easy testing and reproduction
+- All side-effects are logically grouped into middlewares, allowing for testing strategies specific to the type of side-effect
+- Several indirect abstraction layers are removed, minimizing mental model of code
 
 ## Drawbacks
 
