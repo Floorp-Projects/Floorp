@@ -42,11 +42,8 @@
  *      usedTags:         All used tags from within the extension sorted by recency
  */
 
-var EXPORTED_SYMBOLS = ["pktApi"];
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   IndexedDB: "resource://gre/modules/IndexedDB.sys.mjs",
@@ -86,7 +83,7 @@ function getDatabase() {
   return databasePromise;
 }
 
-var pktApi = (function() {
+export var pktApi = (function() {
   /**
    * Configuration
    */

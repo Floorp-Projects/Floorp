@@ -4,11 +4,11 @@
 
 browser.jar:
 % content pocket %content/pocket/ contentaccessible=yes
-  content/pocket/pktApi.jsm (content/pktApi.jsm)
-  content/pocket/pktTelemetry.jsm (content/pktTelemetry.jsm)
+  content/pocket/pktApi.sys.mjs (content/pktApi.sys.mjs)
+  content/pocket/pktTelemetry.sys.mjs (content/pktTelemetry.sys.mjs)
   content/pocket/pktUI.js (content/pktUI.js)
-  content/pocket/Pocket.jsm (content/Pocket.jsm)
-  content/pocket/SaveToPocket.jsm (content/SaveToPocket.jsm)
+  content/pocket/Pocket.sys.mjs (content/Pocket.sys.mjs)
+  content/pocket/SaveToPocket.sys.mjs (content/SaveToPocket.sys.mjs)
   content/pocket/panels/css (content/panels/css/*)
   content/pocket/panels/fonts (content/panels/fonts/*)
   content/pocket/panels/img (content/panels/img/*)
