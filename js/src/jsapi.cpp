@@ -4183,6 +4183,9 @@ JS_PUBLIC_API void JS_SetGlobalJitCompilerOption(JSContext* cx,
     case JSJITCOMPILER_NATIVE_REGEXP_ENABLE:
       jit::JitOptions.nativeRegExp = !!value;
       break;
+    case JSJITCOMPILER_JIT_HINTS_ENABLE:
+      jit::JitOptions.disableJitHints = !value;
+      break;
     case JSJITCOMPILER_OFFTHREAD_COMPILATION_ENABLE:
       if (value == 1) {
         rt->setOffthreadIonCompilationEnabled(true);
