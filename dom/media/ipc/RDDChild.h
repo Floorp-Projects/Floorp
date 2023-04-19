@@ -30,8 +30,9 @@ class RDDChild final : public PRDDChild,
   typedef mozilla::dom::MemoryReportRequestHost MemoryReportRequestHost;
 
  public:
+  NS_INLINE_DECL_REFCOUNTING(RDDChild, final)
+
   explicit RDDChild(RDDProcessHost* aHost);
-  ~RDDChild();
 
   bool Init();
 
@@ -68,9 +69,11 @@ class RDDChild final : public PRDDChild,
                                const bool& aMinimizeMemoryUsage,
                                const Maybe<ipc::FileDescriptor>& aDMDFile);
 
-  static void Destroy(UniquePtr<RDDChild>&& aChild);
+  static void Destroy(RefPtr<RDDChild>&& aChild);
 
  private:
+  ~RDDChild();
+
   RDDProcessHost* mHost;
   UniquePtr<MemoryReportRequestHost> mMemoryReportRequest;
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)

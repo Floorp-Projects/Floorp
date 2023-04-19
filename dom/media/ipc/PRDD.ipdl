@@ -40,7 +40,7 @@ namespace mozilla {
 // (RemoteDataDecoder) process. There is one instance of this protocol,
 // with the RDDParent living on the main thread of the RDD process and
 // the RDDChild living on the main thread of the UI process.
-[ManualDealloc, NeedsOtherPid]
+[NeedsOtherPid]
 protocol PRDD
 {
 parent:

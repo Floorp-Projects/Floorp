@@ -129,7 +129,7 @@ class RDDProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
   enum class LaunchPhase { Unlaunched, Waiting, Complete };
   LaunchPhase mLaunchPhase = LaunchPhase::Unlaunched;
 
-  UniquePtr<RDDChild> mRDDChild;
+  RefPtr<RDDChild> mRDDChild;
   uint64_t mProcessToken = 0;
 
   UniquePtr<ipc::SharedPreferenceSerializer> mPrefSerializer;
