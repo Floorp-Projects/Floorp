@@ -73,7 +73,6 @@ GMPParent::GMPParent()
       mCanDecrypt(false),
       mGMPContentChildCount(0),
       mChildPid(0),
-      mHoldingSelfRef(false),
 #ifdef ALLOW_GECKO_CHILD_PROCESS_ARCH
       mChildLaunchArch(base::PROCESS_ARCH_INVALID),
 #endif
@@ -400,13 +399,6 @@ nsresult GMPParent::LoadProcess() {
 
   mState = GMPStateLoaded;
 
-  // Hold a self ref while the child process is alive. This ensures that
-  // during shutdown the GMPParent stays alive long enough to
-  // terminate the child process.
-  MOZ_ASSERT(!mHoldingSelfRef);
-  mHoldingSelfRef = true;
-  AddRef();
-
   return NS_OK;
 }
 
@@ -568,11 +560,6 @@ void GMPParent::DeleteProcess() {
   nsCOMPtr<nsIRunnable> r =
       new NotifyGMPShutdownTask(NS_ConvertUTF8toUTF16(mNodeId));
   mMainThread->Dispatch(r.forget());
-
-  if (mHoldingSelfRef) {
-    Release();
-    mHoldingSelfRef = false;
-  }
 }
 
 GMPState GMPParent::State() const { return mState; }

@@ -17,7 +17,7 @@ using mozilla::dom::NativeThreadId from "mozilla/dom/NativeThreadId.h";
 namespace mozilla {
 namespace gmp {
 
-[ManualDealloc, NeedsOtherPid, NestedUpTo=inside_sync, ChildImpl="GMPChild", ParentImpl="GMPParent"]
+[NeedsOtherPid, NestedUpTo=inside_sync, ChildImpl="GMPChild", ParentImpl="GMPParent"]
 sync protocol PGMP
 {
   manages PGMPTimer;
