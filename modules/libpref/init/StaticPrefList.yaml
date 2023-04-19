@@ -13621,7 +13621,7 @@
 # WebAuthn CTAP2 support
 - name: security.webauthn.ctap2
   type: RelaxedAtomicBool
-  value: true
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # Dispatch WebAuthn requests to the software CTAP1 token.
