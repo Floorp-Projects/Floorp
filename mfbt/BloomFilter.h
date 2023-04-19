@@ -136,7 +136,7 @@ class BitBloomFilter {
 
  private:
   static const size_t kArraySize = (1 << (KeySize - 3));
-  static const uint32_t kKeyMask = (1 << (KeySize - 3)) - 1;
+  static const uint32_t kKeyMask = (1 << KeySize) - 1;
   static const uint32_t kKeyShift = 16;
 
   static uint32_t hash1(uint32_t aHash) { return aHash & kKeyMask; }
