@@ -60,8 +60,6 @@ Please note that some targeting attributes require stricter controls on the tele
 * [isBackgroundTaskMode](#isbackgroundtaskmode)
 * [backgroundTaskName](#backgroundtaskname)
 * [userPrefersReducedMotion](#userprefersreducedmotion)
-* [colorwaysActive](#colorwaysactive)
-* [userEnabledActiveColorway](#userenabledactivecolorway)
 * [inMr2022Holdback](#inmr2022holdback)
 * [distributionId](#distributionid)
 * [fxViewButtonAreaType](#fxviewbuttonareatype)
@@ -936,14 +934,6 @@ mode, or `null` if this invocation is not running in background task mode.
 ### `userPrefersReducedMotion`
 
 Checks if user prefers reduced motion as indicated by the value of a media query for `prefers-reduced-motion`.
-
-### `colorwaysActive`
-
-A boolean. `true` when there are Colorways available.
-
-### `userEnabledActiveColorway`
-
-A boolean. `true` when user has an active Colorway theme enabled.
 
 ### `inMr2022Holdback`
 

@@ -23,7 +23,6 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AttributionCode: "resource:///modules/AttributionCode.sys.mjs",
-  BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
   ClientEnvironment: "resource://normandy/lib/ClientEnvironment.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
@@ -858,32 +857,7 @@ const TargetingGetters = {
     let window = Services.appShell.hiddenDOMWindow;
     return window?.matchMedia("(prefers-reduced-motion: reduce)")?.matches;
   },
-  /**
-   * Is there an active Colorway collection?
-   * @return {boolean} `true` if an active collection exists.
-   */
-  get colorwaysActive() {
-    return !!lazy.BuiltInThemes.findActiveColorwayCollection();
-  },
-  /**
-   * Has the user enabled an active Colorway as their theme?
-   * @return {boolean} `true` if an active theme from the current
-   * collection is enabled.
-   */
-  get userEnabledActiveColorway() {
-    let bts = Cc["@mozilla.org/backgroundtasks;1"]?.getService(
-      Ci.nsIBackgroundTasks
-    );
-    if (bts?.isBackgroundTaskMode) {
-      return Promise.resolve(false);
-    }
-    return QueryCache.getters.currentThemes.get().then(themes => {
-      let themeId = themes.find(theme => theme.isActive)?.id;
-      return !!(
-        themeId && lazy.BuiltInThemes.isColorwayFromCurrentCollection(themeId)
-      );
-    });
-  },
+
   /**
    * Whether or not the user is in the Major Release 2022 holdback study.
    */
@@ -892,6 +866,7 @@ const TargetingGetters = {
       lazy.NimbusFeatures.majorRelease2022.getVariable("onboarding") === false
     );
   },
+
   /**
    * The distribution id, if any.
    * @return {string}

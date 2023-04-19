@@ -485,25 +485,6 @@ export function _applyColorwayConfig(collections) {
       });
     }
   }
-  BuiltInThemeConfig.findActiveColorwayCollection = (now = new Date()) => {
-    let collection = null;
-    let start = 0;
-    let end = collectionsSorted.length - 1;
-    while (start <= end) {
-      const mid = Math.floor((start + end) / 2);
-      const c = collectionsSorted[mid];
-      const diff = c.expiry - now;
-      if (diff < 0) {
-        // collection expired, look for newer one
-        start = mid + 1;
-      } else {
-        // collection not expired, check for older one
-        collection = c;
-        end = mid - 1;
-      }
-    }
-    return collection;
-  };
 }
 
 _applyColorwayConfig(ColorwayCollections);

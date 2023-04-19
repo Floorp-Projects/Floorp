@@ -71,15 +71,6 @@ class _BuiltInThemes {
   }
 
   /**
-   * @param {string} id An addon's id string.
-   * @return {boolean}
-   *   True if the theme with id `id` is a monochromatic theme.
-   */
-  isMonochromaticTheme(id) {
-    return id.endsWith("-colorway@mozilla.org");
-  }
-
-  /**
    * If the active theme is built-in, this function calls
    * AddonManager.maybeInstallBuiltinAddon for that theme.
    */
@@ -108,8 +99,6 @@ class _BuiltInThemes {
     installPromises.push(this._uninstallExpiredThemes());
 
     const now = new Date();
-    this.monochromaticSortIndices = new Map();
-    let monochromaticSortIndex = 0;
     for (let [id, themeInfo] of this.builtInThemeMap.entries()) {
       if (
         !themeInfo.expiry ||
@@ -123,12 +112,6 @@ class _BuiltInThemes {
             themeInfo.path
           )
         );
-        if (this.isMonochromaticTheme(id)) {
-          // Monochromatic themes get sorted in the UI according to their
-          // position in the config, implied by this loop over
-          // builtInThemeMap.entries().
-          this.monochromaticSortIndices.set(id, monochromaticSortIndex++);
-        }
       }
     }
 
@@ -267,27 +250,6 @@ class _BuiltInThemes {
         JSON.stringify(retainedThemes)
       );
     }
-  }
-
-  /**
-   * Finds the active colorway collection.
-   * @return {object}
-   *   Colorway Collection
-   */
-  findActiveColorwayCollection() {
-    return this.builtInThemeMap.findActiveColorwayCollection();
-  }
-
-  /**
-   * @return {boolean}
-   *   Whether a specific theme is part of the currently active colorway
-   *   collection.
-   */
-  isColorwayFromCurrentCollection(id) {
-    let collection = this.findActiveColorwayCollection();
-    return (
-      collection && this.builtInThemeMap.get(id)?.collection == collection.id
-    );
   }
 
   /**

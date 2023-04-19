@@ -20,10 +20,6 @@ BROWSER_CHROME_MANIFESTS += [
     "test/browser/browser.ini",
 ]
 
-XPCSHELL_TESTS_MANIFESTS += [
-    "test/xpcshell/xpcshell.ini",
-]
-
 toolkit = CONFIG["MOZ_WIDGET_TOOLKIT"]
 
 if toolkit == "windows":
