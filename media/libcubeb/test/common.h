@@ -28,7 +28,7 @@ ARRAY_LENGTH(T(&)[N])
   return N;
 }
 
-inline void delay(unsigned int ms)
+void delay(unsigned int ms)
 {
 #if defined(_WIN32)
   Sleep(ms);
@@ -48,7 +48,7 @@ typedef struct {
   uint32_t const layout;
 } layout_info;
 
-inline int has_available_input_device(cubeb * ctx)
+int has_available_input_device(cubeb * ctx)
 {
   cubeb_device_collection devices;
   int input_device_available = 0;
@@ -80,7 +80,7 @@ inline int has_available_input_device(cubeb * ctx)
   return !!input_device_available;
 }
 
-inline void print_log(const char * msg, ...)
+void print_log(const char * msg, ...)
 {
   va_list args;
   va_start(args, msg);
@@ -91,7 +91,7 @@ inline void print_log(const char * msg, ...)
 /** Initialize cubeb with backend override.
  *  Create call cubeb_init passing value for CUBEB_BACKEND env var as
  *  override. */
-inline int common_init(cubeb ** ctx, char const * ctx_name)
+int common_init(cubeb ** ctx, char const * ctx_name)
 {
 #ifdef ENABLE_NORMAL_LOG
   if (cubeb_set_log_callback(CUBEB_LOG_NORMAL, print_log) != CUBEB_OK) {

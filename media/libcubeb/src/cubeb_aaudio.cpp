@@ -11,13 +11,14 @@
 #include "cubeb_resampler.h"
 #include "cubeb_triple_buffer.h"
 #include <aaudio/AAudio.h>
-#include <android/api-level.h>
 #include <atomic>
 #include <cassert>
 #include <chrono>
 #include <condition_variable>
+#include <cstdint>
 #include <cstring>
 #include <dlfcn.h>
+#include <inttypes.h>
 #include <memory>
 #include <mutex>
 #include <thread>
@@ -101,6 +102,7 @@ LIBAAUDIO_API_VISIT(MAKE_TYPEDEF)
 #endif
 
 const uint8_t MAX_STREAMS = 16;
+const int64_t NS_PER_S = static_cast<int64_t>(1e9);
 
 using unique_lock = std::unique_lock<std::mutex>;
 using lock_guard = std::lock_guard<std::mutex>;
@@ -135,6 +137,7 @@ struct cubeb_stream {
   std::atomic<bool> in_use{false};
   std::atomic<bool> latency_metrics_available{false};
   std::atomic<stream_state> state{stream_state::INIT};
+  std::atomic<bool> in_data_callback{false};
   triple_buffer<AAudioTimingInfo> timing_info;
 
   AAudioStream * ostream{};
@@ -180,9 +183,47 @@ struct cubeb {
   struct cubeb_stream streams[MAX_STREAMS];
 };
 
+struct AutoInCallback {
+  AutoInCallback(cubeb_stream * stm) : stm(stm)
+  {
+    stm->in_data_callback.store(true);
+  }
+  ~AutoInCallback() { stm->in_data_callback.store(false); }
+  cubeb_stream * stm;
+};
+
+// Returns when aaudio_stream's state is equal to desired_state.
+// poll_frequency_ns is the duration that is slept in between asking for
+// state updates and getting the new state.
+// When waiting for a stream to stop, it is best to pick a value similar
+// to the callback time because STOPPED will happen after
+// draining.
+static int
+wait_for_state_change(AAudioStream * aaudio_stream,
+                      aaudio_stream_state_t desired_state,
+                      int64_t poll_frequency_ns)
+{
+  aaudio_stream_state_t new_state;
+  do {
+    aaudio_result_t res = WRAP(AAudioStream_waitForStateChange)(
+        aaudio_stream, AAUDIO_STREAM_STATE_UNKNOWN, &new_state,
+        poll_frequency_ns);
+    if (res != AAUDIO_OK) {
+      LOG("AAudioStream_waitForStateChanged: %s",
+          WRAP(AAudio_convertResultToText)(res));
+      return CUBEB_ERROR;
+    }
+  } while (new_state != desired_state);
+
+  LOG("wait_for_state_change: current state now: %s",
+      cubeb_AAudio_convertStreamStateToText(new_state));
+
+  return CUBEB_OK;
+}
+
 // Only allowed from state thread, while mutex on stm is locked
 static void
-shutdown(cubeb_stream * stm)
+shutdown_with_error(cubeb_stream * stm)
 {
   if (stm->istream) {
     WRAP(AAudioStream_requestStop)(stm->istream);
@@ -191,6 +232,17 @@ shutdown(cubeb_stream * stm)
     WRAP(AAudioStream_requestStop)(stm->ostream);
   }
 
+  int64_t poll_frequency_ns = NS_PER_S * stm->out_frame_size / stm->sample_rate;
+  if (stm->istream) {
+    wait_for_state_change(stm->istream, AAUDIO_STREAM_STATE_STOPPED,
+                          poll_frequency_ns);
+  }
+  if (stm->ostream) {
+    wait_for_state_change(stm->ostream, AAUDIO_STREAM_STATE_STOPPED,
+                          poll_frequency_ns);
+  }
+
+  assert(!stm->in_data_callback.load());
   stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_ERROR);
   stm->state.store(stream_state::SHUTDOWN);
 }
@@ -248,7 +300,7 @@ update_state(cubeb_stream * stm)
     }
 
     if (old_state == stream_state::ERROR) {
-      shutdown(stm);
+      shutdown_with_error(stm);
       return;
     }
 
@@ -293,7 +345,7 @@ update_state(cubeb_stream * stm)
         istate == AAUDIO_STREAM_STATE_DISCONNECTED) {
       LOG("Unexpected android input stream state %s",
           WRAP(AAudio_convertStreamStateToText)(istate));
-      shutdown(stm);
+      shutdown_with_error(stm);
       return;
     }
 
@@ -305,7 +357,7 @@ update_state(cubeb_stream * stm)
         ostate == AAUDIO_STREAM_STATE_DISCONNECTED) {
       LOG("Unexpected android output stream state %s",
           WRAP(AAudio_convertStreamStateToText)(istate));
-      shutdown(stm);
+      shutdown_with_error(stm);
       return;
     }
 
@@ -612,6 +664,7 @@ aaudio_duplex_data_cb(AAudioStream * astream, void * user_data,
                       void * audio_data, int32_t num_frames)
 {
   cubeb_stream * stm = (cubeb_stream *)user_data;
+  AutoInCallback aic(stm);
   assert(stm->ostream == astream);
   assert(stm->istream);
   assert(num_frames >= 0);
@@ -693,6 +746,7 @@ aaudio_output_data_cb(AAudioStream * astream, void * user_data,
                       void * audio_data, int32_t num_frames)
 {
   cubeb_stream * stm = (cubeb_stream *)user_data;
+  AutoInCallback aic(stm);
   assert(stm->ostream == astream);
   assert(!stm->istream);
   assert(num_frames >= 0);
@@ -741,6 +795,7 @@ aaudio_input_data_cb(AAudioStream * astream, void * user_data,
                      void * audio_data, int32_t num_frames)
 {
   cubeb_stream * stm = (cubeb_stream *)user_data;
+  AutoInCallback aic(stm);
   assert(stm->istream == astream);
   assert(!stm->ostream);
   assert(num_frames >= 0);
@@ -1207,8 +1262,8 @@ aaudio_stream_start(cubeb_stream * stm)
       break;
 
     // If the state switched [DRAINING -> STOPPING] or [DRAINING/STOPPING ->
-    // STOPPED] in the meantime, we can simply overwrite that since we restarted
-    // the stream.
+    // STOPPED] in the meantime, we can simply overwrite that since we
+    // restarted the stream.
     case stream_state::STOPPING:
     case stream_state::STOPPED:
       continue;
@@ -1386,7 +1441,7 @@ aaudio_stream_get_position(cubeb_stream * stm, uint64_t * position)
     stm->previous_clock = *position;
   }
 
-  LOG("aaudio_stream_get_position: %ld", *position);
+  LOG("aaudio_stream_get_position: %" PRIu64 " frames", *position);
 
   return CUBEB_OK;
 }
@@ -1550,9 +1605,6 @@ const static struct cubeb_ops aaudio_ops = {
 extern "C" /*static*/ int
 aaudio_init(cubeb ** context, char const * /* context_name */)
 {
-  if (android_get_device_api_level() <= 30) {
-    return CUBEB_ERROR;
-  }
   // load api
   void * libaaudio = NULL;
 #ifndef DISABLE_LIBAAUDIO_DLOPEN
