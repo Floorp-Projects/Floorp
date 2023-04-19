@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::consts::PARAMETER_SIZE;
+use crate::ctap2::client_data::ClientDataHash;
 use crate::ctap2::commands::client_pin::{
     ChangeExistingPin, Pin, PinError, PinUvAuthTokenPermission, SetNewPin,
 };
@@ -12,7 +13,9 @@ use crate::ctap2::commands::reset::Reset;
 use crate::ctap2::commands::{
     repackage_pin_errors, CommandError, PinUvAuthCommand, PinUvAuthResult, Request, StatusCode,
 };
-use crate::ctap2::server::{RelyingParty, RelyingPartyWrapper};
+use crate::ctap2::server::{
+    PublicKeyCredentialDescriptor, RelyingParty, RelyingPartyWrapper, RpIdHash,
+};
 use crate::errors::{self, AuthenticatorError, UnsupportedOption};
 use crate::statecallback::StateCallback;
 use crate::transport::device_selector::{
@@ -22,7 +25,10 @@ use crate::transport::platform::transaction::Transaction;
 use crate::transport::{errors::HIDError, hid::HIDDevice, FidoDevice, Nonce};
 use crate::u2fprotocol::{u2f_init_device, u2f_is_keyhandle_valid, u2f_register, u2f_sign};
 use crate::u2ftypes::U2FDevice;
-use crate::{send_status, RegisterResult, SignResult, StatusPinUv, StatusUpdate};
+use crate::{
+    send_status, AuthenticatorTransports, KeyHandle, RegisterFlags, RegisterResult, SignFlags,
+    SignResult, StatusPinUv, StatusUpdate,
+};
 use std::sync::mpsc::{channel, Sender};
 use std::thread;
 use std::time::Duration;
@@ -62,246 +68,6 @@ pub struct StateMachine {
 }
 
 impl StateMachine {
-    pub fn new() -> Self {
-        Default::default()
-    }
-
-    pub fn register(
-        &mut self,
-        flags: crate::RegisterFlags,
-        timeout: u64,
-        challenge: Vec<u8>,
-        application: crate::AppId,
-        key_handles: Vec<crate::KeyHandle>,
-        status: Sender<crate::StatusUpdate>,
-        callback: StateCallback<crate::Result<crate::RegisterResult>>,
-    ) {
-        // Abort any prior register/sign calls.
-        self.cancel();
-
-        let cbc = callback.clone();
-
-        let transaction = Transaction::new(
-            timeout,
-            cbc.clone(),
-            status,
-            move |info, _, status, alive| {
-                // Create a new device.
-                let dev = &mut match Device::new(info) {
-                    Ok(dev) => dev,
-                    _ => return,
-                };
-
-                // Try initializing it.
-                if !dev.is_u2f() || !u2f_init_device(dev) {
-                    return;
-                }
-
-                // We currently support none of the authenticator selection
-                // criteria because we can't ask tokens whether they do support
-                // those features. If flags are set, ignore all tokens for now.
-                //
-                // Technically, this is a ConstraintError because we shouldn't talk
-                // to this authenticator in the first place. But the result is the
-                // same anyway.
-                if !flags.is_empty() {
-                    return;
-                }
-
-                send_status(
-                    &status,
-                    crate::StatusUpdate::DeviceAvailable {
-                        dev_info: dev.get_device_info(),
-                    },
-                );
-
-                // Iterate the exclude list and see if there are any matches.
-                // If so, we'll keep polling the device anyway to test for user
-                // consent, to be consistent with CTAP2 device behavior.
-                let excluded = key_handles.iter().any(|key_handle| {
-                    is_valid_transport(key_handle.transports)
-                        && u2f_is_keyhandle_valid(
-                            dev,
-                            &challenge,
-                            &application,
-                            &key_handle.credential,
-                        )
-                        .unwrap_or(false) /* no match on failure */
-                });
-
-                while alive() {
-                    if excluded {
-                        let blank = vec![0u8; PARAMETER_SIZE];
-                        if u2f_register(dev, &blank, &blank).is_ok() {
-                            callback.call(Err(errors::AuthenticatorError::U2FToken(
-                                errors::U2FTokenError::InvalidState,
-                            )));
-                            break;
-                        }
-                    } else if let Ok(bytes) = u2f_register(dev, &challenge, &application) {
-                        let dev_info = dev.get_device_info();
-                        send_status(
-                            &status,
-                            crate::StatusUpdate::Success {
-                                dev_info: dev.get_device_info(),
-                            },
-                        );
-                        callback.call(Ok(RegisterResult::CTAP1(bytes, dev_info)));
-                        break;
-                    }
-
-                    // Sleep a bit before trying again.
-                    thread::sleep(Duration::from_millis(100));
-                }
-
-                send_status(
-                    &status,
-                    crate::StatusUpdate::DeviceUnavailable {
-                        dev_info: dev.get_device_info(),
-                    },
-                );
-            },
-        );
-
-        self.transaction = Some(try_or!(transaction, |e| cbc.call(Err(e))));
-    }
-
-    pub fn sign(
-        &mut self,
-        flags: crate::SignFlags,
-        timeout: u64,
-        challenge: Vec<u8>,
-        app_ids: Vec<crate::AppId>,
-        key_handles: Vec<crate::KeyHandle>,
-        status: Sender<crate::StatusUpdate>,
-        callback: StateCallback<crate::Result<crate::SignResult>>,
-    ) {
-        // Abort any prior register/sign calls.
-        self.cancel();
-
-        let cbc = callback.clone();
-
-        let transaction = Transaction::new(
-            timeout,
-            cbc.clone(),
-            status,
-            move |info, _, status, alive| {
-                // Create a new device.
-                let dev = &mut match Device::new(info) {
-                    Ok(dev) => dev,
-                    _ => return,
-                };
-
-                // Try initializing it.
-                if !dev.is_u2f() || !u2f_init_device(dev) {
-                    return;
-                }
-
-                // We currently don't support user verification because we can't
-                // ask tokens whether they do support that. If the flag is set,
-                // ignore all tokens for now.
-                //
-                // Technically, this is a ConstraintError because we shouldn't talk
-                // to this authenticator in the first place. But the result is the
-                // same anyway.
-                if !flags.is_empty() {
-                    return;
-                }
-
-                // For each appId, try all key handles. If there's at least one
-                // valid key handle for an appId, we'll use that appId below.
-                let (app_id, valid_handles) =
-                    find_valid_key_handles(&app_ids, &key_handles, |app_id, key_handle| {
-                        u2f_is_keyhandle_valid(dev, &challenge, app_id, &key_handle.credential)
-                            .unwrap_or(false) /* no match on failure */
-                    });
-
-                // Aggregate distinct transports from all given credentials.
-                let transports = key_handles
-                    .iter()
-                    .fold(crate::AuthenticatorTransports::empty(), |t, k| {
-                        t | k.transports
-                    });
-
-                // We currently only support USB. If the RP specifies transports
-                // and doesn't include USB it's probably lying.
-                if !is_valid_transport(transports) {
-                    return;
-                }
-
-                send_status(
-                    &status,
-                    crate::StatusUpdate::DeviceAvailable {
-                        dev_info: dev.get_device_info(),
-                    },
-                );
-
-                'outer: while alive() {
-                    // If the device matches none of the given key handles
-                    // then just make it blink with bogus data.
-                    if valid_handles.is_empty() {
-                        let blank = vec![0u8; PARAMETER_SIZE];
-                        if u2f_register(dev, &blank, &blank).is_ok() {
-                            callback.call(Err(errors::AuthenticatorError::U2FToken(
-                                errors::U2FTokenError::InvalidState,
-                            )));
-                            break;
-                        }
-                    } else {
-                        // Otherwise, try to sign.
-                        for key_handle in &valid_handles {
-                            if let Ok(bytes) =
-                                u2f_sign(dev, &challenge, app_id, &key_handle.credential)
-                            {
-                                let dev_info = dev.get_device_info();
-                                send_status(
-                                    &status,
-                                    crate::StatusUpdate::Success {
-                                        dev_info: dev.get_device_info(),
-                                    },
-                                );
-                                callback.call(Ok(SignResult::CTAP1(
-                                    app_id.clone(),
-                                    key_handle.credential.clone(),
-                                    bytes,
-                                    dev_info,
-                                )));
-                                break 'outer;
-                            }
-                        }
-                    }
-
-                    // Sleep a bit before trying again.
-                    thread::sleep(Duration::from_millis(100));
-                }
-
-                send_status(
-                    &status,
-                    crate::StatusUpdate::DeviceUnavailable {
-                        dev_info: dev.get_device_info(),
-                    },
-                );
-            },
-        );
-
-        self.transaction = Some(try_or!(transaction, |e| cbc.call(Err(e))));
-    }
-
-    // This blocks.
-    pub fn cancel(&mut self) {
-        if let Some(mut transaction) = self.transaction.take() {
-            transaction.cancel();
-        }
-    }
-}
-
-#[derive(Default)]
-// TODO(MS): To be renamed to `StateMachine` once U2FManager and the original StateMachine can be removed.
-pub struct StateMachineCtap2 {
-    transaction: Option<Transaction>,
-}
-
-impl StateMachineCtap2 {
     pub fn new() -> Self {
         Default::default()
     }
@@ -445,11 +211,18 @@ impl StateMachineCtap2 {
         let supports_pin = info.options.client_pin.is_some();
         let pin_configured = info.options.client_pin == Some(true);
 
+        // Check if the combination of device-protection and request-options
+        // are allowing for 'discouraged', meaning no auth required.
+        if cmd.can_skip_user_verification(info) {
+            return Ok(PinUvAuthResult::NoAuthRequired);
+        }
+
         // Device does not support any auth-method
         if !pin_configured && !supports_uv {
             // We'll send it to the device anyways, and let it error out (or magically work)
             return Ok(PinUvAuthResult::NoAuthTypeSupported);
         }
+
         let (res, pin_auth_token) = if info.options.pin_uv_auth_token == Some(true) {
             if !skip_uv && supports_uv {
                 // CTAP 2.1 - UV
@@ -481,7 +254,9 @@ impl StateMachineCtap2 {
 
                 // We may need the shared secret for HMAC-extension, so we
                 // have to establish one
-                let _shared_secret = dev.establish_shared_secret()?;
+                if info.supports_hmac_secret() {
+                    let _shared_secret = dev.establish_shared_secret()?;
+                }
                 return Ok(PinUvAuthResult::UsingInternalUv);
             }
 
@@ -518,19 +293,9 @@ impl StateMachineCtap2 {
         // Starting from a blank slate.
         cmd.set_pin_uv_auth_param(None).map_err(|_| ())?;
 
-        if !cmd.is_ctap2_request() {
-            return Ok(PinUvAuthResult::RequestIsCtap1);
-        }
-
         // CTAP1/U2F-only devices do not support PinUvAuth, so we skip it
         if !dev.supports_ctap2() {
             return Ok(PinUvAuthResult::DeviceIsCtap1);
-        }
-
-        // TODO: API needs a better way to express "uv = discouraged"
-        if cmd.get_uv_option() == Some(false) {
-            cmd.set_discouraged_uv_option();
-            return Ok(PinUvAuthResult::NoAuthRequired);
         }
 
         while alive() {
@@ -617,6 +382,38 @@ impl StateMachineCtap2 {
         status: Sender<crate::StatusUpdate>,
         callback: StateCallback<crate::Result<crate::RegisterResult>>,
     ) {
+        if params.use_ctap1_fallback {
+            /* Firefox uses this when security.webauthn.ctap2 is false. */
+            let mut flags = RegisterFlags::empty();
+            if params.options.resident_key == Some(true) {
+                flags |= RegisterFlags::REQUIRE_RESIDENT_KEY;
+            }
+            if params.options.user_verification == Some(true) {
+                flags |= RegisterFlags::REQUIRE_USER_VERIFICATION;
+            }
+            let application = params.rp.hash().0.to_vec();
+            let key_handles = params
+                .exclude_list
+                .iter()
+                .map(|cred_desc| KeyHandle {
+                    credential: cred_desc.id.clone(),
+                    transports: AuthenticatorTransports::empty(),
+                })
+                .collect();
+            let challenge = params.client_data_hash;
+
+            self.legacy_register(
+                flags,
+                timeout,
+                challenge,
+                application,
+                key_handles,
+                status,
+                callback,
+            );
+            return;
+        }
+
         // Abort any prior register/sign calls.
         self.cancel();
         let cbc = callback.clone();
@@ -648,16 +445,14 @@ impl StateMachineCtap2 {
                 // TODO(MS): This is wasteful, but the current setup with read only-functions doesn't allow me
                 //           to modify "params" directly.
                 let mut makecred = params.clone();
-                if params.is_ctap2_request() {
-                    // First check if extensions have been requested that are not supported by the device
-                    if let Some(true) = params.extensions.hmac_secret {
-                        if let Some(auth) = dev.get_authenticator_info() {
-                            if !auth.supports_hmac_secret() {
-                                callback.call(Err(AuthenticatorError::UnsupportedOption(
-                                    UnsupportedOption::HmacSecret,
-                                )));
-                                return;
-                            }
+                // First check if extensions have been requested that are not supported by the device
+                if let Some(true) = params.extensions.hmac_secret {
+                    if let Some(auth) = dev.get_authenticator_info() {
+                        if !auth.supports_hmac_secret() {
+                            callback.call(Err(AuthenticatorError::UnsupportedOption(
+                                UnsupportedOption::HmacSecret,
+                            )));
+                            return;
                         }
                     }
                 }
@@ -697,12 +492,8 @@ impl StateMachineCtap2 {
                         let _ = selector.send(DeviceSelectorEvent::SelectedToken(dev.id()));
                     }
                     match resp {
-                        Ok(MakeCredentialsResult::CTAP2(attestation, client_data)) => {
-                            callback.call(Ok(RegisterResult::CTAP2(attestation, client_data)));
-                            break;
-                        }
-                        Ok(MakeCredentialsResult::CTAP1(data)) => {
-                            callback.call(Ok(RegisterResult::CTAP1(data, dev.get_device_info())));
+                        Ok(MakeCredentialsResult(attestation)) => {
+                            callback.call(Ok(RegisterResult::CTAP2(attestation)));
                             break;
                         }
                         Err(HIDError::Command(CommandError::StatusCode(
@@ -765,6 +556,46 @@ impl StateMachineCtap2 {
         status: Sender<crate::StatusUpdate>,
         callback: StateCallback<crate::Result<crate::SignResult>>,
     ) {
+        if params.use_ctap1_fallback {
+            /* Firefox uses this when security.webauthn.ctap2 is false. */
+            let flags = match params.options.user_verification {
+                Some(true) => SignFlags::REQUIRE_USER_VERIFICATION,
+                _ => SignFlags::empty(),
+            };
+            let mut app_ids = vec![params.rp.hash().0.to_vec()];
+            if let Some(app_id) = params.alternate_rp_id {
+                app_ids.push(
+                    RelyingPartyWrapper::Data(RelyingParty {
+                        id: app_id,
+                        ..Default::default()
+                    })
+                    .hash()
+                    .0
+                    .to_vec(),
+                );
+            }
+            let key_handles = params
+                .allow_list
+                .iter()
+                .map(|cred_desc| KeyHandle {
+                    credential: cred_desc.id.clone(),
+                    transports: AuthenticatorTransports::empty(),
+                })
+                .collect();
+            let challenge = params.client_data_hash;
+
+            self.legacy_sign(
+                flags,
+                timeout,
+                challenge,
+                app_ids,
+                key_handles,
+                status,
+                callback,
+            );
+            return;
+        }
+
         // Abort any prior register/sign calls.
         self.cancel();
         let cbc = callback.clone();
@@ -785,16 +616,14 @@ impl StateMachineCtap2 {
                 // TODO(MS): This is wasteful, but the current setup with read only-functions doesn't allow me
                 //           to modify "params" directly.
                 let mut getassertion = params.clone();
-                if params.is_ctap2_request() {
-                    // First check if extensions have been requested that are not supported by the device
-                    if params.extensions.hmac_secret.is_some() {
-                        if let Some(auth) = dev.get_authenticator_info() {
-                            if !auth.supports_hmac_secret() {
-                                callback.call(Err(AuthenticatorError::UnsupportedOption(
-                                    UnsupportedOption::HmacSecret,
-                                )));
-                                return;
-                            }
+                // First check if extensions have been requested that are not supported by the device
+                if params.extensions.hmac_secret.is_some() {
+                    if let Some(auth) = dev.get_authenticator_info() {
+                        if !auth.supports_hmac_secret() {
+                            callback.call(Err(AuthenticatorError::UnsupportedOption(
+                                UnsupportedOption::HmacSecret,
+                            )));
+                            return;
                         }
                     }
                 }
@@ -815,16 +644,14 @@ impl StateMachineCtap2 {
                         }
                     };
 
-                    if params.is_ctap2_request() {
-                        // Third, use the shared secret in the extensions, if requested
-                        if let Some(extension) = getassertion.extensions.hmac_secret.as_mut() {
-                            if let Some(secret) = dev.get_shared_secret() {
-                                match extension.calculate(secret) {
-                                    Ok(x) => x,
-                                    Err(e) => {
-                                        callback.call(Err(e));
-                                        return;
-                                    }
+                    // Third, use the shared secret in the extensions, if requested
+                    if let Some(extension) = getassertion.extensions.hmac_secret.as_mut() {
+                        if let Some(secret) = dev.get_shared_secret() {
+                            match extension.calculate(secret) {
+                                Ok(x) => x,
+                                Err(e) => {
+                                    callback.call(Err(e));
+                                    return;
                                 }
                             }
                         }
@@ -861,20 +688,8 @@ impl StateMachineCtap2 {
                         let _ = selector.send(DeviceSelectorEvent::SelectedToken(dev.id()));
                     }
                     match resp {
-                        Ok(GetAssertionResult::CTAP1(resp)) => {
-                            let app_id = getassertion.rp.hash().as_ref().to_vec();
-                            let key_handle = getassertion.allow_list[0].id.clone();
-
-                            callback.call(Ok(SignResult::CTAP1(
-                                app_id,
-                                key_handle,
-                                resp,
-                                dev.get_device_info(),
-                            )));
-                            break;
-                        }
-                        Ok(GetAssertionResult::CTAP2(assertion, client_data)) => {
-                            callback.call(Ok(SignResult::CTAP2(assertion, client_data)));
+                        Ok(GetAssertionResult(assertion)) => {
+                            callback.call(Ok(SignResult::CTAP2(assertion)));
                             break;
                         }
                         Err(HIDError::Command(CommandError::StatusCode(
@@ -1109,5 +924,246 @@ impl StateMachineCtap2 {
             },
         );
         self.transaction = Some(try_or!(transaction, move |e| cbc.call(Err(e))));
+    }
+
+    pub fn legacy_register(
+        &mut self,
+        flags: crate::RegisterFlags,
+        timeout: u64,
+        challenge: ClientDataHash,
+        application: crate::AppId,
+        key_handles: Vec<crate::KeyHandle>,
+        status: Sender<crate::StatusUpdate>,
+        callback: StateCallback<crate::Result<crate::RegisterResult>>,
+    ) {
+        // Abort any prior register/sign calls.
+        self.cancel();
+
+        let cbc = callback.clone();
+
+        let transaction = Transaction::new(
+            timeout,
+            cbc.clone(),
+            status,
+            move |info, _, status, alive| {
+                // Create a new device.
+                let dev = &mut match Device::new(info) {
+                    Ok(dev) => dev,
+                    _ => return,
+                };
+
+                // Try initializing it.
+                if !dev.is_u2f() || !u2f_init_device(dev) {
+                    return;
+                }
+
+                // We currently support none of the authenticator selection
+                // criteria because we can't ask tokens whether they do support
+                // those features. If flags are set, ignore all tokens for now.
+                //
+                // Technically, this is a ConstraintError because we shouldn't talk
+                // to this authenticator in the first place. But the result is the
+                // same anyway.
+                if !flags.is_empty() {
+                    return;
+                }
+
+                send_status(
+                    &status,
+                    crate::StatusUpdate::DeviceAvailable {
+                        dev_info: dev.get_device_info(),
+                    },
+                );
+
+                // Iterate the exclude list and see if there are any matches.
+                // If so, we'll keep polling the device anyway to test for user
+                // consent, to be consistent with CTAP2 device behavior.
+                let excluded = key_handles.iter().any(|key_handle| {
+                    is_valid_transport(key_handle.transports)
+                        && u2f_is_keyhandle_valid(
+                            dev,
+                            challenge.as_ref(),
+                            &application,
+                            &key_handle.credential,
+                        )
+                        .unwrap_or(false) /* no match on failure */
+                });
+
+                while alive() {
+                    if excluded {
+                        let blank = vec![0u8; PARAMETER_SIZE];
+                        if u2f_register(dev, &blank, &blank).is_ok() {
+                            callback.call(Err(errors::AuthenticatorError::U2FToken(
+                                errors::U2FTokenError::InvalidState,
+                            )));
+                            break;
+                        }
+                    } else if let Ok(bytes) = u2f_register(dev, challenge.as_ref(), &application) {
+                        let mut rp_id_hash: RpIdHash = RpIdHash([0u8; 32]);
+                        rp_id_hash.0.copy_from_slice(&application);
+                        let result = match MakeCredentialsResult::from_ctap1(&bytes, &rp_id_hash) {
+                            Ok(MakeCredentialsResult(att_obj)) => att_obj,
+                            Err(_) => {
+                                callback.call(Err(errors::AuthenticatorError::U2FToken(
+                                    errors::U2FTokenError::Unknown,
+                                )));
+                                break;
+                            }
+                        };
+                        let dev_info = dev.get_device_info();
+                        send_status(&status, crate::StatusUpdate::Success { dev_info });
+                        callback.call(Ok(RegisterResult::CTAP2(result)));
+                        break;
+                    }
+
+                    // Sleep a bit before trying again.
+                    thread::sleep(Duration::from_millis(100));
+                }
+
+                send_status(
+                    &status,
+                    crate::StatusUpdate::DeviceUnavailable {
+                        dev_info: dev.get_device_info(),
+                    },
+                );
+            },
+        );
+
+        self.transaction = Some(try_or!(transaction, |e| cbc.call(Err(e))));
+    }
+
+    pub fn legacy_sign(
+        &mut self,
+        flags: crate::SignFlags,
+        timeout: u64,
+        challenge: ClientDataHash,
+        app_ids: Vec<crate::AppId>,
+        key_handles: Vec<crate::KeyHandle>,
+        status: Sender<crate::StatusUpdate>,
+        callback: StateCallback<crate::Result<crate::SignResult>>,
+    ) {
+        // Abort any prior register/sign calls.
+        self.cancel();
+
+        let cbc = callback.clone();
+
+        let transaction = Transaction::new(
+            timeout,
+            cbc.clone(),
+            status,
+            move |info, _, status, alive| {
+                // Create a new device.
+                let dev = &mut match Device::new(info) {
+                    Ok(dev) => dev,
+                    _ => return,
+                };
+
+                // Try initializing it.
+                if !dev.is_u2f() || !u2f_init_device(dev) {
+                    return;
+                }
+
+                // We currently don't support user verification because we can't
+                // ask tokens whether they do support that. If the flag is set,
+                // ignore all tokens for now.
+                //
+                // Technically, this is a ConstraintError because we shouldn't talk
+                // to this authenticator in the first place. But the result is the
+                // same anyway.
+                if !flags.is_empty() {
+                    return;
+                }
+
+                // For each appId, try all key handles. If there's at least one
+                // valid key handle for an appId, we'll use that appId below.
+                let (app_id, valid_handles) =
+                    find_valid_key_handles(&app_ids, &key_handles, |app_id, key_handle| {
+                        u2f_is_keyhandle_valid(
+                            dev,
+                            challenge.as_ref(),
+                            app_id,
+                            &key_handle.credential,
+                        )
+                        .unwrap_or(false) /* no match on failure */
+                    });
+
+                // Aggregate distinct transports from all given credentials.
+                let transports = key_handles
+                    .iter()
+                    .fold(crate::AuthenticatorTransports::empty(), |t, k| {
+                        t | k.transports
+                    });
+
+                // We currently only support USB. If the RP specifies transports
+                // and doesn't include USB it's probably lying.
+                if !is_valid_transport(transports) {
+                    return;
+                }
+
+                send_status(
+                    &status,
+                    crate::StatusUpdate::DeviceAvailable {
+                        dev_info: dev.get_device_info(),
+                    },
+                );
+
+                'outer: while alive() {
+                    // If the device matches none of the given key handles
+                    // then just make it blink with bogus data.
+                    if valid_handles.is_empty() {
+                        let blank = vec![0u8; PARAMETER_SIZE];
+                        if u2f_register(dev, &blank, &blank).is_ok() {
+                            callback.call(Err(errors::AuthenticatorError::U2FToken(
+                                errors::U2FTokenError::InvalidState,
+                            )));
+                            break;
+                        }
+                    } else {
+                        // Otherwise, try to sign.
+                        for key_handle in &valid_handles {
+                            if let Ok(bytes) =
+                                u2f_sign(dev, challenge.as_ref(), app_id, &key_handle.credential)
+                            {
+                                let pkcd = PublicKeyCredentialDescriptor {
+                                    id: key_handle.credential.clone(),
+                                    transports: vec![],
+                                };
+                                let mut rp_id_hash: RpIdHash = RpIdHash([0u8; 32]);
+                                rp_id_hash.0.copy_from_slice(app_id);
+                                let result = match GetAssertionResult::from_ctap1(
+                                    &bytes,
+                                    &rp_id_hash,
+                                    &pkcd,
+                                ) {
+                                    Ok(GetAssertionResult(assertion)) => assertion,
+                                    Err(_) => {
+                                        callback.call(Err(errors::AuthenticatorError::U2FToken(
+                                            errors::U2FTokenError::Unknown,
+                                        )));
+                                        break 'outer;
+                                    }
+                                };
+                                let dev_info = dev.get_device_info();
+                                send_status(&status, crate::StatusUpdate::Success { dev_info });
+                                callback.call(Ok(SignResult::CTAP2(result)));
+                                break 'outer;
+                            }
+                        }
+                    }
+
+                    // Sleep a bit before trying again.
+                    thread::sleep(Duration::from_millis(100));
+                }
+
+                send_status(
+                    &status,
+                    crate::StatusUpdate::DeviceUnavailable {
+                        dev_info: dev.get_device_info(),
+                    },
+                );
+            },
+        );
+
+        self.transaction = Some(try_or!(transaction, |e| cbc.call(Err(e))));
     }
 }

@@ -36,21 +36,6 @@ pub enum AuthenticatorError {
     CancelledByUser,
 }
 
-impl AuthenticatorError {
-    pub fn as_u2f_errorcode(&self) -> u8 {
-        match *self {
-            AuthenticatorError::U2FToken(ref err) => *err as u8,
-            // TODO: This is somewhat ugly, as we hardcode the error code here, instead of using the
-            // const defined in `u2fhid-capi.h`, which we should.
-            AuthenticatorError::PinError(PinError::PinRequired) => 6u8,
-            AuthenticatorError::PinError(PinError::InvalidPin(_)) => 7u8,
-            AuthenticatorError::PinError(PinError::PinAuthBlocked) => 8u8,
-            AuthenticatorError::PinError(PinError::PinBlocked) => 9u8,
-            _ => U2FTokenError::Unknown as u8,
-        }
-    }
-}
-
 impl std::error::Error for AuthenticatorError {}
 
 impl fmt::Display for AuthenticatorError {

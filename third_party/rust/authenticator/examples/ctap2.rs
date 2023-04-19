@@ -4,9 +4,9 @@
 
 use authenticator::{
     authenticatorservice::{
-        AuthenticatorService, CtapVersion, GetAssertionExtensions, GetAssertionOptions,
-        HmacSecretExtension, MakeCredentialsExtensions, MakeCredentialsOptions, RegisterArgsCtap2,
-        SignArgsCtap2,
+        AuthenticatorService, GetAssertionExtensions, GetAssertionOptions,
+        HmacSecretExtension, MakeCredentialsExtensions, MakeCredentialsOptions, RegisterArgs,
+        SignArgs,
     },
     ctap2::server::{
         PublicKeyCredentialDescriptor, PublicKeyCredentialParameters, RelyingParty, Transport, User,
@@ -49,7 +49,7 @@ fn main() {
         return;
     }
 
-    let mut manager = AuthenticatorService::new(CtapVersion::CTAP2)
+    let mut manager = AuthenticatorService::new()
         .expect("The auth service should initialize safely");
 
     if !matches.opt_present("no-u2f-usb-hid") {
@@ -76,7 +76,7 @@ fn main() {
     );
     let mut challenge = Sha256::new();
     challenge.update(challenge_str.as_bytes());
-    let chall_bytes = challenge.finalize().to_vec();
+    let chall_bytes: [u8; 32] = challenge.finalize().into();
 
     // TODO(MS): Needs to be added to RegisterArgsCtap2
     // let flags = RegisterFlags::empty();
@@ -153,8 +153,8 @@ fn main() {
         display_name: None,
     };
     let origin = "https://example.com".to_string();
-    let ctap_args = RegisterArgsCtap2 {
-        challenge: chall_bytes.clone(),
+    let ctap_args = RegisterArgs{
+        client_data_hash: chall_bytes,
         relying_party: RelyingParty {
             id: "example.com".to_string(),
             name: None,
@@ -191,17 +191,17 @@ fn main() {
             ..Default::default()
         },
         pin: None,
+        use_ctap1_fallback: false,
     };
 
     let attestation_object;
-    let client_data;
     loop {
         let (register_tx, register_rx) = channel();
         let callback = StateCallback::new(Box::new(move |rv| {
             register_tx.send(rv).unwrap();
         }));
 
-        if let Err(e) = manager.register(timeout_ms, ctap_args.into(), status_tx.clone(), callback)
+        if let Err(e) = manager.register(timeout_ms, ctap_args, status_tx.clone(), callback)
         {
             panic!("Couldn't register: {:?}", e);
         };
@@ -211,10 +211,9 @@ fn main() {
             .expect("Problem receiving, unable to continue");
         match register_result {
             Ok(RegisterResult::CTAP1(_, _)) => panic!("Requested CTAP2, but got CTAP1 results!"),
-            Ok(RegisterResult::CTAP2(a, c)) => {
+            Ok(RegisterResult::CTAP2(a)) => {
                 println!("Ok!");
                 attestation_object = a;
-                client_data = c;
                 break;
             }
             Err(e) => panic!("Registration failed: {:?}", e),
@@ -222,7 +221,6 @@ fn main() {
     }
 
     println!("Register result: {:?}", &attestation_object);
-    println!("Collected client data: {:?}", &client_data);
 
     println!();
     println!("*********************************************************************");
@@ -239,8 +237,8 @@ fn main() {
         allow_list = Vec::new();
     }
 
-    let ctap_args = SignArgsCtap2 {
-        challenge: chall_bytes,
+    let ctap_args = SignArgs {
+        client_data_hash: chall_bytes,
         origin,
         relying_party_id: "example.com".to_string(),
         allow_list,
@@ -261,6 +259,7 @@ fn main() {
         },
         pin: None,
         alternate_rp_id: None,
+        use_ctap1_fallback: false,
     };
 
     loop {
@@ -270,7 +269,7 @@ fn main() {
             sign_tx.send(rv).unwrap();
         }));
 
-        if let Err(e) = manager.sign(timeout_ms, ctap_args.into(), status_tx, callback) {
+        if let Err(e) = manager.sign(timeout_ms, ctap_args, status_tx, callback) {
             panic!("Couldn't sign: {:?}", e);
         }
 
@@ -280,7 +279,7 @@ fn main() {
 
         match sign_result {
             Ok(SignResult::CTAP1(..)) => panic!("Requested CTAP2, but got CTAP1 sign results!"),
-            Ok(SignResult::CTAP2(assertion_object, _client_data)) => {
+            Ok(SignResult::CTAP2(assertion_object)) => {
                 println!("Assertion Object: {assertion_object:?}");
                 println!("Done.");
                 break;

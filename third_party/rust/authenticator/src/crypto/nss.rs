@@ -319,7 +319,7 @@ pub fn test_ecdh_p256_raw(
 ) -> Result<Vec<u8>> {
     nss_gk_api::init();
 
-    let peer_public = nss_public_key_from_der_spki(&peer_spki)?;
+    let peer_public = nss_public_key_from_der_spki(peer_spki)?;
 
     /* NSS has no mechanism to import a raw elliptic curve coordinate as a private key.
      * We need to encode it in a key storage format such as PKCS#8. To avoid a dependency
@@ -368,8 +368,8 @@ pub fn test_ecdh_p256_raw(
     pkcs8_priv.extend_from_slice(spk_len);
     pkcs8_priv.push(0x0);
     pkcs8_priv.push(0x04); // SEC 1 encoded uncompressed point
-    pkcs8_priv.extend_from_slice(&client_public_x);
-    pkcs8_priv.extend_from_slice(&client_public_y);
+    pkcs8_priv.extend_from_slice(client_public_x);
+    pkcs8_priv.extend_from_slice(client_public_y);
 
     // Now we can import the private key.
     let slot = Slot::internal()?;

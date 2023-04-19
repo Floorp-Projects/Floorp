@@ -34,20 +34,13 @@ mod u2fprotocol;
 mod u2ftypes;
 
 mod manager;
-pub use crate::manager::U2FManager;
-
-mod capi;
-pub use crate::capi::*;
 
 pub mod ctap2;
 pub use ctap2::attestation::AttestationObject;
-pub use ctap2::client_data::{CollectedClientData, CollectedClientDataWrapper};
+pub use ctap2::client_data::CollectedClientData;
 pub use ctap2::commands::client_pin::{Pin, PinError};
-pub use ctap2::AssertionObject;
 pub use ctap2::commands::get_assertion::Assertion;
-
-mod ctap2_capi;
-pub use crate::ctap2_capi::*;
+pub use ctap2::AssertionObject;
 
 pub mod errors;
 pub mod statecallback;
@@ -92,13 +85,13 @@ pub type AppId = Vec<u8>;
 #[derive(Debug)]
 pub enum RegisterResult {
     CTAP1(Vec<u8>, u2ftypes::U2FDeviceInfo),
-    CTAP2(AttestationObject, CollectedClientDataWrapper),
+    CTAP2(AttestationObject),
 }
 
 #[derive(Debug)]
 pub enum SignResult {
     CTAP1(AppId, Vec<u8>, Vec<u8>, u2ftypes::U2FDeviceInfo),
-    CTAP2(AssertionObject, CollectedClientDataWrapper),
+    CTAP2(AssertionObject),
 }
 
 pub type ResetResult = ();

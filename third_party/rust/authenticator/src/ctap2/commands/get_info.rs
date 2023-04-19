@@ -342,6 +342,21 @@ impl AuthenticatorInfo {
     pub fn supports_hmac_secret(&self) -> bool {
         self.extensions.contains(&"hmac-secret".to_string())
     }
+
+    pub fn max_supported_version(&self) -> AuthenticatorVersion {
+        let versions = vec![
+            AuthenticatorVersion::FIDO_2_1,
+            AuthenticatorVersion::FIDO_2_1_PRE,
+            AuthenticatorVersion::FIDO_2_0,
+            AuthenticatorVersion::U2F_V2,
+        ];
+        for ver in versions {
+            if self.versions.contains(&ver) {
+                return ver;
+            }
+        }
+        AuthenticatorVersion::U2F_V2
+    }
 }
 
 macro_rules! parse_next_optional_value {
@@ -929,5 +944,43 @@ pub mod tests {
         };
 
         assert_eq!(result, &expected);
+    }
+
+    #[test]
+    fn test_authenticator_info_max_version() {
+        let fido2_0 = AuthenticatorInfo {
+            versions: vec![AuthenticatorVersion::U2F_V2, AuthenticatorVersion::FIDO_2_0],
+            ..Default::default()
+        };
+        assert_eq!(
+            fido2_0.max_supported_version(),
+            AuthenticatorVersion::FIDO_2_0
+        );
+
+        let fido2_1_pre = AuthenticatorInfo {
+            versions: vec![
+                AuthenticatorVersion::FIDO_2_1_PRE,
+                AuthenticatorVersion::U2F_V2,
+            ],
+            ..Default::default()
+        };
+        assert_eq!(
+            fido2_1_pre.max_supported_version(),
+            AuthenticatorVersion::FIDO_2_1_PRE
+        );
+
+        let fido2_1 = AuthenticatorInfo {
+            versions: vec![
+                AuthenticatorVersion::FIDO_2_1_PRE,
+                AuthenticatorVersion::FIDO_2_1,
+                AuthenticatorVersion::U2F_V2,
+                AuthenticatorVersion::FIDO_2_0,
+            ],
+            ..Default::default()
+        };
+        assert_eq!(
+            fido2_1.max_supported_version(),
+            AuthenticatorVersion::FIDO_2_1
+        );
     }
 }
