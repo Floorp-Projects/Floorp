@@ -2269,6 +2269,7 @@ STATIC_ATOMS = [
     Atom("_moz_gtk_csd_close_button_position", "-moz-gtk-csd-close-button-position"),
     Atom("_moz_gtk_csd_reversed_placement", "-moz-gtk-csd-reversed-placement"),
     Atom("_moz_gtk_csd_menu_radius", "-moz-gtk-csd-menu-radius"),
+    Atom("_moz_gtk_non_native_menus", "-moz-gtk-non-native-menus"),
     Atom("_moz_content_prefers_color_scheme", "-moz-content-prefers-color-scheme"),
     Atom("_moz_content_preferred_color_scheme", "-moz-content-preferred-color-scheme"),
     Atom("_moz_system_dark_theme", "-moz-system-dark-theme"),
