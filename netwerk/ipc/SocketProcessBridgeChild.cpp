@@ -32,16 +32,24 @@ bool SocketProcessBridgeChild::Create(
     Endpoint<PSocketProcessBridgeChild>&& aEndpoint) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  sSocketProcessBridgeChild =
-      new SocketProcessBridgeChild(std::move(aEndpoint));
-  if (sSocketProcessBridgeChild->Inited()) {
-    mozilla::ipc::BackgroundChild::InitSocketBridgeStarter(
-        sSocketProcessBridgeChild);
-    return true;
+  sSocketProcessBridgeChild = new SocketProcessBridgeChild();
+
+  if (!aEndpoint.Bind(sSocketProcessBridgeChild)) {
+    MOZ_ASSERT(false, "Bind failed!");
+    sSocketProcessBridgeChild = nullptr;
+    return false;
   }
 
-  sSocketProcessBridgeChild = nullptr;
-  return false;
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  if (os) {
+    os->AddObserver(sSocketProcessBridgeChild, "content-child-shutdown", false);
+  }
+
+  sSocketProcessBridgeChild->mSocketProcessPid = aEndpoint.OtherPid();
+
+  mozilla::ipc::BackgroundChild::InitSocketBridgeStarter(
+      sSocketProcessBridgeChild);
+  return true;
 }
 
 // static
@@ -115,23 +123,8 @@ SocketProcessBridgeChild::GetSocketProcessBridge() {
       });
 }
 
-SocketProcessBridgeChild::SocketProcessBridgeChild(
-    Endpoint<PSocketProcessBridgeChild>&& aEndpoint)
-    : mShuttingDown(false) {
+SocketProcessBridgeChild::SocketProcessBridgeChild() : mShuttingDown(false) {
   LOG(("CONSTRUCT SocketProcessBridgeChild::SocketProcessBridgeChild\n"));
-
-  mInited = aEndpoint.Bind(this);
-  if (!mInited) {
-    MOZ_ASSERT(false, "Bind failed!");
-    return;
-  }
-
-  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-  if (os) {
-    os->AddObserver(this, "content-child-shutdown", false);
-  }
-
-  mSocketProcessPid = aEndpoint.OtherPid();
 }
 
 SocketProcessBridgeChild::~SocketProcessBridgeChild() {
