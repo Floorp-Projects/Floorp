@@ -923,8 +923,10 @@ static void ResetBidiKeyboard() {
 
 /* static */
 void KeymapWrapper::ResetKeyboard() {
-  sInstance->mInitialized = false;
-  ResetBidiKeyboard();
+  if (sInstance) {
+    sInstance->mInitialized = false;
+    ResetBidiKeyboard();
+  }
 }
 
 /* static */
