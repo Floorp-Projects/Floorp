@@ -435,6 +435,7 @@ void PeerConnectionCtx::RemovePeerConnection(const std::string& aKey) {
 
     if (mPeerConnections.empty()) {
       mSharedWebrtcState = nullptr;
+      StopTelemetryTimer();
     }
   }
 }
@@ -476,6 +477,7 @@ void PeerConnectionCtx::AddPeerConnection(const std::string& aKey,
         std::move(audioStateConfig),
         already_AddRefed(CreateBuiltinAudioDecoderFactory().release()),
         std::move(trials));
+    StartTelemetryTimer();
   }
   mPeerConnections[aKey] = aPeerConnection;
 }
@@ -504,17 +506,26 @@ nsresult PeerConnectionCtx::Initialize() {
   initGMP();
   SdpRidAttributeList::kMaxRidLength =
       webrtc::BaseRtpStringExtension::kMaxValueSizeBytes;
-  nsresult rv = NS_NewTimerWithFuncCallback(
-      getter_AddRefs(mTelemetryTimer), EverySecondTelemetryCallback_m, this,
-      1000, nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP,
-      "EverySecondTelemetryCallback_m");
-  NS_ENSURE_SUCCESS(rv, rv);
 
   if (XRE_IsContentProcess()) {
     WebrtcGlobalChild::Create();
   }
 
   return NS_OK;
+}
+
+nsresult PeerConnectionCtx::StartTelemetryTimer() {
+  return NS_NewTimerWithFuncCallback(getter_AddRefs(mTelemetryTimer),
+                                     EverySecondTelemetryCallback_m, this, 1000,
+                                     nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP,
+                                     "EverySecondTelemetryCallback_m");
+}
+
+void PeerConnectionCtx::StopTelemetryTimer() {
+  if (mTelemetryTimer) {
+    mTelemetryTimer->Cancel();
+    mTelemetryTimer = nullptr;
+  }
 }
 
 static void GMPReady_m() {
@@ -567,14 +578,6 @@ nsresult PeerConnectionCtx::Cleanup() {
   mSharedWebrtcState = nullptr;
   return NS_OK;
 }
-
-PeerConnectionCtx::~PeerConnectionCtx() {
-  // ensure mTelemetryTimer ends on main thread
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mTelemetryTimer) {
-    mTelemetryTimer->Cancel();
-  }
-};
 
 void PeerConnectionCtx::queueJSEPOperation(nsIRunnable* aOperation) {
   mQueuedJSEPOperations.AppendElement(aOperation);
