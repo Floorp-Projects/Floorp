@@ -199,7 +199,7 @@ void childvaapitest(const char* aRenderDevicePath) {
     record_error("VA-API test failed: vaQueryConfigProfiles() failed.");
     return;
   }
-  numProfiles = std::min(numProfiles, maxProfiles);
+  numProfiles = MIN(numProfiles, maxProfiles);
 
   entryPoints = (VAEntrypoint*)malloc(sizeof(VAEntrypoint) * maxEntryPoints);
   int codecs = 0;
@@ -218,7 +218,7 @@ void childvaapitest(const char* aRenderDevicePath) {
     if (status != VA_STATUS_SUCCESS) {
       continue;
     }
-    numEntryPoints = std::min(numEntryPoints, maxEntryPoints);
+    numEntryPoints = MIN(numEntryPoints, maxEntryPoints);
     for (int entry = 0; entry < numEntryPoints; entry++) {
       if (entryPoints[entry] != VAEntrypointVLD) {
         continue;
