@@ -589,6 +589,13 @@ bool nsXMLContentSerializer::SerializeAttr(const nsAString& aPrefix,
                                            const nsAString& aValue,
                                            nsAString& aStr,
                                            bool aDoEscapeEntities) {
+  // Because this method can short-circuit AppendToString for raw output, we
+  // need to make sure that we're not inappropriately serializing attributes
+  // from outside the body
+  if (mBodyOnly && !mInBody) {
+    return true;
+  }
+
   nsAutoString attrString_;
   // For innerHTML we can do faster appending without
   // temporary strings.
