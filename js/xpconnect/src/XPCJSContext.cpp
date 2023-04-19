@@ -895,6 +895,7 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
         cx, JSJITCOMPILER_JIT_TRUSTEDPRINCIPALS_ENABLE, false);
     JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_NATIVE_REGEXP_ENABLE,
                                   false);
+    JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_JIT_HINTS_ENABLE, false);
     sSelfHostedUseSharedMemory = false;
   } else {
     JS_SetGlobalJitCompilerOption(
@@ -909,6 +910,9 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
     JS_SetGlobalJitCompilerOption(
         cx, JSJITCOMPILER_NATIVE_REGEXP_ENABLE,
         StaticPrefs::javascript_options_native_regexp_DoNotUseDirectly());
+    JS_SetGlobalJitCompilerOption(
+        cx, JSJITCOMPILER_JIT_HINTS_ENABLE,
+        StaticPrefs::javascript_options_jitHints_DoNotUseDirectly());
     sSelfHostedUseSharedMemory = StaticPrefs::
         javascript_options_self_hosted_use_shared_memory_DoNotUseDirectly();
   }
