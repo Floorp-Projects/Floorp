@@ -17,6 +17,10 @@
         "llvmorg-17-init-994-g1e72920c8859.patch",
         "llvmorg-17-init-2171-g8198f30f7e75.patch",
         "llvmorg-17-init-4170-g5c602c46b1ef.patch",
+        "llvmorg-17-init-6897-g415b1cfd57de.patch",
+        "llvmorg-17-init-6905-gc81a322476a1.patch",
+        "llvmorg-17-init-6909-gd644ab022a7b.patch",
+        "llvmorg-17-init-8140-gb1bd52cd0d86.patch",
         "D146664_clang_15.patch",
         "win64-ret-null-on-commitment-limit_clang_14.patch",
         "compiler-rt-rss-limit-heap-profile.patch"
