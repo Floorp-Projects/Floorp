@@ -3,6 +3,7 @@
 
 #include "gtest/gtest.h"
 
+#include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsServiceManagerUtils.h"
 #include "nsICrashReporter.h"
@@ -62,6 +63,56 @@ namespace mozilla::gtest {
 #endif
 
 void DisableCrashReporter();
+
+/**
+ * Exit mode used for ScopedTestResultReporter.
+ */
+enum class ExitMode {
+  // The user of the reporter handles exit.
+  NoExit,
+  // As the reporter goes out of scope, exit with ExitCode().
+  ExitOnDtor,
+};
+
+/**
+ * Status used by ScopedTestResultReporter.
+ */
+enum class TestResultStatus : int {
+  Pass = 0,
+  NonFatalFailure = 1,
+  FatalFailure = 2,
+};
+
+inline int ExitCode(TestResultStatus aStatus) {
+  return static_cast<int>(aStatus);
+}
+
+/**
+ * This is a helper that reports test results to stderr in death test child
+ * processes, since that is normally disabled by default (with no way of
+ * enabling).
+ *
+ * Note that for this to work as intended the death test child has to, on
+ * failure, exit with an exit code that is unexpected to the death test parent,
+ * so the parent can mark the test case as failed.
+ *
+ * If the parent expects a graceful exit (code 0), ExitCode() can be used with
+ * Status() to exit the child process.
+ *
+ * For simplicity the reporter can exit automatically as it goes out of scope,
+ * when created with ExitMode::ExitOnDtor.
+ */
+class ScopedTestResultReporter {
+ public:
+  virtual ~ScopedTestResultReporter() = default;
+
+  /**
+   * The aggregate status of all observed test results.
+   */
+  virtual TestResultStatus Status() const = 0;
+
+  static UniquePtr<ScopedTestResultReporter> Create(ExitMode aExitMode);
+};
 
 }  // namespace mozilla::gtest
 
