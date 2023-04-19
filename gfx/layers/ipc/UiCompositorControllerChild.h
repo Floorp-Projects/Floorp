@@ -29,7 +29,7 @@ class UiCompositorControllerChild final
   friend class PUiCompositorControllerChild;
 
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(UiCompositorControllerChild)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(UiCompositorControllerChild, final)
 
   static RefPtr<UiCompositorControllerChild> CreateForSameProcess(
       const LayersId& aRootLayerTreeId, nsBaseWidget* aWidget);
@@ -76,7 +76,6 @@ class UiCompositorControllerChild final
 
  protected:
   void ActorDestroy(ActorDestroyReason aWhy) override;
-  void ActorDealloc() override;
   void ProcessingError(Result aCode, const char* aReason) override;
   void HandleFatalError(const char* aMsg) const override;
   mozilla::ipc::IPCResult RecvToolbarAnimatorMessageFromCompositor(
