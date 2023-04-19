@@ -27,7 +27,7 @@ class BackgroundDataBridgeParent;
 // This is allocated and kept alive by SocketProcessImpl.
 class SocketProcessChild final : public PSocketProcessChild {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SocketProcessChild)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SocketProcessChild, final)
 
   SocketProcessChild();
 
