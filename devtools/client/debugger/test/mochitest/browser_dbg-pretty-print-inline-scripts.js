@@ -231,7 +231,7 @@ function getExpectedPrettyPrintedHtml() {
     <script>
 {
   'use strict';
-➤  document.querySelector('h1').addEventListener('mousedown', e=>{
+➤  document.querySelector('h1').addEventListener('mousedown', e => {
 ➤    console.log('mousedown on h1')
 ➤  })
 ➤}
@@ -247,7 +247,7 @@ function getExpectedPrettyPrintedHtml() {
   2,
   3
 ];
-➤y.map(i=>i * 2)
+➤y.map(i => i * 2)
 </script>
   </body>
 </html>

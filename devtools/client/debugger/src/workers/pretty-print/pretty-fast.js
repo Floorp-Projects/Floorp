@@ -977,6 +977,9 @@ function needsSpaceAfter(token, lastToken) {
   if (token.type.label == "?") {
     return true;
   }
+  if (token.type.label == "=>") {
+    return true;
+  }
 
   return false;
 }
@@ -1009,6 +1012,9 @@ function needsSpaceBeforeLastToken(lastToken) {
     return true;
   }
   if (lastTokenTypeLabel == "${") {
+    return true;
+  }
+  if (lastTokenTypeLabel == "=>") {
     return true;
   }
   return false;

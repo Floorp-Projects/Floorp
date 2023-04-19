@@ -400,6 +400,14 @@ const cases = [
       const x = ({thisIsAnotherVeryLongPropertyName: "but should not cause the paren to be a line delimiter"})
     `,
   },
+  {
+    name: "Fat arrow function",
+    input: `
+      const a = () => 42
+      addEventListener("click", e => { return false });
+      const sum = (c,d) => c+d
+    `,
+  },
 ];
 
 const includesOnly = cases.find(({ only }) => only);

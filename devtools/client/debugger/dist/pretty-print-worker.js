@@ -10239,6 +10239,9 @@
       if (token.type.label == "?") {
         return true;
       }
+      if (token.type.label == "=>") {
+        return true;
+      }
 
       return false;
     }
@@ -10271,6 +10274,9 @@
         return true;
       }
       if (lastTokenTypeLabel == "${") {
+        return true;
+      }
+      if (lastTokenTypeLabel == "=>") {
         return true;
       }
       return false;
