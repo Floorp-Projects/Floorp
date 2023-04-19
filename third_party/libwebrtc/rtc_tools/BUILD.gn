@@ -208,6 +208,7 @@ if (!is_component_build) {
       "../call:simulated_network",
       "../call:simulated_packet_receiver",
       "../call:video_stream_api",
+      "../media:media_constants",
       "../media:rtc_audio_video",
       "../media:rtc_media_base",
       "../rtc_base",

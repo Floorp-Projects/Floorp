@@ -27,7 +27,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/59232687efa00e5f7
  create mode 100644 api/rtp_sender_setparameters_callback.h
 
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 41c59f91fd..7c6e6144bc 100644
+index 3fb8dc700d..fccb2a0df6 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -215,8 +215,8 @@ rtc_library("rtp_sender_interface") {
@@ -191,10 +191,10 @@ index 431c267e1e..de18fc7b92 100644
  #include "api/video/video_content_type.h"
  #include "api/video/video_frame.h"
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index a309ed9b96..e882e0ed31 100644
+index 1ad2ac6ee9..b08de8d032 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
-@@ -58,7 +58,7 @@ rtc_library("rtc_media_base") {
+@@ -64,7 +64,7 @@ rtc_library("rtc_media_base") {
      "../api:media_stream_interface",
      "../api:rtc_error",
      "../api:rtp_parameters",
@@ -243,7 +243,7 @@ index eeefea0bab..bf140cde22 100644
  using webrtc::FrameDecryptorInterface;
  using webrtc::FrameEncryptorInterface;
 diff --git a/video/BUILD.gn b/video/BUILD.gn
-index 27804f1dd6..04e966d056 100644
+index 415f7023dd..9020172311 100644
 --- a/video/BUILD.gn
 +++ b/video/BUILD.gn
 @@ -17,7 +17,7 @@ rtc_library("video_stream_encoder_interface") {
@@ -255,7 +255,7 @@ index 27804f1dd6..04e966d056 100644
      "../api:scoped_refptr",
      "../api/adaptation:resource_adaptation_api",
      "../api/units:data_rate",
-@@ -409,7 +409,7 @@ rtc_library("video_stream_encoder_impl") {
+@@ -410,7 +410,7 @@ rtc_library("video_stream_encoder_impl") {
      ":video_stream_encoder_interface",
      "../api:field_trials_view",
      "../api:rtp_parameters",

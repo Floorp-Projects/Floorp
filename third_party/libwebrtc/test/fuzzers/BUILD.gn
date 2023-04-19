@@ -339,6 +339,7 @@ webrtc_fuzzer_test("turn_unwrap_fuzzer") {
   deps = [
     "../../media",
     "../../media:rtc_media_base",
+    "../../media:turn_utils",
   ]
 }
 
