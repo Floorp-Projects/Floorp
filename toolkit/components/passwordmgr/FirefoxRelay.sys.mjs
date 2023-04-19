@@ -29,6 +29,9 @@ const gConfig = (function() {
     learnMoreURL: Services.urlFormatter.formatURLPref(
       "signon.firefoxRelay.learn_more_url"
     ),
+    manageURL: Services.urlFormatter.formatURLPref(
+      "signon.firefoxRelay.manage_url"
+    ),
     relayFeaturePref: "signon.firefoxRelay.feature",
   };
 })();
@@ -245,7 +248,7 @@ async function showReusableMasksAsync(browser, origin, error) {
         "get_unlimited_masks",
         FirefoxRelay.flowId
       );
-      browser.ownerGlobal.openWebLinkIn(gConfig.learnMoreURL, "tab");
+      browser.ownerGlobal.openWebLinkIn(gConfig.manageURL, "tab");
     },
   };
 
