@@ -42,6 +42,7 @@
 
 #include "debugger/DebugAPI-inl.h"
 #include "jit/BaselineFrameInfo-inl.h"
+#include "jit/JitHints-inl.h"
 #include "jit/JitScript-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SharedICHelpers-inl.h"
@@ -219,6 +220,13 @@ MethodStatus BaselineCompiler::compile() {
       return Method_Error;
     }
   }
+
+#ifdef NIGHTLY_BUILD
+  if (!JitOptions.disableJitHints) {
+    JitHintsMap* jitHints = cx->runtime()->jitRuntime()->getJitHintsMap();
+    jitHints->setEagerBaselineHint(script);
+  }
+#endif
 
   // Suppress GC during compilation.
   gc::AutoSuppressGC suppressGC(cx);
@@ -530,7 +538,7 @@ bool BaselineCodeGen<Handler>::emitOutOfLinePostBarrierSlot() {
 #endif
   masm.pushValue(R0);
 
-  using Fn = void (*)(JSRuntime * rt, js::gc::Cell * cell);
+  using Fn = void (*)(JSRuntime* rt, js::gc::Cell* cell);
   masm.setupUnalignedABICall(scratch);
   masm.movePtr(ImmPtr(cx->runtime()), scratch);
   masm.passABIArg(scratch);
@@ -804,7 +812,7 @@ bool BaselineCodeGen<Handler>::emitStackCheck() {
 }
 
 static void EmitCallFrameIsDebuggeeCheck(MacroAssembler& masm) {
-  using Fn = void (*)(BaselineFrame * frame);
+  using Fn = void (*)(BaselineFrame* frame);
   masm.setupUnalignedABICall(R0.scratchReg());
   masm.loadBaselineFramePtr(FramePointer, R0.scratchReg());
   masm.passABIArg(R0.scratchReg());
@@ -3594,7 +3602,7 @@ bool BaselineCodeGen<Handler>::emitGetAliasedDebugVar(ValueOperand dest) {
   pushArg(env);
 
   using Fn =
-      bool (*)(JSContext*, JSObject * env, jsbytecode*, MutableHandleValue);
+      bool (*)(JSContext*, JSObject* env, jsbytecode*, MutableHandleValue);
   return callVM<Fn, LoadAliasedDebugVar>();
 }
 
@@ -6710,7 +6718,7 @@ void BaselineInterpreterGenerator::emitOutOfLineCodeCoverageInstrumentation() {
 
   saveInterpreterPCReg();
 
-  using Fn1 = void (*)(BaselineFrame * frame);
+  using Fn1 = void (*)(BaselineFrame* frame);
   masm.setupUnalignedABICall(R0.scratchReg());
   masm.loadBaselineFramePtr(FramePointer, R0.scratchReg());
   masm.passABIArg(R0.scratchReg());
@@ -6726,7 +6734,7 @@ void BaselineInterpreterGenerator::emitOutOfLineCodeCoverageInstrumentation() {
 
   saveInterpreterPCReg();
 
-  using Fn2 = void (*)(BaselineFrame * frame, jsbytecode * pc);
+  using Fn2 = void (*)(BaselineFrame* frame, jsbytecode* pc);
   masm.setupUnalignedABICall(R0.scratchReg());
   masm.loadBaselineFramePtr(FramePointer, R0.scratchReg());
   masm.passABIArg(R0.scratchReg());

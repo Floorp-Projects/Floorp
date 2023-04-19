@@ -25,6 +25,7 @@
 #include "jit/IonCompileTask.h"
 #include "jit/IonTypes.h"
 #include "jit/JitCode.h"
+#include "jit/JitHints.h"
 #include "jit/shared/Assembler-shared.h"
 #include "js/AllocPolicy.h"
 #include "js/ProfilingFrameIterator.h"
@@ -195,6 +196,9 @@ class JitRuntime {
 
   // Global table of jitcode native address => bytecode address mappings.
   UnprotectedData<JitcodeGlobalTable*> jitcodeGlobalTable_{nullptr};
+
+  // Map that stores Jit Hints for each script.
+  MainThreadData<JitHintsMap*> jitHintsMap_{nullptr};
 
   // Map used to collect entry trampolines for the Interpreters which is used
   // for external profiling to identify which functions are being interpreted.
@@ -389,6 +393,13 @@ class JitRuntime {
   JitcodeGlobalTable* getJitcodeGlobalTable() {
     MOZ_ASSERT(hasJitcodeGlobalTable());
     return jitcodeGlobalTable_;
+  }
+
+  bool hasJitHintsMap() const { return jitHintsMap_ != nullptr; }
+
+  JitHintsMap* getJitHintsMap() {
+    MOZ_ASSERT(hasJitHintsMap());
+    return jitHintsMap_;
   }
 
   bool hasInterpreterEntryMap() const {
