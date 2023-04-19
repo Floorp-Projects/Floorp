@@ -727,9 +727,9 @@ let JSWINDOWACTORS = {
       events: {
         DOMContentLoaded: {},
         pageshow: { mozSystemGroup: true },
-        // The 'unload' event is only used to clean up state, and should not
+        // The 'pagehide' event is only used to clean up state, and should not
         // force actor creation.
-        unload: { createActor: false },
+        pagehide: { createActor: false },
         load: { mozSystemGroup: true, capture: true },
       },
     },
