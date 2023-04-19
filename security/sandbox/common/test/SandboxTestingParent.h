@@ -21,9 +21,11 @@ class SandboxTestingThread;
 
 class SandboxTestingParent : public PSandboxTestingParent {
  public:
-  static SandboxTestingParent* Create(
+  static already_AddRefed<SandboxTestingParent> Create(
       Endpoint<PSandboxTestingParent>&& aParentEnd);
-  static void Destroy(SandboxTestingParent* aInstance);
+  static void Destroy(already_AddRefed<SandboxTestingParent> aInstance);
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SandboxTestingParent, override)
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -36,9 +38,8 @@ class SandboxTestingParent : public PSandboxTestingParent {
       const nsCString& aSpecialDirName, nsString* aDirPath);
 
  private:
-  explicit SandboxTestingParent(SandboxTestingThread* aThread,
-                                Endpoint<PSandboxTestingParent>&& aParentEnd);
-  virtual ~SandboxTestingParent() = default;
+  explicit SandboxTestingParent(SandboxTestingThread* aThread);
+  virtual ~SandboxTestingParent();
   void ShutdownSandboxTestThread();
   void Bind(Endpoint<PSandboxTestingParent>&& aEnd);
 

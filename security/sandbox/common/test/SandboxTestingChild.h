@@ -10,7 +10,9 @@
 #include "mozilla/PSandboxTestingChild.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "nsISupports.h"
 
 #ifdef XP_UNIX
 #  include "nsString.h"
@@ -33,6 +35,8 @@ class SandboxTestingChild : public PSandboxTestingChild {
       Endpoint<PSandboxTestingChild>&& aSandboxTestingEndpoint);
   static SandboxTestingChild* GetInstance();
   static void Destroy();
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SandboxTestingChild, override)
 
   bool IsTestThread();
   void PostToTestThread(already_AddRefed<nsIRunnable>&& runnable);
@@ -68,12 +72,13 @@ class SandboxTestingChild : public PSandboxTestingChild {
  private:
   explicit SandboxTestingChild(SandboxTestingThread* aThread,
                                Endpoint<PSandboxTestingChild>&& aEndpoint);
+  ~SandboxTestingChild();
 
   void Bind(Endpoint<PSandboxTestingChild>&& aEndpoint);
 
   UniquePtr<SandboxTestingThread> mThread;
 
-  static SandboxTestingChild* sInstance;
+  static StaticRefPtr<SandboxTestingChild> sInstance;
 };
 
 }  // namespace mozilla
