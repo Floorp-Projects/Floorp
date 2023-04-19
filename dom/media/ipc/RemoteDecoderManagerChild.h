@@ -107,10 +107,6 @@ class RemoteDecoderManagerChild final
       RemoteDecodeIn aLocation);
 
  protected:
-  void InitIPDL();
-
-  void ActorDealloc() override;
-
   void HandleFatalError(const char* aMsg) const override;
 
   PRemoteDecoderChild* AllocPRemoteDecoderChild(
@@ -140,7 +136,6 @@ class RemoteDecoderManagerChild final
   // A thread-safe method to launch the RDD process if it hasn't launched yet.
   static RefPtr<GenericNonExclusivePromise> LaunchRDDProcessIfNeeded();
 
-  RefPtr<RemoteDecoderManagerChild> mIPDLSelfRef;
   // The location for decoding, Rdd or Gpu process.
   const RemoteDecodeIn mLocation;
 };
