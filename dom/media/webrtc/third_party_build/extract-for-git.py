@@ -82,8 +82,11 @@ def filter_nonwebrtc(commit):
 
 
 def fixup_paths(commit):
-    # make sure we only rewrite paths in the diff-related lines
-    return re.sub("( [ab])/" + LIBWEBRTC_DIR + "/", "\\1/", commit)
+    # make sure we only rewrite paths in the diff-related or rename lines
+    commit = re.sub(
+        f"^rename (from|to) {LIBWEBRTC_DIR}/", "rename \\1 ", commit, flags=re.MULTILINE
+    )
+    return re.sub(f"( [ab])/{LIBWEBRTC_DIR}/", "\\1/", commit)
 
 
 def write_as_mbox(sha1, author, date, description, commit, ofile):
