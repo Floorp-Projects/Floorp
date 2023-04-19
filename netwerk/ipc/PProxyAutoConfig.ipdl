@@ -7,7 +7,6 @@
 namespace mozilla {
 namespace net {
 
-[ManualDealloc]
 sync protocol PProxyAutoConfig
 {
 child:
