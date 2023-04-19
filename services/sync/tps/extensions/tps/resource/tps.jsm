@@ -67,14 +67,15 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Preference: "resource://tps/modules/prefs.sys.mjs",
   Separator: "resource://tps/modules/bookmarks.sys.mjs",
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
+  STATUS_OK: "resource://services-sync/constants.sys.mjs",
   Svc: "resource://services-sync/util.sys.mjs",
   SyncTelemetry: "resource://services-sync/telemetry.sys.mjs",
+  WEAVE_VERSION: "resource://services-sync/constants.sys.mjs",
   Weave: "resource://services-sync/main.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.jsm",
-  WEAVE_VERSION: "resource://services-sync/constants.js",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "fileProtocolHandler", () => {
@@ -1374,7 +1375,7 @@ var TPS = {
     await this.waitForSetupComplete();
     lazy.Logger.AssertEqual(
       lazy.Weave.Status.service,
-      lazy.Weave.STATUS_OK,
+      lazy.STATUS_OK,
       "Weave status OK"
     );
     await this.waitForTracking();

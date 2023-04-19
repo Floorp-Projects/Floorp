@@ -10,14 +10,14 @@ import { TokenServerClient } from "resource://services-common/tokenserverclient.
 import { CryptoUtils } from "resource://services-crypto/utils.sys.mjs";
 import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
 
-const {
+import {
   LOGIN_FAILED_LOGIN_REJECTED,
   LOGIN_FAILED_NETWORK_ERROR,
   LOGIN_FAILED_NO_USERNAME,
   LOGIN_SUCCEEDED,
   MASTER_PASSWORD_LOCKED,
   STATUS_OK,
-} = ChromeUtils.import("resource://services-sync/constants.js");
+} from "resource://services-sync/constants.sys.mjs";
 
 const lazy = {};
 

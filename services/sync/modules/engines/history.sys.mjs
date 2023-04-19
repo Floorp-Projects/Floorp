@@ -8,12 +8,13 @@ const THIRTY_DAYS_IN_MS = 2592000000; // 30 days in milliseconds
 import { Async } from "resource://services-common/async.sys.mjs";
 import { CommonUtils } from "resource://services-common/utils.sys.mjs";
 
-const {
+import {
   MAX_HISTORY_DOWNLOAD,
   MAX_HISTORY_UPLOAD,
   SCORE_INCREMENT_SMALL,
   SCORE_INCREMENT_XLARGE,
-} = ChromeUtils.import("resource://services-sync/constants.js");
+} from "resource://services-sync/constants.sys.mjs";
+
 import {
   Store,
   SyncEngine,

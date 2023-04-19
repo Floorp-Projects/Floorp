@@ -12,7 +12,7 @@ import { Log } from "resource://gre/modules/Log.sys.mjs";
 import { Async } from "resource://services-common/async.sys.mjs";
 import { CommonUtils } from "resource://services-common/utils.sys.mjs";
 
-const {
+import {
   CLIENT_NOT_CONFIGURED,
   CREDENTIALS_CHANGED,
   HMAC_EVENT_INTERVAL,
@@ -39,7 +39,8 @@ const {
   kSyncNetworkOffline,
   kSyncNotConfigured,
   kSyncWeaveDisabled,
-} = ChromeUtils.import("resource://services-sync/constants.js");
+} from "resource://services-sync/constants.sys.mjs";
+
 import { EngineManager } from "resource://services-sync/engines.sys.mjs";
 import { ClientEngine } from "resource://services-sync/engines/clients.sys.mjs";
 import { Weave } from "resource://services-sync/main.sys.mjs";

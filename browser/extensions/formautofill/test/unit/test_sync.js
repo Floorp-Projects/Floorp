@@ -12,8 +12,8 @@
 const { Service } = ChromeUtils.importESModule(
   "resource://services-sync/service.sys.mjs"
 );
-const { SCORE_INCREMENT_XLARGE } = ChromeUtils.import(
-  "resource://services-sync/constants.js"
+const { SCORE_INCREMENT_XLARGE } = ChromeUtils.importESModule(
+  "resource://services-sync/constants.sys.mjs"
 );
 
 const {

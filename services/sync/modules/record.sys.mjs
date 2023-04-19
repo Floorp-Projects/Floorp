@@ -7,10 +7,10 @@ const KEYS_WBO = "keys";
 
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
-const {
+import {
   DEFAULT_DOWNLOAD_BATCH_SIZE,
   DEFAULT_KEYBUNDLE_NAME,
-} = ChromeUtils.import("resource://services-sync/constants.js");
+} from "resource://services-sync/constants.sys.mjs";
 import { BulkKeyBundle } from "resource://services-sync/keys.sys.mjs";
 import { Weave } from "resource://services-sync/main.sys.mjs";
 import { Resource } from "resource://services-sync/resource.sys.mjs";

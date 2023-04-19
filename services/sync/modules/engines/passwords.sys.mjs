@@ -7,9 +7,7 @@ import {
   CryptoWrapper,
 } from "resource://services-sync/record.sys.mjs";
 
-const { SCORE_INCREMENT_XLARGE } = ChromeUtils.import(
-  "resource://services-sync/constants.js"
-);
+import { SCORE_INCREMENT_XLARGE } from "resource://services-sync/constants.sys.mjs";
 import { CollectionValidator } from "resource://services-sync/collection_validator.sys.mjs";
 import {
   Store,

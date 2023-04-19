@@ -20,7 +20,7 @@ EXTRA_JS_MODULES["services-sync"] += [
     "modules/addonutils.sys.mjs",
     "modules/bridged_engine.sys.mjs",
     "modules/collection_validator.sys.mjs",
-    "modules/constants.js",
+    "modules/constants.sys.mjs",
     "modules/doctor.sys.mjs",
     "modules/engines.sys.mjs",
     "modules/keys.sys.mjs",

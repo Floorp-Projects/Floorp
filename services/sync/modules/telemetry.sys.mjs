@@ -42,7 +42,7 @@ XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   ).getFxAccountsSingleton();
 });
 
-let constants = ChromeUtils.import("resource://services-sync/constants.js");
+import * as constants from "resource://services-sync/constants.sys.mjs";
 
 XPCOMUtils.defineLazyGetter(
   lazy,

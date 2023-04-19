@@ -16,9 +16,7 @@ const {
   PREF_ACCOUNT_ROOT,
 } = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 
-const { DEVICE_TYPE_DESKTOP } = ChromeUtils.import(
-  "resource://services-sync/constants.js"
-);
+import { DEVICE_TYPE_DESKTOP } from "resource://services-sync/constants.sys.mjs";
 
 const lazy = {};
 

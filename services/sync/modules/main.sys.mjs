@@ -2,23 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+export { lazy as Weave };
 
-export const Weave = ChromeUtils.import(
-  "resource://services-sync/constants.js"
-);
+const lazy = {};
 
 // We want these to be lazily loaded, which helps performance and also tests
 // to not have these loaded before they are ready.
-// eslint-disable-next-line mozilla/lazy-getter-object-name
-ChromeUtils.defineESModuleGetters(Weave, {
+// eslint-disable-next-line mozilla/valid-lazy
+ChromeUtils.defineESModuleGetters(lazy, {
   Service: "resource://services-sync/service.sys.mjs",
   Status: "resource://services-sync/status.sys.mjs",
   Svc: "resource://services-sync/util.sys.mjs",
   Utils: "resource://services-sync/util.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGetter(Weave, "Crypto", function() {
+// eslint-disable-next-line mozilla/valid-lazy
+ChromeUtils.defineLazyGetter(lazy, "Crypto", () => {
   let { WeaveCrypto } = ChromeUtils.importESModule(
     "resource://services-crypto/WeaveCrypto.sys.mjs"
   );

@@ -14,7 +14,9 @@ import { SyncEngine, Tracker } from "resource://services-sync/engines.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  MULTI_DEVICE_THRESHOLD: "resource://services-sync/constants.sys.mjs",
   Observers: "resource://services-common/observers.sys.mjs",
+  SCORE_INCREMENT_MEDIUM: "resource://services-sync/constants.sys.mjs",
   Svc: "resource://services-sync/util.sys.mjs",
 });
 
@@ -22,8 +24,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.jsm",
   extensionStorageSyncKinto:
     "resource://gre/modules/ExtensionStorageSyncKinto.jsm",
-  SCORE_INCREMENT_MEDIUM: "resource://services-sync/constants.js",
-  MULTI_DEVICE_THRESHOLD: "resource://services-sync/constants.js",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
