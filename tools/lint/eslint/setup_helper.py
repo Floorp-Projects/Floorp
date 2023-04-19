@@ -75,6 +75,15 @@ def eslint_setup(should_clobber=False):
     package_setup(get_project_root(), "eslint", should_clobber=should_clobber)
 
 
+def remove_directory(path):
+    print("Clobbering %s..." % path)
+    if sys.platform.startswith("win") and have_winrm():
+        process = subprocess.Popen(["winrm", "-rf", path])
+        process.wait()
+    else:
+        mozfileremove(path)
+
+
 def package_setup(
     package_root,
     package_name,
@@ -106,13 +115,15 @@ def package_setup(
         os.chdir(project_root)
 
         if should_clobber:
-            node_modules_path = os.path.join(project_root, "node_modules")
-            print("Clobbering %s..." % node_modules_path)
-            if sys.platform.startswith("win") and have_winrm():
-                process = subprocess.Popen(["winrm", "-rf", node_modules_path])
-                process.wait()
-            else:
-                mozfileremove(node_modules_path)
+            remove_directory(os.path.join(project_root, "node_modules"))
+
+        # Always remove the eslint-plugin-mozilla sub-directory as that can
+        # sometimes conflict with the top level node_modules, see bug 1809036.
+        remove_directory(
+            os.path.join(
+                get_eslint_module_path(), "eslint-plugin-mozilla", "node_modules"
+            )
+        )
 
         npm_path, _ = find_npm_executable()
         if not npm_path:
