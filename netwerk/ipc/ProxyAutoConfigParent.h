@@ -13,7 +13,7 @@ namespace net {
 
 class ProxyAutoConfigParent final : public PProxyAutoConfigParent {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ProxyAutoConfigParent)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ProxyAutoConfigParent, final)
 
   ProxyAutoConfigParent();
   void Init(Endpoint<PProxyAutoConfigParent>&& aEndpoint);
