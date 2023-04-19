@@ -197,11 +197,12 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
       aState->active &= aState->inHover;
     } else if (aAppearance == StyleAppearance::Treetwisty ||
                aAppearance == StyleAppearance::Treetwistyopen) {
-      if (nsTreeBodyFrame* treeBodyFrame = do_QueryFrame(aFrame)) {
+      nsTreeBodyFrame* treeBodyFrame = do_QueryFrame(aFrame);
+      if (treeBodyFrame) {
         const mozilla::AtomArray& atoms =
             treeBodyFrame->GetPropertyArrayForCurrentDrawingItem();
-        aState->selected = atoms.Contains(nsGkAtoms::selected);
-        aState->inHover = atoms.Contains(nsGkAtoms::hover);
+        aState->selected = atoms.Contains((nsStaticAtom*)nsGkAtoms::selected);
+        aState->inHover = atoms.Contains((nsStaticAtom*)nsGkAtoms::hover);
       }
     }
 

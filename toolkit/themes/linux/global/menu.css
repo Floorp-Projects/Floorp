@@ -27,25 +27,22 @@ menucaption {
   padding: 4px 6px;
   max-width: 42em;
   list-style-image: none;
+
   /* Specify our background to avoid triggering reflows on hover. This is an
    * optimization, as backgrounds don't disable theming on XUL elements, but
    * also papers over bug 1653832. */
   background-color: initial;
 }
 
-@media (-moz-gtk-non-native-menus) {
-  menu,
-  menuitem,
-  menucaption {
-    appearance: none;
-    border-radius: 4px;
-  }
-}
-
 menu:where([_moz-menuactive="true"]),
 menuitem:where([_moz-menuactive="true"]) {
   color: -moz-menuhovertext;
   background-color: -moz-menuhover;
+}
+
+menuitem[customoptionstyling="true"],
+menucaption[customoptionstyling="true"] {
+  appearance: none;
 }
 
 menu:where([disabled="true"]),
@@ -158,26 +155,7 @@ menulist > menupopup > :is(menuitem, menucaption, menu) > .menu-iconic-left {
   display: none;
 }
 
-menuitem:is([type="checkbox"], [checked="true"]) {
-  appearance: auto;
-  -moz-default-appearance: checkmenuitem;
-}
-
-menuitem[type="radio"] {
-  appearance: auto;
-  -moz-default-appearance: radiomenuitem;
-}
-
-menuseparator {
-  appearance: auto;
-  -moz-default-appearance: menuseparator;
-}
-
-@media (-moz-gtk-non-native-menus) or (-moz-non-native-content-theme) {
-  menuitem:is([type="checkbox"], [checked="true"], [type="radio"]) {
-    appearance: none;
-  }
-
+@media (-moz-non-native-content-theme) {
   menuitem:is([type="checkbox"], [checked="true"]) .menu-iconic-icon {
     appearance: auto;
     -moz-default-appearance: checkbox;
@@ -187,10 +165,21 @@ menuseparator {
     appearance: auto;
     -moz-default-appearance: radio;
   }
+}
+
+@media not (-moz-non-native-content-theme) {
+  menuitem:is([type="checkbox"], [checked="true"]) {
+    appearance: auto;
+    -moz-default-appearance: checkmenuitem;
+  }
+
+  menuitem[type="radio"] {
+    appearance: auto;
+    -moz-default-appearance: radiomenuitem;
+  }
 
   menuseparator {
-    appearance: none;
-    margin-block: 2px;
-    border-top: 1px solid color-mix(in srgb, ThreeDShadow 50%, transparent 50%);
+    appearance: auto;
+    -moz-default-appearance: menuseparator;
   }
 }

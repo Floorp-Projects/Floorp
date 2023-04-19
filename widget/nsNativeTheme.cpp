@@ -97,8 +97,7 @@ NS_IMPL_ISUPPORTS(nsNativeTheme, nsITimerCallback, nsINamed)
           flags |= ElementState::FOCUSRING;
         }
       }
-      if (CheckBooleanAttr(aFrame, nsGkAtoms::selected) ||
-          CheckBooleanAttr(aFrame, nsGkAtoms::checked)) {
+      if (CheckBooleanAttr(aFrame, nsGkAtoms::selected)) {
         flags |= ElementState::CHECKED;
       }
       break;
