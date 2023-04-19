@@ -74,7 +74,7 @@ class WebAuthnController final : public nsIWebAuthnController {
 
   void RunFinishRegister(uint64_t aTransactionId,
                          const RefPtr<nsICtapRegisterResult>& aResult);
-  void RunFinishSign(uint64_t aTransactionId, const nsACString& aClientDataJson,
+  void RunFinishSign(uint64_t aTransactionId,
                      const nsTArray<RefPtr<nsICtapSignResult>>& aResult);
 
   // The main thread runnable function for "nsIU2FTokenManager.ResumeRegister".

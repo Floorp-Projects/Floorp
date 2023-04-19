@@ -662,14 +662,16 @@ U2FSoftTokenTransport::MakeCredential(uint64_t aTransactionId,
   nsString rpId;
   args->GetRpId(rpId);
 
-  nsCString clientDataJson;
-  args->GetClientDataJSON(clientDataJson);
-
-  CryptoBuffer rpIdHash, clientDataHash;
-  rv = BuildTransactionHashes(NS_ConvertUTF16toUTF8(rpId), clientDataJson,
-                              rpIdHash, clientDataHash);
+  nsTArray<uint8_t> clientDataHash;
+  rv = args->GetClientDataHash(clientDataHash);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_DOM_UNKNOWN_ERR;
+  }
+
+  CryptoBuffer rpIdHash;
+  rv = HashCString(NS_ConvertUTF16toUTF8(rpId), rpIdHash);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_FAILURE;
   }
 
   // Optional exclusion list.
@@ -776,9 +778,8 @@ U2FSoftTokenTransport::MakeCredential(uint64_t aTransactionId,
   nsTArray<uint8_t> outAttObj(std::move(attObj));
   nsTArray<uint8_t> outKeyHandleBuf(std::move(keyHandleBuf));
   mController->FinishRegister(
-      aTransactionId,
-      new CtapRegisterResult(NS_OK, std::move(clientDataJson),
-                             std::move(outAttObj), std::move(outKeyHandleBuf)));
+      aTransactionId, new CtapRegisterResult(NS_OK, std::move(outAttObj),
+                                             std::move(outKeyHandleBuf)));
   return NS_OK;
 }
 
@@ -847,17 +848,19 @@ U2FSoftTokenTransport::GetAssertion(uint64_t aTransactionId,
     return NS_ERROR_DOM_NOT_ALLOWED_ERR;
   }
 
-  nsCString clientDataJson;
-  args->GetClientDataJSON(clientDataJson);
-
   nsString rpId;
   args->GetRpId(rpId);
 
-  CryptoBuffer rpIdHash, clientDataHash;
-  rv = BuildTransactionHashes(NS_ConvertUTF16toUTF8(rpId), clientDataJson,
-                              rpIdHash, clientDataHash);
+  nsTArray<uint8_t> clientDataHash;
+  rv = args->GetClientDataHash(clientDataHash);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_DOM_UNKNOWN_ERR;
+  }
+
+  CryptoBuffer rpIdHash;
+  rv = HashCString(NS_ConvertUTF16toUTF8(rpId), rpIdHash);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_FAILURE;
   }
 
   nsTArray<nsTArray<uint8_t>> appIdHashes;
@@ -998,7 +1001,7 @@ U2FSoftTokenTransport::GetAssertion(uint64_t aTransactionId,
       std::move(outAuthenticatorData), std::move(userHandle),
       std::move(chosenAppId)));
 
-  mController->FinishSign(aTransactionId, clientDataJson, results);
+  mController->FinishSign(aTransactionId, results);
   return NS_OK;
 }
 

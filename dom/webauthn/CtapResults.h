@@ -17,11 +17,10 @@ class CtapRegisterResult final : public nsICtapRegisterResult {
   NS_DECL_ISUPPORTS
   NS_DECL_NSICTAPREGISTERRESULT
 
-  explicit CtapRegisterResult(nsresult aStatus, nsCString&& aClientDataJSON,
+  explicit CtapRegisterResult(nsresult aStatus,
                               nsTArray<uint8_t>&& aAttestationObject,
                               nsTArray<uint8_t>&& aCredentialId)
       : mStatus(aStatus),
-        mClientDataJSON(std::move(aClientDataJSON)),
         mAttestationObject(std::move(aAttestationObject)),
         mCredentialId(std::move(aCredentialId)) {}
 
@@ -29,7 +28,6 @@ class CtapRegisterResult final : public nsICtapRegisterResult {
   ~CtapRegisterResult() = default;
 
   nsresult mStatus;
-  nsCString mClientDataJSON;
   nsTArray<uint8_t> mAttestationObject;
   nsTArray<uint8_t> mCredentialId;
 };

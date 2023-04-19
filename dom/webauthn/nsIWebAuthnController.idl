@@ -20,13 +20,7 @@ interface nsICtapRegisterArgs : nsISupports {
     // TODO(Bug 1820035) The origin is only used for prompt callbacks. Refactor and remove.
     readonly attribute AString origin;
 
-    // TODO(Bug 1820037) The spec only has `clientDataHash` here. We could refactor
-    // authenticator-rs to remove clientDataJSON
-    // readonly attribute Array<octet> clientDataHash;
-    readonly attribute ACString clientDataJSON;
-    // The challenge field of clientDataJSON. Can be removed if we refactor
-    // authenticators to only require clientDataHash.
-    readonly attribute Array<octet> challenge;
+    readonly attribute Array<octet> clientDataHash;
 
     // A PublicKeyCredentialRpEntity
     readonly attribute AString rpId;
@@ -83,13 +77,7 @@ interface nsICtapSignArgs : nsISupports {
     // The spec only asks for the ID field of a PublicKeyCredentialRpEntity here
     readonly attribute AString rpId;
 
-    // TODO(Bug 1820037) The spec only has `clientDataHash` here. We could refactor
-    // authenticator-rs to remove clientDataJSON
-    // readonly attribute Array<octet> clientDataHash;
-    readonly attribute ACString clientDataJSON;
-    // The challenge field of clientDataJSON. Can be removed if we refactor
-    // authenticators to only require clientDataHash.
-    readonly attribute Array<octet> challenge;
+    readonly attribute Array<octet> clientDataHash;
 
     // The spec defines this as a sequence<PublicKeyCredentialDescriptor>.
     // We only include the ID field, as the transport field is optional and we
@@ -119,8 +107,6 @@ interface nsICtapSignArgs : nsISupports {
 [uuid(0567c384-a728-11ed-85f7-030324a370f0)]
 interface nsICtapRegisterResult : nsISupports {
     readonly attribute nsresult status;
-
-    readonly attribute ACString clientDataJSON;
 
     // The serialied attestation object as defined in
     // https://www.w3.org/TR/webauthn-2/#sctn-attestation
@@ -199,7 +185,7 @@ interface nsIWebAuthnController : nsIU2FTokenManager
     // Authenticator callbacks
     [noscript] void sendPromptNotificationPreformatted(in uint64_t aTransactionId, in ACString aJSON);
     [noscript] void finishRegister(in uint64_t aTransactionId, in nsICtapRegisterResult aResult);
-    [noscript] void finishSign(in uint64_t aTransactionId, in ACString aClientDataJson, in Array<nsICtapSignResult> aResult);
+    [noscript] void finishSign(in uint64_t aTransactionId, in Array<nsICtapSignResult> aResult);
 };
 
 // The nsIWebAuthnTransport interface allows a C++ implemented nsIWebAuthnController to interact

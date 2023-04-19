@@ -6,6 +6,7 @@
 
 #include "CtapArgs.h"
 #include "WebAuthnEnumStrings.h"
+#include "WebAuthnUtil.h"
 #include "mozilla/dom/PWebAuthnTransactionParent.h"
 
 namespace mozilla::dom {
@@ -20,17 +21,17 @@ CtapRegisterArgs::GetOrigin(nsAString& aOrigin) {
 }
 
 NS_IMETHODIMP
-CtapRegisterArgs::GetClientDataJSON(nsACString& aClientDataJSON) {
+CtapRegisterArgs::GetClientDataHash(nsTArray<uint8_t>& aClientDataHash) {
   mozilla::ipc::AssertIsOnBackgroundThread();
-  aClientDataJSON = mInfo.ClientDataJSON();
-  return NS_OK;
-}
 
-NS_IMETHODIMP
-CtapRegisterArgs::GetChallenge(nsTArray<uint8_t>& aChallenge) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
-  aChallenge.Clear();
-  aChallenge.AppendElements(mInfo.Challenge());
+  CryptoBuffer clientDataHash;
+  nsresult rv = HashCString(mInfo.ClientDataJSON(), clientDataHash);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_FAILURE;
+  }
+  aClientDataHash.Clear();
+  aClientDataHash.AppendElements(clientDataHash);
+
   return NS_OK;
 }
 
@@ -205,17 +206,17 @@ CtapSignArgs::GetRpId(nsAString& aRpId) {
 }
 
 NS_IMETHODIMP
-CtapSignArgs::GetClientDataJSON(nsACString& aClientDataJSON) {
+CtapSignArgs::GetClientDataHash(nsTArray<uint8_t>& aClientDataHash) {
   mozilla::ipc::AssertIsOnBackgroundThread();
-  aClientDataJSON = mInfo.ClientDataJSON();
-  return NS_OK;
-}
 
-NS_IMETHODIMP
-CtapSignArgs::GetChallenge(nsTArray<uint8_t>& aChallenge) {
-  mozilla::ipc::AssertIsOnBackgroundThread();
-  aChallenge.Clear();
-  aChallenge.AppendElements(mInfo.Challenge());
+  CryptoBuffer clientDataHash;
+  nsresult rv = HashCString(mInfo.ClientDataJSON(), clientDataHash);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_FAILURE;
+  }
+  aClientDataHash.Clear();
+  aClientDataHash.AppendElements(clientDataHash);
+
   return NS_OK;
 }
 
