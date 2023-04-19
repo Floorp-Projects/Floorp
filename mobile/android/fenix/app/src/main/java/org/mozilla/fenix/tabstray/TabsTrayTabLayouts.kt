@@ -59,10 +59,20 @@ fun TabLayout(
     onTabLongClick: (TabSessionState) -> Unit,
     header: (@Composable () -> Unit)? = null,
 ) {
+    var selectedTabIndex = 0
+    selectedTabId?.let {
+        tabs.forEachIndexed { index, tab ->
+            if (tab.id == selectedTabId) {
+                selectedTabIndex = index
+            }
+        }
+    }
+
     if (displayTabsInGrid) {
         TabGrid(
             tabs = tabs,
             selectedTabId = selectedTabId,
+            selectedTabIndex = selectedTabIndex,
             selectionMode = selectionMode,
             onTabClose = onTabClose,
             onTabMediaClick = onTabMediaClick,
@@ -74,6 +84,7 @@ fun TabLayout(
         TabList(
             tabs = tabs,
             selectedTabId = selectedTabId,
+            selectedTabIndex = selectedTabIndex,
             selectionMode = selectionMode,
             onTabClose = onTabClose,
             onTabMediaClick = onTabMediaClick,
@@ -89,6 +100,7 @@ fun TabLayout(
 private fun TabGrid(
     tabs: List<TabSessionState>,
     selectedTabId: String?,
+    selectedTabIndex: Int,
     selectionMode: TabsTrayState.Mode,
     onTabClose: (TabSessionState) -> Unit,
     onTabMediaClick: (TabSessionState) -> Unit,
@@ -96,7 +108,7 @@ private fun TabGrid(
     onTabLongClick: (TabSessionState) -> Unit,
     header: (@Composable () -> Unit)? = null,
 ) {
-    val state = rememberLazyGridState()
+    val state = rememberLazyGridState(initialFirstVisibleItemIndex = selectedTabIndex)
     val tabListBottomPadding = dimensionResource(id = R.dimen.tab_tray_list_bottom_padding)
     val isInMultiSelectMode = selectionMode is TabsTrayState.Mode.Select
 
@@ -138,6 +150,7 @@ private fun TabGrid(
 private fun TabList(
     tabs: List<TabSessionState>,
     selectedTabId: String?,
+    selectedTabIndex: Int,
     selectionMode: TabsTrayState.Mode,
     onTabClose: (TabSessionState) -> Unit,
     onTabMediaClick: (TabSessionState) -> Unit,
@@ -145,7 +158,7 @@ private fun TabList(
     onTabLongClick: (TabSessionState) -> Unit,
     header: (@Composable () -> Unit)? = null,
 ) {
-    val state = rememberLazyListState()
+    val state = rememberLazyListState(initialFirstVisibleItemIndex = selectedTabIndex)
     val tabListBottomPadding = dimensionResource(id = R.dimen.tab_tray_list_bottom_padding)
     val isInMultiSelectMode = selectionMode is TabsTrayState.Mode.Select
 
