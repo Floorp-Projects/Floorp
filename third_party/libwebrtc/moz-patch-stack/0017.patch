@@ -1,37 +1,37 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Thu, 31 Jan 2019 15:37:00 -0500
-Subject: Bug 1524208 - Calculate stride based upon target_width in
- video_capture_impl.cc; r=pehrsons
+Date: Mon, 13 Aug 2018 10:24:00 -0400
+Subject: Bug 1376873 - Fix warning in mean_variance_estimator.cc; r=padenot
 
-Differential Revision: https://phabricator.services.mozilla.com/D18270
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/51d12094d825c4c4467cb132d03d4f3cad4b1b82
+Differential Revision: https://phabricator.services.mozilla.com/D7470
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/cb6c555654c0bca72999f1e414d8d6d0b59186c9
 ---
- modules/video_capture/video_capture_impl.cc | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ .../echo_detector/mean_variance_estimator.cc                | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
-index 117c6beacf..9367cbb783 100644
---- a/modules/video_capture/video_capture_impl.cc
-+++ b/modules/video_capture/video_capture_impl.cc
-@@ -143,8 +143,6 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
-     return -1;
-   }
+diff --git a/modules/audio_processing/echo_detector/mean_variance_estimator.cc b/modules/audio_processing/echo_detector/mean_variance_estimator.cc
+index a85740387b..a9ebb8cd92 100644
+--- a/modules/audio_processing/echo_detector/mean_variance_estimator.cc
++++ b/modules/audio_processing/echo_detector/mean_variance_estimator.cc
+@@ -10,7 +10,7 @@
  
--  int stride_y = width;
--  int stride_uv = (width + 1) / 2;
-   int target_width = width;
-   int target_height = abs(height);
+ #include "modules/audio_processing/echo_detector/mean_variance_estimator.h"
  
-@@ -160,6 +158,9 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
-     }
-   }
+-#include <math.h>
++#include <cmath>
  
-+  int stride_y = target_width;
-+  int stride_uv = (target_width + 1) / 2;
-+
-   // Setting absolute height (in case it was negative).
-   // In Windows, the image starts bottom left, instead of top left.
-   // Setting a negative source height, inverts the image (within LibYuv).
+ #include "rtc_base/checks.h"
+ 
+@@ -26,8 +26,8 @@ void MeanVarianceEstimator::Update(float value) {
+   mean_ = (1.f - kAlpha) * mean_ + kAlpha * value;
+   variance_ =
+       (1.f - kAlpha) * variance_ + kAlpha * (value - mean_) * (value - mean_);
+-  RTC_DCHECK(isfinite(mean_));
+-  RTC_DCHECK(isfinite(variance_));
++  RTC_DCHECK(std::isfinite(mean_));
++  RTC_DCHECK(std::isfinite(variance_));
+ }
+ 
+ float MeanVarianceEstimator::std_deviation() const {
 -- 
 2.34.1
 

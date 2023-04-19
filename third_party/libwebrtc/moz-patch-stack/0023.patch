@@ -1,56 +1,81 @@
-From: Alex Chronopoulos <achronop@gmail.com>
-Date: Wed, 18 Sep 2019 13:12:00 +0000
-Subject: Bug 1572281 - Remove audio device change notifications from video
- capture in Windows. r=dminor
+From: Dan Minor <dminor@mozilla.com>
+Date: Thu, 21 Mar 2019 15:48:00 +0000
+Subject: Bug 1535584 - Restore UpdateCodecFrameSize to vp9_impl.cc; r=bwc
 
-Video capture used to provide device change notifications for audio and video devices. From now on, CubebDeviceEnumerator will provide audio device change notifications thus video capture is updated to notify only changes of the video device. This is the windows part.
-
-Differential Revision: https://phabricator.services.mozilla.com/D46274
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a5c23245837ebdd99532e8bfaca05774c5c96d9d
+Differential Revision: https://phabricator.services.mozilla.com/D23713
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0898f9cfe09273e1d86c38abdd576cdf273009f0
 ---
- modules/video_capture/windows/device_info_ds.cc | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ .../codecs/vp9/libvpx_vp9_encoder.cc          | 50 +++++++++++++++++++
+ 1 file changed, 50 insertions(+)
 
-diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
-index 96db60c968..3ab95837c0 100644
---- a/modules/video_capture/windows/device_info_ds.cc
-+++ b/modules/video_capture/windows/device_info_ds.cc
-@@ -20,7 +20,7 @@
- namespace webrtc {
- namespace videocapturemodule {
- 
--BOOL isCaptureDevice(DEV_BROADCAST_HDR *pHdr)
-+BOOL isVideoDevice(DEV_BROADCAST_HDR *pHdr)
- {
-   if (pHdr == NULL) {
-     return FALSE;
-@@ -29,7 +29,7 @@ BOOL isCaptureDevice(DEV_BROADCAST_HDR *pHdr)
-     return FALSE;
+diff --git a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
+index 35b13058a2..5877373b76 100644
+--- a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
++++ b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
+@@ -1159,6 +1159,14 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
+     config_changed_ = false;
    }
-   DEV_BROADCAST_DEVICEINTERFACE* pDi = (DEV_BROADCAST_DEVICEINTERFACE*)pHdr;
--  return pDi->dbcc_classguid == KSCATEGORY_CAPTURE;
-+  return pDi->dbcc_classguid == KSCATEGORY_VIDEO_CAMERA;
+ 
++  if (input_image.width() != codec_.width ||
++      input_image.height() != codec_.height) {
++    int ret = UpdateCodecFrameSize(input_image);
++    if (ret < 0) {
++      return ret;
++    }
++  }
++
+   RTC_DCHECK_EQ(input_image.width(), raw_->d_w);
+   RTC_DCHECK_EQ(input_image.height(), raw_->d_h);
+ 
+@@ -1286,6 +1294,48 @@ int LibvpxVp9Encoder::Encode(const VideoFrame& input_image,
+   return WEBRTC_VIDEO_CODEC_OK;
  }
  
- LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
-@@ -47,7 +47,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
-     else if (uiMsg == WM_DEVICECHANGE)
-     {
-         pParent = (DeviceInfoDS*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
--        if (pParent && isCaptureDevice((PDEV_BROADCAST_HDR)lParam))
-+        if (pParent && isVideoDevice((PDEV_BROADCAST_HDR)lParam))
-         {
-             pParent->DeviceChange();
-         }
-@@ -128,7 +128,7 @@ DeviceInfoDS::DeviceInfoDS()
-     DEV_BROADCAST_DEVICEINTERFACE di = { 0 };
-     di.dbcc_size = sizeof(di);
-     di.dbcc_devicetype  = DBT_DEVTYP_DEVICEINTERFACE;
--    di.dbcc_classguid  = KSCATEGORY_CAPTURE;
-+    di.dbcc_classguid  = KSCATEGORY_VIDEO_CAMERA;
- 
-     _hdevnotify = RegisterDeviceNotification(_hwnd, &di,
-                                              DEVICE_NOTIFY_WINDOW_HANDLE);
++int LibvpxVp9Encoder::UpdateCodecFrameSize(
++    const VideoFrame& input_image) {
++  RTC_LOG(LS_INFO) << "Reconfiging VP from " <<
++          codec_.width << "x" << codec_.height << " to " <<
++          input_image.width() << "x" << input_image.height();
++  // Preserve latest bitrate/framerate setting
++  // TODO: Mozilla - see below, we need to save more state here.
++  //uint32_t old_bitrate_kbit = config_->rc_target_bitrate;
++  //uint32_t old_framerate = codec_.maxFramerate;
++
++  codec_.width = input_image.width();
++  codec_.height = input_image.height();
++
++  vpx_img_free(raw_);
++  raw_ = vpx_img_wrap(NULL, VPX_IMG_FMT_I420, codec_.width, codec_.height,
++                      1, NULL);
++  // Update encoder context for new frame size.
++  config_->g_w = codec_.width;
++  config_->g_h = codec_.height;
++
++  // Determine number of threads based on the image size and #cores.
++  config_->g_threads = NumberOfThreads(codec_.width, codec_.height,
++                                       num_cores_);
++
++  // NOTE: We would like to do this the same way vp8 does it
++  // (with vpx_codec_enc_config_set()), but that causes asserts
++  // in AQ 3 (cyclic); and in AQ 0 it works, but on a resize to smaller
++  // than 1/2 x 1/2 original it asserts in convolve().  Given these
++  // bugs in trying to do it the "right" way, we basically re-do
++  // the initialization.
++  vpx_codec_destroy(encoder_); // clean up old state
++  int result = InitAndSetControlSettings(&codec_);
++  if (result == WEBRTC_VIDEO_CODEC_OK) {
++    // TODO: Mozilla rates have become much more complicated, we need to store
++    // more state or find another way of doing this.
++    //return SetRates(old_bitrate_kbit, old_framerate);
++    RTC_CHECK(false);
++    return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
++  }
++  return result;
++}
++
+ bool LibvpxVp9Encoder::PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
+                                              absl::optional<int>* spatial_idx,
+                                              absl::optional<int>* temporal_idx,
 -- 
 2.34.1
 

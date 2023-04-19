@@ -1,61 +1,44 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Tue, 15 Jun 2021 12:18:00 -0500
-Subject: Bug 1654112 - suppress android lint warnings for WrongConstant in 2
- libwebrtc java files. r=ng
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Fri, 19 Feb 2021 13:45:00 +0100
+Subject: Bug 1654112 - libwebrtc: Add a REMB on/off switch to
+ VideoReceiveStream. r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D118050
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e60e2f295fb722f69a3a9fe9af34219880afe772
+Differential Revision: https://phabricator.services.mozilla.com/D105774
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7330681cf4de6d8dd868cc661cbdd6679bbc07b3
 ---
- .../java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java    | 5 +++++
- sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java  | 5 +++++
- 2 files changed, 10 insertions(+)
+ call/video_receive_stream.h         | 3 +++
+ video/rtp_video_stream_receiver2.cc | 3 +--
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java b/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java
-index 0472114297..afd3d429af 100644
---- a/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java
-+++ b/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java
-@@ -15,6 +15,7 @@ import static android.media.AudioManager.MODE_IN_COMMUNICATION;
- import static android.media.AudioManager.MODE_NORMAL;
- import static android.media.AudioManager.MODE_RINGTONE;
+diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
+index 97cbf2266e..9f47e77357 100644
+--- a/call/video_receive_stream.h
++++ b/call/video_receive_stream.h
+@@ -205,6 +205,9 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
+       // disabled.
+       KeyFrameReqMethod keyframe_method = KeyFrameReqMethod::kPliRtcp;
  
-+import android.annotation.SuppressLint;
- import android.content.Context;
- import android.content.pm.PackageManager;
- import android.media.AudioDeviceInfo;
-@@ -247,6 +248,10 @@ public final class WebRtcAudioUtils {
-     }
-   }
++      // See draft-alvestrand-rmcat-remb for information.
++      bool remb = false;
++
+       bool tmmbr = false;
  
-+  // Moz linting complains even though AudioManager.GET_DEVICES_ALL is
-+  // listed in the docs here:
-+  // https://developer.android.com/reference/android/media/AudioManager#GET_DEVICES_ALL
-+  @SuppressLint("WrongConstant")
-   private static void logAudioDeviceInfo(String tag, AudioManager audioManager) {
-     if (Build.VERSION.SDK_INT < 23) {
-       return;
-diff --git a/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java b/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
-index 7894659926..7b4b809ab1 100644
---- a/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
-+++ b/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
-@@ -15,6 +15,7 @@ import static android.media.AudioManager.MODE_IN_COMMUNICATION;
- import static android.media.AudioManager.MODE_NORMAL;
- import static android.media.AudioManager.MODE_RINGTONE;
+       // See LntfConfig for description.
+diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
+index 169aeb4700..3a48e58ea4 100644
+--- a/video/rtp_video_stream_receiver2.cc
++++ b/video/rtp_video_stream_receiver2.cc
+@@ -299,9 +299,8 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
+       frames_decryptable_(false),
+       absolute_capture_time_interpolator_(clock) {
+   packet_sequence_checker_.Detach();
+-  constexpr bool remb_candidate = true;
+   if (packet_router_)
+-    packet_router_->AddReceiveRtpModule(rtp_rtcp_.get(), remb_candidate);
++    packet_router_->AddReceiveRtpModule(rtp_rtcp_.get(), config_.rtp.remb);
  
-+import android.annotation.SuppressLint;
- import android.annotation.TargetApi;
- import android.content.Context;
- import android.content.pm.PackageManager;
-@@ -229,6 +230,10 @@ final class WebRtcAudioUtils {
-     }
-   }
- 
-+  // Moz linting complains even though AudioManager.GET_DEVICES_ALL is
-+  // listed in the docs here:
-+  // https://developer.android.com/reference/android/media/AudioManager#GET_DEVICES_ALL
-+  @SuppressLint("WrongConstant")
-   private static void logAudioDeviceInfo(String tag, AudioManager audioManager) {
-     if (Build.VERSION.SDK_INT < 23) {
-       return;
+   RTC_DCHECK(config_.rtp.rtcp_mode != RtcpMode::kOff)
+       << "A stream should not be configured with RTCP disabled. This value is "
 -- 
 2.34.1
 

@@ -1,57 +1,52 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Thu, 18 Feb 2021 17:23:00 -0800
-Subject: Bug 1654112 - fix device_info_ds pid and Windows constants includes;
- r=pehrsons
+From: Dan Minor <dminor@mozilla.com>
+Date: Wed, 18 Nov 2020 15:19:00 -0500
+Subject: Bug 1654112 - Fully qualify kIvfHeaderSize. r=ng
 
-Upstreaming bug 1697385
-
-Differential Revision: https://phabricator.services.mozilla.com/D107899
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/24809d566449907edea49ea47528065ad0f76910
+Differential Revision: https://phabricator.services.mozilla.com/D130087
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9452e226943fea4b0f6ff67e0ee85587d9c23a44
 ---
- modules/video_capture/windows/device_info_ds.cc | 3 ++-
- modules/video_capture/windows/device_info_ds.h  | 6 +++++-
- 2 files changed, 7 insertions(+), 2 deletions(-)
+ modules/video_coding/utility/ivf_file_writer.cc | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
-index 3ab95837c0..6b4c57d01e 100644
---- a/modules/video_capture/windows/device_info_ds.cc
-+++ b/modules/video_capture/windows/device_info_ds.cc
-@@ -172,7 +172,8 @@ int32_t DeviceInfoDS::GetDeviceName(uint32_t deviceNumber,
-                                     char* deviceUniqueIdUTF8,
-                                     uint32_t deviceUniqueIdUTF8Length,
-                                     char* productUniqueIdUTF8,
--                                    uint32_t productUniqueIdUTF8Length) {
-+                                    uint32_t productUniqueIdUTF8Length,
-+                                    pid_t* pid) {
-   MutexLock lock(&_apiLock);
-   const int32_t result = GetDeviceInfo(
-       deviceNumber, deviceNameUTF8, deviceNameLength, deviceUniqueIdUTF8,
-diff --git a/modules/video_capture/windows/device_info_ds.h b/modules/video_capture/windows/device_info_ds.h
-index ed2a726d6f..e6dfaed366 100644
---- a/modules/video_capture/windows/device_info_ds.h
-+++ b/modules/video_capture/windows/device_info_ds.h
-@@ -12,8 +12,11 @@
- #define MODULES_VIDEO_CAPTURE_MAIN_SOURCE_WINDOWS_DEVICE_INFO_DS_H_
+diff --git a/modules/video_coding/utility/ivf_file_writer.cc b/modules/video_coding/utility/ivf_file_writer.cc
+index 668390a78c..5b27ef3ef7 100644
+--- a/modules/video_coding/utility/ivf_file_writer.cc
++++ b/modules/video_coding/utility/ivf_file_writer.cc
+@@ -39,7 +39,7 @@ IvfFileWriter::IvfFileWriter(FileWrapper file, size_t byte_limit)
+       last_timestamp_(-1),
+       using_capture_timestamps_(false),
+       file_(std::move(file)) {
+-  RTC_DCHECK(byte_limit == 0 || kIvfHeaderSize <= byte_limit)
++  RTC_DCHECK(byte_limit == 0 || webrtc::kIvfHeaderSize <= byte_limit)
+       << "The byte_limit is too low, not even the header will fit.";
+ }
  
- #include <dshow.h>
-+#include <Ks.h>
-+#include <dbt.h>
+@@ -59,7 +59,7 @@ bool IvfFileWriter::WriteHeader() {
+     return false;
+   }
  
- #include "modules/video_capture/device_info_impl.h"
-+#include "modules/video_capture/video_capture.h"
- #include "modules/video_capture/video_capture_impl.h"
+-  uint8_t ivf_header[kIvfHeaderSize] = {0};
++  uint8_t ivf_header[webrtc::kIvfHeaderSize] = {0};
+   ivf_header[0] = 'D';
+   ivf_header[1] = 'K';
+   ivf_header[2] = 'I';
+@@ -113,13 +113,13 @@ bool IvfFileWriter::WriteHeader() {
+                                           static_cast<uint32_t>(num_frames_));
+   ByteWriter<uint32_t>::WriteLittleEndian(&ivf_header[28], 0);  // Reserved.
  
- namespace webrtc {
-@@ -47,7 +50,8 @@ class DeviceInfoDS : public DeviceInfoImpl {
-                         char* deviceUniqueIdUTF8,
-                         uint32_t deviceUniqueIdUTF8Length,
-                         char* productUniqueIdUTF8,
--                        uint32_t productUniqueIdUTF8Length) override;
-+                        uint32_t productUniqueIdUTF8Length,
-+                        pid_t* pid) override;
+-  if (!file_.Write(ivf_header, kIvfHeaderSize)) {
++  if (!file_.Write(ivf_header, webrtc::kIvfHeaderSize)) {
+     RTC_LOG(LS_ERROR) << "Unable to write IVF header for ivf output file.";
+     return false;
+   }
  
-   /*
-    * Display OS /capture device specific settings dialog
+-  if (bytes_written_ < kIvfHeaderSize) {
+-    bytes_written_ = kIvfHeaderSize;
++  if (bytes_written_ < webrtc::kIvfHeaderSize) {
++    bytes_written_ = webrtc::kIvfHeaderSize;
+   }
+ 
+   return true;
 -- 
 2.34.1
 

@@ -1,41 +1,29 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Wed, 10 Feb 2021 12:24:00 -0800
-Subject: Bug 1654112 - Use newer thread run callback, and adapt
- PlatformUIThread; r=pehrsons
+From: Dan Minor <dminor@mozilla.com>
+Date: Fri, 13 Nov 2020 14:34:00 -0500
+Subject: Bug 1654112 - Fully quality AudioLevel::kUri in channel_send.cc. r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D107879
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/bb6417a4cfac1416a8e2565bd68b66c40be4827b
+Differential Revision: https://phabricator.services.mozilla.com/D130082
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7163801a480d607005042292ed9e4fbb892f440d
 ---
- rtc_base/platform_thread.h | 7 +++++++
- 1 file changed, 7 insertions(+)
+ audio/channel_send.cc | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/rtc_base/platform_thread.h b/rtc_base/platform_thread.h
-index 3ab2761f43..52497ffd0c 100644
---- a/rtc_base/platform_thread.h
-+++ b/rtc_base/platform_thread.h
-@@ -18,8 +18,13 @@
- #include "absl/types/optional.h"
- #include "rtc_base/platform_thread_types.h"
+diff --git a/audio/channel_send.cc b/audio/channel_send.cc
+index fdc11a83fb..8c7faf70d8 100644
+--- a/audio/channel_send.cc
++++ b/audio/channel_send.cc
+@@ -703,9 +703,9 @@ void ChannelSend::SetSendAudioLevelIndicationStatus(bool enable, int id) {
+   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+   _includeAudioLevelIndication = enable;
+   if (enable) {
+-    rtp_rtcp_->RegisterRtpHeaderExtension(AudioLevel::Uri(), id);
++    rtp_rtcp_->RegisterRtpHeaderExtension(webrtc::AudioLevel::Uri(), id);
+   } else {
+-    rtp_rtcp_->DeregisterSendRtpHeaderExtension(AudioLevel::Uri());
++    rtp_rtcp_->DeregisterSendRtpHeaderExtension(webrtc::AudioLevel::Uri());
+   }
+ }
  
-+#include "rtc_base/deprecated/recursive_critical_section.h"
-+
- namespace rtc {
- 
-+// Bug 1691641
-+class PlatformUIThread;
-+
- enum class ThreadPriority {
-   kLow = 1,
-   kNormal,
-@@ -110,6 +115,8 @@ class PlatformThread final {
- 
-   absl::optional<Handle> handle_;
-   bool joinable_ = false;
-+  // Bug 1691641
-+  friend PlatformUIThread;
- };
- 
- }  // namespace rtc
 -- 
 2.34.1
 

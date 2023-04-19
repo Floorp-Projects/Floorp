@@ -1,38 +1,41 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Fri, 25 Jun 2021 15:12:00 -0500
-Subject: Bug 1654112 - Mirror Bug 1714577 - Part 3 - Register WebRTC threads
- with the Gecko Profiler. r=ng
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Wed, 10 Feb 2021 12:24:00 -0800
+Subject: Bug 1654112 - Use newer thread run callback, and adapt
+ PlatformUIThread; r=pehrsons
 
-Differential Revision: https://phabricator.services.mozilla.com/D119412
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d881b16dd8a6813feb5ce1516c2a7ebe0270e72d
+Differential Revision: https://phabricator.services.mozilla.com/D107879
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/bb6417a4cfac1416a8e2565bd68b66c40be4827b
 ---
- rtc_base/platform_thread.cc | 6 ++++++
- 1 file changed, 6 insertions(+)
+ rtc_base/platform_thread.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/rtc_base/platform_thread.cc b/rtc_base/platform_thread.cc
-index 556204ac89..71a9f1b224 100644
---- a/rtc_base/platform_thread.cc
-+++ b/rtc_base/platform_thread.cc
-@@ -19,6 +19,8 @@
+diff --git a/rtc_base/platform_thread.h b/rtc_base/platform_thread.h
+index 3ab2761f43..52497ffd0c 100644
+--- a/rtc_base/platform_thread.h
++++ b/rtc_base/platform_thread.h
+@@ -18,8 +18,13 @@
+ #include "absl/types/optional.h"
+ #include "rtc_base/platform_thread_types.h"
  
- #include "rtc_base/checks.h"
- 
-+#include "MicroGeckoProfiler.h"
++#include "rtc_base/deprecated/recursive_critical_section.h"
 +
  namespace rtc {
- namespace {
  
-@@ -181,6 +183,10 @@ PlatformThread PlatformThread::SpawnThread(
-       new std::function<void()>([thread_function = std::move(thread_function),
-                                  name = std::string(name), attributes] {
-         rtc::SetCurrentThreadName(name.c_str());
++// Bug 1691641
++class PlatformUIThread;
 +
-+        char stacktop;
-+        AutoRegisterProfiler profiler(name.c_str(), &stacktop);
-+
-         SetPriority(attributes.priority);
-         thread_function();
-       });
+ enum class ThreadPriority {
+   kLow = 1,
+   kNormal,
+@@ -110,6 +115,8 @@ class PlatformThread final {
+ 
+   absl::optional<Handle> handle_;
+   bool joinable_ = false;
++  // Bug 1691641
++  friend PlatformUIThread;
+ };
+ 
+ }  // namespace rtc
 -- 
 2.34.1
 

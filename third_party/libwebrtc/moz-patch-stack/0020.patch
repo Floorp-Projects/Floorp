@@ -1,96 +1,32 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Tue, 17 Sep 2019 06:47:00 +0000
-Subject: Bug 1581193 - Fix devicechange event on Windows; r=achronop
+From: Jed Davis <jld@mozilla.com>
+Date: Sun, 17 Nov 2019 03:40:00 +0000
+Subject: Bug 1545504 - Strengthen bounds check in WebRTC PhysicalSocketServer.
+ r=jesup
 
-This restores the code for generating devicechange events that was
-accidentally removed as part of updating the Windows video capture code
-in Bug 1552755.
+PhysicalSocketServer isn't currently used by Mozilla's WebRTC
+integration, but just in case, let's make sure that this array index is
+bounds-checked in actual use, not just in debug builds (which tend to
+never see realistic test conditions).
 
-Differential Revision: https://phabricator.services.mozilla.com/D46033
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/840c4edafa021eeac6a7e6ae0e828d0adcfea92e
+Differential Revision: https://phabricator.services.mozilla.com/D52745
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2b079067648bfe0d064a334bf19bdcc233e26b6e
 ---
- .../video_capture/windows/device_info_ds.cc   | 39 +++++++++++++++++++
- .../video_capture/windows/device_info_ds.h    |  3 ++
- 2 files changed, 42 insertions(+)
+ rtc_base/physical_socket_server.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
-index fb8d55137f..8543dce746 100644
---- a/modules/video_capture/windows/device_info_ds.cc
-+++ b/modules/video_capture/windows/device_info_ds.cc
-@@ -20,6 +20,29 @@
- namespace webrtc {
- namespace videocapturemodule {
+diff --git a/rtc_base/physical_socket_server.cc b/rtc_base/physical_socket_server.cc
+index 4ed4fd0cbb..60d024c769 100644
+--- a/rtc_base/physical_socket_server.cc
++++ b/rtc_base/physical_socket_server.cc
+@@ -1397,7 +1397,7 @@ bool PhysicalSocketServer::WaitSelect(int cmsWait, bool process_io) {
+         int fd = pdispatcher->GetDescriptor();
+         // "select"ing a file descriptor that is equal to or larger than
+         // FD_SETSIZE will result in undefined behavior.
+-        RTC_DCHECK_LT(fd, FD_SETSIZE);
++        RTC_CHECK_LT(fd, FD_SETSIZE);
+         if (fd > fdmax)
+           fdmax = fd;
  
-+LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
-+{
-+    DeviceInfoDS* pParent;
-+    if (uiMsg == WM_CREATE)
-+    {
-+        pParent = (DeviceInfoDS*)((LPCREATESTRUCT)lParam)->lpCreateParams;
-+        SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pParent);
-+    }
-+    else if (uiMsg == WM_DESTROY)
-+    {
-+        SetWindowLongPtr(hWnd, GWLP_USERDATA, NULL);
-+    }
-+    else if (uiMsg == WM_DEVICECHANGE)
-+    {
-+        pParent = (DeviceInfoDS*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-+        if (pParent)
-+        {
-+            pParent->DeviceChange();
-+        }
-+    }
-+    return DefWindowProc(hWnd, uiMsg, wParam, lParam);
-+}
-+
- // static
- DeviceInfoDS* DeviceInfoDS::Create() {
-   DeviceInfoDS* dsInfo = new DeviceInfoDS();
-@@ -77,6 +100,18 @@ DeviceInfoDS::DeviceInfoDS()
-                         << rtc::ToHex(hr);
-     }
-   }
-+
-+  _hInstance = reinterpret_cast<HINSTANCE>(GetModuleHandle(NULL));
-+  _wndClass = {0};
-+  _wndClass.lpfnWndProc = &WndProc;
-+  _wndClass.lpszClassName = TEXT("DeviceInfoDS");
-+  _wndClass.hInstance = _hInstance;
-+
-+  if (RegisterClass(&_wndClass)) {
-+    _hwnd = CreateWindow(_wndClass.lpszClassName, NULL, 0, CW_USEDEFAULT,
-+                         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL,
-+                         NULL, _hInstance, this);
-+  }
- }
- 
- DeviceInfoDS::~DeviceInfoDS() {
-@@ -85,6 +120,10 @@ DeviceInfoDS::~DeviceInfoDS() {
-   if (_CoUninitializeIsRequired) {
-     CoUninitialize();
-   }
-+  if (_hwnd != NULL) {
-+    DestroyWindow(_hwnd);
-+  }
-+  UnregisterClass(_wndClass.lpszClassName, _hInstance);
- }
- 
- int32_t DeviceInfoDS::Init() {
-diff --git a/modules/video_capture/windows/device_info_ds.h b/modules/video_capture/windows/device_info_ds.h
-index 1b52645cde..dc7b9b1a24 100644
---- a/modules/video_capture/windows/device_info_ds.h
-+++ b/modules/video_capture/windows/device_info_ds.h
-@@ -93,6 +93,9 @@ class DeviceInfoDS : public DeviceInfoImpl {
-   IEnumMoniker* _dsMonikerDevEnum;
-   bool _CoUninitializeIsRequired;
-   std::vector<VideoCaptureCapabilityWindows> _captureCapabilitiesWindows;
-+  HWND _hwnd;
-+  WNDCLASS _wndClass;
-+  HINSTANCE _hInstance;
- };
- }  // namespace videocapturemodule
- }  // namespace webrtc
 -- 
 2.34.1
 
