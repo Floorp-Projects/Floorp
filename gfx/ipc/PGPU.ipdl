@@ -52,7 +52,7 @@ struct LayerTreeIdMapping {
 // This protocol allows the UI process to talk to the GPU process. There is one
 // instance of this protocol, with the GPUParent living on the main thread of
 // the GPU process and the GPUChild living on the main thread of the UI process.
-[ManualDealloc, NeedsOtherPid]
+[NeedsOtherPid]
 sync protocol PGPU
 {
 parent:
