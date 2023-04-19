@@ -60,7 +60,7 @@ union CompositorBridgeOptions {
  * compositor thread for compositor data that is only shared once, rather than
  * per PCompositorBridge instance.
  */
-[ManualDealloc, NeedsOtherPid]
+[NeedsOtherPid]
 sync protocol PCompositorManager
 {
   manages PCompositorBridge;
