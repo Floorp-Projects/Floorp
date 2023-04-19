@@ -2576,6 +2576,12 @@ bool nsWindow::WaylandPopupCheckAndGetAnchor(GdkRectangle* aPopupAnchor,
     LOG("  can't use move-to-rect due missing gdkWindow or popupFrame");
     return false;
   }
+
+  if (popupFrame->IsFlippedByLayout()) {
+    LOG("  can't use move-to-rect, flipped / constrained by layout");
+    return false;
+  }
+
   if (!mPopupMoveToRectParams.mAnchorSet) {
     LOG("  can't use move-to-rect due missing anchor");
     return false;
