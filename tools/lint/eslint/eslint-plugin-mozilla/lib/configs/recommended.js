@@ -113,7 +113,7 @@ module.exports = {
   },
 
   // When adding items to this file please check for effects on sub-directories.
-  plugins: ["html", "fetch-options", "prettier", "no-unsanitized"],
+  plugins: ["html", "fetch-options", "no-unsanitized"],
 
   // When adding items to this file please check for effects on all of toolkit
   // and browser
@@ -338,8 +338,6 @@ module.exports = {
 
     // This may conflict with prettier, so turn it off.
     "prefer-arrow-callback": "off",
-
-    "prettier/prettier": "off",
 
     // This generates too many false positives that are not easy to work around,
     // and false positives seem to be inherent in the rule.

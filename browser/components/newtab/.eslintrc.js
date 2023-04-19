@@ -112,8 +112,6 @@ module.exports = {
     },
   ],
   rules: {
-    "prettier/prettier": "off",
-
     "fetch-options/no-fetch-credentials": "error",
 
     "react/jsx-boolean-value": ["error", "always"],
