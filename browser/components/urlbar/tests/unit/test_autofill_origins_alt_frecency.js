@@ -143,10 +143,21 @@ add_task(
       );
       return rows?.[0].getResultByName("alt_frecency");
     }
+    async function getThreshold() {
+      let db = await PlacesUtils.promiseDBConnection();
+      let rows = await db.execute("SELECT avg(alt_frecency) FROM moz_origins");
+      return rows[0].getResultByIndex(0);
+    }
 
     await PlacesTestUtils.addVisits(new Array(10).fill("https://example.com/"));
+    // Add more visits to the same origins to differenciate the frecency scores.
+    await PlacesTestUtils.addVisits([
+      "https://example.com/2",
+      "https://example.com/3",
+    ]);
     await PlacesTestUtils.addVisits("https://somethingelse.org/");
     await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
+
     let threshold = await PlacesUtils.metadata.get(
       "origin_alt_frecency_threshold",
       0
@@ -155,6 +166,11 @@ add_task(
       threshold,
       await getOriginAltFrecency("somethingelse.org"),
       "Check mozilla.org has a lower frecency than the threshold"
+    );
+    Assert.equal(
+      threshold,
+      await getThreshold(),
+      "Check the threshold has been calculared correctly"
     );
 
     let engine = Services.search.defaultEngine;
