@@ -1224,64 +1224,6 @@ add_task(async function check_userPrefersReducedMotion() {
   );
 });
 
-add_task(async function check_colorwaysActive() {
-  is(
-    typeof (await ASRouterTargeting.Environment.colorwaysActive),
-    "boolean",
-    "Should return a boolean"
-  );
-
-  const sandbox = sinon.createSandbox();
-  registerCleanupFunction(async () => {
-    sandbox.restore();
-  });
-
-  let stub = sandbox
-    .stub(BuiltInThemes, "findActiveColorwayCollection")
-    .returns(true);
-
-  ok(
-    await ASRouterTargeting.Environment.colorwaysActive,
-    "returns true when an colorways are active"
-  );
-
-  stub.returns(false);
-
-  ok(
-    !(await ASRouterTargeting.Environment.colorwaysActive),
-    "returns false when an colorways are inactive"
-  );
-});
-
-add_task(async function check_userEnabledActiveColorway() {
-  is(
-    typeof (await ASRouterTargeting.Environment.userEnabledActiveColorway),
-    "boolean",
-    "Should return a boolean"
-  );
-
-  const sandbox = sinon.createSandbox();
-  registerCleanupFunction(async () => {
-    sandbox.restore();
-  });
-
-  let currentCollectionStub = sandbox
-    .stub(BuiltInThemes, "isColorwayFromCurrentCollection")
-    .returns(false);
-
-  ok(
-    !(await ASRouterTargeting.Environment.userEnabledActiveColorway),
-    "returns false when an active colorway is not enabled"
-  );
-
-  currentCollectionStub.returns(true);
-
-  ok(
-    await ASRouterTargeting.Environment.userEnabledActiveColorway,
-    "returns true when an active colorway is enabled"
-  );
-});
-
 add_task(async function test_mr2022Holdback() {
   await ExperimentAPI.ready();
 
