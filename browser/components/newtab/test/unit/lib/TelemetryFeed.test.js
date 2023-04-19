@@ -2190,6 +2190,8 @@ describe("TelemetryFeed", () => {
       // Event should be recorded
       assert.calledOnce(Glean.topsites.impression.record);
       assert.calledWith(Glean.topsites.impression.record, {
+        advertiser_name: "adnoid ads",
+        tile_id: "42",
         newtab_visit_id: session_id,
         is_sponsored: true,
         position: 1,
@@ -2198,6 +2200,7 @@ describe("TelemetryFeed", () => {
     it("should record a Glean topsites.click event on a click event", async () => {
       const data = {
         type: "click",
+        advertiser: "test advertiser",
         tile_id: 42,
         source: "newtab",
         position: 0,
@@ -2213,6 +2216,8 @@ describe("TelemetryFeed", () => {
       // Event should be recorded
       assert.calledOnce(Glean.topsites.click.record);
       assert.calledWith(Glean.topsites.click.record, {
+        advertiser_name: "test advertiser",
+        tile_id: "42",
         newtab_visit_id: session_id,
         is_sponsored: true,
         position: 0,

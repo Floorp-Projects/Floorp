@@ -263,6 +263,7 @@ topsites:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105#c11
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1820707#c3
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1821556#c3
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1824842#c7
     data_sensitivity:
       - interaction
     notification_emails:
@@ -273,6 +274,14 @@ topsites:
       - lina@mozilla.com
     expires: never
     extra_keys:
+      advertiser_name: &advertiser_name
+        description: >
+          The name of the advertiser of the tile
+        type: string
+      tile_id: &tile_id
+        description: >
+          The tile id of the advertiser provided by Contile
+        type: string
       newtab_visit_id: *newtab_visit_id
       is_sponsored: &is_sponsored
         description: Whether the topsite tile was sponsored.
@@ -300,6 +309,7 @@ topsites:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105#c11
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1820707#c3
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1821556#c3
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1824842#c7
     data_sensitivity:
       - interaction
     notification_emails:
@@ -310,6 +320,8 @@ topsites:
       - lina@mozilla.com
     expires: never
     extra_keys:
+      advertiser_name: *advertiser_name
+      tile_id: *tile_id
       newtab_visit_id: *newtab_visit_id
       is_sponsored: *is_sponsored
       position: *topsite_position
