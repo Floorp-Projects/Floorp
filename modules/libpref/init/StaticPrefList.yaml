@@ -15110,6 +15110,13 @@
   value: false
   mirror: always
 
+# Whether GTK should use non-native menu styling.
+- name: widget.gtk.non-native-menu-styling
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+  rust: true
+
 # The amount of space that the thumb should fill the scrollbar, from zero to
 # one.
 - name: widget.non-native-theme.gtk.scrollbar.thumb-size
