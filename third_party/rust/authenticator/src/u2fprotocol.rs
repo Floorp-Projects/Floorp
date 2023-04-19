@@ -100,7 +100,7 @@ where
         ));
     }
 
-    if key_handle.len() > 256 {
+    if key_handle.len() >= 256 {
         return Err(io::Error::new(
             io::ErrorKind::InvalidInput,
             "Key handle too large",

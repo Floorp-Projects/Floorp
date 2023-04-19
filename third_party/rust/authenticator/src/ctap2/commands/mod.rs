@@ -1,6 +1,7 @@
 use crate::crypto::{CryptoError, PinUvAuthToken};
-use crate::ctap2::client_data::ClientDataHash;
+
 use crate::ctap2::commands::client_pin::{GetPinRetries, GetUvRetries, Pin, PinError};
+use crate::ctap2::commands::get_info::AuthenticatorInfo;
 use crate::errors::AuthenticatorError;
 use crate::transport::errors::{ApduErrorStatus, HIDError};
 use crate::transport::FidoDevice;
@@ -25,7 +26,6 @@ where
     Self: RequestCtap1<Output = T>,
     Self: RequestCtap2<Output = T>,
 {
-    fn is_ctap2_request(&self) -> bool;
 }
 
 /// Retryable wraps an error type and may ask manager to retry sending a
@@ -120,11 +120,10 @@ pub(crate) trait PinUvAuthCommand: RequestCtap2 {
         &mut self,
         pin_uv_auth_token: Option<PinUvAuthToken>,
     ) -> Result<(), AuthenticatorError>;
-    fn client_data_hash(&self) -> ClientDataHash;
     fn set_uv_option(&mut self, uv: Option<bool>);
     fn get_uv_option(&mut self) -> Option<bool>;
     fn get_rp_id(&self) -> Option<&String>;
-    fn set_discouraged_uv_option(&mut self);
+    fn can_skip_user_verification(&mut self, info: &AuthenticatorInfo) -> bool;
 }
 
 pub(crate) fn repackage_pin_errors<D: FidoDevice>(

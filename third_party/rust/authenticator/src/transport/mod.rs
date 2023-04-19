@@ -100,7 +100,7 @@ pub trait FidoDevice: HIDDevice {
             return Err(HIDError::DeviceNotInitialized);
         }
 
-        if self.supports_ctap2() && msg.is_ctap2_request() {
+        if self.supports_ctap2() {
             self.send_cbor_cancellable(msg, keep_alive)
         } else {
             self.send_ctap1_cancellable(msg, keep_alive)

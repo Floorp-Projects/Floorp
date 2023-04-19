@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::consts::PARAMETER_SIZE;
 use crate::ctap2::commands::client_pin::Pin;
 pub use crate::ctap2::commands::get_assertion::{
     GetAssertionExtensions, GetAssertionOptions, HmacSecretExtension,
@@ -18,24 +17,9 @@ use crate::manager::Manager;
 use crate::statecallback::StateCallback;
 use std::sync::{mpsc::Sender, Arc, Mutex};
 
-// TODO(MS): Once U2FManager gets completely removed, this can be removed as well
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum CtapVersion {
-    CTAP1,
-    CTAP2,
-}
-
 #[derive(Debug, Clone)]
-pub struct RegisterArgsCtap1 {
-    pub flags: crate::RegisterFlags,
-    pub challenge: Vec<u8>,
-    pub application: crate::AppId,
-    pub key_handles: Vec<crate::KeyHandle>,
-}
-
-#[derive(Debug, Clone)]
-pub struct RegisterArgsCtap2 {
-    pub challenge: Vec<u8>,
+pub struct RegisterArgs {
+    pub client_data_hash: [u8; 32],
     pub relying_party: RelyingParty,
     pub origin: String,
     pub user: User,
@@ -44,37 +28,12 @@ pub struct RegisterArgsCtap2 {
     pub options: MakeCredentialsOptions,
     pub extensions: MakeCredentialsExtensions,
     pub pin: Option<Pin>,
-}
-
-#[derive(Debug)]
-pub enum RegisterArgs {
-    CTAP1(RegisterArgsCtap1),
-    CTAP2(RegisterArgsCtap2),
-}
-
-impl From<RegisterArgsCtap1> for RegisterArgs {
-    fn from(args: RegisterArgsCtap1) -> Self {
-        RegisterArgs::CTAP1(args)
-    }
-}
-
-impl From<RegisterArgsCtap2> for RegisterArgs {
-    fn from(args: RegisterArgsCtap2) -> Self {
-        RegisterArgs::CTAP2(args)
-    }
+    pub use_ctap1_fallback: bool,
 }
 
 #[derive(Debug, Clone)]
-pub struct SignArgsCtap1 {
-    pub flags: crate::SignFlags,
-    pub challenge: Vec<u8>,
-    pub app_ids: Vec<crate::AppId>,
-    pub key_handles: Vec<crate::KeyHandle>,
-}
-
-#[derive(Debug, Clone)]
-pub struct SignArgsCtap2 {
-    pub challenge: Vec<u8>,
+pub struct SignArgs {
+    pub client_data_hash: [u8; 32],
     pub origin: String,
     pub relying_party_id: String,
     pub allow_list: Vec<PublicKeyCredentialDescriptor>,
@@ -82,25 +41,8 @@ pub struct SignArgsCtap2 {
     pub extensions: GetAssertionExtensions,
     pub pin: Option<Pin>,
     pub alternate_rp_id: Option<String>,
+    pub use_ctap1_fallback: bool,
     // Todo: Extensions
-}
-
-#[derive(Debug)]
-pub enum SignArgs {
-    CTAP1(SignArgsCtap1),
-    CTAP2(SignArgsCtap2),
-}
-
-impl From<SignArgsCtap1> for SignArgs {
-    fn from(args: SignArgsCtap1) -> Self {
-        SignArgs::CTAP1(args)
-    }
-}
-
-impl From<SignArgsCtap2> for SignArgs {
-    fn from(args: SignArgsCtap2) -> Self {
-        SignArgs::CTAP2(args)
-    }
 }
 
 #[derive(Debug, Clone, Default)]
@@ -147,7 +89,6 @@ pub trait AuthenticatorTransport {
 
 pub struct AuthenticatorService {
     transports: Vec<Arc<Mutex<Box<dyn AuthenticatorTransport + Send>>>>,
-    ctap_version: CtapVersion,
 }
 
 fn clone_and_configure_cancellation_callback<T>(
@@ -170,10 +111,9 @@ fn clone_and_configure_cancellation_callback<T>(
 }
 
 impl AuthenticatorService {
-    pub fn new(ctap_version: CtapVersion) -> crate::Result<Self> {
+    pub fn new() -> crate::Result<Self> {
         Ok(Self {
             transports: Vec::new(),
-            ctap_version,
         })
     }
 
@@ -187,16 +127,9 @@ impl AuthenticatorService {
     }
 
     pub fn add_u2f_usb_hid_platform_transports(&mut self) {
-        if self.ctap_version == CtapVersion::CTAP1 {
-            match crate::U2FManager::new() {
-                Ok(token) => self.add_transport(Box::new(token)),
-                Err(e) => error!("Could not add U2F HID transport: {}", e),
-            }
-        } else {
-            match Manager::new() {
-                Ok(token) => self.add_transport(Box::new(token)),
-                Err(e) => error!("Could not add CTAP2 HID transport: {}", e),
-            }
+        match Manager::new() {
+            Ok(token) => self.add_transport(Box::new(token)),
+            Err(e) => error!("Could not add CTAP2 HID transport: {}", e),
         }
     }
 
@@ -214,68 +147,7 @@ impl AuthenticatorService {
     pub fn register(
         &mut self,
         timeout: u64,
-        ctap_args: RegisterArgs,
-        status: Sender<crate::StatusUpdate>,
-        callback: StateCallback<crate::Result<crate::RegisterResult>>,
-    ) -> crate::Result<()> {
-        match ctap_args {
-            RegisterArgs::CTAP1(a) => self.register_ctap1(timeout, a, status, callback),
-            RegisterArgs::CTAP2(a) => self.register_ctap2(timeout, a, status, callback),
-        }
-    }
-
-    fn register_ctap1(
-        &mut self,
-        timeout: u64,
-        args: RegisterArgsCtap1,
-        status: Sender<crate::StatusUpdate>,
-        callback: StateCallback<crate::Result<crate::RegisterResult>>,
-    ) -> crate::Result<()> {
-        if args.challenge.len() != PARAMETER_SIZE || args.application.len() != PARAMETER_SIZE {
-            return Err(AuthenticatorError::InvalidRelyingPartyInput);
-        }
-
-        for key_handle in &args.key_handles {
-            if key_handle.credential.len() >= 256 {
-                return Err(AuthenticatorError::InvalidRelyingPartyInput);
-            }
-        }
-
-        let iterable_transports = self.transports.clone();
-        if iterable_transports.is_empty() {
-            return Err(AuthenticatorError::NoConfiguredTransports);
-        }
-
-        debug!(
-            "register called with {} transports, iterable is {}",
-            self.transports.len(),
-            iterable_transports.len()
-        );
-
-        for (idx, transport_mutex) in iterable_transports.iter().enumerate() {
-            let mut transports_to_cancel = iterable_transports.clone();
-            transports_to_cancel.remove(idx);
-
-            debug!(
-                "register transports_to_cancel {}",
-                transports_to_cancel.len()
-            );
-
-            transport_mutex.lock().unwrap().register(
-                timeout,
-                RegisterArgs::CTAP1(args.clone()),
-                status.clone(),
-                clone_and_configure_cancellation_callback(callback.clone(), transports_to_cancel),
-            )?;
-        }
-
-        Ok(())
-    }
-
-    fn register_ctap2(
-        &mut self,
-        timeout: u64,
-        args: RegisterArgsCtap2,
+        args: RegisterArgs,
         status: Sender<crate::StatusUpdate>,
         callback: StateCallback<crate::Result<crate::RegisterResult>>,
     ) -> crate::Result<()> {
@@ -301,7 +173,7 @@ impl AuthenticatorService {
 
             transport_mutex.lock().unwrap().register(
                 timeout,
-                RegisterArgs::CTAP2(args.clone()),
+                args.clone(),
                 status.clone(),
                 clone_and_configure_cancellation_callback(callback.clone(), transports_to_cancel),
             )?;
@@ -313,67 +185,7 @@ impl AuthenticatorService {
     pub fn sign(
         &mut self,
         timeout: u64,
-        ctap_args: SignArgs,
-        status: Sender<crate::StatusUpdate>,
-        callback: StateCallback<crate::Result<crate::SignResult>>,
-    ) -> crate::Result<()> {
-        match ctap_args {
-            SignArgs::CTAP1(a) => self.sign_ctap1(timeout, a, status, callback),
-            SignArgs::CTAP2(a) => self.sign_ctap2(timeout, a, status, callback),
-        }
-    }
-
-    pub fn sign_ctap1(
-        &mut self,
-        timeout: u64,
-        args: SignArgsCtap1,
-        status: Sender<crate::StatusUpdate>,
-        callback: StateCallback<crate::Result<crate::SignResult>>,
-    ) -> crate::Result<()> {
-        if args.challenge.len() != PARAMETER_SIZE {
-            return Err(AuthenticatorError::InvalidRelyingPartyInput);
-        }
-
-        if args.app_ids.is_empty() {
-            return Err(AuthenticatorError::InvalidRelyingPartyInput);
-        }
-
-        for app_id in &args.app_ids {
-            if app_id.len() != PARAMETER_SIZE {
-                return Err(AuthenticatorError::InvalidRelyingPartyInput);
-            }
-        }
-
-        for key_handle in &args.key_handles {
-            if key_handle.credential.len() >= 256 {
-                return Err(AuthenticatorError::InvalidRelyingPartyInput);
-            }
-        }
-
-        let iterable_transports = self.transports.clone();
-        if iterable_transports.is_empty() {
-            return Err(AuthenticatorError::NoConfiguredTransports);
-        }
-
-        for (idx, transport_mutex) in iterable_transports.iter().enumerate() {
-            let mut transports_to_cancel = iterable_transports.clone();
-            transports_to_cancel.remove(idx);
-
-            transport_mutex.lock().unwrap().sign(
-                timeout,
-                SignArgs::CTAP1(args.clone()),
-                status.clone(),
-                clone_and_configure_cancellation_callback(callback.clone(), transports_to_cancel),
-            )?;
-        }
-
-        Ok(())
-    }
-
-    pub fn sign_ctap2(
-        &mut self,
-        timeout: u64,
-        args: SignArgsCtap2,
+        args: SignArgs,
         status: Sender<crate::StatusUpdate>,
         callback: StateCallback<crate::Result<crate::SignResult>>,
     ) -> crate::Result<()> {
@@ -388,7 +200,7 @@ impl AuthenticatorService {
 
             transport_mutex.lock().unwrap().sign(
                 timeout,
-                SignArgs::CTAP2(args.clone()),
+                args.clone(),
                 status.clone(),
                 clone_and_configure_cancellation_callback(callback.clone(), transports_to_cancel),
             )?;
@@ -484,16 +296,11 @@ impl AuthenticatorService {
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        AuthenticatorService, AuthenticatorTransport, CtapVersion, Pin, RegisterArgs,
-        RegisterArgsCtap1, RegisterArgsCtap2, SignArgs, SignArgsCtap1, SignArgsCtap2, User,
-    };
-    use crate::consts::Capability;
-    use crate::consts::PARAMETER_SIZE;
-    use crate::ctap2::server::RelyingParty;
+    use super::{AuthenticatorService, AuthenticatorTransport, Pin, RegisterArgs, SignArgs};
+    use crate::consts::{Capability, PARAMETER_SIZE};
+    use crate::ctap2::server::{RelyingParty, User};
     use crate::statecallback::StateCallback;
-    use crate::{AuthenticatorTransports, KeyHandle, RegisterFlags, SignFlags, StatusUpdate};
-    use crate::{RegisterResult, SignResult};
+    use crate::{RegisterResult, SignResult, StatusUpdate};
     use std::sync::atomic::{AtomicBool, Ordering};
     use std::sync::mpsc::{channel, Sender};
     use std::sync::Arc;
@@ -596,260 +403,8 @@ mod tests {
         }
     }
 
-    fn mk_key() -> KeyHandle {
-        KeyHandle {
-            credential: vec![0],
-            transports: AuthenticatorTransports::USB,
-        }
-    }
-
-    fn mk_challenge() -> Vec<u8> {
-        vec![0x11; PARAMETER_SIZE]
-    }
-
-    fn mk_appid() -> Vec<u8> {
-        vec![0x22; PARAMETER_SIZE]
-    }
-
-    #[test]
-    fn test_no_challenge() {
-        init();
-        let (status_tx, _) = channel::<StatusUpdate>();
-
-        let mut s = AuthenticatorService::new(CtapVersion::CTAP1).unwrap();
-        s.add_transport(Box::new(TestTransportDriver::new(true).unwrap()));
-
-        assert_matches!(
-            s.register(
-                1_000,
-                RegisterArgsCtap1 {
-                    challenge: vec![],
-                    flags: RegisterFlags::empty(),
-                    application: mk_appid(),
-                    key_handles: vec![mk_key()],
-                }
-                .into(),
-                status_tx.clone(),
-                StateCallback::new(Box::new(move |_rv| {})),
-            )
-            .unwrap_err(),
-            crate::errors::AuthenticatorError::InvalidRelyingPartyInput
-        );
-
-        assert_matches!(
-            s.sign(
-                1_000,
-                SignArgsCtap1 {
-                    flags: SignFlags::empty(),
-                    challenge: vec![],
-                    app_ids: vec![mk_appid()],
-                    key_handles: vec![mk_key()]
-                }
-                .into(),
-                status_tx,
-                StateCallback::new(Box::new(move |_rv| {})),
-            )
-            .unwrap_err(),
-            crate::errors::AuthenticatorError::InvalidRelyingPartyInput
-        );
-    }
-
-    #[test]
-    fn test_no_appids() {
-        init();
-        let (status_tx, _) = channel::<StatusUpdate>();
-
-        let mut s = AuthenticatorService::new(CtapVersion::CTAP1).unwrap();
-        s.add_transport(Box::new(TestTransportDriver::new(true).unwrap()));
-
-        assert_matches!(
-            s.register(
-                1_000,
-                RegisterArgsCtap1 {
-                    challenge: mk_challenge(),
-                    flags: RegisterFlags::empty(),
-                    application: vec![],
-                    key_handles: vec![mk_key()],
-                }
-                .into(),
-                status_tx.clone(),
-                StateCallback::new(Box::new(move |_rv| {})),
-            )
-            .unwrap_err(),
-            crate::errors::AuthenticatorError::InvalidRelyingPartyInput
-        );
-
-        assert_matches!(
-            s.sign(
-                1_000,
-                SignArgsCtap1 {
-                    flags: SignFlags::empty(),
-                    challenge: mk_challenge(),
-                    app_ids: vec![],
-                    key_handles: vec![mk_key()]
-                }
-                .into(),
-                status_tx,
-                StateCallback::new(Box::new(move |_rv| {})),
-            )
-            .unwrap_err(),
-            crate::errors::AuthenticatorError::InvalidRelyingPartyInput
-        );
-    }
-
-    #[test]
-    fn test_no_keys() {
-        init();
-        // No Keys is a resident-key use case. For U2F this would time out,
-        // but the actual reactions are up to the service implementation.
-        // This test yields OKs.
-        let (status_tx, _) = channel::<StatusUpdate>();
-
-        let mut s = AuthenticatorService::new(CtapVersion::CTAP1).unwrap();
-        s.add_transport(Box::new(TestTransportDriver::new(true).unwrap()));
-
-        assert_matches!(
-            s.register(
-                100,
-                RegisterArgsCtap1 {
-                    challenge: mk_challenge(),
-                    flags: RegisterFlags::empty(),
-                    application: mk_appid(),
-                    key_handles: vec![],
-                }
-                .into(),
-                status_tx.clone(),
-                StateCallback::new(Box::new(move |_rv| {})),
-            ),
-            Ok(())
-        );
-
-        assert_matches!(
-            s.sign(
-                100,
-                SignArgsCtap1 {
-                    flags: SignFlags::empty(),
-                    challenge: mk_challenge(),
-                    app_ids: vec![mk_appid()],
-                    key_handles: vec![]
-                }
-                .into(),
-                status_tx,
-                StateCallback::new(Box::new(move |_rv| {})),
-            ),
-            Ok(())
-        );
-    }
-
-    #[test]
-    fn test_large_keys() {
-        init();
-        let (status_tx, _) = channel::<StatusUpdate>();
-
-        let large_key = KeyHandle {
-            credential: vec![0; 257],
-            transports: AuthenticatorTransports::USB,
-        };
-
-        let mut s = AuthenticatorService::new(CtapVersion::CTAP1).unwrap();
-        s.add_transport(Box::new(TestTransportDriver::new(true).unwrap()));
-
-        assert_matches!(
-            s.register(
-                1_000,
-                RegisterArgsCtap1 {
-                    challenge: mk_challenge(),
-                    flags: RegisterFlags::empty(),
-                    application: mk_appid(),
-                    key_handles: vec![large_key.clone()],
-                }
-                .into(),
-                status_tx.clone(),
-                StateCallback::new(Box::new(move |_rv| {})),
-            )
-            .unwrap_err(),
-            crate::errors::AuthenticatorError::InvalidRelyingPartyInput
-        );
-
-        assert_matches!(
-            s.sign(
-                1_000,
-                SignArgsCtap1 {
-                    flags: SignFlags::empty(),
-                    challenge: mk_challenge(),
-                    app_ids: vec![mk_appid()],
-                    key_handles: vec![large_key]
-                }
-                .into(),
-                status_tx,
-                StateCallback::new(Box::new(move |_rv| {})),
-            )
-            .unwrap_err(),
-            crate::errors::AuthenticatorError::InvalidRelyingPartyInput
-        );
-    }
-
-    #[test]
-    fn test_large_keys_ctap2() {
-        init();
-        let (status_tx, _) = channel::<StatusUpdate>();
-
-        let large_key = KeyHandle {
-            credential: vec![0; 1000],
-            transports: AuthenticatorTransports::USB,
-        };
-
-        let mut s = AuthenticatorService::new(CtapVersion::CTAP2).unwrap();
-        s.add_transport(Box::new(TestTransportDriver::new(true).unwrap()));
-
-        let ctap2_register_args = RegisterArgsCtap2 {
-            challenge: mk_challenge(),
-            relying_party: RelyingParty {
-                id: "example.com".to_string(),
-                name: None,
-                icon: None,
-            },
-            origin: "example.com".to_string(),
-            user: User {
-                id: "user_id".as_bytes().to_vec(),
-                icon: None,
-                name: Some("A. User".to_string()),
-                display_name: None,
-            },
-            pub_cred_params: vec![],
-            exclude_list: vec![(&large_key).into()],
-            options: Default::default(),
-            extensions: Default::default(),
-            pin: None,
-        };
-
-        assert!(s
-            .register(
-                1_000,
-                ctap2_register_args.into(),
-                status_tx.clone(),
-                StateCallback::new(Box::new(move |_rv| {})),
-            )
-            .is_ok(),);
-
-        let ctap2_sign_args = SignArgsCtap2 {
-            challenge: mk_challenge(),
-            origin: "example.com".to_string(),
-            relying_party_id: "example.com".to_string(),
-            allow_list: vec![(&large_key).into()],
-            options: Default::default(),
-            extensions: Default::default(),
-            pin: None,
-            alternate_rp_id: None,
-        };
-        assert!(s
-            .sign(
-                1_000,
-                ctap2_sign_args.into(),
-                status_tx,
-                StateCallback::new(Box::new(move |_rv| {})),
-            )
-            .is_ok(),);
+    fn mk_challenge() -> [u8; PARAMETER_SIZE] {
+        [0x11; PARAMETER_SIZE]
     }
 
     #[test]
@@ -857,15 +412,30 @@ mod tests {
         init();
         let (status_tx, _) = channel::<StatusUpdate>();
 
-        let mut s = AuthenticatorService::new(CtapVersion::CTAP1).unwrap();
+        let mut s = AuthenticatorService::new().unwrap();
         assert_matches!(
             s.register(
                 1_000,
-                RegisterArgsCtap1 {
-                    challenge: mk_challenge(),
-                    flags: RegisterFlags::empty(),
-                    application: mk_appid(),
-                    key_handles: vec![mk_key()],
+                RegisterArgs {
+                    client_data_hash: mk_challenge(),
+                    relying_party: RelyingParty {
+                        id: "example.com".to_string(),
+                        name: None,
+                        icon: None,
+                    },
+                    origin: "example.com".to_string(),
+                    user: User {
+                        id: "user_id".as_bytes().to_vec(),
+                        icon: None,
+                        name: Some("A. User".to_string()),
+                        display_name: None,
+                    },
+                    pub_cred_params: vec![],
+                    exclude_list: vec![],
+                    options: Default::default(),
+                    extensions: Default::default(),
+                    pin: None,
+                    use_ctap1_fallback: false,
                 }
                 .into(),
                 status_tx.clone(),
@@ -878,11 +448,16 @@ mod tests {
         assert_matches!(
             s.sign(
                 1_000,
-                SignArgsCtap1 {
-                    flags: SignFlags::empty(),
-                    challenge: mk_challenge(),
-                    app_ids: vec![mk_appid()],
-                    key_handles: vec![mk_key()]
+                SignArgs {
+                    client_data_hash: mk_challenge(),
+                    origin: "example.com".to_string(),
+                    relying_party_id: "example.com".to_string(),
+                    allow_list: vec![],
+                    options: Default::default(),
+                    extensions: Default::default(),
+                    pin: None,
+                    alternate_rp_id: None,
+                    use_ctap1_fallback: false,
                 }
                 .into(),
                 status_tx,
@@ -903,7 +478,7 @@ mod tests {
         init();
         let (status_tx, _) = channel::<StatusUpdate>();
 
-        let mut s = AuthenticatorService::new(CtapVersion::CTAP1).unwrap();
+        let mut s = AuthenticatorService::new().unwrap();
         let ttd_one = TestTransportDriver::new(true).unwrap();
         let ttd_two = TestTransportDriver::new(false).unwrap();
         let ttd_three = TestTransportDriver::new(false).unwrap();
@@ -920,11 +495,26 @@ mod tests {
         assert!(s
             .register(
                 1_000,
-                RegisterArgsCtap1 {
-                    challenge: mk_challenge(),
-                    flags: RegisterFlags::empty(),
-                    application: mk_appid(),
-                    key_handles: vec![],
+                RegisterArgs {
+                    client_data_hash: mk_challenge(),
+                    relying_party: RelyingParty {
+                        id: "example.com".to_string(),
+                        name: None,
+                        icon: None,
+                    },
+                    origin: "example.com".to_string(),
+                    user: User {
+                        id: "user_id".as_bytes().to_vec(),
+                        icon: None,
+                        name: Some("A. User".to_string()),
+                        display_name: None,
+                    },
+                    pub_cred_params: vec![],
+                    exclude_list: vec![],
+                    options: Default::default(),
+                    extensions: Default::default(),
+                    pin: None,
+                    use_ctap1_fallback: false,
                 }
                 .into(),
                 status_tx,
@@ -943,7 +533,7 @@ mod tests {
         init();
         let (status_tx, _) = channel::<StatusUpdate>();
 
-        let mut s = AuthenticatorService::new(CtapVersion::CTAP1).unwrap();
+        let mut s = AuthenticatorService::new().unwrap();
         let ttd_one = TestTransportDriver::new(true).unwrap();
         let ttd_two = TestTransportDriver::new(false).unwrap();
         let ttd_three = TestTransportDriver::new(false).unwrap();
@@ -960,11 +550,16 @@ mod tests {
         assert!(s
             .sign(
                 1_000,
-                SignArgsCtap1 {
-                    flags: SignFlags::empty(),
-                    challenge: mk_challenge(),
-                    app_ids: vec![mk_appid()],
-                    key_handles: vec![mk_key()]
+                SignArgs {
+                    client_data_hash: mk_challenge(),
+                    origin: "example.com".to_string(),
+                    relying_party_id: "example.com".to_string(),
+                    allow_list: vec![],
+                    options: Default::default(),
+                    extensions: Default::default(),
+                    pin: None,
+                    alternate_rp_id: None,
+                    use_ctap1_fallback: false,
                 }
                 .into(),
                 status_tx,
@@ -983,7 +578,7 @@ mod tests {
         init();
         let (status_tx, _) = channel::<StatusUpdate>();
 
-        let mut s = AuthenticatorService::new(CtapVersion::CTAP1).unwrap();
+        let mut s = AuthenticatorService::new().unwrap();
         // Let both of these race which one provides consent.
         let ttd_one = TestTransportDriver::new(true).unwrap();
         let ttd_two = TestTransportDriver::new(true).unwrap();
@@ -998,11 +593,26 @@ mod tests {
         assert!(s
             .register(
                 1_000,
-                RegisterArgsCtap1 {
-                    challenge: mk_challenge(),
-                    flags: RegisterFlags::empty(),
-                    application: mk_appid(),
-                    key_handles: vec![],
+                RegisterArgs {
+                    client_data_hash: mk_challenge(),
+                    relying_party: RelyingParty {
+                        id: "example.com".to_string(),
+                        name: None,
+                        icon: None,
+                    },
+                    origin: "example.com".to_string(),
+                    user: User {
+                        id: "user_id".as_bytes().to_vec(),
+                        icon: None,
+                        name: Some("A. User".to_string()),
+                        display_name: None,
+                    },
+                    pub_cred_params: vec![],
+                    exclude_list: vec![],
+                    options: Default::default(),
+                    extensions: Default::default(),
+                    pin: None,
+                    use_ctap1_fallback: false,
                 }
                 .into(),
                 status_tx,

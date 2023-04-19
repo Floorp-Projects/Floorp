@@ -1,3 +1,4 @@
+use super::get_info::{AuthenticatorInfo, AuthenticatorVersion};
 use super::{
     Command, CommandError, PinUvAuthCommand, Request, RequestCtap1, RequestCtap2, Retryable,
     StatusCode,
@@ -11,14 +12,12 @@ use crate::ctap2::attestation::{
     AAGuid, AttestationObject, AttestationStatement, AttestationStatementFidoU2F,
     AttestedCredentialData, AuthenticatorData, AuthenticatorDataFlags,
 };
-use crate::ctap2::client_data::{
-    Challenge, ClientDataHash, CollectedClientData, CollectedClientDataWrapper, WebauthnType,
-};
+use crate::ctap2::client_data::{Challenge, ClientDataHash, CollectedClientData, WebauthnType};
 use crate::ctap2::commands::client_pin::Pin;
 use crate::ctap2::commands::get_assertion::CheckKeyHandle;
 use crate::ctap2::server::{
     PublicKeyCredentialDescriptor, PublicKeyCredentialParameters, RelyingParty,
-    RelyingPartyWrapper, User,
+    RelyingPartyWrapper, RpIdHash, User,
 };
 use crate::errors::AuthenticatorError;
 use crate::transport::{
@@ -43,9 +42,71 @@ use std::fmt;
 use std::io;
 
 #[derive(Debug)]
-pub enum MakeCredentialsResult {
-    CTAP1(Vec<u8>),
-    CTAP2(AttestationObject, CollectedClientDataWrapper),
+pub struct MakeCredentialsResult(pub AttestationObject);
+
+impl MakeCredentialsResult {
+    pub fn from_ctap1(
+        input: &[u8],
+        rp_id_hash: &RpIdHash,
+    ) -> Result<MakeCredentialsResult, CommandError> {
+        let parse_register = |input| {
+            let (rest, _) = tag(&[0x05])(input)?;
+            let (rest, public_key) = take(65u8)(rest)?;
+            let (rest, key_handle_len) = be_u8(rest)?;
+            let (rest, key_handle) = take(key_handle_len)(rest)?;
+            Ok((rest, public_key, key_handle))
+        };
+
+        let (rest, public_key, key_handle) =
+            parse_register(input).map_err(|e: nom::Err<VerboseError<_>>| {
+                error!("error while parsing registration: {:?}", e);
+                CommandError::Deserializing(DesError::custom("unable to parse registration"))
+            })?;
+
+        let cert_and_sig = parse_u2f_der_certificate(rest).map_err(|e| {
+            error!("error while parsing registration: {:?}", e);
+            CommandError::Deserializing(DesError::custom("unable to parse registration"))
+        })?;
+
+        let credential_ec2_key = COSEEC2Key::from_sec1_uncompressed(Curve::SECP256R1, public_key)
+            .map_err(|e| {
+            error!("error while parsing registration: {:?}", e);
+            CommandError::Deserializing(DesError::custom("unable to parse registration"))
+        })?;
+
+        let credential_public_key = COSEKey {
+            alg: COSEAlgorithm::ES256,
+            key: COSEKeyType::EC2(credential_ec2_key),
+        };
+
+        let auth_data = AuthenticatorData {
+            rp_id_hash: rp_id_hash.clone(),
+            // https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html#u2f-authenticatorMakeCredential-interoperability
+            // "Let flags be a byte whose zeroth bit (bit 0, UP) is set, and whose sixth bit
+            // (bit 6, AT) is set, and all other bits are zero (bit zero is the least
+            // significant bit)"
+            flags: AuthenticatorDataFlags::USER_PRESENT | AuthenticatorDataFlags::ATTESTED,
+            counter: 0,
+            credential_data: Some(AttestedCredentialData {
+                aaguid: AAGuid::default(),
+                credential_id: Vec::from(key_handle),
+                credential_public_key,
+            }),
+            extensions: Default::default(),
+        };
+
+        let att_statement = AttestationStatement::FidoU2F(AttestationStatementFidoU2F::new(
+            cert_and_sig.certificate,
+            cert_and_sig.signature,
+        ));
+
+        let attestation_object = AttestationObject {
+            auth_data,
+            att_statement,
+        };
+
+        Ok(MakeCredentialsResult(attestation_object))
+    }
 }
 
 #[derive(Copy, Clone, Debug, Default, Serialize)]
@@ -95,7 +156,7 @@ impl MakeCredentialsExtensions {
 
 #[derive(Debug, Clone)]
 pub struct MakeCredentials {
-    pub(crate) client_data_wrapper: CollectedClientDataWrapper,
+    pub(crate) client_data_hash: ClientDataHash,
     pub(crate) rp: RelyingPartyWrapper,
     // Note(baloo): If none -> ctap1
     pub(crate) user: Option<User>,
@@ -113,11 +174,13 @@ pub struct MakeCredentials {
     pub(crate) pin: Option<Pin>,
     pub(crate) pin_uv_auth_param: Option<PinUvAuthParam>,
     pub(crate) enterprise_attestation: Option<u64>,
+    pub(crate) use_ctap1_fallback: bool,
 }
 
 impl MakeCredentials {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
-        client_data: CollectedClientData,
+        client_data_hash: ClientDataHash,
         rp: RelyingPartyWrapper,
         user: Option<User>,
         pub_cred_params: Vec<PublicKeyCredentialParameters>,
@@ -125,10 +188,10 @@ impl MakeCredentials {
         options: MakeCredentialsOptions,
         extensions: MakeCredentialsExtensions,
         pin: Option<Pin>,
+        use_ctap1_fallback: bool,
     ) -> Result<Self, HIDError> {
-        let client_data_wrapper = CollectedClientDataWrapper::new(client_data)?;
         Ok(Self {
-            client_data_wrapper,
+            client_data_hash,
             rp,
             user,
             pub_cred_params,
@@ -138,6 +201,7 @@ impl MakeCredentials {
             pin,
             pin_uv_auth_param: None,
             enterprise_attestation: None,
+            use_ctap1_fallback,
         })
     }
 }
@@ -159,16 +223,12 @@ impl PinUvAuthCommand for MakeCredentials {
         if let Some(token) = pin_uv_auth_token {
             param = Some(
                 token
-                    .derive(self.client_data_hash().as_ref())
+                    .derive(self.client_data_hash.as_ref())
                     .map_err(CommandError::Crypto)?,
             );
         }
         self.pin_uv_auth_param = param;
         Ok(())
-    }
-
-    fn client_data_hash(&self) -> ClientDataHash {
-        self.client_data_wrapper.hash()
     }
 
     fn set_uv_option(&mut self, uv: Option<bool>) {
@@ -187,15 +247,40 @@ impl PinUvAuthCommand for MakeCredentials {
         }
     }
 
-    fn set_discouraged_uv_option(&mut self) {
-        // "[..] the Relying Party wants to create a non-discoverable credential and not require user verification
-        // (e.g., by setting options.authenticatorSelection.userVerification to "discouraged" in the WebAuthn API),
-        // the platform invokes the authenticatorMakeCredential operation using the marshalled input parameters along
-        // with the "uv" option key set to false and terminate these steps."
-        // Note: This is basically a no-op right now, since we use `get_uv_option() == Some(false)`, to determine if
-        //       the RP is discouraging UV. But we may change that part of the API in the future, so better to be
-        //       explicit here.
-        self.set_uv_option(Some(false))
+    fn can_skip_user_verification(&mut self, info: &AuthenticatorInfo) -> bool {
+        // TODO(MS): Handle here the case where we NEED a UV, the device supports PINs, but hasn't set a PIN.
+        //           For this, the user has to be prompted to set a PIN first (see https://github.com/mozilla/authenticator-rs/issues/223)
+
+        let supports_uv = info.options.user_verification == Some(true);
+        let pin_configured = info.options.client_pin == Some(true);
+        let device_protected = supports_uv || pin_configured;
+        // make_cred_uv_not_rqd is only relevant for rk = false
+        let make_cred_uv_not_required = info.options.make_cred_uv_not_rqd == Some(true)
+            && self.options.resident_key != Some(true);
+        // For CTAP2.0, UV is always required when doing MakeCredential
+        let always_uv = info.options.always_uv == Some(true)
+            || info.max_supported_version() == AuthenticatorVersion::FIDO_2_0;
+        let uv_discouraged = self.get_uv_option() == Some(false);
+
+        // CTAP 2.1 authenticators can allow MakeCredential without PinUvAuth,
+        // but that is only relevant, if RP also discourages UV.
+        let can_make_cred_without_uv = make_cred_uv_not_required && uv_discouraged;
+
+        if always_uv || (device_protected && !can_make_cred_without_uv) {
+            // If the token is protected, we have to require UV anyways
+            self.set_uv_option(Some(true));
+            false
+        } else {
+            // "[..] the Relying Party wants to create a non-discoverable credential and not require user verification
+            // (e.g., by setting options.authenticatorSelection.userVerification to "discouraged" in the WebAuthn API),
+            // the platform invokes the authenticatorMakeCredential operation using the marshalled input parameters along
+            // with the "uv" option key set to false and terminate these steps."
+            // Note: This is basically a no-op right now, since we use `get_uv_option() == Some(false)`, to determine if
+            //       the RP is discouraging UV. But we may change that part of the API in the future, so better to be
+            //       explicit here.
+            self.set_uv_option(Some(false));
+            true
+        }
     }
 }
 
@@ -225,8 +310,7 @@ impl Serialize for MakeCredentials {
         }
 
         let mut map = serializer.serialize_map(Some(map_len))?;
-        let client_data_hash = self.client_data_hash();
-        map.serialize_entry(&0x01, &client_data_hash)?;
+        map.serialize_entry(&0x01, &self.client_data_hash)?;
         match self.rp {
             RelyingPartyWrapper::Data(ref d) => {
                 map.serialize_entry(&0x02, &d)?;
@@ -259,11 +343,7 @@ impl Serialize for MakeCredentials {
     }
 }
 
-impl Request<MakeCredentialsResult> for MakeCredentials {
-    fn is_ctap2_request(&self) -> bool {
-        self.user.is_some()
-    }
-}
+impl Request<MakeCredentialsResult> for MakeCredentials {}
 
 impl RequestCtap1 for MakeCredentials {
     type Output = MakeCredentialsResult;
@@ -291,7 +371,7 @@ impl RequestCtap1 for MakeCredentials {
             .map(|exclude_handle| {
                 let check_command = CheckKeyHandle {
                     key_handle: exclude_handle.id.as_ref(),
-                    client_data_wrapper: &self.client_data_wrapper,
+                    client_data_hash: self.client_data_hash.as_ref(),
                     rp: &self.rp,
                 };
                 let res = dev.send_ctap1(&check_command);
@@ -314,16 +394,7 @@ impl RequestCtap1 for MakeCredentials {
         let flags = U2F_REQUEST_USER_PRESENCE;
 
         let mut register_data = Vec::with_capacity(2 * PARAMETER_SIZE);
-        if self.is_ctap2_request() {
-            register_data.extend_from_slice(self.client_data_hash().as_ref());
-        } else {
-            let decoded = base64::decode_config(
-                &self.client_data_wrapper.client_data.challenge.0,
-                base64::URL_SAFE_NO_PAD,
-            )
-            .map_err(|_| HIDError::DeviceError)?; // We encoded it, so this should never fail
-            register_data.extend_from_slice(&decoded);
-        }
+        register_data.extend_from_slice(self.client_data_hash.as_ref());
         register_data.extend_from_slice(self.rp.hash().as_ref());
         let cmd = U2F_REGISTER;
         let apdu = CTAP1RequestAPDU::serialize(cmd, flags, &register_data)?;
@@ -344,68 +415,9 @@ impl RequestCtap1 for MakeCredentials {
             return Err(Retryable::Error(HIDError::ApduStatus(err)));
         }
 
-        if self.is_ctap2_request() {
-            let parse_register = |input| {
-                let (rest, _) = tag(&[0x05])(input)?;
-                let (rest, public_key) = take(65u8)(rest)?;
-                let (rest, key_handle_len) = be_u8(rest)?;
-                let (rest, key_handle) = take(key_handle_len)(rest)?;
-                Ok((rest, public_key, key_handle))
-            };
-            let (rest, public_key, key_handle) = parse_register(input)
-                .map_err(|e: nom::Err<VerboseError<_>>| {
-                    error!("error while parsing registration: {:?}", e);
-                    CommandError::Deserializing(DesError::custom("unable to parse registration"))
-                })
-                .map_err(HIDError::Command)
-                .map_err(Retryable::Error)?;
-
-            let cert_and_sig = parse_u2f_der_certificate(rest)
-                .map_err(|e| HIDError::Command(CommandError::Crypto(e)))
-                .map_err(Retryable::Error)?;
-
-            let credential_ec2_key =
-                COSEEC2Key::from_sec1_uncompressed(Curve::SECP256R1, public_key)
-                    .map_err(|e| HIDError::Command(CommandError::from(e)))
-                    .map_err(Retryable::Error)?;
-            let credential_public_key = COSEKey {
-                alg: COSEAlgorithm::ES256,
-                key: COSEKeyType::EC2(credential_ec2_key),
-            };
-            let auth_data = AuthenticatorData {
-                rp_id_hash: self.rp.hash(),
-                // https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html#u2f-authenticatorMakeCredential-interoperability
-                // "Let flags be a byte whose zeroth bit (bit 0, UP) is set, and whose sixth bit
-                // (bit 6, AT) is set, and all other bits are zero (bit zero is the least
-                // significant bit)"
-                flags: AuthenticatorDataFlags::USER_PRESENT | AuthenticatorDataFlags::ATTESTED,
-                counter: 0,
-                credential_data: Some(AttestedCredentialData {
-                    aaguid: AAGuid::default(),
-                    credential_id: Vec::from(key_handle),
-                    credential_public_key,
-                }),
-                extensions: Default::default(),
-            };
-
-            let att_statement = AttestationStatement::FidoU2F(AttestationStatementFidoU2F::new(
-                cert_and_sig.certificate,
-                cert_and_sig.signature,
-            ));
-
-            let attestation_object = AttestationObject {
-                auth_data,
-                att_statement,
-            };
-            let client_data = self.client_data_wrapper.clone();
-
-            Ok(MakeCredentialsResult::CTAP2(
-                attestation_object,
-                client_data,
-            ))
-        } else {
-            Ok(MakeCredentialsResult::CTAP1(input.to_vec()))
-        }
+        MakeCredentialsResult::from_ctap1(input, &self.rp.hash())
+            .map_err(HIDError::Command)
+            .map_err(Retryable::Error)
     }
 }
 
@@ -440,8 +452,7 @@ impl RequestCtap2 for MakeCredentials {
         if input.len() > 1 {
             if status.is_ok() {
                 let attestation = from_slice(&input[1..]).map_err(CommandError::Deserializing)?;
-                let client_data = self.client_data_wrapper.clone();
-                Ok(MakeCredentialsResult::CTAP2(attestation, client_data))
+                Ok(MakeCredentialsResult(attestation))
             } else {
                 let data: Value = from_slice(&input[1..]).map_err(CommandError::Deserializing)?;
                 Err(HIDError::Command(CommandError::StatusCode(
@@ -465,7 +476,9 @@ pub(crate) fn dummy_make_credentials_cmd() -> Result<MakeCredentials, HIDError> 
             origin: String::new(),
             cross_origin: false,
             token_binding: None,
-        },
+        }
+        .hash()
+        .expect("failed to serialize client data"),
         RelyingPartyWrapper::Data(RelyingParty {
             id: String::from("make.me.blink"),
             ..Default::default()
@@ -482,12 +495,13 @@ pub(crate) fn dummy_make_credentials_cmd() -> Result<MakeCredentials, HIDError> 
         MakeCredentialsOptions::default(),
         MakeCredentialsExtensions::default(),
         None,
+        false,
     )
 }
 
 #[cfg(test)]
 pub mod test {
-    use super::{MakeCredentials, MakeCredentialsOptions, MakeCredentialsResult};
+    use super::{MakeCredentials, MakeCredentialsOptions};
     use crate::crypto::{COSEAlgorithm, COSEEC2Key, COSEKey, COSEKeyType, Curve};
     use crate::ctap2::attestation::{
         AAGuid, AttestationCertificate, AttestationObject, AttestationStatement,
@@ -601,7 +615,9 @@ pub mod test {
                 origin: String::from("example.com"),
                 cross_origin: false,
                 token_binding: Some(TokenBinding::Present(String::from("AAECAw"))),
-            },
+            }
+            .hash()
+            .expect("failed to serialize client data"),
             RelyingPartyWrapper::Data(RelyingParty {
                 id: String::from("example.com"),
                 name: Some(String::from("Acme")),
@@ -632,6 +648,7 @@ pub mod test {
             },
             Default::default(),
             None,
+            false,
         )
         .expect("Failed to create MakeCredentials");
 
@@ -640,16 +657,10 @@ pub mod test {
             .wire_format(&mut device)
             .expect("Failed to serialize MakeCredentials request");
         assert_eq!(req_serialized, MAKE_CREDENTIALS_SAMPLE_REQUEST_CTAP2);
-        let (attestation_object, _collected_client_data) = match req
+        let attestation_object = req
             .handle_response_ctap2(&mut device, &MAKE_CREDENTIALS_SAMPLE_RESPONSE_CTAP2)
             .expect("Failed to handle CTAP2 response")
-        {
-            MakeCredentialsResult::CTAP2(attestation_object, _collected_client_data) => {
-                (attestation_object, _collected_client_data)
-            }
-            _ => panic!("Got CTAP1 Result, but CTAP2 expected"),
-        };
-
+            .0;
         let expected = create_attestation_obj();
 
         assert_eq!(attestation_object, expected);
@@ -664,7 +675,9 @@ pub mod test {
                 origin: String::from("example.com"),
                 cross_origin: false,
                 token_binding: Some(TokenBinding::Present(String::from("AAECAw"))),
-            },
+            }
+            .hash()
+            .expect("failed to serialize client data"),
             RelyingPartyWrapper::Data(RelyingParty {
                 id: String::from("example.com"),
                 name: Some(String::from("Acme")),
@@ -695,6 +708,7 @@ pub mod test {
             },
             Default::default(),
             None,
+            false,
         )
         .expect("Failed to create MakeCredentials");
 
@@ -706,15 +720,10 @@ pub mod test {
             req_serialized, MAKE_CREDENTIALS_SAMPLE_REQUEST_CTAP1,
             "\nGot:      {req_serialized:X?}\nExpected: {MAKE_CREDENTIALS_SAMPLE_REQUEST_CTAP1:X?}"
         );
-        let (attestation_object, _collected_client_data) = match req
+        let attestation_object = req
             .handle_response_ctap1(Ok(()), &MAKE_CREDENTIALS_SAMPLE_RESPONSE_CTAP1, &())
             .expect("Failed to handle CTAP1 response")
-        {
-            MakeCredentialsResult::CTAP2(attestation_object, _collected_client_data) => {
-                (attestation_object, _collected_client_data)
-            }
-            _ => panic!("Got CTAP1 Result, but CTAP2 expected"),
-        };
+            .0;
 
         let expected = AttestationObject {
             auth_data: AuthenticatorData {
