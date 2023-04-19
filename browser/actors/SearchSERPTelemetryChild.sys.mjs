@@ -72,6 +72,7 @@ class SearchProviders {
             return component;
           });
         }
+        p.adServerAttributes = p.adServerAttributes ?? [];
         return {
           ...p,
           searchPageRegexp: new RegExp(p.searchPageRegexp),
@@ -341,10 +342,9 @@ class SearchAdImpression {
     if (!anchor.href) {
       return false;
     }
-    let adServerAttributes = this.#providerInfo.adServerAttributes ?? [];
     let regexps = this.#providerInfo.extraAdServersRegexps;
     // Anchors can contain ad links in a data-attribute.
-    for (let name of adServerAttributes) {
+    for (let name of this.#providerInfo.adServerAttributes) {
       if (
         anchor.dataset[name] &&
         regexps.some(regexp => regexp.test(anchor.dataset[name]))
