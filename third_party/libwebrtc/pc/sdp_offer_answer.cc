@@ -451,7 +451,6 @@ RTCError ValidateBundledPayloadTypes(
   // identical codec configuration. This means that the codecs MUST share
   // the same media type, encoding name, clock rate, and any parameter
   // that can affect the codec configuration and packetization.
-  std::map<int, RtpCodecParameters> payload_to_codec_parameters;
   std::vector<const cricket::ContentGroup*> bundle_groups =
       description.GetGroupsByName(cricket::GROUP_TYPE_BUNDLE);
   for (const cricket::ContentGroup* bundle_group : bundle_groups) {
