@@ -173,15 +173,14 @@ def show_referrers(args, blocks, stacks, block):
                 "0x{} size = {} bytes".format(blocks[r].addr, blocks[r].req_size)
             )
             plural = "s" if len(referrers[r]) > 1 else ""
-            sys.stdout.write(
+            print(
                 " at byte offset"
                 + plural
                 + " "
                 + (", ".join(str(x) for x in referrers[r]))
             )
-            print()
             print_trace_segment(args, stacks, blocks[r])
-            print()
+            print("")
 
         if args.chain_reports:
             if len(referrers) == 0:
