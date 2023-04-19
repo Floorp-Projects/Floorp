@@ -13656,6 +13656,7 @@
   type: RelaxedAtomicBool
   value: true
   mirror: always
+  rust: true
 
 # Dispatch WebAuthn requests to the software CTAP1 token.
 # (mutually exclusive with webauthn_enable_android_fido2,

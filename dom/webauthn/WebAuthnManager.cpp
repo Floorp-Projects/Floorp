@@ -22,7 +22,6 @@
 #include "mozilla/dom/WebAuthnUtil.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/PBackgroundChild.h"
-#include "authenticator/src/u2fhid-capi.h"
 
 #ifdef OS_WIN
 #  include "WinWebAuthnManager.h"

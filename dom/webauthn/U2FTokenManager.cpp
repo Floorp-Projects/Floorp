@@ -6,8 +6,6 @@
 #include "json/json.h"
 #include "mozilla/dom/U2FTokenManager.h"
 #include "mozilla/dom/U2FTokenTransport.h"
-#include "mozilla/dom/U2FHIDTokenManager.h"
-#include "mozilla/dom/U2FSoftTokenManager.h"
 #include "mozilla/dom/PWebAuthnTransactionParent.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/dom/WebAuthnUtil.h"
@@ -28,12 +26,6 @@
 #  include "mozilla/dom/AndroidWebAuthnTokenManager.h"
 #endif
 
-// Not named "security.webauth.u2f_softtoken_counter" because setting that
-// name causes the window.u2f object to disappear until preferences get
-// reloaded, as its pref is a substring!
-#define PREF_U2F_NSSTOKEN_COUNTER "security.webauth.softtoken_counter"
-#define PREF_WEBAUTHN_SOFTTOKEN_ENABLED \
-  "security.webauth.webauthn_enable_softtoken"
 #define PREF_WEBAUTHN_USBTOKEN_ENABLED \
   "security.webauth.webauthn_enable_usbtoken"
 #define PREF_WEBAUTHN_ALLOW_DIRECT_ATTESTATION \
@@ -81,9 +73,6 @@ class U2FPrefManager final : public nsIObserver {
     if (!gPrefManager) {
       gPrefManager = new U2FPrefManager();
       Preferences::AddStrongObserver(gPrefManager,
-                                     PREF_WEBAUTHN_SOFTTOKEN_ENABLED);
-      Preferences::AddStrongObserver(gPrefManager, PREF_U2F_NSSTOKEN_COUNTER);
-      Preferences::AddStrongObserver(gPrefManager,
                                      PREF_WEBAUTHN_USBTOKEN_ENABLED);
       Preferences::AddStrongObserver(gPrefManager,
                                      PREF_WEBAUTHN_ANDROID_FIDO2_ENABLED);
@@ -96,21 +85,6 @@ class U2FPrefManager final : public nsIObserver {
 
   static U2FPrefManager* Get() { return gPrefManager; }
 
-  bool GetSoftTokenEnabled() {
-    MutexAutoLock lock(mPrefMutex);
-    return mSoftTokenEnabled;
-  }
-
-  uint32_t GetSoftTokenCounter() {
-    MutexAutoLock lock(mPrefMutex);
-    return mSoftTokenCounter;
-  }
-
-  bool GetUsbTokenEnabled() {
-    MutexAutoLock lock(mPrefMutex);
-    return mUsbTokenEnabled;
-  }
-
   bool GetAndroidFido2Enabled() {
     MutexAutoLock lock(mPrefMutex);
     return mAndroidFido2Enabled;
@@ -120,8 +94,6 @@ class U2FPrefManager final : public nsIObserver {
     MutexAutoLock lock(mPrefMutex);
     return mAllowDirectAttestation;
   }
-
-  bool GetIsCtap2() { return false; }
 
   NS_IMETHODIMP
   Observe(nsISupports* aSubject, const char* aTopic,
@@ -134,8 +106,6 @@ class U2FPrefManager final : public nsIObserver {
   void UpdateValues() {
     MOZ_ASSERT(NS_IsMainThread());
     MutexAutoLock lock(mPrefMutex);
-    mSoftTokenEnabled = Preferences::GetBool(PREF_WEBAUTHN_SOFTTOKEN_ENABLED);
-    mSoftTokenCounter = Preferences::GetUint(PREF_U2F_NSSTOKEN_COUNTER);
     mUsbTokenEnabled = Preferences::GetBool(PREF_WEBAUTHN_USBTOKEN_ENABLED);
     mAndroidFido2Enabled =
         Preferences::GetBool(PREF_WEBAUTHN_ANDROID_FIDO2_ENABLED);
@@ -144,8 +114,6 @@ class U2FPrefManager final : public nsIObserver {
   }
 
   Mutex mPrefMutex MOZ_UNANNOTATED;
-  bool mSoftTokenEnabled;
-  uint32_t mSoftTokenCounter;
   bool mUsbTokenEnabled;
   bool mAndroidFido2Enabled;
   bool mAllowDirectAttestation;
@@ -280,29 +248,12 @@ RefPtr<U2FTokenTransport> U2FTokenManager::GetTokenManagerImpl() {
     MOZ_ASSERT(gBackgroundThread, "This should never be null!");
   }
 
-  auto pm = U2FPrefManager::Get();
-
 #ifdef MOZ_WIDGET_ANDROID
   // On Android, prefer the platform support if enabled.
-  if (pm->GetAndroidFido2Enabled()) {
+  if (U2FPrefManager::Get()->GetAndroidFido2Enabled()) {
     return AndroidWebAuthnTokenManager::GetInstance();
   }
 #endif
-
-  // Prefer the HW token, even if the softtoken is enabled too.
-  // We currently don't support soft and USB tokens enabled at the
-  // same time as the softtoken would always win the race to register.
-  // We could support it for signing though...
-  if (pm->GetUsbTokenEnabled()) {
-    return new U2FHIDTokenManager();
-  }
-
-  if (pm->GetSoftTokenEnabled()) {
-    return new U2FSoftTokenManager(pm->GetSoftTokenCounter());
-  }
-
-  // TODO Use WebAuthnRequest to aggregate results from all transports,
-  //      once we have multiple HW transport types.
 
   return nullptr;
 }

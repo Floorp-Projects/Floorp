@@ -32,11 +32,10 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestRegister(
   }
 #endif
 
-  bool allowCtap2 = StaticPrefs::security_webauthn_ctap2();
   bool androidFido2 =
       StaticPrefs::security_webauth_webauthn_enable_android_fido2();
 
-  if (allowCtap2 && !androidFido2) {
+  if (!androidFido2) {
     WebAuthnController* ctrl = WebAuthnController::Get();
     ctrl->Register(this, aTransactionId, aTransactionInfo);
   } else {
@@ -60,11 +59,10 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestSign(
   }
 #endif
 
-  bool allowCtap2 = StaticPrefs::security_webauthn_ctap2();
   bool androidFido2 =
       StaticPrefs::security_webauth_webauthn_enable_android_fido2();
 
-  if (allowCtap2 && !androidFido2) {
+  if (!androidFido2) {
     WebAuthnController* ctrl = WebAuthnController::Get();
     ctrl->Sign(this, aTransactionId, aTransactionInfo);
   } else {
