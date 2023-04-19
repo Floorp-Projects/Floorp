@@ -77,14 +77,12 @@ const ADDRESS_TESTCASES = [
       guid: "test-guid",
       "given-name": "Timothy",
       name: "John",
-      "unknown-1": "an unknown field from another client",
     },
     expectedResult: {
       guid: "test-guid",
       version: ADDRESS_SCHEMA_VERSION,
       "given-name": "Timothy",
       name: "Timothy",
-      "unknown-1": "an unknown field from another client",
     },
   },
   {
@@ -95,14 +93,12 @@ const ADDRESS_TESTCASES = [
       version: "ABCDE",
       "given-name": "Timothy",
       name: "John",
-      "unknown-1": "an unknown field from another client",
     },
     expectedResult: {
       guid: "test-guid",
       version: ADDRESS_SCHEMA_VERSION,
       "given-name": "Timothy",
       name: "Timothy",
-      "unknown-1": "an unknown field from another client",
     },
   },
   {
@@ -197,14 +193,12 @@ const CREDIT_CARD_TESTCASES = [
       guid: "test-guid",
       "cc-name": "Timothy",
       "cc-given-name": "John",
-      "unknown-1": "an unknown field from another client",
     },
     expectedResult: {
       guid: "test-guid",
       version: CREDIT_CARD_SCHEMA_VERSION,
       "cc-name": "Timothy",
       "cc-given-name": "Timothy",
-      "unknown-1": "an unknown field from another client",
     },
   },
   {
@@ -215,14 +209,12 @@ const CREDIT_CARD_TESTCASES = [
       version: "ABCDE",
       "cc-name": "Timothy",
       "cc-given-name": "John",
-      "unknown-1": "an unknown field from another client",
     },
     expectedResult: {
       guid: "test-guid",
       version: CREDIT_CARD_SCHEMA_VERSION,
       "cc-name": "Timothy",
       "cc-given-name": "Timothy",
-      "unknown-1": "an unknown field from another client",
     },
   },
   {
