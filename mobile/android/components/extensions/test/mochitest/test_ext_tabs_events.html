@@ -235,7 +235,7 @@ add_task(async function testTabActivationEvent() {
 });
 
 add_task(async function test_tabs_event_page() {
-  async function background() {
+  function background() {
     const EVENTS = [
       "onActivated",
       "onRemoved",
@@ -248,8 +248,12 @@ add_task(async function test_tabs_event_page() {
       browser.tabs[event].addListener(() => {
       });
     }
+    browser.test.onMessage.addListener(async msg => {
+      if (msg === "createTab") {
+        await browser.tabs.create({url: "about:blank"});
+      }
+    });
     browser.test.sendMessage("ready");
-    await browser.tabs.create({url: "about:blank"});
   }
 
   const extension = ExtensionTestUtils.loadExtension({
@@ -262,40 +266,32 @@ add_task(async function test_tabs_event_page() {
   });
 
   await extension.startup();
+  info("Wait for event page to be started");
   await extension.awaitMessage("ready");
+  // Sanity check
+  info("Wait for tabs.onCreated listener call");
+  extension.sendMessage("createTab");
   await extension.awaitMessage("onCreated");
 
-  async function assertPersistentListeners(extension, primed) {
-    const EVENTS = [
-      "onActivated",
-      "onCreated",
-      "onRemoved",
-      "onUpdated",
-    ];
-    await SpecialPowers.spawnChrome([extension.id, EVENTS, primed], async (id, EVENTS, expectedPrimed) => {
-      const { ExtensionTestCommon } = ChromeUtils.import("resource://testing-common/ExtensionTestCommon.jsm");
-      const ext = { id };
-      for (const event of EVENTS) {
-        ExtensionTestCommon.testAssertions.assertPersistentListeners(ext, "tabs", event, {
-          primed: expectedPrimed,
-        });
-      }
-    });
-  }
-
   // on startup, all event listeners should not be primed
-  await assertPersistentListeners(extension, false);
+  await assertPersistentListeners(extension, { primed: false });
 
   // when the extension is killed, all event listeners should be primed
-  await extension.terminateBackground();
-  await assertPersistentListeners(extension, true);
+  info("Terminate event page");
+  await extension.terminateBackground({ disableResetIdleForTest: true });
+  await assertPersistentListeners(extension, { primed: true });
 
   // on start up again, all event listeners should not be primed
-  await extension.wakeupBackground();
+  info("Wake up event page on a new tabs.onCreated event");
+  const newWin = window.open();
+  info("Wait for event page to be restarted");
   await extension.awaitMessage("ready");
-  await assertPersistentListeners(extension, false);
+  info("Wait for the primed tabs.onCreated to be received by the event page");
+  await extension.awaitMessage("onCreated");
+  await assertPersistentListeners(extension, { primed: false });
 
   await extension.unload();
+  newWin.close();
 });
 
 </script>
