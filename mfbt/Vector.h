@@ -341,9 +341,8 @@ template <typename T, size_t MinInlineCapacity = 0,
           class AllocPolicy = MallocAllocPolicy>
 class MOZ_NON_PARAM Vector final : private AllocPolicy {
   /* utilities */
-
   static constexpr bool kElemIsPod =
-      std::is_trivial<T>::value && std::is_standard_layout<T>::value;
+      std::is_trivial_v<T> && std::is_standard_layout_v<T>;
   typedef detail::VectorImpl<T, MinInlineCapacity, AllocPolicy, kElemIsPod>
       Impl;
   friend struct detail::VectorImpl<T, MinInlineCapacity, AllocPolicy,
@@ -540,7 +539,9 @@ class MOZ_NON_PARAM Vector final : private AllocPolicy {
 
   typedef T ElementType;
 
-  explicit Vector(AllocPolicy = AllocPolicy());
+  explicit Vector(AllocPolicy);
+  Vector() : Vector(AllocPolicy()) {}
+
   Vector(Vector&&);            /* Move constructor. */
   Vector& operator=(Vector&&); /* Move assignment. */
   ~Vector();
