@@ -38,7 +38,7 @@ union RemoteDecoderInfoIPDL
   VideoDecoderInfoIPDL;
 };
 
-[ManualDealloc, NeedsOtherPid]
+[NeedsOtherPid]
 sync protocol PRemoteDecoderManager
 {
   manages PRemoteDecoder;
