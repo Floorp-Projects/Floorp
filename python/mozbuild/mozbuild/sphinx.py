@@ -178,18 +178,25 @@ def format_module(m):
     return lines
 
 
-def export_mots(app):
+def find_mots_config_path(app):
+    """Find and return mots config path if it exists."""
+    base_path = Path(app.srcdir).parent
+    config_path = base_path / "mots.yaml"
+    if config_path.exists():
+        return config_path
+
+
+def export_mots(config_path):
     """Load mots configuration and export it to file."""
     # Load from disk and initialize configuration and directory.
-    base_path = Path(app.srcdir).parent
-    config = FileConfig(base_path / "mots.yaml")
+    config = FileConfig(config_path)
     config.load()
     directory = Directory(config)
     directory.load()
 
     # Fetch file format (i.e., "rst") and export path.
     frmt = config.config["export"]["format"]
-    path = base_path / config.config["export"]["path"]
+    path = config_path.parent / config.config["export"]["path"]
 
     # Generate output.
     output = export_to_format(directory, frmt)
@@ -278,7 +285,9 @@ def setup(app):
     # documentation.
 
     # Export and write "governance" documentation to disk.
-    export_mots(app)
+    config_path = find_mots_config_path(app)
+    if config_path:
+        export_mots(config_path)
 
     manager.generate_docs(app)
     app.srcdir = manager.staging_dir
