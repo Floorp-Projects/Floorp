@@ -2787,6 +2787,15 @@ nsRect nsCSSRendering::ComputeImageLayerPositioningArea(
           positionArea.Deflate(scrollbars);
         }
       }
+
+      // If we have the dynamic toolbar, we need to expand the image area to
+      // include the region under the dynamic toolbar, otherwise we will see a
+      // blank space under the toolbar.
+      if (aPresContext->IsRootContentDocumentCrossProcess() &&
+          aPresContext->HasDynamicToolbar()) {
+        positionArea.SizeTo(nsLayoutUtils::ExpandHeightForDynamicToolbar(
+            aPresContext, positionArea.Size()));
+      }
     }
   }
   *aAttachedToFrame = attachedToFrame;
