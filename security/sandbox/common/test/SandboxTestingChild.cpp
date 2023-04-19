@@ -19,7 +19,7 @@
 
 namespace mozilla {
 
-SandboxTestingChild* SandboxTestingChild::sInstance = nullptr;
+StaticRefPtr<SandboxTestingChild> SandboxTestingChild::sInstance;
 
 bool SandboxTestingChild::IsTestThread() { return mThread->IsOnThread(); }
 
@@ -38,6 +38,9 @@ bool SandboxTestingChild::Initialize(
   }
   sInstance =
       new SandboxTestingChild(thread, std::move(aSandboxTestingEndpoint));
+  thread->Dispatch(NewRunnableMethod<Endpoint<PSandboxTestingChild>&&>(
+      "SandboxTestingChild::Bind", sInstance.get(), &SandboxTestingChild::Bind,
+      std::move(aSandboxTestingEndpoint)));
   return true;
 }
 
@@ -49,12 +52,9 @@ SandboxTestingChild* SandboxTestingChild::GetInstance() {
 
 SandboxTestingChild::SandboxTestingChild(
     SandboxTestingThread* aThread, Endpoint<PSandboxTestingChild>&& aEndpoint)
-    : mThread(aThread) {
-  MOZ_ASSERT(aThread);
-  PostToTestThread(NewNonOwningRunnableMethod<Endpoint<PSandboxTestingChild>&&>(
-      "SandboxTestingChild::Bind", this, &SandboxTestingChild::Bind,
-      std::move(aEndpoint)));
-}
+    : mThread(aThread) {}
+
+SandboxTestingChild::~SandboxTestingChild() = default;
 
 void SandboxTestingChild::Bind(Endpoint<PSandboxTestingChild>&& aEndpoint) {
   MOZ_RELEASE_ASSERT(mThread->IsOnThread());
@@ -125,7 +125,6 @@ void SandboxTestingChild::ActorDestroy(ActorDestroyReason aWhy) {
 void SandboxTestingChild::Destroy() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sInstance);
-  delete sInstance;
   sInstance = nullptr;
 }
 

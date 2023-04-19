@@ -37,8 +37,8 @@ class SandboxTestingThread {
   }
 
   ~SandboxTestingThread() {
-    MOZ_RELEASE_ASSERT(NS_IsMainThread());
-    mThread->Shutdown();
+    NS_DispatchToMainThread(NewRunnableMethod("~SandboxTestingThread", mThread,
+                                              &nsIThread::Shutdown));
   }
 
  private:

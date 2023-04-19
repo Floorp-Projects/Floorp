@@ -287,8 +287,8 @@ SandboxTest::StartTests(const nsTArray<nsCString>& aProcessesList) {
     RefPtr<ProcessPromise> aPromise(processPromise);
     aPromise->Then(
         GetMainThreadSerialEventTarget(), __func__,
-        [self](SandboxTestingParent* aValue) {
-          self->mSandboxTestingParents.AppendElement(aValue);
+        [self](RefPtr<SandboxTestingParent> aValue) {
+          self->mSandboxTestingParents.AppendElement(std::move(aValue));
           return NS_OK;
         },
         [](nsresult aError) {
@@ -329,8 +329,8 @@ SandboxTest::FinishTests() {
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  for (SandboxTestingParent* stp : mSandboxTestingParents) {
-    SandboxTestingParent::Destroy(stp);
+  for (RefPtr<SandboxTestingParent>& stp : mSandboxTestingParents) {
+    SandboxTestingParent::Destroy(stp.forget());
   }
 
   // Make sure there is no leftover for test --verify to run without failure
