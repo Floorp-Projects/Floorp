@@ -6,12 +6,28 @@
 import argparse
 import os
 import shutil
+import ssl
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from urllib import request
 
+import certifi
 import yaml
 from buildconfig import topsrcdir
 from vsdownload import downloadPackages, extractPackages
+
+# Hack to hook certifi
+_urlopen = request.urlopen
+
+
+def urlopen(url, data=None):
+    return _urlopen(
+        url, data, context=ssl.create_default_context(cafile=certifi.where())
+    )
+
+
+request.urlopen = urlopen
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
