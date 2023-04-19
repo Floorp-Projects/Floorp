@@ -236,6 +236,23 @@ let JSWINDOWACTORS = {
     enablePreference: "cookiebanners.bannerClicking.enabled",
   },
 
+  DateTimePicker: {
+    parent: {
+      esModuleURI: "resource://gre/actors/DateTimePickerParent.sys.mjs",
+    },
+
+    child: {
+      esModuleURI: "resource://gre/actors/DateTimePickerChild.sys.mjs",
+      events: {
+        MozOpenDateTimePicker: {},
+        MozUpdateDateTimePicker: {},
+        MozCloseDateTimePicker: {},
+      },
+    },
+
+    allFrames: true,
+  },
+
   ExtFind: {
     child: {
       esModuleURI: "resource://gre/actors/ExtFindChild.sys.mjs",
@@ -507,7 +524,6 @@ let JSWINDOWACTORS = {
       },
     },
 
-    includeChrome: true,
     allFrames: true,
   },
 
@@ -566,7 +582,9 @@ if (AppConstants.platform != "android") {
     allFrames: true,
   };
 
-  // Note that GeckoView has another implementation in mobile/android/actors.
+  /**
+   * Note that GeckoView has another implementation in mobile/android/actors.
+   */
   JSWINDOWACTORS.Select = {
     parent: {
       esModuleURI: "resource://gre/actors/SelectParent.sys.mjs",
@@ -578,25 +596,6 @@ if (AppConstants.platform != "android") {
         mozshowdropdown: {},
         "mozshowdropdown-sourcetouch": {},
         mozhidedropdown: { mozSystemGroup: true },
-      },
-    },
-
-    includeChrome: true,
-    allFrames: true,
-  };
-
-  // Note that GeckoView handles MozOpenDateTimePicker in GeckoViewPrompt.
-  JSWINDOWACTORS.DateTimePicker = {
-    parent: {
-      esModuleURI: "resource://gre/actors/DateTimePickerParent.sys.mjs",
-    },
-
-    child: {
-      esModuleURI: "resource://gre/actors/DateTimePickerChild.sys.mjs",
-      events: {
-        MozOpenDateTimePicker: {},
-        MozUpdateDateTimePicker: {},
-        MozCloseDateTimePicker: {},
       },
     },
 
