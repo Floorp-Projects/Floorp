@@ -17,13 +17,12 @@ namespace gfx {
 using namespace ipc;
 
 VRGPUParent::VRGPUParent(ProcessId aChildProcessId) : mClosed(false) {
-  MOZ_COUNT_CTOR(VRGPUParent);
   MOZ_ASSERT(NS_IsMainThread());
 
   SetOtherProcessId(aChildProcessId);
 }
 
-VRGPUParent::~VRGPUParent() { MOZ_COUNT_DTOR(VRGPUParent); }
+VRGPUParent::~VRGPUParent() = default;
 
 void VRGPUParent::ActorDestroy(ActorDestroyReason aWhy) {
 #if !defined(MOZ_WIDGET_ANDROID)
@@ -34,12 +33,7 @@ void VRGPUParent::ActorDestroy(ActorDestroyReason aWhy) {
 #endif
 
   mClosed = true;
-  GetCurrentSerialEventTarget()->Dispatch(
-      NewRunnableMethod("gfx::VRGPUParent::DeferredDestroy", this,
-                        &VRGPUParent::DeferredDestroy));
 }
-
-void VRGPUParent::DeferredDestroy() { mSelfRef = nullptr; }
 
 /* static */
 RefPtr<VRGPUParent> VRGPUParent::CreateForGPU(
@@ -61,8 +55,6 @@ void VRGPUParent::Bind(Endpoint<PVRGPUParent>&& aEndpoint) {
   if (!aEndpoint.Bind(this)) {
     return;
   }
-
-  mSelfRef = this;
 }
 
 mozilla::ipc::IPCResult VRGPUParent::RecvStartVRService() {
