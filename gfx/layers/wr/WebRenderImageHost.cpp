@@ -63,6 +63,11 @@ void WebRenderImageHost::UseTextureHost(
     mPendingRemoteTextureWrappers.clear();
   }
 
+  if (mCurrentTextureHost &&
+      mCurrentTextureHost->AsRemoteTextureHostWrapper()) {
+    mCurrentTextureHost = nullptr;
+  }
+
   nsTArray<TimedImage> newImages;
 
   for (uint32_t i = 0; i < aTextures.Length(); ++i) {
