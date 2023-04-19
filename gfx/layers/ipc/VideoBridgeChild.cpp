@@ -49,9 +49,7 @@ void VideoBridgeChild::Shutdown() {
 }
 
 VideoBridgeChild::VideoBridgeChild()
-    : mIPDLSelfRef(this),
-      mThread(GetCurrentSerialEventTarget()),
-      mCanSend(true) {}
+    : mThread(GetCurrentSerialEventTarget()), mCanSend(true) {}
 
 VideoBridgeChild::~VideoBridgeChild() = default;
 
@@ -154,8 +152,6 @@ bool VideoBridgeChild::DeallocPTextureChild(PTextureChild* actor) {
 void VideoBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
   mCanSend = false;
 }
-
-void VideoBridgeChild::ActorDealloc() { mIPDLSelfRef = nullptr; }
 
 PTextureChild* VideoBridgeChild::CreateTexture(
     const SurfaceDescriptor& aSharedData, ReadLockDescriptor&& aReadLock,
