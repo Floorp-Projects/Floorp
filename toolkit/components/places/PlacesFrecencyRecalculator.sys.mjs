@@ -450,7 +450,7 @@ class AlternativeFrecencyHelper {
       // this threshold will be considered meaningful and autofilled.
       if (affected.length) {
         let threshold = (
-          await db.executeCached(`SELECT avg(frecency) FROM moz_origins`)
+          await db.executeCached(`SELECT avg(alt_frecency) FROM moz_origins`)
         )[0].getResultByIndex(0);
         await lazy.PlacesUtils.metadata.set(
           "origin_alt_frecency_threshold",
