@@ -10,8 +10,8 @@ extern crate xpcom;
 
 use authenticator::{
     authenticatorservice::{
-        AuthenticatorService, CtapVersion, GetAssertionOptions, MakeCredentialsOptions,
-        RegisterArgsCtap2, SignArgsCtap2,
+        AuthenticatorService, GetAssertionOptions, MakeCredentialsOptions,
+        RegisterArgs, SignArgs,
     },
     ctap2::attestation::AttestationStatement,
     ctap2::server::{
@@ -95,20 +95,10 @@ pub struct CtapRegisterResult {
 }
 
 impl CtapRegisterResult {
-    xpcom_method!(get_client_data_json => GetClientDataJSON() -> nsACString);
-    fn get_client_data_json(&self) -> Result<nsCString, nsresult> {
-        match &self.result {
-            Ok(RegisterResult::CTAP2(_, client_data)) => {
-                return Ok(nsCString::from(client_data.serialized_data.clone()))
-            }
-            _ => return Err(NS_ERROR_FAILURE),
-        }
-    }
-
     xpcom_method!(get_attestation_object => GetAttestationObject() -> ThinVec<u8>);
     fn get_attestation_object(&self) -> Result<ThinVec<u8>, nsresult> {
         let mut out = ThinVec::new();
-        if let Ok(RegisterResult::CTAP2(attestation, _)) = &self.result {
+        if let Ok(RegisterResult::CTAP2(attestation)) = &self.result {
             if let Ok(encoded_att_obj) = serde_cbor::to_vec(&attestation) {
                 out.extend_from_slice(&encoded_att_obj);
                 return Ok(out);
@@ -120,7 +110,7 @@ impl CtapRegisterResult {
     xpcom_method!(get_credential_id => GetCredentialId() -> ThinVec<u8>);
     fn get_credential_id(&self) -> Result<ThinVec<u8>, nsresult> {
         let mut out = ThinVec::new();
-        if let Ok(RegisterResult::CTAP2(attestation, _)) = &self.result {
+        if let Ok(RegisterResult::CTAP2(attestation)) = &self.result {
             if let Some(credential_data) = &attestation.auth_data.credential_data {
                 out.extend(credential_data.credential_id.clone());
                 return Ok(out);
@@ -280,14 +270,12 @@ impl Controller {
         // to an error. Otherwise we convert the entries of SignResult (= Vec<Assertion>) into
         // CtapSignResults with OK statuses.
         let mut assertions: ThinVec<Option<RefPtr<nsICtapSignResult>>> = ThinVec::new();
-        let mut client_data = nsCString::new();
         match result {
             Err(e) => assertions.push(
                 CtapSignResult::allocate(InitCtapSignResult { result: Err(e) })
                     .query_interface::<nsICtapSignResult>(),
             ),
-            Ok(SignResult::CTAP2(assertion_vec, json)) => {
-                client_data = nsCString::from(json.serialized_data);
+            Ok(SignResult::CTAP2(assertion_vec)) => {
                 for assertion in assertion_vec.0 {
                     assertions.push(
                         CtapSignResult::allocate(InitCtapSignResult {
@@ -301,7 +289,7 @@ impl Controller {
         }
 
         unsafe {
-            (**(self.0.borrow())).FinishSign(tid, &mut *client_data, &mut assertions);
+            (**(self.0.borrow())).FinishSign(tid, &mut assertions);
         }
         Ok(())
     }
@@ -455,11 +443,10 @@ impl AuthrsTransport {
         let mut relying_party_id = nsString::new();
         unsafe { args.GetRpId(&mut *relying_party_id) }.to_result()?;
 
-        let mut challenge = ThinVec::new();
-        unsafe { args.GetChallenge(&mut challenge) }.to_result()?;
-
-        let mut client_data_json = nsCString::new();
-        unsafe { args.GetClientDataJSON(&mut *client_data_json) }.to_result()?;
+        let mut client_data_hash = ThinVec::new();
+        unsafe { args.GetClientDataHash(&mut client_data_hash) }.to_result()?;
+        let mut client_data_hash_arr = [0u8; 32];
+        client_data_hash_arr.copy_from_slice(&client_data_hash);
 
         let mut timeout_ms = 0u32;
         unsafe { args.GetTimeoutMS(&mut timeout_ms) }.to_result()?;
@@ -513,8 +500,8 @@ impl AuthrsTransport {
         //     _ => (),
         // }
 
-        let info = RegisterArgsCtap2 {
-            challenge: challenge.to_vec(),
+        let info = RegisterArgs {
+            client_data_hash: client_data_hash_arr,
             relying_party: RelyingParty {
                 id: relying_party_id.to_string(),
                 name: None,
@@ -535,6 +522,7 @@ impl AuthrsTransport {
             },
             extensions: Default::default(),
             pin: None,
+            use_ctap1_fallback: false,
         };
 
         let (status_tx, status_rx) = channel::<StatusUpdate>();
@@ -566,13 +554,13 @@ impl AuthrsTransport {
                         "AuthrsTransport::MakeCredential",
                         2,
                     )),
-                    Ok(RegisterResult::CTAP2(mut attestation_object, client_data)) => {
+                    Ok(RegisterResult::CTAP2(mut attestation_object)) => {
                         // Tokens always provide attestation, but the user may have asked we not
                         // include the attestation statement in the response.
                         if none_attestation {
                             attestation_object.att_statement = AttestationStatement::None;
                         }
-                        Ok(RegisterResult::CTAP2(attestation_object, client_data))
+                        Ok(RegisterResult::CTAP2(attestation_object))
                     }
                     Err(e) => Err(e),
                 };
@@ -604,11 +592,10 @@ impl AuthrsTransport {
         let mut relying_party_id = nsString::new();
         unsafe { args.GetRpId(&mut *relying_party_id) }.to_result()?;
 
-        let mut challenge = ThinVec::new();
-        unsafe { args.GetChallenge(&mut challenge) }.to_result()?;
-
-        let mut client_data_json = nsCString::new();
-        unsafe { args.GetClientDataJSON(&mut *client_data_json) }.to_result()?;
+        let mut client_data_hash = ThinVec::new();
+        unsafe { args.GetClientDataHash(&mut client_data_hash) }.to_result()?;
+        let mut client_data_hash_arr = [0u8; 32];
+        client_data_hash_arr.copy_from_slice(&client_data_hash);
 
         let mut timeout_ms = 0u32;
         unsafe { args.GetTimeoutMS(&mut timeout_ms) }.to_result()?;
@@ -666,7 +653,7 @@ impl AuthrsTransport {
                         "AuthrsTransport::GetAssertion",
                         2,
                     )),
-                    Ok(SignResult::CTAP2(mut assertion_object, client_data)) => {
+                    Ok(SignResult::CTAP2(mut assertion_object)) => {
                         // In CTAP 2.0, but not CTAP 2.1, the assertion object's credential field
                         // "May be omitted if the allowList has exactly one Credential." If we had
                         // a unique allowed credential, then copy its descriptor to the output.
@@ -677,15 +664,15 @@ impl AuthrsTransport {
                                 }
                             }
                         }
-                        Ok(SignResult::CTAP2(assertion_object, client_data))
+                        Ok(SignResult::CTAP2(assertion_object))
                     }
                     Err(e) => Err(e),
                 };
                 let _ = controller.finish_sign(tid, result);
             }));
 
-        let info = SignArgsCtap2 {
-            challenge: challenge.to_vec(),
+        let info = SignArgs {
+            client_data_hash: client_data_hash_arr,
             relying_party_id: relying_party_id.to_string(),
             origin: origin.to_string(),
             allow_list,
@@ -696,6 +683,7 @@ impl AuthrsTransport {
             extensions: Default::default(),
             pin: None,
             alternate_rp_id,
+            use_ctap1_fallback: false,
         };
 
         self.auth_service
@@ -721,7 +709,7 @@ impl AuthrsTransport {
 pub extern "C" fn authrs_transport_constructor(
     result: *mut *const nsIWebAuthnTransport,
 ) -> nsresult {
-    let mut auth_service = match AuthenticatorService::new(CtapVersion::CTAP2) {
+    let mut auth_service = match AuthenticatorService::new() {
         Ok(auth_service) => auth_service,
         _ => return NS_ERROR_FAILURE,
     };

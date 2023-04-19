@@ -417,12 +417,7 @@ void WebAuthnController::RunFinishRegister(
     return;
   }
 
-  nsCString clientDataJson;
-  rv = aResult->GetClientDataJSON(clientDataJson);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    AbortTransaction(aTransactionId, NS_ERROR_FAILURE, true);
-    return;
-  }
+  nsCString clientDataJson = mPendingRegisterInfo.ref().ClientDataJSON();
 
   nsTArray<uint8_t> attObj;
   rv = aResult->GetAttestationObject(attObj);
@@ -518,16 +513,15 @@ void WebAuthnController::Sign(PWebAuthnTransactionParent* aTransactionParent,
 
 NS_IMETHODIMP
 WebAuthnController::FinishSign(
-    uint64_t aTransactionId, const nsACString& aClientDataJson,
+    uint64_t aTransactionId,
     const nsTArray<RefPtr<nsICtapSignResult>>& aResult) {
   MOZ_ASSERT(XRE_IsParentProcess());
   nsTArray<RefPtr<nsICtapSignResult>> ownedResult = aResult.Clone();
 
   nsCOMPtr<nsIRunnable> r(
-      NewRunnableMethod<uint64_t, nsCString,
-                        nsTArray<RefPtr<nsICtapSignResult>>>(
+      NewRunnableMethod<uint64_t, nsTArray<RefPtr<nsICtapSignResult>>>(
           "WebAuthnController::RunFinishSign", this,
-          &WebAuthnController::RunFinishSign, aTransactionId, aClientDataJson,
+          &WebAuthnController::RunFinishSign, aTransactionId,
           std::move(ownedResult)));
 
   if (!gWebAuthnBackgroundThread) {
@@ -537,7 +531,7 @@ WebAuthnController::FinishSign(
 }
 
 void WebAuthnController::RunFinishSign(
-    uint64_t aTransactionId, const nsACString& aClientDataJson,
+    uint64_t aTransactionId,
     const nsTArray<RefPtr<nsICtapSignResult>>& aResult) {
   mozilla::ipc::AssertIsOnBackgroundThread();
   if (mTransaction.isNothing() ||
@@ -568,7 +562,6 @@ void WebAuthnController::RunFinishSign(
       return;
     }
     mPendingSignResults = aResult.Clone();
-    mTransaction.ref().mClientDataJSON = aClientDataJson;
     RunResumeWithSelectedSignResult(aTransactionId, 0);
     return;
   }
@@ -600,7 +593,6 @@ void WebAuthnController::RunFinishSign(
       });
 
   mPendingSignResults = aResult.Clone();
-  mTransaction.ref().mClientDataJSON = aClientDataJson;
   NS_ConvertUTF16toUTF8 origin(mPendingSignInfo.ref().Origin());
   SendPromptNotification(kSelectSignResultNotification,
                          mTransaction.ref().mTransactionId, origin.get(),

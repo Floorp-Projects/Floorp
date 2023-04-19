@@ -17,12 +17,6 @@ CtapRegisterResult::GetStatus(nsresult* aStatus) {
 }
 
 NS_IMETHODIMP
-CtapRegisterResult::GetClientDataJSON(nsACString& aClientDataJSON) {
-  aClientDataJSON = mClientDataJSON;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 CtapRegisterResult::GetAttestationObject(
     nsTArray<uint8_t>& aAttestationObject) {
   aAttestationObject.Clear();
