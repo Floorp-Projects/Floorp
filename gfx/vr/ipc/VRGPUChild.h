@@ -14,7 +14,7 @@ namespace gfx {
 
 class VRGPUChild final : public PVRGPUChild {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRGPUChild);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRGPUChild, final);
 
   static VRGPUChild* Get();
   static bool InitForGPUProcess(Endpoint<PVRGPUChild>&& aEndpoint);
