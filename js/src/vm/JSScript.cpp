@@ -1943,7 +1943,12 @@ bool ScriptSource::setFilename(FrontendContext* fc, const char* filename) {
 bool ScriptSource::setFilename(FrontendContext* fc, UniqueChars&& filename) {
   MOZ_ASSERT(!filename_);
   filename_ = getOrCreateStringZ(fc, std::move(filename));
-  return bool(filename_);
+  if (filename_) {
+    filenameHash_ =
+        mozilla::HashStringKnownLength(filename_.chars(), filename_.length());
+    return true;
+  }
+  return false;
 }
 
 bool ScriptSource::setIntroducerFilename(FrontendContext* fc,
