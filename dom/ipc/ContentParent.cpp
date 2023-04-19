@@ -3760,7 +3760,7 @@ class RequestContentJSInterruptRunnable final : public Runnable {
   // executed. So the runnable needs not to care about keeping it alive,
   // as it is surely dispatched earlier than the
   // HangMonitorParent::ShutdownOnThread.
-  PProcessHangMonitorParent* mHangMonitorActor;
+  RefPtr<PProcessHangMonitorParent> mHangMonitorActor;
 };
 
 void ContentParent::SignalImpendingShutdownToContentJS() {

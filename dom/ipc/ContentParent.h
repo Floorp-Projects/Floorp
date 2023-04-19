@@ -1582,7 +1582,7 @@ class ContentParent final : public PContentParent,
   ScopedClose mChildXSocketFdDup;
 #endif
 
-  PProcessHangMonitorParent* mHangMonitorActor;
+  RefPtr<PProcessHangMonitorParent> mHangMonitorActor;
 
   UniquePtr<gfx::DriverCrashGuard> mDriverCrashGuard;
   UniquePtr<MemoryReportRequestHost> mMemoryReportRequest;
