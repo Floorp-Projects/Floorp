@@ -332,13 +332,12 @@ treechildren::-moz-tree-separator(selected, focus) {
   border-top: 1px solid var(--organizer-border-color);
 }
 
-#editBookmarkPanelContent .expander-up,
-#editBookmarkPanelContent .expander-down {
+.expander-up,
+.expander-down {
   appearance: none;
   min-width: 0;
   padding: 5px;
-  margin: 0;
-  margin-inline-end: 4px;
+  margin: 4px;
   border: 1px solid var(--organizer-pane-field-border-color);
   border-radius: 4px;
   color: var(--organizer-color);
@@ -348,34 +347,34 @@ treechildren::-moz-tree-separator(selected, focus) {
   fill: currentColor;
 }
 
-#editBookmarkPanelContent .expander-up:hover,
-#editBookmarkPanelContent .expander-down:hover {
+.expander-up {
+  list-style-image: url("chrome://global/skin/icons/arrow-up-12.svg");
+}
+
+.expander-up:hover,
+.expander-down:hover {
   background-color: var(--organizer-hover-background);
   color: var(--organizer-hover-color);
 }
 
-#editBookmarkPanelContent .expander-up:hover:active,
-#editBookmarkPanelContent .expander-down:hover:active {
+.expander-up:hover:active,
+.expander-down:hover:active {
   background-color: var(--organizer-selected-background);
   color: var(--organizer-selected-color);
 }
 
-#editBookmarkPanelContent .expander-up:focus-visible,
-#editBookmarkPanelContent .expander-down:focus-visible {
+.expander-up:focus-visible,
+.expander-down:focus-visible {
   outline: 2px solid var(--organizer-outline-color);
   outline-offset: -1px;
 }
 
-#editBookmarkPanelContent .expander-up {
-  list-style-image: url("chrome://global/skin/icons/arrow-up-12.svg");
-}
-
-#editBookmarkPanelContent .expander-up > .button-box,
-#editBookmarkPanelContent .expander-down > .button-box {
+.expander-up > .button-box,
+.expander-down > .button-box {
   padding: 0;
 }
 
-#places input {
+input {
   border: 1px solid var(--organizer-pane-field-border-color);
   border-radius: 4px;
   background-color: var(--organizer-content-background);
@@ -384,22 +383,22 @@ treechildren::-moz-tree-separator(selected, focus) {
   padding-inline: 4px;
 }
 
-#places input:focus {
+input:focus {
   outline: 2px solid var(--organizer-outline-color);
   outline-offset: -1px;
 }
 
-#places input:not(:read-write):focus {
+input:not(:read-write):focus {
   outline: none;
+}
+
+#editBookmarkPanelContent input {
+  margin: 4px;
 }
 
 .caption-label {
   margin-inline-start: 8px;
   color: var(--organizer-deemphasized-color);
-}
-
-#editBookmarkPanelContent input {
-  margin: 4px;
 }
 
 #editBMPanel_tagsSelector {
