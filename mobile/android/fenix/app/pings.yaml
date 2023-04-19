@@ -21,9 +21,11 @@ activation:
 
 first-session:
   description: |
-    This ping is intended to capture the source of the app install
-    on the first session.
+    **THIS IS NOT A GENERIC FIRST USE PING** This ping is intended to capture
+    Adjust attribution. Use of this ping for other analyses will result in
+    undesirable outcomes.
   include_client_id: true
+  send_if_empty: true
   bugs:
     - https://github.com/mozilla-mobile/fenix/issues/7295
   data_reviews:
