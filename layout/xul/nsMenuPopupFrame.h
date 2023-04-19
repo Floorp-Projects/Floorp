@@ -374,9 +374,10 @@ class nsMenuPopupFrame final : public nsBlockFrame {
   // constrain them to the available screen rect, ie they will not fall
   // underneath the taskbar, dock or other fixed OS elements.
   Rects GetRects(const nsSize& aPrefSize) const;
-  Maybe<nsRect> GetConstraintRect(const nsRect& aAnchorRect,
-                                  const nsRect& aRootScreenRect,
-                                  PopupLevel) const;
+  mozilla::LayoutDeviceIntRect GetConstraintRect(
+      const mozilla::LayoutDeviceIntRect& aAnchorRect,
+      const mozilla::LayoutDeviceIntRect& aRootScreenRect,
+      PopupLevel aPopupLevel) const;
   void PerformMove(const Rects&);
 
   // Return true if the popup is positioned relative to an anchor.
