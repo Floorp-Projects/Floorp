@@ -1567,11 +1567,10 @@ pub struct NativeSurface {
 pub struct ExternalNativeSurfaceKey {
     /// The YUV/RGB image keys that are used to draw this surface.
     pub image_keys: [ImageKey; 3],
-    /// The current device size of the surface.
-    pub size: DeviceIntSize,
-    /// True if this is an 'external' compositor surface created via
-    /// Compositor::create_external_surface.
-    pub is_external_surface: bool,
+    /// If this is not an 'external' compositor surface created via
+    /// Compositor::create_external_surface, this is set to the
+    /// current device size of the surface.
+    pub size: Option<DeviceIntSize>,
 }
 
 /// Information about a native compositor surface cached between frames.
@@ -2698,8 +2697,7 @@ impl TileCacheInstance {
 
                 let key = ExternalNativeSurfaceKey {
                     image_keys: *api_keys,
-                    size: native_surface_size,
-                    is_external_surface: external_image_id.is_some(),
+                    size: if external_image_id.is_some() { None } else { Some(native_surface_size) },
                 };
 
                 let native_surface = self.external_native_surface_cache
