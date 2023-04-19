@@ -1,3 +1,7 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
 <vector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt" android:width="235dp" android:height="298dp" android:viewportWidth="235" android:viewportHeight="298">
     <path android:pathData="M89.1 218.91l4.15-41.59 83.68-2.25 4.9 4.87v14.61l-4.9 37.85-53.53 22.85-22.99-2.62-14.7-10.86-18.09-22.86v-5.24l21.48 5.24zM8.43 111L2.02 84.77l21.87-8.24 4.14 13.49-8.67 7.87L8.43 111zm30.91 13.49l-5.28 2.62 2.65-9.74 2.64 7.11-0.01 0.01z">
         <aapt:attr name="android:fillColor">

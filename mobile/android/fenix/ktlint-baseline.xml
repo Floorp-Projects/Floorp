@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
 <baseline version="1.0">
     <file name="app/src/main/java/org/mozilla/fenix/home/topsites/TopSiteItemViewHolder.kt">
         <error line="65" column="35" source="annotation" />
