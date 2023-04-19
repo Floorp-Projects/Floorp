@@ -6,9 +6,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 import { Async } from "resource://services-common/async.sys.mjs";
 
-const { SCORE_INCREMENT_XLARGE } = ChromeUtils.import(
-  "resource://services-sync/constants.js"
-);
+import { SCORE_INCREMENT_XLARGE } from "resource://services-sync/constants.sys.mjs";
 import {
   Changeset,
   Store,

@@ -82,7 +82,7 @@ var {
   kSyncNetworkOffline,
   kSyncNotConfigured,
   kSyncWeaveDisabled,
-} = ChromeUtils.import("resource://services-sync/constants.js");
+} = ChromeUtils.importESModule("resource://services-sync/constants.sys.mjs");
 var { BulkKeyBundle, SyncKeyBundle } = ChromeUtils.importESModule(
   "resource://services-sync/keys.sys.mjs"
 );

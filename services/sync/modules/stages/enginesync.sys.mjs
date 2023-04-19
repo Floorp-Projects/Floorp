@@ -8,7 +8,7 @@
 
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
-const {
+import {
   ABORT_SYNC_COMMAND,
   LOGIN_FAILED_NETWORK_ERROR,
   NO_SYNC_NODE_FOUND,
@@ -17,7 +17,8 @@ const {
   SYNC_SUCCEEDED,
   WEAVE_VERSION,
   kSyncNetworkOffline,
-} = ChromeUtils.import("resource://services-sync/constants.js");
+} from "resource://services-sync/constants.sys.mjs";
+
 import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
 
 import { Async } from "resource://services-common/async.sys.mjs";

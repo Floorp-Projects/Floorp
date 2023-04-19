@@ -22,12 +22,13 @@
 
 import { Async } from "resource://services-common/async.sys.mjs";
 
-const {
+import {
   DEVICE_TYPE_DESKTOP,
   DEVICE_TYPE_MOBILE,
   SINGLE_USER_THRESHOLD,
   SYNC_API_VERSION,
-} = ChromeUtils.import("resource://services-sync/constants.js");
+} from "resource://services-sync/constants.sys.mjs";
+
 import {
   Store,
   SyncEngine,

@@ -5,10 +5,13 @@
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
-import { Weave } from "resource://services-sync/main.sys.mjs";
-import { Preferences } from "resource://gre/modules/Preferences.sys.mjs";
-
 const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  CLIENT_NOT_CONFIGURED: "resource://services-sync/constants.sys.mjs",
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
+  Weave: "resource://services-sync/main.sys.mjs",
+});
 
 // The Sync XPCOM service
 XPCOMUtils.defineLazyGetter(lazy, "weaveXPCService", function() {
@@ -67,8 +70,8 @@ let SyncedTabsInternal = {
     return {
       id: client.id,
       type: "client",
-      name: Weave.Service.clientsEngine.getClientName(client.id),
-      clientType: Weave.Service.clientsEngine.getClientType(client.id),
+      name: lazy.Weave.Service.clientsEngine.getClientName(client.id),
+      clientType: lazy.Weave.Service.clientsEngine.getClientType(client.id),
       lastModified: client.lastModified * 1000, // sec to ms
       tabs: [],
     };
@@ -115,17 +118,17 @@ let SyncedTabsInternal = {
     }
 
     // A boolean that controls whether we should show the icon from the remote tab.
-    const showRemoteIcons = Preferences.get(
+    const showRemoteIcons = lazy.Preferences.get(
       "services.sync.syncedTabs.showRemoteIcons",
       true
     );
 
-    let engine = Weave.Service.engineManager.get("tabs");
+    let engine = lazy.Weave.Service.engineManager.get("tabs");
 
     let ntabs = 0;
     let clientTabList = await engine.getAllClients();
     for (let client of clientTabList) {
-      if (!Weave.Service.clientsEngine.remoteClientExists(client.id)) {
+      if (!lazy.Weave.Service.clientsEngine.remoteClientExists(client.id)) {
         continue;
       }
       let clientRepr = await this._makeClient(client);
@@ -158,7 +161,7 @@ let SyncedTabsInternal = {
   async syncTabs(force) {
     if (!force) {
       // Don't bother refetching tabs if we already did so recently
-      let lastFetch = Preferences.get("services.sync.lastTabFetch", 0);
+      let lastFetch = lazy.Preferences.get("services.sync.lastTabFetch", 0);
       let now = Math.floor(Date.now() / 1000);
       if (now - lastFetch < TABS_FRESH_ENOUGH_INTERVAL_SECONDS) {
         lazy.log.info("_refetchTabs was done recently, do not doing it again");
@@ -168,24 +171,24 @@ let SyncedTabsInternal = {
 
     // If Sync isn't configured don't try and sync, else we will get reports
     // of a login failure.
-    if (Weave.Status.checkSetup() === Weave.CLIENT_NOT_CONFIGURED) {
+    if (lazy.Weave.Status.checkSetup() === lazy.CLIENT_NOT_CONFIGURED) {
       lazy.log.info(
         "Sync client is not configured, so not attempting a tab sync"
       );
       return false;
     }
     // If the primary pass is locked, we should not try to sync
-    if (Weave.Utils.mpLocked()) {
+    if (lazy.Weave.Utils.mpLocked()) {
       lazy.log.info(
         "Can't sync tabs due to the primary password being locked",
-        Weave.Status.login
+        lazy.Weave.Status.login
       );
       return false;
     }
     // Ask Sync to just do the tabs engine if it can.
     try {
       lazy.log.info("Doing a tab sync.");
-      await Weave.Service.sync({ why: "tabs", engines: ["tabs"] });
+      await lazy.Weave.Service.sync({ why: "tabs", engines: ["tabs"] });
       return true;
     } catch (ex) {
       lazy.log.error("Sync failed", ex);
@@ -203,7 +206,7 @@ let SyncedTabsInternal = {
         // The tabs engine just finished syncing
         // Set our lastTabFetch pref here so it tracks both explicit sync calls
         // and normally scheduled ones.
-        Preferences.set(
+        lazy.Preferences.set(
           "services.sync.lastTabFetch",
           Math.floor(Date.now() / 1000)
         );
@@ -211,7 +214,7 @@ let SyncedTabsInternal = {
         break;
       case "weave:service:start-over":
         // start-over needs to notify so consumers find no tabs.
-        Preferences.reset("services.sync.lastTabFetch");
+        lazy.Preferences.reset("services.sync.lastTabFetch");
         Services.obs.notifyObservers(null, TOPIC_TABS_CHANGED);
         break;
       case "nsPref:changed":
@@ -229,12 +232,12 @@ let SyncedTabsInternal = {
       return true;
     }
 
-    let engine = Weave.Service.engineManager.get("tabs");
+    let engine = lazy.Weave.Service.engineManager.get("tabs");
     return engine && engine.enabled;
   },
 
   get hasSyncedThisSession() {
-    let engine = Weave.Service.engineManager.get("tabs");
+    let engine = lazy.Weave.Service.engineManager.get("tabs");
     return engine && engine.hasSyncedThisSession;
   },
 };

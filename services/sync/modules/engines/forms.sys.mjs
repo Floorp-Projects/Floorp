@@ -11,9 +11,7 @@ import {
 import { CryptoWrapper } from "resource://services-sync/record.sys.mjs";
 import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
 
-const { SCORE_INCREMENT_MEDIUM } = ChromeUtils.import(
-  "resource://services-sync/constants.js"
-);
+import { SCORE_INCREMENT_MEDIUM } from "resource://services-sync/constants.sys.mjs";
 import {
   CollectionProblemData,
   CollectionValidator,

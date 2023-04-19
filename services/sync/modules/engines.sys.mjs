@@ -10,14 +10,15 @@ import { Log } from "resource://gre/modules/Log.sys.mjs";
 import { Async } from "resource://services-common/async.sys.mjs";
 import { Observers } from "resource://services-common/observers.sys.mjs";
 
-const {
+import {
   DEFAULT_DOWNLOAD_BATCH_SIZE,
   DEFAULT_GUID_FETCH_BATCH_SIZE,
   ENGINE_BATCH_INTERRUPTED,
   ENGINE_DOWNLOAD_FAIL,
   ENGINE_UPLOAD_FAIL,
   VERSION_OUT_OF_DATE,
-} = ChromeUtils.import("resource://services-sync/constants.js");
+} from "resource://services-sync/constants.sys.mjs";
+
 import {
   Collection,
   CryptoWrapper,

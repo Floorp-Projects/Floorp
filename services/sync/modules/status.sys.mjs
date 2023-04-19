@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {
+import {
   CLIENT_NOT_CONFIGURED,
   ENGINE_SUCCEEDED,
   LOGIN_FAILED,
@@ -13,7 +13,8 @@ const {
   SYNC_FAILED,
   SYNC_FAILED_PARTIAL,
   SYNC_SUCCEEDED,
-} = ChromeUtils.import("resource://services-sync/constants.js");
+} from "resource://services-sync/constants.sys.mjs";
+
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
 import { SyncAuthManager } from "resource://services-sync/sync_auth.sys.mjs";

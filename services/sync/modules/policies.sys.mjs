@@ -6,7 +6,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
-const {
+import {
   CREDENTIALS_CHANGED,
   ENGINE_APPLY_FAIL,
   ENGINE_UNKNOWN_FAIL,
@@ -33,7 +33,8 @@ const {
   SYNC_SUCCEEDED,
   kSyncBackoffNotMet,
   kSyncMasterPasswordLocked,
-} = ChromeUtils.import("resource://services-sync/constants.js");
+} from "resource://services-sync/constants.sys.mjs";
+
 import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
 
 const { logManager } = ChromeUtils.import(

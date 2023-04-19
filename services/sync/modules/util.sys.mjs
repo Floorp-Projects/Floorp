@@ -7,14 +7,15 @@ import { Observers } from "resource://services-common/observers.sys.mjs";
 import { CommonUtils } from "resource://services-common/utils.sys.mjs";
 import { CryptoUtils } from "resource://services-crypto/utils.sys.mjs";
 
-const {
+import {
   DEVICE_TYPE_DESKTOP,
   MAXIMUM_BACKOFF_INTERVAL,
   PREFS_BRANCH,
   SYNC_KEY_DECODED_LENGTH,
   SYNC_KEY_ENCODED_LENGTH,
   WEAVE_VERSION,
-} = ChromeUtils.import("resource://services-sync/constants.js");
+} from "resource://services-sync/constants.sys.mjs";
+
 import { Preferences } from "resource://gre/modules/Preferences.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 

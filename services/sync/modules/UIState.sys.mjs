@@ -14,6 +14,7 @@
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
+  LOGIN_FAILED_LOGIN_REJECTED: "resource://services-sync/constants.sys.mjs",
   Weave: "resource://services-sync/main.sys.mjs",
 });
 
@@ -219,7 +220,7 @@ const UIStateInternal = {
     // LOGIN_FAILED_LOGIN_REJECTED explicitly means "you must log back in".
     // All other login failures are assumed to be transient and should go
     // away by themselves, so aren't reflected here.
-    return lazy.Weave.Status.login == lazy.Weave.LOGIN_FAILED_LOGIN_REJECTED;
+    return lazy.Weave.Status.login == lazy.LOGIN_FAILED_LOGIN_REJECTED;
   },
 
   set fxAccounts(mockFxAccounts) {

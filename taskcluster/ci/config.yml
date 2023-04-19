@@ -392,9 +392,9 @@ merge-automation:
                   version-bump: "major"
                   new-suffix: 'a1'
             replacements:
-                - - "services/sync/modules/constants.js"
-                  - 'WEAVE_VERSION: "1.{current_weave_version}.0"'
-                  - 'WEAVE_VERSION: "1.{next_weave_version}.0"'
+                - - "services/sync/modules/constants.sys.mjs"
+                  - 'WEAVE_VERSION = "1.{current_weave_version}.0"'
+                  - 'WEAVE_VERSION = "1.{next_weave_version}.0"'
             merge-old-head: false
             end-tag: 'FIREFOX_NIGHTLY_{major_version}_END'
             to-repo: 'https://hg.mozilla.org/mozilla-central'

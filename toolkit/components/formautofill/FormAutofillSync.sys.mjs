@@ -11,9 +11,7 @@ import {
 import { CryptoWrapper } from "resource://services-sync/record.sys.mjs";
 import { Utils } from "resource://services-sync/util.sys.mjs";
 
-const { SCORE_INCREMENT_XLARGE } = ChromeUtils.import(
-  "resource://services-sync/constants.js"
-);
+import { SCORE_INCREMENT_XLARGE } from "resource://services-sync/constants.sys.mjs";
 
 const lazy = {};
 

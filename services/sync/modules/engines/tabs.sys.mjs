@@ -10,9 +10,11 @@ import { SyncEngine, Tracker } from "resource://services-sync/engines.sys.mjs";
 import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
-const { SCORE_INCREMENT_SMALL, STATUS_OK, URI_LENGTH_MAX } = ChromeUtils.import(
-  "resource://services-sync/constants.js"
-);
+import {
+  SCORE_INCREMENT_SMALL,
+  STATUS_OK,
+  URI_LENGTH_MAX,
+} from "resource://services-sync/constants.sys.mjs";
 import { CommonUtils } from "resource://services-common/utils.sys.mjs";
 import { Async } from "resource://services-common/async.sys.mjs";
 
