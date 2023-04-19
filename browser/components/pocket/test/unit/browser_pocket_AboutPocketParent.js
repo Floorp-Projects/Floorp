@@ -5,7 +5,9 @@
 const { AboutPocketParent } = ChromeUtils.importESModule(
   "resource:///actors/AboutPocketParent.sys.mjs"
 );
-const { pktApi } = ChromeUtils.import("chrome://pocket/content/pktApi.jsm");
+const { pktApi } = ChromeUtils.importESModule(
+  "chrome://pocket/content/pktApi.sys.mjs"
+);
 let aboutPocketParent;
 
 function test_runner(test) {

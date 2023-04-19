@@ -2,25 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["pktTelemetry"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const lazy = {};
 ChromeUtils.defineModuleGetter(
   lazy,
   "PingCentre",
   "resource:///modules/PingCentre.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "pktApi",
-  "chrome://pocket/content/pktApi.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  pktApi: "chrome://pocket/content/pktApi.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
 });
 
@@ -37,7 +28,7 @@ XPCOMUtils.defineLazyGetter(lazy, "pingCentre", () => {
   return new lazy.PingCentre({ topic: POCKET_TELEMETRY_TOPIC });
 });
 
-var pktTelemetry = {
+export var pktTelemetry = {
   get structuredIngestionEndpointBase() {
     if (!this._structuredIngestionEndpointBase) {
       this._structuredIngestionEndpointBase = Services.prefs.getStringPref(

@@ -6,14 +6,10 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  pktApi: "chrome://pocket/content/pktApi.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   ReaderMode: "resource://gre/modules/ReaderMode.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "pktApi",
-  "chrome://pocket/content/pktApi.jsm"
-);
 
 // A set of all of the AboutReaderParent actors that exist.
 // See bug 1631146 for a request for a less manual way of doing this.

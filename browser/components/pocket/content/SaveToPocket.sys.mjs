@@ -3,27 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Pocket",
-  "chrome://pocket/content/Pocket.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  AboutReaderParent: "resource:///actors/AboutReaderParent.sys.mjs",
+  Pocket: "chrome://pocket/content/Pocket.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm"
 );
-ChromeUtils.defineESModuleGetters(lazy, {
-  AboutReaderParent: "resource:///actors/AboutReaderParent.sys.mjs",
-});
-
-var EXPORTED_SYMBOLS = ["SaveToPocket"];
 
 var PocketCustomizableWidget = {
   init() {
@@ -80,7 +71,7 @@ function browserWindows() {
   return Services.wm.getEnumerator("navigator:browser");
 }
 
-var SaveToPocket = {
+export var SaveToPocket = {
   init() {
     // migrate enabled pref
     if (Services.prefs.prefHasUserValue("browser.pocket.enabled")) {

@@ -1,8 +1,6 @@
-ChromeUtils.defineModuleGetter(
-  this,
-  "pktApi",
-  "chrome://pocket/content/pktApi.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  pktApi: "chrome://pocket/content/pktApi.sys.mjs",
+});
 XPCOMUtils.defineLazyScriptGetter(
   this,
   "pktUI",

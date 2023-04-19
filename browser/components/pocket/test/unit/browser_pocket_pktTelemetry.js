@@ -2,11 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "pktTelemetry",
-  "chrome://pocket/content/pktTelemetry.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  pktTelemetry: "chrome://pocket/content/pktTelemetry.sys.mjs",
+});
 
 function test_runner(test) {
   let testTask = async () => {

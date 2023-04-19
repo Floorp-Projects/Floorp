@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["Pocket"];
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(
@@ -14,7 +10,7 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/CustomizableUI.jsm"
 );
 
-var Pocket = {
+export var Pocket = {
   get site() {
     return Services.prefs.getCharPref("extensions.pocket.site");
   },
