@@ -629,7 +629,7 @@ void RTCRtpReceiver::UpdateConduit() {
     UpdateAudioConduit();
   }
 
-  if ((mReceiving = GetJsepTransceiver().mRecvTrack.GetActive())) {
+  if ((mReceiving = mTransceiver->IsReceiving())) {
     mHaveStartedReceiving = true;
   }
 }
