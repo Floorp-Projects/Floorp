@@ -142,20 +142,11 @@ TEST(Atoms, Table)
   EXPECT_EQ(NS_GetNumberOfAtoms(), count + 1);
 }
 
-class nsAtomRunner final : public Runnable {
- public:
-  NS_IMETHOD Run() final {
-    for (int i = 0; i < 10000; i++) {
-      RefPtr<nsAtom> atom = NS_Atomize(u"A Testing Atom");
-    }
-    return NS_OK;
+static void AccessAtoms(void*) {
+  for (int i = 0; i < 10000; i++) {
+    RefPtr<nsAtom> atom = NS_Atomize(u"A Testing Atom");
   }
-
-  nsAtomRunner() : Runnable("nsAtomRunner") {}
-
- private:
-  ~nsAtomRunner() = default;
-};
+}
 
 TEST(Atoms, ConcurrentAccessing)
 {
@@ -163,15 +154,22 @@ TEST(Atoms, ConcurrentAccessing)
   // Force a GC before so that we don't have any unused atom.
   NS_GetNumberOfAtoms();
   EXPECT_EQ(NS_GetUnusedAtomCount(), int32_t(0));
-  nsCOMPtr<nsIThread> threads[kThreadCount];
+
+  // Spawn PRThreads to do the concurrent atom access, to make sure we don't
+  // spin the main thread event loop. Spinning the event loop may run a task
+  // that uses an atom, leading to a false positive test failure.
+  PRThread* threads[kThreadCount];
   for (size_t i = 0; i < kThreadCount; i++) {
-    nsresult rv = NS_NewNamedThread("Atom Test", getter_AddRefs(threads[i]),
-                                    new nsAtomRunner);
-    EXPECT_NS_SUCCEEDED(rv);
+    threads[i] = PR_CreateThread(PR_USER_THREAD, AccessAtoms, nullptr,
+                                 PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
+                                 PR_JOINABLE_THREAD, 0);
+    EXPECT_TRUE(threads[i]);
   }
+
   for (size_t i = 0; i < kThreadCount; i++) {
-    threads[i]->Shutdown();
+    EXPECT_EQ(PR_SUCCESS, PR_JoinThread(threads[i]));
   }
+
   // We should have one unused atom from this test.
   EXPECT_EQ(NS_GetUnusedAtomCount(), int32_t(1));
 }
