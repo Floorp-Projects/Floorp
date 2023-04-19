@@ -17,7 +17,7 @@ class VRService;
 class VRSystemManagerExternal;
 
 class VRParent final : public PVRParent {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRParent);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRParent, final);
 
   friend class PVRParent;
 
