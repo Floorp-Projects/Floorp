@@ -136,6 +136,21 @@
          noautofocus="true"
          hidden="true" />
 
+  <html:template id="dateTimePickerTemplate">
+    <!-- for date/time picker. consumeoutsideclicks is set to never, so that
+         clicks on the anchored input box are never consumed. -->
+    <panel id="DateTimePickerPanel"
+           type="arrow"
+           orient="vertical"
+           ignorekeys="true"
+           norolluponanchor="true"
+           noautofocus="true"
+           consumeoutsideclicks="never"
+           level="parent"
+           tabspecific="true">
+    </panel>
+  </html:template>
+
   <html:template id="printPreviewStackTemplate">
     <stack class="previewStack" rendering="true" flex="1" previewtype="primary">
       <vbox class="previewRendering" flex="1">
