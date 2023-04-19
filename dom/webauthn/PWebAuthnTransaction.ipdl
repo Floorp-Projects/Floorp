@@ -22,7 +22,7 @@ namespace mozilla {
 namespace dom {
 
 struct WebAuthnAuthenticatorSelection {
-  nsString residentKey;
+  bool requireResidentKey;
   nsString userVerificationRequirement;
   nsString? authenticatorAttachment;
 };
