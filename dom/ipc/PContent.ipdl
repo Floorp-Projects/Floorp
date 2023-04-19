@@ -469,7 +469,7 @@ union IPCDataTransferOrError {
  * and a content process. There is exactly one PContentParent/PContentChild pair
  * for each content process.
  */
-[ManualDealloc, NestedUpTo=inside_cpow, NeedsOtherPid]
+[NestedUpTo=inside_cpow, NeedsOtherPid]
 sync protocol PContent
 {
     manages PBrowser;

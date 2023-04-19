@@ -2090,8 +2090,6 @@ void ContentParent::ProcessingError(Result aCode, const char* aReason) {
 }
 
 void ContentParent::ActorDestroy(ActorDestroyReason why) {
-  MOZ_RELEASE_ASSERT(mSelfRef);
-
   if (mForceKillTimer) {
     mForceKillTimer->Cancel();
     mForceKillTimer = nullptr;
@@ -2260,8 +2258,6 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
 
   mPendingLoadStates.Clear();
 }
-
-void ContentParent::ActorDealloc() { mSelfRef = nullptr; }
 
 bool ContentParent::TryToRecycleE10SOnly() {
   // Only try to recycle "web" content processes, as other remote types are
@@ -2701,8 +2697,6 @@ bool ContentParent::BeginSubprocessLaunch(ProcessPriority aPriority) {
   }
 #endif
 
-  // See also ActorDealloc.
-  mSelfRef = this;
   mLaunchYieldTS = TimeStamp::Now();
   return mSubprocess->AsyncLaunch(std::move(extraArgs));
 }
@@ -2872,8 +2866,7 @@ RefPtr<ContentParent::LaunchPromise> ContentParent::LaunchSubprocessAsync(
 }
 
 ContentParent::ContentParent(const nsACString& aRemoteType, int32_t aJSPluginID)
-    : mSelfRef(nullptr),
-      mSubprocess(nullptr),
+    : mSubprocess(nullptr),
       mLaunchTS(TimeStamp::Now()),
       mLaunchYieldTS(mLaunchTS),
       mActivateTS(mLaunchTS),
