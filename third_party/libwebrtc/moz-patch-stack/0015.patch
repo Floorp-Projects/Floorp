@@ -1,0 +1,32 @@
+From: Jed Davis <jld@mozilla.com>
+Date: Sun, 17 Nov 2019 03:40:00 +0000
+Subject: Bug 1545504 - Strengthen bounds check in WebRTC PhysicalSocketServer.
+ r=jesup
+
+PhysicalSocketServer isn't currently used by Mozilla's WebRTC
+integration, but just in case, let's make sure that this array index is
+bounds-checked in actual use, not just in debug builds (which tend to
+never see realistic test conditions).
+
+Differential Revision: https://phabricator.services.mozilla.com/D52745
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2b079067648bfe0d064a334bf19bdcc233e26b6e
+---
+ rtc_base/physical_socket_server.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/rtc_base/physical_socket_server.cc b/rtc_base/physical_socket_server.cc
+index 4ed4fd0cbb..60d024c769 100644
+--- a/rtc_base/physical_socket_server.cc
++++ b/rtc_base/physical_socket_server.cc
+@@ -1397,7 +1397,7 @@ bool PhysicalSocketServer::WaitSelect(int cmsWait, bool process_io) {
+         int fd = pdispatcher->GetDescriptor();
+         // "select"ing a file descriptor that is equal to or larger than
+         // FD_SETSIZE will result in undefined behavior.
+-        RTC_DCHECK_LT(fd, FD_SETSIZE);
++        RTC_CHECK_LT(fd, FD_SETSIZE);
+         if (fd > fdmax)
+           fdmax = fd;
+ 
+-- 
+2.34.1
+

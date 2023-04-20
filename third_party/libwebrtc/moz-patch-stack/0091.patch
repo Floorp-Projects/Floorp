@@ -1,0 +1,100 @@
+From: Jan Grulich <jgrulich@redhat.com>
+Date: Mon, 27 Feb 2023 13:57:00 +0000
+Subject: Bug 1819044 - fix build non-pipewire builds
+ r=webrtc-reviewers,pehrsons
+
+We should check only for PipeWire presence when building code specific
+to PipeWire.
+
+Differential Revision: https://phabricator.services.mozilla.com/D171071
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7a879ad084a6e9768479c73cc5c3f4e9d95a2ab9
+
+Also includes:
+
+    Bug 1819044 - fix build non-pipewire builds (attempt #2) r=webrtc-reviewers,pehrsons
+
+    Make the new API available to everyone and just return an empty capturer
+    in case when building without PipeWire. It will not make any difference
+    because using X11 based capturers on Wayland is useless anyway so if we
+    fail for missing PipeWire on Wayland, it will have the same outcome.
+
+    Differential Revision: https://phabricator.services.mozilla.com/D171192
+    Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/ad247b0aac896d884eba5e40f0ec8a9f50d8b85b
+---
+ modules/desktop_capture/desktop_capturer.cc | 7 +++----
+ modules/desktop_capture/desktop_capturer.h  | 4 ----
+ 2 files changed, 3 insertions(+), 8 deletions(-)
+
+diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
+index 65a4045f8c..042d9f7633 100644
+--- a/modules/desktop_capture/desktop_capturer.cc
++++ b/modules/desktop_capture/desktop_capturer.cc
+@@ -25,7 +25,7 @@
+ #include "rtc_base/win/windows_version.h"
+ #endif  // defined(RTC_ENABLE_WIN_WGC)
+ 
+-#if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
++#if defined(WEBRTC_USE_PIPEWIRE)
+ #include "modules/desktop_capture/linux/wayland/base_capturer_pipewire.h"
+ #endif
+ 
+@@ -82,7 +82,6 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
+   return capturer;
+ }
+ 
+-#if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
+ // static
+ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateGenericCapturer(
+     const DesktopCaptureOptions& options) {
+@@ -94,17 +93,17 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateGenericCapturer(
+   return capturer;
+ }
+ 
+-// static
+ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawGenericCapturer(
+     const DesktopCaptureOptions& options) {
++#if defined(WEBRTC_USE_PIPEWIRE)
+   if (options.allow_pipewire() && DesktopCapturer::IsRunningUnderWayland()) {
+     return std::make_unique<BaseCapturerPipeWire>(options,
+                                                   CaptureType::kAnyScreenContent);
+   }
++#endif  // defined(WEBRTC_USE_PIPEWIRE)
+ 
+   return nullptr;
+ }
+-#endif  // defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
+ 
+ // static
+ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
+diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
+index 2713c0e603..99a3606a05 100644
+--- a/modules/desktop_capture/desktop_capturer.h
++++ b/modules/desktop_capture/desktop_capturer.h
+@@ -168,11 +168,9 @@ class RTC_EXPORT DesktopCapturer {
+   // The return value if `pos` is out of the scope of the source is undefined.
+   virtual bool IsOccluded(const DesktopVector& pos);
+ 
+-#if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
+   // Creates a DesktopCapturer instance which targets to capture windows and screens.
+   static std::unique_ptr<DesktopCapturer> CreateGenericCapturer(
+       const DesktopCaptureOptions& options);
+-#endif
+ 
+   // Creates a DesktopCapturer instance which targets to capture windows.
+   static std::unique_ptr<DesktopCapturer> CreateWindowCapturer(
+@@ -202,12 +200,10 @@ class RTC_EXPORT DesktopCapturer {
+   // CroppingWindowCapturer needs to create raw capturers without wrappers, so
+   // the following two functions are protected.
+ 
+-#if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
+   // Creates a platform specific DesktopCapturer instance which targets to
+   // capture windows and screens.
+   static std::unique_ptr<DesktopCapturer> CreateRawGenericCapturer(
+       const DesktopCaptureOptions& options);
+-#endif
+ 
+   // Creates a platform specific DesktopCapturer instance which targets to
+   // capture windows.
+-- 
+2.34.1
+

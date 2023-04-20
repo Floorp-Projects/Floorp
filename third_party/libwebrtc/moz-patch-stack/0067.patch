@@ -1,0 +1,27 @@
+From: Michael Froman <mjfroman@mac.com>
+Date: Tue, 21 Jun 2022 11:11:09 -0500
+Subject: Bug 1773223 - Generate webrtc moz.builds for all platforms at once.
+ r=mjf,firefox-build-system-reviewers,ahochheiden
+
+---
+ build_overrides/build.gni | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/build_overrides/build.gni b/build_overrides/build.gni
+index 137b6a40b2..e662c94ece 100644
+--- a/build_overrides/build.gni
++++ b/build_overrides/build.gni
+@@ -45,6 +45,10 @@ if (host_os == "mac" || host_os == "linux") {
+   use_system_xcode = _result == 0
+ }
+ 
++use_system_xcode = false
++xcode_version = "10.15"
++mac_xcode_version = "default"
++
+ declare_args() {
+   # WebRTC doesn't depend on //base from production code but only for testing
+   # purposes. In any case, it doesn't depend on //third_party/perfetto which
+-- 
+2.34.1
+

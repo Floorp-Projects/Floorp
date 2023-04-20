@@ -1,0 +1,27 @@
+From: Michael Froman <mfroman@mozilla.com>
+Date: Wed, 28 Sep 2022 14:19:00 -0500
+Subject: Bug 1790097 - (fix-e66b83f8ad) restore deleted include file for
+ std::towupper
+
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2789837da50ca0d6bce9a06bd036bdd049128f20
+---
+ .../desktop_capture/win/full_screen_win_application_handler.cc | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/modules/desktop_capture/win/full_screen_win_application_handler.cc b/modules/desktop_capture/win/full_screen_win_application_handler.cc
+index f7047dba06..c6143ef785 100644
+--- a/modules/desktop_capture/win/full_screen_win_application_handler.cc
++++ b/modules/desktop_capture/win/full_screen_win_application_handler.cc
+@@ -11,6 +11,9 @@
+ #include "modules/desktop_capture/win/full_screen_win_application_handler.h"
+ 
+ #include <algorithm>
++#if defined(WEBRTC_MOZILLA_BUILD)
++#include <cwctype>
++#endif
+ #include <memory>
+ #include <string>
+ #include <vector>
+-- 
+2.34.1
+

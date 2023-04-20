@@ -1,0 +1,34 @@
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Fri, 24 Feb 2023 15:01:00 +0100
+Subject: Bug 1817024 - (fix-0e2cf6cc01) Skip library
+ create_peer_connection_quality_test_frame_generator. r?mjf!
+
+Differential Revision: https://phabricator.services.mozilla.com/D170887
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/fbbc1bf963fda30bca26ae6aac0c3459b8ebea6f
+---
+ api/BUILD.gn | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/api/BUILD.gn b/api/BUILD.gn
+index c501a84b76..41c59f91fd 100644
+--- a/api/BUILD.gn
++++ b/api/BUILD.gn
+@@ -697,6 +697,7 @@ rtc_library("create_frame_generator") {
+   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+ }
+ 
++if (!build_with_mozilla) {
+ rtc_library("create_peer_connection_quality_test_frame_generator") {
+   visibility = [ "*" ]
+   testonly = true
+@@ -713,6 +714,7 @@ rtc_library("create_peer_connection_quality_test_frame_generator") {
+   ]
+   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+ }
++}
+ 
+ rtc_source_set("libjingle_logging_api") {
+   visibility = [ "*" ]
+-- 
+2.34.1
+

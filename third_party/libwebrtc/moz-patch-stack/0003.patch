@@ -1,0 +1,102 @@
+From: Dan Minor <dminor@mozilla.com>
+Date: Tue, 21 Aug 2018 13:39:00 -0400
+Subject: Bug 1376873 - Fix up logging in WebrtcLog.cpp; r=ng
+
+The webrtc::Trace code is removed by this update. We already had support for
+LOG (now RTC_LOG) in WebrtcLog.cpp. This removes the trace code from
+WebRtcLog.cpp and moves the aec logging code from webrtc::Trace to
+rtc::LogMessage.
+
+This also disables logging to stderr in rtc_base/logging.cc. We could disable
+it using the API, but that happens through peerconnection resulting in some
+logging occuring during getusermedia.
+
+The aec logs were testing with --disable-e10s. Rather than trying to
+work around sandboxing, I think it makes more sense to fix Bug 1404982 and
+store the logs in memory for retrieval from about:webrtc.
+
+Differential Revision: https://phabricator.services.mozilla.com/D7429
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e84c60e2c9373f4d2dc24e769375a92c17c2a0ad
+---
+ .../audio_processing/logging/apm_data_dumper.cc    |  2 +-
+ rtc_base/logging.cc                                | 11 ++++++++++-
+ rtc_base/logging.h                                 | 14 ++++++++++++++
+ 3 files changed, 25 insertions(+), 2 deletions(-)
+
+diff --git a/modules/audio_processing/logging/apm_data_dumper.cc b/modules/audio_processing/logging/apm_data_dumper.cc
+index f787b65604..a15321ad48 100644
+--- a/modules/audio_processing/logging/apm_data_dumper.cc
++++ b/modules/audio_processing/logging/apm_data_dumper.cc
+@@ -42,7 +42,7 @@ std::string FormFileName(absl::string_view output_dir,
+ #endif
+ 
+   std::stringstream ss;
+-  std::string base = webrtc::Trace::aec_debug_filename();
++  std::string base = rtc::LogMessage::aec_debug_filename();
+   ss << base;
+ 
+   if (base.length() && base.back() != sep) {
+diff --git a/rtc_base/logging.cc b/rtc_base/logging.cc
+index 4bc9183d97..d71d6a3e1b 100644
+--- a/rtc_base/logging.cc
++++ b/rtc_base/logging.cc
+@@ -54,6 +54,15 @@ static const int kMaxLogLineSize = 1024 - 60;
+ #include "rtc_base/time_utils.h"
+ 
+ namespace rtc {
++
++bool LogMessage::aec_debug_ = false;
++uint32_t LogMessage::aec_debug_size_ = 4*1024*1024;
++std::string LogMessage::aec_filename_base_;
++
++std::string LogMessage::aec_debug_filename() {
++  return aec_filename_base_;
++}
++
+ namespace {
+ 
+ // By default, release builds don't log, debug builds at info level
+@@ -114,7 +123,7 @@ std::string LogLineRef::DefaultLogLine() const {
+ // LogMessage
+ /////////////////////////////////////////////////////////////////////////////
+ 
+-bool LogMessage::log_to_stderr_ = true;
++bool LogMessage::log_to_stderr_ = false;
+ 
+ // The list of logging streams currently configured.
+ // Note: we explicitly do not clean this up, because of the uncertain ordering
+diff --git a/rtc_base/logging.h b/rtc_base/logging.h
+index d59b9a0ef7..8f490c44a2 100644
+--- a/rtc_base/logging.h
++++ b/rtc_base/logging.h
+@@ -581,6 +581,16 @@ class LogMessage {
+   }
+ #endif  // RTC_LOG_ENABLED()
+ 
++  // Enable dumping of AEC inputs and outputs.  Can be changed in mid-call
++  static void set_aec_debug(bool enable) { aec_debug_ = enable; }
++  static void set_aec_debug_size(uint32_t size) { aec_debug_size_ = size; }
++  static bool aec_debug() { return aec_debug_; }
++  static uint32_t aec_debug_size() { return aec_debug_size_; }
++  static std::string aec_debug_filename();
++  static void set_aec_debug_filename(const char* filename) {
++    aec_filename_base_ = filename;
++  }
++
+  private:
+   friend class LogMessageForTesting;
+ 
+@@ -636,6 +646,10 @@ class LogMessage {
+ 
+   // The stringbuilder that buffers the formatted message before output
+   rtc::StringBuilder print_stream_;
++
++  static bool aec_debug_;
++  static uint32_t aec_debug_size_;
++  static std::string aec_filename_base_;
+ };
+ 
+ //////////////////////////////////////////////////////////////////////
+-- 
+2.34.1
+

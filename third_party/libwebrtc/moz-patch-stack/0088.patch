@@ -1,0 +1,189 @@
+From: Michael Froman <mfroman@mozilla.com>
+Date: Wed, 8 Mar 2023 00:26:00 +0000
+Subject: Bug 1820869 - avoid building unreachable files. r=ng,webrtc-reviewers
+
+Differential Revision: https://phabricator.services.mozilla.com/D171922
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/88b3cc6bbece7c53d00e124713330f3d34d2789d
+---
+ BUILD.gn                      |  9 +++++++++
+ call/BUILD.gn                 | 10 ++++++++++
+ media/BUILD.gn                |  7 ++++++-
+ modules/audio_device/BUILD.gn | 11 ++++++++++-
+ rtc_base/BUILD.gn             |  2 ++
+ webrtc.gni                    |  2 +-
+ 6 files changed, 38 insertions(+), 3 deletions(-)
+
+diff --git a/BUILD.gn b/BUILD.gn
+index 3dbb19e748..ad65320c71 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -548,6 +548,15 @@ if (!build_with_chromium) {
+         "api/video:video_rtp_headers",
+         "test:rtp_test_utils",
+       ]
++      # Added when we removed deps in other places to avoid building
++      # unreachable sources.  See Bug 1820869.
++      deps += [
++        "api/video_codecs:video_codecs_api",
++        "api/video_codecs:rtc_software_fallback_wrappers",
++        "media:rtc_encoder_simulcast_proxy",
++        "modules/video_coding:webrtc_vp8",
++        "modules/video_coding:webrtc_vp9",
++      ]
+     } else {
+       deps += [
+         "api",
+diff --git a/call/BUILD.gn b/call/BUILD.gn
+index 132a842243..a34602cae8 100644
+--- a/call/BUILD.gn
++++ b/call/BUILD.gn
+@@ -352,6 +352,16 @@ rtc_library("call") {
+     "//third_party/abseil-cpp/absl/strings",
+     "//third_party/abseil-cpp/absl/types:optional",
+   ]
++  if (build_with_mozilla) { # See Bug 1820869.
++    sources -= [
++      "call_factory.cc",
++      "degraded_call.cc",
++    ]
++    deps -= [
++      ":fake_network",
++      ":simulated_network",
++    ]
++  }
+ }
+ 
+ rtc_source_set("receive_stream_interface") {
+diff --git a/media/BUILD.gn b/media/BUILD.gn
+index d72efab5d1..f4d33389ad 100644
+--- a/media/BUILD.gn
++++ b/media/BUILD.gn
+@@ -255,7 +255,10 @@ rtc_library("rtc_internal_video_codecs") {
+     "../test:fake_video_codecs",
+   ]
+   if (build_with_mozilla) {
+-    deps -= [ "../test:fake_video_codecs" ]
++    deps -= [
++      "../modules/video_coding:webrtc_multiplex", # See Bug 1820869.
++      "../test:fake_video_codecs",
++    ]
+   }
+ 
+   if (enable_libaom) {
+@@ -290,6 +293,8 @@ rtc_library("rtc_internal_video_codecs") {
+     sources -= [
+       "engine/fake_video_codec_factory.cc",
+       "engine/fake_video_codec_factory.h",
++      "engine/internal_encoder_factory.cc", # See Bug 1820869.
++      "engine/multiplex_codec_factory.cc", # See Bug 1820869.
+     ]
+   }
+ }
+diff --git a/modules/audio_device/BUILD.gn b/modules/audio_device/BUILD.gn
+index 7a097fad17..13a8c67e67 100644
+--- a/modules/audio_device/BUILD.gn
++++ b/modules/audio_device/BUILD.gn
+@@ -30,6 +30,7 @@ rtc_source_set("audio_device_default") {
+ }
+ 
+ rtc_source_set("audio_device") {
++if (!build_with_mozilla) { # See Bug 1820869.
+   visibility = [ "*" ]
+   public_deps = [
+     ":audio_device_api",
+@@ -40,6 +41,7 @@ rtc_source_set("audio_device") {
+     ":audio_device_impl",
+   ]
+ }
++}
+ 
+ rtc_source_set("audio_device_api") {
+   visibility = [ "*" ]
+@@ -57,6 +59,7 @@ rtc_source_set("audio_device_api") {
+ }
+ 
+ rtc_library("audio_device_buffer") {
++if (!build_with_mozilla) { # See Bug 1820869.
+   sources = [
+     "audio_device_buffer.cc",
+     "audio_device_buffer.h",
+@@ -84,6 +87,7 @@ rtc_library("audio_device_buffer") {
+     "../../system_wrappers:metrics",
+   ]
+ }
++}
+ 
+ rtc_library("audio_device_generic") {
+   sources = [
+@@ -179,6 +183,7 @@ rtc_source_set("audio_device_module_from_input_and_output") {
+ # Contains default implementations of webrtc::AudioDeviceModule for Windows,
+ # Linux, Mac, iOS and Android.
+ rtc_library("audio_device_impl") {
++if (!build_with_mozilla) { # See Bug 1820869.
+   visibility = [ "*" ]
+   deps = [
+     ":audio_device_api",
+@@ -372,6 +377,7 @@ rtc_library("audio_device_impl") {
+     ]
+   }
+ }
++}
+ 
+ if (is_mac) {
+   rtc_source_set("audio_device_impl_frameworks") {
+@@ -389,6 +395,7 @@ if (is_mac) {
+   }
+ }
+ 
++if (!build_with_mozilla) { # See Bug 1820869.
+ rtc_source_set("mock_audio_device") {
+   visibility = [ "*" ]
+   testonly = true
+@@ -405,8 +412,10 @@ rtc_source_set("mock_audio_device") {
+     "../../test:test_support",
+   ]
+ }
++}
+ 
+-if (rtc_include_tests && !build_with_chromium) {
++# See Bug 1820869 for !build_with_mozilla.
++if (rtc_include_tests && !build_with_chromium && !build_with_mozilla) {
+   rtc_library("audio_device_unittests") {
+     testonly = true
+ 
+diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
+index 9e3da1dd8f..c3cec96532 100644
+--- a/rtc_base/BUILD.gn
++++ b/rtc_base/BUILD.gn
+@@ -283,6 +283,7 @@ rtc_library("sample_counter") {
+   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+ }
+ 
++if (!build_with_mozilla) { # See Bug 1820869.
+ rtc_library("timestamp_aligner") {
+   visibility = [ "*" ]
+   sources = [
+@@ -296,6 +297,7 @@ rtc_library("timestamp_aligner") {
+     "system:rtc_export",
+   ]
+ }
++}
+ 
+ rtc_library("zero_memory") {
+   visibility = [ "*" ]
+diff --git a/webrtc.gni b/webrtc.gni
+index 1b21d329b2..46a9433141 100644
+--- a/webrtc.gni
++++ b/webrtc.gni
+@@ -221,7 +221,7 @@ declare_args() {
+   # video codecs they depends on will not be included in libwebrtc.{a|lib}
+   # (they will still be included in libjingle_peerconnection_so.so and
+   # WebRTC.framework)
+-  rtc_include_builtin_video_codecs = true
++  rtc_include_builtin_video_codecs = !build_with_mozilla # See Bug 1820869.
+ 
+   # When set to true and in a standalone build, it will undefine UNICODE and
+   # _UNICODE (which are always defined globally by the Chromium Windows
+-- 
+2.34.1
+

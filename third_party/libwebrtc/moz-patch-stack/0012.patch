@@ -1,0 +1,37 @@
+From: Dan Minor <dminor@mozilla.com>
+Date: Mon, 13 Aug 2018 10:24:00 -0400
+Subject: Bug 1376873 - Fix warning in mean_variance_estimator.cc; r=padenot
+
+Differential Revision: https://phabricator.services.mozilla.com/D7470
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/cb6c555654c0bca72999f1e414d8d6d0b59186c9
+---
+ .../echo_detector/mean_variance_estimator.cc                | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/modules/audio_processing/echo_detector/mean_variance_estimator.cc b/modules/audio_processing/echo_detector/mean_variance_estimator.cc
+index a85740387b..a9ebb8cd92 100644
+--- a/modules/audio_processing/echo_detector/mean_variance_estimator.cc
++++ b/modules/audio_processing/echo_detector/mean_variance_estimator.cc
+@@ -10,7 +10,7 @@
+ 
+ #include "modules/audio_processing/echo_detector/mean_variance_estimator.h"
+ 
+-#include <math.h>
++#include <cmath>
+ 
+ #include "rtc_base/checks.h"
+ 
+@@ -26,8 +26,8 @@ void MeanVarianceEstimator::Update(float value) {
+   mean_ = (1.f - kAlpha) * mean_ + kAlpha * value;
+   variance_ =
+       (1.f - kAlpha) * variance_ + kAlpha * (value - mean_) * (value - mean_);
+-  RTC_DCHECK(isfinite(mean_));
+-  RTC_DCHECK(isfinite(variance_));
++  RTC_DCHECK(std::isfinite(mean_));
++  RTC_DCHECK(std::isfinite(variance_));
+ }
+ 
+ float MeanVarianceEstimator::std_deviation() const {
+-- 
+2.34.1
+

@@ -1,0 +1,61 @@
+From: Michael Froman <mfroman@mozilla.com>
+Date: Tue, 15 Jun 2021 12:18:00 -0500
+Subject: Bug 1654112 - suppress android lint warnings for WrongConstant in 2
+ libwebrtc java files. r=ng
+
+Differential Revision: https://phabricator.services.mozilla.com/D118050
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e60e2f295fb722f69a3a9fe9af34219880afe772
+---
+ .../java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java    | 5 +++++
+ sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java  | 5 +++++
+ 2 files changed, 10 insertions(+)
+
+diff --git a/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java b/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java
+index 0472114297..afd3d429af 100644
+--- a/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java
++++ b/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java
+@@ -15,6 +15,7 @@ import static android.media.AudioManager.MODE_IN_COMMUNICATION;
+ import static android.media.AudioManager.MODE_NORMAL;
+ import static android.media.AudioManager.MODE_RINGTONE;
+ 
++import android.annotation.SuppressLint;
+ import android.content.Context;
+ import android.content.pm.PackageManager;
+ import android.media.AudioDeviceInfo;
+@@ -247,6 +248,10 @@ public final class WebRtcAudioUtils {
+     }
+   }
+ 
++  // Moz linting complains even though AudioManager.GET_DEVICES_ALL is
++  // listed in the docs here:
++  // https://developer.android.com/reference/android/media/AudioManager#GET_DEVICES_ALL
++  @SuppressLint("WrongConstant")
+   private static void logAudioDeviceInfo(String tag, AudioManager audioManager) {
+     if (Build.VERSION.SDK_INT < 23) {
+       return;
+diff --git a/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java b/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
+index 7894659926..7b4b809ab1 100644
+--- a/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
++++ b/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
+@@ -15,6 +15,7 @@ import static android.media.AudioManager.MODE_IN_COMMUNICATION;
+ import static android.media.AudioManager.MODE_NORMAL;
+ import static android.media.AudioManager.MODE_RINGTONE;
+ 
++import android.annotation.SuppressLint;
+ import android.annotation.TargetApi;
+ import android.content.Context;
+ import android.content.pm.PackageManager;
+@@ -229,6 +230,10 @@ final class WebRtcAudioUtils {
+     }
+   }
+ 
++  // Moz linting complains even though AudioManager.GET_DEVICES_ALL is
++  // listed in the docs here:
++  // https://developer.android.com/reference/android/media/AudioManager#GET_DEVICES_ALL
++  @SuppressLint("WrongConstant")
+   private static void logAudioDeviceInfo(String tag, AudioManager audioManager) {
+     if (Build.VERSION.SDK_INT < 23) {
+       return;
+-- 
+2.34.1
+

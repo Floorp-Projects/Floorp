@@ -1,0 +1,34 @@
+From: Michael Froman <mfroman@mozilla.com>
+Date: Wed, 12 Apr 2023 16:03:00 +0000
+Subject: Bug 1826428 - remove libwebrtc's jvm_android.cc from build
+ r=ng,webrtc-reviewers
+
+Based on info from John Lin and previous try runs, we're almost
+certainly not using this.  Let's try removing it from the build
+and landing it.  If no problems emerge, we'll be able to remove
+our custom changes to upstream code in jvm_android.cc.
+
+Differential Revision: https://phabricator.services.mozilla.com/D174793
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/dca1b97525487ae57d43ced1ebdb4a2d9c9dae89
+---
+ modules/utility/BUILD.gn | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/modules/utility/BUILD.gn b/modules/utility/BUILD.gn
+index 3fe4ca8c92..46bca17f02 100644
+--- a/modules/utility/BUILD.gn
++++ b/modules/utility/BUILD.gn
+@@ -47,6 +47,10 @@ rtc_source_set("utility") {
+       "../../rtc_base:platform_thread",
+       "../../rtc_base/system:arch",
+     ]
++
++    if (build_with_mozilla) {
++      sources -= [ "source/jvm_android.cc" ]
++    }
+   }
+ }
+ 
+-- 
+2.34.1
+

@@ -1,0 +1,36 @@
+From: Dan Minor <dminor@mozilla.com>
+Date: Wed, 12 Feb 2020 17:19:00 +0000
+Subject: Bug 1578073 - Suppress MissingPermission lint in Camera2Session;
+ r=snorp
+
+Depends on D61861
+
+Differential Revision: https://phabricator.services.mozilla.com/D62457
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/722c4a6d1dad867f9ce47fe96d71b5dedb4cbaa8
+---
+ sdk/android/src/java/org/webrtc/Camera2Session.java | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/sdk/android/src/java/org/webrtc/Camera2Session.java b/sdk/android/src/java/org/webrtc/Camera2Session.java
+index dec97a2c25..d5ee80c73e 100644
+--- a/sdk/android/src/java/org/webrtc/Camera2Session.java
++++ b/sdk/android/src/java/org/webrtc/Camera2Session.java
+@@ -10,6 +10,7 @@
+ 
+ package org.webrtc;
+ 
++import android.annotation.SuppressLint;
+ import android.content.Context;
+ import android.hardware.camera2.CameraAccessException;
+ import android.hardware.camera2.CameraCaptureSession;
+@@ -347,6 +348,7 @@ class Camera2Session implements CameraSession {
+     Logging.d(TAG, "Using capture format: " + captureFormat);
+   }
+ 
++  @SuppressLint("MissingPermission")
+   private void openCamera() {
+     checkIsOnCameraThread();
+ 
+-- 
+2.34.1
+

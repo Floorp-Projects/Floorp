@@ -1,0 +1,58 @@
+From: Wang Qing <wangqing-hf@loongson.cn>
+Date: Wed, 25 Sep 2019 14:15:00 +0000
+Subject: Bug 1579834 - [WebRTC] Add mips64 support; r=dminor
+
+Differential Revision: https://phabricator.services.mozilla.com/D45620
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/1387b2c480b55ecca3fbdf62bd7649dafc62438d
+---
+ modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc | 2 +-
+ modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc | 6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc b/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
+index 1ac71899ee..3fe86f2f85 100644
+--- a/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
++++ b/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
+@@ -47,7 +47,7 @@ const char kVp8PostProcArmFieldTrial[] = "WebRTC-VP8-Postproc-Config-Arm";
+ const char kVp8PostProcFieldTrial[] = "WebRTC-VP8-Postproc-Config";
+ 
+ #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || \
+-    defined(WEBRTC_ANDROID)
++    defined(WEBRTC_ANDROID)  || defined(WEBRTC_ARCH_MIPS)
+ constexpr bool kIsArm = true;
+ #else
+ constexpr bool kIsArm = false;
+diff --git a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
+index 8e401fcc7b..cc84605ce7 100644
+--- a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
++++ b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
+@@ -687,7 +687,7 @@ int LibvpxVp8Encoder::InitEncode(const VideoCodec* inst,
+ 
+ int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
+ #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || \
+-    defined(WEBRTC_ANDROID)
++    defined(WEBRTC_ANDROID) || defined(WEBRTC_ARCH_MIPS)
+   // On mobile platform, use a lower speed setting for lower resolutions for
+   // CPUs with 4 or more cores.
+   RTC_DCHECK_GT(number_of_cores_, 0);
+@@ -720,7 +720,7 @@ int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
+ }
+ 
+ int LibvpxVp8Encoder::NumberOfThreads(int width, int height, int cpus) {
+-#if defined(WEBRTC_ANDROID)
++#if defined(WEBRTC_ANDROID) || defined(WEBRTC_ARCH_MIPS)
+   if (width * height >= 320 * 180) {
+     if (cpus >= 4) {
+       // 3 threads for CPUs with 4 and more cores since most of times only 4
+@@ -794,7 +794,7 @@ int LibvpxVp8Encoder::InitAndSetControlSettings() {
+   // multi-res encoding feature?
+   denoiserState denoiser_state = kDenoiserOnYOnly;
+ #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || \
+-    defined(WEBRTC_ANDROID)
++    defined(WEBRTC_ANDROID) || defined(WEBRTC_ARCH_MIPS)
+   denoiser_state = kDenoiserOnYOnly;
+ #else
+   denoiser_state = kDenoiserOnAdaptive;
+-- 
+2.34.1
+

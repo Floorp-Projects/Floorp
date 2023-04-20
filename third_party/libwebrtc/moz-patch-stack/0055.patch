@@ -1,0 +1,29 @@
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Thu, 28 Oct 2021 18:13:00 +0000
+Subject: Bug 1729367 - P7 - restore mac PID tracking using new API;r=mjf
+ a=webrtc-update
+
+Differential Revision: https://phabricator.services.mozilla.com/D129721
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/1495ca5ef535f8ad692a3a579ca42eddc14f39a8
+---
+ modules/desktop_capture/window_capturer_mac.mm | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/modules/desktop_capture/window_capturer_mac.mm b/modules/desktop_capture/window_capturer_mac.mm
+index f0b413b0a6..882498bc34 100644
+--- a/modules/desktop_capture/window_capturer_mac.mm
++++ b/modules/desktop_capture/window_capturer_mac.mm
+@@ -167,8 +167,9 @@ void WindowCapturerMac::CaptureFrame() {
+           return webrtc::GetWindowList(
+               [sources](CFDictionaryRef window) {
+                 WindowId window_id = GetWindowId(window);
++                int pid = GetWindowOwnerPid(window);
+                 if (window_id != kNullWindowId) {
+-                  sources->push_back(DesktopCapturer::Source{window_id, GetWindowTitle(window)});
++                  sources->push_back(DesktopCapturer::Source{window_id, pid, GetWindowTitle(window)});
+                 }
+                 return true;
+               },
+-- 
+2.34.1
+

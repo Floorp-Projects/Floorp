@@ -1,0 +1,37 @@
+From: Michael Froman <mfroman@mozilla.com>
+Date: Fri, 9 Jul 2021 18:14:00 -0500
+Subject: Bug 1654112 - mutex changes to fix tsan errors. r=ng
+
+Differential Revision: https://phabricator.services.mozilla.com/D119674
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3d5503acf9a4b22e02c4300f29e4fbfed406ea2c
+---
+ rtc_base/logging.cc | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/rtc_base/logging.cc b/rtc_base/logging.cc
+index d71d6a3e1b..d6ae7612fc 100644
+--- a/rtc_base/logging.cc
++++ b/rtc_base/logging.cc
+@@ -265,8 +265,8 @@ void LogMessage::LogTimestamps(bool on) {
+ }
+ 
+ void LogMessage::LogToDebug(LoggingSeverity min_sev) {
+-  g_dbg_sev = min_sev;
+   webrtc::MutexLock lock(&GetLoggingLock());
++  g_dbg_sev = min_sev;
+   UpdateMinLogSeverity();
+ }
+ 
+@@ -455,6 +455,9 @@ void LogMessage::OutputToDebug(const LogLineRef& log_line) {
+ 
+ // static
+ bool LogMessage::IsNoop(LoggingSeverity severity) {
++  // Added MutexLock to fix tsan warnings on accessing g_dbg_sev. (mjf)
++  // See https://bugs.chromium.org/p/chromium/issues/detail?id=1228729
++  webrtc::MutexLock lock(&GetLoggingLock());
+   if (severity >= g_dbg_sev || severity >= g_min_sev)
+     return false;
+   return streams_empty_.load(std::memory_order_relaxed);
+-- 
+2.34.1
+

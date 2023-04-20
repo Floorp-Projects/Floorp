@@ -1,0 +1,52 @@
+From: Dan Minor <dminor@mozilla.com>
+Date: Wed, 18 Nov 2020 15:19:00 -0500
+Subject: Bug 1654112 - Fully qualify kIvfHeaderSize. r=ng
+
+Differential Revision: https://phabricator.services.mozilla.com/D130087
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9452e226943fea4b0f6ff67e0ee85587d9c23a44
+---
+ modules/video_coding/utility/ivf_file_writer.cc | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/modules/video_coding/utility/ivf_file_writer.cc b/modules/video_coding/utility/ivf_file_writer.cc
+index 668390a78c..5b27ef3ef7 100644
+--- a/modules/video_coding/utility/ivf_file_writer.cc
++++ b/modules/video_coding/utility/ivf_file_writer.cc
+@@ -39,7 +39,7 @@ IvfFileWriter::IvfFileWriter(FileWrapper file, size_t byte_limit)
+       last_timestamp_(-1),
+       using_capture_timestamps_(false),
+       file_(std::move(file)) {
+-  RTC_DCHECK(byte_limit == 0 || kIvfHeaderSize <= byte_limit)
++  RTC_DCHECK(byte_limit == 0 || webrtc::kIvfHeaderSize <= byte_limit)
+       << "The byte_limit is too low, not even the header will fit.";
+ }
+ 
+@@ -59,7 +59,7 @@ bool IvfFileWriter::WriteHeader() {
+     return false;
+   }
+ 
+-  uint8_t ivf_header[kIvfHeaderSize] = {0};
++  uint8_t ivf_header[webrtc::kIvfHeaderSize] = {0};
+   ivf_header[0] = 'D';
+   ivf_header[1] = 'K';
+   ivf_header[2] = 'I';
+@@ -113,13 +113,13 @@ bool IvfFileWriter::WriteHeader() {
+                                           static_cast<uint32_t>(num_frames_));
+   ByteWriter<uint32_t>::WriteLittleEndian(&ivf_header[28], 0);  // Reserved.
+ 
+-  if (!file_.Write(ivf_header, kIvfHeaderSize)) {
++  if (!file_.Write(ivf_header, webrtc::kIvfHeaderSize)) {
+     RTC_LOG(LS_ERROR) << "Unable to write IVF header for ivf output file.";
+     return false;
+   }
+ 
+-  if (bytes_written_ < kIvfHeaderSize) {
+-    bytes_written_ = kIvfHeaderSize;
++  if (bytes_written_ < webrtc::kIvfHeaderSize) {
++    bytes_written_ = webrtc::kIvfHeaderSize;
+   }
+ 
+   return true;
+-- 
+2.34.1
+

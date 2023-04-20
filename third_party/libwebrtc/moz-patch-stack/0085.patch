@@ -1,0 +1,111 @@
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Fri, 13 Jan 2023 21:18:00 +0000
+Subject: Bug 1731520 - libwebrtc: Cherry-pick commit d100a589c8. r=ng
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Upstream commit: https://webrtc.googlesource.com/src/+/d100a589c82b57659d4ab8dba856fd68b21f1f40
+    Add dimensions to video settings in objc sdk camera backend.
+
+    This is required by some virtual cameras, like Snap Camera from
+    Snapchat.
+
+    Bug: webrtc:14783
+    Change-Id: I3d841936c17f3f227af9a94a4c3b0f37940d43b2
+    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/288361
+    Commit-Queue: Kári Helgason <kthelgason@webrtc.org>
+    Reviewed-by: Kári Helgason <kthelgason@webrtc.org>
+    Cr-Commit-Position: refs/heads/main@{#39073}
+
+Differential Revision: https://phabricator.services.mozilla.com/D166587
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/33f381f39f634f3634bde795ea9d96c37a376516
+---
+ .../capturer/RTCCameraVideoCapturer.m         | 11 ++++-
+ .../unittests/RTCCameraVideoCapturerTests.mm  | 49 +++++++++++++++++++
+ 2 files changed, 58 insertions(+), 2 deletions(-)
+
+diff --git a/sdk/objc/components/capturer/RTCCameraVideoCapturer.m b/sdk/objc/components/capturer/RTCCameraVideoCapturer.m
+index e0e9e41254..98d3cf9f45 100644
+--- a/sdk/objc/components/capturer/RTCCameraVideoCapturer.m
++++ b/sdk/objc/components/capturer/RTCCameraVideoCapturer.m
+@@ -476,9 +476,16 @@ const int64_t kNanosecondsPerSecond = 1000000000;
+ 
+   if (mediaSubType != _outputPixelFormat) {
+     _outputPixelFormat = mediaSubType;
+-    _videoDataOutput.videoSettings =
+-        @{ (NSString *)kCVPixelBufferPixelFormatTypeKey : @(mediaSubType) };
+   }
++
++  // Update videoSettings with dimensions, as some virtual cameras, e.g. Snap Camera, may not work
++  // otherwise.
++  CMVideoDimensions dimensions = CMVideoFormatDescriptionGetDimensions(format.formatDescription);
++  _videoDataOutput.videoSettings = @{
++    (id)kCVPixelBufferWidthKey : @(dimensions.width),
++    (id)kCVPixelBufferHeightKey : @(dimensions.height),
++    (id)kCVPixelBufferPixelFormatTypeKey : @(_outputPixelFormat),
++  };
+ }
+ 
+ #pragma mark - Private, called inside capture queue
+diff --git a/sdk/objc/unittests/RTCCameraVideoCapturerTests.mm b/sdk/objc/unittests/RTCCameraVideoCapturerTests.mm
+index ee5c2d858d..5018479157 100644
+--- a/sdk/objc/unittests/RTCCameraVideoCapturerTests.mm
++++ b/sdk/objc/unittests/RTCCameraVideoCapturerTests.mm
+@@ -517,4 +517,53 @@ CMSampleBufferRef createTestSampleBufferRef() {
+   XCTAssertEqual(callbackError, errorMock);
+ }
+ 
++- (void)testStartCaptureSetsOutputDimensionsInvalidPixelFormat {
++  id expectedDeviceInputMock = OCMClassMock([AVCaptureDeviceInput class]);
++  id captureDeviceInputMock = OCMClassMock([AVCaptureDeviceInput class]);
++  OCMStub([captureDeviceInputMock deviceInputWithDevice:_deviceMock error:[OCMArg setTo:nil]])
++      .andReturn(expectedDeviceInputMock);
++
++  OCMStub([_deviceMock lockForConfiguration:[OCMArg setTo:nil]]).andReturn(YES);
++  OCMStub([_deviceMock unlockForConfiguration]);
++  OCMStub([_captureSessionMock canAddInput:expectedDeviceInputMock]).andReturn(YES);
++  OCMStub([_captureSessionMock addInput:expectedDeviceInputMock]);
++  OCMStub([_captureSessionMock inputs]).andReturn(@[ expectedDeviceInputMock ]);
++  OCMStub([_captureSessionMock removeInput:expectedDeviceInputMock]);
++  OCMStub([_captureSessionMock startRunning]);
++  OCMStub([_captureSessionMock stopRunning]);
++
++  id deviceFormatMock = OCMClassMock([AVCaptureDeviceFormat class]);
++  CMVideoFormatDescriptionRef formatDescription;
++
++  int width = 110;
++  int height = 220;
++  FourCharCode pixelFormat = 0x18000000;
++  CMVideoFormatDescriptionCreate(nil, pixelFormat, width, height, nil, &formatDescription);
++  OCMStub([deviceFormatMock formatDescription]).andReturn(formatDescription);
++
++  [_capturer startCaptureWithDevice:_deviceMock format:deviceFormatMock fps:30];
++
++  XCTestExpectation *expectation = [self expectationWithDescription:@"StopCompletion"];
++  [_capturer stopCaptureWithCompletionHandler:^(void) {
++    [expectation fulfill];
++  }];
++
++  [self waitForExpectationsWithTimeout:15 handler:nil];
++
++  OCMVerify([_captureSessionMock
++      addOutput:[OCMArg checkWithBlock:^BOOL(AVCaptureVideoDataOutput *output) {
++        if (@available(iOS 16, *)) {
++          XCTAssertEqual(width, [output.videoSettings[(id)kCVPixelBufferWidthKey] intValue]);
++          XCTAssertEqual(height, [output.videoSettings[(id)kCVPixelBufferHeightKey] intValue]);
++        } else {
++          XCTAssertEqual(0, [output.videoSettings[(id)kCVPixelBufferWidthKey] intValue]);
++          XCTAssertEqual(0, [output.videoSettings[(id)kCVPixelBufferHeightKey] intValue]);
++        }
++        XCTAssertEqual(
++            (FourCharCode)kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange,
++            [output.videoSettings[(id)kCVPixelBufferPixelFormatTypeKey] unsignedIntValue]);
++        return YES;
++      }]]);
++}
++
+ @end
+-- 
+2.34.1
+

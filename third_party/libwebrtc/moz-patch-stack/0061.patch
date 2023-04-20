@@ -1,0 +1,32 @@
+From: Michael Froman <mjfroman@mac.com>
+Date: Fri, 8 Apr 2022 11:36:36 -0500
+Subject: Bug 1766646 - (fix-b556b08668) avoid InlinedVector method that can
+ throw exception
+
+---
+ api/video_codecs/video_encoder.cc | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/api/video_codecs/video_encoder.cc b/api/video_codecs/video_encoder.cc
+index b85b9328cf..deb4fdc637 100644
+--- a/api/video_codecs/video_encoder.cc
++++ b/api/video_codecs/video_encoder.cc
+@@ -179,7 +179,15 @@ std::string VideoEncoder::EncoderInfo::ToString() const {
+   for (size_t i = 0; i < preferred_pixel_formats.size(); ++i) {
+     if (i > 0)
+       oss << ", ";
++#if defined(WEBRTC_MOZILLA_BUILD)
++    // This could assert, as opposed to throw using the form in the
++    // else, but since we're in a for loop that uses .size() we can
++    // be fairly sure that this is safe without doing a further
++    // check to make sure 'i' is in-range.
++    oss << VideoFrameBufferTypeToString(preferred_pixel_formats[i]);
++#else
+     oss << VideoFrameBufferTypeToString(preferred_pixel_formats.at(i));
++#endif
+   }
+   oss << "]";
+   if (is_qp_trusted.has_value()) {
+-- 
+2.34.1
+
