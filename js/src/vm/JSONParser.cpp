@@ -6,22 +6,43 @@
 
 #include "vm/JSONParser.h"
 
-#include "mozilla/Range.h"
-#include "mozilla/RangedPtr.h"
-#include "mozilla/Sprintf.h"
-#include "mozilla/TextUtils.h"
+#include "mozilla/Assertions.h"  // MOZ_ASSERT
+#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS
+#include "mozilla/Range.h"       // mozilla::Range
+#include "mozilla/RangedPtr.h"   // mozilla::RangedPtr
 
-#include "jsnum.h"
+#include "mozilla/Sprintf.h"    // SprintfLiteral
+#include "mozilla/TextUtils.h"  // mozilla::AsciiAlphanumericToNumber, mozilla::IsAsciiDigit, mozilla::IsAsciiHexDigit
 
-#include "builtin/Array.h"
-#include "js/ErrorReport.h"
+#include <stddef.h>  // size_t
+#include <stdint.h>  // uint32_t
+#include <utility>   // std::move
+
+#include "jsnum.h"  // ParseDecimalNumber, GetFullInteger, FullStringToDouble
+
+#include "builtin/Array.h"            // NewDenseCopiedArray
+#include "ds/IdValuePair.h"           // IdValuePair
+#include "gc/Allocator.h"             // CanGC
+#include "gc/Tracer.h"                // JS::TraceRoot
+#include "js/AllocPolicy.h"           // ReportOutOfMemory
+#include "js/ErrorReport.h"           // JS_ReportErrorNumberASCII
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "util/StringBuffer.h"
-#include "vm/ArrayObject.h"
-#include "vm/JSContext.h"
-#include "vm/PlainObject.h"  // js::NewPlainObjectWithProperties
+#include "js/GCVector.h"              // JS::GCVector
+#include "js/Id.h"                    // jsid
+#include "js/RootingAPI.h"  // JS::Handle, JS::MutableHandle, MutableWrappedPtrOperations
+#include "js/TypeDecls.h"  // Latin1Char
+#include "js/Utility.h"    // js_delete
+#include "js/Value.h"  // JS::Value, JS::BooleanValue, JS::NullValue, JS::NumberValue, JS::StringValue
+#include "js/Vector.h"          // Vector
+#include "util/StringBuffer.h"  // JSStringBuilder
+#include "vm/ArrayObject.h"     // ArrayObject
+#include "vm/ErrorReporting.h"  // ReportCompileErrorLatin1, ErrorMetadata
+#include "vm/JSAtom.h"          // AtomizeChars
+#include "vm/JSContext.h"       // JSContext
+#include "vm/PlainObject.h"     // NewPlainObjectWithMaybeDuplicateKeys
+#include "vm/StringType.h"  // JSString, JSAtom, JSLinearString, NewStringCopyN, NameToId
 
-#include "vm/JSAtom-inl.h"
+#include "vm/JSAtom-inl.h"  // AtomToId
 
 using namespace js;
 
@@ -597,7 +618,7 @@ void JSONParser<CharT>::trace(JSTracer* trc) {
 }
 
 inline void JSONFullParseHandlerAnyChar::setNumberValue(double d) {
-  v = NumberValue(d);
+  v = JS::NumberValue(d);
 }
 
 template <typename CharT>
@@ -610,7 +631,7 @@ inline bool JSONFullParseHandler<CharT>::setStringValue(CharPtr start,
   if (!str) {
     return false;
   }
-  v = StringValue(str);
+  v = JS::StringValue(str);
   return true;
 }
 
@@ -624,7 +645,7 @@ inline bool JSONFullParseHandler<CharT>::setStringValue(
   if (!str) {
     return false;
   }
-  v = StringValue(str);
+  v = JS::StringValue(str);
   return true;
 }
 
@@ -967,8 +988,8 @@ bool JSONPerHandlerParser<CharT, HandlerT>::parseImpl(TempValueT& value,
 }
 
 template <typename CharT>
-bool JSONParser<CharT>::parse(MutableHandleValue vp) {
-  RootedValue tempValue(this->handler.cx);
+bool JSONParser<CharT>::parse(JS::MutableHandle<JS::Value> vp) {
+  JS::Rooted<JS::Value> tempValue(this->handler.cx);
 
   vp.setUndefined();
 
