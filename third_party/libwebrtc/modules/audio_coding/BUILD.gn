@@ -734,6 +734,7 @@ rtc_library("neteq") {
     "../../rtc_base:gtest_prod",
     "../../rtc_base:logging",
     "../../rtc_base:macromagic",
+    "../../rtc_base:rtc_numerics",
     "../../rtc_base:safe_conversions",
     "../../rtc_base:safe_minmax",
     "../../rtc_base:sanitizer",
