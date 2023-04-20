@@ -24,7 +24,6 @@
 #include "call/audio_state.h"
 #include "media/base/codec.h"
 #include "media/base/media_channel.h"
-#include "media/base/media_channel_impl.h"
 #include "media/base/media_config.h"
 #include "media/base/video_common.h"
 #include "rtc_base/system/file_wrapper.h"
@@ -37,6 +36,9 @@ class Call;
 }  // namespace webrtc
 
 namespace cricket {
+
+class VideoMediaChannel;
+class VoiceMediaChannel;
 
 // Checks that the scalability_mode value of each encoding is supported by at
 // least one video codec of the list. If the list is empty, no check is done.

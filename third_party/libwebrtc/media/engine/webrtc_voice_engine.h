@@ -25,6 +25,7 @@
 #include "api/transport/rtp/rtp_source.h"
 #include "call/audio_state.h"
 #include "call/call.h"
+#include "media/base/media_channel_impl.h"
 #include "media/base/media_engine.h"
 #include "media/base/rtp_utils.h"
 #include "modules/async_audio_processing/async_audio_processing.h"
