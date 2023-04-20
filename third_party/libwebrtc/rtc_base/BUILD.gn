@@ -781,6 +781,7 @@ rtc_library("rtc_numerics") {
     "numerics/moving_percentile_filter.h",
     "numerics/percentile_filter.h",
     "numerics/running_statistics.h",
+    "numerics/sequence_number_unwrapper.h",
     "numerics/sequence_number_util.h",
   ]
   deps = [
@@ -1762,6 +1763,7 @@ if (rtc_include_tests) {
         "numerics/moving_percentile_filter_unittest.cc",
         "numerics/percentile_filter_unittest.cc",
         "numerics/running_statistics_unittest.cc",
+        "numerics/sequence_number_unwrapper_unittest.cc",
         "numerics/sequence_number_util_unittest.cc",
         "numerics/sequence_numbers_conformance_test.cc",
       ]

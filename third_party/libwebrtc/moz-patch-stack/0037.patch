@@ -549,10 +549,10 @@ index aa19b1aaf3..360fce3ee7 100644
    deps = [
      ":codec_globals_headers",
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 5d4cdb33d4..2a72485cfd 100644
+index 07dec5d5a7..eb036918c6 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
-@@ -819,7 +819,9 @@ rtc_library("rtc_json") {
+@@ -820,7 +820,9 @@ rtc_library("rtc_json") {
      "strings/json.h",
    ]
    deps = [ ":stringutils" ]
@@ -562,7 +562,7 @@ index 5d4cdb33d4..2a72485cfd 100644
    if (rtc_build_json) {
      deps += [ "//third_party/jsoncpp" ]
    } else {
-@@ -1214,6 +1216,62 @@ rtc_library("rtc_base") {
+@@ -1215,6 +1217,62 @@ rtc_library("rtc_base") {
      "unique_id_generator.cc",
      "unique_id_generator.h",
    ]
@@ -625,7 +625,7 @@ index 5d4cdb33d4..2a72485cfd 100644
  
    # If we are building the SSL library ourselves, we know it's BoringSSL.
    if (rtc_build_ssl) {
-@@ -1224,12 +1282,14 @@ rtc_library("rtc_base") {
+@@ -1225,12 +1283,14 @@ rtc_library("rtc_base") {
        "boringssl_identity.h",
      ]
    } else {
@@ -640,7 +640,7 @@ index 5d4cdb33d4..2a72485cfd 100644
    }
  
    if (build_with_chromium) {
-@@ -1828,7 +1888,7 @@ if (rtc_include_tests) {
+@@ -1830,7 +1890,7 @@ if (rtc_include_tests) {
    }
  }
  

@@ -259,7 +259,7 @@ index 896bacd743..a96d0a6d85 100644
    }
  }
 diff --git a/video/rtp_video_stream_receiver2.h b/video/rtp_video_stream_receiver2.h
-index 975af2bf4a..fa30a3bb5f 100644
+index b2016db038..7ed74bb624 100644
 --- a/video/rtp_video_stream_receiver2.h
 +++ b/video/rtp_video_stream_receiver2.h
 @@ -91,6 +91,7 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
