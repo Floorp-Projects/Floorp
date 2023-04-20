@@ -47,13 +47,10 @@ void CrossMediaMetricsReporter::OnStatsReports(
   std::map<std::string, std::vector<const RTCInboundRTPStreamStats*>>
       sync_group_stats;
   for (const auto& stat : inbound_stats) {
-    auto media_source_stat =
-        report->GetAs<DEPRECATED_RTCMediaStreamTrackStats>(*stat->track_id);
     if (stat->estimated_playout_timestamp.ValueOrDefault(0.) > 0 &&
-        media_source_stat->track_identifier.is_defined()) {
+        stat->track_identifier.is_defined()) {
       sync_group_stats[reporter_helper_
-                           ->GetStreamInfoFromTrackId(
-                               *media_source_stat->track_identifier)
+                           ->GetStreamInfoFromTrackId(*stat->track_identifier)
                            .sync_group]
           .push_back(stat);
     }
@@ -80,20 +77,14 @@ void CrossMediaMetricsReporter::OnStatsReports(
     // Stream labels of a sync group are same for all polls, so we need it add
     // it only once.
     if (stats_info_.find(sync_group) == stats_info_.end()) {
-      auto audio_source_stat =
-          report->GetAs<DEPRECATED_RTCMediaStreamTrackStats>(
-              *audio_stat->track_id);
-      auto video_source_stat =
-          report->GetAs<DEPRECATED_RTCMediaStreamTrackStats>(
-              *video_stat->track_id);
-      // *_source_stat->track_identifier is always defined here because we
-      // checked it while grouping stats.
+      RTC_CHECK(audio_stat->track_identifier.is_defined());
+      RTC_CHECK(video_stat->track_identifier.is_defined());
       stats_info_[sync_group].audio_stream_info =
           reporter_helper_->GetStreamInfoFromTrackId(
-              *audio_source_stat->track_identifier);
+              *audio_stat->track_identifier);
       stats_info_[sync_group].video_stream_info =
           reporter_helper_->GetStreamInfoFromTrackId(
-              *video_source_stat->track_identifier);
+              *video_stat->track_identifier);
     }
 
     double audio_video_playout_diff = *audio_stat->estimated_playout_timestamp -
