@@ -1,0 +1,23 @@
+From: Michael Froman <mjfroman@mac.com>
+Date: Wed, 13 Jul 2022 12:50:36 -0500
+Subject: Bug 1766646 - (fix-4d12174ca5) add missing include to fix build
+
+---
+ modules/audio_processing/aec3/multi_channel_content_detector.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/modules/audio_processing/aec3/multi_channel_content_detector.h b/modules/audio_processing/aec3/multi_channel_content_detector.h
+index be8717f3af..1742c5fc17 100644
+--- a/modules/audio_processing/aec3/multi_channel_content_detector.h
++++ b/modules/audio_processing/aec3/multi_channel_content_detector.h
+@@ -11,6 +11,7 @@
+ #ifndef MODULES_AUDIO_PROCESSING_AEC3_MULTI_CHANNEL_CONTENT_DETECTOR_H_
+ #define MODULES_AUDIO_PROCESSING_AEC3_MULTI_CHANNEL_CONTENT_DETECTOR_H_
+ 
++#include <memory>
+ #include <stddef.h>
+ 
+ #include <memory>
+-- 
+2.34.1
+

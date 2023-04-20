@@ -1,0 +1,141 @@
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Fri, 13 Jan 2023 21:18:00 +0000
+Subject: Bug 1731520 - libwebrtc: Cherry-pick commit 7e176c41b9. r=ng
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Upstream commit: https://webrtc.googlesource.com/src/+/7e176c41b9818052d79d5e3065b36655edbebd6d
+    Get RTCCameraVideoCapturerTests working again
+
+    See commit
+    https://webrtc.googlesource.com/src/+/c8a6fb2bb8762de17008dee97c5fb6e762f7e056
+    where the setup methods for RTCCameraVideoCaptureTests' test cases were
+    lost. Both "setup" where XCTest instead looks for "setUp", and
+    "setupWithMockedCaptureSession" which isn't called explicitly anywhere.
+
+    This commit splits the old RTCCameraVideoCaptureTests into two;
+    RTCCameraVideoCaptureTests for tests using "setup", and
+    RTCCameraVideoCaptureTestsWithMockedCaptureSession for tests using
+    "setupWithMockedCaptureSession".
+
+    Bug: webrtc:8382
+    Change-Id: I64cefff744e12f62d65e04133512de1e10d17d95
+    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/288601
+    Reviewed-by: Kári Helgason <kthelgason@webrtc.org>
+    Reviewed-by: Daniel.L (Byoungchan) Lee <daniel.l@hpcnt.com>
+    Commit-Queue: Kári Helgason <kthelgason@webrtc.org>
+    Cr-Commit-Position: refs/heads/main@{#38931}
+
+Differential Revision: https://phabricator.services.mozilla.com/D166584
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/fa7acbaa684fe13da2fc3faf2ae52588af702746
+---
+ .../unittests/RTCCameraVideoCapturerTests.mm  | 65 +++++++++++++------
+ 1 file changed, 44 insertions(+), 21 deletions(-)
+
+diff --git a/sdk/objc/unittests/RTCCameraVideoCapturerTests.mm b/sdk/objc/unittests/RTCCameraVideoCapturerTests.mm
+index 6235fb4301..4285eb5ca2 100644
+--- a/sdk/objc/unittests/RTCCameraVideoCapturerTests.mm
++++ b/sdk/objc/unittests/RTCCameraVideoCapturerTests.mm
+@@ -72,7 +72,6 @@ CMSampleBufferRef createTestSampleBufferRef() {
+ @property(nonatomic, strong) id delegateMock;
+ @property(nonatomic, strong) id deviceMock;
+ @property(nonatomic, strong) id captureConnectionMock;
+-@property(nonatomic, strong) id captureSessionMock;
+ @property(nonatomic, strong) RTC_OBJC_TYPE(RTCCameraVideoCapturer) * capturer;
+ @end
+ 
+@@ -80,31 +79,14 @@ CMSampleBufferRef createTestSampleBufferRef() {
+ @synthesize delegateMock = _delegateMock;
+ @synthesize deviceMock = _deviceMock;
+ @synthesize captureConnectionMock = _captureConnectionMock;
+-@synthesize captureSessionMock = _captureSessionMock;
+ @synthesize capturer = _capturer;
+ 
+-- (void)setup {
++- (void)setUp {
+   self.delegateMock = OCMProtocolMock(@protocol(RTC_OBJC_TYPE(RTCVideoCapturerDelegate)));
+   self.captureConnectionMock = OCMClassMock([AVCaptureConnection class]);
+   self.capturer =
+       [[RTC_OBJC_TYPE(RTCCameraVideoCapturer) alloc] initWithDelegate:self.delegateMock];
+-  self.deviceMock = [self createDeviceMock];
+-}
+-
+-- (void)setupWithMockedCaptureSession {
+-  self.captureSessionMock = OCMStrictClassMock([AVCaptureSession class]);
+-  OCMStub([self.captureSessionMock setSessionPreset:[OCMArg any]]);
+-  OCMStub([self.captureSessionMock setUsesApplicationAudioSession:NO]);
+-  OCMStub([self.captureSessionMock canAddOutput:[OCMArg any]]).andReturn(YES);
+-  OCMStub([self.captureSessionMock addOutput:[OCMArg any]]);
+-  OCMStub([self.captureSessionMock beginConfiguration]);
+-  OCMStub([self.captureSessionMock commitConfiguration]);
+-  self.delegateMock = OCMProtocolMock(@protocol(RTC_OBJC_TYPE(RTCVideoCapturerDelegate)));
+-  self.captureConnectionMock = OCMClassMock([AVCaptureConnection class]);
+-  self.capturer =
+-      [[RTC_OBJC_TYPE(RTCCameraVideoCapturer) alloc] initWithDelegate:self.delegateMock
+-                                                       captureSession:self.captureSessionMock];
+-  self.deviceMock = [self createDeviceMock];
++  self.deviceMock = [RTCCameraVideoCapturerTests createDeviceMock];
+ }
+ 
+ - (void)tearDown {
+@@ -117,7 +99,7 @@ CMSampleBufferRef createTestSampleBufferRef() {
+ 
+ #pragma mark - utils
+ 
+-- (id)createDeviceMock {
+++ (id)createDeviceMock {
+   return OCMClassMock([AVCaptureDevice class]);
+ }
+ 
+@@ -344,6 +326,47 @@ CMSampleBufferRef createTestSampleBufferRef() {
+ #endif
+ }
+ 
++@end
++
++@interface RTCCameraVideoCapturerTestsWithMockedCaptureSession : XCTestCase
++@property(nonatomic, strong) id delegateMock;
++@property(nonatomic, strong) id deviceMock;
++@property(nonatomic, strong) id captureSessionMock;
++@property(nonatomic, strong) RTC_OBJC_TYPE(RTCCameraVideoCapturer) * capturer;
++@end
++
++@implementation RTCCameraVideoCapturerTestsWithMockedCaptureSession
++@synthesize delegateMock = _delegateMock;
++@synthesize deviceMock = _deviceMock;
++@synthesize captureSessionMock = _captureSessionMock;
++@synthesize capturer = _capturer;
++
++- (void)setUp {
++  self.captureSessionMock = OCMStrictClassMock([AVCaptureSession class]);
++  OCMStub([self.captureSessionMock setSessionPreset:[OCMArg any]]);
++  OCMStub([self.captureSessionMock setUsesApplicationAudioSession:NO]);
++  OCMStub([self.captureSessionMock canAddOutput:[OCMArg any]]).andReturn(YES);
++  OCMStub([self.captureSessionMock addOutput:[OCMArg any]]);
++  OCMStub([self.captureSessionMock beginConfiguration]);
++  OCMStub([self.captureSessionMock commitConfiguration]);
++  self.delegateMock = OCMProtocolMock(@protocol(RTC_OBJC_TYPE(RTCVideoCapturerDelegate)));
++  self.capturer =
++      [[RTC_OBJC_TYPE(RTCCameraVideoCapturer) alloc] initWithDelegate:self.delegateMock
++                                                       captureSession:self.captureSessionMock];
++  self.deviceMock = [RTCCameraVideoCapturerTests createDeviceMock];
++}
++
++- (void)tearDown {
++  [self.delegateMock stopMocking];
++  [self.deviceMock stopMocking];
++  self.delegateMock = nil;
++  self.deviceMock = nil;
++  self.capturer = nil;
++  self.captureSessionMock = nil;
++}
++
++#pragma mark - test cases
++
+ - (void)testStartingAndStoppingCapture {
+   id expectedDeviceInputMock = OCMClassMock([AVCaptureDeviceInput class]);
+   id captureDeviceInputMock = OCMClassMock([AVCaptureDeviceInput class]);
+-- 
+2.34.1
+

@@ -1,0 +1,40 @@
+From: James Willcox <snorp@snorp.net>
+Date: Fri, 18 Sep 2020 22:29:00 +0000
+Subject: Bug 1553459 - Migrate to AndroidX r=geckoview-reviewers,agi
+
+Differential Revision: https://phabricator.services.mozilla.com/D90711
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/cf8917364050fc7d981b190cdc1db5ab57357f9b
+---
+ sdk/android/src/java/org/webrtc/EglBase14Impl.java   | 1 -
+ sdk/android/src/java/org/webrtc/GlGenericDrawer.java | 3 ---
+ 2 files changed, 4 deletions(-)
+
+diff --git a/sdk/android/src/java/org/webrtc/EglBase14Impl.java b/sdk/android/src/java/org/webrtc/EglBase14Impl.java
+index e53dda6e4c..caf45b091e 100644
+--- a/sdk/android/src/java/org/webrtc/EglBase14Impl.java
++++ b/sdk/android/src/java/org/webrtc/EglBase14Impl.java
+@@ -21,7 +21,6 @@ import android.opengl.GLException;
+ import android.os.Build;
+ import android.view.Surface;
+ import androidx.annotation.Nullable;
+-import org.webrtc.EglBase;
+ 
+ /**
+  * Holds EGL state and utility methods for handling an EGL14 EGLContext, an EGLDisplay,
+diff --git a/sdk/android/src/java/org/webrtc/GlGenericDrawer.java b/sdk/android/src/java/org/webrtc/GlGenericDrawer.java
+index b70a3728b9..34144e2f75 100644
+--- a/sdk/android/src/java/org/webrtc/GlGenericDrawer.java
++++ b/sdk/android/src/java/org/webrtc/GlGenericDrawer.java
+@@ -14,9 +14,6 @@ import android.opengl.GLES11Ext;
+ import android.opengl.GLES20;
+ import androidx.annotation.Nullable;
+ import java.nio.FloatBuffer;
+-import org.webrtc.GlShader;
+-import org.webrtc.GlUtil;
+-import org.webrtc.RendererCommon;
+ 
+ /**
+  * Helper class to implement an instance of RendererCommon.GlDrawer that can accept multiple input
+-- 
+2.34.1
+

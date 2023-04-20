@@ -1,0 +1,81 @@
+From: Michael Froman <mjfroman@mac.com>
+Date: Thu, 28 Apr 2022 10:53:43 -0500
+Subject: Bug 1766646 - (fix-a0bb2ef2dc) add back VideoType enum values
+
+---
+ common_video/libyuv/include/webrtc_libyuv.h |  4 ++++
+ common_video/libyuv/webrtc_libyuv.cc        | 11 +++++++++++
+ 2 files changed, 15 insertions(+)
+
+diff --git a/common_video/libyuv/include/webrtc_libyuv.h b/common_video/libyuv/include/webrtc_libyuv.h
+index 08a035a8d7..6d9071bcd5 100644
+--- a/common_video/libyuv/include/webrtc_libyuv.h
++++ b/common_video/libyuv/include/webrtc_libyuv.h
+@@ -32,12 +32,16 @@ enum class VideoType {
+   kI420,
+   kIYUV,
+   kRGB24,
++  kABGR,
+   kARGB,
++  kARGB4444,
+   kRGB565,
++  kARGB1555,
+   kYUY2,
+   kYV12,
+   kUYVY,
+   kMJPEG,
++  kNV21,
+   kBGRA,
+   kNV12,
+ };
+diff --git a/common_video/libyuv/webrtc_libyuv.cc b/common_video/libyuv/webrtc_libyuv.cc
+index 14e2d22612..8998af191d 100644
+--- a/common_video/libyuv/webrtc_libyuv.cc
++++ b/common_video/libyuv/webrtc_libyuv.cc
+@@ -25,6 +25,7 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
+   size_t buffer_size = 0;
+   switch (type) {
+     case VideoType::kI420:
++    case VideoType::kNV21:
+     case VideoType::kIYUV:
+     case VideoType::kYV12:
+     case VideoType::kNV12: {
+@@ -33,7 +34,9 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
+       buffer_size = width * height + half_width * half_height * 2;
+       break;
+     }
++    case VideoType::kARGB4444:
+     case VideoType::kRGB565:
++    case VideoType::kARGB1555:
+     case VideoType::kYUY2:
+     case VideoType::kUYVY:
+       buffer_size = width * height * 2;
+@@ -94,6 +97,8 @@ int ConvertVideoType(VideoType video_type) {
+       return libyuv::FOURCC_YV12;
+     case VideoType::kRGB24:
+       return libyuv::FOURCC_24BG;
++    case VideoType::kABGR:
++      return libyuv::FOURCC_ABGR;
+     case VideoType::kRGB565:
+       return libyuv::FOURCC_RGBP;
+     case VideoType::kYUY2:
+@@ -102,10 +107,16 @@ int ConvertVideoType(VideoType video_type) {
+       return libyuv::FOURCC_UYVY;
+     case VideoType::kMJPEG:
+       return libyuv::FOURCC_MJPG;
++    case VideoType::kNV21:
++      return libyuv::FOURCC_NV21;
+     case VideoType::kARGB:
+       return libyuv::FOURCC_ARGB;
+     case VideoType::kBGRA:
+       return libyuv::FOURCC_BGRA;
++    case VideoType::kARGB4444:
++      return libyuv::FOURCC_R444;
++    case VideoType::kARGB1555:
++      return libyuv::FOURCC_RGBO;
+     case VideoType::kNV12:
+       return libyuv::FOURCC_NV12;
+   }
+-- 
+2.34.1
+

@@ -1,0 +1,41 @@
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Wed, 10 Feb 2021 12:24:00 -0800
+Subject: Bug 1654112 - Use newer thread run callback, and adapt
+ PlatformUIThread; r=pehrsons
+
+Differential Revision: https://phabricator.services.mozilla.com/D107879
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/bb6417a4cfac1416a8e2565bd68b66c40be4827b
+---
+ rtc_base/platform_thread.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/rtc_base/platform_thread.h b/rtc_base/platform_thread.h
+index 3ab2761f43..52497ffd0c 100644
+--- a/rtc_base/platform_thread.h
++++ b/rtc_base/platform_thread.h
+@@ -18,8 +18,13 @@
+ #include "absl/types/optional.h"
+ #include "rtc_base/platform_thread_types.h"
+ 
++#include "rtc_base/deprecated/recursive_critical_section.h"
++
+ namespace rtc {
+ 
++// Bug 1691641
++class PlatformUIThread;
++
+ enum class ThreadPriority {
+   kLow = 1,
+   kNormal,
+@@ -110,6 +115,8 @@ class PlatformThread final {
+ 
+   absl::optional<Handle> handle_;
+   bool joinable_ = false;
++  // Bug 1691641
++  friend PlatformUIThread;
+ };
+ 
+ }  // namespace rtc
+-- 
+2.34.1
+

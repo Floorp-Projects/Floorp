@@ -1,0 +1,259 @@
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Fri, 13 Jan 2023 21:18:00 +0000
+Subject: Bug 1731520 - libwebrtc: Cherry-pick commit 8bec181bfc. r=ng
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Upstream commit: https://webrtc.googlesource.com/src/+/8bec181bfc4f3e3fee422513c0f75f90e80e4ed6
+    Finish converting RTCCameraVideoCapturerTests to XCTest
+
+    Failed gunit assertions in these XCTestCase classes cannot result in
+    failed tests.
+
+    Bug: webrtc:8382
+    Change-Id: I47b50b74f60029fafeff4ca885775482a85dfdd3
+    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/288603
+    Reviewed-by: Kári Helgason <kthelgason@webrtc.org>
+    Commit-Queue: Kári Helgason <kthelgason@webrtc.org>
+    Cr-Commit-Position: refs/heads/main@{#38995}
+
+Differential Revision: https://phabricator.services.mozilla.com/D166586
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e94499837a0ac4571ab06f87e5f0cd64fd13c69e
+---
+ .../unittests/RTCCameraVideoCapturerTests.mm  | 72 ++++++++++++-------
+ 1 file changed, 45 insertions(+), 27 deletions(-)
+
+diff --git a/sdk/objc/unittests/RTCCameraVideoCapturerTests.mm b/sdk/objc/unittests/RTCCameraVideoCapturerTests.mm
+index aaea515bae..ee5c2d858d 100644
+--- a/sdk/objc/unittests/RTCCameraVideoCapturerTests.mm
++++ b/sdk/objc/unittests/RTCCameraVideoCapturerTests.mm
+@@ -15,14 +15,20 @@
+ #import <UIKit/UIKit.h>
+ #endif
+ 
+-#include "rtc_base/gunit.h"
+-
+ #import "base/RTCVideoFrame.h"
+ #import "components/capturer/RTCCameraVideoCapturer.h"
+ #import "helpers/AVCaptureSession+DevicePosition.h"
+ #import "helpers/RTCDispatcher.h"
+ #import "helpers/scoped_cftyperef.h"
+ 
++#define WAIT(timeoutMs)                                                        \
++  do {                                                                         \
++    id expectation = [[XCTestExpectation alloc] initWithDescription:@"Dummy"]; \
++    XCTWaiterResult res = [XCTWaiter waitForExpectations:@[ expectation ]      \
++                                                 timeout:timeoutMs / 1000.0];  \
++    XCTAssertEqual(XCTWaiterResultTimedOut, res);                              \
++  } while (false);
++
+ #if TARGET_OS_IPHONE
+ // Helper method.
+ CMSampleBufferRef createTestSampleBufferRef() {
+@@ -107,19 +113,19 @@ CMSampleBufferRef createTestSampleBufferRef() {
+ 
+ - (void)testSetupSession {
+   AVCaptureSession *session = self.capturer.captureSession;
+-  EXPECT_TRUE(session != nil);
++  XCTAssertTrue(session != nil);
+ 
+ #if TARGET_OS_IPHONE
+-  EXPECT_EQ(session.sessionPreset, AVCaptureSessionPresetInputPriority);
+-  EXPECT_EQ(session.usesApplicationAudioSession, NO);
++  XCTAssertEqual(session.sessionPreset, AVCaptureSessionPresetInputPriority);
++  XCTAssertEqual(session.usesApplicationAudioSession, NO);
+ #endif
+-  EXPECT_EQ(session.outputs.count, 1u);
++  XCTAssertEqual(session.outputs.count, 1u);
+ }
+ 
+ - (void)testSetupSessionOutput {
+   AVCaptureVideoDataOutput *videoOutput = self.capturer.captureSession.outputs[0];
+-  EXPECT_EQ(videoOutput.alwaysDiscardsLateVideoFrames, NO);
+-  EXPECT_EQ(videoOutput.sampleBufferDelegate, self.capturer);
++  XCTAssertEqual(videoOutput.alwaysDiscardsLateVideoFrames, NO);
++  XCTAssertEqual(videoOutput.sampleBufferDelegate, self.capturer);
+ }
+ 
+ - (void)testSupportedFormatsForDevice {
+@@ -152,10 +158,10 @@ CMSampleBufferRef createTestSampleBufferRef() {
+       [RTC_OBJC_TYPE(RTCCameraVideoCapturer) supportedFormatsForDevice:self.deviceMock];
+ 
+   // then
+-  EXPECT_EQ(supportedFormats.count, 3u);
+-  EXPECT_TRUE([supportedFormats containsObject:validFormat1]);
+-  EXPECT_TRUE([supportedFormats containsObject:validFormat2]);
+-  EXPECT_TRUE([supportedFormats containsObject:invalidFormat]);
++  XCTAssertEqual(supportedFormats.count, 3u);
++  XCTAssertTrue([supportedFormats containsObject:validFormat1]);
++  XCTAssertTrue([supportedFormats containsObject:validFormat2]);
++  XCTAssertTrue([supportedFormats containsObject:invalidFormat]);
+ 
+   // cleanup
+   [validFormat1 stopMocking];
+@@ -180,9 +186,12 @@ CMSampleBufferRef createTestSampleBufferRef() {
+   [self.delegateMock verify];
+ }
+ 
++#if 0
++// See crbug.com/1404878 - XCTExpectFailure and XCTSkip are considered failures
+ 
+ - (void)testDelegateCallbackWithValidBufferAndOrientationUpdate {
+ #if TARGET_OS_IPHONE
++  XCTExpectFailure(@"Setting orientation on UIDevice is not supported");
+   [UIDevice.currentDevice setValue:@(UIDeviceOrientationPortraitUpsideDown) forKey:@"orientation"];
+   CMSampleBufferRef sampleBuffer = createTestSampleBufferRef();
+ 
+@@ -190,7 +199,7 @@ CMSampleBufferRef createTestSampleBufferRef() {
+   [[self.delegateMock expect] capturer:self.capturer
+                   didCaptureVideoFrame:[OCMArg checkWithBlock:^BOOL(RTC_OBJC_TYPE(RTCVideoFrame) *
+                                                                     expectedFrame) {
+-                    EXPECT_EQ(expectedFrame.rotation, RTCVideoRotation_270);
++                    XCTAssertEqual(expectedFrame.rotation, RTCVideoRotation_270);
+                     return YES;
+                   }]];
+ 
+@@ -199,7 +208,7 @@ CMSampleBufferRef createTestSampleBufferRef() {
+   [center postNotificationName:UIDeviceOrientationDidChangeNotification object:nil];
+ 
+   // We need to wait for the dispatch to finish.
+-  WAIT(0, 1000);
++  WAIT(1000);
+ 
+   [self.capturer captureOutput:self.capturer.captureSession.outputs[0]
+          didOutputSampleBuffer:sampleBuffer
+@@ -226,6 +235,7 @@ CMSampleBufferRef createTestSampleBufferRef() {
+   OCMStub(inputPortMock.device).andReturn(captureDeviceMock);
+   OCMStub(captureDeviceMock.position).andReturn(camera);
+ 
++  XCTExpectFailure(@"Setting orientation on UIDevice is not supported");
+   [UIDevice.currentDevice setValue:@(deviceOrientation) forKey:@"orientation"];
+ 
+   CMSampleBufferRef sampleBuffer = createTestSampleBufferRef();
+@@ -235,15 +245,15 @@ CMSampleBufferRef createTestSampleBufferRef() {
+                                                                     expectedFrame) {
+                     if (camera == AVCaptureDevicePositionFront) {
+                       if (deviceOrientation == UIDeviceOrientationLandscapeLeft) {
+-                        EXPECT_EQ(expectedFrame.rotation, RTCVideoRotation_180);
++                        XCTAssertEqual(expectedFrame.rotation, RTCVideoRotation_180);
+                       } else if (deviceOrientation == UIDeviceOrientationLandscapeRight) {
+-                        EXPECT_EQ(expectedFrame.rotation, RTCVideoRotation_0);
++                        XCTAssertEqual(expectedFrame.rotation, RTCVideoRotation_0);
+                       }
+                     } else if (camera == AVCaptureDevicePositionBack) {
+                       if (deviceOrientation == UIDeviceOrientationLandscapeLeft) {
+-                        EXPECT_EQ(expectedFrame.rotation, RTCVideoRotation_0);
++                        XCTAssertEqual(expectedFrame.rotation, RTCVideoRotation_0);
+                       } else if (deviceOrientation == UIDeviceOrientationLandscapeRight) {
+-                        EXPECT_EQ(expectedFrame.rotation, RTCVideoRotation_180);
++                        XCTAssertEqual(expectedFrame.rotation, RTCVideoRotation_180);
+                       }
+                     }
+                     return YES;
+@@ -253,7 +263,7 @@ CMSampleBufferRef createTestSampleBufferRef() {
+   [center postNotificationName:UIDeviceOrientationDidChangeNotification object:nil];
+ 
+   // We need to wait for the dispatch to finish.
+-  WAIT(0, 1000);
++  WAIT(1000);
+ 
+   [self.capturer captureOutput:self.capturer.captureSession.outputs[0]
+          didOutputSampleBuffer:sampleBuffer
+@@ -285,6 +295,8 @@ CMSampleBufferRef createTestSampleBufferRef() {
+            withOrientation:UIDeviceOrientationLandscapeRight];
+ }
+ 
++#endif
++
+ - (void)setExif:(CMSampleBufferRef)sampleBuffer {
+   rtc::ScopedCFTypeRef<CFMutableDictionaryRef> exif(CFDictionaryCreateMutable(
+       kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
+@@ -292,6 +304,9 @@ CMSampleBufferRef createTestSampleBufferRef() {
+   CMSetAttachment(sampleBuffer, CFSTR("{Exif}"), exif.get(), kCMAttachmentMode_ShouldPropagate);
+ }
+ 
++#if 0
++// See crbug.com/1404878 - XCTExpectFailure and XCTSkip are considered failures
++
+ - (void)testRotationFrame {
+ #if TARGET_OS_IPHONE
+   // Mock the AVCaptureConnection as we will get the camera position from the connection's
+@@ -306,6 +321,7 @@ CMSampleBufferRef createTestSampleBufferRef() {
+   OCMStub(inputPortMock.device).andReturn(captureDeviceMock);
+   OCMStub(captureDeviceMock.position).andReturn(AVCaptureDevicePositionFront);
+ 
++  XCTExpectFailure(@"Setting orientation on UIDevice is not supported");
+   [UIDevice.currentDevice setValue:@(UIDeviceOrientationLandscapeLeft) forKey:@"orientation"];
+ 
+   CMSampleBufferRef sampleBuffer = createTestSampleBufferRef();
+@@ -315,7 +331,7 @@ CMSampleBufferRef createTestSampleBufferRef() {
+                                                                     expectedFrame) {
+                     // Front camera and landscape left should return 180. But the frame's exif
+                     // we add below says its from the back camera, so rotation should be 0.
+-                    EXPECT_EQ(expectedFrame.rotation, RTCVideoRotation_0);
++                    XCTAssertEqual(expectedFrame.rotation, RTCVideoRotation_0);
+                     return YES;
+                   }]];
+ 
+@@ -323,7 +339,7 @@ CMSampleBufferRef createTestSampleBufferRef() {
+   [center postNotificationName:UIDeviceOrientationDidChangeNotification object:nil];
+ 
+   // We need to wait for the dispatch to finish.
+-  WAIT(0, 1000);
++  WAIT(1000);
+ 
+   [self setExif:sampleBuffer];
+ 
+@@ -336,6 +352,8 @@ CMSampleBufferRef createTestSampleBufferRef() {
+ #endif
+ }
+ 
++#endif
++
+ - (void)testImageExif {
+ #if TARGET_OS_IPHONE
+   CMSampleBufferRef sampleBuffer = createTestSampleBufferRef();
+@@ -343,7 +361,7 @@ CMSampleBufferRef createTestSampleBufferRef() {
+ 
+   AVCaptureDevicePosition cameraPosition = [AVCaptureSession
+                                             devicePositionForSampleBuffer:sampleBuffer];
+-  EXPECT_EQ(cameraPosition, AVCaptureDevicePositionBack);
++  XCTAssertEqual(cameraPosition, AVCaptureDevicePositionBack);
+ #endif
+ }
+ 
+@@ -450,7 +468,7 @@ CMSampleBufferRef createTestSampleBufferRef() {
+                                  format:format
+                                     fps:30
+                       completionHandler:^(NSError *error) {
+-                        EXPECT_EQ(error, nil);
++                        XCTAssertEqual(error, nil);
+                         completedStart = YES;
+                       }];
+ 
+@@ -463,8 +481,8 @@ CMSampleBufferRef createTestSampleBufferRef() {
+   dispatch_semaphore_wait(completedStopSemaphore,
+                           dispatch_time(DISPATCH_TIME_NOW, 15.0 * NSEC_PER_SEC));
+   OCMVerifyAllWithDelay(_captureSessionMock, 15);
+-  EXPECT_TRUE(completedStart);
+-  EXPECT_TRUE(completedStop);
++  XCTAssertTrue(completedStart);
++  XCTAssertTrue(completedStop);
+ }
+ 
+ - (void)testStartCaptureFailingToLockForConfigurationWithCallback {
+@@ -495,8 +513,8 @@ CMSampleBufferRef createTestSampleBufferRef() {
+ 
+   long ret = dispatch_semaphore_wait(completedStartSemaphore,
+                                      dispatch_time(DISPATCH_TIME_NOW, 15.0 * NSEC_PER_SEC));
+-  EXPECT_EQ(ret, 0);
+-  EXPECT_EQ(callbackError, errorMock);
++  XCTAssertEqual(ret, 0);
++  XCTAssertEqual(callbackError, errorMock);
+ }
+ 
+ @end
+-- 
+2.34.1
+

@@ -1,0 +1,25 @@
+From: Byron Campen <docfaraday@gmail.com>
+Date: Tue, 4 Apr 2023 16:34:00 -0500
+Subject: Bug 1822194 - (fix-3b51cd328e) - Add missing designated initializer
+ that gcc is sad about.
+
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/108046c7cbb21c6cf19320c0804e9aee1a3eb4bf
+---
+ modules/audio_processing/audio_processing_impl.cc | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/modules/audio_processing/audio_processing_impl.cc b/modules/audio_processing/audio_processing_impl.cc
+index e92ae6dffd..b0f5692d52 100644
+--- a/modules/audio_processing/audio_processing_impl.cc
++++ b/modules/audio_processing/audio_processing_impl.cc
+@@ -450,6 +450,7 @@ AudioProcessingImpl::GetGainController2ExperimentParams() {
+                   },
+               .adaptive_digital_controller =
+                   {
++                      .enabled = false,
+                       .headroom_db = static_cast<float>(headroom_db.Get()),
+                       .max_gain_db = static_cast<float>(max_gain_db.Get()),
+                       .initial_gain_db =
+-- 
+2.34.1
+

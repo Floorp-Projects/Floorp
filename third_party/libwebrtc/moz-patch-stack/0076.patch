@@ -1,0 +1,31 @@
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Mon, 12 Dec 2022 15:47:00 +0000
+Subject: Bug 1451394 - Record video frame captures with PerformanceRecorder in
+ the new mac camera backend. r=padenot
+
+Also includes:
+Bug 1806605 - Pass TrackingId instead of nsCString to CaptureStage.
+
+Differential Revision: https://phabricator.services.mozilla.com/D163687
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a7362238c9e6fbe0d28200f6b41fc40a0c9a2158
+---
+ modules/video_capture/video_capture.h | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
+index 3948032041..f74491252f 100644
+--- a/modules/video_capture/video_capture.h
++++ b/modules/video_capture/video_capture.h
+@@ -155,6 +155,9 @@ class VideoCaptureModule : public rtc::RefCountInterface {
+   // Return whether the rotation is applied or left pending.
+   virtual bool GetApplyRotation() = 0;
+ 
++  // Mozilla: TrackingId setter for use in profiler markers.
++  virtual void SetTrackingId(uint32_t aTrackingIdProcId) {}
++
+  protected:
+   ~VideoCaptureModule() override {}
+ };
+-- 
+2.34.1
+

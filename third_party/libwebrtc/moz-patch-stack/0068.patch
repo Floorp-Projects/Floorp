@@ -1,0 +1,26 @@
+From: Michael Froman <mjfroman@mac.com>
+Date: Tue, 21 Jun 2022 11:17:46 -0500
+Subject: Bug 1772380 - to upstream - ref count this in lambda capture
+
+---
+ modules/video_capture/linux/video_capture_v4l2.cc | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
+index b527a331e4..c7dcb722bc 100644
+--- a/modules/video_capture/linux/video_capture_v4l2.cc
++++ b/modules/video_capture/linux/video_capture_v4l2.cc
+@@ -250,8 +250,8 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
+   if (_captureThread.empty()) {
+     quit_ = false;
+     _captureThread = rtc::PlatformThread::SpawnJoinable(
+-        [this] {
+-          while (CaptureProcess()) {
++        [self = rtc::scoped_refptr(this)] {
++          while (self->CaptureProcess()) {
+           }
+         },
+         "CaptureThread",
+-- 
+2.34.1
+

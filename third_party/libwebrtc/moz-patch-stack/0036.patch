@@ -1,0 +1,29 @@
+From: Dan Minor <dminor@mozilla.com>
+Date: Fri, 13 Nov 2020 14:34:00 -0500
+Subject: Bug 1654112 - Fully quality AudioLevel::kUri in channel_send.cc. r=ng
+
+Differential Revision: https://phabricator.services.mozilla.com/D130082
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7163801a480d607005042292ed9e4fbb892f440d
+---
+ audio/channel_send.cc | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/audio/channel_send.cc b/audio/channel_send.cc
+index fdc11a83fb..8c7faf70d8 100644
+--- a/audio/channel_send.cc
++++ b/audio/channel_send.cc
+@@ -703,9 +703,9 @@ void ChannelSend::SetSendAudioLevelIndicationStatus(bool enable, int id) {
+   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+   _includeAudioLevelIndication = enable;
+   if (enable) {
+-    rtp_rtcp_->RegisterRtpHeaderExtension(AudioLevel::Uri(), id);
++    rtp_rtcp_->RegisterRtpHeaderExtension(webrtc::AudioLevel::Uri(), id);
+   } else {
+-    rtp_rtcp_->DeregisterSendRtpHeaderExtension(AudioLevel::Uri());
++    rtp_rtcp_->DeregisterSendRtpHeaderExtension(webrtc::AudioLevel::Uri());
+   }
+ }
+ 
+-- 
+2.34.1
+

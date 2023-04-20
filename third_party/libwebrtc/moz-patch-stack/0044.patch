@@ -1,0 +1,63 @@
+From: Michael Froman <mfroman@mozilla.com>
+Date: Fri, 16 Apr 2021 17:35:00 -0500
+Subject: Bug 1654112 - General build fixes for paths and naming changes. r=ng
+
+Differential Revision: https://phabricator.services.mozilla.com/D113438
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/99b99cca6b7b2c2ebffb5472457a4f927bda11c4
+---
+ modules/video_capture/video_capture_impl.h          | 4 +++-
+ rtc_base/system/warn_current_thread_is_deadlocked.h | 2 +-
+ sdk/android/api/org/webrtc/VideoCodecInfo.java      | 2 +-
+ 3 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/modules/video_capture/video_capture_impl.h b/modules/video_capture/video_capture_impl.h
+index 43aa027df0..c3c2b0b85f 100644
+--- a/modules/video_capture/video_capture_impl.h
++++ b/modules/video_capture/video_capture_impl.h
+@@ -79,6 +79,9 @@ class VideoCaptureImpl : public VideoCaptureModule {
+   VideoCaptureImpl();
+   ~VideoCaptureImpl() override;
+ 
++  // moved DeliverCapturedFrame to protected for VideoCaptureAndroid (mjf)
++  int32_t DeliverCapturedFrame(VideoFrame& captureFrame);
++
+   char* _deviceUniqueId;  // current Device unique name;
+   Mutex api_lock_;
+   VideoCaptureCapability _requestedCapability;  // Should be set by platform
+@@ -87,7 +90,6 @@ class VideoCaptureImpl : public VideoCaptureModule {
+  private:
+   void UpdateFrameCount();
+   uint32_t CalculateFrameRate(int64_t now_ns);
+-  int32_t DeliverCapturedFrame(VideoFrame& captureFrame);
+ 
+   // last time the module process function was called.
+   int64_t _lastProcessTimeNanos;
+diff --git a/rtc_base/system/warn_current_thread_is_deadlocked.h b/rtc_base/system/warn_current_thread_is_deadlocked.h
+index 4a0ba9dc09..eac12022ed 100644
+--- a/rtc_base/system/warn_current_thread_is_deadlocked.h
++++ b/rtc_base/system/warn_current_thread_is_deadlocked.h
+@@ -13,7 +13,7 @@
+ 
+ namespace webrtc {
+ 
+-#if defined(WEBRTC_ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD)
++#if defined(WEBRTC_ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD) && !defined(MOZ_WIDGET_ANDROID)
+ void WarnThatTheCurrentThreadIsProbablyDeadlocked();
+ #else
+ inline void WarnThatTheCurrentThreadIsProbablyDeadlocked() {}
+diff --git a/sdk/android/api/org/webrtc/VideoCodecInfo.java b/sdk/android/api/org/webrtc/VideoCodecInfo.java
+index 4f97cf74cf..363be347b5 100644
+--- a/sdk/android/api/org/webrtc/VideoCodecInfo.java
++++ b/sdk/android/api/org/webrtc/VideoCodecInfo.java
+@@ -80,7 +80,7 @@ public class VideoCodecInfo {
+   }
+ 
+   @CalledByNative
+-  Map getParams() {
++  Map<String, String> getParams() {
+     return params;
+   }
+ }
+-- 
+2.34.1
+
