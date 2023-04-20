@@ -491,6 +491,53 @@ RTCError ValidateBundledPayloadTypes(
   return RTCError::OK();
 }
 
+RTCError FindDuplicateHeaderExtensionIds(
+    const RtpExtension extension,
+    std::map<int, RtpExtension>& id_to_extension) {
+  auto existing_extension = id_to_extension.find(extension.id);
+  if (existing_extension != id_to_extension.end() &&
+      !(extension.uri == existing_extension->second.uri &&
+        extension.encrypt == existing_extension->second.encrypt)) {
+    return RTCError(
+        RTCErrorType::INVALID_PARAMETER,
+        "A BUNDLE group contains a codec collision for "
+        "header extension id='" +
+            rtc::ToString(extension.id) +
+            ". The id must be the same across all bundled media descriptions");
+  }
+  id_to_extension.insert(std::make_pair(extension.id, extension));
+  return RTCError::OK();
+}
+
+RTCError ValidateBundledRtpHeaderExtensions(
+    const cricket::SessionDescription& description) {
+  // https://www.rfc-editor.org/rfc/rfc8843#name-rtp-header-extensions-consi
+  // ... the identifier used for a given extension MUST identify the same
+  // extension across all the bundled media descriptions.
+  std::vector<const cricket::ContentGroup*> bundle_groups =
+      description.GetGroupsByName(cricket::GROUP_TYPE_BUNDLE);
+  for (const cricket::ContentGroup* bundle_group : bundle_groups) {
+    std::map<int, RtpExtension> id_to_extension;
+    for (const std::string& content_name : bundle_group->content_names()) {
+      const cricket::MediaContentDescription* media_description =
+          description.GetContentDescriptionByName(content_name);
+      if (!media_description) {
+        return RTCError(RTCErrorType::INVALID_PARAMETER,
+                        "A BUNDLE group contains a MID='" + content_name +
+                            "' matching no m= section.");
+      }
+      for (const auto& extension : media_description->rtp_header_extensions()) {
+        auto error =
+            FindDuplicateHeaderExtensionIds(extension, id_to_extension);
+        if (!error.ok()) {
+          return error;
+        }
+      }
+    }
+  }
+  return RTCError::OK();
+}
+
 bool IsValidOfferToReceiveMedia(int value) {
   typedef PeerConnectionInterface::RTCOfferAnswerOptions Options;
   return (value >= Options::kUndefined) &&
@@ -3371,10 +3418,16 @@ RTCError SdpOfferAnswerHandler::ValidateSessionDescription(
     return RTCError(RTCErrorType::INVALID_PARAMETER, kSdpWithoutIceUfragPwd);
   }
 
-  // Validate bundle, payload types and that there are no collisions.
+  // Validate that there are no collisions of bundled payload types.
   error = ValidateBundledPayloadTypes(*sdesc->description());
   // TODO(bugs.webrtc.org/14420): actually reject.
   RTC_HISTOGRAM_BOOLEAN("WebRTC.PeerConnection.ValidBundledPayloadTypes",
+                        error.ok());
+
+  // Validate that there are no collisions of bundled header extensions ids.
+  error = ValidateBundledRtpHeaderExtensions(*sdesc->description());
+  // TODO(bugs.webrtc.org/14782): actually reject.
+  RTC_HISTOGRAM_BOOLEAN("WebRTC.PeerConnection.ValidBundledExtensionIds",
                         error.ok());
 
   if (!pc_->ValidateBundleSettings(sdesc->description(),
