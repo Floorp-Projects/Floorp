@@ -200,6 +200,7 @@ def output_gifft_map(output_fd, probe_type, all_objs, cpp_fd):
             probe_type=probe_type,
             id_bits=js.ID_BITS,
             id_signal_bits=js.ID_SIGNAL_BITS,
+            runtime_metric_bit=jog.RUNTIME_METRIC_BIT,
         )
     )
     output_fd.write("\n")

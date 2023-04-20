@@ -6,6 +6,8 @@
 
 #include "mozilla/AppShutdown.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/glean/bindings/GleanJSMetricsLookup.h"
+#include "mozilla/glean/bindings/jog/JOG.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Telemetry.h"
 #include <tuple>
@@ -17,6 +19,9 @@
 
 #ifndef mozilla_glean_ScalarGifftMap_h
 #define mozilla_glean_ScalarGifftMap_h
+
+#define DYNAMIC_METRIC_BIT (26)
+#define GLEAN_METRIC_ID(id) ((id) & ((1ULL << 27) - 1))
 
 namespace mozilla::glean {
 
@@ -179,10 +184,35 @@ static Maybe<ScalarID> ScalarIdForMetric(uint32_t aId) {
       return Some(ScalarID::SOME_OTHER_STRING_SCALAR);
     }
     default: {
+      if (MOZ_UNLIKELY(aId & (1 << DYNAMIC_METRIC_BIT))) {
+        // Dynamic (runtime-registered) metric. Use its static (compiletime-
+        // registered) metric's telemetry_mirror mapping.
+        // ...if applicable.
+
+        // Only JS can use dynamic (runtime-registered) metric ids.
+        MOZ_ASSERT(NS_IsMainThread());
+
+        auto metricName = JOG::GetMetricName(aId);
+        // All of these should have names, but the storage only lasts until
+        // XPCOMWillShutdown, so it might return `Nothing()`.
+        if (metricName.isSome()) {
+          auto maybeMetric = MetricByNameLookup(metricName.ref());
+          if (maybeMetric.isSome()) {
+            uint32_t staticId = GLEAN_METRIC_ID(maybeMetric.value());
+            // Let's ensure we don't infinite loop, huh.
+            MOZ_ASSERT(!(staticId & (1 << DYNAMIC_METRIC_BIT)));
+            return ScalarIdForMetric(staticId);
+          }
+        }
+      }
       return Nothing();
     }
   }
 }
 
 }  // namespace mozilla::glean
+
+#undef GLEAN_METRIC_ID
+#undef DYNAMIC_METRIC_BIT
+
 #endif  // mozilla_glean_ScalarGifftMaps_h

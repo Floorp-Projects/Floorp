@@ -76,6 +76,16 @@ class JOG {
   static Maybe<uint32_t> GetMetric(const nsACString& aMetricName);
 
   /**
+   * Get the metric name for an identified runtime-registered metric.
+   *
+   * @param aMetricId The id of the runtime-registered metric.
+   * @return Nothing() if no metric by that id has been registered.
+   *         Otherwise, the `myCategory.myName` dotted.camelCase metric name of
+   *         the runtime-registered metric.
+   */
+  static Maybe<nsCString> GetMetricName(uint32_t aMetricId);
+
+  /**
    * Get the ping id in a u32 for a named runtime-registered ping.
    *
    * Return value's only useful to GleanJSPingsLookup.h
