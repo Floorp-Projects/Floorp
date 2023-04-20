@@ -115,6 +115,7 @@ bool IsNonVolatile(RTPExtensionType type) {
     case kRtpExtensionTransportSequenceNumber:
     case kRtpExtensionTransportSequenceNumber02:
     case kRtpExtensionRtpStreamId:
+    case kRtpExtensionRepairedRtpStreamId:
     case kRtpExtensionMid:
     case kRtpExtensionGenericFrameDescriptor00:
     case kRtpExtensionGenericFrameDescriptor02:
@@ -126,7 +127,6 @@ bool IsNonVolatile(RTPExtensionType type) {
     case kRtpExtensionVideoContentType:
     case kRtpExtensionVideoLayersAllocation:
     case kRtpExtensionVideoTiming:
-    case kRtpExtensionRepairedRtpStreamId:
     case kRtpExtensionColorSpace:
     case kRtpExtensionVideoFrameTrackingId:
       return false;
@@ -755,25 +755,33 @@ void RTPSender::UpdateHeaderSizes() {
       rtp_header_length + RtpHeaderExtensionSize(kFecOrPaddingExtensionSizes,
                                                  rtp_header_extension_map_);
 
-  // RtpStreamId and Mid are treated specially in that we check if they
-  // currently are being sent. RepairedRtpStreamId is ignored because it is sent
-  // instead of RtpStreamId on rtx packets and require the same size.
+  // RtpStreamId, Mid and RepairedRtpStreamId are treated specially in that
+  // we check if they currently are being sent. RepairedRtpStreamId can be
+  // sent instead of RtpStreamID on RTX packets and may share the same space.
+  // When the primary SSRC has already been acked but the RTX SSRC has not
+  // yet been acked, RepairedRtpStreamId needs to be taken into account
+  // separately.
   const bool send_mid_rid_on_rtx =
-      rtx_ssrc_.has_value() && !rtx_ssrc_has_acked_;
-  const bool send_mid_rid =
-      always_send_mid_and_rid_ || !ssrc_has_acked_ || send_mid_rid_on_rtx;
+      rtx_ssrc_.has_value() &&
+      (always_send_mid_and_rid_ || !rtx_ssrc_has_acked_);
+  const bool send_mid_rid = always_send_mid_and_rid_ || !ssrc_has_acked_;
   std::vector<RtpExtensionSize> non_volatile_extensions;
   for (auto& extension :
        audio_configured_ ? AudioExtensionSizes() : VideoExtensionSizes()) {
     if (IsNonVolatile(extension.type)) {
       switch (extension.type) {
         case RTPExtensionType::kRtpExtensionMid:
-          if (send_mid_rid && !mid_.empty()) {
+          if ((send_mid_rid || send_mid_rid_on_rtx) && !mid_.empty()) {
             non_volatile_extensions.push_back(extension);
           }
           break;
         case RTPExtensionType::kRtpExtensionRtpStreamId:
           if (send_mid_rid && !rid_.empty()) {
+            non_volatile_extensions.push_back(extension);
+          }
+          break;
+        case RTPExtensionType::kRtpExtensionRepairedRtpStreamId:
+          if (send_mid_rid_on_rtx && !send_mid_rid && !rid_.empty()) {
             non_volatile_extensions.push_back(extension);
           }
           break;
