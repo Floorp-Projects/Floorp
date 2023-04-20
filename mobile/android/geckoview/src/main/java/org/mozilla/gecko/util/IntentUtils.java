@@ -25,6 +25,9 @@ public class IntentUtils {
    */
   private static Uri normalizeUriScheme(final Uri uri) {
     final String scheme = uri.getScheme();
+    if (scheme == null) {
+      return uri;
+    }
     final String lower = scheme.toLowerCase(Locale.ROOT);
     if (lower.equals(scheme)) {
       return uri;
