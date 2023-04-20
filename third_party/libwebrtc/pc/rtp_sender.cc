@@ -383,6 +383,14 @@ void RtpSenderBase::SetParametersAsync(const RtpParameters& parameters,
       false);
 }
 
+void RtpSenderBase::set_stream_ids(const std::vector<std::string>& stream_ids) {
+  stream_ids_.clear();
+  absl::c_copy_if(stream_ids, std::back_inserter(stream_ids_),
+                  [this](const std::string& stream_id) {
+                    return !absl::c_linear_search(stream_ids_, stream_id);
+                  });
+}
+
 void RtpSenderBase::SetStreams(const std::vector<std::string>& stream_ids) {
   set_stream_ids(stream_ids);
   if (set_streams_observer_)
