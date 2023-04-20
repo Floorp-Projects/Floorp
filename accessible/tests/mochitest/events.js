@@ -1307,8 +1307,8 @@ function synthMouseMove(aID, aCheckerOrEventSeq) {
   this.__proto__ = new synthAction(aID, aCheckerOrEventSeq);
 
   this.invoke = function synthMouseMove_invoke() {
-    synthesizeMouse(this.DOMNode, 1, 1, { type: "mousemove" });
-    synthesizeMouse(this.DOMNode, 2, 2, { type: "mousemove" });
+    synthesizeMouse(this.DOMNode, 5, 5, { type: "mousemove" });
+    synthesizeMouse(this.DOMNode, 6, 6, { type: "mousemove" });
   };
 
   this.getID = function synthMouseMove_getID() {
