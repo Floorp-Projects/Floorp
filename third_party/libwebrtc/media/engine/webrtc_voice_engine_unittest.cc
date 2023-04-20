@@ -753,17 +753,20 @@ class WebRtcVoiceEngineTestFake : public ::testing::TestWithParam<bool> {
     EXPECT_EQ(info.decoding_muted_output, stats.decoding_muted_output);
     EXPECT_EQ(info.capture_start_ntp_time_ms, stats.capture_start_ntp_time_ms);
   }
-  void VerifyVoiceSendRecvCodecs(const cricket::VoiceMediaInfo& info) const {
-    EXPECT_EQ(send_parameters_.codecs.size(), info.send_codecs.size());
+  void VerifyVoiceSendRecvCodecs(
+      const cricket::VoiceMediaSendInfo& send_info,
+      const cricket::VoiceMediaReceiveInfo& receive_info) const {
+    EXPECT_EQ(send_parameters_.codecs.size(), send_info.send_codecs.size());
     for (const cricket::AudioCodec& codec : send_parameters_.codecs) {
-      ASSERT_EQ(info.send_codecs.count(codec.id), 1U);
-      EXPECT_EQ(info.send_codecs.find(codec.id)->second,
+      ASSERT_EQ(send_info.send_codecs.count(codec.id), 1U);
+      EXPECT_EQ(send_info.send_codecs.find(codec.id)->second,
                 codec.ToCodecParameters());
     }
-    EXPECT_EQ(recv_parameters_.codecs.size(), info.receive_codecs.size());
+    EXPECT_EQ(recv_parameters_.codecs.size(),
+              receive_info.receive_codecs.size());
     for (const cricket::AudioCodec& codec : recv_parameters_.codecs) {
-      ASSERT_EQ(info.receive_codecs.count(codec.id), 1U);
-      EXPECT_EQ(info.receive_codecs.find(codec.id)->second,
+      ASSERT_EQ(receive_info.receive_codecs.count(codec.id), 1U);
+      EXPECT_EQ(receive_info.receive_codecs.find(codec.id)->second,
                 codec.ToCodecParameters());
     }
   }
@@ -2321,46 +2324,55 @@ TEST_P(WebRtcVoiceEngineTestFake, GetStatsWithMultipleSendStreams) {
   // Check stats for the added streams.
   {
     EXPECT_CALL(*adm_, GetPlayoutUnderrunCount()).WillOnce(Return(0));
-    cricket::VoiceMediaInfo info;
-    EXPECT_EQ(true,
-              channel_->GetStats(&info, /*get_and_clear_legacy_stats=*/true));
+    cricket::VoiceMediaSendInfo send_info;
+    cricket::VoiceMediaReceiveInfo receive_info;
+    EXPECT_EQ(true, channel_->GetSendStats(&send_info));
+    EXPECT_EQ(true, channel_->GetReceiveStats(
+                        &receive_info, /*get_and_clear_legacy_stats=*/true));
 
     // We have added 4 send streams. We should see empty stats for all.
-    EXPECT_EQ(static_cast<size_t>(arraysize(kSsrcs4)), info.senders.size());
-    for (const auto& sender : info.senders) {
+    EXPECT_EQ(static_cast<size_t>(arraysize(kSsrcs4)),
+              send_info.senders.size());
+    for (const auto& sender : send_info.senders) {
       VerifyVoiceSenderInfo(sender, false);
     }
-    VerifyVoiceSendRecvCodecs(info);
+    VerifyVoiceSendRecvCodecs(send_info, receive_info);
 
     // We have added one receive stream. We should see empty stats.
-    EXPECT_EQ(info.receivers.size(), 1u);
-    EXPECT_EQ(info.receivers[0].ssrc(), 0u);
+    EXPECT_EQ(receive_info.receivers.size(), 1u);
+    EXPECT_EQ(receive_info.receivers[0].ssrc(), 0u);
   }
 
   // Remove the kSsrcY stream. No receiver stats.
   {
-    cricket::VoiceMediaInfo info;
+    cricket::VoiceMediaReceiveInfo receive_info;
+    cricket::VoiceMediaSendInfo send_info;
     EXPECT_TRUE(receive_channel_->RemoveRecvStream(kSsrcY));
     EXPECT_CALL(*adm_, GetPlayoutUnderrunCount()).WillOnce(Return(0));
-    EXPECT_EQ(true,
-              channel_->GetStats(&info, /*get_and_clear_legacy_stats=*/true));
-    EXPECT_EQ(static_cast<size_t>(arraysize(kSsrcs4)), info.senders.size());
-    EXPECT_EQ(0u, info.receivers.size());
+    EXPECT_EQ(true, channel_->GetSendStats(&send_info));
+    EXPECT_EQ(true, channel_->GetReceiveStats(
+                        &receive_info, /*get_and_clear_legacy_stats=*/true));
+    EXPECT_EQ(static_cast<size_t>(arraysize(kSsrcs4)),
+              send_info.senders.size());
+    EXPECT_EQ(0u, receive_info.receivers.size());
   }
 
   // Deliver a new packet - a default receive stream should be created and we
   // should see stats again.
   {
-    cricket::VoiceMediaInfo info;
+    cricket::VoiceMediaSendInfo send_info;
+    cricket::VoiceMediaReceiveInfo receive_info;
     DeliverPacket(kPcmuFrame, sizeof(kPcmuFrame));
     SetAudioReceiveStreamStats();
     EXPECT_CALL(*adm_, GetPlayoutUnderrunCount()).WillOnce(Return(0));
-    EXPECT_EQ(true,
-              channel_->GetStats(&info, /*get_and_clear_legacy_stats=*/true));
-    EXPECT_EQ(static_cast<size_t>(arraysize(kSsrcs4)), info.senders.size());
-    EXPECT_EQ(1u, info.receivers.size());
-    VerifyVoiceReceiverInfo(info.receivers[0]);
-    VerifyVoiceSendRecvCodecs(info);
+    EXPECT_EQ(true, channel_->GetSendStats(&send_info));
+    EXPECT_EQ(true, channel_->GetReceiveStats(
+                        &receive_info, /*get_and_clear_legacy_stats=*/true));
+    EXPECT_EQ(static_cast<size_t>(arraysize(kSsrcs4)),
+              send_info.senders.size());
+    EXPECT_EQ(1u, receive_info.receivers.size());
+    VerifyVoiceReceiverInfo(receive_info.receivers[0]);
+    VerifyVoiceSendRecvCodecs(send_info, receive_info);
   }
 }
 
@@ -2466,53 +2478,61 @@ TEST_P(WebRtcVoiceEngineTestFake, GetStats) {
   // Check stats for the added streams.
   {
     EXPECT_CALL(*adm_, GetPlayoutUnderrunCount()).WillOnce(Return(0));
-    cricket::VoiceMediaInfo info;
-    EXPECT_EQ(true,
-              channel_->GetStats(&info, /*get_and_clear_legacy_stats=*/true));
+    cricket::VoiceMediaSendInfo send_info;
+    cricket::VoiceMediaReceiveInfo receive_info;
+    EXPECT_EQ(true, channel_->GetSendStats(&send_info));
+    EXPECT_EQ(true, channel_->GetReceiveStats(
+                        &receive_info, /*get_and_clear_legacy_stats=*/true));
 
     // We have added one send stream. We should see the stats we've set.
-    EXPECT_EQ(1u, info.senders.size());
-    VerifyVoiceSenderInfo(info.senders[0], false);
+    EXPECT_EQ(1u, send_info.senders.size());
+    VerifyVoiceSenderInfo(send_info.senders[0], false);
     // We have added one receive stream. We should see empty stats.
-    EXPECT_EQ(info.receivers.size(), 1u);
-    EXPECT_EQ(info.receivers[0].ssrc(), 0u);
+    EXPECT_EQ(receive_info.receivers.size(), 1u);
+    EXPECT_EQ(receive_info.receivers[0].ssrc(), 0u);
   }
 
   // Start sending - this affects some reported stats.
   {
-    cricket::VoiceMediaInfo info;
     SetSend(true);
     EXPECT_CALL(*adm_, GetPlayoutUnderrunCount()).WillOnce(Return(0));
-    EXPECT_EQ(true,
-              channel_->GetStats(&info, /*get_and_clear_legacy_stats=*/true));
-    VerifyVoiceSenderInfo(info.senders[0], true);
-    VerifyVoiceSendRecvCodecs(info);
+    cricket::VoiceMediaSendInfo send_info;
+    cricket::VoiceMediaReceiveInfo receive_info;
+    EXPECT_EQ(true, channel_->GetSendStats(&send_info));
+    EXPECT_EQ(true, channel_->GetReceiveStats(
+                        &receive_info, /*get_and_clear_legacy_stats=*/true));
+    VerifyVoiceSenderInfo(send_info.senders[0], true);
+    VerifyVoiceSendRecvCodecs(send_info, receive_info);
   }
 
   // Remove the kSsrcY stream. No receiver stats.
   {
-    cricket::VoiceMediaInfo info;
     EXPECT_TRUE(receive_channel_->RemoveRecvStream(kSsrcY));
     EXPECT_CALL(*adm_, GetPlayoutUnderrunCount()).WillOnce(Return(0));
-    EXPECT_EQ(true,
-              channel_->GetStats(&info, /*get_and_clear_legacy_stats=*/true));
-    EXPECT_EQ(1u, info.senders.size());
-    EXPECT_EQ(0u, info.receivers.size());
+    cricket::VoiceMediaSendInfo send_info;
+    cricket::VoiceMediaReceiveInfo receive_info;
+    EXPECT_EQ(true, channel_->GetSendStats(&send_info));
+    EXPECT_EQ(true, channel_->GetReceiveStats(
+                        &receive_info, /*get_and_clear_legacy_stats=*/true));
+    EXPECT_EQ(1u, send_info.senders.size());
+    EXPECT_EQ(0u, receive_info.receivers.size());
   }
 
   // Deliver a new packet - a default receive stream should be created and we
   // should see stats again.
   {
-    cricket::VoiceMediaInfo info;
     DeliverPacket(kPcmuFrame, sizeof(kPcmuFrame));
     SetAudioReceiveStreamStats();
     EXPECT_CALL(*adm_, GetPlayoutUnderrunCount()).WillOnce(Return(0));
-    EXPECT_EQ(true,
-              channel_->GetStats(&info, /*get_and_clear_legacy_stats=*/true));
-    EXPECT_EQ(1u, info.senders.size());
-    EXPECT_EQ(1u, info.receivers.size());
-    VerifyVoiceReceiverInfo(info.receivers[0]);
-    VerifyVoiceSendRecvCodecs(info);
+    cricket::VoiceMediaSendInfo send_info;
+    cricket::VoiceMediaReceiveInfo receive_info;
+    EXPECT_EQ(true, channel_->GetSendStats(&send_info));
+    EXPECT_EQ(true, channel_->GetReceiveStats(
+                        &receive_info, /*get_and_clear_legacy_stats=*/true));
+    EXPECT_EQ(1u, send_info.senders.size());
+    EXPECT_EQ(1u, receive_info.receivers.size());
+    VerifyVoiceReceiverInfo(receive_info.receivers[0]);
+    VerifyVoiceSendRecvCodecs(send_info, receive_info);
   }
 }
 

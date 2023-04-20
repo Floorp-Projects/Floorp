@@ -35,21 +35,35 @@ class FakeVoiceMediaChannelForStats : public cricket::FakeVoiceMediaChannel {
                                        network_thread) {}
 
   void SetStats(const cricket::VoiceMediaInfo& voice_info) {
-    stats_ = voice_info;
+    send_stats_ = cricket::VoiceMediaSendInfo();
+    send_stats_->senders = voice_info.senders;
+    send_stats_->send_codecs = voice_info.send_codecs;
+    receive_stats_ = cricket::VoiceMediaReceiveInfo();
+    receive_stats_->receivers = voice_info.receivers;
+    receive_stats_->receive_codecs = voice_info.receive_codecs;
+    receive_stats_->device_underrun_count = voice_info.device_underrun_count;
   }
 
   // VoiceMediaChannel overrides.
-  bool GetStats(cricket::VoiceMediaInfo* info,
-                bool get_and_clear_legacy_stats) override {
-    if (stats_) {
-      *info = *stats_;
+  bool GetSendStats(cricket::VoiceMediaSendInfo* info) override {
+    if (send_stats_) {
+      *info = *send_stats_;
+      return true;
+    }
+    return false;
+  }
+  bool GetReceiveStats(cricket::VoiceMediaReceiveInfo* info,
+                       bool get_and_clear_legacy_stats) override {
+    if (receive_stats_) {
+      *info = *receive_stats_;
       return true;
     }
     return false;
   }
 
  private:
-  absl::optional<cricket::VoiceMediaInfo> stats_;
+  absl::optional<cricket::VoiceMediaSendInfo> send_stats_;
+  absl::optional<cricket::VoiceMediaReceiveInfo> receive_stats_;
 };
 
 // Fake VideoMediaChannel where the result of GetStats can be configured.
@@ -61,20 +75,34 @@ class FakeVideoMediaChannelForStats : public cricket::FakeVideoMediaChannel {
                                        network_thread) {}
 
   void SetStats(const cricket::VideoMediaInfo& video_info) {
-    stats_ = video_info;
+    send_stats_ = cricket::VideoMediaSendInfo();
+    send_stats_->senders = video_info.senders;
+    send_stats_->aggregated_senders = video_info.aggregated_senders;
+    send_stats_->send_codecs = video_info.send_codecs;
+    receive_stats_ = cricket::VideoMediaReceiveInfo();
+    receive_stats_->receivers = video_info.receivers;
+    receive_stats_->receive_codecs = video_info.receive_codecs;
   }
 
   // VideoMediaChannel overrides.
-  bool GetStats(cricket::VideoMediaInfo* info) override {
-    if (stats_) {
-      *info = *stats_;
+  bool GetSendStats(cricket::VideoMediaSendInfo* info) override {
+    if (send_stats_) {
+      *info = *send_stats_;
+      return true;
+    }
+    return false;
+  }
+  bool GetReceiveStats(cricket::VideoMediaReceiveInfo* info) override {
+    if (receive_stats_) {
+      *info = *receive_stats_;
       return true;
     }
     return false;
   }
 
  private:
-  absl::optional<cricket::VideoMediaInfo> stats_;
+  absl::optional<cricket::VideoMediaSendInfo> send_stats_;
+  absl::optional<cricket::VideoMediaReceiveInfo> receive_stats_;
 };
 
 constexpr bool kDefaultRtcpMuxRequired = true;

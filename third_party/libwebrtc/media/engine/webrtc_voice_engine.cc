@@ -2262,9 +2262,8 @@ void WebRtcVoiceMediaChannel::OnReadyToSend(bool ready) {
       ready ? webrtc::kNetworkUp : webrtc::kNetworkDown);
 }
 
-bool WebRtcVoiceMediaChannel::GetStats(VoiceMediaInfo* info,
-                                       bool get_and_clear_legacy_stats) {
-  TRACE_EVENT0("webrtc", "WebRtcVoiceMediaChannel::GetStats");
+bool WebRtcVoiceMediaChannel::GetSendStats(VoiceMediaSendInfo* info) {
+  TRACE_EVENT0("webrtc", "WebRtcVoiceMediaChannel::GetSendStats");
   RTC_DCHECK_RUN_ON(worker_thread_);
   RTC_DCHECK(info);
 
@@ -2303,6 +2302,21 @@ bool WebRtcVoiceMediaChannel::GetStats(VoiceMediaInfo* info,
 
     info->senders.push_back(sinfo);
   }
+
+  // Get codec info
+  for (const AudioCodec& codec : send_codecs_) {
+    webrtc::RtpCodecParameters codec_params = codec.ToCodecParameters();
+    info->send_codecs.insert(
+        std::make_pair(codec_params.payload_type, std::move(codec_params)));
+  }
+
+  return true;
+}
+bool WebRtcVoiceMediaChannel::GetReceiveStats(VoiceMediaReceiveInfo* info,
+                                              bool get_and_clear_legacy_stats) {
+  TRACE_EVENT0("webrtc", "WebRtcVoiceMediaChannel::GetReceiveStats");
+  RTC_DCHECK_RUN_ON(worker_thread_);
+  RTC_DCHECK(info);
 
   // Get SSRC and stats for each receiver.
   RTC_DCHECK_EQ(info->receivers.size(), 0U);
@@ -2403,11 +2417,6 @@ bool WebRtcVoiceMediaChannel::GetStats(VoiceMediaInfo* info,
   }
 
   // Get codec info
-  for (const AudioCodec& codec : send_codecs_) {
-    webrtc::RtpCodecParameters codec_params = codec.ToCodecParameters();
-    info->send_codecs.insert(
-        std::make_pair(codec_params.payload_type, std::move(codec_params)));
-  }
   for (const AudioCodec& codec : recv_codecs_) {
     webrtc::RtpCodecParameters codec_params = codec.ToCodecParameters();
     info->receive_codecs.insert(
