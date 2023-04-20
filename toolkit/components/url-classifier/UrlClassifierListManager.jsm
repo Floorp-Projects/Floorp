@@ -20,6 +20,10 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const minDelayMs = 5 * 60 * 1000;
 const maxDelayMs = 24 * 60 * 60 * 1000;
 const defaultUpdateIntervalMs = 30 * 60 * 1000;
+// The threshold to check if the browser is idle. We will defer the update in
+// order to save the power consumption if the browser has been idle for one hour
+// because it's likely that the browser will keep idle for a longer period.
+const browserIdleThresholdMs = 60 * 60 * 1000;
 const PREF_DEBUG_ENABLED = "browser.safebrowsing.debug";
 const PREF_TEST_NOTIFICATIONS =
   "browser.safebrowsing.test-notifications.enabled";
@@ -52,7 +56,6 @@ function PROT_ListManager() {
   loggingEnabled = Services.prefs.getBoolPref(PREF_DEBUG_ENABLED);
 
   log("Initializing list manager");
-  this.updateInterval = defaultUpdateIntervalMs;
 
   // A map of tableNames to objects of type
   // { updateUrl: <updateUrl>, gethashUrl: <gethashUrl> }
@@ -74,6 +77,10 @@ function PROT_ListManager() {
 
   this.dbService_ = Cc["@mozilla.org/url-classifier/dbservice;1"].getService(
     Ci.nsIUrlClassifierDBService
+  );
+
+  this.idleService_ = Cc["@mozilla.org/widget/useridleservice;1"].getService(
+    Ci.nsIUserIdleService
   );
 
   Services.obs.addObserver(this, "quit-application");
@@ -261,13 +268,32 @@ PROT_ListManager.prototype.setUpdateCheckTimer = function(updateUrl, delay) {
   this.updateCheckers_[updateUrl] = Cc["@mozilla.org/timer;1"].createInstance(
     Ci.nsITimer
   );
+
+  // A helper function to trigger the table update.
+  let update = function() {
+    if (!this.checkForUpdates(updateUrl)) {
+      // Make another attempt later.
+      this.setUpdateCheckTimer(updateUrl, defaultUpdateIntervalMs);
+    }
+  }.bind(this);
+
   this.updateCheckers_[updateUrl].initWithCallback(
     () => {
       this.updateCheckers_[updateUrl] = null;
-      if (updateUrl && !this.checkForUpdates(updateUrl)) {
-        // Make another attempt later.
-        this.setUpdateCheckTimer(updateUrl, this.updateInterval);
+      // Check if we are in the idle mode. We will stop the current update and
+      // defer it to the next user interaction active if the browser is
+      // considered in idle mode.
+      if (this.idleService_.idleTime > browserIdleThresholdMs) {
+        let observer = function() {
+          Services.obs.removeObserver(observer, "user-interaction-active");
+          update();
+        };
+
+        Services.obs.addObserver(observer, "user-interaction-active");
+        return;
       }
+
+      update();
     },
     delay,
     Ci.nsITimer.TYPE_ONE_SHOT
@@ -287,9 +313,9 @@ PROT_ListManager.prototype.kickoffUpdate_ = function() {
   for (var updateUrl in this.needsUpdate_) {
     // If we haven't already kicked off updates for this updateUrl, set a
     // non-repeating timer for it. The timer delay will be reset either on
-    // updateSuccess to this.updateInterval, or backed off on downloadError.
-    // Don't set the updateChecker unless at least one table has updates
-    // enabled.
+    // updateSuccess to the default update interval, or backed off on
+    // downloadError. Don't set the updateChecker unless at least one table has
+    // updates enabled.
     if (this.updatesNeeded_(updateUrl) && !this.updateCheckers_[updateUrl]) {
       let provider = null;
       Object.keys(this.tablesData).forEach(function(table) {
@@ -672,10 +698,10 @@ PROT_ListManager.prototype.updateSuccess_ = function(
   } else if (delay < minDelayMs) {
     log(
       "Ignoring delay from server (too short), waiting " +
-        Math.round(this.updateInterval / 60000) +
+        Math.round(defaultUpdateIntervalMs / 60000) +
         "min"
     );
-    delay = this.updateInterval;
+    delay = defaultUpdateIntervalMs;
   } else {
     log("Waiting " + Math.round(delay / 60000) + "min");
   }
@@ -737,7 +763,7 @@ PROT_ListManager.prototype.updateError_ = function(table, updateUrl, result) {
   );
   // There was some trouble applying the updates. Don't try again for at least
   // updateInterval milliseconds.
-  this.setUpdateCheckTimer(updateUrl, this.updateInterval);
+  this.setUpdateCheckTimer(updateUrl, defaultUpdateIntervalMs);
 
   Services.obs.notifyObservers(
     null,
@@ -759,7 +785,7 @@ PROT_ListManager.prototype.downloadError_ = function(table, updateUrl, status) {
   }
   status = parseInt(status, 10);
   this.requestBackoffs_[updateUrl].noteServerResponse(status);
-  var delay = this.updateInterval;
+  let delay = defaultUpdateIntervalMs;
   if (this.requestBackoffs_[updateUrl].isErrorStatus(status)) {
     // Schedule an update for when our backoff is complete
     delay = this.requestBackoffs_[updateUrl].nextRequestDelay();
