@@ -43,6 +43,7 @@ constexpr int kMinMicLevel = 12;
 constexpr int kClippedLevelStep = 15;
 constexpr float kClippedRatioThreshold = 0.1f;
 constexpr int kClippedWaitFrames = 300;
+constexpr float kLowSpeechProbability = 0.1f;
 constexpr float kHighSpeechProbability = 0.7f;
 constexpr float kSpeechLevelDbfs = -25.0f;
 
@@ -2112,5 +2113,72 @@ TEST_P(AgcManagerDirectParametrizedTest, NonEmptyRmsErrorOverrideHasEffect) {
   // getter.
   EXPECT_EQ(manager_1.voice_probability(), manager_2.voice_probability());
 }
+
+class AgcManagerDirectChannelSampleRateTest
+    : public ::testing::TestWithParam<std::tuple<int, int>> {
+ protected:
+  int GetNumChannels() const { return std::get<0>(GetParam()); }
+  int GetSampleRateHz() const { return std::get<1>(GetParam()); }
+};
+
+TEST_P(AgcManagerDirectChannelSampleRateTest, CheckIsAlive) {
+  const int num_channels = GetNumChannels();
+  const int sample_rate_hz = GetSampleRateHz();
+
+  constexpr AnalogAgcConfig kConfig{.enabled = true,
+                                    .clipping_predictor{.enabled = true}};
+  AgcManagerDirect manager(num_channels, kConfig);
+  manager.Initialize();
+  AudioBuffer buffer(sample_rate_hz, num_channels, sample_rate_hz, num_channels,
+                     sample_rate_hz, num_channels);
+
+  constexpr int kStartupVolume = 100;
+  int applied_initial_volume = kStartupVolume;
+
+  // Trigger a downward adaptation with clipping.
+  WriteAudioBufferSamples(/*samples_value=*/0.0f, /*clipped_ratio=*/0.5f,
+                          buffer);
+  const int initial_volume1 = applied_initial_volume;
+  for (int i = 0; i < 400; ++i) {
+    manager.set_stream_analog_level(applied_initial_volume);
+    manager.AnalyzePreProcess(buffer);
+    manager.Process(buffer, kLowSpeechProbability,
+                    /*speech_level_dbfs=*/-20.0f);
+    applied_initial_volume = manager.recommended_analog_level();
+  }
+  ASSERT_LT(manager.recommended_analog_level(), initial_volume1);
+
+  // Fill in audio that does not clip.
+  WriteAudioBufferSamples(/*samples_value=*/1234.5f, /*clipped_ratio=*/0.0f,
+                          buffer);
+
+  // Trigger an upward adaptation.
+  const int initial_volume2 = manager.recommended_analog_level();
+  for (int i = 0; i < kConfig.clipped_wait_frames; ++i) {
+    manager.set_stream_analog_level(applied_initial_volume);
+    manager.AnalyzePreProcess(buffer);
+    manager.Process(buffer, kHighSpeechProbability,
+                    /*speech_level_dbfs=*/-65.0f);
+    applied_initial_volume = manager.recommended_analog_level();
+  }
+  EXPECT_GT(manager.recommended_analog_level(), initial_volume2);
+
+  // Trigger a downward adaptation.
+  const int initial_volume = manager.recommended_analog_level();
+  for (int i = 0; i < 100; ++i) {
+    manager.set_stream_analog_level(applied_initial_volume);
+    manager.AnalyzePreProcess(buffer);
+    manager.Process(buffer, kHighSpeechProbability,
+                    /*speech_level_dbfs=*/-5.0f);
+    applied_initial_volume = manager.recommended_analog_level();
+  }
+  EXPECT_LT(manager.recommended_analog_level(), initial_volume);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    ,
+    AgcManagerDirectChannelSampleRateTest,
+    ::testing::Combine(::testing::Values(1, 2, 3, 6),
+                       ::testing::Values(8000, 16000, 32000, 48000)));
 
 }  // namespace webrtc
