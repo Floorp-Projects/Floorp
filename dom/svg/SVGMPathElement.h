@@ -47,10 +47,6 @@ class SVGMPathElement final : public SVGMPathElementBase,
   void UnbindFromTree(bool aNullParent) override;
 
   // Element specializations
-  bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                      const nsAString& aValue,
-                      nsIPrincipal* aMaybeScriptedPrincipal,
-                      nsAttrValue& aResult) override;
   nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                         const nsAttrValue* aValue, const nsAttrValue* aOldValue,
                         nsIPrincipal* aMaybeScriptedPrincipal,
