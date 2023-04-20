@@ -189,10 +189,10 @@ class alignas(16) Instance {
   // Pointer that should be freed (due to padding before the Instance).
   void* allocatedBase_;
 
-  // The globalArea must be the last field.  Globals for the module start here
+  // The data must be the last field.  Globals for the module start here
   // and are inline in this structure.  16-byte alignment is required for SIMD
   // data.
-  MOZ_ALIGNED_DECL(16, char globalArea_);
+  MOZ_ALIGNED_DECL(16, char data_);
 
   // Internal helpers:
   TypeDefInstanceData* typeDefInstanceData(uint32_t typeIndex) const;
@@ -215,7 +215,7 @@ class alignas(16) Instance {
 
  public:
   static Instance* create(JSContext* cx, Handle<WasmInstanceObject*> object,
-                          const SharedCode& code, uint32_t globalDataLength,
+                          const SharedCode& code, uint32_t instanceDataLength,
                           Handle<WasmMemoryObject*> memory,
                           SharedTableVector&& tables,
                           UniqueDebugState maybeDebug);
@@ -290,11 +290,9 @@ class alignas(16) Instance {
   static constexpr size_t offsetOfDebugFilter() {
     return offsetof(Instance, debugFilter_);
   }
-  static constexpr size_t offsetOfGlobalArea() {
-    return offsetof(Instance, globalArea_);
-  }
-  static constexpr size_t offsetInGlobalArea(size_t offset) {
-    return offsetOfGlobalArea() + offset;
+  static constexpr size_t offsetOfData() { return offsetof(Instance, data_); }
+  static constexpr size_t offsetInData(size_t offset) {
+    return offsetOfData() + offset;
   }
 
   JSContext* cx() const { return cx_; }
@@ -303,7 +301,7 @@ class alignas(16) Instance {
   JS::Realm* realm() const { return realm_; }
   bool debugEnabled() const { return !!maybeDebug_; }
   DebugState& debug() { return *maybeDebug_; }
-  uint8_t* globalData() const { return (uint8_t*)&globalArea_; }
+  uint8_t* data() const { return (uint8_t*)&data_; }
   const SharedTableVector& tables() const { return tables_; }
   SharedMem<uint8_t*> memoryBase() const;
   WasmMemoryObject* memory() const;

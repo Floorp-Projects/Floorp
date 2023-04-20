@@ -5178,12 +5178,14 @@ bool MAsmJSLoadHeap::congruentTo(const MDefinition* ins) const {
   return load->accessType() == accessType() && congruentIfOperandsEqual(load);
 }
 
-MDefinition::AliasType MWasmLoadGlobalVar::mightAlias(
+MDefinition::AliasType MWasmLoadInstanceDataField::mightAlias(
     const MDefinition* def) const {
-  if (def->isWasmStoreGlobalVar()) {
-    const MWasmStoreGlobalVar* store = def->toWasmStoreGlobalVar();
-    return store->globalDataOffset() == globalDataOffset_ ? AliasType::MayAlias
-                                                          : AliasType::NoAlias;
+  if (def->isWasmStoreInstanceDataField()) {
+    const MWasmStoreInstanceDataField* store =
+        def->toWasmStoreInstanceDataField();
+    return store->instanceDataOffset() == instanceDataOffset_
+               ? AliasType::MayAlias
+               : AliasType::NoAlias;
   }
 
   return AliasType::MayAlias;
@@ -5207,23 +5209,23 @@ MDefinition::AliasType MWasmLoadGlobalCell::mightAlias(
   return AliasType::MayAlias;
 }
 
-HashNumber MWasmLoadGlobalVar::valueHash() const {
-  // Same comment as in MWasmLoadGlobalVar::congruentTo() applies here.
+HashNumber MWasmLoadInstanceDataField::valueHash() const {
+  // Same comment as in MWasmLoadInstanceDataField::congruentTo() applies here.
   HashNumber hash = MDefinition::valueHash();
-  hash = addU32ToHash(hash, globalDataOffset_);
+  hash = addU32ToHash(hash, instanceDataOffset_);
   return hash;
 }
 
-bool MWasmLoadGlobalVar::congruentTo(const MDefinition* ins) const {
-  if (!ins->isWasmLoadGlobalVar()) {
+bool MWasmLoadInstanceDataField::congruentTo(const MDefinition* ins) const {
+  if (!ins->isWasmLoadInstanceDataField()) {
     return false;
   }
 
-  const MWasmLoadGlobalVar* other = ins->toWasmLoadGlobalVar();
+  const MWasmLoadInstanceDataField* other = ins->toWasmLoadInstanceDataField();
 
   // We don't need to consider the isConstant_ markings here, because
   // equivalence of offsets implies equivalence of constness.
-  bool sameOffsets = globalDataOffset_ == other->globalDataOffset_;
+  bool sameOffsets = instanceDataOffset_ == other->instanceDataOffset_;
   MOZ_ASSERT_IF(sameOffsets, isConstant_ == other->isConstant_);
 
   // We omit checking congruence of the operands.  There is only one
@@ -5233,17 +5235,18 @@ bool MWasmLoadGlobalVar::congruentTo(const MDefinition* ins) const {
   return sameOffsets /* && congruentIfOperandsEqual(other) */;
 }
 
-MDefinition* MWasmLoadGlobalVar::foldsTo(TempAllocator& alloc) {
-  if (!dependency() || !dependency()->isWasmStoreGlobalVar()) {
+MDefinition* MWasmLoadInstanceDataField::foldsTo(TempAllocator& alloc) {
+  if (!dependency() || !dependency()->isWasmStoreInstanceDataField()) {
     return this;
   }
 
-  MWasmStoreGlobalVar* store = dependency()->toWasmStoreGlobalVar();
+  MWasmStoreInstanceDataField* store =
+      dependency()->toWasmStoreInstanceDataField();
   if (!store->block()->dominates(block())) {
     return this;
   }
 
-  if (store->globalDataOffset() != globalDataOffset()) {
+  if (store->instanceDataOffset() != instanceDataOffset()) {
     return this;
   }
 
