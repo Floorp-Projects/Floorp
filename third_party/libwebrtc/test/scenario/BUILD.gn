@@ -130,6 +130,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../../rtc_base",
       "../../rtc_base:checks",
       "../../rtc_base:copy_on_write_buffer",
+      "../../rtc_base:net_helper",
       "../../rtc_base:refcount",
       "../../rtc_base:rtc_base_tests_utils",
       "../../rtc_base:rtc_event",

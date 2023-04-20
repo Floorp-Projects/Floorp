@@ -34,10 +34,10 @@ index aba72cd52a..1ddf083173 100644
        deps += [
          "api",
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index 132a842243..a34602cae8 100644
+index 6088f00981..3872dc37c5 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
-@@ -352,6 +352,16 @@ rtc_library("call") {
+@@ -354,6 +354,16 @@ rtc_library("call") {
      "//third_party/abseil-cpp/absl/strings",
      "//third_party/abseil-cpp/absl/types:optional",
    ]
@@ -55,10 +55,10 @@ index 132a842243..a34602cae8 100644
  
  rtc_source_set("receive_stream_interface") {
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index a5255834bc..120e411772 100644
+index 71404878b9..24025ca2be 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
-@@ -433,7 +433,10 @@ rtc_library("rtc_internal_video_codecs") {
+@@ -446,7 +446,10 @@ rtc_library("rtc_internal_video_codecs") {
      "../test:fake_video_codecs",
    ]
    if (build_with_mozilla) {
@@ -70,7 +70,7 @@ index a5255834bc..120e411772 100644
    }
  
    if (enable_libaom) {
-@@ -468,6 +471,8 @@ rtc_library("rtc_internal_video_codecs") {
+@@ -481,6 +484,8 @@ rtc_library("rtc_internal_video_codecs") {
      sources -= [
        "engine/fake_video_codec_factory.cc",
        "engine/fake_video_codec_factory.h",
@@ -152,7 +152,7 @@ index 7a097fad17..13a8c67e67 100644
      testonly = true
  
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index ee7932aefa..4933b3c5ab 100644
+index 6fd0c8463b..7089841fdb 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -283,6 +283,7 @@ rtc_library("sample_counter") {

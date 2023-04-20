@@ -927,6 +927,7 @@ if (rtc_include_tests) {
       "../rtc_base:task_queue_for_test",
       "../rtc_base:threading",
       "../rtc_base:timeutils",
+      "../rtc_base:unique_id_generator",
       "../rtc_base/containers:flat_map",
       "../rtc_base/experiments:alr_experiment",
       "../rtc_base/experiments:encoder_info_settings",

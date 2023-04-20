@@ -188,6 +188,7 @@ if (is_ios || is_mac) {
         ":helpers_objc",
         "../rtc_base",
         "../rtc_base:checks",
+        "../rtc_base:log_sinks",
         "../rtc_base:logging",
       ]
 
@@ -209,6 +210,8 @@ if (is_ios || is_mac) {
         ":base_objc",
         "../rtc_base",
         "../rtc_base:checks",
+        "../rtc_base:file_rotating_stream",
+        "../rtc_base:log_sinks",
         "../rtc_base:logging",
       ]
 
@@ -1103,7 +1106,9 @@ if (is_ios || is_mac) {
         "../rtc_base:event_tracer",
         "../rtc_base:logging",
         "../rtc_base:network_constants",
+        "../rtc_base:rtc_certificate_generator",
         "../rtc_base:safe_conversions",
+        "../rtc_base:ssl",
         "../rtc_base:stringutils",
         "../rtc_base:threading",
         "../rtc_base:timeutils",
@@ -1615,6 +1620,7 @@ if (is_ios || is_mac) {
         "../rtc_base",
         "../rtc_base:buffer",
         "../rtc_base:logging",
+        "../rtc_base:ssl",
         "../rtc_base:threading",
       ]
       if (is_ios) {

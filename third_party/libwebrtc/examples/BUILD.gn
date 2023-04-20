@@ -637,6 +637,7 @@ if (is_ios || (is_mac && target_cpu != "x86")) {
           ":AppRTCMobile_lib",
           ":apprtc_signaling",
           "../rtc_base",
+          "../rtc_base:ssl",
           "../sdk:mediaconstraints_objc",
           "../sdk:peerconnectionfactory_base_objc",
           "../sdk:videocapture_objc",
@@ -708,6 +709,8 @@ if (is_linux || is_chromeos || is_win) {
       "../rtc_base:macromagic",
       "../rtc_base:net_helpers",
       "../rtc_base:refcount",
+      "../rtc_base:rtc_certificate_generator",
+      "../rtc_base:ssl",
       "../rtc_base:stringutils",
       "../rtc_base:threading",
       "../rtc_base/third_party/sigslot",
@@ -729,6 +732,7 @@ if (is_linux || is_chromeos || is_win) {
       deps += [
         "../media:rtc_media_base",
         "../rtc_base:win32",
+        "../rtc_base:win32_socket_init",
       ]
     }
     if (is_linux || is_chromeos) {
@@ -800,6 +804,7 @@ if (is_linux || is_chromeos || is_win) {
       "../p2p:rtc_p2p",
       "../pc:rtc_pc",
       "../rtc_base",
+      "../rtc_base:async_udp_socket",
       "../rtc_base:ip_address",
       "../rtc_base:socket_address",
       "../rtc_base:socket_server",
@@ -815,6 +820,7 @@ if (is_linux || is_chromeos || is_win) {
       "../p2p:rtc_p2p",
       "../pc:rtc_pc",
       "../rtc_base",
+      "../rtc_base:async_udp_socket",
       "../rtc_base:socket_address",
       "../rtc_base:socket_server",
       "../rtc_base:threading",
@@ -865,6 +871,7 @@ if (is_win || is_android) {
       "../pc:libjingle_peerconnection",
       "../pc:video_track_source",
       "../rtc_base",
+      "../rtc_base:ssl",
       "../test:platform_video_capturer",
       "../test:video_test_common",
       "//third_party/abseil-cpp/absl/memory",
@@ -941,7 +948,9 @@ if (!build_with_chromium) {
       "../rtc_base",
       "../rtc_base:checks",
       "../rtc_base:logging",
+      "../rtc_base:network",
       "../rtc_base:socket_address",
+      "../rtc_base:ssl",
       "../rtc_base:threading",
       "../rtc_base:timeutils",
       "../test:scoped_key_value_config",
