@@ -1,0 +1,36 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Worker Import failure (Bug 1824498)</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1824498">
+Worker Import failure test: Bug 1824498
+</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+document.addEventListener("DOMContentLoaded", () => {
+  const worker = new Worker("worker_bug1824498.mjs", {"type": "module"})
+  worker.onerror = function(event) {
+    ok(true, "not assert");
+    SimpleTest.finish();
+  };
+});
+
+</script>
+</pre>
+</body>
+</html>
