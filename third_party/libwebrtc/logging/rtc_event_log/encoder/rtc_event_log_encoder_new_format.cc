@@ -883,6 +883,10 @@ std::string RtcEventLogEncoderNewFormat::EncodeBatch(
           // and stopping the log, and only as part of version 3 of the format.
           RTC_DCHECK_NOTREACHED();
           break;
+        case RtcEvent::Type::FakeEvent:
+          // Fake event used for unit test.
+          RTC_DCHECK_NOTREACHED();
+          break;
       }
     }
 

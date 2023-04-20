@@ -33,12 +33,25 @@ namespace webrtc {
 
 class RtcEventLogImpl final : public RtcEventLog {
  public:
-  RtcEventLogImpl(EncodingType encoding_type,
-                  TaskQueueFactory* task_queue_factory);
+  // The max number of events that the history can store.
+  static constexpr size_t kMaxEventsInHistory = 10000;
+  // The max number of events that the config history can store.
+  // The config-history is supposed to be unbounded, but needs to have some
+  // bound to prevent an attack via unreasonable memory use.
+  static constexpr size_t kMaxEventsInConfigHistory = 1000;
+
+  RtcEventLogImpl(
+      std::unique_ptr<RtcEventLogEncoder> encoder,
+      TaskQueueFactory* task_queue_factory,
+      size_t max_events_in_history = kMaxEventsInHistory,
+      size_t max_config_events_in_history = kMaxEventsInConfigHistory);
   RtcEventLogImpl(const RtcEventLogImpl&) = delete;
   RtcEventLogImpl& operator=(const RtcEventLogImpl&) = delete;
 
   ~RtcEventLogImpl() override;
+
+  static std::unique_ptr<RtcEventLogEncoder> CreateEncoder(
+      EncodingType encoding_type);
 
   // TODO(eladalon): We should change these name to reflect that what we're
   // actually starting/stopping is the output of the log, not the log itself.
@@ -63,6 +76,12 @@ class RtcEventLogImpl final : public RtcEventLog {
   void StopLoggingInternal() RTC_RUN_ON(task_queue_);
 
   void ScheduleOutput() RTC_RUN_ON(task_queue_);
+
+  // Max size of event history.
+  const size_t max_events_in_history_;
+
+  // Max size of config event history.
+  const size_t max_config_events_in_history_;
 
   // History containing all past configuration events.
   std::deque<std::unique_ptr<RtcEvent>> config_history_
