@@ -1116,10 +1116,10 @@ index 8166de82b2..252b54377d 100644
    }
  }
 diff --git a/modules/rtp_rtcp/source/rtp_packet_unittest.cc b/modules/rtp_rtcp/source/rtp_packet_unittest.cc
-index 8a82e98d76..58dbd76425 100644
+index 1d51d75662..41bc114efb 100644
 --- a/modules/rtp_rtcp/source/rtp_packet_unittest.cc
 +++ b/modules/rtp_rtcp/source/rtp_packet_unittest.cc
-@@ -119,6 +119,18 @@ constexpr uint8_t kPacketWithMid[] = {
+@@ -121,6 +121,18 @@ constexpr uint8_t kPacketWithMid[] = {
      0xbe, 0xde, 0x00, 0x01,
      0xb2, 'm', 'i', 'd'};
  
@@ -1138,7 +1138,7 @@ index 8a82e98d76..58dbd76425 100644
  constexpr uint32_t kCsrcs[] = {0x34567890, 0x32435465};
  constexpr uint8_t kPayload[] = {'p', 'a', 'y', 'l', 'o', 'a', 'd'};
  constexpr uint8_t kPacketPaddingSize = 8;
-@@ -383,6 +395,24 @@ TEST(RtpPacketTest, FailsToSetUnregisteredExtension) {
+@@ -385,6 +397,24 @@ TEST(RtpPacketTest, FailsToSetUnregisteredExtension) {
    EXPECT_EQ(packet.GetExtension<TransportSequenceNumber>(), absl::nullopt);
  }
  
