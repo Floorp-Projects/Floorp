@@ -57,14 +57,8 @@ if [ "x$MOZ_CONFIG_PATH" = "x" ]; then
 fi
 
 if [ ! -f $MOZ_CONFIG_PATH ]; then
-  echo ""
-  echo "Missing $MOZ_CONFIG_PATH"
-  echo "Please copy $SCRIPT_DIR/example_config_env"
-  echo "and edit (at least) MOZ_LIBWEBRTC_SRC to match your environment."
-  echo ""
-  echo "cp $SCRIPT_DIR/example_config_env $MOZ_CONFIG_PATH"
-  echo ""
-  exit 1
+  echo "Creating default config file at $MOZ_CONFIG_PATH"
+  cp $SCRIPT_DIR/example_config_env $MOZ_CONFIG_PATH
 fi
 source $MOZ_CONFIG_PATH
 
