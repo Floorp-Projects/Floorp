@@ -37,10 +37,10 @@ index 30e090db2a..8cda62b0fa 100644
    configuration.outgoing_transport = rtp_transport;
  
 diff --git a/call/call.cc b/call/call.cc
-index 3b2283d8da..f8d590ecea 100644
+index 218505cdea..c32705585f 100644
 --- a/call/call.cc
 +++ b/call/call.cc
-@@ -485,12 +485,14 @@ std::string Call::Stats::ToString(int64_t time_ms) const {
+@@ -494,12 +494,14 @@ std::string Call::Stats::ToString(int64_t time_ms) const {
    return ss.str();
  }
  
@@ -78,7 +78,7 @@ index 380e80ce12..253f8cd7de 100644
  
  std::unique_ptr<CallFactoryInterface> CreateCallFactory() {
 diff --git a/call/degraded_call.cc b/call/degraded_call.cc
-index c59a63ba69..e381d83b94 100644
+index 445a1e90c2..e7f80d4f50 100644
 --- a/call/degraded_call.cc
 +++ b/call/degraded_call.cc
 @@ -176,6 +176,7 @@ DegradedCall::ThreadedPacketReceiver::DeliverPacket(

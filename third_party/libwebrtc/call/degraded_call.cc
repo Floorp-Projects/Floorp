@@ -416,6 +416,11 @@ PacketReceiver::DeliveryStatus DegradedCall::DeliverPacket(
   return status;
 }
 
+void DegradedCall::DeliverRtcpPacket(rtc::CopyOnWriteBuffer packet) {
+  receive_pipe_->DeliverRtcpPacket(std::move(packet));
+  receive_pipe_->Process();
+}
+
 void DegradedCall::SetClientBitratePreferences(
     const webrtc::BitrateSettings& preferences) {
   call_->SetClientBitratePreferences(preferences);
