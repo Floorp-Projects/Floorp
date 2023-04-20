@@ -111,4 +111,15 @@ extern JS_PUBLIC_API bool JS_ParseJSONWithReviver(
     JSContext* cx, JS::Handle<JSString*> str, JS::Handle<JS::Value> reviver,
     JS::MutableHandle<JS::Value> vp);
 
+namespace JS {
+
+/**
+ * Returns true if the given text is valid JSON.
+ */
+extern JS_PUBLIC_API bool IsValidJSON(const JS::Latin1Char* chars,
+                                      uint32_t len);
+extern JS_PUBLIC_API bool IsValidJSON(const char16_t* chars, uint32_t len);
+
+}  // namespace JS
+
 #endif /* js_JSON_h */

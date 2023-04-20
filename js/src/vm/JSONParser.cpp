@@ -29,6 +29,7 @@
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/GCVector.h"              // JS::GCVector
 #include "js/Id.h"                    // jsid
+#include "js/JSON.h"                  // JS::IsValidJSON
 #include "js/RootingAPI.h"  // JS::Handle, JS::MutableHandle, MutableWrappedPtrOperations
 #include "js/TypeDecls.h"  // Latin1Char
 #include "js/Utility.h"    // js_delete
@@ -1081,3 +1082,25 @@ template class js::JSONPerHandlerParser<char16_t,
 
 template class js::JSONSyntaxParser<Latin1Char>;
 template class js::JSONSyntaxParser<char16_t>;
+
+template <typename CharT>
+static bool IsValidJSONImpl(const CharT* chars, uint32_t len) {
+  FrontendContext fc;
+
+  JSONSyntaxParser<CharT> parser(&fc, mozilla::Range(chars, len));
+  if (!parser.parse()) {
+    MOZ_ASSERT(fc.hadErrors());
+    return false;
+  }
+  MOZ_ASSERT(!fc.hadErrors());
+
+  return true;
+}
+
+JS_PUBLIC_API bool JS::IsValidJSON(const JS::Latin1Char* chars, uint32_t len) {
+  return IsValidJSONImpl(chars, len);
+}
+
+JS_PUBLIC_API bool JS::IsValidJSON(const char16_t* chars, uint32_t len) {
+  return IsValidJSONImpl(chars, len);
+}
