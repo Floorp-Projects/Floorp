@@ -485,6 +485,7 @@ rtc_library("rtc_audio_video") {
   deps = [
     ":codec",
     ":media_channel",
+    ":media_channel_impl",
     ":media_constants",
     ":rtc_media_base",
     ":rtp_utils",

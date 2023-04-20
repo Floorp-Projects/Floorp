@@ -74,11 +74,6 @@ class MediaChannel : public MediaSendChannelInterface,
                         bool enable_dscp = false);
   virtual ~MediaChannel();
 
-  // Downcasting to the implemented interfaces.
-  MediaSendChannelInterface* AsSendChannel() { return this; }
-
-  MediaReceiveChannelInterface* AsReceiveChannel() { return this; }
-
   // Downcasting to the subclasses.
   virtual VideoMediaChannel* AsVideoChannel() {
     RTC_CHECK_NOTREACHED();
