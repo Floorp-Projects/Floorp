@@ -124,26 +124,6 @@ enum class JSONParserState {
 // methods that can be shared between the two encodings.
 class MOZ_STACK_CLASS JSONFullParseHandlerAnyChar {
  public:
-  enum class ParseType {
-    // Parsing a string as if by JSON.parse.
-    JSONParse,
-    // Parsing what may or may not be JSON in a string of eval code.
-    // In this case, a failure to parse indicates either syntax that isn't JSON,
-    // or syntax that has different semantics in eval code than in JSON.
-    AttemptForEval,
-  };
-
- public:
-  /* Data members */
-
-  JSContext* cx;
-
-  Value v;
-
- protected:
-  const ParseType parseType;
-
- public:
   // State related to the parser's current position. At all points in the
   // parse this keeps track of the stack of arrays and objects which have
   // been started but not finished yet. The actual JS object is not
@@ -153,11 +133,20 @@ class MOZ_STACK_CLASS JSONFullParseHandlerAnyChar {
 
   // State for an array that is currently being parsed. This includes all
   // elements that have been seen so far.
-  typedef GCVector<Value, 20> ElementVector;
+  using ElementVector = GCVector<Value, 20>;
 
   // State for an object that is currently being parsed. This includes all
   // the key/value pairs that have been seen so far.
-  typedef GCVector<IdValuePair, 10> PropertyVector;
+  using PropertyVector = GCVector<IdValuePair, 10>;
+
+  enum class ParseType {
+    // Parsing a string as if by JSON.parse.
+    JSONParse,
+    // Parsing what may or may not be JSON in a string of eval code.
+    // In this case, a failure to parse indicates either syntax that isn't JSON,
+    // or syntax that has different semantics in eval code than in JSON.
+    AttemptForEval,
+  };
 
   // Stack element for an in progress array or object.
   struct StackEntry {
@@ -182,6 +171,16 @@ class MOZ_STACK_CLASS JSONFullParseHandlerAnyChar {
    private:
     void* vector;
   };
+
+ public:
+  /* Data members */
+
+  JSContext* cx;
+
+  Value v;
+
+ protected:
+  const ParseType parseType;
 
  private:
   // Unused element and property vectors for previous in progress arrays and
