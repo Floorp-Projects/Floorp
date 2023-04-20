@@ -539,6 +539,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../rtc_base:checks",
       "../rtc_base:event_tracer",
       "../rtc_base:logging",
+      "../rtc_base:ssl",
       "../rtc_base:threading",
       "../system_wrappers:field_trial",
       "../system_wrappers:metrics",
@@ -549,6 +550,10 @@ if (rtc_include_tests && !build_with_chromium) {
       "//third_party/abseil-cpp/absl/strings:strings",
       "//third_party/abseil-cpp/absl/types:optional",
     ]
+
+    if (is_win) {
+      deps += [ "../rtc_base:win32_socket_init" ]
+    }
   }
 
   rtc_library("test_main") {

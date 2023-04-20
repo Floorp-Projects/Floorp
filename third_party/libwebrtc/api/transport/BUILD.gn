@@ -102,10 +102,12 @@ if (!build_with_mozilla) {
     "../../rtc_base:byte_buffer",
     "../../rtc_base:byte_order",
     "../../rtc_base:checks",
+    "../../rtc_base:crc32",
     "../../rtc_base:ip_address",
     "../../rtc_base:logging",
     "../../rtc_base:rtc_base",
     "../../rtc_base:socket_address",
+    "../../rtc_base:ssl",
     "../../system_wrappers:metrics",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
