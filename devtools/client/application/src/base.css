@@ -62,7 +62,7 @@ ul {
 
 a {
   color: var(--theme-highlight-blue);
-  text-decoration: none;
+  text-decoration: underline;
   cursor: pointer;
 }
 
