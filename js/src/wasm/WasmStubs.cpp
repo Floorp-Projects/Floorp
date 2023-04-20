@@ -2286,8 +2286,10 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
 
   // 2.1. Get the callee. This must be a JSFunction if we're using this JIT
   // exit.
-  masm.loadWasmGlobalPtr(
-      fi.instanceOffset() + offsetof(FuncImportInstanceData, callable), callee);
+  masm.loadPtr(Address(InstanceReg,
+                       Instance::offsetInGlobalArea(
+                           fi.instanceOffset() +
+                           offsetof(FuncImportInstanceData, callable))), callee);
 
   // 2.2. Save callee.
   masm.storePtr(callee, Address(masm.getStackPointer(), calleeArgOffset));
