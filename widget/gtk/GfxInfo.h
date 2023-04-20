@@ -80,6 +80,7 @@ class GfxInfo final : public GfxInfoBase {
                                      const nsAString& aDriverVendor) override;
 
  private:
+  bool mInitialized = false;
   nsCString mVendorId;
   nsCString mDeviceId;
   nsCString mDriverVendor;

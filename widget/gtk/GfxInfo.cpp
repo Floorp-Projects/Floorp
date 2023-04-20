@@ -42,7 +42,6 @@
 
 #define VAAPI_PROBE_BINARY u"vaapitest"_ns
 
-#define EXIT_STATUS_BUFFER_TOO_SMALL 2
 #ifdef DEBUG
 bool fire_glxtest_process();
 #endif
@@ -104,96 +103,96 @@ void GfxInfo::AddCrashReportAnnotations() {
   }
 }
 
-void GfxInfo::GetData() {
-  GfxInfoBase::GetData();
+static bool MakeFdNonBlocking(int fd) {
+  return fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK) != -1;
+}
 
-  // to understand this function, see bug 639842. We retrieve the OpenGL driver
-  // information in a separate process to protect against bad drivers.
+static bool ManageChildProcess(int* aPID, int* aPipe, int aTimeout,
+                               char** aData) {
+  GIOChannel* channel = nullptr;
+  *aData = nullptr;
 
-  // if glxtest_pipe == -1, that means that we already read the information
-  if (glxtest_pipe == -1) {
-    return;
-  }
-
-  const TimeStamp deadline =
-      TimeStamp::Now() + TimeDuration::FromMilliseconds(GFX_TEST_TIMEOUT);
-
-  enum { buf_size = 2048 };
-  char buf[buf_size];
-  ssize_t bytesread = 0;
+  auto free = mozilla::MakeScopeExit([&] {
+    if (channel) {
+      g_io_channel_unref(channel);
+    }
+    if (*aPipe >= 0) {
+      close(*aPipe);
+      *aPipe = -1;
+    }
+    if (*aPID) {
+      int status;
+      waitpid(*aPID, &status, WNOHANG);
+      *aPID = 0;
+    }
+  });
 
   struct pollfd pfd {};
-  pfd.fd = glxtest_pipe;
+  pfd.fd = *aPipe;
   pfd.events = POLLIN;
-  auto ret = poll(&pfd, 1, GFX_TEST_TIMEOUT);
+  auto ret = poll(&pfd, 1, aTimeout);
   if (ret <= 0) {
-    gfxCriticalNote << "glxtest: failed to read data from glxtest, we may "
-                       "fallback to software rendering\n";
-  } else {
-    // -1 because we'll append a zero
-    bytesread = read(glxtest_pipe, &buf, buf_size - 1);
-  }
-  close(glxtest_pipe);
-  glxtest_pipe = -1;
-
-  // bytesread < 0 would mean that the above read() call failed.
-  // This should never happen. If it did, the outcome would be to blocklist
-  // anyway.
-  if (bytesread < 0) {
-    bytesread = 0;
-  } else if (bytesread == buf_size - 1) {
-    gfxCriticalNote << "glxtest: read from pipe exceeded buffer size";
+    gfxCriticalNote << "glxtest: poll failed: " << strerror(errno) << "\n";
+    return false;
   }
 
-  // let buf be a zero-terminated string
-  buf[bytesread] = 0;
+  channel = g_io_channel_unix_new(*aPipe);
+  MakeFdNonBlocking(*aPipe);
 
-  // Wait for the glxtest process to finish. This serves 2 purposes:
-  // * avoid having a zombie glxtest process laying around
-  // * get the glxtest process status info.
-  int glxtest_status = 0;
-  bool wait_for_glxtest_process = true;
-  bool waiting_for_glxtest_process_failed = false;
-  int waitpid_errno = 0;
-  while (wait_for_glxtest_process) {
-    wait_for_glxtest_process = false;
-    if (waitpid(glxtest_pid, &glxtest_status, WNOHANG) == -1) {
-      waitpid_errno = errno;
-      if (waitpid_errno == EAGAIN || waitpid_errno == EINTR) {
-        wait_for_glxtest_process = true;
-      } else {
-        // Bug 718629
-        // ECHILD happens when the glxtest process got reaped after a
-        // PR_CreateProcess as per bug 227246. This shouldn't matter, as we
-        // still seem to get the data from the pipe, and if we didn't, the
-        // outcome would be to blocklist anyway.
-        waiting_for_glxtest_process_failed = (waitpid_errno != ECHILD);
-      }
-    }
-    if (wait_for_glxtest_process) {
-      if (TimeStamp::Now() > deadline) {
-        gfxCriticalNote << "glxtest: glxtest process hangs\n";
-        waiting_for_glxtest_process_failed = true;
-        break;
-      }
-      // Wait 100ms to another waitpid() check.
-      usleep(100000);
-    }
+  GUniquePtr<GError> error;
+  gsize length;
+  do {
+    error = nullptr;
+    ret = g_io_channel_read_to_end(channel, aData, &length,
+                                   getter_Transfers(error));
+  } while (ret == G_IO_STATUS_AGAIN);
+  if (error) {
+    gfxCriticalNote << "glxtest: failed to read data from child process: "
+                    << error->message << "\n";
+    return false;
+  }
+  if (!length) {
+    gfxCriticalNote
+        << "glxtest: failed to read data from child process, length = 0\n";
+    return false;
   }
 
-  int exit_code = EXIT_FAILURE;
-  bool exited_with_error_code = false;
-  if (!waiting_for_glxtest_process_failed && WIFEXITED(glxtest_status)) {
-    exit_code = WEXITSTATUS(glxtest_status);
-    exited_with_error_code = exit_code != EXIT_SUCCESS;
+  int status = 0;
+  int pid = *aPID;
+  *aPID = 0;
+  ret = waitpid(pid, &status, WNOHANG);
+  if (ret < 0) {
+    gfxCriticalNote << "glxtest: waitpid failed: " << strerror(errno) << "\n";
+    return false;
   }
 
-  bool received_signal =
-      !waiting_for_glxtest_process_failed && WIFSIGNALED(glxtest_status);
+  if (WEXITSTATUS(status) != EXIT_SUCCESS) {
+    gfxCriticalNote << "glxtest: waitpid failed, status " << WEXITSTATUS(status)
+                    << "\n";
+    return false;
+  }
 
-  bool error = waiting_for_glxtest_process_failed || exited_with_error_code ||
-               received_signal;
-  bool errorLog = false;
+  return true;
+}
+
+// to understand this function, see bug 639842. We retrieve the OpenGL driver
+// information in a separate process to protect against bad drivers.
+void GfxInfo::GetData() {
+  if (mInitialized) {
+    return;
+  }
+  mInitialized = true;
+
+  GfxInfoBase::GetData();
+
+  char* glxData = nullptr;
+  auto free = mozilla::MakeScopeExit([&] { g_free((void*)glxData); });
+
+  bool error = !ManageChildProcess(&glxtest_pid, &glxtest_pipe,
+                                   GFX_TEST_TIMEOUT, &glxData);
+  if (error) {
+    gfxCriticalNote << "glxtest: ManageChildProcess failed\n";
+  }
 
   nsCString glVendor;
   nsCString glRenderer;
@@ -218,8 +217,10 @@ void GfxInfo::GetData() {
 
   nsCString* stringToFill = nullptr;
   bool logString = false;
+  bool errorLog = false;
 
-  char* bufptr = buf;
+  char* bufptr = glxData;
+
   while (true) {
     char* line = NS_strtok("\n", &bufptr);
     if (!line) break;
@@ -435,14 +436,14 @@ void GfxInfo::GetData() {
   // If we still don't have a vendor ID, we can try the PCI vendor list.
   if (mVendorId.IsEmpty()) {
     if (pciVendors.IsEmpty()) {
-      gfxCriticalNote << "No GPUs detected via PCI";
+      gfxCriticalNote << "No GPUs detected via PCI\n";
     } else {
       for (size_t i = 0; i < pciVendors.Length(); ++i) {
         if (mVendorId.IsEmpty()) {
           mVendorId = pciVendors[i];
         } else if (mVendorId != pciVendors[i]) {
           gfxCriticalNote << "More than 1 GPU vendor detected via PCI, cannot "
-                             "deduce vendor";
+                             "deduce vendor\n";
           mVendorId.Truncate();
           break;
         }
@@ -459,7 +460,7 @@ void GfxInfo::GetData() {
           mDeviceId = pciDevices[i];
         } else if (mDeviceId != pciDevices[i]) {
           gfxCriticalNote << "More than 1 GPU from same vendor detected via "
-                             "PCI, cannot deduce device";
+                             "PCI, cannot deduce device\n";
           mDeviceId.Truncate();
           break;
         }
@@ -471,7 +472,7 @@ void GfxInfo::GetData() {
   if (!mVendorId.IsEmpty()) {
     if (pciLen > 2) {
       gfxCriticalNote
-          << "More than 2 GPUs detected via PCI, secondary GPU is arbitrary";
+          << "More than 2 GPUs detected via PCI, secondary GPU is arbitrary\n";
     }
     for (size_t i = 0; i < pciLen; ++i) {
       if (!mVendorId.Equals(pciVendors[i]) ||
@@ -487,7 +488,7 @@ void GfxInfo::GetData() {
   if (mVendorId.IsEmpty()) {
     for (size_t i = 0; i < pciLen; ++i) {
       gfxCriticalNote << "PCI candidate " << pciVendors[i].get() << "/"
-                      << pciDevices[i].get();
+                      << pciDevices[i].get() << "\n";
     }
   }
 
@@ -527,28 +528,6 @@ void GfxInfo::GetData() {
     }
 
     mGlxTestError = true;
-  }
-
-  if (error) {
-    nsAutoCString msg("glxtest: process failed");
-    if (waiting_for_glxtest_process_failed) {
-      msg.AppendPrintf(" (waitpid failed with errno=%d for pid %d)",
-                       waitpid_errno, glxtest_pid);
-    }
-
-    if (exited_with_error_code) {
-      if (exit_code == EXIT_STATUS_BUFFER_TOO_SMALL) {
-        msg.AppendLiteral(" (buffer too small)");
-      } else {
-        msg.AppendPrintf(" (exited with status %d)",
-                         WEXITSTATUS(glxtest_status));
-      }
-    }
-    if (received_signal) {
-      msg.AppendPrintf(" (received signal %d)", WTERMSIG(glxtest_status));
-    }
-
-    gfxCriticalNote << msg.get();
   }
 
   AddCrashReportAnnotations();
@@ -592,73 +571,25 @@ static int fire_vaapi_process(const char* aRenderDevicePath, int* aOutPipe) {
   return pid;
 }
 
-static bool MakeFdNonBlocking(int fd) {
-  return fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK) != -1;
-}
-
 void GfxInfo::GetDataVAAPI() {
   if (mIsVAAPISupported.isSome()) {
     return;
   }
   mIsVAAPISupported = Some(false);
 
+  char* vaapiData = nullptr;
+  auto free = mozilla::MakeScopeExit([&] { g_free((void*)vaapiData); });
+
   int vaapiPipe = -1;
   int vaapiPID = 0;
-  gsize vaapiDataLen;
-  char* vaapiData = nullptr;
-  GIOChannel* channel = nullptr;
-
-  auto free = mozilla::MakeScopeExit([&] {
-    if (channel) {
-      g_io_channel_unref(channel);
-    }
-    if (vaapiPipe >= 0) {
-      close(vaapiPipe);
-    }
-    if (vaapiData) {
-      g_free((void*)vaapiData);
-    }
-    if (vaapiPID) {
-      int status;
-      waitpid(vaapiPID, &status, WNOHANG);
-    }
-  });
-
   vaapiPID = fire_vaapi_process(mDrmRenderDevice.get(), &vaapiPipe);
   if (!vaapiPID) {
     return;
   }
 
-  struct pollfd pfd {};
-  pfd.fd = vaapiPipe;
-  pfd.events = POLLIN;
-  auto ret = poll(&pfd, 1, VAAPI_TEST_TIMEOUT);
-  if (ret <= 0) {
-    return;
-  }
-
-  channel = g_io_channel_unix_new(vaapiPipe);
-  MakeFdNonBlocking(vaapiPID);
-
-  GUniquePtr<GError> error;
-  do {
-    error = nullptr;
-    ret = g_io_channel_read_to_end(channel, &vaapiData, &vaapiDataLen,
-                                   getter_Transfers(error));
-  } while (ret == G_IO_STATUS_AGAIN);
-
-  if (error) {
-    return;
-  }
-
-  int vaapi_exit_code = EXIT_FAILURE;
-  int vaapi_status = 0;
-  if (waitpid(vaapiPID, &vaapi_status, WNOHANG) < 0) {
-    vaapiPID = 0;
-    return;
-  }
-  vaapi_exit_code = WEXITSTATUS(vaapi_status);
-  if (vaapi_exit_code != EXIT_SUCCESS) {
+  if (!ManageChildProcess(&vaapiPID, &vaapiPipe, VAAPI_TEST_TIMEOUT,
+                          &vaapiData)) {
+    gfxCriticalNote << "vaapitest: ManageChildProcess failed\n";
     return;
   }
 
