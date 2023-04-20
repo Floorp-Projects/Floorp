@@ -171,12 +171,9 @@ void RemoveSsrcsAndMsids(cricket::SessionDescription* desc);
 // endpoint that only signals a=msid lines to convey stream_ids.
 void RemoveSsrcsAndKeepMsids(cricket::SessionDescription* desc);
 
-// TODO(https://crbug.com/webrtc/14175): Stop depending on "track" stats, the
-// metrics we're interested in are already available in "inbound-rtp".
 int FindFirstMediaStatsIndexByKind(
     const std::string& kind,
-    const std::vector<const webrtc::DEPRECATED_RTCMediaStreamTrackStats*>&
-        media_stats_vec);
+    const std::vector<const webrtc::RTCInboundRTPStreamStats*>& inbound_rtps);
 
 class TaskQueueMetronome : public webrtc::Metronome {
  public:
