@@ -23,6 +23,7 @@ import java.util.Calendar;
 
 import mozilla.components.support.base.log.logger.Logger;
 
+@SuppressWarnings("deprecation")
 public class TelemetryJobService extends JobService {
     private static final String PREFERENCE_UPLOAD_COUNT_PREFIX = "upload_count_";
     private static final String PREFERENCE_LAST_UPLOAD_PREFIX = "last_uploade_";
