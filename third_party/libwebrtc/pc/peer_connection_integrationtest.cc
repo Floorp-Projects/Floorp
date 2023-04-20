@@ -1326,8 +1326,8 @@ TEST_F(PeerConnectionIntegrationTestUnifiedPlan,
 }
 
 // Test that the new GetStats() returns stats for all outgoing/incoming streams
-// with the correct track IDs if there are more than one audio and more than one
-// video senders/receivers.
+// with the correct track identifiers if there are more than one audio and more
+// than one video senders/receivers.
 TEST_P(PeerConnectionIntegrationTest, NewGetStatsManyAudioAndManyVideoStreams) {
   ASSERT_TRUE(CreatePeerConnectionWrappers());
   ConnectFakeSignaling();
@@ -1362,12 +1362,12 @@ TEST_P(PeerConnectionIntegrationTest, NewGetStatsManyAudioAndManyVideoStreams) {
       ASSERT_TRUE(stat->frames_encoded.is_defined());
       EXPECT_GE(*stat->frames_encoded, *stat->key_frames_encoded);
     }
-    ASSERT_TRUE(stat->track_id.is_defined());
-    const auto* track_stat =
-        caller_report->GetAs<webrtc::DEPRECATED_RTCMediaStreamTrackStats>(
-            *stat->track_id);
-    ASSERT_TRUE(track_stat);
-    outbound_track_ids.push_back(*track_stat->track_identifier);
+    ASSERT_TRUE(stat->media_source_id.is_defined());
+    const RTCMediaSourceStats* media_source =
+        static_cast<const RTCMediaSourceStats*>(
+            caller_report->Get(*stat->media_source_id));
+    ASSERT_TRUE(media_source);
+    outbound_track_ids.push_back(*media_source->track_identifier);
   }
   EXPECT_THAT(outbound_track_ids, UnorderedElementsAreArray(track_ids));
 
@@ -1387,12 +1387,7 @@ TEST_P(PeerConnectionIntegrationTest, NewGetStatsManyAudioAndManyVideoStreams) {
       ASSERT_TRUE(stat->frames_decoded.is_defined());
       EXPECT_GE(*stat->frames_decoded, *stat->key_frames_decoded);
     }
-    ASSERT_TRUE(stat->track_id.is_defined());
-    const auto* track_stat =
-        callee_report->GetAs<webrtc::DEPRECATED_RTCMediaStreamTrackStats>(
-            *stat->track_id);
-    ASSERT_TRUE(track_stat);
-    inbound_track_ids.push_back(*track_stat->track_identifier);
+    inbound_track_ids.push_back(*stat->track_identifier);
   }
   EXPECT_THAT(inbound_track_ids, UnorderedElementsAreArray(track_ids));
 }
@@ -1467,11 +1462,11 @@ TEST_P(PeerConnectionIntegrationTest,
       callee()->NewGetStats();
   ASSERT_NE(nullptr, report);
 
-  auto media_stats =
-      report->GetStatsOfType<webrtc::DEPRECATED_RTCMediaStreamTrackStats>();
-  auto audio_index = FindFirstMediaStatsIndexByKind("audio", media_stats);
-  ASSERT_GE(audio_index, 0);
-  EXPECT_TRUE(media_stats[audio_index]->audio_level.is_defined());
+  auto inbound_rtps =
+      report->GetStatsOfType<webrtc::RTCInboundRTPStreamStats>();
+  auto index = FindFirstMediaStatsIndexByKind("audio", inbound_rtps);
+  ASSERT_GE(index, 0);
+  EXPECT_TRUE(inbound_rtps[index]->audio_level.is_defined());
 }
 
 // Helper for test below.
@@ -2882,22 +2877,14 @@ TEST_P(PeerConnectionIntegrationTest, DisableAndEnableAudioPlayout) {
 
 double GetAudioEnergyStat(PeerConnectionIntegrationWrapper* pc) {
   auto report = pc->NewGetStats();
-  auto track_stats_list =
-      report->GetStatsOfType<webrtc::DEPRECATED_RTCMediaStreamTrackStats>();
-  const webrtc::DEPRECATED_RTCMediaStreamTrackStats* remote_track_stats =
-      nullptr;
-  for (const auto* track_stats : track_stats_list) {
-    if (track_stats->remote_source.is_defined() &&
-        *track_stats->remote_source) {
-      remote_track_stats = track_stats;
-      break;
-    }
-  }
-
-  if (!remote_track_stats->total_audio_energy.is_defined()) {
+  auto inbound_rtps =
+      report->GetStatsOfType<webrtc::RTCInboundRTPStreamStats>();
+  RTC_CHECK(!inbound_rtps.empty());
+  auto* inbound_rtp = inbound_rtps[0];
+  if (!inbound_rtp->total_audio_energy.is_defined()) {
     return 0.0;
   }
-  return *remote_track_stats->total_audio_energy;
+  return *inbound_rtp->total_audio_energy;
 }
 
 // Test that if audio playout is disabled via the SetAudioPlayout() method, then
