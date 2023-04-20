@@ -29,73 +29,16 @@
 #include "prlink.h"
 #include "va/va.h"
 
-// An alternative to mozilla::Unused for use in (a) C code and (b) code where
-// linking with unused.o is difficult.
-#define MOZ_UNUSED(expr) \
-  do {                   \
-    if (expr) {          \
-      (void)0;           \
-    }                    \
-  } while (0)
+#include "mozilla/GfxInfoUtils.h"
 
 // Print VA-API test results to stdout and logging to stderr
 #define OUTPUT_PIPE 1
-#define LOG_PIPE 2
-
-#define EXIT_FAILURE_BUFFER_TOO_SMALL 2
 
 // bits to use decoding childvaapitest() return values.
 constexpr int CODEC_HW_H264 = 1 << 4;
 constexpr int CODEC_HW_VP8 = 1 << 5;
 constexpr int CODEC_HW_VP9 = 1 << 6;
 constexpr int CODEC_HW_AV1 = 1 << 7;
-
-// our buffer, size and used length
-static char* vaapi_test_buf = nullptr;
-static int vaapi_test_bufsize = 0;
-static int vaapitest_length = 0;
-
-// C++ standard collides with C standard in that it doesn't allow casting void*
-// to function pointer types. So the work-around is to convert first to size_t.
-// http://www.trilithium.com/johan/2004/12/problem-with-dlsym/
-template <typename func_ptr_type>
-static func_ptr_type cast(void* ptr) {
-  return reinterpret_cast<func_ptr_type>(reinterpret_cast<size_t>(ptr));
-}
-
-static void record_value(const char* format, ...) {
-  // Don't add more if the buffer is full.
-  if (vaapi_test_bufsize <= vaapitest_length) {
-    return;
-  }
-
-  // Append the new values to the buffer, not to exceed the remaining space.
-  int remaining = vaapi_test_bufsize - vaapitest_length;
-  va_list args;
-  va_start(args, format);
-  int max_added =
-      vsnprintf(vaapi_test_buf + vaapitest_length, remaining, format, args);
-  va_end(args);
-
-  // snprintf returns how many char it could have added, not how many it added.
-  // It is important to get this right since it will control how many chars we
-  // will attempt to write to the pipe fd.
-  if (max_added > remaining) {
-    vaapitest_length += remaining;
-  } else {
-    vaapitest_length += max_added;
-  }
-}
-
-static void record_error(const char* str) { record_value("ERROR\n%s\n", str); }
-
-static void record_flush() {
-  // Write output to stdout
-  MOZ_UNUSED(write(OUTPUT_PIPE, vaapi_test_buf, vaapitest_length));
-  if (getenv("MOZ_GFX_DEBUG")) {
-    MOZ_UNUSED(write(LOG_PIPE, vaapi_test_buf, vaapitest_length));
-  }
-}
 
 // childgltest is declared inside extern "C" so that the name is not mangled.
 // The name is used in build/valgrind/x86_64-pc-linux-gnu.sup to suppress
@@ -135,6 +78,8 @@ void childvaapitest(const char* aRenderDevicePath) {
   VAEntrypoint* entryPoints = nullptr;
   VADisplay display = nullptr;
   void* libDrm = nullptr;
+
+  log("childvaapitest start, device %s\n", aRenderDevicePath);
 
   auto autoRelease = mozilla::MakeScopeExit([&] {
     if (renderDeviceFD > -1) {
@@ -178,11 +123,11 @@ void childvaapitest(const char* aRenderDevicePath) {
   int major, minor;
   VAStatus status = vaInitialize(display, &major, &minor);
   if (status != VA_STATUS_SUCCESS) {
-    fprintf(stderr, "vaInitialize failed %d\n", status);
+    log("vaInitialize failed %d\n", status);
     record_error("VA-API test failed: failed to initialise VAAPI connection.");
     return;
   } else {
-    fprintf(stderr, "vaInitialize finished\n");
+    log("vaInitialize finished\n");
   }
 
   int maxProfiles = vaMaxNumProfiles(display);
@@ -228,9 +173,7 @@ void childvaapitest(const char* aRenderDevicePath) {
                               &config);
       if (status == VA_STATUS_SUCCESS) {
         const char* profstr = VAProfileName(profile);
-        if (getenv("MOZ_GFX_DEBUG")) {
-          fprintf(stderr, "Profile: %s\n", profstr);
-        }
+        log("Profile: %s\n", profstr);
         // VAProfileName returns null on failure, making the below calls safe
         if (!strncmp(profstr, "H264", 4)) {
           codecs |= CODEC_HW_H264;
@@ -241,7 +184,7 @@ void childvaapitest(const char* aRenderDevicePath) {
         } else if (!strncmp(profstr, "AV1", 3)) {
           codecs |= CODEC_HW_AV1;
         } else {
-          record_value("WARNING\nVA-API test unknown profile: %s\n", profstr);
+          record_warning("VA-API test unknown profile.\n");
         }
         vaDestroyConfig(display, config);
         foundProfile = true;
@@ -254,27 +197,13 @@ void childvaapitest(const char* aRenderDevicePath) {
   } else {
     record_value("VAAPI_SUPPORTED\nFALSE\n");
   }
+  log("childvaapitest finished\n");
 }
 
 int vaapitest(const char* aRenderDevicePath) {
-  enum { bufsize = 2048 };
-  char buf[bufsize];
-
-  // We save it as a global so that the X error handler can flush the buffer
-  // before early exiting.
-  vaapi_test_buf = buf;
-  vaapi_test_bufsize = bufsize;
-
   childvaapitest(aRenderDevicePath);
-
   // Finally write buffered data to the pipe.
-  record_flush();
-
-  // If we completely filled the buffer, we need to tell the parent.
-  if (vaapitest_length >= vaapi_test_bufsize) {
-    return EXIT_FAILURE_BUFFER_TOO_SMALL;
-  }
-
+  record_flush(OUTPUT_PIPE);
   return EXIT_SUCCESS;
 }
 
@@ -317,6 +246,8 @@ int main(int argc, char** argv) {
     // report which can confuse the harness in fuzzing automation.
     signal(SIGSEGV, SIG_DFL);
 #endif
+    const char* env = getenv("MOZ_GFX_DEBUG");
+    enable_logging = env && *env == '1';
     return vaapitest(drmDevice);
   }
   PrintUsage();
