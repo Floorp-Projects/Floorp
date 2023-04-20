@@ -170,12 +170,14 @@ class Bootstrapper(object):
         no_interactive=False,
         hg_configure=False,
         no_system_changes=False,
+        exclude=[],
         mach_context=None,
     ):
         self.instance = None
         self.choice = choice
         self.hg_configure = hg_configure
         self.no_system_changes = no_system_changes
+        self.exclude = exclude
         self.mach_context = mach_context
         cls = None
         args = {
@@ -257,7 +259,7 @@ class Bootstrapper(object):
         # Also install the clang static-analysis package by default
         # The best place to install our packages is in the state directory
         # we have.  We should have created one above in non-interactive mode.
-        self.instance.auto_bootstrap(application)
+        self.instance.auto_bootstrap(application, self.exclude)
         self.instance.install_toolchain_artifact("fix-stacks")
         self.instance.install_toolchain_artifact("minidump-stackwalk")
         if not self.instance.artifact_mode:

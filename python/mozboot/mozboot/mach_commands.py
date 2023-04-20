@@ -29,7 +29,14 @@ from mozboot.bootstrap import APPLICATIONS
     action="store_true",
     help="Only execute actions that leave the system configuration alone.",
 )
-def bootstrap(command_context, application_choice=None, no_system_changes=False):
+@CommandArgument(
+    "--exclude",
+    nargs="+",
+    help="A list of bootstrappable elements not to bootstrap.",
+)
+def bootstrap(
+    command_context, application_choice=None, no_system_changes=False, exclude=[]
+):
     """Bootstrap system and mach for optimal development experience."""
     from mozboot.bootstrap import Bootstrapper
 
@@ -37,6 +44,7 @@ def bootstrap(command_context, application_choice=None, no_system_changes=False)
         choice=application_choice,
         no_interactive=not command_context._mach_context.is_interactive,
         no_system_changes=no_system_changes,
+        exclude=exclude,
         mach_context=command_context._mach_context,
     )
     bootstrapper.bootstrap(command_context.settings)

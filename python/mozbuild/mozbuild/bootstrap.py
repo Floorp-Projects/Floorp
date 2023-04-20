@@ -23,8 +23,8 @@ def _raw_sandbox(extra_args=[]):
     sandbox = ConfigureSandbox(
         {},
         argv=["configure"]
-        + extra_args
-        + ["--enable-bootstrap", f"MOZCONFIG={os.devnull}"],
+        + ["--enable-bootstrap", f"MOZCONFIG={os.devnull}"]
+        + extra_args,
         logger=logger,
     )
     return sandbox
