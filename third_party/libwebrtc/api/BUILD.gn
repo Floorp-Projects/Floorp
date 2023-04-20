@@ -176,6 +176,10 @@ rtc_source_set("ice_transport_interface") {
 }
 
 rtc_library("dtls_transport_interface") {
+# Previously, Mozilla has tried to limit including this dep, but as
+# upstream changes, it requires whack-a-mole.  Making it an empty
+# definition has the same effect, but only requires one change.
+if (!build_with_mozilla) {
   visibility = [ "*" ]
 
   sources = [
@@ -192,6 +196,7 @@ rtc_library("dtls_transport_interface") {
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
+}
 
 rtc_library("dtmf_sender_interface") {
   visibility = [ "*" ]
@@ -204,6 +209,10 @@ rtc_library("dtmf_sender_interface") {
 }
 
 rtc_library("rtp_sender_interface") {
+# Previously, Mozilla has tried to limit including this dep, but as
+# upstream changes, it requires whack-a-mole.  Making it an empty
+# definition has the same effect, but only requires one change.
+if (!build_with_mozilla) {
   visibility = [ "*" ]
 
   sources = [
@@ -224,6 +233,7 @@ rtc_library("rtp_sender_interface") {
     "crypto:frame_encryptor_interface",
     "video_codecs:video_codecs_api",
   ]
+}
 }
 
 rtc_library("rtp_sender_setparameters_callback") {
