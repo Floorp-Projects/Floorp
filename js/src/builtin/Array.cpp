@@ -4550,21 +4550,29 @@ static bool IsConcatSpreadable(JSContext* cx, HandleValue v, bool* spreadable) {
   }
 
   // Step 2.
-  RootedValue res(cx);
-  RootedObject obj(cx, &v.toObject());
-  RootedId id(cx,
-              PropertyKey::Symbol(cx->wellKnownSymbols().isConcatSpreadable));
-  if (!GetProperty(cx, obj, v, id, &res)) {
-    return false;
-  }
-
-  // Step 3.
-  if (!res.isUndefined()) {
-    *spreadable = ToBoolean(res);
-    return true;
+  JS::Symbol* sym = cx->wellKnownSymbols().isConcatSpreadable;
+  JSObject* holder;
+  if (MOZ_UNLIKELY(
+          MaybeHasInterestingSymbolProperty(cx, &v.toObject(), sym, &holder))) {
+    RootedValue res(cx);
+    RootedObject obj(cx, holder);
+    Rooted<PropertyKey> key(cx, PropertyKey::Symbol(sym));
+    if (!GetProperty(cx, obj, v, key, &res)) {
+      return false;
+    }
+    // Step 3.
+    if (!res.isUndefined()) {
+      *spreadable = ToBoolean(res);
+      return true;
+    }
   }
 
   // Step 4.
+  if (MOZ_LIKELY(v.toObject().is<ArrayObject>())) {
+    *spreadable = true;
+    return true;
+  }
+  RootedObject obj(cx, &v.toObject());
   bool isArray;
   if (!JS::IsArray(cx, obj, &isArray)) {
     return false;
