@@ -66,13 +66,10 @@
 .objectBox-string a,
 .objectBox-string a:visited {
   color: currentColor;
-  text-decoration: none;
+  text-decoration: underline;
+  text-decoration-skip-ink: none;
   font-style: italic;
   cursor: pointer;
-}
-
-.objectBox-string a:hover {
-  text-decoration: underline;
 }
 
 /* Visually hide the middle of "cropped" url */
