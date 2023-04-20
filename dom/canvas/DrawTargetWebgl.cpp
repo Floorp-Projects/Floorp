@@ -2006,16 +2006,22 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
         // transform must map to an axis-aligned integer rectangle.
         if (Maybe<IntRect> intRect =
                 IsAlignedRect(aTransformed, currentTransform, aRect)) {
-          if (!intRect->Contains(mClipRect)) {
-            EnableScissor(intRect->Intersect(mClipRect));
+          // Only use a clear if the area is larger than a quarter or the
+          // viewport.
+          if (intRect->Area() >=
+              (mViewportSize.width / 2) * (mViewportSize.height / 2)) {
+            if (!intRect->Contains(mClipRect)) {
+              EnableScissor(intRect->Intersect(mClipRect));
+            }
+            if (aOptions.mCompositionOp == CompositionOp::OP_CLEAR) {
+              color =
+                  PremultiplyColor(mCurrentTarget->GetClearPattern().mColor);
+            }
+            mWebgl->ClearColor(color.b, color.g, color.r, color.a);
+            mWebgl->Clear(LOCAL_GL_COLOR_BUFFER_BIT);
+            success = true;
+            break;
           }
-          if (aOptions.mCompositionOp == CompositionOp::OP_CLEAR) {
-            color = PremultiplyColor(mCurrentTarget->GetClearPattern().mColor);
-          }
-          mWebgl->ClearColor(color.b, color.g, color.r, color.a);
-          mWebgl->Clear(LOCAL_GL_COLOR_BUFFER_BIT);
-          success = true;
-          break;
         }
       }
       // Map the composition op to a WebGL blend mode, if possible.
