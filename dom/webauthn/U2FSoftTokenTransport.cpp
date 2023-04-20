@@ -600,11 +600,12 @@ U2FSoftTokenTransport::MakeCredential(uint64_t aTransactionId,
     return NS_ERROR_FAILURE;
   }
 
-  bool requireResidentKey;
-  // Bug 1737205 will make this infallible
-  rv = args->GetRequireResidentKey(&requireResidentKey);
-  if (NS_FAILED(rv)) {
-    requireResidentKey = false;
+  bool requireResidentKey = false;
+  nsString residentKey;
+  rv = args->GetResidentKey(residentKey);
+  if (NS_SUCCEEDED(rv) && residentKey.EqualsLiteral(
+                              MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_REQUIRED)) {
+    requireResidentKey = true;
   }
 
   bool requireUserVerification = false;

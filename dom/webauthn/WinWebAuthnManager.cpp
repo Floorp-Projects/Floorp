@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Assertions.h"
 #include "mozilla/dom/PWebAuthnTransactionParent.h"
 #include "mozilla/dom/WebAuthnCBORUtil.h"
 #include "mozilla/MozPromise.h"
@@ -210,6 +211,7 @@ void WinWebAuthnManager::Register(
 
   // Resident Key
   BOOL winRequireResidentKey = FALSE;
+  BOOL winPreferResidentKey = FALSE;
 
   // AttestationConveyance
   DWORD winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_ANY;
@@ -271,7 +273,29 @@ void WinWebAuthnManager::Register(
       }
     }
 
-    winRequireResidentKey = sel.requireResidentKey();
+    const nsString& residentKey = sel.residentKey();
+    // This mapping needs to be reviewed if values are added to the
+    // ResidentKeyRequirement enum.
+    static_assert(MOZ_WEBAUTHN_ENUM_STRINGS_VERSION == 2);
+    if (residentKey.EqualsLiteral(
+            MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_REQUIRED)) {
+      winRequireResidentKey = TRUE;
+      winPreferResidentKey = TRUE;
+    } else if (residentKey.EqualsLiteral(
+                   MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_PREFERRED)) {
+      winRequireResidentKey = FALSE;
+      winPreferResidentKey = TRUE;
+    } else if (residentKey.EqualsLiteral(
+                   MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_DISCOURAGED)) {
+      winRequireResidentKey = FALSE;
+      winPreferResidentKey = FALSE;
+    } else {
+      // WebAuthnManager::MakeCredential is supposed to assign one of the above
+      // values, so this shouldn't happen.
+      MOZ_ASSERT_UNREACHABLE();
+      MaybeAbortRegister(aTransactionId, NS_ERROR_DOM_UNKNOWN_ERR);
+      return;
+    }
 
     // AttestationConveyance
     const nsString& attestation = extra.attestationConveyancePreference();
@@ -381,7 +405,7 @@ void WinWebAuthnManager::Register(
       pExcludeCredentialList,
       WEBAUTHN_ENTERPRISE_ATTESTATION_NONE,
       WEBAUTHN_LARGE_BLOB_SUPPORT_NONE,
-      FALSE,  // PreferResidentKey
+      winPreferResidentKey,  // PreferResidentKey
   };
 
   GUID cancellationId = {0};

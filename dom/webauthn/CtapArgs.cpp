@@ -125,13 +125,12 @@ CtapRegisterArgs::GetHmacCreateSecret(bool* aHmacCreateSecret) {
 }
 
 NS_IMETHODIMP
-CtapRegisterArgs::GetRequireResidentKey(bool* aRequireResidentKey) {
+CtapRegisterArgs::GetResidentKey(nsAString& aResidentKey) {
   mozilla::ipc::AssertIsOnBackgroundThread();
   if (mInfo.Extra().isNothing()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  *aRequireResidentKey =
-      (*mInfo.Extra()).AuthenticatorSelection().requireResidentKey();
+  aResidentKey = (*mInfo.Extra()).AuthenticatorSelection().residentKey();
   return NS_OK;
 }
 

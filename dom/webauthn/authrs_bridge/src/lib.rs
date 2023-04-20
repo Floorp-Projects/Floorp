@@ -480,8 +480,15 @@ impl AuthrsTransport {
             .map(|alg| PublicKeyCredentialParameters::try_from(*alg).unwrap())
             .collect();
 
-        let mut require_resident_key = false;
-        unsafe { args.GetRequireResidentKey(&mut require_resident_key) }.to_result()?;
+        let mut resident_key = nsString::new();
+        unsafe { args.GetResidentKey(&mut *resident_key) }.to_result()?;
+        let resident_key = if resident_key.eq("required") {
+            Some(true)
+        } else if resident_key.eq("discouraged") {
+            Some(false)
+        } else {
+            None
+        };
 
         let mut user_verification = nsString::new();
         unsafe { args.GetUserVerification(&mut *user_verification) }.to_result()?;
@@ -523,7 +530,7 @@ impl AuthrsTransport {
             pub_cred_params,
             exclude_list,
             options: MakeCredentialsOptions {
-                resident_key: require_resident_key.then_some(true),
+                resident_key,
                 user_verification,
             },
             extensions: Default::default(),

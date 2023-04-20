@@ -156,7 +156,8 @@ RefPtr<U2FRegisterPromise> AndroidWebAuthnTokenManager::Register(
 
           const WebAuthnAuthenticatorSelection& sel =
               extra.AuthenticatorSelection();
-          if (sel.requireResidentKey()) {
+          if (sel.residentKey().EqualsLiteral(
+                  MOZ_WEBAUTHN_RESIDENT_KEY_REQUIREMENT_REQUIRED)) {
             GECKOBUNDLE_PUT(authSelBundle, "requireResidentKey",
                             java::sdk::Integer::ValueOf(1));
           }
