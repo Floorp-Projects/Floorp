@@ -842,6 +842,7 @@ if (!build_with_mozilla) {
 }
 
 rtc_library("net_helpers") {
+  visibility = [ "*" ]
   sources = [
     "net_helpers.cc",
     "net_helpers.h",
@@ -929,6 +930,7 @@ rtc_library("null_socket_server") {
 }
 
 rtc_source_set("socket_server") {
+  visibility = [ "*" ]
   sources = [ "socket_server.h" ]
   deps = [
     ":rtc_event",
@@ -1040,6 +1042,7 @@ rtc_library("socket") {
 }
 
 rtc_source_set("network_constants") {
+  visibility = [ "*" ]
   sources = [
     "network_constants.cc",
     "network_constants.h",
@@ -1348,6 +1351,7 @@ if (!build_with_chromium) {
 
 rtc_library("network") {
 if (!build_with_mozilla) {
+  visibility = [ "*" ]
   sources = [
     "network.cc",
     "network.h",
@@ -1409,6 +1413,7 @@ if (!build_with_mozilla) {
 
 rtc_library("socket_adapters") {
 if (!build_with_mozilla) {
+  visibility = [ "*" ]
   sources = [
     "socket_adapters.cc",
     "socket_adapters.h",
@@ -1465,6 +1470,7 @@ if (!build_with_mozilla) {
 
 rtc_library("async_udp_socket") {
 if (!build_with_mozilla) {
+  visibility = [ "*" ]
   sources = [
     "async_udp_socket.cc",
     "async_udp_socket.h",
@@ -1489,6 +1495,7 @@ if (!build_with_mozilla) {
 
 rtc_library("async_packet_socket") {
 if (!build_with_mozilla) {
+  visibility = [ "*" ]
   sources = [
     "async_packet_socket.cc",
     "async_packet_socket.h",
@@ -1519,6 +1526,7 @@ rtc_library("dscp") {
 
 rtc_library("proxy_info") {
 if (!build_with_mozilla) {
+  visibility = [ "*" ]
   sources = [
     "proxy_info.cc",
     "proxy_info.h",
@@ -1584,6 +1592,7 @@ rtc_library("crc32") {
 }
 
 rtc_library("stream") {
+  visibility = [ "*" ]
   sources = [
     "stream.cc",
     "stream.h",
@@ -1600,6 +1609,7 @@ rtc_library("stream") {
 
 rtc_library("rtc_certificate_generator") {
 if (!build_with_mozilla) {
+  visibility = [ "*" ]
   sources = [
     "rtc_certificate_generator.cc",
     "rtc_certificate_generator.h",
@@ -1620,6 +1630,7 @@ if (!build_with_mozilla) {
 
 rtc_library("ssl") {
 if (!build_with_mozilla) {
+  visibility = [ "*" ]
   sources = [
     "helpers.cc",
     "helpers.h",
