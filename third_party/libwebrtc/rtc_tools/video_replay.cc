@@ -570,7 +570,17 @@ class RtpReplayer final {
       if (!rtp_reader_->NextPacket(&packet)) {
         break;
       }
-      rtc::CopyOnWriteBuffer packet_buffer(packet.data, packet.length);
+      rtc::CopyOnWriteBuffer packet_buffer(
+          packet.original_length > 0 ? packet.original_length : packet.length);
+      memcpy(packet_buffer.MutableData(), packet.data, packet.length);
+      if (packet.length < packet.original_length) {
+        // Only the RTP header was recorded in the RTP dump, payload is not
+        // known and and padding length is not known, zero the payload and
+        // clear the padding bit.
+        memset(packet_buffer.MutableData() + packet.length, 0,
+               packet.original_length - packet.length);
+        packet_buffer.MutableData()[0] &= ~0x20;
+      }
       RtpPacket header;
       header.Parse(packet_buffer);
       if (header.Timestamp() < start_timestamp ||
