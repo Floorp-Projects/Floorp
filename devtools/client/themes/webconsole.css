@@ -604,12 +604,8 @@ html #webconsole-notificationbox {
 
 .cm-s-mozilla a[class] {
   font-style: italic;
-  text-decoration: none;
-}
-
-.cm-s-mozilla a[class]:hover,
-.cm-s-mozilla a[class]:focus {
   text-decoration: underline;
+  text-decoration-skip-ink: none;
 }
 
 a.learn-more-link.webconsole-learn-more-link {

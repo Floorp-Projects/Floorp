@@ -41,12 +41,9 @@
 
 .frame-link a.frame-link-source {
   cursor: pointer;
-  text-decoration: none;
-  font-style: normal;
-}
-
-.frame-link a.frame-link-source:hover {
   text-decoration: underline;
+  text-decoration-skip-ink: none;
+  font-style: normal;
 }
 
 .frame-link .frame-link-host {
