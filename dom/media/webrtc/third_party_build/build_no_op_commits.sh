@@ -88,7 +88,6 @@ for commit in $NEW_COMMITS; do
 
   CHERRY_PICK_COMMIT=`git show $commit | grep "cherry picked from commit" | tr -d "()" | awk '{ print $5; }'`
   SHORT_SHA=`git show --name-only $CHERRY_PICK_COMMIT --format='%h' | head -1`
-  echo "    commit $commit cherry-picks $SHORT_SHA"
 
   # The trick here is that we only want to include no-op processing for the
   # commits that appear both here _and_ in the previous release's cherry-pick
@@ -96,13 +95,14 @@ for commit in $NEW_COMMITS; do
   # cherry picked in the previous release branch and then create another
   # file for the new release branch commit that will ultimately be a no-op.
   if [[ "$SHORT_SHA" =~ ^($KNOWN_NO_OP_COMMITS)$ ]]; then
+    echo "    commit $commit cherry-picks $SHORT_SHA"
     cp $STATE_DIR/$SHORT_SHA.no-op-cherry-pick-msg $STATE_DIR/$commit.no-op-cherry-pick-msg
   fi
 
 done
 
 if [ ! -f $MANUAL_INTERVENTION_COMMIT_FILE ]; then
-  echo "we have no commits needing manual intervention"
+  echo "No commits require manual intervention"
   exit
 fi
 
