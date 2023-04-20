@@ -159,7 +159,7 @@ index 0f1cab19db..91175289e8 100644
    void OnSctpDataChannelCreated(SctpDataChannel* channel);
    // Slots for signals (sigslot) that are wired up to `channel`.
 diff --git a/pc/rtc_stats_collector_unittest.cc b/pc/rtc_stats_collector_unittest.cc
-index 31ccfed839..5388355eb7 100644
+index 5a6ac545ca..3dbf0a09d0 100644
 --- a/pc/rtc_stats_collector_unittest.cc
 +++ b/pc/rtc_stats_collector_unittest.cc
 @@ -388,10 +388,7 @@ rtc::scoped_refptr<MockRtpSenderInternal> CreateMockSender(
