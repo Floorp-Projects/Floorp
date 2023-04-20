@@ -3,6 +3,24 @@
     {
       "stash": {
         "blocked": [
+          "{fa61120a-00c9-45d7-93a1-4666e9db617a}:2.0.2",
+          "{fa61120a-00c9-45d7-93a1-4666e9db617a}:2.0.1",
+          "{9337da2b-7841-4e3c-82b7-ae481cecdb52}:1.0.0",
+          "{a231860e-11a7-4266-b199-bb3ad15cfee1}:2.5.22",
+          "{9337da2b-7841-4e3c-82b7-ae481cecdb52}:1.0.1",
+          "ramirezvalencia@gmail.com:2.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1681891919923,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1681907708522,
+      "id": "635d8b30-4495-4c1c-b0f4-f835b6648776",
+      "last_modified": 1681907860234
+    },
+    {
+      "stash": {
+        "blocked": [
           "{37729083-2e1f-440c-b275-aa23f700da00}:1.0.1",
           "{58b16089-2ea7-4c8b-a0d7-0b20b534c6b5}:9.5.1",
           "{2bf47909-4d19-4d04-a4e2-6b905cad5968}:7.0.33",
@@ -1373,5 +1391,5 @@
       "last_modified": 1673354326131
     }
   ],
-  "timestamp": 1681389452870
+  "timestamp": 1681907860234
 }
