@@ -129,6 +129,10 @@ class RecentlyClosedTabsList extends MozLitElement {
   dismissTabAndUpdate(event) {
     event.preventDefault();
     const item = event.target.closest(".closed-tab-li");
+    this.dismissTabAndUpdateForElement(item);
+  }
+
+  dismissTabAndUpdateForElement(item) {
     let recentlyClosedList = lazy.SessionStore.getClosedTabData(getWindow());
     let closedTabIndex = recentlyClosedList.findIndex(closedTab => {
       return closedTab.closedId === parseInt(item.dataset.tabid, 10);
@@ -264,6 +268,7 @@ class RecentlyClosedTabsList extends MozLitElement {
         data-tabid=${tab.closedId}
         data-targeturi=${targetURI}
         tabindex=${ifDefined(primary ? null : "-1")}
+        @contextmenu=${e => (this.contextTriggerNode = e.currentTarget)}
       >
         <span
           class="closed-tab-li-main"
@@ -278,17 +283,24 @@ class RecentlyClosedTabsList extends MozLitElement {
               backgroundImage: `url(${getImageUrl(tab.icon, targetURI)})`,
             })}
           ></div>
-          <span class="closed-tab-li-title">
+          <a
+            href=${targetURI}
+            class="closed-tab-li-title"
+            tabindex="-1"
+            @click=${e => e.preventDefault()}
+          >
             ${tab.title}
-          </span>
-          <span
-            title=${targetURI}
+          </a>
+          <a
+            href=${targetURI}
             class="closed-tab-li-url"
             data-l10n-id="firefoxview-tabs-list-tab-button"
             data-l10n-args=${JSON.stringify({ targetURI })}
+            tabindex="-1"
+            @click=${e => e.preventDefault()}
           >
             ${formatURIForDisplay(targetURI)}
-          </span>
+          </a>
           <span class="closed-tab-li-time" data-timestamp=${tab.closedAt}>
             ${convertedTime}
           </span>
@@ -343,11 +355,19 @@ class RecentlyClosedTabsContainer extends HTMLDetailsElement {
     );
     this.addEventListener("toggle", this);
     getWindow().gBrowser.tabContainer.addEventListener("TabSelect", this);
+    getWindow().addEventListener("command", this, true);
+    getWindow()
+      .document.getElementById("contentAreaContextMenu")
+      .addEventListener("popuphiding", this);
     this.open = Services.prefs.getBoolPref(UI_OPEN_STATE, true);
   }
 
   cleanup() {
     getWindow().gBrowser.tabContainer.removeEventListener("TabSelect", this);
+    getWindow().removeEventListener("command", this, true);
+    getWindow()
+      .document.getElementById("contentAreaContextMenu")
+      .removeEventListener("popuphiding", this);
     this.removeObserversIfNeeded();
   }
 
@@ -411,6 +431,14 @@ class RecentlyClosedTabsContainer extends HTMLDetailsElement {
       onToggleContainer(this);
     } else if (event.type == "TabSelect") {
       this.handleObservers(event.target.linkedBrowser.contentDocument);
+    } else if (
+      event.type === "command" &&
+      event.target.closest(".context-menu-open-link") &&
+      this.list.contextTriggerNode
+    ) {
+      this.list.dismissTabAndUpdateForElement(this.list.contextTriggerNode);
+    } else if (event.type === "popuphiding") {
+      delete this.list.contextTriggerNode;
     }
   }
 

@@ -67,19 +67,23 @@
                 oncommand="InlineSpellCheckerUI.undoAddToDictionary();" />
       <menuseparator id="spell-suggestions-separator"/>
       <menuitem id="context-openlinkincurrent"
+                class="context-menu-open-link"
                 data-l10n-id="main-context-menu-open-link"
                 oncommand="gContextMenu.openLinkInCurrent();"/>
 # label and data-usercontextid are dynamically set.
       <menuitem id="context-openlinkincontainertab"
+                class="context-menu-open-link"
                 data-l10n-id="main-context-menu-open-link-in-container-tab"
                 data-l10n-args='{"containerName":""}'
                 oncommand="gContextMenu.openLinkInTab(event);"/>
       <menuitem id="context-openlinkintab"
+                class="context-menu-open-link"
                 data-l10n-id="main-context-menu-open-link-new-tab"
                 data-usercontextid="0"
                 oncommand="gContextMenu.openLinkInTab(event);"/>
 
       <menu id="context-openlinkinusercontext-menu"
+            class="context-menu-open-link"
             data-l10n-id="main-context-menu-open-link-container-tab"
             hidden="true">
         <menupopup oncommand="gContextMenu.openLinkInTab(event);"
@@ -87,9 +91,11 @@
       </menu>
 
       <menuitem id="context-openlink"
+                class="context-menu-open-link"
                 data-l10n-id="main-context-menu-open-link-new-window"
                 oncommand="gContextMenu.openLink();"/>
       <menuitem id="context-openlinkprivate"
+                class="context-menu-open-link"
                 data-l10n-id="main-context-menu-open-link-new-private-window"
                 oncommand="gContextMenu.openLinkInPrivateWindow();"/>
       <menuseparator id="context-sep-open"/>

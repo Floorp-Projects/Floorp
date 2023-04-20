@@ -555,12 +555,14 @@ details[open] > .page-section-header > .twisty {
   padding-inline-start: 10px;
   font-weight: 500;
   grid-column: span 3;
+  color: var(--fxview-text-primary-color) !important;
 }
 
 .closed-tab-li-url {
   padding-inline-start: 8px;
   text-decoration-line: underline;
   grid-column: span 2;
+  color: var(--fxview-text-secondary-color) !important;
 }
 
 .closed-tab-li-time {
