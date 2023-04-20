@@ -12,6 +12,9 @@
   --controls-bottom-upper-height: 30px;
   --scrubber-vertical-margin: 7px;
   --resize-margin: 5px;
+
+  background-color: var(--player-bg-color);
+  overflow: hidden;
 }
 
 button::-moz-focus-inner {
@@ -20,8 +23,6 @@ button::-moz-focus-inner {
 
 body {
   margin: 0;
-  background-color: var(--player-bg-color);
-  overflow: hidden;
 }
 
 body:fullscreen {
