@@ -921,6 +921,39 @@ TEST_F(RtpSenderTest, CountMidOnlyUntilAcked) {
   EXPECT_EQ(rtp_sender_->ExpectedPerPacketOverhead(), 12u);
 }
 
+TEST_F(RtpSenderTest, CountMidRidRridUntilAcked) {
+  RtpRtcpInterface::Configuration config = GetDefaultConfig();
+  CreateSender(config);
+
+  // Base RTP overhead is 12B and we use RTX which has an additional 2 bytes
+  // overhead.
+  EXPECT_EQ(rtp_sender_->ExpectedPerPacketOverhead(), 14u);
+
+  rtp_sender_->RegisterRtpHeaderExtension(RtpMid::Uri(), kMidExtensionId);
+
+  // Counted only if set.
+  EXPECT_EQ(rtp_sender_->ExpectedPerPacketOverhead(), 14u);
+  rtp_sender_->SetMid("foo");
+  EXPECT_EQ(rtp_sender_->ExpectedPerPacketOverhead(), 38u);
+
+  rtp_sender_->RegisterRtpHeaderExtension(RtpStreamId::Uri(), kRidExtensionId);
+  EXPECT_EQ(rtp_sender_->ExpectedPerPacketOverhead(), 54u);
+
+  // mid/rrid may be shared with mid/rid when both are active.
+  rtp_sender_->RegisterRtpHeaderExtension(RepairedRtpStreamId::Uri(),
+                                          kRepairedRidExtensionId);
+  EXPECT_EQ(rtp_sender_->ExpectedPerPacketOverhead(), 54u);
+
+  // Ack received, mid/rid no longer sent but we still need space for
+  // mid/rrid which can no longer be shared with mid/rid.
+  rtp_sender_->OnReceivedAckOnSsrc(0);
+  EXPECT_EQ(rtp_sender_->ExpectedPerPacketOverhead(), 54u);
+
+  // Ack received for RTX, no need to send RRID anymore.
+  rtp_sender_->OnReceivedAckOnRtxSsrc(0);
+  EXPECT_EQ(rtp_sender_->ExpectedPerPacketOverhead(), 14u);
+}
+
 TEST_F(RtpSenderTest, DontCountVolatileExtensionsIntoOverhead) {
   RtpRtcpInterface::Configuration config = GetDefaultConfig();
   config.rtx_send_ssrc = {};
