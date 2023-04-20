@@ -6,13 +6,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_GleanJSMetricsLookup_h
-#define mozilla_GleanJSMetricsLookup_h
+#include "mozilla/glean/bindings/GleanJSMetricsLookup.h"
 
 #include "mozilla/PerfectHash.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/glean/bindings/MetricTypes.h"
 #include "mozilla/glean/fog_ffi_generated.h"
+#include "nsString.h"
 
 #define GLEAN_INDEX_BITS (32)
 #define GLEAN_TYPE_BITS (5)
@@ -42,7 +42,7 @@ static_assert(2 < UINT32_MAX, "Too many metric categories generated.");
 static_assert(22 < 33554432, "Too many metrics generated. Need room for 2 signal bits.");
 static_assert(18 < 32, "Too many different metric types.");
 
-static already_AddRefed<nsISupports> NewMetricFromId(uint32_t id) {
+already_AddRefed<nsISupports> NewMetricFromId(uint32_t id) {
   uint32_t typeId = GLEAN_TYPE_ID(id);
   uint32_t metricId = GLEAN_METRIC_ID(id);
 
@@ -136,7 +136,7 @@ static already_AddRefed<nsISupports> NewMetricFromId(uint32_t id) {
  * @param aSubmetricId - an outparam which is assigned the submetric's SDK-generated submetric id.
  *                       Used only by GIFFT.
  */
-static already_AddRefed<nsISupports> NewSubMetricFromIds(uint32_t aParentTypeId, uint32_t aParentMetricId, const nsACString& aLabel, uint32_t* aSubmetricId) {
+already_AddRefed<nsISupports> NewSubMetricFromIds(uint32_t aParentTypeId, uint32_t aParentMetricId, const nsACString& aLabel, uint32_t* aSubmetricId) {
   switch (aParentTypeId) {
     case 4: { /* labeled_boolean */
       auto id = impl::fog_labeled_boolean_get(aParentMetricId, &aLabel);
@@ -182,7 +182,7 @@ const category_entry_t sCategoryByNameLookupEntries[] = {
 
 
 
-static Maybe<uint32_t>
+Maybe<uint32_t>
 CategoryByNameLookup(const nsACString& aKey)
 {
   static const uint8_t BASES[] = {
@@ -288,7 +288,7 @@ const metric_entry_t sMetricByNameLookupEntries[] = {
 
 
 
-static Maybe<uint32_t>
+Maybe<uint32_t>
 MetricByNameLookup(const nsACString& aKey)
 {
   static const uint8_t BASES[] = {
@@ -338,7 +338,7 @@ MetricByNameLookup(const nsACString& aKey)
 /**
  * Get a category's name from the string table.
  */
-static const char* GetCategoryName(category_entry_t entry) {
+const char* GetCategoryName(category_entry_t entry) {
   MOZ_ASSERT(entry < sizeof(gCategoryStringTable), "Entry identifier offset larger than string table");
   return &gCategoryStringTable[entry];
 }
@@ -346,7 +346,7 @@ static const char* GetCategoryName(category_entry_t entry) {
 /**
  * Get a metric's identifier from the string table.
  */
-static const char* GetMetricIdentifier(metric_entry_t entry) {
+const char* GetMetricIdentifier(metric_entry_t entry) {
   uint32_t offset = GLEAN_OFFSET(entry);
   MOZ_ASSERT(offset < sizeof(gMetricStringTable), "Entry identifier offset larger than string table");
   return &gMetricStringTable[offset];
@@ -395,4 +395,3 @@ static Maybe<uint32_t> metric_result_check(const nsACString& aKey, uint64_t entr
 #undef GLEAN_OFFSET
 
 } // namespace mozilla::glean
-#endif // mozilla_GleanJSMetricsLookup_h

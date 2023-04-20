@@ -100,6 +100,8 @@ UNIFIED_SOURCES += [
 
 SOURCES += [
     "!EventExtraGIFFTMaps.cpp",
+    "!GleanJSMetricsLookup.cpp",
+    "!GleanJSPingsLookup.cpp",
 ]
 
 # Provides us the list of dependent metrics|pings.yaml.
@@ -125,7 +127,9 @@ deps = [
     "build_scripts/glean_parser_ext/templates/gifft_events.jinja2",
     "build_scripts/glean_parser_ext/templates/jog_factory.jinja2",
     "build_scripts/glean_parser_ext/templates/js.jinja2",
+    "build_scripts/glean_parser_ext/templates/js_h.jinja2",
     "build_scripts/glean_parser_ext/templates/js_pings.jinja2",
+    "build_scripts/glean_parser_ext/templates/js_pings_h.jinja2",
     "build_scripts/glean_parser_ext/templates/rust.jinja2",
     "build_scripts/glean_parser_ext/templates/rust_pings.jinja2",
 ]
@@ -133,18 +137,30 @@ deps = [
 GeneratedFile(
     "GleanMetrics.h",
     "GleanJSMetricsLookup.h",
+    "GleanJSMetricsLookup.cpp",
     "api/src/metrics.rs",
     script="build_scripts/glean_parser_ext/run_glean_parser.py",
-    flags=[CONFIG["MOZ_APP_VERSION"], "GleanJSMetricsLookup.h", "api/src/metrics.rs"],
+    flags=[
+        CONFIG["MOZ_APP_VERSION"],
+        "GleanJSMetricsLookup.h",
+        "GleanJSMetricsLookup.cpp",
+        "api/src/metrics.rs",
+    ],
     inputs=deps + metrics_yamls + tags_yamls,
 )
 
 GeneratedFile(
     "GleanPings.h",
     "GleanJSPingsLookup.h",
+    "GleanJSPingsLookup.cpp",
     "api/src/pings.rs",
     script="build_scripts/glean_parser_ext/run_glean_parser.py",
-    flags=[CONFIG["MOZ_APP_VERSION"], "GleanJSPingsLookup.h", "api/src/pings.rs"],
+    flags=[
+        CONFIG["MOZ_APP_VERSION"],
+        "GleanJSPingsLookup.h",
+        "GleanJSPingsLookup.cpp",
+        "api/src/pings.rs",
+    ],
     inputs=deps + pings_yamls + tags_yamls,
 )
 

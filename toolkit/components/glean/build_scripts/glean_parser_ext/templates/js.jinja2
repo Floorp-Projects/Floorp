@@ -8,13 +8,13 @@ Jinja2 template is not. Please file bugs! #}
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_GleanJSMetricsLookup_h
-#define mozilla_GleanJSMetricsLookup_h
+#include "mozilla/glean/bindings/GleanJSMetricsLookup.h"
 
 #include "mozilla/PerfectHash.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/glean/bindings/MetricTypes.h"
 #include "mozilla/glean/fog_ffi_generated.h"
+#include "nsString.h"
 
 #define GLEAN_INDEX_BITS ({{index_bits}})
 #define GLEAN_TYPE_BITS ({{type_bits}})
@@ -44,7 +44,7 @@ static_assert({{ categories|length }} < UINT32_MAX, "Too many metric categories 
 static_assert({{ metric_id_mapping|length }} < {{2 ** (id_bits - id_signal_bits)}}, "Too many metrics generated. Need room for {{id_signal_bits}} signal bits.");
 static_assert({{ metric_type_ids|length }} < {{2 ** type_bits}}, "Too many different metric types.");
 
-static already_AddRefed<nsISupports> NewMetricFromId(uint32_t id) {
+already_AddRefed<nsISupports> NewMetricFromId(uint32_t id) {
   uint32_t typeId = GLEAN_TYPE_ID(id);
   uint32_t metricId = GLEAN_METRIC_ID(id);
 
@@ -72,7 +72,7 @@ static already_AddRefed<nsISupports> NewMetricFromId(uint32_t id) {
  * @param aSubmetricId - an outparam which is assigned the submetric's SDK-generated submetric id.
  *                       Used only by GIFFT.
  */
-static already_AddRefed<nsISupports> NewSubMetricFromIds(uint32_t aParentTypeId, uint32_t aParentMetricId, const nsACString& aLabel, uint32_t* aSubmetricId) {
+already_AddRefed<nsISupports> NewSubMetricFromIds(uint32_t aParentTypeId, uint32_t aParentMetricId, const nsACString& aLabel, uint32_t* aSubmetricId) {
   switch (aParentTypeId) {
     {% for (type_name, subtype_name), (type_id, original_type) in metric_type_ids.items() %}
     {% if subtype_name|length > 0 %}
@@ -106,7 +106,7 @@ static_assert(sizeof(gMetricStringTable) < {{2 ** index_bits}}, "Metric string t
 /**
  * Get a category's name from the string table.
  */
-static const char* GetCategoryName(category_entry_t entry) {
+const char* GetCategoryName(category_entry_t entry) {
   MOZ_ASSERT(entry < sizeof(gCategoryStringTable), "Entry identifier offset larger than string table");
   return &gCategoryStringTable[entry];
 }
@@ -114,7 +114,7 @@ static const char* GetCategoryName(category_entry_t entry) {
 /**
  * Get a metric's identifier from the string table.
  */
-static const char* GetMetricIdentifier(metric_entry_t entry) {
+const char* GetMetricIdentifier(metric_entry_t entry) {
   uint32_t offset = GLEAN_OFFSET(entry);
   MOZ_ASSERT(offset < sizeof(gMetricStringTable), "Entry identifier offset larger than string table");
   return &gMetricStringTable[offset];
@@ -163,4 +163,3 @@ static Maybe<uint32_t> metric_result_check(const nsACString& aKey, uint64_t entr
 #undef GLEAN_OFFSET
 
 } // namespace mozilla::glean
-#endif // mozilla_GleanJSMetricsLookup_h

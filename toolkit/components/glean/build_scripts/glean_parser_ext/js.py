@@ -105,7 +105,7 @@ def subtype_name(obj):
     return ""
 
 
-def output_js(objs, output_fd, options={}):
+def output_js(objs, output_fd_h, output_fd_cpp, options={}):
     """
     Given a tree of objects, output code for the JS API to the file-like object `output_fd`.
 
@@ -131,12 +131,20 @@ def output_js(objs, output_fd, options={}):
     util.get_jinja2_template = get_local_template
 
     if "pings" in objs:
-        write_pings({"pings": objs["pings"]}, output_fd, "js_pings.jinja2")
+        write_pings(
+            {"pings": objs["pings"]},
+            output_fd_cpp,
+            "js_pings.jinja2",
+            output_fd_h,
+            "js_pings_h.jinja2",
+        )
     else:
-        write_metrics(get_metrics(objs), output_fd, "js.jinja2")
+        write_metrics(
+            get_metrics(objs), output_fd_cpp, "js.jinja2", output_fd_h, "js_h.jinja2"
+        )
 
 
-def write_metrics(objs, output_fd, template_filename):
+def write_metrics(objs, output_fd, template_filename, output_fd_h, template_filename_h):
     """
     Given a tree of objects `objs`, output metrics-only code for the JS API to the
     file-like object `output_fd` using template `template_filename`
@@ -161,12 +169,12 @@ def write_metrics(objs, output_fd, template_filename):
     metric_type_ids = {}
 
     for category_name, objs in get_metrics(objs).items():
-        category_name = util.camelize(category_name)
-        id = category_string_table.stringIndex(category_name)
-        categories.append((category_name, id))
+        category_camel = util.camelize(category_name)
+        id = category_string_table.stringIndex(category_camel)
+        categories.append((category_camel, id))
 
         for metric in objs.values():
-            identifier = metric_identifier(category_name, metric.name)
+            identifier = metric_identifier(category_camel, metric.name)
             metric_type_tuple = (type_name(metric), subtype_name(metric))
             if metric_type_tuple in metric_type_ids:
                 type_id, _ = metric_type_ids[metric_type_tuple]
@@ -190,7 +198,7 @@ def write_metrics(objs, output_fd, template_filename):
         key_type="const nsACString&",
         key_bytes="aKey.BeginReading()",
         key_length="aKey.Length()",
-        return_type="static Maybe<uint32_t>",
+        return_type="Maybe<uint32_t>",
         return_entry="return category_result_check(aKey, entry);",
     )
 
@@ -208,7 +216,7 @@ def write_metrics(objs, output_fd, template_filename):
         key_type="const nsACString&",
         key_bytes="aKey.BeginReading()",
         key_length="aKey.Length()",
-        return_type="static Maybe<uint32_t>",
+        return_type="Maybe<uint32_t>",
         return_entry="return metric_result_check(aKey, entry);",
     )
 
@@ -230,8 +238,20 @@ def write_metrics(objs, output_fd, template_filename):
     )
     output_fd.write("\n")
 
+    output_fd_h.write(
+        util.get_jinja2_template(template_filename_h).render(
+            index_bits=INDEX_BITS,
+            id_bits=ID_BITS,
+            type_bits=TYPE_BITS,
+            id_signal_bits=ID_SIGNAL_BITS,
+            num_categories=len(categories),
+            num_metrics=len(metric_id_mapping.items()),
+        )
+    )
+    output_fd_h.write("\n")
 
-def write_pings(objs, output_fd, template_filename):
+
+def write_pings(objs, output_fd, template_filename, output_fd_h, template_filename_h):
     """
     Given a tree of objects `objs`, output pings-only code for the JS API to the
     file-like object `output_fd` using template `template_filename`
@@ -249,8 +269,10 @@ def write_pings(objs, output_fd, template_filename):
     pings = {}
     for ping_name in objs["pings"].keys():
         ping_id = get_ping_id(ping_name)
-        ping_name = util.camelize(ping_name)
-        pings[ping_name] = ping_entry(ping_id, ping_string_table.stringIndex(ping_name))
+        ping_camel = util.camelize(ping_name)
+        pings[ping_camel] = ping_entry(
+            ping_id, ping_string_table.stringIndex(ping_camel)
+        )
 
     ping_map = [
         (bytearray(ping_name, "ascii"), ping_entry)
@@ -265,7 +287,7 @@ def write_pings(objs, output_fd, template_filename):
         key_type="const nsACString&",
         key_bytes="aKey.BeginReading()",
         key_length="aKey.Length()",
-        return_type="static Maybe<uint32_t>",
+        return_type="Maybe<uint32_t>",
         return_entry="return ping_result_check(aKey, entry);",
     )
 
@@ -277,3 +299,10 @@ def write_pings(objs, output_fd, template_filename):
         )
     )
     output_fd.write("\n")
+
+    output_fd_h.write(
+        util.get_jinja2_template(template_filename_h).render(
+            num_pings=len(pings.items()),
+        )
+    )
+    output_fd_h.write("\n")
