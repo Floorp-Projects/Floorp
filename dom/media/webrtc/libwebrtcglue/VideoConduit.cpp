@@ -230,7 +230,6 @@ bool operator!=(
          aThis.rtcp_mode != aOther.rtcp_mode ||
          aThis.rtcp_xr.receiver_reference_time_report !=
              aOther.rtcp_xr.receiver_reference_time_report ||
-         aThis.transport_cc != aOther.transport_cc ||
          aThis.remb != aOther.remb || aThis.tmmbr != aOther.tmmbr ||
          aThis.keyframe_method != aOther.keyframe_method ||
          aThis.lntf.enabled != aOther.lntf.enabled ||
@@ -449,7 +448,6 @@ void WebrtcVideoConduit::OnControlConfigChange() {
     newRtp.rtcp_mode = rtpRtcpConfig->GetRtcpMode();
     newRtp.nack.rtp_history_ms = 0;
     newRtp.remb = false;
-    newRtp.transport_cc = false;
     newRtp.tmmbr = false;
     newRtp.keyframe_method = webrtc::KeyFrameReqMethod::kNone;
     newRtp.ulpfec_payload_type = kNullPayloadType;
@@ -515,7 +513,6 @@ void WebrtcVideoConduit::OnControlConfigChange() {
       newRtp.tmmbr |= codec_config.RtcpFbCcmIsSet(kRtcpFbCcmParamTmmbr);
       newRtp.remb |= codec_config.RtcpFbRembIsSet();
       use_fec |= codec_config.RtcpFbFECIsSet();
-      newRtp.transport_cc |= codec_config.RtcpFbTransportCCIsSet();
 
       if (codec_config.RtxPayloadTypeIsSet()) {
         newRtp.rtx_associated_payload_types[codec_config.mRTXPayloadType] =
