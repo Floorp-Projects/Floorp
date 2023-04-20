@@ -38,7 +38,7 @@
 
       // mouseover and click on menuitem makes it active before menubar is
       // active
-      gQueue.push(new synthClick("fruit", new focusChecker("fruit")));
+      gQueue.push(new synthClick("fruit", new focusChecker("fruit"), { where: "center" }));
 
       // mouseover on menuitem when menubar is active
       gQueue.push(new synthMouseMove("apple", new focusChecker("apple")));
@@ -66,7 +66,7 @@
       //gQueue.push(new synthRightKey("vehicle", new focusChecker("apple")));
 
       // click menuitem to close menu, focus gets back to document
-      gQueue.push(new synthClick("tricycle", new focusChecker(document)));
+      gQueue.push(new synthClick("tricycle", new focusChecker(document), { where: "center" }));
 
       //enableLogging("focus,DOMEvents,tree"); // logging for bug708927
       //gQueue.onFinish = function() { disableLogging(); }
