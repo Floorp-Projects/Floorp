@@ -4541,6 +4541,153 @@ bool js::array_includes(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+// ES2024 draft 23.1.3.2.1 IsConcatSpreadable
+static bool IsConcatSpreadable(JSContext* cx, HandleValue v, bool* spreadable) {
+  // Step 1.
+  if (!v.isObject()) {
+    *spreadable = false;
+    return true;
+  }
+
+  // Step 2.
+  RootedValue res(cx);
+  RootedObject obj(cx, &v.toObject());
+  RootedId id(cx,
+              PropertyKey::Symbol(cx->wellKnownSymbols().isConcatSpreadable));
+  if (!GetProperty(cx, obj, v, id, &res)) {
+    return false;
+  }
+
+  // Step 3.
+  if (!res.isUndefined()) {
+    *spreadable = ToBoolean(res);
+    return true;
+  }
+
+  // Step 4.
+  bool isArray;
+  if (!JS::IsArray(cx, obj, &isArray)) {
+    return false;
+  }
+  *spreadable = isArray;
+  return true;
+}
+
+// ES2024 draft 23.1.3.2 Array.prototype.concat
+static bool array_concat(JSContext* cx, unsigned argc, Value* vp) {
+  AutoJSMethodProfilerEntry pseudoFrame(cx, "Array.prototype", "concat");
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1.
+  RootedObject obj(cx, ToObject(cx, args.thisv()));
+  if (!obj) {
+    return false;
+  }
+
+  // Step 2.
+  RootedObject arr(cx);
+  if (IsArraySpecies(cx, obj)) {
+    arr = NewDenseEmptyArray(cx);
+    if (!arr) {
+      return false;
+    }
+  } else {
+    if (!ArraySpeciesCreate(cx, obj, 0, &arr)) {
+      return false;
+    }
+  }
+
+  // Step 3.
+  uint64_t n = 0;
+
+  // Step 4 (handled implicitly with nextArg and CallArgs).
+  uint32_t nextArg = 0;
+
+  // Step 5.
+  RootedValue v(cx, ObjectValue(*obj));
+  while (true) {
+    // Step 5.a.
+    bool spreadable;
+    if (!IsConcatSpreadable(cx, v, &spreadable)) {
+      return false;
+    }
+    // Step 5.b.
+    if (spreadable) {
+      // Step 5.b.i.
+      obj = &v.toObject();
+      uint64_t len;
+      if (!GetLengthPropertyInlined(cx, obj, &len)) {
+        return false;
+      }
+
+      // Step 5.b.ii.
+      if (n + len > uint64_t(DOUBLE_INTEGRAL_PRECISION_LIMIT) - 1) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_TOO_LONG_ARRAY);
+        return false;
+      }
+
+      // Step 5.b.iii.
+      uint64_t k = 0;
+
+      // Step 5.b.iv.
+      while (k < len) {
+        if (!CheckForInterrupt(cx)) {
+          return false;
+        }
+
+        // Step 5.b.iv.2.
+        bool hole;
+        if (!HasAndGetElement(cx, obj, k, &hole, &v)) {
+          return false;
+        }
+        if (!hole) {
+          // Step 5.b.iv.3.
+          if (!DefineArrayElement(cx, arr, n, v)) {
+            return false;
+          }
+        }
+        // Step 5.b.iv.4.
+        n++;
+
+        // Step 5.b.iv.5.
+        k++;
+      }
+    } else {
+      // Step 5.c.ii.
+      if (n >= uint64_t(DOUBLE_INTEGRAL_PRECISION_LIMIT) - 1) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_TOO_LONG_ARRAY);
+        return false;
+      }
+
+      // Step 5.c.iii.
+      if (!DefineArrayElement(cx, arr, n, v)) {
+        return false;
+      }
+
+      // Step 5.c.iv.
+      n++;
+    }
+
+    // Move on to the next argument.
+    if (nextArg == args.length()) {
+      break;
+    }
+    v = args[nextArg];
+    nextArg++;
+  }
+
+  // Step 6.
+  if (!SetLengthProperty(cx, arr, n)) {
+    return false;
+  }
+
+  // Step 7.
+  args.rval().setObject(*arr);
+  return true;
+}
+
 static const JSFunctionSpec array_methods[] = {
     JS_FN(js_toSource_str, array_toSource, 0, 0),
     JS_SELF_HOSTED_FN(js_toString_str, "ArrayToString", 0, 0),
@@ -4557,7 +4704,7 @@ static const JSFunctionSpec array_methods[] = {
     JS_FNINFO("splice", array_splice, &array_splice_info, 2, 0),
 
     /* Pythonic sequence methods. */
-    JS_SELF_HOSTED_FN("concat", "ArrayConcat", 1, 0),
+    JS_FN("concat", array_concat, 1, 0),
     JS_INLINABLE_FN("slice", array_slice, 2, 0, ArraySlice),
 
     JS_FN("lastIndexOf", array_lastIndexOf, 1, 0),

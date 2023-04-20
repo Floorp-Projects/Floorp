@@ -40,29 +40,21 @@ r.foo = 10;
 "abc".match(r);
 
 // Setter inside self-hosted JS.
-// Hook "A.length = n" at the end of Array.prototype.concat.
+// Hook "A.length = k" in Array.from.
+var ctor = function() {
+  let obj = {};
+  Object.defineProperty(obj, "length", { set: Array.prototype.join });
+  return obj;
+};
 var a = [1, 2, 3];
-Object.defineProperty(a, "constructor", {
-  get() {
-    return class {
-      constructor() {
-        let obj = {};
-        Object.defineProperty(obj, "length", { set: Array.prototype.join });
-        return obj;
-      }
-      static get [Symbol.species]() {
-        return this;
-      }
-    }
-  }
-});
-void Array.prototype.concat.call(a, [10, 20, 30]);
+a[Symbol.iterator] = null;
+void Array.from.call(ctor, a);
 `);
-assertEqArray(rv, [
+assertEqArray(rv, [ 
   "match", "[Symbol.match]",
   "get flags",
   "get hasIndices", "get global", "get ignoreCase", "get multiline",
   "get dotAll", "get unicode", "get sticky",
 
-  "defineProperty", "call", "concat", "defineProperty", "join",
+  "call", "from", "defineProperty", "join",
 ]);
