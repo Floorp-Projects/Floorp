@@ -55,7 +55,7 @@ menucaption:where([disabled="true"]) {
 }
 
 menubar > menu {
-  padding: .3em .4em;
+  padding: 4px 6px;
 }
 
 menubar:-moz-lwtheme > menu {
@@ -79,8 +79,8 @@ menubar > menu[open] {
 @media (-moz-gtk-non-native-menus) {
   menubar > menu {
     background-color: transparent;
-    border-bottom: .2em solid transparent;
-    padding-bottom: .1em;
+    border-bottom: 3px solid transparent;
+    padding-bottom: 1px;
     border-radius: 0;
   }
   menubar > menu[open] {
