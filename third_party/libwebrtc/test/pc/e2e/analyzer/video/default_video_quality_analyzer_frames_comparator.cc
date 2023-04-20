@@ -234,6 +234,15 @@ void DefaultVideoQualityAnalyzerFramesComparator::Stop(
           last_rendered_frame_time - stream_last_freeze_end_time_.at(stats_key),
           Now(), /*metadata=*/{}));
     }
+
+    // Freeze Time:
+    // If there were no freezes on a video stream, add only one sample with
+    // value 0 (0ms freezes time).
+    for (auto& [key, stream_stats] : stream_stats_) {
+      if (stream_stats.freeze_time_ms.IsEmpty()) {
+        stream_stats.freeze_time_ms.AddSample(0);
+      }
+    }
   }
 }
 
