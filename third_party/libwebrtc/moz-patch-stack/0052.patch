@@ -36,7 +36,7 @@ index 70c24de280..568b7761d9 100644
      std::unique_ptr<RtpFrameObject> frame) {
    RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
 diff --git a/video/rtp_video_stream_receiver2.h b/video/rtp_video_stream_receiver2.h
-index 782fa522f7..fa4f1cc176 100644
+index 862db6c861..13537636e8 100644
 --- a/video/rtp_video_stream_receiver2.h
 +++ b/video/rtp_video_stream_receiver2.h
 @@ -211,6 +211,12 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,

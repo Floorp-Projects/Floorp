@@ -185,6 +185,7 @@ rtc_library("rtp_video_frame_assembler") {
     "../../modules/video_coding:packet_buffer",
     "../../modules/video_coding:video_coding",
     "../../rtc_base:logging",
+    "../../rtc_base:rtc_numerics",
   ]
 
   absl_deps = [

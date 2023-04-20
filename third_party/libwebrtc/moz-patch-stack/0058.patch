@@ -176,7 +176,7 @@ index 568b7761d9..896bacd743 100644
  
  void RtpVideoStreamReceiver2::ManageFrame(
 diff --git a/video/rtp_video_stream_receiver2.h b/video/rtp_video_stream_receiver2.h
-index fa4f1cc176..975af2bf4a 100644
+index 13537636e8..b2016db038 100644
 --- a/video/rtp_video_stream_receiver2.h
 +++ b/video/rtp_video_stream_receiver2.h
 @@ -215,7 +215,8 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,

@@ -152,7 +152,7 @@ index 7a097fad17..13a8c67e67 100644
      testonly = true
  
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 2899cb47f5..009722fc79 100644
+index ee7932aefa..4933b3c5ab 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -283,6 +283,7 @@ rtc_library("sample_counter") {
