@@ -158,6 +158,28 @@ inline void NativeObject::initDenseElements(const Value* src, uint32_t count) {
   elementsRangePostWriteBarrier(0, count);
 }
 
+inline void NativeObject::initDenseElementRange(uint32_t destStart,
+                                                NativeObject* src) {
+  uint32_t count = src->getDenseInitializedLength();
+
+  // The initialized length must already be set to the correct value.
+  MOZ_ASSERT(destStart + count == getDenseInitializedLength());
+
+  if (!src->denseElementsArePacked()) {
+    markDenseElementsNotPacked();
+  }
+
+  const Value* vp = src->getDenseElements();
+#ifdef DEBUG
+  for (uint32_t i = 0; i < count; ++i) {
+    checkStoredValue(vp[i]);
+  }
+#endif
+  memcpy(reinterpret_cast<Value*>(elements_) + destStart, vp,
+         count * sizeof(Value));
+  elementsRangePostWriteBarrier(destStart, count);
+}
+
 template <typename Iter>
 inline bool NativeObject::initDenseElementsFromRange(JSContext* cx, Iter begin,
                                                      Iter end) {

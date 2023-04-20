@@ -4592,9 +4592,11 @@ static bool array_concat(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  bool isArraySpecies = IsArraySpecies(cx, obj);
+
   // Step 2.
   RootedObject arr(cx);
-  if (IsArraySpecies(cx, obj)) {
+  if (isArraySpecies) {
     arr = NewDenseEmptyArray(cx);
     if (!arr) {
       return false;
@@ -4639,27 +4641,55 @@ static bool array_concat(JSContext* cx, unsigned argc, Value* vp) {
       uint64_t k = 0;
 
       // Step 5.b.iv.
-      while (k < len) {
-        if (!CheckForInterrupt(cx)) {
-          return false;
-        }
 
-        // Step 5.b.iv.2.
-        bool hole;
-        if (!HasAndGetElement(cx, obj, k, &hole, &v)) {
+      // Try a fast path for copying dense elements directly.
+      bool optimized = false;
+      if (len > 0 && isArraySpecies &&
+          CanOptimizeForDenseStorage<ArrayAccess::Read>(obj, len) &&
+          n + len <= NativeObject::MAX_DENSE_ELEMENTS_COUNT) {
+        NativeObject* nobj = &obj->as<NativeObject>();
+        ArrayObject* resArr = &arr->as<ArrayObject>();
+        uint32_t initLen =
+            std::min(uint32_t(len), nobj->getDenseInitializedLength());
+
+        DenseElementResult res = resArr->ensureDenseElements(cx, n, initLen);
+        if (res == DenseElementResult::Failure) {
           return false;
         }
-        if (!hole) {
-          // Step 5.b.iv.3.
-          if (!DefineArrayElement(cx, arr, n, v)) {
+        if (res == DenseElementResult::Success) {
+          resArr->initDenseElementRange(n, nobj);
+          n += len;
+          optimized = true;
+        } else {
+          MOZ_ASSERT(res == DenseElementResult::Incomplete);
+        }
+      }
+
+      if (!optimized) {
+        // Step 5.b.iv.
+        while (k < len) {
+          if (!CheckForInterrupt(cx)) {
             return false;
           }
-        }
-        // Step 5.b.iv.4.
-        n++;
 
-        // Step 5.b.iv.5.
-        k++;
+          // Step 5.b.iv.2.
+          bool hole;
+          if (!HasAndGetElement(cx, obj, k, &hole, &v)) {
+            return false;
+          }
+          if (!hole) {
+            // Step 5.b.iv.3.
+            if (!DefineArrayElement(cx, arr, n, v)) {
+              return false;
+            }
+          }
+
+          // Step 5.b.iv.4.
+          n++;
+
+          // Step 5.b.iv.5.
+          k++;
+        }
       }
     } else {
       // Step 5.c.ii.
