@@ -483,9 +483,10 @@ void Connection::OnReadPacket(const char* data,
       case StunMessage::IntegrityStatus::kIntegrityOk:
         if (remote_candidate().password() != msg->password()) {
           // TODO(bugs.webrtc.org/14578): Do a better thing
-          RTC_LOG(LS_INFO) << "STUN code error - Different passwords, old = "
-                           << absl::CHexEscape(msg->password()) << ", new "
-                           << absl::CHexEscape(remote_candidate().password());
+          RTC_DLOG(LS_VERBOSE)
+              << "STUN code error - Different passwords, old = "
+              << absl::CHexEscape(msg->password()) << ", new "
+              << absl::CHexEscape(remote_candidate().password());
         }
         break;
       default:
