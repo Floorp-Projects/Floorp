@@ -109,28 +109,6 @@ class SeqNumUnwrapper {
     return last_unwrapped_;
   }
 
-  int64_t UnwrapForward(T value) {
-    if (!last_value_) {
-      last_unwrapped_ = {value};
-    } else {
-      last_unwrapped_ += ForwardDiff<T, M>(*last_value_, value);
-    }
-
-    last_value_ = value;
-    return last_unwrapped_;
-  }
-
-  int64_t UnwrapBackwards(T value) {
-    if (!last_value_) {
-      last_unwrapped_ = {value};
-    } else {
-      last_unwrapped_ -= ReverseDiff<T, M>(*last_value_, value);
-    }
-
-    last_value_ = value;
-    return last_unwrapped_;
-  }
-
  private:
   int64_t last_unwrapped_ = 0;
   absl::optional<T> last_value_;
