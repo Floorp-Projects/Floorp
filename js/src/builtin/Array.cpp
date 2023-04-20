@@ -4581,7 +4581,112 @@ static bool IsConcatSpreadable(JSContext* cx, HandleValue v, bool* spreadable) {
   return true;
 }
 
-// ES2024 draft 23.1.3.2 Array.prototype.concat
+// Returns true if the object may have an @@isConcatSpreadable property.
+static bool MaybeHasIsConcatSpreadable(JSContext* cx, JSObject* obj) {
+  JS::Symbol* sym = cx->wellKnownSymbols().isConcatSpreadable;
+  JSObject* holder;
+  return MaybeHasInterestingSymbolProperty(cx, obj, sym, &holder);
+}
+
+static bool TryOptimizePackedArrayConcat(JSContext* cx, CallArgs& args,
+                                         Handle<JSObject*> obj,
+                                         bool* optimized) {
+  // Fast path for the following cases:
+  //
+  // (1) packedArray.concat(): copy the array's elements.
+  // (2) packedArray.concat(packedArray): concatenate two packed arrays.
+  // (3) packedArray.concat(value): copy and append a single non-array value.
+  //
+  // These cases account for almost all calls to Array.prototype.concat in
+  // Speedometer 3.
+
+  *optimized = false;
+
+  if (args.length() > 1) {
+    return true;
+  }
+
+  // The `this` object must be a packed array without @@isConcatSpreadable.
+  // @@isConcatSpreadable is uncommon and requires a property lookup and more
+  // complicated code, so we let the slow path handle it.
+  if (!IsPackedArray(obj)) {
+    return true;
+  }
+  if (MaybeHasIsConcatSpreadable(cx, obj)) {
+    return true;
+  }
+
+  Handle<ArrayObject*> thisArr = obj.as<ArrayObject>();
+  uint32_t thisLen = thisArr->length();
+
+  if (args.length() == 0) {
+    // Case (1). Copy the packed array.
+    ArrayObject* arr = NewDenseFullyAllocatedArray(cx, thisLen);
+    if (!arr) {
+      return false;
+    }
+    arr->initDenseElements(thisArr->getDenseElements(), thisLen);
+    args.rval().setObject(*arr);
+    *optimized = true;
+    return true;
+  }
+
+  MOZ_ASSERT(args.length() == 1);
+
+  // If the argument is an object, it must not have an @@isConcatSpreadable
+  // property.
+  if (args[0].isObject() &&
+      MaybeHasIsConcatSpreadable(cx, &args[0].toObject())) {
+    return true;
+  }
+
+  MOZ_ASSERT_IF(args[0].isObject(), args[0].toObject().is<NativeObject>());
+
+  // Case (3). Copy and append a single value if the argument is not an array.
+  if (!args[0].isObject() || !args[0].toObject().is<ArrayObject>()) {
+    ArrayObject* arr = NewDenseFullyAllocatedArray(cx, thisLen + 1);
+    if (!arr) {
+      return false;
+    }
+    arr->initDenseElements(thisArr->getDenseElements(), thisLen);
+
+    arr->ensureDenseInitializedLength(thisLen, 1);
+    arr->initDenseElement(thisLen, args[0]);
+
+    args.rval().setObject(*arr);
+    *optimized = true;
+    return true;
+  }
+
+  // Case (2). Concatenate two packed arrays.
+  if (!IsPackedArray(&args[0].toObject())) {
+    return true;
+  }
+
+  uint32_t argLen = args[0].toObject().as<ArrayObject>().length();
+
+  // Compute the array length. This can't overflow because both arrays are
+  // packed.
+  static_assert(NativeObject::MAX_DENSE_ELEMENTS_COUNT < INT32_MAX);
+  MOZ_ASSERT(thisLen <= NativeObject::MAX_DENSE_ELEMENTS_COUNT);
+  MOZ_ASSERT(argLen <= NativeObject::MAX_DENSE_ELEMENTS_COUNT);
+  uint32_t totalLen = thisLen + argLen;
+
+  ArrayObject* arr = NewDenseFullyAllocatedArray(cx, totalLen);
+  if (!arr) {
+    return false;
+  }
+  arr->initDenseElements(thisArr->getDenseElements(), thisLen);
+
+  ArrayObject* argArr = &args[0].toObject().as<ArrayObject>();
+  arr->ensureDenseInitializedLength(thisLen, argLen);
+  arr->initDenseElementRange(thisLen, argArr);
+
+  args.rval().setObject(*arr);
+  *optimized = true;
+  return true;
+}
+
 static bool array_concat(JSContext* cx, unsigned argc, Value* vp) {
   AutoJSMethodProfilerEntry pseudoFrame(cx, "Array.prototype", "concat");
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -4593,6 +4698,17 @@ static bool array_concat(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   bool isArraySpecies = IsArraySpecies(cx, obj);
+
+  // Fast path for the most common cases.
+  if (isArraySpecies) {
+    bool optimized;
+    if (!TryOptimizePackedArrayConcat(cx, args, obj, &optimized)) {
+      return false;
+    }
+    if (optimized) {
+      return true;
+    }
+  }
 
   // Step 2.
   RootedObject arr(cx);
