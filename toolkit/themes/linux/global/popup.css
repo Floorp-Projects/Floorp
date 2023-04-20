@@ -24,6 +24,18 @@ panel {
   -moz-window-input-region-margin: var(--panel-shadow-margin);
 }
 
+@media (-moz-gtk-non-native-menus) {
+  menupopup,
+  panel {
+    --panel-padding-block: 3px;
+    --panel-border-radius: 8px;
+  }
+  menupopup {
+    /* Also apply the padding in the inline axis for menus */
+    --panel-padding: var(--panel-padding-block);
+  }
+}
+
 menupopup > menu > menupopup {
   /* Vertically align nested menupopups: the shadow plus the top padding */
   margin-top: calc(-1 * (var(--panel-shadow-margin) + var(--panel-padding-block)));
@@ -70,8 +82,4 @@ panel[type="arrow"].panel-no-padding::part(content) {
 menulist > menupopup {
   padding: 0;
   min-width: 0;
-}
-
-menupopup[customoptionstyling="true"] {
-  appearance: none;
 }
