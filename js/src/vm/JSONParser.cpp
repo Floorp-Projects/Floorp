@@ -30,77 +30,6 @@ using mozilla::IsAsciiDigit;
 using mozilla::IsAsciiHexDigit;
 using mozilla::RangedPtr;
 
-JSONParserBase::~JSONParserBase() {
-  for (size_t i = 0; i < stack.length(); i++) {
-    if (stack[i].state == FinishArrayElement) {
-      js_delete(&stack[i].elements());
-    } else {
-      js_delete(&stack[i].properties());
-    }
-  }
-
-  for (size_t i = 0; i < freeElements.length(); i++) {
-    js_delete(freeElements[i]);
-  }
-
-  for (size_t i = 0; i < freeProperties.length(); i++) {
-    js_delete(freeProperties[i]);
-  }
-}
-
-void JSONParserBase::trace(JSTracer* trc) {
-  for (auto& elem : stack) {
-    if (elem.state == FinishArrayElement) {
-      elem.elements().trace(trc);
-    } else {
-      elem.properties().trace(trc);
-    }
-  }
-}
-
-template <typename CharT>
-void JSONParser<CharT>::getTextPosition(uint32_t* column, uint32_t* line) {
-  CharPtr ptr = begin;
-  uint32_t col = 1;
-  uint32_t row = 1;
-  for (; ptr < current; ptr++) {
-    if (*ptr == '\n' || *ptr == '\r') {
-      ++row;
-      col = 1;
-      // \r\n is treated as a single newline.
-      if (ptr + 1 < current && *ptr == '\r' && *(ptr + 1) == '\n') {
-        ++ptr;
-      }
-    } else {
-      ++col;
-    }
-  }
-  *column = col;
-  *line = row;
-}
-
-template <typename CharT>
-void JSONParser<CharT>::error(const char* msg) {
-  if (parseType == ParseType::JSONParse) {
-    uint32_t column = 1, line = 1;
-    getTextPosition(&column, &line);
-
-    const size_t MaxWidth = sizeof("4294967295");
-    char columnNumber[MaxWidth];
-    SprintfLiteral(columnNumber, "%" PRIu32, column);
-    char lineNumber[MaxWidth];
-    SprintfLiteral(lineNumber, "%" PRIu32, line);
-
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_JSON_BAD_PARSE, msg, lineNumber,
-                              columnNumber);
-  }
-}
-
-bool JSONParserBase::errorReturn() {
-  return parseType == ParseType::AttemptForEval;
-}
-
 template <typename CharT>
 template <JSONParserBase::StringType ST>
 JSONParserBase::Token JSONParser<CharT>::readString() {
@@ -443,74 +372,6 @@ JSONParserBase::Token JSONParser<CharT>::advance() {
 }
 
 template <typename CharT>
-JSONParserBase::Token JSONParser<CharT>::advanceAfterObjectOpen() {
-  MOZ_ASSERT(current[-1] == '{');
-
-  while (current < end && IsJSONWhitespace(*current)) {
-    current++;
-  }
-  if (current >= end) {
-    error("end of data while reading object contents");
-    return token(Error);
-  }
-
-  if (*current == '"') {
-    return readString<PropertyName>();
-  }
-
-  if (*current == '}') {
-    current++;
-    return token(ObjectClose);
-  }
-
-  error("expected property name or '}'");
-  return token(Error);
-}
-
-template <typename CharT>
-static inline void AssertPastValue(const RangedPtr<const CharT> current) {
-  /*
-   * We're past an arbitrary JSON value, so the previous character is
-   * *somewhat* constrained, even if this assertion is pretty broad.  Don't
-   * knock it till you tried it: this assertion *did* catch a bug once.
-   */
-  MOZ_ASSERT((current[-1] == 'l' && current[-2] == 'l' && current[-3] == 'u' &&
-              current[-4] == 'n') ||
-             (current[-1] == 'e' && current[-2] == 'u' && current[-3] == 'r' &&
-              current[-4] == 't') ||
-             (current[-1] == 'e' && current[-2] == 's' && current[-3] == 'l' &&
-              current[-4] == 'a' && current[-5] == 'f') ||
-             current[-1] == '}' || current[-1] == ']' || current[-1] == '"' ||
-             IsAsciiDigit(current[-1]));
-}
-
-template <typename CharT>
-JSONParserBase::Token JSONParser<CharT>::advanceAfterArrayElement() {
-  AssertPastValue(current);
-
-  while (current < end && IsJSONWhitespace(*current)) {
-    current++;
-  }
-  if (current >= end) {
-    error("end of data when ',' or ']' was expected");
-    return token(Error);
-  }
-
-  if (*current == ',') {
-    current++;
-    return token(Comma);
-  }
-
-  if (*current == ']') {
-    current++;
-    return token(ArrayClose);
-  }
-
-  error("expected ',' or ']' after array element");
-  return token(Error);
-}
-
-template <typename CharT>
 JSONParserBase::Token JSONParser<CharT>::advancePropertyName() {
   MOZ_ASSERT(current[-1] == ',');
 
@@ -552,6 +413,23 @@ JSONParserBase::Token JSONParser<CharT>::advancePropertyColon() {
 }
 
 template <typename CharT>
+static inline void AssertPastValue(const RangedPtr<const CharT> current) {
+  /*
+   * We're past an arbitrary JSON value, so the previous character is
+   * *somewhat* constrained, even if this assertion is pretty broad.  Don't
+   * knock it till you tried it: this assertion *did* catch a bug once.
+   */
+  MOZ_ASSERT((current[-1] == 'l' && current[-2] == 'l' && current[-3] == 'u' &&
+              current[-4] == 'n') ||
+             (current[-1] == 'e' && current[-2] == 'u' && current[-3] == 'r' &&
+              current[-4] == 't') ||
+             (current[-1] == 'e' && current[-2] == 's' && current[-3] == 'l' &&
+              current[-4] == 'a' && current[-5] == 'f') ||
+             current[-1] == '}' || current[-1] == ']' || current[-1] == '"' ||
+             IsAsciiDigit(current[-1]));
+}
+
+template <typename CharT>
 JSONParserBase::Token JSONParser<CharT>::advanceAfterProperty() {
   AssertPastValue(current);
 
@@ -575,6 +453,128 @@ JSONParserBase::Token JSONParser<CharT>::advanceAfterProperty() {
 
   error("expected ',' or '}' after property value in object");
   return token(Error);
+}
+
+template <typename CharT>
+JSONParserBase::Token JSONParser<CharT>::advanceAfterObjectOpen() {
+  MOZ_ASSERT(current[-1] == '{');
+
+  while (current < end && IsJSONWhitespace(*current)) {
+    current++;
+  }
+  if (current >= end) {
+    error("end of data while reading object contents");
+    return token(Error);
+  }
+
+  if (*current == '"') {
+    return readString<PropertyName>();
+  }
+
+  if (*current == '}') {
+    current++;
+    return token(ObjectClose);
+  }
+
+  error("expected property name or '}'");
+  return token(Error);
+}
+
+template <typename CharT>
+JSONParserBase::Token JSONParser<CharT>::advanceAfterArrayElement() {
+  AssertPastValue(current);
+
+  while (current < end && IsJSONWhitespace(*current)) {
+    current++;
+  }
+  if (current >= end) {
+    error("end of data when ',' or ']' was expected");
+    return token(Error);
+  }
+
+  if (*current == ',') {
+    current++;
+    return token(Comma);
+  }
+
+  if (*current == ']') {
+    current++;
+    return token(ArrayClose);
+  }
+
+  error("expected ',' or ']' after array element");
+  return token(Error);
+}
+
+template <typename CharT>
+void JSONParser<CharT>::getTextPosition(uint32_t* column, uint32_t* line) {
+  CharPtr ptr = begin;
+  uint32_t col = 1;
+  uint32_t row = 1;
+  for (; ptr < current; ptr++) {
+    if (*ptr == '\n' || *ptr == '\r') {
+      ++row;
+      col = 1;
+      // \r\n is treated as a single newline.
+      if (ptr + 1 < current && *ptr == '\r' && *(ptr + 1) == '\n') {
+        ++ptr;
+      }
+    } else {
+      ++col;
+    }
+  }
+  *column = col;
+  *line = row;
+}
+
+JSONParserBase::~JSONParserBase() {
+  for (size_t i = 0; i < stack.length(); i++) {
+    if (stack[i].state == FinishArrayElement) {
+      js_delete(&stack[i].elements());
+    } else {
+      js_delete(&stack[i].properties());
+    }
+  }
+
+  for (size_t i = 0; i < freeElements.length(); i++) {
+    js_delete(freeElements[i]);
+  }
+
+  for (size_t i = 0; i < freeProperties.length(); i++) {
+    js_delete(freeProperties[i]);
+  }
+}
+
+void JSONParserBase::trace(JSTracer* trc) {
+  for (auto& elem : stack) {
+    if (elem.state == FinishArrayElement) {
+      elem.elements().trace(trc);
+    } else {
+      elem.properties().trace(trc);
+    }
+  }
+}
+
+template <typename CharT>
+void JSONParser<CharT>::error(const char* msg) {
+  if (parseType == ParseType::JSONParse) {
+    uint32_t column = 1, line = 1;
+    getTextPosition(&column, &line);
+
+    const size_t MaxWidth = sizeof("4294967295");
+    char columnNumber[MaxWidth];
+    SprintfLiteral(columnNumber, "%" PRIu32, column);
+    char lineNumber[MaxWidth];
+    SprintfLiteral(lineNumber, "%" PRIu32, line);
+
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_JSON_BAD_PARSE, msg, lineNumber,
+                              columnNumber);
+  }
+}
+
+bool JSONParserBase::errorReturn() {
+  return parseType == ParseType::AttemptForEval;
 }
 
 inline bool JSONParserBase::finishObject(MutableHandleValue vp,
