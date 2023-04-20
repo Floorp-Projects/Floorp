@@ -356,7 +356,6 @@ class MutableScriptFlags : public EnumFlags<MutableScriptFlagsEnum> {
   _(MutableFlags, baselineDisabled, BaselineDisabled)                   \
   _(MutableFlags, ionDisabled, IonDisabled)                             \
   _(MutableFlags, uninlineable, Uninlineable)                           \
-  _(MutableFlags, noEagerBaselineHint, NoEagerBaselineHint)             \
   _(MutableFlags, failedLexicalCheck, FailedLexicalCheck)               \
   _(MutableFlags, hadSpeculativePhiBailout, HadSpeculativePhiBailout)
 

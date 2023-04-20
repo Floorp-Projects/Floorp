@@ -7470,14 +7470,6 @@
   mirror: always  # LoadStartupJSPrefs
   do_not_use_directly: true
 
-# Jit Hints Cache - An in-process cache to
-# accelerate repeated baseline compilations
-- name: javascript.options.jitHints
-  type: bool
-  value: true
-  mirror: always  # LoadStartupJSPrefs
-  do_not_use_directly: true
-
 # "Warm-up" thresholds at which we attempt to compile a script/function with
 # the next JIT tier.
 #

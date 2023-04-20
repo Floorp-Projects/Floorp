@@ -42,7 +42,6 @@
 
 #include "debugger/DebugAPI-inl.h"
 #include "jit/BaselineFrameInfo-inl.h"
-#include "jit/JitHints-inl.h"
 #include "jit/JitScript-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SharedICHelpers-inl.h"
@@ -220,13 +219,6 @@ MethodStatus BaselineCompiler::compile() {
       return Method_Error;
     }
   }
-
-#ifdef NIGHTLY_BUILD
-  if (!JitOptions.disableJitHints) {
-    JitHintsMap* jitHints = cx->runtime()->jitRuntime()->getJitHintsMap();
-    jitHints->setEagerBaselineHint(script);
-  }
-#endif
 
   // Suppress GC during compilation.
   gc::AutoSuppressGC suppressGC(cx);
