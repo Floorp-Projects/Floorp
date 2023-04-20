@@ -226,23 +226,28 @@ class PromptFactory {
   }
 
   _handleDateTime(aElement) {
-    const prompt = new lazy.GeckoViewPrompter(aElement.ownerGlobal);
+    const win = aElement.ownerGlobal;
+    const prompt = new lazy.GeckoViewPrompter(win);
 
     const chromeEventHandler = aElement.ownerGlobal.docShell.chromeEventHandler;
     const dismissPrompt = () => prompt.dismiss();
     // Some controls don't have UA widget (bug 888320)
-    if (
-      ["month", "week"].includes(aElement.type) &&
-      !aElement.openOrClosedShadowRoot
-    ) {
-      aElement.addEventListener("blur", dismissPrompt, {
-        mozSystemGroup: true,
-      });
-    } else {
-      chromeEventHandler.addEventListener(
-        "MozCloseDateTimePicker",
-        dismissPrompt
-      );
+    {
+      const dateTimeBoxElement = aElement.dateTimeBoxElement;
+      if (["month", "week"].includes(aElement.type) && !dateTimeBoxElement) {
+        aElement.addEventListener("blur", dismissPrompt, {
+          mozSystemGroup: true,
+        });
+      } else {
+        chromeEventHandler.addEventListener(
+          "MozCloseDateTimePicker",
+          dismissPrompt
+        );
+
+        dateTimeBoxElement.dispatchEvent(
+          new win.CustomEvent("MozSetDateTimePickerState", { detail: true })
+        );
+      }
     }
 
     prompt.asyncShowPrompt(
@@ -256,10 +261,8 @@ class PromptFactory {
       },
       result => {
         // Some controls don't have UA widget (bug 888320)
-        if (
-          ["month", "week"].includes(aElement.type) &&
-          !aElement.openOrClosedShadowRoot
-        ) {
+        const dateTimeBoxElement = aElement.dateTimeBoxElement;
+        if (["month", "week"].includes(aElement.type) && !dateTimeBoxElement) {
           aElement.removeEventListener("blur", dismissPrompt, {
             mozSystemGroup: true,
           });
@@ -267,6 +270,9 @@ class PromptFactory {
           chromeEventHandler.removeEventListener(
             "MozCloseDateTimePicker",
             dismissPrompt
+          );
+          dateTimeBoxElement.dispatchEvent(
+            new win.CustomEvent("MozSetDateTimePickerState", { detail: false })
           );
         }
 
