@@ -5,10 +5,11 @@
 // Test that style sheets can be disabled and enabled.
 
 // https rather than chrome to improve coverage
-const TESTCASE_URI = TEST_BASE_HTTPS + "simple.html";
+const SIMPLE_URI = TEST_BASE_HTTPS + "simple.html";
+const LONGNAME_URI = TEST_BASE_HTTPS + "longname.html";
 
 add_task(async function() {
-  const { panel, ui } = await openStyleEditorForURL(TESTCASE_URI);
+  const { panel, ui } = await openStyleEditorForURL(SIMPLE_URI);
   const editor = await ui.editors[0].getSourceEditor();
 
   const summary = editor.summary;
@@ -50,6 +51,35 @@ add_task(async function() {
     false,
     "first stylesheet is now enabled again, UI does not have DISABLED class"
   );
+});
+
+// Check that stylesheets with long names do not prevent the toggle button
+// from being visible.
+add_task(async function testLongNameStylesheet() {
+  const { ui } = await openStyleEditorForURL(LONGNAME_URI);
+
+  is(ui.editors.length, 2, "Expected 2 stylesheet editors");
+
+  // Test that the first editor, which should have a stylesheet with a short
+  // name.
+  let editor = ui.editors[0];
+  let stylesheetToggle = editor.summary.querySelector(".stylesheet-toggle");
+  is(editor.friendlyName, "simple.css");
+  ok(stylesheetToggle, "stylesheet toggle button exists");
+  ok(stylesheetToggle.getBoundingClientRect().width > 0);
+  ok(stylesheetToggle.getBoundingClientRect().height > 0);
+
+  const expectedWidth = stylesheetToggle.getBoundingClientRect().width;
+  const expectedHeight = stylesheetToggle.getBoundingClientRect().height;
+
+  // Test that the second editor, which should have a stylesheet with a long
+  // name.
+  editor = ui.editors[1];
+  stylesheetToggle = editor.summary.querySelector(".stylesheet-toggle");
+  is(editor.friendlyName, "veryveryverylongnamethatcanbreakthestyleeditor.css");
+  ok(stylesheetToggle, "stylesheet toggle button exists");
+  is(stylesheetToggle.getBoundingClientRect().width, expectedWidth);
+  is(stylesheetToggle.getBoundingClientRect().height, expectedHeight);
 });
 
 add_task(async function testSystemStylesheet() {
