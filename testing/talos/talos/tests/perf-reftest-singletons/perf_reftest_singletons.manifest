@@ -19,6 +19,7 @@
 % http://localhost/tests/perf-reftest-singletons/inline-style-cache-1.html
 % http://localhost/tests/perf-reftest-singletons/line-iterator.html
 % http://localhost/tests/perf-reftest-singletons/link-style-cache-1.html
+% http://localhost/tests/perf-reftest-singletons/many-custom-props.html
 % http://localhost/tests/perf-reftest-singletons/nth-index-1.html
 % http://localhost/tests/perf-reftest-singletons/nth-index-2.html
 % http://localhost/tests/perf-reftest-singletons/only-children-1.html
