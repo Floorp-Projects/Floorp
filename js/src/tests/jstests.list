@@ -654,6 +654,10 @@ skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/hourCycle-d
 skip script test262/built-ins/Date/year-zero.js
 skip script test262/built-ins/Date/parse/year-zero.js
 
+# Array.prototype.concat currently doesn't support spreading tuples. The spec
+# for records and tuples is undergoing major (design) changes, so disable the
+# test for now.
+skip script non262/Tuple/prototype/concat/concat-with-array.js
 
 ##############################################
 # Enable Iterator Helpers tests in the shell #
