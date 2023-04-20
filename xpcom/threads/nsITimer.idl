@@ -237,6 +237,8 @@ interface nsITimer : nsISupports
    */
   attribute nsIEventTarget target;
 
+  readonly attribute ACString name;
+
   /**
    * The number of microseconds this nsITimer implementation can possibly
    * fire early.
@@ -361,3 +363,14 @@ NS_NewTimerWithFuncCallback(nsTimerCallbackFunc aCallback,
   }
 #endif
 %}
+
+[scriptable, builtinclass, uuid(5482506d-1d21-4d08-b01c-95c87e1295ad)]
+interface nsITimerManager : nsISupports
+{
+  /**
+   * Returns a read-only list of nsITimer objects, implementing only the name,
+   * delay and type attribute getters.
+   * This is meant to be used for tests, to verify that no timer is leftover
+   * at the end of a test. */
+  Array<nsITimer> getTimers();
+};
