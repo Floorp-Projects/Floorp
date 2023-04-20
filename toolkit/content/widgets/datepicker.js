@@ -41,6 +41,8 @@ function DatePicker(context) {
       this._createComponents();
       this._update();
       this.components.calendar.focusDay();
+      // TODO(bug 1828721): This is a bit sad.
+      window.PICKER_READY = true;
       document.dispatchEvent(new CustomEvent("PickerReady"));
     },
 

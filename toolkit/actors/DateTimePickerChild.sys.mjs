@@ -33,14 +33,12 @@ export class DateTimePickerChild extends JSWindowActorChild {
       return;
     }
 
-    if (this._inputElement.openOrClosedShadowRoot) {
-      // dateTimeBoxElement is within UA Widget Shadow DOM.
-      // An event dispatch to it can't be accessed by document.
-      let win = this._inputElement.ownerGlobal;
-      dateTimeBoxElement.dispatchEvent(
-        new win.CustomEvent("MozSetDateTimePickerState", { detail: false })
-      );
-    }
+    // dateTimeBoxElement is within UA Widget Shadow DOM.
+    // An event dispatch to it can't be accessed by document.
+    let win = this._inputElement.ownerGlobal;
+    dateTimeBoxElement.dispatchEvent(
+      new win.CustomEvent("MozSetDateTimePickerState", { detail: false })
+    );
 
     this._inputElement = null;
   }
@@ -148,20 +146,16 @@ export class DateTimePickerChild extends JSWindowActorChild {
 
         let dateTimeBoxElement = this._inputElement.dateTimeBoxElement;
         if (!dateTimeBoxElement) {
-          throw new Error(
-            "How do we get this event without a UA Widget or XBL binding?"
-          );
+          throw new Error("How do we get this event without a UA Widget?");
         }
 
-        if (this._inputElement.openOrClosedShadowRoot) {
-          // dateTimeBoxElement is within UA Widget Shadow DOM.
-          // An event dispatch to it can't be accessed by document, because
-          // the event is not composed.
-          let win = this._inputElement.ownerGlobal;
-          dateTimeBoxElement.dispatchEvent(
-            new win.CustomEvent("MozSetDateTimePickerState", { detail: true })
-          );
-        }
+        // dateTimeBoxElement is within UA Widget Shadow DOM.
+        // An event dispatch to it can't be accessed by document, because
+        // the event is not composed.
+        let win = this._inputElement.ownerGlobal;
+        dateTimeBoxElement.dispatchEvent(
+          new win.CustomEvent("MozSetDateTimePickerState", { detail: true })
+        );
 
         this.addListeners(this._inputElement);
 
