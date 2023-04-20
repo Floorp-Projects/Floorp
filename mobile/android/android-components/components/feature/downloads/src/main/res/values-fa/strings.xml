@@ -4,7 +4,7 @@
     <string name="mozac_feature_downloads_notification_channel">بارگیری‌ها</string>
 
     <!-- Text shown on the second row of a paused download notification. -->
-    <string name="mozac_feature_downloads_paused_notification_text">متوقف کردن بارگیری</string>
+    <string name="mozac_feature_downloads_paused_notification_text">بارگیری مکث شد</string>
 
     <!-- Text shown on the second row of an completed download notification. The filename is shown on the first row. -->
     <string name="mozac_feature_downloads_completed_notification_text2">بارگیری کامل شد</string>
@@ -18,7 +18,7 @@
     <!-- Alert dialog confirmation before download a file, this is the negative action. -->
     <string name="mozac_feature_downloads_dialog_cancel">انصراف</string>
     <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
-    <string name="mozac_feature_downloads_file_not_supported2">%1$s نمی تواند این نوع پرونده را بارگیری کند</string>
+    <string name="mozac_feature_downloads_file_not_supported2">%1$s نمی‌تواند این نوع پرونده را بارگیری کند</string>
 
     <!-- Message that appears when the downloaded file could not be opened-->
     <string name="mozac_feature_downloads_could_not_open_file">پرونده باز نشد</string>
@@ -42,8 +42,16 @@
     <!-- Title for the third party download app chooser dialog -->
     <string name="mozac_feature_downloads_third_party_app_chooser_dialog_title">تکمیل عملکرد با استفاده از</string>
     <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
-    <string name="mozac_feature_downloads_unable_to_open_third_party_app">امکان بازکردن %1$s وجود ندارد</string>
+    <string name="mozac_feature_downloads_unable_to_open_third_party_app">نتوانست %1$s را باز کند</string>
     <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
-    <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">برای دریافت پرونده‌ها، نیاز به اجازهٔ دسترسی به پرونده‌ها و رسانه لازم است. به تنطیمات Android بروید، و بر روی اجازه دادن ضربه بزنید.</string>
+    <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">برای بارگیری پرونده‌ها، اجازهٔ دسترسی به پرونده‌ها و رسانه لازم است. به تنطیمات اندروید بروید، روی اجازه‌ها بزنید و سپس اجازه دادن را بزنید.</string>
 
-    </resources>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the title   -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">بارگیری‌های خصوصی لغو شوند؟</string>
+    <!-- Alert dialog confirmation before cancelling private downloads, this is the body. %1$s will be replaced with the name of the file. -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_warning_content_body">اگر اکنون همهٔ زبانه‌های خصوصی را ببندید، بارگیری %1$s لغو می‌شود. آیا مطمئنید که می‌خواهید از مرور خصوصی خارج شوید؟</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_accept">لغو بارگیری‌ها</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the negative action. Leaves user in Private browsing -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_deny">باقی ماندن در مرور خصوصی</string>
+</resources>

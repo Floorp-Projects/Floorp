@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
-    <string name="mozac_tab_counter_open_tab_tray_single">۱ زبانهٔ باز. برای تعویض ضربه بزنید.</string>
+    <string name="mozac_tab_counter_open_tab_tray_single">۱ زبانهٔ باز. برای تعویض زبانه‌ها ضربه بزنید.</string>
     <!-- Message announced to the user when tab tray is selected with multiple tabs -->
     <string name="mozac_tab_counter_open_tab_tray_plural">%1$s زبانهٔ باز. برای تغییر زبانه‌ها ضربه بزنید.</string>
     <!-- Browser menu button that creates a new tab -->

@@ -215,6 +215,10 @@
     <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
     <string name="preference_switch_autocomplete_user_list">Kichin ri taq Ruxaq Ye\'atz\'aqatisaj</string>
 
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list
+     %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_user_list_summary2">Titzij richin chi ri %s nunojisaj pa ruyonil ri taq URLs ye\'awajo\'.</string>
+
     <!-- Preference category: Manage (user-defined) sites -->
     <string name="preference_category_autocomplete_manage_sites">Kenuk\'samajïx taq ruxaq</string>
 
@@ -223,6 +227,9 @@
 
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Titz\'aqatisäx ichinan URL</string>
+
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">Ri kicholb\'al kiyon enojisan:</string>
 
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add2">Titz\'aqatisäx URL</string>
@@ -339,6 +346,9 @@
 
     <!-- In-app link (in settings) to Focus privacy notice. -->
     <string name="preference_privacy_notice">Rutzijol Ichinanem</string>
+
+    <!-- In-app link (in settings) to Focus licensing information. -->
+    <string name="preference_licensing_info">Na\'oj chi rij ya\'öl q\'ij</string>
 
     <!-- Link to Focus licensing information from other libraries that we use. -->
     <string name="preference_libraries_we_use">Taq wujb\'äl yeqokisaj</string>
@@ -511,6 +521,9 @@
     <!-- Onboarding second screen: Title -->
     <!-- %1$s will be replaced by the app short name(Focus) -->
     <string name="onboarding_second_screen_title">%1$s man junam ta achi\'el kik\'in ch\'aqa\' chik okik\'amaya\'l</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">Niqayüj ri anatab\'al toq natz\'apij ri chokoy richin awichinanem.</string>
 
     <!-- New Onboarding flow second screen make Focus default browser button label-->
     <string name="onboarding_second_screen_default_browser_button_text">Tiya\' kan achi\'el kanob\'äl k\'o wi</string>

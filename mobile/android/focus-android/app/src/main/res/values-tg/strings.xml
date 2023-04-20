@@ -576,6 +576,14 @@
     -->
     <string name="notification_browsing_session_channel_name">Ҷаласаи тамошокунии хусусӣ</string>
 
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">Огоҳномаҳо ба шумо имкон медиҳанд, то тавонед ҷаласаи худро дар «%1$s» бо як ламс тоза намоед. Ба шумо лозим нест, ки браузери худро кушоед ва бинед, ки дар он чӣ иҷро шуда истодааст.</string>
+
     <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
     <string name="tabs_tray_action_erase">Пок кардани таърихи тамошо</string>
 
@@ -597,6 +605,17 @@
     %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
     <string name="your_rights_content3"><![CDATA[Ба шумо нисбат ба тамғаҳои тиҷории «Mozilla Foundation» ё ягон тарафи дигар, аз он ҷумла,
 бе маҳдудият нисбат ба тамға ё номи «Mozilla», «Firefox» or «%1$s» ягон ҳуқуқи тамғаи тиҷорӣ ё иҷозатномавӣ таъмин нашудааст. Маълумоти иловагӣ метавонад <a href="%2$s">дар ин ҷо</a> пайдо карда шавад.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[Рамзи манбаи иловагӣ барои «%1$s» дар таҳти <a href="%2$s">иҷозатномаҳои</a> гуногуни дигари манбаи кушод ва ройгон дастрас аст.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[«%1$s», инчунин, аз рӯйхатҳои манъкуние, ки аз ҷониби «Disconnect, Inc.» таъмин шудаанд, ҳамчун корҳои алоҳида ва мустақил дар таҳти <a href="%2$s">Иҷозатномаи ҷамъиятии умумии GNU v3</a> истифода мебарад ва рӯйхати мазкур <a href="%3$s">дар ин ҷо</a> дастрас аст.]]></string>
 
     <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Номи корбар</string>
@@ -667,6 +686,9 @@
     <!--  Title preference inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
     <string name="cookie_banner_reject_all_option_title">Маҳдудкунии баннери куки</string>
 
+    <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_summary">Ба қадри имкон, дархостҳои кукиҳоро ба таври худкор рад кунед, то ки шумораи намоиши баннерҳо кам карда шавад.</string>
+
     <!-- Preference for removing cookie/consent banners from sites automatically, this is shown as part of the protections panel with the tracking protection toggle. -->--&gt;
     <string name="cookie_banner_exception_item_title">Маҳдудкунии баннери куки</string>
 
@@ -699,6 +721,9 @@
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
     <string name="cookie_banner_exception_panel_description_state_off_for_site2">«%1$s» метавонад кӯшиш кунад, ки дархостҳои кукиҳоро ба таври худкор рад кунад.</string>
+
+    <!-- Long text for a detail explanation indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
+    <string name="cookie_banner_exception_panel_description_site_is_not_supported">Айни ҳол ин сомона аз тарафи «Маҳдудкунии баннери куки» дастгирӣ намешавад. Шумо мехоҳед, ки аз дастаи мо дархост кунед, ки он ин сомонаро бозбинӣ кунад ва онро барои дастгирӣ дар оянда илова намояд?</string>
 
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
     <string name="cookie_banner_exception_panel_site_is_not_supported_cancel_button">Бекор кардан</string>

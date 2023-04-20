@@ -14,6 +14,14 @@
     <string name="content_description_disable_private_browsing_button">غیرفعال کردن حالت مرور خصوصی</string>
     <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
     <string name="search_hint">جست‌وجو یا ورود آدرس</string>
+    <!-- Placeholder text shown in the search bar before a user enters text for a general engine -->
+    <string name="search_hint_general_engine">جست‌وجوی وب</string>
+    <!-- Placeholder text shown in search bar when using history search -->
+    <string name="history_search_hint">جست‌وجوی تاریخچه</string>
+    <!-- Placeholder text shown in search bar when using bookmarks search -->
+    <string name="bookmark_search_hint">جست‌وجوی نشانک‌ها</string>
+    <!-- Placeholder text shown in search bar when using tabs search -->
+    <string name="tab_search_hint">جست‌وجوی زبانه‌ها</string>
     <!-- Placeholder text shown in the search bar when using application search engines -->
     <string name="application_search_hint">عبارت جستجو را وارد کنید</string>
     <!-- No Open Tabs Message Description -->
@@ -37,6 +45,9 @@
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">انتخاب شده</string>
 
+    <!-- Home - Recently saved bookmarks -->
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">به‌تازگی ذخیره شده</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">نمایش همه نشانک های ذخیره شده</string>
     <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
@@ -53,6 +64,11 @@
        باورهای غلط و رایج در مورد مرور خصوصی
     </string>
 
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message_2">زبانهٔ خصوصی بعدی خود را با یک ضربه باز کنید.</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">افزودن به صفحهٔ خانگی</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">نه، ممنون</string>
 
@@ -68,6 +84,9 @@
     <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
     <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
     <string name="tcp_cfr_message">قوی‌ترین قابلیت حفظ حریم خصوصی ما هم‌اکنون، ردیاب‌های میان‌پایگاهی را منزوی می‌کند.</string>
+
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">دربارهٔ محافظت کامل در برابر کلوچک‌ها بیاموزید</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">دسترسی به دوربین مورد نیاز است. به تنظیمات اندروید بروید، روی مجوزها ضربه بزنید و بعد روی اجازه ضربه بزنید.</string>
@@ -118,6 +137,8 @@
     <string name="recent_tabs_see_all_synced_tabs_button_text">نمایش همه زبانه‌های همگام‌سازی شده</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
     <string name="recent_tabs_synced_device_icon_content_description">دستگاه‌ همگام‌سازی شده</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">برداشتن</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">حذف</string>
@@ -143,6 +164,8 @@
     <string name="browser_menu_stop">توقف</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">افزونه‌ها</string>
+    <!-- Browser menu button that opens account settings -->
+    <string name="browser_menu_account_settings">اطلاعات حساب</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">هیچ افزونه‌ای اینجا نیست</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -154,7 +177,7 @@
     <!-- Browser menu button that opens a user's library -->
     <string name="browser_menu_library">کتابخانه</string>
     <!-- Browser menu toggle that requests a desktop site -->
-    <string name="browser_menu_desktop_site">سایت دسک‌تاپ</string>
+    <string name="browser_menu_desktop_site">پایگاه رومیزی</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">افزودن به صفحه خانگی</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
@@ -230,6 +253,28 @@
     <!-- Menu option in the search selector menu to open the search settings -->
     <string name="search_settings_menu_item">تنظیمات جستجو</string>
 
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">این بار جست‌وجو در:</string>
+
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">شروع کنید</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">ورود</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">پرش</string>
+    <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
+    <string name="onboarding_home_content_description_close_button">بستن</string>
+
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_default_browser_negative_button">اکنون نه</string>
+    <!-- Text for the button to sign in to sync on the device -->
+    <string name="juno_onboarding_sign_in_positive_button">ورود</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_sign_in_negative_button">اکنون نه</string>
+
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_enable_notifications_negative_button">اکنون نه</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">یک زبانه %1$s جدید باز کنید</string>
@@ -266,7 +311,7 @@
     <!-- Preference category for privacy and security settings -->
     <string name="preferences_category_privacy_security">حریم خصوصی و امنیت</string>
     <!-- Preference for advanced site permissions -->
-    <string name="preferences_site_permissions">مجوزهای سایت</string>
+    <string name="preferences_site_permissions">اجازه‌های پایگاه</string>
     <!-- Preference for private browsing options -->
     <string name="preferences_private_browsing_options">مرور خصوصی</string>
     <!-- Preference for opening links in a private tab-->
@@ -286,8 +331,17 @@
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
     <string name="reduce_cookie_banner_option_on">روشن</string>
 
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">خاموش برای این پایگاه</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">لغو</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">روشن برای این پایگاه</string>
+    <!-- Remind me later text button for the onboarding dialog -->
+    <string name="reduce_cookie_banner_dialog_not_now_button">اکنون نه</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string name="preferences_https_only_summary">به طور خودکار برای افزایش امنیت تلاش می کند با استفاده از پروتکل رمزگذاری HTTPS به سایت ها متصل شود.</string>
+    <string name="preferences_https_only_summary">به طور خودکار برای افزایش امنیت تلاش می‌کند با استفاده از شیوه‌نامهٔ رمزگذاری HTTPS به پایگاه‌ها متصل شود.</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">خاموش</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
@@ -297,9 +351,11 @@
     <!-- Option for the https only setting -->
     <string name="preferences_https_only_in_private_tabs">فقط در برگه های خصوصی فعال شود</string>
     <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
-    <string name="errorpage_httpsonly_title">سایت امن در دسترس نیست</string>
+    <string name="errorpage_httpsonly_title">پایگاه امن در دسترس نیست</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
-    <string name="errorpage_httpsonly_message_title">به احتمال زیاد، وب سایت از HTTPS پشتیبانی نمی کند.</string>
+    <string name="errorpage_httpsonly_message_title">به احتمال زیاد، وبگاه از HTTPS پشتیبانی نمی‌کند.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">با این حال، همچنین ممکن است که یک ردیاب، درگیر باشد. اگر به وبگاه ادامه می‌دهید، نباید هیچ اطلاعات حساسی را وارد کنید. اگر ادامه دهید، حالت فقط-HTTPS به طور موقت برای پایگاه خاموش می‌شود.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">دسترسی‌پذیری</string>
     <!-- Preference to override the Firefox Account server -->
@@ -441,7 +497,7 @@
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">استثناها</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
-    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">برای همه‌ی سایت‌ها روشن شود</string>
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">روشن کردن برای تمام پایگاه‌ها</string>
     <!-- Text displayed when there are no exceptions -->
     <string name="exceptions_empty_message_description">استثنائات به شما این امکان  را می‌دهد،‌محافظت از ردیابی سایت‌های منتخب را غیرفعال کنید.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
@@ -712,7 +768,7 @@
     <!-- Bookmark overflow menu edit button -->
     <string name="bookmark_menu_edit_button">ویرایش</string>
     <!-- Bookmark overflow menu copy button -->
-    <string name="bookmark_menu_copy_button">رونوشت برداشتن</string>
+    <string name="bookmark_menu_copy_button">رونوشت</string>
     <!-- Bookmark overflow menu share button -->
     <string name="bookmark_menu_share_button">اشتراک‌گذاری</string>
     <!-- Bookmark overflow menu open in new tab button -->
@@ -772,7 +828,7 @@
     <!-- Button label for clearing a site permission-->
     <string name="clear_permission">پاک کردن مجوز</string>
     <!-- Button label for clearing all the information on all sites-->
-    <string name="clear_permissions_on_all_sites">مجوزها را در همه سایتها پاک کنید</string>
+    <string name="clear_permissions_on_all_sites">پاک‌سازی اجازه‌ها در تمام پایگاه‌ها</string>
     <!-- Preference for altering video and audio autoplay for all websites -->
     <string name="preference_browser_feature_autoplay">پخش خودکار</string>
     <!-- Preference for altering the camera access for all websites -->
@@ -785,6 +841,8 @@
     <string name="preference_phone_feature_notification">اعلان‌</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">حافظهٔ دائمی</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">کلوچک‌های میان‌پایگاهی</string>
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">محتوای کنترل شده با DRM</string>
     <!-- Label that indicates that a permission must be asked always -->
@@ -882,6 +940,10 @@
     <string name="share_link_all_apps_subheader">همه عمل‌ها</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">به تازگی استفاده شده</string>
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">رونوشت به تخته‌گیره</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">به تخته‌گیره رونوشت شد</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">برای همگام‌سازی وارد شوید</string>
      <!-- An option from the share dialog to send link to all other sync devices -->
@@ -932,7 +994,7 @@
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">برگردان</string>
     <!-- Text shown in snackbar when user removes a top site -->
-    <string name="snackbar_top_site_removed">سایت حذف شد</string>
+    <string name="snackbar_top_site_removed">پایگاه برداشته شد</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">به %1$s اجازه دهید%2$s باز کند</string>
@@ -952,7 +1014,7 @@
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">ورود به حالت تمام صفحه</string>
     <!-- Message for copying the URL via long press on the toolbar -->
-    <string name="url_copied">رونوشت آدرس</string>
+    <string name="url_copied">نشانی رونوشت شد</string>
 
     <!-- Sample text for accessibility font size -->
     <string name="accessibility_text_size_sample_text_1">این نمونه متن است. در اینجا آمده است تا نشان دهیم که با بزرگنمایی یا کاهش اندازه با این تنظیم ، متن چگونه ظاهر می شود.</string>
@@ -986,7 +1048,7 @@
     <!-- Subtitle for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files_subtitle">فضای ذخیره سازی را آزاد می کند</string>
     <!-- Title for the site permissions item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_site_permissions">مجوزهای سایت</string>
+    <string name="preferences_delete_browsing_data_site_permissions">اجازه‌های پایگاه</string>
     <!-- Title for the downloads item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_downloads">دریافت‌ها</string>
     <!-- Text for the button to delete browsing data -->
@@ -1008,6 +1070,9 @@
     <string name="preferences_delete_browsing_data_snackbar">مرور داده حذف شد</string>
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">در حال حذف اطلاعات…</string>
+
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">حذف تمام پایگاه‌ها در «%s»</string>
 
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description">نشانک‌ها، تاریخچه و گذرواژه‌های خود را به Firefox در این دستگاه بیاورید.</string>
@@ -1061,7 +1126,7 @@
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">با دوربین خود وارد سیستم شوید</string>
     <!-- Text shown for settings option for sign with email -->
-    <string name="sign_in_with_email">به جای آن از ایمیل استفاده کنید</string>
+    <string name="sign_in_with_email">به جای آن از رایانامه استفاده کنید</string>
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
     <string name="sign_in_create_account_text"><![CDATA[حسابی ندارید؟ برای هم‌گام‌سازی بین دستگاه‌های خود <u>یکی ایجاد کنید</u>.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1196,7 +1261,7 @@
 
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
-    <string name="browser_toolbar_long_press_popup_copy">نسخه‌برداری</string>
+    <string name="browser_toolbar_long_press_popup_copy">رونوشت</string>
     <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
     <string name="browser_toolbar_long_press_popup_paste_and_go">جایگذاری و ثبت</string>
     <!-- Paste the text in the clipboard -->
@@ -1278,7 +1343,7 @@
     <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
     <string name="saved_login_clear_username">پاک کردن نام‌کاربری</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
-    <string name="saved_login_open_site">باز کردن سایت در مرورگر</string>
+    <string name="saved_login_open_site">گشودن پایگاه در مرورگر</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">نمایش گذرواژه</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
@@ -1296,7 +1361,7 @@
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
     <string name="logins_biometric_prompt_message_pin">بازکردن دستگاه</string>
     <!-- Title for Accessibility Force Enable Zoom Preference -->
-    <string name="preference_accessibility_force_enable_zoom">بزرگنمایی در همه وب سایت ها</string>
+    <string name="preference_accessibility_force_enable_zoom">بزرگ‌نمایی در تمام وبگاه‌ها</string>
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom_summary">حتی در وب سایت هایی که از این حرکت جلوگیری می کنند ، می توانید خرج کردن و بزرگنمایی را فعال کنید.</string>
 
@@ -1321,6 +1386,9 @@
     <string name="preferences_credit_cards_add_credit_card">اضافه کردن کارت اعتباری</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">مدیریت کارت‌های ذخیره شده</string>
+
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">شامل اطلاعاتی مانند شماره‌ها، رایانامه و نشانی‌های حمل و نقل</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">اضافه کردن کارت</string>
@@ -1368,6 +1436,9 @@
     <string name="credit_cards_biometric_prompt_message_pin">باز کردن قفل دستگاه</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">برای استفاده از اطلاعات کارت اعتباری ذخیره شده، قفل را باز کنید</string>
+
+    <!-- The header for the email of an address -->
+    <string name="addresses_email">رایانامه</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">افزودن موتور جست‌وجو</string>
@@ -1423,13 +1494,13 @@
     <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site -->
     <string name="confirm_clear_site_data"><![CDATA[آیا مطمئن هستید که می‌خواهید تمام کلوچک‌ها و داده‌های پایگاه <b>%s</b> را پاک کنید؟]]></string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
-    <string name="confirm_clear_permissions_on_all_sites">آیا مطمئن هستید که می خواهید همه مجوزها را در همه سایت ها پاک کنید؟</string>
+    <string name="confirm_clear_permissions_on_all_sites">آیا مطمئنید که می‌خواهید تمام اجازه‌ها را در تمام پایگاه‌ها پاک کنید؟</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
-    <string name="confirm_clear_permissions_site">آیا مطمئن هستید که می خواهید همه مجوزها را در این سایت پاک کنید؟</string>
+    <string name="confirm_clear_permissions_site">آیا مطمئنید که می‌خواهید تمام اجازه‌ها را برای این پایگاه‌ها پاک کنید؟</string>
     <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
-    <string name="confirm_clear_permission_site">آیا مطمئن هستید که می خواهید این مجوز را برای این سایت پاک کنید؟</string>
+    <string name="confirm_clear_permission_site">آیا مطمئنید که می‌خواهید این اجازه را برای این پایگاه پاک کنید؟</string>
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
-    <string name="no_site_exceptions">هیچ سایتی استثنائی وجود ندارد</string>
+    <string name="no_site_exceptions">بدون استثنای پایگاه</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">آیا از حذف این نشانک مطمئن هستید؟</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
@@ -1480,6 +1551,8 @@
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">بدون زبانهٔ باز</string>
 
+    <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
+    <string name="shortcut_max_limit_content">برای افزودن میان‌بری جدید، یکی را حذف کنید. پایگاه را لمس کرده، نگه دارید و برداشتن را انتخاب کنید.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">باشه،‌ متوجه شدم</string>
 
@@ -1495,7 +1568,7 @@
     <string name="inactive_tabs_title">برگه های غیر فعال</string>
 
     <!-- Default browser experiment -->
-    <string name="default_browser_experiment_card_text">پیوندهای وب سایت‌ها، ایمیل‌ها و پیام‌ها را تنظیم کنید تا به طور خودکار در Firefox باز شوند.</string>
+    <string name="default_browser_experiment_card_text">پیوندهای وبگاه‌ها، رایانامه‌ها و پیام‌ها را تنظیم کنید تا به طور خودکار در Firefox باز شوند.</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">حذف</string>

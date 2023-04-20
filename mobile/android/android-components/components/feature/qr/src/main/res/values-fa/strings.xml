@@ -2,9 +2,9 @@
 <resources>
 
     <!-- Content description (not visible, for screen readers etc.): Description of an image view. -->
-    <string name="mozac_feature_qr_scanner">خواننده کد QR</string>
+    <string name="mozac_feature_qr_scanner">پویندهٔ رمزینهٔ پاس</string>
 
     <!-- Text shown if no camera is available on the device and the QR scanner cannot be displayed. -->
-    <string name="mozac_feature_qr_scanner_no_camera">دوربین موجود نیست</string>
+    <string name="mozac_feature_qr_scanner_no_camera">دوربین در این افزاره در دسترس نیست</string>
 
 </resources>
