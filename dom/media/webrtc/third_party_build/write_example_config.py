@@ -12,7 +12,7 @@ text = """#!/bin/bash
 
 # Edit {path-to} to match the location of your copy of Mozilla's
 # fork of libwebrtc (at https://github.com/mozilla/libwebrtc).
-export MOZ_LIBWEBRTC_SRC="{path-to}/moz-libwebrtc"
+export MOZ_LIBWEBRTC_SRC=$$STATE_DIR/moz-libwebrtc
 
 # Fast-forwarding each Chromium version of libwebrtc should be done
 # under a separate bugzilla bug.  This bug number is used when crafting
