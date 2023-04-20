@@ -10,7 +10,7 @@ from mozbuild.util import FileAvoidWrite
 # generate all the files in header_list
 
 
-def gen_wrappers(unused, outdir, compiler, template_file, *header_list):
+def gen_wrappers(unused, template_file, outdir, compiler, *header_list):
     template = open(template_file, "r").read()
 
     for header in header_list:
