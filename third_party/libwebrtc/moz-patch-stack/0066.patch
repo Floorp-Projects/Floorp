@@ -8,10 +8,10 @@ Subject: Bug 1766646 - (fix-3f418ccf99) disable a RTC_DCHECK_EQ for mozilla
  1 file changed, 2 insertions(+)
 
 diff --git a/call/call.cc b/call/call.cc
-index 8929c66f86..6a9d4c1f5f 100644
+index 2aac5605a7..d7efca9a20 100644
 --- a/call/call.cc
 +++ b/call/call.cc
-@@ -1385,7 +1385,9 @@ void Call::DeliverRtcp(MediaType media_type, rtc::CopyOnWriteBuffer packet) {
+@@ -1378,7 +1378,9 @@ void Call::DeliverRtcp(MediaType media_type, rtc::CopyOnWriteBuffer packet) {
    // and make sure that the flow of packets is consistent from the
    // `RtpTransport` class, via the *Channel and *Engine classes and into Call.
    // This way we'll also know more about the context of the packet.
