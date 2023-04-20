@@ -185,12 +185,6 @@ SDKs are an exception - they may be installed in a directory which
 contains spaces. It is strongly recommended that you accept the default
 settings for all installation locations.
 
-Installing Visual Studio in a different language than Windows
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-If Visual Studio is using a different language than the system, then your build
-may fail with a link error after reporting a bunch of include errors.
-
 Quotation marks in ``PATH``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -212,11 +206,3 @@ If you happen to have Cygwin installed, its tools may erroneously be
 used when building Firefox. Ensure that MozillaBuild directories (in
 ``C:\mozilla-build\``) are before Cygwin directories in the ``PATH``
 environment variable.
-
-Building from within Users
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-If you encounter a build failure with:
-``LINK: fatal error LNK1181: cannot open input file ..\..\..\..\..\security\nss3.lib``
-and the Firefox code is underneath the ``C:\Users`` folder, then you should try
-moving the code to be underneath ``C:\\mozilla-source`` instead.
