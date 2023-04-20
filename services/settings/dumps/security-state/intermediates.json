@@ -1945,24 +1945,6 @@
       "last_modified": 1666727875188
     },
     {
-      "schema": 1666727409981,
-      "derHash": "xBXOv6P8LvPHQJK4QmW61kw/yZlMkRd5ZWZ9er7pBYg=",
-      "subject": "OU=Security Communication RootCA2,O=SECOM Trust Systems CO.\\,LTD.,C=JP",
-      "subjectDN": "MF0xCzAJBgNVBAYTAkpQMSUwIwYDVQQKExxTRUNPTSBUcnVzdCBTeXN0ZW1zIENPLixMVEQuMScwJQYDVQQLEx5TZWN1cml0eSBDb21tdW5pY2F0aW9uIFJvb3RDQTI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "646b73a99fcc560ca1fe3ce6a321bf45c814a8676d3322ace82a7e7e8897f46a",
-        "size": 1601,
-        "filename": "M4BwmvOwlr48wqQFSBQsClIAKNsJ4st3riIGYWq2y7Q=.pem",
-        "location": "security-state-staging/intermediates/461fedad-31f0-49a0-8419-88fcb971810f.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "M4BwmvOwlr48wqQFSBQsClIAKNsJ4st3riIGYWq2y7Q=",
-      "crlite_enrolled": false,
-      "id": "441e263c-474f-4706-8caf-067062a7022a",
-      "last_modified": 1666727875174
-    },
-    {
       "schema": 1666727354885,
       "derHash": "bN+dy/NRCju0AnYdYtDF5OevxR2c/wHwK9UyVtxWet8=",
       "subject": "CN=GDCA TrustAUTH R4 DV SSL CA G2,O=Global Digital Cybersecurity Authority Co.\\, Ltd.,C=CN",
@@ -27397,5 +27379,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1680512223621
+  "timestamp": 1681833423506
 }
