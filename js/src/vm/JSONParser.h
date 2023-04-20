@@ -36,6 +36,8 @@ enum class JSONToken {
 template <typename CharT>
 class JSONParser;
 
+enum class JSONStringType { PropertyName, LiteralValue };
+
 template <typename CharT>
 class MOZ_STACK_CLASS JSONTokenizer {
  public:
@@ -93,9 +95,7 @@ class MOZ_STACK_CLASS JSONTokenizer {
   JSONToken stringToken(JSString* str);
   JSONToken numberToken(double d);
 
-  enum StringType { PropertyName, LiteralValue };
-
-  template <StringType ST>
+  template <JSONStringType ST>
   JSONToken readString();
 
   JSONToken readNumber();
