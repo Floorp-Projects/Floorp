@@ -801,13 +801,13 @@ export class UrlbarView {
     this.#resultMenuResult = result;
     this.resultMenu.openPopup(anchor, "bottomright topright");
     anchor.toggleAttribute("open", true);
-    this.resultMenu.addEventListener(
-      "popuphidden",
-      () => {
+    let listener = event => {
+      if (event.target == this.resultMenu) {
         anchor.removeAttribute("open");
-      },
-      { once: true }
-    );
+        this.resultMenu.removeEventListener("popuphidden", listener);
+      }
+    };
+    this.resultMenu.addEventListener("popuphidden", listener);
   }
 
   /**
