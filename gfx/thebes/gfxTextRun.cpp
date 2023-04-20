@@ -2420,6 +2420,8 @@ already_AddRefed<gfxTextRun> gfxFontGroup::MakeBlankTextRun(
   textRun->AddGlyphRun(font, FontMatchType::Kind::kUnspecified, 0, false,
                        orientation, false);
 
+  textRun->SetupClusterBoundaries(0, aString, aLength);
+
   for (uint32_t i = 0; i < aLength; i++) {
     if (aString[i] == '\n') {
       textRun->SetIsNewline(i);
