@@ -179,8 +179,7 @@ class MOZ_STACK_CLASS JSONFullParseHandlerAnyChar {
 
   Value v;
 
- protected:
-  const ParseType parseType;
+  ParseType parseType = ParseType::JSONParse;
 
  private:
   // Unused element and property vectors for previous in progress arrays and
@@ -190,8 +189,8 @@ class MOZ_STACK_CLASS JSONFullParseHandlerAnyChar {
   Vector<PropertyVector*, 5> freeProperties;
 
  public:
-  JSONFullParseHandlerAnyChar(JSContext* cx, ParseType parseType)
-      : cx(cx), parseType(parseType), freeElements(cx), freeProperties(cx) {}
+  explicit JSONFullParseHandlerAnyChar(JSContext* cx)
+      : cx(cx), freeElements(cx), freeProperties(cx) {}
   ~JSONFullParseHandlerAnyChar();
 
   // Allow move construction for use with Rooted.
@@ -205,6 +204,8 @@ class MOZ_STACK_CLASS JSONFullParseHandlerAnyChar {
   JSONFullParseHandlerAnyChar(const JSONFullParseHandlerAnyChar& other) =
       delete;
   void operator=(const JSONFullParseHandlerAnyChar& other) = delete;
+
+  JSContext* context() { return cx; }
 
   Value numberValue() const {
     MOZ_ASSERT(v.isNumber());
@@ -266,6 +267,8 @@ class MOZ_STACK_CLASS JSONFullParseHandler
   using CharPtr = mozilla::RangedPtr<const CharT>;
 
  public:
+  using ContextT = JSContext;
+
   class StringBuilder {
    public:
     JSStringBuilder buffer;
@@ -276,8 +279,7 @@ class MOZ_STACK_CLASS JSONFullParseHandler
     bool append(const CharT* begin, const CharT* end);
   };
 
-  JSONFullParseHandler(JSContext* cx, ParseType parseType)
-      : Base(cx, parseType) {}
+  explicit JSONFullParseHandler(JSContext* cx) : Base(cx) {}
 
   JSONFullParseHandler(JSONFullParseHandler&& other) noexcept
       : Base(std::move(other)) {}
@@ -294,23 +296,53 @@ class MOZ_STACK_CLASS JSONFullParseHandler
                    const char* columnString);
 };
 
-template <typename CharT>
-class MOZ_STACK_CLASS JSONParser {
-  using Handler = JSONFullParseHandler<CharT>;
+template <typename CharT, typename HandlerT>
+class MOZ_STACK_CLASS JSONPerHandlerParser {
+  using ContextT = typename HandlerT::ContextT;
+
+  using Tokenizer = JSONTokenizer<CharT, JSONPerHandlerParser<CharT, HandlerT>,
+                                  typename HandlerT::StringBuilder>;
 
  public:
-  using StringBuilder = typename Handler::StringBuilder;
-
- private:
-  using Tokenizer = JSONTokenizer<CharT, JSONParser<CharT>, StringBuilder>;
+  using StringBuilder = typename HandlerT::StringBuilder;
 
  public:
-  Handler handler;
+  HandlerT handler;
   Tokenizer tokenizer;
 
   // All in progress arrays and objects being parsed, in order from outermost
   // to innermost.
-  Vector<typename Handler::StackEntry, 10> stack;
+  Vector<typename HandlerT::StackEntry, 10> stack;
+
+ public:
+  JSONPerHandlerParser(ContextT* context, mozilla::Range<const CharT> data)
+      : handler(context), tokenizer(data, this), stack(context) {}
+
+  JSONPerHandlerParser(JSONPerHandlerParser&& other) noexcept
+      : handler(std::move(other.handler)),
+        tokenizer(std::move(other.tokenizer)),
+        stack(handler.context()) {
+    tokenizer.fixupParser(this);
+  }
+
+  ~JSONPerHandlerParser();
+
+  JSONPerHandlerParser(const JSONPerHandlerParser<CharT, HandlerT>& other) =
+      delete;
+  void operator=(const JSONPerHandlerParser<CharT, HandlerT>& other) = delete;
+
+  template <typename TempValueT, typename ResultSetter>
+  inline bool parseImpl(TempValueT& value, ResultSetter setResult);
+
+  void outOfMemory();
+
+  void error(const char* msg);
+};
+
+template <typename CharT>
+class MOZ_STACK_CLASS JSONParser
+    : JSONPerHandlerParser<CharT, JSONFullParseHandler<CharT>> {
+  using Base = JSONPerHandlerParser<CharT, JSONFullParseHandler<CharT>>;
 
  public:
   using ParseType = JSONFullParseHandlerAnyChar::ParseType;
@@ -320,17 +352,15 @@ class MOZ_STACK_CLASS JSONParser {
   /* Create a parser for the provided JSON data. */
   JSONParser(JSContext* cx, mozilla::Range<const CharT> data,
              ParseType parseType)
-      : handler(cx, parseType), tokenizer(data, this), stack(cx) {}
-
-  /* Allow move construction for use with Rooted. */
-  JSONParser(JSONParser&& other)
-      : handler(std::move(other.handler)),
-        tokenizer(std::move(other.tokenizer)),
-        stack(std::move(other.stack)) {
-    tokenizer.fixupParser(this);
+      : Base(cx, data) {
+    this->handler.parseType = parseType;
   }
 
-  ~JSONParser();
+  /* Allow move construction for use with Rooted. */
+  JSONParser(JSONParser&& other) noexcept : Base(std::move(other)) {}
+
+  JSONParser(const JSONParser& other) = delete;
+  void operator=(const JSONParser& other) = delete;
 
   /*
    * Parse the JSON data specified at construction time.  If it parses
@@ -345,14 +375,6 @@ class MOZ_STACK_CLASS JSONParser {
   bool parse(MutableHandleValue vp);
 
   void trace(JSTracer* trc);
-
-  void outOfMemory();
-
-  void error(const char* msg);
-
- private:
-  JSONParser(const JSONParser& other) = delete;
-  void operator=(const JSONParser& other) = delete;
 };
 
 template <typename CharT, typename Wrapper>
