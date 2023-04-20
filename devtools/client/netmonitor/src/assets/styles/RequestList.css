@@ -603,11 +603,8 @@
 }
 
 .requests-list-initiator .requests-list-initiator-lastframe {
-  text-decoration: none;
-}
-
-.requests-list-initiator .requests-list-initiator-lastframe:hover {
   text-decoration: underline;
+  text-decoration-skip-ink: none;
 }
 
 .requests-list-initiator-lastframe {
