@@ -38,7 +38,9 @@ An error occurred running prettier. Please check the following error messages:
 {}
 """.strip()
 
-PRETTIER_FORMATTING_MESSAGE = "This file needs formatting with prettier."
+PRETTIER_FORMATTING_MESSAGE = (
+    "This file needs formatting with Prettier (use 'mach lint --fix <path>')."
+)
 
 
 def setup(root, **lintargs):
