@@ -9,7 +9,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/108046c7cbb21c6cf
  1 file changed, 1 insertion(+)
 
 diff --git a/modules/audio_processing/audio_processing_impl.cc b/modules/audio_processing/audio_processing_impl.cc
-index e92ae6dffd..b0f5692d52 100644
+index 745e45ce72..6c6fac0de5 100644
 --- a/modules/audio_processing/audio_processing_impl.cc
 +++ b/modules/audio_processing/audio_processing_impl.cc
 @@ -450,6 +450,7 @@ AudioProcessingImpl::GetGainController2ExperimentParams() {
