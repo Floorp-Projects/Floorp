@@ -99,9 +99,9 @@ JSONToken JSONTokenizer<CharT, ParserT, StringBuilderT>::readString() {
    * of unescaped characters into a temporary buffer, then an escaped
    * character, and repeat until the entire string is consumed.
    */
-  JSStringBuilder buffer(parser->handler.cx);
+  StringBuilderT builder(parser->handler.cx);
   do {
-    if (start < current && !buffer.append(start.get(), current.get())) {
+    if (start < current && !builder.append(start.get(), current.get())) {
       return token(JSONToken::OOM);
     }
 
@@ -111,7 +111,7 @@ JSONToken JSONTokenizer<CharT, ParserT, StringBuilderT>::readString() {
 
     char16_t c = *current++;
     if (c == '"') {
-      return stringToken<ST>(buffer);
+      return stringToken<ST>(builder);
     }
 
     if (c != '\\') {
@@ -183,7 +183,7 @@ JSONToken JSONTokenizer<CharT, ParserT, StringBuilderT>::readString() {
         error("bad escaped character");
         return token(JSONToken::Error);
     }
-    if (!buffer.append(c)) {
+    if (!builder.append(c)) {
       return token(JSONToken::OOM);
     }
 
@@ -617,10 +617,10 @@ inline bool JSONFullParseHandler<CharT>::setStringValue(CharPtr start,
 template <typename CharT>
 template <JSONStringType ST>
 inline bool JSONFullParseHandler<CharT>::setStringValue(
-    JSStringBuilder& builder) {
+    StringBuilder& builder) {
   JSLinearString* str = (ST == JSONStringType::PropertyName)
-                            ? builder.finishAtom()
-                            : builder.finishString();
+                            ? builder.buffer.finishAtom()
+                            : builder.buffer.finishString();
   if (!str) {
     return false;
   }
@@ -771,6 +771,17 @@ void JSONParser<CharT>::error(const char* msg) {
   SprintfLiteral(lineNumber, "%" PRIu32, line);
 
   handler.reportError(msg, lineNumber, columnNumber);
+}
+
+template <typename CharT>
+bool JSONFullParseHandler<CharT>::StringBuilder::append(char16_t c) {
+  return buffer.append(c);
+}
+
+template <typename CharT>
+bool JSONFullParseHandler<CharT>::StringBuilder::append(const CharT* begin,
+                                                        const CharT* end) {
+  return buffer.append(begin, end);
 }
 
 template <typename CharT>
