@@ -79,11 +79,6 @@ bool SendPeriodicFeedback(const std::vector<RtpExtension>& extensions) {
   return true;
 }
 
-bool HasTransportSequenceNumber(const RtpHeaderExtensionMap& map) {
-  return map.IsRegistered(kRtpExtensionTransportSequenceNumber) ||
-         map.IsRegistered(kRtpExtensionTransportSequenceNumber02);
-}
-
 const int* FindKeyByValue(const std::map<int, int>& m, int v) {
   for (const auto& kv : m) {
     if (kv.second == v)
@@ -344,12 +339,10 @@ class Call final : public webrtc::Call,
   void ConfigureSync(absl::string_view sync_group) RTC_RUN_ON(worker_thread_);
 
   void NotifyBweOfReceivedPacket(const RtpPacketReceived& packet,
-                                 MediaType media_type,
-                                 bool use_send_side_bwe)
+                                 MediaType media_type)
       RTC_RUN_ON(worker_thread_);
 
-  bool IdentifyReceivedPacket(RtpPacketReceived& packet,
-                              bool* use_send_side_bwe = nullptr);
+  bool IdentifyReceivedPacket(RtpPacketReceived& packet);
   bool RegisterReceiveStream(uint32_t ssrc, ReceiveStreamInterface* stream);
   bool UnregisterReceiveStream(uint32_t ssrc);
 
@@ -1454,11 +1447,10 @@ PacketReceiver::DeliveryStatus Call::DeliverRtp(MediaType media_type,
   RTC_DCHECK(media_type == MediaType::AUDIO || media_type == MediaType::VIDEO ||
              is_keep_alive_packet);
 
-  bool use_send_side_bwe = false;
-  if (!IdentifyReceivedPacket(parsed_packet, &use_send_side_bwe))
+  if (!IdentifyReceivedPacket(parsed_packet))
     return DELIVERY_UNKNOWN_SSRC;
 
-  NotifyBweOfReceivedPacket(parsed_packet, media_type, use_send_side_bwe);
+  NotifyBweOfReceivedPacket(parsed_packet, media_type);
 
   // RateCounters expect input parameter as int, save it as int,
   // instead of converting each time it is passed to RateCounter::Add below.
@@ -1499,8 +1491,7 @@ PacketReceiver::DeliveryStatus Call::DeliverPacket(
 }
 
 void Call::NotifyBweOfReceivedPacket(const RtpPacketReceived& packet,
-                                     MediaType media_type,
-                                     bool use_send_side_bwe) {
+                                     MediaType media_type) {
   RTC_DCHECK_RUN_ON(worker_thread_);
   RTPHeader header;
   packet.GetHeader(&header);
@@ -1513,21 +1504,16 @@ void Call::NotifyBweOfReceivedPacket(const RtpPacketReceived& packet,
   }
   transport_send_->OnReceivedPacket(packet_msg);
 
-  if (!use_send_side_bwe && header.extension.hasTransportSequenceNumber) {
-    // Inconsistent configuration of send side BWE. Do nothing.
-    return;
-  }
   // For audio, we only support send side BWE.
   if (media_type == MediaType::VIDEO ||
-      (use_send_side_bwe && header.extension.hasTransportSequenceNumber)) {
+      header.extension.hasTransportSequenceNumber) {
     receive_side_cc_.OnReceivedPacket(
         packet.arrival_time().ms(),
         packet.payload_size() + packet.padding_size(), header);
   }
 }
 
-bool Call::IdentifyReceivedPacket(RtpPacketReceived& packet,
-                                  bool* use_send_side_bwe /*= nullptr*/) {
+bool Call::IdentifyReceivedPacket(RtpPacketReceived& packet) {
   RTC_DCHECK_RUN_ON(&receive_11993_checker_);
   auto it = receive_rtp_config_.find(packet.Ssrc());
   if (it == receive_rtp_config_.end()) {
@@ -1537,12 +1523,6 @@ bool Call::IdentifyReceivedPacket(RtpPacketReceived& packet,
   }
 
   packet.IdentifyExtensions(it->second->GetRtpExtensionMap());
-
-  if (use_send_side_bwe) {
-    *use_send_side_bwe =
-        HasTransportSequenceNumber(it->second->GetRtpExtensionMap());
-  }
-
   return true;
 }
 
