@@ -8,7 +8,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/cf7e333da17689b3c
  1 file changed, 24 insertions(+), 50 deletions(-)
 
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 7089841fdb..9e65575ade 100644
+index 54f121a6a9..7ecb8ac12d 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -1215,58 +1215,8 @@ rtc_library("rtc_base") {
@@ -70,7 +70,7 @@ index 7089841fdb..9e65575ade 100644
      ]
    }
  
-@@ -1395,6 +1345,7 @@ rtc_library("log_sinks") {
+@@ -1397,6 +1347,7 @@ if (!build_with_chromium) {
  }
  
  rtc_library("network") {
@@ -78,7 +78,7 @@ index 7089841fdb..9e65575ade 100644
    sources = [
      "network.cc",
      "network.h",
-@@ -1432,24 +1383,30 @@ rtc_library("network") {
+@@ -1434,24 +1385,30 @@ rtc_library("network") {
      deps += [ ":win32" ]
    }
  }
@@ -109,7 +109,7 @@ index 7089841fdb..9e65575ade 100644
    sources = [
      "socket_adapters.cc",
      "socket_adapters.h",
-@@ -1468,6 +1425,7 @@ rtc_library("socket_adapters") {
+@@ -1470,6 +1427,7 @@ rtc_library("socket_adapters") {
    ]
    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
  }
@@ -117,7 +117,7 @@ index 7089841fdb..9e65575ade 100644
  
  rtc_library("network_route") {
    sources = [
-@@ -1482,6 +1440,7 @@ rtc_library("network_route") {
+@@ -1484,6 +1442,7 @@ rtc_library("network_route") {
  }
  
  rtc_library("async_tcp_socket") {
@@ -125,7 +125,7 @@ index 7089841fdb..9e65575ade 100644
    sources = [
      "async_tcp_socket.cc",
      "async_tcp_socket.h",
-@@ -1500,8 +1459,10 @@ rtc_library("async_tcp_socket") {
+@@ -1502,8 +1461,10 @@ rtc_library("async_tcp_socket") {
      "third_party/sigslot",
    ]
  }
@@ -136,7 +136,7 @@ index 7089841fdb..9e65575ade 100644
    sources = [
      "async_udp_socket.cc",
      "async_udp_socket.h",
-@@ -1522,8 +1483,10 @@ rtc_library("async_udp_socket") {
+@@ -1524,8 +1485,10 @@ rtc_library("async_udp_socket") {
    ]
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  }
@@ -147,7 +147,7 @@ index 7089841fdb..9e65575ade 100644
    sources = [
      "async_packet_socket.cc",
      "async_packet_socket.h",
-@@ -1540,6 +1503,7 @@ rtc_library("async_packet_socket") {
+@@ -1542,6 +1505,7 @@ rtc_library("async_packet_socket") {
      "third_party/sigslot",
    ]
  }
@@ -155,7 +155,7 @@ index 7089841fdb..9e65575ade 100644
  
  rtc_library("mdns_responder_interface") {
    sources = [ "mdns_responder_interface.h" ]
-@@ -1552,6 +1516,7 @@ rtc_library("dscp") {
+@@ -1554,6 +1518,7 @@ rtc_library("dscp") {
  }
  
  rtc_library("proxy_info") {
@@ -163,7 +163,7 @@ index 7089841fdb..9e65575ade 100644
    sources = [
      "proxy_info.cc",
      "proxy_info.h",
-@@ -1561,6 +1526,7 @@ rtc_library("proxy_info") {
+@@ -1563,6 +1528,7 @@ rtc_library("proxy_info") {
      ":socket_address",
    ]
  }
@@ -171,7 +171,7 @@ index 7089841fdb..9e65575ade 100644
  
  rtc_library("file_rotating_stream") {
    sources = [
-@@ -1589,6 +1555,7 @@ rtc_library("data_rate_limiter") {
+@@ -1591,6 +1557,7 @@ rtc_library("data_rate_limiter") {
  }
  
  rtc_library("unique_id_generator") {
@@ -179,7 +179,7 @@ index 7089841fdb..9e65575ade 100644
    sources = [
      "unique_id_generator.cc",
      "unique_id_generator.h",
-@@ -1603,6 +1570,7 @@ rtc_library("unique_id_generator") {
+@@ -1605,6 +1572,7 @@ rtc_library("unique_id_generator") {
    ]
    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
  }
@@ -187,7 +187,7 @@ index 7089841fdb..9e65575ade 100644
  
  rtc_library("crc32") {
    sources = [
-@@ -1629,6 +1597,7 @@ rtc_library("stream") {
+@@ -1631,6 +1599,7 @@ rtc_library("stream") {
  }
  
  rtc_library("rtc_certificate_generator") {
@@ -195,7 +195,7 @@ index 7089841fdb..9e65575ade 100644
    sources = [
      "rtc_certificate_generator.cc",
      "rtc_certificate_generator.h",
-@@ -1645,8 +1614,10 @@ rtc_library("rtc_certificate_generator") {
+@@ -1647,8 +1616,10 @@ rtc_library("rtc_certificate_generator") {
      "//third_party/abseil-cpp/absl/types:optional",
    ]
  }
@@ -206,7 +206,7 @@ index 7089841fdb..9e65575ade 100644
    sources = [
      "helpers.cc",
      "helpers.h",
-@@ -1744,6 +1715,7 @@ rtc_library("ssl") {
+@@ -1746,6 +1717,7 @@ rtc_library("ssl") {
      deps += [ ":win32" ]
    }
  }
@@ -214,7 +214,7 @@ index 7089841fdb..9e65575ade 100644
  
  rtc_library("crypt_string") {
    sources = [
-@@ -1753,6 +1725,7 @@ rtc_library("crypt_string") {
+@@ -1755,6 +1727,7 @@ rtc_library("crypt_string") {
  }
  
  rtc_library("http_common") {
@@ -222,7 +222,7 @@ index 7089841fdb..9e65575ade 100644
    sources = [
      "http_common.cc",
      "http_common.h",
-@@ -1769,6 +1742,7 @@ rtc_library("http_common") {
+@@ -1771,6 +1744,7 @@ rtc_library("http_common") {
  
    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
  }
