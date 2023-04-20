@@ -630,6 +630,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "rtc_base:rtc_operations_chain_unittests",
       "rtc_base:rtc_task_queue_unittests",
       "rtc_base:sigslot_unittest",
+      "rtc_base:task_queue_stdlib_unittest",
       "rtc_base:untyped_function_unittest",
       "rtc_base:weak_ptr_unittests",
       "rtc_base/experiments:experiments_unittests",

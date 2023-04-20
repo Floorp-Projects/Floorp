@@ -299,6 +299,18 @@ void TaskQueueWin::RunThreadMain() {
       RunPendingTasks();
     }
   }
+  // Ensure remaining deleted tasks are destroyed with Current() set up to this
+  // task queue.
+  std::queue<absl::AnyInvocable<void() &&>> pending;
+  {
+    MutexLock lock(&pending_lock_);
+    pending_.swap(pending);
+  }
+  pending = {};
+#if RTC_DCHECK_IS_ON
+  MutexLock lock(&pending_lock_);
+  RTC_DCHECK(pending_.empty());
+#endif
 }
 
 bool TaskQueueWin::ProcessQueuedMessages() {

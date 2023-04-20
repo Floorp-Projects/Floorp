@@ -10,7 +10,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/50b15e03692420314
  1 file changed, 9 insertions(+)
 
 diff --git a/rtc_base/task_queue_win.cc b/rtc_base/task_queue_win.cc
-index bb8e522c71..1c86b7193b 100644
+index 9ea7fc60ae..6da3094548 100644
 --- a/rtc_base/task_queue_win.cc
 +++ b/rtc_base/task_queue_win.cc
 @@ -8,6 +8,15 @@

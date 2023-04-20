@@ -11,6 +11,7 @@
 #include "rtc_base/thread.h"
 
 #include "absl/strings/string_view.h"
+#include "api/task_queue/task_queue_base.h"
 #include "api/units/time_delta.h"
 #include "rtc_base/socket_server.h"
 
@@ -391,6 +392,7 @@ void Thread::DoDestroy() {
   }
   ThreadManager::Remove(this);
   // Clear.
+  CurrentTaskQueueSetter set_current(this);
   messages_ = {};
   delayed_messages_ = {};
 }
