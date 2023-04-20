@@ -614,7 +614,6 @@ add_task(async function test_aboutwelcome_start_screen_configured() {
 
   let sandbox = sinon.createSandbox();
   let spy = sandbox.spy(AboutWelcomeTelemetry.prototype, "sendTelemetry");
-  registerCleanupFunction(() => sandbox.restore());
 
   let browser = await openAboutWelcome(JSON.stringify(screens));
 
@@ -629,6 +628,13 @@ add_task(async function test_aboutwelcome_start_screen_configured() {
   ok(
     secondScreenShown,
     `Starts on second screen when configured with startScreen index equal to ${startScreen}`
+  );
+  // Wait for screen elements to render before checking impression pings
+  await test_screen_content(
+    browser,
+    "renders second screen elements",
+    // Expected selectors:
+    [`main.screen`, "div.secondary-cta"]
   );
 
   let expectedTelemetry = sinon.match({
@@ -656,4 +662,5 @@ add_task(async function test_aboutwelcome_start_screen_configured() {
 
   await doExperimentCleanup();
   browser.closeBrowser();
+  sandbox.restore();
 });
