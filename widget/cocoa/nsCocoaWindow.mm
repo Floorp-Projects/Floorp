@@ -1634,17 +1634,9 @@ void nsCocoaWindow::CocoaWindowWillEnterFullscreen(bool aFullscreen) {
   // happens.
   mUpdateFullscreenOnResize =
       Some(aFullscreen ? TransitionType::Fullscreen : TransitionType::Windowed);
-
-  if (mWidgetListener) {
-    mWidgetListener->FullscreenWillChange(aFullscreen);
-  }
 }
 
 void nsCocoaWindow::CocoaWindowDidFailFullscreen(bool aAttemptedFullscreen) {
-  if (mWidgetListener) {
-    mWidgetListener->FullscreenWillChange(!aAttemptedFullscreen);
-  }
-
   // If we already updated our fullscreen state due to a resize, we need to update it again.
   if (mUpdateFullscreenOnResize.isNothing()) {
     UpdateFullscreenState(!aAttemptedFullscreen, true);
@@ -1668,10 +1660,6 @@ void nsCocoaWindow::UpdateFullscreenState(bool aFullScreen, bool aNativeMode) {
   }
 
   DispatchSizeModeEvent();
-
-  if (mWidgetListener) {
-    mWidgetListener->FullscreenChanged(aFullScreen);
-  }
 
   // Notify the mainChildView with our new fullscreen state.
   nsChildView* mainChildView = static_cast<nsChildView*>([[mWindow mainChildView] widget]);
@@ -1773,10 +1761,6 @@ void nsCocoaWindow::ProcessTransitions() {
 
       case TransitionType::EmulatedFullscreen: {
         if (!mInFullScreenMode) {
-          // This can be done synchronously.
-          if (mWidgetListener) {
-            mWidgetListener->FullscreenWillChange(true);
-          }
           NSDisableScreenUpdates();
           mSuppressSizeModeEvents = true;
           // The order here matters. When we exit full screen mode, we need to show the
@@ -1798,10 +1782,6 @@ void nsCocoaWindow::ProcessTransitions() {
             [mWindow toggleFullScreen:nil];
             continue;
           } else {
-            // This can be done synchronously.
-            if (mWidgetListener) {
-              mWidgetListener->FullscreenWillChange(false);
-            }
             NSDisableScreenUpdates();
             mSuppressSizeModeEvents = true;
             // The order here matters. When we exit full screen mode, we need to show the
