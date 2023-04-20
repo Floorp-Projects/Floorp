@@ -34,7 +34,7 @@ template <typename CharT>
 template <JSONStringType ST>
 JSONToken JSONTokenizer<CharT>::stringToken(const CharPtr start,
                                             size_t length) {
-  if (!parser->template setStringValue<ST>(start, length)) {
+  if (!parser->handler.template setStringValue<ST>(start, length)) {
     return JSONToken::OOM;
   }
   return JSONToken::String;
@@ -43,7 +43,7 @@ JSONToken JSONTokenizer<CharT>::stringToken(const CharPtr start,
 template <typename CharT>
 template <JSONStringType ST>
 JSONToken JSONTokenizer<CharT>::stringToken(JSStringBuilder& builder) {
-  if (!parser->template setStringValue<ST>(builder)) {
+  if (!parser->handler.template setStringValue<ST>(builder)) {
     return JSONToken::OOM;
   }
   return JSONToken::String;
@@ -51,7 +51,7 @@ JSONToken JSONTokenizer<CharT>::stringToken(JSStringBuilder& builder) {
 
 template <typename CharT>
 JSONToken JSONTokenizer<CharT>::numberToken(double d) {
-  parser->setNumberValue(d);
+  parser->handler.setNumberValue(d);
   return JSONToken::Number;
 }
 
@@ -98,7 +98,7 @@ JSONToken JSONTokenizer<CharT>::readString() {
    * of unescaped characters into a temporary buffer, then an escaped
    * character, and repeat until the entire string is consumed.
    */
-  JSStringBuilder buffer(parser->cx);
+  JSStringBuilder buffer(parser->handler.cx);
   do {
     if (start < current && !buffer.append(start.get(), current.get())) {
       return token(JSONToken::OOM);
@@ -247,7 +247,7 @@ JSONToken JSONTokenizer<CharT>::readNumber() {
     double d;
     if (!GetFullInteger(digitStart.get(), current.get(), 10,
                         IntegerSeparatorHandling::None, &d)) {
-      ReportOutOfMemory(parser->cx);
+      parser->outOfMemory();
       return token(JSONToken::OOM);
     }
     return numberToken(negative ? -d : d);
@@ -554,15 +554,7 @@ void JSONTokenizer<CharT>::getTextPosition(uint32_t* column, uint32_t* line) {
   *line = row;
 }
 
-JSONParserBase::~JSONParserBase() {
-  for (size_t i = 0; i < stack.length(); i++) {
-    if (stack[i].state == JSONParserState::FinishArrayElement) {
-      js_delete(&stack[i].elements());
-    } else {
-      js_delete(&stack[i].properties());
-    }
-  }
-
+JSONFullParseHandlerAnyChar::~JSONFullParseHandlerAnyChar() {
   for (size_t i = 0; i < freeElements.length(); i++) {
     js_delete(freeElements[i]);
   }
@@ -572,7 +564,22 @@ JSONParserBase::~JSONParserBase() {
   }
 }
 
-void JSONParserBase::trace(JSTracer* trc) {
+void JSONFullParseHandlerAnyChar::trace(JSTracer* trc) {
+  JS::TraceRoot(trc, &v, "JSONFullParseHandlerAnyChar current value");
+}
+
+inline void JSONFullParseHandlerAnyChar::freeStackEntry(StackEntry& entry) {
+  if (entry.state == JSONParserState::FinishArrayElement) {
+    js_delete(&entry.elements());
+  } else {
+    js_delete(&entry.properties());
+  }
+}
+
+template <typename CharT>
+void JSONParser<CharT>::trace(JSTracer* trc) {
+  handler.trace(trc);
+
   for (auto& elem : stack) {
     if (elem.state == JSONParserState::FinishArrayElement) {
       elem.elements().trace(trc);
@@ -582,11 +589,14 @@ void JSONParserBase::trace(JSTracer* trc) {
   }
 }
 
-inline void JSONParserBase::setNumberValue(double d) { v = NumberValue(d); }
+inline void JSONFullParseHandlerAnyChar::setNumberValue(double d) {
+  v = NumberValue(d);
+}
 
 template <typename CharT>
 template <JSONStringType ST>
-inline bool JSONParser<CharT>::setStringValue(CharPtr start, size_t length) {
+inline bool JSONFullParseHandler<CharT>::setStringValue(CharPtr start,
+                                                        size_t length) {
   JSLinearString* str = (ST == JSONStringType::PropertyName)
                             ? AtomizeChars(cx, start.get(), length)
                             : NewStringCopyN<CanGC>(cx, start.get(), length);
@@ -599,7 +609,8 @@ inline bool JSONParser<CharT>::setStringValue(CharPtr start, size_t length) {
 
 template <typename CharT>
 template <JSONStringType ST>
-inline bool JSONParser<CharT>::setStringValue(JSStringBuilder& builder) {
+inline bool JSONFullParseHandler<CharT>::setStringValue(
+    JSStringBuilder& builder) {
   JSLinearString* str = (ST == JSONStringType::PropertyName)
                             ? builder.finishAtom()
                             : builder.finishString();
@@ -610,30 +621,59 @@ inline bool JSONParser<CharT>::setStringValue(JSStringBuilder& builder) {
   return true;
 }
 
-template <typename CharT>
-void JSONParser<CharT>::error(const char* msg) {
-  if (parseType == ParseType::JSONParse) {
-    uint32_t column = 1, line = 1;
-    tokenizer.getTextPosition(&column, &line);
-
-    const size_t MaxWidth = sizeof("4294967295");
-    char columnNumber[MaxWidth];
-    SprintfLiteral(columnNumber, "%" PRIu32, column);
-    char lineNumber[MaxWidth];
-    SprintfLiteral(lineNumber, "%" PRIu32, line);
-
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_JSON_BAD_PARSE, msg, lineNumber,
-                              columnNumber);
+inline bool JSONFullParseHandlerAnyChar::objectOpen(
+    Vector<StackEntry, 10>& stack, PropertyVector** properties) {
+  if (!freeProperties.empty()) {
+    *properties = freeProperties.popCopy();
+    (*properties)->clear();
+  } else {
+    (*properties) = cx->new_<PropertyVector>(cx);
+    if (!*properties) {
+      return false;
+    }
   }
+  if (!stack.append(*properties)) {
+    js_delete(*properties);
+    return false;
+  }
+
+  return true;
 }
 
-bool JSONParserBase::errorReturn() {
-  return parseType == ParseType::AttemptForEval;
+inline bool JSONFullParseHandlerAnyChar::objectPropertyName(
+    Vector<StackEntry, 10>& stack, bool* isProtoInEval) {
+  *isProtoInEval = false;
+  jsid id = AtomToId(atomValue());
+  if (parseType == ParseType::AttemptForEval) {
+    // In |JSON.parse|, "__proto__" is a property like any other and may
+    // appear multiple times. In object literal syntax, "__proto__" is
+    // prototype mutation and can appear at most once. |JSONParser| only
+    // supports the former semantics, so if this parse attempt is for
+    // |eval|, return true (without reporting an error) to indicate the
+    // JSON parse attempt was unsuccessful.
+    if (id == NameToId(cx->names().proto)) {
+      *isProtoInEval = true;
+      return true;
+    }
+  }
+  PropertyVector& properties = stack.back().properties();
+  if (!properties.emplaceBack(id)) {
+    return false;
+  }
+
+  return true;
 }
 
-inline bool JSONParserBase::finishObject(MutableHandleValue vp,
-                                         PropertyVector& properties) {
+inline void JSONFullParseHandlerAnyChar::finishObjectMember(
+    Vector<StackEntry, 10>& stack, JS::Handle<JS::Value> value,
+    PropertyVector** properties) {
+  *properties = &stack.back().properties();
+  (*properties)->back().value = value;
+}
+
+inline bool JSONFullParseHandlerAnyChar::finishObject(
+    Vector<StackEntry, 10>& stack, JS::MutableHandle<JS::Value> vp,
+    PropertyVector& properties) {
   MOZ_ASSERT(&properties == &stack.back().properties());
 
   JSObject* obj = NewPlainObjectWithMaybeDuplicateKeys(cx, properties.begin(),
@@ -650,8 +690,35 @@ inline bool JSONParserBase::finishObject(MutableHandleValue vp,
   return true;
 }
 
-inline bool JSONParserBase::finishArray(MutableHandleValue vp,
-                                        ElementVector& elements) {
+inline bool JSONFullParseHandlerAnyChar::arrayOpen(
+    Vector<StackEntry, 10>& stack, ElementVector** elements) {
+  if (!freeElements.empty()) {
+    *elements = freeElements.popCopy();
+    (*elements)->clear();
+  } else {
+    (*elements) = cx->new_<ElementVector>(cx);
+    if (!*elements) {
+      return false;
+    }
+  }
+  if (!stack.append(*elements)) {
+    js_delete(*elements);
+    return false;
+  }
+
+  return true;
+}
+
+inline bool JSONFullParseHandlerAnyChar::arrayElement(
+    Vector<StackEntry, 10>& stack, JS::Handle<JS::Value> value,
+    ElementVector** elements) {
+  *elements = &stack.back().elements();
+  return (*elements)->append(value.get());
+}
+
+inline bool JSONFullParseHandlerAnyChar::finishArray(
+    Vector<StackEntry, 10>& stack, JS::MutableHandle<JS::Value> vp,
+    ElementVector& elements) {
   MOZ_ASSERT(&elements == &stack.back().elements());
 
   ArrayObject* obj =
@@ -669,8 +736,46 @@ inline bool JSONParserBase::finishArray(MutableHandleValue vp,
 }
 
 template <typename CharT>
+void JSONFullParseHandler<CharT>::reportError(const char* msg,
+                                              const char* lineString,
+                                              const char* columnString) {
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_JSON_BAD_PARSE,
+                            msg, lineString, columnString);
+}
+
+template <typename CharT>
+void JSONParser<CharT>::outOfMemory() {
+  ReportOutOfMemory(handler.cx);
+}
+
+template <typename CharT>
+void JSONParser<CharT>::error(const char* msg) {
+  if (handler.ignoreError()) {
+    return;
+  }
+
+  uint32_t column = 1, line = 1;
+  tokenizer.getTextPosition(&column, &line);
+
+  const size_t MaxWidth = sizeof("4294967295");
+  char columnNumber[MaxWidth];
+  SprintfLiteral(columnNumber, "%" PRIu32, column);
+  char lineNumber[MaxWidth];
+  SprintfLiteral(lineNumber, "%" PRIu32, line);
+
+  handler.reportError(msg, lineNumber, columnNumber);
+}
+
+template <typename CharT>
+JSONParser<CharT>::~JSONParser() {
+  for (size_t i = 0; i < stack.length(); i++) {
+    handler.freeStackEntry(stack[i]);
+  }
+}
+
+template <typename CharT>
 bool JSONParser<CharT>::parse(MutableHandleValue vp) {
-  RootedValue value(cx);
+  RootedValue value(handler.cx);
   MOZ_ASSERT(stack.empty());
 
   vp.setUndefined();
@@ -680,12 +785,12 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
   while (true) {
     switch (state) {
       case JSONParserState::FinishObjectMember: {
-        PropertyVector& properties = stack.back().properties();
-        properties.back().value = value;
+        typename Handler::PropertyVector* properties;
+        handler.finishObjectMember(stack, value, &properties);
 
         token = tokenizer.advanceAfterProperty();
         if (token == JSONToken::ObjectClose) {
-          if (!finishObject(&value, properties)) {
+          if (!handler.finishObject(stack, &value, *properties)) {
             return false;
           }
           break;
@@ -699,7 +804,7 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
                 "expected ',' or '}' after property-value pair in object "
                 "literal");
           }
-          return errorReturn();
+          return handler.errorReturn();
         }
         token = tokenizer.advancePropertyName();
         /* FALL THROUGH */
@@ -707,26 +812,18 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
 
       JSONMember:
         if (token == JSONToken::String) {
-          jsid id = AtomToId(atomValue());
-          if (parseType == ParseType::AttemptForEval) {
-            // In |JSON.parse|, "__proto__" is a property like any other and may
-            // appear multiple times. In object literal syntax, "__proto__" is
-            // prototype mutation and can appear at most once. |JSONParser| only
-            // supports the former semantics, so if this parse attempt is for
-            // |eval|, return true (without reporting an error) to indicate the
-            // JSON parse attempt was unsuccessful.
-            if (id == NameToId(cx->names().proto)) {
-              return true;
-            }
-          }
-          PropertyVector& properties = stack.back().properties();
-          if (!properties.emplaceBack(id)) {
+          bool isProtoInEval;
+          if (!handler.objectPropertyName(stack, &isProtoInEval)) {
             return false;
+          }
+          if (isProtoInEval) {
+            // See JSONFullParseHandlerAnyChar::objectPropertyName.
+            return true;
           }
           token = tokenizer.advancePropertyColon();
           if (token != JSONToken::Colon) {
             MOZ_ASSERT(token == JSONToken::Error);
-            return errorReturn();
+            return handler.errorReturn();
           }
           goto JSONValue;
         }
@@ -736,11 +833,11 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
         if (token != JSONToken::Error) {
           error("property names must be double-quoted strings");
         }
-        return errorReturn();
+        return handler.errorReturn();
 
       case JSONParserState::FinishArrayElement: {
-        ElementVector& elements = stack.back().elements();
-        if (!elements.append(value.get())) {
+        typename Handler::ElementVector* elements;
+        if (!handler.arrayElement(stack, value, &elements)) {
           return false;
         }
         token = tokenizer.advanceAfterArrayElement();
@@ -748,13 +845,13 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
           goto JSONValue;
         }
         if (token == JSONToken::ArrayClose) {
-          if (!finishArray(&value, elements)) {
+          if (!handler.finishArray(stack, &value, *elements)) {
             return false;
           }
           break;
         }
         MOZ_ASSERT(token == JSONToken::Error);
-        return errorReturn();
+        return handler.errorReturn();
       }
 
       JSONValue:
@@ -763,40 +860,30 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
       JSONValueSwitch:
         switch (token) {
           case JSONToken::String:
-            value = stringValue();
+            value = handler.stringValue();
             break;
           case JSONToken::Number:
-            value = numberValue();
+            value = handler.numberValue();
             break;
           case JSONToken::True:
-            value = BooleanValue(true);
+            value = handler.booleanValue(true);
             break;
           case JSONToken::False:
-            value = BooleanValue(false);
+            value = handler.booleanValue(false);
             break;
           case JSONToken::Null:
-            value = NullValue();
+            value = handler.nullValue();
             break;
 
           case JSONToken::ArrayOpen: {
-            ElementVector* elements;
-            if (!freeElements.empty()) {
-              elements = freeElements.popCopy();
-              elements->clear();
-            } else {
-              elements = cx->new_<ElementVector>(cx);
-              if (!elements) {
-                return false;
-              }
-            }
-            if (!stack.append(elements)) {
-              js_delete(elements);
+            typename Handler::ElementVector* elements;
+            if (!handler.arrayOpen(stack, &elements)) {
               return false;
             }
 
             token = tokenizer.advance();
             if (token == JSONToken::ArrayClose) {
-              if (!finishArray(&value, *elements)) {
+              if (!handler.finishArray(stack, &value, *elements)) {
                 return false;
               }
               break;
@@ -805,24 +892,14 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
           }
 
           case JSONToken::ObjectOpen: {
-            PropertyVector* properties;
-            if (!freeProperties.empty()) {
-              properties = freeProperties.popCopy();
-              properties->clear();
-            } else {
-              properties = cx->new_<PropertyVector>(cx);
-              if (!properties) {
-                return false;
-              }
-            }
-            if (!stack.append(properties)) {
-              js_delete(properties);
+            typename Handler::PropertyVector* properties;
+            if (!handler.objectOpen(stack, &properties)) {
               return false;
             }
 
             token = tokenizer.advanceAfterObjectOpen();
             if (token == JSONToken::ObjectClose) {
-              if (!finishObject(&value, *properties)) {
+              if (!handler.finishObject(stack, &value, *properties)) {
                 return false;
               }
               break;
@@ -838,13 +915,13 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
             // reported in the error message is correct.
             tokenizer.unget();
             error("unexpected character");
-            return errorReturn();
+            return handler.errorReturn();
 
           case JSONToken::OOM:
             return false;
 
           case JSONToken::Error:
-            return errorReturn();
+            return handler.errorReturn();
         }
         break;
     }
@@ -857,7 +934,7 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
 
   if (!tokenizer.consumeTrailingWhitespaces()) {
     error("unexpected non-whitespace character after JSON data");
-    return errorReturn();
+    return handler.errorReturn();
   }
 
   MOZ_ASSERT(tokenizer.finished());
