@@ -10,6 +10,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/mozalloc.h"
+#include "prlog.h"
 #include <string.h>
 #include <stdarg.h>
 
@@ -29,7 +30,7 @@ static mozilla::LazyLogModule g_LogMod("xpclog");
 
 static bool Init() {
   g_Spaces = new char[SPACE_COUNT + 1];
-  if (!g_Spaces || !MOZ_LOG_TEST(g_LogMod, LogLevel::Error)) {
+  if (!g_Spaces || !MOZ_LOG_TEST(g_LogMod, mozilla::LogLevel::Error)) {
     g_InitState = 1;
     XPC_Log_Finish();
     return false;
@@ -63,7 +64,7 @@ void XPC_Log_print(const char* fmt, ...) {
 }
 
 bool XPC_Log_Check(int i) {
-  return CAN_RUN && MOZ_LOG_TEST(g_LogMod, LogLevel::Error);
+  return CAN_RUN && MOZ_LOG_TEST(g_LogMod, mozilla::LogLevel::Error);
 }
 
 void XPC_Log_Indent() {

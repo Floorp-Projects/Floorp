@@ -614,7 +614,7 @@ void nsXPCWrappedJS::SystemIsBeingShutDown() {
   // triggering post barriers in shutdown, as this will access the chunk
   // containing mJSObj, which may have been freed at this point. This is safe
   // if we are not currently running an incremental GC.
-  MOZ_ASSERT(!IsIncrementalGCInProgress(xpc_GetSafeJSContext()));
+  MOZ_ASSERT(!JS::IsIncrementalGCInProgress(xpc_GetSafeJSContext()));
   *mJSObj.unsafeGet() = nullptr;
   if (isInList()) {
     remove();
