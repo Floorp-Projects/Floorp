@@ -79,7 +79,9 @@ class Symbol
   // symbol properties are added, so we can optimize lookups on objects that
   // don't have the BaseShape flag.
   bool isInterestingSymbol() const {
-    return code_ == SymbolCode::toStringTag || code_ == SymbolCode::toPrimitive;
+    return code_ == SymbolCode::toStringTag ||
+           code_ == SymbolCode::toPrimitive ||
+           code_ == SymbolCode::isConcatSpreadable;
   }
 
   // Symbol created for the #PrivateName syntax.
