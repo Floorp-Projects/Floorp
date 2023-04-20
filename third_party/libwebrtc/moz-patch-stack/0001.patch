@@ -1,130 +1,616 @@
-From: =?UTF-8?q?Erik=20Spr=C3=A5ng?= <sprang@webrtc.org>
-Date: Wed, 4 Jan 2023 13:58:31 +0100
-Subject: (cherry-pick-branch-heads/5481) M110 Merge: Make sure VP9 encoders
- are reconfigured on layer activation.
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From: Ilya Nikolaevskiy <ilnik@webrtc.org>
+Date: Wed, 21 Dec 2022 12:36:37 +0000
+Subject: (tmp-cherry-pick) Revert "Enforce stream id uniqueness in
+ RtpSender::set_stream_ids" (68a7c415c5)
 
-When disabling a spatial layer, reconfiguration of the encoder is not
-necessary (bitrate will never be assigned to the inactive layer anway).
-This CL however makes sure we reconfigure the encoder when a spatial
-layer is activated. Some encoder implementations may encoder the wrong
-number of spatial layers if the active layers have not beens set
-correctly.
+This reverts commit 315b95ca11161bdea715d5316f92828edd41f0d5.
 
-(cherry picked from commit 17043b89ae6422eb055c13c5da191b73927ac99e)
+Reason for revert: Breaks internal bots.
 
-Bug: webrtc:14809, b/261097903, chromium:1310794
-Change-Id: I8d34aaec95eb50a9717c06ea38f25088e5a96429
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/290560
-Commit-Queue: Philip Eliasson <philipel@webrtc.org>
-Auto-Submit: Erik Språng <sprang@webrtc.org>
-Reviewed-by: Philip Eliasson <philipel@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#38999}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/290780
-Commit-Queue: Erik Språng <sprang@webrtc.org>
-Cr-Commit-Position: refs/branch-heads/5481@{#1}
-Cr-Branched-From: 2e1a9a4ae0234d4b1ea7a6fd4188afa1fb20379d-refs/heads/main@{#38901}
+Original change's description:
+> Enforce stream id uniqueness in RtpSender::set_stream_ids
+>
+> https://w3c.github.io/webrtc-pc/#dfn-create-an-rtcrtpsender
+> has a step saying
+>   For each stream in streams, add stream.id to
+>   [[AssociatedMediaStreamIds]] if it's not already there
+>
+> This applies to addTrack and setStreams and the set of streams in
+> addTransceiver.
+>
+> BUG=webrtc:14769
+>
+> Change-Id: If6be813396a1987dfe49fd73f976f96c71459eaf
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/287864
+> Commit-Queue: Philipp Hancke <phancke@microsoft.com>
+> Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+> Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#38937}
+
+Bug: webrtc:14769
+Change-Id: I6fd22ff0550c0894057fb1dc15f1b95819fa6df2
+No-Presubmit: true
+No-Tree-Checks: true
+No-Try: true
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/288744
+Commit-Queue: Ilya Nikolaevskiy <ilnik@webrtc.org>
+Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
+Reviewed-by: Andrey Logvin <landrey@webrtc.org>
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Cr-Commit-Position: refs/heads/main@{#38940}
 ---
- video/video_stream_encoder.cc          |  7 +++-
- video/video_stream_encoder_unittest.cc | 58 ++++++++++++++++++++++++++
- 2 files changed, 64 insertions(+), 1 deletion(-)
+ audio/test/pc_low_bandwidth_audio_test.cc     |  2 -
+ pc/rtp_sender.cc                              |  8 ----
+ pc/rtp_sender.h                               |  5 ++-
+ pc/rtp_sender_receiver_unittest.cc            |  9 -----
+ pc/test/svc_e2e_tests.cc                      |  1 -
+ test/pc/e2e/peer_connection_e2e_smoke_test.cc | 23 ++---------
+ .../e2e/peer_connection_quality_test_test.cc  |  6 +--
+ video/pc_full_stack_tests.cc                  | 39 -------------------
+ 8 files changed, 8 insertions(+), 85 deletions(-)
 
-diff --git a/video/video_stream_encoder.cc b/video/video_stream_encoder.cc
-index 994173228b..c680fe12c8 100644
---- a/video/video_stream_encoder.cc
-+++ b/video/video_stream_encoder.cc
-@@ -150,6 +150,10 @@ bool RequiresEncoderReset(const VideoCodec& prev_send_codec,
-   if (new_send_codec.codecType == kVideoCodecVP9) {
-     size_t num_spatial_layers = new_send_codec.VP9().numberOfSpatialLayers;
-     for (unsigned char i = 0; i < num_spatial_layers; ++i) {
-+      if (!new_send_codec.spatialLayers[i].active) {
-+        // No need to reset when layer is inactive.
-+        continue;
-+      }
-       if (new_send_codec.spatialLayers[i].width !=
-               prev_send_codec.spatialLayers[i].width ||
-           new_send_codec.spatialLayers[i].height !=
-@@ -157,7 +161,8 @@ bool RequiresEncoderReset(const VideoCodec& prev_send_codec,
-           new_send_codec.spatialLayers[i].numberOfTemporalLayers !=
-               prev_send_codec.spatialLayers[i].numberOfTemporalLayers ||
-           new_send_codec.spatialLayers[i].qpMax !=
--              prev_send_codec.spatialLayers[i].qpMax) {
-+              prev_send_codec.spatialLayers[i].qpMax ||
-+          !prev_send_codec.spatialLayers[i].active) {
-         return true;
-       }
-     }
-diff --git a/video/video_stream_encoder_unittest.cc b/video/video_stream_encoder_unittest.cc
-index 1f328ccf81..cdd4c75ab7 100644
---- a/video/video_stream_encoder_unittest.cc
-+++ b/video/video_stream_encoder_unittest.cc
-@@ -8649,6 +8649,64 @@ TEST_F(VideoStreamEncoderTest,
-   video_stream_encoder_->Stop();
+diff --git a/audio/test/pc_low_bandwidth_audio_test.cc b/audio/test/pc_low_bandwidth_audio_test.cc
+index dd9a5c9422..8b733d578d 100644
+--- a/audio/test/pc_low_bandwidth_audio_test.cc
++++ b/audio/test/pc_low_bandwidth_audio_test.cc
+@@ -134,7 +134,6 @@ TEST(PCLowBandwidthAudioTest, PCGoodNetworkHighBitrate) {
+       [](PeerConfigurer* alice) {
+         AudioConfig audio;
+         audio.stream_label = "alice-audio";
+-        audio.sync_group = "alice-media";
+         audio.mode = AudioConfig::Mode::kFile;
+         audio.input_file_name = AudioInputFile();
+         audio.output_dump_file_name = AudioOutputFile();
+@@ -161,7 +160,6 @@ TEST(PCLowBandwidthAudioTest, PC40kbpsNetwork) {
+       [](PeerConfigurer* alice) {
+         AudioConfig audio;
+         audio.stream_label = "alice-audio";
+-        audio.sync_group = "alice-media";
+         audio.mode = AudioConfig::Mode::kFile;
+         audio.input_file_name = AudioInputFile();
+         audio.output_dump_file_name = AudioOutputFile();
+diff --git a/pc/rtp_sender.cc b/pc/rtp_sender.cc
+index fe3b3b1aa5..1bbca3c41a 100644
+--- a/pc/rtp_sender.cc
++++ b/pc/rtp_sender.cc
+@@ -383,14 +383,6 @@ void RtpSenderBase::SetParametersAsync(const RtpParameters& parameters,
+       false);
  }
  
-+TEST_F(VideoStreamEncoderTest, RecreatesEncoderWhenEnableVp9SpatialLayer) {
-+  // Set up encoder to use VP9 SVC using two spatial layers.
-+  fake_encoder_.SetTemporalLayersSupported(/*spatial_idx=*/0, true);
-+  fake_encoder_.SetTemporalLayersSupported(/*spatial_idx*/ 1, true);
-+  VideoEncoderConfig video_encoder_config;
-+  test::FillEncoderConfiguration(VideoCodecType::kVideoCodecVP9,
-+                                 /* num_streams*/ 1, &video_encoder_config);
-+  video_encoder_config.max_bitrate_bps = 2 * kTargetBitrate.bps();
-+  video_encoder_config.content_type =
-+      VideoEncoderConfig::ContentType::kRealtimeVideo;
-+  VideoCodecVP9 vp9_settings = VideoEncoder::GetDefaultVp9Settings();
-+  vp9_settings.numberOfSpatialLayers = 2;
-+  vp9_settings.numberOfTemporalLayers = 2;
-+  vp9_settings.interLayerPred = InterLayerPredMode::kOn;
-+  vp9_settings.automaticResizeOn = false;
-+  video_encoder_config.encoder_specific_settings =
-+      rtc::make_ref_counted<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
-+          vp9_settings);
-+  video_encoder_config.spatial_layers = GetSvcConfig(1280, 720,
-+                                                     /*fps=*/30.0,
-+                                                     /*first_active_layer=*/0,
-+                                                     /*num_spatial_layers=*/2,
-+                                                     /*num_temporal_layers=*/3,
-+                                                     /*is_screenshare=*/false);
-+  ConfigureEncoder(video_encoder_config.Copy(),
-+                   VideoStreamEncoder::BitrateAllocationCallbackType::
-+                       kVideoLayersAllocation);
-+
-+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
-+      kTargetBitrate, kTargetBitrate, kTargetBitrate, 0, 0, 0);
-+
-+  video_source_.IncomingCapturedFrame(CreateFrame(CurrentTimeMs(), 1280, 720));
-+  WaitForEncodedFrame(CurrentTimeMs());
-+  EXPECT_EQ(fake_encoder_.GetNumInitializations(), 1);
-+
-+  // Turn off the top spatial layer. This does not require an encoder reset.
-+  video_encoder_config.spatial_layers[1].active = false;
-+  video_stream_encoder_->ConfigureEncoder(video_encoder_config.Copy(),
-+                                          kMaxPayloadLength, nullptr);
-+
-+  time_controller_.AdvanceTime(TimeDelta::Millis(33));
-+  video_source_.IncomingCapturedFrame(CreateFrame(CurrentTimeMs(), 1280, 720));
-+  WaitForEncodedFrame(CurrentTimeMs());
-+  EXPECT_EQ(fake_encoder_.GetNumInitializations(), 1);
-+
-+  // Turn on the top spatial layer again, this does require an encoder reset.
-+  video_encoder_config.spatial_layers[1].active = true;
-+  video_stream_encoder_->ConfigureEncoder(video_encoder_config.Copy(),
-+                                          kMaxPayloadLength, nullptr);
-+
-+  time_controller_.AdvanceTime(TimeDelta::Millis(33));
-+  video_source_.IncomingCapturedFrame(CreateFrame(CurrentTimeMs(), 1280, 720));
-+  WaitForEncodedFrame(CurrentTimeMs());
-+  EXPECT_EQ(fake_encoder_.GetNumInitializations(), 2);
-+
-+  video_stream_encoder_->Stop();
-+}
-+
- #endif  // !defined(WEBRTC_IOS)
+-void RtpSenderBase::set_stream_ids(const std::vector<std::string>& stream_ids) {
+-  stream_ids_.clear();
+-  absl::c_copy_if(stream_ids, std::back_inserter(stream_ids_),
+-                  [this](const std::string& stream_id) {
+-                    return !absl::c_linear_search(stream_ids_, stream_id);
+-                  });
+-}
+-
+ void RtpSenderBase::SetStreams(const std::vector<std::string>& stream_ids) {
+   set_stream_ids(stream_ids);
+   if (set_streams_observer_)
+diff --git a/pc/rtp_sender.h b/pc/rtp_sender.h
+index 6df030f523..29e5f16cfe 100644
+--- a/pc/rtp_sender.h
++++ b/pc/rtp_sender.h
+@@ -164,8 +164,9 @@ class RtpSenderBase : public RtpSenderInternal, public ObserverInterface {
+     RTC_DCHECK_RUN_ON(signaling_thread_);
+     return stream_ids_;
+   }
+-  // Set stream ids, eliminating duplicates in the process.
+-  void set_stream_ids(const std::vector<std::string>& stream_ids) override;
++  void set_stream_ids(const std::vector<std::string>& stream_ids) override {
++    stream_ids_ = stream_ids;
++  }
+   void SetStreams(const std::vector<std::string>& stream_ids) override;
  
- // Test parameters: (VideoCodecType codec, bool allow_i420_conversion)
+   std::string id() const override { return id_; }
+diff --git a/pc/rtp_sender_receiver_unittest.cc b/pc/rtp_sender_receiver_unittest.cc
+index 04043437a7..e51b058210 100644
+--- a/pc/rtp_sender_receiver_unittest.cc
++++ b/pc/rtp_sender_receiver_unittest.cc
+@@ -1888,15 +1888,6 @@ TEST_F(RtpSenderReceiverTest,
+   EXPECT_TRUE(video_rtp_sender_->SetParameters(parameters).ok());
+ }
+ 
+-// Checks that the senders SetStreams eliminates duplicate stream ids.
+-TEST_F(RtpSenderReceiverTest, SenderSetStreamsEliminatesDuplicateIds) {
+-  AddVideoTrack();
+-  video_rtp_sender_ =
+-      VideoRtpSender::Create(worker_thread_, video_track_->id(), nullptr);
+-  video_rtp_sender_->SetStreams({"1", "2", "1"});
+-  EXPECT_EQ(video_rtp_sender_->stream_ids().size(), 2u);
+-}
+-
+ // Helper method for syntactic sugar for accepting a vector with '{}' notation.
+ std::pair<RidList, RidList> CreatePairOfRidVectors(
+     const std::vector<std::string>& first,
+diff --git a/pc/test/svc_e2e_tests.cc b/pc/test/svc_e2e_tests.cc
+index c6ecab7ca5..dea0763758 100644
+--- a/pc/test/svc_e2e_tests.cc
++++ b/pc/test/svc_e2e_tests.cc
+@@ -329,7 +329,6 @@ TEST_P(SvcTest, ScalabilityModeSupported) {
+       [this](PeerConfigurer* alice) {
+         VideoConfig video(/*stream_label=*/"alice-video", /*width=*/1850,
+                           /*height=*/1110, /*fps=*/30);
+-        video.sync_group = "alice-media";
+         if (IsSMode()) {
+           video.emulated_sfu_config = EmulatedSFUConfig(
+               SvcTestParameters().expected_spatial_layers - 1,
+diff --git a/test/pc/e2e/peer_connection_e2e_smoke_test.cc b/test/pc/e2e/peer_connection_e2e_smoke_test.cc
+index cb44da2821..0e7993e5be 100644
+--- a/test/pc/e2e/peer_connection_e2e_smoke_test.cc
++++ b/test/pc/e2e/peer_connection_e2e_smoke_test.cc
+@@ -138,11 +138,11 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_Smoke) {
+ 
+     AudioConfig audio;
+     audio.stream_label = "alice-audio";
+-    audio.sync_group = "alice-media";
+     audio.mode = AudioConfig::Mode::kFile;
+     audio.input_file_name =
+         test::ResourcePath("pc_quality_smoke_test_alice_source", "wav");
+     audio.sampling_frequency_in_hz = 48000;
++    audio.sync_group = "alice-media";
+     alice->SetAudioConfig(std::move(audio));
+     alice->SetVideoCodecs(
+         {VideoCodecConfig(cricket::kVp9CodecName, {{"profile-id", "0"}})});
+@@ -155,13 +155,11 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_Smoke) {
+     charlie->SetName("charlie");
+     VideoConfig video(160, 120, 15);
+     video.stream_label = "charlie-video";
+-    video.sync_group = "charlie-media";
+     video.temporal_layers_count = 2;
+     charlie->AddVideoConfig(std::move(video));
+ 
+     AudioConfig audio;
+     audio.stream_label = "charlie-audio";
+-    audio.sync_group = "charlie-media";
+     audio.mode = AudioConfig::Mode::kFile;
+     audio.input_file_name =
+         test::ResourcePath("pc_quality_smoke_test_bob_source", "wav");
+@@ -228,13 +226,11 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest,
+     charlie->SetName("charlie");
+     VideoConfig video(160, 120, 15);
+     video.stream_label = "charlie-video";
+-    video.sync_group = "charlie-media";
+     video.temporal_layers_count = 2;
+     charlie->AddVideoConfig(std::move(video));
+ 
+     AudioConfig audio;
+     audio.stream_label = "charlie-audio";
+-    audio.sync_group = "charlie-media";
+     audio.mode = AudioConfig::Mode::kFile;
+     audio.input_file_name =
+         test::ResourcePath("pc_quality_smoke_test_bob_source", "wav");
+@@ -280,13 +276,11 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, SmokeH264) {
+     charlie->SetName("charlie");
+     VideoConfig video(160, 120, 15);
+     video.stream_label = "charlie-video";
+-    video.sync_group = "charlie-media";
+     video.temporal_layers_count = 2;
+     charlie->AddVideoConfig(std::move(video));
+ 
+     AudioConfig audio;
+     audio.stream_label = "charlie-audio";
+-    audio.sync_group = "charlie-media";
+     audio.mode = AudioConfig::Mode::kFile;
+     audio.input_file_name =
+         test::ResourcePath("pc_quality_smoke_test_bob_source", "wav");
+@@ -393,7 +387,6 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_Screenshare) {
+   AddPeer(network_links.first, [](PeerConfigurer* alice) {
+     VideoConfig screenshare(320, 180, 30);
+     screenshare.stream_label = "alice-screenshare";
+-    screenshare.sync_group = "alice-media";
+     screenshare.content_hint = VideoTrackInterface::ContentHint::kText;
+     ScreenShareConfig screen_share_config =
+         ScreenShareConfig(TimeDelta::Seconds(2));
+@@ -420,7 +413,6 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_Echo) {
+   AddPeer(network_links.first, [](PeerConfigurer* alice) {
+     AudioConfig audio;
+     audio.stream_label = "alice-audio";
+-    audio.sync_group = "alice-media";
+     audio.mode = AudioConfig::Mode::kFile;
+     audio.input_file_name =
+         test::ResourcePath("pc_quality_smoke_test_alice_source", "wav");
+@@ -430,7 +422,6 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_Echo) {
+   AddPeer(network_links.second, [](PeerConfigurer* bob) {
+     AudioConfig audio;
+     audio.stream_label = "bob-audio";
+-    audio.sync_group = "bob-media";
+     audio.mode = AudioConfig::Mode::kFile;
+     audio.input_file_name =
+         test::ResourcePath("pc_quality_smoke_test_bob_source", "wav");
+@@ -453,14 +444,12 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_Simulcast) {
+   AddPeer(network_links.first, [](PeerConfigurer* alice) {
+     VideoConfig simulcast(1280, 720, 15);
+     simulcast.stream_label = "alice-simulcast";
+-    simulcast.sync_group = "alice-media";
+     simulcast.simulcast_config = VideoSimulcastConfig(2);
+     simulcast.emulated_sfu_config = EmulatedSFUConfig(0);
+     alice->AddVideoConfig(std::move(simulcast));
+ 
+     AudioConfig audio;
+     audio.stream_label = "alice-audio";
+-    audio.sync_group = "alice-media";
+     audio.mode = AudioConfig::Mode::kFile;
+     audio.input_file_name =
+         test::ResourcePath("pc_quality_smoke_test_alice_source", "wav");
+@@ -481,18 +470,14 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_Svc) {
+   std::pair<EmulatedNetworkManagerInterface*, EmulatedNetworkManagerInterface*>
+       network_links = CreateNetwork();
+   AddPeer(network_links.first, [](PeerConfigurer* alice) {
+-    VideoConfig simulcast(1280, 720, 15);
+-    simulcast.stream_label = "alice-svc";
+-    simulcast.sync_group = "alice-media";
++    VideoConfig simulcast("alice-svc", 1280, 720, 15);
+     // Because we have network with packets loss we can analyze only the
+     // highest spatial layer in SVC mode.
+     simulcast.simulcast_config = VideoSimulcastConfig(2);
+     simulcast.emulated_sfu_config = EmulatedSFUConfig(1);
+     alice->AddVideoConfig(std::move(simulcast));
+ 
+-    AudioConfig audio;
+-    audio.stream_label = "alice-audio";
+-    audio.sync_group = "alice-media";
++    AudioConfig audio("alice-audio");
+     audio.mode = AudioConfig::Mode::kFile;
+     audio.input_file_name =
+         test::ResourcePath("pc_quality_smoke_test_alice_source", "wav");
+@@ -522,7 +507,6 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_HighBitrate) {
+     alice->SetBitrateSettings(bitrate_settings);
+     VideoConfig video(800, 600, 15);
+     video.stream_label = "alice-video";
+-    video.sync_group = "alice-media";
+     RtpEncodingParameters encoding_parameters;
+     encoding_parameters.min_bitrate_bps = 500'000;
+     encoding_parameters.max_bitrate_bps = 3'000'000;
+@@ -531,7 +515,6 @@ TEST_F(PeerConnectionE2EQualityTestSmokeTest, MAYBE_HighBitrate) {
+ 
+     AudioConfig audio;
+     audio.stream_label = "alice-audio";
+-    audio.sync_group = "alice-media";
+     audio.mode = AudioConfig::Mode::kFile;
+     audio.input_file_name =
+         test::ResourcePath("pc_quality_smoke_test_alice_source", "wav");
+diff --git a/test/pc/e2e/peer_connection_quality_test_test.cc b/test/pc/e2e/peer_connection_quality_test_test.cc
+index c1936559ee..066fe7d8ee 100644
+--- a/test/pc/e2e/peer_connection_quality_test_test.cc
++++ b/test/pc/e2e/peer_connection_quality_test_test.cc
+@@ -114,9 +114,7 @@ TEST_F(PeerConnectionE2EQualityTestTest, OutputVideoIsDumpedWhenRequested) {
+   EmulatedNetworkManagerInterface* bob_network =
+       network_emulation->CreateEmulatedNetworkManagerInterface({bob_endpoint});
+ 
+-  VideoConfig alice_video(320, 180, 15);
+-  alice_video.stream_label = "alice-video";
+-  alice_video.sync_group = "alice-media";
++  VideoConfig alice_video("alice_video", 320, 180, 15);
+   alice_video.output_dump_options = VideoDumpOptions(test_directory_);
+   PeerConfigurer alice(alice_network->network_dependencies());
+   alice.SetName("alice");
+@@ -130,7 +128,7 @@ TEST_F(PeerConnectionE2EQualityTestTest, OutputVideoIsDumpedWhenRequested) {
+   fixture.Run(RunParams(TimeDelta::Seconds(2)));
+ 
+   auto frame_reader = test::CreateY4mFrameReader(
+-      test::JoinFilename(test_directory_, "alice-video_bob_320x180_15.y4m"));
++      test::JoinFilename(test_directory_, "alice_video_bob_320x180_15.y4m"));
+   EXPECT_THAT(frame_reader->num_frames(), Eq(31));  // 2 seconds 15 fps + 1
+ 
+   ExpectOutputFilesCount(1);
+diff --git a/video/pc_full_stack_tests.cc b/video/pc_full_stack_tests.cc
+index 43180083e1..83b06830e0 100644
+--- a/video/pc_full_stack_tests.cc
++++ b/video/pc_full_stack_tests.cc
+@@ -133,7 +133,6 @@ TEST(PCFullStackTest, Pc_Foreman_Cif_Net_Delay_0_0_Plr_0_VP9) {
+       [](PeerConfigurer* alice) {
+         VideoConfig video(352, 288, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("foreman_cif"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -165,7 +164,6 @@ TEST(PCGenericDescriptorTest,
+       [](PeerConfigurer* alice) {
+         VideoConfig video(352, 288, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("foreman_cif"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -204,7 +202,6 @@ TEST(PCFullStackTest, MAYBE_Pc_Generator_Net_Delay_0_0_Plr_0_VP9Profile2) {
+       [](PeerConfigurer* alice) {
+         VideoConfig video(352, 288, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateSquareFrameGenerator(
+             video, test::FrameGeneratorInterface::OutputType::kI010);
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -264,7 +261,6 @@ TEST(PCFullStackTest, Pc_Net_Delay_0_0_Plr_0) {
+       [](PeerConfigurer* alice) {
+         VideoConfig video(176, 144, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("paris_qcif"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -285,7 +281,6 @@ TEST(PCGenericDescriptorTest,
+       [](PeerConfigurer* alice) {
+         VideoConfig video(352, 288, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("foreman_cif"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -306,7 +301,6 @@ TEST(PCGenericDescriptorTest,
+       [](PeerConfigurer* alice) {
+         VideoConfig video(352, 288, 10);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("foreman_cif"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -335,7 +329,6 @@ TEST(PCFullStackTest, Pc_Foreman_Cif_Link_150kbps_Net_Delay_0_0_Plr_0) {
+       [](PeerConfigurer* alice) {
+         VideoConfig video(352, 288, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("foreman_cif"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -358,7 +351,6 @@ TEST(PCFullStackTest, Pc_Foreman_Cif_Link_130kbps_Delay100ms_Loss1_Ulpfec) {
+       [](PeerConfigurer* alice) {
+         VideoConfig video(352, 288, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("foreman_cif"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -382,7 +374,6 @@ TEST(PCFullStackTest, Pc_Foreman_Cif_Link_50kbps_Delay100ms_Loss1_Ulpfec) {
+       [](PeerConfigurer* alice) {
+         VideoConfig video(352, 288, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("foreman_cif"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -408,7 +399,6 @@ TEST(PCFullStackTest,
+       [](PeerConfigurer* alice) {
+         VideoConfig video(352, 288, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("foreman_cif"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -437,7 +427,6 @@ TEST(PCFullStackTest, Pc_Foreman_Cif_Link_250kbps_Delay100ms_10pkts_Loss1) {
+       [](PeerConfigurer* alice) {
+         VideoConfig video(352, 288, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("foreman_cif"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -461,7 +450,6 @@ TEST(PCGenericDescriptorTest,
+       [](PeerConfigurer* alice) {
+         VideoConfig video(352, 288, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("foreman_cif"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -484,7 +472,6 @@ TEST(PCGenericDescriptorTest,
+       [](PeerConfigurer* alice) {
+         VideoConfig video(352, 288, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("foreman_cif"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -507,7 +494,6 @@ TEST(PCFullStackTest, Pc_Foreman_Cif_Delay_50_0_Plr_5_Flexfec) {
+       [](PeerConfigurer* alice) {
+         VideoConfig video(352, 288, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("foreman_cif"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -533,7 +519,6 @@ TEST(PCFullStackTest, Pc_Foreman_Cif_500kbps_Delay_50_0_Plr_3_Flexfec) {
+       [](PeerConfigurer* alice) {
+         VideoConfig video(352, 288, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("foreman_cif"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -559,7 +544,6 @@ TEST(PCFullStackTest, Pc_Foreman_Cif_500kbps_Delay_50_0_Plr_3_Ulpfec) {
+       [](PeerConfigurer* alice) {
+         VideoConfig video(352, 288, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("foreman_cif"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -581,7 +565,6 @@ TEST(PCFullStackTest, Pc_Foreman_Cif_Net_Delay_0_0_Plr_0_H264) {
+       [](PeerConfigurer* alice) {
+         VideoConfig video(352, 288, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("foreman_cif"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -604,7 +587,6 @@ TEST(PCFullStackTest, Pc_Foreman_Cif_30kbps_Net_Delay_0_0_Plr_0_H264) {
+       [](PeerConfigurer* alice) {
+         VideoConfig video(352, 288, 10);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("foreman_cif"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -636,7 +618,6 @@ TEST(PCGenericDescriptorTest,
+       [](PeerConfigurer* alice) {
+         VideoConfig video(352, 288, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("foreman_cif"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -664,7 +645,6 @@ TEST(PCFullStackTest, Pc_Foreman_Cif_Delay_50_0_Plr_5_H264_Sps_Pps_Idr) {
+       [](PeerConfigurer* alice) {
+         VideoConfig video(352, 288, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("foreman_cif"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -689,7 +669,6 @@ TEST(PCFullStackTest, Pc_Foreman_Cif_Delay_50_0_Plr_5_H264_Flexfec) {
+       [](PeerConfigurer* alice) {
+         VideoConfig video(352, 288, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("foreman_cif"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -720,7 +699,6 @@ TEST(PCFullStackTest, DISABLED_Pc_Foreman_Cif_Delay_50_0_Plr_5_H264_Ulpfec) {
+       [](PeerConfigurer* alice) {
+         VideoConfig video(352, 288, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("foreman_cif"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -748,7 +726,6 @@ TEST(PCFullStackTest, Pc_Foreman_Cif_500kbps) {
+       [](PeerConfigurer* alice) {
+         VideoConfig video(352, 288, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("foreman_cif"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -771,7 +748,6 @@ TEST_P(ParameterizedPCFullStackTest, Pc_Foreman_Cif_500kbps_32pkts_Queue) {
+       [](PeerConfigurer* alice) {
+         VideoConfig video(352, 288, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("foreman_cif"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -801,7 +777,6 @@ TEST(PCFullStackTest, Pc_Foreman_Cif_500kbps_100ms) {
+       [](PeerConfigurer* alice) {
+         VideoConfig video(352, 288, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("foreman_cif"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -825,7 +800,6 @@ TEST(PCGenericDescriptorTest,
+       [](PeerConfigurer* alice) {
+         VideoConfig video(352, 288, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("foreman_cif"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -869,7 +843,6 @@ TEST(PCFullStackTest, Pc_Foreman_Cif_1000kbps_100ms_32pkts_Queue) {
+       [](PeerConfigurer* alice) {
+         VideoConfig video(352, 288, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("foreman_cif"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -893,7 +866,6 @@ TEST(PCFullStackTest, Pc_Conference_Motion_Hd_2000kbps_100ms_32pkts_Queue) {
+       [](PeerConfigurer* alice) {
+         VideoConfig video(1280, 720, 50);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("ConferenceMotion_1280_720_50"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -1045,7 +1017,6 @@ TEST_P(ParameterizedPCFullStackTest,
+       [](PeerConfigurer* alice) {
+         VideoConfig video(1280, 720, 50);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("ConferenceMotion_1280_720_50"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -1081,7 +1052,6 @@ TEST(PCFullStackTest, Pc_Screenshare_Slides_No_Conference_Mode) {
+       [](PeerConfigurer* alice) {
+         VideoConfig video(1850, 1110, 5);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         video.content_hint = VideoTrackInterface::ContentHint::kText;
+         auto frame_generator = CreateScreenShareFrameGenerator(
+             video, ScreenShareConfig(TimeDelta::Seconds(10)));
+@@ -1101,7 +1071,6 @@ TEST(PCFullStackTest, Pc_Screenshare_Slides) {
+       [](PeerConfigurer* alice) {
+         VideoConfig video(1850, 1110, 5);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         video.content_hint = VideoTrackInterface::ContentHint::kText;
+         auto frame_generator = CreateScreenShareFrameGenerator(
+             video, ScreenShareConfig(TimeDelta::Seconds(10)));
+@@ -1129,7 +1098,6 @@ TEST(PCFullStackTest, Pc_Screenshare_Slides_Simulcast_No_Conference_Mode) {
+         video.emulated_sfu_config = EmulatedSFUConfig(1);
+         video.temporal_layers_count = 2;
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         video.content_hint = VideoTrackInterface::ContentHint::kText;
+         auto frame_generator = CreateScreenShareFrameGenerator(
+             video, ScreenShareConfig(TimeDelta::Seconds(10)));
+@@ -1153,7 +1121,6 @@ TEST_P(ParameterizedPCFullStackTest, Pc_Screenshare_Slides_Simulcast) {
+         video.emulated_sfu_config = EmulatedSFUConfig(1);
+         video.temporal_layers_count = 2;
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         video.content_hint = VideoTrackInterface::ContentHint::kText;
+         auto frame_generator = CreateScreenShareFrameGenerator(
+             video, ScreenShareConfig(TimeDelta::Seconds(10)));
+@@ -1364,7 +1331,6 @@ TEST(PCFullStackTest, Pc_Screenshare_Slides_Vp9_3sl_High_Fps) {
+       [](PeerConfigurer* alice) {
+         VideoConfig video(1850, 1110, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         video.simulcast_config = VideoSimulcastConfig(3);
+         video.emulated_sfu_config = EmulatedSFUConfig(2);
+         video.content_hint = VideoTrackInterface::ContentHint::kText;
+@@ -1398,7 +1364,6 @@ TEST(PCFullStackTest, Pc_Vp9svc_3sl_High) {
+       [](PeerConfigurer* alice) {
+         VideoConfig video(1280, 720, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         video.simulcast_config = VideoSimulcastConfig(3);
+         video.emulated_sfu_config = EmulatedSFUConfig(2);
+         video.temporal_layers_count = 3;
+@@ -1432,7 +1397,6 @@ TEST(PCFullStackTest, Pc_Vp9svc_3sl_Low) {
+       [](PeerConfigurer* alice) {
+         VideoConfig video(1280, 720, 30);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         video.simulcast_config = VideoSimulcastConfig(3);
+         video.emulated_sfu_config = EmulatedSFUConfig(0);
+         video.temporal_layers_count = 3;
+@@ -1569,7 +1533,6 @@ TEST(PCFullStackTest, MAYBE_Pc_Simulcast_HD_High) {
+         video.emulated_sfu_config = EmulatedSFUConfig(2);
+         video.temporal_layers_count = 3;
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         alice->AddVideoConfig(std::move(video));
+       },
+       [](PeerConfigurer* bob) {});
+@@ -1591,7 +1554,6 @@ TEST_P(ParameterizedPCFullStackTest, Pc_Simulcast_Vp8_3sl_High) {
+         video.simulcast_config = VideoSimulcastConfig(3);
+         video.emulated_sfu_config = EmulatedSFUConfig(2);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("ConferenceMotion_1280_720_50"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
+@@ -1621,7 +1583,6 @@ TEST(PCFullStackTest, Pc_Simulcast_Vp8_3sl_Low) {
+         video.simulcast_config = VideoSimulcastConfig(3);
+         video.emulated_sfu_config = EmulatedSFUConfig(0);
+         video.stream_label = "alice-video";
+-        video.sync_group = "alice-media";
+         auto frame_generator = CreateFromYuvFileFrameGenerator(
+             video, ClipNameToClipPath("ConferenceMotion_1280_720_50"));
+         alice->AddVideoConfig(std::move(video), std::move(frame_generator));
 -- 
 2.34.1
 
