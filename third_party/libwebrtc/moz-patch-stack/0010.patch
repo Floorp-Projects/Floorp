@@ -65,10 +65,10 @@ index f68e57479b..6912912cfc 100644
    // Get rtt.
    int32_t RTT(uint32_t remote_ssrc,
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-index ab33d1ab40..ead2f879f0 100644
+index 54fb82c2a1..bf9e2b3bf9 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-@@ -530,8 +530,10 @@ void ModuleRtpRtcpImpl::GetSendStreamDataCounters(
+@@ -528,8 +528,10 @@ void ModuleRtpRtcpImpl::GetSendStreamDataCounters(
  
  // Received RTCP report.
  void ModuleRtpRtcpImpl::RemoteRTCPSenderInfo(uint32_t* packet_count,
