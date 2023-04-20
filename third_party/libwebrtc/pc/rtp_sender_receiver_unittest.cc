@@ -1888,6 +1888,15 @@ TEST_F(RtpSenderReceiverTest,
   EXPECT_TRUE(video_rtp_sender_->SetParameters(parameters).ok());
 }
 
+// Checks that the senders SetStreams eliminates duplicate stream ids.
+TEST_F(RtpSenderReceiverTest, SenderSetStreamsEliminatesDuplicateIds) {
+  AddVideoTrack();
+  video_rtp_sender_ =
+      VideoRtpSender::Create(worker_thread_, video_track_->id(), nullptr);
+  video_rtp_sender_->SetStreams({"1", "2", "1"});
+  EXPECT_EQ(video_rtp_sender_->stream_ids().size(), 2u);
+}
+
 // Helper method for syntactic sugar for accepting a vector with '{}' notation.
 std::pair<RidList, RidList> CreatePairOfRidVectors(
     const std::vector<std::string>& first,
