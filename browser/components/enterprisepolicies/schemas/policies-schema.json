@@ -1347,7 +1347,7 @@
     },
 
     "WebsiteFilter": {
-      "type": "object",
+      "type": ["object", "JSON"],
       "properties": {
         "Block": {
           "type": "array",

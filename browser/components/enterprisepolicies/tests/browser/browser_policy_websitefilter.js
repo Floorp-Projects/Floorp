@@ -8,6 +8,17 @@ const BLOCKED_PAGE = "policy_websitefilter_block.html";
 const EXCEPTION_PAGE = "policy_websitefilter_exception.html";
 const SAVELINKAS_PAGE = "policy_websitefilter_savelink.html";
 
+async function clearWebsiteFilter() {
+  await setupPolicyEngineWithJson({
+    policies: {
+      WebsiteFilter: {
+        Block: [],
+        Exceptions: [],
+      },
+    },
+  });
+}
+
 add_task(async function test_http() {
   await setupPolicyEngineWithJson({
     policies: {
@@ -36,6 +47,7 @@ add_task(async function test_http() {
   await checkBlockedPage(SUPPORT_FILES_PATH + "301.sjs", true);
 
   await checkBlockedPage(SUPPORT_FILES_PATH + "302.sjs", true);
+  await clearWebsiteFilter();
 });
 
 add_task(async function test_http_mixed_case() {
@@ -53,6 +65,7 @@ add_task(async function test_http_mixed_case() {
     SUPPORT_FILES_PATH + EXCEPTION_PAGE.toUpperCase(),
     false
   );
+  await clearWebsiteFilter();
 });
 
 add_task(async function test_file() {
@@ -65,6 +78,7 @@ add_task(async function test_file() {
   });
 
   await checkBlockedPage("file:///this_should_be_blocked", true);
+  await clearWebsiteFilter();
 });
 
 add_task(async function test_savelink() {
@@ -137,4 +151,36 @@ add_task(async function test_savelink() {
   await promiseContextMenuHidden;
 
   BrowserTestUtils.removeTab(tab);
+  await clearWebsiteFilter();
+});
+
+add_task(async function test_http_json_policy() {
+  await setupPolicyEngineWithJson({
+    policies: {
+      WebsiteFilter: `{
+        "Block": ["*://mochi.test/*policy_websitefilter_*"],
+        "Exceptions": ["*://mochi.test/*_websitefilter_exception*"]
+      }`,
+    },
+  });
+
+  await checkBlockedPage(SUPPORT_FILES_PATH + BLOCKED_PAGE, true);
+  await checkBlockedPage(
+    "view-source:" + SUPPORT_FILES_PATH + BLOCKED_PAGE,
+    true
+  );
+  await checkBlockedPage(
+    "about:reader?url=" + SUPPORT_FILES_PATH + BLOCKED_PAGE,
+    true
+  );
+  await checkBlockedPage(
+    "about:READER?url=" + SUPPORT_FILES_PATH + BLOCKED_PAGE,
+    true
+  );
+  await checkBlockedPage(SUPPORT_FILES_PATH + EXCEPTION_PAGE, false);
+
+  await checkBlockedPage(SUPPORT_FILES_PATH + "301.sjs", true);
+
+  await checkBlockedPage(SUPPORT_FILES_PATH + "302.sjs", true);
+  await clearWebsiteFilter();
 });
