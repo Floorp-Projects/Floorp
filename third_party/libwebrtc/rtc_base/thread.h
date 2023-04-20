@@ -34,7 +34,6 @@
 #include "api/task_queue/task_queue_base.h"
 #include "api/units/time_delta.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/deprecated/recursive_critical_section.h"
 #include "rtc_base/platform_thread_types.h"
 #include "rtc_base/socket_server.h"
 #include "rtc_base/synchronization/mutex.h"
@@ -140,11 +139,8 @@ class RTC_EXPORT ThreadManager {
   // This list contains all live Threads.
   std::vector<Thread*> message_queues_ RTC_GUARDED_BY(crit_);
 
-  // Methods that don't modify the list of message queues may be called in a
-  // re-entrant fashion. "processing_" keeps track of the depth of re-entrant
-  // calls.
-  RecursiveCriticalSection crit_;
-  size_t processing_ RTC_GUARDED_BY(crit_) = 0;
+  webrtc::Mutex crit_;
+
 #if RTC_DCHECK_IS_ON
   // Represents all thread seand actions by storing all send targets per thread.
   // This is used by RegisterSendAndCheckForCycles. This graph has no cycles

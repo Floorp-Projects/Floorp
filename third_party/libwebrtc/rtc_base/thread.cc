@@ -37,7 +37,6 @@
 #include "absl/cleanup/cleanup.h"
 #include "api/sequence_checker.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/deprecated/recursive_critical_section.h"
 #include "rtc_base/event.h"
 #include "rtc_base/internal/default_socket_server.h"
 #include "rtc_base/logging.h"
@@ -74,34 +73,9 @@ class ScopedAutoReleasePool {
 #endif
 
 namespace rtc {
-namespace {
 
 using ::webrtc::MutexLock;
 using ::webrtc::TimeDelta;
-
-class RTC_SCOPED_LOCKABLE MarkProcessingCritScope {
- public:
-  MarkProcessingCritScope(const RecursiveCriticalSection* cs,
-                          size_t* processing) RTC_EXCLUSIVE_LOCK_FUNCTION(cs)
-      : cs_(cs), processing_(processing) {
-    cs_->Enter();
-    *processing_ += 1;
-  }
-
-  ~MarkProcessingCritScope() RTC_UNLOCK_FUNCTION() {
-    *processing_ -= 1;
-    cs_->Leave();
-  }
-
-  MarkProcessingCritScope(const MarkProcessingCritScope&) = delete;
-  MarkProcessingCritScope& operator=(const MarkProcessingCritScope&) = delete;
-
- private:
-  const RecursiveCriticalSection* const cs_;
-  size_t* processing_;
-};
-
-}  // namespace
 
 ThreadManager* ThreadManager::Instance() {
   static ThreadManager* const thread_manager = new ThreadManager();
@@ -118,9 +92,7 @@ void ThreadManager::Add(Thread* message_queue) {
   return Instance()->AddInternal(message_queue);
 }
 void ThreadManager::AddInternal(Thread* message_queue) {
-  CritScope cs(&crit_);
-  // Prevent changes while the list of message queues is processed.
-  RTC_DCHECK_EQ(processing_, 0);
+  MutexLock cs(&crit_);
   message_queues_.push_back(message_queue);
 }
 
@@ -130,9 +102,7 @@ void ThreadManager::Remove(Thread* message_queue) {
 }
 void ThreadManager::RemoveInternal(Thread* message_queue) {
   {
-    CritScope cs(&crit_);
-    // Prevent changes while the list of message queues is processed.
-    RTC_DCHECK_EQ(processing_, 0);
+    MutexLock cs(&crit_);
     std::vector<Thread*>::iterator iter;
     iter = absl::c_find(message_queues_, message_queue);
     if (iter != message_queues_.end()) {
@@ -161,7 +131,7 @@ void ThreadManager::RegisterSendAndCheckForCycles(Thread* source,
   RTC_DCHECK(source);
   RTC_DCHECK(target);
 
-  CritScope cs(&crit_);
+  MutexLock cs(&crit_);
   std::deque<Thread*> all_targets({target});
   // We check the pre-existing who-sends-to-who graph for any path from target
   // to source. This loop is guaranteed to terminate because per the send graph
@@ -191,7 +161,7 @@ void ThreadManager::ProcessAllMessageQueuesInternal() {
   std::atomic<int> queues_not_done(0);
 
   {
-    MarkProcessingCritScope cs(&crit_, &processing_);
+    MutexLock cs(&crit_);
     for (Thread* queue : message_queues_) {
       if (!queue->IsProcessingMessagesForTesting()) {
         // If the queue is not processing messages, it can
