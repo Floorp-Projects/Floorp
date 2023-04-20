@@ -53,6 +53,8 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Types.h"
 
+#include "mozilla/GfxInfoUtils.h"
+
 #ifdef MOZ_X11
 // stuff from glx.h
 typedef struct __GLXcontextRec* GLXContext;
@@ -169,81 +171,7 @@ typedef struct _drmDevice {
 #  define LIBDRM_FILENAME "libdrm.so.2"
 #endif
 
-#define EXIT_FAILURE_BUFFER_TOO_SMALL 2
-
-// An alternative to mozilla::Unused for use in (a) C code and (b) code where
-// linking with unused.o is difficult.
-#define MOZ_UNUSED(expr) \
-  do {                   \
-    if (expr) {          \
-      (void)0;           \
-    }                    \
-  } while (0)
-
-// Print log to stderr
-#define LOG_PIPE 2
-
-// our buffer, size and used length
 static int glxtest_out_pipe = 1;
-static char* glxtest_buf = nullptr;
-static int glxtest_bufsize = 0;
-static int glxtest_length = 0;
-static bool enable_logging = false;
-
-static void log(const char* format, ...) {
-  if (!enable_logging) {
-    return;
-  }
-  va_list args;
-  va_start(args, format);
-  vfprintf(stderr, format, args);
-  va_end(args);
-}
-
-// C++ standard collides with C standard in that it doesn't allow casting void*
-// to function pointer types. So the work-around is to convert first to size_t.
-// http://www.trilithium.com/johan/2004/12/problem-with-dlsym/
-template <typename func_ptr_type>
-static func_ptr_type cast(void* ptr) {
-  return reinterpret_cast<func_ptr_type>(reinterpret_cast<size_t>(ptr));
-}
-
-static void record_value(const char* format, ...) {
-  // Don't add more if the buffer is full.
-  if (glxtest_bufsize <= glxtest_length) {
-    return;
-  }
-
-  // Append the new values to the buffer, not to exceed the remaining space.
-  int remaining = glxtest_bufsize - glxtest_length;
-  va_list args;
-  va_start(args, format);
-  int max_added =
-      vsnprintf(glxtest_buf + glxtest_length, remaining, format, args);
-  va_end(args);
-
-  // snprintf returns how many char it could have added, not how many it added.
-  // It is important to get this right since it will control how many chars we
-  // will attempt to write to the pipe fd.
-  if (max_added > remaining) {
-    glxtest_length += remaining;
-  } else {
-    glxtest_length += max_added;
-  }
-}
-
-static void record_error(const char* str) { record_value("ERROR\n%s\n", str); }
-
-static void record_warning(const char* str) {
-  record_value("WARNING\n%s\n", str);
-}
-
-static void record_flush() {
-  MOZ_UNUSED(write(glxtest_out_pipe, glxtest_buf, glxtest_length));
-  if (enable_logging) {
-    MOZ_UNUSED(write(LOG_PIPE, glxtest_buf, glxtest_length));
-  }
-}
 
 #ifdef MOZ_X11
 static int x_error_handler(Display*, XErrorEvent* ev) {
@@ -251,7 +179,7 @@ static int x_error_handler(Display*, XErrorEvent* ev) {
       "ERROR\nX error, error_code=%d, "
       "request_code=%d, minor_code=%d\n",
       ev->error_code, ev->request_code, ev->minor_code);
-  record_flush();
+  record_flush(glxtest_out_pipe);
   _exit(EXIT_FAILURE);
 }
 #endif
@@ -1017,14 +945,6 @@ void wayland_egltest() {
 #endif
 
 int childgltest(bool aWayland) {
-  enum { bufsize = 2048 };
-  char buf[bufsize];
-
-  // We save it as a global so that the X error handler can flush the buffer
-  // before early exiting.
-  glxtest_buf = buf;
-  glxtest_bufsize = bufsize;
-
   log("GLX_TEST: childgltest start\n");
 
   // Get a list of all GPUs from the PCI bus.
@@ -1044,12 +964,7 @@ int childgltest(bool aWayland) {
   }
 #endif
   // Finally write buffered data to the pipe.
-  record_flush();
-
-  // If we completely filled the buffer, we need to tell the parent.
-  if (glxtest_length >= glxtest_bufsize) {
-    return EXIT_FAILURE_BUFFER_TOO_SMALL;
-  }
+  record_flush(glxtest_out_pipe);
 
   log("GLX_TEST: childgltest finished\n");
   return EXIT_SUCCESS;
