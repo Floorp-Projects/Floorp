@@ -57,7 +57,8 @@ class RemoteContentController : public GeckoContentController,
   void DispatchToRepaintThread(already_AddRefed<Runnable> aTask) override;
 
   void NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
-                            APZStateChange aChange, int aArg) override;
+                            APZStateChange aChange, int aArg,
+                            Maybe<uint64_t> aInputBlockId) override;
 
   void UpdateOverscrollVelocity(const ScrollableLayerGuid& aGuid, float aX,
                                 float aY, bool aIsRootContent) override;

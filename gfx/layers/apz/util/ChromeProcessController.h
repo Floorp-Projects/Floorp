@@ -63,7 +63,8 @@ class ChromeProcessController : public mozilla::layers::GeckoContentController {
                           LayoutDeviceCoord aSpanChange,
                           Modifiers aModifiers) override;
   void NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
-                            APZStateChange aChange, int aArg) override;
+                            APZStateChange aChange, int aArg,
+                            Maybe<uint64_t> aInputBlockId) override;
   void NotifyMozMouseScrollEvent(const ScrollableLayerGuid::ViewID& aScrollId,
                                  const nsString& aEvent) override;
   void NotifyFlushComplete() override;

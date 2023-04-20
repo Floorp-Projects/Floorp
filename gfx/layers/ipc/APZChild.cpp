@@ -69,8 +69,8 @@ mozilla::ipc::IPCResult APZChild::RecvNotifyMozMouseScrollEvent(
 
 mozilla::ipc::IPCResult APZChild::RecvNotifyAPZStateChange(
     const ScrollableLayerGuid& aGuid, const APZStateChange& aChange,
-    const int& aArg) {
-  mController->NotifyAPZStateChange(aGuid, aChange, aArg);
+    const int& aArg, Maybe<uint64_t> aInputBlockId) {
+  mController->NotifyAPZStateChange(aGuid, aChange, aArg, aInputBlockId);
   return IPC_OK();
 }
 

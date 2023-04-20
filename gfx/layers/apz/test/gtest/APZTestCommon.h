@@ -140,8 +140,9 @@ class MockContentController : public GeckoContentController {
   void DispatchToRepaintThread(already_AddRefed<Runnable> aTask) {
     NS_DispatchToMainThread(std::move(aTask));
   }
-  MOCK_METHOD3(NotifyAPZStateChange, void(const ScrollableLayerGuid& aGuid,
-                                          APZStateChange aChange, int aArg));
+  MOCK_METHOD4(NotifyAPZStateChange,
+               void(const ScrollableLayerGuid& aGuid, APZStateChange aChange,
+                    int aArg, Maybe<uint64_t> aInputBlockId));
   MOCK_METHOD0(NotifyFlushComplete, void());
   MOCK_METHOD3(NotifyAsyncScrollbarDragInitiated,
                void(uint64_t, const ScrollableLayerGuid::ViewID&,

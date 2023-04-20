@@ -579,7 +579,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   bool NotifyAPZStateChange(
       const ViewID& aViewId,
       const layers::GeckoContentController_APZStateChange& aChange,
-      const int& aArg);
+      const int& aArg, Maybe<uint64_t> aInputBlockId);
   void StartScrollbarDrag(const layers::AsyncDragMetrics& aDragMetrics);
   void ZoomToRect(const uint32_t& aPresShellId,
                   const ScrollableLayerGuid::ViewID& aViewId,
