@@ -86,7 +86,7 @@ already_AddRefed<Category> Glean::NamedGetter(const nsAString& aName,
   }
 
   aFound = true;
-  nsDependentCString name(&gCategoryStringTable[categoryIdx.value()]);
+  nsDependentCString name(GetCategoryName(categoryIdx.value()));
   return MakeAndAddRef<Category>(std::move(name));
 }
 
