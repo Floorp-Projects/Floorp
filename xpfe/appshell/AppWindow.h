@@ -100,6 +100,10 @@ class AppWindow final : public nsIBaseWindow,
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
     virtual void UIResolutionChanged() override;
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
+    virtual void FullscreenWillChange(bool aInFullscreen) override;
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY
+    virtual void FullscreenChanged(bool aInFullscreen) override;
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY
     virtual void MacFullscreenMenubarOverlapChanged(
         mozilla::DesktopCoord aOverlapAmount) override;
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
@@ -388,7 +392,6 @@ class AppWindow final : public nsIBaseWindow,
   nsresult MoveResize(const Maybe<DesktopPoint>& aPosition,
                       const Maybe<DesktopSize>& aSize, bool aRepaint);
   nsCOMPtr<nsIXULStore> mLocalStore;
-  bool mIsWidgetInFullscreen = false;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(AppWindow, NS_APPWINDOW_IMPL_CID)
