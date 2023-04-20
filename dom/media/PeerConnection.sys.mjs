@@ -2,14 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "PeerConnectionIdp",
-  "resource://gre/modules/media/PeerConnectionIdp.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  PeerConnectionIdp: "resource://gre/modules/media/PeerConnectionIdp.sys.mjs",
+});
 
 const PC_CONTRACT = "@mozilla.org/dom/peerconnection;1";
 const PC_OBS_CONTRACT = "@mozilla.org/dom/peerconnectionobserver;1";
@@ -51,7 +47,7 @@ let setupPrototype = (_class, dict) => {
 
 // Global list of PeerConnection objects, so they can be cleaned up when
 // a page is torn down. (Maps inner window ID to an array of PC objects).
-class GlobalPCList {
+export class GlobalPCList {
   constructor() {
     this._list = {};
     this._networkdown = false; // XXX Need to query current state somehow
@@ -205,6 +201,7 @@ class GlobalPCList {
     this._lifecycleobservers[winID] = cb;
   }
 }
+
 setupPrototype(GlobalPCList, {
   QueryInterface: ChromeUtils.generateQI([
     "nsIObserver",
@@ -215,7 +212,7 @@ setupPrototype(GlobalPCList, {
 
 var _globalPCList = new GlobalPCList();
 
-class RTCIceCandidate {
+export class RTCIceCandidate {
   init(win) {
     this._win = win;
   }
@@ -229,13 +226,14 @@ class RTCIceCandidate {
     Object.assign(this, dict);
   }
 }
+
 setupPrototype(RTCIceCandidate, {
   classID: PC_ICE_CID,
   contractID: PC_ICE_CONTRACT,
   QueryInterface: ChromeUtils.generateQI(["nsIDOMGlobalPropertyInitializer"]),
 });
 
-class RTCSessionDescription {
+export class RTCSessionDescription {
   init(win) {
     this._win = win;
     this._winID = this._win.windowGlobalChild.innerWindowId;
@@ -288,6 +286,7 @@ class RTCSessionDescription {
     );
   }
 }
+
 setupPrototype(RTCSessionDescription, {
   classID: PC_SESSION_CID,
   contractID: PC_SESSION_CONTRACT,
@@ -347,7 +346,7 @@ class PeerConnectionTelemetry {
   }
 }
 
-class RTCPeerConnection {
+export class RTCPeerConnection {
   constructor() {
     this._pc = null;
     this._closed = false;
@@ -1762,6 +1761,7 @@ class RTCPeerConnection {
     return dataChannel;
   }
 }
+
 setupPrototype(RTCPeerConnection, {
   classID: PC_CID,
   contractID: PC_CONTRACT,
@@ -1776,7 +1776,7 @@ setupPrototype(RTCPeerConnection, {
 
 // This is a separate class because we don't want to expose it to DOM.
 
-class PeerConnectionObserver {
+export class PeerConnectionObserver {
   init(win) {
     this._win = win;
   }
@@ -1979,13 +1979,14 @@ class PeerConnectionObserver {
     }
   }
 }
+
 setupPrototype(PeerConnectionObserver, {
   classID: PC_OBS_CID,
   contractID: PC_OBS_CONTRACT,
   QueryInterface: ChromeUtils.generateQI(["nsIDOMGlobalPropertyInitializer"]),
 });
 
-class RTCPeerConnectionStatic {
+export class RTCPeerConnectionStatic {
   init(win) {
     this._winID = win.windowGlobalChild.innerWindowId;
   }
@@ -1994,29 +1995,21 @@ class RTCPeerConnectionStatic {
     _globalPCList._registerPeerConnectionLifecycleCallback(this._winID, cb);
   }
 }
+
 setupPrototype(RTCPeerConnectionStatic, {
   classID: PC_STATIC_CID,
   contractID: PC_STATIC_CONTRACT,
   QueryInterface: ChromeUtils.generateQI(["nsIDOMGlobalPropertyInitializer"]),
 });
 
-class CreateOfferRequest {
+export class CreateOfferRequest {
   constructor(windowID, innerWindowID, callID, isSecure) {
     Object.assign(this, { windowID, innerWindowID, callID, isSecure });
   }
 }
+
 setupPrototype(CreateOfferRequest, {
   classID: PC_COREQUEST_CID,
   contractID: PC_COREQUEST_CONTRACT,
   QueryInterface: ChromeUtils.generateQI([]),
 });
-
-var EXPORTED_SYMBOLS = [
-  "GlobalPCList",
-  "RTCIceCandidate",
-  "RTCSessionDescription",
-  "RTCPeerConnection",
-  "RTCPeerConnectionStatic",
-  "PeerConnectionObserver",
-  "CreateOfferRequest",
-];

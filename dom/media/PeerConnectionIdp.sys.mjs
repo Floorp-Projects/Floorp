@@ -2,15 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["PeerConnectionIdp"];
-
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "IdpSandbox",
-  "resource://gre/modules/media/IdpSandbox.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  IdpSandbox: "resource://gre/modules/media/IdpSandbox.sys.mjs",
+});
 
 /**
  * Creates an IdP helper.
@@ -18,7 +14,7 @@ ChromeUtils.defineModuleGetter(
  * @param win (object) the window we are working for
  * @param timeout (int) the timeout in milliseconds
  */
-function PeerConnectionIdp(win, timeout) {
+export function PeerConnectionIdp(win, timeout) {
   this._win = win;
   this._timeout = timeout || 5000;
 
