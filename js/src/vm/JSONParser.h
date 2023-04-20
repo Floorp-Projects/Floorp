@@ -109,6 +109,18 @@ class MOZ_STACK_CLASS JSONTokenizer {
   void error(const char* msg);
 };
 
+// Possible states the parser can be in between values.
+enum class JSONParserState {
+  // An array element has just being parsed.
+  FinishArrayElement,
+
+  // An object property has just been parsed.
+  FinishObjectMember,
+
+  // At the start of the parse, before any values have been processed.
+  JSONValue
+};
+
 // JSONParser base class. JSONParser is templatized to work on either Latin1
 // or TwoByte input strings, JSONParserBase holds all state and methods that
 // can be shared between the two encodings.
@@ -147,37 +159,25 @@ class MOZ_STACK_CLASS JSONParserBase {
   // the key/value pairs that have been seen so far.
   typedef GCVector<IdValuePair, 10> PropertyVector;
 
-  // Possible states the parser can be in between values.
-  enum ParserState {
-    // An array element has just being parsed.
-    FinishArrayElement,
-
-    // An object property has just been parsed.
-    FinishObjectMember,
-
-    // At the start of the parse, before any values have been processed.
-    JSONValue
-  };
-
   // Stack element for an in progress array or object.
   struct StackEntry {
     ElementVector& elements() {
-      MOZ_ASSERT(state == FinishArrayElement);
+      MOZ_ASSERT(state == JSONParserState::FinishArrayElement);
       return *static_cast<ElementVector*>(vector);
     }
 
     PropertyVector& properties() {
-      MOZ_ASSERT(state == FinishObjectMember);
+      MOZ_ASSERT(state == JSONParserState::FinishObjectMember);
       return *static_cast<PropertyVector*>(vector);
     }
 
     explicit StackEntry(ElementVector* elements)
-        : state(FinishArrayElement), vector(elements) {}
+        : state(JSONParserState::FinishArrayElement), vector(elements) {}
 
     explicit StackEntry(PropertyVector* properties)
-        : state(FinishObjectMember), vector(properties) {}
+        : state(JSONParserState::FinishObjectMember), vector(properties) {}
 
-    ParserState state;
+    JSONParserState state;
 
    private:
     void* vector;
