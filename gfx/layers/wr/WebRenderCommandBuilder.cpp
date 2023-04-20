@@ -1193,15 +1193,23 @@ static ItemActivity IsItemProbablyActive(
         // concern.
         const int32_t largeish = 512;
 
-        float width = bounds.width * aSc.GetInheritedScale().xScale;
-        float height = bounds.height * aSc.GetInheritedScale().yScale;
+        float width =
+            static_cast<float>(bounds.width) * aSc.GetInheritedScale().xScale;
+        float height =
+            static_cast<float>(bounds.height) * aSc.GetInheritedScale().yScale;
+        float appUnitsPerDevPixel = static_cast<float>(
+            aItem->Frame()->PresContext()->AppUnitsPerDevPixel());
 
-        if (aHasActivePrecedingSibling || width > largeish ||
-            height > largeish) {
-          return ItemActivity::Should;
+        // Webrender doesn't handle primitives smaller than a pixel well, so
+        // avoid making them active.
+        if (width >= appUnitsPerDevPixel && height >= appUnitsPerDevPixel) {
+          if (aHasActivePrecedingSibling || width > largeish ||
+              height > largeish) {
+            return ItemActivity::Should;
+          }
+
+          return ItemActivity::Could;
         }
-
-        return ItemActivity::Could;
       }
 
       return ItemActivity::No;
