@@ -293,6 +293,9 @@ class alignas(16) Instance {
   static constexpr size_t offsetOfGlobalArea() {
     return offsetof(Instance, globalArea_);
   }
+  static constexpr size_t offsetInGlobalArea(size_t offset) {
+    return offsetOfGlobalArea() + offset;
+  }
 
   JSContext* cx() const { return cx_; }
   void* debugTrapHandler() const { return debugTrapHandler_; }
