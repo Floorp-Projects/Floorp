@@ -55,34 +55,14 @@ def rust_datatypes_filter(value):
             elif isinstance(value, set):
                 yield from self.iterencode(sorted(list(value)))
             elif isinstance(value, list):
-                if len(value) > 8 and all(isinstance(v, str) for v in value):
-                    # For large enough sets and lists of strings, we use a single string
-                    # with an array of lengths and convert to a Vec at runtime. This yields
-                    # smaller code, data, and relocations than using vec![].
-                    yield "{"
-                    yield f"""const S: &'static str = "{"".join(value)}";"""
-                    lengths = [len(v) for v in value]
-                    largest = max(lengths)
-                    # Use a type adequate for the largest string.
-                    # In most cases, this will be u8.
-                    len_type = f"u{((largest.bit_length() + 7) // 8) * 8}"
-                    yield f"const LENGTHS: [{len_type}; {len(lengths)}] = {lengths};"
-                    yield "let mut offset = 0;"
-                    yield "LENGTHS.iter().map(|len| {"
-                    yield "  let start = offset;"
-                    yield "  offset += *len as usize;"
-                    yield "  S[start..offset].into()"
-                    yield "}).collect()"
-                    yield "}"
-                else:
-                    yield "vec!["
-                    first = True
-                    for subvalue in list(value):
-                        if not first:
-                            yield ", "
-                        yield from self.iterencode(subvalue)
-                        first = False
-                    yield "]"
+                yield "vec!["
+                first = True
+                for subvalue in list(value):
+                    if not first:
+                        yield ", "
+                    yield from self.iterencode(subvalue)
+                    first = False
+                yield "]"
             elif value is None:
                 yield "None"
             # CowString is also a 'str' but is a special case.
@@ -125,7 +105,7 @@ def type_name(obj):
         return "LabeledMetric<Labeled{}>".format(class_name(obj.type))
     generate_enums = getattr(obj, "_generate_enums", [])  # Extra Keys? Reasons?
     if len(generate_enums):
-        for name, suffix in generate_enums:
+        for name, _ in generate_enums:
             if not len(getattr(obj, name)) and isinstance(obj, Event):
                 return class_name(obj.type) + "<NoExtraKeys>"
             else:
@@ -239,8 +219,8 @@ def output_rust(objs, output_fd, ping_names_by_app_id, options={}):
                 key = (const_name, typ)
 
                 metric_name = util.snake_case(metric.name)
-                category_name = util.snake_case(category_name)
-                full_path = f"{category_name}::{metric_name}"
+                category_snake = util.snake_case(category_name)
+                full_path = f"{category_snake}::{metric_name}"
 
                 if metric.type == "event":
                     events_by_id[get_metric_id(metric)] = full_path
