@@ -230,8 +230,6 @@ class AudioProcessingImpl : public AudioProcessing {
   static TransientSuppressor::VadMode GetTransientSuppressorVadMode(
       const absl::optional<GainController2ExperimentParams>& experiment_params);
 
-  const bool use_denormal_disabler_;
-
   const TransientSuppressor::VadMode transient_suppressor_vad_mode_;
 
   SwapQueue<RuntimeSetting> capture_runtime_settings_;
