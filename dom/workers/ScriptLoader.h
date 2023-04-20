@@ -158,6 +158,11 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
   bool mExecutionAborted = false;
   bool mMutedErrorFlag = false;
 
+  // Count of loading module requests. mLoadingRequests doesn't keep track of
+  // child module requests.
+  // This member should be accessed on worker thread.
+  uint32_t mLoadingModuleRequestCount;
+
   // Worker cancellation related Mutex
   //
   // Modified on the worker thread.
@@ -269,6 +274,10 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
   }
 
   void LogExceptionToConsole(JSContext* aCx, WorkerPrivate* aWorkerPrivate);
+
+  bool AllModuleRequestsLoaded() const;
+  void IncreaseLoadingModuleRequestCount();
+  void DecreaseLoadingModuleRequestCount();
 };
 
 /* ScriptLoaderRunnable
