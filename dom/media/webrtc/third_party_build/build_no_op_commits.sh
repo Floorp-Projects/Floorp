@@ -13,7 +13,6 @@ trap 'show_error_msg $LINENO' ERR
 source dom/media/webrtc/third_party_build/use_config_env.sh
 
 echo "MOZ_LIBWEBRTC_SRC: $MOZ_LIBWEBRTC_SRC"
-echo "MOZ_PRIOR_LIBWEBRTC_BRANCH: $MOZ_PRIOR_LIBWEBRTC_BRANCH"
 
 # After this point:
 # * eE: All commands should succeed.
@@ -31,7 +30,7 @@ MANUAL_INTERVENTION_COMMIT_FILE="$TMP_DIR/manual_commits.txt"
 rm -f $MANUAL_INTERVENTION_COMMIT_FILE
 
 # Find the common commit between our previous work branch and trunk
-CURRENT_RELEASE_BASE=`git merge-base $MOZ_PRIOR_LIBWEBRTC_BRANCH master`
+CURRENT_RELEASE_BASE=`git merge-base branch-heads/$MOZ_PRIOR_UPSTREAM_BRANCH_HEAD_NUM master`
 
 # Write no-op files for the cherry-picked release branch commits.  For more
 # details on what this is doing, see make_upstream_revert_noop.sh.
