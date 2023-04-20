@@ -18,15 +18,6 @@ export MOZ_FASTFORWARD_BUG="1822194"
 export MOZ_NEXT_LIBWEBRTC_MILESTONE=110
 export MOZ_NEXT_FIREFOX_REL_TARGET=114
 
-# The branch name for the most recently completed fast-forward version.
-# The convention is to include which version of Chromium and the target
-# Firefox release in the branch name. We landed the v109 fast-forward in
-# Firefox 113.  This branch name is used to prep the github repo for the
-# next fast-forward by grabbing all the Mozilla specific commits in the
-# prior branch and restacking them at the same base commit ready to
-# rebase onto the next upstream commit.
-export MOZ_PRIOR_LIBWEBRTC_BRANCH="moz-mods-chr109-for-rel113"
-
 # For Chromium release branches, see:
 # https://chromiumdash.appspot.com/branches
 

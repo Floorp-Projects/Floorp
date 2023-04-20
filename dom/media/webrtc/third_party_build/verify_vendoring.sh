@@ -15,7 +15,6 @@ source dom/media/webrtc/third_party_build/use_config_env.sh
 echo "MOZ_LIBWEBRTC_SRC: $MOZ_LIBWEBRTC_SRC"
 echo "MOZ_LIBWEBRTC_BRANCH: $MOZ_LIBWEBRTC_BRANCH"
 echo "MOZ_FASTFORWARD_BUG: $MOZ_FASTFORWARD_BUG"
-echo "MOZ_PRIOR_LIBWEBRTC_BRANCH: $MOZ_PRIOR_LIBWEBRTC_BRANCH"
 
 # After this point:
 # * eE: All commands should succeed.

@@ -28,15 +28,6 @@ export MOZ_FASTFORWARD_BUG="$bugnum"
 export MOZ_NEXT_LIBWEBRTC_MILESTONE=$m2
 export MOZ_NEXT_FIREFOX_REL_TARGET=$t2
 
-# The branch name for the most recently completed fast-forward version.
-# The convention is to include which version of Chromium and the target
-# Firefox release in the branch name. We landed the v$m1 fast-forward in
-# Firefox $t1.  This branch name is used to prep the github repo for the
-# next fast-forward by grabbing all the Mozilla specific commits in the
-# prior branch and restacking them at the same base commit ready to
-# rebase onto the next upstream commit.
-export MOZ_PRIOR_LIBWEBRTC_BRANCH="moz-mods-chr$m1-for-rel$t1"
-
 # For Chromium release branches, see:
 # https://chromiumdash.appspot.com/branches
 
@@ -76,7 +67,6 @@ def build_example_config_env(bug_number, milestone, target):
     return s.substitute(
         bugnum=bug_number,
         m1=milestone,
-        t1=target,
         m2=milestone + 1,
         t2=target + 1,
         bh1=prior_branch_head,
