@@ -123,10 +123,10 @@ index 3fdcd2c5d0..2713c0e603 100644
    // capture windows.
    static std::unique_ptr<DesktopCapturer> CreateRawWindowCapturer(
 diff --git a/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc b/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
-index 621e21f61f..fce023782f 100644
+index dae2b70510..cf4f7dc9aa 100644
 --- a/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
 +++ b/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
-@@ -159,15 +159,6 @@ void BaseCapturerPipeWire::CaptureFrame() {
+@@ -165,15 +165,6 @@ void BaseCapturerPipeWire::CaptureFrame() {
    callback_->OnCaptureResult(Result::SUCCESS, std::move(frame));
  }
  
@@ -142,7 +142,7 @@ index 621e21f61f..fce023782f 100644
  bool BaseCapturerPipeWire::GetSourceList(SourceList* sources) {
    RTC_DCHECK(sources->size() == 0);
    // List of available screens is already presented by the xdg-desktop-portal,
-@@ -184,7 +175,7 @@ bool BaseCapturerPipeWire::GetSourceList(SourceList* sources) {
+@@ -190,7 +181,7 @@ bool BaseCapturerPipeWire::GetSourceList(SourceList* sources) {
  bool BaseCapturerPipeWire::SelectSource(SourceId id) {
    // Screen selection is handled by the xdg-desktop-portal.
    selected_source_id_ = id;
