@@ -57,13 +57,13 @@ Clip fetch_clip(int index) {
 void main(void) {
     PrimitiveInfo prim_info = ps_quad_main();
 
+    Clip clip = fetch_clip(aClipData.y);
+
     RectWithEndpoint xf_bounds = RectWithEndpoint(
-        max(prim_info.local_prim_rect.p0, prim_info.local_clip_rect.p0),
-        min(prim_info.local_prim_rect.p1, prim_info.local_clip_rect.p1)
+        max(clip.rect.p0, prim_info.local_clip_rect.p0),
+        min(clip.rect.p1, prim_info.local_clip_rect.p1)
     );
     vTransformBounds = vec4(xf_bounds.p0, xf_bounds.p1);
-
-    Clip clip = fetch_clip(aClipData.y);
 
     Transform clip_transform = fetch_transform(aClipData.x);
 
