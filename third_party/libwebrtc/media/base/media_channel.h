@@ -624,8 +624,6 @@ struct VideoReceiverInfo : public MediaReceiverInfo {
   uint32_t pause_count = 0;
   uint32_t total_freezes_duration_ms = 0;
   uint32_t total_pauses_duration_ms = 0;
-  uint32_t total_frames_duration_ms = 0;
-  double sum_squared_frame_durations = 0.0;
   uint32_t jitter_ms = 0;
 
   webrtc::VideoContentType content_type = webrtc::VideoContentType::UNSPECIFIED;
