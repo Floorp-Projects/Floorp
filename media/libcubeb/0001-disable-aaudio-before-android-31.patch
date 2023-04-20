@@ -1,13 +1,3 @@
-# HG changeset patch
-# User Paul Adenot <paul@paul.cx>
-# Date 1675704257 -3600
-#      Mon Feb 06 18:24:17 2023 +0100
-# Node ID af331fb1ade15fff3f042f7881c12fdca6d86349
-# Parent  56d3f31673a0d096e34564b0734d202a89d2ba47
-Bug 1812120 - Disable the AAudio backend when running on Android <= 30. r?kinetik
-
-Differential Revision: https://phabricator.services.mozilla.com/D168979
-
 diff --git a/src/cubeb_aaudio.cpp b/src/cubeb_aaudio.cpp
 --- a/src/cubeb_aaudio.cpp
 +++ b/src/cubeb_aaudio.cpp
@@ -25,11 +15,11 @@ diff --git a/src/cubeb_aaudio.cpp b/src/cubeb_aaudio.cpp
  #include <cassert>
  #include <chrono>
  #include <condition_variable>
+ #include <cstdint>
  #include <cstring>
  #include <dlfcn.h>
- #include <memory>
- #include <mutex>
-@@ -1544,16 +1545,19 @@ const static struct cubeb_ops aaudio_ops
+ #include <inttypes.h>
+@@ -1600,16 +1601,19 @@ const static struct cubeb_ops aaudio_ops
      /*.stream_get_current_device =*/NULL,
      /*.stream_device_destroy =*/NULL,
      /*.stream_register_device_changed_callback =*/NULL,
