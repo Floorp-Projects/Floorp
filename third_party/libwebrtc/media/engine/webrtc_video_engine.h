@@ -547,10 +547,6 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     webrtc::Mutex sink_lock_;
     rtc::VideoSinkInterface<webrtc::VideoFrame>* sink_
         RTC_GUARDED_BY(sink_lock_);
-    // Expands remote RTP timestamps to int64_t to be able to estimate how long
-    // the stream has been running.
-    rtc::TimestampWrapAroundHandler timestamp_wraparound_handler_
-        RTC_GUARDED_BY(sink_lock_);
     int64_t first_frame_timestamp_ RTC_GUARDED_BY(sink_lock_);
     // Start NTP time is estimated as current remote NTP time (estimated from
     // RTCP) minus the elapsed time, as soon as remote NTP time is available.
