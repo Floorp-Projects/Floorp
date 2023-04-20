@@ -1331,17 +1331,19 @@ if (is_win) {
   }
 }
 
-rtc_library("log_sinks") {
-  sources = [
-    "log_sinks.cc",
-    "log_sinks.h",
-  ]
-  deps = [
-    ":checks",
-    ":file_rotating_stream",
-    ":logging",
-  ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+if (!build_with_chromium) {
+  rtc_library("log_sinks") {
+    sources = [
+      "log_sinks.cc",
+      "log_sinks.h",
+    ]
+    deps = [
+      ":checks",
+      ":file_rotating_stream",
+      ":logging",
+    ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+  }
 }
 
 rtc_library("network") {
