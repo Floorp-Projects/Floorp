@@ -162,10 +162,10 @@ index cda8b1f6af..eeb7d14cc3 100644
  
      // Transport for outgoing packets (RTCP).
 diff --git a/modules/rtp_rtcp/include/rtp_rtcp_defines.h b/modules/rtp_rtcp/include/rtp_rtcp_defines.h
-index c482e0c7dc..8d5c7c15c0 100644
+index 1f2804815b..7283939783 100644
 --- a/modules/rtp_rtcp/include/rtp_rtcp_defines.h
 +++ b/modules/rtp_rtcp/include/rtp_rtcp_defines.h
-@@ -219,6 +219,14 @@ class RtcpBandwidthObserver {
+@@ -208,6 +208,14 @@ class RtcpBandwidthObserver {
    virtual ~RtcpBandwidthObserver() {}
  };
  
@@ -261,7 +261,7 @@ index c6854937cb..b988c7805d 100644
      TransportFeedbackObserver* transport_feedback_callback = nullptr;
      VideoBitrateAllocationObserver* bitrate_allocation_observer = nullptr;
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index 3a48e58ea4..d4d8444c35 100644
+index daec616a89..70c24de280 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
 @@ -83,7 +83,8 @@ std::unique_ptr<ModuleRtpRtcpImpl2> CreateRtpRtcpModule(
@@ -282,7 +282,7 @@ index 3a48e58ea4..d4d8444c35 100644
    configuration.non_sender_rtt_measurement = non_sender_rtt_measurement;
    configuration.event_log = rtc_event_log;
  
-@@ -278,7 +280,8 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
+@@ -276,7 +278,8 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
            rtcp_cname_callback,
            config_.rtp.rtcp_xr.receiver_reference_time_report,
            config_.rtp.local_ssrc,

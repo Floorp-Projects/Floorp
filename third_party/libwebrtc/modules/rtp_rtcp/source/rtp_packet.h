@@ -53,6 +53,9 @@ class RtpPacket {
   // Maps extensions id to their types.
   void IdentifyExtensions(ExtensionManager extensions);
 
+  // Returns the extension map used for identifying extensions in this packet.
+  const ExtensionManager& extension_manager() const { return extensions_; }
+
   // Header.
   bool Marker() const { return marker_; }
   uint8_t PayloadType() const { return payload_type_; }

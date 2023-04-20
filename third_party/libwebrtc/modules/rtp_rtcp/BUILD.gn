@@ -11,6 +11,7 @@ import("../../webrtc.gni")
 rtc_library("rtp_rtcp_format") {
   visibility = [ "*" ]
   public = [
+    "include/recovered_packet_receiver.h",
     "include/report_block_data.h",
     "include/rtcp_statistics.h",
     "include/rtp_cvo.h",
