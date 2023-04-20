@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "api/units/timestamp.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/system/rtc_export.h"
 #include "rtc_base/system/rtc_export_template.h"
@@ -42,7 +43,7 @@ class RTCStatsMemberInterface;
 // Derived classes list their dictionary members, RTCStatsMember<T>, as public
 // fields, allowing the following:
 //
-// RTCFooStats foo("fooId", GetCurrentTime());
+// RTCFooStats foo("fooId", Timestamp::Micros(GetCurrentTime()));
 // foo.bar = 42;
 // foo.baz = std::vector<std::string>();
 // foo.baz->push_back("hello world");
@@ -55,15 +56,20 @@ class RTCStatsMemberInterface;
 // }
 class RTC_EXPORT RTCStats {
  public:
+  RTCStats(const std::string& id, Timestamp timestamp)
+      : id_(id), timestamp_(timestamp) {}
   RTCStats(std::string id, int64_t timestamp_us)
-      : id_(std::move(id)), timestamp_us_(timestamp_us) {}
+      : RTCStats(std::move(id), Timestamp::Micros(timestamp_us)) {}
+
   virtual ~RTCStats() {}
 
   virtual std::unique_ptr<RTCStats> copy() const = 0;
 
   const std::string& id() const { return id_; }
   // Time relative to the UNIX epoch (Jan 1, 1970, UTC), in microseconds.
-  int64_t timestamp_us() const { return timestamp_us_; }
+  int64_t timestamp_us() const { return timestamp_.us(); }
+  Timestamp timestamp() const { return timestamp_; }
+
   // Returns the static member variable `kType` of the implementing class.
   virtual const char* type() const = 0;
   // Returns a vector of pointers to all the `RTCStatsMemberInterface` members
@@ -97,7 +103,7 @@ class RTC_EXPORT RTCStats {
   MembersOfThisObjectAndAncestors(size_t additional_capacity) const;
 
   std::string const id_;
-  int64_t timestamp_us_;
+  Timestamp timestamp_;
 };
 
 // All `RTCStats` classes should use these macros.
