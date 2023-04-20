@@ -15,10 +15,10 @@
 #include "call/call.h"
 #include "call/fake_network_pipe.h"
 #include "call/simulated_network.h"
-#include "modules/include/module_common_types_public.h"
 #include "modules/rtp_rtcp/source/byte_io.h"
 #include "modules/rtp_rtcp/source/rtp_header_extensions.h"
 #include "modules/rtp_rtcp/source/rtp_packet.h"
+#include "rtc_base/numerics/sequence_number_unwrapper.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "test/call_test.h"
 #include "test/field_trial.h"
@@ -153,7 +153,7 @@ TEST(TransportFeedbackMultiStreamTest, AssignsTransportSequenceNumbers) {
     Mutex lock_;
     rtc::Event done_;
     RtpHeaderExtensionMap extensions_;
-    SequenceNumberUnwrapper unwrapper_;
+    RtpSequenceNumberUnwrapper unwrapper_;
     std::set<int64_t> received_packed_ids_;
     std::set<uint32_t> streams_observed_;
     std::map<uint32_t, std::set<uint16_t>> dropped_seq_;
@@ -470,7 +470,7 @@ TEST_F(TransportFeedbackEndToEndTest, TransportSeqNumOnAudioAndVideo) {
    private:
     bool video_observed_;
     bool audio_observed_;
-    SequenceNumberUnwrapper unwrapper_;
+    RtpSequenceNumberUnwrapper unwrapper_;
     std::set<int64_t> received_packet_ids_;
     RtpHeaderExtensionMap extensions_;
   } test;
