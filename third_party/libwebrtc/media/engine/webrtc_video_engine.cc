@@ -694,12 +694,7 @@ WebRtcVideoChannel::WebRtcVideoChannel(
       discard_unknown_ssrc_packets_(
           IsEnabled(call_->trials(),
                     "WebRTC-Video-DiscardPacketsWithUnknownSsrc")),
-      crypto_options_(crypto_options),
-      unknown_ssrc_packet_buffer_(
-          IsEnabled(call_->trials(),
-                    "WebRTC-Video-BufferPacketsWithUnknownSsrc")
-              ? new UnhandledPacketsBuffer()
-              : nullptr) {
+      crypto_options_(crypto_options) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   network_thread_checker_.Detach();
 
@@ -1478,9 +1473,9 @@ bool WebRtcVideoChannel::AddRecvStream(const StreamParams& sp,
   if (unsignaled_frame_transformer_ && !config.frame_transformer)
     config.frame_transformer = unsignaled_frame_transformer_;
 
-  receive_streams_[sp.first_ssrc()] = new WebRtcVideoReceiveStream(
-      this, call_, sp, std::move(config), default_stream, recv_codecs_,
-      flexfec_config);
+  receive_streams_[sp.first_ssrc()] =
+      new WebRtcVideoReceiveStream(call_, sp, std::move(config), default_stream,
+                                   recv_codecs_, flexfec_config);
 
   return true;
 }
@@ -1723,10 +1718,6 @@ void WebRtcVideoChannel::OnPacketReceived(rtc::CopyOnWriteBuffer packet,
         absl::optional<uint32_t> rtx_ssrc;
         uint32_t ssrc = ParseRtpSsrc(packet);
 
-        if (unknown_ssrc_packet_buffer_) {
-          unknown_ssrc_packet_buffer_->AddPacket(ssrc, packet_time_us, packet);
-          return;
-        }
 
         if (discard_unknown_ssrc_packets_) {
           return;
@@ -1816,52 +1807,6 @@ void WebRtcVideoChannel::OnPacketSent(const rtc::SentPacket& sent_packet) {
   // the video stats, for all sent packets, including audio, which causes
   // unnecessary lookups.
   call_->OnSentPacket(sent_packet);
-}
-
-void WebRtcVideoChannel::BackfillBufferedPackets(
-    rtc::ArrayView<const uint32_t> ssrcs) {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
-  if (!unknown_ssrc_packet_buffer_) {
-    return;
-  }
-
-  int delivery_ok_cnt = 0;
-  int delivery_unknown_ssrc_cnt = 0;
-  int delivery_packet_error_cnt = 0;
-  webrtc::PacketReceiver* receiver = this->call_->Receiver();
-  unknown_ssrc_packet_buffer_->BackfillPackets(
-      ssrcs, [&](uint32_t /*ssrc*/, int64_t packet_time_us,
-                 rtc::CopyOnWriteBuffer packet) {
-        switch (receiver->DeliverPacket(webrtc::MediaType::VIDEO, packet,
-                                        packet_time_us)) {
-          case webrtc::PacketReceiver::DELIVERY_OK:
-            delivery_ok_cnt++;
-            break;
-          case webrtc::PacketReceiver::DELIVERY_UNKNOWN_SSRC:
-            delivery_unknown_ssrc_cnt++;
-            break;
-          case webrtc::PacketReceiver::DELIVERY_PACKET_ERROR:
-            delivery_packet_error_cnt++;
-            break;
-        }
-      });
-  rtc::StringBuilder out;
-  out << "[ ";
-  for (uint32_t ssrc : ssrcs) {
-    out << std::to_string(ssrc) << " ";
-  }
-  out << "]";
-  auto level = rtc::LS_INFO;
-  if (delivery_unknown_ssrc_cnt > 0 || delivery_packet_error_cnt > 0) {
-    level = rtc::LS_ERROR;
-  }
-  int total =
-      delivery_ok_cnt + delivery_unknown_ssrc_cnt + delivery_packet_error_cnt;
-  RTC_LOG_V(level) << "Backfilled " << total
-                   << " packets for ssrcs: " << out.Release()
-                   << " ok: " << delivery_ok_cnt
-                   << " error: " << delivery_packet_error_cnt
-                   << " unknown: " << delivery_unknown_ssrc_cnt;
 }
 
 void WebRtcVideoChannel::OnReadyToSend(bool ready) {
@@ -2870,15 +2815,13 @@ void WebRtcVideoChannel::WebRtcVideoSendStream::GenerateKeyFrame(
 }
 
 WebRtcVideoChannel::WebRtcVideoReceiveStream::WebRtcVideoReceiveStream(
-    WebRtcVideoChannel* channel,
     webrtc::Call* call,
     const StreamParams& sp,
     webrtc::VideoReceiveStreamInterface::Config config,
     bool default_stream,
     const std::vector<VideoCodecSettings>& recv_codecs,
     const webrtc::FlexfecReceiveStream::Config& flexfec_config)
-    : channel_(channel),
-      call_(call),
+    : call_(call),
       stream_params_(sp),
       stream_(NULL),
       default_stream_(default_stream),
@@ -3191,9 +3134,6 @@ void WebRtcVideoChannel::WebRtcVideoReceiveStream::CreateReceiveStream() {
 
 void WebRtcVideoChannel::WebRtcVideoReceiveStream::StartReceiveStream() {
   stream_->Start();
-  if (IsEnabled(call_->trials(), "WebRTC-Video-BufferPacketsWithUnknownSsrc")) {
-    channel_->BackfillBufferedPackets(stream_params_.ssrcs);
-  }
 }
 
 void WebRtcVideoChannel::WebRtcVideoReceiveStream::OnFrame(
