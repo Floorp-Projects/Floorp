@@ -1,65 +1,46 @@
-From: =?UTF-8?q?Henrik=20Bostr=C3=B6m?= <hbos@webrtc.org>
-Date: Fri, 20 Jan 2023 10:48:31 +0100
-Subject: =?UTF-8?q?(cherry-pick-branch-heads/5481)=20[Merge-110]=C2=A0[Sta?=
- =?UTF-8?q?ts]=20Handle=20the=20case=20of=20missing=20certificates.?=
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From: Danil Chapovalov <danilchap@webrtc.org>
+Date: Fri, 23 Dec 2022 14:17:02 +0000
+Subject: (cherry-pick-branch-heads/5481) Zero extra bytes of FEC recovered
+ packet
 
-Certificates being missing is a sign of a bug (e.g. webrtc:14844, to be
-fixed separately) which is why we have a DCHECK. But this DCHECK does
-not protect against accessing the invalid iterator if it is a release
-build. This CL makes that safe.
+rtc::CopyOnWriteBuffer::SetSize extends buffer with uninitialized memory by design.
+It is up to the user of the rtc::CopyOnWriteBuffer to ensure it is initialized.
 
-# Mobile bots not running properly
-NOTRY=True
+(cherry picked from commit f52e0152397cda785ff311394d8275f210bd5a20)
 
-(cherry picked from commit 124d7c3fe5bdc79a355c9df02d07f25331631a68)
-
-Bug: chromium:1408392
-Change-Id: I97a82786028e41c58ef8ef15002c3f959bbec7f1
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291109
-Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
-Commit-Queue: Henrik Boström <hbos@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#39159}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291380
-Cr-Commit-Position: refs/branch-heads/5481@{#2}
+No-Try: true
+Bug: chromium:1403397
+Change-Id: Ic0111a84bda32379770ddb1c7d24bee10d96b7a4
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/289041
+Reviewed-by: Rasmus Brandt <brandtr@webrtc.org>
+Commit-Queue: Danil Chapovalov <danilchap@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#38959}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291540
+Reviewed-by: Per Kjellander <perkj@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/5481@{#3}
 Cr-Branched-From: 2e1a9a4ae0234d4b1ea7a6fd4188afa1fb20379d-refs/heads/main@{#38901}
 ---
- pc/rtc_stats_collector.cc | 19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-)
+ modules/rtp_rtcp/source/forward_error_correction.cc | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/pc/rtc_stats_collector.cc b/pc/rtc_stats_collector.cc
-index a9fb3b7d76..75e9676d09 100644
---- a/pc/rtc_stats_collector.cc
-+++ b/pc/rtc_stats_collector.cc
-@@ -2192,16 +2192,17 @@ void RTCStatsCollector::ProduceTransportStats_n(
-     // exist.
-     const auto& certificate_stats_it =
-         transport_cert_stats.find(transport_name);
-+    std::string local_certificate_id, remote_certificate_id;
-     RTC_DCHECK(certificate_stats_it != transport_cert_stats.cend());
--    std::string local_certificate_id;
--    if (certificate_stats_it->second.local) {
--      local_certificate_id = RTCCertificateIDFromFingerprint(
--          certificate_stats_it->second.local->fingerprint);
--    }
--    std::string remote_certificate_id;
--    if (certificate_stats_it->second.remote) {
--      remote_certificate_id = RTCCertificateIDFromFingerprint(
--          certificate_stats_it->second.remote->fingerprint);
-+    if (certificate_stats_it != transport_cert_stats.cend()) {
-+      if (certificate_stats_it->second.local) {
-+        local_certificate_id = RTCCertificateIDFromFingerprint(
-+            certificate_stats_it->second.local->fingerprint);
-+      }
-+      if (certificate_stats_it->second.remote) {
-+        remote_certificate_id = RTCCertificateIDFromFingerprint(
-+            certificate_stats_it->second.remote->fingerprint);
-+      }
-     }
- 
-     // There is one transport stats for each channel.
+diff --git a/modules/rtp_rtcp/source/forward_error_correction.cc b/modules/rtp_rtcp/source/forward_error_correction.cc
+index 903d3e7d45..dbf6c361df 100644
+--- a/modules/rtp_rtcp/source/forward_error_correction.cc
++++ b/modules/rtp_rtcp/source/forward_error_correction.cc
+@@ -573,7 +573,13 @@ bool ForwardErrorCorrection::FinishPacketRecovery(
+                            "typical IP packet, and is thus dropped.";
+     return false;
+   }
++  size_t old_size = recovered_packet->pkt->data.size();
+   recovered_packet->pkt->data.SetSize(new_size);
++  data = recovered_packet->pkt->data.MutableData();
++  if (new_size > old_size) {
++    memset(data + old_size, 0, new_size - old_size);
++  }
++
+   // Set the SN field.
+   ByteWriter<uint16_t>::WriteBigEndian(&data[2], recovered_packet->seq_num);
+   // Set the SSRC field.
 -- 
 2.34.1
 

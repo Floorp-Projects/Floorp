@@ -1,46 +1,57 @@
 From: Danil Chapovalov <danilchap@webrtc.org>
-Date: Fri, 23 Dec 2022 14:17:02 +0000
-Subject: (cherry-pick-branch-heads/5481) Zero extra bytes of FEC recovered
- packet
+Date: Mon, 2 Jan 2023 10:44:27 +0100
+Subject: (cherry-pick-branch-heads/5481) Zero memory for FEC recovered packets
+ when size increases
 
 rtc::CopyOnWriteBuffer::SetSize extends buffer with uninitialized memory by design.
 It is up to the user of the rtc::CopyOnWriteBuffer to ensure it is initialized.
 
-(cherry picked from commit f52e0152397cda785ff311394d8275f210bd5a20)
+(cherry picked from commit 4f74385b4f568df77055f99b04de41557ffd022a)
 
 No-Try: true
-Bug: chromium:1403397
-Change-Id: Ic0111a84bda32379770ddb1c7d24bee10d96b7a4
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/289041
-Reviewed-by: Rasmus Brandt <brandtr@webrtc.org>
+Bug: chromium:1404299
+Change-Id: I41f3f91bf20ff440984d78ed81e01f5db36ff509
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/290400
 Commit-Queue: Danil Chapovalov <danilchap@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#38959}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291540
 Reviewed-by: Per Kjellander <perkj@webrtc.org>
-Cr-Commit-Position: refs/branch-heads/5481@{#3}
+Cr-Original-Commit-Position: refs/heads/main@{#38972}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291541
+Cr-Commit-Position: refs/branch-heads/5481@{#4}
 Cr-Branched-From: 2e1a9a4ae0234d4b1ea7a6fd4188afa1fb20379d-refs/heads/main@{#38901}
 ---
- modules/rtp_rtcp/source/forward_error_correction.cc | 6 ++++++
- 1 file changed, 6 insertions(+)
+ modules/rtp_rtcp/source/forward_error_correction.cc | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
 diff --git a/modules/rtp_rtcp/source/forward_error_correction.cc b/modules/rtp_rtcp/source/forward_error_correction.cc
-index 903d3e7d45..dbf6c361df 100644
+index dbf6c361df..1462c2f481 100644
 --- a/modules/rtp_rtcp/source/forward_error_correction.cc
 +++ b/modules/rtp_rtcp/source/forward_error_correction.cc
-@@ -573,7 +573,13 @@ bool ForwardErrorCorrection::FinishPacketRecovery(
-                            "typical IP packet, and is thus dropped.";
-     return false;
+@@ -225,10 +225,10 @@ void ForwardErrorCorrection::GenerateFecPayloads(
+ 
+         size_t fec_packet_length = fec_header_size + media_payload_length;
+         if (fec_packet_length > fec_packet->data.size()) {
+-          // Recall that XORing with zero (which the FEC packets are prefilled
+-          // with) is the identity operator, thus all prior XORs are
+-          // still correct even though we expand the packet length here.
++          size_t old_size = fec_packet->data.size();
+           fec_packet->data.SetSize(fec_packet_length);
++          memset(fec_packet->data.MutableData() + old_size, 0,
++                 fec_packet_length - old_size);
+         }
+         XorHeaders(*media_packet, fec_packet);
+         XorPayloads(*media_packet, media_payload_length, fec_header_size,
+@@ -619,7 +619,10 @@ void ForwardErrorCorrection::XorPayloads(const Packet& src,
+   RTC_DCHECK_LE(kRtpHeaderSize + payload_length, src.data.size());
+   RTC_DCHECK_LE(dst_offset + payload_length, dst->data.capacity());
+   if (dst_offset + payload_length > dst->data.size()) {
+-    dst->data.SetSize(dst_offset + payload_length);
++    size_t old_size = dst->data.size();
++    size_t new_size = dst_offset + payload_length;
++    dst->data.SetSize(new_size);
++    memset(dst->data.MutableData() + old_size, 0, new_size - old_size);
    }
-+  size_t old_size = recovered_packet->pkt->data.size();
-   recovered_packet->pkt->data.SetSize(new_size);
-+  data = recovered_packet->pkt->data.MutableData();
-+  if (new_size > old_size) {
-+    memset(data + old_size, 0, new_size - old_size);
-+  }
-+
-   // Set the SN field.
-   ByteWriter<uint16_t>::WriteBigEndian(&data[2], recovered_packet->seq_num);
-   // Set the SSRC field.
+   uint8_t* dst_data = dst->data.MutableData();
+   const uint8_t* src_data = src.data.cdata();
 -- 
 2.34.1
 
