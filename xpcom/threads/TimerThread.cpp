@@ -1363,3 +1363,121 @@ void TimerThread::PrintStatistics() const {
                 mTotalEarlyWakeupTime / mEarlyWakeups);
 }
 #endif
+
+/* This nsReadOnlyTimer class is used for the values returned by the
+ * TimerThread::GetTimers method.
+ * It is not possible to return a strong reference to the nsTimerImpl
+ * instance (that could extend the lifetime of the timer and cause it to fire
+ * a callback pointing to already freed memory) or a weak reference
+ * (nsSupportsWeakReference doesn't support freeing the referee on a thread
+ * that isn't the thread that owns the weak reference), so instead the timer
+ * name, delay and type are copied to a new object. */
+class nsReadOnlyTimer final : public nsITimer {
+ public:
+  explicit nsReadOnlyTimer(const nsACString& aName, uint32_t aDelay,
+                           uint32_t aType)
+      : mName(aName), mDelay(aDelay), mType(aType) {}
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD Init(nsIObserver* aObserver, uint32_t aDelayInMs,
+                  uint32_t aType) override {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  NS_IMETHOD InitWithCallback(nsITimerCallback* aCallback, uint32_t aDelayInMs,
+                              uint32_t aType) override {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  NS_IMETHOD InitHighResolutionWithCallback(nsITimerCallback* aCallback,
+                                            const mozilla::TimeDuration& aDelay,
+                                            uint32_t aType) override {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  NS_IMETHOD Cancel(void) override { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD InitWithNamedFuncCallback(nsTimerCallbackFunc aCallback,
+                                       void* aClosure, uint32_t aDelay,
+                                       uint32_t aType,
+                                       const char* aName) override {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  NS_IMETHOD InitHighResolutionWithNamedFuncCallback(
+      nsTimerCallbackFunc aCallback, void* aClosure,
+      const mozilla::TimeDuration& aDelay, uint32_t aType,
+      const char* aName) override {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  NS_IMETHOD GetName(nsACString& aName) override {
+    aName = mName;
+    return NS_OK;
+  }
+  NS_IMETHOD GetDelay(uint32_t* aDelay) override {
+    *aDelay = mDelay;
+    return NS_OK;
+  }
+  NS_IMETHOD SetDelay(uint32_t aDelay) override {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  NS_IMETHOD GetType(uint32_t* aType) override {
+    *aType = mType;
+    return NS_OK;
+  }
+  NS_IMETHOD SetType(uint32_t aType) override {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  NS_IMETHOD GetClosure(void** aClosure) override {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  NS_IMETHOD GetCallback(nsITimerCallback** aCallback) override {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  NS_IMETHOD GetTarget(nsIEventTarget** aTarget) override {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  NS_IMETHOD SetTarget(nsIEventTarget* aTarget) override {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  NS_IMETHOD GetAllowedEarlyFiringMicroseconds(
+      uint32_t* aAllowedEarlyFiringMicroseconds) override {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) override {
+    return sizeof(*this);
+  }
+
+ private:
+  nsCString mName;
+  uint32_t mDelay;
+  uint32_t mType;
+  ~nsReadOnlyTimer() = default;
+};
+
+NS_IMPL_ISUPPORTS(nsReadOnlyTimer, nsITimer)
+
+nsresult TimerThread::GetTimers(nsTArray<RefPtr<nsITimer>>& aRetVal) {
+  nsTArray<RefPtr<nsTimerImpl>> timers;
+  {
+    MonitorAutoLock lock(mMonitor);
+    for (const auto& entry : mTimers) {
+      nsTimerImpl* timer = entry.Value();
+      if (!timer) {
+        continue;
+      }
+      timers.AppendElement(timer);
+    }
+  }
+
+  for (nsTimerImpl* timer : timers) {
+    nsAutoCString name;
+    timer->GetName(name);
+
+    uint32_t delay;
+    timer->GetDelay(&delay);
+
+    uint32_t type;
+    timer->GetType(&type);
+
+    aRetVal.AppendElement(new nsReadOnlyTimer(name, delay, type));
+  }
+
+  return NS_OK;
+}

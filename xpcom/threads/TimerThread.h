@@ -64,6 +64,7 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
   bool IsOnTimerThread() const { return mThread->IsOnCurrentThread(); }
 
   uint32_t AllowedEarlyFiringMicroseconds();
+  nsresult GetTimers(nsTArray<RefPtr<nsITimer>>& aRetVal);
 
  private:
   ~TimerThread();

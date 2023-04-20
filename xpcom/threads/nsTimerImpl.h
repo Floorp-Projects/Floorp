@@ -134,8 +134,6 @@ class nsTimerImpl {
   void GetName(nsACString& aName, const mozilla::MutexAutoLock& aProofOfLock)
       MOZ_REQUIRES(mMutex);
 
-  void GetName(nsACString& aName);
-
   bool IsInTimerThread() const { return mIsInTimerThread; }
   void SetIsInTimerThread(bool aIsInTimerThread) {
     mIsInTimerThread = aIsInTimerThread;
@@ -220,6 +218,14 @@ class nsTimer final : public nsITimer {
   // nsTimerImpl holds a strong ref to us. When our refcount goes to 1, we will
   // null this to break the cycle.
   RefPtr<nsTimerImpl> mImpl;
+};
+
+class nsTimerManager final : public nsITimerManager {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSITIMERMANAGER
+ private:
+  ~nsTimerManager() = default;
 };
 
 #endif /* nsTimerImpl_h___ */

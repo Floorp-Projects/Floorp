@@ -56,6 +56,7 @@ class TimerThreadWrapper {
   TimeStamp FindNextFireTimeForCurrentThread(TimeStamp aDefault,
                                              uint32_t aSearchBound);
   uint32_t AllowedEarlyFiringMicroseconds();
+  nsresult GetTimers(nsTArray<RefPtr<nsITimer>>& aRetVal);
 
  private:
   static mozilla::StaticMutex sMutex;
@@ -122,6 +123,18 @@ TimeStamp TimerThreadWrapper::FindNextFireTimeForCurrentThread(
 uint32_t TimerThreadWrapper::AllowedEarlyFiringMicroseconds() {
   mozilla::StaticMutexAutoLock lock(sMutex);
   return mThread ? mThread->AllowedEarlyFiringMicroseconds() : 0;
+}
+
+nsresult TimerThreadWrapper::GetTimers(nsTArray<RefPtr<nsITimer>>& aRetVal) {
+  RefPtr<TimerThread> thread;
+  {
+    mozilla::StaticMutexAutoLock lock(sMutex);
+    if (!mThread) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    thread = mThread;
+  }
+  return thread->GetTimers(aRetVal);
 }
 
 static TimerThreadWrapper gThreadWrapper;
@@ -336,6 +349,12 @@ static void myNS_MeanAndStdDev(double n, double sumOfValues,
 
 NS_IMPL_QUERY_INTERFACE(nsTimer, nsITimer)
 NS_IMPL_ADDREF(nsTimer)
+
+NS_IMPL_ISUPPORTS(nsTimerManager, nsITimerManager)
+
+NS_IMETHODIMP nsTimerManager::GetTimers(nsTArray<RefPtr<nsITimer>>& aRetVal) {
+  return gThreadWrapper.GetTimers(aRetVal);
+}
 
 NS_IMETHODIMP_(MozExternalRefCountType)
 nsTimer::Release(void) {
@@ -772,9 +791,10 @@ void nsTimerImpl::GetName(nsACString& aName,
       [&](const ClosureCallback& c) { aName.Assign(c.mName); });
 }
 
-void nsTimerImpl::GetName(nsACString& aName) {
+nsresult nsTimerImpl::GetName(nsACString& aName) {
   MutexAutoLock lock(mMutex);
   GetName(aName, lock);
+  return NS_OK;
 }
 
 nsTimer::~nsTimer() = default;
