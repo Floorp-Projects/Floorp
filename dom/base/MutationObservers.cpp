@@ -42,13 +42,8 @@ using namespace mozilla::dom;
     notify_(presShell);                                      \
   }
 
-#define DEFINE_NOTIFIERS(func_, params_)                      \
-  auto notifyPresShell = [&](PresShell* aPresShell) {         \
-    aPresShell->func_ params_;                                \
-  };                                                          \
-  auto notifyObserver = [&](nsIMutationObserver* aObserver) { \
-    aObserver->func_ params_;                                 \
-  };
+#define NOTIFIER(func_, ...) \
+  [&](nsIMutationObserver* aObserver) { aObserver->func_(__VA_ARGS__); }
 
 template <typename NotifyObserver>
 static inline nsINode* ForEachAncestorObserver(nsINode* aNode,
@@ -73,34 +68,34 @@ static inline nsINode* ForEachAncestorObserver(nsINode* aNode,
   return last;
 }
 
-enum class IsRemoval { No, Yes };
-enum class ShouldAssert { No, Yes };
+// Whether to notify to the PresShell about a mutation.
+// For removals, the pres shell gets notified first, since it needs to operate
+// on the "old" DOM shape.
+enum class NotifyPresShell { No, Before, After };
 
-template <IsRemoval aIsRemoval = IsRemoval::No,
-          ShouldAssert aShouldAssert = ShouldAssert::Yes,
-          typename NotifyPresShell, typename NotifyObserver>
-static inline void Notify(nsINode* aNode, NotifyPresShell& aNotifyPresShell,
-                          NotifyObserver& aNotifyObserver) {
+template <NotifyPresShell aNotifyPresShell = NotifyPresShell::After,
+          typename NotifyObserver>
+static inline void Notify(nsINode* aNode, NotifyObserver&& aNotify) {
   Document* doc = aNode->OwnerDoc();
   nsDOMMutationEnterLeave enterLeave(doc);
 
   const bool wasConnected = aNode->IsInComposedDoc();
-  // For removals, the pres shell gets notified first, since it needs to operate
-  // on the "old" DOM shape.
-  if (aIsRemoval == IsRemoval::Yes && wasConnected) {
-    NOTIFY_PRESSHELL(aNotifyPresShell);
+  if constexpr (aNotifyPresShell == NotifyPresShell::Before) {
+    if (wasConnected) {
+      NOTIFY_PRESSHELL(aNotify);
+    }
   }
-  nsINode* last = ForEachAncestorObserver(aNode, aNotifyObserver);
+  nsINode* last = ForEachAncestorObserver(aNode, aNotify);
   // For non-removals, the pres shell gets notified last, since it needs to
   // operate on the "final" DOM shape.
-  if (aIsRemoval == IsRemoval::No && last == doc) {
-    NOTIFY_PRESSHELL(aNotifyPresShell);
+  if constexpr (aNotifyPresShell == NotifyPresShell::After) {
+    if (last == doc) {
+      NOTIFY_PRESSHELL(aNotify);
+    }
   }
-  if (aShouldAssert == ShouldAssert::Yes) {
-    MOZ_ASSERT((last == doc) == wasConnected,
-               "If we were connected we should notify all ancestors all the "
-               "way to the document");
-  }
+  MOZ_ASSERT((last == doc) == wasConnected,
+             "If we were connected we should notify all ancestors all the "
+             "way to the document");
 }
 
 #define IMPL_ANIMATION_NOTIFICATION(func_, content_, params_)                \
@@ -117,24 +112,21 @@ static inline void Notify(nsINode* aNode, NotifyPresShell& aNotifyPresShell,
 namespace mozilla {
 void MutationObservers::NotifyCharacterDataWillChange(
     nsIContent* aContent, const CharacterDataChangeInfo& aInfo) {
-  DEFINE_NOTIFIERS(CharacterDataWillChange, (aContent, aInfo));
-  Notify(aContent, notifyPresShell, notifyObserver);
+  Notify(aContent, NOTIFIER(CharacterDataWillChange, aContent, aInfo));
 }
 
 void MutationObservers::NotifyCharacterDataChanged(
     nsIContent* aContent, const CharacterDataChangeInfo& aInfo) {
   aContent->OwnerDoc()->Changed();
-  DEFINE_NOTIFIERS(CharacterDataChanged, (aContent, aInfo));
-  Notify(aContent, notifyPresShell, notifyObserver);
+  Notify(aContent, NOTIFIER(CharacterDataChanged, aContent, aInfo));
 }
 
 void MutationObservers::NotifyAttributeWillChange(Element* aElement,
                                                   int32_t aNameSpaceID,
                                                   nsAtom* aAttribute,
                                                   int32_t aModType) {
-  DEFINE_NOTIFIERS(AttributeWillChange,
-                   (aElement, aNameSpaceID, aAttribute, aModType));
-  Notify(aElement, notifyPresShell, notifyObserver);
+  Notify(aElement, NOTIFIER(AttributeWillChange, aElement, aNameSpaceID,
+                            aAttribute, aModType));
 }
 
 void MutationObservers::NotifyAttributeChanged(Element* aElement,
@@ -143,24 +135,21 @@ void MutationObservers::NotifyAttributeChanged(Element* aElement,
                                                int32_t aModType,
                                                const nsAttrValue* aOldValue) {
   aElement->OwnerDoc()->Changed();
-  DEFINE_NOTIFIERS(AttributeChanged,
-                   (aElement, aNameSpaceID, aAttribute, aModType, aOldValue));
-  Notify(aElement, notifyPresShell, notifyObserver);
+  Notify(aElement, NOTIFIER(AttributeChanged, aElement, aNameSpaceID,
+                            aAttribute, aModType, aOldValue));
 }
 
 void MutationObservers::NotifyAttributeSetToCurrentValue(Element* aElement,
                                                          int32_t aNameSpaceID,
                                                          nsAtom* aAttribute) {
-  DEFINE_NOTIFIERS(AttributeSetToCurrentValue,
-                   (aElement, aNameSpaceID, aAttribute));
-  Notify(aElement, notifyPresShell, notifyObserver);
+  Notify(aElement, NOTIFIER(AttributeSetToCurrentValue, aElement, aNameSpaceID,
+                            aAttribute));
 }
 
 void MutationObservers::NotifyContentAppended(nsIContent* aContainer,
                                               nsIContent* aFirstNewContent) {
   aContainer->OwnerDoc()->Changed();
-  DEFINE_NOTIFIERS(ContentAppended, (aFirstNewContent));
-  Notify(aContainer, notifyPresShell, notifyObserver);
+  Notify(aContainer, NOTIFIER(ContentAppended, aFirstNewContent));
 }
 
 void MutationObservers::NotifyContentInserted(nsINode* aContainer,
@@ -168,8 +157,7 @@ void MutationObservers::NotifyContentInserted(nsINode* aContainer,
   MOZ_ASSERT(aContainer->IsContent() || aContainer->IsDocument(),
              "container must be an nsIContent or an Document");
   aContainer->OwnerDoc()->Changed();
-  DEFINE_NOTIFIERS(ContentInserted, (aChild));
-  Notify(aContainer, notifyPresShell, notifyObserver);
+  Notify(aContainer, NOTIFIER(ContentInserted, aChild));
 }
 
 void MutationObservers::NotifyContentRemoved(nsINode* aContainer,
@@ -180,28 +168,22 @@ void MutationObservers::NotifyContentRemoved(nsINode* aContainer,
   aContainer->OwnerDoc()->Changed();
   MOZ_ASSERT(aChild->GetParentNode() == aContainer,
              "We expect the parent link to be still around at this point");
-  DEFINE_NOTIFIERS(ContentRemoved, (aChild, aPreviousSibling));
-  Notify<IsRemoval::Yes>(aContainer, notifyPresShell, notifyObserver);
+  Notify<NotifyPresShell::Before>(
+      aContainer, NOTIFIER(ContentRemoved, aChild, aPreviousSibling));
 }
 
 void MutationObservers::NotifyARIAAttributeDefaultWillChange(
     mozilla::dom::Element* aElement, nsAtom* aAttribute, int32_t aModType) {
-  // We don't notify the PresShell, so pass an empty lambda.
-  auto notifyPresShell = [](PresShell* aPresShell) {};
-  auto notifyObserver = [&](nsIMutationObserver* aObserver) {
-    aObserver->ARIAAttributeDefaultWillChange(aElement, aAttribute, aModType);
-  };
-  Notify(aElement, notifyPresShell, notifyObserver);
+  Notify<NotifyPresShell::No>(
+      aElement,
+      NOTIFIER(ARIAAttributeDefaultWillChange, aElement, aAttribute, aModType));
 }
 
 void MutationObservers::NotifyARIAAttributeDefaultChanged(
     mozilla::dom::Element* aElement, nsAtom* aAttribute, int32_t aModType) {
-  // We don't notify the PresShell, so pass an empty lambda.
-  auto notifyPresShell = [](PresShell* aPresShell) {};
-  auto notifyObserver = [&](nsIMutationObserver* aObserver) {
-    aObserver->ARIAAttributeDefaultChanged(aElement, aAttribute, aModType);
-  };
-  Notify(aElement, notifyPresShell, notifyObserver);
+  Notify<NotifyPresShell::No>(
+      aElement,
+      NOTIFIER(ARIAAttributeDefaultChanged, aElement, aAttribute, aModType));
 }
 
 }  // namespace mozilla
