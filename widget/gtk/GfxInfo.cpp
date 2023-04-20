@@ -40,11 +40,8 @@
 #define GFX_TEST_TIMEOUT 4000
 #define VAAPI_TEST_TIMEOUT 2000
 
+#define GLX_PROBE_BINARY u"glxtest"_ns
 #define VAAPI_PROBE_BINARY u"vaapitest"_ns
-
-#ifdef DEBUG
-bool fire_glxtest_process();
-#endif
 
 namespace mozilla::widget {
 
@@ -52,9 +49,8 @@ namespace mozilla::widget {
 NS_IMPL_ISUPPORTS_INHERITED(GfxInfo, GfxInfoBase, nsIGfxInfoDebug)
 #endif
 
-// these global variables will be set when firing the glxtest process
-int glxtest_pipe = -2;
-pid_t glxtest_pid = 0;
+int GfxInfo::sGLXTestPipe = -1;
+pid_t GfxInfo::sGLXTestPID = 0;
 
 // bits to use decoding codec information returned from glxtest
 constexpr int CODEC_HW_H264 = 1 << 4;
@@ -109,6 +105,11 @@ static bool MakeFdNonBlocking(int fd) {
 
 static bool ManageChildProcess(int* aPID, int* aPipe, int aTimeout,
                                char** aData) {
+  // Don't try anything if we failed before
+  if (*aPID == -1) {
+    return false;
+  }
+
   GIOChannel* channel = nullptr;
   *aData = nullptr;
 
@@ -188,7 +189,7 @@ void GfxInfo::GetData() {
   char* glxData = nullptr;
   auto free = mozilla::MakeScopeExit([&] { g_free((void*)glxData); });
 
-  bool error = !ManageChildProcess(&glxtest_pid, &glxtest_pipe,
+  bool error = !ManageChildProcess(&sGLXTestPID, &sGLXTestPipe,
                                    GFX_TEST_TIMEOUT, &glxData);
   if (error) {
     gfxCriticalNote << "glxtest: ManageChildProcess failed\n";
@@ -582,6 +583,33 @@ int GfxInfo::FireTestProcess(const nsAString& aBinaryFile, int* aOutPipe,
     free(arg);
   }
   return pid;
+}
+
+bool GfxInfo::FireGLXTestProcess() {
+  // If the pid is zero, then we have never run the test process to query for
+  // driver information. This would normally be run on startup, but we need to
+  // manually invoke it for XPC shell tests.
+  if (sGLXTestPID > 0) {
+    return true;
+  }
+
+  int pfd[2];
+  if (pipe(pfd) == -1) {
+    gfxCriticalNote << "FireGLXTestProcess failed to create pipe\n";
+    return false;
+  }
+  sGLXTestPipe = pfd[0];
+
+  auto pipeID = std::to_string(pfd[1]);
+  const char* args[] = {"-f", pipeID.c_str(),
+                        IsWaylandEnabled() ? "-w" : nullptr, nullptr};
+  sGLXTestPID = FireTestProcess(GLX_PROBE_BINARY, nullptr, args);
+  // Set pid to -1 to avoid further test launch.
+  if (!sGLXTestPID) {
+    sGLXTestPID = -1;
+  }
+  close(pfd[1]);
+  return true;
 }
 
 #ifdef MOZ_WAYLAND
@@ -1293,9 +1321,7 @@ NS_IMETHODIMP GfxInfo::FireTestProcess() {
   // If the pid is zero, then we have never run the test process to query for
   // driver information. This would normally be run on startup, but we need to
   // manually invoke it for XPC shell tests.
-  if (glxtest_pid == 0) {
-    fire_glxtest_process();
-  }
+  FireGLXTestProcess();
   return NS_OK;
 }
 
