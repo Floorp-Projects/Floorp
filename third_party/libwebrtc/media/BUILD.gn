@@ -742,6 +742,7 @@ if (rtc_include_tests) {
       "../api/task_queue",
       "../api/task_queue:pending_task_safety_flag",
       "../api/transport:field_trial_based_config",
+      "../api/units:timestamp",
       "../api/video:encoded_image",
       "../api/video:video_bitrate_allocation",
       "../api/video:video_frame",

@@ -10,11 +10,14 @@
 
 #include "media/engine/fake_webrtc_call.h"
 
+#include <cstdint>
 #include <utility>
 
 #include "absl/algorithm/container.h"
 #include "absl/strings/string_view.h"
 #include "api/call/audio_sink.h"
+#include "api/units/timestamp.h"
+#include "call/packet_receiver.h"
 #include "media/base/media_channel.h"
 #include "modules/rtp_rtcp/source/rtp_util.h"
 #include "rtc_base/checks.h"
@@ -667,36 +670,61 @@ webrtc::PacketReceiver* FakeCall::Receiver() {
   return this;
 }
 
-FakeCall::DeliveryStatus FakeCall::DeliverPacket(webrtc::MediaType media_type,
-                                                 rtc::CopyOnWriteBuffer packet,
-                                                 int64_t packet_time_us) {
+webrtc::PacketReceiver::DeliveryStatus FakeCall::DeliverPacket(
+    webrtc::MediaType media_type,
+    rtc::CopyOnWriteBuffer packet,
+    int64_t packet_time_us) {
+  RTC_DCHECK(webrtc::IsRtpPacket(packet));
+  uint32_t ssrc = ParseRtpSsrc(packet);
+  webrtc::Timestamp arrival_time =
+      packet_time_us > -1 ? webrtc::Timestamp::Micros(packet_time_us)
+                          : webrtc::Timestamp::Zero();
+  if (DeliverPacketInternal(media_type, ssrc, packet, arrival_time)) {
+    return DELIVERY_OK;
+  }
+  return DELIVERY_UNKNOWN_SSRC;
+}
+
+void FakeCall::DeliverRtpPacket(
+    webrtc::MediaType media_type,
+    webrtc::RtpPacketReceived packet,
+    OnUndemuxablePacketHandler undemuxable_packet_handler) {
+  if (!DeliverPacketInternal(media_type, packet.Ssrc(), packet.Buffer(),
+                             packet.arrival_time())) {
+    if (undemuxable_packet_handler(packet)) {
+      DeliverPacketInternal(media_type, packet.Ssrc(), packet.Buffer(),
+                            packet.arrival_time());
+    }
+  }
+}
+
+bool FakeCall::DeliverPacketInternal(webrtc::MediaType media_type,
+                                     uint32_t ssrc,
+                                     const rtc::CopyOnWriteBuffer& packet,
+                                     webrtc::Timestamp arrival_time) {
   EXPECT_GE(packet.size(), 12u);
+  RTC_DCHECK(arrival_time.IsFinite());
   RTC_DCHECK(media_type == webrtc::MediaType::AUDIO ||
              media_type == webrtc::MediaType::VIDEO);
 
-  if (!webrtc::IsRtpPacket(packet)) {
-    return DELIVERY_PACKET_ERROR;
-  }
-
-  uint32_t ssrc = ParseRtpSsrc(packet);
   if (media_type == webrtc::MediaType::VIDEO) {
     for (auto receiver : video_receive_streams_) {
       if (receiver->GetConfig().rtp.remote_ssrc == ssrc) {
         ++delivered_packets_by_ssrc_[ssrc];
-        return DELIVERY_OK;
+        return true;
       }
     }
   }
   if (media_type == webrtc::MediaType::AUDIO) {
     for (auto receiver : audio_receive_streams_) {
       if (receiver->GetConfig().rtp.remote_ssrc == ssrc) {
-        receiver->DeliverRtp(packet.cdata(), packet.size(), packet_time_us);
+        receiver->DeliverRtp(packet.cdata(), packet.size(), arrival_time.us());
         ++delivered_packets_by_ssrc_[ssrc];
-        return DELIVERY_OK;
+        return true;
       }
     }
   }
-  return DELIVERY_UNKNOWN_SSRC;
+  return false;
 }
 
 void FakeCall::SetStats(const webrtc::Call::Stats& stats) {

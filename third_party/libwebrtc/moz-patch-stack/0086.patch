@@ -55,7 +55,7 @@ index 6088f00981..3872dc37c5 100644
  
  rtc_source_set("receive_stream_interface") {
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index 71404878b9..24025ca2be 100644
+index 06d7f7e58b..a544e94fef 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
 @@ -446,7 +446,10 @@ rtc_library("rtc_internal_video_codecs") {
