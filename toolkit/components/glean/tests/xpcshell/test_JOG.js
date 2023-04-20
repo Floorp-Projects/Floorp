@@ -715,3 +715,9 @@ add_task(function test_jog_name_collision() {
   Glean.testOnlyJog.anEvent.record(extra123);
   Assert.deepEqual(extra123, Glean.testOnlyJog.anEvent.testGetValue()[1].extra);
 });
+
+add_task(function test_enumerable_names() {
+  Assert.ok(Object.keys(Glean).includes("testOnlyJog"));
+  Assert.ok(Object.keys(Glean.testOnlyJog).includes("aCounter"));
+  Assert.ok(Object.keys(GleanPings).includes("testPing"));
+});
