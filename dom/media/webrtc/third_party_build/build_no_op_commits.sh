@@ -20,9 +20,6 @@ echo "MOZ_LIBWEBRTC_SRC: $MOZ_LIBWEBRTC_SRC"
 # * o pipefail: All stages of all pipes should succeed.
 set -eEuo pipefail
 
-# wipe no-op commit tracking files for new run
-rm -f $STATE_DIR/*.no-op-cherry-pick-msg
-
 CURRENT_DIR=`pwd`
 cd $MOZ_LIBWEBRTC_SRC
 
