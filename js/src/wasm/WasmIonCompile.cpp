@@ -1722,10 +1722,10 @@ class FunctionCompiler {
     return true;
   }
 
-  MDefinition* loadTableField(const TableDesc& table, unsigned fieldOffset,
+  MDefinition* loadTableField(uint32_t tableIndex, unsigned fieldOffset,
                               MIRType type) {
-    uint32_t instanceDataOffset =
-        wasm::Instance::offsetInData(table.instanceDataOffset + fieldOffset);
+    uint32_t instanceDataOffset = wasm::Instance::offsetInData(
+        moduleEnv_.offsetOfTableInstanceData(tableIndex) + fieldOffset);
     auto* load =
         MWasmLoadInstance::New(alloc(), instancePointer_, instanceDataOffset,
                                type, AliasSet::Load(AliasSet::WasmTableMeta));
@@ -1733,20 +1733,20 @@ class FunctionCompiler {
     return load;
   }
 
-  MDefinition* loadTableLength(const TableDesc& table) {
-    return loadTableField(table, offsetof(TableInstanceData, length),
+  MDefinition* loadTableLength(uint32_t tableIndex) {
+    return loadTableField(tableIndex, offsetof(TableInstanceData, length),
                           MIRType::Int32);
   }
 
-  MDefinition* loadTableElements(const TableDesc& table) {
-    return loadTableField(table, offsetof(TableInstanceData, elements),
+  MDefinition* loadTableElements(uint32_t tableIndex) {
+    return loadTableField(tableIndex, offsetof(TableInstanceData, elements),
                           MIRType::Pointer);
   }
 
-  MDefinition* tableGetAnyRef(const TableDesc& table, MDefinition* index) {
+  MDefinition* tableGetAnyRef(uint32_t tableIndex, MDefinition* index) {
     // Load the table length and perform a bounds check with spectre index
     // masking
-    auto* length = loadTableLength(table);
+    auto* length = loadTableLength(tableIndex);
     auto* check = MWasmBoundsCheck::New(
         alloc(), index, length, bytecodeOffset(), MWasmBoundsCheck::Unknown);
     curBlock_->add(check);
@@ -1755,18 +1755,18 @@ class FunctionCompiler {
     }
 
     // Load the table elements and load the element
-    auto* elements = loadTableElements(table);
+    auto* elements = loadTableElements(tableIndex);
     auto* element = MWasmLoadTableElement::New(alloc(), elements, index);
     curBlock_->add(element);
     return element;
   }
 
-  [[nodiscard]] bool tableSetAnyRef(const TableDesc& table, MDefinition* index,
+  [[nodiscard]] bool tableSetAnyRef(uint32_t tableIndex, MDefinition* index,
                                     MDefinition* value,
                                     uint32_t lineOrBytecode) {
     // Load the table length and perform a bounds check with spectre index
     // masking
-    auto* length = loadTableLength(table);
+    auto* length = loadTableLength(tableIndex);
     auto* check = MWasmBoundsCheck::New(
         alloc(), index, length, bytecodeOffset(), MWasmBoundsCheck::Unknown);
     curBlock_->add(check);
@@ -1775,7 +1775,7 @@ class FunctionCompiler {
     }
 
     // Load the table elements
-    auto* elements = loadTableElements(table);
+    auto* elements = loadTableElements(tableIndex);
 
     // Load the previous value
     auto* prevValue = MWasmLoadTableElement::New(alloc(), elements, index);
@@ -2165,8 +2165,8 @@ class FunctionCompiler {
     if (moduleEnv_.isAsmJS()) {
       MOZ_ASSERT(tableIndex == 0);
       MOZ_ASSERT(callIndirectId.kind() == CallIndirectIdKind::AsmJS);
-      const TableDesc& table =
-          moduleEnv_.tables[moduleEnv_.asmJSSigToTableIndex[funcTypeIndex]];
+      uint32_t tableIndex = moduleEnv_.asmJSSigToTableIndex[funcTypeIndex];
+      const TableDesc& table = moduleEnv_.tables[tableIndex];
       MOZ_ASSERT(IsPowerOfTwo(table.initialLength));
 
       MDefinition* mask = constantI32(int32_t(table.initialLength - 1));
@@ -2174,11 +2174,12 @@ class FunctionCompiler {
       curBlock_->add(maskedIndex);
 
       index = maskedIndex;
-      callee = CalleeDesc::asmJSTable(table);
+      callee = CalleeDesc::asmJSTable(moduleEnv_, tableIndex);
     } else {
       MOZ_ASSERT(callIndirectId.kind() != CallIndirectIdKind::AsmJS);
       const TableDesc& table = moduleEnv_.tables[tableIndex];
-      callee = CalleeDesc::wasmTable(table, callIndirectId);
+      callee =
+          CalleeDesc::wasmTable(moduleEnv_, table, tableIndex, callIndirectId);
     }
 
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Indirect);
@@ -2814,7 +2815,7 @@ class FunctionCompiler {
   MDefinition* loadTag(uint32_t tagIndex) {
     MWasmLoadInstanceDataField* tag = MWasmLoadInstanceDataField::New(
         alloc(), MIRType::RefOrNull,
-        moduleEnv_.tags[tagIndex].instanceDataOffset, true, instancePointer_);
+        moduleEnv_.offsetOfTagInstanceData(tagIndex), true, instancePointer_);
     curBlock_->add(tag);
     return tag;
   }
@@ -6140,7 +6141,7 @@ static bool EmitTableGet(FunctionCompiler& f) {
 
   const TableDesc& table = f.moduleEnv().tables[tableIndex];
   if (table.elemType.tableRepr() == TableRepr::Ref) {
-    MDefinition* ret = f.tableGetAnyRef(table, index);
+    MDefinition* ret = f.tableGetAnyRef(tableIndex, index);
     if (!ret) {
       return false;
     }
@@ -6212,7 +6213,7 @@ static bool EmitTableSet(FunctionCompiler& f) {
 
   const TableDesc& table = f.moduleEnv().tables[tableIndex];
   if (table.elemType.tableRepr() == TableRepr::Ref) {
-    return f.tableSetAnyRef(table, index, value, bytecodeOffset);
+    return f.tableSetAnyRef(tableIndex, index, value, bytecodeOffset);
   }
 
   MDefinition* tableIndexArg = f.constantI32(int32_t(tableIndex));
@@ -6234,9 +6235,7 @@ static bool EmitTableSize(FunctionCompiler& f) {
     return true;
   }
 
-  const TableDesc& table = f.moduleEnv().tables[tableIndex];
-
-  MDefinition* length = f.loadTableLength(table);
+  MDefinition* length = f.loadTableLength(tableIndex);
   if (!length) {
     return false;
   }

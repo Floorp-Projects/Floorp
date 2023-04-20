@@ -1587,7 +1587,8 @@ bool BaseCompiler::callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
   loadI32(indexVal, RegI32(WasmTableCallIndexReg));
 
   CallSiteDesc desc(bytecodeOffset(), CallSiteDesc::Indirect);
-  CalleeDesc callee = CalleeDesc::wasmTable(table, callIndirectId);
+  CalleeDesc callee =
+      CalleeDesc::wasmTable(moduleEnv_, table, tableIndex, callIndirectId);
   OutOfLineCode* oob = addOutOfLineCode(
       new (alloc_) OutOfLineAbortingTrap(Trap::OutOfBounds, bytecodeOffset()));
   if (!oob) {
@@ -1672,8 +1673,8 @@ bool BaseCompiler::throwFrom(RegRef exn) {
 }
 
 void BaseCompiler::loadTag(RegPtr instance, uint32_t tagIndex, RegRef tagDst) {
-  const TagDesc& tagDesc = moduleEnv_.tags[tagIndex];
-  size_t offset = Instance::offsetInData(tagDesc.instanceDataOffset);
+  size_t offset =
+      Instance::offsetInData(moduleEnv_.offsetOfTagInstanceData(tagIndex));
   masm.loadPtr(Address(instance, offset), tagDst);
 }
 
@@ -2204,25 +2205,25 @@ Address BaseCompiler::addressOfGlobalVar(const GlobalDesc& global, RegPtr tmp) {
 //
 // Table access.
 
-Address BaseCompiler::addressOfTableField(const TableDesc& table,
+Address BaseCompiler::addressOfTableField(uint32_t tableIndex,
                                           uint32_t fieldOffset,
                                           RegPtr instance) {
-  uint32_t tableToInstanceOffset =
-      wasm::Instance::offsetInData(table.instanceDataOffset + fieldOffset);
+  uint32_t tableToInstanceOffset = wasm::Instance::offsetInData(
+      moduleEnv_.offsetOfTableInstanceData(tableIndex) + fieldOffset);
   return Address(instance, tableToInstanceOffset);
 }
 
-void BaseCompiler::loadTableLength(const TableDesc& table, RegPtr instance,
+void BaseCompiler::loadTableLength(uint32_t tableIndex, RegPtr instance,
                                    RegI32 length) {
-  masm.load32(
-      addressOfTableField(table, offsetof(TableInstanceData, length), instance),
-      length);
+  masm.load32(addressOfTableField(
+                  tableIndex, offsetof(TableInstanceData, length), instance),
+              length);
 }
 
-void BaseCompiler::loadTableElements(const TableDesc& table, RegPtr instance,
+void BaseCompiler::loadTableElements(uint32_t tableIndex, RegPtr instance,
                                      RegPtr elements) {
-  masm.loadPtr(addressOfTableField(table, offsetof(TableInstanceData, elements),
-                                   instance),
+  masm.loadPtr(addressOfTableField(
+                   tableIndex, offsetof(TableInstanceData, elements), instance),
                elements);
 }
 
@@ -6122,40 +6123,38 @@ bool BaseCompiler::emitTableSize() {
   if (deadCode_) {
     return true;
   }
-  const TableDesc& table = moduleEnv_.tables[tableIndex];
 
   RegPtr instance = needPtr();
   RegI32 length = needI32();
 
   fr.loadInstancePtr(instance);
-  loadTableLength(table, instance, length);
+  loadTableLength(tableIndex, instance, length);
 
   pushI32(length);
   freePtr(instance);
   return true;
 }
 
-void BaseCompiler::emitTableBoundsCheck(const TableDesc& table, RegI32 index,
+void BaseCompiler::emitTableBoundsCheck(uint32_t tableIndex, RegI32 index,
                                         RegPtr instance) {
   Label ok;
   masm.wasmBoundsCheck32(
       Assembler::Condition::Below, index,
-      addressOfTableField(table, offsetof(TableInstanceData, length), instance),
+      addressOfTableField(tableIndex, offsetof(TableInstanceData, length),
+                          instance),
       &ok);
   masm.wasmTrap(wasm::Trap::OutOfBounds, bytecodeOffset());
   masm.bind(&ok);
 }
 
 bool BaseCompiler::emitTableGetAnyRef(uint32_t tableIndex) {
-  const TableDesc& table = moduleEnv_.tables[tableIndex];
-
   RegPtr instance = needPtr();
   RegPtr elements = needPtr();
   RegI32 index = popI32();
 
   fr.loadInstancePtr(instance);
-  emitTableBoundsCheck(table, index, instance);
-  loadTableElements(table, instance, elements);
+  emitTableBoundsCheck(tableIndex, index, instance);
+  loadTableElements(tableIndex, instance, elements);
   masm.loadPtr(BaseIndex(elements, index, ScalePointer), elements);
 
   pushRef(RegRef(elements));
@@ -6166,8 +6165,6 @@ bool BaseCompiler::emitTableGetAnyRef(uint32_t tableIndex) {
 }
 
 bool BaseCompiler::emitTableSetAnyRef(uint32_t tableIndex) {
-  const TableDesc& table = moduleEnv_.tables[tableIndex];
-
   // Create temporaries for valueAddr that is not in the prebarrier register
   // and can be consumed by the barrier operation
   RegPtr valueAddr = RegPtr(PreBarrierReg);
@@ -6185,8 +6182,8 @@ bool BaseCompiler::emitTableSetAnyRef(uint32_t tableIndex) {
 #endif
 
   fr.loadInstancePtr(instance);
-  emitTableBoundsCheck(table, index, instance);
-  loadTableElements(table, instance, elements);
+  emitTableBoundsCheck(tableIndex, index, instance);
+  loadTableElements(tableIndex, instance, elements);
   masm.computeEffectiveAddress(BaseIndex(elements, index, ScalePointer),
                                valueAddr);
 

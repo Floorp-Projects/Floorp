@@ -97,7 +97,7 @@ static_assert(Instance::offsetOfLastCommonJitField() < 128);
 
 TypeDefInstanceData* Instance::typeDefInstanceData(uint32_t typeIndex) const {
   TypeDefInstanceData* instanceData =
-      (TypeDefInstanceData*)(data() + metadata().typeIdsOffsetStart);
+      (TypeDefInstanceData*)(data() + metadata().typeDefsOffsetStart);
   return &instanceData[typeIndex];
 }
 
@@ -115,12 +115,16 @@ FuncImportInstanceData& Instance::funcImportInstanceData(const FuncImport& fi) {
   return *(FuncImportInstanceData*)(data() + fi.instanceOffset());
 }
 
-TableInstanceData& Instance::tableInstanceData(const TableDesc& td) const {
-  return *(TableInstanceData*)(data() + td.instanceDataOffset);
+TableInstanceData& Instance::tableInstanceData(uint32_t tableIndex) const {
+  TableInstanceData* instanceData =
+      (TableInstanceData*)(data() + metadata().tablesOffsetStart);
+  return instanceData[tableIndex];
 }
 
-GCPtr<WasmTagObject*>& Instance::tagInstanceData(const TagDesc& td) const {
-  return *(GCPtr<WasmTagObject*>*)(data() + td.instanceDataOffset);
+TagInstanceData& Instance::tagInstanceData(uint32_t tagIndex) const {
+  TagInstanceData* instanceData =
+      (TagInstanceData*)(data() + metadata().tagsOffsetStart);
+  return instanceData[tagIndex];
 }
 
 static bool UnpackResults(JSContext* cx, const ValTypeVector& resultTypes,
@@ -1684,7 +1688,7 @@ bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
   // Initialize tables in the instance data
   for (size_t i = 0; i < tables_.length(); i++) {
     const TableDesc& td = metadata().tables[i];
-    TableInstanceData& table = tableInstanceData(td);
+    TableInstanceData& table = tableInstanceData(i);
     table.length = tables_[i]->length();
     table.elements = tables_[i]->instanceElements();
     // Non-imported tables, with init_expr, has to be initialized with
@@ -1712,10 +1716,8 @@ bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
 
   // Initialize tags in the instance data
   for (size_t i = 0; i < metadata().tags.length(); i++) {
-    const TagDesc& td = metadata().tags[i];
-    MOZ_ASSERT(td.instanceDataOffset != UINT32_MAX);
     MOZ_ASSERT(tagObjs[i] != nullptr);
-    tagInstanceData(td) = tagObjs[i];
+    tagInstanceData(i).object = tagObjs[i];
   }
   pendingException_ = nullptr;
   pendingExceptionTag_ = nullptr;
@@ -1967,8 +1969,9 @@ void Instance::tracePrivate(JSTracer* trc) {
     TraceNullableEdge(trc, obj, "wasm reference-typed global");
   }
 
-  for (const TagDesc& tag : code().metadata().tags) {
-    TraceNullableEdge(trc, &tagInstanceData(tag), "wasm tag");
+  for (uint32_t tagIndex = 0; tagIndex < code().metadata().tags.length();
+       tagIndex++) {
+    TraceNullableEdge(trc, &tagInstanceData(tagIndex).object, "wasm tag");
   }
 
   const SharedTypeContext& types = metadata().types;
@@ -2591,7 +2594,7 @@ void Instance::onMovingGrowTable(const Table* theTable) {
 
   for (uint32_t i = 0; i < tables_.length(); i++) {
     if (tables_[i] == theTable) {
-      TableInstanceData& table = tableInstanceData(metadata().tables[i]);
+      TableInstanceData& table = tableInstanceData(i);
       table.length = tables_[i]->length();
       table.elements = tables_[i]->instanceElements();
     }

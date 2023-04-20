@@ -110,6 +110,12 @@ struct TableInstanceData {
   void* elements;
 };
 
+// TagInstanceData describes the instance state associated with a tag.
+
+struct TagInstanceData {
+  GCPtr<WasmTagObject*> object;
+};
+
 // Table element for TableRepr::Func which carries both the code pointer and
 // a instance pointer (and thus anything reachable through the instance).
 

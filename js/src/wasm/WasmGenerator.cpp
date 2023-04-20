@@ -267,10 +267,10 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
   // Allocate space for type definitions
   if (!allocateInstanceDataBytesN(
           sizeof(TypeDefInstanceData), alignof(TypeDefInstanceData),
-          moduleEnv_->types->length(), &moduleEnv_->typeIdsOffsetStart)) {
+          moduleEnv_->types->length(), &moduleEnv_->typeDefsOffsetStart)) {
     return false;
   }
-  metadata_->typeIdsOffsetStart = moduleEnv_->typeIdsOffsetStart;
+  metadata_->typeDefsOffsetStart = moduleEnv_->typeDefsOffsetStart;
 
   // Allocate space for every function import
   if (!allocateInstanceDataBytesN(
@@ -280,12 +280,20 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
   }
 
   // Allocate space for every table
-  for (TableDesc& table : moduleEnv_->tables) {
-    if (!allocateInstanceDataBytes(sizeof(TableInstanceData), sizeof(void*),
-                                   &table.instanceDataOffset)) {
-      return false;
-    }
+  if (!allocateInstanceDataBytesN(
+          sizeof(TableInstanceData), alignof(TableInstanceData),
+          moduleEnv_->tables.length(), &moduleEnv_->tablesOffsetStart)) {
+    return false;
   }
+  metadata_->tablesOffsetStart = moduleEnv_->tablesOffsetStart;
+
+  // Allocate space for every tag
+  if (!allocateInstanceDataBytesN(
+          sizeof(TagInstanceData), alignof(TagInstanceData),
+          moduleEnv_->tags.length(), &moduleEnv_->tagsOffsetStart)) {
+    return false;
+  }
+  metadata_->tagsOffsetStart = moduleEnv_->tagsOffsetStart;
 
   // Allocate space for every global that requires it
   for (GlobalDesc& global : moduleEnv_->globals) {
@@ -301,14 +309,6 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
     }
 
     global.setOffset(instanceDataOffset);
-  }
-
-  // Allocate space for every tag
-  for (TagDesc& tag : moduleEnv_->tags) {
-    if (!allocateInstanceDataBytes(sizeof(void*), sizeof(void*),
-                                   &tag.instanceDataOffset)) {
-      return false;
-    }
   }
 
   // Initialize function import metadata
