@@ -137,6 +137,9 @@ class RtpPacket {
   bool SetExtension(const Values&...);
 
   template <typename Extension>
+  bool SetRawExtension(rtc::ArrayView<const uint8_t> data);
+
+  template <typename Extension>
   bool ReserveExtension();
 
   // Find or allocate an extension `type`. Returns view of size `length`
@@ -250,6 +253,17 @@ bool RtpPacket::SetExtension(const Values&... values) {
   if (buffer.empty())
     return false;
   return Extension::Write(buffer, values...);
+}
+
+template <typename Extension>
+bool RtpPacket::SetRawExtension(rtc::ArrayView<const uint8_t> data) {
+  rtc::ArrayView<uint8_t> buffer =
+      AllocateExtension(Extension::kId, data.size());
+  if (buffer.empty()) {
+    return false;
+  }
+  std::memcpy(buffer.data(), data.data(), data.size());
+  return true;
 }
 
 template <typename Extension>
