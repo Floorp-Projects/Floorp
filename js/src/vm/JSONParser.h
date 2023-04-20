@@ -17,6 +17,22 @@
 
 namespace js {
 
+enum class JSONToken {
+  String,
+  Number,
+  True,
+  False,
+  Null,
+  ArrayOpen,
+  ArrayClose,
+  ObjectOpen,
+  ObjectClose,
+  Colon,
+  Comma,
+  OOM,
+  Error
+};
+
 // JSONParser base class. JSONParser is templatized to work on either Latin1
 // or TwoByte input strings, JSONParserBase holds all state and methods that
 // can be shared between the two encodings.
@@ -39,22 +55,6 @@ class MOZ_STACK_CLASS JSONParserBase {
   JSContext* const cx;
 
   const ParseType parseType;
-
-  enum Token {
-    String,
-    Number,
-    True,
-    False,
-    Null,
-    ArrayOpen,
-    ArrayClose,
-    ObjectOpen,
-    ObjectClose,
-    Colon,
-    Comma,
-    OOM,
-    Error
-  };
 
   // State related to the parser's current position. At all points in the
   // parse this keeps track of the stack of arrays and objects which have
@@ -118,7 +118,7 @@ class MOZ_STACK_CLASS JSONParserBase {
   Vector<PropertyVector*, 5> freeProperties;
 
 #ifdef DEBUG
-  Token lastToken;
+  JSONToken lastToken;
 #endif
 
   JSONParserBase(JSContext* cx, ParseType parseType)
@@ -129,7 +129,7 @@ class MOZ_STACK_CLASS JSONParserBase {
         freeProperties(cx)
 #ifdef DEBUG
         ,
-        lastToken(Error)
+        lastToken(JSONToken::Error)
 #endif
   {
   }
@@ -151,13 +151,13 @@ class MOZ_STACK_CLASS JSONParserBase {
   }
 
   Value numberValue() const {
-    MOZ_ASSERT(lastToken == Number);
+    MOZ_ASSERT(lastToken == JSONToken::Number);
     MOZ_ASSERT(v.isNumber());
     return v;
   }
 
   Value stringValue() const {
-    MOZ_ASSERT(lastToken == String);
+    MOZ_ASSERT(lastToken == JSONToken::String);
     MOZ_ASSERT(v.isString());
     return v;
   }
@@ -167,29 +167,29 @@ class MOZ_STACK_CLASS JSONParserBase {
     return &strval.toString()->asAtom();
   }
 
-  Token token(Token t) {
-    MOZ_ASSERT(t != String);
-    MOZ_ASSERT(t != Number);
+  JSONToken token(JSONToken t) {
+    MOZ_ASSERT(t != JSONToken::String);
+    MOZ_ASSERT(t != JSONToken::Number);
 #ifdef DEBUG
     lastToken = t;
 #endif
     return t;
   }
 
-  Token stringToken(JSString* str) {
+  JSONToken stringToken(JSString* str) {
     this->v = StringValue(str);
 #ifdef DEBUG
-    lastToken = String;
+    lastToken = JSONToken::String;
 #endif
-    return String;
+    return JSONToken::String;
   }
 
-  Token numberToken(double d) {
+  JSONToken numberToken(double d) {
     this->v = NumberValue(d);
 #ifdef DEBUG
-    lastToken = Number;
+    lastToken = JSONToken::Number;
 #endif
-    return Number;
+    return JSONToken::Number;
   }
 
   enum StringType { PropertyName, LiteralValue };
@@ -250,16 +250,16 @@ class MOZ_STACK_CLASS JSONParser : public JSONParserBase {
 
  private:
   template <StringType ST>
-  Token readString();
+  JSONToken readString();
 
-  Token readNumber();
+  JSONToken readNumber();
 
-  Token advance();
-  Token advancePropertyName();
-  Token advancePropertyColon();
-  Token advanceAfterProperty();
-  Token advanceAfterObjectOpen();
-  Token advanceAfterArrayElement();
+  JSONToken advance();
+  JSONToken advancePropertyName();
+  JSONToken advancePropertyColon();
+  JSONToken advanceAfterProperty();
+  JSONToken advanceAfterObjectOpen();
+  JSONToken advanceAfterArrayElement();
 
   void error(const char* msg);
 
