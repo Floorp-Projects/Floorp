@@ -16,7 +16,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://gre/modules/PictureInPictureControls.sys.mjs",
 });
 
-const { WebVTT } = ChromeUtils.import("resource://gre/modules/vtt.jsm");
+import { WebVTT } from "resource://gre/modules/vtt.sys.mjs";
 import { setTimeout, clearTimeout } from "resource://gre/modules/Timer.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 

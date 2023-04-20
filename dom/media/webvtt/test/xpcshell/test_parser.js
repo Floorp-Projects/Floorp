@@ -1,6 +1,8 @@
 "use strict";
 
-const { WebVTT } = ChromeUtils.import("resource://gre/modules/vtt.jsm");
+const { WebVTT } = ChromeUtils.importESModule(
+  "resource://gre/modules/vtt.sys.mjs"
+);
 
 let fakeWindow = {
   /* eslint-disable object-shorthand */
