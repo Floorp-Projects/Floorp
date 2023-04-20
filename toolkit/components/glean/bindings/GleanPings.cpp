@@ -79,9 +79,12 @@ already_AddRefed<GleanPing> GleanPings::NamedGetter(const nsAString& aName,
 bool GleanPings::NameIsEnumerable(const nsAString& aName) { return false; }
 
 void GleanPings::GetSupportedNames(nsTArray<nsString>& aNames) {
-  for (uint8_t idx : sPingByNameLookupEntries) {
-    const char* pingName = GetPingName(idx);
-    aNames.AppendElement()->AssignASCII(pingName);
+  JOG::GetPingNames(aNames);
+  if (!JOG::AreRuntimeMetricsComprehensive()) {
+    for (uint8_t idx : sPingByNameLookupEntries) {
+      const char* pingName = GetPingName(idx);
+      aNames.AppendElement()->AssignASCII(pingName);
+    }
   }
 }
 

@@ -52,7 +52,7 @@ already_AddRefed<nsISupports> Category::NamedGetter(const nsAString& aName,
 bool Category::NameIsEnumerable(const nsAString& aName) { return false; }
 
 void Category::GetSupportedNames(nsTArray<nsString>& aNames) {
-  // We don't get dynamic metric names because we don't want to store them.
+  JOG::GetMetricNames(mName, aNames);
   if (!JOG::AreRuntimeMetricsComprehensive()) {
     for (metric_entry_t entry : sMetricByNameLookupEntries) {
       const char* identifierBuf = GetMetricIdentifier(entry);

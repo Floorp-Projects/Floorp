@@ -120,9 +120,36 @@ Maybe<nsCString> JOG::GetMetricName(uint32_t aMetricId) {
 }
 
 // static
+void JOG::GetMetricNames(const nsACString& aCategoryName,
+                         nsTArray<nsString>& aNames) {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!gMetricNames) {
+    return;
+  }
+  for (const auto& identifier : gMetricNames->Values()) {
+    if (StringBeginsWith(identifier, aCategoryName) &&
+        identifier.CharAt(aCategoryName.Length()) == '.') {
+      const char* metricName = &identifier.Data()[aCategoryName.Length() + 1];
+      aNames.AppendElement()->AssignASCII(metricName);
+    }
+  }
+}
+
+// static
 Maybe<uint32_t> JOG::GetPing(const nsACString& aPingName) {
   MOZ_ASSERT(NS_IsMainThread());
   return !gPings ? Nothing() : gPings->MaybeGet(aPingName);
+}
+
+// static
+void JOG::GetPingNames(nsTArray<nsString>& aNames) {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!gPings) {
+    return;
+  }
+  for (const auto& ping : gPings->Keys()) {
+    aNames.EmplaceBack(NS_ConvertUTF8toUTF16(ping));
+  }
 }
 
 }  // namespace mozilla::glean
