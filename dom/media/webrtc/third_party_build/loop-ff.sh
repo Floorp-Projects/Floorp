@@ -167,6 +167,15 @@ elif [ $MOZ_CHANGED -ne $GIT_CHANGED ]; then
 fi
 HANDLE_NOOP_COMMIT=""
 
+# save the current patch stack in case we need to reconstitute it later
+./mach python $SCRIPT_DIR/save_patch_stack.py \
+    --repo-path $MOZ_LIBWEBRTC_SRC \
+    --branch $MOZ_LIBWEBRTC_BRANCH \
+    --patch-path "third_party/libwebrtc/moz-patch-stack" \
+    --state-path $STATE_DIR \
+    --target-branch-head $MOZ_TARGET_UPSTREAM_BRANCH_HEAD
+    2>&1| tee -a $LOOP_OUTPUT_LOG
+
 MODIFIED_BUILD_RELATED_FILE_CNT=`hg diff -c tip --stat \
     --include 'third_party/libwebrtc/**BUILD.gn' \
     --include 'third_party/libwebrtc/webrtc.gni' \
