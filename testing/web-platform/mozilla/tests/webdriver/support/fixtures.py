@@ -1,13 +1,13 @@
 import json
 import os
 import socket
+import subprocess
 import time
 from contextlib import suppress
 from urllib.parse import urlparse
 
 import pytest
 import webdriver
-from mozprocess import ProcessHandler
 from mozprofile import Profile
 from mozrunner import FirefoxRunner
 
@@ -222,25 +222,22 @@ class Geckodriver:
             + self.extra_args
         )
 
-        def processOutputLine(line):
-            print(line)
-
         print(f"Running command: {self.command}")
-        self.proc = ProcessHandler(
-            self.command, processOutputLine=processOutputLine, universal_newlines=True
-        )
-        self.proc.run()
+        self.proc = subprocess.Popen(self.command)
 
         # Wait for the port to become ready
         end_time = time.time() + 10
         while time.time() < end_time:
-            if self.proc.poll() is not None:
-                raise Exception(f"geckodriver terminated with code {self.proc.poll()}")
+            returncode = self.proc.poll()
+            if returncode is not None:
+                raise ChildProcessError(
+                    f"geckodriver terminated with code {returncode}"
+                )
             with socket.socket() as sock:
                 if sock.connect_ex((self.hostname, self.port)) == 0:
                     break
         else:
-            raise Exception(
+            raise ConnectionRefusedError(
                 f"Failed to connect to geckodriver on {self.hostname}:{self.port}"
             )
 
