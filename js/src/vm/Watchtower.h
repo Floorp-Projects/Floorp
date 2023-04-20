@@ -41,7 +41,7 @@ class Watchtower {
                                       HandleId id, PropertyFlags flags);
   static bool watchFreezeOrSealSlow(JSContext* cx, Handle<NativeObject*> obj);
   static bool watchProtoChangeSlow(JSContext* cx, HandleObject obj);
-  static void watchObjectSwapSlow(JSContext* cx, HandleObject a,
+  static bool watchObjectSwapSlow(JSContext* cx, HandleObject a,
                                   HandleObject b);
 
  public:
@@ -107,11 +107,11 @@ class Watchtower {
     }
     return watchProtoChangeSlow(cx, obj);
   }
-  static void watchObjectSwap(JSContext* cx, HandleObject a, HandleObject b) {
+  static bool watchObjectSwap(JSContext* cx, HandleObject a, HandleObject b) {
     if (MOZ_LIKELY(!watchesObjectSwap(a, b))) {
-      return;
+      return true;
     }
-    watchObjectSwapSlow(cx, a, b);
+    return watchObjectSwapSlow(cx, a, b);
   }
 };
 

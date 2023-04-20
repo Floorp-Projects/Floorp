@@ -1234,7 +1234,9 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b,
   MOZ_RELEASE_ASSERT(js::ObjectMayBeSwapped(a));
   MOZ_RELEASE_ASSERT(js::ObjectMayBeSwapped(b));
 
-  Watchtower::watchObjectSwap(cx, a, b);
+  if (!Watchtower::watchObjectSwap(cx, a, b)) {
+    oomUnsafe.crash("watchObjectSwap");
+  }
 
   // Ensure we update any embedded nursery pointers in either object.
   gc::StoreBuffer& storeBuffer = cx->runtime()->gc.storeBuffer();
@@ -1251,15 +1253,6 @@ void JSObject::swap(JSContext* cx, HandleObject a, HandleObject b,
   }
 
   unsigned r = NotifyGCPreSwap(a, b);
-
-  // Don't swap objects that may currently be participating in shape
-  // teleporting optimizations.
-  //
-  // See: ReshapeForProtoMutation, ReshapeForShadowedProp
-  MOZ_ASSERT_IF(a->is<NativeObject>() && a->isUsedAsPrototype(),
-                a->taggedProto() == TaggedProto());
-  MOZ_ASSERT_IF(b->is<NativeObject>() && b->isUsedAsPrototype(),
-                b->taggedProto() == TaggedProto());
 
   bool aIsProxyWithInlineValues =
       a->is<ProxyObject>() && a->as<ProxyObject>().usingInlineValueArray();
