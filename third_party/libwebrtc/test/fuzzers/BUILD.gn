@@ -191,12 +191,11 @@ webrtc_fuzzer_test("flexfec_receiver_fuzzer") {
   ]
 }
 
-webrtc_fuzzer_test("packet_buffer_fuzzer") {
-  sources = [ "packet_buffer_fuzzer.cc" ]
+webrtc_fuzzer_test("rtp_video_frame_assembler_fuzzer") {
+  sources = [ "rtp_video_frame_assembler_fuzzer.cc" ]
   deps = [
-    "../../modules/video_coding:packet_buffer",
-    "../../modules/video_coding/",
-    "../../system_wrappers",
+    "../../api/video:rtp_video_frame_assembler",
+    "../../modules/rtp_rtcp:rtp_rtcp_format",
   ]
 }
 
