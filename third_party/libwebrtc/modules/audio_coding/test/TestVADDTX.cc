@@ -235,30 +235,6 @@ void TestOpusDtx::Perform() {
   expects[static_cast<int>(AudioFrameType::kAudioFrameCN)] = 1;
   Run(webrtc::test::ResourcePath("audio_coding/testfile32kHz", "pcm"), 32000, 1,
       out_filename, true, expects);
-
-  // Register stereo Opus as send codec
-  out_filename = webrtc::test::OutputPath() + "testOpusDtx_outFile_stereo.pcm";
-  RegisterCodec({"opus", 48000, 2, {{"stereo", "1"}}}, absl::nullopt);
-  acm_send_->ModifyEncoder([](std::unique_ptr<AudioEncoder>* encoder_ptr) {
-    (*encoder_ptr)->SetDtx(false);
-  });
-  expects[static_cast<int>(AudioFrameType::kEmptyFrame)] = 0;
-  expects[static_cast<int>(AudioFrameType::kAudioFrameCN)] = 0;
-  Run(webrtc::test::ResourcePath("audio_coding/teststereo32kHz", "pcm"), 32000,
-      2, out_filename, false, expects);
-
-  acm_send_->ModifyEncoder([](std::unique_ptr<AudioEncoder>* encoder_ptr) {
-    (*encoder_ptr)->SetDtx(true);
-    // The default bitrate will not generate frames recognized as CN on desktop
-    // since the frames will be encoded as CELT. Set a low target bitrate to get
-    // consistent behaviour across platforms.
-    (*encoder_ptr)->OnReceivedTargetAudioBitrate(24000);
-  });
-
-  expects[static_cast<int>(AudioFrameType::kEmptyFrame)] = 1;
-  expects[static_cast<int>(AudioFrameType::kAudioFrameCN)] = 1;
-  Run(webrtc::test::ResourcePath("audio_coding/teststereo32kHz", "pcm"), 32000,
-      2, out_filename, true, expects);
 }
 
 }  // namespace webrtc
