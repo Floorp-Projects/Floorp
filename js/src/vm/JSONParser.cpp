@@ -978,3 +978,85 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
 
 template class js::JSONParser<Latin1Char>;
 template class js::JSONParser<char16_t>;
+
+template <typename CharT>
+inline bool JSONSyntaxParseHandler<CharT>::objectOpen(
+    Vector<StackEntry, 10>& stack, PropertyVector** properties) {
+  StackEntry entry{JSONParserState::FinishObjectMember};
+  if (!stack.append(entry)) {
+    return false;
+  }
+  return true;
+}
+
+template <typename CharT>
+inline bool JSONSyntaxParseHandler<CharT>::finishObject(
+    Vector<StackEntry, 10>& stack, DummyValue* vp, PropertyVector& properties) {
+  stack.popBack();
+  return true;
+}
+
+template <typename CharT>
+inline bool JSONSyntaxParseHandler<CharT>::arrayOpen(
+    Vector<StackEntry, 10>& stack, ElementVector** elements) {
+  StackEntry entry{JSONParserState::FinishArrayElement};
+  if (!stack.append(entry)) {
+    return false;
+  }
+  return true;
+}
+
+template <typename CharT>
+inline bool JSONSyntaxParseHandler<CharT>::finishArray(
+    Vector<StackEntry, 10>& stack, DummyValue* vp, ElementVector& elements) {
+  stack.popBack();
+  return true;
+}
+
+static void ReportJSONSyntaxError(FrontendContext* fc, ErrorMetadata&& metadata,
+                                  unsigned errorNumber, ...) {
+  va_list args;
+  va_start(args, errorNumber);
+
+  js::ReportCompileErrorLatin1(fc, std::move(metadata), nullptr, errorNumber,
+                               &args);
+
+  va_end(args);
+}
+
+template <typename CharT>
+void JSONSyntaxParseHandler<CharT>::reportError(const char* msg,
+                                                const char* lineString,
+                                                const char* columnString) {
+  ErrorMetadata metadata;
+  metadata.isMuted = false;
+  metadata.filename = "";
+  metadata.lineNumber = 0;
+  metadata.columnNumber = 0;
+
+  ReportJSONSyntaxError(fc, std::move(metadata), JSMSG_JSON_BAD_PARSE, msg,
+                        lineString, columnString);
+}
+
+template class js::JSONSyntaxParseHandler<Latin1Char>;
+template class js::JSONSyntaxParseHandler<char16_t>;
+
+template <typename CharT>
+bool JSONSyntaxParser<CharT>::parse() {
+  typename HandlerT::DummyValue unused;
+
+  if (!this->parseImpl(unused,
+                       [&](const typename HandlerT::DummyValue& unused) {})) {
+    return false;
+  }
+
+  return true;
+}
+
+template class js::JSONPerHandlerParser<Latin1Char,
+                                        js::JSONSyntaxParseHandler<Latin1Char>>;
+template class js::JSONPerHandlerParser<char16_t,
+                                        js::JSONSyntaxParseHandler<char16_t>>;
+
+template class js::JSONSyntaxParser<Latin1Char>;
+template class js::JSONSyntaxParser<char16_t>;
