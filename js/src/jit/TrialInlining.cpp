@@ -624,6 +624,8 @@ TrialInliningDecision TrialInliner::getInliningDecision(JSFunction* target,
     }
   }
 
+  JitSpewIndent spewIndent(JitSpew_WarpTrialInlining);
+  JitSpew(JitSpew_WarpTrialInlining, "SUCCESS: Inlined monomorphically");
   return TrialInliningDecision::MonomorphicInline;
 }
 
