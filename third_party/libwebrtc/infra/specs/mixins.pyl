@@ -302,17 +302,6 @@
       }
     }
   },
-  'xcode_12d4e': {
-    '$mixin_append': {
-      'args': ['--xcode-build-version', '12d4e'],
-      'swarming': {
-        'named_caches': [{
-          'name': 'xcode_ios_12d4e',
-          'path': 'Xcode.app'
-        }]
-      }
-    }
-  },
   'xcode_13_main': {
     '$mixin_append': {
       'args': ['--xcode-build-version', '13c100']
