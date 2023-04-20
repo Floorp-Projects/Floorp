@@ -52,7 +52,7 @@ index 217c0c9583..d1fc86529e 100644
  rtc_library("rtp_sender_setparameters_callback") {
    visibility = [ "*" ]
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index da9c28479e..ea2b04ea5f 100644
+index 7d008766a7..3dfde550a1 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
 @@ -154,23 +154,14 @@ rtc_library("rtc_media_base") {
