@@ -1,1005 +1,179 @@
-From: Olga Sharonova <olka@webrtc.org>
-Date: Tue, 3 Jan 2023 16:03:39 +0000
-Subject: (tmp-cherry-pick) Revert "Remove use of
- ReceiveStreamRtpConfig:transport_cc" (be5c7135f9)
+From: =?UTF-8?q?Henrik=20Bostr=C3=B6m?= <hbos@webrtc.org>
+Date: Wed, 4 Jan 2023 09:28:27 +0000
+Subject: (tmp-cherry-pick) Revert "Remove 'trackId' dependency in stats
+ selector algorithm." (07d64b4072)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-This reverts commit 97ba853295578975a04fc504315cccd465f9f0bd.
+This reverts commit 81aab488781c1a736c9d85ff1532631be2989523.
 
-Reason for revert: Suspected in breaking WebRTC into Chrome rolls https://chromium-review.googlesource.com/c/chromium/src/+/4132644?tab=checks
+Reason for revert: external/wpt/webrtc/simulcast/setParameters-active.https.html is failing with this change
 
 Original change's description:
-> Remove use of ReceiveStreamRtpConfig:transport_cc
+> Remove 'trackId' dependency in stats selector algorithm.
 >
-> With this change, webrtc will send RTCP transport feedback for all received packets that have a transport sequence number, if the header extension
-> http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions is negotiated.
-> I.e the SDP attribute a=rtcp-fb:96 transport-cc is ignored.
+> In preparation for the deletion of deprecated 'track' stats, the
+> stats selector algorithm needs to be rewritten not to use 'trackId'.
 >
+> This is achieved by finding RTP stats by their SSRC, as obtained via
+> getParameters(). This unfortunately adds a block-invoke (in the sender
+> case the block-invoke happens inside GetParametersInternal and in the
+> receiver case the block-invoke is explicit at the calling place), but
+> it can't be helped and it's just once per getStats() call and only if
+> the selector argument is used.
 >
-> Change-Id: I95d8d4405dc86a2f872f7883b7bafd623d5f7841
->
-> Bug: webrtc:14802
-> Change-Id: I95d8d4405dc86a2f872f7883b7bafd623d5f7841
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/290403
+> Bug: webrtc:14175
+> Change-Id: If0e14cdbdc76d141e0042e43757970893bf32119
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/289101
 > Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-> Reviewed-by: Danil Chapovalov <danilchap@webrtc.org>
-> Commit-Queue: Per Kjellander <perkj@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#38980}
+> Commit-Queue: Henrik Boström <hbos@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#38981}
 
-Bug: webrtc:14802
-Change-Id: I2b04274466a5a81d767a48ff2e001b0a04f7f541
+Bug: webrtc:14175
+Change-Id: Id1cbe892250fe88bd6db0b47269bcefa346709b4
 No-Presubmit: true
 No-Tree-Checks: true
 No-Try: true
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/288943
-Reviewed-by: Christoffer Jansson <jansson@webrtc.org>
-Auto-Submit: Olga Sharonova <olka@webrtc.org>
-Reviewed-by: Danil Chapovalov <danilchap@webrtc.org>
-Commit-Queue: Christoffer Jansson <jansson@webrtc.org>
-Owners-Override: Christoffer Jansson <jansson@webrtc.org>
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/290502
+Commit-Queue: Christoffer Jansson <jansson@google.com>
+Auto-Submit: Henrik Boström <hbos@webrtc.org>
 Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Cr-Commit-Position: refs/heads/main@{#38988}
+Reviewed-by: Christoffer Jansson <jansson@google.com>
+Cr-Commit-Position: refs/heads/main@{#38993}
 ---
- audio/audio_receive_stream.cc                 | 11 ++++++
- audio/audio_receive_stream.h                  |  2 +
- audio/audio_receive_stream_unittest.cc        |  4 +-
- audio/test/audio_bwe_integration_test.cc      |  1 +
- call/call.cc                                  |  8 +++-
- call/flexfec_receive_stream_impl.cc           |  2 +
- call/flexfec_receive_stream_impl.h            | 11 ++++++
- call/flexfec_receive_stream_unittest.cc       |  1 +
- call/rampup_tests.cc                          | 10 +++++
- call/receive_stream.h                         | 19 ++++++++--
- call/video_receive_stream.cc                  |  1 +
- media/engine/fake_webrtc_call.h               | 12 ++++++
- media/engine/webrtc_video_engine.cc           | 20 ++++++++++
- media/engine/webrtc_video_engine.h            |  1 +
- media/engine/webrtc_video_engine_unittest.cc  | 30 +++++++++++++++
- media/engine/webrtc_voice_engine.cc           | 24 ++++++++----
- media/engine/webrtc_voice_engine.h            |  1 +
- media/engine/webrtc_voice_engine_unittest.cc  | 21 +++++++++++
- test/call_config_utils.cc                     |  2 +
- test/call_config_utils_unittest.cc            |  2 +
- test/call_test.cc                             | 13 +++++--
- test/call_test.h                              |  2 +
- test/fuzzers/vp8_replay_fuzzer.cc             |  1 +
- test/fuzzers/vp9_replay_fuzzer.cc             |  1 +
- test/scenario/audio_stream.cc                 |  1 +
- test/scenario/video_stream.cc                 |  1 +
- video/end_to_end_tests/bandwidth_tests.cc     |  3 ++
- video/end_to_end_tests/rtp_rtcp_tests.cc      |  1 +
- .../transport_feedback_tests.cc               | 37 ++++++++++++++++---
- video/video_quality_test.cc                   |  9 +++--
- video/video_receive_stream2.cc                | 11 ++++++
- video/video_receive_stream2.h                 |  2 +
- video/video_send_stream_tests.cc              |  2 +
- 33 files changed, 242 insertions(+), 25 deletions(-)
+ pc/rtc_stats_collector.cc          | 63 +++++++++++++++---------------
+ pc/rtc_stats_collector.h           |  6 ---
+ pc/rtc_stats_collector_unittest.cc |  5 +--
+ 3 files changed, 32 insertions(+), 42 deletions(-)
 
-diff --git a/audio/audio_receive_stream.cc b/audio/audio_receive_stream.cc
-index 7a2037e83f..168d214ecd 100644
---- a/audio/audio_receive_stream.cc
-+++ b/audio/audio_receive_stream.cc
-@@ -38,6 +38,7 @@ std::string AudioReceiveStreamInterface::Config::Rtp::ToString() const {
-   rtc::SimpleStringBuilder ss(ss_buf);
-   ss << "{remote_ssrc: " << remote_ssrc;
-   ss << ", local_ssrc: " << local_ssrc;
-+  ss << ", transport_cc: " << (transport_cc ? "on" : "off");
-   ss << ", nack: " << nack.ToString();
-   ss << ", extensions: [";
-   for (size_t i = 0; i < extensions.size(); ++i) {
-@@ -208,6 +209,16 @@ void AudioReceiveStreamImpl::Stop() {
-   audio_state()->RemoveReceivingStream(this);
- }
- 
-+bool AudioReceiveStreamImpl::transport_cc() const {
-+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-+  return config_.rtp.transport_cc;
-+}
-+
-+void AudioReceiveStreamImpl::SetTransportCc(bool transport_cc) {
-+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-+  config_.rtp.transport_cc = transport_cc;
-+}
-+
- bool AudioReceiveStreamImpl::IsRunning() const {
-   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-   return playing_;
-diff --git a/audio/audio_receive_stream.h b/audio/audio_receive_stream.h
-index d9283ec141..427077fd94 100644
---- a/audio/audio_receive_stream.h
-+++ b/audio/audio_receive_stream.h
-@@ -85,6 +85,8 @@ class AudioReceiveStreamImpl final : public webrtc::AudioReceiveStreamInterface,
-   // webrtc::AudioReceiveStreamInterface implementation.
-   void Start() override;
-   void Stop() override;
-+  bool transport_cc() const override;
-+  void SetTransportCc(bool transport_cc) override;
-   bool IsRunning() const override;
-   void SetDepacketizerToDecoderFrameTransformer(
-       rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer)
-diff --git a/audio/audio_receive_stream_unittest.cc b/audio/audio_receive_stream_unittest.cc
-index 2cee6a4bae..75129acf48 100644
---- a/audio/audio_receive_stream_unittest.cc
-+++ b/audio/audio_receive_stream_unittest.cc
-@@ -216,7 +216,7 @@ TEST(AudioReceiveStreamTest, ConfigToString) {
-   config.rtp.extensions.push_back(
-       RtpExtension(RtpExtension::kAudioLevelUri, kAudioLevelId));
-   EXPECT_EQ(
--      "{rtp: {remote_ssrc: 1234, local_ssrc: 5678, nack: "
-+      "{rtp: {remote_ssrc: 1234, local_ssrc: 5678, transport_cc: off, nack: "
-       "{rtp_history_ms: 0}, extensions: [{uri: "
-       "urn:ietf:params:rtp-hdrext:ssrc-audio-level, id: 3}]}, "
-       "rtcp_send_transport: null}",
-@@ -234,6 +234,7 @@ TEST(AudioReceiveStreamTest, ConstructDestruct) {
- TEST(AudioReceiveStreamTest, ReceiveRtcpPacket) {
-   for (bool use_null_audio_processing : {false, true}) {
-     ConfigHelper helper(use_null_audio_processing);
-+    helper.config().rtp.transport_cc = true;
-     auto recv_stream = helper.CreateAudioReceiveStream();
-     std::vector<uint8_t> rtcp_packet = CreateRtcpSenderReport();
-     EXPECT_CALL(*helper.channel_receive(),
-@@ -402,6 +403,7 @@ TEST(AudioReceiveStreamTest, ReconfigureWithUpdatedConfig) {
-     recv_stream->SetDecoderMap(new_config.decoder_map);
- 
-     EXPECT_CALL(channel_receive, SetNACKStatus(true, 15 + 1)).Times(1);
-+    recv_stream->SetTransportCc(new_config.rtp.transport_cc);
-     recv_stream->SetNackHistory(300 + 20);
- 
-     recv_stream->UnregisterFromTransport();
-diff --git a/audio/test/audio_bwe_integration_test.cc b/audio/test/audio_bwe_integration_test.cc
-index 50a4b6759c..a5faf23860 100644
---- a/audio/test/audio_bwe_integration_test.cc
-+++ b/audio/test/audio_bwe_integration_test.cc
-@@ -115,6 +115,7 @@ class NoBandwidthDropAfterDtx : public AudioBweTest {
-         RtpExtension(RtpExtension::kTransportSequenceNumberUri,
-                      kTransportSequenceNumberExtensionId));
-     for (AudioReceiveStreamInterface::Config& recv_config : *receive_configs) {
-+      recv_config.rtp.transport_cc = true;
-       recv_config.rtp.extensions = send_config->rtp.extensions;
-       recv_config.rtp.remote_ssrc = send_config->rtp.ssrc;
-     }
-diff --git a/call/call.cc b/call/call.cc
-index 27627b0223..99d6dcd22a 100644
---- a/call/call.cc
-+++ b/call/call.cc
-@@ -84,6 +84,11 @@ bool HasTransportSequenceNumber(const RtpHeaderExtensionMap& map) {
-          map.IsRegistered(kRtpExtensionTransportSequenceNumber02);
- }
- 
-+bool UseSendSideBwe(const ReceiveStreamInterface* stream) {
-+  return stream->transport_cc() &&
-+         HasTransportSequenceNumber(stream->GetRtpExtensionMap());
-+}
-+
- const int* FindKeyByValue(const std::map<int, int>& m, int v) {
-   for (const auto& kv : m) {
-     if (kv.second == v)
-@@ -1548,8 +1553,7 @@ bool Call::IdentifyReceivedPacket(RtpPacketReceived& packet,
-   packet.IdentifyExtensions(it->second->GetRtpExtensionMap());
- 
-   if (use_send_side_bwe) {
--    *use_send_side_bwe =
--        HasTransportSequenceNumber(it->second->GetRtpExtensionMap());
-+    *use_send_side_bwe = UseSendSideBwe(it->second);
+diff --git a/pc/rtc_stats_collector.cc b/pc/rtc_stats_collector.cc
+index afb819f8f0..a9fb3b7d76 100644
+--- a/pc/rtc_stats_collector.cc
++++ b/pc/rtc_stats_collector.cc
+@@ -1249,10 +1249,7 @@ void ProduceReceiverMediaTrackStats(
    }
+ }
  
-   return true;
-diff --git a/call/flexfec_receive_stream_impl.cc b/call/flexfec_receive_stream_impl.cc
-index 23cfec4633..db8b7e7edb 100644
---- a/call/flexfec_receive_stream_impl.cc
-+++ b/call/flexfec_receive_stream_impl.cc
-@@ -42,6 +42,7 @@ std::string FlexfecReceiveStream::Config::ToString() const {
-     ss << protected_media_ssrcs[i] << ", ";
-   if (!protected_media_ssrcs.empty())
-     ss << protected_media_ssrcs[i];
-+  ss << "], transport_cc: " << (rtp.transport_cc ? "on" : "off");
-   ss << ", rtp.extensions: [";
-   i = 0;
-   for (; i + 1 < rtp.extensions.size(); ++i)
-@@ -132,6 +133,7 @@ FlexfecReceiveStreamImpl::FlexfecReceiveStreamImpl(
-     RtcpRttStats* rtt_stats)
-     : extension_map_(std::move(config.rtp.extensions)),
-       remote_ssrc_(config.rtp.remote_ssrc),
-+      transport_cc_(config.rtp.transport_cc),
-       payload_type_(config.payload_type),
-       receiver_(
-           MaybeCreateFlexfecReceiver(clock, config, recovered_packet_receiver)),
-diff --git a/call/flexfec_receive_stream_impl.h b/call/flexfec_receive_stream_impl.h
-index 60cc9fe34d..9cb383afee 100644
---- a/call/flexfec_receive_stream_impl.h
-+++ b/call/flexfec_receive_stream_impl.h
-@@ -69,6 +69,16 @@ class FlexfecReceiveStreamImpl : public FlexfecReceiveStream {
- 
-   uint32_t remote_ssrc() const { return remote_ssrc_; }
- 
-+  bool transport_cc() const override {
-+    RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-+    return transport_cc_;
-+  }
-+
-+  void SetTransportCc(bool transport_cc) override {
-+    RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-+    transport_cc_ = transport_cc;
-+  }
-+
-   void SetRtcpMode(RtcpMode mode) override {
-     RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-     rtp_rtcp_->SetRTCPStatus(mode);
-@@ -80,6 +90,7 @@ class FlexfecReceiveStreamImpl : public FlexfecReceiveStream {
-   RtpHeaderExtensionMap extension_map_;
- 
-   const uint32_t remote_ssrc_;
-+  bool transport_cc_ RTC_GUARDED_BY(packet_sequence_checker_);
- 
-   // `payload_type_` is initially set to -1, indicating that FlexFec is
-   // disabled.
-diff --git a/call/flexfec_receive_stream_unittest.cc b/call/flexfec_receive_stream_unittest.cc
-index 4a6ed2c36d..5458ae2ad2 100644
---- a/call/flexfec_receive_stream_unittest.cc
-+++ b/call/flexfec_receive_stream_unittest.cc
-@@ -66,6 +66,7 @@ TEST(FlexfecReceiveStreamConfigTest, IsCompleteAndEnabled) {
- 
-   config.rtp.local_ssrc = 18374743;
-   config.rtcp_mode = RtcpMode::kCompound;
-+  config.rtp.transport_cc = true;
-   config.rtp.extensions.emplace_back(TransportSequenceNumber::Uri(), 7);
-   EXPECT_FALSE(config.IsCompleteAndEnabled());
- 
-diff --git a/call/rampup_tests.cc b/call/rampup_tests.cc
-index 4c4d56fc3c..dd4fe573df 100644
---- a/call/rampup_tests.cc
-+++ b/call/rampup_tests.cc
-@@ -188,13 +188,17 @@ void RampUpTester::ModifyVideoConfigs(
- 
-   send_config->rtp.extensions.clear();
- 
-+  bool transport_cc;
-   if (extension_type_ == RtpExtension::kAbsSendTimeUri) {
-+    transport_cc = false;
-     send_config->rtp.extensions.push_back(
-         RtpExtension(extension_type_.c_str(), kAbsSendTimeExtensionId));
-   } else if (extension_type_ == RtpExtension::kTransportSequenceNumberUri) {
-+    transport_cc = true;
-     send_config->rtp.extensions.push_back(RtpExtension(
-         extension_type_.c_str(), kTransportSequenceNumberExtensionId));
+-}  // namespace
+-
+-rtc::scoped_refptr<RTCStatsReport>
+-RTCStatsCollector::CreateReportFilteredBySelector(
++rtc::scoped_refptr<RTCStatsReport> CreateReportFilteredBySelector(
+     bool filter_by_sender_selector,
+     rtc::scoped_refptr<const RTCStatsReport> report,
+     rtc::scoped_refptr<RtpSenderInternal> sender_selector,
+@@ -1261,40 +1258,40 @@ RTCStatsCollector::CreateReportFilteredBySelector(
+   if (filter_by_sender_selector) {
+     // Filter mode: RTCStatsCollector::RequestInfo::kSenderSelector
+     if (sender_selector) {
+-      // Find outbound-rtp(s) of the sender using ssrc lookup.
+-      auto encodings = sender_selector->GetParametersInternal().encodings;
+-      for (const auto* outbound_rtp :
+-           report->GetStatsOfType<RTCOutboundRTPStreamStats>()) {
+-        RTC_DCHECK(outbound_rtp->ssrc.is_defined());
+-        auto it = std::find_if(
+-            encodings.begin(), encodings.end(),
+-            [ssrc =
+-                 *outbound_rtp->ssrc](const RtpEncodingParameters& encoding) {
+-              return encoding.ssrc.has_value() && encoding.ssrc.value() == ssrc;
+-            });
+-        if (it != encodings.end()) {
+-          rtpstream_ids.push_back(outbound_rtp->id());
++      // Find outbound-rtp(s) of the sender, i.e. the outbound-rtp(s) that
++      // reference the sender stats.
++      // Because we do not implement sender stats, we look at outbound-rtp(s)
++      // that reference the track attachment stats for the sender instead.
++      std::string track_id =
++          DEPRECATED_RTCMediaStreamTrackStatsIDFromDirectionAndAttachment(
++              kDirectionOutbound, sender_selector->AttachmentId());
++      for (const auto& stats : *report) {
++        if (stats.type() != RTCOutboundRTPStreamStats::kType)
++          continue;
++        const auto& outbound_rtp = stats.cast_to<RTCOutboundRTPStreamStats>();
++        if (outbound_rtp.track_id.is_defined() &&
++            *outbound_rtp.track_id == track_id) {
++          rtpstream_ids.push_back(outbound_rtp.id());
+         }
+       }
+     }
    } else {
-+    transport_cc = false;
-     send_config->rtp.extensions.push_back(RtpExtension(
-         extension_type_.c_str(), kTransmissionTimeOffsetExtensionId));
-   }
-@@ -217,6 +221,7 @@ void RampUpTester::ModifyVideoConfigs(
- 
-   size_t i = 0;
-   for (VideoReceiveStreamInterface::Config& recv_config : *receive_configs) {
-+    recv_config.rtp.transport_cc = transport_cc;
-     recv_config.rtp.extensions = send_config->rtp.extensions;
-     recv_config.decoders.reserve(1);
-     recv_config.decoders[0].payload_type = send_config->rtp.payload_type;
-@@ -272,12 +277,15 @@ void RampUpTester::ModifyAudioConfigs(
-   send_config->min_bitrate_bps = 6000;
-   send_config->max_bitrate_bps = 60000;
- 
-+  bool transport_cc = false;
-   if (extension_type_ == RtpExtension::kTransportSequenceNumberUri) {
-+    transport_cc = true;
-     send_config->rtp.extensions.push_back(RtpExtension(
-         extension_type_.c_str(), kTransportSequenceNumberExtensionId));
-   }
- 
-   for (AudioReceiveStreamInterface::Config& recv_config : *receive_configs) {
-+    recv_config.rtp.transport_cc = transport_cc;
-     recv_config.rtp.extensions = send_config->rtp.extensions;
-     recv_config.rtp.remote_ssrc = send_config->rtp.ssrc;
-   }
-@@ -293,9 +301,11 @@ void RampUpTester::ModifyFlexfecConfigs(
-   (*receive_configs)[0].protected_media_ssrcs = {video_ssrcs_[0]};
-   (*receive_configs)[0].rtp.local_ssrc = video_ssrcs_[0];
-   if (extension_type_ == RtpExtension::kAbsSendTimeUri) {
-+    (*receive_configs)[0].rtp.transport_cc = false;
-     (*receive_configs)[0].rtp.extensions.push_back(
-         RtpExtension(extension_type_.c_str(), kAbsSendTimeExtensionId));
-   } else if (extension_type_ == RtpExtension::kTransportSequenceNumberUri) {
-+    (*receive_configs)[0].rtp.transport_cc = true;
-     (*receive_configs)[0].rtp.extensions.push_back(RtpExtension(
-         extension_type_.c_str(), kTransportSequenceNumberExtensionId));
-   }
-diff --git a/call/receive_stream.h b/call/receive_stream.h
-index 517f5f74ee..eb04653000 100644
---- a/call/receive_stream.h
-+++ b/call/receive_stream.h
-@@ -40,9 +40,12 @@ class ReceiveStreamInterface {
-     // that the value is read on (i.e. packet delivery).
-     uint32_t local_ssrc = 0;
- 
--    // Deprecated. This flag has no effect.
--    // TODO(perkj, https://bugs.webrtc.org/14802): Remove this flag once no
--    // projects use it.
-+    // Enable feedback for send side bandwidth estimation.
-+    // See
-+    // https://tools.ietf.org/html/draft-holmer-rmcat-transport-wide-cc-extensions
-+    // for details.
-+    // This value may change mid-stream and must be done on the same thread
-+    // that the value is read on (i.e. packet delivery).
-     bool transport_cc = false;
- 
-     // RTP header extensions used for the received stream.
-@@ -56,6 +59,16 @@ class ReceiveStreamInterface {
-   virtual void SetRtpExtensions(std::vector<RtpExtension> extensions) = 0;
-   virtual RtpHeaderExtensionMap GetRtpExtensionMap() const = 0;
- 
-+  // Returns a bool for whether feedback for send side bandwidth estimation is
-+  // enabled. See
-+  // https://tools.ietf.org/html/draft-holmer-rmcat-transport-wide-cc-extensions
-+  // for details.
-+  // This value may change mid-stream and must be done on the same thread
-+  // that the value is read on (i.e. packet delivery).
-+  virtual bool transport_cc() const = 0;
-+
-+  virtual void SetTransportCc(bool transport_cc) = 0;
-+
-  protected:
-   virtual ~ReceiveStreamInterface() {}
- };
-diff --git a/call/video_receive_stream.cc b/call/video_receive_stream.cc
-index 87df97cbdd..8cd4a952d4 100644
---- a/call/video_receive_stream.cc
-+++ b/call/video_receive_stream.cc
-@@ -131,6 +131,7 @@ std::string VideoReceiveStreamInterface::Config::Rtp::ToString() const {
-   ss << "{receiver_reference_time_report: "
-      << (rtcp_xr.receiver_reference_time_report ? "on" : "off");
-   ss << '}';
-+  ss << ", transport_cc: " << (transport_cc ? "on" : "off");
-   ss << ", lntf: {enabled: " << (lntf.enabled ? "true" : "false") << '}';
-   ss << ", nack: {rtp_history_ms: " << nack.rtp_history_ms << '}';
-   ss << ", ulpfec_payload_type: " << ulpfec_payload_type;
-diff --git a/media/engine/fake_webrtc_call.h b/media/engine/fake_webrtc_call.h
-index 07b33c3a01..370b70700f 100644
---- a/media/engine/fake_webrtc_call.h
-+++ b/media/engine/fake_webrtc_call.h
-@@ -113,6 +113,10 @@ class FakeAudioReceiveStream final
-     config_.sync_group = std::string(sync_group);
-   }
- 
-+  bool transport_cc() const override { return config_.rtp.transport_cc; }
-+  void SetTransportCc(bool transport_cc) override {
-+    config_.rtp.transport_cc = transport_cc;
-+  }
-   uint32_t remote_ssrc() const override { return config_.rtp.remote_ssrc; }
-   void Start() override { started_ = true; }
-   void Stop() override { started_ = false; }
-@@ -278,6 +282,10 @@ class FakeVideoReceiveStream final
-   // webrtc::VideoReceiveStreamInterface implementation.
-   void SetRtpExtensions(std::vector<webrtc::RtpExtension> extensions) override;
-   webrtc::RtpHeaderExtensionMap GetRtpExtensionMap() const override;
-+  bool transport_cc() const override { return config_.rtp.transport_cc; }
-+  void SetTransportCc(bool transport_cc) override {
-+    config_.rtp.transport_cc = transport_cc;
-+  }
-   void SetRtcpMode(webrtc::RtcpMode mode) override {
-     config_.rtp.rtcp_mode = mode;
-   }
-@@ -343,6 +351,10 @@ class FakeFlexfecReceiveStream final : public webrtc::FlexfecReceiveStream {
- 
-   void SetRtpExtensions(std::vector<webrtc::RtpExtension> extensions) override;
-   webrtc::RtpHeaderExtensionMap GetRtpExtensionMap() const override;
-+  bool transport_cc() const override { return config_.rtp.transport_cc; }
-+  void SetTransportCc(bool transport_cc) override {
-+    config_.rtp.transport_cc = transport_cc;
-+  }
-   void SetRtcpMode(webrtc::RtcpMode mode) override { config_.rtcp_mode = mode; }
- 
-   int payload_type() const override { return config_.payload_type; }
-diff --git a/media/engine/webrtc_video_engine.cc b/media/engine/webrtc_video_engine.cc
-index adeaab0c12..dbf760520b 100644
---- a/media/engine/webrtc_video_engine.cc
-+++ b/media/engine/webrtc_video_engine.cc
-@@ -998,6 +998,7 @@ bool WebRtcVideoChannel::ApplyChangedParams(
-       RTC_DCHECK(kv.second != nullptr);
-       kv.second->SetFeedbackParameters(
-           HasLntf(send_codec_->codec), HasNack(send_codec_->codec),
-+          HasTransportCc(send_codec_->codec),
-           send_params_.rtcp.reduced_size ? webrtc::RtcpMode::kReducedSize
-                                          : webrtc::RtcpMode::kCompound,
-           send_codec_->rtx_time);
-@@ -1514,6 +1515,10 @@ void WebRtcVideoChannel::ConfigureReceiverRtp(
-   if (send_codec_ && send_codec_->rtx_time != -1) {
-     config->rtp.nack.rtp_history_ms = send_codec_->rtx_time;
-   }
-+
-+  config->rtp.transport_cc =
-+      send_codec_ ? HasTransportCc(send_codec_->codec) : false;
-+
-   sp.GetFidSsrc(ssrc, &config->rtp.rtx_ssrc);
- 
-   config->rtp.extensions = recv_rtp_extensions_;
-@@ -1525,6 +1530,9 @@ void WebRtcVideoChannel::ConfigureReceiverRtp(
-     flexfec_config->protected_media_ssrcs = {ssrc};
-     flexfec_config->rtp.local_ssrc = config->rtp.local_ssrc;
-     flexfec_config->rtcp_mode = config->rtp.rtcp_mode;
-+    // TODO(brandtr): We should be spec-compliant and set `transport_cc` here
-+    // based on the rtcp-fb for the FlexFEC codec, not the media codec.
-+    flexfec_config->rtp.transport_cc = config->rtp.transport_cc;
-     flexfec_config->rtp.extensions = config->rtp.extensions;
-   }
- }
-@@ -2978,6 +2986,7 @@ bool WebRtcVideoChannel::WebRtcVideoReceiveStream::ReconfigureCodecs(
- void WebRtcVideoChannel::WebRtcVideoReceiveStream::SetFeedbackParameters(
-     bool lntf_enabled,
-     bool nack_enabled,
-+    bool transport_cc_enabled,
-     webrtc::RtcpMode rtcp_mode,
-     int rtx_time) {
-   RTC_DCHECK(stream_);
-@@ -2992,6 +3001,17 @@ void WebRtcVideoChannel::WebRtcVideoReceiveStream::SetFeedbackParameters(
+     // Filter mode: RTCStatsCollector::RequestInfo::kReceiverSelector
+     if (receiver_selector) {
+-      // Find the inbound-rtp of the receiver using ssrc lookup.
+-      absl::optional<uint32_t> ssrc;
+-      worker_thread_->BlockingCall([&] {
+-        auto encodings = receiver_selector->GetParameters().encodings;
+-        if (!encodings.empty()) {
+-          ssrc = encodings[0].ssrc;
+-        }
+-      });
+-      if (ssrc.has_value()) {
+-        for (const auto* inbound_rtp :
+-             report->GetStatsOfType<RTCInboundRTPStreamStats>()) {
+-          RTC_DCHECK(inbound_rtp->ssrc.is_defined());
+-          if (*inbound_rtp->ssrc == *ssrc) {
+-            rtpstream_ids.push_back(inbound_rtp->id());
+-          }
++      // Find inbound-rtp(s) of the receiver, i.e. the inbound-rtp(s) that
++      // reference the receiver stats.
++      // Because we do not implement receiver stats, we look at inbound-rtp(s)
++      // that reference the track attachment stats for the receiver instead.
++      std::string track_id =
++          DEPRECATED_RTCMediaStreamTrackStatsIDFromDirectionAndAttachment(
++              kDirectionInbound, receiver_selector->AttachmentId());
++      for (const auto& stats : *report) {
++        if (stats.type() != RTCInboundRTPStreamStats::kType)
++          continue;
++        const auto& inbound_rtp = stats.cast_to<RTCInboundRTPStreamStats>();
++        if (inbound_rtp.track_id.is_defined() &&
++            *inbound_rtp.track_id == track_id) {
++          rtpstream_ids.push_back(inbound_rtp.id());
+         }
+       }
      }
-   }
- 
-+  if (config_.rtp.transport_cc != transport_cc_enabled) {
-+    config_.rtp.transport_cc = transport_cc_enabled;
-+    stream_->SetTransportCc(transport_cc_enabled);
-+    // TODO(brandtr): We should be spec-compliant and set `transport_cc` here
-+    // based on the rtcp-fb for the FlexFEC codec, not the media codec.
-+    flexfec_config_.rtp.transport_cc = transport_cc_enabled;
-+    if (flexfec_stream_) {
-+      flexfec_stream_->SetTransportCc(transport_cc_enabled);
-+    }
-+  }
-+
-   config_.rtp.lntf.enabled = lntf_enabled;
-   stream_->SetLossNotificationEnabled(lntf_enabled);
- 
-diff --git a/media/engine/webrtc_video_engine.h b/media/engine/webrtc_video_engine.h
-index e59640ddc8..ff6d562dbc 100644
---- a/media/engine/webrtc_video_engine.h
-+++ b/media/engine/webrtc_video_engine.h
-@@ -487,6 +487,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
-     // TODO(deadbeef): Move these feedback parameters into the recv parameters.
-     void SetFeedbackParameters(bool lntf_enabled,
-                                bool nack_enabled,
-+                               bool transport_cc_enabled,
-                                webrtc::RtcpMode rtcp_mode,
-                                int rtx_time);
-     void SetRecvParameters(const ChangedRecvParameters& recv_params);
-diff --git a/media/engine/webrtc_video_engine_unittest.cc b/media/engine/webrtc_video_engine_unittest.cc
-index 7653fea293..0e63b5769b 100644
---- a/media/engine/webrtc_video_engine_unittest.cc
-+++ b/media/engine/webrtc_video_engine_unittest.cc
-@@ -3107,6 +3107,32 @@ TEST_F(WebRtcVideoChannelTest, RtcpIsCompoundByDefault) {
-   EXPECT_EQ(webrtc::RtcpMode::kCompound, stream->GetConfig().rtp.rtcp_mode);
+@@ -1304,6 +1301,8 @@ RTCStatsCollector::CreateReportFilteredBySelector(
+   return TakeReferencedStats(report->Copy(), rtpstream_ids);
  }
  
-+TEST_F(WebRtcVideoChannelTest, TransportCcIsEnabledByDefault) {
-+  FakeVideoReceiveStream* stream = AddRecvStream();
-+  EXPECT_TRUE(stream->transport_cc());
-+}
++}  // namespace
 +
-+TEST_F(WebRtcVideoChannelTest, TransportCcCanBeEnabledAndDisabled) {
-+  FakeVideoReceiveStream* stream = AddRecvStream();
-+  EXPECT_TRUE(stream->transport_cc());
-+
-+  // Verify that transport cc feedback is turned off when send(!) codecs without
-+  // transport cc feedback are set.
-+  cricket::VideoSendParameters parameters;
-+  parameters.codecs.push_back(RemoveFeedbackParams(GetEngineCodec("VP8")));
-+  EXPECT_TRUE(parameters.codecs[0].feedback_params.params().empty());
-+  EXPECT_TRUE(channel_->SetSendParameters(parameters));
-+  stream = fake_call_->GetVideoReceiveStreams()[0];
-+  EXPECT_FALSE(stream->transport_cc());
-+
-+  // Verify that transport cc feedback is turned on when setting default codecs
-+  // since the default codecs have transport cc feedback enabled.
-+  parameters.codecs = engine_.send_codecs();
-+  EXPECT_TRUE(channel_->SetSendParameters(parameters));
-+  stream = fake_call_->GetVideoReceiveStreams()[0];
-+  EXPECT_TRUE(stream->transport_cc());
-+}
-+
- TEST_F(WebRtcVideoChannelTest, LossNotificationIsDisabledByDefault) {
-   TestLossNotificationState(false);
- }
-@@ -4388,6 +4414,10 @@ TEST_F(WebRtcVideoChannelFlexfecRecvTest, SetRecvCodecsWithFec) {
-   EXPECT_EQ(video_stream_config.rtp.rtcp_mode, flexfec_stream_config.rtcp_mode);
-   EXPECT_EQ(video_stream_config.rtcp_send_transport,
-             flexfec_stream_config.rtcp_send_transport);
-+  // TODO(brandtr): Update this EXPECT when we set `transport_cc` in a
-+  // spec-compliant way.
-+  EXPECT_EQ(video_stream_config.rtp.transport_cc,
-+            flexfec_stream_config.rtp.transport_cc);
-   EXPECT_EQ(video_stream_config.rtp.rtcp_mode, flexfec_stream_config.rtcp_mode);
-   EXPECT_EQ(video_stream_config.rtp.extensions,
-             flexfec_stream_config.rtp.extensions);
-diff --git a/media/engine/webrtc_voice_engine.cc b/media/engine/webrtc_voice_engine.cc
-index 31fa7959cc..b6296a1993 100644
---- a/media/engine/webrtc_voice_engine.cc
-+++ b/media/engine/webrtc_voice_engine.cc
-@@ -247,6 +247,7 @@ struct AdaptivePtimeConfig {
- webrtc::AudioReceiveStreamInterface::Config BuildReceiveStreamConfig(
-     uint32_t remote_ssrc,
-     uint32_t local_ssrc,
-+    bool use_transport_cc,
-     bool use_nack,
-     bool enable_non_sender_rtt,
-     const std::vector<std::string>& stream_ids,
-@@ -264,6 +265,7 @@ webrtc::AudioReceiveStreamInterface::Config BuildReceiveStreamConfig(
-   webrtc::AudioReceiveStreamInterface::Config config;
-   config.rtp.remote_ssrc = remote_ssrc;
-   config.rtp.local_ssrc = local_ssrc;
-+  config.rtp.transport_cc = use_transport_cc;
-   config.rtp.nack.rtp_history_ms = use_nack ? kNackRtpHistoryMs : 0;
-   if (!stream_ids.empty()) {
-     config.sync_group = stream_ids[0];
-@@ -1161,8 +1163,9 @@ class WebRtcVoiceMediaChannel::WebRtcAudioReceiveStream {
-     stream_->SetFrameDecryptor(std::move(frame_decryptor));
-   }
+ RTCStatsCollector::CertificateStatsPair
+ RTCStatsCollector::CertificateStatsPair::Copy() const {
+   CertificateStatsPair copy;
+diff --git a/pc/rtc_stats_collector.h b/pc/rtc_stats_collector.h
+index 0f1cab19db..91175289e8 100644
+--- a/pc/rtc_stats_collector.h
++++ b/pc/rtc_stats_collector.h
+@@ -244,12 +244,6 @@ class RTCStatsCollector : public rtc::RefCountInterface,
+   // This is a NO-OP if `network_report_` is null.
+   void MergeNetworkReport_s();
  
--  void SetUseNack(bool use_nack) {
-+  void SetUseTransportCc(bool use_transport_cc, bool use_nack) {
-     RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-+    stream_->SetTransportCc(use_transport_cc);
-     stream_->SetNackHistory(use_nack ? kNackRtpHistoryMs : 0);
-   }
- 
-@@ -1737,13 +1740,17 @@ bool WebRtcVoiceMediaChannel::SetSendCodecs(
-   }
-   call_->GetTransportControllerSend()->SetSdpBitrateParameters(bitrate_config);
- 
--  // Check if the NACK status has changed on the
-+  // Check if the transport cc feedback or NACK status has changed on the
-   // preferred send codec, and in that case reconfigure all receive streams.
--  if (recv_nack_enabled_ != send_codec_spec_->nack_enabled) {
--    RTC_LOG(LS_INFO) << "Changing NACK status on receive streams.";
-+  if (recv_transport_cc_enabled_ != send_codec_spec_->transport_cc_enabled ||
-+      recv_nack_enabled_ != send_codec_spec_->nack_enabled) {
-+    RTC_LOG(LS_INFO) << "Changing transport cc and NACK status on receive "
-+                        "streams.";
-+    recv_transport_cc_enabled_ = send_codec_spec_->transport_cc_enabled;
-     recv_nack_enabled_ = send_codec_spec_->nack_enabled;
-     for (auto& kv : recv_streams_) {
--      kv.second->SetUseNack(recv_nack_enabled_);
-+      kv.second->SetUseTransportCc(recv_transport_cc_enabled_,
-+                                   recv_nack_enabled_);
-     }
-   }
- 
-@@ -1921,9 +1928,10 @@ bool WebRtcVoiceMediaChannel::AddRecvStream(const StreamParams& sp) {
- 
-   // Create a new channel for receiving audio data.
-   auto config = BuildReceiveStreamConfig(
--      ssrc, receiver_reports_ssrc_, recv_nack_enabled_, enable_non_sender_rtt_,
--      sp.stream_ids(), recv_rtp_extensions_, this, engine()->decoder_factory_,
--      decoder_map_, codec_pair_id_, engine()->audio_jitter_buffer_max_packets_,
-+      ssrc, receiver_reports_ssrc_, recv_transport_cc_enabled_,
-+      recv_nack_enabled_, enable_non_sender_rtt_, sp.stream_ids(),
-+      recv_rtp_extensions_, this, engine()->decoder_factory_, decoder_map_,
-+      codec_pair_id_, engine()->audio_jitter_buffer_max_packets_,
-       engine()->audio_jitter_buffer_fast_accelerate_,
-       engine()->audio_jitter_buffer_min_delay_ms_, unsignaled_frame_decryptor_,
-       crypto_options_, unsignaled_frame_transformer_);
-diff --git a/media/engine/webrtc_voice_engine.h b/media/engine/webrtc_voice_engine.h
-index e4017568ff..9ff65703f2 100644
---- a/media/engine/webrtc_voice_engine.h
-+++ b/media/engine/webrtc_voice_engine.h
-@@ -270,6 +270,7 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
-   AudioOptions options_;
-   absl::optional<int> dtmf_payload_type_;
-   int dtmf_payload_freq_ = -1;
-+  bool recv_transport_cc_enabled_ = false;
-   bool recv_nack_enabled_ = false;
-   bool enable_non_sender_rtt_ = false;
-   bool playout_ = false;
-diff --git a/media/engine/webrtc_voice_engine_unittest.cc b/media/engine/webrtc_voice_engine_unittest.cc
-index 0012be37bc..b4fcbc653c 100644
---- a/media/engine/webrtc_voice_engine_unittest.cc
-+++ b/media/engine/webrtc_voice_engine_unittest.cc
-@@ -842,6 +842,7 @@ TEST_P(WebRtcVoiceEngineTestFake, CreateRecvStream) {
-       GetRecvStreamConfig(kSsrcX);
-   EXPECT_EQ(kSsrcX, config.rtp.remote_ssrc);
-   EXPECT_EQ(0xFA17FA17, config.rtp.local_ssrc);
-+  EXPECT_FALSE(config.rtp.transport_cc);
-   EXPECT_EQ(0u, config.rtp.extensions.size());
-   EXPECT_EQ(static_cast<cricket::WebRtcVoiceMediaChannel*>(channel_),
-             config.rtcp_send_transport);
-@@ -1865,6 +1866,26 @@ TEST_P(WebRtcVoiceEngineTestFake, AddRecvStreamEnableNack) {
-   EXPECT_EQ(kRtpHistoryMs, GetRecvStreamConfig(kSsrcZ).rtp.nack.rtp_history_ms);
- }
- 
-+TEST_P(WebRtcVoiceEngineTestFake, TransportCcCanBeEnabledAndDisabled) {
-+  EXPECT_TRUE(SetupChannel());
-+  cricket::AudioSendParameters send_parameters;
-+  send_parameters.codecs.push_back(kOpusCodec);
-+  EXPECT_TRUE(send_parameters.codecs[0].feedback_params.params().empty());
-+  SetSendParameters(send_parameters);
-+
-+  cricket::AudioRecvParameters recv_parameters;
-+  recv_parameters.codecs.push_back(kOpusCodec);
-+  EXPECT_TRUE(channel_->SetRecvParameters(recv_parameters));
-+  EXPECT_TRUE(AddRecvStream(kSsrcX));
-+  ASSERT_TRUE(call_.GetAudioReceiveStream(kSsrcX) != nullptr);
-+  EXPECT_FALSE(call_.GetAudioReceiveStream(kSsrcX)->transport_cc());
-+
-+  send_parameters.codecs = engine_->send_codecs();
-+  SetSendParameters(send_parameters);
-+  ASSERT_TRUE(call_.GetAudioReceiveStream(kSsrcX) != nullptr);
-+  EXPECT_TRUE(call_.GetAudioReceiveStream(kSsrcX)->transport_cc());
-+}
-+
- // Test that we can switch back and forth between Opus and PCMU with CN.
- TEST_P(WebRtcVoiceEngineTestFake, SetSendCodecsOpusPcmuSwitching) {
-   EXPECT_TRUE(SetupSendStream());
-diff --git a/test/call_config_utils.cc b/test/call_config_utils.cc
-index da3d76c689..35c5f7e845 100644
---- a/test/call_config_utils.cc
-+++ b/test/call_config_utils.cc
-@@ -43,6 +43,7 @@ VideoReceiveStreamInterface::Config ParseVideoReceiveStreamJsonConfig(
-       json["rtp"]["rtcp_mode"].asString() == "RtcpMode::kCompound"
-           ? RtcpMode::kCompound
-           : RtcpMode::kReducedSize;
-+  receive_config.rtp.transport_cc = json["rtp"]["transport_cc"].asBool();
-   receive_config.rtp.lntf.enabled = json["rtp"]["lntf"]["enabled"].asInt64();
-   receive_config.rtp.nack.rtp_history_ms =
-       json["rtp"]["nack"]["rtp_history_ms"].asInt64();
-@@ -91,6 +92,7 @@ Json::Value GenerateVideoReceiveStreamJsonConfig(
-   rtp_json["rtcp_mode"] = config.rtp.rtcp_mode == RtcpMode::kCompound
-                               ? "RtcpMode::kCompound"
-                               : "RtcpMode::kReducedSize";
-+  rtp_json["transport_cc"] = config.rtp.transport_cc;
-   rtp_json["lntf"]["enabled"] = config.rtp.lntf.enabled;
-   rtp_json["nack"]["rtp_history_ms"] = config.rtp.nack.rtp_history_ms;
-   rtp_json["ulpfec_payload_type"] = config.rtp.ulpfec_payload_type;
-diff --git a/test/call_config_utils_unittest.cc b/test/call_config_utils_unittest.cc
-index e010ab6707..cdaa3b5030 100644
---- a/test/call_config_utils_unittest.cc
-+++ b/test/call_config_utils_unittest.cc
-@@ -28,6 +28,7 @@ TEST(CallConfigUtils, MarshalUnmarshalProcessSameObject) {
-   recv_config.rtp.remote_ssrc = 100;
-   recv_config.rtp.local_ssrc = 101;
-   recv_config.rtp.rtcp_mode = RtcpMode::kCompound;
-+  recv_config.rtp.transport_cc = false;
-   recv_config.rtp.lntf.enabled = false;
-   recv_config.rtp.nack.rtp_history_ms = 150;
-   recv_config.rtp.red_payload_type = 50;
-@@ -49,6 +50,7 @@ TEST(CallConfigUtils, MarshalUnmarshalProcessSameObject) {
-   EXPECT_EQ(recv_config.rtp.remote_ssrc, unmarshaled_config.rtp.remote_ssrc);
-   EXPECT_EQ(recv_config.rtp.local_ssrc, unmarshaled_config.rtp.local_ssrc);
-   EXPECT_EQ(recv_config.rtp.rtcp_mode, unmarshaled_config.rtp.rtcp_mode);
-+  EXPECT_EQ(recv_config.rtp.transport_cc, unmarshaled_config.rtp.transport_cc);
-   EXPECT_EQ(recv_config.rtp.lntf.enabled, unmarshaled_config.rtp.lntf.enabled);
-   EXPECT_EQ(recv_config.rtp.nack.rtp_history_ms,
-             unmarshaled_config.rtp.nack.rtp_history_ms);
-diff --git a/test/call_test.cc b/test/call_test.cc
-index 60b415d87f..156b8a7f9e 100644
---- a/test/call_test.cc
-+++ b/test/call_test.cc
-@@ -334,33 +334,36 @@ void CallTest::CreateMatchingVideoReceiveConfigs(
-     const VideoSendStream::Config& video_send_config,
-     Transport* rtcp_send_transport) {
-   CreateMatchingVideoReceiveConfigs(video_send_config, rtcp_send_transport,
--                                    &fake_decoder_factory_, absl::nullopt,
-+                                    true, &fake_decoder_factory_, absl::nullopt,
-                                     false, 0);
- }
- 
- void CallTest::CreateMatchingVideoReceiveConfigs(
-     const VideoSendStream::Config& video_send_config,
-     Transport* rtcp_send_transport,
-+    bool send_side_bwe,
-     VideoDecoderFactory* decoder_factory,
-     absl::optional<size_t> decode_sub_stream,
-     bool receiver_reference_time_report,
-     int rtp_history_ms) {
-   AddMatchingVideoReceiveConfigs(
-       &video_receive_configs_, video_send_config, rtcp_send_transport,
--      decoder_factory, decode_sub_stream, receiver_reference_time_report,
--      rtp_history_ms);
-+      send_side_bwe, decoder_factory, decode_sub_stream,
-+      receiver_reference_time_report, rtp_history_ms);
- }
- 
- void CallTest::AddMatchingVideoReceiveConfigs(
-     std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
-     const VideoSendStream::Config& video_send_config,
-     Transport* rtcp_send_transport,
-+    bool send_side_bwe,
-     VideoDecoderFactory* decoder_factory,
-     absl::optional<size_t> decode_sub_stream,
-     bool receiver_reference_time_report,
-     int rtp_history_ms) {
-   RTC_DCHECK(!video_send_config.rtp.ssrcs.empty());
-   VideoReceiveStreamInterface::Config default_config(rtcp_send_transport);
-+  default_config.rtp.transport_cc = send_side_bwe;
-   default_config.rtp.local_ssrc = kReceiverLocalVideoSsrc;
-   for (const RtpExtension& extension : video_send_config.rtp.extensions)
-     default_config.rtp.extensions.push_back(extension);
-@@ -426,6 +429,10 @@ AudioReceiveStreamInterface::Config CallTest::CreateMatchingAudioConfig(
-   audio_config.rtp.local_ssrc = kReceiverLocalAudioSsrc;
-   audio_config.rtcp_send_transport = transport;
-   audio_config.rtp.remote_ssrc = send_config.rtp.ssrc;
-+  audio_config.rtp.transport_cc =
-+      send_config.send_codec_spec
-+          ? send_config.send_codec_spec->transport_cc_enabled
-+          : false;
-   audio_config.rtp.extensions = send_config.rtp.extensions;
-   audio_config.decoder_factory = audio_decoder_factory;
-   audio_config.decoder_map = {{kAudioSendPayloadType, {"opus", 48000, 2}}};
-diff --git a/test/call_test.h b/test/call_test.h
-index 1fd4cd310f..392d953ff4 100644
---- a/test/call_test.h
-+++ b/test/call_test.h
-@@ -113,6 +113,7 @@ class CallTest : public ::testing::Test, public RtpPacketSinkInterface {
-   void CreateMatchingVideoReceiveConfigs(
-       const VideoSendStream::Config& video_send_config,
-       Transport* rtcp_send_transport,
-+      bool send_side_bwe,
-       VideoDecoderFactory* decoder_factory,
-       absl::optional<size_t> decode_sub_stream,
-       bool receiver_reference_time_report,
-@@ -121,6 +122,7 @@ class CallTest : public ::testing::Test, public RtpPacketSinkInterface {
-       std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
-       const VideoSendStream::Config& video_send_config,
-       Transport* rtcp_send_transport,
-+      bool send_side_bwe,
-       VideoDecoderFactory* decoder_factory,
-       absl::optional<size_t> decode_sub_stream,
-       bool receiver_reference_time_report,
-diff --git a/test/fuzzers/vp8_replay_fuzzer.cc b/test/fuzzers/vp8_replay_fuzzer.cc
-index 819b9626f9..55f8b6f7bd 100644
---- a/test/fuzzers/vp8_replay_fuzzer.cc
-+++ b/test/fuzzers/vp8_replay_fuzzer.cc
-@@ -29,6 +29,7 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
-   vp8_config.rtp.local_ssrc = 7731;
-   vp8_config.rtp.remote_ssrc = 1337;
-   vp8_config.rtp.rtx_ssrc = 100;
-+  vp8_config.rtp.transport_cc = true;
-   vp8_config.rtp.nack.rtp_history_ms = 1000;
-   vp8_config.rtp.lntf.enabled = true;
- 
-diff --git a/test/fuzzers/vp9_replay_fuzzer.cc b/test/fuzzers/vp9_replay_fuzzer.cc
-index fc10d9ffc7..5586dacfee 100644
---- a/test/fuzzers/vp9_replay_fuzzer.cc
-+++ b/test/fuzzers/vp9_replay_fuzzer.cc
-@@ -29,6 +29,7 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
-   vp9_config.rtp.local_ssrc = 7731;
-   vp9_config.rtp.remote_ssrc = 1337;
-   vp9_config.rtp.rtx_ssrc = 100;
-+  vp9_config.rtp.transport_cc = true;
-   vp9_config.rtp.nack.rtp_history_ms = 1000;
- 
-   std::vector<VideoReceiveStreamInterface::Config> replay_configs;
-diff --git a/test/scenario/audio_stream.cc b/test/scenario/audio_stream.cc
-index eaf8ca43d9..3c94d7911f 100644
---- a/test/scenario/audio_stream.cc
-+++ b/test/scenario/audio_stream.cc
-@@ -180,6 +180,7 @@ ReceiveAudioStream::ReceiveAudioStream(
-   recv_config.rtp.remote_ssrc = send_stream->ssrc_;
-   receiver->ssrc_media_types_[recv_config.rtp.remote_ssrc] = MediaType::AUDIO;
-   if (config.stream.in_bandwidth_estimation) {
-+    recv_config.rtp.transport_cc = true;
-     recv_config.rtp.extensions = {{RtpExtension::kTransportSequenceNumberUri,
-                                    kTransportSequenceNumberExtensionId}};
-   }
-diff --git a/test/scenario/video_stream.cc b/test/scenario/video_stream.cc
-index d6c5388c0e..96ced83b04 100644
---- a/test/scenario/video_stream.cc
-+++ b/test/scenario/video_stream.cc
-@@ -329,6 +329,7 @@ VideoReceiveStreamInterface::Config CreateVideoReceiveStreamConfig(
-     uint32_t ssrc,
-     uint32_t rtx_ssrc) {
-   VideoReceiveStreamInterface::Config recv(feedback_transport);
-+  recv.rtp.transport_cc = config.stream.packet_feedback;
-   recv.rtp.local_ssrc = local_ssrc;
-   recv.rtp.extensions = GetVideoRtpExtensions(config);
- 
-diff --git a/video/end_to_end_tests/bandwidth_tests.cc b/video/end_to_end_tests/bandwidth_tests.cc
-index 200b6fc4bd..986ced4f60 100644
---- a/video/end_to_end_tests/bandwidth_tests.cc
-+++ b/video/end_to_end_tests/bandwidth_tests.cc
-@@ -55,6 +55,7 @@ TEST_F(BandwidthEndToEndTest, ReceiveStreamSendsRemb) {
-       send_config->rtp.extensions.clear();
-       send_config->rtp.extensions.push_back(
-           RtpExtension(RtpExtension::kAbsSendTimeUri, kAbsSendTimeExtensionId));
-+      (*receive_configs)[0].rtp.transport_cc = false;
-     }
- 
-     Action OnReceiveRtcp(const uint8_t* packet, size_t length) override {
-@@ -105,10 +106,12 @@ class BandwidthStatsTest : public test::EndToEndTest {
-     if (!send_side_bwe_) {
-       send_config->rtp.extensions.push_back(
-           RtpExtension(RtpExtension::kAbsSendTimeUri, kAbsSendTimeExtensionId));
-+      (*receive_configs)[0].rtp.transport_cc = false;
-     } else {
-       send_config->rtp.extensions.push_back(
-           RtpExtension(RtpExtension::kTransportSequenceNumberUri,
-                        kTransportSequenceNumberId));
-+      (*receive_configs)[0].rtp.transport_cc = true;
-     }
- 
-     // Force a too high encoder bitrate to make sure we get pacer delay.
-diff --git a/video/end_to_end_tests/rtp_rtcp_tests.cc b/video/end_to_end_tests/rtp_rtcp_tests.cc
-index ea9b3993f5..c7a34485ee 100644
---- a/video/end_to_end_tests/rtp_rtcp_tests.cc
-+++ b/video/end_to_end_tests/rtp_rtcp_tests.cc
-@@ -540,6 +540,7 @@ TEST_F(RtpRtcpEndToEndTest, DISABLED_TestFlexfecRtpStatePreservation) {
-     flexfec_receive_config.protected_media_ssrcs =
-         GetVideoSendConfig()->rtp.flexfec.protected_media_ssrcs;
-     flexfec_receive_config.rtp.local_ssrc = kReceiverLocalVideoSsrc;
-+    flexfec_receive_config.rtp.transport_cc = true;
-     flexfec_receive_config.rtp.extensions.emplace_back(
-         RtpExtension::kTransportSequenceNumberUri,
-         kTransportSequenceNumberExtensionId);
-diff --git a/video/end_to_end_tests/transport_feedback_tests.cc b/video/end_to_end_tests/transport_feedback_tests.cc
-index dbe3f0c823..1e95140200 100644
---- a/video/end_to_end_tests/transport_feedback_tests.cc
-+++ b/video/end_to_end_tests/transport_feedback_tests.cc
-@@ -244,8 +244,11 @@ class TransportFeedbackEndToEndTest : public test::CallTest {
- 
- class TransportFeedbackTester : public test::EndToEndTest {
-  public:
--  TransportFeedbackTester(size_t num_video_streams, size_t num_audio_streams)
-+  TransportFeedbackTester(bool feedback_enabled,
-+                          size_t num_video_streams,
-+                          size_t num_audio_streams)
-       : EndToEndTest(::webrtc::TransportFeedbackEndToEndTest::kDefaultTimeout),
-+        feedback_enabled_(feedback_enabled),
-         num_video_streams_(num_video_streams),
-         num_audio_streams_(num_audio_streams),
-         receiver_call_(nullptr) {
-@@ -273,7 +276,11 @@ class TransportFeedbackTester : public test::EndToEndTest {
-   }
- 
-   void PerformTest() override {
--    EXPECT_TRUE(observation_complete_.Wait(test::CallTest::kDefaultTimeout));
-+    constexpr TimeDelta kDisabledFeedbackTimeout = TimeDelta::Seconds(5);
-+    EXPECT_EQ(feedback_enabled_,
-+              observation_complete_.Wait(feedback_enabled_
-+                                             ? test::CallTest::kDefaultTimeout
-+                                             : kDisabledFeedbackTimeout));
-   }
- 
-   void OnCallsCreated(Call* sender_call, Call* receiver_call) override {
-@@ -283,6 +290,13 @@ class TransportFeedbackTester : public test::EndToEndTest {
-   size_t GetNumVideoStreams() const override { return num_video_streams_; }
-   size_t GetNumAudioStreams() const override { return num_audio_streams_; }
- 
-+  void ModifyVideoConfigs(
-+      VideoSendStream::Config* send_config,
-+      std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
-+      VideoEncoderConfig* encoder_config) override {
-+    (*receive_configs)[0].rtp.transport_cc = feedback_enabled_;
-+  }
-+
-   void ModifyAudioConfigs(AudioSendStream::Config* send_config,
-                           std::vector<AudioReceiveStreamInterface::Config>*
-                               receive_configs) override {
-@@ -292,25 +306,38 @@ class TransportFeedbackTester : public test::EndToEndTest {
-                      kTransportSequenceNumberExtensionId));
-     (*receive_configs)[0].rtp.extensions.clear();
-     (*receive_configs)[0].rtp.extensions = send_config->rtp.extensions;
-+    (*receive_configs)[0].rtp.transport_cc = feedback_enabled_;
-   }
- 
-  private:
-+  const bool feedback_enabled_;
-   const size_t num_video_streams_;
-   const size_t num_audio_streams_;
-   Call* receiver_call_;
- };
- 
- TEST_F(TransportFeedbackEndToEndTest, VideoReceivesTransportFeedback) {
--  TransportFeedbackTester test(1, 0);
-+  TransportFeedbackTester test(true, 1, 0);
-+  RunBaseTest(&test);
-+}
-+
-+TEST_F(TransportFeedbackEndToEndTest, VideoTransportFeedbackNotConfigured) {
-+  TransportFeedbackTester test(false, 1, 0);
-   RunBaseTest(&test);
- }
-+
- TEST_F(TransportFeedbackEndToEndTest, AudioReceivesTransportFeedback) {
--  TransportFeedbackTester test(0, 1);
-+  TransportFeedbackTester test(true, 0, 1);
-+  RunBaseTest(&test);
-+}
-+
-+TEST_F(TransportFeedbackEndToEndTest, AudioTransportFeedbackNotConfigured) {
-+  TransportFeedbackTester test(false, 0, 1);
-   RunBaseTest(&test);
- }
- 
- TEST_F(TransportFeedbackEndToEndTest, AudioVideoReceivesTransportFeedback) {
--  TransportFeedbackTester test(1, 1);
-+  TransportFeedbackTester test(true, 1, 1);
-   RunBaseTest(&test);
- }
- 
-diff --git a/video/video_quality_test.cc b/video/video_quality_test.cc
-index b8eccb38a6..58283d7dc8 100644
---- a/video/video_quality_test.cc
-+++ b/video/video_quality_test.cc
-@@ -827,8 +827,9 @@ void VideoQualityTest::SetupVideo(Transport* send_transport,
-     if (!decode_all_receive_streams)
-       decode_sub_stream = params_.ss[video_idx].selected_stream;
-     CreateMatchingVideoReceiveConfigs(
--        video_send_configs_[video_idx], recv_transport, &video_decoder_factory_,
--        decode_sub_stream, true, kNackRtpHistoryMs);
-+        video_send_configs_[video_idx], recv_transport,
-+        params_.call.send_side_bwe, &video_decoder_factory_, decode_sub_stream,
-+        true, kNackRtpHistoryMs);
- 
-     if (params_.screenshare[video_idx].enabled) {
-       // Fill out codec settings.
-@@ -933,6 +934,7 @@ void VideoQualityTest::SetupVideo(Transport* send_transport,
-     }
- 
-     CreateMatchingFecConfig(recv_transport, *GetVideoSendConfig());
-+    GetFlexFecConfig()->rtp.transport_cc = params_.call.send_side_bwe;
-     if (params_.call.send_side_bwe) {
-       GetFlexFecConfig()->rtp.extensions.push_back(
-           RtpExtension(RtpExtension::kTransportSequenceNumberUri,
-@@ -1000,7 +1002,8 @@ void VideoQualityTest::SetupThumbnails(Transport* send_transport,
- 
-     AddMatchingVideoReceiveConfigs(
-         &thumbnail_receive_configs_, thumbnail_send_config, send_transport,
--        &video_decoder_factory_, absl::nullopt, false, kNackRtpHistoryMs);
-+        params_.call.send_side_bwe, &video_decoder_factory_, absl::nullopt,
-+        false, kNackRtpHistoryMs);
-   }
-   for (size_t i = 0; i < thumbnail_send_configs_.size(); ++i) {
-     thumbnail_send_streams_.push_back(receiver_call_->CreateVideoSendStream(
-diff --git a/video/video_receive_stream2.cc b/video/video_receive_stream2.cc
-index ce96512795..9a95c58a93 100644
---- a/video/video_receive_stream2.cc
-+++ b/video/video_receive_stream2.cc
-@@ -463,6 +463,17 @@ RtpHeaderExtensionMap VideoReceiveStream2::GetRtpExtensionMap() const {
-   return rtp_video_stream_receiver_.GetRtpExtensions();
- }
- 
-+bool VideoReceiveStream2::transport_cc() const {
-+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-+  return config_.rtp.transport_cc;
-+}
-+
-+void VideoReceiveStream2::SetTransportCc(bool transport_cc) {
-+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-+  // TODO(tommi): Stop using the config struct for the internal state.
-+  const_cast<bool&>(config_.rtp.transport_cc) = transport_cc;
-+}
-+
- void VideoReceiveStream2::SetRtcpMode(RtcpMode mode) {
-   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-   // TODO(tommi): Stop using the config struct for the internal state.
-diff --git a/video/video_receive_stream2.h b/video/video_receive_stream2.h
-index 44e2228dab..34937a244e 100644
---- a/video/video_receive_stream2.h
-+++ b/video/video_receive_stream2.h
-@@ -144,6 +144,8 @@ class VideoReceiveStream2
- 
-   void SetRtpExtensions(std::vector<RtpExtension> extensions) override;
-   RtpHeaderExtensionMap GetRtpExtensionMap() const override;
-+  bool transport_cc() const override;
-+  void SetTransportCc(bool transport_cc) override;
-   void SetRtcpMode(RtcpMode mode) override;
-   void SetFlexFecProtection(RtpPacketSinkInterface* flexfec_sink) override;
-   void SetLossNotificationEnabled(bool enabled) override;
-diff --git a/video/video_send_stream_tests.cc b/video/video_send_stream_tests.cc
-index d4da883ce9..923c318c6d 100644
---- a/video/video_send_stream_tests.cc
-+++ b/video/video_send_stream_tests.cc
-@@ -1615,6 +1615,7 @@ TEST_F(VideoSendStreamTest, ChangingNetworkRoute) {
-       send_config->rtp.extensions.push_back(RtpExtension(
-           RtpExtension::kTransportSequenceNumberUri, kExtensionId));
-       (*receive_configs)[0].rtp.extensions = send_config->rtp.extensions;
-+      (*receive_configs)[0].rtp.transport_cc = true;
-     }
- 
-     void ModifyAudioConfigs(AudioSendStream::Config* send_config,
-@@ -1626,6 +1627,7 @@ TEST_F(VideoSendStreamTest, ChangingNetworkRoute) {
-           RtpExtension::kTransportSequenceNumberUri, kExtensionId));
-       (*receive_configs)[0].rtp.extensions.clear();
-       (*receive_configs)[0].rtp.extensions = send_config->rtp.extensions;
-+      (*receive_configs)[0].rtp.transport_cc = true;
-     }
- 
-     Action OnSendRtp(const uint8_t* packet, size_t length) override {
+-  rtc::scoped_refptr<RTCStatsReport> CreateReportFilteredBySelector(
+-      bool filter_by_sender_selector,
+-      rtc::scoped_refptr<const RTCStatsReport> report,
+-      rtc::scoped_refptr<RtpSenderInternal> sender_selector,
+-      rtc::scoped_refptr<RtpReceiverInternal> receiver_selector);
+-
+   // Slots for signals (sigslot) that are wired up to `pc_`.
+   void OnSctpDataChannelCreated(SctpDataChannel* channel);
+   // Slots for signals (sigslot) that are wired up to `channel`.
+diff --git a/pc/rtc_stats_collector_unittest.cc b/pc/rtc_stats_collector_unittest.cc
+index 31ccfed839..5388355eb7 100644
+--- a/pc/rtc_stats_collector_unittest.cc
++++ b/pc/rtc_stats_collector_unittest.cc
+@@ -388,10 +388,7 @@ rtc::scoped_refptr<MockRtpSenderInternal> CreateMockSender(
+   EXPECT_CALL(*sender, track()).WillRepeatedly(Return(track));
+   EXPECT_CALL(*sender, ssrc()).WillRepeatedly(Return(ssrc));
+   EXPECT_CALL(*sender, media_type()).WillRepeatedly(Return(media_type));
+-  EXPECT_CALL(*sender, GetParameters())
+-      .WillRepeatedly(
+-          Invoke([s = sender.get()]() { return s->GetParametersInternal(); }));
+-  EXPECT_CALL(*sender, GetParametersInternal()).WillRepeatedly(Invoke([ssrc]() {
++  EXPECT_CALL(*sender, GetParameters()).WillRepeatedly(Invoke([ssrc]() {
+     RtpParameters params;
+     params.encodings.push_back(RtpEncodingParameters());
+     params.encodings[0].ssrc = ssrc;
 -- 
 2.34.1
 
