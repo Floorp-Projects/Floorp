@@ -371,9 +371,9 @@
       },
       'iOS64 Perf': {
         'mixins': [
-          'ios-device-perf', 'timeout-3h', 'chrome-tester-service-account',
-          'xcode_12d4e', 'mac_toolchain', 'has_native_resultdb_integration',
-          'out_dir_arg'
+          'ios-device-perf', 'webrtc-xctest', 'timeout-3h',
+          'chrome-tester-service-account', 'xcode_13_main', 'mac_toolchain',
+          'has_native_resultdb_integration', 'out_dir_arg'
         ],
         'test_suites': {
           'isolated_scripts': 'webrtc_perf_tests',
