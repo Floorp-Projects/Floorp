@@ -6371,9 +6371,8 @@ RegPtr BaseCompiler::loadTypeDefInstanceData(uint32_t typeIndex) {
   instance = RegPtr(InstanceReg);
 #  endif
   masm.computeEffectiveAddress(
-      Address(instance,
-              Instance::offsetInData(
-                  moduleEnv_.offsetOfTypeDefInstanceData(typeIndex))),
+      Address(instance, Instance::offsetInData(
+                            moduleEnv_.offsetOfTypeDefInstanceData(typeIndex))),
       rp);
   return rp;
 }
@@ -6390,9 +6389,10 @@ RegPtr BaseCompiler::loadSuperTypeVector(uint32_t typeIndex) {
   // We can use the pinned instance register.
   instance = RegPtr(InstanceReg);
 #  endif
-  masm.loadPtr(Address(instance, Instance::offsetInData(
-                                     moduleEnv_.offsetOfSuperTypeVector(typeIndex))),
-               rp);
+  masm.loadPtr(
+      Address(instance, Instance::offsetInData(
+                            moduleEnv_.offsetOfSuperTypeVector(typeIndex))),
+      rp);
   return rp;
 }
 
