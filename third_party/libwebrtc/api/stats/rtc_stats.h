@@ -55,9 +55,7 @@ class RTCStatsMemberInterface;
 // }
 class RTC_EXPORT RTCStats {
  public:
-  RTCStats(const std::string& id, int64_t timestamp_us)
-      : id_(id), timestamp_us_(timestamp_us) {}
-  RTCStats(std::string&& id, int64_t timestamp_us)
+  RTCStats(std::string id, int64_t timestamp_us)
       : id_(std::move(id)), timestamp_us_(timestamp_us) {}
   virtual ~RTCStats() {}
 
