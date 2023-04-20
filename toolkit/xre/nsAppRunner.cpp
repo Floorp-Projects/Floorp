@@ -3664,61 +3664,6 @@ static DWORD WINAPI InitDwriteBG(LPVOID lpdwThreadParam) {
 }
 #endif
 
-#ifdef USE_GLX_TEST
-namespace mozilla::widget {
-// the read end of the pipe, which will be used by GfxInfo
-extern int glxtest_pipe;
-// the PID of the glxtest process, to pass to waitpid()
-extern pid_t glxtest_pid;
-}  // namespace mozilla::widget
-
-void fire_glxtest_process() {
-  nsCOMPtr<nsIFile> appFile;
-  nsresult rv = XRE_GetBinaryPath(getter_AddRefs(appFile));
-  if (NS_FAILED(rv)) {
-    Output(true, "Couldn't find application file.\n");
-    return;
-  }
-  nsCOMPtr<nsIFile> exePath;
-  rv = appFile->GetParent(getter_AddRefs(exePath));
-  if (NS_FAILED(rv)) {
-    Output(true, "Couldn't get application directory.\n");
-    return;
-  }
-  exePath->Append(FILE_GLX_TEST);
-
-  int pfd[2];
-  if (pipe(pfd) == -1) {
-    Output(true, "Failed to create pipe\n");
-    return;
-  }
-
-  mozilla::widget::glxtest_pipe = pfd[0];
-
-  char* argv[] = {strdup(exePath->NativePath().get()), strdup("-f"),
-                  strdup(std::to_string(pfd[1]).c_str()),
-                  IsWaylandEnabled() ? strdup("-w") : nullptr, nullptr};
-  auto cleanup = mozilla::MakeScopeExit([&] {
-    for (auto& arg : argv) {
-      free(arg);
-    }
-    close(pfd[1]);
-  });
-
-  // Use G_SPAWN_LEAVE_DESCRIPTORS_OPEN | G_SPAWN_DO_NOT_REAP_CHILD flags
-  // to g_spawn_async_with_pipes() run posix_spawn() directly.
-  GUniquePtr<GError> err;
-  g_spawn_async_with_pipes(
-      nullptr, argv, nullptr,
-      GSpawnFlags(G_SPAWN_LEAVE_DESCRIPTORS_OPEN | G_SPAWN_DO_NOT_REAP_CHILD),
-      nullptr, nullptr, &mozilla::widget::glxtest_pid, nullptr, nullptr,
-      nullptr, getter_Transfers(err));
-  if (err) {
-    Output(true, "Failed to probe graphics hardware! %s\n", err->message);
-  }
-}
-#endif
-
 #include "GeckoProfiler.h"
 #include "ProfilerControl.h"
 
@@ -5164,7 +5109,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
   mozilla::glean_pings::Pageload.Submit("startup"_ns);
 
 #ifdef USE_GLX_TEST
-  fire_glxtest_process();
+  GfxInfo::FireGLXTestProcess();
 #endif
 
   return 0;

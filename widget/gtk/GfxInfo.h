@@ -55,6 +55,8 @@ class GfxInfo final : public GfxInfoBase {
 
   NS_IMETHOD_(void) GetData() override;
 
+  static bool FireGLXTestProcess();
+
 #ifdef DEBUG
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIGFXINFODEBUG
@@ -116,6 +118,9 @@ class GfxInfo final : public GfxInfoBase {
   bool mHasMultipleGPUs;
   bool mGlxTestError;
   mozilla::Maybe<bool> mIsVAAPISupported;
+
+  static int sGLXTestPipe;
+  static pid_t sGLXTestPID;
 
 #ifdef MOZ_WAYLAND
   void GetDataVAAPI();
