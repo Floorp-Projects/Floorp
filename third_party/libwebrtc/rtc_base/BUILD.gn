@@ -741,6 +741,21 @@ rtc_library("rtc_task_queue_stdlib") {
   ]
 }
 
+if (rtc_include_tests) {
+  rtc_library("task_queue_stdlib_unittest") {
+    testonly = true
+
+    sources = [ "task_queue_stdlib_unittest.cc" ]
+    deps = [
+      ":gunit_helpers",
+      ":rtc_task_queue_stdlib",
+      "../api/task_queue:task_queue_test",
+      "../test:test_main",
+      "../test:test_support",
+    ]
+  }
+}
+
 rtc_library("weak_ptr") {
   sources = [
     "weak_ptr.cc",

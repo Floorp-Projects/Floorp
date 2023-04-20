@@ -44,7 +44,7 @@ index c9824916ad..d35ea79ced 100644
    # TODO(https://bugs.webrtc.org/14437):  Remove this section if general
    # Chromium fix resolves the problem.
 diff --git a/BUILD.gn b/BUILD.gn
-index 259019268b..3437d570fd 100644
+index da094e1591..ba21391d22 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -33,7 +33,7 @@ if (is_android) {
@@ -173,7 +173,7 @@ index 3618e721b7..b3efb45b75 100644
  rtc_library("neteq_simulator_api") {
    visibility = [ "*" ]
 diff --git a/api/task_queue/BUILD.gn b/api/task_queue/BUILD.gn
-index dc69686f64..c80206430b 100644
+index 69393b80ff..c9b4a5d0ec 100644
 --- a/api/task_queue/BUILD.gn
 +++ b/api/task_queue/BUILD.gn
 @@ -30,6 +30,7 @@ rtc_library("task_queue") {
@@ -184,7 +184,7 @@ index dc69686f64..c80206430b 100644
  rtc_library("task_queue_test") {
    visibility = [ "*" ]
    testonly = true
-@@ -77,6 +78,7 @@ rtc_library("task_queue_test") {
+@@ -78,6 +79,7 @@ rtc_library("task_queue_test") {
      ]
    }
  }
@@ -549,10 +549,10 @@ index aa19b1aaf3..360fce3ee7 100644
    deps = [
      ":codec_globals_headers",
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 8ac6e4102c..2f80ae4165 100644
+index 5d4cdb33d4..2a72485cfd 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
-@@ -804,7 +804,9 @@ rtc_library("rtc_json") {
+@@ -819,7 +819,9 @@ rtc_library("rtc_json") {
      "strings/json.h",
    ]
    deps = [ ":stringutils" ]
@@ -562,7 +562,7 @@ index 8ac6e4102c..2f80ae4165 100644
    if (rtc_build_json) {
      deps += [ "//third_party/jsoncpp" ]
    } else {
-@@ -1199,6 +1201,62 @@ rtc_library("rtc_base") {
+@@ -1214,6 +1216,62 @@ rtc_library("rtc_base") {
      "unique_id_generator.cc",
      "unique_id_generator.h",
    ]
@@ -625,7 +625,7 @@ index 8ac6e4102c..2f80ae4165 100644
  
    # If we are building the SSL library ourselves, we know it's BoringSSL.
    if (rtc_build_ssl) {
-@@ -1209,12 +1267,14 @@ rtc_library("rtc_base") {
+@@ -1224,12 +1282,14 @@ rtc_library("rtc_base") {
        "boringssl_identity.h",
      ]
    } else {
@@ -640,7 +640,7 @@ index 8ac6e4102c..2f80ae4165 100644
    }
  
    if (build_with_chromium) {
-@@ -1813,7 +1873,7 @@ if (rtc_include_tests) {
+@@ -1828,7 +1888,7 @@ if (rtc_include_tests) {
    }
  }
  
