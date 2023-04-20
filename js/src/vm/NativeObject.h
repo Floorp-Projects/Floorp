@@ -1451,6 +1451,10 @@ class NativeObject : public JSObject {
   inline void initDenseElements(NativeObject* src, uint32_t srcStart,
                                 uint32_t count);
 
+  // Copy all dense elements from `src` to `this`, starting at `destStart`.
+  // The initialized length must already include the new elements.
+  inline void initDenseElementRange(uint32_t destStart, NativeObject* src);
+
   // Store the Values in the range [begin, end) as elements of this array.
   //
   // Preconditions: This must be a boring ArrayObject with dense initialized
