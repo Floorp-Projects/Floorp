@@ -680,7 +680,6 @@ CoderResult CodeTagDesc(Coder<mode>& coder, CoderArg<mode, TagDesc> item) {
   MOZ_TRY(CodePod(coder, &item->kind));
   MOZ_TRY((
       CodeRefPtr<mode, const TagType, &CodeTagType<mode>>(coder, &item->type)));
-  MOZ_TRY(CodePod(coder, &item->instanceDataOffset));
   MOZ_TRY(CodePod(coder, &item->isExport));
   return Ok();
 }
@@ -720,12 +719,11 @@ CoderResult CodeCustomSection(Coder<mode>& coder,
 
 template <CoderMode mode>
 CoderResult CodeTableDesc(Coder<mode>& coder, CoderArg<mode, TableDesc> item) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TableDesc, 120);
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::TableDesc, 112);
   MOZ_TRY(CodeRefType(coder, &item->elemType));
   MOZ_TRY(CodePod(coder, &item->isImported));
   MOZ_TRY(CodePod(coder, &item->isExported));
   MOZ_TRY(CodePod(coder, &item->isAsmJS));
-  MOZ_TRY(CodePod(coder, &item->instanceDataOffset));
   MOZ_TRY(CodePod(coder, &item->initialLength));
   MOZ_TRY(CodePod(coder, &item->maximumLength));
   MOZ_TRY(
@@ -950,7 +948,7 @@ CoderResult CodeMetadataTier(Coder<mode>& coder,
 template <CoderMode mode>
 CoderResult CodeMetadata(Coder<mode>& coder,
                          CoderArg<mode, wasm::Metadata> item) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::Metadata, 400);
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::Metadata, 408);
   if constexpr (mode == MODE_ENCODE) {
     // Serialization doesn't handle asm.js or debug enabled modules
     MOZ_ASSERT(!item->debugEnabled && item->debugFuncTypeIndices.empty());
@@ -961,7 +959,6 @@ CoderResult CodeMetadata(Coder<mode>& coder,
   MOZ_TRY(CodePod(coder, &item->pod()));
   MOZ_TRY((CodeRefPtr<mode, const TypeContext, &CodeTypeContext>(
       coder, &item->types)));
-  MOZ_TRY((CodePod(coder, &item->typeIdsOffsetStart)));
   MOZ_TRY((CodeVector<mode, GlobalDesc, &CodeGlobalDesc<mode>>(
       coder, &item->globals)));
   MOZ_TRY((

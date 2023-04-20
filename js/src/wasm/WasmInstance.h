@@ -55,6 +55,7 @@ class GlobalDesc;
 struct TableDesc;
 struct TableInstanceData;
 struct TagDesc;
+struct TagInstanceData;
 struct TypeDefInstanceData;
 class WasmFrameIter;
 
@@ -198,8 +199,8 @@ class alignas(16) Instance {
   TypeDefInstanceData* typeDefInstanceData(uint32_t typeIndex) const;
   const void* addressOfGlobalCell(const GlobalDesc& globalDesc) const;
   FuncImportInstanceData& funcImportInstanceData(const FuncImport& fi);
-  TableInstanceData& tableInstanceData(const TableDesc& td) const;
-  GCPtr<WasmTagObject*>& tagInstanceData(const TagDesc& td) const;
+  TableInstanceData& tableInstanceData(uint32_t tableIndex) const;
+  TagInstanceData& tagInstanceData(uint32_t tagIndex) const;
 
   // Only WasmInstanceObject can call the private trace function.
   friend class js::WasmInstanceObject;

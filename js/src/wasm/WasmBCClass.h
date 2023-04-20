@@ -1103,11 +1103,10 @@ struct BaseCompiler final {
   //
   // Table access.
 
-  Address addressOfTableField(const TableDesc& table, uint32_t fieldOffset,
+  Address addressOfTableField(uint32_t tableIndex, uint32_t fieldOffset,
                               RegPtr instance);
-  void loadTableLength(const TableDesc& table, RegPtr instance, RegI32 length);
-  void loadTableElements(const TableDesc& table, RegPtr instance,
-                         RegPtr elements);
+  void loadTableLength(uint32_t tableIndex, RegPtr instance, RegI32 length);
+  void loadTableElements(uint32_t tableIndex, RegPtr instance, RegPtr elements);
 
   //////////////////////////////////////////////////////////////////////
   //
@@ -1628,8 +1627,7 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitTableSet();
   [[nodiscard]] bool emitTableSize();
 
-  void emitTableBoundsCheck(const TableDesc& table, RegI32 index,
-                            RegPtr instance);
+  void emitTableBoundsCheck(uint32_t tableIndex, RegI32 index, RegPtr instance);
   [[nodiscard]] bool emitTableGetAnyRef(uint32_t tableIndex);
   [[nodiscard]] bool emitTableSetAnyRef(uint32_t tableIndex);
 
