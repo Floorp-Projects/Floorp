@@ -624,6 +624,7 @@ void ChannelReceive::StopPlayout() {
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   playing_ = false;
   _outputAudioLevel.ResetLevelFullRange();
+  acm_receiver_.FlushBuffers();
 }
 
 absl::optional<std::pair<int, SdpAudioFormat>> ChannelReceive::GetReceiveCodec()
