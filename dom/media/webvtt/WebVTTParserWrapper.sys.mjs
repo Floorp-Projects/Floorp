@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { WebVTT } = ChromeUtils.import("resource://gre/modules/vtt.jsm");
+import { WebVTT } from "resource://gre/modules/vtt.sys.mjs";
 
-function WebVTTParserWrapper() {
+export function WebVTTParserWrapper() {
   // Nothing
 }
 
@@ -54,5 +54,3 @@ WebVTTParserWrapper.prototype = {
   classDescription: "Wrapper for the JS WebVTT implementation (vtt.js)",
   QueryInterface: ChromeUtils.generateQI(["nsIWebVTTParserWrapper"]),
 };
-
-var EXPORTED_SYMBOLS = ["WebVTTParserWrapper"];
