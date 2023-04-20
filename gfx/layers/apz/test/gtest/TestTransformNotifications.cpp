@@ -8,6 +8,7 @@
 #include "APZCTreeManagerTester.h"
 #include "APZTestCommon.h"
 #include "mozilla/layers/WebRenderScrollDataWrapper.h"
+#include "apz/util/APZEventState.h"
 
 #include "InputUtils.h"
 
@@ -34,6 +35,24 @@ class APZCTransformNotificationTester : public APZCTreeManagerTester {
 
     mRootApzc = ApzcOf(root);
   }
+
+  void SetupNonScrollableTest() {
+    const char* treeShape = "x";
+    LayerIntRegion layerVisibleRegion[] = {
+        LayerIntRect(0, 0, 100, 100),
+    };
+    CreateScrollData(treeShape, layerVisibleRegion);
+    SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
+                              CSSRect(0, 0, 100, 100));
+
+    mRegistration = MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, mcc);
+
+    UpdateHitTestingTree();
+
+    mRootApzc = ApzcOf(root);
+
+    mRootApzc->GetFrameMetrics().SetIsRootContent(true);
+  }
 };
 
 TEST_F(APZCTransformNotificationTester, PanningTransformNotifications) {
@@ -54,48 +73,52 @@ TEST_F(APZCTransformNotificationTester, PanningTransformNotifications) {
   {
     InSequence s;
     EXPECT_CALL(check, Call("Simple pan"));
-    EXPECT_CALL(*mcc,
-                NotifyAPZStateChange(
-                    _, GeckoContentController::APZStateChange::eStartTouch, _))
+    EXPECT_CALL(
+        *mcc, NotifyAPZStateChange(
+                  _, GeckoContentController::APZStateChange::eStartTouch, _, _))
         .Times(1);
     EXPECT_CALL(
         *mcc,
         NotifyAPZStateChange(
-            _, GeckoContentController::APZStateChange::eTransformBegin, _))
+            _, GeckoContentController::APZStateChange::eTransformBegin, _, _))
         .Times(1);
     EXPECT_CALL(
-        *mcc, NotifyAPZStateChange(
-                  _, GeckoContentController::APZStateChange::eStartPanning, _))
+        *mcc,
+        NotifyAPZStateChange(
+            _, GeckoContentController::APZStateChange::eStartPanning, _, _))
         .Times(1);
     EXPECT_CALL(*mcc,
                 NotifyAPZStateChange(
-                    _, GeckoContentController::APZStateChange::eEndTouch, _))
+                    _, GeckoContentController::APZStateChange::eEndTouch, _, _))
         .Times(1);
     EXPECT_CALL(
-        *mcc, NotifyAPZStateChange(
-                  _, GeckoContentController::APZStateChange::eTransformEnd, _))
+        *mcc,
+        NotifyAPZStateChange(
+            _, GeckoContentController::APZStateChange::eTransformEnd, _, _))
         .Times(1);
     EXPECT_CALL(check, Call("Complex pan"));
-    EXPECT_CALL(*mcc,
-                NotifyAPZStateChange(
-                    _, GeckoContentController::APZStateChange::eStartTouch, _))
+    EXPECT_CALL(
+        *mcc, NotifyAPZStateChange(
+                  _, GeckoContentController::APZStateChange::eStartTouch, _, _))
         .Times(1);
     EXPECT_CALL(
         *mcc,
         NotifyAPZStateChange(
-            _, GeckoContentController::APZStateChange::eTransformBegin, _))
+            _, GeckoContentController::APZStateChange::eTransformBegin, _, _))
         .Times(1);
     EXPECT_CALL(
-        *mcc, NotifyAPZStateChange(
-                  _, GeckoContentController::APZStateChange::eStartPanning, _))
+        *mcc,
+        NotifyAPZStateChange(
+            _, GeckoContentController::APZStateChange::eStartPanning, _, _))
         .Times(1);
     EXPECT_CALL(*mcc,
                 NotifyAPZStateChange(
-                    _, GeckoContentController::APZStateChange::eEndTouch, _))
+                    _, GeckoContentController::APZStateChange::eEndTouch, _, _))
         .Times(1);
     EXPECT_CALL(
-        *mcc, NotifyAPZStateChange(
-                  _, GeckoContentController::APZStateChange::eTransformEnd, _))
+        *mcc,
+        NotifyAPZStateChange(
+            _, GeckoContentController::APZStateChange::eTransformEnd, _, _))
         .Times(1);
     EXPECT_CALL(check, Call("Done"));
   }
@@ -118,7 +141,7 @@ TEST_F(APZCTransformNotificationTester, PanWithMomentumTransformNotifications) {
     EXPECT_CALL(
         *mcc,
         NotifyAPZStateChange(
-            _, GeckoContentController::APZStateChange::eTransformBegin, _))
+            _, GeckoContentController::APZStateChange::eTransformBegin, _, _))
         .Times(1);
 
     EXPECT_CALL(check, Call("Panning"));
@@ -129,8 +152,9 @@ TEST_F(APZCTransformNotificationTester, PanWithMomentumTransformNotifications) {
     EXPECT_CALL(check, Call("Momentum End"));
     // The TransformEnd should only be sent after the momentum pan.
     EXPECT_CALL(
-        *mcc, NotifyAPZStateChange(
-                  _, GeckoContentController::APZStateChange::eTransformEnd, _))
+        *mcc,
+        NotifyAPZStateChange(
+            _, GeckoContentController::APZStateChange::eTransformEnd, _, _))
         .Times(1);
 
     EXPECT_CALL(check, Call("Done"));
@@ -195,7 +219,7 @@ TEST_F(APZCTransformNotificationTester,
     EXPECT_CALL(
         *mcc,
         NotifyAPZStateChange(
-            _, GeckoContentController::APZStateChange::eTransformBegin, _))
+            _, GeckoContentController::APZStateChange::eTransformBegin, _, _))
         .Times(1);
 
     EXPECT_CALL(check, Call("Panning"));
@@ -204,8 +228,9 @@ TEST_F(APZCTransformNotificationTester,
     // The TransformEnd should only be sent after the pan gesture and 100ms
     // timer fire.
     EXPECT_CALL(
-        *mcc, NotifyAPZStateChange(
-                  _, GeckoContentController::APZStateChange::eTransformEnd, _))
+        *mcc,
+        NotifyAPZStateChange(
+            _, GeckoContentController::APZStateChange::eTransformEnd, _, _))
         .Times(1);
 
     EXPECT_CALL(check, Call("Done"));
@@ -253,7 +278,7 @@ TEST_F(APZCTransformNotificationTester,
     EXPECT_CALL(
         *mcc,
         NotifyAPZStateChange(
-            _, GeckoContentController::APZStateChange::eTransformBegin, _))
+            _, GeckoContentController::APZStateChange::eTransformBegin, _, _))
         .Times(1);
 
     EXPECT_CALL(check, Call("Panning"));
@@ -262,18 +287,20 @@ TEST_F(APZCTransformNotificationTester,
     // new pan gesture begins.
     EXPECT_CALL(check, Call("New Pan Start"));
     EXPECT_CALL(
-        *mcc, NotifyAPZStateChange(
-                  _, GeckoContentController::APZStateChange::eTransformEnd, _))
+        *mcc,
+        NotifyAPZStateChange(
+            _, GeckoContentController::APZStateChange::eTransformEnd, _, _))
         .Times(1);
     EXPECT_CALL(
         *mcc,
         NotifyAPZStateChange(
-            _, GeckoContentController::APZStateChange::eTransformBegin, _))
+            _, GeckoContentController::APZStateChange::eTransformBegin, _, _))
         .Times(1);
     EXPECT_CALL(check, Call("New Pan End"));
     EXPECT_CALL(
-        *mcc, NotifyAPZStateChange(
-                  _, GeckoContentController::APZStateChange::eTransformEnd, _))
+        *mcc,
+        NotifyAPZStateChange(
+            _, GeckoContentController::APZStateChange::eTransformEnd, _, _))
         .Times(1);
 
     EXPECT_CALL(check, Call("Done"));
@@ -337,7 +364,7 @@ TEST_F(APZCTransformNotificationTester,
     EXPECT_CALL(
         *mcc,
         NotifyAPZStateChange(
-            _, GeckoContentController::APZStateChange::eTransformBegin, _))
+            _, GeckoContentController::APZStateChange::eTransformBegin, _, _))
         .Times(1);
 
     EXPECT_CALL(check, Call("Panning"));
@@ -346,18 +373,20 @@ TEST_F(APZCTransformNotificationTester,
     // new wheel event begins.
     EXPECT_CALL(check, Call("Wheel Start"));
     EXPECT_CALL(
-        *mcc, NotifyAPZStateChange(
-                  _, GeckoContentController::APZStateChange::eTransformEnd, _))
+        *mcc,
+        NotifyAPZStateChange(
+            _, GeckoContentController::APZStateChange::eTransformEnd, _, _))
         .Times(1);
     EXPECT_CALL(
         *mcc,
         NotifyAPZStateChange(
-            _, GeckoContentController::APZStateChange::eTransformBegin, _))
+            _, GeckoContentController::APZStateChange::eTransformBegin, _, _))
         .Times(1);
     EXPECT_CALL(check, Call("Wheel End"));
     EXPECT_CALL(
-        *mcc, NotifyAPZStateChange(
-                  _, GeckoContentController::APZStateChange::eTransformEnd, _))
+        *mcc,
+        NotifyAPZStateChange(
+            _, GeckoContentController::APZStateChange::eTransformEnd, _, _))
         .Times(1);
     EXPECT_CALL(check, Call("Done"));
   }
@@ -410,7 +439,7 @@ TEST_F(APZCTransformNotificationTester, PanOverscrollTransformNotifications) {
     EXPECT_CALL(
         *mcc,
         NotifyAPZStateChange(
-            _, GeckoContentController::APZStateChange::eTransformBegin, _))
+            _, GeckoContentController::APZStateChange::eTransformBegin, _, _))
         .Times(1);
 
     EXPECT_CALL(check, Call("Panning Into Overscroll"));
@@ -419,8 +448,9 @@ TEST_F(APZCTransformNotificationTester, PanOverscrollTransformNotifications) {
     // The TransformEnd should only be sent after the overscroll animation
     // completes.
     EXPECT_CALL(
-        *mcc, NotifyAPZStateChange(
-                  _, GeckoContentController::APZStateChange::eTransformEnd, _))
+        *mcc,
+        NotifyAPZStateChange(
+            _, GeckoContentController::APZStateChange::eTransformEnd, _, _))
         .Times(1);
     EXPECT_CALL(check, Call("Done"));
   }
@@ -459,3 +489,79 @@ TEST_F(APZCTransformNotificationTester, PanOverscrollTransformNotifications) {
   check.Call("Done");
 }
 #endif
+
+TEST_F(APZCTransformNotificationTester, ScrollableTouchStateChange) {
+  // Create a scroll frame with available space for a scroll.
+  SetupBasicTest();
+
+  MockFunction<void(std::string checkPointName)> check;
+  {
+    EXPECT_CALL(check, Call("Start"));
+    // We receive a touch-start with the flag indicating that the
+    // touch-start occurred over a scrollable element.
+    EXPECT_CALL(
+        *mcc, NotifyAPZStateChange(
+                  _, GeckoContentController::APZStateChange::eStartTouch, 1, _))
+        .Times(1);
+
+    EXPECT_CALL(*mcc,
+                NotifyAPZStateChange(
+                    _, GeckoContentController::APZStateChange::eEndTouch, 1, _))
+        .Times(1);
+    EXPECT_CALL(check, Call("Done"));
+  }
+
+  check.Call("Start");
+
+  // Conduct a touch down and touch up in the scrollable element,
+  // and ensure the correct state change notifications are sent.
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
+  TouchDown(mRootApzc, ScreenIntPoint(10, 10), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  mRootApzc->AdvanceAnimations(mcc->GetSampleTime());
+
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
+  TouchUp(mRootApzc, ScreenIntPoint(10, 10), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  mRootApzc->AdvanceAnimations(mcc->GetSampleTime());
+
+  check.Call("Done");
+}
+
+TEST_F(APZCTransformNotificationTester, NonScrollableTouchStateChange) {
+  // Create a non-scrollable frame with no space to scroll.
+  SetupNonScrollableTest();
+
+  MockFunction<void(std::string checkPointName)> check;
+  {
+    EXPECT_CALL(check, Call("Start"));
+    // We receive a touch-start with the flag indicating that the
+    // touch-start occurred over a non-scrollable element.
+    EXPECT_CALL(
+        *mcc, NotifyAPZStateChange(
+                  _, GeckoContentController::APZStateChange::eStartTouch, 0, _))
+        .Times(1);
+
+    EXPECT_CALL(*mcc,
+                NotifyAPZStateChange(
+                    _, GeckoContentController::APZStateChange::eEndTouch, 1, _))
+        .Times(1);
+    EXPECT_CALL(check, Call("Done"));
+  }
+
+  check.Call("Start");
+
+  // Conduct a touch down and touch up in the non-scrollable element,
+  // and ensure the correct state change notifications are sent.
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
+  TouchDown(mRootApzc, ScreenIntPoint(10, 10), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  mRootApzc->AdvanceAnimations(mcc->GetSampleTime());
+
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
+  TouchUp(mRootApzc, ScreenIntPoint(10, 10), mcc->Time());
+  mcc->AdvanceByMillis(5);
+  mRootApzc->AdvanceAnimations(mcc->GetSampleTime());
+
+  check.Call("Done");
+}

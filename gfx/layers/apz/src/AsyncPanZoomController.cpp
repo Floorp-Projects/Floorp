@@ -1312,7 +1312,8 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(
         controller->NotifyAPZStateChange(
             GetGuid(), APZStateChange::eStartTouch,
             GetCurrentTouchBlock()->GetOverscrollHandoffChain()->CanBePanned(
-                this));
+                this),
+            Some(GetCurrentTouchBlock()->GetBlockId()));
       }
       mLastTouch.mTimeStamp = mTouchStartTime = aEvent.mTimeStamp;
       SetState(TOUCHING);
@@ -3106,7 +3107,8 @@ void AsyncPanZoomController::OnTouchEndOrCancel() {
     MOZ_ASSERT(GetCurrentTouchBlock());
     controller->NotifyAPZStateChange(
         GetGuid(), APZStateChange::eEndTouch,
-        GetCurrentTouchBlock()->SingleTapOccurred());
+        GetCurrentTouchBlock()->SingleTapOccurred(),
+        Some(GetCurrentTouchBlock()->GetBlockId()));
   }
 }
 

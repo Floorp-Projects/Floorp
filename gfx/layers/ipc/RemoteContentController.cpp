@@ -214,19 +214,21 @@ void RemoteContentController::DispatchToRepaintThread(
 }
 
 void RemoteContentController::NotifyAPZStateChange(
-    const ScrollableLayerGuid& aGuid, APZStateChange aChange, int aArg) {
+    const ScrollableLayerGuid& aGuid, APZStateChange aChange, int aArg,
+    Maybe<uint64_t> aInputBlockId) {
   if (!mCompositorThread->IsOnCurrentThread()) {
     // We have to send messages from the compositor thread
     mCompositorThread->Dispatch(
-        NewRunnableMethod<ScrollableLayerGuid, APZStateChange, int>(
+        NewRunnableMethod<ScrollableLayerGuid, APZStateChange, int,
+                          Maybe<uint64_t>>(
             "layers::RemoteContentController::NotifyAPZStateChange", this,
             &RemoteContentController::NotifyAPZStateChange, aGuid, aChange,
-            aArg));
+            aArg, aInputBlockId));
     return;
   }
 
   if (mCanSend) {
-    Unused << SendNotifyAPZStateChange(aGuid, aChange, aArg);
+    Unused << SendNotifyAPZStateChange(aGuid, aChange, aArg, aInputBlockId);
   }
 }
 

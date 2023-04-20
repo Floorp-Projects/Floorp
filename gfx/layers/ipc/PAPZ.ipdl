@@ -62,7 +62,7 @@ child:
 
   async NotifyMozMouseScrollEvent(ViewID aScrollId, nsString aEvent);
 
-  async NotifyAPZStateChange(ScrollableLayerGuid aGuid, GeckoContentController_APZStateChange aChange, int aArg);
+  async NotifyAPZStateChange(ScrollableLayerGuid aGuid, GeckoContentController_APZStateChange aChange, int aArg, uint64_t? aInputBlockId);
 
   [Priority=control]
   async NotifyFlushComplete();

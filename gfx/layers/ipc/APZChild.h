@@ -45,7 +45,7 @@ class APZChild final : public PAPZChild {
 
   mozilla::ipc::IPCResult RecvNotifyAPZStateChange(
       const ScrollableLayerGuid& aGuid, const APZStateChange& aChange,
-      const int& aArg);
+      const int& aArg, Maybe<uint64_t> aInputBlockId);
 
   mozilla::ipc::IPCResult RecvNotifyFlushComplete();
 

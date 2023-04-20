@@ -33,7 +33,6 @@
 #include "nsINamed.h"
 #include "nsIScrollableFrame.h"
 #include "nsIScrollbarMediator.h"
-#include "nsITimer.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsIWidget.h"
 #include "nsLayoutUtils.h"
@@ -105,6 +104,7 @@ APZEventState::APZEventState(nsIWidget* aWidget,
       mEndTouchIsClick(false),
       mFirstTouchCancelled(false),
       mTouchEndCancelled(false),
+      mSingleTapsPendingTargetInfo(),
       mLastTouchIdentifier(0) {
   nsresult rv;
   mWidget = do_GetWeakReference(aWidget, &rv);
@@ -115,58 +115,69 @@ APZEventState::APZEventState(nsIWidget* aWidget,
 
 APZEventState::~APZEventState() = default;
 
-class DelayedFireSingleTapEvent final : public nsITimerCallback,
-                                        public nsINamed {
- public:
-  NS_DECL_ISUPPORTS
-
-  DelayedFireSingleTapEvent(nsWeakPtr aWidget, LayoutDevicePoint& aPoint,
-                            Modifiers aModifiers, int32_t aClickCount,
-                            nsITimer* aTimer, RefPtr<nsIContent>& aTouchRollup)
-      : mWidget(aWidget),
-        mPoint(aPoint),
-        mModifiers(aModifiers),
-        mClickCount(aClickCount)
-        // Hold the reference count until we are called back.
-        ,
-        mTimer(aTimer),
-        mTouchRollup(aTouchRollup) {}
-
-  NS_IMETHOD Notify(nsITimer*) override {
-    if (nsCOMPtr<nsIWidget> widget = do_QueryReferent(mWidget)) {
-      widget::nsAutoRollup rollup(mTouchRollup.get());
-      APZCCallbackHelper::FireSingleTapEvent(mPoint, mModifiers, mClickCount,
-                                             widget);
-    }
-    mTimer = nullptr;
-    return NS_OK;
+RefPtr<DelayedFireSingleTapEvent> DelayedFireSingleTapEvent::Create(
+    Maybe<SingleTapTargetInfo>&& aTargetInfo) {
+  nsCOMPtr<nsITimer> timer = NS_NewTimer();
+  RefPtr<DelayedFireSingleTapEvent> event =
+      new DelayedFireSingleTapEvent(std::move(aTargetInfo), timer);
+  nsresult rv = timer->InitWithCallback(
+      event, StaticPrefs::ui_touch_activation_duration_ms(),
+      nsITimer::TYPE_ONE_SHOT);
+  if (NS_FAILED(rv)) {
+    event->ClearTimer();
+    event = nullptr;
   }
+  return event;
+}
 
-  NS_IMETHOD
-  GetName(nsACString& aName) override {
-    aName.AssignLiteral("DelayedFireSingleTapEvent");
-    return NS_OK;
+NS_IMETHODIMP DelayedFireSingleTapEvent::Notify(nsITimer*) {
+  APZES_LOG("DelayedFireSingeTapEvent notification ready=%d",
+            mTargetInfo.isSome());
+  // If the required information to fire the synthesized events has not
+  // been populated yet, we have not received the touch-end. In this case
+  // we should not fire the synthesized events here. The synthesized events
+  // will be fired on touch-end in this case.
+  if (mTargetInfo.isSome()) {
+    FireSingleTapEvent();
   }
+  mTimer = nullptr;
+  return NS_OK;
+}
 
-  void ClearTimer() { mTimer = nullptr; }
+NS_IMETHODIMP DelayedFireSingleTapEvent::GetName(nsACString& aName) {
+  aName.AssignLiteral("DelayedFireSingleTapEvent");
+  return NS_OK;
+}
 
- private:
-  ~DelayedFireSingleTapEvent() = default;
+void DelayedFireSingleTapEvent::PopulateTargetInfo(
+    SingleTapTargetInfo&& aTargetInfo) {
+  MOZ_ASSERT(!mTargetInfo.isSome());
+  mTargetInfo = Some(std::move(aTargetInfo));
+  // If the timer no longer exists, we have surpassed the minimum elapsed
+  // time to delay the synthesized click. We can immediately fire the
+  // synthesized events in this case.
+  if (!mTimer) {
+    FireSingleTapEvent();
+  }
+}
 
-  nsWeakPtr mWidget;
-  LayoutDevicePoint mPoint;
-  Modifiers mModifiers;
-  int32_t mClickCount;
-  nsCOMPtr<nsITimer> mTimer;
-  RefPtr<nsIContent> mTouchRollup;
-};
+void DelayedFireSingleTapEvent::FireSingleTapEvent() {
+  MOZ_ASSERT(mTargetInfo.isSome());
+  nsCOMPtr<nsIWidget> widget = do_QueryReferent(mTargetInfo->mWidget);
+  if (widget) {
+    widget::nsAutoRollup rollup(mTargetInfo->mTouchRollup.get());
+    APZCCallbackHelper::FireSingleTapEvent(mTargetInfo->mPoint,
+                                           mTargetInfo->mModifiers,
+                                           mTargetInfo->mClickCount, widget);
+  }
+}
 
 NS_IMPL_ISUPPORTS(DelayedFireSingleTapEvent, nsITimerCallback, nsINamed)
 
 void APZEventState::ProcessSingleTap(const CSSPoint& aPoint,
                                      const CSSToLayoutDeviceScale& aScale,
-                                     Modifiers aModifiers,
-                                     int32_t aClickCount) {
+                                     Modifiers aModifiers, int32_t aClickCount,
+                                     uint64_t aInputBlockId) {
   APZES_LOG("Handling single tap at %s with %d\n", ToString(aPoint).c_str(),
             mTouchEndCancelled);
 
@@ -182,19 +193,23 @@ void APZEventState::ProcessSingleTap(const CSSPoint& aPoint,
     return;
   }
 
-  LayoutDevicePoint ldPoint = aPoint * aScale;
+  SingleTapTargetInfo targetInfo(mWidget, aPoint * aScale, aModifiers,
+                                 aClickCount, touchRollup);
 
-  APZES_LOG("Scheduling timer for click event\n");
-  nsCOMPtr<nsITimer> timer = NS_NewTimer();
-  RefPtr<DelayedFireSingleTapEvent> callback = new DelayedFireSingleTapEvent(
-      mWidget, ldPoint, aModifiers, aClickCount, timer, touchRollup);
-  nsresult rv = timer->InitWithCallback(
-      callback, StaticPrefs::ui_touch_activation_duration_ms(),
-      nsITimer::TYPE_ONE_SHOT);
-  if (NS_FAILED(rv)) {
-    // Make |callback| not hold the timer, so they will both be destructed when
-    // we leave the scope of this function.
-    callback->ClearTimer();
+  auto delayedEvent = mSingleTapsPendingTargetInfo.find(aInputBlockId);
+  if (delayedEvent != mSingleTapsPendingTargetInfo.end()) {
+    APZES_LOG("Found tap for block=%" PRIu64, aInputBlockId);
+
+    // With the target info populated, the event will be fired as
+    // soon as the delay timer expires (or now, if it has already expired).
+    delayedEvent->second->PopulateTargetInfo(std::move(targetInfo));
+    mSingleTapsPendingTargetInfo.erase(delayedEvent);
+  } else {
+    APZES_LOG("Scheduling timer for click event\n");
+
+    // We don't need to keep a reference to the event, because the
+    // event and its timer keep each other alive until the timer expires
+    DelayedFireSingleTapEvent::Create(Some(std::move(targetInfo)));
   }
 }
 
@@ -496,7 +511,8 @@ void APZEventState::ProcessMouseEvent(const WidgetMouseEvent& aEvent,
 }
 
 void APZEventState::ProcessAPZStateChange(ViewID aViewId,
-                                          APZStateChange aChange, int aArg) {
+                                          APZStateChange aChange, int aArg,
+                                          Maybe<uint64_t> aInputBlockId) {
   switch (aChange) {
     case APZStateChange::eTransformBegin: {
       nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aViewId);
@@ -531,7 +547,21 @@ void APZEventState::ProcessAPZStateChange(ViewID aViewId,
       break;
     }
     case APZStateChange::eStartTouch: {
-      mActiveElementManager->HandleTouchStart(aArg);
+      bool canBePan = aArg;
+      mActiveElementManager->HandleTouchStart(canBePan);
+      // If this is a non-scrollable content, set a timer for the amount of
+      // time specified by ui.touch_activation.duration_ms to fire the
+      // synthesized click and mouse events.
+      APZES_LOG("%s: can-be-pan=%d", __FUNCTION__, aArg);
+      if (!canBePan) {
+        MOZ_ASSERT(aInputBlockId.isSome());
+        RefPtr<DelayedFireSingleTapEvent> delayedEvent =
+            DelayedFireSingleTapEvent::Create(Nothing());
+        DebugOnly<bool> insertResult =
+            mSingleTapsPendingTargetInfo.emplace(*aInputBlockId, delayedEvent)
+                .second;
+        MOZ_ASSERT(insertResult, "Failed to insert delayed tap event.");
+      }
       break;
     }
     case APZStateChange::eStartPanning: {

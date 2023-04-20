@@ -39,7 +39,8 @@ class AndroidContentController final
                               const float aY,
                               const bool aIsRootContent) override;
   void NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
-                            APZStateChange aChange, int aArg) override;
+                            APZStateChange aChange, int aArg,
+                            Maybe<uint64_t> aInputBlockId) override;
 
  private:
   nsWindow* mAndroidWindow;

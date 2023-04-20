@@ -113,9 +113,14 @@ class GeckoContentController {
    * |aChange| identifies the type of state change
    * |aArg| is used by some state changes to pass extra information (see
    *        the documentation for each state change above)
+   * |aInputBlockId| is populated for the |eStartTouch| and |eEndTouch|
+   *                 state changes and identifies the input block of the
+   *                 gesture that triggers the state change.
    */
   virtual void NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
-                                    APZStateChange aChange, int aArg = 0) {}
+                                    APZStateChange aChange, int aArg = 0,
+                                    Maybe<uint64_t> aInputBlockId = Nothing()) {
+  }
 
   /**
    * Notify content of a MozMouseScrollFailed event.

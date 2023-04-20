@@ -191,13 +191,15 @@ void ChromeProcessController::HandleTap(
 
   switch (aType) {
     case TapType::eSingleTap:
-      mAPZEventState->ProcessSingleTap(point, scale, aModifiers, 1);
+      mAPZEventState->ProcessSingleTap(point, scale, aModifiers, 1,
+                                       aInputBlockId);
       break;
     case TapType::eDoubleTap:
       HandleDoubleTap(point, aModifiers, aGuid);
       break;
     case TapType::eSecondTap:
-      mAPZEventState->ProcessSingleTap(point, scale, aModifiers, 2);
+      mAPZEventState->ProcessSingleTap(point, scale, aModifiers, 2,
+                                       aInputBlockId);
       break;
     case TapType::eLongTap: {
       RefPtr<APZEventState> eventState(mAPZEventState);
@@ -241,13 +243,14 @@ void ChromeProcessController::NotifyPinchGesture(
 }
 
 void ChromeProcessController::NotifyAPZStateChange(
-    const ScrollableLayerGuid& aGuid, APZStateChange aChange, int aArg) {
+    const ScrollableLayerGuid& aGuid, APZStateChange aChange, int aArg,
+    Maybe<uint64_t> aInputBlockId) {
   if (!mUIThread->IsOnCurrentThread()) {
-    mUIThread->Dispatch(
-        NewRunnableMethod<ScrollableLayerGuid, APZStateChange, int>(
-            "layers::ChromeProcessController::NotifyAPZStateChange", this,
-            &ChromeProcessController::NotifyAPZStateChange, aGuid, aChange,
-            aArg));
+    mUIThread->Dispatch(NewRunnableMethod<ScrollableLayerGuid, APZStateChange,
+                                          int, Maybe<uint64_t>>(
+        "layers::ChromeProcessController::NotifyAPZStateChange", this,
+        &ChromeProcessController::NotifyAPZStateChange, aGuid, aChange, aArg,
+        aInputBlockId));
     return;
   }
 
@@ -255,7 +258,8 @@ void ChromeProcessController::NotifyAPZStateChange(
     return;
   }
 
-  mAPZEventState->ProcessAPZStateChange(aGuid.mScrollId, aChange, aArg);
+  mAPZEventState->ProcessAPZStateChange(aGuid.mScrollId, aChange, aArg,
+                                        aInputBlockId);
 }
 
 void ChromeProcessController::NotifyMozMouseScrollEvent(
