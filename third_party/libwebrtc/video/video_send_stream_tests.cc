@@ -1615,7 +1615,6 @@ TEST_F(VideoSendStreamTest, ChangingNetworkRoute) {
       send_config->rtp.extensions.push_back(RtpExtension(
           RtpExtension::kTransportSequenceNumberUri, kExtensionId));
       (*receive_configs)[0].rtp.extensions = send_config->rtp.extensions;
-      (*receive_configs)[0].rtp.transport_cc = true;
     }
 
     void ModifyAudioConfigs(AudioSendStream::Config* send_config,
@@ -1627,7 +1626,6 @@ TEST_F(VideoSendStreamTest, ChangingNetworkRoute) {
           RtpExtension::kTransportSequenceNumberUri, kExtensionId));
       (*receive_configs)[0].rtp.extensions.clear();
       (*receive_configs)[0].rtp.extensions = send_config->rtp.extensions;
-      (*receive_configs)[0].rtp.transport_cc = true;
     }
 
     Action OnSendRtp(const uint8_t* packet, size_t length) override {

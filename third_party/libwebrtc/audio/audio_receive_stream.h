@@ -85,8 +85,6 @@ class AudioReceiveStreamImpl final : public webrtc::AudioReceiveStreamInterface,
   // webrtc::AudioReceiveStreamInterface implementation.
   void Start() override;
   void Stop() override;
-  bool transport_cc() const override;
-  void SetTransportCc(bool transport_cc) override;
   bool IsRunning() const override;
   void SetDepacketizerToDecoderFrameTransformer(
       rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer)

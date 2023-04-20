@@ -180,7 +180,6 @@ ReceiveAudioStream::ReceiveAudioStream(
   recv_config.rtp.remote_ssrc = send_stream->ssrc_;
   receiver->ssrc_media_types_[recv_config.rtp.remote_ssrc] = MediaType::AUDIO;
   if (config.stream.in_bandwidth_estimation) {
-    recv_config.rtp.transport_cc = true;
     recv_config.rtp.extensions = {{RtpExtension::kTransportSequenceNumberUri,
                                    kTransportSequenceNumberExtensionId}};
   }

@@ -998,7 +998,6 @@ bool WebRtcVideoChannel::ApplyChangedParams(
       RTC_DCHECK(kv.second != nullptr);
       kv.second->SetFeedbackParameters(
           HasLntf(send_codec_->codec), HasNack(send_codec_->codec),
-          HasTransportCc(send_codec_->codec),
           send_params_.rtcp.reduced_size ? webrtc::RtcpMode::kReducedSize
                                          : webrtc::RtcpMode::kCompound,
           send_codec_->rtx_time);
@@ -1515,10 +1514,6 @@ void WebRtcVideoChannel::ConfigureReceiverRtp(
   if (send_codec_ && send_codec_->rtx_time != -1) {
     config->rtp.nack.rtp_history_ms = send_codec_->rtx_time;
   }
-
-  config->rtp.transport_cc =
-      send_codec_ ? HasTransportCc(send_codec_->codec) : false;
-
   sp.GetFidSsrc(ssrc, &config->rtp.rtx_ssrc);
 
   config->rtp.extensions = recv_rtp_extensions_;
@@ -1530,9 +1525,6 @@ void WebRtcVideoChannel::ConfigureReceiverRtp(
     flexfec_config->protected_media_ssrcs = {ssrc};
     flexfec_config->rtp.local_ssrc = config->rtp.local_ssrc;
     flexfec_config->rtcp_mode = config->rtp.rtcp_mode;
-    // TODO(brandtr): We should be spec-compliant and set `transport_cc` here
-    // based on the rtcp-fb for the FlexFEC codec, not the media codec.
-    flexfec_config->rtp.transport_cc = config->rtp.transport_cc;
     flexfec_config->rtp.extensions = config->rtp.extensions;
   }
 }
@@ -2986,7 +2978,6 @@ bool WebRtcVideoChannel::WebRtcVideoReceiveStream::ReconfigureCodecs(
 void WebRtcVideoChannel::WebRtcVideoReceiveStream::SetFeedbackParameters(
     bool lntf_enabled,
     bool nack_enabled,
-    bool transport_cc_enabled,
     webrtc::RtcpMode rtcp_mode,
     int rtx_time) {
   RTC_DCHECK(stream_);
@@ -2998,17 +2989,6 @@ void WebRtcVideoChannel::WebRtcVideoReceiveStream::SetFeedbackParameters(
     flexfec_config_.rtcp_mode = rtcp_mode;
     if (flexfec_stream_) {
       flexfec_stream_->SetRtcpMode(rtcp_mode);
-    }
-  }
-
-  if (config_.rtp.transport_cc != transport_cc_enabled) {
-    config_.rtp.transport_cc = transport_cc_enabled;
-    stream_->SetTransportCc(transport_cc_enabled);
-    // TODO(brandtr): We should be spec-compliant and set `transport_cc` here
-    // based on the rtcp-fb for the FlexFEC codec, not the media codec.
-    flexfec_config_.rtp.transport_cc = transport_cc_enabled;
-    if (flexfec_stream_) {
-      flexfec_stream_->SetTransportCc(transport_cc_enabled);
     }
   }
 

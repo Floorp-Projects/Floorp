@@ -334,36 +334,33 @@ void CallTest::CreateMatchingVideoReceiveConfigs(
     const VideoSendStream::Config& video_send_config,
     Transport* rtcp_send_transport) {
   CreateMatchingVideoReceiveConfigs(video_send_config, rtcp_send_transport,
-                                    true, &fake_decoder_factory_, absl::nullopt,
+                                    &fake_decoder_factory_, absl::nullopt,
                                     false, 0);
 }
 
 void CallTest::CreateMatchingVideoReceiveConfigs(
     const VideoSendStream::Config& video_send_config,
     Transport* rtcp_send_transport,
-    bool send_side_bwe,
     VideoDecoderFactory* decoder_factory,
     absl::optional<size_t> decode_sub_stream,
     bool receiver_reference_time_report,
     int rtp_history_ms) {
   AddMatchingVideoReceiveConfigs(
       &video_receive_configs_, video_send_config, rtcp_send_transport,
-      send_side_bwe, decoder_factory, decode_sub_stream,
-      receiver_reference_time_report, rtp_history_ms);
+      decoder_factory, decode_sub_stream, receiver_reference_time_report,
+      rtp_history_ms);
 }
 
 void CallTest::AddMatchingVideoReceiveConfigs(
     std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
     const VideoSendStream::Config& video_send_config,
     Transport* rtcp_send_transport,
-    bool send_side_bwe,
     VideoDecoderFactory* decoder_factory,
     absl::optional<size_t> decode_sub_stream,
     bool receiver_reference_time_report,
     int rtp_history_ms) {
   RTC_DCHECK(!video_send_config.rtp.ssrcs.empty());
   VideoReceiveStreamInterface::Config default_config(rtcp_send_transport);
-  default_config.rtp.transport_cc = send_side_bwe;
   default_config.rtp.local_ssrc = kReceiverLocalVideoSsrc;
   for (const RtpExtension& extension : video_send_config.rtp.extensions)
     default_config.rtp.extensions.push_back(extension);
@@ -429,10 +426,6 @@ AudioReceiveStreamInterface::Config CallTest::CreateMatchingAudioConfig(
   audio_config.rtp.local_ssrc = kReceiverLocalAudioSsrc;
   audio_config.rtcp_send_transport = transport;
   audio_config.rtp.remote_ssrc = send_config.rtp.ssrc;
-  audio_config.rtp.transport_cc =
-      send_config.send_codec_spec
-          ? send_config.send_codec_spec->transport_cc_enabled
-          : false;
   audio_config.rtp.extensions = send_config.rtp.extensions;
   audio_config.decoder_factory = audio_decoder_factory;
   audio_config.decoder_map = {{kAudioSendPayloadType, {"opus", 48000, 2}}};
