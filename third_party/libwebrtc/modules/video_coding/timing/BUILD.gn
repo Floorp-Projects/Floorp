@@ -94,6 +94,7 @@ rtc_library("timestamp_extrapolator") {
   deps = [
     "../../../api/units:timestamp",
     "../../../modules:module_api_public",
+    "../../../rtc_base:rtc_numerics",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
