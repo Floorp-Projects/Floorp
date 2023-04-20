@@ -344,6 +344,8 @@ Tester.prototype = {
       "litElementVersions",
     ];
 
+    this._repeatingTimers = this._getRepeatingTimers();
+
     this.PerTestCoverageUtils.beforeTestSync();
 
     if (this.tests.length) {
@@ -353,6 +355,17 @@ Tester.prototype = {
     } else {
       this.finish();
     }
+  },
+
+  _getRepeatingTimers() {
+    const kNonRepeatingTimerTypes = [
+      Ci.nsITimer.TYPE_ONE_SHOT,
+      Ci.nsITimer.TYPE_ONE_SHOT_LOW_PRIORITY,
+    ];
+    return Cc["@mozilla.org/timer-manager;1"]
+      .getService(Ci.nsITimerManager)
+      .getTimers()
+      .filter(t => !kNonRepeatingTimerTypes.includes(t.type));
   },
 
   async waitForWindowsReady() {
@@ -598,6 +611,75 @@ Tester.prototype = {
     }
   },
 
+  getNewRepeatingTimers() {
+    let repeatingTimers = this._getRepeatingTimers();
+    let results = [];
+    for (let timer of repeatingTimers) {
+      let { name, delay } = timer;
+      // For now ignore long repeating timers (typically from nsExpirationTracker).
+      if (delay >= 10000) {
+        continue;
+      }
+
+      // Also ignore the nsAvailableMemoryWatcher timer that is started when the
+      // user-interaction-active notification is fired, and stopped when the
+      // user-interaction-inactive notification occurs.
+      // On Linux it's a 5s timer, on other platforms it's 10s, which is already
+      // ignored by the previous case.
+      if (
+        AppConstants.platform == "linux" &&
+        name == "nsAvailableMemoryWatcher"
+      ) {
+        continue;
+      }
+
+      if (
+        !this._repeatingTimers.find(t => t.delay == delay && t.name == name)
+      ) {
+        results.push(timer);
+      }
+    }
+    if (results.length) {
+      ChromeUtils.addProfilerMarker(
+        "NewRepeatingTimers",
+        { category: "Test" },
+        results.map(t => `${t.name}: ${t.delay}ms`).join(", ")
+      );
+    }
+    return results;
+  },
+
+  async ensureNoNewRepeatingTimers() {
+    let newTimers;
+    try {
+      await this.TestUtils.waitForCondition(
+        async function() {
+          // The array returned by nsITimerManager.getTimers doesn't include
+          // timers that are queued in the event loop of their target thread.
+          // By waiting for a tick, we ensure the timers that might fire about
+          // at the same time as our waitForCondition timer will be included.
+          await this.TestUtils.waitForTick();
+
+          newTimers = this.getNewRepeatingTimers();
+          return !newTimers.length;
+        }.bind(this),
+        "waiting for new repeating timers to be cancelled"
+      );
+    } catch (e) {
+      this.Assert.ok(false, e);
+      for (let { name, delay } of newTimers) {
+        this.Assert.ok(
+          false,
+          `test left unexpected repeating timer ${name} (duration: ${delay}ms)`
+        );
+      }
+      // Once the new repeating timers have been reported, add them to
+      // this._repeatingTimers to avoid reporting them again for the next
+      // tests of the manifest.
+      this._repeatingTimers.push(...newTimers);
+    }
+  },
+
   async nextTest() {
     if (this.currentTest) {
       if (this._coverageCollector) {
@@ -700,6 +782,8 @@ Tester.prototype = {
           }
         }
       }, this);
+
+      await this.ensureNoNewRepeatingTimers();
 
       // eslint-disable-next-line no-undef
       await new Promise(resolve => SpecialPowers.flushPrefEnv(resolve));

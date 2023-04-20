@@ -120,6 +120,11 @@ add_setup(async function() {
           ["dom.security.featurePolicy.header.enabled", true],
           ["dom.security.featurePolicy.webidl.enabled", true],
           ["permissions.delegation.enabled", true],
+          // This is the amount of time before the repeating
+          // NetworkGeolocationProvider timer is stopped.
+          // It needs to be less than 5000ms, or the timer will be
+          // reported as left behind by the test.
+          ["geo.timeout", 4000],
         ],
       },
       r
