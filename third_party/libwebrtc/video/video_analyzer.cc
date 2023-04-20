@@ -99,8 +99,8 @@ VideoAnalyzer::VideoAnalyzer(test::LayerFilteringTransport* transport,
       mean_decode_time_ms_(0.0),
       freeze_count_(0),
       total_freezes_duration_ms_(0),
-      total_frames_duration_ms_(0),
-      sum_squared_frame_durations_(0),
+      total_inter_frame_delay_(0),
+      total_squared_inter_frame_delay_(0),
       decode_frame_rate_(0),
       render_frame_rate_(0),
       last_fec_bytes_(0),
@@ -502,6 +502,14 @@ void VideoAnalyzer::PollStats() {
   if (receive_stream_ != nullptr) {
     VideoReceiveStreamInterface::Stats receive_stats =
         receive_stream_->GetStats();
+
+    // Freeze metrics.
+    freeze_count_ = receive_stats.freeze_count;
+    total_freezes_duration_ms_ = receive_stats.total_freezes_duration_ms;
+    total_inter_frame_delay_ = receive_stats.total_inter_frame_delay;
+    total_squared_inter_frame_delay_ =
+        receive_stats.total_squared_inter_frame_delay;
+
     // `total_decode_time_ms` gives a good estimate of the mean decode time,
     // `decode_ms` is used to keep track of the standard deviation.
     if (receive_stats.frames_decoded > 0)
@@ -518,20 +526,12 @@ void VideoAnalyzer::PollStats() {
     // `frames_decoded` and `frames_rendered` are used because they are more
     // accurate than `decode_frame_rate` and `render_frame_rate`.
     // The latter two are calculated on a momentary basis.
-    const double total_frames_duration_sec_double =
-        static_cast<double>(receive_stats.total_frames_duration_ms) / 1000.0;
-    if (total_frames_duration_sec_double > 0) {
-      decode_frame_rate_ = static_cast<double>(receive_stats.frames_decoded) /
-                           total_frames_duration_sec_double;
-      render_frame_rate_ = static_cast<double>(receive_stats.frames_rendered) /
-                           total_frames_duration_sec_double;
+    if (total_inter_frame_delay_ > 0) {
+      decode_frame_rate_ =
+          receive_stats.frames_decoded / total_inter_frame_delay_;
+      render_frame_rate_ =
+          receive_stats.frames_rendered / total_inter_frame_delay_;
     }
-
-    // Freeze metrics.
-    freeze_count_ = receive_stats.freeze_count;
-    total_freezes_duration_ms_ = receive_stats.total_freezes_duration_ms;
-    total_frames_duration_ms_ = receive_stats.total_frames_duration_ms;
-    sum_squared_frame_durations_ = receive_stats.sum_squared_frame_durations;
   }
 
   if (audio_receive_stream_ != nullptr) {
@@ -673,7 +673,7 @@ void VideoAnalyzer::PrintResults() {
   const double total_freezes_duration_ms_double =
       static_cast<double>(total_freezes_duration_ms_);
   const double total_frames_duration_ms_double =
-      static_cast<double>(total_frames_duration_ms_);
+      total_inter_frame_delay_ * rtc::kNumMillisecsPerSec;
 
   if (total_frames_duration_ms_double > 0) {
     GetGlobalMetricsLogger()->LogSingleValueMetric(
@@ -701,10 +701,11 @@ void VideoAnalyzer::PrintResults() {
           : 0,
       Unit::kMilliseconds, ImprovementDirection::kSmallerIsBetter);
 
-  if (1000 * sum_squared_frame_durations_ > 0) {
+  if (total_squared_inter_frame_delay_ > 0) {
     GetGlobalMetricsLogger()->LogSingleValueMetric(
         "harmonic_frame_rate_fps", test_label_,
-        total_frames_duration_ms_double / (1000 * sum_squared_frame_durations_),
+        total_frames_duration_ms_double /
+            (1000 * total_squared_inter_frame_delay_),
         Unit::kHertz, ImprovementDirection::kBiggerIsBetter);
   }
 

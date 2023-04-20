@@ -263,8 +263,8 @@ class VideoAnalyzer : public PacketReceiver,
   SamplesStatsCounter time_between_freezes_ RTC_GUARDED_BY(comparison_lock_);
   uint32_t freeze_count_ RTC_GUARDED_BY(comparison_lock_);
   uint32_t total_freezes_duration_ms_ RTC_GUARDED_BY(comparison_lock_);
-  uint32_t total_frames_duration_ms_ RTC_GUARDED_BY(comparison_lock_);
-  double sum_squared_frame_durations_ RTC_GUARDED_BY(comparison_lock_);
+  double total_inter_frame_delay_ RTC_GUARDED_BY(comparison_lock_);
+  double total_squared_inter_frame_delay_ RTC_GUARDED_BY(comparison_lock_);
 
   double decode_frame_rate_ RTC_GUARDED_BY(comparison_lock_);
   double render_frame_rate_ RTC_GUARDED_BY(comparison_lock_);

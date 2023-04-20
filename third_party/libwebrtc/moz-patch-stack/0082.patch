@@ -115,7 +115,7 @@ index 94edf64d5a..81fd12da58 100644
  
  }  // namespace webrtc
 diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
-index 570f07eff3..7ba14a0ac2 100644
+index 25c294a2a6..1ab4a2a85b 100644
 --- a/call/video_receive_stream.h
 +++ b/call/video_receive_stream.h
 @@ -106,6 +106,8 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
@@ -201,10 +201,10 @@ index 53e08c95a1..47b2ffe199 100644
  
    void ForceSpsPpsIdrIsH264Keyframe();
 diff --git a/video/receive_statistics_proxy2.cc b/video/receive_statistics_proxy2.cc
-index 297f5d3de9..2373fd6800 100644
+index 4f208a1d5e..020e4bb0ae 100644
 --- a/video/receive_statistics_proxy2.cc
 +++ b/video/receive_statistics_proxy2.cc
-@@ -961,6 +961,11 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
+@@ -959,6 +959,11 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
        }));
  }
  
