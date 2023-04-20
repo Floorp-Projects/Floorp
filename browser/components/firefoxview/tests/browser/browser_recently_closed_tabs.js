@@ -3,6 +3,8 @@
 
 "use strict";
 
+requestLongerTimeout(10);
+
 /**
  * The recently closed tab list is populated on a per-window basis.
  *
@@ -641,6 +643,37 @@ add_task(async function test_reopen_recently_closed_tabs() {
     tabsList.children[0].dataset.targeturi,
     URLs[1],
     `First recently closed item should be ${URLs[1]}`
+  );
+
+  const contextMenu = gBrowser.ownerDocument.getElementById(
+    "contentAreaContextMenu"
+  );
+  const promisePopup = BrowserTestUtils.waitForEvent(contextMenu, "popupshown");
+  EventUtils.synthesizeMouseAtCenter(
+    tabsList.querySelector(".closed-tab-li-title"),
+    {
+      button: 2,
+      type: "contextmenu",
+    },
+    gBrowser.contentWindow
+  );
+  await promisePopup;
+  const promiseNewTab = BrowserTestUtils.waitForNewTab(gBrowser, URLs[1]);
+  contextMenu.activateItem(
+    gBrowser.ownerDocument.getElementById("context-openlinkintab")
+  );
+  await promiseNewTab;
+
+  await BrowserTestUtils.waitForMutationCondition(
+    tabsList,
+    { childList: true },
+    () => tabsList.children.length === 1
+  );
+
+  Assert.equal(
+    tabsList.children[0].dataset.targeturi,
+    URLs[0],
+    `First recently closed item should be ${URLs[0]}`
   );
 
   // clean up extra tabs
