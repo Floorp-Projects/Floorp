@@ -25,6 +25,7 @@ def test_profile_root(tmp_path, configuration, geckodriver):
 
 def test_profile_root_missing(tmp_path, configuration, geckodriver):
     profile_path = os.path.join(tmp_path, "missing-path")
+    assert not os.path.exists(profile_path)
 
     config = copy.deepcopy(configuration)
     # Ensure we don't set a profile in command line arguments
@@ -32,5 +33,6 @@ def test_profile_root_missing(tmp_path, configuration, geckodriver):
 
     extra_args = ["--profile-root", profile_path]
 
-    with pytest.raises(Exception):
+    with pytest.raises(ChildProcessError) as exc_info:
         geckodriver(config=config, extra_args=extra_args)
+    assert str(exc_info.value) == "geckodriver terminated with code 64"
