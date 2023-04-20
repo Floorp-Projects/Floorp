@@ -204,7 +204,7 @@ index 120e411772..731989f820 100644
      "../api:sequence_checker",
      "../api:transport_api",
 diff --git a/media/base/media_channel.h b/media/base/media_channel.h
-index 9dced9485e..5b6bcad524 100644
+index 30e7571ab8..7f433bf69b 100644
 --- a/media/base/media_channel.h
 +++ b/media/base/media_channel.h
 @@ -63,10 +63,6 @@ class Timing;

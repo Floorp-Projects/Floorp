@@ -100,7 +100,7 @@ class AudioRtpReceiver : public ObserverInterface,
   void Stop() override;
   void SetupMediaChannel(uint32_t ssrc) override;
   void SetupUnsignaledMediaChannel() override;
-  uint32_t ssrc() const override;
+  absl::optional<uint32_t> ssrc() const override;
   void NotifyFirstPacketReceived() override;
   void set_stream_ids(std::vector<std::string> stream_ids) override;
   void set_transport(

@@ -388,7 +388,10 @@ rtc::scoped_refptr<MockRtpSenderInternal> CreateMockSender(
   EXPECT_CALL(*sender, track()).WillRepeatedly(Return(track));
   EXPECT_CALL(*sender, ssrc()).WillRepeatedly(Return(ssrc));
   EXPECT_CALL(*sender, media_type()).WillRepeatedly(Return(media_type));
-  EXPECT_CALL(*sender, GetParameters()).WillRepeatedly(Invoke([ssrc]() {
+  EXPECT_CALL(*sender, GetParameters())
+      .WillRepeatedly(
+          Invoke([s = sender.get()]() { return s->GetParametersInternal(); }));
+  EXPECT_CALL(*sender, GetParametersInternal()).WillRepeatedly(Invoke([ssrc]() {
     RtpParameters params;
     params.encodings.push_back(RtpEncodingParameters());
     params.encodings[0].ssrc = ssrc;
@@ -406,6 +409,9 @@ rtc::scoped_refptr<MockRtpReceiverInternal> CreateMockReceiver(
     int attachment_id) {
   auto receiver = rtc::make_ref_counted<MockRtpReceiverInternal>();
   EXPECT_CALL(*receiver, track()).WillRepeatedly(Return(track));
+  EXPECT_CALL(*receiver, ssrc()).WillRepeatedly(Invoke([ssrc]() {
+    return ssrc;
+  }));
   EXPECT_CALL(*receiver, streams())
       .WillRepeatedly(
           Return(std::vector<rtc::scoped_refptr<MediaStreamInterface>>({})));

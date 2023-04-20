@@ -1966,6 +1966,15 @@ void WebRtcVoiceMediaChannel::ResetUnsignaledRecvStream() {
   }
 }
 
+absl::optional<uint32_t> WebRtcVoiceMediaChannel::GetUnsignaledSsrc() const {
+  if (unsignaled_recv_ssrcs_.empty()) {
+    return absl::nullopt;
+  }
+  // In the event of multiple unsignaled ssrcs, the last in the vector will be
+  // the most recent one (the one forwarded to the MediaStreamTrack).
+  return unsignaled_recv_ssrcs_.back();
+}
+
 // Not implemented.
 // TODO(https://crbug.com/webrtc/12676): Implement a fix for the unsignalled
 // SSRC race that can happen when an m= section goes from receiving to not

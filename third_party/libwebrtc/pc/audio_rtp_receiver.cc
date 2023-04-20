@@ -212,9 +212,12 @@ void AudioRtpReceiver::SetupUnsignaledMediaChannel() {
   RestartMediaChannel(absl::nullopt);
 }
 
-uint32_t AudioRtpReceiver::ssrc() const {
+absl::optional<uint32_t> AudioRtpReceiver::ssrc() const {
   RTC_DCHECK_RUN_ON(worker_thread_);
-  return ssrc_.value_or(0);
+  if (!ssrc_.has_value() && media_channel_) {
+    return media_channel_->GetUnsignaledSsrc();
+  }
+  return ssrc_;
 }
 
 void AudioRtpReceiver::set_stream_ids(std::vector<std::string> stream_ids) {

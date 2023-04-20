@@ -1231,7 +1231,7 @@ void LegacyStatsCollector::ExtractMediaInfo(
 
       for (const auto& receiver : transceiver->internal()->receivers()) {
         gatherer->receiver_track_id_by_ssrc.insert(std::make_pair(
-            receiver->internal()->ssrc(), receiver->track()->id()));
+            receiver->internal()->ssrc().value_or(0), receiver->track()->id()));
       }
     }
 

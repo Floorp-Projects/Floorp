@@ -244,6 +244,12 @@ class RTCStatsCollector : public rtc::RefCountInterface,
   // This is a NO-OP if `network_report_` is null.
   void MergeNetworkReport_s();
 
+  rtc::scoped_refptr<RTCStatsReport> CreateReportFilteredBySelector(
+      bool filter_by_sender_selector,
+      rtc::scoped_refptr<const RTCStatsReport> report,
+      rtc::scoped_refptr<RtpSenderInternal> sender_selector,
+      rtc::scoped_refptr<RtpReceiverInternal> receiver_selector);
+
   // Slots for signals (sigslot) that are wired up to `pc_`.
   void OnSctpDataChannelCreated(SctpDataChannel* channel);
   // Slots for signals (sigslot) that are wired up to `channel`.

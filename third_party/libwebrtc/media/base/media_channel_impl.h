@@ -420,6 +420,9 @@ class VoiceMediaReceiveChannel : public VoiceMediaReceiveChannelInterface {
   void ResetUnsignaledRecvStream() override {
     return impl()->ResetUnsignaledRecvStream();
   }
+  absl::optional<uint32_t> GetUnsignaledSsrc() const override {
+    return impl()->GetUnsignaledSsrc();
+  }
   void OnDemuxerCriteriaUpdatePending() override {
     impl()->OnDemuxerCriteriaUpdatePending();
   }
@@ -613,6 +616,9 @@ class VideoMediaReceiveChannel : public VideoMediaReceiveChannelInterface {
   }
   void ResetUnsignaledRecvStream() override {
     return impl()->ResetUnsignaledRecvStream();
+  }
+  absl::optional<uint32_t> GetUnsignaledSsrc() const override {
+    return impl()->GetUnsignaledSsrc();
   }
   void OnDemuxerCriteriaUpdatePending() override {
     impl()->OnDemuxerCriteriaUpdatePending();

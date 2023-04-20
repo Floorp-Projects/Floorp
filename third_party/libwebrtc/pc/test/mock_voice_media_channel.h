@@ -53,6 +53,10 @@ class MockVoiceMediaChannel : public VoiceMediaChannel {
   MOCK_METHOD(bool, AddRecvStream, (const StreamParams& sp), (override));
   MOCK_METHOD(bool, RemoveRecvStream, (uint32_t ssrc), (override));
   MOCK_METHOD(void, ResetUnsignaledRecvStream, (), (override));
+  MOCK_METHOD(absl::optional<uint32_t>,
+              GetUnsignaledSsrc,
+              (),
+              (const, override));
   MOCK_METHOD(void, OnDemuxerCriteriaUpdatePending, (), (override));
   MOCK_METHOD(void, OnDemuxerCriteriaUpdateComplete, (), (override));
   MOCK_METHOD(int, GetRtpSendTimeExtnId, (), (const, override));

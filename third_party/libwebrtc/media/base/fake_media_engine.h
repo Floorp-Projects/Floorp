@@ -121,6 +121,9 @@ class RtpHelper : public Base {
     return RemoveStreamBySsrc(&send_streams_, ssrc);
   }
   virtual void ResetUnsignaledRecvStream() {}
+  virtual absl::optional<uint32_t> GetUnsignaledSsrc() const {
+    return absl::nullopt;
+  }
   virtual void OnDemuxerCriteriaUpdatePending() {}
   virtual void OnDemuxerCriteriaUpdateComplete() {}
 
