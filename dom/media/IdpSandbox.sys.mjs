@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 /** This little class ensures that redirects maintain an https:// origin */
@@ -107,7 +105,7 @@ function createLocationFromURI(uri) {
  * @param win (obj) the current window
  * @throws if the domain or protocol aren't valid
  */
-function IdpSandbox(domain, protocol, win) {
+export function IdpSandbox(domain, protocol, win) {
   this.source = IdpSandbox.createIdpUri(domain, protocol || "default");
   this.active = null;
   this.sandbox = null;
@@ -285,5 +283,3 @@ IdpSandbox.prototype = {
     return this.source.spec;
   },
 };
-
-var EXPORTED_SYMBOLS = ["IdpSandbox"];

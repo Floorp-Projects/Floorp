@@ -18,7 +18,7 @@ with Files("tests/**"):
     BUG_COMPONENT = ("Core", "WebRTC")
 
 component_signaling = ("Core", "WebRTC: Signaling")
-with Files("IdpSandbox.jsm"):
+with Files("IdpSandbox.sys.mjs"):
     BUG_COMPONENT = component_signaling
 with Files("PeerConnection*"):
     BUG_COMPONENT = component_signaling
@@ -347,12 +347,12 @@ if CONFIG["MOZ_WEBRTC"]:
     ]
 
     EXTRA_JS_MODULES.media += [
-        "PeerConnection.jsm",
+        "PeerConnection.sys.mjs",
     ]
 
 EXTRA_JS_MODULES.media += [
-    "IdpSandbox.jsm",
-    "PeerConnectionIdp.jsm",
+    "IdpSandbox.sys.mjs",
+    "PeerConnectionIdp.sys.mjs",
 ]
 
 LOCAL_INCLUDES += [
