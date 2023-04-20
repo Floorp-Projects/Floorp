@@ -188,8 +188,31 @@ async function dnsListLookup(domainList) {
 }
 
 // TODO: Confirm the expected behavior when filtering is on
-async function globalCanary() {
+export async function globalCanary() {
+  // Check that a commonly used domain resolves before and after
+  // checking the global canary.
+  // If this check fails, the globalCanary isn't to be trusted, as it's
+  // an indication it might have failed due to DNS being unavailable.
+  async function preconditionCheck(domain) {
+    let { addresses, err } = await dnsLookup(domain);
+    if (err === NXDOMAIN_ERR || !addresses.length) {
+      return false;
+    }
+    return true;
+  }
+
+  let preCheckSuccess = await preconditionCheck("example.com.");
+  if (!preCheckSuccess) {
+    return "enable_doh";
+  }
+
+  // Actual global canary check
   let { addresses, err } = await dnsLookup(GLOBAL_CANARY);
+
+  let postCheckSuccess = await preconditionCheck("example.org.");
+  if (!postCheckSuccess) {
+    return "enable_doh";
+  }
 
   function isLocal(addr) {
     // hostnameIsLocalIPAddress does not return true for loopback addresses
