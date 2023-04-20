@@ -32,7 +32,7 @@ using mozilla::RangedPtr;
 
 template <typename CharT>
 template <JSONParserBase::StringType ST>
-JSONParserBase::Token JSONParser<CharT>::readString() {
+JSONToken JSONParser<CharT>::readString() {
   MOZ_ASSERT(current < end);
   MOZ_ASSERT(*current == '"');
 
@@ -43,7 +43,7 @@ JSONParserBase::Token JSONParser<CharT>::readString() {
 
   if (++current == end) {
     error("unterminated string literal");
-    return token(Error);
+    return token(JSONToken::Error);
   }
 
   /*
@@ -60,7 +60,7 @@ JSONParserBase::Token JSONParser<CharT>::readString() {
               ? AtomizeChars(cx, start.get(), length)
               : NewStringCopyN<CanGC>(cx, start.get(), length);
       if (!str) {
-        return token(OOM);
+        return token(JSONToken::OOM);
       }
       return stringToken(str);
     }
@@ -71,7 +71,7 @@ JSONParserBase::Token JSONParser<CharT>::readString() {
 
     if (*current <= 0x001F) {
       error("bad control character in string literal");
-      return token(Error);
+      return token(JSONToken::Error);
     }
   }
 
@@ -83,7 +83,7 @@ JSONParserBase::Token JSONParser<CharT>::readString() {
   JSStringBuilder buffer(cx);
   do {
     if (start < current && !buffer.append(start.get(), current.get())) {
-      return token(OOM);
+      return token(JSONToken::OOM);
     }
 
     if (current >= end) {
@@ -96,7 +96,7 @@ JSONParserBase::Token JSONParser<CharT>::readString() {
                                 ? buffer.finishAtom()
                                 : buffer.finishString();
       if (!str) {
-        return token(OOM);
+        return token(JSONToken::OOM);
       }
       return stringToken(str);
     }
@@ -104,7 +104,7 @@ JSONParserBase::Token JSONParser<CharT>::readString() {
     if (c != '\\') {
       --current;
       error("bad character in string literal");
-      return token(Error);
+      return token(JSONToken::Error);
     }
 
     if (current >= end) {
@@ -156,7 +156,7 @@ JSONParserBase::Token JSONParser<CharT>::readString() {
           }
 
           error("bad Unicode escape");
-          return token(Error);
+          return token(JSONToken::Error);
         }
         c = (AsciiAlphanumericToNumber(current[0]) << 12) |
             (AsciiAlphanumericToNumber(current[1]) << 8) |
@@ -168,10 +168,10 @@ JSONParserBase::Token JSONParser<CharT>::readString() {
       default:
         current--;
         error("bad escaped character");
-        return token(Error);
+        return token(JSONToken::Error);
     }
     if (!buffer.append(c)) {
-      return token(OOM);
+      return token(JSONToken::OOM);
     }
 
     start = current;
@@ -183,11 +183,11 @@ JSONParserBase::Token JSONParser<CharT>::readString() {
   } while (current < end);
 
   error("unterminated string");
-  return token(Error);
+  return token(JSONToken::Error);
 }
 
 template <typename CharT>
-JSONParserBase::Token JSONParser<CharT>::readNumber() {
+JSONToken JSONParser<CharT>::readNumber() {
   MOZ_ASSERT(current < end);
   MOZ_ASSERT(IsAsciiDigit(*current) || *current == '-');
 
@@ -201,7 +201,7 @@ JSONParserBase::Token JSONParser<CharT>::readNumber() {
   /* -? */
   if (negative && ++current == end) {
     error("no number after minus sign");
-    return token(Error);
+    return token(JSONToken::Error);
   }
 
   const CharPtr digitStart = current;
@@ -209,7 +209,7 @@ JSONParserBase::Token JSONParser<CharT>::readNumber() {
   /* 0|[1-9][0-9]+ */
   if (!IsAsciiDigit(*current)) {
     error("unexpected non-digit");
-    return token(Error);
+    return token(JSONToken::Error);
   }
   if (*current++ != '0') {
     for (; current < end; current++) {
@@ -236,7 +236,7 @@ JSONParserBase::Token JSONParser<CharT>::readNumber() {
     if (!GetFullInteger(digitStart.get(), current.get(), 10,
                         IntegerSeparatorHandling::None, &d)) {
       ReportOutOfMemory(cx);
-      return token(OOM);
+      return token(JSONToken::OOM);
     }
     return numberToken(negative ? -d : d);
   }
@@ -245,11 +245,11 @@ JSONParserBase::Token JSONParser<CharT>::readNumber() {
   if (current < end && *current == '.') {
     if (++current == end) {
       error("missing digits after decimal point");
-      return token(Error);
+      return token(JSONToken::Error);
     }
     if (!IsAsciiDigit(*current)) {
       error("unterminated fractional number");
-      return token(Error);
+      return token(JSONToken::Error);
     }
     while (++current < end) {
       if (!IsAsciiDigit(*current)) {
@@ -262,17 +262,17 @@ JSONParserBase::Token JSONParser<CharT>::readNumber() {
   if (current < end && (*current == 'e' || *current == 'E')) {
     if (++current == end) {
       error("missing digits after exponent indicator");
-      return token(Error);
+      return token(JSONToken::Error);
     }
     if (*current == '+' || *current == '-') {
       if (++current == end) {
         error("missing digits after exponent sign");
-        return token(Error);
+        return token(JSONToken::Error);
       }
     }
     if (!IsAsciiDigit(*current)) {
       error("exponent part is missing a number");
-      return token(Error);
+      return token(JSONToken::Error);
     }
     while (++current < end) {
       if (!IsAsciiDigit(*current)) {
@@ -290,13 +290,13 @@ static inline bool IsJSONWhitespace(char16_t c) {
 }
 
 template <typename CharT>
-JSONParserBase::Token JSONParser<CharT>::advance() {
+JSONToken JSONParser<CharT>::advance() {
   while (current < end && IsJSONWhitespace(*current)) {
     current++;
   }
   if (current >= end) {
     error("unexpected end of data");
-    return token(Error);
+    return token(JSONToken::Error);
   }
 
   switch (*current) {
@@ -320,59 +320,59 @@ JSONParserBase::Token JSONParser<CharT>::advance() {
       if (end - current < 4 || current[1] != 'r' || current[2] != 'u' ||
           current[3] != 'e') {
         error("unexpected keyword");
-        return token(Error);
+        return token(JSONToken::Error);
       }
       current += 4;
-      return token(True);
+      return token(JSONToken::True);
 
     case 'f':
       if (end - current < 5 || current[1] != 'a' || current[2] != 'l' ||
           current[3] != 's' || current[4] != 'e') {
         error("unexpected keyword");
-        return token(Error);
+        return token(JSONToken::Error);
       }
       current += 5;
-      return token(False);
+      return token(JSONToken::False);
 
     case 'n':
       if (end - current < 4 || current[1] != 'u' || current[2] != 'l' ||
           current[3] != 'l') {
         error("unexpected keyword");
-        return token(Error);
+        return token(JSONToken::Error);
       }
       current += 4;
-      return token(Null);
+      return token(JSONToken::Null);
 
     case '[':
       current++;
-      return token(ArrayOpen);
+      return token(JSONToken::ArrayOpen);
     case ']':
       current++;
-      return token(ArrayClose);
+      return token(JSONToken::ArrayClose);
 
     case '{':
       current++;
-      return token(ObjectOpen);
+      return token(JSONToken::ObjectOpen);
     case '}':
       current++;
-      return token(ObjectClose);
+      return token(JSONToken::ObjectClose);
 
     case ',':
       current++;
-      return token(Comma);
+      return token(JSONToken::Comma);
 
     case ':':
       current++;
-      return token(Colon);
+      return token(JSONToken::Colon);
 
     default:
       error("unexpected character");
-      return token(Error);
+      return token(JSONToken::Error);
   }
 }
 
 template <typename CharT>
-JSONParserBase::Token JSONParser<CharT>::advancePropertyName() {
+JSONToken JSONParser<CharT>::advancePropertyName() {
   MOZ_ASSERT(current[-1] == ',');
 
   while (current < end && IsJSONWhitespace(*current)) {
@@ -380,7 +380,7 @@ JSONParserBase::Token JSONParser<CharT>::advancePropertyName() {
   }
   if (current >= end) {
     error("end of data when property name was expected");
-    return token(Error);
+    return token(JSONToken::Error);
   }
 
   if (*current == '"') {
@@ -388,11 +388,11 @@ JSONParserBase::Token JSONParser<CharT>::advancePropertyName() {
   }
 
   error("expected double-quoted property name");
-  return token(Error);
+  return token(JSONToken::Error);
 }
 
 template <typename CharT>
-JSONParserBase::Token JSONParser<CharT>::advancePropertyColon() {
+JSONToken JSONParser<CharT>::advancePropertyColon() {
   MOZ_ASSERT(current[-1] == '"');
 
   while (current < end && IsJSONWhitespace(*current)) {
@@ -400,16 +400,16 @@ JSONParserBase::Token JSONParser<CharT>::advancePropertyColon() {
   }
   if (current >= end) {
     error("end of data after property name when ':' was expected");
-    return token(Error);
+    return token(JSONToken::Error);
   }
 
   if (*current == ':') {
     current++;
-    return token(Colon);
+    return token(JSONToken::Colon);
   }
 
   error("expected ':' after property name in object");
-  return token(Error);
+  return token(JSONToken::Error);
 }
 
 template <typename CharT>
@@ -430,7 +430,7 @@ static inline void AssertPastValue(const RangedPtr<const CharT> current) {
 }
 
 template <typename CharT>
-JSONParserBase::Token JSONParser<CharT>::advanceAfterProperty() {
+JSONToken JSONParser<CharT>::advanceAfterProperty() {
   AssertPastValue(current);
 
   while (current < end && IsJSONWhitespace(*current)) {
@@ -438,25 +438,25 @@ JSONParserBase::Token JSONParser<CharT>::advanceAfterProperty() {
   }
   if (current >= end) {
     error("end of data after property value in object");
-    return token(Error);
+    return token(JSONToken::Error);
   }
 
   if (*current == ',') {
     current++;
-    return token(Comma);
+    return token(JSONToken::Comma);
   }
 
   if (*current == '}') {
     current++;
-    return token(ObjectClose);
+    return token(JSONToken::ObjectClose);
   }
 
   error("expected ',' or '}' after property value in object");
-  return token(Error);
+  return token(JSONToken::Error);
 }
 
 template <typename CharT>
-JSONParserBase::Token JSONParser<CharT>::advanceAfterObjectOpen() {
+JSONToken JSONParser<CharT>::advanceAfterObjectOpen() {
   MOZ_ASSERT(current[-1] == '{');
 
   while (current < end && IsJSONWhitespace(*current)) {
@@ -464,7 +464,7 @@ JSONParserBase::Token JSONParser<CharT>::advanceAfterObjectOpen() {
   }
   if (current >= end) {
     error("end of data while reading object contents");
-    return token(Error);
+    return token(JSONToken::Error);
   }
 
   if (*current == '"') {
@@ -473,15 +473,15 @@ JSONParserBase::Token JSONParser<CharT>::advanceAfterObjectOpen() {
 
   if (*current == '}') {
     current++;
-    return token(ObjectClose);
+    return token(JSONToken::ObjectClose);
   }
 
   error("expected property name or '}'");
-  return token(Error);
+  return token(JSONToken::Error);
 }
 
 template <typename CharT>
-JSONParserBase::Token JSONParser<CharT>::advanceAfterArrayElement() {
+JSONToken JSONParser<CharT>::advanceAfterArrayElement() {
   AssertPastValue(current);
 
   while (current < end && IsJSONWhitespace(*current)) {
@@ -489,21 +489,21 @@ JSONParserBase::Token JSONParser<CharT>::advanceAfterArrayElement() {
   }
   if (current >= end) {
     error("end of data when ',' or ']' was expected");
-    return token(Error);
+    return token(JSONToken::Error);
   }
 
   if (*current == ',') {
     current++;
-    return token(Comma);
+    return token(JSONToken::Comma);
   }
 
   if (*current == ']') {
     current++;
-    return token(ArrayClose);
+    return token(JSONToken::ArrayClose);
   }
 
   error("expected ',' or ']' after array element");
-  return token(Error);
+  return token(JSONToken::Error);
 }
 
 template <typename CharT>
@@ -620,7 +620,7 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
 
   vp.setUndefined();
 
-  Token token;
+  JSONToken token;
   ParserState state = JSONValue;
   while (true) {
     switch (state) {
@@ -629,17 +629,17 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
         properties.back().value = value;
 
         token = advanceAfterProperty();
-        if (token == ObjectClose) {
+        if (token == JSONToken::ObjectClose) {
           if (!finishObject(&value, properties)) {
             return false;
           }
           break;
         }
-        if (token != Comma) {
-          if (token == OOM) {
+        if (token != JSONToken::Comma) {
+          if (token == JSONToken::OOM) {
             return false;
           }
-          if (token != Error) {
+          if (token != JSONToken::Error) {
             error(
                 "expected ',' or '}' after property-value pair in object "
                 "literal");
@@ -651,7 +651,7 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
       }
 
       JSONMember:
-        if (token == String) {
+        if (token == JSONToken::String) {
           jsid id = AtomToId(atomValue());
           if (parseType == ParseType::AttemptForEval) {
             // In |JSON.parse|, "__proto__" is a property like any other and may
@@ -669,16 +669,16 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
             return false;
           }
           token = advancePropertyColon();
-          if (token != Colon) {
-            MOZ_ASSERT(token == Error);
+          if (token != JSONToken::Colon) {
+            MOZ_ASSERT(token == JSONToken::Error);
             return errorReturn();
           }
           goto JSONValue;
         }
-        if (token == OOM) {
+        if (token == JSONToken::OOM) {
           return false;
         }
-        if (token != Error) {
+        if (token != JSONToken::Error) {
           error("property names must be double-quoted strings");
         }
         return errorReturn();
@@ -689,16 +689,16 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
           return false;
         }
         token = advanceAfterArrayElement();
-        if (token == Comma) {
+        if (token == JSONToken::Comma) {
           goto JSONValue;
         }
-        if (token == ArrayClose) {
+        if (token == JSONToken::ArrayClose) {
           if (!finishArray(&value, elements)) {
             return false;
           }
           break;
         }
-        MOZ_ASSERT(token == Error);
+        MOZ_ASSERT(token == JSONToken::Error);
         return errorReturn();
       }
 
@@ -707,23 +707,23 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
         token = advance();
       JSONValueSwitch:
         switch (token) {
-          case String:
+          case JSONToken::String:
             value = stringValue();
             break;
-          case Number:
+          case JSONToken::Number:
             value = numberValue();
             break;
-          case True:
+          case JSONToken::True:
             value = BooleanValue(true);
             break;
-          case False:
+          case JSONToken::False:
             value = BooleanValue(false);
             break;
-          case Null:
+          case JSONToken::Null:
             value = NullValue();
             break;
 
-          case ArrayOpen: {
+          case JSONToken::ArrayOpen: {
             ElementVector* elements;
             if (!freeElements.empty()) {
               elements = freeElements.popCopy();
@@ -740,7 +740,7 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
             }
 
             token = advance();
-            if (token == ArrayClose) {
+            if (token == JSONToken::ArrayClose) {
               if (!finishArray(&value, *elements)) {
                 return false;
               }
@@ -749,7 +749,7 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
             goto JSONValueSwitch;
           }
 
-          case ObjectOpen: {
+          case JSONToken::ObjectOpen: {
             PropertyVector* properties;
             if (!freeProperties.empty()) {
               properties = freeProperties.popCopy();
@@ -766,7 +766,7 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
             }
 
             token = advanceAfterObjectOpen();
-            if (token == ObjectClose) {
+            if (token == JSONToken::ObjectClose) {
               if (!finishObject(&value, *properties)) {
                 return false;
               }
@@ -775,20 +775,20 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
             goto JSONMember;
           }
 
-          case ArrayClose:
-          case ObjectClose:
-          case Colon:
-          case Comma:
+          case JSONToken::ArrayClose:
+          case JSONToken::ObjectClose:
+          case JSONToken::Colon:
+          case JSONToken::Comma:
             // Move the current pointer backwards so that the position
             // reported in the error message is correct.
             --current;
             error("unexpected character");
             return errorReturn();
 
-          case OOM:
+          case JSONToken::OOM:
             return false;
 
-          case Error:
+          case JSONToken::Error:
             return errorReturn();
         }
         break;
