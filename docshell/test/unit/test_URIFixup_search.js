@@ -57,9 +57,8 @@ var data = [
     fixed: "http://user:pass@example.com:8080/this/is/a/test.html",
   },
   {
-    wrong: "gobbledygook:user:pass@example.com:8080/this/is/a/test.html",
-    fixed:
-      "http://gobbledygook:user%3Apass@example.com:8080/this/is/a/test.html",
+    wrong: "nonsense:user:pass@example.com:8080/this/is/a/test.html",
+    fixed: "http://nonsense:user%3Apass@example.com:8080/this/is/a/test.html",
   },
   {
     wrong: "user:@example.com:8080/this/is/a/test.html",

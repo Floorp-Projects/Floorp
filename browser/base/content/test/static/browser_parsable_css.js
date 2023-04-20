@@ -225,7 +225,7 @@ trackResourcePrefix("gre");
 trackResourcePrefix("app");
 
 function getBaseUriForChromeUri(chromeUri) {
-  let chromeFile = chromeUri + "gobbledygooknonexistentfile.reallynothere";
+  let chromeFile = chromeUri + "nonexistentfile.reallynothere";
   let uri = Services.io.newURI(chromeFile);
   let fileUri = gChromeReg.convertChromeURL(uri);
   return fileUri.resolve(".");

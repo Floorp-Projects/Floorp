@@ -350,7 +350,7 @@ add_task(async function test_missing_file() {
 });
 
 add_task(async function test_hasSource() {
-  equal(l10nReg.hasSource("gobbledygook"), false, "Non-existing source doesn't exist");
+  equal(l10nReg.hasSource("nonsense"), false, "Non-existing source doesn't exist");
   equal(l10nReg.hasSource("app"), false, "hasSource returns true before registering a source");
   let oneSource = new L10nFileSource("app", "app", ["en-US"], "/{locale}/");
   l10nReg.registerSources([oneSource]);
