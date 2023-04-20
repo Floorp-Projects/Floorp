@@ -3036,13 +3036,6 @@
   value: true
   mirror: always
 
-# Does mousewheel scrolling over a focused <input type="number"> field cause
-# the number value to increase/decrease (rather than scrolling the page)?
-- name: dom.input.scrollwheel-modifies-number-value
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # Whether to allow or disallow web apps to cancel `beforeinput` events caused
 # by MozEditableElement#setUserInput() which is used by autocomplete, autofill
 # and password manager.

@@ -3962,41 +3962,39 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
           }
           break;
         }
+#if !defined(ANDROID) && !defined(XP_MACOSX)
         case eWheel: {
-          if (StaticPrefs::dom_input_scrollwheel_modifies_number_value()) {
-            // Handle wheel events as increasing / decreasing the input
-            // element's value when it's focused and it's type is number or
-            // range.
-            WidgetWheelEvent* wheelEvent = aVisitor.mEvent->AsWheelEvent();
-            if (!aVisitor.mEvent->DefaultPrevented() &&
-                aVisitor.mEvent->IsTrusted() && IsMutable() && wheelEvent &&
-                wheelEvent->mDeltaY != 0 &&
-                wheelEvent->mDeltaMode != WheelEvent_Binding::DOM_DELTA_PIXEL) {
-              if (mType == FormControlType::InputNumber) {
-                if (nsContentUtils::IsFocusedContent(this)) {
-                  StepNumberControlForUserEvent(wheelEvent->mDeltaY > 0 ? -1
-                                                                        : 1);
-                  FireChangeEventIfNeeded();
-                  aVisitor.mEvent->PreventDefault();
-                }
-              } else if (mType == FormControlType::InputRange &&
-                         nsContentUtils::IsFocusedContent(this) &&
-                         GetMinimum() < GetMaximum()) {
-                Decimal value = GetValueAsDecimal();
-                Decimal step = GetStep();
-                if (step == kStepAny) {
-                  step = GetDefaultStep();
-                }
-                MOZ_ASSERT(value.isFinite() && step.isFinite());
-                SetValueOfRangeForUserEvent(
-                    wheelEvent->mDeltaY < 0 ? value + step : value - step);
+          // Handle wheel events as increasing / decreasing the input element's
+          // value when it's focused and it's type is number or range.
+          WidgetWheelEvent* wheelEvent = aVisitor.mEvent->AsWheelEvent();
+          if (!aVisitor.mEvent->DefaultPrevented() &&
+              aVisitor.mEvent->IsTrusted() && IsMutable() && wheelEvent &&
+              wheelEvent->mDeltaY != 0 &&
+              wheelEvent->mDeltaMode != WheelEvent_Binding::DOM_DELTA_PIXEL) {
+            if (mType == FormControlType::InputNumber) {
+              if (nsContentUtils::IsFocusedContent(this)) {
+                StepNumberControlForUserEvent(wheelEvent->mDeltaY > 0 ? -1 : 1);
                 FireChangeEventIfNeeded();
                 aVisitor.mEvent->PreventDefault();
               }
+            } else if (mType == FormControlType::InputRange &&
+                       nsContentUtils::IsFocusedContent(this) &&
+                       GetMinimum() < GetMaximum()) {
+              Decimal value = GetValueAsDecimal();
+              Decimal step = GetStep();
+              if (step == kStepAny) {
+                step = GetDefaultStep();
+              }
+              MOZ_ASSERT(value.isFinite() && step.isFinite());
+              SetValueOfRangeForUserEvent(
+                  wheelEvent->mDeltaY < 0 ? value + step : value - step);
+              FireChangeEventIfNeeded();
+              aVisitor.mEvent->PreventDefault();
             }
           }
           break;
         }
+#endif
         case eMouseClick: {
           if (!aVisitor.mEvent->DefaultPrevented() &&
               aVisitor.mEvent->IsTrusted() &&
