@@ -795,7 +795,7 @@ RTCError VideoRtpSender::GenerateKeyFrame(
     const std::vector<std::string>& rids) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   if (video_media_channel() && ssrc_ && !stopped_) {
-    auto parameters = GetParameters();
+    const auto parameters = GetParametersInternal();
     for (const auto& rid : rids) {
       if (rid.empty()) {
         LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
