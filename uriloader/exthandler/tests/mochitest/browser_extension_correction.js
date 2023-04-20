@@ -178,7 +178,7 @@ add_task(async function test_enforce_useful_extension() {
     await testLinkWithoutExtension("video/webm", true);
     await testLinkWithoutExtension("application/pdf", true);
 
-    await testLinkWithoutExtension("application/x-gobbledygook", false);
+    await testLinkWithoutExtension("application/x-nonsense", false);
     await testLinkWithoutExtension("application/octet-stream", false);
     await testLinkWithoutExtension("binary/octet-stream", false);
     await testLinkWithoutExtension("application/x-msdownload", false);

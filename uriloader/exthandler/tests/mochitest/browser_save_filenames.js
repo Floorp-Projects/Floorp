@@ -23,7 +23,7 @@ let types = {
   // so it is used here for this test.
   js: "application/x-javascript",
   binary: "application/octet-stream",
-  gook: "application/x-gook",
+  nonsense: "application/x-nonsense",
   zip: "application/zip",
   json: "application/json",
   tar: "application/x-tar",

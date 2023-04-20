@@ -329,3 +329,16 @@ avoid-blacklist-and-whitelist:
 # Disable for now. Needs some dev to handle this
 # avoid-master-and-slave:
 #    description: "Use words like 'controller', 'worker' instead"
+---
+avoid-gobbledygook:
+    description: "American English colloquialism. Use 'nonsense' instead."
+    level: error
+    include: ['.']
+    type: regex
+    payload: \b(gobbledy)?-?gook
+    ignore-case: true
+    exclude:
+        - extensions/spellcheck/locales/en-US/hunspell/dictionary-sources/orig/en_US-custom.dic
+        - extensions/spellcheck/locales/en-US/hunspell/dictionary-sources/utf8/en-US-utf8.dic
+        - extensions/spellcheck/locales/en-US/hunspell/en-US.dic
+        - tools/lint/rejected-words.yml
