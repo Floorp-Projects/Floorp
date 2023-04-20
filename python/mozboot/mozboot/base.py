@@ -376,12 +376,16 @@ class BaseBootstrapper(object):
 
         subprocess.check_call(cmd, cwd=str(install_dir))
 
-    def auto_bootstrap(self, application):
+    def auto_bootstrap(self, application, exclude=[]):
         args = ["--with-ccache=sccache"]
         if application.endswith("_artifact_mode"):
             args.append("--enable-artifact-builds")
             application = application[: -len("_artifact_mode")]
         args.append("--enable-project={}".format(application.replace("_", "/")))
+        if exclude:
+            args.append(
+                "--enable-bootstrap={}".format(",".join(f"-{x}" for x in exclude))
+            )
         bootstrap_all_toolchains_for(args)
 
     def run_as_root(self, command, may_use_sudo=True):
