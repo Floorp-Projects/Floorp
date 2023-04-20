@@ -25,6 +25,7 @@ class RTC_EXPORT RTCTestStats : public RTCStats {
  public:
   WEBRTC_RTCSTATS_DECL();
 
+  RTCTestStats(const std::string& id, Timestamp timestamp);
   RTCTestStats(const std::string& id, int64_t timestamp_us);
   RTCTestStats(const RTCTestStats& other);
   ~RTCTestStats() override;

@@ -77,8 +77,8 @@ void VideoQualityMetricsReporter::OnStatsReports(
     if (!(*s->kind == RTCMediaStreamTrackKind::kVideo)) {
       continue;
     }
-    if (s->timestamp_us() > sample.sample_time.us()) {
-      sample.sample_time = Timestamp::Micros(s->timestamp_us());
+    if (s->timestamp() > sample.sample_time) {
+      sample.sample_time = s->timestamp();
     }
     sample.retransmitted_bytes_sent +=
         DataSize::Bytes(s->retransmitted_bytes_sent.ValueOrDefault(0ul));
