@@ -25,9 +25,9 @@
 #include "modules/rtp_rtcp/source/video_rtp_depacketizer.h"
 #include "rtc_base/event.h"
 #include "rtc_base/numerics/running_statistics.h"
+#include "rtc_base/numerics/sequence_number_unwrapper.h"
 #include "rtc_base/platform_thread.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/time_utils.h"
 #include "test/layer_filtering_transport.h"
 #include "test/rtp_file_writer.h"
 
@@ -292,7 +292,7 @@ class VideoAnalyzer : public PacketReceiver,
 
   std::deque<VideoFrame> frames_ RTC_GUARDED_BY(lock_);
   absl::optional<VideoFrame> last_rendered_frame_ RTC_GUARDED_BY(lock_);
-  rtc::TimestampWrapAroundHandler wrap_handler_ RTC_GUARDED_BY(lock_);
+  RtpTimestampUnwrapper wrap_handler_ RTC_GUARDED_BY(lock_);
   std::map<int64_t, int64_t> send_times_ RTC_GUARDED_BY(lock_);
   std::map<int64_t, int64_t> recv_times_ RTC_GUARDED_BY(lock_);
   std::map<int64_t, size_t> encoded_frame_sizes_ RTC_GUARDED_BY(lock_);
