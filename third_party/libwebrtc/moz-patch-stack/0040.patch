@@ -663,7 +663,7 @@ index 77f5139a2f..486b37590c 100644
      deps += [
        "..:logging",
 diff --git a/test/BUILD.gn b/test/BUILD.gn
-index ab42ede40d..8cba277da1 100644
+index 9842ba2733..cc127c6af8 100644
 --- a/test/BUILD.gn
 +++ b/test/BUILD.gn
 @@ -158,6 +158,7 @@ rtc_library("audio_test_common") {
@@ -695,7 +695,7 @@ index ab42ede40d..8cba277da1 100644
  
    deps = [
      "../api:array_view",
-@@ -467,7 +473,9 @@ rtc_library("video_test_support") {
+@@ -470,7 +476,9 @@ rtc_library("video_test_support") {
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  
    if (!is_ios) {
@@ -705,7 +705,7 @@ index ab42ede40d..8cba277da1 100644
      sources += [ "testsupport/jpeg_frame_writer.cc" ]
    } else {
      sources += [ "testsupport/jpeg_frame_writer_ios.cc" ]
-@@ -1031,6 +1039,10 @@ rtc_library("test_common") {
+@@ -1034,6 +1042,10 @@ rtc_library("test_common") {
    if (!is_android && !build_with_chromium) {
      deps += [ "../modules/video_capture:video_capture_internal_impl" ]
    }
@@ -716,7 +716,7 @@ index ab42ede40d..8cba277da1 100644
  }
  
  rtc_library("mock_transport") {
-@@ -1198,6 +1210,7 @@ rtc_library("copy_to_file_audio_capturer_unittest") {
+@@ -1201,6 +1213,7 @@ rtc_library("copy_to_file_audio_capturer_unittest") {
    ]
  }
  
@@ -724,7 +724,7 @@ index ab42ede40d..8cba277da1 100644
  if (!build_with_chromium && is_android) {
    rtc_android_library("native_test_java") {
      testonly = true
-@@ -1211,6 +1224,7 @@ if (!build_with_chromium && is_android) {
+@@ -1214,6 +1227,7 @@ if (!build_with_chromium && is_android) {
      ]
    }
  }
