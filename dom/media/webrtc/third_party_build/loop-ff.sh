@@ -45,6 +45,10 @@ if [ "x$MOZ_STOP_AFTER_COMMIT" = "x" ]; then
   echo "No MOZ_STOP_AFTER_COMMIT variable defined - stopping at $MOZ_TARGET_UPSTREAM_BRANCH_HEAD"
 fi
 
+if [ "x$MOZ_ADVANCE_ONE_COMMIT" = "x" ]; then
+  MOZ_ADVANCE_ONE_COMMIT=""
+fi
+
 if [ "x$SKIP_NEXT_REVERT_CHK" = "x" ]; then
   SKIP_NEXT_REVERT_CHK="0"
 fi
@@ -210,6 +214,11 @@ if [ ! "x$MOZ_STOP_AFTER_COMMIT" = "x" ]; then
 if [ $MOZ_LIBWEBRTC_NEXT_BASE = $MOZ_STOP_AFTER_COMMIT ]; then
   break
 fi
+fi
+
+if [ ! "x$MOZ_ADVANCE_ONE_COMMIT" = "x" ]; then
+  echo_log "Done advancing one commit."
+  exit
 fi
 
 done
