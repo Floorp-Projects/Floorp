@@ -10,7 +10,10 @@
 #ifndef CALL_PACKET_RECEIVER_H_
 #define CALL_PACKET_RECEIVER_H_
 
+#include "absl/functional/any_invocable.h"
 #include "api/media_types.h"
+#include "modules/rtp_rtcp/source/rtp_packet_received.h"
+#include "rtc_base/checks.h"
 #include "rtc_base/copy_on_write_buffer.h"
 
 namespace webrtc {
@@ -26,6 +29,28 @@ class PacketReceiver {
   virtual DeliveryStatus DeliverPacket(MediaType media_type,
                                        rtc::CopyOnWriteBuffer packet,
                                        int64_t packet_time_us) = 0;
+
+  // Demux RTCP packets. Must be called on the worker thread.
+  virtual void DeliverRtcpPacket(rtc::CopyOnWriteBuffer packet) {
+    // TODO(perkj, https://bugs.webrtc.org/7135): Implement in FakeCall and
+    // FakeNetworkPipe.
+    RTC_CHECK_NOTREACHED();
+  }
+
+  // Invoked once when a packet packet is received that can not be demuxed.
+  // If the method returns true, a new attempt is made to demux the packet.
+  using OnUndemuxablePacketHandler =
+      absl::AnyInvocable<bool(const RtpPacketReceived& parsed_packet)>;
+
+  // Demux RTP packets. Must be called on the worker thread.
+  virtual void DeliverRtpPacket(
+      MediaType media_type,
+      RtpPacketReceived packet,
+      OnUndemuxablePacketHandler undemuxable_packet_handler) {
+    // TODO(perkj, https://bugs.webrtc.org/7135): Implement in FakeCall and
+    // FakeNetworkPipe.
+    RTC_CHECK_NOTREACHED();
+  }
 
  protected:
   virtual ~PacketReceiver() {}

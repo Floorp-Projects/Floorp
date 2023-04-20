@@ -149,6 +149,8 @@ class FakeNetworkPipe : public SimulatedPacketReceiverInterface {
                                                rtc::CopyOnWriteBuffer packet,
                                                int64_t packet_time_us) override;
 
+  void DeliverRtcpPacket(rtc::CopyOnWriteBuffer packet) override;
+
   // TODO(bugs.webrtc.org/9584): Needed to inherit the alternative signature for
   // this method.
   using PacketReceiver::DeliverPacket;

@@ -184,6 +184,11 @@ PacketReceiver::DeliveryStatus FakeNetworkPipe::DeliverPacket(
              : PacketReceiver::DELIVERY_PACKET_ERROR;
 }
 
+void FakeNetworkPipe::DeliverRtcpPacket(rtc::CopyOnWriteBuffer packet) {
+  EnqueuePacket(std::move(packet), absl::nullopt, true, MediaType::ANY,
+                absl::nullopt);
+}
+
 void FakeNetworkPipe::SetClockOffset(int64_t offset_ms) {
   MutexLock lock(&config_lock_);
   clock_offset_ms_ = offset_ms;
