@@ -13,7 +13,7 @@
 #include <algorithm>
 
 #include "absl/types/optional.h"
-#include "modules/include/module_common_types_public.h"
+#include "rtc_base/numerics/sequence_number_unwrapper.h"
 
 namespace webrtc {
 
@@ -47,7 +47,7 @@ void TimestampExtrapolator::Reset(Timestamp start) {
   p_[0][0] = 1;
   p_[1][1] = kP11;
   p_[0][1] = p_[1][0] = 0;
-  unwrapper_ = TimestampUnwrapper();
+  unwrapper_ = RtpTimestampUnwrapper();
   packet_count_ = 0;
   detector_accumulator_pos_ = 0;
   detector_accumulator_neg_ = 0;
@@ -124,7 +124,7 @@ void TimestampExtrapolator::Update(Timestamp now, uint32_t ts90khz) {
 
 absl::optional<Timestamp> TimestampExtrapolator::ExtrapolateLocalTime(
     uint32_t timestamp90khz) const {
-  int64_t unwrapped_ts90khz = unwrapper_.UnwrapWithoutUpdate(timestamp90khz);
+  int64_t unwrapped_ts90khz = unwrapper_.PeekUnwrap(timestamp90khz);
   RTC_DCHECK_GE(unwrapped_ts90khz, 0);
 
   if (!first_unwrapped_timestamp_) {
