@@ -1,0 +1,18 @@
+<!doctype html>
+<script src="util.js"></script>
+<body>
+<script>
+window.onload = function() {
+  perf_start();
+  let s = document.createElement("style");
+  s.appendChild(document.createTextNode(`* {`));
+  for (let i = 0; i < 100000; ++i) {
+    s.appendChild(document.createTextNode(`--custom-prop-${i}: ${Math.random()};`));
+  }
+  s.appendChild(document.createTextNode(`}`));
+  document.head.appendChild(s);
+  flush_style(document.body);
+  perf_finish();
+}
+</script>
+</body>
