@@ -256,6 +256,7 @@
 
 #ifdef USE_GLX_TEST
 #  include "mozilla/GUniquePtr.h"
+#  include "mozilla/GfxInfo.h"
 #endif
 
 extern uint32_t gRestartMode;
@@ -3704,6 +3705,8 @@ void fire_glxtest_process() {
     close(pfd[1]);
   });
 
+  // Use G_SPAWN_LEAVE_DESCRIPTORS_OPEN | G_SPAWN_DO_NOT_REAP_CHILD flags
+  // to g_spawn_async_with_pipes() run posix_spawn() directly.
   GUniquePtr<GError> err;
   g_spawn_async_with_pipes(
       nullptr, argv, nullptr,
