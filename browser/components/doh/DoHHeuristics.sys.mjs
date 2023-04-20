@@ -191,12 +191,21 @@ async function dnsListLookup(domainList) {
 async function globalCanary() {
   let { addresses, err } = await dnsLookup(GLOBAL_CANARY);
 
+  function isLocal(addr) {
+    // hostnameIsLocalIPAddress does not return true for loopback addresses
+    // so we specifically handle these.
+    if (addr == "127.0.0.1" || addr == "::1" || addr == "0.0.0.0") {
+      return true;
+    }
+    return Services.io.hostnameIsLocalIPAddress(
+      Services.io.newURI(`http://${addr}`)
+    );
+  }
+
   if (
     err === NXDOMAIN_ERR ||
     !addresses.length ||
-    addresses.every(addr =>
-      Services.io.hostnameIsLocalIPAddress(Services.io.newURI(`http://${addr}`))
-    )
+    addresses.every(addr => isLocal(addr))
   ) {
     return "disable_doh";
   }
