@@ -1,64 +1,57 @@
-From: Alexander Cooper <alcooper@chromium.org>
-Date: Wed, 8 Feb 2023 14:16:01 -0800
-Subject: (cherry-pick-branch-heads/5481) Fix Destruction inside WGC Callback
+From: Danil Chapovalov <danilchap@webrtc.org>
+Date: Mon, 2 Jan 2023 10:44:27 +0100
+Subject: (cherry-pick-branch-heads/5481) Zero memory for FEC recovered packets
+ when size increases
 
-If we are notified of the destruction of the window before a
-CaptureFrame call can fail, then we may end up attempting to destroy the
-underlying WGC object inside it's own event handler. This can be
-problematic, as the class itself may want to run other code. Instead,
-we just unsubscribe and signal that any future CaptureFrame calls should
-reject.
+rtc::CopyOnWriteBuffer::SetSize extends buffer with uninitialized memory by design.
+It is up to the user of the rtc::CopyOnWriteBuffer to ensure it is initialized.
 
-This also removes setting "is_capture_started_=false" in the item closed
-handler, as all that served to do is cause the WgcCapturerWin code to
-attempt to restart the capturer, and somewhat muddies up our metrics.
+(cherry picked from commit 4f74385b4f568df77055f99b04de41557ffd022a)
 
-(cherry picked from commit 318cf28945d80a0ac6f09382e507c95e649cc4c1)
-
-Bug: chromium:1413005
-No-Try: True
-Change-Id: Ibccb7a2e7ce531ba80b4b331b9bc2cda0ff75f4e
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/292762
-Auto-Submit: Alexander Cooper <alcooper@chromium.org>
-Reviewed-by: Mark Foltz <mfoltz@chromium.org>
-Commit-Queue: Mark Foltz <mfoltz@chromium.org>
-Commit-Queue: Alexander Cooper <alcooper@chromium.org>
-Cr-Original-Commit-Position: refs/heads/main@{#39275}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/293246
-Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Cr-Commit-Position: refs/branch-heads/5481@{#5}
+No-Try: true
+Bug: chromium:1404299
+Change-Id: I41f3f91bf20ff440984d78ed81e01f5db36ff509
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/290400
+Commit-Queue: Danil Chapovalov <danilchap@webrtc.org>
+Reviewed-by: Per Kjellander <perkj@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#38972}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291541
+Cr-Commit-Position: refs/branch-heads/5481@{#4}
 Cr-Branched-From: 2e1a9a4ae0234d4b1ea7a6fd4188afa1fb20379d-refs/heads/main@{#38901}
 ---
- modules/desktop_capture/win/wgc_capture_session.cc | 13 +++++--------
- 1 file changed, 5 insertions(+), 8 deletions(-)
+ modules/rtp_rtcp/source/forward_error_correction.cc | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/modules/desktop_capture/win/wgc_capture_session.cc b/modules/desktop_capture/win/wgc_capture_session.cc
-index e16529167f..ea5565c89c 100644
---- a/modules/desktop_capture/win/wgc_capture_session.cc
-+++ b/modules/desktop_capture/win/wgc_capture_session.cc
-@@ -397,17 +397,14 @@ HRESULT WgcCaptureSession::OnItemClosed(WGC::IGraphicsCaptureItem* sender,
+diff --git a/modules/rtp_rtcp/source/forward_error_correction.cc b/modules/rtp_rtcp/source/forward_error_correction.cc
+index dbf6c361df..1462c2f481 100644
+--- a/modules/rtp_rtcp/source/forward_error_correction.cc
++++ b/modules/rtp_rtcp/source/forward_error_correction.cc
+@@ -225,10 +225,10 @@ void ForwardErrorCorrection::GenerateFecPayloads(
  
-   RTC_LOG(LS_INFO) << "Capture target has been closed.";
-   item_closed_ = true;
--  is_capture_started_ = false;
- 
-   RemoveEventHandlers();
- 
--  mapped_texture_ = nullptr;
--  session_ = nullptr;
--  frame_pool_ = nullptr;
--  direct3d_device_ = nullptr;
--  item_ = nullptr;
--  d3d11_device_ = nullptr;
--
-+  // Do not attempt to free resources in the OnItemClosed handler, as this
-+  // causes a race where we try to delete the item that is calling us. Removing
-+  // the event handlers and setting `item_closed_` above is sufficient to ensure
-+  // that the resources are no longer used, and the next time the capturer tries
-+  // to get a frame, we will report a permanent failure and be destroyed.
-   return S_OK;
- }
- 
+         size_t fec_packet_length = fec_header_size + media_payload_length;
+         if (fec_packet_length > fec_packet->data.size()) {
+-          // Recall that XORing with zero (which the FEC packets are prefilled
+-          // with) is the identity operator, thus all prior XORs are
+-          // still correct even though we expand the packet length here.
++          size_t old_size = fec_packet->data.size();
+           fec_packet->data.SetSize(fec_packet_length);
++          memset(fec_packet->data.MutableData() + old_size, 0,
++                 fec_packet_length - old_size);
+         }
+         XorHeaders(*media_packet, fec_packet);
+         XorPayloads(*media_packet, media_payload_length, fec_header_size,
+@@ -619,7 +619,10 @@ void ForwardErrorCorrection::XorPayloads(const Packet& src,
+   RTC_DCHECK_LE(kRtpHeaderSize + payload_length, src.data.size());
+   RTC_DCHECK_LE(dst_offset + payload_length, dst->data.capacity());
+   if (dst_offset + payload_length > dst->data.size()) {
+-    dst->data.SetSize(dst_offset + payload_length);
++    size_t old_size = dst->data.size();
++    size_t new_size = dst_offset + payload_length;
++    dst->data.SetSize(new_size);
++    memset(dst->data.MutableData() + old_size, 0, new_size - old_size);
+   }
+   uint8_t* dst_data = dst->data.MutableData();
+   const uint8_t* src_data = src.data.cdata();
 -- 
 2.34.1
 
