@@ -35,14 +35,6 @@
       }
     }
   },
-  'hammerhead': {
-    'swarming': {
-      'dimensions': {
-        'device_type': 'hammerhead',
-        'os': 'Android'
-      }
-    }
-  },
   'ios-device-15.7': {
     'swarming': {
       'dimensions': {
@@ -129,13 +121,6 @@
       }
     }
   },
-  'marshmallow_generic': {
-    'swarming': {
-      'dimensions': {
-        'device_os': 'M'
-      }
-    }
-  },
   'perf-fuchsia-perf-tests': {
     'merge': {
       'script': '//tools_webrtc/perf/process_perf_results.py',
@@ -219,14 +204,6 @@
     'resultdb': {
       'result_format': 'json'
     }
-  },
-  'shamu': {
-    'swarming': {
-      'dimensions': {
-        'device_type': 'shamu',
-        'os': 'Android',
-      },
-    },
   },
   'shards-2': {
     'swarming': {
