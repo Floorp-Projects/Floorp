@@ -13,11 +13,10 @@
 #include "jspubtd.h"
 
 #include "ds/IdValuePair.h"
+#include "util/StringBuffer.h"
 #include "vm/StringType.h"
 
 namespace js {
-
-class JSStringBuilder;
 
 enum class JSONToken {
   String,
@@ -268,6 +267,16 @@ class MOZ_STACK_CLASS JSONFullParseHandler
   using CharPtr = mozilla::RangedPtr<const CharT>;
 
  public:
+  class StringBuilder {
+   public:
+    JSStringBuilder buffer;
+
+    explicit StringBuilder(JSContext* cx) : buffer(cx) {}
+
+    bool append(char16_t c);
+    bool append(const CharT* begin, const CharT* end);
+  };
+
   JSONFullParseHandler(JSContext* cx, ParseType parseType)
       : Base(cx, parseType) {}
 
@@ -280,7 +289,7 @@ class MOZ_STACK_CLASS JSONFullParseHandler
   template <JSONStringType ST>
   inline bool setStringValue(CharPtr start, size_t length);
   template <JSONStringType ST>
-  inline bool setStringValue(JSStringBuilder& builder);
+  inline bool setStringValue(StringBuilder& builder);
 
   void reportError(const char* msg, const char* lineString,
                    const char* columnString);
@@ -288,8 +297,13 @@ class MOZ_STACK_CLASS JSONFullParseHandler
 
 template <typename CharT>
 class MOZ_STACK_CLASS JSONParser {
-  using Tokenizer = JSONTokenizer<CharT, JSONParser<CharT>, JSStringBuilder>;
   using Handler = JSONFullParseHandler<CharT>;
+
+ public:
+  using StringBuilder = typename Handler::StringBuilder;
+
+ private:
+  using Tokenizer = JSONTokenizer<CharT, JSONParser<CharT>, StringBuilder>;
 
  public:
   Handler handler;
