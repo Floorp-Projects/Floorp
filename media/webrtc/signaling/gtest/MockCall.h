@@ -64,8 +64,6 @@ class MockAudioReceiveStream : public webrtc::AudioReceiveStreamInterface {
 
   bool IsRunning() const override { return true; }
 
-  bool transport_cc() const override { return false; }
-
   Stats GetStats(bool get_and_clear_legacy_stats) const override {
     return mStats;
   }
@@ -87,11 +85,6 @@ class MockAudioReceiveStream : public webrtc::AudioReceiveStreamInterface {
   }
   virtual void SetDecoderMap(
       std::map<int, webrtc::SdpAudioFormat> decoder_map) override;
-  virtual void SetTransportCc(bool use_transport_cc) override {
-    // Unimplemented after webrtc.org e2561e17e2 removed the Reconfigure
-    // method.
-    MOZ_ASSERT(false);
-  }
   virtual void SetNackHistory(int history_ms) override {
     // Unimplemented after webrtc.org e2561e17e2 removed the Reconfigure
     // method.
@@ -162,9 +155,6 @@ class MockVideoReceiveStream : public webrtc::VideoReceiveStreamInterface {
   void Start() override {}
 
   void Stop() override {}
-
-  bool transport_cc() const override { return false; }
-  void SetTransportCc(bool use_transport_cc) override {}
 
   Stats GetStats() const override { return mStats; }
 
