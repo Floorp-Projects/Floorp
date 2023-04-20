@@ -12,10 +12,10 @@ diff --git a/src/cargo/core/compiler/standard_lib.rs b/src/cargo/core/compiler/s
 index e0baebd51..547b84147 100644
 --- a/src/cargo/core/compiler/standard_lib.rs
 +++ b/src/cargo/core/compiler/standard_lib.rs
-@@ -12,6 +12,7 @@ use crate::util::errors::CargoResult;
+@@ -11,6 +11,7 @@ use crate::ops::{self, Packages};
+ use crate::util::errors::CargoResult;
  use crate::Config;
  use std::collections::{HashMap, HashSet};
- use std::env;
 +use std::fs;
  use std::path::PathBuf;
  

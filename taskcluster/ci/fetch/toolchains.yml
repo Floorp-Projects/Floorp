@@ -378,13 +378,13 @@ clang-trunk:
 # We build stable rust from source so the resulting compiler acts as a nightly
 # rust compiler, allowing to use unstable features like -Zbuild-std and
 # sanitizers.
-rust-1.68.0:
-    description: Rust 1.68.0 source code
+rust-1.69.0:
+    description: Rust 1.69.0 source code
     fetch:
         type: git
         include-dot-git: true
         repo: https://github.com/rust-lang/rust/
-        revision: 2c8cc343237b8f7d5a3c3703e3a87f2eb2c54a74
+        revision: 84c898d65adf2f39a5a98507f1fe0ce10a2b8dbc
 
 wasi-sdk:
     description: wasi-sdk-16 source code
