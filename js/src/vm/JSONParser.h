@@ -7,16 +7,29 @@
 #ifndef vm_JSONParser_h
 #define vm_JSONParser_h
 
-#include "mozilla/Attributes.h"
-#include "mozilla/Range.h"
+#include "mozilla/Assertions.h"  // MOZ_ASSERT
+#include "mozilla/Attributes.h"  // MOZ_STACK_CLASS
+#include "mozilla/Range.h"       // mozilla::Range
+#include "mozilla/RangedPtr.h"   // mozilla::RangedPtr
 
-#include "jspubtd.h"
+#include <stddef.h>  // size_t
+#include <stdint.h>  // uint32_t
+#include <utility>   // std::move
 
-#include "ds/IdValuePair.h"
-#include "util/StringBuffer.h"
-#include "vm/StringType.h"
+#include "ds/IdValuePair.h"  // IdValuePair
+#include "js/GCVector.h"     // JS::GCVector
+#include "js/RootingAPI.h"  // JS::Handle, JS::MutableHandle, MutableWrappedPtrOperations
+#include "js/Value.h"           // JS::Value, JS::BooleanValue, JS::NullValue
+#include "js/Vector.h"          // Vector
+#include "util/StringBuffer.h"  // JSStringBuilder
+#include "vm/StringType.h"      // JSString, JSAtom
+
+struct JSContext;
+class JSTracer;
 
 namespace js {
+
+class FrontendContext;
 
 enum class JSONToken {
   String,
@@ -133,11 +146,11 @@ class MOZ_STACK_CLASS JSONFullParseHandlerAnyChar {
 
   // State for an array that is currently being parsed. This includes all
   // elements that have been seen so far.
-  using ElementVector = GCVector<Value, 20>;
+  using ElementVector = JS::GCVector<JS::Value, 20>;
 
   // State for an object that is currently being parsed. This includes all
   // the key/value pairs that have been seen so far.
-  using PropertyVector = GCVector<IdValuePair, 10>;
+  using PropertyVector = JS::GCVector<IdValuePair, 10>;
 
   enum class ParseType {
     // Parsing a string as if by JSON.parse.
@@ -177,7 +190,7 @@ class MOZ_STACK_CLASS JSONFullParseHandlerAnyChar {
 
   JSContext* cx;
 
-  Value v;
+  JS::Value v;
 
   ParseType parseType = ParseType::JSONParse;
 
@@ -207,25 +220,25 @@ class MOZ_STACK_CLASS JSONFullParseHandlerAnyChar {
 
   JSContext* context() { return cx; }
 
-  Value numberValue() const {
+  JS::Value numberValue() const {
     MOZ_ASSERT(v.isNumber());
     return v;
   }
 
   inline void setNumberValue(double d);
 
-  Value stringValue() const {
+  JS::Value stringValue() const {
     MOZ_ASSERT(v.isString());
     return v;
   }
 
   JSAtom* atomValue() const {
-    Value strval = stringValue();
+    JS::Value strval = stringValue();
     return &strval.toString()->asAtom();
   }
 
-  inline Value booleanValue(bool value) { return JS::BooleanValue(value); }
-  inline Value nullValue() { return JS::NullValue(); }
+  inline JS::Value booleanValue(bool value) { return JS::BooleanValue(value); }
+  inline JS::Value nullValue() { return JS::NullValue(); }
 
   inline bool objectOpen(Vector<StackEntry, 10>& stack,
                          PropertyVector** properties);
@@ -466,7 +479,7 @@ class MOZ_STACK_CLASS JSONParser
    * otherwise return true and set *vp to |undefined|.  (JSON syntax can't
    * represent |undefined|, so the JSON data couldn't have specified it.)
    */
-  bool parse(MutableHandleValue vp);
+  bool parse(JS::MutableHandle<JS::Value> vp);
 
   void trace(JSTracer* trc);
 };
@@ -475,7 +488,7 @@ template <typename CharT, typename Wrapper>
 class MutableWrappedPtrOperations<JSONParser<CharT>, Wrapper>
     : public WrappedPtrOperations<JSONParser<CharT>, Wrapper> {
  public:
-  bool parse(MutableHandleValue vp) {
+  bool parse(JS::MutableHandle<JS::Value> vp) {
     return static_cast<Wrapper*>(this)->get().parse(vp);
   }
 };
