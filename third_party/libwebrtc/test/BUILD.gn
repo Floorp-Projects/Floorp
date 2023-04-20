@@ -237,7 +237,10 @@ rtc_library("rtp_test_utils") {
     "../rtc_base/synchronization:mutex",
     "../rtc_base/system:arch",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("field_trial") {
