@@ -40,11 +40,6 @@ class ReceiveStreamInterface {
     // that the value is read on (i.e. packet delivery).
     uint32_t local_ssrc = 0;
 
-    // Deprecated. This flag has no effect.
-    // TODO(perkj, https://bugs.webrtc.org/14802): Remove this flag once no
-    // projects use it.
-    bool transport_cc = false;
-
     // RTP header extensions used for the received stream.
     // This value may change mid-stream and must be done on the same thread
     // that the value is read on (i.e. packet delivery).
