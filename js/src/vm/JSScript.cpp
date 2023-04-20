@@ -1943,12 +1943,7 @@ bool ScriptSource::setFilename(FrontendContext* fc, const char* filename) {
 bool ScriptSource::setFilename(FrontendContext* fc, UniqueChars&& filename) {
   MOZ_ASSERT(!filename_);
   filename_ = getOrCreateStringZ(fc, std::move(filename));
-  if (filename_) {
-    filenameHash_ =
-        mozilla::HashStringKnownLength(filename_.chars(), filename_.length());
-    return true;
-  }
-  return false;
+  return bool(filename_);
 }
 
 bool ScriptSource::setIntroducerFilename(FrontendContext* fc,
@@ -3323,9 +3318,6 @@ static void DumpMutableScriptFlags(js::JSONPrinter& json,
           break;
         case MutableScriptFlagsEnum::Uninlineable:
           json.value("Uninlineable");
-          break;
-        case MutableScriptFlagsEnum::NoEagerBaselineHint:
-          json.value("NoEagerBaselineHint");
           break;
         case MutableScriptFlagsEnum::FailedBoundsCheck:
           json.value("FailedBoundsCheck");

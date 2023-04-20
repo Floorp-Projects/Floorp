@@ -29,7 +29,6 @@
 
 #include "debugger/DebugAPI-inl.h"
 #include "gc/GC-inl.h"
-#include "jit/JitHints-inl.h"
 #include "jit/JitScript-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSScript-inl.h"
@@ -291,23 +290,9 @@ static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
     return Method_Compiled;
   }
 
-  // If a hint is available, skip the warmup count threshold.
-  bool mightHaveEagerBaselineHint = false;
-#ifdef NIGHTLY_BUILD
-  if (!JitOptions.disableJitHints && !script->noEagerBaselineHint()) {
-    JitHintsMap* jitHints = cx->runtime()->jitRuntime()->getJitHintsMap();
-    // If this lookup fails, the NoEagerBaselineHint script flag is set
-    // to true to prevent any further lookups for this script.
-    if (jitHints->mightHaveEagerBaselineHint(script)) {
-      mightHaveEagerBaselineHint = true;
-    }
-  }
-#endif
-  // Check script warm-up counter if no hint.
-  if (!mightHaveEagerBaselineHint) {
-    if (script->getWarmUpCount() <= JitOptions.baselineJitWarmUpThreshold) {
-      return Method_Skipped;
-    }
+  // Check script warm-up counter.
+  if (script->getWarmUpCount() <= JitOptions.baselineJitWarmUpThreshold) {
+    return Method_Skipped;
   }
 
   // Check this before calling ensureJitRealmExists, so we're less
