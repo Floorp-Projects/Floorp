@@ -17,6 +17,8 @@
 
 namespace js {
 
+class JSStringBuilder;
+
 enum class JSONToken {
   String,
   Number,
@@ -92,7 +94,11 @@ class MOZ_STACK_CLASS JSONTokenizer {
     return t;
   }
 
-  JSONToken stringToken(JSString* str);
+  template <JSONStringType ST>
+  JSONToken stringToken(const CharPtr start, size_t length);
+  template <JSONStringType ST>
+  JSONToken stringToken(JSStringBuilder& builder);
+
   JSONToken numberToken(double d);
 
   template <JSONStringType ST>
@@ -226,6 +232,9 @@ class MOZ_STACK_CLASS JSONParserBase {
 
   void trace(JSTracer* trc);
 
+ public:
+  inline void setNumberValue(double d);
+
  private:
   JSONParserBase(const JSONParserBase& other) = delete;
   void operator=(const JSONParserBase& other) = delete;
@@ -234,6 +243,7 @@ class MOZ_STACK_CLASS JSONParserBase {
 template <typename CharT>
 class MOZ_STACK_CLASS JSONParser : public JSONParserBase {
   using Tokenizer = JSONTokenizer<CharT>;
+  using CharPtr = mozilla::RangedPtr<const CharT>;
 
   Tokenizer tokenizer;
 
@@ -265,6 +275,11 @@ class MOZ_STACK_CLASS JSONParser : public JSONParserBase {
   bool parse(MutableHandleValue vp);
 
   void trace(JSTracer* trc) { JSONParserBase::trace(trc); }
+
+  template <JSONStringType ST>
+  inline bool setStringValue(CharPtr start, size_t length);
+  template <JSONStringType ST>
+  inline bool setStringValue(JSStringBuilder& builder);
 
   void error(const char* msg);
 
