@@ -262,26 +262,6 @@
     'name': 'client.webrtc.perf',
     'mixins': [],
     'machines': {
-      'Perf Android32 (M AOSP Nexus6)': {
-        'mixins': [
-          'shamu', 'marshmallow_generic', 'android-devices', 'perf-pool',
-          'perf-output', 'timeout-3h', 'has_native_resultdb_integration',
-          'chromium-tester-service-account'
-        ],
-        'test_suites': {
-          'gtest_tests': 'android_perf_tests',
-        },
-      },
-      'Perf Android32 (M Nexus5)': {
-        'mixins': [
-          'hammerhead', 'marshmallow_generic', 'android-devices', 'perf-pool',
-          'perf-output', 'timeout-3h', 'has_native_resultdb_integration',
-          'chromium-tester-service-account'
-        ],
-        'test_suites': {
-          'gtest_tests': 'android_perf_tests',
-        },
-      },
       'Perf Android32 (O Pixel2)': {
         'mixins': [
           'walleye', 'android-devices', 'perf-pool', 'timeout-3h',
@@ -296,16 +276,6 @@
         'mixins': [
           'redfin', 'android-devices', 'perf-pool', 'timeout-3h', 'perf-output',
           'has_native_resultdb_integration', 'chromium-tester-service-account'
-        ],
-        'test_suites': {
-          'gtest_tests': 'android_perf_tests',
-        },
-      },
-      'Perf Android64 (M Nexus5X)': {
-        'mixins': [
-          'bullhead', 'marshmallow', 'android-devices', 'perf-pool',
-          'perf-output', 'timeout-3h', 'has_native_resultdb_integration',
-          'chromium-tester-service-account'
         ],
         'test_suites': {
           'gtest_tests': 'android_perf_tests',
