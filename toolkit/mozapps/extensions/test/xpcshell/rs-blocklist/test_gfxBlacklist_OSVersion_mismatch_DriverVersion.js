@@ -17,7 +17,6 @@ async function run_test() {
   }
 
   gfxInfo.QueryInterface(Ci.nsIGfxInfoDebug);
-  gfxInfo.fireTestProcess();
 
   // Set the vendor/device ID, etc, to match the test file.
   gfxInfo.spoofDriverVersion("8.52.322.2202");

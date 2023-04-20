@@ -17,7 +17,6 @@ async function run_test() {
   }
 
   gfxInfo.QueryInterface(Ci.nsIGfxInfoDebug);
-  gfxInfo.fireTestProcess();
 
   // Save OS in variable since createAppInfo below will change it to "xpcshell".
   const OS = Services.appinfo.OS;

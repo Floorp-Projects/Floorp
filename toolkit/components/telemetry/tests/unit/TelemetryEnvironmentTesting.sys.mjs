@@ -116,7 +116,6 @@ export var TelemetryEnvironmentTesting = {
       let gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(
         Ci.nsIGfxInfoDebug
       );
-      gfxInfo.fireTestProcess();
       gfxInfo.spoofVendorID(GFX_VENDOR_ID);
       gfxInfo.spoofDeviceID(GFX_DEVICE_ID);
     } catch (x) {

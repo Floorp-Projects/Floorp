@@ -17,7 +17,6 @@ async function run_test() {
   }
 
   gfxInfo.QueryInterface(Ci.nsIGfxInfoDebug);
-  gfxInfo.fireTestProcess();
 
   gfxInfo.spoofVendorID("0xabcd");
   gfxInfo.spoofDeviceID("0x6666");

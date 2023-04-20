@@ -184,6 +184,11 @@ void GfxInfo::GetData() {
   }
   mInitialized = true;
 
+  // In some cases (xpcshell test, Profile manager etc.)
+  // FireGLXTestProcess() is not fired in advance
+  // so we call it here.
+  GfxInfo::FireGLXTestProcess();
+
   GfxInfoBase::GetData();
 
   char* glxData = nullptr;
@@ -1314,14 +1319,6 @@ NS_IMETHODIMP GfxInfo::SpoofDriverVersion(const nsAString& aDriverVersion) {
 
 NS_IMETHODIMP GfxInfo::SpoofOSVersion(uint32_t aVersion) {
   // We don't support OS versioning on Linux. There's just "Linux".
-  return NS_OK;
-}
-
-NS_IMETHODIMP GfxInfo::FireTestProcess() {
-  // If the pid is zero, then we have never run the test process to query for
-  // driver information. This would normally be run on startup, but we need to
-  // manually invoke it for XPC shell tests.
-  FireGLXTestProcess();
   return NS_OK;
 }
 
