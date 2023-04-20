@@ -58,7 +58,6 @@ def make_reclient_properties(instance, jobs = None):
 # useful when a failure can be safely ignored while fixing it without
 # blocking the LKGR finder on it.
 skipped_lkgr_bots = [
-    "Fuchsia Release",
 ]
 
 # Use LUCI Scheduler BBv2 names and add Scheduler realms configs.
@@ -795,7 +794,7 @@ linux_try_job("linux_coverage", cq = None)
 
 linux_builder("Fuchsia Builder", ci_cat = None, perf_cat = "Fuchsia|x64|Builder|", prioritized = True)
 linux_builder("Fuchsia Release", "Fuchsia|x64|rel")
-linux_try_job("fuchsia_rel", cq = None)
+linux_try_job("fuchsia_rel")
 perf_builder("Perf Fuchsia", "Fuchsia|x64|Tester|", triggered_by = ["Fuchsia Builder"])
 
 mac_builder("Mac64 Debug", "Mac|x64|dbg")
