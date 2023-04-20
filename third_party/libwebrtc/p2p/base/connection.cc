@@ -465,86 +465,95 @@ void Connection::OnReadPacket(const char* data,
              "Resetting state to STATE_WRITE_INIT.";
       set_write_state(STATE_WRITE_INIT);
     }
+    return;
   } else if (!msg) {
     // The packet was STUN, but failed a check and was handled internally.
-  } else {
-    // The packet is STUN and passed the Port checks.
-    // Perform our own checks to ensure this packet is valid.
-    // If this is a STUN request, then update the receiving bit and respond.
-    // If this is a STUN response, then update the writable bit.
-    // Log at LS_INFO if we receive a ping on an unwritable connection.
-    rtc::LoggingSeverity sev = (!writable() ? rtc::LS_INFO : rtc::LS_VERBOSE);
-    switch (msg->integrity()) {
-      case StunMessage::IntegrityStatus::kNotSet:
-        // This packet did not come through Port processing?
-        // TODO(bugs.webrtc.org/14578): Clean up this situation.
-        msg->ValidateMessageIntegrity(remote_candidate().password());
-        break;
-      case StunMessage::IntegrityStatus::kIntegrityOk:
-        if (remote_candidate().password() != msg->password()) {
-          // TODO(bugs.webrtc.org/14578): Do a better thing
-          RTC_DLOG(LS_VERBOSE)
-              << "STUN code error - Different passwords, old = "
-              << absl::CHexEscape(msg->password()) << ", new "
-              << absl::CHexEscape(remote_candidate().password());
-        }
-        break;
-      default:
-        // kIntegrityBad and kNoIntegrity.
-        // This shouldn't happen.
-        RTC_DCHECK_NOTREACHED();
-        break;
+    return;
+  }
+
+  // The packet is STUN and passed the Port checks.
+  // Perform our own checks to ensure this packet is valid.
+  // If this is a STUN request, then update the receiving bit and respond.
+  // If this is a STUN response, then update the writable bit.
+  // Log at LS_INFO if we receive a ping on an unwritable connection.
+
+  // REQUESTs   have msg->integrity() already checked in Port
+  // RESPONSEs  have msg->integrity() checked below.
+  // INDICATION does not have any integrity.
+  if (IsStunRequestType(msg->type())) {
+    if (msg->integrity() != StunMessage::IntegrityStatus::kIntegrityOk) {
+      // "silently" discard the request.
+      RTC_LOG(LS_VERBOSE) << ToString() << ": Discarding "
+                          << StunMethodToString(msg->type())
+                          << ", id=" << rtc::hex_encode(msg->transaction_id())
+                          << " with invalid message integrity: "
+                          << static_cast<int>(msg->integrity());
+      return;
     }
-    switch (msg->type()) {
-      case STUN_BINDING_REQUEST:
-        RTC_LOG_V(sev) << ToString() << ": Received "
-                       << StunMethodToString(msg->type())
-                       << ", id=" << rtc::hex_encode(msg->transaction_id());
-        if (remote_ufrag == remote_candidate_.username()) {
-          HandleStunBindingOrGoogPingRequest(msg.get());
-        } else {
-          // The packet had the right local username, but the remote username
-          // was not the right one for the remote address.
-          RTC_LOG(LS_ERROR)
-              << ToString()
-              << ": Received STUN request with bad remote username "
-              << remote_ufrag;
-          port_->SendBindingErrorResponse(msg.get(), addr,
-                                          STUN_ERROR_UNAUTHORIZED,
-                                          STUN_ERROR_REASON_UNAUTHORIZED);
-        }
-        break;
+    // fall-through
+  } else if (IsStunSuccessResponseType(msg->type()) ||
+             IsStunErrorResponseType(msg->type())) {
+    RTC_DCHECK(msg->integrity() == StunMessage::IntegrityStatus::kNotSet);
+    if (msg->ValidateMessageIntegrity(remote_candidate().password()) !=
+        StunMessage::IntegrityStatus::kIntegrityOk) {
+      // "silently" discard the response.
+      RTC_LOG(LS_VERBOSE) << ToString() << ": Discarding "
+                          << StunMethodToString(msg->type())
+                          << ", id=" << rtc::hex_encode(msg->transaction_id())
+                          << " with invalid message integrity: "
+                          << static_cast<int>(msg->integrity());
+      return;
+    }
+  } else {
+    RTC_DCHECK(IsStunIndicationType(msg->type()));
+    // No message integrity.
+  }
+
+  rtc::LoggingSeverity sev = (!writable() ? rtc::LS_INFO : rtc::LS_VERBOSE);
+  switch (msg->type()) {
+    case STUN_BINDING_REQUEST:
+      RTC_LOG_V(sev) << ToString() << ": Received "
+                     << StunMethodToString(msg->type())
+                     << ", id=" << rtc::hex_encode(msg->transaction_id());
+      if (remote_ufrag == remote_candidate_.username()) {
+        HandleStunBindingOrGoogPingRequest(msg.get());
+      } else {
+        // The packet had the right local username, but the remote username
+        // was not the right one for the remote address.
+        RTC_LOG(LS_ERROR) << ToString()
+                          << ": Received STUN request with bad remote username "
+                          << remote_ufrag;
+        port_->SendBindingErrorResponse(msg.get(), addr,
+                                        STUN_ERROR_UNAUTHORIZED,
+                                        STUN_ERROR_REASON_UNAUTHORIZED);
+      }
+      break;
 
       // Response from remote peer. Does it match request sent?
       // This doesn't just check, it makes callbacks if transaction
       // id's match.
-      case STUN_BINDING_RESPONSE:
-      case STUN_BINDING_ERROR_RESPONSE:
-        if (msg->IntegrityOk()) {
-          requests_.CheckResponse(msg.get());
-        }
-        // Otherwise silently discard the response.
-        break;
+    case STUN_BINDING_RESPONSE:
+    case STUN_BINDING_ERROR_RESPONSE:
+      requests_.CheckResponse(msg.get());
+      break;
 
       // Remote end point sent an STUN indication instead of regular binding
       // request. In this case `last_ping_received_` will be updated but no
       // response will be sent.
-      case STUN_BINDING_INDICATION:
-        ReceivedPing(msg->transaction_id());
-        break;
-      case GOOG_PING_REQUEST:
-        HandleStunBindingOrGoogPingRequest(msg.get());
-        break;
-      case GOOG_PING_RESPONSE:
-      case GOOG_PING_ERROR_RESPONSE:
-        if (msg->IntegrityOk()) {
-          requests_.CheckResponse(msg.get());
-        }
-        break;
-      default:
-        RTC_DCHECK_NOTREACHED();
-        break;
-    }
+    case STUN_BINDING_INDICATION:
+      ReceivedPing(msg->transaction_id());
+      break;
+    case GOOG_PING_REQUEST:
+      // Checked in Port::GetStunMessage.
+      HandleStunBindingOrGoogPingRequest(msg.get());
+      break;
+    case GOOG_PING_RESPONSE:
+    case GOOG_PING_ERROR_RESPONSE:
+      requests_.CheckResponse(msg.get());
+      break;
+    default:
+      RTC_DCHECK_NOTREACHED();
+      break;
   }
 }
 
