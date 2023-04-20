@@ -2886,7 +2886,7 @@
 - name: WasmAtomicBinopHeap
   gen_boilerplate: false
 
-- name: WasmLoadGlobalVar
+- name: WasmLoadInstanceDataField
   gen_boilerplate: false
 
 - name: WasmLoadGlobalCell
@@ -2895,7 +2895,7 @@
 - name: WasmLoadTableElement
   gen_boilerplate: false
 
-- name: WasmStoreGlobalVar
+- name: WasmStoreInstanceDataField
   gen_boilerplate: false
 
 - name: WasmStoreGlobalCell

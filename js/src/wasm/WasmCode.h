@@ -353,19 +353,19 @@ using FuncImportVector = Vector<FuncImport, 0, SystemAllocPolicy>;
 struct MetadataCacheablePod {
   ModuleKind kind;
   Maybe<MemoryDesc> memory;
-  uint32_t globalDataLength;
+  uint32_t instanceDataLength;
   Maybe<uint32_t> startFuncIndex;
   Maybe<uint32_t> nameCustomSectionIndex;
   bool filenameIsURL;
   bool omitsBoundsChecks;
 
-  WASM_CHECK_CACHEABLE_POD(kind, memory, globalDataLength, startFuncIndex,
+  WASM_CHECK_CACHEABLE_POD(kind, memory, instanceDataLength, startFuncIndex,
                            nameCustomSectionIndex, filenameIsURL,
                            omitsBoundsChecks)
 
   explicit MetadataCacheablePod(ModuleKind kind)
       : kind(kind),
-        globalDataLength(0),
+        instanceDataLength(0),
         filenameIsURL(false),
         omitsBoundsChecks(false) {}
 };

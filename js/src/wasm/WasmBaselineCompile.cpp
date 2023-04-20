@@ -1621,10 +1621,10 @@ void BaseCompiler::callRef(const Stk& calleeRef, const FunctionCall& call,
 
 // Precondition: sync()
 
-CodeOffset BaseCompiler::callImport(unsigned globalDataOffset,
+CodeOffset BaseCompiler::callImport(unsigned instanceDataOffset,
                                     const FunctionCall& call) {
   CallSiteDesc desc(bytecodeOffset(), CallSiteDesc::Import);
-  CalleeDesc callee = CalleeDesc::import(globalDataOffset);
+  CalleeDesc callee = CalleeDesc::import(instanceDataOffset);
   return masm.wasmCallImport(desc, callee);
 }
 
@@ -1673,7 +1673,7 @@ bool BaseCompiler::throwFrom(RegRef exn) {
 
 void BaseCompiler::loadTag(RegPtr instance, uint32_t tagIndex, RegRef tagDst) {
   const TagDesc& tagDesc = moduleEnv_.tags[tagIndex];
-  size_t offset = Instance::offsetInGlobalArea(tagDesc.globalDataOffset);
+  size_t offset = Instance::offsetInData(tagDesc.instanceDataOffset);
   masm.loadPtr(Address(instance, offset), tagDst);
 }
 
@@ -2187,8 +2187,7 @@ void BaseCompiler::convertI64ToF64(RegI64 src, bool isUnsigned, RegF64 dest,
 // Global variable access.
 
 Address BaseCompiler::addressOfGlobalVar(const GlobalDesc& global, RegPtr tmp) {
-  uint32_t globalToInstanceOffset =
-      Instance::offsetInGlobalArea(global.offset());
+  uint32_t globalToInstanceOffset = Instance::offsetInData(global.offset());
 #ifdef RABALDR_PIN_INSTANCE
   movePtr(RegPtr(InstanceReg), tmp);
 #else
@@ -2209,7 +2208,7 @@ Address BaseCompiler::addressOfTableField(const TableDesc& table,
                                           uint32_t fieldOffset,
                                           RegPtr instance) {
   uint32_t tableToInstanceOffset =
-      wasm::Instance::offsetInGlobalArea(table.globalDataOffset + fieldOffset);
+      wasm::Instance::offsetInData(table.instanceDataOffset + fieldOffset);
   return Address(instance, tableToInstanceOffset);
 }
 
@@ -6376,7 +6375,7 @@ RegPtr BaseCompiler::loadTypeDefInstanceData(uint32_t typeIndex) {
 #  endif
   masm.computeEffectiveAddress(
       Address(instance,
-              Instance::offsetInGlobalArea(
+              Instance::offsetInData(
                   moduleEnv_.offsetOfTypeDefInstanceData(typeIndex))),
       rp);
   return rp;
@@ -6394,7 +6393,7 @@ RegPtr BaseCompiler::loadSuperTypeVector(uint32_t typeIndex) {
   // We can use the pinned instance register.
   instance = RegPtr(InstanceReg);
 #  endif
-  masm.loadPtr(Address(instance, Instance::offsetInGlobalArea(
+  masm.loadPtr(Address(instance, Instance::offsetInData(
                                      moduleEnv_.offsetOfSuperTypeVector(typeIndex))),
                rp);
   return rp;

@@ -655,7 +655,7 @@ class CallIndirectId {
     MOZ_ASSERT(kind_ == CallIndirectIdKind::Immediate);
     return bits_;
   }
-  uint32_t globalDataOffset() const {
+  uint32_t instanceDataOffset() const {
     MOZ_ASSERT(kind_ == CallIndirectIdKind::Global);
     return bits_;
   }
@@ -699,10 +699,10 @@ class CalleeDesc {
     U() : funcIndex_(0) {}
     uint32_t funcIndex_;
     struct {
-      uint32_t globalDataOffset_;
+      uint32_t instanceDataOffset_;
     } import;
     struct {
-      uint32_t globalDataOffset_;
+      uint32_t instanceDataOffset_;
       uint32_t minLength_;
       Maybe<uint32_t> maxLength_;
       CallIndirectId callIndirectId_;
@@ -713,7 +713,7 @@ class CalleeDesc {
  public:
   CalleeDesc() = default;
   static CalleeDesc function(uint32_t funcIndex);
-  static CalleeDesc import(uint32_t globalDataOffset);
+  static CalleeDesc import(uint32_t instanceDataOffset);
   static CalleeDesc wasmTable(const TableDesc& desc,
                               CallIndirectId callIndirectId);
   static CalleeDesc asmJSTable(const TableDesc& desc);
@@ -725,18 +725,18 @@ class CalleeDesc {
     MOZ_ASSERT(which_ == Func);
     return u.funcIndex_;
   }
-  uint32_t importGlobalDataOffset() const {
+  uint32_t importInstanceDataOffset() const {
     MOZ_ASSERT(which_ == Import);
-    return u.import.globalDataOffset_;
+    return u.import.instanceDataOffset_;
   }
   bool isTable() const { return which_ == WasmTable || which_ == AsmJSTable; }
-  uint32_t tableLengthGlobalDataOffset() const {
+  uint32_t tableLengthInstanceDataOffset() const {
     MOZ_ASSERT(isTable());
-    return u.table.globalDataOffset_ + offsetof(TableInstanceData, length);
+    return u.table.instanceDataOffset_ + offsetof(TableInstanceData, length);
   }
-  uint32_t tableFunctionBaseGlobalDataOffset() const {
+  uint32_t tableFunctionBaseInstanceDataOffset() const {
     MOZ_ASSERT(isTable());
-    return u.table.globalDataOffset_ + offsetof(TableInstanceData, elements);
+    return u.table.instanceDataOffset_ + offsetof(TableInstanceData, elements);
   }
   CallIndirectId wasmTableSigId() const {
     MOZ_ASSERT(which_ == WasmTable);
