@@ -457,13 +457,10 @@ TEST_F(FlexfecReceiverTest, SurvivesOldRecoveredPacketBeingReinserted) {
     void SetReceiver(FlexfecReceiver* receiver) { receiver_ = receiver; }
 
     // Implements RecoveredPacketReceiver.
-    void OnRecoveredPacket(const uint8_t* packet, size_t length) override {
-      RtpPacketReceived parsed_packet;
-      EXPECT_TRUE(parsed_packet.Parse(packet, length));
-      parsed_packet.set_recovered(true);
-
+    void OnRecoveredPacket(const RtpPacketReceived& packet) override {
+      EXPECT_TRUE(packet.recovered());
       RTC_DCHECK(receiver_);
-      receiver_->OnRtpPacket(parsed_packet);
+      receiver_->OnRtpPacket(packet);
     }
 
    private:
@@ -571,10 +568,7 @@ TEST_F(FlexfecReceiverTest, RecoveryCallbackDoesNotLoopInfinitely) {
     bool DeepRecursion() const { return deep_recursion_; }
 
     // Implements RecoveredPacketReceiver.
-    void OnRecoveredPacket(const uint8_t* packet, size_t length) override {
-      RtpPacketReceived parsed_packet;
-      EXPECT_TRUE(parsed_packet.Parse(packet, length));
-
+    void OnRecoveredPacket(const RtpPacketReceived& packet) override {
       did_receive_call_back_ = true;
 
       if (recursion_depth_ > kMaxRecursionDepth) {
@@ -583,7 +577,7 @@ TEST_F(FlexfecReceiverTest, RecoveryCallbackDoesNotLoopInfinitely) {
       }
       ++recursion_depth_;
       RTC_DCHECK(receiver_);
-      receiver_->OnRtpPacket(parsed_packet);
+      receiver_->OnRtpPacket(packet);
       --recursion_depth_;
     }
 

@@ -195,7 +195,6 @@ class ResourceVideoSendStreamForwarder {
 
 class Call final : public webrtc::Call,
                    public PacketReceiver,
-                   public RecoveredPacketReceiver,
                    public TargetTransferRateObserver,
                    public BitrateAllocator::LimitObserver {
  public:
@@ -254,9 +253,6 @@ class Call final : public webrtc::Call,
   DeliveryStatus DeliverPacket(MediaType media_type,
                                rtc::CopyOnWriteBuffer packet,
                                int64_t packet_time_us) override;
-
-  // Implements RecoveredPacketReceiver.
-  void OnRecoveredPacket(const uint8_t* packet, size_t length) override;
 
   void SignalChannelNetworkState(MediaType media, NetworkState state) override;
 
@@ -1092,7 +1088,8 @@ FlexfecReceiveStream* Call::CreateFlexfecReceiveStream(
   // OnRtpPacket until the constructor is finished and the object is
   // in a valid state, since OnRtpPacket runs on the same thread.
   FlexfecReceiveStreamImpl* receive_stream = new FlexfecReceiveStreamImpl(
-      clock_, std::move(config), this, call_stats_->AsRtcpRttStats());
+      clock_, std::move(config), &video_receiver_controller_,
+      call_stats_->AsRtcpRttStats());
 
   // TODO(bugs.webrtc.org/11993): Set this up asynchronously on the network
   // thread.
@@ -1504,25 +1501,6 @@ PacketReceiver::DeliveryStatus Call::DeliverPacket(
 
   RTC_DCHECK_RUN_ON(worker_thread_);
   return DeliverRtp(media_type, std::move(packet), packet_time_us);
-}
-
-void Call::OnRecoveredPacket(const uint8_t* packet, size_t length) {
-  // TODO(bugs.webrtc.org/11993): Expect to be called on the network thread.
-  // This method is called synchronously via `OnRtpPacket()` (see DeliverRtp)
-  // on the same thread.
-  RTC_DCHECK_RUN_ON(worker_thread_);
-  RtpPacketReceived parsed_packet;
-  if (!parsed_packet.Parse(packet, length))
-    return;
-
-  parsed_packet.set_recovered(true);
-
-  if (!IdentifyReceivedPacket(parsed_packet))
-    return;
-
-  // TODO(brandtr): Update here when we support protecting audio packets too.
-  parsed_packet.set_payload_type_frequency(kVideoPayloadTypeFrequency);
-  video_receiver_controller_.OnRtpPacket(parsed_packet);
 }
 
 void Call::NotifyBweOfReceivedPacket(const RtpPacketReceived& packet,

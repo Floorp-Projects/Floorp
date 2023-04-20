@@ -37,10 +37,10 @@ index 30e090db2a..8cda62b0fa 100644
    configuration.outgoing_transport = rtp_transport;
  
 diff --git a/call/call.cc b/call/call.cc
-index fc9777c2f1..3cdcd3c5cf 100644
+index 99d6dcd22a..3325ccccdd 100644
 --- a/call/call.cc
 +++ b/call/call.cc
-@@ -501,12 +501,14 @@ std::string Call::Stats::ToString(int64_t time_ms) const {
+@@ -497,12 +497,14 @@ std::string Call::Stats::ToString(int64_t time_ms) const {
    return ss.str();
  }
  
@@ -111,7 +111,7 @@ index 4367ab08fa..2c186273b6 100644
    // Post-decode VAD is disabled by default in NetEq, however, Audio
    // Conference Mixer relies on VAD decisions and fails without them.
 diff --git a/modules/rtp_rtcp/include/flexfec_receiver.h b/modules/rtp_rtcp/include/flexfec_receiver.h
-index d34ba74620..fe872b3b1e 100644
+index 3cf4c3845e..29d9e72786 100644
 --- a/modules/rtp_rtcp/include/flexfec_receiver.h
 +++ b/modules/rtp_rtcp/include/flexfec_receiver.h
 @@ -29,9 +29,11 @@ class Clock;
@@ -127,7 +127,7 @@ index d34ba74620..fe872b3b1e 100644
                    uint32_t ssrc,
                    uint32_t protected_media_ssrc,
 diff --git a/modules/rtp_rtcp/source/flexfec_receiver.cc b/modules/rtp_rtcp/source/flexfec_receiver.cc
-index b5198b53a6..ef1fa53da8 100644
+index 3f345cd6d2..bd67de1f83 100644
 --- a/modules/rtp_rtcp/source/flexfec_receiver.cc
 +++ b/modules/rtp_rtcp/source/flexfec_receiver.cc
 @@ -29,6 +29,7 @@ constexpr int kPacketLogIntervalMs = 10000;

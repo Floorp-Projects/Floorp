@@ -176,17 +176,6 @@ struct RtpState {
   bool ssrc_has_acked;
 };
 
-// Callback interface for packets recovered by FlexFEC or ULPFEC. In
-// the FlexFEC case, the implementation should be able to demultiplex
-// the recovered RTP packets based on SSRC.
-class RecoveredPacketReceiver {
- public:
-  virtual void OnRecoveredPacket(const uint8_t* packet, size_t length) = 0;
-
- protected:
-  virtual ~RecoveredPacketReceiver() = default;
-};
-
 class RtcpIntraFrameObserver {
  public:
   virtual ~RtcpIntraFrameObserver() {}

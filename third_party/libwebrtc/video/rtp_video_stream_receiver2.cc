@@ -129,7 +129,6 @@ std::unique_ptr<UlpfecReceiver> MaybeConstructUlpfecReceiver(
     uint32_t remote_ssrc,
     int red_payload_type,
     int ulpfec_payload_type,
-    rtc::ArrayView<const RtpExtension> extensions,
     RecoveredPacketReceiver* callback,
     Clock* clock) {
   RTC_DCHECK_GE(red_payload_type, -1);
@@ -144,7 +143,7 @@ std::unique_ptr<UlpfecReceiver> MaybeConstructUlpfecReceiver(
   //    return nullptr;
 
   return std::make_unique<UlpfecReceiver>(remote_ssrc, ulpfec_payload_type,
-                                          callback, extensions, clock);
+                                          callback, clock);
 }
 
 static const int kPacketLogIntervalMs = 10000;
@@ -266,7 +265,6 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
           MaybeConstructUlpfecReceiver(config->rtp.remote_ssrc,
                                        config->rtp.red_payload_type,
                                        config->rtp.ulpfec_payload_type,
-                                       config->rtp.extensions,
                                        this,
                                        clock_)),
       red_payload_type_(config_.rtp.red_payload_type),
@@ -699,26 +697,13 @@ void RtpVideoStreamReceiver2::OnReceivedPayloadData(
   OnInsertedPacket(packet_buffer_.InsertPacket(std::move(packet)));
 }
 
-void RtpVideoStreamReceiver2::OnRecoveredPacket(const uint8_t* rtp_packet,
-                                                size_t rtp_packet_length) {
+void RtpVideoStreamReceiver2::OnRecoveredPacket(
+    const RtpPacketReceived& packet) {
   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-
-  RtpPacketReceived packet;
-  if (!packet.Parse(rtp_packet, rtp_packet_length))
-    return;
   if (packet.PayloadType() == red_payload_type_) {
     RTC_LOG(LS_WARNING) << "Discarding recovered packet with RED encapsulation";
     return;
   }
-
-  packet.IdentifyExtensions(rtp_header_extensions_);
-  packet.set_payload_type_frequency(kVideoPayloadTypeFrequency);
-  // TODO(bugs.webrtc.org/7135): UlpfecReceiverImpl::ProcessReceivedFec passes
-  // both original (decapsulated) media packets and recovered packets to this
-  // callback. We need a way to distinguish, for setting packet.recovered()
-  // correctly. Ideally, move RED decapsulation out of the Ulpfec
-  // implementation.
-
   ReceivePacket(packet);
 }
 
@@ -1059,9 +1044,9 @@ void RtpVideoStreamReceiver2::SetProtectionPayloadTypes(
   RTC_DCHECK(red_payload_type >= -1 && red_payload_type < 0x80);
   RTC_DCHECK(ulpfec_payload_type >= -1 && ulpfec_payload_type < 0x80);
   red_payload_type_ = red_payload_type;
-  ulpfec_receiver_ = MaybeConstructUlpfecReceiver(
-      config_.rtp.remote_ssrc, red_payload_type, ulpfec_payload_type,
-      config_.rtp.extensions, this, clock_);
+  ulpfec_receiver_ =
+      MaybeConstructUlpfecReceiver(config_.rtp.remote_ssrc, red_payload_type,
+                                   ulpfec_payload_type, this, clock_);
 }
 
 absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedPacketMs() const {

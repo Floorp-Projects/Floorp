@@ -159,10 +159,10 @@ index b988c7805d..cb4a0a427f 100644
    // Within this list, the sender-source SSRC pair is unique and per-pair the
    // ReportBlockData represents the latest Report Block that was received for
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index e656a6be84..5453ab5840 100644
+index 568b7761d9..896bacd743 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
-@@ -1078,9 +1078,10 @@ absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedKeyframePacketMs()
+@@ -1063,9 +1063,10 @@ absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedKeyframePacketMs()
  // seem to be any support for these stats right now. So, we hack this in.
  void RtpVideoStreamReceiver2::RemoteRTCPSenderInfo(
      uint32_t* packet_count, uint32_t* octet_count,
@@ -176,7 +176,7 @@ index e656a6be84..5453ab5840 100644
  
  void RtpVideoStreamReceiver2::ManageFrame(
 diff --git a/video/rtp_video_stream_receiver2.h b/video/rtp_video_stream_receiver2.h
-index d9e1da33ed..2239b2d63c 100644
+index fa4f1cc176..975af2bf4a 100644
 --- a/video/rtp_video_stream_receiver2.h
 +++ b/video/rtp_video_stream_receiver2.h
 @@ -215,7 +215,8 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,

@@ -53,7 +53,6 @@ class UlpfecReceiverTest : public ::testing::Test {
         receiver_fec_(kMediaSsrc,
                       kFecPayloadType,
                       &recovered_packet_receiver_,
-                      {},
                       Clock::GetRealTimeClock()),
         packet_generator_(kMediaSsrc) {}
 
@@ -180,7 +179,7 @@ void UlpfecReceiverTest::SurvivesMaliciousPacket(const uint8_t* data,
                                                  uint8_t ulpfec_payload_type) {
   NullRecoveredPacketReceiver null_callback;
   UlpfecReceiver receiver_fec(kMediaSsrc, ulpfec_payload_type, &null_callback,
-                              {}, Clock::GetRealTimeClock());
+                              Clock::GetRealTimeClock());
 
   RtpPacketReceived rtp_packet;
   ASSERT_TRUE(rtp_packet.Parse(data, length));
