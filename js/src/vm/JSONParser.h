@@ -33,6 +33,76 @@ enum class JSONToken {
   Error
 };
 
+template <typename CharT>
+class JSONParser;
+
+template <typename CharT>
+class MOZ_STACK_CLASS JSONTokenizer {
+ public:
+  using CharPtr = mozilla::RangedPtr<const CharT>;
+
+ protected:
+  CharPtr current;
+  const CharPtr begin, end;
+
+  JSONParser<CharT>* parser = nullptr;
+
+ public:
+  JSONTokenizer(CharPtr current, const CharPtr begin, const CharPtr end,
+                JSONParser<CharT>* parser)
+      : current(current), begin(begin), end(end), parser(parser) {
+    MOZ_ASSERT(current <= end);
+    MOZ_ASSERT(parser);
+  }
+
+  explicit JSONTokenizer(mozilla::Range<const CharT> data,
+                         JSONParser<CharT>* parser)
+      : JSONTokenizer(data.begin(), data.begin(), data.end(), parser) {}
+
+  JSONTokenizer(JSONTokenizer<CharT>&& other) noexcept
+      : JSONTokenizer(other.current, other.begin, other.end, other.parser) {}
+
+  JSONTokenizer(const JSONTokenizer<CharT>& other) = delete;
+  void operator=(const JSONTokenizer<CharT>& other) = delete;
+
+  void fixupParser(JSONParser<CharT>* newParser) { parser = newParser; }
+
+  void getTextPosition(uint32_t* column, uint32_t* line);
+
+  bool consumeTrailingWhitespaces();
+
+  JSONToken advance();
+  JSONToken advancePropertyName();
+  JSONToken advancePropertyColon();
+  JSONToken advanceAfterProperty();
+  JSONToken advanceAfterObjectOpen();
+  JSONToken advanceAfterArrayElement();
+
+  void unget() { --current; }
+
+#ifdef DEBUG
+  bool finished() { return end == current; }
+#endif
+
+  JSONToken token(JSONToken t) {
+    MOZ_ASSERT(t != JSONToken::String);
+    MOZ_ASSERT(t != JSONToken::Number);
+    return t;
+  }
+
+  JSONToken stringToken(JSString* str);
+  JSONToken numberToken(double d);
+
+  enum StringType { PropertyName, LiteralValue };
+
+  template <StringType ST>
+  JSONToken readString();
+
+  JSONToken readNumber();
+
+  void error(const char* msg);
+};
+
 // JSONParser base class. JSONParser is templatized to work on either Latin1
 // or TwoByte input strings, JSONParserBase holds all state and methods that
 // can be shared between the two encodings.
@@ -47,13 +117,13 @@ class MOZ_STACK_CLASS JSONParserBase {
     AttemptForEval,
   };
 
- private:
+ public:
   /* Data members */
-  Value v;
 
- protected:
+  Value v;
   JSContext* const cx;
 
+ protected:
   const ParseType parseType;
 
   // State related to the parser's current position. At all points in the
@@ -117,22 +187,12 @@ class MOZ_STACK_CLASS JSONParserBase {
   Vector<ElementVector*, 5> freeElements;
   Vector<PropertyVector*, 5> freeProperties;
 
-#ifdef DEBUG
-  JSONToken lastToken;
-#endif
-
   JSONParserBase(JSContext* cx, ParseType parseType)
       : cx(cx),
         parseType(parseType),
         stack(cx),
         freeElements(cx),
-        freeProperties(cx)
-#ifdef DEBUG
-        ,
-        lastToken(JSONToken::Error)
-#endif
-  {
-  }
+        freeProperties(cx) {}
   ~JSONParserBase();
 
   // Allow move construction for use with Rooted.
@@ -142,22 +202,14 @@ class MOZ_STACK_CLASS JSONParserBase {
         parseType(other.parseType),
         stack(std::move(other.stack)),
         freeElements(std::move(other.freeElements)),
-        freeProperties(std::move(other.freeProperties))
-#ifdef DEBUG
-        ,
-        lastToken(std::move(other.lastToken))
-#endif
-  {
-  }
+        freeProperties(std::move(other.freeProperties)) {}
 
   Value numberValue() const {
-    MOZ_ASSERT(lastToken == JSONToken::Number);
     MOZ_ASSERT(v.isNumber());
     return v;
   }
 
   Value stringValue() const {
-    MOZ_ASSERT(lastToken == JSONToken::String);
     MOZ_ASSERT(v.isString());
     return v;
   }
@@ -166,33 +218,6 @@ class MOZ_STACK_CLASS JSONParserBase {
     Value strval = stringValue();
     return &strval.toString()->asAtom();
   }
-
-  JSONToken token(JSONToken t) {
-    MOZ_ASSERT(t != JSONToken::String);
-    MOZ_ASSERT(t != JSONToken::Number);
-#ifdef DEBUG
-    lastToken = t;
-#endif
-    return t;
-  }
-
-  JSONToken stringToken(JSString* str) {
-    this->v = StringValue(str);
-#ifdef DEBUG
-    lastToken = JSONToken::String;
-#endif
-    return JSONToken::String;
-  }
-
-  JSONToken numberToken(double d) {
-    this->v = NumberValue(d);
-#ifdef DEBUG
-    lastToken = JSONToken::Number;
-#endif
-    return JSONToken::Number;
-  }
-
-  enum StringType { PropertyName, LiteralValue };
 
   bool errorReturn();
 
@@ -208,11 +233,9 @@ class MOZ_STACK_CLASS JSONParserBase {
 
 template <typename CharT>
 class MOZ_STACK_CLASS JSONParser : public JSONParserBase {
- private:
-  using CharPtr = mozilla::RangedPtr<const CharT>;
+  using Tokenizer = JSONTokenizer<CharT>;
 
-  CharPtr current;
-  const CharPtr begin, end;
+  Tokenizer tokenizer;
 
  public:
   /* Public API */
@@ -220,19 +243,14 @@ class MOZ_STACK_CLASS JSONParser : public JSONParserBase {
   /* Create a parser for the provided JSON data. */
   JSONParser(JSContext* cx, mozilla::Range<const CharT> data,
              ParseType parseType)
-      : JSONParserBase(cx, parseType),
-        current(data.begin()),
-        begin(current),
-        end(data.end()) {
-    MOZ_ASSERT(current <= end);
-  }
+      : JSONParserBase(cx, parseType), tokenizer(data, this) {}
 
   /* Allow move construction for use with Rooted. */
   JSONParser(JSONParser&& other)
       : JSONParserBase(std::move(other)),
-        current(other.current),
-        begin(other.begin),
-        end(other.end) {}
+        tokenizer(std::move(other.tokenizer)) {
+    tokenizer.fixupParser(this);
+  }
 
   /*
    * Parse the JSON data specified at construction time.  If it parses
@@ -248,22 +266,7 @@ class MOZ_STACK_CLASS JSONParser : public JSONParserBase {
 
   void trace(JSTracer* trc) { JSONParserBase::trace(trc); }
 
- private:
-  template <StringType ST>
-  JSONToken readString();
-
-  JSONToken readNumber();
-
-  JSONToken advance();
-  JSONToken advancePropertyName();
-  JSONToken advancePropertyColon();
-  JSONToken advanceAfterProperty();
-  JSONToken advanceAfterObjectOpen();
-  JSONToken advanceAfterArrayElement();
-
   void error(const char* msg);
-
-  void getTextPosition(uint32_t* column, uint32_t* line);
 
  private:
   JSONParser(const JSONParser& other) = delete;

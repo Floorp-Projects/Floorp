@@ -31,8 +31,20 @@ using mozilla::IsAsciiHexDigit;
 using mozilla::RangedPtr;
 
 template <typename CharT>
-template <JSONParserBase::StringType ST>
-JSONToken JSONParser<CharT>::readString() {
+JSONToken JSONTokenizer<CharT>::stringToken(JSString* str) {
+  parser->v = StringValue(str);
+  return JSONToken::String;
+}
+
+template <typename CharT>
+JSONToken JSONTokenizer<CharT>::numberToken(double d) {
+  parser->v = NumberValue(d);
+  return JSONToken::Number;
+}
+
+template <typename CharT>
+template <typename JSONTokenizer<CharT>::StringType ST>
+JSONToken JSONTokenizer<CharT>::readString() {
   MOZ_ASSERT(current < end);
   MOZ_ASSERT(*current == '"');
 
@@ -56,9 +68,9 @@ JSONToken JSONParser<CharT>::readString() {
       size_t length = current - start;
       current++;
       JSLinearString* str =
-          (ST == JSONParser::PropertyName)
-              ? AtomizeChars(cx, start.get(), length)
-              : NewStringCopyN<CanGC>(cx, start.get(), length);
+          (ST == PropertyName)
+              ? AtomizeChars(parser->cx, start.get(), length)
+              : NewStringCopyN<CanGC>(parser->cx, start.get(), length);
       if (!str) {
         return token(JSONToken::OOM);
       }
@@ -80,7 +92,7 @@ JSONToken JSONParser<CharT>::readString() {
    * of unescaped characters into a temporary buffer, then an escaped
    * character, and repeat until the entire string is consumed.
    */
-  JSStringBuilder buffer(cx);
+  JSStringBuilder buffer(parser->cx);
   do {
     if (start < current && !buffer.append(start.get(), current.get())) {
       return token(JSONToken::OOM);
@@ -92,9 +104,8 @@ JSONToken JSONParser<CharT>::readString() {
 
     char16_t c = *current++;
     if (c == '"') {
-      JSLinearString* str = (ST == JSONParser::PropertyName)
-                                ? buffer.finishAtom()
-                                : buffer.finishString();
+      JSLinearString* str =
+          (ST == PropertyName) ? buffer.finishAtom() : buffer.finishString();
       if (!str) {
         return token(JSONToken::OOM);
       }
@@ -187,7 +198,7 @@ JSONToken JSONParser<CharT>::readString() {
 }
 
 template <typename CharT>
-JSONToken JSONParser<CharT>::readNumber() {
+JSONToken JSONTokenizer<CharT>::readNumber() {
   MOZ_ASSERT(current < end);
   MOZ_ASSERT(IsAsciiDigit(*current) || *current == '-');
 
@@ -235,7 +246,7 @@ JSONToken JSONParser<CharT>::readNumber() {
     double d;
     if (!GetFullInteger(digitStart.get(), current.get(), 10,
                         IntegerSeparatorHandling::None, &d)) {
-      ReportOutOfMemory(cx);
+      ReportOutOfMemory(parser->cx);
       return token(JSONToken::OOM);
     }
     return numberToken(negative ? -d : d);
@@ -290,7 +301,17 @@ static inline bool IsJSONWhitespace(char16_t c) {
 }
 
 template <typename CharT>
-JSONToken JSONParser<CharT>::advance() {
+bool JSONTokenizer<CharT>::consumeTrailingWhitespaces() {
+  for (; current < end; current++) {
+    if (!IsJSONWhitespace(*current)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+template <typename CharT>
+JSONToken JSONTokenizer<CharT>::advance() {
   while (current < end && IsJSONWhitespace(*current)) {
     current++;
   }
@@ -372,7 +393,7 @@ JSONToken JSONParser<CharT>::advance() {
 }
 
 template <typename CharT>
-JSONToken JSONParser<CharT>::advancePropertyName() {
+JSONToken JSONTokenizer<CharT>::advancePropertyName() {
   MOZ_ASSERT(current[-1] == ',');
 
   while (current < end && IsJSONWhitespace(*current)) {
@@ -392,7 +413,7 @@ JSONToken JSONParser<CharT>::advancePropertyName() {
 }
 
 template <typename CharT>
-JSONToken JSONParser<CharT>::advancePropertyColon() {
+JSONToken JSONTokenizer<CharT>::advancePropertyColon() {
   MOZ_ASSERT(current[-1] == '"');
 
   while (current < end && IsJSONWhitespace(*current)) {
@@ -430,7 +451,7 @@ static inline void AssertPastValue(const RangedPtr<const CharT> current) {
 }
 
 template <typename CharT>
-JSONToken JSONParser<CharT>::advanceAfterProperty() {
+JSONToken JSONTokenizer<CharT>::advanceAfterProperty() {
   AssertPastValue(current);
 
   while (current < end && IsJSONWhitespace(*current)) {
@@ -456,7 +477,7 @@ JSONToken JSONParser<CharT>::advanceAfterProperty() {
 }
 
 template <typename CharT>
-JSONToken JSONParser<CharT>::advanceAfterObjectOpen() {
+JSONToken JSONTokenizer<CharT>::advanceAfterObjectOpen() {
   MOZ_ASSERT(current[-1] == '{');
 
   while (current < end && IsJSONWhitespace(*current)) {
@@ -481,7 +502,7 @@ JSONToken JSONParser<CharT>::advanceAfterObjectOpen() {
 }
 
 template <typename CharT>
-JSONToken JSONParser<CharT>::advanceAfterArrayElement() {
+JSONToken JSONTokenizer<CharT>::advanceAfterArrayElement() {
   AssertPastValue(current);
 
   while (current < end && IsJSONWhitespace(*current)) {
@@ -507,7 +528,12 @@ JSONToken JSONParser<CharT>::advanceAfterArrayElement() {
 }
 
 template <typename CharT>
-void JSONParser<CharT>::getTextPosition(uint32_t* column, uint32_t* line) {
+void JSONTokenizer<CharT>::error(const char* msg) {
+  parser->error(msg);
+}
+
+template <typename CharT>
+void JSONTokenizer<CharT>::getTextPosition(uint32_t* column, uint32_t* line) {
   CharPtr ptr = begin;
   uint32_t col = 1;
   uint32_t row = 1;
@@ -559,7 +585,7 @@ template <typename CharT>
 void JSONParser<CharT>::error(const char* msg) {
   if (parseType == ParseType::JSONParse) {
     uint32_t column = 1, line = 1;
-    getTextPosition(&column, &line);
+    tokenizer.getTextPosition(&column, &line);
 
     const size_t MaxWidth = sizeof("4294967295");
     char columnNumber[MaxWidth];
@@ -628,7 +654,7 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
         PropertyVector& properties = stack.back().properties();
         properties.back().value = value;
 
-        token = advanceAfterProperty();
+        token = tokenizer.advanceAfterProperty();
         if (token == JSONToken::ObjectClose) {
           if (!finishObject(&value, properties)) {
             return false;
@@ -646,7 +672,7 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
           }
           return errorReturn();
         }
-        token = advancePropertyName();
+        token = tokenizer.advancePropertyName();
         /* FALL THROUGH */
       }
 
@@ -668,7 +694,7 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
           if (!properties.emplaceBack(id)) {
             return false;
           }
-          token = advancePropertyColon();
+          token = tokenizer.advancePropertyColon();
           if (token != JSONToken::Colon) {
             MOZ_ASSERT(token == JSONToken::Error);
             return errorReturn();
@@ -688,7 +714,7 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
         if (!elements.append(value.get())) {
           return false;
         }
-        token = advanceAfterArrayElement();
+        token = tokenizer.advanceAfterArrayElement();
         if (token == JSONToken::Comma) {
           goto JSONValue;
         }
@@ -704,7 +730,7 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
 
       JSONValue:
       case JSONValue:
-        token = advance();
+        token = tokenizer.advance();
       JSONValueSwitch:
         switch (token) {
           case JSONToken::String:
@@ -739,7 +765,7 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
               return false;
             }
 
-            token = advance();
+            token = tokenizer.advance();
             if (token == JSONToken::ArrayClose) {
               if (!finishArray(&value, *elements)) {
                 return false;
@@ -765,7 +791,7 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
               return false;
             }
 
-            token = advanceAfterObjectOpen();
+            token = tokenizer.advanceAfterObjectOpen();
             if (token == JSONToken::ObjectClose) {
               if (!finishObject(&value, *properties)) {
                 return false;
@@ -781,7 +807,7 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
           case JSONToken::Comma:
             // Move the current pointer backwards so that the position
             // reported in the error message is correct.
-            --current;
+            tokenizer.unget();
             error("unexpected character");
             return errorReturn();
 
@@ -800,14 +826,12 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
     state = stack.back().state;
   }
 
-  for (; current < end; current++) {
-    if (!IsJSONWhitespace(*current)) {
-      error("unexpected non-whitespace character after JSON data");
-      return errorReturn();
-    }
+  if (!tokenizer.consumeTrailingWhitespaces()) {
+    error("unexpected non-whitespace character after JSON data");
+    return errorReturn();
   }
 
-  MOZ_ASSERT(end == current);
+  MOZ_ASSERT(tokenizer.finished());
   MOZ_ASSERT(stack.empty());
 
   vp.set(value);
