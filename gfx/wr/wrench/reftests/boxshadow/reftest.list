@@ -35,3 +35,4 @@ fuzzy(1,5) platform(linux,mac) == box-shadow-huge-radius.yaml box-shadow-huge-ra
 platform(linux,mac) == box-shadow-large-blur-radius-2.yaml box-shadow-large-blur-radius-2.png
 platform(linux,mac) fuzzy(1,8) == box-shadow-large-blur-radius-3.yaml box-shadow-large-blur-radius-3.png
 platform(linux,mac) fuzzy(1,79) == scale.yaml scale.png
+platform(linux,mac) fuzzy(1,4) == box-shadow-non-uniform-corner.yaml box-shadow-non-uniform-corner.png

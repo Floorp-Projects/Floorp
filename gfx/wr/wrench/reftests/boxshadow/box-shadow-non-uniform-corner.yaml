@@ -1,0 +1,12 @@
+---
+root:
+  items:
+    - type: box-shadow
+      bounds: [ 50, 50, 500, 200 ]
+      color: red
+      clip-mode: outset
+      blur-radius: 0
+      spread-radius: 10
+      border-radius: {
+        top-left: 32,
+      }
