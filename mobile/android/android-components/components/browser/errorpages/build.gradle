@@ -15,13 +15,6 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    lint {
-        // Lint reports (falsely) a bunch of unused resources for this project. Those resources
-        // are references from Kotlin code and it looks like Android lint can't see those references
-        // yet. Let's disable this check and retry once a newer SDK is available.
-        disable 'UnusedResources'
-    }
-
     buildTypes {
         release {
             minifyEnabled false

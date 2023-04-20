@@ -12,11 +12,6 @@ android {
         targetSdkVersion config.targetSdkVersion
     }
 
-    lint {
-        // All icons are unused in this module.
-        disable 'UnusedResources'
-    }
-
     buildTypes {
         release {
             minifyEnabled false

@@ -38,9 +38,6 @@ android {
     lint {
         warningsAsErrors true
         abortOnError true
-
-        // https://github.com/mozilla-mobile/android-components/issues/10642
-        disable 'UnusedResources'
     }
 
     buildFeatures {
