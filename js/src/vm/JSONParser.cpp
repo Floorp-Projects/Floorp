@@ -556,7 +556,7 @@ void JSONTokenizer<CharT>::getTextPosition(uint32_t* column, uint32_t* line) {
 
 JSONParserBase::~JSONParserBase() {
   for (size_t i = 0; i < stack.length(); i++) {
-    if (stack[i].state == FinishArrayElement) {
+    if (stack[i].state == JSONParserState::FinishArrayElement) {
       js_delete(&stack[i].elements());
     } else {
       js_delete(&stack[i].properties());
@@ -574,7 +574,7 @@ JSONParserBase::~JSONParserBase() {
 
 void JSONParserBase::trace(JSTracer* trc) {
   for (auto& elem : stack) {
-    if (elem.state == FinishArrayElement) {
+    if (elem.state == JSONParserState::FinishArrayElement) {
       elem.elements().trace(trc);
     } else {
       elem.properties().trace(trc);
@@ -676,10 +676,10 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
   vp.setUndefined();
 
   JSONToken token;
-  ParserState state = JSONValue;
+  JSONParserState state = JSONParserState::JSONValue;
   while (true) {
     switch (state) {
-      case FinishObjectMember: {
+      case JSONParserState::FinishObjectMember: {
         PropertyVector& properties = stack.back().properties();
         properties.back().value = value;
 
@@ -738,7 +738,7 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
         }
         return errorReturn();
 
-      case FinishArrayElement: {
+      case JSONParserState::FinishArrayElement: {
         ElementVector& elements = stack.back().elements();
         if (!elements.append(value.get())) {
           return false;
@@ -758,7 +758,7 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
       }
 
       JSONValue:
-      case JSONValue:
+      case JSONParserState::JSONValue:
         token = tokenizer.advance();
       JSONValueSwitch:
         switch (token) {
