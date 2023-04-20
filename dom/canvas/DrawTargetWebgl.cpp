@@ -1378,6 +1378,25 @@ bool DrawTargetWebgl::SharedContext::CreateShaders() {
   return true;
 }
 
+void DrawTargetWebgl::SharedContext::EnableScissor(const IntRect& aRect) {
+  // Only update scissor state if it actually changes.
+  if (!mLastScissor.IsEqualEdges(aRect)) {
+    mLastScissor = aRect;
+    mWebgl->Scissor(aRect.x, aRect.y, aRect.width, aRect.height);
+  }
+  if (!mScissorEnabled) {
+    mScissorEnabled = true;
+    mWebgl->Enable(LOCAL_GL_SCISSOR_TEST);
+  }
+}
+
+void DrawTargetWebgl::SharedContext::DisableScissor() {
+  if (mScissorEnabled) {
+    mScissorEnabled = false;
+    mWebgl->Disable(LOCAL_GL_SCISSOR_TEST);
+  }
+}
+
 inline ColorPattern DrawTargetWebgl::GetClearPattern() const {
   return ColorPattern(
       DeviceColor(0.0f, 0.0f, 0.0f, IsOpaque(mFormat) ? 1.0f : 0.0f));
@@ -1459,6 +1478,7 @@ bool DrawTargetWebgl::CreateFramebuffer() {
                                 LOCAL_GL_COLOR_ATTACHMENT0, LOCAL_GL_TEXTURE_2D,
                                 mTex, 0);
     webgl->Viewport(0, 0, mSize.width, mSize.height);
+    mSharedContext->DisableScissor();
     DeviceColor color = PremultiplyColor(GetClearPattern().mColor);
     webgl->ClearColor(color.b, color.g, color.r, color.a);
     webgl->Clear(LOCAL_GL_COLOR_BUFFER_BIT);
@@ -1958,12 +1978,10 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
   }
 
   // Set up the scissor test to reflect the clipping rectangle, if supplied.
-  bool scissor = false;
   if (!mClipRect.Contains(IntRect(IntPoint(), mViewportSize))) {
-    scissor = true;
-    mWebgl->Enable(LOCAL_GL_SCISSOR_TEST);
-    mWebgl->Scissor(mClipRect.x, mClipRect.y, mClipRect.width,
-                    mClipRect.height);
+    EnableScissor(mClipRect);
+  } else {
+    DisableScissor();
   }
 
   bool success = false;
@@ -1989,11 +2007,7 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
         if (Maybe<IntRect> intRect =
                 IsAlignedRect(aTransformed, currentTransform, aRect)) {
           if (!intRect->Contains(mClipRect)) {
-            scissor = true;
-            mWebgl->Enable(LOCAL_GL_SCISSOR_TEST);
-            auto scissorRect = intRect->Intersect(mClipRect);
-            mWebgl->Scissor(scissorRect.x, scissorRect.y, scissorRect.width,
-                            scissorRect.height);
+            EnableScissor(intRect->Intersect(mClipRect));
           }
           if (aOptions.mCompositionOp == CompositionOp::OP_CLEAR) {
             color = PremultiplyColor(mCurrentTarget->GetClearPattern().mColor);
@@ -2392,11 +2406,6 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
       break;
   }
   // mWebgl->Disable(LOCAL_GL_BLEND);
-
-  // Clean up any scissor state if there was clipping.
-  if (scissor) {
-    mWebgl->Disable(LOCAL_GL_SCISSOR_TEST);
-  }
 
   return success;
 }
