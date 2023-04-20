@@ -31,14 +31,27 @@ using mozilla::IsAsciiHexDigit;
 using mozilla::RangedPtr;
 
 template <typename CharT>
-JSONToken JSONTokenizer<CharT>::stringToken(JSString* str) {
-  parser->v = StringValue(str);
+template <JSONStringType ST>
+JSONToken JSONTokenizer<CharT>::stringToken(const CharPtr start,
+                                            size_t length) {
+  if (!parser->template setStringValue<ST>(start, length)) {
+    return JSONToken::OOM;
+  }
+  return JSONToken::String;
+}
+
+template <typename CharT>
+template <JSONStringType ST>
+JSONToken JSONTokenizer<CharT>::stringToken(JSStringBuilder& builder) {
+  if (!parser->template setStringValue<ST>(builder)) {
+    return JSONToken::OOM;
+  }
   return JSONToken::String;
 }
 
 template <typename CharT>
 JSONToken JSONTokenizer<CharT>::numberToken(double d) {
-  parser->v = NumberValue(d);
+  parser->setNumberValue(d);
   return JSONToken::Number;
 }
 
@@ -67,14 +80,7 @@ JSONToken JSONTokenizer<CharT>::readString() {
     if (*current == '"') {
       size_t length = current - start;
       current++;
-      JSLinearString* str =
-          (ST == JSONStringType::PropertyName)
-              ? AtomizeChars(parser->cx, start.get(), length)
-              : NewStringCopyN<CanGC>(parser->cx, start.get(), length);
-      if (!str) {
-        return token(JSONToken::OOM);
-      }
-      return stringToken(str);
+      return stringToken<ST>(start, length);
     }
 
     if (*current == '\\') {
@@ -104,13 +110,7 @@ JSONToken JSONTokenizer<CharT>::readString() {
 
     char16_t c = *current++;
     if (c == '"') {
-      JSLinearString* str = (ST == JSONStringType::PropertyName)
-                                ? buffer.finishAtom()
-                                : buffer.finishString();
-      if (!str) {
-        return token(JSONToken::OOM);
-      }
-      return stringToken(str);
+      return stringToken<ST>(buffer);
     }
 
     if (c != '\\') {
@@ -580,6 +580,34 @@ void JSONParserBase::trace(JSTracer* trc) {
       elem.properties().trace(trc);
     }
   }
+}
+
+inline void JSONParserBase::setNumberValue(double d) { v = NumberValue(d); }
+
+template <typename CharT>
+template <JSONStringType ST>
+inline bool JSONParser<CharT>::setStringValue(CharPtr start, size_t length) {
+  JSLinearString* str = (ST == JSONStringType::PropertyName)
+                            ? AtomizeChars(cx, start.get(), length)
+                            : NewStringCopyN<CanGC>(cx, start.get(), length);
+  if (!str) {
+    return false;
+  }
+  v = StringValue(str);
+  return true;
+}
+
+template <typename CharT>
+template <JSONStringType ST>
+inline bool JSONParser<CharT>::setStringValue(JSStringBuilder& builder) {
+  JSLinearString* str = (ST == JSONStringType::PropertyName)
+                            ? builder.finishAtom()
+                            : builder.finishString();
+  if (!str) {
+    return false;
+  }
+  v = StringValue(str);
+  return true;
 }
 
 template <typename CharT>
