@@ -548,8 +548,7 @@ UnsignalledSsrcHandler::Action DefaultUnsignalledSsrcHandler::OnUnsignalledSsrc(
     WebRtcVideoChannel* channel,
     uint32_t ssrc,
     absl::optional<uint32_t> rtx_ssrc) {
-  absl::optional<uint32_t> default_recv_ssrc =
-      channel->GetDefaultReceiveStreamSsrc();
+  absl::optional<uint32_t> default_recv_ssrc = channel->GetUnsignaledSsrc();
 
   if (default_recv_ssrc) {
     RTC_LOG(LS_INFO) << "Destroying old default receive stream for SSRC="
@@ -588,8 +587,7 @@ void DefaultUnsignalledSsrcHandler::SetDefaultSink(
     WebRtcVideoChannel* channel,
     rtc::VideoSinkInterface<webrtc::VideoFrame>* sink) {
   default_sink_ = sink;
-  absl::optional<uint32_t> default_recv_ssrc =
-      channel->GetDefaultReceiveStreamSsrc();
+  absl::optional<uint32_t> default_recv_ssrc = channel->GetUnsignaledSsrc();
   if (default_recv_ssrc) {
     channel->SetSink(*default_recv_ssrc, default_sink_);
   }
@@ -1566,6 +1564,18 @@ void WebRtcVideoChannel::ResetUnsignaledRecvStream() {
   }
 }
 
+absl::optional<uint32_t> WebRtcVideoChannel::GetUnsignaledSsrc() const {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  absl::optional<uint32_t> ssrc;
+  for (auto it = receive_streams_.begin(); it != receive_streams_.end(); ++it) {
+    if (it->second->IsDefaultStream()) {
+      ssrc.emplace(it->first);
+      break;
+    }
+  }
+  return ssrc;
+}
+
 void WebRtcVideoChannel::OnDemuxerCriteriaUpdatePending() {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   ++demuxer_criteria_id_;
@@ -1756,7 +1766,7 @@ void WebRtcVideoChannel::OnPacketReceived(rtc::CopyOnWriteBuffer packet,
             // stream, which will be associated with unsignaled media stream.
             // It is not possible to update the ssrcs of a receive stream, so we
             // recreate it insead if found.
-            auto default_ssrc = GetDefaultReceiveStreamSsrc();
+            auto default_ssrc = GetUnsignaledSsrc();
             if (!default_ssrc) {
               return;
             }
@@ -1919,7 +1929,7 @@ void WebRtcVideoChannel::SetVideoCodecSwitchingEnabled(bool enabled) {
 bool WebRtcVideoChannel::SetBaseMinimumPlayoutDelayMs(uint32_t ssrc,
                                                       int delay_ms) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
-  absl::optional<uint32_t> default_ssrc = GetDefaultReceiveStreamSsrc();
+  absl::optional<uint32_t> default_ssrc = GetUnsignaledSsrc();
 
   // SSRC of 0 represents the default receive stream.
   if (ssrc == 0) {
@@ -1959,18 +1969,6 @@ absl::optional<int> WebRtcVideoChannel::GetBaseMinimumPlayoutDelayMs(
     RTC_LOG(LS_ERROR) << "No stream found to get base minimum playout delay";
     return absl::nullopt;
   }
-}
-
-absl::optional<uint32_t> WebRtcVideoChannel::GetDefaultReceiveStreamSsrc() {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
-  absl::optional<uint32_t> ssrc;
-  for (auto it = receive_streams_.begin(); it != receive_streams_.end(); ++it) {
-    if (it->second->IsDefaultStream()) {
-      ssrc.emplace(it->first);
-      break;
-    }
-  }
-  return ssrc;
 }
 
 std::vector<webrtc::RtpSource> WebRtcVideoChannel::GetSources(
@@ -3496,7 +3494,7 @@ WebRtcVideoChannel::MapCodecs(const std::vector<VideoCodec>& codecs) {
 WebRtcVideoChannel::WebRtcVideoReceiveStream*
 WebRtcVideoChannel::FindReceiveStream(uint32_t ssrc) {
   if (ssrc == 0) {
-    absl::optional<uint32_t> default_ssrc = GetDefaultReceiveStreamSsrc();
+    absl::optional<uint32_t> default_ssrc = GetUnsignaledSsrc();
     if (!default_ssrc) {
       return nullptr;
     }

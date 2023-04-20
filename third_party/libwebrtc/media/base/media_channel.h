@@ -278,6 +278,8 @@ class MediaReceiveChannelInterface
   // Resets any cached StreamParams for an unsignaled RecvStream, and removes
   // any existing unsignaled streams.
   virtual void ResetUnsignaledRecvStream() = 0;
+  // Gets the current unsignaled receive stream's SSRC, if there is one.
+  virtual absl::optional<uint32_t> GetUnsignaledSsrc() const = 0;
   // This is currently a workaround because of the demuxer state being managed
   // across two separate threads. Once the state is consistently managed on
   // the same thread (network), this workaround can be removed.

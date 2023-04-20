@@ -165,6 +165,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   bool AddRecvStream(const StreamParams& sp, bool default_stream);
   bool RemoveRecvStream(uint32_t ssrc) override;
   void ResetUnsignaledRecvStream() override;
+  absl::optional<uint32_t> GetUnsignaledSsrc() const override;
   void OnDemuxerCriteriaUpdatePending() override;
   void OnDemuxerCriteriaUpdateComplete() override;
   bool SetSink(uint32_t ssrc,
@@ -215,8 +216,6 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     RTC_DCHECK_RUN_ON(&thread_checker_);
     return sending_;
   }
-
-  absl::optional<uint32_t> GetDefaultReceiveStreamSsrc();
 
   StreamParams unsignaled_stream_params() {
     RTC_DCHECK_RUN_ON(&thread_checker_);
