@@ -489,6 +489,7 @@ WorkerScriptLoader::WorkerScriptLoader(
       mSyncLoopTarget(aSyncLoopTarget),
       mWorkerScriptType(aWorkerScriptType),
       mRv(aRv),
+      mLoadingModuleRequestCount(0),
       mCleanedUp(false),
       mCleanUpLock("cleanUpLock") {
   aWorkerPrivate->AssertIsOnWorkerThread();
@@ -697,6 +698,8 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
 
 bool WorkerScriptLoader::DispatchLoadScript(ScriptLoadRequest* aRequest) {
   mWorkerRef->Private()->AssertIsOnWorkerThread();
+
+  IncreaseLoadingModuleRequestCount();
 
   nsTArray<RefPtr<ThreadSafeRequestHandle>> scriptLoadList;
   RefPtr<ThreadSafeRequestHandle> handle =
@@ -1186,13 +1189,14 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
 }
 
 void WorkerScriptLoader::TryShutdown() {
-  if (AllScriptsExecuted()) {
+  if (AllScriptsExecuted() && AllModuleRequestsLoaded()) {
     ShutdownScriptLoader(!mExecutionAborted, mMutedErrorFlag);
   }
 }
 
 void WorkerScriptLoader::ShutdownScriptLoader(bool aResult, bool aMutedError) {
   MOZ_ASSERT(AllScriptsExecuted());
+  MOZ_ASSERT(AllModuleRequestsLoaded());
   mWorkerRef->Private()->AssertIsOnWorkerThread();
 
   if (!aResult) {
@@ -1277,6 +1281,21 @@ void WorkerScriptLoader::LogExceptionToConsole(JSContext* aCx,
 
   RefPtr<AsyncErrorReporter> r = new AsyncErrorReporter(xpcReport);
   NS_DispatchToMainThread(r);
+}
+
+bool WorkerScriptLoader::AllModuleRequestsLoaded() const {
+  mWorkerRef->Private()->AssertIsOnWorkerThread();
+  return mLoadingModuleRequestCount == 0;
+}
+
+void WorkerScriptLoader::IncreaseLoadingModuleRequestCount() {
+  mWorkerRef->Private()->AssertIsOnWorkerThread();
+  ++mLoadingModuleRequestCount;
+}
+
+void WorkerScriptLoader::DecreaseLoadingModuleRequestCount() {
+  mWorkerRef->Private()->AssertIsOnWorkerThread();
+  --mLoadingModuleRequestCount;
 }
 
 NS_IMPL_ISUPPORTS(ScriptLoaderRunnable, nsIRunnable, nsINamed)
@@ -1577,6 +1596,11 @@ bool ScriptExecutorRunnable::ProcessModuleScript(
   WorkerLoadContext* loadContext = request->GetWorkerLoadContext();
   ModuleLoadRequest* moduleRequest = request->AsModuleRequest();
 
+  // DecreaseLoadingModuleRequestCount must be called before OnFetchComplete.
+  // OnFetchComplete will call ProcessPendingRequests, and in
+  // ProcessPendingRequests it will try to shutdown if
+  // AllModuleRequestsLoaded() returns true.
+  mScriptLoader->DecreaseLoadingModuleRequestCount();
   moduleRequest->OnFetchComplete(loadContext->mLoadResult);
 
   if (NS_FAILED(loadContext->mLoadResult)) {
@@ -1587,6 +1611,7 @@ bool ScriptExecutorRunnable::ProcessModuleScript(
       }
     } else if (!moduleRequest->IsTopLevel()) {
       moduleRequest->Cancel();
+      mScriptLoader->TryShutdown();
     } else {
       moduleRequest->LoadFailed();
     }
@@ -1638,7 +1663,8 @@ nsresult ScriptExecutorRunnable::Cancel() {
   nsresult rv = MainThreadWorkerSyncRunnable::Cancel();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mScriptLoader->AllScriptsExecuted()) {
+  if (mScriptLoader->AllScriptsExecuted() &&
+      mScriptLoader->AllModuleRequestsLoaded()) {
     mScriptLoader->ShutdownScriptLoader(false, false);
   }
   return NS_OK;
