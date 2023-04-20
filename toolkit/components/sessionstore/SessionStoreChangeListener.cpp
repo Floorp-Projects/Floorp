@@ -95,8 +95,12 @@ SessionStoreChangeListener::HandleEvent(dom::Event* aEvent) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsPIDOMWindowInner> inner =
-      do_QueryInterface(target->GetOwnerGlobal());
+  nsIGlobalObject* global = target->GetOwnerGlobal();
+  if (!global) {
+    return NS_OK;
+  }
+
+  nsPIDOMWindowInner* inner = global->AsInnerWindow();
   if (!inner) {
     return NS_OK;
   }
@@ -106,7 +110,7 @@ SessionStoreChangeListener::HandleEvent(dom::Event* aEvent) {
     return NS_OK;
   }
 
-  RefPtr<BrowsingContext> browsingContext = windowContext->GetBrowsingContext();
+  BrowsingContext* browsingContext = windowContext->GetBrowsingContext();
   if (!browsingContext) {
     return NS_OK;
   }
