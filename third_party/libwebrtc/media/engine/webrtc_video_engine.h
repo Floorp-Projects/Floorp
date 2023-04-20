@@ -172,7 +172,8 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   void SetDefaultSink(
       rtc::VideoSinkInterface<webrtc::VideoFrame>* sink) override;
   void FillBitrateInfo(BandwidthEstimationInfo* bwe_info) override;
-  bool GetStats(VideoMediaInfo* info) override;
+  bool GetSendStats(VideoMediaSendInfo* info) override;
+  bool GetReceiveStats(VideoMediaReceiveInfo* info) override;
 
   void OnPacketReceived(rtc::CopyOnWriteBuffer packet,
                         int64_t packet_time_us) override;
@@ -574,14 +575,16 @@ class WebRtcVideoChannel : public VideoMediaChannel,
       std::vector<VideoCodecSettings> before,
       std::vector<VideoCodecSettings> after);
 
-  void FillSenderStats(VideoMediaInfo* info, bool log_stats)
+  void FillSenderStats(VideoMediaSendInfo* info, bool log_stats)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
-  void FillReceiverStats(VideoMediaInfo* info, bool log_stats)
+  void FillReceiverStats(VideoMediaReceiveInfo* info, bool log_stats)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
   void FillBandwidthEstimationStats(const webrtc::Call::Stats& stats,
                                     VideoMediaInfo* info)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
-  void FillSendAndReceiveCodecStats(VideoMediaInfo* video_media_info)
+  void FillSendCodecStats(VideoMediaSendInfo* video_media_info)
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
+  void FillReceiveCodecStats(VideoMediaReceiveInfo* video_media_info)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
 
   webrtc::TaskQueueBase* const worker_thread_;

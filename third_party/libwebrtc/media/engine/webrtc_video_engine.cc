@@ -1600,9 +1600,9 @@ void WebRtcVideoChannel::SetDefaultSink(
   default_unsignalled_ssrc_handler_.SetDefaultSink(this, sink);
 }
 
-bool WebRtcVideoChannel::GetStats(VideoMediaInfo* info) {
+bool WebRtcVideoChannel::GetSendStats(VideoMediaSendInfo* info) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
-  TRACE_EVENT0("webrtc", "WebRtcVideoChannel::GetStats");
+  TRACE_EVENT0("webrtc", "WebRtcVideoChannel::GetSendStats");
 
   // Log stats periodically.
   bool log_stats = false;
@@ -1615,8 +1615,7 @@ bool WebRtcVideoChannel::GetStats(VideoMediaInfo* info) {
 
   info->Clear();
   FillSenderStats(info, log_stats);
-  FillReceiverStats(info, log_stats);
-  FillSendAndReceiveCodecStats(info);
+  FillSendCodecStats(info);
   // TODO(holmer): We should either have rtt available as a metric on
   // VideoSend/ReceiveStreams, or we should remove rtt from VideoSenderInfo.
   webrtc::Call::Stats stats = call_->GetStats();
@@ -1634,8 +1633,27 @@ bool WebRtcVideoChannel::GetStats(VideoMediaInfo* info) {
 
   return true;
 }
+bool WebRtcVideoChannel::GetReceiveStats(VideoMediaReceiveInfo* info) {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  TRACE_EVENT0("webrtc", "WebRtcVideoChannel::GetReceiveStats");
 
-void WebRtcVideoChannel::FillSenderStats(VideoMediaInfo* video_media_info,
+  // Log stats periodically.
+  bool log_stats = false;
+  int64_t now_ms = rtc::TimeMillis();
+  if (last_stats_log_ms_ == -1 ||
+      now_ms - last_stats_log_ms_ > kStatsLogIntervalMs) {
+    last_stats_log_ms_ = now_ms;
+    log_stats = true;
+  }
+
+  info->Clear();
+  FillReceiverStats(info, log_stats);
+  FillReceiveCodecStats(info);
+
+  return true;
+}
+
+void WebRtcVideoChannel::FillSenderStats(VideoMediaSendInfo* video_media_info,
                                          bool log_stats) {
   for (std::map<uint32_t, WebRtcVideoSendStream*>::iterator it =
            send_streams_.begin();
@@ -1651,8 +1669,9 @@ void WebRtcVideoChannel::FillSenderStats(VideoMediaInfo* video_media_info,
   }
 }
 
-void WebRtcVideoChannel::FillReceiverStats(VideoMediaInfo* video_media_info,
-                                           bool log_stats) {
+void WebRtcVideoChannel::FillReceiverStats(
+    VideoMediaReceiveInfo* video_media_info,
+    bool log_stats) {
   for (std::map<uint32_t, WebRtcVideoReceiveStream*>::iterator it =
            receive_streams_.begin();
        it != receive_streams_.end(); ++it) {
@@ -1670,13 +1689,18 @@ void WebRtcVideoChannel::FillBitrateInfo(BandwidthEstimationInfo* bwe_info) {
   }
 }
 
-void WebRtcVideoChannel::FillSendAndReceiveCodecStats(
-    VideoMediaInfo* video_media_info) {
+void WebRtcVideoChannel::FillSendCodecStats(
+    VideoMediaSendInfo* video_media_info) {
   for (const VideoCodec& codec : send_params_.codecs) {
     webrtc::RtpCodecParameters codec_params = codec.ToCodecParameters();
     video_media_info->send_codecs.insert(
         std::make_pair(codec_params.payload_type, std::move(codec_params)));
   }
+}
+
+void WebRtcVideoChannel::FillReceiveCodecStats(
+    VideoMediaReceiveInfo* video_media_info) {
+  // TODO(bugs.webrtc.org/14808): Don't copy codec info around - reference it.
   for (const VideoCodec& codec : recv_params_.codecs) {
     webrtc::RtpCodecParameters codec_params = codec.ToCodecParameters();
     video_media_info->receive_codecs.insert(

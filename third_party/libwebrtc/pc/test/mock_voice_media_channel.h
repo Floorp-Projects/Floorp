@@ -126,9 +126,10 @@ class MockVoiceMediaChannel : public VoiceMediaChannel {
               InsertDtmf,
               (uint32_t ssrc, int event, int duration),
               (override));
+  MOCK_METHOD(bool, GetSendStats, (VoiceMediaSendInfo * info), (override));
   MOCK_METHOD(bool,
-              GetStats,
-              (VoiceMediaInfo * info, bool get_and_clear_legacy_stats),
+              GetReceiveStats,
+              (VoiceMediaReceiveInfo * info, bool get_and_clear_legacy_stats),
               (override));
   MOCK_METHOD(void,
               SetRawAudioSink,

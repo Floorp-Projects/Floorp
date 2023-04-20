@@ -29,6 +29,8 @@ class VideoBitrateAllocatorFactory;
 namespace cricket {
 
 class MediaChannel;
+class VoiceChannel;
+class VideoChannel;
 class MediaContentDescription;
 struct MediaConfig;
 
@@ -47,6 +49,9 @@ class ChannelInterface {
  public:
   virtual ~ChannelInterface() = default;
   virtual cricket::MediaType media_type() const = 0;
+
+  virtual VideoChannel* AsVideoChannel() = 0;
+  virtual VoiceChannel* AsVoiceChannel() = 0;
 
   // Temporary fix while MediaChannel is being reconstructed
   virtual MediaChannel* media_channel() = 0;

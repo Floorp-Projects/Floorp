@@ -187,8 +187,11 @@ absl::optional<int> FakeVoiceMediaChannel::GetBaseMinimumPlayoutDelayMs(
   }
   return absl::nullopt;
 }
-bool FakeVoiceMediaChannel::GetStats(VoiceMediaInfo* info,
-                                     bool get_and_clear_legacy_stats) {
+bool FakeVoiceMediaChannel::GetSendStats(VoiceMediaSendInfo* info) {
+  return false;
+}
+bool FakeVoiceMediaChannel::GetReceiveStats(VoiceMediaReceiveInfo* info,
+                                            bool get_and_clear_legacy_stats) {
   return false;
 }
 void FakeVoiceMediaChannel::SetRawAudioSink(
@@ -367,7 +370,10 @@ bool FakeVideoMediaChannel::RemoveRecvStream(uint32_t ssrc) {
 }
 void FakeVideoMediaChannel::FillBitrateInfo(BandwidthEstimationInfo* bwe_info) {
 }
-bool FakeVideoMediaChannel::GetStats(VideoMediaInfo* info) {
+bool FakeVideoMediaChannel::GetSendStats(VideoMediaSendInfo* info) {
+  return false;
+}
+bool FakeVideoMediaChannel::GetReceiveStats(VideoMediaReceiveInfo* info) {
   return false;
 }
 std::vector<webrtc::RtpSource> FakeVideoMediaChannel::GetSources(

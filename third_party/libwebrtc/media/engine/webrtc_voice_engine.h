@@ -207,7 +207,9 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
   void OnNetworkRouteChanged(absl::string_view transport_name,
                              const rtc::NetworkRoute& network_route) override;
   void OnReadyToSend(bool ready) override;
-  bool GetStats(VoiceMediaInfo* info, bool get_and_clear_legacy_stats) override;
+  bool GetSendStats(VoiceMediaSendInfo* info) override;
+  bool GetReceiveStats(VoiceMediaReceiveInfo* info,
+                       bool get_and_clear_legacy_stats) override;
 
   // Set the audio sink for an existing stream.
   void SetRawAudioSink(

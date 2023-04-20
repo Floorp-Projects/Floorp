@@ -65,6 +65,8 @@ namespace cricket {
 // and methods with _s suffix on signaling thread.
 // Network and worker threads may be the same thread.
 //
+class VideoChannel;
+class VoiceChannel;
 
 class BaseChannel : public ChannelInterface,
                     // TODO(tommi): Remove has_slots inheritance.
@@ -375,6 +377,12 @@ class VoiceChannel : public BaseChannel {
                rtc::UniqueRandomIdGenerator* ssrc_generator);
   ~VoiceChannel();
 
+  VideoChannel* AsVideoChannel() override {
+    RTC_CHECK_NOTREACHED();
+    return nullptr;
+  }
+  VoiceChannel* AsVoiceChannel() override { return this; }
+
   VoiceMediaSendChannelInterface* media_send_channel() override {
     return &send_channel_;
   }
@@ -430,22 +438,26 @@ class VideoChannel : public BaseChannel {
                rtc::UniqueRandomIdGenerator* ssrc_generator);
   ~VideoChannel();
 
-  // downcasts a MediaChannel
+  VideoChannel* AsVideoChannel() override { return this; }
+  VoiceChannel* AsVoiceChannel() override {
+    RTC_CHECK_NOTREACHED();
+    return nullptr;
+  }
+
   VideoMediaSendChannelInterface* media_send_channel() override {
-    return media_channel()->AsVideoChannel()->AsVideoSendChannel();
+    return &send_channel_;
   }
 
   VideoMediaSendChannelInterface* video_media_send_channel() override {
-    return media_send_channel();
+    return &send_channel_;
   }
 
-  // downcasts a MediaChannel
   VideoMediaReceiveChannelInterface* media_receive_channel() override {
-    return media_channel()->AsVideoChannel()->AsVideoReceiveChannel();
+    return &receive_channel_;
   }
 
   VideoMediaReceiveChannelInterface* video_media_receive_channel() override {
-    return media_receive_channel();
+    return &receive_channel_;
   }
 
   cricket::MediaType media_type() const override {

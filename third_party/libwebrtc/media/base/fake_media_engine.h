@@ -381,7 +381,9 @@ class FakeVoiceMediaChannel : public RtpHelper<VoiceMediaChannel> {
   absl::optional<int> GetBaseMinimumPlayoutDelayMs(
       uint32_t ssrc) const override;
 
-  bool GetStats(VoiceMediaInfo* info, bool get_and_clear_legacy_stats) override;
+  bool GetSendStats(VoiceMediaSendInfo* info) override;
+  bool GetReceiveStats(VoiceMediaReceiveInfo* info,
+                       bool get_and_clear_legacy_stats) override;
 
   void SetRawAudioSink(
       uint32_t ssrc,
@@ -473,7 +475,8 @@ class FakeVideoMediaChannel : public RtpHelper<VideoMediaChannel> {
   bool RemoveRecvStream(uint32_t ssrc) override;
 
   void FillBitrateInfo(BandwidthEstimationInfo* bwe_info) override;
-  bool GetStats(VideoMediaInfo* info) override;
+  bool GetSendStats(VideoMediaSendInfo* info) override;
+  bool GetReceiveStats(VideoMediaReceiveInfo* info) override;
 
   std::vector<webrtc::RtpSource> GetSources(uint32_t ssrc) const override;
 

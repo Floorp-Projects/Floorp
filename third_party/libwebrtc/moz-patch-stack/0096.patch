@@ -204,7 +204,7 @@ index 120e411772..731989f820 100644
      "../api:sequence_checker",
      "../api:transport_api",
 diff --git a/media/base/media_channel.h b/media/base/media_channel.h
-index 233f1185dc..882f114822 100644
+index 9dced9485e..5b6bcad524 100644
 --- a/media/base/media_channel.h
 +++ b/media/base/media_channel.h
 @@ -63,10 +63,6 @@ class Timing;
@@ -219,7 +219,7 @@ index 233f1185dc..882f114822 100644
  
  namespace cricket {
 diff --git a/media/base/media_channel_impl.cc b/media/base/media_channel_impl.cc
-index eeefea0bab..bf140cde22 100644
+index a72b97413d..0e72f47d6d 100644
 --- a/media/base/media_channel_impl.cc
 +++ b/media/base/media_channel_impl.cc
 @@ -31,19 +31,6 @@

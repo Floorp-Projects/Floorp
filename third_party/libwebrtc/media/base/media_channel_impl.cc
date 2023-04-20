@@ -252,6 +252,18 @@ VoiceMediaInfo::~VoiceMediaInfo() = default;
 VideoMediaInfo::VideoMediaInfo() = default;
 VideoMediaInfo::~VideoMediaInfo() = default;
 
+VideoMediaSendInfo::VideoMediaSendInfo() = default;
+VideoMediaSendInfo::~VideoMediaSendInfo() = default;
+
+VoiceMediaSendInfo::VoiceMediaSendInfo() = default;
+VoiceMediaSendInfo::~VoiceMediaSendInfo() = default;
+
+VideoMediaReceiveInfo::VideoMediaReceiveInfo() = default;
+VideoMediaReceiveInfo::~VideoMediaReceiveInfo() = default;
+
+VoiceMediaReceiveInfo::VoiceMediaReceiveInfo() = default;
+VoiceMediaReceiveInfo::~VoiceMediaReceiveInfo() = default;
+
 AudioSendParameters::AudioSendParameters() = default;
 AudioSendParameters::~AudioSendParameters() = default;
 
