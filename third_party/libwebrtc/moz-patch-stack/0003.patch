@@ -1,65 +1,130 @@
-From: =?UTF-8?q?Henrik=20Bostr=C3=B6m?= <hbos@webrtc.org>
-Date: Fri, 20 Jan 2023 10:48:31 +0100
-Subject: =?UTF-8?q?(cherry-pick-branch-heads/5481)=20[Merge-110]=C2=A0[Sta?=
- =?UTF-8?q?ts]=20Handle=20the=20case=20of=20missing=20certificates.?=
+From: =?UTF-8?q?Erik=20Spr=C3=A5ng?= <sprang@webrtc.org>
+Date: Wed, 4 Jan 2023 13:58:31 +0100
+Subject: (cherry-pick-branch-heads/5481) M110 Merge: Make sure VP9 encoders
+ are reconfigured on layer activation.
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Certificates being missing is a sign of a bug (e.g. webrtc:14844, to be
-fixed separately) which is why we have a DCHECK. But this DCHECK does
-not protect against accessing the invalid iterator if it is a release
-build. This CL makes that safe.
+When disabling a spatial layer, reconfiguration of the encoder is not
+necessary (bitrate will never be assigned to the inactive layer anway).
+This CL however makes sure we reconfigure the encoder when a spatial
+layer is activated. Some encoder implementations may encoder the wrong
+number of spatial layers if the active layers have not beens set
+correctly.
 
-# Mobile bots not running properly
-NOTRY=True
+(cherry picked from commit 17043b89ae6422eb055c13c5da191b73927ac99e)
 
-(cherry picked from commit 124d7c3fe5bdc79a355c9df02d07f25331631a68)
-
-Bug: chromium:1408392
-Change-Id: I97a82786028e41c58ef8ef15002c3f959bbec7f1
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291109
-Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
-Commit-Queue: Henrik Boström <hbos@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#39159}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291380
-Cr-Commit-Position: refs/branch-heads/5481@{#2}
+Bug: webrtc:14809, b/261097903, chromium:1310794
+Change-Id: I8d34aaec95eb50a9717c06ea38f25088e5a96429
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/290560
+Commit-Queue: Philip Eliasson <philipel@webrtc.org>
+Auto-Submit: Erik Språng <sprang@webrtc.org>
+Reviewed-by: Philip Eliasson <philipel@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#38999}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/290780
+Commit-Queue: Erik Språng <sprang@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/5481@{#1}
 Cr-Branched-From: 2e1a9a4ae0234d4b1ea7a6fd4188afa1fb20379d-refs/heads/main@{#38901}
 ---
- pc/rtc_stats_collector.cc | 19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-)
+ video/video_stream_encoder.cc          |  7 +++-
+ video/video_stream_encoder_unittest.cc | 58 ++++++++++++++++++++++++++
+ 2 files changed, 64 insertions(+), 1 deletion(-)
 
-diff --git a/pc/rtc_stats_collector.cc b/pc/rtc_stats_collector.cc
-index a9fb3b7d76..75e9676d09 100644
---- a/pc/rtc_stats_collector.cc
-+++ b/pc/rtc_stats_collector.cc
-@@ -2192,16 +2192,17 @@ void RTCStatsCollector::ProduceTransportStats_n(
-     // exist.
-     const auto& certificate_stats_it =
-         transport_cert_stats.find(transport_name);
-+    std::string local_certificate_id, remote_certificate_id;
-     RTC_DCHECK(certificate_stats_it != transport_cert_stats.cend());
--    std::string local_certificate_id;
--    if (certificate_stats_it->second.local) {
--      local_certificate_id = RTCCertificateIDFromFingerprint(
--          certificate_stats_it->second.local->fingerprint);
--    }
--    std::string remote_certificate_id;
--    if (certificate_stats_it->second.remote) {
--      remote_certificate_id = RTCCertificateIDFromFingerprint(
--          certificate_stats_it->second.remote->fingerprint);
-+    if (certificate_stats_it != transport_cert_stats.cend()) {
-+      if (certificate_stats_it->second.local) {
-+        local_certificate_id = RTCCertificateIDFromFingerprint(
-+            certificate_stats_it->second.local->fingerprint);
+diff --git a/video/video_stream_encoder.cc b/video/video_stream_encoder.cc
+index 994173228b..c680fe12c8 100644
+--- a/video/video_stream_encoder.cc
++++ b/video/video_stream_encoder.cc
+@@ -150,6 +150,10 @@ bool RequiresEncoderReset(const VideoCodec& prev_send_codec,
+   if (new_send_codec.codecType == kVideoCodecVP9) {
+     size_t num_spatial_layers = new_send_codec.VP9().numberOfSpatialLayers;
+     for (unsigned char i = 0; i < num_spatial_layers; ++i) {
++      if (!new_send_codec.spatialLayers[i].active) {
++        // No need to reset when layer is inactive.
++        continue;
 +      }
-+      if (certificate_stats_it->second.remote) {
-+        remote_certificate_id = RTCCertificateIDFromFingerprint(
-+            certificate_stats_it->second.remote->fingerprint);
-+      }
+       if (new_send_codec.spatialLayers[i].width !=
+               prev_send_codec.spatialLayers[i].width ||
+           new_send_codec.spatialLayers[i].height !=
+@@ -157,7 +161,8 @@ bool RequiresEncoderReset(const VideoCodec& prev_send_codec,
+           new_send_codec.spatialLayers[i].numberOfTemporalLayers !=
+               prev_send_codec.spatialLayers[i].numberOfTemporalLayers ||
+           new_send_codec.spatialLayers[i].qpMax !=
+-              prev_send_codec.spatialLayers[i].qpMax) {
++              prev_send_codec.spatialLayers[i].qpMax ||
++          !prev_send_codec.spatialLayers[i].active) {
+         return true;
+       }
      }
+diff --git a/video/video_stream_encoder_unittest.cc b/video/video_stream_encoder_unittest.cc
+index 1f328ccf81..cdd4c75ab7 100644
+--- a/video/video_stream_encoder_unittest.cc
++++ b/video/video_stream_encoder_unittest.cc
+@@ -8649,6 +8649,64 @@ TEST_F(VideoStreamEncoderTest,
+   video_stream_encoder_->Stop();
+ }
  
-     // There is one transport stats for each channel.
++TEST_F(VideoStreamEncoderTest, RecreatesEncoderWhenEnableVp9SpatialLayer) {
++  // Set up encoder to use VP9 SVC using two spatial layers.
++  fake_encoder_.SetTemporalLayersSupported(/*spatial_idx=*/0, true);
++  fake_encoder_.SetTemporalLayersSupported(/*spatial_idx*/ 1, true);
++  VideoEncoderConfig video_encoder_config;
++  test::FillEncoderConfiguration(VideoCodecType::kVideoCodecVP9,
++                                 /* num_streams*/ 1, &video_encoder_config);
++  video_encoder_config.max_bitrate_bps = 2 * kTargetBitrate.bps();
++  video_encoder_config.content_type =
++      VideoEncoderConfig::ContentType::kRealtimeVideo;
++  VideoCodecVP9 vp9_settings = VideoEncoder::GetDefaultVp9Settings();
++  vp9_settings.numberOfSpatialLayers = 2;
++  vp9_settings.numberOfTemporalLayers = 2;
++  vp9_settings.interLayerPred = InterLayerPredMode::kOn;
++  vp9_settings.automaticResizeOn = false;
++  video_encoder_config.encoder_specific_settings =
++      rtc::make_ref_counted<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
++          vp9_settings);
++  video_encoder_config.spatial_layers = GetSvcConfig(1280, 720,
++                                                     /*fps=*/30.0,
++                                                     /*first_active_layer=*/0,
++                                                     /*num_spatial_layers=*/2,
++                                                     /*num_temporal_layers=*/3,
++                                                     /*is_screenshare=*/false);
++  ConfigureEncoder(video_encoder_config.Copy(),
++                   VideoStreamEncoder::BitrateAllocationCallbackType::
++                       kVideoLayersAllocation);
++
++  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
++      kTargetBitrate, kTargetBitrate, kTargetBitrate, 0, 0, 0);
++
++  video_source_.IncomingCapturedFrame(CreateFrame(CurrentTimeMs(), 1280, 720));
++  WaitForEncodedFrame(CurrentTimeMs());
++  EXPECT_EQ(fake_encoder_.GetNumInitializations(), 1);
++
++  // Turn off the top spatial layer. This does not require an encoder reset.
++  video_encoder_config.spatial_layers[1].active = false;
++  video_stream_encoder_->ConfigureEncoder(video_encoder_config.Copy(),
++                                          kMaxPayloadLength, nullptr);
++
++  time_controller_.AdvanceTime(TimeDelta::Millis(33));
++  video_source_.IncomingCapturedFrame(CreateFrame(CurrentTimeMs(), 1280, 720));
++  WaitForEncodedFrame(CurrentTimeMs());
++  EXPECT_EQ(fake_encoder_.GetNumInitializations(), 1);
++
++  // Turn on the top spatial layer again, this does require an encoder reset.
++  video_encoder_config.spatial_layers[1].active = true;
++  video_stream_encoder_->ConfigureEncoder(video_encoder_config.Copy(),
++                                          kMaxPayloadLength, nullptr);
++
++  time_controller_.AdvanceTime(TimeDelta::Millis(33));
++  video_source_.IncomingCapturedFrame(CreateFrame(CurrentTimeMs(), 1280, 720));
++  WaitForEncodedFrame(CurrentTimeMs());
++  EXPECT_EQ(fake_encoder_.GetNumInitializations(), 2);
++
++  video_stream_encoder_->Stop();
++}
++
+ #endif  // !defined(WEBRTC_IOS)
+ 
+ // Test parameters: (VideoCodecType codec, bool allow_i420_conversion)
 -- 
 2.34.1
 
