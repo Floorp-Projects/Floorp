@@ -296,6 +296,100 @@ class MOZ_STACK_CLASS JSONFullParseHandler
                    const char* columnString);
 };
 
+template <typename CharT>
+class MOZ_STACK_CLASS JSONSyntaxParseHandler {
+ private:
+  using CharPtr = mozilla::RangedPtr<const CharT>;
+
+ public:
+  /* Types for templatized parser. */
+
+  using ContextT = FrontendContext;
+
+  class DummyValue {};
+
+  struct ElementVector {};
+  struct PropertyVector {};
+
+  class StringBuilder {
+   public:
+    explicit StringBuilder(FrontendContext* fc) {}
+
+    bool append(char16_t c) { return true; }
+    bool append(const CharT* begin, const CharT* end) { return true; }
+  };
+
+  struct StackEntry {
+    JSONParserState state;
+  };
+
+ public:
+  FrontendContext* fc;
+
+  /* Public API */
+
+  /* Create a parser for the provided JSON data. */
+  explicit JSONSyntaxParseHandler(FrontendContext* fc) : fc(fc) {}
+
+  JSONSyntaxParseHandler(JSONSyntaxParseHandler&& other) noexcept
+      : fc(other.fc) {}
+
+  JSONSyntaxParseHandler(const JSONSyntaxParseHandler& other) = delete;
+  void operator=(const JSONSyntaxParseHandler& other) = delete;
+
+  FrontendContext* context() { return fc; }
+
+  template <JSONStringType ST>
+  inline bool setStringValue(CharPtr start, size_t length) {
+    return true;
+  }
+
+  template <JSONStringType ST>
+  inline bool setStringValue(StringBuilder& builder) {
+    return true;
+  }
+
+  inline void setNumberValue(double d) {}
+
+  inline DummyValue numberValue() const { return DummyValue(); }
+
+  inline DummyValue stringValue() const { return DummyValue(); }
+
+  inline DummyValue booleanValue(bool value) { return DummyValue(); }
+  inline DummyValue nullValue() { return DummyValue(); }
+
+  inline bool objectOpen(Vector<StackEntry, 10>& stack,
+                         PropertyVector** properties);
+  inline bool objectPropertyName(Vector<StackEntry, 10>& stack,
+                                 bool* isProtoInEval) {
+    *isProtoInEval = false;
+    return true;
+  }
+  inline void finishObjectMember(Vector<StackEntry, 10>& stack,
+                                 DummyValue& value,
+                                 PropertyVector** properties) {}
+  inline bool finishObject(Vector<StackEntry, 10>& stack, DummyValue* vp,
+                           PropertyVector& properties);
+
+  inline bool arrayOpen(Vector<StackEntry, 10>& stack,
+                        ElementVector** elements);
+  inline bool arrayElement(Vector<StackEntry, 10>& stack, DummyValue& value,
+                           ElementVector** elements) {
+    return true;
+  }
+  inline bool finishArray(Vector<StackEntry, 10>& stack, DummyValue* vp,
+                          ElementVector& elements);
+
+  inline bool errorReturn() const { return false; }
+
+  inline bool ignoreError() const { return false; }
+
+  inline void freeStackEntry(StackEntry& entry) {}
+
+  void reportError(const char* msg, const char* lineString,
+                   const char* columnString);
+};
+
 template <typename CharT, typename HandlerT>
 class MOZ_STACK_CLASS JSONPerHandlerParser {
   using ContextT = typename HandlerT::ContextT;
@@ -384,6 +478,25 @@ class MutableWrappedPtrOperations<JSONParser<CharT>, Wrapper>
   bool parse(MutableHandleValue vp) {
     return static_cast<Wrapper*>(this)->get().parse(vp);
   }
+};
+
+template <typename CharT>
+class MOZ_STACK_CLASS JSONSyntaxParser
+    : JSONPerHandlerParser<CharT, JSONSyntaxParseHandler<CharT>> {
+  using HandlerT = JSONSyntaxParseHandler<CharT>;
+  using Base = JSONPerHandlerParser<CharT, HandlerT>;
+
+ public:
+  JSONSyntaxParser(FrontendContext* fc, mozilla::Range<const CharT> data)
+      : Base(fc, data) {}
+
+  JSONSyntaxParser(JSONSyntaxParser<CharT>&& other) noexcept
+      : Base(std::move(other)) {}
+
+  JSONSyntaxParser(const JSONSyntaxParser& other) = delete;
+  void operator=(const JSONSyntaxParser& other) = delete;
+
+  bool parse();
 };
 
 } /* namespace js */
