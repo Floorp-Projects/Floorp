@@ -8749,6 +8749,33 @@ static bool GetWasmSmithModule(JSContext* cx, unsigned argc, Value* vp) {
 
 #endif
 
+static bool IsValidJSON(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  RootedObject callee(cx, &args.callee());
+
+  if (!args.get(0).isString()) {
+    ReportUsageErrorASCII(cx, callee, "First argument must be a String");
+    return false;
+  }
+
+  JS::Rooted<JSLinearString*> input(cx, args[0].toString()->ensureLinear(cx));
+  if (!input) {
+    return false;
+  }
+
+  bool result;
+  if (input->hasLatin1Chars()) {
+    JS::AutoCheckCannotGC nogc;
+    result = JS::IsValidJSON(input->latin1Chars(nogc), input->length());
+  } else {
+    JS::AutoCheckCannotGC nogc;
+    result = JS::IsValidJSON(input->twoByteChars(nogc), input->length());
+  }
+
+  args.rval().setBoolean(result);
+  return true;
+}
+
 // clang-format off
 static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("options", Options, 0, 0,
@@ -9407,6 +9434,10 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "getWasmSmithModule(arrayBuffer)",
 "  Call wasm-smith to generate a random wasm module from the provided data."),
 #endif
+
+    JS_FN_HELP("isValidJSON", IsValidJSON, 1, 0,
+"isValidJSON(source)",
+" Returns true if the given source is valid JSON."),
 
     JS_FS_HELP_END
 };
