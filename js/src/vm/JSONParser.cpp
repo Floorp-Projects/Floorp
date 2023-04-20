@@ -43,7 +43,7 @@ JSONToken JSONTokenizer<CharT>::numberToken(double d) {
 }
 
 template <typename CharT>
-template <typename JSONTokenizer<CharT>::StringType ST>
+template <JSONStringType ST>
 JSONToken JSONTokenizer<CharT>::readString() {
   MOZ_ASSERT(current < end);
   MOZ_ASSERT(*current == '"');
@@ -68,7 +68,7 @@ JSONToken JSONTokenizer<CharT>::readString() {
       size_t length = current - start;
       current++;
       JSLinearString* str =
-          (ST == PropertyName)
+          (ST == JSONStringType::PropertyName)
               ? AtomizeChars(parser->cx, start.get(), length)
               : NewStringCopyN<CanGC>(parser->cx, start.get(), length);
       if (!str) {
@@ -104,8 +104,9 @@ JSONToken JSONTokenizer<CharT>::readString() {
 
     char16_t c = *current++;
     if (c == '"') {
-      JSLinearString* str =
-          (ST == PropertyName) ? buffer.finishAtom() : buffer.finishString();
+      JSLinearString* str = (ST == JSONStringType::PropertyName)
+                                ? buffer.finishAtom()
+                                : buffer.finishString();
       if (!str) {
         return token(JSONToken::OOM);
       }
@@ -322,7 +323,7 @@ JSONToken JSONTokenizer<CharT>::advance() {
 
   switch (*current) {
     case '"':
-      return readString<LiteralValue>();
+      return readString<JSONStringType::LiteralValue>();
 
     case '-':
     case '0':
@@ -405,7 +406,7 @@ JSONToken JSONTokenizer<CharT>::advancePropertyName() {
   }
 
   if (*current == '"') {
-    return readString<PropertyName>();
+    return readString<JSONStringType::PropertyName>();
   }
 
   error("expected double-quoted property name");
@@ -489,7 +490,7 @@ JSONToken JSONTokenizer<CharT>::advanceAfterObjectOpen() {
   }
 
   if (*current == '"') {
-    return readString<PropertyName>();
+    return readString<JSONStringType::PropertyName>();
   }
 
   if (*current == '}') {
