@@ -27,6 +27,7 @@ namespace webrtc {
 namespace {
 
 using ::testing::Contains;
+using ::testing::DoubleEq;
 using ::testing::Each;
 using ::testing::Eq;
 using ::testing::IsEmpty;
@@ -155,7 +156,7 @@ void ExpectSizeAndAllElementsAre(const SamplesStatsCounter& counter,
                                  int size,
                                  double value) {
   EXPECT_EQ(counter.NumSamples(), size);
-  EXPECT_THAT(counter.GetSamples(), Each(Eq(value)));
+  EXPECT_THAT(counter.GetSamples(), Each(DoubleEq(value)));
 }
 
 TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
