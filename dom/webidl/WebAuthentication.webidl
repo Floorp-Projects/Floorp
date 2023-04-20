@@ -81,6 +81,7 @@ dictionary PublicKeyCredentialUserEntity : PublicKeyCredentialEntity {
 
 dictionary AuthenticatorSelectionCriteria {
     DOMString                    authenticatorAttachment;
+    DOMString                    residentKey;
     boolean                      requireResidentKey = false;
     DOMString                    userVerification = "preferred";
 };

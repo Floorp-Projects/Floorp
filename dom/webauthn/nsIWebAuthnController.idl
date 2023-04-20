@@ -47,7 +47,7 @@ interface nsICtapRegisterArgs : nsISupports {
     [must_use] readonly attribute bool hmacCreateSecret;
 
     // Options.
-    [must_use] readonly attribute bool requireResidentKey;
+    [must_use] readonly attribute AString residentKey;
     [must_use] readonly attribute AString userVerification;
     [must_use] readonly attribute AString authenticatorAttachment;
 
