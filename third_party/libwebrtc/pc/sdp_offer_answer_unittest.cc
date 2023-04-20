@@ -238,6 +238,130 @@ TEST_F(SdpOfferAnswerTest, BundleCodecCollisionInDifferentBundlesAllowed) {
              "WebRTC.PeerConnection.ValidBundledPayloadTypes", false));
 }
 
+TEST_F(SdpOfferAnswerTest, BundleMeasuresHeaderExtensionIdCollision) {
+  auto pc = CreatePeerConnection();
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 0 3 IN IP4 127.0.0.1\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "a=group:BUNDLE 0 1\r\n"
+      "a=fingerprint:sha-1 "
+      "4A:AD:B9:B1:3F:82:18:3B:54:02:12:DF:3E:5D:49:6B:19:E5:7C:AB\r\n"
+      "a=setup:actpass\r\n"
+      "a=ice-ufrag:ETEn\r\n"
+      "a=ice-pwd:OtSK0WpNtpUjkY4+86js7Z/l\r\n"
+      "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=rtcp-mux\r\n"
+      "a=sendonly\r\n"
+      "a=mid:0\r\n"
+      "a=rtpmap:111 opus/48000/2\r\n"
+      "a=extmap:3 "
+      "http://www.ietf.org/id/"
+      "draft-holmer-rmcat-transport-wide-cc-extensions-01\r\n"
+      "m=video 9 UDP/TLS/RTP/SAVPF 112\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=rtcp-mux\r\n"
+      "a=sendonly\r\n"
+      "a=mid:1\r\n"
+      "a=rtpmap:112 VP8/90000\r\n"
+      "a=extmap:3 "
+      "http://www.ietf.org/id/"
+      "draft-holmer-rmcat-transport-wide-cc-extensions-01\r\n";
+  auto desc = CreateSessionDescription(SdpType::kOffer, sdp);
+  ASSERT_NE(desc, nullptr);
+  RTCError error;
+  pc->SetRemoteDescription(std::move(desc), &error);
+  EXPECT_TRUE(error.ok());
+  EXPECT_METRIC_EQ(1,
+                   webrtc::metrics::NumEvents(
+                       "WebRTC.PeerConnection.ValidBundledExtensionIds", true));
+}
+
+// extmap:3 is used with two different URIs which is not allowed.
+TEST_F(SdpOfferAnswerTest, BundleRejectsHeaderExtensionIdCollision) {
+  auto pc = CreatePeerConnection();
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 0 3 IN IP4 127.0.0.1\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "a=group:BUNDLE 0 1\r\n"
+      "a=fingerprint:sha-1 "
+      "4A:AD:B9:B1:3F:82:18:3B:54:02:12:DF:3E:5D:49:6B:19:E5:7C:AB\r\n"
+      "a=setup:actpass\r\n"
+      "a=ice-ufrag:ETEn\r\n"
+      "a=ice-pwd:OtSK0WpNtpUjkY4+86js7Z/l\r\n"
+      "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=rtcp-mux\r\n"
+      "a=sendonly\r\n"
+      "a=mid:0\r\n"
+      "a=rtpmap:111 opus/48000/2\r\n"
+      "a=extmap:3 "
+      "http://www.ietf.org/id/"
+      "draft-holmer-rmcat-transport-wide-cc-extensions-01\r\n"
+      "m=video 9 UDP/TLS/RTP/SAVPF 112\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=rtcp-mux\r\n"
+      "a=sendonly\r\n"
+      "a=mid:1\r\n"
+      "a=rtpmap:112 VP8/90000\r\n"
+      "a=extmap:3 urn:3gpp:video-orientation\r\n";
+  auto desc = CreateSessionDescription(SdpType::kOffer, sdp);
+  ASSERT_NE(desc, nullptr);
+  RTCError error;
+  pc->SetRemoteDescription(std::move(desc), &error);
+  EXPECT_TRUE(error.ok());
+  EXPECT_METRIC_EQ(
+      1, webrtc::metrics::NumEvents(
+             "WebRTC.PeerConnection.ValidBundledExtensionIds", false));
+}
+
+// transport-wide cc is negotiated with two different ids 3 and 4.
+// This is not a good idea but tolerable.
+TEST_F(SdpOfferAnswerTest, BundleAcceptsDifferentIdsForSameExtension) {
+  auto pc = CreatePeerConnection();
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 0 3 IN IP4 127.0.0.1\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "a=group:BUNDLE 0 1\r\n"
+      "a=fingerprint:sha-1 "
+      "4A:AD:B9:B1:3F:82:18:3B:54:02:12:DF:3E:5D:49:6B:19:E5:7C:AB\r\n"
+      "a=setup:actpass\r\n"
+      "a=ice-ufrag:ETEn\r\n"
+      "a=ice-pwd:OtSK0WpNtpUjkY4+86js7Z/l\r\n"
+      "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=rtcp-mux\r\n"
+      "a=sendonly\r\n"
+      "a=mid:0\r\n"
+      "a=rtpmap:111 opus/48000/2\r\n"
+      "a=extmap:3 "
+      "http://www.ietf.org/id/"
+      "draft-holmer-rmcat-transport-wide-cc-extensions-01\r\n"
+      "m=video 9 UDP/TLS/RTP/SAVPF 112\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=rtcp-mux\r\n"
+      "a=sendonly\r\n"
+      "a=mid:1\r\n"
+      "a=rtpmap:112 VP8/90000\r\n"
+      "a=extmap:4 "
+      "http://www.ietf.org/id/"
+      "draft-holmer-rmcat-transport-wide-cc-extensions-01\r\n";
+  auto desc = CreateSessionDescription(SdpType::kOffer, sdp);
+  ASSERT_NE(desc, nullptr);
+  RTCError error;
+  pc->SetRemoteDescription(std::move(desc), &error);
+  EXPECT_TRUE(error.ok());
+  EXPECT_METRIC_EQ(1,
+                   webrtc::metrics::NumEvents(
+                       "WebRTC.PeerConnection.ValidBundledExtensionIds", true));
+}
+
 TEST_F(SdpOfferAnswerTest, LargeMidsAreRejected) {
   auto pc = CreatePeerConnection();
   std::string sdp =
