@@ -84,7 +84,7 @@ index 89c73955a2..4b4984bf6d 100644
  // Base extension class for RTP header extensions which are strings.
  // Subclasses must defined kId and kUri static constexpr members.
 diff --git a/modules/rtp_rtcp/source/rtp_packet.cc b/modules/rtp_rtcp/source/rtp_packet.cc
-index dba150f314..5b21928b3b 100644
+index 252b54377d..c327023019 100644
 --- a/modules/rtp_rtcp/source/rtp_packet.cc
 +++ b/modules/rtp_rtcp/source/rtp_packet.cc
 @@ -185,7 +185,9 @@ void RtpPacket::ZeroMutableExtensions() {
@@ -96,7 +96,7 @@ index dba150f314..5b21928b3b 100644
 +#endif
        case RTPExtensionType::kRtpExtensionAbsoluteCaptureTime:
        case RTPExtensionType::kRtpExtensionColorSpace:
-       case RTPExtensionType::kRtpExtensionGenericFrameDescriptor00:
+       case RTPExtensionType::kRtpExtensionGenericFrameDescriptor:
 @@ -203,10 +205,12 @@ void RtpPacket::ZeroMutableExtensions() {
          // Non-mutable extension. Don't change it.
          break;
@@ -111,7 +111,7 @@ index dba150f314..5b21928b3b 100644
    }
  }
 diff --git a/modules/rtp_rtcp/source/rtp_sender.cc b/modules/rtp_rtcp/source/rtp_sender.cc
-index 1ac37e05f6..a6d8e5e8c6 100644
+index 0ed7243d0a..336a117f4e 100644
 --- a/modules/rtp_rtcp/source/rtp_sender.cc
 +++ b/modules/rtp_rtcp/source/rtp_sender.cc
 @@ -108,7 +108,9 @@ bool IsNonVolatile(RTPExtensionType type) {
@@ -138,7 +138,7 @@ index 1ac37e05f6..a6d8e5e8c6 100644
    RTC_CHECK_NOTREACHED();
  }
 diff --git a/test/fuzzers/rtp_packet_fuzzer.cc b/test/fuzzers/rtp_packet_fuzzer.cc
-index 9cd15e39de..1d28be3764 100644
+index 0e10a8fa3a..5d117529bb 100644
 --- a/test/fuzzers/rtp_packet_fuzzer.cc
 +++ b/test/fuzzers/rtp_packet_fuzzer.cc
 @@ -77,11 +77,13 @@ void FuzzOneInput(const uint8_t* data, size_t size) {

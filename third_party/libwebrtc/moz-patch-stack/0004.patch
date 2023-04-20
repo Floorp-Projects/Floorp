@@ -1101,7 +1101,7 @@ index d80e0da4f8..89c73955a2 100644
  // Subclasses must defined kId and kUri static constexpr members.
  class BaseRtpStringExtension {
 diff --git a/modules/rtp_rtcp/source/rtp_packet.cc b/modules/rtp_rtcp/source/rtp_packet.cc
-index e26cec5760..dba150f314 100644
+index 8166de82b2..252b54377d 100644
 --- a/modules/rtp_rtcp/source/rtp_packet.cc
 +++ b/modules/rtp_rtcp/source/rtp_packet.cc
 @@ -203,6 +203,10 @@ void RtpPacket::ZeroMutableExtensions() {
@@ -1116,7 +1116,7 @@ index e26cec5760..dba150f314 100644
    }
  }
 diff --git a/modules/rtp_rtcp/source/rtp_packet_unittest.cc b/modules/rtp_rtcp/source/rtp_packet_unittest.cc
-index ba5e4e61c6..21bf37c0c3 100644
+index 8a82e98d76..58dbd76425 100644
 --- a/modules/rtp_rtcp/source/rtp_packet_unittest.cc
 +++ b/modules/rtp_rtcp/source/rtp_packet_unittest.cc
 @@ -119,6 +119,18 @@ constexpr uint8_t kPacketWithMid[] = {
@@ -1177,7 +1177,7 @@ index 3e6aa3baae..9ac7696ce9 100644
  constexpr int RTCP_MAX_REPORT_BLOCKS = 31;  // RFC 3550 page 37
  }  // namespace webrtc
 diff --git a/modules/rtp_rtcp/source/rtp_sender.cc b/modules/rtp_rtcp/source/rtp_sender.cc
-index b057d6db0b..1ac37e05f6 100644
+index ac3bd55e05..0ed7243d0a 100644
 --- a/modules/rtp_rtcp/source/rtp_sender.cc
 +++ b/modules/rtp_rtcp/source/rtp_sender.cc
 @@ -132,6 +132,10 @@ bool IsNonVolatile(RTPExtensionType type) {
@@ -1908,7 +1908,7 @@ index 854230ae0a..e31b8b1d25 100644
  }
  
 diff --git a/test/fuzzers/rtp_packet_fuzzer.cc b/test/fuzzers/rtp_packet_fuzzer.cc
-index 5d56eb1505..9cd15e39de 100644
+index 60afb986de..0e10a8fa3a 100644
 --- a/test/fuzzers/rtp_packet_fuzzer.cc
 +++ b/test/fuzzers/rtp_packet_fuzzer.cc
 @@ -164,6 +164,11 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
