@@ -26,6 +26,7 @@ rtc_library("inter_frame_delay") {
     "../../../api/units:frequency",
     "../../../api/units:time_delta",
     "../../../api/units:timestamp",
+    "../../../rtc_base:rtc_numerics",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
