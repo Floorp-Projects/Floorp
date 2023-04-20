@@ -78,6 +78,8 @@ class GfxInfo final : public GfxInfoBase {
 
   virtual bool DoesDriverVendorMatch(const nsAString& aBlocklistVendor,
                                      const nsAString& aDriverVendor) override;
+  static int FireTestProcess(const nsAString& aBinaryFile, int* aOutPipe,
+                             const char** aStringArgs);
 
  private:
   bool mInitialized = false;

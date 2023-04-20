@@ -533,8 +533,8 @@ void GfxInfo::GetData() {
   AddCrashReportAnnotations();
 }
 
-#ifdef MOZ_WAYLAND
-static int fire_vaapi_process(const char* aRenderDevicePath, int* aOutPipe) {
+int GfxInfo::FireTestProcess(const nsAString& aBinaryFile, int* aOutPipe,
+                             const char** aStringArgs) {
   nsCOMPtr<nsIFile> appFile;
   nsresult rv = XRE_GetBinaryPath(getter_AddRefs(appFile));
   if (NS_FAILED(rv)) {
@@ -547,30 +547,44 @@ static int fire_vaapi_process(const char* aRenderDevicePath, int* aOutPipe) {
     gfxCriticalNote << "Couldn't get application directory.\n";
     return false;
   }
-  exePath->Append(VAAPI_PROBE_BINARY);
+  exePath->Append(aBinaryFile);
 
-  char* argv[] = {strdup(exePath->NativePath().get()), strdup("-d"),
-                  strdup(aRenderDevicePath), nullptr};
-  auto freeArgv = mozilla::MakeScopeExit([&] {
-    for (auto& arg : argv) {
-      free(arg);
+#define MAX_ARGS 8
+  char* argv[MAX_ARGS + 2];
+
+  argv[0] = strdup(exePath->NativePath().get());
+  for (int i = 0; i < MAX_ARGS; i++) {
+    if (aStringArgs[i]) {
+      argv[i + 1] = strdup(aStringArgs[i]);
+    } else {
+      argv[i + 1] = nullptr;
+      break;
     }
-  });
+  }
 
+  // Use G_SPAWN_LEAVE_DESCRIPTORS_OPEN | G_SPAWN_DO_NOT_REAP_CHILD flags
+  // to g_spawn_async_with_pipes() run posix_spawn() directly.
   int pid;
   GUniquePtr<GError> err;
   g_spawn_async_with_pipes(
       nullptr, argv, nullptr,
-      GSpawnFlags(G_SPAWN_CLOEXEC_PIPES | G_SPAWN_DO_NOT_REAP_CHILD), nullptr,
-      nullptr, &pid, nullptr, aOutPipe, nullptr, getter_Transfers(err));
+      GSpawnFlags(G_SPAWN_LEAVE_DESCRIPTORS_OPEN | G_SPAWN_DO_NOT_REAP_CHILD),
+      nullptr, nullptr, &pid, nullptr, aOutPipe, nullptr,
+      getter_Transfers(err));
   if (err) {
-    gfxCriticalNote << "Failed to probe VA-API hardware! " << err->message
-                    << "\n";
+    gfxCriticalNote << "FireTestProcess failed: " << err->message << "\n";
     pid = 0;
+  }
+  for (auto& arg : argv) {
+    if (!arg) {
+      break;
+    }
+    free(arg);
   }
   return pid;
 }
 
+#ifdef MOZ_WAYLAND
 void GfxInfo::GetDataVAAPI() {
   if (mIsVAAPISupported.isSome()) {
     return;
@@ -582,7 +596,8 @@ void GfxInfo::GetDataVAAPI() {
 
   int vaapiPipe = -1;
   int vaapiPID = 0;
-  vaapiPID = fire_vaapi_process(mDrmRenderDevice.get(), &vaapiPipe);
+  const char* args[] = {"-d", mDrmRenderDevice.get(), nullptr};
+  vaapiPID = FireTestProcess(VAAPI_PROBE_BINARY, &vaapiPipe, args);
   if (!vaapiPID) {
     return;
   }
