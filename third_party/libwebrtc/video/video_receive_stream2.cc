@@ -464,17 +464,6 @@ RtpHeaderExtensionMap VideoReceiveStream2::GetRtpExtensionMap() const {
   return rtp_video_stream_receiver_.GetRtpExtensions();
 }
 
-bool VideoReceiveStream2::transport_cc() const {
-  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-  return config_.rtp.transport_cc;
-}
-
-void VideoReceiveStream2::SetTransportCc(bool transport_cc) {
-  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-  // TODO(tommi): Stop using the config struct for the internal state.
-  const_cast<bool&>(config_.rtp.transport_cc) = transport_cc;
-}
-
 void VideoReceiveStream2::SetRtcpMode(RtcpMode mode) {
   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
   // TODO(tommi): Stop using the config struct for the internal state.

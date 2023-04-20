@@ -540,7 +540,6 @@ TEST_F(RtpRtcpEndToEndTest, DISABLED_TestFlexfecRtpStatePreservation) {
     flexfec_receive_config.protected_media_ssrcs =
         GetVideoSendConfig()->rtp.flexfec.protected_media_ssrcs;
     flexfec_receive_config.rtp.local_ssrc = kReceiverLocalVideoSsrc;
-    flexfec_receive_config.rtp.transport_cc = true;
     flexfec_receive_config.rtp.extensions.emplace_back(
         RtpExtension::kTransportSequenceNumberUri,
         kTransportSequenceNumberExtensionId);

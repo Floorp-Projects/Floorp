@@ -43,7 +43,6 @@ VideoReceiveStreamInterface::Config ParseVideoReceiveStreamJsonConfig(
       json["rtp"]["rtcp_mode"].asString() == "RtcpMode::kCompound"
           ? RtcpMode::kCompound
           : RtcpMode::kReducedSize;
-  receive_config.rtp.transport_cc = json["rtp"]["transport_cc"].asBool();
   receive_config.rtp.lntf.enabled = json["rtp"]["lntf"]["enabled"].asInt64();
   receive_config.rtp.nack.rtp_history_ms =
       json["rtp"]["nack"]["rtp_history_ms"].asInt64();
@@ -92,7 +91,6 @@ Json::Value GenerateVideoReceiveStreamJsonConfig(
   rtp_json["rtcp_mode"] = config.rtp.rtcp_mode == RtcpMode::kCompound
                               ? "RtcpMode::kCompound"
                               : "RtcpMode::kReducedSize";
-  rtp_json["transport_cc"] = config.rtp.transport_cc;
   rtp_json["lntf"]["enabled"] = config.rtp.lntf.enabled;
   rtp_json["nack"]["rtp_history_ms"] = config.rtp.nack.rtp_history_ms;
   rtp_json["ulpfec_payload_type"] = config.rtp.ulpfec_payload_type;

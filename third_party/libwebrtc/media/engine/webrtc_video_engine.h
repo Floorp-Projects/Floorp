@@ -487,7 +487,6 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     // TODO(deadbeef): Move these feedback parameters into the recv parameters.
     void SetFeedbackParameters(bool lntf_enabled,
                                bool nack_enabled,
-                               bool transport_cc_enabled,
                                webrtc::RtcpMode rtcp_mode,
                                int rtx_time);
     void SetRecvParameters(const ChangedRecvParameters& recv_params);

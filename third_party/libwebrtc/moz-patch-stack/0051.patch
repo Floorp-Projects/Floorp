@@ -20,10 +20,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d0b311007c033e838
  11 files changed, 56 insertions(+), 10 deletions(-)
 
 diff --git a/audio/audio_receive_stream.cc b/audio/audio_receive_stream.cc
-index 168d214ecd..f53f8a96f2 100644
+index 7a2037e83f..a515760976 100644
 --- a/audio/audio_receive_stream.cc
 +++ b/audio/audio_receive_stream.cc
-@@ -48,6 +48,8 @@ std::string AudioReceiveStreamInterface::Config::Rtp::ToString() const {
+@@ -47,6 +47,8 @@ std::string AudioReceiveStreamInterface::Config::Rtp::ToString() const {
      }
    }
    ss << ']';
@@ -32,7 +32,7 @@ index 168d214ecd..f53f8a96f2 100644
    ss << '}';
    return ss.str();
  }
-@@ -82,7 +84,8 @@ std::unique_ptr<voe::ChannelReceiveInterface> CreateChannelReceive(
+@@ -81,7 +83,8 @@ std::unique_ptr<voe::ChannelReceiveInterface> CreateChannelReceive(
        config.jitter_buffer_fast_accelerate, config.jitter_buffer_min_delay_ms,
        config.enable_non_sender_rtt, config.decoder_factory,
        config.codec_pair_id, std::move(config.frame_decryptor),
@@ -128,10 +128,10 @@ index f383277323..5f21f4cac6 100644
  
      // Receive-side RTT.
 diff --git a/call/video_receive_stream.cc b/call/video_receive_stream.cc
-index 8cd4a952d4..95036fb42f 100644
+index 87df97cbdd..838dfcf135 100644
 --- a/call/video_receive_stream.cc
 +++ b/call/video_receive_stream.cc
-@@ -154,6 +154,8 @@ std::string VideoReceiveStreamInterface::Config::Rtp::ToString() const {
+@@ -153,6 +153,8 @@ std::string VideoReceiveStreamInterface::Config::Rtp::ToString() const {
        ss << ", ";
    }
    ss << ']';

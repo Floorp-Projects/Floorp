@@ -55,7 +55,6 @@ TEST_F(BandwidthEndToEndTest, ReceiveStreamSendsRemb) {
       send_config->rtp.extensions.clear();
       send_config->rtp.extensions.push_back(
           RtpExtension(RtpExtension::kAbsSendTimeUri, kAbsSendTimeExtensionId));
-      (*receive_configs)[0].rtp.transport_cc = false;
     }
 
     Action OnReceiveRtcp(const uint8_t* packet, size_t length) override {
@@ -106,12 +105,10 @@ class BandwidthStatsTest : public test::EndToEndTest {
     if (!send_side_bwe_) {
       send_config->rtp.extensions.push_back(
           RtpExtension(RtpExtension::kAbsSendTimeUri, kAbsSendTimeExtensionId));
-      (*receive_configs)[0].rtp.transport_cc = false;
     } else {
       send_config->rtp.extensions.push_back(
           RtpExtension(RtpExtension::kTransportSequenceNumberUri,
                        kTransportSequenceNumberId));
-      (*receive_configs)[0].rtp.transport_cc = true;
     }
 
     // Force a too high encoder bitrate to make sure we get pacer delay.

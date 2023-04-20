@@ -3107,32 +3107,6 @@ TEST_F(WebRtcVideoChannelTest, RtcpIsCompoundByDefault) {
   EXPECT_EQ(webrtc::RtcpMode::kCompound, stream->GetConfig().rtp.rtcp_mode);
 }
 
-TEST_F(WebRtcVideoChannelTest, TransportCcIsEnabledByDefault) {
-  FakeVideoReceiveStream* stream = AddRecvStream();
-  EXPECT_TRUE(stream->transport_cc());
-}
-
-TEST_F(WebRtcVideoChannelTest, TransportCcCanBeEnabledAndDisabled) {
-  FakeVideoReceiveStream* stream = AddRecvStream();
-  EXPECT_TRUE(stream->transport_cc());
-
-  // Verify that transport cc feedback is turned off when send(!) codecs without
-  // transport cc feedback are set.
-  cricket::VideoSendParameters parameters;
-  parameters.codecs.push_back(RemoveFeedbackParams(GetEngineCodec("VP8")));
-  EXPECT_TRUE(parameters.codecs[0].feedback_params.params().empty());
-  EXPECT_TRUE(channel_->SetSendParameters(parameters));
-  stream = fake_call_->GetVideoReceiveStreams()[0];
-  EXPECT_FALSE(stream->transport_cc());
-
-  // Verify that transport cc feedback is turned on when setting default codecs
-  // since the default codecs have transport cc feedback enabled.
-  parameters.codecs = engine_.send_codecs();
-  EXPECT_TRUE(channel_->SetSendParameters(parameters));
-  stream = fake_call_->GetVideoReceiveStreams()[0];
-  EXPECT_TRUE(stream->transport_cc());
-}
-
 TEST_F(WebRtcVideoChannelTest, LossNotificationIsDisabledByDefault) {
   TestLossNotificationState(false);
 }
@@ -4414,10 +4388,6 @@ TEST_F(WebRtcVideoChannelFlexfecRecvTest, SetRecvCodecsWithFec) {
   EXPECT_EQ(video_stream_config.rtp.rtcp_mode, flexfec_stream_config.rtcp_mode);
   EXPECT_EQ(video_stream_config.rtcp_send_transport,
             flexfec_stream_config.rtcp_send_transport);
-  // TODO(brandtr): Update this EXPECT when we set `transport_cc` in a
-  // spec-compliant way.
-  EXPECT_EQ(video_stream_config.rtp.transport_cc,
-            flexfec_stream_config.rtp.transport_cc);
   EXPECT_EQ(video_stream_config.rtp.rtcp_mode, flexfec_stream_config.rtcp_mode);
   EXPECT_EQ(video_stream_config.rtp.extensions,
             flexfec_stream_config.rtp.extensions);
