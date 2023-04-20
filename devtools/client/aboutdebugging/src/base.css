@@ -208,11 +208,9 @@ ul {
 
 a {
   color: var(--link-color);
-  text-decoration: none;
 }
 a:hover {
   color: var(--link-color-hover);
-  text-decoration: underline;
 }
 a:active {
   color: var(--link-color-active);
