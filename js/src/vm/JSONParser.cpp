@@ -99,7 +99,7 @@ JSONToken JSONTokenizer<CharT, ParserT, StringBuilderT>::readString() {
    * of unescaped characters into a temporary buffer, then an escaped
    * character, and repeat until the entire string is consumed.
    */
-  StringBuilderT builder(parser->handler.cx);
+  StringBuilderT builder(parser->handler.context());
   do {
     if (start < current && !builder.append(start.get(), current.get())) {
       return token(JSONToken::OOM);
@@ -585,9 +585,9 @@ inline void JSONFullParseHandlerAnyChar::freeStackEntry(StackEntry& entry) {
 
 template <typename CharT>
 void JSONParser<CharT>::trace(JSTracer* trc) {
-  handler.trace(trc);
+  this->handler.trace(trc);
 
-  for (auto& elem : stack) {
+  for (auto& elem : this->stack) {
     if (elem.state == JSONParserState::FinishArrayElement) {
       elem.elements().trace(trc);
     } else {
@@ -750,13 +750,13 @@ void JSONFullParseHandler<CharT>::reportError(const char* msg,
                             msg, lineString, columnString);
 }
 
-template <typename CharT>
-void JSONParser<CharT>::outOfMemory() {
-  ReportOutOfMemory(handler.cx);
+template <typename CharT, typename HandlerT>
+void JSONPerHandlerParser<CharT, HandlerT>::outOfMemory() {
+  ReportOutOfMemory(handler.context());
 }
 
-template <typename CharT>
-void JSONParser<CharT>::error(const char* msg) {
+template <typename CharT, typename HandlerT>
+void JSONPerHandlerParser<CharT, HandlerT>::error(const char* msg) {
   if (handler.ignoreError()) {
     return;
   }
@@ -784,26 +784,30 @@ bool JSONFullParseHandler<CharT>::StringBuilder::append(const CharT* begin,
   return buffer.append(begin, end);
 }
 
-template <typename CharT>
-JSONParser<CharT>::~JSONParser() {
+template <typename CharT, typename HandlerT>
+JSONPerHandlerParser<CharT, HandlerT>::~JSONPerHandlerParser() {
   for (size_t i = 0; i < stack.length(); i++) {
     handler.freeStackEntry(stack[i]);
   }
 }
 
-template <typename CharT>
-bool JSONParser<CharT>::parse(MutableHandleValue vp) {
-  RootedValue value(handler.cx);
-  MOZ_ASSERT(stack.empty());
+template class js::JSONPerHandlerParser<Latin1Char,
+                                        js::JSONFullParseHandler<Latin1Char>>;
+template class js::JSONPerHandlerParser<char16_t,
+                                        js::JSONFullParseHandler<char16_t>>;
 
-  vp.setUndefined();
+template <typename CharT, typename HandlerT>
+template <typename TempValueT, typename ResultSetter>
+bool JSONPerHandlerParser<CharT, HandlerT>::parseImpl(TempValueT& value,
+                                                      ResultSetter setResult) {
+  MOZ_ASSERT(stack.empty());
 
   JSONToken token;
   JSONParserState state = JSONParserState::JSONValue;
   while (true) {
     switch (state) {
       case JSONParserState::FinishObjectMember: {
-        typename Handler::PropertyVector* properties;
+        typename HandlerT::PropertyVector* properties;
         handler.finishObjectMember(stack, value, &properties);
 
         token = tokenizer.advanceAfterProperty();
@@ -854,7 +858,7 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
         return handler.errorReturn();
 
       case JSONParserState::FinishArrayElement: {
-        typename Handler::ElementVector* elements;
+        typename HandlerT::ElementVector* elements;
         if (!handler.arrayElement(stack, value, &elements)) {
           return false;
         }
@@ -894,7 +898,7 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
             break;
 
           case JSONToken::ArrayOpen: {
-            typename Handler::ElementVector* elements;
+            typename HandlerT::ElementVector* elements;
             if (!handler.arrayOpen(stack, &elements)) {
               return false;
             }
@@ -910,7 +914,7 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
           }
 
           case JSONToken::ObjectOpen: {
-            typename Handler::PropertyVector* properties;
+            typename HandlerT::PropertyVector* properties;
             if (!handler.objectOpen(stack, &properties)) {
               return false;
             }
@@ -958,8 +962,18 @@ bool JSONParser<CharT>::parse(MutableHandleValue vp) {
   MOZ_ASSERT(tokenizer.finished());
   MOZ_ASSERT(stack.empty());
 
-  vp.set(value);
+  setResult(value);
   return true;
+}
+
+template <typename CharT>
+bool JSONParser<CharT>::parse(MutableHandleValue vp) {
+  RootedValue tempValue(this->handler.cx);
+
+  vp.setUndefined();
+
+  return this->parseImpl(tempValue,
+                         [&](JS::Handle<JS::Value> value) { vp.set(value); });
 }
 
 template class js::JSONParser<Latin1Char>;
