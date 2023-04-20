@@ -99,7 +99,7 @@ map of argument name to argument type. I may regret this if I need it again. #}
     numerators: Option<Vec<CommonMetricData>>,
 {# And, don't forget the list of acceptable labels for a labeled metric. #}
     labels: Option<Vec<Cow<'static, str>>>,
-) -> Result<u32, Box<dyn std::error::Error>> {
+) -> Result<(u32, u32), Box<dyn std::error::Error>> {
     let metric_id = NEXT_METRIC_ID.fetch_add(1, Ordering::SeqCst);
     let metric32 = match metric_type {
 {% for metric_type_name, metric_type in metric_types.items() %}
@@ -127,7 +127,7 @@ map of argument name to argument type. I may regret this if I need it again. #}
 {% endfor %}
         _ => return Err(Box::new(MetricTypeNotFoundError(metric_type.to_string())))
     };
-    Ok(metric32)
+    Ok((metric32, metric_id))
 }
 
 /// Creates and registers a ping, returning its id.

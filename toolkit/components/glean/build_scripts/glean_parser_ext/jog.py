@@ -19,6 +19,9 @@ from util import type_ids_and_categories
 
 from js import ID_BITS, PING_INDEX_BITS
 
+RUNTIME_METRIC_BIT = ID_BITS - 1
+RUNTIME_PING_BIT = PING_INDEX_BITS - 1
+
 # The list of all args to CommonMetricData.
 # No particular order is required, but I have these in common_metric_data.rs
 # order just to be organized.
@@ -121,8 +124,8 @@ def output_factory(objs, output_fd, options={}):
             common_metric_data_args=common_metric_data_args,
             extra_args=util.extra_args,
             metric_types=metric_types,
-            runtime_metric_bit=ID_BITS - 1,
-            runtime_ping_bit=PING_INDEX_BITS - 1,
+            runtime_metric_bit=RUNTIME_METRIC_BIT,
+            runtime_ping_bit=RUNTIME_PING_BIT,
             ID_BITS=ID_BITS,
         )
     )
