@@ -35,12 +35,9 @@ enum class JSONToken {
   Error
 };
 
-template <typename CharT>
-class JSONParser;
-
 enum class JSONStringType { PropertyName, LiteralValue };
 
-template <typename CharT>
+template <typename CharT, typename ParserT, typename StringBuilderT>
 class MOZ_STACK_CLASS JSONTokenizer {
  public:
   using CharPtr = mozilla::RangedPtr<const CharT>;
@@ -49,27 +46,28 @@ class MOZ_STACK_CLASS JSONTokenizer {
   CharPtr current;
   const CharPtr begin, end;
 
-  JSONParser<CharT>* parser = nullptr;
+  ParserT* parser = nullptr;
 
  public:
   JSONTokenizer(CharPtr current, const CharPtr begin, const CharPtr end,
-                JSONParser<CharT>* parser)
+                ParserT* parser)
       : current(current), begin(begin), end(end), parser(parser) {
     MOZ_ASSERT(current <= end);
     MOZ_ASSERT(parser);
   }
 
-  explicit JSONTokenizer(mozilla::Range<const CharT> data,
-                         JSONParser<CharT>* parser)
+  explicit JSONTokenizer(mozilla::Range<const CharT> data, ParserT* parser)
       : JSONTokenizer(data.begin(), data.begin(), data.end(), parser) {}
 
-  JSONTokenizer(JSONTokenizer<CharT>&& other) noexcept
+  JSONTokenizer(JSONTokenizer<CharT, ParserT, StringBuilderT>&& other) noexcept
       : JSONTokenizer(other.current, other.begin, other.end, other.parser) {}
 
-  JSONTokenizer(const JSONTokenizer<CharT>& other) = delete;
-  void operator=(const JSONTokenizer<CharT>& other) = delete;
+  JSONTokenizer(const JSONTokenizer<CharT, ParserT, StringBuilderT>& other) =
+      delete;
+  void operator=(const JSONTokenizer<CharT, ParserT, StringBuilderT>& other) =
+      delete;
 
-  void fixupParser(JSONParser<CharT>* newParser) { parser = newParser; }
+  void fixupParser(ParserT* newParser) { parser = newParser; }
 
   void getTextPosition(uint32_t* column, uint32_t* line);
 
@@ -97,7 +95,7 @@ class MOZ_STACK_CLASS JSONTokenizer {
   template <JSONStringType ST>
   JSONToken stringToken(const CharPtr start, size_t length);
   template <JSONStringType ST>
-  JSONToken stringToken(JSStringBuilder& builder);
+  JSONToken stringToken(StringBuilderT& builder);
 
   JSONToken numberToken(double d);
 
@@ -290,7 +288,7 @@ class MOZ_STACK_CLASS JSONFullParseHandler
 
 template <typename CharT>
 class MOZ_STACK_CLASS JSONParser {
-  using Tokenizer = JSONTokenizer<CharT>;
+  using Tokenizer = JSONTokenizer<CharT, JSONParser<CharT>, JSStringBuilder>;
   using Handler = JSONFullParseHandler<CharT>;
 
  public:
