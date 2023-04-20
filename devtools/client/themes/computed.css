@@ -218,13 +218,9 @@
 /* Take away these two :visited rules to get a core dumper     */
 /* See https://bugzilla.mozilla.org/show_bug.cgi?id=575675#c30 */
 
-.computed-link,
-.computed-link:visited {
-  text-decoration: none;
-}
-
-.computed-link:hover {
+.computed-link {
   text-decoration: underline;
+  text-decoration-skip-ink: none;
 }
 
 .computed-colorswatch {

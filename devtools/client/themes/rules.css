@@ -235,9 +235,9 @@
   cursor: default;
 }
 
-.ruleview-rule-source:not(.unselectable):hover,
-.ruleview-rule-source:not([unselectable]):hover {
+.ruleview-rule-source:not([unselectable]) {
   text-decoration: underline;
+  text-decoration-skip-ink: none;
 }
 
 .ruleview-header {
