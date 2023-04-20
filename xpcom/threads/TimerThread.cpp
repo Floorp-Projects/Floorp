@@ -851,7 +851,6 @@ TimerThread::Run() {
               waitInMs * sChaosFractions[ChaosMode::randomUint32LessThan(
                              ArrayLength(sChaosFractions))];
           waitFor = TimeDuration::FromMilliseconds(chaosWaitInMs);
-          MOZ_ASSERT(!waitFor.IsZero());
         }
 
         mIntendedWakeupTime = wakeupTime;
