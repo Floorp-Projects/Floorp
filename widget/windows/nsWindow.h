@@ -702,7 +702,6 @@ class nsWindow final : public nsBaseWidget {
                         POINTER_FLAGS aFlags, uint32_t aPressure = 1024,
                         uint32_t aOrientation = 90);
 
-  void OnFullscreenWillChange(bool aFullScreen);
   void OnFullscreenChanged(nsSizeMode aOldSizeMode, bool aFullScreen);
 
   static void OnCloakEvent(HWND aWnd, bool aCloaked);
