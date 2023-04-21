@@ -8,6 +8,13 @@ user-id = 128763
 user-login = "martinthomson"
 user-name = "Martin Thomson"
 
+[[publisher.cexpr]]
+version = "0.6.0"
+when = "2021-10-11"
+user-id = 3788
+user-login = "emilio"
+user-name = "Emilio Cobos Álvarez"
+
 [[publisher.glean]]
 version = "52.6.0"
 when = "2023-04-20"
