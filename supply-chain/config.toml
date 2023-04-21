@@ -265,10 +265,6 @@ criteria = "safe-to-deploy"
 version = "1.0.9"
 criteria = "safe-to-deploy"
 
-[[exemptions.cexpr]]
-version = "0.6.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.chrono]]
 version = "0.4.19"
 criteria = "safe-to-deploy"
