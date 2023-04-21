@@ -62,16 +62,21 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateStaticImport(
   return request.forget();
 }
 
-void WorkerModuleLoader::CreateDynamicImportLoader() {
+bool WorkerModuleLoader::CreateDynamicImportLoader() {
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   workerPrivate->AssertIsOnWorkerThread();
 
-  ErrorResult rv;
-  SetScriptLoader(new loader::WorkerScriptLoader(
+  IgnoredErrorResult rv;
+  RefPtr<WorkerScriptLoader> loader = new loader::WorkerScriptLoader(
       workerPrivate, nullptr, nullptr,
-      GetCurrentScriptLoader()->GetWorkerScriptType(), rv));
+      GetCurrentScriptLoader()->GetWorkerScriptType(), rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return false;
+  }
 
+  SetScriptLoader(loader);
   SetEventTarget(GetCurrentSerialEventTarget());
+  return true;
 }
 
 already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateDynamicImport(
@@ -80,7 +85,9 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateDynamicImport(
     JS::Handle<JSObject*> aPromise) {
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
 
-  CreateDynamicImportLoader();
+  if (!CreateDynamicImportLoader()) {
+    return nullptr;
+  }
 
   // Not supported for Service Workers.
   if (workerPrivate->IsServiceWorker()) {
