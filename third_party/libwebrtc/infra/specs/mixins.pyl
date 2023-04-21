@@ -117,6 +117,11 @@
   'isolate_profile_data': {
     'isolate_profile_data': True
   },
+  'limited-capacity': {
+    'swarming': {
+      'expiration': 10800
+    }
+  },
   'linux-bionic': {
     'swarming': {
       'dimensions': {

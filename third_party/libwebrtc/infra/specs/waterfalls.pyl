@@ -239,7 +239,7 @@
   },
   {
     'name': 'client.webrtc.perf',
-    'mixins': [],
+    'mixins': ['limited-capacity'],
     'machines': {
       'Perf Android32 (O Pixel2)': {
         'mixins': [
