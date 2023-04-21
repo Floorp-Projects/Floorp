@@ -77,7 +77,7 @@ void CommandEncoder::ConvertExtent3DToFFI(const dom::GPUExtent3D& aExtent,
     aExtentFFI->height = dict.mHeight;
     aExtentFFI->depth_or_array_layers = dict.mDepthOrArrayLayers;
   } else {
-    MOZ_CRASH("Unexptected extent type");
+    MOZ_CRASH("Unexpected extent type");
   }
 }
 
