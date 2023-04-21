@@ -383,7 +383,8 @@ bool KeyboardEvent::ShouldResistFingerprinting(CallerType aCallerType) {
   //   3. This event is from Numpad.
   //   4. This event is in the system group.
   //   5. The caller type is system.
-  if (!nsContentUtils::ShouldResistFingerprinting("Efficiency Check") ||
+  if (!nsContentUtils::ShouldResistFingerprinting("Efficiency Check",
+                                                  RFPTarget::KeyboardEvents) ||
       mInitializedByJS || aCallerType == CallerType::System ||
       mEvent->mFlags.mInSystemGroup ||
       mEvent->AsKeyboardEvent()->mLocation ==
@@ -393,7 +394,8 @@ bool KeyboardEvent::ShouldResistFingerprinting(CallerType aCallerType) {
 
   nsCOMPtr<Document> doc = GetDocument();
   // We've checked the pref above, so use true as fallback if doc is null.
-  return doc ? doc->ShouldResistFingerprinting() : true;
+  return doc ? doc->ShouldResistFingerprinting(RFPTarget::KeyboardEvents)
+             : true;
 }
 
 bool KeyboardEvent::GetSpoofedModifierStates(const Modifiers aModifierKey,
