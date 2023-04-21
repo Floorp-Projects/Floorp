@@ -309,7 +309,7 @@ nsresult FileReader::DoReadData(uint64_t aCount) {
         char tmpBuffer[4096];
         uint32_t minCount =
             XPCOM_MIN(aCount, static_cast<uint64_t>(sizeof(tmpBuffer)));
-        uint32_t read;
+        uint32_t read = 0;
 
         nsresult rv = mAsyncStream->Read(tmpBuffer, minCount, &read);
         if (rv == NS_BASE_STREAM_CLOSED) {
