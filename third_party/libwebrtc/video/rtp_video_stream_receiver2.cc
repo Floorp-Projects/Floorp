@@ -442,8 +442,12 @@ RtpVideoStreamReceiver2::ParseGenericDependenciesExtension(
       // or too new packet (before relevant video_structure_ arrived).
       // Drop such packet to be on the safe side.
       // TODO(bugs.webrtc.org/10342): Stash too new packet.
-      RTC_LOG(LS_WARNING) << "ssrc: " << rtp_packet.Ssrc()
-                          << " Failed to parse dependency descriptor.";
+      Timestamp now = clock_->CurrentTime();
+      if (now - last_logged_failed_to_parse_dd_ > TimeDelta::Seconds(1)) {
+        last_logged_failed_to_parse_dd_ = now;
+        RTC_LOG(LS_WARNING) << "ssrc: " << rtp_packet.Ssrc()
+                            << " Failed to parse dependency descriptor.";
+      }
       return kDropPacket;
     }
     if (dependency_descriptor.attached_structure != nullptr &&
