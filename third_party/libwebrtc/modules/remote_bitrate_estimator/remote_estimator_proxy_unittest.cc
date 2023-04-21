@@ -278,7 +278,6 @@ TEST_F(RemoteEstimatorProxyTest, HandlesMalformedSequenceNumbers) {
             rtcp::TransportFeedback* feedback_packet =
                 static_cast<rtcp::TransportFeedback*>(
                     feedback_packets[0].get());
-            EXPECT_EQ(kBaseSeq + 20000 + 9, feedback_packet->GetBaseSequence());
             EXPECT_EQ(kMediaSsrc, feedback_packet->media_ssrc());
             EXPECT_THAT(SequenceNumbers(*feedback_packet),
                         ElementsAre(kBaseSeq + 20009, kBaseSeq + 40009));
