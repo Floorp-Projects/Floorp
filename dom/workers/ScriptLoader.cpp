@@ -506,12 +506,12 @@ WorkerScriptLoader::WorkerScriptLoader(
 
   nsIGlobalObject* global = GetGlobal();
   mController = global->GetController();
-  // Set up the module loader, if it has not been yet.
-  // TODO: Implement this for classic scripts when dynamic imports are added.
 
   if (!StaticPrefs::dom_workers_modules_enabled()) {
     return;
   }
+
+  // Set up the module loader, if it has not been initialzied yet.
   if (!aWorkerPrivate->IsServiceWorker()) {
     InitModuleLoader();
   }
