@@ -411,26 +411,27 @@ VideoQualityTest::VideoQualityTest(
     encoder_factory_ = std::make_unique<InternalEncoderFactory>();
   }
 
-  payload_type_map_ = test::CallTest::payload_type_map_;
-  RTC_DCHECK(payload_type_map_.find(kPayloadTypeH264) ==
-             payload_type_map_.end());
-  RTC_DCHECK(payload_type_map_.find(kPayloadTypeVP8) ==
-             payload_type_map_.end());
-  RTC_DCHECK(payload_type_map_.find(kPayloadTypeVP9) ==
-             payload_type_map_.end());
-  RTC_DCHECK(payload_type_map_.find(kPayloadTypeGeneric) ==
-             payload_type_map_.end());
-  payload_type_map_[kPayloadTypeH264] = webrtc::MediaType::VIDEO;
-  payload_type_map_[kPayloadTypeVP8] = webrtc::MediaType::VIDEO;
-  payload_type_map_[kPayloadTypeVP9] = webrtc::MediaType::VIDEO;
-  payload_type_map_[kPayloadTypeGeneric] = webrtc::MediaType::VIDEO;
-
   fec_controller_factory_ =
       std::move(injection_components_->fec_controller_factory);
   network_state_predictor_factory_ =
       std::move(injection_components_->network_state_predictor_factory);
   network_controller_factory_ =
       std::move(injection_components_->network_controller_factory);
+
+  // Register header extensions that are used by transport to identify
+  // extensions when parsing incomig packets.
+  RegisterRtpExtension(RtpExtension(RtpExtension::kTransportSequenceNumberUri,
+                                    kTransportSequenceNumberExtensionId));
+  RegisterRtpExtension(
+      RtpExtension(RtpExtension::kAbsSendTimeUri, kAbsSendTimeExtensionId));
+  RegisterRtpExtension(RtpExtension(RtpExtension::kGenericFrameDescriptorUri00,
+                                    kGenericFrameDescriptorExtensionId00));
+  RegisterRtpExtension(RtpExtension(RtpExtension::kDependencyDescriptorUri,
+                                    kRtpExtensionDependencyDescriptor));
+  RegisterRtpExtension(RtpExtension(RtpExtension::kVideoContentTypeUri,
+                                    kVideoContentTypeExtensionId));
+  RegisterRtpExtension(
+      RtpExtension(RtpExtension::kVideoTimingUri, kVideoTimingExtensionId));
 }
 
 VideoQualityTest::InjectionComponents::InjectionComponents() = default;
@@ -1185,7 +1186,8 @@ VideoQualityTest::CreateSendTransport() {
       params_.video[0].selected_tl, params_.ss[0].selected_sl,
       payload_type_map_, kVideoSendSsrcs[0],
       static_cast<uint32_t>(kVideoSendSsrcs[0] + params_.ss[0].streams.size() -
-                            1));
+                            1),
+      GetRegisteredExtensions(), GetRegisteredExtensions());
 }
 
 std::unique_ptr<test::DirectTransport>
@@ -1199,7 +1201,8 @@ VideoQualityTest::CreateReceiveTransport() {
   return std::make_unique<test::DirectTransport>(
       task_queue(),
       std::make_unique<FakeNetworkPipe>(clock_, std::move(network_behavior)),
-      receiver_call_.get(), payload_type_map_);
+      receiver_call_.get(), payload_type_map_, GetRegisteredExtensions(),
+      GetRegisteredExtensions());
 }
 
 void VideoQualityTest::RunWithAnalyzer(const Params& params) {

@@ -32,8 +32,6 @@ class AudioEndToEndTest : public test::EndToEndTest {
     return receive_stream_;
   }
 
-  virtual BuiltInNetworkBehaviorConfig GetNetworkPipeConfig() const;
-
   size_t GetNumVideoStreams() const override;
   size_t GetNumAudioStreams() const override;
   size_t GetNumFlexfecStreams() const override;
@@ -44,12 +42,6 @@ class AudioEndToEndTest : public test::EndToEndTest {
   void OnFakeAudioDevicesCreated(
       TestAudioDeviceModule* send_audio_device,
       TestAudioDeviceModule* recv_audio_device) override;
-
-  std::unique_ptr<test::PacketTransport> CreateSendTransport(
-      TaskQueueBase* task_queue,
-      Call* sender_call) override;
-  std::unique_ptr<test::PacketTransport> CreateReceiveTransport(
-      TaskQueueBase* task_queue) override;
 
   void ModifyAudioConfigs(AudioSendStream::Config* send_config,
                           std::vector<AudioReceiveStreamInterface::Config>*

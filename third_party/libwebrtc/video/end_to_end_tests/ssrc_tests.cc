@@ -12,8 +12,10 @@
 
 #include "api/test/simulated_network.h"
 #include "call/fake_network_pipe.h"
+#include "call/packet_receiver.h"
 #include "call/simulated_network.h"
 #include "modules/rtp_rtcp/source/rtp_packet.h"
+#include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "modules/rtp_rtcp/source/rtp_util.h"
 #include "rtc_base/task_queue_for_test.h"
 #include "test/call_test.h"
@@ -22,6 +24,12 @@
 
 namespace webrtc {
 class SsrcEndToEndTest : public test::CallTest {
+ public:
+  SsrcEndToEndTest() {
+    RegisterRtpExtension(
+        RtpExtension(RtpExtension::kTransportSequenceNumberUri, 1));
+  }
+
  protected:
   void TestSendsSetSsrcs(size_t num_ssrcs, bool send_single_ssrc_first);
 };
@@ -49,31 +57,34 @@ TEST_F(SsrcEndToEndTest, ReceiverUsesLocalSsrc) {
   RunBaseTest(&test);
 }
 
-TEST_F(SsrcEndToEndTest, UnknownRtpPacketGivesUnknownSsrcReturnCode) {
+TEST_F(SsrcEndToEndTest, UnknownRtpPacketTriggersUndemuxablePacketHandler) {
   class PacketInputObserver : public PacketReceiver {
    public:
     explicit PacketInputObserver(PacketReceiver* receiver)
         : receiver_(receiver) {}
 
-    bool Wait() { return delivered_packet_.Wait(kDefaultTimeout); }
-
-   private:
-    DeliveryStatus DeliverPacket(MediaType media_type,
-                                 rtc::CopyOnWriteBuffer packet,
-                                 int64_t packet_time_us) override {
-      if (IsRtcpPacket(packet)) {
-        return receiver_->DeliverPacket(media_type, std::move(packet),
-                                        packet_time_us);
-      }
-      DeliveryStatus delivery_status = receiver_->DeliverPacket(
-          media_type, std::move(packet), packet_time_us);
-      EXPECT_EQ(DELIVERY_UNKNOWN_SSRC, delivery_status);
-      delivered_packet_.Set();
-      return delivery_status;
+    bool Wait() {
+      return undemuxable_packet_handler_triggered_.Wait(kDefaultTimeout);
     }
 
+   private:
+    void DeliverRtpPacket(
+        MediaType media_type,
+        RtpPacketReceived packet,
+        OnUndemuxablePacketHandler undemuxable_packet_handler) override {
+      PacketReceiver::OnUndemuxablePacketHandler handler =
+          [this](const RtpPacketReceived& packet) {
+            undemuxable_packet_handler_triggered_.Set();
+            // No need to re-attempt deliver the packet.
+            return false;
+          };
+      receiver_->DeliverRtpPacket(media_type, std::move(packet),
+                                  std::move(handler));
+    }
+    void DeliverRtcpPacket(rtc::CopyOnWriteBuffer packet) override {}
+
     PacketReceiver* receiver_;
-    rtc::Event delivered_packet_;
+    rtc::Event undemuxable_packet_handler_triggered_;
   };
 
   std::unique_ptr<test::DirectTransport> send_transport;
@@ -90,7 +101,8 @@ TEST_F(SsrcEndToEndTest, UnknownRtpPacketGivesUnknownSsrcReturnCode) {
             std::make_unique<FakeNetworkPipe>(
                 Clock::GetRealTimeClock(), std::make_unique<SimulatedNetwork>(
                                                BuiltInNetworkBehaviorConfig())),
-            sender_call_.get(), payload_type_map_);
+            sender_call_.get(), payload_type_map_, GetRegisteredExtensions(),
+            GetRegisteredExtensions());
         receive_transport = std::make_unique<test::DirectTransport>(
             task_queue(),
             std::make_unique<FakeNetworkPipe>(

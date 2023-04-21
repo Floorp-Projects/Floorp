@@ -32,7 +32,7 @@ class NoLossTest : public AudioEndToEndTest {
 
   NoLossTest() = default;
 
-  BuiltInNetworkBehaviorConfig GetNetworkPipeConfig() const override {
+  BuiltInNetworkBehaviorConfig GetSendTransportConfig() const override {
     BuiltInNetworkBehaviorConfig pipe_config;
     pipe_config.queue_delay_ms = kRttMs / 2;
     return pipe_config;

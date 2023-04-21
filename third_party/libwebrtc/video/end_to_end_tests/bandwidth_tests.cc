@@ -196,24 +196,11 @@ TEST_F(BandwidthEndToEndTest, RembWithSendSideBwe) {
           clock_(Clock::GetRealTimeClock()),
           sender_ssrc_(0),
           remb_bitrate_bps_(1000000),
-          receive_transport_(nullptr),
           state_(kWaitForFirstRampUp),
           retransmission_rate_limiter_(clock_, 1000),
           task_queue_(task_queue) {}
 
     void OnStreamsStopped() override { rtp_rtcp_ = nullptr; }
-
-    std::unique_ptr<test::PacketTransport> CreateReceiveTransport(
-        TaskQueueBase* task_queue) override {
-      auto receive_transport = std::make_unique<test::PacketTransport>(
-          task_queue, nullptr, this, test::PacketTransport::kReceiver,
-          payload_type_map_,
-          std::make_unique<FakeNetworkPipe>(
-              Clock::GetRealTimeClock(), std::make_unique<SimulatedNetwork>(
-                                             BuiltInNetworkBehaviorConfig())));
-      receive_transport_ = receive_transport.get();
-      return receive_transport;
-    }
 
     void ModifySenderBitrateConfig(
         BitrateConstraints* bitrate_config) override {
@@ -231,21 +218,31 @@ TEST_F(BandwidthEndToEndTest, RembWithSendSideBwe) {
       encoder_config->max_bitrate_bps = 2000000;
 
       ASSERT_EQ(1u, receive_configs->size());
-      RtpRtcpInterface::Configuration config;
-      config.receiver_only = true;
-      config.clock = clock_;
-      config.outgoing_transport = receive_transport_;
-      config.retransmission_rate_limiter = &retransmission_rate_limiter_;
-      config.local_media_ssrc = (*receive_configs)[0].rtp.local_ssrc;
-      rtp_rtcp_ = ModuleRtpRtcpImpl2::Create(config);
-      rtp_rtcp_->SetRemoteSSRC((*receive_configs)[0].rtp.remote_ssrc);
-      rtp_rtcp_->SetRTCPStatus(RtcpMode::kReducedSize);
+      remb_sender_local_ssrc_ = (*receive_configs)[0].rtp.local_ssrc;
+      remb_sender_remote_ssrc_ = (*receive_configs)[0].rtp.remote_ssrc;
     }
 
     void OnCallsCreated(Call* sender_call, Call* receiver_call) override {
       RTC_DCHECK(sender_call);
       sender_call_ = sender_call;
       task_queue_->PostTask([this]() { PollStats(); });
+    }
+
+    void OnTransportCreated(
+        test::PacketTransport* /*to_receiver*/,
+        SimulatedNetworkInterface* /*sender_network*/,
+        test::PacketTransport* to_sender,
+        SimulatedNetworkInterface* /*receiver_network*/) override {
+      RtpRtcpInterface::Configuration config;
+      config.receiver_only = true;
+      config.clock = clock_;
+      config.outgoing_transport = to_sender;
+      config.retransmission_rate_limiter = &retransmission_rate_limiter_;
+      config.local_media_ssrc = remb_sender_local_ssrc_;
+
+      rtp_rtcp_ = ModuleRtpRtcpImpl2::Create(config);
+      rtp_rtcp_->SetRemoteSSRC(remb_sender_remote_ssrc_);
+      rtp_rtcp_->SetRTCPStatus(RtcpMode::kReducedSize);
     }
 
     void PollStats() {
@@ -296,9 +293,10 @@ TEST_F(BandwidthEndToEndTest, RembWithSendSideBwe) {
     Call* sender_call_;
     Clock* const clock_;
     uint32_t sender_ssrc_;
+    uint32_t remb_sender_local_ssrc_ = 0;
+    uint32_t remb_sender_remote_ssrc_ = 0;
     int remb_bitrate_bps_;
     std::unique_ptr<ModuleRtpRtcpImpl2> rtp_rtcp_;
-    test::PacketTransport* receive_transport_;
     TestState state_;
     RateLimiter retransmission_rate_limiter_;
     TaskQueueBase* const task_queue_;
