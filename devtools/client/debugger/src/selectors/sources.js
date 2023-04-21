@@ -170,7 +170,7 @@ export function getFirstSourceActorForGeneratedSource(
  *         List of source actors
  */
 export function getSourceActorsForSource(state, id) {
-  return state.sources.actors[id] || [];
+  return state.sources.mutableSourceActors.get(id) || [];
 }
 
 export function isSourceWithMap(state, id) {
@@ -314,11 +314,12 @@ export function getSourcesToRemoveForThread(state, threadActorID) {
   const sourcesToRemove = [];
   const actorsToRemove = [];
 
-  const { actors } = state.sources;
-  for (const sourceId in actors) {
+  for (const [
+    sourceId,
+    actorsForSource,
+  ] of state.sources.mutableSourceActors.entries()) {
     let removedActorsCount = 0;
     // Find all actors for the current source which belongs to the given thread actor
-    const actorsForSource = actors[sourceId];
     for (const actor of actorsForSource) {
       if (actor.thread == threadActorID) {
         actorsToRemove.push(actor);
