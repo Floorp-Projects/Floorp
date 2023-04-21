@@ -12,50 +12,8 @@ import { prefs } from "../utils/prefs";
 import { createPendingSelectedLocation } from "../utils/location";
 
 export function initialSourcesState(state) {
+  /* eslint sort-keys: "error" */
   return {
-    /**
-     * All currently available sources.
-     *
-     * See create.js: `createSourceObject` method for the description of stored objects.
-     */
-    mutableSources: new Map(),
-
-    /**
-     * List of override objects whose sources texts have been locally overridden.
-     *
-     * Object { sourceUrl, path }
-     */
-    mutableOverrideSources: state?.mutableOverrideSources || new Map(),
-
-    /**
-     * All sources associated with a given URL. When using source maps, multiple
-     * sources can have the same URL.
-     *
-     * Map(url => array<source>)
-     */
-    mutableSourcesPerUrl: new Map(),
-
-    /**
-     * Map of the source id's to one or more related original source id's
-     * Only generated sources which have related original sources will be maintained here.
-     *
-     * Map(source id => array<Original Source ID>)
-     */
-    mutableOriginalSources: new Map(),
-
-    /**
-     * Mapping of source id's to one or more source-actor's.
-     * Dictionary whose keys are source id's and values are arrays
-     * made of all the related source-actor's.
-     * Note: The source mapped here are only generated sources.
-     *
-     * "source" are the objects stored in this reducer, in the `sources` attribute.
-     * "source-actor" are the objects stored in the "source-actors.js" reducer, in its `sourceActors` attribute.
-     *
-     * Map(source id => array<Source Actor object>)
-     */
-    mutableSourceActors: new Map(),
-
     /**
      * List of all breakpoint positions for all sources (generated and original).
      * Map of source id (string) to dictionary object whose keys are line numbers
@@ -77,6 +35,57 @@ export function initialSourcesState(state) {
     mutableOriginalBreakableLines: new Map(),
 
     /**
+     * Map of the source id's to one or more related original source id's
+     * Only generated sources which have related original sources will be maintained here.
+     *
+     * Map(source id => array<Original Source ID>)
+     */
+    mutableOriginalSources: new Map(),
+
+    /**
+     * List of override objects whose sources texts have been locally overridden.
+     *
+     * Object { sourceUrl, path }
+     */
+    mutableOverrideSources: state?.mutableOverrideSources || new Map(),
+
+    /**
+     * Mapping of source id's to one or more source-actor's.
+     * Dictionary whose keys are source id's and values are arrays
+     * made of all the related source-actor's.
+     * Note: The source mapped here are only generated sources.
+     *
+     * "source" are the objects stored in this reducer, in the `sources` attribute.
+     * "source-actor" are the objects stored in the "source-actors.js" reducer, in its `sourceActors` attribute.
+     *
+     * Map(source id => array<Source Actor object>)
+     */
+    mutableSourceActors: new Map(),
+
+    /**
+     * All currently available sources.
+     *
+     * See create.js: `createSourceObject` method for the description of stored objects.
+     */
+    mutableSources: new Map(),
+
+    /**
+     * All sources associated with a given URL. When using source maps, multiple
+     * sources can have the same URL.
+     *
+     * Map(url => array<source>)
+     */
+    mutableSourcesPerUrl: new Map(),
+
+    /**
+     * When we want to select a source that isn't available yet, use this.
+     * The location object should have a url attribute instead of a sourceId.
+     *
+     * See `createPendingSelectedLocation` for the definition of this object.
+     */
+    pendingSelectedLocation: prefs.pendingSelectedLocation,
+
+    /**
      * The actual currently selected location.
      * Only set if the related source is already registered in the sources reducer.
      * Otherwise, pendingSelectedLocation should be used. Typically for sources
@@ -87,15 +96,8 @@ export function initialSourcesState(state) {
      * See `createLocation` for the definition of this object.
      */
     selectedLocation: undefined,
-
-    /**
-     * When we want to select a source that isn't available yet, use this.
-     * The location object should have a url attribute instead of a sourceId.
-     *
-     * See `createPendingSelectedLocation` for the definition of this object.
-     */
-    pendingSelectedLocation: prefs.pendingSelectedLocation,
   };
+  /* eslint-disable sort-keys */
 }
 
 function update(state = initialSourcesState(), action) {
