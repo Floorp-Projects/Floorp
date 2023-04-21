@@ -2180,7 +2180,6 @@ if (rtc_include_tests) {
         ":strong_alias",
         ":timeutils",
         "../modules:module_api_public",
-        "../net/dcsctp/common:sequence_numbers",
         "../test:test_main",
         "../test:test_support",
       ]
