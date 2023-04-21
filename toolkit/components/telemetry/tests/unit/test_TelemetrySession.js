@@ -1629,7 +1629,7 @@ add_task(async function test_invalidSessionData() {
   // Write test data to the session data file. This should fail to parse.
   const dataFilePath = OS.Path.join(DATAREPORTING_PATH, "session-state.json");
   const unparseableData = "{asdf:@äü";
-  OS.File.writeAtomic(dataFilePath, unparseableData, {
+  await OS.File.writeAtomic(dataFilePath, unparseableData, {
     encoding: "utf-8",
     tmpPath: dataFilePath + ".tmp",
   });
