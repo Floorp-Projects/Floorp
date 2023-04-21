@@ -66,7 +66,6 @@
 #include "nsIFormControl.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "nsFocusManager.h"
-#include "nsAttrValueOrString.h"
 
 #include "mozilla/InternalMutationEvent.h"
 #include "nsDOMStringMap.h"
@@ -620,7 +619,7 @@ already_AddRefed<nsIURI> nsGenericHTMLElement::GetHrefURIForAnchors() const {
 }
 
 void nsGenericHTMLElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                         const nsAttrValueOrString* aValue,
+                                         const nsAttrValue* aValue,
                                          bool aNotify) {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::accesskey) {
@@ -632,7 +631,7 @@ void nsGenericHTMLElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
     } else if (aName == nsGkAtoms::name) {
       // Have to do this before clearing flag. See RemoveFromNameTable
       RemoveFromNameTable();
-      if (!aValue || aValue->IsEmpty()) {
+      if (!aValue || aValue->IsEmptyString()) {
         ClearHasName();
       }
     } else if (aName == nsGkAtoms::contenteditable) {
@@ -1835,7 +1834,7 @@ void nsGenericHTMLFormElement::UnbindFromTree(bool aNullParent) {
 
 void nsGenericHTMLFormElement::BeforeSetAttr(int32_t aNameSpaceID,
                                              nsAtom* aName,
-                                             const nsAttrValueOrString* aValue,
+                                             const nsAttrValue* aValue,
                                              bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None && IsFormAssociatedElement()) {
     nsAutoString tmp;

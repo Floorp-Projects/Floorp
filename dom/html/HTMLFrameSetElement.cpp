@@ -10,7 +10,6 @@
 #include "mozilla/dom/EventHandlerBinding.h"
 #include "nsGlobalWindow.h"
 #include "mozilla/UniquePtrExtensions.h"
-#include "nsAttrValueOrString.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(FrameSet)
 
@@ -26,7 +25,7 @@ JSObject* HTMLFrameSetElement::WrapNode(JSContext* aCx,
 NS_IMPL_ELEMENT_CLONE(HTMLFrameSetElement)
 
 void HTMLFrameSetElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                        const nsAttrValueOrString* aValue,
+                                        const nsAttrValue* aValue,
                                         bool aNotify) {
   /* The main goal here is to see whether the _number_ of rows or
    * columns has changed. If it has, we need to reframe; otherwise
@@ -45,8 +44,7 @@ void HTMLFrameSetElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
     if (aName == nsGkAtoms::rows) {
       if (aValue) {
         int32_t oldRows = mNumRows;
-        ParseRowCol(aValue->String(), mNumRows, &mRowSpecs);
-
+        ParseRowCol(*aValue, mNumRows, &mRowSpecs);
         if (mNumRows != oldRows) {
           mCurrentRowColHint = nsChangeHint_ReconstructFrame;
         }
@@ -54,8 +52,7 @@ void HTMLFrameSetElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
     } else if (aName == nsGkAtoms::cols) {
       if (aValue) {
         int32_t oldCols = mNumCols;
-        ParseRowCol(aValue->String(), mNumCols, &mColSpecs);
-
+        ParseRowCol(*aValue, mNumCols, &mColSpecs);
         if (mNumCols != oldCols) {
           mCurrentRowColHint = nsChangeHint_ReconstructFrame;
         }
@@ -75,10 +72,8 @@ nsresult HTMLFrameSetElement::GetRowSpec(int32_t* aNumValues,
   *aSpecs = nullptr;
 
   if (!mRowSpecs) {
-    const nsAttrValue* value = GetParsedAttr(nsGkAtoms::rows);
-    if (value && value->Type() == nsAttrValue::eString) {
-      nsresult rv = ParseRowCol(value->GetStringValue(), mNumRows, &mRowSpecs);
-      NS_ENSURE_SUCCESS(rv, rv);
+    if (const nsAttrValue* value = GetParsedAttr(nsGkAtoms::rows)) {
+      MOZ_TRY(ParseRowCol(*value, mNumRows, &mRowSpecs));
     }
 
     if (!mRowSpecs) {  // we may not have had an attr or had an empty attr
@@ -102,9 +97,8 @@ nsresult HTMLFrameSetElement::GetColSpec(int32_t* aNumValues,
   *aSpecs = nullptr;
 
   if (!mColSpecs) {
-    const nsAttrValue* value = GetParsedAttr(nsGkAtoms::cols);
-    if (value && value->Type() == nsAttrValue::eString) {
-      nsresult rv = ParseRowCol(value->GetStringValue(), mNumCols, &mColSpecs);
+    if (const nsAttrValue* value = GetParsedAttr(nsGkAtoms::rows)) {
+      nsresult rv = ParseRowCol(*value, mNumCols, &mColSpecs);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -155,20 +149,22 @@ nsChangeHint HTMLFrameSetElement::GetAttributeChangeHint(
 /**
  * Translate a "rows" or "cols" spec into an array of nsFramesetSpecs
  */
-nsresult HTMLFrameSetElement::ParseRowCol(const nsAString& aValue,
+nsresult HTMLFrameSetElement::ParseRowCol(const nsAttrValue& aValue,
                                           int32_t& aNumSpecs,
                                           UniquePtr<nsFramesetSpec[]>* aSpecs) {
-  if (aValue.IsEmpty()) {
+  if (aValue.IsEmptyString()) {
     aNumSpecs = 0;
     *aSpecs = nullptr;
     return NS_OK;
   }
 
+  MOZ_ASSERT(aValue.Type() == nsAttrValue::eString);
+
   static const char16_t sAster('*');
   static const char16_t sPercent('%');
   static const char16_t sComma(',');
 
-  nsAutoString spec(aValue);
+  nsAutoString spec(aValue.GetStringValue());
   // remove whitespace (Bug 33699) and quotation marks (bug 224598)
   // also remove leading/trailing commas (bug 31482)
   spec.StripChars(u" \n\r\t\"\'");

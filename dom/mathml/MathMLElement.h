@@ -35,16 +35,15 @@ class MathMLElement final : public MathMLElementBase,
   NS_IMPL_FROMNODE(MathMLElement, kNameSpaceID_MathML)
 
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  virtual void UnbindFromTree(bool aNullParent = true) override;
+  void UnbindFromTree(bool aNullParent = true) override;
 
-  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                              const nsAString& aValue,
-                              nsIPrincipal* aMaybeScriptedPrincipal,
-                              nsAttrValue& aResult) override;
+  bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                      const nsAString& aValue,
+                      nsIPrincipal* aMaybeScriptedPrincipal,
+                      nsAttrValue& aResult) override;
 
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction()
-      const override;
+  nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
 
   enum {
     PARSE_ALLOW_NEGATIVE = 0x02,
@@ -95,16 +94,13 @@ class MathMLElement final : public MathMLElementBase,
  protected:
   virtual ~MathMLElement() = default;
 
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
 
   void BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                     const nsAttrValueOrString* aValue, bool aNotify) final;
-  virtual void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                            const nsAttrValue* aValue,
-                            const nsAttrValue* aOldValue,
-                            nsIPrincipal* aSubjectPrincipal,
-                            bool aNotify) override;
+                     const nsAttrValue* aValue, bool aNotify) final;
+  void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                    const nsAttrValue* aValue, const nsAttrValue* aOldValue,
+                    nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
 
  private:
   bool mIncrementScriptLevel;

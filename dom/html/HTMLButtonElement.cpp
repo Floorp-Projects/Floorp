@@ -336,8 +336,7 @@ void HTMLButtonElement::DoneCreatingElement() {
 }
 
 void HTMLButtonElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                      const nsAttrValueOrString* aValue,
-                                      bool aNotify) {
+                                      const nsAttrValue* aValue, bool aNotify) {
   if (aNotify && aName == nsGkAtoms::disabled &&
       aNameSpaceID == kNameSpaceID_None) {
     mDisabledChanged = true;

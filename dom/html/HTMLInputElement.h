@@ -940,7 +940,7 @@ class HTMLInputElement final : public TextControlElement,
    * Called when an attribute is about to be changed
    */
   void BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                     const nsAttrValueOrString* aValue, bool aNotify) override;
+                     const nsAttrValue* aValue, bool aNotify) override;
   /**
    * Called when an attribute has just been changed
    */

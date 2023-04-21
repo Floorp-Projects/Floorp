@@ -64,7 +64,6 @@
 #include "nsRangeFrame.h"
 #include "nsError.h"
 #include "nsIEditor.h"
-#include "nsAttrValueOrString.h"
 #include "nsIPromptCollection.h"
 
 #include "mozilla/PresState.h"
@@ -1175,8 +1174,7 @@ nsresult HTMLInputElement::Clone(dom::NodeInfo* aNodeInfo,
 }
 
 void HTMLInputElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                     const nsAttrValueOrString* aValue,
-                                     bool aNotify) {
+                                     const nsAttrValue* aValue, bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aNotify && aName == nsGkAtoms::disabled) {
       mDisabledChanged = true;

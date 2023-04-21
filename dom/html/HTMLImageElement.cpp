@@ -296,16 +296,13 @@ nsMapRuleToAttributesFunc HTMLImageElement::GetAttributeMappingFunction()
 }
 
 void HTMLImageElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                     const nsAttrValueOrString* aValue,
-                                     bool aNotify) {
+                                     const nsAttrValue* aValue, bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None && mForm &&
       (aName == nsGkAtoms::name || aName == nsGkAtoms::id)) {
     // remove the image from the hashtable as needed
-    nsAutoString tmp;
-    GetAttr(kNameSpaceID_None, aName, tmp);
-
-    if (!tmp.IsEmpty()) {
-      mForm->RemoveImageElementFromTable(this, tmp);
+    if (auto* old = GetParsedAttr(aName); old && !old->IsEmptyString()) {
+      mForm->RemoveImageElementFromTable(
+          this, nsDependentAtomString(old->GetAtomValue()));
     }
   }
 
@@ -812,8 +809,8 @@ void HTMLImageElement::ClearForm(bool aRemoveFromForm) {
 
   if (aRemoveFromForm) {
     nsAutoString nameVal, idVal;
-    GetAttr(kNameSpaceID_None, nsGkAtoms::name, nameVal);
-    GetAttr(kNameSpaceID_None, nsGkAtoms::id, idVal);
+    GetAttr(nsGkAtoms::name, nameVal);
+    GetAttr(nsGkAtoms::id, idVal);
 
     mForm->RemoveImageElement(this);
 

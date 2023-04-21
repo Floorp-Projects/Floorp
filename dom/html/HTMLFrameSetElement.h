@@ -68,7 +68,7 @@ class HTMLFrameSetElement final : public nsGenericHTMLElement {
     SetHTMLAttr(nsGkAtoms::rows, aRows, aError);
   }
 
-  virtual bool IsEventAttributeNameInternal(nsAtom* aName) override;
+  bool IsEventAttributeNameInternal(nsAtom* aName) override;
 
   // Event listener stuff; we need to declare only the ones we need to
   // forward to window that don't come from nsIDOMHTMLFrameSetElement.
@@ -104,27 +104,25 @@ class HTMLFrameSetElement final : public nsGenericHTMLElement {
    */
   nsresult GetColSpec(int32_t* aNumValues, const nsFramesetSpec** aSpecs);
 
-  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                              const nsAString& aValue,
-                              nsIPrincipal* aMaybeScriptedPrincipal,
-                              nsAttrValue& aResult) override;
-  virtual nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
-                                              int32_t aModType) const override;
+  bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                      const nsAString& aValue,
+                      nsIPrincipal* aMaybeScriptedPrincipal,
+                      nsAttrValue& aResult) override;
+  nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
+                                      int32_t aModType) const override;
 
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
  protected:
   virtual ~HTMLFrameSetElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual void BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                             const nsAttrValueOrString* aValue,
-                             bool aNotify) override;
+  void BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                     const nsAttrValue* aValue, bool aNotify) override;
 
  private:
-  nsresult ParseRowCol(const nsAString& aValue, int32_t& aNumSpecs,
+  nsresult ParseRowCol(const nsAttrValue& aValue, int32_t& aNumSpecs,
                        UniquePtr<nsFramesetSpec[]>* aSpecs);
 
   /**

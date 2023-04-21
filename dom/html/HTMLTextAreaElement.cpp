@@ -823,7 +823,7 @@ void HTMLTextAreaElement::UnbindFromTree(bool aNullParent) {
 }
 
 void HTMLTextAreaElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                        const nsAttrValueOrString* aValue,
+                                        const nsAttrValue* aValue,
                                         bool aNotify) {
   if (aNotify && aName == nsGkAtoms::disabled &&
       aNameSpaceID == kNameSpaceID_None) {

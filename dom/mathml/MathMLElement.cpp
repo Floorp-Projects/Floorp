@@ -698,8 +698,7 @@ bool MathMLElement::IsEventAttributeNameInternal(nsAtom* aName) {
 }
 
 void MathMLElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                  const nsAttrValueOrString* aValue,
-                                  bool aNotify) {
+                                  const nsAttrValue* aValue, bool aNotify) {
   if (aNamespaceID == kNameSpaceID_None) {
     if (!aValue && IsEventAttributeName(aName)) {
       if (EventListenerManager* manager = GetExistingListenerManager()) {

@@ -1928,7 +1928,7 @@ class Element : public FragmentOrElement {
    * @param aNotify Whether we plan to notify document observers.
    */
   virtual void BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                             const nsAttrValueOrString* aValue, bool aNotify);
+                             const nsAttrValue* aValue, bool aNotify);
 
   /**
    * Hook that is called by Element::SetAttr to allow subclasses to
@@ -1974,7 +1974,7 @@ class Element : public FragmentOrElement {
    * @param aValue the new id value. Will be null if the id is being unset.
    */
   void PreIdMaybeChange(int32_t aNamespaceID, nsAtom* aName,
-                        const nsAttrValueOrString* aValue);
+                        const nsAttrValue* aValue);
 
   /**
    * This function shall be called just after the id attribute changes. It will
