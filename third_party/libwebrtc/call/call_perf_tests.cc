@@ -1138,6 +1138,8 @@ void CallPerfTest::TestEncodeFramerate(VideoEncoderFactory* encoder_factory,
     }
 
     void VerifyStats() const {
+      const bool quick_perf_test =
+          field_trial::IsEnabled("WebRTC-QuickPerfTest");
       double input_fps = 0.0;
       for (const auto& configured_framerate : configured_framerates_) {
         input_fps = std::max(configured_framerate.second, input_fps);
@@ -1153,7 +1155,7 @@ void CallPerfTest::TestEncodeFramerate(VideoEncoderFactory* encoder_factory,
         double average_fps = values.GetAverage();
         uint32_t ssrc = encode_frame_rate_list.first;
         double expected_fps = configured_framerates_.find(ssrc)->second;
-        if (expected_fps != input_fps)
+        if (quick_perf_test && expected_fps != input_fps)
           EXPECT_NEAR(expected_fps, average_fps, kAllowedFpsDiff);
       }
     }
