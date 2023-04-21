@@ -527,7 +527,7 @@ ServoStyleSet::ResolveInheritingAnonymousBoxStyle(PseudoStyleType aType,
 
   if (!style) {
     style = Servo_ComputedValues_GetForAnonymousBox(aParentStyle, aType,
-                                                    mRawSet.get(), nullptr)
+                                                    mRawSet.get())
                 .Consume();
     MOZ_ASSERT(style);
     if (aParentStyle) {
@@ -539,29 +539,17 @@ ServoStyleSet::ResolveInheritingAnonymousBoxStyle(PseudoStyleType aType,
 }
 
 already_AddRefed<ComputedStyle>
-ServoStyleSet::ResolveNonInheritingAnonymousBoxStyle(PseudoStyleType aType,
-                                                     const nsAtom* aPageName) {
+ServoStyleSet::ResolveNonInheritingAnonymousBoxStyle(PseudoStyleType aType) {
+  MOZ_ASSERT(aType != PseudoStyleType::pageContent,
+             "Use ResolvePageContentStyle for page content");
   MOZ_ASSERT(PseudoStyle::IsNonInheritingAnonBox(aType));
-  MOZ_ASSERT(!aPageName || aType == PseudoStyleType::pageContent,
-             "page name should only be specified for pageContent");
+
   nsCSSAnonBoxes::NonInheriting type =
       nsCSSAnonBoxes::NonInheritingTypeForPseudoType(aType);
-
-  // The empty atom is used to indicate no specified page name, and is not
-  // usable as a page-rule selector. Changing this to null is a slight
-  // optimization to avoid the Servo code from doing an unnecessary hashtable
-  // lookup, and still use the style cache in this case.
-  if (aPageName == nsGkAtoms::_empty) {
-    aPageName = nullptr;
-  }
-  // Only use the cache if we are not doing a lookup for a named page style.
-  RefPtr<ComputedStyle>* cache = nullptr;
-  if (!aPageName) {
-    cache = &mNonInheritingComputedStyles[type];
-    if (*cache) {
-      RefPtr<ComputedStyle> retval = *cache;
-      return retval.forget();
-    }
+  RefPtr<ComputedStyle>& cache = mNonInheritingComputedStyles[type];
+  if (cache) {
+    RefPtr<ComputedStyle> retval = cache;
+    return retval.forget();
   }
 
   UpdateStylistIfNeeded();
@@ -574,13 +562,40 @@ ServoStyleSet::ResolveNonInheritingAnonymousBoxStyle(PseudoStyleType aType,
              "viewport needs fixup to handle blockifying it");
 
   RefPtr<ComputedStyle> computedValues =
-      Servo_ComputedValues_GetForAnonymousBox(nullptr, aType, mRawSet.get(),
-                                              aPageName)
+      Servo_ComputedValues_GetForAnonymousBox(nullptr, aType, mRawSet.get())
           .Consume();
   MOZ_ASSERT(computedValues);
 
-  if (cache) {
-    *cache = computedValues;
+  cache = computedValues;
+  return computedValues.forget();
+}
+
+already_AddRefed<ComputedStyle> ServoStyleSet::ResolvePageContentStyle(
+    const nsAtom* aPageName) {
+  // The empty atom is used to indicate no specified page name, and is not
+  // usable as a page-rule selector. Changing this to null is a slight
+  // optimization to avoid the Servo code from doing an unnecessary hashtable
+  // lookup, and still use the style cache in this case.
+  if (aPageName == nsGkAtoms::_empty) {
+    aPageName = nullptr;
+  }
+  // Only use the cache if we are not doing a lookup for a named page style.
+  RefPtr<ComputedStyle>& cache =
+      mNonInheritingComputedStyles[nsCSSAnonBoxes::NonInheriting::pageContent];
+  if (!aPageName && cache) {
+    RefPtr<ComputedStyle> retval = cache;
+    return retval.forget();
+  }
+
+  UpdateStylistIfNeeded();
+
+  RefPtr<ComputedStyle> computedValues =
+      Servo_ComputedValues_GetForPageContent(mRawSet.get(), aPageName)
+          .Consume();
+  MOZ_ASSERT(computedValues);
+
+  if (!aPageName) {
+    cache = computedValues;
   }
   return computedValues.forget();
 }

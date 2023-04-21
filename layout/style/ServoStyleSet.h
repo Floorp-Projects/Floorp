@@ -248,17 +248,15 @@ class ServoStyleSet {
       PseudoStyleType, ComputedStyle* aParentStyle);
 
   // Get a ComputedStyle for an anonymous box. The pseudo type must be
-  // a non-inheriting anon box.
+  // a non-inheriting anon box, and must not be page-content.
+  // See ResolvePageContentStyle for resolving page-content style.
   already_AddRefed<ComputedStyle> ResolveNonInheritingAnonymousBoxStyle(
-      PseudoStyleType aType) {
-    return ResolveNonInheritingAnonymousBoxStyle(aType, nullptr);
-  }
+      PseudoStyleType aType);
 
+  // Get a ComputedStyle for a pageContent box with the specified page-name.
+  // A page name that is null or the empty atom gets the global page style.
   already_AddRefed<ComputedStyle> ResolvePageContentStyle(
-      const nsAtom* aPageName) {
-    return ResolveNonInheritingAnonymousBoxStyle(PseudoStyleType::pageContent,
-                                                 aPageName);
-  }
+      const nsAtom* aPageName);
 
   already_AddRefed<ComputedStyle> ResolveXULTreePseudoStyle(
       dom::Element* aParentElement, nsCSSAnonBoxPseudoStaticAtom* aPseudoTag,
@@ -643,9 +641,6 @@ class ServoStyleSet {
   EnumeratedArray<nsCSSAnonBoxes::NonInheriting,
                   nsCSSAnonBoxes::NonInheriting::_Count, RefPtr<ComputedStyle>>
       mNonInheritingComputedStyles;
-
-  already_AddRefed<ComputedStyle> ResolveNonInheritingAnonymousBoxStyle(
-      PseudoStyleType aType, const nsAtom* aPageName);
 
  public:
   void PutCachedAnonymousContentStyles(
