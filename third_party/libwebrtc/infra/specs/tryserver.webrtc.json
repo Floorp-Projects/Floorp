@@ -12798,7 +12798,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -12819,7 +12819,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -12840,7 +12840,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -12861,7 +12861,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -12885,7 +12885,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -12906,7 +12906,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 2
@@ -12928,7 +12928,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 6
@@ -12950,7 +12950,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 4
@@ -12972,7 +12972,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -12993,7 +12993,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13014,7 +13014,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13035,7 +13035,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 6
@@ -13057,7 +13057,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13078,7 +13078,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 4
@@ -13100,7 +13100,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13121,7 +13121,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13142,7 +13142,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13163,7 +13163,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 4
@@ -13185,7 +13185,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13206,7 +13206,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13235,7 +13235,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13256,7 +13256,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13277,7 +13277,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13298,7 +13298,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13322,7 +13322,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13343,7 +13343,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 2
@@ -13365,7 +13365,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 6
@@ -13387,7 +13387,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 4
@@ -13409,7 +13409,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13430,7 +13430,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13451,7 +13451,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13472,7 +13472,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 6
@@ -13494,7 +13494,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13515,7 +13515,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 4
@@ -13537,7 +13537,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13558,7 +13558,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13579,7 +13579,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13600,7 +13600,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 4
@@ -13622,7 +13622,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13643,7 +13643,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13668,7 +13668,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13689,7 +13689,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13710,7 +13710,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13731,7 +13731,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13755,7 +13755,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13776,7 +13776,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 2
@@ -13798,7 +13798,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 6
@@ -13820,7 +13820,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 4
@@ -13842,7 +13842,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13863,7 +13863,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13884,7 +13884,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13905,7 +13905,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 6
@@ -13927,7 +13927,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13948,7 +13948,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 4
@@ -13970,7 +13970,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -13991,7 +13991,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14012,7 +14012,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14033,7 +14033,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 4
@@ -14055,7 +14055,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14076,7 +14076,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14101,7 +14101,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14122,7 +14122,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14143,7 +14143,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14164,7 +14164,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14188,7 +14188,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14209,7 +14209,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 2
@@ -14231,7 +14231,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 6
@@ -14253,7 +14253,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 4
@@ -14275,7 +14275,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14296,7 +14296,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14317,7 +14317,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14338,7 +14338,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 6
@@ -14360,7 +14360,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14381,7 +14381,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 4
@@ -14403,7 +14403,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14424,7 +14424,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14445,7 +14445,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14466,7 +14466,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 4
@@ -14488,7 +14488,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14509,7 +14509,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14534,7 +14534,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14555,7 +14555,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14576,7 +14576,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14597,7 +14597,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14621,7 +14621,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14642,7 +14642,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 2
@@ -14664,7 +14664,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 6
@@ -14686,7 +14686,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 4
@@ -14708,7 +14708,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14729,7 +14729,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14750,7 +14750,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14771,7 +14771,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 6
@@ -14793,7 +14793,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14814,7 +14814,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 4
@@ -14836,7 +14836,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14857,7 +14857,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14878,7 +14878,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14899,7 +14899,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042",
+              "os": "Windows-10-19042|Windows-10-19045",
               "pool": "WebRTC-baremetal-try"
             }
           ]
@@ -14921,7 +14921,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 4
@@ -14943,7 +14943,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14964,7 +14964,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -14991,7 +14991,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ]
         },
@@ -15016,7 +15016,7 @@
           "dimension_sets": [
             {
               "cpu": "x86-64",
-              "os": "Windows-10-19042"
+              "os": "Windows-10-19042|Windows-10-19045"
             }
           ],
           "shards": 4
