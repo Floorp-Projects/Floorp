@@ -23,7 +23,6 @@ class ApmDataDumper;
 
 class FrameCombiner {
  public:
-  enum class LimiterType { kNoLimiter, kApmAgcLimiter, kApmAgc2Limiter };
   explicit FrameCombiner(bool use_limiter);
   ~FrameCombiner();
 
