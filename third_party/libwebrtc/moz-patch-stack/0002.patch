@@ -253,7 +253,7 @@ index e0ad9eb26e..8e1efc7262 100644
  RTPHeaderExtension::RTPHeaderExtension(const RTPHeaderExtension& other) =
      default;
 diff --git a/api/rtp_headers.h b/api/rtp_headers.h
-index a640eb7d38..41543be62f 100644
+index 743fd6d1b6..261c984d05 100644
 --- a/api/rtp_headers.h
 +++ b/api/rtp_headers.h
 @@ -89,6 +89,19 @@ inline bool operator!=(const AbsoluteCaptureTime& lhs,
@@ -286,7 +286,7 @@ index a640eb7d38..41543be62f 100644
 +  CsrcAudioLevelList csrcAudioLevels;
 +};
  
- struct RTPHeader {
+ struct RTC_EXPORT RTPHeader {
    RTPHeader();
 diff --git a/api/rtp_parameters.cc b/api/rtp_parameters.cc
 index c48b8da02c..c1d12e5d8d 100644
