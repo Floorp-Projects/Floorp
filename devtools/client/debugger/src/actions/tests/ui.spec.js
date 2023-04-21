@@ -53,6 +53,6 @@ describe("ui", () => {
     const range = { start: 3, end: 5, sourceId: "2" };
     dispatch(actions.highlightLineRange(range));
     dispatch(actions.clearHighlightLineRange());
-    expect(getHighlightedLineRange(getState())).toEqual(undefined);
+    expect(getHighlightedLineRange(getState())).toEqual(null);
   });
 });
