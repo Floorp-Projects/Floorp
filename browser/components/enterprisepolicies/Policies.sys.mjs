@@ -1731,7 +1731,6 @@ export var Policies = {
         "security.insecure_connection_text.enabled",
         "security.insecure_connection_text.pbmode.enabled",
         "security.mixed_content.block_active_content",
-        "security.osclientcerts.assume_rsa_pss_support",
         "security.osclientcerts.autoload",
         "security.OCSP.enabled",
         "security.OCSP.require",

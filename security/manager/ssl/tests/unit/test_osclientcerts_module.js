@@ -27,7 +27,10 @@ async function check_osclientcerts_module_loaded() {
     slot => slot.name
   );
   testModuleSlotNames.sort();
-  const expectedSlotNames = ["OS Client Cert Slot"];
+  const expectedSlotNames = [
+    "OS Client Cert Slot (Legacy)",
+    "OS Client Cert Slot (Modern)",
+  ];
   deepEqual(
     testModuleSlotNames,
     expectedSlotNames,
