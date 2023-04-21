@@ -276,6 +276,7 @@ async function waitForStateTelemetry(expectedStates) {
     return events;
   });
   events = events.filter(e => e[1] == "doh" && e[2] == "state");
+  info(events);
   is(events.length, expectedStates.length, "Found the expected state events.");
   for (let state of expectedStates) {
     let event = events.find(e => e[3] == state);
