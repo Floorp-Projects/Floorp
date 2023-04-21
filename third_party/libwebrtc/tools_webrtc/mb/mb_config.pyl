@@ -11,6 +11,9 @@
 # configurations source-side instead of in the buildbot scripts. That makes it
 # easy to try different configurations of GN args in tryjob patches.
 
+# TODO(b/245249582): clean up after completing reclient migration.
+# - replace use_goma=true with use_remoteexec=true.
+# - remove '*_reclient' configs.
 {
   # This is a map of buildbot builder group names -> buildbot builder names ->
   # config names (where each config name is a key in the 'configs' dict,
