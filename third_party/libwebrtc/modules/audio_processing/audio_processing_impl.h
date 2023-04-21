@@ -227,10 +227,12 @@ class AudioProcessingImpl : public AudioProcessing {
   static AudioProcessing::Config AdjustConfig(
       const AudioProcessing::Config& config,
       const absl::optional<GainController2ExperimentParams>& experiment_params);
-  static TransientSuppressor::VadMode GetTransientSuppressorVadMode(
+  // Returns true if the APM VAD sub-module should be used.
+  static bool UseApmVadSubModule(
+      const AudioProcessing::Config& config,
       const absl::optional<GainController2ExperimentParams>& experiment_params);
 
-  const TransientSuppressor::VadMode transient_suppressor_vad_mode_;
+  TransientSuppressor::VadMode transient_suppressor_vad_mode_;
 
   SwapQueue<RuntimeSetting> capture_runtime_settings_;
   SwapQueue<RuntimeSetting> render_runtime_settings_;
@@ -317,14 +319,15 @@ class AudioProcessingImpl : public AudioProcessing {
   void InitializeGainController1() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
   void InitializeTransientSuppressor()
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
-  // Initializes the `GainController2` sub-module. If the sub-module is enabled
-  // and `config_has_changed` is true, recreates the sub-module.
-  void InitializeGainController2(bool config_has_changed)
-      RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
+  // Initializes the `GainController2` sub-module. If the sub-module is enabled,
+  // recreates it.
+  void InitializeGainController2() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
   // Initializes the `VoiceActivityDetectorWrapper` sub-module. If the
-  // sub-module is enabled and `config_has_changed` is true, recreates the
-  // sub-module.
-  void InitializeVoiceActivityDetector(bool config_has_changed)
+  // sub-module is enabled, recreates it. Call `InitializeGainController2()`
+  // first.
+  // TODO(bugs.webrtc.org/13663): Remove if TS is removed otherwise remove call
+  // order requirement - i.e., decouple from `InitializeGainController2()`.
+  void InitializeVoiceActivityDetector()
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
   void InitializeNoiseSuppressor() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
   void InitializeCaptureLevelsAdjuster()

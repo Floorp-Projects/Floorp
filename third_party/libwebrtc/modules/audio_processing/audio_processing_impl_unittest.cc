@@ -1287,7 +1287,10 @@ TEST_P(Agc2FieldTrialParametrizedTest,
 
 TEST_P(Agc2FieldTrialParametrizedTest, ProcessSucceedsWithTs) {
   AudioProcessing::Config config = GetParam();
-  config.transient_suppression.enabled = true;
+  if (!config.transient_suppression.enabled) {
+    GTEST_SKIP() << "TS is disabled, skip.";
+  }
+
   webrtc::test::ScopedFieldTrials field_trials(
       "WebRTC-Audio-GainController2/Disabled/");
   auto apm = AudioProcessingBuilder().SetConfig(config).Create();
@@ -1340,7 +1343,10 @@ TEST_P(Agc2FieldTrialParametrizedTest, ProcessSucceedsWithoutTs) {
 TEST_P(Agc2FieldTrialParametrizedTest,
        ProcessSucceedsWhenSwitchToFullAgc2WithTs) {
   AudioProcessing::Config config = GetParam();
-  config.transient_suppression.enabled = true;
+  if (!config.transient_suppression.enabled) {
+    GTEST_SKIP() << "TS is disabled, skip.";
+  }
+
   webrtc::test::ScopedFieldTrials field_trials(
       "WebRTC-Audio-GainController2/Enabled,"
       "switch_to_agc2:true,"
@@ -1397,15 +1403,34 @@ INSTANTIATE_TEST_SUITE_P(
     AudioProcessingImplTest,
     Agc2FieldTrialParametrizedTest,
     ::testing::Values(
-        // Full AGC1.
+        // Full AGC1, TS disabled.
         AudioProcessing::Config{
+            .transient_suppression = {.enabled = false},
             .gain_controller1 =
                 {.enabled = true,
                  .analog_gain_controller = {.enabled = true,
                                             .enable_digital_adaptive = true}},
             .gain_controller2 = {.enabled = false}},
-        // Hybrid AGC.
+        // Full AGC1, TS enabled.
         AudioProcessing::Config{
+            .transient_suppression = {.enabled = true},
+            .gain_controller1 =
+                {.enabled = true,
+                 .analog_gain_controller = {.enabled = true,
+                                            .enable_digital_adaptive = true}},
+            .gain_controller2 = {.enabled = false}},
+        // Hybrid AGC, TS disabled.
+        AudioProcessing::Config{
+            .transient_suppression = {.enabled = false},
+            .gain_controller1 =
+                {.enabled = true,
+                 .analog_gain_controller = {.enabled = true,
+                                            .enable_digital_adaptive = false}},
+            .gain_controller2 = {.enabled = true,
+                                 .adaptive_digital = {.enabled = true}}},
+        // Hybrid AGC, TS enabled.
+        AudioProcessing::Config{
+            .transient_suppression = {.enabled = true},
             .gain_controller1 =
                 {.enabled = true,
                  .analog_gain_controller = {.enabled = true,
