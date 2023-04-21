@@ -281,6 +281,8 @@ function deserializeSharedReference(sharedRef, realm, options = {}) {
  * @param {object} options
  * @param {NodeCache} options.nodeCache
  *     The cache containing DOM node references.
+ * @param {Function} options.emitScriptMessage
+ *     The function to emit "script.message" event.
  *
  * @returns {object} Deserialized representation of the value.
  */
@@ -359,6 +361,13 @@ export function deserialize(realm, serializedValue, options = {}) {
           `Failed to deserialize value as BigInt: ${value}`
         );
       }
+
+    // Script channel
+    case "channel": {
+      const channel = message =>
+        options.emitScriptMessage(realm, value, message);
+      return realm.cloneIntoRealm(channel);
+    }
 
     // Non-primitive protocol values
     case "array":
