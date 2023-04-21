@@ -14,7 +14,6 @@
 #include "MediaEventSource.h"
 #include "modules/video_capture/video_capture_impl.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/StateWatching.h"
 #include "PerformanceRecorder.h"
 
 @interface VideoCaptureAdapter : NSObject <RTCVideoCapturerDelegate> {
@@ -55,19 +54,11 @@ class VideoCaptureAvFoundation : public VideoCaptureImpl {
   void SetTrackingId(uint32_t aTrackingIdProcId) override;
 
  private:
-  // Convert mNextFrameToProcess and pass it to callbacks.
-  void ProcessNextFrame();
-
   // Control thread checker.
   SequenceChecker mChecker;
-  const RefPtr<mozilla::AbstractThread> mCallbackThread;
   AVCaptureDevice* _Nonnull const mDevice RTC_GUARDED_BY(mChecker);
   VideoCaptureAdapter* _Nonnull const mAdapter RTC_GUARDED_BY(mChecker);
   RTCCameraVideoCapturer* _Nonnull const mCapturer RTC_GUARDED_BY(mChecker);
-  mozilla::WatchManager<VideoCaptureAvFoundation> mWatchManager RTC_GUARDED_BY(mChecker);
-  // The next frame to be processed. If processing is slow this is always the most recent frame.
-  mozilla::Watchable<__strong RTCVideoFrame* _Nullable> mNextFrameToProcess
-      RTC_GUARDED_BY(mChecker);
   // If capture has started, this is the capability it was started for.
   mozilla::Maybe<VideoCaptureCapability> mCapability RTC_GUARDED_BY(mChecker);
   // The image type that mCapability maps to. Set in lockstep with mCapability.
