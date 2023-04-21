@@ -335,7 +335,11 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
       unsignaled_frame_decryptor_;
   rtc::scoped_refptr<webrtc::FrameTransformerInterface>
       unsignaled_frame_transformer_;
+
+  void FillSendCodecStats(VoiceMediaSendInfo* voice_media_info);
+  void FillReceiveCodecStats(VoiceMediaReceiveInfo* voice_media_info);
 };
+
 }  // namespace cricket
 
 #endif  // MEDIA_ENGINE_WEBRTC_VOICE_ENGINE_H_

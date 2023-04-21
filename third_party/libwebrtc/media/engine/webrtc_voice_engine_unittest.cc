@@ -603,7 +603,7 @@ class WebRtcVoiceEngineTestFake : public ::testing::TestWithParam<bool> {
     stats.packets_lost = 9012;
     stats.fraction_lost = 34.56f;
     stats.codec_name = "codec_name_send";
-    stats.codec_payload_type = 42;
+    stats.codec_payload_type = 0;
     stats.jitter_ms = 12;
     stats.rtt_ms = 345;
     stats.audio_level = 678;
@@ -679,7 +679,7 @@ class WebRtcVoiceEngineTestFake : public ::testing::TestWithParam<bool> {
     stats.packets_rcvd = 768;
     stats.packets_lost = 101;
     stats.codec_name = "codec_name_recv";
-    stats.codec_payload_type = 42;
+    stats.codec_payload_type = 0;
     stats.jitter_ms = 901;
     stats.jitter_buffer_ms = 234;
     stats.jitter_buffer_preferred_ms = 567;
@@ -2347,6 +2347,7 @@ TEST_P(WebRtcVoiceEngineTestFake, GetStatsWithMultipleSendStreams) {
   SetSendParameters(send_parameters_);
   EXPECT_TRUE(channel_->SetRecvParameters(recv_parameters_));
   SetAudioSendStreamStats();
+  SetAudioReceiveStreamStats();
 
   // Check stats for the added streams.
   {
@@ -2367,7 +2368,7 @@ TEST_P(WebRtcVoiceEngineTestFake, GetStatsWithMultipleSendStreams) {
 
     // We have added one receive stream. We should see empty stats.
     EXPECT_EQ(receive_info.receivers.size(), 1u);
-    EXPECT_EQ(receive_info.receivers[0].ssrc(), 0u);
+    EXPECT_EQ(receive_info.receivers[0].ssrc(), 123u);
   }
 
   // Remove the kSsrcY stream. No receiver stats.
@@ -2525,6 +2526,7 @@ TEST_P(WebRtcVoiceEngineTestFake, GetStats) {
     EXPECT_CALL(*adm_, GetPlayoutUnderrunCount()).WillOnce(Return(0));
     cricket::VoiceMediaSendInfo send_info;
     cricket::VoiceMediaReceiveInfo receive_info;
+    SetAudioReceiveStreamStats();
     EXPECT_EQ(true, channel_->GetSendStats(&send_info));
     EXPECT_EQ(true, channel_->GetReceiveStats(
                         &receive_info, /*get_and_clear_legacy_stats=*/true));
