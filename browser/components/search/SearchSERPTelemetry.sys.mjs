@@ -40,6 +40,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
 export var SearchSERPTelemetryUtils = {
   ACTIONS: {
     CLICKED: "clicked",
+    EXPANDED: "expanded",
+    SUBMITTED: "submitted",
   },
   COMPONENTS: {
     AD_CAROUSEL: "ad_carousel",

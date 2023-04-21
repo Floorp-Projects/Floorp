@@ -181,6 +181,7 @@ serp:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1814773
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1816730
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1816735
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1814773
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1816730
@@ -195,7 +196,7 @@ serp:
       action:
         description: >
           The action taken on the page.
-          Possible values are `clicked`.
+          Possible values are `clicked`, `expanded`, and `submitted`.
         type: string
       target:
         description: >
