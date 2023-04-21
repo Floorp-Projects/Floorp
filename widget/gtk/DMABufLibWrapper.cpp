@@ -26,6 +26,8 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace widget {
 
+bool nsDMABufDevice::sUseWebGLDmabufBackend = true;
+
 #define GBMLIB_NAME "libgbm.so.1"
 #define DRMLIB_NAME "libdrm.so.2"
 
@@ -138,10 +140,7 @@ bool nsDMABufDevice::IsEnabled(nsACString& aFailureId) {
 }
 
 nsDMABufDevice::nsDMABufDevice()
-    : mUseWebGLDmabufBackend(true),
-      mDRMFd(-1),
-      mGbmDevice(nullptr),
-      mInitialized(false) {
+    : mDRMFd(-1), mGbmDevice(nullptr), mInitialized(false) {
   Configure();
 }
 
@@ -217,15 +216,15 @@ bool nsDMABufDevice::IsDMABufTexturesEnabled() { return false; }
 bool nsDMABufDevice::IsDMABufWebGLEnabled() {
   LOGDMABUF(
       ("nsDMABufDevice::IsDMABufWebGLEnabled: UseDMABuf %d "
-       "mUseWebGLDmabufBackend %d "
+       "sUseWebGLDmabufBackend %d "
        "widget_dmabuf_webgl_enabled %d\n",
-       gfx::gfxVars::UseDMABuf(), mUseWebGLDmabufBackend,
+       gfx::gfxVars::UseDMABuf(), sUseWebGLDmabufBackend,
        StaticPrefs::widget_dmabuf_webgl_enabled()));
-  return gfx::gfxVars::UseDMABuf() && mUseWebGLDmabufBackend &&
+  return gfx::gfxVars::UseDMABuf() && sUseWebGLDmabufBackend &&
          StaticPrefs::widget_dmabuf_webgl_enabled();
 }
 
-void nsDMABufDevice::DisableDMABufWebGL() { mUseWebGLDmabufBackend = false; }
+void nsDMABufDevice::DisableDMABufWebGL() { sUseWebGLDmabufBackend = false; }
 
 // TODO: Make private or make sure it's configured
 nsDMABufDevice* GetDMABufDevice() {
