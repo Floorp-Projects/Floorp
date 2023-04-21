@@ -60,8 +60,6 @@ RtpPacket::RtpPacket() : RtpPacket(nullptr, kDefaultPacketSize) {}
 RtpPacket::RtpPacket(const ExtensionManager* extensions)
     : RtpPacket(extensions, kDefaultPacketSize) {}
 
-RtpPacket::RtpPacket(const RtpPacket&) = default;
-
 RtpPacket::RtpPacket(const ExtensionManager* extensions, size_t capacity)
     : extensions_(extensions ? *extensions : ExtensionManager()),
       buffer_(capacity) {
@@ -69,7 +67,11 @@ RtpPacket::RtpPacket(const ExtensionManager* extensions, size_t capacity)
   Clear();
 }
 
-RtpPacket::~RtpPacket() {}
+RtpPacket::RtpPacket(const RtpPacket&) = default;
+RtpPacket::RtpPacket(RtpPacket&&) = default;
+RtpPacket& RtpPacket::operator=(const RtpPacket&) = default;
+RtpPacket& RtpPacket::operator=(RtpPacket&&) = default;
+RtpPacket::~RtpPacket() = default;
 
 void RtpPacket::IdentifyExtensions(ExtensionManager extensions) {
   extensions_ = std::move(extensions);
