@@ -186,7 +186,9 @@ summary {
   margin-block-start: 16px;
 }
 
-:host(:not([dialog-mode])) .cancel-close {
+:host(:not([dialog-mode])) .cancel-close,
+:host(:not([dialog-mode])) .done-button,
+:host([dialog-mode]) .continue-button {
   display: none;
 }
 
