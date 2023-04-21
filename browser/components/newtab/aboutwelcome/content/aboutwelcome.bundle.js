@@ -882,7 +882,9 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       activeMultiSelect: this.props.activeMultiSelect,
       setActiveMultiSelect: this.props.setActiveMultiSelect,
       handleAction: this.props.handleAction
-    }) : null);
+    }) : null, content.tiles && content.tiles.type === "migration-wizard" ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("migration-wizard", {
+      "auto-request-state": ""
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("panel-list", null)) : null);
   }
 
   renderNoodles() {
@@ -978,7 +980,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
   }
 
   render() {
-    var _this$props$appAndSys, _this$props$messageId;
+    var _content$tiles, _this$props$appAndSys, _this$props$messageId;
 
     const {
       autoAdvance,
@@ -997,6 +999,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     // by checking if screen order is even or odd.
 
     const screenClassName = isCenterPosition ? this.getScreenClassName(isFirstScreen, isLastScreen, includeNoodles, content === null || content === void 0 ? void 0 : content.video_container) : "";
+    const isEmbeddedMigration = ((_content$tiles = content.tiles) === null || _content$tiles === void 0 ? void 0 : _content$tiles.type) === "migration-wizard";
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("main", {
       className: `screen ${this.props.id || ""}
           ${screenClassName} ${textColorClass}`,
@@ -1008,7 +1011,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
         this.mainContentHeader = input;
       }
     }, isCenterPosition ? null : this.renderSecondarySection(content), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-      className: "section-main",
+      className: `section-main ${isEmbeddedMigration ? "embedded-migration" : ""}`,
       role: "document"
     }, content.secondary_button_top ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_6__.SecondaryCTA, {
       content: content,

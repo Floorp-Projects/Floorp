@@ -393,6 +393,8 @@ html {
   justify-content: center;
   width: 504px;
   flex-shrink: 0;
+}
+.onboardingContainer .section-main:not(.embedded-migration) {
   position: relative;
 }
 .onboardingContainer .main-content {
@@ -1592,4 +1594,12 @@ html {
   opacity: 0;
   translate: 0 calc(2 * var(--translate));
   transition-delay: 0.4s;
+}
+
+migration-wizard {
+  width: unset;
+}
+
+migration-wizard::part(buttons) {
+  justify-content: flex-start;
 }

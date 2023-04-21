@@ -1463,6 +1463,36 @@ add_task(async function test_migrationInteractions() {
   ok(await ASRouterTargeting.Environment.hasMigratedPasswords);
 });
 
+add_task(async function check_useEmbeddedMigrationWizard() {
+  await pushPrefs([
+    "browser.migrate.content-modal.about-welcome-behavior",
+    "default",
+  ]);
+
+  ok(!(await ASRouterTargeting.Environment.useEmbeddedMigrationWizard));
+
+  await pushPrefs([
+    "browser.migrate.content-modal.about-welcome-behavior",
+    "autoclose",
+  ]);
+
+  ok(!(await ASRouterTargeting.Environment.useEmbeddedMigrationWizard));
+
+  await pushPrefs([
+    "browser.migrate.content-modal.about-welcome-behavior",
+    "embedded",
+  ]);
+
+  ok(await ASRouterTargeting.Environment.useEmbeddedMigrationWizard);
+
+  await pushPrefs([
+    "browser.migrate.content-modal.about-welcome-behavior",
+    "standalone",
+  ]);
+
+  ok(!(await ASRouterTargeting.Environment.useEmbeddedMigrationWizard));
+});
+
 add_task(async function check_isRTAMO() {
   is(
     typeof ASRouterTargeting.Environment.isRTAMO,

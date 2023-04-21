@@ -226,6 +226,11 @@ export class ProtonScreen extends React.PureComponent {
             handleAction={this.props.handleAction}
           />
         ) : null}
+        {content.tiles && content.tiles.type === "migration-wizard" ? (
+          <migration-wizard auto-request-state="">
+            <panel-list />
+          </migration-wizard>
+        ) : null}
       </React.Fragment>
     );
   }
@@ -365,6 +370,7 @@ export class ProtonScreen extends React.PureComponent {
           content?.video_container
         )
       : "";
+    const isEmbeddedMigration = content.tiles?.type === "migration-wizard";
 
     return (
       <main
@@ -379,7 +385,12 @@ export class ProtonScreen extends React.PureComponent {
         }}
       >
         {isCenterPosition ? null : this.renderSecondarySection(content)}
-        <div className="section-main" role="document">
+        <div
+          className={`section-main ${
+            isEmbeddedMigration ? "embedded-migration" : ""
+          }`}
+          role="document"
+        >
           {content.secondary_button_top ? (
             <SecondaryCTA
               content={content}

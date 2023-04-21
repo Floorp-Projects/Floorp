@@ -141,6 +141,9 @@ html {
     justify-content: center;
     width: $main-section-width;
     flex-shrink: 0;
+  }
+
+  .section-main:not(.embedded-migration) {
     position: relative;
   }
 
@@ -1628,4 +1631,12 @@ html {
       }
     }
   }
+}
+
+migration-wizard {
+  width: unset;
+}
+
+migration-wizard::part(buttons) {
+  justify-content: flex-start;
 }
