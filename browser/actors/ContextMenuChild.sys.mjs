@@ -11,6 +11,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   InlineSpellCheckerContent:
     "resource://gre/modules/InlineSpellCheckerContent.sys.mjs",
+  LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
   LoginManagerChild: "resource://gre/modules/LoginManagerChild.sys.mjs",
   SelectionUtils: "resource://gre/modules/SelectionUtils.sys.mjs",
   SpellCheckHelper: "resource://gre/modules/InlineSpellChecker.sys.mjs",
@@ -171,6 +172,14 @@ export class ContextMenuChild extends JSWindowActorChild {
           message.data.targetIdentifier
         );
         target.revealPassword = !target.revealPassword;
+        break;
+      }
+
+      case "ContextMenu:UseRelayMask": {
+        const input = lazy.ContentDOMReference.resolve(
+          message.data.targetIdentifier
+        );
+        input.setUserInput(message.data.emailMask);
         break;
       }
 
@@ -1060,6 +1069,13 @@ export class ContextMenuChild extends JSWindowActorChild {
       context.onNumeric = (editFlags & lazy.SpellCheckHelper.NUMERIC) !== 0;
       context.onEditable = (editFlags & lazy.SpellCheckHelper.EDITABLE) !== 0;
       context.onPassword = (editFlags & lazy.SpellCheckHelper.PASSWORD) !== 0;
+
+      context.showRelay =
+        HTMLInputElement.isInstance(context.target) &&
+        !context.target.disabled &&
+        !context.target.readOnly &&
+        (lazy.LoginHelper.isInferredEmailField(context.target) ||
+          lazy.LoginHelper.isInferredUsernameField(context.target));
       context.isDesignMode =
         (editFlags & lazy.SpellCheckHelper.CONTENTEDITABLE) !== 0;
       context.passwordRevealed =

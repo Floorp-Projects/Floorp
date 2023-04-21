@@ -3,6 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  FirefoxRelay: "resource://gre/modules/FirefoxRelay.sys.mjs",
+});
+
 export class ContextMenuParent extends JSWindowActorParent {
   receiveMessage(message) {
     let browser = this.manager.rootFrameLoader.ownerElement;
@@ -16,6 +22,8 @@ export class ContextMenuParent extends JSWindowActorParent {
       let topBrowser = browser.ownerGlobal.docShell.chromeEventHandler;
       win = topBrowser.ownerGlobal;
     }
+
+    message.data.context.showRelay &&= lazy.FirefoxRelay.isEnabled;
 
     win.openContextMenu(message, browser, this);
   }
@@ -46,6 +54,22 @@ export class ContextMenuParent extends JSWindowActorParent {
     this.sendAsyncMessage("ContextMenu:ToggleRevealPassword", {
       targetIdentifier,
     });
+  }
+
+  async useRelayMask(targetIdentifier, origin) {
+    if (!origin) {
+      return;
+    }
+
+    const windowGlobal = this.manager.browsingContext.currentWindowGlobal;
+    const browser = windowGlobal.rootFrameLoader.ownerElement;
+    const emailMask = await lazy.FirefoxRelay.generateUsername(browser, origin);
+    if (emailMask) {
+      this.sendAsyncMessage("ContextMenu:UseRelayMask", {
+        targetIdentifier,
+        emailMask,
+      });
+    }
   }
 
   reloadImage(targetIdentifier) {
