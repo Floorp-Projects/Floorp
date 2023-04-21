@@ -771,6 +771,11 @@ GMPDownloader.prototype = {
             return extractedPaths;
           },
           reason => {
+            GMPPrefs.setString(
+              GMPPrefs.KEY_PLUGIN_LAST_INSTALL_FAIL_REASON,
+              reason,
+              gmpAddon.id
+            );
             let now = Math.round(Date.now() / 1000);
             GMPPrefs.setInt(
               GMPPrefs.KEY_PLUGIN_LAST_INSTALL_FAILED,
