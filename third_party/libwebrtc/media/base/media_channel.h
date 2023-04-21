@@ -46,6 +46,7 @@
 #include "media/base/stream_params.h"
 #include "modules/audio_processing/include/audio_processing_statistics.h"
 #include "modules/rtp_rtcp/include/report_block_data.h"
+#include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/buffer.h"
 #include "rtc_base/copy_on_write_buffer.h"
@@ -190,8 +191,7 @@ class MediaBaseChannelInterface {
   // channel).
 
   // Called on the network when an RTP packet is received.
-  virtual void OnPacketReceived(rtc::CopyOnWriteBuffer packet,
-                                int64_t packet_time_us) = 0;
+  virtual void OnPacketReceived(const webrtc::RtpPacketReceived& packet) = 0;
   // Called on the network thread after a transport has finished sending a
   // packet.
   virtual void OnPacketSent(const rtc::SentPacket& sent_packet) = 0;

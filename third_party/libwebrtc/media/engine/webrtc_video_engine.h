@@ -176,8 +176,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   bool GetSendStats(VideoMediaSendInfo* info) override;
   bool GetReceiveStats(VideoMediaReceiveInfo* info) override;
 
-  void OnPacketReceived(rtc::CopyOnWriteBuffer packet,
-                        int64_t packet_time_us) override;
+  void OnPacketReceived(const webrtc::RtpPacketReceived& packet) override;
   void OnPacketSent(const rtc::SentPacket& sent_packet) override;
   void OnReadyToSend(bool ready) override;
   void OnNetworkRouteChanged(absl::string_view transport_name,
@@ -316,6 +315,12 @@ class WebRtcVideoChannel : public VideoMediaChannel,
                                 ChangedRecvParameters* changed_params) const
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
 
+  // Expected to be invoked once per packet that belongs to this channel that
+  // can not be demuxed.
+  // Returns true if a new default stream has been created.
+  bool MaybeCreateDefaultReceiveStream(
+      const webrtc::RtpPacketReceived& parsed_packet)
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
   void ConfigureReceiverRtp(
       webrtc::VideoReceiveStreamInterface::Config* config,
       webrtc::FlexfecReceiveStream::Config* flexfec_config,
@@ -646,6 +651,8 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   webrtc::VideoBitrateAllocatorFactory* const bitrate_allocator_factory_
       RTC_GUARDED_BY(thread_checker_);
   std::vector<VideoCodecSettings> recv_codecs_ RTC_GUARDED_BY(thread_checker_);
+  webrtc::RtpHeaderExtensionMap recv_rtp_extension_map_
+      RTC_GUARDED_BY(thread_checker_);
   std::vector<webrtc::RtpExtension> recv_rtp_extensions_
       RTC_GUARDED_BY(thread_checker_);
   // See reason for keeping track of the FlexFEC payload type separately in

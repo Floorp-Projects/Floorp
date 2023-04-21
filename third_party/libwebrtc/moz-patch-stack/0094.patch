@@ -191,7 +191,7 @@ index 431c267e1e..de18fc7b92 100644
  #include "api/video/video_content_type.h"
  #include "api/video/video_frame.h"
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index a544e94fef..7d008766a7 100644
+index 97227bc81e..bb0f687be3 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
 @@ -64,7 +64,7 @@ rtc_library("rtc_media_base") {
@@ -204,10 +204,10 @@ index a544e94fef..7d008766a7 100644
      "../api:sequence_checker",
      "../api:transport_api",
 diff --git a/media/base/media_channel.h b/media/base/media_channel.h
-index 30e7571ab8..7f433bf69b 100644
+index 43e09290bd..138d28ae4c 100644
 --- a/media/base/media_channel.h
 +++ b/media/base/media_channel.h
-@@ -63,10 +63,6 @@ class Timing;
+@@ -64,10 +64,6 @@ class Timing;
  
  namespace webrtc {
  class VideoFrame;

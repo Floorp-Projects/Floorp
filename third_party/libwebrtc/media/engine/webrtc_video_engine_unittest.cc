@@ -11,6 +11,7 @@
 #include "media/engine/webrtc_video_engine.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <string>
@@ -1471,7 +1472,7 @@ class WebRtcVideoChannelEncodedFrameCallbackTest : public ::testing::Test {
     buf_ptr[8] = height & 255;
     buf_ptr[9] = height >> 8;
 
-    channel_->OnPacketReceived(packet.Buffer(), /*packet_time_us=*/-1);
+    channel_->OnPacketReceived(packet);
   }
 
   void DeliverKeyFrameAndWait(uint32_t ssrc) {
@@ -2065,7 +2066,7 @@ TEST_F(WebRtcVideoChannelBaseTest, SetSink) {
   EXPECT_TRUE(SetDefaultCodec());
   EXPECT_TRUE(SetSend(true));
   EXPECT_EQ(0, renderer_.num_rendered_frames());
-  channel_->OnPacketReceived(packet.Buffer(), /*packet_time_us=*/-1);
+  channel_->OnPacketReceived(packet);
   channel_->SetDefaultSink(&renderer_);
   SendFrame();
   EXPECT_FRAME_WAIT(1, kVideoWidth, kVideoHeight, kTimeout);
@@ -2501,7 +2502,7 @@ class WebRtcVideoChannelTest : public WebRtcVideoEngineTest {
   // After receciving and processing the packet, enough time is advanced that
   // the unsignalled receive stream cooldown is no longer in effect.
   void ReceivePacketAndAdvanceTime(const RtpPacketReceived& packet) {
-    receive_channel_->OnPacketReceived(packet.Buffer(), /*packet_time_us=*/-1);
+    receive_channel_->OnPacketReceived(packet);
     rtc::Thread::Current()->ProcessMessages(0);
     time_controller_.AdvanceTime(
         webrtc::TimeDelta::Millis(kUnsignalledReceiveStreamCooldownMs));
@@ -3104,6 +3105,27 @@ TEST_F(WebRtcVideoChannelTest, SetRecvRtpHeaderExtensionsRejectsDuplicateIds) {
       RtpExtension(RtpExtension::kTimestampOffsetUri, id));
   recv_parameters_.extensions.push_back(recv_parameters_.extensions.back());
   EXPECT_FALSE(channel_->SetRecvParameters(recv_parameters_));
+}
+
+TEST_F(WebRtcVideoChannelTest, OnPacketReceivedIdentifiesExtensions) {
+  cricket::VideoRecvParameters parameters = recv_parameters_;
+  parameters.extensions.push_back(
+      RtpExtension(RtpExtension::kVideoRotationUri, /*id=*/1));
+  ASSERT_TRUE(channel_->SetRecvParameters(parameters));
+  webrtc::RtpHeaderExtensionMap extension_map(parameters.extensions);
+  RtpPacketReceived reference_packet(&extension_map);
+  reference_packet.SetExtension<webrtc::VideoOrientation>(
+      webrtc::VideoRotation::kVideoRotation_270);
+  // Create a packet without the extension map but with the same content.
+  RtpPacketReceived received_packet;
+  ASSERT_TRUE(received_packet.Parse(reference_packet.Buffer()));
+
+  receive_channel_->OnPacketReceived(received_packet);
+  rtc::Thread::Current()->ProcessMessages(0);
+
+  EXPECT_EQ(fake_call_->last_received_rtp_packet()
+                .GetExtension<webrtc::VideoOrientation>(),
+            webrtc::VideoRotation::kVideoRotation_270);
 }
 
 TEST_F(WebRtcVideoChannelTest, AddRecvStreamOnlyUsesOneReceiveStream) {
@@ -6999,7 +7021,7 @@ TEST_F(WebRtcVideoChannelTest, UnsignalledSsrcHasACooldown) {
     // Receive a packet for kSsrc1.
     RtpPacketReceived packet;
     packet.SetSsrc(kSsrc1);
-    receive_channel_->OnPacketReceived(packet.Buffer(), /*packet_time_us=*/-1);
+    receive_channel_->OnPacketReceived(packet);
   }
   rtc::Thread::Current()->ProcessMessages(0);
   time_controller_.AdvanceTime(
@@ -7014,7 +7036,7 @@ TEST_F(WebRtcVideoChannelTest, UnsignalledSsrcHasACooldown) {
     // Receive a packet for kSsrc2.
     RtpPacketReceived packet;
     packet.SetSsrc(kSsrc2);
-    receive_channel_->OnPacketReceived(packet.Buffer(), /*packet_time_us=*/-1);
+    receive_channel_->OnPacketReceived(packet);
   }
   rtc::Thread::Current()->ProcessMessages(0);
 
@@ -7031,7 +7053,7 @@ TEST_F(WebRtcVideoChannelTest, UnsignalledSsrcHasACooldown) {
     // Receive a packet for kSsrc2.
     RtpPacketReceived packet;
     packet.SetSsrc(kSsrc2);
-    receive_channel_->OnPacketReceived(packet.Buffer(), /*packet_time_us=*/-1);
+    receive_channel_->OnPacketReceived(packet);
   }
   rtc::Thread::Current()->ProcessMessages(0);
 

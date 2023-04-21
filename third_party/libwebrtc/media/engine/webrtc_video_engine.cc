@@ -18,6 +18,7 @@
 #include <utility>
 
 #include "absl/algorithm/container.h"
+#include "absl/functional/bind_front.h"
 #include "absl/strings/match.h"
 #include "api/media_stream_interface.h"
 #include "api/video/video_codec_constants.h"
@@ -29,6 +30,7 @@
 #include "call/call.h"
 #include "media/engine/webrtc_media_engine.h"
 #include "media/engine/webrtc_voice_engine.h"
+#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/rtp_util.h"
 #include "modules/video_coding/codecs/vp9/svc_config.h"
 #include "modules/video_coding/svc/scalability_mode_util.h"
@@ -1196,6 +1198,8 @@ bool WebRtcVideoChannel::SetRecvParameters(const VideoRecvParameters& params) {
   }
   if (changed_params.rtp_header_extensions) {
     recv_rtp_extensions_ = *changed_params.rtp_header_extensions;
+    recv_rtp_extension_map_ =
+        webrtc::RtpHeaderExtensionMap(recv_rtp_extensions_);
   }
   if (changed_params.codec_settings) {
     RTC_DLOG(LS_INFO) << "Changing recv codecs from "
@@ -1718,109 +1722,109 @@ void WebRtcVideoChannel::FillReceiveCodecStats(
   }
 }
 
-void WebRtcVideoChannel::OnPacketReceived(rtc::CopyOnWriteBuffer packet,
-                                          int64_t packet_time_us) {
+void WebRtcVideoChannel::OnPacketReceived(
+    const webrtc::RtpPacketReceived& packet) {
   RTC_DCHECK_RUN_ON(&network_thread_checker_);
+
   // TODO(bugs.webrtc.org/11993): This code is very similar to what
   // WebRtcVoiceMediaChannel::OnPacketReceived does. For maintainability and
   // consistency it would be good to move the interaction with call_->Receiver()
   // to a common implementation and provide a callback on the worker thread
   // for the exception case (DELIVERY_UNKNOWN_SSRC) and how retry is attempted.
   worker_thread_->PostTask(
-      SafeTask(task_safety_.flag(), [this, packet, packet_time_us] {
+      SafeTask(task_safety_.flag(), [this, packet = packet]() mutable {
         RTC_DCHECK_RUN_ON(&thread_checker_);
-        const webrtc::PacketReceiver::DeliveryStatus delivery_result =
-            call_->Receiver()->DeliverPacket(webrtc::MediaType::VIDEO, packet,
-                                             packet_time_us);
-        switch (delivery_result) {
-          case webrtc::PacketReceiver::DELIVERY_OK:
-            return;
-          case webrtc::PacketReceiver::DELIVERY_PACKET_ERROR:
-            return;
-          case webrtc::PacketReceiver::DELIVERY_UNKNOWN_SSRC:
-            break;
+
+        // TODO(bugs.webrtc.org/7135): extensions in `packet` is currently set
+        // in RtpTransport and does not neccessarily include extensions specific
+        // to this channel/MID. Also see comment in
+        // BaseChannel::MaybeUpdateDemuxerAndRtpExtensions_w.
+        // It would likely be good if extensions where merged per BUNDLE and
+        // applied directly in RtpTransport::DemuxPacket;
+        packet.IdentifyExtensions(recv_rtp_extension_map_);
+        packet.set_payload_type_frequency(webrtc::kVideoPayloadTypeFrequency);
+        if (!packet.arrival_time().IsFinite()) {
+          packet.set_arrival_time(webrtc::Timestamp::Micros(rtc::TimeMicros()));
         }
 
-        absl::optional<uint32_t> rtx_ssrc;
-        uint32_t ssrc = ParseRtpSsrc(packet);
-
-
-        if (discard_unknown_ssrc_packets_) {
-          return;
-        }
-
-        int payload_type = ParseRtpPayloadType(packet);
-
-        // See if this payload_type is registered as one that usually gets its
-        // own SSRC (RTX) or at least is safe to drop either way (FEC). If it
-        // is, and it wasn't handled above by DeliverPacket, that means we don't
-        // know what stream it associates with, and we shouldn't ever create an
-        // implicit channel for these.
-        for (auto& codec : recv_codecs_) {
-          if (payload_type == codec.ulpfec.red_rtx_payload_type ||
-              payload_type == codec.ulpfec.ulpfec_payload_type) {
-            return;
-          }
-          if (payload_type == codec.rtx_payload_type) {
-            // As we don't support receiving simulcast there can only be one RTX
-            // stream, which will be associated with unsignaled media stream.
-            // It is not possible to update the ssrcs of a receive stream, so we
-            // recreate it insead if found.
-            auto default_ssrc = GetUnsignaledSsrc();
-            if (!default_ssrc) {
-              return;
-            }
-            rtx_ssrc = ssrc;
-            ssrc = *default_ssrc;
-            // Allow recreating the receive stream even if the RTX packet is
-            // received just after the media packet.
-            last_unsignalled_ssrc_creation_time_ms_.reset();
-            break;
-          }
-        }
-        if (payload_type == recv_flexfec_payload_type_) {
-          return;
-        }
-
-        // Ignore unknown ssrcs if there is a demuxer criteria update pending.
-        // During a demuxer update we may receive ssrcs that were recently
-        // removed or we may receve ssrcs that were recently configured for a
-        // different video channel.
-        if (demuxer_criteria_id_ != demuxer_criteria_completed_id_) {
-          return;
-        }
-        // Ignore unknown ssrcs if we recently created an unsignalled receive
-        // stream since this shouldn't happen frequently. Getting into a state
-        // of creating decoders on every packet eats up processing time (e.g.
-        // https://crbug.com/1069603) and this cooldown prevents that.
-        if (last_unsignalled_ssrc_creation_time_ms_.has_value()) {
-          int64_t now_ms = rtc::TimeMillis();
-          if (now_ms - last_unsignalled_ssrc_creation_time_ms_.value() <
-              kUnsignaledSsrcCooldownMs) {
-            // We've already created an unsignalled ssrc stream within the last
-            // 0.5 s, ignore with a warning.
-            RTC_LOG(LS_WARNING)
-                << "Another unsignalled ssrc packet arrived shortly after the "
-                << "creation of an unsignalled ssrc stream. Dropping packet.";
-            return;
-          }
-        }
-        // Let the unsignalled ssrc handler decide whether to drop or deliver.
-        switch (unsignalled_ssrc_handler_->OnUnsignalledSsrc(this, ssrc,
-                                                             rtx_ssrc)) {
-          case UnsignalledSsrcHandler::kDropPacket:
-            return;
-          case UnsignalledSsrcHandler::kDeliverPacket:
-            break;
-        }
-
-        if (call_->Receiver()->DeliverPacket(webrtc::MediaType::VIDEO, packet,
-                                             packet_time_us) !=
-            webrtc::PacketReceiver::DELIVERY_OK) {
-          RTC_LOG(LS_WARNING) << "Failed to deliver RTP packet on re-delivery.";
-        }
-        last_unsignalled_ssrc_creation_time_ms_ = rtc::TimeMillis();
+        call_->Receiver()->DeliverRtpPacket(
+            webrtc::MediaType::VIDEO, std::move(packet),
+            absl::bind_front(
+                &WebRtcVideoChannel::MaybeCreateDefaultReceiveStream, this));
       }));
+}
+
+bool WebRtcVideoChannel::MaybeCreateDefaultReceiveStream(
+    const webrtc::RtpPacketReceived& packet) {
+  if (discard_unknown_ssrc_packets_) {
+    return false;
+  }
+
+  absl::optional<uint32_t> rtx_ssrc;
+  uint32_t ssrc = packet.Ssrc();
+  // See if this payload_type is registered as one that usually gets its
+  // own SSRC (RTX) or at least is safe to drop either way (FEC). If it
+  // is, and it wasn't handled above by DeliverPacket, that means we don't
+  // know what stream it associates with, and we shouldn't ever create an
+  // implicit channel for these.
+  for (auto& codec : recv_codecs_) {
+    if (packet.PayloadType() == codec.ulpfec.red_rtx_payload_type ||
+        packet.PayloadType() == codec.ulpfec.ulpfec_payload_type) {
+      return false;
+    }
+    if (packet.PayloadType() == codec.rtx_payload_type) {
+      // As we don't support receiving simulcast there can only be one RTX
+      // stream, which will be associated with unsignaled media stream.
+      // It is not possible to update the ssrcs of a receive stream, so we
+      // recreate it insead if found.
+      auto default_ssrc = GetUnsignaledSsrc();
+      if (!default_ssrc) {
+        return false;
+      }
+      rtx_ssrc = ssrc;
+      ssrc = *default_ssrc;
+      // Allow recreating the receive stream even if the RTX packet is
+      // received just after the media packet.
+      last_unsignalled_ssrc_creation_time_ms_.reset();
+      break;
+    }
+  }
+  if (packet.PayloadType() == recv_flexfec_payload_type_) {
+    return false;
+  }
+
+  // Ignore unknown ssrcs if there is a demuxer criteria update pending.
+  // During a demuxer update we may receive ssrcs that were recently
+  // removed or we may receve ssrcs that were recently configured for a
+  // different video channel.
+  if (demuxer_criteria_id_ != demuxer_criteria_completed_id_) {
+    return false;
+  }
+  // Ignore unknown ssrcs if we recently created an unsignalled receive
+  // stream since this shouldn't happen frequently. Getting into a state
+  // of creating decoders on every packet eats up processing time (e.g.
+  // https://crbug.com/1069603) and this cooldown prevents that.
+  if (last_unsignalled_ssrc_creation_time_ms_.has_value()) {
+    int64_t now_ms = rtc::TimeMillis();
+    if (now_ms - last_unsignalled_ssrc_creation_time_ms_.value() <
+        kUnsignaledSsrcCooldownMs) {
+      // We've already created an unsignalled ssrc stream within the last
+      // 0.5 s, ignore with a warning.
+      RTC_LOG(LS_WARNING)
+          << "Another unsignalled ssrc packet arrived shortly after the "
+          << "creation of an unsignalled ssrc stream. Dropping packet.";
+      return false;
+    }
+  }
+  // Let the unsignalled ssrc handler decide whether to drop or deliver.
+  switch (unsignalled_ssrc_handler_->OnUnsignalledSsrc(this, ssrc, rtx_ssrc)) {
+    case UnsignalledSsrcHandler::kDropPacket:
+      return false;
+    case UnsignalledSsrcHandler::kDeliverPacket:
+      break;
+  }
+  last_unsignalled_ssrc_creation_time_ms_ = rtc::TimeMillis();
+  return true;
 }
 
 void WebRtcVideoChannel::OnPacketSent(const rtc::SentPacket& sent_packet) {

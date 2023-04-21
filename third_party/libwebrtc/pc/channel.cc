@@ -433,11 +433,7 @@ void BaseChannel::OnRtpPacket(const webrtc::RtpPacketReceived& parsed_packet) {
                         << ToString();
     return;
   }
-
-  webrtc::Timestamp packet_time = parsed_packet.arrival_time();
-  media_channel_->OnPacketReceived(
-      parsed_packet.Buffer(),
-      packet_time.IsMinusInfinity() ? -1 : packet_time.us());
+  media_channel_->OnPacketReceived(parsed_packet);
 }
 
 bool BaseChannel::MaybeUpdateDemuxerAndRtpExtensions_w(
