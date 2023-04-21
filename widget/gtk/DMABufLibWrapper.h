@@ -192,10 +192,10 @@ class nsDMABufDevice {
  private:
   void Configure();
 
-  int mDRMFd;
-  gbm_device* mGbmDevice;
-  bool mInitialized;
-  const char* mFailureId;
+  int mDRMFd = -1;
+  gbm_device* mGbmDevice = nullptr;
+  bool mInitialized = false;
+  const char* mFailureId = nullptr;
 
   static bool sUseWebGLDmabufBackend;
 };
