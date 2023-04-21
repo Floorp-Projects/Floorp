@@ -59,7 +59,11 @@ class StorageAccessPermissionRequest final
                                  const Maybe<nsCString>& aTopLevelBaseDomain,
                                  AllowCallback&& aAllowCallback,
                                  CancelCallback&& aCancelCallback);
-  ~StorageAccessPermissionRequest() = default;
+  ~StorageAccessPermissionRequest() {
+    // Invoke Cancel() to ensure we call a callback even if the request has
+    // been destroyed before the request is completed.
+    Cancel();
+  }
 
   unsigned CalculateSimulatedDelay();
 
