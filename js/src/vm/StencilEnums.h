@@ -305,7 +305,9 @@ enum class MutableScriptFlagsEnum : uint32_t {
   // has failed.
   Uninlineable = 1 << 19,
 
-  // (1 << 20) is unused.
+  // Indicates that this script has no eager baseline hint available
+  // in the cache, used to prevent further lookups.
+  NoEagerBaselineHint = 1 << 20,
 
   // *****************************************************************
   // The flags below are set when we bail out and invalidate a script.
