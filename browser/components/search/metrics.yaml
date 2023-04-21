@@ -138,8 +138,10 @@ serp:
       Recorded when a search engine results page (SERP) is shown to a user.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1813162
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1824543
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1813162
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1824543
     data_sensitivity:
       - interaction
     notification_emails:
@@ -173,6 +175,14 @@ serp:
           `tabhistory`, `unknown`.
           This will be `unknown` if we cannot determine the source.
         type: string
+      shopping_tab_displayed:
+        description:
+          Indicates if the shopping tab is displayed.
+        type: boolean
+      is_shopping_page:
+        description:
+          Indicates if the page is a shopping page.
+        type: boolean
 
   engagement:
     type: event

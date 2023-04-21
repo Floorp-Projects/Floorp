@@ -28,6 +28,9 @@ const TEST_PROVIDER_INFO = [
     organicCodes: ["foo"],
     followOnParamNames: ["a"],
     extraAdServersRegexps: [/^https:\/\/www\.example\.com\/ad2/],
+    shoppingTab: {
+      regexp: "&site=shop",
+    },
   },
   {
     telemetryId: "example2",
@@ -54,6 +57,25 @@ const TESTS = [
       provider: "example",
       tagged: "true",
       partner_code: "ff",
+      is_shopping_page: "false",
+      shopping_tab_displayed: "false",
+      source: "unknown",
+    },
+  },
+  {
+    title: "Tagged search with shopping",
+    trackingUrl: "https://www.example.com/search?q=test&abc=ff&site=shop",
+    expectedSearchCountEntry: "example:tagged:ff",
+    expectedAdKey: "example:tagged",
+    adUrls: ["https://www.example.com/ad2"],
+    nonAdUrls: ["https://www.example.com/ad3"],
+    impression: {
+      provider: "example",
+      tagged: "true",
+      partner_code: "ff",
+      is_shopping_page: "true",
+      shopping_tab_displayed: "false",
+      source: "unknown",
     },
   },
   {
@@ -67,6 +89,9 @@ const TESTS = [
       provider: "example",
       tagged: "true",
       partner_code: "tb",
+      is_shopping_page: "false",
+      shopping_tab_displayed: "false",
+      source: "unknown",
     },
   },
   {
@@ -80,6 +105,9 @@ const TESTS = [
       provider: "example",
       tagged: "false",
       partner_code: "foo",
+      is_shopping_page: "false",
+      shopping_tab_displayed: "false",
+      source: "unknown",
     },
   },
   {
@@ -93,6 +121,9 @@ const TESTS = [
       provider: "example",
       tagged: "false",
       partner_code: "other",
+      is_shopping_page: "false",
+      shopping_tab_displayed: "false",
+      source: "unknown",
     },
   },
   {
@@ -106,6 +137,9 @@ const TESTS = [
       provider: "example",
       tagged: "false",
       partner_code: "other",
+      is_shopping_page: "false",
+      shopping_tab_displayed: "false",
+      source: "unknown",
     },
   },
   {
@@ -119,6 +153,9 @@ const TESTS = [
       provider: "example",
       tagged: "false",
       partner_code: "",
+      is_shopping_page: "false",
+      shopping_tab_displayed: "false",
+      source: "unknown",
     },
   },
   {
@@ -132,6 +169,9 @@ const TESTS = [
       provider: "example",
       tagged: "false",
       partner_code: "",
+      is_shopping_page: "false",
+      shopping_tab_displayed: "false",
+      source: "unknown",
     },
   },
   {
@@ -145,6 +185,9 @@ const TESTS = [
       provider: "example2",
       tagged: "false",
       partner_code: "",
+      is_shopping_page: "false",
+      shopping_tab_displayed: "false",
+      source: "unknown",
     },
   },
 ];
@@ -217,11 +260,16 @@ add_task(async function test_parsing_search_urls() {
     if (test.setUp) {
       test.setUp();
     }
-    SearchSERPTelemetry.updateTrackingStatus(
+    let browser = {
+      getTabBrowser: () => {},
+    };
+    SearchSERPTelemetry.updateTrackingStatus(browser, test.trackingUrl);
+    SearchSERPTelemetry.reportPageImpression(
       {
-        getTabBrowser: () => {},
+        url: test.trackingUrl,
+        hasShoppingTab: false,
       },
-      test.trackingUrl
+      browser
     );
     let scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
     TelemetryTestUtils.assertKeyedScalar(
@@ -248,22 +296,9 @@ add_task(async function test_parsing_search_urls() {
       "should only see one impression event"
     );
 
-    let recordedEvent = recordedEvents[0].extra;
-    Assert.equal(
-      recordedEvent.partner_code,
-      test.impression.partner_code,
-      "should see the correct partner code"
-    );
-    Assert.equal(
-      recordedEvent.tagged,
-      test.impression.tagged,
-      "should see the correct tagged value"
-    );
-    Assert.equal(
-      recordedEvent.provider,
-      test.impression.provider,
-      "should see the correct provider"
-    );
+    // To allow deep equality.
+    test.impression.impression_id = recordedEvents[0].extra.impression_id;
+    Assert.deepEqual(recordedEvents[0].extra, test.impression);
 
     if (test.tearDown) {
       test.tearDown();

@@ -173,6 +173,8 @@ add_task(async function test_click_second_ad_in_component() {
         tagged: "true",
         partner_code: "ff",
         source: "unknown",
+        is_shopping_page: "false",
+        shopping_tab_displayed: "false",
       },
       engagements: [
         {
@@ -222,6 +224,8 @@ add_task(async function test_click_non_ads_link_redirected_new_tab() {
         tagged: "true",
         partner_code: "ff",
         source: "unknown",
+        is_shopping_page: "false",
+        shopping_tab_displayed: "false",
       },
       engagements: [
         {
@@ -275,6 +279,8 @@ add_task(async function test_click_non_ads_link_redirected() {
         tagged: "true",
         partner_code: "ff",
         source: "unknown",
+        is_shopping_page: "false",
+        shopping_tab_displayed: "false",
       },
       engagements: [
         {
@@ -314,6 +320,8 @@ add_task(async function test_click_ads_link_modified() {
         tagged: "true",
         partner_code: "ff",
         source: "unknown",
+        is_shopping_page: "false",
+        shopping_tab_displayed: "false",
       },
       engagements: [
         {
@@ -355,6 +363,8 @@ add_task(async function test_click_non_ads_link() {
         tagged: "true",
         partner_code: "ff",
         source: "unknown",
+        is_shopping_page: "false",
+        shopping_tab_displayed: "false",
       },
       engagements: [
         {
@@ -393,6 +403,8 @@ add_task(async function test_click_incontent_searchbox() {
         tagged: "true",
         partner_code: "ff",
         source: "unknown",
+        is_shopping_page: "false",
+        shopping_tab_displayed: "false",
       },
       engagements: [
         {
@@ -435,6 +447,8 @@ add_task(async function test_click_autosuggest() {
         tagged: "true",
         partner_code: "ff",
         source: "unknown",
+        is_shopping_page: "false",
+        shopping_tab_displayed: "false",
       },
       engagements: [
         {
@@ -468,6 +482,8 @@ add_task(async function test_click_carousel_expand() {
         tagged: "true",
         partner_code: "ff",
         source: "unknown",
+        is_shopping_page: "false",
+        shopping_tab_displayed: "false",
       },
       engagements: [
         {

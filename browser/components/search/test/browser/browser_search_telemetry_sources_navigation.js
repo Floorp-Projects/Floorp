@@ -163,6 +163,8 @@ add_task(async function test_search() {
         tagged: "true",
         partner_code: "ff",
         source: "urlbar",
+        shopping_tab_displayed: "false",
+        is_shopping_page: "false",
       },
     },
   ]);
@@ -193,6 +195,8 @@ add_task(async function test_reload() {
         tagged: "true",
         partner_code: "ff",
         source: "urlbar",
+        shopping_tab_displayed: "false",
+        is_shopping_page: "false",
       },
     },
     {
@@ -201,6 +205,8 @@ add_task(async function test_reload() {
         tagged: "true",
         partner_code: "ff",
         source: "reload",
+        shopping_tab_displayed: "false",
+        is_shopping_page: "false",
       },
     },
   ]);
@@ -232,6 +238,8 @@ add_task(async function test_reload() {
         tagged: "true",
         partner_code: "ff",
         source: "urlbar",
+        shopping_tab_displayed: "false",
+        is_shopping_page: "false",
       },
     },
     {
@@ -240,6 +248,8 @@ add_task(async function test_reload() {
         tagged: "true",
         partner_code: "ff",
         source: "reload",
+        shopping_tab_displayed: "false",
+        is_shopping_page: "false",
       },
       engagements: [
         {
@@ -278,6 +288,8 @@ add_task(async function test_fresh_search() {
         tagged: "true",
         partner_code: "ff",
         source: "urlbar",
+        shopping_tab_displayed: "false",
+        is_shopping_page: "false",
       },
     },
   ]);
@@ -309,6 +321,8 @@ add_task(async function test_click_ad() {
         tagged: "true",
         partner_code: "ff",
         source: "urlbar",
+        shopping_tab_displayed: "false",
+        is_shopping_page: "false",
       },
       engagements: [
         {
@@ -346,6 +360,8 @@ add_task(async function test_go_back() {
         tagged: "true",
         partner_code: "ff",
         source: "urlbar",
+        shopping_tab_displayed: "false",
+        is_shopping_page: "false",
       },
       engagements: [
         {
@@ -360,6 +376,8 @@ add_task(async function test_go_back() {
         tagged: "true",
         partner_code: "ff",
         source: "tabhistory",
+        shopping_tab_displayed: "false",
+        is_shopping_page: "false",
       },
     },
   ]);
@@ -392,6 +410,8 @@ add_task(async function test_go_back() {
         tagged: "true",
         partner_code: "ff",
         source: "urlbar",
+        shopping_tab_displayed: "false",
+        is_shopping_page: "false",
       },
       engagements: [
         {
@@ -406,6 +426,8 @@ add_task(async function test_go_back() {
         tagged: "true",
         partner_code: "ff",
         source: "tabhistory",
+        shopping_tab_displayed: "false",
+        is_shopping_page: "false",
       },
       engagements: [
         {
@@ -447,6 +469,8 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
         tagged: "true",
         partner_code: "ff",
         source: "urlbar",
+        shopping_tab_displayed: "false",
+        is_shopping_page: "false",
       },
     },
   ]);
@@ -474,6 +498,8 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
         tagged: "true",
         partner_code: "ff",
         source: "urlbar",
+        shopping_tab_displayed: "false",
+        is_shopping_page: "false",
       },
     },
     {
@@ -482,6 +508,8 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
         tagged: "true",
         partner_code: "ff",
         source: "urlbar_persisted",
+        shopping_tab_displayed: "false",
+        is_shopping_page: "false",
       },
     },
   ]);
@@ -514,6 +542,8 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
         tagged: "true",
         partner_code: "ff",
         source: "urlbar",
+        shopping_tab_displayed: "false",
+        is_shopping_page: "false",
       },
     },
     {
@@ -522,6 +552,8 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
         tagged: "true",
         partner_code: "ff",
         source: "urlbar_persisted",
+        shopping_tab_displayed: "false",
+        is_shopping_page: "false",
       },
       engagements: [
         {

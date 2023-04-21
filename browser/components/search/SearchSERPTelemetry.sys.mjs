@@ -268,6 +268,12 @@ class TelemetryHandler {
       newProvider.nonAdsLinkRegexps = provider.nonAdsLinkRegexps?.length
         ? provider.nonAdsLinkRegexps.map(r => new RegExp(r))
         : [];
+      if (provider.shoppingTab?.regexp) {
+        newProvider.shoppingTab = {
+          selector: provider.shoppingTab.selector,
+          regexp: new RegExp(provider.shoppingTab.regexp),
+        };
+      }
       return newProvider;
     });
     this._contentHandler._searchProviderInfo = this._searchProviderInfo;
@@ -283,6 +289,10 @@ class TelemetryHandler {
 
   reportPageWithAdImpressions(info, browser) {
     this._contentHandler._reportPageWithAdImpressions(info, browser);
+  }
+
+  reportPageImpression(info, browser) {
+    this._contentHandler._reportPageImpression(info, browser);
   }
 
   /**
@@ -341,9 +351,24 @@ class TelemetryHandler {
       impressionIdsWithoutEngagementsSet.add(impressionId);
     }
 
-    this._reportSerpPage(info, source, url, impressionId);
+    this._reportSerpPage(info, source, url);
 
     let item = this._browserInfoByURL.get(url);
+
+    let impressionInfo;
+    if (lazy.serpEventsEnabled) {
+      let partnerCode = "";
+      if (info.code != "none" && info.code != null) {
+        partnerCode = info.code;
+      }
+      impressionInfo = {
+        provider: info.provider,
+        tagged: info.type.startsWith("tagged"),
+        partnerCode,
+        source,
+        isShoppingPage: info.isShoppingPage,
+      };
+    }
 
     if (item) {
       item.browserTelemetryStateMap.set(browser, {
@@ -351,6 +376,7 @@ class TelemetryHandler {
         adImpressionsReported: false,
         impressionId,
         hrefToComponentMap: null,
+        impressionInfo,
       });
       item.count++;
       item.source = source;
@@ -362,6 +388,7 @@ class TelemetryHandler {
           adImpressionsReported: false,
           impressionId,
           hrefToComponentMap: null,
+          impressionInfo,
         }),
         info,
         count: 1,
@@ -644,7 +671,16 @@ class TelemetryHandler {
         }
       }
     }
-    return { provider: searchProviderInfo.telemetryId, type, code };
+    let isShoppingPage = false;
+    if (lazy.serpEventsEnabled && searchProviderInfo.shoppingTab?.regexp) {
+      isShoppingPage = searchProviderInfo.shoppingTab.regexp.test(url);
+    }
+    return {
+      provider: searchProviderInfo.telemetryId,
+      type,
+      code,
+      isShoppingPage,
+    };
   }
 
   /**
@@ -656,32 +692,15 @@ class TelemetryHandler {
    * @param {string} [info.code] The code for the provider.
    * @param {string} source Where the search originated from.
    * @param {string} url The url that was matched (for debug logging only).
-   * @param {string | null} impressionId The id for the impression.
    */
-  _reportSerpPage(info, source, url, impressionId) {
+  _reportSerpPage(info, source, url) {
     let payload = `${info.provider}:${info.type}:${info.code || "none"}`;
     Services.telemetry.keyedScalarAdd(
       SEARCH_CONTENT_SCALAR_BASE + source,
       payload,
       1
     );
-
-    if (lazy.serpEventsEnabled) {
-      let partnerCode = "";
-      if (info.code != "none" && info.code != null) {
-        partnerCode = info.code;
-      }
-
-      Glean.serp.impression.record({
-        impression_id: impressionId,
-        provider: info.provider,
-        tagged: info.type.startsWith("tagged"),
-        partner_code: partnerCode,
-        source,
-      });
-    }
-
-    lazy.logConsole.debug("Impression:", impressionId, payload, url);
+    lazy.logConsole.debug("Impression:", payload, url);
   }
 }
 
@@ -1114,6 +1133,37 @@ class ContentHandler {
         info.url,
         "but couldn't find an impression id."
       );
+    }
+  }
+
+  _reportPageImpression(info, browser) {
+    let item = this._findBrowserItemForURL(info.url);
+    let telemetryState = item.browserTelemetryStateMap.get(browser);
+    if (!telemetryState?.impressionInfo) {
+      lazy.logConsole.debug(
+        "Could not find telemetry state or impression info."
+      );
+      return;
+    }
+    let impressionId = telemetryState.impressionId;
+    if (impressionId) {
+      let impressionInfo = telemetryState.impressionInfo;
+      Glean.serp.impression.record({
+        impression_id: impressionId,
+        provider: impressionInfo.provider,
+        tagged: impressionInfo.tagged,
+        partner_code: impressionInfo.partnerCode,
+        source: impressionInfo.source,
+        shopping_tab_displayed: info.hasShoppingTab,
+        is_shopping_page: impressionInfo.isShoppingPage,
+      });
+      lazy.logConsole.debug(`Reported Impression:`, {
+        impressionId,
+        ...impressionInfo,
+        hasShopping: info.hasShoppingTab,
+      });
+    } else {
+      lazy.logConsole.debug("Could not find an impression id.");
     }
   }
 }
