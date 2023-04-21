@@ -310,15 +310,24 @@ static BlockAction DetermineBlockAction(
 
   mozilla::freestanding::DllBlockInfoComparator comp(aLeafName);
 
-  size_t match;
-  bool onBuiltinList = BinarySearchIf(info, 0, infoNumEntries, comp, &match);
+  size_t match = LowerBound(info, 0, infoNumEntries, comp);
+  bool builtinListHasLowerBound = match != infoNumEntries;
   const DllBlockInfo* entry = nullptr;
   mozilla::nt::PEHeaders headers(aBaseAddress);
   uint64_t version;
   BlockAction checkResult = BlockAction::Allow;
-  if (onBuiltinList) {
-    entry = &info[match];
-    checkResult = CheckBlockInfo(entry, headers, version);
+  if (builtinListHasLowerBound) {
+    // There may be multiple entries on the list. Since LowerBound() returns
+    // the first entry that matches (if there are any matches),
+    // search forward from there.
+    while (match < infoNumEntries && (comp(info[match]) == 0)) {
+      entry = &info[match];
+      checkResult = CheckBlockInfo(entry, headers, version);
+      if (checkResult != BlockAction::Allow) {
+        break;
+      }
+      ++match;
+    }
   }
   mozilla::DebugOnly<bool> blockedByDynamicBlocklist = false;
   // Make sure we handle a case that older versions are blocked by the static
