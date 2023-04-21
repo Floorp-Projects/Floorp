@@ -121,6 +121,7 @@ class RTC_EXPORT RTCCertificateStats final : public RTCStats {
   WEBRTC_RTCSTATS_DECL();
 
   RTCCertificateStats(std::string id, Timestamp timestamp);
+  ABSL_DEPRECATED("Use constructor with Timestamp instead")
   RTCCertificateStats(std::string id, int64_t timestamp_us);
   RTCCertificateStats(const RTCCertificateStats& other);
   ~RTCCertificateStats() override;
@@ -151,6 +152,7 @@ class RTC_EXPORT RTCCodecStats final : public RTCStats {
   WEBRTC_RTCSTATS_DECL();
 
   RTCCodecStats(std::string id, Timestamp timestamp);
+  ABSL_DEPRECATED("Use constructor with Timestamp instead")
   RTCCodecStats(std::string id, int64_t timestamp_us);
   RTCCodecStats(const RTCCodecStats& other);
   ~RTCCodecStats() override;
@@ -169,6 +171,7 @@ class RTC_EXPORT RTCDataChannelStats final : public RTCStats {
   WEBRTC_RTCSTATS_DECL();
 
   RTCDataChannelStats(std::string id, Timestamp timestamp);
+  ABSL_DEPRECATED("Use constructor with Timestamp instead")
   RTCDataChannelStats(std::string id, int64_t timestamp_us);
   RTCDataChannelStats(const RTCDataChannelStats& other);
   ~RTCDataChannelStats() override;
@@ -190,6 +193,7 @@ class RTC_EXPORT RTCIceCandidatePairStats final : public RTCStats {
   WEBRTC_RTCSTATS_DECL();
 
   RTCIceCandidatePairStats(std::string id, Timestamp timestamp);
+  ABSL_DEPRECATED("Use constructor with Timestamp instead")
   RTCIceCandidatePairStats(std::string id, int64_t timestamp_us);
   RTCIceCandidatePairStats(const RTCIceCandidatePairStats& other);
   ~RTCIceCandidatePairStats() override;
@@ -259,6 +263,7 @@ class RTC_EXPORT RTCIceCandidateStats : public RTCStats {
 
  protected:
   RTCIceCandidateStats(std::string id, Timestamp timestamp, bool is_remote);
+  ABSL_DEPRECATED("Use constructor with Timestamp instead")
   RTCIceCandidateStats(std::string id, int64_t timestamp_us, bool is_remote);
 };
 
@@ -271,6 +276,7 @@ class RTC_EXPORT RTCLocalIceCandidateStats final : public RTCIceCandidateStats {
  public:
   static const char kType[];
   RTCLocalIceCandidateStats(std::string id, Timestamp timestamp);
+  ABSL_DEPRECATED("Use constructor with Timestamp instead")
   RTCLocalIceCandidateStats(std::string id, int64_t timestamp_us);
   std::unique_ptr<RTCStats> copy() const override;
   const char* type() const override;
@@ -281,6 +287,7 @@ class RTC_EXPORT RTCRemoteIceCandidateStats final
  public:
   static const char kType[];
   RTCRemoteIceCandidateStats(std::string id, Timestamp timestamp);
+  ABSL_DEPRECATED("Use constructor with Timestamp instead")
   RTCRemoteIceCandidateStats(std::string id, int64_t timestamp_us);
   std::unique_ptr<RTCStats> copy() const override;
   const char* type() const override;
@@ -292,6 +299,7 @@ class RTC_EXPORT DEPRECATED_RTCMediaStreamStats final : public RTCStats {
   WEBRTC_RTCSTATS_DECL();
 
   DEPRECATED_RTCMediaStreamStats(std::string id, Timestamp timestamp);
+  ABSL_DEPRECATED("Use constructor with Timestamp instead")
   DEPRECATED_RTCMediaStreamStats(std::string id, int64_t timestamp_us);
   DEPRECATED_RTCMediaStreamStats(const DEPRECATED_RTCMediaStreamStats& other);
   ~DEPRECATED_RTCMediaStreamStats() override;
@@ -310,6 +318,7 @@ class RTC_EXPORT DEPRECATED_RTCMediaStreamTrackStats final : public RTCStats {
   DEPRECATED_RTCMediaStreamTrackStats(std::string id,
                                       Timestamp timestamp,
                                       const char* kind);
+  ABSL_DEPRECATED("Use constructor with Timestamp instead")
   DEPRECATED_RTCMediaStreamTrackStats(std::string id,
                                       int64_t timestamp_us,
                                       const char* kind);
@@ -357,6 +366,7 @@ class RTC_EXPORT RTCPeerConnectionStats final : public RTCStats {
   WEBRTC_RTCSTATS_DECL();
 
   RTCPeerConnectionStats(std::string id, Timestamp timestamp);
+  ABSL_DEPRECATED("Use constructor with Timestamp instead")
   RTCPeerConnectionStats(std::string id, int64_t timestamp_us);
   RTCPeerConnectionStats(const RTCPeerConnectionStats& other);
   ~RTCPeerConnectionStats() override;
@@ -385,6 +395,7 @@ class RTC_EXPORT RTCRTPStreamStats : public RTCStats {
 
  protected:
   RTCRTPStreamStats(std::string id, Timestamp timestamp);
+  ABSL_DEPRECATED("Use constructor with Timestamp instead")
   RTCRTPStreamStats(std::string id, int64_t timestamp_us);
 };
 
@@ -401,6 +412,7 @@ class RTC_EXPORT RTCReceivedRtpStreamStats : public RTCRTPStreamStats {
 
  protected:
   RTCReceivedRtpStreamStats(std::string id, Timestamp timestamp);
+  ABSL_DEPRECATED("Use constructor with Timestamp instead")
   RTCReceivedRtpStreamStats(std::string id, int64_t timestamp_us);
 };
 
@@ -417,6 +429,7 @@ class RTC_EXPORT RTCSentRtpStreamStats : public RTCRTPStreamStats {
 
  protected:
   RTCSentRtpStreamStats(std::string id, Timestamp timestamp);
+  ABSL_DEPRECATED("Use constructor with Timestamp instead")
   RTCSentRtpStreamStats(std::string id, int64_t timestamp_us);
 };
 
@@ -427,6 +440,7 @@ class RTC_EXPORT RTCInboundRTPStreamStats final
   WEBRTC_RTCSTATS_DECL();
 
   RTCInboundRTPStreamStats(std::string id, Timestamp timestamp);
+  ABSL_DEPRECATED("Use constructor with Timestamp instead")
   RTCInboundRTPStreamStats(std::string id, int64_t timestamp_us);
   RTCInboundRTPStreamStats(const RTCInboundRTPStreamStats& other);
   ~RTCInboundRTPStreamStats() override;
@@ -515,6 +529,7 @@ class RTC_EXPORT RTCOutboundRTPStreamStats final : public RTCRTPStreamStats {
   WEBRTC_RTCSTATS_DECL();
 
   RTCOutboundRTPStreamStats(std::string id, Timestamp timestamp);
+  ABSL_DEPRECATED("Use constructor with Timestamp instead")
   RTCOutboundRTPStreamStats(std::string id, int64_t timestamp_us);
   RTCOutboundRTPStreamStats(const RTCOutboundRTPStreamStats& other);
   ~RTCOutboundRTPStreamStats() override;
@@ -569,6 +584,7 @@ class RTC_EXPORT RTCRemoteInboundRtpStreamStats final
   WEBRTC_RTCSTATS_DECL();
 
   RTCRemoteInboundRtpStreamStats(std::string id, Timestamp timestamp);
+  ABSL_DEPRECATED("Use constructor with Timestamp instead")
   RTCRemoteInboundRtpStreamStats(std::string id, int64_t timestamp_us);
   RTCRemoteInboundRtpStreamStats(const RTCRemoteInboundRtpStreamStats& other);
   ~RTCRemoteInboundRtpStreamStats() override;
@@ -587,6 +603,7 @@ class RTC_EXPORT RTCRemoteOutboundRtpStreamStats final
   WEBRTC_RTCSTATS_DECL();
 
   RTCRemoteOutboundRtpStreamStats(std::string id, Timestamp timestamp);
+  ABSL_DEPRECATED("Use constructor with Timestamp instead")
   RTCRemoteOutboundRtpStreamStats(std::string id, int64_t timestamp_us);
   RTCRemoteOutboundRtpStreamStats(const RTCRemoteOutboundRtpStreamStats& other);
   ~RTCRemoteOutboundRtpStreamStats() override;
@@ -612,6 +629,7 @@ class RTC_EXPORT RTCMediaSourceStats : public RTCStats {
 
  protected:
   RTCMediaSourceStats(std::string id, Timestamp timestamp);
+  ABSL_DEPRECATED("Use constructor with Timestamp instead")
   RTCMediaSourceStats(std::string id, int64_t timestamp_us);
 };
 
@@ -621,6 +639,7 @@ class RTC_EXPORT RTCAudioSourceStats final : public RTCMediaSourceStats {
   WEBRTC_RTCSTATS_DECL();
 
   RTCAudioSourceStats(std::string id, Timestamp timestamp);
+  ABSL_DEPRECATED("Use constructor with Timestamp instead")
   RTCAudioSourceStats(std::string id, int64_t timestamp_us);
   RTCAudioSourceStats(const RTCAudioSourceStats& other);
   ~RTCAudioSourceStats() override;
@@ -638,6 +657,7 @@ class RTC_EXPORT RTCVideoSourceStats final : public RTCMediaSourceStats {
   WEBRTC_RTCSTATS_DECL();
 
   RTCVideoSourceStats(std::string id, Timestamp timestamp);
+  ABSL_DEPRECATED("Use constructor with Timestamp instead")
   RTCVideoSourceStats(std::string id, int64_t timestamp_us);
   RTCVideoSourceStats(const RTCVideoSourceStats& other);
   ~RTCVideoSourceStats() override;
@@ -654,6 +674,7 @@ class RTC_EXPORT RTCTransportStats final : public RTCStats {
   WEBRTC_RTCSTATS_DECL();
 
   RTCTransportStats(std::string id, Timestamp timestamp);
+  ABSL_DEPRECATED("Use constructor with Timestamp instead")
   RTCTransportStats(std::string id, int64_t timestamp_us);
   RTCTransportStats(const RTCTransportStats& other);
   ~RTCTransportStats() override;
