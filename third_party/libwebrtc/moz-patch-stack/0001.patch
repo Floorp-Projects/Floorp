@@ -1,65 +1,496 @@
-From: =?UTF-8?q?Henrik=20Bostr=C3=B6m?= <hbos@webrtc.org>
-Date: Fri, 20 Jan 2023 10:48:31 +0100
-Subject: =?UTF-8?q?(cherry-pick-branch-heads/5481)=20[Merge-110]=C2=A0[Sta?=
- =?UTF-8?q?ts]=20Handle=20the=20case=20of=20missing=20certificates.?=
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From: Danil Chapovalov <danilchap@webrtc.org>
+Date: Fri, 13 Jan 2023 08:13:08 +0000
+Subject: (tmp-cherry-pick) Revert "Move leb128 helper functions into own build
+ target" (6a9af57a24)
 
-Certificates being missing is a sign of a bug (e.g. webrtc:14844, to be
-fixed separately) which is why we have a DCHECK. But this DCHECK does
-not protect against accessing the invalid iterator if it is a release
-build. This CL makes that safe.
+This reverts commit fa962ffc698bda5bc7306ac5c3fd626eef737775.
 
-# Mobile bots not running properly
-NOTRY=True
+Reason for revert: introduces use-of-uninitialized-value in rtp packet parsing
 
-(cherry picked from commit 124d7c3fe5bdc79a355c9df02d07f25331631a68)
+Original change's description:
+> Move leb128 helper functions into own build target
+>
+> to remove duplicated implementation of these functions between av1 packetizer, av1 depacketizer and video allocation rtp header extension
+>
+> Bug: None
+> Change-Id: I30049f31c289bdb9e0aad6520f5145d1f999e635
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/290731
+> Commit-Queue: Danil Chapovalov <danilchap@webrtc.org>
+> Reviewed-by: Philip Eliasson <philipel@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#39069}
 
-Bug: chromium:1408392
-Change-Id: I97a82786028e41c58ef8ef15002c3f959bbec7f1
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291109
-Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
-Commit-Queue: Henrik Boström <hbos@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#39159}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291380
-Cr-Commit-Position: refs/branch-heads/5481@{#2}
-Cr-Branched-From: 2e1a9a4ae0234d4b1ea7a6fd4188afa1fb20379d-refs/heads/main@{#38901}
+Bug: chromium:1407045
+Change-Id: I6b04b567e698db7ddcf1e91161075aeaa0c5988c
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/290960
+Auto-Submit: Danil Chapovalov <danilchap@webrtc.org>
+Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
+Commit-Queue: Danil Chapovalov <danilchap@webrtc.org>
+Cr-Commit-Position: refs/heads/main@{#39099}
 ---
- pc/rtc_stats_collector.cc | 19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-)
+ modules/rtp_rtcp/BUILD.gn                     |   9 --
+ modules/rtp_rtcp/source/leb128.cc             |  63 --------
+ modules/rtp_rtcp/source/leb128.h              |  31 ----
+ modules/rtp_rtcp/source/leb128_unittest.cc    | 138 ------------------
+ modules/rtp_rtcp/source/rtp_packetizer_av1.cc |  26 +++-
+ .../rtp_video_layers_allocation_extension.cc  |  44 +++++-
+ .../source/video_rtp_depacketizer_av1.cc      |  16 +-
+ 7 files changed, 82 insertions(+), 245 deletions(-)
+ delete mode 100644 modules/rtp_rtcp/source/leb128.cc
+ delete mode 100644 modules/rtp_rtcp/source/leb128.h
+ delete mode 100644 modules/rtp_rtcp/source/leb128_unittest.cc
 
-diff --git a/pc/rtc_stats_collector.cc b/pc/rtc_stats_collector.cc
-index 6a45b58eb5..ebe31f6275 100644
---- a/pc/rtc_stats_collector.cc
-+++ b/pc/rtc_stats_collector.cc
-@@ -2172,16 +2172,17 @@ void RTCStatsCollector::ProduceTransportStats_n(
-     // exist.
-     const auto& certificate_stats_it =
-         transport_cert_stats.find(transport_name);
-+    std::string local_certificate_id, remote_certificate_id;
-     RTC_DCHECK(certificate_stats_it != transport_cert_stats.cend());
--    std::string local_certificate_id;
--    if (certificate_stats_it->second.local) {
--      local_certificate_id = RTCCertificateIDFromFingerprint(
--          certificate_stats_it->second.local->fingerprint);
--    }
--    std::string remote_certificate_id;
--    if (certificate_stats_it->second.remote) {
--      remote_certificate_id = RTCCertificateIDFromFingerprint(
--          certificate_stats_it->second.remote->fingerprint);
-+    if (certificate_stats_it != transport_cert_stats.cend()) {
-+      if (certificate_stats_it->second.local) {
-+        local_certificate_id = RTCCertificateIDFromFingerprint(
-+            certificate_stats_it->second.local->fingerprint);
-+      }
-+      if (certificate_stats_it->second.remote) {
-+        remote_certificate_id = RTCCertificateIDFromFingerprint(
-+            certificate_stats_it->second.remote->fingerprint);
-+      }
-     }
+diff --git a/modules/rtp_rtcp/BUILD.gn b/modules/rtp_rtcp/BUILD.gn
+index 6014ae420b..2256317e70 100644
+--- a/modules/rtp_rtcp/BUILD.gn
++++ b/modules/rtp_rtcp/BUILD.gn
+@@ -8,11 +8,6 @@
  
-     // There is one transport stats for each channel.
+ import("../../webrtc.gni")
+ 
+-rtc_library("leb128") {
+-  public = [ "source/leb128.h" ]
+-  sources = [ "source/leb128.cc" ]
+-}
+-
+ rtc_library("rtp_rtcp_format") {
+   visibility = [ "*" ]
+   public = [
+@@ -106,7 +101,6 @@ rtc_library("rtp_rtcp_format") {
+   ]
+ 
+   deps = [
+-    ":leb128",
+     "..:module_api_public",
+     "../../api:array_view",
+     "../../api:function_view",
+@@ -260,7 +254,6 @@ rtc_library("rtp_rtcp") {
+   }
+ 
+   deps = [
+-    ":leb128",
+     ":rtp_rtcp_format",
+     ":rtp_video_header",
+     "..:module_api_public",
+@@ -545,7 +538,6 @@ if (rtc_include_tests) {
+       "source/flexfec_header_reader_writer_unittest.cc",
+       "source/flexfec_receiver_unittest.cc",
+       "source/flexfec_sender_unittest.cc",
+-      "source/leb128_unittest.cc",
+       "source/nack_rtx_unittest.cc",
+       "source/packet_loss_stats_unittest.cc",
+       "source/packet_sequencer_unittest.cc",
+@@ -618,7 +610,6 @@ if (rtc_include_tests) {
+     deps = [
+       ":fec_test_helper",
+       ":frame_transformer_factory_unittest",
+-      ":leb128",
+       ":mock_rtp_rtcp",
+       ":rtcp_transceiver",
+       ":rtp_packetizer_av1_test_helper",
+diff --git a/modules/rtp_rtcp/source/leb128.cc b/modules/rtp_rtcp/source/leb128.cc
+deleted file mode 100644
+index ad3ece0265..0000000000
+--- a/modules/rtp_rtcp/source/leb128.cc
++++ /dev/null
+@@ -1,63 +0,0 @@
+-/*
+- *  Copyright (c) 2023 The WebRTC project authors. All Rights Reserved.
+- *
+- *  Use of this source code is governed by a BSD-style license
+- *  that can be found in the LICENSE file in the root of the source
+- *  tree. An additional intellectual property rights grant can be found
+- *  in the file PATENTS.  All contributing project authors may
+- *  be found in the AUTHORS file in the root of the source tree.
+- */
+-
+-#include "modules/rtp_rtcp/source/leb128.h"
+-
+-#include <cstdint>
+-
+-namespace webrtc {
+-
+-int Leb128Size(uint64_t value) {
+-  int size = 0;
+-  while (value >= 0x80) {
+-    ++size;
+-    value >>= 7;
+-  }
+-  return size + 1;
+-}
+-
+-uint64_t ReadLeb128(const uint8_t*& read_at, const uint8_t* end) {
+-  uint64_t value = 0;
+-  int fill_bits = 0;
+-  while (read_at != end && fill_bits < 64 - 7) {
+-    uint8_t leb128_byte = *read_at;
+-    value |= uint64_t{leb128_byte & 0x7Fu} << fill_bits;
+-    ++read_at;
+-    fill_bits += 7;
+-    if ((leb128_byte & 0x80) == 0) {
+-      return value;
+-    }
+-  }
+-  // Read 9 bytes and didn't find the terminator byte. Check if 10th byte
+-  // is that terminator, however to fit result into uint64_t it may carry only
+-  // single bit.
+-  if (*read_at <= 1) {
+-    value |= uint64_t{*read_at} << fill_bits;
+-    ++read_at;
+-    return value;
+-  }
+-  // Failed to find terminator leb128 byte.
+-  read_at = nullptr;
+-  return 0;
+-}
+-
+-int WriteLeb128(uint64_t value, uint8_t* buffer) {
+-  int size = 0;
+-  while (value >= 0x80) {
+-    buffer[size] = 0x80 | (value & 0x7F);
+-    ++size;
+-    value >>= 7;
+-  }
+-  buffer[size] = value;
+-  ++size;
+-  return size;
+-}
+-
+-}  // namespace webrtc
+diff --git a/modules/rtp_rtcp/source/leb128.h b/modules/rtp_rtcp/source/leb128.h
+deleted file mode 100644
+index 6a793f23ed..0000000000
+--- a/modules/rtp_rtcp/source/leb128.h
++++ /dev/null
+@@ -1,31 +0,0 @@
+-/*
+- *  Copyright (c) 2023 The WebRTC project authors. All Rights Reserved.
+- *
+- *  Use of this source code is governed by a BSD-style license
+- *  that can be found in the LICENSE file in the root of the source
+- *  tree. An additional intellectual property rights grant can be found
+- *  in the file PATENTS.  All contributing project authors may
+- *  be found in the AUTHORS file in the root of the source tree.
+- */
+-
+-#ifndef MODULES_RTP_RTCP_SOURCE_LEB128_H_
+-#define MODULES_RTP_RTCP_SOURCE_LEB128_H_
+-
+-#include <cstdint>
+-
+-namespace webrtc {
+-
+-// Returns number of bytes needed to store `value` in leb128 format.
+-int Leb128Size(uint64_t value);
+-
+-// Reads leb128 encoded value and advance read_at by number of bytes consumed.
+-// Sets read_at to nullptr on error.
+-uint64_t ReadLeb128(const uint8_t*& read_at, const uint8_t* end);
+-
+-// Encodes `value` in leb128 format. Assumes buffer has size of at least
+-// Leb128Size(value). Returns number of bytes consumed.
+-int WriteLeb128(uint64_t value, uint8_t* buffer);
+-
+-}  // namespace webrtc
+-
+-#endif  // MODULES_RTP_RTCP_SOURCE_LEB128_H_
+diff --git a/modules/rtp_rtcp/source/leb128_unittest.cc b/modules/rtp_rtcp/source/leb128_unittest.cc
+deleted file mode 100644
+index dbabcb36f2..0000000000
+--- a/modules/rtp_rtcp/source/leb128_unittest.cc
++++ /dev/null
+@@ -1,138 +0,0 @@
+-/*
+- *  Copyright (c) 2023 The WebRTC project authors. All Rights Reserved.
+- *
+- *  Use of this source code is governed by a BSD-style license
+- *  that can be found in the LICENSE file in the root of the source
+- *  tree. An additional intellectual property rights grant can be found
+- *  in the file PATENTS.  All contributing project authors may
+- *  be found in the AUTHORS file in the root of the source tree.
+- */
+-
+-#include "modules/rtp_rtcp/source/leb128.h"
+-
+-#include <cstdint>
+-#include <iterator>
+-#include <limits>
+-
+-#include "api/array_view.h"
+-#include "test/gmock.h"
+-#include "test/gtest.h"
+-
+-namespace webrtc {
+-namespace {
+-
+-using ::testing::ElementsAre;
+-
+-TEST(Leb128Test, Size) {
+-  EXPECT_EQ(Leb128Size(0), 1);
+-  EXPECT_EQ(Leb128Size(0b0111'1111), 1);
+-  EXPECT_EQ(Leb128Size(0b1000'0000), 2);
+-  EXPECT_EQ(Leb128Size(std::numeric_limits<uint64_t>::max()), 10);
+-}
+-
+-TEST(Leb128Test, ReadZero) {
+-  const uint8_t one_byte[] = {0};
+-  const uint8_t* read_at = one_byte;
+-  EXPECT_EQ(ReadLeb128(read_at, std::end(one_byte)), uint64_t{0});
+-  EXPECT_EQ(std::distance(read_at, std::end(one_byte)), 0);
+-}
+-
+-TEST(Leb128Test, ReadOneByte) {
+-  const uint8_t buffer[] = {0b0010'1100};
+-  const uint8_t* read_at = buffer;
+-  EXPECT_EQ(ReadLeb128(read_at, std::end(buffer)), uint64_t{0b0010'1100});
+-  EXPECT_EQ(std::distance(read_at, std::end(buffer)), 0);
+-}
+-
+-TEST(Leb128Test, ReadTwoByte) {
+-  const uint8_t buffer[] = {0b1010'1100, 0b0111'0000};
+-  const uint8_t* read_at = buffer;
+-  EXPECT_EQ(ReadLeb128(read_at, std::end(buffer)),
+-            uint64_t{0b111'0000'010'1100});
+-  EXPECT_EQ(std::distance(read_at, std::end(buffer)), 0);
+-}
+-
+-TEST(Leb128Test, ReadNearlyMaxValue1) {
+-  const uint8_t buffer[] = {0xff, 0xff, 0xff, 0xff, 0xff,
+-                            0xff, 0xff, 0xff, 0x7f};
+-  const uint8_t* read_at = buffer;
+-  EXPECT_EQ(ReadLeb128(read_at, std::end(buffer)),
+-            uint64_t{0x7fff'ffff'ffff'ffff});
+-  EXPECT_EQ(std::distance(read_at, std::end(buffer)), 0);
+-}
+-
+-TEST(Leb128Test, ReadNearlyMaxValue2) {
+-  // This is valid, though not optimal way to store 63 bits of the value.
+-  const uint8_t buffer[] = {0xff, 0xff, 0xff, 0xff, 0xff,
+-                            0xff, 0xff, 0xff, 0xff, 0x0};
+-  const uint8_t* read_at = buffer;
+-  EXPECT_EQ(ReadLeb128(read_at, std::end(buffer)),
+-            uint64_t{0x7fff'ffff'ffff'ffff});
+-  EXPECT_EQ(std::distance(read_at, std::end(buffer)), 0);
+-}
+-
+-TEST(Leb128Test, ReadMaxValue) {
+-  // This is valid, though not optimal way to store 63 bits of the value.
+-  const uint8_t buffer[] = {0xff, 0xff, 0xff, 0xff, 0xff,
+-                            0xff, 0xff, 0xff, 0xff, 0x1};
+-  const uint8_t* read_at = buffer;
+-  EXPECT_EQ(ReadLeb128(read_at, std::end(buffer)), 0xffff'ffff'ffff'ffff);
+-  EXPECT_EQ(std::distance(read_at, std::end(buffer)), 0);
+-}
+-
+-TEST(Leb128Test, FailsToReadMoreThanMaxValue) {
+-  const uint8_t buffer[] = {0xff, 0xff, 0xff, 0xff, 0xff,
+-                            0xff, 0xff, 0xff, 0xff, 0x2};
+-  const uint8_t* read_at = buffer;
+-  ReadLeb128(read_at, std::end(buffer));
+-  EXPECT_EQ(read_at, nullptr);
+-}
+-
+-TEST(Leb128Test, DoesntReadMoreThan10Bytes) {
+-  // Though this array represent leb128 encoded value that can fit in uint64_t,
+-  // ReadLeb128 function discards it to avoid reading too many bytes from the
+-  // buffer.
+-  const uint8_t buffer[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+-                            0xff, 0xff, 0xff, 0x80, 0x00};
+-  const uint8_t* read_at = buffer;
+-  ReadLeb128(read_at, std::end(buffer));
+-  EXPECT_EQ(read_at, nullptr);
+-}
+-
+-TEST(Leb128Test, WriteZero) {
+-  uint8_t buffer[16];
+-  EXPECT_EQ(WriteLeb128(0, buffer), 1);
+-  EXPECT_EQ(buffer[0], 0);
+-}
+-
+-TEST(Leb128Test, WriteOneByteValue) {
+-  uint8_t buffer[16];
+-  EXPECT_EQ(WriteLeb128(0b0010'1100, buffer), 1);
+-  EXPECT_EQ(buffer[0], 0b0010'1100);
+-}
+-
+-TEST(Leb128Test, WriteTwoByteValue) {
+-  uint8_t buffer[16];
+-  EXPECT_EQ(WriteLeb128(0b11'1111'010'1100, buffer), 2);
+-  EXPECT_EQ(buffer[0], 0b1010'1100);
+-  EXPECT_EQ(buffer[1], 0b0011'1111);
+-}
+-
+-TEST(Leb128Test, WriteNearlyMaxValue) {
+-  uint8_t buffer[16];
+-  EXPECT_EQ(WriteLeb128(0x7fff'ffff'ffff'ffff, buffer), 9);
+-  EXPECT_THAT(
+-      rtc::MakeArrayView(buffer, 9),
+-      ElementsAre(0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f));
+-}
+-
+-TEST(Leb128Test, WriteMaxValue) {
+-  uint8_t buffer[16];
+-  EXPECT_EQ(WriteLeb128(0xffff'ffff'ffff'ffff, buffer), 10);
+-  EXPECT_THAT(
+-      rtc::MakeArrayView(buffer, 10),
+-      ElementsAre(0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01));
+-}
+-
+-}  // namespace
+-}  // namespace webrtc
+diff --git a/modules/rtp_rtcp/source/rtp_packetizer_av1.cc b/modules/rtp_rtcp/source/rtp_packetizer_av1.cc
+index 95dbaf364c..c866c608ad 100644
+--- a/modules/rtp_rtcp/source/rtp_packetizer_av1.cc
++++ b/modules/rtp_rtcp/source/rtp_packetizer_av1.cc
+@@ -16,7 +16,6 @@
+ 
+ #include "api/array_view.h"
+ #include "api/video/video_frame_type.h"
+-#include "modules/rtp_rtcp/source/leb128.h"
+ #include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
+ #include "rtc_base/byte_buffer.h"
+ #include "rtc_base/checks.h"
+@@ -24,6 +23,8 @@
+ 
+ namespace webrtc {
+ namespace {
++// TODO(danilchap): Some of the helpers/constants are same as in
++// rtp_depacketizer_av1. Move them to common av1 file.
+ constexpr int kAggregationHeaderSize = 1;
+ // when there are 3 or less OBU (fragments) in a packet, size of the last one
+ // can be omited.
+@@ -46,6 +47,29 @@ int ObuType(uint8_t obu_header) {
+   return (obu_header & 0b0'1111'000) >> 3;
+ }
+ 
++int Leb128Size(int value) {
++  RTC_DCHECK_GE(value, 0);
++  int size = 0;
++  while (value >= 0x80) {
++    ++size;
++    value >>= 7;
++  }
++  return size + 1;
++}
++
++// Returns number of bytes consumed.
++int WriteLeb128(uint32_t value, uint8_t* buffer) {
++  int size = 0;
++  while (value >= 0x80) {
++    buffer[size] = 0x80 | (value & 0x7F);
++    ++size;
++    value >>= 7;
++  }
++  buffer[size] = value;
++  ++size;
++  return size;
++}
++
+ // Given `remaining_bytes` free bytes left in a packet, returns max size of an
+ // OBU fragment that can fit into the packet.
+ // i.e. MaxFragmentSize + Leb128Size(MaxFragmentSize) <= remaining_bytes.
+diff --git a/modules/rtp_rtcp/source/rtp_video_layers_allocation_extension.cc b/modules/rtp_rtcp/source/rtp_video_layers_allocation_extension.cc
+index 78fd7c9808..5172ed4ce7 100644
+--- a/modules/rtp_rtcp/source/rtp_video_layers_allocation_extension.cc
++++ b/modules/rtp_rtcp/source/rtp_video_layers_allocation_extension.cc
+@@ -16,7 +16,6 @@
+ #include "absl/algorithm/container.h"
+ #include "api/video/video_layers_allocation.h"
+ #include "modules/rtp_rtcp/source/byte_io.h"
+-#include "modules/rtp_rtcp/source/leb128.h"
+ #include "rtc_base/checks.h"
+ 
+ namespace webrtc {
+@@ -27,6 +26,49 @@ namespace {
+ 
+ constexpr int kMaxNumRtpStreams = 4;
+ 
++// TODO(bugs.webrtc.org/12000): share Leb128 functions with av1 packetizer.
++// Returns minimum number of bytes required to store `value`.
++int Leb128Size(uint32_t value) {
++  int size = 0;
++  while (value >= 0x80) {
++    ++size;
++    value >>= 7;
++  }
++  return size + 1;
++}
++
++// Returns number of bytes consumed.
++int WriteLeb128(uint32_t value, uint8_t* buffer) {
++  int size = 0;
++  while (value >= 0x80) {
++    buffer[size] = 0x80 | (value & 0x7F);
++    ++size;
++    value >>= 7;
++  }
++  buffer[size] = value;
++  ++size;
++  return size;
++}
++
++// Reads leb128 encoded value and advance read_at by number of bytes consumed.
++// Sets read_at to nullptr on error.
++uint64_t ReadLeb128(const uint8_t*& read_at, const uint8_t* end) {
++  uint64_t value = 0;
++  int fill_bits = 0;
++  while (read_at != end && fill_bits < 64 - 7) {
++    uint8_t leb128_byte = *read_at;
++    value |= uint64_t{leb128_byte & 0x7Fu} << fill_bits;
++    ++read_at;
++    fill_bits += 7;
++    if ((leb128_byte & 0x80) == 0) {
++      return value;
++    }
++  }
++  // Failed to find terminator leb128 byte.
++  read_at = nullptr;
++  return 0;
++}
++
+ bool AllocationIsValid(const VideoLayersAllocation& allocation) {
+   // Since all multivalue fields are stored in (rtp_stream_id, spatial_id) order
+   // assume `allocation.active_spatial_layers` is already sorted. It is simpler
+diff --git a/modules/rtp_rtcp/source/video_rtp_depacketizer_av1.cc b/modules/rtp_rtcp/source/video_rtp_depacketizer_av1.cc
+index 870f788538..5c41b48cc4 100644
+--- a/modules/rtp_rtcp/source/video_rtp_depacketizer_av1.cc
++++ b/modules/rtp_rtcp/source/video_rtp_depacketizer_av1.cc
+@@ -15,7 +15,6 @@
+ 
+ #include <utility>
+ 
+-#include "modules/rtp_rtcp/source/leb128.h"
+ #include "modules/rtp_rtcp/source/rtp_video_header.h"
+ #include "rtc_base/byte_buffer.h"
+ #include "rtc_base/checks.h"
+@@ -263,6 +262,19 @@ VectorObuInfo ParseObus(
+   return obu_infos;
+ }
+ 
++// Returns number of bytes consumed.
++int WriteLeb128(uint32_t value, uint8_t* buffer) {
++  int size = 0;
++  while (value >= 0x80) {
++    buffer[size] = 0x80 | (value & 0x7F);
++    ++size;
++    value >>= 7;
++  }
++  buffer[size] = value;
++  ++size;
++  return size;
++}
++
+ // Calculates sizes for the Obu, i.e. base on ObuInfo::data field calculates
+ // all other fields in the ObuInfo structure.
+ // Returns false if obu found to be misformed.
+@@ -319,7 +331,7 @@ bool CalculateObuSizes(ObuInfo* obu_info) {
+   }
+   obu_info->payload_offset = it;
+   obu_info->prefix_size +=
+-      WriteLeb128(rtc::dchecked_cast<uint64_t>(obu_info->payload_size),
++      WriteLeb128(rtc::dchecked_cast<uint32_t>(obu_info->payload_size),
+                   obu_info->prefix.data() + obu_info->prefix_size);
+   return true;
+ }
 -- 
 2.34.1
 
