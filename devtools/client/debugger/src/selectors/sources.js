@@ -164,14 +164,11 @@ export function getFirstSourceActorForGeneratedSource(
   if (source.isOriginal) {
     source = getSource(state, originalToGeneratedId(source.id));
   }
-  let actorsInfo = state.sources.actors[source.id];
-  if (!actorsInfo || !actorsInfo.length) {
-    return null;
-  }
+  const actors = getSourceActorsForSource(state, source.id);
   if (threadId) {
-    actorsInfo = actorsInfo.filter(actorInfo => actorInfo.thread == threadId);
+    return actors.find(actorInfo => actorInfo.thread == threadId) || null;
   }
-  return actorsInfo.length ? getSourceActor(state, actorsInfo[0].id) : null;
+  return actors[0] || null;
 }
 
 /**
@@ -184,25 +181,12 @@ export function getFirstSourceActorForGeneratedSource(
  *         List of source actors
  */
 export function getSourceActorsForSource(state, id) {
-  const actorsInfo = state.sources.actors[id];
-  if (!actorsInfo) {
-    return [];
-  }
-
-  return actorsInfo
-    .map(actorInfo => getSourceActor(state, actorInfo.id))
-    .filter(actor => !!actor);
+  return state.sources.actors[id] || [];
 }
 
 export function isSourceWithMap(state, id) {
-  const actorsInfo = state.sources.actors[id];
-  if (!actorsInfo) {
-    return false;
-  }
-
-  return actorsInfo.some(actorInfo =>
-    isSourceActorWithSourceMap(state, actorInfo.id)
-  );
+  const actors = getSourceActorsForSource(state, id);
+  return actors.some(actor => isSourceActorWithSourceMap(state, actor.id));
 }
 
 export function canPrettyPrintSource(state, location) {
@@ -301,18 +285,14 @@ export function getBreakableLines(state, sourceId) {
     return state.sources.breakableLines[sourceId];
   }
 
-  const sourceActorsInfo = state.sources.actors[sourceId];
-  if (!sourceActorsInfo?.length) {
+  const sourceActors = getSourceActorsForSource(state, sourceId);
+  if (!sourceActors.length) {
     return null;
   }
 
   // We pull generated file breakable lines directly from the source actors
   // so that breakable lines can be added as new source actors on HTML loads.
-  return getBreakableLinesForSourceActors(
-    state,
-    sourceActorsInfo.map(actorInfo => actorInfo.id),
-    source.isHTML
-  );
+  return getBreakableLinesForSourceActors(state, sourceActors, source.isHTML);
 }
 
 export const getSelectedBreakableLines = createSelector(

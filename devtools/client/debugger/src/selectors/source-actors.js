@@ -83,8 +83,8 @@ export function getSourceActorBreakableLines(state, sourceActorId) {
  * which are made of multiple source actors (one per inline script).
  *
  * @param {Object} state
- * @param {Array<String>} sourceActorIDs
- *        List of Source Actor IDs
+ * @param {Array<String>} sourceActors
+ *        List of Source Actors
  * @param {Boolean} isHTML
  *        True, if we are fetching the breakable lines for an HTML source.
  *        For them, we have to aggregate the lines of each source actors.
@@ -93,15 +93,11 @@ export function getSourceActorBreakableLines(state, sourceActorId) {
  * @return {Array<Number>}
  *        List of all the breakable lines.
  */
-export function getBreakableLinesForSourceActors(
-  state,
-  sourceActorIDs,
-  isHTML
-) {
+export function getBreakableLinesForSourceActors(state, sourceActors, isHTML) {
   const allBreakableLines = [];
-  for (const sourceActorId of sourceActorIDs) {
+  for (const sourceActor of sourceActors) {
     const breakableLines = state.sourceActors.mutableBreakableLines.get(
-      sourceActorId
+      sourceActor.id
     );
     if (breakableLines) {
       if (isHTML) {
