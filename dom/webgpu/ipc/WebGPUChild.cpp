@@ -750,10 +750,22 @@ MOZ_CAN_RUN_SCRIPT void reportCompilationMessagesToConsole(
             }
           };
 
+  // We haven't actually inspected a message for severity, but
+  // it doesn't actually matter, since we don't do anything at
+  // this level.
+  auto highestSeveritySeen = WebGPUCompilationMessageType::Info;
   size_t errorCount = 0;
   size_t warningCount = 0;
   size_t infoCount = 0;
   for (const auto& message : messages) {
+    bool higherThanSeen =
+        static_cast<std::underlying_type_t<WebGPUCompilationMessageType>>(
+            message.messageType) <
+        static_cast<std::underlying_type_t<WebGPUCompilationMessageType>>(
+            highestSeveritySeen);
+    if (higherThanSeen) {
+      highestSeveritySeen = message.messageType;
+    }
     switch (message.messageType) {
       case WebGPUCompilationMessageType::Error:
         errorCount += 1;
@@ -764,6 +776,25 @@ MOZ_CAN_RUN_SCRIPT void reportCompilationMessagesToConsole(
       case WebGPUCompilationMessageType::Info:
         infoCount += 1;
         break;
+    }
+  }
+  switch (highestSeveritySeen) {
+    case WebGPUCompilationMessageType::Info:
+      // shouldn't happen, but :shrug:
+      break;
+    case WebGPUCompilationMessageType::Warning: {
+      nsString msg(
+          u"Encountered one or more warnings while creating shader module");
+      SetSingleStrAsArgs(msg, &args);
+      console->Warn(globalObj, args);
+      break;
+    }
+    case WebGPUCompilationMessageType::Error: {
+      nsString msg(
+          u"Encountered one or more errors while creating shader module");
+      SetSingleStrAsArgs(msg, &args);
+      console->Error(globalObj, args);
+      break;
     }
   }
 
