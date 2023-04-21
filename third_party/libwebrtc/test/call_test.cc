@@ -256,6 +256,10 @@ void CallTest::CreateVideoSendConfig(VideoSendStream::Config* video_config,
   video_config->rtp.extmap_allow_mixed = true;
   AddRtpExtensionByUri(RtpExtension::kTransportSequenceNumberUri,
                        &video_config->rtp.extensions);
+  AddRtpExtensionByUri(RtpExtension::kAbsSendTimeUri,
+                       &video_config->rtp.extensions);
+  AddRtpExtensionByUri(RtpExtension::kTimestampOffsetUri,
+                       &video_config->rtp.extensions);
   AddRtpExtensionByUri(RtpExtension::kVideoContentTypeUri,
                        &video_config->rtp.extensions);
   AddRtpExtensionByUri(RtpExtension::kGenericFrameDescriptorUri00,
@@ -283,6 +287,9 @@ void CallTest::CreateAudioAndFecSendConfigs(size_t num_audio_streams,
   if (num_audio_streams > 0) {
     AudioSendStream::Config audio_send_config(send_transport);
     audio_send_config.rtp.ssrc = kAudioSendSsrc;
+    AddRtpExtensionByUri(RtpExtension::kTransportSequenceNumberUri,
+                         &audio_send_config.rtp.extensions);
+
     audio_send_config.send_codec_spec = AudioSendStream::Config::SendCodecSpec(
         kAudioSendPayloadType, {"opus", 48000, 2, {{"stereo", "1"}}});
     audio_send_config.encoder_factory = audio_encoder_factory_;

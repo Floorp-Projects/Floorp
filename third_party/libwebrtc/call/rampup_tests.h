@@ -44,7 +44,6 @@ class RampUpTester : public test::EndToEndTest {
                size_t num_flexfec_streams,
                unsigned int start_bitrate_bps,
                int64_t min_run_time_ms,
-               absl::string_view extension_type,
                bool rtx,
                bool red,
                bool report_perf_stats,
@@ -115,7 +114,6 @@ class RampUpTester : public test::EndToEndTest {
   int64_t test_start_ms_;
   int64_t ramp_up_finished_ms_;
 
-  const std::string extension_type_;
   std::vector<uint32_t> video_ssrcs_;
   std::vector<uint32_t> video_rtx_ssrcs_;
   std::vector<uint32_t> audio_ssrcs_;
@@ -131,7 +129,6 @@ class RampUpDownUpTester : public RampUpTester {
                      size_t num_audio_streams,
                      size_t num_flexfec_streams,
                      unsigned int start_bitrate_bps,
-                     absl::string_view extension_type,
                      bool rtx,
                      bool red,
                      const std::vector<int>& loss_rates,
