@@ -70,6 +70,9 @@ class NetworkPacket {
   bool is_rtcp() const { return is_rtcp_; }
   MediaType media_type() const { return media_type_; }
   absl::optional<int64_t> packet_time_us() const { return packet_time_us_; }
+  RtpPacketReceived* packet_received() {
+    return packet_received_ ? &packet_received_.value() : nullptr;
+  }
   absl::optional<RtpPacketReceived> packet_received() const {
     return packet_received_;
   }
