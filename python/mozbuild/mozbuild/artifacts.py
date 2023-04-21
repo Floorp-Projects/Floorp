@@ -556,6 +556,8 @@ class LinuxArtifactJob(ArtifactJob):
         "{product}/pingsender",
         "{product}/plugin-container",
         "{product}/updater",
+        "{product}/glxtest",
+        "{product}/vaapitest",
         "{product}/**/*.so",
         # Preserve signatures when present.
         "{product}/**/*.sig",
