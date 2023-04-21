@@ -883,6 +883,7 @@ rtc_library("neteq_tools") {
     "../../api:array_view",
     "../../api/audio_codecs:audio_codecs_api",
     "../../rtc_base:checks",
+    "../../rtc_base:rtc_numerics",
     "../../rtc_base:safe_conversions",
     "../../rtc_base:stringutils",
     "../../rtc_base:timeutils",

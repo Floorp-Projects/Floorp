@@ -314,7 +314,7 @@ index 4ba6f382bf..06d7f7e58b 100644
  
  rtc_library("rtc_audio_video") {
 diff --git a/modules/audio_coding/BUILD.gn b/modules/audio_coding/BUILD.gn
-index 4f04b35d70..9032eaba42 100644
+index 0bf6968cb6..19a6f1269b 100644
 --- a/modules/audio_coding/BUILD.gn
 +++ b/modules/audio_coding/BUILD.gn
 @@ -553,7 +553,7 @@ rtc_library("webrtc_opus_wrapper") {
