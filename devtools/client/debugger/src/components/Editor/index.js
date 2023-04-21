@@ -42,6 +42,7 @@ import {
   getHighlightedCalls,
   getBlackBoxRanges,
   isSourceBlackBoxed,
+  getHighlightedLineRangeForSelectedSource,
 } from "../../selectors";
 
 // Redux actions
@@ -139,6 +140,7 @@ class Editor extends PureComponent {
       skipPausing: PropTypes.bool.isRequired,
       blackboxedRanges: PropTypes.object.isRequired,
       breakableLines: PropTypes.object.isRequired,
+      highlightedLineRange: PropTypes.object,
     };
   }
 
@@ -147,7 +149,6 @@ class Editor extends PureComponent {
     super(props);
 
     this.state = {
-      highlightedLineRange: null,
       editor: null,
       contextMenu: null,
     };
@@ -664,6 +665,7 @@ class Editor extends PureComponent {
       isPaused,
       inlinePreviewEnabled,
       editorWrappingEnabled,
+      highlightedLineRange,
     } = this.props;
     const { editor, contextMenu } = this.state;
 
@@ -679,7 +681,9 @@ class Editor extends PureComponent {
         <EmptyLines editor={editor} />
         <Breakpoints editor={editor} cx={cx} />
         <Preview editor={editor} editorRef={this.$editorWrapper} />
-        <HighlightLines editor={editor} />
+        {highlightedLineRange ? (
+          <HighlightLines editor={editor} range={highlightedLineRange} />
+        ) : null}
         {features.blackboxLines ? <BlackboxLines editor={editor} /> : null}
         <Exceptions />
         {
@@ -759,6 +763,7 @@ const mapStateToProps = state => {
     highlightedCalls: getHighlightedCalls(state, getCurrentThread(state)),
     blackboxedRanges: getBlackBoxRanges(state),
     breakableLines: getSelectedBreakableLines(state),
+    highlightedLineRange: getHighlightedLineRangeForSelectedSource(state),
   };
 };
 

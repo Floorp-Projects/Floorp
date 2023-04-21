@@ -2,13 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { createStore, selectors, actions } from "../../utils/test-head";
+import {
+  createStore,
+  selectors,
+  actions,
+  makeSource,
+} from "../../utils/test-head";
+import { createLocation } from "../../utils/location";
+import { mockCommandClient } from "./helpers/mockCommandClient";
 
 const {
   getActiveSearch,
   getFrameworkGroupingState,
   getPaneCollapse,
-  getHighlightedLineRange,
+  getHighlightedLineRangeForSelectedSource,
 } = selectors;
 
 describe("ui", () => {
@@ -41,18 +48,43 @@ describe("ui", () => {
     expect(getFrameworkGroupingState(getState())).toBe(!currentState);
   });
 
-  it("should highlight lines", () => {
-    const { dispatch, getState } = createStore();
-    const range = { start: 3, end: 5, sourceId: "2" };
+  it("should highlight lines", async () => {
+    const { dispatch, getState } = createStore(mockCommandClient);
+    const base = await dispatch(
+      actions.newGeneratedSource(makeSource("base.js"))
+    );
+    const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
+      getState(),
+      base.id
+    );
+    const cx = selectors.getThreadContext(getState());
+    //await dispatch(actions.selectSource(cx, base, sourceActor));
+    const location = createLocation({
+      source: base,
+      line: 1,
+      sourceActor,
+    });
+    await dispatch(actions.selectLocation(cx, location));
+
+    const range = { start: 3, end: 5, sourceId: base.id };
     dispatch(actions.highlightLineRange(range));
-    expect(getHighlightedLineRange(getState())).toEqual(range);
+    expect(getHighlightedLineRangeForSelectedSource(getState())).toEqual(range);
   });
 
-  it("should clear highlight lines", () => {
-    const { dispatch, getState } = createStore();
+  it("should clear highlight lines", async () => {
+    const { dispatch, getState } = createStore(mockCommandClient);
+    const base = await dispatch(
+      actions.newGeneratedSource(makeSource("base.js"))
+    );
+    const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
+      getState(),
+      base.id
+    );
+    const cx = selectors.getThreadContext(getState());
+    await dispatch(actions.selectSource(cx, base, sourceActor));
     const range = { start: 3, end: 5, sourceId: "2" };
     dispatch(actions.highlightLineRange(range));
     dispatch(actions.clearHighlightLineRange());
-    expect(getHighlightedLineRange(getState())).toEqual(null);
+    expect(getHighlightedLineRangeForSelectedSource(getState())).toEqual(null);
   });
 });

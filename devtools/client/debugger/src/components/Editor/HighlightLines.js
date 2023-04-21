@@ -4,14 +4,12 @@
 
 import { Component } from "react";
 import PropTypes from "prop-types";
-import { connect } from "../../utils/connect";
-import { getHighlightedLineRange } from "../../selectors";
 
 class HighlightLines extends Component {
   static get propTypes() {
     return {
       editor: PropTypes.object.isRequired,
-      highlightedLineRange: PropTypes.object,
+      range: PropTypes.object.isRequired,
     };
   }
 
@@ -33,15 +31,15 @@ class HighlightLines extends Component {
   }
 
   clearHighlightRange() {
-    const { highlightedLineRange, editor } = this.props;
+    const { range, editor } = this.props;
 
     const { codeMirror } = editor;
 
-    if (!highlightedLineRange || !codeMirror) {
+    if (!range || !codeMirror) {
       return;
     }
 
-    const { start, end } = highlightedLineRange;
+    const { start, end } = range;
     codeMirror.operation(() => {
       for (let line = start - 1; line < end; line++) {
         codeMirror.removeLineClass(line, "wrap", "highlight-lines");
@@ -50,15 +48,15 @@ class HighlightLines extends Component {
   }
 
   highlightLineRange = () => {
-    const { highlightedLineRange, editor } = this.props;
+    const { range, editor } = this.props;
 
     const { codeMirror } = editor;
 
-    if (!highlightedLineRange || !codeMirror) {
+    if (!range || !codeMirror) {
       return;
     }
 
-    const { start, end } = highlightedLineRange;
+    const { start, end } = range;
 
     codeMirror.operation(() => {
       editor.alignLine(start);
@@ -73,6 +71,4 @@ class HighlightLines extends Component {
   }
 }
 
-export default connect(state => ({
-  highlightedLineRange: getHighlightedLineRange(state),
-}))(HighlightLines);
+export default HighlightLines;
