@@ -19,7 +19,7 @@ export function getSourceTextContent(state, location) {
   }
 
   if (source.isOriginal) {
-    return state.sourcesContent.mutableOriginalSourceTextContentMap.get(
+    return state.sourcesContent.mutableOriginalSourceTextContentMapBySourceId.get(
       sourceId
     );
   }
@@ -27,7 +27,7 @@ export function getSourceTextContent(state, location) {
     const sourceActor = getFirstSourceActorForGeneratedSource(state, sourceId);
     sourceActorId = sourceActor.actor;
   }
-  return state.sourcesContent.mutableGeneratedSourceTextContentMap.get(
+  return state.sourcesContent.mutableGeneratedSourceTextContentMapBySourceActorId.get(
     sourceActorId
   );
 }

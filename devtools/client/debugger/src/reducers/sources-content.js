@@ -21,14 +21,14 @@ export function initialSourcesContentState() {
      *
      * Map(source id => AsyncValue<String>)
      */
-    mutableOriginalSourceTextContentMap: new Map(),
+    mutableOriginalSourceTextContentMapBySourceId: new Map(),
 
     /**
      * Text content of all the generated sources.
      *
      * Map(source actor is => AsyncValue<String>)
      */
-    mutableGeneratedSourceTextContentMap: new Map(),
+    mutableGeneratedSourceTextContentMapBySourceActorId: new Map(),
 
     /**
      * Incremental number that is bumped each time we navigate to a new page.
@@ -53,6 +53,9 @@ function update(state = initialSourcesContentState(), action) {
         throw new Error("No source actor id found.");
       }
       return updateSourceTextContent(state, action);
+
+    case "REMOVE_THREAD":
+      return removeThread(state, action);
 
     case "NAVIGATE":
       return {
@@ -99,11 +102,14 @@ function updateSourceTextContent(state, action) {
   }
 
   if (action.sourceId) {
-    state.mutableOriginalSourceTextContentMap.set(action.sourceId, content);
+    state.mutableOriginalSourceTextContentMapBySourceId.set(
+      action.sourceId,
+      content
+    );
   }
 
   if (action.sourceActorId) {
-    state.mutableGeneratedSourceTextContentMap.set(
+    state.mutableGeneratedSourceTextContentMapBySourceActorId.set(
       action.sourceActorId,
       content
     );
@@ -112,6 +118,28 @@ function updateSourceTextContent(state, action) {
   return {
     ...state,
   };
+}
+
+function removeThread(state, action) {
+  const originalSizeBefore =
+    state.mutableOriginalSourceTextContentMapBySourceId.size;
+  for (const source of action.sources) {
+    state.mutableOriginalSourceTextContentMapBySourceId.delete(source.id);
+  }
+  const generatedSizeBefore =
+    state.mutableGeneratedSourceTextContentMapBySourceActorId.size;
+  for (const actor of action.actors) {
+    state.mutableGeneratedSourceTextContentMapBySourceActorId.delete(actor.id);
+  }
+  if (
+    originalSizeBefore !=
+      state.mutableOriginalSourceTextContentMapBySourceId.size ||
+    generatedSizeBefore !=
+      state.mutableGeneratedSourceTextContentMapBySourceActorId.size
+  ) {
+    return { ...state };
+  }
+  return state;
 }
 
 export default update;
