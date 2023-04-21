@@ -52,9 +52,9 @@ export function initialSourcesState(state) {
      * "source" are the objects stored in this reducer, in the `sources` attribute.
      * "source-actor" are the objects stored in the "source-actors.js" reducer, in its `sourceActors` attribute.
      *
-     * Dictionary(source id => array<Source Actor object>)
+     * Map(source id => array<Source Actor object>)
      */
-    actors: {},
+    mutableSourceActors: new Map(),
 
     breakpointPositions: {},
     breakableLines: {},
@@ -217,16 +217,11 @@ function addSources(state, sources) {
 }
 
 function removeSourcesAndActors(state, action) {
-  state = {
-    ...state,
-    actors: { ...state.actors },
-  };
-
   const {
     mutableSourcesPerUrl,
     mutableSources,
     mutableOriginalSources,
-    actors,
+    mutableSourceActors,
   } = state;
   for (const removedSource of action.sources) {
     const sourceId = removedSource.id;
@@ -256,45 +251,49 @@ function removeSourcesAndActors(state, action) {
 
     // If a source is removed, immediately remove all its related source actors.
     // It can speed-up the following for loop cleaning actors.
-    delete actors[sourceId];
+    mutableSourceActors.delete(sourceId);
   }
 
   for (const removedActor of action.actors) {
     const sourceId = removedActor.source;
-    const actorsForSource = actors[sourceId];
-    // The entry might already have been cleared by the previous for..loop.
+    const actorsForSource = mutableSourceActors.get(sourceId);
+    // actors may have already been cleared by the previous for..loop
     if (!actorsForSource) {
       continue;
     }
     const idx = actorsForSource.indexOf(removedActor);
     if (idx != -1) {
       actorsForSource.splice(idx, 1);
-      // Selectors are still expecting new array instances on any update
-      actors[sourceId] = [...actorsForSource];
+      // While the Map is mutable, we expect new array instance on each new change
+      mutableSourceActors.set(sourceId, [...actorsForSource]);
     }
-    // Remove the entry in state.actors if there is no more actors for that source
+
+    // Remove the entry in the Map if there is no more actors for that source
     if (!actorsForSource.length) {
-      delete actors[sourceId];
+      mutableSourceActors.delete(sourceId);
     }
   }
 
-  return state;
+  return { ...state };
 }
 
 function insertSourceActors(state, action) {
   const { sourceActors } = action;
-  state = {
-    ...state,
-    actors: { ...state.actors },
-  };
 
+  const { mutableSourceActors } = state;
   // The `sourceActor` objects are defined from `newGeneratedSources` action:
   // https://searchfox.org/mozilla-central/rev/4646b826a25d3825cf209db890862b45fa09ffc3/devtools/client/debugger/src/actions/sources/newSources.js#300-314
   for (const sourceActor of sourceActors) {
-    state.actors[sourceActor.source] = [
-      ...(state.actors[sourceActor.source] || []),
-      sourceActor,
-    ];
+    const sourceId = sourceActor.source;
+    // We always clone the array of source actors as we return it from selectors.
+    // So the map is mutable, but its values are considered immutable and will change
+    // anytime there is a new actor added per source ID.
+    const existing = mutableSourceActors.get(sourceId);
+    if (existing) {
+      mutableSourceActors.set(sourceId, [...existing, sourceActor]);
+    } else {
+      mutableSourceActors.set(sourceId, [sourceActor]);
+    }
   }
 
   const scriptActors = sourceActors.filter(
@@ -312,7 +311,7 @@ function insertSourceActors(state, action) {
     state = { ...state, breakpointPositions };
   }
 
-  return state;
+  return { ...state };
 }
 
 export default update;
