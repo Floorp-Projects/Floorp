@@ -102,9 +102,6 @@
       'iOS Debug (simulator)': 'ios_debug_bot_x64',
       'iOS64 Debug': 'ios_debug_bot_arm64',
       'iOS64 Release': 'ios_release_bot_arm64',
-      'iOS64 Sim Debug (iOS 12)': 'ios_debug_bot_x64',
-      'iOS64 Sim Debug (iOS 13)': 'ios_debug_bot_x64',
-      'iOS64 Sim Debug (iOS 14)': 'ios_debug_bot_x64',
     },
     'client.webrtc.fyi': {
       # Android
@@ -171,9 +168,6 @@
       'ios_compile_arm64_rel': 'ios_release_bot_arm64',
       'ios_compile_arm64_rel_reclient': 'ios_release_bot_arm64_reclient',
       'ios_dbg_simulator': 'ios_debug_bot_x64',
-      'ios_sim_x64_dbg_ios12': 'ios_debug_bot_x64',
-      'ios_sim_x64_dbg_ios13': 'ios_debug_bot_x64',
-      'ios_sim_x64_dbg_ios14': 'ios_debug_bot_x64',
 
       # Linux
       'linux_asan': 'asan_lsan_clang_release_bot_x64',
