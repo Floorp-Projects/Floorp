@@ -307,8 +307,7 @@ class SmokeTest {
             verifyExistingTabList()
             verifyExistingOpenTabs(website.title)
             verifyCloseTabsButton(website.title)
-            // Disabled step due to ongoing tabs tray compose refactoring, see: https://github.com/mozilla-mobile/fenix/issues/21318
-            // verifyOpenedTabThumbnail()
+            verifyOpenedTabThumbnail()
             verifyPrivateBrowsingNewTabButton()
         }
     }
