@@ -477,6 +477,9 @@ with Files("tests/hr-time/**"):
 with Files("tests/html/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
+with Files("tests/html/canvas/**"):
+    BUG_COMPONENT = ("Core", "Graphics: Canvas2D")
+
 with Files("tests/html-longdesc/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
