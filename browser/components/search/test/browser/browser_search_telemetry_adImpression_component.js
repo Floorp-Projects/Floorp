@@ -23,7 +23,7 @@ const TEST_PROVIDER_INFO = [
     codeParamName: "abc",
     taggedCodes: ["ff"],
     adServerAttributes: ["mozAttr"],
-    extraAdServersRegexps: [/^https:\/\/example\.com\/ad$/],
+    extraAdServersRegexps: [/^https:\/\/example\.com\/ad/],
     components: [
       {
         type: SearchSERPTelemetryUtils.COMPONENTS.AD_CAROUSEL,

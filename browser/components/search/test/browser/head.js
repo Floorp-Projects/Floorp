@@ -356,3 +356,16 @@ async function assertAbandonmentEvent(expectedAbandonment) {
     "Should have the correct abandonment reason."
   );
 }
+
+async function promiseAdImpressionReceived(num) {
+  if (num) {
+    return TestUtils.waitForCondition(() => {
+      let adImpressions = Glean.serp.adImpression.testGetValue() ?? [];
+      return adImpressions.length == num;
+    }, `Should have received an ${num} ad impressions.`);
+  }
+  return TestUtils.waitForCondition(() => {
+    let adImpressions = Glean.serp.adImpression.testGetValue() ?? [];
+    return adImpressions.length;
+  }, "Should have received an ad impression.");
+}

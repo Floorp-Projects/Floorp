@@ -46,6 +46,7 @@ export var SearchSERPTelemetryUtils = {
     AD_LINK: "ad_link",
     AD_SIDEBAR: "ad_sidebar",
     AD_SITELINK: "ad_sitelink",
+    NON_ADS_LINK: "non_ads_link",
     REFINED_SEARCH_BUTTONS: "refined_search_buttons",
     SHOPPING_TAB: "shopping_tab",
   },
@@ -261,6 +262,9 @@ class TelemetryHandler {
           r => new RegExp(r)
         );
       }
+      newProvider.nonAdsLinkRegexps = provider.nonAdsLinkRegexps?.length
+        ? provider.nonAdsLinkRegexps.map(r => new RegExp(r))
+        : [];
       return newProvider;
     });
     this._contentHandler._searchProviderInfo = this._searchProviderInfo;
@@ -339,6 +343,7 @@ class TelemetryHandler {
         adsReported: false,
         adImpressionsReported: false,
         impressionId,
+        hrefToComponentMap: null,
       });
       item.count++;
       item.source = source;
@@ -349,6 +354,7 @@ class TelemetryHandler {
           adsReported: false,
           adImpressionsReported: false,
           impressionId,
+          hrefToComponentMap: null,
         }),
         info,
         count: 1,
@@ -848,6 +854,82 @@ class ContentHandler {
         return provider.telemetryId == providerInfo;
       });
 
+      // The SERP "clicked" action is implied if a user loads another page from
+      // the context of a SERP.
+      if (
+        lazy.serpEventsEnabled &&
+        channel.isDocument &&
+        !wrappedChannel._countedClick
+      ) {
+        let start = Cu.now();
+        // Try to find the telemetryState that relates to the browser.
+        let browser = wrappedChannel.browserElement;
+        let telemetryState;
+        if (item.browserTelemetryStateMap.has(browser)) {
+          // Current browser is tracked.
+          telemetryState = item.browserTelemetryStateMap.get(browser);
+        } else if (browser) {
+          // Current browser might have been created by a browser in a
+          // different tab.
+          let tabBrowser = browser.getTabBrowser();
+          let tab = tabBrowser.getTabForBrowser(browser).openerTab;
+          telemetryState = item.browserTelemetryStateMap.get(tab.linkedBrowser);
+        }
+
+        let type;
+        // Check if telemetry is found.
+        if (telemetryState && telemetryState.hrefToComponentMap) {
+          // First check, see if anything matches.
+          type = telemetryState.hrefToComponentMap?.get(URL);
+          // The SERP provider may have modified the url with different query
+          // parameters, so try checking all the recorded hrefs to see if any
+          // look similar.
+          if (!type) {
+            for (let [
+              href,
+              componentType,
+            ] of telemetryState.hrefToComponentMap.entries()) {
+              if (URL.startsWith(href)) {
+                type = componentType;
+                break;
+              }
+            }
+          }
+          // If no matches, check if the href matches a non-ads link. Do this
+          // check last because a link that looks like a non-ad might actually
+          // be more specific, but have additional query parameters from when
+          // the href was recorded in memory.
+          if (!type) {
+            type = info.nonAdsLinkRegexps.some(r => r.test(URL))
+              ? SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK
+              : "";
+          }
+        }
+        ChromeUtils.addProfilerMarker(
+          "SearchSERPTelemetry._observeActivity",
+          start,
+          "Find component type"
+        );
+        if (type) {
+          impressionIdsWithoutEngagementsSet.delete(
+            telemetryState.impressionId
+          );
+          Glean.serp.engagement.record({
+            impression_id: telemetryState.impressionId,
+            action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+            target: type,
+          });
+          lazy.logConsole.debug("Counting click:", {
+            impressionId: telemetryState.impressionId,
+            type,
+            URL,
+          });
+          wrappedChannel._countedClick = true;
+        } else {
+          lazy.logConsole.warn(`Could not find a component type for ${URL}`);
+        }
+      }
+
       if (!info.extraAdServersRegexps?.some(regex => regex.test(URL))) {
         return;
       }
@@ -869,44 +951,7 @@ class ContentHandler {
           });
         }
 
-        let impressionId;
-        if (lazy.serpEventsEnabled) {
-          // Browser can be null if this is run in an XPCShell test.
-          let browser = wrappedChannel.browserElement;
-
-          // An ad page load can occur in the same browser
-          // as the SERP or in a new tab.
-          if (item.browserTelemetryStateMap.has(browser)) {
-            impressionId = item.browserTelemetryStateMap.get(browser)
-              .impressionId;
-          } else if (browser) {
-            let tabBrowser = browser.getTabBrowser();
-            let tab = tabBrowser.getTabForBrowser(browser).openerTab;
-            impressionId = item.browserTelemetryStateMap.get(tab.linkedBrowser)
-              ?.impressionId;
-          }
-
-          if (impressionId) {
-            impressionIdsWithoutEngagementsSet.delete(impressionId);
-
-            Glean.serp.engagement.record({
-              impression_id: impressionId,
-              action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
-            });
-          } else {
-            lazy.logConsole.warn(
-              "Expected to report a",
-              SearchSERPTelemetryUtils.ACTIONS.CLICKED,
-              "engagement for",
-              URL,
-              "but couldn't find an impression id."
-            );
-          }
-        }
-
         lazy.logConsole.debug("Counting ad click in page for:", {
-          telemetryId: info.telemetryId,
-          impressionId,
           source: item.source,
           originURL,
           URL,
@@ -989,6 +1034,9 @@ class ContentHandler {
    *     is the type of ad component and the value is an object
    *     containing the number of ads that were loaded, visible,
    *     and hidden.
+   * @param {Map<string, string>} info.hrefToComponentMap
+   *     A map of hrefs to their component type. Contains both ads
+   *     and non-ads.
    * @param {object} browser
    *     The browser associated with the page.
    */
@@ -1001,6 +1049,7 @@ class ContentHandler {
     if (
       lazy.serpEventsEnabled &&
       info.adImpressions &&
+      telemetryState &&
       !telemetryState.adImpressionsReported
     ) {
       for (let [componentType, data] of info.adImpressions.entries()) {
@@ -1013,6 +1062,7 @@ class ContentHandler {
           ads_hidden: data.adsHidden,
         });
       }
+      telemetryState.hrefToComponentMap = info.hrefToComponentMap;
       telemetryState.adImpressionsReported = true;
     }
   }

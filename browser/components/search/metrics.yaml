@@ -180,8 +180,10 @@ serp:
       Recorded user actions on a SERP.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1814773
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1816730
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1814773
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1816730
     data_sensitivity:
       - interaction
     notification_emails:
@@ -194,6 +196,13 @@ serp:
         description: >
           The action taken on the page.
           Possible values are `clicked`.
+        type: string
+      target:
+        description: >
+          The target component used to trigger the action.
+          Possible values are `ad_carousel`, `ad_link`, `ad_sitelink`,
+          `ad_sidebar`, `shopping_tab`, `non_ads_link`, or
+          `incontent_searchbox`.
         type: string
 
   ad_impression:

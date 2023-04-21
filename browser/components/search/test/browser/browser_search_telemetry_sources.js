@@ -29,6 +29,14 @@ const TEST_PROVIDER_INFO = [
     taggedCodes: ["ff"],
     followOnParamNames: ["a"],
     extraAdServersRegexps: [/^https:\/\/example\.com\/ad2?/],
+    components: [
+      {
+        type: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+        included: {
+          default: true,
+        },
+      },
+    ],
   },
 ];
 
@@ -148,6 +156,11 @@ async function track_ad_click(
       },
     },
   ]);
+  // Ad impression data is needed to categorize ads on the page in order to
+  // register ad click events before a click occurs. We don't assert their
+  // precise values here because other tests cover that the component
+  // categorizations are valid.
+  await promiseAdImpressionReceived();
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
   await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
@@ -178,6 +191,7 @@ async function track_ad_click(
       engagements: [
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+          target: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
         },
       ],
     },
