@@ -24,6 +24,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs_security.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
@@ -1801,8 +1802,12 @@ bool LoadOSClientCertsModule(const nsCString& dir) {
     return false;
   }
 #endif
+  nsLiteralCString params =
+      StaticPrefs::security_osclientcerts_assume_rsa_pss_support()
+          ? "RSA-PSS"_ns
+          : ""_ns;
   return LoadUserModuleAt(kOSClientCertsModuleName, "osclientcerts", dir,
-                          nullptr);
+                          params.get());
 }
 
 bool LoadLoadableRoots(const nsCString& dir) {
