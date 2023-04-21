@@ -149,15 +149,20 @@
     <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>صفحه‌ای که تلاش می‌کنید از آن بازدید کنید قابل نمایش نیست، زیرا خطایی در هنگام انتقال اطلاعات رُخ داده است.</p><ul><li>لطفاً با صاحبان این پایگاه اینترنتی تماس بگیرید و آنها را در جریان این مشکل قرار دهید.</li></ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_content_crashed_title">محتوا خراب شد</string>
-    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>صفحه‌ای که تلاش می‌کنید از آن بازدید کنید قابل نمایش نیست، زیرا خطایی در هنگام انتقال اطلاعات رُخ داده است.</p><ul><li>لطفاً با صاحبان این پایگاه اینترنتی تماس بگیرید و آنها را در جریان این مشکل قرار دهید.</li></ul>]]></string>
+    <string name="mozac_browser_errorpages_content_crashed_title">محتوا فروپاشید</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+  <p>صفحه‌ای که تلاش می‌کنید از آن بازدید کنید قابل نمایش نیست، زیرا خطایی در هنگام انتقال اطلاعات رخ داده است.</p>
+  <ul>
+  <li>لطفاً با صاحبان این وبگاه تماس بگیرید و آن‌ها را در جریان این مشکل قرار دهید.</li>
+  </ul>
+  ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">خطای کدگذاری محتوا</string>
     <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>قادر به نمایش صفحه‌ای که درخواست بازدید از آن را کرده‌اید نیست، زیرا از گونه‌ای ناشناخته یا پشتیبانی نشده از فشرده‌سازی استفاده می‌کند.</p><ul><li>لطفاً با صاحبان این پایگاه اینترنتی تماس برقرار کنید و آنها را در جریان این مشکل قرار دهید.</li></ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_unknown_host_title">آدرس پیدا نشد</string>
+    <string name="mozac_browser_errorpages_unknown_host_title">نشانی پیدا نشد</string>
     <!-- In the example, the two URLs in markup do not need to be translated. -->
     <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
   <p>مرورگر نتوانست کارساز میزبان را برای نشانی ارائه شده پیدا کند.</p>

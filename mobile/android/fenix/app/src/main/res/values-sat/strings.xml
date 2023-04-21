@@ -64,9 +64,6 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">ᱢᱤᱫᱴᱟᱝ ᱴᱤᱯᱟᱹᱣ ᱛᱮ ᱤᱱᱟᱹ ᱛᱟᱭᱚᱢᱟᱜ ᱯᱨᱟᱭᱵᱷᱮᱴ ᱴᱟᱵ ᱮᱦᱚᱵ ᱢᱮ ᱾</string>
-
-    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">ᱢᱤᱫᱴᱟᱝ ᱴᱤᱯᱟᱹᱣ ᱛᱮ ᱟᱢᱟᱜ ᱤᱱᱟᱹ ᱛᱟᱭᱚᱢᱟᱜ ᱯᱨᱟᱭᱵᱷᱮᱴ ᱴᱟᱵᱽ ᱡᱷᱤᱡᱽ ᱢᱮ ᱾</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">ᱚᱲᱟᱜ ᱥᱠᱨᱤᱱ ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
@@ -260,9 +257,6 @@
     <string name="search_settings_menu_item">ᱥᱮᱸᱫᱽᱨᱟ ᱥᱟᱡᱟᱣ ᱠᱚ</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">ᱱᱤᱭᱟᱹ ᱚᱠᱛᱚ ᱥᱮᱸᱫᱽᱨᱟ :</string>
-
-    <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">ᱱᱤᱛᱚᱜ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ :</string>
 
     <!-- Home onboarding -->
@@ -292,26 +286,47 @@
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="onboarding_home_enable_notifications_title">%s ᱮᱛᱞᱟᱤᱭᱟᱹ ᱥᱟᱞᱟᱜ ᱵᱟᱹᱲᱛᱤ ᱠᱟᱹᱢᱤ ᱠᱚᱨᱟᱣ ᱨᱮ ᱜᱚᱲᱚ ᱮᱢᱚᱜᱼᱟᱭ</string>
+    <!-- Enable notification pre permission dialog description with rationale
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_description">ᱟᱢᱟᱜ ᱴᱮᱵᱽ ᱠᱚ ᱥᱟᱫᱷᱚᱱ ᱠᱚ ᱢᱩᱫᱽ ᱨᱮ ᱥᱤᱱᱠᱨᱚᱱᱤᱠᱮᱥᱚᱱ ᱢᱮ, ᱰᱟᱣᱩᱱᱞᱚᱰ ᱠᱚ ᱢᱮᱱᱮᱡᱽ ᱢᱮ, %s ᱦᱟᱜ ᱯᱨᱟᱭᱵᱷᱮᱥᱤ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱠᱷᱚᱱ ᱡᱚᱛᱚ ᱠᱷᱚᱱ ᱰᱷᱮᱨ ᱵᱮᱵᱷᱟᱨ ᱞᱟᱹᱜᱤᱫ ᱴᱤᱯᱥ ᱧᱟᱢ ᱢᱮ, ᱟᱨᱦᱚᱸ ᱟᱭᱢᱟ ᱡᱤᱱᱤᱥ ᱵᱟᱲᱟᱭ ᱡᱚᱝ ᱢᱮ ᱾</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="onboarding_home_enable_notifications_positive_button">ᱞᱮᱛᱟᱲ</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">ᱱᱤᱛᱚᱜ ᱫᱚ ᱵᱟᱝᱟ</string>
 
+    <!-- Juno first user onboarding flow experiment -->
+    <!-- Title for set firefox as default browser screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_default_browser_title">%s ᱟᱢᱟᱜ ᱠᱩᱥᱤ ᱵᱽᱨᱟᱣᱡᱚᱨ ᱛᱮᱭᱟᱨ ᱢᱮ</string>
+    <!-- Description for set firefox as default browser screen.
+        The first parameter is the Firefox brand name.
+        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
+    <string name="juno_onboarding_default_browser_description">%1$s ᱫᱚ ᱦᱚᱲ ᱠᱚ ᱵᱮᱯᱟᱨ ᱠᱷᱚᱱ ᱢᱩᱬᱩᱛ ᱨᱮ ᱫᱚᱦᱚᱭᱟ ᱟᱨ ᱠᱨᱚᱥ-ᱥᱟᱭᱤᱴ ᱴᱨᱮᱠᱚᱨ ᱵᱞᱚᱠ ᱠᱟᱛᱮ ᱟᱢᱟᱜ ᱯᱨᱟᱵᱷᱮᱴᱤ ᱫᱚᱦᱚᱭᱟ ᱾\n\n ᱟᱞᱮᱭᱟᱜ %2$s ᱨᱮ ᱰᱷᱮᱨ ᱵᱟᱲᱟᱭ ᱢᱮ ᱾</string>
+    <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
+    This is part of the string with the key "juno_onboarding_default_browser_description". -->
+    <string name="juno_onboarding_default_browser_description_link_text">ᱱᱤᱥᱚᱱ ᱨᱮᱭᱟᱜ ᱱᱚᱴᱤᱥ</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
+    <string name="juno_onboarding_default_browser_positive_button">ᱢᱩᱞ ᱵᱽᱨᱟᱣᱩᱡᱟᱹᱨ ᱞᱮᱠᱷᱟ ᱥᱟᱡᱟᱣ ᱢᱮ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">ᱱᱤᱛᱚᱜ ᱫᱚ ᱵᱟᱝᱟ</string>
+    <string name="juno_onboarding_default_browser_negative_button">ᱱᱤᱛᱚᱜ ᱫᱚ ᱵᱟᱝᱟ</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">ᱯᱷᱚᱱ ᱠᱷᱚᱱ ᱞᱮᱯᱴᱚᱯ ᱛᱮ ᱩᱪᱟᱹᱲ ᱢᱮ ᱵᱟᱨ ᱯᱟᱦᱴᱮ ᱞᱮᱠᱟᱛᱮ</string>
+    <string name="juno_onboarding_sign_in_title">ᱯᱷᱚᱱ ᱠᱷᱚᱱ ᱞᱮᱯᱴᱚᱯ ᱛᱮ ᱩᱪᱟᱹᱲ ᱢᱮ ᱵᱟᱨ ᱯᱟᱦᱴᱮ ᱞᱮᱠᱟᱛᱮ</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">ᱴᱮᱵᱽ ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱫᱚ ᱮᱴᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱠᱷᱚᱱ ᱡᱟᱦᱟᱸ ᱨᱮ ᱟᱲᱟᱜ ᱞᱮᱫᱟᱢ ᱚᱱᱰᱮ ᱠᱷᱚᱱ ᱯᱟᱧᱡᱟ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱢ ᱾</string>
+    <string name="juno_onboarding_sign_in_description">ᱴᱮᱵᱽ ᱟᱨ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱫᱚ ᱮᱴᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱠᱷᱚᱱ ᱡᱟᱦᱟᱸ ᱨᱮ ᱟᱲᱟᱜ ᱞᱮᱫᱟᱢ ᱚᱱᱰᱮ ᱠᱷᱚᱱ ᱯᱟᱧᱡᱟ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱢ ᱾</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ</string>
+    <string name="juno_onboarding_sign_in_positive_button">ᱵᱚᱞᱚᱱ ᱥᱩᱦᱤ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">ᱱᱤᱛᱚᱜ ᱫᱚ ᱵᱟᱝᱟ</string>
+    <string name="juno_onboarding_sign_in_negative_button">ᱱᱤᱛᱚᱜ ᱫᱚ ᱵᱟᱝᱟ</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" tools:ignore="UnusedResources">%s ᱮᱛᱞᱟᱤᱭᱟᱹ ᱥᱟᱞᱟᱜ ᱵᱟᱹᱲᱛᱤ ᱠᱟᱹᱢᱤ ᱠᱚᱨᱟᱣ ᱨᱮ ᱜᱚᱲᱚ ᱮᱢᱚᱜᱼᱟᱭ</string>
+    <string name="juno_onboarding_enable_notifications_title">%s ᱮᱛᱞᱟᱤᱭᱟᱹ ᱥᱟᱞᱟᱜ ᱵᱟᱹᱲᱛᱤ ᱠᱟᱹᱢᱤ ᱠᱚᱨᱟᱣ ᱨᱮ ᱜᱚᱲᱚ ᱮᱢᱚᱜᱼᱟᱭ</string>
+    <!-- Description for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_description">ᱥᱟᱫᱷᱚᱱ ᱠᱚ ᱛᱟᱞᱟᱨᱮ ᱴᱟᱵᱽ ᱠᱚ ᱩᱪᱟᱹᱲ ᱢᱮ, ᱰᱟᱣᱩᱱᱞᱚᱰ ᱠᱚ ᱢᱮᱱᱮᱡᱽ ᱢᱮ, ᱟᱨ %s ᱠᱷᱚᱱ ᱡᱚᱛᱚ ᱠᱷᱚᱱ ᱡᱟᱹᱥᱛᱤ ᱵᱮᱵᱷᱟᱨ ᱞᱟᱹᱜᱤᱫ ᱴᱤᱯᱥ ᱧᱟᱢ ᱢᱮ ᱾</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="juno_onboarding_enable_notifications_positive_button">ᱠᱷᱚᱵᱚᱨ ᱠᱚ ᱦᱮᱡ ᱪᱷᱚᱭ ᱢᱮ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">ᱱᱤᱛᱚᱜ ᱫᱚ ᱵᱟᱝᱟ</string>
+    <string name="juno_onboarding_enable_notifications_negative_button">ᱱᱤᱛᱚᱜ ᱫᱚ ᱵᱟᱝᱟ</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -396,8 +411,6 @@
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">ᱵᱮᱰᱷᱟᱣ ᱠᱟᱱᱟ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱞᱟᱹᱜᱤᱫ ᱛᱮ HTTPS ᱫᱟᱱᱟᱝ ᱵᱮᱵᱷᱟᱨ ᱛᱮ ᱥᱟᱭᱤᱴ ᱠᱚ ᱥᱟᱞᱟᱜ ᱟᱡ ᱛᱮ ᱡᱩᱲᱟᱹᱣ ᱵᱤᱲᱟᱹᱣ ᱾</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">ᱪᱟᱹᱞᱩ</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">ᱵᱚᱸᱫᱚ</string>
     <!-- Summary of https only preference if https only is set to on in all tabs -->
@@ -704,15 +717,9 @@
     <!-- Dialog button text for canceling open all tabs -->
     <string name="open_all_warning_cancel">ᱵᱟᱹᱰᱨᱟᱹ</string>
 
-    <!-- Text to show users they have one site in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%d ᱥᱟᱭᱤᱴ</string>
     <!-- Text to show users they have one page in the history group section of the History fragment.
     %d is a placeholder for the number of pages in the group. -->
     <string name="history_search_group_site_1">%d ᱥᱟᱦᱴᱟ</string>
-    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_sites" moz:RemovedIn="111" tools:ignore="UnusedResources">%d ᱥᱟᱭᱤᱴ ᱠᱚ</string>
 
     <!-- Text to show users they have multiple pages in the history group section of the History fragment.
     %d is a placeholder for the number of pages in the group. -->
@@ -1040,8 +1047,6 @@
     <string name="phone_feature_blocked_by_android">Android ᱫᱟᱨᱟᱭ ᱛᱮ ᱟᱠᱚᱴ ᱦᱩᱭ ᱟᱠᱟᱱᱟ</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">ᱪᱷᱟᱰᱟ ᱠᱚ</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">ᱪᱟᱹᱞᱩ</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">ᱵᱚᱸᱫᱚ</string>
     <!-- Summary of tracking protection preference if tracking protection is set to standard -->
@@ -1188,7 +1193,7 @@
     <string name="notification_re_engagement_text">%1$s ᱨᱮ ᱵᱟᱝ ᱥᱟᱧᱪᱟᱣ ᱠᱟᱱ ᱠᱩᱠᱤ ᱟᱨᱵᱟᱝ ᱦᱤᱛᱟᱹᱞ ᱠᱚ ᱵᱽᱨᱟᱣᱩᱡᱽ ᱢᱮ</string>
 
     <!-- Preference for not taking the short survey. -->
-    <string name="preferences_not_take_survey" tools:ignore="UnusedResources">ᱵᱟᱝᱟ ᱥᱟᱨᱦᱟᱣ</string>
+    <string name="preferences_not_take_survey">ᱵᱟᱝᱟ ᱥᱟᱨᱦᱟᱣ</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
@@ -1404,21 +1409,21 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">ᱵᱟᱲᱦᱟᱣᱟᱠᱟᱱ ᱯᱟᱸᱡᱟ ᱨᱚᱯᱷᱟ</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">ᱯᱟᱸᱡᱟ ᱵᱮᱜᱚᱨ ᱵᱽᱨᱟᱣᱩᱡ ᱢᱮ</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">ᱯᱟᱸᱡᱟ ᱵᱮᱜᱚᱨ ᱵᱽᱨᱟᱣᱩᱡ ᱢᱮ</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">ᱟᱢᱟᱜᱽ ᱰᱟᱴᱟ ᱟᱢ ᱴᱷᱮᱱ ᱜᱮ ᱫᱚᱦᱚᱭ ᱢᱮ ᱾ %s ᱫᱚ ᱟᱭᱢᱟ ᱥᱚᱢᱟᱱ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱠᱚ ᱴᱷᱮᱱ ᱠᱷᱚᱱ ᱚᱱᱞᱟᱭᱤᱱ ᱨᱩᱠᱷᱤᱭᱟᱹᱭ ᱢᱮᱟᱭ ᱾</string>
+    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">ᱟᱢᱟᱜᱽ ᱰᱟᱴᱟ ᱟᱢ ᱴᱷᱮᱱ ᱜᱮ ᱫᱚᱦᱚᱭ ᱢᱮ ᱾ %s ᱫᱚ ᱟᱭᱢᱟ ᱥᱚᱢᱟᱱ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱠᱚ ᱴᱷᱮᱱ ᱠᱷᱚᱱ ᱚᱱᱞᱟᱭᱤᱱ ᱨᱩᱠᱷᱤᱭᱟᱹᱭ ᱢᱮᱟᱭ ᱾</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">ᱱᱟᱯ (ᱢᱩᱞ ᱯᱷᱮᱲᱟᱛ)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">ᱯᱨᱟᱭᱣᱮᱥᱭ ᱟᱨ ᱯᱚᱨᱯᱷᱚᱨᱢᱮᱱᱥ ᱞᱟᱹᱜᱤᱫ ᱥᱚᱢᱟᱱ ᱾ ᱥᱟᱦᱴᱟ ᱢᱩᱞ ᱞᱮᱠᱷᱟᱛᱮ ᱞᱟᱫᱮᱜᱼᱟ ᱾</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">ᱯᱨᱟᱭᱣᱮᱥᱭ ᱟᱨ ᱯᱚᱨᱯᱷᱚᱨᱢᱮᱱᱥ ᱞᱟᱹᱜᱤᱫ ᱥᱚᱢᱟᱱ ᱾ ᱥᱟᱦᱴᱟ ᱢᱩᱞ ᱞᱮᱠᱷᱟᱛᱮ ᱞᱟᱫᱮᱜᱼᱟ ᱾</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">ᱢᱩᱞ ᱜᱷᱮᱨ ᱮᱥᱮᱫ ᱨᱚᱠᱷᱭᱟ ᱫᱚ ᱪᱮᱫ ᱮ ᱵᱞᱚᱠ ᱪᱷᱚ ᱠᱮᱜᱼᱟᱭ</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">ᱱᱤᱦᱟᱹᱛ</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">ᱥᱟᱦᱴᱟ ᱞᱚᱜᱚᱱ ᱞᱳᱰ ᱞᱟᱹᱜᱤᱫ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱠᱚ ᱵᱞᱚᱠ ᱠᱚᱟᱭ, ᱦᱮᱞᱮ ᱥᱟᱦᱴᱟ ᱞᱳᱰ ᱨᱮ ᱰᱤᱜᱟᱹᱣ ᱦᱩᱭ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱾</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">ᱥᱟᱦᱴᱟ ᱞᱚᱜᱚᱱ ᱞᱳᱰ ᱞᱟᱹᱜᱤᱫ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱠᱚ ᱵᱞᱚᱠ ᱠᱚᱟᱭ, ᱦᱮᱞᱮ ᱥᱟᱦᱴᱟ ᱞᱳᱰ ᱨᱮ ᱰᱤᱜᱟᱹᱣ ᱦᱩᱭ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱾</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">ᱴᱷᱤᱴ ᱜᱷᱮᱨ ᱮᱥᱮᱫ ᱨᱩᱠᱷᱭᱟ ᱫᱚ ᱪᱮᱫ ᱵᱞᱚᱠ ᱠᱮᱜᱼᱟᱭ</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->

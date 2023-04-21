@@ -1465,6 +1465,8 @@
     <string name="preference_enhanced_tracking_protection">የተሻሻለ የመከታተያ ጥበቃ</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">ያለተከታታይ ያስሱ</string>
+    <!-- Preference summary for enhanced tracking protection settings on/off switch -->
+    <string name="preference_enhanced_tracking_protection_summary">አሁን አጠቃላይ የኩኪ ጥበቃን በማሳየት ላይ፣ የኛ እጅግ ኃይለኛው ድረ-ገጽ ተሻጋሪ መከታተያዎችን አጋጅ።</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">ውሂብዎን ለራስዎ ያስቀምጡ። %s በመስመር ላይ የሚያደርጉትን ከሚከተሉ ብዙ በጣም የተለመዱ መከታተያዎች ይጠብቅዎታል።</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
@@ -1513,6 +1515,8 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">በግል ትሮች ውስጥ ብቻ</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">ምናባዊ ገንዘብ መቆፈርያዎች</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">የአሳሽ አሻራ መከታተያዎች</string>
     <!-- Button label for navigating to the Enhanced Tracking Protection details -->
     <string name="enhanced_tracking_protection_details">ዝርዝር ማብራሪያዎች</string>
@@ -1534,6 +1538,8 @@
     <string name="etp_cookies_description_2">አጠቃላይ የኩኪ ጥበቃ ኩኪዎችን እርስዎ ካሉበት ድረ-ገጽ ላይ ይነጥላቸዋል ስለዚህ እንደ የማስታወቂያ አውታረ መረቦች ያሉ መከታተያዎች እርስዎን በሁሉም ድረ-ገጾች ላይ ለመከታተል ሊጠቀሙባቸው አይችሉም።</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">ክሪፕቶማይነሮች</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">ተንኮል አዘል ስክሪፕቶች መሳሪያዎን ለዲጂታል ገንዘብ ቁፋሮ ለማዋል ፈቃድ እንዳያገኙ ይከላከላል።</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">የአሳሽ አሻራ መከታተያዎች</string>
     <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->

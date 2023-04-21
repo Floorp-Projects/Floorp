@@ -8,5 +8,5 @@
     <!-- Text preview for larger sized widgets -->
     <string name="search_widget_text_long">جست‌وجوی وب</string>
     <!-- Content description (not visible, for screen readers etc.): Voice search -->
-    <string name="search_widget_voice">جستجوی صوتی</string>
+    <string name="search_widget_voice">جست‌وجوی صوتی</string>
 </resources>

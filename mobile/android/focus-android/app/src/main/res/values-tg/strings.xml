@@ -737,6 +737,9 @@
     <!-- Label for cookie banner item from tracking protection, after the user reports with success a website where cookie banner reducer did not work -->
     <string name="cookie_banner_the_site_was_reported">Дархост барои дастгирӣ кардани сомонаи пешниҳодшуда.</string>
 
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Cookie Banner (Banner Info Message). %1$s will be replaced by the app name, %2$s will be an active link using the string cfr_cookie_banner_link as text. -->
+    <string name="cfr_cookie_banner">Барои қатъ кардани намоиши баннерҳои кукии безоркунанда, «%1$s» кӯшиш мекунад, ки дархостҳои кукиҳоро рад намояд.\n\nХусусиятҳои баннери кукиҳоро дар «%2$s» идора кунед.</string>
     <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
     <string name="cfr_cookie_banner_link">танзимот</string>
 
@@ -884,6 +887,12 @@
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
     The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_autocomplete_url">Пуркунии худкори нишонаҳои URL барои сомонаҳои писандида\n
+        Нишонии URL-и дилхоҳро ба муддати дароз дар навори нишонӣ пахш кунед
+    </string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">Пайвандеро дар варақаи нав кушоед\n
         Ҳар як пайванди саҳифаро ба муддати дароз пахш намоед
     </string>
@@ -905,6 +914,8 @@
 
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">Манъ кардани муҳтавои зараровар ва сомонаҳои қалбакии имконпазир</string>
+    <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_summary">Манъ кардани сомонаҳои фиребанда ва ҳамлакунанда, сомонаҳои зараровар ва сомонаҳо бо нармафзори беҳуда.</string>
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Реҷаи «Танҳо HTTPS»</string>
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
@@ -996,12 +1007,35 @@
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
     <string name="errorpage_httpsonly_title2">Ин сомона пайвасти «HTTPS»-ро дастгирӣ намекунад</string>
 
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[Барои бехатарии бештар, «%1$s» кӯшиш мекунад, ки аз пайвасти «HTTPS» ба қадри имкон истифода барад.
+     <a href="%2$s">Маълумоти бештар</a> <br/><br/>
+     Шумо метавонед ин танзимро дар Танзимот > Махфият ва амният > Бехатарӣ иваз кунед.]]></string>
+
     <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Пайвастшавӣ бехатар нест</string>
+
+     <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    Ин метавонад дар танзимоти сервер мушкилӣ дошта бошад ё касе кӯшиш мекунад, ки серверро тақаллуб намояд. <br/><br/>
+    Агар шумо қаблан ба ин сервер бо муваффақият пайваст шуда бошед, эҳтимол ин хато муваққатӣ аст ва шумо метавонед баъдтар амалро аз нав кӯшиш намоед.
+    ]]></string>
+
+     <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Касе метавонад тақаллуб кардани сомонаро кӯшиш намояд ва идомаи кор бо ин сомона хатарнок аст.</label>
+        <br><br>
+        <label>«%1$s» ба <b>%2$s</b> эътимод надорад, зеро барорандаи гувоҳнома номаълум аст, гувоҳнома ба таври худ имзо гузоштааст ё сервер гувоҳномаҳои фосилавии дурустро намефиристад.</label>
+    ]]></string>
 
      <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Пӯшидани варақа</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon2">Қапидем! Мо ин сомонаро манъ кардем, то ки аз қафои шумо ҷосусӣ накунад. Барои дидани он чизеро, ки мо манъ карда истодаем, дар вақти дилхоҳ ба сипар зер кунед.</string>
 
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Пӯшидани равзанаҳои зоҳиршаванда</string>
@@ -1009,6 +1043,8 @@
     <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
     <!-- Tool Tip Title -->
     <string name="tool_tip_title">Мо шуморо муҳофизат мекунем!</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">Ҳамин танзимоти пешфарз муҳофизати пурқувватро пешниҳод мекунанд. Аммо шумо метавонед танзимоти пешниҳодшударо мувофиқи ниёзҳои хусусии худ ба осони иваз намоед.</string>
     <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
     <string name="tool_tip_dismiss_button_content_description">Нодида гузарондан</string>
 
@@ -1027,6 +1063,13 @@
 
     <!-- This is the title of promote search widget dialog. -->
     <string name="promote_search_widget_dialog_title">Таърихи тамошо пок карда шуд! 🎉</string>
+
+    <!-- Banner Info Message than will appear when user first enters in the app. The location is at the toolbar. -->
+    <string name="cfr_for_start_browsing">Ҷаласаи тамошокунии хусусиро оғоз намоед ва мо васоити пайгирӣ ва дигар чизҳои зарароварро аз роҳи шумо тоза мекунем.</string>
+
+    <!-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. "Focus") -->
+    <string name="promote_search_widget_dialog_subtitle">Мо шуморо ба тамошокунии хусусӣ ворид мекунем, аммо дар оянда браузери худро ба воситаи виҷети «%1$s» аз экрани асосии худ зудтар оғоз намоед.</string>
 
     <!-- This is te text from add search widget to home screen button .The button is located on
     promote search widget dialog. -->

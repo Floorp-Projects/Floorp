@@ -39,7 +39,7 @@
     <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
         <label>Касе метавонад тақаллуб кардани сомонаро кӯшиш намояд ва шумо бояд идома надиҳед.</label>
         <br><br>
-        <label>Сомонаҳо айнияти худро тавассути гувоҳномаҳо исбот мекунанд. %1$s ба <b>%2$s</b> эътимод надорад, зеро барорандаи гувоҳнома номаълум аст, гувоҳнома ба таври худ имзо гузошааст ё сервер гувоҳномаҳои фосилавии дурустро намефиристад.</label>
+        <label>Сомонаҳо айнияти худро тавассути гувоҳномаҳо исбот мекунанд. %1$s ба <b>%2$s</b> эътимод надорад, зеро барорандаи гувоҳнома номаълум аст, гувоҳнома ба таври худ имзо гузоштааст ё сервер гувоҳномаҳои фосилавии дурустро намефиристад.</label>
     ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">Бозгашт (тавсия дода мешавад)</string>
@@ -60,10 +60,6 @@
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Иловагӣ…</string>
 
-    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
-    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
-        <label> <b>%1$s</b> дорои сиёсати амниятӣ бо номи «Амнияти интиқоли қатъии HTTP» (HSTS) мебошад, ва ин маънои онро дорад, ки <b>%2$s</b> метавонад ба он танҳо тавассути алоқаи бехатар пайваст шавад. Шумо барои ворид шудан ба ин сомона истисноро илова карда наметавонед.
-    ]]></string>
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
         <label> <b>%1$s</b> дорои сиёсати амниятӣ бо номи «Амнияти интиқоли қатъии HTTP» (HSTS) мебошад, ва ин маънои онро дорад, ки <b>%2$s</b> метавонад ба он танҳо тавассути алоқаи бехатар пайваст шавад. Шумо барои ворид шудан ба ин сомона истисноро илова карда наметавонед. </label>

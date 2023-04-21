@@ -62,10 +62,6 @@
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">የላቀ…</string>
 
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
-    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
-        <label> <b>%1$s</b> HTTP Strict Transport Security (HSTS) የሚባል የደህንነት ፖሊሲ አለው፣ ይህ ማለት <b>%2$s</b> ደህንነቱ በተጠበቀ ሁኔታ ብቻ ነው መገናኘት የሚችለው። ይህንን ድረ-ገጽ ለመጎብኘት የተለየ ፈቃድ ማከል አይችሉም።
-    ]]></string>
-    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
         <label> <b>%1$s</b> HTTP Strict Transport Security (HSTS) የሚባል የደህንነት ፖሊሲ አለው፣ ይህ ማለት <b>%2$s</b> ደህንነቱ በተጠበቀ ሁኔታ ብቻ ነው መገናኘት የሚችለው። ይህንን ድረ-ገጽ ለመጎብኘት የተለየ ፈቃድ ማከል አይችሉም። </label>
     ]]></string>
@@ -292,6 +288,8 @@
       </ul>
     ]]></string>
 
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">ጎጂ ድረ-ገጽ ችግር</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
       <p>በ%1$s ያለው ድረ-ገፅ የጥቃት ድረ-ገፅ ተብሎ ሪፖርት ተደርጓል እና በእርስዎ የደህንነት ምርጫዎች መሠረት ታግዷል።</p>

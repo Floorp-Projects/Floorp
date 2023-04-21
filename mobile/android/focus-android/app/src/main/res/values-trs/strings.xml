@@ -352,6 +352,15 @@
     <!-- In-app link (in settings) to Focus privacy notice. -->
     <string name="preference_privacy_notice">Noticia huìi</string>
 
+    <!-- In-app link (in settings) to Focus licensing information. -->
+    <string name="preference_licensing_info">Si nùguàn\' līsênsia</string>
+
+    <!-- Link to Focus licensing information from other libraries that we use. -->
+    <string name="preference_libraries_we_use">Nej dukuâ ñanj arâj sun ñûnj</string>
+
+    <!-- Open Source Licenses page title. The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s Dukuâ ñanj OSS</string>
+
     <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
     <string name="preference_about">Rayi\'î %1$s</string>
 
@@ -676,10 +685,65 @@
     <!--  Preference summary for the cookie banner. If the cookie banner option is disabled. -->
     <string name="preferences_cookie_banner_summary_off">Dūnâ\’àj</string>
 
-    <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
-    <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">nāgi\'iô\'</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
+    <string name="cookie_banner_exception_panel_site_is_not_supported_cancel_button">Dūyichin\'</string>
+
     <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
     <string name="cfr_cookie_banner_link">nāgi\'iô\'</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Nānùn ma\'an man</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Da\' ga\'hue gā\'nïn:</string>
+
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Gūij riña gā\'hue nāgi\'iát Android</string>
+
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Gūru\'man ra\'a riña <b>nej sa achín nì\'hiát</b>]]></string>
+
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Gūij riña gā\'ue Nāgi\'hiô\'</string>
+
+    <!-- Third step for allowing a permission. The placeholder will be updated by, for example, "Camera" -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Nāchrūn <b>%1$s</b>]]></string>
+
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Kâmara</string>
+
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Aga\' uxun nanèe</string>
+
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Danè\' huin</string>
+
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Sa atāj nan\'ānj an</string>
+
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Gāchinj nì\'hiaj</string>
+
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Nitāj si hūaj nayi\'nin</string>
+
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Gā\'hue</string>
+
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Nitāj si hūaj nāyi\'nïn \'hiaj Android</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Gā\'nïn gī\'hiaj sun sa unïnt ngà sa ni\'hiājt</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Màn riña sa unïnt nārán</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Sā sà\'a huin ânj</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Nārán riña sa unïnt ngà sa ni\'iājt</string>
 
     <!-- Preference for studies -->
     <string name="preference_studies">Nej ēstûdio</string>
@@ -699,8 +763,14 @@
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Ngà \'hiaj sunj</string>
 
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">Ngà gisîj</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Guyun sa kïj hua nga USB/Wi-Fi</string>
+
+    <!-- Text Button for show biometric prompt -->
+    <string name="show_biometric_button_text">Na\'nïn riñanj</string>
 
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
@@ -858,6 +928,17 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Gānikò\' si tema aga\' dan</string>
 
-     <!-- Promote SearchWidget Dialog -->
+     <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Nitāj seguridâ nikāj koneksiôn</string>
+
+     <!-- Sessions List -->
+    <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
+    <string name="close_tab">Narán rakïj ñanj</string>
+
+    <!-- Promote SearchWidget Dialog -->
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_content_description">Nārán</string>
 
     </resources>

@@ -300,6 +300,10 @@
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_default_browser_title">Ejapo %s-gui kundahára ehayhuvéva</string>
+    <!-- Description for set firefox as default browser screen.
+        The first parameter is the Firefox brand name.
+        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
+    <string name="juno_onboarding_default_browser_description">%1$s omotenonde avápe viru rovake ha omomba’e nde rekoñemi ojokóvo tapykuehoha tenda pa’ũme.\n\nEñemomaranduve %2$s rupive.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text">marandu’i ñemiguáva</string>
@@ -310,6 +314,8 @@
     <string name="juno_onboarding_default_browser_negative_button">Ani ko’ág̃a</string>
     <!-- Title for sign in to sync screen. -->
     <string name="juno_onboarding_sign_in_title">Eva pumbyrýgui mohendahápe ha ambueháicha</string>
+    <!-- Description for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_description">Erujey tendayke ha ñe’ẽñemi ambue mba’e’okágui eku’ejey hag̃ua eheja haguégui.</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button">Eñemboheraguapy</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -317,6 +323,9 @@
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_enable_notifications_title">Marandu’i ne pytyvõta ejapove hag̃ua %s ndive</string>
+    <!-- Description for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_description">Emondo tendayke mba’e’oka pa’ũme, eñangareko ñemboguejýre ha ehecháta ñemoñe’ẽ eipuru porã hag̃ua %s.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button">Emyandy marandu’i</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -1268,6 +1277,10 @@
     <!-- Text B shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_B_text">Ejuhuta ag̃uite. Térã ehecháta mba’e ijukýva.</string>
 
+    <!-- Survey -->
+    <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_survey_message_text">Ore pytyvõ Firefox rekoporãrã embohováivo ko’ã porandu.</string>
     <!-- Preference for taking the short survey. -->
     <string name="preferences_take_survey">Ejapo encuesta</string>
     <!-- Preference for not taking the short survey. -->
@@ -1599,6 +1612,10 @@
     <string name="preference_etp_smartblock_description">Oĩ ndahetái tapykuehoha ikurusúva oñemosãso’imíva ko kuatiaroguépe eñemongu’e rupive hendivekuéra *.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">Kuaave</string>
+
+    <!-- Content description (not visible, for screen readers etc.):
+    Enhanced tracking protection exception preference icon for ETP settings. -->
+    <string name="preference_etp_exceptions_icon_description">Erohoryvéva ta’ãnga’i ñemo’ã ykeguáva jehapykueho rovake</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Ñepytyvõ</string>
