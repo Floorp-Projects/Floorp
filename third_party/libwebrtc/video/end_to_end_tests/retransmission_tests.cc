@@ -142,24 +142,13 @@ TEST_F(RetransmissionEndToEndTest, ReceivesNackAndRetransmitsAudio) {
     size_t GetNumVideoStreams() const override { return 0; }
     size_t GetNumAudioStreams() const override { return 1; }
 
-    std::unique_ptr<test::PacketTransport> CreateReceiveTransport(
-        TaskQueueBase* task_queue) override {
-      auto receive_transport = std::make_unique<test::PacketTransport>(
-          task_queue, nullptr, this, test::PacketTransport::kReceiver,
-          payload_type_map_,
-          std::make_unique<FakeNetworkPipe>(
-              Clock::GetRealTimeClock(), std::make_unique<SimulatedNetwork>(
-                                             BuiltInNetworkBehaviorConfig())));
-      receive_transport_ = receive_transport.get();
-      return receive_transport;
-    }
-
     Action OnSendRtp(const uint8_t* packet, size_t length) override {
       RtpPacket rtp_packet;
       EXPECT_TRUE(rtp_packet.Parse(packet, length));
 
       if (!sequence_number_to_retransmit_) {
         sequence_number_to_retransmit_ = rtp_packet.SequenceNumber();
+        return DROP_PACKET;
 
         // Don't ask for retransmission straight away, may be deduped in pacer.
       } else if (rtp_packet.SequenceNumber() ==
@@ -186,6 +175,7 @@ TEST_F(RetransmissionEndToEndTest, ReceivesNackAndRetransmitsAudio) {
       (*receive_configs)[0].rtp.nack.rtp_history_ms = kNackRtpHistoryMs;
       local_ssrc_ = (*receive_configs)[0].rtp.local_ssrc;
       remote_ssrc_ = (*receive_configs)[0].rtp.remote_ssrc;
+      receive_transport_ = (*receive_configs)[0].rtcp_send_transport;
     }
 
     void PerformTest() override {

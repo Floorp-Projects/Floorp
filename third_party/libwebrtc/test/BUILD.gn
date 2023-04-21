@@ -871,6 +871,7 @@ rtc_library("direct_transport") {
     "direct_transport.h",
   ]
   deps = [
+    "../api:rtp_parameters",
     "../api:sequence_checker",
     "../api:simulated_network_api",
     "../api:transport_api",
@@ -879,6 +880,7 @@ rtc_library("direct_transport") {
     "../call:call_interfaces",
     "../call:simulated_packet_receiver",
     "../modules/rtp_rtcp:rtp_rtcp_format",
+    "../rtc_base:checks",
     "../rtc_base:macromagic",
     "../rtc_base:timeutils",
     "../rtc_base/synchronization:mutex",

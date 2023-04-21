@@ -113,18 +113,8 @@ void RampUpTester::OnVideoStreamsCreated(
   send_stream_ = send_stream;
 }
 
-std::unique_ptr<test::PacketTransport> RampUpTester::CreateSendTransport(
-    TaskQueueBase* task_queue,
-    Call* sender_call) {
-  auto network = std::make_unique<SimulatedNetwork>(forward_transport_config_);
-  send_simulated_network_ = network.get();
-  auto send_transport = std::make_unique<test::PacketTransport>(
-      task_queue, sender_call, this, test::PacketTransport::kSender,
-      test::CallTest::payload_type_map_,
-      std::make_unique<FakeNetworkPipe>(Clock::GetRealTimeClock(),
-                                        std::move(network)));
-  send_transport_ = send_transport.get();
-  return send_transport;
+BuiltInNetworkBehaviorConfig RampUpTester::GetSendTransportConfig() const {
+  return forward_transport_config_;
 }
 
 size_t RampUpTester::GetNumVideoStreams() const {
@@ -308,6 +298,17 @@ void RampUpTester::OnCallsCreated(Call* sender_call, Call* receiver_call) {
     PollStats();
     return kPollInterval;
   });
+}
+
+void RampUpTester::OnTransportCreated(
+    test::PacketTransport* to_receiver,
+    SimulatedNetworkInterface* sender_network,
+    test::PacketTransport* to_sender,
+    SimulatedNetworkInterface* receiver_network) {
+  RTC_DCHECK_RUN_ON(task_queue_);
+
+  send_transport_ = to_receiver;
+  send_simulated_network_ = sender_network;
 }
 
 void RampUpTester::PollStats() {

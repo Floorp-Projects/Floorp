@@ -20,12 +20,14 @@
 #include "api/test/create_frame_generator.h"
 #include "api/video/builtin_video_bitrate_allocator_factory.h"
 #include "call/fake_network_pipe.h"
+#include "call/packet_receiver.h"
 #include "call/simulated_network.h"
 #include "modules/audio_mixer/audio_mixer_impl.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/event.h"
 #include "rtc_base/task_queue_for_test.h"
 #include "test/fake_encoder.h"
+#include "test/rtp_rtcp_observer.h"
 #include "test/testsupport/file_utils.h"
 #include "video/config/video_encoder_config.h"
 
@@ -126,13 +128,12 @@ void CallTest::RunBaseTest(BaseTest* test) {
       CreateReceiverCall(recv_config);
     }
     test->OnCallsCreated(sender_call_.get(), receiver_call_.get());
-    receive_transport_ = test->CreateReceiveTransport(task_queue());
-    send_transport_ =
-        test->CreateSendTransport(task_queue(), sender_call_.get());
-
+    CreateReceiveTransport(test->GetReceiveTransportConfig(), test);
+    CreateSendTransport(test->GetSendTransportConfig(), test);
+    test->OnTransportCreated(send_transport_.get(), send_simulated_network_,
+                             receive_transport_.get(),
+                             receive_simulated_network_);
     if (test->ShouldCreateReceivers()) {
-      send_transport_->SetReceiver(receiver_call_->Receiver());
-      receive_transport_->SetReceiver(sender_call_->Receiver());
       if (num_video_streams_ > 0)
         receiver_call_->SignalChannelNetworkState(MediaType::VIDEO, kNetworkUp);
       if (num_audio_streams_ > 0)
@@ -146,7 +147,7 @@ void CallTest::RunBaseTest(BaseTest* test) {
     CreateSendConfig(num_video_streams_, num_audio_streams_,
                      num_flexfec_streams_, send_transport_.get());
     if (test->ShouldCreateReceivers()) {
-      CreateMatchingReceiveConfigs(receive_transport_.get());
+      CreateMatchingReceiveConfigs();
     }
     if (num_video_streams_ > 0) {
       test->ModifyVideoConfigs(GetVideoSendConfig(), &video_receive_configs_,
@@ -235,6 +236,8 @@ void CallTest::CreateReceiverCall(const Call::Config& config) {
 }
 
 void CallTest::DestroyCalls() {
+  send_transport_.reset();
+  receive_transport_.reset();
   sender_call_.reset();
   receiver_call_.reset();
 }
@@ -568,6 +571,35 @@ void CallTest::CreateFlexfecStreams() {
   }
 }
 
+void CallTest::CreateSendTransport(const BuiltInNetworkBehaviorConfig& config,
+                                   RtpRtcpObserver* observer) {
+  PacketReceiver* receiver =
+      receiver_call_ ? receiver_call_->Receiver() : nullptr;
+
+  auto network = std::make_unique<SimulatedNetwork>(config);
+  send_simulated_network_ = network.get();
+  send_transport_ = std::make_unique<PacketTransport>(
+      task_queue(), sender_call_.get(), observer,
+      test::PacketTransport::kSender, payload_type_map_,
+      std::make_unique<FakeNetworkPipe>(Clock::GetRealTimeClock(),
+                                        std::move(network), receiver),
+      rtp_extensions_, rtp_extensions_);
+}
+
+void CallTest::CreateReceiveTransport(
+    const BuiltInNetworkBehaviorConfig& config,
+    RtpRtcpObserver* observer) {
+  auto network = std::make_unique<SimulatedNetwork>(config);
+  receive_simulated_network_ = network.get();
+  receive_transport_ = std::make_unique<PacketTransport>(
+      task_queue(), nullptr, observer, test::PacketTransport::kReceiver,
+      payload_type_map_,
+      std::make_unique<FakeNetworkPipe>(Clock::GetRealTimeClock(),
+                                        std::move(network),
+                                        sender_call_->Receiver()),
+      rtp_extensions_, rtp_extensions_);
+}
+
 void CallTest::ConnectVideoSourcesToStreams() {
   for (size_t i = 0; i < video_sources_.size(); ++i)
     video_send_streams_[i]->SetSource(video_sources_[i].get(),
@@ -710,6 +742,10 @@ const std::map<uint8_t, MediaType> CallTest::payload_type_map_ = {
     {CallTest::kVideoSendPayloadType, MediaType::VIDEO},
     {CallTest::kFakeVideoSendPayloadType, MediaType::VIDEO},
     {CallTest::kSendRtxPayloadType, MediaType::VIDEO},
+    {CallTest::kPayloadTypeVP8, MediaType::VIDEO},
+    {CallTest::kPayloadTypeVP9, MediaType::VIDEO},
+    {CallTest::kPayloadTypeH264, MediaType::VIDEO},
+    {CallTest::kPayloadTypeGeneric, MediaType::VIDEO},
     {CallTest::kRedPayloadType, MediaType::VIDEO},
     {CallTest::kRtxRedPayloadType, MediaType::VIDEO},
     {CallTest::kUlpfecPayloadType, MediaType::VIDEO},
@@ -741,27 +777,18 @@ void BaseTest::ModifyReceiverBitrateConfig(BitrateConstraints* bitrate_config) {
 
 void BaseTest::OnCallsCreated(Call* sender_call, Call* receiver_call) {}
 
-std::unique_ptr<PacketTransport> BaseTest::CreateSendTransport(
-    TaskQueueBase* task_queue,
-    Call* sender_call) {
-  return std::make_unique<PacketTransport>(
-      task_queue, sender_call, this, test::PacketTransport::kSender,
-      CallTest::payload_type_map_,
-      std::make_unique<FakeNetworkPipe>(
-          Clock::GetRealTimeClock(),
-          std::make_unique<SimulatedNetwork>(BuiltInNetworkBehaviorConfig())));
+void BaseTest::OnTransportCreated(PacketTransport* to_receiver,
+                                  SimulatedNetworkInterface* sender_network,
+                                  PacketTransport* to_sender,
+                                  SimulatedNetworkInterface* receiver_network) {
 }
 
-std::unique_ptr<PacketTransport> BaseTest::CreateReceiveTransport(
-    TaskQueueBase* task_queue) {
-  return std::make_unique<PacketTransport>(
-      task_queue, nullptr, this, test::PacketTransport::kReceiver,
-      CallTest::payload_type_map_,
-      std::make_unique<FakeNetworkPipe>(
-          Clock::GetRealTimeClock(),
-          std::make_unique<SimulatedNetwork>(BuiltInNetworkBehaviorConfig())));
+BuiltInNetworkBehaviorConfig BaseTest::GetSendTransportConfig() const {
+  return BuiltInNetworkBehaviorConfig();
 }
-
+BuiltInNetworkBehaviorConfig BaseTest::GetReceiveTransportConfig() const {
+  return BuiltInNetworkBehaviorConfig();
+}
 size_t BaseTest::GetNumVideoStreams() const {
   return 1;
 }

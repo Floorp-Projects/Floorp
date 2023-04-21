@@ -7,6 +7,7 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
+#include <cstddef>
 #include <functional>
 #include <list>
 #include <memory>
@@ -15,7 +16,6 @@
 #include "absl/strings/string_view.h"
 #include "api/test/create_frame_generator.h"
 #include "call/call.h"
-#include "call/fake_network_pipe.h"
 #include "call/simulated_network.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/event.h"
@@ -24,7 +24,6 @@
 #include "rtc_base/task_queue_for_test.h"
 #include "rtc_base/thread_annotations.h"
 #include "test/call_test.h"
-#include "test/direct_transport.h"
 #include "test/encoder_settings.h"
 #include "test/fake_decoder.h"
 #include "test/fake_encoder.h"
@@ -113,20 +112,9 @@ class BitrateEstimatorTest : public test::CallTest {
     SendTask(task_queue(), [this]() {
       CreateCalls();
 
-      send_transport_.reset(new test::DirectTransport(
-          task_queue(),
-          std::make_unique<FakeNetworkPipe>(
-              Clock::GetRealTimeClock(), std::make_unique<SimulatedNetwork>(
-                                             BuiltInNetworkBehaviorConfig())),
-          sender_call_.get(), payload_type_map_));
-      send_transport_->SetReceiver(receiver_call_->Receiver());
-      receive_transport_.reset(new test::DirectTransport(
-          task_queue(),
-          std::make_unique<FakeNetworkPipe>(
-              Clock::GetRealTimeClock(), std::make_unique<SimulatedNetwork>(
-                                             BuiltInNetworkBehaviorConfig())),
-          receiver_call_.get(), payload_type_map_));
-      receive_transport_->SetReceiver(sender_call_->Receiver());
+      CreateSendTransport(BuiltInNetworkBehaviorConfig(), /*observer=*/nullptr);
+      CreateReceiveTransport(BuiltInNetworkBehaviorConfig(),
+                             /*observer=*/nullptr);
 
       VideoSendStream::Config video_send_config(send_transport_.get());
       video_send_config.rtp.ssrcs.push_back(kVideoSendSsrcs[0]);
@@ -160,10 +148,6 @@ class BitrateEstimatorTest : public test::CallTest {
         delete stream;
       }
       streams_.clear();
-
-      send_transport_.reset();
-      receive_transport_.reset();
-
       DestroyCalls();
     });
   }
@@ -245,8 +229,6 @@ class BitrateEstimatorTest : public test::CallTest {
   };
 
   LogObserver receiver_log_;
-  std::unique_ptr<test::DirectTransport> send_transport_;
-  std::unique_ptr<test::DirectTransport> receive_transport_;
   VideoReceiveStreamInterface::Config receive_config_;
   std::vector<Stream*> streams_;
 };

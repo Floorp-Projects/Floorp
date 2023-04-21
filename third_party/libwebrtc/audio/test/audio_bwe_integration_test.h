@@ -39,12 +39,6 @@ class AudioBweTest : public test::EndToEndTest {
       TestAudioDeviceModule* send_audio_device,
       TestAudioDeviceModule* recv_audio_device) override;
 
-  std::unique_ptr<test::PacketTransport> CreateSendTransport(
-      TaskQueueBase* task_queue,
-      Call* sender_call) override;
-  std::unique_ptr<test::PacketTransport> CreateReceiveTransport(
-      TaskQueueBase* task_queue) override;
-
   void PerformTest() override;
 
  private:

@@ -218,43 +218,38 @@ rtc::VideoSourceInterface<VideoFrame>* VideoAnalyzer::OutputInterface() {
   return &captured_frame_forwarder_;
 }
 
-PacketReceiver::DeliveryStatus VideoAnalyzer::DeliverPacket(
-    MediaType media_type,
-    rtc::CopyOnWriteBuffer packet,
-    int64_t packet_time_us) {
-  // Ignore timestamps of RTCP packets. They're not synchronized with
-  // RTP packet timestamps and so they would confuse wrap_handler_.
-  if (IsRtcpPacket(packet)) {
-    return receiver_->DeliverPacket(media_type, std::move(packet),
-                                    packet_time_us);
-  }
+void VideoAnalyzer::DeliverRtcpPacket(rtc::CopyOnWriteBuffer packet) {
+  return receiver_->DeliverRtcpPacket(std::move(packet));
+}
 
+void VideoAnalyzer::DeliverRtpPacket(
+    MediaType media_type,
+    RtpPacketReceived packet,
+    PacketReceiver::OnUndemuxablePacketHandler undemuxable_packet_handler) {
   if (rtp_file_writer_) {
     test::RtpPacket p;
-    memcpy(p.data, packet.cdata(), packet.size());
+    memcpy(p.data, packet.Buffer().data(), packet.size());
     p.length = packet.size();
     p.original_length = packet.size();
     p.time_ms = clock_->TimeInMilliseconds() - start_ms_;
     rtp_file_writer_->WritePacket(&p);
   }
 
-  RtpPacket rtp_packet;
-  rtp_packet.Parse(packet);
-  if (!IsFlexfec(rtp_packet.PayloadType()) &&
-      (rtp_packet.Ssrc() == ssrc_to_analyze_ ||
-       rtp_packet.Ssrc() == rtx_ssrc_to_analyze_)) {
+  if (!IsFlexfec(packet.PayloadType()) &&
+      (packet.Ssrc() == ssrc_to_analyze_ ||
+       packet.Ssrc() == rtx_ssrc_to_analyze_)) {
     // Ignore FlexFEC timestamps, to avoid collisions with media timestamps.
     // (FlexFEC and media are sent on different SSRCs, which have different
     // timestamps spaces.)
     // Also ignore packets from wrong SSRC, but include retransmits.
     MutexLock lock(&lock_);
     int64_t timestamp =
-        wrap_handler_.Unwrap(rtp_packet.Timestamp() - rtp_timestamp_delta_);
+        wrap_handler_.Unwrap(packet.Timestamp() - rtp_timestamp_delta_);
     recv_times_[timestamp] = clock_->CurrentNtpInMilliseconds();
   }
 
-  return receiver_->DeliverPacket(media_type, std::move(packet),
-                                  packet_time_us);
+  return receiver_->DeliverRtpPacket(media_type, std::move(packet),
+                                     std::move(undemuxable_packet_handler));
 }
 
 void VideoAnalyzer::PreEncodeOnFrame(const VideoFrame& video_frame) {

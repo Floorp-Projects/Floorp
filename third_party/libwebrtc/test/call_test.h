@@ -16,9 +16,11 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "api/array_view.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/task_queue/task_queue_factory.h"
+#include "api/test/simulated_network.h"
 #include "api/test/video/function_video_decoder_factory.h"
 #include "api/test/video/function_video_encoder_factory.h"
 #include "api/units/time_delta.h"
@@ -76,6 +78,10 @@ class CallTest : public ::testing::Test, public RtpPacketSinkInterface {
 
  protected:
   void RegisterRtpExtension(const RtpExtension& extension);
+  // Returns header extensions that can be parsed by the transport.
+  rtc::ArrayView<const RtpExtension> GetRegisteredExtensions() {
+    return rtp_extensions_;
+  }
 
   // RunBaseTest overwrites the audio_state of the send and receive Call configs
   // to simplify test code.
@@ -102,11 +108,23 @@ class CallTest : public ::testing::Test, public RtpPacketSinkInterface {
   void SetSendUlpFecConfig(VideoSendStream::Config* send_config);
   void SetReceiveUlpFecConfig(
       VideoReceiveStreamInterface::Config* receive_config);
+
+  void CreateSendConfig(size_t num_video_streams,
+                        size_t num_audio_streams,
+                        size_t num_flexfec_streams) {
+    CreateSendConfig(num_video_streams, num_audio_streams, num_flexfec_streams,
+                     send_transport_.get());
+  }
   void CreateSendConfig(size_t num_video_streams,
                         size_t num_audio_streams,
                         size_t num_flexfec_streams,
                         Transport* send_transport);
 
+  void CreateMatchingVideoReceiveConfigs(
+      const VideoSendStream::Config& video_send_config) {
+    CreateMatchingVideoReceiveConfigs(video_send_config,
+                                      receive_transport_.get());
+  }
   void CreateMatchingVideoReceiveConfigs(
       const VideoSendStream::Config& video_send_config,
       Transport* rtcp_send_transport);
@@ -136,6 +154,9 @@ class CallTest : public ::testing::Test, public RtpPacketSinkInterface {
   void CreateMatchingFecConfig(
       Transport* transport,
       const VideoSendStream::Config& video_send_config);
+  void CreateMatchingReceiveConfigs() {
+    CreateMatchingReceiveConfigs(receive_transport_.get());
+  }
   void CreateMatchingReceiveConfigs(Transport* rtcp_send_transport);
 
   void CreateFrameGeneratorCapturerWithDrift(Clock* drift_clock,
@@ -153,6 +174,16 @@ class CallTest : public ::testing::Test, public RtpPacketSinkInterface {
   void CreateVideoSendStream(const VideoEncoderConfig& encoder_config);
   void CreateAudioStreams();
   void CreateFlexfecStreams();
+
+  // Receiver call must be created before calling CreateSendTransport in order
+  // to set a receiver.
+  // Rtp header extensions must be registered (RegisterRtpExtension(..)) before
+  // the transport is created in order for the receiving call object receive RTP
+  // packets with extensions.
+  void CreateSendTransport(const BuiltInNetworkBehaviorConfig& config,
+                           RtpRtcpObserver* observer);
+  void CreateReceiveTransport(const BuiltInNetworkBehaviorConfig& config,
+                              RtpRtcpObserver* observer);
 
   void ConnectVideoSourcesToStreams();
 
@@ -187,6 +218,7 @@ class CallTest : public ::testing::Test, public RtpPacketSinkInterface {
   std::unique_ptr<webrtc::RtcEventLog> recv_event_log_;
   std::unique_ptr<Call> sender_call_;
   std::unique_ptr<PacketTransport> send_transport_;
+  SimulatedNetworkInterface* send_simulated_network_ = nullptr;
   std::vector<VideoSendStream::Config> video_send_configs_;
   std::vector<VideoEncoderConfig> video_encoder_configs_;
   std::vector<VideoSendStream*> video_send_streams_;
@@ -195,6 +227,7 @@ class CallTest : public ::testing::Test, public RtpPacketSinkInterface {
 
   std::unique_ptr<Call> receiver_call_;
   std::unique_ptr<PacketTransport> receive_transport_;
+  SimulatedNetworkInterface* receive_simulated_network_ = nullptr;
   std::vector<VideoReceiveStreamInterface::Config> video_receive_configs_;
   std::vector<VideoReceiveStreamInterface*> video_receive_streams_;
   std::vector<AudioReceiveStreamInterface::Config> audio_receive_configs_;
@@ -265,12 +298,13 @@ class BaseTest : public RtpRtcpObserver {
   virtual void ModifyReceiverBitrateConfig(BitrateConstraints* bitrate_config);
 
   virtual void OnCallsCreated(Call* sender_call, Call* receiver_call);
+  virtual void OnTransportCreated(PacketTransport* to_receiver,
+                                  SimulatedNetworkInterface* sender_network,
+                                  PacketTransport* to_sender,
+                                  SimulatedNetworkInterface* receiver_network);
 
-  virtual std::unique_ptr<test::PacketTransport> CreateSendTransport(
-      TaskQueueBase* task_queue,
-      Call* sender_call);
-  virtual std::unique_ptr<test::PacketTransport> CreateReceiveTransport(
-      TaskQueueBase* task_queue);
+  virtual BuiltInNetworkBehaviorConfig GetSendTransportConfig() const;
+  virtual BuiltInNetworkBehaviorConfig GetReceiveTransportConfig() const;
 
   virtual void ModifyVideoConfigs(
       VideoSendStream::Config* send_config,

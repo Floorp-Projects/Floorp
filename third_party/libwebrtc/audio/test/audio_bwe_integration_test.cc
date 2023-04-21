@@ -58,27 +58,6 @@ void AudioBweTest::OnFakeAudioDevicesCreated(
   send_audio_device_ = send_audio_device;
 }
 
-std::unique_ptr<test::PacketTransport> AudioBweTest::CreateSendTransport(
-    TaskQueueBase* task_queue,
-    Call* sender_call) {
-  return std::make_unique<test::PacketTransport>(
-      task_queue, sender_call, this, test::PacketTransport::kSender,
-      test::CallTest::payload_type_map_,
-      std::make_unique<FakeNetworkPipe>(
-          Clock::GetRealTimeClock(),
-          std::make_unique<SimulatedNetwork>(GetNetworkPipeConfig())));
-}
-
-std::unique_ptr<test::PacketTransport> AudioBweTest::CreateReceiveTransport(
-    TaskQueueBase* task_queue) {
-  return std::make_unique<test::PacketTransport>(
-      task_queue, nullptr, this, test::PacketTransport::kReceiver,
-      test::CallTest::payload_type_map_,
-      std::make_unique<FakeNetworkPipe>(
-          Clock::GetRealTimeClock(),
-          std::make_unique<SimulatedNetwork>(GetNetworkPipeConfig())));
-}
-
 void AudioBweTest::PerformTest() {
   send_audio_device_->WaitForRecordingEnd();
   SleepMs(GetNetworkPipeConfig().queue_delay_ms + kExtraProcessTimeMs);
