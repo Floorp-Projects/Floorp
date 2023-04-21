@@ -189,7 +189,7 @@ static ffi::WGPUTextureFormat ConvertTextureFormat(
       result.tag = ffi::WGPUTextureFormat_Bc6hRgbUfloat;
       break;
     case dom::GPUTextureFormat::Bc6h_rgb_float:
-      result.tag = ffi::WGPUTextureFormat_Bc6hRgbSfloat;
+      result.tag = ffi::WGPUTextureFormat_Bc6hRgbFloat;
       break;
     case dom::GPUTextureFormat::Bc7_rgba_unorm:
       result.tag = ffi::WGPUTextureFormat_Bc7RgbaUnorm;
