@@ -143,7 +143,7 @@ index 0000000000..45194f5ace
 +
 +#endif  // API_RTP_SENDER_SETPARAMETERS_CALLBACK_H_
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index bb47181230..f41be8e40a 100644
+index fb23b7ef39..2bc7aaec92 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
 @@ -52,7 +52,7 @@ rtc_library("call_interfaces") {

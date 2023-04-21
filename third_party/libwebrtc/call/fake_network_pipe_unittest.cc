@@ -13,6 +13,8 @@
 #include <memory>
 #include <utility>
 
+#include "api/units/time_delta.h"
+#include "api/units/timestamp.h"
 #include "call/simulated_network.h"
 #include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
 #include "modules/rtp_rtcp/source/rtp_header_extensions.h"
@@ -438,6 +440,30 @@ TEST_F(FakeNetworkPipeTest, SetReceiver) {
   fake_clock_.AdvanceTimeMilliseconds(kPacketTimeMs);
   EXPECT_CALL(receiver, DeliverRtpPacket).Times(0);
   EXPECT_CALL(new_receiver, DeliverRtpPacket).Times(1);
+  pipe->Process();
+}
+
+TEST_F(FakeNetworkPipeTest, DeliverRtpPacketSetsCorrectArrivalTime) {
+  BuiltInNetworkBehaviorConfig config;
+  config.queue_delay_ms = 100;
+  MockReceiver receiver;
+  auto simulated_network = std::make_unique<SimulatedNetwork>(config);
+  std::unique_ptr<FakeNetworkPipe> pipe(new FakeNetworkPipe(
+      &fake_clock_, std::move(simulated_network), &receiver));
+
+  Timestamp send_time = fake_clock_.CurrentTime();
+  RtpPacketReceived packet(nullptr, send_time);
+  packet.SetExtension<TransportSequenceNumber>(123);
+  pipe->DeliverRtpPacket(MediaType::VIDEO, std::move(packet),
+                         [](const RtpPacketReceived&) { return false; });
+
+  // Advance the network delay to get the first packet.
+  fake_clock_.AdvanceTimeMilliseconds(config.queue_delay_ms);
+  EXPECT_CALL(receiver, DeliverRtpPacket(MediaType::VIDEO, _, _))
+      .WillOnce(WithArg<1>([&](RtpPacketReceived packet) {
+        EXPECT_EQ(packet.arrival_time(),
+                  send_time + TimeDelta::Millis(config.queue_delay_ms));
+      }));
   pipe->Process();
 }
 

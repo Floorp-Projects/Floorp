@@ -684,6 +684,7 @@ if (rtc_include_tests) {
       "../api:simulated_network_api",
       "../api/units:data_rate",
       "../api/units:time_delta",
+      "../api/units:timestamp",
       "../modules/rtp_rtcp:rtp_rtcp_format",
       "../rtc_base:checks",
       "../system_wrappers",
