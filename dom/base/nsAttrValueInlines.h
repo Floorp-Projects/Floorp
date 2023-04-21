@@ -45,7 +45,6 @@ struct MiscContainer final {
         mozilla::DeclarationBlock* mCSSDeclaration;
         nsIURI* mURL;
         mozilla::AttrAtomArray* mAtomArray;
-        nsIntMargin* mIntMargin;
         const mozilla::ShadowParts* mShadowParts;
         const mozilla::SVGAnimatedIntegerPair* mSVGAnimatedIntegerPair;
         const mozilla::SVGAnimatedLength* mSVGLength;
@@ -185,14 +184,6 @@ inline nsIURI* nsAttrValue::GetURLValue() const {
 inline double nsAttrValue::GetDoubleValue() const {
   MOZ_ASSERT(Type() == eDoubleValue, "wrong type");
   return GetMiscContainer()->mDoubleValue;
-}
-
-inline bool nsAttrValue::GetIntMarginValue(nsIntMargin& aMargin) const {
-  MOZ_ASSERT(Type() == eIntMarginValue, "wrong type");
-  nsIntMargin* m = GetMiscContainer()->mValue.mIntMargin;
-  if (!m) return false;
-  aMargin = *m;
-  return true;
 }
 
 inline bool nsAttrValue::IsSVGType(ValueType aType) const {

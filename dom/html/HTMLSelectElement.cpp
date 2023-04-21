@@ -1050,9 +1050,9 @@ void HTMLSelectElement::UnbindFromTree(bool aNullParent) {
   UpdateState(false);
 }
 
-nsresult HTMLSelectElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                          const nsAttrValueOrString* aValue,
-                                          bool aNotify) {
+void HTMLSelectElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                      const nsAttrValueOrString* aValue,
+                                      bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::disabled) {
       if (aNotify) {

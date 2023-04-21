@@ -28,9 +28,9 @@ class HTMLSlotElement final : public nsGenericHTMLElement {
   virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
   virtual void UnbindFromTree(bool aNullParent) override;
 
-  virtual nsresult BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                 const nsAttrValueOrString* aValue,
-                                 bool aNotify) override;
+  virtual void BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                             const nsAttrValueOrString* aValue,
+                             bool aNotify) override;
   virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                 const nsAttrValue* aValue,
                                 const nsAttrValue* aOldValue,

@@ -351,8 +351,8 @@ class SVGElement : public SVGElementBase  // nsIContent
   // This is because we're not currently passing the correct value for aValue to
   // BeforeSetAttr since it would involve allocating extra SVG value types.
   // See the comment in SVGElement::WillChangeValue.
-  nsresult BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                         const nsAttrValueOrString* aValue, bool aNotify) final;
+  void BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                     const nsAttrValueOrString* aValue, bool aNotify) final;
   nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                         const nsAttrValue* aValue, const nsAttrValue* aOldValue,
                         nsIPrincipal* aSubjectPrincipal, bool aNotify) override;

@@ -697,9 +697,9 @@ bool MathMLElement::IsEventAttributeNameInternal(nsAtom* aName) {
   return nsContentUtils::IsEventAttributeName(aName, EventNameType_HTML);
 }
 
-nsresult MathMLElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                      const nsAttrValueOrString* aValue,
-                                      bool aNotify) {
+void MathMLElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                                  const nsAttrValueOrString* aValue,
+                                  bool aNotify) {
   if (aNamespaceID == kNameSpaceID_None) {
     if (!aValue && IsEventAttributeName(aName)) {
       if (EventListenerManager* manager = GetExistingListenerManager()) {

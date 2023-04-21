@@ -129,17 +129,10 @@ void ChromeObserver::SetChromeMargins(const nsAttrValue* aValue) {
   if (!mainWidget) return;
 
   // top, right, bottom, left - see nsAttrValue
+  nsAutoString tmp;
+  aValue->ToString(tmp);
   nsIntMargin margins;
-  bool gotMargins = false;
-
-  if (aValue->Type() == nsAttrValue::eIntMarginValue) {
-    gotMargins = aValue->GetIntMarginValue(margins);
-  } else {
-    nsAutoString tmp;
-    aValue->ToString(tmp);
-    gotMargins = nsContentUtils::ParseIntMarginValue(tmp, margins);
-  }
-  if (gotMargins) {
+  if (nsContentUtils::ParseIntMarginValue(tmp, margins)) {
     nsContentUtils::AddScriptRunner(new MarginSetter(
         mainWidget, LayoutDeviceIntMargin::FromUnknownMargin(margins)));
   }

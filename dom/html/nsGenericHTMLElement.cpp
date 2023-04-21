@@ -619,10 +619,9 @@ already_AddRefed<nsIURI> nsGenericHTMLElement::GetHrefURIForAnchors() const {
   return uri.forget();
 }
 
-nsresult nsGenericHTMLElement::BeforeSetAttr(int32_t aNamespaceID,
-                                             nsAtom* aName,
-                                             const nsAttrValueOrString* aValue,
-                                             bool aNotify) {
+void nsGenericHTMLElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                                         const nsAttrValueOrString* aValue,
+                                         bool aNotify) {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::accesskey) {
       // Have to unregister before clearing flag. See UnregAccessKey
@@ -1833,9 +1832,10 @@ void nsGenericHTMLFormElement::UnbindFromTree(bool aNullParent) {
   UpdateFieldSet(false);
 }
 
-nsresult nsGenericHTMLFormElement::BeforeSetAttr(
-    int32_t aNameSpaceID, nsAtom* aName, const nsAttrValueOrString* aValue,
-    bool aNotify) {
+void nsGenericHTMLFormElement::BeforeSetAttr(int32_t aNameSpaceID,
+                                             nsAtom* aName,
+                                             const nsAttrValueOrString* aValue,
+                                             bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None && IsFormAssociatedElement()) {
     nsAutoString tmp;
     HTMLFormElement* form = GetFormInternal();

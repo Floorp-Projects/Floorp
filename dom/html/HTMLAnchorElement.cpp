@@ -186,9 +186,9 @@ already_AddRefed<nsIURI> HTMLAnchorElement::GetHrefURI() const {
   return GetHrefURIForAnchors();
 }
 
-nsresult HTMLAnchorElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                          const nsAttrValueOrString* aValue,
-                                          bool aNotify) {
+void HTMLAnchorElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                                      const nsAttrValueOrString* aValue,
+                                      bool aNotify) {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::href) {
       CancelDNSPrefetch(*this);

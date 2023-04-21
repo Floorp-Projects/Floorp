@@ -195,9 +195,9 @@ void HTMLLinkElement::CreateAndDispatchEvent(Document* aDoc,
   asyncDispatcher->PostDOMEvent();
 }
 
-nsresult HTMLLinkElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                        const nsAttrValueOrString* aValue,
-                                        bool aNotify) {
+void HTMLLinkElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                    const nsAttrValueOrString* aValue,
+                                    bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None &&
       (aName == nsGkAtoms::href || aName == nsGkAtoms::rel)) {
     CancelDNSPrefetch(*this);
