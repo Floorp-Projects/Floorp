@@ -103,16 +103,9 @@ function update(state = initialUIState(), action) {
     }
 
     case "HIGHLIGHT_LINES": {
-      const { start, end, sourceId } = action.location;
-      let lineRange;
-
-      // Lines are one-based so the check below is fine.
-      if (start && end && sourceId) {
-        lineRange = { start, end, sourceId };
-      }
-
-      return { ...state, highlightedLineRange: lineRange };
+      return { ...state, highlightedLineRange: action.location };
     }
+
     case "CLOSE_QUICK_OPEN":
     case "CLEAR_HIGHLIGHT_LINES":
       if (!state.highlightedLineRange) {
