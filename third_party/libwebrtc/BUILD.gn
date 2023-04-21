@@ -770,13 +770,13 @@ if (rtc_include_tests && !build_with_chromium) {
       testonly = true
       deps = [
         #TODO(fxbug.dev/115601) - Enable when fixed
-        #"call:call_perf_tests",
-        #"video:video_pc_full_stack_tests",
+        "call:call_perf_tests",
         "modules/audio_coding:audio_coding_perf_tests",
         "modules/audio_processing:audio_processing_perf_tests",
         "pc:peerconnection_perf_tests",
         "test:test_main",
         "video:video_full_stack_tests",
+        "video:video_pc_full_stack_tests",
       ]
 
       data = webrtc_perf_tests_resources

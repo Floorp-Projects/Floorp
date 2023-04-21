@@ -118,7 +118,7 @@
     },
     'fuchsia_compatible_perf_tests': {
       'fuchsia_perf_tests': {
-        'mixins': ['perf-fuchsia-perf-tests'],
+        'mixins': ['perf-fuchsia-perf-tests', 'fuchsia-gtest-output'],
       },
     },
     'fuchsia_compatible_tests': {
