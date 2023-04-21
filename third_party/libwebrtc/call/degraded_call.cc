@@ -348,25 +348,6 @@ void DegradedCall::OnSentPacket(const rtc::SentPacket& sent_packet) {
   call_->OnSentPacket(sent_packet);
 }
 
-PacketReceiver::DeliveryStatus DegradedCall::DeliverPacket(
-    MediaType media_type,
-    rtc::CopyOnWriteBuffer packet,
-    int64_t packet_time_us) {
-  RTC_DCHECK_RUN_ON(&received_packet_sequence_checker_);
-  PacketReceiver::DeliveryStatus status = receive_pipe_->DeliverPacket(
-      media_type, std::move(packet), packet_time_us);
-  // This is not optimal, but there are many places where there are thread
-  // checks that fail if we're not using the worker thread call into this
-  // method. If we want to fix this we probably need a task queue to do handover
-  // of all overriden methods, which feels like overkill for the current use
-  // case.
-  // By just having this thread call out via the Process() method we work around
-  // that, with the tradeoff that a non-zero delay may become a little larger
-  // than anticipated at very low packet rates.
-  receive_pipe_->Process();
-  return status;
-}
-
 void DegradedCall::DeliverRtpPacket(
     MediaType media_type,
     RtpPacketReceived packet,

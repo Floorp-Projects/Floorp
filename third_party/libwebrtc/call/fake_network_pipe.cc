@@ -191,16 +191,6 @@ bool FakeNetworkPipe::SendRtcp(const uint8_t* packet,
   return true;
 }
 
-PacketReceiver::DeliveryStatus FakeNetworkPipe::DeliverPacket(
-    MediaType media_type,
-    rtc::CopyOnWriteBuffer packet,
-    int64_t packet_time_us) {
-  return EnqueuePacket(std::move(packet), absl::nullopt, false, media_type,
-                       packet_time_us)
-             ? PacketReceiver::DELIVERY_OK
-             : PacketReceiver::DELIVERY_PACKET_ERROR;
-}
-
 void FakeNetworkPipe::DeliverRtpPacket(
     MediaType media_type,
     RtpPacketReceived packet,
@@ -393,10 +383,6 @@ void FakeNetworkPipe::DeliverNetworkPacket(NetworkPacket* packet) {
                 << packet.Ssrc() << " seq : " << packet.SequenceNumber();
             return false;
           });
-    } else {
-      receiver_->DeliverPacket(packet->media_type(),
-                               std::move(*packet->raw_packet()),
-                               packet_time_us);
     }
   }
 }

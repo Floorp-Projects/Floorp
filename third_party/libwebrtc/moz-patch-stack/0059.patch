@@ -37,10 +37,10 @@ index bf8e81fda4..5f5f24e825 100644
    configuration.outgoing_transport = rtp_transport;
  
 diff --git a/call/call.cc b/call/call.cc
-index 218505cdea..c32705585f 100644
+index e676d7a30a..a63087f5c1 100644
 --- a/call/call.cc
 +++ b/call/call.cc
-@@ -494,12 +494,14 @@ std::string Call::Stats::ToString(int64_t time_ms) const {
+@@ -485,12 +485,14 @@ std::string Call::Stats::ToString(int64_t time_ms) const {
    return ss.str();
  }
  
@@ -78,7 +78,7 @@ index 380e80ce12..253f8cd7de 100644
  
  std::unique_ptr<CallFactoryInterface> CreateCallFactory() {
 diff --git a/call/degraded_call.cc b/call/degraded_call.cc
-index 50349c1086..00b121bbdc 100644
+index fc76c7be5c..99c32296c3 100644
 --- a/call/degraded_call.cc
 +++ b/call/degraded_call.cc
 @@ -129,6 +129,7 @@ bool DegradedCall::FakeNetworkPipeTransportAdapter::SendRtcp(

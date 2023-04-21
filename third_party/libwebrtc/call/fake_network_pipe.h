@@ -162,12 +162,6 @@ class FakeNetworkPipe : public SimulatedPacketReceiverInterface {
       OnUndemuxablePacketHandler undemuxable_packet_handler) override;
   void DeliverRtcpPacket(rtc::CopyOnWriteBuffer packet) override;
 
-  // TODO(perkj,  https://bugs.webrtc.org/7135): Remove once implementations
-  // dont use it.
-  PacketReceiver::DeliveryStatus DeliverPacket(MediaType media_type,
-                                               rtc::CopyOnWriteBuffer packet,
-                                               int64_t packet_time_us) override;
-
   // Processes the network queues and trigger PacketReceiver::IncomingPacket for
   // packets ready to be delivered.
   void Process() override;

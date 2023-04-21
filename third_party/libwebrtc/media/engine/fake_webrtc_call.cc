@@ -665,21 +665,6 @@ webrtc::PacketReceiver* FakeCall::Receiver() {
   return this;
 }
 
-webrtc::PacketReceiver::DeliveryStatus FakeCall::DeliverPacket(
-    webrtc::MediaType media_type,
-    rtc::CopyOnWriteBuffer packet,
-    int64_t packet_time_us) {
-  RTC_DCHECK(webrtc::IsRtpPacket(packet));
-  uint32_t ssrc = ParseRtpSsrc(packet);
-  webrtc::Timestamp arrival_time =
-      packet_time_us > -1 ? webrtc::Timestamp::Micros(packet_time_us)
-                          : webrtc::Timestamp::Zero();
-  if (DeliverPacketInternal(media_type, ssrc, packet, arrival_time)) {
-    return DELIVERY_OK;
-  }
-  return DELIVERY_UNKNOWN_SSRC;
-}
-
 void FakeCall::DeliverRtpPacket(
     webrtc::MediaType media_type,
     webrtc::RtpPacketReceived packet,
