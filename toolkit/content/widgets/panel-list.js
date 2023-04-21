@@ -330,6 +330,10 @@
       switch (e.type) {
         case "resize":
         case "scroll":
+          if (inPanelList) {
+            break;
+          }
+        // Intentional fall-through
         case "blur":
         case "popuphidden":
           this.hide();
