@@ -29,6 +29,7 @@
 #include "audio/channel_send.h"
 #include "audio/utility/audio_frame_operations.h"
 #include "logging/rtc_event_log/events/rtc_event_audio_playout.h"
+#include "logging/rtc_event_log/events/rtc_event_neteq_set_minimum_delay.h"
 #include "modules/audio_coding/acm2/acm_receiver.h"
 #include "modules/audio_coding/audio_network_adaptor/include/audio_network_adaptor_config.h"
 #include "modules/audio_device/include/audio_device.h"
@@ -1020,6 +1021,8 @@ ChannelReceive::GetCurrentEstimatedPlayoutNtpTimestampMs(int64_t now_ms) const {
 }
 
 bool ChannelReceive::SetBaseMinimumPlayoutDelayMs(int delay_ms) {
+  event_log_->Log(
+      std::make_unique<RtcEventNetEqSetMinimumDelay>(remote_ssrc_, delay_ms));
   return acm_receiver_.SetBaseMinimumDelayMs(delay_ms);
 }
 
