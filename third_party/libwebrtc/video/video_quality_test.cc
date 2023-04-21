@@ -1223,9 +1223,9 @@ void VideoQualityTest::RunWithAnalyzer(const Params& params) {
 
   if (!params.logging.rtc_event_log_name.empty()) {
     send_event_log_ = rtc_event_log_factory_.CreateRtcEventLog(
-        RtcEventLog::EncodingType::Legacy);
+        RtcEventLog::EncodingType::NewFormat);
     recv_event_log_ = rtc_event_log_factory_.CreateRtcEventLog(
-        RtcEventLog::EncodingType::Legacy);
+        RtcEventLog::EncodingType::NewFormat);
     std::unique_ptr<RtcEventLogOutputFile> send_output(
         std::make_unique<RtcEventLogOutputFile>(
             params.logging.rtc_event_log_name + "_send",
@@ -1446,9 +1446,9 @@ void VideoQualityTest::RunWithRenderers(const Params& params) {
 
   if (!params.logging.rtc_event_log_name.empty()) {
     send_event_log_ = rtc_event_log_factory_.CreateRtcEventLog(
-        RtcEventLog::EncodingType::Legacy);
+        RtcEventLog::EncodingType::NewFormat);
     recv_event_log_ = rtc_event_log_factory_.CreateRtcEventLog(
-        RtcEventLog::EncodingType::Legacy);
+        RtcEventLog::EncodingType::NewFormat);
     std::unique_ptr<RtcEventLogOutputFile> send_output(
         std::make_unique<RtcEventLogOutputFile>(
             params.logging.rtc_event_log_name + "_send",
