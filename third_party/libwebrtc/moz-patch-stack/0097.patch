@@ -8,7 +8,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/cf7e333da17689b3c
  1 file changed, 24 insertions(+), 50 deletions(-)
 
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index ec1f93752b..b7f8754fd8 100644
+index 3927ef2e87..d1a2dac8ac 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -1218,58 +1218,8 @@ rtc_library("rtc_base") {

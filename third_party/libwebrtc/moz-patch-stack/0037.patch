@@ -549,7 +549,7 @@ index fe63804b19..e1b5e4ba84 100644
    deps = [
      ":codec_globals_headers",
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index eb8044266e..ad4b6e1395 100644
+index 4a9a5463ed..899bbd8e25 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -820,7 +820,9 @@ rtc_library("rtc_json") {
@@ -638,7 +638,7 @@ index eb8044266e..ad4b6e1395 100644
    }
  
    if (build_with_chromium) {
-@@ -2265,7 +2325,7 @@ if (rtc_include_tests) {
+@@ -2268,7 +2328,7 @@ if (rtc_include_tests) {
    }
  }
  

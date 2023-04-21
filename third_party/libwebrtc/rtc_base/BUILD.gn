@@ -1888,6 +1888,9 @@ rtc_library("rtc_base_tests_utils") {
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
+  if (is_fuchsia) {
+    deps += [ "//third_party/fuchsia-sdk/sdk/pkg/zx" ]
+  }
 }
 
 rtc_library("task_queue_for_test") {
