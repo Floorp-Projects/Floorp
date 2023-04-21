@@ -1658,6 +1658,11 @@ bool WebRtcVideoChannel::GetSendStats(VideoMediaSendInfo* info) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   TRACE_EVENT0("webrtc", "WebRtcVideoChannel::GetSendStats");
 
+  info->Clear();
+  if (send_streams_.empty()) {
+    return true;
+  }
+
   // Log stats periodically.
   bool log_stats = false;
   int64_t now_ms = rtc::TimeMillis();
@@ -1667,7 +1672,6 @@ bool WebRtcVideoChannel::GetSendStats(VideoMediaSendInfo* info) {
     log_stats = true;
   }
 
-  info->Clear();
   FillSenderStats(info, log_stats);
   FillSendCodecStats(info);
   // TODO(holmer): We should either have rtt available as a metric on
@@ -1691,6 +1695,11 @@ bool WebRtcVideoChannel::GetReceiveStats(VideoMediaReceiveInfo* info) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   TRACE_EVENT0("webrtc", "WebRtcVideoChannel::GetReceiveStats");
 
+  info->Clear();
+  if (receive_streams_.empty()) {
+    return true;
+  }
+
   // Log stats periodically.
   bool log_stats = false;
   int64_t now_ms = rtc::TimeMillis();
@@ -1700,7 +1709,6 @@ bool WebRtcVideoChannel::GetReceiveStats(VideoMediaReceiveInfo* info) {
     log_stats = true;
   }
 
-  info->Clear();
   FillReceiverStats(info, log_stats);
   FillReceiveCodecStats(info);
 
