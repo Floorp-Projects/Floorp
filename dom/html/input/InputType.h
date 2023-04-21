@@ -76,7 +76,7 @@ class InputType {
   virtual nsresult GetRangeUnderflowMessage(nsAString& aMessage);
   virtual nsresult GetBadInputMessage(nsAString& aMessage);
 
-  MOZ_CAN_RUN_SCRIPT virtual nsresult MinMaxStepAttrChanged();
+  MOZ_CAN_RUN_SCRIPT virtual void MinMaxStepAttrChanged() {}
 
   /**
    * Convert a string to a Decimal number in a type specific way,

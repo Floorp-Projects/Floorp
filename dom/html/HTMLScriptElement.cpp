@@ -99,11 +99,11 @@ nsresult HTMLScriptElement::Clone(dom::NodeInfo* aNodeInfo,
   return NS_OK;
 }
 
-nsresult HTMLScriptElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                         const nsAttrValue* aValue,
-                                         const nsAttrValue* aOldValue,
-                                         nsIPrincipal* aMaybeScriptedPrincipal,
-                                         bool aNotify) {
+void HTMLScriptElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                                     const nsAttrValue* aValue,
+                                     const nsAttrValue* aOldValue,
+                                     nsIPrincipal* aMaybeScriptedPrincipal,
+                                     bool aNotify) {
   if (nsGkAtoms::async == aName && kNameSpaceID_None == aNamespaceID) {
     mForceAsync = false;
   }

@@ -47,10 +47,10 @@ class SVGMPathElement final : public SVGMPathElementBase,
   void UnbindFromTree(bool aNullParent) override;
 
   // Element specializations
-  nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                        const nsAttrValue* aValue, const nsAttrValue* aOldValue,
-                        nsIPrincipal* aMaybeScriptedPrincipal,
-                        bool aNotify) override;
+  void AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                    const nsAttrValue* aValue, const nsAttrValue* aOldValue,
+                    nsIPrincipal* aMaybeScriptedPrincipal,
+                    bool aNotify) override;
 
   // Public helper method: If our xlink:href attribute links to a Shape
   // element, this method returns a pointer to that element. Otherwise,

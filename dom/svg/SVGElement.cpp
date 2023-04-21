@@ -313,11 +313,10 @@ nsresult SVGElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   return NS_OK;
 }
 
-nsresult SVGElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                  const nsAttrValue* aValue,
-                                  const nsAttrValue* aOldValue,
-                                  nsIPrincipal* aSubjectPrincipal,
-                                  bool aNotify) {
+void SVGElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                              const nsAttrValue* aValue,
+                              const nsAttrValue* aOldValue,
+                              nsIPrincipal* aSubjectPrincipal, bool aNotify) {
   // We don't currently use nsMappedAttributes within SVG. If this changes, we
   // need to be very careful because some nsAttrValues used by SVG point to
   // member data of SVG elements and if an nsAttrValue outlives the SVG element

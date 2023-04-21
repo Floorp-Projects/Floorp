@@ -121,15 +121,13 @@ nsresult DateTimeInputTypeBase::GetRangeUnderflowMessage(nsAString& aMessage) {
       minStr);
 }
 
-nsresult DateTimeInputTypeBase::MinMaxStepAttrChanged() {
+void DateTimeInputTypeBase::MinMaxStepAttrChanged() {
   if (Element* dateTimeBoxElement = mInputElement->GetDateTimeBoxElement()) {
     AsyncEventDispatcher* dispatcher = new AsyncEventDispatcher(
         dateTimeBoxElement, u"MozNotifyMinMaxStepAttrChanged"_ns,
         CanBubble::eNo, ChromeOnlyDispatch::eNo);
     dispatcher->RunDOMEventWhenSafe();
   }
-
-  return NS_OK;
 }
 
 bool DateTimeInputTypeBase::GetTimeFromMs(double aValue, uint16_t* aHours,

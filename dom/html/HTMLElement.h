@@ -56,10 +56,10 @@ class HTMLElement final : public nsGenericHTMLFormElement {
                      JS::Handle<JSObject*> aGivenProto) override;
 
   // Element
-  nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                        const nsAttrValue* aValue, const nsAttrValue* aOldValue,
-                        nsIPrincipal* aMaybeScriptedPrincipal,
-                        bool aNotify) override;
+  void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                    const nsAttrValue* aValue, const nsAttrValue* aOldValue,
+                    nsIPrincipal* aMaybeScriptedPrincipal,
+                    bool aNotify) override;
   ElementState IntrinsicState() const override;
 
   // nsGenericHTMLFormElement

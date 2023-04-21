@@ -113,11 +113,11 @@ bool HTMLMarqueeElement::ParseAttribute(int32_t aNamespaceID,
                                               aMaybeScriptedPrincipal, aResult);
 }
 
-nsresult HTMLMarqueeElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                          const nsAttrValue* aValue,
-                                          const nsAttrValue* aOldValue,
-                                          nsIPrincipal* aMaybeScriptedPrincipal,
-                                          bool aNotify) {
+void HTMLMarqueeElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                      const nsAttrValue* aValue,
+                                      const nsAttrValue* aOldValue,
+                                      nsIPrincipal* aMaybeScriptedPrincipal,
+                                      bool aNotify) {
   if (IsInComposedDoc() && aNameSpaceID == kNameSpaceID_None &&
       aName == nsGkAtoms::direction) {
     NotifyUAWidgetSetupOrChange();

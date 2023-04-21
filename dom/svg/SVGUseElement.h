@@ -95,9 +95,9 @@ class SVGUseElement final : public SVGUseElementBase,
   // This is needed because SMIL doesn't go through AfterSetAttr unfortunately.
   void ProcessAttributeChange(int32_t aNamespaceID, nsAtom* aAttribute);
 
-  nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aAttribute,
-                        const nsAttrValue* aValue, const nsAttrValue* aOldValue,
-                        nsIPrincipal* aSubjectPrincipal, bool aNotify) final;
+  void AfterSetAttr(int32_t aNamespaceID, nsAtom* aAttribute,
+                    const nsAttrValue* aValue, const nsAttrValue* aOldValue,
+                    nsIPrincipal* aSubjectPrincipal, bool aNotify) final;
 
  protected:
   // Information from walking our ancestors and a given target.

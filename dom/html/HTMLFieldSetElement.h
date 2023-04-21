@@ -34,11 +34,11 @@ class HTMLFieldSetElement final : public nsGenericHTMLFormControlElement,
 
   // nsIContent
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
-  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                const nsAttrValue* aValue,
-                                const nsAttrValue* aOldValue,
-                                nsIPrincipal* aSubjectPrincipal,
-                                bool aNotify) override;
+  virtual void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                            const nsAttrValue* aValue,
+                            const nsAttrValue* aOldValue,
+                            nsIPrincipal* aSubjectPrincipal,
+                            bool aNotify) override;
 
   virtual void InsertChildBefore(nsIContent* aChild, nsIContent* aBeforeThis,
                                  bool aNotify, ErrorResult& aRv) override;

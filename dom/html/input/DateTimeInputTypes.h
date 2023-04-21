@@ -24,7 +24,7 @@ class DateTimeInputTypeBase : public InputType {
   nsresult GetRangeOverflowMessage(nsAString& aMessage) override;
   nsresult GetRangeUnderflowMessage(nsAString& aMessage) override;
 
-  nsresult MinMaxStepAttrChanged() override;
+  void MinMaxStepAttrChanged() override;
 
  protected:
   explicit DateTimeInputTypeBase(HTMLInputElement* aInputElement)

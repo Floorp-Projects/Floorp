@@ -121,11 +121,11 @@ void SVGUseElement::ProcessAttributeChange(int32_t aNamespaceID,
   }
 }
 
-nsresult SVGUseElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aAttribute,
-                                     const nsAttrValue* aValue,
-                                     const nsAttrValue* aOldValue,
-                                     nsIPrincipal* aSubjectPrincipal,
-                                     bool aNotify) {
+void SVGUseElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aAttribute,
+                                 const nsAttrValue* aValue,
+                                 const nsAttrValue* aOldValue,
+                                 nsIPrincipal* aSubjectPrincipal,
+                                 bool aNotify) {
   ProcessAttributeChange(aNamespaceID, aAttribute);
   return SVGUseElementBase::AfterSetAttr(aNamespaceID, aAttribute, aValue,
                                          aOldValue, aSubjectPrincipal, aNotify);

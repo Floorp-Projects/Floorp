@@ -227,7 +227,7 @@ ScrollbarPreference nsGenericHTMLFrameElement::MapScrollingAttribute(
 }
 
 /* virtual */
-nsresult nsGenericHTMLFrameElement::AfterSetAttr(
+void nsGenericHTMLFrameElement::AfterSetAttr(
     int32_t aNameSpaceID, nsAtom* aName, const nsAttrValue* aValue,
     const nsAttrValue* aOldValue, nsIPrincipal* aMaybeScriptedPrincipal,
     bool aNotify) {
@@ -265,7 +265,7 @@ nsresult nsGenericHTMLFrameElement::AfterSetAttr(
       aNameSpaceID, aName, aValue, aOldValue, aMaybeScriptedPrincipal, aNotify);
 }
 
-nsresult nsGenericHTMLFrameElement::OnAttrSetButNotChanged(
+void nsGenericHTMLFrameElement::OnAttrSetButNotChanged(
     int32_t aNamespaceID, nsAtom* aName, const nsAttrValueOrString& aValue,
     bool aNotify) {
   AfterMaybeChangeAttr(aNamespaceID, aName, &aValue, nullptr, aNotify);

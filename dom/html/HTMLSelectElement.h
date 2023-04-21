@@ -274,11 +274,11 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
   virtual void BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                              const nsAttrValueOrString* aValue,
                              bool aNotify) override;
-  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                const nsAttrValue* aValue,
-                                const nsAttrValue* aOldValue,
-                                nsIPrincipal* aSubjectPrincipal,
-                                bool aNotify) override;
+  virtual void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                            const nsAttrValue* aValue,
+                            const nsAttrValue* aOldValue,
+                            nsIPrincipal* aSubjectPrincipal,
+                            bool aNotify) override;
 
   virtual void DoneAddingChildren(bool aHaveNotified) override;
   virtual bool IsDoneAddingChildren() override { return mIsDoneAddingChildren; }

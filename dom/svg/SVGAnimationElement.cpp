@@ -215,11 +215,11 @@ bool SVGAnimationElement::ParseAttribute(int32_t aNamespaceID,
       aNamespaceID, aAttribute, aValue, aMaybeScriptedPrincipal, aResult);
 }
 
-nsresult SVGAnimationElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                           const nsAttrValue* aValue,
-                                           const nsAttrValue* aOldValue,
-                                           nsIPrincipal* aSubjectPrincipal,
-                                           bool aNotify) {
+void SVGAnimationElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                                       const nsAttrValue* aValue,
+                                       const nsAttrValue* aOldValue,
+                                       nsIPrincipal* aSubjectPrincipal,
+                                       bool aNotify) {
   if (!aValue && aNamespaceID == kNameSpaceID_None) {
     // Attribute is being removed.
     if (AnimationFunction().UnsetAttr(aName) ||
@@ -228,8 +228,8 @@ nsresult SVGAnimationElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
     }
   }
 
-  nsresult rv = SVGAnimationElementBase::AfterSetAttr(
-      aNamespaceID, aName, aValue, aOldValue, aSubjectPrincipal, aNotify);
+  SVGAnimationElementBase::AfterSetAttr(aNamespaceID, aName, aValue, aOldValue,
+                                        aSubjectPrincipal, aNotify);
 
   if (SVGTests::IsConditionalProcessingAttribute(aName)) {
     bool isDisabled = !SVGTests::PassesConditionalProcessingTests();
@@ -239,13 +239,13 @@ nsresult SVGAnimationElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
   }
 
   if (!IsInComposedDoc()) {
-    return rv;
+    return;
   }
 
   if (!((aNamespaceID == kNameSpaceID_None ||
          aNamespaceID == kNameSpaceID_XLink) &&
         aName == nsGkAtoms::href)) {
-    return rv;
+    return;
   }
 
   if (!aValue) {
@@ -274,8 +274,6 @@ nsresult SVGAnimationElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
     UpdateHrefTarget(aValue->GetStringValue());
   }  // else: we're not yet in a document -- we'll update the target on
      // next BindToTree call.
-
-  return rv;
 }
 
 //----------------------------------------------------------------------

@@ -63,11 +63,11 @@ void HTMLFieldSetElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   nsGenericHTMLFormControlElement::GetEventTargetParent(aVisitor);
 }
 
-nsresult HTMLFieldSetElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                           const nsAttrValue* aValue,
-                                           const nsAttrValue* aOldValue,
-                                           nsIPrincipal* aSubjectPrincipal,
-                                           bool aNotify) {
+void HTMLFieldSetElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                       const nsAttrValue* aValue,
+                                       const nsAttrValue* aOldValue,
+                                       nsIPrincipal* aSubjectPrincipal,
+                                       bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::disabled) {
     // This *has* to be called *before* calling FieldSetDisabledChanged on our
     // controls, as they may depend on our disabled state.

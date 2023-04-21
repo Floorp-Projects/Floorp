@@ -37,11 +37,11 @@ HTMLSummaryElement* HTMLDetailsElement::GetFirstSummary() const {
   return nullptr;
 }
 
-nsresult HTMLDetailsElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                          const nsAttrValue* aValue,
-                                          const nsAttrValue* aOldValue,
-                                          nsIPrincipal* aMaybeScriptedPrincipal,
-                                          bool aNotify) {
+void HTMLDetailsElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                      const nsAttrValue* aValue,
+                                      const nsAttrValue* aOldValue,
+                                      nsIPrincipal* aMaybeScriptedPrincipal,
+                                      bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::open) {
     bool wasOpen = !!aOldValue;
     bool isOpen = !!aValue;

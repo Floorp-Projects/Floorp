@@ -203,11 +203,11 @@ bool SVGImageElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                              aMaybeScriptedPrincipal, aResult);
 }
 
-nsresult SVGImageElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                       const nsAttrValue* aValue,
-                                       const nsAttrValue* aOldValue,
-                                       nsIPrincipal* aSubjectPrincipal,
-                                       bool aNotify) {
+void SVGImageElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                                   const nsAttrValue* aValue,
+                                   const nsAttrValue* aOldValue,
+                                   nsIPrincipal* aSubjectPrincipal,
+                                   bool aNotify) {
   if (aName == nsGkAtoms::href && (aNamespaceID == kNameSpaceID_None ||
                                    aNamespaceID == kNameSpaceID_XLink)) {
     if (aValue) {

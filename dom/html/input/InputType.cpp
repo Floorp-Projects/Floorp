@@ -286,8 +286,6 @@ nsresult InputType::GetBadInputMessage(nsAString& aMessage) {
   return NS_ERROR_UNEXPECTED;
 }
 
-nsresult InputType::MinMaxStepAttrChanged() { return NS_OK; }
-
 bool InputType::ConvertStringToNumber(nsAString& aValue,
                                       Decimal& aResultValue) const {
   NS_WARNING("InputType::ConvertStringToNumber called");

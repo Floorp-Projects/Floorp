@@ -84,11 +84,11 @@ bool HTMLSourceElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                               aMaybeScriptedPrincipal, aResult);
 }
 
-nsresult HTMLSourceElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                         const nsAttrValue* aValue,
-                                         const nsAttrValue* aOldValue,
-                                         nsIPrincipal* aMaybeScriptedPrincipal,
-                                         bool aNotify) {
+void HTMLSourceElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                     const nsAttrValue* aValue,
+                                     const nsAttrValue* aOldValue,
+                                     nsIPrincipal* aMaybeScriptedPrincipal,
+                                     bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::srcset) {
     mSrcsetTriggeringPrincipal = nsContentUtils::GetAttrTriggeringPrincipal(
         this, aValue ? aValue->GetStringValue() : EmptyString(),

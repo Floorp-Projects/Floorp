@@ -156,7 +156,7 @@ bool NumberInputType::IsMutable() const {
 }
 
 /* input type=range */
-nsresult RangeInputType::MinMaxStepAttrChanged() {
+void RangeInputType::MinMaxStepAttrChanged() {
   // The value may need to change when @min/max/step changes since the value may
   // have been invalid and can now change to a valid value, or vice versa. For
   // example, consider: <input type=range value=-1 max=1 step=3>. The valid
@@ -169,6 +169,5 @@ nsresult RangeInputType::MinMaxStepAttrChanged() {
   // example above were to change from 1 to -1.
   nsAutoString value;
   GetNonFileValueInternal(value);
-  return SetValueInternal(value,
-                          TextControlState::ValueSetterOption::ByInternalAPI);
+  SetValueInternal(value, TextControlState::ValueSetterOption::ByInternalAPI);
 }

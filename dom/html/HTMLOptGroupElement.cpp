@@ -73,11 +73,11 @@ void HTMLOptGroupElement::RemoveChildNode(nsIContent* aKid, bool aNotify) {
   nsGenericHTMLElement::RemoveChildNode(aKid, aNotify);
 }
 
-nsresult HTMLOptGroupElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                           const nsAttrValue* aValue,
-                                           const nsAttrValue* aOldValue,
-                                           nsIPrincipal* aSubjectPrincipal,
-                                           bool aNotify) {
+void HTMLOptGroupElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                       const nsAttrValue* aValue,
+                                       const nsAttrValue* aOldValue,
+                                       nsIPrincipal* aSubjectPrincipal,
+                                       bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::disabled) {
     ElementState disabledStates;
     if (aValue) {

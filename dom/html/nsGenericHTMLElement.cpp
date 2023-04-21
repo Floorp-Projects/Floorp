@@ -654,10 +654,11 @@ void nsGenericHTMLElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                                  aNotify);
 }
 
-nsresult nsGenericHTMLElement::AfterSetAttr(
-    int32_t aNamespaceID, nsAtom* aName, const nsAttrValue* aValue,
-    const nsAttrValue* aOldValue, nsIPrincipal* aMaybeScriptedPrincipal,
-    bool aNotify) {
+void nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                                        const nsAttrValue* aValue,
+                                        const nsAttrValue* aOldValue,
+                                        nsIPrincipal* aMaybeScriptedPrincipal,
+                                        bool aNotify) {
   if (aNamespaceID == kNameSpaceID_None) {
     if (IsEventAttributeName(aName) && aValue) {
       MOZ_ASSERT(aValue->Type() == nsAttrValue::eString,
@@ -1882,7 +1883,7 @@ void nsGenericHTMLFormElement::BeforeSetAttr(int32_t aNameSpaceID,
                                              aNotify);
 }
 
-nsresult nsGenericHTMLFormElement::AfterSetAttr(
+void nsGenericHTMLFormElement::AfterSetAttr(
     int32_t aNameSpaceID, nsAtom* aName, const nsAttrValue* aValue,
     const nsAttrValue* aOldValue, nsIPrincipal* aMaybeScriptedPrincipal,
     bool aNotify) {

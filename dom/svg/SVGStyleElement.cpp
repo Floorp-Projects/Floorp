@@ -78,11 +78,11 @@ void SVGStyleElement::UnbindFromTree(bool aNullParent) {
   Unused << UpdateStyleSheetInternal(oldDoc, oldShadow);
 }
 
-nsresult SVGStyleElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                       const nsAttrValue* aValue,
-                                       const nsAttrValue* aOldValue,
-                                       nsIPrincipal* aMaybeScriptedPrincipal,
-                                       bool aNotify) {
+void SVGStyleElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                   const nsAttrValue* aValue,
+                                   const nsAttrValue* aOldValue,
+                                   nsIPrincipal* aMaybeScriptedPrincipal,
+                                   bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::title || aName == nsGkAtoms::media ||
         aName == nsGkAtoms::type) {

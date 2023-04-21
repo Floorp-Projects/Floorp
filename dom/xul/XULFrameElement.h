@@ -57,11 +57,11 @@ class XULFrameElement final : public nsXULElement, public nsFrameLoaderOwner {
   virtual void UnbindFromTree(bool aNullParent) override;
   virtual void DestroyContent() override;
 
-  virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                const nsAttrValue* aValue,
-                                const nsAttrValue* aOldValue,
-                                nsIPrincipal* aSubjectPrincipal,
-                                bool aNotify) override;
+  virtual void AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                            const nsAttrValue* aValue,
+                            const nsAttrValue* aOldValue,
+                            nsIPrincipal* aSubjectPrincipal,
+                            bool aNotify) override;
 
   NS_IMPL_FROMNODE_HELPER(XULFrameElement,
                           IsAnyOfXULElements(nsGkAtoms::iframe,
