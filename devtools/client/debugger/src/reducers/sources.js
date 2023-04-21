@@ -57,7 +57,13 @@ export function initialSourcesState(state) {
     mutableSourceActors: new Map(),
 
     breakpointPositions: {},
-    breakableLines: {},
+
+    /**
+     * List of all breakable lines for original sources only.
+     *
+     * Map(source id => array<int : breakable line numbers>)
+     */
+    mutableOriginalBreakableLines: new Map(),
 
     /**
      * The actual currently selected location.
@@ -132,13 +138,13 @@ function update(state = initialSourcesState(), action) {
     }
 
     case "SET_ORIGINAL_BREAKABLE_LINES": {
-      const { breakableLines, sourceId } = action;
+      state.mutableOriginalBreakableLines.set(
+        action.sourceId,
+        action.breakableLines
+      );
+
       return {
         ...state,
-        breakableLines: {
-          ...state.breakableLines,
-          [sourceId]: breakableLines,
-        },
       };
     }
 
