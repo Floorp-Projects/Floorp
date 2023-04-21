@@ -39,9 +39,9 @@ export function initialSourcesState(state) {
      * Map of the source id's to one or more related original source id's
      * Only generated sources which have related original sources will be maintained here.
      *
-     * Dictionary(source id => array<Original Source ID>)
+     * Map(source id => array<Original Source ID>)
      */
-    originalSources: {},
+    mutableOriginalSources: new Map(),
 
     /**
      * Mapping of source id's to one or more source-actor's.
@@ -198,12 +198,18 @@ function addSources(state, sources) {
       state.urls[source.url] = [...existing, source.id];
     }
 
+    // In case of original source, maintain the mapping of generated source to original sources map.
     if (source.isOriginal) {
       const generatedSourceId = originalToGeneratedId(source.id);
-      if (!state.originalSources[generatedSourceId]) {
-        state.originalSources[generatedSourceId] = [];
+      let originalSourceIds = state.mutableOriginalSources.get(
+        generatedSourceId
+      );
+      if (!originalSourceIds) {
+        originalSourceIds = [];
+        state.mutableOriginalSources.set(generatedSourceId, originalSourceIds);
       }
-      state.originalSources[generatedSourceId].push(source.id);
+      // We never return this array out of selectors, so mutate the list
+      originalSourceIds.push(source.id);
     }
   }
 
@@ -215,10 +221,9 @@ function removeSourcesAndActors(state, action) {
     ...state,
     urls: { ...state.urls },
     actors: { ...state.actors },
-    originalSources: { ...state.originalSources },
   };
 
-  const { urls, mutableSources, originalSources, actors } = state;
+  const { urls, mutableSources, mutableOriginalSources, actors } = state;
   for (const removedSource of action.sources) {
     const sourceId = removedSource.id;
 
@@ -241,7 +246,7 @@ function removeSourcesAndActors(state, action) {
     // to aggregate the related original sources.
     // So if we were having related original sources, they will be
     // in `action.sources`.
-    delete originalSources[sourceId];
+    mutableOriginalSources.delete(sourceId);
 
     // If a source is removed, immediately remove all its related source actors.
     // It can speed-up the following for loop cleaning actors.
