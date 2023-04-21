@@ -51,7 +51,7 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
   void UnbindFromTree(bool aNullParent = true) override;
   void BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                     const nsAttrValueOrString* aValue, bool aNotify) override;
+                     const nsAttrValue* aValue, bool aNotify) override;
   void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                     const nsAttrValue* aValue, const nsAttrValue* aOldValue,
                     nsIPrincipal* aSubjectPrincipal, bool aNotify) override;

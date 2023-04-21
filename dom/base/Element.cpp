@@ -2469,14 +2469,17 @@ nsresult Element::SetAttr(int32_t aNamespaceID, nsAtom* aName, nsAtom* aPrefix,
 
   uint8_t modType;
   bool hasListeners;
-  nsAttrValueOrString value(aValue);
   nsAttrValue oldValue;
   bool oldValueSet;
 
-  if (OnlyNotifySameValueSet(aNamespaceID, aName, aPrefix, value, aNotify,
-                             oldValue, &modType, &hasListeners, &oldValueSet)) {
-    OnAttrSetButNotChanged(aNamespaceID, aName, value, aNotify);
-    return NS_OK;
+  {
+    const nsAttrValueOrString value(aValue);
+    if (OnlyNotifySameValueSet(aNamespaceID, aName, aPrefix, value, aNotify,
+                               oldValue, &modType, &hasListeners,
+                               &oldValueSet)) {
+      OnAttrSetButNotChanged(aNamespaceID, aName, value, aNotify);
+      return NS_OK;
+    }
   }
 
   // Hold a script blocker while calling ParseAttribute since that can call
@@ -2489,15 +2492,15 @@ nsresult Element::SetAttr(int32_t aNamespaceID, nsAtom* aName, nsAtom* aPrefix,
                                                  modType);
   }
 
-  BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
-
   nsAttrValue attrValue;
   if (!ParseAttribute(aNamespaceID, aName, aValue, aSubjectPrincipal,
                       attrValue)) {
     attrValue.SetTo(aValue);
   }
 
-  PreIdMaybeChange(aNamespaceID, aName, &value);
+  BeforeSetAttr(aNamespaceID, aName, &attrValue, aNotify);
+
+  PreIdMaybeChange(aNamespaceID, aName, &attrValue);
 
   return SetAttrAndNotify(aNamespaceID, aName, aPrefix,
                           oldValueSet ? &oldValue : nullptr, attrValue,
@@ -2516,14 +2519,17 @@ nsresult Element::SetParsedAttr(int32_t aNamespaceID, nsAtom* aName,
 
   uint8_t modType;
   bool hasListeners;
-  nsAttrValueOrString value(aParsedValue);
   nsAttrValue oldValue;
   bool oldValueSet;
 
-  if (OnlyNotifySameValueSet(aNamespaceID, aName, aPrefix, value, aNotify,
-                             oldValue, &modType, &hasListeners, &oldValueSet)) {
-    OnAttrSetButNotChanged(aNamespaceID, aName, value, aNotify);
-    return NS_OK;
+  {
+    const nsAttrValueOrString value(aParsedValue);
+    if (OnlyNotifySameValueSet(aNamespaceID, aName, aPrefix, value, aNotify,
+                               oldValue, &modType, &hasListeners,
+                               &oldValueSet)) {
+      OnAttrSetButNotChanged(aNamespaceID, aName, value, aNotify);
+      return NS_OK;
+    }
   }
 
   Document* document = GetComposedDoc();
@@ -2534,9 +2540,9 @@ nsresult Element::SetParsedAttr(int32_t aNamespaceID, nsAtom* aName,
                                                  modType);
   }
 
-  BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
+  BeforeSetAttr(aNamespaceID, aName, &aParsedValue, aNotify);
 
-  PreIdMaybeChange(aNamespaceID, aName, &value);
+  PreIdMaybeChange(aNamespaceID, aName, &aParsedValue);
 
   return SetAttrAndNotify(aNamespaceID, aName, aPrefix,
                           oldValueSet ? &oldValue : nullptr, aParsedValue,
@@ -2731,7 +2737,7 @@ bool Element::SetAndSwapMappedAttribute(nsAtom* aName, nsAttrValue& aValue,
 }
 
 void Element::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                            const nsAttrValueOrString* aValue, bool aNotify) {
+                            const nsAttrValue* aValue, bool aNotify) {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::_class && aValue) {
       // Note: This flag is asymmetrical. It is never unset and isn't exact.
@@ -2775,7 +2781,7 @@ void Element::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
 }
 
 void Element::PreIdMaybeChange(int32_t aNamespaceID, nsAtom* aName,
-                               const nsAttrValueOrString* aValue) {
+                               const nsAttrValue* aValue) {
   if (aNamespaceID != kNameSpaceID_None || aName != nsGkAtoms::id) {
     return;
   }

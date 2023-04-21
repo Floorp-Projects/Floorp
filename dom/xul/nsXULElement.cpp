@@ -70,7 +70,6 @@
 #include "mozilla/fallible.h"
 #include "nsAtom.h"
 #include "nsAttrValueInlines.h"
-#include "nsAttrValueOrString.h"
 #include "nsCaseTreatment.h"
 #include "nsChangeHint.h"
 #include "nsCOMPtr.h"
@@ -772,8 +771,7 @@ bool nsXULElement::SupportsAccessKey() const {
 }
 
 void nsXULElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                 const nsAttrValueOrString* aValue,
-                                 bool aNotify) {
+                                 const nsAttrValue* aValue, bool aNotify) {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::accesskey || aName == nsGkAtoms::control ||
         aName == nsGkAtoms::value) {
@@ -796,10 +794,8 @@ void nsXULElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
       }
 #ifdef DEBUG
     } else if (aName == nsGkAtoms::usercontextid) {
-      nsAutoString oldValue;
-      bool hasAttribute =
-          GetAttr(kNameSpaceID_None, nsGkAtoms::usercontextid, oldValue);
-      if (hasAttribute && (!aValue || !aValue->String().Equals(oldValue))) {
+      const nsAttrValue* oldValue = GetParsedAttr(aName);
+      if (oldValue && (!aValue || !aValue->Equals(*oldValue))) {
         MOZ_ASSERT(false,
                    "Changing usercontextid doesn't really work properly.");
       }

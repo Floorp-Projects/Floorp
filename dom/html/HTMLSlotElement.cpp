@@ -75,8 +75,7 @@ void HTMLSlotElement::UnbindFromTree(bool aNullParent) {
 }
 
 void HTMLSlotElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                    const nsAttrValueOrString* aValue,
-                                    bool aNotify) {
+                                    const nsAttrValue* aValue, bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::name) {
     if (ShadowRoot* containingShadow = GetContainingShadow()) {
       containingShadow->RemoveSlot(this);

@@ -115,10 +115,10 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  virtual int32_t TabIndexDefault() override;
+  int32_t TabIndexDefault() override;
 
   // Element
-  virtual bool IsInteractiveHTMLContent() const override { return true; }
+  bool IsInteractiveHTMLContent() const override { return true; }
 
   // WebIdl HTMLSelectElement
   void GetAutocomplete(DOMString& aValue);
@@ -188,22 +188,21 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
   using nsINode::Remove;
 
   // nsINode
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
 
   // nsIContent
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
   MOZ_CAN_RUN_SCRIPT
   nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
 
-  virtual bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
-                               int32_t* aTabIndex) override;
-  virtual void InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
-                                 bool aNotify, ErrorResult& aRv) override;
-  virtual void RemoveChildNode(nsIContent* aKid, bool aNotify) override;
+  bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
+                       int32_t* aTabIndex) override;
+  void InsertChildBefore(nsIContent* aKid, nsIContent* aBeforeThis,
+                         bool aNotify, ErrorResult& aRv) override;
+  void RemoveChildNode(nsIContent* aKid, bool aNotify) override;
 
   // nsGenericHTMLElement
-  virtual bool IsDisabledForEvents(WidgetEvent* aEvent) override;
+  bool IsDisabledForEvents(WidgetEvent* aEvent) override;
 
   // nsGenericHTMLFormElement
   void SaveState() override;
@@ -213,7 +212,7 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
   NS_IMETHOD Reset() override;
   NS_IMETHOD SubmitNamesValues(FormData* aFormData) override;
 
-  virtual void FieldSetDisabledChanged(bool aNotify) override;
+  void FieldSetDisabledChanged(bool aNotify) override;
 
   ElementState IntrinsicState() const override;
 
@@ -269,31 +268,27 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
   /**
    * Called when an attribute is about to be changed
    */
-  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  virtual void UnbindFromTree(bool aNullParent) override;
-  virtual void BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                             const nsAttrValueOrString* aValue,
-                             bool aNotify) override;
-  virtual void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                            const nsAttrValue* aValue,
-                            const nsAttrValue* aOldValue,
-                            nsIPrincipal* aSubjectPrincipal,
-                            bool aNotify) override;
+  nsresult BindToTree(BindContext&, nsINode& aParent) override;
+  void UnbindFromTree(bool aNullParent) override;
+  void BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                     const nsAttrValue* aValue, bool aNotify) override;
+  void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                    const nsAttrValue* aValue, const nsAttrValue* aOldValue,
+                    nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
 
-  virtual void DoneAddingChildren(bool aHaveNotified) override;
-  virtual bool IsDoneAddingChildren() override { return mIsDoneAddingChildren; }
+  void DoneAddingChildren(bool aHaveNotified) override;
+  bool IsDoneAddingChildren() override { return mIsDoneAddingChildren; }
 
-  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                              const nsAString& aValue,
-                              nsIPrincipal* aMaybeScriptedPrincipal,
-                              nsAttrValue& aResult) override;
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction()
-      const override;
-  virtual nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
-                                              int32_t aModType) const override;
+  bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                      const nsAString& aValue,
+                      nsIPrincipal* aMaybeScriptedPrincipal,
+                      nsAttrValue& aResult) override;
+  nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
+  nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
+                                      int32_t aModType) const override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(
       HTMLSelectElement, nsGenericHTMLFormControlElementWithState)

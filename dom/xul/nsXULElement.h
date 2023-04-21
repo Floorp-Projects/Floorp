@@ -50,7 +50,6 @@
 #include "nscore.h"
 
 class JSObject;
-class nsAttrValueOrString;
 class nsIControllers;
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
@@ -476,23 +475,20 @@ class nsXULElement : public nsStyledElement {
    */
   nsresult MakeHeavyweight(nsXULPrototypeElement* aPrototype);
 
-  virtual void BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                             const nsAttrValueOrString* aValue,
-                             bool aNotify) override;
-  virtual void AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                            const nsAttrValue* aValue,
-                            const nsAttrValue* aOldValue,
-                            nsIPrincipal* aSubjectPrincipal,
-                            bool aNotify) override;
+  void BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                     const nsAttrValue* aValue, bool aNotify) override;
+  void AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                    const nsAttrValue* aValue, const nsAttrValue* aOldValue,
+                    nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
 
-  virtual void UpdateEditableState(bool aNotify) override;
+  void UpdateEditableState(bool aNotify) override;
 
-  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                              const nsAString& aValue,
-                              nsIPrincipal* aMaybeScriptedPrincipal,
-                              nsAttrValue& aResult) override;
+  bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                      const nsAString& aValue,
+                      nsIPrincipal* aMaybeScriptedPrincipal,
+                      nsAttrValue& aResult) override;
 
-  virtual mozilla::EventListenerManager* GetEventListenerManagerForAttr(
+  mozilla::EventListenerManager* GetEventListenerManagerForAttr(
       nsAtom* aAttrName, bool* aDefer) override;
 
   /**
@@ -530,8 +526,7 @@ class nsXULElement : public nsStyledElement {
       nsXULPrototypeElement* aPrototype, mozilla::dom::NodeInfo* aNodeInfo,
       bool aIsScriptable, bool aIsRoot);
 
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
 
   bool IsEventStoppedFromAnonymousScrollbar(mozilla::EventMessage aMessage);
 

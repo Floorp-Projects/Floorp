@@ -45,8 +45,6 @@ class MutationObservers {
    * @param aNameSpaceID  Namespace of changing attribute
    * @param aAttribute    Local-name of changing attribute
    * @param aModType      Type of change (add/change/removal)
-   * @param aNewValue     The parsed new value, but only if BeforeSetAttr
-   *                      preparsed it!!!
    * @see nsIMutationObserver::AttributeWillChange
    */
   static void NotifyAttributeWillChange(mozilla::dom::Element* aElement,

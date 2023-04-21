@@ -168,8 +168,6 @@ class nsIMutationObserver
    * @param aModType     Whether or not the attribute will be added, changed, or
    *                     removed. The constants are defined in
    *                     MutationEvent.webidl.
-   * @param aNewValue    The new value, IF it has been preparsed by
-   *                     BeforeSetAttr, otherwise null.
    *
    * @note Callers of this method might not hold a strong reference to the
    *       observer.  The observer is responsible for making sure it stays

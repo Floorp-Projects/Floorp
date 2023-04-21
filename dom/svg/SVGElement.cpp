@@ -901,8 +901,7 @@ void SVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsAtom* aName,
 }
 
 void SVGElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                               const nsAttrValueOrString* aValue,
-                               bool aNotify) {
+                               const nsAttrValue* aValue, bool aNotify) {
   if (!aValue) {
     UnsetAttrInternal(aNamespaceID, aName, aNotify);
   }
@@ -1363,10 +1362,8 @@ nsAttrValue SVGElement::WillChangeValue(
   // allocating, e.g. an extra SVGAnimatedLength, and isn't necessary at the
   // moment since no SVG elements overload BeforeSetAttr. For now we just pass
   // the current value.
-  nsAttrValueOrString attrStringOrValue(attrValue ? *attrValue
-                                                  : emptyOrOldAttrValue);
-  BeforeSetAttr(kNameSpaceID_None, aName, &attrStringOrValue,
-                kNotifyDocumentObservers);
+  const nsAttrValue* value = attrValue ? attrValue : &emptyOrOldAttrValue;
+  BeforeSetAttr(kNameSpaceID_None, aName, value, kNotifyDocumentObservers);
   return emptyOrOldAttrValue;
 }
 

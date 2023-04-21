@@ -180,8 +180,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLFormElement)
 nsIHTMLCollection* HTMLFormElement::Elements() { return mControls; }
 
 void HTMLFormElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                    const nsAttrValueOrString* aValue,
-                                    bool aNotify) {
+                                    const nsAttrValue* aValue, bool aNotify) {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::action || aName == nsGkAtoms::target) {
       // Don't forget we've notified the password manager already if the

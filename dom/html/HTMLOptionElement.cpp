@@ -143,8 +143,7 @@ nsChangeHint HTMLOptionElement::GetAttributeChangeHint(const nsAtom* aAttribute,
 }
 
 void HTMLOptionElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                      const nsAttrValueOrString* aValue,
-                                      bool aNotify) {
+                                      const nsAttrValue* aValue, bool aNotify) {
   nsGenericHTMLElement::BeforeSetAttr(aNamespaceID, aName, aValue, aNotify);
 
   if (aNamespaceID != kNameSpaceID_None || aName != nsGkAtoms::selected ||

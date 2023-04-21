@@ -1005,8 +1005,7 @@ void HTMLTableElement::UnbindFromTree(bool aNullParent) {
 }
 
 void HTMLTableElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                     const nsAttrValueOrString* aValue,
-                                     bool aNotify) {
+                                     const nsAttrValue* aValue, bool aNotify) {
   if (aName == nsGkAtoms::cellpadding && aNameSpaceID == kNameSpaceID_None) {
     ReleaseInheritedAttributes();
   }
