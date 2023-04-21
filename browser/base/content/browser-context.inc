@@ -281,6 +281,10 @@
                 data-l10n-id="main-context-menu-suggest-strong-password"
                 hidden="true"
                 oncommand="gContextMenu.useGeneratedPassword();"/>
+      <menuitem id="use-relay-mask"
+                data-l10n-id="main-context-menu-use-relay-mask"
+                hidden="true"
+                oncommand="gContextMenu.useRelayMask();"/>
       <menuitem id="manage-saved-logins"
                 data-l10n-id="main-context-menu-manage-logins2"
                 hidden="true"

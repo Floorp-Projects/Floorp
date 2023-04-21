@@ -357,6 +357,10 @@ main-context-menu-use-saved-password =
 
 ##
 
+main-context-menu-use-relay-mask =
+    .label = Use { -relay-brand-short-name } Email Mask
+    .accesskey = E
+
 main-context-menu-suggest-strong-password =
     .label = Suggest Strong Password…
     .accesskey = S

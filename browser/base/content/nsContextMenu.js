@@ -61,6 +61,7 @@ function openContextMenu(aMessage, aBrowser, aActor) {
     frameBrowsingContext: wgp.browsingContext,
     selectionInfo: data.selectionInfo,
     disableSetDesktopBackground: data.disableSetDesktopBackground,
+    showRelay: data.showRelay,
     loginFillInfo: data.loginFillInfo,
     userContextId: wgp.browsingContext.originAttributes.userContextId,
     webExtContextData: data.webExtContextData,
@@ -1191,8 +1192,13 @@ class nsContextMenu {
       let popup = document.getElementById("fill-login-popup");
       popup.appendChild(fragment);
     } finally {
+      const documentURI = this.contentData?.documentURIObject;
+      const origin = LoginHelper.getLoginOrigin(documentURI?.spec);
+      const showRelay = origin && this.contentData?.context.showRelay;
+
       this.showItem("fill-login", showUseSavedLogin);
       this.showItem("fill-login-generated-password", showGenerate);
+      this.showItem("use-relay-mask", showRelay);
       this.showItem("manage-saved-logins", showManage);
       this.setItemAttr(
         "fill-login-generated-password",
@@ -1202,7 +1208,9 @@ class nsContextMenu {
       this.setItemAttr(
         "passwordmgr-items-separator",
         "ensureHidden",
-        showUseSavedLogin || showGenerate || showManage ? null : true
+        showUseSavedLogin || showGenerate || showManage || showRelay
+          ? null
+          : true
       );
     }
   }
@@ -1331,6 +1339,12 @@ class nsContextMenu {
     LoginHelper.openPasswordManager(window, {
       entryPoint: "contextmenu",
     });
+  }
+
+  useRelayMask() {
+    const documentURI = this.contentData?.documentURIObject;
+    const origin = LoginHelper.getLoginOrigin(documentURI?.spec);
+    this.actor.useRelayMask(this.targetIdentifier, origin);
   }
 
   useGeneratedPassword() {

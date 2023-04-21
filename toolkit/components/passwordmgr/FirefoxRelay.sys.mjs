@@ -54,7 +54,7 @@ XPCOMUtils.defineLazyGetter(lazy, "strings", function() {
 });
 
 if (Services.appinfo.processType !== Services.appinfo.PROCESS_TYPE_DEFAULT) {
-  throw new Error("FirefoxRelay.jsm should only run in the parent process");
+  throw new Error("FirefoxRelay.sys.mjs should only run in the parent process");
 }
 
 async function getRelayTokenAsync() {

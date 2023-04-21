@@ -176,6 +176,70 @@ add_task(async function test_password_input() {
   await SpecialPowers.popPrefEnv();
 });
 
+add_task(async function firefox_relay_input() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["signon.firefoxRelay.feature", "enabled"]],
+  });
+
+  await test_contextmenu("#input_username", [
+    "use-relay-mask",
+    true,
+    "---",
+    null,
+    "context-undo",
+    false,
+    "context-redo",
+    false,
+    "---",
+    null,
+    "context-cut",
+    false,
+    "context-copy",
+    false,
+    "context-paste",
+    null, // ignore clipboard state
+    "context-delete",
+    false,
+    "context-selectall",
+    false,
+    "---",
+    null,
+    "spell-check-enabled",
+    true,
+  ]);
+
+  await test_contextmenu(
+    "#input_email",
+    [
+      "use-relay-mask",
+      true,
+      "---",
+      null,
+      "context-undo",
+      false,
+      "context-redo",
+      false,
+      "---",
+      null,
+      "context-cut",
+      false,
+      "context-copy",
+      false,
+      "context-paste",
+      null, // ignore clipboard state
+      "context-delete",
+      false,
+      "context-selectall",
+      null,
+    ],
+    {
+      skipFocusChange: true,
+    }
+  );
+
+  await SpecialPowers.popPrefEnv();
+});
+
 add_task(async function test_tel_email_url_number_input() {
   todo(
     false,
