@@ -429,7 +429,6 @@ webrtc_fuzzer_test("pseudotcp_parser_fuzzer") {
   sources = [ "pseudotcp_parser_fuzzer.cc" ]
   deps = [
     "../../p2p:rtc_p2p",
-    "../../rtc_base",
     "../../rtc_base:threading",
   ]
 }
@@ -647,7 +646,6 @@ webrtc_fuzzer_test("ssl_certificate_fuzzer") {
   sources = [ "ssl_certificate_fuzzer.cc" ]
   deps = [
     "../:rtp_test_utils",
-    "../../rtc_base",
     "../../rtc_base:ssl",
     "../../rtc_base:stringutils",
   ]

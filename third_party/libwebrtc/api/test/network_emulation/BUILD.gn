@@ -19,7 +19,6 @@ rtc_library("network_emulation") {
 
   deps = [
     "../..:array_view",
-    "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:copy_on_write_buffer",
     "../../../rtc_base:ip_address",

@@ -50,7 +50,6 @@ rtc_executable("data_channel_benchmark") {
     "../../api/audio_codecs:builtin_audio_encoder_factory",
     "../../api/video_codecs:builtin_video_decoder_factory",
     "../../api/video_codecs:builtin_video_encoder_factory",
-    "../../rtc_base",
     "../../rtc_base:logging",
     "../../rtc_base:refcount",
     "../../rtc_base:rtc_event",
