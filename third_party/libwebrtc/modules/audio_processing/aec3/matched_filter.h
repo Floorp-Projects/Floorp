@@ -135,7 +135,7 @@ class MatchedFilter {
               bool use_slow_smoothing);
 
   // Resets the matched filter.
-  void Reset();
+  void Reset(bool full_reset);
 
   // Returns the current lag estimates.
   absl::optional<const MatchedFilter::LagEstimate> GetBestLagEstimate() const {
@@ -176,6 +176,7 @@ class MatchedFilter {
   absl::optional<size_t> winner_lag_;
   int last_detected_best_lag_filter_ = -1;
   std::vector<size_t> filters_offsets_;
+  int number_pre_echo_updates_ = 0;
   const float excitation_limit_;
   const float smoothing_fast_;
   const float smoothing_slow_;
