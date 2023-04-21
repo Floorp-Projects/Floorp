@@ -14,6 +14,7 @@
 #include <utility>
 
 #include "absl/strings/string_view.h"
+#include "api/sequence_checker.h"
 #include "modules/rtp_rtcp/source/rtp_util.h"
 #include "rtc_base/event.h"
 
@@ -128,54 +129,6 @@ bool DegradedCall::FakeNetworkPipeTransportAdapter::SendRtcp(
   return true;
 }
 
-DegradedCall::ThreadedPacketReceiver::ThreadedPacketReceiver(
-    webrtc::TaskQueueBase* worker_thread,
-    webrtc::TaskQueueBase* network_thread,
-    rtc::scoped_refptr<PendingTaskSafetyFlag> call_alive,
-    webrtc::PacketReceiver* receiver)
-    : worker_thread_(worker_thread),
-      network_thread_(network_thread),
-      call_alive_(std::move(call_alive)),
-      receiver_(receiver) {}
-
-DegradedCall::ThreadedPacketReceiver::~ThreadedPacketReceiver() = default;
-
-PacketReceiver::DeliveryStatus
-DegradedCall::ThreadedPacketReceiver::DeliverPacket(
-    MediaType media_type,
-    rtc::CopyOnWriteBuffer packet,
-    int64_t packet_time_us) {
-  // `Call::DeliverPacket` expects RTCP packets to be delivered from the
-  // network thread and RTP packets to be delivered from the worker thread.
-  // Because `FakeNetworkPipe` queues packets, the thread used when this packet
-  // is delivered to `DegradedCall::DeliverPacket` may differ from the thread
-  // used when this packet is delivered to
-  // `ThreadedPacketReceiver::DeliverPacket`. To solve this problem, always
-  // make sure that packets are sent in the correct thread.
-  if (IsRtcpPacket(packet)) {
-    if (!network_thread_->IsCurrent()) {
-      network_thread_->PostTask(
-          SafeTask(call_alive_, [receiver = receiver_, media_type,
-                                 packet = std::move(packet), packet_time_us]() {
-            receiver->DeliverPacket(media_type, std::move(packet),
-                                    packet_time_us);
-          }));
-      return DELIVERY_OK;
-    }
-  } else {
-    if (!worker_thread_->IsCurrent()) {
-      worker_thread_->PostTask([receiver = receiver_, media_type,
-                                packet = std::move(packet), packet_time_us]() {
-        receiver->DeliverPacket(media_type, std::move(packet), packet_time_us);
-      });
-      return DELIVERY_OK;
-    }
-  }
-
-  return receiver_->DeliverPacket(media_type, std::move(packet),
-                                  packet_time_us);
-}
-
 /* Mozilla: Avoid this since it could use GetRealTimeClock().
 DegradedCall::DegradedCall(
     std::unique_ptr<Call> call,
@@ -194,10 +147,7 @@ DegradedCall::DegradedCall(
     receive_simulated_network_ = network.get();
     receive_pipe_ =
         std::make_unique<webrtc::FakeNetworkPipe>(clock_, std::move(network));
-    packet_receiver_ = std::make_unique<ThreadedPacketReceiver>(
-        call_->worker_thread(), call_->network_thread(), call_alive_,
-        call_->Receiver());
-    receive_pipe_->SetReceiver(packet_receiver_.get());
+    receive_pipe_->SetReceiver(call_->Receiver());
     if (receive_configs_.size() > 1) {
       call_->network_thread()->PostDelayedTask(
           SafeTask(call_alive_, [this] { UpdateReceiveNetworkConfig(); }),
@@ -402,6 +352,7 @@ PacketReceiver::DeliveryStatus DegradedCall::DeliverPacket(
     MediaType media_type,
     rtc::CopyOnWriteBuffer packet,
     int64_t packet_time_us) {
+  RTC_DCHECK_RUN_ON(&received_packet_sequence_checker_);
   PacketReceiver::DeliveryStatus status = receive_pipe_->DeliverPacket(
       media_type, std::move(packet), packet_time_us);
   // This is not optimal, but there are many places where there are thread
@@ -416,7 +367,18 @@ PacketReceiver::DeliveryStatus DegradedCall::DeliverPacket(
   return status;
 }
 
+void DegradedCall::DeliverRtpPacket(
+    MediaType media_type,
+    RtpPacketReceived packet,
+    OnUndemuxablePacketHandler undemuxable_packet_handler) {
+  RTC_DCHECK_RUN_ON(&received_packet_sequence_checker_);
+  receive_pipe_->DeliverRtpPacket(media_type, std::move(packet),
+                                  std::move(undemuxable_packet_handler));
+  receive_pipe_->Process();
+}
+
 void DegradedCall::DeliverRtcpPacket(rtc::CopyOnWriteBuffer packet) {
+  RTC_DCHECK_RUN_ON(&received_packet_sequence_checker_);
   receive_pipe_->DeliverRtcpPacket(std::move(packet));
   receive_pipe_->Process();
 }

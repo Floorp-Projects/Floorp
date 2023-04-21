@@ -34,7 +34,7 @@ index aba72cd52a..1ddf083173 100644
        deps += [
          "api",
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index 6088f00981..3872dc37c5 100644
+index 51836e603a..6409d0b994 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
 @@ -354,6 +354,16 @@ rtc_library("call") {
