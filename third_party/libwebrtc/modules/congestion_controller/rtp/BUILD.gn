@@ -63,6 +63,7 @@ rtc_library("transport_feedback") {
     "../../../rtc_base:logging",
     "../../../rtc_base:macromagic",
     "../../../rtc_base:network_route",
+    "../../../rtc_base:rtc_numerics",
     "../../../rtc_base/network:sent_packet",
     "../../../rtc_base/synchronization:mutex",
     "../../../rtc_base/system:no_unique_address",
