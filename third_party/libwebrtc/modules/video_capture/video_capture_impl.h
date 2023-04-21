@@ -53,6 +53,8 @@ class VideoCaptureImpl : public VideoCaptureModule {
   // Call backs
   void RegisterCaptureDataCallback(
       rtc::VideoSinkInterface<VideoFrame>* dataCallback) override;
+  virtual void RegisterCaptureDataCallback(
+      RawVideoSinkInterface* dataCallback) override;
   void DeRegisterCaptureDataCallback(
       rtc::VideoSinkInterface<VideoFrame>* dataCallback) override;
 
@@ -90,6 +92,10 @@ class VideoCaptureImpl : public VideoCaptureModule {
  private:
   void UpdateFrameCount();
   uint32_t CalculateFrameRate(int64_t now_ns);
+  void DeliverRawFrame(uint8_t* videoFrame,
+                       size_t videoFrameLength,
+                       const VideoCaptureCapability& frameInfo,
+                       int64_t captureTime);
 
   // last time the module process function was called.
   int64_t _lastProcessTimeNanos;
@@ -97,6 +103,7 @@ class VideoCaptureImpl : public VideoCaptureModule {
   int64_t _lastFrameRateCallbackTimeNanos;
 
   std::set<rtc::VideoSinkInterface<VideoFrame>*> _dataCallBacks;
+  RawVideoSinkInterface* _rawDataCallBack;
 
   int64_t _lastProcessFrameTimeNanos;
   // timestamp for local captured frames

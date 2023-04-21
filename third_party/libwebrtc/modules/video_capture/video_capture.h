@@ -14,6 +14,7 @@
 #include "api/video/video_rotation.h"
 #include "api/video/video_sink_interface.h"
 #include "modules/desktop_capture/desktop_capture_types.h"
+#include "modules/video_capture/raw_video_sink_interface.h"
 #include "modules/video_capture/video_capture_defines.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
@@ -117,6 +118,8 @@ class VideoCaptureModule : public rtc::RefCountInterface {
   //   Register capture data callback
   virtual void RegisterCaptureDataCallback(
       rtc::VideoSinkInterface<VideoFrame>* dataCallback) = 0;
+  virtual void RegisterCaptureDataCallback(
+      RawVideoSinkInterface* dataCallback) = 0;
 
   //  Remove capture data callback
   virtual void DeRegisterCaptureDataCallback(

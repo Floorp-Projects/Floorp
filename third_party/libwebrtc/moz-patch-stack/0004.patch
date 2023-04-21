@@ -228,7 +228,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/26eee332d844bd3f9
  .../video_capture/linux/video_capture_v4l2.cc |   7 +
  modules/video_capture/video_capture.h         |  45 +++-
  .../video_capture/video_capture_factory.cc    |   8 -
- modules/video_capture/video_capture_impl.cc   |  34 ++-
+ modules/video_capture/video_capture_impl.cc   |  36 +++-
  modules/video_capture/video_capture_impl.h    |   6 +-
  .../codecs/vp9/libvpx_vp9_encoder.cc          |   2 +
  .../codecs/vp9/libvpx_vp9_encoder.h           |   4 +
@@ -236,7 +236,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/26eee332d844bd3f9
  modules/video_coding/session_info.cc          |  32 ++-
  test/fuzzers/rtp_packet_fuzzer.cc             |   5 +
  test/vcm_capturer.cc                          |   2 +-
- 45 files changed, 651 insertions(+), 133 deletions(-)
+ 45 files changed, 652 insertions(+), 134 deletions(-)
 
 diff --git a/api/rtp_headers.cc b/api/rtp_headers.cc
 index e0ad9eb26e..8e1efc7262 100644
@@ -1563,12 +1563,12 @@ index 5101a67e0c..1dc13b01aa 100644
    char device[32];
    bool found = false;
 diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
-index 3bbe217cba..3f39fb3215 100644
+index eddc31414a..187eba76a0 100644
 --- a/modules/video_capture/video_capture.h
 +++ b/modules/video_capture/video_capture.h
-@@ -14,15 +14,48 @@
- #include "api/video/video_rotation.h"
+@@ -15,15 +15,48 @@
  #include "api/video/video_sink_interface.h"
+ #include "modules/video_capture/raw_video_sink_interface.h"
  #include "modules/video_capture/video_capture_defines.h"
 +#include <set>
 +
@@ -1615,7 +1615,7 @@ index 3bbe217cba..3f39fb3215 100644
  
      // Returns the available capture devices.
      // deviceNumber   - Index of capture device.
-@@ -37,7 +70,8 @@ class VideoCaptureModule : public rtc::RefCountInterface {
+@@ -38,7 +71,8 @@ class VideoCaptureModule : public rtc::RefCountInterface {
                                    char* deviceUniqueIdUTF8,
                                    uint32_t deviceUniqueIdUTF8Length,
                                    char* productUniqueIdUTF8 = 0,
@@ -1625,7 +1625,7 @@ index 3bbe217cba..3f39fb3215 100644
  
      // Returns the number of capabilities this device.
      virtual int32_t NumberOfCapabilities(const char* deviceUniqueIdUTF8) = 0;
-@@ -69,6 +103,8 @@ class VideoCaptureModule : public rtc::RefCountInterface {
+@@ -70,6 +104,8 @@ class VideoCaptureModule : public rtc::RefCountInterface {
          uint32_t positionY) = 0;
  
      virtual ~DeviceInfo() {}
@@ -1634,8 +1634,8 @@ index 3bbe217cba..3f39fb3215 100644
    };
  
    //   Register capture data callback
-@@ -76,11 +112,16 @@ class VideoCaptureModule : public rtc::RefCountInterface {
-       rtc::VideoSinkInterface<VideoFrame>* dataCallback) = 0;
+@@ -79,11 +115,16 @@ class VideoCaptureModule : public rtc::RefCountInterface {
+       RawVideoSinkInterface* dataCallback) = 0;
  
    //  Remove capture data callback
 -  virtual void DeRegisterCaptureDataCallback() = 0;
@@ -1677,7 +1677,7 @@ index c0e1479caf..e4a46902e0 100644
  
  }  // namespace webrtc
 diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
-index 234c2e131e..874eb23875 100644
+index d539b38264..d5ec4daae1 100644
 --- a/modules/video_capture/video_capture_impl.cc
 +++ b/modules/video_capture/video_capture_impl.cc
 @@ -76,7 +76,6 @@ VideoCaptureImpl::VideoCaptureImpl()
@@ -1685,10 +1685,10 @@ index 234c2e131e..874eb23875 100644
        _lastProcessTimeNanos(rtc::TimeNanos()),
        _lastFrameRateCallbackTimeNanos(rtc::TimeNanos()),
 -      _dataCallBack(NULL),
+       _rawDataCallBack(NULL),
        _lastProcessFrameTimeNanos(rtc::TimeNanos()),
        _rotateFrame(kVideoRotation_0),
-       apply_rotation_(false) {
-@@ -88,7 +87,6 @@ VideoCaptureImpl::VideoCaptureImpl()
+@@ -89,7 +88,6 @@ VideoCaptureImpl::VideoCaptureImpl()
  }
  
  VideoCaptureImpl::~VideoCaptureImpl() {
@@ -1696,12 +1696,20 @@ index 234c2e131e..874eb23875 100644
    if (_deviceUniqueId)
      delete[] _deviceUniqueId;
  }
-@@ -96,18 +94,31 @@ VideoCaptureImpl::~VideoCaptureImpl() {
- void VideoCaptureImpl::RegisterCaptureDataCallback(
+@@ -98,26 +96,39 @@ void VideoCaptureImpl::RegisterCaptureDataCallback(
      rtc::VideoSinkInterface<VideoFrame>* dataCallBack) {
    MutexLock lock(&api_lock_);
+   RTC_DCHECK(!_rawDataCallBack);
 -  _dataCallBack = dataCallBack;
 +  _dataCallBacks.insert(dataCallBack);
+ }
+ 
+ void VideoCaptureImpl::RegisterCaptureDataCallback(
+     RawVideoSinkInterface* dataCallBack) {
+   MutexLock lock(&api_lock_);
+-  RTC_DCHECK(!_dataCallBack);
++  RTC_DCHECK(_dataCallBacks.empty());
+   _rawDataCallBack = dataCallBack;
  }
  
 -void VideoCaptureImpl::DeRegisterCaptureDataCallback() {
@@ -1713,7 +1721,8 @@ index 234c2e131e..874eb23875 100644
 +  if (it != _dataCallBacks.end()) {
 +    _dataCallBacks.erase(it);
 +  }
-+}
+   _rawDataCallBack = NULL;
+ }
 +
 +int32_t VideoCaptureImpl::StopCaptureIfAllClientsClose() {
 +  if (_dataCallBacks.empty()) {
@@ -1721,7 +1730,7 @@ index 234c2e131e..874eb23875 100644
 +  } else {
 +    return 0;
 +  }
- }
++}
 +
  int32_t VideoCaptureImpl::DeliverCapturedFrame(VideoFrame& captureFrame) {
    UpdateFrameCount();  // frame count used for local frame rate callback.
@@ -1733,7 +1742,7 @@ index 234c2e131e..874eb23875 100644
    }
  
    return 0;
-@@ -180,7 +191,7 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
+@@ -204,7 +215,7 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
        buffer.get()->StrideV(), 0, 0,  // No Cropping
        width, height, target_width, target_height, rotation_mode,
        ConvertVideoType(frameInfo.videoType));
@@ -1742,7 +1751,7 @@ index 234c2e131e..874eb23875 100644
      RTC_LOG(LS_ERROR) << "Failed to convert capture frame from type "
                        << static_cast<int>(frameInfo.videoType) << "to I420.";
      return -1;
-@@ -195,6 +206,13 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
+@@ -219,6 +230,13 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
            .build();
    captureFrame.set_ntp_time_ms(captureTime);
  
@@ -1757,13 +1766,13 @@ index 234c2e131e..874eb23875 100644
  
    return 0;
 diff --git a/modules/video_capture/video_capture_impl.h b/modules/video_capture/video_capture_impl.h
-index 9e4afe7ec1..43aa027df0 100644
+index fee93396d3..f874580471 100644
 --- a/modules/video_capture/video_capture_impl.h
 +++ b/modules/video_capture/video_capture_impl.h
-@@ -53,8 +53,10 @@ class VideoCaptureImpl : public VideoCaptureModule {
-   // Call backs
-   void RegisterCaptureDataCallback(
+@@ -55,8 +55,10 @@ class VideoCaptureImpl : public VideoCaptureModule {
        rtc::VideoSinkInterface<VideoFrame>* dataCallback) override;
+   virtual void RegisterCaptureDataCallback(
+       RawVideoSinkInterface* dataCallback) override;
 -  void DeRegisterCaptureDataCallback() override;
 +  void DeRegisterCaptureDataCallback(
 +      rtc::VideoSinkInterface<VideoFrame>* dataCallback) override;
@@ -1772,15 +1781,15 @@ index 9e4afe7ec1..43aa027df0 100644
    int32_t SetCaptureRotation(VideoRotation rotation) override;
    bool SetApplyRotation(bool enable) override;
    bool GetApplyRotation() override;
-@@ -92,7 +94,7 @@ class VideoCaptureImpl : public VideoCaptureModule {
+@@ -98,7 +100,7 @@ class VideoCaptureImpl : public VideoCaptureModule {
    // last time the frame rate callback function was called.
    int64_t _lastFrameRateCallbackTimeNanos;
  
 -  rtc::VideoSinkInterface<VideoFrame>* _dataCallBack;
 +  std::set<rtc::VideoSinkInterface<VideoFrame>*> _dataCallBacks;
+   RawVideoSinkInterface* _rawDataCallBack;
  
    int64_t _lastProcessFrameTimeNanos;
-   // timestamp for local captured frames
 diff --git a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc b/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc
 index c2884c0395..35b13058a2 100644
 --- a/modules/video_coding/codecs/vp9/libvpx_vp9_encoder.cc

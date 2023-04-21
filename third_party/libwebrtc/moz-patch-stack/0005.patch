@@ -30,7 +30,7 @@ index 9627076eea..381d1021c4 100644
  
  enum class CaptureType { kWindow, kScreen };
 diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
-index 3f39fb3215..2d2562036f 100644
+index 187eba76a0..258bc7f810 100644
 --- a/modules/video_capture/video_capture.h
 +++ b/modules/video_capture/video_capture.h
 @@ -13,6 +13,7 @@
@@ -38,9 +38,9 @@ index 3f39fb3215..2d2562036f 100644
  #include "api/video/video_rotation.h"
  #include "api/video/video_sink_interface.h"
 +#include "modules/desktop_capture/desktop_capture_types.h"
+ #include "modules/video_capture/raw_video_sink_interface.h"
  #include "modules/video_capture/video_capture_defines.h"
  #include <set>
- 
 -- 
 2.34.1
 

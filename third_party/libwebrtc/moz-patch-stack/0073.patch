@@ -10,19 +10,19 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e826dfadfe1264c59
  1 file changed, 7 insertions(+), 1 deletion(-)
 
 diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
-index 2d2562036f..3948032041 100644
+index 258bc7f810..ad1b341b62 100644
 --- a/modules/video_capture/video_capture.h
 +++ b/modules/video_capture/video_capture.h
-@@ -15,6 +15,8 @@
- #include "api/video/video_sink_interface.h"
+@@ -16,6 +16,8 @@
  #include "modules/desktop_capture/desktop_capture_types.h"
+ #include "modules/video_capture/raw_video_sink_interface.h"
  #include "modules/video_capture/video_capture_defines.h"
 +#include "rtc_base/synchronization/mutex.h"
 +#include "rtc_base/thread_annotations.h"
  #include <set>
  
  #if defined(ANDROID)
-@@ -43,15 +45,18 @@ class VideoCaptureModule : public rtc::RefCountInterface {
+@@ -44,15 +46,18 @@ class VideoCaptureModule : public rtc::RefCountInterface {
      virtual uint32_t NumberOfDevices() = 0;
      virtual int32_t Refresh() = 0;
      virtual void DeviceChange() {
@@ -41,7 +41,7 @@ index 2d2562036f..3948032041 100644
        auto it = _inputCallBacks.find(callBack);
        if (it != _inputCallBacks.end()) {
          _inputCallBacks.erase(it);
-@@ -105,7 +110,8 @@ class VideoCaptureModule : public rtc::RefCountInterface {
+@@ -106,7 +111,8 @@ class VideoCaptureModule : public rtc::RefCountInterface {
  
      virtual ~DeviceInfo() {}
     private:
