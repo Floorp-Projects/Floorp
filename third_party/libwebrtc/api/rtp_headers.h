@@ -161,7 +161,7 @@ struct RTPHeaderExtension {
   CsrcAudioLevelList csrcAudioLevels;
 };
 
-struct RTPHeader {
+struct RTC_EXPORT RTPHeader {
   RTPHeader();
   RTPHeader(const RTPHeader& other);
   RTPHeader& operator=(const RTPHeader& other);
