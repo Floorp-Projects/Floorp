@@ -2475,7 +2475,8 @@ nsresult Element::SetAttr(int32_t aNamespaceID, nsAtom* aName, nsAtom* aPrefix,
 
   if (OnlyNotifySameValueSet(aNamespaceID, aName, aPrefix, value, aNotify,
                              oldValue, &modType, &hasListeners, &oldValueSet)) {
-    return OnAttrSetButNotChanged(aNamespaceID, aName, value, aNotify);
+    OnAttrSetButNotChanged(aNamespaceID, aName, value, aNotify);
+    return NS_OK;
   }
 
   // Hold a script blocker while calling ParseAttribute since that can call
@@ -2521,7 +2522,8 @@ nsresult Element::SetParsedAttr(int32_t aNamespaceID, nsAtom* aName,
 
   if (OnlyNotifySameValueSet(aNamespaceID, aName, aPrefix, value, aNotify,
                              oldValue, &modType, &hasListeners, &oldValueSet)) {
-    return OnAttrSetButNotChanged(aNamespaceID, aName, value, aNotify);
+    OnAttrSetButNotChanged(aNamespaceID, aName, value, aNotify);
+    return NS_OK;
   }
 
   Document* document = GetComposedDoc();
@@ -2641,8 +2643,8 @@ nsresult Element::SetAttrAndNotify(
   }
 
   if (aCallAfterSetAttr) {
-    MOZ_TRY(AfterSetAttr(aNamespaceID, aName, &valueForAfterSetAttr, oldValue,
-                         aSubjectPrincipal, aNotify));
+    AfterSetAttr(aNamespaceID, aName, &valueForAfterSetAttr, oldValue,
+                 aSubjectPrincipal, aNotify);
 
     if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::dir) {
       OnSetDirAttr(this, &valueForAfterSetAttr, hadValidDir, hadDirAuto,
@@ -2745,11 +2747,11 @@ void Element::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
   }
 }
 
-nsresult Element::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                               const nsAttrValue* aValue,
-                               const nsAttrValue* aOldValue,
-                               nsIPrincipal* aMaybeScriptedPrincipal,
-                               bool aNotify) {
+void Element::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                           const nsAttrValue* aValue,
+                           const nsAttrValue* aOldValue,
+                           nsIPrincipal* aMaybeScriptedPrincipal,
+                           bool aNotify) {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::part) {
       bool isPart = !!aValue;
@@ -2770,7 +2772,6 @@ nsresult Element::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
       }
     }
   }
-  return NS_OK;
 }
 
 void Element::PreIdMaybeChange(int32_t aNamespaceID, nsAtom* aName,
@@ -2797,9 +2798,9 @@ void Element::PostIdMaybeChange(int32_t aNamespaceID, nsAtom* aName,
   }
 }
 
-nsresult Element::OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
-                                         const nsAttrValueOrString& aValue,
-                                         bool aNotify) {
+void Element::OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
+                                     const nsAttrValueOrString& aValue,
+                                     bool aNotify) {
   const CustomElementData* data = GetCustomElementData();
   if (data && data->mState == CustomElementData::State::eCustom) {
     CustomElementDefinition* definition = data->GetCustomElementDefinition();
@@ -2820,8 +2821,6 @@ nsresult Element::OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
           ElementCallbackType::eAttributeChanged, this, args, definition);
     }
   }
-
-  return NS_OK;
 }
 
 EventListenerManager* Element::GetEventListenerManagerForAttr(nsAtom* aAttrName,
@@ -2921,8 +2920,7 @@ nsresult Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName, bool aNotify) {
     }
   }
 
-  MOZ_TRY(
-      AfterSetAttr(aNameSpaceID, aName, nullptr, &oldValue, nullptr, aNotify));
+  AfterSetAttr(aNameSpaceID, aName, nullptr, &oldValue, nullptr, aNotify);
 
   UpdateState(aNotify);
 

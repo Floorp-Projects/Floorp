@@ -46,11 +46,11 @@ class HTMLStyleElement final : public nsGenericHTMLElement,
 
   virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
   virtual void UnbindFromTree(bool aNullParent = true) override;
-  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                const nsAttrValue* aValue,
-                                const nsAttrValue* aOldValue,
-                                nsIPrincipal* aSubjectPrincipal,
-                                bool aNotify) override;
+  virtual void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                            const nsAttrValue* aValue,
+                            const nsAttrValue* aOldValue,
+                            nsIPrincipal* aSubjectPrincipal,
+                            bool aNotify) override;
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 

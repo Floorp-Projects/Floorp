@@ -65,8 +65,7 @@ class RangeInputType : public NumericInputTypeBase {
     return new (aMemory) RangeInputType(aInputElement);
   }
 
-  MOZ_CAN_RUN_SCRIPT
-  nsresult MinMaxStepAttrChanged() override;
+  MOZ_CAN_RUN_SCRIPT void MinMaxStepAttrChanged() override;
 
  private:
   explicit RangeInputType(HTMLInputElement* aInputElement)

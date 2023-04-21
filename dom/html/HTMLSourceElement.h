@@ -122,10 +122,10 @@ class HTMLSourceElement final : public nsGenericHTMLElement {
                       nsIPrincipal* aMaybeScriptedPrincipal,
                       nsAttrValue& aResult) override;
 
-  nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                        const nsAttrValue* aValue, const nsAttrValue* aOldValue,
-                        nsIPrincipal* aMaybeScriptedPrincipal,
-                        bool aNotify) override;
+  void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                    const nsAttrValue* aValue, const nsAttrValue* aOldValue,
+                    nsIPrincipal* aMaybeScriptedPrincipal,
+                    bool aNotify) override;
 
  private:
   // Generates a new MediaList using the given input

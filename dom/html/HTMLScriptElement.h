@@ -47,11 +47,11 @@ class HTMLScriptElement final : public nsGenericHTMLElement,
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // Element
-  virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                const nsAttrValue* aValue,
-                                const nsAttrValue* aOldValue,
-                                nsIPrincipal* aMaybeScriptedPrincipal,
-                                bool aNotify) override;
+  virtual void AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                            const nsAttrValue* aValue,
+                            const nsAttrValue* aOldValue,
+                            nsIPrincipal* aMaybeScriptedPrincipal,
+                            bool aNotify) override;
 
   // WebIDL
   void GetText(nsAString& aValue, ErrorResult& aRv) const;

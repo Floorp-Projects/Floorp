@@ -557,18 +557,18 @@ nsIntSize HTMLCanvasElement::GetWidthHeight() {
   return size;
 }
 
-nsresult HTMLCanvasElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                         const nsAttrValue* aValue,
-                                         const nsAttrValue* aOldValue,
-                                         nsIPrincipal* aSubjectPrincipal,
-                                         bool aNotify) {
+void HTMLCanvasElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                                     const nsAttrValue* aValue,
+                                     const nsAttrValue* aOldValue,
+                                     nsIPrincipal* aSubjectPrincipal,
+                                     bool aNotify) {
   AfterMaybeChangeAttr(aNamespaceID, aName, aNotify);
 
   return nsGenericHTMLElement::AfterSetAttr(
       aNamespaceID, aName, aValue, aOldValue, aSubjectPrincipal, aNotify);
 }
 
-nsresult HTMLCanvasElement::OnAttrSetButNotChanged(
+void HTMLCanvasElement::OnAttrSetButNotChanged(
     int32_t aNamespaceID, nsAtom* aName, const nsAttrValueOrString& aValue,
     bool aNotify) {
   AfterMaybeChangeAttr(aNamespaceID, aName, aNotify);

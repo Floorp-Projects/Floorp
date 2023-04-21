@@ -46,11 +46,11 @@ nsresult XULTooltipElement::Init() {
   return error.StealNSResult();
 }
 
-nsresult XULTooltipElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                         const nsAttrValue* aValue,
-                                         const nsAttrValue* aOldValue,
-                                         nsIPrincipal* aSubjectPrincipal,
-                                         bool aNotify) {
+void XULTooltipElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                     const nsAttrValue* aValue,
+                                     const nsAttrValue* aOldValue,
+                                     nsIPrincipal* aSubjectPrincipal,
+                                     bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::label) {
     // When the label attribute of this node changes propagate the text down
     // into child description element.

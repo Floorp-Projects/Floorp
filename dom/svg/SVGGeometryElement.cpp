@@ -40,11 +40,11 @@ SVGElement::NumberAttributesInfo SVGGeometryElement::GetNumberInfo() {
   return NumberAttributesInfo(&mPathLength, &sNumberInfo, 1);
 }
 
-nsresult SVGGeometryElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                          const nsAttrValue* aValue,
-                                          const nsAttrValue* aOldValue,
-                                          nsIPrincipal* aSubjectPrincipal,
-                                          bool aNotify) {
+void SVGGeometryElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                                      const nsAttrValue* aValue,
+                                      const nsAttrValue* aOldValue,
+                                      nsIPrincipal* aSubjectPrincipal,
+                                      bool aNotify) {
   if (mCachedPath && aNamespaceID == kNameSpaceID_None &&
       AttributeDefinesGeometry(aName)) {
     mCachedPath = nullptr;

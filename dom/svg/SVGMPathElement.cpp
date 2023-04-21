@@ -96,11 +96,11 @@ void SVGMPathElement::UnbindFromTree(bool aNullParent) {
   SVGMPathElementBase::UnbindFromTree(aNullParent);
 }
 
-nsresult SVGMPathElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                       const nsAttrValue* aValue,
-                                       const nsAttrValue* aOldValue,
-                                       nsIPrincipal* aMaybeScriptedPrincipal,
-                                       bool aNotify) {
+void SVGMPathElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                                   const nsAttrValue* aValue,
+                                   const nsAttrValue* aOldValue,
+                                   nsIPrincipal* aMaybeScriptedPrincipal,
+                                   bool aNotify) {
   if (aName == nsGkAtoms::href) {
     if (aValue) {
       if ((aNamespaceID == kNameSpaceID_XLink ||

@@ -179,11 +179,11 @@ void XULFrameElement::DestroyContent() {
   nsXULElement::DestroyContent();
 }
 
-nsresult XULFrameElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                       const nsAttrValue* aValue,
-                                       const nsAttrValue* aOldValue,
-                                       nsIPrincipal* aSubjectPrincipal,
-                                       bool aNotify) {
+void XULFrameElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                                   const nsAttrValue* aValue,
+                                   const nsAttrValue* aOldValue,
+                                   nsIPrincipal* aSubjectPrincipal,
+                                   bool aNotify) {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::src && aValue) {
       LoadSrc();

@@ -347,11 +347,11 @@ void HTMLButtonElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       aNameSpaceID, aName, aValue, aNotify);
 }
 
-nsresult HTMLButtonElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                         const nsAttrValue* aValue,
-                                         const nsAttrValue* aOldValue,
-                                         nsIPrincipal* aSubjectPrincipal,
-                                         bool aNotify) {
+void HTMLButtonElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                     const nsAttrValue* aValue,
+                                     const nsAttrValue* aOldValue,
+                                     nsIPrincipal* aSubjectPrincipal,
+                                     bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::type) {
       if (aValue) {

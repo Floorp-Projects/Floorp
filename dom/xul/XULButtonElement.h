@@ -72,9 +72,9 @@ class XULButtonElement : public nsXULElement {
 
   nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
                                       int32_t aModType) const override;
-  nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                        const nsAttrValue* aValue, const nsAttrValue* aOldValue,
-                        nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
+  void AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                    const nsAttrValue* aValue, const nsAttrValue* aOldValue,
+                    nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
 
   NS_IMPL_FROMNODE_HELPER(XULButtonElement,
                           IsAnyOfXULElements(nsGkAtoms::checkbox,

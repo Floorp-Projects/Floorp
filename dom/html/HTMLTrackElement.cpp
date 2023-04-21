@@ -486,11 +486,11 @@ void HTMLTrackElement::CancelChannelAndListener() {
   }
 }
 
-nsresult HTMLTrackElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                        const nsAttrValue* aValue,
-                                        const nsAttrValue* aOldValue,
-                                        nsIPrincipal* aMaybeScriptedPrincipal,
-                                        bool aNotify) {
+void HTMLTrackElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                    const nsAttrValue* aValue,
+                                    const nsAttrValue* aOldValue,
+                                    nsIPrincipal* aMaybeScriptedPrincipal,
+                                    bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::src) {
     MaybeClearAllCues();
     // In spec, `start the track processing model` step10, while fetching is

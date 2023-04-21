@@ -208,11 +208,11 @@ bool HTMLElement::IsDisabledForEvents(WidgetEvent* aEvent) {
   return false;
 }
 
-nsresult HTMLElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                   const nsAttrValue* aValue,
-                                   const nsAttrValue* aOldValue,
-                                   nsIPrincipal* aMaybeScriptedPrincipal,
-                                   bool aNotify) {
+void HTMLElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                               const nsAttrValue* aValue,
+                               const nsAttrValue* aOldValue,
+                               nsIPrincipal* aMaybeScriptedPrincipal,
+                               bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None &&
       (aName == nsGkAtoms::disabled || aName == nsGkAtoms::readonly)) {
     if (aName == nsGkAtoms::disabled) {

@@ -110,14 +110,14 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
   Document* GetContentDocument(nsIPrincipal& aSubjectPrincipal);
   mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> GetContentWindow();
 
-  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                const nsAttrValue* aValue,
-                                const nsAttrValue* aOldValue,
-                                nsIPrincipal* aSubjectPrincipal,
-                                bool aNotify) override;
-  virtual nsresult OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
-                                          const nsAttrValueOrString& aValue,
-                                          bool aNotify) override;
+  virtual void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                            const nsAttrValue* aValue,
+                            const nsAttrValue* aOldValue,
+                            nsIPrincipal* aSubjectPrincipal,
+                            bool aNotify) override;
+  virtual void OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
+                                      const nsAttrValueOrString& aValue,
+                                      bool aNotify) override;
 
   nsCOMPtr<nsIPrincipal> mSrcTriggeringPrincipal;
 

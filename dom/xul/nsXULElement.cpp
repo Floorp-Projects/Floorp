@@ -810,11 +810,10 @@ void nsXULElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
   return nsStyledElement::BeforeSetAttr(aNamespaceID, aName, aValue, aNotify);
 }
 
-nsresult nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                    const nsAttrValue* aValue,
-                                    const nsAttrValue* aOldValue,
-                                    nsIPrincipal* aSubjectPrincipal,
-                                    bool aNotify) {
+void nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                                const nsAttrValue* aValue,
+                                const nsAttrValue* aOldValue,
+                                nsIPrincipal* aSubjectPrincipal, bool aNotify) {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aValue) {
       AddListenerForAttributeIfNeeded(aName);

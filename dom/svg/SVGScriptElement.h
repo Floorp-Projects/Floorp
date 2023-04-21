@@ -50,9 +50,9 @@ class SVGScriptElement final : public SVGScriptElementBase,
 
   // nsIContent specializations:
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                        const nsAttrValue* aValue, const nsAttrValue* aOldValue,
-                        nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
+  void AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                    const nsAttrValue* aValue, const nsAttrValue* aOldValue,
+                    nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
   bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                       const nsAString& aValue,
                       nsIPrincipal* aMaybeScriptedPrincipal,

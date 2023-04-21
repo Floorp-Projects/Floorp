@@ -32,10 +32,10 @@ class HTMLDetailsElement final : public nsGenericHTMLElement {
 
   nsresult Clone(NodeInfo* aNodeInfo, nsINode** aResult) const override;
 
-  nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                        const nsAttrValue* aValue, const nsAttrValue* aOldValue,
-                        nsIPrincipal* aMaybeScriptedPrincipal,
-                        bool aNotify) override;
+  void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                    const nsAttrValue* aValue, const nsAttrValue* aOldValue,
+                    nsIPrincipal* aMaybeScriptedPrincipal,
+                    bool aNotify) override;
 
   bool IsInteractiveHTMLContent() const override { return true; }
 

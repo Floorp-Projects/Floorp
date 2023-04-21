@@ -353,9 +353,9 @@ class SVGElement : public SVGElementBase  // nsIContent
   // See the comment in SVGElement::WillChangeValue.
   void BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
                      const nsAttrValueOrString* aValue, bool aNotify) final;
-  nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                        const nsAttrValue* aValue, const nsAttrValue* aOldValue,
-                        nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
+  void AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                    const nsAttrValue* aValue, const nsAttrValue* aOldValue,
+                    nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
   bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                       const nsAString& aValue,
                       nsIPrincipal* aMaybeScriptedPrincipal,

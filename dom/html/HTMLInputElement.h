@@ -945,9 +945,9 @@ class HTMLInputElement final : public TextControlElement,
    * Called when an attribute has just been changed
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                        const nsAttrValue* aValue, const nsAttrValue* aOldValue,
-                        nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
+  void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                    const nsAttrValue* aValue, const nsAttrValue* aOldValue,
+                    nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
 
   void BeforeSetForm(bool aBindToTree) override;
 

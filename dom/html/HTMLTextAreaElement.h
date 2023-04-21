@@ -349,11 +349,11 @@ class HTMLTextAreaElement final : public TextControlElement,
    */
   void ContentChanged(nsIContent* aContent);
 
-  virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                const nsAttrValue* aValue,
-                                const nsAttrValue* aOldValue,
-                                nsIPrincipal* aSubjectPrincipal,
-                                bool aNotify) override;
+  virtual void AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                            const nsAttrValue* aValue,
+                            const nsAttrValue* aOldValue,
+                            nsIPrincipal* aSubjectPrincipal,
+                            bool aNotify) override;
 
   /**
    * Return if an element should have a specific validity UI

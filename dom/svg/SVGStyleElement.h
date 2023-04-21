@@ -41,11 +41,11 @@ class SVGStyleElement final : public SVGStyleElementBase,
   // nsIContent
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
   void UnbindFromTree(bool aNullParent = true) override;
-  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                const nsAttrValue* aValue,
-                                const nsAttrValue* aOldValue,
-                                nsIPrincipal* aMaybeScriptedPrincipal,
-                                bool aNotify) override;
+  virtual void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                            const nsAttrValue* aValue,
+                            const nsAttrValue* aOldValue,
+                            nsIPrincipal* aMaybeScriptedPrincipal,
+                            bool aNotify) override;
   virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                               const nsAString& aValue,
                               nsIPrincipal* aMaybeScriptedPrincipal,

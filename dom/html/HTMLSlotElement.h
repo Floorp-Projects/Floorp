@@ -31,11 +31,11 @@ class HTMLSlotElement final : public nsGenericHTMLElement {
   virtual void BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                              const nsAttrValueOrString* aValue,
                              bool aNotify) override;
-  virtual nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                const nsAttrValue* aValue,
-                                const nsAttrValue* aOldValue,
-                                nsIPrincipal* aSubjectPrincipal,
-                                bool aNotify) override;
+  virtual void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                            const nsAttrValue* aValue,
+                            const nsAttrValue* aOldValue,
+                            nsIPrincipal* aSubjectPrincipal,
+                            bool aNotify) override;
 
   // WebIDL
   void SetName(const nsAString& aName, ErrorResult& aRv) {

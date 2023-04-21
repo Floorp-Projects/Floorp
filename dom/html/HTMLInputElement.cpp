@@ -1209,11 +1209,11 @@ void HTMLInputElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       aNameSpaceID, aName, aValue, aNotify);
 }
 
-nsresult HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                        const nsAttrValue* aValue,
-                                        const nsAttrValue* aOldValue,
-                                        nsIPrincipal* aSubjectPrincipal,
-                                        bool aNotify) {
+void HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                    const nsAttrValue* aValue,
+                                    const nsAttrValue* aOldValue,
+                                    nsIPrincipal* aSubjectPrincipal,
+                                    bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::src) {
       mSrcTriggeringPrincipal = nsContentUtils::GetAttrTriggeringPrincipal(
@@ -1320,8 +1320,7 @@ nsresult HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       UpdateTypeMismatchValidityState();
     } else if (aName == nsGkAtoms::max) {
       UpdateHasRange();
-      nsresult rv = mInputType->MinMaxStepAttrChanged();
-      NS_ENSURE_SUCCESS(rv, rv);
+      mInputType->MinMaxStepAttrChanged();
       // Validity state must be updated *after* the UpdateValueDueToAttrChange
       // call above or else the following assert will not be valid.
       // We don't assert the state of underflow during creation since
@@ -1332,8 +1331,7 @@ nsresult HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                  "HTML5 spec does not allow underflow for type=range");
     } else if (aName == nsGkAtoms::min) {
       UpdateHasRange();
-      nsresult rv = mInputType->MinMaxStepAttrChanged();
-      NS_ENSURE_SUCCESS(rv, rv);
+      mInputType->MinMaxStepAttrChanged();
       // See corresponding @max comment
       UpdateRangeUnderflowValidityState();
       UpdateStepMismatchValidityState();
@@ -1341,8 +1339,7 @@ nsresult HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                      !GetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW),
                  "HTML5 spec does not allow underflow for type=range");
     } else if (aName == nsGkAtoms::step) {
-      nsresult rv = mInputType->MinMaxStepAttrChanged();
-      NS_ENSURE_SUCCESS(rv, rv);
+      mInputType->MinMaxStepAttrChanged();
       // See corresponding @max comment
       UpdateStepMismatchValidityState();
       MOZ_ASSERT(!mDoneCreating || mType != FormControlType::InputRange ||

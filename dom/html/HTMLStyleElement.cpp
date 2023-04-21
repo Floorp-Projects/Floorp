@@ -101,11 +101,11 @@ void HTMLStyleElement::UnbindFromTree(bool aNullParent) {
   Unused << UpdateStyleSheetInternal(oldDoc, oldShadow);
 }
 
-nsresult HTMLStyleElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                        const nsAttrValue* aValue,
-                                        const nsAttrValue* aOldValue,
-                                        nsIPrincipal* aSubjectPrincipal,
-                                        bool aNotify) {
+void HTMLStyleElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                    const nsAttrValue* aValue,
+                                    const nsAttrValue* aOldValue,
+                                    nsIPrincipal* aSubjectPrincipal,
+                                    bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::title || aName == nsGkAtoms::media ||
         aName == nsGkAtoms::type) {

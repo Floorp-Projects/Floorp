@@ -754,10 +754,10 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
                      const nsAttrValueOrString* aValue, bool aNotify) override;
   // TODO: Convert AfterSetAttr to MOZ_CAN_RUN_SCRIPT and get rid of
   // kungFuDeathGrip in it.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
-  AfterSetAttr(int32_t aNamespaceID, nsAtom* aName, const nsAttrValue* aValue,
-               const nsAttrValue* aOldValue,
-               nsIPrincipal* aMaybeScriptedPrincipal, bool aNotify) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void AfterSetAttr(
+      int32_t aNamespaceID, nsAtom* aName, const nsAttrValue* aValue,
+      const nsAttrValue* aOldValue, nsIPrincipal* aMaybeScriptedPrincipal,
+      bool aNotify) override;
 
   mozilla::EventListenerManager* GetEventListenerManagerForAttr(
       nsAtom* aAttrName, bool* aDefer) override;
@@ -1057,10 +1057,10 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement {
   void BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                      const nsAttrValueOrString* aValue, bool aNotify) override;
 
-  nsresult AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                        const nsAttrValue* aValue, const nsAttrValue* aOldValue,
-                        nsIPrincipal* aMaybeScriptedPrincipal,
-                        bool aNotify) override;
+  void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                    const nsAttrValue* aValue, const nsAttrValue* aOldValue,
+                    nsIPrincipal* aMaybeScriptedPrincipal,
+                    bool aNotify) override;
 
   virtual void BeforeSetForm(bool aBindToTree) {}
 

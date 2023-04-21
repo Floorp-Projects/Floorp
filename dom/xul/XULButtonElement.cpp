@@ -711,13 +711,13 @@ void XULButtonElement::UncheckRadioSiblings() {
   }
 }
 
-nsresult XULButtonElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                        const nsAttrValue* aValue,
-                                        const nsAttrValue* aOldValue,
-                                        nsIPrincipal* aSubjectPrincipal,
-                                        bool aNotify) {
-  MOZ_TRY(nsXULElement::AfterSetAttr(aNamespaceID, aName, aValue, aOldValue,
-                                     aSubjectPrincipal, aNotify));
+void XULButtonElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                                    const nsAttrValue* aValue,
+                                    const nsAttrValue* aOldValue,
+                                    nsIPrincipal* aSubjectPrincipal,
+                                    bool aNotify) {
+  nsXULElement::AfterSetAttr(aNamespaceID, aName, aValue, aOldValue,
+                             aSubjectPrincipal, aNotify);
   if (IsAlwaysMenu() && aNamespaceID == kNameSpaceID_None) {
     // We need to uncheck radio siblings when we're a checked radio and switch
     // groups, or become checked.
@@ -736,7 +736,6 @@ nsresult XULButtonElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
       UncheckRadioSiblings();
     }
   }
-  return NS_OK;
 }
 
 auto XULButtonElement::GetMenuType() const -> Maybe<MenuType> {

@@ -711,11 +711,11 @@ void MathMLElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
   return MathMLElementBase::BeforeSetAttr(aNamespaceID, aName, aValue, aNotify);
 }
 
-nsresult MathMLElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                     const nsAttrValue* aValue,
-                                     const nsAttrValue* aOldValue,
-                                     nsIPrincipal* aSubjectPrincipal,
-                                     bool aNotify) {
+void MathMLElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                 const nsAttrValue* aValue,
+                                 const nsAttrValue* aOldValue,
+                                 nsIPrincipal* aSubjectPrincipal,
+                                 bool aNotify) {
   // It is important that this be done after the attribute is set/unset.
   // We will need the updated attribute value because notifying the document
   // that content states have changed will call IntrinsicState, which will try
