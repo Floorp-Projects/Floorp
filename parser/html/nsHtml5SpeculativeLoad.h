@@ -169,9 +169,9 @@ class nsHtml5SpeculativeLoad {
   inline void InitScript(nsHtml5String aUrl, nsHtml5String aCharset,
                          nsHtml5String aType, nsHtml5String aCrossOrigin,
                          nsHtml5String aMedia, nsHtml5String aIntegrity,
-                         nsHtml5String aAs, nsHtml5String aReferrerPolicy,
-                         bool aParserInHead, bool aAsync, bool aDefer,
-                         bool aNoModule, bool aLinkPreload) {
+                         nsHtml5String aReferrerPolicy, bool aParserInHead,
+                         bool aAsync, bool aDefer, bool aNoModule,
+                         bool aLinkPreload) {
     MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
                "Trying to reinitialize a speculative load!");
     if (aNoModule) {
@@ -188,7 +188,6 @@ class nsHtml5SpeculativeLoad {
     aCrossOrigin.ToString(mCrossOrigin);
     aMedia.ToString(mMedia);
     aIntegrity.ToString(mReferrerPolicyOrIntegrity);
-    aAs.ToString(mAs);
     nsAutoString referrerPolicy;
     aReferrerPolicy.ToString(referrerPolicy);
     referrerPolicy =
@@ -335,8 +334,8 @@ class nsHtml5SpeculativeLoad {
 
   /**
    * True if and only if this is a speculative load initiated by <link
-   * rel="preload"> or <link rel="modulepreload"> tag encounter.  Passed to the
-   * handling loader as an indication to raise the priority.
+   * rel="preload"> tag encounter.  Passed to the handling loader as an
+   * indication to raise the priority.
    */
   bool mIsLinkPreload;
 
@@ -388,8 +387,8 @@ class nsHtml5SpeculativeLoad {
    * value of the "sizes" attribute. If the attribute is not set, this will
    * be a void string. If mOpCode is eSpeculativeLoadStyle, this
    * is the value of the "integrity" attribute. If the attribute is not set,
-   * this will be a void string. Otherwise, it is empty or the value of the type
-   * attribute.
+   * this will be a void string. Otherwise it is empty or the value of the
+   * referrer policy. Otherwise, it is empty or the value of the type attribute.
    */
   nsString mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity;
   /**
@@ -407,12 +406,6 @@ class nsHtml5SpeculativeLoad {
    * will be a void string.
    */
   nsString mMedia;
-  /**
-   * If mOpCode is eSpeculativeLoadScript[FromHead] and the preload originated
-   * from <link rel="modulepreload">, this is the value of the "as" attribute.
-   * Otherwise, this will be a void string.
-   */
-  nsString mAs;
   /**
    * If mOpCode is eSpeculativeLoadScript[FromHead] this represents the value
    * of the "referrerpolicy" attribute. This field holds one of the values

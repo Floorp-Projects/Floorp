@@ -311,30 +311,36 @@ void HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       aNameSpaceID, aName, aValue, aOldValue, aSubjectPrincipal, aNotify);
 }
 
-// Keep this and the arrays below in sync with ToLinkMask in LinkStyle.cpp.
-#define SUPPORTED_REL_VALUES_BASE                                              \
-  "prefetch", "dns-prefetch", "stylesheet", "next", "alternate", "preconnect", \
-      "icon", "search", nullptr
+static const DOMTokenListSupportedToken sSupportedRelValues[] = {
+    // Keep this and the one below in sync with ToLinkMask in
+    // LinkStyle.cpp.
+    // "preload" must come first because it can be disabled.
+    "preload", "prefetch",      "dns-prefetch", "stylesheet",
+    "next",    "alternate",     "preconnect",   "icon",
+    "search",  "modulepreload", nullptr};
 
-static const DOMTokenListSupportedToken sSupportedRelValueCombinations[][12] = {
-    {SUPPORTED_REL_VALUES_BASE},
-    {"manifest", SUPPORTED_REL_VALUES_BASE},
-    {"preload", SUPPORTED_REL_VALUES_BASE},
-    {"preload", "manifest", SUPPORTED_REL_VALUES_BASE},
-    {"modulepreload", SUPPORTED_REL_VALUES_BASE},
-    {"modulepreload", "manifest", SUPPORTED_REL_VALUES_BASE},
-    {"modulepreload", "preload", SUPPORTED_REL_VALUES_BASE},
-    {"modulepreload", "preload", "manifest", SUPPORTED_REL_VALUES_BASE}};
-#undef SUPPORTED_REL_VALUES_BASE
+static const DOMTokenListSupportedToken sSupportedRelValuesWithManifest[] = {
+    // Keep this in sync with ToLinkMask in LinkStyle.cpp.
+    // "preload" and "manifest" must come first because they can be disabled.
+    "preload",   "manifest",   "prefetch", "dns-prefetch", "stylesheet", "next",
+    "alternate", "preconnect", "icon",     "search",       nullptr};
 
 nsDOMTokenList* HTMLLinkElement::RelList() {
   if (!mRelList) {
-    int index = (StaticPrefs::dom_manifest_enabled() ? 1 : 0) |
-                (StaticPrefs::network_preload() ? 2 : 0) |
-                (StaticPrefs::network_modulepreload() ? 4 : 0);
-
-    mRelList = new nsDOMTokenList(this, nsGkAtoms::rel,
-                                  sSupportedRelValueCombinations[index]);
+    auto preload = StaticPrefs::network_preload();
+    auto manifest = StaticPrefs::dom_manifest_enabled();
+    if (manifest && preload) {
+      mRelList = new nsDOMTokenList(this, nsGkAtoms::rel,
+                                    sSupportedRelValuesWithManifest);
+    } else if (manifest && !preload) {
+      mRelList = new nsDOMTokenList(this, nsGkAtoms::rel,
+                                    &sSupportedRelValuesWithManifest[1]);
+    } else if (!manifest && preload) {
+      mRelList = new nsDOMTokenList(this, nsGkAtoms::rel, sSupportedRelValues);
+    } else {  // both false...drop preload
+      mRelList =
+          new nsDOMTokenList(this, nsGkAtoms::rel, &sSupportedRelValues[1]);
+    }
   }
   return mRelList;
 }
@@ -484,10 +490,7 @@ void HTMLLinkElement::
   }
 
   if (linkTypes & eMODULE_PRELOAD) {
-    ScriptLoader* scriptLoader = OwnerDoc()->ScriptLoader();
-    ModuleLoader* moduleLoader = scriptLoader->GetModuleLoader();
-
-    if (!moduleLoader) {
+    if (!OwnerDoc()->ScriptLoader()->GetModuleLoader()) {
       // For the print preview documents, at this moment it doesn't have module
       // loader yet, as the (print preview) document is not attached to the
       // nsIContentViewer yet, so it doesn't have the GlobalObject.
@@ -497,52 +500,9 @@ void HTMLLinkElement::
       return;
     }
 
-    if (!StaticPrefs::network_modulepreload()) {
-      // Keep behavior from https://phabricator.services.mozilla.com/D149371,
-      // prior to main implementation of modulepreload
-      moduleLoader->DisallowImportMaps();
-      return;
-    }
-
-    // https://html.spec.whatwg.org/multipage/semantics.html#processing-the-media-attribute
-    // TODO: apply this check for all linkTypes
-    nsAutoString media;
-    if (GetAttr(nsGkAtoms::media, media)) {
-      RefPtr<mozilla::dom::MediaList> mediaList =
-          mozilla::dom::MediaList::Create(NS_ConvertUTF16toUTF8(media));
-      if (!mediaList->Matches(*OwnerDoc())) {
-        return;
-      }
-    }
-
-    // TODO: per spec, apply this check for ePREFETCH as well
-    if (!HasNonEmptyAttr(nsGkAtoms::href)) {
-      return;
-    }
-
-    nsAutoString as;
-    GetAttr(nsGkAtoms::as, as);
-
-    nsAttrValue asAttr;
-    net::ParseAsValue(as, asAttr);
-
-    if (!net::IsScriptLikeOrInvalid(asAttr)) {
-      RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
-          this, u"error"_ns, CanBubble::eNo, ChromeOnlyDispatch::eNo);
-      asyncDispatcher->PostDOMEvent();
-      return;
-    }
-
-    nsCOMPtr<nsIURI> uri = GetURI();
-    if (!uri) {
-      return;
-    }
-
     // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-modulepreload-module-script-graph
     // Step 1. Disallow further import maps given settings object.
-    moduleLoader->DisallowImportMaps();
-
-    StartPreload(nsIContentPolicy::TYPE_SCRIPT);
+    OwnerDoc()->ScriptLoader()->GetModuleLoader()->DisallowImportMaps();
     return;
   }
 
