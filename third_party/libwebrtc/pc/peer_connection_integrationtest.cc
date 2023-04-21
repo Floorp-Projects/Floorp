@@ -2756,6 +2756,84 @@ TEST_P(PeerConnectionIntegrationTest, GetSourcesVideo) {
   EXPECT_EQ(webrtc::RtpSourceType::SSRC, sources[0].source_type());
 }
 
+TEST_P(PeerConnectionIntegrationTest, UnsignaledSsrcGetSourcesAudio) {
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  ConnectFakeSignaling();
+  caller()->AddAudioTrack();
+  callee()->SetReceivedSdpMunger(RemoveSsrcsAndMsids);
+  caller()->CreateAndSetAndSignalOffer();
+  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
+  ASSERT_EQ(callee()->pc()->GetReceivers().size(), 1u);
+  auto receiver = callee()->pc()->GetReceivers()[0];
+  std::vector<RtpSource> sources;
+  EXPECT_TRUE_WAIT(([&receiver, &sources]() {
+                     sources = receiver->GetSources();
+                     return !sources.empty();
+                   })(),
+                   kDefaultTimeout);
+  ASSERT_GT(sources.size(), 0u);
+  EXPECT_EQ(webrtc::RtpSourceType::SSRC, sources[0].source_type());
+}
+
+TEST_P(PeerConnectionIntegrationTest, UnsignaledSsrcGetSourcesVideo) {
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  ConnectFakeSignaling();
+  caller()->AddVideoTrack();
+  callee()->SetReceivedSdpMunger(RemoveSsrcsAndMsids);
+  caller()->CreateAndSetAndSignalOffer();
+  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
+  ASSERT_EQ(callee()->pc()->GetReceivers().size(), 1u);
+  auto receiver = callee()->pc()->GetReceivers()[0];
+  std::vector<RtpSource> sources;
+  EXPECT_TRUE_WAIT(([&receiver, &sources]() {
+                     sources = receiver->GetSources();
+                     return !sources.empty();
+                   })(),
+                   kDefaultTimeout);
+  ASSERT_GT(sources.size(), 0u);
+  EXPECT_EQ(webrtc::RtpSourceType::SSRC, sources[0].source_type());
+}
+
+TEST_P(PeerConnectionIntegrationTest, UnsignaledSsrcGetParametersAudio) {
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  ConnectFakeSignaling();
+  caller()->AddAudioTrack();
+  callee()->SetReceivedSdpMunger(RemoveSsrcsAndMsids);
+  caller()->CreateAndSetAndSignalOffer();
+  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
+  ASSERT_EQ(callee()->pc()->GetReceivers().size(), 1u);
+  auto receiver = callee()->pc()->GetReceivers()[0];
+  RtpParameters parameters;
+  EXPECT_TRUE_WAIT(([&receiver, &parameters]() {
+                     parameters = receiver->GetParameters();
+                     return !parameters.encodings.empty() &&
+                            parameters.encodings[0].ssrc.has_value();
+                   })(),
+                   kDefaultTimeout);
+  ASSERT_EQ(parameters.encodings.size(), 1u);
+  EXPECT_TRUE(parameters.encodings[0].ssrc.has_value());
+}
+
+TEST_P(PeerConnectionIntegrationTest, UnsignaledSsrcGetParametersVideo) {
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  ConnectFakeSignaling();
+  caller()->AddVideoTrack();
+  callee()->SetReceivedSdpMunger(RemoveSsrcsAndMsids);
+  caller()->CreateAndSetAndSignalOffer();
+  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
+  ASSERT_EQ(callee()->pc()->GetReceivers().size(), 1u);
+  auto receiver = callee()->pc()->GetReceivers()[0];
+  RtpParameters parameters;
+  EXPECT_TRUE_WAIT(([&receiver, &parameters]() {
+                     parameters = receiver->GetParameters();
+                     return !parameters.encodings.empty() &&
+                            parameters.encodings[0].ssrc.has_value();
+                   })(),
+                   kDefaultTimeout);
+  ASSERT_EQ(parameters.encodings.size(), 1u);
+  EXPECT_TRUE(parameters.encodings[0].ssrc.has_value());
+}
+
 // Test that if a track is removed and added again with a different stream ID,
 // the new stream ID is successfully communicated in SDP and media continues to
 // flow end-to-end.

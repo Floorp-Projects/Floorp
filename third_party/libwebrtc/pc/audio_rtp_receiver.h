@@ -138,7 +138,7 @@ class AudioRtpReceiver : public ObserverInterface,
   const rtc::scoped_refptr<AudioTrackProxyWithInternal<AudioTrack>> track_;
   cricket::VoiceMediaReceiveChannelInterface* media_channel_
       RTC_GUARDED_BY(worker_thread_) = nullptr;
-  absl::optional<uint32_t> ssrc_ RTC_GUARDED_BY(worker_thread_);
+  absl::optional<uint32_t> signaled_ssrc_ RTC_GUARDED_BY(worker_thread_);
   std::vector<rtc::scoped_refptr<MediaStreamInterface>> streams_
       RTC_GUARDED_BY(&signaling_thread_checker_);
   bool cached_track_enabled_ RTC_GUARDED_BY(&signaling_thread_checker_);
