@@ -7,44 +7,40 @@ bugzilla:
 origin:
   name: wasm2c_sandbox_compiler
   description: wasm2c fork used for rlbox sandboxing
-  url: https://github.com/PLSysSec/wasm2c_sandbox_compiler
+  url: https://github.com/WebAssembly/wabt
 
-  release: 3266be52998117f47b490d026b02e4193d5d3338 (2022-11-24T04:56:29Z).
-  revision: 3266be52998117f47b490d026b02e4193d5d3338
+  release: ad5f1385fa7afe29e98d69b6167132162675228f (2023-04-13T05:14:45Z).
+  revision: ad5f1385fa7afe29e98d69b6167132162675228f
 
   license: Apache-2.0
   license-file: LICENSE
 
 vendoring:
-  url: https://github.com/PLSysSec/wasm2c_sandbox_compiler
+  url: https://github.com/WebAssembly/wabt
   source-hosting: github
   vendor-directory: third_party/wasm2c
-
-  # ideally we would have exclude *, and the explicitly include certain folders, but this does not work
-  # so just explicitly exclude what we don't want for now
   exclude:
     # dirs
     - cmake
     - docs
     - fuzz-in
+    - include/wabt/interp
     - man
     - scripts
+    - src/interp
+    - src/template
     - test
     - third_party
-    - src/interp
     - wasm2c/examples
     # files
-    - .clang-format
-    - .flake8
-    - .gitattributes
-    - .gitignore
-    - .gitmodules
-    - .style.yapf
+    - .*
     - CMakeLists.txt
     - Contributing.md
     - Makefile
     - README.md
     - ubsan.blacklist
-    - wasm2c/examples/hello/.gitignore
-    - wasm2c/wasm-rt-runner.c
-    - wasm2c/wasm-rt-static-runner.c
+    - src/tools/s*
+    - src/tools/wasm-*
+    - src/tools/wast*
+    - src/tools/wat*
+    - src/tools/wasm2w*

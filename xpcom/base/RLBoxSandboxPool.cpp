@@ -9,8 +9,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/RLBoxSandboxPool.h"
 #ifdef MOZ_USING_WASM_SANDBOXING
-#  include "mozilla/rlbox/rlbox_config.h"
-#  include "mozilla/rlbox/rlbox_wasm2c_sandbox.hpp"
+#  include "wasm2c_rt_mem.h"
 #endif
 
 using namespace mozilla;
@@ -94,22 +93,17 @@ UniquePtr<RLBoxSandboxPoolData> RLBoxSandboxPool::PopOrCreate(
   if (!sbxData) {
 #ifdef MOZ_USING_WASM_SANDBOXING
     // RLBox's wasm sandboxes have a limited platform dependent capacity. We
-    // track this capacity in this pool. Note the noop sandboxes have no
-    // capacity limit but this design assumes that all sandboxes use the wasm
-    // sandbox limit.
-    const uint64_t defaultCapacityForSandbox =
-        wasm_rt_get_default_max_linear_memory_size();
-    const uint64_t minSandboxCapacity =
-        std::max(aMinSize, defaultCapacityForSandbox);
-    const uint64_t chosenAdjustedCapacity =
-        rlbox::rlbox_wasm2c_sandbox::rlbox_wasm2c_get_adjusted_heap_size(
-            minSandboxCapacity);
+    // track this capacity in this pool.
+    const w2c_mem_capacity w2c_capacity = get_valid_wasm2c_memory_capacity(
+        aMinSize, true /* 32-bit wasm memory*/);
+    const uint64_t chosenCapacity = w2c_capacity.max_size;
 #else
-    // If sandboxing is disabled altogether we just set a limit of 4gb.
-    // This is not actually enforced by the noop sandbox.
-    const uint64_t chosenAdjustedCapacity = static_cast<uint64_t>(1) << 32;
+    // Note the noop sandboxes have no capacity limit. In this case we simply
+    // specify a value of 4gb. This is not actually enforced by the noop
+    // sandbox.
+    const uint64_t chosenCapacity = static_cast<uint64_t>(1) << 32;
 #endif
-    sbxData = CreateSandboxData(chosenAdjustedCapacity);
+    sbxData = CreateSandboxData(chosenCapacity);
     NS_ENSURE_TRUE(sbxData, nullptr);
   }
 

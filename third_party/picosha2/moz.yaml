@@ -1,0 +1,25 @@
+schema: 1
+
+bugzilla:
+  product: Core
+  component: "General"
+
+origin:
+  name: picosha2
+  description: tiny header-only SHA256 hash generator for C++
+  url: https://github.com/okdshin/PicoSHA2
+
+  release: 27fcf6979298949e8a462e16d09a0351c18fcaf2 (2022-08-08T10:31:07Z).
+  revision: 27fcf6979298949e8a462e16d09a0351c18fcaf2
+
+  license: MIT
+  license-file: LICENSE
+
+vendoring:
+  url: https://github.com/okdshin/PicoSHA2
+  source-hosting: github
+  vendor-directory: third_party/picosha2
+  exclude:
+    - example/*
+    - test/*
+    - CMakeLists.txt

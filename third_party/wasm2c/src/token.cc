@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/token.h"
+#include "wabt/token.h"
 
 namespace wabt {
 
@@ -23,7 +23,7 @@ const char* GetTokenTypeName(TokenType token_type) {
 #define WABT_TOKEN(name, string) string,
 #define WABT_TOKEN_FIRST(name, string)
 #define WABT_TOKEN_LAST(name, string)
-#include "token.def"
+#include "wabt/token.def"
 #undef WABT_TOKEN
 #undef WABT_TOKEN_FIRST
 #undef WABT_TOKEN_LAST
@@ -52,7 +52,7 @@ Token::Token(Location loc, TokenType token_type, Type type)
   Construct(type_, type);
 }
 
-Token::Token(Location loc, TokenType token_type, string_view text)
+Token::Token(Location loc, TokenType token_type, std::string_view text)
     : loc(loc), token_type_(token_type) {
   assert(HasText());
   Construct(text_, text);
@@ -74,11 +74,11 @@ std::string Token::to_string() const {
   if (IsTokenTypeBare(token_type_)) {
     return GetTokenTypeName(token_type_);
   } else if (HasLiteral()) {
-    return literal_.text.to_string();
+    return std::string(literal_.text);
   } else if (HasOpcode()) {
     return opcode_.GetName();
   } else if (HasText()) {
-    return text_.to_string();
+    return std::string(text_);
   } else if (IsTokenTypeRefKind(token_type_)) {
     return type_.GetRefKindName();
   } else {

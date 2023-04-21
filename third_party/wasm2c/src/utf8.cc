@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/utf8.h"
+#include "wabt/utf8.h"
 
 #include <cstdint>
 
@@ -22,6 +22,7 @@ namespace wabt {
 
 namespace {
 
+// clang-format off
 const int s_utf8_length[256] = {
  // 0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 0x00
@@ -41,6 +42,7 @@ const int s_utf8_length[256] = {
     3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,  // 0xe0
     4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0xf0
 };
+// clang-format on
 
 // Returns true if this is a valid continuation byte.
 bool IsCont(uint8_t c) {

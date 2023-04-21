@@ -15,7 +15,7 @@
  */
 
 #define WABT_TRACING 1
-#include "src/tracing.h"
+#include "wabt/tracing.h"
 
 namespace {
 

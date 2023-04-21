@@ -16,18 +16,28 @@
 
 var WABT_OK = 0;
 var WABT_ERROR = 1;
-var FEATURES = [
-  'exceptions',
-  'mutable_globals',
-  'sat_float_to_int',
-  'sign_extension',
-  'simd',
-  'threads',
-  'multi_value',
-  'tail_call',
-  'bulk_memory',
-  'reference_types',
-];
+
+/// features and default enabled state
+const FEATURES = Object.freeze({
+  'exceptions': false,
+  'mutable_globals': true,
+  'sat_float_to_int': true,
+  'sign_extension': true,
+  'simd': true,
+  'threads': false,
+  'function_references': false,
+  'multi_value': true,
+  'tail_call': false,
+  'bulk_memory': true,
+  'reference_types': true,
+  'annotations': false,
+  'code_metadata': false,
+  'gc': false,
+  'memory64': false,
+  'multi_memory': false,
+  'extended_const': false,
+  'relaxed_simd': false,
+});
 
 /// If value is not undefined, return it. Otherwise return default_.
 function maybeDefault(value, default_) {
@@ -85,9 +95,8 @@ function allocateCString(s) {
 /// Features
 function Features(obj) {
   this.addr = Module._wabt_new_features();
-  for (var i = 0; i < FEATURES.length; ++i) {
-    var feature = FEATURES[i];
-    this[feature] = obj[feature] | 0;
+  for ([f, v] of Object.entries(FEATURES)) {
+    this[f] = booleanOrDefault(obj[f], v);
   }
 }
 Features.prototype = Object.create(Object.prototype);
@@ -96,7 +105,7 @@ Features.prototype.destroy = function() {
   Module._wabt_destroy_features(this.addr);
 };
 
-FEATURES.forEach(function(feature) {
+Object.keys(FEATURES).forEach(function(feature) {
   Object.defineProperty(Features.prototype, feature, {
     enumerable: true,
     get: function() {
@@ -110,11 +119,12 @@ FEATURES.forEach(function(feature) {
 
 
 /// Lexer
-function Lexer(filename, buffer) {
+function Lexer(filename, buffer, errors) {
   this.filenameObj = allocateCString(filename);
   this.bufferObj = allocateBuffer(buffer);
   this.addr = Module._wabt_new_wast_buffer_lexer(
-      this.filenameObj.addr, this.bufferObj.addr, this.bufferObj.size);
+      this.filenameObj.addr, this.bufferObj.addr, this.bufferObj.size,
+      errors.addr);
 }
 Lexer.prototype = Object.create(Object.prototype);
 
@@ -159,10 +169,9 @@ OutputBuffer.prototype.destroy = function() {
 
 
 /// Errors
-function Errors(kind, lexer) {
+function Errors(kind) {
   this.kind = kind;
   this.addr = Module._wabt_new_errors();
-  this.lexer = lexer;
 }
 Errors.prototype = Object.create(Object.prototype);
 
@@ -194,8 +203,9 @@ Errors.prototype.destroy = function() {
 
 /// parseWat
 function parseWat(filename, buffer, options) {
-  var lexer = new Lexer(filename, buffer);
-  var errors = new Errors('text', lexer);
+  var errors = new Errors('text');
+  var lexer = new Lexer(filename, buffer, errors);
+  errors.lexer = lexer;
   var features = new Features(options || {});
 
   try {
@@ -303,16 +313,16 @@ WasmModule.prototype.toText = function(options) {
   var writeModuleResult_addr =
       Module._wabt_write_text_module(this.module_addr, foldExprs, inlineExport);
 
-  var result = Module._wabt_write_module_result_get_result(
-      writeModuleResult_addr);
+  var result =
+      Module._wabt_write_module_result_get_result(writeModuleResult_addr);
 
   try {
     if (result !== WABT_OK) {
       throw new Error('toText failed.');
     }
 
-    var outputBuffer = new OutputBuffer(
-        Module._wabt_write_module_result_release_output_buffer(
+    var outputBuffer =
+        new OutputBuffer(Module._wabt_write_module_result_release_output_buffer(
             writeModuleResult_addr));
 
     return outputBuffer.toString();
@@ -374,3 +384,4 @@ WasmModule.prototype.destroy = function() {
 
 Module['parseWat'] = parseWat;
 Module['readWasm'] = readWasm;
+Module['FEATURES'] = FEATURES;

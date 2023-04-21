@@ -25,26 +25,26 @@
 #include <utility>
 #include <vector>
 
-#include "src/apply-names.h"
-#include "src/binary-reader-ir.h"
-#include "src/binary-reader.h"
-#include "src/binary-writer-spec.h"
-#include "src/binary-writer.h"
-#include "src/common.h"
-#include "src/error-formatter.h"
-#include "src/feature.h"
-#include "src/filenames.h"
-#include "src/generate-names.h"
-#include "src/ir.h"
-#include "src/stream.h"
-#include "src/validator.h"
-#include "src/wast-lexer.h"
-#include "src/wast-parser.h"
-#include "src/wat-writer.h"
+#include "wabt/apply-names.h"
+#include "wabt/binary-reader-ir.h"
+#include "wabt/binary-reader.h"
+#include "wabt/binary-writer-spec.h"
+#include "wabt/binary-writer.h"
+#include "wabt/common.h"
+#include "wabt/error-formatter.h"
+#include "wabt/feature.h"
+#include "wabt/filenames.h"
+#include "wabt/generate-names.h"
+#include "wabt/ir.h"
+#include "wabt/stream.h"
+#include "wabt/validator.h"
+#include "wabt/wast-lexer.h"
+#include "wabt/wast-parser.h"
+#include "wabt/wat-writer.h"
 
-typedef std::unique_ptr<wabt::OutputBuffer> WabtOutputBufferPtr;
-typedef std::pair<std::string, WabtOutputBufferPtr>
-    WabtFilenameOutputBufferPair;
+using WabtOutputBufferPtr = std::unique_ptr<wabt::OutputBuffer>;
+using WabtFilenameOutputBufferPair =
+    std::pair<std::string, WabtOutputBufferPtr>;
 
 struct WabtParseWatResult {
   wabt::Result result;
@@ -91,14 +91,15 @@ void wabt_destroy_features(wabt::Features* f) {
   void wabt_set_##variable##_enabled(wabt::Features* f, int enabled) { \
     f->set_##variable##_enabled(enabled);                              \
   }
-#include "src/feature.def"
+#include "wabt/feature.def"
 #undef WABT_FEATURE
 
 wabt::WastLexer* wabt_new_wast_buffer_lexer(const char* filename,
                                             const void* data,
-                                            size_t size) {
+                                            size_t size,
+                                            wabt::Errors* errors) {
   std::unique_ptr<wabt::WastLexer> lexer =
-      wabt::WastLexer::CreateBufferLexer(filename, data, size);
+      wabt::WastLexer::CreateBufferLexer(filename, data, size, errors);
   return lexer.release();
 }
 
@@ -178,9 +179,8 @@ WabtWriteScriptResult* wabt_write_binary_spec_script(
   std::vector<wabt::FilenameMemoryStreamPair> module_streams;
   wabt::MemoryStream json_stream(log_stream_p);
 
-  std::string module_filename_noext =
-      wabt::StripExtension(out_filename ? out_filename : source_filename)
-          .to_string();
+  std::string module_filename_noext(
+      wabt::StripExtension(out_filename ? out_filename : source_filename));
 
   WabtWriteScriptResult* result = new WabtWriteScriptResult();
   result->result = WriteBinarySpecScript(&json_stream, script, source_filename,
@@ -397,9 +397,6 @@ size_t wabt_output_buffer_get_size(wabt::OutputBuffer* output_buffer) {
 void wabt_destroy_output_buffer(wabt::OutputBuffer* output_buffer) {
   delete output_buffer;
 }
-
-// See https://github.com/kripken/emscripten/issues/7073.
-void dummy_workaround_for_emscripten_issue_7073(void) {}
 
 }  // extern "C"
 

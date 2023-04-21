@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-#include "src/common.h"
+#include "wabt/common.h"
 
 #include <cassert>
+#include <cerrno>
 #include <climits>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
 
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 
 #if COMPILER_IS_MSVC
 #include <fcntl.h>
@@ -76,8 +77,8 @@ static Result ReadStdin(std::vector<uint8_t>* out_data) {
   }
 }
 
-Result ReadFile(string_view filename, std::vector<uint8_t>* out_data) {
-  std::string filename_str = filename.to_string();
+Result ReadFile(std::string_view filename, std::vector<uint8_t>* out_data) {
+  std::string filename_str(filename);
   const char* filename_cstr = filename_str.c_str();
 
   if (filename == "-") {

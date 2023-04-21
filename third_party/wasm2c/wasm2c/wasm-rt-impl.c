@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-#include "wasm-rt-os.h"
-#include "wasm-rt.h"
+#include "wasm-rt-impl.h"
 
 #include <assert.h>
-#include <limits.h>
+#include <math.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -26,431 +25,448 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef WASM_RT_CUSTOM_TRAP_HANDLER
-// forward declare the signature of any custom trap handler
-void WASM_RT_CUSTOM_TRAP_HANDLER(const char*);
+#if WASM_RT_INSTALL_SIGNAL_HANDLER && !defined(_WIN32)
+#include <signal.h>
+#include <unistd.h>
+#endif
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <sys/mman.h>
+#endif
+
+#if _MSC_VER
+#include <malloc.h>
+#define alloca _alloca
+#endif
+
+#define PAGE_SIZE 65536
+#define MAX_EXCEPTION_SIZE PAGE_SIZE
+
+#if WASM_RT_INSTALL_SIGNAL_HANDLER
+static bool g_signal_handler_installed = false;
+#ifdef _WIN32
+static void* g_sig_handler_handle = 0;
+#else
+static char* g_alt_stack = 0;
+#endif
+#endif
+
+#if WASM_RT_USE_STACK_DEPTH_COUNT
+WASM_RT_THREAD_LOCAL uint32_t wasm_rt_call_stack_depth;
+WASM_RT_THREAD_LOCAL uint32_t wasm_rt_saved_call_stack_depth;
+#endif
+
+WASM_RT_THREAD_LOCAL wasm_rt_jmp_buf g_wasm_rt_jmp_buf;
+
+static WASM_RT_THREAD_LOCAL wasm_rt_tag_t g_active_exception_tag;
+static WASM_RT_THREAD_LOCAL uint8_t g_active_exception[MAX_EXCEPTION_SIZE];
+static WASM_RT_THREAD_LOCAL uint32_t g_active_exception_size;
+
+static WASM_RT_THREAD_LOCAL wasm_rt_jmp_buf* g_unwind_target;
+
+#ifdef WASM_RT_TRAP_HANDLER
+extern void WASM_RT_TRAP_HANDLER(wasm_rt_trap_t code);
+#endif
+
+#ifdef WASM_RT_GROW_FAILED_HANDLER
+extern void WASM_RT_GROW_FAILED_HANDLER();
 #endif
 
 void wasm_rt_trap(wasm_rt_trap_t code) {
-  const char* error_message = "wasm2c: unknown trap";
-  switch (code) {
-    case WASM_RT_TRAP_NONE: {
-      // this should never happen
-      error_message = "wasm2c: WASM_RT_TRAP_NONE";
-      break;
-    }
-    case WASM_RT_TRAP_OOB: {
-      error_message = "wasm2c: WASM_RT_TRAP_OOB";
-      break;
-    }
-    case WASM_RT_TRAP_INT_OVERFLOW: {
-      error_message = "wasm2c: WASM_RT_TRAP_INT_OVERFLOW";
-      break;
-    }
-    case WASM_RT_TRAP_DIV_BY_ZERO: {
-      error_message = "wasm2c: WASM_RT_TRAP_DIV_BY_ZERO";
-      break;
-    }
-    case WASM_RT_TRAP_INVALID_CONVERSION: {
-      error_message = "wasm2c: WASM_RT_TRAP_INVALID_CONVERSION";
-      break;
-    }
-    case WASM_RT_TRAP_UNREACHABLE: {
-      error_message = "wasm2c: WASM_RT_TRAP_UNREACHABLE";
-      break;
-    }
-    case WASM_RT_TRAP_CALL_INDIRECT_TABLE_EXPANSION: {
-      error_message = "wasm2c: WASM_RT_TRAP_CALL_INDIRECT_TABLE_EXPANSION";
-      break;
-    }
-    case WASM_RT_TRAP_CALL_INDIRECT_OOB_INDEX: {
-      error_message = "wasm2c: WASM_RT_TRAP_CALL_INDIRECT_OOB_INDEX";
-      break;
-    }
-    case WASM_RT_TRAP_CALL_INDIRECT_NULL_PTR: {
-      error_message = "wasm2c: WASM_RT_TRAP_CALL_INDIRECT_NULL_PTR";
-      break;
-    }
-    case WASM_RT_TRAP_CALL_INDIRECT_TYPE_MISMATCH: {
-      error_message = "wasm2c: WASM_RT_TRAP_CALL_INDIRECT_TYPE_MISMATCH";
-      break;
-    }
-    case WASM_RT_TRAP_CALL_INDIRECT_UNKNOWN_ERR: {
-      error_message = "wasm2c: WASM_RT_TRAP_CALL_INDIRECT_UNKNOWN_ERR";
-      break;
-    }
-    case WASM_RT_TRAP_EXHAUSTION: {
-      error_message = "wasm2c: WASM_RT_TRAP_EXHAUSTION";
-      break;
-    }
-    case WASM_RT_TRAP_SHADOW_MEM: {
-      error_message = "wasm2c: WASM_RT_TRAP_SHADOW_MEM";
-      break;
-    }
-    case WASM_RT_TRAP_WASI: {
-      error_message = "wasm2c: WASM_RT_TRAP_WASI";
-      break;
-    }
-  };
-#ifdef WASM_RT_CUSTOM_TRAP_HANDLER
-  WASM_RT_CUSTOM_TRAP_HANDLER(error_message);
+  assert(code != WASM_RT_TRAP_NONE);
+#if WASM_RT_USE_STACK_DEPTH_COUNT
+  wasm_rt_call_stack_depth = wasm_rt_saved_call_stack_depth;
+#endif
+
+#ifdef WASM_RT_TRAP_HANDLER
+  WASM_RT_TRAP_HANDLER(code);
+  wasm_rt_unreachable();
 #else
-  fprintf(stderr, "Error: %s\n", error_message);
-  abort();
+  WASM_RT_LONGJMP(g_wasm_rt_jmp_buf, code);
 #endif
 }
 
-void wasm_rt_callback_error_trap(wasm_rt_table_t* table,
-                                 uint32_t func_index,
-                                 uint32_t expected_func_type) {
-  if (func_index >= table->size) {
-    wasm_rt_trap(WASM_RT_TRAP_CALL_INDIRECT_OOB_INDEX);
-  } else if (!table->data[func_index].func) {
-    wasm_rt_trap(WASM_RT_TRAP_CALL_INDIRECT_NULL_PTR);
-  } else if (table->data[func_index].func_type != expected_func_type) {
-    wasm_rt_trap(WASM_RT_TRAP_CALL_INDIRECT_TYPE_MISMATCH);
-  }
-  wasm_rt_trap(WASM_RT_TRAP_CALL_INDIRECT_UNKNOWN_ERR);
-}
-
-static bool func_types_are_equal(wasm_func_type_t* a, wasm_func_type_t* b) {
-  if (a->param_count != b->param_count || a->result_count != b->result_count)
-    return 0;
-  uint32_t i;
-  for (i = 0; i < a->param_count; ++i)
-    if (a->params[i] != b->params[i])
-      return 0;
-  for (i = 0; i < a->result_count; ++i)
-    if (a->results[i] != b->results[i])
-      return 0;
-  return 1;
-}
-
-uint32_t wasm_rt_register_func_type(wasm_func_type_t** p_func_type_structs,
-                                    uint32_t* p_func_type_count,
-                                    uint32_t param_count,
-                                    uint32_t result_count,
-                                    wasm_rt_type_t* types) {
-  wasm_func_type_t func_type;
-
-  func_type.param_count = param_count;
-  if (func_type.param_count != 0) {
-    func_type.params = malloc(param_count * sizeof(wasm_rt_type_t));
-    assert(func_type.params != 0);
-  } else {
-    func_type.params = 0;
+void wasm_rt_load_exception(const wasm_rt_tag_t tag,
+                            uint32_t size,
+                            const void* values) {
+  if (size > MAX_EXCEPTION_SIZE) {
+    wasm_rt_trap(WASM_RT_TRAP_EXHAUSTION);
   }
 
-  func_type.result_count = result_count;
-  if (func_type.result_count != 0) {
-    func_type.results = malloc(result_count * sizeof(wasm_rt_type_t));
-    assert(func_type.results != 0);
-  } else {
-    func_type.results = 0;
+  g_active_exception_tag = tag;
+  g_active_exception_size = size;
+
+  if (size) {
+    memcpy(g_active_exception, values, size);
   }
-
-  uint32_t i;
-  for (i = 0; i < param_count; ++i)
-    func_type.params[i] = types[i];
-  for (i = 0; i < result_count; ++i)
-    func_type.results[i] = types[(uint64_t)(param_count) + i];
-
-  for (i = 0; i < *p_func_type_count; ++i) {
-    wasm_func_type_t* func_types = *p_func_type_structs;
-    if (func_types_are_equal(&func_types[i], &func_type)) {
-      if (func_type.params) {
-        free(func_type.params);
-      }
-      if (func_type.results) {
-        free(func_type.results);
-      }
-      return i + 1;
-    }
-  }
-
-  uint32_t idx = (*p_func_type_count)++;
-  // realloc works fine even if *p_func_type_structs is null
-  *p_func_type_structs = realloc(*p_func_type_structs,
-                                 *p_func_type_count * sizeof(wasm_func_type_t));
-  (*p_func_type_structs)[idx] = func_type;
-  return idx + 1;
 }
 
-void wasm_rt_cleanup_func_types(wasm_func_type_t** p_func_type_structs,
-                                uint32_t* p_func_type_count) {
-  // Use a u64 to iterate over u32 arrays to prevent infinite loops
-  const uint32_t func_count = *p_func_type_count;
-  for (uint64_t idx = 0; idx < func_count; idx++) {
-    wasm_func_type_t* func_type = &((*p_func_type_structs)[idx]);
-    if (func_type->params != 0) {
-      free(func_type->params);
-      func_type->params = 0;
-    }
-    if (func_type->results != 0) {
-      free(func_type->results);
-      func_type->results = 0;
-    }
-  }
-  free(*p_func_type_structs);
+WASM_RT_NO_RETURN void wasm_rt_throw(void) {
+  WASM_RT_LONGJMP(*g_unwind_target, WASM_RT_TRAP_UNCAUGHT_EXCEPTION);
 }
 
-#if UINTPTR_MAX == 0xffffffff
-static int is_power_of_two(uint64_t x) {
-  return ((x != 0) && !(x & (x - 1)));
+WASM_RT_UNWIND_TARGET* wasm_rt_get_unwind_target(void) {
+  return g_unwind_target;
 }
-#endif
 
-#define WASM_PAGE_SIZE 65536
+void wasm_rt_set_unwind_target(WASM_RT_UNWIND_TARGET* target) {
+  g_unwind_target = target;
+}
 
-#if UINTPTR_MAX == 0xffffffffffffffff
-// Guard page of 4GiB
-#define WASM_HEAP_GUARD_PAGE_SIZE 0x100000000ull
-// Heap aligned to 4GB
-#define WASM_HEAP_ALIGNMENT 0x100000000ull
-// By default max heap is 4GB
-#define WASM_HEAP_DEFAULT_MAX_PAGES 65536
-// Runtime can override the max heap up to 4GB
-#define WASM_HEAP_MAX_ALLOWED_PAGES 65536
-#elif UINTPTR_MAX == 0xffffffff
-// No guard pages
-#define WASM_HEAP_GUARD_PAGE_SIZE 0
-// Unaligned heap
-#define WASM_HEAP_ALIGNMENT 0
-// Default max heap is 16MB (1GB if you enable incremental heaps)
-#ifdef WASM_USE_INCREMENTAL_MOVEABLE_MEMORY_ALLOC
-#define WASM_HEAP_DEFAULT_MAX_PAGES 16384
-#else
-#define WASM_HEAP_DEFAULT_MAX_PAGES 256
-#endif
-// Runtime can override the max heap up to 1GB
-#define WASM_HEAP_MAX_ALLOWED_PAGES 16384
-#else
-#error "Unknown pointer size"
-#endif
+wasm_rt_tag_t wasm_rt_exception_tag(void) {
+  return g_active_exception_tag;
+}
 
-uint64_t wasm_rt_get_default_max_linear_memory_size() {
-  uint64_t ret = ((uint64_t)WASM_HEAP_DEFAULT_MAX_PAGES) * WASM_PAGE_SIZE;
+uint32_t wasm_rt_exception_size(void) {
+  return g_active_exception_size;
+}
+
+void* wasm_rt_exception(void) {
+  return g_active_exception;
+}
+
+#ifdef _WIN32
+static void* os_mmap(size_t size) {
+  void* ret = VirtualAlloc(NULL, size, MEM_RESERVE, PAGE_NOACCESS);
   return ret;
 }
 
-static uint64_t compute_heap_reserve_space(uint32_t chosen_max_pages) {
-  const uint64_t heap_reserve_size =
-      ((uint64_t)chosen_max_pages) * WASM_PAGE_SIZE + WASM_HEAP_GUARD_PAGE_SIZE;
-  return heap_reserve_size;
+static int os_munmap(void* addr, size_t size) {
+  // Windows can only unmap the whole mapping
+  (void)size; /* unused */
+  BOOL succeeded = VirtualFree(addr, 0, MEM_RELEASE);
+  return succeeded ? 0 : -1;
 }
 
-bool wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
-                             uint32_t initial_pages,
-                             uint32_t max_pages) {
-  const uint32_t byte_length = initial_pages * WASM_PAGE_SIZE;
-
-  const uint32_t suggested_max_pages =
-      max_pages == 0 ? WASM_HEAP_DEFAULT_MAX_PAGES : max_pages;
-  const uint32_t chosen_max_pages =
-      (WASM_HEAP_MAX_ALLOWED_PAGES < suggested_max_pages)
-          ? WASM_HEAP_MAX_ALLOWED_PAGES
-          : suggested_max_pages;
-
-  if (chosen_max_pages < initial_pages) {
-    return false;
+static int os_mprotect(void* addr, size_t size) {
+  if (size == 0) {
+    return 0;
   }
-
-#ifdef WASM_USE_GUARD_PAGES
-  // mmap based heaps with guard pages
-  // Guard pages already allocates memory incrementally thus we don't need to
-  // look at WASM_USE_INCREMENTAL_MOVEABLE_MEMORY_ALLOC
-  void* addr = NULL;
-  const uint64_t retries = 10;
-  const uint64_t heap_reserve_size =
-      compute_heap_reserve_space(chosen_max_pages);
-
-  // 32-bit platforms rely on masking for sandboxing
-  // thus we require the heap reserve size to always be a power of 2
-#if UINTPTR_MAX == 0xffffffff
-  if (!is_power_of_two(heap_reserve_size)) {
-    return false;
+  void* ret = VirtualAlloc(addr, size, MEM_COMMIT, PAGE_READWRITE);
+  if (ret == addr) {
+    return 0;
   }
+  VirtualFree(addr, 0, MEM_RELEASE);
+  return -1;
+}
+
+static void os_print_last_error(const char* msg) {
+  DWORD errorMessageID = GetLastError();
+  if (errorMessageID != 0) {
+    LPSTR messageBuffer = 0;
+    // The api creates the buffer that holds the message
+    size_t size = FormatMessageA(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+            FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPSTR)&messageBuffer, 0, NULL);
+    (void)size;
+    printf("%s. %s\n", msg, messageBuffer);
+    LocalFree(messageBuffer);
+  } else {
+    printf("%s. No error code.\n", msg);
+  }
+}
+
+#if WASM_RT_INSTALL_SIGNAL_HANDLER
+
+static LONG os_signal_handler(PEXCEPTION_POINTERS info) {
+  if (info->ExceptionRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION) {
+    wasm_rt_trap(WASM_RT_TRAP_OOB);
+  } else if (info->ExceptionRecord->ExceptionCode == EXCEPTION_STACK_OVERFLOW) {
+    wasm_rt_trap(WASM_RT_TRAP_EXHAUSTION);
+  }
+  return EXCEPTION_CONTINUE_SEARCH;
+}
+
+static void os_install_signal_handler(void) {
+  g_sig_handler_handle =
+      AddVectoredExceptionHandler(1 /* CALL_FIRST */, os_signal_handler);
+}
+
+static void os_cleanup_signal_handler(void) {
+  RemoveVectoredExceptionHandler(g_sig_handler_handle);
+}
+
 #endif
 
-  for (uint64_t i = 0; i < retries; i++) {
-    addr =
-        os_mmap_aligned(NULL, heap_reserve_size, MMAP_PROT_NONE, MMAP_MAP_NONE,
-                        WASM_HEAP_ALIGNMENT, 0 /* alignment_offset */);
-    if (addr) {
-      break;
-    }
-  }
-
-  if (!addr) {
-    os_print_last_error("os_mmap failed.");
-    return false;
-  }
-  int ret = os_mmap_commit(addr, byte_length, MMAP_PROT_READ | MMAP_PROT_WRITE);
-  if (ret != 0) {
-    return false;
-  }
-  // This is a valid way to initialize a constant field that is not undefined
-  // behavior
-  // https://stackoverflow.com/questions/9691404/how-to-initialize-const-in-a-struct-in-c-with-malloc
-  // Summary: malloc of a struct, followed by a write to the constant fields is
-  // still defined behavior iff
-  //   there is no prior read of the field
-  *(uint8_t**)&memory->data = addr;
 #else
-  // malloc based heaps
-#ifdef WASM_USE_INCREMENTAL_MOVEABLE_MEMORY_ALLOC
-  memory->data = calloc(byte_length, 1);
-#else
-  const uint64_t heap_max_size = ((uint64_t)chosen_max_pages) * WASM_PAGE_SIZE;
-  *(uint8_t**)&memory->data = calloc(heap_max_size, 1);
-#endif
+static void* os_mmap(size_t size) {
+  int map_prot = PROT_NONE;
+  int map_flags = MAP_ANONYMOUS | MAP_PRIVATE;
+  uint8_t* addr = mmap(NULL, size, map_prot, map_flags, -1, 0);
+  if (addr == MAP_FAILED)
+    return NULL;
+  return addr;
+}
+
+static int os_munmap(void* addr, size_t size) {
+  return munmap(addr, size);
+}
+
+static int os_mprotect(void* addr, size_t size) {
+  return mprotect(addr, size, PROT_READ | PROT_WRITE);
+}
+
+static void os_print_last_error(const char* msg) {
+  perror(msg);
+}
+
+#if WASM_RT_INSTALL_SIGNAL_HANDLER
+static void os_signal_handler(int sig, siginfo_t* si, void* unused) {
+  if (si->si_code == SEGV_ACCERR) {
+    wasm_rt_trap(WASM_RT_TRAP_OOB);
+  } else {
+    wasm_rt_trap(WASM_RT_TRAP_EXHAUSTION);
+  }
+}
+
+static void os_install_signal_handler(void) {
+  /* Use alt stack to handle SIGSEGV from stack overflow */
+  g_alt_stack = malloc(SIGSTKSZ);
+  if (g_alt_stack == NULL) {
+    perror("malloc failed");
+    abort();
+  }
+
+  stack_t ss;
+  ss.ss_sp = g_alt_stack;
+  ss.ss_flags = 0;
+  ss.ss_size = SIGSTKSZ;
+  if (sigaltstack(&ss, NULL) != 0) {
+    perror("sigaltstack failed");
+    abort();
+  }
+
+  struct sigaction sa;
+  memset(&sa, '\0', sizeof(sa));
+  sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_sigaction = os_signal_handler;
+
+  /* Install SIGSEGV and SIGBUS handlers, since macOS seems to use SIGBUS. */
+  if (sigaction(SIGSEGV, &sa, NULL) != 0 || sigaction(SIGBUS, &sa, NULL) != 0) {
+    perror("sigaction failed");
+    abort();
+  }
+}
+
+static void os_cleanup_signal_handler(void) {
+  /* Undo what was done in os_install_signal_handler */
+  struct sigaction sa;
+  memset(&sa, '\0', sizeof(sa));
+  sa.sa_handler = SIG_DFL;
+  if (sigaction(SIGSEGV, &sa, NULL) != 0 || sigaction(SIGBUS, &sa, NULL)) {
+    perror("sigaction failed");
+    abort();
+  }
+
+  if (sigaltstack(NULL, NULL) != 0) {
+    perror("sigaltstack failed");
+    abort();
+  }
+
+  free(g_alt_stack);
+}
 #endif
 
+#endif
+
+void wasm_rt_init(void) {
+#if WASM_RT_INSTALL_SIGNAL_HANDLER
+  if (!g_signal_handler_installed) {
+    g_signal_handler_installed = true;
+    os_install_signal_handler();
+  }
+#endif
+}
+
+bool wasm_rt_is_initialized(void) {
+#if WASM_RT_INSTALL_SIGNAL_HANDLER
+  return g_signal_handler_installed;
+#else
+  return true;
+#endif
+}
+
+void wasm_rt_free(void) {
+#if WASM_RT_INSTALL_SIGNAL_HANDLER
+  os_cleanup_signal_handler();
+#endif
+}
+
+#if WASM_RT_USE_MMAP
+
+static uint64_t get_allocation_size_for_mmap(wasm_rt_memory_t* memory) {
+  assert(!memory->is64 &&
+         "memory64 is not yet compatible with WASM_RT_USE_MMAP");
+#if WASM_RT_MEMCHECK_GUARD_PAGES
+  /* Reserve 8GiB. */
+  const uint64_t max_size = 0x200000000ul;
+  return max_size;
+#else
+  if (memory->max_pages != 0) {
+    const uint64_t max_size = memory->max_pages * PAGE_SIZE;
+    return max_size;
+  }
+
+  /* Reserve 4GiB. */
+  const uint64_t max_size = 0x100000000ul;
+  return max_size;
+#endif
+}
+
+#endif
+
+void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
+                             uint64_t initial_pages,
+                             uint64_t max_pages,
+                             bool is64) {
+  uint64_t byte_length = initial_pages * PAGE_SIZE;
   memory->size = byte_length;
   memory->pages = initial_pages;
-  memory->max_pages = chosen_max_pages;
+  memory->max_pages = max_pages;
+  memory->is64 = is64;
 
-  // 32-bit platforms use masking for sandboxing. Compute the mask
-#if UINTPTR_MAX == 0xffffffff
-  *(uint32_t*)&memory->mem_mask = heap_reserve_size - 1;
-#endif
-
-#if defined(WASM_CHECK_SHADOW_MEMORY)
-  wasm2c_shadow_memory_create(memory);
-#endif
-  return true;
-}
-
-void wasm_rt_deallocate_memory(wasm_rt_memory_t* memory) {
-#ifdef WASM_USE_GUARD_PAGES
-  const uint64_t heap_reserve_size =
-      compute_heap_reserve_space(memory->max_pages);
-  os_munmap(memory->data, heap_reserve_size);
+#if WASM_RT_USE_MMAP
+  const uint64_t mmap_size = get_allocation_size_for_mmap(memory);
+  void* addr = os_mmap(mmap_size);
+  if (!addr) {
+    os_print_last_error("os_mmap failed.");
+    abort();
+  }
+  int ret = os_mprotect(addr, byte_length);
+  if (ret != 0) {
+    os_print_last_error("os_mprotect failed.");
+    abort();
+  }
+  memory->data = addr;
 #else
-  free(memory->data);
-#endif
-
-#if defined(WASM_CHECK_SHADOW_MEMORY)
-  wasm2c_shadow_memory_destroy(memory);
+  memory->data = calloc(byte_length, 1);
 #endif
 }
 
-uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
-  uint32_t old_pages = memory->pages;
-  uint32_t new_pages = memory->pages + delta;
+static uint64_t grow_memory_impl(wasm_rt_memory_t* memory, uint64_t delta) {
+  uint64_t old_pages = memory->pages;
+  uint64_t new_pages = memory->pages + delta;
   if (new_pages == 0) {
     return 0;
   }
   if (new_pages < old_pages || new_pages > memory->max_pages) {
-    return (uint32_t)-1;
+    return (uint64_t)-1;
   }
-  uint32_t old_size = old_pages * WASM_PAGE_SIZE;
-  uint32_t new_size = new_pages * WASM_PAGE_SIZE;
-  uint32_t delta_size = delta * WASM_PAGE_SIZE;
-
-#ifdef WASM_USE_GUARD_PAGES
-  // mmap based heaps with guard pages
-  int ret = os_mmap_commit(memory->data + old_size, delta_size,
-                           MMAP_PROT_READ | MMAP_PROT_WRITE);
+  uint64_t old_size = old_pages * PAGE_SIZE;
+  uint64_t new_size = new_pages * PAGE_SIZE;
+  uint64_t delta_size = delta * PAGE_SIZE;
+#if WASM_RT_USE_MMAP
+  uint8_t* new_data = memory->data;
+  int ret = os_mprotect(new_data + old_size, delta_size);
   if (ret != 0) {
-    return (uint32_t)-1;
+    return (uint64_t)-1;
   }
 #else
-  // malloc based heaps --- if below macro is not defined, the max memory range
-  // is already allocated
-#ifdef WASM_USE_INCREMENTAL_MOVEABLE_MEMORY_ALLOC
   uint8_t* new_data = realloc(memory->data, new_size);
   if (new_data == NULL) {
-    return (uint32_t)-1;
+    return (uint64_t)-1;
   }
 #if !WABT_BIG_ENDIAN
   memset(new_data + old_size, 0, delta_size);
 #endif
-  memory->data = new_data;
 #endif
-#endif
-
 #if WABT_BIG_ENDIAN
-  memmove(memory->data + new_size - old_size, memory->data, old_size);
-  memset(memory->data, 0, delta_size);
+  memmove(new_data + new_size - old_size, new_data, old_size);
+  memset(new_data, 0, delta_size);
 #endif
   memory->pages = new_pages;
   memory->size = new_size;
-#if defined(WASM_CHECK_SHADOW_MEMORY)
-  wasm2c_shadow_memory_expand(memory);
-#endif
+  memory->data = new_data;
   return old_pages;
 }
 
-void wasm_rt_allocate_table(wasm_rt_table_t* table,
-                            uint32_t elements,
-                            uint32_t max_elements) {
-  assert(max_elements >= elements);
-  table->size = elements;
-  table->max_size = max_elements;
-  table->data = calloc(table->size, sizeof(wasm_rt_elem_t));
-  assert(table->data != 0);
+uint64_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint64_t delta) {
+  uint64_t ret = grow_memory_impl(memory, delta);
+#ifdef WASM_RT_GROW_FAILED_HANDLER
+  if (ret == -1) {
+    WASM_RT_GROW_FAILED_HANDLER();
+  }
+#endif
+  return ret;
 }
 
-void wasm_rt_deallocate_table(wasm_rt_table_t* table) {
-  free(table->data);
+void wasm_rt_free_memory(wasm_rt_memory_t* memory) {
+#if WASM_RT_USE_MMAP
+  const uint64_t mmap_size = get_allocation_size_for_mmap(memory);
+  os_munmap(memory->data, mmap_size); // ignore error
+#else
+  free(memory->data);
+#endif
 }
 
-#define WASM_SATURATING_U32_ADD(ret_ptr, a, b) \
-  {                                            \
-    if ((a) > (UINT32_MAX - (b))) {            \
-      /* add will overflowed */                \
-      *ret_ptr = UINT32_MAX;                   \
-    } else {                                   \
-      *ret_ptr = (a) + (b);                    \
-    }                                          \
+#define DEFINE_TABLE_OPS(type)                                          \
+  void wasm_rt_allocate_##type##_table(wasm_rt_##type##_table_t* table, \
+                                       uint32_t elements,               \
+                                       uint32_t max_elements) {         \
+    table->size = elements;                                             \
+    table->max_size = max_elements;                                     \
+    table->data = calloc(table->size, sizeof(wasm_rt_##type##_t));      \
+  }                                                                     \
+  void wasm_rt_free_##type##_table(wasm_rt_##type##_table_t* table) {   \
+    free(table->data);                                                  \
+  }                                                                     \
+  uint32_t wasm_rt_grow_##type##_table(wasm_rt_##type##_table_t* table, \
+                                       uint32_t delta,                  \
+                                       wasm_rt_##type##_t init) {       \
+    uint32_t old_elems = table->size;                                   \
+    uint64_t new_elems = (uint64_t)table->size + delta;                 \
+    if (new_elems == 0) {                                               \
+      return 0;                                                         \
+    }                                                                   \
+    if ((new_elems < old_elems) || (new_elems > table->max_size)) {     \
+      return (uint32_t)-1;                                              \
+    }                                                                   \
+    void* new_data =                                                    \
+        realloc(table->data, new_elems * sizeof(wasm_rt_##type##_t));   \
+    if (!new_data) {                                                    \
+      return (uint32_t)-1;                                              \
+    }                                                                   \
+    table->data = new_data;                                             \
+    table->size = new_elems;                                            \
+    for (uint32_t i = old_elems; i < new_elems; i++) {                  \
+      table->data[i] = init;                                            \
+    }                                                                   \
+    return old_elems;                                                   \
   }
 
-#define WASM_CHECKED_U32_RET_SIZE_T_MULTIPLY(ret_ptr, a, b)     \
-  {                                                             \
-    if ((a) > (SIZE_MAX / (b))) {                               \
-      /* multiple will overflowed */                            \
-      wasm_rt_trap(WASM_RT_TRAP_CALL_INDIRECT_TABLE_EXPANSION); \
-    } else {                                                    \
-      /* convert to size by assigning */                        \
-      *ret_ptr = a;                                             \
-      *ret_ptr = *ret_ptr * b;                                  \
-    }                                                           \
+DEFINE_TABLE_OPS(funcref)
+DEFINE_TABLE_OPS(externref)
+
+const char* wasm_rt_strerror(wasm_rt_trap_t trap) {
+  switch (trap) {
+    case WASM_RT_TRAP_NONE:
+      return "No error";
+    case WASM_RT_TRAP_OOB:
+#if WASM_RT_MERGED_OOB_AND_EXHAUSTION_TRAPS
+      return "Out-of-bounds access in linear memory or a table, or call stack "
+             "exhausted";
+#else
+      return "Out-of-bounds access in linear memory or a table";
+    case WASM_RT_TRAP_EXHAUSTION:
+      return "Call stack exhausted";
+#endif
+    case WASM_RT_TRAP_INT_OVERFLOW:
+      return "Integer overflow on divide or truncation";
+    case WASM_RT_TRAP_DIV_BY_ZERO:
+      return "Integer divide by zero";
+    case WASM_RT_TRAP_INVALID_CONVERSION:
+      return "Conversion from NaN to integer";
+    case WASM_RT_TRAP_UNREACHABLE:
+      return "Unreachable instruction executed";
+    case WASM_RT_TRAP_CALL_INDIRECT:
+      return "Invalid call_indirect";
+    case WASM_RT_TRAP_UNCAUGHT_EXCEPTION:
+      return "Uncaught exception";
   }
-
-void wasm_rt_expand_table(wasm_rt_table_t* table) {
-  uint32_t new_size = 0;
-  WASM_SATURATING_U32_ADD(&new_size, table->size, 32);
-
-  if (new_size > table->max_size) {
-    new_size = table->max_size;
-  }
-
-  if (table->size == new_size) {
-    // table is already as large as we allowed, can't expand further
-    wasm_rt_trap(WASM_RT_TRAP_CALL_INDIRECT_TABLE_EXPANSION);
-  }
-
-  size_t allocation_size = 0;
-  WASM_CHECKED_U32_RET_SIZE_T_MULTIPLY(&allocation_size, sizeof(wasm_rt_elem_t),
-                                       new_size);
-  table->data = realloc(table->data, allocation_size);
-  assert(table->data != 0);
-
-  memset(&(table->data[table->size]), 0,
-         allocation_size - (table->size * sizeof(wasm_rt_elem_t)));
-  table->size = new_size;
+  return "invalid trap code";
 }
-
-void wasm2c_ensure_linked() {
-  // We use this to ensure the dynamic library with the wasi symbols is loaded
-  // for the host application
-}
-
-#undef WASM_PAGE_SIZE
-#undef WASM_HEAP_GUARD_PAGE_SIZE
-#undef WASM_HEAP_ALIGNMENT
-#undef WASM_HEAP_DEFAULT_MAX_PAGES
-#undef WASM_HEAP_MAX_ALLOWED_PAGES
-#undef WASM_SATURATING_U32_ADD
-#undef WASM_CHECKED_U32_RET_SIZE_T_MULTIPLY

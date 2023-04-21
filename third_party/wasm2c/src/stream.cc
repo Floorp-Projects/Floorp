@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/stream.h"
+#include "wabt/stream.h"
 
 #include <cassert>
 #include <cctype>
@@ -132,8 +132,8 @@ void Stream::WriteMemoryDump(const void* start,
   }
 }
 
-Result OutputBuffer::WriteToFile(string_view filename) const {
-  std::string filename_str = filename.to_string();
+Result OutputBuffer::WriteToFile(std::string_view filename) const {
+  std::string filename_str(filename);
   FILE* file = fopen(filename_str.c_str(), "wb");
   if (!file) {
     ERROR("unable to open %s for writing\n", filename_str.c_str());
@@ -154,6 +154,18 @@ Result OutputBuffer::WriteToFile(string_view filename) const {
   }
 
   fclose(file);
+  return Result::Ok;
+}
+
+Result OutputBuffer::WriteToStdout() const {
+  if (data.empty()) {
+    return Result::Ok;
+  }
+  ssize_t bytes = fwrite(data.data(), 1, data.size(), stdout);
+  if (bytes < 0 || static_cast<size_t>(bytes) != data.size()) {
+    ERROR("failed to write %" PRIzd " bytes to stdout\n", data.size());
+    return Result::Error;
+  }
   return Result::Ok;
 }
 
@@ -217,9 +229,9 @@ Result MemoryStream::TruncateImpl(size_t size) {
   return Result::Ok;
 }
 
-FileStream::FileStream(string_view filename, Stream* log_stream)
+FileStream::FileStream(std::string_view filename, Stream* log_stream)
     : Stream(log_stream), file_(nullptr), offset_(0), should_close_(false) {
-  std::string filename_str = filename.to_string();
+  std::string filename_str(filename);
   file_ = fopen(filename_str.c_str(), "wb");
 
   // TODO(binji): this is pretty cheesy, should come up with a better API.
@@ -255,7 +267,9 @@ FileStream::~FileStream() {
 }
 
 void FileStream::Flush() {
-  if (file_) fflush(file_);
+  if (file_) {
+    fflush(file_);
+  }
 }
 
 Result FileStream::WriteDataImpl(size_t at, const void* data, size_t size) {

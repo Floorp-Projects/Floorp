@@ -16,11 +16,11 @@
 
 #include "gtest/gtest.h"
 
-#include "src/binary-reader.h"
-#include "src/error-formatter.h"
+#include "wabt/binary-reader.h"
+#include "wabt/error-formatter.h"
 
-#include "src/interp/binary-reader-interp.h"
-#include "src/interp/interp.h"
+#include "wabt/interp/binary-reader-interp.h"
+#include "wabt/interp/interp.h"
 
 using namespace wabt;
 using namespace wabt::interp;
@@ -30,8 +30,8 @@ class InterpTest : public ::testing::Test {
   void ReadModule(const std::vector<u8>& data) {
     Errors errors;
     ReadBinaryOptions options;
-    Result result = ReadBinaryInterp(data.data(), data.size(), options, &errors,
-                                     &module_desc_);
+    Result result = ReadBinaryInterp("<internal>", data.data(), data.size(),
+                                     options, &errors, &module_desc_);
     ASSERT_EQ(Result::Ok, result)
         << FormatErrorsToString(errors, Location::Type::Binary);
   }
@@ -58,7 +58,6 @@ class InterpTest : public ::testing::Test {
   Module::Ptr mod_;
   Instance::Ptr inst_;
 };
-
 
 TEST_F(InterpTest, Empty) {
   ASSERT_TRUE(mod_.empty());
@@ -308,18 +307,18 @@ TEST_F(InterpTest, HostFunc_PingPong) {
       0x0b, 0x01, 0x09, 0x00, 0x20, 0x00, 0x41, 0x01, 0x6a, 0x10, 0x00, 0x0b,
   });
 
-  auto host_func = HostFunc::New(
-      store_, FuncType{{ValueType::I32}, {ValueType::I32}},
-      [&](Thread& thread, const Values& params, Values& results,
-          Trap::Ptr* out_trap) -> Result {
-        auto val = params[0].Get<u32>();
-        if (val < 10) {
-          return GetFuncExport(0)->Call(store_, {Value::Make(val * 2)}, results,
-                                        out_trap);
-        }
-        results[0] = Value::Make(val);
-        return Result::Ok;
-      });
+  auto host_func =
+      HostFunc::New(store_, FuncType{{ValueType::I32}, {ValueType::I32}},
+                    [&](Thread& thread, const Values& params, Values& results,
+                        Trap::Ptr* out_trap) -> Result {
+                      auto val = params[0].Get<u32>();
+                      if (val < 10) {
+                        return GetFuncExport(0)->Call(
+                            store_, {Value::Make(val * 2)}, results, out_trap);
+                      }
+                      results[0] = Value::Make(val);
+                      return Result::Ok;
+                    });
 
   Instantiate({host_func->self()});
 
@@ -328,7 +327,8 @@ TEST_F(InterpTest, HostFunc_PingPong) {
 
   Values results;
   Trap::Ptr trap;
-  Result result = GetFuncExport(0)->Call(store_, {Value::Make(1)}, results, &trap);
+  Result result =
+      GetFuncExport(0)->Call(store_, {Value::Make(1)}, results, &trap);
 
   ASSERT_EQ(Result::Ok, result);
   EXPECT_EQ(1u, results.size());
@@ -346,7 +346,7 @@ TEST_F(InterpTest, HostFunc_PingPong_SameThread) {
       0x0b, 0x01, 0x09, 0x00, 0x20, 0x00, 0x41, 0x01, 0x6a, 0x10, 0x00, 0x0b,
   });
 
-  auto thread = Thread::New(store_, {});
+  Thread thread(store_);
 
   auto host_func =
       HostFunc::New(store_, FuncType{{ValueType::I32}, {ValueType::I32}},
@@ -368,7 +368,8 @@ TEST_F(InterpTest, HostFunc_PingPong_SameThread) {
 
   Values results;
   Trap::Ptr trap;
-  Result result = GetFuncExport(0)->Call(*thread, {Value::Make(1)}, results, &trap);
+  Result result =
+      GetFuncExport(0)->Call(thread, {Value::Make(1)}, results, &trap);
 
   ASSERT_EQ(Result::Ok, result);
   EXPECT_EQ(1u, results.size());
@@ -411,22 +412,22 @@ TEST_F(InterpTest, Rot13) {
   //   (local $uc i32)
   //
   //   ;; No change if < 'A'.
-  //   (if (i32.lt_u (get_local $c) (i32.const 65))
-  //     (return (get_local $c)))
+  //   (if (i32.lt_u (local.get $c) (i32.const 65))
+  //     (return (local.get $c)))
   //
   //   ;; Clear 5th bit of c, to force uppercase. 0xdf = 0b11011111
-  //   (set_local $uc (i32.and (get_local $c) (i32.const 0xdf)))
+  //   (local.set $uc (i32.and (local.get $c) (i32.const 0xdf)))
   //
   //   ;; In range ['A', 'M'] return |c| + 13.
-  //   (if (i32.le_u (get_local $uc) (i32.const 77))
-  //     (return (i32.add (get_local $c) (i32.const 13))))
+  //   (if (i32.le_u (local.get $uc) (i32.const 77))
+  //     (return (i32.add (local.get $c) (i32.const 13))))
   //
   //   ;; In range ['N', 'Z'] return |c| - 13.
-  //   (if (i32.le_u (get_local $uc) (i32.const 90))
-  //     (return (i32.sub (get_local $c) (i32.const 13))))
+  //   (if (i32.le_u (local.get $uc) (i32.const 90))
+  //     (return (i32.sub (local.get $c) (i32.const 13))))
   //
   //   ;; No change for everything else.
-  //   (return (get_local $c))
+  //   (return (local.get $c))
   // )
   //
   // (func (export "rot13")
@@ -437,27 +438,27 @@ TEST_F(InterpTest, Rot13) {
   //   (call $fill_buf (i32.const 0) (i32.const 1024))
   //
   //   ;; The host returns the size filled.
-  //   (set_local $size)
+  //   (local.set $size)
   //
   //   ;; Loop over all bytes and rot13 them.
   //   (block $exit
   //     (loop $top
   //       ;; if (i >= size) break
-  //       (if (i32.ge_u (get_local $i) (get_local $size)) (br $exit))
+  //       (if (i32.ge_u (local.get $i) (local.get $size)) (br $exit))
   //
   //       ;; mem[i] = rot13c(mem[i])
   //       (i32.store8
-  //         (get_local $i)
+  //         (local.get $i)
   //         (call $rot13c
-  //           (i32.load8_u (get_local $i))))
+  //           (i32.load8_u (local.get $i))))
   //
   //       ;; i++
-  //       (set_local $i (i32.add (get_local $i) (i32.const 1)))
+  //       (local.set $i (i32.add (local.get $i) (i32.const 1)))
   //       (br $top)
   //     )
   //   )
   //
-  //   (call $buf_done (i32.const 0) (get_local $size))
+  //   (call $buf_done (i32.const 0) (local.get $size))
   // )
   ReadModule({
       0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x14, 0x04, 0x60,
@@ -551,9 +552,7 @@ TEST_F(InterpTest, Rot13) {
 
 class InterpGCTest : public InterpTest {
  public:
-  void SetUp() override {
-    before_new = store_.object_count();
-  }
+  void SetUp() override { before_new = store_.object_count(); }
 
   void TearDown() override {
     // Reset instance and module, in case they were allocated.
@@ -681,11 +680,42 @@ TEST_F(InterpGCTest, Collect_InstanceExport) {
   });
   Instantiate();
   auto after_new = store_.object_count();
-  EXPECT_EQ(before_new + 6, after_new);  // module, instance, f, t, m, g
+  EXPECT_EQ(before_new + 7,
+            after_new);  // module, instance, f, t, m, g, g-init-func
 
-  // Instance keeps all exports alive.
+  // Instance keeps all exports alive, except the init func which can be
+  // collected once its has been run
   store_.Collect();
-  EXPECT_EQ(after_new, store_.object_count());
+  EXPECT_EQ(after_new - 1, store_.object_count());
+}
+
+TEST_F(InterpGCTest, Collect_DeepRecursion) {
+  const size_t table_count = 65;
+
+  TableType tt = TableType{ValueType::ExternRef, Limits{1}};
+
+  // Create a chain of tables, where each contains
+  // a single reference to the next table.
+
+  Table::Ptr prev_table = Table::New(store_, tt);
+
+  for (size_t i = 1; i < table_count; i++) {
+    Table::Ptr new_table = Table::New(store_, tt);
+
+    new_table->Set(store_, 0, prev_table->self());
+
+    prev_table.reset();
+    prev_table = std::move(new_table);
+  }
+
+  store_.Collect();
+  EXPECT_EQ(table_count + 1, store_.object_count());
+
+  // Remove the last root, now all should be removed.
+  prev_table.reset();
+
+  store_.Collect();
+  EXPECT_EQ(1u, store_.object_count());
 }
 
 // TODO: Test for Thread keeping references alive as locals/params/stack values.

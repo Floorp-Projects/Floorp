@@ -10,10 +10,8 @@
 
 // Load general firefox configuration of RLBox
 #  include "mozilla/rlbox/rlbox_config.h"
-
-#  include "mozilla/rlbox/rlbox_wasm2c_sandbox.hpp"
-
-#  include "mozilla/rlbox/rlbox.hpp"
+#  include "mozilla/rlbox/rlbox_wasm2c_tls.hpp"
+#  include "wasm-rt.h"
 
 #  include "nsExceptionHandler.h"
 
@@ -26,16 +24,13 @@ extern "C" {
 
 // Any error encountered by the wasm2c runtime or wasm sandboxed library code
 // is configured to call the below trap handler.
-void moz_wasm2c_trap_handler(const char* msg) {
-  MOZ_CRASH_UNSAFE_PRINTF("wasm2c crash: %s", msg);
+void moz_wasm2c_trap_handler(wasm_rt_trap_t code) {
+  MOZ_CRASH_UNSAFE_PRINTF("wasm2c crash: %s", wasm_rt_strerror(code));
 }
 
 // The below function is called if a malloc in sandboxed code returns null
 // This indicates that the sandbox has run out of memory.
-void moz_wasm2c_malloc_failed(uint32_t size) {
-  // We don't use the allocation size information for now
-  (void)size;
-
+void moz_wasm2c_memgrow_failed() {
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::WasmLibrarySandboxMallocFailed, true);
 }

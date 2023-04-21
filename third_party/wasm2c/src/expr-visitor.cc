@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-#include "src/expr-visitor.h"
+#include "wabt/expr-visitor.h"
 
-#include "src/cast.h"
-#include "src/ir.h"
+#include "wabt/cast.h"
+#include "wabt/ir.h"
 
 namespace wabt {
 
@@ -219,6 +219,10 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       CHECK_RESULT(delegate_->OnCallRefExpr(cast<CallRefExpr>(expr)));
       break;
 
+    case ExprType::CodeMetadata:
+      CHECK_RESULT(delegate_->OnCodeMetadataExpr(cast<CodeMetadataExpr>(expr)));
+      break;
+
     case ExprType::Compare:
       CHECK_RESULT(delegate_->OnCompareExpr(cast<CompareExpr>(expr)));
       break;
@@ -377,7 +381,6 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
     case ExprType::Store:
       CHECK_RESULT(delegate_->OnStoreExpr(cast<StoreExpr>(expr)));
       break;
-
 
     case ExprType::Throw:
       CHECK_RESULT(delegate_->OnThrowExpr(cast<ThrowExpr>(expr)));

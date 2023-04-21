@@ -368,7 +368,7 @@ public:
   /**
    * @brief Create a new sandbox.
    *
-   * @tparam T_args Arguments passed to the underlying sandbox
+   * @tparam T_Args Arguments passed to the underlying sandbox
    * implementation. For the null sandbox, no arguments are necessary.
    */
   template<typename... T_Args>

@@ -16,10 +16,10 @@
 
 #include "gtest/gtest.h"
 
-#include "src/binary-reader.h"
-#include "src/binary-reader-nop.h"
-#include "src/leb128.h"
-#include "src/opcode.h"
+#include "wabt/binary-reader-nop.h"
+#include "wabt/binary-reader.h"
+#include "wabt/leb128.h"
+#include "wabt/opcode.h"
 
 using namespace wabt;
 

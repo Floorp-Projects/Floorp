@@ -18,8 +18,8 @@
 
 #include <memory>
 
-#include "src/wast-lexer.h"
-#include "src/wast-parser.h"
+#include "wabt/wast-lexer.h"
+#include "wabt/wast-parser.h"
 
 using namespace wabt;
 
@@ -34,8 +34,9 @@ std::string repeat(std::string s, size_t count) {
 }
 
 Errors ParseInvalidModule(std::string text) {
-  auto lexer = WastLexer::CreateBufferLexer("test", text.c_str(), text.size());
   Errors errors;
+  auto lexer =
+      WastLexer::CreateBufferLexer("test", text.c_str(), text.size(), &errors);
   std::unique_ptr<Module> module;
   Features features;
   WastParseOptions options(features);

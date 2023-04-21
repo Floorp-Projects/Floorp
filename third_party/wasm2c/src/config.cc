@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "config.h"
+#include "wabt/config.h"
 
 #include <cstdarg>
 #include <cstdio>
@@ -55,7 +55,7 @@ int wabt_snprintf(char* str, size_t size, const char* format, ...) {
 // Allow the following functions to change the floating-point environment (e.g.
 // update to 64-bit precision in the mantissa). This is only needed for x87
 // floats, which are only used on MSVC 32-bit.
-#pragma fenv_access (on)
+#pragma fenv_access(on)
 namespace {
 
 typedef unsigned int FPControl;
@@ -158,5 +158,5 @@ float wabt_convert_int64_to_float(int64_t x) {
 }
 
 #if COMPILER_IS_MSVC && _M_IX86
-#pragma fenv_access (off)
+#pragma fenv_access(off)
 #endif

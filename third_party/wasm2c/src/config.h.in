@@ -20,7 +20,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#cmakedefine CMAKE_PROJECT_VERSION "${CMAKE_PROJECT_VERSION}"
+#cmakedefine WABT_VERSION_STRING "@WABT_VERSION_STRING@"
+
+#cmakedefine WABT_DEBUG @WABT_DEBUG@
 
 /* TODO(binji): nice way to define these with WABT_ prefix? */
 
@@ -42,6 +44,12 @@
 /* Whether ENABLE_VIRTUAL_TERMINAL_PROCESSING is defined by windows.h */
 #cmakedefine01 HAVE_WIN32_VT100
 
+/* Whether the target architecture is big endian */
+#cmakedefine01 WABT_BIG_ENDIAN
+
+/* Whether <openssl/sha.h> is available */
+#cmakedefine01 HAVE_OPENSSL_SHA_H
+
 #cmakedefine01 COMPILER_IS_CLANG
 #cmakedefine01 COMPILER_IS_GNU
 #cmakedefine01 COMPILER_IS_MSVC
@@ -61,9 +69,6 @@
 
 #if COMPILER_IS_CLANG || COMPILER_IS_GNU
 
-#define WABT_UNUSED __attribute__((unused))
-#define WABT_WARN_UNUSED __attribute__((warn_unused_result))
-#define WABT_INLINE inline
 #define WABT_UNLIKELY(x) __builtin_expect(!!(x), 0)
 #define WABT_LIKELY(x) __builtin_expect(!!(x), 1)
 
@@ -81,14 +86,7 @@
 #endif
 
 #ifdef __cplusplus
-#if __cplusplus >= 201103L
 #define WABT_STATIC_ASSERT(x) static_assert((x), #x)
-#else
-#define WABT_STATIC_ASSERT__(x, c) \
-  static int static_assert_##c[(x ? 0 : -1)] WABT_UNUSED
-#define WABT_STATIC_ASSERT_(x, c) WABT_STATIC_ASSERT__(x, c)
-#define WABT_STATIC_ASSERT(x) WABT_STATIC_ASSERT_(x, __COUNTER__)
-#endif
 #else
 #define WABT_STATIC_ASSERT(x) _Static_assert((x), #x)
 #endif
@@ -98,9 +96,6 @@
 #include <intrin.h>
 #include <string.h>
 
-#define WABT_UNUSED
-#define WABT_WARN_UNUSED
-#define WABT_INLINE __inline
 #define WABT_STATIC_ASSERT(x) _STATIC_ASSERT(x)
 #define WABT_UNLIKELY(x) (x)
 #define WABT_LIKELY(x) (x)
@@ -163,7 +158,7 @@ inline int Clz(unsigned int mask) {
 }
 
 inline int Clz(unsigned __int64 mask) {
-#if _M_X64
+#if _M_X64 || _M_ARM64
   if (mask == 0)
     return 64;
 
@@ -195,7 +190,7 @@ inline int Ctz(unsigned int mask) {
 }
 
 inline int Ctz(unsigned __int64 mask) {
-#if _M_X64
+#if _M_X64 || _M_ARM64
   if (mask == 0)
     return 64;
 
@@ -213,12 +208,31 @@ inline int Ctz(unsigned __int64 mask) {
 #endif
 }
 
-inline int Popcount(uint8_t value) {
-  return __popcnt(value);
+#if _M_ARM64
+//https://stackoverflow.com/a/70012905
+template <typename T>
+int BrianKernighanPopcount(T value) {
+  int count;
+  for(count = 0; value; count++)
+  {
+    value &= value - 1;
+  }
+  return count;
 }
+#endif
 
 inline int Popcount(unsigned long value) {
+  #if _M_X64 || _M_IX86
   return __popcnt(value);
+#elif _M_ARM64
+  return BrianKernighanPopcount(value);
+#else
+#error unexpected architecture
+#endif
+}
+
+inline int Popcount(uint8_t value) {
+  return Popcount((unsigned long)value);
 }
 
 inline int Popcount(unsigned int value) {
@@ -230,6 +244,8 @@ inline int Popcount(unsigned __int64 value) {
   return __popcnt64(value);
 #elif _M_IX86
   return Popcount(HighDword(value)) + Popcount(LowDword(value));
+#elif _M_ARM64
+  return BrianKernighanPopcount(value);
 #else
 #error unexpected architecture
 #endif

@@ -4,10 +4,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-LOCAL_INCLUDES += ["/third_party/wasm2c/"]
+LOCAL_INCLUDES += [
+    "/third_party/picosha2/",
+    "/third_party/wasm2c/include/",
+]
 
 GeneratedFile(
-    "config.h",
+    "wabt/config.h",
     script="preprocess_wasm2c_config.py",
     entry_point="generate_config",
     inputs=["/third_party/wasm2c/src/config.h.in"],
@@ -18,6 +21,8 @@ HOST_SOURCES += [
     "/third_party/wasm2c/src/apply-names.cc",
     "/third_party/wasm2c/src/binary-reader-ir.cc",
     "/third_party/wasm2c/src/binary-reader-logging.cc",
+    "/third_party/wasm2c/src/binary-reader-objdump.cc",
+    "/third_party/wasm2c/src/binary-reader-opcnt.cc",
     "/third_party/wasm2c/src/binary-reader.cc",
     "/third_party/wasm2c/src/binary-writer-spec.cc",
     "/third_party/wasm2c/src/binary-writer.cc",
@@ -27,12 +32,12 @@ HOST_SOURCES += [
     "/third_party/wasm2c/src/common.cc",
     "/third_party/wasm2c/src/config.cc",
     "/third_party/wasm2c/src/decompiler.cc",
+    "/third_party/wasm2c/src/emscripten-helpers.cc",
     "/third_party/wasm2c/src/error-formatter.cc",
     "/third_party/wasm2c/src/expr-visitor.cc",
     "/third_party/wasm2c/src/feature.cc",
     "/third_party/wasm2c/src/filenames.cc",
     "/third_party/wasm2c/src/generate-names.cc",
-    "/third_party/wasm2c/src/hash-util.cc",
     "/third_party/wasm2c/src/ir-util.cc",
     "/third_party/wasm2c/src/ir.cc",
     "/third_party/wasm2c/src/leb128.cc",
@@ -43,9 +48,9 @@ HOST_SOURCES += [
     "/third_party/wasm2c/src/opcode.cc",
     "/third_party/wasm2c/src/option-parser.cc",
     "/third_party/wasm2c/src/resolve-names.cc",
+    "/third_party/wasm2c/src/sha256.cc",
     "/third_party/wasm2c/src/shared-validator.cc",
     "/third_party/wasm2c/src/stream.cc",
-    "/third_party/wasm2c/src/string-view.cc",
     "/third_party/wasm2c/src/token.cc",
     "/third_party/wasm2c/src/tracing.cc",
     "/third_party/wasm2c/src/type-checker.cc",
@@ -59,6 +64,10 @@ HOST_SOURCES += [
 # wasm2c sources
 HOST_SOURCES += [
     "/third_party/wasm2c/src/c-writer.cc",
+    "/third_party/wasm2c/src/prebuilt/wasm2c_header_bottom.cc",
+    "/third_party/wasm2c/src/prebuilt/wasm2c_header_top.cc",
+    "/third_party/wasm2c/src/prebuilt/wasm2c_source_declarations.cc",
+    "/third_party/wasm2c/src/prebuilt/wasm2c_source_includes.cc",
     "/third_party/wasm2c/src/tools/wasm2c.cc",
 ]
 

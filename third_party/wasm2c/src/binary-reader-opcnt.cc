@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/binary-reader-opcnt.h"
+#include "wabt/binary-reader-opcnt.h"
 
 #include <cassert>
 #include <cinttypes>
@@ -22,10 +22,10 @@
 #include <cstdint>
 #include <cstdio>
 
-#include "src/binary-reader-nop.h"
-#include "src/common.h"
-#include "src/literal.h"
-#include "src/stream.h"
+#include "wabt/binary-reader-nop.h"
+#include "wabt/common.h"
+#include "wabt/literal.h"
+#include "wabt/stream.h"
 
 namespace wabt {
 
@@ -61,19 +61,19 @@ std::pair<const T*, size_t> OpcodeInfo::GetDataArray() const {
 
 template <typename T>
 const T* OpcodeInfo::GetData(size_t expected_size) const {
-  auto pair = GetDataArray<T>();
-  assert(pair.second == expected_size);
-  return pair.first;
+  auto [data, size] = GetDataArray<T>();
+  assert(size == expected_size);
+  return data;
 }
 
 template <typename T, typename F>
 void OpcodeInfo::WriteArray(Stream& stream, F&& write_func) {
-  auto pair = GetDataArray<T>();
-  for (size_t i = 0; i < pair.second; ++i) {
+  auto [data, size] = GetDataArray<T>();
+  for (size_t i = 0; i < size; ++i) {
     // Write an initial space (to separate from the opcode name) first, then
     // comma-separate.
     stream.Writef("%s", i == 0 ? " " : ", ");
-    write_func(pair.first[i]);
+    write_func(data[i]);
   }
 }
 
@@ -113,7 +113,20 @@ void OpcodeInfo::Write(Stream& stream) {
       break;
     }
 
+    case Kind::V128: {
+      auto data = *GetData<v128>();
+      auto l0 = data.u32(0);
+      auto l1 = data.u32(1);
+      auto l2 = data.u32(2);
+      auto l3 = data.u32(3);
+      stream.Writef(" %u %u %u %u (0x%x 0x%x 0x%x 0x%x)", l0, l1, l2, l3, l0,
+                    l1, l2, l3);
+      break;
+    }
+
     case Kind::Uint32Uint32:
+    case Kind::Uint32Uint32Uint32:
+    case Kind::Uint32Uint32Uint32Uint32:
       WriteArray<uint32_t>(
           stream, [&stream](uint32_t value) { stream.Writef("%u", value); });
       break;
@@ -123,7 +136,7 @@ void OpcodeInfo::Write(Stream& stream) {
       if (type.IsIndex()) {
         stream.Writef(" type:%d", type.GetIndex());
       } else if (type != Type::Void) {
-        stream.Writef(" %s", type.GetName());
+        stream.Writef(" %s", type.GetName().c_str());
       }
       break;
     }
@@ -191,15 +204,18 @@ class BinaryReaderOpcnt : public BinaryReaderNop {
   Result OnOpcodeUint32(uint32_t value) override;
   Result OnOpcodeIndex(Index value) override;
   Result OnOpcodeUint32Uint32(uint32_t value, uint32_t value2) override;
+  Result OnOpcodeUint32Uint32Uint32(uint32_t value,
+                                    uint32_t value2,
+                                    uint32_t value3) override;
   Result OnOpcodeUint64(uint64_t value) override;
   Result OnOpcodeF32(uint32_t value) override;
   Result OnOpcodeF64(uint64_t value) override;
+  Result OnOpcodeV128(v128 value) override;
   Result OnOpcodeBlockSig(Type sig_type) override;
   Result OnBrTableExpr(Index num_targets,
                        Index* target_depths,
                        Index default_target_depth) override;
   Result OnEndExpr() override;
-  Result OnEndFunc() override;
 
  private:
   template <typename... Args>
@@ -246,6 +262,14 @@ Result BinaryReaderOpcnt::OnOpcodeUint32Uint32(uint32_t value0,
   return Emplace(current_opcode_, OpcodeInfo::Kind::Uint32Uint32, array, 2);
 }
 
+Result BinaryReaderOpcnt::OnOpcodeUint32Uint32Uint32(uint32_t value0,
+                                                     uint32_t value1,
+                                                     uint32_t value2) {
+  uint32_t array[3] = {value0, value1, value2};
+  return Emplace(current_opcode_, OpcodeInfo::Kind::Uint32Uint32Uint32, array,
+                 3);
+}
+
 Result BinaryReaderOpcnt::OnOpcodeUint64(uint64_t value) {
   return Emplace(current_opcode_, OpcodeInfo::Kind::Uint64, &value);
 }
@@ -256,6 +280,10 @@ Result BinaryReaderOpcnt::OnOpcodeF32(uint32_t value) {
 
 Result BinaryReaderOpcnt::OnOpcodeF64(uint64_t value) {
   return Emplace(current_opcode_, OpcodeInfo::Kind::Float64, &value);
+}
+
+Result BinaryReaderOpcnt::OnOpcodeV128(v128 value) {
+  return Emplace(current_opcode_, OpcodeInfo::Kind::V128, &value);
 }
 
 Result BinaryReaderOpcnt::OnOpcodeBlockSig(Type sig_type) {
@@ -270,10 +298,6 @@ Result BinaryReaderOpcnt::OnBrTableExpr(Index num_targets,
 }
 
 Result BinaryReaderOpcnt::OnEndExpr() {
-  return Emplace(Opcode::End, OpcodeInfo::Kind::Bare);
-}
-
-Result BinaryReaderOpcnt::OnEndFunc() {
   return Emplace(Opcode::End, OpcodeInfo::Kind::Bare);
 }
 

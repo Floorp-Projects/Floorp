@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#include "src/color.h"
+#include "wabt/color.h"
 
 #include <cstdlib>
 
-#include "src/common.h"
+#include "wabt/common.h"
 
 #if _WIN32
 #include <io.h>
