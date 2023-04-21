@@ -255,6 +255,7 @@ class BrowserFragment :
             FindInPageIntegration(
                 components.store,
                 binding.findInPage,
+                binding.browserToolbar,
                 binding.engineView,
             ),
             this,
