@@ -92,6 +92,8 @@ rtc_library("video_frame_i010") {
     "i010_buffer.h",
     "i210_buffer.cc",
     "i210_buffer.h",
+    "i410_buffer.cc",
+    "i410_buffer.h",
   ]
   deps = [
     ":video_frame",

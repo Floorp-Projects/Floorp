@@ -328,6 +328,16 @@ int LibvpxVp9Decoder::ReturnFrame(
           reinterpret_cast<const uint16_t*>(img->planes[VPX_PLANE_V]),
           img->stride[VPX_PLANE_V] / 2, [img_buffer] {});
       break;
+    case VPX_IMG_FMT_I44416:
+      img_wrapped_buffer = WrapI410Buffer(
+          img->d_w, img->d_h,
+          reinterpret_cast<const uint16_t*>(img->planes[VPX_PLANE_Y]),
+          img->stride[VPX_PLANE_Y] / 2,
+          reinterpret_cast<const uint16_t*>(img->planes[VPX_PLANE_U]),
+          img->stride[VPX_PLANE_U] / 2,
+          reinterpret_cast<const uint16_t*>(img->planes[VPX_PLANE_V]),
+          img->stride[VPX_PLANE_V] / 2, [img_buffer] {});
+      break;
     default:
       RTC_LOG(LS_ERROR) << "Unsupported pixel format produced by the decoder: "
                         << static_cast<int>(img->fmt);
