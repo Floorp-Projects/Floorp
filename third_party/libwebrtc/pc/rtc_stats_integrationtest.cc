@@ -416,6 +416,9 @@ class RTCStatsReportVerifier {
       } else if (stats.type() == RTCTransportStats::kType) {
         verify_successful &=
             VerifyRTCTransportStats(stats.cast_to<RTCTransportStats>());
+      } else if (stats.type() == RTCAudioPlayoutStats::kType) {
+        verify_successful &=
+            VerifyRTCAudioPlayoutSTats(stats.cast_to<RTCAudioPlayoutStats>());
       } else {
         EXPECT_TRUE(false) << "Unrecognized stats type: " << stats.type();
         verify_successful = false;
@@ -908,6 +911,12 @@ class RTCStatsReportVerifier {
       verifier.TestMemberIsUndefined(inbound_stream.min_playout_delay);
       verifier.TestMemberIsUndefined(inbound_stream.goog_timing_frame_info);
     }
+    if (inbound_stream.kind.is_defined() && *inbound_stream.kind == "audio") {
+      verifier.TestMemberIsDefined(inbound_stream.playout_id);
+    } else {
+      verifier.TestMemberIsUndefined(inbound_stream.playout_id);
+    }
+
     return verifier.ExpectAllMembersSuccessfullyTested();
   }
 
@@ -1116,6 +1125,20 @@ class RTCStatsReportVerifier {
     verifier.TestMemberIsDefined(transport.ice_role);
     verifier.TestMemberIsDefined(transport.ice_local_username_fragment);
     verifier.TestMemberIsDefined(transport.ice_state);
+    return verifier.ExpectAllMembersSuccessfullyTested();
+  }
+
+  bool VerifyRTCAudioPlayoutSTats(const RTCAudioPlayoutStats& audio_playout) {
+    RTCStatsVerifier verifier(report_.get(), &audio_playout);
+    verifier.TestMemberIsNonNegative<uint64_t>(
+        audio_playout.synthesized_samples_events);
+    verifier.TestMemberIsNonNegative<double>(
+        audio_playout.synthesized_samples_duration);
+    verifier.TestMemberIsNonNegative<uint64_t>(
+        audio_playout.total_samples_count);
+    verifier.TestMemberIsNonNegative<double>(
+        audio_playout.total_samples_duration);
+    verifier.TestMemberIsNonNegative<double>(audio_playout.total_playout_delay);
     return verifier.ExpectAllMembersSuccessfullyTested();
   }
 
