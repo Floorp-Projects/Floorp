@@ -684,11 +684,7 @@ class GMut {
   // The mutex that protects the other members.
   static Mutex sMutex MOZ_UNANNOTATED;
 
-  GMut()
-      : mRNG(RandomSeed<0>(), RandomSeed<1>()),
-        mAllocPages(),
-        mPageAllocHits(0),
-        mPageAllocMisses(0) {
+  GMut() : mRNG(RandomSeed<0>(), RandomSeed<1>()), mAllocPages() {
     sMutex.Init();
   }
 
@@ -908,8 +904,13 @@ class GMut {
   static void postfork_child() { sMutex.Init(); }
 #endif
 
+#if PHC_LOGGING
   void IncPageAllocHits(GMutLock) { mPageAllocHits++; }
   void IncPageAllocMisses(GMutLock) { mPageAllocMisses++; }
+#else
+  void IncPageAllocHits(GMutLock) {}
+  void IncPageAllocMisses(GMutLock) {}
+#endif
 
 #if PHC_LOGGING
   struct PageStats {
@@ -927,7 +928,6 @@ class GMut {
 
     return stats;
   }
-#endif
 
   size_t PageAllocHits(GMutLock) { return mPageAllocHits; }
   size_t PageAllocAttempts(GMutLock) {
@@ -938,6 +938,7 @@ class GMut {
   size_t PageAllocHitRate(GMutLock) {
     return mPageAllocHits * 100 / (mPageAllocHits + mPageAllocMisses);
   }
+#endif
 
  private:
   template <int N>
@@ -991,13 +992,13 @@ class GMut {
   AllocPageInfo mAllocPages[kNumAllocPages];
 #if PHC_LOGGING
   Time mFreeTime[kNumAllocPages];
-#endif
 
   // How many allocations that could have been page allocs actually were? As
   // constrained kNumAllocPages. If the hit ratio isn't close to 100% it's
   // likely that the global constants are poorly chosen.
-  size_t mPageAllocHits;
-  size_t mPageAllocMisses;
+  size_t mPageAllocHits = 0;
+  size_t mPageAllocMisses = 0;
+#endif
 };
 
 Mutex GMut::sMutex;
