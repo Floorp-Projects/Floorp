@@ -9,7 +9,6 @@ import {
   getSource,
   getSelectedSource,
   getSelectedSourceTextContent,
-  getBreakpointPositions,
   getBreakpointPositionsForSource,
 } from "./index";
 import { getVisibleBreakpoints } from "./visibleBreakpoints";
@@ -152,22 +151,19 @@ export function getColumnBreakpoints(
   return formatPositions(positions, selectedSource, breakpointMap);
 }
 
-const getVisibleBreakpointPositions = createSelector(
-  getSelectedSource,
-  getBreakpointPositions,
-  (source, positions) => {
-    if (!source) {
-      return [];
-    }
-
-    const sourcePositions = positions[source.id];
-    if (!sourcePositions) {
-      return [];
-    }
-
-    return convertToList(sourcePositions);
+function getVisibleBreakpointPositions(state) {
+  const source = getSelectedSource(state);
+  if (!source) {
+    return [];
   }
-);
+
+  const sourcePositions = getBreakpointPositionsForSource(state, source.id);
+  if (!sourcePositions) {
+    return [];
+  }
+
+  return convertToList(sourcePositions);
+}
 
 export const visibleColumnBreakpoints = createSelector(
   getVisibleBreakpointPositions,

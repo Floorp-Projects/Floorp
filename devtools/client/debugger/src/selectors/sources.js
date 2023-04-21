@@ -235,14 +235,8 @@ export function getPrettyPrintMessage(state, location) {
   return L10N.getStr("sourceTabs.prettyPrint");
 }
 
-// Used by visibleColumnBreakpoints selectors
-export function getBreakpointPositions(state) {
-  return state.sources.breakpointPositions;
-}
-
 export function getBreakpointPositionsForSource(state, sourceId) {
-  const positions = getBreakpointPositions(state);
-  return positions?.[sourceId];
+  return state.sources.mutableBreakpointPositions.get(sourceId);
 }
 
 // This is only used by one test
