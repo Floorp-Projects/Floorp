@@ -29,6 +29,7 @@
 #include "rtc_base/network.h"
 #include "rtc_base/numerics/event_based_exponential_moving_average.h"
 #include "rtc_base/rate_tracker.h"
+#include "rtc_base/system/rtc_export.h"
 #include "rtc_base/weak_ptr.h"
 
 namespace cricket {
@@ -56,7 +57,7 @@ struct CandidatePair final : public CandidatePairInterface {
 
 // Represents a communication link between a port on the local client and a
 // port on the remote client.
-class Connection : public CandidatePairInterface {
+class RTC_EXPORT Connection : public CandidatePairInterface {
  public:
   struct SentPing {
     SentPing(absl::string_view id, int64_t sent_time, uint32_t nomination)
