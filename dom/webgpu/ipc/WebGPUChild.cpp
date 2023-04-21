@@ -750,6 +750,16 @@ MOZ_CAN_RUN_SCRIPT void reportCompilationMessagesToConsole(
             }
           };
 
+  nsString label;
+  shaderModule->GetLabel(label);
+  auto appendNiceLabelIfPresent = [&label](nsString* buf) MOZ_CAN_RUN_SCRIPT {
+    if (!label.IsEmpty()) {
+      buf->AppendLiteral(u" \"");
+      buf->Append(label);
+      buf->AppendLiteral(u"\"");
+    }
+  };
+
   // We haven't actually inspected a message for severity, but
   // it doesn't actually matter, since we don't do anything at
   // this level.
@@ -785,6 +795,7 @@ MOZ_CAN_RUN_SCRIPT void reportCompilationMessagesToConsole(
     case WebGPUCompilationMessageType::Warning: {
       nsString msg(
           u"Encountered one or more warnings while creating shader module");
+      appendNiceLabelIfPresent(&msg);
       SetSingleStrAsArgs(msg, &args);
       console->Warn(globalObj, args);
       break;
@@ -792,13 +803,17 @@ MOZ_CAN_RUN_SCRIPT void reportCompilationMessagesToConsole(
     case WebGPUCompilationMessageType::Error: {
       nsString msg(
           u"Encountered one or more errors while creating shader module");
+      appendNiceLabelIfPresent(&msg);
       SetSingleStrAsArgs(msg, &args);
       console->Error(globalObj, args);
       break;
     }
   }
 
-  nsString header(u"WebGPU compilation info for shader module (");
+  nsString header;
+  header.AppendLiteral(u"WebGPU compilation info for shader module");
+  appendNiceLabelIfPresent(&header);
+  header.AppendLiteral(u" (");
   header.AppendInt(errorCount);
   header.AppendLiteral(u" error(s), ");
   header.AppendInt(warningCount);
