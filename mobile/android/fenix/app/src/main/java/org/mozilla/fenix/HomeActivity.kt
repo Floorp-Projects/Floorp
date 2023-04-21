@@ -118,7 +118,6 @@ import org.mozilla.fenix.messaging.FenixMessageSurfaceId
 import org.mozilla.fenix.messaging.FenixNimbusMessagingController
 import org.mozilla.fenix.messaging.MessageNotificationWorker
 import org.mozilla.fenix.nimbus.FxNimbus
-import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.onboarding.ReEngagementNotificationWorker
 import org.mozilla.fenix.onboarding.ensureMarketingChannelExists
 import org.mozilla.fenix.perf.MarkersActivityLifecycleCallbacks
@@ -193,8 +192,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     private val navHost by lazy {
         supportFragmentManager.findFragmentById(R.id.container) as NavHostFragment
     }
-
-    private val onboarding by lazy { FenixOnboarding(applicationContext) }
 
     private val externalSourceIntentProcessors by lazy {
         listOf(
@@ -272,7 +269,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         }
 
         if (settings().shouldShowJunoOnboarding(
-                hasUserBeenOnboarded = onboarding.userHasBeenOnboarded(),
+                hasUserBeenOnboarded = components.fenixOnboarding.userHasBeenOnboarded(),
                 isLauncherIntent = intent.toSafeIntent().isLauncherIntent,
             )
         ) {
@@ -296,7 +293,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                 StartOnHome.enterHomeScreen.record(NoExtras())
             }
 
-            if (settings().showHomeOnboardingDialog && onboarding.userHasBeenOnboarded()) {
+            if (settings().showHomeOnboardingDialog && components.fenixOnboarding.userHasBeenOnboarded()) {
                 navHost.navController.navigate(NavGraphDirections.actionGlobalHomeOnboardingDialog())
             }
             showNotificationPermissionPromptIfRequired()

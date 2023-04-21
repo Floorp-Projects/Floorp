@@ -33,7 +33,7 @@ import org.mozilla.fenix.helpers.HomeActivityTestRule
  *
  * Say no to main thread IO! 🙅
  */
-private const val EXPECTED_SUPPRESSION_COUNT = 19
+private const val EXPECTED_SUPPRESSION_COUNT = 17
 
 /**
  * The number of times we call the `runBlocking` coroutine method on the main thread during this

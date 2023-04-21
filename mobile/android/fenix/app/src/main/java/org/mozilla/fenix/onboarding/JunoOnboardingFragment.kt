@@ -37,7 +37,6 @@ import org.mozilla.fenix.theme.FirefoxTheme
  */
 class JunoOnboardingFragment : Fragment() {
 
-    private val fenixOnboarding by lazy { FenixOnboarding(requireContext()) }
     private val onboardingPageTypeList by lazy { onboardingPageTypeList(requireContext()) }
     private val telemetryRecorder by lazy { JunoOnboardingTelemetryRecorder() }
 
@@ -148,7 +147,7 @@ class JunoOnboardingFragment : Fragment() {
     }
 
     private fun onFinish(sequenceId: String, pageType: JunoOnboardingPageType) {
-        fenixOnboarding.finish()
+        requireComponents.fenixOnboarding.finish()
         findNavController().nav(
             id = R.id.junoOnboardingFragment,
             directions = JunoOnboardingFragmentDirections.actionOnboardingHome(),

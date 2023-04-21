@@ -85,7 +85,7 @@ class BrowserFragmentTest {
         every { browserFragment.browserToolbarView } returns mockk(relaxed = true)
         every { browserFragment.activity } returns homeActivity
         every { browserFragment.lifecycle } returns lifecycleOwner.lifecycle
-        every { browserFragment.onboarding } returns onboarding
+        every { context.components.fenixOnboarding } returns onboarding
 
         every { browserFragment.requireContext() } returns context
         every { browserFragment.initializeUI(any(), any()) } returns mockk()
