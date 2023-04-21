@@ -1429,8 +1429,7 @@ bool WebRtcVideoChannel::RemoveSendStream(uint32_t ssrc) {
   RTC_LOG(LS_INFO) << "RemoveSendStream: " << ssrc;
 
   WebRtcVideoSendStream* removed_stream;
-  std::map<uint32_t, WebRtcVideoSendStream*>::iterator it =
-      send_streams_.find(ssrc);
+  auto it = send_streams_.find(ssrc);
   if (it == send_streams_.end()) {
     return false;
   }
@@ -1575,8 +1574,7 @@ bool WebRtcVideoChannel::RemoveRecvStream(uint32_t ssrc) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   RTC_LOG(LS_INFO) << "RemoveRecvStream: " << ssrc;
 
-  std::map<uint32_t, WebRtcVideoReceiveStream*>::iterator stream =
-      receive_streams_.find(ssrc);
+  auto stream = receive_streams_.find(ssrc);
   if (stream == receive_streams_.end()) {
     RTC_LOG(LS_ERROR) << "Stream not found for ssrc: " << ssrc;
     return false;
@@ -1637,8 +1635,7 @@ bool WebRtcVideoChannel::SetSink(
   RTC_LOG(LS_INFO) << "SetSink: ssrc:" << ssrc << " "
                    << (sink ? "(ptr)" : "nullptr");
 
-  std::map<uint32_t, WebRtcVideoReceiveStream*>::iterator it =
-      receive_streams_.find(ssrc);
+  auto it = receive_streams_.find(ssrc);
   if (it == receive_streams_.end()) {
     return false;
   }
@@ -1717,14 +1714,12 @@ bool WebRtcVideoChannel::GetReceiveStats(VideoMediaReceiveInfo* info) {
 
 void WebRtcVideoChannel::FillSenderStats(VideoMediaSendInfo* video_media_info,
                                          bool log_stats) {
-  for (std::map<uint32_t, WebRtcVideoSendStream*>::iterator it =
-           send_streams_.begin();
-       it != send_streams_.end(); ++it) {
-    auto infos = it->second->GetPerLayerVideoSenderInfos(log_stats);
+  for (const auto& it : send_streams_) {
+    auto infos = it.second->GetPerLayerVideoSenderInfos(log_stats);
     if (infos.empty())
       continue;
     video_media_info->aggregated_senders.push_back(
-        it->second->GetAggregatedVideoSenderInfo(infos));
+        it.second->GetAggregatedVideoSenderInfo(infos));
     for (auto&& info : infos) {
       video_media_info->senders.push_back(info);
     }
@@ -1734,20 +1729,16 @@ void WebRtcVideoChannel::FillSenderStats(VideoMediaSendInfo* video_media_info,
 void WebRtcVideoChannel::FillReceiverStats(
     VideoMediaReceiveInfo* video_media_info,
     bool log_stats) {
-  for (std::map<uint32_t, WebRtcVideoReceiveStream*>::iterator it =
-           receive_streams_.begin();
-       it != receive_streams_.end(); ++it) {
+  for (const auto& it : receive_streams_) {
     video_media_info->receivers.push_back(
-        it->second->GetVideoReceiverInfo(log_stats));
+        it.second->GetVideoReceiverInfo(log_stats));
   }
 }
 
 void WebRtcVideoChannel::FillBitrateInfo(BandwidthEstimationInfo* bwe_info) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
-  for (std::map<uint32_t, WebRtcVideoSendStream*>::iterator stream =
-           send_streams_.begin();
-       stream != send_streams_.end(); ++stream) {
-    stream->second->FillBitrateInfo(bwe_info);
+  for (const auto& it : send_streams_) {
+    it.second->FillBitrateInfo(bwe_info);
   }
 }
 
@@ -2820,11 +2811,9 @@ void WebRtcVideoChannel::WebRtcVideoSendStream::FillBitrateInfo(
     return;
   }
   webrtc::VideoSendStream::Stats stats = stream_->GetStats();
-  for (std::map<uint32_t, webrtc::VideoSendStream::StreamStats>::iterator it =
-           stats.substreams.begin();
-       it != stats.substreams.end(); ++it) {
-    bwe_info->transmit_bitrate += it->second.total_bitrate_bps;
-    bwe_info->retransmit_bitrate += it->second.retransmit_bitrate_bps;
+  for (const auto& it : stats.substreams) {
+    bwe_info->transmit_bitrate += it.second.total_bitrate_bps;
+    bwe_info->retransmit_bitrate += it.second.retransmit_bitrate_bps;
   }
   bwe_info->target_enc_bitrate += stats.target_media_bitrate_bps;
   bwe_info->actual_enc_bitrate += stats.media_bitrate_bps;
