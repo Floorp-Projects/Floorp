@@ -5,29 +5,29 @@ Subject: Bug 1654112 - Tweak upstream gn files for Firefox build. r=ng
 Differential Revision: https://phabricator.services.mozilla.com/D130075
 Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/127ace4d8887f11abb201d300a849772a2b519f8
 ---
- .gn                                           |  2 +
- BUILD.gn                                      | 26 +++++++-
- api/BUILD.gn                                  |  8 ++-
- api/task_queue/BUILD.gn                       |  2 +
- api/transport/BUILD.gn                        |  2 +
- common_audio/BUILD.gn                         |  4 --
- common_audio/fir_filter_avx2.cc               |  2 +
- common_audio/intrin.h                         |  8 +++
- media/BUILD.gn                                | 30 +++++++++
+ .gn                                           |  2 ++
+ BUILD.gn                                      | 26 +++++++++++++-
+ api/BUILD.gn                                  |  8 ++++-
+ api/task_queue/BUILD.gn                       |  2 ++
+ api/transport/BUILD.gn                        |  2 ++
+ common_audio/BUILD.gn                         |  4 ---
+ common_audio/fir_filter_avx2.cc               |  2 ++
+ common_audio/intrin.h                         |  8 +++++
+ media/BUILD.gn                                | 30 ++++++++++++++++
  modules/audio_coding/BUILD.gn                 |  2 +-
- modules/audio_device/BUILD.gn                 |  8 +--
- modules/audio_processing/aec3/BUILD.gn        | 13 ++--
+ modules/audio_device/BUILD.gn                 |  8 ++---
+ modules/audio_processing/aec3/BUILD.gn        | 13 +++----
  .../aec3/adaptive_fir_filter_avx2.cc          |  3 +-
  .../audio_processing/agc2/rnn_vad/BUILD.gn    |  2 +-
- modules/desktop_capture/BUILD.gn              | 29 +--------
- modules/portal/BUILD.gn                       | 24 +++++++
- modules/video_capture/BUILD.gn                | 11 +---
- modules/video_coding/BUILD.gn                 |  6 ++
- rtc_base/BUILD.gn                             | 62 ++++++++++++++++++-
+ modules/desktop_capture/BUILD.gn              | 29 +---------------
+ modules/portal/BUILD.gn                       | 24 +++++++++++++
+ modules/video_capture/BUILD.gn                | 11 +-----
+ modules/video_coding/BUILD.gn                 |  6 ++++
+ rtc_base/BUILD.gn                             |  4 ++-
  rtc_base/system/BUILD.gn                      |  2 +-
- test/BUILD.gn                                 | 14 +++++
- webrtc.gni                                    | 34 ++++++----
- 22 files changed, 220 insertions(+), 74 deletions(-)
+ test/BUILD.gn                                 | 14 ++++++++
+ webrtc.gni                                    | 34 ++++++++++++-------
+ 22 files changed, 162 insertions(+), 74 deletions(-)
  create mode 100644 common_audio/intrin.h
 
 diff --git a/.gn b/.gn
@@ -549,7 +549,7 @@ index fe63804b19..e1b5e4ba84 100644
    deps = [
      ":codec_globals_headers",
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 7d236bc12c..9301622177 100644
+index 0d8bd4f759..7e162cecbb 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -820,7 +820,9 @@ rtc_library("rtc_json") {
@@ -562,83 +562,7 @@ index 7d236bc12c..9301622177 100644
    if (rtc_build_json) {
      deps += [ "//third_party/jsoncpp" ]
    } else {
-@@ -1208,6 +1210,62 @@ rtc_library("rtc_base") {
-     "stream.h",
-     "unique_id_generator.h",
-   ]
-+  if (build_with_mozilla) {
-+    sources -= [
-+      "async_packet_socket.cc",
-+      "async_packet_socket.h",
-+      "async_tcp_socket.cc",
-+      "async_tcp_socket.h",
-+      "async_udp_socket.cc",
-+      "async_udp_socket.h",
-+      "helpers.cc",
-+      "helpers.h",
-+      "http_common.cc",
-+      "http_common.h",
-+      "mdns_responder_interface.h",
-+      "message_digest.cc",
-+      "message_digest.h",
-+      "net_helper.cc",
-+      "net_helper.h",
-+      "network.cc",
-+      "network.h",
-+      "openssl.h",
-+      "openssl_adapter.cc",
-+      "openssl_adapter.h",
-+      "openssl_digest.cc",
-+      "openssl_digest.h",
-+      "openssl_key_pair.cc",
-+      "openssl_key_pair.h",
-+      "openssl_session_cache.cc",
-+      "openssl_session_cache.h",
-+      "openssl_stream_adapter.cc",
-+      "openssl_stream_adapter.h",
-+      "openssl_utility.cc",
-+      "openssl_utility.h",
-+      "proxy_info.cc",
-+      "proxy_info.h",
-+      "rtc_certificate.cc",
-+      "rtc_certificate.h",
-+      "rtc_certificate_generator.cc",
-+      "rtc_certificate_generator.h",
-+      "socket_adapters.cc",
-+      "socket_adapters.h",
-+      "socket_address_pair.cc",
-+      "socket_address_pair.h",
-+      "ssl_adapter.cc",
-+      "ssl_adapter.h",
-+      "ssl_certificate.cc",
-+      "ssl_certificate.h",
-+      "ssl_fingerprint.cc",
-+      "ssl_fingerprint.h",
-+      "ssl_identity.cc",
-+      "ssl_identity.h",
-+      "ssl_stream_adapter.cc",
-+      "ssl_stream_adapter.h",
-+      "unique_id_generator.cc",
-+      "unique_id_generator.h",
-+    ]
-+  }
- 
-   # If we are building the SSL library ourselves, we know it's BoringSSL.
-   if (rtc_build_ssl) {
-@@ -1216,10 +1274,12 @@ rtc_library("rtc_base") {
-       "boringssl_identity.h",
-     ]
-   } else {
-+    if (!build_with_mozilla) {
-     sources += [
-       "openssl_certificate.h",
-       "openssl_identity.h",
-     ]
-+    }
-   }
- 
-   if (build_with_chromium) {
-@@ -2269,7 +2329,7 @@ if (rtc_include_tests) {
+@@ -2073,7 +2075,7 @@ if (rtc_include_tests) {
    }
  }
  
