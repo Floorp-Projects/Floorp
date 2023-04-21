@@ -181,7 +181,7 @@
       'linux_compile_x86_rel': 'pure_release_bot_x86',
       'linux_coverage': 'code_coverage_bot_x64',
       'linux_dbg': 'debug_bot_x64',
-      'linux_libfuzzer_rel': 'libfuzzer_asan_release_bot_x64',
+      'linux_libfuzzer_rel': 'libfuzzer_asan_release_bot_x64_reclient',
       'linux_more_configs': {
         'bwe_test_logging': 'bwe_test_logging_x64',
         'dummy_audio_file_devices_no_protobuf':
@@ -291,10 +291,6 @@
     'ios_release_bot_arm64_reclient': [
       'ios', 'release_bot', 'arm64', 'no_ios_code_signing', 'xctest',
       'no_goma', 'reclient',
-    ],
-    'libfuzzer_asan_release_bot_x64': [
-      'libfuzzer', 'asan', 'optimize_for_fuzzing', 'openh264',
-      'pure_release_bot', 'x64'
     ],
     'libfuzzer_asan_release_bot_x64_reclient': [
       'libfuzzer', 'asan', 'optimize_for_fuzzing', 'openh264',
