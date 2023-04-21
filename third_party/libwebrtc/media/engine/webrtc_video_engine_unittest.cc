@@ -55,6 +55,7 @@
 #include "media/engine/webrtc_voice_engine.h"
 #include "modules/rtp_rtcp/source/rtp_packet.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
+#include "modules/video_coding/svc/scalability_mode_util.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/event.h"
 #include "rtc_base/experiments/min_video_bitrate_experiment.h"
@@ -85,9 +86,11 @@ using ::testing::SizeIs;
 using ::testing::StrNe;
 using ::testing::Values;
 using ::webrtc::BitrateConstraints;
+using ::webrtc::kDefaultScalabilityModeStr;
 using ::webrtc::RtpExtension;
 using ::webrtc::RtpPacket;
 using ::webrtc::RtpPacketReceived;
+using ::webrtc::ScalabilityMode;
 
 namespace {
 static const int kDefaultQpMax = 56;
@@ -109,6 +112,7 @@ static const uint32_t kIncomingUnsignalledSsrc = 0xC0FFEE;
 static const int64_t kUnsignalledReceiveStreamCooldownMs = 500;
 
 constexpr uint32_t kRtpHeaderSize = 12;
+constexpr size_t kNumSimulcastStreams = 3;
 
 static const char kUnsupportedExtensionName[] =
     "urn:ietf:params:rtp-hdrext:unsupported";
@@ -2739,7 +2743,7 @@ class WebRtcVideoChannelTest : public WebRtcVideoEngineTest {
     last_ssrc_ += 3;
     std::vector<uint32_t> ssrcs;
     std::vector<uint32_t> rtx_ssrcs;
-    uint32_t num_streams = enabled ? 3 : 1;
+    uint32_t num_streams = enabled ? kNumSimulcastStreams : 1;
     for (uint32_t i = 0; i < num_streams; ++i) {
       uint32_t ssrc = last_ssrc_ + i;
       ssrcs.push_back(ssrc);
@@ -3421,7 +3425,7 @@ TEST_F(WebRtcVideoChannelTest, VerifyVp8SpecificSettings) {
   // Single-stream settings should apply with RTX as well (verifies that we
   // check number of regular SSRCs and not StreamParams::ssrcs which contains
   // both RTX and regular SSRCs).
-  FakeVideoSendStream* stream = SetUpSimulcast(false, true);
+  FakeVideoSendStream* stream = SetUpSimulcast(false, /*with_rtx=*/true);
 
   webrtc::test::FrameForwarder frame_forwarder;
   EXPECT_TRUE(channel_->SetVideoSend(last_ssrc_, nullptr, &frame_forwarder));
@@ -3449,7 +3453,7 @@ TEST_F(WebRtcVideoChannelTest, VerifyVp8SpecificSettings) {
   EXPECT_TRUE(stream->GetEncoderConfig().frame_drop_enabled);
 
   EXPECT_TRUE(channel_->SetVideoSend(last_ssrc_, nullptr, nullptr));
-  stream = SetUpSimulcast(true, false);
+  stream = SetUpSimulcast(true, /*with_rtx=*/false);
   EXPECT_TRUE(channel_->SetVideoSend(last_ssrc_, nullptr, &frame_forwarder));
   channel_->SetSend(true);
   frame_forwarder.IncomingCapturedFrame(frame_source_.GetFrame());
@@ -3532,11 +3536,15 @@ class Vp9SettingsTest : public WebRtcVideoChannelTest {
 };
 
 TEST_F(Vp9SettingsTest, VerifyVp9SpecificSettings) {
+  encoder_factory_->AddSupportedVideoCodec(
+      webrtc::SdpVideoFormat("VP9", webrtc::SdpVideoFormat::Parameters(),
+                             {ScalabilityMode::kL1T1, ScalabilityMode::kL2T1}));
+
   cricket::VideoSendParameters parameters;
   parameters.codecs.push_back(GetEngineCodec("VP9"));
   ASSERT_TRUE(channel_->SetSendParameters(parameters));
 
-  FakeVideoSendStream* stream = SetUpSimulcast(false, false);
+  FakeVideoSendStream* stream = SetUpSimulcast(false, /*with_rtx=*/false);
 
   webrtc::test::FrameForwarder frame_forwarder;
   EXPECT_TRUE(channel_->SetVideoSend(last_ssrc_, nullptr, &frame_forwarder));
@@ -3589,6 +3597,10 @@ TEST_F(Vp9SettingsTest, VerifyVp9SpecificSettings) {
   rtp_parameters.encodings[0].scalability_mode = "L1T1";
   EXPECT_TRUE(
       send_channel_->SetRtpSendParameters(last_ssrc_, rtp_parameters).ok());
+  rtp_parameters = send_channel_->GetRtpSendParameters(last_ssrc_);
+  EXPECT_THAT(rtp_parameters.encodings,
+              ElementsAre(Field(
+                  &webrtc::RtpEncodingParameters::scalability_mode, "L1T1")));
 
   ASSERT_TRUE(stream->GetVp9Settings(&vp9_settings)) << "No VP9 config set.";
   EXPECT_TRUE(vp9_settings.denoisingOn);
@@ -3816,7 +3828,7 @@ class Vp9SettingsTestWithFieldTrial
     parameters.codecs.push_back(GetEngineCodec("VP9"));
     ASSERT_TRUE(channel_->SetSendParameters(parameters));
 
-    FakeVideoSendStream* stream = SetUpSimulcast(false, false);
+    FakeVideoSendStream* stream = SetUpSimulcast(false, /*with_rtx=*/false);
 
     webrtc::test::FrameForwarder frame_forwarder;
     EXPECT_TRUE(channel_->SetVideoSend(last_ssrc_, nullptr, &frame_forwarder));
@@ -7686,7 +7698,7 @@ TEST_F(WebRtcVideoChannelTest,
   VideoSendParameters parameters;
   parameters.codecs.push_back(VideoCodec(kVp8CodecName));
   ASSERT_TRUE(channel_->SetSendParameters(parameters));
-  FakeVideoSendStream* stream = SetUpSimulcast(true, false);
+  FakeVideoSendStream* stream = SetUpSimulcast(true, /*with_rtx=*/false);
 
   webrtc::test::FrameForwarder frame_forwarder;
   FakeFrameSource frame_source(1280, 720, rtc::kNumMicrosecsPerSec / 30);
@@ -7803,7 +7815,7 @@ TEST_F(WebRtcVideoChannelTest,
   VideoSendParameters parameters;
   parameters.codecs.push_back(VideoCodec(kVp8CodecName));
   ASSERT_TRUE(channel_->SetSendParameters(parameters));
-  FakeVideoSendStream* stream = SetUpSimulcast(true, false);
+  FakeVideoSendStream* stream = SetUpSimulcast(true, /*with_rtx=*/false);
   webrtc::test::FrameForwarder frame_forwarder;
   EXPECT_TRUE(channel_->SetVideoSend(last_ssrc_, /*options=*/nullptr,
                                      &frame_forwarder));
@@ -7846,7 +7858,7 @@ TEST_F(WebRtcVideoChannelTest,
   VideoSendParameters parameters;
   parameters.codecs.push_back(VideoCodec(kH264CodecName));
   ASSERT_TRUE(channel_->SetSendParameters(parameters));
-  FakeVideoSendStream* stream = SetUpSimulcast(true, false);
+  FakeVideoSendStream* stream = SetUpSimulcast(true, /*with_rtx=*/false);
 
   webrtc::test::FrameForwarder frame_forwarder;
   FakeFrameSource frame_source(1280, 720, rtc::kNumMicrosecsPerSec / 30);
@@ -7963,7 +7975,7 @@ TEST_F(WebRtcVideoChannelTest,
   VideoSendParameters parameters;
   parameters.codecs.push_back(VideoCodec(kH264CodecName));
   ASSERT_TRUE(channel_->SetSendParameters(parameters));
-  FakeVideoSendStream* stream = SetUpSimulcast(true, false);
+  FakeVideoSendStream* stream = SetUpSimulcast(true, /*with_rtx=*/false);
   webrtc::test::FrameForwarder frame_forwarder;
   EXPECT_TRUE(channel_->SetVideoSend(last_ssrc_, /*options=*/nullptr,
                                      &frame_forwarder));
@@ -8001,8 +8013,7 @@ TEST_F(WebRtcVideoChannelTest,
 }
 
 TEST_F(WebRtcVideoChannelTest, GetAndSetRtpSendParametersMaxFramerate) {
-  const size_t kNumSimulcastStreams = 3;
-  SetUpSimulcast(true, false);
+  SetUpSimulcast(true, /*with_rtx=*/false);
 
   // Get and set the rtp encoding parameters.
   webrtc::RtpParameters parameters =
@@ -8028,8 +8039,7 @@ TEST_F(WebRtcVideoChannelTest, GetAndSetRtpSendParametersMaxFramerate) {
 
 TEST_F(WebRtcVideoChannelTest,
        SetRtpSendParametersNumTemporalLayersFailsForInvalidRange) {
-  const size_t kNumSimulcastStreams = 3;
-  SetUpSimulcast(true, false);
+  SetUpSimulcast(true, /*with_rtx=*/false);
 
   // Get and set the rtp encoding parameters.
   webrtc::RtpParameters parameters =
@@ -8046,8 +8056,7 @@ TEST_F(WebRtcVideoChannelTest,
 }
 
 TEST_F(WebRtcVideoChannelTest, GetAndSetRtpSendParametersNumTemporalLayers) {
-  const size_t kNumSimulcastStreams = 3;
-  SetUpSimulcast(true, false);
+  SetUpSimulcast(true, /*with_rtx=*/false);
 
   // Get and set the rtp encoding parameters.
   webrtc::RtpParameters parameters =
@@ -8071,8 +8080,7 @@ TEST_F(WebRtcVideoChannelTest, GetAndSetRtpSendParametersNumTemporalLayers) {
 }
 
 TEST_F(WebRtcVideoChannelTest, NumTemporalLayersPropagatedToEncoder) {
-  const size_t kNumSimulcastStreams = 3;
-  FakeVideoSendStream* stream = SetUpSimulcast(true, false);
+  FakeVideoSendStream* stream = SetUpSimulcast(true, /*with_rtx=*/false);
 
   // Send a full size frame so all simulcast layers are used when reconfiguring.
   webrtc::test::FrameForwarder frame_forwarder;
@@ -8118,8 +8126,7 @@ TEST_F(WebRtcVideoChannelTest, NumTemporalLayersPropagatedToEncoder) {
 TEST_F(WebRtcVideoChannelTest,
        DefaultValuePropagatedToEncoderForUnsetNumTemporalLayers) {
   const size_t kDefaultNumTemporalLayers = 3;
-  const size_t kNumSimulcastStreams = 3;
-  FakeVideoSendStream* stream = SetUpSimulcast(true, false);
+  FakeVideoSendStream* stream = SetUpSimulcast(true, /*with_rtx=*/false);
 
   // Send a full size frame so all simulcast layers are used when reconfiguring.
   webrtc::test::FrameForwarder frame_forwarder;
@@ -8157,9 +8164,8 @@ TEST_F(WebRtcVideoChannelTest,
 
 TEST_F(WebRtcVideoChannelTest,
        DefaultValuePropagatedToEncoderForUnsetFramerate) {
-  const size_t kNumSimulcastStreams = 3;
   const std::vector<webrtc::VideoStream> kDefault = GetSimulcastBitrates720p();
-  FakeVideoSendStream* stream = SetUpSimulcast(true, false);
+  FakeVideoSendStream* stream = SetUpSimulcast(true, /*with_rtx=*/false);
 
   // Send a full size frame so all simulcast layers are used when reconfiguring.
   webrtc::test::FrameForwarder frame_forwarder;
@@ -8198,9 +8204,172 @@ TEST_F(WebRtcVideoChannelTest,
   EXPECT_TRUE(channel_->SetVideoSend(last_ssrc_, nullptr, nullptr));
 }
 
+TEST_F(WebRtcVideoChannelTest, FallbackForUnsetOrUnsupportedScalabilityMode) {
+  const absl::InlinedVector<ScalabilityMode, webrtc::kScalabilityModeCount>
+      kSupportedModes = {ScalabilityMode::kL1T1, ScalabilityMode::kL1T2,
+                         ScalabilityMode::kL1T3};
+
+  encoder_factory_->AddSupportedVideoCodec(webrtc::SdpVideoFormat(
+      "VP8", webrtc::SdpVideoFormat::Parameters(), kSupportedModes));
+
+  FakeVideoSendStream* stream = SetUpSimulcast(true, /*with_rtx=*/false);
+
+  // Send a full size frame so all simulcast layers are used when reconfiguring.
+  webrtc::test::FrameForwarder frame_forwarder;
+  VideoOptions options;
+  EXPECT_TRUE(channel_->SetVideoSend(last_ssrc_, &options, &frame_forwarder));
+  channel_->SetSend(true);
+  frame_forwarder.IncomingCapturedFrame(frame_source_.GetFrame());
+
+  // Set scalability mode.
+  webrtc::RtpParameters parameters =
+      send_channel_->GetRtpSendParameters(last_ssrc_);
+  EXPECT_EQ(kNumSimulcastStreams, parameters.encodings.size());
+  parameters.encodings[0].scalability_mode = absl::nullopt;
+  parameters.encodings[1].scalability_mode = "L1T3";  // Supported.
+  parameters.encodings[2].scalability_mode = "L3T3";  // Unsupported.
+  EXPECT_TRUE(send_channel_->SetRtpSendParameters(last_ssrc_, parameters).ok());
+
+  // Verify that the new value is propagated down to the encoder.
+  // Check that WebRtcVideoSendStream updates VideoEncoderConfig correctly.
+  const absl::optional<ScalabilityMode> kDefaultScalabilityMode =
+      webrtc::ScalabilityModeFromString(kDefaultScalabilityModeStr);
+  EXPECT_EQ(2, stream->num_encoder_reconfigurations());
+  webrtc::VideoEncoderConfig encoder_config = stream->GetEncoderConfig().Copy();
+  EXPECT_EQ(kNumSimulcastStreams, encoder_config.number_of_streams);
+  EXPECT_THAT(encoder_config.simulcast_layers,
+              ElementsAre(Field(&webrtc::VideoStream::scalability_mode,
+                                kDefaultScalabilityMode),
+                          Field(&webrtc::VideoStream::scalability_mode,
+                                ScalabilityMode::kL1T3),
+                          Field(&webrtc::VideoStream::scalability_mode,
+                                kDefaultScalabilityMode)));
+
+  // FakeVideoSendStream calls CreateEncoderStreams, test that the vector of
+  // VideoStreams are created appropriately for the simulcast case.
+  EXPECT_THAT(stream->GetVideoStreams(),
+              ElementsAre(Field(&webrtc::VideoStream::scalability_mode,
+                                kDefaultScalabilityMode),
+                          Field(&webrtc::VideoStream::scalability_mode,
+                                ScalabilityMode::kL1T3),
+                          Field(&webrtc::VideoStream::scalability_mode,
+                                kDefaultScalabilityMode)));
+
+  // GetParameters.
+  parameters = send_channel_->GetRtpSendParameters(last_ssrc_);
+  EXPECT_THAT(
+      parameters.encodings,
+      ElementsAre(
+          Field(&webrtc::RtpEncodingParameters::scalability_mode,
+                kDefaultScalabilityModeStr),
+          Field(&webrtc::RtpEncodingParameters::scalability_mode, "L1T3"),
+          Field(&webrtc::RtpEncodingParameters::scalability_mode,
+                kDefaultScalabilityModeStr)));
+
+  // No parameters changed, encoder should not be reconfigured.
+  EXPECT_TRUE(send_channel_->SetRtpSendParameters(last_ssrc_, parameters).ok());
+  EXPECT_EQ(2, stream->num_encoder_reconfigurations());
+
+  EXPECT_TRUE(channel_->SetVideoSend(last_ssrc_, nullptr, nullptr));
+}
+
+TEST_F(WebRtcVideoChannelTest,
+       DefaultValueUsedIfScalabilityModeIsUnsupportedByCodec) {
+  const absl::InlinedVector<ScalabilityMode, webrtc::kScalabilityModeCount>
+      kVp9SupportedModes = {ScalabilityMode::kL3T3};
+
+  encoder_factory_->AddSupportedVideoCodec(webrtc::SdpVideoFormat(
+      "VP8", webrtc::SdpVideoFormat::Parameters(), {ScalabilityMode::kL1T1}));
+  encoder_factory_->AddSupportedVideoCodec(webrtc::SdpVideoFormat(
+      "VP9", webrtc::SdpVideoFormat::Parameters(), {ScalabilityMode::kL3T3}));
+
+  cricket::VideoSendParameters send_parameters;
+  send_parameters.codecs.push_back(GetEngineCodec("VP9"));
+  EXPECT_TRUE(channel_->SetSendParameters(send_parameters));
+
+  FakeVideoSendStream* stream = SetUpSimulcast(true, /*with_rtx=*/false);
+
+  // Send a full size frame so all simulcast layers are used when reconfiguring.
+  webrtc::test::FrameForwarder frame_forwarder;
+  VideoOptions options;
+  EXPECT_TRUE(channel_->SetVideoSend(last_ssrc_, &options, &frame_forwarder));
+  channel_->SetSend(true);
+  frame_forwarder.IncomingCapturedFrame(frame_source_.GetFrame());
+
+  // Set scalability mode.
+  webrtc::RtpParameters parameters =
+      send_channel_->GetRtpSendParameters(last_ssrc_);
+  EXPECT_EQ(kNumSimulcastStreams, parameters.encodings.size());
+  parameters.encodings[0].scalability_mode = "L3T3";
+  EXPECT_TRUE(send_channel_->SetRtpSendParameters(last_ssrc_, parameters).ok());
+
+  // Verify that the new value is propagated down to the encoder.
+  // Check that WebRtcVideoSendStream updates VideoEncoderConfig correctly.
+  const absl::optional<ScalabilityMode> kDefaultScalabilityMode =
+      webrtc::ScalabilityModeFromString(kDefaultScalabilityModeStr);
+  EXPECT_EQ(2, stream->num_encoder_reconfigurations());
+  webrtc::VideoEncoderConfig encoder_config = stream->GetEncoderConfig().Copy();
+  EXPECT_EQ(1u, encoder_config.number_of_streams);
+  EXPECT_THAT(encoder_config.simulcast_layers,
+              ElementsAre(Field(&webrtc::VideoStream::scalability_mode,
+                                ScalabilityMode::kL3T3),
+                          Field(&webrtc::VideoStream::scalability_mode,
+                                kDefaultScalabilityMode),
+                          Field(&webrtc::VideoStream::scalability_mode,
+                                kDefaultScalabilityMode)));
+
+  // FakeVideoSendStream calls CreateEncoderStreams, test that the vector of
+  // VideoStreams are created appropriately for the simulcast case.
+  EXPECT_THAT(stream->GetVideoStreams(),
+              ElementsAre(Field(&webrtc::VideoStream::scalability_mode,
+                                ScalabilityMode::kL3T3)));
+
+  // GetParameters.
+  parameters = send_channel_->GetRtpSendParameters(last_ssrc_);
+  EXPECT_THAT(
+      parameters.encodings,
+      ElementsAre(
+          Field(&webrtc::RtpEncodingParameters::scalability_mode, "L3T3"),
+          Field(&webrtc::RtpEncodingParameters::scalability_mode,
+                kDefaultScalabilityModeStr),
+          Field(&webrtc::RtpEncodingParameters::scalability_mode,
+                kDefaultScalabilityModeStr)));
+
+  // Change codec to VP8.
+  cricket::VideoSendParameters vp8_parameters;
+  vp8_parameters.codecs.push_back(GetEngineCodec("VP8"));
+  EXPECT_TRUE(channel_->SetSendParameters(vp8_parameters));
+  frame_forwarder.IncomingCapturedFrame(frame_source_.GetFrame());
+
+  // The stream should be recreated due to codec change.
+  std::vector<FakeVideoSendStream*> new_streams = GetFakeSendStreams();
+  EXPECT_EQ(1u, new_streams.size());
+  EXPECT_EQ(2, fake_call_->GetNumCreatedSendStreams());
+
+  // Verify fallback to default value triggered (L3T3 is not supported).
+  EXPECT_THAT(new_streams[0]->GetVideoStreams(),
+              ElementsAre(Field(&webrtc::VideoStream::scalability_mode,
+                                kDefaultScalabilityMode),
+                          Field(&webrtc::VideoStream::scalability_mode,
+                                kDefaultScalabilityMode),
+                          Field(&webrtc::VideoStream::scalability_mode,
+                                kDefaultScalabilityMode)));
+
+  parameters = send_channel_->GetRtpSendParameters(last_ssrc_);
+  EXPECT_THAT(
+      parameters.encodings,
+      ElementsAre(Field(&webrtc::RtpEncodingParameters::scalability_mode,
+                        kDefaultScalabilityModeStr),
+                  Field(&webrtc::RtpEncodingParameters::scalability_mode,
+                        kDefaultScalabilityModeStr),
+                  Field(&webrtc::RtpEncodingParameters::scalability_mode,
+                        kDefaultScalabilityModeStr)));
+
+  EXPECT_TRUE(channel_->SetVideoSend(last_ssrc_, nullptr, nullptr));
+}
+
 TEST_F(WebRtcVideoChannelTest, GetAndSetRtpSendParametersMinAndMaxBitrate) {
-  const size_t kNumSimulcastStreams = 3;
-  SetUpSimulcast(true, false);
+  SetUpSimulcast(true, /*with_rtx=*/false);
 
   // Get and set the rtp encoding parameters.
   webrtc::RtpParameters parameters =
@@ -8232,8 +8401,7 @@ TEST_F(WebRtcVideoChannelTest, GetAndSetRtpSendParametersMinAndMaxBitrate) {
 }
 
 TEST_F(WebRtcVideoChannelTest, SetRtpSendParametersFailsWithIncorrectBitrate) {
-  const size_t kNumSimulcastStreams = 3;
-  SetUpSimulcast(true, false);
+  SetUpSimulcast(true, /*with_rtx=*/false);
 
   // Get and set the rtp encoding parameters.
   webrtc::RtpParameters parameters =
@@ -8252,8 +8420,7 @@ TEST_F(WebRtcVideoChannelTest, SetRtpSendParametersFailsWithIncorrectBitrate) {
 // the maximum (3/4 was chosen because it's similar to the simulcast defaults
 // that are used if no min/max are specified).
 TEST_F(WebRtcVideoChannelTest, MinAndMaxSimulcastBitratePropagatedToEncoder) {
-  const size_t kNumSimulcastStreams = 3;
-  FakeVideoSendStream* stream = SetUpSimulcast(true, false);
+  FakeVideoSendStream* stream = SetUpSimulcast(true, /*with_rtx=*/false);
 
   // Send a full size frame so all simulcast layers are used when reconfiguring.
   webrtc::test::FrameForwarder frame_forwarder;
@@ -8315,9 +8482,8 @@ TEST_F(WebRtcVideoChannelTest, MinAndMaxSimulcastBitratePropagatedToEncoder) {
 // RtpParameters. The unspecified min/max and target value should be set to the
 // simulcast default that is used if no min/max are specified.
 TEST_F(WebRtcVideoChannelTest, MinOrMaxSimulcastBitratePropagatedToEncoder) {
-  const size_t kNumSimulcastStreams = 3;
   const std::vector<webrtc::VideoStream> kDefault = GetSimulcastBitrates720p();
-  FakeVideoSendStream* stream = SetUpSimulcast(true, false);
+  FakeVideoSendStream* stream = SetUpSimulcast(true, /*with_rtx=*/false);
 
   // Send a full size frame so all simulcast layers are used when reconfiguring.
   webrtc::test::FrameForwarder frame_forwarder;
@@ -8385,9 +8551,8 @@ TEST_F(WebRtcVideoChannelTest, MinOrMaxSimulcastBitratePropagatedToEncoder) {
 // RtpParameters above (or below) the simulcast default max (or min) adjusts the
 // unspecified values accordingly.
 TEST_F(WebRtcVideoChannelTest, SetMinAndMaxSimulcastBitrateAboveBelowDefault) {
-  const size_t kNumSimulcastStreams = 3;
   const std::vector<webrtc::VideoStream> kDefault = GetSimulcastBitrates720p();
-  FakeVideoSendStream* stream = SetUpSimulcast(true, false);
+  FakeVideoSendStream* stream = SetUpSimulcast(true, /*with_rtx=*/false);
 
   // Send a full size frame so all simulcast layers are used when reconfiguring.
   webrtc::test::FrameForwarder frame_forwarder;
@@ -8434,9 +8599,8 @@ TEST_F(WebRtcVideoChannelTest, SetMinAndMaxSimulcastBitrateAboveBelowDefault) {
 }
 
 TEST_F(WebRtcVideoChannelTest, BandwidthAboveTotalMaxBitrateGivenToMaxLayer) {
-  const size_t kNumSimulcastStreams = 3;
   const std::vector<webrtc::VideoStream> kDefault = GetSimulcastBitrates720p();
-  FakeVideoSendStream* stream = SetUpSimulcast(true, false);
+  FakeVideoSendStream* stream = SetUpSimulcast(true, /*with_rtx=*/false);
 
   // Send a full size frame so all simulcast layers are used when reconfiguring.
   webrtc::test::FrameForwarder frame_forwarder;
@@ -8483,10 +8647,9 @@ TEST_F(WebRtcVideoChannelTest, BandwidthAboveTotalMaxBitrateGivenToMaxLayer) {
 
 TEST_F(WebRtcVideoChannelTest,
        BandwidthAboveTotalMaxBitrateNotGivenToMaxLayerIfMaxBitrateSet) {
-  const size_t kNumSimulcastStreams = 3;
   const std::vector<webrtc::VideoStream> kDefault = GetSimulcastBitrates720p();
   EXPECT_EQ(kNumSimulcastStreams, kDefault.size());
-  FakeVideoSendStream* stream = SetUpSimulcast(true, false);
+  FakeVideoSendStream* stream = SetUpSimulcast(true, /*with_rtx=*/false);
 
   // Send a full size frame so all simulcast layers are used when reconfiguring.
   webrtc::test::FrameForwarder frame_forwarder;
@@ -9052,18 +9215,18 @@ TEST_F(WebRtcVideoChannelTest, ConfiguresLocalSsrcOnExistingReceivers) {
 }
 
 TEST_F(WebRtcVideoChannelTest, Simulcast_QualityScalingNotAllowed) {
-  FakeVideoSendStream* stream = SetUpSimulcast(true, true);
+  FakeVideoSendStream* stream = SetUpSimulcast(true, /*with_rtx=*/true);
   EXPECT_FALSE(stream->GetEncoderConfig().is_quality_scaling_allowed);
 }
 
 TEST_F(WebRtcVideoChannelTest, Singlecast_QualityScalingAllowed) {
-  FakeVideoSendStream* stream = SetUpSimulcast(false, true);
+  FakeVideoSendStream* stream = SetUpSimulcast(false, /*with_rtx=*/true);
   EXPECT_TRUE(stream->GetEncoderConfig().is_quality_scaling_allowed);
 }
 
 TEST_F(WebRtcVideoChannelTest,
        SinglecastScreenSharing_QualityScalingNotAllowed) {
-  SetUpSimulcast(false, true);
+  SetUpSimulcast(false, /*with_rtx=*/true);
 
   webrtc::test::FrameForwarder frame_forwarder;
   VideoOptions options;
@@ -9079,7 +9242,7 @@ TEST_F(WebRtcVideoChannelTest,
 
 TEST_F(WebRtcVideoChannelTest,
        SimulcastSingleActiveStream_QualityScalingAllowed) {
-  FakeVideoSendStream* stream = SetUpSimulcast(true, false);
+  FakeVideoSendStream* stream = SetUpSimulcast(true, /*with_rtx=*/false);
 
   webrtc::RtpParameters rtp_parameters =
       send_channel_->GetRtpSendParameters(last_ssrc_);
@@ -9509,7 +9672,7 @@ TEST_F(WebRtcVideoChannelTest, RequestedResolutionSimulcast) {
   parameters.codecs.push_back(GetEngineCodec("VP8"));
   ASSERT_TRUE(channel_->SetSendParameters(parameters));
 
-  FakeVideoSendStream* stream = SetUpSimulcast(true, false);
+  FakeVideoSendStream* stream = SetUpSimulcast(true, /*with_rtx=*/false);
   webrtc::test::FrameForwarder frame_forwarder;
   cricket::FakeFrameSource frame_source(1280, 720,
                                         rtc::kNumMicrosecsPerSec / 30);

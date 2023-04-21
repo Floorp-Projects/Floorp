@@ -440,6 +440,46 @@ bool IsActiveFromEncodings(
   return false;
 }
 
+bool IsScalabilityModeSupportedByCodec(
+    const VideoCodec& codec,
+    const std::string& scalability_mode,
+    const webrtc::VideoSendStream::Config& config) {
+  return config.encoder_settings.encoder_factory
+      ->QueryCodecSupport(webrtc::SdpVideoFormat(codec.name, codec.params),
+                          scalability_mode)
+      .is_supported;
+}
+
+// Fallback to default value if the scalability mode is unset or unsupported by
+// the codec.
+void FallbackToDefaultScalabilityModeIfNotSupported(
+    const VideoCodec& codec,
+    const webrtc::VideoSendStream::Config& config,
+    std::vector<webrtc::RtpEncodingParameters>& encodings) {
+  if (!absl::c_any_of(encodings,
+                      [](const webrtc::RtpEncodingParameters& encoding) {
+                        return encoding.scalability_mode &&
+                               !encoding.scalability_mode->empty();
+                      })) {
+    // Fallback is only enabled if the scalability mode is configured for any of
+    // the encodings for now.
+    return;
+  }
+  if (config.encoder_settings.encoder_factory == nullptr) {
+    return;
+  }
+  for (auto& encoding : encodings) {
+    RTC_LOG(LS_INFO) << "Encoding scalability_mode: "
+                     << encoding.scalability_mode.value_or("-");
+    if (!encoding.scalability_mode.has_value() ||
+        !IsScalabilityModeSupportedByCodec(codec, *encoding.scalability_mode,
+                                           config)) {
+      encoding.scalability_mode = webrtc::kDefaultScalabilityModeStr;
+      RTC_LOG(LS_INFO) << " -> " << *encoding.scalability_mode;
+    }
+  }
+}
+
 }  // namespace
 
 // This constant is really an on/off, lower-level configurable NACK history
@@ -2184,6 +2224,9 @@ WebRtcVideoChannel::WebRtcVideoSendStream::GetSsrcs() const {
 void WebRtcVideoChannel::WebRtcVideoSendStream::SetCodec(
     const VideoCodecSettings& codec_settings) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
+  FallbackToDefaultScalabilityModeIfNotSupported(
+      codec_settings.codec, parameters_.config, rtp_parameters_.encodings);
+
   parameters_.encoder_config = CreateVideoEncoderConfig(codec_settings.codec);
   RTC_DCHECK_GT(parameters_.encoder_config.number_of_streams, 0);
 
@@ -2298,7 +2341,9 @@ webrtc::RTCError WebRtcVideoChannel::WebRtcVideoSendStream::SetRtpParameters(
         (new_parameters.encodings[i].num_temporal_layers !=
          rtp_parameters_.encodings[i].num_temporal_layers) ||
         (new_parameters.encodings[i].requested_resolution !=
-         rtp_parameters_.encodings[i].requested_resolution)) {
+         rtp_parameters_.encodings[i].requested_resolution) ||
+        (new_parameters.encodings[i].scalability_mode !=
+         rtp_parameters_.encodings[i].scalability_mode)) {
       new_param = true;
       break;
     }
@@ -2313,11 +2358,9 @@ webrtc::RTCError WebRtcVideoChannel::WebRtcVideoSendStream::SetRtpParameters(
   // Some fields (e.g. bitrate priority) only need to update the bitrate
   // allocator which is updated via ReconfigureEncoder (however, note that the
   // actual encoder should only be reconfigured if needed).
-  bool reconfigure_encoder = new_param ||
-                             (new_parameters.encodings[0].bitrate_priority !=
-                              rtp_parameters_.encodings[0].bitrate_priority) ||
-                             new_parameters.encodings[0].scalability_mode !=
-                                 rtp_parameters_.encodings[0].scalability_mode;
+  bool reconfigure_encoder =
+      new_param || (new_parameters.encodings[0].bitrate_priority !=
+                    rtp_parameters_.encodings[0].bitrate_priority);
 
   // Note that the simulcast encoder adapter relies on the fact that layers
   // de/activation triggers encoder reinitialization.
@@ -2547,6 +2590,9 @@ void WebRtcVideoChannel::WebRtcVideoSendStream::ReconfigureEncoder(
 
   RTC_CHECK(parameters_.codec_settings);
   VideoCodecSettings codec_settings = *parameters_.codec_settings;
+
+  FallbackToDefaultScalabilityModeIfNotSupported(
+      codec_settings.codec, parameters_.config, rtp_parameters_.encodings);
 
   webrtc::VideoEncoderConfig encoder_config =
       CreateVideoEncoderConfig(codec_settings.codec);
