@@ -29,6 +29,7 @@
 #include "api/stats/rtcstats_objects.h"
 #include "call/call.h"
 #include "media/base/media_channel.h"
+#include "modules/audio_device/include/audio_device.h"
 #include "pc/data_channel_utils.h"
 #include "pc/peer_connection_internal.h"
 #include "pc/rtp_receiver.h"
@@ -204,6 +205,9 @@ class RTCStatsCollector : public rtc::RefCountInterface,
   // Produces `RTCPeerConnectionStats`.
   void ProducePeerConnectionStats_s(Timestamp timestamp,
                                     RTCStatsReport* report) const;
+  // Produces `RTCAudioPlayoutStats`.
+  void ProduceAudioPlayoutStats_s(Timestamp timestamp,
+                                  RTCStatsReport* report) const;
   // Produces `RTCInboundRTPStreamStats`, `RTCOutboundRTPStreamStats`,
   // `RTCRemoteInboundRtpStreamStats`, `RTCRemoteOutboundRtpStreamStats` and any
   // referenced `RTCCodecStats`. This has to be invoked after transport stats
@@ -297,6 +301,8 @@ class RTCStatsCollector : public rtc::RefCountInterface,
       RTC_GUARDED_BY(cached_certificates_mutex_);
 
   Call::Stats call_stats_;
+
+  absl::optional<AudioDeviceModule::Stats> audio_device_stats_;
 
   // A timestamp, in microseconds, that is based on a timer that is
   // monotonically increasing. That is, even if the system clock is modified the

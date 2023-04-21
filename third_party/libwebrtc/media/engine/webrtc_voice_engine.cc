@@ -626,6 +626,11 @@ void WebRtcVoiceEngine::StopAecDump() {
   }
 }
 
+absl::optional<webrtc::AudioDeviceModule::Stats>
+WebRtcVoiceEngine::GetAudioDeviceStats() {
+  return adm()->GetStats();
+}
+
 webrtc::AudioDeviceModule* WebRtcVoiceEngine::adm() {
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   RTC_DCHECK(adm_);

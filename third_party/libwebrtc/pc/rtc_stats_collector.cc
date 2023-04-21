@@ -37,6 +37,7 @@
 #include "common_video/include/quality_limitation_reason.h"
 #include "media/base/media_channel.h"
 #include "media/base/media_channel_impl.h"
+#include "modules/audio_device/include/audio_device.h"
 #include "modules/audio_processing/include/audio_processing_statistics.h"
 #include "modules/rtp_rtcp/include/report_block_data.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
@@ -511,6 +512,21 @@ std::unique_ptr<RTCInboundRTPStreamStats> CreateInboundAudioStreamStats(
       static_cast<double>(voice_receiver_info.total_interruption_duration_ms) /
       rtc::kNumMillisecsPerSec;
   return inbound_audio;
+}
+
+std::unique_ptr<RTCAudioPlayoutStats> CreateAudioPlayoutStats(
+    const AudioDeviceModule::Stats& audio_device_stats,
+    webrtc::Timestamp timestamp) {
+  auto stats = std::make_unique<RTCAudioPlayoutStats>(
+      /*id=*/"AP", timestamp);
+  stats->synthesized_samples_duration =
+      audio_device_stats.synthesized_samples_duration_s;
+  stats->synthesized_samples_events =
+      audio_device_stats.synthesized_samples_events;
+  stats->total_samples_count = audio_device_stats.total_samples_count;
+  stats->total_samples_duration = audio_device_stats.total_samples_duration_s;
+  stats->total_playout_delay = audio_device_stats.total_playout_delay_s;
+  return stats;
 }
 
 std::unique_ptr<RTCRemoteOutboundRtpStreamStats>
@@ -1486,6 +1502,7 @@ void RTCStatsCollector::ProducePartialResultsOnSignalingThreadImpl(
   ProduceMediaStreamTrackStats_s(timestamp, partial_report);
   ProduceMediaSourceStats_s(timestamp, partial_report);
   ProducePeerConnectionStats_s(timestamp, partial_report);
+  ProduceAudioPlayoutStats_s(timestamp, partial_report);
 }
 
 void RTCStatsCollector::ProducePartialResultsOnNetworkThread(
@@ -1933,6 +1950,17 @@ void RTCStatsCollector::ProducePeerConnectionStats_s(
   stats->data_channels_opened = internal_record_.data_channels_opened;
   stats->data_channels_closed = internal_record_.data_channels_closed;
   report->AddStats(std::move(stats));
+}
+
+void RTCStatsCollector::ProduceAudioPlayoutStats_s(
+    Timestamp timestamp,
+    RTCStatsReport* report) const {
+  RTC_DCHECK_RUN_ON(signaling_thread_);
+  rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
+
+  if (audio_device_stats_) {
+    report->AddStats(CreateAudioPlayoutStats(*audio_device_stats_, timestamp));
+  }
 }
 
 void RTCStatsCollector::ProduceRTPStreamStats_n(
@@ -2448,6 +2476,7 @@ void RTCStatsCollector::PrepareTransceiverStatsInfosAndCallStats_s_w_n() {
     }
 
     call_stats_ = pc_->GetCallStats();
+    audio_device_stats_ = pc_->GetAudioDeviceStats();
   });
 }
 

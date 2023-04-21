@@ -30,10 +30,10 @@ Cr-Branched-From: 2e1a9a4ae0234d4b1ea7a6fd4188afa1fb20379d-refs/heads/main@{#389
  1 file changed, 10 insertions(+), 9 deletions(-)
 
 diff --git a/pc/rtc_stats_collector.cc b/pc/rtc_stats_collector.cc
-index 6a45b58eb5..ebe31f6275 100644
+index 508661ec8a..704d383510 100644
 --- a/pc/rtc_stats_collector.cc
 +++ b/pc/rtc_stats_collector.cc
-@@ -2172,16 +2172,17 @@ void RTCStatsCollector::ProduceTransportStats_n(
+@@ -2200,16 +2200,17 @@ void RTCStatsCollector::ProduceTransportStats_n(
      // exist.
      const auto& certificate_stats_it =
          transport_cert_stats.find(transport_name);

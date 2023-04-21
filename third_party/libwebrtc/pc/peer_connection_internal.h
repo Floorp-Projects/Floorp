@@ -17,8 +17,10 @@
 #include <string>
 #include <vector>
 
+#include "absl/types/optional.h"
 #include "api/peer_connection_interface.h"
 #include "call/call.h"
+#include "modules/audio_device/include/audio_device.h"
 #include "pc/jsep_transport_controller.h"
 #include "pc/peer_connection_message_handler.h"
 #include "pc/rtp_transceiver.h"
@@ -161,6 +163,8 @@ class PeerConnectionInternal : public PeerConnectionInterface,
   GetTransportStatsByNames(const std::set<std::string>& transport_names) = 0;
 
   virtual Call::Stats GetCallStats() = 0;
+
+  virtual absl::optional<AudioDeviceModule::Stats> GetAudioDeviceStats() = 0;
 
   virtual bool GetLocalCertificate(
       const std::string& transport_name,

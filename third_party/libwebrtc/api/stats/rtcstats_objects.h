@@ -699,6 +699,22 @@ class RTC_EXPORT RTCTransportStats final : public RTCStats {
   RTCStatsMember<std::string> ice_state;
 };
 
+// https://w3c.github.io/webrtc-stats/#playoutstats-dict*
+class RTC_EXPORT RTCAudioPlayoutStats final : public RTCStats {
+ public:
+  WEBRTC_RTCSTATS_DECL();
+
+  RTCAudioPlayoutStats(const std::string& id, Timestamp timestamp);
+  RTCAudioPlayoutStats(const RTCAudioPlayoutStats& other);
+  ~RTCAudioPlayoutStats() override;
+
+  RTCStatsMember<double> synthesized_samples_duration;
+  RTCStatsMember<uint64_t> synthesized_samples_events;
+  RTCStatsMember<double> total_samples_duration;
+  RTCStatsMember<double> total_playout_delay;
+  RTCStatsMember<uint64_t> total_samples_count;
+};
+
 }  // namespace webrtc
 
 #endif  // API_STATS_RTCSTATS_OBJECTS_H_

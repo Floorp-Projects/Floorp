@@ -90,6 +90,7 @@ rtc_library("rtc_media_base") {
     "../call:video_stream_api",
     "../common_video",
     "../modules/async_audio_processing",
+    "../modules/audio_device",
     "../modules/audio_processing:audio_processing_statistics",
     "../modules/rtp_rtcp:rtp_rtcp_format",
     "../rtc_base",
@@ -784,6 +785,7 @@ if (rtc_include_tests) {
     absl_deps = [
       "//third_party/abseil-cpp/absl/algorithm:container",
       "//third_party/abseil-cpp/absl/strings",
+      "//third_party/abseil-cpp/absl/types:optional",
     ]
     sources = [
       "base/fake_frame_source.cc",
