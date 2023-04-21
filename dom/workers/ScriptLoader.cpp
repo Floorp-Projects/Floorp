@@ -494,10 +494,8 @@ WorkerScriptLoader::WorkerScriptLoader(
       mCleanUpLock("cleanUpLock") {
   aWorkerPrivate->AssertIsOnWorkerThread();
 
-  RefPtr<WorkerScriptLoader> self = this;
-
   RefPtr<StrongWorkerRef> workerRef =
-      StrongWorkerRef::Create(aWorkerPrivate, "ScriptLoader", [self]() {});
+      StrongWorkerRef::Create(aWorkerPrivate, "ScriptLoader");
 
   if (workerRef) {
     mWorkerRef = new ThreadSafeWorkerRef(workerRef);
