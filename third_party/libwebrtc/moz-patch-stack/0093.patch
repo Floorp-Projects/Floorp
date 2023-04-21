@@ -27,10 +27,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/59232687efa00e5f7
  create mode 100644 api/rtp_sender_setparameters_callback.h
 
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 4f60f98616..217c0c9583 100644
+index 3f313e2743..56afc5efce 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
-@@ -217,8 +217,8 @@ rtc_library("rtp_sender_interface") {
+@@ -214,8 +214,8 @@ rtc_library("rtp_sender_interface") {
      ":dtmf_sender_interface",
      ":frame_transformer_interface",
      ":media_stream_interface",
@@ -40,7 +40,7 @@ index 4f60f98616..217c0c9583 100644
      ":scoped_refptr",
      "../rtc_base:checks",
      "../rtc_base:refcount",
-@@ -226,6 +226,18 @@ rtc_library("rtp_sender_interface") {
+@@ -223,6 +223,18 @@ rtc_library("rtp_sender_interface") {
      "crypto:frame_encryptor_interface",
      "video_codecs:video_codecs_api",
    ]
@@ -143,7 +143,7 @@ index 0000000000..45194f5ace
 +
 +#endif  // API_RTP_SENDER_SETPARAMETERS_CALLBACK_H_
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index 6409d0b994..283c5631b5 100644
+index bb47181230..f41be8e40a 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
 @@ -52,7 +52,7 @@ rtc_library("call_interfaces") {
@@ -155,7 +155,7 @@ index 6409d0b994..283c5631b5 100644
      "../api:scoped_refptr",
      "../api:transport_api",
      "../api/adaptation:resource_adaptation_api",
-@@ -391,7 +391,7 @@ rtc_library("video_stream_api") {
+@@ -389,7 +389,7 @@ rtc_library("video_stream_api") {
      "../api:frame_transformer_interface",
      "../api:rtp_headers",
      "../api:rtp_parameters",
@@ -191,7 +191,7 @@ index 431c267e1e..de18fc7b92 100644
  #include "api/video/video_content_type.h"
  #include "api/video/video_frame.h"
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index d6dfec2809..a8a240cdf2 100644
+index daca67e033..80662563b0 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
 @@ -64,7 +64,7 @@ rtc_library("rtc_media_base") {
@@ -243,7 +243,7 @@ index a72b97413d..0e72f47d6d 100644
  using webrtc::FrameDecryptorInterface;
  using webrtc::FrameEncryptorInterface;
 diff --git a/video/BUILD.gn b/video/BUILD.gn
-index 0878dfada9..920ebb9dfe 100644
+index e21e1c7ea8..2c0a411e35 100644
 --- a/video/BUILD.gn
 +++ b/video/BUILD.gn
 @@ -17,7 +17,7 @@ rtc_library("video_stream_encoder_interface") {

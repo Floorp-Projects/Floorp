@@ -1771,7 +1771,6 @@ rtc_library("gunit_helpers") {
   ]
   deps = [
     ":logging",
-    ":rtc_base",
     ":rtc_base_tests_utils",
     ":stringutils",
     ":threading",
@@ -1789,7 +1788,6 @@ rtc_library("testclient") {
   deps = [
     ":async_udp_socket",
     ":gunit_helpers",
-    ":rtc_base",
     ":rtc_base_tests_utils",
     ":threading",
     ":timeutils",
@@ -1804,7 +1802,6 @@ rtc_library("callback_list_unittests") {
   deps = [
     ":callback_list",
     ":gunit_helpers",
-    ":rtc_base",
     "../api:function_view",
     "../test:test_support",
   ]
@@ -1861,7 +1858,6 @@ rtc_library("rtc_base_tests_utils") {
     ":macromagic",
     ":mdns_responder_interface",
     ":network",
-    ":rtc_base",
     ":rtc_event",
     ":socket",
     ":socket_adapters",
@@ -1922,7 +1918,6 @@ if (rtc_include_tests) {
     sources = [ "sigslot_unittest.cc" ]
     deps = [
       ":gunit_helpers",
-      ":rtc_base",
       ":rtc_base_tests_utils",
       "../test:test_support",
       "synchronization:mutex",
@@ -1945,7 +1940,6 @@ if (rtc_include_tests) {
     sources = [ "operations_chain_unittest.cc" ]
     deps = [
       ":gunit_helpers",
-      ":rtc_base",
       ":rtc_event",
       ":rtc_operations_chain",
       ":threading",
@@ -1979,7 +1973,6 @@ if (rtc_include_tests) {
         ":net_helpers",
         ":null_socket_server",
         ":platform_thread",
-        ":rtc_base",
         ":rtc_base_tests_utils",
         ":socket",
         ":socket_address",
@@ -2077,7 +2070,6 @@ if (rtc_include_tests) {
         ":rate_statistics",
         ":rate_tracker",
         ":refcount",
-        ":rtc_base",
         ":rtc_base_tests_utils",
         ":rtc_event",
         ":rtc_numerics",
@@ -2240,7 +2232,6 @@ if (rtc_include_tests) {
         ":null_socket_server",
         ":refcount",
         ":rolling_accumulator",
-        ":rtc_base",
         ":rtc_base_tests_utils",
         ":rtc_certificate_generator",
         ":rtc_event",

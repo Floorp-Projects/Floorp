@@ -908,7 +908,6 @@ if (rtc_include_tests) {
       "../modules/video_coding/svc:scalability_structures",
       "../modules/video_coding/svc:scalable_video_controller",
       "../modules/video_coding/timing:timing_module",
-      "../rtc_base",
       "../rtc_base:byte_buffer",
       "../rtc_base:checks",
       "../rtc_base:gunit_helpers",

@@ -48,7 +48,7 @@ if (!build_with_mozilla) {
         "../../:common_config",
         ":pipewire",
       ]
-      deps = [ "../../rtc_base" ]
+      deps = [ "../../rtc_base:logging" ]
       extra_header = "pipewire_stub_header.fragment"
       logging_function = "RTC_LOG(LS_VERBOSE)"
       logging_include = "rtc_base/logging.h"

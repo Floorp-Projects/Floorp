@@ -508,7 +508,6 @@ if (!build_with_chromium) {
       "p2p:rtc_p2p",
       "pc:libjingle_peerconnection",
       "pc:rtc_pc",
-      "rtc_base",
       "sdk",
       "video",
     ]

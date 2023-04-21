@@ -14,10 +14,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/88b3cc6bbece7c53d
  6 files changed, 38 insertions(+), 3 deletions(-)
 
 diff --git a/BUILD.gn b/BUILD.gn
-index 43b0ee2b99..281d8fa950 100644
+index 7fa4bb338d..6133b5e0bd 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
-@@ -550,6 +550,15 @@ if (!build_with_chromium) {
+@@ -549,6 +549,15 @@ if (!build_with_chromium) {
          "api/video:video_rtp_headers",
          "test:rtp_test_utils",
        ]
@@ -34,10 +34,10 @@ index 43b0ee2b99..281d8fa950 100644
        deps += [
          "api",
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index 51836e603a..6409d0b994 100644
+index 65566fce81..bb47181230 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
-@@ -354,6 +354,16 @@ rtc_library("call") {
+@@ -352,6 +352,16 @@ rtc_library("call") {
      "//third_party/abseil-cpp/absl/strings",
      "//third_party/abseil-cpp/absl/types:optional",
    ]
@@ -55,10 +55,10 @@ index 51836e603a..6409d0b994 100644
  
  rtc_source_set("receive_stream_interface") {
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index 33cf52a796..d6dfec2809 100644
+index 4ddc8349a8..daca67e033 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
-@@ -447,7 +447,10 @@ rtc_library("rtc_internal_video_codecs") {
+@@ -442,7 +442,10 @@ rtc_library("rtc_internal_video_codecs") {
      "../test:fake_video_codecs",
    ]
    if (build_with_mozilla) {
@@ -70,7 +70,7 @@ index 33cf52a796..d6dfec2809 100644
    }
  
    if (enable_libaom) {
-@@ -482,6 +485,8 @@ rtc_library("rtc_internal_video_codecs") {
+@@ -477,6 +480,8 @@ rtc_library("rtc_internal_video_codecs") {
      sources -= [
        "engine/fake_video_codec_factory.cc",
        "engine/fake_video_codec_factory.h",
@@ -152,7 +152,7 @@ index e35a442025..61cd531edd 100644
      testonly = true
  
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 5e5b50799b..ea29c9f876 100644
+index 0b093e3694..ec1f93752b 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -283,6 +283,7 @@ rtc_library("sample_counter") {

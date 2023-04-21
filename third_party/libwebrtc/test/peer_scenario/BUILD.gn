@@ -50,7 +50,6 @@ if (rtc_include_tests) {
       "../../pc:pc_test_utils",
       "../../pc:rtp_transport_internal",
       "../../pc:session_description",
-      "../../rtc_base",
       "../../rtc_base:null_socket_server",
       "../../rtc_base:stringutils",
       "../../rtc_base:task_queue_for_test",

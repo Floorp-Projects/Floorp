@@ -402,7 +402,6 @@ rtc_library("fake_rtc_event_log") {
 
   deps = [
     "../api/rtc_event_log",
-    "../rtc_base",
     "../rtc_base:macromagic",
     "../rtc_base/synchronization:mutex",
   ]

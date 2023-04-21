@@ -128,7 +128,6 @@ if (rtc_include_tests && !build_with_chromium) {
       "../../modules/video_coding:webrtc_vp8",
       "../../modules/video_coding:webrtc_vp9",
       "../../modules/video_coding/svc:scalability_mode_util",
-      "../../rtc_base",
       "../../rtc_base:checks",
       "../../rtc_base:copy_on_write_buffer",
       "../../rtc_base:net_helper",

@@ -98,7 +98,6 @@ rtc_library("video_frame_i010") {
     ":video_rtp_headers",
     "..:make_ref_counted",
     "..:scoped_refptr",
-    "../../rtc_base",
     "../../rtc_base:checks",
     "../../rtc_base:refcount",
     "../../rtc_base/memory:aligned_malloc",

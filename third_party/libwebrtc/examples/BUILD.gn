@@ -71,7 +71,6 @@ rtc_library("read_auth_file") {
   ]
   deps = [
     "../api:array_view",
-    "../rtc_base",
     "../rtc_base:stringutils",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/strings:strings" ]
@@ -498,7 +497,6 @@ if (is_ios || (is_mac && target_cpu != "x86")) {
         "../modules/audio_processing",
         "../modules/audio_processing:api",
         "../pc:libjingle_peerconnection",
-        "../rtc_base",
         "../rtc_base/synchronization:mutex",
         "../sdk:base_objc",
         "../sdk:default_codec_factory_objc",
@@ -636,7 +634,6 @@ if (is_ios || (is_mac && target_cpu != "x86")) {
         deps = [
           ":AppRTCMobile_lib",
           ":apprtc_signaling",
-          "../rtc_base",
           "../rtc_base:ssl",
           "../sdk:mediaconstraints_objc",
           "../sdk:peerconnectionfactory_base_objc",
@@ -765,7 +762,6 @@ if (is_linux || is_chromeos || is_win) {
       "../modules/audio_processing:api",
       "../modules/video_capture:video_capture_module",
       "../pc:libjingle_peerconnection",
-      "../rtc_base",
       "../rtc_base:rtc_json",
       "../test:video_test_common",
       "//third_party/abseil-cpp/absl/flags:flag",
@@ -803,7 +799,6 @@ if (is_linux || is_chromeos || is_win) {
       "../p2p:p2p_server_utils",
       "../p2p:rtc_p2p",
       "../pc:rtc_pc",
-      "../rtc_base",
       "../rtc_base:async_udp_socket",
       "../rtc_base:ip_address",
       "../rtc_base:socket_address",
@@ -819,7 +814,6 @@ if (is_linux || is_chromeos || is_win) {
       "../p2p:p2p_server_utils",
       "../p2p:rtc_p2p",
       "../pc:rtc_pc",
-      "../rtc_base",
       "../rtc_base:async_udp_socket",
       "../rtc_base:socket_address",
       "../rtc_base:socket_server",
@@ -870,7 +864,6 @@ if (is_win || is_android) {
       "../modules/video_capture:video_capture_module",
       "../pc:libjingle_peerconnection",
       "../pc:video_track_source",
-      "../rtc_base",
       "../rtc_base:ssl",
       "../test:platform_video_capturer",
       "../test:video_test_common",
@@ -945,7 +938,6 @@ if (!build_with_chromium) {
     deps = [
       "../p2p:libstunprober",
       "../p2p:rtc_p2p",
-      "../rtc_base",
       "../rtc_base:checks",
       "../rtc_base:logging",
       "../rtc_base:network",

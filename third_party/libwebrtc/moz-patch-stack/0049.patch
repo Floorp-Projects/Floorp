@@ -20,7 +20,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/58f47eacaf10d12e2
  11 files changed, 27 insertions(+), 27 deletions(-)
 
 diff --git a/BUILD.gn b/BUILD.gn
-index 39d1f98cc1..eedbab2ef8 100644
+index 959f56ad9c..68f94fd89d 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -407,12 +407,12 @@ config("common_config") {
@@ -263,7 +263,7 @@ index d818e23f3c..8c2e9dba84 100644
      cflags = [ "-mfpu=neon" ]
    }
 diff --git a/modules/desktop_capture/BUILD.gn b/modules/desktop_capture/BUILD.gn
-index 96d88f8047..5db43e3589 100644
+index 4aa9186527..060d4e8200 100644
 --- a/modules/desktop_capture/BUILD.gn
 +++ b/modules/desktop_capture/BUILD.gn
 @@ -10,7 +10,7 @@ import("//build/config/linux/gtk/gtk.gni")
