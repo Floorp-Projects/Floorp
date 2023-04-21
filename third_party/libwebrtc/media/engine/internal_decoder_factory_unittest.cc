@@ -47,10 +47,6 @@ constexpr VideoDecoderFactory::CodecSupport kSupported = {
     /*is_supported=*/true, /*is_power_efficient=*/false};
 constexpr VideoDecoderFactory::CodecSupport kUnsupported = {
     /*is_supported=*/false, /*is_power_efficient=*/false};
-constexpr char kDav1dDecoderFieldTrialEnabled[] =
-    "WebRTC-Dav1dDecoder/Enabled/";
-constexpr char kDav1dDecoderFieldTrialDisabled[] =
-    "WebRTC-Dav1dDecoder/Disabled/";
 
 MATCHER_P(Support, expected, "") {
   return arg.is_supported == expected.is_supported &&
@@ -91,7 +87,6 @@ TEST(InternalDecoderFactoryTest, H264) {
 
 TEST(InternalDecoderFactoryTest, Av1Profile0) {
   InternalDecoderFactory factory;
-  InitFieldTrialsFromString(kDav1dDecoderFieldTrialEnabled);
   if (kDav1dIsIncluded) {
     EXPECT_THAT(factory.GetSupportedFormats(),
                 Contains(Field(&SdpVideoFormat::name, cricket::kAv1CodecName)));
@@ -113,23 +108,12 @@ TEST(InternalDecoderFactoryTest, Av1) {
 #endif
 
 TEST(InternalDecoderFactoryTest, Av1Profile1_Dav1dDecoderTrialEnabled) {
-  InitFieldTrialsFromString(kDav1dDecoderFieldTrialEnabled);
   InternalDecoderFactory factory;
   std::unique_ptr<VideoDecoder> decoder = factory.CreateVideoDecoder(
       SdpVideoFormat(cricket::kAv1CodecName,
                      {{kAV1FmtpProfile,
                        AV1ProfileToString(AV1Profile::kProfile1).data()}}));
   EXPECT_EQ(static_cast<bool>(decoder), kDav1dIsIncluded);
-}
-
-TEST(InternalDecoderFactoryTest, Av1Profile1_Dav1dDecoderTrialDisabled) {
-  test::ScopedFieldTrials disable_dav1d(kDav1dDecoderFieldTrialDisabled);
-  InternalDecoderFactory factory;
-  std::unique_ptr<VideoDecoder> decoder = factory.CreateVideoDecoder(
-      SdpVideoFormat(cricket::kAv1CodecName,
-                     {{kAV1FmtpProfile,
-                       AV1ProfileToString(AV1Profile::kProfile1).data()}}));
-  EXPECT_FALSE(static_cast<bool>(decoder));
 }
 
 TEST(InternalDecoderFactoryTest, QueryCodecSupportNoReferenceScaling) {
