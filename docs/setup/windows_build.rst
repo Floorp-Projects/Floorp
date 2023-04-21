@@ -18,35 +18,8 @@ Requirements
 -  **Operating System:** Windows 10. It is advisable to have Windows Update be fully
    up-to-date. See :ref:`build_hosts` for more information.
 
-1. System preparation
----------------------
-
-1.1 Install Visual Studio Build Tools
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-`Download and install the Build Tools for Visual Studio 2022
-<https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022>`_.
-If you have a full install of Visual Studio (Community/Professional/Enterprise),
-that is also supported.
-Ensure you've checked the following items for installation:
-
--  In the Workloads tab:
-    -  Desktop development with C++.
--  In the Individual components tab:
-    -  MSVC v143 - VS 2022 C++ x64/x86 build tools.
-    -  Windows 10 SDK (at least **10.0.19041.0**).
-    -  C++ ATL for v143 build tools (x86 and x64).
-
-.. note::
-
-    The recommended Visual Studio version and components has recently changed. If you run
-    into unexpected build errors, you should `report a bug
-    <https://bugzilla.mozilla.org/enter_bug.cgi?product=Firefox%20Build%20System&component=General>`_
-    or ask about it in the ``#build`` Matrix channel - the solution may be to downgrade back to
-    `Visual Studio 2019 <https://docs.microsoft.com/en-ca/visualstudio/releases/2019/release-notes>`_.
-
-1.2 Install MozillaBuild
-~~~~~~~~~~~~~~~~~~~~~~~~
+1. Install MozillaBuild
+-----------------------
 
 Install `MozillaBuild
 <https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe>`_.
@@ -74,7 +47,7 @@ the interactive setup process.
 
 .. code-block:: shell
 
-    # Using the C:\mozilla-build\start-shell.bat shell from step 1.2:
+    # Using the C:\mozilla-build\start-shell.bat shell from step 1:
     cd c:/
     mkdir mozilla-source
     cd mozilla-source
