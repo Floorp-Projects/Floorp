@@ -11,6 +11,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   getFramesFromStack: "chrome://remote/content/shared/Stack.sys.mjs",
   isChromeFrame: "chrome://remote/content/shared/Stack.sys.mjs",
+  OwnershipModel: "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
   serialize: "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
   setDefaultSerializationOptions:
     "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
@@ -187,6 +188,35 @@ class ScriptModule extends WindowGlobalBiDiModule {
     }
   }
 
+  /**
+   * Emit "script.message" event with provided data.
+   *
+   * @param {Realm} realm
+   * @param {ChannelProperties} channelProperties
+   * @param {RemoteValue} message
+   */
+  #emitScriptMessage = (realm, channelProperties, message) => {
+    const {
+      channel,
+      ownership: ownershipType = lazy.OwnershipModel.None,
+      serializationOptions,
+    } = channelProperties;
+
+    const data = lazy.serialize(
+      this.#toRawObject(message),
+      lazy.setDefaultSerializationOptions(serializationOptions),
+      ownershipType,
+      new Map(),
+      realm
+    );
+
+    this.emitEvent("script.message", {
+      channel,
+      data,
+      source: this.#getSource(realm),
+    });
+  };
+
   #evaluatePreloadScripts() {
     let resolveBlockerPromise;
     const blockerPromise = new Promise(resolve => {
@@ -196,10 +226,21 @@ class ScriptModule extends WindowGlobalBiDiModule {
     // Block script parsing.
     this.messageHandler.window.document.blockParsing(blockerPromise);
     for (const script of this.#preloadScripts.values()) {
-      const { functionDeclaration, sandbox } = script;
+      const {
+        arguments: commandArguments,
+        functionDeclaration,
+        sandbox,
+      } = script;
       const realm = this.#getRealmFromSandboxName(sandbox);
-
-      const rv = realm.executeInGlobalWithBindings(functionDeclaration, []);
+      const deserializedArguments = commandArguments.map(arg =>
+        lazy.deserialize(realm, arg, {
+          emitScriptMessage: this.#emitScriptMessage,
+        })
+      );
+      const rv = realm.executeInGlobalWithBindings(
+        functionDeclaration,
+        deserializedArguments
+      );
 
       if ("throw" in rv) {
         const exception = this.#toRawObject(rv.throw);
@@ -247,6 +288,13 @@ class ScriptModule extends WindowGlobalBiDiModule {
     this.#realms.set(sandboxName, realm);
 
     return realm;
+  }
+
+  #getSource(realm) {
+    return {
+      realm: realm.id,
+      context: this.messageHandler.context,
+    };
   }
 
   #startObserving() {
@@ -330,13 +378,19 @@ class ScriptModule extends WindowGlobalBiDiModule {
     const deserializedArguments =
       commandArguments !== null
         ? commandArguments.map(arg =>
-            lazy.deserialize(realm, arg, { nodeCache })
+            lazy.deserialize(realm, arg, {
+              emitScriptMessage: this.#emitScriptMessage,
+              nodeCache,
+            })
           )
         : [];
 
     const deserializedThis =
       thisParameter !== null
-        ? lazy.deserialize(realm, thisParameter, { nodeCache })
+        ? lazy.deserialize(realm, thisParameter, {
+            emitScriptMessage: this.#emitScriptMessage,
+            nodeCache,
+          })
         : null;
 
     const rv = realm.executeInGlobalWithBindings(

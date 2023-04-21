@@ -27,6 +27,8 @@ ChromeUtils.defineESModuleGetters(modules["windowglobal-in-root"], {
     "chrome://remote/content/webdriver-bidi/modules/windowglobal-in-root/browsingContext.sys.mjs",
   log:
     "chrome://remote/content/webdriver-bidi/modules/windowglobal-in-root/log.sys.mjs",
+  script:
+    "chrome://remote/content/webdriver-bidi/modules/windowglobal-in-root/script.sys.mjs",
 });
 
 // eslint-disable-next-line mozilla/lazy-getter-object-name

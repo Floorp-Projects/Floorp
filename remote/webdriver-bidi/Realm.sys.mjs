@@ -232,7 +232,7 @@ export class WindowRealm extends Realm {
    *     The cloned object.
    */
   cloneIntoRealm(obj) {
-    return Cu.cloneInto(obj, this.#globalObject);
+    return Cu.cloneInto(obj, this.#globalObject, { cloneFunctions: true });
   }
 
   /**

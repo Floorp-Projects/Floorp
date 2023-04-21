@@ -526,6 +526,26 @@ add_task(async function test_deserializeLocalValuesInWindowRealm() {
   }
 });
 
+add_task(async function test_deserializeChannel() {
+  const realm = new Realm();
+  const channel = {
+    type: "channel",
+    value: { channel: "channel_name" },
+  };
+  const deserializationOptions = {
+    emitScriptMessage: (realm, channelProperties, message) => message,
+  };
+
+  info(`Checking 'channel'`);
+  const deserializedValue = deserialize(realm, channel, deserializationOptions);
+  Assert.equal(
+    Object.prototype.toString.call(deserializedValue),
+    "[object Function]",
+    "Got expected type Function"
+  );
+  Assert.equal(deserializedValue("foo"), "foo", "Got expected result");
+});
+
 add_task(function test_deserializeLocalValuesByHandle() {
   // Create two realms, realm1 will be used to serialize values, while realm2
   // will be used as a reference empty realm without any object reference.

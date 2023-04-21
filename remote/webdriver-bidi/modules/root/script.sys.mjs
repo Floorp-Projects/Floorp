@@ -68,14 +68,26 @@ class ScriptModule extends Module {
    */
 
   /**
+   * @typedef ChannelProperties
+   *
+   * @property {string} channel
+   *     The channel id.
+   * @property {SerializationOptions=} serializationOptions
+   *     An object which holds the information of how the result of evaluation
+   *     in case of ECMAScript objects should be serialized.
+   * @property {OwnershipModel=} ownership
+   *     The ownership model to use for the results of this evaluation. Defaults
+   *     to `OwnershipModel.None`.
+   */
+
+  /**
    * Represents a channel used to send custom messages from preload script
    * to clients.
    *
-   * @typedef Channel
+   * @typedef ChannelValue
    *
    * @property {'channel'} type
-   * @property {string} value
-   *  The channel id.
+   * @property {ChannelProperties} value
    */
 
   /**
@@ -83,7 +95,7 @@ class ScriptModule extends Module {
    * before any author-defined script have run.
    *
    * @param {object=} options
-   * @param {Array<Channel>=} options.arguments [unsupported]
+   * @param {Array<ChannelValue>=} options.arguments
    *     The arguments to pass to the function call.
    * @param {string} options.functionDeclaration
    *     The expression to evaluate.
@@ -98,9 +110,9 @@ class ScriptModule extends Module {
    */
   async addPreloadScript(options = {}) {
     const {
-      arguments: commandArguments,
+      arguments: commandArguments = [],
       functionDeclaration,
-      sandbox,
+      sandbox = null,
     } = options;
 
     lazy.assert.string(
@@ -115,15 +127,21 @@ class ScriptModule extends Module {
       );
     }
 
-    if (commandArguments != null) {
-      lazy.assert.array(
-        commandArguments,
-        `Expected "arguments" to be an array, got ${commandArguments}`
-      );
-      throw new lazy.error.UnsupportedOperationError(
-        `arguments are not supported yet`
-      );
-    }
+    lazy.assert.array(
+      commandArguments,
+      `Expected "arguments" to be an array, got ${commandArguments}`
+    );
+    lazy.assert.that(
+      commandArguments =>
+        commandArguments.every(({ type, value }) => {
+          if (type === "channel") {
+            this.#assertChannelArgument(value);
+            return true;
+          }
+          return false;
+        }),
+      `One of the arguments has an unsupported type, only type "channel" is supported`
+    )(commandArguments);
 
     const script = getUUID();
     const preloadScript = {
@@ -270,6 +288,11 @@ class ScriptModule extends Module {
         commandArguments,
         `Expected "arguments" to be an array, got ${commandArguments}`
       );
+      commandArguments.forEach(({ type, value }) => {
+        if (type === "channel") {
+          this.#assertChannelArgument(value);
+        }
+      });
     }
 
     const { contextId, realmId, sandbox } = this.#assertTarget(target);
@@ -563,6 +586,28 @@ class ScriptModule extends Module {
     this.#preloadScriptMap.delete(script);
   }
 
+  #assertChannelArgument(value) {
+    lazy.assert.object(value);
+    const {
+      channel,
+      ownership = lazy.OwnershipModel.None,
+      serializationOptions,
+    } = value;
+    lazy.assert.string(channel);
+    lazy.setDefaultAndAssertSerializationOptions(serializationOptions);
+    lazy.assert.that(
+      ownership =>
+        [lazy.OwnershipModel.None, lazy.OwnershipModel.Root].includes(
+          ownership
+        ),
+      `Expected "ownership" to be one of ${Object.values(
+        lazy.OwnershipModel
+      )}, got ${ownership}`
+    )(ownership);
+
+    return true;
+  }
+
   #assertResultOwnership(resultOwnership) {
     if (
       ![lazy.OwnershipModel.None, lazy.OwnershipModel.Root].includes(
@@ -703,7 +748,7 @@ class ScriptModule extends Module {
   }
 
   static get supportedEvents() {
-    return [];
+    return ["script.message"];
   }
 }
 
