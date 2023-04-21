@@ -13,8 +13,10 @@
 
 #include <stdint.h>
 
+#include <functional>
 #include <vector>
 
+#include "absl/strings/match.h"
 #include "api/rtc_error.h"
 #include "api/rtp_parameters.h"
 #include "api/rtp_transceiver_interface.h"
@@ -238,6 +240,69 @@ TEST_F(PeerConnectionSVCIntegrationTest,
   EXPECT_EQ(result.type(), webrtc::RTCErrorType::UNSUPPORTED_OPERATION);
 }
 
+TEST_F(PeerConnectionSVCIntegrationTest, FallbackToL1Tx) {
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  ConnectFakeSignaling();
+
+  webrtc::RtpTransceiverInit init;
+  webrtc::RtpEncodingParameters encoding_parameters;
+  init.send_encodings.push_back(encoding_parameters);
+  auto transceiver_or_error =
+      caller()->pc()->AddTransceiver(caller()->CreateLocalVideoTrack(), init);
+  ASSERT_TRUE(transceiver_or_error.ok());
+  auto caller_transceiver = transceiver_or_error.MoveValue();
+
+  webrtc::RtpCapabilities capabilities =
+      caller()->pc_factory()->GetRtpSenderCapabilities(
+          cricket::MEDIA_TYPE_VIDEO);
+  std::vector<RtpCodecCapability> send_codecs = capabilities.codecs;
+  // Only keep VP9 in the caller
+  send_codecs.erase(std::partition(send_codecs.begin(), send_codecs.end(),
+                                   [](const auto& codec) -> bool {
+                                     return codec.name ==
+                                            cricket::kVp9CodecName;
+                                   }),
+                    send_codecs.end());
+  ASSERT_FALSE(send_codecs.empty());
+  caller_transceiver->SetCodecPreferences(send_codecs);
+
+  // L3T3 should be supported by VP9
+  webrtc::RtpParameters parameters =
+      caller_transceiver->sender()->GetParameters();
+  ASSERT_EQ(parameters.encodings.size(), 1u);
+  parameters.encodings[0].scalability_mode = "L3T3";
+  auto result = caller_transceiver->sender()->SetParameters(parameters);
+  EXPECT_TRUE(result.ok());
+
+  caller()->CreateAndSetAndSignalOffer();
+  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
+
+  parameters = caller_transceiver->sender()->GetParameters();
+  ASSERT_TRUE(parameters.encodings[0].scalability_mode.has_value());
+  EXPECT_TRUE(
+      absl::StartsWith(*parameters.encodings[0].scalability_mode, "L3T3"));
+
+  // Keep only VP8 in the caller
+  send_codecs = capabilities.codecs;
+  send_codecs.erase(std::partition(send_codecs.begin(), send_codecs.end(),
+                                   [](const auto& codec) -> bool {
+                                     return codec.name ==
+                                            cricket::kVp8CodecName;
+                                   }),
+                    send_codecs.end());
+  ASSERT_FALSE(send_codecs.empty());
+  caller_transceiver->SetCodecPreferences(send_codecs);
+
+  // Renegotiate to force the new codec list to be used
+  caller()->CreateAndSetAndSignalOffer();
+  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
+
+  // Fallback should happen and L3T3 is not used anymore
+  parameters = caller_transceiver->sender()->GetParameters();
+  ASSERT_TRUE(parameters.encodings[0].scalability_mode.has_value());
+  EXPECT_TRUE(
+      absl::StartsWith(*parameters.encodings[0].scalability_mode, "L1T"));
+}
 }  // namespace
 
 }  // namespace webrtc
