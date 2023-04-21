@@ -337,12 +337,14 @@ rtc_source_set("video_frame_metadata") {
     ":video_frame_type",
     ":video_rtp_headers",
     "..:array_view",
+    "../../modules/video_coding:codec_globals_headers",
     "../../rtc_base/system:rtc_export",
     "../transport/rtp:dependency_descriptor",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/container:inlined_vector",
     "//third_party/abseil-cpp/absl/types:optional",
+    "//third_party/abseil-cpp/absl/types:variant",
   ]
 }
 

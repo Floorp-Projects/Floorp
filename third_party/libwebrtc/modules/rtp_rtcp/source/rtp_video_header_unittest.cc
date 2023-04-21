@@ -158,8 +158,48 @@ TEST(RTPVideoHeaderTest, GetAsMetadataGetSimulcastIdx) {
 TEST(RTPVideoHeaderTest, GetAsMetadataGetCodec) {
   RTPVideoHeader video_header;
   video_header.codec = VideoCodecType::kVideoCodecVP9;
+  video_header.video_type_header = RTPVideoHeaderVP9();
   VideoFrameMetadata metadata = video_header.GetAsMetadata();
   EXPECT_EQ(metadata.GetCodec(), VideoCodecType::kVideoCodecVP9);
+}
+
+TEST(RTPVideoHeaderTest, GetAsMetadataGetRTPVideoHeaderCodecSpecifics) {
+  RTPVideoHeader video_header;
+  {
+    video_header.codec = VideoCodecType::kVideoCodecVP8;
+    RTPVideoHeaderVP8 vp8_specifics;
+    vp8_specifics.InitRTPVideoHeaderVP8();
+    vp8_specifics.pictureId = 42;
+    video_header.video_type_header = vp8_specifics;
+    VideoFrameMetadata metadata = video_header.GetAsMetadata();
+    EXPECT_EQ(
+        absl::get<RTPVideoHeaderVP8>(metadata.GetRTPVideoHeaderCodecSpecifics())
+            .pictureId,
+        vp8_specifics.pictureId);
+  }
+  {
+    video_header.codec = VideoCodecType::kVideoCodecVP9;
+    RTPVideoHeaderVP9 vp9_specifics;
+    vp9_specifics.InitRTPVideoHeaderVP9();
+    vp9_specifics.max_picture_id = 42;
+    video_header.video_type_header = vp9_specifics;
+    VideoFrameMetadata metadata = video_header.GetAsMetadata();
+    EXPECT_EQ(
+        absl::get<RTPVideoHeaderVP9>(metadata.GetRTPVideoHeaderCodecSpecifics())
+            .max_picture_id,
+        vp9_specifics.max_picture_id);
+  }
+  {
+    video_header.codec = VideoCodecType::kVideoCodecH264;
+    RTPVideoHeaderH264 h264_specifics;
+    h264_specifics.nalu_type = 42;
+    video_header.video_type_header = h264_specifics;
+    VideoFrameMetadata metadata = video_header.GetAsMetadata();
+    EXPECT_EQ(absl::get<RTPVideoHeaderH264>(
+                  metadata.GetRTPVideoHeaderCodecSpecifics())
+                  .nalu_type,
+              h264_specifics.nalu_type);
+  }
 }
 
 }  // namespace
