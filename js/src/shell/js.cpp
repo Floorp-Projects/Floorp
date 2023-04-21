@@ -11555,6 +11555,8 @@ bool InitOptionParser(OptionParser& op) {
       !op.addBoolOption('\0', "blinterp",
                         "Enable Baseline Interpreter (default)") ||
       !op.addBoolOption('\0', "no-blinterp", "Disable Baseline Interpreter") ||
+      !op.addBoolOption('\0', "disable-jithints",
+                        "Disable caching eager baseline compilation hints.") ||
       !op.addBoolOption(
           '\0', "emit-interpreter-entry",
           "Emit Interpreter entry trampolines (default under --enable-perf)") ||
@@ -12347,6 +12349,10 @@ bool SetContextJITOptions(JSContext* cx, const OptionParser& op) {
 
   if (op.getBoolOption("no-blinterp")) {
     jit::JitOptions.baselineInterpreter = false;
+  }
+
+  if (op.getBoolOption("disable-jithints")) {
+    jit::JitOptions.disableJitHints = true;
   }
 
   if (op.getBoolOption("emit-interpreter-entry")) {

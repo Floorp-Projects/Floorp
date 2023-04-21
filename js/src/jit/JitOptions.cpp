@@ -179,6 +179,9 @@ DefaultJitOptions::DefaultJitOptions() {
   // Duplicated in all.js - ensure both match.
   SET_DEFAULT(baselineJitWarmUpThreshold, 100);
 
+  // Disable eager baseline jit hints
+  SET_DEFAULT(disableJitHints, false);
+
   // How many invocations or loop iterations are needed before functions
   // are considered for trial inlining.
   SET_DEFAULT(trialInliningWarmUpThreshold, 500);
