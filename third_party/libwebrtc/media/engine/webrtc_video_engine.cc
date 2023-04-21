@@ -1502,8 +1502,8 @@ void WebRtcVideoChannel::ConfigureReceiverRtp(
 
   // rtx-time (RFC 4588) is a declarative attribute similar to rtcp-rsize and
   // determined by the sender / send codec.
-  if (send_codec_ && send_codec_->rtx_time != -1) {
-    config->rtp.nack.rtp_history_ms = send_codec_->rtx_time;
+  if (send_codec_ && send_codec_->rtx_time) {
+    config->rtp.nack.rtp_history_ms = *send_codec_->rtx_time;
   }
   sp.GetFidSsrc(ssrc, &config->rtp.rtx_ssrc);
 
@@ -2903,8 +2903,8 @@ WebRtcVideoChannel::WebRtcVideoReceiveStream::WebRtcVideoReceiveStream(
   config_.rtp.red_payload_type = codec.ulpfec.red_payload_type;
   config_.rtp.lntf.enabled = HasLntf(codec.codec);
   config_.rtp.nack.rtp_history_ms = HasNack(codec.codec) ? kNackHistoryMs : 0;
-  if (codec.rtx_time != -1 && config_.rtp.nack.rtp_history_ms != 0) {
-    config_.rtp.nack.rtp_history_ms = codec.rtx_time;
+  if (codec.rtx_time && config_.rtp.nack.rtp_history_ms != 0) {
+    config_.rtp.nack.rtp_history_ms = *codec.rtx_time;
   }
 
   config_.rtp.rtcp_xr.receiver_reference_time_report = HasRrtr(codec.codec);
@@ -3003,8 +3003,8 @@ bool WebRtcVideoChannel::WebRtcVideoReceiveStream::ReconfigureCodecs(
 
   // The rtx-time parameter can be used to override the hardcoded default for
   // the NACK buffer length.
-  if (codec.rtx_time != -1 && new_history_ms != 0) {
-    new_history_ms = codec.rtx_time;
+  if (codec.rtx_time && new_history_ms != 0) {
+    new_history_ms = *codec.rtx_time;
   }
 
   if (config_.rtp.nack.rtp_history_ms != new_history_ms) {
@@ -3048,7 +3048,7 @@ void WebRtcVideoChannel::WebRtcVideoReceiveStream::SetFeedbackParameters(
     bool lntf_enabled,
     bool nack_enabled,
     webrtc::RtcpMode rtcp_mode,
-    int rtx_time) {
+    absl::optional<int> rtx_time) {
   RTC_DCHECK(stream_);
 
   if (config_.rtp.rtcp_mode != rtcp_mode) {
@@ -3064,8 +3064,7 @@ void WebRtcVideoChannel::WebRtcVideoReceiveStream::SetFeedbackParameters(
   config_.rtp.lntf.enabled = lntf_enabled;
   stream_->SetLossNotificationEnabled(lntf_enabled);
 
-  int nack_history_ms =
-      nack_enabled ? rtx_time != -1 ? rtx_time : kNackHistoryMs : 0;
+  int nack_history_ms = nack_enabled ? rtx_time.value_or(kNackHistoryMs) : 0;
   config_.rtp.nack.rtp_history_ms = nack_history_ms;
   stream_->SetNackHistory(webrtc::TimeDelta::Millis(nack_history_ms));
 }
@@ -3375,7 +3374,7 @@ void WebRtcVideoChannel::WebRtcVideoReceiveStream::SetLocalSsrc(uint32_t ssrc) {
 }
 
 WebRtcVideoChannel::VideoCodecSettings::VideoCodecSettings()
-    : flexfec_payload_type(-1), rtx_payload_type(-1), rtx_time(-1) {}
+    : flexfec_payload_type(-1), rtx_payload_type(-1) {}
 
 bool WebRtcVideoChannel::VideoCodecSettings::operator==(
     const WebRtcVideoChannel::VideoCodecSettings& other) const {
