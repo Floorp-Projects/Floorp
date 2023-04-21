@@ -10,19 +10,19 @@ add_task(async function test_execute() {
   // add a http:// uri
   var uri1 = uri("http://mozilla.com");
   await PlacesTestUtils.addVisits({ uri: uri1, referrer });
-  do_check_guid_for_uri(uri1);
+  await check_guid_for_uri(uri1);
   Assert.ok(await PlacesUtils.history.hasVisits(uri1));
 
   // add a https:// uri
   var uri2 = uri("https://etrade.com");
   await PlacesTestUtils.addVisits({ uri: uri2, referrer });
-  do_check_guid_for_uri(uri2);
+  await check_guid_for_uri(uri2);
   Assert.ok(await PlacesUtils.history.hasVisits(uri2));
 
   // add a ftp:// uri
   var uri3 = uri("ftp://ftp.mozilla.org");
   await PlacesTestUtils.addVisits({ uri: uri3, referrer });
-  do_check_guid_for_uri(uri3);
+  await check_guid_for_uri(uri3);
   Assert.ok(await PlacesUtils.history.hasVisits(uri3));
 
   // check if a nonexistent uri is visited

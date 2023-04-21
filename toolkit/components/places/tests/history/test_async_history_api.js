@@ -82,7 +82,7 @@ class TitleChangedObserver {
     PlacesObservers.addListener(["page-title-changed"], this.handlePlacesEvent);
   }
 
-  handlePlacesEvent(aEvents) {
+  async handlePlacesEvent(aEvents) {
     info("'page-title-changed'!!!");
     Assert.equal(aEvents.length, 1, "Right number of title changed notified");
     Assert.equal(aEvents[0].type, "page-title-changed");
@@ -90,7 +90,7 @@ class TitleChangedObserver {
       return;
     }
     Assert.equal(aEvents[0].title, this.expectedTitle);
-    do_check_guid_for_uri(this.uri, aEvents[0].pageGuid);
+    await check_guid_for_uri(this.uri, aEvents[0].pageGuid);
     this.callback();
 
     PlacesObservers.removeListener(
@@ -799,7 +799,7 @@ add_task(async function test_guid_saved() {
   let uri = placeInfo.uri;
   Assert.ok(await PlacesUtils.history.hasVisits(uri));
   Assert.equal(placeInfo.guid, place.guid);
-  do_check_guid_for_uri(uri, place.guid);
+  await check_guid_for_uri(uri, place.guid);
   await PlacesTestUtils.promiseAsyncUpdates();
 });
 
@@ -874,7 +874,7 @@ add_task(async function test_guid_change_saved() {
   if (placesResult.errors.length) {
     do_throw("Unexpected error.");
   }
-  do_check_guid_for_uri(place.uri, place.guid);
+  await check_guid_for_uri(place.uri, place.guid);
 
   await PlacesTestUtils.promiseAsyncUpdates();
 });

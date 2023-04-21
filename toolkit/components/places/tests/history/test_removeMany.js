@@ -47,7 +47,9 @@ add_task(async function test_remove_many() {
     pages.push(page);
 
     await PlacesTestUtils.addVisits(page);
-    page.guid = do_get_guid_for_uri(uri);
+    page.guid = await PlacesTestUtils.getDatabaseValue("moz_places", "guid", {
+      url: uri,
+    });
     if (hasBookmark) {
       await PlacesUtils.bookmarks.insert({
         parentGuid: PlacesUtils.bookmarks.unfiledGuid,

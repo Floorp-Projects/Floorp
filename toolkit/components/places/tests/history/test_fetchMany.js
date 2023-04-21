@@ -25,8 +25,14 @@ add_task(async function test_fetchMany() {
 
   // Add missing page info from the database.
   for (let page of pages) {
-    page.guid = await PlacesTestUtils.fieldInDB(page.url, "guid");
-    page.frecency = await PlacesTestUtils.fieldInDB(page.url, "frecency");
+    page.guid = await PlacesTestUtils.getDatabaseValue("moz_places", "guid", {
+      url: page.url,
+    });
+    page.frecency = await PlacesTestUtils.getDatabaseValue(
+      "moz_places",
+      "frecency",
+      { url: page.url }
+    );
   }
 
   info("Fetch by url");

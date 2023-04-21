@@ -107,7 +107,7 @@ add_task(async () => {
     }
 
     // Observe history.
-    const listener = events => {
+    const listener = async events => {
       for (const event of events) {
         Assert.equal(event.type, "page-removed");
         Assert.equal(event.reason, PlacesVisitRemoved.REASON_EXPIRED);
@@ -118,7 +118,10 @@ add_task(async () => {
           do_check_valid_places_guid(event.pageGuid);
         } else {
           currentTest.receivedNotifications++;
-          do_check_guid_for_uri(Services.io.newURI(event.url), event.pageGuid);
+          await check_guid_for_uri(
+            Services.io.newURI(event.url),
+            event.pageGuid
+          );
           Assert.equal(
             event.isPartialVisistsRemoval,
             currentTest.expectedIsPartialRemoval,

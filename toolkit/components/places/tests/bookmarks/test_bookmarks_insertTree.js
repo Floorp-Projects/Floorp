@@ -407,7 +407,9 @@ add_task(async function create_hierarchy() {
     prevBM = bm;
     if (bm.type == PlacesUtils.bookmarks.TYPE_BOOKMARK) {
       Assert.greater(
-        frecencyForUrl(bm.url),
+        await PlacesTestUtils.getDatabaseValue("moz_places", "frecency", {
+          url: bm.url,
+        }),
         0,
         "Check frecency has been updated for bookmark " + bm.url
       );
@@ -482,7 +484,9 @@ add_task(async function insert_many_non_nested() {
     );
     if (bm.type == PlacesUtils.bookmarks.TYPE_BOOKMARK) {
       Assert.greater(
-        frecencyForUrl(bm.url),
+        await PlacesTestUtils.getDatabaseValue("moz_places", "frecency", {
+          url: bm.url,
+        }),
         0,
         "Check frecency has been updated for bookmark " + bm.url
       );

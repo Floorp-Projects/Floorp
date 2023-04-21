@@ -17,10 +17,16 @@ const FRECENCY = {
 const { VISIT_SOURCE_BOOKMARKED, VISIT_SOURCE_SEARCHED } = PlacesUtils.history;
 
 async function assertDatabase({ targetURL, expected }) {
-  const frecency = await PlacesTestUtils.fieldInDB(targetURL, "frecency");
+  const frecency = await PlacesTestUtils.getDatabaseValue(
+    "moz_places",
+    "frecency",
+    { url: targetURL }
+  );
   Assert.equal(frecency, expected.frecency, "Frecency is correct");
 
-  const placesId = await PlacesTestUtils.fieldInDB(targetURL, "id");
+  const placesId = await PlacesTestUtils.getDatabaseValue("moz_places", "id", {
+    url: targetURL,
+  });
   const db = await PlacesUtils.promiseDBConnection();
   const rows = await db.execute(
     "SELECT source, triggeringPlaceId FROM moz_historyvisits WHERE place_id = :place_id AND source = :source",
@@ -103,9 +109,13 @@ add_task(async function basic() {
       resultURL
     );
     await searchInSearchbar(input);
+    let promiseVisited = PlacesTestUtils.waitForNotification(
+      "page-visited",
+      events => events.some(e => e.url == resultURL)
+    );
     EventUtils.synthesizeKey("KEY_Enter");
     await onLoad;
-
+    await promiseVisited;
     await assertDatabase({ targetURL: resultURL, expected });
 
     await PlacesUtils.history.clear();
@@ -143,9 +153,13 @@ add_task(async function contextmenu() {
       const openLinkMenuItem = contextMenu.querySelector(
         "#context-searchselect"
       );
+      let promiseVisited = PlacesTestUtils.waitForNotification(
+        "page-visited",
+        events => events.some(e => e.url == targetURL)
+      );
       contextMenu.activateItem(openLinkMenuItem);
       const tab = await onLoad;
-
+      await promiseVisited;
       await assertDatabase({
         targetURL,
         expected: {

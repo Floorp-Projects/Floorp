@@ -36,7 +36,9 @@ add_task(async function test_fetch_existent() {
   Assert.equal(await PlacesTestUtils.visitsInDB(uri), visits.length);
 
   // Store guid for further use in testing.
-  guid = await PlacesTestUtils.fieldInDB(uri, "guid");
+  guid = await PlacesTestUtils.getDatabaseValue("moz_places", "guid", {
+    url: uri,
+  });
   Assert.ok(guid, guid);
 
   // Initialize the objects to compare against.

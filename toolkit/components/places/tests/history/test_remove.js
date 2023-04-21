@@ -94,7 +94,9 @@ add_task(async function test_remove_single() {
     let removed = false;
     if (options.useCallback) {
       let onRowCalled = false;
-      let guid = do_get_guid_for_uri(uri);
+      let guid = await PlacesTestUtils.getDatabaseValue("moz_places", "guid", {
+        url: uri,
+      });
       removed = await PlacesUtils.history.remove(removeArg, page => {
         Assert.equal(onRowCalled, false, "Callback has not been called yet");
         onRowCalled = true;
@@ -158,7 +160,8 @@ add_task(async function test_remove_single() {
         );
         await remover(
           "Testing History.remove() with a single string guid",
-          x => do_get_guid_for_uri(x),
+          async x =>
+            PlacesTestUtils.getDatabaseValue("moz_places", "guid", { url: x }),
           options
         );
         await remover(
@@ -173,7 +176,8 @@ add_task(async function test_remove_single() {
         );
         await remover(
           "Testing History.remove() with a single string guid in an array",
-          x => [do_get_guid_for_uri(x)],
+          x =>
+            PlacesTestUtils.getDatabaseValue("moz_places", "guid", { url: x }),
           options
         );
       }

@@ -38,7 +38,9 @@ add_task(async function() {
       await TestUtils.waitForCondition(() => visitCount == 2);
       // Check that the visit is not hidden in the database.
       Assert.ok(
-        !(await PlacesTestUtils.fieldInDB(url, "hidden")),
+        !(await PlacesTestUtils.getDatabaseValue("moz_places", "hidden", {
+          url,
+        })),
         "The url should not be hidden in the database"
       );
     }

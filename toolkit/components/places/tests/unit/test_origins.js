@@ -1020,8 +1020,16 @@ add_task(async function moreOriginFrecencyStats() {
  *         An array of URL strings.
  * @return The expected origin frecency.
  */
-function expectedOriginFrecency(urls) {
-  return urls.reduce((sum, url) => sum + Math.max(frecencyForUrl(url), 0), 0);
+async function expectedOriginFrecency(urls) {
+  let value = 0;
+  for (let url of urls) {
+    let v = Math.max(
+      await PlacesTestUtils.getDatabaseValue("moz_places", "frecency", { url }),
+      0
+    );
+    value += v;
+  }
+  return value;
 }
 
 /**
@@ -1055,14 +1063,17 @@ async function checkDB(expectedOrigins) {
     }
     return o;
   });
-  expectedOrigins = expectedOrigins.map(o => {
-    return o
-      .slice(0, 2)
-      .concat(checkFrecencies ? expectedOriginFrecency(o[2]) : []);
-  });
-  Assert.deepEqual(actualOrigins, expectedOrigins);
+  let expected = [];
+  for (let origin of expectedOrigins) {
+    expected.push(
+      origin
+        .slice(0, 2)
+        .concat(checkFrecencies ? await expectedOriginFrecency(origin[2]) : [])
+    );
+  }
+  Assert.deepEqual(actualOrigins, expected);
   if (checkFrecencies) {
-    await checkStats(expectedOrigins.map(o => o[2]).filter(o => o > 0));
+    await checkStats(expected.map(o => o[2]).filter(o => o > 0));
   }
 }
 

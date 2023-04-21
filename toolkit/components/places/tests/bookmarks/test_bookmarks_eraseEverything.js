@@ -8,8 +8,16 @@ add_task(async function test_eraseEverything() {
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/"),
   });
-  let frecencyForExample = frecencyForUrl("http://example.com/");
-  let frecencyForMozilla = frecencyForUrl("http://mozilla.org/");
+  let frecencyForExample = await PlacesTestUtils.getDatabaseValue(
+    "moz_places",
+    "frecency",
+    { url: "http://example.com/" }
+  );
+  let frecencyForMozilla = await PlacesTestUtils.getDatabaseValue(
+    "moz_places",
+    "frecency",
+    { url: "http://mozilla.org/" }
+  );
   Assert.ok(frecencyForExample > 0);
   Assert.ok(frecencyForMozilla > 0);
   let unfiledFolder = await PlacesUtils.bookmarks.insert({
@@ -67,14 +75,32 @@ add_task(async function test_eraseEverything() {
   checkBookmarkObject(toolbarBookmarkInFolder);
 
   await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
-  Assert.ok(frecencyForUrl("http://example.com/") > frecencyForExample);
-  Assert.ok(frecencyForUrl("http://example.com/") > frecencyForMozilla);
+  Assert.ok(
+    (await PlacesTestUtils.getDatabaseValue("moz_places", "frecency", {
+      url: "http://example.com/",
+    })) > frecencyForExample
+  );
+  Assert.ok(
+    (await PlacesTestUtils.getDatabaseValue("moz_places", "frecency", {
+      url: "http://example.com/",
+    })) > frecencyForMozilla
+  );
 
   await PlacesUtils.bookmarks.eraseEverything();
 
   await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
-  Assert.equal(frecencyForUrl("http://example.com/"), frecencyForExample);
-  Assert.equal(frecencyForUrl("http://example.com/"), frecencyForMozilla);
+  Assert.equal(
+    await PlacesTestUtils.getDatabaseValue("moz_places", "frecency", {
+      url: "http://example.com/",
+    }),
+    frecencyForExample
+  );
+  Assert.equal(
+    await PlacesTestUtils.getDatabaseValue("moz_places", "frecency", {
+      url: "http://example.com/",
+    }),
+    frecencyForMozilla
+  );
 });
 
 add_task(async function test_eraseEverything_roots() {

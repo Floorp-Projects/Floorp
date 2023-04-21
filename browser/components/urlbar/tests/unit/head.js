@@ -393,24 +393,6 @@ async function cleanupPlaces() {
 }
 
 /**
- * Returns the frecency of a url.
- *
- * @param {string} aURI The URI or spec to get frecency for.
- * @returns {number} the frecency value.
- */
-async function frecencyForUrl(aURI) {
-  let url = aURI;
-  if (aURI instanceof Ci.nsIURI) {
-    url = aURI.spec;
-  } else if (URL.isInstance(aURI)) {
-    url = aURI.href;
-  }
-  return PlacesTestUtils.getDatabaseValue("moz_places", "frecency", {
-    url,
-  });
-}
-
-/**
  * Creates a UrlbarResult for a bookmark result.
  *
  * @param {UrlbarQueryContext} queryContext

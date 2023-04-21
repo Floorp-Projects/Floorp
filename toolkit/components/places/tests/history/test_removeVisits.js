@@ -56,7 +56,11 @@ add_task(async function remove_visits_outside_unbookmarked_uri() {
 
   await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   info("Frecency should be positive.");
-  Assert.ok(frecencyForUrl(TEST_URI) > 0);
+  Assert.ok(
+    (await PlacesTestUtils.getDatabaseValue("moz_places", "frecency", {
+      url: TEST_URI,
+    })) > 0
+  );
 
   await cleanup();
 });
@@ -111,7 +115,11 @@ add_task(async function remove_visits_outside_bookmarked_uri() {
   await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   info("Frecency should be positive.");
-  Assert.ok(frecencyForUrl(TEST_URI) > 0);
+  Assert.ok(
+    (await PlacesTestUtils.getDatabaseValue("moz_places", "frecency", {
+      url: TEST_URI,
+    })) > 0
+  );
 
   await cleanup();
 });
@@ -160,7 +168,11 @@ add_task(async function remove_visits_unbookmarked_uri() {
   await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   info("Frecency should be positive.");
-  Assert.ok(frecencyForUrl(TEST_URI) > 0);
+  Assert.ok(
+    (await PlacesTestUtils.getDatabaseValue("moz_places", "frecency", {
+      url: TEST_URI,
+    })) > 0
+  );
 
   await cleanup();
 });
@@ -215,7 +227,11 @@ add_task(async function remove_visits_bookmarked_uri() {
   await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   info("Frecency should be positive.");
-  Assert.ok(frecencyForUrl(TEST_URI) > 0);
+  Assert.ok(
+    (await PlacesTestUtils.getDatabaseValue("moz_places", "frecency", {
+      url: TEST_URI,
+    })) > 0
+  );
 
   await cleanup();
 });
@@ -276,7 +292,11 @@ add_task(async function remove_all_visits_bookmarked_uri() {
     title: "bookmark title",
   });
   await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
-  let initialFrecency = frecencyForUrl(TEST_URI);
+  let initialFrecency = await PlacesTestUtils.getDatabaseValue(
+    "moz_places",
+    "frecency",
+    { url: TEST_URI }
+  );
 
   info("Remove all visits.");
   let filter = {
@@ -310,7 +330,11 @@ add_task(async function remove_all_visits_bookmarked_uri() {
   await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
 
   info("Frecency should be smaller.");
-  Assert.ok(frecencyForUrl(TEST_URI) < initialFrecency);
+  Assert.ok(
+    (await PlacesTestUtils.getDatabaseValue("moz_places", "frecency", {
+      url: TEST_URI,
+    })) < initialFrecency
+  );
 
   await cleanup();
 });
@@ -341,7 +365,12 @@ add_task(async function remove_all_visits_bookmarked_uri() {
   info("URI should still exist in moz_places.");
   Assert.ok(page_in_database(TEST_URI.spec));
   info("Frecency should be zero.");
-  Assert.equal(frecencyForUrl(TEST_URI), 0);
+  Assert.equal(
+    await PlacesTestUtils.getDatabaseValue("moz_places", "frecency", {
+      url: TEST_URI,
+    }),
+    0
+  );
 
   await cleanup();
 });
