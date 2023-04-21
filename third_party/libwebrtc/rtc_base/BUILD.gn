@@ -1336,6 +1336,7 @@ if (is_win) {
 
 if (!build_with_chromium) {
   rtc_library("log_sinks") {
+    visibility = [ "*" ]
     sources = [
       "log_sinks.cc",
       "log_sinks.h",
