@@ -3910,9 +3910,7 @@ counter_style_descriptors! {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_ComputedValues_GetForAnonymousBox(
-    parent_style_or_null: Option<&ComputedValues>,
-    pseudo: PseudoStyleType,
+pub unsafe extern "C" fn Servo_ComputedValues_GetForPageContent(
     raw_data: &RawServoStyleSet,
     page_name: *const nsAtom,
 ) -> Strong<ComputedValues> {
@@ -3920,47 +3918,69 @@ pub unsafe extern "C" fn Servo_ComputedValues_GetForAnonymousBox(
     let guard = global_style_data.shared_lock.read();
     let guards = StylesheetGuards::same(&guard);
     let data = PerDocumentStyleData::from_ffi(raw_data).borrow_mut();
-    let pseudo = PseudoElement::from_pseudo_type(pseudo).unwrap();
-    debug_assert!(pseudo.is_anon_box());
 
-    // If the pseudo element is PageContent, we should append @page rules to the
-    // precomputed pseudo.
     let mut extra_declarations = vec![];
-    if pseudo == PseudoElement::PageContent {
-        let iter = data.stylist.iter_extra_data_origins_rev();
-        for (data, origin) in iter {
-            let level = match origin {
-                Origin::UserAgent => CascadeLevel::UANormal,
-                Origin::User => CascadeLevel::UserNormal,
-                Origin::Author => CascadeLevel::same_tree_author_normal(),
-            };
-            extra_declarations.reserve(data.pages.global.len());
-            let mut add_rule = |rule: &Arc<Locked<PageRule>>| {
-                extra_declarations.push(ApplicableDeclarationBlock::from_declarations(
-                    rule.read_with(level.guard(&guards)).block.clone(),
-                    level,
-                    LayerOrder::root(),
-                ));
-            };
-            for &(ref rule, _layer_id) in data.pages.global.iter() {
-                add_rule(&rule.0);
-            }
-            if !page_name.is_null() {
-                Atom::with(page_name, |name| {
-                    if let Some(rules) = data.pages.named.get(name) {
-                        // Rules are already sorted by source order.
-                        rules.iter().for_each(|d| add_rule(&d.rule));
-                    }
-                });
-            }
+    let iter = data.stylist.iter_extra_data_origins_rev();
+    for (data, origin) in iter {
+        let level = match origin {
+            Origin::UserAgent => CascadeLevel::UANormal,
+            Origin::User => CascadeLevel::UserNormal,
+            Origin::Author => CascadeLevel::same_tree_author_normal(),
+        };
+        extra_declarations.reserve(data.pages.global.len());
+        let mut add_rule = |rule: &Arc<Locked<PageRule>>| {
+            extra_declarations.push(ApplicableDeclarationBlock::from_declarations(
+                rule.read_with(level.guard(&guards)).block.clone(),
+                level,
+                LayerOrder::root(),
+            ));
+        };
+        for &(ref rule, _layer_id) in data.pages.global.iter() {
+            add_rule(&rule.0);
         }
-    } else {
-        debug_assert!(page_name.is_null());
+        if !page_name.is_null() {
+            Atom::with(page_name, |name| {
+                if let Some(rules) = data.pages.named.get(name) {
+                    // Rules are already sorted by source order.
+                    rules.iter().for_each(|d| add_rule(&d.rule));
+                }
+            });
+        }
     }
 
     let rule_node =
         data.stylist
-            .rule_node_for_precomputed_pseudo(&guards, &pseudo, extra_declarations);
+            .rule_node_for_precomputed_pseudo(
+                &guards,
+                &PseudoElement::PageContent,
+                extra_declarations);
+
+    data.stylist
+        .precomputed_values_for_pseudo_with_rule_node::<GeckoElement>(
+            &guards,
+            &PseudoElement::PageContent,
+            None,
+            rule_node,
+        )
+        .into()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_ComputedValues_GetForAnonymousBox(
+    parent_style_or_null: Option<&ComputedValues>,
+    pseudo: PseudoStyleType,
+    raw_data: &RawServoStyleSet,
+) -> Strong<ComputedValues> {
+    let pseudo = PseudoElement::from_pseudo_type(pseudo).unwrap();
+    debug_assert!(pseudo.is_anon_box());
+    debug_assert_ne!(pseudo, PseudoElement::PageContent);
+    let global_style_data = &*GLOBAL_STYLE_DATA;
+    let guard = global_style_data.shared_lock.read();
+    let guards = StylesheetGuards::same(&guard);
+    let data = PerDocumentStyleData::from_ffi(raw_data).borrow_mut();
+    let rule_node =
+        data.stylist
+            .rule_node_for_precomputed_pseudo(&guards, &pseudo, vec![]);
 
     data.stylist
         .precomputed_values_for_pseudo_with_rule_node::<GeckoElement>(
