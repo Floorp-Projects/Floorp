@@ -17,6 +17,7 @@ rtc_library("video_capture_module") {
   sources = [
     "device_info_impl.cc",
     "device_info_impl.h",
+    "raw_video_sink_interface.h",
     "video_capture.h",
     "video_capture_config.h",
     "video_capture_defines.h",
