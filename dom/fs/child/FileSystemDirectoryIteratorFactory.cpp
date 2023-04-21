@@ -143,18 +143,18 @@ class DoubleBufferQueueImpl
            manager = RefPtr<FileSystemManager>(aManager), newPage, aResult,
            this](JSContext* aCx, JS::Handle<JS::Value> aValue) mutable {
             MOZ_ASSERT(0u == mWithinPageIndex);
+            MOZ_ASSERT(newPage->Length() <= PageSize);
 
-            // XXX Do we need this extra copy ?
-            nsTArray<DataType> batch;
-            for (const auto& it : *newPage) {
-              batch.AppendElement(it);
+            const size_t startPos = mCurrentPageIsLastPage ? 0u : PageSize;
+            if (mData.Length() < 2 * PageSize) {
+              mData.InsertElementsAt(startPos, newPage->Elements(),
+                                     newPage->Length());
+            } else {
+              mData.ReplaceElementsAt(startPos, newPage->Length(),
+                                      newPage->Elements(), newPage->Length());
             }
-
-            const size_t batchSize = std::min(PageSize, newPage->Length());
-            mData.InsertElementsAt(
-                PageSize * static_cast<size_t>(!mCurrentPageIsLastPage),
-                batch.Elements(), batchSize);
-            mWithinPageEnd += batchSize;
+            MOZ_ASSERT(mData.Length() <= 2 * PageSize);
+            mWithinPageEnd = newPage->Length();
 
             Maybe<DataType> value;
             if (0 != newPage->Length()) {
@@ -186,9 +186,8 @@ class DoubleBufferQueueImpl
       return false;
     }
 
-    const auto previous =
-        static_cast<size_t>(!mCurrentPageIsLastPage) * PageSize +
-        mWithinPageIndex;
+    const size_t previous =
+        mWithinPageIndex + (mCurrentPageIsLastPage ? 0 : PageSize);
     MOZ_ASSERT(2u * PageSize > previous);
     MOZ_ASSERT(previous < mData.Length());
 
