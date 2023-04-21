@@ -52,7 +52,7 @@ export function initialSourcesState(state) {
      * "source" are the objects stored in this reducer, in the `sources` attribute.
      * "source-actor" are the objects stored in the "source-actors.js" reducer, in its `sourceActors` attribute.
      *
-     * Dictionary(source id => array<Object(id: SourceActor Id, thread: Thread Actor ID)>)
+     * Dictionary(source id => array<Source Actor object>)
      */
     actors: {},
 
@@ -270,13 +270,7 @@ function insertSourceActors(state, action) {
   for (const sourceActor of sourceActors) {
     state.actors[sourceActor.source] = [
       ...(state.actors[sourceActor.source] || []),
-      {
-        id: sourceActor.id,
-        thread: sourceActor.thread,
-        startLine: sourceActor.startLine,
-        column: sourceActor.column,
-        length: sourceActor.length,
-      },
+      sourceActor,
     ];
   }
 
