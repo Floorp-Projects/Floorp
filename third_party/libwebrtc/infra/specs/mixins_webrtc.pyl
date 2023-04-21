@@ -64,6 +64,14 @@
       },
     },
   },
+  'limited-capacity': {
+    # Sometimes there are multiple tests that can be run only on one machine.
+    # We need to increase timeouts so the tests dont expire before the machine is freed.
+    # Using 3h expiration timeout to align with `timeout-3h` mixin used for per tests.
+    'swarming': {
+      'expiration': 10800,
+    },
+  },
   'mac-m1-cpu': {
     'swarming': {
       'dimensions': {
