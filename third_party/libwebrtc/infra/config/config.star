@@ -58,7 +58,6 @@ def make_reclient_properties(instance, jobs = None):
 # useful when a failure can be safely ignored while fixing it without
 # blocking the LKGR finder on it.
 skipped_lkgr_bots = [
-    "iOS Debug (simulator)",
 ]
 
 # Use LUCI Scheduler BBv2 names and add Scheduler realms configs.
@@ -743,13 +742,7 @@ ios_builder("iOS64 Release", "iOS|arm64|rel")
 ios_try_job("ios_compile_arm64_rel")
 ios_try_job("ios_compile_arm64_rel_reclient", cq = {"experiment_percentage": 100})
 ios_builder("iOS Debug (simulator)", "iOS|x64|sim")
-ios_try_job("ios_dbg_simulator", cq = None)
-ios_builder("iOS64 Sim Debug (iOS 14)", "iOS|x64|14")
-ios_try_job("ios_sim_x64_dbg_ios14")
-ios_builder("iOS64 Sim Debug (iOS 13)", "iOS|x64|13")
-ios_try_job("ios_sim_x64_dbg_ios13")
-ios_builder("iOS64 Sim Debug (iOS 12)", "iOS|x64|12")
-ios_try_job("ios_sim_x64_dbg_ios12")
+ios_try_job("ios_dbg_simulator")
 ios_builder("iOS API Framework Builder", "iOS|fat|size", recipe = "ios_api_framework", prioritized = True)
 ios_try_job("ios_api_framework", recipe = "ios_api_framework")
 
