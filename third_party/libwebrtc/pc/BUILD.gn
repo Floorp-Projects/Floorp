@@ -1015,7 +1015,10 @@ rtc_source_set("peer_connection_internal") {
     ":sctp_data_channel",
     "../api:libjingle_peerconnection_api",
     "../call:call_interfaces",
+    "../modules/audio_device",
   ]
+
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 rtc_source_set("rtc_stats_collector") {
@@ -1060,6 +1063,7 @@ rtc_source_set("rtc_stats_collector") {
     "../media:media_channel",
     "../media:media_channel_impl",
     "../media:rtc_media_base",
+    "../modules/audio_device",
     "../modules/audio_processing:audio_processing_statistics",
     "../modules/rtp_rtcp:rtp_rtcp_format",
     "../p2p:rtc_p2p",

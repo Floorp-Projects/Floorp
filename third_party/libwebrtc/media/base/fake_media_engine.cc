@@ -15,6 +15,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/strings/match.h"
+#include "absl/types/optional.h"
 #include "rtc_base/checks.h"
 
 namespace cricket {
@@ -489,6 +490,10 @@ int FakeVoiceEngine::GetInputLevel() {
 bool FakeVoiceEngine::StartAecDump(webrtc::FileWrapper file,
                                    int64_t max_size_bytes) {
   return false;
+}
+absl::optional<webrtc::AudioDeviceModule::Stats>
+FakeVoiceEngine::GetAudioDeviceStats() {
+  return absl::nullopt;
 }
 void FakeVoiceEngine::StopAecDump() {}
 

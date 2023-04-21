@@ -42,6 +42,7 @@
 #include "api/video_codecs/scalability_mode.h"
 #include "common_video/include/quality_limitation_reason.h"
 #include "media/base/media_channel.h"
+#include "modules/audio_device/include/audio_device.h"
 #include "modules/audio_processing/include/audio_processing_statistics.h"
 #include "modules/rtp_rtcp/include/report_block_data.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
@@ -2703,6 +2704,31 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Video) {
   EXPECT_TRUE(report->Get(*expected_video.track_id));
   EXPECT_TRUE(report->Get(*expected_video.transport_id));
   EXPECT_TRUE(report->Get(*expected_video.codec_id));
+}
+
+TEST_F(RTCStatsCollectorTest, CollectRTCAudioPlayoutStats) {
+  AudioDeviceModule::Stats audio_device_stats;
+  audio_device_stats.synthesized_samples_duration_s = 1;
+  audio_device_stats.synthesized_samples_events = 2;
+  audio_device_stats.total_samples_count = 3;
+  audio_device_stats.total_samples_duration_s = 4;
+  audio_device_stats.total_playout_delay_s = 5;
+  pc_->SetAudioDeviceStats(audio_device_stats);
+
+  rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
+  auto stats_of_track_type = report->GetStatsOfType<RTCAudioPlayoutStats>();
+  ASSERT_EQ(1U, stats_of_track_type.size());
+
+  RTCAudioPlayoutStats expected_stats("AP", report->timestamp());
+  expected_stats.synthesized_samples_duration = 1;
+  expected_stats.synthesized_samples_events = 2;
+  expected_stats.total_samples_count = 3;
+  expected_stats.total_samples_duration = 4;
+  expected_stats.total_playout_delay = 5;
+
+  ASSERT_TRUE(report->Get(expected_stats.id()));
+  EXPECT_EQ(report->Get(expected_stats.id())->cast_to<RTCAudioPlayoutStats>(),
+            expected_stats);
 }
 
 TEST_F(RTCStatsCollectorTest, CollectGoogTimingFrameInfo) {

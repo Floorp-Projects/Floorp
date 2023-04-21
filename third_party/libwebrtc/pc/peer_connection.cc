@@ -22,6 +22,7 @@
 #include "absl/algorithm/container.h"
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
 #include "api/jsep_ice_candidate.h"
 #include "api/rtp_parameters.h"
 #include "api/rtp_transceiver_direction.h"
@@ -2498,6 +2499,13 @@ Call::Stats PeerConnection::GetCallStats() {
   } else {
     return Call::Stats();
   }
+}
+
+absl::optional<AudioDeviceModule::Stats> PeerConnection::GetAudioDeviceStats() {
+  if (context_->media_engine()) {
+    return context_->media_engine()->voice().GetAudioDeviceStats();
+  }
+  return absl::nullopt;
 }
 
 bool PeerConnection::SetupDataChannelTransport_n(const std::string& mid) {

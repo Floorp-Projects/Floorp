@@ -895,4 +895,27 @@ RTCTransportStats::RTCTransportStats(const RTCTransportStats& other) = default;
 
 RTCTransportStats::~RTCTransportStats() {}
 
+RTCAudioPlayoutStats::RTCAudioPlayoutStats(const std::string& id,
+                                           Timestamp timestamp)
+    : RTCStats(std::move(id), timestamp),
+      synthesized_samples_duration("synthesizedSamplesDuration"),
+      synthesized_samples_events("synthesizedSamplesEvents"),
+      total_samples_duration("totalSamplesDuration"),
+      total_playout_delay("totalPlayoutDelay"),
+      total_samples_count("totalSamplesCount") {}
+
+RTCAudioPlayoutStats::RTCAudioPlayoutStats(const RTCAudioPlayoutStats& other) =
+    default;
+
+RTCAudioPlayoutStats::~RTCAudioPlayoutStats() {}
+
+// clang-format off
+WEBRTC_RTCSTATS_IMPL(RTCAudioPlayoutStats, RTCStats, "audio-playout",
+    &synthesized_samples_duration,
+    &synthesized_samples_events,
+    &total_samples_duration,
+    &total_playout_delay,
+    &total_samples_count)
+// clang-format on
+
 }  // namespace webrtc

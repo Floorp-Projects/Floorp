@@ -259,10 +259,10 @@ index 0000000000..f6ff7f218f
 +  #endif
 +#endif
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index 4d8c67eead..0c59ee606d 100644
+index 4ab0b114db..33cf52a796 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
-@@ -147,6 +147,27 @@ rtc_library("rtc_media_base") {
+@@ -148,6 +148,27 @@ rtc_library("rtc_media_base") {
      "base/video_source_base.cc",
      "base/video_source_base.h",
    ]
@@ -290,7 +290,7 @@ index 4d8c67eead..0c59ee606d 100644
  }
  
  rtc_library("media_channel_impl") {
-@@ -424,6 +445,9 @@ rtc_library("rtc_internal_video_codecs") {
+@@ -425,6 +446,9 @@ rtc_library("rtc_internal_video_codecs") {
      "../system_wrappers:field_trial",
      "../test:fake_video_codecs",
    ]
@@ -300,7 +300,7 @@ index 4d8c67eead..0c59ee606d 100644
  
    if (enable_libaom) {
      defines += [ "RTC_USE_LIBAOM_AV1_ENCODER" ]
-@@ -453,6 +477,12 @@ rtc_library("rtc_internal_video_codecs") {
+@@ -454,6 +478,12 @@ rtc_library("rtc_internal_video_codecs") {
      # targets depend on :rtc_encoder_simulcast_proxy directly.
      "engine/encoder_simulcast_proxy.h",
    ]
@@ -327,10 +327,10 @@ index 0bf6968cb6..19a6f1269b 100644
  }
  
 diff --git a/modules/audio_device/BUILD.gn b/modules/audio_device/BUILD.gn
-index 6c7292aba1..7a097fad17 100644
+index 4a6a0ab41c..e35a442025 100644
 --- a/modules/audio_device/BUILD.gn
 +++ b/modules/audio_device/BUILD.gn
-@@ -232,9 +232,9 @@ rtc_library("audio_device_impl") {
+@@ -233,9 +233,9 @@ rtc_library("audio_device_impl") {
    ]
  
    if (build_with_mozilla) {
@@ -343,7 +343,7 @@ index 6c7292aba1..7a097fad17 100644
      ]
    }
  
-@@ -476,7 +476,7 @@ if (rtc_include_tests && !build_with_chromium) {
+@@ -477,7 +477,7 @@ if (rtc_include_tests && !build_with_chromium) {
    }
  }
  

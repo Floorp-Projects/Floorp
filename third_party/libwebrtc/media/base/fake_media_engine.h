@@ -537,6 +537,8 @@ class FakeVoiceEngine : public VoiceEngineInterface {
   int GetInputLevel();
   bool StartAecDump(webrtc::FileWrapper file, int64_t max_size_bytes) override;
   void StopAecDump() override;
+  absl::optional<webrtc::AudioDeviceModule::Stats> GetAudioDeviceStats()
+      override;
   std::vector<webrtc::RtpHeaderExtensionCapability> GetRtpHeaderExtensions()
       const override;
   void SetRtpHeaderExtensions(
