@@ -12,6 +12,13 @@
 
 namespace webrtc {
 
+template class RTC_EXPORT_TEMPLATE_DEFINE(RTC_EXPORT) Scoped<GError>;
+template class RTC_EXPORT_TEMPLATE_DEFINE(RTC_EXPORT) Scoped<char>;
+template class RTC_EXPORT_TEMPLATE_DEFINE(RTC_EXPORT) Scoped<GVariant>;
+template class RTC_EXPORT_TEMPLATE_DEFINE(RTC_EXPORT) Scoped<GVariantIter>;
+template class RTC_EXPORT_TEMPLATE_DEFINE(RTC_EXPORT) Scoped<GDBusMessage>;
+template class RTC_EXPORT_TEMPLATE_DEFINE(RTC_EXPORT) Scoped<GUnixFDList>;
+
 template <>
 Scoped<GError>::~Scoped() {
   if (ptr_) {

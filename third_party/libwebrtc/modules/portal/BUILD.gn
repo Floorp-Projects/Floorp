@@ -118,6 +118,7 @@ if (!build_with_mozilla) {
       "../../rtc_base:checks",
       "../../rtc_base:logging",
       "../../rtc_base:sanitizer",
+      "../../rtc_base/system:rtc_export",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 
