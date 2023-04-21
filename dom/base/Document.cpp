@@ -18287,7 +18287,8 @@ ColorScheme Document::DefaultColorScheme() const {
 }
 
 ColorScheme Document::PreferredColorScheme(IgnoreRFP aIgnoreRFP) const {
-  if (ShouldResistFingerprinting() && aIgnoreRFP == IgnoreRFP::No) {
+  if (ShouldResistFingerprinting(RFPTarget::CSSPrefersColorScheme) &&
+      aIgnoreRFP == IgnoreRFP::No) {
     return ColorScheme::Light;
   }
 
