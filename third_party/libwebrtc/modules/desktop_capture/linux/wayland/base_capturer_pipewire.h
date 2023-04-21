@@ -23,9 +23,10 @@
 
 namespace webrtc {
 
-class BaseCapturerPipeWire : public DesktopCapturer,
-                             public DelegatedSourceListController,
-                             public ScreenCastPortal::PortalNotifier {
+class RTC_EXPORT BaseCapturerPipeWire
+    : public DesktopCapturer,
+      public DelegatedSourceListController,
+      public ScreenCastPortal::PortalNotifier {
  public:
   // Returns whether or not the current system can support capture via PipeWire.
   // This will only be true on Wayland systems that also have PipeWire

@@ -55,28 +55,30 @@ using SessionStartRequestedHandler = void (*)(GDBusProxy*,
                                               GAsyncResult*,
                                               gpointer);
 
-std::string RequestResponseToString(RequestResponse request);
+RTC_EXPORT std::string RequestResponseToString(RequestResponse request);
 
 RequestResponse RequestResponseFromPortalResponse(uint32_t portal_response);
 
 // Returns a string path for signal handle based on the provided connection and
 // token.
-std::string PrepareSignalHandle(absl::string_view token,
-                                GDBusConnection* connection);
+RTC_EXPORT std::string PrepareSignalHandle(absl::string_view token,
+                                           GDBusConnection* connection);
 
 // Sets up the callback to execute when a response signal is received for the
 // given object.
-uint32_t SetupRequestResponseSignal(absl::string_view object_path,
-                                    const GDBusSignalCallback callback,
-                                    gpointer user_data,
-                                    GDBusConnection* connection);
+RTC_EXPORT uint32_t
+SetupRequestResponseSignal(absl::string_view object_path,
+                           const GDBusSignalCallback callback,
+                           gpointer user_data,
+                           GDBusConnection* connection);
 
-void RequestSessionProxy(absl::string_view interface_name,
-                         const ProxyRequestCallback proxy_request_callback,
-                         GCancellable* cancellable,
-                         gpointer user_data);
+RTC_EXPORT void RequestSessionProxy(
+    absl::string_view interface_name,
+    const ProxyRequestCallback proxy_request_callback,
+    GCancellable* cancellable,
+    gpointer user_data);
 
-void SetupSessionRequestHandlers(
+RTC_EXPORT void SetupSessionRequestHandlers(
     absl::string_view portal_prefix,
     const SessionRequestCallback session_request_callback,
     const SessionRequestResponseSignalHandler request_response_signale_handler,
@@ -87,7 +89,7 @@ void SetupSessionRequestHandlers(
     guint& session_request_signal_id,
     gpointer user_data);
 
-void StartSessionRequest(
+RTC_EXPORT void StartSessionRequest(
     absl::string_view prefix,
     absl::string_view session_handle,
     const StartRequestResponseSignalHandler signal_handler,
@@ -100,10 +102,10 @@ void StartSessionRequest(
     gpointer user_data);
 
 // Tears down the portal session and cleans up related objects.
-void TearDownSession(absl::string_view session_handle,
-                     GDBusProxy* proxy,
-                     GCancellable* cancellable,
-                     GDBusConnection* connection);
+RTC_EXPORT void TearDownSession(absl::string_view session_handle,
+                                GDBusProxy* proxy,
+                                GCancellable* cancellable,
+                                GDBusConnection* connection);
 
 }  // namespace xdg_portal
 }  // namespace webrtc

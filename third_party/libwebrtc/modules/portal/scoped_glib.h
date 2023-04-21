@@ -14,6 +14,7 @@
 #include <gio/gio.h>
 
 #include "rtc_base/checks.h"
+#include "rtc_base/system/rtc_export_template.h"
 
 namespace webrtc {
 
@@ -59,6 +60,16 @@ template <>
 Scoped<GDBusMessage>::~Scoped();
 template <>
 Scoped<GUnixFDList>::~Scoped();
+
+extern template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT) Scoped<GError>;
+extern template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT) Scoped<char>;
+extern template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT) Scoped<GVariant>;
+extern template class RTC_EXPORT_TEMPLATE_DECLARE(
+    RTC_EXPORT) Scoped<GVariantIter>;
+extern template class RTC_EXPORT_TEMPLATE_DECLARE(
+    RTC_EXPORT) Scoped<GDBusMessage>;
+extern template class RTC_EXPORT_TEMPLATE_DECLARE(
+    RTC_EXPORT) Scoped<GUnixFDList>;
 
 }  // namespace webrtc
 
