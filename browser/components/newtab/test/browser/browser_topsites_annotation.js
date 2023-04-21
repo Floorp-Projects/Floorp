@@ -52,12 +52,20 @@ const {
 } = PlacesUtils.history;
 
 async function assertDatabase({ targetURL, expected }) {
-  const frecency = await PlacesTestUtils.fieldInDB(targetURL, "frecency");
+  const frecency = await PlacesTestUtils.getDatabaseValue(
+    "moz_places",
+    "frecency",
+    { url: targetURL }
+  );
   Assert.equal(frecency, expected.frecency, "Frecency is correct");
 
-  const placesId = await PlacesTestUtils.fieldInDB(targetURL, "id");
+  const placesId = await PlacesTestUtils.getDatabaseValue("moz_places", "id", {
+    url: targetURL,
+  });
   const expectedTriggeringPlaceId = expected.triggerURL
-    ? await PlacesTestUtils.fieldInDB(expected.triggerURL, "id")
+    ? await PlacesTestUtils.getDatabaseValue("moz_places", "id", {
+        url: expected.triggerURL,
+      })
     : null;
   const db = await PlacesUtils.promiseDBConnection();
   const rows = await db.execute(

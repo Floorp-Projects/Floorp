@@ -342,9 +342,21 @@ add_task(async function groupByHost() {
     { uri: "https://mozilla.org/" },
   ]);
 
-  let httpFrec = await frecencyForUrl("http://example.com/");
-  let httpsFrec = await frecencyForUrl("https://example.com/");
-  let otherFrec = await frecencyForUrl("https://mozilla.org/");
+  let httpFrec = await PlacesTestUtils.getDatabaseValue(
+    "moz_places",
+    "frecency",
+    { url: "http://example.com/" }
+  );
+  let httpsFrec = await PlacesTestUtils.getDatabaseValue(
+    "moz_places",
+    "frecency",
+    { url: "https://example.com/" }
+  );
+  let otherFrec = await PlacesTestUtils.getDatabaseValue(
+    "moz_places",
+    "frecency",
+    { url: "https://mozilla.org/" }
+  );
   Assert.less(httpFrec, httpsFrec, "Sanity check");
   Assert.less(httpsFrec, otherFrec, "Sanity check");
 
@@ -407,9 +419,27 @@ add_task(async function groupByHostNonDefaultStddevMultiplier() {
     { uri: "https://mozilla.org/" },
   ]);
 
-  let httpFrec = await frecencyForUrl("http://example.com/");
-  let httpsFrec = await frecencyForUrl("https://example.com/");
-  let otherFrec = await frecencyForUrl("https://mozilla.org/");
+  let httpFrec = await PlacesTestUtils.getDatabaseValue(
+    "moz_places",
+    "frecency",
+    {
+      url: "http://example.com/",
+    }
+  );
+  let httpsFrec = await PlacesTestUtils.getDatabaseValue(
+    "moz_places",
+    "frecency",
+    {
+      url: "https://example.com/",
+    }
+  );
+  let otherFrec = await PlacesTestUtils.getDatabaseValue(
+    "moz_places",
+    "frecency",
+    {
+      url: "https://mozilla.org/",
+    }
+  );
   Assert.less(httpFrec, httpsFrec, "Sanity check");
   Assert.less(httpsFrec, otherFrec, "Sanity check");
 

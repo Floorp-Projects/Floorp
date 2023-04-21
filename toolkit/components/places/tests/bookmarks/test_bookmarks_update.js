@@ -308,7 +308,11 @@ add_task(async function update_url() {
   checkBookmarkObject(bm);
   let lastModified = bm.lastModified;
   await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
-  let frecency = frecencyForUrl(bm.url);
+  let frecency = await PlacesTestUtils.getDatabaseValue(
+    "moz_places",
+    "frecency",
+    { url: bm.url }
+  );
   Assert.greater(frecency, 0, "Check frecency has been updated");
 
   bm = await PlacesUtils.bookmarks.update({
@@ -325,12 +329,16 @@ add_task(async function update_url() {
 
   await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   Assert.equal(
-    frecencyForUrl("http://example.com/"),
+    await PlacesTestUtils.getDatabaseValue("moz_places", "frecency", {
+      url: "http://example.com/",
+    }),
     frecency,
     "Check frecency for example.com"
   );
   Assert.equal(
-    frecencyForUrl("http://mozilla.org/"),
+    await PlacesTestUtils.getDatabaseValue("moz_places", "frecency", {
+      url: "http://mozilla.org/",
+    }),
     frecency,
     "Check frecency for mozilla.org"
   );

@@ -96,7 +96,9 @@ add_task(async function() {
 
     Assert.equal(
       pageGuid,
-      await PlacesTestUtils.fieldInDB(pageURI, "guid"),
+      await PlacesTestUtils.getDatabaseValue("moz_places", "guid", {
+        url: pageURI,
+      }),
       "Page guid is correct"
     );
     let { dataLen, data, mimeType } = await PlacesUtils.promiseFaviconData(

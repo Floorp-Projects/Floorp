@@ -225,13 +225,10 @@ export var PlacesTestUtils = Object.freeze({
    * @rejects JavaScript exception.
    */
   async isPageInDB(aURI) {
-    let url = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
-    let db = await lazy.PlacesUtils.promiseDBConnection();
-    let rows = await db.executeCached(
-      "SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url",
-      { url }
+    return (
+      (await this.getDatabaseValue("moz_places", "id", { url: aURI })) !==
+      undefined
     );
-    return !!rows.length;
   },
 
   /**
@@ -253,30 +250,6 @@ export var PlacesTestUtils = Object.freeze({
       { url }
     );
     return rows[0].getResultByIndex(0);
-  },
-
-  /**
-   * Asynchronously returns the required DB field for a specified page.
-   * @param aURI
-   *        nsIURI or address to look for.
-   *
-   * @return {Promise}
-   * @resolves Returns the field value.
-   * @rejects JavaScript exception.
-   */
-  fieldInDB(aURI, field) {
-    let url = aURI instanceof Ci.nsIURI ? URL.fromURI(aURI) : new URL(aURI);
-    return lazy.PlacesUtils.withConnectionWrapper(
-      "PlacesTestUtils.jsm: fieldInDb",
-      async db => {
-        let rows = await db.executeCached(
-          `SELECT ${field} FROM moz_places
-        WHERE url_hash = hash(:url) AND url = :url`,
-          { url: url.href }
-        );
-        return rows[0].getResultByIndex(0);
-      }
-    );
   },
 
   /**
@@ -570,24 +543,33 @@ export var PlacesTestUtils = Object.freeze({
   },
 
   /**
-  Retrieves a value from a specified field in a database table based on the given conditions.
-  @param {string} table - The name of the database table to query.
-  @param {string} field - The name of the field to retrieve a value from.
-  @param {Object} conditions - An object containing the conditions to filter the query results. The keys
-  represent the names of the columns to filter by, and the values represent the filter values.
-  @return {Promise} A Promise that resolves to the value of the specified field from the database table,
-  or null if the query returns no results.
-  */
+   * Retrieves a single value from a specified field in a database table, based
+   * on the given conditions.
+   * @param {string} table - The name of the database table to query.
+   * @param {string} field - The name of the field to retrieve a value from.
+   * @param {Object} conditions - An object containing the conditions to filter
+   * the query results. The keys represent the names of the columns to filter
+   * by, and the values represent the filter values.
+   * @return {Promise} A Promise that resolves to the value of the specified
+   * field from the database table, or null if the query returns no results.
+   * @throws If more than one result is found for the given conditions.
+   */
   async getDatabaseValue(table, field, conditions) {
     let whereClause = [];
     let params = {};
     for (let [column, value] of Object.entries(conditions)) {
-      if (table == "moz_places" && column == "url") {
+      if (column == "url") {
+        if (value instanceof Ci.nsIURI) {
+          value = value.spec;
+        } else if (URL.isInstance(value)) {
+          value = value.href;
+        }
+      }
+      if (column == "url" && table == "moz_places") {
         whereClause.push("url_hash = hash(:url) AND url = :url");
       } else {
         whereClause.push(`${column} = :${column}`);
       }
-
       params[column] = value;
     }
     let whereString = whereClause.length
@@ -595,8 +577,12 @@ export var PlacesTestUtils = Object.freeze({
       : "";
     let query = `SELECT ${field} FROM ${table} ${whereString}`;
     let conn = await lazy.PlacesUtils.promiseDBConnection();
-    let result = await conn.executeCached(query, params);
-
-    return result[0] ? result[0].getResultByName(field) : undefined;
+    let rows = await conn.executeCached(query, params);
+    if (rows.length > 1) {
+      throw new Error(
+        "getDatabaseValue doesn't support returning multiple results"
+      );
+    }
+    return rows[0]?.getResultByName(field);
   },
 });

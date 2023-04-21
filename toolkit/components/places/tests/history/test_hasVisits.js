@@ -48,7 +48,9 @@ add_task(async function test_history_has_visits() {
     true,
     "Test Url should be in history."
   );
-  let guid = await PlacesTestUtils.fieldInDB(TEST_URL, "guid");
+  let guid = await PlacesTestUtils.getDatabaseValue("moz_places", "guid", {
+    url: TEST_URL,
+  });
   Assert.equal(
     await PlacesUtils.history.hasVisits(guid),
     true,

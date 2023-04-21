@@ -36,11 +36,19 @@ add_task(async function() {
 
   // The newest bookmark should have an higher frecency.
   Assert.greater(
-    await PlacesTestUtils.fieldInDB(bookmarks[1].url, "frecency"),
-    await PlacesTestUtils.fieldInDB(bookmarks[0].url, "frecency")
+    await PlacesTestUtils.getDatabaseValue("moz_places", "frecency", {
+      url: bookmarks[1].url,
+    }),
+    await PlacesTestUtils.getDatabaseValue("moz_places", "frecency", {
+      url: bookmarks[0].url,
+    })
   );
   Assert.greater(
-    await PlacesTestUtils.fieldInDB(bookmarks[0].url, "frecency"),
-    await PlacesTestUtils.fieldInDB(bookmarks[2].url, "frecency")
+    await PlacesTestUtils.getDatabaseValue("moz_places", "frecency", {
+      url: bookmarks[0].url,
+    }),
+    await PlacesTestUtils.getDatabaseValue("moz_places", "frecency", {
+      url: bookmarks[2].url,
+    })
   );
 });

@@ -65,7 +65,11 @@ add_task(async function test_frecency_decay() {
   Assert.equal(PlacesUtils.history.isFrecencyDecaying, false);
 
   // Now check the new frecency is correct.
-  let newFrecency = await PlacesTestUtils.fieldInDB(url, "frecency");
+  let newFrecency = await PlacesTestUtils.getDatabaseValue(
+    "moz_places",
+    "frecency",
+    { url }
+  );
 
   Assert.equal(
     newFrecency,

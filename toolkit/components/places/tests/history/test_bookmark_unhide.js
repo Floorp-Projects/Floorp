@@ -11,10 +11,16 @@ add_task(async function test_hidden() {
     url,
     transition: TRANSITION_FRAMED_LINK,
   });
-  Assert.equal(await PlacesTestUtils.fieldInDB(url, "hidden"), 1);
+  Assert.equal(
+    await PlacesTestUtils.getDatabaseValue("moz_places", "hidden", { url }),
+    1
+  );
   await PlacesUtils.bookmarks.insert({
     url,
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
   });
-  Assert.equal(await PlacesTestUtils.fieldInDB(url, "hidden"), 0);
+  Assert.equal(
+    await PlacesTestUtils.getDatabaseValue("moz_places", "hidden", { url }),
+    0
+  );
 });

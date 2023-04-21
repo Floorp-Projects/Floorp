@@ -7,11 +7,11 @@
  */
 function promiseVisitAdded(callback) {
   return new Promise(resolve => {
-    function listener(events) {
+    async function listener(events) {
       PlacesObservers.removeListener(["page-visited"], listener);
       Assert.equal(events.length, 1, "Right number of visits notified");
       Assert.equal(events[0].type, "page-visited");
-      callback(events[0]);
+      await callback(events[0]);
       resolve();
     }
     PlacesObservers.addListener(["page-visited"], listener);
@@ -33,14 +33,14 @@ async function task_add_visit(uri, timestamp, transition) {
 }
 
 add_task(async function test_visitAdded() {
-  let promiseNotify = promiseVisitAdded(function(visit) {
+  let promiseNotify = promiseVisitAdded(async function(visit) {
     Assert.ok(visit.visitId > 0);
     Assert.equal(visit.url, testuri.spec);
     Assert.equal(visit.visitTime, testtime / 1000);
     Assert.equal(visit.referringVisitId, 0);
     Assert.equal(visit.transitionType, TRANSITION_TYPED);
     let uri = NetUtil.newURI(visit.url);
-    do_check_guid_for_uri(uri, visit.pageGuid);
+    await check_guid_for_uri(uri, visit.pageGuid);
     Assert.ok(!visit.hidden);
     Assert.equal(visit.visitCount, 1);
     Assert.equal(visit.typedCount, 1);
@@ -52,14 +52,14 @@ add_task(async function test_visitAdded() {
 });
 
 add_task(async function test_visitAdded() {
-  let promiseNotify = promiseVisitAdded(function(visit) {
+  let promiseNotify = promiseVisitAdded(async function(visit) {
     Assert.ok(visit.visitId > 0);
     Assert.equal(visit.url, testuri.spec);
     Assert.equal(visit.visitTime, testtime / 1000);
     Assert.equal(visit.referringVisitId, 0);
     Assert.equal(visit.transitionType, TRANSITION_FRAMED_LINK);
     let uri = NetUtil.newURI(visit.url);
-    do_check_guid_for_uri(uri, visit.pageGuid);
+    await check_guid_for_uri(uri, visit.pageGuid);
     Assert.ok(visit.hidden);
     Assert.equal(visit.visitCount, 1);
     Assert.equal(visit.typedCount, 0);
@@ -73,7 +73,7 @@ add_task(async function test_visitAdded() {
 add_task(async function test_multiple_onVisit() {
   let testuri = NetUtil.newURI("http://self.firefox.com/");
   let promiseNotifications = new Promise(resolve => {
-    function listener(aEvents) {
+    async function listener(aEvents) {
       Assert.equal(aEvents.length, 3, "Right number of visits notified");
       for (let i = 0; i < aEvents.length; i++) {
         Assert.equal(aEvents[i].type, "page-visited");
@@ -83,7 +83,7 @@ add_task(async function test_multiple_onVisit() {
         Assert.ok(visit.visitTime > 0);
         Assert.ok(!visit.hidden);
         let uri = NetUtil.newURI(visit.url);
-        do_check_guid_for_uri(uri, visit.pageGuid);
+        await check_guid_for_uri(uri, visit.pageGuid);
         switch (i) {
           case 0:
             Assert.equal(visit.referringVisitId, 0);
@@ -121,7 +121,9 @@ add_task(async function test_multiple_onVisit() {
 
 add_task(async function test_pageRemovedFromStore() {
   let [testuri] = await task_add_visit();
-  let testguid = do_get_guid_for_uri(testuri);
+  let testguid = await PlacesTestUtils.getDatabaseValue("moz_places", "guid", {
+    url: testuri,
+  });
 
   const promiseNotify = PlacesTestUtils.waitForNotification("page-removed");
 
@@ -147,7 +149,9 @@ add_task(async function test_pageRemovedAllVisits() {
     title: "test",
     url: testuri,
   });
-  let testguid = do_get_guid_for_uri(testuri);
+  let testguid = await PlacesTestUtils.getDatabaseValue("moz_places", "guid", {
+    url: testuri,
+  });
   await PlacesUtils.history.remove(testuri);
 
   const events = await promiseNotify;
@@ -179,5 +183,5 @@ add_task(async function test_pageTitleChanged() {
   Assert.equal(events[0].type, "page-title-changed");
   Assert.equal(events[0].url, testuri.spec);
   Assert.equal(events[0].title, title);
-  do_check_guid_for_uri(testuri, events[0].pageGuid);
+  await check_guid_for_uri(testuri, events[0].pageGuid);
 });

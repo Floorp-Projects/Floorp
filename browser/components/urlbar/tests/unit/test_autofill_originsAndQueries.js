@@ -852,9 +852,10 @@ add_autofill_task(async function bookmarkBelowThreshold() {
 
   // Make sure the bookmarked origin and place frecencies are below the
   // threshold so that the origin/URL otherwise would not be autofilled.
-  let placeFrecency = await PlacesTestUtils.fieldInDB(
-    "http://" + url,
-    "frecency"
+  let placeFrecency = await PlacesTestUtils.getDatabaseValue(
+    "moz_places",
+    "frecency",
+    { url: "http://" + url }
   );
   let originFrecency = await getOriginFrecency("http://", host);
   let threshold = await getOriginAutofillThreshold();
@@ -903,9 +904,10 @@ add_autofill_task(async function bookmarkAboveThreshold() {
   // The frecencies of the place and origin should be >= the threshold.  In
   // fact they should be the same as the threshold since the place is the only
   // place in the database.
-  let placeFrecency = await PlacesTestUtils.fieldInDB(
-    "http://" + url,
-    "frecency"
+  let placeFrecency = await PlacesTestUtils.getDatabaseValue(
+    "moz_places",
+    "frecency",
+    { url: "http://" + url }
   );
   let originFrecency = await getOriginFrecency("http://", host);
   let threshold = await getOriginAutofillThreshold();
@@ -948,7 +950,11 @@ add_autofill_task(async function zeroThreshold() {
   });
 
   // Make sure the place's frecency is -1.
-  let placeFrecency = await PlacesTestUtils.fieldInDB(pageUrl, "frecency");
+  let placeFrecency = await PlacesTestUtils.getDatabaseValue(
+    "moz_places",
+    "frecency",
+    { url: pageUrl }
+  );
   Assert.equal(placeFrecency, -1);
 
   // Make sure the origin's frecency is 0.

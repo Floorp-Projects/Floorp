@@ -29,7 +29,9 @@ add_task(async function test_searchEngine_autoFill() {
   });
   await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
   ok(
-    (await frecencyForUrl(uri)) > 10000,
+    (await PlacesTestUtils.getDatabaseValue("moz_places", "frecency", {
+      url: uri,
+    })) > 10000,
     "Added URI should have expected high frecency"
   );
 

@@ -389,7 +389,13 @@ add_task(async function create_bookmark_frecency() {
   checkBookmarkObject(bm);
 
   await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
-  Assert.greater(frecencyForUrl(bm.url), 0, "Check frecency has been updated");
+  Assert.greater(
+    await PlacesTestUtils.getDatabaseValue("moz_places", "frecency", {
+      url: bm.url,
+    }),
+    0,
+    "Check frecency has been updated"
+  );
 });
 
 add_task(async function create_bookmark_without_type() {
