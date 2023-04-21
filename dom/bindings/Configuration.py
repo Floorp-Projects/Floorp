@@ -1053,12 +1053,7 @@ def getTypesFromDictionary(dictionary):
     """
     Get all member types for this dictionary
     """
-    types = []
-    curDict = dictionary
-    while curDict:
-        types.extend([m.type for m in curDict.members])
-        curDict = curDict.parent
-    return types
+    return [m.type for m in dictionary.members]
 
 
 def getTypesFromCallback(callback):
