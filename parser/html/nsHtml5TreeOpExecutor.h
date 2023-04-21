@@ -246,9 +246,9 @@ class nsHtml5TreeOpExecutor final
   void PreloadScript(const nsAString& aURL, const nsAString& aCharset,
                      const nsAString& aType, const nsAString& aCrossOrigin,
                      const nsAString& aMedia, const nsAString& aIntegrity,
-                     const nsAString& aAs, ReferrerPolicy aReferrerPolicy,
-                     bool aScriptFromHead, bool aAsync, bool aDefer,
-                     bool aNoModule, bool aLinkPreload);
+                     ReferrerPolicy aReferrerPolicy, bool aScriptFromHead,
+                     bool aAsync, bool aDefer, bool aNoModule,
+                     bool aLinkPreload);
 
   void PreloadStyle(const nsAString& aURL, const nsAString& aCharset,
                     const nsAString& aCrossOrigin, const nsAString& aMedia,

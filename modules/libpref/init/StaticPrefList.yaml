@@ -11634,17 +11634,8 @@
   value: false
   mirror: always
 
-# Enables `<link rel="preload">` tag and `Link: rel=preload` response header
-# handling.
+# Enables `<link rel="preload">` tag and `Link: rel=preload` response header handling.
 - name: network.preload
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
-# Enables `<link rel="modulepreload">` tag and `Link: rel=modulepreload`
-# response header handling. The latter is not yet implemented, see:
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1773056.
-- name: network.modulepreload
   type: RelaxedAtomicBool
   value: true
   mirror: always

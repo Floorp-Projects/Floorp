@@ -1205,21 +1205,12 @@ dom::ReferrerPolicy nsHtml5TreeOpExecutor::GetPreloadReferrerPolicy(
 void nsHtml5TreeOpExecutor::PreloadScript(
     const nsAString& aURL, const nsAString& aCharset, const nsAString& aType,
     const nsAString& aCrossOrigin, const nsAString& aMedia,
-    const nsAString& aIntegrity, const nsAString& aAs,
-    dom::ReferrerPolicy aReferrerPolicy, bool aScriptFromHead, bool aAsync,
-    bool aDefer, bool aNoModule, bool aLinkPreload) {
+    const nsAString& aIntegrity, dom::ReferrerPolicy aReferrerPolicy,
+    bool aScriptFromHead, bool aAsync, bool aDefer, bool aNoModule,
+    bool aLinkPreload) {
   nsCOMPtr<nsIURI> uri = ConvertIfNotPreloadedYetAndMediaApplies(aURL, aMedia);
   if (!uri) {
     return;
-  }
-  if (!aAs.IsVoid()) {
-    MOZ_ASSERT(aType.LowerCaseEqualsASCII("module") && aLinkPreload,
-               "aAs should be void for non-modulepreloads");
-    nsAttrValue asAttr;
-    net::ParseAsValue(aAs, asAttr);
-    if (!net::IsScriptLikeOrInvalid(asAttr)) {
-      return;
-    }
   }
   auto key = PreloadHashKey::CreateAsScript(uri, aCrossOrigin, aType);
   if (mDocument->Preloads().PreloadExists(key)) {
