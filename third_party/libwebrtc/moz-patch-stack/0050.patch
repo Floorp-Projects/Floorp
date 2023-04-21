@@ -43,10 +43,10 @@ index 7a2037e83f..a515760976 100644
  }  // namespace
  
 diff --git a/audio/channel_receive.cc b/audio/channel_receive.cc
-index f884e39aa7..b60275dcd1 100644
+index b95d98c20c..50bc94fe1f 100644
 --- a/audio/channel_receive.cc
 +++ b/audio/channel_receive.cc
-@@ -101,7 +101,8 @@ class ChannelReceive : public ChannelReceiveInterface,
+@@ -102,7 +102,8 @@ class ChannelReceive : public ChannelReceiveInterface,
        absl::optional<AudioCodecPairId> codec_pair_id,
        rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
        const webrtc::CryptoOptions& crypto_options,
@@ -56,7 +56,7 @@ index f884e39aa7..b60275dcd1 100644
    ~ChannelReceive() override;
  
    void SetSink(AudioSinkInterface* sink) override;
-@@ -540,7 +541,8 @@ ChannelReceive::ChannelReceive(
+@@ -541,7 +542,8 @@ ChannelReceive::ChannelReceive(
      absl::optional<AudioCodecPairId> codec_pair_id,
      rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
      const webrtc::CryptoOptions& crypto_options,
@@ -66,7 +66,7 @@ index f884e39aa7..b60275dcd1 100644
      : worker_thread_(TaskQueueBase::Current()),
        event_log_(rtc_event_log),
        rtp_receive_statistics_(ReceiveStatistics::Create(clock)),
-@@ -585,6 +587,7 @@ ChannelReceive::ChannelReceive(
+@@ -586,6 +588,7 @@ ChannelReceive::ChannelReceive(
    configuration.local_media_ssrc = local_ssrc;
    configuration.rtcp_packet_type_counter_observer = this;
    configuration.non_sender_rtt_measurement = enable_non_sender_rtt;
@@ -74,7 +74,7 @@ index f884e39aa7..b60275dcd1 100644
  
    if (frame_transformer)
      InitFrameTransformerDelegate(std::move(frame_transformer));
-@@ -1116,13 +1119,15 @@ std::unique_ptr<ChannelReceiveInterface> CreateChannelReceive(
+@@ -1119,13 +1122,15 @@ std::unique_ptr<ChannelReceiveInterface> CreateChannelReceive(
      absl::optional<AudioCodecPairId> codec_pair_id,
      rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
      const webrtc::CryptoOptions& crypto_options,

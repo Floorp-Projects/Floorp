@@ -101,6 +101,8 @@ rtc_library("rtc_event_audio") {
     "rtc_event_log/events/rtc_event_audio_receive_stream_config.h",
     "rtc_event_log/events/rtc_event_audio_send_stream_config.cc",
     "rtc_event_log/events/rtc_event_audio_send_stream_config.h",
+    "rtc_event_log/events/rtc_event_neteq_set_minimum_delay.cc",
+    "rtc_event_log/events/rtc_event_neteq_set_minimum_delay.h",
   ]
 
   deps = [
@@ -306,6 +308,7 @@ rtc_library("rtc_event_log_impl_encoder") {
     "../rtc_base:ignore_wundef",
     "../rtc_base:logging",
     "../rtc_base:safe_conversions",
+    "../system_wrappers:field_trial",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/memory",

@@ -40,6 +40,7 @@ message EventStream {
   repeated GenericAckReceived generic_acks_received = 31;
   repeated RouteChange route_changes = 32;
   repeated RemoteEstimates remote_estimates = 33;
+  repeated NetEqSetMinimumDelay neteq_set_minimum_delay = 34;
 
   repeated AudioRecvStreamConfig audio_recv_stream_configs = 101;
   repeated AudioSendStreamConfig audio_send_stream_configs = 102;
@@ -283,6 +284,26 @@ message AudioPlayoutEvents {
   // Delta encodings.
   optional bytes timestamp_ms_deltas = 101;
   optional bytes local_ssrc_deltas = 102;
+}
+
+message NetEqSetMinimumDelay {
+  // required
+  optional int64 timestamp_ms = 1;
+
+  // required - The SSRC of the remote stream associated with the MinimumDelay
+  // event.
+  optional fixed32 remote_ssrc = 2;
+
+  // required - minimum delay passed to SetBaseMinimumDelay.
+  optional int32 minimum_delay_ms = 3;
+
+  // optional - required if the batch contains delta encoded events.
+  optional uint32 number_of_deltas = 4;
+
+  // Delta encodings.
+  optional bytes timestamp_ms_deltas = 101;
+  optional bytes remote_ssrc_deltas = 102;
+  optional bytes minimum_delay_ms_deltas = 103;
 }
 
 message FrameDecodedEvents {
