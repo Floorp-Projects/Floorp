@@ -99,6 +99,7 @@
       'Win64 Release (Clang)': 'win_clang_release_bot_x64',
 
       # iOS
+      'iOS Debug (simulator)': 'ios_debug_bot_x64',
       'iOS64 Debug': 'ios_debug_bot_arm64',
       'iOS64 Release': 'ios_release_bot_arm64',
       'iOS64 Sim Debug (iOS 12)': 'ios_debug_bot_x64',
