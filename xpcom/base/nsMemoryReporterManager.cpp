@@ -1488,8 +1488,10 @@ class ThreadsReporter final : public nsIMemoryReporter {
           "platform");
 #endif
 
+      nsCString threadName;
+      thread->GetThreadName(threadName);
       threads.AppendElement(ThreadData{
-          nsCString(PR_GetThreadName(thread->GetPRThread())),
+          std::move(threadName),
           thread->ThreadId(),
           // On Linux, it's possible (but unlikely) that our stack region will
           // have been merged with adjacent heap regions, in which case we'll
