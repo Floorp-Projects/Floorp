@@ -3486,8 +3486,8 @@ checksum = "a2983372caf4480544083767bf2d27defafe32af49ab4df3a0b7fc90793a3664"
 
 [[package]]
 name = "naga"
-version = "0.11.0"
-source = "git+https://github.com/gfx-rs/naga?rev=f59668ccfaf7bdb3a7e43d84363a21c77357b2fe#f59668ccfaf7bdb3a7e43d84363a21c77357b2fe"
+version = "0.12.0"
+source = "git+https://github.com/gfx-rs/naga?rev=b99d58ea435090e561377949f428bce2c18451bb#b99d58ea435090e561377949f428bce2c18451bb"
 dependencies = [
  "bit-set",
  "bitflags 1.3.2",
@@ -6122,8 +6122,8 @@ dependencies = [
 
 [[package]]
 name = "wgpu-core"
-version = "0.15.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=f3bf0f782e4dfc561d48e758e1f1e04f77860925#f3bf0f782e4dfc561d48e758e1f1e04f77860925"
+version = "0.16.0"
+source = "git+https://github.com/gfx-rs/wgpu?rev=25cb9f61e9a6be572ee42536bbe57aa5f759a700#25cb9f61e9a6be572ee42536bbe57aa5f759a700"
 dependencies = [
  "arrayvec",
  "bit-vec",
@@ -6131,7 +6131,7 @@ dependencies = [
  "codespan-reporting",
  "log",
  "naga",
- "parking_lot 0.12.999",
+ "parking_lot 0.11.2",
  "profiling",
  "ron",
  "rustc-hash",
@@ -6145,8 +6145,8 @@ dependencies = [
 
 [[package]]
 name = "wgpu-hal"
-version = "0.15.1"
-source = "git+https://github.com/gfx-rs/wgpu?rev=f3bf0f782e4dfc561d48e758e1f1e04f77860925#f3bf0f782e4dfc561d48e758e1f1e04f77860925"
+version = "0.16.0"
+source = "git+https://github.com/gfx-rs/wgpu?rev=25cb9f61e9a6be572ee42536bbe57aa5f759a700#25cb9f61e9a6be572ee42536bbe57aa5f759a700"
 dependencies = [
  "android_system_properties",
  "arrayvec",
@@ -6167,7 +6167,7 @@ dependencies = [
  "metal",
  "naga",
  "objc",
- "parking_lot 0.12.999",
+ "parking_lot 0.11.2",
  "profiling",
  "range-alloc",
  "raw-window-handle",
@@ -6182,8 +6182,8 @@ dependencies = [
 
 [[package]]
 name = "wgpu-types"
-version = "0.15.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=f3bf0f782e4dfc561d48e758e1f1e04f77860925#f3bf0f782e4dfc561d48e758e1f1e04f77860925"
+version = "0.16.0"
+source = "git+https://github.com/gfx-rs/wgpu?rev=25cb9f61e9a6be572ee42536bbe57aa5f759a700#25cb9f61e9a6be572ee42536bbe57aa5f759a700"
 dependencies = [
  "bitflags 2.999.999",
  "js-sys",
