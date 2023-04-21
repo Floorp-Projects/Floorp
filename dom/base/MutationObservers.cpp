@@ -79,9 +79,11 @@ static inline void Notify(nsINode* aNode, NotifyObserver&& aNotify) {
   Document* doc = aNode->OwnerDoc();
   nsDOMMutationEnterLeave enterLeave(doc);
 
+#ifdef DEBUG
   const bool wasConnected = aNode->IsInComposedDoc();
+#endif
   if constexpr (aNotifyPresShell == NotifyPresShell::Before) {
-    if (wasConnected) {
+    if (aNode->IsInComposedDoc()) {
       NOTIFY_PRESSHELL(aNotify);
     }
   }
