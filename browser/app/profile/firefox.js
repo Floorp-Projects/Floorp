@@ -1617,7 +1617,8 @@ pref("browser.newtabpage.activity-stream.discoverystream.region-stories-block", 
 #endif
 // List of regions that get stories by default.
 pref("browser.newtabpage.activity-stream.discoverystream.region-stories-config", "US,DE,CA,GB,IE,CH,AT,BE,IN");
-
+// List of regions that support the new recommendations BFF, also requires region-stories-config
+pref("browser.newtabpage.activity-stream.discoverystream.region-bff-config", "FR,IT,ES");
 // List of regions that get spocs by default.
 pref("browser.newtabpage.activity-stream.discoverystream.region-spocs-config", "US,CA,DE,GB");
 // List of regions that don't get the 7 row layout.

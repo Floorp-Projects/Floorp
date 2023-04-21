@@ -99,22 +99,19 @@ ChromeUtils.defineModuleGetter(
   "DiscoveryStreamFeed",
   "resource://activity-stream/lib/DiscoveryStreamFeed.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "NimbusFeatures",
+  "resource://nimbus/ExperimentAPI.jsm"
+);
 
-const REGION_STORIES_CONFIG =
-  "browser.newtabpage.activity-stream.discoverystream.region-stories-config";
-const REGION_STORIES_BLOCK =
-  "browser.newtabpage.activity-stream.discoverystream.region-stories-block";
-const REGION_SPOCS_CONFIG =
-  "browser.newtabpage.activity-stream.discoverystream.region-spocs-config";
 const REGION_BASIC_CONFIG =
   "browser.newtabpage.activity-stream.discoverystream.region-basic-config";
-const LOCALE_LIST_CONFIG =
-  "browser.newtabpage.activity-stream.discoverystream.locale-list-config";
 
 // Determine if spocs should be shown for a geo/locale
 function showSpocs({ geo }) {
   const spocsGeoString =
-    Services.prefs.getStringPref(REGION_SPOCS_CONFIG) || "";
+    lazy.NimbusFeatures.pocketNewtab.getVariable("regionSpocsConfig") || "";
   const spocsGeo = spocsGeoString.split(",").map(s => s.trim());
   return spocsGeo.includes(geo);
 }
@@ -388,7 +385,8 @@ const PREFS_CONFIG = new Map([
     {
       title:
         "Endpoint prefixes (comma-separated) that are allowed to be requested",
-      value: "https://getpocket.cdn.mozilla.net/,https://spocs.getpocket.com/",
+      value:
+        "https://getpocket.cdn.mozilla.net/,https://firefox-api-proxy.cdn.mozilla.net/,https://spocs.getpocket.com/",
     },
   ],
   [
@@ -505,11 +503,13 @@ const FEEDS_DATA = [
         return false;
       }
       const preffedRegionsBlockString =
-        Services.prefs.getStringPref(REGION_STORIES_BLOCK) || "";
+        lazy.NimbusFeatures.pocketNewtab.getVariable("regionStoriesBlock") ||
+        "";
       const preffedRegionsString =
-        Services.prefs.getStringPref(REGION_STORIES_CONFIG) || "";
+        lazy.NimbusFeatures.pocketNewtab.getVariable("regionStoriesConfig") ||
+        "";
       const preffedLocaleListString =
-        Services.prefs.getStringPref(LOCALE_LIST_CONFIG) || "";
+        lazy.NimbusFeatures.pocketNewtab.getVariable("localeListConfig") || "";
       const preffedBlockRegions = preffedRegionsBlockString
         .split(",")
         .map(s => s.trim());

@@ -993,11 +993,13 @@ class DiscoveryStreamAdmin extends (external_React_default()).PureComponent {
   }
 
   renderFeedData(url) {
+    var _feed$recommendations;
+
     const {
       feeds
     } = this.props.state.DiscoveryStream;
     const feed = feeds.data[url].data;
-    return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("h4", null, "Feed url: ", url), /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tbody", null, feed.recommendations.map(story => this.renderStoryData(story)))));
+    return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("h4", null, "Feed url: ", url), /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tbody", null, (_feed$recommendations = feed.recommendations) === null || _feed$recommendations === void 0 ? void 0 : _feed$recommendations.map(story => this.renderStoryData(story)))));
   }
 
   renderFeedsData() {
@@ -7979,6 +7981,16 @@ class _DSCard extends (external_React_default()).PureComponent {
       DiscoveryStream,
       saveToPocketCard
     } = this.props;
+    let {
+      source
+    } = this.props;
+
+    if (!source) {
+      try {
+        source = new URL(this.props.url).hostname;
+      } catch (e) {}
+    }
+
     const {
       pocketButtonEnabled,
       hideDescriptions,
@@ -8035,7 +8047,7 @@ class _DSCard extends (external_React_default()).PureComponent {
       title: this.props.title,
       isRecentSave: isRecentSave
     })), /*#__PURE__*/external_React_default().createElement(DefaultMeta, {
-      source: this.props.source,
+      source: source,
       title: this.props.title,
       excerpt: excerpt,
       newSponsoredLabel: newSponsoredLabel,
@@ -8066,7 +8078,7 @@ class _DSCard extends (external_React_default()).PureComponent {
       dispatch: this.props.dispatch,
       url: this.props.url,
       title: this.props.title,
-      source: this.props.source,
+      source: source,
       type: this.props.type,
       pocket_id: this.props.pocket_id,
       shim: this.props.shim,
@@ -8084,7 +8096,7 @@ class _DSCard extends (external_React_default()).PureComponent {
       dispatch: this.props.dispatch,
       url: this.props.url,
       title: this.props.title,
-      source: this.props.source,
+      source: source,
       type: this.props.type,
       pocket_id: this.props.pocket_id,
       shim: this.props.shim,

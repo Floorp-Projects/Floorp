@@ -263,7 +263,7 @@ export class DiscoveryStreamAdmin extends React.PureComponent {
         <h4>Feed url: {url}</h4>
         <table>
           <tbody>
-            {feed.recommendations.map(story => this.renderStoryData(story))}
+            {feed.recommendations?.map(story => this.renderStoryData(story))}
           </tbody>
         </table>
       </React.Fragment>
