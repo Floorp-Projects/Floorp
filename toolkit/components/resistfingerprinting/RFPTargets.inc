@@ -12,6 +12,9 @@ ITEM_VALUE(ScreenOrientation, 0x0005)
 // SpeechSynthesis part of the Web Speech API
 ITEM_VALUE(SpeechSynthesis, 0x0006)
 
+// `prefers-color-scheme` CSS media feature
+ITEM_VALUE(CSSPrefersColorScheme, 0x0007)
+
 /*
  * Certain classes (Document, at time of writing) have a cached value for
  * ShouldResistFingerprinting. By adding a Target check into their ShouldRFP
