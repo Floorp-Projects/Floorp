@@ -1019,12 +1019,16 @@ nsTArray<LinkHeader> ParseLinkHeader(const nsAString& aLinkData);
 enum ASDestination : uint8_t {
   DESTINATION_INVALID,
   DESTINATION_AUDIO,
+  DESTINATION_AUDIOWORKLET,
   DESTINATION_DOCUMENT,
   DESTINATION_EMBED,
   DESTINATION_FONT,
+  DESTINATION_FRAME,
+  DESTINATION_IFRAME,
   DESTINATION_IMAGE,
   DESTINATION_MANIFEST,
   DESTINATION_OBJECT,
+  DESTINATION_PAINTWORKLET,
   DESTINATION_REPORT,
   DESTINATION_SCRIPT,
   DESTINATION_SERVICEWORKER,
@@ -1032,6 +1036,7 @@ enum ASDestination : uint8_t {
   DESTINATION_STYLE,
   DESTINATION_TRACK,
   DESTINATION_VIDEO,
+  DESTINATION_WEBIDENTITY,
   DESTINATION_WORKER,
   DESTINATION_XSLT,
   DESTINATION_FETCH
@@ -1039,6 +1044,7 @@ enum ASDestination : uint8_t {
 
 void ParseAsValue(const nsAString& aValue, nsAttrValue& aResult);
 nsContentPolicyType AsValueToContentPolicy(const nsAttrValue& aValue);
+bool IsScriptLikeOrInvalid(const nsAttrValue& aValue);
 
 bool CheckPreloadAttrs(const nsAttrValue& aAs, const nsAString& aType,
                        const nsAString& aMedia,

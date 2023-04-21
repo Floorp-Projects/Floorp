@@ -246,8 +246,9 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                 aAttributes->contains(nsHtml5AttributeName::ATTR_NOMODULE);
             mSpeculativeLoadQueue.AppendElement()->InitScript(
                 url, charset, type, crossOrigin, /* aMedia = */ nullptr,
-                integrity, referrerPolicy, mode == nsHtml5TreeBuilder::IN_HEAD,
-                async, defer, noModule, false);
+                integrity, nullptr, referrerPolicy,
+                mode == nsHtml5TreeBuilder::IN_HEAD, async, defer, noModule,
+                false);
             mCurrentHtmlScriptIsAsyncOrDefer = async || defer;
           }
         } else if (nsGkAtoms::link == aName) {
@@ -313,8 +314,9 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                       aAttributes->getValue(nsHtml5AttributeName::ATTR_TYPE);
                   mSpeculativeLoadQueue.AppendElement()->InitScript(
                       url, charset, type, crossOrigin, media, integrity,
-                      referrerPolicy, mode == nsHtml5TreeBuilder::IN_HEAD,
-                      false, false, false, true);
+                      nullptr, referrerPolicy,
+                      mode == nsHtml5TreeBuilder::IN_HEAD, false, false, false,
+                      true);
                 } else if (as.LowerCaseEqualsASCII("style")) {
                   mSpeculativeLoadQueue.AppendElement()->InitStyle(
                       url, charset, crossOrigin, media, referrerPolicy,
@@ -335,6 +337,31 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                       url, crossOrigin, media, referrerPolicy);
                 }
                 // Other "as" values will be supported later.
+              }
+            } else if (mozilla::StaticPrefs::network_modulepreload() &&
+                       rel.LowerCaseEqualsASCII("modulepreload")) {
+              nsHtml5String url =
+                  aAttributes->getValue(nsHtml5AttributeName::ATTR_HREF);
+              if (url && url.Length() != 0) {
+                nsHtml5String as =
+                    aAttributes->getValue(nsHtml5AttributeName::ATTR_AS);
+                nsHtml5String charset =
+                    aAttributes->getValue(nsHtml5AttributeName::ATTR_CHARSET);
+                RefPtr<nsAtom> moduleType = nsGkAtoms::_module;
+                nsHtml5String type =
+                    nsHtml5String::FromAtom(moduleType.forget());
+                nsHtml5String crossOrigin = aAttributes->getValue(
+                    nsHtml5AttributeName::ATTR_CROSSORIGIN);
+                nsHtml5String media =
+                    aAttributes->getValue(nsHtml5AttributeName::ATTR_MEDIA);
+                nsHtml5String integrity =
+                    aAttributes->getValue(nsHtml5AttributeName::ATTR_INTEGRITY);
+                nsHtml5String referrerPolicy = aAttributes->getValue(
+                    nsHtml5AttributeName::ATTR_REFERRERPOLICY);
+                mSpeculativeLoadQueue.AppendElement()->InitScript(
+                    url, charset, type, crossOrigin, media, integrity, as,
+                    referrerPolicy, mode == nsHtml5TreeBuilder::IN_HEAD, false,
+                    false, false, true);
               }
             }
           }
@@ -430,8 +457,9 @@ nsIContentHandle* nsHtml5TreeBuilder::createElement(
                 nsHtml5AttributeName::ATTR_REFERRERPOLICY);
             mSpeculativeLoadQueue.AppendElement()->InitScript(
                 url, nullptr, type, crossOrigin, /* aMedia = */ nullptr,
-                integrity, referrerPolicy, mode == nsHtml5TreeBuilder::IN_HEAD,
-                false, false, false, false);
+                integrity, nullptr, referrerPolicy,
+                mode == nsHtml5TreeBuilder::IN_HEAD, false, false, false,
+                false);
           }
         } else if (nsGkAtoms::style == aName) {
           mImportScanner.Start();
