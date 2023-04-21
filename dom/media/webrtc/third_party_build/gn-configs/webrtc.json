@@ -17,6 +17,7 @@
   "non_unified_sources": [
     "third_party/libwebrtc/api/audio_codecs/opus/audio_encoder_opus_config.cc",
     "third_party/libwebrtc/api/video/i210_buffer.cc",
+    "third_party/libwebrtc/api/video/i410_buffer.cc",
     "third_party/libwebrtc/api/video/i422_buffer.cc",
     "third_party/libwebrtc/api/video/i444_buffer.cc",
     "third_party/libwebrtc/audio/channel_send_frame_transformer_delegate.cc",
