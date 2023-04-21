@@ -66,6 +66,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [hasMigratedBookmarks](#hasmigratedbookmarks)
 * [hasMigratedHistory](#hasmigratedhistory)
 * [hasMigratedPasswords](#hasmigratedpasswords)
+* [useEmbeddedMigrationWizard][#useembeddedmigrationwizard]
 * [isRTAMO](#isrtamo)
 
 ## Detailed usage
@@ -959,6 +960,10 @@ A boolean. `true` if the user ever used the Migration Wizard to migrate history.
 ### `hasMigratedPasswords`
 
 A boolean. `true` if the user ever used the Migration Wizard to migrate passwords.
+
+### `useEmbeddedMigrationWizard`
+
+A boolean. `true` if the user is configured to use the embedded Migration Wizard in about:welcome.
 
 ### `isRTAMO`
 

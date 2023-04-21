@@ -345,3 +345,119 @@ add_task(async function test_aboutwelcome_gratitude() {
   await SpecialPowers.popPrefEnv(); // for setAboutWelcomeMultiStage
   await cleanup();
 });
+
+add_task(async function test_aboutwelcome_embedded_migration() {
+  // Let's make sure at least one migrator is available and enabled - the
+  // InternalTestingProfileMigrator.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.migrate.internal-testing.enabled", true]],
+  });
+
+  const TEST_CONTENT = [
+    {
+      id: "AW_IMPORT_SETTINGS_EMBEDDED",
+      content: {
+        tiles: { type: "migration-wizard" },
+        position: "split",
+        split_narrow_bkg_position: "-42px",
+        image_alt_text: {
+          string_id: "mr2022-onboarding-import-image-alt",
+        },
+        background:
+          "url('chrome://activity-stream/content/data/content/assets/mr-import.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
+        progress_bar: true,
+        secondary_button: {
+          label: {
+            string_id: "mr2022-onboarding-secondary-skip-button-label",
+          },
+          action: {
+            navigate: true,
+          },
+          has_arrow_icon: true,
+        },
+      },
+    },
+  ];
+
+  await setAboutWelcomeMultiStage(JSON.stringify(TEST_CONTENT)); // NB: calls SpecialPowers.pushPrefEnv
+  let { cleanup, browser } = await openMRAboutWelcome();
+
+  // execution
+  await test_screen_content(
+    browser,
+    "Renders a <migration-wizard> custom element",
+    // We expect <migration-wizard> to automatically request the set of migrators
+    // upon binding to the DOM, and to not be in dialog mode.
+    [
+      "main.AW_IMPORT_SETTINGS_EMBEDDED",
+      "migration-wizard[auto-request-state]:not([dialog-mode])",
+    ]
+  );
+
+  // Do a basic test to make sure that the <migration-wizard> is on the right
+  // page and the <panel-list> can open.
+  await SpecialPowers.spawn(browser, [], async () => {
+    const { MigrationWizardConstants } = ChromeUtils.importESModule(
+      "chrome://browser/content/migration/migration-wizard-constants.mjs"
+    );
+
+    let wizard = content.document.querySelector("migration-wizard");
+    let shadow = wizard.openOrClosedShadowRoot;
+    let deck = shadow.querySelector("#wizard-deck");
+
+    // It's unlikely but possible that the deck might not yet be showing the
+    // selection page yet, in which case we wait for that page to appear.
+    if (deck.selectedViewName !== MigrationWizardConstants.PAGES.SELECTION) {
+      await ContentTaskUtils.waitForMutationCondition(
+        deck,
+        { attributeFilter: ["selected-view"] },
+        () => {
+          return (
+            deck.getAttribute("selected-view") ===
+            `page-${MigrationWizardConstants.PAGES.SELECTION}`
+          );
+        }
+      );
+    }
+
+    Assert.ok(true, "Selection page is being shown in the migration wizard.");
+
+    // Now let's make sure that the <panel-list> can appear.
+    let panelList = wizard.querySelector("panel-list");
+    Assert.ok(panelList, "Found the <panel-list>.");
+
+    // The "shown" event from the panel-list is coming from a lower level
+    // of privilege than where we're executing this SpecialPowers.spawn
+    // task. In order to properly listen for it, we have to ask
+    // ContentTaskUtils.waitForEvent to listen for untrusted events.
+    let shown = ContentTaskUtils.waitForEvent(
+      panelList,
+      "shown",
+      false /* capture */,
+      null /* checkFn */,
+      true /* wantsUntrusted */
+    );
+    let selector = shadow.querySelector("#browser-profile-selector");
+    selector.click();
+    await shown;
+
+    let panelRect = panelList.getBoundingClientRect();
+    let selectorRect = selector.getBoundingClientRect();
+
+    // Recalculate the <panel-list> rect top value relative to the top-left
+    // of the selectorRect. We expect the <panel-list> to be tightly anchored
+    // to the bottom of the <button>, so we expect this new value to be 0.
+    let panelTopLeftRelativeToAnchorTopLeft =
+      panelRect.top - selectorRect.top - selectorRect.height;
+    Assert.equal(
+      panelTopLeftRelativeToAnchorTopLeft,
+      0,
+      "Panel should be tightly anchored to the bottom of the button shadow node."
+    );
+  });
+
+  // cleanup
+  await SpecialPowers.popPrefEnv(); // for the InternalTestingProfileMigrator.
+  await SpecialPowers.popPrefEnv(); // for setAboutWelcomeMultiStage
+  await cleanup();
+});

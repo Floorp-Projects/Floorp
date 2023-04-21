@@ -255,7 +255,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
     {
       id: "AW_IMPORT_SETTINGS",
       targeting:
-        "!(os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin)",
+        "!(os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin) && !useEmbeddedMigrationWizard",
       content: {
         position: "split",
         split_narrow_bkg_position: "-42px",
@@ -283,6 +283,31 @@ const MR_ABOUT_WELCOME_DEFAULT = {
             navigate: true,
           },
         },
+        secondary_button: {
+          label: {
+            string_id: "mr2022-onboarding-secondary-skip-button-label",
+          },
+          action: {
+            navigate: true,
+          },
+          has_arrow_icon: true,
+        },
+      },
+    },
+    {
+      id: "AW_IMPORT_SETTINGS_EMBEDDED",
+      targeting:
+        "!(os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin) && useEmbeddedMigrationWizard",
+      content: {
+        tiles: { type: "migration-wizard" },
+        position: "split",
+        split_narrow_bkg_position: "-42px",
+        image_alt_text: {
+          string_id: "mr2022-onboarding-import-image-alt",
+        },
+        background:
+          "url('chrome://activity-stream/content/data/content/assets/mr-import.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
+        progress_bar: true,
         secondary_button: {
           label: {
             string_id: "mr2022-onboarding-secondary-skip-button-label",
