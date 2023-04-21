@@ -325,11 +325,12 @@
     "isolated_scripts": [
       {
         "args": [
-          "--nologs",
-          "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.json",
+          "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json",
           "--test-launcher-summary-output=${ISOLATED_OUTDIR}/gtest_output.json",
           "--test-arg=--gtest_output=json:/custom_artifacts/gtest_output.json",
-          "--test-arg=--undefok=test_launcher_summary_output"
+          "--test-arg=--undefok=test_launcher_summary_output",
+          "--nologs",
+          "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.json"
         ],
         "isolate_name": "fuchsia_perf_tests",
         "merge": {
@@ -341,8 +342,8 @@
         },
         "name": "fuchsia_perf_tests",
         "resultdb": {
-          "enable": true,
-          "has_native_resultdb_integration": true
+          "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
+          "result_format": "gtest_json"
         },
         "swarming": {
           "can_use_on_swarming_builders": true,
@@ -357,8 +358,7 @@
           "expiration": 10800,
           "hard_timeout": 10800,
           "idempotent": false,
-          "io_timeout": 10800,
-          "service_account": "chromium-tester@chops-service-accounts.iam.gserviceaccount.com"
+          "io_timeout": 10800
         },
         "test_id_prefix": "ninja://:fuchsia_perf_tests/"
       }

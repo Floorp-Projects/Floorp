@@ -2208,6 +2208,12 @@
   "fuchsia_rel": {
     "isolated_scripts": [
       {
+        "args": [
+          "--test-launcher-summary-output=${ISOLATED_OUTDIR}/gtest_output.json",
+          "--test-arg=--gtest_output=json:/custom_artifacts/gtest_output.json",
+          "--test-arg=--undefok=test_launcher_summary_output",
+          "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
+        ],
         "isolate_name": "audio_decoder_unittests",
         "merge": {
           "args": [],
@@ -2215,8 +2221,8 @@
         },
         "name": "audio_decoder_unittests",
         "resultdb": {
-          "enable": true,
-          "has_native_resultdb_integration": true
+          "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
+          "result_format": "gtest_json"
         },
         "swarming": {
           "can_use_on_swarming_builders": true,
@@ -2230,6 +2236,12 @@
         "test_id_prefix": "ninja://modules/audio_coding:audio_decoder_unittests/"
       },
       {
+        "args": [
+          "--test-launcher-summary-output=${ISOLATED_OUTDIR}/gtest_output.json",
+          "--test-arg=--gtest_output=json:/custom_artifacts/gtest_output.json",
+          "--test-arg=--undefok=test_launcher_summary_output",
+          "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
+        ],
         "isolate_name": "common_audio_unittests",
         "merge": {
           "args": [],
@@ -2237,8 +2249,8 @@
         },
         "name": "common_audio_unittests",
         "resultdb": {
-          "enable": true,
-          "has_native_resultdb_integration": true
+          "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
+          "result_format": "gtest_json"
         },
         "swarming": {
           "can_use_on_swarming_builders": true,
@@ -2252,6 +2264,12 @@
         "test_id_prefix": "ninja://common_audio:common_audio_unittests/"
       },
       {
+        "args": [
+          "--test-launcher-summary-output=${ISOLATED_OUTDIR}/gtest_output.json",
+          "--test-arg=--gtest_output=json:/custom_artifacts/gtest_output.json",
+          "--test-arg=--undefok=test_launcher_summary_output",
+          "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
+        ],
         "isolate_name": "common_video_unittests",
         "merge": {
           "args": [],
@@ -2259,8 +2277,8 @@
         },
         "name": "common_video_unittests",
         "resultdb": {
-          "enable": true,
-          "has_native_resultdb_integration": true
+          "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
+          "result_format": "gtest_json"
         },
         "swarming": {
           "can_use_on_swarming_builders": true,
@@ -2274,6 +2292,12 @@
         "test_id_prefix": "ninja://common_video:common_video_unittests/"
       },
       {
+        "args": [
+          "--test-launcher-summary-output=${ISOLATED_OUTDIR}/gtest_output.json",
+          "--test-arg=--gtest_output=json:/custom_artifacts/gtest_output.json",
+          "--test-arg=--undefok=test_launcher_summary_output",
+          "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
+        ],
         "isolate_name": "dcsctp_unittests",
         "merge": {
           "args": [],
@@ -2281,8 +2305,8 @@
         },
         "name": "dcsctp_unittests",
         "resultdb": {
-          "enable": true,
-          "has_native_resultdb_integration": true
+          "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
+          "result_format": "gtest_json"
         },
         "swarming": {
           "can_use_on_swarming_builders": true,
@@ -2297,7 +2321,11 @@
       },
       {
         "args": [
-          "--quick"
+          "--quick",
+          "--test-launcher-summary-output=${ISOLATED_OUTDIR}/gtest_output.json",
+          "--test-arg=--gtest_output=json:/custom_artifacts/gtest_output.json",
+          "--test-arg=--undefok=test_launcher_summary_output",
+          "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
         ],
         "isolate_name": "low_bandwidth_audio_test",
         "merge": {
@@ -2306,8 +2334,8 @@
         },
         "name": "low_bandwidth_audio_test",
         "resultdb": {
-          "enable": true,
-          "has_native_resultdb_integration": true
+          "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
+          "result_format": "gtest_json"
         },
         "swarming": {
           "can_use_on_swarming_builders": true,
@@ -2321,6 +2349,12 @@
         "test_id_prefix": "ninja://audio:low_bandwidth_audio_test/"
       },
       {
+        "args": [
+          "--test-launcher-summary-output=${ISOLATED_OUTDIR}/gtest_output.json",
+          "--test-arg=--gtest_output=json:/custom_artifacts/gtest_output.json",
+          "--test-arg=--undefok=test_launcher_summary_output",
+          "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
+        ],
         "isolate_name": "rtc_media_unittests",
         "merge": {
           "args": [],
@@ -2328,8 +2362,8 @@
         },
         "name": "rtc_media_unittests",
         "resultdb": {
-          "enable": true,
-          "has_native_resultdb_integration": true
+          "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
+          "result_format": "gtest_json"
         },
         "swarming": {
           "can_use_on_swarming_builders": true,
@@ -2343,6 +2377,12 @@
         "test_id_prefix": "ninja://media:rtc_media_unittests/"
       },
       {
+        "args": [
+          "--test-launcher-summary-output=${ISOLATED_OUTDIR}/gtest_output.json",
+          "--test-arg=--gtest_output=json:/custom_artifacts/gtest_output.json",
+          "--test-arg=--undefok=test_launcher_summary_output",
+          "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
+        ],
         "isolate_name": "rtc_pc_unittests",
         "merge": {
           "args": [],
@@ -2350,8 +2390,8 @@
         },
         "name": "rtc_pc_unittests",
         "resultdb": {
-          "enable": true,
-          "has_native_resultdb_integration": true
+          "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
+          "result_format": "gtest_json"
         },
         "swarming": {
           "can_use_on_swarming_builders": true,
@@ -2365,6 +2405,12 @@
         "test_id_prefix": "ninja://pc:rtc_pc_unittests/"
       },
       {
+        "args": [
+          "--test-launcher-summary-output=${ISOLATED_OUTDIR}/gtest_output.json",
+          "--test-arg=--gtest_output=json:/custom_artifacts/gtest_output.json",
+          "--test-arg=--undefok=test_launcher_summary_output",
+          "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
+        ],
         "isolate_name": "svc_tests",
         "merge": {
           "args": [],
@@ -2372,8 +2418,8 @@
         },
         "name": "svc_tests",
         "resultdb": {
-          "enable": true,
-          "has_native_resultdb_integration": true
+          "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
+          "result_format": "gtest_json"
         },
         "swarming": {
           "can_use_on_swarming_builders": true,
@@ -2388,6 +2434,12 @@
         "test_id_prefix": "ninja://pc:svc_tests/"
       },
       {
+        "args": [
+          "--test-launcher-summary-output=${ISOLATED_OUTDIR}/gtest_output.json",
+          "--test-arg=--gtest_output=json:/custom_artifacts/gtest_output.json",
+          "--test-arg=--undefok=test_launcher_summary_output",
+          "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
+        ],
         "isolate_name": "system_wrappers_unittests",
         "merge": {
           "args": [],
@@ -2395,8 +2447,8 @@
         },
         "name": "system_wrappers_unittests",
         "resultdb": {
-          "enable": true,
-          "has_native_resultdb_integration": true
+          "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
+          "result_format": "gtest_json"
         },
         "swarming": {
           "can_use_on_swarming_builders": true,
@@ -2410,6 +2462,12 @@
         "test_id_prefix": "ninja://system_wrappers:system_wrappers_unittests/"
       },
       {
+        "args": [
+          "--test-launcher-summary-output=${ISOLATED_OUTDIR}/gtest_output.json",
+          "--test-arg=--gtest_output=json:/custom_artifacts/gtest_output.json",
+          "--test-arg=--undefok=test_launcher_summary_output",
+          "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
+        ],
         "isolate_name": "video_engine_tests",
         "merge": {
           "args": [],
@@ -2417,8 +2475,8 @@
         },
         "name": "video_engine_tests",
         "resultdb": {
-          "enable": true,
-          "has_native_resultdb_integration": true
+          "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
+          "result_format": "gtest_json"
         },
         "swarming": {
           "can_use_on_swarming_builders": true,
@@ -2433,6 +2491,12 @@
         "test_id_prefix": "ninja://:video_engine_tests/"
       },
       {
+        "args": [
+          "--test-launcher-summary-output=${ISOLATED_OUTDIR}/gtest_output.json",
+          "--test-arg=--gtest_output=json:/custom_artifacts/gtest_output.json",
+          "--test-arg=--undefok=test_launcher_summary_output",
+          "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
+        ],
         "isolate_name": "voip_unittests",
         "merge": {
           "args": [],
@@ -2440,8 +2504,8 @@
         },
         "name": "voip_unittests",
         "resultdb": {
-          "enable": true,
-          "has_native_resultdb_integration": true
+          "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
+          "result_format": "gtest_json"
         },
         "swarming": {
           "can_use_on_swarming_builders": true,

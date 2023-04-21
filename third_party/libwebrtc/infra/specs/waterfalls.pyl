@@ -67,8 +67,12 @@
       'Android64 Builder x64 (dbg)': {},
       'Fuchsia Builder': {},
       'Fuchsia Release': {
-        'os_type': 'linux',
-        'mixins': ['linux-bionic', 'x86-64', 'has_native_resultdb_integration'],
+        'os_type':
+        'linux',
+        'mixins': [
+          'linux-bionic', 'x86-64', 'fuchsia-gtest-output',
+          'resultdb-gtest-json-format'
+        ],
         'test_suites': {
           'isolated_scripts': 'fuchsia_compatible_tests',
         },
@@ -284,7 +288,7 @@
         'linux',
         'mixins': [
           'linux-bionic', 'x86-64', 'perf-pool-vm', 'timeout-3h',
-          'has_native_resultdb_integration', 'chromium-tester-service-account'
+          'resultdb-gtest-json-format', 'fuchsia-gtest-output'
         ],
         'test_suites': {
           'isolated_scripts': 'fuchsia_compatible_perf_tests',
@@ -435,8 +439,12 @@
       'android_compile_x86_dbg': {},
       'android_compile_x86_rel': {},
       'fuchsia_rel': {
-        'os_type': 'linux',
-        'mixins': ['linux-bionic', 'x86-64', 'has_native_resultdb_integration'],
+        'os_type':
+        'linux',
+        'mixins': [
+          'linux-bionic', 'x86-64', 'fuchsia-gtest-output',
+          'resultdb-gtest-json-format'
+        ],
         'test_suites': {
           'isolated_scripts': 'fuchsia_compatible_tests',
         },
