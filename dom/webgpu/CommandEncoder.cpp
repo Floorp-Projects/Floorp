@@ -69,8 +69,8 @@ void CommandEncoder::ConvertExtent3DToFFI(const dom::GPUExtent3D& aExtent,
   if (aExtent.IsRangeEnforcedUnsignedLongSequence()) {
     const auto& seq = aExtent.GetAsRangeEnforcedUnsignedLongSequence();
     aExtentFFI->width = seq.Length() > 0 ? seq[0] : 0;
-    aExtentFFI->height = seq.Length() > 1 ? seq[1] : 0;
-    aExtentFFI->depth_or_array_layers = seq.Length() > 2 ? seq[2] : 0;
+    aExtentFFI->height = seq.Length() > 1 ? seq[1] : 1;
+    aExtentFFI->depth_or_array_layers = seq.Length() > 2 ? seq[2] : 1;
   } else if (aExtent.IsGPUExtent3DDict()) {
     const auto& dict = aExtent.GetAsGPUExtent3DDict();
     aExtentFFI->width = dict.mWidth;
