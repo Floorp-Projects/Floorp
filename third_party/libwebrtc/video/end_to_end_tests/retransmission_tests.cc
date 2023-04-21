@@ -407,18 +407,6 @@ void RetransmissionEndToEndTest::DecodesRetransmittedFrame(bool enable_rtx,
         // This should be the only dropped packet.
         EXPECT_EQ(0u, retransmitted_timestamp_);
         retransmitted_timestamp_ = rtp_packet.Timestamp();
-        if (absl::c_linear_search(rendered_timestamps_,
-                                  retransmitted_timestamp_)) {
-          // Frame was rendered before last packet was scheduled for sending.
-          // This is extremly rare but possible scenario because prober able to
-          // resend packet before it was send.
-          // TODO(danilchap): Remove this corner case when prober would not be
-          // able to sneak in between packet saved to history for resending and
-          // pacer notified about existance of that packet for sending.
-          // See https://bugs.chromium.org/p/webrtc/issues/detail?id=5540 for
-          // details.
-          observation_complete_.Set();
-        }
         return DROP_PACKET;
       }
 
@@ -431,7 +419,6 @@ void RetransmissionEndToEndTest::DecodesRetransmittedFrame(bool enable_rtx,
         MutexLock lock(&mutex_);
         if (frame.timestamp() == retransmitted_timestamp_)
           observation_complete_.Set();
-        rendered_timestamps_.push_back(frame.timestamp());
       }
       orig_renderer_->OnFrame(frame);
     }
@@ -512,7 +499,6 @@ void RetransmissionEndToEndTest::DecodesRetransmittedFrame(bool enable_rtx,
     const std::string payload_name_;
     int marker_bits_observed_;
     uint32_t retransmitted_timestamp_ RTC_GUARDED_BY(&mutex_);
-    std::vector<uint32_t> rendered_timestamps_ RTC_GUARDED_BY(&mutex_);
   } test(enable_rtx, enable_red);
 
   RunBaseTest(&test);
