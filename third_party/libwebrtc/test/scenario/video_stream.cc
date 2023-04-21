@@ -80,24 +80,6 @@ VideoEncoderConfig::ContentType ConvertContentType(
   }
 }
 
-std::vector<RtpExtension> GetVideoRtpExtensions(
-    const VideoStreamConfig config) {
-  std::vector<RtpExtension> res = {
-      RtpExtension(RtpExtension::kVideoContentTypeUri,
-                   kVideoContentTypeExtensionId),
-      RtpExtension(RtpExtension::kVideoRotationUri,
-                   kVideoRotationRtpExtensionId)};
-  if (config.stream.packet_feedback) {
-    res.push_back(RtpExtension(RtpExtension::kTransportSequenceNumberUri,
-                               kTransportSequenceNumberExtensionId));
-  }
-  if (config.stream.abs_send_time) {
-    res.push_back(
-        RtpExtension(RtpExtension::kAbsSendTimeUri, kAbsSendTimeExtensionId));
-  }
-  return res;
-}
-
 std::string TransformFilePath(std::string path) {
   static const std::string resource_prefix = "res://";
   int ext_pos = path.rfind('.');
@@ -355,6 +337,24 @@ VideoReceiveStreamInterface::Config CreateVideoReceiveStreamConfig(
   return recv;
 }
 }  // namespace
+
+std::vector<RtpExtension> GetVideoRtpExtensions(
+    const VideoStreamConfig config) {
+  std::vector<RtpExtension> res = {
+      RtpExtension(RtpExtension::kVideoContentTypeUri,
+                   kVideoContentTypeExtensionId),
+      RtpExtension(RtpExtension::kVideoRotationUri,
+                   kVideoRotationRtpExtensionId)};
+  if (config.stream.packet_feedback) {
+    res.push_back(RtpExtension(RtpExtension::kTransportSequenceNumberUri,
+                               kTransportSequenceNumberExtensionId));
+  }
+  if (config.stream.abs_send_time) {
+    res.push_back(
+        RtpExtension(RtpExtension::kAbsSendTimeUri, kAbsSendTimeExtensionId));
+  }
+  return res;
+}
 
 SendVideoStream::SendVideoStream(CallClient* sender,
                                  VideoStreamConfig config,

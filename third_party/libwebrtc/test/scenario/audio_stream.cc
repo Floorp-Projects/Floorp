@@ -67,6 +67,20 @@ absl::optional<std::string> CreateAdaptationString(
 }
 }  // namespace
 
+std::vector<RtpExtension> GetAudioRtpExtensions(
+    const AudioStreamConfig& config) {
+  std::vector<RtpExtension> extensions;
+  if (config.stream.in_bandwidth_estimation) {
+    extensions.push_back({RtpExtension::kTransportSequenceNumberUri,
+                          kTransportSequenceNumberExtensionId});
+  }
+  if (config.stream.abs_send_time) {
+    extensions.push_back(
+        {RtpExtension::kAbsSendTimeUri, kAbsSendTimeExtensionId});
+  }
+  return extensions;
+}
+
 SendAudioStream::SendAudioStream(
     CallClient* sender,
     AudioStreamConfig config,
@@ -120,13 +134,8 @@ SendAudioStream::SendAudioStream(
 
   if (config.stream.in_bandwidth_estimation) {
     send_config.send_codec_spec->transport_cc_enabled = true;
-    send_config.rtp.extensions = {{RtpExtension::kTransportSequenceNumberUri,
-                                   kTransportSequenceNumberExtensionId}};
   }
-  if (config.stream.abs_send_time) {
-    send_config.rtp.extensions.push_back(
-        {RtpExtension::kAbsSendTimeUri, kAbsSendTimeExtensionId});
-  }
+  send_config.rtp.extensions = GetAudioRtpExtensions(config);
 
   sender_->SendTask([&] {
     send_stream_ = sender_->call_->CreateAudioSendStream(send_config);
@@ -179,10 +188,7 @@ ReceiveAudioStream::ReceiveAudioStream(
   recv_config.rtcp_send_transport = feedback_transport;
   recv_config.rtp.remote_ssrc = send_stream->ssrc_;
   receiver->ssrc_media_types_[recv_config.rtp.remote_ssrc] = MediaType::AUDIO;
-  if (config.stream.in_bandwidth_estimation) {
-    recv_config.rtp.extensions = {{RtpExtension::kTransportSequenceNumberUri,
-                                   kTransportSequenceNumberExtensionId}};
-  }
+  recv_config.rtp.extensions = GetAudioRtpExtensions(config);
   recv_config.decoder_factory = decoder_factory;
   recv_config.decoder_map = {
       {CallTest::kAudioSendPayloadType, {"opus", 48000, 2}}};
