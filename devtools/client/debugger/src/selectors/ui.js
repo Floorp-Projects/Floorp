@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+import { getSelectedSource } from "./sources";
+
 export function getSelectedPrimaryPaneTab(state) {
   return state.ui.selectedPrimaryPaneTab;
 }
@@ -22,8 +24,20 @@ export function getPaneCollapse(state, position) {
   return state.ui.endPanelCollapsed;
 }
 
-export function getHighlightedLineRange(state) {
-  return state.ui.highlightedLineRange;
+export function getHighlightedLineRangeForSelectedSource(state) {
+  const selectedSource = getSelectedSource(state);
+  if (!selectedSource) {
+    return null;
+  }
+  // Only return the highlighted line range if it matches the selected source
+  const highlightedLineRange = state.ui.highlightedLineRange;
+  if (
+    highlightedLineRange &&
+    selectedSource.id == highlightedLineRange.sourceId
+  ) {
+    return highlightedLineRange;
+  }
+  return null;
 }
 
 export function getConditionalPanelLocation(state) {
