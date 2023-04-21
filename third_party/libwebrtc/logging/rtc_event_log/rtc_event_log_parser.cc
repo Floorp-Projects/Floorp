@@ -32,7 +32,6 @@
 #include "logging/rtc_event_log/events/logged_rtp_rtcp.h"
 #include "logging/rtc_event_log/rtc_event_processor.h"
 #include "modules/audio_coding/audio_network_adaptor/include/audio_network_adaptor.h"
-#include "modules/include/module_common_types_public.h"
 #include "modules/rtp_rtcp/include/rtp_cvo.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/byte_io.h"
@@ -2289,7 +2288,7 @@ std::vector<LoggedPacketInfo> ParsedRtcEventLog::GetPacketInfos(
   std::map<int64_t, size_t> indices;
   uint16_t current_overhead = kDefaultOverhead;
   Timestamp last_log_time = Timestamp::Zero();
-  SequenceNumberUnwrapper seq_num_unwrapper;
+  RtpSequenceNumberUnwrapper seq_num_unwrapper;
 
   auto advance_time = [&](Timestamp new_log_time) {
     if (overhead_iter != overheads.end() &&
@@ -2301,7 +2300,7 @@ std::vector<LoggedPacketInfo> ParsedRtcEventLog::GetPacketInfos(
     // therefore we don't want to match up sequence numbers as we might have had
     // a wraparound.
     if (new_log_time - last_log_time > TimeDelta::Seconds(30)) {
-      seq_num_unwrapper = SequenceNumberUnwrapper();
+      seq_num_unwrapper.Reset();
       indices.clear();
     }
     RTC_DCHECK_GE(new_log_time, last_log_time);
