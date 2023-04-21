@@ -4,13 +4,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebGPUChild.h"
+#include "js/RootingAPI.h"
+#include "js/String.h"
+#include "js/TypeDecls.h"
+#include "js/Value.h"
 #include "js/Warnings.h"  // JS::WarnUTF8
 #include "mozilla/EnumTypeTraits.h"
+#include "mozilla/dom/Console.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/WebGPUBinding.h"
 #include "mozilla/dom/GPUUncapturedErrorEvent.h"
 #include "mozilla/webgpu/ValidationError.h"
+#include "mozilla/webgpu/WebGPUTypes.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
 #include "Adapter.h"
 #include "DeviceLostInfo.h"
@@ -18,6 +24,7 @@
 #include "Sampler.h"
 #include "CompilationInfo.h"
 #include "mozilla/ipc/RawShmem.h"
+#include "nsGlobalWindowInner.h"
 
 namespace mozilla::webgpu {
 
@@ -705,6 +712,65 @@ RawId WebGPUChild::DeviceCreateBindGroup(
   return id;
 }
 
+MOZ_CAN_RUN_SCRIPT void reportCompilationMessagesToConsole(
+    const RefPtr<ShaderModule>& shaderModule,
+    const nsTArray<WebGPUCompilationMessage>& messages) {
+  auto* global = shaderModule->GetParentObject();
+
+  dom::AutoJSAPI api;
+  if (!api.Init(global)) {
+    return;
+  }
+
+  const auto& cx = api.cx();
+
+  ErrorResult rv;
+  RefPtr<dom::Console> console =
+      nsGlobalWindowInner::Cast(global->AsInnerWindow())->GetConsole(cx, rv);
+  if (rv.Failed()) {
+    return;
+  }
+
+  dom::GlobalObject globalObj(cx, global->GetGlobalJSObject());
+
+  dom::Sequence<JS::Value> args;
+  dom::SequenceRooter<JS::Value> msgArgsRooter(cx, &args);
+  auto SetSingleStrAsArgs =
+      [&](const nsString& message, dom::Sequence<JS::Value>* args)
+          MOZ_CAN_RUN_SCRIPT {
+            args->Clear();
+            JS::Rooted<JSString*> jsStr(
+                cx, JS_NewUCStringCopyN(cx, message.Data(), message.Length()));
+            if (!jsStr) {
+              return;
+            }
+            JS::Rooted<JS::Value> val(cx, JS::StringValue(jsStr));
+            if (!args->AppendElement(val, fallible)) {
+              return;
+            }
+          };
+
+  nsString header(u"WebGPU compilation info for shader module");
+  SetSingleStrAsArgs(header, &args);
+  console->GroupCollapsed(globalObj, args);
+
+  for (const auto& message : messages) {
+    SetSingleStrAsArgs(message.message, &args);
+    switch (message.messageType) {
+      case WebGPUCompilationMessageType::Error:
+        console->Error(globalObj, args);
+        break;
+      case WebGPUCompilationMessageType::Warning:
+        console->Warn(globalObj, args);
+        break;
+      case WebGPUCompilationMessageType::Info:
+        console->Info(globalObj, args);
+        break;
+    }
+  }
+  console->GroupEnd(globalObj);
+}
+
 already_AddRefed<ShaderModule> WebGPUChild::DeviceCreateShaderModule(
     Device* aDevice, const dom::GPUShaderModuleDescriptor& aDesc,
     RefPtr<dom::Promise> aPromise) {
@@ -722,12 +788,17 @@ already_AddRefed<ShaderModule> WebGPUChild::DeviceCreateShaderModule(
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [aPromise,
-           shaderModule](nsTArray<WebGPUCompilationMessage>&& messages) {
-            RefPtr<CompilationInfo> infoObject(
-                new CompilationInfo(shaderModule));
-            infoObject->SetMessages(messages);
-            aPromise->MaybeResolve(infoObject);
-          },
+           shaderModule](nsTArray<WebGPUCompilationMessage>&& messages)
+              MOZ_CAN_RUN_SCRIPT {
+                if (!messages.IsEmpty()) {
+                  reportCompilationMessagesToConsole(shaderModule,
+                                                     std::cref(messages));
+                }
+                RefPtr<CompilationInfo> infoObject(
+                    new CompilationInfo(shaderModule));
+                infoObject->SetMessages(messages);
+                aPromise->MaybeResolve(infoObject);
+              },
           [aPromise](const ipc::ResponseRejectReason& aReason) {
             aPromise->MaybeRejectWithNotSupportedError("IPC error");
           });
