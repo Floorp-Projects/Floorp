@@ -49,24 +49,27 @@ add_task(async function test_closePanelESCMouseFocus() {
       Assert.ok(subtitlesButton, "Subtitles button found");
 
       let subtitlesPanel = pipWin.document.getElementById("settings");
+      let panelVisiblePromise = BrowserTestUtils.waitForCondition(
+        () => BrowserTestUtils.is_visible(subtitlesPanel),
+        "Wait for panel to be visible"
+      );
 
       EventUtils.synthesizeMouseAtCenter(subtitlesButton, {}, pipWin);
 
-      Assert.ok(
-        BrowserTestUtils.is_visible(subtitlesPanel),
-        "Subtitles panel is visible"
-      );
+      await panelVisiblePromise;
 
       let audioButton = pipWin.document.getElementById("audio");
       audioButton.focus();
 
+      let panelHiddenPromise = BrowserTestUtils.waitForCondition(
+        () => BrowserTestUtils.is_hidden(subtitlesPanel),
+        "Wait for panel to be hidden"
+      );
+
       EventUtils.synthesizeKey("KEY_Escape", {}, pipWin);
 
       info("Make sure subtitles settings panel closes after pressing ESC");
-      Assert.ok(
-        BrowserTestUtils.is_hidden(subtitlesPanel),
-        "Subtitles panel is hidden"
-      );
+      await panelHiddenPromise;
 
       Assert.notEqual(
         pipWin.document.activeElement,
@@ -123,14 +126,15 @@ add_task(async function test_closePanelESCKeyboardFocus() {
 
       let subtitlesPanel = pipWin.document.getElementById("settings");
       let subtitlesToggle = pipWin.document.getElementById("subtitles-toggle");
+      let panelVisiblePromise = BrowserTestUtils.waitForCondition(
+        () => BrowserTestUtils.is_visible(subtitlesPanel),
+        "Wait for panel to be visible"
+      );
 
       subtitlesButton.focus();
       EventUtils.synthesizeKey(" ", {}, pipWin);
 
-      Assert.ok(
-        BrowserTestUtils.is_visible(subtitlesPanel),
-        "Subtitles panel is visible"
-      );
+      await panelVisiblePromise;
 
       Assert.equal(
         pipWin.document.activeElement,
@@ -138,13 +142,15 @@ add_task(async function test_closePanelESCKeyboardFocus() {
         "Subtitles switch toggle should have focus after opening panel"
       );
 
+      let panelHiddenPromise = BrowserTestUtils.waitForCondition(
+        () => BrowserTestUtils.is_hidden(subtitlesPanel),
+        "Wait for panel to be hidden"
+      );
+
       EventUtils.synthesizeKey("KEY_Escape", {}, pipWin);
 
       info("Make sure subtitles settings panel closes after pressing ESC");
-      Assert.ok(
-        BrowserTestUtils.is_hidden(subtitlesPanel),
-        "Subtitles panel is hidden"
-      );
+      await panelHiddenPromise;
 
       Assert.equal(
         pipWin.document.activeElement,
@@ -203,14 +209,15 @@ add_task(async function test_panelKeyboardButtons() {
 
       let subtitlesPanel = pipWin.document.getElementById("settings");
       let subtitlesToggle = pipWin.document.getElementById("subtitles-toggle");
+      let panelVisiblePromise = BrowserTestUtils.waitForCondition(
+        () => BrowserTestUtils.is_visible(subtitlesPanel),
+        "Wait for panel to be visible"
+      );
 
       subtitlesButton.focus();
       EventUtils.synthesizeKey(" ", {}, pipWin);
 
-      Assert.ok(
-        BrowserTestUtils.is_visible(subtitlesPanel),
-        "Subtitles panel is visible"
-      );
+      await panelVisiblePromise;
 
       Assert.equal(
         pipWin.document.activeElement,
@@ -245,15 +252,18 @@ add_task(async function test_panelKeyboardButtons() {
       );
 
       subtitlesButton.focus();
+
+      let panelHiddenPromise = BrowserTestUtils.waitForCondition(
+        () => BrowserTestUtils.is_hidden(subtitlesPanel),
+        "Wait for panel to be hidden"
+      );
+
       EventUtils.synthesizeKey(" ", {}, pipWin);
 
       info(
         "Make sure subtitles settings panel closes after pressing the subtitles button"
       );
-      Assert.ok(
-        BrowserTestUtils.is_hidden(subtitlesPanel),
-        "Subtitles panel is hidden"
-      );
+      await panelHiddenPromise;
 
       Assert.ok(pipWin, "PiP window is still open");
 
