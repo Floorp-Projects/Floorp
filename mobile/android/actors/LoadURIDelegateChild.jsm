@@ -5,9 +5,12 @@
 const { GeckoViewActorChild } = ChromeUtils.importESModule(
   "resource://gre/modules/GeckoViewActorChild.sys.mjs"
 );
-const { LoadURIDelegate } = ChromeUtils.import(
-  "resource://gre/modules/LoadURIDelegate.jsm"
-);
+
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  LoadURIDelegate: "resource://gre/modules/LoadURIDelegate.sys.mjs",
+});
 
 var EXPORTED_SYMBOLS = ["LoadURIDelegateChild"];
 
@@ -18,7 +21,7 @@ class LoadURIDelegateChild extends GeckoViewActorChild {
     debug`handleLoadError: uri=${aUri && aUri.spec}
                              displaySpec=${aUri && aUri.displaySpec}
                              error=${aError}`;
-    if (aUri && LoadURIDelegate.isSafeBrowsingError(aError)) {
+    if (aUri && lazy.LoadURIDelegate.isSafeBrowsingError(aError)) {
       const message = {
         type: "GeckoView:ContentBlocked",
         uri: aUri.spec,
@@ -28,7 +31,7 @@ class LoadURIDelegateChild extends GeckoViewActorChild {
       this.eventDispatcher.sendRequest(message);
     }
 
-    return LoadURIDelegate.handleLoadError(
+    return lazy.LoadURIDelegate.handleLoadError(
       this.contentWindow,
       this.eventDispatcher,
       aUri,
