@@ -197,13 +197,13 @@ find info on how to run trybots and applying for try rights.
 
 Many WebRTC committers are also Chromium committers. To make sure to use the
 right account for pushing commits to WebRTC, use the `user.email` Git config
-setting. The recommended way is to have the chromium.org account set globally
+setting. The recommended way is to have the chromium committer account set globally
 as described at the [depot tools setup page][depot-tools] and then set `user.email`
-locally for the WebRTC repos using (change to your webrtc.org address):
+locally for the WebRTC repos using:
 
 ```
 $ cd /path/to/webrtc/src
-$ git config user.email yourname@webrtc.org
+$ git config user.email <YOUR_WEBRTC_COMMITTER_EMAIL>
 ```
 
 ## Example Applications
