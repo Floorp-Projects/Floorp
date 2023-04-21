@@ -305,7 +305,7 @@ StylePrefersColorScheme Gecko_MediaFeatures_PrefersColorScheme(
 // as a signal.
 StylePrefersContrast Gecko_MediaFeatures_PrefersContrast(
     const Document* aDocument) {
-  if (aDocument->ShouldResistFingerprinting()) {
+  if (aDocument->ShouldResistFingerprinting(RFPTarget::CSSPrefersContrast)) {
     return StylePrefersContrast::NoPreference;
   }
   const auto& prefs = PreferenceSheet::PrefsFor(*aDocument);
