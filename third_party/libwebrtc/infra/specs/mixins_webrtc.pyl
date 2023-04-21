@@ -211,8 +211,8 @@
     'swarming': {
       'dimensions': {
         'os': 'Windows-10-19042|Windows-10-19045'
-      }
-    }
+      },
+    },
   },
   'xcode_13_main': {
     '$mixin_append': {
