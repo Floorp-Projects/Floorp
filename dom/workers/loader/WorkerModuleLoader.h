@@ -44,7 +44,7 @@ class WorkerModuleLoader : public JS::loader::ModuleLoaderBase {
  private:
   ~WorkerModuleLoader() = default;
 
-  void CreateDynamicImportLoader();
+  bool CreateDynamicImportLoader();
   void SetScriptLoader(JS::loader::ScriptLoaderInterface* aLoader) {
     mLoader = aLoader;
   }
