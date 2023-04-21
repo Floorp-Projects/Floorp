@@ -31,9 +31,9 @@ export function initialSourcesState(state) {
      * All sources associated with a given URL. When using source maps, multiple
      * sources can have the same URL.
      *
-     * Dictionary(url => array<source id>)
+     * Map(url => array<source>)
      */
-    urls: {},
+    mutableSourcesPerUrl: new Map(),
 
     /**
      * Map of the source id's to one or more related original source id's
@@ -181,21 +181,21 @@ function update(state = initialSourcesState(), action) {
 /*
  * Add sources to the sources store
  * - Add the source to the sources store
- * - Add the source URL to the urls map
+ * - Add the source URL to the source url map
  */
 function addSources(state, sources) {
-  state = {
-    ...state,
-    urls: { ...state.urls },
-  };
-
   for (const source of sources) {
     state.mutableSources.set(source.id, source);
 
     // Update the source url map
-    const existing = state.urls[source.url] || [];
-    if (!existing.includes(source.id)) {
-      state.urls[source.url] = [...existing, source.id];
+    const existing = state.mutableSourcesPerUrl.get(source.url);
+    if (existing) {
+      // We never return this array from selectors as-is,
+      // we either return the first entry or lookup for a precise entry
+      // so we can mutate it.
+      existing.push(source);
+    } else {
+      state.mutableSourcesPerUrl.set(source.url, [source]);
     }
 
     // In case of original source, maintain the mapping of generated source to original sources map.
@@ -213,30 +213,36 @@ function addSources(state, sources) {
     }
   }
 
-  return state;
+  return { ...state };
 }
 
 function removeSourcesAndActors(state, action) {
   state = {
     ...state,
-    urls: { ...state.urls },
     actors: { ...state.actors },
   };
 
-  const { urls, mutableSources, mutableOriginalSources, actors } = state;
+  const {
+    mutableSourcesPerUrl,
+    mutableSources,
+    mutableOriginalSources,
+    actors,
+  } = state;
   for (const removedSource of action.sources) {
     const sourceId = removedSource.id;
 
     // Clear the urls Map
     const sourceUrl = removedSource.url;
     if (sourceUrl) {
-      let sourcesForUrl = urls[sourceUrl];
-      if (sourcesForUrl) {
-        sourcesForUrl = sourcesForUrl.filter(id => id !== sourceId);
-        urls[sourceUrl] = sourcesForUrl;
-        if (!sourcesForUrl.length) {
-          delete urls[sourceUrl];
-        }
+      const sourcesForSameUrl = (
+        mutableSourcesPerUrl.get(sourceUrl) || []
+      ).filter(s => s != removedSource);
+      if (!sourcesForSameUrl.length) {
+        // All sources with this URL have been removed
+        mutableSourcesPerUrl.delete(sourceUrl);
+      } else {
+        // There are other sources still alive with the same URL
+        mutableSourcesPerUrl.set(sourceUrl, sourcesForSameUrl);
       }
     }
 
