@@ -2173,13 +2173,10 @@ if (rtc_include_tests) {
         "numerics/running_statistics_unittest.cc",
         "numerics/sequence_number_unwrapper_unittest.cc",
         "numerics/sequence_number_util_unittest.cc",
-        "numerics/sequence_numbers_conformance_test.cc",
       ]
       deps = [
         ":rtc_numerics",
-        ":strong_alias",
         ":timeutils",
-        "../modules:module_api_public",
         "../test:test_main",
         "../test:test_support",
       ]
