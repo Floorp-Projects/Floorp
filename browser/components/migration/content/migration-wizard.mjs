@@ -38,7 +38,7 @@ export class MigrationWizard extends HTMLElement {
             <div class="loading-block large"></div>
             <div class="loading-block small"></div>
             <div class="loading-block small"></div>
-            <moz-button-group class="buttons">
+            <moz-button-group class="buttons" part="buttons">
               <!-- If possible, use the same button labels as the SELECTION page with the same strings.
                    That'll prevent flicker when the load state exits if we then enter the SELECTION page. -->
               <button class="cancel-close" data-l10n-id="migration-cancel-button-label" disabled></button>
@@ -86,7 +86,7 @@ export class MigrationWizard extends HTMLElement {
               </fieldset>
             </details>
 
-            <moz-button-group class="buttons">
+            <moz-button-group class="buttons" part="buttons">
               <button class="cancel-close" data-l10n-id="migration-cancel-button-label"></button>
               <button id="import-from-file" class="primary" data-l10n-id="migration-import-from-file-button-label"></button>
               <button id="import" class="primary" data-l10n-id="migration-import-button-label"></button>
@@ -120,7 +120,7 @@ export class MigrationWizard extends HTMLElement {
                 <span class="success-text deemphasized-text">&nbsp;</span>
               </div>
             </div>
-            <moz-button-group class="buttons">
+            <moz-button-group class="buttons" part="buttons">
               <button class="cancel-close" data-l10n-id="migration-cancel-button-label" disabled></button>
               <button class="primary done-button" data-l10n-id="migration-done-button-label"></button>
             </moz-button-group>
@@ -165,7 +165,7 @@ export class MigrationWizard extends HTMLElement {
                 <span class="page-portrait-icon"></span>
               </li>
             </ol>
-            <moz-button-group class="buttons">
+            <moz-button-group class="buttons" part="buttons">
               <button class="cancel-close" data-l10n-id="migration-safari-password-import-skip-button"></button>
               <button class="primary" data-l10n-id="migration-safari-password-import-select-button"></button>
             </moz-button-group>
@@ -178,7 +178,7 @@ export class MigrationWizard extends HTMLElement {
               <li data-l10n-id="migration-wizard-safari-instructions-continue"></li>
               <li data-l10n-id="migration-wizard-safari-instructions-folder"></li>
             </ol>
-            <moz-button-group class="buttons">
+            <moz-button-group class="buttons" part="buttons">
               <button class="cancel-close" data-l10n-id="migration-cancel-button-label"></button>
               <button id="safari-request-permissions" class="primary" data-l10n-id="migration-wizard-safari-select-button"></button>
             </moz-button-group>
@@ -190,7 +190,7 @@ export class MigrationWizard extends HTMLElement {
               <span class="error-icon" role="img"></span>
               <div class="no-browsers-found-message" data-l10n-id="migration-wizard-import-browser-no-browsers"></div>
             </div>
-            <moz-button-group class="buttons">
+            <moz-button-group class="buttons" part="buttons">
               <button class="cancel-close" data-l10n-id="migration-cancel-button-label"></button>
               <button id="choose-import-from-file" class="primary" data-l10n-id="migration-choose-to-import-from-file-button-label"></button>
             </moz-button-group>

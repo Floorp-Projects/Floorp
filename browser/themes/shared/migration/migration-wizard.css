@@ -7,6 +7,7 @@
 :host {
   display: flex;
   flex-direction: column;
+  text-align: start;
   width: 22.34em;
 }
 
@@ -200,6 +201,7 @@ summary {
   grid-template-areas: "icon type"
                        "icon status";
   align-items: center;
+  justify-items: start;
 }
 
 .resource-progress-group[hidden] {
