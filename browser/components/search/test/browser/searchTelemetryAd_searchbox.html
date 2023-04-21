@@ -8,7 +8,11 @@
 <body>
   <section>
     <form role="search">
-      <input type="text" />
+      <input type="text" value="hello world" />
+      <div>
+        <ul>
+          <li id="suggest">hello world 2</li>
+      </div>
     </form>
   </section>
   <!-- TODO: Remove links with ads once page checks can be done without any ads -->
@@ -48,6 +52,7 @@
             <span>Cras ac velit sed tellus</span>
           </div>
         </div>
+        <button type="text">See More</button>
       </div>
     </div>
     <div class="rhs">
@@ -65,4 +70,14 @@
     </div>
   </section>
 </body>
+<script type="text/javascript">
+  document.querySelector("form").addEventListener("submit", event => {
+    event.preventDefault();
+    window.location.href = "https://example.org/search?q=hello+world";
+  })
+  document.getElementById("suggest").addEventListener("click", event => {
+    event.preventDefault();
+    window.location.href = "https://example.org/search?q=hello+world+2";
+  })
+</script>
 </html>

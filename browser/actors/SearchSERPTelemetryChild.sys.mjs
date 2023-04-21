@@ -259,7 +259,8 @@ class SearchAdImpression {
         // fallback to its parent element.
         this.#addEventListenerToElements(
           data.childElements.length ? data.childElements : [element],
-          data.type
+          data.type,
+          false
         );
         continue;
       }
@@ -376,6 +377,9 @@ class SearchAdImpression {
             childElements: result.childElements,
           });
         }
+        if (result.relatedElements?.length) {
+          this.#addEventListenerToElements(result.relatedElements, result.type);
+        }
         // If an anchor doesn't match any component, and it doesn't have a non
         // ads link regexp, cache the anchor so the parent process can observe
         // them.
@@ -411,6 +415,12 @@ class SearchAdImpression {
       );
       if (parents.length) {
         for (let parent of parents) {
+          if (component.included.related?.selector) {
+            this.#addEventListenerToElements(
+              parent.querySelectorAll(component.included.related.selector),
+              component.type
+            );
+          }
           if (component.included.children) {
             for (let child of component.included.children) {
               let childElements = parent.querySelectorAll(child.selector);
@@ -572,6 +582,13 @@ class SearchAdImpression {
         };
       }
 
+      let relatedElements = [];
+      if (component.included.related?.selector) {
+        relatedElements = parent.querySelectorAll(
+          component.included.related.selector
+        );
+      }
+
       // If the component has no defined children, return the parent element.
       if (component.included.children) {
         // Look for the first instance of a matching child selector.
@@ -586,6 +603,7 @@ class SearchAdImpression {
                 proxyChildElements: Array.from(proxyChildElements),
                 count: proxyChildElements.length,
                 childElements: [anchor],
+                relatedElements,
               };
             }
           } else if (parent.querySelector(child.selector)) {
@@ -593,6 +611,7 @@ class SearchAdImpression {
               element: parent,
               type: child.type ?? component.type,
               childElements: [anchor],
+              relatedElements,
             };
           }
         }
@@ -603,6 +622,7 @@ class SearchAdImpression {
         element: parent,
         type: component.type,
         childElements: [anchor],
+        relatedElements,
       };
     }
     // If no component was found, use default values.
@@ -750,18 +770,50 @@ class SearchAdImpression {
    *  DOM elements to add event listeners to.
    * @param {string} type
    *  The component type of the element.
+   * @param {boolean} isRelated
+   *  Whether the elements input are related to components or are actual
+   *  components.
    */
-  #addEventListenerToElements(elements, type) {
-    if (!elements) {
+  #addEventListenerToElements(elements, type, isRelated = true) {
+    if (!elements?.length) {
       return;
+    }
+    let clickAction = "clicked";
+    let keydownEnterAction = "clicked";
+
+    switch (type) {
+      case "incontent_searchbox":
+        keydownEnterAction = "submitted";
+        if (isRelated) {
+          // The related element to incontent_search are autosuggested elements
+          // which when clicked should cause different action than if the
+          // searchbox is clicked.
+          clickAction = "submitted";
+        }
+        break;
+      case "ad_carousel":
+      case "refined_search_buttons":
+        if (isRelated) {
+          clickAction = "expanded";
+        }
+        break;
     }
     for (let element of elements) {
       let clickCallback = () => {
-        this.#eventCallback(type, "clicked");
+        this.#eventCallback(type, clickAction);
       };
       element.addEventListener("click", clickCallback);
+
+      let keydownCallback = event => {
+        if (event.key == "Enter") {
+          this.#eventCallback(type, keydownEnterAction);
+        }
+      };
+      element.addEventListener("keydown", keydownCallback);
+
       searchAdImpressionListeners.set(element, {
         clicked: clickCallback,
+        keydown: keydownCallback,
       });
       searchAdImpressionElements.add(element);
     }

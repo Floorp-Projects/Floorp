@@ -30,6 +30,23 @@ const TEST_PROVIDER_INFO = [
     extraAdServersRegexps: [/^https:\/\/example\.com\/ad/],
     components: [
       {
+        type: SearchSERPTelemetryUtils.COMPONENTS.AD_CAROUSEL,
+        included: {
+          parent: {
+            selector: ".moz-carousel",
+          },
+          children: [
+            {
+              selector: ".moz-carousel-card",
+              countChildren: true,
+            },
+          ],
+          related: {
+            selector: "button",
+          },
+        },
+      },
+      {
         type: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
         included: {
           parent: {
@@ -41,6 +58,9 @@ const TEST_PROVIDER_INFO = [
               type: SearchSERPTelemetryUtils.COMPONENTS.AD_SITELINK,
             },
           ],
+          related: {
+            selector: "button",
+          },
         },
         excluded: {
           parent: {
@@ -52,7 +72,15 @@ const TEST_PROVIDER_INFO = [
         type: SearchSERPTelemetryUtils.COMPONENTS.INCONTENT_SEARCHBOX,
         included: {
           parent: {
-            selector: "form input",
+            selector: "form",
+          },
+          children: [
+            {
+              selector: "input",
+            },
+          ],
+          related: {
+            selector: "div",
           },
         },
         topDown: true,
@@ -350,8 +378,13 @@ add_task(async function test_click_incontent_searchbox() {
 
   // Click on the searchbox.
   await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
-    content.document.querySelector("form input").click();
+    let input = content.document.querySelector("form input");
+    input.click();
+    input.focus();
   });
+  let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
+  EventUtils.synthesizeKey("KEY_Enter");
+  await pageLoadPromise;
 
   assertImpressionEvents([
     {
@@ -365,6 +398,81 @@ add_task(async function test_click_incontent_searchbox() {
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
           target: SearchSERPTelemetryUtils.COMPONENTS.INCONTENT_SEARCHBOX,
+        },
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.SUBMITTED,
+          target: SearchSERPTelemetryUtils.COMPONENTS.INCONTENT_SEARCHBOX,
+        },
+      ],
+    },
+  ]);
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+// Click an auto-suggested term. The element that is clicked is related
+// to the searchbox but not in search-telemetry-v2 because it can be too
+// difficult to determine ahead of time since the elements are generated
+// dynamically. So instead it should listen to an element higher in the DOM.
+add_task(async function test_click_autosuggest() {
+  resetTelemetry();
+  let url = getSERPUrl("searchTelemetryAd_searchbox.html");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+
+  await promiseImpressionReceived();
+
+  // Click an autosuggested term.
+  let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+    content.document.querySelector("#suggest").click();
+  });
+  await pageLoadPromise;
+
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+      },
+      engagements: [
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.SUBMITTED,
+          target: SearchSERPTelemetryUtils.COMPONENTS.INCONTENT_SEARCHBOX,
+        },
+      ],
+    },
+  ]);
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+// Carousel related buttons expand content.
+add_task(async function test_click_carousel_expand() {
+  resetTelemetry();
+  let url = getSERPUrl("searchTelemetryAd_components_carousel.html");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+
+  await promiseImpressionReceived();
+
+  // Click a button that is expected to expand.
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+    content.document.querySelector("button").click();
+  });
+
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+      },
+      engagements: [
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.EXPANDED,
+          target: SearchSERPTelemetryUtils.COMPONENTS.AD_CAROUSEL,
         },
       ],
     },
