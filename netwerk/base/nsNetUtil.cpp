@@ -3716,11 +3716,30 @@ bool IsFontMimeType(const nsAString& aType) {
 }
 
 static const nsAttrValue::EnumTable kAsAttributeTable[] = {
-    {"", DESTINATION_INVALID},      {"audio", DESTINATION_AUDIO},
-    {"font", DESTINATION_FONT},     {"image", DESTINATION_IMAGE},
-    {"script", DESTINATION_SCRIPT}, {"style", DESTINATION_STYLE},
-    {"track", DESTINATION_TRACK},   {"video", DESTINATION_VIDEO},
-    {"fetch", DESTINATION_FETCH},   {nullptr, 0}};
+    {"", DESTINATION_INVALID},
+    {"audio", DESTINATION_AUDIO},
+    {"audioworklet", DESTINATION_AUDIOWORKLET},
+    {"document", DESTINATION_DOCUMENT},
+    {"embed", DESTINATION_EMBED},
+    {"font", DESTINATION_FONT},
+    {"frame", DESTINATION_FRAME},
+    {"iframe", DESTINATION_IFRAME},
+    {"image", DESTINATION_IMAGE},
+    {"manifest", DESTINATION_MANIFEST},
+    {"object", DESTINATION_OBJECT},
+    {"paintworklet", DESTINATION_PAINTWORKLET},
+    {"report", DESTINATION_REPORT},
+    {"script", DESTINATION_SCRIPT},
+    {"serviceworker", DESTINATION_SERVICEWORKER},
+    {"sharedworker", DESTINATION_SHAREDWORKER},
+    {"style", DESTINATION_STYLE},
+    {"track", DESTINATION_TRACK},
+    {"video", DESTINATION_VIDEO},
+    {"webidentity", DESTINATION_WEBIDENTITY},
+    {"worker", DESTINATION_WORKER},
+    {"xslt", DESTINATION_XSLT},
+    {"fetch", DESTINATION_FETCH},
+    {nullptr, 0}};
 
 void ParseAsValue(const nsAString& aValue, nsAttrValue& aResult) {
   DebugOnly<bool> success =
@@ -3754,6 +3773,16 @@ nsContentPolicyType AsValueToContentPolicy(const nsAttrValue& aValue) {
       return nsIContentPolicy::TYPE_INTERNAL_FETCH_PRELOAD;
   }
   return nsIContentPolicy::TYPE_INVALID;
+}
+
+bool IsScriptLikeOrInvalid(const nsAttrValue& aValue) {
+  return aValue.GetEnumValue() == DESTINATION_INVALID ||
+         aValue.GetEnumValue() == DESTINATION_AUDIOWORKLET ||
+         aValue.GetEnumValue() == DESTINATION_PAINTWORKLET ||
+         aValue.GetEnumValue() == DESTINATION_SCRIPT ||
+         aValue.GetEnumValue() == DESTINATION_SERVICEWORKER ||
+         aValue.GetEnumValue() == DESTINATION_SHAREDWORKER ||
+         aValue.GetEnumValue() == DESTINATION_WORKER;
 }
 
 bool CheckPreloadAttrs(const nsAttrValue& aAs, const nsAString& aType,
