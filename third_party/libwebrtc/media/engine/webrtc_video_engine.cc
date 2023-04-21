@@ -1745,20 +1745,30 @@ void WebRtcVideoChannel::FillBitrateInfo(BandwidthEstimationInfo* bwe_info) {
 
 void WebRtcVideoChannel::FillSendCodecStats(
     VideoMediaSendInfo* video_media_info) {
-  for (const VideoCodec& codec : send_params_.codecs) {
-    webrtc::RtpCodecParameters codec_params = codec.ToCodecParameters();
-    video_media_info->send_codecs.insert(
-        std::make_pair(codec_params.payload_type, std::move(codec_params)));
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  if (!send_codec_) {
+    return;
   }
+  // Note: since RTP stats don't account for RTX and FEC separately (see
+  // https://w3c.github.io/webrtc-stats/#dom-rtcstatstype-outbound-rtp)
+  // we can omit the codec information for those here and only insert the
+  // primary codec that is being used to send here.
+  video_media_info->send_codecs.insert(std::make_pair(
+      send_codec_->codec.id, send_codec_->codec.ToCodecParameters()));
 }
 
 void WebRtcVideoChannel::FillReceiveCodecStats(
     VideoMediaReceiveInfo* video_media_info) {
-  // TODO(bugs.webrtc.org/14808): Don't copy codec info around - reference it.
-  for (const VideoCodec& codec : recv_params_.codecs) {
-    webrtc::RtpCodecParameters codec_params = codec.ToCodecParameters();
-    video_media_info->receive_codecs.insert(
-        std::make_pair(codec_params.payload_type, std::move(codec_params)));
+  for (const auto& receiver : video_media_info->receivers) {
+    auto codec =
+        absl::c_find_if(recv_params_.codecs, [&receiver](const VideoCodec& c) {
+          return receiver.codec_payload_type &&
+                 *receiver.codec_payload_type == c.id;
+        });
+    if (codec != recv_params_.codecs.end()) {
+      video_media_info->receive_codecs.insert(
+          std::make_pair(codec->id, codec->ToCodecParameters()));
+    }
   }
 }
 
