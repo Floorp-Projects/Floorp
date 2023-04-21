@@ -1,169 +1,65 @@
-From: Evan Shrubsole <eshr@webrtc.org>
-Date: Wed, 18 Jan 2023 10:28:12 +0000
-Subject: (tmp-cherry-pick) Revert "Ensure RTCRtpSenders are always created
- with one encoding" (44e5d5a9d1)
+From: =?UTF-8?q?Henrik=20Bostr=C3=B6m?= <hbos@webrtc.org>
+Date: Fri, 20 Jan 2023 10:48:31 +0100
+Subject: =?UTF-8?q?(cherry-pick-branch-heads/5481)=20[Merge-110]=C2=A0[Sta?=
+ =?UTF-8?q?ts]=20Handle=20the=20case=20of=20missing=20certificates.?=
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-This reverts commit b8023690d9f0e150cfe698cd68b477903ac66178.
+Certificates being missing is a sign of a bug (e.g. webrtc:14844, to be
+fixed separately) which is why we have a DCHECK. But this DCHECK does
+not protect against accessing the invalid iterator if it is a release
+build. This CL makes that safe.
 
-Reason for revert: Breaking WPT tests in Chrome. Example build https://ci.chromium.org/ui/p/chromium/builders/try/linux-rel/1263191/overview
+# Mobile bots not running properly
+NOTRY=True
 
-Original change's description:
-> Ensure RTCRtpSenders are always created with one encoding
->
-> It is possible to have AddTransceiver calls with an empty array
-> of encodings or AddTrack calls. In both cases, before negotiation,
-> the sender's encodings array would be empty and it was not possible
-> to update any value.
->
-> Now, a default entry should be created in those cases, allowing to
-> update the configuration before negotiation.
->
-> Bug: webrtc:10567
-> Change-Id: I1271e2965e1a97c1e472451e0ab8867fc24f6c2b
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/290994
-> Auto-Submit: Florent Castelli <orphis@webrtc.org>
-> Reviewed-by: Henrik Boström <hbos@webrtc.org>
-> Commit-Queue: Florent Castelli <orphis@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#39126}
+(cherry picked from commit 124d7c3fe5bdc79a355c9df02d07f25331631a68)
 
-Bug: webrtc:10567
-Change-Id: Ib8931b38182251baac616540788a02a5fafaf670
-No-Presubmit: true
-No-Tree-Checks: true
-No-Try: true
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291120
-Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Commit-Queue: Evan Shrubsole <eshr@webrtc.org>
-Auto-Submit: Evan Shrubsole <eshr@webrtc.org>
-Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Cr-Commit-Position: refs/heads/main@{#39132}
+Bug: chromium:1408392
+Change-Id: I97a82786028e41c58ef8ef15002c3f959bbec7f1
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291109
+Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+Commit-Queue: Henrik Boström <hbos@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#39159}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291380
+Cr-Commit-Position: refs/branch-heads/5481@{#2}
+Cr-Branched-From: 2e1a9a4ae0234d4b1ea7a6fd4188afa1fb20379d-refs/heads/main@{#38901}
 ---
- pc/peer_connection.cc                 |  5 -----
- pc/peer_connection_integrationtest.cc | 30 ---------------------------
- pc/rtp_transmission_manager.cc        | 22 +++++++++-----------
- 3 files changed, 10 insertions(+), 47 deletions(-)
+ pc/rtc_stats_collector.cc | 19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
 
-diff --git a/pc/peer_connection.cc b/pc/peer_connection.cc
-index 36ffd1122f..5633be352e 100644
---- a/pc/peer_connection.cc
-+++ b/pc/peer_connection.cc
-@@ -1096,11 +1096,6 @@ PeerConnection::AddTransceiver(
+diff --git a/pc/rtc_stats_collector.cc b/pc/rtc_stats_collector.cc
+index 508661ec8a..704d383510 100644
+--- a/pc/rtc_stats_collector.cc
++++ b/pc/rtc_stats_collector.cc
+@@ -2200,16 +2200,17 @@ void RTCStatsCollector::ProduceTransportStats_n(
+     // exist.
+     const auto& certificate_stats_it =
+         transport_cert_stats.find(transport_name);
++    std::string local_certificate_id, remote_certificate_id;
+     RTC_DCHECK(certificate_stats_it != transport_cert_stats.cend());
+-    std::string local_certificate_id;
+-    if (certificate_stats_it->second.local) {
+-      local_certificate_id = RTCCertificateIDFromFingerprint(
+-          certificate_stats_it->second.local->fingerprint);
+-    }
+-    std::string remote_certificate_id;
+-    if (certificate_stats_it->second.remote) {
+-      remote_certificate_id = RTCCertificateIDFromFingerprint(
+-          certificate_stats_it->second.remote->fingerprint);
++    if (certificate_stats_it != transport_cert_stats.cend()) {
++      if (certificate_stats_it->second.local) {
++        local_certificate_id = RTCCertificateIDFromFingerprint(
++            certificate_stats_it->second.local->fingerprint);
++      }
++      if (certificate_stats_it->second.remote) {
++        remote_certificate_id = RTCCertificateIDFromFingerprint(
++            certificate_stats_it->second.remote->fingerprint);
++      }
      }
-   }
  
--  // If no encoding parameters were provided, a default entry is created.
--  if (parameters.encodings.empty()) {
--    parameters.encodings.push_back({});
--  }
--
-   if (UnimplementedRtpParameterHasValue(parameters)) {
-     LOG_AND_RETURN_ERROR(
-         RTCErrorType::UNSUPPORTED_PARAMETER,
-diff --git a/pc/peer_connection_integrationtest.cc b/pc/peer_connection_integrationtest.cc
-index 220415baf2..f46ef2ebdf 100644
---- a/pc/peer_connection_integrationtest.cc
-+++ b/pc/peer_connection_integrationtest.cc
-@@ -2834,14 +2834,6 @@ TEST_P(PeerConnectionIntegrationTest, UnsignaledSsrcGetParametersVideo) {
-   EXPECT_TRUE(parameters.encodings[0].ssrc.has_value());
- }
- 
--TEST_P(PeerConnectionIntegrationTest,
--       GetParametersHasEncodingsBeforeNegotiation) {
--  ASSERT_TRUE(CreatePeerConnectionWrappers());
--  auto sender = caller()->AddTrack(caller()->CreateLocalVideoTrack());
--  auto parameters = sender->GetParameters();
--  EXPECT_EQ(parameters.encodings.size(), 1u);
--}
--
- // Test that if a track is removed and added again with a different stream ID,
- // the new stream ID is successfully communicated in SDP and media continues to
- // flow end-to-end.
-@@ -3418,28 +3410,6 @@ TEST_F(PeerConnectionIntegrationTestUnifiedPlan,
-   }
- }
- 
--TEST_F(PeerConnectionIntegrationTestUnifiedPlan,
--       GetParametersHasEncodingsBeforeNegotiation) {
--  ASSERT_TRUE(CreatePeerConnectionWrappers());
--  auto result = caller()->pc()->AddTransceiver(cricket::MEDIA_TYPE_VIDEO);
--  auto transceiver = result.MoveValue();
--  auto parameters = transceiver->sender()->GetParameters();
--  EXPECT_EQ(parameters.encodings.size(), 1u);
--}
--
--TEST_F(PeerConnectionIntegrationTestUnifiedPlan,
--       GetParametersHasInitEncodingsBeforeNegotiation) {
--  ASSERT_TRUE(CreatePeerConnectionWrappers());
--  RtpTransceiverInit init;
--  init.send_encodings.push_back({});
--  init.send_encodings[0].max_bitrate_bps = 12345;
--  auto result = caller()->pc()->AddTransceiver(cricket::MEDIA_TYPE_VIDEO, init);
--  auto transceiver = result.MoveValue();
--  auto parameters = transceiver->sender()->GetParameters();
--  ASSERT_EQ(parameters.encodings.size(), 1u);
--  EXPECT_EQ(parameters.encodings[0].max_bitrate_bps, 12345);
--}
--
- INSTANTIATE_TEST_SUITE_P(
-     PeerConnectionIntegrationTest,
-     PeerConnectionIntegrationTest,
-diff --git a/pc/rtp_transmission_manager.cc b/pc/rtp_transmission_manager.cc
-index 96b308842b..96b748b4b4 100644
---- a/pc/rtp_transmission_manager.cc
-+++ b/pc/rtp_transmission_manager.cc
-@@ -150,11 +150,10 @@ RtpTransmissionManager::AddTrackPlanB(
-       (track->kind() == MediaStreamTrackInterface::kAudioKind
-            ? cricket::MEDIA_TYPE_AUDIO
-            : cricket::MEDIA_TYPE_VIDEO);
--  auto new_sender = CreateSender(
--      media_type, track->id(), track, adjusted_stream_ids,
--      init_send_encodings
--          ? *init_send_encodings
--          : std::vector<RtpEncodingParameters>(1, RtpEncodingParameters{}));
-+  auto new_sender =
-+      CreateSender(media_type, track->id(), track, adjusted_stream_ids,
-+                   init_send_encodings ? *init_send_encodings
-+                                       : std::vector<RtpEncodingParameters>());
-   if (track->kind() == MediaStreamTrackInterface::kAudioKind) {
-     new_sender->internal()->SetMediaChannel(voice_media_send_channel());
-     GetAudioTransceiver()->internal()->AddSender(new_sender);
-@@ -218,11 +217,10 @@ RtpTransmissionManager::AddTrackUnifiedPlan(
-     if (FindSenderById(sender_id)) {
-       sender_id = rtc::CreateRandomUuid();
-     }
--    auto sender = CreateSender(
--        media_type, sender_id, track, stream_ids,
--        init_send_encodings
--            ? *init_send_encodings
--            : std::vector<RtpEncodingParameters>(1, RtpEncodingParameters{}));
-+    auto sender = CreateSender(media_type, sender_id, track, stream_ids,
-+                               init_send_encodings
-+                                   ? *init_send_encodings
-+                                   : std::vector<RtpEncodingParameters>());
-     auto receiver = CreateReceiver(media_type, rtc::CreateRandomUuid());
-     transceiver = CreateAndAddTransceiver(sender, receiver);
-     transceiver->internal()->set_created_by_addtrack(true);
-@@ -413,7 +411,7 @@ void RtpTransmissionManager::AddAudioTrack(AudioTrackInterface* track,
-   // Normal case; we've never seen this track before.
-   auto new_sender = CreateSender(cricket::MEDIA_TYPE_AUDIO, track->id(),
-                                  rtc::scoped_refptr<AudioTrackInterface>(track),
--                                 {stream->id()}, {{}});
-+                                 {stream->id()}, {});
-   new_sender->internal()->SetMediaChannel(voice_media_send_channel());
-   GetAudioTransceiver()->internal()->AddSender(new_sender);
-   // If the sender has already been configured in SDP, we call SetSsrc,
-@@ -460,7 +458,7 @@ void RtpTransmissionManager::AddVideoTrack(VideoTrackInterface* track,
-   // Normal case; we've never seen this track before.
-   auto new_sender = CreateSender(cricket::MEDIA_TYPE_VIDEO, track->id(),
-                                  rtc::scoped_refptr<VideoTrackInterface>(track),
--                                 {stream->id()}, {{}});
-+                                 {stream->id()}, {});
-   new_sender->internal()->SetMediaChannel(video_media_send_channel());
-   GetVideoTransceiver()->internal()->AddSender(new_sender);
-   const RtpSenderInfo* sender_info =
+     // There is one transport stats for each channel.
 -- 
 2.34.1
 
