@@ -114,6 +114,7 @@ export var GMPPrefs = {
   KEY_PLUGIN_LAST_DOWNLOAD_FAILED: "media.{0}.lastDownloadFailed",
   KEY_PLUGIN_LAST_DOWNLOAD_FAIL_REASON: "media.{0}.lastDownloadFailReason",
   KEY_PLUGIN_LAST_INSTALL_FAILED: "media.{0}.lastInstallFailed",
+  KEY_PLUGIN_LAST_INSTALL_FAIL_REASON: "media.{0}.lastInstallFailReason",
   KEY_PLUGIN_LAST_INSTALL_START: "media.{0}.lastInstallStart",
   KEY_PLUGIN_LAST_UPDATE: "media.{0}.lastUpdate",
   KEY_PLUGIN_HASHVALUE: "media.{0}.hashValue",
