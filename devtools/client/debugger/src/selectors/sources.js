@@ -271,7 +271,7 @@ export function getBreakableLines(state, sourceId) {
   }
 
   if (source.isOriginal) {
-    return state.sources.breakableLines[sourceId];
+    return state.sources.mutableOriginalBreakableLines.get(sourceId);
   }
 
   const sourceActors = getSourceActorsForSource(state, sourceId);
