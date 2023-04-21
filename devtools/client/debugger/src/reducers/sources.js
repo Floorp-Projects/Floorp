@@ -242,6 +242,8 @@ function removeSourcesAndActors(state, action) {
     mutableSources,
     mutableOriginalSources,
     mutableSourceActors,
+    mutableBreakableLines,
+    mutableBreakpointPositions,
   } = state;
   for (const removedSource of action.sources) {
     const sourceId = removedSource.id;
@@ -272,6 +274,12 @@ function removeSourcesAndActors(state, action) {
     // If a source is removed, immediately remove all its related source actors.
     // It can speed-up the following for loop cleaning actors.
     mutableSourceActors.delete(sourceId);
+
+    if (removedSource.isOriginal) {
+      mutableBreakableLines.delete(sourceId);
+    }
+
+    mutableBreakpointPositions.delete(sourceId);
   }
 
   for (const removedActor of action.actors) {
