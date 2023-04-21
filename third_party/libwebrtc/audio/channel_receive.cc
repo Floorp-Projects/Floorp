@@ -44,6 +44,7 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_minmax.h"
+#include "rtc_base/numerics/sequence_number_unwrapper.h"
 #include "rtc_base/race_checker.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/system/no_unique_address.h"
@@ -266,7 +267,7 @@ class ChannelReceive : public ChannelReceiveInterface,
 
   mutable Mutex ts_stats_lock_;
 
-  std::unique_ptr<rtc::TimestampWrapAroundHandler> rtp_ts_wraparound_handler_;
+  webrtc::RtpTimestampUnwrapper rtp_ts_wraparound_handler_;
   // The rtp timestamp of the first played out audio frame.
   int64_t capture_start_rtp_time_stamp_;
   // The capture ntp time (in local timebase) of the first played out audio
@@ -449,7 +450,7 @@ AudioMixer::Source::AudioFrameInfo ChannelReceive::GetAudioFrameWithInfo(
     // audio_frame.timestamp_ should be valid from now on.
     // Compute elapsed time.
     int64_t unwrap_timestamp =
-        rtp_ts_wraparound_handler_->Unwrap(audio_frame->timestamp_);
+        rtp_ts_wraparound_handler_.Unwrap(audio_frame->timestamp_);
     audio_frame->elapsed_time_ms_ =
         (unwrap_timestamp - capture_start_rtp_time_stamp_) /
         (GetRtpTimestampRateHz() / 1000);
@@ -556,7 +557,6 @@ ChannelReceive::ChannelReceive(
       ntp_estimator_(clock),
       playout_timestamp_rtp_(0),
       playout_delay_ms_(0),
-      rtp_ts_wraparound_handler_(new rtc::TimestampWrapAroundHandler()),
       capture_start_rtp_time_stamp_(-1),
       capture_start_ntp_time_ms_(-1),
       _audioDeviceModulePtr(audio_device_module),

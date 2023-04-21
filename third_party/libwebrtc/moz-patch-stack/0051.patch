@@ -43,10 +43,10 @@ index 7a2037e83f..a515760976 100644
  }  // namespace
  
 diff --git a/audio/channel_receive.cc b/audio/channel_receive.cc
-index 0562d66c78..0670619b38 100644
+index f884e39aa7..b60275dcd1 100644
 --- a/audio/channel_receive.cc
 +++ b/audio/channel_receive.cc
-@@ -100,7 +100,8 @@ class ChannelReceive : public ChannelReceiveInterface,
+@@ -101,7 +101,8 @@ class ChannelReceive : public ChannelReceiveInterface,
        absl::optional<AudioCodecPairId> codec_pair_id,
        rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
        const webrtc::CryptoOptions& crypto_options,
@@ -56,7 +56,7 @@ index 0562d66c78..0670619b38 100644
    ~ChannelReceive() override;
  
    void SetSink(AudioSinkInterface* sink) override;
-@@ -539,7 +540,8 @@ ChannelReceive::ChannelReceive(
+@@ -540,7 +541,8 @@ ChannelReceive::ChannelReceive(
      absl::optional<AudioCodecPairId> codec_pair_id,
      rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
      const webrtc::CryptoOptions& crypto_options,
