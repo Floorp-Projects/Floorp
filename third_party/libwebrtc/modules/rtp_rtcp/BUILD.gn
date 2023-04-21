@@ -8,6 +8,11 @@
 
 import("../../webrtc.gni")
 
+rtc_library("leb128") {
+  public = [ "source/leb128.h" ]
+  sources = [ "source/leb128.cc" ]
+}
+
 rtc_library("rtp_rtcp_format") {
   visibility = [ "*" ]
   public = [
@@ -101,6 +106,7 @@ rtc_library("rtp_rtcp_format") {
   ]
 
   deps = [
+    ":leb128",
     "..:module_api_public",
     "../../api:array_view",
     "../../api:function_view",
@@ -254,6 +260,7 @@ rtc_library("rtp_rtcp") {
   }
 
   deps = [
+    ":leb128",
     ":rtp_rtcp_format",
     ":rtp_video_header",
     "..:module_api_public",
@@ -538,6 +545,7 @@ if (rtc_include_tests) {
       "source/flexfec_header_reader_writer_unittest.cc",
       "source/flexfec_receiver_unittest.cc",
       "source/flexfec_sender_unittest.cc",
+      "source/leb128_unittest.cc",
       "source/nack_rtx_unittest.cc",
       "source/packet_loss_stats_unittest.cc",
       "source/packet_sequencer_unittest.cc",
@@ -610,6 +618,7 @@ if (rtc_include_tests) {
     deps = [
       ":fec_test_helper",
       ":frame_transformer_factory_unittest",
+      ":leb128",
       ":mock_rtp_rtcp",
       ":rtcp_transceiver",
       ":rtp_packetizer_av1_test_helper",
