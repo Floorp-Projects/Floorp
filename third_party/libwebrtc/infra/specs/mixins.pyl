@@ -75,39 +75,6 @@
       }
     }
   },
-  'ios-simulator-12.4': {
-    '$mixin_append': {
-      'args': ['--platform', 'iPhone X', '--version', '12.4'],
-      'swarming': {
-        'named_caches': [{
-          'name': 'runtime_ios_12_4',
-          'path': 'Runtime-ios-12.4'
-        }]
-      }
-    }
-  },
-  'ios-simulator-13.6': {
-    '$mixin_append': {
-      'args': ['--platform', 'iPhone X', '--version', '13.6'],
-      'swarming': {
-        'named_caches': [{
-          'name': 'runtime_ios_13_6',
-          'path': 'Runtime-ios-13.6'
-        }]
-      }
-    }
-  },
-  'ios-simulator-14.5': {
-    '$mixin_append': {
-      'args': ['--platform', 'iPhone X', '--version', '14.5'],
-      'swarming': {
-        'named_caches': [{
-          'name': 'runtime_ios_14_5',
-          'path': 'Runtime-ios-14.5'
-        }]
-      }
-    }
-  },
   'ios_runtime_cache_14_5': {
     '$mixin_append': {
       'swarming': {
