@@ -48,6 +48,10 @@ class MockTransformableVideoFrame
               GetMetadata,
               (),
               (const, override));
+  MOCK_METHOD(void,
+              SetMetadata,
+              (const webrtc::VideoFrameMetadata&),
+              (override));
 };
 
 TEST(FrameTransformerFactory, CloneVideoFrame) {
