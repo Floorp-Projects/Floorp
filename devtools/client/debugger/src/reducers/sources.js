@@ -159,7 +159,7 @@ function update(state = initialSourcesState(), action) {
       return initialSourcesState(state);
 
     case "REMOVE_THREAD": {
-      return removeSourcesAndActors(state, action.threadActorID);
+      return removeSourcesAndActors(state, action);
     }
 
     case "SET_OVERRIDE": {
@@ -210,7 +210,7 @@ function addSources(state, sources) {
   return state;
 }
 
-function removeSourcesAndActors(state, threadActorID) {
+function removeSourcesAndActors(state, action) {
   state = {
     ...state,
     urls: { ...state.urls },
@@ -218,43 +218,55 @@ function removeSourcesAndActors(state, threadActorID) {
     originalSources: { ...state.originalSources },
   };
 
-  for (const sourceId in state.actors) {
-    let i = state.actors[sourceId].length;
-    while (i--) {
-      // delete the source actors which belong to the
-      // specified thread.
-      if (state.actors[sourceId][i].thread == threadActorID) {
-        state.actors[sourceId].splice(i, 1);
+  const { urls, mutableSources, originalSources, actors } = state;
+  for (const removedSource of action.sources) {
+    const sourceId = removedSource.id;
+
+    // Clear the urls Map
+    const sourceUrl = removedSource.url;
+    if (sourceUrl) {
+      let sourcesForUrl = urls[sourceUrl];
+      if (sourcesForUrl) {
+        sourcesForUrl = sourcesForUrl.filter(id => id !== sourceId);
+        urls[sourceUrl] = sourcesForUrl;
+        if (!sourcesForUrl.length) {
+          delete urls[sourceUrl];
+        }
       }
     }
-    // Delete the source only if all its actors belong to
-    // the same thread.
-    if (!state.actors[sourceId].length) {
-      delete state.actors[sourceId];
 
-      const source = state.mutableSources.get(sourceId);
-      if (source.url) {
-        // urls
-        if (state.urls[source.url]) {
-          state.urls[source.url] = state.urls[source.url].filter(
-            id => id !== source.id
-          );
-        }
-        if (state.urls[source.url]?.length == 0) {
-          delete state.urls[source.url];
-        }
-      }
+    mutableSources.delete(sourceId);
 
-      state.mutableSources.delete(sourceId);
+    // Note that the caller of this method queried the reducer state
+    // to aggregate the related original sources.
+    // So if we were having related original sources, they will be
+    // in `action.sources`.
+    delete originalSources[sourceId];
 
-      // Also remove any original sources related to this generated source
-      const originalSourceIds = state.originalSources[sourceId];
-      if (originalSourceIds && originalSourceIds.length) {
-        originalSourceIds.forEach(id => state.mutableSources.delete(id));
-        delete state.originalSources[sourceId];
-      }
+    // If a source is removed, immediately remove all its related source actors.
+    // It can speed-up the following for loop cleaning actors.
+    delete actors[sourceId];
+  }
+
+  for (const removedActor of action.actors) {
+    const sourceId = removedActor.source;
+    const actorsForSource = actors[sourceId];
+    // The entry might already have been cleared by the previous for..loop.
+    if (!actorsForSource) {
+      continue;
+    }
+    const idx = actorsForSource.indexOf(removedActor);
+    if (idx != -1) {
+      actorsForSource.splice(idx, 1);
+      // Selectors are still expecting new array instances on any update
+      actors[sourceId] = [...actorsForSource];
+    }
+    // Remove the entry in state.actors if there is no more actors for that source
+    if (!actorsForSource.length) {
+      delete actors[sourceId];
     }
   }
+
   return state;
 }
 

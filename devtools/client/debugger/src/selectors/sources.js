@@ -309,3 +309,57 @@ export function isSourceOverridden(state, source) {
   }
   return state.sources.mutableOverrideSources.has(source.url);
 }
+
+/**
+ * Compute the list of source actors and source objects to be removed
+ * when removing a given target/thread.
+ *
+ * @param {String} threadActorID
+ *        The thread to be removed.
+ * @return {Object}
+ *         An object with two arrays:
+ *         - actors: list of source actor objects to remove
+ *         - sources: list of source objects to remove
+ */
+export function getSourcesToRemoveForThread(state, threadActorID) {
+  const sourcesToRemove = [];
+  const actorsToRemove = [];
+
+  const { actors } = state.sources;
+  for (const sourceId in actors) {
+    let removedActorsCount = 0;
+    // Find all actors for the current source which belongs to the given thread actor
+    const actorsForSource = actors[sourceId];
+    for (const actor of actorsForSource) {
+      if (actor.thread == threadActorID) {
+        actorsToRemove.push(actor);
+        removedActorsCount++;
+      }
+    }
+
+    // If we are about to remove all source actors for the current source,
+    // or if for some unexpected reason we have a source with no actors,
+    // notify the caller to also remove this source.
+    if (
+      removedActorsCount == actorsForSource.length ||
+      !actorsForSource.length
+    ) {
+      sourcesToRemove.push(state.sources.mutableSources.get(sourceId));
+
+      // Also remove any original sources related to this generated source
+      const originalSourceIds = state.sources.originalSources[sourceId];
+      if (originalSourceIds?.length > 0) {
+        for (const originalSourceId of originalSourceIds) {
+          sourcesToRemove.push(
+            state.sources.mutableSources.get(originalSourceId)
+          );
+        }
+      }
+    }
+  }
+
+  return {
+    actors: actorsToRemove,
+    sources: sourcesToRemove,
+  };
+}

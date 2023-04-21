@@ -2,13 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// Test basic windowless worker functionality: the main thread and worker can be
+// Test basic worker functionality: the main thread and worker can be
 // separately controlled from the same debugger.
 
 "use strict";
 
 add_task(async function() {
-  await pushPref("devtools.debugger.features.windowless-workers", true);
   await pushPref("devtools.debugger.workers-visible", true);
 
   const dbg = await initDebugger("doc-windowless-workers.html");
@@ -91,6 +90,11 @@ add_task(async function() {
   threadIsSelected(dbg, 3);
   await waitForPaused(dbg);
   const workerSource3 = dbg.selectors.getSelectedSource();
+  is(
+    workerSource2,
+    workerSource3,
+    "The selected source is the same as we have one source per URL"
+  );
   assertPausedAtSourceAndLine(dbg, workerSource3.id, 10);
 
   info("StepOver in second worker and not the first");
@@ -98,6 +102,51 @@ add_task(async function() {
   assertPausedAtSourceAndLine(dbg, workerSource3.id, 11);
   await dbg.actions.selectThread(getContext(dbg), thread1);
   assertPausedAtSourceAndLine(dbg, workerSource2.id, 10);
+
+  info("Resume both worker execution");
+  await resume(dbg);
+  await dbg.actions.selectThread(getContext(dbg), thread2);
+  await resume(dbg);
+
+  let sourceActors = dbg.selectors.getSourceActorsForSource(workerSource3.id);
+  is(
+    sourceActors.length,
+    2,
+    "There is one source actor per thread for the worker source"
+  );
+  info(
+    "Terminate the first worker and wait for having only the second worker in threads list"
+  );
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    content.wrappedJSObject.worker1.terminate();
+  });
+  await waitForThreadCount(dbg, 1);
+  sourceActors = dbg.selectors.getSourceActorsForSource(workerSource3.id);
+  is(
+    sourceActors.length,
+    1,
+    "After the first worker is destroyed, we only have one source actor for the worker source"
+  );
+  ok(
+    sourceExists(dbg, "simple-worker.js"),
+    "But we still have the worker source object"
+  );
+
+  info("Terminate the second worker and wait for no more additional threads");
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    content.wrappedJSObject.worker2.terminate();
+  });
+  await waitForThreadCount(dbg, 0);
+  sourceActors = dbg.selectors.getSourceActorsForSource(workerSource3.id);
+  is(
+    sourceActors.length,
+    0,
+    "After all workers are destroyed, we no longer have any source actor"
+  );
+  ok(
+    !sourceExists(dbg, "simple-worker.js"),
+    "And we no longer have the worker source"
+  );
 });
 
 function assertClass(dbg, selector, className, ...args) {

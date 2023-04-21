@@ -3,20 +3,38 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { createThread } from "../client/firefox/create";
+import { getSourcesToRemoveForThread } from "../selectors";
 
 export function addTarget(targetFront) {
   return { type: "INSERT_THREAD", newThread: createThread(targetFront) };
 }
 
 export function removeTarget(targetFront) {
-  return {
-    type: "REMOVE_THREAD",
-    threadActorID: targetFront.targetForm.threadActor,
+  return ({ getState, dispatch }) => {
+    const threadActorID = targetFront.targetForm.threadActor;
+
+    // Just before emitting the REMOVE_THREAD action,
+    // synchronously compute the list of source and source actor objects
+    // which should be removed as that one target get removed.
+    //
+    // The list of source objects isn't trivial to compute as these objects
+    // are shared across targets/threads.
+    const { actors, sources } = getSourcesToRemoveForThread(
+      getState(),
+      threadActorID
+    );
+
+    dispatch({
+      type: "REMOVE_THREAD",
+      threadActorID,
+      actors,
+      sources,
+    });
   };
 }
 
 export function toggleJavaScriptEnabled(enabled) {
-  return async ({ panel, dispatch, client }) => {
+  return async ({ dispatch, client }) => {
     await client.toggleJavaScriptEnabled(enabled);
     dispatch({
       type: "TOGGLE_JAVASCRIPT_ENABLED",
