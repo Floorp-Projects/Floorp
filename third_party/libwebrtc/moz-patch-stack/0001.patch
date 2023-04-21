@@ -1,99 +1,65 @@
-From: Jeremy Leconte <jleconte@google.com>
-Date: Tue, 10 Jan 2023 11:14:03 +0000
-Subject: (tmp-cherry-pick) Revert "[Unwrap] Migrate ReceiveStatisticsImpl to
- use (c4991048b2) RtpSequenceNumberUnwrapper"
+From: =?UTF-8?q?Henrik=20Bostr=C3=B6m?= <hbos@webrtc.org>
+Date: Fri, 20 Jan 2023 10:48:31 +0100
+Subject: =?UTF-8?q?(cherry-pick-branch-heads/5481)=20[Merge-110]=C2=A0[Sta?=
+ =?UTF-8?q?ts]=20Handle=20the=20case=20of=20missing=20certificates.?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-This reverts commit 6762fbd9882c6b0436b4bcd0b04f070312c52981.
+Certificates being missing is a sign of a bug (e.g. webrtc:14844, to be
+fixed separately) which is why we have a DCHECK. But this DCHECK does
+not protect against accessing the invalid iterator if it is a release
+build. This CL makes that safe.
 
-Reason for revert: attempt to fix some broken tests.
+# Mobile bots not running properly
+NOTRY=True
 
-Original change's description:
-> [Unwrap] Migrate ReceiveStatisticsImpl to use RtpSequenceNumberUnwrapper
->
-> Bug: webrtc:13982
-> Change-Id: Ic971371d4295e87380a77ef6aa7986a83d86f615
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/288962
-> Commit-Queue: Evan Shrubsole <eshr@webrtc.org>
-> Auto-Submit: Evan Shrubsole <eshr@webrtc.org>
-> Reviewed-by: Danil Chapovalov <danilchap@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#39046}
+(cherry picked from commit 124d7c3fe5bdc79a355c9df02d07f25331631a68)
 
-Bug: webrtc:13982
-Change-Id: Iad8dcacdce299b9671d6215bf90b0077da3bdf7a
-No-Presubmit: true
-No-Tree-Checks: true
-No-Try: true
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/290760
-Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Reviewed-by: Jeremy Leconte <jleconte@google.com>
-Owners-Override: Jeremy Leconte <jleconte@google.com>
-Commit-Queue: Jeremy Leconte <jleconte@webrtc.org>
-Reviewed-by: Jeremy Leconte <jleconte@webrtc.org>
-Cr-Commit-Position: refs/heads/main@{#39054}
+Bug: chromium:1408392
+Change-Id: I97a82786028e41c58ef8ef15002c3f959bbec7f1
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291109
+Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+Commit-Queue: Henrik Boström <hbos@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#39159}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291380
+Cr-Commit-Position: refs/branch-heads/5481@{#2}
+Cr-Branched-From: 2e1a9a4ae0234d4b1ea7a6fd4188afa1fb20379d-refs/heads/main@{#38901}
 ---
- modules/rtp_rtcp/source/receive_statistics_impl.cc | 9 ++++-----
- modules/rtp_rtcp/source/receive_statistics_impl.h  | 4 ++--
- 2 files changed, 6 insertions(+), 7 deletions(-)
+ pc/rtc_stats_collector.cc | 19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
 
-diff --git a/modules/rtp_rtcp/source/receive_statistics_impl.cc b/modules/rtp_rtcp/source/receive_statistics_impl.cc
-index 1dc756d876..deae14e8c5 100644
---- a/modules/rtp_rtcp/source/receive_statistics_impl.cc
-+++ b/modules/rtp_rtcp/source/receive_statistics_impl.cc
-@@ -21,6 +21,7 @@
- #include "modules/rtp_rtcp/source/rtcp_packet/report_block.h"
- #include "modules/rtp_rtcp/source/rtp_packet_received.h"
- #include "modules/rtp_rtcp/source/rtp_rtcp_config.h"
-+#include "modules/rtp_rtcp/source/time_util.h"
- #include "rtc_base/logging.h"
- #include "rtc_base/time_utils.h"
- #include "system_wrappers/include/clock.h"
-@@ -116,9 +117,8 @@ void StreamStatisticianImpl::UpdateCounters(const RtpPacketReceived& packet) {
-   receive_counters_.transmitted.AddPacket(packet);
-   --cumulative_loss_;
+diff --git a/pc/rtc_stats_collector.cc b/pc/rtc_stats_collector.cc
+index 6a45b58eb5..ebe31f6275 100644
+--- a/pc/rtc_stats_collector.cc
++++ b/pc/rtc_stats_collector.cc
+@@ -2172,16 +2172,17 @@ void RTCStatsCollector::ProduceTransportStats_n(
+     // exist.
+     const auto& certificate_stats_it =
+         transport_cert_stats.find(transport_name);
++    std::string local_certificate_id, remote_certificate_id;
+     RTC_DCHECK(certificate_stats_it != transport_cert_stats.cend());
+-    std::string local_certificate_id;
+-    if (certificate_stats_it->second.local) {
+-      local_certificate_id = RTCCertificateIDFromFingerprint(
+-          certificate_stats_it->second.local->fingerprint);
+-    }
+-    std::string remote_certificate_id;
+-    if (certificate_stats_it->second.remote) {
+-      remote_certificate_id = RTCCertificateIDFromFingerprint(
+-          certificate_stats_it->second.remote->fingerprint);
++    if (certificate_stats_it != transport_cert_stats.cend()) {
++      if (certificate_stats_it->second.local) {
++        local_certificate_id = RTCCertificateIDFromFingerprint(
++            certificate_stats_it->second.local->fingerprint);
++      }
++      if (certificate_stats_it->second.remote) {
++        remote_certificate_id = RTCCertificateIDFromFingerprint(
++            certificate_stats_it->second.remote->fingerprint);
++      }
+     }
  
--  // Use PeekUnwrap and later update the state to avoid updating the state for
--  // out of order packets.
--  int64_t sequence_number = seq_unwrapper_.PeekUnwrap(packet.SequenceNumber());
-+  int64_t sequence_number =
-+      seq_unwrapper_.UnwrapWithoutUpdate(packet.SequenceNumber());
- 
-   if (!ReceivedRtpPacket()) {
-     received_seq_first_ = sequence_number;
-@@ -131,8 +131,7 @@ void StreamStatisticianImpl::UpdateCounters(const RtpPacketReceived& packet) {
-   // In order packet.
-   cumulative_loss_ += sequence_number - received_seq_max_;
-   received_seq_max_ = sequence_number;
--  // Update the internal state of `seq_unwrapper_`.
--  seq_unwrapper_.Unwrap(packet.SequenceNumber());
-+  seq_unwrapper_.UpdateLast(sequence_number);
- 
-   // If new time stamp and more than one in-order packet received, calculate
-   // new jitter statistics.
-diff --git a/modules/rtp_rtcp/source/receive_statistics_impl.h b/modules/rtp_rtcp/source/receive_statistics_impl.h
-index 11853b3244..4aac20a74b 100644
---- a/modules/rtp_rtcp/source/receive_statistics_impl.h
-+++ b/modules/rtp_rtcp/source/receive_statistics_impl.h
-@@ -18,10 +18,10 @@
- #include <vector>
- 
- #include "absl/types/optional.h"
-+#include "modules/include/module_common_types_public.h"
- #include "modules/rtp_rtcp/include/receive_statistics.h"
- #include "modules/rtp_rtcp/source/rtcp_packet/report_block.h"
- #include "rtc_base/containers/flat_map.h"
--#include "rtc_base/numerics/sequence_number_unwrapper.h"
- #include "rtc_base/rate_statistics.h"
- #include "rtc_base/synchronization/mutex.h"
- #include "rtc_base/thread_annotations.h"
-@@ -96,7 +96,7 @@ class StreamStatisticianImpl : public StreamStatisticianImplInterface {
- 
-   int64_t last_receive_time_ms_;
-   uint32_t last_received_timestamp_;
--  RtpSequenceNumberUnwrapper seq_unwrapper_;
-+  SequenceNumberUnwrapper seq_unwrapper_;
-   int64_t received_seq_first_;
-   int64_t received_seq_max_;
-   // Assume that the other side restarted when there are two sequential packets
+     // There is one transport stats for each channel.
 -- 
 2.34.1
 
