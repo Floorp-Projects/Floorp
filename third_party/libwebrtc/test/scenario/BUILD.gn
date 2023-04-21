@@ -74,6 +74,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../:test_common",
       "../:test_support",
       "../:video_test_common",
+      "../../api:array_view",
       "../../api:create_frame_generator",
       "../../api:fec_controller_api",
       "../../api:frame_generator_api",
