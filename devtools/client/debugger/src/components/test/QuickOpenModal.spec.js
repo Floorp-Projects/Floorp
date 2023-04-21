@@ -672,6 +672,7 @@ describe("QuickOpenModal", () => {
         key: "ArrowUp",
       };
       const location = {
+        sourceId: "sourceId",
         start: {
           line: 1,
         },
@@ -688,6 +689,7 @@ describe("QuickOpenModal", () => {
       expect(event.preventDefault).toHaveBeenCalled();
       expect(wrapper.state().selectedIndex).toEqual(0);
       expect(props.highlightLineRange).toHaveBeenCalledWith({
+        sourceId: "sourceId",
         end: 3,
         start: 1,
       });
@@ -744,7 +746,8 @@ describe("QuickOpenModal", () => {
       wrapper.find("Connect(SearchInput)").simulate("keydown", event);
       expect(event.preventDefault).toHaveBeenCalled();
       expect(wrapper.state().selectedIndex).toEqual(0);
-      expect(props.highlightLineRange).toHaveBeenCalledWith({});
+      expect(props.highlightLineRange).not.toHaveBeenCalled();
+      expect(props.clearHighlightLineRange).toHaveBeenCalled();
     });
 
     it(
@@ -770,6 +773,7 @@ describe("QuickOpenModal", () => {
           key: "ArrowDown",
         };
         const location = {
+          sourceId: "sourceId",
           start: {
             line: 7,
           },
@@ -810,6 +814,7 @@ describe("QuickOpenModal", () => {
           key: "ArrowUp",
         };
         const location = {
+          sourceId: "sourceId",
           start: {
             line: 7,
           },
