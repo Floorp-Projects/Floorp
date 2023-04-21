@@ -153,6 +153,8 @@ async function track_ad_click(
         tagged: "true",
         partner_code: "ff",
         source: expectedScalarSource,
+        is_shopping_page: "false",
+        shopping_tab_displayed: "false",
       },
     },
   ]);
@@ -187,6 +189,8 @@ async function track_ad_click(
         tagged: "true",
         partner_code: "ff",
         source: expectedScalarSource,
+        is_shopping_page: "false",
+        shopping_tab_displayed: "false",
       },
       engagements: [
         {

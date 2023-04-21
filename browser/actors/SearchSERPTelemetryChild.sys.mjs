@@ -73,6 +73,9 @@ class SearchProviders {
           });
         }
         p.adServerAttributes = p.adServerAttributes ?? [];
+        if (p.shoppingTab?.regexp) {
+          p.shoppingTab.regexp = new RegExp(p.shoppingTab.regexp);
+        }
         return {
           ...p,
           searchPageRegexp: new RegExp(p.searchPageRegexp),
@@ -185,6 +188,8 @@ class SearchAdImpression {
     this.#topDownComponents = [];
 
     for (let component of this.#providerInfo.components) {
+      // Shopping is parsed before any component, so its regular expression
+      // and flags should not be added to avoid double-checking.
       if (component.included?.default) {
         this.#defaultComponent = component;
       }
@@ -217,6 +222,35 @@ class SearchAdImpression {
 
   set scrollFromTop(distance) {
     this.#scrollFromTop = distance;
+  }
+
+  /**
+   * Check if the page has a shopping tab.
+   *
+   * @param {Document} document
+   * @return {boolean}
+   *   Whether the page has a shopping tab. Defaults to false.
+   */
+  hasShoppingTab(document) {
+    if (!this.#providerInfo?.shoppingTab) {
+      return false;
+    }
+
+    let selector = this.#providerInfo.shoppingTab.selector;
+    let regexp = this.#providerInfo.shoppingTab.regexp;
+
+    let elements = document.querySelectorAll(selector);
+    for (let element of elements) {
+      let href = element.getAttribute("href");
+      if (href && regexp.test(href)) {
+        this.#recordElementData(element, {
+          type: "shopping_tab",
+          count: 1,
+        });
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -718,7 +752,8 @@ class SearchAdImpression {
   /**
    * Caches ad data for a DOM element. The key of the map is by Element rather
    * than Component for fast lookup on whether an Element has been already been
-   * categorized as a component.
+   * categorized as a component. Subsequent calls to this passing the same
+   * element will update the list of child elements.
    *
    * @param {Element} element
    *  The element considered to be the root for the component.
@@ -749,9 +784,6 @@ class SearchAdImpression {
         recordedValues.childElements = recordedValues.childElements.concat(
           childElements
         );
-      }
-      if (type) {
-        recordedValues.type = type;
       }
     } else {
       this.#elementToAdDataMap.set(element, {
@@ -944,6 +976,28 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
   }
 
   /**
+   * Checks for the presence of certain components on the page that are
+   * required for recording the page impression.
+   */
+  #checkForPageImpressionComponents() {
+    let url = this.document.documentURI;
+    let providerInfo = this._getProviderInfoForUrl(url);
+    searchAdImpression.providerInfo = providerInfo;
+
+    let start = Cu.now();
+    let hasShoppingTab = searchAdImpression.hasShoppingTab(this.document);
+    ChromeUtils.addProfilerMarker(
+      "SearchSERPTelemetryChild.#recordImpression",
+      start,
+      "Checked for shopping tab"
+    );
+    this.sendAsyncMessage("SearchTelemetry:PageImpression", {
+      url,
+      hasShoppingTab,
+    });
+  }
+
+  /**
    * Handles events received from the actor child notifications.
    *
    * @param {object} event The event details.
@@ -960,10 +1014,16 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
         // SEARCH_COUNTS histogram.
         if (event.persisted) {
           this.#check(event.type);
+          if (lazy.serpEventsEnabled) {
+            this.#checkForPageImpressionComponents();
+          }
         }
         break;
       }
       case "DOMContentLoaded": {
+        if (lazy.serpEventsEnabled) {
+          this.#checkForPageImpressionComponents();
+        }
         this.#check(event.type);
         break;
       }

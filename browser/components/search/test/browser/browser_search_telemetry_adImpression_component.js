@@ -100,23 +100,6 @@ const TEST_PROVIDER_INFO = [
         },
       },
       {
-        type: SearchSERPTelemetryUtils.COMPONENTS.SHOPPING_TAB,
-        included: {
-          regexps: [/^https:\/\/example\.com\/search\?(?:.+)&page=shop/],
-        },
-        nonAd: true,
-      },
-      {
-        type: SearchSERPTelemetryUtils.COMPONENTS.SHOPPING_TAB,
-        included: {
-          parent: {
-            selector: "nav .list-item-shop a",
-          },
-        },
-        topDown: true,
-        nonAd: true,
-      },
-      {
         type: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
         included: {
           default: true,
@@ -439,34 +422,6 @@ add_task(async function test_ad_impressions_with_refined_search_button() {
   assertAdImpressionEvents([
     {
       component: SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
-      ads_loaded: "2",
-      ads_visible: "2",
-      ads_hidden: "0",
-    },
-    {
-      component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
-      ads_loaded: "1",
-      ads_visible: "1",
-      ads_hidden: "0",
-    },
-  ]);
-  BrowserTestUtils.removeTab(tab);
-});
-
-// Shopping tabs won't be detected unless there is at least one
-// ad on the page. There are two instances of the shopping tab on this page:
-// one using a bottom up approach with regular expressions and the other using
-// a top down approach via the document object.
-add_task(async function test_ad_impressions_with_shop_tab() {
-  resetTelemetry();
-  let url = getSERPUrl("searchTelemetryAd_components_shopping_tab.html");
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
-
-  await promiseAdImpressionReceived();
-
-  assertAdImpressionEvents([
-    {
-      component: SearchSERPTelemetryUtils.COMPONENTS.SHOPPING_TAB,
       ads_loaded: "2",
       ads_visible: "2",
       ads_hidden: "0",
