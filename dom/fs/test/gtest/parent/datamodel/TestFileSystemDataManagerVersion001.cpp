@@ -109,13 +109,18 @@ static void MakeDatabaseManagerVersion001(
 
 class TestFileSystemDatabaseManagerVersion001
     : public quota::test::QuotaManagerDependencyFixture {
+ public:
   void SetUp() override { ASSERT_NO_FATAL_FAILURE(InitializeFixture()); }
 
   void TearDown() override {
     ASSERT_NO_FATAL_FAILURE(ClearStoragesForOrigin(GetTestOriginMetadata()));
     ASSERT_NO_FATAL_FAILURE(ShutdownFixture());
   }
+
+  static ContentType sContentType;
 };
+
+ContentType TestFileSystemDatabaseManagerVersion001::sContentType = "psid"_ns;
 
 TEST_F(TestFileSystemDatabaseManagerVersion001,
        smokeTestCreateRemoveDirectories) {
@@ -218,17 +223,19 @@ TEST_F(TestFileSystemDatabaseManagerVersion001, smokeTestCreateRemoveFiles) {
 
     FileSystemChildMetadata firstChildMeta(rootId, u"First"_ns);
     // If creating is not allowed, getting a file from empty root fails
-    TEST_TRY_UNWRAP_ERR(
-        rv, dm->GetOrCreateFile(firstChildMeta, /* create */ false));
+    TEST_TRY_UNWRAP_ERR(rv, dm->GetOrCreateFile(firstChildMeta, sContentType,
+                                                /* create */ false));
     ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
 
     // Creating a file under empty root succeeds
-    TEST_TRY_UNWRAP(EntryId firstChild,
-                    dm->GetOrCreateFile(firstChildMeta, /* create */ true));
+    TEST_TRY_UNWRAP(
+        EntryId firstChild,
+        dm->GetOrCreateFile(firstChildMeta, sContentType, /* create */ true));
 
     // Second time, the same file is returned
-    TEST_TRY_UNWRAP(EntryId firstChildClone,
-                    dm->GetOrCreateFile(firstChildMeta, /* create */ true));
+    TEST_TRY_UNWRAP(
+        EntryId firstChildClone,
+        dm->GetOrCreateFile(firstChildMeta, sContentType, /* create */ true));
     ASSERT_EQ(firstChild, firstChildClone);
 
     // Directory listing returns the created file
@@ -243,7 +250,7 @@ TEST_F(TestFileSystemDatabaseManagerVersion001, smokeTestCreateRemoveFiles) {
     << firstItemRef.entryName();
     ASSERT_EQ(firstChild, firstItemRef.entryId());
 
-    nsString type;
+    ContentType type;
     TimeStamp lastModifiedMilliSeconds;
     Path path;
     nsCOMPtr<nsIFile> file;
@@ -251,7 +258,7 @@ TEST_F(TestFileSystemDatabaseManagerVersion001, smokeTestCreateRemoveFiles) {
                      path, file);
     ASSERT_NSEQ(NS_OK, rv);
 
-    ASSERT_TRUE(type.IsEmpty());
+    ASSERT_STREQ(sContentType, type);
 
     const int64_t nowMilliSeconds = PR_Now() / 1000;
     ASSERT_GE(nowMilliSeconds, lastModifiedMilliSeconds);
@@ -278,8 +285,8 @@ TEST_F(TestFileSystemDatabaseManagerVersion001, smokeTestCreateRemoveFiles) {
 
     EntryId notAChildHash = "0123456789abcdef0123456789abcdef"_ns;
     FileSystemChildMetadata notAChildMeta(notAChildHash, u"Dummy"_ns);
-    TEST_TRY_UNWRAP_ERR(rv,
-                        dm->GetOrCreateFile(notAChildMeta, /* create */ true));
+    TEST_TRY_UNWRAP_ERR(rv, dm->GetOrCreateFile(notAChildMeta, sContentType,
+                                                /* create */ true));
     ASSERT_NSEQ(NS_ERROR_STORAGE_CONSTRAINT, rv);  // Is this a good error?
 
     // We create a directory under root
@@ -301,8 +308,9 @@ TEST_F(TestFileSystemDatabaseManagerVersion001, smokeTestCreateRemoveFiles) {
 
     // Create a file under the new directory
     FileSystemChildMetadata thirdChildMeta(secondChild, u"Third"_ns);
-    TEST_TRY_UNWRAP(EntryId thirdChild,
-                    dm->GetOrCreateFile(thirdChildMeta, /* create */ true));
+    TEST_TRY_UNWRAP(
+        EntryId thirdChild,
+        dm->GetOrCreateFile(thirdChildMeta, sContentType, /* create */ true));
 
     FileSystemEntryPair entryPair(rootId, thirdChild);
     TEST_TRY_UNWRAP(Path entryPath, dm->Resolve(entryPair));
@@ -322,8 +330,8 @@ TEST_F(TestFileSystemDatabaseManagerVersion001, smokeTestCreateRemoveFiles) {
     ASSERT_TRUE(isDeleted);
 
     // The file under the removed directory is no longer accessible.
-    TEST_TRY_UNWRAP_ERR(rv,
-                        dm->GetOrCreateFile(thirdChildMeta, /* create */ true));
+    TEST_TRY_UNWRAP_ERR(rv, dm->GetOrCreateFile(thirdChildMeta, sContentType,
+                                                /* create */ true));
     ASSERT_NSEQ(NS_ERROR_STORAGE_CONSTRAINT, rv);  // Is this a good error?
 
     // The deletion is reflected by the root directory listing
@@ -472,8 +480,9 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
 
     // Create file in the subdirectory with already existing subsubdirectory
     FileSystemChildMetadata testFileMeta(firstChildDir, u"Subfile"_ns);
-    TEST_TRY_UNWRAP(EntryId testFile,
-                    dm->GetOrCreateFile(testFileMeta, /* create */ true));
+    TEST_TRY_UNWRAP(
+        EntryId testFile,
+        dm->GetOrCreateFile(testFileMeta, sContentType, /* create */ true));
 
     // Get handles to the original locations of the entries
     FileSystemEntryMetadata subSubDir;
@@ -567,8 +576,9 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
       TEST_TRY_UNWRAP(bool isMoved, dm->MoveEntry(src, dest));
       ASSERT_TRUE(isMoved);
 
-      TEST_TRY_UNWRAP(EntryId testFileCheck,
-                      dm->GetOrCreateFile(testFileMeta, /* create */ true));
+      TEST_TRY_UNWRAP(
+          EntryId testFileCheck,
+          dm->GetOrCreateFile(testFileMeta, sContentType, /* create */ true));
       ASSERT_EQ(testFile, testFileCheck);
     }
 
@@ -609,7 +619,8 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
     {
       // Try to get a handle to the old item
       TEST_TRY_UNWRAP_ERR(
-          nsresult rv, dm->GetOrCreateFile(testFileMeta, /* create */ false));
+          nsresult rv,
+          dm->GetOrCreateFile(testFileMeta, sContentType, /* create */ false));
       ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
     }
 
@@ -638,8 +649,9 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
                                           firstChildDescendantMeta.childName()};
 
       // Is there still something out there?
-      TEST_TRY_UNWRAP_ERR(nsresult rv,
-                          dm->GetOrCreateFile(oldLocation, /* create */ false));
+      TEST_TRY_UNWRAP_ERR(
+          nsresult rv,
+          dm->GetOrCreateFile(oldLocation, sContentType, /* create */ false));
       ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
 
       TEST_TRY_UNWRAP(EntryId firstChildDescendantCheck,
@@ -684,8 +696,9 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
                                           firstChildDescendantMeta.childName()};
 
       // Is there still something out there?
-      TEST_TRY_UNWRAP_ERR(nsresult rv,
-                          dm->GetOrCreateFile(oldLocation, /* create */ false));
+      TEST_TRY_UNWRAP_ERR(
+          nsresult rv,
+          dm->GetOrCreateFile(oldLocation, sContentType, /* create */ false));
       ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
 
       TEST_TRY_UNWRAP(EntryId firstChildDescendantCheck,
@@ -722,8 +735,9 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
                                            oldLocation, /* create */ false));
       ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
 
-      TEST_TRY_UNWRAP(EntryId testFileCheck,
-                      dm->GetOrCreateFile(oldLocation, /* create */ true));
+      TEST_TRY_UNWRAP(
+          EntryId testFileCheck,
+          dm->GetOrCreateFile(oldLocation, sContentType, /* create */ true));
       ASSERT_NE(testFile, testFileCheck);
       testFile = testFileCheck;
     }
@@ -731,8 +745,9 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
     // Create a new file in the subsubdirectory
     FileSystemChildMetadata newFileMeta{firstChildDescendant,
                                         testFileMeta.childName()};
-    TEST_TRY_UNWRAP(EntryId newFile,
-                    dm->GetOrCreateFile(newFileMeta, /* create */ true));
+    TEST_TRY_UNWRAP(
+        EntryId newFile,
+        dm->GetOrCreateFile(newFileMeta, sContentType, /* create */ true));
 
     {
       TEST_TRY_UNWRAP(Path entryPath, dm->Resolve({rootId, newFile}));
@@ -760,8 +775,9 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
       ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
 
       // Still under the same parent
-      TEST_TRY_UNWRAP(EntryId handle, dm->GetOrCreateFile(newFileMeta,
-                                                          /* create */ false));
+      TEST_TRY_UNWRAP(
+          EntryId handle,
+          dm->GetOrCreateFile(newFileMeta, sContentType, /* create */ false));
       ASSERT_EQ(handle, newFile);
 
       TEST_TRY_UNWRAP(
@@ -861,13 +877,13 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
       // Try to get handles to the old items
       TEST_TRY_UNWRAP_ERR(
           nsresult rv, dm->GetOrCreateFile({rootId, testFileMeta.childName()},
-                                           /* create */ false));
+                                           sContentType, /* create */ false));
       ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
 
       TEST_TRY_UNWRAP_ERR(
           rv,
           dm->GetOrCreateFile({rootId, firstChildDescendantMeta.childName()},
-                              /* create */ false));
+                              sContentType, /* create */ false));
       ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
 
       TEST_TRY_UNWRAP_ERR(
@@ -883,7 +899,7 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
 
       TEST_TRY_UNWRAP_ERR(
           rv, dm->GetOrCreateFile({firstChildDir, testFileMeta.childName()},
-                                  /* create */ false));
+                                  sContentType, /* create */ false));
       ASSERT_NSEQ(NS_ERROR_DOM_TYPE_MISMATCH_ERR, rv);
 
       TEST_TRY_UNWRAP_ERR(
@@ -894,7 +910,7 @@ TEST_F(TestFileSystemDatabaseManagerVersion001,
 
       TEST_TRY_UNWRAP_ERR(
           rv, dm->GetOrCreateFile({testFile, newFileMeta.childName()},
-                                  /* create */ false));
+                                  sContentType, /* create */ false));
       ASSERT_NSEQ(NS_ERROR_DOM_NOT_FOUND_ERR, rv);
     }
   };

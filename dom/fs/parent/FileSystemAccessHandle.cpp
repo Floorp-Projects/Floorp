@@ -179,7 +179,7 @@ FileSystemAccessHandle::BeginInit() {
     return CreateAndRejectMozPromise<InitPromise>(aFunc, aRv);
   };
 
-  nsString type;
+  fs::ContentType type;
   fs::TimeStamp lastModifiedMilliSeconds;
   fs::Path path;
   nsCOMPtr<nsIFile> file;
