@@ -1403,6 +1403,7 @@ if (!build_with_mozilla) {
 
 rtc_library("net_helper") {
 if (!build_with_mozilla) {
+  visibility = [ "*" ]
   sources = [
     "net_helper.cc",
     "net_helper.h",
