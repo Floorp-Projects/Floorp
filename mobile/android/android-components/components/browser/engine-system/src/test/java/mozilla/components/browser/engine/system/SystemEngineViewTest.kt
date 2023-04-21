@@ -461,6 +461,8 @@ class SystemEngineViewTest {
                     cookie: String?,
                     userAgent: String?,
                     isPrivate: Boolean,
+                    skipConfirmation: Boolean,
+                    openInApp: Boolean,
                     response: Response?,
                 ) {
                     assertEquals("https://download.mozilla.org", url)

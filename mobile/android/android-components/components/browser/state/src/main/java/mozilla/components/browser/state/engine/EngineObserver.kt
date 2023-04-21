@@ -189,6 +189,8 @@ internal class EngineObserver(
         cookie: String?,
         userAgent: String?,
         isPrivate: Boolean,
+        skipConfirmation: Boolean,
+        openInApp: Boolean,
         response: Response?,
     ) {
         // We want to avoid negative contentLength values
@@ -204,6 +206,8 @@ internal class EngineObserver(
             userAgent,
             Environment.DIRECTORY_DOWNLOADS,
             private = isPrivate,
+            skipConfirmation = skipConfirmation,
+            openInApp = openInApp,
             response = response,
         )
 

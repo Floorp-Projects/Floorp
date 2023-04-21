@@ -1011,7 +1011,6 @@ class GeckoEngineSession(
                     mimeType = contentType,
                 )
                 val response = webResponse.toResponse()
-
                 notifyObservers {
                     onExternalResource(
                         url = url,
@@ -1020,6 +1019,8 @@ class GeckoEngineSession(
                         fileName = fileName.sanitizeFileName(),
                         response = response,
                         isPrivate = privateMode,
+                        openInApp = webResponse.doRequestExternalApp,
+                        skipConfirmation = webResponse.doSkipConfirmation,
                     )
                 }
             }

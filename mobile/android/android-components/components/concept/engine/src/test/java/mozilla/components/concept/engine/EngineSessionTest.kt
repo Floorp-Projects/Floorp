@@ -650,6 +650,8 @@ class EngineSessionTest {
                 contentType = "application/vnd.android.package-archive",
                 cookie = "PHPSESSID=298zf09hf012fh2; csrftoken=u32t4o3tb3gg43; _gat=1;",
                 isPrivate = true,
+                skipConfirmation = false,
+                openInApp = false,
                 userAgent = "Components/1.0",
             )
         }
@@ -661,6 +663,8 @@ class EngineSessionTest {
             contentType = "application/vnd.android.package-archive",
             cookie = "PHPSESSID=298zf09hf012fh2; csrftoken=u32t4o3tb3gg43; _gat=1;",
             isPrivate = true,
+            skipConfirmation = false,
+            openInApp = false,
             userAgent = "Components/1.0",
         )
     }

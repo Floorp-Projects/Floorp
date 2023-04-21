@@ -247,6 +247,9 @@ abstract class EngineSession(
          * @param contentType The type of content to be downloaded.
          * @param cookie The cookie related to request.
          * @param userAgent The user agent of the engine.
+         * @param skipConfirmation Whether or not the confirmation dialog should be shown before the download begins.
+         * @param openInApp Whether or not the associated resource should be opened in a third party
+         * app after processed successfully.
          * @param isPrivate Indicates if the download was requested from a private session.
          * @param response A response object associated with this request, when provided can be
          * used instead of performing a manual a download.
@@ -260,6 +263,8 @@ abstract class EngineSession(
             cookie: String? = null,
             userAgent: String? = null,
             isPrivate: Boolean = false,
+            skipConfirmation: Boolean = false,
+            openInApp: Boolean = false,
             response: Response? = null,
         ) = Unit
 

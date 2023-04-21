@@ -344,6 +344,8 @@ class GeckoEngineSessionTest {
             cookie = eq(null),
             userAgent = eq(null),
             isPrivate = eq(true),
+            skipConfirmation = eq(true),
+            openInApp = eq(true),
             response = captor.capture(),
         )
 
@@ -3724,6 +3726,8 @@ class GeckoEngineSessionTest {
                     cookie: String?,
                     userAgent: String?,
                     isPrivate: Boolean,
+                    skipConfirmation: Boolean,
+                    openInApp: Boolean,
                     response: Response?,
                 ) {
                     assertEquals("PDF response is always a success.", RESPONSE_CODE_SUCCESS, response!!.status)
@@ -3756,6 +3760,8 @@ class GeckoEngineSessionTest {
                     cookie: String?,
                     userAgent: String?,
                     isPrivate: Boolean,
+                    skipConfirmation: Boolean,
+                    openInApp: Boolean,
                     response: Response?,
                 ) {
                     assert(false) { "We should not notify observers." }

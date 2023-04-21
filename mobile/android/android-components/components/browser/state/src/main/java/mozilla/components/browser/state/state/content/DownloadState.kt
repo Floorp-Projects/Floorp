@@ -23,6 +23,8 @@ import java.util.UUID
  * @property filePath The file path the file was saved at.
  * @property referrerUrl The site that linked to this download.
  * @property skipConfirmation Whether or not the confirmation dialog should be shown before the download begins.
+ * @property openInApp Whether or not the file associated with this download should be opened in a
+ * third party app after downloaded successfully.
  * @property id The unique identifier of this download.
  * @property private Indicates if the download was created from a private session.
  * @property createdTime A timestamp when the download was created.
@@ -43,6 +45,7 @@ data class DownloadState(
     val destinationDirectory: String = Environment.DIRECTORY_DOWNLOADS,
     val referrerUrl: String? = null,
     val skipConfirmation: Boolean = false,
+    val openInApp: Boolean = false,
     val id: String = UUID.randomUUID().toString(),
     val sessionId: String? = null,
     val private: Boolean = false,

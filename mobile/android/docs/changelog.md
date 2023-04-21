@@ -10,6 +10,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
 
+* * **browser-state**
+  * 🌟 Added `DownloadState`.`openInApp` to indicate whether or not the file associated with the download should be opened in a third party app after downloaded successfully, for more information see [bug 1829371](https://bugzilla.mozilla.org/show_bug.cgi?id=1829371) and [bug 1829372](https://bugzilla.mozilla.org/show_bug.cgi?id=1829372).
+
 # 113.0.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v112..releases_v113)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v113/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
