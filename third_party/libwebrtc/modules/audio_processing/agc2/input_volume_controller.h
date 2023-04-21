@@ -65,7 +65,7 @@ class InputVolumeController final {
     float speech_probability_threshold = 0.7f;
     // Minimum speech frame ratio for volume updates to be allowed. Limited to
     // [0.0f, 1.0f].
-    float speech_ratio_threshold = 0.9f;
+    float speech_ratio_threshold = 0.6f;
   };
 
   // Ctor. `num_capture_channels` specifies the number of channels for the audio
