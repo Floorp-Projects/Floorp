@@ -205,7 +205,6 @@ absl::optional<double> NetworkDelayDiff_CaptureTime(
   return delay_change;
 }
 
-
 template <typename T>
 TimeSeries CreateRtcpTypeTimeSeries(const std::vector<T>& rtcp_list,
                                     AnalyzerConfig config,
@@ -615,6 +614,30 @@ void EventLogAnalyzer::CreatePlayoutGraph(Plot* plot) {
   plot->SetSuggestedYAxis(0, 1, "Time since last playout (ms)", kBottomMargin,
                           kTopMargin);
   plot->SetTitle("Audio playout");
+}
+
+void EventLogAnalyzer::CreateNetEqSetMinimumDelay(Plot* plot) {
+  for (const auto& playout_stream :
+       parsed_log_.neteq_set_minimum_delay_events()) {
+    uint32_t ssrc = playout_stream.first;
+    if (!MatchingSsrc(ssrc, desired_ssrc_))
+      continue;
+
+    TimeSeries time_series(SsrcToString(ssrc), LineStyle::kStep,
+                           PointStyle::kHighlight);
+    for (const auto& event : playout_stream.second) {
+      float x = config_.GetCallTimeSec(event.log_time());
+      float y = event.minimum_delay_ms;
+      time_series.points.push_back(TimeSeriesPoint(x, y));
+    }
+    plot->AppendTimeSeries(std::move(time_series));
+  }
+
+  plot->SetXAxis(config_.CallBeginTimeSec(), config_.CallEndTimeSec(),
+                 "Time (s)", kLeftMargin, kRightMargin);
+  plot->SetSuggestedYAxis(0, 1000, "Minimum Delay (ms)", kBottomMargin,
+                          kTopMargin);
+  plot->SetTitle("Set Minimum Delay");
 }
 
 // For audio SSRCs, plot the audio level.
