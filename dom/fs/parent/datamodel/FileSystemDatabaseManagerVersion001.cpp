@@ -856,7 +856,8 @@ FileSystemDatabaseManagerVersion001::GetOrCreateDirectory(
 }
 
 Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::GetOrCreateFile(
-    const FileSystemChildMetadata& aHandle, bool aCreate) {
+    const FileSystemChildMetadata& aHandle, const ContentType& aType,
+    bool aCreate) {
   MOZ_ASSERT(!aHandle.parentId().IsEmpty());
 
   const auto& name = aHandle.childName();
@@ -893,9 +894,9 @@ Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::GetOrCreateFile(
 
   const nsLiteralCString insertFileQuery =
       "INSERT INTO Files "
-      "( handle, name ) "
+      "( handle, type, name ) "
       "VALUES "
-      "( :handle, :name ) "
+      "( :handle, :type, :name ) "
       ";"_ns;
 
   QM_TRY_UNWRAP(EntryId entryId, GetUniqueEntryId(mConnection, aHandle));
@@ -916,6 +917,7 @@ Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::GetOrCreateFile(
     QM_TRY_UNWRAP(ResultStatement stmt,
                   ResultStatement::Create(mConnection, insertFileQuery));
     QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, entryId)));
+    QM_TRY(QM_TO_RESULT(stmt.BindContentTypeByName("type"_ns, aType)));
     QM_TRY(QM_TO_RESULT(stmt.BindNameByName("name"_ns, name)));
     QM_TRY(QM_TO_RESULT(stmt.Execute()));
   }
@@ -966,7 +968,7 @@ FileSystemDatabaseManagerVersion001::GetDirectoryEntries(
 }
 
 nsresult FileSystemDatabaseManagerVersion001::GetFile(
-    const EntryId& aEntryId, nsString& aType,
+    const EntryId& aEntryId, ContentType& aType,
     TimeStamp& lastModifiedMilliSeconds, nsTArray<Name>& aPath,
     nsCOMPtr<nsIFile>& aFile) const {
   MOZ_ASSERT(!aEntryId.IsEmpty());
