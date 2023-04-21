@@ -195,7 +195,7 @@ class nsDMABufDevice {
   int mDRMFd;
   gbm_device* mGbmDevice;
   bool mInitialized;
-  nsCString mFailureId;
+  const char* mFailureId;
 
   static bool sUseWebGLDmabufBackend;
 };
