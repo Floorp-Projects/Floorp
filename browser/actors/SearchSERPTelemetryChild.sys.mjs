@@ -200,6 +200,17 @@ class SearchAdImpression {
   }
 
   /**
+   * The callback that should fire when an element is interacted with.
+   *
+   * @type {function}
+   */
+  #eventCallback = null;
+
+  set eventCallback(callback) {
+    this.#eventCallback = callback;
+  }
+
+  /**
    * How far from the top the page has been scrolled.
    */
   #scrollFromTop = 0;
@@ -239,9 +250,19 @@ class SearchAdImpression {
     let componentToVisibilityMap = new Map();
     let hrefToComponentMap = new Map();
     // Iterate over the results:
+    // - If it's searchbox add event listeners.
     // - If it is a non_ads_link, map its href to component type.
     // - For others, map its component type and check visibility.
     for (let [element, data] of this.#elementToAdDataMap.entries()) {
+      if (data.type == "incontent_searchbox") {
+        // If searchbox has child elements, observe those, otherwise
+        // fallback to its parent element.
+        this.#addEventListenerToElements(
+          data.childElements.length ? data.childElements : [element],
+          data.type
+        );
+        continue;
+      }
       if (data.childElements.length) {
         for (let child of data.childElements) {
           let href = this.#extractHref(child);
@@ -723,6 +744,30 @@ class SearchAdImpression {
   }
 
   /**
+   * Adds a click listener to a specific element.
+   *
+   * @param {Array<Element>} elements
+   *  DOM elements to add event listeners to.
+   * @param {string} type
+   *  The component type of the element.
+   */
+  #addEventListenerToElements(elements, type) {
+    if (!elements) {
+      return;
+    }
+    for (let element of elements) {
+      let clickCallback = () => {
+        this.#eventCallback(type, "clicked");
+      };
+      element.addEventListener("click", clickCallback);
+      searchAdImpressionListeners.set(element, {
+        clicked: clickCallback,
+      });
+      searchAdImpressionElements.add(element);
+    }
+  }
+
+  /**
    * Given a DOM element, return whether or not this element was counted
    * by specific child elements rather than the number of anchor links.
    *
@@ -738,6 +783,8 @@ class SearchAdImpression {
 
 const searchProviders = new SearchProviders();
 const searchAdImpression = new SearchAdImpression();
+const searchAdImpressionListeners = new WeakMap();
+const searchAdImpressionElements = new WeakSet();
 
 /**
  * SearchTelemetryChild monitors for pages that are partner searches, and
@@ -818,6 +865,13 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
         searchAdImpression.providerInfo = providerInfo;
         searchAdImpression.scrollFromTop = this.contentWindow.scrollY;
         searchAdImpression.innerWindowHeight = this.contentWindow.innerHeight;
+        searchAdImpression.eventCallback = (type, action) => {
+          this.sendAsyncMessage("SearchTelemetry:Action", {
+            type,
+            url: this.document.documentURI,
+            action,
+          });
+        };
         let start = Cu.now();
         let {
           componentToVisibilityMap,
@@ -872,9 +926,30 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
       }
       case "pagehide": {
         this.#cancelCheck();
+        if (lazy.serpEventsEnabled) {
+          this.#clearListeners();
+        }
         break;
       }
     }
+  }
+
+  #clearListeners() {
+    let start = Cu.now();
+    for (let element of ChromeUtils.nondeterministicGetWeakSetKeys(
+      searchAdImpressionElements
+    )) {
+      let listeners = searchAdImpressionListeners.get(element);
+      if (listeners) {
+        element.removeEventListener("clicked", listeners.clicked);
+        element.removeEventListener("keydown", listeners.keydown);
+      }
+    }
+    ChromeUtils.addProfilerMarker(
+      "SearchSERPTelemetryChild.#clearListeners",
+      start,
+      "Removed event listeners."
+    );
   }
 
   #cancelCheck() {
