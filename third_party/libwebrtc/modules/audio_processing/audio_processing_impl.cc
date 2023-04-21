@@ -507,13 +507,16 @@ AudioProcessing::Config AudioProcessingImpl::AdjustConfig(
         !config.gain_controller2.enabled;
     const bool one_and_only_one_input_volume_controller =
         hybrid_agc_config_detected != full_agc1_config_detected;
+    const bool agc2_input_volume_controller_enabled =
+        config.gain_controller2.enabled &&
+        config.gain_controller2.input_volume_controller.enabled;
     if (!one_and_only_one_input_volume_controller ||
-        config.gain_controller2.input_volume_controller.enabled) {
+        agc2_input_volume_controller_enabled) {
       RTC_LOG(LS_ERROR) << "Cannot adjust AGC config (precondition failed)";
       if (!one_and_only_one_input_volume_controller)
         RTC_LOG(LS_ERROR)
             << "One and only one input volume controller must be enabled.";
-      if (config.gain_controller2.input_volume_controller.enabled)
+      if (agc2_input_volume_controller_enabled)
         RTC_LOG(LS_ERROR)
             << "The AGC2 input volume controller must be disabled.";
     } else {
@@ -531,19 +534,18 @@ AudioProcessing::Config AudioProcessingImpl::AdjustConfig(
   return adjusted_config;
 }
 
-TransientSuppressor::VadMode AudioProcessingImpl::GetTransientSuppressorVadMode(
-    const absl::optional<AudioProcessingImpl::GainController2ExperimentParams>&
-        params) {
-  if (params.has_value() && params->agc2_config.has_value() &&
-      !params->disallow_transient_suppressor_usage) {
-    // When the experiment is active, the gain control switches to AGC2 and TS
-    // can be active, use the RNN VAD to control TS. This choice will also
-    // disable the internal RNN VAD in AGC2.
-    return TransientSuppressor::VadMode::kRnnVad;
-  }
-  // If TS is disabled, the returned value does not matter. If enabled, use the
-  // default VAD.
-  return TransientSuppressor::VadMode::kDefault;
+bool AudioProcessingImpl::UseApmVadSubModule(
+    const AudioProcessing::Config& config,
+    const absl::optional<GainController2ExperimentParams>& experiment_params) {
+  // The VAD as an APM sub-module is needed only in one case, that is when TS
+  // and AGC2 are both enabled and when the AGC2 experiment is running and its
+  // parameters require to fully switch the gain control to AGC2.
+  return config.transient_suppression.enabled &&
+         config.gain_controller2.enabled &&
+         (config.gain_controller2.input_volume_controller.enabled ||
+          config.gain_controller2.adaptive_digital.enabled) &&
+         experiment_params.has_value() &&
+         experiment_params->agc2_config.has_value();
 }
 
 AudioProcessingImpl::SubmoduleStates::SubmoduleStates(
@@ -664,8 +666,7 @@ AudioProcessingImpl::AudioProcessingImpl(
       use_setup_specific_default_aec3_config_(
           UseSetupSpecificDefaultAec3Congfig()),
       gain_controller2_experiment_params_(GetGainController2ExperimentParams()),
-      transient_suppressor_vad_mode_(
-          GetTransientSuppressorVadMode(gain_controller2_experiment_params_)),
+      transient_suppressor_vad_mode_(TransientSuppressor::VadMode::kDefault),
       capture_runtime_settings_(RuntimeSettingQueueSize()),
       render_runtime_settings_(RuntimeSettingQueueSize()),
       capture_runtime_settings_enqueuer_(&capture_runtime_settings_),
@@ -810,8 +811,8 @@ void AudioProcessingImpl::InitializeLocked() {
   InitializeHighPassFilter(true);
   InitializeResidualEchoDetector();
   InitializeEchoController();
-  InitializeGainController2(/*config_has_changed=*/true);
-  InitializeVoiceActivityDetector(/*config_has_changed=*/true);
+  InitializeGainController2();
+  InitializeVoiceActivityDetector();
   InitializeNoiseSuppressor();
   InitializeAnalyzer();
   InitializePostProcessor();
@@ -978,8 +979,12 @@ void AudioProcessingImpl::ApplyConfig(const AudioProcessing::Config& config) {
     config_.gain_controller2 = AudioProcessing::Config::GainController2();
   }
 
-  InitializeGainController2(agc2_config_changed);
-  InitializeVoiceActivityDetector(agc2_config_changed);
+  if (agc2_config_changed || ts_config_changed) {
+    // AGC2 also depends on TS because of the possible dependency on the APM VAD
+    // sub-module.
+    InitializeGainController2();
+    InitializeVoiceActivityDetector();
+  }
 
   if (pre_amplifier_config_changed || gain_adjustment_config_changed) {
     InitializeCaptureLevelsAdjuster();
@@ -2145,10 +2150,20 @@ bool AudioProcessingImpl::UpdateActiveSubmoduleStates() {
 }
 
 void AudioProcessingImpl::InitializeTransientSuppressor() {
+  // Choose the VAD mode for TS and detect a VAD mode change.
+  const TransientSuppressor::VadMode previous_vad_mode =
+      transient_suppressor_vad_mode_;
+  transient_suppressor_vad_mode_ = TransientSuppressor::VadMode::kDefault;
+  if (UseApmVadSubModule(config_, gain_controller2_experiment_params_)) {
+    transient_suppressor_vad_mode_ = TransientSuppressor::VadMode::kRnnVad;
+  }
+  const bool vad_mode_changed =
+      previous_vad_mode != transient_suppressor_vad_mode_;
+
   if (config_.transient_suppression.enabled &&
       !constants_.transient_suppressor_forced_off) {
     // Attempt to create a transient suppressor, if one is not already created.
-    if (!submodules_.transient_suppressor) {
+    if (!submodules_.transient_suppressor || vad_mode_changed) {
       submodules_.transient_suppressor = CreateTransientSuppressor(
           submodule_creation_overrides_, transient_suppressor_vad_mode_,
           proc_fullband_sample_rate_hz(), capture_nonlocked_.split_rate,
@@ -2342,54 +2357,48 @@ void AudioProcessingImpl::InitializeGainController1() {
       capture_.capture_output_used);
 }
 
-void AudioProcessingImpl::InitializeGainController2(bool config_has_changed) {
-  if (!config_has_changed) {
-    return;
-  }
+void AudioProcessingImpl::InitializeGainController2() {
   if (!config_.gain_controller2.enabled) {
     submodules_.gain_controller2.reset();
     return;
   }
-  if (!submodules_.gain_controller2 || config_has_changed) {
-    const bool use_internal_vad =
-        transient_suppressor_vad_mode_ != TransientSuppressor::VadMode::kRnnVad;
-    const bool input_volume_controller_config_overridden =
-        gain_controller2_experiment_params_.has_value() &&
-        gain_controller2_experiment_params_->agc2_config.has_value();
-    const InputVolumeController::Config input_volume_controller_config =
-        input_volume_controller_config_overridden
-            ? gain_controller2_experiment_params_->agc2_config
-                  ->input_volume_controller
-            : InputVolumeController::Config{};
-    submodules_.gain_controller2 = std::make_unique<GainController2>(
-        config_.gain_controller2, input_volume_controller_config,
-        proc_fullband_sample_rate_hz(), num_proc_channels(), use_internal_vad);
-    submodules_.gain_controller2->SetCaptureOutputUsed(
-        capture_.capture_output_used);
-  }
+  // Override the input volume controller configuration if the AGC2 experiment
+  // is running and its parameters require to fully switch the gain control to
+  // AGC2.
+  const bool input_volume_controller_config_overridden =
+      gain_controller2_experiment_params_.has_value() &&
+      gain_controller2_experiment_params_->agc2_config.has_value();
+  const InputVolumeController::Config input_volume_controller_config =
+      input_volume_controller_config_overridden
+          ? gain_controller2_experiment_params_->agc2_config
+                ->input_volume_controller
+          : InputVolumeController::Config{};
+  // If the APM VAD sub-module is not used, let AGC2 use its internal VAD.
+  const bool use_internal_vad =
+      !UseApmVadSubModule(config_, gain_controller2_experiment_params_);
+  submodules_.gain_controller2 = std::make_unique<GainController2>(
+      config_.gain_controller2, input_volume_controller_config,
+      proc_fullband_sample_rate_hz(), num_proc_channels(), use_internal_vad);
+  submodules_.gain_controller2->SetCaptureOutputUsed(
+      capture_.capture_output_used);
 }
 
-void AudioProcessingImpl::InitializeVoiceActivityDetector(
-    bool config_has_changed) {
-  if (!config_has_changed) {
-    return;
-  }
-  const bool use_vad =
-      transient_suppressor_vad_mode_ == TransientSuppressor::VadMode::kRnnVad &&
-      config_.gain_controller2.enabled &&
-      (config_.gain_controller2.adaptive_digital.enabled ||
-       config_.gain_controller2.input_volume_controller.enabled);
-  if (!use_vad) {
+void AudioProcessingImpl::InitializeVoiceActivityDetector() {
+  if (!UseApmVadSubModule(config_, gain_controller2_experiment_params_)) {
     submodules_.voice_activity_detector.reset();
     return;
   }
-  if (!submodules_.voice_activity_detector || config_has_changed) {
+
+  if (!submodules_.voice_activity_detector) {
     RTC_DCHECK(!!submodules_.gain_controller2);
     // TODO(bugs.webrtc.org/13663): Cache CPU features in APM and use here.
     submodules_.voice_activity_detector =
         std::make_unique<VoiceActivityDetectorWrapper>(
             submodules_.gain_controller2->GetCpuFeatures(),
             proc_fullband_sample_rate_hz());
+  } else {
+    submodules_.voice_activity_detector->Initialize(
+        proc_fullband_sample_rate_hz());
   }
 }
 
