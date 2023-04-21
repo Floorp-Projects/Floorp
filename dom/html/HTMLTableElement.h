@@ -161,9 +161,9 @@ class HTMLTableElement final : public nsGenericHTMLElement {
   /**
    * Called when an attribute is about to be changed
    */
-  virtual nsresult BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                 const nsAttrValueOrString* aValue,
-                                 bool aNotify) override;
+  virtual void BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                             const nsAttrValueOrString* aValue,
+                             bool aNotify) override;
   /**
    * Called when an attribute has just been changed
    */

@@ -2488,8 +2488,7 @@ nsresult Element::SetAttr(int32_t aNamespaceID, nsAtom* aName, nsAtom* aPrefix,
                                                  modType);
   }
 
-  nsresult rv = BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
-  NS_ENSURE_SUCCESS(rv, rv);
+  BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
 
   nsAttrValue attrValue;
   if (!ParseAttribute(aNamespaceID, aName, aValue, aSubjectPrincipal,
@@ -2533,8 +2532,7 @@ nsresult Element::SetParsedAttr(int32_t aNamespaceID, nsAtom* aName,
                                                  modType);
   }
 
-  nsresult rv = BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
-  NS_ENSURE_SUCCESS(rv, rv);
+  BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
 
   PreIdMaybeChange(aNamespaceID, aName, &value);
 
@@ -2643,9 +2641,8 @@ nsresult Element::SetAttrAndNotify(
   }
 
   if (aCallAfterSetAttr) {
-    rv = AfterSetAttr(aNamespaceID, aName, &valueForAfterSetAttr, oldValue,
-                      aSubjectPrincipal, aNotify);
-    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_TRY(AfterSetAttr(aNamespaceID, aName, &valueForAfterSetAttr, oldValue,
+                         aSubjectPrincipal, aNotify));
 
     if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::dir) {
       OnSetDirAttr(this, &valueForAfterSetAttr, hadValidDir, hadDirAuto,
@@ -2731,9 +2728,8 @@ bool Element::SetAndSwapMappedAttribute(nsAtom* aName, nsAttrValue& aValue,
   return false;
 }
 
-nsresult Element::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                const nsAttrValueOrString* aValue,
-                                bool aNotify) {
+void Element::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                            const nsAttrValueOrString* aValue, bool aNotify) {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::_class && aValue) {
       // Note: This flag is asymmetrical. It is never unset and isn't exact.
@@ -2747,8 +2743,6 @@ nsresult Element::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
       SetMayHaveClass();
     }
   }
-
-  return NS_OK;
 }
 
 nsresult Element::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
@@ -2866,8 +2860,7 @@ nsresult Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName, bool aNotify) {
         this, aNameSpaceID, aName, MutationEvent_Binding::REMOVAL);
   }
 
-  nsresult rv = BeforeSetAttr(aNameSpaceID, aName, nullptr, aNotify);
-  NS_ENSURE_SUCCESS(rv, rv);
+  BeforeSetAttr(aNameSpaceID, aName, nullptr, aNotify);
 
   bool hasMutationListeners =
       aNotify && nsContentUtils::HasMutationListeners(
@@ -2902,7 +2895,7 @@ nsresult Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName, bool aNotify) {
   }
 
   nsAttrValue oldValue;
-  rv = mAttrs.RemoveAttrAt(index, oldValue);
+  nsresult rv = mAttrs.RemoveAttrAt(index, oldValue);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PostIdMaybeChange(aNameSpaceID, aName, nullptr);
@@ -2928,8 +2921,8 @@ nsresult Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName, bool aNotify) {
     }
   }
 
-  rv = AfterSetAttr(aNameSpaceID, aName, nullptr, &oldValue, nullptr, aNotify);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(
+      AfterSetAttr(aNameSpaceID, aName, nullptr, &oldValue, nullptr, aNotify));
 
   UpdateState(aNotify);
 

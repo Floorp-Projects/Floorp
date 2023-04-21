@@ -94,9 +94,9 @@ class HTMLFormElement final : public nsGenericHTMLElement,
 
   virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
   virtual void UnbindFromTree(bool aNullParent = true) override;
-  virtual nsresult BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                 const nsAttrValueOrString* aValue,
-                                 bool aNotify) override;
+  virtual void BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                             const nsAttrValueOrString* aValue,
+                             bool aNotify) override;
 
   /**
    * Forget all information about the current submission (and the fact that we

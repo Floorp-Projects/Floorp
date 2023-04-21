@@ -25,9 +25,9 @@ JSObject* HTMLFrameSetElement::WrapNode(JSContext* aCx,
 
 NS_IMPL_ELEMENT_CLONE(HTMLFrameSetElement)
 
-nsresult HTMLFrameSetElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                            const nsAttrValueOrString* aValue,
-                                            bool aNotify) {
+void HTMLFrameSetElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                                        const nsAttrValueOrString* aValue,
+                                        bool aNotify) {
   /* The main goal here is to see whether the _number_ of rows or
    * columns has changed. If it has, we need to reframe; otherwise
    * we want to reflow.

@@ -163,10 +163,6 @@ nsAttrValue::nsAttrValue(already_AddRefed<DeclarationBlock> aValue,
   SetTo(std::move(aValue), aSerialized);
 }
 
-nsAttrValue::nsAttrValue(const nsIntMargin& aValue) : mBits(0) {
-  SetTo(aValue);
-}
-
 nsAttrValue::~nsAttrValue() { ResetIfSet(); }
 
 /* static */
@@ -303,13 +299,6 @@ void nsAttrValue::SetTo(const nsAttrValue& aOther) {
       cont->mDoubleValue = otherCont->mDoubleValue;
       break;
     }
-    case eIntMarginValue: {
-      if (otherCont->mValue.mIntMargin) {
-        cont->mValue.mIntMargin =
-            new nsIntMargin(*otherCont->mValue.mIntMargin);
-      }
-      break;
-    }
     default: {
       if (IsSVGType(otherCont->mType)) {
         // All SVG types are just pointers to classes and will therefore have
@@ -385,12 +374,6 @@ void nsAttrValue::SetTo(nsIURI* aValue, const nsAString* aSerialized) {
   NS_ADDREF(cont->mValue.mURL = aValue);
   cont->mType = eURL;
   SetMiscAtomOrString(aSerialized);
-}
-
-void nsAttrValue::SetTo(const nsIntMargin& aValue) {
-  MiscContainer* cont = EnsureEmptyMiscContainer();
-  cont->mValue.mIntMargin = new nsIntMargin(aValue);
-  cont->mType = eIntMarginValue;
 }
 
 void nsAttrValue::SetToSerialized(const nsAttrValue& aOther) {
@@ -825,9 +808,6 @@ uint32_t nsAttrValue::HashValue() const {
       // XXX this is crappy, but oh well
       return cont->mDoubleValue;
     }
-    case eIntMarginValue: {
-      return NS_PTR_TO_INT32(cont->mValue.mIntMargin);
-    }
     default: {
       if (IsSVGType(cont->mType)) {
         // All SVG types are just pointers to classes so we can treat them alike
@@ -914,9 +894,6 @@ bool nsAttrValue::Equals(const nsAttrValue& aOther) const {
     }
     case eDoubleValue: {
       return thisCont->mDoubleValue == otherCont->mDoubleValue;
-    }
-    case eIntMarginValue: {
-      return thisCont->mValue.mIntMargin == otherCont->mValue.mIntMargin;
     }
     default: {
       if (IsSVGType(thisCont->mType)) {
@@ -1723,19 +1700,6 @@ bool nsAttrValue::ParseDoubleValue(const nsAString& aString) {
   return true;
 }
 
-bool nsAttrValue::ParseIntMarginValue(const nsAString& aString) {
-  ResetIfSet();
-
-  nsIntMargin margins;
-  if (!nsContentUtils::ParseIntMarginValue(aString, margins)) return false;
-
-  MiscContainer* cont = EnsureEmptyMiscContainer();
-  cont->mValue.mIntMargin = new nsIntMargin(margins);
-  cont->mType = eIntMarginValue;
-  SetMiscAtomOrString(&aString);
-  return true;
-}
-
 bool nsAttrValue::ParseStyleAttribute(const nsAString& aString,
                                       nsIPrincipal* aMaybeScriptedPrincipal,
                                       nsStyledElement* aElement) {
@@ -1892,10 +1856,6 @@ MiscContainer* nsAttrValue::ClearMiscContainer() {
         }
         case eAtomArray: {
           delete cont->mValue.mAtomArray;
-          break;
-        }
-        case eIntMarginValue: {
-          delete cont->mValue.mIntMargin;
           break;
         }
         default: {

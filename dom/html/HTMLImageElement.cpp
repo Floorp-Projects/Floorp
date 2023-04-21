@@ -295,9 +295,9 @@ nsMapRuleToAttributesFunc HTMLImageElement::GetAttributeMappingFunction()
   return &MapAttributesIntoRule;
 }
 
-nsresult HTMLImageElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                                         const nsAttrValueOrString* aValue,
-                                         bool aNotify) {
+void HTMLImageElement::BeforeSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                     const nsAttrValueOrString* aValue,
+                                     bool aNotify) {
   if (aNameSpaceID == kNameSpaceID_None && mForm &&
       (aName == nsGkAtoms::name || aName == nsGkAtoms::id)) {
     // remove the image from the hashtable as needed

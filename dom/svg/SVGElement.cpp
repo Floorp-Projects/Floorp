@@ -901,9 +901,9 @@ void SVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsAtom* aName,
   }
 }
 
-nsresult SVGElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                   const nsAttrValueOrString* aValue,
-                                   bool aNotify) {
+void SVGElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                               const nsAttrValueOrString* aValue,
+                               bool aNotify) {
   if (!aValue) {
     UnsetAttrInternal(aNamespaceID, aName, aNotify);
   }
@@ -1366,13 +1366,8 @@ nsAttrValue SVGElement::WillChangeValue(
   // the current value.
   nsAttrValueOrString attrStringOrValue(attrValue ? *attrValue
                                                   : emptyOrOldAttrValue);
-  DebugOnly<nsresult> rv = BeforeSetAttr(
-      kNameSpaceID_None, aName, &attrStringOrValue, kNotifyDocumentObservers);
-  // SVG elements aren't expected to overload BeforeSetAttr in such a way that
-  // it may fail. So long as this is the case we don't need to check and pass on
-  // the return value which simplifies the calling code significantly.
-  MOZ_ASSERT(NS_SUCCEEDED(rv), "Unexpected failure from BeforeSetAttr");
-
+  BeforeSetAttr(kNameSpaceID_None, aName, &attrStringOrValue,
+                kNotifyDocumentObservers);
   return emptyOrOldAttrValue;
 }
 

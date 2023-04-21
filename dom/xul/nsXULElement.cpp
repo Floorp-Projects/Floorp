@@ -771,47 +771,39 @@ bool nsXULElement::SupportsAccessKey() const {
                             nsGkAtoms::radio);
 }
 
-nsresult nsXULElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                                     const nsAttrValueOrString* aValue,
-                                     bool aNotify) {
-  if (aNamespaceID == kNameSpaceID_None &&
-      (aName == nsGkAtoms::accesskey || aName == nsGkAtoms::control ||
-       aName == nsGkAtoms::value)) {
-    RegUnRegAccessKey(false);
-  } else if (aNamespaceID == kNameSpaceID_None &&
-             (aName == nsGkAtoms::command || aName == nsGkAtoms::observes) &&
-             IsInUncomposedDoc()) {
-    //         XXX sXBL/XBL2 issue! Owner or current document?
-    // XXX Why does this not also remove broadcast listeners if the
-    // "element" attribute was changed on an <observer>?
-    nsAutoString oldValue;
-    GetAttr(kNameSpaceID_None, nsGkAtoms::observes, oldValue);
-    if (oldValue.IsEmpty()) {
-      GetAttr(kNameSpaceID_None, nsGkAtoms::command, oldValue);
-    }
-
-    Document* doc = GetUncomposedDoc();
-    if (!oldValue.IsEmpty() && doc->HasXULBroadcastManager()) {
-      RefPtr<XULBroadcastManager> broadcastManager =
-          doc->GetXULBroadcastManager();
-      broadcastManager->RemoveListener(this);
-    }
-  } else if (aNamespaceID == kNameSpaceID_None && aValue &&
-             mNodeInfo->Equals(nsGkAtoms::window) &&
-             aName == nsGkAtoms::chromemargin) {
-    nsAttrValue attrValue;
-    // Make sure the margin format is valid first
-    if (!attrValue.ParseIntMarginValue(aValue->String())) {
-      return NS_ERROR_INVALID_ARG;
-    }
-  } else if (aNamespaceID == kNameSpaceID_None &&
-             aName == nsGkAtoms::usercontextid) {
-    nsAutoString oldValue;
-    bool hasAttribute =
-        GetAttr(kNameSpaceID_None, nsGkAtoms::usercontextid, oldValue);
-    if (hasAttribute && (!aValue || !aValue->String().Equals(oldValue))) {
-      MOZ_ASSERT(false, "Changing usercontextid is not allowed.");
-      return NS_ERROR_INVALID_ARG;
+void nsXULElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                                 const nsAttrValueOrString* aValue,
+                                 bool aNotify) {
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aName == nsGkAtoms::accesskey || aName == nsGkAtoms::control ||
+        aName == nsGkAtoms::value) {
+      RegUnRegAccessKey(false);
+    } else if ((aName == nsGkAtoms::command || aName == nsGkAtoms::observes) &&
+               IsInUncomposedDoc()) {
+      //         XXX sXBL/XBL2 issue! Owner or current document?
+      // XXX Why does this not also remove broadcast listeners if the
+      // "element" attribute was changed on an <observer>?
+      nsAutoString oldValue;
+      GetAttr(kNameSpaceID_None, nsGkAtoms::observes, oldValue);
+      if (oldValue.IsEmpty()) {
+        GetAttr(kNameSpaceID_None, nsGkAtoms::command, oldValue);
+      }
+      Document* doc = GetUncomposedDoc();
+      if (!oldValue.IsEmpty() && doc->HasXULBroadcastManager()) {
+        RefPtr<XULBroadcastManager> broadcastManager =
+            doc->GetXULBroadcastManager();
+        broadcastManager->RemoveListener(this);
+      }
+#ifdef DEBUG
+    } else if (aName == nsGkAtoms::usercontextid) {
+      nsAutoString oldValue;
+      bool hasAttribute =
+          GetAttr(kNameSpaceID_None, nsGkAtoms::usercontextid, oldValue);
+      if (hasAttribute && (!aValue || !aValue->String().Equals(oldValue))) {
+        MOZ_ASSERT(false,
+                   "Changing usercontextid doesn't really work properly.");
+      }
+#endif
     }
   }
 
