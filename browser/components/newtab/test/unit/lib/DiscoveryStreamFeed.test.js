@@ -3497,4 +3497,85 @@ describe("DiscoveryStreamFeed", () => {
       assert.equal(result.score, 1);
     });
   });
+  describe("new proxy feed", () => {
+    beforeEach(() => {
+      feed.store = createStore(combineReducers(reducers), {
+        Prefs: {
+          values: {
+            pocketConfig: { regionBffConfig: "DE" },
+          },
+        },
+      });
+      sandbox.stub(global.Region, "home").get(() => "DE");
+      globals.set("NimbusFeatures", {
+        saveToPocket: {
+          getVariable: sandbox.stub(),
+        },
+      });
+      global.NimbusFeatures.saveToPocket.getVariable
+        .withArgs("bffApi")
+        .returns("bffApi");
+      global.NimbusFeatures.saveToPocket.getVariable
+        .withArgs("oAuthConsumerKeyBff")
+        .returns("oAuthConsumerKeyBff");
+    });
+    it("should return true with isBff", async () => {
+      assert.isUndefined(feed._isBff);
+      assert.isTrue(feed.isBff);
+      assert.isTrue(feed._isBff);
+    });
+    it("should update to new feed url", async () => {
+      await feed.loadLayout(feed.store.dispatch);
+      const { layout } = feed.store.getState().DiscoveryStream;
+      assert.equal(
+        layout[0].components[2].feed.url,
+        "https://bffApi/desktop/v1/recommendations?locale=$locale&region=$region&count=30"
+      );
+    });
+    it("should fetch proper data from getComponentFeed", async () => {
+      const fakeCache = {};
+      sandbox.stub(feed.cache, "get").returns(Promise.resolve(fakeCache));
+      sandbox.stub(feed, "rotate").callsFake(val => val);
+      sandbox
+        .stub(feed, "scoreItems")
+        .callsFake(val => ({ data: val, filtered: [] }));
+      sandbox.stub(feed, "fetchFromEndpoint").resolves({
+        data: [
+          {
+            tileId: 1234,
+            url: "url",
+            title: "title",
+            excerpt: "excerpt",
+            publisher: "publisher",
+            imageUrl: "imageUrl",
+          },
+        ],
+      });
+
+      const feedData = await feed.getComponentFeed("url");
+      assert.deepEqual(feedData, {
+        lastUpdated: 0,
+        data: {
+          settings: {},
+          recommendations: [
+            {
+              id: 1234,
+              url: "url",
+              title: "title",
+              excerpt: "excerpt",
+              publisher: "publisher",
+              raw_image_src: "imageUrl",
+            },
+          ],
+          status: "success",
+        },
+      });
+      assert.equal(feed.fetchFromEndpoint.firstCall.args[0], "url");
+      assert.equal(feed.fetchFromEndpoint.firstCall.args[1].method, "GET");
+      assert.equal(
+        feed.fetchFromEndpoint.firstCall.args[1].headers.get("consumer_key"),
+        "oAuthConsumerKeyBff"
+      );
+    });
+  });
 });

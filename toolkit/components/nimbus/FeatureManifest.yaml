@@ -534,21 +534,30 @@ pocketNewtab:
       type: string
       setPref: "browser.newtabpage.activity-stream.discoverystream.spocs-endpoint"
     regionStoriesConfig:
-      description: A comma-separated list of locales to get stories for.
+      description: A comma-separated list of region to get stories for.
       type: string
-      setPref: "browser.newtabpage.activity-stream.discoverystream.region-stories-config"
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.region-stories-config
+    regionBffConfig:
+      type: string
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.region-bff-config
+      description: A comma-separated list of regions to get stories from the recommendations BFF. Also requires region-stories-config.
     regionStoriesBlock:
       description: A comma-separated list of regions that do not get stories, regardless of locale-list-config.
       type: string
-      setPref: "browser.newtabpage.activity-stream.discoverystream.region-stories-block"
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.region-stories-block
     localeListConfig:
       description: A comma-separated list of locales that get stories, regardless of region-stories-config.
       type: string
-      setPref: "browser.newtabpage.activity-stream.discoverystream.locale-list-config"
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.locale-list-config
     regionSpocsConfig:
       description: A comma-separated list of regions that get spocs by default.
       type: string
-      setPref: "browser.newtabpage.activity-stream.discoverystream.region-spocs-config"
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.region-spocs-config
     topSitesMaxSponsored:
       # Defined under `pocketNewtab` as it needs to be used along with other variables
       type: int
