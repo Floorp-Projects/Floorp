@@ -13,9 +13,7 @@
 #include <type_traits>
 
 #include "modules/include/module_common_types_public.h"
-#include "net/dcsctp/common/sequence_numbers.h"
 #include "rtc_base/numerics/sequence_number_unwrapper.h"
-#include "rtc_base/strong_alias.h"
 #include "rtc_base/time_utils.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
@@ -24,27 +22,6 @@ namespace webrtc {
 namespace {
 
 using ::testing::Test;
-
-using dcsctp::UnwrappedSequenceNumber;
-using Wrapped = StrongAlias<class WrappedTag, uint32_t>;
-using TestSequence = UnwrappedSequenceNumber<Wrapped>;
-
-template <typename T>
-class UnwrapperHelper;
-
-template <>
-class UnwrapperHelper<TestSequence::Unwrapper> {
- public:
-  int64_t Unwrap(uint32_t val) {
-    TestSequence s = unwrapper_.Unwrap(Wrapped(val));
-    // UnwrappedSequenceNumber starts counting at 2^32.
-    constexpr int64_t kDcsctpUnwrapStart = int64_t{1} << 32;
-    return s.value() - kDcsctpUnwrapStart;
-  }
-
- private:
-  TestSequence::Unwrapper unwrapper_;
-};
 
 // MaxVal is the max of the wrapped space, ie MaxVal + 1 = 0 when wrapped.
 template <typename U, int64_t MaxVal = std::numeric_limits<uint32_t>::max()>
@@ -138,8 +115,6 @@ TYPED_TEST_P(UnwrapperConformanceFixture, MultipleNegativeWrapArounds) {
   // SequenceNumberUnwrapper can only wrap negative once.
   // rtc::TimestampWrapAroundHandler does not wrap around correctly.
   if constexpr (std::is_same<UnwrapperT, TimestampUnwrapper>() ||
-                std::is_same<UnwrapperT,
-                             UnwrapperHelper<TestSequence::Unwrapper>>() ||
                 std::is_same<UnwrapperT, rtc::TimestampWrapAroundHandler>()) {
     return;
   }
@@ -166,7 +141,6 @@ using UnwrapperTypes = ::testing::Types<
     FixtureParams<rtc::TimestampWrapAroundHandler>,
     FixtureParams<TimestampUnwrapper>,
     FixtureParams<RtpTimestampUnwrapper>,
-    FixtureParams<UnwrapperHelper<TestSequence::Unwrapper>>,
     // SeqNumUnwrapper supports arbitrary limits.
     FixtureParams<SeqNumUnwrapper<uint32_t, k15BitMax + 1>, k15BitMax>>;
 
@@ -185,9 +159,6 @@ class TestNames {
     if constexpr (std::is_same<typename T::Unwrapper,
                                SeqNumUnwrapper<uint32_t, k15BitMax + 1>>())
       return "SeqNumUnwrapper15bit";
-    if constexpr (std::is_same<typename T::Unwrapper,
-                               UnwrapperHelper<TestSequence::Unwrapper>>())
-      return "UnwrappedSequenceNumber";
   }
 };
 
