@@ -10,7 +10,6 @@ extern crate byteorder;
 #[macro_use]
 extern crate core_foundation;
 extern crate env_logger;
-#[cfg(target_os = "macos")]
 #[macro_use]
 extern crate lazy_static;
 #[cfg(target_os = "macos")]
@@ -26,7 +25,6 @@ extern crate winapi;
 
 use pkcs11_bindings::*;
 use rsclientcerts::manager::{ManagerProxy, SlotType};
-use std::ffi::CStr;
 use std::sync::Mutex;
 use std::thread;
 
@@ -40,29 +38,26 @@ use crate::backend_macos::Backend;
 #[cfg(target_os = "windows")]
 use crate::backend_windows::Backend;
 
-struct ModuleState {
-    manager_proxy: ManagerProxy,
-    mechanisms: Vec<CK_MECHANISM_TYPE>,
+lazy_static! {
+    /// The singleton `ManagerProxy` that handles state with respect to PKCS #11. Only one thread
+    /// may use it at a time, but there is no restriction on which threads may use it. However, as
+    /// OS APIs being used are not necessarily thread-safe (e.g. they may be using
+    /// thread-local-storage), the `ManagerProxy` forwards calls from any thread to a single thread
+    /// where the real `Manager` does the actual work.
+    static ref MANAGER_PROXY: Mutex<Option<ManagerProxy>> = Mutex::new(None);
 }
-
-/// The singleton `ModuleState` that handles state with respect to PKCS #11. Only one thread
-/// may use it at a time, but there is no restriction on which threads may use it. However, as
-/// OS APIs being used are not necessarily thread-safe (e.g. they may be using
-/// thread-local-storage), the `ManagerProxy` of the `ModuleState` forwards calls from any
-/// thread to a single thread where the real `Manager` does the actual work.
-static MODULE_STATE: Mutex<Option<ModuleState>> = Mutex::new(None);
 
 // Obtaining a handle on the manager proxy is a two-step process. First the mutex must be locked,
 // which (if successful), results in a mutex guard object. We must then get a mutable refence to the
 // underlying manager proxy (if set - otherwise we return an error). This can't happen all in one
 // macro without dropping a reference that needs to live long enough for this to be safe. In
 // practice, this looks like:
-//   let mut module_state_guard = try_to_get_module_state_guard!();
-//   let manager = module_state_guard_to_manager!(module_state_guard);
-macro_rules! try_to_get_module_state_guard {
+//   let mut manager_guard = try_to_get_manager_guard!();
+//   let manager = manager_guard_to_manager!(manager_guard);
+macro_rules! try_to_get_manager_guard {
     () => {
-        match MODULE_STATE.lock() {
-            Ok(maybe_module_state) => maybe_module_state,
+        match MANAGER_PROXY.lock() {
+            Ok(maybe_manager_proxy) => maybe_manager_proxy,
             Err(poison_error) => {
                 log_with_thread_id!(
                     error,
@@ -75,24 +70,12 @@ macro_rules! try_to_get_module_state_guard {
     };
 }
 
-macro_rules! module_state_guard_to_manager {
-    ($module_state_guard:ident) => {
-        match $module_state_guard.as_mut() {
-            Some(module_state) => &mut module_state.manager_proxy,
+macro_rules! manager_guard_to_manager {
+    ($manager_guard:ident) => {
+        match $manager_guard.as_mut() {
+            Some(manager_proxy) => manager_proxy,
             None => {
-                log_with_thread_id!(error, "module state expected to be set, but it is not");
-                return CKR_DEVICE_ERROR;
-            }
-        }
-    };
-}
-
-macro_rules! module_state_guard_to_mechanisms {
-    ($module_state_guard:ident) => {
-        match $module_state_guard.as_ref() {
-            Some(module_state) => &module_state.mechanisms,
-            None => {
-                log_with_thread_id!(error, "module state expected to be set, but it is not");
+                log_with_thread_id!(error, "manager expected to be set, but it is not");
                 return CKR_DEVICE_ERROR;
             }
         }
@@ -108,29 +91,11 @@ macro_rules! log_with_thread_id {
 
 /// This gets called to initialize the module. For this implementation, this consists of
 /// instantiating the `ManagerProxy`.
-extern "C" fn C_Initialize(pInitArgs: CK_VOID_PTR) -> CK_RV {
+extern "C" fn C_Initialize(_pInitArgs: CK_VOID_PTR) -> CK_RV {
     // This will fail if this has already been called, but this isn't a problem because either way,
     // logging has been initialized.
     let _ = env_logger::try_init();
-
-    if pInitArgs.is_null() {
-        return CKR_DEVICE_ERROR;
-    }
-    let init_args_ptr = unsafe { (*(pInitArgs as CK_C_INITIALIZE_ARGS_PTR)).pReserved };
-    if init_args_ptr.is_null() {
-        return CKR_DEVICE_ERROR;
-    }
-    let init_args_cstr = unsafe { CStr::from_ptr(init_args_ptr as *mut std::os::raw::c_char) };
-    let init_args = match init_args_cstr.to_str() {
-        Ok(init_args) => init_args,
-        Err(_) => return CKR_DEVICE_ERROR,
-    };
-    let mechanisms = if init_args == "RSA-PSS" {
-        vec![CKM_ECDSA, CKM_RSA_PKCS, CKM_RSA_PKCS_PSS]
-    } else {
-        vec![CKM_ECDSA, CKM_RSA_PKCS]
-    };
-    let mut module_state_guard = try_to_get_module_state_guard!();
+    let mut manager_guard = try_to_get_manager_guard!();
     let manager_proxy = match ManagerProxy::new(Backend {}) {
         Ok(p) => p,
         Err(e) => {
@@ -138,21 +103,15 @@ extern "C" fn C_Initialize(pInitArgs: CK_VOID_PTR) -> CK_RV {
             return CKR_DEVICE_ERROR;
         }
     };
-    match module_state_guard.replace(ModuleState {
-        manager_proxy,
-        mechanisms,
-    }) {
-        Some(_unexpected_previous_module_state) => {
+    match manager_guard.replace(manager_proxy) {
+        Some(_unexpected_previous_manager) => {
             #[cfg(target_os = "macos")]
             {
-                log_with_thread_id!(info, "C_Initialize: module state previously set (this is expected on macOS - replacing it)");
+                log_with_thread_id!(info, "C_Initialize: manager previously set (this is expected on macOS - replacing it)");
             }
             #[cfg(target_os = "windows")]
             {
-                log_with_thread_id!(
-                    warn,
-                    "C_Initialize: module state unexpectedly previously set (replacing it)"
-                );
+                log_with_thread_id!(warn, "C_Initialize: manager unexpectedly previously set (bravely continuing by replacing it)");
             }
         }
         None => {}
@@ -162,8 +121,8 @@ extern "C" fn C_Initialize(pInitArgs: CK_VOID_PTR) -> CK_RV {
 }
 
 extern "C" fn C_Finalize(_pReserved: CK_VOID_PTR) -> CK_RV {
-    let mut module_state_guard = try_to_get_module_state_guard!();
-    let manager = module_state_guard_to_manager!(module_state_guard);
+    let mut manager_guard = try_to_get_manager_guard!();
+    let manager = manager_guard_to_manager!(manager_guard);
     match manager.stop() {
         Ok(()) => {
             log_with_thread_id!(debug, "C_Finalize: CKR_OK");
@@ -201,9 +160,12 @@ extern "C" fn C_GetInfo(pInfo: CK_INFO_PTR) -> CK_RV {
     CKR_OK
 }
 
-/// This module has one slot.
-const SLOT_COUNT: CK_ULONG = 1;
-const SLOT_ID: CK_SLOT_ID = 1;
+/// This module has two slots.
+const SLOT_COUNT: CK_ULONG = 2;
+/// The slot with ID 1 supports modern mechanisms like RSA-PSS.
+const SLOT_ID_MODERN: CK_SLOT_ID = 1;
+/// The slot with ID 2 only supports legacy mechanisms.
+const SLOT_ID_LEGACY: CK_SLOT_ID = 2;
 
 /// This gets called twice: once with a null `pSlotList` to get the number of slots (returned via
 /// `pulCount`) and a second time to get the ID for each slot.
@@ -222,7 +184,8 @@ extern "C" fn C_GetSlotList(
             return CKR_BUFFER_TOO_SMALL;
         }
         unsafe {
-            *pSlotList = SLOT_ID;
+            *pSlotList = SLOT_ID_MODERN;
+            *pSlotList.offset(1) = SLOT_ID_LEGACY;
         }
     };
     unsafe {
@@ -232,18 +195,25 @@ extern "C" fn C_GetSlotList(
     CKR_OK
 }
 
-const SLOT_DESCRIPTION_BYTES: &[u8; 64] =
-    b"OS Client Cert Slot                                             ";
+const SLOT_DESCRIPTION_MODERN_BYTES: &[u8; 64] =
+    b"OS Client Cert Slot (Modern)                                    ";
+const SLOT_DESCRIPTION_LEGACY_BYTES: &[u8; 64] =
+    b"OS Client Cert Slot (Legacy)                                    ";
 
-/// This gets called to obtain information about slots. In this implementation, the token is
-/// always present in the singular slot.
+/// This gets called to obtain information about slots. In this implementation, the tokens are
+/// always present in the slots.
 extern "C" fn C_GetSlotInfo(slotID: CK_SLOT_ID, pInfo: CK_SLOT_INFO_PTR) -> CK_RV {
-    if slotID != SLOT_ID || pInfo.is_null() {
+    if (slotID != SLOT_ID_MODERN && slotID != SLOT_ID_LEGACY) || pInfo.is_null() {
         log_with_thread_id!(error, "C_GetSlotInfo: CKR_ARGUMENTS_BAD");
         return CKR_ARGUMENTS_BAD;
     }
+    let description = if slotID == SLOT_ID_MODERN {
+        SLOT_DESCRIPTION_MODERN_BYTES
+    } else {
+        SLOT_DESCRIPTION_LEGACY_BYTES
+    };
     let slot_info = CK_SLOT_INFO {
-        slotDescription: *SLOT_DESCRIPTION_BYTES,
+        slotDescription: *description,
         manufacturerID: *MANUFACTURER_ID_BYTES,
         flags: CKF_TOKEN_PRESENT,
         hardwareVersion: CK_VERSION::default(),
@@ -256,19 +226,25 @@ extern "C" fn C_GetSlotInfo(slotID: CK_SLOT_ID, pInfo: CK_SLOT_INFO_PTR) -> CK_R
     CKR_OK
 }
 
-const TOKEN_LABEL_BYTES: &[u8; 32] = b"OS Client Cert Token            ";
+const TOKEN_LABEL_MODERN_BYTES: &[u8; 32] = b"OS Client Cert Token (Modern)   ";
+const TOKEN_LABEL_LEGACY_BYTES: &[u8; 32] = b"OS Client Cert Token (Legacy)   ";
 const TOKEN_MODEL_BYTES: &[u8; 16] = b"osclientcerts   ";
 const TOKEN_SERIAL_NUMBER_BYTES: &[u8; 16] = b"0000000000000000";
 
-/// This gets called to obtain some information about tokens. This implementation has one slot,
-/// so it has one token. This information is primarily for display purposes.
+/// This gets called to obtain some information about tokens. This implementation has two slots,
+/// so it has two tokens. This information is primarily for display purposes.
 extern "C" fn C_GetTokenInfo(slotID: CK_SLOT_ID, pInfo: CK_TOKEN_INFO_PTR) -> CK_RV {
-    if slotID != SLOT_ID || pInfo.is_null() {
+    if (slotID != SLOT_ID_MODERN && slotID != SLOT_ID_LEGACY) || pInfo.is_null() {
         log_with_thread_id!(error, "C_GetTokenInfo: CKR_ARGUMENTS_BAD");
         return CKR_ARGUMENTS_BAD;
     }
     let mut token_info = CK_TOKEN_INFO::default();
-    token_info.label = *TOKEN_LABEL_BYTES;
+    let label = if slotID == SLOT_ID_MODERN {
+        TOKEN_LABEL_MODERN_BYTES
+    } else {
+        TOKEN_LABEL_LEGACY_BYTES
+    };
+    token_info.label = *label;
     token_info.manufacturerID = *MANUFACTURER_ID_BYTES;
     token_info.model = *TOKEN_MODEL_BYTES;
     token_info.serialNumber = *TOKEN_SERIAL_NUMBER_BYTES;
@@ -279,20 +255,22 @@ extern "C" fn C_GetTokenInfo(slotID: CK_SLOT_ID, pInfo: CK_TOKEN_INFO_PTR) -> CK
     CKR_OK
 }
 
-/// This gets called to determine what mechanisms a slot supports. The singular slot supports
-/// ECDSA and RSA PKCS1. Depending on the configuration the module was loaded with, it may also
-/// support RSA PSS.
+/// This gets called to determine what mechanisms a slot supports. The modern slot supports ECDSA,
+/// RSA PKCS, and RSA PSS. The legacy slot only supports RSA PKCS.
 extern "C" fn C_GetMechanismList(
     slotID: CK_SLOT_ID,
     pMechanismList: CK_MECHANISM_TYPE_PTR,
     pulCount: CK_ULONG_PTR,
 ) -> CK_RV {
-    if slotID != SLOT_ID || pulCount.is_null() {
+    if (slotID != SLOT_ID_MODERN && slotID != SLOT_ID_LEGACY) || pulCount.is_null() {
         log_with_thread_id!(error, "C_GetMechanismList: CKR_ARGUMENTS_BAD");
         return CKR_ARGUMENTS_BAD;
     }
-    let module_state_guard = try_to_get_module_state_guard!();
-    let mechanisms = module_state_guard_to_mechanisms!(module_state_guard);
+    let mechanisms = if slotID == SLOT_ID_MODERN {
+        vec![CKM_ECDSA, CKM_RSA_PKCS, CKM_RSA_PKCS_PSS]
+    } else {
+        vec![CKM_RSA_PKCS]
+    };
     if !pMechanismList.is_null() {
         if unsafe { *pulCount as usize } < mechanisms.len() {
             log_with_thread_id!(error, "C_GetMechanismList: CKR_ARGUMENTS_BAD");
@@ -359,16 +337,18 @@ extern "C" fn C_OpenSession(
     _Notify: CK_NOTIFY,
     phSession: CK_SESSION_HANDLE_PTR,
 ) -> CK_RV {
-    if slotID != SLOT_ID || phSession.is_null() {
+    if (slotID != SLOT_ID_MODERN && slotID != SLOT_ID_LEGACY) || phSession.is_null() {
         log_with_thread_id!(error, "C_OpenSession: CKR_ARGUMENTS_BAD");
         return CKR_ARGUMENTS_BAD;
     }
-    let mut module_state_guard = try_to_get_module_state_guard!();
-    let manager = module_state_guard_to_manager!(module_state_guard);
-    // The "modern"/"legacy" slot distinction still exists in ipcclientcerts,
-    // which shares some library code with this module, to allow for a more
-    // nuanced notion of whether or not e.g. RSA-PSS is supported.
-    let session_handle = match manager.open_session(SlotType::Modern) {
+    let mut manager_guard = try_to_get_manager_guard!();
+    let manager = manager_guard_to_manager!(manager_guard);
+    let slot_type = if slotID == SLOT_ID_MODERN {
+        SlotType::Modern
+    } else {
+        SlotType::Legacy
+    };
+    let session_handle = match manager.open_session(slot_type) {
         Ok(session_handle) => session_handle,
         Err(e) => {
             log_with_thread_id!(error, "C_OpenSession: open_session failed: {}", e);
@@ -384,8 +364,8 @@ extern "C" fn C_OpenSession(
 
 /// This gets called to close a session. This is handled by the `ManagerProxy`.
 extern "C" fn C_CloseSession(hSession: CK_SESSION_HANDLE) -> CK_RV {
-    let mut module_state_guard = try_to_get_module_state_guard!();
-    let manager = module_state_guard_to_manager!(module_state_guard);
+    let mut manager_guard = try_to_get_manager_guard!();
+    let manager = manager_guard_to_manager!(manager_guard);
     if manager.close_session(hSession).is_err() {
         log_with_thread_id!(error, "C_CloseSession: CKR_SESSION_HANDLE_INVALID");
         return CKR_SESSION_HANDLE_INVALID;
@@ -396,13 +376,18 @@ extern "C" fn C_CloseSession(hSession: CK_SESSION_HANDLE) -> CK_RV {
 
 /// This gets called to close all open sessions at once. This is handled by the `ManagerProxy`.
 extern "C" fn C_CloseAllSessions(slotID: CK_SLOT_ID) -> CK_RV {
-    if slotID != SLOT_ID {
+    if slotID != SLOT_ID_MODERN && slotID != SLOT_ID_LEGACY {
         log_with_thread_id!(error, "C_CloseAllSessions: CKR_ARGUMENTS_BAD");
         return CKR_ARGUMENTS_BAD;
     }
-    let mut module_state_guard = try_to_get_module_state_guard!();
-    let manager = module_state_guard_to_manager!(module_state_guard);
-    match manager.close_all_sessions(SlotType::Modern) {
+    let mut manager_guard = try_to_get_manager_guard!();
+    let manager = manager_guard_to_manager!(manager_guard);
+    let slot_type = if slotID == SLOT_ID_MODERN {
+        SlotType::Modern
+    } else {
+        SlotType::Legacy
+    };
+    match manager.close_all_sessions(slot_type) {
         Ok(()) => {
             log_with_thread_id!(debug, "C_CloseAllSessions: CKR_OK");
             CKR_OK
@@ -517,8 +502,8 @@ extern "C" fn C_GetAttributeValue(
         let attr = unsafe { &*pTemplate.add(i) };
         attr_types.push(attr.type_);
     }
-    let mut module_state_guard = try_to_get_module_state_guard!();
-    let manager = module_state_guard_to_manager!(module_state_guard);
+    let mut manager_guard = try_to_get_manager_guard!();
+    let manager = manager_guard_to_manager!(manager_guard);
     let values = match manager.get_attributes(hObject, attr_types) {
         Ok(values) => values,
         Err(e) => {
@@ -616,8 +601,8 @@ extern "C" fn C_FindObjectsInit(
         };
         attrs.push((attr.type_, slice.to_owned()));
     }
-    let mut module_state_guard = try_to_get_module_state_guard!();
-    let manager = module_state_guard_to_manager!(module_state_guard);
+    let mut manager_guard = try_to_get_manager_guard!();
+    let manager = manager_guard_to_manager!(manager_guard);
     match manager.start_search(hSession, attrs) {
         Ok(()) => {}
         Err(e) => {
@@ -642,8 +627,8 @@ extern "C" fn C_FindObjects(
         log_with_thread_id!(error, "C_FindObjects: CKR_ARGUMENTS_BAD");
         return CKR_ARGUMENTS_BAD;
     }
-    let mut module_state_guard = try_to_get_module_state_guard!();
-    let manager = module_state_guard_to_manager!(module_state_guard);
+    let mut manager_guard = try_to_get_manager_guard!();
+    let manager = manager_guard_to_manager!(manager_guard);
     let handles = match manager.search(hSession, ulMaxObjectCount as usize) {
         Ok(handles) => handles,
         Err(e) => {
@@ -673,8 +658,8 @@ extern "C" fn C_FindObjects(
 /// This gets called after `C_FindObjectsInit` and `C_FindObjects` to finish a search. The module
 /// tells the `ManagerProxy` to clear the search.
 extern "C" fn C_FindObjectsFinal(hSession: CK_SESSION_HANDLE) -> CK_RV {
-    let mut module_state_guard = try_to_get_module_state_guard!();
-    let manager = module_state_guard_to_manager!(module_state_guard);
+    let mut manager_guard = try_to_get_manager_guard!();
+    let manager = manager_guard_to_manager!(manager_guard);
     // It would be an error if there were no search for this session, but we can be permissive here.
     match manager.clear_search(hSession) {
         Ok(()) => {
@@ -835,8 +820,8 @@ extern "C" fn C_SignInit(
     } else {
         None
     };
-    let mut module_state_guard = try_to_get_module_state_guard!();
-    let manager = module_state_guard_to_manager!(module_state_guard);
+    let mut manager_guard = try_to_get_manager_guard!();
+    let manager = manager_guard_to_manager!(manager_guard);
     match manager.start_sign(hSession, hKey, mechanism_params) {
         Ok(()) => {}
         Err(e) => {
@@ -864,21 +849,20 @@ extern "C" fn C_Sign(
     }
     let data = unsafe { std::slice::from_raw_parts(pData, ulDataLen as usize) };
     if pSignature.is_null() {
-        let mut module_state_guard = try_to_get_module_state_guard!();
-        let manager = module_state_guard_to_manager!(module_state_guard);
+        let mut manager_guard = try_to_get_manager_guard!();
+        let manager = manager_guard_to_manager!(manager_guard);
         match manager.get_signature_length(hSession, data.to_vec()) {
             Ok(signature_length) => unsafe {
                 *pulSignatureLen = signature_length as CK_ULONG;
             },
             Err(e) => {
                 log_with_thread_id!(error, "C_Sign: get_signature_length failed: {}", e);
-                log_with_thread_id!(error, "C_Sign: try setting security.osclientcerts.assume_rsa_pss_support to false and restarting");
                 return CKR_GENERAL_ERROR;
             }
         }
     } else {
-        let mut module_state_guard = try_to_get_module_state_guard!();
-        let manager = module_state_guard_to_manager!(module_state_guard);
+        let mut manager_guard = try_to_get_manager_guard!();
+        let manager = manager_guard_to_manager!(manager_guard);
         match manager.sign(hSession, data.to_vec()) {
             Ok(signature) => {
                 let signature_capacity = unsafe { *pulSignatureLen } as usize;
@@ -894,7 +878,6 @@ extern "C" fn C_Sign(
             }
             Err(e) => {
                 log_with_thread_id!(error, "C_Sign: sign failed: {}", e);
-                log_with_thread_id!(error, "C_Sign: try setting security.osclientcerts.assume_rsa_pss_support to false and restarting");
                 return CKR_GENERAL_ERROR;
             }
         }
