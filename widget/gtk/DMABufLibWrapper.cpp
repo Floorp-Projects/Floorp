@@ -180,6 +180,7 @@ void nsDMABufDevice::Configure() {
     if (mDRMFd < 0) {
       LOGDMABUF(("Failed to open drm render node %s error %s\n",
                  drm_render_node.get(), strerror(errno)));
+      mFailureId = "FEATURE_FAILURE_NO_DRM_DEVICE";
       return;
     }
   } else {
