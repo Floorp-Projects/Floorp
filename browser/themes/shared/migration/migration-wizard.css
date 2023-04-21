@@ -52,7 +52,12 @@ div[name="page-loading"] > .buttons > button {
 
 .deemphasized-text {
   font-size: 0.84em;
-  color: var(--in-content-deemphasized-text);
+}
+
+@media not (prefers-contrast) {
+  .deemphasized-text {
+    color: var(--in-content-deemphasized-text);
+  }
 }
 
 fieldset {
