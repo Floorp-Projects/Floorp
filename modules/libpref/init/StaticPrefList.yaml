@@ -13847,6 +13847,17 @@
   value: true
   mirror: always
 
+# If true, assume tokens accessed via osclientcerts implement RSA-PSS. If a
+# given token does not support RSA-PSS, users may see the error
+# 'SEC_ERROR_PKCS11_GENERAL_ERROR' if a server indicates it will accept an
+# RSA-PSS signature in the client's certificate verify message.
+# Setting this to false may allow such connections to succeed, if the server
+# also accepts RSA-PKCS1 signatures.
+- name: security.osclientcerts.assume_rsa_pss_support
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 - name: security.pki.cert_short_lifetime_in_days
   type: RelaxedAtomicUint32
   value: 10
