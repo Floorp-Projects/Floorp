@@ -139,10 +139,7 @@ bool nsDMABufDevice::IsEnabled(nsACString& aFailureId) {
   return mDRMFd != -1;
 }
 
-nsDMABufDevice::nsDMABufDevice()
-    : mDRMFd(-1), mGbmDevice(nullptr), mInitialized(false) {
-  Configure();
-}
+nsDMABufDevice::nsDMABufDevice() { Configure(); }
 
 nsDMABufDevice::~nsDMABufDevice() {
   if (mGbmDevice) {
