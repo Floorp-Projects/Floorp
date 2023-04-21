@@ -603,8 +603,14 @@ MOZ_CXX11
 
 AC_LANG_C
 
-STL_FLAGS="-I${DIST}/stl_wrappers"
-WRAP_STL_INCLUDES=1
+case "${OS_TARGET}" in
+Darwin)
+  ;;
+*)
+  STL_FLAGS="-I${DIST}/stl_wrappers"
+  WRAP_STL_INCLUDES=1
+  ;;
+esac
 
 if test "$MOZ_BUILD_APP" = "tools/crashreporter/injector"; then
     WRAP_STL_INCLUDES=
