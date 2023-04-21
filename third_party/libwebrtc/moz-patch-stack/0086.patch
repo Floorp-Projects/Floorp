@@ -14,10 +14,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/88b3cc6bbece7c53d
  6 files changed, 38 insertions(+), 3 deletions(-)
 
 diff --git a/BUILD.gn b/BUILD.gn
-index aba72cd52a..1ddf083173 100644
+index 43b0ee2b99..281d8fa950 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
-@@ -548,6 +548,15 @@ if (!build_with_chromium) {
+@@ -550,6 +550,15 @@ if (!build_with_chromium) {
          "api/video:video_rtp_headers",
          "test:rtp_test_utils",
        ]
