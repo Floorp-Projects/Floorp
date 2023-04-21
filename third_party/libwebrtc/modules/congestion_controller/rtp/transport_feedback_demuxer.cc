@@ -66,8 +66,7 @@ void TransportFeedbackDemuxer::OnTransportFeedback(
 
   std::vector<StreamFeedbackObserver::StreamPacketInfo> stream_feedbacks;
   for (const auto& packet : feedback.GetAllPackets()) {
-    int64_t seq_num =
-        seq_num_unwrapper_.UnwrapWithoutUpdate(packet.sequence_number());
+    int64_t seq_num = seq_num_unwrapper_.PeekUnwrap(packet.sequence_number());
     auto it = history_.find(seq_num);
     if (it != history_.end()) {
       auto packet_info = it->second;
