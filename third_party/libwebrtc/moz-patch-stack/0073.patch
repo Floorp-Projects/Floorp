@@ -1,27 +1,56 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Wed, 28 Sep 2022 14:19:00 -0500
-Subject: Bug 1790097 - (fix-e66b83f8ad) restore deleted include file for
- std::towupper
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Mon, 5 Sep 2022 13:56:00 +0000
+Subject: Bug 1786502 - Lock access to DeviceInfo devicechange callbacks.
+ r=webrtc-reviewers,jib
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2789837da50ca0d6bce9a06bd036bdd049128f20
+Differential Revision: https://phabricator.services.mozilla.com/D155365
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e826dfadfe1264c59d9b13e3c17d6f75a40f5c33
 ---
- .../desktop_capture/win/full_screen_win_application_handler.cc | 3 +++
- 1 file changed, 3 insertions(+)
+ modules/video_capture/video_capture.h | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/modules/desktop_capture/win/full_screen_win_application_handler.cc b/modules/desktop_capture/win/full_screen_win_application_handler.cc
-index f7047dba06..c6143ef785 100644
---- a/modules/desktop_capture/win/full_screen_win_application_handler.cc
-+++ b/modules/desktop_capture/win/full_screen_win_application_handler.cc
-@@ -11,6 +11,9 @@
- #include "modules/desktop_capture/win/full_screen_win_application_handler.h"
+diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
+index 258bc7f810..ad1b341b62 100644
+--- a/modules/video_capture/video_capture.h
++++ b/modules/video_capture/video_capture.h
+@@ -16,6 +16,8 @@
+ #include "modules/desktop_capture/desktop_capture_types.h"
+ #include "modules/video_capture/raw_video_sink_interface.h"
+ #include "modules/video_capture/video_capture_defines.h"
++#include "rtc_base/synchronization/mutex.h"
++#include "rtc_base/thread_annotations.h"
+ #include <set>
  
- #include <algorithm>
-+#if defined(WEBRTC_MOZILLA_BUILD)
-+#include <cwctype>
-+#endif
- #include <memory>
- #include <string>
- #include <vector>
+ #if defined(ANDROID)
+@@ -44,15 +46,18 @@ class VideoCaptureModule : public rtc::RefCountInterface {
+     virtual uint32_t NumberOfDevices() = 0;
+     virtual int32_t Refresh() = 0;
+     virtual void DeviceChange() {
++      MutexLock lock(&_inputCallbacksMutex);
+       for (auto inputCallBack : _inputCallBacks) {
+         inputCallBack->OnDeviceChange();
+       }
+     }
+     virtual void RegisterVideoInputFeedBack(VideoInputFeedBack* callBack) {
++      MutexLock lock(&_inputCallbacksMutex);
+       _inputCallBacks.insert(callBack);
+     }
+ 
+     virtual void DeRegisterVideoInputFeedBack(VideoInputFeedBack* callBack) {
++      MutexLock lock(&_inputCallbacksMutex);
+       auto it = _inputCallBacks.find(callBack);
+       if (it != _inputCallBacks.end()) {
+         _inputCallBacks.erase(it);
+@@ -106,7 +111,8 @@ class VideoCaptureModule : public rtc::RefCountInterface {
+ 
+     virtual ~DeviceInfo() {}
+    private:
+-    std::set<VideoInputFeedBack*> _inputCallBacks;
++    Mutex _inputCallbacksMutex;
++    std::set<VideoInputFeedBack*> _inputCallBacks RTC_GUARDED_BY(_inputCallbacksMutex);
+   };
+ 
+   //   Register capture data callback
 -- 
 2.34.1
 
