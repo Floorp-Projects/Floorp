@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "wgpu-types"
-version = "0.15.0"
+version = "0.16.0"
 authors = ["wgpu developers"]
 description = "WebGPU types"
 homepage = "https://wgpu.rs/"
@@ -44,7 +44,7 @@ features = ["serde_derive"]
 optional = true
 
 [dev-dependencies]
-serde_json = "1.0.95"
+serde_json = "1.0.96"
 
 [dev-dependencies.serde]
 version = "1"

@@ -22,7 +22,7 @@ use hal::{CommandEncoder as _, Device as _};
 use parking_lot::{Mutex, MutexGuard};
 use smallvec::SmallVec;
 use thiserror::Error;
-use wgt::{BufferAddress, TextureFormat, TextureViewDimension};
+use wgt::{BufferAddress, TextureFormat, TextureSampleType, TextureViewDimension};
 
 use std::{borrow::Cow, iter, mem, num::NonZeroU32, ops::Range, ptr};
 
@@ -880,7 +880,10 @@ impl<A: HalApi> Device<A> {
         let missing_allowed_usages = desc.usage - format_features.allowed_usages;
         if !missing_allowed_usages.is_empty() {
             // detect downlevel incompatibilities
-            let wgpu_allowed_usages = desc.format.guaranteed_format_features().allowed_usages;
+            let wgpu_allowed_usages = desc
+                .format
+                .guaranteed_format_features(self.features)
+                .allowed_usages;
             let wgpu_missing_usages = desc.usage - wgpu_allowed_usages;
             return Err(CreateTextureError::InvalidFormatUsages(
                 missing_allowed_usages,
@@ -1694,6 +1697,16 @@ impl<A: HalApi> Device<A> {
                     Some(wgt::Features::TEXTURE_BINDING_ARRAY),
                     WritableStorage::No,
                 ),
+                Bt::Texture {
+                    multisampled: true,
+                    sample_type: TextureSampleType::Float { filterable: true },
+                    ..
+                } => {
+                    return Err(binding_model::CreateBindGroupLayoutError::Entry {
+                        binding: entry.binding,
+                        error: binding_model::BindGroupLayoutEntryError::SampleTypeFloatFilterableBindingMultisampled,
+                    });
+                }
                 Bt::Texture { .. } => (
                     Some(wgt::Features::TEXTURE_BINDING_ARRAY),
                     WritableStorage::No,
@@ -3242,7 +3255,7 @@ impl<A: HalApi> Device<A> {
         if using_device_features || downlevel {
             Ok(adapter.get_texture_format_features(format))
         } else {
-            Ok(format.guaranteed_format_features())
+            Ok(format.guaranteed_format_features(self.features))
         }
     }
 

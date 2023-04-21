@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.60"
 name = "wgpu-hal"
-version = "0.15.1"
+version = "0.16.0"
 authors = ["wgpu developers"]
 description = "WebGPU hardware abstraction layer"
 homepage = "https://wgpu.rs/"
@@ -62,9 +62,9 @@ version = "0.12.1"
 optional = true
 
 [dependencies.naga]
-version = "0.11.0"
+version = "0.12.0"
 git = "https://github.com/gfx-rs/naga"
-rev = "f59668ccfaf7bdb3a7e43d84363a21c77357b2fe"
+rev = "b99d58ea435090e561377949f428bce2c18451bb"
 features = ["clone"]
 
 [dependencies.profiling]
@@ -72,7 +72,7 @@ version = "1"
 default-features = false
 
 [dependencies.wgt]
-version = "0.15"
+version = "0.16"
 path = "../wgpu-types"
 package = "wgpu-types"
 
@@ -81,9 +81,9 @@ env_logger = "0.10"
 winit = "0.27.1"
 
 [dev-dependencies.naga]
-version = "0.11.0"
+version = "0.12.0"
 git = "https://github.com/gfx-rs/naga"
-rev = "f59668ccfaf7bdb3a7e43d84363a21c77357b2fe"
+rev = "b99d58ea435090e561377949f428bce2c18451bb"
 features = ["wgsl-in"]
 
 [features]
