@@ -34,11 +34,14 @@ class RtpPacket {
   // stored.
   RtpPacket();
   explicit RtpPacket(const ExtensionManager* extensions);
-  RtpPacket(const RtpPacket&);
   RtpPacket(const ExtensionManager* extensions, size_t capacity);
-  ~RtpPacket();
 
-  RtpPacket& operator=(const RtpPacket&) = default;
+  RtpPacket(const RtpPacket&);
+  RtpPacket(RtpPacket&&);
+  RtpPacket& operator=(const RtpPacket&);
+  RtpPacket& operator=(RtpPacket&&);
+
+  ~RtpPacket();
 
   // Parse and copy given buffer into Packet.
   // Does not require extension map to be registered (map is only required to

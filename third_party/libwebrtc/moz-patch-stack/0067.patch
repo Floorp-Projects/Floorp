@@ -84,10 +84,10 @@ index 89c73955a2..4b4984bf6d 100644
  // Base extension class for RTP header extensions which are strings.
  // Subclasses must defined kId and kUri static constexpr members.
 diff --git a/modules/rtp_rtcp/source/rtp_packet.cc b/modules/rtp_rtcp/source/rtp_packet.cc
-index 252b54377d..c327023019 100644
+index 9495841984..fd2f5c5ae8 100644
 --- a/modules/rtp_rtcp/source/rtp_packet.cc
 +++ b/modules/rtp_rtcp/source/rtp_packet.cc
-@@ -185,7 +185,9 @@ void RtpPacket::ZeroMutableExtensions() {
+@@ -187,7 +187,9 @@ void RtpPacket::ZeroMutableExtensions() {
          break;
        }
        case RTPExtensionType::kRtpExtensionAudioLevel:
@@ -97,7 +97,7 @@ index 252b54377d..c327023019 100644
        case RTPExtensionType::kRtpExtensionAbsoluteCaptureTime:
        case RTPExtensionType::kRtpExtensionColorSpace:
        case RTPExtensionType::kRtpExtensionGenericFrameDescriptor:
-@@ -203,10 +205,12 @@ void RtpPacket::ZeroMutableExtensions() {
+@@ -205,10 +207,12 @@ void RtpPacket::ZeroMutableExtensions() {
          // Non-mutable extension. Don't change it.
          break;
        }
