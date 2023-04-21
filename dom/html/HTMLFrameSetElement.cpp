@@ -97,9 +97,8 @@ nsresult HTMLFrameSetElement::GetColSpec(int32_t* aNumValues,
   *aSpecs = nullptr;
 
   if (!mColSpecs) {
-    if (const nsAttrValue* value = GetParsedAttr(nsGkAtoms::rows)) {
-      nsresult rv = ParseRowCol(*value, mNumCols, &mColSpecs);
-      NS_ENSURE_SUCCESS(rv, rv);
+    if (const nsAttrValue* value = GetParsedAttr(nsGkAtoms::cols)) {
+      MOZ_TRY(ParseRowCol(*value, mNumCols, &mColSpecs));
     }
 
     if (!mColSpecs) {  // we may not have had an attr or had an empty attr
