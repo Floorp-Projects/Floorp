@@ -78,6 +78,7 @@
 #include "rtc_base/virtual_socket_server.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
+#include "test/scoped_key_value_config.h"
 
 #ifdef WEBRTC_ANDROID
 #include "pc/test/android_test_initializer.h"
@@ -681,8 +682,6 @@ class PeerConnectionInterfaceBaseTest : public ::testing::Test {
         webrtc::CreateBuiltinVideoDecoderFactory(), nullptr /* audio_mixer */,
         nullptr /* audio_processing */);
     ASSERT_TRUE(pc_factory_);
-    pc_factory_for_test_ =
-        PeerConnectionFactoryForTest::CreatePeerConnectionFactoryForTest();
   }
 
   void TearDown() override {
@@ -733,7 +732,8 @@ class PeerConnectionInterfaceBaseTest : public ::testing::Test {
     std::unique_ptr<cricket::FakePortAllocator> port_allocator(
         new cricket::FakePortAllocator(
             rtc::Thread::Current(),
-            std::make_unique<rtc::BasicPacketSocketFactory>(vss_.get())));
+            std::make_unique<rtc::BasicPacketSocketFactory>(vss_.get()),
+            &field_trials_));
     port_allocator_ = port_allocator.get();
     port_allocator_->SetIceTiebreaker(kTiebreakerDefault);
 
@@ -1258,13 +1258,13 @@ class PeerConnectionInterfaceBaseTest : public ::testing::Test {
 
   rtc::SocketServer* socket_server() const { return vss_.get(); }
 
+  webrtc::test::ScopedKeyValueConfig field_trials_;
   std::unique_ptr<rtc::VirtualSocketServer> vss_;
   rtc::AutoSocketServerThread main_;
   rtc::scoped_refptr<FakeAudioCaptureModule> fake_audio_capture_module_;
   cricket::FakePortAllocator* port_allocator_ = nullptr;
   FakeRTCCertificateGenerator* fake_certificate_generator_ = nullptr;
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> pc_factory_;
-  rtc::scoped_refptr<PeerConnectionFactoryForTest> pc_factory_for_test_;
   rtc::scoped_refptr<PeerConnectionInterface> pc_;
   MockPeerConnectionObserver observer_;
   rtc::scoped_refptr<StreamCollection> reference_collection_;
@@ -1367,8 +1367,8 @@ TEST_P(PeerConnectionInterfaceTest,
   std::unique_ptr<rtc::PacketSocketFactory> packet_socket_factory(
       new rtc::BasicPacketSocketFactory(socket_server()));
   std::unique_ptr<cricket::FakePortAllocator> port_allocator(
-      new cricket::FakePortAllocator(rtc::Thread::Current(),
-                                     packet_socket_factory.get()));
+      new cricket::FakePortAllocator(
+          rtc::Thread::Current(), packet_socket_factory.get(), &field_trials_));
   cricket::FakePortAllocator* raw_port_allocator = port_allocator.get();
 
   // Create RTCConfiguration with some network-related fields relevant to

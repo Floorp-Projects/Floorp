@@ -59,6 +59,7 @@
 #include "rtc_base/rtc_certificate_generator.h"
 #include "rtc_base/thread.h"
 #include "test/gtest.h"
+#include "test/scoped_key_value_config.h"
 #ifdef WEBRTC_ANDROID
 #include "pc/test/android_test_initializer.h"
 #endif
@@ -138,7 +139,8 @@ class PeerConnectionMediaBaseTest : public ::testing::Test {
 
     auto fake_port_allocator = std::make_unique<cricket::FakePortAllocator>(
         rtc::Thread::Current(),
-        std::make_unique<rtc::BasicPacketSocketFactory>(vss_.get()));
+        std::make_unique<rtc::BasicPacketSocketFactory>(vss_.get()),
+        &field_trials_);
     auto observer = std::make_unique<MockPeerConnectionObserver>();
     auto modified_config = config;
     modified_config.sdp_semantics = sdp_semantics_;
@@ -208,6 +210,7 @@ class PeerConnectionMediaBaseTest : public ::testing::Test {
     return sdp_semantics_ == SdpSemantics::kUnifiedPlan;
   }
 
+  webrtc::test::ScopedKeyValueConfig field_trials_;
   std::unique_ptr<rtc::VirtualSocketServer> vss_;
   rtc::AutoSocketServerThread main_;
   const SdpSemantics sdp_semantics_;

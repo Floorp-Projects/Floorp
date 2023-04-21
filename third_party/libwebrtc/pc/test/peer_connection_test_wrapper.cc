@@ -104,7 +104,8 @@ bool PeerConnectionTestWrapper::CreatePc(
   std::unique_ptr<cricket::PortAllocator> port_allocator(
       new cricket::FakePortAllocator(
           network_thread_,
-          std::make_unique<rtc::BasicPacketSocketFactory>(socket_server_)));
+          std::make_unique<rtc::BasicPacketSocketFactory>(socket_server_),
+          &field_trials_));
 
   RTC_DCHECK_RUN_ON(&pc_thread_checker_);
 
