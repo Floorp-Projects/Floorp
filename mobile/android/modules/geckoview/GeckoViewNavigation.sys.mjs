@@ -10,10 +10,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   GeckoViewUtils: "resource://gre/modules/GeckoViewUtils.sys.mjs",
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  LoadURIDelegate: "resource://gre/modules/LoadURIDelegate.jsm",
+  LoadURIDelegate: "resource://gre/modules/LoadURIDelegate.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "ReferrerInfo", () =>
