@@ -29,12 +29,6 @@ void MockAudioReceiveStream::SetRtpExtensions(
       std::move(extensions);
 }
 
-const std::vector<webrtc::RtpExtension>&
-MockAudioReceiveStream::GetRtpExtensions() const {
-  static std::vector<webrtc::RtpExtension> rtpExtensions;
-  return rtpExtensions;
-}
-
 webrtc::RtpHeaderExtensionMap MockAudioReceiveStream::GetRtpExtensionMap()
     const {
   return webrtc::RtpHeaderExtensionMap();
