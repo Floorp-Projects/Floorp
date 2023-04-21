@@ -46,6 +46,7 @@ export var SearchSERPTelemetryUtils = {
     AD_LINK: "ad_link",
     AD_SIDEBAR: "ad_sidebar",
     AD_SITELINK: "ad_sitelink",
+    INCONTENT_SEARCHBOX: "incontent_searchbox",
     NON_ADS_LINK: "non_ads_link",
     REFINED_SEARCH_BUTTONS: "refined_search_buttons",
     SHOPPING_TAB: "shopping_tab",
@@ -268,6 +269,10 @@ class TelemetryHandler {
       return newProvider;
     });
     this._contentHandler._searchProviderInfo = this._searchProviderInfo;
+  }
+
+  reportPageAction(info, browser) {
+    this._contentHandler._reportPageAction(info, browser);
   }
 
   reportPageWithAds(info, browser) {
@@ -1064,6 +1069,49 @@ class ContentHandler {
       }
       telemetryState.hrefToComponentMap = info.hrefToComponentMap;
       telemetryState.adImpressionsReported = true;
+    }
+  }
+
+  /**
+   * Records a page action from a SERP page. Normally, actions are tracked in
+   * parent process by observing network events but some actions are not
+   * possible to detect outside of subscribing to the child process.
+   *
+   * @param {object} info
+   *   The search provider infomation for the page.
+   * @param {string} info.type
+   *   The component type that was clicked on.
+   * @param {string} info.action
+   *   The action taken on the page.
+   * @param {object} browser
+   *   The browser associated with the page.
+   */
+  _reportPageAction(info, browser) {
+    let item = this._findBrowserItemForURL(info.url);
+    if (!item) {
+      return;
+    }
+    let impressionId = item.browserTelemetryStateMap.get(browser)?.impressionId;
+    if (info.type && impressionId) {
+      lazy.logConsole.debug(`Recorded page action:`, {
+        impressionId,
+        type: info.type,
+        action: info.action,
+      });
+      Glean.serp.engagement.record({
+        impression_id: impressionId,
+        action: info.action,
+        target: info.type,
+      });
+      impressionIdsWithoutEngagementsSet.delete(impressionId);
+    } else {
+      lazy.logConsole.warn(
+        "Expected to report a",
+        info.action,
+        "engagement for",
+        info.url,
+        "but couldn't find an impression id."
+      );
     }
   }
 }

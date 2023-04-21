@@ -21,6 +21,10 @@ export class SearchSERPTelemetryParent extends JSWindowActorParent {
         lazy.SearchSERPTelemetry.reportPageWithAdImpressions(msg.data, browser);
         break;
       }
+      case "SearchTelemetry:Action": {
+        lazy.SearchSERPTelemetry.reportPageAction(msg.data, browser);
+        break;
+      }
     }
   }
 }

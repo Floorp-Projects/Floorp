@@ -49,6 +49,16 @@ const TEST_PROVIDER_INFO = [
         },
       },
       {
+        type: SearchSERPTelemetryUtils.COMPONENTS.INCONTENT_SEARCHBOX,
+        included: {
+          parent: {
+            selector: "form input",
+          },
+        },
+        topDown: true,
+        nonAd: true,
+      },
+      {
         type: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
         included: {
           default: true,
@@ -322,6 +332,39 @@ add_task(async function test_click_non_ads_link() {
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
           target: SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK,
+        },
+      ],
+    },
+  ]);
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+// Search box is a special case which has to be tracked in the child process.
+add_task(async function test_click_incontent_searchbox() {
+  resetTelemetry();
+  let url = getSERPUrl("searchTelemetryAd_searchbox.html");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+
+  await promiseImpressionReceived();
+
+  // Click on the searchbox.
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+    content.document.querySelector("form input").click();
+  });
+
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+      },
+      engagements: [
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+          target: SearchSERPTelemetryUtils.COMPONENTS.INCONTENT_SEARCHBOX,
         },
       ],
     },
