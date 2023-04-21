@@ -133,6 +133,45 @@ exported_symbols.quotaTest = async function() {
   }
 };
 
+exported_symbols.pagedIterationTest = async function() {
+  const root = await navigator.storage.getDirectory();
+
+  for await (let contentItem of root.keys()) {
+    await root.removeEntry(contentItem, { recursive: true });
+  }
+
+  const allowCreate = { create: true };
+
+  // When half of the buffer is iterated, a request for the second half is sent.
+  // We test that the this boundary is crossed smoothly.
+  // After the buffer is filled, a request for more items is sent. The
+  // items are placed in the first half of the buffer.
+  // This boundary should also be crossed without problems.
+  // Currently, the buffer is half-filled at 1024.
+  const itemBatch = 3 + 2 * 1024;
+  for (let i = 0; i <= itemBatch; ++i) {
+    await root.getDirectoryHandle("" + i, allowCreate);
+  }
+
+  let result = 0;
+  let sum = 0;
+  const handles = new Set();
+  let isUnique = true;
+  for await (let [key, elem] of root.entries()) {
+    result += key.length;
+    sum += parseInt(elem.name);
+    if (handles.has(key)) {
+      // Asserting here is slow and verbose
+      isUnique = false;
+      break;
+    }
+    handles.add(key);
+  }
+  Assert.ok(isUnique);
+  Assert.equal(result, 7098);
+  Assert.equal(sum, (itemBatch * (itemBatch + 1)) / 2);
+};
+
 for (const [key, value] of Object.entries(exported_symbols)) {
   Object.defineProperty(value, "name", {
     value: key,
