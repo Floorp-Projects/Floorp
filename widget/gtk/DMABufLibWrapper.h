@@ -173,14 +173,6 @@ class nsGbmLib {
   static mozilla::StaticMutex sDRILock MOZ_UNANNOTATED;
 };
 
-struct GbmFormat {
-  bool mIsSupported;
-  bool mHasAlpha;
-  int mFormat;
-  uint64_t* mModifiers;
-  int mModifiersCount;
-};
-
 class nsDMABufDevice {
  public:
   nsDMABufDevice();
@@ -195,20 +187,12 @@ class nsDMABufDevice {
   void DisableDMABufWebGL();
 
   int GetDRMFd();
-  GbmFormat* GetGbmFormat(bool aHasAlpha);
-  GbmFormat* GetExactGbmFormat(int aFormat);
-  void ResetFormatsModifiers();
-  void AddFormatModifier(bool aHasAlpha, int aFormat, uint32_t mModifierHi,
-                         uint32_t mModifierLo);
   bool Configure(nsACString& aFailureId);
 
  private:
   bool mUseWebGLDmabufBackend;
 
  private:
-  GbmFormat mXRGBFormat;
-  GbmFormat mARGBFormat;
-
   int mDRMFd;
   gbm_device* mGbmDevice;
   bool mInitialized;
