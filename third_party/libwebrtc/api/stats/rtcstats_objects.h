@@ -709,6 +709,7 @@ class RTC_EXPORT RTCAudioPlayoutStats final : public RTCStats {
   RTCAudioPlayoutStats(const RTCAudioPlayoutStats& other);
   ~RTCAudioPlayoutStats() override;
 
+  RTCStatsMember<std::string> kind;
   RTCStatsMember<double> synthesized_samples_duration;
   RTCStatsMember<uint64_t> synthesized_samples_events;
   RTCStatsMember<double> total_samples_duration;

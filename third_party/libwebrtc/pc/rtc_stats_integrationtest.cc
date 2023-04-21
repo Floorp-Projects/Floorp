@@ -418,7 +418,7 @@ class RTCStatsReportVerifier {
             VerifyRTCTransportStats(stats.cast_to<RTCTransportStats>());
       } else if (stats.type() == RTCAudioPlayoutStats::kType) {
         verify_successful &=
-            VerifyRTCAudioPlayoutSTats(stats.cast_to<RTCAudioPlayoutStats>());
+            VerifyRTCAudioPlayoutStats(stats.cast_to<RTCAudioPlayoutStats>());
       } else {
         EXPECT_TRUE(false) << "Unrecognized stats type: " << stats.type();
         verify_successful = false;
@@ -1128,8 +1128,12 @@ class RTCStatsReportVerifier {
     return verifier.ExpectAllMembersSuccessfullyTested();
   }
 
-  bool VerifyRTCAudioPlayoutSTats(const RTCAudioPlayoutStats& audio_playout) {
+  bool VerifyRTCAudioPlayoutStats(const RTCAudioPlayoutStats& audio_playout) {
     RTCStatsVerifier verifier(report_.get(), &audio_playout);
+    verifier.TestMemberIsDefined(audio_playout.kind);
+    if (audio_playout.kind.is_defined()) {
+      EXPECT_EQ(*audio_playout.kind, "audio");
+    }
     verifier.TestMemberIsNonNegative<uint64_t>(
         audio_playout.synthesized_samples_events);
     verifier.TestMemberIsNonNegative<double>(
