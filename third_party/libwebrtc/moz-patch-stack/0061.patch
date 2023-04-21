@@ -78,18 +78,18 @@ index 380e80ce12..253f8cd7de 100644
  
  std::unique_ptr<CallFactoryInterface> CreateCallFactory() {
 diff --git a/call/degraded_call.cc b/call/degraded_call.cc
-index 445a1e90c2..e7f80d4f50 100644
+index 50349c1086..00b121bbdc 100644
 --- a/call/degraded_call.cc
 +++ b/call/degraded_call.cc
-@@ -176,6 +176,7 @@ DegradedCall::ThreadedPacketReceiver::DeliverPacket(
-                                   packet_time_us);
+@@ -129,6 +129,7 @@ bool DegradedCall::FakeNetworkPipeTransportAdapter::SendRtcp(
+   return true;
  }
  
 +/* Mozilla: Avoid this since it could use GetRealTimeClock().
  DegradedCall::DegradedCall(
      std::unique_ptr<Call> call,
      const std::vector<TimeScopedNetworkConfig>& send_configs,
-@@ -215,6 +216,7 @@ DegradedCall::DegradedCall(
+@@ -165,6 +166,7 @@ DegradedCall::DegradedCall(
      }
    }
  }
