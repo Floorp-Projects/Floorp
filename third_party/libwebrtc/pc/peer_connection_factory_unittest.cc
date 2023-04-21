@@ -40,6 +40,7 @@
 #include "rtc_base/time_utils.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
+#include "test/scoped_key_value_config.h"
 
 #ifdef WEBRTC_ANDROID
 #include "pc/test/android_test_initializer.h"
@@ -149,7 +150,7 @@ class PeerConnectionFactoryTest : public ::testing::Test {
     packet_socket_factory_.reset(
         new rtc::BasicPacketSocketFactory(socket_server_.get()));
     port_allocator_.reset(new cricket::FakePortAllocator(
-        rtc::Thread::Current(), packet_socket_factory_.get()));
+        rtc::Thread::Current(), packet_socket_factory_.get(), &field_trials_));
     raw_port_allocator_ = port_allocator_.get();
   }
 
@@ -244,6 +245,7 @@ class PeerConnectionFactoryTest : public ::testing::Test {
     }
   }
 
+  webrtc::test::ScopedKeyValueConfig field_trials_;
   std::unique_ptr<rtc::SocketServer> socket_server_;
   rtc::AutoSocketServerThread main_thread_;
   rtc::scoped_refptr<PeerConnectionFactoryInterface> factory_;
