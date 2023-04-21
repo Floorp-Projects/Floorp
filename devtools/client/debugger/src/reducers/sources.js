@@ -56,7 +56,18 @@ export function initialSourcesState(state) {
      */
     mutableSourceActors: new Map(),
 
-    breakpointPositions: {},
+    /**
+     * List of all breakpoint positions for all sources (generated and original).
+     * Map of source id (string) to dictionary object whose keys are line numbers
+     * and values of array of positions.
+     * A position is an object made with two attributes:
+     * location and generatedLocation. Both refering to breakpoint positions
+     * in original and generated sources.
+     * In case of generated source, the two location will be the same.
+     *
+     * Map(source id => Dictionary(int => array<Position>))
+     */
+    mutableBreakpointPositions: new Map(),
 
     /**
      * List of all breakable lines for original sources only.
@@ -149,15 +160,18 @@ function update(state = initialSourcesState(), action) {
     }
 
     case "ADD_BREAKPOINT_POSITIONS": {
-      const { source, positions } = action;
-      const breakpointPositions = state.breakpointPositions[source.id];
+      // Merge existing and new reported position if some where already stored
+      let positions = state.mutableBreakpointPositions.get(action.source.id);
+      if (positions) {
+        positions = { ...positions, ...action.positions };
+      } else {
+        positions = action.positions;
+      }
+
+      state.mutableBreakpointPositions.set(action.source.id, positions);
 
       return {
         ...state,
-        breakpointPositions: {
-          ...state.breakpointPositions,
-          [source.id]: { ...breakpointPositions, ...positions },
-        },
       };
     }
 
@@ -306,15 +320,11 @@ function insertSourceActors(state, action) {
     item => item.introductionType === "scriptElement"
   );
   if (scriptActors.length) {
-    const { ...breakpointPositions } = state.breakpointPositions;
-
     // If new HTML sources are being added, we need to clear the breakpoint
     // positions since the new source is a <script> with new breakpoints.
     for (const { source } of scriptActors) {
-      delete breakpointPositions[source];
+      state.mutableBreakpointPositions.delete(source);
     }
-
-    state = { ...state, breakpointPositions };
   }
 
   return { ...state };
