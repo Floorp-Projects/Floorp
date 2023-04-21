@@ -222,16 +222,13 @@ class ChannelSend : public ChannelSendInterface,
   std::unique_ptr<RTPSenderAudio> rtp_sender_audio_;
 
   std::unique_ptr<AudioCodingModule> audio_coding_;
-  uint32_t _timeStamp RTC_GUARDED_BY(encoder_queue_);
 
-  // uses
+  // This is just an offset, RTP module will add its own random offset.
+  uint32_t timestamp_ RTC_GUARDED_BY(audio_thread_race_checker_) = 0;
+
   RmsLevel rms_level_ RTC_GUARDED_BY(encoder_queue_);
-  bool input_mute_ RTC_GUARDED_BY(volume_settings_mutex_);
-  bool previous_frame_muted_ RTC_GUARDED_BY(encoder_queue_);
-  // VoeRTP_RTCP
-  // TODO(henrika): can today be accessed on the main thread and on the
-  // task queue; hence potential race.
-  bool _includeAudioLevelIndication;
+  bool input_mute_ RTC_GUARDED_BY(volume_settings_mutex_) = false;
+  bool previous_frame_muted_ RTC_GUARDED_BY(encoder_queue_) = false;
 
   // RtcpBandwidthObserver
   const std::unique_ptr<VoERtcpObserver> rtcp_observer_;
@@ -246,7 +243,8 @@ class ChannelSend : public ChannelSendInterface,
 
   SequenceChecker construction_thread_;
 
-  bool encoder_queue_is_active_ RTC_GUARDED_BY(encoder_queue_) = false;
+  std::atomic<bool> include_audio_level_indication_ = false;
+  std::atomic<bool> encoder_queue_is_active_ = false;
 
   // E2EE Audio Frame Encryption
   rtc::scoped_refptr<FrameEncryptorInterface> frame_encryptor_
@@ -259,8 +257,6 @@ class ChannelSend : public ChannelSendInterface,
   // ChannelSend::SendRtpAudio to send the transformed audio.
   rtc::scoped_refptr<ChannelSendFrameTransformerDelegate>
       frame_transformer_delegate_ RTC_GUARDED_BY(encoder_queue_);
-
-  const bool fixing_timestamp_stall_;
 
   mutable Mutex rtcp_counter_mutex_;
   RtcpPacketTypeCounter rtcp_packet_type_counter_
@@ -400,7 +396,7 @@ int32_t ChannelSend::SendRtpAudio(AudioFrameType frameType,
                                   uint32_t rtp_timestamp,
                                   rtc::ArrayView<const uint8_t> payload,
                                   int64_t absolute_capture_timestamp_ms) {
-  if (_includeAudioLevelIndication) {
+  if (include_audio_level_indication_.load()) {
     // Store current audio level in the RTP sender.
     // The level will be used in combination with voice-activity state
     // (frameType) to add an RTP header extension
@@ -490,11 +486,6 @@ ChannelSend::ChannelSend(
     const FieldTrialsView& field_trials)
     : ssrc_(ssrc),
       event_log_(rtc_event_log),
-      _timeStamp(0),  // This is just an offset, RTP module will add it's own
-                      // random offset
-      input_mute_(false),
-      previous_frame_muted_(false),
-      _includeAudioLevelIndication(false),
       rtcp_observer_(new VoERtcpObserver(this)),
       rtcp_counter_observer_(new RtcpCounterObserver(ssrc)),
       feedback_observer_(feedback_observer),
@@ -503,8 +494,6 @@ ChannelSend::ChannelSend(
           new RateLimiter(clock, kMaxRetransmissionWindowMs)),
       frame_encryptor_(frame_encryptor),
       crypto_options_(crypto_options),
-      fixing_timestamp_stall_(
-          field_trials.IsDisabled("WebRTC-Audio-FixTimestampStall")),
       encoder_queue_(task_queue_factory->CreateTaskQueue(
           "AudioEncoder",
           TaskQueueFactory::Priority::NORMAL)) {
@@ -570,10 +559,7 @@ void ChannelSend::StartSend() {
   RTC_DCHECK_EQ(0, ret);
 
   // It is now OK to start processing on the encoder task queue.
-  encoder_queue_.PostTask([this] {
-    RTC_DCHECK_RUN_ON(&encoder_queue_);
-    encoder_queue_is_active_ = true;
-  });
+  encoder_queue_is_active_.store(true);
 }
 
 void ChannelSend::StopSend() {
@@ -582,11 +568,12 @@ void ChannelSend::StopSend() {
     return;
   }
   sending_ = false;
+  encoder_queue_is_active_.store(false);
 
+  // Wait until all pending encode tasks are executed.
   rtc::Event flush;
   encoder_queue_.PostTask([this, &flush]() {
     RTC_DCHECK_RUN_ON(&encoder_queue_);
-    encoder_queue_is_active_ = false;
     flush.Set();
   });
   flush.Wait(rtc::Event::kForever);
@@ -731,7 +718,7 @@ void ChannelSend::SetSendTelephoneEventPayloadType(int payload_type,
 
 void ChannelSend::SetSendAudioLevelIndicationStatus(bool enable, int id) {
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-  _includeAudioLevelIndication = enable;
+  include_audio_level_indication_.store(enable);
   if (enable) {
     rtp_rtcp_->RegisterRtpHeaderExtension(webrtc::AudioLevel::Uri(), id);
   } else {
@@ -846,17 +833,19 @@ void ChannelSend::ProcessAndEncodeAudio(
   RTC_DCHECK_GT(audio_frame->samples_per_channel_, 0);
   RTC_DCHECK_LE(audio_frame->num_channels_, 8);
 
+  audio_frame->timestamp_ = timestamp_;
+  timestamp_ += audio_frame->samples_per_channel_;
+  if (!encoder_queue_is_active_.load()) {
+    return;
+  }
+
   // Profile time between when the audio frame is added to the task queue and
   // when the task is actually executed.
   audio_frame->UpdateProfileTimeStamp();
   encoder_queue_.PostTask(
       [this, audio_frame = std::move(audio_frame)]() mutable {
         RTC_DCHECK_RUN_ON(&encoder_queue_);
-        if (!encoder_queue_is_active_) {
-          if (fixing_timestamp_stall_) {
-            _timeStamp +=
-                static_cast<uint32_t>(audio_frame->samples_per_channel_);
-          }
+        if (!encoder_queue_is_active_.load()) {
           return;
         }
         // Measure time between when the audio frame is added to the task queue
@@ -869,7 +858,7 @@ void ChannelSend::ProcessAndEncodeAudio(
         AudioFrameOperations::Mute(audio_frame.get(), previous_frame_muted_,
                                    is_muted);
 
-        if (_includeAudioLevelIndication) {
+        if (include_audio_level_indication_.load()) {
           size_t length =
               audio_frame->samples_per_channel_ * audio_frame->num_channels_;
           RTC_CHECK_LE(length, AudioFrame::kMaxDataSizeBytes);
@@ -882,10 +871,6 @@ void ChannelSend::ProcessAndEncodeAudio(
         }
         previous_frame_muted_ = is_muted;
 
-        // Add 10ms of raw (PCM) audio data to the encoder @ 32kHz.
-
-        // The ACM resamples internally.
-        audio_frame->timestamp_ = _timeStamp;
         // This call will trigger AudioPacketizationCallback::SendData if
         // encoding is done and payload is ready for packetization and
         // transmission. Otherwise, it will return without invoking the
@@ -894,8 +879,6 @@ void ChannelSend::ProcessAndEncodeAudio(
           RTC_DLOG(LS_ERROR) << "ACM::Add10MsData() failed.";
           return;
         }
-
-        _timeStamp += static_cast<uint32_t>(audio_frame->samples_per_channel_);
       });
 }
 
