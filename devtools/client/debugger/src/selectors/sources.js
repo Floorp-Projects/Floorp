@@ -50,25 +50,18 @@ export function getSourceByActorId(state, actorId) {
 }
 
 function getSourcesByURL(state, url) {
-  const urls = getUrls(state);
-  if (!url || !urls[url]) {
-    return [];
-  }
-  return urls[url].map(id => getSource(state, id));
+  return state.sources.mutableSourcesPerUrl.get(url) || [];
 }
 
 export function getSourceByURL(state, url) {
   const foundSources = getSourcesByURL(state, url);
-  return foundSources ? foundSources[0] : null;
+  return foundSources[0];
 }
 
 // This is used by tabs selectors
 export function getSpecificSourceByURL(state, url, isOriginal) {
   const foundSources = getSourcesByURL(state, url);
-  if (foundSources) {
-    return foundSources.find(source => source.isOriginal == isOriginal);
-  }
-  return null;
+  return foundSources.find(source => source.isOriginal == isOriginal);
 }
 
 function getOriginalSourceByURL(state, url) {
@@ -106,10 +99,6 @@ export function getPrettySource(state, id) {
   }
 
   return getOriginalSourceByURL(state, getPrettySourceURL(source.url));
-}
-
-function getUrls(state) {
-  return state.sources.urls;
 }
 
 // This is only used by Project Search and tests.
