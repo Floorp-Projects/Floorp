@@ -38,6 +38,23 @@ VideoFrameMetadata RTPVideoHeader::GetAsMetadata() const {
   metadata.SetIsLastFrameInPicture(is_last_frame_in_picture);
   metadata.SetSimulcastIdx(simulcastIdx);
   metadata.SetCodec(codec);
+  switch (codec) {
+    case VideoCodecType::kVideoCodecVP8:
+      metadata.SetRTPVideoHeaderCodecSpecifics(
+          absl::get<RTPVideoHeaderVP8>(video_type_header));
+      break;
+    case VideoCodecType::kVideoCodecVP9:
+      metadata.SetRTPVideoHeaderCodecSpecifics(
+          absl::get<RTPVideoHeaderVP9>(video_type_header));
+      break;
+    case VideoCodecType::kVideoCodecH264:
+      metadata.SetRTPVideoHeaderCodecSpecifics(
+          absl::get<RTPVideoHeaderH264>(video_type_header));
+      break;
+    default:
+      // Codec-specifics are not supported for this codec.
+      break;
+  }
   return metadata;
 }
 
