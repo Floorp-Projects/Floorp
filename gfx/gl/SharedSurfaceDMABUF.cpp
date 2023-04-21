@@ -89,7 +89,7 @@ Maybe<layers::SurfaceDescriptor> SharedSurface_DMABUF::ToSurfaceDescriptor() {
 
 /*static*/
 UniquePtr<SurfaceFactory_DMABUF> SurfaceFactory_DMABUF::Create(GLContext& gl) {
-  if (!widget::GetDMABufDevice()->IsDMABufWebGLEnabled()) {
+  if (!widget::nsDMABufDevice::IsDMABufWebGLEnabled()) {
     return nullptr;
   }
 
@@ -100,7 +100,7 @@ UniquePtr<SurfaceFactory_DMABUF> SurfaceFactory_DMABUF::Create(GLContext& gl) {
 
   LOGDMABUF(
       ("SurfaceFactory_DMABUF::Create() failed, fallback to SW buffers.\n"));
-  widget::GetDMABufDevice()->DisableDMABufWebGL();
+  widget::nsDMABufDevice::DisableDMABufWebGL();
   return nullptr;
 }
 
