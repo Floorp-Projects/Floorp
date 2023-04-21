@@ -18,6 +18,9 @@ ITEM_VALUE(CSSPrefersColorScheme, 0x0007)
 // `prefers-reduced-motion` CSS media feature
 ITEM_VALUE(CSSPrefersReducedMotion, 0x0008)
 
+// `prefers-contrast` CSS media feature
+ITEM_VALUE(CSSPrefersContrast, 0x0009)
+
 /*
  * Certain classes (Document, at time of writing) have a cached value for
  * ShouldResistFingerprinting. By adding a Target check into their ShouldRFP
