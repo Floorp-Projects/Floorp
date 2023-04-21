@@ -10,7 +10,7 @@ use flate2::read::GzDecoder;
 use serde_json::Value as JsonValue;
 
 use crate::private::PingType;
-use crate::private::{BooleanMetric, CounterMetric, EventMetric, StringMetric};
+use crate::private::{BooleanMetric, CounterMetric, EventMetric, StringMetric, TextMetric};
 
 use super::*;
 use crate::common_test::{lock_test, new_glean, GLOBAL_APPLICATION_ID};
@@ -1366,6 +1366,31 @@ fn test_boolean_get_num_errors() {
     // Check specifically for an invalid label
     let result = metric.test_get_num_recorded_errors(ErrorType::InvalidLabel);
 
+    assert_eq!(result, 0);
+}
+
+#[test]
+fn test_text_can_hold_long_string() {
+    let _lock = lock_test();
+
+    let _t = new_glean(None, false);
+
+    let metric = TextMetric::new(CommonMetricData {
+        name: "text_metric".into(),
+        category: "test".into(),
+        send_in_pings: vec!["custom1".into()],
+        lifetime: Lifetime::Application,
+        disabled: false,
+        dynamic_label: Some(str::to_string("text")),
+    });
+
+    // 216 characters, which would overflow StringMetric
+    metric.set("I've seen things you people wouldn't believe. Attack ships on fire off the shoulder of Orion. I watched C-beams glitter in the dark near the Tannhäuser Gate. All those moments will be lost in time, like tears in rain".into());
+
+    let result = metric.test_get_num_recorded_errors(ErrorType::InvalidValue);
+    assert_eq!(result, 0);
+
+    let result = metric.test_get_num_recorded_errors(ErrorType::InvalidOverflow);
     assert_eq!(result, 0);
 }
 

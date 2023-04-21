@@ -9,15 +9,15 @@ user-login = "martinthomson"
 user-name = "Martin Thomson"
 
 [[publisher.glean]]
-version = "52.5.0"
-when = "2023-04-11"
+version = "52.6.0"
+when = "2023-04-20"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
 [[publisher.glean-core]]
-version = "52.5.0"
-when = "2023-04-11"
+version = "52.6.0"
+when = "2023-04-20"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"

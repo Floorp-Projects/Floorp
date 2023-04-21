@@ -19,6 +19,7 @@ pub use glean_core::RateMetric;
 pub use glean_core::RecordedExperiment;
 pub use glean_core::StringListMetric;
 pub use glean_core::StringMetric;
+pub use glean_core::TextMetric;
 pub use glean_core::TimespanMetric;
 pub use glean_core::TimingDistributionMetric;
 pub use glean_core::UrlMetric;
