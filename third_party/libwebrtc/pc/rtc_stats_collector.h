@@ -171,6 +171,7 @@ class RTCStatsCollector : public rtc::RefCountInterface,
     absl::optional<std::string> mid;
     absl::optional<std::string> transport_name;
     TrackMediaInfoMap track_media_info_map;
+    absl::optional<RtpTransceiverDirection> current_direction;
   };
 
   void DeliverCachedReport(

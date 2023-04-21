@@ -528,6 +528,7 @@ WEBRTC_RTCSTATS_IMPL(
     &audio_level,
     &total_audio_energy,
     &total_samples_duration,
+    &playout_id,
     &frames_received,
     &frame_width,
     &frame_height,
@@ -565,6 +566,7 @@ WEBRTC_RTCSTATS_IMPL(
 RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(std::string id,
                                                    Timestamp timestamp)
     : RTCReceivedRtpStreamStats(std::move(id), timestamp),
+      playout_id("playoutId"),
       track_identifier("trackIdentifier"),
       mid("mid"),
       remote_id("remoteId"),

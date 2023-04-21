@@ -28,6 +28,7 @@
 #include "api/media_stream_interface.h"
 #include "api/media_stream_track.h"
 #include "api/rtp_parameters.h"
+#include "api/rtp_transceiver_direction.h"
 #include "api/stats/rtc_stats.h"
 #include "api/stats/rtc_stats_report.h"
 #include "api/stats/rtcstats_objects.h"
@@ -2494,6 +2495,11 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Audio) {
   stats_->SetupRemoteTrackAndReceiver(
       cricket::MEDIA_TYPE_AUDIO, "RemoteAudioTrackID", "RemoteStreamId", 1);
 
+  // Needed for playoutId to be populated.
+  pc_->SetAudioDeviceStats(AudioDeviceModule::Stats());
+  pc_->GetTransceiversInternal()[0]->internal()->set_current_direction(
+      RtpTransceiverDirection::kSendRecv);
+
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
 
   auto stats_of_track_type =
@@ -2538,6 +2544,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Audio) {
   expected_audio.relative_packet_arrival_delay = 16;
   expected_audio.interruption_count = 7788;
   expected_audio.total_interruption_duration = 778.899;
+  expected_audio.playout_id = "AP";
 
   ASSERT_TRUE(report->Get(expected_audio.id()));
   EXPECT_EQ(
@@ -2560,6 +2567,44 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Audio) {
   EXPECT_TRUE(report->Get(*expected_audio.track_id));
   EXPECT_TRUE(report->Get(*expected_audio.transport_id));
   EXPECT_TRUE(report->Get(*expected_audio.codec_id));
+}
+
+TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Audio_PlayoutId) {
+  cricket::VoiceMediaInfo voice_media_info;
+
+  voice_media_info.receivers.push_back(cricket::VoiceReceiverInfo());
+  voice_media_info.receivers[0].local_stats.push_back(
+      cricket::SsrcReceiverInfo());
+  voice_media_info.receivers[0].local_stats[0].ssrc = 1;
+
+  pc_->AddVoiceChannel("AudioMid", "TransportName", voice_media_info);
+  stats_->SetupRemoteTrackAndReceiver(
+      cricket::MEDIA_TYPE_AUDIO, "RemoteAudioTrackID", "RemoteStreamId", 1);
+  // Needed for playoutId to be populated.
+  pc_->SetAudioDeviceStats(AudioDeviceModule::Stats());
+
+  {
+    // We do not expect a playout id when only sending.
+    pc_->GetTransceiversInternal()[0]->internal()->set_current_direction(
+        RtpTransceiverDirection::kSendOnly);
+    rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
+    ASSERT_TRUE(report->Get("ITTransportName1A1"));
+    auto stats =
+        report->Get("ITTransportName1A1")->cast_to<RTCInboundRTPStreamStats>();
+    ASSERT_FALSE(stats.playout_id.is_defined());
+  }
+  {
+    // We do expect a playout id when receiving.
+    pc_->GetTransceiversInternal()[0]->internal()->set_current_direction(
+        RtpTransceiverDirection::kRecvOnly);
+    rtc::scoped_refptr<const RTCStatsReport> report =
+        stats_->GetFreshStatsReport();
+    ASSERT_TRUE(report->Get("ITTransportName1A1"));
+    auto stats =
+        report->Get("ITTransportName1A1")->cast_to<RTCInboundRTPStreamStats>();
+    ASSERT_TRUE(stats.playout_id.is_defined());
+    EXPECT_EQ(*stats.playout_id, "AP");
+  }
 }
 
 TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Video) {
