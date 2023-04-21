@@ -118,8 +118,9 @@ mozilla::GenericErrorResult<AbortReason> WarpOracle::abort(HandleScript script,
 }
 
 void WarpOracle::addScriptSnapshot(WarpScriptSnapshot* scriptSnapshot,
-                                   ICScript* icScript) {
+                                   ICScript* icScript, size_t bytecodeLength) {
   scriptSnapshots_.insertBack(scriptSnapshot);
+  accumulatedBytecodeSize_ += bytecodeLength;
 #ifdef DEBUG
   runningScriptHash_ = mozilla::AddToHash(runningScriptHash_, icScript->hash());
 #endif
@@ -141,6 +142,8 @@ AbortReasonOr<WarpSnapshot*> WarpOracle::createSnapshot() {
           outerScript_->isGenerator() ? " isGenerator" : "",
           outerScript_->isAsync() ? " isAsync" : "");
 #endif
+
+  accumulatedBytecodeSize_ = outerScript_->length();
 
   MOZ_ASSERT(outerScript_->hasJitScript());
   ICScript* icScript = outerScript_->jitScript()->icScript();
@@ -958,9 +961,18 @@ AbortReasonOr<bool> WarpScriptOracle::maybeInlineCall(
     return false;
   }
 
+  // This is just a cheap check to limit the damage we can do to ourselves if
+  // we try to monomorphically inline an indirectly recursive call.
   const uint32_t maxInliningDepth = 8;
   if (!isTrialInlined &&
       info_->inlineScriptTree()->depth() > maxInliningDepth) {
+    return false;
+  }
+
+  // And this is a second cheap check to ensure monomorphic inlining doesn't
+  // cause us to blow past our script size budget.
+  if (oracle_->accumulatedBytecodeSize() + targetScript->length() >
+      JitOptions.ionMaxScriptSize) {
     return false;
   }
 
@@ -1030,7 +1042,7 @@ AbortReasonOr<bool> WarpScriptOracle::maybeInlineCall(
     scriptSnapshot->markIsMonomorphicInlined();
   }
 
-  oracle_->addScriptSnapshot(scriptSnapshot, icScript);
+  oracle_->addScriptSnapshot(scriptSnapshot, icScript, targetScript->length());
 
   if (!AddOpSnapshot<WarpInlinedCall>(alloc_, snapshots, offset,
                                       cacheIRSnapshot, scriptSnapshot, info)) {
