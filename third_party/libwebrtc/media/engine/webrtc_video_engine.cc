@@ -13,6 +13,7 @@
 #include <stdio.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <set>
 #include <string>
 #include <utility>
@@ -20,6 +21,7 @@
 #include "absl/algorithm/container.h"
 #include "absl/functional/bind_front.h"
 #include "absl/strings/match.h"
+#include "absl/types/optional.h"
 #include "api/media_stream_interface.h"
 #include "api/video/video_codec_constants.h"
 #include "api/video/video_codec_type.h"
@@ -583,58 +585,6 @@ WebRtcVideoChannel::WebRtcVideoSendStream::ConfigureVideoEncoderSettings(
   return nullptr;
 }
 
-DefaultUnsignalledSsrcHandler::DefaultUnsignalledSsrcHandler()
-    : default_sink_(nullptr) {}
-
-UnsignalledSsrcHandler::Action DefaultUnsignalledSsrcHandler::OnUnsignalledSsrc(
-    WebRtcVideoChannel* channel,
-    uint32_t ssrc,
-    absl::optional<uint32_t> rtx_ssrc) {
-  absl::optional<uint32_t> default_recv_ssrc = channel->GetUnsignaledSsrc();
-
-  if (default_recv_ssrc) {
-    RTC_LOG(LS_INFO) << "Destroying old default receive stream for SSRC="
-                     << ssrc << ".";
-    channel->RemoveRecvStream(*default_recv_ssrc);
-  }
-
-  StreamParams sp = channel->unsignaled_stream_params();
-  sp.ssrcs.push_back(ssrc);
-  if (rtx_ssrc) {
-    sp.AddFidSsrc(ssrc, *rtx_ssrc);
-  }
-  RTC_LOG(LS_INFO) << "Creating default receive stream for SSRC=" << ssrc
-                   << ".";
-  if (!channel->AddRecvStream(sp, /*default_stream=*/true)) {
-    RTC_LOG(LS_WARNING) << "Could not create default receive stream.";
-  }
-
-  // SSRC 0 returns default_recv_base_minimum_delay_ms.
-  const int unsignaled_ssrc = 0;
-  int default_recv_base_minimum_delay_ms =
-      channel->GetBaseMinimumPlayoutDelayMs(unsignaled_ssrc).value_or(0);
-  // Set base minimum delay if it was set before for the default receive stream.
-  channel->SetBaseMinimumPlayoutDelayMs(ssrc,
-                                        default_recv_base_minimum_delay_ms);
-  channel->SetSink(ssrc, default_sink_);
-  return kDeliverPacket;
-}
-
-rtc::VideoSinkInterface<webrtc::VideoFrame>*
-DefaultUnsignalledSsrcHandler::GetDefaultSink() const {
-  return default_sink_;
-}
-
-void DefaultUnsignalledSsrcHandler::SetDefaultSink(
-    WebRtcVideoChannel* channel,
-    rtc::VideoSinkInterface<webrtc::VideoFrame>* sink) {
-  default_sink_ = sink;
-  absl::optional<uint32_t> default_recv_ssrc = channel->GetUnsignaledSsrc();
-  if (default_recv_ssrc) {
-    channel->SetSink(*default_recv_ssrc, default_sink_);
-  }
-}
-
 WebRtcVideoEngine::WebRtcVideoEngine(
     std::unique_ptr<webrtc::VideoEncoderFactory> video_encoder_factory,
     std::unique_ptr<webrtc::VideoDecoderFactory> video_decoder_factory,
@@ -724,7 +674,7 @@ WebRtcVideoChannel::WebRtcVideoChannel(
     : VideoMediaChannel(call->network_thread(), config.enable_dscp),
       worker_thread_(call->worker_thread()),
       call_(call),
-      unsignalled_ssrc_handler_(&default_unsignalled_ssrc_handler_),
+      default_sink_(nullptr),
       video_config_(config.video),
       encoder_factory_(encoder_factory),
       decoder_factory_(decoder_factory),
@@ -1151,7 +1101,7 @@ webrtc::RtpParameters WebRtcVideoChannel::GetDefaultRtpReceiveParameters()
     const {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   webrtc::RtpParameters rtp_params;
-  if (!default_unsignalled_ssrc_handler_.GetDefaultSink()) {
+  if (!default_sink_) {
     // Getting parameters on a default, unsignaled video receive stream but
     // because we've not configured to receive such a stream, `encodings` is
     // empty.
@@ -1648,7 +1598,7 @@ void WebRtcVideoChannel::SetDefaultSink(
     rtc::VideoSinkInterface<webrtc::VideoFrame>* sink) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   RTC_LOG(LS_INFO) << "SetDefaultSink: " << (sink ? "(ptr)" : "nullptr");
-  default_unsignalled_ssrc_handler_.SetDefaultSink(this, sink);
+  default_sink_ = sink;
 }
 
 bool WebRtcVideoChannel::GetSendStats(VideoMediaSendInfo* info) {
@@ -1809,35 +1759,6 @@ bool WebRtcVideoChannel::MaybeCreateDefaultReceiveStream(
     return false;
   }
 
-  absl::optional<uint32_t> rtx_ssrc;
-  uint32_t ssrc = packet.Ssrc();
-  // See if this payload_type is registered as one that usually gets its
-  // own SSRC (RTX) or at least is safe to drop either way (FEC). If it
-  // is, and it wasn't handled above by DeliverPacket, that means we don't
-  // know what stream it associates with, and we shouldn't ever create an
-  // implicit channel for these.
-  for (auto& codec : recv_codecs_) {
-    if (packet.PayloadType() == codec.ulpfec.red_rtx_payload_type ||
-        packet.PayloadType() == codec.ulpfec.ulpfec_payload_type) {
-      return false;
-    }
-    if (packet.PayloadType() == codec.rtx_payload_type) {
-      // As we don't support receiving simulcast there can only be one RTX
-      // stream, which will be associated with unsignaled media stream.
-      // It is not possible to update the ssrcs of a receive stream, so we
-      // recreate it insead if found.
-      auto default_ssrc = GetUnsignaledSsrc();
-      if (!default_ssrc) {
-        return false;
-      }
-      rtx_ssrc = ssrc;
-      ssrc = *default_ssrc;
-      // Allow recreating the receive stream even if the RTX packet is
-      // received just after the media packet.
-      last_unsignalled_ssrc_creation_time_ms_.reset();
-      break;
-    }
-  }
   if (packet.PayloadType() == recv_flexfec_payload_type_) {
     return false;
   }
@@ -1849,31 +1770,100 @@ bool WebRtcVideoChannel::MaybeCreateDefaultReceiveStream(
   if (demuxer_criteria_id_ != demuxer_criteria_completed_id_) {
     return false;
   }
-  // Ignore unknown ssrcs if we recently created an unsignalled receive
-  // stream since this shouldn't happen frequently. Getting into a state
-  // of creating decoders on every packet eats up processing time (e.g.
-  // https://crbug.com/1069603) and this cooldown prevents that.
-  if (last_unsignalled_ssrc_creation_time_ms_.has_value()) {
-    int64_t now_ms = rtc::TimeMillis();
-    if (now_ms - last_unsignalled_ssrc_creation_time_ms_.value() <
-        kUnsignaledSsrcCooldownMs) {
-      // We've already created an unsignalled ssrc stream within the last
-      // 0.5 s, ignore with a warning.
-      RTC_LOG(LS_WARNING)
-          << "Another unsignalled ssrc packet arrived shortly after the "
-          << "creation of an unsignalled ssrc stream. Dropping packet.";
+
+  // See if this payload_type is registered as one that usually gets its
+  // own SSRC (RTX) or at least is safe to drop either way (FEC). If it
+  // is, and it wasn't handled above by DeliverPacket, that means we don't
+  // know what stream it associates with, and we shouldn't ever create an
+  // implicit channel for these.
+  bool is_rtx_payload = false;
+  for (auto& codec : recv_codecs_) {
+    if (packet.PayloadType() == codec.ulpfec.red_rtx_payload_type ||
+        packet.PayloadType() == codec.ulpfec.ulpfec_payload_type) {
       return false;
     }
-  }
-  // Let the unsignalled ssrc handler decide whether to drop or deliver.
-  switch (unsignalled_ssrc_handler_->OnUnsignalledSsrc(this, ssrc, rtx_ssrc)) {
-    case UnsignalledSsrcHandler::kDropPacket:
-      return false;
-    case UnsignalledSsrcHandler::kDeliverPacket:
+
+    if (packet.PayloadType() == codec.rtx_payload_type) {
+      is_rtx_payload = true;
       break;
+    }
   }
+
+  if (is_rtx_payload) {
+    // As we don't support receiving simulcast there can only be one RTX
+    // stream, which will be associated with unsignaled media stream.
+    absl::optional<uint32_t> current_default_ssrc = GetUnsignaledSsrc();
+    if (current_default_ssrc) {
+      // TODO(bug.webrtc.org/14817): Consider associating the existing default
+      // stream with this RTX stream instead of recreating.
+      ReCreateDefaulReceiveStream(/*ssrc =*/*current_default_ssrc,
+                                  packet.Ssrc());
+    } else {
+      // Received unsignaled RTX packet before a media packet. Create a default
+      // stream with a "random" SSRC and the RTX SSRC from the packet.  The
+      // stream will be recreated on the first media packet, unless we are
+      // extremely lucky and used the right media SSRC.
+      ReCreateDefaulReceiveStream(/*ssrc =*/14795, /*rtx_ssrc=*/packet.Ssrc());
+    }
+    return true;
+  } else {
+    // Ignore unknown ssrcs if we recently created an unsignalled receive
+    // stream since this shouldn't happen frequently. Getting into a state
+    // of creating decoders on every packet eats up processing time (e.g.
+    // https://crbug.com/1069603) and this cooldown prevents that.
+    if (last_unsignalled_ssrc_creation_time_ms_.has_value()) {
+      int64_t now_ms = rtc::TimeMillis();
+      if (now_ms - last_unsignalled_ssrc_creation_time_ms_.value() <
+          kUnsignaledSsrcCooldownMs) {
+        // We've already created an unsignalled ssrc stream within the last
+        // 0.5 s, ignore with a warning.
+        RTC_LOG(LS_WARNING)
+            << "Another unsignalled ssrc packet arrived shortly after the "
+            << "creation of an unsignalled ssrc stream. Dropping packet.";
+        return false;
+      }
+    }
+  }
+
+  // TODO(bug.webrtc.org/14817): Consider creating a default stream with a fake
+  // RTX ssrc that can be updated when the real SSRC is known if rtx has been
+  // negotiated.
+  ReCreateDefaulReceiveStream(packet.Ssrc(), absl::nullopt);
   last_unsignalled_ssrc_creation_time_ms_ = rtc::TimeMillis();
   return true;
+}
+
+void WebRtcVideoChannel::ReCreateDefaulReceiveStream(
+    uint32_t ssrc,
+    absl::optional<uint32_t> rtx_ssrc) {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+
+  absl::optional<uint32_t> default_recv_ssrc = GetUnsignaledSsrc();
+  if (default_recv_ssrc) {
+    RTC_LOG(LS_INFO) << "Destroying old default receive stream for SSRC="
+                     << ssrc << ".";
+    RemoveRecvStream(*default_recv_ssrc);
+  }
+
+  StreamParams sp = unsignaled_stream_params();
+  sp.ssrcs.push_back(ssrc);
+  if (rtx_ssrc) {
+    sp.AddFidSsrc(ssrc, *rtx_ssrc);
+  }
+  RTC_LOG(LS_INFO) << "Creating default receive stream for SSRC=" << ssrc
+                   << ".";
+  if (!AddRecvStream(sp, /*default_stream=*/true)) {
+    RTC_LOG(LS_WARNING) << "Could not create default receive stream.";
+  }
+
+  // SSRC 0 returns default_recv_base_minimum_delay_ms.
+  const int unsignaled_ssrc = 0;
+  int default_recv_base_minimum_delay_ms =
+      GetBaseMinimumPlayoutDelayMs(unsignaled_ssrc).value_or(0);
+  // Set base minimum delay if it was set before for the default receive
+  // stream.
+  SetBaseMinimumPlayoutDelayMs(ssrc, default_recv_base_minimum_delay_ms);
+  SetSink(ssrc, default_sink_);
 }
 
 void WebRtcVideoChannel::OnPacketSent(const rtc::SentPacket& sent_packet) {

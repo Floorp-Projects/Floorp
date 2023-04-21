@@ -60,36 +60,6 @@ std::map<uint32_t, webrtc::VideoSendStream::StreamStats>
 MergeInfoAboutOutboundRtpSubstreamsForTesting(
     const std::map<uint32_t, webrtc::VideoSendStream::StreamStats>& substreams);
 
-class UnsignalledSsrcHandler {
- public:
-  enum Action {
-    kDropPacket,
-    kDeliverPacket,
-  };
-  virtual Action OnUnsignalledSsrc(WebRtcVideoChannel* channel,
-                                   uint32_t ssrc,
-                                   absl::optional<uint32_t> rtx_ssrc) = 0;
-  virtual ~UnsignalledSsrcHandler() = default;
-};
-
-// TODO(pbos): Remove, use external handlers only.
-class DefaultUnsignalledSsrcHandler : public UnsignalledSsrcHandler {
- public:
-  DefaultUnsignalledSsrcHandler();
-  Action OnUnsignalledSsrc(WebRtcVideoChannel* channel,
-                           uint32_t ssrc,
-                           absl::optional<uint32_t> rtx_ssrc) override;
-
-  rtc::VideoSinkInterface<webrtc::VideoFrame>* GetDefaultSink() const;
-  void SetDefaultSink(WebRtcVideoChannel* channel,
-                      rtc::VideoSinkInterface<webrtc::VideoFrame>* sink);
-
-  virtual ~DefaultUnsignalledSsrcHandler() = default;
-
- private:
-  rtc::VideoSinkInterface<webrtc::VideoFrame>* default_sink_;
-};
-
 // WebRtcVideoEngine is used for the new native WebRTC Video API (webrtc:1667).
 class WebRtcVideoEngine : public VideoEngineInterface {
  public:
@@ -321,6 +291,8 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   bool MaybeCreateDefaultReceiveStream(
       const webrtc::RtpPacketReceived& parsed_packet)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
+  void ReCreateDefaulReceiveStream(uint32_t ssrc,
+                                   absl::optional<uint32_t> rtx_ssrc);
   void ConfigureReceiverRtp(
       webrtc::VideoReceiveStreamInterface::Config* config,
       webrtc::FlexfecReceiveStream::Config* flexfec_config,
@@ -600,9 +572,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   bool sending_ RTC_GUARDED_BY(thread_checker_);
   webrtc::Call* const call_;
 
-  DefaultUnsignalledSsrcHandler default_unsignalled_ssrc_handler_
-      RTC_GUARDED_BY(thread_checker_);
-  UnsignalledSsrcHandler* const unsignalled_ssrc_handler_
+  rtc::VideoSinkInterface<webrtc::VideoFrame>* default_sink_
       RTC_GUARDED_BY(thread_checker_);
 
   // Delay for unsignaled streams, which may be set before the stream exists.

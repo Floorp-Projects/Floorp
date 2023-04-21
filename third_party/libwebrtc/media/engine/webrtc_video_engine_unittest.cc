@@ -53,6 +53,8 @@
 #include "media/engine/fake_webrtc_call.h"
 #include "media/engine/fake_webrtc_video_engine.h"
 #include "media/engine/webrtc_voice_engine.h"
+#include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
+#include "modules/rtp_rtcp/source/rtcp_packet.h"
 #include "modules/rtp_rtcp/source/rtp_packet.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "modules/video_coding/svc/scalability_mode_util.h"
@@ -66,6 +68,7 @@
 #include "test/fake_decoder.h"
 #include "test/frame_forwarder.h"
 #include "test/gmock.h"
+#include "test/rtcp_packet_parser.h"
 #include "test/scoped_key_value_config.h"
 #include "test/time_controller/simulated_time_controller.h"
 #include "video/config/simulcast.h"
@@ -85,12 +88,14 @@ using ::testing::Return;
 using ::testing::SizeIs;
 using ::testing::StrNe;
 using ::testing::Values;
+using ::testing::WithArg;
 using ::webrtc::BitrateConstraints;
 using ::webrtc::kDefaultScalabilityModeStr;
 using ::webrtc::RtpExtension;
 using ::webrtc::RtpPacket;
 using ::webrtc::RtpPacketReceived;
 using ::webrtc::ScalabilityMode;
+using ::webrtc::test::RtcpPacketParser;
 
 namespace {
 static const int kDefaultQpMax = 56;
@@ -243,6 +248,24 @@ class MockVideoSource : public rtc::VideoSourceInterface<webrtc::VideoFrame> {
   MOCK_METHOD(void,
               RemoveSink,
               (rtc::VideoSinkInterface<webrtc::VideoFrame> * sink),
+              (override));
+};
+
+class MockNetworkInterface : public cricket::MediaChannelNetworkInterface {
+ public:
+  MOCK_METHOD(bool,
+              SendPacket,
+              (rtc::CopyOnWriteBuffer * packet,
+               const rtc::PacketOptions& options),
+              (override));
+  MOCK_METHOD(bool,
+              SendRtcp,
+              (rtc::CopyOnWriteBuffer * packet,
+               const rtc::PacketOptions& options),
+              (override));
+  MOCK_METHOD(int,
+              SetOption,
+              (SocketType type, rtc::Socket::Option opt, int option),
               (override));
 };
 
@@ -832,6 +855,51 @@ void WebRtcVideoEngineTest::ExpectRtpCapabilitySupport(const char* uri,
   }
 }
 
+TEST_F(WebRtcVideoEngineTest, SendsFeedbackAfterUnsignaledRtxPacket) {
+  // Setup a channel with VP8, RTX and transport sequence number header
+  // extension. Receive stream is not explicitly configured.
+  AddSupportedVideoCodecType("VP8");
+  std::vector<VideoCodec> supported_codecs =
+      engine_.recv_codecs(/*include_rtx=*/true);
+  ASSERT_EQ(supported_codecs[1].name, "rtx");
+  int rtx_payload_type = supported_codecs[1].id;
+  MockNetworkInterface network;
+  RtcpPacketParser rtcp_parser;
+  ON_CALL(network, SendRtcp)
+      .WillByDefault(testing::DoAll(
+          WithArg<0>([&](rtc::CopyOnWriteBuffer* packet) {
+            ASSERT_TRUE(rtcp_parser.Parse(packet->cdata(), packet->size()));
+          }),
+          Return(true)));
+  std::unique_ptr<VideoMediaChannel> channel(engine_.CreateMediaChannel(
+      call_.get(), GetMediaConfig(), VideoOptions(), webrtc::CryptoOptions(),
+      video_bitrate_allocator_factory_.get()));
+  cricket::VideoRecvParameters parameters;
+  parameters.codecs = supported_codecs;
+  const int kTransportSeqExtensionId = 1;
+  parameters.extensions.push_back(RtpExtension(
+      RtpExtension::kTransportSequenceNumberUri, kTransportSeqExtensionId));
+  ASSERT_TRUE(channel->SetRecvParameters(parameters));
+  channel->SetInterface(&network);
+  channel->AsVideoReceiveChannel()->OnReadyToSend(true);
+
+  // Inject a RTX packet.
+  webrtc::RtpHeaderExtensionMap extension_map(parameters.extensions);
+  webrtc::RtpPacketReceived packet(&extension_map);
+  packet.SetMarker(true);
+  packet.SetPayloadType(rtx_payload_type);
+  packet.SetSsrc(999);
+  packet.SetExtension<webrtc::TransportSequenceNumber>(7);
+  uint8_t* buf_ptr = packet.AllocatePayload(11);
+  memset(buf_ptr, 0, 11);  // Pass MSAN (don't care about bytes 1-9)
+  channel->AsVideoReceiveChannel()->OnPacketReceived(packet);
+
+  //  Expect that feedback is  sent after a while.
+  time_controller_.AdvanceTime(webrtc::TimeDelta::Seconds(1));
+  EXPECT_GT(rtcp_parser.transport_feedback()->num_packets(), 0);
+
+  channel->SetInterface(nullptr);
+}
 TEST_F(WebRtcVideoEngineTest, UsesSimulcastAdapterForVp8Factories) {
   AddSupportedVideoCodecType("VP8");
 
@@ -7178,12 +7246,12 @@ TEST_F(WebRtcVideoChannelTest, Vp9PacketCreatesUnsignalledStream) {
                                   true /* expect_created_receive_stream */);
 }
 
-TEST_F(WebRtcVideoChannelTest, RtxPacketDoesntCreateUnsignalledStream) {
+TEST_F(WebRtcVideoChannelTest, RtxPacketCreateUnsignalledStream) {
   AssignDefaultAptRtxTypes();
   const cricket::VideoCodec vp8 = GetEngineCodec("VP8");
   const int rtx_vp8_payload_type = default_apt_rtx_types_[vp8.id];
   TestReceiveUnsignaledSsrcPacket(rtx_vp8_payload_type,
-                                  false /* expect_created_receive_stream */);
+                                  true /* expect_created_receive_stream */);
 }
 
 TEST_F(WebRtcVideoChannelTest, UlpfecPacketDoesntCreateUnsignalledStream) {
@@ -7235,6 +7303,37 @@ TEST_F(WebRtcVideoChannelTest,
       << "Receive stream should have correct media ssrc";
   EXPECT_EQ(config.rtp.rtx_ssrc, rtx_ssrc)
       << "Receive stream should have correct rtx ssrc";
+}
+
+TEST_F(WebRtcVideoChannelTest,
+       MediaPacketAfterRtxImmediatelyRecreatesUnsignalledStream) {
+  AssignDefaultAptRtxTypes();
+  const cricket::VideoCodec vp8 = GetEngineCodec("VP8");
+  const int payload_type = vp8.id;
+  const int rtx_vp8_payload_type = default_apt_rtx_types_[vp8.id];
+  const uint32_t ssrc = kIncomingUnsignalledSsrc;
+  const uint32_t rtx_ssrc = ssrc + 1;
+
+  // Send rtx packet.
+  RtpPacketReceived rtx_packet;
+  rtx_packet.SetPayloadType(rtx_vp8_payload_type);
+  rtx_packet.SetSsrc(rtx_ssrc);
+  receive_channel_->OnPacketReceived(rtx_packet);
+  rtc::Thread::Current()->ProcessMessages(0);
+  EXPECT_EQ(1u, fake_call_->GetVideoReceiveStreams().size());
+
+  // Send media packet.
+  RtpPacketReceived packet;
+  packet.SetPayloadType(payload_type);
+  packet.SetSsrc(ssrc);
+  ReceivePacketAndAdvanceTime(packet);
+  EXPECT_EQ(1u, fake_call_->GetVideoReceiveStreams().size());
+
+  // Check receive stream has been recreated with correct ssrcs.
+  auto recv_stream = fake_call_->GetVideoReceiveStreams().front();
+  auto& config = recv_stream->GetConfig();
+  EXPECT_EQ(config.rtp.remote_ssrc, ssrc)
+      << "Receive stream should have correct media ssrc";
 }
 
 // Test that receiving any unsignalled SSRC works even if it changes.
