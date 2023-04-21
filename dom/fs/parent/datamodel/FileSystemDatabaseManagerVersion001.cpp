@@ -329,23 +329,14 @@ Result<EntryId, QMResult> FindEntryId(const FileSystemConnection& aConnection,
   return entryId;
 }
 
-Result<bool, QMResult> IsSame(const FileSystemConnection& aConnection,
-                              const FileSystemEntryMetadata& aHandle,
-                              const FileSystemChildMetadata& aNewHandle,
-                              bool aIsFile) {
+bool IsSame(const FileSystemConnection& aConnection,
+            const FileSystemEntryMetadata& aHandle,
+            const FileSystemChildMetadata& aNewHandle, bool aIsFile) {
   MOZ_ASSERT(!aNewHandle.parentId().IsEmpty());
 
-  // Typically aNewHandle does not exist which is not an error
-  QM_TRY_RETURN(QM_OR_ELSE_LOG_VERBOSE_IF(
-      // Expression.
-      FindEntryId(aConnection, aNewHandle, aIsFile)
-          .map([&aHandle](const EntryId& entryId) {
-            return entryId == aHandle.entryId();
-          }),
-      // Predicate.
-      IsSpecificError<NS_ERROR_DOM_NOT_FOUND_ERR>,
-      // Fallback.
-      ErrToOkFromQMResult<false>));
+  QM_TRY_UNWRAP(EntryId entryId, FindEntryId(aConnection, aNewHandle, aIsFile),
+                false);
+  return entryId == aHandle.entryId();
 }
 
 Result<bool, QMResult> IsFile(const FileSystemConnection& aConnection,
@@ -856,8 +847,7 @@ FileSystemDatabaseManagerVersion001::GetOrCreateDirectory(
 }
 
 Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::GetOrCreateFile(
-    const FileSystemChildMetadata& aHandle, const ContentType& aType,
-    bool aCreate) {
+    const FileSystemChildMetadata& aHandle, bool aCreate) {
   MOZ_ASSERT(!aHandle.parentId().IsEmpty());
 
   const auto& name = aHandle.childName();
@@ -894,9 +884,9 @@ Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::GetOrCreateFile(
 
   const nsLiteralCString insertFileQuery =
       "INSERT INTO Files "
-      "( handle, type, name ) "
+      "( handle, name ) "
       "VALUES "
-      "( :handle, :type, :name ) "
+      "( :handle, :name ) "
       ";"_ns;
 
   QM_TRY_UNWRAP(EntryId entryId, GetUniqueEntryId(mConnection, aHandle));
@@ -917,7 +907,6 @@ Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::GetOrCreateFile(
     QM_TRY_UNWRAP(ResultStatement stmt,
                   ResultStatement::Create(mConnection, insertFileQuery));
     QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, entryId)));
-    QM_TRY(QM_TO_RESULT(stmt.BindContentTypeByName("type"_ns, aType)));
     QM_TRY(QM_TO_RESULT(stmt.BindNameByName("name"_ns, name)));
     QM_TRY(QM_TO_RESULT(stmt.Execute()));
   }
@@ -968,7 +957,7 @@ FileSystemDatabaseManagerVersion001::GetDirectoryEntries(
 }
 
 nsresult FileSystemDatabaseManagerVersion001::GetFile(
-    const EntryId& aEntryId, ContentType& aType,
+    const EntryId& aEntryId, nsString& aType,
     TimeStamp& lastModifiedMilliSeconds, nsTArray<Name>& aPath,
     nsCOMPtr<nsIFile>& aFile) const {
   MOZ_ASSERT(!aEntryId.IsEmpty());
@@ -1348,9 +1337,7 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::MoveEntry(
 
   // If the rename doesn't change the name or directory, just return success.
   // XXX Needs to be added to the spec
-  QM_WARNONLY_TRY_UNWRAP(Maybe<bool> maybeSame,
-                         IsSame(mConnection, aHandle, aNewDesignation, isFile));
-  if (maybeSame && maybeSame.value()) {
+  if (IsSame(mConnection, aHandle, aNewDesignation, isFile)) {
     return true;
   }
 

@@ -14,7 +14,7 @@ class nsTArray;
 
 namespace mozilla::dom::fs {
 
-using ContentType = nsCString;
+using ContentType = nsString;
 using DatabaseVersion = int32_t;
 using EntryId = nsCString;
 using Name = nsString;
