@@ -2765,6 +2765,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCAudioPlayoutStats) {
   ASSERT_EQ(1U, stats_of_track_type.size());
 
   RTCAudioPlayoutStats expected_stats("AP", report->timestamp());
+  expected_stats.kind = "audio";
   expected_stats.synthesized_samples_duration = 1;
   expected_stats.synthesized_samples_events = 2;
   expected_stats.total_samples_count = 3;

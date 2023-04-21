@@ -900,6 +900,7 @@ RTCTransportStats::~RTCTransportStats() {}
 RTCAudioPlayoutStats::RTCAudioPlayoutStats(const std::string& id,
                                            Timestamp timestamp)
     : RTCStats(std::move(id), timestamp),
+      kind("kind", "audio"),
       synthesized_samples_duration("synthesizedSamplesDuration"),
       synthesized_samples_events("synthesizedSamplesEvents"),
       total_samples_duration("totalSamplesDuration"),
@@ -912,7 +913,8 @@ RTCAudioPlayoutStats::RTCAudioPlayoutStats(const RTCAudioPlayoutStats& other) =
 RTCAudioPlayoutStats::~RTCAudioPlayoutStats() {}
 
 // clang-format off
-WEBRTC_RTCSTATS_IMPL(RTCAudioPlayoutStats, RTCStats, "audio-playout",
+WEBRTC_RTCSTATS_IMPL(RTCAudioPlayoutStats, RTCStats, "media-playout",
+    &kind,
     &synthesized_samples_duration,
     &synthesized_samples_events,
     &total_samples_duration,
