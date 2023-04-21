@@ -20,7 +20,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d0b311007c033e838
  11 files changed, 56 insertions(+), 10 deletions(-)
 
 diff --git a/audio/audio_receive_stream.cc b/audio/audio_receive_stream.cc
-index 7a2037e83f..a515760976 100644
+index 0bb1168384..7063f40186 100644
 --- a/audio/audio_receive_stream.cc
 +++ b/audio/audio_receive_stream.cc
 @@ -47,6 +47,8 @@ std::string AudioReceiveStreamInterface::Config::Rtp::ToString() const {
@@ -107,7 +107,7 @@ index b47a4b5b97..dd3ca1af83 100644
  }  // namespace voe
  }  // namespace webrtc
 diff --git a/call/audio_receive_stream.h b/call/audio_receive_stream.h
-index f383277323..5f21f4cac6 100644
+index 1228861c42..6fc93b2d9a 100644
 --- a/call/audio_receive_stream.h
 +++ b/call/audio_receive_stream.h
 @@ -19,6 +19,7 @@

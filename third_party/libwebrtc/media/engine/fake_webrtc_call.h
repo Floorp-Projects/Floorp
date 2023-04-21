@@ -127,7 +127,6 @@ class FakeAudioReceiveStream final
   void SetFrameDecryptor(rtc::scoped_refptr<webrtc::FrameDecryptorInterface>
                              frame_decryptor) override;
   void SetRtpExtensions(std::vector<webrtc::RtpExtension> extensions) override;
-  const std::vector<webrtc::RtpExtension>& GetRtpExtensions() const override;
   webrtc::RtpHeaderExtensionMap GetRtpExtensionMap() const override;
 
   webrtc::AudioReceiveStreamInterface::Stats GetStats(

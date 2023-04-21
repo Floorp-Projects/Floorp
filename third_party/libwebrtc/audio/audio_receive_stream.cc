@@ -265,12 +265,6 @@ void AudioReceiveStreamImpl::SetRtpExtensions(
   config_.rtp.extensions = std::move(extensions);
 }
 
-const std::vector<RtpExtension>& AudioReceiveStreamImpl::GetRtpExtensions()
-    const {
-  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-  return config_.rtp.extensions;
-}
-
 RtpHeaderExtensionMap AudioReceiveStreamImpl::GetRtpExtensionMap() const {
   return RtpHeaderExtensionMap(config_.rtp.extensions);
 }

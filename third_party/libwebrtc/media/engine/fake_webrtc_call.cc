@@ -135,11 +135,6 @@ void FakeAudioReceiveStream::SetRtpExtensions(
   config_.rtp.extensions = std::move(extensions);
 }
 
-const std::vector<webrtc::RtpExtension>&
-FakeAudioReceiveStream::GetRtpExtensions() const {
-  return config_.rtp.extensions;
-}
-
 webrtc::RtpHeaderExtensionMap FakeAudioReceiveStream::GetRtpExtensionMap()
     const {
   return webrtc::RtpHeaderExtensionMap(config_.rtp.extensions);
