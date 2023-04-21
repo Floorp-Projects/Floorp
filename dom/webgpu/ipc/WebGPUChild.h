@@ -98,7 +98,7 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
   RefPtr<PipelinePromise> DeviceCreateRenderPipelineAsync(
       PipelineCreationContext* const aContext,
       const dom::GPURenderPipelineDescriptor& aDesc);
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<ShaderModule> DeviceCreateShaderModule(
+  already_AddRefed<ShaderModule> DeviceCreateShaderModule(
       Device* aDevice, const dom::GPUShaderModuleDescriptor& aDesc,
       RefPtr<dom::Promise> aPromise);
 
