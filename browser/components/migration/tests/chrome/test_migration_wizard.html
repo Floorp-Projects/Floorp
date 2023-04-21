@@ -949,6 +949,84 @@
           );
         }
       });
+
+      /**
+       * Tests that the button shown in either the browser migration success or
+       * file migration success pages is a "continue" button rather than a
+       * "done" button.
+       */
+      add_task(async function test_embedded_continue_button() {
+        gWiz.toggleAttribute("dialog-mode", false);
+        gWiz.setState({
+          page: MigrationWizardConstants.PAGES.PROGRESS,
+          key: "chrome",
+          progress: {
+            [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS]: {
+              inProgress: false,
+              message: "A string from the parent",
+            },
+          },
+        });
+
+        let progressPage = gShadowRoot.querySelector("div[name='page-progress']");
+        let cancelButton = progressPage.querySelector(".cancel-close");
+        ok(isHidden(cancelButton), "Cancel button should be hidden");
+        let doneButton = progressPage.querySelector(".done-button");
+        ok(isHidden(doneButton), "Done button should be hidden when embedding");
+        let continueButton = progressPage.querySelector(".continue-button");
+        ok(!isHidden(continueButton), "Continue button should be displayed");
+
+        let content = document.getElementById("content");
+
+        let promise = new Promise(resolve => {
+          content.addEventListener("MigrationWizard:Close", resolve, {
+            once: true,
+          });
+        });
+        continueButton.click();
+        await promise;
+        ok(
+          true,
+          "Clicking on the Continue button sent the MigrationWizard:Close event."
+        );
+
+        gWiz.setState({
+          page: MigrationWizardConstants.PAGES.FILE_IMPORT_PROGRESS,
+          title: "Done importing file data",
+          progress: {
+            [MigrationWizardConstants.DISPLAYED_FILE_RESOURCE_TYPES.PASSWORDS_NEW]: {
+              inProgress: false,
+              message: "Some message",
+            },
+            [MigrationWizardConstants.DISPLAYED_FILE_RESOURCE_TYPES.PASSWORDS_UPDATED]: {
+              inProgress: false,
+              message: "Some other",
+            },
+          },
+        });
+
+        progressPage = gShadowRoot.querySelector("div[name='page-file-import-progress']");
+        cancelButton = progressPage.querySelector(".cancel-close");
+        ok(isHidden(cancelButton), "Cancel button should be hidden");
+        doneButton = progressPage.querySelector(".done-button");
+        ok(isHidden(doneButton), "Done button should be hidden when embedding");
+        continueButton = progressPage.querySelector(".continue-button");
+        ok(!isHidden(continueButton), "Continue button should be displayed");
+
+        promise = new Promise(resolve => {
+          content.addEventListener("MigrationWizard:Close", resolve, {
+            once: true,
+          });
+        });
+        continueButton.click();
+        await promise;
+        ok(
+          true,
+          "Clicking on the Continue button sent the MigrationWizard:Close event."
+        );
+
+        gWiz.toggleAttribute("dialog-mode", true);
+      });
     </script>
   </head>
   <body>

@@ -112,6 +112,7 @@ migration-choose-to-import-from-file-button-label = Import From File
 migration-import-from-file-button-label = Select File
 migration-cancel-button-label = Cancel
 migration-done-button-label = Done
+migration-continue-button-label = Continue
 
 migration-wizard-import-browser-no-browsers = { -brand-short-name } couldn’t find any programs that contain bookmark, history or password data.
 migration-wizard-import-browser-no-resources = There was an error. { -brand-short-name } can’t find any data to import from that browser profile.
