@@ -29,6 +29,14 @@ const TEST_PROVIDER_INFO = [
     taggedCodes: ["ff"],
     followOnParamNames: ["a"],
     extraAdServersRegexps: [/^https:\/\/example\.com\/ad2?/],
+    components: [
+      {
+        type: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+        included: {
+          default: true,
+        },
+      },
+    ],
   },
 ];
 
@@ -196,6 +204,7 @@ add_task(async function test_reload() {
       },
     },
   ]);
+  await promiseAdImpressionReceived();
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
   await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
@@ -235,6 +244,7 @@ add_task(async function test_reload() {
       engagements: [
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+          target: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
         },
       ],
     },
@@ -271,6 +281,7 @@ add_task(async function test_fresh_search() {
       },
     },
   ]);
+  await promiseAdImpressionReceived(1);
 });
 
 add_task(async function test_click_ad() {
@@ -302,6 +313,7 @@ add_task(async function test_click_ad() {
       engagements: [
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+          target: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
         },
       ],
     },
@@ -338,6 +350,7 @@ add_task(async function test_go_back() {
       engagements: [
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+          target: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
         },
       ],
     },
@@ -350,6 +363,7 @@ add_task(async function test_go_back() {
       },
     },
   ]);
+  await promiseAdImpressionReceived(2);
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
   await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
@@ -382,6 +396,7 @@ add_task(async function test_go_back() {
       engagements: [
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+          target: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
         },
       ],
     },
@@ -395,6 +410,7 @@ add_task(async function test_go_back() {
       engagements: [
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+          target: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
         },
       ],
     },
@@ -434,6 +450,7 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
       },
     },
   ]);
+  await promiseAdImpressionReceived(1);
 
   // Do another search from the context of the default SERP.
   await loadSearchPage();
@@ -468,6 +485,7 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
       },
     },
   ]);
+  await promiseAdImpressionReceived(2);
 
   // Click on an ad.
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
@@ -508,6 +526,7 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
       engagements: [
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+          target: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
         },
       ],
     },

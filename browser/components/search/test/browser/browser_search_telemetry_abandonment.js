@@ -23,6 +23,14 @@ const TEST_PROVIDER_INFO = [
     taggedCodes: ["ff"],
     followOnParamNames: ["a"],
     extraAdServersRegexps: [/^https:\/\/example\.com\/ad2?/],
+    components: [
+      {
+        type: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+        included: {
+          default: true,
+        },
+      },
+    ],
   },
 ];
 
@@ -168,6 +176,11 @@ add_task(async function test_click_ad() {
     gBrowser,
     getSERPUrl("searchTelemetryAd.html")
   );
+
+  await TestUtils.waitForCondition(() => {
+    let adImpressions = Glean.serp.adImpression.testGetValue() ?? [];
+    return adImpressions.length;
+  }, "Should have received an ad impression.");
 
   let browserLoadedPromise = BrowserTestUtils.browserLoaded(gBrowser);
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
