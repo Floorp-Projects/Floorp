@@ -6,29 +6,25 @@ import { asSettled } from "../utils/async-value";
 
 import {
   getSelectedLocation,
-  getSource,
   getFirstSourceActorForGeneratedSource,
 } from "../selectors/sources";
 
 export function getSourceTextContent(state, location) {
-  let { sourceId, sourceActorId } = location;
-
-  const source = getSource(state, sourceId);
-  if (!source) {
-    return null;
-  }
-
-  if (source.isOriginal) {
+  if (location.source.isOriginal) {
     return state.sourcesContent.mutableOriginalSourceTextContentMapBySourceId.get(
-      sourceId
+      location.source.id
     );
   }
-  if (!sourceActorId) {
-    const sourceActor = getFirstSourceActorForGeneratedSource(state, sourceId);
-    sourceActorId = sourceActor.actor;
+
+  let { sourceActor } = location;
+  if (!sourceActor) {
+    sourceActor = getFirstSourceActorForGeneratedSource(
+      state,
+      location.source.id
+    );
   }
   return state.sourcesContent.mutableGeneratedSourceTextContentMapBySourceActorId.get(
-    sourceActorId
+    sourceActor.id
   );
 }
 
