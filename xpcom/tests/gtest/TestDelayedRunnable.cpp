@@ -151,6 +151,7 @@ TEST(DelayedRunnable, TimerFiresBeforeRunnableRuns)
         // we leave scope.
         innerMonitor.Wait();
         // Notify the outer monitor that we've finished the async steps.
+        MonitorAutoLock outerLock(outerMonitor);
         outerMonitor.NotifyAll();
       })));
   // Wait for async steps before wrapping up the test case.
