@@ -27,6 +27,7 @@ CaptureStreamTestHelper.prototype = {
   /* Predefined colors for use in the methods below. */
   black: { data: [0, 0, 0, 255], name: "black" },
   blackTransparent: { data: [0, 0, 0, 0], name: "blackTransparent" },
+  white: { data: [255, 255, 255, 255], name: "white" },
   green: { data: [0, 255, 0, 255], name: "green" },
   red: { data: [255, 0, 0, 255], name: "red" },
   blue: { data: [0, 0, 255, 255], name: "blue" },

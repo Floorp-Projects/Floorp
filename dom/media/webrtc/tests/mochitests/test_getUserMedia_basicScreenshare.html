@@ -133,7 +133,7 @@
        `Width setting ${settings.width} should be set after gUM (or 0 per bug 1453247)`);
     ok(settings.height <= 8192,
        `Height setting ${settings.height} should be set after gUM (or 0 per bug 1453247)`);
-    let colors = ["red", "blue", "green", "grey"];
+    let colors = ["red", "blue", "green", "white"];
     draw(colors);
     await doVerify(stream, colors);
     const screenWidth = testVideo.videoWidth;
@@ -163,7 +163,7 @@
        `Width setting ${settings.width} should be correct after gUM (or 0 per bug 1453247)`);
     ok(settings.height == 0 || (settings.height >= 10 && settings.height <= 100),
        `Height setting ${settings.height} should be correct after gUM (or 0 per bug 1453247)`);
-    colors = ["green", "red", "grey", "blue"];
+    colors = ["green", "red", "white", "blue"];
     draw(colors);
     await doVerify(stream.clone(), colors);
     settings = stream.getTracks()[0].getSettings();
@@ -215,7 +215,7 @@
     expectedHeight = (screenHeight * settings.width) / screenWidth;
     ok(Math.abs(expectedHeight - settings.height) <= 1,
        "Aspect ratio after applying constraints should be close enough");
-    colors = ["grey", "green", "blue", "red"];
+    colors = ["white", "green", "blue", "red"];
     draw(colors);
     await doVerify(stream, colors);
   });
