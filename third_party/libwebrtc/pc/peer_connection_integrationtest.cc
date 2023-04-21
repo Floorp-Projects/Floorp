@@ -2834,6 +2834,14 @@ TEST_P(PeerConnectionIntegrationTest, UnsignaledSsrcGetParametersVideo) {
   EXPECT_TRUE(parameters.encodings[0].ssrc.has_value());
 }
 
+TEST_P(PeerConnectionIntegrationTest,
+       GetParametersHasEncodingsBeforeNegotiation) {
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  auto sender = caller()->AddTrack(caller()->CreateLocalVideoTrack());
+  auto parameters = sender->GetParameters();
+  EXPECT_EQ(parameters.encodings.size(), 1u);
+}
+
 // Test that if a track is removed and added again with a different stream ID,
 // the new stream ID is successfully communicated in SDP and media continues to
 // flow end-to-end.
@@ -3408,6 +3416,28 @@ TEST_F(PeerConnectionIntegrationTestUnifiedPlan,
     caller()->UpdateDelayStats("caller reception", current_size);
     callee()->UpdateDelayStats("callee reception", current_size);
   }
+}
+
+TEST_F(PeerConnectionIntegrationTestUnifiedPlan,
+       GetParametersHasEncodingsBeforeNegotiation) {
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  auto result = caller()->pc()->AddTransceiver(cricket::MEDIA_TYPE_VIDEO);
+  auto transceiver = result.MoveValue();
+  auto parameters = transceiver->sender()->GetParameters();
+  EXPECT_EQ(parameters.encodings.size(), 1u);
+}
+
+TEST_F(PeerConnectionIntegrationTestUnifiedPlan,
+       GetParametersHasInitEncodingsBeforeNegotiation) {
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  RtpTransceiverInit init;
+  init.send_encodings.push_back({});
+  init.send_encodings[0].max_bitrate_bps = 12345;
+  auto result = caller()->pc()->AddTransceiver(cricket::MEDIA_TYPE_VIDEO, init);
+  auto transceiver = result.MoveValue();
+  auto parameters = transceiver->sender()->GetParameters();
+  ASSERT_EQ(parameters.encodings.size(), 1u);
+  EXPECT_EQ(parameters.encodings[0].max_bitrate_bps, 12345);
 }
 
 INSTANTIATE_TEST_SUITE_P(

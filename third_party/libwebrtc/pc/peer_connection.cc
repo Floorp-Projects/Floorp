@@ -1096,6 +1096,11 @@ PeerConnection::AddTransceiver(
     }
   }
 
+  // If no encoding parameters were provided, a default entry is created.
+  if (parameters.encodings.empty()) {
+    parameters.encodings.push_back({});
+  }
+
   if (UnimplementedRtpParameterHasValue(parameters)) {
     LOG_AND_RETURN_ERROR(
         RTCErrorType::UNSUPPORTED_PARAMETER,
