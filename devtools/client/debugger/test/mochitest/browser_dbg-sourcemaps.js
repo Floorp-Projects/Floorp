@@ -62,6 +62,16 @@ add_task(async function() {
     "Original source text loaded correctly"
   );
 
+  // Bug 1824375 - pending location shouldn't be location and include only url, line and column attributes
+  let pendingSelectedLocation = Services.prefs.getStringPref(
+    "devtools.debugger.pending-selected-location"
+  );
+  is(
+    pendingSelectedLocation,
+    JSON.stringify({ url: entrySrc.url, line: 0, column: undefined }),
+    "Pending selected location is the expected one"
+  );
+
   // Test breaking on a breakpoint
   await addBreakpoint(dbg, "entry.js", 15);
   is(getBreakpointCount(), 1, "One breakpoint exists");
@@ -81,6 +91,15 @@ add_task(async function() {
   await dbg.actions.jumpToMappedSelectedLocation(getContext(dbg));
   await stepOut(dbg);
   assertPausedAtSourceAndLine(dbg, entrySrc.id, 16);
+
+  pendingSelectedLocation = Services.prefs.getStringPref(
+    "devtools.debugger.pending-selected-location"
+  );
+  is(
+    pendingSelectedLocation,
+    JSON.stringify({ url: entrySrc.url, line: 16, column: 0 }),
+    "Pending selected location is the expected one"
+  );
 });
 
 function assertBreakpointExists(dbg, source, line) {

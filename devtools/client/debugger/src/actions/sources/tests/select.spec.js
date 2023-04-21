@@ -178,7 +178,7 @@ describe("sources", () => {
     const source = await dispatch(
       actions.newGeneratedSource(makeSource("testSource"))
     );
-    const location = { test: "testLocation" };
+    const location = createLocation({ source });
 
     // set value
     dispatch(actions.setSelectedLocation(cx, source, location));
