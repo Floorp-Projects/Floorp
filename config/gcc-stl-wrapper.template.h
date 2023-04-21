@@ -8,9 +8,7 @@
 #ifndef mozilla_${HEADER}_h
 #define mozilla_${HEADER}_h
 
-// For some reason, Apple's GCC refuses to honor -fno-exceptions when
-// compiling ObjC.
-#if defined(__EXCEPTIONS) && __EXCEPTIONS && !(__OBJC__ && __GNUC__ && XP_IOS)
+#if defined(__cpp_exceptions) && __cpp_exceptions
 #  error "STL code can only be used with -fno-exceptions"
 #endif
 
