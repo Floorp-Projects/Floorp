@@ -283,9 +283,6 @@ class BlocklistDescriptor(object):
                 map(add_list_flags, self.get_test_entries(exec_env, blocklist))
             )
 
-        # There should be no dupes in the input. If there are, raise an error.
-        self.ensure_no_dupes(unified_list)
-
         # Now we filter out any unwanted list entries
         filtered_list = filter(filter_func, unified_list)
 

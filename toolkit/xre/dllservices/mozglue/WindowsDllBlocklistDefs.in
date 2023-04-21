@@ -274,6 +274,24 @@ ALL_PROCESSES_TESTS += [
                              (5, 5, 5, 5)),
     DllBlocklistEntry("testdllblocklist_singlenotification1.dll", ALL_VERSIONS),
     DllBlocklistEntry("testdllblocklist_singlenotification2.dll", (5, 5, 5, 5)),
+    DllBlocklistEntry("testdllblocklist_multipleentries_differentprocesses.dll", UNVERSIONED),
+    # Multiple entries so that search is required to account for each one
+    DllBlocklistEntry("testdllblocklist_multipleentries_sameprocessbackward.dll", (5, 5, 5, 5)),
+    DllBlocklistEntry("testdllblocklist_multipleentries_sameprocessbackward.dll", (1, 1, 1, 1)),
+    DllBlocklistEntry("testdllblocklist_multipleentries_sameprocessbackward.dll", (1, 1, 1, 1)),
+    DllBlocklistEntry("testdllblocklist_multipleentries_sameprocessbackward.dll", (1, 1, 1, 1)),
+    DllBlocklistEntry("testdllblocklist_multipleentries_sameprocessbackward.dll", (1, 1, 1, 1)),
+    DllBlocklistEntry("testdllblocklist_multipleentries_sameprocessbackward.dll", (1, 1, 1, 1)),
+    DllBlocklistEntry("testdllblocklist_multipleentries_sameprocessbackward.dll", (1, 1, 1, 1)),
+    # Multiple entries so that search is required to account for each one
+    DllBlocklistEntry("testdllblocklist_multipleentries_sameprocessforward.dll", (1, 1, 1, 1)),
+    DllBlocklistEntry("testdllblocklist_multipleentries_sameprocessforward.dll", (1, 1, 1, 1)),
+    DllBlocklistEntry("testdllblocklist_multipleentries_sameprocessforward.dll", (1, 1, 1, 1)),
+    DllBlocklistEntry("testdllblocklist_multipleentries_sameprocessforward.dll", (1, 1, 1, 1)),
+    DllBlocklistEntry("testdllblocklist_multipleentries_sameprocessforward.dll", (1, 1, 1, 1)),
+    DllBlocklistEntry("testdllblocklist_multipleentries_sameprocessforward.dll", (1, 1, 1, 1)),
+    DllBlocklistEntry("testdllblocklist_multipleentries_sameprocessforward.dll", (1, 1, 1, 1)),
+    DllBlocklistEntry("testdllblocklist_multipleentries_sameprocessforward.dll", (5, 5, 5, 5)),
 ]
 
 BROWSER_PROCESS += [
@@ -352,6 +370,7 @@ GPU_PROCESSES += [
 GPU_PROCESSES_TESTS += [
     # DLLs used by TestDllBlocklist* gTests
     DllBlocklistEntry("testdllblocklist_gpuprocessonly.dll", ALL_VERSIONS),
+    DllBlocklistEntry("testdllblocklist_multipleentries_differentprocesses.dll", ALL_VERSIONS)
 ]
 
 SOCKET_PROCESSES += [

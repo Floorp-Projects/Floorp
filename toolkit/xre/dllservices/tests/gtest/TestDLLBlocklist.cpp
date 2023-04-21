@@ -206,6 +206,60 @@ TEST(TestDllBlocklist, UtilityProcessOnly_AllowInMainProcess)
   EXPECT_TRUE(!!::GetModuleHandleW(kLeafName.get()));
 }
 
+// This DLL has two entries; it's blocked for unversioned (i.e. DLLs that
+// have no version information) everywhere and blocked for versions 5.5.5.5 and
+// earlier only in the GPU process. Since the version we're trying to load
+// is 5.5.5.5, it should load in the main process.
+TEST(TestDllBlocklist, MultipleEntriesDifferentProcesses_AllowInMainProcess)
+{
+  constexpr auto kLeafName =
+      u"TestDllBlocklist_MultipleEntries_DifferentProcesses.dll"_ns;
+  nsString dllPath = GetFullPath(kLeafName);
+
+  nsModuleHandle hDll(::LoadLibraryW(dllPath.get()));
+
+  EXPECT_TRUE(!!hDll);
+  EXPECT_TRUE(!!::GetModuleHandleW(kLeafName.get()));
+}
+
+TEST(TestDllBlocklist, MultipleEntriesSameProcessBackward_Block)
+{
+  // One entry matches by version and many others do not, so
+  // we should block.
+  constexpr auto kLeafName =
+      u"TestDllBlocklist_MultipleEntries_SameProcessBackward.dll"_ns;
+  nsString dllPath = GetFullPath(kLeafName);
+
+  nsModuleHandle hDll(::LoadLibraryW(dllPath.get()));
+
+  EXPECT_TRUE(!hDll);
+  EXPECT_TRUE(!::GetModuleHandleW(kLeafName.get()));
+
+  hDll.own(
+      ::LoadLibraryExW(dllPath.get(), nullptr, LOAD_LIBRARY_AS_IMAGE_RESOURCE));
+  // Mapped as MEM_IMAGE + PAGE_READONLY
+  EXPECT_TRUE(hDll);
+}
+
+TEST(TestDllBlocklist, MultipleEntriesSameProcessForward_Block)
+{
+  // One entry matches by version and many others do not, so
+  // we should block.
+  constexpr auto kLeafName =
+      u"TestDllBlocklist_MultipleEntries_SameProcessForward.dll"_ns;
+  nsString dllPath = GetFullPath(kLeafName);
+
+  nsModuleHandle hDll(::LoadLibraryW(dllPath.get()));
+
+  EXPECT_TRUE(!hDll);
+  EXPECT_TRUE(!::GetModuleHandleW(kLeafName.get()));
+
+  hDll.own(
+      ::LoadLibraryExW(dllPath.get(), nullptr, LOAD_LIBRARY_AS_IMAGE_RESOURCE));
+  // Mapped as MEM_IMAGE + PAGE_READONLY
+  EXPECT_TRUE(hDll);
+}
+
 #if defined(MOZ_LAUNCHER_PROCESS)
 // RedirectToNoOpEntryPoint needs the launcher process.
 // This test will fail in debug x64 if we mistakenly reintroduce stack buffers
@@ -259,7 +313,6 @@ TEST(TestDllBlocklist, UserBlocked)
 
 TEST(TestDllBlocklist, BlocklistIntegrity)
 {
-  nsTArray<DLL_BLOCKLIST_STRING_TYPE> dupes;
   DECLARE_POINTER_TO_FIRST_DLL_BLOCKLIST_ENTRY(pFirst);
   DECLARE_POINTER_TO_LAST_DLL_BLOCKLIST_ENTRY(pLast);
 
@@ -276,13 +329,6 @@ TEST(TestDllBlocklist, BlocklistIntegrity)
     for (auto pch = pEntry->mName; *pch != 0; ++pch) {
       EXPECT_FALSE(*pch >= 'A' && *pch <= 'Z');
     }
-
-    // Check for duplicate entries
-    for (auto&& dupe : dupes) {
-      EXPECT_NE(stricmp(dupe, pEntry->mName), 0);
-    }
-
-    dupes.AppendElement(pEntry->mName);
   }
 }
 
