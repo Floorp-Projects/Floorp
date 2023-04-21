@@ -73,6 +73,9 @@ with Files("drm/**"):
 with Files("libepoxy/**"):
     BUG_COMPONENT = ("Core", "WebRTC")
 
+with Files('picosha2/**'):
+    BUG_COMPONENT = ('Firefox Build System', 'General')
+
 with Files('rlbox_wasm2c_sandbox/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
