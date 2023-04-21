@@ -19,32 +19,35 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include "src/apply-names.h"
-#include "src/binary-reader.h"
-#include "src/binary-reader-ir.h"
-#include "src/error-formatter.h"
-#include "src/feature.h"
-#include "src/generate-names.h"
-#include "src/ir.h"
-#include "src/option-parser.h"
-#include "src/stream.h"
-#include "src/validator.h"
-#include "src/wast-lexer.h"
+#include "wabt/apply-names.h"
+#include "wabt/binary-reader-ir.h"
+#include "wabt/binary-reader.h"
+#include "wabt/error-formatter.h"
+#include "wabt/feature.h"
+#include "wabt/filenames.h"
+#include "wabt/generate-names.h"
+#include "wabt/ir.h"
+#include "wabt/option-parser.h"
+#include "wabt/result.h"
+#include "wabt/stream.h"
+#include "wabt/validator.h"
+#include "wabt/wast-lexer.h"
 
-#include "src/c-writer.h"
+#include "wabt/c-writer.h"
 
 using namespace wabt;
 
 static int s_verbose;
 static std::string s_infile;
 static std::string s_outfile;
+static unsigned int s_num_outputs = 1;
 static Features s_features;
 static WriteCOptions s_write_c_options;
 static bool s_read_debug_names = true;
 static std::unique_ptr<FileStream> s_log_stream;
 
 static const char s_description[] =
-R"(  Read a file in the WebAssembly binary format, and convert it to
+    R"(  Read a file in the WebAssembly binary format, and convert it to
   a C source file and header.
 
 examples:
@@ -54,6 +57,15 @@ examples:
   # parse test.wasm, write test.c and test.h, but ignore the debug names, if any
   $ wasm2c test.wasm --no-debug-names -o test.c
 )";
+
+static const std::string supported_features[] = {
+    "multi-memory", "multi-value", "sign-extension", "saturating-float-to-int",
+    "exceptions",   "memory64",    "extended-const"};
+
+static bool IsFeatureSupported(const std::string& feature) {
+  return std::find(std::begin(supported_features), std::end(supported_features),
+                   feature) != std::end(supported_features);
+};
 
 static void ParseOptions(int argc, char** argv) {
   OptionParser parser("wasm2c", s_description);
@@ -70,11 +82,15 @@ static void ParseOptions(int argc, char** argv) {
         ConvertBackslashToSlash(&s_outfile);
       });
   parser.AddOption(
-      'n', "modname", "MODNAME",
-      "Unique name for the module being generated. Each wasm sandboxed module in a single application should have a unique name.",
-      [](const char* argument) {
-        s_write_c_options.mod_name = argument;
-      });
+      '\0', "num-outputs", "NUM", "Number of output files to write",
+      [](const char* argument) { s_num_outputs = atoi(argument); });
+  parser.AddOption(
+      'n', "module-name", "MODNAME",
+      "Unique name for the module being generated. This name is prefixed to\n"
+      "each of the generaed C symbols. By default, the module name from the\n"
+      "names section is used. If that is not present the name of the input\n"
+      "file is used as the default.\n",
+      [](const char* argument) { s_write_c_options.module_name = argument; });
   s_features.AddOptions(&parser);
   parser.AddOption("no-debug-names", "Ignore debug names in the binary file",
                    []() { s_read_debug_names = false; });
@@ -85,28 +101,99 @@ static void ParseOptions(int argc, char** argv) {
                      });
   parser.Parse(argc, argv);
 
-  // TODO(binji): currently wasm2c doesn't support any non-default feature
-  // flags.
-  bool any_non_default_feature = false;
-#define WABT_FEATURE(variable, flag, default_, help) \
-  any_non_default_feature |= (s_features.variable##_enabled() != default_);
-#include "src/feature.def"
+  bool any_non_supported_feature = false;
+#define WABT_FEATURE(variable, flag, default_, help)   \
+  any_non_supported_feature |=                         \
+      (s_features.variable##_enabled() != default_) && \
+      !IsFeatureSupported(flag);
+#include "wabt/feature.def"
 #undef WABT_FEATURE
 
-  if (any_non_default_feature) {
-    fprintf(stderr, "wasm2c currently support only default feature flags.\n");
+  if (any_non_supported_feature) {
+    fprintf(stderr,
+            "wasm2c currently only supports a limited set of features.\n");
     exit(1);
   }
 }
 
 // TODO(binji): copied from binary-writer-spec.cc, probably should share.
-static string_view strip_extension(string_view s) {
-  string_view ext = s.substr(s.find_last_of('.'));
-  string_view result = s;
+static std::string_view strip_extension(std::string_view s) {
+  std::string_view ext = s.substr(s.find_last_of('.'));
+  std::string_view result = s;
 
   if (ext == ".c")
     result.remove_suffix(ext.length());
   return result;
+}
+
+Result Wasm2cMain(Errors& errors) {
+  if (s_num_outputs < 1) {
+    fprintf(stderr, "Number of output files must be positive.\n");
+    return Result::Error;
+  }
+
+  std::vector<uint8_t> file_data;
+  CHECK_RESULT(ReadFile(s_infile.c_str(), &file_data));
+
+  Module module;
+  const bool kStopOnFirstError = true;
+  const bool kFailOnCustomSectionError = true;
+  ReadBinaryOptions options(s_features, s_log_stream.get(), s_read_debug_names,
+                            kStopOnFirstError, kFailOnCustomSectionError);
+  CHECK_RESULT(ReadBinaryIr(s_infile.c_str(), file_data.data(),
+                            file_data.size(), options, &errors, &module));
+  CHECK_RESULT(ValidateModule(&module, &errors, s_features));
+  CHECK_RESULT(GenerateNames(&module));
+  /* TODO(binji): This shouldn't fail; if a name can't be applied
+   * (because the index is invalid, say) it should just be skipped. */
+  ApplyNames(&module);
+
+  if (!s_outfile.empty()) {
+    std::string header_name_full =
+        std::string(strip_extension(s_outfile)) + ".h";
+    std::vector<FileStream> c_streams;
+    if (s_num_outputs == 1) {
+      c_streams.emplace_back(s_outfile.c_str());
+    } else {
+      std::string output_prefix{strip_extension(s_outfile)};
+      for (unsigned int i = 0; i < s_num_outputs; i++) {
+        c_streams.emplace_back(output_prefix + "_" + std::to_string(i) + ".c");
+      }
+    }
+    std::vector<Stream*> c_stream_ptrs;
+    for (auto& s : c_streams) {
+      c_stream_ptrs.emplace_back(&s);
+    }
+    FileStream h_stream(header_name_full);
+    std::string_view header_name = GetBasename(header_name_full);
+    if (s_write_c_options.module_name.empty()) {
+      s_write_c_options.module_name = module.name;
+      if (s_write_c_options.module_name.empty()) {
+        // In the absence of module name in the names section use the filename.
+        s_write_c_options.module_name = StripExtension(GetBasename(s_infile));
+      }
+    }
+    if (s_num_outputs == 1) {
+      CHECK_RESULT(WriteC(std::move(c_stream_ptrs), &h_stream, c_stream_ptrs[0],
+                          std::string(header_name).c_str(), "", &module,
+                          s_write_c_options));
+    } else {
+      std::string header_impl_name_full =
+          std::string(strip_extension(s_outfile)) + "-impl.h";
+      FileStream h_impl_stream(header_impl_name_full);
+      std::string_view header_impl_name = GetBasename(header_impl_name_full);
+      CHECK_RESULT(WriteC(std::move(c_stream_ptrs), &h_stream, &h_impl_stream,
+                          std::string(header_name).c_str(),
+                          std::string(header_impl_name).c_str(), &module,
+                          s_write_c_options));
+    }
+  } else {
+    FileStream stream(stdout);
+    CHECK_RESULT(WriteC({&stream}, &stream, &stream, "wasm.h", "", &module,
+                        s_write_c_options));
+  }
+
+  return Result::Ok;
 }
 
 int ProgramMain(int argc, char** argv) {
@@ -115,49 +202,10 @@ int ProgramMain(int argc, char** argv) {
   InitStdio();
   ParseOptions(argc, argv);
 
-  std::vector<uint8_t> file_data;
-  result = ReadFile(s_infile.c_str(), &file_data);
-  if (Succeeded(result)) {
-    Errors errors;
-    Module module;
-    const bool kStopOnFirstError = true;
-    const bool kFailOnCustomSectionError = true;
-    ReadBinaryOptions options(s_features, s_log_stream.get(),
-                              s_read_debug_names, kStopOnFirstError,
-                              kFailOnCustomSectionError);
-    result = ReadBinaryIr(s_infile.c_str(), file_data.data(), file_data.size(),
-                          options, &errors, &module);
-    if (Succeeded(result)) {
-      if (Succeeded(result)) {
-        ValidateOptions options(s_features);
-        result = ValidateModule(&module, &errors, options);
-        result |= GenerateNames(&module);
-      }
+  Errors errors;
+  result = Wasm2cMain(errors);
+  FormatErrorsToFile(errors, Location::Type::Binary);
 
-      if (Succeeded(result)) {
-        /* TODO(binji): This shouldn't fail; if a name can't be applied
-         * (because the index is invalid, say) it should just be skipped. */
-        Result dummy_result = ApplyNames(&module);
-        WABT_USE(dummy_result);
-      }
-
-      if (Succeeded(result)) {
-        if (!s_outfile.empty()) {
-          std::string header_name =
-              strip_extension(s_outfile).to_string() + ".h";
-          FileStream c_stream(s_outfile.c_str());
-          FileStream h_stream(header_name);
-          result = WriteC(&c_stream, &h_stream, header_name.c_str(), &module,
-                          s_write_c_options);
-        } else {
-          FileStream stream(stdout);
-          result =
-              WriteC(&stream, &stream, "wasm.h", &module, s_write_c_options);
-        }
-      }
-    }
-    FormatErrorsToFile(errors, Location::Type::Binary);
-  }
   return result != Result::Ok;
 }
 
@@ -166,4 +214,3 @@ int main(int argc, char** argv) {
   return ProgramMain(argc, argv);
   WABT_CATCH_BAD_ALLOC_AND_EXIT
 }
-

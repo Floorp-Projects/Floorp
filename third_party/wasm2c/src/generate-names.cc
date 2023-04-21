@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-#include "src/generate-names.h"
+#include "wabt/generate-names.h"
 
 #include <cassert>
 #include <cstdio>
 #include <string>
 #include <vector>
 
-#include "src/cast.h"
-#include "src/expr-visitor.h"
-#include "src/ir.h"
+#include "wabt/cast.h"
+#include "wabt/expr-visitor.h"
+#include "wabt/ir.h"
 
 namespace wabt {
 
@@ -37,6 +37,7 @@ class NameGenerator : public ExprVisitor::DelegateNop {
 
   // Implementation of ExprVisitor::DelegateNop.
   Result BeginBlockExpr(BlockExpr* expr) override;
+  Result BeginTryExpr(TryExpr* expr) override;
   Result BeginLoopExpr(LoopExpr* expr) override;
   Result BeginIfExpr(IfExpr* expr) override;
 
@@ -52,9 +53,7 @@ class NameGenerator : public ExprVisitor::DelegateNop {
                     std::string* out_str);
 
   // Like GenerateName, but only generates a name if |out_str| is empty.
-  void MaybeGenerateName(const char* prefix,
-                         Index index,
-                         std::string* out_str);
+  void MaybeGenerateName(const char* prefix, Index index, std::string* out_str);
 
   // Generate a name via GenerateName and bind it to the given binding hash. If
   // the name already exists, the name will be disambiguated until it can be
@@ -108,8 +107,7 @@ class NameGenerator : public ExprVisitor::DelegateNop {
   NameOpts opts_;
 };
 
-NameGenerator::NameGenerator(NameOpts opts)
-  : visitor_(this), opts_(opts) {}
+NameGenerator::NameGenerator(NameOpts opts) : visitor_(this), opts_(opts) {}
 
 // static
 bool NameGenerator::HasName(const std::string& str) {
@@ -212,6 +210,11 @@ void NameGenerator::GenerateAndBindLocalNames(Func* func) {
 
 Result NameGenerator::BeginBlockExpr(BlockExpr* expr) {
   MaybeGenerateName("B", label_count_++, &expr->block.label);
+  return Result::Ok;
+}
+
+Result NameGenerator::BeginTryExpr(TryExpr* expr) {
+  MaybeGenerateName("T", label_count_++, &expr->block.label);
   return Result::Ok;
 }
 

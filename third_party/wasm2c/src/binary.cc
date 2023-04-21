@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/binary.h"
+#include "wabt/binary.h"
 
 namespace wabt {
 
@@ -25,8 +25,8 @@ BinarySectionOrder GetSectionOrder(BinarySection sec) {
     return BinarySectionOrder::Name;
     WABT_FOREACH_BINARY_SECTION(V)
 #undef V
-  default:
-    WABT_UNREACHABLE;
+    default:
+      WABT_UNREACHABLE;
   }
 }
 
@@ -42,20 +42,26 @@ const char* GetSectionName(BinarySection sec) {
   }
 }
 
+// clang-format off
 const char* NameSubsectionName[] = {
-  "module",
-  "function",
-  "local",
-  "label",
-  "type",
-  "table",
-  "memory",
-  "global",
-  "elemseg",
-  "dataseg",
+    "module",
+    "function",
+    "local",
+    "label",
+    "type",
+    "table",
+    "memory",
+    "global",
+    "elemseg",
+    "dataseg",
+    "tag",
 };
+// clang-format on
 
 const char* GetNameSectionSubsectionName(NameSectionSubsection subsec) {
+  static_assert(WABT_ENUM_COUNT(NameSectionSubsection) ==
+                    WABT_ARRAY_SIZE(NameSubsectionName),
+                "Malformed ExprTypeName array");
   return NameSubsectionName[size_t(subsec)];
 }
 

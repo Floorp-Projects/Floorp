@@ -55,7 +55,9 @@ UniquePtr<RLBoxSandboxDataBase> RLBoxWOFF2SandboxPool::CreateSandboxData(
   auto sandbox = MakeUnique<rlbox_sandbox_woff2>();
 
 #if defined(MOZ_WASM_SANDBOXING_WOFF2)
-  bool createOK = sandbox->create_sandbox(/* infallible = */ false, aSize);
+  const w2c_mem_capacity capacity =
+      get_valid_wasm2c_memory_capacity(aSize, true /* 32-bit wasm memory*/);
+  bool createOK = sandbox->create_sandbox(/* infallible = */ false, &capacity);
 #else
   bool createOK = sandbox->create_sandbox();
 #endif

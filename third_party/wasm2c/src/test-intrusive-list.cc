@@ -18,8 +18,7 @@
 
 #include <memory>
 
-#include "src/intrusive-list.h"
-#include "src/make-unique.h"
+#include "wabt/intrusive-list.h"
 
 using namespace wabt;
 
@@ -63,7 +62,7 @@ struct TestObject : intrusive_list_base<TestObject> {
 // static
 int TestObject::creation_count = 0;
 
-typedef intrusive_list<TestObject> TestObjectList;
+using TestObjectList = intrusive_list<TestObject>;
 
 class IntrusiveListTest : public ::testing::Test {
  protected:
@@ -112,7 +111,7 @@ TEST_F(IntrusiveListTest, default_constructor) {
 }
 
 TEST_F(IntrusiveListTest, node_constructor) {
-  TestObjectList list(MakeUnique<TestObject>(1));
+  TestObjectList list(std::make_unique<TestObject>(1));
   AssertListEq(list, {1});
 }
 
@@ -276,9 +275,9 @@ TEST_F(IntrusiveListTest, emplace_back) {
 TEST_F(IntrusiveListTest, push_front_pointer) {
   TestObjectList list;
 
-  list.push_front(MakeUnique<TestObject>(1));
-  list.push_front(MakeUnique<TestObject>(2));
-  list.push_front(MakeUnique<TestObject>(3));
+  list.push_front(std::make_unique<TestObject>(1));
+  list.push_front(std::make_unique<TestObject>(2));
+  list.push_front(std::make_unique<TestObject>(3));
 
   AssertListEq(list, {3, 2, 1});
 }
@@ -286,9 +285,9 @@ TEST_F(IntrusiveListTest, push_front_pointer) {
 TEST_F(IntrusiveListTest, push_back_pointer) {
   TestObjectList list;
 
-  list.push_back(MakeUnique<TestObject>(1));
-  list.push_back(MakeUnique<TestObject>(2));
-  list.push_back(MakeUnique<TestObject>(3));
+  list.push_back(std::make_unique<TestObject>(1));
+  list.push_back(std::make_unique<TestObject>(2));
+  list.push_back(std::make_unique<TestObject>(3));
 
   AssertListEq(list, {1, 2, 3});
 }
@@ -386,10 +385,10 @@ TEST_F(IntrusiveListTest, emplace) {
 TEST_F(IntrusiveListTest, insert_pointer) {
   TestObjectList list;
 
-  list.insert(list.begin(), MakeUnique<TestObject>(2));
-  list.insert(list.end(), MakeUnique<TestObject>(4));
-  list.insert(std::next(list.begin()), MakeUnique<TestObject>(3));
-  list.insert(list.begin(), MakeUnique<TestObject>(1));
+  list.insert(list.begin(), std::make_unique<TestObject>(2));
+  list.insert(list.end(), std::make_unique<TestObject>(4));
+  list.insert(std::next(list.begin()), std::make_unique<TestObject>(3));
+  list.insert(list.begin(), std::make_unique<TestObject>(1));
 
   AssertListEq(list, {1, 2, 3, 4});
 }

@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-#include "src/validator.h"
+#include "wabt/validator.h"
 
 #include <cassert>
 #include <cinttypes>
 #include <cstdarg>
 #include <cstdio>
 
-#include "config.h"
+#include "wabt/config.h"
 
-#include "src/binary-reader.h"
-#include "src/cast.h"
-#include "src/expr-visitor.h"
-#include "src/ir.h"
-#include "src/shared-validator.h"
+#include "wabt/binary-reader.h"
+#include "wabt/cast.h"
+#include "wabt/expr-visitor.h"
+#include "wabt/ir.h"
+#include "wabt/shared-validator.h"
 
 namespace wabt {
 
@@ -66,6 +66,14 @@ class ScriptValidator {
                         const TypeVector& actual,
                         const TypeVector& expected,
                         const char* desc);
+  void CheckExpectation(const Location* loc,
+                        const TypeVector& result_types,
+                        const ConstVector& expected,
+                        const char* desc);
+  void CheckExpectationTypes(const Location* loc,
+                             const TypeVector& result_types,
+                             const Expectation* expect,
+                             const char* desc);
 
   const TypeVector* CheckInvoke(const InvokeAction* action);
   Result CheckGet(const GetAction* action, Type* out_type);
@@ -94,6 +102,7 @@ class Validator : public ExprVisitor::Delegate {
   Result OnCallExpr(CallExpr*) override;
   Result OnCallIndirectExpr(CallIndirectExpr*) override;
   Result OnCallRefExpr(CallRefExpr*) override;
+  Result OnCodeMetadataExpr(CodeMetadataExpr*) override;
   Result OnCompareExpr(CompareExpr*) override;
   Result OnConstExpr(ConstExpr*) override;
   Result OnConvertExpr(ConvertExpr*) override;
@@ -186,7 +195,8 @@ void ScriptValidator::CheckTypeIndex(const Location* loc,
   if (Failed(TypeChecker::CheckType(actual, expected))) {
     PrintError(loc,
                "type mismatch for %s %" PRIindex " of %s. got %s, expected %s",
-               index_kind, index, desc, actual.GetName(), expected.GetName());
+               index_kind, index, desc, actual.GetName().c_str(),
+               expected.GetName().c_str());
   }
 }
 
@@ -201,6 +211,39 @@ void ScriptValidator::CheckResultTypes(const Location* loc,
   } else {
     PrintError(loc, "expected %" PRIzd " results, got %" PRIzd, expected.size(),
                actual.size());
+  }
+}
+
+void ScriptValidator::CheckExpectation(const Location* loc,
+                                       const TypeVector& result_types,
+                                       const ConstVector& expected,
+                                       const char* desc) {
+  // Here we take the concrete expected output types verify those actains
+  // the types that are the result of the action.
+  TypeVector actual_types;
+  for (auto ex : expected) {
+    actual_types.push_back(ex.type());
+  }
+  CheckResultTypes(loc, actual_types, result_types, desc);
+}
+
+void ScriptValidator::CheckExpectationTypes(const Location* loc,
+                                            const TypeVector& result_types,
+                                            const Expectation* expect,
+                                            const char* desc) {
+  switch (expect->type()) {
+    case ExpectationType::Values: {
+      CheckExpectation(loc, result_types, expect->expected, desc);
+      break;
+    }
+
+    case ExpectationType::Either: {
+      auto* either = cast<EitherExpectation>(expect);
+      for (auto alt : either->expected) {
+        CheckExpectation(loc, result_types, {alt}, desc);
+      }
+      break;
+    }
   }
 }
 
@@ -278,11 +321,15 @@ Result Validator::OnCallRefExpr(CallRefExpr* expr) {
   Index function_type_index;
   result_ |= validator_.OnCallRef(expr->loc, &function_type_index);
   if (Succeeded(result_)) {
-    expr->function_type_index = Var{function_type_index};
+    expr->function_type_index = Var{function_type_index, expr->loc};
     return Result::Ok;
   }
 
   return Result::Error;
+}
+
+Result Validator::OnCodeMetadataExpr(CodeMetadataExpr* expr) {
+  return Result::Ok;
 }
 
 Result Validator::OnCompareExpr(CompareExpr* expr) {
@@ -334,7 +381,7 @@ Result Validator::EndIfExpr(IfExpr* expr) {
 }
 
 Result Validator::OnLoadExpr(LoadExpr* expr) {
-  result_ |= validator_.OnLoad(expr->loc, expr->opcode,
+  result_ |= validator_.OnLoad(expr->loc, expr->opcode, expr->memidx,
                                expr->opcode.GetAlignment(expr->align));
   return Result::Ok;
 }
@@ -365,7 +412,8 @@ Result Validator::EndLoopExpr(LoopExpr* expr) {
 }
 
 Result Validator::OnMemoryCopyExpr(MemoryCopyExpr* expr) {
-  result_ |= validator_.OnMemoryCopy(expr->loc);
+  result_ |=
+      validator_.OnMemoryCopy(expr->loc, expr->srcmemidx, expr->destmemidx);
   return Result::Ok;
 }
 
@@ -375,22 +423,22 @@ Result Validator::OnDataDropExpr(DataDropExpr* expr) {
 }
 
 Result Validator::OnMemoryFillExpr(MemoryFillExpr* expr) {
-  result_ |= validator_.OnMemoryFill(expr->loc);
+  result_ |= validator_.OnMemoryFill(expr->loc, expr->memidx);
   return Result::Ok;
 }
 
 Result Validator::OnMemoryGrowExpr(MemoryGrowExpr* expr) {
-  result_ |= validator_.OnMemoryGrow(expr->loc);
+  result_ |= validator_.OnMemoryGrow(expr->loc, expr->memidx);
   return Result::Ok;
 }
 
 Result Validator::OnMemoryInitExpr(MemoryInitExpr* expr) {
-  result_ |= validator_.OnMemoryInit(expr->loc, expr->var);
+  result_ |= validator_.OnMemoryInit(expr->loc, expr->var, expr->memidx);
   return Result::Ok;
 }
 
 Result Validator::OnMemorySizeExpr(MemorySizeExpr* expr) {
-  result_ |= validator_.OnMemorySize(expr->loc);
+  result_ |= validator_.OnMemorySize(expr->loc, expr->memidx);
   return Result::Ok;
 }
 
@@ -484,7 +532,7 @@ Result Validator::OnSelectExpr(SelectExpr* expr) {
 }
 
 Result Validator::OnStoreExpr(StoreExpr* expr) {
-  result_ |= validator_.OnStore(expr->loc, expr->opcode,
+  result_ |= validator_.OnStore(expr->loc, expr->opcode, expr->memidx,
                                 expr->opcode.GetAlignment(expr->align));
   return Result::Ok;
 }
@@ -505,8 +553,7 @@ Result Validator::BeginTryExpr(TryExpr* expr) {
 }
 
 Result Validator::OnCatchExpr(TryExpr*, Catch* catch_) {
-  result_ |= validator_.OnCatch(catch_->loc, catch_->var,
-                                catch_->IsCatchAll());
+  result_ |= validator_.OnCatch(catch_->loc, catch_->var, catch_->IsCatchAll());
   return Result::Ok;
 }
 
@@ -531,7 +578,7 @@ Result Validator::OnRethrowExpr(RethrowExpr* expr) {
 }
 
 Result Validator::OnAtomicWaitExpr(AtomicWaitExpr* expr) {
-  result_ |= validator_.OnAtomicWait(expr->loc, expr->opcode,
+  result_ |= validator_.OnAtomicWait(expr->loc, expr->opcode, expr->memidx,
                                      expr->opcode.GetAlignment(expr->align));
   return Result::Ok;
 }
@@ -542,32 +589,33 @@ Result Validator::OnAtomicFenceExpr(AtomicFenceExpr* expr) {
 }
 
 Result Validator::OnAtomicNotifyExpr(AtomicNotifyExpr* expr) {
-  result_ |= validator_.OnAtomicNotify(expr->loc, expr->opcode,
+  result_ |= validator_.OnAtomicNotify(expr->loc, expr->opcode, expr->memidx,
                                        expr->opcode.GetAlignment(expr->align));
   return Result::Ok;
 }
 
 Result Validator::OnAtomicLoadExpr(AtomicLoadExpr* expr) {
-  result_ |= validator_.OnAtomicLoad(expr->loc, expr->opcode,
+  result_ |= validator_.OnAtomicLoad(expr->loc, expr->opcode, expr->memidx,
                                      expr->opcode.GetAlignment(expr->align));
   return Result::Ok;
 }
 
 Result Validator::OnAtomicStoreExpr(AtomicStoreExpr* expr) {
-  result_ |= validator_.OnAtomicStore(expr->loc, expr->opcode,
+  result_ |= validator_.OnAtomicStore(expr->loc, expr->opcode, expr->memidx,
                                       expr->opcode.GetAlignment(expr->align));
   return Result::Ok;
 }
 
 Result Validator::OnAtomicRmwExpr(AtomicRmwExpr* expr) {
-  result_ |= validator_.OnAtomicRmw(expr->loc, expr->opcode,
+  result_ |= validator_.OnAtomicRmw(expr->loc, expr->opcode, expr->memidx,
                                     expr->opcode.GetAlignment(expr->align));
   return Result::Ok;
 }
 
 Result Validator::OnAtomicRmwCmpxchgExpr(AtomicRmwCmpxchgExpr* expr) {
-  result_ |= validator_.OnAtomicRmwCmpxchg(
-      expr->loc, expr->opcode, expr->opcode.GetAlignment(expr->align));
+  result_ |=
+      validator_.OnAtomicRmwCmpxchg(expr->loc, expr->opcode, expr->memidx,
+                                    expr->opcode.GetAlignment(expr->align));
   return Result::Ok;
 }
 
@@ -582,14 +630,14 @@ Result Validator::OnSimdLaneOpExpr(SimdLaneOpExpr* expr) {
 }
 
 Result Validator::OnSimdLoadLaneExpr(SimdLoadLaneExpr* expr) {
-  result_ |= validator_.OnSimdLoadLane(
-      expr->loc, expr->opcode, expr->opcode.GetAlignment(expr->align),
-      expr->val);
+  result_ |= validator_.OnSimdLoadLane(expr->loc, expr->opcode, expr->memidx,
+                                       expr->opcode.GetAlignment(expr->align),
+                                       expr->val);
   return Result::Ok;
 }
 
 Result Validator::OnSimdStoreLaneExpr(SimdStoreLaneExpr* expr) {
-  result_ |= validator_.OnSimdStoreLane(expr->loc, expr->opcode,
+  result_ |= validator_.OnSimdStoreLane(expr->loc, expr->opcode, expr->memidx,
                                         expr->opcode.GetAlignment(expr->align),
                                         expr->val);
   return Result::Ok;
@@ -601,13 +649,13 @@ Result Validator::OnSimdShuffleOpExpr(SimdShuffleOpExpr* expr) {
 }
 
 Result Validator::OnLoadSplatExpr(LoadSplatExpr* expr) {
-  result_ |= validator_.OnLoadSplat(expr->loc, expr->opcode,
+  result_ |= validator_.OnLoadSplat(expr->loc, expr->opcode, expr->memidx,
                                     expr->opcode.GetAlignment(expr->align));
   return Result::Ok;
 }
 
 Result Validator::OnLoadZeroExpr(LoadZeroExpr* expr) {
-  result_ |= validator_.OnLoadZero(expr->loc, expr->opcode,
+  result_ |= validator_.OnLoadZero(expr->loc, expr->opcode, expr->memidx,
                                    expr->opcode.GetAlignment(expr->align));
   return Result::Ok;
 }
@@ -629,11 +677,12 @@ Result Validator::CheckModule() {
       switch (f->type->kind()) {
         case TypeEntryKind::Func: {
           FuncType* func_type = cast<FuncType>(f->type.get());
-          result_ |= validator_.OnFuncType(field.loc,
-                                           func_type->sig.param_types.size(),
-                                           func_type->sig.param_types.data(),
-                                           func_type->sig.result_types.size(),
-                                           func_type->sig.result_types.data());
+          result_ |= validator_.OnFuncType(
+              field.loc, func_type->sig.param_types.size(),
+              func_type->sig.param_types.data(),
+              func_type->sig.result_types.size(),
+              func_type->sig.result_types.data(),
+              module->GetFuncTypeIndex(func_type->sig));
           break;
         }
 
@@ -729,38 +778,12 @@ Result Validator::CheckModule() {
       result_ |=
           validator_.OnGlobal(field.loc, f->global.type, f->global.mutable_);
 
-      if (f->global.init_expr.size() == 1) {
-        const Expr* expr = &f->global.init_expr.front();
-
-        switch (expr->type()) {
-          case ExprType::Const:
-            result_ |= validator_.OnGlobalInitExpr_Const(
-                expr->loc, cast<ConstExpr>(expr)->const_.type());
-            break;
-
-          case ExprType::GlobalGet: {
-            Var var = cast<GlobalGetExpr>(expr)->var;
-            result_ |= validator_.OnGlobalInitExpr_GlobalGet(expr->loc, var);
-            break;
-          }
-
-          case ExprType::RefFunc:
-            result_ |= validator_.OnGlobalInitExpr_RefFunc(
-                expr->loc, cast<RefFuncExpr>(expr)->var);
-            break;
-
-          case ExprType::RefNull:
-            result_ |= validator_.OnGlobalInitExpr_RefNull(
-                expr->loc, cast<RefNullExpr>(expr)->type);
-            break;
-
-          default:
-            result_ |= validator_.OnGlobalInitExpr_Other(field.loc);
-            break;
-        }
-      } else {
-        result_ |= validator_.OnGlobalInitExpr_Other(field.loc);
-      }
+      // Init expr.
+      result_ |= validator_.BeginInitExpr(field.loc, f->global.type);
+      ExprVisitor visitor(this);
+      result_ |=
+          visitor.VisitExprList(const_cast<ExprList&>(f->global.init_expr));
+      result_ |= validator_.EndInitExpr();
     }
   }
 
@@ -793,46 +816,37 @@ Result Validator::CheckModule() {
       result_ |= validator_.OnElemSegment(field.loc, f->elem_segment.table_var,
                                           f->elem_segment.kind);
 
-      validator_.OnElemSegmentElemType(f->elem_segment.elem_type);
+      result_ |= validator_.OnElemSegmentElemType(field.loc,
+                                                  f->elem_segment.elem_type);
 
       // Init expr.
-      if (f->elem_segment.offset.size() == 1) {
-        const Expr* expr = &f->elem_segment.offset.front();
-
-        switch (expr->type()) {
-          case ExprType::Const:
-            result_ |= validator_.OnElemSegmentInitExpr_Const(
-                expr->loc, cast<ConstExpr>(expr)->const_.type());
-            break;
-
-          case ExprType::GlobalGet: {
-            Var var = cast<GlobalGetExpr>(expr)->var;
-            result_ |=
-                validator_.OnElemSegmentInitExpr_GlobalGet(expr->loc, var);
-            break;
-          }
-
-          default:
-            result_ |= validator_.OnElemSegmentInitExpr_Other(field.loc);
-            break;
-        }
-      } else if (f->elem_segment.offset.size() > 1) {
-        result_ |= validator_.OnElemSegmentInitExpr_Other(field.loc);
+      if (f->elem_segment.offset.size()) {
+        result_ |= validator_.BeginInitExpr(field.loc, Type::I32);
+        ExprVisitor visitor(this);
+        result_ |= visitor.VisitExprList(
+            const_cast<ExprList&>(f->elem_segment.offset));
+        result_ |= validator_.EndInitExpr();
       }
 
       // Element expr.
       for (auto&& elem_expr : f->elem_segment.elem_exprs) {
-        switch (elem_expr.kind) {
-          case ElemExprKind::RefNull:
-            // TODO: better location?
-            result_ |= validator_.OnElemSegmentElemExpr_RefNull(field.loc,
-                                                                elem_expr.type);
-            break;
-
-          case ElemExprKind::RefFunc:
-            result_ |= validator_.OnElemSegmentElemExpr_RefFunc(
-                elem_expr.var.loc, elem_expr.var);
-            break;
+        if (elem_expr.size() == 1) {
+          const Expr* expr = &elem_expr.front();
+          switch (expr->type()) {
+            case ExprType::RefNull:
+              result_ |= validator_.OnElemSegmentElemExpr_RefNull(
+                  expr->loc, cast<RefNullExpr>(expr)->type);
+              break;
+            case ExprType::RefFunc:
+              result_ |= validator_.OnElemSegmentElemExpr_RefFunc(
+                  expr->loc, cast<RefFuncExpr>(expr)->var);
+              break;
+            default:
+              result_ |= validator_.OnElemSegmentElemExpr_Other(expr->loc);
+              break;
+          }
+        } else if (elem_expr.size() > 1) {
+          result_ |= validator_.OnElemSegmentElemExpr_Other(field.loc);
         }
       }
     }
@@ -845,48 +859,40 @@ Result Validator::CheckModule() {
   Index func_index = module->num_func_imports;
   for (const ModuleField& field : module->fields) {
     if (auto* f = dyn_cast<FuncModuleField>(&field)) {
-      result_ |= validator_.BeginFunctionBody(field.loc, func_index++);
+      const Location& body_start = f->func.loc;
+      const Location& body_end =
+          f->func.exprs.empty() ? body_start : f->func.exprs.back().loc;
+      result_ |= validator_.BeginFunctionBody(body_start, func_index++);
 
       for (auto&& decl : f->func.local_types.decls()) {
-        // TODO: Better location?
-        result_ |= validator_.OnLocalDecl(field.loc, decl.second, decl.first);
+        result_ |= validator_.OnLocalDecl(body_start, decl.second, decl.first);
       }
 
       ExprVisitor visitor(this);
       result_ |= visitor.VisitExprList(const_cast<ExprList&>(f->func.exprs));
-      result_ |= validator_.EndFunctionBody(field.loc);
+      result_ |= validator_.EndFunctionBody(body_end);
     }
   }
 
   // Data segment section.
   for (const ModuleField& field : module->fields) {
     if (auto* f = dyn_cast<DataSegmentModuleField>(&field)) {
-      result_ |= validator_.OnDataSegment(
-          field.loc, f->data_segment.memory_var, f->data_segment.kind);
+      result_ |= validator_.OnDataSegment(field.loc, f->data_segment.memory_var,
+                                          f->data_segment.kind);
 
       // Init expr.
-      if (f->data_segment.offset.size() == 1) {
-        const Expr* expr = &f->data_segment.offset.front();
-
-        switch (expr->type()) {
-          case ExprType::Const:
-            result_ |= validator_.OnDataSegmentInitExpr_Const(
-                expr->loc, cast<ConstExpr>(expr)->const_.type());
-            break;
-
-          case ExprType::GlobalGet: {
-            Var var = cast<GlobalGetExpr>(expr)->var;
-            result_ |=
-                validator_.OnDataSegmentInitExpr_GlobalGet(expr->loc, var);
-            break;
-          }
-
-          default:
-            result_ |= validator_.OnDataSegmentInitExpr_Other(field.loc);
-            break;
+      if (f->data_segment.offset.size()) {
+        Type offset_type = Type::I32;
+        Index memory_index = module->GetMemoryIndex(f->data_segment.memory_var);
+        if (memory_index < module->memories.size() &&
+            module->memories[memory_index]->page_limits.is_64) {
+          offset_type = Type::I64;
         }
-      } else if (f->data_segment.offset.size() > 1) {
-        result_ |= validator_.OnDataSegmentInitExpr_Other(field.loc);
+        result_ |= validator_.BeginInitExpr(field.loc, offset_type);
+        ExprVisitor visitor(this);
+        result_ |= visitor.VisitExprList(
+            const_cast<ExprList&>(f->data_segment.offset));
+        result_ |= validator_.EndInitExpr();
       }
     }
   }
@@ -995,6 +1001,13 @@ void ScriptValidator::CheckCommand(const Command* command) {
       break;
     }
 
+    case CommandType::ScriptModule: {
+      Validator module_validator(
+          errors_, &cast<ScriptModuleCommand>(command)->module, options_);
+      module_validator.CheckModule();
+      break;
+    }
+
     case CommandType::Action:
       // Ignore result type.
       CheckAction(cast<ActionCommand>(command)->action.get());
@@ -1012,19 +1025,16 @@ void ScriptValidator::CheckCommand(const Command* command) {
       auto* assert_return_command = cast<AssertReturnCommand>(command);
       const Action* action = assert_return_command->action.get();
       ActionResult result = CheckAction(action);
-      // Here we take the concrete expected output types verify those actains
-      // the types that are the result of the action.
-      TypeVector actual_types;
-      for (auto ex : assert_return_command->expected) {
-        actual_types.push_back(ex.type());
-      }
+      const Expectation* expected = assert_return_command->expected.get();
       switch (result.kind) {
         case ActionResult::Kind::Types:
-          CheckResultTypes(&action->loc, actual_types, *result.types, "action");
+          CheckExpectationTypes(&action->loc, *result.types, expected,
+                                "action");
           break;
 
         case ActionResult::Kind::Type:
-          CheckResultTypes(&action->loc, actual_types, {result.type}, "action");
+          CheckExpectationTypes(&action->loc, {result.type}, expected,
+                                "action");
           break;
 
         case ActionResult::Kind::Error:
@@ -1041,6 +1051,10 @@ void ScriptValidator::CheckCommand(const Command* command) {
     case CommandType::AssertExhaustion:
       // ignore result type.
       CheckAction(cast<AssertExhaustionCommand>(command)->action.get());
+      break;
+    case CommandType::AssertException:
+      // ignore result type.
+      CheckAction(cast<AssertExceptionCommand>(command)->action.get());
       break;
   }
 }

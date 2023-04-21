@@ -17,20 +17,26 @@ EXPORTS += [
 SOURCES += [
     "!rlbox.wasm.c",
     "/third_party/wasm2c/wasm2c/wasm-rt-impl.c",
-    "/third_party/wasm2c/wasm2c/wasm-rt-os-unix.c",
-    "/third_party/wasm2c/wasm2c/wasm-rt-os-win.c",
-    "/third_party/wasm2c/wasm2c/wasm-rt-wasi.c",
 ]
 
-# Configure the wasm runtime to use a custom trap handler that calls MOZ_CRASH
-DEFINES["WASM_RT_CUSTOM_TRAP_HANDLER"] = "moz_wasm2c_trap_handler"
+# Configuration for the wasm2c runtime used by RLBox
 
-# Configure the wasm runtime to invoke a callback when a malloc fails inside
-# the sandbox. This information is used to annotate crash reports
-DEFINES["WASM2C_MALLOC_FAIL_CALLBACK"] = "moz_wasm2c_malloc_failed"
+# Use a mmap style allocation
+DEFINES["WASM_RT_USE_MMAP"] = 1
 
-# Configuration that removes the wasm2c functions from shared library exports
-DEFINES["WASM_DONT_EXPORT_FUNCS"] = True
+# Don't use internal signal handler as Firefox already provides one
+DEFINES["WASM_RT_SKIP_SIGNAL_RECOVERY"] = 1
+
+# We provide a custom trap handler that calls MOZ_CRASH
+DEFINES["WASM_RT_TRAP_HANDLER"] = "moz_wasm2c_trap_handler"
+
+# Don't limit the nested call depth
+DEFINES["WASM_RT_USE_STACK_DEPTH_COUNT"] = 0
+
+# Configure the wasm runtime to invoke a callback when a Wasm memory growth
+# fails inside the sandbox. This information is used to annotate crash reports.
+DEFINES["WASM_RT_GROW_FAILED_HANDLER"] = "moz_wasm2c_memgrow_failed"
+
 
 FINAL_LIBRARY = "xul"
 

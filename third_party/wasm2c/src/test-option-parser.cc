@@ -16,7 +16,7 @@
 
 #include <string>
 
-#include "src/option-parser.h"
+#include "wabt/option-parser.h"
 
 using namespace wabt;
 
@@ -118,7 +118,6 @@ TEST(OptionParser, FlagCombinedAfterShortParam) {
   EXPECT_TRUE(has_x);
   EXPECT_EQ(error, "prog: unexpected argument 'stuff'" ERROR_ENDING);
 }
-
 
 TEST(OptionParser, OneArgument) {
   std::string argument;

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include "src/opcode.h"
+#include "wabt/opcode.h"
 
-#include "src/feature.h"
+#include "wabt/feature.h"
 
 namespace wabt {
 
@@ -26,16 +26,16 @@ Opcode::Info Opcode::infos_[] = {
                     text, decomp)                                             \
   {text,     decomp, Type::rtype, {Type::type1, Type::type2, Type::type3},    \
    mem_size, prefix, code,        PrefixCode(prefix, code)},
-#include "src/opcode.def"
+#include "wabt/opcode.def"
 #undef WABT_OPCODE
 
   {"<invalid>", "", Type::Void, {Type::Void, Type::Void, Type::Void}, 0, 0, 0, 0},
 };
 
 #define WABT_OPCODE(rtype, type1, type2, type3, mem_size, prefix, code, Name, \
-                    text, decomp)                                                     \
+                    text, decomp)                                             \
   /* static */ Opcode Opcode::Name##_Opcode(Opcode::Name);
-#include "src/opcode.def"
+#include "wabt/opcode.def"
 #undef WABT_OPCODE
 
 Opcode::Info Opcode::GetInfo() const {
@@ -317,6 +317,28 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::I16X8Abs:
     case Opcode::I32X4Abs:
       return features.simd_enabled();
+
+    case Opcode::I8X16RelaxedSwizzle:
+    case Opcode::I32X4RelaxedTruncF32X4S:
+    case Opcode::I32X4RelaxedTruncF32X4U:
+    case Opcode::I32X4RelaxedTruncF64X2SZero:
+    case Opcode::I32X4RelaxedTruncF64X2UZero:
+    case Opcode::F32X4RelaxedMadd:
+    case Opcode::F32X4RelaxedNmadd:
+    case Opcode::F64X2RelaxedMadd:
+    case Opcode::F64X2RelaxedNmadd:
+    case Opcode::I8X16RelaxedLaneSelect:
+    case Opcode::I16X8RelaxedLaneSelect:
+    case Opcode::I32X4RelaxedLaneSelect:
+    case Opcode::I64X2RelaxedLaneSelect:
+    case Opcode::F32X4RelaxedMin:
+    case Opcode::F32X4RelaxedMax:
+    case Opcode::F64X2RelaxedMin:
+    case Opcode::F64X2RelaxedMax:
+    case Opcode::I16X8RelaxedQ15mulrS:
+    case Opcode::I16X8DotI8X16I7X16S:
+    case Opcode::I32X4DotI8X16I7X16AddS:
+      return features.relaxed_simd_enabled();
 
     case Opcode::MemoryInit:
     case Opcode::DataDrop:

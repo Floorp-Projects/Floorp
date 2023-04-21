@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "src/circular-array.h"
+#include "wabt/circular-array.h"
 
 using namespace wabt;
 

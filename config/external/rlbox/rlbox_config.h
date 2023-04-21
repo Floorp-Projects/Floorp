@@ -21,4 +21,10 @@
 // fixed.
 #define RLBOX_EMBEDDER_PROVIDES_TLS_STATIC_VARIABLES
 
+// When instantiating a wasm sandbox, rlbox requires the name of the wasm module
+// being instantiated. LLVM and wasm2c use the module name by choosing the name
+// used to generate the wasm file. In Firefox this is a static library called
+// rlbox
+#define RLBOX_WASM2C_MODULE_NAME rlbox
+
 #endif

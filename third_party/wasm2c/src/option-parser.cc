@@ -14,17 +14,13 @@
  * limitations under the License.
  */
 
-#include "src/option-parser.h"
+#include "wabt/option-parser.h"
 
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
 
-#include "config.h"
-
-#if HAVE_ALLOCA
-#include <alloca.h>
-#endif
+#include "wabt/config.h"
 
 namespace wabt {
 
@@ -50,14 +46,13 @@ OptionParser::OptionParser(const char* program_name, const char* description)
     : program_name_(program_name),
       description_(description),
       on_error_([this](const std::string& message) { DefaultError(message); }) {
-
   // Add common options
   AddOption("help", "Print this help message", [this]() {
     PrintHelp();
     exit(0);
   });
   AddOption("version", "Print version information", []() {
-    printf("%s\n", CMAKE_PROJECT_VERSION);
+    printf("%s\n", WABT_VERSION_STRING);
     exit(0);
   });
 }

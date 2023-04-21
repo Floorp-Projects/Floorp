@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-#include "src/decompiler.h"
+#include "wabt/decompiler.h"
 
-#include "src/decompiler-ast.h"
-#include "src/decompiler-ls.h"
-#include "src/decompiler-naming.h"
+#include "wabt/decompiler-ast.h"
+#include "wabt/decompiler-ls.h"
+#include "wabt/decompiler-naming.h"
 
-#include "src/stream.h"
+#include "wabt/stream.h"
 
 #define WABT_TRACING 0
-#include "src/tracing.h"
+#include "wabt/tracing.h"
 
 #include <inttypes.h>
 
@@ -64,12 +64,11 @@ struct Decompiler {
     // but not if it is the reverse.
     Precedence precedence;
 
-    Value(std::vector<std::string>&& v, Precedence p)
-      : v(v), precedence(p) {}
+    Value(std::vector<std::string>&& v, Precedence p) : v(v), precedence(p) {}
 
     size_t width() {
       size_t w = 0;
-      for (auto &s : v) {
+      for (auto& s : v) {
         w = std::max(w, s.size());
       }
       return w;
@@ -90,9 +89,7 @@ struct Decompiler {
     return s;
   }
 
-  std::string Indent(size_t amount) {
-    return std::string(amount, ' ');
-  }
+  std::string Indent(size_t amount) { return std::string(amount, ' '); }
 
   std::string OpcodeToToken(Opcode opcode) {
     std::string s = opcode.GetDecomp();
@@ -100,20 +97,22 @@ struct Decompiler {
     return s;
   }
 
-  void IndentValue(Value &val, size_t amount, string_view first_indent) {
+  void IndentValue(Value& val, size_t amount, std::string_view first_indent) {
     auto indent = Indent(amount);
     for (auto& stat : val.v) {
       auto is = (&stat != &val.v[0] || first_indent.empty())
-                    ? string_view(indent)
+                    ? std::string_view(indent)
                     : first_indent;
       stat.insert(0, is.data(), is.size());
     }
   }
 
-  Value WrapChild(Value &child, string_view prefix, string_view postfix,
+  Value WrapChild(Value& child,
+                  std::string_view prefix,
+                  std::string_view postfix,
                   Precedence precedence) {
     auto width = prefix.size() + postfix.size() + child.width();
-    auto &v = child.v;
+    auto& v = child.v;
     if (width < target_exp_width ||
         (prefix.size() <= indent_amount && postfix.size() <= indent_amount)) {
       if (v.size() == 1) {
@@ -135,15 +134,19 @@ struct Decompiler {
     return std::move(child);
   }
 
-  void BracketIfNeeded(Value &val, Precedence parent_precedence) {
+  void BracketIfNeeded(Value& val, Precedence parent_precedence) {
     if (parent_precedence < val.precedence ||
         (parent_precedence == val.precedence &&
-         Associative(parent_precedence))) return;
+         Associative(parent_precedence))) {
+      return;
+    }
     val = WrapChild(val, "(", ")", Precedence::Atomic);
   }
 
-  Value WrapBinary(std::vector<Value>& args, string_view infix,
-                   bool indent_right, Precedence precedence) {
+  Value WrapBinary(std::vector<Value>& args,
+                   std::string_view infix,
+                   bool indent_right,
+                   Precedence precedence) {
     assert(args.size() == 2);
     auto& left = args[0];
     auto& right = args[1];
@@ -153,18 +156,22 @@ struct Decompiler {
     if (width < target_exp_width && left.v.size() == 1 && right.v.size() == 1) {
       return Value{{cat(left.v[0], " ", infix, " ", right.v[0])}, precedence};
     } else {
-      Value bin { {}, precedence };
+      Value bin{{}, precedence};
       std::move(left.v.begin(), left.v.end(), std::back_inserter(bin.v));
       bin.v.back().append(" ", 1);
       bin.v.back().append(infix.data(), infix.size());
-      if (indent_right) IndentValue(right, indent_amount, {});
+      if (indent_right) {
+        IndentValue(right, indent_amount, {});
+      }
       std::move(right.v.begin(), right.v.end(), std::back_inserter(bin.v));
       return bin;
     }
   }
 
-  Value WrapNAry(std::vector<Value>& args, string_view prefix,
-                 string_view postfix, Precedence precedence) {
+  Value WrapNAry(std::vector<Value>& args,
+                 std::string_view prefix,
+                 std::string_view postfix,
+                 Precedence precedence) {
     size_t total_width = 0;
     size_t max_width = 0;
     bool multiline = false;
@@ -188,34 +195,40 @@ struct Decompiler {
       return Value{{std::move(s)}, precedence};
     } else {
       // Multi-line.
-      Value ml { {}, precedence };
+      Value ml{{}, precedence};
       auto ident_with_name = max_width + prefix.size() < target_exp_width;
       size_t i = 0;
       for (auto& child : args) {
         IndentValue(child, ident_with_name ? prefix.size() : indent_amount,
-                    !i && ident_with_name ? prefix : string_view {});
-        if (i < args.size() - 1) child.v.back() += ",";
-        std::move(child.v.begin(), child.v.end(),
-                  std::back_inserter(ml.v));
+                    !i && ident_with_name ? prefix : std::string_view{});
+        if (i < args.size() - 1) {
+          child.v.back() += ",";
+        }
+        std::move(child.v.begin(), child.v.end(), std::back_inserter(ml.v));
         i++;
       }
-      if (!ident_with_name) ml.v.insert(ml.v.begin(), std::string(prefix));
+      if (!ident_with_name) {
+        ml.v.insert(ml.v.begin(), std::string(prefix));
+      }
       ml.v.back() += postfix;
       return ml;
     }
   }
 
-  string_view VarName(string_view name) {
+  std::string_view VarName(std::string_view name) {
     assert(!name.empty());
     return name[0] == '$' ? name.substr(1) : name;
   }
 
-  template<ExprType T> Value Get(const VarExpr<T>& ve) {
+  template <ExprType T>
+  Value Get(const VarExpr<T>& ve) {
     return Value{{std::string(VarName(ve.var.name()))}, Precedence::Atomic};
   }
 
-  template<ExprType T> Value Set(Value& child, const VarExpr<T>& ve) {
-    return WrapChild(child, VarName(ve.var.name()) + " = ", "", Precedence::Assign);
+  template <ExprType T>
+  Value Set(Value& child, const VarExpr<T>& ve) {
+    return WrapChild(child, VarName(ve.var.name()) + " = ", "",
+                     Precedence::Assign);
   }
 
   std::string TempVarName(Index n) {
@@ -231,17 +244,25 @@ struct Decompiler {
                struc.empty() ? GetDecompTypeName(t) : struc);
   }
 
-  bool ConstIntVal(const Expr* e, uint64_t &dest) {
+  bool ConstIntVal(const Expr* e, uint64_t& dest) {
     dest = 0;
-    if (!e || e->type() != ExprType::Const) return false;
+    if (!e || e->type() != ExprType::Const) {
+      return false;
+    }
     auto& c = cast<ConstExpr>(e)->const_;
-    if (c.type() != Type::I32 && c.type() != Type::I64) return false;
+    if (c.type() != Type::I32 && c.type() != Type::I64) {
+      return false;
+    }
     dest = c.type() == Type::I32 ? c.u32() : c.u64();
     return true;
   }
 
-  void LoadStore(Value &val, const Node& addr_exp, uint64_t offset,
-                  Opcode opc, Address align, Type op_type) {
+  void LoadStore(Value& val,
+                 const Node& addr_exp,
+                 uint64_t offset,
+                 Opcode opc,
+                 Address align,
+                 Type op_type) {
     bool append_type = true;
     auto access = lst.GenAccess(offset, addr_exp);
     if (!access.empty()) {
@@ -268,11 +289,10 @@ struct Decompiler {
         uint64_t dat_base;
         if (dat->offset.size() == 1 &&
             ConstIntVal(&dat->offset.front(), dat_base) &&
-            abs_base >= dat_base &&
-            abs_base < dat_base + dat->data.size()) {
+            abs_base >= dat_base && abs_base < dat_base + dat->data.size()) {
           // We are inside the range of this data segment!
           // Turn expression into data_name[index]
-          val = Value { { dat->name }, Precedence::Atomic };
+          val = Value{{dat->name}, Precedence::Atomic};
           // The new offset is from the start of the data segment, instead of
           // whatever it was.. this may be a different value from both the
           // original const and offset!
@@ -285,8 +305,8 @@ struct Decompiler {
     // cases, but the spec doesn't guarantee it, so we must
     // have a backup syntax.
     auto index = offset % align == 0
-                ? std::to_string(offset / align)
-                : cat(std::to_string(offset), "@", std::to_string(align));
+                     ? std::to_string(offset / align)
+                     : cat(std::to_string(offset), "@", std::to_string(align));
     // Detect the very common case of (base + (index << 2))[0]:int etc.
     // so we can instead do base[index]:int
     // TODO: (index << 2) on the left of + occurs also.
@@ -296,12 +316,10 @@ struct Decompiler {
     if (addr_exp.etype == ExprType::Binary) {
       auto& pe = *cast<BinaryExpr>(addr_exp.e);
       auto& shift_exp = addr_exp.children[1];
-      if (pe.opcode == Opcode::I32Add &&
-          shift_exp.etype == ExprType::Binary) {
+      if (pe.opcode == Opcode::I32Add && shift_exp.etype == ExprType::Binary) {
         auto& se = *cast<BinaryExpr>(shift_exp.e);
         auto& const_exp = shift_exp.children[1];
-        if (se.opcode == Opcode::I32Shl &&
-            const_exp.etype == ExprType::Const) {
+        if (se.opcode == Opcode::I32Shl && const_exp.etype == ExprType::Const) {
           auto& ce = *cast<ConstExpr>(const_exp.e);
           if (ce.const_.type() == Type::I32 &&
               (1ULL << ce.const_.u32()) == align) {
@@ -327,9 +345,8 @@ struct Decompiler {
     BracketIfNeeded(val, Precedence::Indexing);
     val.v.back() += cat("[", index, "]");
     if (append_type) {
-      val.v.back() +=
-        cat(":", GetDecompTypeName(GetMemoryType(op_type, opc)),
-            lst.GenAlign(align, opc));
+      val.v.back() += cat(":", GetDecompTypeName(GetMemoryType(op_type, opc)),
+                          lst.GenAlign(align, opc));
     }
     val.precedence = Precedence::Indexing;
   }
@@ -344,20 +361,24 @@ struct Decompiler {
       case NodeType::FlushToVars: {
         std::string decls = "let ";
         for (Index i = 0; i < n.u.var_count; i++) {
-          if (i) decls += ", ";
+          if (i) {
+            decls += ", ";
+          }
           decls += TempVarName(n.u.var_start + i);
         }
         decls += " = ";
         return WrapNAry(args, decls, "", Precedence::Assign);
       }
       case NodeType::FlushedVar: {
-        return Value { { TempVarName(n.u.var_start) }, Precedence::Atomic };
+        return Value{{TempVarName(n.u.var_start)}, Precedence::Atomic};
       }
       case NodeType::Statements: {
-        Value stats { {}, Precedence::None };
+        Value stats{{}, Precedence::None};
         for (size_t i = 0; i < n.children.size(); i++) {
           auto& s = args[i].v.back();
-          if (s.back() != '}' && s.back() != ':') s += ';';
+          if (s.back() != '}' && s.back() != ':') {
+            s += ';';
+          }
           std::move(args[i].v.begin(), args[i].v.end(),
                     std::back_inserter(stats.v));
         }
@@ -368,10 +389,9 @@ struct Decompiler {
       }
       case NodeType::Decl: {
         cur_ast->vars_defined[n.u.var->name()].defined = true;
-        return Value{
-            {"var " + LocalDecl(std::string(n.u.var->name()),
-                                cur_func->GetLocalType(*n.u.var))},
-            Precedence::None};
+        return Value{{"var " + LocalDecl(std::string(n.u.var->name()),
+                                         cur_func->GetLocalType(*n.u.var))},
+                     Precedence::None};
       }
       case NodeType::DeclInit: {
         if (cur_ast->vars_defined[n.u.var->name()].defined) {
@@ -379,13 +399,12 @@ struct Decompiler {
           return WrapChild(args[0], cat(VarName(n.u.var->name()), " = "), "",
                            Precedence::None);
         } else {
-          return WrapChild(
-              args[0],
-              cat("var ",
-                  LocalDecl(std::string(n.u.var->name()),
-                            cur_func->GetLocalType(*n.u.var)),
-                  " = "),
-              "", Precedence::None);
+          return WrapChild(args[0],
+                           cat("var ",
+                               LocalDecl(std::string(n.u.var->name()),
+                                         cur_func->GetLocalType(*n.u.var)),
+                               " = "),
+                           "", Precedence::None);
         }
       }
       case NodeType::Expr:
@@ -460,7 +479,7 @@ struct Decompiler {
       }
       case ExprType::Unary: {
         auto& ue = *cast<UnaryExpr>(n.e);
-        //BracketIfNeeded(stack.back());
+        // BracketIfNeeded(stack.back());
         // TODO: also version without () depending on precedence.
         return WrapChild(args[0], OpcodeToToken(ue.opcode) + "(", ")",
                          Precedence::Atomic);
@@ -479,7 +498,7 @@ struct Decompiler {
       }
       case ExprType::If: {
         auto ife = cast<IfExpr>(n.e);
-        Value *elsep = nullptr;
+        Value* elsep = nullptr;
         if (!ife->false_.empty()) {
           elsep = &args[2];
         }
@@ -493,7 +512,7 @@ struct Decompiler {
         }
         multiline = multiline || width > target_exp_width;
         if (multiline) {
-          auto if_start = string_view("if (");
+          auto if_start = std::string_view("if (");
           IndentValue(ifs, if_start.size(), if_start);
           ifs.v.back() += ") {";
           IndentValue(thenp, indent_amount, {});
@@ -501,7 +520,8 @@ struct Decompiler {
           if (elsep) {
             ifs.v.push_back("} else {");
             IndentValue(*elsep, indent_amount, {});
-            std::move(elsep->v.begin(), elsep->v.end(), std::back_inserter(ifs.v));
+            std::move(elsep->v.begin(), elsep->v.end(),
+                      std::back_inserter(ifs.v));
           }
           ifs.v.push_back("}");
           ifs.precedence = Precedence::If;
@@ -516,14 +536,13 @@ struct Decompiler {
       case ExprType::Block: {
         auto& val = args[0];
         val.v.push_back(
-              cat("label ", VarName(cast<BlockExpr>(n.e)->block.label), ":"));
+            cat("label ", VarName(cast<BlockExpr>(n.e)->block.label), ":"));
         // If this block is part of a larger statement scope, it doesn't
         // need its own indenting, but if its part of an exp we wrap it in {}.
-        if (parent && parent->ntype != NodeType::Statements
-                   && parent->etype != ExprType::Block
-                   && parent->etype != ExprType::Loop
-                   && (parent->etype != ExprType::If ||
-                       &parent->children[0] == &n)) {
+        if (parent && parent->ntype != NodeType::Statements &&
+            parent->etype != ExprType::Block &&
+            parent->etype != ExprType::Loop &&
+            (parent->etype != ExprType::If || &parent->children[0] == &n)) {
           IndentValue(val, indent_amount, {});
           val.v.insert(val.v.begin(), "{");
           val.v.push_back("}");
@@ -549,8 +568,8 @@ struct Decompiler {
       case ExprType::BrIf: {
         auto bie = cast<BrIfExpr>(n.e);
         auto jmp = n.u.lt == LabelType::Loop ? "continue" : "goto";
-        return WrapChild(args[0], "if (", cat(") ", jmp, " ",
-                                              VarName(bie->var.name())),
+        return WrapChild(args[0], "if (",
+                         cat(") ", jmp, " ", VarName(bie->var.name())),
                          Precedence::None);
       }
       case ExprType::Return: {
@@ -576,7 +595,7 @@ struct Decompiler {
       case ExprType::BrTable: {
         auto bte = cast<BrTableExpr>(n.e);
         std::string ts = "br_table[";
-        for (auto &v : bte->targets) {
+        for (auto& v : bte->targets) {
           ts += VarName(v.name());
           ts += ", ";
         }
@@ -584,6 +603,12 @@ struct Decompiler {
         ts += VarName(bte->default_target.name());
         ts += "](";
         return WrapChild(args[0], ts, ")", Precedence::Atomic);
+      }
+      case ExprType::CodeMetadata: {
+        auto cme = cast<CodeMetadataExpr>(n.e);
+        std::string c = "// @metadata.code." + cme->name + " ";
+        c += BinaryToString(cme->data);
+        return Value{{std::move(c)}, Precedence::None};
       }
       default: {
         // Everything that looks like a function call.
@@ -644,9 +669,9 @@ struct Decompiler {
   bool CheckImportExport(std::string& s,
                          ExternalKind kind,
                          Index index,
-                         string_view name) {
+                         std::string_view name) {
     // Figure out if this thing is imported, exported, or neither.
-    auto is_import = mc.module.IsImport(kind, Var(index));
+    auto is_import = mc.module.IsImport(kind, Var(index, Location()));
     // TODO: is this the best way to check for export?
     // FIXME: this doesn't work for functions that get renamed in some way,
     // as the export has the original name..
@@ -659,7 +684,7 @@ struct Decompiler {
     return is_import;
   }
 
-  std::string InitExp(const ExprList &el) {
+  std::string InitExp(const ExprList& el) {
     assert(!el.empty());
     AST ast(mc, nullptr);
     ast.Construct(el, 1, 0, false);
@@ -669,7 +694,7 @@ struct Decompiler {
   }
 
   // FIXME: Merge with WatWriter::WriteQuotedData somehow.
-  std::string BinaryToString(const std::vector<uint8_t> &in) {
+  std::string BinaryToString(const std::vector<uint8_t>& in) {
     std::string s = "\"";
     size_t line_start = 0;
     static const char s_hexdigits[] = "0123456789abcdef";

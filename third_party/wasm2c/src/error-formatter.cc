@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/error-formatter.h"
+#include "wabt/error-formatter.h"
 
 namespace wabt {
 
@@ -33,7 +33,7 @@ std::string FormatError(const Error& error,
 
   const Location& loc = error.loc;
   if (!loc.filename.empty()) {
-    result += loc.filename.to_string();
+    result += loc.filename;
     result += ":";
   }
 
@@ -94,7 +94,7 @@ std::string FormatErrorsToString(const Errors& errors,
           break;
         case PrintHeader::Once:
           print_header = PrintHeader::Never;
-          // Fallthrough.
+          [[fallthrough]];
         case PrintHeader::Always:
           result += header;
           result += ":\n";

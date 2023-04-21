@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/literal.h"
+#include "wabt/literal.h"
 
 #include <cassert>
 #include <cerrno>
@@ -37,7 +37,7 @@ struct FloatTraitsBase {};
 
 template <>
 struct FloatTraitsBase<float> {
-  typedef uint32_t Uint;
+  using Uint = uint32_t;
   static constexpr int kBits = sizeof(Uint) * 8;
   static constexpr int kSigBits = 23;
   static constexpr float kHugeVal = HUGE_VALF;
@@ -48,7 +48,7 @@ struct FloatTraitsBase<float> {
 
 template <>
 struct FloatTraitsBase<double> {
-  typedef uint64_t Uint;
+  using Uint = uint64_t;
   static constexpr int kBits = sizeof(Uint) * 8;
   static constexpr int kSigBits = 52;
   static constexpr float kHugeVal = HUGE_VAL;
@@ -61,7 +61,7 @@ struct FloatTraitsBase<double> {
 
 template <typename T>
 struct FloatTraits : FloatTraitsBase<T> {
-  typedef typename FloatTraitsBase<T>::Uint Uint;
+  using Uint = typename FloatTraitsBase<T>::Uint;
   using FloatTraitsBase<T>::kBits;
   using FloatTraitsBase<T>::kSigBits;
 
@@ -80,9 +80,9 @@ struct FloatTraits : FloatTraitsBase<T> {
 template <typename T>
 class FloatParser {
  public:
-  typedef FloatTraits<T> Traits;
-  typedef typename Traits::Uint Uint;
-  typedef T Float;
+  using Traits = FloatTraits<T>;
+  using Uint = typename Traits::Uint;
+  using Float = T;
 
   static Result Parse(LiteralType,
                       const char* s,
@@ -107,8 +107,8 @@ class FloatParser {
 template <typename T>
 class FloatWriter {
  public:
-  typedef FloatTraits<T> Traits;
-  typedef typename Traits::Uint Uint;
+  using Traits = FloatTraits<T>;
+  using Uint = typename Traits::Uint;
 
   static void WriteHex(char* out, size_t size, Uint bits);
 };
@@ -649,7 +649,9 @@ Result ParseInt64(const char* s,
 namespace {
 uint32_t AddWithCarry(uint32_t x, uint32_t y, uint32_t* carry) {
   // Increments *carry if the addition overflows, otherwise leaves carry alone.
-  if ((0xffffffff - x) < y) ++*carry;
+  if ((0xffffffff - x) < y) {
+    ++*carry;
+  }
   return x + y;
 }
 
@@ -674,11 +676,9 @@ void Mul10(v128* v) {
   v->set_u32(2, AddWithCarry(v->u32(2), carry_into_v2, &carry_into_v3));
   v->set_u32(3, v->u32(3) * 10 + carry_into_v3);
 }
-}
+}  // namespace
 
-Result ParseUint128(const char* s,
-                    const char* end,
-                    v128* out) {
+Result ParseUint128(const char* s, const char* end, v128* out) {
   if (s == end) {
     return Result::Error;
   }
@@ -719,7 +719,7 @@ Result ParseInt(const char* s,
                 const char* end,
                 U* out,
                 ParseIntType parse_type) {
-  typedef typename std::make_signed<U>::type S;
+  using S = typename std::make_signed<U>::type;
   uint64_t value;
   bool has_sign = false;
   if (*s == '-' || *s == '+') {
@@ -801,7 +801,7 @@ void WriteUint128(char* buffer, size_t size, v128 bits) {
 
     for (int i = 3; i != 0; --i) {
       digits = remainder / 10;
-      remainder = ((remainder - digits * 10) << 32) + bits.u32(i-1);
+      remainder = ((remainder - digits * 10) << 32) + bits.u32(i - 1);
       bits.set_u32(i, digits);
     }
 
@@ -822,8 +822,7 @@ void WriteUint128(char* buffer, size_t size, v128 bits) {
     len = size - 1;
   }
   std::reverse_copy(reversed_buffer + truncated_tail,
-                    reversed_buffer + len + truncated_tail,
-                    buffer);
+                    reversed_buffer + len + truncated_tail, buffer);
   buffer[len] = '\0';
 }
 

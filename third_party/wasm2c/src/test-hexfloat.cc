@@ -20,7 +20,7 @@
 
 #include "gtest/gtest.h"
 
-#include "src/literal.h"
+#include "wabt/literal.h"
 
 #define FOREACH_UINT32_MULTIPLIER 1
 
@@ -67,7 +67,7 @@ static bool is_infinity_or_nan(uint64_t double_bits) {
 
 class ThreadedTest : public ::testing::Test {
  protected:
-  static const int kDefaultNumThreads = 2;
+  static constexpr int kDefaultNumThreads = 2;
 
   virtual void SetUp() {
     num_threads_ = std::thread::hardware_concurrency();

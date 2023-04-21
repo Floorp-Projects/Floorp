@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#include "src/leb128.h"
+#include "wabt/leb128.h"
 
 #include <type_traits>
 
-#include "src/stream.h"
+#include "wabt/stream.h"
 
 #define MAX_U32_LEB128_BYTES 5
 #define MAX_U64_LEB128_BYTES 10
