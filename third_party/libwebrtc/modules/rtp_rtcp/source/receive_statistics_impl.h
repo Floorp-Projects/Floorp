@@ -18,10 +18,10 @@
 #include <vector>
 
 #include "absl/types/optional.h"
-#include "modules/include/module_common_types_public.h"
 #include "modules/rtp_rtcp/include/receive_statistics.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/report_block.h"
 #include "rtc_base/containers/flat_map.h"
+#include "rtc_base/numerics/sequence_number_unwrapper.h"
 #include "rtc_base/rate_statistics.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
@@ -96,7 +96,7 @@ class StreamStatisticianImpl : public StreamStatisticianImplInterface {
 
   int64_t last_receive_time_ms_;
   uint32_t last_received_timestamp_;
-  SequenceNumberUnwrapper seq_unwrapper_;
+  RtpSequenceNumberUnwrapper seq_unwrapper_;
   int64_t received_seq_first_;
   int64_t received_seq_max_;
   // Assume that the other side restarted when there are two sequential packets
