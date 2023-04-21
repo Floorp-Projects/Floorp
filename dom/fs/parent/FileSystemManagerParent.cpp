@@ -102,10 +102,9 @@ IPCResult FileSystemManagerParent::RecvGetFileHandle(
     aResolver(response);
   };
 
-  ContentType type;
   QM_TRY_UNWRAP(fs::EntryId entryId,
                 mDataManager->MutableDatabaseManagerPtr()->GetOrCreateFile(
-                    aRequest.handle(), type, aRequest.create()),
+                    aRequest.handle(), aRequest.create()),
                 IPC_OK(), reportError);
   MOZ_ASSERT(!entryId.IsEmpty());
 
@@ -201,7 +200,7 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetWritable(
 
   auto reportError = [aResolver](nsresult rv) { aResolver(rv); };
 
-  fs::ContentType type;
+  nsString type;
   fs::TimeStamp lastModifiedMilliSeconds;
   fs::Path path;
   nsCOMPtr<nsIFile> file;
@@ -264,7 +263,7 @@ IPCResult FileSystemManagerParent::RecvGetFile(
     aResolver(rv);
   };
 
-  fs::ContentType type;
+  nsString type;
   fs::TimeStamp lastModifiedMilliSeconds;
   fs::Path path;
   nsCOMPtr<nsIFile> fileObject;
@@ -282,8 +281,8 @@ IPCResult FileSystemManagerParent::RecvGetFile(
 
   // TODO: Currently, there is no way to assign type and it is empty.
   // See bug 1826780.
-  RefPtr<BlobImpl> blob = MakeRefPtr<FileBlobImpl>(
-      fileObject, path.LastElement(), NS_ConvertUTF8toUTF16(type));
+  RefPtr<BlobImpl> blob =
+      MakeRefPtr<FileBlobImpl>(fileObject, path.LastElement(), type);
 
   IPCBlob ipcBlob;
   QM_TRY(MOZ_TO_RESULT(IPCBlobUtils::Serialize(blob, ipcBlob)), IPC_OK(),

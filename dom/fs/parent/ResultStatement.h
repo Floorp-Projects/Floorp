@@ -70,11 +70,7 @@ class ResultStatement {
 
   inline nsresult BindContentTypeByName(const nsACString& aField,
                                         const ContentType& aValue) {
-    if (0u == aValue.Length()) {  // Otherwise empty string becomes null
-      return mStmt->BindUTF8StringByName(aField, aValue);
-    }
-
-    return mStmt->BindUTF8StringAsBlobByName(aField, aValue);
+    return mStmt->BindStringByName(aField, aValue);
   }
 
   inline nsresult BindNameByName(const nsACString& aField, const Name& aValue) {
@@ -103,7 +99,7 @@ class ResultStatement {
 
   inline Result<ContentType, QMResult> GetContentTypeByColumn(Column aColumn) {
     ContentType value;
-    QM_TRY(QM_TO_RESULT(mStmt->GetUTF8String(aColumn, value)));
+    QM_TRY(QM_TO_RESULT(mStmt->GetString(aColumn, value)));
 
     return value;
   }
