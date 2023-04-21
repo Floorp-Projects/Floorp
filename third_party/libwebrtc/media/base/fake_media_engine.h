@@ -28,6 +28,7 @@
 #include "media/base/stream_params.h"
 #include "media/engine/webrtc_video_engine.h"
 #include "modules/audio_processing/include/audio_processing.h"
+#include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/network_route.h"
 #include "rtc_base/thread.h"
@@ -296,9 +297,9 @@ class RtpHelper : public Base {
   void set_recv_rtcp_parameters(const RtcpParameters& params) {
     recv_rtcp_parameters_ = params;
   }
-  void OnPacketReceived(rtc::CopyOnWriteBuffer packet,
-                        int64_t packet_time_us) override {
-    rtp_packets_.push_back(std::string(packet.cdata<char>(), packet.size()));
+  void OnPacketReceived(const webrtc::RtpPacketReceived& packet) override {
+    rtp_packets_.push_back(
+        std::string(packet.Buffer().cdata<char>(), packet.size()));
   }
   void OnPacketSent(const rtc::SentPacket& sent_packet) override {}
   void OnReadyToSend(bool ready) override { ready_to_send_ = ready; }

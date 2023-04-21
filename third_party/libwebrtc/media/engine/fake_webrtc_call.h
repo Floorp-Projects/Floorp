@@ -384,6 +384,9 @@ class FakeCall final : public webrtc::Call, public webrtc::PacketReceiver {
   const std::vector<FakeFlexfecReceiveStream*>& GetFlexfecReceiveStreams();
 
   rtc::SentPacket last_sent_packet() const { return last_sent_packet_; }
+  const webrtc::RtpPacketReceived& last_received_rtp_packet() const {
+    return last_received_rtp_packet_;
+  }
   size_t GetDeliveredPacketsForSsrc(uint32_t ssrc) const {
     auto it = delivered_packets_by_ssrc_.find(ssrc);
     return it != delivered_packets_by_ssrc_.end() ? it->second : 0u;
@@ -489,6 +492,7 @@ class FakeCall final : public webrtc::Call, public webrtc::PacketReceiver {
   webrtc::NetworkState audio_network_state_;
   webrtc::NetworkState video_network_state_;
   rtc::SentPacket last_sent_packet_;
+  webrtc::RtpPacketReceived last_received_rtp_packet_;
   int last_sent_nonnegative_packet_id_ = -1;
   int next_stream_id_ = 665;
   webrtc::Call::Stats stats_;

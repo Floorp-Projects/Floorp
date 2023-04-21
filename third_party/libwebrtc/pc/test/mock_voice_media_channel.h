@@ -17,6 +17,7 @@
 #include "api/call/audio_sink.h"
 #include "media/base/media_channel.h"
 #include "media/base/media_channel_impl.h"
+#include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "rtc_base/gunit.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
@@ -36,7 +37,7 @@ class MockVoiceMediaChannel : public VoiceMediaChannel {
               (override));
   MOCK_METHOD(void,
               OnPacketReceived,
-              (rtc::CopyOnWriteBuffer packet, int64_t packet_time_us),
+              (const webrtc::RtpPacketReceived& packet),
               (override));
   MOCK_METHOD(void,
               OnPacketSent,

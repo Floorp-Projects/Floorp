@@ -2803,6 +2803,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../modules/audio_device",
       "../modules/audio_processing",
       "../modules/audio_processing:api",
+      "../modules/rtp_rtcp:rtp_rtcp_format",
       "../p2p:fake_port_allocator",
       "../p2p:p2p_test_utils",
       "../p2p:rtc_p2p",

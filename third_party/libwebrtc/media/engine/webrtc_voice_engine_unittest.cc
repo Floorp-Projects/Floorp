@@ -31,6 +31,8 @@
 #include "modules/audio_device/include/mock_audio_device.h"
 #include "modules/audio_mixer/audio_mixer_impl.h"
 #include "modules/audio_processing/include/mock_audio_processing.h"
+#include "modules/rtp_rtcp/source/rtp_header_extensions.h"
+#include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/byte_order.h"
 #include "rtc_base/numerics/safe_conversions.h"
@@ -275,9 +277,9 @@ class WebRtcVoiceEngineTestFake : public ::testing::TestWithParam<bool> {
   }
 
   void DeliverPacket(const void* data, int len) {
-    rtc::CopyOnWriteBuffer packet(reinterpret_cast<const uint8_t*>(data), len);
-    receive_channel_->OnPacketReceived(packet,
-                                       /* packet_time_us */ -1);
+    webrtc::RtpPacketReceived packet;
+    packet.Parse(reinterpret_cast<const uint8_t*>(data), len);
+    receive_channel_->OnPacketReceived(packet);
     rtc::Thread::Current()->ProcessMessages(0);
   }
 
@@ -1472,6 +1474,31 @@ TEST_P(WebRtcVoiceEngineTestFake, GetRtpReceiveParametersWithUnsignaledSsrc) {
   rtp_parameters = channel_->GetDefaultRtpReceiveParameters();
   ASSERT_EQ(1u, rtp_parameters.encodings.size());
   EXPECT_FALSE(rtp_parameters.encodings[0].ssrc);
+}
+
+TEST_P(WebRtcVoiceEngineTestFake, OnPacketReceivedIdentifiesExtensions) {
+  ASSERT_TRUE(SetupChannel());
+  cricket::AudioRecvParameters parameters = recv_parameters_;
+  parameters.extensions.push_back(
+      RtpExtension(RtpExtension::kAudioLevelUri, /*id=*/1));
+  ASSERT_TRUE(channel_->SetRecvParameters(parameters));
+  webrtc::RtpHeaderExtensionMap extension_map(parameters.extensions);
+  webrtc::RtpPacketReceived reference_packet(&extension_map);
+  constexpr uint8_t kAudioLevel = 123;
+  reference_packet.SetExtension<webrtc::AudioLevel>(/*voice_activity=*/true,
+                                                    kAudioLevel);
+  //  Create a packet without the extension map but with the same content.
+  webrtc::RtpPacketReceived received_packet;
+  ASSERT_TRUE(received_packet.Parse(reference_packet.Buffer()));
+
+  receive_channel_->OnPacketReceived(received_packet);
+  rtc::Thread::Current()->ProcessMessages(0);
+
+  bool voice_activity;
+  uint8_t audio_level;
+  EXPECT_TRUE(call_.last_received_rtp_packet().GetExtension<webrtc::AudioLevel>(
+      &voice_activity, &audio_level));
+  EXPECT_EQ(audio_level, kAudioLevel);
 }
 
 // Test that we apply codecs properly.
@@ -3419,8 +3446,9 @@ TEST_P(WebRtcVoiceEngineTestFake, DeliverAudioPacket_Call) {
   const cricket::FakeAudioReceiveStream* s =
       call_.GetAudioReceiveStream(kAudioSsrc);
   EXPECT_EQ(0, s->received_packets());
-  receive_channel_->OnPacketReceived(kPcmuPacket,
-                                     /* packet_time_us */ -1);
+  webrtc::RtpPacketReceived parsed_packet;
+  RTC_CHECK(parsed_packet.Parse(kPcmuPacket));
+  receive_channel_->OnPacketReceived(parsed_packet);
   rtc::Thread::Current()->ProcessMessages(0);
 
   EXPECT_EQ(1, s->received_packets());

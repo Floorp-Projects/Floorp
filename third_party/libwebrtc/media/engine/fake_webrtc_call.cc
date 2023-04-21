@@ -696,6 +696,7 @@ void FakeCall::DeliverRtpPacket(
                             packet.arrival_time());
     }
   }
+  last_received_rtp_packet_ = packet;
 }
 
 bool FakeCall::DeliverPacketInternal(webrtc::MediaType media_type,
