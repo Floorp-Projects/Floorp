@@ -24,10 +24,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0744d68b8c944e699
  10 files changed, 18 insertions(+), 6 deletions(-)
 
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index 30e090db2a..8cda62b0fa 100644
+index bf8e81fda4..5f5f24e825 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
-@@ -513,7 +513,7 @@ ChannelSend::ChannelSend(
+@@ -502,7 +502,7 @@ ChannelSend::ChannelSend(
    RtpRtcpInterface::Configuration configuration;
    configuration.bandwidth_callback = rtcp_observer_.get();
    configuration.transport_feedback_callback = feedback_observer_;
