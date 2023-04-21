@@ -16,6 +16,7 @@
 #include "modules/include/module_common_types_public.h"
 #include "modules/rtp_rtcp/source/rtp_packet.h"
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
+#include "rtc_base/numerics/sequence_number_unwrapper.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/task_queue_for_test.h"
 #include "test/call_test.h"
@@ -268,7 +269,7 @@ void RtpRtcpEndToEndTest::TestRtpStatePreservation(
       return SEND_PACKET;
     }
 
-    SequenceNumberUnwrapper seq_numbers_unwrapper_;
+    RtpSequenceNumberUnwrapper seq_numbers_unwrapper_;
     std::map<uint32_t, std::list<int64_t>> last_observed_seq_numbers_;
     std::map<uint32_t, uint32_t> last_observed_timestamp_;
     std::map<uint32_t, bool> ssrc_is_rtx_;
