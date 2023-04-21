@@ -111,7 +111,11 @@ add_task(async function test_aboutwelcome_pin_screen_impression() {
   for (let i = 0; i < callCount; i++) {
     const call = impressionSpy.getCall(i);
     info(`Call #${i}:  ${JSON.stringify(call.args[0])}`);
-    if (call.calledWithMatch({ event: "IMPRESSION" })) {
+    if (
+      call.calledWithMatch({ event: "IMPRESSION" }) &&
+      !call.calledWithMatch({ message_id: "MR_WELCOME_DEFAULT" })
+    ) {
+      info(`Screen Impression Call #${i}:  ${JSON.stringify(call.args[0])}`);
       impressionCall = call;
     }
   }
