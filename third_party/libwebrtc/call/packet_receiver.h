@@ -20,26 +20,8 @@ namespace webrtc {
 
 class PacketReceiver {
  public:
-  enum DeliveryStatus {
-    DELIVERY_OK,
-    DELIVERY_UNKNOWN_SSRC,
-    DELIVERY_PACKET_ERROR,
-  };
-
-  // TODO(perkj, https://bugs.webrtc.org/7135): Remove this method. This method
-  // is no longer used by PeerConnections. Some tests still use it.
-  virtual DeliveryStatus DeliverPacket(MediaType media_type,
-                                       rtc::CopyOnWriteBuffer packet,
-                                       int64_t packet_time_us) {
-    RTC_CHECK_NOTREACHED();
-  }
-
   // Demux RTCP packets. Must be called on the worker thread.
-  virtual void DeliverRtcpPacket(rtc::CopyOnWriteBuffer packet) {
-    // TODO(perkj, https://bugs.webrtc.org/7135): Implement in FakeCall and
-    // FakeNetworkPipe.
-    RTC_CHECK_NOTREACHED();
-  }
+  virtual void DeliverRtcpPacket(rtc::CopyOnWriteBuffer packet) = 0;
 
   // Invoked once when a packet packet is received that can not be demuxed.
   // If the method returns true, a new attempt is made to demux the packet.
@@ -50,11 +32,7 @@ class PacketReceiver {
   virtual void DeliverRtpPacket(
       MediaType media_type,
       RtpPacketReceived packet,
-      OnUndemuxablePacketHandler undemuxable_packet_handler) {
-    // TODO(perkj, https://bugs.webrtc.org/7135): Implement in FakeCall and
-    // FakeNetworkPipe.
-    RTC_CHECK_NOTREACHED();
-  }
+      OnUndemuxablePacketHandler undemuxable_packet_handler) = 0;
 
  protected:
   virtual ~PacketReceiver() {}

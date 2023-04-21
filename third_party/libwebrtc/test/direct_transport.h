@@ -44,14 +44,6 @@ class Demuxer {
 // same task-queue - the one that's passed in via the constructor.
 class DirectTransport : public Transport {
  public:
-  // TODO(perkj, https://bugs.webrtc.org/7135): Remove header once downstream
-  // projects have been updated.
-  [[deprecated("Use ctor that provide header extensions.")]] DirectTransport(
-      TaskQueueBase* task_queue,
-      std::unique_ptr<SimulatedPacketReceiverInterface> pipe,
-      Call* send_call,
-      const std::map<uint8_t, MediaType>& payload_type_map);
-
   DirectTransport(TaskQueueBase* task_queue,
                   std::unique_ptr<SimulatedPacketReceiverInterface> pipe,
                   Call* send_call,
@@ -85,7 +77,6 @@ class DirectTransport : public Transport {
 
   const Demuxer demuxer_;
   const std::unique_ptr<SimulatedPacketReceiverInterface> fake_network_;
-  const bool use_legacy_send_;
   const RtpHeaderExtensionMap audio_extensions_;
   const RtpHeaderExtensionMap video_extensions_;
 };
