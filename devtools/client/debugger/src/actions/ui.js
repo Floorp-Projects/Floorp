@@ -136,8 +136,15 @@ export function togglePaneCollapse(position, paneCollapsed) {
 }
 
 /**
- * @memberof actions/sources
- * @static
+ * Highlight one or many lines in CodeMirror for a given source.
+ *
+ * @param {Object} location
+ * @param {String} location.sourceId
+ *        The precise source to highlight.
+ * @param {Number} location.start
+ *        The 1-based index of first line to highlight.
+ * @param {Number} location.end
+ *        The 1-based index of last line to highlight.
  */
 export function highlightLineRange(location) {
   return {
@@ -153,10 +160,6 @@ export function flashLineRange(location) {
   };
 }
 
-/**
- * @memberof actions/sources
- * @static
- */
 export function clearHighlightLineRange() {
   return {
     type: "CLEAR_HIGHLIGHT_LINES",

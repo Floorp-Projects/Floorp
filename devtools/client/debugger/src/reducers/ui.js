@@ -18,7 +18,15 @@ export const initialUIState = () => ({
   startPanelCollapsed: prefs.startPanelCollapsed,
   endPanelCollapsed: prefs.endPanelCollapsed,
   frameworkGroupingOn: prefs.frameworkGroupingOn,
-  highlightedLineRange: undefined,
+
+  // This is used from Outline's copy to clipboard context menu
+  // and QuickOpen to highlight lines temporarily.
+  // If defined, it will be an object with following attributes:
+  // - sourceId, String
+  // - start, Number, start line to highlight, 1-based
+  // - end, Number, end line to highlight, 1-based
+  highlightedLineRange: null,
+
   conditionalPanelLocation: null,
   isLogPoint: false,
   orientation: "horizontal",
@@ -94,7 +102,7 @@ function update(state = initialUIState(), action) {
       return { ...state, endPanelCollapsed: action.paneCollapsed };
     }
 
-    case "HIGHLIGHT_LINES":
+    case "HIGHLIGHT_LINES": {
       const { start, end, sourceId } = action.location;
       let lineRange;
 
@@ -104,10 +112,13 @@ function update(state = initialUIState(), action) {
       }
 
       return { ...state, highlightedLineRange: lineRange };
-
+    }
     case "CLOSE_QUICK_OPEN":
     case "CLEAR_HIGHLIGHT_LINES":
-      return { ...state, highlightedLineRange: undefined };
+      if (!state.highlightedLineRange) {
+        return state;
+      }
+      return { ...state, highlightedLineRange: null };
 
     case "OPEN_CONDITIONAL_PANEL":
       return {
@@ -138,7 +149,16 @@ function update(state = initialUIState(), action) {
     }
 
     case "NAVIGATE": {
-      return { ...state, activeSearch: null, highlightedLineRange: {} };
+      return { ...state, activeSearch: null, highlightedLineRange: null };
+    }
+
+    case "REMOVE_THREAD": {
+      // Reset the highlighted range if the related source has been removed
+      const sourceId = state.highlightedLineRange?.sourceId;
+      if (sourceId && action.sources.some(s => s.id == sourceId)) {
+        return { ...state, highlightedLineRange: null };
+      }
+      return state;
     }
 
     case "SET_JAVASCRIPT_TRACING_LOG_METHOD": {
