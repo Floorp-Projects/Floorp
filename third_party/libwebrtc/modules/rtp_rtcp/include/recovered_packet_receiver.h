@@ -20,16 +20,7 @@ namespace webrtc {
 // the recovered RTP packets based on SSRC.
 class RecoveredPacketReceiver {
  public:
-  // TODO(bugs.webrtc.org/7135,perkj): Remove when all
-  // implementations implement OnRecoveredPacket(const RtpPacketReceived&)
-  virtual void OnRecoveredPacket(const uint8_t* packet, size_t length) {
-    RTC_DCHECK_NOTREACHED();
-  }
-  // TODO(bugs.webrtc.org/7135,perkj): Make pure virtual when all
-  // implementations are updated.
-  virtual void OnRecoveredPacket(const RtpPacketReceived& packet) {
-    OnRecoveredPacket(packet.Buffer().data(), packet.Buffer().size());
-  }
+  virtual void OnRecoveredPacket(const RtpPacketReceived& packet) = 0;
 
  protected:
   virtual ~RecoveredPacketReceiver() = default;
