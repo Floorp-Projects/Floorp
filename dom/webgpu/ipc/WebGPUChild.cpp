@@ -836,8 +836,11 @@ already_AddRefed<ShaderModule> WebGPUChild::DeviceCreateShaderModule(
       new ShaderModule(aDevice, moduleId, aPromise);
 
   nsString noLabel;
-  const nsString& label =
-      aDesc.mLabel.WasPassed() ? aDesc.mLabel.Value() : noLabel;
+  nsString& label = noLabel;
+  if (aDesc.mLabel.WasPassed()) {
+    label = aDesc.mLabel.Value();
+    shaderModule->SetLabel(label);
+  }
   SendDeviceCreateShaderModule(deviceId, moduleId, label, aDesc.mCode)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
