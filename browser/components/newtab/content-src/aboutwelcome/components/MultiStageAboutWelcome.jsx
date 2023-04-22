@@ -337,10 +337,21 @@ export class WelcomeScreen extends React.PureComponent {
     if (action.collectSelect) {
       // Populate MULTI_ACTION data actions property with selected checkbox actions from tiles data
       action.data = {
-        actions: this.props.activeMultiSelect.map(
-          id => props.content?.tiles?.data.find(ckbx => ckbx.id === id)?.action
-        ),
+        actions: [],
       };
+
+      for (const checkbox of props.content?.tiles?.data ?? []) {
+        let checkboxAction;
+        if (this.props.activeMultiSelect.includes(checkbox.id)) {
+          checkboxAction = checkbox.checkedAction ?? checkbox.action;
+        } else {
+          checkboxAction = checkbox.uncheckedAction;
+        }
+
+        if (checkboxAction) {
+          action.data.actions.push(checkboxAction);
+        }
+      }
 
       // Send telemetry with selected checkbox ids
       AboutWelcomeUtils.sendActionTelemetry(

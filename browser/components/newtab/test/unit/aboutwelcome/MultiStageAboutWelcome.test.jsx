@@ -591,6 +591,226 @@ describe("MultiStageAboutWelcome module", () => {
         });
         assert.calledOnce(migrationCloseStub);
       });
+      it("should unset prefs from unchecked checkboxes", () => {
+        const PREF_SCREEN_PROPS = {
+          content: {
+            title: "Checkboxes",
+            tiles: {
+              type: "multiselect",
+              data: [
+                {
+                  id: "checkbox-1",
+                  label: "checkbox 1",
+                  checkedAction: {
+                    type: "SET_PREF",
+                    data: {
+                      pref: {
+                        name: "pref-a",
+                        value: true,
+                      },
+                    },
+                  },
+                  uncheckedAction: {
+                    type: "SET_PREF",
+                    data: {
+                      pref: {
+                        name: "pref-a",
+                      },
+                    },
+                  },
+                },
+                {
+                  id: "checkbox-2",
+                  label: "checkbox 2",
+                  checkedAction: {
+                    type: "MULTI_ACTION",
+                    data: {
+                      actions: [
+                        {
+                          type: "SET_PREF",
+                          data: {
+                            pref: {
+                              name: "pref-b",
+                              value: "pref-b",
+                            },
+                          },
+                        },
+                        {
+                          type: "SET_PREF",
+                          data: {
+                            pref: {
+                              name: "pref-c",
+                              value: 3,
+                            },
+                          },
+                        },
+                      ],
+                    },
+                  },
+                  uncheckedAction: {
+                    type: "SET_PREF",
+                    data: {
+                      pref: { name: "pref-b" },
+                    },
+                  },
+                },
+              ],
+            },
+            primary_button: {
+              label: "Set Prefs",
+              action: {
+                type: "MULTI_ACTION",
+                collectSelect: true,
+                isDynamic: true,
+                navigate: true,
+                data: {
+                  actions: [],
+                },
+              },
+            },
+          },
+          navigate: sandbox.stub(),
+          setActiveMultiSelect: sandbox.stub(),
+        };
+
+        // No checkboxes checked. All prefs will be unset and pref-c will not be
+        // reset.
+        {
+          const wrapper = mount(
+            <WelcomeScreen {...PREF_SCREEN_PROPS} activeMultiSelect={[]} />
+          );
+          wrapper.find(".primary").simulate("click");
+          assert.calledWith(AboutWelcomeUtils.handleUserAction, {
+            type: "MULTI_ACTION",
+            collectSelect: true,
+            isDynamic: true,
+            navigate: true,
+            data: {
+              actions: [
+                { type: "SET_PREF", data: { pref: { name: "pref-a" } } },
+                { type: "SET_PREF", data: { pref: { name: "pref-b" } } },
+              ],
+            },
+          });
+
+          AboutWelcomeUtils.handleUserAction.resetHistory();
+        }
+
+        // The first checkbox is checked. Only pref-a will be set and pref-c
+        // will not be reset.
+        {
+          const wrapper = mount(
+            <WelcomeScreen
+              {...PREF_SCREEN_PROPS}
+              activeMultiSelect={["checkbox-1"]}
+            />
+          );
+          wrapper.find(".primary").simulate("click");
+          assert.calledWith(AboutWelcomeUtils.handleUserAction, {
+            type: "MULTI_ACTION",
+            collectSelect: true,
+            isDynamic: true,
+            navigate: true,
+            data: {
+              actions: [
+                {
+                  type: "SET_PREF",
+                  data: {
+                    pref: {
+                      name: "pref-a",
+                      value: true,
+                    },
+                  },
+                },
+                { type: "SET_PREF", data: { pref: { name: "pref-b" } } },
+              ],
+            },
+          });
+
+          AboutWelcomeUtils.handleUserAction.resetHistory();
+        }
+
+        // The second checkbox is checked. Prefs pref-b and pref-c will be set.
+        {
+          const wrapper = mount(
+            <WelcomeScreen
+              {...PREF_SCREEN_PROPS}
+              activeMultiSelect={["checkbox-2"]}
+            />
+          );
+          wrapper.find(".primary").simulate("click");
+          assert.calledWith(AboutWelcomeUtils.handleUserAction, {
+            type: "MULTI_ACTION",
+            collectSelect: true,
+            isDynamic: true,
+            navigate: true,
+            data: {
+              actions: [
+                { type: "SET_PREF", data: { pref: { name: "pref-a" } } },
+                {
+                  type: "MULTI_ACTION",
+                  data: {
+                    actions: [
+                      {
+                        type: "SET_PREF",
+                        data: { pref: { name: "pref-b", value: "pref-b" } },
+                      },
+                      {
+                        type: "SET_PREF",
+                        data: { pref: { name: "pref-c", value: 3 } },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          });
+
+          AboutWelcomeUtils.handleUserAction.resetHistory();
+        }
+
+        // // Both checkboxes are checked. All prefs will be set.
+        {
+          const wrapper = mount(
+            <WelcomeScreen
+              {...PREF_SCREEN_PROPS}
+              activeMultiSelect={["checkbox-1", "checkbox-2"]}
+            />
+          );
+          wrapper.find(".primary").simulate("click");
+          assert.calledWith(AboutWelcomeUtils.handleUserAction, {
+            type: "MULTI_ACTION",
+            collectSelect: true,
+            isDynamic: true,
+            navigate: true,
+            data: {
+              actions: [
+                {
+                  type: "SET_PREF",
+                  data: { pref: { name: "pref-a", value: true } },
+                },
+                {
+                  type: "MULTI_ACTION",
+                  data: {
+                    actions: [
+                      {
+                        type: "SET_PREF",
+                        data: { pref: { name: "pref-b", value: "pref-b" } },
+                      },
+                      {
+                        type: "SET_PREF",
+                        data: { pref: { name: "pref-c", value: 3 } },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          });
+
+          AboutWelcomeUtils.handleUserAction.resetHistory();
+        }
+      });
     });
   });
 });
