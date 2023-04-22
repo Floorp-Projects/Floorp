@@ -29,7 +29,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "config.h"
 #endif
 
-typedef int _prevent_empty_translation_unit_warning;
+typedef int prevent_empty_translation_unit_warning;
 
 #include "debug.h"
 
