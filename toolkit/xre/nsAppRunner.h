@@ -161,8 +161,6 @@ void MOZ_EXPORT __sanitizer_set_report_path(const char* path);
 void setASanReporterPath(nsIFile* aDir);
 #endif
 
-#ifdef MOZ_WAYLAND
 bool IsWaylandEnabled();
-#endif
 
 #endif  // nsAppRunner_h__
