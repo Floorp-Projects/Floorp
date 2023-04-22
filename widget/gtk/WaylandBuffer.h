@@ -23,8 +23,8 @@ class WaylandShmPool {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WaylandShmPool);
 
-  static RefPtr<WaylandShmPool> Create(
-      const RefPtr<nsWaylandDisplay>& aWaylandDisplay, int aSize);
+  static RefPtr<WaylandShmPool> Create(nsWaylandDisplay* aWaylandDisplay,
+                                       int aSize);
 
   wl_shm_pool* GetShmPool() { return mShmPool; };
   void* GetImageData() { return mImageData; };
