@@ -1857,8 +1857,8 @@ bool nsRefreshDriver::HasObservers() const {
   // We should NOT count mTimerAdjustmentObservers here since this method is
   // used to determine whether or not to stop the timer or re-start it and timer
   // adjustment observers should not influence timer starting or stopping.
-  return mViewManagerFlushIsPending || !mStyleFlushObservers.IsEmpty() ||
-         !mLayoutFlushObservers.IsEmpty() ||
+  return (mViewManagerFlushIsPending && !mThrottled) ||
+         !mStyleFlushObservers.IsEmpty() || !mLayoutFlushObservers.IsEmpty() ||
          !mAnimationEventFlushObservers.IsEmpty() ||
          !mResizeEventFlushObservers.IsEmpty() ||
          !mPendingFullscreenEvents.IsEmpty() ||
@@ -1875,7 +1875,7 @@ void nsRefreshDriver::AppendObserverDescriptionsToString(
                         kFlushTypeNames[observer.mFlushType]);
     }
   }
-  if (mViewManagerFlushIsPending) {
+  if (mViewManagerFlushIsPending && !mThrottled) {
     aStr.AppendLiteral("View manager flush pending, ");
   }
   if (!mAnimationEventFlushObservers.IsEmpty()) {
@@ -1932,7 +1932,7 @@ auto nsRefreshDriver::GetReasonsToTick() const -> TickReasons {
   if (HasObservers()) {
     reasons |= TickReasons::eHasObservers;
   }
-  if (HasImageRequests()) {
+  if (HasImageRequests() && !mThrottled) {
     reasons |= TickReasons::eHasImageRequests;
   }
   if (mNeedToUpdateIntersectionObservations) {
@@ -2703,76 +2703,77 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
 
   UpdateIntersectionObservations(aNowTime);
 
-  /*
-   * Perform notification to imgIRequests subscribed to listen
-   * for refresh events.
-   */
+  // Perform notification to imgIRequests subscribed to listen for refresh
+  // events. Don't do this when throttled, as (just like when painting) the
+  // compositor might be paused and we don't want to queue a lot of paints, see
+  // bug 1828587.
+  if (!mThrottled) {
+    for (const auto& entry : mStartTable) {
+      const uint32_t& delay = entry.GetKey();
+      ImageStartData* data = entry.GetWeak();
 
-  for (const auto& entry : mStartTable) {
-    const uint32_t& delay = entry.GetKey();
-    ImageStartData* data = entry.GetWeak();
+      if (data->mEntries.IsEmpty()) {
+        continue;
+      }
 
-    if (data->mEntries.IsEmpty()) {
-      continue;
-    }
+      if (data->mStartTime) {
+        TimeStamp& start = *data->mStartTime;
 
-    if (data->mStartTime) {
-      TimeStamp& start = *data->mStartTime;
+        if (previousRefresh >= start && aNowTime >= start) {
+          TimeDuration prev = previousRefresh - start;
+          TimeDuration curr = aNowTime - start;
+          uint32_t prevMultiple = uint32_t(prev.ToMilliseconds()) / delay;
 
-      if (previousRefresh >= start && aNowTime >= start) {
-        TimeDuration prev = previousRefresh - start;
-        TimeDuration curr = aNowTime - start;
-        uint32_t prevMultiple = uint32_t(prev.ToMilliseconds()) / delay;
-
-        // We want to trigger images' refresh if we've just crossed over a
-        // multiple of the first image's start time. If so, set the animation
-        // start time to the nearest multiple of the delay and move all the
-        // images in this table to the main requests table.
-        if (prevMultiple != uint32_t(curr.ToMilliseconds()) / delay) {
-          mozilla::TimeStamp desired =
-              start + TimeDuration::FromMilliseconds(prevMultiple * delay);
+          // We want to trigger images' refresh if we've just crossed over a
+          // multiple of the first image's start time. If so, set the animation
+          // start time to the nearest multiple of the delay and move all the
+          // images in this table to the main requests table.
+          if (prevMultiple != uint32_t(curr.ToMilliseconds()) / delay) {
+            mozilla::TimeStamp desired =
+                start + TimeDuration::FromMilliseconds(prevMultiple * delay);
+            BeginRefreshingImages(data->mEntries, desired);
+          }
+        } else {
+          // Sometimes the start time can be in the future if we spin a nested
+          // event loop and re-entrantly tick. In that case, setting the
+          // animation start time to the start time seems like the least bad
+          // thing we can do.
+          mozilla::TimeStamp desired = start;
           BeginRefreshingImages(data->mEntries, desired);
         }
       } else {
-        // Sometimes the start time can be in the future if we spin a nested
-        // event loop and re-entrantly tick. In that case, setting the animation
-        // start time to the start time seems like the least bad thing we can
-        // do.
-        mozilla::TimeStamp desired = start;
+        // This is the very first time we've drawn images with this time delay.
+        // Set the animation start time to "now" and move all the images in this
+        // table to the main requests table.
+        mozilla::TimeStamp desired = aNowTime;
         BeginRefreshingImages(data->mEntries, desired);
-      }
-    } else {
-      // This is the very first time we've drawn images with this time delay.
-      // Set the animation start time to "now" and move all the images in this
-      // table to the main requests table.
-      mozilla::TimeStamp desired = aNowTime;
-      BeginRefreshingImages(data->mEntries, desired);
-      data->mStartTime.emplace(aNowTime);
-    }
-  }
-
-  if (!mRequests.IsEmpty()) {
-    // RequestRefresh may run scripts, so it's not safe to directly call it
-    // while using a hashtable enumerator to enumerate mRequests in case
-    // script modifies the hashtable. Instead, we build a (local) array of
-    // images to refresh, and then we refresh each image in that array.
-    nsTArray<nsCOMPtr<imgIContainer>> imagesToRefresh(mRequests.Count());
-
-    for (const auto& req : mRequests) {
-      nsCOMPtr<imgIContainer> image;
-      if (NS_SUCCEEDED(req->GetImage(getter_AddRefs(image)))) {
-        imagesToRefresh.AppendElement(image.forget());
+        data->mStartTime.emplace(aNowTime);
       }
     }
 
-    for (const auto& image : imagesToRefresh) {
-      image->RequestRefresh(aNowTime);
+    if (!mRequests.IsEmpty()) {
+      // RequestRefresh may run scripts, so it's not safe to directly call it
+      // while using a hashtable enumerator to enumerate mRequests in case
+      // script modifies the hashtable. Instead, we build a (local) array of
+      // images to refresh, and then we refresh each image in that array.
+      nsTArray<nsCOMPtr<imgIContainer>> imagesToRefresh(mRequests.Count());
+
+      for (const auto& req : mRequests) {
+        nsCOMPtr<imgIContainer> image;
+        if (NS_SUCCEEDED(req->GetImage(getter_AddRefs(image)))) {
+          imagesToRefresh.AppendElement(image.forget());
+        }
+      }
+
+      for (const auto& image : imagesToRefresh) {
+        image->RequestRefresh(aNowTime);
+      }
     }
   }
 
   double phasePaint = 0.0;
   bool dispatchTasksAfterTick = false;
-  if (mViewManagerFlushIsPending) {
+  if (mViewManagerFlushIsPending && !mThrottled) {
     AutoRecordPhase paintRecord(&phasePaint);
     nsCString transactionId;
     if (profiler_thread_is_being_profiled_for_markers()) {
@@ -3112,9 +3113,9 @@ void nsRefreshDriver::UpdateThrottledState() {
     return;
   }
   mThrottled = shouldThrottle;
-  if (mActiveTimer) {
-    // We want to switch our timer type here, so just stop and
-    // restart the timer.
+  if (mActiveTimer || GetReasonsToTick() != TickReasons::eNone) {
+    // We want to switch our timer type here, so just stop and restart the
+    // timer.
     EnsureTimerStarted(eForceAdjustTimer);
   }
 }
