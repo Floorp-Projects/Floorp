@@ -3322,12 +3322,12 @@ richlistitem[originaltype="loginsFooter"] .ac-site-icon {
   list-style-image: url(chrome://browser/skin/sync.svg) !important;
 }
 
-.tab-icon-image:not([src]) {
+.tab-icon-image:not([src]):not([busy="true"] *) {
   list-style-image: url(chrome://browser/skin/globe.svg) !important;
   display: initial;
 }
 
-.tab-icon-image[src="chrome://global/skin/icons/settings.svg"]~.tab-icon-overlay {
+.tab-icon-image[src="chrome://global/skin/icons/settings.svg"]~.tab-icon-overlay:not([busy="true"] *) {
   display: -moz-box !important;
   margin: 0 !important;
   list-style-image: url(chrome://global/skin/icons/settings.svg) !important;
