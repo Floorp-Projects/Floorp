@@ -2025,6 +2025,7 @@ const NetworkIntegration = {
     // - url > extensionPath > transform > regexSubstitution
     const redirect = matchedRule.rule.action.redirect;
     const extension = matchedRule.ruleManager.extension;
+    const preRedirectUri = channel.finalURI;
     let redirectUri;
     if (redirect.url) {
       // redirect.url already validated by checkActionRedirect.
@@ -2035,14 +2036,22 @@ const NetworkIntegration = {
         .setPathQueryRef(redirect.extensionPath)
         .finalize();
     } else if (redirect.transform) {
-      redirectUri = applyURLTransform(channel.finalURI, redirect.transform);
+      redirectUri = applyURLTransform(preRedirectUri, redirect.transform);
     } else if (redirect.regexSubstitution) {
       // Note: may throw if regexSubstitution results in an invalid redirect.
       // The error propagates up to handleRequest, which will just allow the
       // request to continue.
-      redirectUri = applyRegexSubstitution(channel.finalURI, matchedRule);
+      redirectUri = applyRegexSubstitution(preRedirectUri, matchedRule);
     } else {
       // #checkActionRedirect ensures that the redirect action is non-empty.
+    }
+
+    if (preRedirectUri.equals(redirectUri)) {
+      // URL did not change. Sometimes it is a bug in the extension, but there
+      // are also cases where the result is unavoidable. E.g. redirect.transform
+      // with queryTransform.removeParams that does not remove anything.
+      // TODO: consider logging to help with debugging.
+      return;
     }
 
     channel.redirectTo(redirectUri);
