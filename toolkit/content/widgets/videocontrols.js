@@ -1181,6 +1181,7 @@ this.VideoControlsImplWidget = class {
 
         this.seekToPosition(time);
         this.showPosition(time, duration);
+        this.updateScrubberProgress();
 
         this.scrubber.isDragging = true;
         this.pauseVideoDuringDragging();
