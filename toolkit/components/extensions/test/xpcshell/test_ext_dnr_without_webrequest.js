@@ -674,10 +674,26 @@ add_task(async function redirect_request_with_dnr_with_redirect_loop() {
       addRules: [
         {
           id: 1,
-          condition: { requestDomains: ["redir"] },
+          // requestMethods is mutually exclusive with the other rule.
+          condition: { regexFilter: "^(.+)$", requestMethods: ["post"] },
           action: {
             type: "redirect",
             redirect: {
+              // Appends "?loop" to the request URL
+              regexSubstitution: "\\1?loop",
+            },
+          },
+        },
+        {
+          id: 2,
+          // requestMethods is mutually exclusive with the other rule.
+          condition: { requestDomains: ["redir"], requestMethods: ["get"] },
+          action: {
+            type: "redirect",
+            redirect: {
+              // Despite redirect.url matching the condition, the redirect loop
+              // should be caught because of the obvious fact that the URL did
+              // not change.
               url: "http://redir/cors_202?loop",
             },
           },
@@ -685,17 +701,34 @@ add_task(async function redirect_request_with_dnr_with_redirect_loop() {
       ],
     });
 
-    // Redirect with initially a different URL.
+    // Redirect where the redirect URL changes at every redirect.
     await browser.test.assertRejects(
-      fetch("http://redir/never_reached?"),
+      fetch("http://redir/cors_202?loop", { method: "post" }),
       "NetworkError when attempting to fetch resource.",
+      "Redirect loop caught (redirect target differs at every redirect)"
+    );
+
+    async function assertRedirect(url, expected, description) {
+      // method: "get" could only match rule 2.
+      let res = await fetch(url);
+      browser.test.assertDeepEq(
+        expected,
+        { status: res.status, url: res.url, redirected: res.redirected },
+        description
+      );
+    }
+
+    // Redirect with initially a different URL.
+    await assertRedirect(
+      "http://redir/never_reached?",
+      { status: 202, url: "http://redir/cors_202?loop", redirected: true },
       "Redirect loop caught (initially different URL)"
     );
 
     // Redirect where redirect is exactly the same URL as requested.
-    await browser.test.assertRejects(
-      fetch("http://redir/cors_202?loop"),
-      "NetworkError when attempting to fetch resource.",
+    await assertRedirect(
+      "http://redir/cors_202?loop",
+      { status: 202, url: "http://redir/cors_202?loop", redirected: false },
       "Redirect loop caught (redirect target same as initial URL)"
     );
 
