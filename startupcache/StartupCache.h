@@ -24,6 +24,7 @@
 #include "mozilla/AutoMemMap.h"
 #include "mozilla/Compression.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Result.h"
 #include "mozilla/UniquePtr.h"
@@ -209,13 +210,16 @@ class StartupCache : public nsIMemoryReporter {
   // Writes the cache to disk
   Result<Ok, nsresult> WriteToDisk() MOZ_REQUIRES(mTableLock);
 
-  void WaitOnPrefetchThread();
-  void StartPrefetchMemoryThread();
+  void WaitOnPrefetch();
+  void StartPrefetchMemory();
 
   static nsresult InitSingleton();
   static void WriteTimeout(nsITimer* aTimer, void* aClosure);
   void MaybeWriteOffMainThread();
-  static void ThreadedPrefetch(void* aClosure);
+  void ThreadedPrefetch();
+
+  Monitor mPrefetchComplete{"StartupCachePrefetch"};
+  bool mPrefetchInProgress MOZ_GUARDED_BY(mPrefetchComplete){false};
 
   // This is normally accessed on MainThread, but WriteToDisk() can
   // access it on other threads
@@ -246,7 +250,7 @@ class StartupCache : public nsIMemoryReporter {
   static bool gShutdownInitiated;
   static bool gIgnoreDiskCache;
   static bool gFoundDiskCacheOnInit;
-  PRThread* mPrefetchThread;
+
   UniquePtr<Compression::LZ4FrameDecompressionContext> mDecompressionContext;
 #ifdef DEBUG
   nsTHashSet<nsCOMPtr<nsISupports>> mWriteObjectMap;
