@@ -5,6 +5,7 @@
 
 #include "js/ArrayBuffer.h"
 #include "js/Value.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Logging.h"
 #include "mozilla/dom/Promise.h"
@@ -178,8 +179,9 @@ already_AddRefed<BindGroup> Device::CreateBindGroup(
   return object.forget();
 }
 
-already_AddRefed<ShaderModule> Device::CreateShaderModule(
-    JSContext* aCx, const dom::GPUShaderModuleDescriptor& aDesc) {
+MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION already_AddRefed<ShaderModule>
+Device::CreateShaderModule(JSContext* aCx,
+                           const dom::GPUShaderModuleDescriptor& aDesc) {
   Unused << aCx;
 
   if (!mBridge->CanSend()) {
@@ -192,7 +194,8 @@ already_AddRefed<ShaderModule> Device::CreateShaderModule(
     return nullptr;
   }
 
-  return mBridge->DeviceCreateShaderModule(this, aDesc, promise);
+  return MOZ_KnownLive(mBridge)->DeviceCreateShaderModule(*this, aDesc,
+                                                          promise);
 }
 
 already_AddRefed<ComputePipeline> Device::CreateComputePipeline(
