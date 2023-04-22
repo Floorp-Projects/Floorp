@@ -519,6 +519,10 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   // Trigger a refresh immediately, if haven't been disconnected or frozen.
   void DoRefresh();
 
+  // Starts pending image animations, and refreshes ongoing animations.
+  void UpdateAnimatedImages(mozilla::TimeStamp aPreviousRefresh,
+                            mozilla::TimeStamp aNowTime);
+
   TickReasons GetReasonsToTick() const;
   void AppendTickReasonsToString(TickReasons aReasons, nsACString& aStr) const;
 

@@ -2423,7 +2423,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
     return;
   }
 
-  TimeStamp previousRefresh = mMostRecentRefresh;
+  const TimeStamp previousRefresh = mMostRecentRefresh;
   mMostRecentRefresh = aNowTime;
 
   if (mRootRefresh) {
@@ -2703,73 +2703,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
 
   UpdateIntersectionObservations(aNowTime);
 
-  // Perform notification to imgIRequests subscribed to listen for refresh
-  // events. Don't do this when throttled, as (just like when painting) the
-  // compositor might be paused and we don't want to queue a lot of paints, see
-  // bug 1828587.
-  if (!mThrottled) {
-    for (const auto& entry : mStartTable) {
-      const uint32_t& delay = entry.GetKey();
-      ImageStartData* data = entry.GetWeak();
-
-      if (data->mEntries.IsEmpty()) {
-        continue;
-      }
-
-      if (data->mStartTime) {
-        TimeStamp& start = *data->mStartTime;
-
-        if (previousRefresh >= start && aNowTime >= start) {
-          TimeDuration prev = previousRefresh - start;
-          TimeDuration curr = aNowTime - start;
-          uint32_t prevMultiple = uint32_t(prev.ToMilliseconds()) / delay;
-
-          // We want to trigger images' refresh if we've just crossed over a
-          // multiple of the first image's start time. If so, set the animation
-          // start time to the nearest multiple of the delay and move all the
-          // images in this table to the main requests table.
-          if (prevMultiple != uint32_t(curr.ToMilliseconds()) / delay) {
-            mozilla::TimeStamp desired =
-                start + TimeDuration::FromMilliseconds(prevMultiple * delay);
-            BeginRefreshingImages(data->mEntries, desired);
-          }
-        } else {
-          // Sometimes the start time can be in the future if we spin a nested
-          // event loop and re-entrantly tick. In that case, setting the
-          // animation start time to the start time seems like the least bad
-          // thing we can do.
-          mozilla::TimeStamp desired = start;
-          BeginRefreshingImages(data->mEntries, desired);
-        }
-      } else {
-        // This is the very first time we've drawn images with this time delay.
-        // Set the animation start time to "now" and move all the images in this
-        // table to the main requests table.
-        mozilla::TimeStamp desired = aNowTime;
-        BeginRefreshingImages(data->mEntries, desired);
-        data->mStartTime.emplace(aNowTime);
-      }
-    }
-
-    if (!mRequests.IsEmpty()) {
-      // RequestRefresh may run scripts, so it's not safe to directly call it
-      // while using a hashtable enumerator to enumerate mRequests in case
-      // script modifies the hashtable. Instead, we build a (local) array of
-      // images to refresh, and then we refresh each image in that array.
-      nsTArray<nsCOMPtr<imgIContainer>> imagesToRefresh(mRequests.Count());
-
-      for (const auto& req : mRequests) {
-        nsCOMPtr<imgIContainer> image;
-        if (NS_SUCCEEDED(req->GetImage(getter_AddRefs(image)))) {
-          imagesToRefresh.AppendElement(image.forget());
-        }
-      }
-
-      for (const auto& image : imagesToRefresh) {
-        image->RequestRefresh(aNowTime);
-      }
-    }
-  }
+  UpdateAnimatedImages(previousRefresh, aNowTime);
 
   double phasePaint = 0.0;
   bool dispatchTasksAfterTick = false;
@@ -2896,6 +2830,78 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
     UniquePtr<AutoTArray<RefPtr<Task>, 8>> tasks(sPendingIdleTasks.forget());
     for (RefPtr<Task>& taskWithDelay : *tasks) {
       TaskController::Get()->AddTask(taskWithDelay.forget());
+    }
+  }
+}
+
+void nsRefreshDriver::UpdateAnimatedImages(TimeStamp aPreviousRefresh,
+                                           TimeStamp aNowTime) {
+  if (mThrottled) {
+    // Don't do this when throttled, as the compositor might be paused and we
+    // don't want to queue a lot of paints, see bug 1828587.
+    return;
+  }
+  // Perform notification to imgIRequests subscribed to listen for refresh
+  // events.
+  for (const auto& entry : mStartTable) {
+    const uint32_t& delay = entry.GetKey();
+    ImageStartData* data = entry.GetWeak();
+
+    if (data->mEntries.IsEmpty()) {
+      continue;
+    }
+
+    if (data->mStartTime) {
+      TimeStamp& start = *data->mStartTime;
+
+      if (aPreviousRefresh >= start && aNowTime >= start) {
+        TimeDuration prev = aPreviousRefresh - start;
+        TimeDuration curr = aNowTime - start;
+        uint32_t prevMultiple = uint32_t(prev.ToMilliseconds()) / delay;
+
+        // We want to trigger images' refresh if we've just crossed over a
+        // multiple of the first image's start time. If so, set the animation
+        // start time to the nearest multiple of the delay and move all the
+        // images in this table to the main requests table.
+        if (prevMultiple != uint32_t(curr.ToMilliseconds()) / delay) {
+          mozilla::TimeStamp desired =
+              start + TimeDuration::FromMilliseconds(prevMultiple * delay);
+          BeginRefreshingImages(data->mEntries, desired);
+        }
+      } else {
+        // Sometimes the start time can be in the future if we spin a nested
+        // event loop and re-entrantly tick. In that case, setting the
+        // animation start time to the start time seems like the least bad
+        // thing we can do.
+        mozilla::TimeStamp desired = start;
+        BeginRefreshingImages(data->mEntries, desired);
+      }
+    } else {
+      // This is the very first time we've drawn images with this time delay.
+      // Set the animation start time to "now" and move all the images in this
+      // table to the main requests table.
+      mozilla::TimeStamp desired = aNowTime;
+      BeginRefreshingImages(data->mEntries, desired);
+      data->mStartTime.emplace(aNowTime);
+    }
+  }
+
+  if (!mRequests.IsEmpty()) {
+    // RequestRefresh may run scripts, so it's not safe to directly call it
+    // while using a hashtable enumerator to enumerate mRequests in case
+    // script modifies the hashtable. Instead, we build a (local) array of
+    // images to refresh, and then we refresh each image in that array.
+    nsTArray<nsCOMPtr<imgIContainer>> imagesToRefresh(mRequests.Count());
+
+    for (const auto& req : mRequests) {
+      nsCOMPtr<imgIContainer> image;
+      if (NS_SUCCEEDED(req->GetImage(getter_AddRefs(image)))) {
+        imagesToRefresh.AppendElement(image.forget());
+      }
+    }
+
+    for (const auto& image : imagesToRefresh) {
+      image->RequestRefresh(aNowTime);
     }
   }
 }
