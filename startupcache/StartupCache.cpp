@@ -65,6 +65,7 @@ MOZ_DEFINE_MALLOC_SIZE_OF(StartupCacheMallocSizeOf)
 NS_IMETHODIMP
 StartupCache::CollectReports(nsIHandleReportCallback* aHandleReport,
                              nsISupports* aData, bool aAnonymize) {
+  MutexAutoLock lock(mTableLock);
   MOZ_COLLECT_REPORT(
       "explicit/startup-cache/mapping", KIND_NONHEAP, UNITS_BYTES,
       mCacheData.nonHeapSizeOfExcludingThis(),
@@ -229,8 +230,11 @@ nsresult StartupCache::Init() {
                                      false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  auto result = LoadArchive();
-  rv = result.isErr() ? result.unwrapErr() : NS_OK;
+  {
+    MutexAutoLock lock(mTableLock);
+    auto result = LoadArchive();
+    rv = result.isErr() ? result.unwrapErr() : NS_OK;
+  }
 
   gFoundDiskCacheOnInit = rv != NS_ERROR_FILE_NOT_FOUND;
 
@@ -251,6 +255,7 @@ void StartupCache::StartPrefetchMemoryThread() {
   // XXX: It would be great for this to not create its own thread, unfortunately
   // there doesn't seem to be an existing thread that makes sense for this, so
   // barring a coordinated global scheduling system this is the best we get.
+  // XXX Switch to NS_DispatchBackgroundTask()
   mPrefetchThread = PR_CreateThread(
       PR_USER_THREAD, StartupCache::ThreadedPrefetch, this, PR_PRIORITY_NORMAL,
       PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 256 * 1024);
@@ -262,6 +267,8 @@ void StartupCache::StartPrefetchMemoryThread() {
 Result<Ok, nsresult> StartupCache::LoadArchive() {
   MOZ_ASSERT(NS_IsMainThread(), "Can only load startup cache on main thread");
   if (gIgnoreDiskCache) return Err(NS_ERROR_FAILURE);
+
+  mTableLock.AssertCurrentThreadOwns();
 
   MOZ_TRY(mCacheData.init(mFile));
   auto size = mCacheData.size();
@@ -301,6 +308,7 @@ Result<Ok, nsresult> StartupCache::LoadArchive() {
       return Err(NS_ERROR_UNEXPECTED);
     }
     auto cleanup = MakeScopeExit([&]() {
+      mTableLock.AssertCurrentThreadOwns();
       WaitOnPrefetchThread();
       mTable.clear();
       mCacheData.reset();
@@ -362,6 +370,7 @@ bool StartupCache::HasEntry(const char* id) {
 
   MOZ_ASSERT(NS_IsMainThread(), "Startup cache only available on main thread");
 
+  MutexAutoLock lock(mTableLock);
   return mTable.has(nsDependentCString(id));
 }
 
@@ -378,6 +387,7 @@ nsresult StartupCache::GetBuffer(const char* id, const char** outbuf,
   auto telemetry =
       MakeScopeExit([&label] { Telemetry::AccumulateCategorical(label); });
 
+  MutexAutoLock lock(mTableLock);
   decltype(mTable)::Ptr p = mTable.lookup(nsDependentCString(id));
   if (!p) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -390,22 +400,6 @@ nsresult StartupCache::GetBuffer(const char* id, const char** outbuf,
     if (!mCacheData.initialized()) {
       return NS_ERROR_NOT_AVAILABLE;
     }
-#ifdef DEBUG
-    // It should be impossible for a write to be pending here. This is because
-    // we just checked mCacheData.initialized(), and this is reset before
-    // writing to the cache. It's not re-initialized unless we call
-    // LoadArchive(), either from Init() (which must have already happened) or
-    // InvalidateCache(). InvalidateCache() locks the mutex, so a write can't be
-    // happening. Really, we want to MOZ_ASSERT(!mTableLock.IsLocked()) here,
-    // but there is no such method. So we hack around by attempting to gain the
-    // lock. This should always succeed; if it fails, someone's broken the
-    // assumptions.
-    if (!mTableLock.TryLock()) {
-      MOZ_ASSERT(false, "Could not gain mTableLock - should never happen!");
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-    mTableLock.Unlock();
-#endif
 
     size_t totalRead = 0;
     size_t totalWritten = 0;
@@ -423,6 +417,7 @@ nsresult StartupCache::GetBuffer(const char* id, const char** outbuf,
           uncompressed.From(totalWritten), compressed.From(totalRead));
       if (NS_WARN_IF(result.isErr())) {
         value.mData = nullptr;
+        MutexAutoUnlock unlock(mTableLock);
         InvalidateCache();
         return NS_ERROR_FAILURE;
       }
@@ -462,22 +457,19 @@ nsresult StartupCache::PutBuffer(const char* id, UniqueFreePtr<char[]>&& inbuf,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  // Try to gain the table write lock. If the background task to write the
+  // cache is running, this will fail.
+  MutexAutoTryLock lock(mTableLock);
+  if (!lock) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  mTableLock.AssertCurrentThreadOwns();
   bool exists = mTable.has(nsDependentCString(id));
-
   if (exists) {
     NS_WARNING("Existing entry in StartupCache.");
     // Double-caching is undesirable but not an error.
     return NS_OK;
   }
-  // Try to gain the table write lock. If the background task to write the
-  // cache is running, this will fail.
-  if (!mTableLock.TryLock()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  auto lockGuard = MakeScopeExit([&] {
-    mTableLock.AssertCurrentThreadOwns();
-    mTableLock.Unlock();
-  });
 
   // putNew returns false on alloc failure - in the very unlikely event we hit
   // that and aren't going to crash elsewhere, there's no reason we need to
@@ -512,11 +504,10 @@ size_t StartupCache::HeapSizeOfIncludingThis(
 /**
  * WriteToDisk writes the cache out to disk. Callers of WriteToDisk need to call
  * WaitOnWriteComplete to make sure there isn't a write
- * happening on another thread
+ * happening on another thread.
+ * We own the mTableLock here.
  */
 Result<Ok, nsresult> StartupCache::WriteToDisk() {
-  mTableLock.AssertCurrentThreadOwns();
-
   if (!mDirty || mWrittenOnce) {
     return Ok();
   }
@@ -621,7 +612,7 @@ Result<Ok, nsresult> StartupCache::WriteToDisk() {
 void StartupCache::InvalidateCache(bool memoryOnly) {
   WaitOnPrefetchThread();
   // Ensure we're not writing using mTable...
-  MutexAutoLock unlock(mTableLock);
+  MutexAutoLock lock(mTableLock);
 
   mWrittenOnce = false;
   if (memoryOnly) {
@@ -678,6 +669,7 @@ void StartupCache::MaybeInitShutdownWrite() {
 }
 
 void StartupCache::EnsureShutdownWriteComplete() {
+  MutexAutoLock lock(mTableLock);
   // If we've already written or there's nothing to write,
   // we don't need to do anything. This is the common case.
   if (mWrittenOnce || (mCacheData.initialized() && !ShouldCompactCache())) {
@@ -685,26 +677,20 @@ void StartupCache::EnsureShutdownWriteComplete() {
   }
   // Otherwise, ensure the write happens. The timer should have been cancelled
   // already in MaybeInitShutdownWrite.
-  if (!mTableLock.TryLock()) {
-    // Uh oh, we're writing away from the main thread. Wait to gain the lock,
-    // to ensure the write completes.
-    mTableLock.Lock();
-  } else {
-    // We got the lock. Keep the following in sync with
-    // MaybeWriteOffMainThread:
-    WaitOnPrefetchThread();
-    mDirty = true;
-    mCacheData.reset();
-    // Most of this should be redundant given MaybeWriteOffMainThread should
-    // have run before now.
 
-    auto writeResult = WriteToDisk();
-    Unused << NS_WARN_IF(writeResult.isErr());
-    // We've had the lock, and `WriteToDisk()` sets mWrittenOnce and mDirty
-    // when done, and checks for them when starting, so we don't need to do
-    // anything else.
-  }
-  mTableLock.Unlock();
+  // We got the lock. Keep the following in sync with
+  // MaybeWriteOffMainThread:
+  WaitOnPrefetchThread();
+  mDirty = true;
+  mCacheData.reset();
+  // Most of this should be redundant given MaybeWriteOffMainThread should
+  // have run before now.
+
+  auto writeResult = WriteToDisk();
+  Unused << NS_WARN_IF(writeResult.isErr());
+  // We've had the lock, and `WriteToDisk()` sets mWrittenOnce and mDirty
+  // when done, and checks for them when starting, so we don't need to do
+  // anything else.
 }
 
 void StartupCache::IgnoreDiskCache() {
@@ -724,14 +710,22 @@ void StartupCache::ThreadedPrefetch(void* aClosure) {
   NS_SetCurrentThreadName("StartupCache");
   mozilla::IOInterposer::RegisterCurrentThread();
   StartupCache* startupCacheObj = static_cast<StartupCache*>(aClosure);
-  uint8_t* buf = startupCacheObj->mCacheData.get<uint8_t>().get();
-  size_t size = startupCacheObj->mCacheData.size();
+  uint8_t* buf;
+  size_t size;
+  {
+    MutexAutoLock lock(startupCacheObj->mTableLock);
+    buf = startupCacheObj->mCacheData.get<uint8_t>().get();
+    size = startupCacheObj->mCacheData.size();
+  }
+  // PrefetchMemory does madvise/equivalent, but doesn't access the memory
+  // pointed to by buf
   MMAP_FAULT_HANDLER_BEGIN_BUFFER(buf, size)
   PrefetchMemory(buf, size);
   MMAP_FAULT_HANDLER_CATCH()
   mozilla::IOInterposer::UnregisterCurrentThread();
 }
 
+// mTableLock must be held
 bool StartupCache::ShouldCompactCache() {
   // If we've requested less than 4/5 of the startup cache, then we should
   // probably compact it down. This can happen quite easily after the first run,
@@ -761,23 +755,24 @@ void StartupCache::WriteTimeout(nsITimer* aTimer, void* aClosure) {
  * See StartupCache::WriteTimeout above - this is just the non-static body.
  */
 void StartupCache::MaybeWriteOffMainThread() {
-  if (mWrittenOnce) {
-    return;
+  {
+    MutexAutoLock lock(mTableLock);
+    if (mWrittenOnce || (mCacheData.initialized() && !ShouldCompactCache())) {
+      return;
+    }
   }
-
-  if (mCacheData.initialized() && !ShouldCompactCache()) {
-    return;
-  }
-
   // Keep this code in sync with EnsureShutdownWriteComplete.
   WaitOnPrefetchThread();
-  mDirty = true;
-  mCacheData.reset();
+  {
+    MutexAutoLock lock(mTableLock);
+    mDirty = true;
+    mCacheData.reset();
+  }
 
   RefPtr<StartupCache> self = this;
   nsCOMPtr<nsIRunnable> runnable =
       NS_NewRunnableFunction("StartupCache::Write", [self]() mutable {
-        MutexAutoLock unlock(self->mTableLock);
+        MutexAutoLock lock(self->mTableLock);
         auto result = self->WriteToDisk();
         Unused << NS_WARN_IF(result.isErr());
       });
@@ -841,6 +836,12 @@ nsresult StartupCache::ResetStartupWriteTimerCheckingReadCount() {
   return NS_OK;
 }
 
+// For test code only
+nsresult StartupCache::ResetStartupWriteTimerAndLock() {
+  MutexAutoLock lock(mTableLock);
+  return ResetStartupWriteTimer();
+}
+
 nsresult StartupCache::ResetStartupWriteTimer() {
   mDirty = true;
   nsresult rv = NS_OK;
@@ -859,6 +860,7 @@ nsresult StartupCache::ResetStartupWriteTimer() {
 // Used only in tests:
 bool StartupCache::StartupWriteComplete() {
   // Need to have written to disk and not added new things since;
+  MutexAutoLock lock(mTableLock);
   return !mDirty && mWrittenOnce;
 }
 

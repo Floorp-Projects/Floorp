@@ -29,6 +29,7 @@ nsresult StartupCacheInfo::GetWroteToDiskCache(bool* aWrote) {
   if (!StartupCache::gStartupCache) {
     *aWrote = false;
   } else {
+    MutexAutoLock lock(StartupCache::gStartupCache->mTableLock);
     *aWrote = StartupCache::gStartupCache->mWrittenOnce;
   }
   return NS_OK;
