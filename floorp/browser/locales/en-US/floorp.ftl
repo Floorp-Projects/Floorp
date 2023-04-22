@@ -59,7 +59,7 @@ tabbar-on-bottom =
 native-tabbar = Native Vertical Tabbar
 use-native-vertical =
   .label = Use native vertical tabbar (experimental)
-native-tabbar-tip = This feature uses default Firefox sidebar, so you can't use it with other sidebar addons & default sidebar panels.
+native-tabbar-tip = This feature uses default Firefox sidebar, so you can't use it with other sidebar add-ons & default sidebar panels.
 
 hover-vertical-tab =
  .label = Expand vertical tabs when hovering the mouse cursor
@@ -71,7 +71,7 @@ treestyletab-Settings =
  .label = Expand TreeStyleTab when hovering the mouse cursor
 treestyletab-open-option = TreeStyleTab Settings
 
-bookmarks-bar-settings = Bookmark Bar Settings (Can`t be used in parallel)
+bookmarks-bar-settings = Bookmark Bar Settings (Can't be used in parallel)
 bookmarks-focus-mode =
  .label = Show the bookmark bar when the mouse is focused on the toolbar
 bookmarks-bottom-mode =
@@ -205,8 +205,8 @@ set-custom-URL-button =
     .accesskey = S
 bsb-header = Browser Manager Sidebar
 bsb-context = Select Container Tabs
-bsb-userAgent-label = 
-  .label = Use Mobile version UserAgent in this panel
+bsb-userAgent-label =
+  .label = Use Mobile User Agent on this panel
 bsb-width = Width (If set to 0, use global values)
 bsb-page = Page to open
 
@@ -399,7 +399,7 @@ floorp-lepton-enable-overlap-sidebar =
 floorp-home-mode-choice-default =
     .label = Floorp Home (Default)
 floorp-home-prefs-content-header = Floorp Home Content
-floorp-home-prefs-content-description = Choose what content you want on your Floorp Home screen.
+floorp-home-prefs-content-description = Choose the content you want to see on the Floorp Home Screen.
 
 
 ################################################################### browser ###############################################################
@@ -630,7 +630,7 @@ delete-memo = Delete
 save-memo = Save
 memo-welcome-title = Welcome!
 memo-first-tip = Welcome to Floorp Notes! Here are some instructions on how to use it!
-memo-second-tip = Floorp Notes is a notepad that allows you to store multiple notes that are synchronized across devices. You must sign in to this Floorp with your Firefox account to enable synchronization.
+memo-second-tip = Floorp Notes is a notepad that allows you to store multiple notes that are synchronized across devices. You must sign in to Floorp with your Firefox account to enable synchronization.
 memo-third-tip = Floorp Notes will be saved in your Floorp settings. Also, Firefox Sync encrypts the contents of the sync with your Firefox account password, so no one but you knows the contents.
 memo-fourth-tip = Firefox Sync is not a backup service. We recommend that you make backups.
 memo-new-title = New Memo
