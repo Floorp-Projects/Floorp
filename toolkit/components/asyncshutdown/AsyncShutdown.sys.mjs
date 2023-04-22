@@ -551,7 +551,8 @@ Spinner.prototype = {
     debug(`Starting phase ${topic}`);
     Services.obs.removeObserver(this, topic);
 
-    let satisfied = false; // |true| once we have satisfied all conditions
+    // Setup the promise that will signal our phase's end.
+    let isPhaseEnd = false;
     let promise;
     try {
       promise = this._barrier
@@ -566,20 +567,16 @@ Spinner.prototype = {
       debug("Error waiting for notification");
       throw ex;
     }
+    promise.then(() => (isPhaseEnd = true)); // This promise cannot reject
 
-    // Now, spin the event loop
+    // Now, spin the event loop. In case of a hang we will just crash without
+    // ever leaving this loop.
     debug("Spinning the event loop");
-    promise.then(() => (satisfied = true)); // This promise cannot reject
-    let thread = Services.tm.mainThread;
-    while (!satisfied) {
-      try {
-        thread.processNextEvent(true);
-      } catch (ex) {
-        // An uncaught error should not stop us, but it should still
-        // be reported and cause tests to fail.
-        Promise.reject(ex);
-      }
-    }
+    Services.tm.spinEventLoopUntil(
+      `AsyncShutdown Spinner for ${topic}`,
+      () => isPhaseEnd
+    );
+
     debug(`Finished phase ${topic}`);
   },
 };
