@@ -241,6 +241,21 @@ impl<'a, 'i> AtRuleParser<'i> for TopLevelRuleParser<'a> {
                 let url_string = input.expect_url_or_string()?.as_ref().to_owned();
                 let url = CssUrl::parse_from_string(url_string, &self.context, CorsMode::None);
 
+                let layer = if input.try_parse(|input| input.expect_ident_matching("layer")).is_ok() {
+                    Some(ImportLayer {
+                        name: None,
+                    })
+                } else {
+                    input.try_parse(|input| {
+                        input.expect_function_matching("layer")?;
+                        input.parse_nested_block(|input| {
+                            LayerName::parse(&self.context, input)
+                        }).map(|name| ImportLayer {
+                            name: Some(name),
+                        })
+                    }).ok()
+                };
+
                 let supports = if !static_prefs::pref!("layout.css.import-supports.enabled") {
                     None
                 } else {
@@ -256,21 +271,6 @@ impl<'a, 'i> AtRuleParser<'i> for TopLevelRuleParser<'a> {
                             condition,
                             enabled
                         }
-                    }).ok()
-                };
-
-                let layer = if input.try_parse(|input| input.expect_ident_matching("layer")).is_ok() {
-                    Some(ImportLayer {
-                        name: None,
-                    })
-                } else {
-                    input.try_parse(|input| {
-                        input.expect_function_matching("layer")?;
-                        input.parse_nested_block(|input| {
-                            LayerName::parse(&self.context, input)
-                        }).map(|name| ImportLayer {
-                            name: Some(name),
-                        })
                     }).ok()
                 };
 

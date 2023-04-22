@@ -99,6 +99,14 @@
       importCondition: "supports(font-format(invalid))",
       matches: false
     },
+    {
+      importCondition: "layer(A.B) supports(font-format(opentype))",
+      matches: false
+    },
+    {
+      importCondition: "layer supports(selector(a))",
+      matches: false
+    },
   ];
   let target = document.getElementById("target");
   for (let testCase of testCases) {
