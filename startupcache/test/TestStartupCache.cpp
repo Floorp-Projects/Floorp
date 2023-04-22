@@ -92,7 +92,7 @@ TEST_F(TestStartupCache, StartupWriteRead) {
   EXPECT_NS_SUCCEEDED(rv);
   EXPECT_STREQ(buf, outbuf);
 
-  rv = sc->ResetStartupWriteTimer();
+  rv = sc->ResetStartupWriteTimerAndLock();
   EXPECT_NS_SUCCEEDED(rv);
   WaitForStartupTimer();
 
