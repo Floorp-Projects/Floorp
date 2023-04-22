@@ -65,8 +65,57 @@
     <string name="private_browsing_placeholder_description_2">%1$snadure\' nej sa nana\'uî\'t nga gaché nunt riña nej rakïj ñanj huì garâj sunt nan sisī naránt asi gahuīt riña aplikasiûn nan. Nan nī sê sī gāta ruhuaj sisī à\'ngō nādure\'ej sò\' riña nej sîtio asi riña duguî\' dû\'uèj internet, sanī rugûñu\'un da\' \'ngōrïnt gīni\'in sa \'iát ngà aché nunt nī sī ga\'ue gīni\'in a\'ngô guìi ngà\'.</string>
     <string name="private_browsing_common_myths">Nuguan\' nē huā rayi\'î riña aché nu huì\'</string>
 
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message_2">Màn si gūru’man ra’ât nī gā’hue gāyi’ìt ngà ‘ngō sesiûn hùii.</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">Nāchrūn riña pantayâ Ayi\'ìi</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Guruhuât nānj ân</string>
+
+
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">Nāgi’hiaj riña %1$s da’ gā’hue na’nïn mā’an nej enlâse riña nej aplikasiûn.</string>
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">Gūij riña gā\'ue nāgi\'hiô\'</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">Si gi\'hiaj guendô\'</string>
+
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">Ûta nùkuaj sa arán riña nej sa naga’nāj ‘hiaj ñûnj ndà aluan’ nïn dadin’ nu a’nïn gātū sa yī’ìi.</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">Gini’in doj dàj hua rayi’î nej sa Arân riña nej Kokî rañu’ūnj un</string>
+
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">Gārasunj kâmara. Gūij riña sa nagi’hiát si’hiaj Android , nī gārayina si gā’hue gārasunj sa ni’ña.</string>
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">Gūij riña gā\'ue nāgi\'hiô\'</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">Si gi\'hiaj guendô\'</string>
+
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">Nāgi’hiaj riña nej rakïj ñanj da’ nārán mā’an man ngà gisîj ni’hiājt gachîn ‘ngō gui, semana, así ahuii.</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">Ni’hiāj doj nej sa huāa</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">Si gi\'hiaj guendô\'</string>
+    <!-- Text for the banner message to tell users about our inactive tabs feature. -->
+    <string name="tab_tray_inactive_onboarding_message">Ngà nu atûjt gachîn hûij semana riña rakïj ñanj nan nī hiūj nan nanunj.</string>
+    <!-- Text for the action link to go to Settings for inactive tabs. -->
+    <string name="tab_tray_inactive_onboarding_button_text">Dūyichin’ man riña sa nagi’hiát</string>
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">Ngà gachîn ‘ngō ahuii nī nārán mā’an riñanj anj</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">%1$s nārán man riña nej rakïj ñanj nu ni’hiājt gachîn ‘ngō ahuii.</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">Nārán</string>
+
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button_2">Nāchrūn da’ nārán mā’an man</string>
 
 
     <!-- Home screen icons - Long press shortcuts -->
@@ -74,6 +123,34 @@
     <string name="home_screen_shortcut_open_new_tab_2">Rakïj ñanj nakàa</string>
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Rakïj ñaj nakà gārasun \'ngō rïn\'</string>
+
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">Nānikāj riña a’ngô rakïj ñanj</string>
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">Nādigân daran’anj</string>
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string name="recent_tabs_show_all_content_description_2">Butûn nādigân daran’ nej rakïj ñanj hìaj ni’hiāj nākàt</string>
+    <!-- Text for button in synced tab card that opens synced tabs tray -->
+    <string name="recent_tabs_see_all_synced_tabs_button_text">Ni’hiāj riña daran’ nej rakïj ñanj nahuin nūguan’àn</string>
+    <!-- Accessibility description for device icon used for recent synced tab -->
+    <string name="recent_tabs_synced_device_icon_content_description">Aga’ ngà nahuin nūguan’àn</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">Nādure\'</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recent_tab_menu_item_remove">Nādure\'</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">Hìaj nākà gini’hiājt</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recently_visited_menu_item_remove">Nādure\'</string>
+
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string name="past_explorations_show_all_content_description_2">Ni’hiāj riña daran’ nej sa gatūjt gini’hiājt</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
@@ -87,6 +164,8 @@
 
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Sa gā\'ue nūtò\'</string>
+    <!-- Browser menu button that opens account settings -->
+    <string name="browser_menu_account_settings">Nuguan’ huā rayi’î kuênta</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Nitāj sa gā\'ue nūtò\' mân hiūj nan</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -106,6 +185,8 @@
     <string name="browser_menu_add_to_homescreen">Nāchrūn riña pantayâ Ayi\'ìi</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Gā\'nïnj</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Nāgi’hiaj nūguan’àn ñû</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Nānà\'uì\' riña ñanj</string>
     <!-- Browser menu button that saves the current tab to a collection -->
@@ -130,6 +211,19 @@
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Na\'nīn\' riña aplikasiûn</string>
 
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">Nāgi’hiaj da’ nānùn man guendâ gāhiāt</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Nūtà\'</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Nāgi\'hiaj riñaj</string>
+
+    <!-- Button shown on the home page that opens the Customize home settings -->
+    <string name="browser_menu_customize_home_1">Nāgi’hiaj dà garan’ ruhuât riña paginâ ayi’ìt</string>
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Raga\' ayi\'ìt</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Nāguī nânj gā\'min</string>
@@ -141,6 +235,8 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Nātsij hue\'ê</string>
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">Sa nana\'hui\'i</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Sa nagi\'iaj sa nānà\'ui\'i</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -154,6 +250,9 @@
     <string name="search_suggestions_onboarding_title">Dīganj nuguan\' dàj nanà\'uì\'t riña sesiûn guendâ \'ngō rînt</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s dūyingaj daran\' sa gāchrūnt riña barra direksiûn ngà sa nana\'ui\' nīkājt.</string>
+
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">Nanà\'huì\' %s</string>
 
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Nānà\'uì\'</string>

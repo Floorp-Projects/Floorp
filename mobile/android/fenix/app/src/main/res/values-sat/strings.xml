@@ -386,24 +386,62 @@
     <string name="reduce_cookie_banner_option_off">ᱵᱚᱸᱫᱚ</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
     <string name="reduce_cookie_banner_option_on">ᱪᱟᱹᱞᱩ</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_summary_1">%1$s ᱫᱚ ᱠᱩᱠᱤ ᱵᱮᱱᱚᱨ ᱨᱮ ᱠᱩᱠᱤ ᱞᱟᱹᱱᱟᱹᱭ ᱠᱚ ᱚᱡ ᱞᱮᱠᱟᱛᱮ ᱵᱟᱭ ᱩᱫᱩᱜ ᱮᱫᱟᱭ ᱾</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱫ ᱵᱚᱱᱫ ᱜᱮᱭᱟ</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">ᱵᱟᱹᱰᱨᱟᱹ</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button">ᱜᱚᱲᱚ ᱱᱮᱦᱚᱨ</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title">ᱠᱩᱠᱤ ᱵᱮᱱᱚᱨ ᱠᱷᱟᱴᱚ</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text">ᱥᱟᱭᱤᱴ ᱥᱚᱦᱚᱫ ᱞᱟᱹᱜᱤᱫ ᱜᱚᱲᱚ ᱡᱚᱢᱟ ᱟᱠᱟᱱᱟ ᱾</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱫ ᱮᱢ ᱪᱷᱚ ᱜᱮᱭᱟ</string>
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted">ᱥᱟᱭᱤᱴ ᱥᱚᱦᱚᱫ ᱞᱟᱹᱜᱤᱫ ᱜᱚᱲᱚ ᱡᱚᱢᱟ ᱟᱠᱟᱱᱟ</string>
+    <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site">ᱥᱟᱭᱟᱴ ᱱᱤᱛᱚᱜ ᱥᱟᱵ ᱨᱮ ᱵᱟᱹᱱᱩᱜᱼᱟ</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">%1$s ᱞᱟᱹᱜᱤᱫ ᱠᱩᱠᱤ ᱵᱮᱱᱚᱨ ᱨᱮᱰᱟᱹᱠᱥᱚᱱ ᱮᱢ ᱪᱷᱚᱭ ᱢᱮ?</string>
 
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">%1$s ᱞᱟᱹᱜᱤᱫ ᱠᱩᱠᱤ ᱵᱮᱱᱚᱨ ᱨᱮᱰᱟᱹᱠᱥᱚᱱ ᱵᱚᱱᱫᱚᱭᱟᱢ ᱥᱮ?</string>
 
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request">ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴ ᱫᱚ ᱱᱤᱛᱚᱜ ᱠᱩᱠᱤ ᱵᱮᱱᱚᱨ ᱨᱤᱰᱩᱠᱥᱚᱱ ᱵᱟᱭ ᱥᱚᱦᱚᱫᱟᱭ ᱾ ᱟᱢ ᱱᱚᱶᱟ ᱣᱮᱵᱽᱥᱟᱭᱤᱴ ᱫᱚ ᱵᱷᱚᱵᱤᱥᱚᱛ ᱨᱮ ᱜᱚᱲᱚ ᱮᱢ ᱪᱷᱚ ᱞᱟᱹᱜᱤᱫ ᱟᱞᱮ ᱫᱳᱞᱟᱜ ᱜᱚᱲᱚ ᱤᱫᱤ ᱥᱮᱱᱮ ᱮᱫ ᱢᱮᱭᱟ ᱥᱮ ?</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s ᱫᱚ ᱱᱚᱶᱟ ᱥᱟᱭᱤᱴᱟᱜ ᱠᱩᱠᱤ ᱠᱚ ᱢᱮᱴᱟᱣᱟᱭ ᱟᱨ ᱥᱟᱦᱴᱟ ᱯᱷᱟᱨᱪᱟ ᱜᱚᱫ ᱠᱟᱜᱼᱟᱭ ᱾ ᱡᱷᱚᱛᱚ ᱠᱩᱠᱤ ᱠᱚ ᱢᱮᱴᱟᱣ ᱞᱮᱠᱷᱟᱱ ᱟᱢ ᱵᱟᱦᱨᱮ ᱛᱮ ᱚᱰᱚᱠᱚᱜᱼᱟᱢ ᱟᱨᱵᱟᱝ ᱠᱤᱨᱤᱧ ᱵᱚᱥᱛᱟ ᱫᱚ ᱠᱷᱟᱹᱞᱤᱜ ᱛᱟᱢᱟᱸ ᱾</string>
 
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s ᱫᱚ ᱥᱚᱦᱚᱫ ᱮᱢᱚᱜ ᱥᱟᱭᱤᱴ ᱠᱚ ᱞᱟᱹᱜᱤᱫ ᱟᱡ ᱛᱮ ᱡᱷᱚᱛᱚ ᱠᱩᱠᱤ ᱱᱮᱦᱚᱨ ᱵᱟᱹᱨᱜᱤᱞ ᱜᱤᱰᱤ ᱞᱟᱹᱜᱤᱫ ᱪᱮᱥᱴᱟ ᱮᱫᱟᱭ ᱾</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">ᱠᱩᱠᱤ ᱵᱮᱱᱚᱨ ᱠᱚ ᱪᱟᱞᱟᱣ ᱮᱱᱟ!</string>
 
+    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_title">ᱠᱩᱠᱤ ᱵᱮᱱᱚᱨ ᱵᱟᱹᱨᱜᱤᱞ ᱜᱤᱰᱤ ᱞᱟᱹᱜᱤᱫ %1$s ᱦᱚᱠ ᱮᱢᱟᱭ ᱟᱢ ᱥᱮ ?</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">ᱡᱟᱦᱟᱸ ᱛᱤᱱ ᱡᱷᱚᱜ %1$s ᱫᱚ ᱟᱡ ᱛᱮ ᱠᱩᱠᱤ ᱱᱮᱦᱚᱨ ᱵᱟᱹᱨᱜᱤᱞ ᱜᱤᱰᱤ ᱞᱟᱹᱜᱤᱫ ᱦᱚᱠ ᱮᱢᱟᱭ ᱢᱮ ?</string>
+    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_body">%1$s ᱫᱚ ᱟᱡ ᱛᱮ ᱟᱹᱰᱤᱜᱟᱱ ᱠᱩᱠᱤ ᱵᱮᱱᱚᱨ ᱱᱮᱦᱚᱨ ᱵᱟᱹᱨᱜᱤᱞ ᱜᱤᱰᱤ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱭ ᱾</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">ᱱᱤᱛᱚᱜ ᱫᱚ ᱵᱟᱝᱟ</string>
+    <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">ᱵᱮᱱᱚᱨ ᱠᱚ ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
+    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
+    <string name="reduce_cookie_banner_dialog_snackbar_text">ᱟᱢ ᱫᱚ ᱠᱩᱠᱤ ᱱᱮᱦᱚᱨ ᱠᱚ ᱠᱚᱢ ᱜᱮ ᱧᱮᱞ ᱟᱢ</string>
+    <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">ᱠᱚᱢ ᱴᱟᱴᱠᱟ ᱚᱰᱚᱠ ᱠᱚ ᱧᱮᱞ ᱟᱢ</string>
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">ᱢᱚᱱᱮᱫᱷᱭᱟᱱ ᱟᱞᱚ ᱜᱮᱫᱚᱜ ᱵᱽᱨᱟᱣᱡᱤᱝ ᱞᱟᱹᱜᱤᱫ ᱟᱡ ᱛᱮ ᱴᱟᱴᱠᱟ ᱛᱮᱞᱟ ᱮᱢᱟᱭᱟ ᱾ ​%1$s​ ᱫᱚ ᱡᱷᱚᱛᱚ ᱱᱮᱦᱚᱨ ᱠᱷᱟᱨᱚᱡᱽ ᱞᱟᱹᱜᱤᱫ ᱪᱮᱥᱴᱟ ᱵᱤᱲᱟᱣ ᱟᱭ ᱾</string>
+    <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">ᱴᱟᱴᱠᱟ ᱚᱰᱚᱠ ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
+    <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">ᱠᱩᱠᱤ ᱵᱮᱱᱚᱨ ᱠᱷᱟᱴᱚ</string>
+    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">ᱡᱩᱫᱤ ᱫᱚᱨᱠᱟᱨ ᱯᱟᱲᱟᱣᱜ ᱠᱷᱟᱱ ​%1$s​ ᱫᱚ ᱥᱟᱭᱤᱴ ᱠᱩᱠᱞᱤ ᱵᱟᱹᱨᱜᱤᱞ ᱜᱤᱰᱤ ᱞᱟᱹᱜᱤᱫ ᱦᱚᱠ ᱮᱭᱟᱭᱟᱢ ᱥᱮ ?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">ᱦᱮᱥᱟᱨᱤᱭᱟᱹ</string>
     <!-- Change setting text button, for the cookie banner re-engagement dialog -->
@@ -415,6 +453,8 @@
     <string name="preferences_https_only_off">ᱵᱚᱸᱫᱚ</string>
     <!-- Summary of https only preference if https only is set to on in all tabs -->
     <string name="preferences_https_only_on_all">ᱡᱷᱚᱛᱚ ᱴᱮᱵᱽ ᱮᱢ ᱪᱷᱚᱭ ᱢᱮ</string>
+    <!-- Summary of https only preference if https only is set to on in private tabs only -->
+    <string name="preferences_https_only_on_private">ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵᱽ ᱨᱮ ᱜᱮ</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
     <!-- Option for the https only setting -->
@@ -484,6 +524,10 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">ᱞᱤᱝᱠ ᱠᱚ ᱮᱯ ᱨᱮ ᱡᱷᱤᱡᱽ ᱢᱮ</string>
 
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">ᱡᱟᱣᱜᱮ</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">ᱠᱷᱩᱞᱟᱹ ᱢᱟᱲᱟᱝ ᱨᱮ ᱠᱩᱠᱞᱤ ᱢᱮ</string>
     <!-- Preference for open links in third party apps never open in apps option -->
     <string name="preferences_open_links_in_apps_never">ᱛᱤᱥ ᱦᱚᱸ ᱵᱟᱝ</string>
     <!-- Preference for open download with an external download manager app -->
@@ -495,6 +539,9 @@
 
     <!-- Summary for notification preference indicating notifications are allowed -->
     <string name="notifications_allowed_summary">ᱦᱮᱥᱟᱹᱨᱤᱭᱟᱹ</string>
+
+    <!-- Summary for notification preference indicating notifications are not allowed -->
+    <string name="notifications_not_allowed_summary">ᱢᱟᱱᱟ ᱜᱮᱭᱟ</string>
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
@@ -784,6 +831,12 @@
 
     <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
     <string name="opening_screen_homepage_summary">ᱚᱲᱟᱜ ᱥᱟᱦᱴᱟ ᱨᱮ</string>
+
+    <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab_summary">ᱢᱩᱪᱟᱹᱫ ᱴᱮᱵᱽ ᱨᱮ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ</string>
+
+    <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">ᱯᱩᱱ ᱴᱟᱲᱟᱝ ᱛᱟᱭᱚᱢ ᱚᱲᱟᱜ ᱥᱟᱦᱴᱟ ᱨᱮ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ</string>
 
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
@@ -1185,6 +1238,12 @@
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">ᱢᱟᱨᱠᱮᱴᱤᱝ</string>
 
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_title" tools:ignore="UnusedResources">Firefox ᱫᱚ ᱛᱮᱡᱽ ᱟᱨ ᱱᱤᱡᱮᱨᱟᱜ ᱜᱮ</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_text" tools:ignore="UnusedResources">Firefox ᱟᱢᱟᱜ ᱢᱩᱞ ᱵᱽᱨᱟᱣᱡᱚᱨ ᱞᱮᱠᱷᱟ ᱫᱚᱦᱚᱭ ᱢᱮ</string>
     <!-- Title shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_title">ᱱᱤᱡᱚᱨᱟᱜ ᱵᱽᱨᱟᱣᱡᱤᱝ ᱠᱩᱨᱩᱢᱩᱴᱩ ᱞᱮᱢ</string>
 
@@ -1192,6 +1251,22 @@
     %1$s is a placeholder that will be replaced by the app name. -->
     <string name="notification_re_engagement_text">%1$s ᱨᱮ ᱵᱟᱝ ᱥᱟᱧᱪᱟᱣ ᱠᱟᱱ ᱠᱩᱠᱤ ᱟᱨᱵᱟᱝ ᱦᱤᱛᱟᱹᱞ ᱠᱚ ᱵᱽᱨᱟᱣᱩᱡᱽ ᱢᱮ</string>
 
+    <!-- Title A shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_A_title">ᱵᱤᱱᱟᱹ ᱯᱟᱧᱡᱟ ᱛᱮ ᱵᱽᱨᱟᱣᱡᱽ ᱢᱮ</string>
+    <!-- Text A shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_A_text">%1$s ᱨᱮ ᱱᱤᱡᱮᱨᱟᱜ ᱞᱮᱠᱷᱟ ᱛᱮ ᱵᱽᱨᱟᱣᱡᱽ ᱠᱚᱨᱟᱣ ᱛᱮ ᱫᱚ ᱟᱢᱟᱜ ᱡᱤᱱᱤᱥ ᱵᱟᱝ ᱪᱤᱠᱟᱹᱜᱼᱟ ᱾</string>
+    <!-- Title B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_title">ᱟᱢᱟᱜ ᱯᱩᱭᱞᱤ ᱥᱮᱸᱫᱽᱨᱟ ᱮᱛᱦᱚᱵ ᱢᱮ</string>
+    <!-- Text B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_text">ᱥᱩᱨ ᱠᱚᱨᱮ ᱡᱟᱦᱱᱟᱜ ᱯᱟᱱᱛᱮ ᱢᱮ ᱾ ᱟᱨ ᱵᱟᱝ ᱡᱟᱦᱱᱟᱜ ᱢᱚᱡᱽ ᱯᱟᱱᱛᱮ ᱢᱮ ᱾</string>
+
+    <!-- Survey -->
+    <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_survey_message_text">ᱠᱷᱟᱴᱚ ᱥᱚᱨᱵᱷᱮ ᱞᱮᱠᱷᱟᱛᱮ Firefox ᱥᱩᱫᱷᱟᱨ ᱨᱮ ᱜᱚᱲᱚ ᱮᱢᱚᱜ ᱢᱮ ᱾</string>
+    <!-- Preference for taking the short survey. -->
+    <string name="preferences_take_survey">ᱥᱚᱨᱵᱷᱮ ᱤᱫᱤ ᱢᱮ</string>
     <!-- Preference for not taking the short survey. -->
     <string name="preferences_not_take_survey">ᱵᱟᱝᱟ ᱥᱟᱨᱦᱟᱣ</string>
 
@@ -1410,20 +1485,28 @@
     <string name="preference_enhanced_tracking_protection">ᱵᱟᱲᱦᱟᱣᱟᱠᱟᱱ ᱯᱟᱸᱡᱟ ᱨᱚᱯᱷᱟ</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">ᱯᱟᱸᱡᱟ ᱵᱮᱜᱚᱨ ᱵᱽᱨᱟᱣᱩᱡ ᱢᱮ</string>
+    <!-- Preference summary for enhanced tracking protection settings on/off switch -->
+    <string name="preference_enhanced_tracking_protection_summary">ᱱᱤᱛᱚᱜ ᱢᱩᱴ ᱜᱚᱴᱟ ᱥᱟᱦᱴᱟ ᱠᱩᱠᱤ ᱦᱮᱡ ᱥᱮᱴᱮᱨ ᱮᱱᱟ, ᱱᱚᱣᱟ ᱫᱚ ᱠᱨᱚᱥ-ᱥᱟᱭᱤᱴ ᱴᱨᱮᱠᱚᱨ ᱠᱚ ᱞᱟᱹᱜᱤᱫ ᱱᱤᱛ ᱦᱟᱹᱵᱤᱡ ᱡᱚᱛᱚ ᱠᱷᱚᱱ ᱢᱟᱨᱟᱝ ᱟᱠᱚᱴ ᱥᱟᱫᱷᱚᱱ ᱠᱟᱱᱟ ᱾</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">ᱟᱢᱟᱜᱽ ᱰᱟᱴᱟ ᱟᱢ ᱴᱷᱮᱱ ᱜᱮ ᱫᱚᱦᱚᱭ ᱢᱮ ᱾ %s ᱫᱚ ᱟᱭᱢᱟ ᱥᱚᱢᱟᱱ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱠᱚ ᱴᱷᱮᱱ ᱠᱷᱚᱱ ᱚᱱᱞᱟᱭᱤᱱ ᱨᱩᱠᱷᱤᱭᱟᱹᱭ ᱢᱮᱟᱭ ᱾</string>
+    <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation_2">​%s​ ᱫᱚ ᱟᱭᱢᱟ ᱥᱚᱢᱟᱱ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱠᱚ ᱴᱷᱮᱱ ᱠᱷᱚᱱ ᱚᱱᱞᱟᱭᱤᱱ ᱨᱩᱠᱷᱤᱭᱟᱹᱭ ᱢᱮᱟᱭ ᱾</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">ᱱᱟᱯ (ᱢᱩᱞ ᱯᱷᱮᱲᱟᱛ)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">ᱯᱨᱟᱭᱣᱮᱥᱭ ᱟᱨ ᱯᱚᱨᱯᱷᱚᱨᱢᱮᱱᱥ ᱞᱟᱹᱜᱤᱫ ᱥᱚᱢᱟᱱ ᱾ ᱥᱟᱦᱴᱟ ᱢᱩᱞ ᱞᱮᱠᱷᱟᱛᱮ ᱞᱟᱫᱮᱜᱼᱟ ᱾</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_5">ᱥᱟᱦᱴᱚ ᱫᱚ ᱴᱷᱤᱠ ᱛᱮ ᱞᱟᱫᱮᱜᱼᱟ, ᱢᱮᱱᱠᱷᱟᱱ ᱴᱨᱚᱠᱚᱨ ᱠᱚᱢ ᱵᱞᱚᱠᱚᱜᱼᱟ ᱾</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">ᱢᱩᱞ ᱜᱷᱮᱨ ᱮᱥᱮᱫ ᱨᱚᱠᱷᱭᱟ ᱫᱚ ᱪᱮᱫ ᱮ ᱵᱞᱚᱠ ᱪᱷᱚ ᱠᱮᱜᱼᱟᱭ</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">ᱱᱤᱦᱟᱹᱛ</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">ᱥᱟᱦᱴᱟ ᱞᱚᱜᱚᱱ ᱞᱳᱰ ᱞᱟᱹᱜᱤᱫ ᱯᱟᱧᱡᱟ ᱫᱟᱱᱟᱲ ᱠᱚ ᱵᱞᱚᱠ ᱠᱚᱟᱭ, ᱦᱮᱞᱮ ᱥᱟᱦᱴᱟ ᱞᱳᱰ ᱨᱮ ᱰᱤᱜᱟᱹᱣ ᱦᱩᱭ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱾</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_4">ᱠᱚᱴᱮᱡ ᱯᱟᱧᱡᱟ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱟᱨ ᱞᱚᱜᱚᱱ ᱜᱮ ᱠᱟᱹᱢᱤᱭᱟᱭ, ᱢᱮᱱᱠᱷᱟᱱ ᱡᱷᱚᱛᱚ ᱥᱟᱭᱤᱴ ᱠᱚᱨᱮ ᱫᱚ ᱵᱟᱭ ᱠᱟᱹᱢᱤᱭᱟ ᱾</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">ᱴᱷᱤᱴ ᱜᱷᱮᱨ ᱮᱥᱮᱫ ᱨᱩᱠᱷᱭᱟ ᱫᱚ ᱪᱮᱫ ᱵᱞᱚᱠ ᱠᱮᱜᱼᱟᱭ</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1510,6 +1593,10 @@
     <string name="preference_etp_smartblock_description">ᱞᱟᱛᱟᱨ ᱨᱮ ᱪᱤᱱᱦᱟᱹ ᱞᱟᱱ ᱛᱤᱱᱟᱹᱝ ᱜᱟᱱ ᱴᱨᱟᱠᱚᱨ ᱠᱚ ᱫᱚ ᱠᱷᱟᱴᱚ ᱥᱟᱹᱦᱤᱡ ᱠᱚ ᱟᱹᱱᱵᱞᱚᱠ ᱠᱟᱱᱟ ᱠᱚ ᱪᱮᱫᱟᱜ ᱥᱮ ᱟᱢ ᱫᱚ ᱩᱱᱠᱩ ᱥᱟᱞᱟᱜ ᱠᱟᱹᱢᱤ ᱠᱟᱫᱟᱢ * ᱾</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
+
+    <!-- Content description (not visible, for screen readers etc.):
+    Enhanced tracking protection exception preference icon for ETP settings. -->
+    <string name="preference_etp_exceptions_icon_description">ᱵᱟᱲᱦᱟᱣᱟᱠᱟᱱ ᱯᱟᱸᱡᱟ ᱨᱚᱯᱷᱟ ᱵᱟᱹᱨᱜᱤᱞ ᱠᱩᱥᱤ ᱪᱤᱱᱦᱟᱹ</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">ᱜᱚᱲᱚ</string>

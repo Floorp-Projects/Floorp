@@ -352,6 +352,15 @@
     <!-- In-app link (in settings) to Focus privacy notice. -->
     <string name="preference_privacy_notice">개인 정보 보호 정책</string>
 
+    <!-- In-app link (in settings) to Focus licensing information. -->
+    <string name="preference_licensing_info">라이선스 정보</string>
+
+    <!-- Link to Focus licensing information from other libraries that we use. -->
+    <string name="preference_libraries_we_use">사용한 라이브러리</string>
+
+    <!-- Open Source Licenses page title. The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | OSS 라이브러리</string>
+
     <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
     <string name="preference_about">%1$s에 대한 정보</string>
 
@@ -728,9 +737,6 @@
     <string name="cookie_banner_exception_panel_description_state_on_for_site">%1$s가 이 사이트의 쿠키를 지우고 페이지를 새로고침할 것입니다. 모든 쿠키를 삭제하면 로그아웃되거나 장바구니 등이 비워질 수 있습니다.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
-    <string name="cookie_banner_exception_panel_description_state_off_for_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s는 자동으로 쿠키 요청을 거부하려고 시도합니다. 거부가 되지 않으면, %1$s는 배너를 닫기 위해 모든 쿠키를 허용할 수 있습니다.</string>
-
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
     <string name="cookie_banner_exception_panel_description_state_off_for_site2">%1$s는 쿠키 요청을 자동으로 거부할 수 있습니다.</string>
 
     <!-- Long text for a detail explanation indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
@@ -749,13 +755,8 @@
     <string name="cookie_banner_the_site_was_reported">사이트 지원 요청이 제출되었습니다.</string>
 
     <!-- Contextual Feature Recommendation Popups -->
-    <!-- CFR for Cookie Banner (Banner Info Message). The placeholder will be updated with the app name. -->
-    <string name="cfr_for_cookie_banner" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s가 성가신 쿠키 배너를 해제하기 위해 쿠키 요청을 거부하려고 시도합니다.\n\n설정에서 쿠키 배너 설정을 관리하세요.</string>
-
     <!-- CFR for Cookie Banner (Banner Info Message). %1$s will be replaced by the app name, %2$s will be an active link using the string cfr_cookie_banner_link as text. -->
     <string name="cfr_cookie_banner">%1$s는 성가신 쿠키 배너를 닫기 위해 쿠키 요청을 거부하려고 시도합니다.\n\n%2$s에서 쿠키 배너 설정을 관리하세요.</string>
-    <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
-    <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">설정</string>
 
     <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
     <string name="cfr_cookie_banner_link">설정</string>
@@ -1022,13 +1023,7 @@
 
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">요청하신 사이트는 HTTPS를 지원하지 않습니다</string>
-
-    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
     <string name="errorpage_httpsonly_title2">이 사이트는 HTTPS를 지원하지 않습니다.</string>
-
-    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">기본적으로, %1$s는 보안 강화를 위해 HTTPS를 사용한 연결을 시도합니다. 이 설정을 변경하시거나 자세히 알아보려면 설정 &gt; 개인 정보 및 보안 &gt; 보안으로 이동하십시오.</string>
 
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
         Contains a button that will redirect the user to Privacy & Security Screen-->

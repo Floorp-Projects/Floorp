@@ -259,15 +259,42 @@
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">با صفحهٔ خانگی شخصی‌سازی شدهٔ خود آشنا شوید. زبانه‌های اخیر، نشانک‌ها و نتایج جست‌وجوها در این‌جا ظاهر می‌شوند.</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title_2">به اینترنتی شخصی‌تر خوش‌آمدید</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">رنگ‌های بیش‌تر. حریم خصوصی بهتر. تعهد یک‌سان نسبت به مردم و منافع.</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_3">تعویض صفحه‌نمایش‌ها از همیشه آسان‌تر است</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">جایی که زبانه‌ها را در افزاره‌ای دیگر ترک کرده‌اید، هم‌اکنون در صفحهٔ خانگی‌تان پی بگیرید.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">شروع کنید</string>
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
     <string name="onboarding_home_sign_in_button">ورود</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">پرش</string>
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">زبانه‌هایتان در حال همگام‌سازی‌اند! جایی که در افزاره‌ای دیگر رها کرده‌اید را پی بگیرید.</string>
     <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
     <string name="onboarding_home_content_description_close_button">بستن</string>
 
+    <!-- Notification pre-permission dialog -->
+    <!-- Enable notification pre permission dialog title
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_title">آگاهی‌ها کمک می‌کنند تا با %s کار‌های بیش‌تری بکنید</string>
+    <!-- Enable notification pre permission dialog description with rationale
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_description">همگام‌سازی زبانه‌هایتان میان افزاره‌ها، مدیریت بارگیری‌ها، دریافت نکاتی دربارهٔ بهره بردن هر چه بیش‌تر از محافظت حریم خصوصی %s، و بیش‌تر.</string>
+
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="onboarding_home_enable_notifications_positive_button">ادامه</string>
+    <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
+    <string name="onboarding_home_enable_notifications_negative_button">هم‌اکنون نه</string>
+
+    <!-- Juno first user onboarding flow experiment -->
+    <!-- Title for set firefox as default browser screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_default_browser_title">‏%s را مروگر پیش‌گزیده‌تان کنید</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_default_browser_negative_button">اکنون نه</string>
     <!-- Text for the button to sign in to sync on the device -->
@@ -343,10 +370,19 @@
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">اکنون نه</string>
 
+    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">اجازه</string>
+    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
+    <string name="reduce_cookie_banner_dialog_change_setting_button">اجازه</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">به طور خودکار برای افزایش امنیت تلاش می‌کند با استفاده از شیوه‌نامهٔ رمزگذاری HTTPS به پایگاه‌ها متصل شود.</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">خاموش</string>
+    <!-- Summary of https only preference if https only is set to on in all tabs -->
+    <string name="preferences_https_only_on_all">روشن در تمام زبانه‌ها</string>
+    <!-- Summary of https only preference if https only is set to on in private tabs only -->
+    <string name="preferences_https_only_on_private">روشن در زبانه‌های خصوصی</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">بیشتر بدانید</string>
     <!-- Option for the https only setting -->
@@ -416,6 +452,12 @@
     <string name="preferences_enable_autocomplete_urls">تکمیل خودکار نشانی اینترنتی</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">پیوندها را در برنامه ها باز کنید</string>
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">همیشه</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">پرسش پیش از گشودن</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">هرگز</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">مدیریت بارگیری خارجی</string>
     <!-- Preference for add_ons -->
@@ -423,6 +465,11 @@
 
     <!-- Preference for notifications -->
     <string name="preferences_notifications">اعلان‌ها</string>
+
+    <!-- Summary for notification preference indicating notifications are allowed -->
+    <string name="notifications_allowed_summary">مجاز</string>
+    <!-- Summary for notification preference indicating notifications are not allowed -->
+    <string name="notifications_not_allowed_summary">غیرمجاز</string>
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
@@ -463,6 +510,9 @@
     <string name="wallpaper_updated_snackbar_message">کاغذدیواری به‌روز شد!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">نمایش</string>
+
+    <!-- Snackbar label for action to retry downloading the wallpaper -->
+    <string name="wallpaper_download_error_snackbar_action">تلاش دوباره</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->

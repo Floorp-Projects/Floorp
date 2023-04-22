@@ -47,6 +47,8 @@
     <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
     <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">Файлларны йөкләп алу өчен файллардан һәм медиадан файдалану рөхсәте кирәк. Android көйләүләренә кереп, &quot;рөхсәтләр&quot; дигән битне ачып, &quot;рөхсәт итү&quot; дигәнгә басыгыз.</string>
 
+    <!-- Alert dialog confirmation before cancelling downloads, this is the title   -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">Шәхси иңдерүләрдән баш тартырга телисезме?</string>
     <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->
     <string name="mozac_feature_downloads_cancel_active_downloads_accept">Йөкләүдән баш тарту</string>
     <!-- Alert dialog confirmation before cancelling downloads, this is the negative action. Leaves user in Private browsing -->

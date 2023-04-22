@@ -4,6 +4,11 @@
     <string name="mozac_feature_applinks_open_in">… белән ачу</string>
     <!-- The description to warn users that their private browsing session changes  -->
     <string name="mozac_feature_applinks_confirm_dialog_title">Кушымтада ачу кирәкме? Гамәлләрегез бүтән хосусый булмаска да мөмкин.</string>
+    <!-- The title of the prompt that warns users their normal browsing session is trying to open another app  -->
+    <string name="mozac_feature_applinks_normal_confirm_dialog_title">Башка кушымтада ачу</string>
+    <!-- The message of the prompt to confirm with users that they want to open the link in another app
+    %s is a placeholder that will be replaced by the app name -->
+    <string name="mozac_feature_applinks_normal_confirm_dialog_message">Бу эчтәлекне карау өчен %s программасыннан чыгарга телисезме?</string>
     <!-- Opens the selected time -->
     <string name="mozac_feature_applinks_confirm_dialog_confirm">Ачу</string>
     <!-- Cancels the prompt -->

@@ -24,6 +24,8 @@
     <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate">Башка %1$d домендагы мәгълүматыгызга ирешү</string>
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">Браузер табларына ирешү</string>
+    <!-- Description for unlimited_storage permission. -->
+    <string name="mozac_feature_addons_permissions_unlimited_storage_description">Клиент ягында чиксез күләмдә мәгълүмат саклау</string>
     <!-- Description for navigation permission. -->
     <string name="mozac_feature_addons_permissions_web_navigation_description">Навигация вакытында браузер гамәлләренә ирешү</string>
     <!-- Description for bookmarks permission. -->
@@ -36,6 +38,10 @@
     <string name="mozac_feature_addons_permissions_clipboard_read_description">Алмаш буферыннан мәгълүмат алу</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Мәгълүматны алмаш буферына кую</string>
+    <!-- Description for declarativeNetRequest permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_description">Теләсә нинди биттәге эчтәлекне блоклау</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Гизү тарихыгызны уку</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Файлларны йөкләп алу һәм браузерның йөкләү тарихын уку һәм үзгәртү</string>
     <!-- Description for downloads_open permission. -->
@@ -174,6 +180,8 @@
     <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">%1$s уңышлы бетерелде</string>
     <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">%1$s кушымчасын бетереп булмады</string>
+    <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be Firefox. -->
+    <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">Бу кушымча %1$s программасының искерәк версиясеннән алынды</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
     <string name="mozac_feature_addons_unsupported_caption">1 кушымча</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
