@@ -23,7 +23,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 resolver = TestResolver.from_environment(cwd=here, loader_cls=TestManifestLoader)
 
 
-def guess_mozinfo_from_task(task):
+def guess_mozinfo_from_task(task, repo=""):
     """Attempt to build a mozinfo dict from a task definition.
 
     This won't be perfect and many values used in the manifests will be missing. But
@@ -57,6 +57,7 @@ def guess_mozinfo_from_task(task):
         "xorigin": any("xorigin" in key for key in setting["runtime"].keys()),
         "socketprocess_networking": "socketprocess_networking"
         in setting["runtime"].keys(),
+        "nightly_build": repo in ["mozilla-central", "autoland", "try", ""],  # trunk
     }
     for platform in ("android", "linux", "mac", "win"):
         if p_os["name"].startswith(platform):
@@ -232,9 +233,25 @@ class DefaultLoader(BaseManifestLoader):
         m = TestManifest()
         m.tests = tests
         tests = m.active_tests(disabled=False, exists=False, filters=filters, **mozinfo)
-        active = {chunk_by_runtime.get_manifest(t) for t in tests}
-        skipped = manifests - active
-        return {"active": list(active), "skipped": list(skipped)}
+        active = {}
+        # map manifests and 'other' directories included
+        for t in tests:
+            mp = chunk_by_runtime.get_manifest(t)
+            active.setdefault(mp, [])
+
+            if not mp.startswith(t["dir_relpath"]):
+                active[mp].append(t["dir_relpath"])
+
+        skipped = manifests - set(active.keys())
+        other = {}
+        for m in active:
+            if len(active[m]) > 0:
+                other[m] = list(set(active[m]))
+        return {
+            "active": list(active.keys()),
+            "skipped": list(skipped),
+            "other_dirs": other,
+        }
 
 
 class BugbugLoader(DefaultLoader):

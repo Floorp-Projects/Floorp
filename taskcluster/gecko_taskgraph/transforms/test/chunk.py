@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import json
+
 import taskgraph
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import keymatch
@@ -90,7 +92,9 @@ def set_test_manifests(config, tasks):
             yield task
             continue
 
-        mozinfo = guess_mozinfo_from_task(task)
+        mozinfo = guess_mozinfo_from_task(
+            task, config.params.get("head_repository", "")
+        )
 
         loader_name = task.pop(
             "test-manifest-loader", config.params["test_manifest_loader"]
@@ -101,6 +105,44 @@ def set_test_manifests(config, tasks):
             task["suite"],
             frozenset(mozinfo.items()),
         )
+
+        # When scheduling with test paths, we often find manifests scheduled but all tests
+        # are skipped on a given config.  This will remove the task from the task set if
+        # no manifests have active tests for the given task/config
+        mh_test_paths = {}
+        if "MOZHARNESS_TEST_PATHS" in config.params.get("try_task_config", {}).get(
+            "env", {}
+        ):
+            mh_test_paths = json.loads(
+                config.params["try_task_config"]["env"]["MOZHARNESS_TEST_PATHS"]
+            )
+
+        if task["attributes"]["unittest_suite"] in mh_test_paths.keys():
+            input_paths = mh_test_paths[task["attributes"]["unittest_suite"]]
+            remaining_manifests = []
+
+            # input paths can exist in other directories (i.e. [../../dir/test.js])
+            # we need to look for all [active] manifests that include tests in the path
+            for m in input_paths:
+                if [tm for tm in task["test-manifests"]["active"] if tm.startswith(m)]:
+                    remaining_manifests.append(m)
+
+            # look in the 'other' manifests
+            for m in input_paths:
+                for tm in task["test-manifests"]["other_dirs"]:
+                    matched_dirs = [
+                        dp
+                        for dp in task["test-manifests"]["other_dirs"].get(tm)
+                        if dp.startswith(m)
+                    ]
+                    if matched_dirs:
+                        if tm not in task["test-manifests"]["active"]:
+                            continue
+                        if m not in remaining_manifests:
+                            remaining_manifests.append(m)
+
+            if remaining_manifests == []:
+                continue
 
         # The default loader loads all manifests. If we use a non-default
         # loader, we'll only run some subset of manifests and the hardcoded
