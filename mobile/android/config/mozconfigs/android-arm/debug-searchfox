@@ -13,9 +13,6 @@ ac_add_options --with-branding=mobile/android/branding/nightly
 # Workaround gold bug (see bug 1807993)
 ac_add_options --enable-linker=lld
 
-# Save rust analysis (this requires unlocking the unstable features,
-# which is done in the taskcluster task definition via RUSTC_BOOTSTRAP)
-export RUSTFLAGS="-Zsave-analysis"
 ac_add_options --enable-mozsearch-plugin
 
 . "$topsrcdir/mobile/android/config/mozconfigs/common.override"
