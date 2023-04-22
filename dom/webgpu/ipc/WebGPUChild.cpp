@@ -751,7 +751,30 @@ MOZ_CAN_RUN_SCRIPT void reportCompilationMessagesToConsole(
             }
           };
 
-  nsString header(u"WebGPU compilation info for shader module");
+  uint64_t errorCount = 0;
+  uint64_t warningCount = 0;
+  uint64_t infoCount = 0;
+  for (const auto& message : aMessages) {
+    switch (message.messageType) {
+      case WebGPUCompilationMessageType::Error:
+        errorCount += 1;
+        break;
+      case WebGPUCompilationMessageType::Warning:
+        warningCount += 1;
+        break;
+      case WebGPUCompilationMessageType::Info:
+        infoCount += 1;
+        break;
+    }
+  }
+
+  nsString header(u"WebGPU compilation info for shader module (");
+  header.AppendInt(errorCount);
+  header.AppendLiteral(u" error(s), ");
+  header.AppendInt(warningCount);
+  header.AppendLiteral(u" warning(s), ");
+  header.AppendInt(infoCount);
+  header.AppendLiteral(u" info)");
   SetSingleStrAsArgs(header, &args);
   console->GroupCollapsed(globalObj, args);
 
