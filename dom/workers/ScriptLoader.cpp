@@ -1163,8 +1163,14 @@ bool WorkerScriptLoader::EvaluateScript(JSContext* aCx,
     // keep things simple, we don't create a classic script for ServiceWorkers.
     // If this changes then we will need to ensure that the reference that is
     // held is released appropriately.
-    classicScript = new JS::loader::ClassicScript(aRequest->mFetchOptions,
-                                                  aRequest->mBaseURL);
+    nsCOMPtr<nsIURI> requestBaseURI;
+    if (loadContext->mMutedErrorFlag.valueOr(false)) {
+      NS_NewURI(getter_AddRefs(requestBaseURI), "about:blank"_ns);
+    } else {
+      requestBaseURI = aRequest->mBaseURL;
+    }
+    classicScript =
+        new JS::loader::ClassicScript(aRequest->mFetchOptions, requestBaseURI);
   }
 
   bool successfullyEvaluated =
