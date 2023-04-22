@@ -98,8 +98,8 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
   RefPtr<PipelinePromise> DeviceCreateRenderPipelineAsync(
       PipelineCreationContext* const aContext,
       const dom::GPURenderPipelineDescriptor& aDesc);
-  already_AddRefed<ShaderModule> DeviceCreateShaderModule(
-      Device* aDevice, const dom::GPUShaderModuleDescriptor& aDesc,
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<ShaderModule> DeviceCreateShaderModule(
+      Device& aDevice, const dom::GPUShaderModuleDescriptor& aDesc,
       RefPtr<dom::Promise> aPromise);
 
   void DeviceCreateSwapChain(RawId aSelfId, const RGBDescriptor& aRgbDesc,
