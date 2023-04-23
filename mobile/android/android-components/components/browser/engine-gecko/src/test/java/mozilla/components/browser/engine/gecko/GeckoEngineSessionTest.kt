@@ -355,6 +355,80 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun contentDelegateNotifiesObserverAboutDownloadsWithMalformedContentLength() {
+        val engineSession = GeckoEngineSession(
+            mock(),
+            geckoSessionProvider = geckoSessionProvider,
+            privateMode = true,
+        )
+
+        val observer: EngineSession.Observer = mock()
+        engineSession.register(observer)
+
+        val response = WebResponse.Builder("https://download.mozilla.org/image.png")
+            .addHeader(Headers.Names.CONTENT_TYPE, "image/png")
+            .addHeader(Headers.Names.CONTENT_LENGTH, "42,42")
+            .body(mock())
+            .build()
+
+        val captor = argumentCaptor<Response>()
+        captureDelegates()
+        contentDelegate.value.onExternalResponse(mock(), response)
+
+        verify(observer).onExternalResource(
+            url = eq("https://download.mozilla.org/image.png"),
+            fileName = eq("image.png"),
+            contentLength = eq(null),
+            contentType = eq("image/png"),
+            cookie = eq(null),
+            userAgent = eq(null),
+            isPrivate = eq(true),
+            skipConfirmation = eq(false),
+            openInApp = eq(false),
+            response = captor.capture(),
+        )
+
+        assertNotNull(captor.value)
+    }
+
+    @Test
+    fun contentDelegateNotifiesObserverAboutDownloadsWithEmptyContentLength() {
+        val engineSession = GeckoEngineSession(
+            mock(),
+            geckoSessionProvider = geckoSessionProvider,
+            privateMode = true,
+        )
+
+        val observer: EngineSession.Observer = mock()
+        engineSession.register(observer)
+
+        val response = WebResponse.Builder("https://download.mozilla.org/image.png")
+            .addHeader(Headers.Names.CONTENT_TYPE, "image/png")
+            .addHeader(Headers.Names.CONTENT_LENGTH, "")
+            .body(mock())
+            .build()
+
+        val captor = argumentCaptor<Response>()
+        captureDelegates()
+        contentDelegate.value.onExternalResponse(mock(), response)
+
+        verify(observer).onExternalResource(
+            url = eq("https://download.mozilla.org/image.png"),
+            fileName = eq("image.png"),
+            contentLength = eq(null),
+            contentType = eq("image/png"),
+            cookie = eq(null),
+            userAgent = eq(null),
+            isPrivate = eq(true),
+            skipConfirmation = eq(false),
+            openInApp = eq(false),
+            response = captor.capture(),
+        )
+
+        assertNotNull(captor.value)
+    }
+
+    @Test
     fun contentDelegateNotifiesObserverAboutWebAppManifest() {
         val engineSession = GeckoEngineSession(
             mock(),
