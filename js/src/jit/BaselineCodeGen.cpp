@@ -221,12 +221,10 @@ MethodStatus BaselineCompiler::compile() {
     }
   }
 
-#ifdef NIGHTLY_BUILD
   if (!JitOptions.disableJitHints) {
     JitHintsMap* jitHints = cx->runtime()->jitRuntime()->getJitHintsMap();
     jitHints->setEagerBaselineHint(script);
   }
-#endif
 
   // Suppress GC during compilation.
   gc::AutoSuppressGC suppressGC(cx);
