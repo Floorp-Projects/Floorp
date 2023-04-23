@@ -290,9 +290,12 @@ def setup_clangd_rust_in_vscode(command_context):
 
     clang_tidy_cfg = ClangTidyConfig(command_context.topsrcdir)
 
-    cargo_check_command = [
-        sys.executable,
-        mozpath.join(command_context.topsrcdir, "mach"),
+    if sys.platform == "win32":
+        cargo_check_command = [sys.executable, "mach"]
+    else:
+        cargo_check_command = ["./mach"]
+
+    cargo_check_command += [
         "--log-no-times",
         "cargo",
         "check",
