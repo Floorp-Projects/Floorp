@@ -4,11 +4,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function isAutocompleteDisabled(aField) {
+  if (!aField) {
+    return false;
+  }
+
   if (aField.autocomplete !== "") {
     return aField.autocomplete === "off";
   }
 
-  return aField.form && aField.form.autocomplete === "off";
+  return aField.form?.autocomplete === "off";
 }
 
 /**
@@ -32,36 +36,31 @@ function isAutocompleteDisabled(aField) {
  *        If this is searchbar-history, then formField needs to be null,
  *        otherwise constructing will throw.
  */
-export function FormHistoryClient({ formField, inputName }) {
-  if (formField && inputName != this.SEARCHBAR_ID) {
-    let window = formField.ownerGlobal;
-    this.windowGlobal = window.windowGlobalChild;
-  } else if (inputName == this.SEARCHBAR_ID && formField) {
-    throw new Error(
-      "FormHistoryClient constructed with both a " +
-        "formField and an inputName. This is not " +
-        "supported, and only empty results will be " +
-        "returned."
-    );
-  }
-
-  this.inputName = inputName;
-  this.id = FormHistoryClient.nextRequestID++;
-}
-
-FormHistoryClient.prototype = {
-  SEARCHBAR_ID: "searchbar-history",
-
-  cancelled: false,
-  inputName: "",
-
-  getActor() {
-    if (this.windowGlobal) {
-      return this.windowGlobal.getActor("FormHistory");
+export class FormHistoryClient {
+  constructor({ formField, inputName }) {
+    if (formField) {
+      if (inputName == this.SEARCHBAR_ID) {
+        throw new Error(
+          "FormHistoryClient constructed with both a  formField and an inputName. " +
+            "This is not supported, and only empty results will be returned."
+        );
+      }
+      const window = formField.ownerGlobal;
+      this.windowGlobal = window.windowGlobalChild;
     }
 
-    return null;
-  },
+    this.inputName = inputName;
+    this.id = FormHistoryClient.nextRequestID++;
+  }
+
+  static nextRequestID = 1;
+  SEARCHBAR_ID = "searchbar-history";
+  cancelled = false;
+  inputName = "";
+
+  getActor() {
+    return this.windowGlobal?.getActor("FormHistory");
+  }
 
   /**
    * Query FormHistory for some results.
@@ -82,7 +81,7 @@ FormHistoryClient.prototype = {
     // Use the actor if possible, otherwise for the searchbar,
     // use the more roundabout per-process message manager which has
     // no sendQuery method.
-    let actor = this.getActor();
+    const actor = this.getActor();
     if (actor) {
       actor
         .sendQuery("FormHistory:AutoCompleteSearchAsync", {
@@ -90,9 +89,7 @@ FormHistoryClient.prototype = {
           params,
         })
         .then(
-          results => {
-            this.handleAutoCompleteResults(results, callback);
-          },
+          results => this.handleAutoCompleteResults(results, callback),
           () => this.cancel()
         );
     } else {
@@ -107,7 +104,7 @@ FormHistoryClient.prototype = {
         params,
       });
     }
-  },
+  }
 
   handleAutoCompleteResults(results, callback) {
     if (this.cancelled) {
@@ -121,7 +118,7 @@ FormHistoryClient.prototype = {
 
     callback(results);
     this.cancel();
-  },
+  }
 
   /**
    * Cancel an in-flight results request. This ensures that the
@@ -137,7 +134,7 @@ FormHistoryClient.prototype = {
       this.callback = null;
     }
     this.cancelled = true;
-  },
+  }
 
   /**
    * Remove an item from FormHistory.
@@ -152,46 +149,121 @@ FormHistoryClient.prototype = {
    *        The guid for the item being removed.
    */
   remove(value, guid) {
-    let actor = this.getActor() || Services.cpmm;
+    const actor = this.getActor() || Services.cpmm;
     actor.sendAsyncMessage("FormHistory:RemoveEntry", {
       inputName: this.inputName,
       value,
       guid,
     });
-  },
+  }
 
   receiveMessage(msg) {
-    let { id, results } = msg.data;
+    const { id, results } = msg.data;
     if (id == this.id) {
       this.handleAutoCompleteResults(results, this.callback);
     }
-  },
-};
-
-FormHistoryClient.nextRequestID = 1;
-
-export function FormAutoComplete() {
-  this.init();
+  }
 }
 
-/**
- * Implements the nsIFormAutoComplete interface in the main process.
- */
-FormAutoComplete.prototype = {
-  classID: Components.ID("{c11c21b2-71c9-4f87-a0f8-5e13f50495fd}"),
-  QueryInterface: ChromeUtils.generateQI([
-    "nsIFormAutoComplete",
+// nsIAutoCompleteResult implementation
+export class FormAutoCompleteResult {
+  constructor(client, entries, fieldName, searchString) {
+    this.client = client;
+    this.entries = entries;
+    this.fieldName = fieldName;
+    this.searchString = searchString;
+  }
+
+  QueryInterface = ChromeUtils.generateQI([
+    "nsIAutoCompleteResult",
     "nsISupportsWeakReference",
-  ]),
+  ]);
 
-  // Only one query via FormHistoryClient is performed at a time, and the
-  // most recent FormHistoryClient which will be stored in _pendingClient
-  // while the query is being performed. It will be cleared when the query
-  // finishes, is cancelled, or an error occurs. If a new query occurs while
-  // one is already pending, the existing one is cancelled.
-  _pendingClient: null,
+  // private
+  client = null;
+  entries = null;
+  fieldName = null;
 
-  init() {
+  _checkIndexBounds(index) {
+    if (index < 0 || index >= this.entries.length) {
+      throw Components.Exception(
+        "Index out of range.",
+        Cr.NS_ERROR_ILLEGAL_VALUE
+      );
+    }
+  }
+
+  // Allow autoCompleteSearch to get at the JS object so it can
+  // modify some readonly properties for internal use.
+  get wrappedJSObject() {
+    return this;
+  }
+
+  // Interfaces from idl...
+  searchString = "";
+  errorDescription = "";
+
+  get defaultIndex() {
+    if (!this.entries.length) {
+      return -1;
+    }
+    return 0;
+  }
+
+  get searchResult() {
+    if (!this.entries.length) {
+      return Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
+    }
+    return Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
+  }
+
+  get matchCount() {
+    return this.entries.length;
+  }
+
+  getValueAt(index) {
+    this._checkIndexBounds(index);
+    return this.entries[index].text;
+  }
+
+  getLabelAt(index) {
+    return this.getValueAt(index);
+  }
+
+  getCommentAt(index) {
+    this._checkIndexBounds(index);
+    return "";
+  }
+
+  getStyleAt(index) {
+    this._checkIndexBounds(index);
+    return "";
+  }
+
+  getImageAt(index) {
+    this._checkIndexBounds(index);
+    return "";
+  }
+
+  getFinalCompleteValueAt(index) {
+    return this.getValueAt(index);
+  }
+
+  isRemovableAt(index) {
+    this._checkIndexBounds(index);
+    return true;
+  }
+
+  removeValueAt(index) {
+    this._checkIndexBounds(index);
+
+    const [removedEntry] = this.entries.splice(index, 1);
+    this.client.remove(removedEntry.text, removedEntry.guid);
+  }
+}
+
+export class FormAutoComplete {
+  constructor() {
     // Preferences. Add observer so we get notified of changes.
     this._prefBranch = Services.prefs.getBranch("browser.formfill.");
     this._prefBranch.addObserver("", this.observer, true);
@@ -199,9 +271,22 @@ FormAutoComplete.prototype = {
 
     this._debug = this._prefBranch.getBoolPref("debug");
     this._enabled = this._prefBranch.getBoolPref("enable");
-  },
+  }
 
-  observer: {
+  classID = Components.ID("{c11c21b2-71c9-4f87-a0f8-5e13f50495fd}");
+  QueryInterface = ChromeUtils.generateQI([
+    "nsIFormAutoComplete",
+    "nsISupportsWeakReference",
+  ]);
+
+  // Only one query via FormHistoryClient is performed at a time, and the
+  // most recent FormHistoryClient which will be stored in _pendingClient
+  // while the query is being performed. It will be cleared when the query
+  // finishes, is cancelled, or an error occurs. If a new query occurs while
+  // one is already pending, the existing one is cancelled.
+  #pendingClient = null;
+
+  observer = {
     _self: null,
 
     QueryInterface: ChromeUtils.generateQI([
@@ -209,12 +294,12 @@ FormAutoComplete.prototype = {
       "nsISupportsWeakReference",
     ]),
 
-    observe(subject, topic, data) {
-      let self = this._self;
+    observe(_subject, topic, data) {
+      const self = this._self;
 
       if (topic == "nsPref:changed") {
-        let prefName = data;
-        self.log("got change to " + prefName + " preference");
+        const prefName = data;
+        self.log(`got change to ${prefName} preference`);
 
         switch (prefName) {
           case "debug":
@@ -226,13 +311,13 @@ FormAutoComplete.prototype = {
         }
       }
     },
-  },
+  };
 
   // AutoCompleteE10S needs to be able to call autoCompleteSearchAsync without
   // going through IDL in order to pass a mock DOM object field.
   get wrappedJSObject() {
     return this;
-  },
+  }
 
   /*
    * log
@@ -246,7 +331,7 @@ FormAutoComplete.prototype = {
     }
     dump("FormAutoComplete: " + message + "\n");
     Services.console.logStringMessage("FormAutoComplete: " + message);
-  },
+  }
 
   /*
    * autoCompleteSearchAsync
@@ -278,11 +363,11 @@ FormAutoComplete.prototype = {
     if (typeof aUntrimmedSearchString === "object") {
       aUntrimmedSearchString = "";
     }
-    let params = {};
+    const params = {};
     if (aOptions) {
       try {
         aOptions.QueryInterface(Ci.nsIPropertyBag2);
-        for (let { name, value } of aOptions.enumerator) {
+        for (const { name, value } of aOptions.enumerator) {
           params[name] = value;
         }
       } catch (ex) {
@@ -290,19 +375,17 @@ FormAutoComplete.prototype = {
       }
     }
 
-    let client = new FormHistoryClient({
+    const client = new FormHistoryClient({
       formField: aField,
       inputName: aInputName,
     });
 
     function maybeNotifyListener(result) {
-      if (aListener) {
-        aListener.onSearchCompletion(result);
-      }
+      aListener?.onSearchCompletion(result);
     }
 
     // If we have datalist results, they become our "empty" result.
-    let emptyResult =
+    const emptyResult =
       aDatalistResult ||
       new FormAutoCompleteResult(
         client,
@@ -310,6 +393,7 @@ FormAutoComplete.prototype = {
         aInputName,
         aUntrimmedSearchString
       );
+
     if (!this._enabled) {
       maybeNotifyListener(emptyResult);
       return;
@@ -318,14 +402,12 @@ FormAutoComplete.prototype = {
     // Don't allow form inputs (aField != null) to get results from
     // search bar history.
     if (aInputName == "searchbar-history" && aField) {
-      this.log(
-        'autoCompleteSearch for input name "' + aInputName + '" is denied'
-      );
+      this.log(`autoCompleteSearch for input name "${aInputName}" is denied`);
       maybeNotifyListener(emptyResult);
       return;
     }
 
-    if (aField && isAutocompleteDisabled(aField)) {
+    if (isAutocompleteDisabled(aField)) {
       this.log("autoCompleteSearch not allowed due to autcomplete=off");
       maybeNotifyListener(emptyResult);
       return;
@@ -334,19 +416,19 @@ FormAutoComplete.prototype = {
     this.log(
       "AutoCompleteSearch invoked. Search is: " + aUntrimmedSearchString
     );
-    let searchString = aUntrimmedSearchString.trim().toLowerCase();
+    const searchString = aUntrimmedSearchString.trim().toLowerCase();
 
     // reuse previous results if:
     // a) length greater than one character (others searches are special cases) AND
     // b) the the new results will be a subset of the previous results
+    const prevSearchString = aPreviousResult?.searchString.trim();
     if (
-      aPreviousResult &&
-      aPreviousResult.searchString.trim().length > 1 &&
-      searchString.includes(aPreviousResult.searchString.trim().toLowerCase())
+      prevSearchString?.length > 1 &&
+      searchString.includes(prevSearchString.toLowerCase())
     ) {
       this.log("Using previous autocomplete result");
-      let result = aPreviousResult;
-      let wrappedResult = result.wrappedJSObject;
+      const result = aPreviousResult;
+      const wrappedResult = result.wrappedJSObject;
       wrappedResult.searchString = aUntrimmedSearchString;
 
       // Leaky abstraction alert: it would be great to be able to split
@@ -359,35 +441,30 @@ FormAutoComplete.prototype = {
       // of results in wrappedResult._items and only the results from
       // form history in wrappedResult.entries.
       // First, grab the entire list of old results.
-      let allResults = wrappedResult._items;
-      let datalistItems;
+      const allResults = wrappedResult._items;
+      const datalistItems = [];
       if (allResults) {
         // We have datalist results, extract them from the values array.
         // Both allResults and values arrays are in the form of:
         // |--wR.entries--|
         // <history entries><datalist entries>
-        let oldItems = allResults.slice(wrappedResult.entries.length);
-
-        datalistItems = [];
-        for (let i = 0; i < oldItems.length; ++i) {
-          if (oldItems[i].label.toLowerCase().includes(searchString)) {
+        for (const oldItem of allResults.slice(wrappedResult.entries.length)) {
+          if (oldItem.label.toLowerCase().includes(searchString)) {
             datalistItems.push({
-              value: oldItems[i].value,
-              label: oldItems[i].label,
+              value: oldItem.value,
+              label: oldItem.label,
               comment: "",
-              removable: oldItems[i].removable,
+              removable: oldItem.removable,
             });
           }
         }
       }
 
-      let searchTokens = searchString.split(/\s+/);
+      const searchTokens = searchString.split(/\s+/);
       // We have a list of results for a shorter search string, so just
       // filter them further based on the new search string and add to a new array.
-      let entries = wrappedResult.entries;
       let filteredEntries = [];
-      for (let i = 0; i < entries.length; i++) {
-        let entry = entries[i];
+      for (const entry of wrappedResult.entries) {
         // Remove results that do not contain the token
         // XXX bug 394604 -- .toLowerCase can be wrong for some intl chars
         if (searchTokens.some(tok => !entry.textLowerCase.includes(tok))) {
@@ -395,13 +472,7 @@ FormAutoComplete.prototype = {
         }
         this._calculateScore(entry, searchString, searchTokens);
         this.log(
-          "Reusing autocomplete entry '" +
-            entry.text +
-            "' (" +
-            entry.frecency +
-            " / " +
-            entry.totalScore +
-            ")"
+          `Reusing autocomplete entry '${entry.text}' (${entry.frecency} / ${entry.totalScore})`
         );
         filteredEntries.push(entry);
       }
@@ -410,7 +481,7 @@ FormAutoComplete.prototype = {
 
       // If we had datalistResults, re-merge them back into the filtered
       // entries.
-      if (datalistItems?.length) {
+      if (datalistItems.length) {
         filteredEntries = filteredEntries.map(elt => ({
           value: elt.text,
           // History entries don't have labels (their labels would be read
@@ -439,8 +510,8 @@ FormAutoComplete.prototype = {
           )
         : emptyResult;
 
-      let processEntry = aEntries => {
-        if (aField && aField.maxLength > -1) {
+      const processEntry = aEntries => {
+        if (aField?.maxLength > -1) {
           result.entries = aEntries.filter(
             el => el.text.length <= aField.maxLength
           );
@@ -448,7 +519,7 @@ FormAutoComplete.prototype = {
           result.entries = aEntries;
         }
 
-        if (aDatalistResult && aDatalistResult.matchCount > 0) {
+        if (aDatalistResult?.matchCount > 0) {
           result = this.mergeResults(result, aDatalistResult);
         }
 
@@ -463,15 +534,15 @@ FormAutoComplete.prototype = {
         processEntry
       );
     }
-  },
+  }
 
   mergeResults(historyResult, datalistResult) {
-    let items = datalistResult.wrappedJSObject._items;
+    const items = datalistResult.wrappedJSObject._items;
 
     // historyResult will be null if form autocomplete is disabled. We
     // still want the list values to display.
-    let entries = historyResult.wrappedJSObject.entries;
-    let historyResults = entries.map(entry => ({
+    const entries = historyResult.wrappedJSObject.entries;
+    const historyResults = entries.map(entry => ({
       value: entry.text,
       label: entry.text,
       comment: "",
@@ -503,7 +574,7 @@ FormAutoComplete.prototype = {
     // that we use the one defined here. To get around that, we explicitly
     // import the module here, out of the way of the other uses of
     // FormAutoCompleteResult.
-    let { FormAutoCompleteResult } = ChromeUtils.importESModule(
+    const { FormAutoCompleteResult } = ChromeUtils.importESModule(
       "resource://gre/modules/nsFormAutoCompleteResult.sys.mjs"
     );
     return new FormAutoCompleteResult(
@@ -514,14 +585,14 @@ FormAutoComplete.prototype = {
       finalItems,
       historyResult
     );
-  },
+  }
 
   stopAutoCompleteSearch() {
-    if (this._pendingClient) {
-      this._pendingClient.cancel();
-      this._pendingClient = null;
+    if (this.#pendingClient) {
+      this.#pendingClient.cancel();
+      this.#pendingClient = null;
     }
-  },
+  }
 
   /*
    * Get the values for an autocomplete list given a search string.
@@ -535,20 +606,15 @@ FormAutoComplete.prototype = {
    *             when successful.
    */
   getAutoCompleteValues(client, fieldName, searchString, params, callback) {
-    params = Object.assign(
-      {
-        fieldname: fieldName,
-      },
-      params
-    );
+    params = Object.assign({ fieldname: fieldName }, params);
 
     this.stopAutoCompleteSearch();
     client.requestAutoCompleteResults(searchString, params, entries => {
-      this._pendingClient = null;
+      this.#pendingClient = null;
       callback(entries);
     });
-    this._pendingClient = client;
-  },
+    this.#pendingClient = client;
+  }
 
   /*
    * _calculateScore
@@ -562,7 +628,7 @@ FormAutoComplete.prototype = {
   _calculateScore(entry, aSearchString, searchTokens) {
     let boundaryCalc = 0;
     // for each word, calculate word boundary weights
-    for (let token of searchTokens) {
+    for (const token of searchTokens) {
       if (entry.textLowerCase.startsWith(token)) {
         boundaryCalc++;
       }
@@ -577,104 +643,5 @@ FormAutoComplete.prototype = {
       boundaryCalc += this._prefixWeight;
     }
     entry.totalScore = Math.round(entry.frecency * Math.max(1, boundaryCalc));
-  },
-}; // end of FormAutoComplete implementation
-
-// nsIAutoCompleteResult implementation
-export function FormAutoCompleteResult(
-  client,
-  entries,
-  fieldName,
-  searchString
-) {
-  this.client = client;
-  this.entries = entries;
-  this.fieldName = fieldName;
-  this.searchString = searchString;
+  }
 }
-
-FormAutoCompleteResult.prototype = {
-  QueryInterface: ChromeUtils.generateQI([
-    "nsIAutoCompleteResult",
-    "nsISupportsWeakReference",
-  ]),
-
-  // private
-  client: null,
-  entries: null,
-  fieldName: null,
-
-  _checkIndexBounds(index) {
-    if (index < 0 || index >= this.entries.length) {
-      throw Components.Exception(
-        "Index out of range.",
-        Cr.NS_ERROR_ILLEGAL_VALUE
-      );
-    }
-  },
-
-  // Allow autoCompleteSearch to get at the JS object so it can
-  // modify some readonly properties for internal use.
-  get wrappedJSObject() {
-    return this;
-  },
-
-  // Interfaces from idl...
-  searchString: "",
-  errorDescription: "",
-  get defaultIndex() {
-    if (!this.entries.length) {
-      return -1;
-    }
-    return 0;
-  },
-  get searchResult() {
-    if (!this.entries.length) {
-      return Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
-    }
-    return Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
-  },
-  get matchCount() {
-    return this.entries.length;
-  },
-
-  getValueAt(index) {
-    this._checkIndexBounds(index);
-    return this.entries[index].text;
-  },
-
-  getLabelAt(index) {
-    return this.getValueAt(index);
-  },
-
-  getCommentAt(index) {
-    this._checkIndexBounds(index);
-    return "";
-  },
-
-  getStyleAt(index) {
-    this._checkIndexBounds(index);
-    return "";
-  },
-
-  getImageAt(index) {
-    this._checkIndexBounds(index);
-    return "";
-  },
-
-  getFinalCompleteValueAt(index) {
-    return this.getValueAt(index);
-  },
-
-  isRemovableAt(index) {
-    return true;
-  },
-
-  removeValueAt(index) {
-    this._checkIndexBounds(index);
-
-    let [removedEntry] = this.entries.splice(index, 1);
-
-    this.client.remove(removedEntry.text, removedEntry.guid);
-  },
-};

@@ -35,18 +35,15 @@ function log(message) {
 export class FormHistoryChild extends JSWindowActorChild {
   handleEvent(event) {
     switch (event.type) {
-      case "DOMFormBeforeSubmit": {
-        this.onDOMFormBeforeSubmit(event);
+      case "DOMFormBeforeSubmit":
+        this.#onDOMFormBeforeSubmit(event.target);
         break;
-      }
-      default: {
+      default:
         throw new Error("Unexpected event");
-      }
     }
   }
 
-  onDOMFormBeforeSubmit(event) {
-    let form = event.target;
+  #onDOMFormBeforeSubmit(form) {
     if (
       !lazy.gEnabled ||
       lazy.PrivateBrowsingUtils.isContentWindowPrivate(form.ownerGlobal)
@@ -56,15 +53,12 @@ export class FormHistoryChild extends JSWindowActorChild {
 
     log("Form submit observer notified.");
 
-    if (
-      form.hasAttribute("autocomplete") &&
-      form.getAttribute("autocomplete").toLowerCase() == "off"
-    ) {
+    if (form.getAttribute("autocomplete")?.toLowerCase() == "off") {
       return;
     }
 
-    let entries = [];
-    for (let input of form.elements) {
+    const entries = [];
+    for (const input of form.elements) {
       if (!HTMLInputElement.isInstance(input)) {
         continue;
       }
@@ -87,8 +81,8 @@ export class FormHistoryChild extends JSWindowActorChild {
       }
 
       // Don't save values when @autocomplete is "off" or has a sensitive field name.
-      let autocompleteInfo = input.getAutocompleteInfo();
-      if (autocompleteInfo && !autocompleteInfo.canAutomaticallyPersist) {
+      const autocompleteInfo = input.getAutocompleteInfo();
+      if (autocompleteInfo?.canAutomaticallyPersist === false) {
         continue;
       }
 
@@ -112,7 +106,7 @@ export class FormHistoryChild extends JSWindowActorChild {
         continue;
       }
 
-      let name = input.name || input.id;
+      const name = input.name || input.id;
       if (!name) {
         continue;
       }
@@ -128,13 +122,13 @@ export class FormHistoryChild extends JSWindowActorChild {
         continue;
       }
 
+      entries.push({ name, value });
+
       // Limit number of fields stored per form.
       if (entries.length >= 100) {
         log("not saving any more entries for this form.");
         break;
       }
-
-      entries.push({ name, value });
     }
 
     if (entries.length) {

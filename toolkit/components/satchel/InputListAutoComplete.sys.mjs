@@ -4,18 +4,16 @@
 
 import { FormAutoCompleteResult } from "resource://gre/modules/nsFormAutoCompleteResult.sys.mjs";
 
-export function InputListAutoComplete() {}
-
-InputListAutoComplete.prototype = {
-  classID: Components.ID("{bf1e01d0-953e-11df-981c-0800200c9a66}"),
-  QueryInterface: ChromeUtils.generateQI(["nsIInputListAutoComplete"]),
+export class InputListAutoComplete {
+  classID = Components.ID("{bf1e01d0-953e-11df-981c-0800200c9a66}");
+  QueryInterface = ChromeUtils.generateQI(["nsIInputListAutoComplete"]);
 
   autoCompleteSearch(aUntrimmedSearchString, aField) {
-    let items = this.getListSuggestions(aField);
-    let searchResult = items.length
+    const items = this.getListSuggestions(aField);
+    const searchResult = items.length
       ? Ci.nsIAutoCompleteResult.RESULT_SUCCESS
       : Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
-    let defaultIndex = items.length ? 0 : -1;
+    const defaultIndex = items.length ? 0 : -1;
 
     return new FormAutoCompleteResult(
       aUntrimmedSearchString,
@@ -25,27 +23,20 @@ InputListAutoComplete.prototype = {
       items,
       null
     );
-  },
+  }
 
   getListSuggestions(aField) {
-    let items = [];
-    if (!aField || !aField.list) {
+    const items = [];
+
+    if (!aField?.list) {
       return items;
     }
 
-    let filter = !aField.hasAttribute("mozNoFilter");
-    let lowerFieldValue = aField.value.toLowerCase();
-    let options = aField.list.options;
+    const filter = !aField.hasAttribute("mozNoFilter");
+    const lowerFieldValue = aField.value.toLowerCase();
 
-    for (let item of options) {
-      let label = "";
-      if (item.label) {
-        label = item.label;
-      } else if (item.text) {
-        label = item.text;
-      } else {
-        label = item.value;
-      }
+    for (const option of aField.list.options) {
+      const label = option.label || option.text || option.value || "";
 
       if (filter && !label.toLowerCase().includes(lowerFieldValue)) {
         continue;
@@ -53,12 +44,12 @@ InputListAutoComplete.prototype = {
 
       items.push({
         label,
-        value: item.value,
+        value: option.value,
         comment: "",
         removable: false,
       });
     }
 
     return items;
-  },
-};
+  }
+}

@@ -8,17 +8,15 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
 });
 
-export function FormHistoryStartup() {}
+export class FormHistoryStartup {
+  classID = Components.ID("{3A0012EB-007F-4BB8-AA81-A07385F77A25}");
 
-FormHistoryStartup.prototype = {
-  classID: Components.ID("{3A0012EB-007F-4BB8-AA81-A07385F77A25}"),
-
-  QueryInterface: ChromeUtils.generateQI([
+  QueryInterface = ChromeUtils.generateQI([
     "nsIObserver",
     "nsISupportsWeakReference",
-  ]),
+  ]);
 
-  observe(subject, topic, data) {
+  observe(_subject, topic, _data) {
     switch (topic) {
       case "idle-daily":
       case "formhistory-expire-now":
@@ -28,9 +26,7 @@ FormHistoryStartup.prototype = {
         this.init();
         break;
     }
-  },
-
-  inited: false,
+  }
 
   init() {
     if (this.inited) {
@@ -47,50 +43,58 @@ FormHistoryStartup.prototype = {
       this
     );
     Services.ppmm.addMessageListener("FormHistory:RemoveEntry", this);
-  },
+  }
 
   receiveMessage(message) {
     switch (message.name) {
-      case "FormHistory:AutoCompleteSearchAsync": {
-        // This case is only used for the search field. There is a
-        // similar algorithm in FormHistoryParent.jsm that uses
-        // sendQuery for other form fields.
-
-        let { id, searchString, params } = message.data;
-
-        let instance = (this._queryInstance = {});
-        lazy.FormHistory.getAutoCompleteResults(
-          searchString,
-          params,
-          (row, cancel) => {
-            if (this._queryInstance != instance) {
-              cancel();
-            }
-          }
-        ).then(results => {
-          if (this._queryInstance == instance) {
-            message.target.sendAsyncMessage(
-              "FormHistory:AutoCompleteSearchResults",
-              {
-                id,
-                results,
-              }
-            );
-          }
+      case "FormHistory:AutoCompleteSearchAsync":
+        this.#onFormHistoryAutoCompleteSearchAsync({
+          ...message.data,
+          target: message.target,
         });
         break;
-      }
 
-      case "FormHistory:RemoveEntry": {
-        let { inputName, value, guid } = message.data;
-        lazy.FormHistory.update({
-          op: "remove",
-          fieldname: inputName,
-          value,
-          guid,
-        });
+      case "FormHistory:RemoveEntry":
+        this.#onFormHistoryRemoveEntry(message.data);
         break;
-      }
     }
-  },
-};
+  }
+
+  async #onFormHistoryAutoCompleteSearchAsync({
+    id,
+    searchString,
+    params,
+    target,
+  }) {
+    // This case is only used for the search field. There is a
+    // similar algorithm in FormHistoryParent.jsm that uses
+    // sendQuery for other form fields.
+
+    const instance = (this._queryInstance = {});
+    const results = await lazy.FormHistory.getAutoCompleteResults(
+      searchString,
+      params,
+      (_row, cancel) => {
+        if (this._queryInstance != instance) {
+          cancel();
+        }
+      }
+    );
+
+    if (this._queryInstance == instance) {
+      target.sendAsyncMessage("FormHistory:AutoCompleteSearchResults", {
+        id,
+        results,
+      });
+    }
+  }
+
+  #onFormHistoryRemoveEntry({ inputName, value, guid }) {
+    lazy.FormHistory.update({
+      op: "remove",
+      fieldname: inputName,
+      value,
+      guid,
+    });
+  }
+}

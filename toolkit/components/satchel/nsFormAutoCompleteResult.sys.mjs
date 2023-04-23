@@ -2,47 +2,50 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-export function FormAutoCompleteResult(
-  searchString,
-  searchResult,
-  defaultIndex,
-  errorDescription,
-  items,
-  prevResult
-) {
-  this.searchString = searchString;
-  this._searchResult = searchResult;
-  this._defaultIndex = defaultIndex;
-  this._errorDescription = errorDescription;
-  this._items = items;
-  this._formHistResult = prevResult;
-  this.entries = prevResult ? prevResult.wrappedJSObject.entries : [];
-}
+export class FormAutoCompleteResult {
+  constructor(
+    searchString,
+    searchResult,
+    defaultIndex,
+    errorDescription,
+    items,
+    prevResult
+  ) {
+    this.searchString = searchString;
+    this._searchResult = searchResult;
+    this._defaultIndex = defaultIndex;
+    this._errorDescription = errorDescription;
+    this._items = items;
+    this._formHistResult = prevResult;
+    this.entries = prevResult ? prevResult.wrappedJSObject.entries : [];
+  }
 
-FormAutoCompleteResult.prototype = {
+  // nsISupports
+  QueryInterface = ChromeUtils.generateQI(["nsIAutoCompleteResult"]);
+
   // The user's query string
-  searchString: "",
+  searchString = "";
 
   // The result code of this result object, see |get searchResult| for possible values.
-  _searchResult: 0,
+  _searchResult = 0;
 
   // The default item that should be entered if none is selected
-  _defaultIndex: 0,
+  _defaultIndex = 0;
 
   // The reason the search failed
-  _errorDescription: "",
+  _errorDescription = "";
 
   /**
    * A reference to the form history nsIAutocompleteResult that we're wrapping.
    * We use this to forward removeEntryAt calls as needed.
    */
-  _formHistResult: null,
+  _formHistResult = null;
 
-  entries: null,
+  entries = null;
 
   get wrappedJSObject() {
     return this;
-  },
+  }
 
   /**
    * @returns {number} the result code of this result object, either:
@@ -53,28 +56,28 @@ FormAutoCompleteResult.prototype = {
    */
   get searchResult() {
     return this._searchResult;
-  },
+  }
 
   /**
    * @returns {number} the default item that should be entered if none is selected
    */
   get defaultIndex() {
     return this._defaultIndex;
-  },
+  }
 
   /**
    * @returns {string} the reason the search failed
    */
   get errorDescription() {
     return this._errorDescription;
-  },
+  }
 
   /**
    * @returns {number} the number of results
    */
   get matchCount() {
     return this._items.length;
-  },
+  }
 
   _checkIndexBounds(index) {
     if (index < 0 || index >= this._items.length) {
@@ -83,7 +86,7 @@ FormAutoCompleteResult.prototype = {
         Cr.NS_ERROR_ILLEGAL_VALUE
       );
     }
-  },
+  }
 
   /**
    * Retrieves a result
@@ -94,12 +97,12 @@ FormAutoCompleteResult.prototype = {
   getValueAt(index) {
     this._checkIndexBounds(index);
     return this._items[index].value;
-  },
+  }
 
   getLabelAt(index) {
     this._checkIndexBounds(index);
     return this._items[index].label || this._items[index].value;
-  },
+  }
 
   /**
    * Retrieves a comment (metadata instance)
@@ -110,7 +113,7 @@ FormAutoCompleteResult.prototype = {
   getCommentAt(index) {
     this._checkIndexBounds(index);
     return this._items[index].comment;
-  },
+  }
 
   /**
    * Retrieves a style hint specific to a particular index.
@@ -121,20 +124,19 @@ FormAutoCompleteResult.prototype = {
   getStyleAt(index) {
     this._checkIndexBounds(index);
 
-    if (this._formHistResult && index < this._formHistResult.matchCount) {
+    if (index < this._formHistResult?.matchCount) {
       return "fromhistory";
     }
 
     if (
-      this._formHistResult &&
-      this._formHistResult.matchCount > 0 &&
+      this._formHistResult?.matchCount > 0 &&
       index == this._formHistResult.matchCount
     ) {
       return "datalist-first";
     }
 
     return null;
-  },
+  }
 
   /**
    * Retrieves an image url.
@@ -145,7 +147,7 @@ FormAutoCompleteResult.prototype = {
   getImageAt(index) {
     this._checkIndexBounds(index);
     return "";
-  },
+  }
 
   /**
    * Retrieves a result
@@ -155,7 +157,7 @@ FormAutoCompleteResult.prototype = {
    */
   getFinalCompleteValueAt(index) {
     return this.getValueAt(index);
-  },
+  }
 
   /**
    * Returns true if the value at the given index is removable
@@ -166,7 +168,7 @@ FormAutoCompleteResult.prototype = {
   isRemovableAt(index) {
     this._checkIndexBounds(index);
     return this._items[index].removable;
-  },
+  }
 
   /**
    * Removes a result from the resultset
@@ -183,8 +185,5 @@ FormAutoCompleteResult.prototype = {
       this._formHistResult.removeValueAt(index);
     }
     this._items.splice(index, 1);
-  },
-
-  // nsISupports
-  QueryInterface: ChromeUtils.generateQI(["nsIAutoCompleteResult"]),
-};
+  }
+}
