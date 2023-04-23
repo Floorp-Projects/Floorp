@@ -5234,15 +5234,7 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
   LOG("\tTiled: %d\n", int(mIsTiled));
 
   if (mWidgetListener && mSizeMode != oldSizeMode) {
-    if (mSizeMode == nsSizeMode_Fullscreen ||
-        oldSizeMode == nsSizeMode_Fullscreen) {
-      bool isFullscreen = mSizeMode == nsSizeMode_Fullscreen;
-      mWidgetListener->FullscreenWillChange(isFullscreen);
-      mWidgetListener->SizeModeChanged(mSizeMode);
-      mWidgetListener->FullscreenChanged(isFullscreen);
-    } else {
-      mWidgetListener->SizeModeChanged(mSizeMode);
-    }
+    mWidgetListener->SizeModeChanged(mSizeMode);
   }
 
   if (mDrawInTitlebar && mTransparencyBitmapForTitlebar) {

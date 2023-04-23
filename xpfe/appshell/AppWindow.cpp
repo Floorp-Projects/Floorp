@@ -2897,6 +2897,20 @@ bool AppWindow::RequestWindowClose(nsIWidget* aWidget) {
 }
 
 void AppWindow::SizeModeChanged(nsSizeMode aSizeMode) {
+  const bool wasWidgetInFullscreen = mIsWidgetInFullscreen;
+  // Fullscreen and minimized states are usually compatible, and the widget
+  // typically returns to fullscreen after restoration. By not updating the
+  // widget's fullscreen state while it is minimized, we can avoid unnecessary
+  // fullscreen exits, such as those encountered in bug 1823284.
+  if (aSizeMode != nsSizeMode_Minimized) {
+    mIsWidgetInFullscreen = aSizeMode == nsSizeMode_Fullscreen;
+  }
+
+  const bool fullscreenChanged = wasWidgetInFullscreen != mIsWidgetInFullscreen;
+  if (fullscreenChanged) {
+    FullscreenWillChange(mIsWidgetInFullscreen);
+  }
+
   // An alwaysRaised (or higher) window will hide any newly opened normal
   // browser windows, so here we just drop a raised window to the normal
   // zlevel if it's maximized. We make no provision for automatically
@@ -2938,6 +2952,10 @@ void AppWindow::SizeModeChanged(nsSizeMode aSizeMode) {
 
   if (PresShell* presShell = GetPresShell()) {
     presShell->GetPresContext()->SizeModeChanged(aSizeMode);
+  }
+
+  if (fullscreenChanged) {
+    FullscreenChanged(mIsWidgetInFullscreen);
   }
 
   // Note the current implementation of SetSizeMode just stores
@@ -3452,17 +3470,6 @@ void AppWindow::WidgetListenerDelegate::SizeModeChanged(nsSizeMode aSizeMode) {
 void AppWindow::WidgetListenerDelegate::UIResolutionChanged() {
   RefPtr<AppWindow> holder = mAppWindow;
   holder->UIResolutionChanged();
-}
-
-void AppWindow::WidgetListenerDelegate::FullscreenWillChange(
-    bool aInFullscreen) {
-  RefPtr<AppWindow> holder = mAppWindow;
-  holder->FullscreenWillChange(aInFullscreen);
-}
-
-void AppWindow::WidgetListenerDelegate::FullscreenChanged(bool aInFullscreen) {
-  RefPtr<AppWindow> holder = mAppWindow;
-  holder->FullscreenChanged(aInFullscreen);
 }
 
 void AppWindow::WidgetListenerDelegate::MacFullscreenMenubarOverlapChanged(
