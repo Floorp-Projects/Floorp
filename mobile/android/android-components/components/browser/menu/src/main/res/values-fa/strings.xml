@@ -5,7 +5,7 @@
     <!-- Content description (not visible, for screen readers etc.): Indicates the overflow menu has a highlight -->
     <string name="mozac_browser_menu_highlighted">برجسته‌شده</string>
     <!-- Label for add-ons submenu section -->
-    <string name="mozac_browser_menu_addons">افزودنی‌ها</string>
+    <string name="mozac_browser_menu_addons">افزونه‌ها</string>
     <!-- Label for add-ons sub menu item for add-ons manager -->
-    <string name="mozac_browser_menu_addons_manager">مدیریت افزودنی‌ها</string>
+    <string name="mozac_browser_menu_addons_manager">مدیریت افزونه‌ها</string>
 </resources>

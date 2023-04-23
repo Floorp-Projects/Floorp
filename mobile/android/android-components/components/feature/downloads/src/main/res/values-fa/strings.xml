@@ -16,7 +16,7 @@
     <!-- Alert dialog confirmation before download a file, this is the positive action. -->
     <string name="mozac_feature_downloads_dialog_download">بارگیری</string>
     <!-- Alert dialog confirmation before download a file, this is the negative action. -->
-    <string name="mozac_feature_downloads_dialog_cancel">انصراف</string>
+    <string name="mozac_feature_downloads_dialog_cancel">لغو</string>
     <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
     <string name="mozac_feature_downloads_file_not_supported2">%1$s نمی‌تواند این نوع پرونده را بارگیری کند</string>
 
@@ -31,7 +31,7 @@
     <!-- Button that resumes the download when pressed -->
     <string name="mozac_feature_downloads_button_resume">ازسرگیری</string>
     <!-- Button that cancels the download when pressed -->
-    <string name="mozac_feature_downloads_button_cancel">انصراف</string>
+    <string name="mozac_feature_downloads_button_cancel">لغو</string>
     <!-- Button that opens the downloaded file when pressed -->
     <string name="mozac_feature_downloads_button_open">باز کردن</string>
     <!-- Button that restarts the download after a failed attempt -->

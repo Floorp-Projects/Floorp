@@ -309,6 +309,12 @@
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Tawokisaj retal ruwi\' aq\'a\' richin man niq\'at ta chik ri chokoy</string>
 
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %s will be replaced by the app name (e.g. Firefox Focus)
+        Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
+    <string name="preference_security_biometric_summary2">Taq\'ata\' rik\'in ri retal ruwi\' q\'ab\'aj we xatz\'aqatisaj chojokem o toq jun ruxaq ajk\'amaya\'l jaqäl chik pa %s.</string>
+
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
     <string name="preference_privacy_secure_mode">Ewan</string>
@@ -525,6 +531,10 @@
     <!-- New Onboarding flow second screen subtitle the one that appears under title -->
     <string name="onboarding_second_screen_subtitle_one">Niqayüj ri anatab\'al toq natz\'apij ri chokoy richin awichinanem.</string>
 
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Tab\'ana\' chi re ri %1$s achi\'el k\'o wi richin ye\'achajij ri taq atzij pa xab\'achike ximoj xtajäq.</string>
+
     <!-- New Onboarding flow second screen make Focus default browser button label-->
     <string name="onboarding_second_screen_default_browser_button_text">Tiya\' kan achi\'el kanob\'äl k\'o wi</string>
 
@@ -694,6 +704,9 @@
     <!--  Title preference inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
     <string name="cookie_banner_reject_all_option_title">Kech\'utinirisäx kitzijol kuki</string>
 
+    <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_summary">Ke\'atz\'eta\' jub\'a\' taq rutzijol k\'ayij rik\'in yexutüx ri taq kik\'utuxik kuki toq ke ri\' nrajo\'.</string>
+
     <!-- Preference for removing cookie/consent banners from sites automatically, this is shown as part of the protections panel with the tracking protection toggle. -->--&gt;
     <string name="cookie_banner_exception_item_title">Kech\'utinirisäx kitzijol kuki</string>
 
@@ -727,8 +740,14 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
     <string name="cookie_banner_exception_panel_description_state_off_for_site2">%1$s nitikïr nutojtob\'ej yeruxutuj pa ruyonil ri kik\'utuxik taq kuki.</string>
 
+    <!-- Long text for a detail explanation indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
+    <string name="cookie_banner_exception_panel_description_site_is_not_supported">Wakami re ruxaq re\' man nuköch\' ta ri kich\'utinisaxik kitzijol kuki. ¿La nawajo\' nak\'utuj chi re ri qamolaj richin nunik\'oj re ruxaq ajk\'amaya\'l re\' chuqa\' tutz\'aqatisaj tob\'äl ri chwa\'q kab\'ij?</string>
+
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
     <string name="cookie_banner_exception_panel_site_is_not_supported_cancel_button">Tiq\'at</string>
+
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
+    <string name="cookie_banner_exception_panel_site_is_not_supported_request_support_button">Tik\'utüx to\'ïk</string>
 
     <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
     <string name="cfr_cookie_banner_link">taq nuk\'ulem</string>
@@ -999,4 +1018,7 @@
     promote search widget dialog. -->
     <string name="promote_search_widget_button_text">Titz\'aqatisäx widget pa ri rutikirib\'al ruwa</string>
 
-    </resources>
+    <!-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. -->
+    <string name="promote_search_widget_snackbar_message">Xtz\'aqatisäx widget pa ri rutikirib\'al ruwa</string>
+</resources>
