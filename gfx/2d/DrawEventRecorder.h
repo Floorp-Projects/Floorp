@@ -69,7 +69,7 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
   void AddStoredObject(const ReferencePtr aObject) {
     PendingDeletionsVector pendingDeletions;
     {
-      auto lockedPendingDeletions = mPendingDeleltions.Lock();
+      auto lockedPendingDeletions = mPendingDeletions.Lock();
       pendingDeletions.swap(*lockedPendingDeletions);
     }
     for (const auto& pendingDeletion : pendingDeletions) {
@@ -79,7 +79,7 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
   }
 
   void AddPendingDeletion(std::function<void()>&& aPendingDeletion) {
-    auto lockedPendingDeletions = mPendingDeleltions.Lock();
+    auto lockedPendingDeletions = mPendingDeletions.Lock();
     lockedPendingDeletions->emplace_back(std::move(aPendingDeletion));
   }
 
@@ -160,8 +160,8 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
   std::unordered_set<const void*> mStoredObjects;
 
   using PendingDeletionsVector = std::vector<std::function<void()>>;
-  DataMutex<PendingDeletionsVector> mPendingDeleltions{
-      "DrawEventRecorderPrivate::mPendingDeleltions"};
+  DataMutex<PendingDeletionsVector> mPendingDeletions{
+      "DrawEventRecorderPrivate::mPendingDeletions"};
 
   // It's difficult to track the lifetimes of UnscaledFonts directly, so we
   // instead track the number of recorded ScaledFonts that hold a reference to
