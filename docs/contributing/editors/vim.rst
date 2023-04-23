@@ -1,20 +1,43 @@
-VIM
-===
+Vim / Neovim
+============
 
 AutoCompletion
 --------------
 
-There's C++ and Rust auto-completion support for VIM via
-`YouCompleteMe <https://github.com/ycm-core/YouCompleteMe/>`__. As long as that
-is installed and you have run :code:`./mach build` or :code:`./mach configure`,
-it should work out of the box. Configuration for this lives in
-:code:`.ycm_extra_conf` at the root of the repo.
+For C++, anything that can use an LSP like :code:`coc.nvim`,
+:code:`nvim-lspconfig`, or what not, should work as long as you generate a
+:ref:`compilation database <CompileDB back-end-compileflags>` and point to it.
 
-If you don't like YouCompleteMe, other solutions also work, but they'll require
-you to create a :code:`compile_commands.json` file (see below for instructions).
+Additionally, `YouCompleteMe <https://github.com/ycm-core/YouCompleteMe/>`__
+works without the need of a C++ compilation database as long as you have run
+:code:`./mach build` or :code:`./mach configure`. Configuration for this lives
+in :searchfox:`.ycm_extra_conf <.ycm_extra_conf>` at the root of the repo.
 
-Rust auto-completion should work both with the default completer (RLS, as of
-this writing), or with `rust-analyzer <https://rust-analyzer.github.io/manual.html#youcompleteme>`__.
+Rust auto-completion should work both with Rust's LSP :code:`rust-analyzer`.
+
+Make sure that the LSP is configured in a way that it detects the root of the
+tree as a workspace, not the crate you happen to be editing. For example, the
+default of :code:`nvim-lspconfig` is to search for the closest
+:code:`Cargo.toml` file, which is not what you want. You'd want something like:
+
+.. code ::
+
+    root_dir = lspconfig.util.root_pattern(".git", ".hg")
+
+You also need to set some options to get full diagnostics:
+
+.. code ::
+
+   "rust-analyzer.server.extraEnv": {
+     "CARGO_TARGET_DIR": "/path/to/objdir"
+   },
+   "rust-analyzer.checkOnSave.overrideCommand": [ "/path/to/mach", "--log-no-times", "cargo", "check", "--all-crates", "--message-format-json" ],
+   "rust-analyzer.cargo.buildScripts.overrideCommand": [ "/path/to/mach", "--log-no-times", "cargo", "check", "--all-crates", "--message-format-json" ],
+
+The easiest way to make these work out of the box is using
+`neoconf <https://github.com/folke/neoconf.nvim/>`__, which
+automatically supports importing VSCode configuration files.
+:code:`./mach ide vscode` will then generate the right configuration for you.
 
 ESLint
 ------
