@@ -949,10 +949,13 @@ class NormalOriginOperationBase
  protected:
   NormalOriginOperationBase(const char* aRunnableName,
                             const Nullable<PersistenceType>& aPersistenceType,
-                            const OriginScope& aOriginScope, bool aExclusive)
+                            const OriginScope& aOriginScope,
+                            const Nullable<Client::Type> aClientType,
+                            bool aExclusive)
       : OriginOperationBase(GetCurrentSerialEventTarget(), aRunnableName),
         mOriginScope(aOriginScope),
         mPersistenceType(aPersistenceType),
+        mClientType(aClientType),
         mExclusive(aExclusive) {
     AssertIsOnOwningThread();
   }
@@ -988,6 +991,7 @@ class SaveOriginAccessTimeOp : public NormalOriginOperationBase {
       : NormalOriginOperationBase("dom::quota::SaveOriginAccessTimeOp",
                                   Nullable<PersistenceType>(aPersistenceType),
                                   OriginScope::FromOrigin(aOrigin),
+                                  Nullable<Client::Type>(),
                                   /* aExclusive */ false),
         mTimestamp(aTimestamp) {
     AssertIsOnOwningThread();
@@ -1006,10 +1010,10 @@ class ShutdownStorageOp : public NormalOriginOperationBase {
 
  public:
   ShutdownStorageOp()
-      : NormalOriginOperationBase("dom::quota::ShutdownStorageOp",
-                                  Nullable<PersistenceType>(),
-                                  OriginScope::FromNull(),
-                                  /* aExclusive */ true) {
+      : NormalOriginOperationBase(
+            "dom::quota::ShutdownStorageOp", Nullable<PersistenceType>(),
+            OriginScope::FromNull(), Nullable<Client::Type>(),
+            /* aExclusive */ true) {
     AssertIsOnOwningThread();
   }
 
@@ -1092,6 +1096,7 @@ class QuotaUsageRequestBase : public NormalOriginOperationBase,
   QuotaUsageRequestBase(const char* aRunnableName)
       : NormalOriginOperationBase(aRunnableName, Nullable<PersistenceType>(),
                                   OriginScope::FromNull(),
+                                  Nullable<Client::Type>(),
                                   /* aExclusive */ false) {}
 
   mozilla::Result<UsageInfo, nsresult> GetUsageForOrigin(
@@ -1199,7 +1204,8 @@ class QuotaRequestBase : public NormalOriginOperationBase,
  protected:
   explicit QuotaRequestBase(const char* aRunnableName, bool aExclusive)
       : NormalOriginOperationBase(aRunnableName, Nullable<PersistenceType>(),
-                                  OriginScope::FromNull(), aExclusive) {}
+                                  OriginScope::FromNull(),
+                                  Nullable<Client::Type>(), aExclusive) {}
 
   // Subclasses use this override to set the IPDL response value.
   virtual void GetResponse(RequestResponse& aResponse) = 0;
