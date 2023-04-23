@@ -11,36 +11,36 @@ ChromeUtils.defineESModuleGetters(lazy, {
 export class FormHistoryParent extends JSWindowActorParent {
   receiveMessage(message) {
     switch (message.name) {
-      case "FormHistory:FormSubmitEntries": {
-        let entries = message.data;
-        let changes = entries.map(entry => ({
-          op: "bump",
-          fieldname: entry.name,
-          value: entry.value,
-        }));
-
-        lazy.FormHistory.update(changes);
+      case "FormHistory:FormSubmitEntries":
+        this.#onFormSubmitEntries(message.data);
         break;
-      }
 
       case "FormHistory:AutoCompleteSearchAsync":
-        return this.autoCompleteSearch(message);
+        return this.#onAutoCompleteSearch(message.data);
 
       case "FormHistory:RemoveEntry":
-        this.removeEntry(message);
+        this.#onRemoveEntry(message.data);
         break;
     }
 
     return undefined;
   }
 
-  autoCompleteSearch(message) {
-    let { searchString, params } = message.data;
+  #onFormSubmitEntries(entries) {
+    const changes = entries.map(entry => ({
+      op: "bump",
+      fieldname: entry.name,
+      value: entry.value,
+    }));
+
+    lazy.FormHistory.update(changes);
+  }
+
+  #onAutoCompleteSearch({ searchString, params }) {
     return lazy.FormHistory.getAutoCompleteResults(searchString, params);
   }
 
-  removeEntry(message) {
-    let { inputName, value, guid } = message.data;
+  #onRemoveEntry({ inputName, value, guid }) {
     lazy.FormHistory.update({
       op: "remove",
       fieldname: inputName,

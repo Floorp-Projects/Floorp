@@ -128,10 +128,10 @@ var Prefs = {
       this._prefBranch.getIntPref("timeGroupingSize") * 1000 * 1000;
   },
 
-  observe(subject, topic, data) {
+  observe(_subject, topic, data) {
     if (topic == "nsPref:changed") {
       let prefName = data;
-      log("got change to " + prefName + " preference");
+      log(`got change to ${prefName} preference`);
 
       switch (prefName) {
         case "agedWeight":
@@ -183,20 +183,20 @@ function log(aMessage) {
 
 function sendNotification(aType, aData) {
   if (typeof aData == "string") {
-    let strWrapper = Cc["@mozilla.org/supports-string;1"].createInstance(
+    const strWrapper = Cc["@mozilla.org/supports-string;1"].createInstance(
       Ci.nsISupportsString
     );
     strWrapper.data = aData;
     aData = strWrapper;
   } else if (typeof aData == "number") {
-    let intWrapper = Cc["@mozilla.org/supports-PRInt64;1"].createInstance(
+    const intWrapper = Cc["@mozilla.org/supports-PRInt64;1"].createInstance(
       Ci.nsISupportsPRInt64
     );
     intWrapper.data = aData;
     aData = intWrapper;
   } else if (aData) {
     throw Components.Exception(
-      "Invalid type " + typeof aType + " passed to sendNotification",
+      `Invalid type ${typeof aType} passed to sendNotification`,
       Cr.NS_ERROR_ILLEGAL_VALUE
     );
   }
@@ -283,10 +283,10 @@ function validateOpData(aData, aDataType) {
   if (aDataType == "Update" && "newGuid" in aData) {
     thisValidFields = ["guid", "newGuid"];
   }
-  for (let field in aData) {
+  for (const field in aData) {
     if (field != "op" && !thisValidFields.includes(field)) {
       throw Components.Exception(
-        aDataType + " query contains an unrecognized field: " + field,
+        `${aDataType} query contains an unrecognized field: ${field}`,
         Cr.NS_ERROR_ILLEGAL_VALUE
       );
     }
@@ -295,14 +295,14 @@ function validateOpData(aData, aDataType) {
 }
 
 function validateSearchData(aData, aDataType) {
-  for (let field in aData) {
+  for (const field in aData) {
     if (
       field != "op" &&
       !validFields.includes(field) &&
       !searchFilters.includes(field)
     ) {
       throw Components.Exception(
-        aDataType + " query contains an unrecognized field: " + field,
+        `${aDataType} query contains an unrecognized field: ${field}`,
         Cr.NS_ERROR_ILLEGAL_VALUE
       );
     }
@@ -310,32 +310,27 @@ function validateSearchData(aData, aDataType) {
 }
 
 function makeQueryPredicates(aQueryData, delimiter = " AND ") {
-  let params = {};
-  let queryTerms = Object.keys(aQueryData)
+  const params = {};
+  const queryTerms = Object.keys(aQueryData)
     .filter(field => aQueryData[field] !== undefined)
     .map(field => {
       params[field] = aQueryData[field];
       switch (field) {
-        case "firstUsedStart": {
+        case "firstUsedStart":
           return "firstUsed >= :" + field;
-        }
-        case "firstUsedEnd": {
+        case "firstUsedEnd":
           return "firstUsed <= :" + field;
-        }
-        case "lastUsedStart": {
+        case "lastUsedStart":
           return "lastUsed >= :" + field;
-        }
-        case "lastUsedEnd": {
+        case "lastUsedEnd":
           return "lastUsed <= :" + field;
-        }
-        case "source": {
+        case "source":
           return `EXISTS(
             SELECT 1 FROM moz_history_to_sources
             JOIN moz_sources s ON s.id = source_id
             WHERE source = :${field}
               AND history_id = moz_formhistory.id
           )`;
-        }
       }
       return field + " = :" + field;
     })
@@ -345,7 +340,7 @@ function makeQueryPredicates(aQueryData, delimiter = " AND ") {
 
 function generateGUID() {
   // string like: "{f60d9eac-9421-4abc-8491-8e8322b063d4}"
-  let uuid = Services.uuid.generateUUID().toString();
+  const uuid = Services.uuid.generateUUID().toString();
   let raw = ""; // A string with the low bytes set to random values
   let bytes = 0;
   for (let i = 1; bytes < 12; i += 2) {
@@ -353,7 +348,7 @@ function generateGUID() {
     if (uuid[i] == "-") {
       i++;
     }
-    let hexVal = parseInt(uuid[i] + uuid[i + 1], 16);
+    const hexVal = parseInt(uuid[i] + uuid[i + 1], 16);
     raw += String.fromCharCode(hexVal);
     bytes++;
   }
@@ -364,7 +359,7 @@ var Migrators = {
   // Bug 506402 - Adds deleted form history table.
   async dbAsyncMigrateToVersion4(conn) {
     const tableName = "moz_deleted_formhistory";
-    let tableExists = await conn.tableExists(tableName);
+    const tableExists = await conn.tableExists(tableName);
     if (!tableExists) {
       await createTable(conn, tableName);
     }
@@ -373,7 +368,7 @@ var Migrators = {
   // Bug 1654862 - Adds sources and moz_history_to_sources tables.
   async dbAsyncMigrateToVersion5(conn) {
     if (!(await conn.tableExists("moz_sources"))) {
-      for (let tableName of ["moz_history_to_sources", "moz_sources"]) {
+      for (const tableName of ["moz_history_to_sources", "moz_sources"]) {
         await createTable(conn, tableName);
       }
     }
@@ -400,8 +395,8 @@ var Migrators = {
  *          The query information needed to pass along to the database.
  */
 function prepareInsertQuery(change, now) {
-  let params = {};
-  for (let key of new Set([
+  const params = {};
+  for (const key of new Set([
     ...Object.keys(change),
     // These must always be NOT NULL.
     "firstUsed",
@@ -444,7 +439,7 @@ var InProgressInserts = {
   _inProgress: new Map(),
 
   add(fieldname, value) {
-    let fieldnameSet = this._inProgress.get(fieldname);
+    const fieldnameSet = this._inProgress.get(fieldname);
     if (!fieldnameSet) {
       this._inProgress.set(fieldname, new Set([value]));
       return true;
@@ -459,13 +454,9 @@ var InProgressInserts = {
   },
 
   clear(fieldnamesAndValues) {
-    for (let [fieldname, value] of fieldnamesAndValues) {
-      let fieldnameSet = this._inProgress.get(fieldname);
-      if (
-        fieldnameSet &&
-        fieldnameSet.delete(value) &&
-        fieldnameSet.size == 0
-      ) {
+    for (const [fieldname, value] of fieldnamesAndValues) {
+      const fieldnameSet = this._inProgress.get(fieldname);
+      if (fieldnameSet?.delete(value) && fieldnameSet.size == 0) {
         this._inProgress.delete(fieldname);
       }
     }
@@ -503,19 +494,19 @@ async function updateFormHistoryWrite(aChanges) {
   log("updateFormHistoryWrite  " + aChanges.length);
 
   // pass 'now' down so that every entry in the batch has the same timestamp
-  let now = Date.now() * 1000;
+  const now = Date.now() * 1000;
   let queries = [];
-  let notifications = [];
-  let adds = [];
-  let conn = await FormHistory.db;
+  const notifications = [];
+  const adds = [];
+  const conn = await FormHistory.db;
 
-  for (let change of aChanges) {
-    let operation = change.op;
+  for (const change of aChanges) {
+    const operation = change.op;
     delete change.op;
     switch (operation) {
       case "remove": {
         log("Remove from form history  " + change);
-        let { queryTerms, params } = makeQueryPredicates(change);
+        const { queryTerms, params } = makeQueryPredicates(change);
 
         // If source is defined, we only remove the source relation, if the
         // consumer intends to remove the value from everywhere, then they
@@ -592,7 +583,7 @@ async function updateFormHistoryWrite(aChanges) {
       }
       case "update": {
         log("Update form history " + change);
-        let guid = change.guid;
+        const guid = change.guid;
         delete change.guid;
         // a special case for updating the GUID - the new value can be
         // specified in newGuid.
@@ -625,10 +616,10 @@ async function updateFormHistoryWrite(aChanges) {
       case "bump": {
         log("Bump form history " + change);
         if (change.guid) {
-          let query =
+          const query =
             "UPDATE moz_formhistory " +
             "SET timesUsed = timesUsed + 1, lastUsed = :lastUsed WHERE guid = :guid";
-          let queryParams = {
+          const queryParams = {
             lastUsed: now,
             guid: change.guid,
           };
@@ -643,7 +634,7 @@ async function updateFormHistoryWrite(aChanges) {
           }
           adds.push([change.fieldname, change.value]);
           change.guid = generateGUID();
-          let { query, params } = prepareInsertQuery(change, now);
+          const { query, params } = prepareInsertQuery(change, now);
           queries.push({ query, params });
           notifications.push(["formhistory-add", params.guid]);
         }
@@ -668,7 +659,7 @@ async function updateFormHistoryWrite(aChanges) {
           change.guid = generateGUID();
         }
 
-        let { query, params } = prepareInsertQuery(change, now);
+        const { query, params } = prepareInsertQuery(change, now);
         queries.push({ query, params });
 
         notifications.push(["formhistory-add", params.guid]);
@@ -692,11 +683,11 @@ async function updateFormHistoryWrite(aChanges) {
 
   try {
     await conn.executeTransaction(async () => {
-      for (let { query, params } of queries) {
+      for (const { query, params } of queries) {
         await conn.executeCached(query, params);
       }
     });
-    for (let [notification, param] of notifications) {
+    for (const [notification, param] of notifications) {
       // We're either sending a GUID or nothing at all.
       sendNotification(notification, param);
     }
@@ -718,7 +709,7 @@ async function updateFormHistoryWrite(aChanges) {
  * @returns {Promise} resolved once the work is complete
  */
 async function expireOldEntriesDeletion(aExpireTime, aBeginningCount) {
-  log("expireOldEntriesDeletion(" + aExpireTime + "," + aBeginningCount + ")");
+  log(`expireOldEntriesDeletion(${aExpireTime},${aBeginningCount})`);
 
   await FormHistory.update([
     {
@@ -736,23 +727,23 @@ async function expireOldEntriesDeletion(aExpireTime, aBeginningCount) {
  * @param {number} aBeginningCount number of entries at first
  */
 async function expireOldEntriesVacuum(aExpireTime, aBeginningCount) {
-  let count = await FormHistory.count({});
+  const count = await FormHistory.count({});
   if (aBeginningCount - count > 500) {
     log("expireOldEntriesVacuum");
-    let conn = await FormHistory.db;
+    const conn = await FormHistory.db;
     await conn.executeCached("VACUUM");
   }
   sendNotification("formhistory-expireoldentries", aExpireTime);
 }
 
 async function createTable(conn, tableName) {
-  let table = dbSchema.tables[tableName];
-  let columns = Object.keys(table)
+  const table = dbSchema.tables[tableName];
+  const columns = Object.keys(table)
     .filter(col => col != "SQL")
     .map(col => [col, table[col]].join(" "))
     .join(", ");
-  let no_rowid = Object.keys(table).includes("id") ? "" : "WITHOUT ROWID";
-  log("Creating table " + tableName + " with " + columns);
+  const no_rowid = Object.keys(table).includes("id") ? "" : "WITHOUT ROWID";
+  log(`Creating table ${tableName} with ${columns}`);
   await conn.execute(
     `CREATE TABLE ${tableName} (
       ${columns}
@@ -796,7 +787,7 @@ var DB = {
    */
   get conn() {
     delete this.conn;
-    let conn = (async () => {
+    const conn = (async () => {
       try {
         this._instance = await this._establishConn();
       } catch (e) {
@@ -861,7 +852,7 @@ var DB = {
       // Enable foreign keys support.
       await conn.execute("PRAGMA foreign_keys = ON");
 
-      let dbVersion = parseInt(await conn.getSchemaVersion(), 10);
+      const dbVersion = parseInt(await conn.getSchemaVersion(), 10);
 
       // Case 1: Database is up to date and we're ready to go.
       if (dbVersion == DB_SCHEMA_VERSION) {
@@ -908,21 +899,16 @@ var DB = {
         // Case 4: New database
         await conn.executeTransaction(async () => {
           log("Creating DB -- tables");
-          for (let name in dbSchema.tables) {
+          for (const name in dbSchema.tables) {
             await createTable(conn, name);
           }
 
           log("Creating DB -- indices");
-          for (let name in dbSchema.indices) {
-            let index = dbSchema.indices[name];
-            let statement =
-              "CREATE INDEX IF NOT EXISTS " +
-              name +
-              " ON " +
-              index.table +
-              "(" +
-              index.columns.join(", ") +
-              ")";
+          for (const name in dbSchema.indices) {
+            const index = dbSchema.indices[name];
+            const statement = `CREATE INDEX IF NOT EXISTS ${name} ON ${
+              index.table
+            }(${index.columns.join(", ")})`;
             await conn.execute(statement);
           }
         });
@@ -930,7 +916,7 @@ var DB = {
         // Case 5: Old database requiring a migration
         await conn.executeTransaction(async () => {
           for (let v = dbVersion + 1; v <= DB_SCHEMA_VERSION; v++) {
-            log("Upgrading to version " + v + "...");
+            log(`Upgrading to version ${v}...`);
             await Migrators["dbAsyncMigrateToVersion" + v](conn);
           }
         });
@@ -975,8 +961,8 @@ var DB = {
     if (conn) {
       await conn.close();
     }
-    let backupFile = this.path + ".corrupt";
-    let uniquePath = await IOUtils.createUniqueFile(
+    const backupFile = this.path + ".corrupt";
+    const uniquePath = await IOUtils.createUniqueFile(
       PathUtils.parent(backupFile),
       PathUtils.filename(backupFile),
       0o600
@@ -995,12 +981,12 @@ var DB = {
    * @returns {Promise<boolean>} true if all expected columns are present.
    */
   async _expectedColumnsPresent(conn) {
-    for (let name in dbSchema.tables) {
-      let table = dbSchema.tables[name];
-      let columns = Object.keys(table).filter(col => col != "SQL");
-      let query = "SELECT " + columns.join(", ") + " FROM " + name;
+    for (const name in dbSchema.tables) {
+      const table = dbSchema.tables[name];
+      const columns = Object.keys(table).filter(col => col != "SQL");
+      const query = `SELECT ${columns.join(", ")} FROM ${name}`;
       try {
-        await conn.execute(query, null, (row, cancel) => {
+        await conn.execute(query, null, (_row, cancel) => {
           // One row is enough to let us know this worked.
           cancel();
         });
@@ -1032,23 +1018,21 @@ FormHistory = {
 
     validateSearchData(aSearchData, "Search");
 
-    let query = "SELECT " + aSelectTerms.join(", ") + " FROM moz_formhistory";
-    let { queryTerms, params } = makeQueryPredicates(aSearchData);
+    let query = `SELECT ${aSelectTerms.join(", ")} FROM moz_formhistory`;
+    const { queryTerms, params } = makeQueryPredicates(aSearchData);
     if (queryTerms) {
       query += " WHERE " + queryTerms;
     }
 
-    let allResults = [];
+    const allResults = [];
 
-    let conn = await this.db;
+    const conn = await this.db;
     await conn.executeCached(query, params, row => {
-      let result = {};
-      for (let field of aSelectTerms) {
+      const result = {};
+      for (const field of aSelectTerms) {
         result[field] = row.getResultByName(field);
       }
-      if (aRowFunc) {
-        aRowFunc(result);
-      }
+      aRowFunc?.(result);
       allResults.push(result);
     });
 
@@ -1059,13 +1043,13 @@ FormHistory = {
     validateSearchData(aSearchData, "Count");
 
     let query = "SELECT COUNT(*) AS numEntries FROM moz_formhistory";
-    let { queryTerms, params } = makeQueryPredicates(aSearchData);
+    const { queryTerms, params } = makeQueryPredicates(aSearchData);
     if (queryTerms) {
       query += " WHERE " + queryTerms;
     }
 
-    let conn = await this.db;
-    let rows = await conn.executeCached(query, params);
+    const conn = await this.db;
+    const rows = await conn.executeCached(query, params);
     return rows[0].getResultByName("numEntries");
   },
 
@@ -1080,16 +1064,14 @@ FormHistory = {
       aChanges = [aChanges];
     }
 
-    let isRemoveOperation = aChanges.every(
-      change => change && change.op && change.op == "remove"
-    );
+    const isRemoveOperation = aChanges.every(change => change?.op == "remove");
     if (!this.enabled && !isRemoveOperation) {
       throw new Error(
         "Form history is disabled, only remove operations are allowed"
       );
     }
 
-    for (let change of aChanges) {
+    for (const change of aChanges) {
       switch (change.op) {
         case "remove":
           validateSearchData(change, "Remove");
@@ -1137,17 +1119,15 @@ FormHistory = {
           );
       }
 
-      let results = await FormHistory.search(["guid"], {
+      const results = await FormHistory.search(["guid"], {
         fieldname: change.fieldname,
         value: change.value,
       });
       if (results.length > 1) {
-        log(
-          "Database contains multiple entries with the same fieldname/value pair."
-        );
-        throw new Error(
-          "Database contains multiple entries with the same fieldname/value pair."
-        );
+        const error =
+          "Database contains multiple entries with the same fieldname/value pair.";
+        log(error);
+        throw new Error(error);
       }
       change.guid = results[0]?.guid;
     }
@@ -1208,14 +1188,9 @@ FormHistory = {
         params["tokenContains" + i] = "%" + escapedToken + "%";
 
         tokenCalc.push(
-          "(value LIKE :tokenBegin" +
-            i +
-            " ESCAPE '/') + " +
-            "(value LIKE :tokenBoundary" +
-            i +
-            " ESCAPE '/')"
+          `(value LIKE :tokenBegin${i} ESCAPE '/') + (value LIKE :tokenBoundary${i} ESCAPE '/')`
         );
-        where += "AND (value LIKE :tokenContains" + i + " ESCAPE '/') ";
+        where += `AND (value LIKE :tokenContains${i} ESCAPE '/') `;
       }
       // add more weight if we have a traditional prefix match and
       // multiply boundary bonuses by boundary weight
@@ -1253,7 +1228,7 @@ FormHistory = {
      * to reduce the amount of moving around by entries while typing.
      */
 
-    let query =
+    const query =
       "/* do not warn (bug 496471): can't use an index */ " +
       "SELECT value, guid, " +
       "ROUND( " +
@@ -1269,23 +1244,23 @@ FormHistory = {
       where +
       "ORDER BY ROUND(frecency * boundaryBonuses) DESC, UPPER(value) ASC";
 
-    let results = [];
+    const results = [];
     let cancelled = false;
     function cancelFn() {
       cancelled = true;
     }
 
-    let conn = await this.db;
+    const conn = await this.db;
     await conn.executeCached(query, params, (row, cancel) => {
       if (cancelled) {
         cancel();
         return;
       }
 
-      let value = row.getResultByName("value");
-      let guid = row.getResultByName("guid");
-      let frecency = row.getResultByName("frecency");
-      let entry = {
+      const value = row.getResultByName("value");
+      const guid = row.getResultByName("guid");
+      const frecency = row.getResultByName("frecency");
+      const entry = {
         text: value,
         guid,
         textLowerCase: value.toLowerCase(),
@@ -1294,9 +1269,7 @@ FormHistory = {
           frecency * row.getResultByName("boundaryBonuses")
         ),
       };
-      if (callback) {
-        callback(entry, cancelFn);
-      }
+      callback?.(entry, cancelFn);
       results.push(entry);
     });
     return cancelled ? [] : results;
@@ -1316,11 +1289,12 @@ FormHistory = {
 
     // Determine how many days of history we're supposed to keep.
     // Calculate expireTime in microseconds
-    let expireTime = (Date.now() - Prefs.get("expireDays") * DAY_IN_MS) * 1000;
+    const expireTime =
+      (Date.now() - Prefs.get("expireDays") * DAY_IN_MS) * 1000;
 
     sendNotification("formhistory-beforeexpireoldentries", expireTime);
 
-    let count = await FormHistory.count({});
+    const count = await FormHistory.count({});
     await expireOldEntriesDeletion(expireTime, count);
   },
 };
