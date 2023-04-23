@@ -361,19 +361,16 @@ imply_option("--build-backends", build_backend)
     target,
     "--enable-artifact-builds",
     "--disable-compile-environment",
-    "--enable-build-backend",
     "--enable-project",
     "--enable-application",
     "--help",
 )
 @imports("sys")
-@imports(_from="mozbuild.backend.clangd", _import="find_vscode_cmd")
 def build_backend_defaults(
     host,
     target,
     artifact_builds,
     compile_environment,
-    requested_backends,
     project,
     application,
     _,
@@ -383,11 +380,7 @@ def build_backend_defaults(
     elif project:
         project = project[0]
 
-    if "Tup" in requested_backends:
-        # As a special case, if Tup was requested, do not combine it with any
-        # Make based backend by default.
-        all_backends = []
-    elif artifact_builds:
+    if artifact_builds:
         all_backends = ["FasterMake+RecursiveMake"]
     else:
         all_backends = ["RecursiveMake", "FasterMake"]
@@ -398,11 +391,7 @@ def build_backend_defaults(
         and project not in ("mobile/android", "memory", "tools/update-programs")
     ):
         all_backends.append("VisualStudio")
-    if (
-        compile_environment
-        and find_vscode_cmd()
-        and project not in ("mobile/android", "memory", "tools/update-programs")
-    ):
+    if compile_environment and project not in ("memory", "tools/update-programs"):
         all_backends.append("Clangd")
     return tuple(all_backends) or None
 
