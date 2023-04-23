@@ -390,7 +390,6 @@ nsresult HeadlessWidget::MakeFullScreen(bool aFullScreen) {
   // resize events.
   if (mWidgetListener) {
     mWidgetListener->SizeModeChanged(mSizeMode);
-    mWidgetListener->FullscreenChanged(aFullScreen);
   }
 
   // Real widget backends don't seem to follow a common approach for
