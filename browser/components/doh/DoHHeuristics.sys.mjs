@@ -188,47 +188,15 @@ async function dnsListLookup(domainList) {
 }
 
 // TODO: Confirm the expected behavior when filtering is on
-export async function globalCanary() {
-  // Check that a commonly used domain resolves before and after
-  // checking the global canary.
-  // If this check fails, the globalCanary isn't to be trusted, as it's
-  // an indication it might have failed due to DNS being unavailable.
-  async function preconditionCheck(domain) {
-    let { addresses, err } = await dnsLookup(domain);
-    if (err === NXDOMAIN_ERR || !addresses.length) {
-      return false;
-    }
-    return true;
-  }
-
-  let preCheckSuccess = await preconditionCheck("example.com.");
-  if (!preCheckSuccess) {
-    return "enable_doh";
-  }
-
-  // Actual global canary check
+async function globalCanary() {
   let { addresses, err } = await dnsLookup(GLOBAL_CANARY);
-
-  let postCheckSuccess = await preconditionCheck("example.org.");
-  if (!postCheckSuccess) {
-    return "enable_doh";
-  }
-
-  function isLocal(addr) {
-    // hostnameIsLocalIPAddress does not return true for loopback addresses
-    // so we specifically handle these.
-    if (addr == "127.0.0.1" || addr == "::1" || addr == "0.0.0.0") {
-      return true;
-    }
-    return Services.io.hostnameIsLocalIPAddress(
-      Services.io.newURI(`http://${addr}`)
-    );
-  }
 
   if (
     err === NXDOMAIN_ERR ||
     !addresses.length ||
-    addresses.every(addr => isLocal(addr))
+    addresses.every(addr =>
+      Services.io.hostnameIsLocalIPAddress(Services.io.newURI(`http://${addr}`))
+    )
   ) {
     return "disable_doh";
   }
