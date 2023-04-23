@@ -1207,6 +1207,13 @@ class QuotaRequestBase : public NormalOriginOperationBase,
                                   OriginScope::FromNull(),
                                   Nullable<Client::Type>(), aExclusive) {}
 
+  QuotaRequestBase(const char* aRunnableName,
+                   const Nullable<PersistenceType>& aPersistenceType,
+                   const OriginScope& aOriginScope,
+                   const Nullable<Client::Type>& aClientType, bool aExclusive)
+      : NormalOriginOperationBase(aRunnableName, aPersistenceType, aOriginScope,
+                                  aClientType, aExclusive) {}
+
   // Subclasses use this override to set the IPDL response value.
   virtual void GetResponse(RequestResponse& aResponse) = 0;
 
@@ -1383,6 +1390,13 @@ class ClearRequestBase : public QuotaRequestBase {
       : QuotaRequestBase(aRunnableName, aExclusive) {
     AssertIsOnOwningThread();
   }
+
+  ClearRequestBase(const char* aRunnableName,
+                   const Nullable<PersistenceType>& aPersistenceType,
+                   const OriginScope& aOriginScope,
+                   const Nullable<Client::Type>& aClientType, bool aExclusive)
+      : QuotaRequestBase(aRunnableName, aPersistenceType, aOriginScope,
+                         aClientType, aExclusive) {}
 
   void DeleteFiles(QuotaManager& aQuotaManager,
                    PersistenceType aPersistenceType);
