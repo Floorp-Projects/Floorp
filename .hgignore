@@ -33,6 +33,7 @@ compile_commands\.json
 
 # User files that may appear at the root
 ^\.clang-tidy
+^\.clangd
 ^\.mozconfig
 ^mozconfig*
 ^\.moz-fast-forward
