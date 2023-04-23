@@ -61,6 +61,36 @@ add_task(async function() {
     0,
     "We stopped recording traces, an the function call isn't logged in the console"
   );
+
+  await navigate(dbg, "doc-sourcemaps2.html", "main.js", "main.min.js");
+
+  info("Re-enable the tracing after navigation");
+  await clickElement(dbg, "trace");
+
+  const newTopLevelThread =
+    dbg.toolbox.commands.targetCommand.targetFront.threadFront.actorID;
+  info("Wait for tracing to be re-enabled");
+  await waitForState(dbg, state => {
+    return dbg.selectors.getIsThreadCurrentlyTracing(newTopLevelThread);
+  });
+
+  invokeInTab("logMessage");
+
+  await hasConsoleMessage(dbg, "λ logMessage");
+
+  const traceMessages2 = await findConsoleMessages(dbg.toolbox, "λ logMessage");
+  is(
+    traceMessages2.length,
+    1,
+    "We got a unique trace for 'logMessage' function call"
+  );
+  const sourceLink2 = traceMessages2[0].querySelector(".frame-link-source");
+  sourceLink2.click();
+
+  info("Wait for the 'logMessage' function to be highlighted in the debugger");
+  await waitForSelectedSource(dbg, "main.js");
+  await waitForSelectedLocation(dbg, 4, 2);
+  ok(true, "The selected source and location is on the original file");
 });
 
 add_task(async function testPersitentLogMethod() {
