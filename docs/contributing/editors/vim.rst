@@ -37,7 +37,8 @@ You also need to set some options to get full diagnostics:
 The easiest way to make these work out of the box is using
 `neoconf <https://github.com/folke/neoconf.nvim/>`__, which
 automatically supports importing VSCode configuration files.
-:code:`./mach ide vscode` will then generate the right configuration for you.
+:code:`./mach ide vscode --no-interactive` will then generate the right
+configuration for you.
 
 ESLint
 ------
