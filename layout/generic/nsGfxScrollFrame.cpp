@@ -6545,9 +6545,7 @@ void nsHTMLScrollFrame::LayoutScrollbars(ScrollReflowInput& aState,
       // not visible because it is positioned just outside the scrollport. But
       // we know that it needs to be made visible so we shift it back in.
       vRect.width += width;
-      if (scrollbarOnLeft) {
-        vRect.x += width;
-      } else {
+      if (!scrollbarOnLeft) {
         vRect.x -= width;
       }
     }
