@@ -293,7 +293,6 @@ static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
 
   // If a hint is available, skip the warmup count threshold.
   bool mightHaveEagerBaselineHint = false;
-#ifdef NIGHTLY_BUILD
   if (!JitOptions.disableJitHints && !script->noEagerBaselineHint()) {
     JitHintsMap* jitHints = cx->runtime()->jitRuntime()->getJitHintsMap();
     // If this lookup fails, the NoEagerBaselineHint script flag is set
@@ -302,7 +301,6 @@ static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
       mightHaveEagerBaselineHint = true;
     }
   }
-#endif
   // Check script warm-up counter if no hint.
   if (!mightHaveEagerBaselineHint) {
     if (script->getWarmUpCount() <= JitOptions.baselineJitWarmUpThreshold) {

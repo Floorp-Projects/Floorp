@@ -7470,11 +7470,12 @@
   mirror: always  # LoadStartupJSPrefs
   do_not_use_directly: true
 
-# Jit Hints Cache - An in-process cache to
-# accelerate repeated baseline compilations
-- name: javascript.options.jitHints
+# Jit Hints Cache - An in-process cache for the 
+# content process to accelerate repeated baseline 
+# compilations
+- name: javascript.options.jithints
   type: bool
-  value: true
+  value: @IS_NIGHTLY_BUILD@
   mirror: always  # LoadStartupJSPrefs
   do_not_use_directly: true
 
