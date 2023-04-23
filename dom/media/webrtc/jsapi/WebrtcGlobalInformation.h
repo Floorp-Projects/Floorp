@@ -45,7 +45,6 @@ class WebrtcGlobalInformation {
 
   static void StashStats(const RTCStatsReportInternal& aReport);
 
- private:
   WebrtcGlobalInformation() = delete;
   WebrtcGlobalInformation(const WebrtcGlobalInformation& aOrig) = delete;
   WebrtcGlobalInformation& operator=(const WebrtcGlobalInformation& aRhs) =

@@ -36,10 +36,10 @@
 
 namespace mozilla::dom {
 
-typedef nsMainThreadPtrHandle<WebrtcGlobalStatisticsCallback>
-    StatsRequestCallback;
+using StatsRequestCallback =
+    nsMainThreadPtrHandle<WebrtcGlobalStatisticsCallback>;
 
-typedef nsMainThreadPtrHandle<WebrtcGlobalLoggingCallback> LogRequestCallback;
+using LogRequestCallback = nsMainThreadPtrHandle<WebrtcGlobalLoggingCallback>;
 
 class WebrtcContentParents {
  public:
@@ -50,11 +50,12 @@ class WebrtcContentParents {
     return sContentParents;
   }
 
- private:
-  static std::vector<RefPtr<WebrtcGlobalParent>> sContentParents;
   WebrtcContentParents() = delete;
   WebrtcContentParents(const WebrtcContentParents&) = delete;
   WebrtcContentParents& operator=(const WebrtcContentParents&) = delete;
+
+ private:
+  static std::vector<RefPtr<WebrtcGlobalParent>> sContentParents;
 };
 
 std::vector<RefPtr<WebrtcGlobalParent>> WebrtcContentParents::sContentParents;
@@ -98,7 +99,7 @@ GetStatsPromiseForThisProcess(const nsAString& aPcIdFilter) {
   nsTArray<RefPtr<dom::RTCStatsReportPromise>> promises;
 
   std::set<nsString> pcids;
-  if (auto ctx = GetPeerConnectionCtx()) {
+  if (auto* ctx = GetPeerConnectionCtx()) {
     // Grab stats for PCs that still exist
     ctx->ForEachPeerConnection([&](PeerConnectionImpl* aPc) {
       if (!aPcIdFilter.IsEmpty() &&
@@ -159,7 +160,7 @@ static std::map<int32_t, dom::Sequence<nsString>>& GetWebrtcGlobalLogStash() {
 
 static void ClearLongTermStats() {
   GetWebrtcGlobalStatsStash().Clear();
-  if (auto ctx = GetPeerConnectionCtx()) {
+  if (auto* ctx = GetPeerConnectionCtx()) {
     ctx->ClearClosedStats();
   }
 }
