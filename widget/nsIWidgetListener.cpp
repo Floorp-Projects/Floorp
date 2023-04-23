@@ -44,10 +44,6 @@ void nsIWidgetListener::DynamicToolbarMaxHeightChanged(ScreenIntCoord aHeight) {
 void nsIWidgetListener::DynamicToolbarOffsetChanged(ScreenIntCoord aOffset) {}
 #endif
 
-void nsIWidgetListener::FullscreenWillChange(bool aInFullscreen) {}
-
-void nsIWidgetListener::FullscreenChanged(bool aInFullscreen) {}
-
 void nsIWidgetListener::MacFullscreenMenubarOverlapChanged(
     mozilla::DesktopCoord aOverlapAmount) {}
 
