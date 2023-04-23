@@ -2,8 +2,17 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.preference.PreferenceScreen xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.preference.PreferenceCategory
+        android:key="@string/pref_key_site_permissions_description"
+        app:iconSpaceReserved="false"
+        android:title="@string/preferences_site_permissions_description"
+        android:singleLineTitle="false"
+        android:visible="false"
+        tools:targetApi="o" />
 
     <androidx.preference.Preference
             android:icon="@drawable/ic_autoplay_enabled"

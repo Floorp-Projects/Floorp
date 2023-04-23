@@ -44,5 +44,7 @@
     <!-- Homescreen menu button -->
     <!-- Browser menu button that opens the account setting page -->
     <string name="browser_menu_manage_account_and_devices">管理账户和设备</string>
+
+    <string name="preferences_site_permissions_description">此页面为所有网站的默认权限设置；如您曾对特定网站进行权限调整，则此网站会出现在“例外网站”中。</string>
 </resources>
 

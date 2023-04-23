@@ -109,6 +109,7 @@
     <string name="pref_key_enable_autocomplete_urls" translatable="false">pref_key_enable_domain_autocomplete</string>
 
     <!-- Site Permissions Settings -->
+    <string name="pref_key_site_permissions_description" translatable="false">pref_key_site_permissions_description</string>
     <string name="pref_key_show_site_exceptions" translatable="false">pref_key_show_site_exceptions</string>
     <string name="pref_key_browser_feature_autoplay_v2" translatable="false">pref_key_browser_feature_autoplay_v2</string>
     <string name="pref_key_browser_feature_autoplay_audible_v2" translatable="false">pref_key_browser_feature_autoplay_v2</string>
