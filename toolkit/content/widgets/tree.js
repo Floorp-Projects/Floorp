@@ -672,6 +672,10 @@
         el.addEventListener("command", stopProp);
       }
       this.shadowRoot.appendChild(this.constructor.fragment);
+
+      this.#verticalScrollbar = this.shadowRoot.querySelector(
+        "scrollbar[orient='vertical']"
+      );
     }
 
     static get inheritedAttributes() {
@@ -787,31 +791,20 @@
 
       // This event doesn't retarget, so listen on the shadow DOM directly
       this.shadowRoot.addEventListener("MozMousePixelScroll", event => {
-        if (
-          !(
-            this.getAttribute("allowunderflowscroll") == "true" &&
-            this.getAttribute("hidevscroll") == "true"
-          )
-        ) {
+        if (this.#canScroll(event)) {
           event.preventDefault();
         }
       });
 
       // This event doesn't retarget, so listen on the shadow DOM directly
       this.shadowRoot.addEventListener("DOMMouseScroll", event => {
-        if (
-          !(
-            this.getAttribute("allowunderflowscroll") == "true" &&
-            this.getAttribute("hidevscroll") == "true"
-          )
-        ) {
-          event.preventDefault();
-        }
-
-        if (this._editingColumn) {
+        if (!this.#canScroll(event)) {
           return;
         }
-        if (event.axis == event.HORIZONTAL_AXIS) {
+
+        event.preventDefault();
+
+        if (this._editingColumn) {
           return;
         }
 
@@ -1377,7 +1370,7 @@
       // in LTR mode, and left side of the cell in RTL mode.
       let left = style.direction == "rtl" ? cellRect.x : textRect.x;
       let scrollbarWidth = window.windowUtils.getBoundsWithoutFlushing(
-        this.shadowRoot.querySelector("scrollbar[orient='vertical']")
+        this.#verticalScrollbar
       ).width;
       // Note: this won't be quite right in RTL for trees using twisties
       // or indentation. bug 1708159 tracks fixing the implementation
@@ -1663,6 +1656,26 @@
       }
 
       return this.changeOpenState(this.currentIndex);
+    }
+
+    #verticalScrollbar = null;
+
+    #canScroll(event) {
+      if (
+        window.windowUtils.getWheelScrollTarget() ||
+        event.axis == event.HORIZONTAL_AXIS ||
+        (this.getAttribute("allowunderflowscroll") == "true" &&
+          this.getAttribute("hidevscroll") == "true")
+      ) {
+        return false;
+      }
+
+      const curpos = Number(this.#verticalScrollbar.getAttribute("curpos"));
+      return (
+        (event.detail < 0 && 0 < curpos) ||
+        (event.detail > 0 &&
+          curpos < Number(this.#verticalScrollbar.getAttribute("maxpos")))
+      );
     }
   }
 

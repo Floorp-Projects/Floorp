@@ -132,6 +132,7 @@
 #include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/IMEContentObserver.h"
+#include "mozilla/WheelHandlingHelper.h"
 
 #ifdef XP_WIN
 #  include <direct.h>
@@ -4901,6 +4902,15 @@ nsDOMWindowUtils::GetOrientationLock(uint32_t* aOrientationLock) {
   }
 
   *aOrientationLock = static_cast<uint32_t>(bc->GetOrientationLock());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetWheelScrollTarget(Element** aResult) {
+  *aResult = nullptr;
+  if (nsIFrame* targetFrame = WheelTransaction::GetScrollTargetFrame()) {
+    NS_IF_ADDREF(*aResult = Element::FromNodeOrNull(targetFrame->GetContent()));
+  }
   return NS_OK;
 }
 
