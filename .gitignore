@@ -35,6 +35,7 @@ ID
 
 # User files that may appear at the root
 /.clang-tidy
+/.clangd
 /.mozconfig*
 /mozconfig*
 /old-configure

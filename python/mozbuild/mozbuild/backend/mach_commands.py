@@ -299,11 +299,18 @@ def setup_clangd_rust_in_vscode(command_context):
     with open(".clang-tidy", "w") as file:
         yaml.dump(clang_tidy, file)
 
+    clangd_cfg = {
+        "CompileFlags": {
+            "CompilationDatabase": clangd_cc_path,
+        }
+    }
+
+    with open(".clangd", "w") as file:
+        yaml.dump(clangd_cfg, file)
+
     return {
         "clangd.path": clangd_path,
         "clangd.arguments": [
-            "--compile-commands-dir",
-            clangd_cc_path,
             "-j",
             str(multiprocessing.cpu_count() // 2),
             "--limit-results",
