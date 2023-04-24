@@ -1019,8 +1019,8 @@ class GeckoEngineSession(
                         fileName = fileName.sanitizeFileName(),
                         response = response,
                         isPrivate = privateMode,
-                        openInApp = webResponse.doRequestExternalApp,
-                        skipConfirmation = webResponse.doSkipConfirmation,
+                        openInApp = webResponse.requestExternalApp,
+                        skipConfirmation = webResponse.skipConfirmation,
                     )
                 }
             }

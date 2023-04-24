@@ -329,6 +329,8 @@ class GeckoEngineSessionTest {
         val response = WebResponse.Builder("https://download.mozilla.org/image.png")
             .addHeader(Headers.Names.CONTENT_TYPE, "image/png")
             .addHeader(Headers.Names.CONTENT_LENGTH, "42")
+            .skipConfirmation(true)
+            .requestExternalApp(true)
             .body(mock())
             .build()
 

@@ -168,7 +168,7 @@ abstract class BaseBrowserFragment :
     AccessibilityManager.AccessibilityStateChangeListener {
 
     private var _binding: FragmentBrowserBinding? = null
-    protected val binding get() = _binding!!
+    internal val binding get() = _binding!!
 
     private lateinit var browserFragmentStore: BrowserFragmentStore
     private lateinit var browserAnimator: BrowserAnimator
@@ -221,7 +221,7 @@ abstract class BaseBrowserFragment :
     private var initUIJob: Job? = null
     protected var webAppToolbarShouldBeVisible = true
 
-    private val sharedViewModel: SharedViewModel by activityViewModels()
+    internal val sharedViewModel: SharedViewModel by activityViewModels()
     private val homeViewModel: HomeScreenViewModel by activityViewModels()
 
     private var currentStartDownloadDialog: StartDownloadDialog? = null
@@ -577,29 +577,7 @@ abstract class BaseBrowserFragment :
         )
 
         downloadFeature.onDownloadStopped = { downloadState, _, downloadJobStatus ->
-            // If the download is just paused, don't show any in-app notification
-            if (shouldShowCompletedDownloadDialog(downloadState, downloadJobStatus)) {
-                saveDownloadDialogState(
-                    downloadState.sessionId,
-                    downloadState,
-                    downloadJobStatus,
-                )
-
-                val dynamicDownloadDialog = DynamicDownloadDialog(
-                    context = context,
-                    downloadState = downloadState,
-                    didFail = downloadJobStatus == DownloadState.Status.FAILED,
-                    tryAgain = downloadFeature::tryAgain,
-                    onCannotOpenFile = {
-                        showCannotOpenFileError(binding.dynamicSnackbarContainer, context, it)
-                    },
-                    binding = binding.viewDynamicDownloadDialog,
-                    toolbarHeight = toolbarHeight,
-                ) { sharedViewModel.downloadDialogState.remove(downloadState.sessionId) }
-
-                dynamicDownloadDialog.show()
-                browserToolbarView.expand()
-            }
+            handleOnDownloadFinished(downloadState, downloadJobStatus, downloadFeature::tryAgain)
         }
 
         resumeDownloadDialogState(
@@ -1005,7 +983,7 @@ abstract class BaseBrowserFragment :
      * Preserves current state of the [DynamicDownloadDialog] to persist through tab changes and
      * other fragments navigation.
      * */
-    private fun saveDownloadDialogState(
+    internal fun saveDownloadDialogState(
         sessionId: String?,
         downloadState: DownloadState,
         downloadJobStatus: DownloadState.Status,
@@ -1544,7 +1522,7 @@ abstract class BaseBrowserFragment :
         )
     }
 
-    private fun showCannotOpenFileError(
+    internal fun showCannotOpenFileError(
         container: ViewGroup,
         context: Context,
         downloadState: DownloadState,
@@ -1608,7 +1586,6 @@ abstract class BaseBrowserFragment :
     @VisibleForTesting
     internal fun getSwipeRefreshLayout() = binding.swipeRefresh
 
-    @VisibleForTesting
     internal fun shouldShowCompletedDownloadDialog(
         downloadState: DownloadState,
         status: DownloadState.Status,
