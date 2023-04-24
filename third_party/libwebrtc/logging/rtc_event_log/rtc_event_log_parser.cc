@@ -2370,28 +2370,26 @@ std::vector<LoggedPacketInfo> ParsedRtcEventLog::GetPacketInfos(
         last_feedback_base_time = feedback.BaseTime();
 
         std::vector<LoggedPacketInfo*> packet_feedbacks;
-        packet_feedbacks.reserve(feedback.GetAllPackets().size());
-        Timestamp receive_timestamp = feedback_base_time;
+        packet_feedbacks.reserve(feedback.GetPacketStatusCount());
         std::vector<int64_t> unknown_seq_nums;
-        for (const auto& packet : feedback.GetAllPackets()) {
-          int64_t unwrapped_seq_num =
-              seq_num_unwrapper.Unwrap(packet.sequence_number());
+        feedback.ForAllPackets([&](uint16_t sequence_number,
+                                   TimeDelta delta_since_base) {
+          int64_t unwrapped_seq_num = seq_num_unwrapper.Unwrap(sequence_number);
           auto it = indices.find(unwrapped_seq_num);
           if (it == indices.end()) {
             unknown_seq_nums.push_back(unwrapped_seq_num);
-            continue;
+            return;
           }
           LoggedPacketInfo* sent = &packets[it->second];
           if (log_feedback_time - sent->log_packet_time >
               TimeDelta::Seconds(60)) {
             RTC_LOG(LS_WARNING)
                 << "Received very late feedback, possibly due to wraparound.";
-            continue;
+            return;
           }
-          if (packet.received()) {
-            receive_timestamp += packet.delta();
+          if (delta_since_base.IsFinite()) {
             if (sent->reported_recv_time.IsInfinite()) {
-              sent->reported_recv_time = receive_timestamp;
+              sent->reported_recv_time = feedback_base_time + delta_since_base;
               sent->log_feedback_time = log_feedback_time;
             }
           } else {
@@ -2402,7 +2400,7 @@ std::vector<LoggedPacketInfo> ParsedRtcEventLog::GetPacketInfos(
             }
           }
           packet_feedbacks.push_back(sent);
-        }
+        });
         if (!unknown_seq_nums.empty()) {
           RTC_LOG(LS_WARNING)
               << "Received feedback for unknown packets: "
