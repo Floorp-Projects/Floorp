@@ -233,7 +233,6 @@ avoid-blacklist-and-whitelist:
         - toolkit/actors/RemotePageChild.sys.mjs
         - toolkit/actors/WebChannelChild.sys.mjs
         - toolkit/components/antitracking/test/browser/browser_socialtracking_save_image.js
-        - toolkit/components/remotepagemanager/RemotePageManagerParent.sys.mjs
         - toolkit/components/reputationservice/ApplicationReputation.cpp
         - toolkit/components/reputationservice/chromium/chrome/common/safe_browsing/csd.pb.h
         - toolkit/components/reputationservice/LoginReputation.cpp
