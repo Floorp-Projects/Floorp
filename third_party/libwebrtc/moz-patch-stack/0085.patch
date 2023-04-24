@@ -46,10 +46,10 @@ index 381d1021c4..e777a45f92 100644
  // Type used to identify windows on the desktop. Values are platform-specific:
  //   - On Windows: HWND cast to intptr_t.
 diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
-index 4debc75394..65a4045f8c 100644
+index 4baa93cab9..7df6becb4e 100644
 --- a/modules/desktop_capture/desktop_capturer.cc
 +++ b/modules/desktop_capture/desktop_capturer.cc
-@@ -25,6 +25,10 @@
+@@ -26,6 +26,10 @@
  #include "rtc_base/win/windows_version.h"
  #endif  // defined(RTC_ENABLE_WIN_WGC)
  
@@ -59,8 +59,8 @@ index 4debc75394..65a4045f8c 100644
 +
  namespace webrtc {
  
- DesktopCapturer::~DesktopCapturer() = default;
-@@ -78,6 +82,30 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
+ void LogDesktopCapturerFullscreenDetectorUsage() {
+@@ -84,6 +88,30 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
    return capturer;
  }
  
@@ -92,10 +92,10 @@ index 4debc75394..65a4045f8c 100644
  std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
      const DesktopCaptureOptions& options) {
 diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
-index 3fdcd2c5d0..2713c0e603 100644
+index cf75004af5..951c4a9b10 100644
 --- a/modules/desktop_capture/desktop_capturer.h
 +++ b/modules/desktop_capture/desktop_capturer.h
-@@ -168,6 +168,12 @@ class RTC_EXPORT DesktopCapturer {
+@@ -170,6 +170,12 @@ class RTC_EXPORT DesktopCapturer {
    // The return value if `pos` is out of the scope of the source is undefined.
    virtual bool IsOccluded(const DesktopVector& pos);
  
@@ -108,7 +108,7 @@ index 3fdcd2c5d0..2713c0e603 100644
    // Creates a DesktopCapturer instance which targets to capture windows.
    static std::unique_ptr<DesktopCapturer> CreateWindowCapturer(
        const DesktopCaptureOptions& options);
-@@ -196,6 +202,13 @@ class RTC_EXPORT DesktopCapturer {
+@@ -198,6 +204,13 @@ class RTC_EXPORT DesktopCapturer {
    // CroppingWindowCapturer needs to create raw capturers without wrappers, so
    // the following two functions are protected.
  
