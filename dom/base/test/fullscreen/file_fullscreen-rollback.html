@@ -111,9 +111,16 @@ function change5() {
 }
 
 function change6() {
-  addFullscreenChangeContinuation("exit", change7);
   var element = e('fse-inner');
   is(document.fullscreenElement, element, "FSE should be e('fse-inner')");
+
+  // We're breaking out of two levels of fullscreen by removing the
+  // fullscreenElement. To make our helper functions work correctly,
+  // we set the fullscreenChangeEnters value to 1. This is a hack, but
+  // it is a hack that supports the expected behavior.
+  setFullscreenChangeEnters(1);
+  addFullscreenChangeContinuation("exit", change7);
+  info(`Removing FSE should exit fullscreen.`);
   element.remove();
 }
 
