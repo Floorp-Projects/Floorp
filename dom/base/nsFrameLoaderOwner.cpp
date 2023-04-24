@@ -222,9 +222,11 @@ void nsFrameLoaderOwner::ChangeFrameLoaderCommon(Element* aOwner,
         ->RunDOMEventWhenSafe();
   }
 
-  mFrameLoader->PropagateIsUnderHiddenEmbedderElement(
-      !aOwner->GetPrimaryFrame() ||
-      !aOwner->GetPrimaryFrame()->StyleVisibility()->IsVisible());
+  if (mFrameLoader) {
+    mFrameLoader->PropagateIsUnderHiddenEmbedderElement(
+        !aOwner->GetPrimaryFrame() ||
+        !aOwner->GetPrimaryFrame()->StyleVisibility()->IsVisible());
+  }
 }
 
 void nsFrameLoaderOwner::UpdateFocusAndMouseEnterStateAfterFrameLoaderChange() {
