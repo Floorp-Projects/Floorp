@@ -101,8 +101,8 @@ static int WaylandAllocateShmMemory(int aSize) {
 }
 
 /* static */
-RefPtr<WaylandShmPool> WaylandShmPool::Create(nsWaylandDisplay* aWaylandDisplay,
-                                              int aSize) {
+RefPtr<WaylandShmPool> WaylandShmPool::Create(
+    const RefPtr<nsWaylandDisplay>& aWaylandDisplay, int aSize) {
   if (!aWaylandDisplay->GetShm()) {
     NS_WARNING("Missing Wayland shm interface!");
     return nullptr;
@@ -127,6 +127,10 @@ RefPtr<WaylandShmPool> WaylandShmPool::Create(nsWaylandDisplay* aWaylandDisplay,
   if (!shmPool->mShmPool) {
     return nullptr;
   }
+
+  // We set our queue to get mShmPool events at compositor thread.
+  wl_proxy_set_queue((struct wl_proxy*)shmPool->mShmPool,
+                     aWaylandDisplay->GetEventQueue());
 
   return shmPool;
 }
@@ -189,7 +193,7 @@ void WaylandBuffer::BufferReleaseCallbackHandler(void* aData,
 RefPtr<WaylandBufferSHM> WaylandBufferSHM::Create(
     const LayoutDeviceIntSize& aSize) {
   RefPtr<WaylandBufferSHM> buffer = new WaylandBufferSHM(aSize);
-  nsWaylandDisplay* waylandDisplay = WaylandDisplayGet();
+  RefPtr<nsWaylandDisplay> waylandDisplay = WaylandDisplayGet();
 
   int size = aSize.width * aSize.height * BUFFER_BPP;
   buffer->mShmPool = WaylandShmPool::Create(waylandDisplay, size);
@@ -204,11 +208,13 @@ RefPtr<WaylandBufferSHM> WaylandBufferSHM::Create(
     return nullptr;
   }
 
+  wl_proxy_set_queue((struct wl_proxy*)buffer->GetWlBuffer(),
+                     waylandDisplay->GetEventQueue());
   wl_buffer_add_listener(buffer->GetWlBuffer(), &sBufferListenerWaylandBuffer,
                          buffer.get());
 
   LOGWAYLAND("WaylandBufferSHM Created [%p] WaylandDisplay [%p]\n",
-             buffer.get(), waylandDisplay);
+             buffer.get(), waylandDisplay.get());
 
   return buffer;
 }
@@ -276,6 +282,9 @@ RefPtr<WaylandBufferDMABUF> WaylandBufferDMABUF::Create(
     return nullptr;
   }
 
+  RefPtr<nsWaylandDisplay> waylandDisplay = WaylandDisplayGet();
+  wl_proxy_set_queue((struct wl_proxy*)buffer->GetWlBuffer(),
+                     waylandDisplay->GetEventQueue());
   wl_buffer_add_listener(buffer->GetWlBuffer(), &sBufferListenerWaylandBuffer,
                          buffer.get());
 

@@ -423,6 +423,7 @@ class nsWindow final : public nsBaseWidget {
   void SetEGLNativeWindowSize(const LayoutDeviceIntSize& aEGLWindowSize);
   void WaylandDragWorkaround(GdkEventButton* aEvent);
 
+  wl_display* GetWaylandDisplay();
   void CreateCompositorVsyncDispatcher() override;
   LayoutDeviceIntPoint GetNativePointerLockCenter() {
     return mNativePointerLockCenter;

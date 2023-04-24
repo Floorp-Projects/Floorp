@@ -359,7 +359,7 @@ NativeLayerWayland::NativeLayerWayland(
   MOZ_RELEASE_ASSERT(mSurfacePoolHandle,
                      "Need a non-null surface pool handle.");
 
-  widget::nsWaylandDisplay* waylandDisplay = widget::WaylandDisplayGet();
+  RefPtr<widget::nsWaylandDisplay> waylandDisplay = widget::WaylandDisplayGet();
   wl_compositor* compositor = waylandDisplay->GetCompositor();
   mWlSurface = wl_compositor_create_surface(compositor);
 
