@@ -1,5 +1,5 @@
-<?% config.freshness.owner = 'brandtr' %?>
-<?% config.freshness.reviewed = '2021-04-15' %?>
+<!-- go/cmark -->
+<!--* freshness: {owner: 'brandtr' reviewed: '2021-04-15'} *-->
 
 # Video coding in WebRTC
 
