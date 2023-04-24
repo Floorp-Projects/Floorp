@@ -34,9 +34,11 @@ add_task(function test_initial_scrubber_position() {
 
 add_task(async function test_scrubber_after_manual_move() {
   // Kick-start the video before trying to change the scrubber.
-  let loadedPromise = new Promise(r => {
-    video.addEventListener("canplaythrough", r, {once: true});
-  });
+  let loadedPromise = video.readyState == video.HAVE_ENOUGH_DATA ?
+    Promise.resolve() :
+    new Promise(r => {
+      video.addEventListener("canplaythrough", r, {once: true});
+    });
   video.play();
   await loadedPromise;
   video.pause();
@@ -45,13 +47,74 @@ add_task(async function test_scrubber_after_manual_move() {
   synthesizeMouseAtCenter(scrubber, {});
   // Expect that the progress updates, too:
 
-  let progress = getElementWithinVideo(video, "progressBar");
+  const progress = getElementWithinVideo(video, "progressBar");
   is(
     // toFixed(2) takes care of rounding issues here.
     (progress.value / progress.max).toFixed(2),
     (scrubber.value / scrubber.max).toFixed(2),
     "Should have updated progress bar."
   );
+});
+
+add_task(async function test_progress_and_scrubber_once_fullscreened() {
+  // loop to ensure we can always get 4 timeupdate events.
+  video.loop = true;
+  video.currentTime = video.duration / 2;
+  info("Setting max width");
+  video.style.maxWidth = "200px";
+  info(
+    "Current video progress = " +
+      (video.currentTime / video.duration).toFixed(2)
+  );
+  // Wait for a flush so the scrubber has been hidden.
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  info("Hid progress and scrubber.");
+  // Then full screen.
+  await SpecialPowers.wrap(video).requestFullscreen();
+  info("Gone into fullscreen.");
+  // Then wait for the video to play a bit (4 events is pretty arbitrary)
+  let updateCounter = 4;
+  let playABitPromise = new Promise(resolve => {
+    let handler = () => {
+      info("timeupdate event, counter left: " + updateCounter);
+      if (--updateCounter <= 0) {
+        video.removeEventListener("timeupdate", handler);
+        video.addEventListener("pause", resolve, { once: true });
+        video.pause();
+      }
+    };
+    video.addEventListener("timeupdate", handler);
+  });
+  video.play();
+  await playABitPromise;
+
+  const scrubber = getElementWithinVideo(video, "scrubber");
+  let videoProgress = video.currentTime / video.duration;
+  let fuzzFactor = video.duration * 0.01;
+  info("Video progress: " + videoProgress.toFixed(3));
+  let scrubberProgress = scrubber.value / scrubber.max;
+  info("Scrubber : " + scrubberProgress.toFixed(3));
+  ok(
+    scrubberProgress <= videoProgress + fuzzFactor,
+    "Scrubber should match actual video point in time."
+  );
+  ok(
+    scrubberProgress >= videoProgress - fuzzFactor,
+    "Scrubber should match actual video point in time."
+  );
+  // Expect that the progress matches the scrubber:
+  const progress = getElementWithinVideo(video, "progressBar");
+  let progressProgress = progress.value / progress.max;
+  info("Progress bar : " + progressProgress.toFixed(3));
+  ok(
+    progressProgress <= videoProgress + fuzzFactor,
+    "Progress bar should match actual video point in time."
+  );
+  ok(
+    progressProgress >= videoProgress - fuzzFactor,
+    "Progress bar should match actual video point in time."
+  );
+  await SpecialPowers.wrap(document).exitFullscreen();
 });
 
 </script>

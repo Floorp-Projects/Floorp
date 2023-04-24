@@ -937,7 +937,20 @@ this.VideoControlsImplWidget = class {
             this.reflowTriggeringCallValidator.isReflowTriggeringPropsAllowed = true;
             this.updateReflowedDimensions();
             this.reflowTriggeringCallValidator.isReflowTriggeringPropsAllowed = false;
+
+            let scrubberWasHidden = this.scrubberStack.hidden;
             this.adjustControlSize();
+            if (scrubberWasHidden && !this.scrubberStack.hidden) {
+              // requestAnimationFrame + setTimeout of 0ms is a best effort way to avoid
+              // triggering reflows, but cannot fully guarantee a reflow will not happen.
+              this.window.requestAnimationFrame(() =>
+                this.window.setTimeout(() => {
+                  this.reflowTriggeringCallValidator.isReflowTriggeringPropsAllowed = true;
+                  this.updateReflowedDimensions();
+                  this.reflowTriggeringCallValidator.isReflowTriggeringPropsAllowed = false;
+                }, 0)
+              );
+            }
             this.updatePictureInPictureToggleDisplay();
             break;
           case "fullscreenchange":
@@ -1242,6 +1255,16 @@ this.VideoControlsImplWidget = class {
           scrubberProgress *
           this.reflowedDimensions.scrubberWidth *
           this.window.devicePixelRatio;
+        // Hack: if we haven't updated the scrubber width to be non-0, but
+        // the scrubber stack is visible, assume there is progress.
+        // This should be rectified by the next time we do layout (see handling
+        // of resizevideocontrols events in handleEvent).
+        if (
+          !this.reflowedDimensions.scrubberWidth &&
+          !this.scrubberStack.hidden
+        ) {
+          devPxProgress = 1;
+        }
         // Update the scrubber only if it will move by at least 1 pixel
         // Note that this.scrubber.max can be "" if unitialized,
         // and either or both of currentTimeMs or durationMs can be 0, leading
