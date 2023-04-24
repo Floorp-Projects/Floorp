@@ -291,7 +291,10 @@ class ThreeDotMenuMainRobot {
         }
 
         fun refreshPage(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            refreshButton.click()
+            refreshButton.also {
+                it.waitForExists(waitingTime)
+                it.click()
+            }
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()

@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.ui
 
+import androidx.core.net.toUri
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import mozilla.components.concept.engine.utils.EngineReleaseChannel
@@ -312,6 +313,38 @@ class SettingsAdvancedTest {
                 mDevice.waitForIdle()
                 assertYoutubeAppOpens()
             }
+        }
+    }
+
+    @Test
+    fun dismissOpenLinksInAppCFRTest() {
+        activityIntentTestRule.applySettingsExceptions {
+            it.isOpenInAppBannerEnabled = true
+        }
+        val defaultWebPage = "https://m.youtube.com/"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.toUri()) {
+            waitForPageToLoad()
+            verifyOpenLinksInAppsCFRExists(true)
+            clickOpenLinksInAppsDismissCFRButton()
+            verifyOpenLinksInAppsCFRExists(false)
+        }
+    }
+
+    @Test
+    fun goToSettingsFromOpenLinksInAppCFRTest() {
+        activityIntentTestRule.applySettingsExceptions {
+            it.isOpenInAppBannerEnabled = true
+        }
+        val defaultWebPage = "https://m.youtube.com/"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.toUri()) {
+            waitForPageToLoad()
+            verifyOpenLinksInAppsCFRExists(true)
+        }.clickOpenLinksInAppsGoToSettingsCFRButton {
+            verifyOpenLinksInAppsButton()
         }
     }
 }

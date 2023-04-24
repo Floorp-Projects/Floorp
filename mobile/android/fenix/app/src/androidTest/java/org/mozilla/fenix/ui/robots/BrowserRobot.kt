@@ -46,6 +46,7 @@ import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
@@ -817,6 +818,48 @@ class BrowserRobot {
         assertItemWithResIdExists(itemWithResId("errorTryAgain"))
     }
 
+    fun verifyOpenLinksInAppsCFRExists(exists: Boolean) {
+        for (i in 1..RETRY_COUNT) {
+            try {
+                assertItemWithResIdExists(
+                    itemWithResId("$packageName:id/banner_container"),
+                    exists = exists,
+                )
+                assertItemWithResIdAndTextExists(
+                    itemWithResIdContainingText(
+                        "$packageName:id/banner_info_message",
+                        getStringResource(R.string.open_in_app_cfr_info_message_2),
+                    ),
+                    itemWithResIdContainingText(
+                        "$packageName:id/dismiss",
+                        getStringResource(R.string.open_in_app_cfr_negative_button_text),
+                    ),
+                    itemWithResIdContainingText(
+                        "$packageName:id/action",
+                        getStringResource(R.string.open_in_app_cfr_positive_button_text),
+                    ),
+                    exists = exists,
+                )
+            } catch (e: AssertionError) {
+                if (i == RETRY_COUNT) {
+                    throw e
+                } else {
+                    browserScreen {
+                    }.openThreeDotMenu {
+                    }.refreshPage {
+                        progressBar.waitUntilGone(waitingTimeLong)
+                    }
+                }
+            }
+        }
+    }
+
+    fun clickOpenLinksInAppsDismissCFRButton() =
+        itemWithResIdContainingText(
+            "$packageName:id/dismiss",
+            getStringResource(R.string.open_in_app_cfr_negative_button_text),
+        ).click()
+
     class Transition {
         fun openThreeDotMenu(interact: ThreeDotMenuMainRobot.() -> Unit): ThreeDotMenuMainRobot.Transition {
             mDevice.waitForIdle(waitingTime)
@@ -1016,6 +1059,16 @@ class BrowserRobot {
 
             SettingsSubMenuAutofillRobot().interact()
             return SettingsSubMenuAutofillRobot.Transition()
+        }
+
+        fun clickOpenLinksInAppsGoToSettingsCFRButton(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
+            itemWithResIdContainingText(
+                "$packageName:id/action",
+                getStringResource(R.string.open_in_app_cfr_positive_button_text),
+            ).clickAndWaitForNewWindow(waitingTime)
+
+            SettingsRobot().interact()
+            return SettingsRobot.Transition()
         }
     }
 }
