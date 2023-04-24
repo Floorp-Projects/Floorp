@@ -1278,6 +1278,20 @@
       "type": "object",
       "patternProperties": {
         "^.*$": { "type": "string" }
+      },
+      "properties": {
+        "Add": {
+          "type": "object",
+          "patternProperties": {
+            "^.*$": { "type": "string" }
+          }
+        },
+        "Delete": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
 

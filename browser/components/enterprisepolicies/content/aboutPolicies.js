@@ -294,6 +294,7 @@ function generateDocumentation() {
     Permissions: "Permissions2",
     SanitizeOnShutdown: "SanitizeOnShutdown2",
     WindowsSSO: "Windows10SSO",
+    SecurityDevices: "SecurityDevices2",
   };
 
   for (let policyName in schema.properties) {
