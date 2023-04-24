@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+<script type="text/javascript">
+/* global RPMAddMessageListener, RPMSendAsyncMessage, RPMRemoveMessageListener */
+
+RPMAddMessageListener("Ping", function(message) {
+  RPMSendAsyncMessage("Pong", {
+    str: message.data.str,
+    counter: message.data.counter + 1,
+  });
+});
+
+RPMAddMessageListener("Ping2", function(message) {
+  RPMSendAsyncMessage("Pong2", message.data);
+});
+
+function neverCalled() {
+  RPMSendAsyncMessage("Pong3");
+}
+RPMAddMessageListener("Pong3", neverCalled);
+RPMRemoveMessageListener("Pong3", neverCalled);
+
+function testData(data) {
+  var response = {
+    result: true,
+    status: "All data correctly received",
+  };
+
+  function compare(prop, expected) {
+    if (JSON.stringify(data[prop]) == JSON.stringify(expected))
+      return;
+    if (response.result)
+      response.status = "";
+    response.result = false;
+    response.status += "Property " + prop + " should have been " + expected + " but was " + data[prop] + "\n";
+  }
+
+  compare("integer", 45);
+  compare("real", 45.78);
+  compare("str", "foobar");
+  compare("array", [1, 2, 3, 5, 27]);
+
+  return response;
+}
+
+RPMAddMessageListener("SendData", function(message) {
+  RPMSendAsyncMessage("ReceivedData", testData(message.data));
+});
+
+RPMAddMessageListener("SendData2", function(message) {
+  RPMSendAsyncMessage("ReceivedData2", testData(message.data.data));
+});
+
+var cookie = "nom";
+RPMAddMessageListener("SetCookie", function(message) {
+  cookie = message.data.value;
+});
+
+RPMAddMessageListener("GetCookie", function(message) {
+  RPMSendAsyncMessage("Cookie", { value: cookie });
+});
+</script>
+</head>
+<body>
+</body>
+</html>
