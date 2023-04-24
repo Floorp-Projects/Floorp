@@ -22,12 +22,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
 import kotlinx.coroutines.launch
 import mozilla.components.lib.state.ext.observeAsComposableState
+import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.PagerIndicator
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
@@ -36,7 +38,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
 /**
  * A screen for displaying juno onboarding.
  *
- * @param onboardingPageTypeList List of pages to be displayed in onboarding pager ui.
+ * @param pagesToDisplay List of pages to be displayed in onboarding pager ui.
  * @param onMakeFirefoxDefaultClick Invoked when positive button on default browser page is clicked.
  * @param onSkipDefaultClick Invoked when negative button on default browser page is clicked.
  * @param onPrivacyPolicyClick Invoked when the privacy policy link text is clicked.
@@ -51,7 +53,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
 @Composable
 @Suppress("LongParameterList")
 fun JunoOnboardingScreen(
-    onboardingPageTypeList: List<JunoOnboardingPageType>,
+    pagesToDisplay: List<OnboardingPageUiData>,
     onMakeFirefoxDefaultClick: () -> Unit,
     onSkipDefaultClick: () -> Unit,
     onPrivacyPolicyClick: (url: String) -> Unit,
@@ -59,8 +61,8 @@ fun JunoOnboardingScreen(
     onSkipSignInClick: () -> Unit,
     onNotificationPermissionButtonClick: () -> Unit,
     onSkipNotificationClick: () -> Unit,
-    onFinish: (pageType: JunoOnboardingPageType) -> Unit,
-    onImpression: (pageType: JunoOnboardingPageType) -> Unit,
+    onFinish: (pageType: OnboardingPageUiData) -> Unit,
+    onImpression: (pageType: OnboardingPageUiData) -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
     val pagerState = rememberPagerState()
@@ -75,7 +77,7 @@ fun JunoOnboardingScreen(
 
     val scrollToNextPageOrDismiss: () -> Unit = {
         if (pagerState.currentPage == pagerState.pageCount - 1) {
-            onFinish(onboardingPageTypeList[pagerState.currentPage])
+            onFinish(pagesToDisplay[pagerState.currentPage])
         } else {
             coroutineScope.launch {
                 pagerState.animateScrollToPage(pagerState.currentPage + 1)
@@ -91,12 +93,12 @@ fun JunoOnboardingScreen(
 
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { page ->
-            onImpression(onboardingPageTypeList[page])
+            onImpression(pagesToDisplay[page])
         }
     }
 
     JunoOnboardingContent(
-        onboardingPageTypeList = onboardingPageTypeList,
+        pagesToDisplay = pagesToDisplay,
         pagerState = pagerState,
         onMakeFirefoxDefaultClick = {
             scrollToNextPageOrDismiss()
@@ -131,7 +133,7 @@ fun JunoOnboardingScreen(
 @Composable
 @Suppress("LongParameterList")
 private fun JunoOnboardingContent(
-    onboardingPageTypeList: List<JunoOnboardingPageType>,
+    pagesToDisplay: List<OnboardingPageUiData>,
     pagerState: PagerState,
     onMakeFirefoxDefaultClick: () -> Unit,
     onMakeFirefoxDefaultSkipClick: () -> Unit,
@@ -150,16 +152,16 @@ private fun JunoOnboardingContent(
             .navigationBarsPadding(),
     ) {
         HorizontalPager(
-            count = onboardingPageTypeList.size,
+            count = pagesToDisplay.size,
             state = pagerState,
-            key = { onboardingPageTypeList[it] },
+            key = { pagesToDisplay[it].type },
             modifier = Modifier
                 .weight(1f)
                 .nestedScroll(nestedScrollConnection),
         ) { pageIndex ->
-            val onboardingPageType = onboardingPageTypeList[pageIndex]
-            val pageState = mapToOnboardingPageState(
-                onboardingPageType = onboardingPageType,
+            val pageUiState = pagesToDisplay[pageIndex]
+            val onboardingPageState = mapToOnboardingPageState(
+                onboardingPageUiData = pageUiState,
                 onMakeFirefoxDefaultClick = onMakeFirefoxDefaultClick,
                 onMakeFirefoxDefaultSkipClick = onMakeFirefoxDefaultSkipClick,
                 onPrivacyPolicyClick = onPrivacyPolicyClick,
@@ -168,7 +170,7 @@ private fun JunoOnboardingContent(
                 onNotificationPermissionButtonClick = onNotificationPermissionButtonClick,
                 onNotificationPermissionSkipClick = onNotificationPermissionSkipClick,
             )
-            OnboardingPage(pageState = pageState)
+            OnboardingPage(pageState = onboardingPageState)
         }
 
         PagerIndicator(
@@ -187,8 +189,8 @@ private class DisableForwardSwipeNestedScrollConnection(
     private val pagerState: PagerState,
 ) : NestedScrollConnection {
 
-    override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-        return if (available.x > 0) {
+    override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset =
+        if (available.x > 0) {
             // Allow going back on swipe
             Offset.Zero
         } else {
@@ -197,12 +199,11 @@ private class DisableForwardSwipeNestedScrollConnection(
             // snap to the appropriate item.
             // Else consume the whole offset and disable going forward.
             if (pagerState.currentPageOffset < 0) {
-                return Offset.Zero
+                Offset.Zero
             } else {
                 Offset(available.x, 0f)
             }
         }
-    }
 }
 
 @LightDarkPreview
@@ -210,11 +211,7 @@ private class DisableForwardSwipeNestedScrollConnection(
 private fun JunoOnboardingScreenPreview() {
     FirefoxTheme {
         JunoOnboardingContent(
-            onboardingPageTypeList = listOf(
-                JunoOnboardingPageType.DEFAULT_BROWSER,
-                JunoOnboardingPageType.SYNC_SIGN_IN,
-                JunoOnboardingPageType.NOTIFICATION_PERMISSION,
-            ),
+            pagesToDisplay = defaultPreviewPages(),
             pagerState = PagerState(0),
             onMakeFirefoxDefaultClick = {},
             onMakeFirefoxDefaultSkipClick = {},
@@ -226,3 +223,32 @@ private fun JunoOnboardingScreenPreview() {
         )
     }
 }
+
+@Composable
+private fun defaultPreviewPages() = listOf(
+    OnboardingPageUiData(
+        type = OnboardingPageUiData.Type.DEFAULT_BROWSER,
+        imageRes = R.drawable.ic_onboarding_welcome,
+        title = stringResource(R.string.juno_onboarding_default_browser_title_nimbus),
+        description = stringResource(R.string.juno_onboarding_default_browser_description_nimbus),
+        linkText = stringResource(R.string.juno_onboarding_default_browser_description_link_text),
+        primaryButtonLabel = stringResource(R.string.juno_onboarding_default_browser_positive_button),
+        secondaryButtonLabel = stringResource(R.string.juno_onboarding_default_browser_negative_button),
+    ),
+    OnboardingPageUiData(
+        type = OnboardingPageUiData.Type.SYNC_SIGN_IN,
+        imageRes = R.drawable.ic_onboarding_sync,
+        title = stringResource(R.string.juno_onboarding_sign_in_title),
+        description = stringResource(R.string.juno_onboarding_sign_in_description),
+        primaryButtonLabel = stringResource(R.string.juno_onboarding_sign_in_positive_button),
+        secondaryButtonLabel = stringResource(R.string.juno_onboarding_sign_in_negative_button),
+    ),
+    OnboardingPageUiData(
+        type = OnboardingPageUiData.Type.NOTIFICATION_PERMISSION,
+        imageRes = R.drawable.ic_notification_permission,
+        title = stringResource(R.string.juno_onboarding_enable_notifications_title_nimbus),
+        description = stringResource(R.string.juno_onboarding_enable_notifications_description_nimbus),
+        primaryButtonLabel = stringResource(R.string.juno_onboarding_enable_notifications_positive_button),
+        secondaryButtonLabel = stringResource(R.string.juno_onboarding_enable_notifications_negative_button),
+    ),
+)

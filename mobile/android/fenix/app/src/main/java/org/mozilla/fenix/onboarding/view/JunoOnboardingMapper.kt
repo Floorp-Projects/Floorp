@@ -4,21 +4,63 @@
 
 package org.mozilla.fenix.onboarding.view
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.ui.res.stringResource
 import org.mozilla.fenix.R
+import org.mozilla.fenix.nimbus.OnboardingCardData
+import org.mozilla.fenix.nimbus.OnboardingCardType
 import org.mozilla.fenix.settings.SupportUtils
 
 /**
- * Mapper to convert [JunoOnboardingPageType] to [OnboardingPageState] that is a param for
+ * Returns a list of all the required Nimbus 'cards' that have been converted to [OnboardingPageUiData].
+ */
+internal fun Collection<OnboardingCardData>.toPageUiData(showNotificationPage: Boolean): List<OnboardingPageUiData> =
+    filter {
+        if (it.cardType == OnboardingCardType.NOTIFICATION_PERMISSION) {
+            showNotificationPage
+        } else {
+            true
+        }
+    }.sortedBy { it.ordering }
+        .map { it.toPageUiData() }
+
+private fun OnboardingCardData.toPageUiData(): OnboardingPageUiData {
+    return when (cardType) {
+        OnboardingCardType.DEFAULT_BROWSER -> OnboardingPageUiData(
+            type = OnboardingPageUiData.Type.DEFAULT_BROWSER,
+            imageRes = R.drawable.ic_onboarding_welcome,
+            title = title,
+            description = body,
+            linkText = linkText,
+            primaryButtonLabel = primaryButtonLabel,
+            secondaryButtonLabel = secondaryButtonLabel,
+        )
+
+        OnboardingCardType.SYNC_SIGN_IN -> OnboardingPageUiData(
+            type = OnboardingPageUiData.Type.SYNC_SIGN_IN,
+            imageRes = R.drawable.ic_onboarding_sync,
+            title = title,
+            description = body,
+            primaryButtonLabel = primaryButtonLabel,
+            secondaryButtonLabel = secondaryButtonLabel,
+        )
+
+        OnboardingCardType.NOTIFICATION_PERMISSION -> OnboardingPageUiData(
+            type = OnboardingPageUiData.Type.NOTIFICATION_PERMISSION,
+            imageRes = R.drawable.ic_notification_permission,
+            title = title,
+            description = body,
+            primaryButtonLabel = primaryButtonLabel,
+            secondaryButtonLabel = secondaryButtonLabel,
+        )
+    }
+}
+
+/**
+ * Mapper to convert [OnboardingPageUiData] to [OnboardingPageState] that is a param for
  * [OnboardingPage] composable.
  */
-@ReadOnlyComposable
-@Composable
 @Suppress("LongParameterList")
 internal fun mapToOnboardingPageState(
-    onboardingPageType: JunoOnboardingPageType,
+    onboardingPageUiData: OnboardingPageUiData,
     onMakeFirefoxDefaultClick: () -> Unit,
     onMakeFirefoxDefaultSkipClick: () -> Unit,
     onPrivacyPolicyClick: (String) -> Unit,
@@ -26,99 +68,43 @@ internal fun mapToOnboardingPageState(
     onSignInSkipClick: () -> Unit,
     onNotificationPermissionButtonClick: () -> Unit,
     onNotificationPermissionSkipClick: () -> Unit,
-): OnboardingPageState = when (onboardingPageType) {
-    JunoOnboardingPageType.DEFAULT_BROWSER -> defaultBrowserPageState(
+): OnboardingPageState = when (onboardingPageUiData.type) {
+    OnboardingPageUiData.Type.DEFAULT_BROWSER -> createOnboardingPageState(
+        onboardingPageUiData = onboardingPageUiData,
         onPositiveButtonClick = onMakeFirefoxDefaultClick,
         onNegativeButtonClick = onMakeFirefoxDefaultSkipClick,
         onUrlClick = onPrivacyPolicyClick,
     )
-    JunoOnboardingPageType.SYNC_SIGN_IN -> syncSignInPageState(
+
+    OnboardingPageUiData.Type.SYNC_SIGN_IN -> createOnboardingPageState(
+        onboardingPageUiData = onboardingPageUiData,
         onPositiveButtonClick = onSignInButtonClick,
         onNegativeButtonClick = onSignInSkipClick,
     )
-    JunoOnboardingPageType.NOTIFICATION_PERMISSION -> notificationPermissionPageState(
+
+    OnboardingPageUiData.Type.NOTIFICATION_PERMISSION -> createOnboardingPageState(
+        onboardingPageUiData = onboardingPageUiData,
         onPositiveButtonClick = onNotificationPermissionButtonClick,
         onNegativeButtonClick = onNotificationPermissionSkipClick,
     )
 }
 
-@Composable
-@ReadOnlyComposable
-private fun notificationPermissionPageState(
+private fun createOnboardingPageState(
+    onboardingPageUiData: OnboardingPageUiData,
     onPositiveButtonClick: () -> Unit,
     onNegativeButtonClick: () -> Unit,
-) = OnboardingPageState(
-    image = R.drawable.ic_notification_permission,
-    title = stringResource(
-        id = R.string.juno_onboarding_enable_notifications_title,
-        formatArgs = arrayOf(stringResource(R.string.app_name)),
-    ),
-    description = stringResource(
-        id = R.string.juno_onboarding_enable_notifications_description,
-        formatArgs = arrayOf(stringResource(R.string.app_name)),
-    ),
-    primaryButton = Action(
-        text = stringResource(id = R.string.juno_onboarding_enable_notifications_positive_button),
-        onClick = onPositiveButtonClick,
-    ),
-    secondaryButton = Action(
-        text = stringResource(id = R.string.juno_onboarding_enable_notifications_negative_button),
-        onClick = onNegativeButtonClick,
-    ),
-    onRecordImpressionEvent = {},
-)
-
-@Composable
-@ReadOnlyComposable
-private fun syncSignInPageState(
-    onPositiveButtonClick: () -> Unit,
-    onNegativeButtonClick: () -> Unit,
-) = OnboardingPageState(
-    image = R.drawable.ic_onboarding_sync,
-    title = stringResource(id = R.string.juno_onboarding_sign_in_title),
-    description = stringResource(id = R.string.juno_onboarding_sign_in_description),
-    primaryButton = Action(
-        text = stringResource(id = R.string.juno_onboarding_sign_in_positive_button),
-        onClick = onPositiveButtonClick,
-    ),
-    secondaryButton = Action(
-        text = stringResource(id = R.string.juno_onboarding_sign_in_negative_button),
-        onClick = onNegativeButtonClick,
-    ),
-    onRecordImpressionEvent = {},
-)
-
-@Composable
-@ReadOnlyComposable
-private fun defaultBrowserPageState(
-    onPositiveButtonClick: () -> Unit,
-    onNegativeButtonClick: () -> Unit,
-    onUrlClick: (String) -> Unit,
-) = OnboardingPageState(
-    image = R.drawable.ic_onboarding_welcome,
-    title = stringResource(
-        id = R.string.juno_onboarding_default_browser_title,
-        formatArgs = arrayOf(stringResource(R.string.app_name)),
-    ),
-    description = stringResource(
-        id = R.string.juno_onboarding_default_browser_description,
-        formatArgs = arrayOf(
-            stringResource(R.string.firefox),
-            stringResource(R.string.juno_onboarding_default_browser_description_link_text),
-        ),
-    ),
-    linkTextState = LinkTextState(
-        text = stringResource(id = R.string.juno_onboarding_default_browser_description_link_text),
-        url = SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE),
-        onClick = onUrlClick,
-    ),
-    primaryButton = Action(
-        text = stringResource(id = R.string.juno_onboarding_default_browser_positive_button),
-        onClick = onPositiveButtonClick,
-    ),
-    secondaryButton = Action(
-        text = stringResource(id = R.string.juno_onboarding_default_browser_negative_button),
-        onClick = onNegativeButtonClick,
-    ),
-    onRecordImpressionEvent = {},
+    onUrlClick: (String) -> Unit = {},
+): OnboardingPageState = OnboardingPageState(
+    image = onboardingPageUiData.imageRes,
+    title = onboardingPageUiData.title,
+    description = onboardingPageUiData.description,
+    linkTextState = onboardingPageUiData.linkText?.let {
+        LinkTextState(
+            text = it,
+            url = SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE),
+            onClick = onUrlClick,
+        )
+    },
+    primaryButton = Action(onboardingPageUiData.primaryButtonLabel, onPositiveButtonClick),
+    secondaryButton = Action(onboardingPageUiData.secondaryButtonLabel, onNegativeButtonClick),
 )

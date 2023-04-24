@@ -24,7 +24,7 @@ data class OnboardingPageState(
     val linkTextState: LinkTextState? = null,
     val primaryButton: Action,
     val secondaryButton: Action? = null,
-    val onRecordImpressionEvent: () -> Unit,
+    val onRecordImpressionEvent: () -> Unit = {},
 )
 
 /**
