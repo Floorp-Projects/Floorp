@@ -5383,24 +5383,6 @@
       "last_modified": 1666727872549
     },
     {
-      "schema": 1666727363109,
-      "derHash": "NlH5s2odqYMgDG7k787PpN78BZRmaJ2qGm22hKVMnns=",
-      "subject": "CN=Actalis Organization Validated Server CA G1,O=Actalis S.p.A./03358520967,L=Ponte San Pietro,ST=Bergamo,C=IT",
-      "subjectDN": "MIGVMQswCQYDVQQGEwJJVDEQMA4GA1UECAwHQmVyZ2FtbzEZMBcGA1UEBwwQUG9udGUgU2FuIFBpZXRybzEjMCEGA1UECgwaQWN0YWxpcyBTLnAuQS4vMDMzNTg1MjA5NjcxNDAyBgNVBAMMK0FjdGFsaXMgT3JnYW5pemF0aW9uIFZhbGlkYXRlZCBTZXJ2ZXIgQ0EgRzE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "6abedb9881ea66af627c7960fe41956b260b02726a2719d0ac283185d97e16cf",
-        "size": 2263,
-        "filename": "pmKuxMFaLv7ve9PLjGilItvtdgTK9uISTaDGBZSO3kQ=.pem",
-        "location": "security-state-staging/intermediates/a33bcad3-47f9-4423-ab8e-92ad859cc5ec.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "pmKuxMFaLv7ve9PLjGilItvtdgTK9uISTaDGBZSO3kQ=",
-      "crlite_enrolled": false,
-      "id": "041225c6-347b-421b-89b7-20269162c1f4",
-      "last_modified": 1666727872536
-    },
-    {
       "schema": 1666727406839,
       "derHash": "Xr2YdOa4jaOPSnuVZs5dTfBeDCJNlJhq2MxeugBKDAQ=",
       "subject": "CN=CrowdStrike Global EV CA G2,O=CrowdStrike\\, Inc.,C=US",
@@ -15103,24 +15085,6 @@
       "last_modified": 1665579462816
     },
     {
-      "schema": 1665298623610,
-      "derHash": "/Zi0DrlKrAl2IhefHjrN2s0/PJUnzWl03DYU0JrTeq4=",
-      "subject": "CN=Actalis Domain Validation Server CA G1,O=Actalis S.p.A./03358520967,L=Ponte San Pietro,ST=Bergamo,C=IT",
-      "subjectDN": "MIGQMQswCQYDVQQGEwJJVDEQMA4GA1UECAwHQmVyZ2FtbzEZMBcGA1UEBwwQUG9udGUgU2FuIFBpZXRybzEjMCEGA1UECgwaQWN0YWxpcyBTLnAuQS4vMDMzNTg1MjA5NjcxLzAtBgNVBAMMJkFjdGFsaXMgRG9tYWluIFZhbGlkYXRpb24gU2VydmVyIENBIEcx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "6acbc0db9e14c20b7451ac6a4370d052bc7c3e5998ac0c9ffd0579f1e572ba26",
-        "size": 2255,
-        "filename": "BJJEqWcyIOaOIv8i-zwBwibnq29_3M0jCAjL4VG3bvU=.pem",
-        "location": "security-state-staging/intermediates/7dfd8c65-c838-4d5b-9e31-7514f9077c07.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "BJJEqWcyIOaOIv8i+zwBwibnq29/3M0jCAjL4VG3bvU=",
-      "crlite_enrolled": false,
-      "id": "8508b975-2be6-4467-9f9f-2771caa111e4",
-      "last_modified": 1665557823134
-    },
-    {
       "schema": 1665168562462,
       "derHash": "wOixwZXN/3tRN7mtNROmEgsdv/SeXgqM6jJzvI12GHc=",
       "subject": "CN=GTS CA 1D8,O=Google Trust Services LLC,C=US",
@@ -24193,24 +24157,6 @@
       "last_modified": 1616745549953
     },
     {
-      "schema": 1615708697267,
-      "derHash": "SUKtBEEhiuwi2sQXrEmdfeTFTsvT0zXzSl+LBo9ubJY=",
-      "subject": "CN=Actalis Extended Validation Server CA G1,O=Actalis S.p.A./03358520967,L=Milano,ST=Milano,C=IT",
-      "subjectDN": "MIGHMQswCQYDVQQGEwJJVDEPMA0GA1UECAwGTWlsYW5vMQ8wDQYDVQQHDAZNaWxhbm8xIzAhBgNVBAoMGkFjdGFsaXMgUy5wLkEuLzAzMzU4NTIwOTY3MTEwLwYDVQQDDChBY3RhbGlzIEV4dGVuZGVkIFZhbGlkYXRpb24gU2VydmVyIENBIEcx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "9dca42b206384547c8a9ebe8126b177b165c1f506a22d83e63775bee433d5029",
-        "size": 2243,
-        "filename": "iiRAhRCKHfD_Hl73m_3kvrRJsjFUTTQ3Xaw6E8qVac4=.pem",
-        "location": "security-state-staging/intermediates/0bd6f9b1-1826-400c-9fc8-549c1432ff92.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "iiRAhRCKHfD/Hl73m/3kvrRJsjFUTTQ3Xaw6E8qVac4=",
-      "crlite_enrolled": false,
-      "id": "d9a1301f-ca8e-47e1-b6ae-ce1d56900f3c",
-      "last_modified": 1615730373204
-    },
-    {
       "schema": 1615384231447,
       "derHash": "sQhhc3s+ybEfphVNI5cP+y2r/Ciuamv1bD8yBCZiOa0=",
       "subject": "CN=SECOM Passport for Member PUB CA4,OU=SECOM Passport for Member 2.0 PUB,O=SECOM Trust Systems CO.\\,LTD.,C=JP",
@@ -27649,5 +27595,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1681981023506
+  "timestamp": 1682110623483
 }
