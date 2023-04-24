@@ -1,0 +1,367 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/**
+ * These tests load a SERP that has multiple ways of refining a search term
+ * within content, or moving it into another search engine. It is also common
+ * for providers to remove tracking params.
+ */
+
+"use strict";
+
+const {
+  SearchSERPTelemetry,
+  SearchSERPTelemetryUtils,
+} = ChromeUtils.importESModule(
+  "resource:///modules/SearchSERPTelemetry.sys.mjs"
+);
+
+const TEST_PROVIDER_INFO = [
+  {
+    telemetryId: "example",
+    searchPageRegexp: /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd_searchbox_with_content.html/,
+    extraPageRegexps: [
+      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd_searchbox.html/,
+    ],
+    queryParamName: "s",
+    codeParamName: "abc",
+    taggedCodes: ["ff"],
+    adServerAttributes: ["mozAttr"],
+    nonAdsLinkRegexps: [
+      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd_searchbox_with_content_redirect.html/,
+    ],
+    extraAdServersRegexps: [/^https:\/\/example\.com\/ad/],
+    shoppingTab: {
+      selector: "nav a",
+      regexp: "&page=shopping",
+    },
+    components: [
+      {
+        type: SearchSERPTelemetryUtils.COMPONENTS.INCONTENT_SEARCHBOX,
+        included: {
+          parent: {
+            selector: "form",
+          },
+          children: [
+            {
+              selector: "input",
+            },
+          ],
+          related: {
+            selector: "div",
+          },
+        },
+        topDown: true,
+        nonAd: true,
+      },
+      {
+        type: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+        included: {
+          default: true,
+        },
+      },
+    ],
+  },
+];
+
+function getSERPUrl(page, organic = false) {
+  let url =
+    getRootDirectory(gTestPath).replace(
+      "chrome://mochitests/content",
+      "https://example.org"
+    ) + page;
+  return `${url}?s=test${organic ? "" : "&abc=ff"}`;
+}
+
+async function promiseImpressionReceived() {
+  return TestUtils.waitForCondition(() => {
+    let adImpressions = Glean.serp.adImpression.testGetValue() ?? [];
+    return adImpressions.length;
+  }, "Should have received an ad impression.");
+}
+
+async function waitForIdle() {
+  for (let i = 0; i < 10; i++) {
+    await new Promise(resolve => Services.tm.idleDispatchToMainThread(resolve));
+  }
+}
+
+add_setup(async function() {
+  SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
+  await waitForIdle();
+  // Enable local telemetry recording for the duration of the tests.
+  let oldCanRecord = Services.telemetry.canRecordExtended;
+  Services.telemetry.canRecordExtended = true;
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.search.log", true],
+      ["browser.search.serpEventTelemetry.enabled", true],
+    ],
+  });
+
+  registerCleanupFunction(async () => {
+    SearchSERPTelemetry.overrideSearchTelemetryForTests();
+    Services.telemetry.canRecordExtended = oldCanRecord;
+    resetTelemetry();
+  });
+});
+
+// "Tabs" are considered to be links the navigation of a SERP. Their hrefs
+// may look similar to a search page, including related searches.
+add_task(async function test_click_tab() {
+  resetTelemetry();
+  let url = getSERPUrl("searchTelemetryAd_searchbox_with_content.html");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  await waitForPageWithAdImpressions();
+
+  let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+    content.document.getElementById("images").click();
+  });
+  await pageLoadPromise;
+
+  await TestUtils.waitForCondition(() => {
+    return Glean.serp.impression?.testGetValue()?.length == 2;
+  }, "Should have two impressions.");
+
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        shopping_tab_displayed: "true",
+      },
+      engagements: [
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+          target: SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK,
+        },
+      ],
+    },
+    {
+      impression: {
+        provider: "example",
+        tagged: "false",
+        partner_code: "",
+        source: "unknown",
+        is_shopping_page: "false",
+        shopping_tab_displayed: "true",
+      },
+    },
+  ]);
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+// Ensure that shopping links on a page with many non-ad link regular
+// expressions doesn't get confused for a non-ads link.
+add_task(async function test_click_shopping() {
+  resetTelemetry();
+  let url = getSERPUrl("searchTelemetryAd_searchbox_with_content.html");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  await waitForPageWithAdImpressions();
+
+  let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+    content.document.getElementById("shopping").click();
+  });
+  await pageLoadPromise;
+
+  await TestUtils.waitForCondition(() => {
+    return Glean.serp.impression?.testGetValue()?.length == 2;
+  }, "Should have two impressions.");
+
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        shopping_tab_displayed: "true",
+      },
+      engagements: [
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+          target: SearchSERPTelemetryUtils.COMPONENTS.SHOPPING_TAB,
+        },
+      ],
+    },
+    {
+      impression: {
+        provider: "example",
+        tagged: "false",
+        partner_code: "",
+        source: "unknown",
+        is_shopping_page: "true",
+        shopping_tab_displayed: "true",
+      },
+    },
+  ]);
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+// Tests adding another regular expression to extraPageRegexps correctly
+// categorizes the page.
+add_task(async function test_click_extra_page() {
+  resetTelemetry();
+  let url = getSERPUrl("searchTelemetryAd_searchbox_with_content.html");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  await waitForPageWithAdImpressions();
+
+  let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+    content.document.getElementById("extra").click();
+  });
+  await pageLoadPromise;
+
+  // This should only have one impression because the subsequent page is not
+  // a search page matching the SERP Regexp, but it is another search page that
+  // consumes the search term (e.g. Flights, Maps)
+  await TestUtils.waitForCondition(() => {
+    return Glean.serp.impression?.testGetValue()?.length == 1;
+  }, "Should have one impression.");
+
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        shopping_tab_displayed: "true",
+      },
+      engagements: [
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+          target: SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK,
+        },
+      ],
+    },
+  ]);
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_click_related_search_in_new_tab() {
+  resetTelemetry();
+  let url = getSERPUrl("searchTelemetryAd_searchbox_with_content.html");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  await waitForPageWithAdImpressions();
+
+  let targetUrl =
+    getRootDirectory(gTestPath).replace(
+      "chrome://mochitests/content",
+      "https://example.org"
+    ) + "searchTelemetryAd_searchbox_with_content.html?s=test+one+two+three";
+
+  let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, targetUrl, true);
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+    content.document.getElementById("related-new-tab").click();
+  });
+  let tab2 = await tabPromise;
+
+  await TestUtils.waitForCondition(() => {
+    return Glean.serp.impression?.testGetValue()?.length == 2;
+  }, "Should have two impressions.");
+
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        shopping_tab_displayed: "true",
+      },
+      engagements: [
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+          target: SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK,
+        },
+      ],
+    },
+    {
+      impression: {
+        provider: "example",
+        tagged: "false",
+        partner_code: "",
+        source: "unknown",
+        is_shopping_page: "false",
+        shopping_tab_displayed: "true",
+      },
+    },
+  ]);
+
+  BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab2);
+});
+
+// We consider regular expressions in nonAdsLinkRegexps and
+// searchPageRegexp/extraPageRegexps as valid non ads links when recording
+// an engagement event. However, if a nonAdsLinkRegexp leads to a
+// searchPageRegexp/extraPageRegexps, than we risk double counting in the case
+// of a re-direct occuring in a new tab.
+add_task(async function test_click_redirect_search_in_newtab() {
+  resetTelemetry();
+  let url = getSERPUrl("searchTelemetryAd_searchbox_with_content.html");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  await waitForPageWithAdImpressions();
+
+  let targetUrl =
+    getRootDirectory(gTestPath).replace(
+      "chrome://mochitests/content",
+      "https://example.org"
+    ) + "searchTelemetryAd_searchbox_with_content.html?s=test+one+two+three";
+
+  let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, targetUrl, true);
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+    content.document.getElementById("related-redirect").click();
+  });
+  let tab2 = await tabPromise;
+
+  await waitForPageWithAdImpressions();
+
+  await TestUtils.waitForCondition(() => {
+    return Glean.serp.impression.testGetValue()?.length == 2;
+  }, "Should have two impressions.");
+
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        shopping_tab_displayed: "true",
+      },
+      engagements: [
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+          target: SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK,
+        },
+      ],
+    },
+    {
+      impression: {
+        provider: "example",
+        tagged: "false",
+        partner_code: "",
+        source: "unknown",
+        is_shopping_page: "false",
+        shopping_tab_displayed: "true",
+      },
+    },
+  ]);
+
+  BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(tab2);
+});

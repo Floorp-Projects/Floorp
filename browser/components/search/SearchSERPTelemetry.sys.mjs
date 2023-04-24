@@ -296,6 +296,12 @@ class TelemetryHandler {
           r => new RegExp(r)
         );
       }
+      if (provider.extraPageRegexps) {
+        newProvider.extraPageRegexps = provider.extraPageRegexps.map(
+          r => new RegExp(r)
+        );
+      }
+
       newProvider.nonAdsLinkRegexps = provider.nonAdsLinkRegexps?.length
         ? provider.nonAdsLinkRegexps.map(r => new RegExp(r))
         : [];
@@ -416,6 +422,7 @@ class TelemetryHandler {
         impressionId,
         hrefToComponentMap: null,
         impressionInfo,
+        searchBoxSubmitted: false,
       });
       item.count++;
       item.source = source;
@@ -428,6 +435,7 @@ class TelemetryHandler {
           impressionId,
           hrefToComponentMap: null,
           impressionInfo,
+          searchBoxSubmitted: false,
         }),
         info,
         count: 1,
@@ -942,8 +950,18 @@ class ContentHandler {
         }
 
         let type;
-        // Check if telemetry is found.
-        if (telemetryState && telemetryState.adImpressionsReported) {
+        // Check if telemetry is found. If a searchbox was used to initiate the
+        // load, then ignore the href because the event has already been logged.
+        // Related searches on some SERPs can be encoded as a nonAdsLinkRegexp
+        // before becoming a search page URL, so if the origin of the request
+        // was from a URL matching a non ads link, we can ignore it because
+        // we've already recorded an event.
+        if (
+          telemetryState &&
+          telemetryState.adImpressionsReported &&
+          !telemetryState.searchBoxSubmitted &&
+          !info.nonAdsLinkRegexps.some(r => r.test(originURL))
+        ) {
           // First check, see if anything matches.
           type = telemetryState.hrefToComponentMap?.get(URL);
           // The SERP provider may have modified the url with different query
@@ -966,6 +984,20 @@ class ContentHandler {
           // the href was recorded in memory.
           if (!type) {
             type = info.nonAdsLinkRegexps.some(r => r.test(URL))
+              ? SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK
+              : "";
+          }
+          // The search may have been refined or moved into another search
+          // engine (e.g. images, video).
+          if (!type) {
+            type = info.searchPageRegexp?.test(URL)
+              ? SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK
+              : "";
+          }
+          // Some variants of the search page have a different regular
+          // expression than the one we use for standard search pages.
+          if (!type) {
+            type = info.extraPageRegexps?.some(r => r.test(URL))
               ? SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK
               : "";
           }
@@ -1152,10 +1184,11 @@ class ContentHandler {
     if (!item) {
       return;
     }
-    let impressionId = item.browserTelemetryStateMap.get(browser)?.impressionId;
+    let telemetryState = item.browserTelemetryStateMap.get(browser);
+    let impressionId = telemetryState?.impressionId;
     if (info.type && impressionId) {
       lazy.logConsole.debug(`Recorded page action:`, {
-        impressionId,
+        impressionId: telemetryState.impressionId,
         type: info.type,
         action: info.action,
       });
@@ -1171,6 +1204,7 @@ class ContentHandler {
         info.type == SearchSERPTelemetryUtils.COMPONENTS.INCONTENT_SEARCHBOX &&
         info.action == SearchSERPTelemetryUtils.ACTIONS.SUBMITTED
       ) {
+        telemetryState.searchBoxSubmitted = true;
         SearchSERPTelemetry.setBrowserContentSource(browser, info.type);
       }
     } else {
