@@ -2483,17 +2483,6 @@ impl Renderer {
         {
             let _timer = self.gpu_profiler.start_timer(GPU_TAG_SETUP_TARGET);
             self.device.bind_draw_target(draw_target);
-
-            if self.device.get_capabilities().supports_qcom_tiled_rendering {
-                self.device.gl().start_tiling_qcom(
-                    target.dirty_rect.min.x.max(0) as _,
-                    target.dirty_rect.min.y.max(0) as _,
-                    target.dirty_rect.width() as _,
-                    target.dirty_rect.height() as _,
-                    0,
-                );
-            }
-
             self.device.enable_depth_write();
             self.set_blend(false, framebuffer_kind);
 
@@ -2594,9 +2583,6 @@ impl Renderer {
         }
 
         self.device.invalidate_depth_target();
-        if self.device.get_capabilities().supports_qcom_tiled_rendering {
-            self.device.gl().end_tiling_qcom(gl::COLOR_BUFFER_BIT0_QCOM);
-        }
     }
 
     /// Draw an alpha batch container into a given draw target. This is used
@@ -3363,21 +3349,6 @@ impl Renderer {
         {
             let _timer = self.gpu_profiler.start_timer(GPU_TAG_SETUP_TARGET);
             self.device.bind_draw_target(draw_target);
-
-            if self.device.get_capabilities().supports_qcom_tiled_rendering {
-                let preserve_mask = match target.clear_color {
-                    Some(_) => 0,
-                    None => gl::COLOR_BUFFER_BIT0_QCOM,
-                };
-                self.device.gl().start_tiling_qcom(
-                    target.used_rect.min.x.max(0) as _,
-                    target.used_rect.min.y.max(0) as _,
-                    target.used_rect.width() as _,
-                    target.used_rect.height() as _,
-                    preserve_mask,
-                );
-            }
-
             self.device.disable_depth();
             self.set_blend(false, framebuffer_kind);
 
@@ -3507,9 +3478,6 @@ impl Renderer {
 
         if clear_depth.is_some() {
             self.device.invalidate_depth_target();
-        }
-        if self.device.get_capabilities().supports_qcom_tiled_rendering {
-            self.device.gl().end_tiling_qcom(gl::COLOR_BUFFER_BIT0_QCOM);
         }
     }
 
