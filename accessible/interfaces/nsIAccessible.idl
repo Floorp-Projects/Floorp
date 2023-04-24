@@ -345,6 +345,13 @@ interface nsIAccessible : nsISupports
    */
   void announce(in AString announcement, in unsigned short priority);
 
+  /**
+   * Get the role of this Accessible as an ARIA role token. This might have been
+   * set explicitly (e.g. role="button") or it might be implicit in native
+   * markup (e.g. <button> returns "button").
+   */
+  readonly attribute AString computedARIARole;
+
   [notxpcom, nostdcall] InternalLocalAccessible toInternalAccessible();
   [notxpcom, nostdcall] InternalAccessible toInternalGeneric();
 
