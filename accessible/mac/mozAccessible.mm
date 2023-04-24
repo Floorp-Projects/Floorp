@@ -356,8 +356,8 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
 }
 
 - (NSString*)moxRole {
-#define ROLE(geckoRole, stringRole, atkRole, macRole, macSubrole, msaaRole, \
-             ia2Role, androidClass, nameRule)                               \
+#define ROLE(geckoRole, stringRole, ariaRole, atkRole, macRole, macSubrole, \
+             msaaRole, ia2Role, androidClass, nameRule)                     \
   case roles::geckoRole:                                                    \
     return macRole;
 
@@ -430,8 +430,8 @@ static const uint64_t kCacheInitialized = ((uint64_t)0x1) << 63;
     }
   }
 
-#define ROLE(geckoRole, stringRole, atkRole, macRole, macSubrole, msaaRole, \
-             ia2Role, androidClass, nameRule)                               \
+#define ROLE(geckoRole, stringRole, ariaRole, atkRole, macRole, macSubrole, \
+             msaaRole, ia2Role, androidClass, nameRule)                     \
   case roles::geckoRole:                                                    \
     if (![macSubrole isEqualToString:NSAccessibilityUnknownSubrole]) {      \
       return macSubrole;                                                    \

@@ -482,6 +482,7 @@ STATIC_ATOMS = [
     Atom("fullscreenerror", "fullscreenerror"),
     Atom("functionAvailable", "function-available"),
     Atom("generateId", "generate-id"),
+    Atom("generic", "generic"),
     Atom("getter", "getter"),
     Atom("graphicsDocument", "graphics-document"),
     Atom("graphicsObject", "graphics-object"),
