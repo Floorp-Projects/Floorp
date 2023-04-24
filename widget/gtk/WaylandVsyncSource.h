@@ -56,7 +56,8 @@ class WaylandVsyncSource final : public gfx::VsyncSource {
   void DisableMonitor();
 
   void FrameCallback(wl_callback* aCallback, uint32_t aTime);
-  void IdleCallback();
+  // Returns whether we should keep firing.
+  bool IdleCallback();
 
   TimeDuration GetVsyncRate() override;
 
@@ -86,9 +87,9 @@ class WaylandVsyncSource final : public gfx::VsyncSource {
   RefPtr<NativeLayerRootWayland> mNativeLayerRoot MOZ_GUARDED_BY(mMutex);
   TimeDuration mVsyncRate MOZ_GUARDED_BY(mMutex);
   TimeStamp mLastVsyncTimeStamp MOZ_GUARDED_BY(mMutex);
-  guint mIdleTimerID MOZ_GUARDED_BY(mMutex) = 0;
   wl_callback* mCallback MOZ_GUARDED_BY(mMutex) = nullptr;
 
+  guint mIdleTimerID = 0;   // Main thread only.
   nsWindow* const mWindow;  // Main thread only, except for logging.
   const guint mIdleTimeout;
 };

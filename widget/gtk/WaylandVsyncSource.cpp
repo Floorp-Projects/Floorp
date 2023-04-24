@@ -14,6 +14,7 @@
 #  include "mozilla/ScopeExit.h"
 #  include "nsGtkUtils.h"
 #  include "mozilla/StaticPrefs_layout.h"
+#  include "mozilla/StaticPrefs_widget.h"
 #  include "nsWindow.h"
 
 #  include <gdk/gdkwayland.h>
@@ -229,12 +230,17 @@ void WaylandVsyncSource::SetupFrameCallback(const MutexAutoLock& aProofOfLock) {
     wl_display_flush(WaylandDisplayGet()->GetDisplay());
 
     if (!mIdleTimerID) {
-      mIdleTimerID = (int)g_timeout_add(
+      mIdleTimerID = g_timeout_add(
           mIdleTimeout,
           [](void* data) -> gint {
-            auto* vsync = static_cast<WaylandVsyncSource*>(data);
-            vsync->IdleCallback();
-            return true;
+            RefPtr vsync = static_cast<WaylandVsyncSource*>(data);
+            if (vsync->IdleCallback()) {
+              // We want to fire again, so don't clear mIdleTimerID
+              return G_SOURCE_CONTINUE;
+            }
+            // No need for g_source_remove, caller does it for us.
+            vsync->mIdleTimerID = 0;
+            return G_SOURCE_REMOVE;
           },
           this);
     }
@@ -243,7 +249,7 @@ void WaylandVsyncSource::SetupFrameCallback(const MutexAutoLock& aProofOfLock) {
   mCallbackRequested = true;
 }
 
-void WaylandVsyncSource::IdleCallback() {
+bool WaylandVsyncSource::IdleCallback() {
   LOG("WaylandVsyncSource::IdleCallback");
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
 
@@ -258,13 +264,14 @@ void WaylandVsyncSource::IdleCallback() {
       // here without setting up a new frame callback.
       LOG("  quit, mVsyncEnabled %d mMonitorEnabled %d", mVsyncEnabled,
           mMonitorEnabled);
-      return;
+      return false;
     }
 
     guint duration = static_cast<guint>(
         (TimeStamp::Now() - mLastVsyncTimeStamp).ToMilliseconds());
     if (duration < mIdleTimeout) {
-      return;
+      // We're not idle, we want to fire the timer again.
+      return true;
     }
 
     LOG("  fire idle vsync");
@@ -279,11 +286,14 @@ void WaylandVsyncSource::IdleCallback() {
   // This could disable vsync.
   window->NotifyOcclusionState(OcclusionState::OCCLUDED);
 
+  if (window->IsDestroyed()) {
+    return false;
+  }
   // Make sure to fire vsync now even if we get disabled afterwards.
   // This gives an opportunity to clean up after the visibility state change.
-  if (!window->IsDestroyed()) {
-    NotifyVsync(lastVSync, outputTimestamp);
-  }
+  // FIXME: Do we really need to do this?
+  NotifyVsync(lastVSync, outputTimestamp);
+  return StaticPrefs::widget_wayland_vsync_keep_firing_at_idle();
 }
 
 void WaylandVsyncSource::FrameCallback(wl_callback* aCallback, uint32_t aTime) {

@@ -15348,6 +15348,13 @@
   type: bool
   value: true
   mirror: once
+
+# Whether to keep firing vsync at layout.throttled_frame_rate after we've been
+# occluded.
+- name: widget.wayland.vsync.keep-firing-at-idle
+  type: bool
+  value: false
+  mirror: always
 #endif
 
 #ifdef MOZ_WIDGET_GTK
