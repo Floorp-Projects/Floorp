@@ -1006,8 +1006,8 @@ forms-breach-alerts =
     .label = Show alerts about passwords for breached websites
     .accesskey = b
 forms-breach-alerts-learn-more-link = Learn more
-relay-integration =
-    .label = Enable { -relay-brand-name } in your { -brand-short-name } password manager
+preferences-relay-integration-checkbox =
+    .label = Suggest { -relay-brand-name } email masks to protect your email address
 relay-integration-learn-more-link = Learn more
 
 # Checkbox which controls filling saved logins into fields automatically when they appear, in some cases without user interaction.

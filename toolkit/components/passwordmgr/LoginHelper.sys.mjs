@@ -1830,6 +1830,10 @@ export class OptInFeature {
     return this.#currentPrefValue == OptInFeature.PREF_ENABLED_VALUE;
   }
 
+  markAsAvailable() {
+    this.#markAs(OptInFeature.PREF_AVAILABLE_VALUE);
+  }
+
   markAsOffered() {
     this.#markAs(OptInFeature.PREF_OFFERED_VALUE);
   }
