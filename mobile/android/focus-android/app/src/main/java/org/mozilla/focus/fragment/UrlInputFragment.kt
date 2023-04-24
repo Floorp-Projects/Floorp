@@ -28,6 +28,7 @@ import mozilla.components.feature.top.sites.TopSitesFeature
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.hideKeyboard
+import mozilla.components.support.utils.StatusBarUtils
 import mozilla.components.support.utils.ThreadUtils
 import org.mozilla.focus.GleanMetrics.BrowserSearch
 import org.mozilla.focus.GleanMetrics.SearchBar
@@ -53,7 +54,6 @@ import org.mozilla.focus.topsites.DefaultTopSitesView
 import org.mozilla.focus.topsites.TopSitesOverlay
 import org.mozilla.focus.ui.theme.FocusTheme
 import org.mozilla.focus.utils.OneShotOnPreDrawListener
-import org.mozilla.focus.utils.StatusBarUtils
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils

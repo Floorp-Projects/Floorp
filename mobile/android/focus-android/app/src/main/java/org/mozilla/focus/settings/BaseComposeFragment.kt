@@ -26,12 +26,12 @@ import androidx.fragment.app.Fragment
 import com.google.accompanist.insets.LocalWindowInsets
 import com.google.accompanist.insets.rememberInsetsPaddingValues
 import com.google.accompanist.insets.ui.TopAppBar
+import mozilla.components.support.utils.StatusBarUtils
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.ext.hideToolbar
 import org.mozilla.focus.ui.theme.FocusTheme
 import org.mozilla.focus.ui.theme.focusColors
-import org.mozilla.focus.utils.StatusBarUtils
 
 /**
  * Fragment acting as a wrapper over a [Composable] which will be shown below a [TopAppBar].

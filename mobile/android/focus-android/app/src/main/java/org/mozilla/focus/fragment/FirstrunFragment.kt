@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.viewpager.widget.ViewPager
+import mozilla.components.support.utils.StatusBarUtils
 import org.mozilla.focus.GleanMetrics.Onboarding
 import org.mozilla.focus.R
 import org.mozilla.focus.databinding.FragmentFirstrunBinding
@@ -20,7 +21,6 @@ import org.mozilla.focus.ext.settings
 import org.mozilla.focus.firstrun.FirstrunPagerAdapter
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
-import org.mozilla.focus.utils.StatusBarUtils
 import kotlin.math.abs
 
 class FirstrunFragment : Fragment(), View.OnClickListener {

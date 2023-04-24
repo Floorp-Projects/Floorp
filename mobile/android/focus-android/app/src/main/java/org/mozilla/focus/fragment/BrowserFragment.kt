@@ -65,6 +65,7 @@ import mozilla.components.support.ktx.android.view.exitImmersiveMode
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.components.support.locale.ActivityContextWrapper
 import mozilla.components.support.utils.Browsers
+import mozilla.components.support.utils.StatusBarUtils
 import mozilla.components.support.utils.ext.requestInPlacePermissions
 import org.mozilla.focus.GleanMetrics.Browser
 import org.mozilla.focus.GleanMetrics.CookieBanner
@@ -112,7 +113,6 @@ import org.mozilla.focus.topsites.DefaultTopSitesView
 import org.mozilla.focus.utils.FocusSnackbar
 import org.mozilla.focus.utils.FocusSnackbarDelegate
 import org.mozilla.focus.utils.IntentUtils
-import org.mozilla.focus.utils.StatusBarUtils
 import org.mozilla.focus.utils.ViewUtils
 import java.net.URLEncoder
 
