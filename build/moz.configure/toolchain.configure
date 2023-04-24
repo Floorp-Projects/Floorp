@@ -718,18 +718,13 @@ def rust_search_path(rust_path, search_order, original_path):
     return result
 
 
-# As a workaround until bug 1516228 and bug 1516253 are fixed, set the PATH
-# variable for the build to contain the toolchain search path.
-#
-# FIXME(bug 1802573): The two bugs above are fixed, do we still need that?
-#
 # Prepend the mozilla-build msys2 path, since otherwise we can get mismatched
 # cygwin dll errors during configure if we get called from another msys2
 # environment, see bug 1801826.
-@depends(mozillabuild_bin_paths, vc_toolchain_search_path)
+@depends(mozillabuild_bin_paths)
 @imports("os")
-def altered_path(mozillabuild_bin_paths, vc_toolchain_search_path):
-    altered_path = mozillabuild_bin_paths + list(vc_toolchain_search_path)
+def altered_path(mozillabuild_bin_paths):
+    altered_path = mozillabuild_bin_paths
     for p in os.environ["PATH"].split(os.pathsep):
         if p not in altered_path:
             altered_path.append(p)
