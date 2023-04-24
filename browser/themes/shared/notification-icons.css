@@ -131,7 +131,7 @@
 }
 
 #password-notification-icon[extraAttr="attention"] {
-  fill: var(--toolbar-field-icon-fill-attention);
+  fill: var(--toolbarbutton-icon-fill-attention);
   fill-opacity: 1;
 }
 

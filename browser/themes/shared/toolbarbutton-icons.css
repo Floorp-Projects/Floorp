@@ -21,13 +21,6 @@ toolbar[brighttext]:-moz-lwtheme {
   --warning-icon-bgcolor: #FFBD4F;
 }
 
-:root,
-/* Pick up potentially diverging --toolbarbutton-icon-fill-attention
-   values from above. */
-:is(panel, toolbar, #urlbar, #searchbar) {
-  --toolbar-field-icon-fill-attention: var(--lwt-toolbar-field-icon-fill-attention, var(--toolbarbutton-icon-fill-attention));
-}
-
 .toolbarbutton-animatable-box,
 .toolbarbutton-1 {
   color: inherit;
