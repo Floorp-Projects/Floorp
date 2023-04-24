@@ -863,7 +863,7 @@ const uintptr_t kPointerMask =
 const uintptr_t kPointerMask = ~uintptr_t(0);
 #  endif
 
-MOZ_ASAN_BLACKLIST
+MOZ_ASAN_IGNORE
 static void DoFramePointerStackWalk(MozWalkStackCallback aCallback,
                                     const void* aFirstFramePC,
                                     uint32_t aMaxFrames, void* aClosure,
