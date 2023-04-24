@@ -8,7 +8,7 @@
     <!-- Text shown on the second row of the site controls notification. -->
     <string name="mozac_feature_pwa_site_controls_notification_text">برای رونوشت از نشانی این کاره ضربه بزنید</string>
     <!-- Refresh button in site controls notification. -->
-    <string name="mozac_feature_pwa_site_controls_refresh">نوسازی</string>
+    <string name="mozac_feature_pwa_site_controls_refresh">بازخوانی</string>
     <!-- Toast displayed when the website URL is copied. -->
     <string name="mozac_feature_pwa_copy_success">نشانی رونوشت شد.</string>
 </resources>

@@ -94,7 +94,7 @@
 
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">ارسال دوباره داده به این پایگاه؟</string>
-    <string name="mozac_feature_prompt_repost_message">نوسازی این صفحه می تواند اقدامات اخیر مانند پرداخت یا ارسال نظر را دوبار تکرار کند.</string>
+    <string name="mozac_feature_prompt_repost_message">بازخوانی این صفحه می‌تواند کنش‌های اخیر مانند پرداخت یا ارسال نظر را دوباره تکرار کند.</string>
     <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
     <string name="mozac_feature_prompt_repost_positive_button_text">ارسال دوبارهٔ داده‌ها</string>
     <!-- Pressing this will dismiss the dialog and not refresh the webpage -->

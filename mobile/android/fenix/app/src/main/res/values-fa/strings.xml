@@ -159,7 +159,7 @@
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
     <string name="browser_menu_forward">جلو</string>
     <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
-    <string name="browser_menu_refresh">نوسازی</string>
+    <string name="browser_menu_refresh">بازخوانی</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">توقف</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -295,13 +295,34 @@
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_default_browser_title">‏%s را مروگر پیش‌فرض‌تان کنید</string>
+    <!-- Description for set firefox as default browser screen.
+        The first parameter is the Firefox brand name.
+        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
+    <string name="juno_onboarding_default_browser_description">‏%1$s مردم را به سود خود ترجیح می‌دهد و با مسدود کردن ردیاب‌های میان‌پایگاهی، از حریم خصوصی شما دفاع می‌کند.\n\nدر %2$s بیش‌تر بیاموزید.</string>
+    <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
+    This is part of the string with the key "juno_onboarding_default_browser_description". -->
+    <string name="juno_onboarding_default_browser_description_link_text">نکات حریم خصوصی</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
+    <string name="juno_onboarding_default_browser_positive_button">تنظیم به عنوان مرورگر پیش‌فرض</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_default_browser_negative_button">اکنون نه</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title">از تلفن همراه به رایانهٔ تاشو بپرید و برعکس</string>
+    <!-- Description for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_description">زبانه‌ها و گذرواژه‌ها را از افزاره‌های دیگرتان بگیرید تا از جایی که رها کرده‌اید، ادامه دهید.</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button">ورود</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button">اکنون نه</string>
 
+    <!-- Title for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_title">آگاهی‌ها کمک می‌کنند تا با %s کار‌های بیش‌تری بکنید</string>
+    <!-- Description for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_description">ارسال زبانه‌ها میان افزاره‌ها، مدیریت بارگیری‌ها، و دریافت نکاتی راجع به بهره‌گیری هر چه بیش‌تر از %s.</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="juno_onboarding_enable_notifications_positive_button">روشن کردن آگاهی‌ها</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_enable_notifications_negative_button">اکنون نه</string>
 
@@ -356,20 +377,68 @@
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">حالت فقط-Https</string>
 
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">کاهش برنمای کلوچک</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">برنماهای کلوچک را کاهش می‌دهد</string>
     <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
     <string name="reduce_cookie_banner_option_off">خاموش</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
     <string name="reduce_cookie_banner_option_on">روشن</string>
 
+    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_summary_1">‏%1$s به طور خودکار تلاش می‌کند تا درخواست‌های برنماهای کلوچک را رد کند.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">خاموش برای این پایگاه</string>
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">لغو</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button">درخواست پشتیبانی</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title">کاهش برنمای کلوچک</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text">درخواست برای پشتیبانی پایگاه ثبت شد.</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">روشن برای این پایگاه</string>
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted">درخواست برای پشتیبانی پایگاه ثبت شد</string>
+    <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site">پایگاه هم‌اکنون پشتیبانی نمی‌شود</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">روشن کردن کاهش برنمای کلوچک برای %1$s؟</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">خاموش کردن کاهش برنمای کلوچک برای %1$s؟</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request">این پایگاه هم‌اکنون از  کاهش برنمای کلوچک پشتیبانی نمی‌کند. آیا می‌خواهید گروه ما این وبگاه را بازبینی کند و پشتیبانی از آن را در آینده اضافه کند؟</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site">‏%1$s کلوچک‌های این پایگاه را پاک‌سازی و صفحه را بازخوانی می‌کند. پاک‌سازی تمام کلوچک‌ها ممکن است شما را از حساب‌تان خارج یا سبد خریدتان را خالی کند.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">‏%1$s تلاش می‌کند تا خودکار تمام درخواست‌های کلوچک را در پایگاه‌های پشتیبانی شده رد کند.</string>
+    <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">اجازه دادن به Firefox برای رد کردن برنماهای کلوچک؟</string>
+    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_title">اجازه دادن به %1$s برای رد کردن برنماهای کلوچک؟</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">اجازه دادن به %1$s برای رد خودکار درخواست‌های کلوچک در صورت امکان؟</string>
+    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_body">‏%1$s می‌تواند به طور خودکار بسیاری از درخواست‌های برنمای کلوچک را رد کند.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">اکنون نه</string>
 
+    <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">رد کردن برنماها</string>
+    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
+    <string name="reduce_cookie_banner_dialog_snackbar_text">درخواست‌های کلوچک کم‌تری خواهید دید</string>
+    <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">بالاپَرهای کلوچک کم‌تری خواهید دید</string>
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">برای مروری بدون حواس‌پرتی، به طور خودکار به بالاپَرهای کلوچک پاسخ می‌دهد. %1$s تمام درخواست‌ها را در صورت امکان رد می‌کند.</string>
+    <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">رد کردن بالاپَرها</string>
+    <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">کاهش برنمای کلوچک</string>
+    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">اجازه دادن به %1$s برای رد درخواست رضایت کلوچک پایگاه در صورت امکان؟</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">اجازه</string>
     <!-- Change setting text button, for the cookie banner re-engagement dialog -->
@@ -496,6 +565,8 @@
 
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket_2">داستان‌های تأمل‌برانگیز</string>
+    <!-- Summary for the customize home screen section with Pocket. The first parameter is product name Pocket -->
+    <string name="customize_toggle_pocket_summary">مقاله‌ها قدرت گرفته از %s</string>
     <!-- Title for the customize home screen section with sponsored Pocket stories. -->
     <string name="customize_toggle_pocket_sponsored">داستان‌های حامیان</string>
     <!-- Title for the opening wallpaper settings screen -->
@@ -511,8 +582,29 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">نمایش</string>
 
+    <!-- Snackbar message for when wallpaper couldn't be downloaded -->
+    <string name="wallpaper_download_error_snackbar_message">نتوانست کاغذدیواری را بارگیری کند</string>
     <!-- Snackbar label for action to retry downloading the wallpaper -->
     <string name="wallpaper_download_error_snackbar_action">تلاش دوباره</string>
+
+    <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
+    <string name="wallpaper_select_error_snackbar_message">نتوانست کاغذدیواری را تغییر دهد</string>
+    <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
+    <string name="wallpaper_learn_more">بیشتر بدانید</string>
+    <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
+    <string name="wallpaper_classic_title">‏%s سنتی</string>
+    <!-- Text for limited edition wallpapers title. -->
+    <string name="wallpaper_limited_edition_title">ویراست محدود</string>
+    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
+    <string name="wallpaper_limited_edition_description_with_learn_more">مجموعهٔ آواهای مستقل جدید. %s</string>
+    <!-- Description text for the limited edition wallpapers. -->
+    <string name="wallpaper_limited_edition_description">مجموعهٔ آواهای مستقل جدید.</string>
+    <!-- Wallpaper onboarding dialog header text. -->
+    <string name="wallpapers_onboarding_dialog_title_text">یک رنگ پاشیده شده را بیازمایید</string>
+    <!-- Wallpaper onboarding dialog body text. -->
+    <string name="wallpapers_onboarding_dialog_body_text">کاغذدیواری‌ای را انتخاب کنید که با شما سخن می‌گوید.</string>
+    <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
+    <string name="wallpapers_onboarding_dialog_explore_more_button_text">کاوش کاغذدیواری‌های بیش‌تر</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -623,7 +715,7 @@
 
     <!-- Gestures Preferences-->
     <!-- Preferences for using pull to refresh in a webpage -->
-    <string name="preference_gestures_website_pull_to_refresh">برای تازه‌ سازی صفحه بکشید</string>
+    <string name="preference_gestures_website_pull_to_refresh">کشیدن برای بازخوانی</string>
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">برای پنهان‌ کردن نوار ابزار پیمایش کنید</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
@@ -653,8 +745,23 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">بستن</string>
 
+    <!-- Title to show in alert when a lot of tabs are to be opened
+    %d is a placeholder for the number of tabs that will be opened -->
+    <string name="open_all_warning_title">گشودن %d زبانه؟</string>
+    <!-- Message to warn users that a large number of tabs will be opened
+    %s will be replaced by app name. -->
+    <string name="open_all_warning_message">گشودن این‌همه زبانه ممکن است هنگام بار کردن صفحات، %s را کند سازد. مطمئنید که می‌خواهید ادامه دهید؟</string>
+    <!-- Dialog button text for confirming open all tabs -->
+    <string name="open_all_warning_confirm">گشودن زبانه‌ها</string>
     <!-- Dialog button text for canceling open all tabs -->
     <string name="open_all_warning_cancel">لغو</string>
+
+    <!-- Text to show users they have one page in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_site_1">%d صفحه</string>
+    <!-- Text to show users they have multiple pages in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_sites_1">%d صفحه‌ها</string>
 
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">زبانه‌های تازه بسته شده</string>
@@ -709,6 +816,13 @@
     <string name="close_tabs_after_one_week_summary">بستن پس از یک هفته</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">بستن پس از یک ماه</string>
+
+    <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage_summary">گشودن در صفحهٔ خانگی</string>
+    <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab_summary">گشودن در آخرین زبانه</string>
+    <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">گشودن در صفحهٔ خانگی بعد از چهار ساعت</string>
 
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
@@ -880,6 +994,10 @@
     <string name="bookmark_menu_open_in_new_tab_button">گشودن در زبانهٔ جدید</string>
     <!-- Bookmark overflow menu open in private tab button -->
     <string name="bookmark_menu_open_in_private_tab_button">گشودن در زبانهٔ خصوصی</string>
+    <!-- Bookmark overflow menu open all in tabs button -->
+    <string name="bookmark_menu_open_all_in_tabs_button">گشودن همه در زبانه‌های جدید</string>
+    <!-- Bookmark overflow menu open all in private tabs button -->
+    <string name="bookmark_menu_open_all_in_private_tabs_button">گشودن همه در زبانه‌های خصوصی</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">حذف</string>
     <!--Bookmark overflow menu save button -->
@@ -973,6 +1091,12 @@
     <string name="preference_exceptions">استثناها</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">خاموش</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to standard -->
+    <string name="tracking_protection_standard">استاندارد</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to strict -->
+    <string name="tracking_protection_strict">سخت‌گیرانه</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to custom -->
+    <string name="tracking_protection_custom">سفارشی</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">اجازه دادن صوت و ویدئو</string>
     <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
@@ -1055,6 +1179,10 @@
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">اشتراک‌گذاری</string>
+    <!-- Text for the Save to PDF feature in the share menu -->
+    <string name="share_save_to_pdf">ذخیره به صورت PDF</string>
+    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <string name="unable_to_save_to_pdf_error">ناتوانی در تولید PDF</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">ارسال به دستگاه</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1067,7 +1195,9 @@
     <string name="toast_copy_link_to_clipboard">به تخته‌گیره رونوشت شد</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">برای همگام‌سازی وارد شوید</string>
-     <!-- An option from the share dialog to send link to all other sync devices -->
+     <!-- An option from the three dot menu to sync and save data -->
+    <string name="sync_menu_sync_and_save_data">همگام‌سازی و ذخیرهٔ داده‌ها</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">ارسال به همه دستگاه‌ها</string>
     <!-- An option from the share dialog to reconnect to sync -->
     <string name="sync_reconnect">اتصال مجدد برای همگام‌سازی</string>
@@ -1096,6 +1226,36 @@
 
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">بازاریابی</string>
+
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_title" tools:ignore="UnusedResources">‏‏Firefox سریع و خصوصی است</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_text" tools:ignore="UnusedResources">‏Firefox را مروگر پیش‌فرض‌تان بکنید</string>
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">مرور خصوصی را بیازمایید</string>
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">در %1$s بدون هیچ کلوچک یا تاریخچهٔ ذخیره شده‌ای مرور کنید</string>
+    <!-- Title A shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_A_title">بدون ردیابی شدن مرور کنید</string>
+    <!-- Text A shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_A_text">مرور خصوصی در %1$s اطلاعات شما را ذخیره نمی‌کند.</string>
+    <!-- Title B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_title">نخستین جست‌وجویتان را شروع کنید</string>
+    <!-- Text B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_text">چیزی نزدیک را بیابید. یا چیزی جالب کشف کنید.</string>
+
+    <!-- Survey -->
+    <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_survey_message_text">لطفاً با شرکت در یک نظرسنجی کوتاه، به بهتر شدن Firefox کمک کنید.</string>
+    <!-- Preference for taking the short survey. -->
+    <string name="preferences_take_survey">شرکت در نظرسنجی</string>
+    <!-- Preference for not taking the short survey. -->
+    <string name="preferences_not_take_survey">نه ممنون</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
@@ -1219,10 +1379,25 @@
     <!-- Text for the snackbar confirmation that the history group was deleted -->
     <string name="delete_history_group_snackbar">گروه حذف شد</string>
 
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome header. -->
+    <string name="onboarding_header_2">به اینترنتی بهتر خوش‌آمدید</string>
+    <!-- Text for the onboarding welcome message. -->
+    <string name="onboarding_message">مرورگری ساخته شده برای مردم، نه سود.</string>
+    <!-- Text for the Firefox account onboarding sign in card header. -->
+    <string name="onboarding_account_sign_in_header">از همان جایی که قبلاً بودید ادامه دهید</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description">نشانک‌ها، تاریخچه و گذرواژه‌های خود را به Firefox در این دستگاه بیاورید.</string>
+    <!-- Text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in">ورود</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">همگام سازی روشن است</string>
+    <!-- Text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">حفاظت خودکار از حریم خصوصی</string>
+    <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_old">‏%1$s به طور خودکار جلوی شرکت‌ها را از پی‌گیری مخفیانهٔ شما در پیرامون وب می‌گیرد.</string>
+    <!-- Text for the tracking protection card description. -->
+    <string name="onboarding_tracking_protection_description">دارای محفاظت کامل در برابر کلوچک‌ها است که نمی‌گذارد ردیاب‌ها با استفاده از کلوچک‌ها شما را میان پایگاه‌ها تعقیب کنند.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">استاندارد (پیش‌فرض)</string>
     <!-- text for standard blocking option button description -->
@@ -1234,9 +1409,17 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">مسدودسازی ردیاب‌های بیشتر، اما برخی امکانات داخل صفحات ممکن است از کار بیافتند.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">محل قرارگیری نوار ابزار خود را انتخاب کنید</string>
+    <!-- Text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description">پایین نگهش دارید، یا بالا بیاوریدش.</string>
+    <!-- Text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header_1">شما داده‌هایتان را کنترل می‌کنید</string>
+    <!-- Text for the privacy notice onboarding card description. -->
+    <string name="onboarding_privacy_notice_description">‏Firefox کنترل چیزهایی که برخط یا با ما هم‌رسانی می‌کنید را به شما می‌دهد.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">اعلامیه حریم خصوصی ما را بخوانید</string>
 
+    <!-- Text for the conclusion onboarding message -->
+    <string name="onboarding_conclusion_header">آمادهٔ گشودن اینترنتی شگفت‌انگیز هستید؟</string>
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">شروع مرور</string>
 
@@ -1290,20 +1473,28 @@
     <string name="preference_enhanced_tracking_protection">محافظت پیشرفته در برابر ردیابی</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">بدون دنبال شدن مرور کنید</string>
+    <!-- Preference summary for enhanced tracking protection settings on/off switch -->
+    <string name="preference_enhanced_tracking_protection_summary">هم‌اکنون دارای محافظت کامل در برابر کلوچک است؛ قدرتمندترین سد ما بر ضدّ ردیاب‌های میان‌پایگاهی.</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">داده‌های خود را نزد خود نگه دارید.%s شما را از بسیاری از متداول‌ترین ردیاب‌هایی که شما را به صورت برخط دنبال می‌کنند محافظت می‌کند.</string>
+    <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation_2">‏%s شما را از بسیاری از ردیاب‌های رایج که فعالیت‌های برخط‌تان را پی می‌گیرند، محافظت می‌کند.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">بیشتر بدانید</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">استاندارد (پیش‌فرض)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">تعادل بین کارآیی و حریم‌خصوصی. بارگیری صفحات با سرعتی عادی.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_5">صفحات به طور معمولی بار می‌شوند؛ اما تعداد کمی ردیاب را مسدود می‌کند.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">آنچه توسط حفاظت ردیابی استاندارد مسدود شده است</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict">سخت گیرانه</string>
+    <string name="preference_enhanced_tracking_protection_strict">سخت‌گیرانه</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">مسدودسازی ردیاب‌های بیشتر، اما برخی امکانات داخل صفحات ممکن است از کار بیافتند.</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_4">محافظت از ردیابی قوی‌تر و کارایی سریع‌تر ، اما برخی از پایگاه‌ها ممکن است به درستی کار نکنند.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">آنچه توسط حفاظت ردیابی سخت‌گیرانه مسدود شده است</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1391,6 +1582,10 @@
     <string name="preference_etp_smartblock_description">برخی از ردیاب‌هایی که در زیر علامت‌گذاری شده‌اند تا حدی در این صفحه رفع انسداد شده‌اند زیرا شما با آن‌ها تعامل داشتید *.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">بیشتر بدانید</string>
+
+    <!-- Content description (not visible, for screen readers etc.):
+    Enhanced tracking protection exception preference icon for ETP settings. -->
+    <string name="preference_etp_exceptions_icon_description">نقشک ترجیحات استثناهای محافظت در برابر ردیابی ارتقا یافته</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">پشتیبانی</string>
@@ -1740,6 +1935,8 @@
     <string name="dialog_delete_negative">لغو</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">گزینه های ورود</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">فیلد متنی ویرایش‌پذیر برای نشانی وب ورود.</string>
     <!--  The editable text field for a login's username. -->
     <string name="saved_login_username_description">قسمت متن قابل ویرایش برای نام کاربری ورود به سیستم.</string>
     <!--  The editable text field for a login's password. -->
@@ -1845,6 +2042,11 @@
     <!-- Search suggestions title for Firefox Suggest. -->
     <string name="firefox_suggest_header">پیشنهادهای Firefox</string>
 
+    <!-- Title for search suggestions when Google is the default search suggestion engine. -->
+    <string name="google_search_engine_suggestion_header">جست‌وجوی گوگل</string>
+    <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
+    <string name="other_default_search_engine_suggestion_header">جست‌وجوی %s</string>
+
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">پیوندهای وبگاه‌ها، رایانامه‌ها و پیام‌ها را تنظیم کنید تا به طور خودکار در Firefox باز شوند.</string>
 
@@ -1867,6 +2069,8 @@
     <string name="pocket_stories_categories_header">داستان‌ها بر اساس موضوع</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">بیشتر ببینید</string>
+    <!-- Title of an app feature. Smaller than a heading. The first parameter is product name Pocket -->
+    <string name="pocket_stories_feature_title_2">قدرت گرفته از %s.</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
     <string name="pocket_stories_feature_caption">بخشی از خانوادهٔ Firefox.‏ %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
@@ -1880,4 +2084,15 @@
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">رفتن به تنظیمات</string>
 
-    </resources>
+    <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
+    <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->
+    <string name="a11y_action_label_collapse">جمع کردن</string>
+    <!-- Action label for elements that can be expanded if interacting with them. Talkback will append this to say "Double tap to expand". -->
+    <string name="a11y_action_label_expand">گستردن</string>
+    <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
+    <string name="a11y_action_label_wallpaper_collection_learn_more">برای آموختن بیش‌تر دربارهٔ این مجموعه، پیوند را باز کنید</string>
+    <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
+    <string name="a11y_action_label_read_article">خواندن مقاله</string>
+    <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
+    <string name="a11y_action_label_pocket_learn_more">برای آموختن بیش‌تر، پیوند را باز کنید</string>
+</resources>

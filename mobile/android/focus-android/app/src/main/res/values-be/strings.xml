@@ -481,6 +481,9 @@
     <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
     <string name="firstrun_shortcut_text">Хутка вярніцеся да сваіх улюбёных сайтаў у %1$s. Проста выберыце \&quot;Дадаць на хатні экран\&quot; у меню %1$s.</string>
 
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">Зрабіце прыватнасць звычкаю</string>
+
     <string name="firstrun_close_button">OK, зразумела!</string>
     <string name="firstrun_skip_button">Прапусціць</string>
     <string name="firstrun_next_button">Далей</string>
@@ -616,8 +619,20 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
     <string name="cookie_banner_exception_panel_description_state_off_for_site2">%1$s можа паспрабаваць аўтаматычна адхіляць запыты на файлы кукі.</string>
 
+    <!-- Long text for a detail explanation indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
+    <string name="cookie_banner_exception_panel_description_site_is_not_supported">Гэты сайт у цяперашні час не падтрымліваецца функцыяй памяншэння колькасці банераў кукі. Хочаце запытаць нашу каманду прагледзець гэты сайт і дадаць падтрымку ў будучыні?</string>
+
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
     <string name="cookie_banner_exception_panel_site_is_not_supported_cancel_button">Скасаваць</string>
+
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
+    <string name="cookie_banner_exception_panel_site_is_not_supported_request_support_button">Запытаць падтрымку</string>
+
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_report_a_site_snackbar_label">Запыт на падтрымку сайта адпраўлены.</string>
+
+    <!-- Label for cookie banner item from tracking protection, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_the_site_was_reported">Запыт на падтрымку сайта адпраўлены.</string>
 
     <!-- Contextual Feature Recommendation Popups -->
     <!-- CFR for Cookie Banner (Banner Info Message). %1$s will be replaced by the app name, %2$s will be an active link using the string cfr_cookie_banner_link as text. -->
@@ -760,6 +775,8 @@
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Уваход у поўнаэкранны рэжым</string>
 
+    <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_title">Блакаваць патэнцыйна небяспечныя і падманлівыя сайты</string>
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Рэжым «Толькі HTTPS»</string>
 
@@ -786,6 +803,8 @@
     <string name="tab_crash_report_title">Збой карткі</string>
     <!-- Headline for the tab crash report screen -->
     <string name="tab_crash_report_headline">Прабачце. З гэтай карткай узніклі праблемы.</string>
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">Як прыватны браўзер, мы ніколі не захоўваем і не можам аднавіць гэту картку.</string>
     <!-- Label for button to close the tab-->
     <string name="tab_crash_report_close_tab_button_label">Закрыць картку</string>
 
@@ -845,6 +864,12 @@
 
     <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Злучэнне не бяспечнае</string>
+
+     <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    Гэта можа быць праблемай наладкі сервера ці, магчыма, хтосьці спрабуе прыкінуцца гэтым серверам. <br/><br/>
+    Калі вы паспяхова злучаліся з гэтым серверам раней, памылка можа быць часовай.
+    ]]></string>
 
      <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
