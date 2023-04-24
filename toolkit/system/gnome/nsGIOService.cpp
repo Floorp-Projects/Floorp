@@ -269,10 +269,15 @@ gboolean g_app_info_launch_default_for_uri_openbsd(const char* uri,
   gboolean result_uncertain;
   gchar* path = g_filename_from_uri(uri, NULL, NULL);
   gchar* content_type = g_content_type_guess(path, NULL, 0, &result_uncertain);
+  gchar* scheme = g_uri_parse_scheme(uri);
   auto release = MakeScopeExit([&] {
     g_free(path);
     g_free(content_type);
+    g_free(scheme);
   });
+  if (g_strcmp0(scheme, "http") == 0 || g_strcmp0(scheme, "https") == 0)
+    return g_app_info_launch_default_for_uri(uri, context, error);
+
   if (content_type != NULL && !result_uncertain) {
     g_debug("content type for %s: %s", uri, content_type);
     GAppInfo* app_info = g_app_info_get_default_for_type(content_type, false);
