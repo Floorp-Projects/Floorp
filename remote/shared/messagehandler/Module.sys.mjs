@@ -8,11 +8,14 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
+  Log: "chrome://remote/content/shared/Log.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "disabledExperimentalAPI", () => {
   return !Services.prefs.getBoolPref("remote.experimental.enabled");
 });
+
+XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 
 export class Module {
   #messageHandler;
@@ -29,11 +32,11 @@ export class Module {
 
   /**
    * Clean-up the module instance.
-   *
-   * It's required to be implemented in the sub class.
    */
   destroy() {
-    throw new Error("Not implemented");
+    lazy.logger.warn(
+      `Module ${this.constructor.name} is missing a destroy method`
+    );
   }
 
   /**
