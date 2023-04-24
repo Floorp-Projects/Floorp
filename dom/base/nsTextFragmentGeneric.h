@@ -4,10 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef nsTextFragmentGeneric_h__
+#define nsTextFragmentGeneric_h__
+
+#include "nsTextFragmentGenericFwd.h"
+
 #include "nscore.h"
 #include "nsTextFragmentImpl.h"
 #include <algorithm>
-#include <xsimd/xsimd.hpp>
 
 namespace mozilla {
 
@@ -57,3 +61,5 @@ int32_t FirstNon8Bit(const char16_t* str, const char16_t* end) {
 }
 
 }  // namespace mozilla
+
+#endif
