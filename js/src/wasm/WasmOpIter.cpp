@@ -764,9 +764,12 @@ OpKind wasm::Classify(OpBytes op) {
         case MozOp::F64Pow:
         case MozOp::F64Atan2:
           return OpKind::Binary;
-        case MozOp::F64Sin:
-        case MozOp::F64Cos:
-        case MozOp::F64Tan:
+        case MozOp::F64SinNative:
+        case MozOp::F64SinFdlibm:
+        case MozOp::F64CosNative:
+        case MozOp::F64CosFdlibm:
+        case MozOp::F64TanNative:
+        case MozOp::F64TanFdlibm:
         case MozOp::F64Asin:
         case MozOp::F64Acos:
         case MozOp::F64Atan:

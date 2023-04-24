@@ -47,9 +47,12 @@ enum class SymbolicAddress {
   aeabi_uidivmod,
 #endif
   ModD,
-  SinD,
-  CosD,
-  TanD,
+  SinNativeD,
+  SinFdlibmD,
+  CosNativeD,
+  CosFdlibmD,
+  TanNativeD,
+  TanFdlibmD,
   ASinD,
   ACosD,
   ATanD,
@@ -198,9 +201,12 @@ static_assert(sizeof(SymbolicAddressSignature) <= 32,
 // These provide argument type information for a subset of the SymbolicAddress
 // targets, for which type info is needed to generate correct stackmaps.
 
-extern const SymbolicAddressSignature SASigSinD;
-extern const SymbolicAddressSignature SASigCosD;
-extern const SymbolicAddressSignature SASigTanD;
+extern const SymbolicAddressSignature SASigSinNativeD;
+extern const SymbolicAddressSignature SASigSinFdlibmD;
+extern const SymbolicAddressSignature SASigCosNativeD;
+extern const SymbolicAddressSignature SASigCosFdlibmD;
+extern const SymbolicAddressSignature SASigTanNativeD;
+extern const SymbolicAddressSignature SASigTanFdlibmD;
 extern const SymbolicAddressSignature SASigASinD;
 extern const SymbolicAddressSignature SASigACosD;
 extern const SymbolicAddressSignature SASigATanD;

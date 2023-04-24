@@ -79,12 +79,18 @@ static const unsigned BUILTIN_THUNK_LIFO_SIZE = 64 * 1024;
 namespace js {
 namespace wasm {
 
-const SymbolicAddressSignature SASigSinD = {
-    SymbolicAddress::SinD, _F64, _Infallible, 1, {_F64, _END}};
-const SymbolicAddressSignature SASigCosD = {
-    SymbolicAddress::CosD, _F64, _Infallible, 1, {_F64, _END}};
-const SymbolicAddressSignature SASigTanD = {
-    SymbolicAddress::TanD, _F64, _Infallible, 1, {_F64, _END}};
+const SymbolicAddressSignature SASigSinNativeD = {
+    SymbolicAddress::SinNativeD, _F64, _Infallible, 1, {_F64, _END}};
+const SymbolicAddressSignature SASigSinFdlibmD = {
+    SymbolicAddress::SinFdlibmD, _F64, _Infallible, 1, {_F64, _END}};
+const SymbolicAddressSignature SASigCosNativeD = {
+    SymbolicAddress::CosNativeD, _F64, _Infallible, 1, {_F64, _END}};
+const SymbolicAddressSignature SASigCosFdlibmD = {
+    SymbolicAddress::CosFdlibmD, _F64, _Infallible, 1, {_F64, _END}};
+const SymbolicAddressSignature SASigTanNativeD = {
+    SymbolicAddress::TanNativeD, _F64, _Infallible, 1, {_F64, _END}};
+const SymbolicAddressSignature SASigTanFdlibmD = {
+    SymbolicAddress::TanFdlibmD, _F64, _Infallible, 1, {_F64, _END}};
 const SymbolicAddressSignature SASigASinD = {
     SymbolicAddress::ASinD, _F64, _Infallible, 1, {_F64, _END}};
 const SymbolicAddressSignature SASigACosD = {
@@ -1104,15 +1110,24 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
     case SymbolicAddress::ModD:
       *abiType = Args_Double_DoubleDouble;
       return FuncCast(NumberMod, *abiType);
-    case SymbolicAddress::SinD:
+    case SymbolicAddress::SinNativeD:
       *abiType = Args_Double_Double;
       return FuncCast<double(double)>(sin, *abiType);
-    case SymbolicAddress::CosD:
+    case SymbolicAddress::SinFdlibmD:
+      *abiType = Args_Double_Double;
+      return FuncCast<double(double)>(fdlibm::sin, *abiType);
+    case SymbolicAddress::CosNativeD:
       *abiType = Args_Double_Double;
       return FuncCast<double(double)>(cos, *abiType);
-    case SymbolicAddress::TanD:
+    case SymbolicAddress::CosFdlibmD:
+      *abiType = Args_Double_Double;
+      return FuncCast<double(double)>(fdlibm::cos, *abiType);
+    case SymbolicAddress::TanNativeD:
       *abiType = Args_Double_Double;
       return FuncCast<double(double)>(tan, *abiType);
+    case SymbolicAddress::TanFdlibmD:
+      *abiType = Args_Double_Double;
+      return FuncCast<double(double)>(fdlibm::tan, *abiType);
     case SymbolicAddress::ASinD:
       *abiType = Args_Double_Double;
       return FuncCast<double(double)>(fdlibm::asin, *abiType);
@@ -1450,9 +1465,12 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
 #endif
     case SymbolicAddress::AllocateBigInt:
     case SymbolicAddress::ModD:
-    case SymbolicAddress::SinD:
-    case SymbolicAddress::CosD:
-    case SymbolicAddress::TanD:
+    case SymbolicAddress::SinNativeD:
+    case SymbolicAddress::SinFdlibmD:
+    case SymbolicAddress::CosNativeD:
+    case SymbolicAddress::CosFdlibmD:
+    case SymbolicAddress::TanNativeD:
+    case SymbolicAddress::TanFdlibmD:
     case SymbolicAddress::ASinD:
     case SymbolicAddress::ACosD:
     case SymbolicAddress::ATanD:
