@@ -1,6 +1,15 @@
 {
   "data": [
     {
+      "name": "Node.js",
+      "schema": 1682169844757,
+      "status": "current",
+      "version": "20.0.0",
+      "browserid": "nodejs",
+      "id": "59f25720-b682-46f5-8d95-a1f991c25b4c",
+      "last_modified": 1682319518056
+    },
+    {
       "name": "Edge",
       "schema": 1681910646625,
       "status": "nightly",
@@ -236,15 +245,6 @@
     },
     {
       "name": "Node.js",
-      "schema": 1666790648328,
-      "status": "current",
-      "version": "19.0.0",
-      "browserid": "nodejs",
-      "id": "0b1807f0-a262-4526-91ab-d3a0b8dcf8a3",
-      "last_modified": 1666884917916
-    },
-    {
-      "name": "Node.js",
       "schema": 1666790648265,
       "status": "esr",
       "version": "18.0.0",
@@ -415,5 +415,5 @@
       "last_modified": 1645448267500
     }
   ],
-  "timestamp": 1681914299806
+  "timestamp": 1682319518056
 }
