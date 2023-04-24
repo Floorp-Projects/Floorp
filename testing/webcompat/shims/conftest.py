@@ -18,6 +18,11 @@ def pytest_generate_tests(metafunc):
     argvalues = []
     ids = []
 
+    if "only_platforms" in marks:
+        for mark in metafunc.function.pytestmark:
+            if mark.name == "only_platforms":
+                otherargs["only_platforms"] = mark.args
+
     if "skip_platforms" in marks:
         for mark in metafunc.function.pytestmark:
             if mark.name == "skip_platforms":

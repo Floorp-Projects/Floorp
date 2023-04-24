@@ -238,6 +238,15 @@ def platform(session):
 
 
 @pytest.fixture(autouse=True)
+def only_platforms(bug_number, platform, request, session):
+    if request.node.get_closest_marker("only_platforms"):
+        for only in request.node.get_closest_marker("only_platforms").args:
+            if only == platform:
+                return
+        pytest.skip(f"Bug #{bug_number} skipped on platform ({platform})")
+
+
+@pytest.fixture(autouse=True)
 def skip_platforms(bug_number, platform, request, session):
     if request.node.get_closest_marker("skip_platforms"):
         for skipped in request.node.get_closest_marker("skip_platforms").args:
