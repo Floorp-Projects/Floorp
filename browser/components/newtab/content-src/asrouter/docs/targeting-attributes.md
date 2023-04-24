@@ -68,6 +68,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [hasMigratedPasswords](#hasmigratedpasswords)
 * [useEmbeddedMigrationWizard][#useembeddedmigrationwizard]
 * [isRTAMO](#isrtamo)
+* [isDeviceMigration](#isdevicemigration)
 
 ## Detailed usage
 
@@ -968,3 +969,7 @@ A boolean. `true` if the user is configured to use the embedded Migration Wizard
 ### `isRTAMO`
 
 A boolean. `true` when [RTAMO](first-run.md#return-to-amo-rtamo) has been used to download Firefox, `false` otherwise.
+
+### `isDeviceMigration`
+
+A boolean. `true` when [support.mozilla.org](https://support.mozilla.org) has been used to download the browser as part of a "migration" campaign, for device migration guidance, `false` otherwise.
