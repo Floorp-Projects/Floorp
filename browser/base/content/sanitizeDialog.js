@@ -62,7 +62,7 @@ var gSanitizePromptDialog = {
       this.warningBox.hidden = false;
       document.l10n.setAttributes(
         document.documentElement,
-        "dialog-title-everything"
+        "sanitize-dialog-title-everything"
       );
       let warningDesc = document.getElementById("sanitizeEverythingWarning");
       // Ensure we've translated and sized the warning.
@@ -95,7 +95,7 @@ var gSanitizePromptDialog = {
       }
       document.l10n.setAttributes(
         document.documentElement,
-        "dialog-title-everything"
+        "sanitize-dialog-title-everything"
       );
       return;
     }
@@ -108,7 +108,10 @@ var gSanitizePromptDialog = {
       window.resizeBy(0, -diff);
       warningBox.hidden = true;
     }
-    document.l10n.setAttributes(document.documentElement, "dialog-title");
+    document.l10n.setAttributes(
+      document.documentElement,
+      "sanitize-dialog-title"
+    );
   },
 
   sanitize(event) {
