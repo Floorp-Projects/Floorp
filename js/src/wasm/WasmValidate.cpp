@@ -1711,6 +1711,8 @@ static bool DecodeTypeSection(Decoder& d, ModuleEnvironment* env) {
       return false;
     }
 
+    // First, iterate over the types, validate them and set super types.
+    // Subtyping relationship will be checked in a second iteration.
     for (uint32_t recGroupTypeIndex = 0; recGroupTypeIndex < recGroupLength;
          recGroupTypeIndex++) {
       uint32_t typeIndex =
@@ -1795,17 +1797,26 @@ static bool DecodeTypeSection(Decoder& d, ModuleEnvironment* env) {
       }
 
       if (superTypeDef) {
-        // Check that the super type is compatible with this type
-        if (!TypeDef::canBeSubTypeOf(typeDef, superTypeDef)) {
-          return d.fail("incompatible super type");
-        }
-
         // Check that we aren't creating too deep of a subtyping chain
         if (superTypeDef->subTypingDepth() >= MaxSubTypingDepth) {
           return d.fail("type is too deep");
         }
 
         typeDef->setSuperTypeDef(superTypeDef);
+      }
+    }
+
+    // Check the super types to make sure they are compatible with their
+    // subtypes. This is done in a second iteration to avoid dealing with not
+    // yet loaded types.
+    for (uint32_t recGroupTypeIndex = 0; recGroupTypeIndex < recGroupLength;
+         recGroupTypeIndex++) {
+      TypeDef* typeDef = &recGroup->type(recGroupTypeIndex);
+      if (typeDef->superTypeDef()) {
+        // Check that the super type is compatible with this type
+        if (!TypeDef::canBeSubTypeOf(typeDef, typeDef->superTypeDef())) {
+          return d.fail("incompatible super type");
+        }
       }
     }
 
