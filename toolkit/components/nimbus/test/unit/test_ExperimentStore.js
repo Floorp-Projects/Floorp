@@ -3,8 +3,8 @@
 const { ExperimentStore } = ChromeUtils.importESModule(
   "resource://nimbus/lib/ExperimentStore.sys.mjs"
 );
-const { FeatureManifest } = ChromeUtils.import(
-  "resource://nimbus/FeatureManifest.js"
+const { FeatureManifest } = ChromeUtils.importESModule(
+  "resource://nimbus/FeatureManifest.sys.mjs"
 );
 
 const { SYNC_DATA_PREF_BRANCH, SYNC_DEFAULTS_PREF_BRANCH } = ExperimentStore;
