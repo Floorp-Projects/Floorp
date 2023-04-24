@@ -7,6 +7,8 @@
 #include "mozilla/glean/bindings/MemoryDistribution.h"
 
 #include "mozilla/Components.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/ResultVariant.h"
 #include "mozilla/glean/bindings/HistogramGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "nsIClassInfoImpl.h"

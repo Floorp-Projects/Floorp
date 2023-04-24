@@ -8,6 +8,8 @@
 #define mozilla_glean_GleanQuantity_h
 
 #include "nsIGleanMetrics.h"
+#include "nsTString.h"
+#include "nsIScriptError.h"
 
 namespace mozilla::glean {
 
