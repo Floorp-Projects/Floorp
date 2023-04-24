@@ -11,9 +11,7 @@
 #include "mozilla/ResultVariant.h"
 #include "mozilla/glean/bindings/ScalarGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
-#include "Common.h"
 #include "nsIClassInfoImpl.h"
-#include "nsIScriptError.h"
 
 namespace mozilla::glean {
 

@@ -198,7 +198,7 @@ def write_metrics(objs, output_fd, template_filename, output_fd_h, template_file
         key_type="const nsACString&",
         key_bytes="aKey.BeginReading()",
         key_length="aKey.Length()",
-        return_type="static inline Maybe<uint32_t>",
+        return_type="Maybe<uint32_t>",
         return_entry="return category_result_check(aKey, entry);",
     )
 
@@ -216,7 +216,7 @@ def write_metrics(objs, output_fd, template_filename, output_fd_h, template_file
         key_type="const nsACString&",
         key_bytes="aKey.BeginReading()",
         key_length="aKey.Length()",
-        return_type="static inline Maybe<uint32_t>",
+        return_type="Maybe<uint32_t>",
         return_entry="return metric_result_check(aKey, entry);",
     )
 
