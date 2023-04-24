@@ -57,7 +57,7 @@ debug = ["webrender/capture", "webrender/profiler"]
 app_units = "0.7"
 env_logger = { version = "0.10", default_features = false }
 euclid = "0.22"
-gleam = "0.13"
+gleam = "0.15"
 glutin = "0.28"
 rayon = "1"
 webrender = { path = "../webrender" }
