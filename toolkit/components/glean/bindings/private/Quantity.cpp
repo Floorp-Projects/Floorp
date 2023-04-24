@@ -12,7 +12,6 @@
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "nsIClassInfoImpl.h"
 #include "nsString.h"
-#include "Common.h"
 
 namespace mozilla::glean {
 
