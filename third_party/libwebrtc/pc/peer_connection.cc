@@ -2028,6 +2028,19 @@ void PeerConnection::ReportFirstConnectUsageMetrics() {
         "WebRTC.PeerConnection.ValidIceChars",
         !(isUsingInvalidIceCharInUfrag || isUsingInvalidIceCharInPwd));
   }
+
+  // Record RtcpMuxPolicy setting.
+  RtcpMuxPolicyUsage rtcp_mux_policy = kRtcpMuxPolicyUsageMax;
+  switch (configuration_.rtcp_mux_policy) {
+    case kRtcpMuxPolicyNegotiate:
+      rtcp_mux_policy = kRtcpMuxPolicyUsageNegotiate;
+      break;
+    case kRtcpMuxPolicyRequire:
+      rtcp_mux_policy = kRtcpMuxPolicyUsageRequire;
+      break;
+  }
+  RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.RtcpMuxPolicy",
+                            rtcp_mux_policy, kRtcpMuxPolicyUsageMax);
 }
 
 void PeerConnection::OnIceGatheringChange(

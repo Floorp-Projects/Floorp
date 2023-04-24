@@ -175,6 +175,16 @@ enum ProvisionalAnswerUsage {
   kProvisionalAnswerMax
 };
 
+// Metrics for RTCRtpMuxPolicy. The only defined value is
+// https://w3c.github.io/webrtc-pc/#rtcrtcpmuxpolicy-enum
+// "require" but there is a legacy option "negotiate" which
+// was removed from the spec.
+enum RtcpMuxPolicyUsage {
+  kRtcpMuxPolicyUsageRequire = 0,
+  kRtcpMuxPolicyUsageNegotiate = 1,
+  kRtcpMuxPolicyUsageMax
+};
+
 // When adding new metrics please consider using the style described in
 // https://chromium.googlesource.com/chromium/src.git/+/HEAD/tools/metrics/histograms/README.md#usage
 // instead of the legacy enums used above.
