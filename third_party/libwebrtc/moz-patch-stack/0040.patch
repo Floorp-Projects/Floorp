@@ -27,7 +27,7 @@ index 7d6ec794d4..20af3f7722 100644
    stats.header_and_padding_bytes_sent =
        call_stats.header_and_padding_bytes_sent;
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index f39e57cc39..bf8e81fda4 100644
+index 0bca328846..c84a91770e 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
 @@ -56,6 +56,31 @@ class RtpPacketSenderProxy;
@@ -88,7 +88,7 @@ index f39e57cc39..bf8e81fda4 100644
    configuration.retransmission_rate_limiter =
        retransmission_rate_limiter_.get();
    configuration.extmap_allow_mixed = extmap_allow_mixed;
-@@ -757,6 +787,7 @@ CallSendStatistics ChannelSend::GetRTCPStatistics() const {
+@@ -759,6 +789,7 @@ CallSendStatistics ChannelSend::GetRTCPStatistics() const {
    RTC_DCHECK_RUN_ON(&worker_thread_checker_);
    CallSendStatistics stats = {0};
    stats.rttMs = GetRTT();
