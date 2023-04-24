@@ -207,8 +207,6 @@ void RemoteTextureMap::PushTexture(
       if (it != mRemoteTextureHostWrapperHolders.end()) {
         MOZ_ASSERT(!it->second->mAsyncRemoteTextureHost);
         it->second->mAsyncRemoteTextureHost = aTextureHost;
-      } else {
-        MOZ_ASSERT(renderingReadyCallbacks.empty());
       }
     }
 
