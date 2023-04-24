@@ -222,6 +222,15 @@ sm-all:
         - "!android !asan !shippable 'jsreftest"
         - "!shippable !android 'jittest"  # macosx64 jittests
 
+webgpu:
+    selector: fuzzy
+    description: >-
+        Runs the tests relevant to WebGPU.
+    query:
+        - "'web-platform-tests !tsan !asan !macos !android"
+        - "source-test-mozlint-updatebot"
+        - "source-test-vendor-rust"
+
 webrender:
     selector: fuzzy
     description: >-
