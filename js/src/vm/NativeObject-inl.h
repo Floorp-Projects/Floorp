@@ -159,8 +159,9 @@ inline void NativeObject::initDenseElements(const Value* src, uint32_t count) {
 }
 
 inline void NativeObject::initDenseElementRange(uint32_t destStart,
-                                                NativeObject* src) {
-  uint32_t count = src->getDenseInitializedLength();
+                                                NativeObject* src,
+                                                uint32_t count) {
+  MOZ_ASSERT(count <= src->getDenseInitializedLength());
 
   // The initialized length must already be set to the correct value.
   MOZ_ASSERT(destStart + count == getDenseInitializedLength());

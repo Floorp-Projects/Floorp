@@ -4680,7 +4680,7 @@ static bool TryOptimizePackedArrayConcat(JSContext* cx, CallArgs& args,
 
   ArrayObject* argArr = &args[0].toObject().as<ArrayObject>();
   arr->ensureDenseInitializedLength(thisLen, argLen);
-  arr->initDenseElementRange(thisLen, argArr);
+  arr->initDenseElementRange(thisLen, argArr, argLen);
 
   args.rval().setObject(*arr);
   *optimized = true;
@@ -4765,15 +4765,15 @@ static bool array_concat(JSContext* cx, unsigned argc, Value* vp) {
           n + len <= NativeObject::MAX_DENSE_ELEMENTS_COUNT) {
         NativeObject* nobj = &obj->as<NativeObject>();
         ArrayObject* resArr = &arr->as<ArrayObject>();
-        uint32_t initLen =
+        uint32_t count =
             std::min(uint32_t(len), nobj->getDenseInitializedLength());
 
-        DenseElementResult res = resArr->ensureDenseElements(cx, n, initLen);
+        DenseElementResult res = resArr->ensureDenseElements(cx, n, count);
         if (res == DenseElementResult::Failure) {
           return false;
         }
         if (res == DenseElementResult::Success) {
-          resArr->initDenseElementRange(n, nobj);
+          resArr->initDenseElementRange(n, nobj, count);
           n += len;
           optimized = true;
         } else {
