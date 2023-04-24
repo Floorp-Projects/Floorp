@@ -917,7 +917,7 @@ async function check_results({
   // return reliable resultsets, thus we have to wait.
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  let controller = UrlbarTestUtils.newMockController({
+  const controller = UrlbarTestUtils.newMockController({
     input: {
       isPrivate: context.isPrivate,
       onFirstResult() {

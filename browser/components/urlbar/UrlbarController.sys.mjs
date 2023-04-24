@@ -702,6 +702,7 @@ class TelemetryEvent {
     this._controller = controller;
     this._category = category;
     this._isPrivate = controller.input.isPrivate;
+    this.#exposureResultTypes = new Set();
     this.#beginObservingPingPrefs();
   }
 
@@ -1163,11 +1164,37 @@ class TelemetryEvent {
       return;
     }
 
+    // First check to see if we can record an exposure event
+    if (
+      (method === "abandonment" || method === "engagement") &&
+      this.#exposureResultTypes.size
+    ) {
+      const exposureResults = Array.from(this.#exposureResultTypes).join(",");
+      this._controller.logger.debug(
+        `exposure event: ${JSON.stringify({ results: exposureResults })}`
+      );
+      Glean.urlbar.exposure.record({ results: exposureResults });
+
+      // reset the provider list on the controller
+      this.#exposureResultTypes.clear();
+    }
+
     this._controller.logger.info(
       `${method} event: ${JSON.stringify(eventInfo)}`
     );
 
     Glean.urlbar[method].record(eventInfo);
+  }
+
+  /**
+   * Add result type to engagementEvent instance exposureResultTypes Set.
+   *
+   * @param {UrlbarResult} result UrlbarResult to have exposure recorded.
+   */
+  addExposure(result) {
+    if (result.exposureResultType) {
+      this.#exposureResultTypes.add(result.exposureResultType);
+    }
   }
 
   #getInteractionType(
@@ -1360,4 +1387,6 @@ class TelemetryEvent {
   }
 
   #previousSearchWordsSet = null;
+
+  #exposureResultTypes;
 }

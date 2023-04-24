@@ -556,10 +556,10 @@ add_task(async function selected_result_suggest_sponsor() {
 
     assertEngagementTelemetry([
       {
-        selected_result: "suggest_sponsor",
+        selected_result: "rs_suggest_sponsor",
         selected_result_subtype: "",
         provider: "UrlbarProviderQuickSuggest",
-        results: "search_engine,suggest_sponsor",
+        results: "search_engine,rs_suggest_sponsor",
       },
     ]);
   });
@@ -577,10 +577,10 @@ add_task(async function selected_result_suggest_non_sponsor() {
 
     assertEngagementTelemetry([
       {
-        selected_result: "suggest_non_sponsor",
+        selected_result: "rs_suggest_non_sponsor",
         selected_result_subtype: "",
         provider: "UrlbarProviderQuickSuggest",
-        results: "search_engine,suggest_non_sponsor",
+        results: "search_engine,rs_suggest_non_sponsor",
       },
     ]);
   });
@@ -660,10 +660,10 @@ add_task(async function selected_result_navigational() {
 
     assertEngagementTelemetry([
       {
-        selected_result: "navigational",
+        selected_result: "merino_navigational",
         selected_result_subtype: "",
         provider: "UrlbarProviderQuickSuggest",
-        results: "search_engine,navigational",
+        results: "search_engine,merino_navigational",
       },
     ]);
   });
@@ -694,10 +694,10 @@ add_task(async function selected_result_dynamic_wikipedia() {
 
     assertEngagementTelemetry([
       {
-        selected_result: "dynamic_wikipedia",
+        selected_result: "merino_dynamic_wikipedia",
         selected_result_subtype: "",
         provider: "UrlbarProviderQuickSuggest",
-        results: "search_engine,dynamic_wikipedia",
+        results: "search_engine,merino_dynamic_wikipedia",
       },
     ]);
   });

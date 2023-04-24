@@ -147,6 +147,16 @@ urlbar:
       type: int
       fallbackPref: browser.urlbar.merino.timeoutMs
       description: Timeout for Merino fetches (ms)
+    exposureResults:
+      type: string
+      setPref: browser.urlbar.exposureResults
+      description: >-
+        Comma-separated list of result type combinations, that are used to determine if an exposure event should be fired.
+    showExposureResults:
+      type: boolean
+      setPref: browser.urlbar.showExposureResults
+      description: >-
+        Boolean used to determine if the results defined in `exposureResults` should be shown in search results. Should be false for Control branch of an experiment.
     quickSuggestAllowPositionInSuggestions:
       type: boolean
       fallbackPref: browser.urlbar.quicksuggest.allowPositionInSuggestions

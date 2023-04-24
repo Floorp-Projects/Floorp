@@ -40,7 +40,7 @@ export class UrlbarResult {
    * @param {object} [payloadHighlights] payload highlights, if any. Each
    *        property in the payload may have a corresponding property in this
    *        object. The value of each property should be an array of [index,
-   *        length] tuples. Each tuple indicates a substring in the correspoding
+   *        length] tuples. Each tuple indicates a substring in the corresponding
    *        payload property.
    */
   constructor(resultType, resultSource, payload, payloadHighlights = {}) {
@@ -64,6 +64,15 @@ export class UrlbarResult {
     // May be used to indicate an heuristic result. Heuristic results can bypass
     // source filters in the ProvidersManager, that otherwise may skip them.
     this.heuristic = false;
+
+    // Exposure specific properties. These allow us to track the exposure
+    // of a result through the query process.
+    // A non-zero value here indicates that this result's exposure should be
+    // recorded in the exposure event.
+    this.exposureResultType = "";
+
+    // Determines if the exposure result should be hidden from the view.
+    this.exposureResultHidden = false;
 
     // The payload contains result data. Some of the data is common across
     // multiple types, but most of it will vary.
@@ -119,7 +128,7 @@ export class UrlbarResult {
       case lazy.UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
         if (this.payload.qsSuggestion) {
           return [
-            // We will initially only be targetting en-US users with this experiment
+            // We will initially only be targeting en-US users with this experiment
             // but will need to change this to work properly with l10n.
             this.payload.qsSuggestion + " — " + this.payload.title,
             this.payloadHighlights.qsSuggestion,
