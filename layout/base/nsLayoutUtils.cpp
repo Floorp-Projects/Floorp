@@ -85,7 +85,6 @@
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_font.h"
-#include "mozilla/StaticPrefs_general.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_image.h"
 #include "mozilla/StaticPrefs_layers.h"
@@ -7768,22 +7767,6 @@ size_t nsLayoutUtils::SizeOfTextRunsForFrames(nsIFrame* aFrame,
     }
   }
   return total;
-}
-
-/* static */
-void nsLayoutUtils::RecomputeSmoothScrollDefault() {
-  // We want prefers-reduced-motion to determine the default
-  // value of the general.smoothScroll pref. If the user
-  // changed the pref we want to respect the change.
-  Preferences::SetBool(
-      "general.smoothScroll",
-      !LookAndFeel::GetInt(LookAndFeel::IntID::PrefersReducedMotion, 0),
-      PrefValueKind::Default);
-}
-
-/* static */
-bool nsLayoutUtils::IsSmoothScrollingEnabled() {
-  return StaticPrefs::general_smoothScroll();
 }
 
 /* static */
