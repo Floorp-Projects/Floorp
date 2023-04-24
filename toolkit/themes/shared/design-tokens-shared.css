@@ -1,0 +1,100 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  /* Base tokens */
+  /* Do not use base tokens directly as they don't carry any meaning. Refer to application tokens below. */
+  /** Color **/
+  --color-white: #ffffff;
+  --color-blue-05: #aaf2ff;
+  --color-blue-10: #80ebff;
+  --color-blue-20: #00ddff;
+  --color-blue-50: #0060df;
+  --color-blue-60: #0250bb;
+  --color-blue-70: #054096;
+  --color-gray-50: #bfbfc9;
+  --color-gray-60: #8f8f9d;
+  --color-gray-70: #5b5b66;
+  --color-gray-90: #1c1b22;
+
+  /* Application tokens */
+  /** Border **/
+  --border-radius-circle: 9999px;
+  --border-width: 1px;
+  --border-interactive-color: unset;
+
+  /** Button **/
+  --button-background-color: unset;
+  --button-background-color-hover: unset;
+  --button-background-color-active: unset;
+
+  /** Color **/
+  --color-accent-primary: unset;
+  --color-accent-primary-hover: unset;
+  --color-accent-primary-active: unset;
+  --color-canvas: unset;
+
+  /** Focus Outline **/
+  --focus-outline: var(--focus-outline-width) solid var(--focus-outline-color);
+  --focus-outline-color: var(--color-accent-primary);
+  --focus-outline-inset: calc(-1 * var(--focus-outline-width));
+  --focus-outline-offset: 2px;
+  --focus-outline-width: 2px;
+
+  /** Text **/
+  --text-color-deemphasized: unset;
+
+  /** Size **/
+  --size-item-small: 16px;
+  --size-item-large: 32px;
+}
+
+
+@media (prefers-contrast) {
+  :root, :host {
+    /* Button */
+    --button-background-color: ButtonFace;
+    --button-background-color-hover: ButtonFace;
+    --button-background-color-active: ButtonFace;
+    --button-background-color-disabled: GrayText;
+
+    /* Color */
+    --color-canvas: Canvas;
+
+    /* Text */
+    --text-color-deemphasized: CanvasText;
+  }
+}
+
+@media (forced-colors) {
+  /* Applies to Windows HCM only */
+  :root, host {
+    /* Border */
+    --border-interactive-color: ButtonText;
+    --border-interactive-color-hover: SelectedItem;
+    --border-interactive-color-active: ButtonText;
+    --border-interactive-color-disabled: GrayText;
+
+    /* Color */
+    --color-accent-primary: ButtonText;
+    --color-accent-primary-hover: SelectedItem;
+    --color-accent-primary-active: SelectedItem;
+  }
+}
+
+@media (forced-colors: none) and (prefers-contrast)  {
+  /* Applies to macOS "increase contrast" only */
+  :root, host {
+    /* Border */
+    --border-interactive-color: AccentColor;
+    --border-interactive-color-hover: ButtonText;
+    --border-interactive-color-active: AccentColor;
+    --border-interactive-color-disabled: GrayText;
+
+    /* Color */
+    --color-accent-primary: AccentColor;
+    --color-accent-primary-hover: ButtonText;
+    --color-accent-primary-active: ButtonText;
+  }
+}

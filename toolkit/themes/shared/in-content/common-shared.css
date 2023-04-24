@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@import url("chrome://global/skin/design-tokens-brand.css");
+
 @namespace html "http://www.w3.org/1999/xhtml";
 @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -53,11 +55,11 @@
   --in-content-danger-button-background: #e22850;
   --in-content-danger-button-background-hover: #c50042;
   --in-content-danger-button-background-active: #810220;
-  --in-content-focus-outline-color: var(--in-content-primary-button-background);
-  --in-content-focus-outline-width: 2px;
-  --in-content-focus-outline-offset: 2px;
-  --in-content-focus-outline-inset: calc(-1 * var(--in-content-focus-outline-width));
-  --in-content-focus-outline: var(--in-content-focus-outline-width) solid var(--in-content-focus-outline-color);
+  --in-content-focus-outline-color: var(--focus-outline-color);
+  --in-content-focus-outline-width: var(--focus-outline-width);
+  --in-content-focus-outline-offset: var(--focus-outline-offset);
+  --in-content-focus-outline-inset: var(--focus-outline-inset);
+  --in-content-focus-outline: var(--focus-outline);
 
   --in-content-table-background: #f8f8fa;
   --in-content-table-border-color: var(--in-content-box-border-color);
@@ -265,7 +267,7 @@
 }
 
 :root:not(.system-font-size) {
-  font-size: 15px;
+  font-size: var(--in-content-font-body-size-base);
 }
 
 html|body {

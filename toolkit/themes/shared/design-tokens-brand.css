@@ -1,0 +1,53 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://global/skin/design-tokens-shared.css");
+
+:root {
+  /* Typography */
+  /** Font size **/
+  --in-content-font-body-size-base: 15px;
+  --in-content-font-body-size-small: 0.867rem;
+}
+
+@media not (prefers-contrast) {
+  :root {
+    /* Border */
+    --border-interactive-color: var(--color-gray-60);
+
+    /* Button */
+    /* TODO Bug 1821203 - Gray use needs to be consolidated */
+    --button-background-color: color-mix(in srgb, currentColor 7%, transparent);
+    --button-background-color-hover: color-mix(in srgb, currentColor 14%, transparent);
+    --button-background-color-active: color-mix(in srgb, currentColor 21%, transparent);
+
+    /* Color */
+    --color-accent-primary: var(--brand-color-accent);
+    --color-accent-primary-hover: var(--brand-color-accent-hover);
+    --color-accent-primary-active: var(--brand-color-accent-active);
+    --brand-color-accent: var(--color-blue-50);
+    --brand-color-accent-hover: var(--color-blue-60);
+    --brand-color-accent-active: var(--color-blue-70);
+    --color-canvas: var(--color-white);
+
+    /* Text */
+    --text-color-deemphasized: var(--color-gray-70);
+  }
+}
+
+@media (prefers-contrast: no-preference) and (prefers-color-scheme: dark) {
+  :root {
+    /* Border */
+    --border-interactive-color: var(--color-gray-50);
+
+    /* Color */
+    --brand-color-accent: var(--color-blue-20);
+    --brand-color-accent-hover: var(--color-blue-10);
+    --brand-color-accent-active: var(--color-blue-05);
+    --color-canvas: var(--color-gray-90);
+
+    /* Text */
+    --text-color-deemphasized: var(--color-gray-50);
+  }
+}
