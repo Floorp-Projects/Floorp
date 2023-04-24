@@ -44,8 +44,9 @@ describe("Store", () => {
     assert.property(store, "getState");
   });
   it("should create a ActivityStreamMessageChannel with the right dispatcher", () => {
-    assert.ok(store._messageChannel);
-    assert.equal(store._messageChannel.dispatch, store.dispatch);
+    assert.ok(store.getMessageChannel());
+    assert.equal(store.getMessageChannel().dispatch, store.dispatch);
+    assert.equal(store.getMessageChannel(), store._messageChannel);
   });
   it("should connect the ActivityStreamMessageChannel's middleware", () => {
     store.dispatch({ type: "FOO" });
@@ -190,7 +191,6 @@ describe("Store", () => {
     });
     it("should initialize the ActivityStreamMessageChannel channel", async () => {
       await store.init(new Map());
-      assert.calledOnce(store._messageChannel.createChannel);
     });
     it("should emit an initial event if provided", async () => {
       sinon.stub(store, "dispatch");
@@ -217,15 +217,17 @@ describe("Store", () => {
     it("should dispatch init/load events", async () => {
       await store.init(new Map(), { type: "FOO" });
 
-      assert.calledOnce(store._messageChannel.simulateMessagesForExistingTabs);
+      assert.calledOnce(
+        store.getMessageChannel().simulateMessagesForExistingTabs
+      );
     });
     it("should dispatch INIT before LOAD", async () => {
       const init = { type: "INIT" };
       const load = { type: "TAB_LOAD" };
       sandbox.stub(store, "dispatch");
-      store._messageChannel.simulateMessagesForExistingTabs.callsFake(() =>
-        store.dispatch(load)
-      );
+      store
+        .getMessageChannel()
+        .simulateMessagesForExistingTabs.callsFake(() => store.dispatch(load));
       await store.init(new Map(), init);
 
       assert.calledTwice(store.dispatch);
@@ -258,10 +260,6 @@ describe("Store", () => {
 
       assert.equal(store.feeds.size, 0);
       assert.isNull(store._feedFactories);
-    });
-    it("should destroy the ActivityStreamMessageChannel channel", () => {
-      store.uninit();
-      assert.calledOnce(store._messageChannel.destroyChannel);
     });
   });
   describe("#getState", () => {

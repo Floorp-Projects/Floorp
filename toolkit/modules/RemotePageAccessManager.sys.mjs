@@ -59,6 +59,10 @@ export let RemotePageAccessManager = {
       RPMIsWindowPrivate: ["*"],
       RPMAddToHistogram: ["*"],
     },
+    "about:home": {
+      RPMSendAsyncMessage: ["ActivityStream:ContentToMain"],
+      RPMAddMessageListener: ["ActivityStream:MainToContent"],
+    },
     "about:httpsonlyerror": {
       RPMGetFormatURLPref: ["app.support.baseURL"],
       RPMSendAsyncMessage: ["goBack", "openInsecure"],
@@ -110,6 +114,10 @@ export let RemotePageAccessManager = {
       RPMIsSiteSpecificTRRError: ["*"],
       RPMSetTRRDisabledLoadFlags: ["*"],
       RPMSendQuery: ["Browser:AddTRRExcludedDomain"],
+    },
+    "about:newtab": {
+      RPMSendAsyncMessage: ["ActivityStream:ContentToMain"],
+      RPMAddMessageListener: ["ActivityStream:MainToContent"],
     },
     "about:plugins": {
       RPMSendQuery: ["RequestPlugins"],
@@ -229,6 +237,10 @@ export let RemotePageAccessManager = {
       RPMSendAsyncMessage: ["Load", "closeTab", "restoreTab", "restoreAll"],
       RPMAddMessageListener: ["*"],
       RPMRemoveMessageListener: ["*"],
+    },
+    "about:welcome": {
+      RPMSendAsyncMessage: ["ActivityStream:ContentToMain"],
+      RPMAddMessageListener: ["ActivityStream:MainToContent"],
     },
   },
 
