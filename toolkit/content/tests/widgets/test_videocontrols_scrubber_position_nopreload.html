@@ -32,6 +32,28 @@ add_task(function test_initial_scrubber_position() {
   is(parseInt(scrubber.value), 0, "The initial position should be 0");
 });
 
+add_task(async function test_scrubber_after_manual_move() {
+  // Kick-start the video before trying to change the scrubber.
+  let loadedPromise = new Promise(r => {
+    video.addEventListener("canplaythrough", r, {once: true});
+  });
+  video.play();
+  await loadedPromise;
+  video.pause();
+  const scrubber = getElementWithinVideo(video, "scrubber");
+  // Click the middle of the scrubber:
+  synthesizeMouseAtCenter(scrubber, {});
+  // Expect that the progress updates, too:
+
+  let progress = getElementWithinVideo(video, "progressBar");
+  is(
+    // toFixed(2) takes care of rounding issues here.
+    (progress.value / progress.max).toFixed(2),
+    (scrubber.value / scrubber.max).toFixed(2),
+    "Should have updated progress bar."
+  );
+});
+
 </script>
 </pre>
 </body>
