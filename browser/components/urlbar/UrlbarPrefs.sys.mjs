@@ -26,7 +26,7 @@ const PREF_URLBAR_BRANCH = "browser.urlbar.";
 // NOTE: Don't name prefs (relative to the `browser.urlbar` branch) the same as
 // Nimbus urlbar features. Doing so would cause a name collision because pref
 // names and Nimbus feature names are both kept as keys in UrlbarPref's map. For
-// a list of Nimbus features, see: toolkit/components/nimbus/FeatureManifest.js
+// a list of Nimbus features, see toolkit/components/nimbus/FeatureManifest.yaml.
 const PREF_URLBAR_DEFAULTS = new Map([
   // Whether we announce to screen readers when tab-to-search results are
   // inserted.

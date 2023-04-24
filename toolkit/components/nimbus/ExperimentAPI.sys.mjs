@@ -10,11 +10,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   ExperimentManager: "resource://nimbus/lib/ExperimentManager.sys.mjs",
   ExperimentStore: "resource://nimbus/lib/ExperimentStore.sys.mjs",
+  FeatureManifest: "resource://nimbus/FeatureManifest.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  FeatureManifest: "resource://nimbus/FeatureManifest.js",
 });
 
 const IS_MAIN_PROCESS =
@@ -314,7 +311,7 @@ export class _ExperimentFeature {
     this.manifest = manifest || lazy.FeatureManifest[featureId];
     if (!this.manifest) {
       console.error(
-        `No manifest entry for ${featureId}. Please add one to toolkit/components/nimbus/FeatureManifest.js`
+        `No manifest entry for ${featureId}. Please add one to toolkit/components/nimbus/FeatureManifest.yaml`
       );
     }
     this._didSendExposureEvent = false;
@@ -391,7 +388,7 @@ export class _ExperimentFeature {
       // Only throw in nightly/tests
       if (Cu.isInAutomation || AppConstants.NIGHTLY_BUILD) {
         throw new Error(
-          `Nimbus: Warning - variable "${variable}" is not defined in FeatureManifest.js`
+          `Nimbus: Warning - variable "${variable}" is not defined in FeatureManifest.yaml`
         );
       }
     }

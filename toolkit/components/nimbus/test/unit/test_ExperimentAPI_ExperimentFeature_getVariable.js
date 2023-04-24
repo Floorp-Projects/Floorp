@@ -64,7 +64,7 @@ add_task(async function test_ExperimentFeature_getVariable_notRegistered() {
       () => {
         instance.getVariable("non_existant_variable");
       },
-      /Nimbus: Warning - variable "non_existant_variable" is not defined in FeatureManifest\.js/,
+      /Nimbus: Warning - variable "non_existant_variable" is not defined in FeatureManifest\.yaml/,
       "should throw in automation for variables not defined in the manifest"
     );
   } else {

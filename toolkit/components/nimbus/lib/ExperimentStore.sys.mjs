@@ -3,17 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { SharedDataMap } from "resource://nimbus/lib/SharedDataMap.sys.mjs";
-
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  FeatureManifest: "resource://nimbus/FeatureManifest.sys.mjs",
   PrefUtils: "resource://normandy/lib/PrefUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  FeatureManifest: "resource://nimbus/FeatureManifest.js",
 });
 
 const IS_MAIN_PROCESS =
