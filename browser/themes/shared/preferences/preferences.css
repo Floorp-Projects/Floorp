@@ -252,6 +252,12 @@ checkbox {
   }
 }
 
+#dataMigration {
+  /* This should really be using baseline, but that doesn't work properly with
+   * the <description> and XUL <button> markup. */
+  align-items: center;
+}
+
 #browserContainersExtensionContent {
   padding-block: 5px;
 }
