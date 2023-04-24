@@ -276,7 +276,7 @@ function _validateTestCase(tc) {
 
 async function test_submit_telemetry(tc) {
   if (tc.savedLogin) {
-    Services.logins.addLogin(
+    await Services.logins.addLoginAsync(
       LoginTestUtils.testData.formLogin({
         origin: "https://example.com",
         formActionOrigin: "https://example.com",
