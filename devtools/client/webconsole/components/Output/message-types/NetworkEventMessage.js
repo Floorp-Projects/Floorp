@@ -152,11 +152,14 @@ function NetworkEventMessage({
       title: unicodeURL,
       href: url,
       onClick: e => {
+        // The href of the <a> is the actual URL, so we need to prevent the navigation
+        // within the console panel.
+        // We only want to handle Ctrl/Cmd + click to open the link in a new tab.
+        e.preventDefault();
         const shouldOpenLink =
           (isMacOS && e.metaKey) || (!isMacOS && e.ctrlKey);
         if (shouldOpenLink) {
           e.stopPropagation();
-          e.preventDefault();
           serviceContainer.openLink(url, e);
         }
       },
