@@ -11,18 +11,31 @@
 Login Manager test: forms and logins without a username.
 <script>
 gTestDependsOnDeprecatedLogin = true;
-runChecksAfterCommonInit(async () => {
-  // The first login uses a unique formActionOrigin, to check forms where no other logins
-  // will apply. The second login uses the normal formActionOrigin, so that we can test
+runChecksAfterCommonInit(() => startTest());
+runInParent(() => {
+  var nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo);
+
+  // pwlogin1 uses a unique formActionOrigin, to check forms where no other logins
+  // will apply. pwlogin2 uses the normal formActionOrigin, so that we can test
   // forms with a mix of username and non-username logins that might apply.
   //
-  // Note: the second login is deleted at the end of the test.
-  await addLoginsInParent(
-    ["http://mochi.test:8888", "http://mochi.test:1111", null, "", "1234"],
-    ["http://mochi.test:8888", "http://mochi.test:8888", null, "", "1234"]
-  );
-  await startTest();
+  // Note: pwlogin2 is deleted at the end of the test.
+
+  let pwlogin1 = new nsLoginInfo();
+  let pwlogin2 = new nsLoginInfo();
+
+  pwlogin1.init("http://mochi.test:8888", "http://mochi.test:1111", null,
+                "", "1234");
+
+  pwlogin2.init("http://mochi.test:8888", "http://mochi.test:8888", null,
+                "", "1234");
+
+
+  Services.logins.addLogin(pwlogin1);
+  Services.logins.addLogin(pwlogin2);
 });
+
+let DEFAULT_ORIGIN = window.location.origin;
 </script>
 <p id="display"></p>
 
@@ -31,11 +44,10 @@ runChecksAfterCommonInit(async () => {
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-const DEFAULT_ORIGIN = window.location.origin;
 
 /** Test for Login Manager: password-only logins **/
 async function startTest() {
-  const win = window.open("about:blank");
+  let win = window.open("about:blank");
   SimpleTest.registerCleanupFunction(() => win.close());
   await loadFormIntoWindow(DEFAULT_ORIGIN, `
     <!-- simple form: no username field, 1 password field -->

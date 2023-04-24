@@ -11,6 +11,34 @@
 </head>
 <body>
 Login Manager test: logins with non-exact match origin appear in autocomplete dropdown
+
+<script>
+let origin = window.location.origin;
+let lastDot = origin.lastIndexOf(".");
+let suffix = origin.slice(lastDot);
+
+let baseHost = "http://example" + suffix;
+let baseSecureHost = "https://example" + suffix;
+let oldHost = "http://old.example" + suffix;
+let oldSecureHost = "https://old.example" + suffix;
+let newHost = "https://new.example" + suffix;
+
+addLoginsInParent(
+  // The first two logins should never be visible on https: versions of
+  // *.example.com since the login is for http: and an https: login exists for this username.
+  [oldHost, oldSecureHost, null, "dsdu1", "dsdp1new", "uname", "pword"],
+  [baseHost, baseSecureHost, null, "dsdu1", "dsdp1", "uname", "pword"],
+  [oldSecureHost, oldSecureHost, null, "dsdu1", "dsdp1", "uname", "pword"],
+  [baseSecureHost, baseSecureHost, null, "dsdu1", "dsdp1", "uname", "pword"],
+  [newHost, newHost, null, "dsdu1", "dsdp1prime", "uname", "pword"]);
+
+var setupScript = runInParent(function setup() {
+  addMessageListener("getDateString", () => {
+    let dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined, { dateStyle: "medium" });
+    return dateAndTimeFormatter.format(new Date());
+  });
+});
+</script>
 <p id="display"></p>
 
 <!-- we presumably can't hide the content for this test. -->
@@ -40,34 +68,7 @@ function spinEventLoop() {
   return Promise.resolve();
 }
 
-const setupScript = runInParent(function setup() {
-  addMessageListener("getDateString", () => {
-    const dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined, { dateStyle: "medium" });
-    return dateAndTimeFormatter.format(new Date());
-  });
-});
-
 add_setup(async () => {
-  const origin = window.location.origin;
-  const lastDot = origin.lastIndexOf(".");
-  const suffix = origin.slice(lastDot);
-
-  const baseHost = "http://example" + suffix;
-  const baseSecureHost = "https://example" + suffix;
-  const oldHost = "http://old.example" + suffix;
-  const oldSecureHost = "https://old.example" + suffix;
-  const newHost = "https://new.example" + suffix;
-
-  await addLoginsInParent(
-    // The first two logins should never be visible on https: versions of
-    // *.example.com since the login is for http: and an https: login exists for this username.
-    [oldHost, oldSecureHost, null, "dsdu1", "dsdp1new", "uname", "pword"],
-    [baseHost, baseSecureHost, null, "dsdu1", "dsdp1", "uname", "pword"],
-    [oldSecureHost, oldSecureHost, null, "dsdu1", "dsdp1", "uname", "pword"],
-    [baseSecureHost, baseSecureHost, null, "dsdu1", "dsdp1", "uname", "pword"],
-    [newHost, newHost, null, "dsdu1", "dsdp1prime", "uname", "pword"]
-  );
-
   await SpecialPowers.pushPrefEnv({
     set: [
       ["signon.includeOtherSubdomainsInLookup", true],
@@ -81,7 +82,7 @@ add_task(async function test_form1_initial_empty() {
 
   // Make sure initial form is empty.
   checkLoginForm(uname, "", pword, "");
-  const popupState = await getPopupState();
+  let popupState = await getPopupState();
   is(popupState.open, false, "Check popup is initially closed");
 });
 
@@ -95,13 +96,13 @@ add_task(async function test_form1_menu_shows_two_logins_same_usernames_for_diff
   restoreForm();
   const autocompleteItems = await popupByArrowDown();
 
-  const popupState = await getPopupState();
+  let popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
 
   // The logins are added "today" and since they are duplicates, the date that they were last
   // changed will be appended.
-  const dateString = await setupScript.sendQuery("getDateString");
-  const username = `dsdu1 (${dateString})`;
+  let dateString = await setupScript.sendQuery("getDateString");
+  let username = `dsdu1 (${dateString})`;
 
   checkAutoCompleteResults(autocompleteItems, [username, username], window.location.host, "Check all menuitems are displayed correctly.");
 

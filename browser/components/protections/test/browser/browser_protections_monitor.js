@@ -18,14 +18,14 @@ const mockMonitorData = {
 };
 
 add_task(async function() {
-  const tab = await BrowserTestUtils.openNewForegroundTab({
+  let tab = await BrowserTestUtils.openNewForegroundTab({
     url: "about:protections",
     gBrowser,
   });
 
   await BrowserTestUtils.reloadTab(tab);
 
-  const monitorCardEnabled = Services.prefs.getBoolPref(
+  let monitorCardEnabled = Services.prefs.getBoolPref(
     "browser.contentblocking.report.monitor.enabled"
   );
 
@@ -39,7 +39,7 @@ add_task(async function() {
     info(
       "Check that the correct content is displayed for users with monitor data."
     );
-    await Services.logins.addLoginAsync(TEST_LOGIN1);
+    Services.logins.addLogin(TEST_LOGIN1);
     AboutProtectionsParent.setTestOverride(mockGetMonitorData(mockMonitorData));
     await BrowserTestUtils.reloadTab(tab);
 
