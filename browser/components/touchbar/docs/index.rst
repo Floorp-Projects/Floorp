@@ -51,7 +51,7 @@ when needed.
 JavaScript API
 ~~~~~~~~~~~~~~
 
-``browser/components/touchbar/MacTouchBar.jsm`` defines what specific inputs are
+``browser/components/touchbar/MacTouchBar.sys.mjs`` defines what specific inputs are
 available to the user, what icon they will have, what action they will perform,
 and so on. Inputs are defined in the ``gBuiltInInputs`` object `in that file`_.
 When creating a new object in ``gBuiltInInputs``, the available properties are
@@ -85,11 +85,11 @@ documented in the JSDoc for ``TouchBarInput``:
 Clarification on some of these properties is warranted.
 
 * ``title`` is the key to a Fluent translation defined in ``browser/locales/<LOCALE>/browser/touchbar/touchbar.ftl``.
-* ``type`` must be a value from the ``kInputTypes`` enum in ``MacTouchBar.jsm``.
+* ``type`` must be a value from the ``kInputTypes`` enum in ``MacTouchBar.sys.mjs``.
   For example, ``kInputTypes.BUTTON``. More information on input types follows
   below.
 * ``callback`` points to a JavaScript function. Any chrome-level JavaScript can
-  be executed. ``execCommand`` is a convenience method in ``MacTouchBar.jsm``
+  be executed. ``execCommand`` is a convenience method in ``MacTouchBar.sys.mjs``
   that takes a XUL command as a string and executes that command. For instance,
   one input sets ``callback`` to ``execCommand("Browser:Back")``.
 * ``children`` is an array of objects with the same properties as members of

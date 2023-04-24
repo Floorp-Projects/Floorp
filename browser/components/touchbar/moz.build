@@ -8,7 +8,7 @@ with Files("**"):
 BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 
 EXTRA_JS_MODULES += [
-    "MacTouchBar.jsm",
+    "MacTouchBar.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [
