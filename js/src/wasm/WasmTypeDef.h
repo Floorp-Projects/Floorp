@@ -1240,6 +1240,55 @@ inline MatchTypeCode MatchTypeCode::forMatch(PackedTypeCode ptc,
   return mtc;
 }
 
+inline RefTypeHierarchy RefType::hierarchy() const {
+  switch (kind()) {
+    case RefType::Func:
+    case RefType::NoFunc:
+      return RefTypeHierarchy::Func;
+    case RefType::Extern:
+    case RefType::NoExtern:
+      return RefTypeHierarchy::Extern;
+    case RefType::Any:
+    case RefType::None:
+    case RefType::Eq:
+    case RefType::Struct:
+    case RefType::Array:
+      return RefTypeHierarchy::Any;
+    case RefType::TypeRef:
+      switch (typeDef()->kind()) {
+        case TypeDefKind::Struct:
+        case TypeDefKind::Array:
+          return RefTypeHierarchy::Any;
+        case TypeDefKind::Func:
+          return RefTypeHierarchy::Func;
+        case TypeDefKind::None:
+          MOZ_CRASH();
+      }
+  }
+  MOZ_CRASH("switch is exhaustive");
+}
+
+inline TableRepr RefType::tableRepr() const {
+  switch (hierarchy()) {
+    case RefTypeHierarchy::Any:
+    case RefTypeHierarchy::Extern:
+      return TableRepr::Ref;
+    case RefTypeHierarchy::Func:
+      return TableRepr::Func;
+  }
+  MOZ_CRASH("switch is exhaustive");
+}
+
+inline bool RefType::isFuncHierarchy() const {
+  return hierarchy() == RefTypeHierarchy::Func;
+}
+inline bool RefType::isExternHierarchy() const {
+  return hierarchy() == RefTypeHierarchy::Extern;
+}
+inline bool RefType::isAnyHierarchy() const {
+  return hierarchy() == RefTypeHierarchy::Any;
+}
+
 /* static */
 inline bool RefType::isSubTypeOf(RefType subType, RefType superType) {
   // Anything is a subtype of itself.
@@ -1292,6 +1341,22 @@ inline bool RefType::isSubTypeOf(RefType subType, RefType superType) {
   // Type references can be subtypes
   if (subType.isTypeRef() && superType.isTypeRef()) {
     return TypeDef::isSubTypeOf(subType.typeDef(), superType.typeDef());
+  }
+
+  // No func is the bottom type of the func hierarchy
+  if (subType.isNoFunc() && superType.hierarchy() == RefTypeHierarchy::Func) {
+    return true;
+  }
+
+  // No extern is the bottom type of the extern hierarchy
+  if (subType.isNoExtern() &&
+      superType.hierarchy() == RefTypeHierarchy::Extern) {
+    return true;
+  }
+
+  // None is the bottom type of the any hierarchy
+  if (subType.isNone() && superType.hierarchy() == RefTypeHierarchy::Any) {
+    return true;
   }
 
   return false;

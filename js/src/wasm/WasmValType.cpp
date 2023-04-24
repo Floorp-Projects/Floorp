@@ -41,10 +41,13 @@ RefType RefType::topType() const {
     case RefType::Eq:
     case RefType::Array:
     case RefType::Struct:
+    case RefType::None:
       return RefType::any();
     case RefType::Func:
+    case RefType::NoFunc:
       return RefType::func();
     case RefType::Extern:
+    case RefType::NoExtern:
       return RefType::extern_();
     case RefType::TypeRef:
       switch (typeDef()->kind()) {
@@ -67,27 +70,48 @@ static bool ToRefType(JSContext* cx, JSLinearString* typeLinearStr,
     // The JS API uses "anyfunc" uniformly as the external name of funcref.  We
     // also allow "funcref" for compatibility with code we've already shipped.
     *out = RefType::func();
-  } else if (StringEqualsLiteral(typeLinearStr, "externref")) {
-    *out = RefType::extern_();
-#ifdef ENABLE_WASM_GC
-  } else if (GcAvailable(cx) && StringEqualsLiteral(typeLinearStr, "anyref")) {
-    *out = RefType::any();
-  } else if (GcAvailable(cx) && StringEqualsLiteral(typeLinearStr, "eqref")) {
-    *out = RefType::eq();
-  } else if (GcAvailable(cx) &&
-             StringEqualsLiteral(typeLinearStr, "structref")) {
-    *out = RefType::struct_();
-  } else if (GcAvailable(cx) &&
-             StringEqualsLiteral(typeLinearStr, "arrayref")) {
-    *out = RefType::array();
-#endif
-  } else {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_WASM_BAD_STRING_VAL_TYPE);
-    return false;
+    return true;
   }
+  if (StringEqualsLiteral(typeLinearStr, "externref")) {
+    *out = RefType::extern_();
+    return true;
+  }
+#ifdef ENABLE_WASM_GC
+  if (GcAvailable(cx)) {
+    if (StringEqualsLiteral(typeLinearStr, "anyref")) {
+      *out = RefType::any();
+      return true;
+    }
+    if (StringEqualsLiteral(typeLinearStr, "eqref")) {
+      *out = RefType::eq();
+      return true;
+    }
+    if (StringEqualsLiteral(typeLinearStr, "structref")) {
+      *out = RefType::struct_();
+      return true;
+    }
+    if (StringEqualsLiteral(typeLinearStr, "arrayref")) {
+      *out = RefType::array();
+      return true;
+    }
+    if (StringEqualsLiteral(typeLinearStr, "nullfuncref")) {
+      *out = RefType::nofunc();
+      return true;
+    }
+    if (StringEqualsLiteral(typeLinearStr, "nullexternref")) {
+      *out = RefType::noextern();
+      return true;
+    }
+    if (StringEqualsLiteral(typeLinearStr, "nullref")) {
+      *out = RefType::none();
+      return true;
+    }
+  }
+#endif
 
-  return true;
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           JSMSG_WASM_BAD_STRING_VAL_TYPE);
+  return false;
 }
 
 enum class RefTypeResult {
@@ -253,6 +277,15 @@ UniqueChars wasm::ToString(RefType type, const TypeContext* types) {
       case RefType::Any:
         literal = "anyref";
         break;
+      case RefType::NoFunc:
+        literal = "nullfuncref";
+        break;
+      case RefType::NoExtern:
+        literal = "nullexternref";
+        break;
+      case RefType::None:
+        literal = "nullref";
+        break;
       case RefType::Eq:
         literal = "eqref";
         break;
@@ -282,6 +315,15 @@ UniqueChars wasm::ToString(RefType type, const TypeContext* types) {
       break;
     case RefType::Any:
       heapType = "any";
+      break;
+    case RefType::NoFunc:
+      heapType = "nofunc";
+      break;
+    case RefType::NoExtern:
+      heapType = "noextern";
+      break;
+    case RefType::None:
+      heapType = "none";
       break;
     case RefType::Eq:
       heapType = "eq";

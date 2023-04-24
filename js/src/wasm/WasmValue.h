@@ -23,7 +23,7 @@
 #include "vm/JSObject.h"
 #include "vm/NativeObject.h"  // NativeObject
 #include "wasm/WasmSerialize.h"
-#include "wasm/WasmValType.h"
+#include "wasm/WasmTypeDef.h"
 
 namespace js {
 namespace wasm {
@@ -387,7 +387,7 @@ class MOZ_NON_PARAM Val : public LitVal {
     cell_.ref_ = val;
   }
   explicit Val(ValType type, FuncRef val) : LitVal(type, AnyRef::null()) {
-    MOZ_ASSERT(type.isFuncRef());
+    MOZ_ASSERT(type.refType().isFuncHierarchy());
     cell_.ref_ = val.asAnyRef();
   }
 
@@ -490,6 +490,18 @@ using RootedValVectorN = Rooted<ValVectorN<N>>;
 [[nodiscard]] extern bool CheckAnyRefValue(JSContext* cx, HandleValue v,
                                            MutableHandleAnyRef vp);
 
+// The same as above for when the target type is 'nullexternref'.
+[[nodiscard]] extern bool CheckNullExternRefValue(JSContext* cx, HandleValue v,
+                                                  MutableHandleAnyRef vp);
+
+// The same as above for when the target type is 'nullfuncref'.
+[[nodiscard]] extern bool CheckNullFuncRefValue(JSContext* cx, HandleValue v,
+                                                MutableHandleFunction fun);
+
+// The same as above for when the target type is 'nullref'.
+[[nodiscard]] extern bool CheckNullRefValue(JSContext* cx, HandleValue v,
+                                            MutableHandleAnyRef vp);
+
 // The same as above for when the target type is 'eqref'.
 [[nodiscard]] extern bool CheckEqRefValue(JSContext* cx, HandleValue v,
                                           MutableHandleAnyRef vp);
@@ -507,7 +519,6 @@ using RootedValVectorN = Rooted<ValVectorN<N>>;
                                             const TypeDef* typeDef,
                                             HandleValue v,
                                             MutableHandleAnyRef vp);
-
 class NoDebug;
 class DebugCodegenVal;
 

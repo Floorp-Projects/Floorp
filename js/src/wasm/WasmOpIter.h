@@ -2468,7 +2468,7 @@ inline bool OpIter<Policy>::readCallIndirect(uint32_t* funcTypeIndex,
     }
     return fail("table index out of range for call_indirect");
   }
-  if (!env_.tables[*tableIndex].elemType.isFunc()) {
+  if (!env_.tables[*tableIndex].elemType.isFuncHierarchy()) {
     return fail("indirect calls must go through a table of 'funcref'");
   }
 
