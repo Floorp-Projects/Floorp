@@ -3079,8 +3079,10 @@ RTCError SdpOfferAnswerHandler::Rollback(SdpType desc_type) {
     }
     transceiver->internal()->sender_internal()->set_transport(nullptr);
     transceiver->internal()->receiver_internal()->set_transport(nullptr);
-    transceiver->internal()->set_mid(state.mid());
-    transceiver->internal()->set_mline_index(state.mline_index());
+    if (state.has_m_section()) {
+      transceiver->internal()->set_mid(state.mid());
+      transceiver->internal()->set_mline_index(state.mline_index());
+    }
   }
   RTCError e = transport_controller_s()->RollbackTransports();
   if (!e.ok()) {

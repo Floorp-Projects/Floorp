@@ -388,4 +388,67 @@ TEST_F(SdpOfferAnswerTest, LargeMidsAreRejected) {
   EXPECT_EQ(error.type(), RTCErrorType::INVALID_PARAMETER);
 }
 
+TEST_F(SdpOfferAnswerTest, RollbackPreservesAddTrackMid) {
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 4131505339648218884 3 IN IP4 **-----**\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "a=ice-lite\r\n"
+      "a=msid-semantic: WMS 100030878598094:4Qs1PjbLM32RK5u3\r\n"
+      "a=ice-ufrag:zGWFZ+fVXDeN6UoI/136\r\n"
+      "a=ice-pwd:9AUNgUqRNI5LSIrC1qFD2iTR\r\n"
+      "a=fingerprint:sha-256 "
+      "AD:52:52:E0:B1:37:34:21:0E:15:8E:B7:56:56:7B:B4:39:0E:6D:1C:F5:84:A7:EE:"
+      "B5:27:3E:30:B1:7D:69:42\r\n"
+      "a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r\n"
+      "a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid\r\n"
+      "a=group:BUNDLE 0 1\r\n"
+      "m=audio 40005 UDP/TLS/RTP/SAVPF 111\r\n"
+      "a=rtpmap:111 opus/48000/2\r\n"
+      "a=fmtp:111 "
+      "maxaveragebitrate=20000;maxplaybackrate=16000;minptime=10;usedtx=1;"
+      "useinbandfec=1;stereo=0\r\n"
+      "a=rtcp-fb:111 nack\r\n"
+      "a=setup:passive\r\n"
+      "a=mid:0\r\n"
+      "a=msid:- 75156ebd-e705-4da1-920e-2dac39794dfd\r\n"
+      "a=ptime:60\r\n"
+      "a=recvonly\r\n"
+      "a=rtcp-mux\r\n"
+      "m=audio 40005 UDP/TLS/RTP/SAVPF 111\r\n"
+      "a=rtpmap:111 opus/48000/2\r\n"
+      "a=fmtp:111 "
+      "maxaveragebitrate=20000;maxplaybackrate=16000;minptime=10;usedtx=1;"
+      "useinbandfec=1;stereo=0\r\n"
+      "a=rtcp-fb:111 nack\r\n"
+      "a=setup:passive\r\n"
+      "a=mid:1\r\n"
+      "a=msid:100030878598094:4Qs1PjbLM32RK5u3 9695447562408476674\r\n"
+      "a=ptime:60\r\n"
+      "a=sendonly\r\n"
+      "a=ssrc:2565730539 cname:100030878598094:4Qs1PjbLM32RK5u3\r\n"
+      "a=rtcp-mux\r\n";
+  auto pc = CreatePeerConnection();
+  auto audio_track = pc->AddAudioTrack("audio_track", {});
+  auto first_transceiver = pc->pc()->GetTransceivers()[0];
+  EXPECT_FALSE(first_transceiver->mid().has_value());
+  auto desc = CreateSessionDescription(SdpType::kOffer, sdp);
+  ASSERT_NE(desc, nullptr);
+  RTCError error;
+  ASSERT_TRUE(pc->SetRemoteDescription(std::move(desc)));
+  pc->CreateAnswerAndSetAsLocal();
+  auto saved_mid = first_transceiver->mid();
+  EXPECT_TRUE(saved_mid.has_value());
+  auto offer_before_rollback = pc->CreateOfferAndSetAsLocal();
+  EXPECT_EQ(saved_mid, first_transceiver->mid());
+  auto rollback = pc->CreateRollback();
+  ASSERT_NE(rollback, nullptr);
+  ASSERT_TRUE(pc->SetLocalDescription(std::move(rollback)));
+  EXPECT_EQ(saved_mid, first_transceiver->mid());
+  auto offer2 = pc->CreateOfferAndSetAsLocal();
+  ASSERT_NE(offer2, nullptr);
+  EXPECT_EQ(saved_mid, first_transceiver->mid());
+}
+
 }  // namespace webrtc
