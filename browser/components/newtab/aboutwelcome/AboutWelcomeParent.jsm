@@ -17,9 +17,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
   BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
   FxAccounts: "resource://gre/modules/FxAccounts.sys.mjs",
   ShellService: "resource:///modules/ShellService.sys.mjs",
-
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
+  UIState: "resource://services-sync/UIState.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -242,11 +242,121 @@ class AboutWelcomeParent extends JSWindowActorParent {
       case "AWPage:SEND_TO_DEVICE_EMAILS_SUPPORTED": {
         return lazy.BrowserUtils.sendToDeviceEmailsSupported();
       }
+      case "AWPage:FXA_SIGNIN_TAB_FLOW": {
+        return this.fxaSignInTabFlow(data, browser);
+      }
       default:
         lazy.log.debug(`Unexpected event ${type} was not handled.`);
     }
 
     return undefined;
+  }
+
+  /**
+   * Open an FxA sign-in page and automatically close it once sign-in
+   * completes.
+   *
+   * @param {any=} data
+   * @param {Browser} the xul:browser rendering the page
+   */
+  async fxaSignInTabFlow(data, browser) {
+    if (!(await lazy.FxAccounts.canConnectAccount())) {
+      return false;
+    }
+    const url = await lazy.FxAccounts.config.promiseConnectAccountURI(
+      data?.entrypoint || "activity-stream-firstrun",
+      data?.extraParams || {}
+    );
+
+    let window = browser.ownerGlobal;
+
+    let fxaBrowser = await new Promise(resolve => {
+      window.openLinkIn(url, "tab", {
+        private: false,
+        triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
+          {}
+        ),
+        csp: null,
+        resolveOnNewTabCreated: resolve,
+        forceForeground: true,
+      });
+    });
+
+    let gBrowser = fxaBrowser.getTabBrowser();
+    let fxaTab = gBrowser.getTabForBrowser(fxaBrowser);
+
+    let didSignIn = await new Promise(resolve => {
+      // We're going to be setting up a listener and an observer for this
+      // mechanism.
+      //
+      // 1. An event listener for the TabClose event, to detect if the user
+      //    closes the tab before completing sign-in
+      // 2. An nsIObserver that listens for the UIState for FxA to reach
+      //    STATUS_SIGNED_IN.
+      //
+      // We want to clean up both the listener and observer when all of this
+      // is done.
+      //
+      // We use an AbortController to make it easier to manage the cleanup.
+      let controller = new AbortController();
+      let { signal } = controller;
+
+      // This nsIObserver will listen for the UIState status to change to
+      // STATUS_SIGNED_IN as our definitive signal that FxA sign-in has
+      // completed. It will then resolve the outer Promise to `true`.
+      let fxaObserver = {
+        QueryInterface: ChromeUtils.generateQI([
+          Ci.nsIObserver,
+          Ci.nsISupportsWeakReference,
+        ]),
+
+        observe(aSubject, aTopic, aData) {
+          let state = lazy.UIState.get();
+          if (state.status === lazy.UIState.STATUS_SIGNED_IN) {
+            // We completed sign-in, so tear down our listener / observer and resolve
+            // didSignIn to true.
+            controller.abort();
+            resolve(true);
+          }
+        },
+      };
+
+      // The TabClose event listener _can_ accept the AbortController signal,
+      // which will then remove the event listener after controller.abort is
+      // called.
+      fxaTab.addEventListener(
+        "TabClose",
+        () => {
+          // If the TabClose event was fired before the event handler was
+          // removed, this means that the tab was closed and sign-in was
+          // not completed, which means we should resolve didSignIn to false.
+          controller.abort();
+          resolve(false);
+        },
+        { once: true, signal }
+      );
+
+      Services.obs.addObserver(fxaObserver, lazy.UIState.ON_UPDATE);
+
+      // Unfortunately, nsIObserverService.addObserver does not accept an
+      // AbortController signal as a parameter, so instead we listen for the
+      // abort event on the signal to remove the observer.
+      signal.addEventListener(
+        "abort",
+        () => {
+          Services.obs.removeObserver(fxaObserver, lazy.UIState.ON_UPDATE);
+        },
+        { once: true }
+      );
+    });
+
+    // If the user completed sign-in, we'll close the fxaBrowser tab for
+    // them to bring them back to the about:welcome flow.
+    if (didSignIn && data?.autoClose !== false) {
+      gBrowser.removeTab(fxaTab);
+    }
+
+    return didSignIn;
   }
 
   /**
