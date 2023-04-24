@@ -216,15 +216,6 @@ class SearchAdImpression {
   }
 
   /**
-   * How far from the top the page has been scrolled.
-   */
-  #scrollFromTop = 0;
-
-  set scrollFromTop(distance) {
-    this.#scrollFromTop = distance;
-  }
-
-  /**
    * Check if the page has a shopping tab.
    *
    * @param {Document} document
@@ -850,19 +841,6 @@ class SearchAdImpression {
       searchAdImpressionElements.add(element);
     }
   }
-
-  /**
-   * Given a DOM element, return whether or not this element was counted
-   * by specific child elements rather than the number of anchor links.
-   *
-   * @param {Element} domElement
-   *  The element to lookup.
-   * @returns {boolean}
-   *  Returns true if child elements were counted, false otherwise.
-   */
-  #childElementsCounted(domElement) {
-    return !!this.#elementToAdDataMap.get(domElement)?.countChildren;
-  }
 }
 
 const searchProviders = new SearchProviders();
@@ -939,39 +917,38 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
         hasAds,
         url,
       });
+    }
 
-      if (
-        lazy.serpEventsEnabled &&
-        providerInfo?.components &&
-        (eventType == "load" || eventType == "pageshow")
-      ) {
-        searchAdImpression.pageUrl = new URL(url);
-        searchAdImpression.providerInfo = providerInfo;
-        searchAdImpression.scrollFromTop = this.contentWindow.scrollY;
-        searchAdImpression.innerWindowHeight = this.contentWindow.innerHeight;
-        searchAdImpression.eventCallback = (type, action) => {
-          this.sendAsyncMessage("SearchTelemetry:Action", {
-            type,
-            url: this.document.documentURI,
-            action,
-          });
-        };
-        let start = Cu.now();
-        let {
-          componentToVisibilityMap,
-          hrefToComponentMap,
-        } = searchAdImpression.categorize(anchors, doc);
-        ChromeUtils.addProfilerMarker(
-          "SearchSERPTelemetryChild._checkForAdLink",
-          start,
-          "Checked anchors for visibility"
-        );
-        this.sendAsyncMessage("SearchTelemetry:AdImpressions", {
-          adImpressions: componentToVisibilityMap,
-          hrefToComponentMap,
-          url,
+    if (
+      lazy.serpEventsEnabled &&
+      providerInfo?.components &&
+      (eventType == "load" || eventType == "pageshow")
+    ) {
+      searchAdImpression.pageUrl = new URL(url);
+      searchAdImpression.providerInfo = providerInfo;
+      searchAdImpression.innerWindowHeight = this.contentWindow.innerHeight;
+      searchAdImpression.eventCallback = (type, action) => {
+        this.sendAsyncMessage("SearchTelemetry:Action", {
+          type,
+          url: this.document.documentURI,
+          action,
         });
-      }
+      };
+      let start = Cu.now();
+      let {
+        componentToVisibilityMap,
+        hrefToComponentMap,
+      } = searchAdImpression.categorize(anchors, doc);
+      ChromeUtils.addProfilerMarker(
+        "SearchSERPTelemetryChild._checkForAdLink",
+        start,
+        "Checked anchors for visibility"
+      );
+      this.sendAsyncMessage("SearchTelemetry:AdImpressions", {
+        adImpressions: componentToVisibilityMap,
+        hrefToComponentMap,
+        url,
+      });
     }
   }
 

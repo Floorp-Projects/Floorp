@@ -8,64 +8,20 @@
 <body>
   <section>
     <form role="search">
-      <input type="text" value="hello world" />
+      <input type="text" value="test" />
       <div>
         <ul>
-          <li id="suggest">hello world 2</li>
+          <li id="suggest">test</li>
       </div>
     </form>
   </section>
-  <!-- TODO: Remove links with ads once page checks can be done without any ads -->
   <section id="searchresults">
     <div class="lhs">
-      <div class="moz_ad">
-        <h5 test-label>ad_sitelink</h5>
-        <a href="https://example.com/ad">
-          <h2>Example Result</h2>
+      <div>
+        <h5 test-label>non_ads_link</h5>
+        <a id="non_ads_link" href="https://example.com/hello_world">
+          <h2>Example of a non ad</h2>
         </a>
-        <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Cras ac velit sed tellus facilisis euismod.</p>
-        <span><a href="https://example.com/ad">Ad link that says there are 10 Locations nearby</a></span>
-        <div class="multi-col">
-          <div>
-            <a href="https://example.com/ad">
-              <h2>New Releases</h2>
-            </a>
-            <span>Cras ac velit sed tellus</span>
-          </div>
-          <div>
-            <a href="https://example.com/ad">
-              <h2>Men's</h2>
-            </a>
-            <span>Cras ac velit sed tellus</span>
-          </div>
-          <div>
-            <a href="https://example.com/ad">
-              <h2>Women's</h2>
-            </a>
-            <span>Cras ac velit sed tellus</span>
-          </div>
-          <div>
-            <!-- Ensure ads encoded in data-attributes are also recorded properly -->
-            <a data-moz-attr="https://example.com/ad" href="https://example.com/normal-link">
-              <h2>Sale</h2>
-            </a>
-            <span>Cras ac velit sed tellus</span>
-          </div>
-        </div>
-        <button type="text">See More</button>
-      </div>
-    </div>
-    <div class="rhs">
-      <h5 test-label>ad_sidebar</h5>
-      <div class="moz_ad">
-        <a href="https://example.com/ad">
-          <div class="mock-image">Mock ad image</div>
-        </a>
-        <a href="https://example.com/ad">
-          <h3>Buy Example Now</h3>
-        </a>
-        <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit.</p>
-        <a href="https://example.com/ad">Buy Now</a>
       </div>
     </div>
   </section>
@@ -73,11 +29,11 @@
 <script type="text/javascript">
   document.querySelector("form").addEventListener("submit", event => {
     event.preventDefault();
-    window.location.href = "https://example.org/search?q=hello+world";
+    window.location.href = "https://example.org/browser/browser/components/search/test/browser/searchTelemetryAd_searchbox.html?s=test&abc=ff";
   })
   document.getElementById("suggest").addEventListener("click", event => {
     event.preventDefault();
-    window.location.href = "https://example.org/search?q=hello+world+2";
+    window.location.href = "https://example.org/browser/browser/components/search/test/browser/searchTelemetryAd_searchbox.html?s=test&abc=ff";
   })
 </script>
 </html>
