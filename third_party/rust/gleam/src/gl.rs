@@ -241,6 +241,7 @@ declare_gl_apis! {
     fn bind_renderbuffer(&self, target: GLenum, renderbuffer: GLuint);
     fn bind_framebuffer(&self, target: GLenum, framebuffer: GLuint);
     fn bind_texture(&self, target: GLenum, texture: GLuint);
+    fn bind_vertex_buffer(&self, binding_index: GLuint, buffer: GLuint, offset: GLintptr, stride: GLint);
     fn draw_buffers(&self, bufs: &[GLenum]);
     fn tex_image_2d(
         &self,
@@ -477,6 +478,7 @@ declare_gl_apis! {
         filter: GLenum,
     );
     fn vertex_attrib_4f(&self, index: GLuint, x: GLfloat, y: GLfloat, z: GLfloat, w: GLfloat);
+    fn vertex_attrib_binding(&self, attrib_index: GLuint, binding_index: GLuint);
     fn vertex_attrib_pointer_f32(
         &self,
         index: GLuint,
@@ -503,6 +505,9 @@ declare_gl_apis! {
         offset: GLuint,
     );
     fn vertex_attrib_divisor(&self, index: GLuint, divisor: GLuint);
+    fn vertex_attrib_format(&self, attrib_index: GLuint, size: GLint, type_: GLenum, normalized: bool, relative_offset: GLuint);
+    fn vertex_attrib_i_format(&self, attrib_index: GLuint, size: GLint, type_: GLenum, relative_offset: GLuint);
+    fn vertex_binding_divisor(&self, binding_index: GLuint, divisor: GLuint);
     fn viewport(&self, x: GLint, y: GLint, width: GLsizei, height: GLsizei);
     fn scissor(&self, x: GLint, y: GLint, width: GLsizei, height: GLsizei);
     fn line_width(&self, width: GLfloat);
@@ -756,6 +761,9 @@ declare_gl_apis! {
     );
 
     fn flush_mapped_buffer_range(&self, target: GLenum, offset: GLintptr, length: GLsizeiptr);
+
+    fn start_tiling_qcom(&self, x: GLuint, y: GLuint, width: GLuint, height: GLuint, preserve_mask: GLbitfield);
+    fn end_tiling_qcom(&self, preserve_mask: GLbitfield);
 }
 
 //#[deprecated(since = "0.6.11", note = "use ErrorReactingGl instead")]
