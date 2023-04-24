@@ -19,12 +19,13 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.bookmarkStorage
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
+import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.longTapSelectItem
 import org.mozilla.fenix.helpers.TestHelper.registerAndCleanupIdlingResources
 import org.mozilla.fenix.ui.robots.bookmarksMenu
@@ -32,6 +33,7 @@ import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.multipleSelectionToolbar
 import org.mozilla.fenix.ui.robots.navigationToolbar
+import org.mozilla.fenix.ui.robots.searchScreen
 
 /**
  *  Tests for verifying basic functionality of bookmarks
@@ -48,7 +50,7 @@ class BookmarksTest {
     }
 
     @get:Rule
-    val activityTestRule = HomeActivityTestRule.withDefaultSettingsOverrides()
+    val activityTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
 
     @Rule
     @JvmField
@@ -739,6 +741,118 @@ class BookmarksTest {
             verifyDeleteSnackBarText()
             clickUndoDeleteButton()
             verifyFolderTitle("My Folder")
+        }
+    }
+
+    @Test
+    fun verifySearchBookmarksViewTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        browserScreen {
+            createBookmark(defaultWebPage.url)
+        }.openThreeDotMenu {
+        }.openBookmarks {
+            clickSearchButton()
+            verifyBookmarksSearchBar(true)
+            verifyBookmarksSearchBarPosition(true)
+            clickOutsideTheSearchBar()
+            verifyBookmarksSearchBar(false)
+        }.goBackToBrowserScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openCustomizeSubMenu {
+            clickTopToolbarToggle()
+        }
+
+        exitMenu()
+
+        browserScreen {
+        }.openThreeDotMenu {
+        }.openBookmarks {
+            clickSearchButton()
+            verifyBookmarksSearchBar(true)
+            verifyBookmarksSearchBarPosition(false)
+            dismissBookmarksSearchBarUsingBackButton()
+            verifyBookmarksSearchBar(false)
+        }
+    }
+
+    @Test
+    fun verifySearchForBookmarkedItemsTest() {
+        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val secondWebPage = TestAssetHelper.getHTMLControlsFormAsset(mockWebServer)
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openBookmarks {
+            createFolder(bookmarksFolderName)
+        }
+
+        exitMenu()
+
+        browserScreen {
+            createBookmark(firstWebPage.url, bookmarksFolderName)
+            createBookmark(secondWebPage.url)
+        }.openThreeDotMenu {
+        }.openBookmarks {
+            clickSearchButton()
+            // Search for a valid term
+            searchBookmarkedItem(firstWebPage.title)
+            verifySearchedBookmarkExists(firstWebPage.url.toString(), true)
+            verifySearchedBookmarkExists(secondWebPage.url.toString(), false)
+            // Search for invalid term
+            searchBookmarkedItem("Android")
+            verifySearchedBookmarkExists(firstWebPage.url.toString(), false)
+            verifySearchedBookmarkExists(secondWebPage.url.toString(), false)
+        }
+    }
+
+    @Test
+    fun verifyVoiceSearchInBookmarksTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        browserScreen {
+            createBookmark(defaultWebPage.url)
+        }.openThreeDotMenu {
+        }.openBookmarks {
+            clickSearchButton()
+            verifyBookmarksSearchBar(true)
+        }
+        searchScreen {
+            startVoiceSearch()
+        }
+    }
+
+    @Test
+    fun verifyDeletedBookmarksCanNotBeSearchedTest() {
+        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
+        val thirdWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 3)
+
+        browserScreen {
+            createBookmark(firstWebPage.url)
+            createBookmark(secondWebPage.url)
+            createBookmark(thirdWebPage.url)
+        }.openThreeDotMenu {
+        }.openBookmarks {
+        }.openThreeDotMenu(firstWebPage.url) {
+        }.clickDelete {
+            verifyBookmarkIsDeleted(firstWebPage.title)
+        }.openThreeDotMenu(secondWebPage.url) {
+        }.clickDelete {
+            verifyBookmarkIsDeleted(secondWebPage.title)
+            clickSearchButton()
+            searchBookmarkedItem("generic")
+            verifySearchedBookmarkExists(firstWebPage.url.toString(), false)
+            verifySearchedBookmarkExists(secondWebPage.url.toString(), false)
+            verifySearchedBookmarkExists(thirdWebPage.url.toString(), true)
+            dismissBookmarksSearchBar()
+        }.openThreeDotMenu(thirdWebPage.url) {
+        }.clickDelete {
+            verifyBookmarkIsDeleted(thirdWebPage.title)
+            clickSearchButton()
+            searchBookmarkedItem("generic")
+            verifySearchedBookmarkExists(thirdWebPage.url.toString(), false)
         }
     }
 }

@@ -12,6 +12,7 @@ import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.longClick
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.action.ViewActions.typeText
+import androidx.test.espresso.assertion.PositionAssertions
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.RootMatchers
@@ -34,7 +35,9 @@ import org.junit.Assert.assertFalse
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithDescriptionExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
+import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
@@ -242,6 +245,61 @@ class BookmarksRobot {
 
     fun clickDeleteInEditModeButton() = deleteInEditModeButton().click()
 
+    fun clickSearchButton() = itemWithResId("$packageName:id/bookmark_search").click()
+
+    fun verifyBookmarksSearchBarPosition(defaultPosition: Boolean) {
+        onView(withId(R.id.toolbar))
+            .check(
+                if (defaultPosition) {
+                    PositionAssertions.isCompletelyBelow(withId(R.id.pill_wrapper_divider))
+                } else {
+                    PositionAssertions.isCompletelyAbove(withId(R.id.pill_wrapper_divider))
+                },
+            )
+    }
+
+    fun clickOutsideTheSearchBar() {
+        itemWithResId("$packageName:id/search_wrapper").click()
+        itemWithResId("$packageName:id/mozac_browser_toolbar_edit_url_view")
+            .waitUntilGone(waitingTime)
+    }
+
+    fun dismissBookmarksSearchBarUsingBackButton() {
+        mDevice.pressBack()
+        itemWithResId("$packageName:id/mozac_browser_toolbar_edit_url_view")
+            .waitUntilGone(waitingTime)
+    }
+
+    fun verifyBookmarksSearchBar(exists: Boolean) {
+        assertItemWithResIdExists(
+            itemWithResId("$packageName:id/toolbar"),
+            itemWithResId("$packageName:id/mozac_browser_toolbar_edit_icon"),
+            exists = exists,
+        )
+        assertItemWithResIdAndTextExists(
+            itemWithResId("$packageName:id/mozac_browser_toolbar_edit_url_view"),
+            itemContainingText(getStringResource(R.string.bookmark_search)),
+            exists = exists,
+        )
+        assertItemWithDescriptionExists(
+            itemWithDescription(getStringResource(R.string.voice_search_content_description)),
+            exists = exists,
+        )
+    }
+
+    fun searchBookmarkedItem(bookmarkedItem: String) {
+        itemWithResId("$packageName:id/mozac_browser_toolbar_edit_url_view").also {
+            it.waitForExists(waitingTime)
+            it.setText(bookmarkedItem)
+        }
+        mDevice.waitForWindowUpdate(packageName, waitingTimeShort)
+    }
+
+    fun verifySearchedBookmarkExists(bookmarkUrl: String, exists: Boolean = true) =
+        assertItemContainingTextExists(itemContainingText(bookmarkUrl), exists = exists)
+
+    fun dismissBookmarksSearchBar() = mDevice.pressBack()
+
     class Transition {
         fun closeMenu(interact: HomeScreenRobot.() -> Unit): Transition {
             closeButton().click()
@@ -277,6 +335,13 @@ class BookmarksRobot {
 
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
+        }
+
+        fun goBackToBrowserScreen(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            goBackButton().click()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
         }
 
         fun closeEditBookmarkSection(interact: BookmarksRobot.() -> Unit): BookmarksRobot.Transition {

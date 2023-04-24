@@ -344,18 +344,21 @@ object TestHelper {
 
     // Permission allow dialogs differ on various Android APIs
     fun grantSystemPermission() {
+        val whileUsingTheAppPermissionButton: UiObject =
+            mDevice.findObject(UiSelector().textContains("While using the app"))
+
+        val allowPermissionButton: UiObject =
+            mDevice.findObject(
+                UiSelector()
+                    .textContains("Allow")
+                    .className("android.widget.Button"),
+            )
+
         if (Build.VERSION.SDK_INT >= 23) {
-            if (mDevice.findObject(UiSelector().textContains("While using the app")).waitForExists(
-                    waitingTimeShort,
-                )
-            ) {
-                mDevice.findObject(UiSelector().textContains("While using the app")).click()
-            } else {
-                mDevice.findObject(
-                    UiSelector()
-                        .textContains("Allow")
-                        .className("android.widget.Button"),
-                ).click()
+            if (whileUsingTheAppPermissionButton.waitForExists(waitingTimeShort)) {
+                whileUsingTheAppPermissionButton.click()
+            } else if (allowPermissionButton.waitForExists(waitingTimeShort)) {
+                allowPermissionButton.click()
             }
         }
     }

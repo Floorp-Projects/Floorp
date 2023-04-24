@@ -6,7 +6,6 @@
 
 package org.mozilla.fenix.ui.robots
 
-import android.os.Build
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
@@ -45,6 +44,7 @@ import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
+import org.mozilla.fenix.helpers.TestHelper.grantSystemPermission
 import org.mozilla.fenix.helpers.TestHelper.isPackageInstalled
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
@@ -70,25 +70,10 @@ class SearchRobot {
     // Device or AVD requires a Google Services Android OS installation
     fun startVoiceSearch() {
         voiceSearchButton.click()
+        grantSystemPermission()
 
-        // Accept runtime permission (API 30) for Google Voice
-        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
-            val allowPermission = mDevice.findObject(
-                UiSelector().text(
-                    when {
-                        Build.VERSION.SDK_INT == Build.VERSION_CODES.R -> "Allow all the time"
-                        else -> "While using the app"
-                    },
-                ),
-            )
-
-            if (allowPermission.exists()) {
-                allowPermission.click()
-            }
-
-            if (isPackageInstalled(Constants.PackageName.GOOGLE_QUICK_SEARCH)) {
-                Intents.intended(IntentMatchers.hasAction(SPEECH_RECOGNITION))
-            }
+        if (isPackageInstalled(Constants.PackageName.GOOGLE_QUICK_SEARCH)) {
+            Intents.intended(IntentMatchers.hasAction(SPEECH_RECOGNITION))
         }
     }
 
