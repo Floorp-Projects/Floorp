@@ -2822,7 +2822,7 @@ var gPrivacyPane = {
   toggleRelayIntegration() {
     const checkbox = document.getElementById("relayIntegration");
     if (checkbox.checked) {
-      FirefoxRelay.markAsAvailable();
+      FirefoxRelay.markAsEnabled();
       FirefoxRelayTelemetry.recordRelayPrefEvent("enabled");
     } else {
       FirefoxRelay.markAsDisabled();
