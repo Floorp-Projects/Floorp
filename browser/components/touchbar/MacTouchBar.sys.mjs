@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["TouchBarHelper", "TouchBarInput"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -244,7 +240,7 @@ const kHelperObservers = new Set([
  * JS-implemented TouchBarHelper class.
  * Provides services to the Mac Touch Bar.
  */
-class TouchBarHelper {
+export class TouchBarHelper {
   constructor() {
     for (let topic of kHelperObservers) {
       Services.obs.addObserver(this, topic);
@@ -560,7 +556,7 @@ helperProto._l10n = new Localization(["browser/touchbar/touchbar.ftl"]);
  *            this input. Available only for types KInputTypes.POPOVER and
  *            kInputTypes.SCROLLVIEW.
  */
-class TouchBarInput {
+export class TouchBarInput {
   constructor(input) {
     this._key = input.key || input.title;
     this._title = localizedStrings[input.title] || "";
