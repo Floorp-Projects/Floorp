@@ -965,6 +965,20 @@ const TargetingGetters = {
       !!decodeAttributionValue(attributionData?.content)?.startsWith("rta:")
     );
   },
+
+  /**
+   * Whether the user installed via the device migration flow from SUMO.
+   * @return {boolean} `true` when SUMO provided the link to download as part
+   * of guidance for device migration. `false` otherwise.
+   */
+  get isDeviceMigration() {
+    const { attributionData } = this;
+
+    return (
+      attributionData?.source === "support.mozilla.org" &&
+      attributionData?.campaign === "migration"
+    );
+  },
 };
 
 const ASRouterTargeting = {

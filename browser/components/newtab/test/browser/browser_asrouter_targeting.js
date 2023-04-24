@@ -1598,4 +1598,99 @@ add_task(async function check_isRTAMO() {
       `${title} - Expected isRTAMO to have the expected value`
     );
   }
+
+  sandbox.restore();
+});
+
+add_task(async function check_isDeviceMigration() {
+  is(
+    typeof ASRouterTargeting.Environment.isDeviceMigration,
+    "boolean",
+    "Should return a boolean"
+  );
+
+  const TEST_CASES = [
+    {
+      title: "no attribution data",
+      attributionData: {},
+      expected: false,
+    },
+    {
+      title: "null attribution data",
+      attributionData: null,
+      expected: false,
+    },
+    {
+      title: "no campaign",
+      attributionData: {
+        source: "support.mozilla.org",
+      },
+      expected: false,
+    },
+    {
+      title: "empty campaign",
+      attributionData: {
+        source: "support.mozilla.org",
+        campaign: "",
+      },
+      expected: false,
+    },
+    {
+      title: "null campaign",
+      attributionData: {
+        source: "addons.mozilla.org",
+        campaign: null,
+      },
+      expected: false,
+    },
+    {
+      title: "empty source",
+      attributionData: {
+        source: "",
+      },
+      expected: false,
+    },
+    {
+      title: "null source",
+      attributionData: {
+        source: null,
+      },
+      expected: false,
+    },
+    {
+      title: "invalid source",
+      attributionData: {
+        source: "www.mozilla.org",
+        campaign: "migration",
+      },
+      expected: false,
+    },
+    {
+      title: "valid attribution data for isDeviceMigration",
+      attributionData: {
+        source: "support.mozilla.org",
+        campaign: "migration",
+      },
+      expected: true,
+    },
+  ];
+
+  const sandbox = sinon.createSandbox();
+  registerCleanupFunction(async () => {
+    sandbox.restore();
+  });
+
+  const stub = sandbox.stub(AttributionCode, "getCachedAttributionData");
+
+  for (const { title, attributionData, expected } of TEST_CASES) {
+    stub.returns(attributionData);
+
+    is(
+      ASRouterTargeting.Environment.isDeviceMigration,
+      expected,
+      `${title} - Expected isDeviceMigration to have the expected value`
+    );
+  }
+
+  sandbox.restore();
 });
