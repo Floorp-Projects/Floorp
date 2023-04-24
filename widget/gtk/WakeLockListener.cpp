@@ -262,12 +262,12 @@ bool WakeLockTopic::InhibitXScreenSaver(bool inhibit) {
 
 /* static */
 bool WakeLockTopic::CheckWaylandIdleInhibitSupport() {
-  nsWaylandDisplay* waylandDisplay = WaylandDisplayGet();
+  RefPtr<nsWaylandDisplay> waylandDisplay = WaylandDisplayGet();
   return waylandDisplay && waylandDisplay->GetIdleInhibitManager() != nullptr;
 }
 
 bool WakeLockTopic::InhibitWaylandIdle() {
-  nsWaylandDisplay* waylandDisplay = WaylandDisplayGet();
+  RefPtr<nsWaylandDisplay> waylandDisplay = WaylandDisplayGet();
   if (!waylandDisplay) {
     return false;
   }
