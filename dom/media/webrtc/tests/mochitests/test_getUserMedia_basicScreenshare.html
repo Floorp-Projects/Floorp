@@ -13,6 +13,33 @@
     visible: true,
   });
 
+  const {AppConstants} =
+    SpecialPowers.ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+
+  // Since the MacOS backend captures in the wrong rgb color profile we need
+  // large thresholds there, and they vary greatly by color. We define
+  // thresholds per platform and color here to still allow the test to run.
+  // Since the colors used (red, green, blue, white) consist only of "pure"
+  // components (0 or 255 for each component), the high thresholds on Mac will
+  // still be able to catch an error where the image is corrupt, or if frames
+  // don't flow.
+  const thresholds = {
+    // macos: captures in the display rgb color profile, which we treat as
+    // sRGB, which is most likely wrong. These thresholds are needed currently
+    // in CI. See bug 1827606.
+    "macosx": { "red": 120, "green": 135, "blue": 35, "white": 10 },
+    // windows: rounding errors in 1) conversion to I420 (the capture),
+    // 2) downscaling, 3) conversion to RGB (for rendering).
+    "win": { "red": 5, "green": 5, "blue": 10, "white": 5 },
+    // linux: rounding errors in 1) conversion to I420 (the capture),
+    // 2) downscaling, 3) conversion to RGB (for rendering).
+    "linux": { "red": 5, "green": 5, "blue": 10, "white": 5 },
+    // android: we don't have a screen capture backend.
+    "android": { "red": 0, "green": 0, "blue": 0, "white": 0 },
+    // other: here just because it's supported by AppConstants.platform.
+    "other": { "red": 0, "green": 0, "blue": 0, "white": 0 },
+  };
+
   const verifyScreenshare =
       async (video, helper, upleft, upright, downleft, downright) => {
     if (video.readyState < video.HAVE_CURRENT_DATA) {
@@ -33,6 +60,7 @@
         {dx: 1, dy: 3},
         {dx: 8, dy: 5},
       ];
+      const threshold = thresholds[AppConstants.platform][color.name];
       for (let {dx, dy} of areaSamples) {
         const x = offsetX + dx + internalX;
         const y = offsetY + dy + internalY;
@@ -41,13 +69,13 @@
         let lastPixel = [-1, -1, -1, -1];
         await helper.waitForPixel(video, px => {
           lastPixel = Array.from(px);
-          return helper.isPixel(px, color, 48);
+          return helper.isPixel(px, color, threshold);
         }, {
           offsetX: x,
           offsetY: y,
           cancel: wait(30000).then(_ =>
             new Error(`Checking ${[x,y]} against ${color.name} timed out. ` +
-                      `Got [${lastPixel}].`)),
+                      `Got [${lastPixel}]. Threshold ${threshold}.`)),
         });
         ok(true, `Pixel (${[x,y]}) passed. Got [${lastPixel}].`);
       }
