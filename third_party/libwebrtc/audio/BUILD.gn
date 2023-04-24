@@ -331,32 +331,4 @@ if (rtc_include_tests) {
       }
     }
   }
-
-  if (!build_with_chromium) {
-    rtc_library("audio_perf_tests") {
-      testonly = true
-
-      sources = [
-        "test/audio_bwe_integration_test.cc",
-        "test/audio_bwe_integration_test.h",
-      ]
-      deps = [
-        "../api:simulated_network_api",
-        "../api/task_queue",
-        "../call:fake_network",
-        "../call:simulated_network",
-        "../common_audio",
-        "../rtc_base:task_queue_for_test",
-        "../system_wrappers",
-        "../test:field_trial",
-        "../test:fileutils",
-        "../test:test_common",
-        "../test:test_main",
-        "../test:test_support",
-        "//testing/gtest",
-      ]
-      absl_deps = [ "//third_party/abseil-cpp/absl/functional:any_invocable" ]
-      data = [ "//resources/voice_engine/audio_dtx16.wav" ]
-    }
-  }
 }
