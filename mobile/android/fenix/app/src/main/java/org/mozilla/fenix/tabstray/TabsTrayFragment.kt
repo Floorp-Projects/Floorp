@@ -259,6 +259,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                         onInactiveTabClose = tabsTrayInteractor::onInactiveTabClosed,
                         onSyncedTabClick = tabsTrayInteractor::onSyncedTabClicked,
                         onSaveToCollectionClick = tabsTrayInteractor::onAddSelectedTabsToCollectionClicked,
+                        onShareSelectedTabsClick = tabsTrayInteractor::onShareSelectedTabs,
                     )
                 }
             }

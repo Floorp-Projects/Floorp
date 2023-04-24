@@ -65,6 +65,7 @@ private val ICON_SIZE = 24.dp
  * multi select banner.
  * @param onSaveToCollectionClick Invoked when the user clicks on the save to collection button from
  * the multi select banner.
+ * @param onShareSelectedTabsClick Invoked when the user clicks on the share button from the multi select banner.
  */
 @Suppress("LongParameterList")
 @Composable
@@ -76,6 +77,7 @@ fun TabsTrayBanner(
     onTabPageIndicatorClicked: (Page) -> Unit,
     onExitSelectModeClick: () -> Unit,
     onSaveToCollectionClick: () -> Unit,
+    onShareSelectedTabsClick: () -> Unit,
 ) {
     if (selectMode is TabsTrayState.Mode.Select) {
         MultiSelectBanner(
@@ -83,6 +85,7 @@ fun TabsTrayBanner(
             shouldShowInactiveButton = isInDebugMode,
             onExitSelectModeClick = onExitSelectModeClick,
             onSaveToCollectionsClick = onSaveToCollectionClick,
+            onShareSelectedTabs = onShareSelectedTabsClick,
         )
     } else {
         SingleSelectBanner(
@@ -227,6 +230,7 @@ private fun NormalTabsTabIcon(normalTabCount: Int) {
  * @param shouldShowInactiveButton Whether or not to show the inactive tabs menu item.
  * @param onExitSelectModeClick Invoked when the user clicks on exit select mode button.
  * @param onSaveToCollectionsClick Invoked when the user clicks on the save to collection button.
+ * @param onShareSelectedTabs Invoked when the user clicks on the share button.
  */
 @Suppress("LongMethod")
 @Composable
@@ -235,6 +239,7 @@ private fun MultiSelectBanner(
     shouldShowInactiveButton: Boolean,
     onExitSelectModeClick: () -> Unit,
     onSaveToCollectionsClick: () -> Unit,
+    onShareSelectedTabs: () -> Unit,
 ) {
     var showMenu by remember { mutableStateOf(false) }
     val menuItems = mutableListOf(
@@ -288,7 +293,7 @@ private fun MultiSelectBanner(
             )
         }
 
-        IconButton(onClick = {}) {
+        IconButton(onClick = onShareSelectedTabs) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_share),
                 contentDescription = stringResource(
@@ -376,6 +381,7 @@ private fun TabsTrayBannerPreviewRoot(
                 },
                 onExitSelectModeClick = { selectModeState = TabsTrayState.Mode.Normal },
                 onSaveToCollectionClick = {},
+                onShareSelectedTabsClick = {},
             )
         }
     }
