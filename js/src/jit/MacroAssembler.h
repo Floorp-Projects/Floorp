@@ -3832,6 +3832,26 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                            wasm::SymbolicAddress builtin,
                                            wasm::FailureMode failureMode);
 
+  // Perform a subtype check that `object` is a subtype of `type`, branching to
+  // `label` depending on `onSuccess`.
+  //
+  // `scratch1` is required iff the destination type is eq or lower and not
+  // none. `superSuperTypeVector` is required iff the destination type is a
+  // concrete type. `scratch2` is required iff the destination type is a
+  // concrete type and its `subTypingDepth` is >=
+  // wasm::MinSuperTypeVectorLength.
+  //
+  // `object` and `superSuperTypeVector` are preserved. Scratch registers are
+  // clobbered.
+  void branchWasmGcObjectIsRefType(Register object, const wasm::RefType& type,
+                                   Label* label, bool onSuccess,
+                                   Register superSuperTypeVector,
+                                   Register scratch1, Register scratch2);
+  static bool needScratch1ForBranchWasmGcRefType(const wasm::RefType& type);
+  static bool needScratch2ForBranchWasmGcRefType(const wasm::RefType& type);
+  static bool needSuperSuperTypeVectorForBranchWasmGcRefType(
+      const wasm::RefType& type);
+
   // Perform a subtype check that `subSuperTypeVector` is a subtype of
   // `superSuperTypeVector`, branching to `label` depending on `onSuccess`.
   // This method is a specialization of the general

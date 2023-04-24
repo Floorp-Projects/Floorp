@@ -17,6 +17,7 @@
 #include "jit/IonOptimizationLevels.h"
 #include "jit/JitSpewer.h"
 #include "jit/LIR.h"
+#include "jit/MacroAssembler.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
 #include "jit/SharedICRegisters.h"
@@ -1066,19 +1067,20 @@ void LIRGenerator::visitTest(MTest* test) {
     return;
   }
 
-  if (opd->isWasmGcObjectIsSubtypeOf() && opd->isEmittedAtUses()) {
-    MWasmGcObjectIsSubtypeOf* isSubTypeOf = opd->toWasmGcObjectIsSubtypeOf();
+  if (opd->isWasmGcObjectIsSubtypeOfConcrete() && opd->isEmittedAtUses()) {
+    MWasmGcObjectIsSubtypeOfConcrete* isSubTypeOf =
+        opd->toWasmGcObjectIsSubtypeOfConcrete();
     LAllocation object = useRegister(isSubTypeOf->object());
     LAllocation superSuperTypeVector =
         useRegister(isSubTypeOf->superSuperTypeVector());
-    uint32_t subTypingDepth = isSubTypeOf->subTypingDepth();
+    uint32_t subTypingDepth = isSubTypeOf->type().typeDef()->subTypingDepth();
     LDefinition subTypeDepth = temp();
     LDefinition scratch = subTypingDepth >= wasm::MinSuperTypeVectorLength
                               ? temp()
                               : LDefinition();
     add(new (alloc()) LWasmGcObjectIsSubtypeOfAndBranch(
             ifTrue, ifFalse, object, superSuperTypeVector, subTypingDepth,
-            isSubTypeOf->succeedOnNull(), subTypeDepth, scratch),
+            isSubTypeOf->type().isNullable(), subTypeDepth, scratch),
         test);
     return;
   }
@@ -7045,20 +7047,46 @@ void LIRGenerator::visitWasmStoreFieldRefKA(MWasmStoreFieldRefKA* ins) {
   add(new (alloc()) LKeepAliveObject(useKeepalive(ins->ka())), ins);
 }
 
-void LIRGenerator::visitWasmGcObjectIsSubtypeOf(MWasmGcObjectIsSubtypeOf* ins) {
+void LIRGenerator::visitWasmGcObjectIsSubtypeOfAbstract(
+    MWasmGcObjectIsSubtypeOfAbstract* ins) {
+  // See comment on MacroAssembler::branchWasmGcObjectIsRefType.
+  // We know we do not need scratch2 and superSuperTypeVector because we know
+  // this is not a concrete type.
+  MOZ_ASSERT(!MacroAssembler::needScratch2ForBranchWasmGcRefType(ins->type()));
+  MOZ_ASSERT(!MacroAssembler::needSuperSuperTypeVectorForBranchWasmGcRefType(
+      ins->type()));
+
+  LAllocation object = useRegister(ins->object());
+  LDefinition scratch1 =
+      MacroAssembler::needScratch1ForBranchWasmGcRefType(ins->type())
+          ? temp()
+          : LDefinition();
+  define(new (alloc()) LWasmGcObjectIsSubtypeOfAbstract(object, scratch1), ins);
+}
+
+void LIRGenerator::visitWasmGcObjectIsSubtypeOfConcrete(
+    MWasmGcObjectIsSubtypeOfConcrete* ins) {
   if (CanEmitAtUseForSingleTest(ins)) {
     emitAtUses(ins);
     return;
   }
 
+  // See comment on MacroAssembler::branchWasmGcObjectIsRefType.
+  // We know we need scratch1 and superSuperTypeVector because we know this is a
+  // concrete type.
+  MOZ_ASSERT(MacroAssembler::needScratch1ForBranchWasmGcRefType(ins->type()));
+  MOZ_ASSERT(MacroAssembler::needSuperSuperTypeVectorForBranchWasmGcRefType(
+      ins->type()));
+
   LAllocation object = useRegister(ins->object());
+  LDefinition scratch1 = temp();
+  LDefinition scratch2 =
+      MacroAssembler::needScratch2ForBranchWasmGcRefType(ins->type())
+          ? temp()
+          : LDefinition();
   LAllocation superSuperTypeVector = useRegister(ins->superSuperTypeVector());
-  uint32_t subTypingDepth = ins->subTypingDepth();
-  LDefinition subTypeDepth = temp();
-  LDefinition scratch =
-      subTypingDepth >= wasm::MinSuperTypeVectorLength ? temp() : LDefinition();
-  define(new (alloc()) LWasmGcObjectIsSubtypeOf(object, superSuperTypeVector,
-                                                subTypeDepth, scratch),
+  define(new (alloc()) LWasmGcObjectIsSubtypeOfConcrete(
+             object, superSuperTypeVector, scratch1, scratch2),
          ins);
 }
 

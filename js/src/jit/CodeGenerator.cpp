@@ -72,6 +72,8 @@
 #include "vm/StringObject.h"
 #include "vm/StringType.h"
 #include "vm/TypedArrayObject.h"
+#include "wasm/WasmCodegenConstants.h"
+#include "wasm/WasmValType.h"
 #ifdef MOZ_VTUNE
 #  include "vtune/VTuneWrapper.h"
 #endif
@@ -16657,27 +16659,52 @@ void CodeGenerator::visitWasmTrapIfNull(LWasmTrapIfNull* lir) {
   masm.bind(&nonNull);
 }
 
-void CodeGenerator::visitWasmGcObjectIsSubtypeOf(
-    LWasmGcObjectIsSubtypeOf* ins) {
+void CodeGenerator::visitWasmGcObjectIsSubtypeOfAbstract(
+    LWasmGcObjectIsSubtypeOfAbstract* ins) {
   MOZ_ASSERT(gen->compilingWasm());
-  const MWasmGcObjectIsSubtypeOf* mir = ins->mir();
+
+  const MWasmGcObjectIsSubtypeOfAbstract* mir = ins->mir();
+  MOZ_ASSERT(!mir->type().isTypeRef());
+
   Register object = ToRegister(ins->object());
-  Register superSuperTypeVector = ToRegister(ins->superSuperTypeVector());
+  Register scratch1 = ins->temp0()->isBogusTemp() ? Register::Invalid()
+                                                  : ToRegister(ins->temp0());
+  Register superSuperTypeVector = Register::Invalid();
+  Register scratch2 = Register::Invalid();
+  Register result = ToRegister(ins->output());
+  Label failed;
+  Label success;
+  Label join;
+  masm.branchWasmGcObjectIsRefType(object, mir->type(), &success,
+                                   /*onSuccess=*/true, superSuperTypeVector,
+                                   scratch1, scratch2);
+  masm.bind(&failed);
+  masm.xor32(result, result);
+  masm.jump(&join);
+  masm.bind(&success);
+  masm.move32(Imm32(1), result);
+  masm.bind(&join);
+}
+
+void CodeGenerator::visitWasmGcObjectIsSubtypeOfConcrete(
+    LWasmGcObjectIsSubtypeOfConcrete* ins) {
+  MOZ_ASSERT(gen->compilingWasm());
+
+  const MWasmGcObjectIsSubtypeOfConcrete* mir = ins->mir();
+  MOZ_ASSERT(mir->type().isTypeRef());
+
+  Register object = ToRegister(ins->object());
   Register scratch1 = ToRegister(ins->temp0());
+  Register superSuperTypeVector = ToRegister(ins->superSuperTypeVector());
   Register scratch2 = ins->temp1()->isBogusTemp() ? Register::Invalid()
                                                   : ToRegister(ins->temp1());
   Register result = ToRegister(ins->output());
   Label failed;
   Label success;
   Label join;
-  masm.branchTestPtr(Assembler::Zero, object, object,
-                     mir->succeedOnNull() ? &success : &failed);
-  masm.branchTestObjectIsWasmGcObject(false, object, scratch1, &failed);
-  masm.loadPtr(Address(object, WasmGcObject::offsetOfSuperTypeVector()),
-               scratch1);
-  masm.branchWasmSuperTypeVectorIsSubtype(scratch1, superSuperTypeVector,
-                                          scratch2, mir->subTypingDepth(),
-                                          &success, true);
+  masm.branchWasmGcObjectIsRefType(object, mir->type(), &success,
+                                   /*onSuccess=*/true, superSuperTypeVector,
+                                   scratch1, scratch2);
   masm.bind(&failed);
   masm.xor32(result, result);
   masm.jump(&join);

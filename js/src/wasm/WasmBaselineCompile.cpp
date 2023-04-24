@@ -62,6 +62,7 @@
  */
 
 #include "wasm/WasmBaselineCompile.h"
+
 #include "wasm/WasmBCClass.h"
 #include "wasm/WasmBCDefs.h"
 #include "wasm/WasmBCFrame.h"
@@ -3144,9 +3145,7 @@ bool BaseCompiler::jumpConditionalWithResults(BranchState* b, Cond cond,
 
 #ifdef ENABLE_WASM_GC
 bool BaseCompiler::jumpConditionalWithResults(BranchState* b, RegRef object,
-                                              uint32_t typeIndex,
-                                              bool succeedOnNull,
-                                              bool onSuccess) {
+                                              RefType type, bool onSuccess) {
   if (b->hasBlockResults()) {
     StackHeight resultsBase(0);
     if (!topBranchParams(b->resultType, &resultsBase)) {
@@ -3154,12 +3153,11 @@ bool BaseCompiler::jumpConditionalWithResults(BranchState* b, RegRef object,
     }
     if (b->stackHeight != resultsBase) {
       Label notTaken;
-      // Temporarily take the result registers so that branchGcObjectType
-      // doesn't use them.
+      // Temporarily take the result registers so that branchGcHeapType doesn't
+      // use them.
       needIntegerResultRegisters(b->resultType);
-      branchGcObjectType(
-          object, typeIndex, &notTaken, succeedOnNull,
-          /*onSuccess=*/b->invertBranch ? onSuccess : !onSuccess);
+      branchGcRefType(object, type, &notTaken,
+                      /*onSuccess=*/b->invertBranch ? !onSuccess : onSuccess);
       freeIntegerResultRegisters(b->resultType);
 
       // Shuffle stack args.
@@ -3171,8 +3169,8 @@ bool BaseCompiler::jumpConditionalWithResults(BranchState* b, RegRef object,
     }
   }
 
-  branchGcObjectType(object, typeIndex, b->label, succeedOnNull,
-                     /*onSuccess=*/b->invertBranch ? !onSuccess : onSuccess);
+  branchGcRefType(object, type, b->label,
+                  /*onSuccess=*/b->invertBranch ? !onSuccess : onSuccess);
   return true;
 }
 #endif
@@ -6413,37 +6411,6 @@ void BaseCompiler::SignalNullCheck::emitTrapSite(BaseCompiler* bc) {
               wasm::TrapSite(masm.currentOffset(), trapOffset));
 }
 
-void BaseCompiler::branchGcObjectType(RegRef object, uint32_t typeIndex,
-                                      Label* label, bool succeedOnNull,
-                                      bool onSuccess) {
-  const TypeDef& castTypeDef = (*moduleEnv_.types)[typeIndex];
-  RegPtr superSuperTypeVector = loadSuperTypeVector(typeIndex);
-  RegPtr scratch1 = needPtr();
-  RegI32 scratch2;
-  if (castTypeDef.subTypingDepth() >= MinSuperTypeVectorLength) {
-    scratch2 = needI32();
-  }
-
-  Label fallthrough;
-  Label* successLabel = onSuccess ? label : &fallthrough;
-  Label* failLabel = onSuccess ? &fallthrough : label;
-  Label* nullLabel = succeedOnNull ? successLabel : failLabel;
-  masm.branchTestPtr(Assembler::Zero, object, object, nullLabel);
-  masm.branchTestObjectIsWasmGcObject(false, object, scratch1, failLabel);
-  masm.loadPtr(Address(object, WasmGcObject::offsetOfSuperTypeVector()),
-               scratch1);
-  masm.branchWasmSuperTypeVectorIsSubtype(
-      scratch1, superSuperTypeVector, scratch2, castTypeDef.subTypingDepth(),
-      label, onSuccess);
-  masm.bind(&fallthrough);
-
-  if (castTypeDef.subTypingDepth() >= MinSuperTypeVectorLength) {
-    freeI32(scratch2);
-  }
-  freePtr(scratch1);
-  freePtr(superSuperTypeVector);
-}
-
 RegPtr BaseCompiler::emitGcArrayGetData(RegRef rp) {
   // `rp` points at a WasmArrayObject.  Return a reg holding the value of its
   // `data_` field.
@@ -7276,14 +7243,13 @@ bool BaseCompiler::emitArrayCopy() {
   return emitInstanceCall(SASigArrayCopy);
 }
 
-void BaseCompiler::emitRefTestCommon(uint32_t typeIndex, bool succeedOnNull) {
+void BaseCompiler::emitRefTestCommon(const RefType& type) {
   Label success;
   Label join;
   RegRef object = popRef();
   RegI32 result = needI32();
 
-  branchGcObjectType(object, typeIndex, &success, succeedOnNull,
-                     /*onSuccess=*/true);
+  branchGcRefType(object, type, &success, /*onSuccess=*/true);
   masm.xor32(result, result);
   masm.jump(&join);
   masm.bind(&success);
@@ -7294,12 +7260,11 @@ void BaseCompiler::emitRefTestCommon(uint32_t typeIndex, bool succeedOnNull) {
   freeRef(object);
 }
 
-void BaseCompiler::emitRefCastCommon(uint32_t typeIndex, bool succeedOnNull) {
+void BaseCompiler::emitRefCastCommon(const RefType& type) {
   RegRef object = popRef();
 
   Label success;
-  branchGcObjectType(object, typeIndex, &success, succeedOnNull,
-                     /*onSuccess=*/true);
+  branchGcRefType(object, type, &success, /*onSuccess=*/true);
   masm.wasmTrap(Trap::BadCast, bytecodeOffset());
   masm.bind(&success);
   pushRef(object);
@@ -7316,9 +7281,39 @@ bool BaseCompiler::emitRefTestV5() {
     return true;
   }
 
-  emitRefTestCommon(typeIndex, /*succeedOnNull=*/false);
+  const TypeDef& typeDef = moduleEnv_.types->type(typeIndex);
+  const RefType& type = RefType::fromTypeDef(&typeDef, /*nullable=*/false);
+  emitRefTestCommon(type);
 
   return true;
+}
+
+void BaseCompiler::branchGcRefType(RegRef object, const RefType& type,
+                                   Label* label, bool onSuccess) {
+  RegI32 scratch1 = MacroAssembler::needScratch1ForBranchWasmGcRefType(type)
+                        ? needI32()
+                        : RegI32::Invalid();
+  RegI32 scratch2 = MacroAssembler::needScratch2ForBranchWasmGcRefType(type)
+                        ? needI32()
+                        : RegI32::Invalid();
+  RegPtr superSuperTypeVector;
+  if (MacroAssembler::needSuperSuperTypeVectorForBranchWasmGcRefType(type)) {
+    uint32_t typeIndex = moduleEnv_.types->indexOf(*type.typeDef());
+    superSuperTypeVector = loadSuperTypeVector(typeIndex);
+  }
+
+  masm.branchWasmGcObjectIsRefType(object, type, label, onSuccess,
+                                   superSuperTypeVector, scratch1, scratch2);
+
+  if (superSuperTypeVector.isValid()) {
+    freePtr(superSuperTypeVector);
+  }
+  if (scratch2.isValid()) {
+    freeI32(scratch2);
+  }
+  if (scratch1.isValid()) {
+    freeI32(scratch1);
+  }
 }
 
 bool BaseCompiler::emitRefCastV5() {
@@ -7332,7 +7327,9 @@ bool BaseCompiler::emitRefCastV5() {
     return true;
   }
 
-  emitRefCastCommon(typeIndex, /*succeedOnNull=*/true);
+  const TypeDef& typeDef = moduleEnv_.types->type(typeIndex);
+  const RefType& type = RefType::fromTypeDef(&typeDef, /*nullable=*/true);
+  emitRefCastCommon(type);
 
   return true;
 }
@@ -7348,10 +7345,7 @@ bool BaseCompiler::emitRefTest(bool nullable) {
     return true;
   }
 
-  MOZ_ASSERT(type.isTypeRef(),
-             "ref.test only works with type indexes for now; validation should "
-             "have caught this");
-  emitRefTestCommon(moduleEnv_.types->indexOf(*type.typeDef()), nullable);
+  emitRefTestCommon(type);
 
   return true;
 }
@@ -7367,10 +7361,7 @@ bool BaseCompiler::emitRefCast(bool nullable) {
     return true;
   }
 
-  MOZ_ASSERT(type.isTypeRef(),
-             "ref.cast only works with type indexes for now; validation should "
-             "have caught this");
-  emitRefCastCommon(moduleEnv_.types->indexOf(*type.typeDef()), nullable);
+  emitRefCastCommon(type);
 
   return true;
 }
@@ -7378,8 +7369,7 @@ bool BaseCompiler::emitRefCast(bool nullable) {
 bool BaseCompiler::emitBrOnCastCommon(bool onSuccess,
                                       uint32_t labelRelativeDepth,
                                       const ResultType& labelType,
-                                      uint32_t destTypeIndex,
-                                      bool succeedOnNull) {
+                                      const RefType& destType) {
   Control& target = controlItem(labelRelativeDepth);
   target.bceSafeOnExit &= bceSafe_;
 
@@ -7403,8 +7393,7 @@ bool BaseCompiler::emitBrOnCastCommon(bool onSuccess,
     freeIntegerResultRegisters(b.resultType);
   }
 
-  if (!jumpConditionalWithResults(&b, objectCondition, destTypeIndex,
-                                  succeedOnNull, onSuccess)) {
+  if (!jumpConditionalWithResults(&b, objectCondition, destType, onSuccess)) {
     return false;
   }
   freeRef(objectCondition);
@@ -7429,14 +7418,7 @@ bool BaseCompiler::emitBrOnCast() {
     return true;
   }
 
-  MOZ_ASSERT(
-      destType.isTypeRef(),
-      "br_on_cast only works with type indexes for now; validation should "
-      "have caught this");
-  uint32_t castTypeIndex = moduleEnv_.types->indexOf(*destType.typeDef());
-
-  return emitBrOnCastCommon(onSuccess, labelRelativeDepth, labelType,
-                            castTypeIndex, destType.isNullable());
+  return emitBrOnCastCommon(onSuccess, labelRelativeDepth, labelType, destType);
 }
 
 bool BaseCompiler::emitBrOnCastV5(bool onSuccess) {
@@ -7457,8 +7439,9 @@ bool BaseCompiler::emitBrOnCastV5(bool onSuccess) {
     return true;
   }
 
-  return emitBrOnCastCommon(onSuccess, labelRelativeDepth, labelType,
-                            castTypeIndex, /*succeedOnNull=*/false);
+  const TypeDef& typeDef = moduleEnv_.types->type(castTypeIndex);
+  const RefType& destType = RefType::fromTypeDef(&typeDef, false);
+  return emitBrOnCastCommon(onSuccess, labelRelativeDepth, labelType, destType);
 }
 
 bool BaseCompiler::emitBrOnCastHeapV5(bool onSuccess, bool nullable) {
@@ -7481,14 +7464,7 @@ bool BaseCompiler::emitBrOnCastHeapV5(bool onSuccess, bool nullable) {
     return true;
   }
 
-  MOZ_ASSERT(
-      destType.isTypeRef(),
-      "br_on_cast only works with type indexes for now; validation should "
-      "have caught this");
-  uint32_t castTypeIndex = moduleEnv_.types->indexOf(*destType.typeDef());
-
-  return emitBrOnCastCommon(onSuccess, labelRelativeDepth, labelType,
-                            castTypeIndex, destType.isNullable());
+  return emitBrOnCastCommon(onSuccess, labelRelativeDepth, labelType, destType);
 }
 
 bool BaseCompiler::emitRefAsStructV5() {

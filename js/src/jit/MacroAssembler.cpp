@@ -41,8 +41,10 @@
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmCodegenConstants.h"
 #include "wasm/WasmCodegenTypes.h"
+#include "wasm/WasmGcObject.h"
 #include "wasm/WasmInstanceData.h"
 #include "wasm/WasmMemory.h"
+#include "wasm/WasmTypeDef.h"
 #include "wasm/WasmValidate.h"
 
 #include "jit/TemplateObject-inl.h"
@@ -4803,6 +4805,100 @@ void MacroAssembler::wasmCallRef(const wasm::CallSiteDesc& desc,
   *fastCallOffset = call(newDesc, calleeScratch);
 
   bind(&done);
+}
+
+bool MacroAssembler::needScratch1ForBranchWasmGcRefType(
+    const wasm::RefType& type) {
+  return !type.isNone() &&
+         wasm::RefType::isSubTypeOf(type, wasm::RefType::eq());
+}
+
+bool MacroAssembler::needScratch2ForBranchWasmGcRefType(
+    const wasm::RefType& type) {
+  return type.isTypeRef() &&
+         type.typeDef()->subTypingDepth() >= wasm::MinSuperTypeVectorLength;
+}
+
+bool MacroAssembler::needSuperSuperTypeVectorForBranchWasmGcRefType(
+    const wasm::RefType& type) {
+  return type.isTypeRef();
+}
+
+void MacroAssembler::branchWasmGcObjectIsRefType(
+    Register object, const wasm::RefType& type, Label* label, bool onSuccess,
+    Register superSuperTypeVector, Register scratch1, Register scratch2) {
+  MOZ_ASSERT(type.isValid());
+  MOZ_ASSERT_IF(needScratch1ForBranchWasmGcRefType(type),
+                scratch1 != Register::Invalid());
+  MOZ_ASSERT_IF(needScratch2ForBranchWasmGcRefType(type),
+                scratch2 != Register::Invalid());
+  MOZ_ASSERT_IF(needSuperSuperTypeVectorForBranchWasmGcRefType(type),
+                superSuperTypeVector != Register::Invalid());
+
+  Label fallthrough;
+  Label* successLabel = onSuccess ? label : &fallthrough;
+  Label* failLabel = onSuccess ? &fallthrough : label;
+  Label* nullLabel = type.isNullable() ? successLabel : failLabel;
+
+  // Check for null.
+  branchTestPtr(Assembler::Zero, object, object, nullLabel);
+
+  // The only value that can inhabit 'none' is null. So, early out if we got
+  // not-null.
+  if (type.isNone()) {
+    jump(failLabel);
+    bind(&fallthrough);
+    return;
+  }
+
+  if (type.isAny()) {
+    // No further checks for 'any'
+    jump(successLabel);
+    bind(&fallthrough);
+    return;
+  }
+
+  // 'type' is now 'eq' or lower, which currently will always be a gc object.
+  // Test for non-gc objects.
+  MOZ_ASSERT(scratch1 != Register::Invalid());
+  branchTestObjectIsWasmGcObject(false, object, scratch1, failLabel);
+
+  if (type.isEq()) {
+    // No further checks for 'eq'
+    jump(successLabel);
+    bind(&fallthrough);
+    return;
+  }
+
+  // 'type' is now 'struct', 'array', or a concrete type. (Bottom types were
+  // handled above.)
+  //
+  // Casting to a concrete type only requires a simple check on the
+  // object's superTypeVector. Casting to an abstract type (struct, array)
+  // requires loading the object's superTypeVector->typeDef->kind, and checking
+  // that it is correct.
+
+  loadPtr(Address(object, int32_t(WasmGcObject::offsetOfSuperTypeVector())),
+          scratch1);
+  if (type.isTypeRef()) {
+    // concrete type, do superTypeVector check
+    branchWasmSuperTypeVectorIsSubtype(scratch1, superSuperTypeVector, scratch2,
+                                       type.typeDef()->subTypingDepth(),
+                                       successLabel, true);
+  } else {
+    // abstract type, do kind check
+    loadPtr(Address(scratch1,
+                    int32_t(wasm::SuperTypeVector::offsetOfSelfTypeDef())),
+            scratch1);
+    load8ZeroExtend(Address(scratch1, int32_t(wasm::TypeDef::offsetOfKind())),
+                    scratch1);
+    branch32(Assembler::Equal, scratch1, Imm32(int32_t(type.typeDefKind())),
+             successLabel);
+  }
+
+  // The cast failed.
+  jump(failLabel);
+  bind(&fallthrough);
 }
 
 void MacroAssembler::branchWasmSuperTypeVectorIsSubtype(

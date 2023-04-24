@@ -13,20 +13,20 @@ const preamble = `
 
 const hierarchies = [
   [
-    // { name: 'any' },
-    // { name: 'eq' },
-    // { name: 'struct' },
+    { name: 'any' },
+    { name: 'eq' },
+    { name: 'struct' },
     { name: '$s1', make: 'struct.new_default $s1' },
     { name: '$s2', make: 'struct.new_default $s2' },
-    // { name: 'none', none: true },
+    { name: 'none', none: true },
   ],
   [
-    // { name: 'any' },
-    // { name: 'eq' },
-    // { name: 'array' },
+    { name: 'any' },
+    { name: 'eq' },
+    { name: 'array' },
     { name: '$a1', make: '(array.new_default $a1 (i32.const 10))' },
     { name: '$a2', make: '(array.new_default $a2 (i32.const 10))' },
-    // { name: 'none', none: true },
+    { name: 'none', none: true },
   ],
   // i31 eventually
 

@@ -63,6 +63,20 @@ RefType RefType::topType() const {
   MOZ_CRASH("switch is exhaustive");
 }
 
+TypeDefKind RefType::typeDefKind() const {
+  switch (kind()) {
+    case RefType::Struct:
+      return TypeDefKind::Struct;
+    case RefType::Array:
+      return TypeDefKind::Array;
+    case RefType::Func:
+      return TypeDefKind::Func;
+    default:
+      return TypeDefKind::None;
+  }
+  MOZ_CRASH("switch is exhaustive");
+}
+
 static bool ToRefType(JSContext* cx, JSLinearString* typeLinearStr,
                       RefType* out) {
   if (StringEqualsLiteral(typeLinearStr, "anyfunc") ||

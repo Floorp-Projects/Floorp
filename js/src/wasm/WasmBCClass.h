@@ -1340,9 +1340,7 @@ struct BaseCompiler final {
   // Jump to the given branch, passing results, if the WasmGcObject, `object`,
   // is a subtype of `typeIndex`.
   [[nodiscard]] bool jumpConditionalWithResults(BranchState* b, RegRef object,
-                                                uint32_t typeIndex,
-                                                bool succeedOnNull,
-                                                bool onSuccess);
+                                                RefType type, bool onSuccess);
 #endif
   template <typename Cond>
   [[nodiscard]] bool sniffConditionalControlCmp(Cond compareOp,
@@ -1657,8 +1655,7 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitBrOnCastCommon(bool onSuccess,
                                         uint32_t labelRelativeDepth,
                                         const ResultType& labelType,
-                                        uint32_t destTypeIndex,
-                                        bool succeedOnNull);
+                                        const RefType& destType);
   [[nodiscard]] bool emitBrOnCast();
   [[nodiscard]] bool emitExternInternalize();
   [[nodiscard]] bool emitExternExternalize();
@@ -1679,10 +1676,6 @@ struct BaseCompiler final {
   // Load a pointer to the SuperTypeVector for a given type index
   RegPtr loadSuperTypeVector(uint32_t typeIndex);
 
-  // Branch to the label if the WasmGcObject `object` is/is not a subtype of
-  // `typeIndex`.
-  void branchGcObjectType(RegRef object, uint32_t typeIndex, Label* label,
-                          bool succeedOnNull, bool onSuccess);
   RegPtr emitGcArrayGetData(RegRef rp);
   template <typename NullCheckPolicy>
   RegI32 emitGcArrayGetNumElements(RegRef rp);
@@ -1692,12 +1685,15 @@ struct BaseCompiler final {
   template <typename T, typename NullCheckPolicy>
   void emitGcSetScalar(const T& dst, FieldType type, AnyReg value);
 
-  // Common code for both old and new ref.test instructions. Only handles type
-  // indexes right now, not abstract heap types.
-  void emitRefTestCommon(uint32_t typeIndex, bool succeedOnNull);
-  // Common code for both old and new ref.cast instructions. Only handles type
-  // indexes right now, not abstract heap types.
-  void emitRefCastCommon(uint32_t typeIndex, bool succeedOnNull);
+  // Common code for both old and new ref.test instructions.
+  void emitRefTestCommon(const RefType& type);
+  // Common code for both old and new ref.cast instructions.
+  void emitRefCastCommon(const RefType& type);
+
+  // Allocate registers and branch if the given object is a subtype of the given
+  // heap type.
+  void branchGcRefType(RegRef object, const RefType& type, Label* label,
+                       bool onSuccess);
 
   // Write `value` to wasm struct `object`, at `areaBase + areaOffset`.  The
   // caller must decide on the in- vs out-of-lineness before the call and set
