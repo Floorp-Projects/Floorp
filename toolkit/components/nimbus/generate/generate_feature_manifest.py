@@ -21,15 +21,9 @@ NIMBUS_FALLBACK_PREFS = (
     "NIMBUS_FALLBACK_PREFS[]{{{}}};"
 )
 
-EXPORTED_SYMBOLS = 'const EXPORTED_SYMBOLS = ["{}"];'
 
-
-def write_fm_cpp_headers(fd):
+def write_fm_headers(fd):
     fd.write(HEADER_LINE)
-
-
-def write_fm_js_headers(fd):
-    fd.write("\n".join([HEADER_LINE, EXPORTED_SYMBOLS.format("FeatureManifest")]))
 
 
 def validate_feature_manifest(schema_path, manifest_path, manifest):
@@ -97,7 +91,7 @@ def validate_feature_manifest(schema_path, manifest_path, manifest):
 
 
 def generate_feature_manifest(fd, input_file):
-    write_fm_js_headers(fd)
+    write_fm_headers(fd)
 
     try:
         with open(input_file, "r", encoding="utf-8") as f:
@@ -107,7 +101,7 @@ def generate_feature_manifest(fd, input_file):
             Path(input_file).parent / FEATURE_MANIFEST_SCHEMA, input_file, manifest
         )
 
-        fd.write(f"const FeatureManifest = {json.dumps(manifest)};")
+        fd.write(f"export const FeatureManifest = {json.dumps(manifest)};")
     except (IOError) as e:
         print(f"{input_file}: error:\n  {e}\n")
         sys.exit(1)
@@ -131,7 +125,7 @@ def platform_feature_manifest_array(features):
 
 
 def generate_platform_feature_manifest(fd, input_file):
-    write_fm_cpp_headers(fd)
+    write_fm_headers(fd)
 
     def file_structure(data):
         return "\n".join(

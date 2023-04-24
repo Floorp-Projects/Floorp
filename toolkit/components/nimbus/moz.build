@@ -33,7 +33,7 @@ TESTING_JS_MODULES += [
 ]
 
 GeneratedFile(
-    "FeatureManifest.js",
+    "FeatureManifest.sys.mjs",
     script="generate/generate_feature_manifest.py",
     entry_point="generate_feature_manifest",
     inputs=["./FeatureManifest.yaml"],

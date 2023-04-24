@@ -6,6 +6,6 @@ toolkit.jar:
 % resource nimbus %res/nimbus/
   res/nimbus/lib/ (./lib/*.sys.mjs)
   res/nimbus/ExperimentAPI.sys.mjs (./ExperimentAPI.sys.mjs)
-  res/nimbus/FeatureManifest.js (FeatureManifest.js)
+  res/nimbus/FeatureManifest.sys.mjs (FeatureManifest.sys.mjs)
   res/nimbus/schemas/NimbusEnrollment.schema.json (./schemas/NimbusEnrollment.schema.json)
   res/nimbus/schemas/NimbusExperiment.schema.json (./schemas/NimbusExperiment.schema.json)
