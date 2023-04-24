@@ -159,7 +159,7 @@ static inline int32_t FirstNon8BitUnvectorized(const char16_t* str,
 }
 
 #if defined(MOZILLA_MAY_SUPPORT_SSE2)
-#  include "nsTextFragmentGeneric.h"
+#  include "nsTextFragmentGenericFwd.h"
 #endif
 
 #ifdef __powerpc__
