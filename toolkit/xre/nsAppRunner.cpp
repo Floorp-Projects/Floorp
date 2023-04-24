@@ -5112,15 +5112,6 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
   GfxInfo::FireGLXTestProcess();
 #endif
 
-#ifdef MOZ_WAYLAND
-  // Make sure we have wayland connection for main thread.
-  // It's used as template to create display connections
-  // for different threads.
-  if (IsWaylandEnabled()) {
-    MOZ_UNUSED(WaylandDisplayGet());
-  }
-#endif
-
   return 0;
 }
 
