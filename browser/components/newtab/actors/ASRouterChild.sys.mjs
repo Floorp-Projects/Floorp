@@ -14,7 +14,6 @@ export class ASRouterChild extends JSWindowActorChild {
   constructor() {
     super();
     this.observers = new Set();
-    this.rpmInitialized = false;
   }
 
   didDestroy() {
@@ -25,7 +24,6 @@ export class ASRouterChild extends JSWindowActorChild {
     // NOTE: DOMDocElementInserted may be called multiple times per
     // PWindowGlobal due to the initial about:blank document's window global
     // being re-used.
-    this.initializeRPM();
     const window = this.contentWindow;
     Cu.exportFunction(this.asRouterMessage.bind(this), window, {
       defineAs: "ASRouterMessage",
@@ -109,31 +107,5 @@ export class ASRouterChild extends JSWindowActorChild {
       }
     }
     throw new Error(`Unexpected type "${type}"`);
-  }
-
-  // Creates a new PageListener for this process. This will listen for page loads
-  // and for those that match URLs provided by the parent process will set up
-  // a dedicated message port and notify the parent process.
-  // Note: this is part of the old message-manager based RPM and is only still
-  // used by newtab/home/welcome.
-  initializeRPM() {
-    if (this.rpmInitialized) {
-      return;
-    }
-
-    // Strip the hash from the URL, because it's not part of the origin.
-    let url = this.document.documentURI.replace(/[\#?].*$/, "");
-
-    let registeredURLs = Services.cpmm.sharedData.get("RemotePageManager:urls");
-
-    if (registeredURLs && registeredURLs.has(url)) {
-      let { ChildMessagePort } = ChromeUtils.importESModule(
-        "resource://gre/modules/remotepagemanager/RemotePageManagerChild.sys.mjs"
-      );
-      // Set up the child side of the message port
-      // eslint-disable-next-line no-new
-      new ChildMessagePort(this.contentWindow);
-      this.rpmInitialized = true;
-    }
   }
 }
