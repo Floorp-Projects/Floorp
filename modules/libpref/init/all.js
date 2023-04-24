@@ -3192,7 +3192,11 @@ pref("signon.firefoxRelay.base_url", "https://relay.firefox.com/api/v1/");
 pref("signon.firefoxRelay.learn_more_url", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/firefox-relay-integration");
 pref("signon.firefoxRelay.manage_url", "https://relay.firefox.com");
 pref("signon.signupDetection.confidenceThreshold",     "0.75");
-pref("signon.signupDetection.enabled",                 false);
+#ifdef NIGHTLY_BUILD
+  pref("signon.signupDetection.enabled", true);
+#else
+  pref("signon.signupDetection.enabled", false);
+#endif
 
 // Satchel (Form Manager) prefs
 pref("browser.formfill.debug",            false);
