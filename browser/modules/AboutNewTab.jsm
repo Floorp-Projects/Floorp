@@ -14,6 +14,11 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  RemotePages:
+    "resource://gre/modules/remotepagemanager/RemotePageManagerParent.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ActivityStream: "resource://activity-stream/lib/ActivityStream.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
@@ -33,6 +38,8 @@ const AboutNewTab = {
   // AboutNewTab
   initialized: false,
 
+  pageListener: null,
+  isPageListenerOverridden: false,
   willNotifyUser: false,
 
   _activityStreamEnabled: false,
@@ -45,9 +52,15 @@ const AboutNewTab = {
   _newTabURLOverridden: false,
 
   /**
-   * init - Initializes an instance of Activity Stream if one doesn't exist already.
+   * init - Initializes an instance of Activity Stream if one doesn't exist already
+   *        and creates the instance of Remote Page Manager which Activity Stream
+   *        uses for message passing.
+   *
+   * @param {obj} pageListener - Optional argument. An existing instance of RemotePages
+   *                             which Activity Stream has previously made, and we
+   *                             would like to re-use.
    */
-  init() {
+  init(pageListener) {
     Services.obs.addObserver(this, TOPIC_APP_QUIT);
     if (!AppConstants.RELEASE_OR_BETA) {
       XPCOMUtils.defineLazyPreferenceGetter(
@@ -75,7 +88,20 @@ const AboutNewTab = {
     this.toggleActivityStream(true);
     this.initialized = true;
 
-    Services.obs.addObserver(this, BROWSER_READY_NOTIFICATION);
+    if (this.isPageListenerOverridden) {
+      return;
+    }
+
+    // Since `init` can be called via `reset` at a later time with an existing
+    // pageListener, we want to only add the observer if we are initializing
+    // without this pageListener argument. This means it was the first call to `init`
+    if (!pageListener) {
+      Services.obs.addObserver(this, BROWSER_READY_NOTIFICATION);
+    }
+
+    this.pageListener =
+      pageListener ||
+      new lazy.RemotePages(["about:home", "about:newtab", "about:welcome"]);
   },
 
   /**
@@ -192,7 +218,8 @@ const AboutNewTab = {
   },
 
   /**
-   * uninit - Uninitializes Activity Stream if it exists.
+   * uninit - Uninitializes Activity Stream if it exists, and destroys the pageListener
+   *        if it exists.
    */
   uninit() {
     if (this.activityStream) {
@@ -201,7 +228,31 @@ const AboutNewTab = {
       this.activityStream = null;
     }
 
+    if (this.pageListener) {
+      this.pageListener.destroy();
+      this.pageListener = null;
+    }
     this.initialized = false;
+  },
+
+  overridePageListener(shouldPassPageListener) {
+    this.isPageListenerOverridden = true;
+
+    const pageListener = this.pageListener;
+    if (!pageListener) {
+      return null;
+    }
+    if (shouldPassPageListener) {
+      this.pageListener = null;
+      return pageListener;
+    }
+    this.uninit();
+    return null;
+  },
+
+  reset(pageListener) {
+    this.isPageListenerOverridden = false;
+    this.init(pageListener);
   },
 
   getTopSites() {
