@@ -32,7 +32,7 @@ serde = { optional = true, version = "1.0", features = ["serde_derive"] }
 [dev-dependencies]
 env_logger = { version = "0.10", default_features = false }
 euclid = "0.22"
-gleam = "0.13"
+gleam = "0.15"
 glutin = "0.28"
 rayon = "1"
 winit = "0.26"

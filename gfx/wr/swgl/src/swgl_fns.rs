@@ -964,6 +964,16 @@ impl Gl for Context {
         }
     }
 
+    fn bind_vertex_buffer(
+        &self,
+        binding_index: GLuint,
+        buffer: GLuint,
+        offset: GLintptr,
+        stride: GLint,
+    ) {
+        unimplemented!("Not supported by SWGL");
+    }
+
     fn bind_texture(&self, target: GLenum, texture: GLuint) {
         //panic!();
         unsafe {
@@ -1405,6 +1415,10 @@ impl Gl for Context {
         panic!();
     }
 
+    fn vertex_attrib_binding(&self, attrib_index: GLuint, binding_index: GLuint) {
+        unimplemented!("Not supported by SWGL");
+    }
+
     fn vertex_attrib_pointer_f32(
         &self,
         index: GLuint,
@@ -1467,6 +1481,31 @@ impl Gl for Context {
         unsafe {
             VertexAttribDivisor(index, divisor);
         }
+    }
+
+    fn vertex_attrib_format(
+        &self,
+        attrib_index: GLuint,
+        size: GLint,
+        type_: GLenum,
+        normalized: bool,
+        relative_offset: GLuint,
+    ) {
+        unimplemented!("Not supported by SWGL");
+    }
+
+    fn vertex_attrib_i_format(
+        &self,
+        attrib_index: GLuint,
+        size: GLint,
+        type_: GLenum,
+        relative_offset: GLuint,
+    ) {
+        unimplemented!("Not supported by SWGL");
+    }
+
+    fn vertex_binding_divisor(&self, binding_index: GLuint, divisor: GLuint) {
+        unimplemented!("Not supported by SWGL");
     }
 
     fn viewport(&self, x: GLint, y: GLint, width: GLsizei, height: GLsizei) {
@@ -2283,6 +2322,21 @@ impl Gl for Context {
     }
 
     fn flush_mapped_buffer_range(&self, target: GLenum, offset: GLintptr, length: GLsizeiptr) {
+        unimplemented!("Not supported by SWGL");
+    }
+
+    fn start_tiling_qcom(
+        &self,
+        x: GLuint,
+        y: GLuint,
+        width: GLuint,
+        height: GLuint,
+        preserve_mask: GLbitfield,
+    ) {
+        unimplemented!("Not supported by SWGL");
+    }
+
+    fn end_tiling_qcom(&self, preserve_mask: GLbitfield) {
         unimplemented!("Not supported by SWGL");
     }
 }
