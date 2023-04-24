@@ -134,6 +134,21 @@ android {
                 manifest.srcFile "${topobjdir}/mobile/android/geckoview/src/main/AndroidManifest_overlay.xml"
             }
         }
+
+        withGeckoBinaries {
+            assets {
+                // This should contain only `omni.ja`.
+                srcDir "${topobjdir}/dist/geckoview/assets"
+            }
+
+            jniLibs {
+                if (!mozconfig.substs.MOZ_ANDROID_FAT_AAR_ARCHITECTURES) {
+                    srcDir "${topobjdir}/dist/geckoview/lib"
+                } else {
+                    srcDir "${topobjdir}/dist/fat-aar/output/jni"
+                }
+            }
+        }
     }
 }
 
