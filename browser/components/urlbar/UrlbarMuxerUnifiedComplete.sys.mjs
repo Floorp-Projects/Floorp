@@ -139,7 +139,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     let rootGroup = context.searchMode?.engineName
       ? lazy.UrlbarPrefs.makeResultGroups({ showSearchSuggestionsFirst: true })
       : lazy.UrlbarPrefs.resultGroups;
-    lazy.logger.debug(`Groups: ${rootGroup}`);
+    lazy.logger.debug(`Groups: ${JSON.stringify(rootGroup)}`);
 
     // Fill the root group.
     let [sortedResults] = this._fillGroup(
@@ -251,14 +251,21 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       if (suggestedIndexResults) {
         // Subtract them from the group's limits so there will be room for them
         // later. Create a new `limits` object so we don't modify the caller's.
-        let span = suggestedIndexResults.reduce((sum, result) => {
-          sum += UrlbarUtils.getSpanForResult(result);
-          return sum;
-        }, 0);
+        let [span, resultCount] = suggestedIndexResults.reduce(
+          ([sum, count], result) => {
+            const spanSize = UrlbarUtils.getSpanForResult(result);
+            sum += spanSize;
+            if (spanSize) {
+              count++;
+            }
+            return [sum, count];
+          },
+          [0, 0]
+        );
         limits = { ...limits };
         limits.availableSpan = Math.max(limits.availableSpan - span, 0);
         limits.maxResultCount = Math.max(
-          limits.maxResultCount - suggestedIndexResults.length,
+          limits.maxResultCount - resultCount,
           0
         );
       }
@@ -610,9 +617,12 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
           // added to later groups.
           break;
         }
+
         addedResults.push(result);
         usedLimits.availableSpan = newUsedSpan;
-        usedLimits.maxResultCount++;
+        if (span) {
+          usedLimits.maxResultCount++;
+        }
         state.usedResultSpan += span;
         this._updateStatePostAdd(result, state);
       }
@@ -975,6 +985,12 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    *   Global state that we use to make decisions during this sort.
    */
   _updateStatePreAdd(result, state) {
+    // check if this result should trigger an exposure
+    // if so mark the result properties and skip the rest of the state setting.
+    if (this._checkAndSetExposureProperties(result)) {
+      return;
+    }
+
     // Keep track of the largest heuristic result span.
     if (result.heuristic && this._canAddResult(result, state)) {
       state.maxHeuristicResultSpan = Math.max(
@@ -1092,6 +1108,11 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    *   Global state that we use to make decisions during this sort.
    */
   _updateStatePostAdd(result, state) {
+    // bail early if the result will be hidden from the final view.
+    if (result.exposureResultHidden) {
+      return;
+    }
+
     // Update heuristic state.
     if (result.heuristic) {
       state.context.heuristicResult = result;
@@ -1261,14 +1282,49 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
           prevResult = result;
           prevIndex = index;
           sortedResults.splice(index, 0, result);
-          usedLimits.availableSpan += UrlbarUtils.getSpanForResult(result);
-          usedLimits.maxResultCount++;
+
+          // Adjust the limits based on span size.
+          const resultSpan = UrlbarUtils.getSpanForResult(result);
+          usedLimits.availableSpan += resultSpan;
+          if (resultSpan) {
+            usedLimits.maxResultCount++;
+          }
           this._updateStatePostAdd(result, state);
         }
       }
     }
 
     return usedLimits;
+  }
+
+  /**
+   * Checks exposure eligibility and visibility for the given result.
+   * If the result passes the exposure check, we set two properties
+   * on the UrlbarResult: `result.exposureResultType` a string containing
+   * the results of `UrlbarUtils.searchEngagementTelemetryType` and
+   * `result.exposureResultHidden` a boolean which indicates whether the
+   * result should be hidden from the view.
+   *
+   *
+   * @param {UrlbarResult} result
+   *   The result.
+   * @returns {boolean}
+   *   A boolean indicating if this is a hidden exposure result.
+   */
+  _checkAndSetExposureProperties(result) {
+    const exposureResultsPref = lazy.UrlbarPrefs.get("exposureResults");
+    const exposureResults = exposureResultsPref?.split(",");
+    if (exposureResults) {
+      const telemetryType = UrlbarUtils.searchEngagementTelemetryType(result);
+      if (exposureResults.includes(telemetryType)) {
+        result.exposureResultType = telemetryType;
+        result.exposureResultHidden = !lazy.UrlbarPrefs.get(
+          "showExposureResults"
+        );
+      }
+    }
+
+    return result.exposureResultHidden;
   }
 }
 

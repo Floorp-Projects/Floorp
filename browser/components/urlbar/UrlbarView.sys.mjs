@@ -1066,10 +1066,16 @@ export class UrlbarView {
       // Continue updating rows as long as we haven't encountered a new
       // suggestedIndex result that couldn't replace a current result.
       if (!seenMisplacedResult) {
+        let result = results[resultIndex];
+        // skip this result if it is supposed to be hidden from the view.
+        if (result.exposureResultHidden) {
+          this.#addExposure(result);
+          resultIndex++;
+          continue;
+        }
         seenSearchSuggestion =
           seenSearchSuggestion ||
           (!row.result.heuristic && this.#resultIsSearchSuggestion(row.result));
-        let result = results[resultIndex];
         if (
           this.#rowCanUpdateToResult(rowIndex, result, seenSearchSuggestion)
         ) {
@@ -1099,8 +1105,13 @@ export class UrlbarView {
 
     // Add remaining results, if we have fewer rows than results.
     for (; resultIndex < results.length; ++resultIndex) {
-      let row = this.#createRow();
       let result = results[resultIndex];
+      // skip this result if it is supposed to be hidden from the view.
+      if (result.exposureResultHidden) {
+        this.#addExposure(result);
+        continue;
+      }
+      let row = this.#createRow();
       this.#updateRow(row, result);
       if (!seenMisplacedResult && result.hasSuggestedIndex) {
         if (result.isSuggestedIndexRelativeToGroup) {
@@ -1844,6 +1855,9 @@ export class UrlbarView {
 
       let visible = this.#isElementVisible(item);
       if (visible) {
+        if (item.result.exposureResultType) {
+          this.#addExposure(item.result);
+        }
         this.visibleResults.push(item.result);
       }
 
@@ -3037,6 +3051,15 @@ export class UrlbarView {
     if (event.target == this.resultMenu) {
       this.#populateResultMenu();
     }
+  }
+
+  /**
+   * Add result to exposure set on the controller.
+   *
+   * @param {UrlbarResult} result UrlbarResult for which to record an exposure.
+   */
+  #addExposure(result) {
+    this.controller.engagementEvent.addExposure(result);
   }
 }
 

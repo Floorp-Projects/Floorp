@@ -455,6 +455,25 @@ urlbar:
       - fx-search-telemetry@mozilla.com
     expires: never
 
+  exposure:
+    type: event
+    description: >
+      Recorded when client is exposed to urlbar experiment results.
+    extra_keys:
+      results:
+        description: >
+          Comma separated list of results that were visible to the user.
+        type: string
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1819766
+    data_reviews:
+      - ""
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    expires: never
+
   pref_max_results:
     lifetime: application
     type: quantity

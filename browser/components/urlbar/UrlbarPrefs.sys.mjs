@@ -115,6 +115,12 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether the urlbar displays a permanent search button.
   ["experimental.searchButton", false],
 
+  // Comma-separated list of `source.providers` combinations, that are used to
+  // determine if an exposure event should be fired. This can be set by a
+  // Nimbus variable and is expected to be set via nimbus experiment
+  // configuration.
+  ["exposureResults", ""],
+
   // When we send events to (privileged) extensions (urlbar API), we wait this
   // amount of time in milliseconds for them to respond before timing out.
   ["extension.timeout", 400],
@@ -131,6 +137,13 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // Interval time until taking pause impression telemetry.
   ["searchEngagementTelemetry.pauseImpressionIntervalMs", 1000],
+
+  // Boolean to determine if the providers defined in `exposureResults`
+  // should be displayed in search results. This can be set by a
+  // Nimbus variable and is expected to be set via nimbus experiment
+  // configuration. For the control branch of an experiment this would be
+  // false and true for the treatment.
+  ["showExposureResults", false],
 
   // Whether Firefox Suggest group labels are shown in the urlbar view in en-*
   // locales. Labels are not shown in other locales but likely will be in the

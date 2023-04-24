@@ -648,6 +648,13 @@ export var UrlbarUtils = {
     if (result.resultSpan) {
       return result.resultSpan;
     }
+
+    // We know this result will be hidden in the final view so assign it
+    // a span of zero.
+    if (result.exposureResultHidden) {
+      return 0;
+    }
+
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.URL:
       case UrlbarUtils.RESULT_TYPE.BOOKMARKS:
@@ -1406,7 +1413,11 @@ export var UrlbarUtils = {
           return `autofill_${result.autofill.type ?? "unknown"}`;
         }
         if (result.providerName === "UrlbarProviderQuickSuggest") {
-          return result.payload.subtype;
+          let source = result.payload.source;
+          if (source == "remote-settings") {
+            source = "rs";
+          }
+          return `${source}_${result.payload.subtype}`;
         }
         if (result.providerName === "Weather") {
           return "weather";
