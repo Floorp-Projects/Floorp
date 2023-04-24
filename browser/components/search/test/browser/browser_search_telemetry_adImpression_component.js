@@ -406,11 +406,7 @@ add_task(async function test_ad_visibility() {
   BrowserTestUtils.removeTab(tab);
 });
 
-// Refinement buttons won't be detected unless there is at least
-// one ad on the page. There are two instances of the shopping tab on this page:
-// one using a bottom up approach with regular expressions and the other using
-// a top down approach via the document object.
-add_task(async function test_ad_impressions_with_refined_search_button() {
+add_task(async function test_impressions_without_ads() {
   resetTelemetry();
   let url = getSERPUrl(
     "searchTelemetryAd_components_refined_search_button.html"
@@ -424,12 +420,6 @@ add_task(async function test_ad_impressions_with_refined_search_button() {
       component: SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
       ads_loaded: "2",
       ads_visible: "2",
-      ads_hidden: "0",
-    },
-    {
-      component: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
-      ads_loaded: "1",
-      ads_visible: "1",
       ads_hidden: "0",
     },
   ]);

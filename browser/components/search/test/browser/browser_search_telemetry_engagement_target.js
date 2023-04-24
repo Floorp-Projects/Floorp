@@ -87,6 +87,21 @@ const TEST_PROVIDER_INFO = [
         nonAd: true,
       },
       {
+        type: SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
+        included: {
+          parent: {
+            selector: ".moz-carousel",
+          },
+          children: [
+            {
+              selector: ".moz-carousel-text",
+            },
+          ],
+          regexps: [/^https:\/\/example\.com\/search\?(?:.+)&prs=/],
+        },
+        nonAd: true,
+      },
+      {
         type: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
         included: {
           default: true,
@@ -157,8 +172,7 @@ add_task(async function test_click_second_ad_in_component() {
   resetTelemetry();
   let url = getSERPUrl("searchTelemetryAd_components_text.html");
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
-
-  await promiseImpressionReceived();
+  await waitForPageWithAdImpressions();
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
   await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
@@ -195,7 +209,7 @@ add_task(async function test_click_non_ads_link_redirected_new_tab() {
 
   let url = getSERPUrl("searchTelemetryAd_components_text.html");
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
-  await promiseImpressionReceived();
+  await waitForPageWithAdImpressions();
 
   let redirectUrl =
     getRootDirectory(gTestPath).replace(
@@ -250,7 +264,7 @@ add_task(async function test_click_non_ads_link_redirected() {
 
   let url = getSERPUrl("searchTelemetryAd_components_text.html");
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
-  await promiseImpressionReceived();
+  await waitForPageWithAdImpressions();
 
   let redirectUrl =
     getRootDirectory(gTestPath).replace(
@@ -301,7 +315,7 @@ add_task(async function test_click_ads_link_modified() {
 
   let url = getSERPUrl("searchTelemetryAd_components_text.html");
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
-  await promiseImpressionReceived();
+  await waitForPageWithAdImpressions();
 
   let browserLoadedPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
@@ -346,8 +360,7 @@ add_task(async function test_click_non_ads_link() {
   resetTelemetry();
   let url = getSERPUrl("searchTelemetryAd_components_text.html");
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
-
-  await promiseImpressionReceived();
+  await waitForPageWithAdImpressions();
 
   // Click a non ad.
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
@@ -376,25 +389,32 @@ add_task(async function test_click_non_ads_link() {
   ]);
 
   BrowserTestUtils.removeTab(tab);
+
+  // Reset state for other tests.
+  SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
+  await waitForIdle();
 });
 
 // Search box is a special case which has to be tracked in the child process.
-add_task(async function test_click_incontent_searchbox() {
+add_task(async function test_click_and_submit_incontent_searchbox() {
   resetTelemetry();
   let url = getSERPUrl("searchTelemetryAd_searchbox.html");
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
-
-  await promiseImpressionReceived();
+  await waitForPageWithAdImpressions();
 
   // Click on the searchbox.
+  let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser, url);
   await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
     let input = content.document.querySelector("form input");
     input.click();
     input.focus();
   });
-  let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
   EventUtils.synthesizeKey("KEY_Enter");
   await pageLoadPromise;
+
+  await TestUtils.waitForCondition(() => {
+    return Glean.serp.impression?.testGetValue()?.length == 2;
+  }, "Should have two impressions.");
 
   assertImpressionEvents([
     {
@@ -417,6 +437,16 @@ add_task(async function test_click_incontent_searchbox() {
         },
       ],
     },
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        shopping_tab_displayed: "false",
+      },
+    },
   ]);
 
   BrowserTestUtils.removeTab(tab);
@@ -430,15 +460,18 @@ add_task(async function test_click_autosuggest() {
   resetTelemetry();
   let url = getSERPUrl("searchTelemetryAd_searchbox.html");
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
-
-  await promiseImpressionReceived();
+  await waitForPageWithAdImpressions();
 
   // Click an autosuggested term.
-  let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
+  let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser, url);
   await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
     content.document.querySelector("#suggest").click();
   });
   await pageLoadPromise;
+
+  await TestUtils.waitForCondition(() => {
+    return Glean.serp.impression?.testGetValue()?.length == 2;
+  }, "Should have two impressions.");
 
   assertImpressionEvents([
     {
@@ -457,6 +490,16 @@ add_task(async function test_click_autosuggest() {
         },
       ],
     },
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        shopping_tab_displayed: "false",
+      },
+    },
   ]);
 
   BrowserTestUtils.removeTab(tab);
@@ -467,8 +510,7 @@ add_task(async function test_click_carousel_expand() {
   resetTelemetry();
   let url = getSERPUrl("searchTelemetryAd_components_carousel.html");
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
-
-  await promiseImpressionReceived();
+  await waitForPageWithAdImpressions();
 
   // Click a button that is expected to expand.
   await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
@@ -489,6 +531,52 @@ add_task(async function test_click_carousel_expand() {
         {
           action: SearchSERPTelemetryUtils.ACTIONS.EXPANDED,
           target: SearchSERPTelemetryUtils.COMPONENTS.AD_CAROUSEL,
+        },
+      ],
+    },
+  ]);
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+// Click on an non-ad element while no ads are present.
+add_task(async function test_click_non_ad_with_no_ads() {
+  // Use a provider that doesn't a stored non-ads regexp.
+  SearchSERPTelemetry.overrideSearchTelemetryForTests(
+    TEST_PROVIDER_INFO_NO_NON_ADS_REGEXP
+  );
+  await waitForIdle();
+
+  resetTelemetry();
+
+  let url = getSERPUrl("searchTelemetryAd_searchbox.html");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  await waitForPageWithAdImpressions();
+
+  let browserLoadedPromise = BrowserTestUtils.browserLoaded(
+    tab.linkedBrowser,
+    true,
+    "https://example.com/hello_world"
+  );
+  await SpecialPowers.spawn(tab.linkedBrowser, [], urls => {
+    content.document.getElementById("non_ads_link").click();
+  });
+  await browserLoadedPromise;
+
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        shopping_tab_displayed: "false",
+      },
+      engagements: [
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+          target: SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK,
         },
       ],
     },

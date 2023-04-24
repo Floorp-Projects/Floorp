@@ -904,7 +904,7 @@ class ContentHandler {
 
         let type;
         // Check if telemetry is found.
-        if (telemetryState && telemetryState.hrefToComponentMap) {
+        if (telemetryState && telemetryState.adImpressionsReported) {
           // First check, see if anything matches.
           type = telemetryState.hrefToComponentMap?.get(URL);
           // The SERP provider may have modified the url with different query
@@ -1090,6 +1090,7 @@ class ContentHandler {
       }
       telemetryState.hrefToComponentMap = info.hrefToComponentMap;
       telemetryState.adImpressionsReported = true;
+      Services.obs.notifyObservers(null, "reported-page-with-ad-impressions");
     }
   }
 
