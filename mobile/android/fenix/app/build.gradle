@@ -1,3 +1,4 @@
+import org.apache.tools.ant.util.StringUtils
 import org.mozilla.fenix.gradle.tasks.ApkSizeTask
 
 plugins {
@@ -849,7 +850,7 @@ if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopsrcd
     if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopobjdir')) {
         ext.topobjdir = gradle."localProperties.dependencySubstitutions.geckoviewTopobjdir"
     }
-    ext.topsrcdir = gradle."localProperties.dependencySubstitutions.geckoviewTopsrcdir"
+    ext.topsrcdir = StringUtils.removeSuffix(gradle."localProperties.dependencySubstitutions.geckoviewTopsrcdir", File.separator)
     apply from: "${topsrcdir}/substitute-local-geckoview.gradle"
 }
 
