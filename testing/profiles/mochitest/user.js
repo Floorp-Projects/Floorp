@@ -13,3 +13,6 @@ user_pref("javascript.options.asyncstack_capture_debuggee_only", false);
 // is suppressed, synthetic click events and co. go to the old page, which can
 // be confusing for tests that send click events before the first paint.
 user_pref("nglayout.initialpaint.unsuppress_with_no_background", true);
+
+// Disable prefers-reduced-motion to ensure that smooth scrolls can be tested.
+user_pref("general.smoothScroll", true);

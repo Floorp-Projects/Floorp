@@ -83,3 +83,5 @@ user_pref("remote.experimental.enabled", true);
 user_pref("privacy.partition.always_partition_third_party_non_cookie_storage", false);
 // Disable OCSP checks in WPT (webtransport triggers these occasionally)
 user_pref("security.OCSP.enabled", 0);
+// Disable prefers-reduced-motion to ensure that smooth scrolls can be tested.
+user_pref("general.smoothScroll", true);
