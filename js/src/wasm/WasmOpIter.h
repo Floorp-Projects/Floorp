@@ -3559,13 +3559,6 @@ inline bool OpIter<Policy>::readRefTest(bool nullable, RefType* refType,
     return false;
   }
 
-  // Temporarily ensure that we are downcasting to a specific type index.
-  // This should be removed when we correctly implement casting to all heap
-  // types.
-  if (!refType->isTypeRef()) {
-    return fail("casting to all heap types is not yet supported");
-  }
-
   return push(ValType(ValType::I32));
 }
 
@@ -3578,16 +3571,8 @@ inline bool OpIter<Policy>::readRefCast(bool nullable, RefType* refType,
     return false;
   }
 
-  StackType inputType;
-  if (!popWithType(refType->topType(), ref, &inputType)) {
+  if (!popWithType(refType->topType(), ref)) {
     return false;
-  }
-
-  // Temporarily ensure that we are downcasting to a specific type index.
-  // This should be removed when we correctly implement casting to all heap
-  // types.
-  if (!refType->isTypeRef()) {
-    return fail("casting to all heap types is not yet supported");
   }
 
   return push(*refType);
@@ -3825,10 +3810,6 @@ inline bool OpIter<Policy>::readBrOnCastHeapV5(bool nullable,
     return false;
   }
 
-  if (!destType->isTypeRef()) {
-    return fail("br_on_cast only works with concrete types for now");
-  }
-
   ValType castToType(*destType);
   return checkBrOnCastCommonV5(*labelRelativeDepth, castToType, labelType,
                                values);
@@ -3933,10 +3914,6 @@ inline bool OpIter<Policy>::readBrOnCastFailHeapV5(bool nullable,
 
   if (!readHeapType(nullable, destType)) {
     return false;
-  }
-
-  if (!destType->isTypeRef()) {
-    return fail("br_on_cast only works with concrete types for now");
   }
 
   // The casted from type is any subtype of eqref.

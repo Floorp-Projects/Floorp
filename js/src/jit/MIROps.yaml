@@ -3043,7 +3043,10 @@
 - name: WasmStoreFieldRefKA
   gen_boilerplate: false
 
-- name: WasmGcObjectIsSubtypeOf
+- name: WasmGcObjectIsSubtypeOfConcrete
+  gen_boilerplate: false
+
+- name: WasmGcObjectIsSubtypeOfAbstract
   gen_boilerplate: false
 
 #ifdef FUZZING_JS_FUZZILLI

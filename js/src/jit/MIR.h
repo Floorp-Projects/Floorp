@@ -13,6 +13,7 @@
 #define jit_MIR_h
 
 #include "mozilla/Array.h"
+#include "mozilla/HashFunctions.h"
 #ifdef JS_JITSPEW
 #  include "mozilla/Attributes.h"  // MOZ_STACK_CLASS
 #endif
@@ -561,6 +562,12 @@ class MDefinition : public MNode {
 
   static HashNumber addU32ToHash(HashNumber hash, uint32_t data) {
     return data + (hash << 6) + (hash << 16) - hash;
+  }
+
+  static HashNumber addU64ToHash(HashNumber hash, uint64_t data) {
+    hash = addU32ToHash(hash, uint32_t(data));
+    hash = addU32ToHash(hash, uint32_t(data >> 32));
+    return hash;
   }
 
  public:
@@ -11381,42 +11388,68 @@ class MWasmStoreFieldRefKA : public MAryInstruction<4>,
 #endif
 };
 
-// Tests if the WasmGcObject, `object`, is a subtype of `superSuperTypeVector`.
-// The actual super type definition must be known at compile time, so that the
-// subtyping depth of super type depth can be used.
-class MWasmGcObjectIsSubtypeOf : public MBinaryInstruction,
-                                 public NoTypePolicy::Data {
-  uint32_t subTypingDepth_;
-  bool succeedOnNull_;
-  MWasmGcObjectIsSubtypeOf(MDefinition* object,
-                           MDefinition* superSuperTypeVector,
-                           uint32_t subTypingDepth, bool succeedOnNull)
-      : MBinaryInstruction(classOpcode, object, superSuperTypeVector),
-        subTypingDepth_(subTypingDepth),
-        succeedOnNull_(succeedOnNull) {
+class MWasmGcObjectIsSubtypeOfAbstract : public MUnaryInstruction,
+                                         public NoTypePolicy::Data {
+  wasm::RefType type_;
+
+  MWasmGcObjectIsSubtypeOfAbstract(MDefinition* object, wasm::RefType type)
+      : MUnaryInstruction(classOpcode, object), type_(type) {
+    MOZ_ASSERT(!type.isTypeRef());
     setResultType(MIRType::Int32);
     setMovable();
   }
 
  public:
-  INSTRUCTION_HEADER(WasmGcObjectIsSubtypeOf)
+  INSTRUCTION_HEADER(WasmGcObjectIsSubtypeOfAbstract)
   TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, object), (1, superSuperTypeVector))
+  NAMED_OPERANDS((0, object))
 
-  uint32_t subTypingDepth() const { return subTypingDepth_; }
-  bool succeedOnNull() const { return succeedOnNull_; }
+  const wasm::RefType& type() const { return type_; };
 
   bool congruentTo(const MDefinition* ins) const override {
     return congruentIfOperandsEqual(ins) &&
-           ins->toWasmGcObjectIsSubtypeOf()->subTypingDepth() ==
-               subTypingDepth() &&
-           succeedOnNull() == ins->toWasmGcObjectIsSubtypeOf()->succeedOnNull();
+           type() == ins->toWasmGcObjectIsSubtypeOfAbstract()->type();
+  }
+
+  HashNumber valueHash() const override {
+    HashNumber hn = MUnaryInstruction::valueHash();
+    hn = addU64ToHash(hn, type().packed().bits());
+    return hn;
+  }
+};
+
+// Tests if the WasmGcObject, `object`, is a subtype of `superSuperTypeVector`.
+// The actual super type definition must be known at compile time, so that the
+// subtyping depth of super type depth can be used.
+class MWasmGcObjectIsSubtypeOfConcrete : public MBinaryInstruction,
+                                         public NoTypePolicy::Data {
+  wasm::RefType type_;
+
+  MWasmGcObjectIsSubtypeOfConcrete(MDefinition* object,
+                                   MDefinition* superSuperTypeVector,
+                                   wasm::RefType type)
+      : MBinaryInstruction(classOpcode, object, superSuperTypeVector),
+        type_(type) {
+    MOZ_ASSERT(type.isTypeRef());
+    setResultType(MIRType::Int32);
+    setMovable();
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmGcObjectIsSubtypeOfConcrete)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, object), (1, superSuperTypeVector))
+
+  const wasm::RefType& type() const { return type_; };
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins) &&
+           type() == ins->toWasmGcObjectIsSubtypeOfConcrete()->type();
   }
 
   HashNumber valueHash() const override {
     HashNumber hn = MBinaryInstruction::valueHash();
-    hn = addU32ToHash(hn, subTypingDepth());
-    hn = addU32ToHash(hn, (uint32_t)succeedOnNull());
+    hn = addU64ToHash(hn, type().packed().bits());
     return hn;
   }
 };

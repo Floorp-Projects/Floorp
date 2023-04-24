@@ -576,6 +576,9 @@ class SuperTypeVector {
   static size_t byteSizeForTypeDef(const TypeDef& typeDef);
 
   static size_t offsetOfLength() { return offsetof(SuperTypeVector, length_); }
+  static size_t offsetOfSelfTypeDef() {
+    return offsetof(SuperTypeVector, typeDef_);
+  };
   static size_t offsetOfTypeDefInVector(uint32_t typeDefDepth);
 };
 
@@ -672,6 +675,8 @@ class TypeDef {
   void setSuperTypeVector(const SuperTypeVector* superTypeVector) {
     superTypeVector_ = superTypeVector;
   }
+
+  static size_t offsetOfKind() { return offsetof(TypeDef, kind_); }
 
   static size_t offsetOfSuperTypeVector() {
     return offsetof(TypeDef, superTypeVector_);
