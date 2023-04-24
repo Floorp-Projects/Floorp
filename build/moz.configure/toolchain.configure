@@ -680,6 +680,18 @@ def vc_toolchain_search_path(vc_compiler_path, original_path):
     return result
 
 
+@depends_if(vc_compiler_path, when=is_windows)
+def vc_compiler_version(vc_compiler_path):
+    version = Version(
+        os.path.basename(
+            os.path.dirname(os.path.dirname(os.path.dirname(vc_compiler_path[0])))
+        )
+    )
+    # MSVC path with version 14.x is actually version 19.x
+    if version.major == 14:
+        return f"19.{version.minor}"
+
+
 clang_search_path = bootstrap_search_path("clang/bin")
 
 
@@ -1217,6 +1229,7 @@ def compiler(
         sysroot,
         macos_target,
         android_version,
+        vc_compiler_version,
         multiarch_dir,
         winsysroot,
         host,
@@ -1233,6 +1246,7 @@ def compiler(
         sysroot,
         macos_target,
         android_version,
+        vc_compiler_version,
         multiarch_dir,
         winsysroot,
         host,
@@ -1260,6 +1274,16 @@ def compiler(
             host_or_target,
             android_version,
         )
+
+        # When not given an explicit compatibility version, clang-cl tries
+        # to get one from MSVC, which might not even be the one used by the
+        # build. And when it can't find one, its default might also not match
+        # what the build is using. So if we were able to figure out the version
+        # we're building with, explicitly use that.
+        # This also means that, as a side effect, clang-cl will not try to find
+        # MSVC, which saves a little overhead.
+        if info.type == "clang-cl" and vc_compiler_version:
+            flags.append(f"-fms-compatibility-version={vc_compiler_version}")
 
         if info.type == "clang" and language == "C++" and host_or_target.os == "OSX":
             flags.append("-stdlib=libc++")
