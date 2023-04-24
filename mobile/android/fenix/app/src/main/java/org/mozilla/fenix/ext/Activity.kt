@@ -12,6 +12,7 @@ import android.provider.Settings
 import android.view.View
 import android.view.WindowManager
 import androidx.annotation.DrawableRes
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
 import mozilla.components.concept.base.crash.Breadcrumb
@@ -88,48 +89,87 @@ fun Activity.openSetDefaultBrowserOption(
                         REQUEST_CODE_BROWSER_ROLE,
                     )
                 } else {
-                    navigateToDefaultBrowserAppsSettings()
+                    navigateToDefaultBrowserAppsSettings(
+                        useCustomTab = useCustomTab,
+                        from = from,
+                        flags = flags,
+                    )
                 }
             }
         }
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> {
-            navigateToDefaultBrowserAppsSettings()
+            navigateToDefaultBrowserAppsSettings(
+                useCustomTab = useCustomTab,
+                from = from,
+                flags = flags,
+            )
         }
         else -> {
-            val sumoDefaultBrowserUrl = SupportUtils.getGenericSumoURLForTopic(
-                topic = SupportUtils.SumoTopic.SET_AS_DEFAULT_BROWSER,
-            )
-            if (useCustomTab) {
-                startActivity(
-                    SupportUtils.createSandboxCustomTabIntent(
-                        context = this,
-                        url = sumoDefaultBrowserUrl,
-                    ),
-                )
-            } else {
-                (this as HomeActivity).openToBrowserAndLoad(
-                    searchTermOrURL = sumoDefaultBrowserUrl,
-                    newTab = true,
-                    from = from,
-                    flags = flags,
-                )
-            }
+            openDefaultBrowserSumoPage(useCustomTab, from, flags)
         }
     }
 }
 
-private fun Activity.navigateToDefaultBrowserAppsSettings() {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-        val intent = Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS)
-        intent.putExtra(
-            SETTINGS_SELECT_OPTION_KEY,
-            DEFAULT_BROWSER_APP_OPTION,
-        )
-        intent.putExtra(
+@RequiresApi(Build.VERSION_CODES.N)
+private fun Activity.navigateToDefaultBrowserAppsSettings(
+    from: BrowserDirection,
+    flags: EngineSession.LoadUrlFlags,
+    useCustomTab: Boolean,
+) {
+    val intent = Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS).apply {
+        putExtra(SETTINGS_SELECT_OPTION_KEY, DEFAULT_BROWSER_APP_OPTION)
+        putExtra(
             SETTINGS_SHOW_FRAGMENT_ARGS,
             bundleOf(SETTINGS_SELECT_OPTION_KEY to DEFAULT_BROWSER_APP_OPTION),
         )
+    }
+    startExternalActivitySafe(
+        intent = intent,
+        onActivityNotPresent = {
+            openDefaultBrowserSumoPage(useCustomTab = useCustomTab, from = from, flags = flags)
+        },
+    )
+}
+
+private fun Activity.openDefaultBrowserSumoPage(
+    useCustomTab: Boolean,
+    from: BrowserDirection,
+    flags: EngineSession.LoadUrlFlags,
+) {
+    val sumoDefaultBrowserUrl = SupportUtils.getGenericSumoURLForTopic(
+        topic = SupportUtils.SumoTopic.SET_AS_DEFAULT_BROWSER,
+    )
+    if (useCustomTab) {
+        startActivity(
+            SupportUtils.createSandboxCustomTabIntent(
+                context = this,
+                url = sumoDefaultBrowserUrl,
+            ),
+        )
+    } else {
+        (this as HomeActivity).openToBrowserAndLoad(
+            searchTermOrURL = sumoDefaultBrowserUrl,
+            newTab = true,
+            from = from,
+            flags = flags,
+        )
+    }
+}
+
+/**
+ * Checks for the presence of an activity before starting it. In case it's not present,
+ * [onActivityNotPresent] is invoked, preventing ActivityNotFoundException from being thrown.
+ * This is useful when navigating to external activities like device permission settings,
+ * notification settings, default app settings, etc.
+ *
+ * @param intent The Intent of the activity to resolve and start.
+ * @param onActivityNotPresent Invoked when the activity to handle the intent is not present.
+ */
+inline fun Activity.startExternalActivitySafe(intent: Intent, onActivityNotPresent: () -> Unit) {
+    if (intent.resolveActivity(packageManager) != null) {
         startActivity(intent)
+    } else {
+        onActivityNotPresent()
     }
 }
 

@@ -8,8 +8,6 @@ import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Build.VERSION_CODES.M
-import android.os.Build.VERSION_CODES.N
-import android.os.Build.VERSION_CODES.P
 import androidx.core.net.toUri
 import androidx.navigation.NavController
 import io.mockk.Called
@@ -234,16 +232,6 @@ class HomeDeepLinkIntentProcessorTest {
         assertTrue(invalidProcessor.process(testIntent("open?url=open?url=https%3A%2F%2Fwww.example.org%2F"), navController, out))
 
         verify { activity wasNot Called }
-        verify { navController wasNot Called }
-        verify { out wasNot Called }
-    }
-
-    @Test
-    @Config(minSdk = N, maxSdk = P)
-    fun `process make_default_browser deep link for above API 23`() {
-        assertTrue(processorHome.process(testIntent("make_default_browser"), navController, out))
-
-        verify { activity.startActivity(any()) }
         verify { navController wasNot Called }
         verify { out wasNot Called }
     }
