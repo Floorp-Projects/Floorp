@@ -110,11 +110,11 @@ buildscript {
         }
     }
 
-    ext.kotlin_version = '1.6.21'
+    ext.kotlin_version = '1.7.20'
 
     dependencies {
         classpath 'org.mozilla.apilint:apilint:0.5.2'
-        classpath 'com.android.tools.build:gradle:7.2.2'
+        classpath 'com.android.tools.build:gradle:7.3.0'
         classpath 'org.apache.commons:commons-exec:1.3'
         classpath 'com.diffplug.spotless:spotless-plugin-gradle:6.12.1'
         classpath 'org.tomlj:tomlj:1.0.0'
