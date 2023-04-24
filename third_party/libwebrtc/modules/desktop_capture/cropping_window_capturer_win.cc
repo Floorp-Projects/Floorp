@@ -310,7 +310,8 @@ WindowId CroppingWindowCapturerWin::GetWindowToCapture() const {
       full_screen_window_detector_
           ? full_screen_window_detector_->FindFullScreenWindow(selected_source)
           : 0;
-  if (full_screen_source != selected_source && !fullscreen_usage_logged_) {
+  if (full_screen_source && full_screen_source != selected_source &&
+      !fullscreen_usage_logged_) {
     fullscreen_usage_logged_ = true;
     LogDesktopCapturerFullscreenDetectorUsage();
   }
