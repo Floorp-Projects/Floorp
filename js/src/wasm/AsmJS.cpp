@@ -367,6 +367,7 @@ struct js::AsmJSMetadata : Metadata, AsmJSMetadataCacheablePod {
   uint32_t toStringStart;
   uint32_t srcStart;
   bool strict;
+  bool shouldResistFingerprinting = false;
   RefPtr<ScriptSource> source;
 
   uint32_t srcEndBeforeCurly() const { return srcStart + srcLength; }
@@ -1992,6 +1993,8 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
     asmJSMetadata_->srcStart = moduleFunctionNode_->body()->pn_pos.begin;
     asmJSMetadata_->strict = parser_.pc_->sc()->strict() &&
                              !parser_.pc_->sc()->hasExplicitUseStrict();
+    asmJSMetadata_->shouldResistFingerprinting =
+        parser_.options().shouldResistFingerprinting();
     asmJSMetadata_->source = do_AddRef(parser_.ss);
 
     if (!initModuleEnvironment()) {
@@ -2003,6 +2006,10 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
   AsmJSParser<Unit>& parser() const { return parser_; }
 
   auto& tokenStream() const { return parser_.tokenStream; }
+
+  bool shouldResistFingerprinting() const {
+    return asmJSMetadata_->shouldResistFingerprinting;
+  }
 
  public:
   bool addFuncDef(TaggedParserAtomIndex name, uint32_t firstUse, FuncType&& sig,
@@ -4358,17 +4365,29 @@ static bool CheckMathBuiltinCall(FunctionValidator<Unit>& f,
       break;
     case AsmJSMathBuiltin_sin:
       arity = 1;
-      mozf64 = MozOp::F64Sin;
+      if (!f.m().shouldResistFingerprinting()) {
+        mozf64 = MozOp::F64SinNative;
+      } else {
+        mozf64 = MozOp::F64SinFdlibm;
+      }
       f32 = Op::Unreachable;
       break;
     case AsmJSMathBuiltin_cos:
       arity = 1;
-      mozf64 = MozOp::F64Cos;
+      if (!f.m().shouldResistFingerprinting()) {
+        mozf64 = MozOp::F64CosNative;
+      } else {
+        mozf64 = MozOp::F64CosFdlibm;
+      }
       f32 = Op::Unreachable;
       break;
     case AsmJSMathBuiltin_tan:
       arity = 1;
-      mozf64 = MozOp::F64Tan;
+      if (!f.m().shouldResistFingerprinting()) {
+        mozf64 = MozOp::F64TanNative;
+      } else {
+        mozf64 = MozOp::F64TanFdlibm;
+      }
       f32 = Op::Unreachable;
       break;
     case AsmJSMathBuiltin_asin:
@@ -6725,6 +6744,7 @@ static InlinableNative ToInlinableNative(AsmJSMathBuiltinFunction func) {
 }
 
 static bool ValidateMathBuiltinFunction(JSContext* cx,
+                                        const AsmJSMetadata& metadata,
                                         const AsmJSGlobal& global,
                                         HandleValue globalVal) {
   RootedValue v(cx);
@@ -6743,6 +6763,12 @@ static bool ValidateMathBuiltinFunction(JSContext* cx,
       fun->jitInfo()->type() != JSJitInfo::InlinableNative ||
       fun->jitInfo()->inlinableNative != native) {
     return LinkFail(cx, "bad Math.* builtin function");
+  }
+  if (fun->realm()->behaviors().shouldResistFingerprinting() !=
+      metadata.shouldResistFingerprinting) {
+    return LinkFail(cx,
+                    "Math.* builtin function and asm.js module have a "
+                    "different resist fingerprinting mode");
   }
 
   return true;
@@ -6898,7 +6924,7 @@ static bool GetImports(JSContext* cx, const AsmJSMetadata& metadata,
         }
         break;
       case AsmJSGlobal::MathBuiltinFunction:
-        if (!ValidateMathBuiltinFunction(cx, global, globalVal)) {
+        if (!ValidateMathBuiltinFunction(cx, metadata, global, globalVal)) {
           return false;
         }
         break;
