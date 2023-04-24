@@ -44,11 +44,14 @@ class FirefoxCom {
   static requestSync(action, data) {
     const request = document.createTextNode("");
     document.documentElement.append(request);
-    const sender = document.createEvent("CustomEvent");
-    sender.initCustomEvent("pdf.js.message", true, false, {
-      action,
-      data,
-      sync: true
+    const sender = new CustomEvent("pdf.js.message", {
+      bubbles: true,
+      cancelable: false,
+      detail: {
+        action,
+        data,
+        sync: true
+      }
     });
     request.dispatchEvent(sender);
     const response = sender.detail.response;
@@ -72,12 +75,15 @@ class FirefoxCom {
       });
     }
     document.documentElement.append(request);
-    const sender = document.createEvent("CustomEvent");
-    sender.initCustomEvent("pdf.js.message", true, false, {
-      action,
-      data,
-      sync: false,
-      responseExpected: !!callback
+    const sender = new CustomEvent("pdf.js.message", {
+      bubbles: true,
+      cancelable: false,
+      detail: {
+        action,
+        data,
+        sync: false,
+        responseExpected: !!callback
+      }
     });
     request.dispatchEvent(sender);
   }
@@ -3515,7 +3521,7 @@ exports.EventBus = EventBus;
 class AutomationEventBus extends EventBus {
   dispatch(eventName, data) {
     super.dispatch(eventName, data);
-    const details = Object.create(null);
+    const detail = Object.create(null);
     if (data) {
       for (const key in data) {
         const value = data[key];
@@ -3525,11 +3531,14 @@ class AutomationEventBus extends EventBus {
           }
           continue;
         }
-        details[key] = value;
+        detail[key] = value;
       }
     }
-    const event = document.createEvent("CustomEvent");
-    event.initCustomEvent(eventName, true, true, details);
+    const event = new CustomEvent(eventName, {
+      bubbles: true,
+      cancelable: true,
+      detail
+    });
     document.dispatchEvent(event);
   }
 }
@@ -6065,7 +6074,7 @@ class PDFViewer {
   #onVisibilityChange = null;
   #scaleTimeoutId = null;
   constructor(options) {
-    const viewerVersion = '3.6.74';
+    const viewerVersion = '3.6.115';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -9291,26 +9300,16 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.Toolbar = void 0;
-const TIME_BEFORE_SHOWING_TOOLBAR = 200;
 class Toolbar {
   #buttons;
-  #checkForScrollEndBound = this.#checkForScrollEnd.bind(this);
   #eventBus;
-  #hideBound = this.#hide.bind(this);
-  #mainContainer;
-  #scrollEndTimeoutId = null;
-  #showBound = this.#show.bind(this);
-  #toolbar;
   constructor(options, eventBus, _l10n) {
-    this.#toolbar = options.container;
-    this.#mainContainer = options.mainContainer;
     this.#eventBus = eventBus;
     this.#buttons = [{
       element: options.download,
       eventName: "download"
     }];
     this.#bindListeners(options);
-    this.#checkForScrollEnd();
   }
   setPageNumber(pageNumber, pageLabel) {}
   setPagesCount(pagesCount, hasPageLabels) {}
@@ -9333,24 +9332,6 @@ class Toolbar {
     }
   }
   updateLoadingIndicatorState(loading = false) {}
-  #checkForScrollEnd() {
-    if (this.#scrollEndTimeoutId !== null) {
-      clearTimeout(this.#scrollEndTimeoutId);
-    }
-    this.#scrollEndTimeoutId = setTimeout(this.#showBound, TIME_BEFORE_SHOWING_TOOLBAR);
-  }
-  #show() {
-    this.#toolbar.classList.toggle("show", true);
-    this.#mainContainer.removeEventListener("scroll", this.#checkForScrollEndBound);
-    this.#scrollEndTimeoutId = null;
-    this.#mainContainer.addEventListener("scroll", this.#hideBound);
-  }
-  #hide() {
-    this.#toolbar.classList.toggle("show", false);
-    this.#mainContainer.removeEventListener("scroll", this.#hideBound);
-    this.#mainContainer.addEventListener("scroll", this.#checkForScrollEndBound);
-    this.#checkForScrollEnd();
-  }
 }
 exports.Toolbar = Toolbar;
 
@@ -9606,8 +9587,8 @@ var _ui_utils = __webpack_require__(4);
 var _app_options = __webpack_require__(6);
 var _pdf_link_service = __webpack_require__(8);
 var _app = __webpack_require__(3);
-const pdfjsVersion = '3.6.74';
-const pdfjsBuild = '42faecf31';
+const pdfjsVersion = '3.6.115';
+const pdfjsBuild = '1b79b0cd2';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;
