@@ -160,6 +160,7 @@ if (rtc_include_tests) {
     deps = [
       ":audio",
       ":audio_end_to_end_test",
+      ":channel_receive_unittest",
       "../api:libjingle_peerconnection_api",
       "../api:mock_audio_mixer",
       "../api:mock_frame_decryptor",
@@ -181,6 +182,7 @@ if (rtc_include_tests) {
       "../call:rtp_sender",
       "../common_audio",
       "../logging:mocks",
+      "../modules/audio_device:audio_device_api",
       "../modules/audio_device:audio_device_impl",  # For TestAudioDeviceModule
       "../modules/audio_device:mock_audio_device",
       "../modules/audio_mixer:audio_mixer_impl",
@@ -197,6 +199,7 @@ if (rtc_include_tests) {
       "../rtc_base:rtc_base_tests_utils",
       "../rtc_base:safe_compare",
       "../rtc_base:task_queue_for_test",
+      "../rtc_base:threading",
       "../rtc_base:timeutils",
       "../system_wrappers",
       "../test:audio_codec_mocks",
@@ -211,6 +214,22 @@ if (rtc_include_tests) {
       "../test/time_controller:time_controller",
       "utility:utility_tests",
       "//testing/gtest",
+    ]
+  }
+
+  rtc_library("channel_receive_unittest") {
+    testonly = true
+    sources = [ "channel_receive_unittest.cc" ]
+    deps = [
+      ":audio",
+      "../api/crypto:frame_decryptor_interface",
+      "../api/task_queue:default_task_queue_factory",
+      "../modules/audio_device:audio_device_api",
+      "../modules/audio_device:mock_audio_device",
+      "../rtc_base:threading",
+      "../test:mock_transport",
+      "../test:test_support",
+      "../test/time_controller",
     ]
   }
 
