@@ -1,61 +1,64 @@
 // |jit-test| skip-if: !wasmGcEnabled()
 
-function typingModule(types, castToTypeIndex, brParams, blockResults) {
+function typingModule(types, from, to, brParams, branchResults, fallthroughResults) {
   return `(module
     ${types}
     (func
       (param ${brParams.join(' ')})
-      (result ${blockResults.join(' ')})
+      (result ${branchResults.join(' ')})
 
-      (; push params onto the stack in the same order as they appear, leaving
-         the last param at the top of the stack. ;)
-      ${brParams.map((_, i) => `local.get ${i}`).join('\n')}
-      br_on_cast_fail 0 ${castToTypeIndex}
+      (block (result ${fallthroughResults.join(' ')})
+        (; push params onto the stack in the same order as they appear, leaving
+          the last param at the top of the stack. ;)
+        ${brParams.map((_, i) => `local.get ${i}`).join('\n')}
+        br_on_cast_fail 1 ${from} ${to}
+      )
       unreachable
     )
   )`;
 }
 
-function validTyping(types, castToTypeIndex, brParams, blockResults) {
-  wasmValidateText(typingModule(types, castToTypeIndex, brParams, blockResults));
+function validTyping(types, from, to, brParams, branchResults, fallthroughResults) {
+  wasmValidateText(typingModule(types, from, to, brParams, branchResults, fallthroughResults));
 }
 
-function invalidTyping(types, castToTypeIndex, brParams, blockResults, error) {
-  wasmFailValidateText(typingModule(types, castToTypeIndex, brParams, blockResults), error);
+function invalidTyping(types, from, to, brParams, branchResults, fallthroughResults, error) {
+  wasmFailValidateText(typingModule(types, from, to, brParams, branchResults, fallthroughResults), error);
 }
 
-// valid: input non-nullable struct, output non-nullable struct
-validTyping('(type $a (struct)) (type $b (struct))', '$b', ['(ref $a)'],
-            ['(ref $b)']);
-// valid: input nullable struct, output nullable struct
-validTyping('(type $a (struct)) (type $b (struct))', '$b', ['(ref null $a)'],
-            ['(ref null $b)']);
-// valid: input with an extra i32
-validTyping('(type $a (struct))', '$a', ['i32', 'eqref'], ['i32', 'eqref']);
-// valid: input with an extra i32 and f32
-validTyping('(type $a (struct))', '$a', ['i32', 'f32', 'eqref'],
-            ['i32', 'f32', 'eqref']);
+// valid: eqref -> struct
+validTyping('(type $a (struct))', 'eqref', '(ref $a)', ['eqref'], ['eqref'], ['(ref $a)']);
+// valid: eqref -> struct (and looser types on results)
+validTyping('(type $a (struct))', 'eqref', '(ref $a)', ['eqref'], ['anyref'], ['(ref null $a)']);
+// valid: eqref -> nullable struct (note that branch type becomes non-nullable)
+validTyping('(type $a (struct))', 'eqref', '(ref null $a)', ['eqref'], ['(ref eq)'], ['(ref null $a)']);
+// valid: struct -> struct (from anyref)
+validTyping('(type $a (struct))', 'anyref', '(ref $a)', ['(ref $a)'], ['anyref'], ['(ref $a)']);
+// valid: struct -> struct (canonicalized)
+validTyping('(type $a (struct)) (type $b (struct))', '(ref $a)', '(ref $b)', ['(ref $a)'], ['(ref $b)'], ['(ref $a)']);
+// valid: nullable struct -> non-nullable struct (canonicalized)
+validTyping('(type $a (struct)) (type $b (struct))', '(ref null $a)', '(ref $b)', ['(ref null $a)'], ['(ref null $a)'], ['(ref $b)']);
+// valid: nullable struct -> nullable struct (canonicalized)
+validTyping('(type $a (struct)) (type $b (struct))', '(ref null $a)', '(ref null $b)', ['(ref null $a)'], ['(ref $a)'], ['(ref null $a)']);
+// valid: eqref -> struct with extra arg
+validTyping('(type $a (struct))', 'eqref', '(ref $a)', ['i32', 'eqref'], ['i32', 'eqref'], ['i32', '(ref $a)']);
+// valid: eqref -> struct with two extra args
+validTyping('(type $a (struct))', 'eqref', '(ref $a)', ['i32', 'f32', 'eqref'], ['i32', 'f32', 'eqref'], ['i32', 'f32', '(ref $a)']);
 
-// invalid: input eqref, output non-nullable struct
-invalidTyping('(type $a (struct))', '$a', ['eqref'], ['(ref $a)'],
-              /type mismatch/);
-// invalid: input eqref, output nullable struct
-invalidTyping('(type $a (struct))', '$a', ['eqref'], ['(ref null $a)'],
-              /type mismatch/);
-// invalid: input nullable struct, output non-nullable struct
-invalidTyping('(type $a (struct)) (type $b (struct))', '$b', ['(ref null $a)'],
-              ['(ref $b)'],/type mismatch/);
 // invalid: block result type must have slot for casted-to type
-invalidTyping('(type $a (struct))', '$a', ['eqref'], [], /type mismatch/);
-// invalid: block result type must be subtype of casted-to type
-invalidTyping('(type $a (struct)) (type $b (struct (field i32)))', '$a',
-              ['eqref'], ['(ref $b)'], /type mismatch/);
+invalidTyping('(type $a (struct))', 'eqref', '(ref $a)', ['eqref'], [], ['(ref $a)'], /type mismatch/);
+// invalid: block result type must be supertype of casted-to type
+invalidTyping('(type $a (struct)) (type $b (struct (field i32)))', 'eqref', '(ref $a)', ['eqref'], ['(ref $b)'], ['(ref $a)'], /type mismatch/);
 // invalid: input is missing extra i32 from the branch target type
-invalidTyping('(type $a (struct))', '$a', ['f32', 'eqref'],
-              ['i32', 'f32', 'eqref'], /popping value/);
-// invalid: input is has extra [i32, f32] swapped from the branch target type
-invalidTyping('(type $a (struct))', '$a', ['i32', 'f32', 'eqref'],
-              ['f32', 'i32', '(ref $a)'], /type mismatch/);
+invalidTyping('(type $a (struct))', 'eqref', '(ref $a)', ['f32', 'eqref'], ['i32', 'f32', 'eqref'], ['i32', 'f32', '(ref $a)'], /popping value/);
+// invalid: input has extra [i32, f32] swapped from the branch target type
+invalidTyping('(type $a (struct))', 'eqref', '(ref $a)', ['i32', 'f32', 'eqref'], ['f32', 'i32', 'eqref'], ['i32', 'f32', '(ref $a)'], /type mismatch/);
+// invalid: input has extra [i32, f32] swapped from the branch fallthrough type
+invalidTyping('(type $a (struct))', 'eqref', '(ref $a)', ['i32', 'f32', 'eqref'], ['i32', 'f32', 'eqref'], ['f32', 'i32', '(ref $a)'], /type mismatch/);
+// invalid: casting to non-nullable but fallthrough not nullable
+invalidTyping('(type $a (struct))', 'eqref', '(ref $a)', ['eqref'], ['(ref $a)'], ['(ref eq)'], /type mismatch/);
+// invalid: struct -> struct (same recursion group)
+invalidTyping('(rec (type $a (struct)) (type $b (struct)))', '(ref $a)', '(ref $b)', ['(ref $a)'], ['(ref $a)'], ['(ref $b)'], /type mismatch/);
 
 // Simple runtime test of cast-fail-ing
 {
@@ -74,7 +77,7 @@ invalidTyping('(type $a (struct))', '$a', ['i32', 'f32', 'eqref'],
     (func (export "isA") (param eqref) (result i32)
       (block (result eqref)
         local.get 0
-        br_on_cast_fail 0 $a
+        br_on_cast_fail 0 eqref (ref $a)
 
         i32.const 1
         br 1
@@ -86,7 +89,7 @@ invalidTyping('(type $a (struct))', '$a', ['i32', 'f32', 'eqref'],
     (func (export "isB") (param eqref) (result i32)
       (block (result eqref)
         local.get 0
-        br_on_cast_fail 0 $b
+        br_on_cast_fail 0 eqref (ref $b)
 
         i32.const 1
         br 1
@@ -142,7 +145,7 @@ invalidTyping('(type $a (struct))', '$a', ['i32', 'f32', 'eqref'],
             (param eqref) (result ${values.map((type) => type).join(" ")})
         (block (result eqref)
           local.get 0
-          br_on_cast_fail 0 $t
+          br_on_cast_fail 0 eqref (ref $t)
 
           ${values.map((type, i) => `${type}.const ${values.length + i}`)
                   .join("\n")}
@@ -188,7 +191,7 @@ invalidTyping('(type $a (struct))', '$a', ['i32', 'f32', 'eqref'],
          local.get 0
          local.get 1
          local.get 2
-         br_on_cast_fail 0 $a
+         br_on_cast_fail 0 eqref (ref $a)
          unreachable
        )
      )`;

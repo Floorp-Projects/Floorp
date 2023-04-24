@@ -115,7 +115,7 @@
                                   (i32.const 0x55) (i32.const 0x55)
         ))
         (func (export "writeField8x8_3") (param $p eqref) (param $v i32)
-           (struct.set $struct8x8 3 (ref.cast $struct8x8 (local.get $p))
+           (struct.set $struct8x8 3 (ref.cast (ref null $struct8x8) (local.get $p))
                                     (local.get $v))
         )
      )`;
@@ -147,7 +147,7 @@
                                    (i32.const 0x5555) (i32.const 0x5555)
         ))
         (func (export "writeField16x8_3") (param $p eqref) (param $v i32)
-           (struct.set $struct16x8 3 (ref.cast $struct16x8 (local.get $p))
+           (struct.set $struct16x8 3 (ref.cast (ref null $struct16x8) (local.get $p))
                                     (local.get $v))
         )
      )`;
@@ -180,19 +180,19 @@
         ))
         ;; read i8 from a field, unsigned extend, read value has top bit 0
         (func (export "readU8hi0") (param $p eqref) (result i32)
-           (struct.get_u $struct8x8 2 (ref.cast $struct8x8 (local.get $p)))
+           (struct.get_u $struct8x8 2 (ref.cast (ref null $struct8x8) (local.get $p)))
         )
         ;; read i8 from a field, unsigned extend, read value has top bit 1
         (func (export "readU8hi1") (param $p eqref) (result i32)
-           (struct.get_u $struct8x8 3 (ref.cast $struct8x8 (local.get $p)))
+           (struct.get_u $struct8x8 3 (ref.cast (ref null $struct8x8) (local.get $p)))
         )
         ;; read i8 from a field, signed extend, read value has top bit 0
         (func (export "readS8hi0") (param $p eqref) (result i32)
-           (struct.get_s $struct8x8 4 (ref.cast $struct8x8 (local.get $p)))
+           (struct.get_s $struct8x8 4 (ref.cast (ref null $struct8x8) (local.get $p)))
         )
         ;; read i8 from a field, signed extend, read value has top bit 1
         (func (export "readS8hi1") (param $p eqref) (result i32)
-           (struct.get_s $struct8x8 5 (ref.cast $struct8x8 (local.get $p)))
+           (struct.get_s $struct8x8 5 (ref.cast (ref null $struct8x8) (local.get $p)))
         )
      )`;
     let exports = wasmEvalText(txt).exports;
@@ -219,19 +219,19 @@
         ))
         ;; read i16 from a field, unsigned extend, read value has top bit 0
         (func (export "readU16hi0") (param $p eqref) (result i32)
-           (struct.get_u $struct16x8 2 (ref.cast $struct16x8 (local.get $p)))
+           (struct.get_u $struct16x8 2 (ref.cast (ref null $struct16x8) (local.get $p)))
         )
         ;; read i16 from a field, unsigned extend, read value has top bit 1
         (func (export "readU16hi1") (param $p eqref) (result i32)
-           (struct.get_u $struct16x8 3 (ref.cast $struct16x8 (local.get $p)))
+           (struct.get_u $struct16x8 3 (ref.cast (ref null $struct16x8) (local.get $p)))
         )
         ;; read i16 from a field, signed extend, read value has top bit 0
         (func (export "readS16hi0") (param $p eqref) (result i32)
-           (struct.get_s $struct16x8 4 (ref.cast $struct16x8 (local.get $p)))
+           (struct.get_s $struct16x8 4 (ref.cast (ref null $struct16x8) (local.get $p)))
         )
         ;; read i16 from a field, signed extend, read value has top bit 1
         (func (export "readS16hi1") (param $p eqref) (result i32)
-           (struct.get_s $struct16x8 5 (ref.cast $struct16x8 (local.get $p)))
+           (struct.get_s $struct16x8 5 (ref.cast (ref null $struct16x8) (local.get $p)))
         )
      )`;
     let exports = wasmEvalText(txt).exports;

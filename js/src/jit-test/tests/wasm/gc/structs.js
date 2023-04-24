@@ -264,20 +264,20 @@ assertEq(the_list, null);
 
           (func (export "set") (param eqref)
            (local (ref null $big))
-           (local.set 1 (ref.cast $big (local.get 0)))
+           (local.set 1 (ref.cast (ref null $big) (local.get 0)))
            (struct.set $big 1 (local.get 1) (i64.const 0x3333333376544567)))
 
           (func (export "set2") (param $p eqref)
            (struct.set $big 1
-            (ref.cast $big (local.get $p))
+            (ref.cast (ref null $big) (local.get $p))
             (i64.const 0x3141592653589793)))
 
           (func (export "low") (param $p eqref) (result i32)
-           (i32.wrap/i64 (struct.get $big 1 (ref.cast $big (local.get $p)))))
+           (i32.wrap/i64 (struct.get $big 1 (ref.cast (ref null $big) (local.get $p)))))
 
           (func (export "high") (param $p eqref) (result i32)
            (i32.wrap/i64 (i64.shr_u
-                          (struct.get $big 1 (ref.cast $big (local.get $p)))
+                          (struct.get $big 1 (ref.cast (ref null $big) (local.get $p)))
                           (i64.const 32))))
 
           (func (export "mk") (result eqref)
@@ -423,7 +423,7 @@ assertErrorMessage(() => ins.pop(),
           (func (export "mk") (result eqref)
            (struct.new $Node (i32.const 37)))
           (func (export "f") (param $n eqref) (result eqref)
-           (ref.cast $Node (local.get $n))))`).exports;
+           (ref.cast (ref null $Node) (local.get $n))))`).exports;
     var n = ins.mk();
     assertEq(ins.f(n), n);
     assertErrorMessage(() => ins.f(wrapWithProto(n, {})), TypeError, /can only pass a WebAssembly GC object/);
@@ -666,7 +666,7 @@ assertErrorMessage(() => new WebAssembly.Module(bad),
        ;; reloaded for the second OOL write.  First for non-ref fields ..
        (func (export "threeSetsNonReffy") (param eqref)
          (local (ref $hasOOL))
-         (local.set 1 (ref.as_non_null (ref.cast $hasOOL (local.get 0))))
+         (local.set 1 (ref.as_non_null (ref.cast (ref null $hasOOL) (local.get 0))))
          (struct.set $hasOOL 16 (local.get 1) (i64.const 1337)) ;; set $OOLnonref
          (struct.set $hasOOL 2  (local.get 1) (i64.const 7331)) ;; set $ILnonref
          (struct.set $hasOOL 16 (local.get 1) (i64.const 9009)) ;; set $OOLnonref
@@ -674,7 +674,7 @@ assertErrorMessage(() => new WebAssembly.Module(bad),
        ;; and the same for ref fields.
        (func (export "threeSetsReffy") (param eqref)
          (local (ref $hasOOL))
-         (local.set 1 (ref.as_non_null (ref.cast $hasOOL (local.get 0))))
+         (local.set 1 (ref.as_non_null (ref.cast (ref null $hasOOL) (local.get 0))))
          (struct.set $hasOOL 17 (local.get 1) (ref.null $meh)) ;; set $OOLref
          (struct.set $hasOOL 3  (local.get 1) (ref.null $meh)) ;; set $ILref
          (struct.set $hasOOL 17 (local.get 1) (ref.null $meh)) ;; set $OOLref

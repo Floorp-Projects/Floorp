@@ -10,12 +10,12 @@ let { refCast, refTest, brOnCast, brOnCastFail } = wasmEvalText(`
     (func (export "refTest") (param externref) (result i32)
       local.get 0
       extern.internalize
-      ref.test 0
+      ref.test (ref 0)
     )
     (func (export "refCast") (param externref) (result i32)
       local.get 0
       extern.internalize
-      ref.cast 0
+      ref.cast (ref null 0)
       drop
       i32.const 0
     )
@@ -23,7 +23,7 @@ let { refCast, refTest, brOnCast, brOnCastFail } = wasmEvalText(`
       (block (result (ref 0))
         local.get 0
         extern.internalize
-        br_on_cast 0 0
+        br_on_cast 0 anyref (ref 0)
         drop
         i32.const 0
         br 1
@@ -35,7 +35,7 @@ let { refCast, refTest, brOnCast, brOnCastFail } = wasmEvalText(`
       (block (result anyref)
         local.get 0
         extern.internalize
-        br_on_cast_fail 0 0
+        br_on_cast_fail 0 anyref (ref 0)
         drop
         i32.const 1
         br 1

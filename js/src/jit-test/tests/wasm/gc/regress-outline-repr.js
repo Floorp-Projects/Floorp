@@ -8,7 +8,7 @@
 const wat = `
 (module
   (type $S2 (struct))
-  (sub $S2 (type $S
+  (type $S (sub $S2
     (struct
       (field (mut i64))
       (field (mut i64))
@@ -69,7 +69,7 @@ wasmEvalText(`
       (field (mut i64))
       (field (mut i64))
     ))
-  (sub $inline (type $outline
+  (type $outline (sub $inline
     (struct
       (field (mut i64))
       (field (mut i64))

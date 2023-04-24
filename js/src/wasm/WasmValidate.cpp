@@ -135,25 +135,25 @@ bool wasm::DecodeValidatedLocalEntries(const TypeContext& types, Decoder& d,
 }
 
 bool wasm::CheckIsSubtypeOf(Decoder& d, const ModuleEnvironment& env,
-                            size_t opcodeOffset, FieldType actual,
-                            FieldType expected) {
-  if (FieldType::isSubTypeOf(actual, expected)) {
+                            size_t opcodeOffset, FieldType subType,
+                            FieldType superType) {
+  if (FieldType::isSubTypeOf(subType, superType)) {
     return true;
   }
 
-  UniqueChars actualText = ToString(actual, env.types);
-  if (!actualText) {
+  UniqueChars subText = ToString(subType, env.types);
+  if (!subText) {
     return false;
   }
 
-  UniqueChars expectedText = ToString(expected, env.types);
-  if (!expectedText) {
+  UniqueChars superText = ToString(superType, env.types);
+  if (!superText) {
     return false;
   }
 
   UniqueChars error(
       JS_smprintf("type mismatch: expression has type %s but expected %s",
-                  actualText.get(), expectedText.get()));
+                  subText.get(), superText.get()));
   if (!error) {
     return false;
   }
@@ -593,6 +593,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             CHECK(iter.readArrayNewData(&unusedUint1, &unusedUint2, &nothing,
                                         &nothing));
           }
+          case uint32_t(GcOp::ArrayInitFromElemStaticV5):
           case uint32_t(GcOp::ArrayNewElem): {
             uint32_t unusedUint1, unusedUint2;
             CHECK(iter.readArrayNewElem(&unusedUint1, &unusedUint2, &nothing,
@@ -631,35 +632,86 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             CHECK(iter.readArrayCopy(&unusedInt, &unusedBool, &nothing,
                                      &nothing, &nothing, &nothing, &nothing));
           }
-          case uint16_t(GcOp::RefTest): {
+          case uint16_t(GcOp::RefTestV5): {
             uint32_t typeIndex;
-            CHECK(iter.readRefTest(&typeIndex, &nothing));
+            CHECK(iter.readRefTestV5(&typeIndex, &nothing));
+          }
+          case uint16_t(GcOp::RefCastV5): {
+            uint32_t typeIndex;
+            CHECK(iter.readRefCastV5(&typeIndex, &nothing));
+          }
+          case uint16_t(GcOp::RefTest): {
+            RefType type;
+            CHECK(iter.readRefTest(false, &type, &nothing));
+          }
+          case uint16_t(GcOp::RefTestNull): {
+            RefType type;
+            CHECK(iter.readRefTest(true, &type, &nothing));
           }
           case uint16_t(GcOp::RefCast): {
-            uint32_t typeIndex;
-            CHECK(iter.readRefCast(&typeIndex, &nothing));
+            RefType type;
+            CHECK(iter.readRefCast(false, &type, &nothing));
+          }
+          case uint16_t(GcOp::RefCastNull): {
+            RefType type;
+            CHECK(iter.readRefCast(true, &type, &nothing));
           }
           case uint16_t(GcOp::BrOnCast): {
+            bool unusedOnSuccess;
+            uint32_t unusedRelativeDepth;
+            RefType unusedDestType;
+            CHECK(iter.readBrOnCast(&unusedOnSuccess, &unusedRelativeDepth,
+                                    &unusedDestType, &unusedType, &nothings));
+          }
+          case uint16_t(GcOp::BrOnCastV5): {
             uint32_t unusedRelativeDepth;
             uint32_t typeIndex;
-            CHECK(iter.readBrOnCast(&unusedRelativeDepth, &typeIndex,
-                                    &unusedType, &nothings));
+            CHECK(iter.readBrOnCastV5(&unusedRelativeDepth, &typeIndex,
+                                      &unusedType, &nothings));
           }
-          case uint16_t(GcOp::BrOnCastFail): {
+          case uint16_t(GcOp::BrOnCastFailV5): {
             uint32_t unusedRelativeDepth;
             uint32_t typeIndex;
-            CHECK(iter.readBrOnCastFail(&unusedRelativeDepth, &typeIndex,
-                                        &unusedType, &nothings));
+            CHECK(iter.readBrOnCastFailV5(&unusedRelativeDepth, &typeIndex,
+                                          &unusedType, &nothings));
           }
-          case uint16_t(GcOp::RefAsStruct): {
+          case uint16_t(GcOp::BrOnCastHeapV5): {
+            uint32_t unusedRelativeDepth;
+            RefType unusedDestType;
+            CHECK(iter.readBrOnCastHeapV5(false, &unusedRelativeDepth,
+                                          &unusedDestType, &unusedType,
+                                          &nothings));
+          }
+          case uint16_t(GcOp::BrOnCastHeapNullV5): {
+            uint32_t unusedRelativeDepth;
+            RefType unusedDestType;
+            CHECK(iter.readBrOnCastHeapV5(true, &unusedRelativeDepth,
+                                          &unusedDestType, &unusedType,
+                                          &nothings));
+          }
+          case uint16_t(GcOp::BrOnCastFailHeapV5): {
+            uint32_t unusedRelativeDepth;
+            RefType unusedDestType;
+            CHECK(iter.readBrOnCastFailHeapV5(false, &unusedRelativeDepth,
+                                              &unusedDestType, &unusedType,
+                                              &nothings));
+          }
+          case uint16_t(GcOp::BrOnCastFailHeapNullV5): {
+            uint32_t unusedRelativeDepth;
+            RefType unusedDestType;
+            CHECK(iter.readBrOnCastFailHeapV5(true, &unusedRelativeDepth,
+                                              &unusedDestType, &unusedType,
+                                              &nothings));
+          }
+          case uint16_t(GcOp::RefAsStructV5): {
             CHECK(iter.readConversion(
                 ValType(RefType::any()),
                 ValType(RefType::struct_().asNonNullable()), &nothing));
           }
-          case uint16_t(GcOp::BrOnNonStruct): {
+          case uint16_t(GcOp::BrOnNonStructV5): {
             uint32_t unusedRelativeDepth;
-            CHECK(iter.readBrOnNonStruct(&unusedRelativeDepth, &unusedType,
-                                         &nothings));
+            CHECK(iter.readBrOnNonStructV5(&unusedRelativeDepth, &unusedType,
+                                           &nothings));
           }
           case uint16_t(GcOp::ExternInternalize): {
             CHECK(iter.readRefConversion(RefType::extern_(), RefType::any(),

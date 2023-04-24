@@ -35,6 +35,31 @@
 using namespace js;
 using namespace js::wasm;
 
+RefType RefType::topType() const {
+  switch (kind()) {
+    case RefType::Any:
+    case RefType::Eq:
+    case RefType::Array:
+    case RefType::Struct:
+      return RefType::any();
+    case RefType::Func:
+      return RefType::func();
+    case RefType::Extern:
+      return RefType::extern_();
+    case RefType::TypeRef:
+      switch (typeDef()->kind()) {
+        case TypeDefKind::Array:
+        case TypeDefKind::Struct:
+          return RefType::any();
+        case TypeDefKind::Func:
+          return RefType::func();
+        case TypeDefKind::None:
+          MOZ_CRASH("should not see TypeDefKind::None at this point");
+      }
+  }
+  MOZ_CRASH("switch is exhaustive");
+}
+
 static bool ToRefType(JSContext* cx, JSLinearString* typeLinearStr,
                       RefType* out) {
   if (StringEqualsLiteral(typeLinearStr, "anyfunc") ||

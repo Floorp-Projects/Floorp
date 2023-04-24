@@ -439,7 +439,12 @@ pub mod kw {
     custom_keyword!(modulecode);
     custom_keyword!(nan_arithmetic = "nan:arithmetic");
     custom_keyword!(nan_canonical = "nan:canonical");
+    custom_keyword!(nofunc);
+    custom_keyword!(noextern);
+    custom_keyword!(none);
     custom_keyword!(null);
+    custom_keyword!(nullfuncref);
+    custom_keyword!(nullexternref);
     custom_keyword!(nullref);
     custom_keyword!(offset);
     custom_keyword!(outer);

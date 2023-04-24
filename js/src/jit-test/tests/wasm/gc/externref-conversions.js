@@ -64,7 +64,7 @@ let {testStruct, testArray} = wasmEvalText(`(module
 	  (local.set 0 struct.new $struct)
       local.get 0
 	  (ref.eq
-	  	(ref.cast $struct
+	  	(ref.cast (ref null $struct)
 	  	  (extern.internalize
 	  	    (extern.externalize
 	  	      local.get 0
@@ -79,7 +79,7 @@ let {testStruct, testArray} = wasmEvalText(`(module
 	  (local.set 0 (array.new $array i32.const 0 i32.const 0))
       local.get 0
 	  (ref.eq
-	  	(ref.cast $array
+	  	(ref.cast (ref null $array)
 	  	  (extern.internalize
 	  	    (extern.externalize
 	  	      local.get 0

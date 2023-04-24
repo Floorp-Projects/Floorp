@@ -46,7 +46,7 @@ for (let [valtype, def, nondef] of GENERAL_TESTS) {
     (; 0[1] ;)
     (func (export "get") (param eqref i32) (result ${valtype})
       local.get 0
-      ref.cast $a
+      ref.cast (ref null $a)
       local.get 1
       array.get $a
     )
@@ -54,7 +54,7 @@ for (let [valtype, def, nondef] of GENERAL_TESTS) {
     (; 0[1] = 2 ;)
     (func (export "set") (param eqref i32 ${valtype})
       local.get 0
-      ref.cast $a
+      ref.cast (ref null $a)
       local.get 1
       local.get 2
       array.set $a
@@ -63,7 +63,7 @@ for (let [valtype, def, nondef] of GENERAL_TESTS) {
     (; len(a) ;)
     (func (export "len") (param eqref) (result i32)
       local.get 0
-      ref.cast $a
+      ref.cast (ref null $a)
       array.len
     )
   )`).exports;
@@ -131,7 +131,7 @@ for (let [fieldtype, max] of [
     (; 0[1] ;)
     (func (export "getS") (param eqref i32) (result i32)
       local.get 0
-      ref.cast $a
+      ref.cast (ref null $a)
       local.get 1
       array.get_s $a
     )
@@ -139,7 +139,7 @@ for (let [fieldtype, max] of [
     (; 0[1] ;)
     (func (export "getU") (param eqref i32) (result i32)
       local.get 0
-      ref.cast $a
+      ref.cast (ref null $a)
       local.get 1
       array.get_u $a
     )
@@ -147,7 +147,7 @@ for (let [fieldtype, max] of [
     (; 0[1] = 2 ;)
     (func (export "set") (param eqref i32 i32)
       local.get 0
-      ref.cast $a
+      ref.cast (ref null $a)
       local.get 1
       local.get 2
       array.set $a
@@ -952,8 +952,8 @@ for (let [elemTy, valueTy, src, exp1, exp2] of ARRAY_COPY_TESTS) {
         (func (export "arrayCopy")
               (param eqref i32 eqref i32 i32)
           (array.copy $arrTy $arrTy
-            (ref.cast $arrTy local.get 0) (local.get 1)
-            (ref.cast $arrTy local.get 2) (local.get 3) (local.get 4)
+            (ref.cast (ref null $arrTy) local.get 0) (local.get 1)
+            (ref.cast (ref null $arrTy) local.get 2) (local.get 3) (local.get 4)
           )
         )
       )`
