@@ -2348,6 +2348,13 @@ export class PictureInPictureChild extends JSWindowActorChild {
     this.onCueChange = this.onCueChange.bind(this);
     this.trackOriginatingVideo(originatingVideo);
 
+    // A request to open PIP implies that the user intends to be interacting
+    // with the page, even if they open PIP by some means outside of the page
+    // itself (e.g., the keyboard shortcut or the page action button). So we
+    // manually record that the document has been activated via user gesture
+    // to make sure the video can be played regardless of autoplay permissions.
+    originatingVideo.ownerDocument.notifyUserGestureActivation();
+
     this.contentWindow.addEventListener(
       "unload",
       () => {
