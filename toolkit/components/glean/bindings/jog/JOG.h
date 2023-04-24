@@ -7,6 +7,10 @@
 #ifndef mozilla_glean_JOG_h
 #define mozilla_glean_JOG_h
 
+#include "nsStringFwd.h"
+#include "nsTArray.h"
+#include "mozilla/Maybe.h"
+
 namespace mozilla::glean {
 
 class JOG {

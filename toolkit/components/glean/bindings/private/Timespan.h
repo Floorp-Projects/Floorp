@@ -10,6 +10,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
 #include "nsIGleanMetrics.h"
+#include "nsTString.h"
 
 namespace mozilla::glean {
 

@@ -10,6 +10,7 @@
 #include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/GleanPingsBinding.h"
 #include "mozilla/glean/bindings/GleanJSPingsLookup.h"
+#include "mozilla/glean/bindings/jog/JOG.h"
 #include "mozilla/glean/bindings/Ping.h"
 #include "MainThreadUtils.h"
 #include "js/PropertyAndElement.h"  // JS_DefineProperty
