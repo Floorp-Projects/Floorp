@@ -17,7 +17,7 @@ pdfjs.jar:
  content/web/viewer.html (content/web/viewer-geckoview.html)
  content/web/viewer.css (content/web/viewer-geckoview.css)
  content/web/viewer.js (content/web/viewer-geckoview.js)
- content/web/images/toolbarButton-download.svg	(content/web/images/toolbarButton-download.svg)
+ content/web/images/gv-toolbarButton-download.svg	(content/web/images/gv-toolbarButton-download.svg)
 #else
  content/PdfjsParent.sys.mjs (content/PdfjsParent.sys.mjs)
  content/PdfjsChild.sys.mjs (content/PdfjsChild.sys.mjs)
