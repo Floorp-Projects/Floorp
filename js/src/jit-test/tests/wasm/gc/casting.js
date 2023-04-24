@@ -5,7 +5,7 @@
   const MaxDepth = 31;
   let types = `(type (struct))\n`;
   for (let depth = 1; depth <= MaxDepth + 1; depth++) {
-    types += `(sub ${depth - 1} (type (struct)))\n`;
+    types += `(type (sub ${depth - 1} (struct)))\n`;
   }
   wasmFailValidateText(`(module
     ${types}
@@ -85,7 +85,7 @@ function testAllCasts(types) {
     if (type.super === null) {
       typeSection += `(type \$${name} (struct))\n`;
     } else {
-      typeSection += `(sub \$${type.super} (type \$${name} (struct)))\n`;
+      typeSection += `(type \$${name} (sub \$${type.super} (struct)))\n`;
     }
     funcSection += `
       (func (export "new${name}") (result externref)
@@ -95,7 +95,7 @@ function testAllCasts(types) {
       (func (export "is${name}") (param externref) (result i32)
         local.get 0
         extern.internalize
-        ref.test \$${name}
+        ref.test (ref \$${name})
       )`;
   }
   // NOTE: we place all types in a single recursion group to prevent

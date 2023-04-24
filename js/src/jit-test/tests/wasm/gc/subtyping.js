@@ -101,12 +101,12 @@ assertSubtype(
   '(ref 0)',
   '(ref 1)',
   `(type (struct))
-   (sub 0 (type (struct (field i32))))`);
+   (type (sub 0 (struct (field i32))))`);
 assertSubtype(
   '(ref 0)',
   '(ref 1)',
   `(type (struct))
-   (sub 0 (type (struct (field i32) (field i32))))`);
+   (type (sub 0 (struct (field i32) (field i32))))`);
 
 // Struct supertypes cannot have extra fields
 assertNotSubtype(
@@ -165,9 +165,9 @@ assertSubtype(
   '(ref 2)',
   '(ref 3)',
   `(type (struct))
-   (sub 0 (type (struct (field i32))))
+   (type (sub 0 (struct (field i32))))
    (type (struct (field (ref 0))))
-   (sub 2 (type (struct (field (ref 1)))))`);
+   (type (sub 2 (struct (field (ref 1)))))`);
 
 // Arrays are subtypes of anyref, eqref, and arrayref
 assertSubtype(
@@ -261,6 +261,6 @@ assertSubtype(
   '(ref 2)',
   '(ref 3)',
   `(type (struct))
-   (sub 0 (type (struct (field i32))))
+   (type (sub 0 (struct (field i32))))
    (type (array (ref 0)))
-   (sub 2 (type (array (ref 1))))`);
+   (type (sub 2 (array (ref 1))))`);

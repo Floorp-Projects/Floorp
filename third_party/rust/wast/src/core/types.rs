@@ -76,9 +76,14 @@ pub enum HeapType<'a> {
     Struct,
     /// A reference to a GC array. This is part of the GC proposal.
     Array,
-    /// An unboxed 31-bit integer: i31ref. This may be going away if there is no common
-    /// supertype of all reference types. Part of the GC proposal.
+    /// An unboxed 31-bit integer: i31ref. Part of the GC proposal.
     I31,
+    /// The bottom type of the funcref hierarchy. Part of the GC proposal.
+    NoFunc,
+    /// The bottom type of the externref hierarchy. Part of the GC proposal.
+    NoExtern,
+    /// The bottom type of the anyref hierarchy. Part of the GC proposal.
+    None,
     /// A reference to a function, struct, or array: ref T. This is part of the
     /// GC proposal.
     Index(Index<'a>),
@@ -108,6 +113,15 @@ impl<'a> Parse<'a> for HeapType<'a> {
         } else if l.peek::<kw::i31>() {
             parser.parse::<kw::i31>()?;
             Ok(HeapType::I31)
+        } else if l.peek::<kw::nofunc>() {
+            parser.parse::<kw::nofunc>()?;
+            Ok(HeapType::NoFunc)
+        } else if l.peek::<kw::noextern>() {
+            parser.parse::<kw::noextern>()?;
+            Ok(HeapType::NoExtern)
+        } else if l.peek::<kw::none>() {
+            parser.parse::<kw::none>()?;
+            Ok(HeapType::None)
         } else if l.peek::<Index>() {
             Ok(HeapType::Index(parser.parse()?))
         } else {
@@ -125,6 +139,9 @@ impl<'a> Peek for HeapType<'a> {
             || kw::r#struct::peek(cursor)
             || kw::array::peek(cursor)
             || kw::i31::peek(cursor)
+            || kw::nofunc::peek(cursor)
+            || kw::noextern::peek(cursor)
+            || kw::none::peek(cursor)
             || (LParen::peek(cursor) && kw::r#type::peek2(cursor))
     }
     fn display() -> &'static str {
@@ -196,6 +213,30 @@ impl<'a> RefType<'a> {
             heap: HeapType::I31,
         }
     }
+
+    /// A `nullfuncref` as an abbreviation for `(ref null nofunc)`.
+    pub fn nullfuncref() -> Self {
+        RefType {
+            nullable: true,
+            heap: HeapType::NoFunc,
+        }
+    }
+
+    /// A `nullexternref` as an abbreviation for `(ref null noextern)`.
+    pub fn nullexternref() -> Self {
+        RefType {
+            nullable: true,
+            heap: HeapType::NoExtern,
+        }
+    }
+
+    /// A `nullref` as an abbreviation for `(ref null none)`.
+    pub fn nullref() -> Self {
+        RefType {
+            nullable: true,
+            heap: HeapType::None,
+        }
+    }
 }
 
 impl<'a> Parse<'a> for RefType<'a> {
@@ -225,6 +266,15 @@ impl<'a> Parse<'a> for RefType<'a> {
         } else if l.peek::<kw::i31ref>() {
             parser.parse::<kw::i31ref>()?;
             Ok(RefType::i31())
+        } else if l.peek::<kw::nullfuncref>() {
+            parser.parse::<kw::nullfuncref>()?;
+            Ok(RefType::nullfuncref())
+        } else if l.peek::<kw::nullexternref>() {
+            parser.parse::<kw::nullexternref>()?;
+            Ok(RefType::nullexternref())
+        } else if l.peek::<kw::nullref>() {
+            parser.parse::<kw::nullref>()?;
+            Ok(RefType::nullref())
         } else if l.peek::<LParen>() {
             parser.parens(|p| {
                 let mut l = parser.lookahead1();
@@ -261,6 +311,9 @@ impl<'a> Peek for RefType<'a> {
             || kw::structref::peek(cursor)
             || kw::arrayref::peek(cursor)
             || kw::i31ref::peek(cursor)
+            || kw::nullfuncref::peek(cursor)
+            || kw::nullexternref::peek(cursor)
+            || kw::nullref::peek(cursor)
             || (LParen::peek(cursor) && kw::r#ref::peek2(cursor))
     }
     fn display() -> &'static str {
@@ -673,25 +726,9 @@ pub struct Type<'a> {
     pub parent: Option<Index<'a>>,
 }
 
-impl<'a> Type<'a> {
-    fn parse_inner(parser: Parser<'a>, parent: Option<Index<'a>>) -> Result<Self> {
-        let span = parser.parse::<kw::r#type>()?.0;
-        let id = parser.parse()?;
-        let name = parser.parse()?;
-        let def = parser.parens(|parser| parser.parse())?;
-        Ok(Type {
-            span,
-            id,
-            name,
-            def,
-            parent,
-        })
-    }
-}
-
 impl<'a> Peek for Type<'a> {
     fn peek(cursor: Cursor<'_>) -> bool {
-        kw::r#type::peek(cursor) || kw::sub::peek(cursor)
+        kw::r#type::peek(cursor)
     }
     fn display() -> &'static str {
         "type"
@@ -700,16 +737,32 @@ impl<'a> Peek for Type<'a> {
 
 impl<'a> Parse<'a> for Type<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        if parser.peek::<kw::sub>() {
-            parser.parse::<kw::sub>()?;
-            let parent = if parser.peek::<Index<'a>>() {
-                parser.parse()?
-            } else {
-                None
-            };
-            return parser.parens(|parser| Type::parse_inner(parser, parent));
-        }
-        Type::parse_inner(parser, None)
+        let span = parser.parse::<kw::r#type>()?.0;
+        let id = parser.parse()?;
+        let name = parser.parse()?;
+
+        let (parent, def) = if parser.peek2::<kw::sub>() {
+            parser.parens(|parser| {
+                parser.parse::<kw::sub>()?;
+                let parent = if parser.peek::<Index<'a>>() {
+                    parser.parse()?
+                } else {
+                    None
+                };
+                let def = parser.parens(|parser| parser.parse())?;
+                Ok((parent, def))
+            })?
+        } else {
+            (None, parser.parens(|parser| parser.parse())?)
+        };
+
+        Ok(Type {
+            span,
+            id,
+            name,
+            def,
+            parent,
+        })
     }
 }
 

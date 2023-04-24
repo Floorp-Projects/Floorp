@@ -19,4 +19,4 @@ gluesmith = ['jsrust_shared/gluesmith']
 jsrust_shared = { path = "./shared" }
 # Workaround for https://github.com/rust-lang/rust/issues/58393
 mozglue-static = { path = "../../../mozglue/static/rust" }
-wast = { version = "55.0.0" }
+wast = "56.0.0"

@@ -483,7 +483,10 @@ enum class GcOp {
   ArrayNewFixed = 0x1a,
   ArrayNewDefault = 0x1c,
   ArrayNewData = 0x1d,
-  ArrayNewElem = 0x10,
+  // array.init_from_elem_static in V5 became array.new_elem in V6, changing
+  // opcodes in the process
+  ArrayInitFromElemStaticV5 = 0x10,
+  ArrayNewElem = 0x1f,
   ArrayGet = 0x13,
   ArrayGetS = 0x14,
   ArrayGetU = 0x15,
@@ -493,14 +496,23 @@ enum class GcOp {
   ArrayLen = 0x19,
 
   // Ref operations
-  RefTest = 0x44,
-  RefCast = 0x45,
-  BrOnCast = 0x46,
-  BrOnCastFail = 0x47,
+  RefTestV5 = 0x44,
+  RefCastV5 = 0x45,
+  BrOnCastV5 = 0x46,
+  BrOnCastHeapV5 = 0x42,
+  BrOnCastHeapNullV5 = 0x4a,
+  BrOnCastFailV5 = 0x47,
+  BrOnCastFailHeapV5 = 0x43,
+  BrOnCastFailHeapNullV5 = 0x4b,
+  RefTest = 0x40,
+  RefCast = 0x41,
+  RefTestNull = 0x48,
+  RefCastNull = 0x49,
+  BrOnCast = 0x4f,
 
   // Dart compatibility instruction
-  RefAsStruct = 0x59,
-  BrOnNonStruct = 0x64,
+  RefAsStructV5 = 0x59,
+  BrOnNonStructV5 = 0x64,
 
   // Extern/any coercion operations
   ExternInternalize = 0x70,

@@ -396,6 +396,10 @@ class RefType {
   // Defined in WasmTypeDef.h to avoid a cycle while allowing inlining
   static bool isSubTypeOf(RefType subType, RefType superType);
 
+  // Gets the top of the given type's hierarchy, e.g. Any for structs and
+  // arrays, and Func for funcs
+  RefType topType() const;
+
   bool operator==(const RefType& that) const { return ptc_ == that.ptc_; }
   bool operator!=(const RefType& that) const { return ptc_ != that.ptc_; }
 };

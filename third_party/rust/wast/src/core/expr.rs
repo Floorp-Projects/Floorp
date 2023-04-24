@@ -602,13 +602,16 @@ instructions! {
         ArrayNewDefault(Index<'a>) : [0xfb, 0x1c] : "array.new_default",
         ArrayNewFixed(ArrayNewFixed<'a>) : [0xfb, 0x1a] : "array.new_fixed",
         ArrayNewData(ArrayNewData<'a>) : [0xfb, 0x1d] : "array.new_data",
-        ArrayNewElem(ArrayNewElem<'a>) : [0xfb, 0x10] : "array.new_elem",
+        ArrayNewElem(ArrayNewElem<'a>) : [0xfb, 0x1f] : "array.new_elem",
         ArrayGet(Index<'a>) : [0xfb, 0x13] : "array.get",
         ArrayGetS(Index<'a>) : [0xfb, 0x14] : "array.get_s",
         ArrayGetU(Index<'a>) : [0xfb, 0x15] : "array.get_u",
         ArraySet(Index<'a>) : [0xfb, 0x16] : "array.set",
-        ArrayCopy(ArrayCopy<'a>) : [0xfb, 0x18] : "array.copy",
         ArrayLen : [0xfb, 0x19] : "array.len",
+        ArrayFill(ArrayFill<'a>) : [0xfb, 0x0f] : "array.fill",
+        ArrayCopy(ArrayCopy<'a>) : [0xfb, 0x18] : "array.copy",
+        ArrayInitData(ArrayInit<'a>) : [0xfb, 0x54] : "array.init_data",
+        ArrayInitElem(ArrayInit<'a>) : [0xfb, 0x55] : "array.init_elem",
 
         // gc proposal, i31
         I31New : [0xfb, 0x20] : "i31.new",
@@ -616,31 +619,10 @@ instructions! {
         I31GetU : [0xfb, 0x22] : "i31.get_u",
 
         // gc proposal, concrete casting
-        RefTest(Index<'a>) : [0xfb, 0x44] : "ref.test",
-        RefCast(Index<'a>) : [0xfb, 0x45] : "ref.cast",
-        BrOnCast(BrOnCast<'a>) : [0xfb, 0x46] : "br_on_cast",
-        BrOnCastFail(BrOnCast<'a>) : [0xfb, 0x47] : "br_on_cast_fail",
-
-        // gc proposal, heap casting
-        RefIsFunc : [0xfb, 0x50] : "ref.is_func",
-        RefIsData : [0xfb, 0x51] : "ref.is_data",
-        RefIsI31 : [0xfb, 0x52] : "ref.is_i31",
-        RefIsArray : [0xfb, 0x53] : "ref.is_array",
-
-        RefAsFunc : [0xfb, 0x58] : "ref.as_func",
-        RefAsData : [0xfb, 0x59] : "ref.as_data",
-        RefAsI31 : [0xfb, 0x5a] : "ref.as_i31",
-        RefAsArray : [0xfb, 0x5b] : "ref.as_array",
-
-        BrOnFunc(Index<'a>) : [0xfb, 0x60] : "br_on_func",
-        BrOnData(Index<'a>) : [0xfb, 0x61] : "br_on_data",
-        BrOnI31(Index<'a>) : [0xfb, 0x62] : "br_on_i31",
-        BrOnArray(Index<'a>) : [0xfb, 0x66] : "br_on_array",
-
-        BrOnNonFunc(Index<'a>) : [0xfb, 0x63] : "br_on_non_func",
-        BrOnNonData(Index<'a>) : [0xfb, 0x64] : "br_on_non_data",
-        BrOnNonI31(Index<'a>) : [0xfb, 0x65] : "br_on_non_i31",
-        BrOnNonArray(Index<'a>) : [0xfb, 0x67] : "br_on_non_array",
+        RefTest(RefTest<'a>) : [] : "ref.test",
+        RefCast(RefCast<'a>) : [] : "ref.cast",
+        BrOnCast(BrOnCast<'a>) : [] : "br_on_cast",
+        BrOnCastFail(BrOnCastFail<'a>) : [] : "br_on_cast_fail",
 
         // gc proposal extern/any coercion operations
         ExternInternalize : [0xfb, 0x70] : "extern.internalize",
@@ -1575,6 +1557,21 @@ impl<'a> Parse<'a> for StructAccess<'a> {
     }
 }
 
+/// Extra data associated with the `array.fill` instruction
+#[derive(Debug)]
+pub struct ArrayFill<'a> {
+    /// The index of the array type we're filling.
+    pub array: Index<'a>,
+}
+
+impl<'a> Parse<'a> for ArrayFill<'a> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        Ok(ArrayFill {
+            array: parser.parse()?,
+        })
+    }
+}
+
 /// Extra data associated with the `array.copy` instruction
 #[derive(Debug)]
 pub struct ArrayCopy<'a> {
@@ -1589,6 +1586,24 @@ impl<'a> Parse<'a> for ArrayCopy<'a> {
         Ok(ArrayCopy {
             dest_array: parser.parse()?,
             src_array: parser.parse()?,
+        })
+    }
+}
+
+/// Extra data associated with the `array.init_[data/elem]` instruction
+#[derive(Debug)]
+pub struct ArrayInit<'a> {
+    /// The index of the array type we're initializing.
+    pub array: Index<'a>,
+    /// The index of the data or elem segment we're reading from.
+    pub segment: Index<'a>,
+}
+
+impl<'a> Parse<'a> for ArrayInit<'a> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        Ok(ArrayInit {
+            array: parser.parse()?,
+            segment: parser.parse()?,
         })
     }
 }
@@ -1647,20 +1662,74 @@ impl<'a> Parse<'a> for ArrayNewElem<'a> {
     }
 }
 
+/// Extra data associated with the `ref.cast` instruction
+#[derive(Debug)]
+pub struct RefCast<'a> {
+    /// The type to cast to.
+    pub r#type: RefType<'a>,
+}
+
+impl<'a> Parse<'a> for RefCast<'a> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        Ok(RefCast {
+            r#type: parser.parse()?,
+        })
+    }
+}
+
+/// Extra data associated with the `ref.test` instruction
+#[derive(Debug)]
+pub struct RefTest<'a> {
+    /// The type to test for.
+    pub r#type: RefType<'a>,
+}
+
+impl<'a> Parse<'a> for RefTest<'a> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        Ok(RefTest {
+            r#type: parser.parse()?,
+        })
+    }
+}
+
 /// Extra data associated with the `br_on_cast` instruction
 #[derive(Debug)]
 pub struct BrOnCast<'a> {
     /// The label to branch to.
     pub label: Index<'a>,
-    /// The index of the type we're casting.
-    pub r#type: Index<'a>,
+    /// The type we're casting from.
+    pub from_type: RefType<'a>,
+    /// The type we're casting to.
+    pub to_type: RefType<'a>,
 }
 
 impl<'a> Parse<'a> for BrOnCast<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         Ok(BrOnCast {
             label: parser.parse()?,
-            r#type: parser.parse()?,
+            from_type: parser.parse()?,
+            to_type: parser.parse()?,
+        })
+    }
+}
+
+/// Extra data associated with the `br_on_cast_fail` instruction
+#[derive(Debug)]
+pub struct BrOnCastFail<'a> {
+    /// The label to branch to.
+    pub label: Index<'a>,
+    /// The type we're casting from.
+    pub from_type: RefType<'a>,
+    /// The type we're casting to.
+    pub to_type: RefType<'a>,
+}
+
+impl<'a> Parse<'a> for BrOnCastFail<'a> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        Ok(BrOnCastFail {
+            label: parser.parse()?,
+            from_type: parser.parse()?,
+            to_type: parser.parse()?,
         })
     }
 }

@@ -241,6 +241,9 @@ impl<'a> Encode for HeapType<'a> {
             HeapType::Struct => e.push(0x67),
             HeapType::Array => e.push(0x66),
             HeapType::I31 => e.push(0x6a),
+            HeapType::NoFunc => e.push(0x68),
+            HeapType::NoExtern => e.push(0x69),
+            HeapType::None => e.push(0x65),
             // Note that this is encoded as a signed leb128 so be sure to cast
             // to an i64 first
             HeapType::Index(Index::Num(n, _)) => i64::from(*n).encode(e),
@@ -279,8 +282,23 @@ impl<'a> Encode for RefType<'a> {
                 nullable: true,
                 heap: HeapType::I31,
             } => e.push(0x6a),
+            // The 'nullfuncref' binary abbreviation
+            RefType {
+                nullable: true,
+                heap: HeapType::NoFunc,
+            } => e.push(0x68),
+            // The 'nullexternref' binary abbreviation
+            RefType {
+                nullable: true,
+                heap: HeapType::NoExtern,
+            } => e.push(0x69),
+            // The 'nullref' binary abbreviation
+            RefType {
+                nullable: true,
+                heap: HeapType::None,
+            } => e.push(0x65),
 
-            // Generic 'ref opt <heaptype>' encoding
+            // Generic 'ref null <heaptype>' encoding
             RefType {
                 nullable: true,
                 heap,
@@ -1060,10 +1078,23 @@ impl Encode for StructAccess<'_> {
     }
 }
 
+impl Encode for ArrayFill<'_> {
+    fn encode(&self, e: &mut Vec<u8>) {
+        self.array.encode(e);
+    }
+}
+
 impl Encode for ArrayCopy<'_> {
     fn encode(&self, e: &mut Vec<u8>) {
         self.dest_array.encode(e);
         self.src_array.encode(e);
+    }
+}
+
+impl Encode for ArrayInit<'_> {
+    fn encode(&self, e: &mut Vec<u8>) {
+        self.array.encode(e);
+        self.segment.encode(e);
     }
 }
 
@@ -1088,9 +1119,62 @@ impl Encode for ArrayNewElem<'_> {
     }
 }
 
+impl Encode for RefTest<'_> {
+    fn encode(&self, e: &mut Vec<u8>) {
+        e.push(0xfb);
+        if self.r#type.nullable {
+            e.push(0x48);
+        } else {
+            e.push(0x40);
+        }
+        self.r#type.heap.encode(e);
+    }
+}
+
+impl Encode for RefCast<'_> {
+    fn encode(&self, e: &mut Vec<u8>) {
+        e.push(0xfb);
+        if self.r#type.nullable {
+            e.push(0x49);
+        } else {
+            e.push(0x41);
+        }
+        self.r#type.heap.encode(e);
+    }
+}
+
+fn br_on_cast_flags(on_fail: bool, from_nullable: bool, to_nullable: bool) -> u8 {
+    let mut flag = 0;
+    if from_nullable {
+        flag |= 1 << 0;
+    }
+    if to_nullable {
+        flag |= 1 << 1;
+    }
+    if on_fail {
+        flag |= 1 << 2;
+    }
+    flag
+}
+
 impl Encode for BrOnCast<'_> {
     fn encode(&self, e: &mut Vec<u8>) {
+        e.push(0xfb);
+        e.push(0x4f);
+        e.push(br_on_cast_flags(false, self.from_type.nullable, self.to_type.nullable));
         self.label.encode(e);
-        self.r#type.encode(e);
+        self.from_type.heap.encode(e);
+        self.to_type.heap.encode(e);
+    }
+}
+
+impl Encode for BrOnCastFail<'_> {
+    fn encode(&self, e: &mut Vec<u8>) {
+        e.push(0xfb);
+        e.push(0x4f);
+        e.push(br_on_cast_flags(true, self.from_type.nullable, self.to_type.nullable));
+        self.label.encode(e);
+        self.from_type.heap.encode(e);
+        self.to_type.heap.encode(e);
     }
 }

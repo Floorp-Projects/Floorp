@@ -106,11 +106,11 @@
           (type $q (struct (field i32) (field i32)))
           (func $f (param eqref) (result i32)
            local.get 0
-           ref.test $q
+           ref.test (ref $q)
           )
           (func $g (param eqref) (result i32)
            local.get 0
-           ref.test $p
+           ref.test (ref $p)
           )
           (func (export "t1") (result i32)
            (call $f (struct.new $p (i64.const 0))))

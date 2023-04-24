@@ -117,29 +117,43 @@ function checkInvalid(body, errorMessage) {
 wasmEvalText(
     `(module
       (type $node (struct (field (mut (ref null $node)))))
-      (sub $node (type $nix (struct (field (mut (ref null $node))) (field i32))))
+      (type $nix (sub $node (struct (field (mut (ref null $node))) (field i32))))
       (func $f (param $p (ref null $node)) (param $q (ref null $nix))
        (struct.set $node 0 (local.get $p) (local.get $q))))`);
 
-// ref.cast: if the pointer's null we do not trap
+// ref.cast: if the pointer is null we trap
 
-wasmEvalText(
+assertErrorMessage(() => wasmEvalText(
     `(module
       (type $node (struct (field i32)))
       (type $node2 (struct (field i32) (field f32)))
       (func $f (param $p (ref null $node)) (result (ref null $node2))
-       (ref.cast $node2 (local.get $p)))
+       (ref.cast (ref $node2) (local.get $p)))
       (func (export "test") (result eqref)
-       (call $f (ref.null $node))))`).exports.test();
+       (call $f (ref.null $node))))`).exports.test(),
+    WebAssembly.RuntimeError,
+    /bad cast/,
+);
+
+// ref.cast null: if the pointer is null we do not trap
+
+wasmEvalText(
+  `(module
+    (type $node (struct (field i32)))
+    (type $node2 (struct (field i32) (field f32)))
+    (func $f (param $p (ref null $node)) (result (ref null $node2))
+     (ref.cast (ref null $node2) (local.get $p)))
+    (func (export "test") (result eqref)
+     (call $f (ref.null $node))))`).exports.test();
 
 // ref.cast: if the downcast succeeds we get the original pointer
 
 assertEq(wasmEvalText(
     `(module
       (type $node (struct (field i32)))
-      (sub $node (type $node2 (struct (field i32) (field f32))))
+      (type $node2 (sub $node (struct (field i32) (field f32))))
       (func $f (param $p (ref null $node)) (result (ref null $node2))
-       (ref.cast $node2 (local.get $p)))
+       (ref.cast (ref null $node2) (local.get $p)))
       (func (export "test") (result i32)
        (local $n (ref null $node))
        (local.set $n (struct.new $node2 (i32.const 0) (f32.const 12)))
@@ -151,9 +165,9 @@ assertEq(wasmEvalText(
 assertEq(wasmEvalText(
     `(module
       (type $node (struct (field (mut i32))))
-      (sub $node (type $node2 (struct (field (mut i32)) (field f32))))
+      (type $node2 (sub $node (struct (field (mut i32)) (field f32))))
       (func $f (param $p (ref null $node)) (result (ref null $node2))
-       (ref.cast $node2 (local.get $p)))
+       (ref.cast (ref null $node2) (local.get $p)))
       (func (export "test") (result i32)
        (local $n (ref null $node))
        (local.set $n (struct.new $node2 (i32.const 0) (f32.const 12)))
@@ -167,7 +181,7 @@ assertEq(wasmEvalText(
     `(module
       (type $node (struct (field i32)))
       (func $f (param $p eqref) (result (ref null $node))
-       (ref.cast $node (local.get $p)))
+       (ref.cast (ref null $node) (local.get $p)))
       (func (export "test") (result i32)
        (local $n (ref null $node))
        (local.set $n (struct.new $node (i32.const 0)))
