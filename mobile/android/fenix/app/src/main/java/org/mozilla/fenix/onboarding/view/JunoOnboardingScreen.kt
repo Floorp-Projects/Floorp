@@ -199,7 +199,7 @@ private class DisableForwardSwipeNestedScrollConnection(
             if (pagerState.currentPageOffset < 0) {
                 return Offset.Zero
             } else {
-                Offset(available.x, available.y)
+                Offset(available.x, 0f)
             }
         }
     }
