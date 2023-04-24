@@ -93,6 +93,8 @@ class xpcAccessible : public nsIAccessible {
 
   NS_IMETHOD Announce(const nsAString& aAnnouncement, uint16_t aPriority) final;
 
+  NS_IMETHOD GetComputedARIARole(nsAString& aRole) final;
+
  protected:
   xpcAccessible() {}
   virtual ~xpcAccessible() {}
