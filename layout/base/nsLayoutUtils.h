@@ -3039,6 +3039,19 @@ class nsLayoutUtils {
    **/
   static nsIFrame* GetNearestOverflowClipFrame(nsIFrame* aFrame);
 
+  /*
+   * Returns true if the user's preferences allow for smooth scrolling.
+   */
+  static bool IsSmoothScrollingEnabled();
+
+  /*
+   * Recompute the default value of general.smoothScroll based on
+   * the system settings for prefers-reduced-motion.
+   *
+   * Note: Must only be called from the main thread.
+   */
+  static void RecomputeSmoothScrollDefault();
+
  private:
   /**
    * Helper function for LogTestDataForPaint().
