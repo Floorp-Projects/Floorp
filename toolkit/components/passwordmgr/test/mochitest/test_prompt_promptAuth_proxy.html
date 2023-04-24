@@ -92,7 +92,7 @@ let chromeScript = runInParent(() => {
     onStopRequest(request, status) {}
   }
 
-  function initLogins(pi) {
+  async function initLogins(pi) {
     mozproxyURL = `moz-proxy://${pi.host}:${pi.port}`;
 
     let proxyLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(
@@ -109,7 +109,7 @@ let chromeScript = runInParent(() => {
       ""
     );
 
-    Services.logins.addLogin(proxyLogin);
+    await Services.logins.addLoginAsync(proxyLogin);
   }
 
   let resolveCallback = {
@@ -126,8 +126,8 @@ let chromeScript = runInParent(() => {
       return this;
     },
 
-    onProxyAvailable(req, uri, pi, status) {
-      initLogins(pi);
+    async onProxyAvailable(req, uri, pi, status) {
+      await initLogins(pi);
 
       // I'm cheating a bit here... We should probably do some magic foo to get
       // something implementing nsIProxiedProtocolHandler and then call

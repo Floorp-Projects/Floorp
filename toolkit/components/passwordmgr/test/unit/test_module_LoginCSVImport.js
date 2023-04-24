@@ -251,9 +251,7 @@ add_task(async function test_import_from_firefox_various_latest() {
   await setupCsv([]);
   info("Populate the login list for export");
   let logins = LoginTestUtils.testData.loginList();
-  for (let loginInfo of logins) {
-    Services.logins.addLogin(loginInfo);
-  }
+  await Services.logins.addLogins(logins);
 
   let tmpFilePath = FileTestUtils.getTempFile("logins.csv").path;
   await LoginExport.exportAsCSV(tmpFilePath);

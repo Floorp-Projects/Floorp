@@ -24,49 +24,18 @@ modalType = authPromptModalType;
 
 const AUTHENTICATE_PATH = new URL("authenticate.sjs", window.location.href).pathname;
 
-runInParent(() => {
-  let login3A, login3B, login4;
-  login3A = Cc["@mozilla.org/login-manager/loginInfo;1"].
-            createInstance(Ci.nsILoginInfo);
-  login3B = Cc["@mozilla.org/login-manager/loginInfo;1"].
-            createInstance(Ci.nsILoginInfo);
-  login4  = Cc["@mozilla.org/login-manager/loginInfo;1"].
-            createInstance(Ci.nsILoginInfo);
-  let httpUpgradeLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
-                         createInstance(Ci.nsILoginInfo);
-  let httpsDowngradeLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
-                            createInstance(Ci.nsILoginInfo);
-  let dedupeHttpUpgradeLogin  = Cc["@mozilla.org/login-manager/loginInfo;1"].
-                                createInstance(Ci.nsILoginInfo);
-  let dedupeHttpsUpgradeLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
-                                createInstance(Ci.nsILoginInfo);
-
-
-  login3A.init("http://mochi.test:8888", null, "mochitest",
-               "mochiuser1", "mochipass1", "", "");
-  login3B.init("http://mochi.test:8888", null, "mochitest2",
-               "mochiuser2", "mochipass2", "", "");
-  login4.init("http://mochi.test:8888", null, "mochitest3",
-              "mochiuser3", "mochipass3-old", "", "");
-  // Logins to test scheme upgrades (allowed) and downgrades (disallowed)
-  httpUpgradeLogin.init("http://example.com", null, "schemeUpgrade",
-                        "httpUser", "httpPass", "", "");
-  httpsDowngradeLogin.init("https://example.com", null, "schemeDowngrade",
-                           "httpsUser", "httpsPass", "", "");
-  // HTTP and HTTPS version of the same domain and realm but with different passwords.
-  dedupeHttpUpgradeLogin.init("http://example.org", null, "schemeUpgradeDedupe",
-                              "dedupeUser", "httpPass", "", "");
-  dedupeHttpsUpgradeLogin.init("https://example.org", null, "schemeUpgradeDedupe",
-                               "dedupeUser", "httpsPass", "", "");
-
-
-  Services.logins.addLogin(login3A);
-  Services.logins.addLogin(login3B);
-  Services.logins.addLogin(login4);
-  Services.logins.addLogin(httpUpgradeLogin);
-  Services.logins.addLogin(httpsDowngradeLogin);
-  Services.logins.addLogin(dedupeHttpUpgradeLogin);
-  Services.logins.addLogin(dedupeHttpsUpgradeLogin);
+add_setup(async () => {
+  await addLoginsInParent(
+    ["http://mochi.test:8888", null, "mochitest", "mochiuser1", "mochipass1", "", ""],
+    ["http://mochi.test:8888", null, "mochitest2", "mochiuser2", "mochipass2", "", ""],
+    ["http://mochi.test:8888", null, "mochitest3", "mochiuser3", "mochipass3-old", "", ""],
+    // Logins to test scheme upgrades (allowed) and downgrades (disallowed)
+    ["http://example.com", null, "schemeUpgrade", "httpUser", "httpPass", "", ""],
+    ["https://example.com", null, "schemeDowngrade", "httpsUser", "httpsPass", "", ""],
+    // HTTP and HTTPS version of the same domain and realm but with different passwords.
+    ["http://example.org", null, "schemeUpgradeDedupe", "dedupeUser", "httpPass", "", ""],
+    ["https://example.org", null, "schemeUpgradeDedupe", "dedupeUser", "httpsPass", "", ""]
+  );
 });
 
 add_task(async function test_iframe() {
@@ -282,7 +251,7 @@ add_task(async function test_schemeUpgrade() {
 });
 
 add_task(async function test_schemeDowngrade() {
-  let state = {
+  const state = {
     msg: "This site is asking you to sign in. Warning: Your login information " +
       "will be shared with example.com, not the website you are currently visiting.",
     title: "Authentication Required",
@@ -298,14 +267,14 @@ add_task(async function test_schemeDowngrade() {
     focused: "textField",
     defButton: "button0",
   };
-  let action = {
+  const action = {
     buttonClick: "cancel",
   };
-  let promptDone = handlePrompt(state, action);
+  const promptDone = handlePrompt(state, action);
 
   // The following tests are driven by iframe loads
 
-  let iframeLoaded = onloadPromiseFor("iframe");
+  const iframeLoaded = onloadPromiseFor("iframe");
   iframe.src = "http://example.com" + AUTHENTICATE_PATH +
                "?user=unused&pass=unused&realm=schemeDowngrade";
   await promptDone;
@@ -313,7 +282,7 @@ add_task(async function test_schemeDowngrade() {
 });
 
 add_task(async function test_schemeUpgrade_dedupe() {
-  let state = {
+  const state = {
     msg: "This site is asking you to sign in. Warning: Your login information " +
       "will be shared with example.org, not the website you are currently visiting.",
     title: "Authentication Required",
@@ -329,14 +298,14 @@ add_task(async function test_schemeUpgrade_dedupe() {
     focused: "textField",
     defButton: "button0",
   };
-  let action = {
+  const action = {
     buttonClick: "ok",
   };
-  let promptDone = handlePrompt(state, action);
+  const promptDone = handlePrompt(state, action);
 
   // The following tests are driven by iframe loads
 
-  let iframeLoaded = onloadPromiseFor("iframe");
+  const iframeLoaded = onloadPromiseFor("iframe");
   iframe.src = "https://example.org" + AUTHENTICATE_PATH +
                "?user=dedupeUser&pass=httpsPass&realm=schemeUpgradeDedupe";
   await promptDone;

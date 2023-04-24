@@ -5,7 +5,7 @@
 
 "use strict";
 
-add_setup(function() {
+add_setup(async () => {
   let nsLoginInfo = Components.Constructor(
     "@mozilla.org/login-manager/loginInfo;1",
     Ci.nsILoginInfo,
@@ -30,8 +30,7 @@ add_setup(function() {
     "testpass2"
   );
 
-  Services.logins.addLogin(login1);
-  Services.logins.addLogin(login2);
+  await Services.logins.addLogins([login1, login2]);
 });
 
 add_task(async function test_autocompleteFromUsername() {
