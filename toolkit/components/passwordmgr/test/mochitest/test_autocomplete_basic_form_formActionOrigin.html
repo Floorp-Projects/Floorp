@@ -13,7 +13,10 @@
 Login Manager test: logins with non-matching formActionOrigin appear in autocomplete dropdown
 
 <script>
-const chromeScript = runChecksAfterCommonInit();
+var chromeScript = runChecksAfterCommonInit();
+
+addLoginsInParent([window.location.origin, "https://differentFormSubmitURL", null,
+                  "dfsu1", "dfsp1", "uname", "pword"]);
 </script>
 <p id="display"></p>
 
@@ -47,9 +50,6 @@ function spinEventLoop() {
 }
 
 add_setup(async () => {
-  await addLoginsInParent(
-    [window.location.origin, "https://differentFormSubmitURL", null, "dfsu1", "dfsp1", "uname", "pword"]
-  );
   listenForUnexpectedPopupShown();
 });
 
@@ -58,7 +58,7 @@ add_task(async function test_form1_initial_empty() {
 
   // Make sure initial form is empty.
   checkLoginForm(uname, "", pword, "");
-  const popupState = await getPopupState();
+  let popupState = await getPopupState();
   is(popupState.open, false, "Check popup is initially closed");
 });
 
@@ -72,10 +72,10 @@ add_task(async function test_form1_menu_shows_logins_for_different_formActionOri
   restoreForm();
   const autocompleteItems = await popupByArrowDown();
 
-  const popupState = await getPopupState();
+  let popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
 
-  const expectedMenuItems = ["dfsu1"];
+  let expectedMenuItems = ["dfsu1"];
   checkAutoCompleteResults(autocompleteItems, expectedMenuItems, window.location.host, "Check all menuitems are displayed correctly.");
 
   synthesizeKey("KEY_ArrowDown"); // first item

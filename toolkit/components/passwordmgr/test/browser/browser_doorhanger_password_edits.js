@@ -71,7 +71,7 @@ add_task(async function test_edit_password() {
 
     // Create the pre-existing logins when needed.
     if (testCase.usernameInPageExists) {
-      await Services.logins.addLoginAsync(
+      Services.logins.addLogin(
         LoginTestUtils.testData.formLogin({
           origin: "https://example.com",
           formActionOrigin: "https://example.com",
@@ -82,7 +82,7 @@ add_task(async function test_edit_password() {
     }
 
     if (testCase.usernameChangedToExists) {
-      await Services.logins.addLoginAsync(
+      Services.logins.addLogin(
         LoginTestUtils.testData.formLogin({
           origin: "https://example.com",
           formActionOrigin: "https://example.com",

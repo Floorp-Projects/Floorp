@@ -35,7 +35,7 @@ add_setup(async function() {
     username: "user1",
     password: "pass1",
   });
-  await Services.logins.addLoginAsync(login);
+  Services.logins.addLogin(login);
 });
 
 testUrlsWithForm.forEach(testUrl => {

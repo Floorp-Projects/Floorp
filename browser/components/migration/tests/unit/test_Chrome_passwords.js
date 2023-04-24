@@ -104,12 +104,12 @@ var loginCrypto;
 var dbConn;
 
 async function promiseSetPassword(login) {
-  const encryptedString = await loginCrypto.encryptData(
+  let encryptedString = await loginCrypto.encryptData(
     login.password,
     login.version
   );
   info(`promiseSetPassword: ${encryptedString}`);
-  const passwordValue = new Uint8Array(
+  let passwordValue = new Uint8Array(
     loginCrypto.stringToArray(encryptedString)
   );
   return dbConn.execute(
@@ -177,7 +177,7 @@ function checkLoginsAreEqual(passwordManagerLogin, chromeLogin, id) {
 }
 
 function generateDifferentLogin(login) {
-  const newLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(
+  let newLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(
     Ci.nsILoginInfo
   );
 
@@ -206,13 +206,13 @@ add_task(async function setup() {
   // would block the test from finishing if Chrome has already created a matching
   // Keychain entry. This allows us to still exercise the keychain lookup code.
   // The mock encryption passphrase is used when the Keychain item isn't found.
-  const mockMacOSKeychain = {
+  let mockMacOSKeychain = {
     passphrase: "bW96aWxsYWZpcmVmb3g=",
     serviceName: "TESTING Chrome Safe Storage",
     accountName: "TESTING Chrome",
   };
   if (AppConstants.platform == "macosx") {
-    const { ChromeMacOSLoginCrypto } = ChromeUtils.importESModule(
+    let { ChromeMacOSLoginCrypto } = ChromeUtils.importESModule(
       "resource:///modules/ChromeMacOSLoginCrypto.sys.mjs"
     );
     loginCrypto = new ChromeMacOSLoginCrypto(
@@ -230,7 +230,7 @@ add_task(async function setup() {
       "Login Data",
     ];
   } else if (AppConstants.platform == "win") {
-    const { ChromeWindowsLoginCrypto } = ChromeUtils.importESModule(
+    let { ChromeWindowsLoginCrypto } = ChromeUtils.importESModule(
       "resource:///modules/ChromeWindowsLoginCrypto.sys.mjs"
     );
     loginCrypto = new ChromeWindowsLoginCrypto("Chrome");
@@ -246,18 +246,18 @@ add_task(async function setup() {
   } else {
     throw new Error("Not implemented");
   }
-  const dirSvcFile = do_get_file(dirSvcPath);
+  let dirSvcFile = do_get_file(dirSvcPath);
   registerFakePath(pathId, dirSvcFile);
 
   info(PathUtils.join(dirSvcFile.path, ...profilePathSegments));
-  const loginDataFilePath = PathUtils.join(
+  let loginDataFilePath = PathUtils.join(
     dirSvcFile.path,
     ...profilePathSegments
   );
   dbConn = await Sqlite.openConnection({ path: loginDataFilePath });
 
   if (AppConstants.platform == "macosx") {
-    const migrator = await MigrationUtils.getMigrator("chrome");
+    let migrator = await MigrationUtils.getMigrator("chrome");
     Object.assign(migrator, {
       _keychainServiceName: mockMacOSKeychain.serviceName,
       _keychainAccountName: mockMacOSKeychain.accountName,
@@ -275,11 +275,11 @@ add_task(async function setup() {
 });
 
 add_task(async function test_importIntoEmptyDB() {
-  for (const login of TEST_LOGINS) {
+  for (let login of TEST_LOGINS) {
     await promiseSetPassword(login);
   }
 
-  const migrator = await MigrationUtils.getMigrator("chrome");
+  let migrator = await MigrationUtils.getMigrator("chrome");
   Assert.ok(
     await migrator.isSourceAvailable(),
     "Sanity check the source exists"
@@ -315,7 +315,7 @@ add_task(async function test_importIntoEmptyDB() {
 
 // Test that existing logins for the same primary key don't get overwritten
 add_task(async function test_importExistingLogins() {
-  const migrator = await MigrationUtils.getMigrator("chrome");
+  let migrator = await MigrationUtils.getMigrator("chrome");
   Assert.ok(
     await migrator.isSourceAvailable(),
     "Sanity check the source exists"
@@ -329,7 +329,7 @@ add_task(async function test_importExistingLogins() {
     "There are no logins after removing all of them"
   );
 
-  const newLogins = [];
+  let newLogins = [];
 
   // Create 3 new logins that are different but where the key properties are still the same.
   for (let i = 0; i < 3; i++) {

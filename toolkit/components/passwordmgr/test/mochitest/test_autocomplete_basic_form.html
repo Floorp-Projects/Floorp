@@ -24,7 +24,7 @@ function addLoginsInParent(...aLogins) {
 
     let initialCount = 5;
 
-    addMessageListener("initLogins", async logins => {
+    addMessageListener("initLogins", logins => {
       let nsLoginInfo = Components.Constructor(
         "@mozilla.org/login-manager/loginInfo;1",
         Ci.nsILoginInfo,
@@ -37,7 +37,7 @@ function addLoginsInParent(...aLogins) {
         // Only add the first 'initialCount' number of logins.
         if (initialCount-- > 0) {
           try {
-            await Services.logins.addLoginAsync(loginInfo);
+            Services.logins.addLogin(loginInfo);
           } catch (e) {
             assert.ok(false, "addLogin threw: " + e);
           }
@@ -46,10 +46,10 @@ function addLoginsInParent(...aLogins) {
       }
     });
 
-    addMessageListener("addLogin", async loginVariableName => {
+    addMessageListener("addLogin", loginVariableName => {
       let login = loginsMap[loginVariableName];
       assert.ok(!!login, "Login to add is defined: " + loginVariableName);
-      await Services.logins.addLoginAsync(login);
+      Services.logins.addLogin(login);
     });
     addMessageListener("removeLogin", loginVariableName => {
       let login = loginsMap[loginVariableName];

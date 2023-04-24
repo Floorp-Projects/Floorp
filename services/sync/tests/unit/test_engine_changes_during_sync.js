@@ -143,7 +143,7 @@ add_task(async function test_passwords_change_during_sync() {
         "",
         ""
       );
-      await Services.logins.addLoginAsync(login);
+      Services.logins.addLogin(login);
       await engine._tracker.asyncObserver.promiseObserversComplete();
     }
   };

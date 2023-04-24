@@ -12,11 +12,27 @@
 </head>
 <body>
 <script>
- const readyPromise = addLoginsInParent(
-    ["http://mochi.test:8888", "http://username-focus-1", null, "testuser1A", "testpass1A", "", ""],
-    ["http://mochi.test:8888", "http://username-focus-2", null, "testuser2A", "testpass2A", "", ""],
-    ["http://mochi.test:8888", "http://username-focus-2", null, "testuser2B", "testpass2B", "", ""]
-  ).then(() => registerRunTests(5));
+let readyPromise = registerRunTests(5);
+let chromeScript = runInParent(function chromeSetup() {
+  let login1A  = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                 createInstance(Ci.nsILoginInfo);
+  let login2A  = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                 createInstance(Ci.nsILoginInfo);
+  let login2B  = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                 createInstance(Ci.nsILoginInfo);
+
+  login1A.init("http://mochi.test:8888", "http://username-focus-1", null,
+               "testuser1A", "testpass1A", "", "");
+
+  login2A.init("http://mochi.test:8888", "http://username-focus-2", null,
+               "testuser2A", "testpass2A", "", "");
+  login2B.init("http://mochi.test:8888", "http://username-focus-2", null,
+               "testuser2B", "testpass2B", "", "");
+
+  Services.logins.addLogin(login1A);
+  Services.logins.addLogin(login2A);
+  Services.logins.addLogin(login2B);
+});
 </script>
 
 <p id="display"></p>
@@ -95,7 +111,7 @@ add_setup(async () => {
 });
 
 add_task(async function test_autofilled() {
-  const usernameField = getFormElementByName("-autofilled", "uname");
+  let usernameField = getFormElementByName("-autofilled", "uname");
   info("Username and password already filled so don't show autocomplete");
   await noPopupBy(() => usernameField.focus());
 
@@ -106,7 +122,7 @@ add_task(async function test_autofilled() {
 });
 
 add_task(async function test_autofilled_prefilled_un() {
-  const usernameField = getFormElementByName("-autofilled-prefilled-un", "uname");
+  let usernameField = getFormElementByName("-autofilled-prefilled-un", "uname");
   info("Username and password already filled so don't show autocomplete");
   await noPopupBy(() => usernameField.focus());
 
@@ -117,14 +133,14 @@ add_task(async function test_autofilled_prefilled_un() {
 });
 
 add_task(async function test_autofilled_focused_dynamic() {
-  const usernameField = getFormElementByName("-autofilled-focused-dynamic", "uname");
-  const passwordField = getFormElementByName("-autofilled-focused-dynamic", "pword");
+  let usernameField = getFormElementByName("-autofilled-focused-dynamic", "uname");
+  let passwordField = getFormElementByName("-autofilled-focused-dynamic", "pword");
   info("Username and password will be filled while username focused");
   await noPopupBy(() => usernameField.focus());
   info("triggering autofill");
   await noPopupBy(() => passwordField.type = "password");
 
-  const popupState = await getPopupState();
+  let popupState = await getPopupState();
   is(popupState.open, false, "Check popup is closed");
 
   removeFocus();
@@ -136,14 +152,14 @@ add_task(async function test_autofilled_focused_dynamic() {
 // Begin testing forms that have multiple saved logins
 
 add_task(async function test_multiple() {
-  const usernameField = getFormElementByName("-multiple", "uname");
+  let usernameField = getFormElementByName("-multiple", "uname");
   info("Fields not filled due to multiple so autocomplete upon focus");
   await popupBy(() => usernameField.focus());
 });
 
 add_task(async function test_multiple_dynamic() {
-  const usernameField = getFormElementByName("-multiple-dynamic", "uname");
-  const passwordField = getFormElementByName("-multiple-dynamic", "pword");
+  let usernameField = getFormElementByName("-multiple-dynamic", "uname");
+  let passwordField = getFormElementByName("-multiple-dynamic", "pword");
   info("Fields not filled but username is focused upon marking so open");
   await noPopupBy(() => usernameField.focus());
 
@@ -152,7 +168,7 @@ add_task(async function test_multiple_dynamic() {
 });
 
 add_task(async function test_multiple_prefilled_un1() {
-  const usernameField = getFormElementByName("-multiple-prefilled-un1", "uname");
+  let usernameField = getFormElementByName("-multiple-prefilled-un1", "uname");
   info("Username and password already filled so don't show autocomplete");
   await noPopupBy(() => usernameField.focus());
 
@@ -163,7 +179,7 @@ add_task(async function test_multiple_prefilled_un1() {
 });
 
 add_task(async function test_multiple_prefilled_un2() {
-  const usernameField = getFormElementByName("-multiple-prefilled-un2", "uname");
+  let usernameField = getFormElementByName("-multiple-prefilled-un2", "uname");
   info("Username and password already filled so don't show autocomplete");
   await noPopupBy(() => usernameField.focus());
 
@@ -174,14 +190,14 @@ add_task(async function test_multiple_prefilled_un2() {
 });
 
 add_task(async function test_multiple_prefilled_focused_dynamic() {
-  const usernameField = getFormElementByName("-multiple-prefilled-focused-dynamic", "uname");
-  const passwordField = getFormElementByName("-multiple-prefilled-focused-dynamic", "pword");
+  let usernameField = getFormElementByName("-multiple-prefilled-focused-dynamic", "uname");
+  let passwordField = getFormElementByName("-multiple-prefilled-focused-dynamic", "pword");
   info("Username and password will be filled while username focused");
   await noPopupBy(() => usernameField.focus());
   info("triggering autofill");
   await noPopupBy(() => passwordField.type = "password");
 
-  const popupState = await getPopupState();
+  let popupState = await getPopupState();
   is(popupState.open, false, "Check popup is closed");
 
   removeFocus();

@@ -11,6 +11,19 @@
 </head>
 <body>
 Login Manager test: related realms autocomplete
+
+<script>
+  addLoginsInParent(
+    // Simple related domain relationship where example.com and other-example.com are in the related domains list
+    ["https://other-example.com", "https://other-example.com", null, "relatedUser1", "relatedPass1", "uname", "pword"],
+
+    // Example.com and example.co.uk are related, so sub.example.co.uk should appear on example.com's autocomplete dropdown
+    // The intent is to cover the ebay.com/ebay.co.uk and all other country TLD cases
+    // where the sign in page is actually signin.ebay.com/signin.ebay.co.uk but credentials could have manually been entered
+    // for ebay.com/ebay.co.uk or automatically stored as signin.ebay.com/sigin.ebay.co.uk
+    ["https://sub.example.co.uk", "https://sub.example.co.uk", null, "subUser1", "subPass1", "uname", "pword"],
+    );
+</script>
 <p id="display"></p>
 <div id="content">
   <form id="form1" onsubmit="return false;">
@@ -53,16 +66,6 @@ async function promiseACPopupClosed() {
 }
 
 add_setup(async () => {
-  await addLoginsInParent(
-    // Simple related domain relationship where example.com and other-example.com are in the related domains list
-    ["https://other-example.com", "https://other-example.com", null, "relatedUser1", "relatedPass1", "uname", "pword"],
-
-    // Example.com and example.co.uk are related, so sub.example.co.uk should appear on example.com's autocomplete dropdown
-    // The intent is to cover the ebay.com/ebay.co.uk and all other country TLD cases
-    // where the sign in page is actually signin.ebay.com/signin.ebay.co.uk but credentials could have manually been entered
-    // for ebay.com/ebay.co.uk or automatically stored as signin.ebay.com/sigin.ebay.co.uk
-    ["https://sub.example.co.uk", "https://sub.example.co.uk", null, "subUser1", "subPass1", "uname", "pword"],
-  );
   listenForUnexpectedPopupShown();
 });
 
