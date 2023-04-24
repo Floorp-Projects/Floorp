@@ -356,7 +356,7 @@
 }
 #star-button[starred] {
   fill-opacity: 1;
-  fill: var(--toolbar-field-icon-fill-attention);
+  fill: var(--toolbarbutton-icon-fill-attention);
 }
 
 /* URL bar and page action buttons */
@@ -575,7 +575,7 @@
 }
 
 #reader-mode-button[readeractive] > .urlbar-icon {
-  fill: var(--toolbar-field-icon-fill-attention);
+  fill: var(--toolbarbutton-icon-fill-attention);
   fill-opacity: 1;
 }
 
@@ -599,7 +599,7 @@
 }
 
 #translations-button[translationsactive] > .urlbar-icon {
-  fill: var(--toolbar-field-icon-fill-attention);
+  fill: var(--toolbarbutton-icon-fill-attention);
   fill-opacity: 1;
 }
 
