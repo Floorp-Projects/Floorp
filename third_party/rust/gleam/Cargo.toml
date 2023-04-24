@@ -3,21 +3,22 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g., crates.io) dependencies.
 #
-# If you believe there's an error in this file please file an
-# issue against the rust-lang/cargo repository. If you're
-# editing this file be aware that the upstream Cargo.toml
-# will likely look very different (and much more reasonable)
+# If you are reading this file be aware that the original Cargo.toml
+# will likely look very different (and much more reasonable).
+# See Cargo.toml.orig for the original contents.
 
 [package]
 name = "gleam"
-version = "0.13.1"
+version = "0.15.0"
 authors = ["The Servo Project Developers"]
 build = "build.rs"
 description = "Generated OpenGL bindings and wrapper for Servo."
 documentation = "https://doc.servo.org/gleam/"
+readme = "README.md"
 license = "Apache-2.0/MIT"
 repository = "https://github.com/servo/gleam"
+
 [build-dependencies.gl_generator]
 version = "0.14"
