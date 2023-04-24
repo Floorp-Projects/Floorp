@@ -150,6 +150,9 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   // strict-mode.
   bool forceStrictMode_ = false;
 
+  // The Realm of this script is configured to resist fingerprinting.
+  bool shouldResistFingerprinting_ = false;
+
   // The context has specified that source pragmas should be parsed.
   bool sourcePragmas_ = true;
 
@@ -262,6 +265,9 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   // Read-only accessors for non-POD options. The proper way to set these
   // depends on the derived type.
   bool mutedErrors() const { return mutedErrors_; }
+  bool shouldResistFingerprinting() const {
+    return shouldResistFingerprinting_;
+  }
   bool forceFullParse() const {
     return eagerDelazificationIsOneOf<
         DelazificationOption::ParseEverythingEagerly>();
@@ -306,6 +312,7 @@ class JS_PUBLIC_API TransitiveCompileOptions {
     PrintFields_(sourceMapURL_);
     PrintFields_(mutedErrors_);
     PrintFields_(forceStrictMode_);
+    PrintFields_(shouldResistFingerprinting_);
     PrintFields_(sourcePragmas_);
     PrintFields_(skipFilenameValidation_);
     PrintFields_(hideScriptFromDebugger_);
