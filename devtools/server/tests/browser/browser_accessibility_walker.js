@@ -38,7 +38,7 @@ add_task(async function() {
 
   checkA11yFront(accessibleFront, {
     name: "Accessible Button",
-    role: "pushbutton",
+    role: "button",
   });
 
   const ancestry = await a11yWalker.getAncestry(accessibleFront);
@@ -50,7 +50,7 @@ add_task(async function() {
   );
   is(
     ancestry[0].children.length,
-    4,
+    7,
     "Root doc should have correct number of children"
   );
   ok(
@@ -79,7 +79,7 @@ add_task(async function() {
 
   // Ensure reorder event is emitted by walker when DOM tree changes.
   let docChildren = await a11yDoc.children();
-  is(docChildren.length, 4, "Root doc should have correct number of children");
+  is(docChildren.length, 7, "Root doc should have correct number of children");
 
   await emitA11yEvent(
     a11yWalker,
@@ -96,7 +96,7 @@ add_task(async function() {
   );
 
   docChildren = await a11yDoc.children();
-  is(docChildren.length, 5, "Root doc should have correct number of children");
+  is(docChildren.length, 8, "Root doc should have correct number of children");
 
   let shown = await a11yWalker.highlightAccessible(docChildren[0]);
   ok(shown, "AccessibleHighlighter highlighted the node");

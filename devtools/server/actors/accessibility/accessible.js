@@ -167,7 +167,7 @@ function getSnapshot(acc, a11yService, targetActor) {
   const { nodeType, nodeCssSelector } = getNodeDescription(acc.DOMNode);
   const snapshot = {
     name: acc.name,
-    role: a11yService.getStringRole(acc.role),
+    role: getStringRole(acc, a11yService),
     actions,
     value: acc.value,
     nodeCssSelector,
@@ -190,6 +190,27 @@ function getSnapshot(acc, a11yService, targetActor) {
   }
 
   return snapshot;
+}
+
+/**
+ * Get a string indicating the role of the nsIAccessible object.
+ * An ARIA role token will be returned unless the role can't be mapped to an
+ * ARIA role (e.g. <iframe>), in which case a Gecko role string will be
+ * returned.
+ * @param  {nsIAccessible} acc
+ *         Accessible object to take a snapshot of.
+ * @param  {nsIAccessibilityService} a11yService
+ *         Accessibility service instance in the current process, used to get localized
+ *         string representation of various accessible properties.
+ * @return String
+ */
+function getStringRole(acc, a11yService) {
+  let role = acc.computedARIARole;
+  if (!role) {
+    // We couldn't map to an ARIA role, so use a Gecko role string.
+    role = a11yService.getStringRole(acc.role);
+  }
+  return role;
 }
 
 /**
@@ -232,7 +253,7 @@ class AccessibleActor extends Actor {
     if (this.isDefunct) {
       return null;
     }
-    return this.walker.a11yService.getStringRole(this.rawAccessible.role);
+    return getStringRole(this.rawAccessible, this.walker.a11yService);
   }
 
   get name() {
