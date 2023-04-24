@@ -84,11 +84,20 @@ enum class TypeCode {
   // Type constructor for non-nullable reference types.
   Ref = 0x6b,  // SLEB128(-0x15)
 
+  // A null reference in the extern hierarchy.
+  NullExternRef = 0x69,  // SLEB128(-0x17)
+
+  // A null reference in the func hierarchy.
+  NullFuncRef = 0x68,  // SLEB128(-0x18)
+
   // A reference to any struct value.
   StructRef = 0x67,  // SLEB128(-0x19)
 
   // A reference to any array value.
   ArrayRef = 0x66,  // SLEB128(-0x1A)
+
+  // A null reference in the any hierarchy.
+  NullAnyRef = 0x65,  // SLEB128(-0x1B)
 
   // Type constructor for function types
   Func = 0x60,  // SLEB128(-0x20)

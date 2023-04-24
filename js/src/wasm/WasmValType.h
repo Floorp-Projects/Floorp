@@ -290,6 +290,10 @@ union MatchTypeCode {
 
 enum class TableRepr { Ref, Func };
 
+// An enum that describes the different type hierarchies.
+
+enum class RefTypeHierarchy { Func, Extern, Any };
+
 // The RefType carries more information about types t for which t.isRefType()
 // is true.
 
@@ -299,6 +303,9 @@ class RefType {
     Func = uint8_t(TypeCode::FuncRef),
     Extern = uint8_t(TypeCode::ExternRef),
     Any = uint8_t(TypeCode::AnyRef),
+    NoFunc = uint8_t(TypeCode::NullFuncRef),
+    NoExtern = uint8_t(TypeCode::NullExternRef),
+    None = uint8_t(TypeCode::NullAnyRef),
     Eq = uint8_t(TypeCode::EqRef),
     Struct = uint8_t(TypeCode::StructRef),
     Array = uint8_t(TypeCode::ArrayRef),
@@ -319,6 +326,9 @@ class RefType {
       case TypeCode::EqRef:
       case TypeCode::StructRef:
       case TypeCode::ArrayRef:
+      case TypeCode::NullFuncRef:
+      case TypeCode::NullExternRef:
+      case TypeCode::NullAnyRef:
       case AbstractTypeRefCode:
         return true;
       default:
@@ -360,6 +370,9 @@ class RefType {
   static RefType func() { return RefType(Func, true); }
   static RefType extern_() { return RefType(Extern, true); }
   static RefType any() { return RefType(Any, true); }
+  static RefType nofunc() { return RefType(NoFunc, true); }
+  static RefType noextern() { return RefType(NoExtern, true); }
+  static RefType none() { return RefType(None, true); }
   static RefType eq() { return RefType(Eq, true); }
   static RefType struct_() { return RefType(Struct, true); }
   static RefType array() { return RefType(Array, true); }
@@ -367,6 +380,9 @@ class RefType {
   bool isFunc() const { return kind() == RefType::Func; }
   bool isExtern() const { return kind() == RefType::Extern; }
   bool isAny() const { return kind() == RefType::Any; }
+  bool isNoFunc() const { return kind() == RefType::NoFunc; }
+  bool isNoExtern() const { return kind() == RefType::NoExtern; }
+  bool isNone() const { return kind() == RefType::None; }
   bool isEq() const { return kind() == RefType::Eq; }
   bool isStruct() const { return kind() == RefType::Struct; }
   bool isArray() const { return kind() == RefType::Array; }
@@ -378,22 +394,13 @@ class RefType {
     return RefType(ptc_.withIsNullable(nullable));
   }
 
-  TableRepr tableRepr() const {
-    switch (kind()) {
-      case RefType::Func:
-        return TableRepr::Func;
-      case RefType::Extern:
-      case RefType::Any:
-      case RefType::Eq:
-      case RefType::Struct:
-      case RefType::Array:
-      case RefType::TypeRef:
-        return TableRepr::Ref;
-    }
-    MOZ_CRASH("switch is exhaustive");
-  }
-
-  // Defined in WasmTypeDef.h to avoid a cycle while allowing inlining
+  // These methods are defined in WasmTypeDef.h to avoid a cycle while allowing
+  // inlining.
+  inline RefTypeHierarchy hierarchy() const;
+  inline TableRepr tableRepr() const;
+  inline bool isFuncHierarchy() const;
+  inline bool isExternHierarchy() const;
+  inline bool isAnyHierarchy() const;
   static bool isSubTypeOf(RefType subType, RefType superType);
 
   // Gets the top of the given type's hierarchy, e.g. Any for structs and
@@ -437,6 +444,9 @@ class FieldTypeTraits {
       case TypeCode::EqRef:
       case TypeCode::StructRef:
       case TypeCode::ArrayRef:
+      case TypeCode::NullFuncRef:
+      case TypeCode::NullExternRef:
+      case TypeCode::NullAnyRef:
 #endif
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
       case AbstractTypeRefCode:
@@ -510,6 +520,9 @@ class ValTypeTraits {
       case TypeCode::EqRef:
       case TypeCode::StructRef:
       case TypeCode::ArrayRef:
+      case TypeCode::NullFuncRef:
+      case TypeCode::NullExternRef:
+      case TypeCode::NullAnyRef:
 #endif
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
       case AbstractTypeRefCode:
@@ -664,6 +677,12 @@ class PackedType : public T {
   bool isExternRef() const { return tc_.typeCode() == TypeCode::ExternRef; }
 
   bool isAnyRef() const { return tc_.typeCode() == TypeCode::AnyRef; }
+
+  bool isNoFunc() const { return tc_.typeCode() == TypeCode::NullFuncRef; }
+
+  bool isNoExtern() const { return tc_.typeCode() == TypeCode::NullExternRef; }
+
+  bool isNone() const { return tc_.typeCode() == TypeCode::NullAnyRef; }
 
   bool isEqRef() const { return tc_.typeCode() == TypeCode::EqRef; }
 

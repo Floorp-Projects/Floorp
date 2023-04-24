@@ -74,11 +74,11 @@ class Table : public ShareableBase<Table> {
   TableRepr repr() const { return elemType_.tableRepr(); }
 
   bool isAsmJS() const {
-    MOZ_ASSERT(elemType_.isFunc());
+    MOZ_ASSERT(elemType_.isFuncHierarchy());
     return isAsmJS_;
   }
 
-  bool isFunction() const { return elemType().isFunc(); }
+  bool isFunction() const { return elemType().isFuncHierarchy(); }
   uint32_t length() const { return length_; }
   Maybe<uint32_t> maximum() const { return maximum_; }
 

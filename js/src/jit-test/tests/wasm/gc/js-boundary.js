@@ -12,6 +12,7 @@ let { newStruct } = wasmEvalText(`
         struct.new $s)
   )`).exports;
 test('(ref null 0)', [newStruct()], WasmNonAnyrefValues, '(type (struct))');
+test('nullref', [null], WasmNonAnyrefValues);
 
 function test(type, validValues, invalidValues, typeSection) {
   const CheckError = /can only pass|bad type/;

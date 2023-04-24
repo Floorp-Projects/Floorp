@@ -286,7 +286,8 @@ bool Table::copy(JSContext* cx, const Table& srcTable, uint32_t dstIndex,
   MOZ_RELEASE_ASSERT(!srcTable.isAsmJS_);
   switch (repr()) {
     case TableRepr::Func: {
-      MOZ_RELEASE_ASSERT(elemType().isFunc() && srcTable.elemType().isFunc());
+      MOZ_RELEASE_ASSERT(elemType().isFuncHierarchy() &&
+                         srcTable.elemType().isFuncHierarchy());
       FunctionTableElem& dst = functions_[dstIndex];
       if (dst.instance) {
         gc::PreWriteBarrier(dst.instance->objectUnbarriered());
@@ -312,7 +313,7 @@ bool Table::copy(JSContext* cx, const Table& srcTable, uint32_t dstIndex,
           break;
         }
         case TableRepr::Func: {
-          MOZ_RELEASE_ASSERT(srcTable.elemType().isFunc());
+          MOZ_RELEASE_ASSERT(srcTable.elemType().isFuncHierarchy());
           // Upcast.
           RootedFunction fun(cx);
           if (!srcTable.getFuncRef(cx, srcIndex, &fun)) {
