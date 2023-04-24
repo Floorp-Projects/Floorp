@@ -805,6 +805,13 @@ class BrowserRobot {
         assertItemWithResIdExists(itemWithResId("errorTryAgain"))
     }
 
+    fun verifyAddressNotFoundErrorMessage() {
+        assertItemContainingTextExists(
+            itemContainingText(getStringResource(R.string.mozac_browser_errorpages_unknown_host_title)),
+        )
+        assertItemWithResIdExists(itemWithResId("errorTryAgain"))
+    }
+
     class Transition {
         fun openThreeDotMenu(interact: ThreeDotMenuMainRobot.() -> Unit): ThreeDotMenuMainRobot.Transition {
             mDevice.waitForIdle(waitingTime)
