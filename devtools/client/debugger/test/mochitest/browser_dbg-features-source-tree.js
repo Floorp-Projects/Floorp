@@ -476,6 +476,50 @@ add_task(async function testSourceTreeWithWebExtensionContentScript() {
   await extension.unload();
 });
 
+add_task(async function testSourceTreeWithEncodedPaths() {
+  const httpServer = createTestHTTPServer();
+  httpServer.registerContentType("html", "text/html");
+  httpServer.registerContentType("js", "application/javascript");
+
+  httpServer.registerPathHandler("/index.html", function(request, response) {
+    response.setStatusLine(request.httpVersion, 200, "OK");
+    response.write(`<!DOCTYPE html>
+    <html>
+      <head>
+      <script src="/my folder/my file.js"></script>
+      </head>
+      <body>
+      <h1>Encoded scripts paths</h1>
+      </body>
+    `);
+  });
+  httpServer.registerPathHandler(encodeURI("/my folder/my file.js"), function(
+    request,
+    response
+  ) {
+    response.setStatusLine(request.httpVersion, 200, "OK");
+    response.setHeader("Content-Type", "application/javascript", false);
+    response.write(`const x = 42`);
+  });
+  const port = httpServer.identity.primaryPort;
+
+  const dbg = await initDebuggerWithAbsoluteURL(
+    `http://localhost:${port}/index.html`,
+    "my file.js"
+  );
+
+  await waitForSourcesInSourceTree(dbg, ["my file.js"]);
+  ok(true, "source name is decoded in the tree");
+  is(
+    // We don't have any specific class on the folder item, so let's target the folder
+    // icon next sibling, which is the directory label.
+    findElementWithSelector(dbg, ".sources-panel .node .folder + .label")
+      .innerText,
+    "my folder",
+    "folder name is decoded in the tree"
+  );
+});
+
 /**
  * Assert the location displayed in the breakpoint list, in the right sidebar.
  *

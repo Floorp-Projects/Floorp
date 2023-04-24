@@ -337,17 +337,19 @@ class SourceTreeItem extends Component {
       );
     }
     if (item.type == "group") {
-      return unescape(item.groupName);
+      return decodeURI(item.groupName);
     }
     if (item.type == "directory") {
       const parentItem = this.props.getParent(item);
-      return item.path.replace(parentItem.path, "").replace(/^\//, "");
+      return decodeURI(
+        item.path.replace(parentItem.path, "").replace(/^\//, "")
+      );
     }
     if (item.type == "source") {
       const { displayURL } = item.source;
       const name =
         displayURL.filename + (displayURL.search ? displayURL.search : "");
-      return unescape(name);
+      return decodeURI(name);
     }
 
     return null;
