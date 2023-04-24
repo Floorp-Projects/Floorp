@@ -265,10 +265,7 @@ let JSWINDOWACTORS = {
     child: {
       esModuleURI: "resource:///actors/AboutNewTabChild.sys.mjs",
       events: {
-        DOMDocElementInserted: {},
         DOMContentLoaded: {},
-        load: { capture: true },
-        unload: { capture: true },
         pageshow: {},
         visibilitychange: {},
       },

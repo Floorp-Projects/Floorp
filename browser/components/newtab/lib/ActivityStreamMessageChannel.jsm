@@ -6,10 +6,21 @@
 
 const lazy = {};
 
+// TODO delete this?
+
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "AboutNewTab",
+  "resource:///modules/AboutNewTab.jsm"
+);
+
 ChromeUtils.defineESModuleGetters(lazy, {
   AboutHomeStartupCache: "resource:///modules/BrowserGlue.sys.mjs",
-  AboutNewTabParent: "resource:///actors/AboutNewTabParent.sys.mjs",
 });
+
+const { RemotePages } = ChromeUtils.importESModule(
+  "resource://gre/modules/remotepagemanager/RemotePageManagerParent.sys.mjs"
+);
 
 const {
   actionCreators: ac,
@@ -20,6 +31,7 @@ const {
 );
 
 const ABOUT_NEW_TAB_URL = "about:newtab";
+const ABOUT_HOME_URL = "about:home";
 
 const DEFAULT_OPTIONS = {
   dispatch(action) {
@@ -34,34 +46,30 @@ const DEFAULT_OPTIONS = {
 
 class ActivityStreamMessageChannel {
   /**
-   * ActivityStreamMessageChannel - This module connects a Redux store to the new tab page actor.
+   * ActivityStreamMessageChannel - This module connects a Redux store to a RemotePageManager in Firefox.
+   *                  Call .createChannel to start the connection, and .destroyChannel to destroy it.
    *                  You should use the BroadcastToContent, AlsoToOneContent, and AlsoToMain action creators
    *                  in common/Actions.sys.mjs to help you create actions that will be automatically routed
    *                  to the correct location.
    *
    * @param  {object} options
    * @param  {function} options.dispatch The dispatch method from a Redux store
-   * @param  {string} options.pageURL The URL to which the channel is attached, such as about:newtab.
+   * @param  {string} options.pageURL The URL to which a RemotePageManager should be attached.
+   *                                  Note that if it is about:newtab, the existing RemotePageManager
+   *                                  for about:newtab will also be disabled
    * @param  {string} options.outgoingMessageName The name of the message sent to child processes
    * @param  {string} options.incomingMessageName The name of the message received from child processes
    * @return {ActivityStreamMessageChannel}
    */
   constructor(options = {}) {
     Object.assign(this, DEFAULT_OPTIONS, options);
+    this.channel = null;
 
     this.middleware = this.middleware.bind(this);
     this.onMessage = this.onMessage.bind(this);
     this.onNewTabLoad = this.onNewTabLoad.bind(this);
     this.onNewTabUnload = this.onNewTabUnload.bind(this);
     this.onNewTabInit = this.onNewTabInit.bind(this);
-  }
-
-  /**
-   * Get an iterator over the loaded tab objects.
-   */
-  get loadedTabs() {
-    // In the test, AboutNewTabParent is not defined.
-    return lazy.AboutNewTabParent?.loadedTabs || new Map();
   }
 
   /**
@@ -74,6 +82,10 @@ class ActivityStreamMessageChannel {
   middleware(store) {
     return next => action => {
       const skipMain = action.meta && action.meta.skipMain;
+      if (!this.channel && !skipMain) {
+        next(action);
+        return;
+      }
       if (au.isSendToOneContent(action)) {
         this.send(action);
       } else if (au.isBroadcastToContent(action)) {
@@ -108,13 +120,7 @@ class ActivityStreamMessageChannel {
     // that its likely time to refresh the cache.
     lazy.AboutHomeStartupCache.onPreloadedNewTabMessage();
 
-    for (let browser of this.loadedTabs.keys()) {
-      browser.sendMessageToActor(
-        this.outgoingMessageName,
-        action,
-        "AboutNewTab"
-      );
-    }
+    this.channel.sendAsyncMessage(this.outgoingMessageName, action);
   }
 
   /**
@@ -126,19 +132,15 @@ class ActivityStreamMessageChannel {
     const targetId = action.meta && action.meta.toTarget;
     const target = this.getTargetById(targetId);
     try {
-      target.sendMessageToActor(
-        this.outgoingMessageName,
-        action,
-        "AboutNewTab"
-      );
+      target.sendAsyncMessage(this.outgoingMessageName, action);
     } catch (e) {
       // The target page is closed/closing by the user or test, so just ignore.
     }
   }
 
   /**
-   * A valid portID is a combination of process id and a port number.
-   * It is generated in AboutNewTabChild.sys.mjs.
+   * A valid portID is a combination of process id and port
+   * https://searchfox.org/mozilla-central/rev/196560b95f191b48ff7cba7c2ba9237bba6b5b6a/toolkit/components/remotepagemanager/RemotePageManagerChild.jsm#14
    */
   validatePortID(id) {
     if (typeof id !== "string" || !id.includes(":")) {
@@ -156,10 +158,9 @@ class ActivityStreamMessageChannel {
    */
   getTargetById(id) {
     this.validatePortID(id);
-
-    for (let { portID, browser } of this.loadedTabs.values()) {
-      if (portID === id) {
-        return browser;
+    for (let port of this.channel.messagePorts) {
+      if (port.portID === id) {
+        return port;
       }
     }
     return null;
@@ -176,15 +177,11 @@ class ActivityStreamMessageChannel {
     // the cache.
     lazy.AboutHomeStartupCache.onPreloadedNewTabMessage();
 
-    const preloadedBrowsers = this.getPreloadedBrowsers();
+    const preloadedBrowsers = this.getPreloadedBrowser();
     if (preloadedBrowsers && action.data) {
       for (let preloadedBrowser of preloadedBrowsers) {
         try {
-          preloadedBrowser.sendMessageToActor(
-            this.outgoingMessageName,
-            action,
-            "AboutNewTab"
-          );
+          preloadedBrowser.sendAsyncMessage(this.outgoingMessageName, action);
         } catch (e) {
           // The preloaded page is no longer available, so just ignore.
         }
@@ -193,19 +190,19 @@ class ActivityStreamMessageChannel {
   }
 
   /**
-   * getPreloadedBrowsers - Retrieve the preloaded browsers
+   * getPreloadedBrowser - Retrieve the port of any preloaded browsers
    *
-   * @return {Array|null} An array of browsers belonging to the preloaded browsers, or null
+   * @return {Array|null} An array of ports belonging to the preloaded browsers, or null
    *                      if there aren't any preloaded browsers
    */
-  getPreloadedBrowsers() {
-    let preloadedBrowsers = [];
-    for (let browser of this.loadedTabs.keys()) {
-      if (this.isPreloadedBrowser(browser)) {
-        preloadedBrowsers.push(browser);
+  getPreloadedBrowser() {
+    let preloadedPorts = [];
+    for (let port of this.channel.messagePorts) {
+      if (this.isPreloadedBrowser(port.browser)) {
+        preloadedPorts.push(port);
       }
     }
-    return preloadedBrowsers.length ? preloadedBrowsers : null;
+    return preloadedPorts.length ? preloadedPorts : null;
   }
 
   /**
@@ -220,65 +217,81 @@ class ActivityStreamMessageChannel {
     return browser.getAttribute("preloadedState") === "preloaded";
   }
 
+  /**
+   * createChannel - Create RemotePages channel to establishing message passing
+   *                 between the main process and child pages
+   */
+  createChannel() {
+    //  Receive AboutNewTab's Remote Pages instance, if it exists, on override
+    const channel =
+      this.pageURL === ABOUT_NEW_TAB_URL &&
+      lazy.AboutNewTab.overridePageListener(true);
+    this.channel =
+      channel || new RemotePages([ABOUT_HOME_URL, ABOUT_NEW_TAB_URL]);
+    this.channel.addMessageListener("RemotePage:Init", this.onNewTabInit);
+    this.channel.addMessageListener("RemotePage:Load", this.onNewTabLoad);
+    this.channel.addMessageListener("RemotePage:Unload", this.onNewTabUnload);
+    this.channel.addMessageListener(this.incomingMessageName, this.onMessage);
+  }
+
   simulateMessagesForExistingTabs() {
     // Some pages might have already loaded, so we won't get the usual message
-    for (const loadedTab of this.loadedTabs.values()) {
-      let simulatedDetails = {
-        browser: loadedTab.browser,
-        browsingContext: loadedTab.browsingContext,
-        portID: loadedTab.portID,
-        url: loadedTab.url,
-        simulated: true,
+    for (const target of this.channel.messagePorts) {
+      const simulatedMsg = {
+        target: Object.assign({ simulated: true }, target),
       };
-
-      this.onActionFromContent(
-        {
-          type: at.NEW_TAB_INIT,
-          data: simulatedDetails,
-        },
-        loadedTab.portID
-      );
-
-      if (loadedTab.loaded) {
-        this.tabLoaded(simulatedDetails);
+      this.onNewTabInit(simulatedMsg);
+      if (target.loaded) {
+        this.onNewTabLoad(simulatedMsg);
       }
     }
   }
 
   /**
+   * destroyChannel - Destroys the RemotePages channel
+   */
+  destroyChannel() {
+    this.channel.removeMessageListener("RemotePage:Init", this.onNewTabInit);
+    this.channel.removeMessageListener("RemotePage:Load", this.onNewTabLoad);
+    this.channel.removeMessageListener(
+      "RemotePage:Unload",
+      this.onNewTabUnload
+    );
+    this.channel.removeMessageListener(
+      this.incomingMessageName,
+      this.onMessage
+    );
+    if (this.pageURL === ABOUT_NEW_TAB_URL) {
+      lazy.AboutNewTab.reset(this.channel);
+    } else {
+      this.channel.destroy();
+    }
+    this.channel = null;
+  }
+
+  /**
    * onNewTabInit - Handler for special RemotePage:Init message fired
-   * on initialization.
+   * by RemotePages
    *
    * @param  {obj} msg The messsage from a page that was just initialized
-   * @param  {obj} tabDetails details about a loaded tab
-   *
-   * tabDetails contains:
-   *   browser, browsingContext, portID, url
    */
-  onNewTabInit(msg, tabDetails) {
+  onNewTabInit(msg) {
     this.onActionFromContent(
       {
         type: at.NEW_TAB_INIT,
-        data: tabDetails,
+        data: msg.target,
       },
-      msg.data.portID
+      msg.target.portID
     );
   }
 
   /**
-   * onNewTabLoad - Handler for special RemotePage:Load message fired on page load.
+   * onNewTabLoad - Handler for special RemotePage:Load message fired by RemotePages
    *
    * @param  {obj} msg The messsage from a page that was just loaded
-   * @param  {obj} tabDetails details about a loaded tab, similar to onNewTabInit
    */
-  onNewTabLoad(msg, tabDetails) {
-    this.tabLoaded(tabDetails);
-  }
-
-  tabLoaded(tabDetails) {
-    tabDetails.loaded = true;
-
-    let { browser } = tabDetails;
+  onNewTabLoad(msg) {
+    let { browser } = msg.target;
     if (
       this.isPreloadedBrowser(browser) &&
       browser.ownerGlobal.windowState !== browser.ownerGlobal.STATE_MINIMIZED &&
@@ -292,18 +305,16 @@ class ActivityStreamMessageChannel {
       browser.renderLayers = true;
     }
 
-    this.onActionFromContent({ type: at.NEW_TAB_LOAD }, tabDetails.portID);
+    this.onActionFromContent({ type: at.NEW_TAB_LOAD }, msg.target.portID);
   }
 
   /**
-   * onNewTabUnloadLoad - Handler for special RemotePage:Unload message fired
-   * on page unload.
+   * onNewTabUnloadLoad - Handler for special RemotePage:Unload message fired by RemotePages
    *
    * @param  {obj} msg The messsage from a page that was just unloaded
-   * @param  {obj} tabDetails details about a loaded tab, similar to onNewTabInit
    */
-  onNewTabUnload(msg, tabDetails) {
-    this.onActionFromContent({ type: at.NEW_TAB_UNLOAD }, tabDetails.portID);
+  onNewTabUnload(msg) {
+    this.onActionFromContent({ type: at.NEW_TAB_UNLOAD }, msg.target.portID);
   }
 
   /**
@@ -313,14 +324,12 @@ class ActivityStreamMessageChannel {
    * @param  {obj} msg A custom message from content
    * @param  {obj} msg.action A Redux action (e.g. {type: "HELLO_WORLD"})
    * @param  {obj} msg.target A message target
-   * @param  {obj} tabDetails details about a loaded tab, similar to onNewTabInit
    */
-  onMessage(msg, tabDetails) {
+  onMessage(msg) {
+    const { portID } = msg.target;
     if (!msg.data || !msg.data.type) {
       console.error(
-        new Error(
-          `Received an improperly formatted message from ${tabDetails.portID}`
-        )
+        new Error(`Received an improperly formatted message from ${portID}`)
       );
       return;
     }
@@ -328,11 +337,8 @@ class ActivityStreamMessageChannel {
     Object.assign(action, msg.data);
     // target is used to access a browser reference that came from the content
     // and should only be used in feeds (not reducers)
-    action._target = {
-      browser: tabDetails.browser,
-    };
-
-    this.onActionFromContent(action, tabDetails.portID);
+    action._target = msg.target;
+    this.onActionFromContent(action, portID);
   }
 }
 

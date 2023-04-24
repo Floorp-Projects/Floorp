@@ -8,10 +8,6 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { PrivateBrowsingUtils } from "resource://gre/modules/PrivateBrowsingUtils.sys.mjs";
 
-const { RemotePageChild } = ChromeUtils.import(
-  "resource://gre/actors/RemotePageChild.jsm"
-);
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -25,20 +21,9 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-let gNextPortID = 0;
-
-export class AboutNewTabChild extends RemotePageChild {
+export class AboutNewTabChild extends JSWindowActorChild {
   handleEvent(event) {
-    if (event.type == "DOMDocElementInserted") {
-      let portID = Services.appinfo.processID + ":" + ++gNextPortID;
-
-      this.sendAsyncMessage("Init", {
-        portID,
-        url: this.contentWindow.document.documentURI.replace(/[\#|\?].*$/, ""),
-      });
-    } else if (event.type == "load") {
-      this.sendAsyncMessage("Load");
-    } else if (event.type == "DOMContentLoaded") {
+    if (event.type == "DOMContentLoaded") {
       if (!this.contentWindow.document.body.firstElementChild) {
         return; // about:newtab is a blank page
       }
@@ -72,13 +57,6 @@ export class AboutNewTabChild extends RemotePageChild {
 
       for (let script of scripts) {
         Services.scriptloader.loadSubScript(script, this.contentWindow);
-      }
-    } else if (event.type == "unload") {
-      try {
-        this.sendAsyncMessage("Unload");
-      } catch (e) {
-        // If the tab has been closed the frame message manager has already been
-        // destroyed
       }
     } else if (
       (event.type == "pageshow" || event.type == "visibilitychange") &&

@@ -145,6 +145,7 @@ class Store {
     }
 
     this._prefs.observeBranch(this);
+    this._messageChannel.createChannel();
 
     // Dispatch an initial action after all enabled feeds are ready
     if (initAction) {
@@ -182,13 +183,7 @@ class Store {
     this._prefs.ignoreBranch(this);
     this.feeds.clear();
     this._feedFactories = null;
-  }
-
-  /**
-   * getMessageChannel - Used by the AboutNewTabParent actor to get the message channel.
-   */
-  getMessageChannel() {
-    return this._messageChannel;
+    this._messageChannel.destroyChannel();
   }
 }
 
