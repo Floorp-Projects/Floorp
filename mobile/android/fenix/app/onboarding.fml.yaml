@@ -1,0 +1,100 @@
+---
+features:
+
+  juno-onboarding:
+    description: A feature that shows juno onboarding flow.
+
+    variables:
+      enabled:
+        description: if true, juno onboarding is shown to the user.
+        type: Boolean
+        default: false
+      cards:
+        description: Collection of user facing onboarding cards.
+        type: Map<String, OnboardingCardData>
+        default:
+            default-browser:
+              card-type: default-browser
+              title: juno_onboarding_default_browser_title_nimbus
+              ordering: 10
+              body: juno_onboarding_default_browser_description_nimbus
+              link-text: juno_onboarding_default_browser_description_link_text
+              primary-button-label: juno_onboarding_default_browser_positive_button
+              secondary-button-label: juno_onboarding_default_browser_negative_button
+
+            sync-sign-in:
+              card-type: sync-sign-in
+              title: juno_onboarding_sign_in_title
+              body: juno_onboarding_sign_in_description
+              ordering: 20
+              primary-button-label: juno_onboarding_sign_in_positive_button
+              secondary-button-label: juno_onboarding_sign_in_negative_button
+
+            notification-permission:
+              card-type: notification-permission
+              title: juno_onboarding_enable_notifications_title
+              body: juno_onboarding_enable_notifications_description
+              ordering: 30
+              primary-button-label: juno_onboarding_enable_notifications_positive_button
+              secondary-button-label: juno_onboarding_enable_notifications_negative_button
+
+    defaults:
+      - channel: developer
+        value:
+          enabled: false
+      - channel: nightly
+        value:
+          enabled: true
+
+objects:
+
+  OnboardingCardData:
+    description: An object to describe a user facing onboarding card.
+    fields:
+      card-type:
+        type: OnboardingCardType
+        description: The type of the card.
+        # This should never be defaulted.
+        default: default-browser
+      title:
+        type: Text
+        description: The title text displayed to the user.
+        # This should never be defaulted.
+        default: ""
+      body:
+        type: Text
+        description: The message text displayed to the user. May contain linkable text.
+        # This should never be defaulted.
+        default: ""
+      link-text:
+        type: Option<Text>
+        description: >
+               link-text: policy link
+        default: null
+      ordering:
+        type: Int
+        description: Used to sequence the cards.
+        # This should never be defaulted.
+        default: 0
+      primary-button-label:
+        type: Text
+        description: The text to display on the primary button.
+        # This should never be defaulted.
+        default: ""
+      secondary-button-label:
+        type: Text
+        description: The text to display on the secondary button.
+        # This should never be defaulted.
+        default: ""
+
+enums:
+
+  OnboardingCardType:
+    description: An enum to describe a type of card.
+    variants:
+      default-browser:
+        description: Allows user to set Firefox as the default browser.
+      sync-sign-in:
+        description: Allows user to sync with a Firefox account.
+      notification-permission:
+        description: Allows user to enable notification permission.

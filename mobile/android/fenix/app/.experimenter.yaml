@@ -36,6 +36,9 @@ juno-onboarding:
   hasExposure: true
   exposureDescription: ""
   variables:
+    cards:
+      type: json
+      description: Collection of user facing onboarding cards.
     enabled:
       type: boolean
       description: "if true, juno onboarding is shown to the user."

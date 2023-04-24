@@ -9,6 +9,8 @@ channels:
   - beta
   - nightly
   - developer
+includes:
+  - onboarding.fml.yaml
 import:
   - path: ../../android-components/components/service/nimbus/messaging.fml.yaml
     channel: release
@@ -304,21 +306,6 @@ features:
         description: if true, the pre-permission notification prompt is shown to the user.
         type: Boolean
         default: false
-
-  juno-onboarding:
-    description: A feature that shows juno onboarding flow.
-    variables:
-      enabled:
-        description: if true, juno onboarding is shown to the user.
-        type: Boolean
-        default: false
-    defaults:
-      - channel: developer
-        value:
-          enabled: false
-      - channel: nightly
-        value:
-          enabled: true
 
   onboarding:
     description: "A feature that configures the new user onboarding page.
