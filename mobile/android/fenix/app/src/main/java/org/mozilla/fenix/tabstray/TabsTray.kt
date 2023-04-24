@@ -138,6 +138,7 @@ fun TabsTray(
                 normalTabCount = normalTabCount,
                 isInDebugMode = isInDebugMode,
                 onTabPageIndicatorClicked = onTabPageClick,
+                onExitSelectModeClick = { tabsTrayStore.dispatch(TabsTrayAction.ExitSelectMode) },
             )
         }
 

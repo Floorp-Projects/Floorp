@@ -61,7 +61,10 @@ private val ICON_SIZE = 24.dp
  * @param normalTabCount The total amount of normal browsing tabs currently open.
  * @param isInDebugMode True for debug variant or if secret menu is enabled for this session.
  * @param onTabPageIndicatorClicked Invoked when the user clicks on a tab page indicator.
+ * @param onExitSelectModeClick Invoked when the user clicks on exit select mode button from the
+ * multi select banner.
  */
+@Suppress("LongParameterList")
 @Composable
 fun TabsTrayBanner(
     selectMode: TabsTrayState.Mode,
@@ -69,11 +72,13 @@ fun TabsTrayBanner(
     normalTabCount: Int,
     isInDebugMode: Boolean,
     onTabPageIndicatorClicked: (Page) -> Unit,
+    onExitSelectModeClick: () -> Unit,
 ) {
     if (selectMode is TabsTrayState.Mode.Select) {
         MultiSelectBanner(
             selectedTabCount = selectMode.selectedTabs.size,
             shouldShowInactiveButton = isInDebugMode,
+            onExitSelectModeClick = onExitSelectModeClick,
         )
     } else {
         SingleSelectBanner(
@@ -216,12 +221,14 @@ private fun NormalTabsTabIcon(normalTabCount: Int) {
  *
  * @param selectedTabCount Number of selected tabs.
  * @param shouldShowInactiveButton Whether or not to show the inactive tabs menu item.
+ * @param onExitSelectModeClick Invoked when the user clicks on exit select mode button.
  */
 @Suppress("LongMethod")
 @Composable
 private fun MultiSelectBanner(
     selectedTabCount: Int,
     shouldShowInactiveButton: Boolean,
+    onExitSelectModeClick: () -> Unit,
 ) {
     var showMenu by remember { mutableStateOf(false) }
     val menuItems = mutableListOf(
@@ -247,7 +254,7 @@ private fun MultiSelectBanner(
             .background(color = FirefoxTheme.colors.layerAccent),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(onClick = {}) {
+        IconButton(onClick = onExitSelectModeClick) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_close),
                 contentDescription = stringResource(id = R.string.tab_tray_close_multiselect_content_description),
@@ -349,17 +356,19 @@ private fun TabsTrayBannerPreviewRoot(
     normalTabCount: Int = 10,
 ) {
     var selectedPageState by remember { mutableStateOf(selectedPage) }
+    var selectModeState by remember { mutableStateOf(selectMode) }
 
     FirefoxTheme {
         Box(modifier = Modifier.background(color = FirefoxTheme.colors.layer1)) {
             TabsTrayBanner(
-                selectMode = selectMode,
+                selectMode = selectModeState,
                 selectedPage = selectedPageState,
                 normalTabCount = normalTabCount,
                 isInDebugMode = true,
                 onTabPageIndicatorClicked = { page ->
                     selectedPageState = page
                 },
+                onExitSelectModeClick = { selectModeState = TabsTrayState.Mode.Normal },
             )
         }
     }
