@@ -712,6 +712,10 @@ class nsWindow final : public nsBaseWidget {
   virtual nsresult RestoreHiDPIMode() override;
 #endif
 
+  // Get the orientation of the hidden taskbar, on the screen that this window
+  // is on, or Nothing if taskbar isn't hidden.
+  mozilla::Maybe<UINT> GetHiddenTaskbarEdge();
+
   static bool sTouchInjectInitialized;
   static InjectTouchInputPtr sInjectTouchFuncPtr;
   static uint32_t sInstanceCount;
