@@ -490,6 +490,16 @@ var gMainPane = {
       gMainPane.onMigrationButtonCommand
     );
 
+    document
+      .getElementById("migrationWizardDialog")
+      .addEventListener("MigrationWizard:Close", function(e) {
+        e.currentTarget.close();
+      });
+
+    if (Services.policies && !Services.policies.isAllowed("profileImport")) {
+      document.getElementById("dataMigrationGroup").remove();
+    }
+
     // For media control toggle button, we support it on Windows 8.1+ (NT6.3),
     // MacOs 10.4+ (darwin8.0, but we already don't support that) and
     // gtk-based Linux.
@@ -804,6 +814,9 @@ var gMainPane = {
   },
 
   handleSubcategory(subcategory) {
+    if (Services.policies && !Services.policies.isAllowed("profileImport")) {
+      return false;
+    }
     if (subcategory == "migrate") {
       this.showMigrationWizardDialog();
       return true;
@@ -3761,12 +3774,6 @@ const AppearanceChooser = {
       });
 
     this.warning = document.getElementById("web-appearance-override-warning");
-
-    document
-      .getElementById("migrationWizardDialog")
-      .addEventListener("MigrationWizard:Close", function(e) {
-        e.currentTarget.close();
-      });
 
     FORCED_COLORS_QUERY.addEventListener("change", this);
     Services.prefs.addObserver(PREF_USE_SYSTEM_COLORS, this);
