@@ -1858,7 +1858,7 @@ void GeckoViewSupport::CreatePdf(
               aValue) {
         if (aValue.IsReject()) {
           GVS_LOG("Could not print. %s", pdfErrorMsg);
-          stream->SendError();
+          stream->WriteError();
         }
       });
 }
