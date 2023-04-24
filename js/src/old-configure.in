@@ -233,15 +233,9 @@ if test "$GNU_CC"; then
                   AC_MSG_RESULT([no])
                   LDFLAGS=$_SAVE_LDFLAGS)
 
-    # While sha1 is deterministic, it is slower.
-    if test -z "$DEVELOPER_OPTIONS" -o "$OS_TARGET" = "Android"; then
-        build_id=sha1
-    else
-        build_id=uuid
-    fi
-    AC_MSG_CHECKING([for --build-id=$build_id option to ld])
+    AC_MSG_CHECKING([for --build-id=uuid option to ld])
     _SAVE_LDFLAGS=$LDFLAGS
-    LDFLAGS="$LDFLAGS -Wl,--build-id=$build_id"
+    LDFLAGS="$LDFLAGS -Wl,--build-id=uuid"
     AC_TRY_LINK(,,AC_MSG_RESULT([yes]),
                   AC_MSG_RESULT([no])
                   LDFLAGS=$_SAVE_LDFLAGS)
