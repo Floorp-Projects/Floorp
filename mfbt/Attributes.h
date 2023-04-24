@@ -212,44 +212,42 @@
 #endif
 
 /*
- * MOZ_ASAN_BLACKLIST is a macro to tell AddressSanitizer (a compile-time
+ * MOZ_ASAN_IGNORE is a macro to tell AddressSanitizer (a compile-time
  * instrumentation shipped with Clang and GCC) to not instrument the annotated
  * function. Furthermore, it will prevent the compiler from inlining the
- * function because inlining currently breaks the blacklisting mechanism of
+ * function because inlining currently breaks the blocklisting mechanism of
  * AddressSanitizer.
  */
 #if defined(__has_feature)
 #  if __has_feature(address_sanitizer)
-#    define MOZ_HAVE_ASAN_BLACKLIST
+#    define MOZ_HAVE_ASAN_IGNORE
 #  endif
 #elif defined(__GNUC__)
 #  if defined(__SANITIZE_ADDRESS__)
-#    define MOZ_HAVE_ASAN_BLACKLIST
+#    define MOZ_HAVE_ASAN_IGNORE
 #  endif
 #endif
 
-#if defined(MOZ_HAVE_ASAN_BLACKLIST)
-#  define MOZ_ASAN_BLACKLIST \
-    MOZ_NEVER_INLINE __attribute__((no_sanitize_address))
+#if defined(MOZ_HAVE_ASAN_IGNORE)
+#  define MOZ_ASAN_IGNORE MOZ_NEVER_INLINE __attribute__((no_sanitize_address))
 #else
-#  define MOZ_ASAN_BLACKLIST /* nothing */
+#  define MOZ_ASAN_IGNORE /* nothing */
 #endif
 
 /*
- * MOZ_TSAN_BLACKLIST is a macro to tell ThreadSanitizer (a compile-time
+ * MOZ_TSAN_IGNORE is a macro to tell ThreadSanitizer (a compile-time
  * instrumentation shipped with Clang) to not instrument the annotated function.
  * Furthermore, it will prevent the compiler from inlining the function because
- * inlining currently breaks the blacklisting mechanism of ThreadSanitizer.
+ * inlining currently breaks the blocklisting mechanism of ThreadSanitizer.
  */
 #if defined(__has_feature)
 #  if __has_feature(thread_sanitizer)
-#    define MOZ_TSAN_BLACKLIST \
-      MOZ_NEVER_INLINE __attribute__((no_sanitize_thread))
+#    define MOZ_TSAN_IGNORE MOZ_NEVER_INLINE __attribute__((no_sanitize_thread))
 #  else
-#    define MOZ_TSAN_BLACKLIST /* nothing */
+#    define MOZ_TSAN_IGNORE /* nothing */
 #  endif
 #else
-#  define MOZ_TSAN_BLACKLIST /* nothing */
+#  define MOZ_TSAN_IGNORE /* nothing */
 #endif
 
 #if defined(__has_attribute)

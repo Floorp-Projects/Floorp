@@ -524,8 +524,8 @@ static int CloneCallee(void* aPtr) {
 // Valgrind would disapprove of using clone() without CLONE_VM;
 // Chromium uses the raw syscall as a workaround in that case, but
 // we don't currently support sandboxing under valgrind.
-MOZ_NEVER_INLINE MOZ_ASAN_BLACKLIST static pid_t DoClone(int aFlags,
-                                                         jmp_buf* aCtx) {
+MOZ_NEVER_INLINE MOZ_ASAN_IGNORE static pid_t DoClone(int aFlags,
+                                                      jmp_buf* aCtx) {
   static constexpr size_t kStackAlignment = 16;
   uint8_t miniStack[4096] __attribute__((aligned(kStackAlignment)));
 #ifdef __hppa__
