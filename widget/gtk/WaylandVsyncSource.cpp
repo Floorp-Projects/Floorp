@@ -39,7 +39,7 @@ namespace mozilla {
 static void WaylandVsyncSourceCallbackHandler(void* aData,
                                               struct wl_callback* aCallback,
                                               uint32_t aTime) {
-  RefPtr<WaylandVsyncSource> context(static_cast<WaylandVsyncSource*>(aData));
+  RefPtr context = static_cast<WaylandVsyncSource*>(aData);
   context->FrameCallback(aCallback, aTime);
 }
 
@@ -47,12 +47,12 @@ static const struct wl_callback_listener WaylandVsyncSourceCallbackListener = {
     WaylandVsyncSourceCallbackHandler};
 
 static void NativeLayerRootWaylandVsyncCallback(void* aData, uint32_t aTime) {
-  RefPtr<WaylandVsyncSource> context(static_cast<WaylandVsyncSource*>(aData));
+  RefPtr context = static_cast<WaylandVsyncSource*>(aData);
   context->FrameCallback(nullptr, aTime);
 }
 
 static float GetFPS(TimeDuration aVsyncRate) {
-  return 1000.0 / aVsyncRate.ToMilliseconds();
+  return 1000.0f / float(aVsyncRate.ToMilliseconds());
 }
 
 static nsTArray<WaylandVsyncSource*> gWaylandVsyncSources;
@@ -267,18 +267,17 @@ bool WaylandVsyncSource::IdleCallback() {
       return false;
     }
 
-    guint duration = static_cast<guint>(
-        (TimeStamp::Now() - mLastVsyncTimeStamp).ToMilliseconds());
-    if (duration < mIdleTimeout) {
+    const auto now = TimeStamp::Now();
+    const auto timeSinceLastVSync = now - mLastVsyncTimeStamp;
+    if (timeSinceLastVSync.ToMilliseconds() < mIdleTimeout) {
       // We're not idle, we want to fire the timer again.
       return true;
     }
 
     LOG("  fire idle vsync");
-    CalculateVsyncRate(lock, TimeStamp::Now());
-    mLastVsyncTimeStamp = TimeStamp::Now();
+    CalculateVsyncRate(lock, now);
+    mLastVsyncTimeStamp = lastVSync = now;
 
-    lastVSync = mLastVsyncTimeStamp;
     outputTimestamp = mLastVsyncTimeStamp + mVsyncRate;
     window = mWindow;
   }
@@ -331,19 +330,19 @@ void WaylandVsyncSource::FrameCallback(wl_callback* aCallback, uint32_t aTime) {
   SetupFrameCallback(lock);
 
   int64_t tick = BaseTimeDurationPlatformUtils::TicksFromMilliseconds(aTime);
-  TimeStamp callbackTimeStamp = TimeStamp::FromSystemTime(tick);
-  double duration = (TimeStamp::Now() - callbackTimeStamp).ToMilliseconds();
+  const auto callbackTimeStamp = TimeStamp::FromSystemTime(tick);
+  const auto now = TimeStamp::Now();
 
-  TimeStamp vsyncTimestamp;
-  if (duration < 50 && duration > -50) {
-    vsyncTimestamp = callbackTimeStamp;
-  } else {
-    vsyncTimestamp = TimeStamp::Now();
-  }
+  // If the callback timestamp is close enough to our timestamp, use it,
+  // otherwise use the current time.
+  const TimeStamp& vsyncTimestamp =
+      std::abs((now - callbackTimeStamp).ToMilliseconds()) < 50.0
+          ? callbackTimeStamp
+          : now;
 
   CalculateVsyncRate(lock, vsyncTimestamp);
   mLastVsyncTimeStamp = vsyncTimestamp;
-  TimeStamp outputTimestamp = vsyncTimestamp + mVsyncRate;
+  const TimeStamp outputTimestamp = vsyncTimestamp + mVsyncRate;
 
   {
     MutexAutoUnlock unlock(mMutex);
