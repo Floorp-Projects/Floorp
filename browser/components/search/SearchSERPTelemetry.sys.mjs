@@ -58,6 +58,9 @@ export var SearchSERPTelemetryUtils = {
     WINDOW_CLOSE: "window_close",
     NAVIGATION: "navigation",
   },
+  INCONTENT_SOURCES: {
+    SEARCHBOX: "follow_on_from_refine_on_incontent_search",
+  },
 };
 
 /**
@@ -101,6 +104,34 @@ class TelemetryHandler {
   // _browserSourceMap is a map of the latest search source for a particular
   // browser - one of the KNOWN_SEARCH_SOURCES in BrowserSearchTelemetry.
   _browserSourceMap = new WeakMap();
+
+  /**
+   * A WeakMap whose key is a browser with value of a source type found in
+   * INCONTENT_SOURCES. Kept separate to avoid overlapping with legacy
+   * search sources. These sources are specific to the content of a search
+   * provider page rather than something from within the browser itself.
+   */
+  #browserContentSourceMap = new WeakMap();
+
+  /**
+   * Sets the source of a SERP visit from something that occured in content
+   * rather than from the browser.
+   *
+   * @param {browser} browser
+   *   The browser object associated with the page that should be a SERP.
+   * @param {string} type
+   *   The component type that started the load.
+   */
+  setBrowserContentSource(browser, type) {
+    switch (type) {
+      case SearchSERPTelemetryUtils.COMPONENTS.INCONTENT_SEARCHBOX:
+        this.#browserContentSourceMap.set(
+          browser,
+          SearchSERPTelemetryUtils.INCONTENT_SOURCES.SEARCHBOX
+        );
+        break;
+    }
+  }
 
   // _browserNewtabSessionMap is a map of the newtab session id for particular
   // browsers.
@@ -332,6 +363,14 @@ class TelemetryHandler {
       this._browserSourceMap.delete(browser);
     }
 
+    // If it's a SERP but doesn't have a browser source, the source might be
+    // from something that happened in content. We keep this separate from
+    // source because legacy telemetry should not change its reporting.
+    let inContentSource;
+    if (lazy.serpEventsEnabled && this.#browserContentSourceMap.has(browser)) {
+      inContentSource = this.#browserContentSourceMap.get(browser);
+    }
+
     let newtabSessionId;
     if (this._browserNewtabSessionMap.has(browser)) {
       newtabSessionId = this._browserNewtabSessionMap.get(browser);
@@ -365,7 +404,7 @@ class TelemetryHandler {
         provider: info.provider,
         tagged: info.type.startsWith("tagged"),
         partnerCode,
-        source,
+        source: inContentSource ?? source,
         isShoppingPage: info.isShoppingPage,
       };
     }
@@ -1126,6 +1165,14 @@ class ContentHandler {
         target: info.type,
       });
       impressionIdsWithoutEngagementsSet.delete(impressionId);
+      // In-content searches are not be categorized with a type, so they will
+      // not be picked up in the network processes.
+      if (
+        info.type == SearchSERPTelemetryUtils.COMPONENTS.INCONTENT_SEARCHBOX &&
+        info.action == SearchSERPTelemetryUtils.ACTIONS.SUBMITTED
+      ) {
+        SearchSERPTelemetry.setBrowserContentSource(browser, info.type);
+      }
     } else {
       lazy.logConsole.warn(
         "Expected to report a",
