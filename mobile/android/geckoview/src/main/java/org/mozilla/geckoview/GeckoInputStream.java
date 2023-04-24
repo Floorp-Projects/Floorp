@@ -169,6 +169,17 @@ import org.mozilla.gecko.mozglue.JNIObject;
   }
 
   /**
+   * Called by native code to indicate that there was an issue during appending data to the stream.
+   * The writing stream should still report EoF. Setting this error during writing will cause an
+   * IOException if readers try to read from the stream.
+   */
+  @WrapForJNI(calledFrom = "gecko")
+  public synchronized void writeError() {
+    mHaveError = true;
+    notifyAll();
+  }
+
+  /**
    * Called by native code to check if the stream is open.
    *
    * @return true if the stream is closed

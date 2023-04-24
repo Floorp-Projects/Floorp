@@ -146,4 +146,22 @@ public class GeckoInputStreamTest extends BaseSessionTest {
     Assert.assertTrue(
         "Writers wrote as expected.", isSequenceInOrder(lines, threadNames, writeCount));
   }
+
+  @Test
+  public void writeError() throws IOException {
+    boolean didThrowIoException = false;
+    final GeckoInputStream inputStream = new GeckoInputStream(null);
+    final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+    final byte[] data = "Hello, World.".getBytes();
+    inputStream.appendBuffer(data);
+    inputStream.writeError();
+    inputStream.sendEof();
+    try {
+      reader.readLine();
+    } catch (IOException e) {
+      didThrowIoException = true;
+    }
+    reader.close();
+    Assert.assertTrue("Correctly caused an IOException from writer.", didThrowIoException);
+  }
 }
