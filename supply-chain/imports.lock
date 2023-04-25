@@ -50,6 +50,13 @@ user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
+[[publisher.glslopt]]
+version = "0.1.9"
+when = "2021-03-17"
+user-id = 84794
+user-login = "jamienicol"
+user-name = "Jamie Nicol"
+
 [[publisher.ohttp]]
 version = "0.3.1"
 when = "2023-02-23"
