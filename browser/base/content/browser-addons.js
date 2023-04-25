@@ -1592,7 +1592,7 @@ var gUnifiedExtensions = {
     window.dispatchEvent(new CustomEvent("UnifiedExtensionsTogglePanel"));
   },
 
-  async updateContextMenu(menu, event) {
+  updateContextMenu(menu, event) {
     // When the context menu is open, `onpopupshowing` is called when menu
     // items open sub-menus. We don't want to update the context menu in this
     // case.
@@ -1601,7 +1601,6 @@ var gUnifiedExtensions = {
     }
 
     const id = this._getExtensionId(menu);
-    const addon = await AddonManager.getAddonByID(id);
     const widgetId = this._getWidgetId(menu);
     const forBrowserAction = !!widgetId;
 
@@ -1621,16 +1620,21 @@ var gUnifiedExtensions = {
     menuSeparator.hidden = !forBrowserAction;
     pinButton.hidden = !forBrowserAction;
 
+    reportButton.hidden = !gAddonAbuseReportEnabled;
+    // We use this syntax instead of async/await to not block this method that
+    // updates the context menu. This avoids the context menu to be out of sync
+    // on macOS.
+    AddonManager.getAddonByID(id).then(addon => {
+      removeButton.disabled = !(
+        addon.permissions & AddonManager.PERM_CAN_UNINSTALL
+      );
+    });
+
     if (forBrowserAction) {
       let area = CustomizableUI.getPlacementOfWidget(widgetId).area;
       let inToolbar = area != CustomizableUI.AREA_ADDONS;
       pinButton.setAttribute("checked", inToolbar);
     }
-
-    reportButton.hidden = !gAddonAbuseReportEnabled;
-    removeButton.disabled = !(
-      addon.permissions & AddonManager.PERM_CAN_UNINSTALL
-    );
 
     ExtensionsUI.originControlsMenu(menu, id);
 
