@@ -83,13 +83,13 @@
     // (We want to chop off the profile root and the resulting path component
     // must not start with a directory separator.)
     let fileRelPath =
-      fileFullPath.substring(fileFullPath.search(/[/\\]storage[/\\]default[/\\]/) + 1);
+      fileFullPath.substring(fileFullPath.search(/[/\\]storage[/\\]default(?:-private)?[/\\]/) + 1);
     info("trying to delete: " + fileRelPath);
     // by using the existing SpecialPowers mechanism to create files and clean
     // them up.  We clobber our existing content, then trigger deletion to
     // clean up after it.
     SpecialPowers.createFiles(
-      [{ name: fileRelPath, data: "" }],
+    [{ name: fileRelPath, data: "" }],
       grabEventAndContinueHandler, errorCallbackHandler);
     yield undefined;
     // This is async without a callback because it's intended for cleanup.

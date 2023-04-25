@@ -159,9 +159,8 @@ bool CanonicalQuotaObject::LockedMaybeUpdateSize(int64_t aSize,
 
   MOZ_ASSERT(mSize < aSize);
 
-  RefPtr<GroupInfo> complementaryGroupInfo =
-      groupInfo->mGroupInfoPair->LockedGetGroupInfo(
-          ComplementaryPersistenceType(groupInfo->mPersistenceType));
+  const auto& complementaryPersistenceTypes =
+      ComplementaryPersistenceTypes(groupInfo->mPersistenceType);
 
   uint64_t delta = aSize - mSize;
 
@@ -181,9 +180,16 @@ bool CanonicalQuotaObject::LockedMaybeUpdateSize(int64_t aSize,
     newGroupUsage += delta;
 
     uint64_t groupUsage = groupInfo->mUsage;
-    if (complementaryGroupInfo) {
-      AssertNoOverflow(groupUsage, complementaryGroupInfo->mUsage);
-      groupUsage += complementaryGroupInfo->mUsage;
+    for (const auto& complementaryPersistenceType :
+         complementaryPersistenceTypes) {
+      const auto& complementaryGroupInfo =
+          groupInfo->mGroupInfoPair->LockedGetGroupInfo(
+              complementaryPersistenceType);
+
+      if (complementaryGroupInfo) {
+        AssertNoOverflow(groupUsage, complementaryGroupInfo->mUsage);
+        groupUsage += complementaryGroupInfo->mUsage;
+      }
     }
 
     // Temporary storage has a hard limit for group usage (20 % of the global
@@ -264,9 +270,17 @@ bool CanonicalQuotaObject::LockedMaybeUpdateSize(int64_t aSize,
       newGroupUsage += delta;
 
       uint64_t groupUsage = groupInfo->mUsage;
-      if (complementaryGroupInfo) {
-        AssertNoOverflow(groupUsage, complementaryGroupInfo->mUsage);
-        groupUsage += complementaryGroupInfo->mUsage;
+
+      for (const auto& complementaryPersistenceType :
+           complementaryPersistenceTypes) {
+        const auto& complementaryGroupInfo =
+            groupInfo->mGroupInfoPair->LockedGetGroupInfo(
+                complementaryPersistenceType);
+
+        if (complementaryGroupInfo) {
+          AssertNoOverflow(groupUsage, complementaryGroupInfo->mUsage);
+          groupUsage += complementaryGroupInfo->mUsage;
+        }
       }
 
       AssertNoOverflow(groupUsage, delta);

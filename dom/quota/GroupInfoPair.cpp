@@ -15,6 +15,8 @@ RefPtr<GroupInfo>& GroupInfoPair::GetGroupInfoForPersistenceType(
       return mTemporaryStorageGroupInfo;
     case PERSISTENCE_TYPE_DEFAULT:
       return mDefaultStorageGroupInfo;
+    case PERSISTENCE_TYPE_PRIVATE:
+      return mPrivateStorageGroupInfo;
 
     case PERSISTENCE_TYPE_PERSISTENT:
     case PERSISTENCE_TYPE_INVALID:

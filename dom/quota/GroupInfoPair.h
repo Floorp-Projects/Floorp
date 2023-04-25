@@ -17,8 +17,8 @@ namespace mozilla::dom::quota {
 
 class GroupInfo;
 
-// XXX Consider a new name for this class, it has other data members now
-// (besides two GroupInfo objects).
+// XXX Consider a new name for this class, it has other data members now and an
+// additional GroupInfo (it's not a pair of GroupInfo objects anymore).
 class GroupInfoPair {
  public:
   GroupInfoPair(const nsACString& aSuffix, const nsACString& aGroup)
@@ -61,7 +61,8 @@ class GroupInfoPair {
   bool LockedHasGroupInfos() {
     AssertCurrentThreadOwnsQuotaMutex();
 
-    return mTemporaryStorageGroupInfo || mDefaultStorageGroupInfo;
+    return mTemporaryStorageGroupInfo || mDefaultStorageGroupInfo ||
+           mPrivateStorageGroupInfo;
   }
 
  private:
@@ -72,6 +73,7 @@ class GroupInfoPair {
   const nsCString mGroup;
   RefPtr<GroupInfo> mTemporaryStorageGroupInfo;
   RefPtr<GroupInfo> mDefaultStorageGroupInfo;
+  RefPtr<GroupInfo> mPrivateStorageGroupInfo;
 };
 
 }  // namespace mozilla::dom::quota

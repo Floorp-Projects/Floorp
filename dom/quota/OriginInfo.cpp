@@ -15,14 +15,15 @@
 namespace mozilla::dom::quota {
 
 OriginInfo::OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin,
-                       const ClientUsageArray& aClientUsages, uint64_t aUsage,
-                       int64_t aAccessTime, bool aPersisted,
+                       bool aIsPrivate, const ClientUsageArray& aClientUsages,
+                       uint64_t aUsage, int64_t aAccessTime, bool aPersisted,
                        bool aDirectoryExists)
     : mClientUsages(aClientUsages.Clone()),
       mGroupInfo(aGroupInfo),
       mOrigin(aOrigin),
       mUsage(aUsage),
       mAccessTime(aAccessTime),
+      mIsPrivate(aIsPrivate),
       mAccessed(false),
       mPersisted(aPersisted),
       mDirectoryExists(aDirectoryExists) {
@@ -56,7 +57,7 @@ OriginInfo::OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin,
 
 OriginMetadata OriginInfo::FlattenToOriginMetadata() const {
   return {mGroupInfo->mGroupInfoPair->Suffix(),
-          mGroupInfo->mGroupInfoPair->Group(), mOrigin,
+          mGroupInfo->mGroupInfoPair->Group(), mOrigin, mIsPrivate,
           mGroupInfo->mPersistenceType};
 }
 
@@ -79,6 +80,8 @@ nsresult OriginInfo::LockedBindToStatement(
   QM_TRY(MOZ_TO_RESULT(aStatement->BindUTF8StringByName(
       "group_"_ns, mGroupInfo->mGroupInfoPair->Group())));
   QM_TRY(MOZ_TO_RESULT(aStatement->BindUTF8StringByName("origin"_ns, mOrigin)));
+
+  MOZ_ASSERT(!mIsPrivate);
 
   nsCString clientUsagesText;
   mClientUsages.Serialize(clientUsagesText);

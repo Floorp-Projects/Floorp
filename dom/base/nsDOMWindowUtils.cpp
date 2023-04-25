@@ -3453,15 +3453,16 @@ nsDOMWindowUtils::GetFileReferences(const nsAString& aDatabaseName, int64_t aId,
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
-  nsCString origin;
-  MOZ_TRY_VAR(origin, quota::QuotaManager::GetOriginFromWindow(window));
+  quota::PrincipalMetadata principalMetadata;
+  MOZ_TRY_VAR(principalMetadata,
+              quota::QuotaManager::GetInfoFromWindow(window));
 
   RefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::Get();
-
   if (mgr) {
     nsresult rv = mgr->BlockAndGetFileReferences(
-        quota::PERSISTENCE_TYPE_DEFAULT, origin, aDatabaseName, aId, aRefCnt,
-        aDBRefCnt, aResult);
+        quota::PERSISTENCE_TYPE_DEFAULT, principalMetadata.mOrigin,
+        aDatabaseName, aId, aRefCnt, aDBRefCnt, aResult);
+
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     *aRefCnt = *aDBRefCnt = -1;

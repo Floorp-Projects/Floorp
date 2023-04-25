@@ -16,8 +16,9 @@ DirectoryLockImpl::DirectoryLockImpl(
     MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
     const Nullable<PersistenceType>& aPersistenceType,
     const nsACString& aSuffix, const nsACString& aGroup,
-    const OriginScope& aOriginScope, const Nullable<Client::Type>& aClientType,
-    const bool aExclusive, const bool aInternal,
+    const OriginScope& aOriginScope, bool aIsPrivate,
+    const Nullable<Client::Type>& aClientType, const bool aExclusive,
+    const bool aInternal,
     const ShouldUpdateLockIdTableFlag aShouldUpdateLockIdTableFlag)
     : mQuotaManager(std::move(aQuotaManager)),
       mPersistenceType(aPersistenceType),
@@ -26,6 +27,7 @@ DirectoryLockImpl::DirectoryLockImpl(
       mOriginScope(aOriginScope),
       mClientType(aClientType),
       mId(mQuotaManager->GenerateDirectoryLockId()),
+      mIsPrivate(aIsPrivate),
       mExclusive(aExclusive),
       mInternal(aInternal),
       mShouldUpdateLockIdTable(aShouldUpdateLockIdTableFlag ==
@@ -280,7 +282,7 @@ RefPtr<ClientDirectoryLock> DirectoryLockImpl::SpecializeForClient(
       mQuotaManager, Nullable<PersistenceType>(aPersistenceType),
       aOriginMetadata.mSuffix, aOriginMetadata.mGroup,
       OriginScope::FromOrigin(aOriginMetadata.mOrigin),
-      Nullable<Client::Type>(aClientType),
+      aOriginMetadata.mIsPrivate, Nullable<Client::Type>(aClientType),
       /* aExclusive */ false, mInternal, ShouldUpdateLockIdTableFlag::Yes);
   if (NS_WARN_IF(!Overlaps(*lock))) {
     return nullptr;

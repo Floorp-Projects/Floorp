@@ -13005,7 +13005,7 @@ nsresult Maintenance::DirectoryWork() {
   // in this order:
   static const PersistenceType kPersistenceTypes[] = {
       PERSISTENCE_TYPE_PERSISTENT, PERSISTENCE_TYPE_DEFAULT,
-      PERSISTENCE_TYPE_TEMPORARY};
+      PERSISTENCE_TYPE_TEMPORARY, PERSISTENCE_TYPE_PRIVATE};
 
   static_assert(
       ArrayLength(kPersistenceTypes) == size_t(PERSISTENCE_TYPE_INVALID),
