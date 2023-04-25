@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #![cfg_attr(feature = "oom_with_hook", feature(alloc_error_hook))]
+#![cfg_attr(feature = "oom_with_alloc_error_panic", feature(panic_oom_payload))]
 
 use arrayvec::ArrayString;
 use std::cmp;
@@ -68,7 +69,11 @@ impl<const CAP: usize> Deref for ArrayCString<CAP> {
 fn panic_hook(info: &panic::PanicInfo) {
     // Try to handle &str/String payloads, which should handle 99% of cases.
     let payload = info.payload();
-    let message = if let Some(s) = payload.downcast_ref::<&str>() {
+    let message = if let Some(layout) = oom_hook::oom_layout(payload) {
+        unsafe {
+            oom_hook::RustHandleOOM(layout.size());
+        }
+    } else if let Some(s) = payload.downcast_ref::<&str>() {
         s
     } else if let Some(s) = payload.downcast_ref::<String>() {
         s.as_str()
@@ -98,33 +103,40 @@ fn panic_hook(info: &panic::PanicInfo) {
 
 /// Configure a panic hook to redirect rust panics to MFBT's MOZ_Crash.
 #[no_mangle]
-pub extern "C" fn install_rust_panic_hook() {
+pub extern "C" fn install_rust_hooks() {
     panic::set_hook(Box::new(panic_hook));
+    #[cfg(feature = "oom_with_hook")]
+    use std::alloc::set_alloc_error_hook;
+    #[cfg(feature = "oom_with_hook")]
+    set_alloc_error_hook(oom_hook::hook);
 }
 
-#[cfg(feature = "oom_with_hook")]
 mod oom_hook {
-    use std::alloc::{set_alloc_error_hook, Layout};
+    #[cfg(feature = "oom_with_alloc_error_panic")]
+    use std::alloc::AllocErrorPanicPayload;
+    use std::alloc::Layout;
+    use std::any::Any;
 
-    extern "C" {
-        fn RustHandleOOM(size: usize) -> !;
+    #[inline(always)]
+    pub fn oom_layout(_payload: &dyn Any) -> Option<Layout> {
+        #[cfg(feature = "oom_with_alloc_error_panic")]
+        return _payload
+            .downcast_ref::<AllocErrorPanicPayload>()
+            .map(|p| p.layout());
+        #[cfg(not(feature = "oom_with_alloc_error_panic"))]
+        return None;
     }
 
+    extern "C" {
+        pub fn RustHandleOOM(size: usize) -> !;
+    }
+
+    #[cfg(feature = "oom_with_hook")]
     pub fn hook(layout: Layout) {
         unsafe {
             RustHandleOOM(layout.size());
         }
     }
-
-    pub fn install() {
-        set_alloc_error_hook(hook);
-    }
-}
-
-#[no_mangle]
-pub extern "C" fn install_rust_oom_hook() {
-    #[cfg(feature = "oom_with_hook")]
-    oom_hook::install();
 }
 
 #[cfg(feature = "moz_memory")]

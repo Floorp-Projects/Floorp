@@ -6100,14 +6100,10 @@ mozilla::BinPathType XRE_GetChildProcBinPathType(
 }
 
 // From mozglue/static/rust/lib.rs
-extern "C" void install_rust_panic_hook();
-extern "C" void install_rust_oom_hook();
+extern "C" void install_rust_hooks();
 
 struct InstallRustHooks {
-  InstallRustHooks() {
-    install_rust_panic_hook();
-    install_rust_oom_hook();
-  }
+  InstallRustHooks() { install_rust_hooks(); }
 };
 
 InstallRustHooks sInstallRustHooks;
