@@ -10,7 +10,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Components.h"
 #include "nsIClassInfoImpl.h"
-#include "nsTHashMap.h"
 #include "nsString.h"
 
 namespace mozilla::glean {
