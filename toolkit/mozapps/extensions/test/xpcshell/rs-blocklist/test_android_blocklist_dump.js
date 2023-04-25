@@ -3,6 +3,29 @@
 
 "use strict";
 
+// Blocklist v3 will be enabled on release in bug 1824863.
+// TODO bug 1824863: Remove this when blocklist v3 is enabled.
+const IS_USING_BLOCKLIST_V3 = AppConstants.NIGHTLY_BUILD;
+const ExtensionBlocklistMLBF = getExtensionBlocklistMLBF();
+
+let MLBF_LOAD_ATTEMPTS;
+let MLBF_LOAD_RESULTS;
+let originalFetchMLBF;
+
+add_task(async function setup() {
+  MLBF_LOAD_RESULTS = [];
+  MLBF_LOAD_ATTEMPTS = [];
+
+  // Tapping into the internals of ExtensionBlocklistMLBF._fetchMLBF to observe
+  originalFetchMLBF = ExtensionBlocklistMLBF._fetchMLBF;
+  ExtensionBlocklistMLBF._fetchMLBF = async function(record) {
+    MLBF_LOAD_ATTEMPTS.push(record);
+    let promise = originalFetchMLBF.apply(this, arguments);
+    MLBF_LOAD_RESULTS.push(promise);
+    return promise;
+  };
+});
+
 // When bug 1639050 is fixed, this whole test can be removed as it is already
 // covered by test_blocklist_mlbf_dump.js.
 
@@ -35,23 +58,59 @@ const nonBlockedAddon = {
   signedState: AddonManager.SIGNEDSTATE_SIGNED,
 };
 
-add_task(async function verify_blocklistv2_dump_first_run() {
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
+add_task(
+  { skip_if: () => IS_USING_BLOCKLIST_V3 },
+  async function verify_blocklistv2_dump_first_run() {
+    createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
 
-  Assert.equal(
-    await Blocklist.getAddonBlocklistState(blockedAddon),
-    Ci.nsIBlocklistService.STATE_BLOCKED,
-    "A add-on that is known to be on the v2 blocklist should be blocked"
-  );
-  Assert.equal(
-    await Blocklist.getAddonBlocklistState(blockedAddonV3only),
-    Ci.nsIBlocklistService.STATE_NOT_BLOCKED,
-    "An add-on that is not part of the v2 blocklist should not be blocked"
-  );
+    Assert.equal(
+      await Blocklist.getAddonBlocklistState(blockedAddon),
+      Ci.nsIBlocklistService.STATE_BLOCKED,
+      "A add-on that is known to be on the v2 blocklist should be blocked"
+    );
+    Assert.equal(
+      await Blocklist.getAddonBlocklistState(blockedAddonV3only),
+      Ci.nsIBlocklistService.STATE_NOT_BLOCKED,
+      "An add-on that is not part of the v2 blocklist should not be blocked"
+    );
 
-  Assert.equal(
-    await Blocklist.getAddonBlocklistState(nonBlockedAddon),
-    Ci.nsIBlocklistService.STATE_NOT_BLOCKED,
-    "A known non-blocked add-on should not be blocked"
-  );
-});
+    Assert.equal(
+      await Blocklist.getAddonBlocklistState(nonBlockedAddon),
+      Ci.nsIBlocklistService.STATE_NOT_BLOCKED,
+      "A known non-blocked add-on should not be blocked"
+    );
+  }
+);
+
+add_task(
+  { skip_if: () => !IS_USING_BLOCKLIST_V3 },
+  async function verify_a_known_blocked_add_on_is_not_detected_as_blocked_at_first_run() {
+    // The addons blocklist data is not packaged and will be downloaded after install
+    Assert.equal(
+      await Blocklist.getAddonBlocklistState(blockedAddon),
+      Ci.nsIBlocklistService.STATE_NOT_BLOCKED,
+      "A known blocked add-on should not be blocked at first"
+    );
+
+    await Assert.rejects(
+      MLBF_LOAD_RESULTS[0],
+      /DownloadError: Could not download addons-mlbf.bin/,
+      "Should not find any packaged attachment"
+    );
+
+    MLBF_LOAD_ATTEMPTS.length = 0;
+    MLBF_LOAD_RESULTS.length = 0;
+
+    Assert.equal(
+      await Blocklist.getAddonBlocklistState(blockedAddon),
+      Ci.nsIBlocklistService.STATE_NOT_BLOCKED,
+      "Blocklist is still not populated"
+    );
+    Assert.deepEqual(
+      MLBF_LOAD_ATTEMPTS,
+      [],
+      "MLBF is not fetched again after the first lookup"
+    );
+    ExtensionBlocklistMLBF._fetchMLBF = originalFetchMLBF;
+  }
+);

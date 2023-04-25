@@ -46,9 +46,11 @@ function getExtensionBlocklistMLBF() {
   const {
     BlocklistPrivate: { ExtensionBlocklistMLBF },
   } = ChromeUtils.import("resource://gre/modules/Blocklist.jsm");
-  Assert.ok(
-    Services.prefs.getBoolPref("extensions.blocklist.useMLBF", false),
-    "blocklist.useMLBF should be true"
-  );
+  if (Blocklist.allowDeprecatedBlocklistV2) {
+    Assert.ok(
+      Services.prefs.getBoolPref("extensions.blocklist.useMLBF", false),
+      "blocklist.useMLBF should be true"
+    );
+  }
   return ExtensionBlocklistMLBF;
 }

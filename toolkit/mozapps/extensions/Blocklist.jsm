@@ -1428,10 +1428,9 @@ let Blocklist = {
   recordAddonBlockChangeTelemetry(addon, reason) {
     BlocklistTelemetry.recordAddonBlockChangeTelemetry(addon, reason);
   },
-
-  // TODO bug 1649906, bug 1639050: Remove blocklist v2.
-  // Allow blocklist for Android and unit tests only.
-  allowDeprecatedBlocklistV2: AppConstants.platform === "android",
+  // TODO bug 1649906 and 1824863: Remove blocklist v2 (dead code).
+  allowDeprecatedBlocklistV2:
+    AppConstants.platform === "android" && !AppConstants.NIGHTLY_BUILD,
 
   _chooseExtensionBlocklistImplementationFromPref() {
     if (
