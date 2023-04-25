@@ -5,6 +5,7 @@
 import React, { PureComponent } from "react";
 import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
+import { createLocation } from "../../utils/location";
 import classnames from "classnames";
 import actions from "../../actions";
 import {
@@ -200,11 +201,11 @@ class SourceFooter extends PureComponent {
       filename
     );
     const title = L10N.getFormatStr("sourceFooter.mappedSource", filename);
-    const mappedSourceLocation = {
-      sourceId: selectedSource.id,
+    const mappedSourceLocation = createLocation({
+      source: selectedSource,
       line: 1,
       column: 1,
-    };
+    });
     return (
       <button
         className="mapped-source"
