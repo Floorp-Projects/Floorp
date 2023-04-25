@@ -203,7 +203,7 @@ function verifySectionFieldDetails(sections, expectedResults) {
 
     sectionInfo.forEach((field, fieldIndex) => {
       let expectedField = expectedSectionInfo[fieldIndex];
-      delete field._reason;
+      delete field.reason;
       delete field.elementWeakRef;
       delete field.confidence;
       Assert.deepEqual(field, expectedField);
@@ -313,11 +313,6 @@ function objectMatches(object, fields) {
 
 add_setup(async function head_initialize() {
   Services.prefs.setBoolPref("extensions.experiments.enabled", true);
-  Services.prefs.setBoolPref(
-    "extensions.formautofill.heuristics.enabled",
-    true
-  );
-  Services.prefs.setBoolPref("extensions.formautofill.section.enabled", true);
   Services.prefs.setBoolPref("dom.forms.autocomplete.formautofill", true);
 
   Services.prefs.setCharPref(
@@ -342,8 +337,6 @@ add_setup(async function head_initialize() {
     );
     Services.prefs.clearUserPref("extensions.formautofill.addresses.supported");
     Services.prefs.clearUserPref("extensions.formautofill.creditCards.enabled");
-    Services.prefs.clearUserPref("extensions.formautofill.heuristics.enabled");
-    Services.prefs.clearUserPref("extensions.formautofill.section.enabled");
     Services.prefs.clearUserPref("dom.forms.autocomplete.formautofill");
     Services.prefs.clearUserPref("extensions.formautofill.addresses.enabled");
     Services.prefs.clearUserPref("extensions.formautofill.creditCards.enabled");

@@ -865,14 +865,14 @@ class FormAutofillAddressSection extends FormAutofillSection {
       }
     } else if (element.maxLength) {
       if (
-        detail._reason == "autocomplete" &&
+        detail.reason == "autocomplete" &&
         profile.tel.length <= element.maxLength
       ) {
         return;
       }
     }
 
-    if (detail._reason != "autocomplete") {
+    if (detail.reason != "autocomplete") {
       // Since we only target people living in US and using en-US websites in
       // MVP, it makes more sense to fill `tel-national` instead of `tel`
       // if the field is identified by heuristics and no other clues to
@@ -936,7 +936,7 @@ class FormAutofillAddressSection extends FormAutofillSection {
       let detail = this.getFieldDetailByName("country");
       // Try identifying country field aggressively if it doesn't come from
       // @autocomplete.
-      if (detail._reason != "autocomplete") {
+      if (detail.reason != "autocomplete") {
         let countryCode = FormAutofillUtils.identifyCountryCode(
           address.record.country
         );
@@ -1069,9 +1069,9 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
     // Condition A. Always trust autocomplete attribute. A section is considered a valid
     // cc section as long as a field has autocomplete=cc-number, cc-name or cc-exp*
     if (
-      ccNumberDetail?._reason == "autocomplete" ||
-      ccNameDetail?._reason == "autocomplete" ||
-      ccExpiryDetail?._reason == "autocomplete"
+      ccNumberDetail?.reason == "autocomplete" ||
+      ccNameDetail?.reason == "autocomplete" ||
+      ccExpiryDetail?.reason == "autocomplete"
     ) {
       return true;
     }
@@ -1425,6 +1425,39 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
  * Handles profile autofill for a DOM Form element.
  */
 export class FormAutofillHandler {
+  // The window to which this form belongs
+  window = null;
+
+  // A WindowUtils reference of which Window the form belongs
+  winUtils = null;
+
+  // DOM Form element to which this object is attached
+  form = null;
+
+  // An array of section that are found in this form
+  sections = [];
+
+  // The section contains the focused input
+  #focusedSection = null;
+
+  // Caches the element to section mapping
+  #cachedSectionByElement = new WeakMap();
+
+  /**
+   * Array of collected data about relevant form fields.  Each item is an object
+   * storing the identifying details of the field and a reference to the
+   * originally associated element from the form.
+   *
+   * The "section", "addressType", "contactType", and "fieldName" values are
+   * used to identify the exact field when the serializable data is received
+   * from the backend.  There cannot be multiple fields which have
+   * the same exact combination of these values.
+   *
+   * A direct reference to the associated element cannot be sent to the user
+   * interface because processing may be done in the parent process.
+   */
+  fieldDetails = null;
+
   /**
    * Initialize the form from `FormLike` object to handle the section or form
    * operations.
@@ -1439,14 +1472,7 @@ export class FormAutofillHandler {
   constructor(form, onFormSubmitted = () => {}) {
     this._updateForm(form);
 
-    /**
-     * The window to which this form belongs
-     */
     this.window = this.form.rootElement.ownerGlobal;
-
-    /**
-     * A WindowUtils reference of which Window the form belongs
-     */
     this.winUtils = this.window.windowUtils;
 
     /**
@@ -1459,21 +1485,20 @@ export class FormAutofillHandler {
   }
 
   set focusedInput(element) {
-    let section = this._sectionCache.get(element);
+    const section =
+      this.#cachedSectionByElement.get(element) ??
+      this.sections.find(s => s.getFieldDetailByElement(element));
     if (!section) {
-      section = this.sections.find(s => s.getFieldDetailByElement(element));
-      this._sectionCache.set(element, section);
+      return;
     }
 
-    this._focusedSection = section;
-
-    if (section) {
-      section.focusedInput = element;
-    }
+    this.#cachedSectionByElement.set(element, section);
+    this.#focusedSection = section;
+    this.#focusedSection.focusedInput = element;
   }
 
   get activeSection() {
-    return this._focusedSection;
+    return this.#focusedSection;
   }
 
   /**
@@ -1493,18 +1518,14 @@ export class FormAutofillHandler {
     // e.g. a tel field is changed from type="hidden" to type="tel".
 
     let _formLike;
-    let getFormLike = () => {
+    const getFormLike = () => {
       if (!_formLike) {
         _formLike = lazy.FormLikeFactory.createFromField(element);
       }
       return _formLike;
     };
 
-    let currentForm = element.form;
-    if (!currentForm) {
-      currentForm = getFormLike();
-    }
-
+    const currentForm = element.form ?? getFormLike();
     if (currentForm.elements.length != this.form.elements.length) {
       lazy.log.debug("The count of form elements is changed.");
       this._updateForm(getFormLike());
@@ -1527,45 +1548,23 @@ export class FormAutofillHandler {
    * @param {FormLike} form a new FormLike to replace the original one.
    */
   _updateForm(form) {
-    /**
-     * DOM Form element to which this object is attached.
-     */
     this.form = form;
 
-    /**
-     * Array of collected data about relevant form fields.  Each item is an object
-     * storing the identifying details of the field and a reference to the
-     * originally associated element from the form.
-     *
-     * The "section", "addressType", "contactType", and "fieldName" values are
-     * used to identify the exact field when the serializable data is received
-     * from the backend.  There cannot be multiple fields which have
-     * the same exact combination of these values.
-     *
-     * A direct reference to the associated element cannot be sent to the user
-     * interface because processing may be done in the parent process.
-     */
     this.fieldDetails = null;
 
     this.sections = [];
-    this._sectionCache = new WeakMap();
+    this.#cachedSectionByElement = new WeakMap();
   }
 
   /**
    * Set fieldDetails from the form about fields that can be autofilled.
    *
-   * @param {boolean} allowDuplicates
-   *        true to remain any duplicated field details otherwise to remove the
-   *        duplicated ones.
    * @returns {Array} The valid address and credit card details.
    */
-  collectFormFields(allowDuplicates = false) {
-    let sections = lazy.FormAutofillHeuristics.getFormInfo(
-      this.form,
-      allowDuplicates
-    );
-    let allValidDetails = [];
-    for (let { fieldDetails, type } of sections) {
+  collectFormFields() {
+    const sections = lazy.FormAutofillHeuristics.getFormInfo(this.form);
+    const allValidDetails = [];
+    for (const { fieldDetails, type } of sections) {
       let section;
       if (type == FormAutofillUtils.SECTION_TYPES.ADDRESS) {
         section = new FormAutofillAddressSection(fieldDetails, this.winUtils);
@@ -1586,7 +1585,7 @@ export class FormAutofillHandler {
     return allValidDetails;
   }
 
-  _hasFilledSection() {
+  #hasFilledSection() {
     return this.sections.some(section => section.isFilled());
   }
 
@@ -1598,7 +1597,7 @@ export class FormAutofillHandler {
    *        A profile to be filled in.
    */
   async autofillFormFields(profile) {
-    let noFilledSectionsPreviously = !this._hasFilledSection();
+    const noFilledSectionsPreviously = !this.#hasFilledSection();
     await this.activeSection.autofillFields(profile);
 
     const onChangeHandler = e => {
@@ -1606,12 +1605,10 @@ export class FormAutofillHandler {
         return;
       }
       if (e.type == "reset") {
-        for (let section of this.sections) {
-          section.resetFieldStates();
-        }
+        this.sections.map(section => section.resetFieldStates());
       }
       // Unregister listeners once no field is in AUTO_FILLED state.
-      if (!this._hasFilledSection()) {
+      if (!this.#hasFilledSection()) {
         this.form.rootElement.removeEventListener("input", onChangeHandler, {
           mozSystemGroup: true,
         });
