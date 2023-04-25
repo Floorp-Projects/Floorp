@@ -310,6 +310,7 @@ TEST_F(APZCBasicTester, RelativeScrollOffset) {
 }
 
 TEST_F(APZCBasicTester, MultipleSmoothScrollsSmooth) {
+  SCOPED_GFX_PREF_BOOL("general.smoothScroll", true);
   // We want to test that if we send multiple smooth scroll requests that we
   // still smoothly animate, ie that we get non-zero change every frame while
   // the animation is running.
@@ -450,11 +451,13 @@ class APZCSmoothScrollTester : public APZCBasicTester {
 };
 
 TEST_F(APZCSmoothScrollTester, SmoothScrollDestinationUpdateBezier) {
+  SCOPED_GFX_PREF_BOOL("general.smoothScroll", true);
   SCOPED_GFX_PREF_BOOL("general.smoothScroll.msdPhysics.enabled", false);
   TestSmoothScrollDestinationUpdate();
 }
 
 TEST_F(APZCSmoothScrollTester, SmoothScrollDestinationUpdateMsd) {
+  SCOPED_GFX_PREF_BOOL("general.smoothScroll", true);
   SCOPED_GFX_PREF_BOOL("general.smoothScroll.msdPhysics.enabled", true);
   TestSmoothScrollDestinationUpdate();
 }
