@@ -758,10 +758,15 @@ pub unsafe extern "C" fn wgpu_server_encoder_copy_texture_to_buffer(
     global: &Global,
     self_id: id::CommandEncoderId,
     source: &wgc::command::ImageCopyTexture,
-    destination: &wgc::command::ImageCopyBuffer,
+    dst_buffer: wgc::id::BufferId,
+    dst_layout: &crate::ImageDataLayout,
     size: &wgt::Extent3d,
 ) {
-    gfx_select!(self_id => global.command_encoder_copy_texture_to_buffer(self_id, source, destination, size)).unwrap();
+    let destination = wgc::command::ImageCopyBuffer {
+        buffer: dst_buffer,
+        layout: dst_layout.into_wgt(),
+    };
+    gfx_select!(self_id => global.command_encoder_copy_texture_to_buffer(self_id, source, &destination, size)).unwrap();
 }
 
 /// # Safety

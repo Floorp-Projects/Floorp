@@ -938,17 +938,14 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
       &data->mSourcePitch,
       nullptr,
   };
-  const ffi::WGPUImageCopyBuffer bufView = {
-      bufferId,
-      bufLayout,
-  };
   const ffi::WGPUExtent3d extent = {
       static_cast<uint32_t>(size.width),
       static_cast<uint32_t>(size.height),
       1,
   };
   ffi::wgpu_server_encoder_copy_texture_to_buffer(
-      mContext.get(), aCommandEncoderId, &texView, &bufView, &extent);
+      mContext.get(), aCommandEncoderId, &texView, bufferId, &bufLayout,
+      &extent);
   ffi::WGPUCommandBufferDescriptor commandDesc = {};
   {
     ErrorBuffer error;
