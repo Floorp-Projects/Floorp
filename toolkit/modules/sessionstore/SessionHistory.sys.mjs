@@ -8,10 +8,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
 });
 
-function debug(msg) {
-  Services.console.logStringMessage("SessionHistory: " + msg);
-}
-
 /**
  * The external API exported by this module.
  */
@@ -564,7 +560,7 @@ var SessionHistoryInternal = {
         // and this ensures we always have a principal returned from this function.
         // We must always have a triggering principal for a load to work.
         // A null principal won't always work however is safe to use.
-        debug(
+        console.warn(
           "Couldn't deserialize the triggeringPrincipal, falling back to NullPrincipal"
         );
         return Services.scriptSecurityManager.createNullPrincipal({});

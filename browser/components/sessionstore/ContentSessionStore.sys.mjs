@@ -8,10 +8,6 @@ import {
   setTimeoutWithTarget,
 } from "resource://gre/modules/Timer.sys.mjs";
 
-function debug(msg) {
-  Services.console.logStringMessage("SessionStoreContent: " + msg);
-}
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -372,7 +368,7 @@ class MessageQueue extends Handler {
           );
           break;
         default:
-          debug("received unknown message '" + data + "'");
+          console.error("received unknown message '" + data + "'");
           break;
       }
     }
@@ -570,7 +566,7 @@ export class ContentSessionStore {
         this.mm.docShell.persistLayoutHistoryState();
         break;
       default:
-        debug("received unknown message '" + name + "'");
+        console.error("received unknown message '" + name + "'");
         break;
     }
   }
