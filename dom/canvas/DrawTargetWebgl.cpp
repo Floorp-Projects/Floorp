@@ -1518,6 +1518,7 @@ void DrawTargetWebgl::CopySurface(SourceSurface* aSurface,
     return;
   }
 
+  IntRect samplingRect;
   if (!mSharedContext->IsCompatibleSurface(aSurface)) {
     // If this data surface completely overwrites the framebuffer, then just
     // copy it to the Skia target.
@@ -1528,20 +1529,18 @@ void DrawTargetWebgl::CopySurface(SourceSurface* aSurface,
       return;
     }
 
-    // If this is a data surface with a matching format, try to upload the data
-    // directly to the backing texture of the framebuffer.
-    if (aSurface->GetFormat() == mFormat && PrepareContext(false) &&
-        MarkChanged()) {
-      if (RefPtr<DataSourceSurface> data = aSurface->GetDataSurface()) {
-        mSharedContext->UploadSurface(data, mFormat, srcRect,
-                                      destRect.TopLeft(), false, false, mTex);
-      }
-      return;
+    // CopySurface usually only samples a surface once, so don't cache the
+    // entire surface as it is unlikely to be reused. Limit it to the used
+    // source rectangle instead.
+    IntRect surfaceRect = aSurface->GetRect();
+    if (!srcRect.IsEqualEdges(surfaceRect)) {
+      samplingRect = srcRect.SafeIntersect(surfaceRect);
     }
   }
 
   Matrix matrix = Matrix::Translation(destRect.TopLeft() - srcRect.TopLeft());
-  SurfacePattern pattern(aSurface, ExtendMode::CLAMP, matrix);
+  SurfacePattern pattern(aSurface, ExtendMode::CLAMP, matrix,
+                         SamplingFilter::POINT, samplingRect);
   DrawRect(Rect(destRect), pattern, DrawOptions(1.0f, CompositionOp::OP_SOURCE),
            Nothing(), nullptr, false, false);
 }
