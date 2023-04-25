@@ -1,6 +1,123 @@
 $col4-header-line-height: 20;
 $col4-header-font-size: 14;
 
+.ds-onboarding,
+.ds-card-grid .ds-card {
+  @include dark-theme-only {
+    background: none;
+  }
+
+  background: $white;
+  border-radius: 4px;
+
+  &:not(.placeholder) {
+    @include dark-theme-only {
+      background: var(--newtab-background-color-secondary);
+    }
+    border-radius: $border-radius-new;
+    box-shadow: $shadow-card;
+
+    .img-wrapper .img {
+      img,
+      .placeholder-image {
+        border-radius: $border-radius-new $border-radius-new 0 0;
+      }
+    }
+  }
+}
+
+.ds-onboarding-ref {
+  display: inline-block;
+}
+
+.ds-onboarding {
+  padding-inline-start: 16px;
+  padding-inline-end: 16px;
+  @media (min-width: $break-point-medium) {
+    padding-inline-end: 48px;
+  }
+  @media (min-width: $break-point-large) {
+    padding-inline-end: 56px;
+  }
+  margin-bottom: 24px;
+  display: inline-block;
+  // This is to position the dismiss button to the right most of this element.
+  position: relative;
+
+  .ds-dismiss {
+    position: static;
+
+    .ds-dismiss-button {
+      inset-inline-end: 8px;
+      top: 8px;
+    }
+  }
+
+  header {
+    @include dark-theme-only {
+      color: var(--newtab-background-color-primary);
+    }
+    display: flex;
+    margin: 32px 0 8px;
+    @media (min-width: $break-point-medium) {
+      margin: 16px 0 8px;
+      display: block;
+      height: 24px;
+    }
+    font-size: 17px;
+    line-height: 23.8px;
+    font-weight: 600;
+    color: $pocket-icon-fill;
+  }
+
+  p {
+    margin: 8px 0 16px;
+    font-size: 13px;
+    line-height: 19.5px;
+  }
+
+  .icon-pocket {
+    @include dark-theme-only {
+      fill: var(--newtab-text-primary-color);
+    }
+    fill: $pocket-icon-fill;
+    margin-top: 3px;
+    margin-inline-end: 8px;
+    height: 22px;
+    width: 22px;
+    background-image: url('chrome://global/skin/icons/pocket.svg');
+    @media (min-width: $break-point-medium) {
+      margin-top: -5px;
+      margin-inline-start: -2px;
+      margin-inline-end: 15px;
+      height: 30px;
+      width: 30px;
+    }
+    background-size: contain;
+  }
+
+  .ds-onboarding-graphic {
+    background-image: url('chrome://activity-stream/content/data/content/assets/pocket-onboarding.avif');
+    @media (min-resolution: 2x) {
+      background-image: url('chrome://activity-stream/content/data/content/assets/pocket-onboarding@2x.avif');
+    }
+    border-radius: 8px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    height: 120px;
+    width: 200px;
+    margin-inline-start: 54px;
+    margin-bottom: 16px;
+    float: inline-end;
+    display: none;
+
+    @media (min-width: $break-point-large) {
+      display: block;
+    }
+  }
+}
+
 .ds-card-grid {
   display: grid;
   grid-gap: 24px;
@@ -15,32 +132,6 @@ $col4-header-font-size: 14;
       @media (min-width: $break-point-medium) and (max-width: $break-point-large) {
         &:last-child:nth-child(2n - 1) {
           display: none;
-        }
-      }
-    }
-  }
-
-  .ds-card {
-    @include dark-theme-only {
-      background: none;
-    }
-
-    background: $white;
-    border-radius: 4px;
-  }
-
-  &.ds-card-grid-border {
-    .ds-card:not(.placeholder) {
-      @include dark-theme-only {
-        background: var(--newtab-background-color-secondary);
-      }
-      border-radius: $border-radius-new;
-      box-shadow: $shadow-card;
-
-      .img-wrapper .img {
-        img,
-        .placeholder-image {
-          border-radius: $border-radius-new $border-radius-new 0 0;
         }
       }
     }
@@ -193,8 +284,8 @@ $col4-header-font-size: 14;
   }
 }
 
-.outer-wrapper .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card,
-.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card {
+.outer-wrapper .ds-card-grid.ds-card-grid-hide-background .ds-card,
+.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-hide-background .ds-card {
   &:not(.placeholder) {
     box-shadow: none;
     background: none;

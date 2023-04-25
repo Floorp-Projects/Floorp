@@ -73,6 +73,7 @@ A user event ping includes some basic metadata (tab id, addon version, etc.) as 
     "SEARCH",
     "BLOCK",
     "DELETE",
+    "IMPRESSION",
     "OPEN_NEW_WINDOW",
     "OPEN_PRIVATE_WINDOW",
     "BOOKMARK_DELETE",

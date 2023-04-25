@@ -17,6 +17,7 @@ export const INITIAL_STATE = {
     initialized: false,
     locale: "",
     isForStartupCache: false,
+    customizeMenuVisible: false,
   },
   ASRouter: { initialized: false },
   Snippets: { initialized: false },
@@ -107,6 +108,14 @@ function App(prevState = INITIAL_STATE.App, action) {
       // so that sponsored tiles can be rendered as usual. See Bug 1826360.
       return Object.assign({}, prevState, action.data || {}, {
         isForStartupCache: false,
+      });
+    case at.SHOW_PERSONALIZE:
+      return Object.assign({}, prevState, {
+        customizeMenuVisible: true,
+      });
+    case at.HIDE_PERSONALIZE:
+      return Object.assign({}, prevState, {
+        customizeMenuVisible: false,
       });
     default:
       return prevState;

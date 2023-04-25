@@ -479,6 +479,12 @@ pocketNewtab:
         browser.newtabpage.activity-stream.discoverystream.descLines
       description: >-
         Changes the maximum number of lines a description can be for Pocket cards on newtab.
+    onboardingExperience:
+      type: boolean
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.onboardingExperience.enabled
+      description: >-
+        Enables an onboarding experience for Pocket section on newtab.
     essentialReadsHeader:
       type: boolean
       fallbackPref: >-

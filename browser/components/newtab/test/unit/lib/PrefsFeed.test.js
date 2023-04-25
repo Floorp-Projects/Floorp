@@ -18,6 +18,7 @@ describe("PrefsFeed", () => {
       ["foo", 1],
       ["bar", 2],
       ["baz", { value: 1, skipBroadcast: true }],
+      ["qux", { value: 1, skipBroadcast: true, alsoToPreloaded: true }],
     ]);
     feed = new PrefsFeed(FAKE_PREFS);
     const storage = {
@@ -259,6 +260,23 @@ describe("PrefsFeed", () => {
       ac.OnlyToMain({
         type: at.PREF_CHANGED,
         data: { name: "baz", value: { value: 2, skipBroadcast: true } },
+      })
+    );
+  });
+  it("should send AlsoToPreloaded pref update if config for pref has skipBroadcast: true and alsoToPreloaded: true", async () => {
+    feed.onPrefChanged("qux", {
+      value: 2,
+      skipBroadcast: true,
+      alsoToPreloaded: true,
+    });
+    assert.calledWith(
+      feed.store.dispatch,
+      ac.AlsoToPreloaded({
+        type: at.PREF_CHANGED,
+        data: {
+          name: "qux",
+          value: { value: 2, skipBroadcast: true, alsoToPreloaded: true },
+        },
       })
     );
   });

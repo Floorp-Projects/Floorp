@@ -99,11 +99,17 @@ describe("<BaseContent>", () => {
   it("should dispatch a user event when the customize menu is opened or closed", () => {
     const dispatch = sinon.stub();
     const wrapper = shallow(
-      <BaseContent {...DEFAULT_PROPS} dispatch={dispatch} />
+      <BaseContent
+        {...DEFAULT_PROPS}
+        dispatch={dispatch}
+        App={{ customizeMenuVisible: true }}
+      />
     );
     wrapper.instance().openCustomizationMenu();
+    assert.calledWith(dispatch, { type: "SHOW_PERSONALIZE" });
     assert.calledWith(dispatch, ac.UserEvent({ event: "SHOW_PERSONALIZE" }));
     wrapper.instance().closeCustomizationMenu();
+    assert.calledWith(dispatch, { type: "HIDE_PERSONALIZE" });
     assert.calledWith(dispatch, ac.UserEvent({ event: "HIDE_PERSONALIZE" }));
   });
 

@@ -23,9 +23,5 @@
   &:is(:hover, :focus, .active) {
     @include context-menu-button-hover;
     outline: none;
-
-    &.ds-card-grid-border {
-      @include fade-in-card;
-    }
   }
 }

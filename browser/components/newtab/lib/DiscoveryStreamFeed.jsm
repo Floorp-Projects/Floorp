@@ -661,6 +661,8 @@ class DiscoveryStreamFeed {
 
       const pocketConfig =
         this.store.getState().Prefs.values?.pocketConfig || {};
+      const onboardingExperience =
+        this.isBff && pocketConfig.onboardingExperience;
 
       let items = isBasicLayout ? 3 : 21;
       if (pocketConfig.fourCardLayout || pocketConfig.hybridLayout) {
@@ -742,6 +744,7 @@ class DiscoveryStreamFeed {
           this.locale.startsWith("en-") && pocketConfig.essentialReadsHeader,
         editorsPicksHeader:
           this.locale.startsWith("en-") && pocketConfig.editorsPicksHeader,
+        onboardingExperience,
       });
     }
 
@@ -2208,6 +2211,7 @@ class DiscoveryStreamFeed {
      `compactGrid` Reduce the number of pixels between the Pocket cards.
      `essentialReadsHeader` Updates the Pocket section header and title to say "Today’s Essential Reads", moves the "Recommended by Pocket" header to the right side.
      `editorsPicksHeader` Updates the Pocket section header and title to say "Editor’s Picks", if used with essentialReadsHeader, creates a second section 2 rows down for editorsPicks.
+     `onboardingExperience` Show new users some UI explaining Pocket above the Pocket section.
 */
 getHardcodedLayout = ({
   spocsUrl = SPOCS_URL,
@@ -2227,6 +2231,7 @@ getHardcodedLayout = ({
   compactGrid = false,
   essentialReadsHeader = false,
   editorsPicksHeader = false,
+  onboardingExperience = false,
 }) => ({
   lastUpdate: Date.now(),
   spocs: {
@@ -2324,6 +2329,7 @@ getHardcodedLayout = ({
             compactGrid,
             essentialReadsHeader,
             editorsPicksHeader,
+            onboardingExperience,
           },
           widgets: {
             positions: widgetPositions.map(position => {

@@ -152,6 +152,7 @@ for (const type of [
   "FAKE_FOCUS_SEARCH",
   "FILL_SEARCH_TERM",
   "HANDOFF_SEARCH_TO_AWESOMEBAR",
+  "HIDE_PERSONALIZE",
   "HIDE_PRIVACY_INFO",
   "INIT",
   "NEW_TAB_INIT",
@@ -200,6 +201,7 @@ for (const type of [
   "SET_PREF",
   "SHOW_DOWNLOAD_FILE",
   "SHOW_FIREFOX_ACCOUNTS",
+  "SHOW_PERSONALIZE",
   "SHOW_PRIVACY_INFO",
   "SHOW_SEARCH",
   "SKIPPED_SIGNIN",
@@ -8217,6 +8219,59 @@ class DSEmptyState extends (external_React_default()).PureComponent {
   }
 
 }
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSDismiss/DSDismiss.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+class DSDismiss extends (external_React_default()).PureComponent {
+  constructor(props) {
+    super(props);
+    this.onDismissClick = this.onDismissClick.bind(this);
+    this.onHover = this.onHover.bind(this);
+    this.offHover = this.offHover.bind(this);
+    this.state = {
+      hovering: false
+    };
+  }
+
+  onDismissClick() {
+    if (this.props.onDismissClick) {
+      this.props.onDismissClick();
+    }
+  }
+
+  onHover() {
+    this.setState({
+      hovering: true
+    });
+  }
+
+  offHover() {
+    this.setState({
+      hovering: false
+    });
+  }
+
+  render() {
+    let className = `ds-dismiss
+      ${this.state.hovering ? ` hovering` : ``}
+      ${this.props.extraClasses ? ` ${this.props.extraClasses}` : ``}`;
+    return /*#__PURE__*/external_React_default().createElement("div", {
+      className: className
+    }, this.props.children, /*#__PURE__*/external_React_default().createElement("button", {
+      className: "ds-dismiss-button",
+      "data-l10n-id": "newtab-dismiss-button-tooltip",
+      onHover: this.onHover,
+      onClick: this.onDismissClick,
+      onMouseEnter: this.onHover,
+      onMouseLeave: this.offHover
+    }, /*#__PURE__*/external_React_default().createElement("span", {
+      className: "icon icon-dismiss"
+    })));
+  }
+
+}
 ;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/TopicsWidget/TopicsWidget.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -8352,6 +8407,9 @@ const TopicsWidget = (0,external_ReactRedux_namespaceObject.connect)(state => ({
 
 
 
+
+const PREF_ONBOARDING_EXPERIENCE_DISMISSED = "discoverystream.onboardingExperience.dismissed";
+const CardGrid_INTERSECTION_RATIO = 0.5;
 const WIDGET_IDS = {
   TOPICS: 1
 };
@@ -8363,6 +8421,88 @@ function DSSubHeader({
   }, /*#__PURE__*/external_React_default().createElement("h3", {
     className: "section-title-container"
   }, children));
+}
+function OnboardingExperience({
+  children,
+  dispatch,
+  windowObj = __webpack_require__.g
+}) {
+  const [dismissed, setDismissed] = (0,external_React_namespaceObject.useState)(false);
+  const [maxHeight, setMaxHeight] = (0,external_React_namespaceObject.useState)(null);
+  const heightElement = (0,external_React_namespaceObject.useRef)(null);
+  const onDismissClick = (0,external_React_namespaceObject.useCallback)(() => {
+    // We update this as state and redux.
+    // The state update is for this newtab,
+    // and the redux update is for other tabs, offscreen tabs, and future tabs.
+    // We need the state update for this tab to support the transition.
+    setDismissed(true);
+    dispatch(actionCreators.SetPref(PREF_ONBOARDING_EXPERIENCE_DISMISSED, true));
+    dispatch(actionCreators.DiscoveryStreamUserEvent({
+      event: "BLOCK",
+      source: "POCKET_ONBOARDING"
+    }));
+  }, [dispatch]);
+  (0,external_React_namespaceObject.useEffect)(() => {
+    const resizeObserver = new windowObj.ResizeObserver(() => {
+      if (heightElement.current) {
+        setMaxHeight(heightElement.current.offsetHeight);
+      }
+    });
+    const options = {
+      threshold: CardGrid_INTERSECTION_RATIO
+    };
+    const intersectionObserver = new windowObj.IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting && entry.intersectionRatio >= CardGrid_INTERSECTION_RATIO)) {
+        dispatch(actionCreators.DiscoveryStreamUserEvent({
+          event: "IMPRESSION",
+          source: "POCKET_ONBOARDING"
+        })); // Once we have observed an impression, we can stop for this instance of newtab.
+
+        intersectionObserver.unobserve(heightElement.current);
+      }
+    }, options);
+
+    if (heightElement.current) {
+      resizeObserver.observe(heightElement.current);
+      intersectionObserver.observe(heightElement.current);
+      setMaxHeight(heightElement.current.offsetHeight);
+    } // Return unmount callback to clean up observers.
+
+
+    return () => {
+      resizeObserver === null || resizeObserver === void 0 ? void 0 : resizeObserver.disconnect();
+      intersectionObserver === null || intersectionObserver === void 0 ? void 0 : intersectionObserver.disconnect();
+    };
+  }, [dispatch, windowObj]);
+  const style = {};
+
+  if (dismissed) {
+    style.maxHeight = "0";
+    style.opacity = "0";
+    style.transition = "max-height 0.26s ease, opacity 0.26s ease";
+  } else if (maxHeight) {
+    style.maxHeight = `${maxHeight}px`;
+  }
+
+  return /*#__PURE__*/external_React_default().createElement("div", {
+    style: style
+  }, /*#__PURE__*/external_React_default().createElement("div", {
+    className: "ds-onboarding-ref",
+    ref: heightElement
+  }, /*#__PURE__*/external_React_default().createElement("div", {
+    className: "ds-onboarding"
+  }, /*#__PURE__*/external_React_default().createElement(DSDismiss, {
+    onDismissClick: onDismissClick,
+    extraClasses: `ds-onboarding-dismiss`
+  }, /*#__PURE__*/external_React_default().createElement("div", {
+    className: "ds-onboarding-graphic"
+  }), /*#__PURE__*/external_React_default().createElement("header", null, /*#__PURE__*/external_React_default().createElement("span", {
+    className: "icon icon-pocket"
+  }), /*#__PURE__*/external_React_default().createElement("span", {
+    "data-l10n-id": "newtab-pocket-onboarding-discover"
+  })), /*#__PURE__*/external_React_default().createElement("p", {
+    "data-l10n-id": "newtab-pocket-onboarding-cta"
+  })))));
 }
 function CardGrid_IntersectionObserver({
   children,
@@ -8537,6 +8677,7 @@ class _CardGrid extends (external_React_default()).PureComponent {
       compactGrid,
       essentialReadsHeader,
       editorsPicksHeader,
+      onboardingExperience,
       widgets,
       recentSavesEnabled,
       hideDescriptions,
@@ -8546,6 +8687,7 @@ class _CardGrid extends (external_React_default()).PureComponent {
       saveToPocketCard
     } = DiscoveryStream;
     const showRecentSaves = prefs.showRecentSaves && recentSavesEnabled;
+    const isOnboardingExperienceDismissed = prefs[PREF_ONBOARDING_EXPERIENCE_DISMISSED];
     const recs = this.props.data.recommendations.slice(0, items);
     const cards = [];
     let essentialReadsCards = [];
@@ -8638,8 +8780,10 @@ class _CardGrid extends (external_React_default()).PureComponent {
     const hideDescriptionsClassName = !hideDescriptions ? `ds-card-grid-include-descriptions` : ``;
     const compactGridClassName = compactGrid ? `ds-card-grid-compact` : ``;
     const hybridLayoutClassName = hybridLayout ? `ds-card-grid-hybrid-layout` : ``;
-    const gridClassName = `ds-card-grid ds-card-grid-border ${hybridLayoutClassName} ${hideCardBackgroundClass} ${fourCardLayoutClass} ${hideDescriptionsClassName} ${compactGridClassName}`;
-    return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, ((_essentialReadsCards = essentialReadsCards) === null || _essentialReadsCards === void 0 ? void 0 : _essentialReadsCards.length) > 0 && /*#__PURE__*/external_React_default().createElement("div", {
+    const gridClassName = `ds-card-grid ${hybridLayoutClassName} ${hideCardBackgroundClass} ${fourCardLayoutClass} ${hideDescriptionsClassName} ${compactGridClassName}`;
+    return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, !isOnboardingExperienceDismissed && onboardingExperience && /*#__PURE__*/external_React_default().createElement(OnboardingExperience, {
+      dispatch: this.props.dispatch
+    }), ((_essentialReadsCards = essentialReadsCards) === null || _essentialReadsCards === void 0 ? void 0 : _essentialReadsCards.length) > 0 && /*#__PURE__*/external_React_default().createElement("div", {
       className: gridClassName
     }, essentialReadsCards), showRecentSaves && /*#__PURE__*/external_React_default().createElement(RecentSavesContainer, {
       gridClassName: gridClassName,
@@ -8696,59 +8840,6 @@ const CardGrid = (0,external_ReactRedux_namespaceObject.connect)(state => ({
   Prefs: state.Prefs,
   DiscoveryStream: state.DiscoveryStream
 }))(_CardGrid);
-;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/DSDismiss/DSDismiss.jsx
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-class DSDismiss extends (external_React_default()).PureComponent {
-  constructor(props) {
-    super(props);
-    this.onDismissClick = this.onDismissClick.bind(this);
-    this.onHover = this.onHover.bind(this);
-    this.offHover = this.offHover.bind(this);
-    this.state = {
-      hovering: false
-    };
-  }
-
-  onDismissClick() {
-    if (this.props.onDismissClick) {
-      this.props.onDismissClick();
-    }
-  }
-
-  onHover() {
-    this.setState({
-      hovering: true
-    });
-  }
-
-  offHover() {
-    this.setState({
-      hovering: false
-    });
-  }
-
-  render() {
-    let className = `ds-dismiss
-      ${this.state.hovering ? ` hovering` : ``}
-      ${this.props.extraClasses ? ` ${this.props.extraClasses}` : ``}`;
-    return /*#__PURE__*/external_React_default().createElement("div", {
-      className: className
-    }, this.props.children, /*#__PURE__*/external_React_default().createElement("button", {
-      className: "ds-dismiss-button",
-      "data-l10n-id": "newtab-dismiss-button-tooltip",
-      onHover: this.onHover,
-      onClick: this.onDismissClick,
-      onMouseEnter: this.onHover,
-      onMouseLeave: this.offHover
-    }, /*#__PURE__*/external_React_default().createElement("span", {
-      className: "icon icon-dismiss"
-    })));
-  }
-
-}
 ;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/CollectionCardGrid/CollectionCardGrid.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -10561,6 +10652,7 @@ const INITIAL_STATE = {
     initialized: false,
     locale: "",
     isForStartupCache: false,
+    customizeMenuVisible: false,
   },
   ASRouter: { initialized: false },
   Snippets: { initialized: false },
@@ -10651,6 +10743,14 @@ function App(prevState = INITIAL_STATE.App, action) {
       // so that sponsored tiles can be rendered as usual. See Bug 1826360.
       return Object.assign({}, prevState, action.data || {}, {
         isForStartupCache: false,
+      });
+    case actionTypes.SHOW_PERSONALIZE:
+      return Object.assign({}, prevState, {
+        customizeMenuVisible: true,
+      });
+    case actionTypes.HIDE_PERSONALIZE:
+      return Object.assign({}, prevState, {
+        customizeMenuVisible: false,
       });
     default:
       return prevState;
@@ -13890,6 +13990,7 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
           fourCardLayout: component.properties.fourCardLayout,
           compactGrid: component.properties.compactGrid,
           essentialReadsHeader: component.properties.essentialReadsHeader,
+          onboardingExperience: component.properties.onboardingExperience,
           editorsPicksHeader: component.properties.editorsPicksHeader,
           recentSavesEnabled: this.props.DiscoveryStream.recentSavesEnabled,
           hideDescriptions: this.props.DiscoveryStream.hideDescriptions
@@ -14733,8 +14834,7 @@ class BaseContent extends (external_React_default()).PureComponent {
     this.onWindowScroll = debounce(this.onWindowScroll.bind(this), 5);
     this.setPref = this.setPref.bind(this);
     this.state = {
-      fixedSearch: false,
-      customizeMenuVisible: false
+      fixedSearch: false
     };
   }
 
@@ -14773,8 +14873,8 @@ class BaseContent extends (external_React_default()).PureComponent {
   }
 
   openCustomizationMenu() {
-    this.setState({
-      customizeMenuVisible: true
+    this.props.dispatch({
+      type: actionTypes.SHOW_PERSONALIZE
     });
     this.props.dispatch(actionCreators.UserEvent({
       event: "SHOW_PERSONALIZE"
@@ -14782,9 +14882,9 @@ class BaseContent extends (external_React_default()).PureComponent {
   }
 
   closeCustomizationMenu() {
-    if (this.state.customizeMenuVisible) {
-      this.setState({
-        customizeMenuVisible: false
+    if (this.props.App.customizeMenuVisible) {
+      this.props.dispatch({
+        type: actionTypes.HIDE_PERSONALIZE
       });
       this.props.dispatch(actionCreators.UserEvent({
         event: "HIDE_PERSONALIZE"
@@ -14810,7 +14910,8 @@ class BaseContent extends (external_React_default()).PureComponent {
       App
     } = props;
     const {
-      initialized
+      initialized,
+      customizeMenuVisible
     } = App;
     const prefs = props.Prefs.values;
     const isDiscoveryStream = props.DiscoveryStream.config && props.DiscoveryStream.config.enabled;
@@ -14818,7 +14919,6 @@ class BaseContent extends (external_React_default()).PureComponent {
     const pocketEnabled = prefs["feeds.section.topstories"] && prefs["feeds.system.topstories"];
     const noSectionsEnabled = !prefs["feeds.topsites"] && !pocketEnabled && filteredSections.filter(section => section.enabled).length === 0;
     const searchHandoffEnabled = prefs["improvesearch.handoffToAwesomebar"];
-    const showCustomizationMenu = this.state.customizeMenuVisible;
     const enabledSections = {
       topSitesEnabled: prefs["feeds.topsites"],
       pocketEnabled: prefs["feeds.section.topstories"],
@@ -14842,7 +14942,7 @@ class BaseContent extends (external_React_default()).PureComponent {
       enabledSections: enabledSections,
       pocketRegion: pocketRegion,
       mayHaveSponsoredTopSites: mayHaveSponsoredTopSites,
-      showing: showCustomizationMenu
+      showing: customizeMenuVisible
     }), /*#__PURE__*/external_React_default().createElement("div", {
       className: outerClassName,
       onClick: this.closeCustomizationMenu

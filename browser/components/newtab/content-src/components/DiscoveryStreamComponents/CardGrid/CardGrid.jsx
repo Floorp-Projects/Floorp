@@ -4,6 +4,7 @@
 
 import { DSCard, PlaceholderDSCard } from "../DSCard/DSCard.jsx";
 import { DSEmptyState } from "../DSEmptyState/DSEmptyState.jsx";
+import { DSDismiss } from "content-src/components/DiscoveryStreamComponents/DSDismiss/DSDismiss";
 import { TopicsWidget } from "../TopicsWidget/TopicsWidget.jsx";
 import { SafeAnchor } from "../SafeAnchor/SafeAnchor";
 import { FluentOrText } from "../../FluentOrText/FluentOrText.jsx";
@@ -13,6 +14,9 @@ import {
 } from "common/Actions.sys.mjs";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { connect, useSelector } from "react-redux";
+const PREF_ONBOARDING_EXPERIENCE_DISMISSED =
+  "discoverystream.onboardingExperience.dismissed";
+const INTERSECTION_RATIO = 0.5;
 const WIDGET_IDS = {
   TOPICS: 1,
 };
@@ -21,6 +25,99 @@ export function DSSubHeader({ children }) {
   return (
     <div className="section-top-bar ds-sub-header">
       <h3 className="section-title-container">{children}</h3>
+    </div>
+  );
+}
+
+export function OnboardingExperience({
+  children,
+  dispatch,
+  windowObj = global,
+}) {
+  const [dismissed, setDismissed] = useState(false);
+  const [maxHeight, setMaxHeight] = useState(null);
+  const heightElement = useRef(null);
+
+  const onDismissClick = useCallback(() => {
+    // We update this as state and redux.
+    // The state update is for this newtab,
+    // and the redux update is for other tabs, offscreen tabs, and future tabs.
+    // We need the state update for this tab to support the transition.
+    setDismissed(true);
+    dispatch(ac.SetPref(PREF_ONBOARDING_EXPERIENCE_DISMISSED, true));
+    dispatch(
+      ac.DiscoveryStreamUserEvent({
+        event: "BLOCK",
+        source: "POCKET_ONBOARDING",
+      })
+    );
+  }, [dispatch]);
+
+  useEffect(() => {
+    const resizeObserver = new windowObj.ResizeObserver(() => {
+      if (heightElement.current) {
+        setMaxHeight(heightElement.current.offsetHeight);
+      }
+    });
+
+    const options = { threshold: INTERSECTION_RATIO };
+    const intersectionObserver = new windowObj.IntersectionObserver(entries => {
+      if (
+        entries.some(
+          entry =>
+            entry.isIntersecting &&
+            entry.intersectionRatio >= INTERSECTION_RATIO
+        )
+      ) {
+        dispatch(
+          ac.DiscoveryStreamUserEvent({
+            event: "IMPRESSION",
+            source: "POCKET_ONBOARDING",
+          })
+        );
+        // Once we have observed an impression, we can stop for this instance of newtab.
+        intersectionObserver.unobserve(heightElement.current);
+      }
+    }, options);
+    if (heightElement.current) {
+      resizeObserver.observe(heightElement.current);
+      intersectionObserver.observe(heightElement.current);
+      setMaxHeight(heightElement.current.offsetHeight);
+    }
+
+    // Return unmount callback to clean up observers.
+    return () => {
+      resizeObserver?.disconnect();
+      intersectionObserver?.disconnect();
+    };
+  }, [dispatch, windowObj]);
+
+  const style = {};
+  if (dismissed) {
+    style.maxHeight = "0";
+    style.opacity = "0";
+    style.transition = "max-height 0.26s ease, opacity 0.26s ease";
+  } else if (maxHeight) {
+    style.maxHeight = `${maxHeight}px`;
+  }
+
+  return (
+    <div style={style}>
+      <div className="ds-onboarding-ref" ref={heightElement}>
+        <div className="ds-onboarding">
+          <DSDismiss
+            onDismissClick={onDismissClick}
+            extraClasses={`ds-onboarding-dismiss`}
+          >
+            <div className="ds-onboarding-graphic" />
+            <header>
+              <span className="icon icon-pocket" />
+              <span data-l10n-id="newtab-pocket-onboarding-discover" />
+            </header>
+            <p data-l10n-id="newtab-pocket-onboarding-cta" />
+          </DSDismiss>
+        </div>
+      </div>
     </div>
   );
 }
@@ -204,6 +301,7 @@ export class _CardGrid extends React.PureComponent {
       compactGrid,
       essentialReadsHeader,
       editorsPicksHeader,
+      onboardingExperience,
       widgets,
       recentSavesEnabled,
       hideDescriptions,
@@ -211,6 +309,8 @@ export class _CardGrid extends React.PureComponent {
     } = this.props;
     const { saveToPocketCard } = DiscoveryStream;
     const showRecentSaves = prefs.showRecentSaves && recentSavesEnabled;
+    const isOnboardingExperienceDismissed =
+      prefs[PREF_ONBOARDING_EXPERIENCE_DISMISSED];
 
     const recs = this.props.data.recommendations.slice(0, items);
     const cards = [];
@@ -319,10 +419,13 @@ export class _CardGrid extends React.PureComponent {
       ? `ds-card-grid-hybrid-layout`
       : ``;
 
-    const gridClassName = `ds-card-grid ds-card-grid-border ${hybridLayoutClassName} ${hideCardBackgroundClass} ${fourCardLayoutClass} ${hideDescriptionsClassName} ${compactGridClassName}`;
+    const gridClassName = `ds-card-grid ${hybridLayoutClassName} ${hideCardBackgroundClass} ${fourCardLayoutClass} ${hideDescriptionsClassName} ${compactGridClassName}`;
 
     return (
       <>
+        {!isOnboardingExperienceDismissed && onboardingExperience && (
+          <OnboardingExperience dispatch={this.props.dispatch} />
+        )}
         {essentialReadsCards?.length > 0 && (
           <div className={gridClassName}>{essentialReadsCards}</div>
         )}

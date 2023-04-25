@@ -32,8 +32,16 @@ class PrefsFeed {
   onPrefChanged(name, value) {
     const prefItem = this._prefMap.get(name);
     if (prefItem) {
+      let action = "BroadcastToContent";
+      if (prefItem.skipBroadcast) {
+        action = "OnlyToMain";
+        if (prefItem.alsoToPreloaded) {
+          action = "AlsoToPreloaded";
+        }
+      }
+
       this.store.dispatch(
-        ac[prefItem.skipBroadcast ? "OnlyToMain" : "BroadcastToContent"]({
+        ac[action]({
           type: at.PREF_CHANGED,
           data: { name, value },
         })

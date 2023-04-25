@@ -2629,6 +2629,127 @@ main.has-snippet {
   text-decoration: underline;
 }
 
+.ds-onboarding,
+.ds-card-grid .ds-card {
+  background: #FFF;
+  border-radius: 4px;
+}
+[lwt-newtab-brighttext] .ds-onboarding,
+[lwt-newtab-brighttext] .ds-card-grid .ds-card {
+  background: none;
+}
+.ds-onboarding:not(.placeholder),
+.ds-card-grid .ds-card:not(.placeholder) {
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+[lwt-newtab-brighttext] .ds-onboarding:not(.placeholder),
+[lwt-newtab-brighttext] .ds-card-grid .ds-card:not(.placeholder) {
+  background: var(--newtab-background-color-secondary);
+}
+.ds-onboarding:not(.placeholder) .img-wrapper .img img,
+.ds-onboarding:not(.placeholder) .img-wrapper .img .placeholder-image,
+.ds-card-grid .ds-card:not(.placeholder) .img-wrapper .img img,
+.ds-card-grid .ds-card:not(.placeholder) .img-wrapper .img .placeholder-image {
+  border-radius: 8px 8px 0 0;
+}
+
+.ds-onboarding-ref {
+  display: inline-block;
+}
+
+.ds-onboarding {
+  padding-inline-start: 16px;
+  padding-inline-end: 16px;
+  margin-bottom: 24px;
+  display: inline-block;
+  position: relative;
+}
+@media (min-width: 610px) {
+  .ds-onboarding {
+    padding-inline-end: 48px;
+  }
+}
+@media (min-width: 866px) {
+  .ds-onboarding {
+    padding-inline-end: 56px;
+  }
+}
+.ds-onboarding .ds-dismiss {
+  position: static;
+}
+.ds-onboarding .ds-dismiss .ds-dismiss-button {
+  inset-inline-end: 8px;
+  top: 8px;
+}
+.ds-onboarding header {
+  display: flex;
+  margin: 32px 0 8px;
+  font-size: 17px;
+  line-height: 23.8px;
+  font-weight: 600;
+  color: #EF4056;
+}
+[lwt-newtab-brighttext] .ds-onboarding header {
+  color: var(--newtab-background-color-primary);
+}
+@media (min-width: 610px) {
+  .ds-onboarding header {
+    margin: 16px 0 8px;
+    display: block;
+    height: 24px;
+  }
+}
+.ds-onboarding p {
+  margin: 8px 0 16px;
+  font-size: 13px;
+  line-height: 19.5px;
+}
+.ds-onboarding .icon-pocket {
+  fill: #EF4056;
+  margin-top: 3px;
+  margin-inline-end: 8px;
+  height: 22px;
+  width: 22px;
+  background-image: url("chrome://global/skin/icons/pocket.svg");
+  background-size: contain;
+}
+[lwt-newtab-brighttext] .ds-onboarding .icon-pocket {
+  fill: var(--newtab-text-primary-color);
+}
+@media (min-width: 610px) {
+  .ds-onboarding .icon-pocket {
+    margin-top: -5px;
+    margin-inline-start: -2px;
+    margin-inline-end: 15px;
+    height: 30px;
+    width: 30px;
+  }
+}
+.ds-onboarding .ds-onboarding-graphic {
+  background-image: url("chrome://activity-stream/content/data/content/assets/pocket-onboarding.avif");
+  border-radius: 8px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  height: 120px;
+  width: 200px;
+  margin-inline-start: 54px;
+  margin-bottom: 16px;
+  float: inline-end;
+  display: none;
+}
+@media (min-resolution: 2x) {
+  .ds-onboarding .ds-onboarding-graphic {
+    background-image: url("chrome://activity-stream/content/data/content/assets/pocket-onboarding@2x.avif");
+  }
+}
+@media (min-width: 866px) {
+  .ds-onboarding .ds-onboarding-graphic {
+    display: block;
+  }
+}
+
 .ds-card-grid {
   display: grid;
   grid-gap: 24px;
@@ -2640,24 +2761,6 @@ main.has-snippet {
   .ds-card-grid.ds-card-grid-recent-saves .ds-card:last-child:nth-child(2n-1) {
     display: none;
   }
-}
-.ds-card-grid .ds-card {
-  background: #FFF;
-  border-radius: 4px;
-}
-[lwt-newtab-brighttext] .ds-card-grid .ds-card {
-  background: none;
-}
-.ds-card-grid.ds-card-grid-border .ds-card:not(.placeholder) {
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-}
-[lwt-newtab-brighttext] .ds-card-grid.ds-card-grid-border .ds-card:not(.placeholder) {
-  background: var(--newtab-background-color-secondary);
-}
-.ds-card-grid.ds-card-grid-border .ds-card:not(.placeholder) .img-wrapper .img img,
-.ds-card-grid.ds-card-grid-border .ds-card:not(.placeholder) .img-wrapper .img .placeholder-image {
-  border-radius: 8px 8px 0 0;
 }
 .ds-card-grid .ds-card-link:focus {
   border: 0;
@@ -2855,28 +2958,28 @@ main.has-snippet {
   }
 }
 
-.outer-wrapper .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder),
-.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder) {
+.outer-wrapper .ds-card-grid.ds-card-grid-hide-background .ds-card:not(.placeholder),
+.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-hide-background .ds-card:not(.placeholder) {
   box-shadow: none;
   background: none;
 }
-.outer-wrapper .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder) .ds-card-link:focus,
-.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder) .ds-card-link:focus {
+.outer-wrapper .ds-card-grid.ds-card-grid-hide-background .ds-card:not(.placeholder) .ds-card-link:focus,
+.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-hide-background .ds-card:not(.placeholder) .ds-card-link:focus {
   box-shadow: none;
 }
-.outer-wrapper .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder) .ds-card-link:focus .img-wrapper .img img,
-.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder) .ds-card-link:focus .img-wrapper .img img {
+.outer-wrapper .ds-card-grid.ds-card-grid-hide-background .ds-card:not(.placeholder) .ds-card-link:focus .img-wrapper .img img,
+.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-hide-background .ds-card:not(.placeholder) .ds-card-link:focus .img-wrapper .img img {
   border: 0;
   outline: 0;
   box-shadow: 0 0 0 3px var(--newtab-primary-action-background-dimmed), 0 0 0 1px var(--newtab-primary-action-background);
 }
-.outer-wrapper .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder) .img-wrapper .img img,
-.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder) .img-wrapper .img img {
+.outer-wrapper .ds-card-grid.ds-card-grid-hide-background .ds-card:not(.placeholder) .img-wrapper .img img,
+.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-hide-background .ds-card:not(.placeholder) .img-wrapper .img img {
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
-.outer-wrapper .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder) .meta,
-.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder) .meta {
+.outer-wrapper .ds-card-grid.ds-card-grid-hide-background .ds-card:not(.placeholder) .meta,
+.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-hide-background .ds-card:not(.placeholder) .meta {
   padding: 12px 0 0;
 }
 
@@ -3274,11 +3377,6 @@ main.has-snippet {
   opacity: 1;
   transform: scale(1);
   transition-delay: 333ms;
-}
-.ds-card:is(:hover, :focus, .active).ds-card-grid-border,
-.ds-signup:is(:hover, :focus, .active).ds-card-grid-border {
-  box-shadow: 0 0 0 5px var(--newtab-element-secondary-color);
-  transition: box-shadow 150ms;
 }
 
 .ds-card {

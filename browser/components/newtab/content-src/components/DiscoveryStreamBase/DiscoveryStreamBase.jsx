@@ -192,6 +192,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             fourCardLayout={component.properties.fourCardLayout}
             compactGrid={component.properties.compactGrid}
             essentialReadsHeader={component.properties.essentialReadsHeader}
+            onboardingExperience={component.properties.onboardingExperience}
             editorsPicksHeader={component.properties.editorsPicksHeader}
             recentSavesEnabled={this.props.DiscoveryStream.recentSavesEnabled}
             hideDescriptions={this.props.DiscoveryStream.hideDescriptions}
