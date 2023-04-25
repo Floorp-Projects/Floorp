@@ -93,20 +93,21 @@ const REMOTE_CONFIGURATION_BAR = ExperimentFakes.recipe("bar-rollout", {
 
 const SYNC_DEFAULTS_PREF_BRANCH = "nimbus.syncdefaultsstore.";
 
+add_setup(function() {
+  const client = RemoteSettings("nimbus-desktop-experiments");
+  sinon.stub(client, "get").resolves([]);
+
+  registerCleanupFunction(() => client.get.restore());
+});
+
 async function setup(configuration) {
   const client = RemoteSettings("nimbus-desktop-experiments");
-  await client.db.importChanges(
-    {},
-    Date.now(),
-    configuration || [REMOTE_CONFIGURATION_FOO, REMOTE_CONFIGURATION_BAR],
-    {
-      clear: true,
-    }
+  client.get.resolves(
+    configuration ?? [REMOTE_CONFIGURATION_FOO, REMOTE_CONFIGURATION_BAR]
   );
 
   // Simulate a state where no experiment exists.
-  const cleanup = () =>
-    client.db.importChanges({}, Date.now(), [], { clear: true });
+  const cleanup = () => client.get.resolves([]);
   return { client, cleanup };
 }
 

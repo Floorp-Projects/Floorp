@@ -4,6 +4,7 @@
 
 import { ExperimentStore } from "resource://nimbus/lib/ExperimentStore.sys.mjs";
 import { FileTestUtils } from "resource://testing-common/FileTestUtils.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -17,6 +18,36 @@ ChromeUtils.defineESModuleGetters(lazy, {
   _RemoteSettingsExperimentLoader:
     "resource://nimbus/lib/RemoteSettingsExperimentLoader.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
+});
+
+function fetchSchemaSync(uri) {
+  // Yes, this is doing a sync load, but this is only done *once* and we cache
+  // the result after *and* it is test-only.
+  const channel = lazy.NetUtil.newChannel({
+    uri,
+    loadUsingSystemPrincipal: true,
+  });
+  const stream = Cc["@mozilla.org/scriptableinputstream;1"].createInstance(
+    Ci.nsIScriptableInputStream
+  );
+
+  stream.init(channel.open());
+
+  const available = stream.available();
+  const json = stream.read(available);
+  stream.close();
+
+  return JSON.parse(json);
+}
+
+XPCOMUtils.defineLazyGetter(lazy, "enrollmentSchema", () => {
+  return fetchSchemaSync(
+    "resource://nimbus/schemas/NimbusEnrollment.schema.json"
+  );
 });
 
 const { SYNC_DATA_PREF_BRANCH, SYNC_DEFAULTS_PREF_BRANCH } = ExperimentStore;
@@ -97,11 +128,7 @@ export const ExperimentTestUtils = {
       `Experiment ${experiment.slug} not valid`
     );
   },
-  async validateEnrollment(enrollment) {
-    const schema = await fetchSchema(
-      "resource://nimbus/schemas/NimbusEnrollment.schema.json"
-    );
-
+  validateEnrollment(enrollment) {
     // We still have single feature experiment recipes for backwards
     // compatibility testing but we don't do schema validation
     if (!enrollment.branch.features && enrollment.branch.feature) {
@@ -111,7 +138,7 @@ export const ExperimentTestUtils = {
     return (
       this._validateFeatureValueEnum(enrollment) &&
       this._validateSchema(
-        schema,
+        lazy.enrollmentSchema,
         enrollment,
         `Enrollment ${enrollment.slug} is not valid`
       )
@@ -217,6 +244,12 @@ export const ExperimentFakes = {
       return promise;
     };
   },
+  /**
+   * Enroll in an experiment branch with the given feature configuration.
+   *
+   * NB: It is unnecessary to await the enrollmentPromise.
+   *     See bug 1773583 and bug 1829412.
+   */
   async enrollWithFeatureConfig(
     featureConfig,
     { manager = lazy.ExperimentAPI._manager, isRollout = false } = {}
@@ -255,6 +288,12 @@ export const ExperimentFakes = {
 
     return doExperimentCleanup;
   },
+  /**
+   * Enroll in the given recipe.
+   *
+   * NB: It is unnecessary to await the enrollmentPromise.
+   *     See bug 1773583 and bug 1829412.
+   */
   enrollmentHelper(
     recipe,
     { manager = lazy.ExperimentAPI._manager, source = "enrollmentHelper" } = {}

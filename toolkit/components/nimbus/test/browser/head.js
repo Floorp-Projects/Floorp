@@ -27,8 +27,8 @@ add_setup(function() {
   );
   sandbox
     .stub(ExperimentManager.store, "addEnrollment")
-    .callsFake(async enrollment => {
-      await ExperimentTestUtils.validateEnrollment(enrollment);
+    .callsFake(enrollment => {
+      ExperimentTestUtils.validateEnrollment(enrollment);
       return origAddExperiment(enrollment);
     });
 
