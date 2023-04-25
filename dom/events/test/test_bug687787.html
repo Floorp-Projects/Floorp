@@ -19,8 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=687787
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-SimpleTest.expectAssertions(1); // in IMEStateManager::OnChangeFocusInternal, bug 1820470
-
 var eventStack = [];
 
 function _callback(e){
@@ -531,12 +529,6 @@ function TestFocusOutMovesTarget() {
         {'type' : 'focusout',
         'target' : input1,
         'relatedTarget' : input2},
-        {'type' : 'focus',
-        'target' : input2,
-        'relatedTarget' : null},
-        {'type' : 'focusin',
-        'target' : input2,
-        'relatedTarget' : null},
     ]
 
     input1.focus();
