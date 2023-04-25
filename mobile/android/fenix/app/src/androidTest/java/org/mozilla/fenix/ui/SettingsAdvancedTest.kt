@@ -16,10 +16,13 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.assertYoutubeAppOpens
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.runWithCondition
+import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
@@ -139,7 +142,7 @@ class SettingsAdvancedTest {
 
             navigationToolbar {
             }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-                clickLinkMatchingText("Youtube link")
+                clickPageObject(itemContainingText("Youtube link"))
                 waitForPageToLoad()
                 verifyUrl("youtube.com")
             }
@@ -173,7 +176,7 @@ class SettingsAdvancedTest {
 
             navigationToolbar {
             }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-                clickLinkMatchingText("Youtube link")
+                clickPageObject(itemContainingText("Youtube link"))
                 waitForPageToLoad()
                 verifyUrl("youtube.com")
             }
@@ -209,18 +212,18 @@ class SettingsAdvancedTest {
 
             navigationToolbar {
             }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-                clickLinkMatchingText("Youtube link")
+                clickPageObject(itemContainingText("Youtube link"))
                 verifyOpenLinkInAnotherAppPrompt()
-                cancelOpenLinkInAnotherApp()
+                clickPageObject(itemWithResIdAndText("android:id/button2", "CANCEL"))
                 waitForPageToLoad()
                 verifyUrl("youtube.com")
             }
 
             navigationToolbar {
             }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-                clickLinkMatchingText("Youtube link")
+                clickPageObject(itemContainingText("Youtube link"))
                 verifyOpenLinkInAnotherAppPrompt()
-                confirmOpenLinkInAnotherApp()
+                clickPageObject(itemWithResIdAndText("android:id/button1", "OPEN"))
                 mDevice.waitForIdle()
                 assertYoutubeAppOpens()
             }
@@ -259,18 +262,18 @@ class SettingsAdvancedTest {
 
             navigationToolbar {
             }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-                clickLinkMatchingText("Youtube link")
+                clickPageObject(itemContainingText("Youtube link"))
                 verifyPrivateBrowsingOpenLinkInAnotherAppPrompt("youtube.com")
-                cancelOpenLinkInAnotherApp()
+                clickPageObject(itemWithResIdAndText("android:id/button2", "CANCEL"))
                 waitForPageToLoad()
                 verifyUrl("youtube.com")
             }
 
             navigationToolbar {
             }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-                clickLinkMatchingText("Youtube link")
+                clickPageObject(itemContainingText("Youtube link"))
                 verifyPrivateBrowsingOpenLinkInAnotherAppPrompt("youtube.com")
-                confirmOpenLinkInAnotherApp()
+                clickPageObject(itemWithResIdAndText("android:id/button1", "OPEN"))
                 mDevice.waitForIdle()
                 assertYoutubeAppOpens()
             }
@@ -305,7 +308,7 @@ class SettingsAdvancedTest {
 
             navigationToolbar {
             }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-                clickLinkMatchingText("Youtube link")
+                clickPageObject(itemContainingText("Youtube link"))
                 mDevice.waitForIdle()
                 assertYoutubeAppOpens()
             }
@@ -343,18 +346,18 @@ class SettingsAdvancedTest {
 
             navigationToolbar {
             }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-                clickLinkMatchingText("Youtube link")
+                clickPageObject(itemContainingText("Youtube link"))
                 verifyPrivateBrowsingOpenLinkInAnotherAppPrompt("youtube.com")
-                cancelOpenLinkInAnotherApp()
+                clickPageObject(itemWithResIdAndText("android:id/button2", "CANCEL"))
                 waitForPageToLoad()
                 verifyUrl("youtube.com")
             }
 
             navigationToolbar {
             }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-                clickLinkMatchingText("Youtube link")
+                clickPageObject(itemContainingText("Youtube link"))
                 verifyPrivateBrowsingOpenLinkInAnotherAppPrompt("youtube.com")
-                confirmOpenLinkInAnotherApp()
+                clickPageObject(itemWithResIdAndText("android:id/button1", "OPEN"))
                 mDevice.waitForIdle()
                 assertYoutubeAppOpens()
             }

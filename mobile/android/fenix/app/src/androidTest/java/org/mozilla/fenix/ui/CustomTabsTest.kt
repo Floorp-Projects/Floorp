@@ -16,11 +16,15 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.FeatureSettingsHelperDelegate
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.createCustomTabIntent
 import org.mozilla.fenix.helpers.TestHelper.openAppFromExternalLink
 import org.mozilla.fenix.ui.robots.browserScreen
+import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.customTabScreen
+import org.mozilla.fenix.ui.robots.longClickPageObject
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.notificationShade
 import org.mozilla.fenix.ui.robots.openEditURLView
@@ -78,7 +82,7 @@ class CustomTabsTest {
 
         customTabScreen {
             waitForPageToLoad()
-            clickLinkMatchingText("External link")
+            clickPageObject(itemContainingText("External link"))
             waitForPageToLoad()
             verifyCustomTabToolbarTitle(externalLinkURL)
         }
@@ -101,7 +105,7 @@ class CustomTabsTest {
 
         browserScreen {
             verifySaveLoginPromptIsDisplayed()
-            saveLoginFromPrompt("Save")
+            clickPageObject(itemWithText("Save"))
         }
 
         openAppFromExternalLink(loginPage)
@@ -164,7 +168,7 @@ class CustomTabsTest {
         }
 
         browserScreen {
-            longClickMatchingText("content")
+            longClickPageObject(itemContainingText("content"))
         }.clickShareSelectedText {
             verifyAndroidShareLayout()
         }

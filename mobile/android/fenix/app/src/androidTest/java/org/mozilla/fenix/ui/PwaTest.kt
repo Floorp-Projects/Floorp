@@ -8,14 +8,20 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.Constants.PackageName.GMAIL_APP
 import org.mozilla.fenix.helpers.Constants.PackageName.PHONE_APP
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.assertNativeAppOpens
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.ui.robots.addToHomeScreen
 import org.mozilla.fenix.ui.robots.browserScreen
+import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.customTabScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.pwaScreen
+import org.mozilla.fenix.ui.robots.setPageObjectText
 
 class PwaTest {
     /* Updated externalLinks.html to v2.0,
@@ -42,7 +48,7 @@ class PwaTest {
         }.clickInstall {
             clickAddAutomaticallyButton()
         }.openHomeScreenShortcut(shortcutTitle) {
-            clickLinkMatchingText("External link")
+            clickPageObject(itemContainingText("External link"))
         }
 
         customTabScreen {
@@ -62,7 +68,7 @@ class PwaTest {
         }.clickInstall {
             clickAddAutomaticallyButton()
         }.openHomeScreenShortcut(shortcutTitle) {
-            clickLinkMatchingText("Email link")
+            clickPageObject(itemContainingText("Email link"))
             assertNativeAppOpens(GMAIL_APP, emailLink)
         }
     }
@@ -78,8 +84,8 @@ class PwaTest {
         }.clickInstall {
             clickAddAutomaticallyButton()
         }.openHomeScreenShortcut(shortcutTitle) {
-            clickLinkMatchingText("Telephone link")
-            confirmOpenLinkInAnotherApp()
+            clickPageObject(itemContainingText("Telephone link"))
+            clickPageObject(itemWithResIdAndText("android:id/button1", "OPEN"))
             assertNativeAppOpens(PHONE_APP, phoneLink)
         }
     }
@@ -117,9 +123,11 @@ class PwaTest {
             clickAddAutomaticallyButton()
         }.openHomeScreenShortcut(shortcutTitle) {
             mDevice.waitForIdle()
-            fillAndSubmitLoginCredentials("mozilla", "firefox")
+            setPageObjectText(itemWithResId("username"), "mozilla")
+            setPageObjectText(itemWithResId("password"), "firefox")
+            clickPageObject(itemWithResId("submit"))
             verifySaveLoginPromptIsDisplayed()
-            saveLoginFromPrompt("Save")
+            clickPageObject(itemWithText("Save"))
             TestHelper.openAppFromExternalLink(pwaPage)
 
             browserScreen {

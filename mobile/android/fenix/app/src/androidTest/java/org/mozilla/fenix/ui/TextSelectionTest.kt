@@ -11,9 +11,14 @@ import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.ui.robots.clickContextMenuItem
+import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.homeScreen
+import org.mozilla.fenix.ui.robots.longClickPageObject
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.openEditURLView
 import org.mozilla.fenix.ui.robots.searchScreen
@@ -50,7 +55,9 @@ class TextSelectionTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-            longClickAndCopyText("content", true)
+            longClickPageObject(itemContainingText("content"))
+            clickContextMenuItem("Select all")
+            clickContextMenuItem("Copy")
         }.openNavigationToolbar {
             openEditURLView()
         }
@@ -72,7 +79,8 @@ class TextSelectionTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-            longClickAndCopyText("content")
+            longClickPageObject(itemContainingText("content"))
+            clickContextMenuItem("Copy")
         }.openNavigationToolbar {
             openEditURLView()
         }
@@ -92,7 +100,7 @@ class TextSelectionTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-            longClickLink(genericURL.content)
+            longClickPageObject(itemWithText(genericURL.content))
         }.clickShareSelectedText {
             verifyAndroidShareLayout()
         }
@@ -105,7 +113,8 @@ class TextSelectionTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-            longClickAndSearchText("Search", "content")
+            longClickPageObject(itemContainingText("content"))
+            clickContextMenuItem("Search")
             mDevice.waitForIdle()
             verifyTabCounter("2")
             verifyUrl("google")
@@ -122,7 +131,8 @@ class TextSelectionTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-            longClickAndSearchText("Private Search", "content")
+            longClickPageObject(itemContainingText("content"))
+            clickContextMenuItem("Private Search")
             mDevice.waitForIdle()
             verifyTabCounter("2")
             verifyUrl("google")
@@ -138,8 +148,10 @@ class TextSelectionTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-            clickLinkMatchingText("PDF file")
-            longClickAndCopyText("Crossing", true)
+            clickPageObject(itemWithText("PDF file"))
+            longClickPageObject(itemContainingText("Crossing"))
+            clickContextMenuItem("Select all")
+            clickContextMenuItem("Copy")
         }.openNavigationToolbar {
             openEditURLView()
         }
@@ -162,8 +174,9 @@ class TextSelectionTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-            clickLinkMatchingText("PDF file")
-            longClickAndCopyText("Crossing")
+            clickPageObject(itemWithText("PDF file"))
+            longClickPageObject(itemContainingText("Crossing"))
+            clickContextMenuItem("Copy")
         }.openNavigationToolbar {
             openEditURLView()
         }
@@ -184,8 +197,8 @@ class TextSelectionTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-            clickLinkMatchingText("PDF file")
-            longClickMatchingText("Crossing")
+            clickPageObject(itemWithText("PDF file"))
+            longClickPageObject(itemContainingText("Crossing"))
         }.clickShareSelectedText {
             verifyAndroidShareLayout()
         }
@@ -199,8 +212,9 @@ class TextSelectionTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-            clickLinkMatchingText("PDF file")
-            longClickAndSearchText("Search", "Crossing")
+            clickPageObject(itemWithText("PDF file"))
+            longClickPageObject(itemContainingText("Crossing"))
+            clickContextMenuItem("Search")
             verifyTabCounter("2")
             verifyUrl("google")
         }
@@ -217,8 +231,9 @@ class TextSelectionTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-            clickLinkMatchingText("PDF file")
-            longClickAndSearchText("Private Search", "Crossing")
+            clickPageObject(itemWithText("PDF file"))
+            longClickPageObject(itemContainingText("Crossing"))
+            clickContextMenuItem("Private Search")
             verifyTabCounter("2")
             verifyUrl("google")
         }

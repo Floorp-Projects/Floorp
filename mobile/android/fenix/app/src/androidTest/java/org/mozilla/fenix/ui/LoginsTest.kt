@@ -16,15 +16,23 @@ import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.MatcherHelper
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.restartApp
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.ui.robots.browserScreen
+import org.mozilla.fenix.ui.robots.clearTextFieldItem
+import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
+import org.mozilla.fenix.ui.robots.setPageObjectText
 
 /**
  * Tests for verifying:
@@ -125,8 +133,9 @@ class LoginsTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(saveLoginTest.url) {
             clickSubmitLoginButton()
+            verifySaveLoginPromptIsDisplayed()
             // Click save to save the login
-            saveLoginFromPrompt("Save")
+            clickPageObject(itemWithText("Save"))
         }
         browserScreen {
         }.openThreeDotMenu {
@@ -152,8 +161,11 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
-            fillAndSubmitLoginCredentials(userName, password)
-            saveLoginFromPrompt("Save")
+            setPageObjectText(itemWithResId("username"), userName)
+            setPageObjectText(itemWithResId("password"), password)
+            clickPageObject(itemWithResId("submit"))
+            verifySaveLoginPromptIsDisplayed()
+            clickPageObject(itemWithText("Save"))
             mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.openSettings {
@@ -175,7 +187,7 @@ class LoginsTest {
         }.enterURLAndEnterToBrowser(saveLoginTest.url) {
             clickSubmitLoginButton()
             // Don't save the login, add to exceptions
-            saveLoginFromPrompt("Never save")
+            clickPageObject(itemWithText("Never save"))
             mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.openSettings {
@@ -203,16 +215,17 @@ class LoginsTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(saveLoginTest.url) {
             clickSubmitLoginButton()
+            verifySaveLoginPromptIsDisplayed()
             // Click Save to save the login
-            saveLoginFromPrompt("Save")
+            clickPageObject(itemWithText("Save"))
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(saveLoginTest.url) {
             enterPassword("test")
             mDevice.waitForIdle()
             clickSubmitLoginButton()
-            verifyUpdateLoginPromptIsShown()
+            verifySaveLoginPromptIsDisplayed()
             // Click Update to change the saved password
-            saveLoginFromPrompt("Update")
+            clickPageObject(itemWithText("Update"))
         }.openThreeDotMenu {
         }.openSettings {
             scrollToElementByText("Logins and passwords")
@@ -232,20 +245,35 @@ class LoginsTest {
     @Test
     fun verifyMultipleLoginsSelectionsTest() {
         val loginPage = "https://mozilla-mobile.github.io/testapp/v2.0/loginForm.html"
+        val firstUser = "mozilla"
+        val firstPass = "firefox"
+        val secondUser = "fenix"
+        val secondPass = "pass"
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
-            fillAndSubmitLoginCredentials("mozilla", "firefox")
-            saveLoginFromPrompt("Save")
-            fillAndSubmitLoginCredentials("firefox", "mozilla")
-            saveLoginFromPrompt("Save")
-            clearUserNameLoginCredential()
+            setPageObjectText(itemWithResId("username"), firstUser)
+            setPageObjectText(itemWithResId("password"), firstPass)
+            clickPageObject(itemWithResId("submit"))
+            verifySaveLoginPromptIsDisplayed()
+            clickPageObject(itemWithText("Save"))
+            setPageObjectText(itemWithResId("username"), secondUser)
+            setPageObjectText(itemWithResId("password"), secondPass)
+            clickPageObject(itemWithResId("submit"))
+            verifySaveLoginPromptIsDisplayed()
+            clickPageObject(itemWithText("Save"))
+            clearTextFieldItem(itemWithResId("username"))
             clickSuggestedLoginsButton()
-            verifySuggestedUserName("firefox")
-            verifySuggestedUserName("mozilla")
-            clickLoginSuggestion("mozilla")
-            clickShowPasswordButton()
-            verifyPrefilledLoginCredentials("mozilla", "firefox", true)
+            verifySuggestedUserName(firstUser)
+            verifySuggestedUserName(secondUser)
+            clickPageObject(
+                itemWithResIdAndText(
+                    "$packageName:id/username",
+                    firstUser,
+                ),
+            )
+            clickPageObject(itemWithResId("togglePassword"))
+            verifyPrefilledLoginCredentials(firstUser, firstPass, true)
         }
     }
 
@@ -256,8 +284,11 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
-            fillAndSubmitLoginCredentials("mozilla", "firefox")
-            saveLoginFromPrompt("Save")
+            setPageObjectText(itemWithResId("username"), "mozilla")
+            setPageObjectText(itemWithResId("password"), "firefox")
+            clickPageObject(itemWithResId("submit"))
+            verifySaveLoginPromptIsDisplayed()
+            clickPageObject(itemWithText("Save"))
             mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.openSettings {
@@ -281,8 +312,11 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
-            fillAndSubmitLoginCredentials("mozilla", "firefox")
-            saveLoginFromPrompt("Save")
+            setPageObjectText(itemWithResId("username"), "mozilla")
+            setPageObjectText(itemWithResId("password"), "firefox")
+            clickPageObject(itemWithResId("submit"))
+            verifySaveLoginPromptIsDisplayed()
+            clickPageObject(itemWithText("Save"))
             mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.openSettings {
@@ -303,7 +337,7 @@ class LoginsTest {
         }.openThreeDotMenu {
         }.refreshPage {
             waitForPageToLoad()
-            clickShowPasswordButton()
+            clickPageObject(itemWithResId("togglePassword"))
             verifyPrefilledLoginCredentials("android", "fenix", true)
         }
     }
@@ -315,8 +349,11 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
-            fillAndSubmitLoginCredentials("mozilla", "firefox")
-            saveLoginFromPrompt("Save")
+            setPageObjectText(itemWithResId("username"), "mozilla")
+            setPageObjectText(itemWithResId("password"), "firefox")
+            clickPageObject(itemWithResId("submit"))
+            verifySaveLoginPromptIsDisplayed()
+            clickPageObject(itemWithText("Save"))
             mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.openSettings {
@@ -339,8 +376,11 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
-            fillAndSubmitLoginCredentials("mozilla", "firefox")
-            saveLoginFromPrompt("Save")
+            setPageObjectText(itemWithResId("username"), "mozilla")
+            setPageObjectText(itemWithResId("password"), "firefox")
+            clickPageObject(itemWithResId("submit"))
+            verifySaveLoginPromptIsDisplayed()
+            clickPageObject(itemWithText("Save"))
             mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.openSettings {
@@ -365,8 +405,11 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
-            fillAndSubmitLoginCredentials("mozilla", "firefox")
-            saveLoginFromPrompt("Save")
+            setPageObjectText(itemWithResId("username"), "mozilla")
+            setPageObjectText(itemWithResId("password"), "firefox")
+            clickPageObject(itemWithResId("submit"))
+            verifySaveLoginPromptIsDisplayed()
+            clickPageObject(itemWithText("Save"))
             mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.openSettings {
@@ -392,7 +435,7 @@ class LoginsTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.url) {
             clickSubmitLoginButton()
-            saveLoginFromPrompt("Save")
+            clickPageObject(itemWithText("Save"))
             mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.openSettings {
@@ -443,8 +486,11 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
-            fillAndSubmitLoginCredentials("mozilla", "firefox")
-            saveLoginFromPrompt("Save")
+            setPageObjectText(itemWithResId("username"), "mozilla")
+            setPageObjectText(itemWithResId("password"), "firefox")
+            clickPageObject(itemWithResId("submit"))
+            verifySaveLoginPromptIsDisplayed()
+            clickPageObject(itemWithText("Save"))
         }.openTabDrawer {
             closeTab()
         }
@@ -494,18 +540,23 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
-            fillAndSubmitLoginCredentials("mozilla", "firefox")
-            saveLoginFromPrompt("Save")
+            setPageObjectText(itemWithResId("username"), "mozilla")
+            setPageObjectText(itemWithResId("password"), "firefox")
+            clickPageObject(itemWithResId("submit"))
+            verifySaveLoginPromptIsDisplayed()
+            clickPageObject(itemWithText("Save"))
         }.openTabDrawer {
             closeTab()
         }
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
-            clickShowPasswordButton()
-            fillAndSubmitLoginCredentials("mozilla", "fenix")
-            verifyUpdateLoginPromptIsShown()
-            saveLoginFromPrompt("Don’t update")
+            clickPageObject(itemWithResId("togglePassword"))
+            setPageObjectText(itemWithResId("username"), "mozilla")
+            setPageObjectText(itemWithResId("password"), "fenix")
+            clickPageObject(itemWithResId("submit"))
+            verifySaveLoginPromptIsDisplayed()
+            clickPageObject(itemWithText("Don’t update"))
         }.openThreeDotMenu {
         }.openSettings {
         }.openLoginsAndPasswordSubMenu {
@@ -526,11 +577,15 @@ class LoginsTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstLoginPage.url) {
             clickSubmitLoginButton()
-            saveLoginFromPrompt("Save")
+            verifySaveLoginPromptIsDisplayed()
+            clickPageObject(itemWithText("Save"))
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(secondLoginPage.toUri()) {
-            fillAndSubmitLoginCredentials("android", "firefox")
-            saveLoginFromPrompt("Save")
+            setPageObjectText(itemWithResId("username"), "android")
+            setPageObjectText(itemWithResId("password"), "firefox")
+            clickPageObject(itemWithResId("submit"))
+            verifySaveLoginPromptIsDisplayed()
+            clickPageObject(itemWithText("Save"))
         }.openThreeDotMenu {
         }.openSettings {
         }.openLoginsAndPasswordSubMenu {
@@ -568,11 +623,15 @@ class LoginsTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstLoginPage.url) {
             clickSubmitLoginButton()
-            saveLoginFromPrompt("Save")
+            verifySaveLoginPromptIsDisplayed()
+            clickPageObject(itemWithText("Save"))
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(secondLoginPage.toUri()) {
-            fillAndSubmitLoginCredentials("android", "firefox")
-            saveLoginFromPrompt("Save")
+            setPageObjectText(itemWithResId("username"), "android")
+            setPageObjectText(itemWithResId("password"), "firefox")
+            clickPageObject(itemWithResId("submit"))
+            verifySaveLoginPromptIsDisplayed()
+            clickPageObject(itemWithText("Save"))
         }.openThreeDotMenu {
         }.openSettings {
         }.openLoginsAndPasswordSubMenu {
@@ -610,11 +669,15 @@ class LoginsTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstLoginPage.url) {
             clickSubmitLoginButton()
-            saveLoginFromPrompt("Save")
+            verifySaveLoginPromptIsDisplayed()
+            clickPageObject(itemWithText("Save"))
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(secondLoginPage.toUri()) {
-            fillAndSubmitLoginCredentials("mozilla", "firefox")
-            saveLoginFromPrompt("Save")
+            setPageObjectText(itemWithResId("username"), "mozilla")
+            setPageObjectText(itemWithResId("password"), "firefox")
+            clickPageObject(itemWithResId("submit"))
+            verifySaveLoginPromptIsDisplayed()
+            clickPageObject(itemWithText("Save"))
         }.openThreeDotMenu {
         }.openSettings {
         }.openLoginsAndPasswordSubMenu {
@@ -652,11 +715,15 @@ class LoginsTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstLoginPage.url) {
             clickSubmitLoginButton()
-            saveLoginFromPrompt("Save")
+            verifySaveLoginPromptIsDisplayed()
+            clickPageObject(itemWithText("Save"))
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(secondLoginPage.toUri()) {
-            fillAndSubmitLoginCredentials("mozilla", "firefox")
-            saveLoginFromPrompt("Save")
+            setPageObjectText(itemWithResId("username"), "mozilla")
+            setPageObjectText(itemWithResId("password"), "firefox")
+            clickPageObject(itemWithResId("submit"))
+            verifySaveLoginPromptIsDisplayed()
+            clickPageObject(itemWithText("Save"))
             mDevice.waitForIdle()
         }.openThreeDotMenu {
         }.openSettings {
@@ -712,11 +779,11 @@ class LoginsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
-            clickUsernameTextField()
+            clickPageObject(MatcherHelper.itemWithResId("username"))
             clickSuggestedLoginsButton()
             verifySuggestedUserName("mozilla")
-            clickLoginSuggestion("mozilla")
-            clickShowPasswordButton()
+            clickPageObject(itemWithResIdAndText("$packageName:id/username", "mozilla"))
+            clickPageObject(itemWithResId("togglePassword"))
             verifyPrefilledLoginCredentials("mozilla", "firefox", true)
         }
     }

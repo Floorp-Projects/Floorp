@@ -5,9 +5,11 @@
 package org.mozilla.fenix.ui.robots
 
 import android.content.Intent
+import android.net.Uri
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents
+import androidx.test.espresso.intent.matcher.BundleMatchers
 import androidx.test.espresso.intent.matcher.IntentMatchers
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
@@ -72,6 +74,30 @@ class ShareOverlayRobot {
         )
     }
 
+    fun verifyShareLinkIntent(url: Uri) {
+        // verify share intent is launched and matched with associated passed in URL
+        Intents.intended(
+            allOf(
+                IntentMatchers.hasAction(Intent.ACTION_CHOOSER),
+                IntentMatchers.hasExtras(
+                    allOf(
+                        BundleMatchers.hasEntry(
+                            Intent.EXTRA_INTENT,
+                            allOf(
+                                IntentMatchers.hasAction(Intent.ACTION_SEND),
+                                IntentMatchers.hasType("text/plain"),
+                                IntentMatchers.hasExtra(
+                                    Intent.EXTRA_TEXT,
+                                    url.toString(),
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        )
+    }
+
     class Transition {
         fun clickSaveAsPDF(interact: DownloadRobot.() -> Unit): DownloadRobot.Transition {
             itemContainingText("Save as PDF").click()
@@ -80,6 +106,11 @@ class ShareOverlayRobot {
             return DownloadRobot.Transition()
         }
     }
+}
+
+fun shareOverlay(interact: ShareOverlayRobot.() -> Unit): ShareOverlayRobot.Transition {
+    ShareOverlayRobot().interact()
+    return ShareOverlayRobot.Transition()
 }
 
 private fun shareTabsLayout() = onView(withResourceName("shareWrapper"))

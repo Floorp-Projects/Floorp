@@ -8,8 +8,12 @@ import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
+import org.mozilla.fenix.helpers.TestHelper.packageName
+import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
@@ -60,9 +64,14 @@ class AddressAutofillTest {
         }
         navigationToolbar {
         }.enterURLAndEnterToBrowser(addressFormPage.url) {
-            clickStreetAddressTextBox()
+            clickPageObject(itemWithResId("streetAddress"))
             clickSelectAddressButton()
-            clickAddressSuggestion("Harrison Street")
+            clickPageObject(
+                itemWithResIdContainingText(
+                    "$packageName:id/address_name",
+                    "Harrison Street",
+                ),
+            )
             verifyAutofilledAddress("Harrison Street")
         }
     }
@@ -164,7 +173,7 @@ class AddressAutofillTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(addressFormPage.url) {
-            clickStreetAddressTextBox()
+            clickPageObject(itemWithResId("streetAddress"))
             verifySelectAddressButtonExists(true)
         }.openThreeDotMenu {
         }.openSettings {
@@ -177,7 +186,7 @@ class AddressAutofillTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(addressFormPage.url) {
-            clickStreetAddressTextBox()
+            clickPageObject(itemWithResId("streetAddress"))
             verifySelectAddressButtonExists(false)
         }
     }
@@ -211,7 +220,7 @@ class AddressAutofillTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(addressFormPage.url) {
-            clickStreetAddressTextBox()
+            clickPageObject(itemWithResId("streetAddress"))
             clickSelectAddressButton()
         }.clickManageAddressButton {
             verifyAutofillToolbarTitle()
@@ -264,14 +273,24 @@ class AddressAutofillTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(addressFormPage.url) {
-            clickStreetAddressTextBox()
+            clickPageObject(itemWithResId("streetAddress"))
             clickSelectAddressButton()
-            clickAddressSuggestion("Harrison Street")
+            clickPageObject(
+                itemWithResIdContainingText(
+                    "$packageName:id/address_name",
+                    "Harrison Street",
+                ),
+            )
             verifyAutofilledAddress("Harrison Street")
             clearAddressForm()
-            clickStreetAddressTextBox()
+            clickPageObject(itemWithResId("streetAddress"))
             clickSelectAddressButton()
-            clickAddressSuggestion("Fort Street")
+            clickPageObject(
+                itemWithResIdContainingText(
+                    "$packageName:id/address_name",
+                    "Fort Street",
+                ),
+            )
             verifyAutofilledAddress("Fort Street")
         }
     }
@@ -358,9 +377,14 @@ class AddressAutofillTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(addressFormPage.url) {
-            clickStreetAddressTextBox()
+            clickPageObject(itemWithResId("streetAddress"))
             clickSelectAddressButton()
-            clickAddressSuggestion("Harrison Street")
+            clickPageObject(
+                itemWithResIdContainingText(
+                    "$packageName:id/address_name",
+                    "Harrison Street",
+                ),
+            )
             verifyAutofilledAddress("Harrison Street")
             setTextForApartmentTextBox("Ap. 07")
             verifyManuallyFilledAddress("Ap. 07")

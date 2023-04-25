@@ -16,10 +16,16 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
+import org.mozilla.fenix.ui.robots.clickContextMenuItem
+import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.downloadRobot
+import org.mozilla.fenix.ui.robots.longClickPageObject
 import org.mozilla.fenix.ui.robots.navigationToolbar
+import org.mozilla.fenix.ui.robots.shareOverlay
 
 /**
  *  Tests for verifying basic functionality of content context menus
@@ -72,9 +78,9 @@ class ContextMenusTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(pageLinks.url) {
             mDevice.waitForIdle()
-            longClickLink("Link 1")
+            longClickPageObject(itemWithText("Link 1"))
             verifyLinkContextMenuItems(genericURL.url)
-            clickContextOpenLinkInNewTab()
+            clickContextMenuItem("Open link in new tab")
             verifySnackBarText("New tab opened")
             clickSnackbarButton("SWITCH")
             verifyUrl(genericURL.url.toString())
@@ -96,9 +102,9 @@ class ContextMenusTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(pageLinks.url) {
             mDevice.waitForIdle()
-            longClickLink("Link 2")
+            longClickPageObject(itemWithText("Link 2"))
             verifyLinkContextMenuItems(genericURL.url)
-            clickContextOpenLinkInPrivateTab()
+            clickContextMenuItem("Open link in private tab")
             verifySnackBarText("New private tab opened")
             clickSnackbarButton("SWITCH")
             verifyUrl(genericURL.url.toString())
@@ -118,9 +124,9 @@ class ContextMenusTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(pageLinks.url) {
             mDevice.waitForIdle()
-            longClickLink("Link 3")
+            longClickPageObject(itemWithText("Link 3"))
             verifyLinkContextMenuItems(genericURL.url)
-            clickContextCopyLink()
+            clickContextMenuItem("Copy link")
             verifySnackBarText("Link copied to clipboard")
         }.openNavigationToolbar {
         }.visitLinkFromClipboard {
@@ -135,9 +141,9 @@ class ContextMenusTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(pageLinks.url) {
-            longClickMatchingText("Link 3")
+            longClickPageObject(itemWithText("Link 3"))
             verifyLinkContextMenuItems(genericURL.url)
-            clickContextCopyLink()
+            clickContextMenuItem("Copy link")
             verifySnackBarText("Link copied to clipboard")
         }.openNavigationToolbar {
         }.visitLinkFromClipboard {
@@ -160,9 +166,12 @@ class ContextMenusTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(pageLinks.url) {
             mDevice.waitForIdle()
-            longClickLink("Link 1")
+            longClickPageObject(itemWithText("Link 1"))
             verifyLinkContextMenuItems(genericURL.url)
-            clickContextShareLink(genericURL.url) // verify share intent is matched with associated URL
+            clickContextMenuItem("Share link")
+            shareOverlay {
+                verifyShareLinkIntent(genericURL.url)
+            }
         }
     }
 
@@ -176,9 +185,9 @@ class ContextMenusTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(pageLinks.url) {
             mDevice.waitForIdle()
-            longClickLink("test_link_image")
+            longClickPageObject(itemWithText("test_link_image"))
             verifyLinkImageContextMenuItems(imageResource.url)
-            clickContextOpenImageNewTab()
+            clickContextMenuItem("Open image in new tab")
             verifySnackBarText("New tab opened")
             clickSnackbarButton("SWITCH")
             verifyUrl(imageResource.url.toString())
@@ -195,9 +204,9 @@ class ContextMenusTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(pageLinks.url) {
             mDevice.waitForIdle()
-            longClickLink("test_link_image")
+            longClickPageObject(itemWithText("test_link_image"))
             verifyLinkImageContextMenuItems(imageResource.url)
-            clickContextCopyImageLocation()
+            clickContextMenuItem("Copy image location")
             verifySnackBarText("Link copied to clipboard")
         }.openNavigationToolbar {
         }.visitLinkFromClipboard {
@@ -215,9 +224,9 @@ class ContextMenusTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(pageLinks.url) {
             mDevice.waitForIdle()
-            longClickLink("test_link_image")
+            longClickPageObject(itemWithText("test_link_image"))
             verifyLinkImageContextMenuItems(imageResource.url)
-            clickContextSaveImage()
+            clickContextMenuItem("Save image")
         }
 
         downloadRobot {
@@ -240,13 +249,13 @@ class ContextMenusTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(pageLinks.url) {
             mDevice.waitForIdle()
-            longClickLink("Link 1")
+            longClickPageObject(itemWithText("Link 1"))
             verifyLinkContextMenuItems(genericURL.url)
             dismissContentContextMenu()
-            longClickLink("test_link_image")
+            longClickPageObject(itemWithText("test_link_image"))
             verifyLinkImageContextMenuItems(imageResource.url)
             dismissContentContextMenu()
-            longClickLink("test_no_link_image")
+            longClickPageObject(itemWithText("test_no_link_image"))
             verifyNoLinkImageContextMenuItems(imageResource.url)
         }
     }
@@ -258,8 +267,8 @@ class ContextMenusTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-            clickLinkMatchingText("PDF file")
-            longClickLink("Wikipedia link")
+            clickPageObject(itemWithText("PDF file"))
+            longClickPageObject(itemWithText("Wikipedia link"))
             verifyLinkContextMenuItems("wikipedia.org".toUri(), false)
             dismissContentContextMenu()
             // Some options are missing from the linked and non liked images context menus in PDF files

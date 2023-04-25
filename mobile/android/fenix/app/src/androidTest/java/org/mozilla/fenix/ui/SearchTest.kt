@@ -24,17 +24,23 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.Constants.PackageName.ANDROID_SETTINGS
 import org.mozilla.fenix.helpers.Constants.searchEngineCodes
 import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.SearchDispatcher
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.helpers.TestHelper.assertNativeAppOpens
+import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
 import org.mozilla.fenix.helpers.TestHelper.denyPermission
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.grantSystemPermission
 import org.mozilla.fenix.helpers.TestHelper.longTapSelectItem
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.setCustomSearchEngine
+import org.mozilla.fenix.ui.robots.clickContextMenuItem
+import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.homeScreen
+import org.mozilla.fenix.ui.robots.longClickPageObject
 import org.mozilla.fenix.ui.robots.multipleSelectionToolbar
 
 /**
@@ -179,13 +185,13 @@ class SearchTest {
         homeScreen {
         }.openSearch {
         }.submitQuery(queryString) {
-            longClickLink("Link 1")
-            clickContextOpenLinkInNewTab()
+            longClickPageObject(itemWithText("Link 1"))
+            clickContextMenuItem("Open link in new tab")
             clickSnackbarButton("SWITCH")
             waitForPageToLoad()
             pressBack()
-            longClickLink("Link 2")
-            clickContextOpenLinkInNewTab()
+            longClickPageObject(itemWithText("Link 2"))
+            clickContextMenuItem("Open link in new tab")
             clickSnackbarButton("SWITCH")
             waitForPageToLoad()
         }.openTabDrawer {
@@ -217,23 +223,23 @@ class SearchTest {
         homeScreen {
         }.openSearch {
         }.submitQuery(queryString) {
-            longClickLink("Link 1")
-            clickContextOpenLinkInNewTab()
+            longClickPageObject(itemWithText("Link 1"))
+            clickContextMenuItem("Open link in new tab")
             clickSnackbarButton("SWITCH")
             waitForPageToLoad()
             pressBack()
-            longClickLink("Link 1")
-            clickContextOpenLinkInNewTab()
+            longClickPageObject(itemWithText("Link 1"))
+            clickContextMenuItem("Open link in new tab")
             clickSnackbarButton("SWITCH")
             waitForPageToLoad()
             pressBack()
-            longClickLink("Link 2")
-            clickContextOpenLinkInNewTab()
+            longClickPageObject(itemWithText("Link 2"))
+            clickContextMenuItem("Open link in new tab")
             clickSnackbarButton("SWITCH")
             waitForPageToLoad()
             pressBack()
-            longClickLink("Link 1")
-            clickContextOpenLinkInNewTab()
+            longClickPageObject(itemWithText("Link 1"))
+            clickContextMenuItem("Open link in new tab")
             clickSnackbarButton("SWITCH")
             waitForPageToLoad()
         }.openTabDrawer {
@@ -265,10 +271,10 @@ class SearchTest {
         homeScreen {
         }.openSearch {
         }.submitQuery(queryString) {
-            clickLinkMatchingText("Link 1")
+            clickPageObject(itemContainingText("Link 1"))
             waitForPageToLoad()
             pressBack()
-            clickLinkMatchingText("Link 2")
+            clickPageObject(itemContainingText("Link 2"))
             waitForPageToLoad()
         }.openTabDrawer {
         }.openTabsListThreeDotMenu {
@@ -296,10 +302,10 @@ class SearchTest {
         homeScreen {
         }.openSearch {
         }.submitQuery(queryString) {
-            longClickLink("Link 1")
-            clickContextOpenLinkInPrivateTab()
-            longClickLink("Link 2")
-            clickContextOpenLinkInPrivateTab()
+            longClickPageObject(itemWithText("Link 1"))
+            clickContextMenuItem("Open link in private tab")
+            longClickPageObject(itemWithText("Link 2"))
+            clickContextMenuItem("Open link in private tab")
         }.openTabDrawer {
         }.toggleToPrivateTabs {
         }.openTabWithIndex(0) {
@@ -337,13 +343,13 @@ class SearchTest {
         homeScreen {
         }.openSearch {
         }.submitQuery(queryString) {
-            longClickLink("Link 1")
-            clickContextOpenLinkInNewTab()
+            longClickPageObject(itemWithText("Link 1"))
+            clickContextMenuItem("Open link in new tab")
             clickSnackbarButton("SWITCH")
             waitForPageToLoad()
             mDevice.pressBack()
-            longClickLink("Link 2")
-            clickContextOpenLinkInNewTab()
+            longClickPageObject(itemWithText("Link 2"))
+            clickContextMenuItem("Open link in new tab")
             clickSnackbarButton("SWITCH")
             waitForPageToLoad()
         }.openTabDrawer {
@@ -384,13 +390,13 @@ class SearchTest {
         homeScreen {
         }.openSearch {
         }.submitQuery(queryString) {
-            longClickLink("Link 1")
-            clickContextOpenLinkInNewTab()
+            longClickPageObject(itemWithText("Link 1"))
+            clickContextMenuItem("Open link in new tab")
             clickSnackbarButton("SWITCH")
             waitForPageToLoad()
             mDevice.pressBack()
-            longClickLink("Link 2")
-            clickContextOpenLinkInNewTab()
+            longClickPageObject(itemWithText("Link 2"))
+            clickContextMenuItem("Open link in new tab")
             clickSnackbarButton("SWITCH")
             waitForPageToLoad()
         }.openTabDrawer {
@@ -432,13 +438,13 @@ class SearchTest {
         homeScreen {
         }.openSearch {
         }.submitQuery(queryString) {
-            longClickLink("Link 1")
-            clickContextOpenLinkInNewTab()
+            longClickPageObject(itemWithText("Link 1"))
+            clickContextMenuItem("Open link in new tab")
             clickSnackbarButton("SWITCH")
             waitForPageToLoad()
             mDevice.pressBack()
-            longClickLink("Link 2")
-            clickContextOpenLinkInNewTab()
+            longClickPageObject(itemWithText("Link 2"))
+            clickContextMenuItem("Open link in new tab")
             clickSnackbarButton("SWITCH")
             waitForPageToLoad()
         }.openTabDrawer {
@@ -485,13 +491,13 @@ class SearchTest {
         homeScreen {
         }.openSearch {
         }.submitQuery(queryString) {
-            longClickLink("Link 1")
-            clickContextOpenLinkInNewTab()
+            longClickPageObject(itemWithText("Link 1"))
+            clickContextMenuItem("Open link in new tab")
             clickSnackbarButton("SWITCH")
             waitForPageToLoad()
             mDevice.pressBack()
-            longClickLink("Link 2")
-            clickContextOpenLinkInNewTab()
+            longClickPageObject(itemWithText("Link 2"))
+            clickContextMenuItem("Open link in new tab")
             clickSnackbarButton("SWITCH")
             waitForPageToLoad()
         }.openTabDrawer {

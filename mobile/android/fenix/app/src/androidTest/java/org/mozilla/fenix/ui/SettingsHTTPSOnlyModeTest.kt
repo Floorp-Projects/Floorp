@@ -10,8 +10,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.ui.robots.browserScreen
+import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
@@ -82,11 +84,11 @@ class SettingsHTTPSOnlyModeTest {
             verifyPageContent(httpsOnlyErrorMessage)
             verifyPageContent(httpsOnlyErrorMessage2)
             verifyPageContent(httpsOnlyBackButton)
-            clickLinkMatchingText(httpsOnlyBackButton)
+            clickPageObject(itemContainingText(httpsOnlyBackButton))
             verifyPageContent("Example Domain")
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(insecureHttpPage.toUri()) {
-            clickLinkMatchingText(httpsOnlyContinueButton)
+            clickPageObject(itemContainingText(httpsOnlyContinueButton))
             verifyPageContent("http.badssl.com")
         }
     }
@@ -107,7 +109,7 @@ class SettingsHTTPSOnlyModeTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(insecureHttpPage.toUri()) {
             verifyPageContent(httpsOnlyErrorTitle)
-            clickLinkMatchingText(httpsOnlyContinueButton)
+            clickPageObject(itemContainingText(httpsOnlyContinueButton))
             verifyPageContent("http.badssl.com")
         }.openTabDrawer {
             closeTab()
@@ -148,11 +150,11 @@ class SettingsHTTPSOnlyModeTest {
             verifyPageContent(httpsOnlyErrorMessage)
             verifyPageContent(httpsOnlyErrorMessage2)
             verifyPageContent(httpsOnlyBackButton)
-            clickLinkMatchingText(httpsOnlyBackButton)
+            clickPageObject(itemContainingText(httpsOnlyBackButton))
             verifyPageContent("Example Domain")
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(insecureHttpPage.toUri()) {
-            clickLinkMatchingText(httpsOnlyContinueButton)
+            clickPageObject(itemContainingText(httpsOnlyContinueButton))
             verifyPageContent("http.badssl.com")
         }
     }

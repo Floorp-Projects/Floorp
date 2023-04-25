@@ -359,8 +359,6 @@ class HomeScreenRobot {
         mDevice.waitNotNull(findObject(By.text(expectedText)), waitingTime)
     }
 
-    fun clickUndoSnackBarButton() = undoSnackBarButton.click()
-
     fun clickFirefoxLogo() = homepageWordmark.click()
 
     fun verifyThoughtProvokingStories(enabled: Boolean) {
@@ -1145,8 +1143,6 @@ private val menuButton =
     itemWithResId("$packageName:id/menuButton")
 private fun tabCounter(numberOfOpenTabs: String) =
     itemWithResIdAndText("$packageName:id/counter_text", numberOfOpenTabs)
-private val undoSnackBarButton =
-    itemWithResId("$packageName:id/snackbar_btn")
 
 val deleteFromHistory =
     onView(

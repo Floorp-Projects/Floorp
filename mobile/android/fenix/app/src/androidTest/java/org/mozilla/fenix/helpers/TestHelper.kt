@@ -65,11 +65,13 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.Constants.PackageName.YOUTUBE_APP
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.helpers.idlingresource.NetworkConnectionIdlingResource
 import org.mozilla.fenix.ui.robots.BrowserRobot
+import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.utils.IntentUtils
 import org.mozilla.gecko.util.ThreadUtils
 import java.io.File
@@ -126,6 +128,9 @@ object TestHelper {
             waitingTime,
         )
     }
+
+    fun clickSnackbarButton(expectedText: String) =
+        clickPageObject(itemWithResIdAndText("$packageName:id/snackbar_btn", expectedText))
 
     fun waitUntilSnackbarGone() {
         mDevice.findObject(

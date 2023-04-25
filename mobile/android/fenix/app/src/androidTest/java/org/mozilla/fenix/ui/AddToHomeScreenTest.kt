@@ -9,9 +9,11 @@ import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.ui.robots.browserScreen
+import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.searchScreen
@@ -95,7 +97,7 @@ class AddToHomeScreenTest {
     fun addPDFToHomeScreenTest() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
-            clickLinkMatchingText(pdfFileName)
+            clickPageObject(itemContainingText(pdfFileName))
             verifyUrl(pdfFileURL)
             verifyPageContent(pdfFileContent)
         }.openThreeDotMenu {

@@ -11,8 +11,14 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
+import org.mozilla.fenix.ui.robots.clickContextMenuItem
+import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.homeScreen
+import org.mozilla.fenix.ui.robots.longClickPageObject
 
 /**
  *  Tests for verifying the main three dot menu options
@@ -153,14 +159,14 @@ class ThreeDotMenuMainTest {
         }.openThreeDotMenu {
             verifyDesktopSiteModeEnabled(true)
         }.closeBrowserMenuToBrowser {
-            clickLinkMatchingText("Link 1")
+            clickPageObject(itemContainingText("Link 1"))
         }.openThreeDotMenu {
             verifyDesktopSiteModeEnabled(true)
         }.closeBrowserMenuToBrowser {
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(webPage.url) {
-            longClickLink("Link 2")
-            clickContextOpenLinkInNewTab()
+            longClickPageObject(itemWithText("Link 2"))
+            clickContextMenuItem("Open link in new tab")
             clickSnackbarButton("SWITCH")
         }.openThreeDotMenu {
             verifyDesktopSiteModeEnabled(false)
@@ -183,14 +189,14 @@ class ThreeDotMenuMainTest {
         }.openThreeDotMenu {
             verifyDesktopSiteModeEnabled(true)
         }.closeBrowserMenuToBrowser {
-            clickLinkMatchingText("Link 1")
+            clickPageObject(itemContainingText("Link 1"))
         }.openThreeDotMenu {
             verifyDesktopSiteModeEnabled(true)
         }.closeBrowserMenuToBrowser {
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(webPage.url) {
-            longClickLink("Link 2")
-            clickContextOpenLinkInPrivateTab()
+            longClickPageObject(itemWithText("Link 2"))
+            clickContextMenuItem("Open link in private tab")
             clickSnackbarButton("SWITCH")
         }.openThreeDotMenu {
             verifyDesktopSiteModeEnabled(false)

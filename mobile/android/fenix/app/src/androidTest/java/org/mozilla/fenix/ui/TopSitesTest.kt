@@ -18,6 +18,7 @@ import org.mozilla.fenix.helpers.Constants.defaultTopSitesList
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
+import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
 import org.mozilla.fenix.helpers.TestHelper.generateRandomString
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.waitUntilSnackbarGone
@@ -186,7 +187,7 @@ class TopSitesTest {
         }.openContextMenuOnTopSitesWithTitle(defaultWebPage.title) {
             verifyTopSiteContextMenuItems()
         }.removeTopSite {
-            clickUndoSnackBarButton()
+            clickSnackbarButton("UNDO")
             verifyExistingTopSitesTabs(defaultWebPage.title)
         }
     }

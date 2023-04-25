@@ -16,6 +16,7 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
+import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.collectionRobot
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -488,7 +489,7 @@ class CollectionTest {
 
         homeScreen {
             verifySnackBarText("Collection deleted")
-            clickUndoSnackBarButton()
+            clickSnackbarButton("UNDO")
             verifyCollectionIsDisplayed(collectionName, true)
         }
     }

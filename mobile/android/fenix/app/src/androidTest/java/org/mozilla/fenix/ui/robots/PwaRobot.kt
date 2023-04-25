@@ -12,7 +12,6 @@ import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 
 class PwaRobot {
-
     fun verifyCustomTabToolbarIsNotDisplayed() = assertFalse(customTabToolbar().exists())
     fun verifyPwaActivityInCurrentTask() = assertTrue(isExternalAppBrowserActivityInCurrentTask())
 

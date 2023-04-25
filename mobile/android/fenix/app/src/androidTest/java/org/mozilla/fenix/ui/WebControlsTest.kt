@@ -12,9 +12,16 @@ import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.Constants
 import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestAssetHelper.getHTMLControlsFormAsset
 import org.mozilla.fenix.helpers.TestHelper.assertNativeAppOpens
+import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.navigationToolbar
+import java.time.LocalDate
 
 /**
  *  Tests for verifying basic interactions with web control elements
@@ -51,103 +58,107 @@ class WebControlsTest {
 
     @Test
     fun cancelCalendarFormTest() {
-        val htmlControlsPage = TestAssetHelper.getHTMLControlsFormAsset(mockWebServer)
+        val htmlControlsPage = getHTMLControlsFormAsset(mockWebServer)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(htmlControlsPage.url) {
-            clickForm("Calendar Form")
-            clickFormViewButton("CANCEL")
-            clickSubmitDateButton()
+            clickPageObject(itemWithResId("calendar"))
+            clickPageObject(itemContainingText("CANCEL"))
+            clickPageObject(itemWithResId("submitDate"))
             verifyNoDateIsSelected()
         }
     }
 
     @Test
     fun setAndClearCalendarFormTest() {
-        val htmlControlsPage = TestAssetHelper.getHTMLControlsFormAsset(mockWebServer)
+        val currentDate = LocalDate.now()
+        val currentDay = currentDate.dayOfMonth
+        val currentMonth = currentDate.month
+        val currentYear = currentDate.year
+        val htmlControlsPage = getHTMLControlsFormAsset(mockWebServer)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(htmlControlsPage.url) {
-            clickForm("Calendar Form")
-            selectDate()
-            clickFormViewButton("OK")
-            clickSubmitDateButton()
+            clickPageObject(itemWithResId("calendar"))
+            clickPageObject(itemWithDescription("$currentDay $currentMonth $currentYear"))
+            clickPageObject(itemContainingText("OK"))
+            clickPageObject(itemWithResId("submitDate"))
             verifySelectedDate()
-            clickForm("Calendar Form")
-            clickFormViewButton("CLEAR")
-            clickSubmitDateButton()
+            clickPageObject(itemWithResId("calendar"))
+            clickPageObject(itemContainingText("CLEAR"))
+            clickPageObject(itemWithResId("submitDate"))
             verifyNoDateIsSelected()
         }
     }
 
     @Test
     fun cancelClockFormTest() {
-        val htmlControlsPage = TestAssetHelper.getHTMLControlsFormAsset(mockWebServer)
+        val htmlControlsPage = getHTMLControlsFormAsset(mockWebServer)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(htmlControlsPage.url) {
-            clickForm("Clock Form")
-            clickFormViewButton("CANCEL")
-            clickSubmitTimeButton()
+            clickPageObject(itemWithResId("clock"))
+            clickPageObject(itemContainingText("CANCEL"))
+            clickPageObject(itemWithResId("submitTime"))
             verifyNoTimeIsSelected(hour, minute)
         }
     }
 
     @Test
     fun setAndClearClockFormTest() {
-        val htmlControlsPage = TestAssetHelper.getHTMLControlsFormAsset(mockWebServer)
+        val htmlControlsPage = getHTMLControlsFormAsset(mockWebServer)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(htmlControlsPage.url) {
-            clickForm("Clock Form")
+            clickPageObject(itemWithResId("clock"))
             selectTime(hour, minute)
-            clickFormViewButton("OK")
-            clickSubmitTimeButton()
+            clickPageObject(itemContainingText("OK"))
+            clickPageObject(itemWithResId("submitTime"))
             verifySelectedTime(hour, minute)
-            clickForm("Clock Form")
-            clickFormViewButton("CLEAR")
-            clickSubmitTimeButton()
+            clickPageObject(itemWithResId("clock"))
+            clickPageObject(itemContainingText("CLEAR"))
+            clickPageObject(itemWithResId("submitTime"))
             verifyNoTimeIsSelected(hour, minute)
         }
     }
 
     @Test
     fun cancelColorFormTest() {
-        val htmlControlsPage = TestAssetHelper.getHTMLControlsFormAsset(mockWebServer)
+        val htmlControlsPage = getHTMLControlsFormAsset(mockWebServer)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(htmlControlsPage.url) {
-            clickForm("Color Form")
-            selectColor(colorHexValue)
-            clickFormViewButton("CANCEL")
-            clickSubmitColorButton()
+            clickPageObject(itemWithResId("colorPicker"))
+            clickPageObject(itemWithDescription(colorHexValue))
+            clickPageObject(itemContainingText("CANCEL"))
+            clickPageObject(itemWithResId("submitColor"))
             verifyColorIsNotSelected(colorHexValue)
         }
     }
 
     @Test
     fun setColorFormTest() {
-        val htmlControlsPage = TestAssetHelper.getHTMLControlsFormAsset(mockWebServer)
+        val htmlControlsPage = getHTMLControlsFormAsset(mockWebServer)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(htmlControlsPage.url) {
-            clickForm("Color Form")
-            selectColor(colorHexValue)
-            clickFormViewButton("SET")
-            clickSubmitColorButton()
+            clickPageObject(itemWithResId("colorPicker"))
+            clickPageObject(itemWithDescription(colorHexValue))
+            clickPageObject(itemContainingText("SET"))
+            clickPageObject(itemWithResId("submitColor"))
             verifySelectedColor(colorHexValue)
         }
     }
 
     @Test
     fun verifyDropdownMenuTest() {
-        val htmlControlsPage = TestAssetHelper.getHTMLControlsFormAsset(mockWebServer)
+        val htmlControlsPage = getHTMLControlsFormAsset(mockWebServer)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(htmlControlsPage.url) {
-            clickForm("Drop-down Form")
-            selectDropDownOption("The National")
-            clickSubmitDropDownButton()
+            clickPageObject(itemWithResId("dropDown"))
+            clickPageObject(itemContainingText("The National"))
+            clickPageObject(itemWithResId("submitOption"))
             verifySelectedDropDownOption("The National")
         }
     }
@@ -158,7 +169,7 @@ class WebControlsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(externalLinksPage.url) {
-            clickLinkMatchingText("External link")
+            clickPageObject(itemContainingText("External link"))
             verifyUrl("duckduckgo")
         }
     }
@@ -169,8 +180,8 @@ class WebControlsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(externalLinksPage.url) {
-            clickLinkMatchingText("Email link")
-            confirmOpenLinkInAnotherApp()
+            clickPageObject(itemContainingText("Email link"))
+            clickPageObject(itemWithResIdAndText("android:id/button1", "OPEN"))
             assertNativeAppOpens(Constants.PackageName.GMAIL_APP, emailLink)
         }
     }
@@ -181,8 +192,8 @@ class WebControlsTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(externalLinksPage.url) {
-            clickLinkMatchingText("Telephone link")
-            confirmOpenLinkInAnotherApp()
+            clickPageObject(itemContainingText("Telephone link"))
+            clickPageObject(itemWithResIdAndText("android:id/button1", "OPEN"))
             assertNativeAppOpens(Constants.PackageName.PHONE_APP, phoneLink)
         }
     }

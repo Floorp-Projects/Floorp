@@ -25,6 +25,7 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
@@ -33,6 +34,7 @@ import org.mozilla.fenix.helpers.TestHelper.createCustomTabIntent
 import org.mozilla.fenix.helpers.TestHelper.registerAndCleanupIdlingResources
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.browserScreen
+import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.customTabScreen
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
@@ -441,7 +443,7 @@ class SmokeTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(audioTestPage.url) {
             mDevice.waitForIdle()
-            clickMediaPlayerPlayButton()
+            clickPageObject(itemWithText("Play"))
             assertPlaybackState(browserStore, MediaSession.PlaybackState.PLAYING)
         }.openTabDrawer {
             verifyTabMediaControlButtonState("Pause")

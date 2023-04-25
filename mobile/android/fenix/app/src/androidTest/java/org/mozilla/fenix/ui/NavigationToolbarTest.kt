@@ -15,8 +15,10 @@ import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.runWithSystemLocaleChanged
+import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import java.util.Locale
@@ -192,7 +194,7 @@ class NavigationToolbarTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-            clickLinkMatchingText("PDF file")
+            clickPageObject(itemWithText("PDF file"))
         }.openThreeDotMenu {
             verifyThreeDotMenuExists()
             verifyFindInPageButton()

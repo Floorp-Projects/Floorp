@@ -14,11 +14,14 @@ import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.assertExternalAppOpens
 import org.mozilla.fenix.helpers.TestHelper.deleteDownloadedFileOnStorage
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.ui.robots.browserScreen
+import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.downloadRobot
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.notificationShade
@@ -214,7 +217,7 @@ class DownloadTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-            clickLinkMatchingText("PDF file")
+            clickPageObject(itemContainingText("PDF file"))
             verifyPageContent("Washington Crossing the Delaware")
         }
     }
@@ -227,7 +230,7 @@ class DownloadTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
-            clickLinkMatchingText("PDF file")
+            clickPageObject(itemWithText("PDF file"))
         }.openThreeDotMenu {
         }.clickShareButton {
         }.clickSaveAsPDF {
