@@ -13,6 +13,7 @@
 #include "Units.h"
 
 class nsAtom;
+class nsStaticAtom;
 
 struct nsRoleMapEntry;
 
@@ -374,7 +375,7 @@ class Accessible {
   /**
    * Return a landmark role if applied.
    */
-  virtual nsAtom* LandmarkRole() const;
+  virtual nsStaticAtom* LandmarkRole() const;
 
   /**
    * Return the id of the dom node this accessible represents.

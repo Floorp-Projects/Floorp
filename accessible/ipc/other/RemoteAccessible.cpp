@@ -127,7 +127,7 @@ bool RemoteAccessible::IsSearchbox() const {
   return retVal;
 }
 
-nsAtom* RemoteAccessible::LandmarkRole() const {
+nsStaticAtom* RemoteAccessible::LandmarkRole() const {
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return RemoteAccessibleBase<RemoteAccessible>::LandmarkRole();
   }

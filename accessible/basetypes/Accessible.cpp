@@ -476,7 +476,7 @@ const Accessible* Accessible::ActionAncestor() const {
   return nullptr;
 }
 
-nsAtom* Accessible::LandmarkRole() const {
+nsStaticAtom* Accessible::LandmarkRole() const {
   nsAtom* tagName = TagName();
   if (!tagName) {
     // Either no associated content, or no cache.
