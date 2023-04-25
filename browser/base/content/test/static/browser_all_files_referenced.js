@@ -123,6 +123,12 @@ var whitelist = [
     platforms: ["linux", "macosx"],
   },
 
+  // This file is referenced by the build system to generate the
+  // Firefox .desktop entry. See bug 1824327 (and perhaps bug 1526672)
+  {
+    file: "resource://app/localization/en-US/browser/linuxDesktopEntry.ftl",
+  },
+
   // toolkit/content/aboutRights-unbranded.xhtml doesn't use aboutRights.css
   { file: "chrome://global/skin/aboutRights.css", skipUnofficial: true },
 
