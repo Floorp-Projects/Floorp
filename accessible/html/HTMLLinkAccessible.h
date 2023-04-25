@@ -31,8 +31,6 @@ class HTMLLinkAccessible : public HyperTextAccessibleWrap {
 
   // HyperLinkAccessible
   virtual bool IsLink() const override;
-  virtual already_AddRefed<nsIURI> AnchorURIAt(
-      uint32_t aAnchorIndex) const override;
 
   /**
    * Returns true if the link has href attribute.

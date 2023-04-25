@@ -143,22 +143,21 @@ void finalizeCB(GObject* aObj) {
 
 gchar* getUriCB(AtkHyperlink* aLink, gint aLinkIndex) {
   MaiHyperlink* maiLink = GetMaiHyperlink(aLink);
-  if (!maiLink) return nullptr;
-
-  nsAutoCString cautoStr;
-  if (LocalAccessible* hyperlink = maiLink->GetAccHyperlink()) {
-    nsCOMPtr<nsIURI> uri = hyperlink->AnchorURIAt(aLinkIndex);
-    if (!uri) return nullptr;
-
-    nsresult rv = uri->GetSpec(cautoStr);
-    NS_ENSURE_SUCCESS(rv, nullptr);
-
-    return g_strdup(cautoStr.get());
+  if (!maiLink) {
+    return nullptr;
   }
 
-  bool valid;
-  maiLink->Proxy()->AnchorURIAt(aLinkIndex, cautoStr, &valid);
-  if (!valid) return nullptr;
+  Accessible* acc = maiLink->Acc();
+  if (!acc) {
+    return nullptr;
+  }
+
+  nsAutoCString cautoStr;
+  nsCOMPtr<nsIURI> uri = acc->AnchorURIAt(aLinkIndex);
+  if (!uri) return nullptr;
+
+  nsresult rv = uri->GetSpec(cautoStr);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   return g_strdup(cautoStr.get());
 }
