@@ -71,20 +71,6 @@ GMPChild::~GMPChild() {
 #endif
 }
 
-#if defined(XP_MACOSX)
-static nsCString GetNativeTarget(nsIFile* aFile) {
-  bool isLink;
-  nsCString path;
-  aFile->IsSymlink(&isLink);
-  if (isLink) {
-    aFile->GetNativeTarget(path);
-  } else {
-    aFile->GetNativePath(path);
-  }
-  return path;
-}
-#endif  // XP_MACOSX
-
 bool GMPChild::Init(const nsAString& aPluginPath,
                     mozilla::ipc::UntypedEndpoint&& aEndpoint) {
   GMP_CHILD_LOG_DEBUG("%s pluginPath=%s", __FUNCTION__,
@@ -200,23 +186,6 @@ mozilla::ipc::IPCResult GMPChild::RecvPreloadLibs(const nsCString& aLibs) {
   return IPC_OK();
 }
 
-static bool ResolveLinks(nsCOMPtr<nsIFile>& aPath) {
-#if defined(XP_WIN)
-  return widget::WinUtils::ResolveJunctionPointsAndSymLinks(aPath);
-#elif defined(XP_MACOSX)
-  nsCString targetPath = GetNativeTarget(aPath);
-  nsCOMPtr<nsIFile> newFile;
-  if (NS_WARN_IF(NS_FAILED(
-          NS_NewNativeLocalFile(targetPath, true, getter_AddRefs(newFile))))) {
-    return false;
-  }
-  aPath = newFile;
-  return true;
-#else
-  return true;
-#endif
-}
-
 bool GMPChild::GetUTF8LibPath(nsACString& aOutLibPath) {
   nsCOMPtr<nsIFile> libFile;
 
@@ -267,20 +236,6 @@ bool GMPChild::GetUTF8LibPath(nsACString& aOutLibPath) {
   rv = libFile->AppendRelativePath(binaryName);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     GMP_PATH_CRASH("Failed to append lib to plugin file");
-    return false;
-  }
-
-  // On some platforms, we may not be able to normalize the path because we
-  // don't have access to the parent directories, hence why we ignore access
-  // denied errors.
-  rv = libFile->Normalize();
-  if (rv != NS_ERROR_FILE_ACCESS_DENIED && NS_WARN_IF(NS_FAILED(rv))) {
-    GMP_PATH_CRASH("Failed to normalize plugin file");
-    return false;
-  }
-
-  if (NS_WARN_IF(!ResolveLinks(libFile))) {
-    GMP_PATH_CRASH("Failed to resolve links in plugin file");
     return false;
   }
 
@@ -395,8 +350,7 @@ static bool GetSigPath(const int aRelativeLayers,
 static bool AppendHostPath(nsCOMPtr<nsIFile>& aFile,
                            nsTArray<std::pair<nsCString, nsCString>>& aPaths) {
   nsString str;
-  if (!FileExists(aFile) || !ResolveLinks(aFile) ||
-      NS_FAILED(aFile->GetPath(str))) {
+  if (!FileExists(aFile) || NS_FAILED(aFile->GetPath(str))) {
     return false;
   }
 
