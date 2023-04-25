@@ -510,6 +510,7 @@ public class GeckoSession {
             "GeckoView:PreviewImage",
             "GeckoView:CookieBannerEvent:Detected",
             "GeckoView:CookieBannerEvent:Handled",
+            "GeckoView:SavePdf"
           }) {
         @Override
         public void handleMessage(
@@ -570,6 +571,16 @@ public class GeckoSession {
             delegate.onCookieBannerDetected(GeckoSession.this);
           } else if ("GeckoView:CookieBannerEvent:Handled".equals(event)) {
             delegate.onCookieBannerHandled(GeckoSession.this);
+          } else if ("GeckoView:SavePdf".equals(event)) {
+            final WebResponse response =
+                SessionPdfFileSaver.createResponse(
+                    message.getByteArray("bytes"),
+                    message.getString("filename"),
+                    message.getString("originalUrl"));
+            if (response == null) {
+              return;
+            }
+            delegate.onExternalResponse(GeckoSession.this, response);
           }
         }
       };

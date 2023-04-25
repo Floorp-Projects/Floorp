@@ -5,8 +5,11 @@
 
 package org.mozilla.geckoview;
 
+import android.util.Log;
 import androidx.annotation.AnyThread;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import java.io.ByteArrayInputStream;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.geckoview.GeckoSession.PdfSaveResult;
 
@@ -34,5 +37,31 @@ public final class SessionPdfFileSaver {
     return mDispatcher
         .queryBundle("GeckoView:PDFSave", null)
         .map(response -> new PdfSaveResult(response));
+  }
+
+  /**
+   * Create a WebResponse from some binary data in order to use it to download a PDF file.
+   *
+   * @param data The pdf data.
+   * @param filename The file name.
+   * @param originalUrl The original url for the file.
+   * @return a response used to "download" the pdf.
+   */
+  public static @Nullable WebResponse createResponse(
+      @NonNull final byte[] data,
+      @NonNull final String filename,
+      @NonNull final String originalUrl) {
+    try {
+      return new WebResponse.Builder(originalUrl)
+          .statusCode(200)
+          .body(new ByteArrayInputStream(data))
+          .addHeader("Content-Type", "application/pdf")
+          .addHeader("Content-Length", Integer.toString(data.length))
+          .addHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+          .build();
+    } catch (final Exception e) {
+      Log.d(LOGTAG, e.getMessage());
+      return null;
+    }
   }
 }
