@@ -43,7 +43,7 @@ class AutofillTelemetryBase {
     section.fieldDetails.forEach(detail => {
       identified.add(detail.fieldName);
 
-      if (detail._reason == "autocomplete") {
+      if (detail.reason == "autocomplete") {
         this.#setFormEventExtra(extra, detail.fieldName, "true");
       } else {
         // confidence exists only when a field is identified by fathom.
