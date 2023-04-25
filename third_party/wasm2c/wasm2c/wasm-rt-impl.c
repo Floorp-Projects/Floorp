@@ -294,6 +294,7 @@ bool wasm_rt_is_initialized(void) {
 void wasm_rt_free(void) {
 #if WASM_RT_INSTALL_SIGNAL_HANDLER
   os_cleanup_signal_handler();
+  g_signal_handler_installed = false;
 #endif
 }
 

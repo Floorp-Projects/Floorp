@@ -1193,7 +1193,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                        Address alignment_log2,
                        uint32_t flags) override;
   Result OnInitFunctionCount(Index count) override;
-  Result OnInitFunction(uint32_t priority, Index function_index) override;
+  Result OnInitFunction(uint32_t priority, Index symbol_index) override;
   Result OnComdatCount(Index count) override;
   Result OnComdatBegin(std::string_view name,
                        uint32_t flags,
@@ -2264,10 +2264,16 @@ Result BinaryReaderObjdump::OnInitFunctionCount(Index count) {
 }
 
 Result BinaryReaderObjdump::OnInitFunction(uint32_t priority,
-                                           Index function_index) {
-  PrintDetails("   - %d: priority=%d\n", function_index, priority);
+                                           Index symbol_index) {
+  PrintDetails("   - %d: priority=%d", symbol_index, priority);
+  auto name = GetSymbolName(symbol_index);
+  if (!name.empty()) {
+    PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
+  }
+  PrintDetails("\n");
   return Result::Ok;
 }
+
 Result BinaryReaderObjdump::OnComdatCount(Index count) {
   PrintDetails("  - comdat groups [count=%d]\n", count);
   return Result::Ok;

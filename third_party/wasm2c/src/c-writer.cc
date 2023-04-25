@@ -326,7 +326,7 @@ class CWriter {
   void Write(Newline);
   void Write(OpenBrace);
   void Write(CloseBrace);
-  void Write(Index);
+  void Write(uint64_t);
   void Write(std::string_view);
   void Write(const ParamName&);
   void Write(const LabelName&);
@@ -1012,8 +1012,8 @@ void CWriter::Write(CloseBrace) {
   Write("}");
 }
 
-void CWriter::Write(Index index) {
-  Writef("%" PRIindex, index);
+void CWriter::Write(uint64_t val) {
+  Writef("%" PRIu64, val);
 }
 
 void CWriter::Write(std::string_view s) {
@@ -1086,15 +1086,15 @@ void CWriter::Write(const GotoLabel& goto_label) {
               StackVar(amount - i - 1), "; ");
       }
     }
+  }
 
-    assert(try_catch_stack_.size() >= label->try_catch_stack_size);
+  assert(try_catch_stack_.size() >= label->try_catch_stack_size);
 
-    if (try_catch_stack_.size() != label->try_catch_stack_size) {
-      const std::string& name =
-          try_catch_stack_.at(label->try_catch_stack_size).name;
+  if (try_catch_stack_.size() != label->try_catch_stack_size) {
+    const std::string& name =
+        try_catch_stack_.at(label->try_catch_stack_size).name;
 
-      Write("wasm_rt_set_unwind_target(", name, "_outer_target);", Newline());
-    }
+    Write("wasm_rt_set_unwind_target(", name, "_outer_target);", Newline());
   }
 
   if (goto_label.var.is_name()) {
@@ -1972,8 +1972,13 @@ void CWriter::WriteDataInitializers() {
     Index memory_idx = module_->num_memory_imports;
     for (Index i = memory_idx; i < module_->memories.size(); i++) {
       const Memory* memory = module_->memories[i];
-      uint32_t max =
-          memory->page_limits.has_max ? memory->page_limits.max : 65536;
+      uint64_t max;
+      if (memory->page_limits.has_max) {
+        max = memory->page_limits.max;
+      } else {
+        max = memory->page_limits.is_64 ? (static_cast<uint64_t>(1) << 48)
+                                        : 65536;
+      }
       Write("wasm_rt_allocate_memory(",
             ExternalInstancePtr(ModuleFieldType::Memory, memory->name), ", ",
             memory->page_limits.initial, ", ", max, ", ",

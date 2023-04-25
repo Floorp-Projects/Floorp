@@ -460,7 +460,7 @@ class BinaryReaderDelegate {
                                Address alignment_log2,
                                uint32_t flags) = 0;
   virtual Result OnInitFunctionCount(Index count) = 0;
-  virtual Result OnInitFunction(uint32_t priority, Index function_index) = 0;
+  virtual Result OnInitFunction(uint32_t priority, Index symbol_index) = 0;
   virtual Result OnComdatCount(Index count) = 0;
   virtual Result OnComdatBegin(std::string_view name,
                                uint32_t flags,
