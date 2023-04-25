@@ -28,7 +28,7 @@ add_task(async function() {
 
   checkA11yFront(accessibleFront, {
     name: "Accessible Button",
-    role: "pushbutton",
+    role: "button",
     childCount: 1,
   });
 
@@ -36,7 +36,7 @@ add_task(async function() {
 
   checkA11yFront(accessibleFront, {
     name: "Accessible Button",
-    role: "pushbutton",
+    role: "button",
     value: "",
     description: "Accessibility Test",
     keyboardShortcut: modifiers + "b",
