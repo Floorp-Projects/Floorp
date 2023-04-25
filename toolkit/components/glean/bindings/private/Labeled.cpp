@@ -11,7 +11,6 @@
 #include "mozilla/glean/bindings/GleanJSMetricsLookup.h"
 #include "mozilla/glean/bindings/MetricTypes.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/glean/bindings/ScalarGIFFTMap.h"
 #include "nsString.h"
 
 namespace mozilla::glean {

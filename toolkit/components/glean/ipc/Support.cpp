@@ -9,7 +9,6 @@
 #include "FOGIPC.h"
 #include "mozilla/AppShutdown.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/Unused.h"
 #include "nsThreadUtils.h"
 
