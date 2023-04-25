@@ -8,7 +8,6 @@ import android.view.View
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.action.ContentAction.UpdateRefreshCanceledStateAction
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
@@ -27,6 +26,7 @@ class SwipeRefreshFeature(
     private val store: BrowserStore,
     private val reloadUrlUseCase: SessionUseCases.ReloadUrlUseCase,
     private val swipeRefreshLayout: SwipeRefreshLayout,
+    private val onRefreshCallback: (() -> Unit)? = null,
     private val tabId: String? = null,
 ) : LifecycleAwareFeature,
     SwipeRefreshLayout.OnChildScrollUpCallback,
@@ -84,6 +84,7 @@ class SwipeRefreshFeature(
      * Called when a swipe gesture triggers a refresh.
      */
     override fun onRefresh() {
+        onRefreshCallback?.invoke()
         store.state.findTabOrCustomTabOrSelectedTab(tabId)?.let { tab ->
             reloadUrlUseCase(tab.id)
         }

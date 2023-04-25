@@ -9,10 +9,12 @@ import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.AppTheme
+import org.mozilla.fenix.GleanMetrics.PullToRefreshInBrowser
 import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
@@ -152,6 +154,15 @@ class CustomizationFragment : PreferenceFragmentCompat() {
             isChecked = context.settings().isSwipeToolbarToSwitchTabsEnabled
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
+    }
+
+    override fun onPreferenceTreeClick(preference: Preference): Boolean {
+        when (preference.key) {
+            resources.getString(R.string.pref_key_website_pull_to_refresh) -> {
+                PullToRefreshInBrowser.enabled.set(requireContext().settings().isPullToRefreshEnabledInBrowser)
+            }
+        }
+        return super.onPreferenceTreeClick(preference)
     }
 
     companion object {

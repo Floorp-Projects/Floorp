@@ -9525,3 +9525,36 @@ private_browsing_shortcut_cfr:
     notification_emails:
       - android-probes@mozilla.com
     expires: 122
+
+pull_to_refresh_in_browser:
+  enabled:
+    type: boolean
+    description: |
+      Whether or not pull-to-refresh functionality
+      is enabled from Settings screen.
+      default: true
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825413
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/1775#pullrequestreview-1401966483
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 126
+    metadata:
+      tags:
+        - Settings
+  executed:
+    type: event
+    description: |
+      Whether the pull-to-refresh gesture was executed by the user.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1825413
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/1775#pullrequestreview-1401966483
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 126
