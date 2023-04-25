@@ -9,11 +9,13 @@
 #include "jsapi.h"
 #include "js/Date.h"
 #include "nsString.h"
+#include "nsIScriptError.h"
 #include "mozilla/Components.h"
 #include "mozilla/ResultVariant.h"
 #include "mozilla/glean/bindings/ScalarGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "nsIClassInfoImpl.h"
+#include "Common.h"
 #include "prtime.h"
 
 namespace mozilla::glean {
