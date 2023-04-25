@@ -85,7 +85,6 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_media.h"
-#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/StorageAccessAPIHelper.h"
 #include "mozilla/StyleSheet.h"
@@ -3154,7 +3153,6 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   nsIDNSService::ResolverMode mode;
   dns->GetCurrentTrrMode(&mode);
   xpcomInit.trrMode() = mode;
-  xpcomInit.trrModeFromPref() = StaticPrefs::network_trr_mode();
 
   Unused << SendSetXPCOMProcessAttributes(
       xpcomInit, initialData, lnf, fontList, std::move(sharedUASheetHandle),
@@ -4152,7 +4150,7 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
     nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
     nsIDNSService::ResolverMode mode;
     dns->GetCurrentTrrMode(&mode);
-    Unused << SendSetTRRMode(mode, StaticPrefs::network_trr_mode());
+    Unused << SendSetTRRMode(mode);
   }
 
   return NS_OK;

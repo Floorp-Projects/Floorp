@@ -350,15 +350,14 @@ ChildDNSService::GetCurrentTrrMode(nsIDNSService::ResolverMode* aMode) {
   return NS_OK;
 }
 
-void ChildDNSService::SetTRRModeInChild(nsIDNSService::ResolverMode mode,
-                                        uint32_t modeFromPref) {
+NS_IMETHODIMP
+ChildDNSService::SetTRRModeInChild(nsIDNSService::ResolverMode mode) {
   if (!XRE_IsContentProcess()) {
     MOZ_ASSERT(false, "Why are we calling this?");
-    return;
+    return NS_ERROR_NOT_AVAILABLE;
   }
   mTRRMode = mode;
-  TRRService::SetCurrentTRRMode(
-      static_cast<nsIDNSService::ResolverMode>(modeFromPref));
+  return NS_OK;
 }
 
 NS_IMETHODIMP
