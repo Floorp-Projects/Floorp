@@ -4,7 +4,7 @@
 
 use crate::{
     cow_label, wgpu_string, AdapterInformation, ByteBuf, CommandEncoderAction, DeviceAction,
-    DropAction, ImplicitLayout, QueueWriteAction, RawString, TextureAction,
+    DropAction, ImplicitLayout, QueueWriteAction, RawString, TextureAction, ImageDataLayout,
 };
 
 use wgc::{hub::IdentityManager, id};
@@ -1106,25 +1106,6 @@ pub unsafe extern "C" fn wgpu_queue_write_buffer(
 ) {
     let action = QueueWriteAction::Buffer { dst, offset };
     *bb = make_byte_buf(&action);
-}
-
-
-
-#[repr(C)]
-pub struct ImageDataLayout<'a> {
-    pub offset: wgt::BufferAddress,
-    pub bytes_per_row: Option<&'a u32>,
-    pub rows_per_image: Option<&'a u32>,
-}
-
-impl<'a> ImageDataLayout<'a> {
-    fn into_wgt(&self) -> wgt::ImageDataLayout {
-        wgt::ImageDataLayout {
-            offset: self.offset,
-            bytes_per_row: self.bytes_per_row.map(|bpr| *bpr),
-            rows_per_image: self.rows_per_image.map(|rpi| *rpi),
-        }
-    }
 }
 
 #[no_mangle]
