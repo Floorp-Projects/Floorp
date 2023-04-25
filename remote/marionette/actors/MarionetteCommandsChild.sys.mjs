@@ -311,7 +311,8 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
       return null;
     }
 
-    return accessible.computedARIARole;
+    // TODO: Bug 1822112. Accessibility service is not returning WAI-ARIA roles.
+    return lazy.accessibility.service.getStringRole(accessible.role);
   }
 
   /**
