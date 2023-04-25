@@ -80,3 +80,24 @@ TEST(ImportScanner, Layers)
   ASSERT_EQ(urls[1], u"baz"_ns);
   ASSERT_EQ(urls[2], u"bazz"_ns);
 }
+
+TEST(ImportScanner, Supports)
+{
+  auto urls = Scan(
+      // Supported feature, should be included.
+      "@import url(bar) supports(display: block);"
+      // Unsupported feature, should not be included.
+      "@import url(baz) supports(foo: bar);"
+      // Supported condition with operator, should be included.
+      "@import url(bazz) supports((display: flex) and (display: block));"
+      // Unsupported condition with function, should be not included.
+      "@import url(bazzz) supports(selector(foo:bar(baz)));"
+      // Supported large condition with layer, supports, media list
+      "@import url(bazzzz) layer(A.B) supports(display: flex) (max-width: "
+      "100px)");
+
+  ASSERT_EQ(urls.Length(), 3u);
+  ASSERT_EQ(urls[0], u"bar"_ns);
+  ASSERT_EQ(urls[1], u"bazz"_ns);
+  ASSERT_EQ(urls[2], u"bazzzz"_ns);
+}
