@@ -88,8 +88,15 @@
 @BINPATH@/application.ini
 @BINPATH@/platform.ini
 @BINPATH@/defaults/settings/last_modified.json
-; TODO bug 1639050: addons-bloomfilters should be used instead of addons.json
+#ifdef NIGHTLY_BUILD
+; The addons blocklist data is not packaged and will be downloaded after install.
+; See https://bugzilla.mozilla.org/show_bug.cgi?id=1639050#c5
+; @BINPATH@/defaults/settings/blocklists/addons-bloomfilters.json
+; @BINPATH@/defaults/settings/blocklists/addons-bloomfilters/addons-mlbf.bin
+; @BINPATH@/defaults/settings/blocklists/addons-bloomfilters/addons-mlbf.bin.meta.json
+#else
 @BINPATH@/defaults/settings/blocklists/addons.json
+#endif
 @BINPATH@/defaults/settings/blocklists/gfx.json
 @BINPATH@/defaults/settings/main/password-recipes.json
 @BINPATH@/defaults/settings/security-state/onecrl.json
