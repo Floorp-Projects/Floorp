@@ -476,7 +476,7 @@ const Accessible* Accessible::ActionAncestor() const {
   return nullptr;
 }
 
-nsStaticAtom* Accessible::LandmarkRole() const {
+nsAtom* Accessible::LandmarkRole() const {
   nsAtom* tagName = TagName();
   if (!tagName) {
     // Either no associated content, or no cache.
@@ -527,47 +527,6 @@ nsStaticAtom* Accessible::LandmarkRole() const {
   return roleMapEntry && roleMapEntry->IsOfType(eLandmark)
              ? roleMapEntry->roleAtom
              : nullptr;
-}
-
-nsStaticAtom* Accessible::ComputedARIARole() const {
-  const nsRoleMapEntry* roleMap = ARIARoleMap();
-  if (roleMap && roleMap->roleAtom != nsGkAtoms::_empty &&
-      // region has its own Gecko role and it needs to be handled specially.
-      roleMap->roleAtom != nsGkAtoms::region &&
-      (roleMap->roleRule == kUseNativeRole || roleMap->IsOfType(eLandmark) ||
-       roleMap->roleAtom == nsGkAtoms::alertdialog ||
-       roleMap->roleAtom == nsGkAtoms::feed ||
-       roleMap->roleAtom == nsGkAtoms::rowgroup ||
-       roleMap->roleAtom == nsGkAtoms::searchbox)) {
-    // Explicit ARIA role (e.g. specified via the role attribute) which does not
-    // map to a unique Gecko role.
-    return roleMap->roleAtom;
-  }
-  role geckoRole = Role();
-  if (geckoRole == roles::LANDMARK) {
-    // Landmark role from native markup; e.g. <main>, <nav>.
-    return LandmarkRole();
-  }
-  if (geckoRole == roles::GROUPING) {
-    // Gecko doesn't differentiate between group and rowgroup. It uses
-    // roles::GROUPING for both.
-    nsAtom* tag = TagName();
-    if (tag == nsGkAtoms::tbody || tag == nsGkAtoms::tfoot ||
-        tag == nsGkAtoms::thead) {
-      return nsGkAtoms::rowgroup;
-    }
-  }
-  // Role from native markup or layout.
-#define ROLE(_geckoRole, stringRole, ariaRole, atkRole, macRole, macSubrole, \
-             msaaRole, ia2Role, androidClass, nameRule)                      \
-  case roles::_geckoRole:                                                    \
-    return ariaRole;
-  switch (geckoRole) {
-#include "RoleMap.h"
-  }
-#undef ROLE
-  MOZ_ASSERT_UNREACHABLE("Unknown role");
-  return nullptr;
 }
 
 void Accessible::ApplyImplicitState(uint64_t& aState) const {

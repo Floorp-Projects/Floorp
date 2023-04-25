@@ -93,6 +93,38 @@ accessibility.get = function(strict = false) {
 };
 
 /**
+ * Wait for the document accessibility state to be different from STATE_BUSY.
+ *
+ * @param {Document} doc
+ *     The document to wait for.
+ * @returns {Promise}
+ *     A promise which resolves when the document's accessibility state is no
+ *     longer busy.
+ */
+function waitForDocumentAccessibility(doc) {
+  const documentAccessible = accessibility.service.getAccessibleFor(doc);
+  const state = {};
+  documentAccessible.getState(state, {});
+  if ((state.value & Ci.nsIAccessibleStates.STATE_BUSY) == 0) {
+    return Promise.resolve();
+  }
+
+  // Accessibility for the doc is busy, so wait for the state to change.
+  return lazy.waitForObserverTopic("accessible-event", {
+    checkFn: subject => {
+      // If event type does not match expected type, skip the event.
+      // If event's accessible does not match expected accessible,
+      // skip the event.
+      const event = subject.QueryInterface(Ci.nsIAccessibleEvent);
+      return (
+        event.eventType === Ci.nsIAccessibleEvent.EVENT_STATE_CHANGE &&
+        event.accessible === documentAccessible
+      );
+    },
+  });
+}
+
+/**
  * Retrieve the Accessible for the provided element.
  *
  * @param {Element} element
@@ -107,30 +139,8 @@ accessibility.getAccessible = async function(element) {
     return null;
   }
 
-  const acc = accessibility.service.getAccessibleFor(element);
-  if (acc) {
-    return acc;
-  }
-
-  // The Accessible doesn't exist yet. This can happen because a11y tree
-  // mutations happen during refresh driver ticks. Wait for a11y events,
-  // checking after each event to see if the Accessible exists yet and returning
-  // it if it does. Stop waiting after a short timeout because the Accessible
-  // might never be created and we want to report a failure without breaking
-  // subsequent tests.
-  try {
-    await lazy.waitForObserverTopic("accessible-event", {
-      checkFn: subject => {
-        return !!accessibility.service.getAccessibleFor(element);
-      },
-      timeout: 100,
-    });
-  } catch (e) {
-    // Don't treat a timeout as an error. We will most likely return null below.
-    if (!(e instanceof lazy.error.TimeoutError)) {
-      throw e;
-    }
-  }
+  // First, wait for accessibility to be ready for the element's document.
+  await waitForDocumentAccessibility(element.ownerDocument);
   return accessibility.service.getAccessibleFor(element);
 };
 

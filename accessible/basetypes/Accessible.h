@@ -13,7 +13,6 @@
 #include "Units.h"
 
 class nsAtom;
-class nsStaticAtom;
 
 struct nsRoleMapEntry;
 
@@ -352,13 +351,6 @@ class Accessible {
    */
   virtual void Language(nsAString& aLocale) = 0;
 
-  /**
-   * Get the role of this Accessible as an ARIA role token. This might have been
-   * set explicitly (e.g. role="button") or it might be implicit in native
-   * markup (e.g. <button> returns "button").
-   */
-  nsStaticAtom* ComputedARIARole() const;
-
   // Methods that interact with content.
 
   virtual void TakeFocus() const = 0;
@@ -382,7 +374,7 @@ class Accessible {
   /**
    * Return a landmark role if applied.
    */
-  virtual nsStaticAtom* LandmarkRole() const;
+  virtual nsAtom* LandmarkRole() const;
 
   /**
    * Return the id of the dom node this accessible represents.
