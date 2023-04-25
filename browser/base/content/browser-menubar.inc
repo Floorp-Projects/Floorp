@@ -495,6 +495,10 @@
                           data-l10n-id="menu-help-not-deceptive"
                           appmenu-data-l10n-id="appmenu-help-not-deceptive"
                           hidden="true"/>
+                <menuitem id="helpSwitchDevice"
+                          oncommand="openSwitchingDevicesPage();"
+                          data-l10n-id="menu-help-switch-device"
+                          appmenu-data-l10n-id="appmenu-help-switch-device"/>
                 <menuseparator id="aboutSeparator"/>
                 <menuitem id="aboutName"
                           oncommand="openAboutDialog();"
