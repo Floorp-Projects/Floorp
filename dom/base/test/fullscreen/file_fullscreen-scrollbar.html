@@ -78,11 +78,7 @@ function checkScrollbars(elem, shouldHaveScrollbars) {
 }
 
 function begin() {
-  // Check for the use of overlay scrollbars. We can only get an accurate
-  // answer to our media query if we are Chrome-privileged. Otherwise, the
-  // media query will never match.
-  let wrappedWindow = SpecialPowers.wrap(window);
-  if (wrappedWindow.matchMedia("(-moz-overlay-scrollbars)").matches) {
+  if (window.matchMedia("(-moz-overlay-scrollbars)").matches) {
     // If overlay scrollbar is enabled, the scrollbar is not measurable,
     // so we skip this test in that case.
     info("Skip this test because of overlay scrollbar");
@@ -100,6 +96,7 @@ function begin() {
   ok(gHorizontalScrollbarWidth != 0, "Should have horizontal scrollbar");
   info(`gVerticalScrollbarWidth: ${gVerticalScrollbarWidth}`);
   info(`gHorizontalScrollbarWidth: ${gHorizontalScrollbarWidth}`);
+
   info("Entering fullscreen on root");
   addFullscreenChangeContinuation("enter", enteredFullscreenOnRoot);
   document.documentElement.requestFullscreen();
