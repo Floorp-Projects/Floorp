@@ -11,6 +11,7 @@ export default {
   title: "Toggle",
   component: "moz-toggle",
   parameters: {
+    status: "in-development",
     actions: {
       handles: ["toggle"],
     },

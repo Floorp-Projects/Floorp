@@ -19,6 +19,7 @@ export default {
     },
   },
   parameters: {
+    status: "stable",
     fluent: `
 moz-button-group-p = The button group is below. Card for emphasis.
 moz-button-group-ok = OK

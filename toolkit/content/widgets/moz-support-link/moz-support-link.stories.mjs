@@ -27,6 +27,9 @@ export default {
     },
     onClick: { action: "clicked" },
   },
+  parameters: {
+    status: "stable",
+  },
 };
 
 const Template = ({
