@@ -6,8 +6,8 @@ apply plugin: 'java'
 // http://googlesamples.github.io/android-custom-lint-rules/api-guide.html#example:samplelintcheckgithubproject/lintversion?
 
 dependencies {
-    implementation 'com.android.tools.lint:lint:30.3.0'
-    implementation 'com.android.tools.lint:lint-checks:30.3.0'
+    implementation 'com.android.tools.lint:lint:30.4.1'
+    implementation 'com.android.tools.lint:lint-checks:30.4.1'
 }
 
 sourceCompatibility = JavaVersion.VERSION_11
