@@ -135,33 +135,3 @@ export const FAKE_RECOMMENDATION = {
     },
   },
 };
-
-// Stubs methods on RemotePageManager
-export class FakeRemotePageManager {
-  constructor() {
-    this.messagePorts = [];
-    this.addMessageListener = sinon.stub();
-    this.sendAsyncMessage = sinon.stub();
-    this.removeMessageListener = sinon.stub();
-    this.browser = {
-      ownerGlobal: {
-        openTrustedLinkIn: sinon.stub(),
-        openLinkIn: sinon.stub(),
-        OpenBrowserWindow: sinon.stub(),
-        openPreferences: sinon.stub(),
-        gBrowser: {
-          pinTab: sinon.stub(),
-          selectedTab: {},
-        },
-        ConfirmationHint: {
-          show: sinon.stub(),
-        },
-        gProtectionsHandler: {
-          showProtectionsPopup: sinon.stub(),
-          openProtections: sinon.stub(),
-        },
-      },
-    };
-    this.portID = "6000:2";
-  }
-}
