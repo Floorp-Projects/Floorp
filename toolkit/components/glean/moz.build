@@ -225,5 +225,3 @@ with Files("docs/**"):
 
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Telemetry")
-
-REQUIRES_UNIFIED_BUILD = True
