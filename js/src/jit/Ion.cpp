@@ -94,9 +94,7 @@ JitRuntime::~JitRuntime() {
   MOZ_ASSERT_IF(interpreterEntryMap_, interpreterEntryMap_->empty());
   js_delete(interpreterEntryMap_.ref());
 
-#ifdef NIGHTLY_BUILD
   js_delete(jitHintsMap_.ref());
-#endif
 }
 
 uint32_t JitRuntime::startTrampolineCode(MacroAssembler& masm) {
@@ -128,14 +126,12 @@ bool JitRuntime::initialize(JSContext* cx) {
     return false;
   }
 
-#ifdef NIGHTLY_BUILD
   if (!JitOptions.disableJitHints) {
     jitHintsMap_ = cx->new_<JitHintsMap>();
     if (!jitHintsMap_) {
       return false;
     }
   }
-#endif
 
   if (JitOptions.emitInterpreterEntryTrampoline) {
     interpreterEntryMap_ = cx->new_<EntryTrampolineMap>();
