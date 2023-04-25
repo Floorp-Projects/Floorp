@@ -10895,8 +10895,6 @@ static void ConcatInlineString(MacroAssembler& masm, Register lhs, Register rhs,
 
   // Copy rhs chars. Clobbers the rhs register.
   copyChars(rhs);
-
-  masm.ret();
 }
 
 void CodeGenerator::visitSubstr(LSubstr* lir) {
@@ -11068,6 +11066,9 @@ JitCode* JitRealm::generateStringConcatStub(JSContext* cx) {
 #ifdef JS_USE_LINK_REGISTER
   masm.pushReturnAddress();
 #endif
+  masm.Push(FramePointer);
+  masm.moveStackPtrTo(FramePointer);
+
   // If lhs is empty, return rhs.
   Label leftEmpty;
   masm.loadStringLength(lhs, temp1);
@@ -11122,29 +11123,37 @@ JitCode* JitRealm::generateStringConcatStub(JSContext* cx) {
 
   // Store left and right nodes.
   masm.storeRopeChildren(lhs, rhs, output);
+  masm.pop(FramePointer);
   masm.ret();
 
   masm.bind(&leftEmpty);
   masm.mov(rhs, output);
+  masm.pop(FramePointer);
   masm.ret();
 
   masm.bind(&rightEmpty);
   masm.mov(lhs, output);
+  masm.pop(FramePointer);
   masm.ret();
 
   masm.bind(&isInlineTwoByte);
   ConcatInlineString(masm, lhs, rhs, output, temp1, temp2, temp3,
                      initialStringHeap, &failure, CharEncoding::TwoByte);
+  masm.pop(FramePointer);
+  masm.ret();
 
   masm.bind(&isInlineLatin1);
   ConcatInlineString(masm, lhs, rhs, output, temp1, temp2, temp3,
                      initialStringHeap, &failure, CharEncoding::Latin1);
+  masm.pop(FramePointer);
+  masm.ret();
 
   masm.pop(temp2);
   masm.pop(temp1);
 
   masm.bind(&failure);
   masm.movePtr(ImmPtr(nullptr), output);
+  masm.pop(FramePointer);
   masm.ret();
 
   Linker linker(masm);
