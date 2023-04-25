@@ -22,9 +22,8 @@ add_task(async function test_no_startup_actions() {
     await simulateRestart(browser);
     await ensureCachedAboutHome(browser);
 
-    // Set up a RemotePageManager listener to monitor for actions
-    // that get dispatched in the browser when we fire Activity Stream
-    // up again.
+    // Set up a listener to monitor for actions that get dispatched in the
+    // browser when we fire Activity Stream up again.
     await SpecialPowers.spawn(browser, [], async () => {
       let xrayWindow = ChromeUtils.waiveXrays(content);
       xrayWindow.nonStartupActions = [];
