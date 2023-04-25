@@ -13,7 +13,7 @@ const IMAGE_ARRAYBUFFER = Uint8Array.from(image, byte => byte.charCodeAt(0))
   .buffer;
 
 add_task(async function test_web_accessible_resources_matching() {
-  let extension = await ExtensionTestUtils.loadExtension({
+  let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       manifest_version: 3,
       web_accessible_resources: [
@@ -30,7 +30,7 @@ add_task(async function test_web_accessible_resources_matching() {
     "web_accessible_resources object format incorrect"
   );
 
-  extension = await ExtensionTestUtils.loadExtension({
+  extension = ExtensionTestUtils.loadExtension({
     manifest: {
       manifest_version: 3,
       web_accessible_resources: [
@@ -46,7 +46,7 @@ add_task(async function test_web_accessible_resources_matching() {
   ok(true, "web_accessible_resources with matches loads");
   await extension.unload();
 
-  extension = await ExtensionTestUtils.loadExtension({
+  extension = ExtensionTestUtils.loadExtension({
     manifest: {
       manifest_version: 3,
       web_accessible_resources: [
@@ -62,7 +62,7 @@ add_task(async function test_web_accessible_resources_matching() {
   ok(true, "web_accessible_resources with extensions loads");
   await extension.unload();
 
-  extension = await ExtensionTestUtils.loadExtension({
+  extension = ExtensionTestUtils.loadExtension({
     manifest: {
       manifest_version: 3,
       web_accessible_resources: [
@@ -79,7 +79,7 @@ add_task(async function test_web_accessible_resources_matching() {
   ok(true, "web_accessible_resources with matches and extensions loads");
   await extension.unload();
 
-  extension = await ExtensionTestUtils.loadExtension({
+  extension = ExtensionTestUtils.loadExtension({
     manifest: {
       manifest_version: 3,
       web_accessible_resources: [
@@ -95,7 +95,7 @@ add_task(async function test_web_accessible_resources_matching() {
   ok(true, "web_accessible_resources with empty extensions loads");
   await extension.unload();
 
-  extension = await ExtensionTestUtils.loadExtension({
+  extension = ExtensionTestUtils.loadExtension({
     manifest: {
       manifest_version: 3,
       web_accessible_resources: [
@@ -446,23 +446,99 @@ add_task(async function test_web_accessible_resources_empty_extension_ids() {
     "expected access to the extension's resource"
   );
 
-  // We need to use `try/catch` because `Assert.rejects` does not seem to catch
-  // the error correctly and the task fails because of an uncaught exception.
-  // This is likely due to how errors are propagated somehow.
-  try {
-    await ExtensionTestUtils.fetch(
+  await Assert.rejects(
+    ExtensionTestUtils.fetch(
       secondExtension.extension.baseURI.resolve("page.html"),
       fileURL
-    );
-    ok(false, "expected an error to be thrown");
-  } catch (e) {
-    Assert.equal(
-      e?.message,
-      "NetworkError when attempting to fetch resource.",
-      "expected a network error"
-    );
-  }
+    ),
+    e => e?.message === "NetworkError when attempting to fetch resource.",
+    "other extension should not be able to fetch when extension_ids is empty"
+  );
 
   await extension.unload();
   await secondExtension.unload();
+});
+
+add_task(async function test_web_accessible_resources_empty_array() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 3,
+      web_accessible_resources: [],
+    },
+  });
+  await extension.startup();
+  ok(true, "empty web_accessible_resources loads");
+  await extension.unload();
+});
+
+add_task(async function test_web_accessible_resources_empty_resources() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 3,
+      web_accessible_resources: [{ resources: [], matches: ["*://*/*"] }],
+    },
+  });
+  await extension.startup();
+  ok(true, "empty web_accessible_resources[0].resources loads");
+  await extension.unload();
+});
+
+add_task(async function test_web_accessible_resources_empty_everything() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 3,
+      web_accessible_resources: [
+        { resources: [], matches: [], extension_ids: [] },
+      ],
+    },
+  });
+  await extension.startup();
+  ok(true, "empty resources, matches & extension_ids loads");
+  await extension.unload();
+});
+
+add_task(async function test_web_accessible_resources_empty_matches() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 3,
+      web_accessible_resources: [{ resources: ["file.txt"], matches: [] }],
+    },
+    files: {
+      "file.txt": "some content",
+    },
+  });
+  await extension.startup();
+  ok(true, "empty web_accessible_resources[0].matches loads");
+
+  const fileURL = extension.extension.baseURI.resolve("file.txt");
+  await Assert.rejects(
+    ExtensionTestUtils.fetch("http://example.com", fileURL),
+    e => e?.message === "NetworkError when attempting to fetch resource.",
+    "empty matches[] = not web-accessible"
+  );
+  await extension.unload();
+});
+
+add_task(async function test_web_accessible_resources_unknown_property() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 3,
+      web_accessible_resources: [{ resources: [], matches: [], idk: null }],
+    },
+  });
+
+  let { messages } = await promiseConsoleOutput(async () => {
+    ExtensionTestUtils.failOnSchemaWarnings(false);
+    await extension.startup();
+    ExtensionTestUtils.failOnSchemaWarnings(true);
+  });
+
+  AddonTestUtils.checkMessages(messages, {
+    expected: [
+      {
+        message: /Reading manifest: Warning processing web_accessible_resources.0.idk: An unexpected property was found in the WebExtension manifest./,
+      },
+    ],
+  });
+  await extension.unload();
 });

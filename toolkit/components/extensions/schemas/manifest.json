@@ -296,19 +296,16 @@
                 "min_manifest_version": 3,
                 "type": "array",
                 "postprocess": "webAccessibleMatching",
-                "minItems": 1,
                 "items": {
                   "type": "object",
                   "properties": {
                     "resources": {
                       "type": "array",
-                      "minItems": 1,
                       "items": { "type": "string" }
                     },
                     "matches": {
                       "optional": true,
                       "type": "array",
-                      "minItems": 1,
                       "items": { "$ref": "MatchPattern" }
                     },
                     "extension_ids": {
@@ -321,7 +318,8 @@
                         ]
                       }
                     }
-                  }
+                  },
+                  "additionalProperties": { "$ref": "UnrecognizedProperty" }
                 }
               }
             ]
