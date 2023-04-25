@@ -30,9 +30,13 @@ def make_path():
     try:
         return buildconfig.substs["GMAKE"]
     except KeyError:
+        fetches_dir = os.environ.get("MOZ_FETCHES_DIR")
+        extra_search_dirs = ()
+        if fetches_dir:
+            extra_search_dirs = (os.path.join(fetches_dir, "mozmake"),)
         # Fallback for when running the test without an objdir.
         for name in ("gmake", "make", "mozmake", "gnumake", "mingw32-make"):
-            path = which(name)
+            path = which(name, extra_search_dirs=extra_search_dirs)
             if path:
                 return path
 

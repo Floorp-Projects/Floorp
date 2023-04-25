@@ -384,6 +384,7 @@ mozbuild:
                     - macosx64-node-12
                 windows10-64/opt:
                     - win64-node-12
+                    - win64-mozmake
     when:
         files-changed:
             - '**/moz.configure'
