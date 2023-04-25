@@ -8612,7 +8612,11 @@
 # private-browsing level specified by this pref.)
 - name: layout.css.font-visibility.private
   type: int32_t
+#if defined(NIGHTLY_BUILD)
+  value: 2
+#else
   value: 3
+#endif
   mirror: always
 
 # Is support for GeometryUtils.getBoxQuads enabled?
