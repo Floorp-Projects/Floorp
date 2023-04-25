@@ -304,10 +304,10 @@ async function getOriginalSourceText(originalSourceId) {
       });
       text = response.content;
     } catch (err) {
-      // Wrapper logic renders a notification about the specific URL that
-      // failed to load, so we include it in the error metadata.
+      // Workers exceptions are processed by worker-utils module and
+      // only metadata attribute is transferred between threads.
+      // Notify the main thread about which url failed loading.
       err.metadata = {
-        ...err.metadata,
         url,
       };
       throw err;
