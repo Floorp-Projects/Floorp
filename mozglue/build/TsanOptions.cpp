@@ -56,8 +56,6 @@ extern "C" const char* __tsan_default_suppressions() {
          "mutex:libEGL_mesa.so\n"
          // ~GLContextGLX unlocks a libGL mutex.
          "mutex:GLContextGLX::~GLContextGLX\n"
-         // Bug 1825171
-         "mutex:wl_registry_destroy\n"
          // Bug 1651446 - permanent (ffmpeg)
          "race:libavcodec.so*\n"
          "race:libavutil.so*\n"
@@ -81,8 +79,6 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:fire_glxtest_process\n"
          // Bug 1722721 - WebRender using uninstrumented Mesa drivers
          "race:swrast_dri.so\n"
-         // Bug 1825171
-         "race:mozilla::widget::WaylandBuffer::BufferReleaseCallbackHandler\n"
 
 
 
