@@ -36,6 +36,16 @@ class SettingsSubMenuOpenLinksInAppsRobot {
         verifySelectedOpenLinksInAppOption(selectedOpenLinkInAppsOption)
     }
 
+    fun verifyPrivateOpenLinksInAppsView(selectedOpenLinkInAppsOption: String) {
+        assertItemWithDescriptionExists(goBackButton)
+        assertItemContainingTextExists(
+            itemContainingText(getStringResource(R.string.preferences_open_links_in_apps)),
+            itemContainingText(getStringResource(R.string.preferences_open_links_in_apps_ask)),
+            itemContainingText(getStringResource(R.string.preferences_open_links_in_apps_never)),
+        )
+        verifySelectedOpenLinksInAppOption(selectedOpenLinkInAppsOption)
+    }
+
     fun verifySelectedOpenLinksInAppOption(openLinkInAppsOption: String) =
         onView(
             allOf(

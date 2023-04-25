@@ -7,6 +7,7 @@ package org.mozilla.fenix.settings
 import android.os.Bundle
 import androidx.preference.PreferenceFragmentCompat
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.utils.view.addToRadioGroup
@@ -21,6 +22,13 @@ class OpenLinksInAppsFragment : PreferenceFragmentCompat() {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.open_links_in_apps_preferences, rootKey)
+
+        radioAlways = requirePreference(R.string.pref_key_open_links_in_apps_always)
+        radioAskBeforeOpening = requirePreference(R.string.pref_key_open_links_in_apps_ask)
+        radioNever = requirePreference(R.string.pref_key_open_links_in_apps_never)
+
+        /* only show the Always option in normal browsing mode */
+        radioAlways.isVisible = requireContext().settings().lastKnownMode == BrowsingMode.Normal
     }
 
     override fun onResume() {
@@ -31,13 +39,15 @@ class OpenLinksInAppsFragment : PreferenceFragmentCompat() {
     }
 
     private fun setupPreferences() {
-        radioAlways = requirePreference(R.string.pref_key_open_links_in_apps_always)
-        radioAskBeforeOpening = requirePreference(R.string.pref_key_open_links_in_apps_ask)
-        radioNever = requirePreference(R.string.pref_key_open_links_in_apps_never)
-
         when (requireContext().settings().openLinksInExternalApp) {
             getString(R.string.pref_key_open_links_in_apps_always) ->
-                radioAlways.setCheckedWithoutClickListener(true)
+                if (requireContext().settings().lastKnownMode == BrowsingMode.Normal) {
+                    radioAlways.setCheckedWithoutClickListener(true)
+                    radioAskBeforeOpening.setCheckedWithoutClickListener(false)
+                } else {
+                    radioAlways.setCheckedWithoutClickListener(false)
+                    radioAskBeforeOpening.setCheckedWithoutClickListener(true)
+                }
             getString(R.string.pref_key_open_links_in_apps_ask) ->
                 radioAskBeforeOpening.setCheckedWithoutClickListener(true)
             getString(R.string.pref_key_open_links_in_apps_never) ->
