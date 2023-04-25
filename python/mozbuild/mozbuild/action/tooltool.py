@@ -34,6 +34,7 @@ import os
 import pprint
 import re
 import shutil
+import ssl
 import stat
 import sys
 import tarfile
@@ -46,6 +47,8 @@ from functools import wraps
 from io import BytesIO, open
 from random import random
 from subprocess import PIPE, Popen
+
+import certifi
 
 __version__ = "1.4.0"
 
@@ -886,7 +889,9 @@ def touch(f):
 def request(url, auth_file=None):
     req = Request(url)
     _authorize(req, auth_file)
-    with closing(urllib2.urlopen(req)) as f:
+    with closing(
+        urllib2.urlopen(req, context=ssl.create_default_context(cafile=certifi.where()))
+    ) as f:
         log.debug("opened %s for reading" % url)
         yield f
 
@@ -1299,7 +1304,9 @@ def _send_batch(base_url, auth_file, batch, region):
     req = Request(url, data, {"Content-Type": "application/json"})
     _authorize(req, auth_file)
     try:
-        resp = urllib2.urlopen(req)
+        resp = urllib2.urlopen(
+            req, context=ssl.create_default_context(cafile=certifi.where())
+        )
     except (URLError, HTTPError) as e:
         _log_api_error(e)
         return None
@@ -1347,7 +1354,7 @@ def _notify_upload_complete(base_url, auth_file, file):
     req = Request(urljoin(base_url, "upload/complete/%(algorithm)s/%(digest)s" % file))
     _authorize(req, auth_file)
     try:
-        urllib2.urlopen(req)
+        urllib2.urlopen(req, context=ssl.create_default_context(cafile=certifi.where()))
     except HTTPError as e:
         if e.code != 409:
             _log_api_error(e)
@@ -1449,7 +1456,7 @@ def send_operation_on_file(data, base_urls, digest, auth_file):
     _authorize(req, auth_file)
 
     try:
-        urllib2.urlopen(req)
+        urllib2.urlopen(req, context=ssl.create_default_context(cafile=certifi.where()))
     except (URLError, HTTPError) as e:
         _log_api_error(e)
         return False
