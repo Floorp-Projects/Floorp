@@ -239,9 +239,6 @@ pref("chrome.override_package.global", "browser");
 pref("chrome.override_package.mozapps", "browser");
 pref("chrome.override_package.passwordmgr", "browser");
 
-// disable color management
-pref("gfx.color_management.mode", 0);
-
 // don't allow JS to move and resize existing windows
 pref("dom.disable_window_move_resize", true);
 
