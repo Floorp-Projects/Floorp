@@ -64,8 +64,8 @@ void a11y::PlatformInit() {
   }
 
   // Preload any roles that have localized versions
-#define ROLE(geckoRole, stringRole, atkRole, macRole, macSubrole, msaaRole, \
-             ia2Role, androidClass, nameRule)                               \
+#define ROLE(geckoRole, stringRole, ariaRole, atkRole, macRole, macSubrole, \
+             msaaRole, ia2Role, androidClass, nameRule)                     \
   rv = stringBundle->GetStringFromName(stringRole, localizedStr);           \
   if (NS_SUCCEEDED(rv)) {                                                   \
     sLocalizedStrings.InsertOrUpdate(u##stringRole##_ns, localizedStr);     \
