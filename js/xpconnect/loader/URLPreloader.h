@@ -153,7 +153,6 @@ class URLPreloader final : public nsIMemoryReporter {
     explicit CacheKey(nsIFile* file) : mType(TypeFile) {
       nsString path;
       MOZ_ALWAYS_SUCCEEDS(file->GetPath(path));
-      MOZ_DIAGNOSTIC_ASSERT(path.Length() > 0);
       CopyUTF16toUTF8(path, mPath);
     }
 
@@ -163,7 +162,6 @@ class URLPreloader final : public nsIMemoryReporter {
     template <typename Buffer>
     void Code(Buffer& buffer) {
       buffer.codeUint8(*reinterpret_cast<uint8_t*>(&mType));
-      MOZ_DIAGNOSTIC_ASSERT(mPath.Length() > 0);
       buffer.codeString(mPath);
     }
 
