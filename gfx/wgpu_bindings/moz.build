@@ -19,6 +19,7 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
         inputs=[
             "/gfx/wgpu_bindings",
             "/third_party/rust/wgpu-core",
+            "/third_party/rust/wgpu-hal",
             "/third_party/rust/wgpu-types",
         ],
     )
