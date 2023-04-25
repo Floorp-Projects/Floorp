@@ -10,6 +10,7 @@ export default {
   title: "UI Widgets/Panel Menu",
   component: "panel-list",
   parameters: {
+    status: "stable",
     actions: {
       handles: ["click"],
     },

@@ -11,6 +11,7 @@ export default {
   title: "UI Widgets/Named Deck",
   component: "named-deck",
   parameters: {
+    status: "stable",
     fluent: `
 named-deck-tab-one = Tab 1
 named-deck-tab-two = Tab 2

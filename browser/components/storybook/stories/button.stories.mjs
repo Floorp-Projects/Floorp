@@ -8,6 +8,7 @@ export default {
   title: "UI Widgets/Button",
   component: "button",
   parameters: {
+    status: "stable",
     fluent: `
 button-regular = Regular
 button-primary = Primary

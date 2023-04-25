@@ -17,6 +17,17 @@ export default {
       control: { type: "select" },
     },
   },
+  parameters: {
+    status: {
+      type: "unstable",
+      links: [
+        {
+          title: "Learn more",
+          href: "?path=/docs/ui-widgets-label-readme--page#component-status",
+        },
+      ],
+    },
+  },
 };
 
 const Template = ({

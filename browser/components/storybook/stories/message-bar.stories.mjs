@@ -25,6 +25,7 @@ export default {
     },
   },
   parameters: {
+    status: "stable",
     fluent: `
 message-bar-text = A very expressive and slightly whimsical message goes here.
 message-bar-button = Click me, please!
