@@ -327,7 +327,10 @@ function stopTracing() {
 function addTracingListener(listener) {
   listeners.add(listener);
 
-  if (activeTracer?.isTracing()) {
+  if (
+    activeTracer?.isTracing() &&
+    typeof listener.onTracingToggled == "function"
+  ) {
     listener.onTracingToggled(true);
   }
 }
