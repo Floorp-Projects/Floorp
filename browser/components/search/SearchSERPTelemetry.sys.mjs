@@ -932,6 +932,7 @@ class ContentHandler {
       if (
         lazy.serpEventsEnabled &&
         channel.isDocument &&
+        channel.loadInfo.isTopLevelLoad &&
         !wrappedChannel._countedClick
       ) {
         let start = Cu.now();
