@@ -1247,6 +1247,9 @@
     <!-- Title B shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_B_title">آپݨی پہلی ڳول شروع کرو</string>
 
+    <!-- Text B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_text">نیڑے دی کئی شئے لبھو۔ یا کئی تفریحی شئے دریافت کرو۔</string>
+
     <!-- Preference for taking the short survey. -->
     <string name="preferences_take_survey">سروے وچ حصہ گھنو</string>
     <!-- Preference for not taking the short survey. -->
