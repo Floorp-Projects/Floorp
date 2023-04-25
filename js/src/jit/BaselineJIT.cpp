@@ -293,7 +293,8 @@ static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
 
   // If a hint is available, skip the warmup count threshold.
   bool mightHaveEagerBaselineHint = false;
-  if (!JitOptions.disableJitHints && !script->noEagerBaselineHint()) {
+  if (!JitOptions.disableJitHints && !script->noEagerBaselineHint() &&
+      cx->runtime()->jitRuntime()->hasJitHintsMap()) {
     JitHintsMap* jitHints = cx->runtime()->jitRuntime()->getJitHintsMap();
     // If this lookup fails, the NoEagerBaselineHint script flag is set
     // to true to prevent any further lookups for this script.

@@ -221,7 +221,8 @@ MethodStatus BaselineCompiler::compile() {
     }
   }
 
-  if (!JitOptions.disableJitHints) {
+  if (!JitOptions.disableJitHints &&
+      cx->runtime()->jitRuntime()->hasJitHintsMap()) {
     JitHintsMap* jitHints = cx->runtime()->jitRuntime()->getJitHintsMap();
     jitHints->setEagerBaselineHint(script);
   }
