@@ -39,8 +39,8 @@ pull_request_rules:
     conditions:
       - author=github-actions[bot]
       - status-success=complete-pr
-      - files~=^android-components/(\.buildconfig\.yml|.+/NimbusGradlePlugin\.groovy|plugins/dependencies/src/main/java/(Gecko|DependenciesPlugin)\.kt|buildSrc/src/main/java/Gecko\.kt)
-      - -files~=^(?!android-components/(\.buildconfig\.yml|.+/NimbusGradlePlugin\.groovy|plugins/dependencies/src/main/java/(Gecko|DependenciesPlugin)\.kt|buildSrc/src/main/java/Gecko\.kt)).+$
+      - files~=^android-components/(\.buildconfig\.yml|plugins/dependencies/src/main/java/(ApplicationServices|DependenciesPlugin|Gecko)\.kt)
+      - -files~=^(?!android-components/(\.buildconfig\.yml|plugins/dependencies/src/main/java/(ApplicationServices|DependenciesPlugin|Gecko)\.kt)).+$
     actions:
       review:
         type: APPROVE
