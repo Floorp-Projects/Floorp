@@ -605,6 +605,12 @@ export class Page extends Domain {
     printSettings.paperWidth = paperWidth;
     printSettings.paperHeight = paperHeight;
 
+    // Override any os-specific unwriteable margins
+    printSettings.unwriteableMarginTop = 0;
+    printSettings.unwriteableMarginLeft = 0;
+    printSettings.unwriteableMarginBottom = 0;
+    printSettings.unwriteableMarginRight = 0;
+
     printSettings.marginBottom = marginBottom;
     printSettings.marginLeft = marginLeft;
     printSettings.marginRight = marginRight;
