@@ -11,6 +11,8 @@
 #include "mozilla/PerfectHash.h"
 #include "nsString.h"
 
+#include "mozilla/PerfectHash.h"
+
 #define GLEAN_PING_INDEX_BITS (16)
 #define GLEAN_PING_ID(entry) ((entry) >> GLEAN_PING_INDEX_BITS)
 #define GLEAN_PING_INDEX(entry) ((entry) & ((1UL << GLEAN_PING_INDEX_BITS) - 1))

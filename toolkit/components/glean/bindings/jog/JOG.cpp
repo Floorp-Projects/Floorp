@@ -13,6 +13,7 @@
 #include "mozilla/glean/bindings/jog/jog_ffi_generated.h"
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs_telemetry.h"
+#include "mozilla/AppShutdown.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsThreadUtils.h"

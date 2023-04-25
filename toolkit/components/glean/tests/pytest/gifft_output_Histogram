@@ -12,6 +12,7 @@
 #include "mozilla/Telemetry.h"
 #include <tuple>
 #include "mozilla/DataMutex.h"
+#include "nsIThread.h"
 #include "nsThreadUtils.h"
 
 #ifndef mozilla_glean_HistogramGifftMap_h
