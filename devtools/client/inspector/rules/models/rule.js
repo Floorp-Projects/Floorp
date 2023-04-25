@@ -197,7 +197,7 @@ class Rule {
 
   /**
    * Get the declaration block issues from the compatibility actor
-   * @returns An Array of JSON objects with compatibility information in following form:
+   * @returns A promise that resolves with an array of objects in following form:
    *    {
    *      // Type of compatibility issue
    *      type: <string>,
@@ -215,14 +215,14 @@ class Rule {
    */
   async getCompatibilityIssues() {
     if (!this.compatibilityIssues) {
-      const [targetBrowsers, compatibility] = await Promise.all([
+      this.compatibilityIssues = Promise.all([
         getTargetBrowsers(),
         this.inspector.inspectorFront.getCompatibilityFront(),
-      ]);
-
-      this.compatibilityIssues = await compatibility.getCSSDeclarationBlockIssues(
-        this.domRule.declarations,
-        targetBrowsers
+      ]).then(([targetBrowsers, compatibility]) =>
+        compatibility.getCSSDeclarationBlockIssues(
+          this.domRule.declarations,
+          targetBrowsers
+        )
       );
     }
 
