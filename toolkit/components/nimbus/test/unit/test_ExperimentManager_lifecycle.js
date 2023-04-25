@@ -215,7 +215,7 @@ add_task(async function test_onRecipe_rollout_update() {
     "should call .updateEnrollment() if the recipe has already been enrolled"
   );
   Assert.ok(
-    manager.updateEnrollment.alwaysReturned(true),
+    manager.updateEnrollment.alwaysReturned(Promise.resolve(true)),
     "updateEnrollment will confirm the enrolled branch still exists in the recipe and exit"
   );
   Assert.ok(

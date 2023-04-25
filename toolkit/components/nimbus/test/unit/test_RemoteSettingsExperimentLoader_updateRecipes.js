@@ -973,3 +973,128 @@ add_task(async function test_updateRecipes_invalidFeature_mismatch() {
 
   targetingSpy.restore();
 });
+
+add_task(async function test_updateRecipes_rollout_bucketing() {
+  TelemetryEvents.init();
+  Services.fog.testResetFOG();
+  Services.telemetry.snapshotEvents(
+    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+    /* clear = */ true
+  );
+
+  const loader = ExperimentFakes.rsLoader();
+  const manager = loader.manager;
+
+  const experiment = ExperimentFakes.recipe("experiment", {
+    branches: [
+      {
+        slug: "control",
+        ratio: 1,
+        features: [
+          {
+            featureId: "testFeature",
+            value: {},
+          },
+        ],
+      },
+    ],
+    bucketConfig: {
+      namespace: "nimbus-test-utils",
+      randomizationUnit: "normandy_id",
+      start: 0,
+      count: 1000,
+      total: 1000,
+    },
+  });
+  const rollout = ExperimentFakes.recipe("rollout", {
+    isRollout: true,
+    branches: [
+      {
+        slug: "rollout",
+        ratio: 1,
+        features: [
+          {
+            featureId: "testFeature",
+            value: {},
+          },
+        ],
+      },
+    ],
+    bucketConfig: {
+      namespace: "nimbus-test-utils",
+      randomizationUnit: "normandy_id",
+      start: 0,
+      count: 1000,
+      total: 1000,
+    },
+  });
+
+  await loader.init();
+  await manager.onStartup();
+  await manager.store.ready();
+
+  sinon
+    .stub(loader.remoteSettingsClient, "get")
+    .resolves([experiment, rollout]);
+
+  await loader.updateRecipes();
+
+  Assert.equal(
+    manager.store.getExperimentForFeature("testFeature")?.slug,
+    experiment.slug,
+    "Should enroll in experiment"
+  );
+  Assert.equal(
+    manager.store.getRolloutForFeature("testFeature")?.slug,
+    rollout.slug,
+    "Should enroll in rollout"
+  );
+
+  experiment.bucketConfig.count = 0;
+  rollout.bucketConfig.count = 0;
+
+  await loader.updateRecipes();
+
+  Assert.equal(
+    manager.store.getExperimentForFeature("testFeature")?.slug,
+    experiment.slug,
+    "Should stay enrolled in experiment -- experiments cannot be resized"
+  );
+  Assert.ok(
+    !manager.store.getRolloutForFeature("testFeature"),
+    "Should unenroll from rollout"
+  );
+
+  const unenrollmentEvents = Glean.nimbusEvents.unenrollment.testGetValue();
+  Assert.equal(
+    unenrollmentEvents.length,
+    1,
+    "Should be one unenrollment event"
+  );
+  Assert.equal(
+    unenrollmentEvents[0].extra.experiment,
+    rollout.slug,
+    "Experiment slug should match"
+  );
+  Assert.equal(
+    unenrollmentEvents[0].extra.reason,
+    "bucketing",
+    "Reason should match"
+  );
+
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        value: rollout.slug,
+        extra: {
+          reason: "bucketing",
+        },
+      },
+    ],
+    {
+      category: "normandy",
+      method: "unenroll",
+      object: "nimbus_experiment",
+    }
+  );
+});
