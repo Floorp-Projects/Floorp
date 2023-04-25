@@ -328,8 +328,6 @@ interface nsIDNSService : nsISupports
      */
     readonly attribute nsIDNSService_ResolverMode currentTrrMode;
 
-    void setTRRModeInChild(in nsIDNSService_ResolverMode mode);
-
     /**
      * The TRRService's current confirmation state.
      * This is mostly for testing purposes.
