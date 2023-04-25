@@ -54,7 +54,9 @@ async function test() {
   // Setup a scroll-linked effect callback.
   await promiseScrollAndEvent(() => {
     isnot(window.scrollY, 0, "we've already scrolled some amount");
-    target.style.top = window.scrollY + "px";
+    // ceil() makes sure that the non-effective setter below is actually
+    // non-effective.
+    target.style.top = Math.ceil(window.scrollY) + "px";
     eventTimeStamp = document.timeline.currentTime;
   });
   is(eventTimeStamp, document.timeline.currentTime,
