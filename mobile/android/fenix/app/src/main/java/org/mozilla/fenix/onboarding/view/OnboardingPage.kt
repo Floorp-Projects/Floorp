@@ -8,6 +8,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,6 +30,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
@@ -37,10 +39,20 @@ import org.mozilla.fenix.compose.button.SecondaryButton
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
- * The ratio of the image height to the window height. This was determined from the designs in figma
+ * The ratio of the image height to the parent height. This was determined from the designs in figma
  * taking the ratio of the image height to the mockup height.
  */
-private const val IMAGE_HEIGHT_RATIO = 0.4f
+private const val IMAGE_HEIGHT_RATIO_DEFAULT = 0.4f
+
+/**
+ * The ratio of the image height to the parent height for medium sized devices.
+ */
+private const val IMAGE_HEIGHT_RATIO_MEDIUM = 0.36f
+
+/**
+ * The ratio of the image height to the parent height for small devices like Nexus 4, Nexus 1.
+ */
+private const val IMAGE_HEIGHT_RATIO_SMALL = 0.28f
 
 /**
  * The tag used for links in the text for annotated strings.
@@ -97,8 +109,7 @@ fun OnboardingPage(
                 Image(
                     painter = painterResource(id = pageState.image),
                     contentDescription = null,
-                    modifier = Modifier
-                        .height(boxWithConstraintsScope.maxHeight.times(IMAGE_HEIGHT_RATIO)),
+                    modifier = Modifier.height(imageHeight(boxWithConstraintsScope)),
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -206,6 +217,18 @@ private fun LinkText(
             }
         },
     )
+}
+
+/**
+ * Calculates the image height to be set. The ratio is selected based on parent height.
+ */
+private fun imageHeight(boxWithConstraintsScope: BoxWithConstraintsScope): Dp {
+    val imageHeightRatio: Float = when {
+        boxWithConstraintsScope.maxHeight <= 550.dp -> IMAGE_HEIGHT_RATIO_SMALL
+        boxWithConstraintsScope.maxHeight <= 650.dp -> IMAGE_HEIGHT_RATIO_MEDIUM
+        else -> IMAGE_HEIGHT_RATIO_DEFAULT
+    }
+    return boxWithConstraintsScope.maxHeight.times(imageHeightRatio)
 }
 
 @LightDarkPreview
