@@ -5,12 +5,38 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ImportScanner.h"
+
+#include "mozilla/ServoBindings.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "nsContentUtils.h"
 
 namespace mozilla {
 
 static inline bool IsWhitespace(char16_t aChar) {
   return nsContentUtils::IsHTMLWhitespace(aChar);
+}
+
+static inline bool OptionalSupportsMatches(const nsAString& aAfterRuleValue) {
+  // Ensure pref for @import supports() is enabled before wanting to check.
+  if (!StaticPrefs::layout_css_import_supports_enabled()) {
+    return true;
+  }
+
+  // Empty, don't bother checking.
+  if (aAfterRuleValue.IsEmpty()) {
+    return true;
+  }
+
+  NS_ConvertUTF16toUTF8 value(aAfterRuleValue);
+  return Servo_CSSSupportsForImport(&value);
+}
+
+void ImportScanner::ResetState() {
+  mInImportRule = false;
+  // We try to avoid freeing the buffers here.
+  mRuleName.Truncate(0);
+  mRuleValue.Truncate(0);
+  mAfterRuleValue.Truncate(0);
 }
 
 void ImportScanner::Start() {
@@ -26,12 +52,16 @@ void ImportScanner::EmitUrl() {
       // FIXME: Add a convenience function in nsContentUtils or something?
       mRuleValue.Trim(" \t\n\r\f", false);
     }
-    mUrlsFound.AppendElement(std::move(mRuleValue));
+
+    // If a supports(...) condition is given as part of import conditions,
+    // only emit the URL if it matches, as there is no use preloading
+    // imports for features we do not support, as this cannot change
+    // mid-page.
+    if (OptionalSupportsMatches(mAfterRuleValue)) {
+      mUrlsFound.AppendElement(std::move(mRuleValue));
+    }
   }
-  mInImportRule = false;
-  // We try to avoid freeing the buffers here.
-  mRuleName.Truncate(0);
-  mRuleValue.Truncate(0);
+  ResetState();
   MOZ_ASSERT(mRuleValue.IsEmpty());
 }
 
@@ -40,9 +70,7 @@ nsTArray<nsString> ImportScanner::Stop() {
     EmitUrl();
   }
   mState = State::OutsideOfStyleElement;
-  mInImportRule = false;
-  mRuleName.Truncate(0);
-  mRuleValue.Truncate(0);
+  ResetState();
   return std::move(mUrlsFound);
 }
 
@@ -190,6 +218,12 @@ auto ImportScanner::Scan(char16_t aChar) -> State {
       if (aChar == '{') {
         return State::Done;
       }
+
+      if (!mAfterRuleValue.Append(aChar, mozilla::fallible)) {
+        mAfterRuleValue.Truncate(0);
+        return State::Done;
+      }
+
       return mState;  // There can be all sorts of stuff here like media
                       // queries or what not.
     }

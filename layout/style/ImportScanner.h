@@ -66,6 +66,7 @@ struct ImportScanner final {
     Done,
   };
 
+  void ResetState();
   void EmitUrl();
   [[nodiscard]] State Scan(char16_t aChar);
 
@@ -74,6 +75,7 @@ struct ImportScanner final {
   State mState = State::OutsideOfStyleElement;
   nsAutoStringN<kMaxRuleNameLength> mRuleName;
   nsAutoStringN<128> mRuleValue;
+  nsAutoStringN<128> mAfterRuleValue;
   nsTArray<nsString> mUrlsFound;
 
   // This is conceptually part of the AtRuleValue* / AfterRuleValue states,
