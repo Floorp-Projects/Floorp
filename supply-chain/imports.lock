@@ -1,6 +1,13 @@
 
 # cargo-vet imports lock
 
+[[publisher.audio_thread_priority]]
+version = "0.26.1"
+when = "2022-03-22"
+user-id = 1258
+user-login = "padenot"
+user-name = "Paul Adenot"
+
 [[publisher.bhttp]]
 version = "0.3.1"
 when = "2023-02-23"
