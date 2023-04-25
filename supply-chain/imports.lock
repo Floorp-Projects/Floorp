@@ -15,6 +15,20 @@ user-id = 3788
 user-login = "emilio"
 user-name = "Emilio Cobos Álvarez"
 
+[[publisher.etagere]]
+version = "0.2.7"
+when = "2022-05-04"
+user-id = 1281
+user-login = "nical"
+user-name = "Nicolas Silva"
+
+[[publisher.euclid]]
+version = "0.22.7"
+when = "2022-04-04"
+user-id = 1281
+user-login = "nical"
+user-name = "Nicolas Silva"
+
 [[publisher.glean]]
 version = "52.6.0"
 when = "2023-04-20"
