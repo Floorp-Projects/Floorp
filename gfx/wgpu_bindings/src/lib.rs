@@ -193,3 +193,20 @@ impl DropAction {
         ByteBuf::from_vec(data)
     }
 }
+
+#[repr(C)]
+pub struct ImageDataLayout<'a> {
+    pub offset: wgt::BufferAddress,
+    pub bytes_per_row: Option<&'a u32>,
+    pub rows_per_image: Option<&'a u32>,
+}
+
+impl<'a> ImageDataLayout<'a> {
+    fn into_wgt(&self) -> wgt::ImageDataLayout {
+        wgt::ImageDataLayout {
+            offset: self.offset,
+            bytes_per_row: self.bytes_per_row.map(|bpr| *bpr),
+            rows_per_image: self.rows_per_image.map(|rpi| *rpi),
+        }
+    }
+}
