@@ -271,6 +271,7 @@ class ProviderWeather extends UrlbarProvider {
       }
     );
 
+    result.showFeedbackMenu = true;
     result.suggestedIndex = queryContext.searchString ? 1 : 0;
 
     addCallback(this, result);

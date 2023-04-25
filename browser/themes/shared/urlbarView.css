@@ -20,6 +20,7 @@
   --urlbarView-favicon-width: 16px;
   --urlbarView-icon-margin-end: calc(var(--urlbar-icon-padding) + var(--identity-box-margin-inline));
 
+  --urlbarView-result-button-size: 24px;
   --urlbarView-result-button-background-opacity: 60%;
   --urlbarView-result-button-selected-color: var(--toolbar-field-focus-color);
   --urlbarView-result-button-selected-background-color: color-mix(in srgb, var(--toolbar-field-focus-background-color) var(--urlbarView-result-button-background-opacity), transparent);
@@ -303,8 +304,8 @@
 
 .urlbarView-button {
   display: inline-block;
-  min-width: 24px;
-  min-height: 24px;
+  min-width: var(--urlbarView-result-button-size);
+  min-height: var(--urlbarView-result-button-size);
   background-size: 16px;
   background-position: center;
   background-repeat: no-repeat;
@@ -341,17 +342,40 @@
   background-image: url("chrome://global/skin/icons/help.svg");
 }
 
+/* Result menu button */
+
 .urlbarView-button-menu {
   background-image: url("chrome://global/skin/icons/more.svg");
+  background-color: var(--button-bgcolor);
 }
 
-.urlbarView-results:not([disable-resultmenu-autohide]) > .urlbarView-row:not(:hover, [selected]) > .urlbarView-row-inner + .urlbarView-button-menu:not([open]) {
+.urlbarView-results:not([disable-resultmenu-autohide]) > .urlbarView-row:not(:hover, [selected]) > .urlbarView-row-inner + .urlbarView-button-menu:not([open]):empty {
   display: none;
+}
+
+/* Labeled result menu button */
+
+.urlbarView-results:not([wrap]) > .urlbarView-row > .urlbarView-button-menu:not(:empty) {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--urlbarView-result-button-size);
+  padding-inline: 8px 26px;
+  background-position-x: right 4px;
+  font-size: 0.85em;
+}
+
+.urlbarView-results:not([wrap]) > .urlbarView-row > .urlbarView-button-menu:not(:empty):-moz-locale-dir(rtl) {
+  background-position-x: left 4px;
+}
+
+.urlbarView-results[wrap] > .urlbarView-row > .urlbarView-button-menu:not(:empty) {
+  /* Hide the label in narrow windows. */
+  font-size: 0;
 }
 
 /* Button with label, e.g. tip button */
 
-.urlbarView-button:not(:empty) {
+.urlbarView-button:not(:empty, .urlbarView-button-menu) {
   border-radius: var(--toolbarbutton-border-radius);
   padding: 7px;
   font-size: 0.93em;
@@ -364,21 +388,21 @@
   flex-shrink: 0;
 }
 
-.urlbarView-button:not(:empty, :hover) {
+.urlbarView-button:not(:empty, :hover, .urlbarView-button-menu) {
   background-color: var(--button-bgcolor);
 }
 
-.urlbarView-button:not(:empty)[selected] {
+.urlbarView-button:not(:empty, .urlbarView-button-menu)[selected] {
   color: var(--button-primary-color);
   background-color: var(--button-primary-bgcolor);
   outline-offset: var(--focus-outline-offset);
 }
 
-.urlbarView-button:not(:empty)[selected]:hover {
+.urlbarView-button:not(:empty, .urlbarView-button-menu)[selected]:hover {
   background-color: var(--button-primary-hover-bgcolor);
 }
 
-.urlbarView-button:not(:empty)[selected]:hover:active {
+.urlbarView-button:not(:empty, .urlbarView-button-menu)[selected]:hover:active {
   background-color: var(--button-primary-active-bgcolor);
 }
 
@@ -387,7 +411,7 @@
   margin-inline-start: 1.8em;
 }
 
-.urlbarView-button:not(:empty):last-child {
+.urlbarView-button:not(:empty, .urlbarView-button-menu):last-child {
   /* Add space between a labeled button and the trailing edge of the panel. */
   margin-inline-end: 1.8em;
 }
