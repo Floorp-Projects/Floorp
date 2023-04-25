@@ -64,6 +64,13 @@ user-id = 128763
 user-login = "martinthomson"
 user-name = "Martin Thomson"
 
+[[publisher.rust_cascade]]
+version = "1.5.0"
+when = "2023-04-05"
+user-id = 57462
+user-login = "mozkeeler"
+user-name = "Dana Keeler"
+
 [[audits.bytecode-alliance.audits.arbitrary]]
 who = "Nick Fitzgerald <fitzgen@gmail.com>"
 criteria = "safe-to-deploy"

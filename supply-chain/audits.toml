@@ -115,6 +115,14 @@ start = "2022-08-04"
 end = "2024-03-09"
 notes = "This code contains two cryptographic back ends.  No unsafe code is contained if the Rust `hpke` crate is used (the `rust-hpke` feature).  Using NSS (the `nss` feature) involves extensive use of bindings to the native code provided by NSS.  This interface uses wrappers that attempt to add safety to a fundamentally very dangerous library, but those wrappers have only been validated for use following the needs of this crate."
 
+[[wildcard-audits.rust_cascade]]
+who = "Dana Keeler <dkeeler@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 57462
+start = "2019-11-15"
+end = "2024-04-24"
+notes = "Written and maintained by the security engineering team at Mozilla."
+
 [[wildcard-audits.webdriver]]
 who = "Henrik Skupin <mail@hskupin.info>"
 criteria = "safe-to-deploy"
