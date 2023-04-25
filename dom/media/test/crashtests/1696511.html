@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html class='reftest-wait'>
+<head>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const canvas = document.createElement('canvas')
+  canvas.height = 27530
+  const context = canvas.getContext('2d')
+  context.strokeRect(5, 5, canvas.width - 5, canvas.height - 5)
+  const stream = canvas.captureStream()
+  const recorder = new MediaRecorder(stream)
+  recorder.start()
+  const stopped = new Promise(r => recorder.onstop = r)
+  await new Promise(r => setTimeout(r, 100))
+  stream.getTracks().forEach(t => t.stop())
+  await stopped
+  document.documentElement.removeAttribute("class")
+})
+</script>
+</head>
+</html>
+
