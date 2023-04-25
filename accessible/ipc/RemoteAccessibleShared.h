@@ -107,8 +107,6 @@ LayoutDeviceIntPoint ImagePosition(uint32_t aCoordType);
 
 LayoutDeviceIntSize ImageSize();
 
-void AnchorURIAt(uint32_t aIndex, nsCString& aURI, bool* aOk);
-
 uint32_t LinkCount();
 
 RemoteAccessible* TableOfACell();

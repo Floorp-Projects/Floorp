@@ -70,7 +70,6 @@
 #include "nsReadableUtils.h"
 #include "prdtoa.h"
 #include "nsAtom.h"
-#include "nsIURI.h"
 #include "nsArrayUtils.h"
 #include "nsWhitespaceTokenizer.h"
 #include "nsAttrName.h"
@@ -2774,12 +2773,6 @@ bool LocalAccessible::IsLink() const {
   // Every embedded accessible within hypertext accessible implements
   // hyperlink interface.
   return mParent && mParent->IsHyperText() && !IsText();
-}
-
-already_AddRefed<nsIURI> LocalAccessible::AnchorURIAt(
-    uint32_t aAnchorIndex) const {
-  MOZ_ASSERT(IsLink(), "AnchorURIAt is called on not hyper link!");
-  return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

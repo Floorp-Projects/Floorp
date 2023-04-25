@@ -65,32 +65,22 @@ NS_IMETHODIMP
 xpcAccessibleHyperLink::GetURI(int32_t aIndex, nsIURI** aURI) {
   NS_ENSURE_ARG_POINTER(aURI);
 
-  if (!Intl()) return NS_ERROR_FAILURE;
-
-  if (aIndex < 0) return NS_ERROR_INVALID_ARG;
-
-  if (Intl()->IsLocal()) {
-    if (aIndex >= static_cast<int32_t>(Intl()->AsLocal()->AnchorCount())) {
-      return NS_ERROR_INVALID_ARG;
-    }
-
-    RefPtr<nsIURI>(Intl()->AsLocal()->AnchorURIAt(aIndex)).forget(aURI);
-  } else {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    nsCString spec;
-    bool isURIValid = false;
-    Intl()->AsRemote()->AnchorURIAt(aIndex, spec, &isURIValid);
-    if (!isURIValid) return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = NS_NewURI(getter_AddRefs(uri), spec);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    uri.forget(aURI);
-#endif
+  if (!Intl()) {
+    return NS_ERROR_FAILURE;
   }
+
+#if defined(XP_WIN)
+  if (Intl()->IsRemote() &&
+      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+#endif
+
+  if (aIndex < 0 || aIndex >= static_cast<int32_t>(Intl()->AnchorCount())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  RefPtr<nsIURI>(Intl()->AnchorURIAt(aIndex)).forget(aURI);
 
   return NS_OK;
 }

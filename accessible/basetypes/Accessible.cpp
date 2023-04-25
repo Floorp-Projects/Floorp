@@ -7,6 +7,7 @@
 #include "AccGroupInfo.h"
 #include "ARIAMap.h"
 #include "nsAccUtils.h"
+#include "nsIURI.h"
 #include "Relation.h"
 #include "States.h"
 #include "mozilla/a11y/FocusManager.h"
@@ -382,13 +383,40 @@ uint32_t Accessible::AnchorCount() {
   return 1;
 }
 
-Accessible* Accessible::AnchorAt(uint32_t aAnchorIndex) {
+Accessible* Accessible::AnchorAt(uint32_t aAnchorIndex) const {
   if (IsImageMap()) {
     return ChildAt(aAnchorIndex);
   }
 
   MOZ_ASSERT(IsLink(), "GetAnchor is called on not hyper link!");
-  return aAnchorIndex == 0 ? this : nullptr;
+  return aAnchorIndex == 0 ? const_cast<Accessible*>(this) : nullptr;
+}
+
+already_AddRefed<nsIURI> Accessible::AnchorURIAt(uint32_t aAnchorIndex) const {
+  Accessible* anchor = nullptr;
+
+  if (IsTextLeaf() || IsImage()) {
+    for (Accessible* parent = Parent(); parent && !parent->IsOuterDoc();
+         parent = parent->Parent()) {
+      if (parent->IsLink()) {
+        anchor = parent->AnchorAt(aAnchorIndex);
+      }
+    }
+  } else {
+    anchor = AnchorAt(aAnchorIndex);
+  }
+
+  if (anchor) {
+    RefPtr<nsIURI> uri;
+    nsAutoString spec;
+    anchor->Value(spec);
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), spec);
+    if (NS_SUCCEEDED(rv)) {
+      return uri.forget();
+    }
+  }
+
+  return nullptr;
 }
 
 bool Accessible::IsSearchbox() const {

@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 "use strict";
 
@@ -15,10 +15,12 @@ function testLinkIndexAtOffset(id, offset, index) {
 
 function testThis(
   paragraph,
+  docURI,
   id,
   charIndex,
   expectedLinkIndex,
   expectedAnchors,
+  expectedURIs,
   valid = true
 ) {
   testLinkIndexAtOffset(paragraph, charIndex, expectedLinkIndex);
@@ -33,6 +35,12 @@ function testThis(
 
   is(linkAcc.anchorCount, expectedAnchors.length, "Correct number of anchors");
   for (let i = 0; i < expectedAnchors.length; i++) {
+    let uri = linkAcc.getURI(i);
+    is(
+      (uri ? uri.spec : "").replace(docURI, ""),
+      expectedURIs[i],
+      `Wrong anchor URI at ${i} for "${id}"`
+    );
     is(
       getAccessibleDOMNodeID(linkAcc.getAnchor(i)),
       expectedAnchors[i],
@@ -48,20 +56,20 @@ addAccessibleTask(
   `
   <p id="testParagraph"><br
   >Simple link:<br
-  ><a id="NormalHyperlink" href="http://www.mozilla.org">Mozilla Foundation</a><br
+  ><a id="NormalHyperlink" href="https://www.mozilla.org">Mozilla Foundation</a><br
   >ARIA link:<br
   ><span id="AriaHyperlink" role="link"
-          onclick="window.open('http://www.mozilla.org/');"
+          onclick="window.open('https://www.mozilla.org/');"
           tabindex="0">Mozilla Foundation Home</span><br
   >Invalid, non-focusable hyperlink:<br
   ><span id="InvalidAriaHyperlink" role="link" aria-invalid="true"
-         onclick="window.open('http:/www.mozilla.org/');">Invalid link</span><br
+         onclick="window.open('https:/www.mozilla.org/');">Invalid link</span><br
   >Image map:<br
-  ><map name="atoz_map"><area href="http://www.bbc.co.uk/radio4/atoz/index.shtml#b"
+  ><map name="atoz_map"><area href="https://www.bbc.co.uk/radio4/atoz/index.shtml#b"
                               coords="17,0,30,14"
                               id="b"
                               shape="rect"></area
-   ><area href="http://www.bbc.co.uk/radio4/atoz/index.shtml#a"
+   ><area href="https://www.bbc.co.uk/radio4/atoz/index.shtml#a"
           coords="0,0,13,14"
           id="a"
           shape="rect"></area></map
@@ -72,7 +80,7 @@ addAccessibleTask(
   >Empty link:<br
   ><a id="emptyLink" href=""><img src=""></img></a><br
   >Link with embedded span<br
-  ><a id="LinkWithSpan" href="http://www.heise.de/"><span lang="de">Heise Online</span></a><br
+  ><a id="LinkWithSpan" href="https://www.heise.de/"><span lang="de">Heise Online</span></a><br
   >Named anchor, must not have "linked" state for it to be exposed correctly:<br
   ><a id="namedAnchor" name="named_anchor">This should never be of state_linked</a>
   </p>
@@ -83,33 +91,71 @@ addAccessibleTask(
     ]);
     is(paragraph.linkCount, 7, "Wrong link count for paragraph!");
 
+    const docURI = accDoc.URL;
     // normal hyperlink
-    testThis(paragraph, "NormalHyperlink", 14, 0, ["NormalHyperlink"]);
+    testThis(
+      paragraph,
+      docURI,
+      "NormalHyperlink",
+      14,
+      0,
+      ["NormalHyperlink"],
+      ["https://www.mozilla.org/"]
+    );
 
     // ARIA hyperlink
-    testThis(paragraph, "AriaHyperlink", 27, 1, ["AriaHyperlink"]);
+    testThis(
+      paragraph,
+      docURI,
+      "AriaHyperlink",
+      27,
+      1,
+      ["AriaHyperlink"],
+      [""]
+    );
 
     // ARIA hyperlink with status invalid
     testThis(
       paragraph,
+      docURI,
       "InvalidAriaHyperlink",
       63,
       2,
       ["InvalidAriaHyperlink"],
+      [""],
       false
     );
 
     // image map, but not its link children. They are not part of hypertext.
-    testThis(paragraph, "imgmap", 76, 3, ["b", "a"]);
+    testThis(
+      paragraph,
+      docURI,
+      "imgmap",
+      76,
+      3,
+      ["b", "a"],
+      [
+        "https://www.bbc.co.uk/radio4/atoz/index.shtml#b",
+        "https://www.bbc.co.uk/radio4/atoz/index.shtml#a",
+      ]
+    );
 
     // empty hyperlink
-    testThis(paragraph, "emptyLink", 90, 4, ["emptyLink"]);
+    testThis(paragraph, docURI, "emptyLink", 90, 4, ["emptyLink"], [""]);
 
     // normal hyperlink with embedded span
-    testThis(paragraph, "LinkWithSpan", 116, 5, ["LinkWithSpan"]);
+    testThis(
+      paragraph,
+      docURI,
+      "LinkWithSpan",
+      116,
+      5,
+      ["LinkWithSpan"],
+      ["https://www.heise.de/"]
+    );
 
     // Named anchor
-    testThis(paragraph, "namedAnchor", 193, 6, ["namedAnchor"]);
+    testThis(paragraph, docURI, "namedAnchor", 193, 6, ["namedAnchor"], [""]);
   },
   {
     chrome: true,
