@@ -27,6 +27,7 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.IgnoreCrash
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
+import java.io.ByteArrayInputStream
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -44,6 +45,38 @@ class ContentDelegateTest : BaseSessionTest() {
                 )
             }
         })
+    }
+
+    @Test fun openInAppRequest() {
+        // Testing WebResponse behavior
+        val data = "Hello, World.".toByteArray()
+        val fileHeader = "attachment; filename=\"hello-world.txt\""
+        val requestExternal = true
+        val skipConfirmation = true
+        var response = WebResponse.Builder(HELLO_HTML_PATH)
+            .statusCode(200)
+            .body(ByteArrayInputStream(data))
+            .addHeader("Content-Type", "application/txt")
+            .addHeader("Content-Length", data.size.toString())
+            .addHeader("Content-Disposition", fileHeader)
+            .requestExternalApp(requestExternal)
+            .skipConfirmation(skipConfirmation)
+            .build()
+        assertThat(
+            "Filename matches as expected",
+            response.headers["Content-Disposition"],
+            equalTo(fileHeader)
+        )
+        assertThat(
+            "Request external response matches as expected.",
+            requestExternal,
+            equalTo(response.requestExternalApp)
+        )
+        assertThat(
+            "Skipping the confirmation matches as expected.",
+            skipConfirmation,
+            equalTo(response.skipConfirmation)
+        )
     }
 
     @Test fun downloadOneRequest() {
@@ -73,6 +106,8 @@ class ContentDelegateTest : BaseSessionTest() {
                 assertThat("Content type should match", response.headers.get("content-type"), equalTo("text/plain"))
                 assertThat("Content length should be non-zero", response.headers.get("Content-Length")!!.toLong(), greaterThan(0L))
                 assertThat("Filename should match", response.headers.get("cONTent-diSPOsiTion"), equalTo("attachment; filename=\"download.txt\""))
+                assertThat("Request external response should not be set.", response.requestExternalApp, equalTo(false))
+                assertThat("Should not skip the confirmation on a regular download.", response.skipConfirmation, equalTo(false))
             }
         })
     }

@@ -2513,6 +2513,8 @@ package org.mozilla.geckoview {
     field @Nullable public final X509Certificate certificate;
     field public final boolean isSecure;
     field public final boolean redirected;
+    field @Nullable public final boolean requestExternalApp;
+    field @Nullable public final boolean skipConfirmation;
     field public final int statusCode;
   }
 
@@ -2523,6 +2525,8 @@ package org.mozilla.geckoview {
     method @NonNull public WebResponse.Builder certificate(@NonNull X509Certificate);
     method @NonNull public WebResponse.Builder isSecure(boolean);
     method @NonNull public WebResponse.Builder redirected(boolean);
+    method @NonNull public WebResponse.Builder requestExternalApp(boolean);
+    method @NonNull public WebResponse.Builder skipConfirmation(boolean);
     method @NonNull public WebResponse.Builder statusCode(int);
   }
 
