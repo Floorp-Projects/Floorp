@@ -110,6 +110,8 @@ urlbar-tip-icon-description =
 
 urlbar-result-menu-button =
     .title = Open menu
+urlbar-result-menu-button-feedback = Feedback
+    .title = Open menu
 urlbar-result-menu-learn-more =
     .label = Learn more
     .accesskey = L
