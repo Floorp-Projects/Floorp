@@ -72,7 +72,7 @@ static const char* VAProfileName(VAProfile aVAProfile) {
   return nullptr;
 }
 
-void childvaapitest(const char* aRenderDevicePath) {
+static void vaapitest(const char* aRenderDevicePath) {
   int renderDeviceFD = -1;
   VAProfile* profiles = nullptr;
   VAEntrypoint* entryPoints = nullptr;
@@ -82,9 +82,6 @@ void childvaapitest(const char* aRenderDevicePath) {
   log("childvaapitest start, device %s\n", aRenderDevicePath);
 
   auto autoRelease = mozilla::MakeScopeExit([&] {
-    if (renderDeviceFD > -1) {
-      close(renderDeviceFD);
-    }
     free(profiles);
     free(entryPoints);
     if (display) {
@@ -92,6 +89,9 @@ void childvaapitest(const char* aRenderDevicePath) {
     }
     if (libDrm) {
       dlclose(libDrm);
+    }
+    if (renderDeviceFD > -1) {
+      close(renderDeviceFD);
     }
   });
 
@@ -200,13 +200,6 @@ void childvaapitest(const char* aRenderDevicePath) {
   log("childvaapitest finished\n");
 }
 
-int vaapitest(const char* aRenderDevicePath) {
-  childvaapitest(aRenderDevicePath);
-  // Finally write buffered data to the pipe.
-  record_flush(OUTPUT_PIPE);
-  return EXIT_SUCCESS;
-}
-
 }  // extern "C"
 
 static void PrintUsage() {
@@ -248,7 +241,9 @@ int main(int argc, char** argv) {
 #endif
     const char* env = getenv("MOZ_GFX_DEBUG");
     enable_logging = env && *env == '1';
-    return vaapitest(drmDevice);
+    vaapitest(drmDevice);
+    record_flush(OUTPUT_PIPE);
+    return EXIT_SUCCESS;
   }
   PrintUsage();
   return 0;
