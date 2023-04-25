@@ -60,6 +60,13 @@ start = "2019-09-24"
 end = "2024-02-24"
 notes = "The Glean SDKs are maintained by the Glean Team at Mozilla."
 
+[[wildcard-audits.glslopt]]
+who = "Jamie Nicol <jnicol@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 84794
+start = "2020-04-07"
+end = "2024-04-25"
+
 [[wildcard-audits.marionette]]
 who = "Henrik Skupin <mail@hskupin.info>"
 criteria = "safe-to-run"
