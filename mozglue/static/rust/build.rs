@@ -16,12 +16,15 @@ fn main() {
     println!("cargo:rerun-if-changed=wrappers.cpp");
 
     let ver = version().unwrap();
-    let max_oom_hook_version = Version::parse("1.70.0-alpha").unwrap();
+    let max_oom_hook_version = Version::parse("1.71.0-alpha").unwrap();
+    let max_alloc_error_panic_version = Version::parse("1.72.0-alpha").unwrap();
 
     if ver < max_oom_hook_version {
         println!("cargo:rustc-cfg=feature=\"oom_with_hook\"");
+    } else if ver < max_alloc_error_panic_version {
+        println!("cargo:rustc-cfg=feature=\"oom_with_alloc_error_panic\"");
     } else if std::env::var("MOZ_AUTOMATION").is_ok() {
         panic!("Builds on automation must use a version of rust for which we know how to hook OOM: want < {}, have {}",
-               max_oom_hook_version, ver);
+               max_alloc_error_panic_version, ver);
     }
 }
