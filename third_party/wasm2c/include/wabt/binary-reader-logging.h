@@ -385,7 +385,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                        Address alignment,
                        uint32_t flags) override;
   Result OnInitFunctionCount(Index count) override;
-  Result OnInitFunction(uint32_t priority, Index function_index) override;
+  Result OnInitFunction(uint32_t priority, Index symbol_index) override;
   Result OnComdatCount(Index count) override;
   Result OnComdatBegin(std::string_view name,
                        uint32_t flags,

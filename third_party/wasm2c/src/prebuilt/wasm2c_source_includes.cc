@@ -8,13 +8,21 @@ R"w2c_template(#include <stddef.h>
 )w2c_template"
 R"w2c_template(#include <string.h>
 )w2c_template"
-R"w2c_template(#if defined(_MSC_VER)
+R"w2c_template(#if defined(__MINGW32__)
+)w2c_template"
+R"w2c_template(#include <malloc.h>
+)w2c_template"
+R"w2c_template(#elif defined(_MSC_VER)
 )w2c_template"
 R"w2c_template(#include <intrin.h>
 )w2c_template"
 R"w2c_template(#include <malloc.h>
 )w2c_template"
 R"w2c_template(#define alloca _alloca
+)w2c_template"
+R"w2c_template(#elif defined(__FreeBSD__)
+)w2c_template"
+R"w2c_template(#include <stdlib.h>
 )w2c_template"
 R"w2c_template(#else
 )w2c_template"

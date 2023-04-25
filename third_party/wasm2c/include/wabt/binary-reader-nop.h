@@ -569,7 +569,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
     return Result::Ok;
   }
   Result OnInitFunctionCount(Index count) override { return Result::Ok; }
-  Result OnInitFunction(uint32_t priority, Index function_index) override {
+  Result OnInitFunction(uint32_t priority, Index symbol_index) override {
     return Result::Ok;
   }
   Result OnComdatCount(Index count) override { return Result::Ok; }

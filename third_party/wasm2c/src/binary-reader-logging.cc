@@ -619,9 +619,9 @@ Result BinaryReaderLogging::OnSegmentInfo(Index index,
 }
 
 Result BinaryReaderLogging::OnInitFunction(uint32_t priority,
-                                           Index func_index) {
-  LOGF("OnInitFunction(%d priority: %d)\n", func_index, priority);
-  return reader_->OnInitFunction(priority, func_index);
+                                           Index symbol_index) {
+  LOGF("OnInitFunction(%d priority: %d)\n", symbol_index, priority);
+  return reader_->OnInitFunction(priority, symbol_index);
 }
 
 Result BinaryReaderLogging::OnComdatBegin(std::string_view name,

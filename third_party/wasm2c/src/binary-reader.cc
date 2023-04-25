@@ -2256,10 +2256,10 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
         CALLBACK(OnInitFunctionCount, count);
         while (count--) {
           uint32_t priority;
-          uint32_t func;
+          uint32_t symbol;
           CHECK_RESULT(ReadU32Leb128(&priority, "priority"));
-          CHECK_RESULT(ReadU32Leb128(&func, "function index"));
-          CALLBACK(OnInitFunction, priority, func);
+          CHECK_RESULT(ReadU32Leb128(&symbol, "symbol index"));
+          CALLBACK(OnInitFunction, priority, symbol);
         }
         break;
       case LinkingEntryType::ComdatInfo:
