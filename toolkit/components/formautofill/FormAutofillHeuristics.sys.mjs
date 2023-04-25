@@ -75,6 +75,12 @@ export class FieldDetail {
   addressType = "";
   contactType = "";
 
+  // When a field is split into N fields, we use part to record which field it is
+  // For example, a credit card number field is split into 4 fields, the value of
+  // "part" for the first cc-number field is 1, for the last one is 4.
+  // If the field is not split, the value is null
+  part = null;
+
   // Confidence value when the field name is inferred by "fathom"
   confidence = null;
 
@@ -97,6 +103,16 @@ export class FieldDetail {
     } else {
       this.reason = "regex-heuristic";
     }
+  }
+
+  isSame(other) {
+    return (
+      this.fieldName == other.fieldName &&
+      this.section == other.section &&
+      this.addressType == other.addressType &&
+      !this.part &&
+      !other.part
+    );
   }
 }
 
@@ -389,16 +405,6 @@ export class FieldScanner {
     this.fieldDetails[index].fieldName = fieldName;
   }
 
-  #isSameField(field1, field2) {
-    return (
-      field1.section == field2.section &&
-      field1.addressType == field2.addressType &&
-      field1.fieldName == field2.fieldName &&
-      !field1.transform &&
-      !field2.transform
-    );
-  }
-
   /**
    * When a site has four credit card number fields and
    * these fields have a max length of four
@@ -410,17 +416,18 @@ export class FieldScanner {
    * @memberof FieldScanner
    */
   #transformCCNumberForMultipleFields(creditCardFieldDetails) {
-    const ccNumberFields = creditCardFieldDetails.filter(
+    const details = creditCardFieldDetails.filter(
       field =>
         field.fieldName == "cc-number" &&
         field.elementWeakRef.get().maxLength == 4
     );
-    if (ccNumberFields.length == 4) {
-      ccNumberFields[0].transform = fullCCNumber => fullCCNumber.slice(0, 4);
-      ccNumberFields[1].transform = fullCCNumber => fullCCNumber.slice(4, 8);
-      ccNumberFields[2].transform = fullCCNumber => fullCCNumber.slice(8, 12);
-      ccNumberFields[3].transform = fullCCNumber => fullCCNumber.slice(12, 16);
+    if (details.length != 4) {
+      return;
     }
+
+    details.map((detail, idx) => {
+      detail.part = idx + 1;
+    });
   }
 
   /**
@@ -454,6 +461,7 @@ export class FieldScanner {
         );
       }
     }
+    dump(`[Dimi]getFinalDetails: ${JSON.stringify(addressFieldDetails)}\n`);
     this.#transformCCNumberForMultipleFields(creditCardFieldDetails);
     return [
       {
@@ -470,8 +478,9 @@ export class FieldScanner {
         const details = section.fieldDetails;
         section.fieldDetails = details.filter((detail, index) => {
           const previousFields = details.slice(0, index);
-          return !previousFields.find(f => this.#isSameField(detail, f));
+          return !previousFields.find(f => f.isSame(detail));
         });
+        dump(`[Dimi]section:${JSON.stringify(section.fieldDetails)}\n`);
         return section;
       })
       .filter(section => !!section.fieldDetails.length);
