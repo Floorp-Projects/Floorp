@@ -29,8 +29,11 @@ interface PushProcessor {
 
     /**
      * A new push message has been received.
+     * The message contains the payload as sent by the
+     * Autopush server, and it will be read at a lower
+     * abstraction layer.
      */
-    fun onMessageReceived(message: EncryptedPushMessage)
+    fun onMessageReceived(message: Map<String, String>)
 
     /**
      * An error has occurred.
@@ -62,33 +65,6 @@ interface PushProcessor {
             get() = instance ?: throw IllegalStateException(
                 "You need to call PushProcessor.install() on your Push instance from Application.onCreate().",
             )
-    }
-}
-
-/**
- * A push message holds the information needed to pass the message on to the appropriate receiver.
- */
-data class EncryptedPushMessage(
-    val channelId: String,
-    val body: String?,
-    val encoding: String,
-    val salt: String = "",
-    val cryptoKey: String = "", // diffie–hellman key
-) {
-    companion object {
-        /**
-         * The [salt] and [cryptoKey] are optional as part of the standard for WebPush, so we should default
-         * to empty strings.
-         *
-         * Note: We have use the invoke operator since secondary constructors don't work with nullable primitive types.
-         */
-        operator fun invoke(
-            channelId: String,
-            body: String?,
-            encoding: String?,
-            salt: String? = null,
-            cryptoKey: String? = null,
-        ) = EncryptedPushMessage(channelId, body, encoding ?: "aes128gcm", salt ?: "", cryptoKey ?: "")
     }
 }
 

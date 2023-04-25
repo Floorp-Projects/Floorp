@@ -92,8 +92,8 @@ internal class WebPushEngineDelegate(
                 logger.error("Error on push onUnsubscribe.")
                 onUnsubscribe(false)
             },
-            onUnsubscribe = { result ->
-                onUnsubscribe(result)
+            onUnsubscribe = {
+                onUnsubscribe(it)
             },
         )
     }

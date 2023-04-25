@@ -16,6 +16,9 @@ permalink: /changelog/
 * **concept-sync**
   *  Bug Fixed [bug #1804274]((https://bugzilla.mozilla.org/show_bug.cgi?id=1804274)) Passes an entrypoint url parameter to FxA when logging-in, that represents the context which the app launches the Firefox Accounts web channel.
 
+* **feature-push**
+  * Refactored [bug #1829982]( https://bugzilla.mozilla.org/show_bug.cgi?id=1829982) Refactors push to remove the RustConnection layer, and instead use the underlying Rust layer directly.
+
 # 114.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v113..releases_v114)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v114/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)

@@ -8,13 +8,10 @@ import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.Dispatchers
-import mozilla.components.concept.push.EncryptedPushMessage
 import mozilla.components.concept.push.PushProcessor
 import mozilla.components.support.test.any
-import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -57,17 +54,10 @@ class AbstractFirebasePushServiceTest {
             "enc" to "salt",
             "cryptokey" to "dh256",
         )
-        val captor = argumentCaptor<EncryptedPushMessage>()
         `when`(remoteMessage.data).thenReturn(data)
         service.onMessageReceived(remoteMessage)
 
-        verify(processor).onMessageReceived(captor.capture())
-
-        assertEquals("1234", captor.value.channelId)
-        assertEquals("contents", captor.value.body)
-        assertEquals("encoding", captor.value.encoding)
-        assertEquals("salt", captor.value.salt)
-        assertEquals("dh256", captor.value.cryptoKey)
+        verify(processor).onMessageReceived(data)
     }
 
     @Test
@@ -76,17 +66,11 @@ class AbstractFirebasePushServiceTest {
         val data = mapOf(
             "chid" to "1234",
         )
-        val captor = argumentCaptor<EncryptedPushMessage>()
         `when`(remoteMessage.data).thenReturn(data)
         service.onMessageReceived(remoteMessage)
 
         verify(processor, never()).onError(any())
-        verify(processor).onMessageReceived(captor.capture())
-
-        assertEquals("1234", captor.value.channelId)
-        assertEquals("aes128gcm", captor.value.encoding)
-        assertEquals("", captor.value.salt)
-        assertEquals("", captor.value.cryptoKey)
+        verify(processor).onMessageReceived(data)
     }
 
     @Test

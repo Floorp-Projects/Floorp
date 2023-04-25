@@ -13,25 +13,29 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
-import mozilla.appservices.push.PushException.CommunicationException
-import mozilla.appservices.push.PushException.CommunicationServerException
-import mozilla.appservices.push.PushException.CryptoException
-import mozilla.appservices.push.PushException.GeneralException
-import mozilla.appservices.push.PushException.JsonDeserializeException
-import mozilla.appservices.push.PushException.RequestException
+import mozilla.appservices.push.BridgeType
+import mozilla.appservices.push.PushApiException
+import mozilla.appservices.push.PushApiException.RecordNotFoundException
+import mozilla.appservices.push.PushApiException.UaidNotRecognizedException
+import mozilla.appservices.push.PushConfiguration
+import mozilla.appservices.push.PushHttpProtocol
+import mozilla.appservices.push.PushManager
+import mozilla.appservices.push.PushManagerInterface
+import mozilla.appservices.push.SubscriptionResponse
 import mozilla.components.concept.base.crash.CrashReporting
-import mozilla.components.concept.push.EncryptedPushMessage
 import mozilla.components.concept.push.PushError
 import mozilla.components.concept.push.PushProcessor
 import mozilla.components.concept.push.PushService
-import mozilla.components.feature.push.ext.ifInitialized
-import mozilla.components.feature.push.ext.launchAndTry
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 import mozilla.components.support.base.utils.NamedThreadFactory
+import java.io.File
 import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
+
+typealias PushScope = String
+typealias AppServerKey = String
 
 /**
  * A implementation of a [PushProcessor] that should live as a singleton by being installed
@@ -69,9 +73,9 @@ import kotlin.coroutines.CoroutineContext
  * @param service A [PushService] bridge that receives the encrypted push messages - eg, Firebase.
  * @param config An instance of [PushConfig] to configure the feature.
  * @param coroutineContext An instance of [CoroutineContext] used for executing async push tasks.
- * @param connection An implementation of [PushConnection] to communicate with autopush - eg, app-services component.
  * @param crashReporter An optional instance of a [CrashReporting].
  */
+
 @Suppress("LargeClass", "LongParameterList")
 class AutoPushFeature(
     private val context: Context,
@@ -80,13 +84,6 @@ class AutoPushFeature(
     coroutineContext: CoroutineContext = Executors.newSingleThreadExecutor(
         NamedThreadFactory("AutoPushFeature"),
     ).asCoroutineDispatcher(),
-    private val connection: PushConnection = RustPushConnection(
-        context = context,
-        senderId = config.senderId,
-        serverHost = config.serverHost,
-        socketProtocol = config.protocol,
-        serviceType = config.serviceType,
-    ),
     private val crashReporter: CrashReporting? = null,
 ) : PushProcessor, Observable<AutoPushFeature.Observer> by ObserverRegistry() {
 
@@ -95,11 +92,11 @@ class AutoPushFeature(
     // The preference that stores new registration tokens.
     private val prefToken: String?
         get() = preferences(context).getString(PREF_TOKEN, null)
-    private var prefLastVerified: Long
-        get() = preferences(context).getLong(LAST_VERIFIED, 0)
-        set(value) = preferences(context).edit().putLong(LAST_VERIFIED, value).apply()
 
     private val coroutineScope = CoroutineScope(coroutineContext) + SupervisorJob() + exceptionHandler { onError(it) }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal var connection: PushManagerInterface? = null
 
     /**
      * Starts the push feature and initialization work needed. Also starts the [PushService] to ensure new messages
@@ -108,10 +105,24 @@ class AutoPushFeature(
     override fun initialize() {
         // If we have a token, initialize the rust component on a different thread.
         coroutineScope.launch {
+            if (connection == null) {
+                val databasePath = File(context.filesDir, DB_NAME).canonicalPath
+                connection = PushManager(
+                    PushConfiguration(
+                        serverHost = config.serverHost,
+                        httpProtocol = config.protocol.toRustHttpProtocol(),
+                        bridgeType = config.serviceType.toBridgeType(),
+                        senderId = config.senderId,
+                        databasePath = databasePath,
+                        // Default is one request in 24 hours
+                        verifyConnectionRateLimiter = null,
+                    ),
+                )
+            }
             prefToken?.let { token ->
                 logger.debug("Initializing rust component with the cached token.")
-                connection.updateToken(token)
-                tryVerifySubscriptions()
+                connection?.update(token)
+                verifyActiveSubscriptions()
             }
         }
         // Starts the (FCM) push feature so that we receive messages if the service is not already started (safe call).
@@ -127,14 +138,9 @@ class AutoPushFeature(
      * This should only be done on an account logout or app data deletion.
      */
     override fun shutdown() {
-        connection.ifInitialized {
-            coroutineScope.launch {
-                unsubscribeAll()
-            }
+        withConnection {
+            it.unsubscribeAll()
         }
-
-        // Reset the push subscription check.
-        prefLastVerified = 0L
     }
 
     /**
@@ -142,35 +148,28 @@ class AutoPushFeature(
      * each push type and notifies the subscribers.
      */
     override fun onNewToken(newToken: String) {
-        coroutineScope.launchAndTry {
+        val currentConnection = connection
+        coroutineScope.launch {
             logger.info("Received a new registration token from push service.")
 
             saveToken(context, newToken)
 
             // Tell the autopush service about it and update subscriptions.
-            connection.updateToken(newToken)
-            tryVerifySubscriptions()
+            currentConnection?.update(newToken)
+            verifyActiveSubscriptions()
         }
     }
 
     /**
      * New encrypted messages received from a supported push messaging service.
      */
-    override fun onMessageReceived(message: EncryptedPushMessage) {
-        connection.ifInitialized {
-            coroutineScope.launchAndTry {
-                logger.info("New push message decrypted.")
-
-                val (scope, decryptedMessage) = decryptMessage(
-                    channelId = message.channelId,
-                    body = message.body,
-                    encoding = message.encoding,
-                    salt = message.salt,
-                    cryptoKey = message.cryptoKey,
-                ) ?: return@launchAndTry
-
-                notifyObservers { onMessageReceived(scope, decryptedMessage) }
-            }
+    override fun onMessageReceived(message: Map<String, String>) {
+        withConnection {
+            val decryptResponse = it.decrypt(
+                payload = message,
+            )
+            logger.info("New push message decrypted.")
+            notifyObservers { onMessageReceived(decryptResponse.scope, decryptResponse.result.toByteArray()) }
         }
     }
 
@@ -194,16 +193,9 @@ class AutoPushFeature(
         onSubscribeError: (Exception) -> Unit = {},
         onSubscribe: ((AutoPushSubscription) -> Unit) = {},
     ) {
-        connection.ifInitialized {
-            coroutineScope.launchAndTry(
-                errorBlock = { exception ->
-                    onSubscribeError(exception)
-                },
-                block = {
-                    val sub = subscribe(scope, appServerKey)
-                    onSubscribe(sub)
-                },
-            )
+        withConnection(errorBlock = { exception -> onSubscribeError(exception) }) {
+            val sub = it.subscribe(scope, appServerKey ?: "")
+            onSubscribe(sub.toPushSubscription(scope, appServerKey ?: ""))
         }
     }
 
@@ -219,21 +211,8 @@ class AutoPushFeature(
         onUnsubscribeError: (Exception) -> Unit = {},
         onUnsubscribe: (Boolean) -> Unit = {},
     ) {
-        connection.ifInitialized {
-            coroutineScope.launchAndTry(
-                errorBlock = { exception ->
-                    onUnsubscribeError(exception)
-                },
-                block = {
-                    val result = unsubscribe(scope)
-
-                    if (result) {
-                        onUnsubscribe(result)
-                    } else {
-                        onUnsubscribeError(IllegalStateException("Un-subscribing with the native client failed."))
-                    }
-                },
-            )
+        withConnection(errorBlock = { exception -> onUnsubscribeError(exception) }) {
+            onUnsubscribe(it.unsubscribe(scope))
         }
     }
 
@@ -250,16 +229,8 @@ class AutoPushFeature(
         appServerKey: String? = null,
         block: (AutoPushSubscription?) -> Unit,
     ) {
-        connection.ifInitialized {
-            coroutineScope.launchAndTry {
-                if (containsSubscription(scope)) {
-                    // If we have a subscription, calling subscribe will give us the existing subscription.
-                    // We do this because we do not have API symmetry across the different layers in this stack.
-                    subscribe(scope, appServerKey, {}, block)
-                } else {
-                    block(null)
-                }
-            }
+        withConnection {
+            block(it.getSubscription(scope)?.toPushSubscription(scope, appServerKey))
         }
     }
 
@@ -288,9 +259,9 @@ class AutoPushFeature(
      * Verifies status (active, expired) of the push subscriptions and then notifies observers.
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal suspend fun verifyActiveSubscriptions() {
-        connection.ifInitialized {
-            val subscriptionChanges = verifyConnection()
+    internal fun verifyActiveSubscriptions(forceVerify: Boolean = false) {
+        withConnection {
+            val subscriptionChanges = it.verifyConnection(forceVerify)
 
             if (subscriptionChanges.isNotEmpty()) {
                 logger.info("Subscriptions have changed; notifying observers..")
@@ -304,19 +275,6 @@ class AutoPushFeature(
         }
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun tryVerifySubscriptions() = coroutineScope.launch {
-        logger.info("Trying to check validity of push subscriptions.")
-
-        if (config.disableRateLimit || shouldVerifyNow()) {
-            logger.info("Checking now..")
-
-            verifyActiveSubscriptions()
-
-            prefLastVerified = System.currentTimeMillis()
-        }
-    }
-
     private fun saveToken(context: Context, value: String) {
         preferences(context).edit().putString(PREF_TOKEN, value).apply()
     }
@@ -327,13 +285,6 @@ class AutoPushFeature(
 
     private fun preferences(context: Context): SharedPreferences =
         context.getSharedPreferences(PREFERENCE_NAME, Context.MODE_PRIVATE)
-
-    /**
-     * We should verify if it's been [PERIODIC_INTERVAL_MILLISECONDS] since our last attempt (successful or not).
-     */
-    private fun shouldVerifyNow(): Boolean {
-        return (System.currentTimeMillis() - prefLastVerified) >= PERIODIC_INTERVAL_MILLISECONDS
-    }
 
     /**
      * Observers that want to receive updates for new subscriptions and messages.
@@ -351,32 +302,35 @@ class AutoPushFeature(
         fun onMessageReceived(scope: PushScope, message: ByteArray?) = Unit
     }
 
+    private fun exceptionHandler(onError: (PushError) -> Unit) = CoroutineExceptionHandler { _, e ->
+        when (e) {
+            is RecordNotFoundException,
+            is UaidNotRecognizedException,
+            -> onError(PushError.Rust(e, e.message.orEmpty()))
+            else -> logger.warn("Internal error occurred in AutoPushFeature.", e)
+        }
+    }
+
     companion object {
         internal const val PREFERENCE_NAME = "mozac_feature_push"
         internal const val PREF_TOKEN = "token"
-
-        internal const val LAST_VERIFIED = "last_verified_push_connection"
-        internal const val PERIODIC_INTERVAL_MILLISECONDS = 24 * 60 * 60 * 1000L // 24 hours
-    }
-}
-
-internal inline fun exceptionHandler(crossinline onError: (PushError) -> Unit) = CoroutineExceptionHandler { _, e ->
-    val isFatal = when (e) {
-        is PushError.MalformedMessage,
-        is GeneralException,
-        is CryptoException,
-        is CommunicationException,
-        is JsonDeserializeException,
-        is RequestException,
-        is CommunicationServerException,
-        -> false
-        else -> true
+        internal const val DB_NAME = "push.sqlite"
     }
 
-    if (isFatal) {
-        onError(PushError.Rust(e, e.message.orEmpty()))
-    } else {
-        Logger.warn("Non-fatal error occurred in AutoPushFeature.", e)
+    private fun withConnection(errorBlock: (Exception) -> Unit = {}, block: (PushManagerInterface) -> Unit) {
+        val currentConnection = connection
+        currentConnection?.let {
+            coroutineScope.launch {
+                try {
+                    block(it)
+                } catch (e: PushApiException) {
+                    errorBlock(e)
+
+                    // rethrow
+                    throw e
+                }
+            }
+        }
     }
 }
 
@@ -408,14 +362,6 @@ data class AutoPushSubscription(
 )
 
 /**
- * The subscription from AutoPush that has changed on the remote push servers.
- */
-data class AutoPushSubscriptionChanged(
-    val scope: PushScope,
-    val channelId: String,
-)
-
-/**
  * Configuration object for initializing the Push Manager with an AutoPush server.
  *
  * @param senderId The project identifier set by the server. Contact your server ops team to know what value to set.
@@ -431,3 +377,38 @@ data class PushConfig(
     val serviceType: ServiceType = ServiceType.FCM,
     val disableRateLimit: Boolean = false,
 )
+
+/**
+ * Helper function to get the corresponding support [BridgeType] from the support set.
+ */
+@VisibleForTesting
+internal fun ServiceType.toBridgeType() = when (this) {
+    ServiceType.FCM -> BridgeType.FCM
+}
+
+/**
+ * A helper to convert the internal data class.
+ */
+private fun Protocol.toRustHttpProtocol(): PushHttpProtocol {
+    return when (this) {
+        Protocol.HTTPS -> PushHttpProtocol.HTTPS
+        Protocol.HTTP -> PushHttpProtocol.HTTP
+    }
+}
+
+/**
+ * A helper to convert the internal data class.
+ */
+@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+fun SubscriptionResponse.toPushSubscription(
+    scope: String,
+    appServerKey: AppServerKey? = null,
+): AutoPushSubscription {
+    return AutoPushSubscription(
+        scope = scope,
+        endpoint = subscriptionInfo.endpoint,
+        authKey = subscriptionInfo.keys.auth,
+        publicKey = subscriptionInfo.keys.p256dh,
+        appServerKey = appServerKey,
+    )
+}

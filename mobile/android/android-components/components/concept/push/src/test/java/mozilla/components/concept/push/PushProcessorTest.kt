@@ -46,7 +46,7 @@ class PushProcessorTest {
 
         override fun onNewToken(newToken: String) {}
 
-        override fun onMessageReceived(message: EncryptedPushMessage) {}
+        override fun onMessageReceived(message: Map<String, String>) {}
 
         override fun onError(error: PushError) {}
 
