@@ -812,6 +812,13 @@ class BrowserRobot {
         assertItemWithResIdExists(itemWithResId("errorTryAgain"))
     }
 
+    fun verifyNoInternetConnectionErrorMessage() {
+        assertItemContainingTextExists(
+            itemContainingText(getStringResource(R.string.mozac_browser_errorpages_no_internet_title)),
+        )
+        assertItemWithResIdExists(itemWithResId("errorTryAgain"))
+    }
+
     class Transition {
         fun openThreeDotMenu(interact: ThreeDotMenuMainRobot.() -> Unit): ThreeDotMenuMainRobot.Transition {
             mDevice.waitForIdle(waitingTime)

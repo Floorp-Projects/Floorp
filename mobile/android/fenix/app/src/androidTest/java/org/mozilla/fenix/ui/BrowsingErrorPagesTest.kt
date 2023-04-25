@@ -127,4 +127,24 @@ class BrowsingErrorPagesTest {
             verifyAddressNotFoundErrorMessage()
         }
     }
+
+    @Test
+    fun noInternetConnectionErrorMessageTest() {
+        val url = "www.example.com"
+
+        setNetworkEnabled(false)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(url.toUri()) {
+            verifyNoInternetConnectionErrorMessage()
+        }
+
+        setNetworkEnabled(true)
+
+        browserScreen {
+            clickPageObject(itemWithResId("errorTryAgain"))
+            waitForPageToLoad()
+            verifyPageContent("Example Domain")
+        }
+    }
 }
