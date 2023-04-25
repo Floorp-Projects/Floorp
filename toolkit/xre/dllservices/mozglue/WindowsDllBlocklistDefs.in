@@ -390,6 +390,12 @@ SOCKET_PROCESSES_TESTS += [
 UTILITY_PROCESSES += [
     # Generated dynamic code that we block
     DllBlocklistEntry("cyinjct.dll", ALL_VERSIONS),
+
+    # Causes crashes in the utility process, bug 1826393
+    DllBlocklistEntry("ipseng64.dll", ALL_VERSIONS),
+    DllBlocklistEntry("ipseng32.dll", ALL_VERSIONS),
+    DllBlocklistEntry("ks3rdhmpg.dll", ALL_VERSIONS),
+    DllBlocklistEntry("kwsui64.dll", ALL_VERSIONS),
 ]
 
 UTILITY_PROCESSES_TESTS += [
