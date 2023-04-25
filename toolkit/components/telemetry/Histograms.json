@@ -12357,6 +12357,7 @@
     "alert_emails": ["seceng-telemetry@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
+    "releaseChannelCollection": "opt-out",
     "labels": ["ImgUpSuccess", "ImgUpFailure", "ImgNoUpSuccess", "ImgNoUpFailure"],
     "description": "How often image loads fail in regular mode and in upgrading mode?"
   },
@@ -12367,6 +12368,7 @@
     "alert_emails": ["seceng-telemetry@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
+    "releaseChannelCollection": "opt-out",
     "labels": ["VideoUpSuccess", "VideoUpFailure", "VideoNoUpSuccess", "VideoNoUpFailure"],
     "description": "How often video loads fail in regular mode and in upgrading mode?"
   },
@@ -12377,6 +12379,7 @@
     "alert_emails": ["seceng-telemetry@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
+    "releaseChannelCollection": "opt-out",
     "labels": ["AudioUpSuccess", "AudioUpFailure", "AudioNoUpSuccess", "AudioNoUpFailure"],
     "description": "How often audio loads fail in regular mode and in upgrading mode?"
   },
