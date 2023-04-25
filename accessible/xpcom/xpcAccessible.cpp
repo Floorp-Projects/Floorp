@@ -762,3 +762,17 @@ xpcAccessible::Announce(const nsAString& aAnnouncement, uint16_t aPriority) {
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+xpcAccessible::GetComputedARIARole(nsAString& aRole) {
+  if (!IntlGeneric()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsStaticAtom* ariaRole = IntlGeneric()->ComputedARIARole();
+  if (ariaRole) {
+    ariaRole->ToString(aRole);
+  }
+
+  return NS_OK;
+}

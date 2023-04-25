@@ -352,6 +352,13 @@ class Accessible {
    */
   virtual void Language(nsAString& aLocale) = 0;
 
+  /**
+   * Get the role of this Accessible as an ARIA role token. This might have been
+   * set explicitly (e.g. role="button") or it might be implicit in native
+   * markup (e.g. <button> returns "button").
+   */
+  nsStaticAtom* ComputedARIARole() const;
+
   // Methods that interact with content.
 
   virtual void TakeFocus() const = 0;
