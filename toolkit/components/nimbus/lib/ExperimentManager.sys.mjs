@@ -160,7 +160,7 @@ export class _ExperimentManager {
     this.sessions.get(source).add(slug);
 
     if (this.store.has(slug)) {
-      this.updateEnrollment(recipe);
+      await this.updateEnrollment(recipe);
     } else if (isEnrollmentPaused) {
       lazy.log.debug(`Enrollment is paused for "${slug}"`);
     } else if (!(await this.isInBucketAllocation(recipe.bucketConfig))) {
@@ -497,13 +497,21 @@ export class _ExperimentManager {
    * @param {RecipeArgs} recipe
    * @returns {boolean} whether the enrollment is still active
    */
-  updateEnrollment(recipe) {
+  async updateEnrollment(recipe) {
     /** @type Enrollment */
     const enrollment = this.store.get(recipe.slug);
 
     // Don't update experiments that were already unenrolled.
     if (enrollment.active === false) {
       lazy.log.debug(`Enrollment ${recipe.slug} has expired, aborting.`);
+      return false;
+    }
+
+    if (
+      recipe.isRollout &&
+      !(await this.isInBucketAllocation(recipe.bucketConfig))
+    ) {
+      this.unenroll(recipe.slug, "bucketing");
       return false;
     }
 
