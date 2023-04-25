@@ -15,8 +15,11 @@ exclude: true
 
 ## v114
 - Add [`SessionPdfFileSaver.createResponse`][114.1] to response of saving PDF.
+- Added [`requestExternalApp`][114.2] and [`skipConfirmation`][114.3] with builder fields on a WebResponse to request that a downloaded file be opened in an external application or to skip a confirmation, respectively.
 
 [114.1]: {{javadoc_uri}}/SessionPdfFileSaver.html#createResponse(byte[], String, String)
+[114.2]: {{javadoc_uri}}/WebResponse.html#requestExternalApp
+[114.3]: {{javadoc_uri}}/WebResponse.html#skipConfirmation
 
 ## v113
 - Add `DisplayMdoe` annotation to [`displayMode`][113.1], [`getDisplayMode`][113.2] and [`setDisplayMode`][113.3].
@@ -1351,4 +1354,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: b732806c6323be058e5a1933cb66a93a0097a3fa
+[api-version]: 8c569363935bb4c900c17fd64e7ced2acaa4264a
