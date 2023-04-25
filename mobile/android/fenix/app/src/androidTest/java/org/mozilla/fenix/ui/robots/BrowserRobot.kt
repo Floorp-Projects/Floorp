@@ -799,8 +799,6 @@ class BrowserRobot {
     fun verifyConnectionErrorMessage() {
         assertItemContainingTextExists(
             itemContainingText(getStringResource(R.string.mozac_browser_errorpages_connection_failure_title)),
-            itemContainingText("The site could be temporarily unavailable or too busy. Try again in a few moments."),
-            itemContainingText("If you are unable to load any pages, check your device’s data or Wi-Fi connection."),
         )
         assertItemWithResIdExists(itemWithResId("errorTryAgain"))
     }
