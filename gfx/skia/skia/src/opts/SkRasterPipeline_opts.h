@@ -2129,7 +2129,7 @@ STAGE(rgb_to_hsl, NoCtx) {
       d_rcp = 1.0f / d;
 
     F h = (1/6.0f) *
-          if_then_else(mx == mn, 0,
+          if_then_else(mx == mn, F(0),
           if_then_else(mx ==  r, (g-b)*d_rcp + if_then_else(g < b, F(6.0f), F(0)),
           if_then_else(mx ==  g, (b-r)*d_rcp + 2.0f,
                                  (r-g)*d_rcp + 4.0f)));
