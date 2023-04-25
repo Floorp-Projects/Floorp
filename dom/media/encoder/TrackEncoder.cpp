@@ -606,6 +606,11 @@ void VideoTrackEncoder::NotifyEndOfStream() {
     }
   }
 
+  if (mCanceled) {
+    // Previous Init failed and we got canceled. Nothing to do here.
+    return;
+  }
+
   mIncomingBuffer.Clear();
   mLastChunk.SetNull(0);
 
