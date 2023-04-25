@@ -332,7 +332,7 @@ static wchar_t* lastslash(wchar_t* s, int len) {
   return nullptr;
 }
 
-static bool ShouldBlockBasedOnBlockInfo(const DllBlockInfo* info,
+static bool ShouldBlockBasedOnBlockInfo(const DllBlockInfo& info,
                                         const char* dllName, PWCHAR filePath,
                                         wchar_t* fname,
                                         unsigned long long* fVersion) {
@@ -340,49 +340,49 @@ static bool ShouldBlockBasedOnBlockInfo(const DllBlockInfo* info,
   printf_stderr("LdrLoadDll: info->mName: '%s'\n", info->mName);
 #endif
 
-  if (info->mFlags & DllBlockInfo::REDIRECT_TO_NOOP_ENTRYPOINT) {
+  if (info.mFlags & DllBlockInfo::REDIRECT_TO_NOOP_ENTRYPOINT) {
     printf_stderr(
         "LdrLoadDll: "
         "Ignoring the REDIRECT_TO_NOOP_ENTRYPOINT flag\n");
   }
 
-  if ((info->mFlags & DllBlockInfo::BLOCK_WIN8_AND_OLDER) &&
+  if ((info.mFlags & DllBlockInfo::BLOCK_WIN8_AND_OLDER) &&
       IsWin8Point1OrLater()) {
     return false;
   }
 
-  if ((info->mFlags & DllBlockInfo::BLOCK_WIN7_AND_OLDER) && IsWin8OrLater()) {
+  if ((info.mFlags & DllBlockInfo::BLOCK_WIN7_AND_OLDER) && IsWin8OrLater()) {
     return false;
   }
 
-  if ((info->mFlags & DllBlockInfo::CHILD_PROCESSES_ONLY) &&
+  if ((info.mFlags & DllBlockInfo::CHILD_PROCESSES_ONLY) &&
       !(sInitFlags & eDllBlocklistInitFlagIsChildProcess)) {
     return false;
   }
 
-  if ((info->mFlags & DllBlockInfo::UTILITY_PROCESSES_ONLY) &&
+  if ((info.mFlags & DllBlockInfo::UTILITY_PROCESSES_ONLY) &&
       !(sInitFlags & eDllBlocklistInitFlagIsUtilityProcess)) {
     return false;
   }
 
-  if ((info->mFlags & DllBlockInfo::SOCKET_PROCESSES_ONLY) &&
+  if ((info.mFlags & DllBlockInfo::SOCKET_PROCESSES_ONLY) &&
       !(sInitFlags & eDllBlocklistInitFlagIsSocketProcess)) {
     return false;
   }
 
-  if ((info->mFlags & DllBlockInfo::GPU_PROCESSES_ONLY) &&
+  if ((info.mFlags & DllBlockInfo::GPU_PROCESSES_ONLY) &&
       !(sInitFlags & eDllBlocklistInitFlagIsGPUProcess)) {
     return false;
   }
 
-  if ((info->mFlags & DllBlockInfo::BROWSER_PROCESS_ONLY) &&
+  if ((info.mFlags & DllBlockInfo::BROWSER_PROCESS_ONLY) &&
       (sInitFlags & eDllBlocklistInitFlagIsChildProcess)) {
     return false;
   }
 
   *fVersion = DllBlockInfo::ALL_VERSIONS;
 
-  if (info->mMaxVersion != DllBlockInfo::ALL_VERSIONS) {
+  if (info.mMaxVersion != DllBlockInfo::ALL_VERSIONS) {
     ReentrancySentinel sentinel(dllName);
     if (sentinel.BailOut()) {
       return false;
@@ -398,9 +398,9 @@ static bool ShouldBlockBasedOnBlockInfo(const DllBlockInfo* info,
       return true;
     }
 
-    if (info->mFlags & DllBlockInfo::USE_TIMESTAMP) {
+    if (info.mFlags & DllBlockInfo::USE_TIMESTAMP) {
       *fVersion = GetTimestamp(full_fname.get());
-      if (*fVersion > info->mMaxVersion) {
+      if (*fVersion > info.mMaxVersion) {
         return false;
       }
     } else {
@@ -408,13 +408,24 @@ static bool ShouldBlockBasedOnBlockInfo(const DllBlockInfo* info,
           GetModuleVersion(full_fname.get());
       // If we failed to get the version information, we block.
       if (version.isOk()) {
-        return info->IsVersionBlocked(version.unwrap());
+        return info.IsVersionBlocked(version.unwrap());
       }
     }
   }
   // Falling through to here means we should block.
   return true;
 }
+
+struct CaseSensitiveStringComparator {
+  explicit CaseSensitiveStringComparator(const char* aTarget)
+      : mTarget(aTarget) {}
+
+  int operator()(const DllBlockInfo& aVal) const {
+    return strcmp(mTarget, aVal.mName);
+  }
+
+  const char* mTarget;
+};
 
 static NTSTATUS NTAPI patched_LdrLoadDll(PWCHAR filePath, PULONG flags,
                                          PUNICODE_STRING moduleFileName,
@@ -509,21 +520,26 @@ static NTSTATUS NTAPI patched_LdrLoadDll(PWCHAR filePath, PULONG flags,
 
     // then compare to everything on the blocklist
     DECLARE_POINTER_TO_FIRST_DLL_BLOCKLIST_ENTRY(info);
-    while (info->mName) {
-      if (strcmp(info->mName, dllName) == 0) {
+    DECLARE_DLL_BLOCKLIST_NUM_ENTRIES(infoNumEntries);
+    CaseSensitiveStringComparator comp(dllName);
+    size_t match = LowerBound(info, 0, infoNumEntries, comp);
+    if (match != infoNumEntries) {
+      // There may be multiple entries on the list. Since LowerBound() returns
+      // the first entry that matches (if there are any matches),
+      // search forward from there.
+      while (match < infoNumEntries && (comp(info[match]) == 0)) {
         unsigned long long fVersion;
-        if (ShouldBlockBasedOnBlockInfo(info, dllName, filePath, fname,
+        if (ShouldBlockBasedOnBlockInfo(info[match], dllName, filePath, fname,
                                         &fVersion)) {
           printf_stderr(
               "LdrLoadDll: Blocking load of '%s' -- see "
               "http://www.mozilla.com/en-US/blocklist/\n",
               dllName);
-          DllBlockSet::Add(info->mName, fVersion);
+          DllBlockSet::Add(info[match].mName, fVersion);
           return STATUS_DLL_NOT_FOUND;
         }
+        ++match;
       }
-
-      info++;
     }
   }
 
