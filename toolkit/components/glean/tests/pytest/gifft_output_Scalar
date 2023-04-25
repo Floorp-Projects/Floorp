@@ -13,8 +13,8 @@
 #include <tuple>
 #include "mozilla/DataMutex.h"
 #include "nsClassHashtable.h"
-#include "nsIThread.h"
 #include "nsTHashMap.h"
+#include "nsIThread.h"
 #include "nsThreadUtils.h"
 
 #ifndef mozilla_glean_ScalarGifftMap_h

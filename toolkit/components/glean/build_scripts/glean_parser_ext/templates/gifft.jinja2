@@ -16,9 +16,9 @@ Jinja2 template is not. Please file bugs! #}
 #include "mozilla/DataMutex.h"
 {% if probe_type == "Scalar" %}
 #include "nsClassHashtable.h"
-#include "nsIThread.h"
 #include "nsTHashMap.h"
 {% endif %}
+#include "nsIThread.h"
 #include "nsThreadUtils.h"
 
 #ifndef mozilla_glean_{{ probe_type }}GifftMap_h
