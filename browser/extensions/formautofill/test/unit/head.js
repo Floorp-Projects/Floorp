@@ -203,6 +203,9 @@ function verifySectionFieldDetails(sections, expectedResults) {
 
     sectionInfo.forEach((field, fieldIndex) => {
       let expectedField = expectedSectionInfo[fieldIndex];
+      if (!("part" in expectedField)) {
+        expectedField.part = null;
+      }
       delete field.reason;
       delete field.elementWeakRef;
       delete field.confidence;

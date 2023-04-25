@@ -46,22 +46,12 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () =>
 const { FIELD_STATES } = FormAutofillUtils;
 
 class FormAutofillSection {
-  constructor(fieldDetails, winUtils) {
-    this.fieldDetails = fieldDetails;
-    this.filledRecordGUID = null;
-    this.winUtils = winUtils;
+  #focusedInput = null;
 
-    /**
-     * Enum for form autofill MANUALLY_MANAGED_STATES values
-     */
-    this._FIELD_STATE_ENUM = {
-      // not themed
-      [FIELD_STATES.NORMAL]: null,
-      // highlighted
-      [FIELD_STATES.AUTO_FILLED]: "autofill",
-      // highlighted && grey color text
-      [FIELD_STATES.PREVIEW]: "-moz-autofill-preview",
-    };
+  constructor(fieldDetails, handler) {
+    this.fieldDetails = fieldDetails;
+    this.handler = handler;
+    this.filledRecordGUID = null;
 
     if (!this.isValidSection()) {
       this.fieldDetails = [];
@@ -117,6 +107,15 @@ class FormAutofillSection {
     throw new TypeError("isRecordCreatable method must be overridden");
   }
 
+  /*
+   * Override this method if any data for `createRecord` is needed to be
+   * normalized before submitting the record.
+   *
+   * @param {Object} profile
+   *        A record for normalization.
+   */
+  createNormalizedRecord(data) {}
+
   /**
    * Override this method if the profile is needed to apply some transformers.
    *
@@ -146,14 +145,20 @@ class FormAutofillSection {
     return true;
   }
 
-  /*
-   * Override this method if any data for `createRecord` is needed to be
-   * normalized before submitting the record.
+  /**
+   * Override this method if the profile is needed to be customized for filling
+   * values.
    *
-   * @param {Object} profile
-   *        A record for normalization.
+   * @param {object} fieldDetail A fieldDetail of the related element.
+   * @param {object} profile The profile to fill.
+   * @returns {string} The value to fill for the given field.
    */
-  createNormalizedRecord(data) {}
+  getFilledValueFromProfile(fieldDetail, profile) {
+    return (
+      profile[`${fieldDetail.fieldName}-formatted`] ||
+      profile[fieldDetail.fieldName]
+    );
+  }
 
   /*
    * Override this method if there is any field value needs to compute for a
@@ -173,13 +178,17 @@ class FormAutofillSection {
   }
 
   set focusedInput(element) {
-    this._focusedDetail = this.getFieldDetailByElement(element);
+    this.#focusedInput = element;
   }
 
   getFieldDetailByElement(element) {
     return this.fieldDetails.find(
       detail => detail.elementWeakRef.get() == element
     );
+  }
+
+  getFieldDetailByName(fieldName) {
+    return this.fieldDetails.find(detail => detail.fieldName == fieldName);
   }
 
   get allFieldNames() {
@@ -189,10 +198,6 @@ class FormAutofillSection {
       );
     }
     return this._cacheValue.allFieldNames;
-  }
-
-  getFieldDetailByName(fieldName) {
-    return this.fieldDetails.find(detail => detail.fieldName == fieldName);
   }
 
   matchSelectOptions(profile) {
@@ -321,7 +326,11 @@ class FormAutofillSection {
    *          True if successful, false if failed
    */
   async autofillFields(profile) {
-    let focusedDetail = this._focusedDetail;
+    if (!this.#focusedInput) {
+      throw new Error("No focused input.");
+    }
+
+    const focusedDetail = this.getFieldDetailByElement(this.#focusedInput);
     if (!focusedDetail) {
       throw new Error("No fieldDetail for the focused input.");
     }
@@ -331,16 +340,14 @@ class FormAutofillSection {
       return false;
     }
 
-    let focusedInput = focusedDetail.elementWeakRef.get();
-
     this.filledRecordGUID = profile.guid;
-    for (let fieldDetail of this.fieldDetails) {
+    for (const fieldDetail of this.fieldDetails) {
       // Avoid filling field value in the following cases:
       // 1. a non-empty input field for an unfocused input
       // 2. the invalid value set
       // 3. value already chosen in select element
 
-      let element = fieldDetail.elementWeakRef.get();
+      const element = fieldDetail.elementWeakRef.get();
       // Skip the field if it is null or readonly or disabled
       if (!FormAutofillUtils.isFieldAutofillable(element)) {
         continue;
@@ -352,14 +359,8 @@ class FormAutofillSection {
       // For example, autofilling expiration month into an input element will not work as expected if
       // the month is less than 10, since the input is expected a zero-padded string.
       // See Bug 1722941 for follow up.
-      let value =
-        profile[`${fieldDetail.fieldName}-formatted`] ||
-        profile[fieldDetail.fieldName];
+      const value = this.getFilledValueFromProfile(fieldDetail, profile);
 
-      // Bug 1688607: The transform function allows us to handle the multiple credit card number fields case
-      if (fieldDetail.transform) {
-        value = fieldDetail.transform(value);
-      }
       if (HTMLInputElement.isInstance(element) && value) {
         // For the focused input element, it will be filled with a valid value
         // anyway.
@@ -367,14 +368,15 @@ class FormAutofillSection {
         // or their values are equal to the site prefill value
         // or are the result of an earlier auto-fill.
         if (
-          element == focusedInput ||
-          (element != focusedInput &&
+          element == this.#focusedInput ||
+          (element != this.#focusedInput &&
             (!element.value || element.value == element.defaultValue)) ||
-          fieldDetail.state == FIELD_STATES.AUTO_FILLED
+          this.handler.getFilledStateByElement(element) ==
+            FIELD_STATES.AUTO_FILLED
         ) {
           element.focus({ preventScroll: true });
           element.setUserInput(value);
-          this._changeFieldState(fieldDetail, FIELD_STATES.AUTO_FILLED);
+          this.handler.changeFieldState(fieldDetail, FIELD_STATES.AUTO_FILLED);
         }
       } else if (HTMLSelectElement.isInstance(element)) {
         let cache = this._cacheValue.matchingSelectOption.get(element) || {};
@@ -397,10 +399,10 @@ class FormAutofillSection {
           );
         }
         // Autofill highlight appears regardless if value is changed or not
-        this._changeFieldState(fieldDetail, FIELD_STATES.AUTO_FILLED);
+        this.handler.changeFieldState(fieldDetail, FIELD_STATES.AUTO_FILLED);
       }
     }
-    focusedInput.focus({ preventScroll: true });
+    this.#focusedInput.focus({ preventScroll: true });
 
     lazy.AutofillTelemetry.recordFormInteractionEvent("filled", this, {
       profile,
@@ -418,39 +420,71 @@ class FormAutofillSection {
   previewFormFields(profile) {
     this.preparePreviewProfile(profile);
 
-    for (let fieldDetail of this.fieldDetails) {
+    for (const fieldDetail of this.fieldDetails) {
       let element = fieldDetail.elementWeakRef.get();
-      let value =
-        profile[`${fieldDetail.fieldName}-formatted`] ||
-        profile[fieldDetail.fieldName] ||
-        "";
-
       // Skip the field if it is null or readonly or disabled
       if (!FormAutofillUtils.isFieldAutofillable(element)) {
         continue;
       }
 
+      let value =
+        profile[`${fieldDetail.fieldName}-formatted`] ||
+        profile[fieldDetail.fieldName] ||
+        "";
       if (HTMLSelectElement.isInstance(element)) {
         // Unlike text input, select element is always previewed even if
         // the option is already selected.
         if (value) {
-          let cache = this._cacheValue.matchingSelectOption.get(element) || {};
-          let option = cache[value] && cache[value].get();
-          if (option) {
-            value = option.text || "";
-          } else {
-            value = "";
-          }
+          const cache =
+            this._cacheValue.matchingSelectOption.get(element) ?? {};
+          const option = cache[value]?.get();
+          value = option?.text ?? "";
         }
       } else if (element.value && element.value != element.defaultValue) {
         // Skip the field if the user has already entered text and that text is not the site prefilled value.
         continue;
       }
       element.previewValue = value;
-      this._changeFieldState(
+      this.handler.changeFieldState(
         fieldDetail,
         value ? FIELD_STATES.PREVIEW : FIELD_STATES.NORMAL
       );
+    }
+  }
+
+  /**
+   * Clear a previously autofilled field in this section
+   */
+  clearFilled(fieldDetail) {
+    lazy.AutofillTelemetry.recordFormInteractionEvent("filled_modified", this, {
+      fieldName: fieldDetail.fieldName,
+    });
+
+    let isAutofilled = false;
+    const dimFieldDetails = [];
+    for (const fieldDetail of this.fieldDetails) {
+      const element = fieldDetail.elementWeakRef.get();
+
+      if (HTMLSelectElement.isInstance(element)) {
+        // Dim fields are those we don't attempt to revert their value
+        // when clear the target set, such as <select>.
+        dimFieldDetails.push(fieldDetail);
+      } else {
+        isAutofilled |=
+          this.handler.getFilledStateByElement(element) ==
+          FIELD_STATES.AUTO_FILLED;
+      }
+    }
+    if (!isAutofilled) {
+      // Restore the dim fields to initial state as well once we knew
+      // that user had intention to clear the filled form manually.
+      for (const fieldDetail of dimFieldDetails) {
+        // If we can't find a selected option, then we should just reset to the first option's value
+        let element = fieldDetail.elementWeakRef.get();
+        this._resetSelectElementValue(element);
+        this.handler.changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
+      }
+      this.filledRecordGUID = null;
     }
   }
 
@@ -460,7 +494,7 @@ class FormAutofillSection {
   clearPreviewedFormFields() {
     lazy.log.debug("clear previewed fields");
 
-    for (let fieldDetail of this.fieldDetails) {
+    for (const fieldDetail of this.fieldDetails) {
       let element = fieldDetail.elementWeakRef.get();
       if (!element) {
         lazy.log.warn(fieldDetail.fieldName, "is unreachable");
@@ -471,11 +505,14 @@ class FormAutofillSection {
 
       // We keep the state if this field has
       // already been auto-filled.
-      if (fieldDetail.state == FIELD_STATES.AUTO_FILLED) {
+      if (
+        this.handler.getFilledStateByElement(element) ==
+        FIELD_STATES.AUTO_FILLED
+      ) {
         continue;
       }
 
-      this._changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
+      this.handler.changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
     }
   }
 
@@ -490,7 +527,10 @@ class FormAutofillSection {
         continue;
       }
 
-      if (fieldDetail.state == FIELD_STATES.AUTO_FILLED) {
+      if (
+        this.handler.getFilledStateByElement(element) ==
+        FIELD_STATES.AUTO_FILLED
+      ) {
         if (HTMLInputElement.isInstance(element)) {
           element.setUserInput("");
         } else if (HTMLSelectElement.isInstance(element)) {
@@ -501,66 +541,11 @@ class FormAutofillSection {
     }
   }
 
-  /**
-   * Change the state of a field to correspond with different presentations.
-   *
-   * @param {object} fieldDetail
-   *        A fieldDetail of which its element is about to update the state.
-   * @param {string} nextState
-   *        Used to determine the next state
-   */
-  _changeFieldState(fieldDetail, nextState) {
-    let element = fieldDetail.elementWeakRef.get();
-
-    if (!element) {
-      lazy.log.warn(
-        fieldDetail.fieldName,
-        "is unreachable while changing state"
-      );
-      return;
-    }
-    if (!(nextState in this._FIELD_STATE_ENUM)) {
-      lazy.log.warn(
-        fieldDetail.fieldName,
-        "is trying to change to an invalid state"
-      );
-      return;
-    }
-    if (fieldDetail.state == nextState) {
-      return;
-    }
-
-    let nextStateValue = null;
-    for (let [state, mmStateValue] of Object.entries(this._FIELD_STATE_ENUM)) {
-      // The NORMAL state is simply the absence of other manually
-      // managed states so we never need to add or remove it.
-      if (!mmStateValue) {
-        continue;
-      }
-
-      if (state == nextState) {
-        nextStateValue = mmStateValue;
-      } else {
-        this.winUtils.removeManuallyManagedState(element, mmStateValue);
-      }
-    }
-
-    if (nextStateValue) {
-      this.winUtils.addManuallyManagedState(element, nextStateValue);
-    }
-
-    if (nextState == FIELD_STATES.AUTO_FILLED) {
-      element.addEventListener("input", this, { mozSystemGroup: true });
-    }
-
-    fieldDetail.state = nextState;
-  }
-
   resetFieldStates() {
-    for (let fieldDetail of this.fieldDetails) {
+    for (const fieldDetail of this.fieldDetails) {
       const element = fieldDetail.elementWeakRef.get();
       element.removeEventListener("input", this, { mozSystemGroup: true });
-      this._changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
+      this.handler.changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
     }
     this.filledRecordGUID = null;
   }
@@ -630,7 +615,7 @@ class FormAutofillSection {
     this._condenseMultipleCCNumberFields(condensedDetails);
 
     condensedDetails.forEach(detail => {
-      let element = detail.elementWeakRef.get();
+      const element = detail.elementWeakRef.get();
       // Remove the unnecessary spaces
       let value = detail.fieldValue ?? (element && element.value.trim());
       value = this.computeFillingValue(value, detail, element);
@@ -643,7 +628,10 @@ class FormAutofillSection {
 
       data.record[detail.fieldName] = value;
 
-      if (detail.state == FIELD_STATES.AUTO_FILLED) {
+      if (
+        this.handler.getFilledStateByElement(element) ==
+        FIELD_STATES.AUTO_FILLED
+      ) {
         data.untouchedFields.push(detail.fieldName);
       }
     });
@@ -657,70 +645,6 @@ class FormAutofillSection {
     return data;
   }
 
-  handleEvent(event) {
-    switch (event.type) {
-      case "input": {
-        if (!event.isTrusted) {
-          return;
-        }
-        const target = event.target;
-        const targetFieldDetail = this.getFieldDetailByElement(target);
-        const isCreditCardField = FormAutofillUtils.isCreditCardField(
-          targetFieldDetail.fieldName
-        );
-
-        // If the user manually blanks a credit card field, then
-        // we want the popup to be activated.
-        if (
-          !HTMLSelectElement.isInstance(target) &&
-          isCreditCardField &&
-          target.value === ""
-        ) {
-          formFillController.showPopup();
-        }
-
-        if (targetFieldDetail.state == FIELD_STATES.NORMAL) {
-          return;
-        }
-
-        this._changeFieldState(targetFieldDetail, FIELD_STATES.NORMAL);
-
-        lazy.AutofillTelemetry.recordFormInteractionEvent(
-          "filled_modified",
-          this,
-          {
-            fieldName: targetFieldDetail.fieldName,
-          }
-        );
-
-        let isAutofilled = false;
-        let dimFieldDetails = [];
-        for (const fieldDetail of this.fieldDetails) {
-          const element = fieldDetail.elementWeakRef.get();
-
-          if (HTMLSelectElement.isInstance(element)) {
-            // Dim fields are those we don't attempt to revert their value
-            // when clear the target set, such as <select>.
-            dimFieldDetails.push(fieldDetail);
-          } else {
-            isAutofilled |= fieldDetail.state == FIELD_STATES.AUTO_FILLED;
-          }
-        }
-        if (!isAutofilled) {
-          // Restore the dim fields to initial state as well once we knew
-          // that user had intention to clear the filled form manually.
-          for (const fieldDetail of dimFieldDetails) {
-            // If we can't find a selected option, then we should just reset to the first option's value
-            let element = fieldDetail.elementWeakRef.get();
-            this._resetSelectElementValue(element);
-            this._changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
-          }
-          this.filledRecordGUID = null;
-        }
-        break;
-      }
-    }
-  }
   /**
    * Resets a <select> element to its selected option or the first option if there is none selected.
    *
@@ -745,8 +669,8 @@ class FormAutofillSection {
 }
 
 class FormAutofillAddressSection extends FormAutofillSection {
-  constructor(fieldDetails, winUtils) {
-    super(fieldDetails, winUtils);
+  constructor(fieldDetails, handler) {
+    super(fieldDetails, handler);
 
     this._cacheValue.oneLineStreetAddress = null;
 
@@ -980,15 +904,11 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
    *
    * @param {object} fieldDetails
    *        The fieldDetail objects for the fields in this section
-   * @param {object} winUtils
-   *        A WindowUtils reference for the Window the section appears in
    * @param {object} handler
    *        The FormAutofillHandler responsible for this section
    */
-  constructor(fieldDetails, winUtils, handler) {
-    super(fieldDetails, winUtils);
-
-    this.handler = handler;
+  constructor(fieldDetails, handler) {
+    super(fieldDetails, handler);
 
     if (!this.isValidSection()) {
       return;
@@ -1314,6 +1234,15 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
     this.adaptFieldMaxLength(profile);
   }
 
+  getFilledValueFromProfile(fieldDetail, profile) {
+    const value = super.getFilledValueFromProfile(fieldDetail, profile);
+    if (fieldDetail.fieldName == "cc-number" && fieldDetail.part != null) {
+      const part = fieldDetail.part;
+      return value.slice((part - 1) * 4, part * 4);
+    }
+    return value;
+  }
+
   computeFillingValue(value, fieldDetail, element) {
     if (
       fieldDetail.fieldName != "cc-type" ||
@@ -1443,6 +1372,8 @@ export class FormAutofillHandler {
   // Caches the element to section mapping
   #cachedSectionByElement = new WeakMap();
 
+  // Keeps track of filled state for all identified elements
+  #filledStateByElement = new WeakMap();
   /**
    * Array of collected data about relevant form fields.  Each item is an object
    * storing the identifying details of the field and a reference to the
@@ -1475,6 +1406,16 @@ export class FormAutofillHandler {
     this.window = this.form.rootElement.ownerGlobal;
     this.winUtils = this.window.windowUtils;
 
+    // Enum for form autofill MANUALLY_MANAGED_STATES values
+    this.FIELD_STATE_ENUM = {
+      // not themed
+      [FIELD_STATES.NORMAL]: null,
+      // highlighted
+      [FIELD_STATES.AUTO_FILLED]: "autofill",
+      // highlighted && grey color text
+      [FIELD_STATES.PREVIEW]: "-moz-autofill-preview",
+    };
+
     /**
      * This function is used if the form handler (or one of its sections)
      * determines that it needs to act as if the form had been submitted.
@@ -1484,17 +1425,71 @@ export class FormAutofillHandler {
     };
   }
 
+  handleEvent(event) {
+    switch (event.type) {
+      case "input": {
+        if (!event.isTrusted) {
+          return;
+        }
+        const target = event.target;
+        const targetFieldDetail = this.getFieldDetailByElement(target);
+        const isCreditCardField = FormAutofillUtils.isCreditCardField(
+          targetFieldDetail.fieldName
+        );
+
+        // If the user manually blanks a credit card field, then
+        // we want the popup to be activated.
+        if (
+          !HTMLSelectElement.isInstance(target) &&
+          isCreditCardField &&
+          target.value === ""
+        ) {
+          formFillController.showPopup();
+        }
+
+        if (this.getFilledStateByElement(target) == FIELD_STATES.NORMAL) {
+          return;
+        }
+
+        this.changeFieldState(targetFieldDetail, FIELD_STATES.NORMAL);
+        const section = this.getSectionByElement(
+          targetFieldDetail.elementWeakRef.get()
+        );
+        section?.clearFilled(targetFieldDetail);
+      }
+    }
+  }
+
   set focusedInput(element) {
-    const section =
-      this.#cachedSectionByElement.get(element) ??
-      this.sections.find(s => s.getFieldDetailByElement(element));
+    const section = this.getSectionByElement(element);
     if (!section) {
       return;
     }
 
-    this.#cachedSectionByElement.set(element, section);
     this.#focusedSection = section;
     this.#focusedSection.focusedInput = element;
+  }
+
+  getSectionByElement(element) {
+    const section =
+      this.#cachedSectionByElement.get(element) ??
+      this.sections.find(s => s.getFieldDetailByElement(element));
+    if (!section) {
+      return null;
+    }
+
+    this.#cachedSectionByElement.set(element, section);
+    return section;
+  }
+
+  getFieldDetailByElement(element) {
+    for (const section of this.sections) {
+      const detail = section.getFieldDetailByElement(element);
+      if (detail) {
+        return detail;
+      }
+    }
+    return null;
   }
 
   get activeSection() {
@@ -1567,13 +1562,9 @@ export class FormAutofillHandler {
     for (const { fieldDetails, type } of sections) {
       let section;
       if (type == FormAutofillUtils.SECTION_TYPES.ADDRESS) {
-        section = new FormAutofillAddressSection(fieldDetails, this.winUtils);
+        section = new FormAutofillAddressSection(fieldDetails, this);
       } else if (type == FormAutofillUtils.SECTION_TYPES.CREDIT_CARD) {
-        section = new FormAutofillCreditCardSection(
-          fieldDetails,
-          this.winUtils,
-          this
-        );
+        section = new FormAutofillCreditCardSection(fieldDetails, this);
       } else {
         throw new Error("Unknown field type.");
       }
@@ -1587,6 +1578,65 @@ export class FormAutofillHandler {
 
   #hasFilledSection() {
     return this.sections.some(section => section.isFilled());
+  }
+
+  getFilledStateByElement(element) {
+    return this.#filledStateByElement.get(element);
+  }
+
+  /**
+   * Change the state of a field to correspond with different presentations.
+   *
+   * @param {object} fieldDetail
+   *        A fieldDetail of which its element is about to update the state.
+   * @param {string} nextState
+   *        Used to determine the next state
+   */
+  changeFieldState(fieldDetail, nextState) {
+    const element = fieldDetail.elementWeakRef.get();
+    if (!element) {
+      lazy.log.warn(
+        fieldDetail.fieldName,
+        "is unreachable while changing state"
+      );
+      return;
+    }
+    if (!(nextState in this.FIELD_STATE_ENUM)) {
+      lazy.log.warn(
+        fieldDetail.fieldName,
+        "is trying to change to an invalid state"
+      );
+      return;
+    }
+
+    if (this.#filledStateByElement.get(element) == nextState) {
+      return;
+    }
+
+    let nextStateValue = null;
+    for (const [state, mmStateValue] of Object.entries(this.FIELD_STATE_ENUM)) {
+      // The NORMAL state is simply the absence of other manually
+      // managed states so we never need to add or remove it.
+      if (!mmStateValue) {
+        continue;
+      }
+
+      if (state == nextState) {
+        nextStateValue = mmStateValue;
+      } else {
+        this.winUtils.removeManuallyManagedState(element, mmStateValue);
+      }
+    }
+
+    if (nextStateValue) {
+      this.winUtils.addManuallyManagedState(element, nextStateValue);
+    }
+
+    if (nextState == FIELD_STATES.AUTO_FILLED) {
+      element.addEventListener("input", this, { mozSystemGroup: true });
+    }
+
+    this.#filledStateByElement.set(element, nextState);
   }
 
   /**

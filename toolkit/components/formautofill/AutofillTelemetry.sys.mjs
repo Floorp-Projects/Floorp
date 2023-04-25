@@ -69,7 +69,8 @@ class AutofillTelemetryBase {
       let element = fieldDetail.elementWeakRef.get();
       let state = profile[fieldDetail.fieldName] ? "filled" : "not_filled";
       if (
-        fieldDetail.state == FIELD_STATES.NORMAL &&
+        section.handler.getFilledStateByElement(element) ==
+          FIELD_STATES.NORMAL &&
         (HTMLSelectElement.isInstance(element) ||
           (HTMLInputElement.isInstance(element) && element.value.length))
       ) {
@@ -366,7 +367,8 @@ class CreditCardTelemetry extends AutofillTelemetryBase {
       let element = fieldDetail.elementWeakRef.get();
       let state = profile[fieldDetail.fieldName] ? "filled" : "not_filled";
       if (
-        fieldDetail.state == FIELD_STATES.NORMAL &&
+        section.handler.getFilledStateByElement(element) ==
+          FIELD_STATES.NORMAL &&
         (HTMLSelectElement.isInstance(element) ||
           (HTMLInputElement.isInstance(element) && element.value.length))
       ) {

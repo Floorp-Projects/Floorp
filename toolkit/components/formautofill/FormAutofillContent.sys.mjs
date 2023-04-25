@@ -146,6 +146,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
       activeInput,
       activeSection,
       activeFieldDetail,
+      activeHandler,
       savedFieldNames,
     } = FormAutofillContent;
     this.forceStop = false;
@@ -157,7 +158,8 @@ AutofillProfileAutoCompleteSearch.prototype = {
       activeFieldDetail.fieldName
     );
     let isInputAutofilled =
-      activeFieldDetail.state == lazy.FIELD_STATES.AUTO_FILLED;
+      activeHandler.getFilledStateByElement(activeInput) ==
+      lazy.FIELD_STATES.AUTO_FILLED;
     let allFieldNames = activeSection.allFieldNames;
     let filledRecordGUID = activeSection.filledRecordGUID;
 
