@@ -441,14 +441,6 @@ criteria = "safe-to-deploy"
 version = "0.12.4"
 criteria = "safe-to-deploy"
 
-[[exemptions.etagere]]
-version = "0.2.7"
-criteria = "safe-to-deploy"
-
-[[exemptions.euclid]]
-version = "0.22.7"
-criteria = "safe-to-deploy"
-
 [[exemptions.fallible-iterator]]
 version = "0.2.0"
 criteria = "safe-to-deploy"

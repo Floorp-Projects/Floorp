@@ -17,6 +17,22 @@ start = "2021-06-21"
 end = "2024-04-21"
 notes = "No unsafe code, rather straight-forward parser."
 
+[[wildcard-audits.etagere]]
+who = "Nicolas Silva <nical@fastmail.com>"
+criteria = "safe-to-deploy"
+user-id = 1281
+start = "2020-11-12"
+end = "2024-04-25"
+notes = "I am the author of this crate."
+
+[[wildcard-audits.euclid]]
+who = "Nicolas Silva <nical@fastmail.com>"
+criteria = "safe-to-deploy"
+user-id = 1281
+start = "2019-03-14"
+end = "2024-04-25"
+notes = "I wrote most of the commits in the euclid reprository and review every change that is not produced by me."
+
 [[wildcard-audits.glean]]
 who = "Chris H-C <chutten@mozilla.com>"
 criteria = "safe-to-deploy"
