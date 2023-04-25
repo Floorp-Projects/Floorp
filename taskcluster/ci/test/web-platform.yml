@@ -44,15 +44,15 @@ web-platform-tests:
         by-test-platform:
             android.*/debug: 32
             android.*: 24
-            linux.*64-tsan-qr/opt: 36
-            linux.*64-asan(-qr)?/opt: 26
-            linux.*64-ccov.*/opt: 24
-            linux.*/debug: 24
+            linux.*64-tsan-qr/opt: 32
+            linux.*64-asan(-qr)?/opt: 22
+            linux.*64-ccov.*/opt: 20
+            linux.*/debug: 16
             macosx.*/debug: 18
             windows.*32.*/opt: 12
-            windows.*/debug: 26
-            windows.*-ccov.*/opt: 24
-            default: 14
+            windows.*/debug: 16
+            windows.*-ccov.*/opt: 14
+            default: 10
     max-run-time:
         by-test-platform:
             .*-ccov.*/.*: 10800
@@ -97,6 +97,12 @@ web-platform-tests:
             - --test-type=testharness
             - --skip-implementation-status=backlog
             - --skip-implementation-status=not-implementing
+            # Because we have a separate job for them, don't run the (core)
+            # webgpu/* tests in the main WPT runs. (but still run tests in dirs
+            # other than webgpu/* that are tagged webgpu, e.g. canvas tests)
+            - --exclude=webgpu
+            # Remove after webgpu tests move back to upstream WPT repo:
+            - --exclude=_mozilla/webgpu
 
 web-platform-tests-backlog:
     description: "Web platform test (backlog) run"
@@ -187,6 +193,27 @@ web-platform-tests-reftest:
             - --test-type=reftest
             - --skip-implementation-status=backlog
             - --skip-implementation-status=not-implementing
+
+web-platform-tests-webgpu:
+    description: "Web platform WebGPU test run"
+    suite: web-platform-tests
+    treeherder-symbol: W(webgpu)
+    virtualization: virtual
+    tier: default
+    chunks: 2
+    max-run-time: 7200
+    variants: []  # We don't need sw or nofis testing.
+    run-on-projects:
+        by-test-platform:
+            android.*: []
+            macos.*: []
+            default: built-projects
+    mozharness:
+        chunked: true
+        extra-options:
+            - --test-type=testharness
+            - --default-exclude
+            - --tag=webgpu
 
 web-platform-tests-reftest-backlog:
     description: "Web platform reftest (backlog) run"
