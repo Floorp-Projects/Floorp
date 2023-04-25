@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_quota_persistencetype_h__
 #define mozilla_dom_quota_persistencetype_h__
 
+#include <array>
 #include <cstdint>
 #include "mozilla/Assertions.h"
 #include "mozilla/Maybe.h"
@@ -21,6 +22,7 @@ enum PersistenceType {
   PERSISTENCE_TYPE_PERSISTENT = 0,
   PERSISTENCE_TYPE_TEMPORARY,
   PERSISTENCE_TYPE_DEFAULT,
+  PERSISTENCE_TYPE_PRIVATE,
 
   // Only needed for IPC serialization helper, should never be used in code.
   PERSISTENCE_TYPE_INVALID
@@ -28,9 +30,13 @@ enum PersistenceType {
 
 static const PersistenceType kAllPersistenceTypes[] = {
     PERSISTENCE_TYPE_PERSISTENT, PERSISTENCE_TYPE_TEMPORARY,
-    PERSISTENCE_TYPE_DEFAULT};
+    PERSISTENCE_TYPE_DEFAULT, PERSISTENCE_TYPE_PRIVATE};
 
 static const PersistenceType kBestEffortPersistenceTypes[] = {
+    PERSISTENCE_TYPE_TEMPORARY, PERSISTENCE_TYPE_DEFAULT,
+    PERSISTENCE_TYPE_PRIVATE};
+
+static const PersistenceType kInitializableBestEffortPersistenceTypes[] = {
     PERSISTENCE_TYPE_TEMPORARY, PERSISTENCE_TYPE_DEFAULT};
 
 bool IsValidPersistenceType(PersistenceType aPersistenceType);
@@ -52,17 +58,8 @@ Maybe<PersistenceType> PersistenceTypeFromInt32(int32_t aInt32,
 Maybe<PersistenceType> PersistenceTypeFromFile(nsIFile& aFile,
                                                const fallible_t&);
 
-inline PersistenceType ComplementaryPersistenceType(
-    const PersistenceType aPersistenceType) {
-  MOZ_ASSERT(aPersistenceType == PERSISTENCE_TYPE_DEFAULT ||
-             aPersistenceType == PERSISTENCE_TYPE_TEMPORARY);
-
-  if (aPersistenceType == PERSISTENCE_TYPE_DEFAULT) {
-    return PERSISTENCE_TYPE_TEMPORARY;
-  }
-
-  return PERSISTENCE_TYPE_DEFAULT;
-}
+std::array<PersistenceType, 2> ComplementaryPersistenceTypes(
+    const PersistenceType aPersistenceType);
 
 }  // namespace mozilla::dom::quota
 

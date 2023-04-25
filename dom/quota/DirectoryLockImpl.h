@@ -37,6 +37,8 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
 
   const int64_t mId;
 
+  const bool mIsPrivate;
+
   const bool mExclusive;
 
   // Internal quota manager operations use this flag to prevent directory lock
@@ -57,7 +59,7 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
   DirectoryLockImpl(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
                     const Nullable<PersistenceType>& aPersistenceType,
                     const nsACString& aSuffix, const nsACString& aGroup,
-                    const OriginScope& aOriginScope,
+                    const OriginScope& aOriginScope, bool aIsPrivate,
                     const Nullable<Client::Type>& aClientType, bool aExclusive,
                     bool aInternal,
                     ShouldUpdateLockIdTableFlag aShouldUpdateLockIdTableFlag);
@@ -67,12 +69,12 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
       PersistenceType aPersistenceType,
       const quota::OriginMetadata& aOriginMetadata, Client::Type aClientType,
       bool aExclusive) {
-    return Create(std::move(aQuotaManager),
-                  Nullable<PersistenceType>(aPersistenceType),
-                  aOriginMetadata.mSuffix, aOriginMetadata.mGroup,
-                  OriginScope::FromOrigin(aOriginMetadata.mOrigin),
-                  Nullable<Client::Type>(aClientType), aExclusive, false,
-                  ShouldUpdateLockIdTableFlag::Yes);
+    return Create(
+        std::move(aQuotaManager), Nullable<PersistenceType>(aPersistenceType),
+        aOriginMetadata.mSuffix, aOriginMetadata.mGroup,
+        OriginScope::FromOrigin(aOriginMetadata.mOrigin),
+        aOriginMetadata.mIsPrivate, Nullable<Client::Type>(aClientType),
+        aExclusive, false, ShouldUpdateLockIdTableFlag::Yes);
   }
 
   static RefPtr<OriginDirectoryLock> CreateForEviction(
@@ -86,7 +88,7 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
                   Nullable<PersistenceType>(aPersistenceType),
                   aOriginMetadata.mSuffix, aOriginMetadata.mGroup,
                   OriginScope::FromOrigin(aOriginMetadata.mOrigin),
-                  Nullable<Client::Type>(),
+                  aOriginMetadata.mIsPrivate, Nullable<Client::Type>(),
                   /* aExclusive */ true, /* aInternal */ true,
                   ShouldUpdateLockIdTableFlag::No);
   }
@@ -97,7 +99,7 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
       const OriginScope& aOriginScope,
       const Nullable<Client::Type>& aClientType, bool aExclusive) {
     return Create(std::move(aQuotaManager), aPersistenceType, ""_ns, ""_ns,
-                  aOriginScope, aClientType, aExclusive, true,
+                  aOriginScope, false, aClientType, aExclusive, true,
                   ShouldUpdateLockIdTableFlag::Yes);
   }
 
@@ -203,7 +205,7 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
     MOZ_DIAGNOSTIC_ASSERT(!mGroup.IsEmpty());
 
     return quota::OriginMetadata{mSuffix, mGroup, nsCString(Origin()),
-                                 GetPersistenceType()};
+                                 mIsPrivate, GetPersistenceType()};
   }
 
   const nsACString& Origin() const override {
@@ -246,7 +248,7 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
       MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
       const Nullable<PersistenceType>& aPersistenceType,
       const nsACString& aSuffix, const nsACString& aGroup,
-      const OriginScope& aOriginScope,
+      const OriginScope& aOriginScope, bool aIsPrivate,
       const Nullable<Client::Type>& aClientType, bool aExclusive,
       bool aInternal,
       ShouldUpdateLockIdTableFlag aShouldUpdateLockIdTableFlag) {
@@ -261,7 +263,7 @@ class DirectoryLockImpl final : public ClientDirectoryLock,
 
     return MakeRefPtr<DirectoryLockImpl>(
         std::move(aQuotaManager), aPersistenceType, aSuffix, aGroup,
-        aOriginScope, aClientType, aExclusive, aInternal,
+        aOriginScope, aIsPrivate, aClientType, aExclusive, aInternal,
         aShouldUpdateLockIdTableFlag);
   }
 

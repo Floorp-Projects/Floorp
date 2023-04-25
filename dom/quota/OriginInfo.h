@@ -22,7 +22,7 @@ class OriginInfo final {
   friend class QuotaManager;
 
  public:
-  OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin,
+  OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin, bool aIsPrivate,
              const ClientUsageArray& aClientUsages, uint64_t aUsage,
              int64_t aAccessTime, bool aPersisted, bool aDirectoryExists);
 
@@ -103,6 +103,7 @@ class OriginInfo final {
   bool mIsExtension;
   uint64_t mUsage;
   int64_t mAccessTime;
+  bool mIsPrivate;
   bool mAccessed;
   bool mPersisted;
   /**

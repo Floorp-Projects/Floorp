@@ -35,9 +35,9 @@
 namespace mozilla::dom::fs::test {
 
 quota::OriginMetadata GetTestQuotaOriginMetadata() {
-  return quota::OriginMetadata{""_ns, "quotaexample.com"_ns,
-                               "http://quotaexample.com"_ns,
-                               quota::PERSISTENCE_TYPE_DEFAULT};
+  return quota::OriginMetadata{
+      ""_ns, "quotaexample.com"_ns, "http://quotaexample.com"_ns,
+      /* aIsPrivate */ false, quota::PERSISTENCE_TYPE_DEFAULT};
 }
 
 class TestFileSystemQuotaClient

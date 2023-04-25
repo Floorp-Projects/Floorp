@@ -46,6 +46,7 @@ namespace mozilla::dom::fs::test {
 
 quota::OriginMetadata GetTestOriginMetadata() {
   return quota::OriginMetadata{""_ns, "example.com"_ns, "http://example.com"_ns,
+                               /* aIsPrivate */ false,
                                quota::PERSISTENCE_TYPE_DEFAULT};
 }
 

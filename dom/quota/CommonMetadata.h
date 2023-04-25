@@ -8,6 +8,7 @@
 #define DOM_QUOTA_COMMONMETADATA_H_
 
 #include <utility>
+
 #include "mozilla/dom/quota/Client.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "nsString.h"
@@ -18,16 +19,19 @@ struct PrincipalMetadata {
   nsCString mSuffix;
   nsCString mGroup;
   nsCString mOrigin;
+  bool mIsPrivate = false;
 
   // These explicit constructors exist to prevent accidental aggregate
   // initialization which could for example initialize mSuffix as group and
   // mGroup as origin (if only two string arguments are used).
   PrincipalMetadata() = default;
 
-  PrincipalMetadata(nsCString aSuffix, nsCString aGroup, nsCString aOrigin)
+  PrincipalMetadata(nsCString aSuffix, nsCString aGroup, nsCString aOrigin,
+                    bool aIsPrivate)
       : mSuffix{std::move(aSuffix)},
         mGroup{std::move(aGroup)},
-        mOrigin{std::move(aOrigin)} {}
+        mOrigin{std::move(aOrigin)},
+        mIsPrivate{aIsPrivate} {}
 };
 
 struct OriginMetadata : public PrincipalMetadata {
@@ -36,9 +40,9 @@ struct OriginMetadata : public PrincipalMetadata {
   OriginMetadata() = default;
 
   OriginMetadata(nsCString aSuffix, nsCString aGroup, nsCString aOrigin,
-                 PersistenceType aPersistenceType)
+                 bool aIsPrivate, PersistenceType aPersistenceType)
       : PrincipalMetadata(std::move(aSuffix), std::move(aGroup),
-                          std::move(aOrigin)),
+                          std::move(aOrigin), aIsPrivate),
         mPersistenceType(aPersistenceType) {}
 
   OriginMetadata(PrincipalMetadata&& aPrincipalMetadata,

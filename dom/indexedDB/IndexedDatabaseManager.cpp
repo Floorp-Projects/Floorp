@@ -97,6 +97,7 @@ class FileManagerInfo {
   nsTArray<SafeRefPtr<DatabaseFileManager> > mPersistentStorageFileManagers;
   nsTArray<SafeRefPtr<DatabaseFileManager> > mTemporaryStorageFileManagers;
   nsTArray<SafeRefPtr<DatabaseFileManager> > mDefaultStorageFileManagers;
+  nsTArray<SafeRefPtr<DatabaseFileManager> > mPrivateStorageFileManagers;
 };
 
 }  // namespace indexedDB
@@ -707,6 +708,8 @@ nsTArray<SafeRefPtr<DatabaseFileManager> >& FileManagerInfo::GetArray(
       return mTemporaryStorageFileManagers;
     case PERSISTENCE_TYPE_DEFAULT:
       return mDefaultStorageFileManagers;
+    case PERSISTENCE_TYPE_PRIVATE:
+      return mPrivateStorageFileManagers;
 
     case PERSISTENCE_TYPE_INVALID:
     default:

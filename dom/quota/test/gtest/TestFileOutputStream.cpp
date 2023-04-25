@@ -41,9 +41,9 @@ TEST_F(TestFileOutputStream, extendFileStreamWithSetEOF) {
   auto ioTask = []() {
     quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
 
-    auto originMetadata =
-        quota::OriginMetadata{""_ns, "example.com"_ns, "http://example.com"_ns,
-                              quota::PERSISTENCE_TYPE_DEFAULT};
+    auto originMetadata = quota::OriginMetadata{
+        ""_ns, "example.com"_ns, "http://example.com"_ns,
+        /* aIsPrivate */ false, quota::PERSISTENCE_TYPE_DEFAULT};
 
     {
       ASSERT_NS_SUCCEEDED(quotaManager->EnsureStorageIsInitialized());

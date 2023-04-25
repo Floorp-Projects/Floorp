@@ -18,15 +18,18 @@ namespace {
 constexpr auto kPersistentCString = "persistent"_ns;
 constexpr auto kTemporaryCString = "temporary"_ns;
 constexpr auto kDefaultCString = "default"_ns;
+constexpr auto kPrivateCString = "private"_ns;
 
 constexpr auto kPermanentString = u"permanent"_ns;
 constexpr auto kTemporaryString = u"temporary"_ns;
 constexpr auto kDefaultString = u"default"_ns;
+constexpr auto kPrivateString = u"private"_ns;
 
 static_assert(PERSISTENCE_TYPE_PERSISTENT == 0 &&
                   PERSISTENCE_TYPE_TEMPORARY == 1 &&
                   PERSISTENCE_TYPE_DEFAULT == 2 &&
-                  PERSISTENCE_TYPE_INVALID == 3,
+                  PERSISTENCE_TYPE_PRIVATE == 3 &&
+                  PERSISTENCE_TYPE_INVALID == 4,
               "Incorrect enum values!");
 
 template <PersistenceType type>
@@ -104,6 +107,30 @@ PersistenceTypeTraits<PERSISTENCE_TYPE_DEFAULT>::To<nsLiteralCString>() {
   return kDefaultCString;
 }
 
+template <>
+struct PersistenceTypeTraits<PERSISTENCE_TYPE_PRIVATE> {
+  template <typename T>
+  static T To();
+
+  static bool From(const nsACString& aString) {
+    return aString == kPrivateCString;
+  }
+
+  static bool From(const int32_t aInt32) { return aInt32 == 3; }
+
+  static bool From(nsIFile& aFile) {
+    nsAutoString leafName;
+    MOZ_ALWAYS_SUCCEEDS(aFile.GetLeafName(leafName));
+    return leafName == kPrivateString;
+  }
+};
+
+template <>
+nsLiteralCString
+PersistenceTypeTraits<PERSISTENCE_TYPE_PRIVATE>::To<nsLiteralCString>() {
+  return kPrivateCString;
+}
+
 template <typename T>
 Maybe<T> TypeTo_impl(const PersistenceType aPersistenceType) {
   switch (aPersistenceType) {
@@ -115,6 +142,9 @@ Maybe<T> TypeTo_impl(const PersistenceType aPersistenceType) {
 
     case PERSISTENCE_TYPE_DEFAULT:
       return Some(PersistenceTypeTraits<PERSISTENCE_TYPE_DEFAULT>::To<T>());
+
+    case PERSISTENCE_TYPE_PRIVATE:
+      return Some(PersistenceTypeTraits<PERSISTENCE_TYPE_PRIVATE>::To<T>());
 
     default:
       return Nothing();
@@ -135,6 +165,10 @@ Maybe<PersistenceType> TypeFrom_impl(T& aData) {
     return Some(PERSISTENCE_TYPE_DEFAULT);
   }
 
+  if (PersistenceTypeTraits<PERSISTENCE_TYPE_PRIVATE>::From(aData)) {
+    return Some(PERSISTENCE_TYPE_PRIVATE);
+  }
+
   return Nothing();
 }
 
@@ -147,6 +181,7 @@ bool IsValidPersistenceType(const PersistenceType aPersistenceType) {
     case PERSISTENCE_TYPE_PERSISTENT:
     case PERSISTENCE_TYPE_TEMPORARY:
     case PERSISTENCE_TYPE_DEFAULT:
+    case PERSISTENCE_TYPE_PRIVATE:
       return true;
 
     default:
@@ -158,6 +193,7 @@ bool IsBestEffortPersistenceType(const PersistenceType aPersistenceType) {
   switch (aPersistenceType) {
     case PERSISTENCE_TYPE_TEMPORARY:
     case PERSISTENCE_TYPE_DEFAULT:
+    case PERSISTENCE_TYPE_PRIVATE:
       return true;
 
     case PERSISTENCE_TYPE_PERSISTENT:
@@ -197,6 +233,23 @@ Maybe<PersistenceType> PersistenceTypeFromInt32(const int32_t aInt32,
 Maybe<PersistenceType> PersistenceTypeFromFile(nsIFile& aFile,
                                                const fallible_t&) {
   return TypeFrom_impl(aFile);
+}
+
+std::array<PersistenceType, 2> ComplementaryPersistenceTypes(
+    const PersistenceType aPersistenceType) {
+  MOZ_ASSERT(aPersistenceType == PERSISTENCE_TYPE_DEFAULT ||
+             aPersistenceType == PERSISTENCE_TYPE_TEMPORARY ||
+             aPersistenceType == PERSISTENCE_TYPE_PRIVATE);
+
+  if (aPersistenceType == PERSISTENCE_TYPE_TEMPORARY) {
+    return {PERSISTENCE_TYPE_DEFAULT, PERSISTENCE_TYPE_PRIVATE};
+  }
+
+  if (aPersistenceType == PERSISTENCE_TYPE_DEFAULT) {
+    return {PERSISTENCE_TYPE_TEMPORARY, PERSISTENCE_TYPE_PRIVATE};
+  }
+
+  return {PERSISTENCE_TYPE_DEFAULT, PERSISTENCE_TYPE_TEMPORARY};
 }
 
 }  // namespace mozilla::dom::quota
