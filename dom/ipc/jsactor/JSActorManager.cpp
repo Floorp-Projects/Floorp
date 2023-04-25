@@ -11,6 +11,7 @@
 #include "mozilla/dom/PWindowGlobal.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/AppShutdown.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/ScopeExit.h"
 #include "mozJSModuleLoader.h"
 #include "jsapi.h"
@@ -187,7 +188,8 @@ void JSActorManager::ReceiveRawMessage(
   if (aData) {
     aData->Read(cx, &data, error);
     if (error.Failed()) {
-      CHILD_DIAGNOSTIC_ASSERT(false, "Should not receive non-decodable data");
+      CHILD_DIAGNOSTIC_ASSERT(CycleCollectedJSRuntime::Get()->OOMReported(),
+                              "Should not receive non-decodable data");
       return;
     }
   }

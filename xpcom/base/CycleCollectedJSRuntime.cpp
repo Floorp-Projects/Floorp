@@ -1821,6 +1821,10 @@ const char* CycleCollectedJSRuntime::OOMStateToString(
   }
 }
 
+bool CycleCollectedJSRuntime::OOMReported() {
+  return mOutOfMemoryState == OOMState::Reported;
+}
+
 void CycleCollectedJSRuntime::AnnotateAndSetOutOfMemory(OOMState* aStatePtr,
                                                         OOMState aNewState) {
   *aStatePtr = aNewState;

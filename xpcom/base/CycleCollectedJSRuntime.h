@@ -344,6 +344,10 @@ class CycleCollectedJSRuntime {
 
   const char* OOMStateToString(const OOMState aOomState) const;
 
+  // Returns true if OOM was reported and a new successful GC cycle hasn't
+  // occurred since.
+  bool OOMReported();
+
   void SetLargeAllocationFailure(OOMState aNewState);
 
   void AnnotateAndSetOutOfMemory(OOMState* aStatePtr, OOMState aNewState);
