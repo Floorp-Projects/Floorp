@@ -349,8 +349,13 @@ export var Sanitizer = {
 
   // This method is meant to be used by tests.
   async runSanitizeOnShutdown() {
-    // since we bypass sanitize() we need to initialise the principalsCollector ourselves
-    gPrincipalsCollector = new lazy.PrincipalsCollector();
+    // The collector needs to be reset for each test, as the collection only happens
+    // once and does not update after that.
+    // Pretend that it has never been initialized to mimic the actual browser behavior
+    // by setting it to null.
+    // The actually initialization will happen either via sanitize() or directly in
+    // sanitizeOnShutdown.
+    gPrincipalsCollector = null;
     return sanitizeOnShutdown({
       isShutdown: true,
       clearHonoringExceptions: true,
@@ -877,6 +882,7 @@ async function sanitizeOnShutdown(progress) {
     progress.advancement = "session-permission";
 
     let exceptions = 0;
+    let selectedPrincipals = [];
     // Let's see if we have to forget some particular site.
     for (let permission of Services.perms.all) {
       if (
@@ -899,20 +905,22 @@ async function sanitizeOnShutdown(progress) {
 
       // We use just the URI here, because permissions ignore OriginAttributes.
       // The principalsCollector is lazy, this is computed only once
+      if (!gPrincipalsCollector) {
+        gPrincipalsCollector = new lazy.PrincipalsCollector();
+      }
       let principals = await gPrincipalsCollector.getAllPrincipals(progress);
-      let selectedPrincipals = extractMatchingPrincipals(
-        principals,
-        permission.principal.host
-      );
-      await maybeSanitizeSessionPrincipals(
-        progress,
-        selectedPrincipals,
-        Ci.nsIClearDataService.CLEAR_ALL_CACHES |
-          Ci.nsIClearDataService.CLEAR_COOKIES |
-          Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
-          Ci.nsIClearDataService.CLEAR_EME
+      selectedPrincipals.push(
+        ...extractMatchingPrincipals(principals, permission.principal.host)
       );
     }
+    await maybeSanitizeSessionPrincipals(
+      progress,
+      selectedPrincipals,
+      Ci.nsIClearDataService.CLEAR_ALL_CACHES |
+        Ci.nsIClearDataService.CLEAR_COOKIES |
+        Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
+        Ci.nsIClearDataService.CLEAR_EME
+    );
     progress.sanitizationPrefs.session_permission_exceptions = exceptions;
   }
   progress.advancement = "done";
