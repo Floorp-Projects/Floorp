@@ -923,10 +923,6 @@ criteria = "safe-to-deploy"
 version = "0.10.3"
 criteria = "safe-to-deploy"
 
-[[exemptions.rust_cascade]]
-version = "1.4.0"
-criteria = "safe-to-deploy"
-
 [[exemptions.rust_decimal]]
 version = "1.24.0"
 criteria = "safe-to-deploy"
