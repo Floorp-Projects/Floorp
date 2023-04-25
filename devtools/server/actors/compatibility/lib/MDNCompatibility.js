@@ -117,7 +117,7 @@ class MDNCompatibility {
         return true;
       }
 
-      const alias = this._getAlias(database, ...terms);
+      const alias = this._getAlias(database, terms);
       if (!alias) {
         return true;
       }
@@ -210,7 +210,7 @@ class MDNCompatibility {
     }
   }
 
-  _getAlias(compatNode, ...terms) {
+  _getAlias(compatNode, terms) {
     const targetNode = this._getCompatNode(compatNode, terms);
     return targetNode ? targetNode._aliasOf : null;
   }
@@ -336,34 +336,39 @@ class MDNCompatibility {
    *                  unsupportedBrowsers: Array of unsupported browsers,
    *                }
    */
-  _getCompatSummary(browsers, database, ...terms) {
-    if (!this._hasTerm(database, ...terms)) {
+  _getCompatSummary(browsers, database, terms) {
+    const compatTable = this._getCompatTable(database, terms);
+
+    if (!compatTable) {
       return { invalid: true, unsupportedBrowsers: [] };
     }
 
-    const { unsupportedBrowsers, prefixNeededBrowsers } = browsers.reduce(
-      (value, browser) => {
-        const state = this._getSupportState(browser, database, ...terms);
+    const unsupportedBrowsers = [];
+    const prefixNeededBrowsers = [];
 
-        switch (state) {
-          case _SUPPORT_STATE.UNSUPPORTED_PREFIX_NEEDED: {
-            value.prefixNeededBrowsers.push(browser);
-            value.unsupportedBrowsers.push(browser);
-            break;
-          }
-          case _SUPPORT_STATE.UNSUPPORTED: {
-            value.unsupportedBrowsers.push(browser);
-            break;
-          }
+    for (const browser of browsers) {
+      const state = this._getSupportState(
+        compatTable,
+        browser,
+        database,
+        terms
+      );
+
+      switch (state) {
+        case _SUPPORT_STATE.UNSUPPORTED_PREFIX_NEEDED: {
+          prefixNeededBrowsers.push(browser);
+          unsupportedBrowsers.push(browser);
+          break;
         }
+        case _SUPPORT_STATE.UNSUPPORTED: {
+          unsupportedBrowsers.push(browser);
+          break;
+        }
+      }
+    }
 
-        return value;
-      },
-      { unsupportedBrowsers: [], prefixNeededBrowsers: [] }
-    );
-
-    const { deprecated, experimental } = this._getStatus(database, ...terms);
-    const url = this._getMDNLink(database, ...terms);
+    const { deprecated, experimental } = compatTable.status || {};
+    const url = compatTable.mdn_url;
 
     return {
       database,
@@ -389,30 +394,12 @@ class MDNCompatibility {
     const summary = this._getCompatSummary(
       browsers,
       this._cssPropertiesCompatData,
-      property
+      [property]
     );
     return Object.assign(summary, { property });
   }
 
-  _getMDNLink(compatNode, ...terms) {
-    for (; terms.length; terms.pop()) {
-      const compatTable = this._getCompatTable(compatNode, terms);
-      const url = compatTable ? compatTable.mdn_url : null;
-
-      if (url) {
-        return url;
-      }
-    }
-
-    return null;
-  }
-
-  _getSupportState(browser, compatNode, ...terms) {
-    const compatTable = this._getCompatTable(compatNode, terms);
-    if (!compatTable) {
-      return _SUPPORT_STATE.DATA_NOT_FOUND;
-    }
-
+  _getSupportState(compatTable, browser, compatNode, terms) {
     let supportList = compatTable.support[browser.id];
     if (!supportList) {
       return _SUPPORT_STATE.BROWSER_NOT_FOUND;
@@ -425,7 +412,7 @@ class MDNCompatibility {
     const prefix = match ? match[0] : undefined;
     // There are compat data that are defined with prefix like "-moz-binding".
     // In this case, we don't have to check the prefix.
-    const isPrefixedData = prefix && !this._getAlias(compatNode, ...terms);
+    const isPrefixedData = prefix && !this._getAlias(compatNode, terms);
 
     let prefixNeeded = false;
     for (const support of supportList) {
@@ -453,20 +440,11 @@ class MDNCompatibility {
       : _SUPPORT_STATE.UNSUPPORTED;
   }
 
-  _getStatus(compatNode, ...terms) {
-    const compatTable = this._getCompatTable(compatNode, terms);
-    return compatTable ? compatTable.status : {};
-  }
-
   _hasIssue({ unsupportedBrowsers, deprecated, experimental, invalid }) {
     // Don't apply as issue the invalid term which was not in the database.
     return (
       !invalid && (unsupportedBrowsers.length || deprecated || experimental)
     );
-  }
-
-  _hasTerm(compatNode, ...terms) {
-    return !!this._getCompatTable(compatNode, terms);
   }
 
   _toIssue(summary, type) {
