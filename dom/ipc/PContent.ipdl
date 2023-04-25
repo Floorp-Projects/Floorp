@@ -371,6 +371,8 @@ struct XPCOMInitData
     MetricMask perfStatsMask;
     nsCString trrDomain;
     ResolverMode trrMode;
+    // This is the value of network.trr.mode and can be diffrent than trrMode.
+    uint32_t trrModeFromPref;
 };
 
 struct VisitedQueryResult
@@ -658,7 +660,7 @@ child:
     async SetOffline(bool offline);
     async SetConnectivity(bool connectivity);
     async SetCaptivePortalState(int32_t aState);
-    async SetTRRMode(ResolverMode aMode);
+    async SetTRRMode(ResolverMode aMode, uint32_t aModeFromPref);
 
     async NotifyVisited(VisitedQueryResult[] uri);
 
