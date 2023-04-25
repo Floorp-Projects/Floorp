@@ -43,7 +43,8 @@ add_task(async function() {
     { noExpand: true }
   );
 
-  await selectSource(dbg, "bundle.js");
+  const bundleSrc = findSource(dbg, "bundle.js");
+  await selectSource(dbg, bundleSrc);
 
   await clickGutter(dbg, 70);
   await waitForBreakpointCount(dbg, 1);
@@ -100,6 +101,12 @@ add_task(async function() {
     JSON.stringify({ url: entrySrc.url, line: 16, column: 0 }),
     "Pending selected location is the expected one"
   );
+
+  info("Click on jump to generated source link from editor's footer");
+  findElement(dbg, "sourceMapLink").click();
+
+  await waitForSelectedSource(dbg, bundleSrc);
+  assertPausedAtSourceAndLine(dbg, bundleSrc.id, 62);
 });
 
 function assertBreakpointExists(dbg, source, line) {
