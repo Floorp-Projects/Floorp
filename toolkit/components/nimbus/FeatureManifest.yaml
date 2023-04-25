@@ -1206,3 +1206,14 @@ mixedContentUpgrading:
       description: True if the mixed content upgrading pref is enabled
       type: boolean
       setPref: security.mixed_content.upgrade_display_content
+
+deviceMigration:
+  description: Prefs to control aspects of the new device migration experiment
+  owner: hjones@mozilla.com
+  hasExposure: false
+  isEarlyStartup: true
+  variables:
+    helpMenuHidden:
+      description: True if new help menu item should be hidden
+      type: boolean
+      fallbackPref: browser.device-migration.help-menu.hidden

@@ -505,6 +505,18 @@ function openFeedbackPage() {
   openTrustedLinkIn(url, "tab");
 }
 
+/**
+ * Appends UTM parameters to then opens the SUMO URL for device migration.
+ */
+function openSwitchingDevicesPage() {
+  let url = getHelpLinkURL("switching-devices");
+  let parsedUrl = new URL(url);
+  parsedUrl.searchParams.set("utm_source", "fx-new-device-help-menu");
+  parsedUrl.searchParams.set("utm_medium", "firefox-desktop");
+  parsedUrl.searchParams.set("utm_campaign", "migration");
+  openTrustedLinkIn(parsedUrl.href, "tab");
+}
+
 function buildHelpMenu() {
   document.getElementById(
     "feedbackPage"
@@ -556,6 +568,11 @@ function buildHelpMenu() {
     let isReportablePage =
       uri && (uri.schemeIs("http") || uri.schemeIs("https"));
     reportSiteIssue.disabled = !isReportablePage;
+  }
+
+  if (NimbusFeatures.deviceMigration.getVariable("helpMenuHidden")) {
+    let helpMenuItem = document.getElementById("helpSwitchDevice");
+    helpMenuItem.hidden = true;
   }
 }
 

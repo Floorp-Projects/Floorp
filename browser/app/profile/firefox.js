@@ -2188,6 +2188,8 @@ pref("browser.migrate.interactions.history", false);
 pref("browser.migrate.interactions.passwords", false);
 pref("browser.migrate.preferences-entrypoint.enabled", true);
 
+pref("browser.device-migration.help-menu.hidden", false);
+
 pref("extensions.pocket.api", "api.getpocket.com");
 pref("extensions.pocket.bffApi", "firefox-api-proxy.cdn.mozilla.net");
 pref("extensions.pocket.bffRecentSaves", true);
