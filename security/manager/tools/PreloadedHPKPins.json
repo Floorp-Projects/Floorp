@@ -41,9 +41,6 @@
       // Chrome's test domains.
       "pinningtest.appspot.com",
       "pinning-test.badssl.com",
-      // Dropbox
-      "dropbox.com",
-      "www.dropbox.com",
       // Tor
       "torproject.org",
       "blog.torproject.org",
