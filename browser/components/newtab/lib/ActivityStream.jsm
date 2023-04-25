@@ -397,6 +397,15 @@ const PREFS_CONFIG = new Map([
     },
   ],
   [
+    "discoverystream.onboardingExperience.dismissed",
+    {
+      title: "Allows the user to dismiss the new Pocket onboarding experience",
+      skipBroadcast: true,
+      alsoToPreloaded: true,
+      value: false,
+    },
+  ],
+  [
     "discoverystream.region-basic-layout",
     {
       title: "Decision to use basic layout based on region.",
