@@ -151,6 +151,7 @@ flatpak build-finish build                                      \
         --require-version=0.11.1                                \
         --persist=.mozilla                                      \
         --filesystem=xdg-download:rw                            \
+        --filesystem=/run/.heim_org.h5l.kcm-socket              \
         --device=all                                            \
         --talk-name=org.freedesktop.FileManager1                \
         --system-talk-name=org.freedesktop.NetworkManager       \
