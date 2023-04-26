@@ -609,18 +609,18 @@ giturlparse = "*"
 
 [[package]]
 name = "mozilla-version"
-version = "0.3.4"
+version = "2.0.0"
 description = "Process Firefox versions numbers. Tells whether they are valid or not, whether they are nightlies or regular releases, whether this version precedes that other."
 category = "main"
 optional = false
 python-versions = "*"
 files = [
-    {file = "mozilla-version-0.3.4.tar.gz", hash = "sha256:3ed4deb7a6fb25c83a5346ef4de08ddff9b2ddc4d16dd8fafb4a84978cc71255"},
-    {file = "mozilla_version-0.3.4-py2.py3-none-any.whl", hash = "sha256:ce5741c2e7d12c30b53de9f79e30d6ac2a8bd4c93be711d30c7a7a08e32a094f"},
+    {file = "mozilla-version-2.0.0.tar.gz", hash = "sha256:09697ddc5f55ad8d76521bf3e37aaec4d5bfd7fd4c9018a1cbb0e8cf6c536538"},
+    {file = "mozilla_version-2.0.0-py3-none-any.whl", hash = "sha256:50807a1f4000a7db6bfe95b0ffb1bade429cd8e56cbab70fd3eff5dd46ebb794"},
 ]
 
 [package.dependencies]
-attrs = "*"
+attrs = ">=19.2"
 
 [[package]]
 name = "multidict"
@@ -1284,4 +1284,4 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=4.6)", "pytest-black (
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7"
-content-hash = "247e39847f9f29624441b6fa5234581d5b3901c06100860f004f1fa15ec92a58"
+content-hash = "9f803e0b016e0f45ff28e99fca69e4cfe07c40a18697d57ed24e0f414e1c0b7c"

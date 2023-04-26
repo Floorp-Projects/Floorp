@@ -26,11 +26,11 @@ def does_regex_have_group(regex_matches, group_name):
 def positive_int(val):
     """Parse `val` into a positive integer."""
     if isinstance(val, float):
-        raise ValueError('"{}" must not be a float'.format(val))
+        raise ValueError(f'"{val}" must not be a float')
     val = int(val)
     if val >= 0:
         return val
-    raise ValueError('"{}" must be positive'.format(val))
+    raise ValueError(f'"{val}" must be positive')
 
 
 def positive_int_or_none(val):
@@ -45,4 +45,4 @@ def strictly_positive_int_or_none(val):
     val = positive_int_or_none(val)
     if val is None or val > 0:
         return val
-    raise ValueError('"{}" must be strictly positive'.format(val))
+    raise ValueError(f'"{val}" must be strictly positive')
