@@ -7,6 +7,7 @@
 #define _include_ipc_glue_UtilityAudioDecoderChild_h__
 
 #include "mozilla/ProcInfo.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/RefPtr.h"
 
 #include "mozilla/ipc/Endpoint.h"
@@ -94,6 +95,11 @@ class UtilityAudioDecoderChild final : public PUtilityAudioDecoderChild
     }
 
     Bind(std::move(utilityAudioDecoderChildEnd));
+
+    PROFILER_MARKER_UNTYPED(
+        "UtilityAudioDecoderChild::BindToUtilityProcess", IPC,
+        MarkerOptions(
+            MarkerTiming::IntervalUntilNowFrom(mAudioDecoderChildStart)));
     return NS_OK;
   }
 
@@ -130,6 +136,8 @@ class UtilityAudioDecoderChild final : public PUtilityAudioDecoderChild
   // Currently only used for media egine cdm. Main thread only.
   bool mHasCreatedVideoBridge = false;
 #endif
+
+  TimeStamp mAudioDecoderChildStart;
 };
 
 }  // namespace mozilla::ipc

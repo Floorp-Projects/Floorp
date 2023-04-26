@@ -54,7 +54,7 @@ static StaticMutex sUtilityProcessChildMutex;
 static StaticRefPtr<UtilityProcessChild> sUtilityProcessChild
     MOZ_GUARDED_BY(sUtilityProcessChildMutex);
 
-UtilityProcessChild::UtilityProcessChild() {
+UtilityProcessChild::UtilityProcessChild() : mChildStartTime(TimeStamp::Now()) {
   nsDebugImpl::SetMultiprocessMode("Utility");
 }
 
@@ -135,6 +135,10 @@ bool UtilityProcessChild::Init(mozilla::ipc::UntypedEndpoint&& aEndpoint,
   // now resolve the pending promise of process startup
   SendInitCompleted();
 
+  PROFILER_MARKER_UNTYPED(
+      "UtilityProcessChild::SendInitCompleted", IPC,
+      MarkerOptions(MarkerTiming::IntervalUntilNowFrom(mChildStartTime)));
+
   RunOnShutdown(
       [sandboxKind = mSandbox] {
         StaticMutexAutoLock lock(sUtilityProcessChildMutex);
@@ -186,6 +190,10 @@ mozilla::ipc::IPCResult UtilityProcessChild::RecvInit(
     dllSvc->StartUntrustedModulesProcessor(aIsReadyForBackgroundProcessing);
   }
 #endif  // defined(XP_WIN)
+
+  PROFILER_MARKER_UNTYPED(
+      "UtilityProcessChild::RecvInit", IPC,
+      MarkerOptions(MarkerTiming::IntervalUntilNowFrom(mChildStartTime)));
   return IPC_OK();
 }
 
@@ -253,6 +261,9 @@ mozilla::ipc::IPCResult UtilityProcessChild::RecvTestTelemetryProbes() {
 mozilla::ipc::IPCResult
 UtilityProcessChild::RecvStartUtilityAudioDecoderService(
     Endpoint<PUtilityAudioDecoderParent>&& aEndpoint) {
+  PROFILER_MARKER_UNTYPED(
+      "UtilityProcessChild::RecvStartUtilityAudioDecoderService", MEDIA,
+      MarkerOptions(MarkerTiming::IntervalUntilNowFrom(mChildStartTime)));
   mUtilityAudioDecoderInstance = new UtilityAudioDecoderParent();
   if (!mUtilityAudioDecoderInstance) {
     return IPC_FAIL(this, "Failing to create UtilityAudioDecoderParent");
@@ -264,6 +275,9 @@ UtilityProcessChild::RecvStartUtilityAudioDecoderService(
 
 mozilla::ipc::IPCResult UtilityProcessChild::RecvStartJSOracleService(
     Endpoint<PJSOracleChild>&& aEndpoint) {
+  PROFILER_MARKER_UNTYPED(
+      "UtilityProcessChild::RecvStartJSOracleService", JS,
+      MarkerOptions(MarkerTiming::IntervalUntilNowFrom(mChildStartTime)));
   mJSOracleInstance = new mozilla::dom::JSOracleChild();
   if (!mJSOracleInstance) {
     return IPC_FAIL(this, "Failing to create JSOracleParent");
@@ -276,6 +290,9 @@ mozilla::ipc::IPCResult UtilityProcessChild::RecvStartJSOracleService(
 #if defined(XP_WIN)
 mozilla::ipc::IPCResult UtilityProcessChild::RecvStartWindowsUtilsService(
     Endpoint<dom::PWindowsUtilsChild>&& aEndpoint) {
+  PROFILER_MARKER_UNTYPED(
+      "UtilityProcessChild::RecvStartWindowsUtilsService", OTHER,
+      MarkerOptions(MarkerTiming::IntervalUntilNowFrom(mChildStartTime)));
   mWindowsUtilsInstance = new dom::WindowsUtilsChild();
   if (!mWindowsUtilsInstance) {
     return IPC_FAIL(this, "Failed to create WindowsUtilsChild");

@@ -10,6 +10,7 @@
 #include "mozilla/ipc/UtilityProcessHost.h"
 #include "mozilla/MemoryReportingProcess.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/SyncRunnable.h"  // for LaunchUtilityProcess
 #include "mozilla/ipc/UtilityProcessParent.h"
@@ -235,6 +236,8 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessManager::StartUtility(
       "SandboxingKind=%" PRIu64,
       this, aActor.get(), aSandbox);
 
+  TimeStamp utilityStart = TimeStamp::Now();
+
   if (!aActor) {
     MOZ_ASSERT(false, "Actor singleton failure");
     return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_FAILURE,
@@ -245,13 +248,18 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessManager::StartUtility(
     // Actor has already been setup, so we:
     //   - know the process has been launched
     //   - the ipc actors are ready
+    PROFILER_MARKER_TEXT(
+        "UtilityProcessManager::StartUtility", IPC,
+        MarkerOptions(MarkerTiming::InstantNow()),
+        nsPrintfCString("SandboxingKind=%" PRIu64 " aActor->CanSend()",
+                        aSandbox));
     return GenericNonExclusivePromise::CreateAndResolve(true, __func__);
   }
 
   RefPtr<UtilityProcessManager> self = this;
   return LaunchProcess(aSandbox)->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [self, aActor, aSandbox]() {
+      [self, aActor, aSandbox, utilityStart]() {
         RefPtr<UtilityProcessParent> utilityParent =
             self->GetProcessParent(aSandbox);
         if (!utilityParent) {
@@ -279,13 +287,21 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessManager::StartUtility(
           self->RegisterActor(utilityParent, aActor->GetActorName());
         }
 
+        PROFILER_MARKER_TEXT(
+            "UtilityProcessManager::StartUtility", IPC,
+            MarkerOptions(MarkerTiming::IntervalUntilNowFrom(utilityStart)),
+            nsPrintfCString("SandboxingKind=%" PRIu64 " Resolve", aSandbox));
         return GenericNonExclusivePromise::CreateAndResolve(true, __func__);
       },
-      [self](nsresult aError) {
+      [self, aSandbox, utilityStart](nsresult aError) {
         NS_WARNING("Reject StartUtility() for LaunchProcess() rejection");
         if (!self->IsShutdown()) {
           NS_WARNING("Reject StartUtility() when !IsShutdown()");
         }
+        PROFILER_MARKER_TEXT(
+            "UtilityProcessManager::StartUtility", IPC,
+            MarkerOptions(MarkerTiming::IntervalUntilNowFrom(utilityStart)),
+            nsPrintfCString("SandboxingKind=%" PRIu64 " Reject", aSandbox));
         return GenericNonExclusivePromise::CreateAndReject(aError, __func__);
       });
 }
@@ -308,6 +324,8 @@ UtilityProcessManager::StartProcessForRemoteMediaDecoding(
     return StartRemoteDecodingUtilityPromise::CreateAndReject(NS_ERROR_FAILURE,
                                                               __func__);
   }
+  TimeStamp remoteDecodingStart = TimeStamp::Now();
+
   RefPtr<UtilityProcessManager> self = this;
   RefPtr<UtilityAudioDecoderChild> uadc =
       UtilityAudioDecoderChild::GetSingleton(aSandbox);
@@ -315,7 +333,7 @@ UtilityProcessManager::StartProcessForRemoteMediaDecoding(
   return StartUtility(uadc, aSandbox)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
-          [self, uadc, aOtherProcess, aSandbox]() {
+          [self, uadc, aOtherProcess, aSandbox, remoteDecodingStart]() {
             RefPtr<UtilityProcessParent> parent =
                 self->GetProcessParent(aSandbox);
             if (!parent) {
@@ -357,10 +375,16 @@ UtilityProcessManager::StartProcessForRemoteMediaDecoding(
                   NS_ERROR_FAILURE, __func__);
             }
 #endif
+            PROFILER_MARKER_TEXT(
+                "UtilityProcessManager::StartProcessForRemoteMediaDecoding",
+                MEDIA,
+                MarkerOptions(
+                    MarkerTiming::IntervalUntilNowFrom(remoteDecodingStart)),
+                "Resolve"_ns);
             return StartRemoteDecodingUtilityPromise::CreateAndResolve(
                 std::move(childPipe), __func__);
           },
-          [self](nsresult aError) {
+          [self, remoteDecodingStart](nsresult aError) {
             if (!self->IsShutdown()) {
               NS_WARNING(
                   nsPrintfCString(
@@ -379,6 +403,12 @@ UtilityProcessManager::StartProcessForRemoteMediaDecoding(
             NS_WARNING(
                 "Reject StartProcessForRemoteMediaDecoding() for "
                 "StartUtility() rejection");
+            PROFILER_MARKER_TEXT(
+                "UtilityProcessManager::StartProcessForRemoteMediaDecoding",
+                MEDIA,
+                MarkerOptions(
+                    MarkerTiming::IntervalUntilNowFrom(remoteDecodingStart)),
+                "Reject"_ns);
             return StartRemoteDecodingUtilityPromise::CreateAndReject(aError,
                                                                       __func__);
           });
@@ -395,6 +425,7 @@ UtilityProcessManager::StartJSOracle(dom::JSOracleParent* aParent) {
 
 RefPtr<UtilityProcessManager::WindowsUtilsPromise>
 UtilityProcessManager::GetWindowsUtilsPromise() {
+  TimeStamp windowsUtilsStart = TimeStamp::Now();
   RefPtr<UtilityProcessManager> self = this;
   if (!mWindowsUtils) {
     mWindowsUtils = new dom::WindowsUtilsParent();
@@ -405,20 +436,30 @@ UtilityProcessManager::GetWindowsUtilsPromise() {
   return StartUtility(wup, SandboxingKind::WINDOWS_UTILS)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
-          [self, wup]() {
+          [self, wup, windowsUtilsStart]() {
             if (!wup->CanSend()) {
               MOZ_ASSERT(false, "WindowsUtilsParent can't send");
               return WindowsUtilsPromise::CreateAndReject(NS_ERROR_FAILURE,
                                                           __func__);
             }
+            PROFILER_MARKER_TEXT(
+                "UtilityProcessManager::GetWindowsUtilsPromise", OTHER,
+                MarkerOptions(
+                    MarkerTiming::IntervalUntilNowFrom(windowsUtilsStart)),
+                "Resolve"_ns);
             return WindowsUtilsPromise::CreateAndResolve(wup, __func__);
           },
-          [self](nsresult aError) {
+          [self, windowsUtilsStart](nsresult aError) {
             if (!self->IsShutdown()) {
               MOZ_ASSERT_UNREACHABLE(
                   "PWindowsUtils: failure when starting actor");
             }
             NS_WARNING("StartUtility rejected promise for PWindowsUtils");
+            PROFILER_MARKER_TEXT(
+                "UtilityProcessManager::GetWindowsUtilsPromise", OTHER,
+                MarkerOptions(
+                    MarkerTiming::IntervalUntilNowFrom(windowsUtilsStart)),
+                "Reject"_ns);
             return WindowsUtilsPromise::CreateAndReject(aError, __func__);
           });
 }
