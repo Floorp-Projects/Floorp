@@ -176,7 +176,7 @@ void DMABufSurface::ReleaseDMABuf() {
 
   for (int i = 0; i < mBufferPlaneCount; i++) {
     if (mGbmBufferObject[i]) {
-      nsGbmLib::Destroy(mGbmBufferObject[i]);
+      GbmLib::Destroy(mGbmBufferObject[i]);
       mGbmBufferObject[i] = nullptr;
     }
   }
@@ -356,10 +356,10 @@ bool DMABufSurfaceRGBA::OpenFileDescriptorForPlane(
 
   if (mBufferPlaneCount == 1) {
     MOZ_ASSERT(aPlane == 0, "DMABuf: wrong surface plane!");
-    mDmabufFds[0] = nsGbmLib::GetFd(bo);
+    mDmabufFds[0] = GbmLib::GetFd(bo);
   } else {
     mDmabufFds[aPlane] = GetDMABufDevice()->GetDmabufFD(
-        nsGbmLib::GetHandleForPlane(bo, aPlane).u32);
+        GbmLib::GetHandleForPlane(bo, aPlane).u32);
   }
 
   if (mDmabufFds[aPlane] < 0) {
@@ -405,11 +405,11 @@ bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
                       mGmbFormat->mModifiersCount > 0;
   if (useModifiers) {
     LOGDMABUF(("    Creating with modifiers\n"));
-    mGbmBufferObject[0] = nsGbmLib::CreateWithModifiers(
+    mGbmBufferObject[0] = GbmLib::CreateWithModifiers(
         GetDMABufDevice()->GetGbmDevice(), mWidth, mHeight, mDrmFormats[0],
         mGmbFormat->mModifiers, mGmbFormat->mModifiersCount);
     if (mGbmBufferObject[0]) {
-      mBufferModifiers[0] = nsGbmLib::GetModifier(mGbmBufferObject[0]);
+      mBufferModifiers[0] = GbmLib::GetModifier(mGbmBufferObject[0]);
     }
   }
 
@@ -417,8 +417,8 @@ bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
     LOGDMABUF(("    Creating without modifiers\n"));
     mGbmBufferFlags = GBM_BO_USE_LINEAR;
     mGbmBufferObject[0] =
-        nsGbmLib::Create(GetDMABufDevice()->GetGbmDevice(), mWidth, mHeight,
-                         mDrmFormats[0], mGbmBufferFlags);
+        GbmLib::Create(GetDMABufDevice()->GetGbmDevice(), mWidth, mHeight,
+                       mDrmFormats[0], mGbmBufferFlags);
     mBufferModifiers[0] = DRM_FORMAT_MOD_INVALID;
   }
 
@@ -428,7 +428,7 @@ bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
   }
 
   if (mBufferModifiers[0] != DRM_FORMAT_MOD_INVALID) {
-    mBufferPlaneCount = nsGbmLib::GetPlaneCount(mGbmBufferObject[0]);
+    mBufferPlaneCount = GbmLib::GetPlaneCount(mGbmBufferObject[0]);
     if (mBufferPlaneCount > DMABUF_BUFFER_PLANES) {
       LOGDMABUF(("    There's too many dmabuf planes!"));
       ReleaseSurface();
@@ -436,12 +436,12 @@ bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
     }
 
     for (int i = 0; i < mBufferPlaneCount; i++) {
-      mStrides[i] = nsGbmLib::GetStrideForPlane(mGbmBufferObject[0], i);
-      mOffsets[i] = nsGbmLib::GetOffset(mGbmBufferObject[0], i);
+      mStrides[i] = GbmLib::GetStrideForPlane(mGbmBufferObject[0], i);
+      mOffsets[i] = GbmLib::GetOffset(mGbmBufferObject[0], i);
     }
   } else {
     mBufferPlaneCount = 1;
-    mStrides[0] = nsGbmLib::GetStride(mGbmBufferObject[0]);
+    mStrides[0] = GbmLib::GetStride(mGbmBufferObject[0]);
   }
 
   LOGDMABUF(("    Success\n"));
@@ -786,9 +786,9 @@ void* DMABufSurface::MapInternal(uint32_t aX, uint32_t aY, uint32_t aWidth,
 
   mMappedRegionStride[aPlane] = 0;
   mMappedRegionData[aPlane] = nullptr;
-  mMappedRegion[aPlane] = nsGbmLib::Map(
-      mGbmBufferObject[aPlane], aX, aY, aWidth, aHeight, aGbmFlags,
-      &mMappedRegionStride[aPlane], &mMappedRegionData[aPlane]);
+  mMappedRegion[aPlane] =
+      GbmLib::Map(mGbmBufferObject[aPlane], aX, aY, aWidth, aHeight, aGbmFlags,
+                  &mMappedRegionStride[aPlane], &mMappedRegionData[aPlane]);
   if (!mMappedRegion[aPlane]) {
     LOGDMABUF(("    Surface mapping failed: %s", strerror(errno)));
     return nullptr;
@@ -834,7 +834,7 @@ void DMABufSurface::Unmap(int aPlane) {
       SyncDmaBuf(mDmabufFds[aPlane], DMA_BUF_SYNC_END);
       CloseFileDescriptorForPlane(lockFD, aPlane);
     }
-    nsGbmLib::Unmap(mGbmBufferObject[aPlane], mMappedRegionData[aPlane]);
+    GbmLib::Unmap(mGbmBufferObject[aPlane], mMappedRegionData[aPlane]);
     mMappedRegion[aPlane] = nullptr;
     mMappedRegionData[aPlane] = nullptr;
     mMappedRegionStride[aPlane] = 0;
@@ -988,7 +988,7 @@ bool DMABufSurfaceYUV::OpenFileDescriptorForPlane(
     return false;
   }
 
-  mDmabufFds[aPlane] = nsGbmLib::GetFd(mGbmBufferObject[aPlane]);
+  mDmabufFds[aPlane] = GbmLib::GetFd(mGbmBufferObject[aPlane]);
   if (mDmabufFds[aPlane] < 0) {
     CloseFileDescriptors(aProofOfLock);
     return false;
@@ -1083,13 +1083,13 @@ bool DMABufSurfaceYUV::CreateYUVPlane(int aPlane) {
   bool useModifiers = (mBufferModifiers[aPlane] != DRM_FORMAT_MOD_INVALID);
   if (useModifiers) {
     LOGDMABUF(("    Creating with modifiers"));
-    mGbmBufferObject[aPlane] = nsGbmLib::CreateWithModifiers(
+    mGbmBufferObject[aPlane] = GbmLib::CreateWithModifiers(
         GetDMABufDevice()->GetGbmDevice(), mWidth[aPlane], mHeight[aPlane],
         mDrmFormats[aPlane], mBufferModifiers + aPlane, 1);
   }
   if (!mGbmBufferObject[aPlane]) {
     LOGDMABUF(("    Creating without modifiers"));
-    mGbmBufferObject[aPlane] = nsGbmLib::Create(
+    mGbmBufferObject[aPlane] = GbmLib::Create(
         GetDMABufDevice()->GetGbmDevice(), mWidth[aPlane], mHeight[aPlane],
         mDrmFormats[aPlane], GBM_BO_USE_RENDERING);
     mBufferModifiers[aPlane] = DRM_FORMAT_MOD_INVALID;
@@ -1099,8 +1099,8 @@ bool DMABufSurfaceYUV::CreateYUVPlane(int aPlane) {
     return false;
   }
 
-  mStrides[aPlane] = nsGbmLib::GetStride(mGbmBufferObject[aPlane]);
-  mOffsets[aPlane] = nsGbmLib::GetOffset(mGbmBufferObject[aPlane], 0);
+  mStrides[aPlane] = GbmLib::GetStride(mGbmBufferObject[aPlane]);
+  mOffsets[aPlane] = GbmLib::GetOffset(mGbmBufferObject[aPlane], 0);
   mWidthAligned[aPlane] = mWidth[aPlane];
   mHeightAligned[aPlane] = mHeight[aPlane];
   return true;
@@ -1162,14 +1162,14 @@ bool DMABufSurfaceYUV::CreateLinearYUVPlane(int aPlane, int aWidth, int aHeight,
   mDrmFormats[aPlane] = aDrmFormat;
 
   mGbmBufferObject[aPlane] =
-      nsGbmLib::Create(GetDMABufDevice()->GetGbmDevice(), aWidth, aHeight,
-                       aDrmFormat, GBM_BO_USE_LINEAR);
+      GbmLib::Create(GetDMABufDevice()->GetGbmDevice(), aWidth, aHeight,
+                     aDrmFormat, GBM_BO_USE_LINEAR);
   if (!mGbmBufferObject[aPlane]) {
     LOGDMABUF(("    Failed to create GbmBufferObject: %s", strerror(errno)));
     return false;
   }
 
-  mStrides[aPlane] = nsGbmLib::GetStride(mGbmBufferObject[aPlane]);
+  mStrides[aPlane] = GbmLib::GetStride(mGbmBufferObject[aPlane]);
   mDmabufFds[aPlane] = -1;
 
   return true;

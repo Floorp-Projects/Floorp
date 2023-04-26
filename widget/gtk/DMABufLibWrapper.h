@@ -55,7 +55,7 @@ typedef struct gbm_surface* (*CreateSurfaceFunc)(struct gbm_device*, uint32_t,
                                                  uint32_t, uint32_t, uint32_t);
 typedef void (*DestroySurfaceFunc)(struct gbm_surface*);
 
-class nsGbmLib {
+class GbmLib {
  public:
   static bool IsAvailable() { return sLoaded || Load(); }
   static bool IsModifierAvailable();
@@ -182,10 +182,10 @@ struct GbmFormat {
   int mModifiersCount;
 };
 
-class nsDMABufDevice {
+class DMABufDevice {
  public:
-  nsDMABufDevice();
-  ~nsDMABufDevice();
+  DMABufDevice();
+  ~DMABufDevice();
 
   int OpenDRMFd();
   gbm_device* GetGbmDevice();
@@ -217,7 +217,7 @@ class nsDMABufDevice {
   nsAutoCString mDrmRenderNode;
 };
 
-nsDMABufDevice* GetDMABufDevice();
+DMABufDevice* GetDMABufDevice();
 
 }  // namespace widget
 }  // namespace mozilla
