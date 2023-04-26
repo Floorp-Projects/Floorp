@@ -14,7 +14,9 @@
 /* SHARED PIP STYLING */
 
 .controlsOverlay[hidetoggle="true"].hovering > .pip-wrapper:not(.hovering) {
-  opacity: 0;
+  /* If this isn't !important, it will fail to override the other opacity
+   * rules, which are currently defined below this point in this file. */
+  opacity: 0 !important;
 }
 
 .pip-wrapper {
