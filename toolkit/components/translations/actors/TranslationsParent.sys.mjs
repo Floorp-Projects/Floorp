@@ -433,23 +433,19 @@ export class TranslationsParent extends JSWindowActorParent {
     if (TranslationsParent.#mockedLanguagePairs) {
       return TranslationsParent.#mockedLanguagePairs;
     }
+
     const records = await this.#getTranslationModelRecords();
-    const languagePairKeys = new Set();
+    const languagePairMap = new Map();
+
     for (const { fromLang, toLang, version } of records.values()) {
       const isBeta = Services.vc.compare(version, "1.0") < 0;
-      languagePairKeys.add({ key: fromLang + toLang, isBeta });
+      const key = `${fromLang},${toLang}`;
+      if (!languagePairMap.has(key)) {
+        languagePairMap.set(key, { fromLang, toLang, isBeta });
+      }
     }
 
-    const languagePairs = [];
-    for (const { key, isBeta } of languagePairKeys) {
-      languagePairs.push({
-        fromLang: key[0] + key[1],
-        toLang: key[2] + key[3],
-        isBeta,
-      });
-    }
-
-    return languagePairs;
+    return Array.from(languagePairMap.values());
   }
 
   /**
@@ -835,6 +831,72 @@ export class TranslationsParent extends JSWindowActorParent {
     );
 
     return buffer;
+  }
+
+  /**
+   * Get the necessary files for translating to and from the app language and a
+   * requested language. This may require the files for a pivot language translation
+   * if there is no language model for a direct translation.
+   *
+   * @param {string} requestedLanguage The BCP 47 language tag.
+   * @param {boolean} isForDeletion - Return a more restrictive set of languages, as
+   *                  these files are marked for deletion. We don't want to remove
+   *                  files that are needed for some other language's pivot translation.
+   * @returns {Set<TranslationModelRecord>}
+   */
+  async getRecordsForTranslatingToAndFromAppLanguage(
+    requestedLanguage,
+    isForDeletion = false
+  ) {
+    const records = await this.#getTranslationModelRecords();
+    const appLanguage = new Intl.Locale(Services.locale.appLocaleAsBCP47)
+      .language;
+
+    let matchedRecords = new Set();
+
+    if (requestedLanguage === appLanguage) {
+      // There are no records if the requested language and app language are the same.
+      return matchedRecords;
+    }
+
+    const addLanguagePair = (fromLang, toLang) => {
+      let matchFound = false;
+      for (const record of records.values()) {
+        if (record.fromLang === fromLang && record.toLang === toLang) {
+          matchedRecords.add(record);
+          matchFound = true;
+        }
+      }
+      return matchFound;
+    };
+
+    if (
+      // Is there a direct translation?
+      !addLanguagePair(requestedLanguage, appLanguage)
+    ) {
+      // This is no direct translation, get the pivot files.
+      addLanguagePair(requestedLanguage, PIVOT_LANGUAGE);
+      // These files may be required for other pivot translations, so don't remove
+      // them if we are deleting records.
+      if (!isForDeletion) {
+        addLanguagePair(PIVOT_LANGUAGE, appLanguage);
+      }
+    }
+
+    if (
+      // Is there a direct translation?
+      !addLanguagePair(appLanguage, requestedLanguage)
+    ) {
+      // This is no direct translation, get the pivot files.
+      addLanguagePair(PIVOT_LANGUAGE, requestedLanguage);
+      // These files may be required for other pivot translations, so don't remove
+      // them if we are deleting records.
+      if (!isForDeletion) {
+        addLanguagePair(appLanguage, PIVOT_LANGUAGE);
+      }
+    }
+
+    return matchedRecords;
   }
 
   /**
