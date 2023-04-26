@@ -12,26 +12,29 @@
 <script type="text/javascript">
 "use strict";
 
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
 // Test that the default paths searched for native host manifests
 // are the ones we expect.
 add_task(async function test_default_paths() {
   let expectUser, expectGlobal;
   switch (AppConstants.platform) {
     case "macosx": {
-      expectUser = OS.Path.join(OS.Constants.Path.homeDir,
-                                "Library/Application Support/Mozilla");
+      expectUser = PathUtils.joinRelative(
+        Services.dirsvc.get("Home", Ci.nsIFile).path,
+        "Library/Application Support/Mozilla"
+      );
       expectGlobal = "/Library/Application Support/Mozilla";
 
       break;
     }
 
     case "linux": {
-      expectUser = OS.Path.join(OS.Constants.Path.homeDir, ".mozilla");
+      expectUser = PathUtils.join(
+        Services.dirsvc.get("Home", Ci.nsIFile).path,
+        ".mozilla"
+      );
 
       const libdir = AppConstants.HAVE_USR_LIB64_DIR ? "lib64" : "lib";
-      expectGlobal = OS.Path.join("/usr", libdir, "mozilla");
+      expectGlobal = PathUtils.join("/usr", libdir, "mozilla");
       break;
     }
 
