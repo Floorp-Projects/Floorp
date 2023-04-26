@@ -127,10 +127,19 @@ function removeWatchpoint(item) {
 }
 
 function getActorIDs(roots) {
-  return (roots || []).reduce((ids, root) => {
+  if (!roots) {
+    return []
+  }
+
+  const actorIds = [];
+  for (const root of roots) {
     const front = getFront(root);
-    return front ? ids.concat(front.actorID) : ids;
-  }, []);
+    if (front?.actorID) {
+      actorIds.push(front.actorID);
+    }
+  }
+
+  return actorIds;
 }
 
 function closeObjectInspector(roots) {
