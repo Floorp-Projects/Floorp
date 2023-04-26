@@ -1212,11 +1212,12 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     /**
      * Check to see if we should open the link in an external app
      */
-    fun shouldOpenLinksInApp(): Boolean {
+    fun shouldOpenLinksInApp(isCustomTab: Boolean = false): Boolean {
         return when (openLinksInExternalApp) {
             appContext.getString(R.string.pref_key_open_links_in_apps_always) -> true
             appContext.getString(R.string.pref_key_open_links_in_apps_ask) -> true
-            appContext.getString(R.string.pref_key_open_links_in_apps_never) -> false
+            /* Some applications will not work if custom tab never open links in apps, return true if it's custom tab */
+            appContext.getString(R.string.pref_key_open_links_in_apps_never) -> isCustomTab
             else -> false
         }
     }
