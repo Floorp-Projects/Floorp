@@ -1652,7 +1652,14 @@ var TelemetryStorageImpl = {
       } catch (ex) {
         // It is possible there is another task removing a ping in between
         // reading the directory and calling stat.
-        if (DOMException.isInstance(ex) && ex.name === "NotFoundError") {
+        //
+        // On Windows, attempting to call GetFileAttributesEx() on a file
+        // pending deletion will result in ERROR_ACCESS_DENIED, which will
+        // propagate to here as a NotAllowedError.
+        if (
+          DOMException.isInstance(ex) &&
+          (ex.name === "NotFoundError" || ex.name === "NotAllowedError")
+        ) {
           continue;
         }
 

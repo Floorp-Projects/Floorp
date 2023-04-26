@@ -22,7 +22,7 @@ const REASON_ABORTED_SESSION = "aborted-session";
 const TEST_PING_TYPE = "test-ping-type";
 
 XPCOMUtils.defineLazyGetter(this, "DATAREPORTING_PATH", function() {
-  return OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIR);
+  return PathUtils.join(PathUtils.profileDir, DATAREPORTING_DIR);
 });
 
 function sendPing() {
@@ -49,10 +49,16 @@ add_task(async function test_setup() {
 });
 
 add_task(async function test_abortedSessionQueued() {
-  const ABORTED_FILE = OS.Path.join(DATAREPORTING_PATH, ABORTED_PING_FILE_NAME);
+  const ABORTED_FILE = PathUtils.join(
+    DATAREPORTING_PATH,
+    ABORTED_PING_FILE_NAME
+  );
 
   // Make sure the aborted sessions directory does not exist to test its creation.
-  await OS.File.removeDir(DATAREPORTING_PATH, { ignoreAbsent: true });
+  await IOUtils.remove(DATAREPORTING_PATH, {
+    ignoreAbsent: true,
+    recursive: true,
+  });
 
   let schedulerTickCallback = null;
   let now = new Date(2040, 1, 1, 0, 0, 0);
@@ -65,7 +71,7 @@ add_task(async function test_abortedSessionQueued() {
   await TelemetryController.testReset();
 
   Assert.ok(
-    await OS.File.exists(DATAREPORTING_PATH),
+    await IOUtils.exists(DATAREPORTING_PATH),
     "Telemetry must create the aborted session directory when starting."
   );
 
@@ -78,7 +84,7 @@ add_task(async function test_abortedSessionQueued() {
   await schedulerTickCallback();
   // Check that the aborted session is due at the correct time.
   Assert.ok(
-    await OS.File.exists(ABORTED_FILE),
+    await IOUtils.exists(ABORTED_FILE),
     "There must be an aborted session ping."
   );
 
@@ -87,7 +93,7 @@ add_task(async function test_abortedSessionQueued() {
   await TelemetryController.testReset();
 
   Assert.ok(
-    !(await OS.File.exists(ABORTED_FILE)),
+    !(await IOUtils.exists(ABORTED_FILE)),
     "The aborted session ping must be removed from the aborted session ping directory."
   );
 
@@ -116,10 +122,16 @@ add_task(async function test_abortedSessionQueued() {
  * These pings should not be sent out at a later point when Telemetry is enabled again.
  */
 add_task(async function test_abortedSession_canary_clientid() {
-  const ABORTED_FILE = OS.Path.join(DATAREPORTING_PATH, ABORTED_PING_FILE_NAME);
+  const ABORTED_FILE = PathUtils.join(
+    DATAREPORTING_PATH,
+    ABORTED_PING_FILE_NAME
+  );
 
   // Make sure the aborted sessions directory does not exist to test its creation.
-  await OS.File.removeDir(DATAREPORTING_PATH, { ignoreAbsent: true });
+  await IOUtils.remove(DATAREPORTING_PATH, {
+    ignoreAbsent: true,
+    recursive: true,
+  });
 
   let schedulerTickCallback = null;
   let now = new Date(2040, 1, 1, 0, 0, 0);
@@ -132,7 +144,7 @@ add_task(async function test_abortedSession_canary_clientid() {
   await TelemetryController.testReset();
 
   Assert.ok(
-    await OS.File.exists(DATAREPORTING_PATH),
+    await IOUtils.exists(DATAREPORTING_PATH),
     "Telemetry must create the aborted session directory when starting."
   );
 
@@ -145,23 +157,21 @@ add_task(async function test_abortedSession_canary_clientid() {
   await schedulerTickCallback();
   // Check that the aborted session is due at the correct time.
   Assert.ok(
-    await OS.File.exists(ABORTED_FILE),
+    await IOUtils.exists(ABORTED_FILE),
     "There must be an aborted session ping."
   );
 
   // Set clientID in aborted-session ping to canary value
   let abortedPing = await IOUtils.readJSON(ABORTED_FILE);
   abortedPing.clientId = TelemetryUtils.knownClientID;
-  OS.File.writeAtomic(ABORTED_FILE, JSON.stringify(abortedPing), {
-    encoding: "utf-8",
-  });
+  await IOUtils.writeJSON(ABORTED_FILE, abortedPing);
 
   await TelemetryStorage.testClearPendingPings();
   PingServer.clearRequests();
   await TelemetryController.testReset();
 
   Assert.ok(
-    !(await OS.File.exists(ABORTED_FILE)),
+    !(await IOUtils.exists(ABORTED_FILE)),
     "The aborted session ping must be removed from the aborted session ping directory."
   );
 
