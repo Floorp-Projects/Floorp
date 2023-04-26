@@ -856,6 +856,48 @@ export class TranslationsChild extends JSWindowActorChild {
   }
 
   /**
+   * @param {string} language The BCP 47 language tag.
+   */
+  hasAllFilesForLanguage(language) {
+    return this.sendQuery("Translations:HasAllFilesForLanguage", {
+      language,
+    });
+  }
+
+  /**
+   * @param {string} language The BCP 47 language tag.
+   */
+  deleteLanguageFiles(language) {
+    return this.sendQuery("Translations:DeleteLanguageFiles", {
+      language,
+    });
+  }
+
+  /**
+   * @param {string} language The BCP 47 language tag.
+   */
+  downloadLanguageFiles(language) {
+    return this.sendQuery("Translations:DownloadLanguageFiles", {
+      language,
+    });
+  }
+
+  /**
+   * Download all files from Remote Settings.
+   */
+  downloadAllFiles() {
+    return this.sendQuery("Translations:DownloadAllFiles");
+  }
+
+  /**
+   * Delete all language files.
+   * @returns {Promise<string[]>} Returns a list of deleted record ids.
+   */
+  deleteAllLanguageFiles() {
+    return this.sendQuery("Translations:DeleteAllLanguageFiles");
+  }
+
+  /**
    * Get the language pairs that can be used for translations. This is cheaper than
    * the getSupportedLanguages call, since the localized display names of the languages
    * are not needed.
