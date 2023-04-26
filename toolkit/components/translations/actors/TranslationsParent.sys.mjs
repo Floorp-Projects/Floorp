@@ -100,10 +100,11 @@ export class TranslationsParent extends JSWindowActorParent {
 
   /**
    * The remote settings client that retrieves the language-identification model binary.
+   * This is public so that tests can provide a mocked RemoteSettingsClient.
    *
    * @type {RemoteSettingsClient | null}
    */
-  #languageIdModelsRemoteClient = null;
+  static languageIdModelsRemoteClient = null;
 
   /**
    * A map of the TranslationModelRecord["id"] to the record of the model in Remote Settings.
@@ -113,11 +114,21 @@ export class TranslationsParent extends JSWindowActorParent {
    */
   #translationModelRecords = new Map();
 
-  /** @type {RemoteSettingsClient | null} */
-  #translationModelsRemoteClient = null;
+  /**
+   * The RemoteSettingsClient that downloads the translation models. This is public so
+   * that tests can provide a mocked RemoteSettingsClient.
+   *
+   * @type {RemoteSettingsClient | null}
+   */
+  static translationModelsRemoteClient = null;
 
-  /** @type {RemoteSettingsClient | null} */
-  #translationsWasmRemoteClient = null;
+  /**
+   * The RemoteSettingsClient that downloads the wasm binaries. This is public so that
+   * tests can provide a mocked RemoteSettingsClient.
+   *
+   * @type {RemoteSettingsClient | null}
+   */
+  static translationsWasmRemoteClient = null;
 
   /**
    * If "browser.translations.autoTranslate" is set to "true" then the page will
@@ -334,15 +345,15 @@ export class TranslationsParent extends JSWindowActorParent {
    * @returns {RemoteSettingsClient}
    */
   #getLanguageIdModelRemoteClient() {
-    if (this.#languageIdModelsRemoteClient) {
-      return this.#languageIdModelsRemoteClient;
+    if (TranslationsParent.languageIdModelsRemoteClient) {
+      return TranslationsParent.languageIdModelsRemoteClient;
     }
 
     /** @type {RemoteSettingsClient} */
     const client = lazy.RemoteSettings("translations-identification-models");
     bypassSignatureVerificationIfDev(client);
 
-    this.#languageIdModelsRemoteClient = client;
+    TranslationsParent.languageIdModelsRemoteClient = client;
     return client;
   }
 
@@ -520,12 +531,13 @@ export class TranslationsParent extends JSWindowActorParent {
    * @returns {RemoteSettingsClient}
    */
   #getTranslationModelsRemoteClient() {
-    if (this.#translationModelsRemoteClient) {
-      return this.#translationModelsRemoteClient;
+    if (TranslationsParent.translationModelsRemoteClient) {
+      return TranslationsParent.translationModelsRemoteClient;
     }
 
     /** @type {RemoteSettingsClient} */
     const client = lazy.RemoteSettings("translations-models");
+    TranslationsParent.translationModelsRemoteClient = client;
 
     bypassSignatureVerificationIfDev(client);
 
@@ -739,11 +751,14 @@ export class TranslationsParent extends JSWindowActorParent {
    * @returns {RemoteSettingsClient}
    */
   #getTranslationsWasmRemoteClient() {
-    if (this.#translationsWasmRemoteClient) {
-      return this.#translationsWasmRemoteClient;
+    if (TranslationsParent.translationsWasmRemoteClient) {
+      return TranslationsParent.translationsWasmRemoteClient;
     }
+
     /** @type {RemoteSettingsClient} */
     const client = lazy.RemoteSettings("translations-wasm");
+
+    TranslationsParent.translationsWasmRemoteClient = client;
 
     bypassSignatureVerificationIfDev(client);
 
@@ -767,7 +782,6 @@ export class TranslationsParent extends JSWindowActorParent {
       // Do nothing for the created records.
     });
 
-    this.#translationsWasmRemoteClient = client;
     return client;
   }
 

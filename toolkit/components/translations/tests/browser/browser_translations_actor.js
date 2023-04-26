@@ -31,6 +31,11 @@ add_task(async function test_pivot_language_behavior() {
 
   const { languagePairs } = await actor.getSupportedLanguages();
 
+  // The pairs aren't guaranteed to be sorted.
+  languagePairs.sort((a, b) =>
+    (a.fromLang + a.toLang).localeCompare(b.fromLang + b.toLang)
+  );
+
   Assert.deepEqual(
     languagePairs,
     [

@@ -153,10 +153,10 @@ add_task(async function test_get_records_with_multiple_versions() {
   const maxVersionMap = {};
 
   // Create a list of records that are all version 1.0
-  /** @type {TranslationModelRecord} */
+  /** @type {TranslationModelRecord[]} */
   const versionOneRecords = [
     {
-      id: Services.uuid.generateUUID().toString(),
+      id: crypto.randomUUID(),
       name: "qualityModel.enes.bin",
       fromLang: "en",
       toLang: "es",
@@ -164,7 +164,7 @@ add_task(async function test_get_records_with_multiple_versions() {
       version: "1.0",
     },
     {
-      id: Services.uuid.generateUUID().toString(),
+      id: crypto.randomUUID(),
       name: "vocab.esen.spm",
       fromLang: "en",
       toLang: "es",
@@ -172,7 +172,7 @@ add_task(async function test_get_records_with_multiple_versions() {
       version: "1.0",
     },
     {
-      id: Services.uuid.generateUUID().toString(),
+      id: crypto.randomUUID(),
       name: "vocab.esen.spm",
       fromLang: "es",
       toLang: "en",
@@ -180,7 +180,7 @@ add_task(async function test_get_records_with_multiple_versions() {
       version: "1.0",
     },
     {
-      id: Services.uuid.generateUUID().toString(),
+      id: crypto.randomUUID(),
       name: "lex.50.50.enes.s2t.bin",
       fromLang: "en",
       toLang: "es",
@@ -188,7 +188,7 @@ add_task(async function test_get_records_with_multiple_versions() {
       version: "1.0",
     },
     {
-      id: Services.uuid.generateUUID().toString(),
+      id: crypto.randomUUID(),
       name: "model.enes.intgemm.alphas.bin",
       fromLang: "en",
       toLang: "es",
@@ -196,7 +196,7 @@ add_task(async function test_get_records_with_multiple_versions() {
       version: "1.0",
     },
     {
-      id: Services.uuid.generateUUID().toString(),
+      id: crypto.randomUUID(),
       name: "vocab.deen.spm",
       fromLang: "en",
       toLang: "de",
@@ -204,7 +204,7 @@ add_task(async function test_get_records_with_multiple_versions() {
       version: "1.0",
     },
     {
-      id: Services.uuid.generateUUID().toString(),
+      id: crypto.randomUUID(),
       name: "lex.50.50.ende.s2t.bin",
       fromLang: "en",
       toLang: "de",
@@ -212,7 +212,7 @@ add_task(async function test_get_records_with_multiple_versions() {
       version: "1.0",
     },
     {
-      id: Services.uuid.generateUUID().toString(),
+      id: crypto.randomUUID(),
       name: "model.ende.intgemm.alphas.bin",
       fromLang: "en",
       toLang: "de",
@@ -231,7 +231,7 @@ add_task(async function test_get_records_with_multiple_versions() {
   // Create a list of records that are identical to some of the above, but with higher version numbers.
   const higherVersionRecords = [
     {
-      id: Services.uuid.generateUUID().toString(),
+      id: crypto.randomUUID(),
       name: "qualityModel.enes.bin",
       fromLang: "en",
       toLang: "es",
@@ -239,7 +239,7 @@ add_task(async function test_get_records_with_multiple_versions() {
       version: "1.1",
     },
     {
-      id: Services.uuid.generateUUID().toString(),
+      id: crypto.randomUUID(),
       name: "qualityModel.enes.bin",
       fromLang: "en",
       toLang: "es",
@@ -247,7 +247,7 @@ add_task(async function test_get_records_with_multiple_versions() {
       version: "1.2",
     },
     {
-      id: Services.uuid.generateUUID().toString(),
+      id: crypto.randomUUID(),
       name: "vocab.esen.spm",
       fromLang: "en",
       toLang: "es",
