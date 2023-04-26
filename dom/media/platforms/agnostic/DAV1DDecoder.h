@@ -18,9 +18,11 @@ DDLoggedTypeDeclNameAndBase(DAV1DDecoder, MediaDataDecoder);
 typedef nsRefPtrHashtable<nsPtrHashKey<const uint8_t>, MediaRawData>
     MediaRawDataHashtable;
 
-class DAV1DDecoder : public MediaDataDecoder,
-                     public DecoderDoctorLifeLogger<DAV1DDecoder> {
+class DAV1DDecoder final : public MediaDataDecoder,
+                           public DecoderDoctorLifeLogger<DAV1DDecoder> {
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DAV1DDecoder, final);
+
   explicit DAV1DDecoder(const CreateDecoderParams& aParams);
 
   RefPtr<InitPromise> Init() override;

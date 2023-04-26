@@ -190,8 +190,10 @@ class MFMediaEngineStream
  * are not thread-safe and would only be called on the IPC decoder manager
  * thread.
  */
-class MFMediaEngineStreamWrapper : public MediaDataDecoder {
+class MFMediaEngineStreamWrapper final : public MediaDataDecoder {
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MFMediaEngineStreamWrapper, final);
+
   MFMediaEngineStreamWrapper(MFMediaEngineStream* aStream,
                              TaskQueue* aTaskQueue,
                              const CreateDecoderParams& aParams)
@@ -212,6 +214,8 @@ class MFMediaEngineStreamWrapper : public MediaDataDecoder {
   ConversionRequired NeedsConversion() const override;
 
  private:
+  ~MFMediaEngineStreamWrapper() = default;
+
   Microsoft::WRL::ComPtr<MFMediaEngineStream> mStream;
   RefPtr<TaskQueue> mTaskQueue;
 };
