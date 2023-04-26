@@ -676,7 +676,7 @@ add_task(async function test_telemetryCleanFHRDatabase() {
 add_task(async function test_sendNewProfile() {
   if (
     gIsAndroid ||
-    (AppConstants.platform == "linux" && OS.Constants.Sys.bits == 32)
+    (AppConstants.platform == "linux" && !Services.appinfo.is64Bit)
   ) {
     // We don't support the pingsender on Android, yet, see bug 1335917.
     // We also don't suppor the pingsender testing on Treeherder for

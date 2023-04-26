@@ -30,9 +30,8 @@ add_task(
     const FILE_PATH = getDefinitionsPath();
 
     // Write a corrupted JSON file.
-    await OS.File.writeAtomic(FILE_PATH, INVALID_JSON, {
-      encoding: "utf-8",
-      noOverwrite: false,
+    await IOUtils.writeUTF8(FILE_PATH, INVALID_JSON, {
+      mode: "overwrite",
     });
 
     // Simulate Firefox startup. This should not throw!
@@ -41,7 +40,7 @@ add_task(
 
     // Cleanup.
     await TelemetryController.testShutdown();
-    await OS.File.remove(FILE_PATH);
+    await IOUtils.remove(FILE_PATH);
   }
 );
 
@@ -154,7 +153,7 @@ add_task(
 
     // Clean up.
     await TelemetryController.testShutdown();
-    await OS.File.remove(FILE_PATH);
+    await IOUtils.remove(FILE_PATH);
   }
 );
 
