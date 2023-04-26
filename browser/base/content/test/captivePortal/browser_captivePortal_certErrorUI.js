@@ -113,8 +113,12 @@ add_task(async function testCaptivePortalAdvancedPanel() {
   let tab = await openCaptivePortalErrorTab();
   let browser = tab.linkedBrowser;
 
+  const waitForLocationChange = (async () => {
+    await BrowserTestUtils.waitForLocationChange(gBrowser, BAD_CERT_PAGE);
+    info("(waitForLocationChange resolved)");
+  })();
   await SpecialPowers.spawn(browser, [BAD_CERT_PAGE], async expectedURL => {
-    let doc = content.document;
+    const doc = content.document;
     let advancedButton = doc.getElementById("advancedButton");
     await ContentTaskUtils.waitForCondition(
       () => ContentTaskUtils.is_visible(advancedButton),
@@ -122,8 +126,12 @@ add_task(async function testCaptivePortalAdvancedPanel() {
     );
 
     info("Clicking on the advanced button");
+    const advPanel = doc.getElementById("badCertAdvancedPanel");
+    ok(
+      !ContentTaskUtils.is_visible(advPanel),
+      "Advanced panel is not yet visible"
+    );
     await EventUtils.synthesizeMouseAtCenter(advancedButton, {}, content);
-    let advPanel = doc.getElementById("badCertAdvancedPanel");
     ok(ContentTaskUtils.is_visible(advPanel), "Advanced panel is now visible");
 
     let advPanelContent = doc.getElementById("badCertTechnicalInfo");
@@ -139,17 +147,58 @@ add_task(async function testCaptivePortalAdvancedPanel() {
       "Cert error code is visible in the advanced panel"
     );
 
-    let advPanelExceptionButton = doc.getElementById("exceptionDialogButton");
+    // -
+
+    const advPanelExceptionButton = doc.getElementById("exceptionDialogButton");
+
+    function isOnCertErrorPage() {
+      return ContentTaskUtils.is_visible(advPanel);
+    }
+
+    ok(isOnCertErrorPage(), "On cert error page before adding exception");
+    ok(
+      advPanelExceptionButton.disabled,
+      "Exception button should start disabled"
+    );
     await EventUtils.synthesizeMouseAtCenter(
       advPanelExceptionButton,
       {},
       content
-    );
+    ); // Click
+    const clickTime = content.performance.now();
     ok(
-      doc.location.href.startsWith(expectedURL),
-      "Accept the risk and continue button works on the captive portal page"
+      isOnCertErrorPage(),
+      "Still on cert error page because clicked too early"
     );
+
+    // Now waitForCondition now that it's possible.
+    try {
+      await ContentTaskUtils.waitForCondition(
+        () => !advPanelExceptionButton.disabled,
+        "Wait for exception button enabled"
+      );
+    } catch (rejected) {
+      ok(false, rejected);
+      return;
+    }
+    ok(
+      !advPanelExceptionButton.disabled,
+      "Exception button should be enabled after waiting"
+    );
+    const msSinceClick = content.performance.now() - clickTime;
+    const expr = `${msSinceClick} > 1000`;
+    /* eslint-disable no-eval */
+    ok(eval(expr), `Exception button should stay disabled for ${expr} ms`);
+
+    await EventUtils.synthesizeMouseAtCenter(
+      advPanelExceptionButton,
+      {},
+      content
+    ); // Click
+    info("Clicked");
   });
+  await waitForLocationChange;
+  info("Page reloaded after adding cert exception");
 
   // Clear the certificate exception.
   let certOverrideService = Cc[
@@ -157,9 +206,16 @@ add_task(async function testCaptivePortalAdvancedPanel() {
   ].getService(Ci.nsICertOverrideService);
   certOverrideService.clearValidityOverride("expired.example.com", -1, {});
 
-  let errorTabReloaded = BrowserTestUtils.waitForErrorPage(browser);
-  Services.obs.notifyObservers(null, "captive-portal-login-success");
-  await errorTabReloaded;
+  info("After clearing cert override, asking for reload...");
+  const waitForErrorPage = BrowserTestUtils.waitForErrorPage(browser);
+  await SpecialPowers.spawn(browser, [], async () => {
+    info("reload...");
+    content.location.reload();
+  });
+  info("waitForErrorPage...");
+  await waitForErrorPage;
 
+  info("removeTab...");
   await BrowserTestUtils.removeTab(tab);
+  info("Done!");
 });
