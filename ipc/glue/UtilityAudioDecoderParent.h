@@ -7,6 +7,7 @@
 #define _include_ipc_glue_UtilityAudioDecoderParent_h_
 
 #include "mozilla/PRemoteDecoderManagerParent.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/UniquePtr.h"
 
 #include "mozilla/ipc/Endpoint.h"
@@ -47,6 +48,7 @@ class UtilityAudioDecoderParent final : public PUtilityAudioDecoderParent {
   ~UtilityAudioDecoderParent();
 
   const SandboxingKind mKind;
+  TimeStamp mAudioDecoderParentStart;
 };
 
 }  // namespace mozilla::ipc

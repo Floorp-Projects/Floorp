@@ -41,7 +41,7 @@ static EnumeratedArray<SandboxingKind, SandboxingKind::COUNT,
     sAudioDecoderChilds;
 
 UtilityAudioDecoderChild::UtilityAudioDecoderChild(SandboxingKind aKind)
-    : mSandbox(aKind) {
+    : mSandbox(aKind), mAudioDecoderChildStart(TimeStamp::Now()) {
   MOZ_ASSERT(NS_IsMainThread());
 #ifdef MOZ_WMF_MEDIA_ENGINE
   if (mSandbox == SandboxingKind::MF_MEDIA_ENGINE_CDM) {

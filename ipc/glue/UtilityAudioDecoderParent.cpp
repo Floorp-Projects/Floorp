@@ -38,7 +38,8 @@
 namespace mozilla::ipc {
 
 UtilityAudioDecoderParent::UtilityAudioDecoderParent()
-    : mKind(GetCurrentSandboxingKind()) {
+    : mKind(GetCurrentSandboxingKind()),
+      mAudioDecoderParentStart(TimeStamp::Now()) {
 #ifdef MOZ_WMF_MEDIA_ENGINE
   if (mKind == SandboxingKind::MF_MEDIA_ENGINE_CDM) {
     nsDebugImpl::SetMultiprocessMode("MF Media Engine CDM");
@@ -110,6 +111,9 @@ void UtilityAudioDecoderParent::Start(
   auto supported = PDMFactory::Supported();
   Unused << SendUpdateMediaCodecsSupported(GetRemoteDecodeInFromKind(mKind),
                                            supported);
+  PROFILER_MARKER_UNTYPED("UtilityAudioDecoderParent::Start", IPC,
+                          MarkerOptions(MarkerTiming::IntervalUntilNowFrom(
+                              mAudioDecoderParentStart)));
 }
 
 mozilla::ipc::IPCResult

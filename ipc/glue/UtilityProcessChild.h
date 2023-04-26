@@ -14,6 +14,7 @@
 #include "mozilla/PRemoteDecoderManagerParent.h"
 #include "mozilla/ipc/AsyncBlockers.h"
 #include "mozilla/dom/JSOracleChild.h"
+#include "mozilla/ProfilerMarkers.h"
 
 namespace mozilla::dom {
 class PJSOracleChild;
@@ -87,6 +88,7 @@ class UtilityProcessChild final : public PUtilityProcessChild {
   ~UtilityProcessChild();
 
  private:
+  TimeStamp mChildStartTime;
   RefPtr<ChildProfilerController> mProfilerController;
   RefPtr<UtilityAudioDecoderParent> mUtilityAudioDecoderInstance{};
   RefPtr<dom::JSOracleChild> mJSOracleInstance{};
