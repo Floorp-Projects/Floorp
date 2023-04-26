@@ -424,8 +424,5 @@ bool nsAppShell::ProcessNextNativeEvent(bool mayWait) {
     return false;
   }
   bool didProcessEvent = g_main_context_iteration(nullptr, mayWait);
-#ifdef MOZ_WAYLAND
-  mozilla::widget::WaylandDispatchDisplays();
-#endif
   return didProcessEvent;
 }
