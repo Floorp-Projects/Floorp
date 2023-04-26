@@ -3,8 +3,9 @@
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"
 );
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
-add_setup(async function setup() {
+add_task(async function setup() {
   // Add a test .ftl file
   // (Note: other tests do this by patching L10nRegistry.load() but in
   // this test L10nRegistry is also loaded in the extension process --
@@ -13,8 +14,8 @@ add_setup(async function setup() {
   let dir = FileUtils.getDir("TmpD", ["l10ntest"]);
   dir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 
-  await IOUtils.writeUTF8(
-    PathUtils.join(dir.path, "test.ftl"),
+  await OS.File.writeAtomic(
+    OS.Path.join(dir.path, "test.ftl"),
     "key = value\n"
   );
 

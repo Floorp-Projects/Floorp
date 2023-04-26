@@ -16,6 +16,7 @@ const { Subprocess } = ChromeUtils.importESModule(
 const { NativeApp } = ChromeUtils.import(
   "resource://gre/modules/NativeMessaging.jsm"
 );
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
 let registry = null;
 if (AppConstants.platform == "win") {
@@ -55,10 +56,8 @@ let globalDir = dir.clone();
 globalDir.append("global");
 globalDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 
-add_setup(async function setup() {
-  await IOUtils.makeDirectory(PathUtils.join(userDir.path, TYPE_SLUG));
-  await IOUtils.makeDirectory(PathUtils.join(globalDir.path, TYPE_SLUG));
-});
+OS.File.makeDir(OS.Path.join(userDir.path, TYPE_SLUG));
+OS.File.makeDir(OS.Path.join(globalDir.path, TYPE_SLUG));
 
 let dirProvider = {
   getFile(property) {
@@ -82,7 +81,7 @@ function writeManifest(path, manifest) {
   if (typeof manifest != "string") {
     manifest = JSON.stringify(manifest);
   }
-  return IOUtils.writeUTF8(path, manifest);
+  return OS.File.writeAtomic(path, manifest);
 }
 
 let PYTHON;
@@ -157,7 +156,7 @@ add_task(async function test_nonexistent_manifest() {
   );
 });
 
-const USER_TEST_JSON = PathUtils.join(userDir.path, TYPE_SLUG, "test.json");
+const USER_TEST_JSON = OS.Path.join(userDir.path, TYPE_SLUG, "test.json");
 
 add_task(async function test_nonexistent_manifest_with_registry_entry() {
   if (registry) {
@@ -169,7 +168,7 @@ add_task(async function test_nonexistent_manifest_with_registry_entry() {
     );
   }
 
-  await IOUtils.remove(USER_TEST_JSON);
+  await OS.File.remove(USER_TEST_JSON);
   let { messages, result } = await promiseConsoleOutput(() =>
     lookupApplication("test", context)
   );
@@ -284,12 +283,12 @@ add_task(async function test_no_allowed_extensions() {
   );
 });
 
-const GLOBAL_TEST_JSON = PathUtils.join(globalDir.path, TYPE_SLUG, "test.json");
+const GLOBAL_TEST_JSON = OS.Path.join(globalDir.path, TYPE_SLUG, "test.json");
 let globalManifest = Object.assign({}, templateManifest);
 globalManifest.description = "This manifest is from the systemwide directory";
 
 add_task(async function good_manifest_system_dir() {
-  await IOUtils.remove(USER_TEST_JSON);
+  await OS.File.remove(USER_TEST_JSON);
   await writeManifest(GLOBAL_TEST_JSON, globalManifest);
   if (registry) {
     registry.setValue(
@@ -380,8 +379,8 @@ while True:
     stdout.write(msg)
 `;
 
-  let scriptPath = PathUtils.join(userDir.path, TYPE_SLUG, "wontdie.py");
-  let manifestPath = PathUtils.join(userDir.path, TYPE_SLUG, "wontdie.json");
+  let scriptPath = OS.Path.join(userDir.path, TYPE_SLUG, "wontdie.py");
+  let manifestPath = OS.Path.join(userDir.path, TYPE_SLUG, "wontdie.json");
 
   const ID = "native@tests.mozilla.org";
   let manifest = {
@@ -392,12 +391,12 @@ while True:
   };
 
   if (AppConstants.platform == "win") {
-    await IOUtils.writeUTF8(scriptPath, SCRIPT);
+    await OS.File.writeAtomic(scriptPath, SCRIPT);
 
-    let batPath = PathUtils.join(userDir.path, TYPE_SLUG, "wontdie.bat");
+    let batPath = OS.Path.join(userDir.path, TYPE_SLUG, "wontdie.bat");
     let batBody = `@ECHO OFF\n${PYTHON} -u "${scriptPath}" %*\n`;
-    await IOUtils.writeUTF8(batPath, batBody);
-    await IOUtils.setPermissions(batPath, 0o755);
+    await OS.File.writeAtomic(batPath, batBody);
+    await OS.File.setPermissions(batPath, { unixMode: 0o755 });
 
     manifest.path = batPath;
     await writeManifest(manifestPath, manifest);
@@ -409,8 +408,8 @@ while True:
       manifestPath
     );
   } else {
-    await IOUtils.writeUTF8(scriptPath, `#!${PYTHON} -u\n${SCRIPT}`);
-    await IOUtils.setPermissions(scriptPath, 0o755);
+    await OS.File.writeAtomic(scriptPath, `#!${PYTHON} -u\n${SCRIPT}`);
+    await OS.File.setPermissions(scriptPath, { unixMode: 0o755 });
     manifest.path = scriptPath;
     await writeManifest(manifestPath, manifest);
   }

@@ -383,7 +383,7 @@ if (AppConstants.platform == "win") {
       appname: "relative.echo",
       expectedError: "An unexpected error occurred",
       expectedConsoleMessages: [
-        /NativeApp requires absolute path to command on this platform/,
+        /File at path "relative\.echo\.py" does not exist, or is not executable/,
       ],
     });
   });
