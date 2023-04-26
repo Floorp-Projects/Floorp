@@ -5,7 +5,7 @@
 
 // Test global touch simulation button
 
-const TEST_URL = `${URL_ROOT}touch.html`;
+const TEST_URL = `${URL_ROOT_SSL}touch.html`;
 const PREF_DOM_META_VIEWPORT_ENABLED = "dom.meta-viewport.enabled";
 
 // A 300ms delay between a `touchend` and `click` event is added whenever double-tap zoom

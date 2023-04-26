@@ -6,7 +6,7 @@
 // Tests that the contextual menu items shown when clicking on linked attributes
 // for <script> and <link> tags actually open the right tools.
 
-const TEST_URL = URL_ROOT + "doc_markup_links.html";
+const TEST_URL = URL_ROOT_SSL + "doc_markup_links.html";
 
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/shared-head.js",
@@ -52,7 +52,7 @@ add_task(async function() {
   // Wait for the debugger to have fully processed the opened source
   await toolbox.getPanelWhenReady("jsdebugger");
   const dbg = createDebuggerContext(toolbox);
-  await waitForSelectedSource(dbg, URL_ROOT + "lib_jquery_1.0.js");
+  await waitForSelectedSource(dbg, URL_ROOT_SSL + "lib_jquery_1.0.js");
 
   // No real need to test that the debugger opened on the right file here as
   // this is already tested in /framework/test/browser_toolbox_view_source_*
