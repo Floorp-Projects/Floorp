@@ -13,19 +13,19 @@ process often occur multiple times per keystroke, as described below.
 
 It is recommended that you first read the :doc:`nontechnical-overview` to become
 familiar with the terminology in this document. This document is current as
-of December 2021.
+of April 2023.
 
 #.
    The user types a query (e.g. "coffee near me") into the *UrlbarInput*
-   `<input> DOM element <https://searchfox.org/mozilla-central/rev/0bcf81557b89e7757c44e25bb4bc7f4cb8619dc9/browser/base/content/browser.xhtml#1864>`_.
-   That DOM element `tells <https://searchfox.org/mozilla-central/rev/0bcf81557b89e7757c44e25bb4bc7f4cb8619dc9/browser/components/urlbar/UrlbarInput.jsm#2919>`_
+   `<input> DOM element <https://searchfox.org/mozilla-central/rev/1f4f99a8f331cce8467a50742178b6d46914ab89/browser/base/content/navigator-toolbox.inc.xhtml#330-336>`_.
+   That DOM element `tells <https://searchfox.org/mozilla-central/rev/1f4f99a8f331cce8467a50742178b6d46914ab89/browser/components/urlbar/UrlbarInput.sys.mjs#3312>`_
    *UrlbarInput* that text is being input.
 
 #.
-   *UrlbarInput* `starts a search <https://searchfox.org/mozilla-central/rev/0bcf81557b89e7757c44e25bb4bc7f4cb8619dc9/browser/components/urlbar/UrlbarInput.jsm#2990>`_.
-   It `creates <https://searchfox.org/mozilla-central/rev/0bcf81557b89e7757c44e25bb4bc7f4cb8619dc9/browser/components/urlbar/UrlbarInput.jsm#1290>`_
+   *UrlbarInput* `starts a search <https://searchfox.org/mozilla-central/rev/1f4f99a8f331cce8467a50742178b6d46914ab89/browser/components/urlbar/UrlbarInput.sys.mjs#3395>`_.
+   It `creates <https://searchfox.org/mozilla-central/rev/1f4f99a8f331cce8467a50742178b6d46914ab89/browser/components/urlbar/UrlbarInput.sys.mjs#1549>`_
    a `UrlbarQueryContext <https://firefox-source-docs.mozilla.org/browser/urlbar/overview.html#the-urlbarquerycontext>`_
-   and `passes it to UrlbarController <https://searchfox.org/mozilla-central/rev/0bcf81557b89e7757c44e25bb4bc7f4cb8619dc9/browser/components/urlbar/UrlbarInput.jsm#1289>`_.
+   and `passes it to UrlbarController <https://searchfox.org/mozilla-central/rev/1f4f99a8f331cce8467a50742178b6d46914ab89/browser/components/urlbar/UrlbarInput.sys.mjs#1548>`_.
    The query context is an object that will exist for the lifetime of the query
    and it's how we keep track of what results to show. It contains information
    like what kind of results are allowed, the search string ("coffee near me",
@@ -33,20 +33,20 @@ of December 2021.
    *UrlbarQueryContext* is created every time the text in the input changes.
 
 #.
-   *UrlbarController* `tells UrlbarProvidersManager <https://searchfox.org/mozilla-central/rev/0bcf81557b89e7757c44e25bb4bc7f4cb8619dc9/browser/components/urlbar/UrlbarController.jsm#134>`_
+   *UrlbarController* `tells UrlbarProvidersManager <https://searchfox.org/mozilla-central/rev/0ffaecaa075887ab07bf4c607c61ea2faa81b172/browser/components/urlbar/UrlbarController.sys.mjs#140>`_
    that the providers should fetch results.
 
 #.
-   *UrlbarProvidersManager* tells `each <https://searchfox.org/mozilla-central/source/browser/components/urlbar/UrlbarProvidersManager.jsm#348>`_
+   *UrlbarProvidersManager* tells `each <https://searchfox.org/mozilla-central/rev/0ffaecaa075887ab07bf4c607c61ea2faa81b172/browser/components/urlbar/UrlbarProvidersManager.sys.mjs#408>`_
    provider to decide if it wants to provide results for this query by calling
-   their `isActive <https://searchfox.org/mozilla-central/source/browser/components/urlbar/UrlbarProvidersManager.jsm#362>`_
+   their `isActive <https://searchfox.org/mozilla-central/rev/0ffaecaa075887ab07bf4c607c61ea2faa81b172/browser/components/urlbar/UrlbarProvidersManager.sys.mjs#422>`_
    methods. The provider can decide whether or not it will be active for this
    query. Some providers are rarely active: for example,
-   *UrlbarProviderTopSites* `isn't active if the user has typed a search string <https://searchfox.org/mozilla-central/rev/0bcf81557b89e7757c44e25bb4bc7f4cb8619dc9/browser/components/urlbar/UrlbarProviderTopSites.jsm#69>`_.
+   *UrlbarProviderTopSites* `isn't active if the user has typed a search string <https://searchfox.org/mozilla-central/rev/0ffaecaa075887ab07bf4c607c61ea2faa81b172/browser/components/urlbar/UrlbarProviderTopSites.sys.mjs#97>`_.
 
 #.
    *UrlbarProvidersManager* then tells the *active* providers to fetch results by
-   `calling their startQuery method <https://searchfox.org/mozilla-central/rev/0bcf81557b89e7757c44e25bb4bc7f4cb8619dc9/browser/components/urlbar/UrlbarProvidersManager.jsm#400>`_.
+   `calling their startQuery method <https://searchfox.org/mozilla-central/rev/0ffaecaa075887ab07bf4c607c61ea2faa81b172/browser/components/urlbar/UrlbarProvidersManager.sys.mjs#462>`_.
 
 #.
    The providers fetch results for the query asynchronously. Each provider
@@ -57,9 +57,9 @@ of December 2021.
 
 #.
    The providers send their results back to *UrlbarProvidersManager*. They do
-   this one result at a time by `calling the addCallback callback <https://searchfox.org/mozilla-central/rev/0bcf81557b89e7757c44e25bb4bc7f4cb8619dc9/browser/components/urlbar/UrlbarProviderSearchSuggestions.jsm#294>`_
+   this one result at a time by `calling the addCallback callback <https://searchfox.org/mozilla-central/rev/0ffaecaa075887ab07bf4c607c61ea2faa81b172/browser/components/urlbar/UrlbarProviderSearchSuggestions.sys.mjs#292>`_
    passed into startQuery. *UrlbarProvidersManager* takes all the results from all the
-   providers and `puts them into the UrlbarQueryContext <https://searchfox.org/mozilla-central/rev/0bcf81557b89e7757c44e25bb4bc7f4cb8619dc9/browser/components/urlbar/UrlbarProvidersManager.jsm#541>`_.
+   providers and `puts them into the list of unsorted results <https://searchfox.org/mozilla-central/rev/0ffaecaa075887ab07bf4c607c61ea2faa81b172/browser/components/urlbar/UrlbarProvidersManager.sys.mjs#607>`_.
 
    Due to the asynchronous and parallel nature of providers, this and the
    following steps may occur multiple times per search. Some providers may take
@@ -71,8 +71,8 @@ of December 2021.
    following steps.
 
 #.
-   *UrlbarProvidersManager* `asks <https://searchfox.org/mozilla-central/rev/0bcf81557b89e7757c44e25bb4bc7f4cb8619dc9/browser/components/urlbar/UrlbarProvidersManager.jsm#582>`_
-   *UrlbarMuxer* to sort the results.
+   *UrlbarProvidersManager* `asks <https://searchfox.org/mozilla-central/rev/0ffaecaa075887ab07bf4c607c61ea2faa81b172/browser/components/urlbar/UrlbarProvidersManager.sys.mjs#648>`_
+   *UrlbarMuxer* to sort the unsorted results.
 
 #.
    *UrlbarMuxer* chooses the results that will be shown to the user. It groups
@@ -83,15 +83,15 @@ of December 2021.
 
 #.
    Once the results are sorted, *UrlbarProvidersManager*
-   `tells UrlbarController <https://searchfox.org/mozilla-central/rev/0bcf81557b89e7757c44e25bb4bc7f4cb8619dc9/browser/components/urlbar/UrlbarProvidersManager.jsm#627>`_
+   `tells UrlbarController <https://searchfox.org/mozilla-central/rev/0ffaecaa075887ab07bf4c607c61ea2faa81b172/browser/components/urlbar/UrlbarProvidersManager.sys.mjs#675>`_
    that results are ready to be shown.
 
 #.
-   *UrlbarController* `sends out a notification <https://searchfox.org/mozilla-central/rev/0bcf81557b89e7757c44e25bb4bc7f4cb8619dc9/browser/components/urlbar/UrlbarController.jsm#198>`_
-   that results are ready to be shown. *UrlbarView* was `listening <https://searchfox.org/mozilla-central/rev/0bcf81557b89e7757c44e25bb4bc7f4cb8619dc9/browser/components/urlbar/UrlbarView.jsm#615>`_
-   for that notification. Once the view gets the notification, it `creates <https://searchfox.org/mozilla-central/rev/0bcf81557b89e7757c44e25bb4bc7f4cb8619dc9/browser/components/urlbar/UrlbarView.jsm#623>`__
-   `DOM nodes <https://searchfox.org/mozilla-central/rev/0bcf81557b89e7757c44e25bb4bc7f4cb8619dc9/browser/components/urlbar/UrlbarView.jsm#1003>`_
-   for each *UrlbarResult* and `inserts them <https://searchfox.org/mozilla-central/rev/0bcf81557b89e7757c44e25bb4bc7f4cb8619dc9/browser/components/urlbar/UrlbarView.jsm#989>`_
+   *UrlbarController* `sends out a notification <https://searchfox.org/mozilla-central/rev/0ffaecaa075887ab07bf4c607c61ea2faa81b172/browser/components/urlbar/UrlbarController.sys.mjs#213>`_
+   that results are ready to be shown. *UrlbarView* was `listening <https://searchfox.org/mozilla-central/rev/0ffaecaa075887ab07bf4c607c61ea2faa81b172/browser/components/urlbar/UrlbarView.sys.mjs#662>`_
+   for that notification. Once the view gets the notification, it `calls #updateResults <https://searchfox.org/mozilla-central/rev/0ffaecaa075887ab07bf4c607c61ea2faa81b172/browser/components/urlbar/UrlbarView.sys.mjs#670>`_
+   to create `DOM nodes <https://searchfox.org/mozilla-central/rev/0ffaecaa075887ab07bf4c607c61ea2faa81b172/browser/components/urlbar/UrlbarView.sys.mjs#1185>`_
+   for each *UrlbarResult* and `inserts them <https://searchfox.org/mozilla-central/rev/0ffaecaa075887ab07bf4c607c61ea2faa81b172/browser/components/urlbar/UrlbarView.sys.mjs#1156>`_
    into the view's DOM element.
 
    As described above, we may reach this step multiple times per search. That
