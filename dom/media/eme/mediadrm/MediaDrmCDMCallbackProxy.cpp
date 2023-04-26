@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaDrmCDMCallbackProxy.h"
-#include "MediaDrmCDMProxy.h"
+#include "mozilla/CDMProxy.h"
 #include "nsString.h"
 #include "mozilla/dom/MediaKeys.h"
 #include "mozilla/dom/MediaKeySession.h"
@@ -16,10 +16,8 @@
 
 namespace mozilla {
 
-MediaDrmCDMCallbackProxy::MediaDrmCDMCallbackProxy(MediaDrmCDMProxy* aProxy)
+MediaDrmCDMCallbackProxy::MediaDrmCDMCallbackProxy(CDMProxy* aProxy)
     : mProxy(aProxy) {}
-
-MediaDrmCDMCallbackProxy::~MediaDrmCDMCallbackProxy() = default;
 
 void MediaDrmCDMCallbackProxy::SetSessionId(uint32_t aToken,
                                             const nsCString& aSessionId) {
