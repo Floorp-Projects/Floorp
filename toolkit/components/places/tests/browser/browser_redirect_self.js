@@ -11,6 +11,9 @@
 
 add_task(async function() {
   await PlacesUtils.history.clear();
+  Cc["@mozilla.org/browser/history;1"]
+    .getService(Ci.mozIAsyncHistory)
+    .clearCache();
   const url =
     "http://mochi.test:8888/tests/toolkit/components/places/tests/browser/redirect_self.sjs";
   let visitCount = 0;

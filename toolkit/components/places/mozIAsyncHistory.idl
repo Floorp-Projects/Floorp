@@ -177,4 +177,10 @@ interface mozIAsyncHistory : nsISupports
    */
   void isURIVisited(in nsIURI aURI,
                     in mozIVisitedStatusCallback aCallback);
+
+  /**
+   * Helper to clear any internal state caches, like the recent URIs list.
+   * This may be useful in testing code.
+   */
+  void clearCache();
 };
