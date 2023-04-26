@@ -1,7 +1,11 @@
 import pytest
 
 from webdriver.bidi.modules.input import Actions
-from webdriver.bidi.error import InvalidArgumentException, NoSuchFrameException
+from webdriver.bidi.error import (
+    InvalidArgumentException,
+    MoveTargetOutOfBoundsException,
+    NoSuchFrameException,
+)
 
 
 pytestmark = pytest.mark.asyncio
@@ -66,4 +70,39 @@ async def test_params_actions_missing_wheel_property(
     with pytest.raises(InvalidArgumentException):
         await bidi_session.input.perform_actions(
             actions=json_actions, context=top_context["context"]
+        )
+
+
+async def test_params_actions_origin_element_outside_viewport(
+    bidi_session, top_context, get_actions_origin_page, get_element
+):
+    url = get_actions_origin_page(
+        """width: 100px; height: 50px; background: green;
+           position: relative; left: -200px; top: -100px;"""
+    )
+    await bidi_session.browsing_context.navigate(
+        context=top_context["context"],
+        url=url,
+        wait="complete",
+    )
+
+    elem = await get_element("#inner")
+
+    actions = Actions()
+    actions.add_pointer().pointer_move(x=0, y=0, origin=elem)
+    with pytest.raises(MoveTargetOutOfBoundsException):
+        await bidi_session.input.perform_actions(
+            actions=actions, context=top_context["context"]
+        )
+
+
+@pytest.mark.parametrize("origin", ["viewport", "pointer"])
+async def test_params_actions_origin_outside_viewport(
+    bidi_session, top_context, origin
+):
+    actions = Actions()
+    actions.add_pointer().pointer_move(x=-50, y=-50, origin=origin)
+    with pytest.raises(MoveTargetOutOfBoundsException):
+        await bidi_session.input.perform_actions(
+            actions=actions, context=top_context["context"]
         )

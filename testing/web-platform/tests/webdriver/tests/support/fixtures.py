@@ -256,6 +256,24 @@ def iframe(inline):
 
 
 @pytest.fixture
+def get_actions_origin_page(inline):
+    """Create a test pagefor action origin tests, recording mouse coordinates
+    automatically on window.coords."""
+
+    def get_actions_origin_page(inner_style, outer_style=""):
+        return inline(
+            f"""
+          <div id="outer" style="{outer_style}"
+               onmousemove="window.coords = {{x: event.clientX, y: event.clientY}}">
+            <div id="inner" style="{inner_style}"></div>
+          </div>
+        """
+        )
+
+    return get_actions_origin_page
+
+
+@pytest.fixture
 def get_test_page(iframe, inline):
     def get_test_page(
         as_frame=False,
