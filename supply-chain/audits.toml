@@ -313,6 +313,12 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.1.8 -> 0.1.9"
 
+[[audits.audio-mixer]]
+who = "Chun-Min Chang <chun.m.chang@gmail.com>"
+criteria = "safe-to-deploy"
+version = "0.1.2"
+notes = "audio-mixer is a Mozilla-developed package."
+
 [[audits.authenticator]]
 who = "John M. Schanck <jschanck@mozilla.com>"
 criteria = "safe-to-deploy"
