@@ -1246,6 +1246,12 @@ let Player = {
 
     if (!revealIndefinitely) {
       this.showingTimeout = setTimeout(() => {
+        const isHoverOverControlItem = this.controls.querySelector(
+          ".control-item:hover"
+        );
+        if (this.isFullscreen && isHoverOverControlItem) {
+          return;
+        }
         this.controls.removeAttribute("showing");
 
         if (
