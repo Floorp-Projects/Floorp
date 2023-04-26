@@ -252,6 +252,12 @@ class KeyInputSource(InputSource):
         self.actions.append(KeyUpAction(key))
         return self
 
+    def send_keys(self, keys: str) -> "KeyInputSource":
+        for c in keys:
+            self.key_down(c)
+            self.key_up(c)
+        return self
+
 
 class PointerInputSource(InputSource):
     input_type = "pointer"

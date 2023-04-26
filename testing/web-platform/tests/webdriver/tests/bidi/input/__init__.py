@@ -26,3 +26,13 @@ async def get_events(bidi_session, context):
         if "code" in e and e["code"] == "Unidentified":
             e["code"] = ""
     return events
+
+
+async def get_keys_value(bidi_session, context):
+    keys_value = await bidi_session.script.evaluate(
+        expression="""document.getElementById("keys").value""",
+        target=ContextTarget(context),
+        await_promise=False,
+    )
+
+    return keys_value["value"]
