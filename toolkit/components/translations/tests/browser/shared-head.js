@@ -285,7 +285,10 @@ async function setupActorTest({
   });
 
   if (languagePairs) {
-    TranslationsParent.mockLanguagePairs(languagePairs);
+    const translationModels = await createTranslationModelsRemoteClient(
+      languagePairs
+    );
+    TranslationsParent.translationModelsRemoteClient = translationModels.client;
   }
 
   if (detectedLanguageLabel && detectedLanguageConfidence) {
@@ -295,12 +298,15 @@ async function setupActorTest({
     );
   }
 
+  /** @type {import("../../actors/TranslationsParent.sys.mjs").TranslationsParent} */
+  const actor = gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getActor(
+    "Translations"
+  );
+
   return {
-    actor: gBrowser.selectedBrowser.browsingContext.currentWindowGlobal.getActor(
-      "Translations"
-    ),
+    actor,
     cleanup() {
-      TranslationsParent.mockLanguagePairs(null);
+      TranslationsParent.translationModelsRemoteClient = null;
       TranslationsParent.mockLanguageIdentification(null, null);
       return SpecialPowers.popPrefEnv();
     },
@@ -403,4 +409,162 @@ async function loadTestPageAndRun(options) {
   const { cleanup, runInPage } = await loadTestPage(options);
   await runInPage(options.runInPage);
   await cleanup();
+}
+
+/**
+ * @param {RemoteSettingsClient} client
+ */
+function createAttachmentMock(client) {
+  const pendingDownloads = [];
+  client.attachments.download = record =>
+    new Promise((resolve, reject) => {
+      pendingDownloads.push({ record, resolve, reject });
+    });
+
+  function waitForDownloads() {
+    return TestUtils.waitForCondition(
+      () => !!pendingDownloads.length,
+      "Waiting for a pending download to be added"
+    );
+  }
+
+  function resolvePendingDownloads() {
+    info("Resolving downloads");
+    return downloadHandler(download =>
+      download.resolve({ buffer: new ArrayBuffer() })
+    );
+  }
+
+  function rejectPendingDownloads() {
+    info("Rejecting downloads");
+    return downloadHandler(download => download.reject());
+  }
+
+  async function downloadHandler(action) {
+    await waitForDownloads();
+    const names = [];
+    while (true) {
+      // Wait a tick, as downloads are added asynchronously. This will continue checking
+      // for downloads at the start of the next event loop.
+      await null;
+      let download = pendingDownloads.shift();
+      if (!download) {
+        break;
+      }
+      action(download);
+      names.push(download.record.name);
+    }
+    return names.sort((a, b) => a.localeCompare(b));
+  }
+
+  async function assertNoNewDownloads() {
+    await new Promise(resolve => setTimeout(resolve, 0));
+    is(
+      pendingDownloads.length,
+      0,
+      `No downloads happened for "${client.collectionName}"`
+    );
+  }
+
+  return {
+    client,
+    pendingDownloads,
+    resolvePendingDownloads,
+    rejectPendingDownloads,
+    assertNoNewDownloads,
+  };
+}
+
+/**
+ * Creates a local RemoteSettingsClient for use within tests.
+ *
+ * @param {Object[]} langPairs
+ * @returns {RemoteSettingsClient}
+ */
+async function createTranslationModelsRemoteClient(langPairs) {
+  const records = [];
+  for (const { fromLang, toLang } of langPairs) {
+    const lang = fromLang + toLang;
+    const models = [
+      { fileType: "model", name: `model.${lang}.intgemm.alphas.bin` },
+      { fileType: "lex", name: `lex.50.50.${lang}.s2t.bin` },
+      { fileType: "qualityModel", name: `qualityModel.${lang}.bin` },
+      { fileType: "vocab", name: `vocab.${lang}.spm` },
+    ];
+
+    for (const { fileType, name } of models) {
+      records.push({
+        id: crypto.randomUUID(),
+        name,
+        fromLang,
+        toLang,
+        fileType,
+        version: "1.0",
+        last_modified: Date.now(),
+        schema: Date.now(),
+      });
+    }
+  }
+
+  const { RemoteSettings } = ChromeUtils.import(
+    "resource://services-settings/remote-settings.js"
+  );
+  const client = RemoteSettings("test-translation-models");
+  const metadata = {};
+  await client.db.clear();
+  await client.db.importChanges(metadata, Date.now(), records);
+
+  return createAttachmentMock(client);
+}
+
+/**
+ * Creates a local RemoteSettingsClient for use within tests.
+ *
+ * @returns {RemoteSettingsClient}
+ */
+async function createTranslationsWasmRemoteClient() {
+  const records = ["bergamot-translator", "fasttext-wasm"].map(name => ({
+    id: crypto.randomUUID(),
+    name,
+    version: "1.0",
+    last_modified: Date.now(),
+    schema: Date.now(),
+  }));
+
+  const { RemoteSettings } = ChromeUtils.import(
+    "resource://services-settings/remote-settings.js"
+  );
+  const client = RemoteSettings("test-translations-wasm");
+  const metadata = {};
+  await client.db.clear();
+  await client.db.importChanges(metadata, Date.now(), records);
+
+  return createAttachmentMock(client);
+}
+
+/**
+ * Creates a local RemoteSettingsClient for use within tests.
+ *
+ * @returns {RemoteSettingsClient}
+ */
+async function createLanguageIdModelsRemoteClient() {
+  const records = [
+    {
+      id: crypto.randomUUID(),
+      name: "lid.176.ftz",
+      version: "1.0",
+      last_modified: Date.now(),
+      schema: Date.now(),
+    },
+  ];
+
+  const { RemoteSettings } = ChromeUtils.import(
+    "resource://services-settings/remote-settings.js"
+  );
+  const client = RemoteSettings("test-language-id-models");
+  const metadata = {};
+  await client.db.clear();
+  await client.db.importChanges(metadata, Date.now(), records);
+
+  return createAttachmentMock(client);
 }
