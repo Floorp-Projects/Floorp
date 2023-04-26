@@ -33,4 +33,21 @@ export class ParserDispatcher extends WorkerDispatcher {
   mapExpression = this.task("mapExpression");
 
   clear = this.task("clearState");
+
+  /**
+   * Reports if the location's source can be parsed by this worker.
+   *
+   * @param {Object} location
+   *        A debugger frontend location object. See createLocation().
+   * @return {Boolean}
+   *         True, if the worker may be able to parse this source.
+   */
+  isLocationSupported(location) {
+    // There might be more sources that the worker doesn't support,
+    // like original sources which aren't JavaScript.
+    // But we can only know with the source's content type,
+    // which isn't available right away.
+    // These source will be ignored from within the worker.
+    return !location.source.isWasm;
+  }
 }

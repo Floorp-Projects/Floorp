@@ -26,8 +26,8 @@ async function doSetSymbols(
 }
 
 export const setSymbols = memoizeableAction("setSymbols", {
-  getValue: ({ location }, { getState }) => {
-    if (location.source.isWasm) {
+  getValue: ({ location }, { getState, parserWorker }) => {
+    if (!parserWorker.isLocationSupported(location)) {
       return fulfilled(null);
     }
 

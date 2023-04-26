@@ -63,6 +63,10 @@ export function generateInlinePreview(cx, frame) {
       return null;
     }
 
+    if (!parserWorker.isLocationSupported(selectedLocation)) {
+      return null;
+    }
+
     const originalAstScopes = await parserWorker.getScopes(selectedLocation);
     validateThreadContext(getState(), cx);
     if (!originalAstScopes) {

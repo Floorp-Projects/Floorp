@@ -126,27 +126,35 @@ async function onSourceTextContentAvailable(
   sourceActor,
   { dispatch, getState, parserWorker }
 ) {
-  const content = getSettledSourceTextContent(
-    getState(),
-    createLocation({
-      source,
-      sourceActor,
-    })
-  );
+  const location = createLocation({
+    source,
+    sourceActor,
+  });
+  const content = getSettledSourceTextContent(getState(), location);
+  if (!content) {
+    return;
+  }
 
-  if (!source.isWasm && content) {
+  if (parserWorker.isLocationSupported(location)) {
     parserWorker.setSource(
       source.id,
       isFulfilled(content)
         ? content.value
         : { type: "text", value: "", contentType: undefined }
     );
+  }
 
-    // Update the text in any breakpoints for this source by re-adding them.
-    const breakpoints = getBreakpointsForSource(getState(), source.id);
-    for (const { location, options, disabled } of breakpoints) {
-      await dispatch(addBreakpoint(cx, location, options, disabled));
-    }
+  // Update the text in any breakpoints for this source by re-adding them.
+  const breakpoints = getBreakpointsForSource(getState(), source.id);
+  for (const breakpoint of breakpoints) {
+    await dispatch(
+      addBreakpoint(
+        cx,
+        breakpoint.location,
+        breakpoint.options,
+        breakpoint.disabled
+      )
+    );
   }
 }
 
