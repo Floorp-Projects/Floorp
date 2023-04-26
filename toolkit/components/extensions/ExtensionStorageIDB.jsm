@@ -20,7 +20,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExtensionStorage: "resource://gre/modules/ExtensionStorage.jsm",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
   getTrimmedString: "resource://gre/modules/ExtensionTelemetry.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
 });
 
 // The userContextID reserved for the extension storage (its purpose is ensuring that the IndexedDB
@@ -461,17 +460,15 @@ async function migrateJSONFileData(extension, storagePrincipal) {
     abortIfShuttingDown();
 
     oldStoragePath = lazy.ExtensionStorage.getStorageFile(extension.id);
-    oldStorageExists = await lazy.OS.File.exists(oldStoragePath).catch(
-      fileErr => {
-        // If we can't access the oldStoragePath here, then extension is also going to be unable to
-        // access it, and so we log the error but we don't stop the extension from switching to
-        // the IndexedDB backend.
-        extension.logWarning(
-          `Unable to access extension storage.local data file: ${fileErr.message}::${fileErr.stack}`
-        );
-        return false;
-      }
-    );
+    oldStorageExists = await IOUtils.exists(oldStoragePath).catch(fileErr => {
+      // If we can't access the oldStoragePath here, then extension is also going to be unable to
+      // access it, and so we log the error but we don't stop the extension from switching to
+      // the IndexedDB backend.
+      extension.logWarning(
+        `Unable to access extension storage.local data file: ${fileErr.message}::${fileErr.stack}`
+      );
+      return false;
+    });
 
     // Migrate any data stored in the JSONFile backend (if any), and remove the old data file
     // if the migration has been completed successfully.
@@ -545,15 +542,12 @@ async function migrateJSONFileData(extension, storagePrincipal) {
     try {
       // Only migrate the file when it actually exists (e.g. the file name is not going to exist
       // when it is corrupted, because JSONFile internally rename it to `.corrupt`.
-      if (await lazy.OS.File.exists(oldStoragePath)) {
-        let openInfo = await lazy.OS.File.openUnique(
-          `${oldStoragePath}.migrated`,
-          {
-            humanReadable: true,
-          }
+      if (await IOUtils.exists(oldStoragePath)) {
+        const uniquePath = await IOUtils.createUniqueFile(
+          PathUtils.parent(oldStoragePath),
+          `${PathUtils.filename(oldStoragePath)}.migrated`
         );
-        await openInfo.file.close();
-        await lazy.OS.File.move(oldStoragePath, openInfo.path);
+        await IOUtils.move(oldStoragePath, uniquePath);
       }
     } catch (err) {
       nonFatalError = err;

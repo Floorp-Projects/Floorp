@@ -52,8 +52,6 @@ ChromeUtils.defineModuleGetter(
   "ExtensionPermissions",
   "resource://gre/modules/ExtensionPermissions.jsm"
 );
-ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
-
 XPCOMUtils.defineLazyGetter(
   lazy,
   "apiManager",
@@ -216,7 +214,7 @@ class MockExtension {
         });
       })
       .then(() => {
-        return lazy.OS.File.remove(this.file.path);
+        return IOUtils.remove(this.file.path, { retryReadonly: true });
       });
   }
 

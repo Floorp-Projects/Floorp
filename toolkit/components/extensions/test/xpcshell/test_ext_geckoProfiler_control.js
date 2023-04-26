@@ -2,8 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
 let getExtension = () => {
   return ExtensionTestUtils.loadExtension({
     background: async function() {
@@ -121,9 +119,7 @@ let getExtension = () => {
   });
 };
 
-let verifyProfileData = bytes => {
-  let textDecoder = new TextDecoder();
-  let profile = JSON.parse(textDecoder.decode(bytes));
+let verifyProfileData = profile => {
   ok("libs" in profile, "The profile contains libs.");
   ok("meta" in profile, "The profile contains meta.");
   ok("threads" in profile, "The profile contains threads.");
@@ -152,40 +148,40 @@ add_task(async function testProfilerControl() {
   extension.sendMessage("test profile");
   await extension.awaitMessage("tested profile");
 
-  const profilerPath = OS.Path.join(OS.Constants.Path.profileDir, "profiler");
+  const profilerPath = PathUtils.join(PathUtils.profileDir, "profiler");
   let data, fileName, targetPath;
 
   // test with file name only
   fileName = "bar.profile";
-  targetPath = OS.Path.join(profilerPath, fileName);
+  targetPath = PathUtils.join(profilerPath, fileName);
   extension.sendMessage("test dump to file", { fileName });
   data = await extension.awaitMessage("tested dump to file");
   equal(data.error, undefined, "No error thrown");
-  ok(await OS.File.exists(targetPath), "Saved gecko profile exists.");
-  verifyProfileData(await OS.File.read(targetPath));
+  ok(await IOUtils.exists(targetPath), "Saved gecko profile exists.");
+  verifyProfileData(await IOUtils.readJSON(targetPath));
 
   // test overwriting the formerly created file
   extension.sendMessage("test dump to file", { fileName });
   data = await extension.awaitMessage("tested dump to file");
   equal(data.error, undefined, "No error thrown");
-  ok(await OS.File.exists(targetPath), "Saved gecko profile exists.");
-  verifyProfileData(await OS.File.read(targetPath));
+  ok(await IOUtils.exists(targetPath), "Saved gecko profile exists.");
+  verifyProfileData(await IOUtils.readJSON(targetPath));
 
   // test with a POSIX path, which is not allowed
   fileName = "foo/bar.profile";
-  targetPath = OS.Path.join(profilerPath, ...fileName.split("/"));
+  targetPath = PathUtils.join(profilerPath, ...fileName.split("/"));
   extension.sendMessage("test dump to file", { fileName });
   data = await extension.awaitMessage("tested dump to file");
   equal(data.error, "Path cannot contain a subdirectory.");
-  ok(!(await OS.File.exists(targetPath)), "Gecko profile hasn't been saved.");
+  ok(!(await IOUtils.exists(targetPath)), "Gecko profile hasn't been saved.");
 
   // test with a non POSIX path which is not allowed
   fileName = "foo\\bar.profile";
-  targetPath = OS.Path.join(profilerPath, ...fileName.split("\\"));
+  targetPath = PathUtils.join(profilerPath, ...fileName.split("\\"));
   extension.sendMessage("test dump to file", { fileName });
   data = await extension.awaitMessage("tested dump to file");
   equal(data.error, "Path cannot contain a subdirectory.");
-  ok(!(await OS.File.exists(targetPath)), "Gecko profile hasn't been saved.");
+  ok(!(await IOUtils.exists(targetPath)), "Gecko profile hasn't been saved.");
 
   extension.sendMessage("test profile as array buffer");
   await extension.awaitMessage("tested profile as array buffer");
