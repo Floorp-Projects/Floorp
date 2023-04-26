@@ -200,6 +200,18 @@ async function revealAdvancedPanelSlowlyAsync() {
     wasReset = true;
   };
 
+  // Wait for 10 frames to ensure that the warning text is rendered
+  // and gets all the way to the screen for the user to read it.
+  // This is only ~0.160s at 60Hz, so it's not too much extra time that we're
+  // taking to ensure that we're caught up with rendering, on top of the
+  // (by default) whole second(s) we're going to wait based on the
+  // security.dialog_enable_delay pref.
+  // The catching-up to rendering is the important part, not the
+  // N-frame-delay here.
+  for (let i = 0; i < 10; i++) {
+    await new Promise(requestAnimationFrame);
+  }
+
   // Wait another Nms (default: 1000) for the user to be very sure. (Sorry speed readers!)
   const securityDelayMs = RPMGetIntPref("security.dialog_enable_delay", 1000);
   await new Promise(go => setTimeout(go, securityDelayMs));
