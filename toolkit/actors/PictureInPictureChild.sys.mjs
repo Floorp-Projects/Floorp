@@ -67,7 +67,7 @@ const TEXT_TRACK_FONT_SIZE =
   "media.videocontrols.picture-in-picture.display-text-tracks.size";
 
 const MOUSEMOVE_PROCESSING_DELAY_MS = 50;
-const TOGGLE_HIDING_TIMEOUT_MS = 2000;
+const TOGGLE_HIDING_TIMEOUT_MS = 3000;
 // If you change this, also change VideoControlsWidget.SEEK_TIME_SECS:
 const SEEK_TIME_SECS = 5;
 const EMPTIED_TIMEOUT_MS = 1000;
