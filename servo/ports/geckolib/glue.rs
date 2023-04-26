@@ -122,8 +122,8 @@ use style::style_adjuster::StyleAdjuster;
 use style::stylesheets::container_rule::ContainerSizeQuery;
 use style::stylesheets::import_rule::ImportSheet;
 use style::stylesheets::keyframes_rule::{Keyframe, KeyframeSelector, KeyframesStepValue};
-use style::stylesheets::layer_rule::{LayerOrder, LayerName};
-use style::stylesheets::supports_rule::{parse_condition_or_declaration, SupportsCondition};
+use style::stylesheets::layer_rule::LayerOrder;
+use style::stylesheets::supports_rule::parse_condition_or_declaration;
 use style::stylesheets::{
     AllowImportRules, ContainerRule, CounterStyleRule, CssRule, CssRuleType, CssRules,
     CssRulesHelpers, DocumentRule, FontFaceRule, FontFeatureValuesRule, FontPaletteValuesRule,
@@ -148,7 +148,7 @@ use style::values::generics::easing::BeforeFlag;
 use style::values::specified::gecko::IntersectionObserverRootMargin;
 use style::values::specified::source_size_list::SourceSizeList;
 use style::values::{specified, AtomIdent, CustomIdent, KeyframesName};
-use style_traits::{CssWriter, ParsingMode, ToCss, ParseError};
+use style_traits::{CssWriter, ParsingMode, ToCss};
 use to_shmem::SharedMemoryBuilder;
 
 trait ClosureHelper {
@@ -5854,37 +5854,10 @@ pub extern "C" fn Servo_CSSSupportsForImport(after_rule: &nsACString) -> bool {
         None,
     );
 
-    // Try to parse a layer definition first if there is one,
-    // the input we recieve is after the main @import value (URL),
-    // so we should expect, in this order:
-    // [ layer | layer(<layer-name>) ]?
-    // [ supports( [ <supports-condition> | <declaration> ] ) ]?
-    // <media-query-list>?
-    // https://drafts.csswg.org/css-cascade-5/#at-import
-    let _ = input.try_parse(|input| -> Result<_, ParseError> {
-        // Try to parse layer ident if there.
-        if !input.expect_ident_matching("layer").is_ok() {
-            // Did not get a layer ident, try to parse a function and nested instead.
-            input.expect_function_matching("layer")?;
-            input.parse_nested_block(|input| {
-                LayerName::parse(&context, input)
-            })?;
-        }
-        Ok(())
-    });
-
-    // supports() import conditions have to be parsed differently as:
-    // 1. They are wrapped in a supports(...) function
-    // 2. They do not have to be the entire input (supports() and media query list)
-    // 3. We return true by default, as an @import with no supports() should still be imported
-    // https://drafts.csswg.org/css-cascade-5/#typedef-import-conditions
-    let cond = match input.try_parse(SupportsCondition::parse_for_import) {
-        Ok(c) => c,
-        Err(..) => return true,
-    };
-
     let namespaces = Default::default();
-    cond.eval(&context, &namespaces)
+    let (_layer, supports) = ImportRule::parse_layer_and_supports(&mut input, &context, &namespaces);
+
+    supports.map_or(true, |s| s.enabled)
 }
 
 #[no_mangle]
