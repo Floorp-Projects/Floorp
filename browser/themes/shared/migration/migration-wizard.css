@@ -27,6 +27,10 @@ li:not(:last-child) {
   margin-block-end: 16px;
 }
 
+input[type="checkbox"] {
+  margin-block: 0;
+}
+
 div[name="page-loading"] > .buttons > button {
   color: transparent;
 }
