@@ -40,6 +40,7 @@ headers = [
 raw-lines = [
     # FIXME(emilio): Incrementally remove these "pub use"s. Probably
     # mozilla::css and mozilla::dom are easier.
+    "#[allow(unknown_lints, ambiguous_glob_reexports)]",
     "pub use self::root::*;",
     "pub use self::root::mozilla::*;",
     "pub use self::root::mozilla::css::*;",
