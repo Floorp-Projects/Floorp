@@ -98,8 +98,8 @@ addIntegrationTask(async function testReloadingChangedGeneratedSource(
     await assertNoBreakpoint(dbg, 5);
     assertTextContentOnLine(dbg, 5, "funcC();");
 
-    await selectSource(dbg, "bundle-with-another-original.js");
-
+    info("Switch to generated source and assert that the location is correct");
+    await dbg.actions.jumpToMappedSelectedLocation(getContext(dbg));
     assertPausedAtSourceAndLine(
       dbg,
       findSource(dbg, "bundle-with-another-original.js").id,
@@ -108,6 +108,8 @@ addIntegrationTask(async function testReloadingChangedGeneratedSource(
     await assertNoBreakpoint(dbg, 82);
     assertTextContentOnLine(dbg, 82, "funcC();");
 
+    info("Switch back to original location before resuming");
+    await dbg.actions.jumpToMappedSelectedLocation(getContext(dbg));
     await resume(dbg);
     await waitForPaused(dbg);
 

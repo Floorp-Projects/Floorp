@@ -230,7 +230,7 @@ function waitForSelectedSource(dbg, sourceOrUrl) {
       }
 
       // Wait for symbols/AST to be parsed
-      if (!getSymbols(location)) {
+      if (!getSymbols(location) && !isWasmBinarySource(location.source)) {
         return false;
       }
 
@@ -249,6 +249,17 @@ function waitForSelectedSource(dbg, sourceOrUrl) {
     },
     "selected source"
   );
+}
+
+/**
+ * The generated source of WASM source are WASM binary file,
+ * which have many broken/disabled features in the debugger.
+ *
+ * They especially have a very special behavior in CodeMirror
+ * where line labels aren't line number, but hex addresses.
+ */
+function isWasmBinarySource(source) {
+  return source.isWasm && !source.isOriginal;
 }
 
 function getVisibleSelectedFrameLine(dbg) {
@@ -327,9 +338,14 @@ function assertHighlightLocation(dbg, source, line) {
  * Assert that CodeMirror reports to be paused at the given line/column.
  */
 function _assertDebugLine(dbg, line, column) {
+  const source = dbg.selectors.getSelectedSource();
+  // WASM lines are hex addresses which have to be mapped to decimal line number
+  if (isWasmBinarySource(source)) {
+    line = dbg.wasmOffsetToLine(source.id, line) + 1;
+  }
+
   // Check the debug line
   const lineInfo = getCM(dbg).lineInfo(line - 1);
-  const source = dbg.selectors.getSelectedSource();
   const sourceTextContent = dbg.selectors.getSelectedSourceTextContent();
   if (source && !sourceTextContent) {
     const url = source.url;
@@ -368,7 +384,7 @@ function _assertDebugLine(dbg, line, column) {
   ok(isVisibleInEditor(dbg, debugLine), "debug line is visible");
 
   const markedSpans = lineInfo.handle.markedSpans;
-  if (markedSpans && markedSpans.length) {
+  if (markedSpans && markedSpans.length && !isWasmBinarySource(source)) {
     const hasExpectedDebugLine = markedSpans.some(
       span =>
         span.marker.className?.includes("debug-expression") &&
@@ -425,6 +441,13 @@ function assertPausedAtSourceAndLine(
   ok(isVisibleInEditor(dbg, getCM(dbg).display.gutters), "gutter is visible");
 
   const frames = dbg.selectors.getCurrentThreadFrames();
+  const source = dbg.selectors.getSelectedSource();
+
+  // WASM support is limited when we are on the generated binary source
+  if (isWasmBinarySource(source)) {
+    return;
+  }
+
   ok(frames.length >= 1, "Got at least one frame");
 
   // Lets make sure we can assert both original and generated file locations when needed

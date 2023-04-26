@@ -44,11 +44,16 @@ add_task(async function() {
   invokeInTab("changeStyleAttribute");
   await waitForPaused(dbg);
 
-  // Bug 1829694: For now, on pause, the debugger automagically select the bogus original file for which we can't retrieve text content,
-  // but we should probably automatically fallback to generated file in this case.
-  // assertPausedAtSourceAndLine(dbg, findSource(dbg, "map-with-failed-original-request.js").id, 7);
-  // await selectSource(dbg, "map-with-failed-original-request.original.js");
+  // As the original file can't be loaded, the generated source is automatically selected
+  assertPausedAtSourceAndLine(
+    dbg,
+    findSource(dbg, "map-with-failed-original-request.js").id,
+    7
+  );
 
+  // The original file is visible in the source tree and can be selected,
+  // but its content can't be displayed
+  await selectSource(dbg, "map-with-failed-original-request.original.js");
   is(
     getCM(dbg).getValue(),
     `Error while fetching an original source: request failed with status 404\nSource URL: ${EXAMPLE_URL}map-with-failed-original-request.original.js`
