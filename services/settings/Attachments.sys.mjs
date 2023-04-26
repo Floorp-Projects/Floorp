@@ -257,6 +257,19 @@ export class Downloader {
   }
 
   /**
+   * Is the record downloaded? This does not check if it was bundled.
+   *
+   * @param record A Remote Settings entry with attachment.
+   * @returns {Promise<boolean>}
+   */
+  isDownloaded(record) {
+    const cacheInfo = new LazyRecordAndBuffer(() =>
+      this._readAttachmentCache(record.id)
+    );
+    return cacheInfo.isMatchingRequestedRecord(record);
+  }
+
+  /**
    * Delete the record attachment downloaded locally.
    * No-op if the attachment does not exist.
    *
