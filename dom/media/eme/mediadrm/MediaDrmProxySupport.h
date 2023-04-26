@@ -10,6 +10,7 @@
 #include "mozilla/DecryptorProxyCallback.h"
 #include "mozilla/java/MediaDrmProxyWrappers.h"
 #include "mozilla/Logging.h"
+#include "mozilla/UniquePtr.h"
 #include "nsString.h"
 
 namespace mozilla {
@@ -27,6 +28,8 @@ LogModule* GetMDRMNLog();
             ("[MediaDrmProxySupport][%s]" x, __FUNCTION__, ##__VA_ARGS__))
 #endif
 
+class MediaDrmCDMCallbackProxy;
+
 class MediaDrmProxySupport final {
  public:
   explicit MediaDrmProxySupport(const nsAString& aKeySystem);
@@ -35,7 +38,7 @@ class MediaDrmProxySupport final {
   /*
    * APIs to act as GMPDecryptorAPI, discarding unnecessary calls.
    */
-  nsresult Init(DecryptorProxyCallback* aCallback);
+  nsresult Init(UniquePtr<MediaDrmCDMCallbackProxy>&& aCallback);
 
   void CreateSession(uint32_t aCreateSessionToken, uint32_t aPromiseId,
                      const nsCString& aInitDataType,
@@ -57,7 +60,6 @@ class MediaDrmProxySupport final {
   const nsString mKeySystem;
   java::MediaDrmProxy::GlobalRef mBridgeProxy;
   java::MediaDrmProxy::NativeMediaDrmProxyCallbacks::GlobalRef mJavaCallbacks;
-  DecryptorProxyCallback* mCallback;
   bool mDestroyed;
   nsString mMediaDrmStubId;
 };

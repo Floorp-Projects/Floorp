@@ -13,11 +13,12 @@
 namespace mozilla {
 class CDMProxy;
 class ErrorResult;
+class MediaDrmCDMProxy;
 
 // Proxies call backs from the MediaDrmProxy -> MediaDrmProxySupport back to the
 // MediaKeys object on the main thread. We used annotation calledFrom = "gecko"
 // to ensure running on main thread.
-class MediaDrmCDMCallbackProxy : public DecryptorProxyCallback {
+class MediaDrmCDMCallbackProxy final : public DecryptorProxyCallback {
  public:
   void SetSessionId(uint32_t aCreateSessionToken,
                     const nsCString& aSessionId) override;
@@ -47,16 +48,15 @@ class MediaDrmCDMCallbackProxy : public DecryptorProxyCallback {
   void BatchedKeyStatusChanged(const nsCString& aSessionId,
                                const nsTArray<CDMKeyInfo>& aKeyInfos) override;
 
-  ~MediaDrmCDMCallbackProxy() {}
+  ~MediaDrmCDMCallbackProxy();
 
  private:
   friend class MediaDrmCDMProxy;
-  explicit MediaDrmCDMCallbackProxy(CDMProxy* aProxy);
+  explicit MediaDrmCDMCallbackProxy(MediaDrmCDMProxy* aProxy);
 
   void BatchedKeyStatusChangedInternal(const nsCString& aSessionId,
                                        const nsTArray<CDMKeyInfo>& aKeyInfos);
-  // Warning: Weak ref.
-  CDMProxy* mProxy;
+  const RefPtr<MediaDrmCDMProxy> mProxy;
 };
 
 }  // namespace mozilla
