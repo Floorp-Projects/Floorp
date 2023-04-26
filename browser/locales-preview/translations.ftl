@@ -28,3 +28,14 @@ translations-panel-restore-header = Change the language?
 # $toLanguage (string) - The target language of the translation.
 translations-panel-restore-label = The page is being translated from { $fromLanguage } to { $toLanguage }.
 translations-panel-restore-button = Restore the page
+
+## Firefox Translations language management in about:preferences.
+
+translations-manage-header = Translations
+translations-manage-description = Download languages for offline translation.
+translations-manage-all-language = All languages
+translations-manage-download-button = Download
+translations-manage-delete-button = Delete
+translations-manage-error-download = There was a problem downloading the language files. Please try again.
+translations-manage-error-delete = There was an error deleting the language files. Please try again.
+translations-manage-error-list = Failed to get the list of available languages for translation. Refresh the page to try again.
