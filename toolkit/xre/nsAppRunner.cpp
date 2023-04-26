@@ -265,7 +265,6 @@ extern void InstallSignalHandlers(const char* ProgramName);
 #define FILE_COMPATIBILITY_INFO "compatibility.ini"_ns
 #define FILE_INVALIDATE_CACHES ".purgecaches"_ns
 #define FILE_STARTUP_INCOMPLETE u".startup-incomplete"_ns
-#define FILE_GLX_TEST u"glxtest"_ns
 
 #if defined(MOZ_BLOCK_PROFILE_DOWNGRADE) || defined(MOZ_LAUNCHER_PROCESS) || \
     defined(MOZ_DEFAULT_BROWSER_AGENT)
