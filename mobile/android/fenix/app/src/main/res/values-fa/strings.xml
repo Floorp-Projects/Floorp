@@ -1704,7 +1704,7 @@
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">ورود‌ها و گذرواژه های خود را امن کنید</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">در صورت دسترسی شخص دیگری از دستگاه شما ، یک الگوی قفل دستگاه ، PIN یا رمز عبور را تنظیم کنید تا از ورود و گذرواژه‌های ذخیره شده خود در دسترس نباشید.</string>
+    <string name="logins_warning_dialog_message">یک الگوی قفل افزاره، پین یا گذرواژه تنظیم کنید تا از ورودها و گذرواژه‌های ذخیره شدهٔ خود محافظت کنید تا اگر افزاره‌تان به دست دیگری افتاد، به آن‌ها دسترسی پیدا نکند.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">بعدا</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1787,7 +1787,7 @@
     <!-- Error message for credit card number validation -->
     <string name="credit_cards_number_validation_error_message">لطفا یک شمارهٔ کارت اعتباری معتبر وارد کنید</string>
     <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message">لطفا این قسمت را پر کنید</string>
+    <string name="credit_cards_name_on_card_validation_error_message">لطفاً این خانه را پر کنید</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">برای مشاهدهٔ کارت‌های اعتباری، قفل را باز کنید</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
@@ -1936,11 +1936,11 @@
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">گزینه های ورود</string>
     <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">فیلد متنی ویرایش‌پذیر برای نشانی وب ورود.</string>
+    <string name="saved_login_hostname_description">خانهٔ متنی ویرایش‌پذیر برای نشانی وب ورود.</string>
     <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">قسمت متن قابل ویرایش برای نام کاربری ورود به سیستم.</string>
+    <string name="saved_login_username_description">خانهٔ متنی ویرایش‌پذیر برای نام کاربری ورود.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">قسمت متن قابل ویرایش برای کلمه عبور ورود به سیستم.</string>
+    <string name="saved_login_password_description">خانهٔ متنی ویرایش‌پذیر برای گذرواژهٔ ورود.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">تغییرات را برای ورود به سیستم ذخیره کنید</string>
     <!--  The page title for editing a saved login. -->

@@ -68,6 +68,10 @@
          doesn't work correctly with blocked content. -->
     <string name="menu_trackers_blocked_title">Трэкераў заблакіравана</string>
 
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">Адключэнне гэтай функцыі можа вырашыць некаторыя праблемы з сайтам</string>
+
     <!-- Menu item: This is the label for turning off content blocking for the current website. -->
     <string name="menu_content_blocking">Блакіроўка змесціва</string>
 
@@ -198,6 +202,9 @@
     %s is a placeholder for the app name (e.g. Firefox Focus)-->
     <string name="preference_autocomplete_topsite_summary2">Уключыць аўтадапаўненне ў %s для больш чым 450 папулярных сайтаў у адрасным радку.</string>
 
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">Для даданых вамі сайтаў</string>
+
     <!-- Summary for the toggle to enable autocomplete for the user-defined list
      %s is a placeholder for the app name (e.g. Firefox Focus)-->
     <string name="preference_autocomplete_user_list_summary2">Уключыце, каб %s аўтаматычна завяршаў URL-адрасы вашых улюбёных сайтаў.</string>
@@ -210,6 +217,9 @@
 
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Дадаць уласны URL-адрас</string>
+
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">Ваш спіс аўтадапаўнення:</string>
 
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add2">Дадаць URL</string>
@@ -234,6 +244,9 @@
 
     <!-- A link to SUMO at autocomplete settings. -->
     <string name="preference_autocomplete_learn_more">Падрабязней</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">Даданне і кіраванне ўласнымі URL-адрасамі аўтадапаўнення.</string>
 
     <!-- Label for the "custom autocomplete URL" input field -->
     <string name="preference_autocomplete_add_title">URL для дадавання</string>
@@ -267,9 +280,13 @@
     <string name="preference_category_privacy">Прыватнасць</string>
     <string name="preference_privacy_block_ads">Блакіраваць рэкламнае сачэнне</string>
 
+    <string name="preference_privacy_block_ads_summary">Некаторая рэклама асочвае наведванне сайтаў, нават калі вы не націскаеце на яе</string>
     <string name="preference_privacy_block_analytics">Блакіраваць трэкеры аналітыкі</string>
+    <string name="preference_privacy_block_analytics_summary">Выкарыстоўваецца для збору, аналізу і вымярэння дзеянняў, напрыклад, дотыку і пракруткі</string>
     <string name="preference_privacy_block_social">Блакіраваць трэкеры сацыяльных сетак</string>
+    <string name="preference_privacy_block_social_summary">Убудаваны на сайты для сачэння за вашымі наведваннямі і адлюстравання такіх функцый, як кнопка «Падзяліцца»</string>
     <string name="preference_privacy_block_content">Блакіраваць іншыя трэкеры змесціва</string>
+    <string name="preference_privacy_block_content_summary2">Уключэнне можа прывесці да таго, што некаторыя старонкі будуць паводзіць сябе нечакана</string>
     <string name="preference_privacy_category_cookies">Блакіраваць кукі</string>
 
     <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
@@ -290,6 +307,16 @@
         %s will be replaced by the app name (e.g. Firefox Focus)
         Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
     <string name="preference_security_biometric_summary2">Разблакіроўка з дапамогай адбітка пальца, калі вы дадалі цэтлікі або калі вэб-сайт ужо адкрыты ў %s.</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">Скрытнасць</string>
+
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">Хаваць вэб-старонкі пры пераключэнні праграм і блакіраваць здымкі экрана.</string>
 
     <string name="preference_category_security">Бяспека</string>
 
@@ -408,6 +435,9 @@
     on home screen-->
     <string name="indicator_content_description_menu">Кнопка дадатковых налад</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">Перайсці наперад</string>
+
     <!-- Content description (not visible, for screen readers etc.): Reload current website -->
     <string name="content_description_reload">Перазагрузіць сайт</string>
 
@@ -420,6 +450,10 @@
     <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
     <string name="content_description_customtab_exit">Вярнуцца ў папярэднюю праграму</string>
 
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">Колькасць заблакаваных трэкераў</string>
+
     <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
          content blocking for the current session -->
     <string name="content_description_blocking_switch">Блакіраваць трэкеры</string>
@@ -428,8 +462,14 @@
 
     <string name="external_app_prompt_title">Адкрыць спасылку ў іншай праграме</string>
 
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">Вы можаце выйсці з %1$s, каб адкрыць гэтую спасылку ў %2$s.</string>
     <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
     <string name="external_app_prompt_no_app_title">Знайдзіце праграму, якая можа адкрыць спасылку</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">Ні адна з праграм на вашай прыладзе не можа адкрыць гэту спасылку. Вы можаце выйсці з %1$s для пошуку ў %2$s праграмы, якая можа.</string>
     <!-- This label is shown above a list of apps that can be used to open a given link -->
     <string name="external_multiple_apps_matched_exit">Пакінуць Прыватнае агляданне?</string>
 
@@ -487,6 +527,9 @@
     <!-- First run tour (Privacy): Title -->
     <string name="firstrun_privacy_title">Зрабіце прыватнасць звычкаю</string>
 
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">Усталюйце %1$s прадвызначаным браўзерам і атрымлівайце перавагі прыватнага аглядання, калі адкрываеце вэб-старонкі з іншых праграм.</string>
+
     <string name="firstrun_close_button">OK, зразумела!</string>
     <string name="firstrun_skip_button">Прапусціць</string>
     <string name="firstrun_next_button">Далей</string>
@@ -518,6 +561,31 @@
     <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
       item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
     <string name="download_firefox">Сцягнуць Firefox</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA[%1$s — бясплатнае праграмнае забеспячэнне з адкрытым зыходным кодам, створанае Mozilla і іншымі ўдзельнікамі.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s даступны вам на ўмовах <a href="%2$s">Mozilla Public License</a> і іншых ліцэнзій для адкрытага зыходнага коду.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[Вам не прадстаўляюцца ніякія правы ці ліцэнзіі на таварныя знакі Mozilla Foundation або іншых бакоў, уключаючы назвы і эмблемы Mozilla, Firefox або %1$s. Дадатковую інфармацыю можна знайсці <a href="%2$s">тут</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[Дадатковы зыходны код для %1$s даступны пад рознымі іншымі бясплатнымі і адкрытымі <a href="%2$s">ліцэнзіямі</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s таксама выкарыстоўвае спісы блакіровак, прадстаўленыя Disconnect, Inc. як асобныя і незалежныя працы ў адпаведнасці з <a href="%2$s">GNU General Public License v3</a> і даступныя <a href="%3$s">тут</a>.]]></string>
 
     <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Імя карыстальніка</string>
@@ -588,6 +656,9 @@
 
     <!--  Title preference inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
     <string name="cookie_banner_reject_all_option_title">Памяншэнне колькасці банераў кукі</string>
+
+    <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_summary">Бачце менш банераў, аўтаматычна адхіляючы запыты на кукі, калі гэта магчыма.</string>
 
     <!-- Preference for removing cookie/consent banners from sites automatically, this is shown as part of the protections panel with the tracking protection toggle. -->--&gt;
     <string name="cookie_banner_exception_item_title">Памяншэнне колькасці банераў кукі</string>
@@ -730,6 +801,9 @@
     <!-- Title text for biometric prompt pop-up -->
     <string name="biometric_prompt_title">Пацвердзіце з дапамогай адбітка пальца</string>
 
+    <!-- Subtitle text for biometric prompt pop-up -->
+    <string name="biometric_prompt_subtitle">Можаце выкарыстаць адбітак пальца, каб працягнуць цяперашні сеанс праграмы.</string>
+
     <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
     while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
     <string name="biometric_auth_open_link_new_session">Адкрыць спасылку ў новым сеансе</string>
@@ -740,6 +814,10 @@
     <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
      This is displayed during the authentication flow as the app launches. -->
     <string name="biometric_auth_not_recognized_error">Адбітак пальца не распазнаны. Паспрабуйце яшчэ.</string>
+
+    <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
+    This is displayed during the authentication flow as the app launches.-->
+    <string name="biometric_auth_moved_too_quickly">Палец рухаўся надта хутка. Паспрабуйце зноў.</string>
 
     <!-- Title for the prompt to enable search suggestions -->
     <string name="enable_search_suggestion_title2">Паказваць пошукавыя прапановы?</string>
@@ -762,9 +840,27 @@
 
     <!-- Tips displayed on the home view -->
 
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection">Сайт паводзіць сябе нечакана?\n
+    Паспрабуйце адключыць ахову ад сачэння</string>
+
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[Хуткі доступ да ўлюбёных сайтаў%1$s Меню > Дадаць на хатні экран]]></string>
+
+    <!-- Tip displayed on home view explaining how to make Focus the default browser
+    Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_set_default_browser">Адкрывайце ўсе спасылкі ў %1$s\n
+        Усталяваць %1$s як прадвызначаны браўзер
+    </string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_autocomplete_url">Аўтадапаўненне URL-адрасоў для сайтаў, якімі найчасцей карыстаецеся\n
+        Доўгае націсканне на любы URL у адрасным радку
+    </string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Выключыць парады на стартавым экране</string>
@@ -778,8 +874,13 @@
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Уваход у поўнаэкранны рэжым</string>
 
+    <!-- Preference for switching to a new tab immediately after opening -->
+    <string name="preference_open_new_tab">Неадкладна пераключыцца на спасылку ў новай картцы</string>
+
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">Блакаваць патэнцыйна небяспечныя і падманлівыя сайты</string>
+    <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_summary">Блакіраваць сайты, якія падманваюць і нападаюць, сайты са шкодным і непажаданым праграмным забеспячэннем.</string>
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Рэжым «Толькі HTTPS»</string>
 
@@ -836,6 +937,9 @@
     <string name="secure_connection">Бяспечнае злучэнне</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="insecure_connection">Небяспечнае злучэнне</string>
+
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">Трэкеры і скрыпты, якія трэба заблакіраваць</string>
 
     <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
     <string name="go_back">Вярнуцца</string>

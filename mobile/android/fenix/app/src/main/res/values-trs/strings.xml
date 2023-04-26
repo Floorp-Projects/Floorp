@@ -254,6 +254,29 @@
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">Nanà\'huì\' %s</string>
 
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">Gāyi\'ì</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">Gāyi\'ì sēsiûn</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">Si gi\'hiaj guendât</string>
+    <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
+    <string name="onboarding_home_content_description_close_button">Nārán</string>
+
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="onboarding_home_enable_notifications_positive_button">Guij ne\' ñaan</string>
+    <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
+    <string name="onboarding_home_enable_notifications_negative_button">Sī ga\'hue akuan\' nïn</string>
+
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_default_browser_negative_button">Sī ga\'hue akuan\' nïn</string>
+    <!-- Text for the button to sign in to sync on the device -->
+    <string name="juno_onboarding_sign_in_positive_button">Gāyi\'ì sēsiûn</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_sign_in_negative_button">Sī ga\'hue akuan\' nïn</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_enable_notifications_negative_button">Sī ga\'hue akuan\' nïn</string>
+
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Nānà\'uì\'</string>
     <!-- Text preview for larger sized widgets -->
@@ -301,6 +324,27 @@
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Gāchrūn aksêso direkto riña aché nu huìt</string>
 
+    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
+    <string name="reduce_cookie_banner_option_off">Dūnâ\’àj</string>
+    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
+    <string name="reduce_cookie_banner_option_on">Nāchrūn</string>
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">Nitāj si huā nî’nïn guendâ sitiô nan</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Dūyichin\'</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">Huā nî’nïn guendâ sitiô nan</string>
+    <!-- Remind me later text button for the onboarding dialog -->
+    <string name="reduce_cookie_banner_dialog_not_now_button">Sī ga\'hue Akuan\' nïn</string>
+    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Gā\'nïn</string>
+    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
+    <string name="reduce_cookie_banner_dialog_change_setting_button">Gā\'nïn</string>
+
+    <!-- Summary of https only preference if https only is set to off -->
+    <string name="preferences_https_only_off">Dūnâ\’àj</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">Gāhuin chrūn doj</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Dàj gā gātū\'</string>
     <!-- Preference to override the Firefox Account server -->
@@ -351,8 +395,22 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Nā\'nīn nej lînk riña nej aplikasiûn</string>
 
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">Nitāj āmān</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Sa gā\'ue nūtò\'</string>
+
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">GĀ’HUE</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Dūyichin\'</string>
+
+    <!-- Snackbar label for action to view selected wallpaper -->
+    <string name="wallpaper_updated_snackbar_action">Ni\'hiāj</string>
+    <!-- Snackbar label for action to retry downloading the wallpaper -->
+    <string name="wallpaper_download_error_snackbar_action">Ginùn huin ñûn</string>
+    <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
+    <string name="wallpaper_learn_more">Gāhuin chrūn doj</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -460,10 +518,58 @@
     <!-- Option in Library to open History page -->
     <string name="library_history">Sa gahuin</string>
 
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">Rakïj ñanj nākàa</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Nāgi\'iô\'</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Nārán</string>
+
+    <!-- Dialog button text for confirming open all tabs -->
+    <string name="open_all_warning_confirm">Na\'nïn nej rakïj ñanj </string>
+    <!-- Dialog button text for canceling open all tabs -->
+    <string name="open_all_warning_cancel">Dūyichin\'</string>
+
+    <!-- Text to show users they have one page in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_site_1">%d pâjina</string>
+    <!-- Text to show users they have multiple pages in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_sites_1">%d nej pâjina</string>
+
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">Rakïj ñanj hiaj narán nakà</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">%d nej rakïj ñanj</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d rakïj ñanj</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">Nej rakïj ñanj</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">Lista</string>
+
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">Narán nej rakïj ñanj</string>
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">Nitāj āmān</string>
+
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Nādure\'</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Ngà \'hiaj sunj</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Gāhuin chrūn doj</string>
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">Nārán riña aplikasiûn nan da’ gā’hue nātū sa nākàa riñanj</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">GĀ’HUE</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Dūyichin\'</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -480,6 +586,8 @@
     <string name="tab_tray_menu_item_share">Dūyinga\' daran\' nej rakïj ñanj</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Nārrán riña daran\' nej rakïj ñanj</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">Nārán</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Nādure\' rakïj ñanj riña màn yì\'nïnj</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -516,6 +624,10 @@
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d sa naguij</string>
 
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Gui hìaj</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Guki</string>
     <!-- Text for the header that groups the history the past 7 days -->
     <string name="history_7_days">sa gahuin gachîn 7 gui</string>
     <!-- Text for the header that groups the history the past 30 days -->
@@ -524,6 +636,10 @@
     <string name="history_older">Sa nâ doj</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Nitāj à\'ngō sa gini\'iājt</string>
+
+
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">Nādure\'</string>
 
 
     <!-- Crashes -->
@@ -541,6 +657,8 @@
     <string name="bookmark_delete_folder_confirmation_dialog">Huā yītïnj ruhuât nādure\'t kārpetâ nan anj</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s nādure’ej nej sa naguit dan.</string>
+    <!-- Text for the cancel button on delete bookmark dialog -->
+    <string name="bookmark_delete_negative">Dūyichin\'</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Nūtà\' kārpêta</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -609,8 +727,16 @@
     <string name="phone_feature_recommended">Sā sà\'a huin ânj</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Nādure\' nej sa achín nì\'iaj</string>
+    <!-- Text for the OK button on Clear permissions dialog -->
+    <string name="clear_permissions_positive">GĀ’HUE</string>
+    <!-- Text for the cancel button on Clear permissions dialog -->
+    <string name="clear_permissions_negative">Dūyichin\'</string>
     <!-- Button label for clearing a site permission-->
     <string name="clear_permission">Nādure\' sa achín nì\'iaj</string>
+    <!-- Text for the OK button on Clear permission dialog -->
+    <string name="clear_permission_positive">GĀ’HUE</string>
+    <!-- Text for the cancel button on Clear permission dialog -->
+    <string name="clear_permission_negative">Dūyichin\'</string>
     <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">Nādure\' nej sa achín nì\'iaj riña daran\' nej sîtio</string>
     <!-- Preference for altering video and audio autoplay for all websites -->
@@ -650,6 +776,11 @@
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Dūnâ\’àj</string>
 
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">Nāchrūn</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Dūnâ\’àj</string>
+
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">Koleksiôn</string>
@@ -688,6 +819,11 @@
     <string name="create_collection_save">Nā\'nïnj sà\'</string>
     <!-- Snackbar action to view the collection the user just created or updated -->
     <string name="create_collection_view">Ni\'iāj</string>
+
+    <!-- Text for the OK button from collection dialogs -->
+    <string name="create_collection_positive">GĀ’HUE</string>
+    <!-- Text for the cancel button from collection dialogs -->
+    <string name="create_collection_negative">Dūyichin\'</string>
 
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">Sa nachra chrē\'t %d</string>
@@ -760,6 +896,8 @@
     <string name="qr_scanner_dialog_positive">GA\'NĪN</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
     <string name="qr_scanner_dialog_negative">SĪ GA\'NÏNJT</string>
+    <!-- QR code scanner prompt dialog positive option when there is an error -->
+    <string name="qr_scanner_dialog_invalid_ok">GĀ’HUE</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Huā yītïnj ruhuât nādure\'t %1$s anj</string>
     <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
@@ -807,6 +945,8 @@
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Gī\'iaj hīu hiūj nachrasàt</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Sa rikî nì\'iaj sîtio</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Nej sa naduninjt</string>
     <!-- Text for the button to delete browsing data -->
     <string name="preferences_delete_browsing_data_button">Nādure\' nej si datô riña sā nana\'uî\'t</string>
     <!-- Title for the Delete browsing data on quit preference -->
@@ -827,6 +967,11 @@
     <string name="preferences_delete_browsing_data_snackbar">Ngà ganare\' nej si datô sa nana\'uî\'t</string>
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Hīaj nadure\'ej nej si datô riña sā nana\'uî\'t…</string>
+
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">Dūyichin\'</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">Nādūre\'</string>
 
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Ngà nanûn Sync</string>
@@ -975,6 +1120,9 @@
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s Dukuâ ñanj OSS</string>
 
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">Gāhuin chrūn doj</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">Sa rugûñu\'ūnj un</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1090,6 +1238,25 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Nāgi\'iaj hue\'ê riña menú gayì\'ìt sēsiûn</string>
 
+    <!-- The text for the positive button on "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_button">Nādūre\'</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">Nā\'nïnj sà\'</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">Nā\'nïnj sà\'</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting a credit card -->
+    <string name="credit_cards_cancel_button">Dūyichin\'</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Ne\' rūkù doj</string>
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">Nā\'nïnj sà\'</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">Dūyichin\'</string>
+    <!-- The text for the positive button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_ok_button">Nādūre\'</string>
+    <!-- The text for the negative button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_cancel_button">Dūyichin\'</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Nūtà\' a\'ngô sa riñā nānà\'uì\'t</string>
     <!-- Title of the Edit search engine screen -->
@@ -1164,6 +1331,8 @@
     <string name="login_deletion_confirmation">Huā yītïnj ruhuât nādure\'t riña gayì\'ìt sēsiûn nan anj</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Nādūre\'</string>
+    <!-- Negative action of a dialog asking to delete login -->
+    <string name="dialog_delete_negative">Dūyichin\'</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">A\'ngô sa ga\'ue gī\'iát da\' ga\'ue gāyi\'ìt sēsiûn</string>
     <!--  The editable text field for a login's web address. -->
@@ -1203,5 +1372,19 @@
 
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Ga\'ue, ngà garâj da\'nga\' ruhuâj</string>
+
+    <!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">GĀ’HUE</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">Dūyichin\'</string>
+
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Nādure\'</string>
+
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Nārán</string>
+
+    <!-- Clickable text for opening an external link for more information about Pocket. -->
+    <string name="pocket_stories_feature_learn_more">Gāhuin chrūn doj</string>
 
     </resources>

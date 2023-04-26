@@ -1,14 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">Huā sa \'iaj chì\' guendâ gāyi\'ìj</string>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">A\'ngô ñû</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">Nanikàj rukù</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">Na\'ue gārayinaj sa achín nì\'iát</string>
@@ -44,6 +38,12 @@
     <string name="mozac_browser_errorpages_security_bad_cert_back">Nānikàj ne\' rūkùu (sa sà\'a huin)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Gārāyino\' si ahī hua man nī gun\'  ne\' ñāan</string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Sa huāj ñā doj…</string>
+
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Nānīkāj ne\’ Rūkùu</string>
 
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">Giyichin\' ngè kōneksiûn</string>
@@ -243,4 +243,5 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Sa huā a\'nan\' riña sitiô diga\'ñu\'ūnj un</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Pajinâ %1$s nī \'ngō pajinâ diga\'ñu\'ūnj un huin man yī\'ì dan narán aga\' nan riñaj dadin\' daj gà\' gatāj na\'ānjt gūnï.</p>]]></string>
-</resources>
+
+    </resources>

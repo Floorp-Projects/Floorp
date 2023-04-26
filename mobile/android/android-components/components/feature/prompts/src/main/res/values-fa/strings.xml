@@ -29,7 +29,7 @@
     <!-- Positive confirmation that we should save the updated login -->
     <string name="mozac_feature_prompt_update_confirmation">بروزرسانی</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_empty_password">قسمت رمز عبور نباید خالی باشد</string>
+    <string name="mozac_feature_prompt_error_empty_password">خانهٔ گذرواژه نباید خالی باشد</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
     <string name="mozac_feature_prompt_error_unknown_cause">ذخیره ورود امکان پذیر نیست</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
@@ -40,7 +40,7 @@
     <string name="mozac_feature_prompt_login_add_username_headline">افزودن نام‌کاربری به گذرواژه ذخیره شده؟</string>
     <!-- Text for a label for the field when prompt requesting a text is shown. -->
     <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
-    <string name="mozac_feature_prompts_content_description_input_label">برچسب ورود به فیلد ورودی متن</string>
+    <string name="mozac_feature_prompts_content_description_input_label">برچسب برای وارد کردن یک خانهٔ ورودی متنی</string>
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">یک رنگ انتخاب کنید</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
