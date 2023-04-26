@@ -355,6 +355,7 @@
             data-l10n-args='{"localeName": "und"}'
             preference="intl.regional_prefs.use_os_locales"/>
 
+  <!-- TODO (Bug 1817084) This older implementation will be removed soon -->
   <hbox id="translationBox" hidden="true">
     <hbox align="center" flex="1">
       <checkbox id="translate" preference="browser.translation.detectLanguage"
@@ -384,6 +385,25 @@
   <checkbox id="checkSpelling"
           data-l10n-id="check-user-spelling"
           preference="layout.spellcheckDefault"/>
+
+  <!-- Translations -->
+  <vbox id="translationsGroup" hidden="true" data-subcategory="translations">
+    <label><html:h2 data-l10n-id="translations-manage-header"/></label>
+    <description data-l10n-id="translations-manage-description"/>
+    <vbox>
+      <html:div id="translations-manage-install-list" hidden="true">
+        <hbox class="translations-manage-language">
+          <label data-l10n-id="translations-manage-all-language"></label>
+          <button id="translations-manage-install-all"
+                  data-l10n-id="translations-manage-download-button"></button>
+          <button id="translations-manage-delete-all"
+                  data-l10n-id="translations-manage-delete-button"></button>
+        </hbox>
+        <!-- The downloadable languages will be listed here. -->
+      </html:div>
+      <description id="translations-manage-error" hidden="true"></description>
+    </vbox>
+  </vbox>
 </groupbox>
 
 <!-- Files and Applications -->

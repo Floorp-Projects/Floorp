@@ -1455,6 +1455,37 @@ richlistitem .text-link:hover {
   margin-top: 0.4em;
 }
 
+#translations-manage-install-list {
+  height: 220px;
+  overflow: scroll;
+  background-color: var(--in-content-box-background);
+  border: 1px solid var(--in-content-box-border-color);
+  border-radius: 4px;
+  resize: vertical;
+  margin: 4px 0;
+}
+
+.translations-manage-language:first-child {
+  border-bottom: 1px solid var(--in-content-box-border-color);
+  padding: 8px;
+  margin-bottom: 8px;
+}
+
+.translations-manage-language {
+	align-items: center;
+  padding: 0 8px;
+}
+
+.translations-manage-language label {
+	flex: 1;
+	margin: 0 15px;
+}
+
+#translations-manage-error {
+  color: var(--in-content-error-text-color);
+  margin: 16px 0;
+}
+
 /* Platform-specific tweaks & overrides */
 
 @media (-moz-platform: macos) {

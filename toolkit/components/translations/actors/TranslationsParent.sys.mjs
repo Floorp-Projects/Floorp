@@ -862,12 +862,15 @@ export class TranslationsParent extends JSWindowActorParent {
     const client = this.#getTranslationModelsRemoteClient();
     const isForDeletion = true;
     return Promise.all(
-      Array.from(await this.getMatchedRecords(language, isForDeletion)).map(
-        record => {
-          lazy.console.log("Deleting record", record);
-          return client.attachments.deleteDownloaded(record);
-        }
-      )
+      Array.from(
+        await this.getRecordsForTranslatingToAndFromAppLanguage(
+          language,
+          isForDeletion
+        )
+      ).map(record => {
+        lazy.console.log("Deleting record", record);
+        return client.attachments.deleteDownloaded(record);
+      })
     );
   }
 
@@ -881,7 +884,9 @@ export class TranslationsParent extends JSWindowActorParent {
 
     const queue = [];
 
-    for (const record of await this.getMatchedRecords(language)) {
+    for (const record of await this.getRecordsForTranslatingToAndFromAppLanguage(
+      language
+    )) {
       const download = () => {
         lazy.console.log("Downloading record", record.name, record.id);
         return client.attachments.download(record);
@@ -941,7 +946,7 @@ export class TranslationsParent extends JSWindowActorParent {
    */
   async hasAllFilesForLanguage(requestedLanguage) {
     const client = this.#getTranslationModelsRemoteClient();
-    for (const record of await this.getMatchedRecords(
+    for (const record of await this.getRecordsForTranslatingToAndFromAppLanguage(
       requestedLanguage,
       true
     )) {
