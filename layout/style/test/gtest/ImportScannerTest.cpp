@@ -6,6 +6,7 @@
 
 #include "gtest/gtest.h"
 #include "mozilla/ImportScanner.h"
+#include "mozilla/StaticPrefs_layout.h"
 
 using namespace mozilla;
 
@@ -96,8 +97,23 @@ TEST(ImportScanner, Supports)
       "@import url(bazzzz) layer(A.B) supports(display: flex) (max-width: "
       "100px)");
 
-  ASSERT_EQ(urls.Length(), 3u);
-  ASSERT_EQ(urls[0], u"bar"_ns);
-  ASSERT_EQ(urls[1], u"bazz"_ns);
-  ASSERT_EQ(urls[2], u"bazzzz"_ns);
+  if (StaticPrefs::layout_css_import_supports_enabled()) {
+    // If the pref is enabled, expect the supports conditions to be evaluated
+    // and unsupported to not be emitted.
+
+    ASSERT_EQ(urls.Length(), 3u);
+    ASSERT_EQ(urls[0], u"bar"_ns);
+    ASSERT_EQ(urls[1], u"bazz"_ns);
+    ASSERT_EQ(urls[2], u"bazzzz"_ns);
+  } else {
+    // If disabled, all imports should be included as the supports conditions
+    // should be ignored.
+
+    ASSERT_EQ(urls.Length(), 5u);
+    ASSERT_EQ(urls[0], u"bar"_ns);
+    ASSERT_EQ(urls[1], u"baz"_ns);
+    ASSERT_EQ(urls[2], u"bazz"_ns);
+    ASSERT_EQ(urls[3], u"bazzz"_ns);
+    ASSERT_EQ(urls[4], u"bazzzz"_ns);
+  }
 }
