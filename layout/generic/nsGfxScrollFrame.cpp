@@ -2787,28 +2787,89 @@ void nsHTMLScrollFrame::ScrollVisual() {
 
 /**
  * Clamp desired scroll position aDesired and range [aDestLower, aDestUpper]
- * to [aBoundLower, aBoundUpper]
+ * to [aBoundLower, aBoundUpper] and then select the appunit value from among
+ * aBoundLower, aBoundUpper and those such that (aDesired - aCurrent) *
+ * aRes/aAppUnitsPerPixel is an integer (or as close as we can get
+ * modulo rounding to appunits) that is in [aDestLower, aDestUpper] and
+ * closest to aDesired.  If no such value exists, return the nearest in
+ * [aDestLower, aDestUpper].
  */
-static nscoord ClampScrollPositionAxis(nscoord aDesired, nscoord aBoundLower,
+static nscoord ClampAndAlignWithPixels(nscoord aDesired, nscoord aBoundLower,
                                        nscoord aBoundUpper, nscoord aDestLower,
-                                       nscoord aDestUpper) {
+                                       nscoord aDestUpper,
+                                       nscoord aAppUnitsPerPixel, double aRes,
+                                       nscoord aCurrent) {
   // Intersect scroll range with allowed range, by clamping the ends
   // of aRange to be within bounds
   nscoord destLower = clamped(aDestLower, aBoundLower, aBoundUpper);
   nscoord destUpper = clamped(aDestUpper, aBoundLower, aBoundUpper);
-  return clamped(aDesired, destLower, destUpper);
+
+  nscoord desired = clamped(aDesired, destLower, destUpper);
+
+  double currentLayerVal = (aRes * aCurrent) / aAppUnitsPerPixel;
+  double desiredLayerVal = (aRes * desired) / aAppUnitsPerPixel;
+  double delta = desiredLayerVal - currentLayerVal;
+  double nearestLayerVal = NS_round(delta) + currentLayerVal;
+
+  // Convert back from PaintedLayer space to appunits relative to the top-left
+  // of the scrolled frame.
+  nscoord aligned =
+      aRes == 0.0
+          ? 0.0
+          : NSToCoordRoundWithClamp(nearestLayerVal * aAppUnitsPerPixel / aRes);
+
+  // Use a bound if it is within the allowed range and closer to desired than
+  // the nearest pixel-aligned value.
+  if (aBoundUpper == destUpper &&
+      static_cast<decltype(Abs(desired))>(aBoundUpper - desired) <
+          Abs(desired - aligned)) {
+    return aBoundUpper;
+  }
+
+  if (aBoundLower == destLower &&
+      static_cast<decltype(Abs(desired))>(desired - aBoundLower) <
+          Abs(aligned - desired)) {
+    return aBoundLower;
+  }
+
+  // Accept the nearest pixel-aligned value if it is within the allowed range.
+  if (aligned >= destLower && aligned <= destUpper) {
+    return aligned;
+  }
+
+  // Check if opposite pixel boundary fits into allowed range.
+  double oppositeLayerVal =
+      nearestLayerVal + ((nearestLayerVal < desiredLayerVal) ? 1.0 : -1.0);
+  nscoord opposite = aRes == 0.0
+                         ? 0.0
+                         : NSToCoordRoundWithClamp(oppositeLayerVal *
+                                                   aAppUnitsPerPixel / aRes);
+  if (opposite >= destLower && opposite <= destUpper) {
+    return opposite;
+  }
+
+  // No alignment available.
+  return desired;
 }
 
 /**
- * Clamp desired scroll position aPt to aBounds, keeping it within aRange.
- * aCurrent is the current scroll position.
+ * Clamp desired scroll position aPt to aBounds and then snap
+ * it to the same layer pixel edges as aCurrent, keeping it within aRange
+ * during snapping. aCurrent is the current scroll position.
  */
-static nsPoint ClampScrollPosition(const nsPoint& aPt, const nsRect& aBounds,
-                                   const nsRect& aRange) {
-  return nsPoint(ClampScrollPositionAxis(aPt.x, aBounds.x, aBounds.XMost(),
-                                         aRange.x, aRange.XMost()),
-                 ClampScrollPositionAxis(aPt.y, aBounds.y, aBounds.YMost(),
-                                         aRange.y, aRange.YMost()));
+static nsPoint ClampAndAlignWithLayerPixels(const nsPoint& aPt,
+                                            const nsRect& aBounds,
+                                            const nsRect& aRange,
+                                            const nsPoint& aCurrent,
+                                            nscoord aAppUnitsPerPixel,
+                                            const MatrixScales& aScale) {
+  return nsPoint(
+      ClampAndAlignWithPixels(aPt.x, aBounds.x, aBounds.XMost(), aRange.x,
+                              aRange.XMost(), aAppUnitsPerPixel, aScale.xScale,
+                              aCurrent.x),
+      ClampAndAlignWithPixels(aPt.y, aBounds.y, aBounds.YMost(), aRange.y,
+                              aRange.YMost(), aAppUnitsPerPixel, aScale.yScale,
+                              aCurrent.y));
 }
 
 /* static */
@@ -2922,7 +2983,11 @@ void nsHTMLScrollFrame::ScrollToImpl(
   }
 
   nsPresContext* presContext = PresContext();
-  const nsPoint curPos = GetScrollPosition();
+  nscoord appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
+  // 'scale' is our estimate of the scale factor that will be applied
+  // when rendering the scrolled content to its own PaintedLayer.
+  MatrixScales scale = GetPaintedLayerScaleForFrame(mScrolledFrame);
+  nsPoint curPos = GetScrollPosition();
 
   // Try to align aPt with curPos so they have an integer number of layer
   // pixels between them. This gives us the best chance of scrolling without
@@ -2934,7 +2999,8 @@ void nsHTMLScrollFrame::ScrollToImpl(
   // and are relative to the scrollport top-left. This difference doesn't
   // actually matter since all we are about is that there be an integer number
   // of layer pixels between pt and curPos.
-  nsPoint pt = ClampScrollPosition(aPt, GetLayoutScrollRange(), aRange);
+  nsPoint pt = ClampAndAlignWithLayerPixels(aPt, GetLayoutScrollRange(), aRange,
+                                            curPos, appUnitsPerDevPixel, scale);
   if (pt == curPos) {
     // Even if we are bailing out due to no-op main-thread scroll position
     // change, we might need to cancel an APZ smooth scroll that we already

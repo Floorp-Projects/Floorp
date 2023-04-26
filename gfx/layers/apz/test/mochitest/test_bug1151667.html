@@ -48,16 +48,8 @@ async function test() {
   var subframe = document.getElementById("subframe");
   await promiseNativeWheelAndWaitForScrollEvent(subframe, 100, 150, 0, -10);
 
-  while (!subframe.scrollTop) {
-    is(document.documentElement.scrollTop, 0, "We should not have scrolled the page");
-    info("Waiting for one more scroll");
-    // FIXME(bug 1674687): The first scroll might be fractional, and thus still
-    // round down to zero. Wait for another scroll event.
-    // Remove this when bug 1674687 is fixed.
-    await new Promise(r => subframe.addEventListener("scroll", r, { once: true }));
-  }
-  is(document.documentElement.scrollTop, 0, "We should still not have scrolled the page");
-  ok(subframe.scrollTop > 0, "We should have scrolled the subframe down");
+  is(subframe.scrollTop > 0, true, "We should have scrolled the subframe down");
+  is(document.documentElement.scrollTop, 0, "We should not have scrolled the page");
 }
 
 SimpleTest.waitForExplicitFinish();
