@@ -34,10 +34,6 @@ const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  OS: "resource://gre/modules/osfile.jsm",
-});
-
 const { promiseShutdownManager, promiseStartupManager } = AddonTestUtils;
 
 const {
@@ -62,7 +58,7 @@ async function createExtensionJSONFileWithData(extensionId, data) {
   await jsonFile._save();
   const oldStorageFilename = ExtensionStorage.getStorageFile(extensionId);
   equal(
-    await OS.File.exists(oldStorageFilename),
+    await IOUtils.exists(oldStorageFilename),
     true,
     "The old json file has been created"
   );
@@ -319,13 +315,13 @@ add_task(async function test_storage_local_data_migration() {
   );
 
   equal(
-    await OS.File.exists(oldStorageFilename),
+    await IOUtils.exists(oldStorageFilename),
     false,
     "The old json storage file name should not exist anymore"
   );
 
   equal(
-    await OS.File.exists(`${oldStorageFilename}.migrated`),
+    await IOUtils.exists(`${oldStorageFilename}.migrated`),
     true,
     "The old json storage file name should have been renamed as .migrated"
   );
@@ -482,16 +478,14 @@ add_task(async function test_storage_local_corrupted_data_migration() {
   const invalidData = `{"test_key_string": "test_value1"`;
   const oldStorageFilename = ExtensionStorage.getStorageFile(EXTENSION_ID);
 
-  const profileDir = OS.Constants.Path.profileDir;
-  await OS.File.makeDir(
-    OS.Path.join(profileDir, "browser-extension-data", EXTENSION_ID),
-    { from: profileDir, ignoreExisting: true }
+  await IOUtils.makeDirectory(
+    PathUtils.join(PathUtils.profileDir, "browser-extension-data", EXTENSION_ID)
   );
 
   // Write the json file with some invalid data.
-  await OS.File.writeAtomic(oldStorageFilename, invalidData, { flush: true });
+  await IOUtils.writeUTF8(oldStorageFilename, invalidData, { flush: true });
   equal(
-    await OS.File.read(oldStorageFilename, { encoding: "utf-8" }),
+    await IOUtils.readUTF8(oldStorageFilename),
     invalidData,
     "The old json file has been overwritten with invalid data"
   );
@@ -546,7 +540,7 @@ add_task(async function test_storage_local_corrupted_data_migration() {
   );
 
   equal(
-    await OS.File.exists(`${oldStorageFilename}.corrupt`),
+    await IOUtils.exists(`${oldStorageFilename}.corrupt`),
     true,
     "The old json storage should still be available if failed to be read"
   );
@@ -638,7 +632,7 @@ add_task(async function test_storage_local_data_migration_failure() {
     "No data stored in the ExtensionStorageIDB backend as expected"
   );
   equal(
-    await OS.File.exists(oldStorageFilename),
+    await IOUtils.exists(oldStorageFilename),
     true,
     "The old json storage should still be available if failed to be read"
   );
