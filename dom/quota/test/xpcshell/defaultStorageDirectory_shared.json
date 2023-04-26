@@ -105,5 +105,41 @@
         ]
       }
     ]
+  },
+  {
+    "key": "afterClearPrivateBrowsing",
+    "entries": [
+      {
+        "name": "storage",
+        "dir": true,
+        "entries": [
+          {"name":"ls-archive.sqlite","dir":false},
+          {
+            "name": "permanent",
+            "dir": true,
+            "entries": [
+              { "name": "invalid+++example.com", "dir": true },
+              { "name": "foo.bar", "dir": false }
+            ]
+          },
+          {
+            "name": "default",
+            "dir": true,
+            "entries": [
+              { "name": "invalid+++example.com", "dir": true },
+              { "name": "foo.bar", "dir": false }
+            ]
+          },
+          {
+            "name": "temporary",
+            "dir": true,
+            "entries": [
+              { "name": "invalid+++example.com", "dir": true },
+              { "name": "foo.bar", "dir": false }
+            ]
+          }
+        ]
+      }
+    ]
   }
 ]
