@@ -5,10 +5,10 @@
 
 // Test the primary browser navigation UI to verify it's connected to the viewport.
 
-const DUMMY_1_URL = "http://example.com/";
-const TEST_URL = `${URL_ROOT}doc_page_state.html`;
-const DUMMY_2_URL = "http://example.com/browser/";
-const DUMMY_3_URL = "http://example.com/browser/devtools/";
+const DUMMY_1_URL = "https://example.com/";
+const TEST_URL = `${URL_ROOT_SSL}doc_page_state.html`;
+const DUMMY_2_URL = "https://example.com/browser/";
+const DUMMY_3_URL = "https://example.com/browser/devtools/";
 
 addRDMTask(
   null,

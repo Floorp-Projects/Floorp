@@ -6,13 +6,13 @@
 // Test that the eyedropper icons in the toolbar and in the color picker aren't displayed
 // when the page isn't an HTML one.
 
-const TEST_URL = URL_ROOT + "doc_inspector_eyedropper_disabled.xhtml";
+const TEST_URL = URL_ROOT_SSL + "doc_inspector_eyedropper_disabled.xhtml";
 const TEST_URL_2 =
   "data:text/html;charset=utf-8,<h1 style='color:red'>HTML test page</h1>";
 
 add_task(async function() {
   await SpecialPowers.pushPermissions([
-    { type: "allowXULXBL", allow: true, context: URL_ROOT },
+    { type: "allowXULXBL", allow: true, context: URL_ROOT_SSL },
   ]);
 
   const { inspector } = await openInspectorForURL(TEST_URL);

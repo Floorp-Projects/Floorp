@@ -5,7 +5,7 @@
 
 // Test inactive css properties in XUL documents.
 
-const TEST_URI = URL_ROOT + "doc_inactive_css_xul.xhtml";
+const TEST_URI = URL_ROOT_SSL + "doc_inactive_css_xul.xhtml";
 
 const TEST_DATA = [
   {
@@ -30,7 +30,7 @@ const TEST_DATA = [
 
 add_task(async () => {
   await SpecialPowers.pushPermissions([
-    { type: "allowXULXBL", allow: true, context: URL_ROOT },
+    { type: "allowXULXBL", allow: true, context: URL_ROOT_SSL },
   ]);
 
   info("Open a url to a XUL document");

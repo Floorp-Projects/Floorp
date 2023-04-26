@@ -6,9 +6,9 @@
 // Test page state to ensure page is not reloaded and session history is not
 // modified.
 
-const DUMMY_1_URL = "http://example.com/";
-const TEST_URL = `${URL_ROOT}doc_page_state.html`;
-const DUMMY_2_URL = "http://example.com/browser/";
+const DUMMY_1_URL = "https://example.com/";
+const TEST_URL = `${URL_ROOT_SSL}doc_page_state.html`;
+const DUMMY_2_URL = "https://example.com/browser/";
 
 addRDMTask(
   null,
