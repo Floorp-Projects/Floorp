@@ -181,13 +181,13 @@ function enter4(event) {
      "Should not have a full-screen element again.");
 }
 
-function exit_to_arg_test_1(event) {
+async function exit_to_arg_test_1(event) {
   ok(!document.fullscreenElement,
      "Should have left full-screen mode (third time).");
   addFullscreenChangeContinuation("enter", enter_from_arg_test_1);
   var threw = false;
   try {
-    FULLSCREEN_ELEMENT.requestFullscreen(123);
+    await FULLSCREEN_ELEMENT.requestFullscreen(123);
   } catch (e) {
     threw = true;
     // trigger normal fullscreen so that we continue
@@ -203,13 +203,13 @@ function enter_from_arg_test_1(event) {
   document.exitFullscreen();
 }
 
-function exit_to_arg_test_2(event) {
+async function exit_to_arg_test_2(event) {
   ok(!document.fullscreenElement,
      "Should have left full-screen mode (fourth time).");
   addFullscreenChangeContinuation("enter", enter_from_arg_test_2);
   var threw = false;
   try {
-    FULLSCREEN_ELEMENT.requestFullscreen({ vrDisplay: null });
+    await FULLSCREEN_ELEMENT.requestFullscreen({ vrDisplay: null });
   } catch (e) {
     threw = true;
     // trigger normal fullscreen so that we continue

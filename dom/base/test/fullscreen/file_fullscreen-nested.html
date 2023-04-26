@@ -36,14 +36,18 @@ function begin() {
 
   // The format of each test step is:
   // [[action, target], [fsOuter, fsInner]] where:
-  // * "action" is either "enter" or "exit", means whether we want to
-  //   enter or exit fullscreen in this step.
+  // * "action" is "enter" or "exit" means whether we want to enter or
+  //   fullscreen in this step. An action of "reset" means to force
+  //   our count of enters to a certain value, to match how many exits
+  //   we need to do to leave fullscreen. This is used when one exit
+  //   can unwind more than one enter.
   // * "target" is where we apply this action. For "enter" action, it
   //   is the element we want to call requestFullscreen() on, and for
   //   "exit", it is the document we want to call exitFullscreen() on.
   // * "fsOuter" and "fsInner" are the expected fullscreen elements of
   //   the outer and inner document respectively after executing the
-  //   action in this step.
+  //   action in this step. These are only checked after "enter" or
+  //   "exit" actions.
   gTestSteps = [
     // innerRoot
     [["enter", innerRoot], [iframe, innerRoot]],
@@ -66,6 +70,7 @@ function begin() {
     [[ "exit",  document], [  null,      null]],
     [["enter",    iframe], [iframe,      null]],
     [["enter", innerRoot], [iframe, innerRoot]],
+    [["reset",         1], [  null,      null]],
     [[ "exit",  document], [  null,      null]],
     // root, iframe, innerRoot
     [["enter",      root], [  root,      null]],
@@ -78,6 +83,7 @@ function begin() {
     [["enter",    iframe], [iframe,      null]],
     [["enter", innerRoot], [iframe, innerRoot]],
     [[ "exit",  document], [  root,      null]],
+    [["reset",         1], [  null,      null]],
     [[ "exit",  document], [  null,      null]],
   ];
 
@@ -111,6 +117,10 @@ function nextStep() {
     // For "exit" action, the target is the document
     addFullscreenChangeContinuation("exit", checkAndNext, target);
     target.exitFullscreen();
+  } else if (action == "reset") {
+    // For "reset" action, the target is the number to setFullscreenChangeEnters.
+    setFullscreenChangeEnters(target);
+    nextStep();
   } else {
     ok(false, `Unknown action ${action}`);
   }
