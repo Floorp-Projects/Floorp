@@ -713,7 +713,7 @@ bool DMABufSurfaceRGBA::CreateWlBuffer() {
     return false;
   }
 
-  RefPtr<nsWaylandDisplay> waylandDisplay = widget::WaylandDisplayGet();
+  nsWaylandDisplay* waylandDisplay = widget::WaylandDisplayGet();
   if (!waylandDisplay->GetDmabuf()) {
     CloseFileDescriptors(lockFD);
     return false;
