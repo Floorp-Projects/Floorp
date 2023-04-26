@@ -149,8 +149,10 @@ static bool IncludeBBoxScale(const SVGAnimatedViewBox& aViewBox,
 
 // Given the matrix for the pattern element's own transform, this returns a
 // combined matrix including the transforms applicable to its target.
-static Matrix GetPatternMatrix(uint16_t aPatternUnits,
-                               const Matrix& patternTransform,
+static Matrix GetPatternMatrix(nsIFrame* aSource,
+                               const StyleSVGPaint nsStyleSVG::*aFillOrStroke,
+                               uint16_t aPatternUnits,
+                               const gfxMatrix& patternTransform,
                                const gfxRect& bbox, const gfxRect& callerBBox,
                                const Matrix& callerCTM) {
   // We really want the pattern matrix to handle translations
@@ -162,12 +164,20 @@ static Matrix GetPatternMatrix(uint16_t aPatternUnits,
     miny += callerBBox.Y();
   }
 
-  float scale = 1.0f / MaxExpansion(callerCTM);
-  Matrix patternMatrix = patternTransform;
-  patternMatrix.PreScale(scale, scale);
+  double scale = 1.0 / MaxExpansion(callerCTM);
+  auto patternMatrix = patternTransform;
+  patternMatrix.PostScale(scale, scale);
   patternMatrix.PreTranslate(minx, miny);
 
-  return patternMatrix;
+  // revert the vector effect transform so that the pattern appears unchanged
+  if (aFillOrStroke == &nsStyleSVG::mStroke) {
+    gfxMatrix userToOuterSVG;
+    if (SVGUtils::GetNonScalingStrokeTransform(aSource, &userToOuterSVG)) {
+      patternMatrix *= userToOuterSVG;
+    }
+  }
+
+  return ToMatrix(patternMatrix);
 }
 
 static nsresult GetTargetGeometry(gfxRect* aBBox,
@@ -280,31 +290,20 @@ already_AddRefed<SourceSurface> SVGPatternFrame::PaintPattern(
   }
 
   // Get the pattern transform
-  Matrix patternTransform = ToMatrix(GetPatternTransform());
-
-  // revert the vector effect transform so that the pattern appears unchanged
-  if (aFillOrStroke == &nsStyleSVG::mStroke) {
-    gfxMatrix userToOuterSVG;
-    if (SVGUtils::GetNonScalingStrokeTransform(aSource, &userToOuterSVG)) {
-      patternTransform *= ToMatrix(userToOuterSVG);
-      if (patternTransform.IsSingular()) {
-        NS_WARNING("Singular matrix painting non-scaling-stroke");
-        return nullptr;
-      }
-    }
-  }
+  auto patternTransform = GetPatternTransform();
 
   // Get the transformation matrix that we will hand to the renderer's pattern
   // routine.
-  *patternMatrix = GetPatternMatrix(patternUnits, patternTransform, bbox,
-                                    callerBBox, aContextMatrix);
+  *patternMatrix =
+      GetPatternMatrix(aSource, aFillOrStroke, patternUnits, patternTransform,
+                       bbox, callerBBox, aContextMatrix);
   if (patternMatrix->IsSingular()) {
     return nullptr;
   }
 
   // Now that we have all of the necessary geometries, we can
   // create our surface.
-  gfxSize scaledSize = bbox.Size() * MaxExpansion(patternTransform);
+  gfxSize scaledSize = bbox.Size() * MaxExpansion(ToMatrix(patternTransform));
 
   bool resultOverflows;
   IntSize surfaceSize =
@@ -321,8 +320,8 @@ already_AddRefed<SourceSurface> SVGPatternFrame::PaintPattern(
   if (resultOverflows || patternWidth != surfaceSize.width ||
       patternHeight != surfaceSize.height) {
     // scale drawing to pattern surface size
-    patternWithChildren->mCTM->PreScale(surfaceSize.width / patternWidth,
-                                        surfaceSize.height / patternHeight);
+    patternWithChildren->mCTM->PostScale(surfaceSize.width / patternWidth,
+                                         surfaceSize.height / patternHeight);
 
     // and rescale pattern to compensate
     patternMatrix->PreScale(patternWidth / surfaceSize.width,
