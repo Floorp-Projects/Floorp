@@ -9,9 +9,9 @@ pytestmark = pytest.mark.asyncio
 
 
 async def test_release_char_sequence_sends_keyup_events_in_reverse(
-    bidi_session, top_context, test_actions_page_bidi, get_focused_key_input
+    bidi_session, top_context, load_static_test_page, get_focused_key_input
 ):
-    await test_actions_page_bidi()
+    await load_static_test_page(page="test_actions.html")
     await get_focused_key_input()
 
     actions = Actions()
@@ -43,10 +43,10 @@ async def test_release_char_sequence_sends_keyup_events_in_reverse(
 async def test_release_mouse_sequence_resets_dblclick_state(
     bidi_session,
     top_context,
-    test_actions_page_bidi,
+    load_static_test_page,
     release_actions
 ):
-    await test_actions_page_bidi()
+    await load_static_test_page(page="test_actions.html")
     reporter = await bidi_session.script.evaluate(
         expression="document.querySelector('#outer')",
         target=ContextTarget(top_context["context"]),

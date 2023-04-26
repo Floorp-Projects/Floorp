@@ -211,8 +211,8 @@ def url(server_config):
 
 
 @pytest.fixture
-def modifier_key(session):
-    if session.capabilities["platformName"] == "mac":
+def modifier_key(current_session):
+    if current_session.capabilities["platformName"] == "mac":
         return Keys.META
     else:
         return Keys.CONTROL
