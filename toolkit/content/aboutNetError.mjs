@@ -156,24 +156,60 @@ function setupAdvancedButton() {
     .addEventListener("click", togglePanelVisibility);
 
   function togglePanelVisibility() {
-    panel.hidden = !panel.hidden;
+    if (panel.hidden) {
+      // Reveal
+      revealAdvancedPanelSlowlyAsync();
 
-    // Toggling the advanced panel must ensure that the debugging
-    // information panel is hidden as well, since it's opened by the
-    // error code link in the advanced panel.
-    toggleCertErrorDebugInfoVisibility(false);
-
-    if (!panel.hidden) {
       // send event to trigger telemetry ping
       document.dispatchEvent(
         new CustomEvent("AboutNetErrorUIExpanded", { bubbles: true })
       );
+    } else {
+      // Hide
+      panel.hidden = true;
     }
   }
 
   if (getCSSClass() == "expertBadCert") {
-    panel.hidden = false;
+    revealAdvancedPanelSlowlyAsync();
   }
+}
+
+async function revealAdvancedPanelSlowlyAsync() {
+  const badCertAdvancedPanel = document.getElementById("badCertAdvancedPanel");
+  const exceptionDialogButton = document.getElementById(
+    "exceptionDialogButton"
+  );
+
+  // Toggling the advanced panel must ensure that the debugging
+  // information panel is hidden as well, since it's opened by the
+  // error code link in the advanced panel.
+  toggleCertErrorDebugInfoVisibility(false);
+
+  // Reveal, but disabled (and grayed-out) for 3.0s.
+  badCertAdvancedPanel.hidden = false;
+  exceptionDialogButton.disabled = true;
+
+  // -
+
+  if (exceptionDialogButton.resetReveal) {
+    exceptionDialogButton.resetReveal(); // Reset if previous is pending.
+  }
+  let wasReset = false;
+  exceptionDialogButton.resetReveal = () => {
+    wasReset = true;
+  };
+
+  // Wait another Nms (default: 1000) for the user to be very sure. (Sorry speed readers!)
+  const securityDelayMs = RPMGetIntPref("security.dialog_enable_delay", 1000);
+  await new Promise(go => setTimeout(go, securityDelayMs));
+
+  if (wasReset) {
+    return;
+  }
+
+  // Enable and un-gray-out.
+  exceptionDialogButton.disabled = false;
 }
 
 function disallowCertOverridesIfNeeded() {
@@ -1400,12 +1436,7 @@ function setTechnicalDetailsOnCertError(
             // If we set a link, meaning there's something helpful for
             // the user here, expand the section by default
             if (getCSSClass() != "expertBadCert") {
-              document.getElementById("badCertAdvancedPanel").hidden = false;
-
-              // Toggling the advanced panel must ensure that the debugging
-              // information panel is hidden as well, since it's opened by the
-              // error code link in the advanced panel.
-              toggleCertErrorDebugInfoVisibility(false);
+              revealAdvancedPanelSlowlyAsync();
             }
           } else {
             addLabel("cert-error-domain-mismatch-single-nolink", l10nArgs);
