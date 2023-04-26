@@ -3097,4 +3097,65 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
         )
     }
+
+    @Test fun goBackFromHistory() {
+        // TODO: Bug 1673954
+        assumeThat(sessionRule.env.isFission, equalTo(false))
+
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+
+        mainSession.waitUntilCalled(object : HistoryDelegate, ContentDelegate {
+            @AssertCalled(count = 1)
+            override fun onHistoryStateChange(session: GeckoSession, state: HistoryDelegate.HistoryList) {
+                assertThat("History should have one entry", state.size, equalTo(1))
+            }
+
+            @AssertCalled(count = 1)
+            override fun onTitleChange(session: GeckoSession, title: String?) {
+                assertThat("Title should match", title, equalTo("Hello, world!"))
+            }
+        })
+
+        mainSession.loadTestPath(HELLO2_HTML_PATH)
+
+        mainSession.waitUntilCalled(object : HistoryDelegate, NavigationDelegate, ContentDelegate {
+            @AssertCalled(count = 1)
+            override fun onHistoryStateChange(session: GeckoSession, state: HistoryDelegate.HistoryList) {
+                assertThat("History should have two entry", state.size, equalTo(2))
+            }
+
+            @AssertCalled(count = 1)
+            override fun onCanGoBack(session: GeckoSession, canGoBack: Boolean) {
+                assertThat("Can go back", canGoBack, equalTo(true))
+            }
+
+            @AssertCalled(count = 1)
+            override fun onTitleChange(session: GeckoSession, title: String?) {
+                assertThat("Title should match", title, equalTo("Hello, world! Again!"))
+            }
+        })
+
+        // goBack will be navigated from history.
+
+        var lastTitle: String? = ""
+        sessionRule.delegateDuringNextWait(object : NavigationDelegate, ContentDelegate {
+            @AssertCalled(count = 1)
+            override fun onLocationChange(
+                session: GeckoSession,
+                url: String?,
+                perms: MutableList<PermissionDelegate.ContentPermission>
+            ) {
+                assertThat("URL should match", url, endsWith(HELLO_HTML_PATH))
+            }
+
+            @AssertCalled
+            override fun onTitleChange(session: GeckoSession, title: String?) {
+                lastTitle = title
+            }
+        })
+
+        mainSession.goBack()
+        sessionRule.waitForPageStop()
+        assertThat("Title should match", lastTitle, equalTo("Hello, world!"))
+    }
 }
