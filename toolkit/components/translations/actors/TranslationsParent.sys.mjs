@@ -173,6 +173,11 @@ export class TranslationsParent extends JSWindowActorParent {
    */
   static #isTranslationsEngineSupported = null;
 
+  // On a fast connection, 10 concurrent downloads were measured to be the fastest when
+  // downloading all of the language files.
+  static MAX_CONCURRENT_DOWNLOADS = 10;
+  static MAX_DOWNLOAD_RETRIES = 3;
+
   /**
    * Detect if Wasm SIMD is supported, and cache the value. It's better to check
    * for support before downloading large binary blobs to a user who can't even
@@ -268,6 +273,21 @@ export class TranslationsParent extends JSWindowActorParent {
       }
       case "Translations:GetSupportedLanguages": {
         return this.getSupportedLanguages();
+      }
+      case "Translations:HasAllFilesForLanguage": {
+        return this.hasAllFilesForLanguage(data.language);
+      }
+      case "Translations:DownloadLanguageFiles": {
+        return this.downloadLanguageFiles(data.language);
+      }
+      case "Translations:DownloadAllFiles": {
+        return this.downloadAllFiles();
+      }
+      case "Translations:DeleteAllLanguageFiles": {
+        return this.deleteAllLanguageFiles();
+      }
+      case "Translations:DeleteLanguageFiles": {
+        return this.deleteLanguageFiles(data.language);
       }
       case "Translations:GetLanguagePairs": {
         return this.getLanguagePairs();
@@ -834,6 +854,106 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   /**
+   * Deletes language files that match a language.
+   *
+   * @param {string} requestedLanguage The BCP 47 language tag.
+   */
+  async deleteLanguageFiles(language) {
+    const client = this.#getTranslationModelsRemoteClient();
+    const isForDeletion = true;
+    return Promise.all(
+      Array.from(await this.getMatchedRecords(language, isForDeletion)).map(
+        record => {
+          lazy.console.log("Deleting record", record);
+          return client.attachments.deleteDownloaded(record);
+        }
+      )
+    );
+  }
+
+  /**
+   * Download language files that match a language.
+   *
+   * @param {string} requestedLanguage The BCP 47 language tag.
+   */
+  async downloadLanguageFiles(language) {
+    const client = this.#getTranslationModelsRemoteClient();
+
+    const queue = [];
+
+    for (const record of await this.getMatchedRecords(language)) {
+      const download = () => {
+        lazy.console.log("Downloading record", record.name, record.id);
+        return client.attachments.download(record);
+      };
+      queue.push({ download });
+    }
+
+    return downloadManager(queue);
+  }
+
+  /**
+   * Download all files used for translations.
+   */
+  async downloadAllFiles() {
+    const client = this.#getTranslationModelsRemoteClient();
+
+    const queue = [];
+
+    for (const [recordId, record] of await this.#getTranslationModelRecords()) {
+      queue.push({
+        onSuccess: () => {
+          this.sendQuery("Translations:DownloadedLanguageFile", { recordId });
+        },
+        // The download may be attempted multiple times.
+        onFailure: () => {
+          this.sendQuery("Translations:DownloadLanguageFileError", {
+            recordId,
+          });
+        },
+        download: () => client.attachments.download(record),
+      });
+    }
+
+    queue.push({ download: () => this.#getBergamotWasmArrayBuffer() });
+    queue.push({ download: () => this.#getLanguageIdModelArrayBuffer() });
+    queue.push({ download: () => this.#getLanguageIdWasmArrayBuffer() });
+
+    return downloadManager(queue);
+  }
+
+  /**
+   * Delete all language model files.
+   * @returns {Promise<string[]>} A list of record IDs.
+   */
+  async deleteAllLanguageFiles() {
+    const client = this.#getTranslationModelsRemoteClient();
+    await client.attachments.deleteAll();
+    return [...(await this.#getTranslationModelRecords()).keys()];
+  }
+
+  /**
+   * Only returns true if all language files are present for a requested language.
+   * It's possible only half the files exist for a pivot translation into another
+   * language, or there was a download error, and we're still missing some files.
+   *
+   * @param {string} requestedLanguage The BCP 47 language tag.
+   */
+  async hasAllFilesForLanguage(requestedLanguage) {
+    const client = this.#getTranslationModelsRemoteClient();
+    for (const record of await this.getMatchedRecords(
+      requestedLanguage,
+      true
+    )) {
+      if (!(await client.attachments.isDownloaded(record))) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
    * Get the necessary files for translating to and from the app language and a
    * requested language. This may require the files for a pivot language translation
    * if there is no language model for a direct translation.
@@ -1277,4 +1397,98 @@ class TranslationsLanguageState {
       })
     );
   }
+}
+
+/**
+ * @typedef {Object} QueueItem
+ * @prop {Function} download
+ * @prop {Function} [onSuccess]
+ * @prop {Function} [onFailure]
+ * @prop {number} [retriesLeft]
+ */
+
+/**
+ * Manage the download of the files by providing a maximum number of concurrent files
+ * and the ability to retry a file download in case of an error.
+ *
+ * @param {QueueItem[]} queue
+ */
+async function downloadManager(queue) {
+  const NOOP = () => {};
+
+  const pendingDownloadAttempts = new Set();
+  let failCount = 0;
+  let index = 0;
+  const start = Date.now();
+  const originalQueueLength = queue.length;
+
+  while (index < queue.length || pendingDownloadAttempts.size > 0) {
+    // Start new downloads up to the maximum limit
+    while (
+      index < queue.length &&
+      pendingDownloadAttempts.size < TranslationsParent.MAX_CONCURRENT_DOWNLOADS
+    ) {
+      lazy.console.log(`Starting download ${index + 1} of ${queue.length}`);
+
+      const {
+        download,
+        onSuccess = NOOP,
+        onFailure = NOOP,
+        retriesLeft = TranslationsParent.MAX_DOWNLOAD_RETRIES,
+      } = queue[index];
+
+      const handleFailedDownload = error => {
+        // The download failed. Either retry it, or report the failure.
+        lazy.console.error(`Failed to download file`, error);
+
+        const newRetriesLeft = retriesLeft - 1;
+
+        if (retriesLeft > 0) {
+          lazy.console.log(
+            `Queueing another attempt. ${newRetriesLeft} attempts left.`
+          );
+          queue.push({
+            download,
+            retriesLeft: newRetriesLeft,
+            onSuccess,
+            onFailure,
+          });
+        } else {
+          // Give up on this download.
+          failCount++;
+          onFailure();
+        }
+      };
+
+      const afterDownloadAttempt = () => {
+        pendingDownloadAttempts.delete(downloadAttempt);
+      };
+
+      // Kick off the download. If it fails, retry it a certain number of attempts.
+      // This is done asynchronously from the rest of the for loop.
+      const downloadAttempt = download()
+        .then(onSuccess, handleFailedDownload)
+        .then(afterDownloadAttempt);
+
+      pendingDownloadAttempts.add(downloadAttempt);
+      index++;
+    }
+
+    // Wait for any active downloads to complete.
+    await Promise.race(pendingDownloadAttempts);
+  }
+
+  const duration = ((Date.now() - start) / 1000).toFixed(3);
+
+  if (failCount > 0) {
+    const message = `Finished downloads in ${duration} seconds, but ${failCount} download(s) failed.`;
+    lazy.console.log(
+      `Finished downloads in ${duration} seconds, but ${failCount} download(s) failed.`
+    );
+    throw new Error(message);
+  }
+
+  lazy.console.log(
+    `Finished ${originalQueueLength} downloads in ${duration} seconds.`
+  );
 }
