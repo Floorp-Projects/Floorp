@@ -4832,6 +4832,17 @@ bool WarpCacheIRTranspiler::updateCallInfo(MDefinition* callee,
       callInfo_->setArgFormat(CallInfo::ArgFormat::Array);
       break;
     }
+    case CallFlags::FunApplyNullUndefined:
+      // Note: We already changed the callee to the target
+      // function instead of the |apply| function.
+      MOZ_ASSERT(callInfo_->argc() == 2);
+      MOZ_ASSERT(!callInfo_->constructing());
+      MOZ_ASSERT(callInfo_->argFormat() == CallInfo::ArgFormat::Standard);
+      callInfo_->setThis(callInfo_->getArg(0));
+      callInfo_->getArg(1)->setImplicitlyUsedUnchecked();
+      callInfo_->removeArg(1);
+      callInfo_->removeArg(0);
+      break;
     default:
       MOZ_CRASH("Unsupported arg format");
   }

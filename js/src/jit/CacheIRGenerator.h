@@ -9,6 +9,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 
 #include <stdint.h>
 
@@ -501,7 +502,8 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   ObjOperandId emitFunCallOrApplyGuard(Int32OperandId argcId);
   ObjOperandId emitFunCallGuard(Int32OperandId argcId);
   ObjOperandId emitFunApplyGuard(Int32OperandId argcId);
-  ObjOperandId emitFunApplyArgsGuard(CallFlags::ArgFormat format);
+  mozilla::Maybe<ObjOperandId> emitFunApplyArgsGuard(
+      CallFlags::ArgFormat format);
 
   void emitCallScriptedGuards(ObjOperandId calleeObjId, JSFunction* calleeFunc,
                               Int32OperandId argcId, CallFlags flags,

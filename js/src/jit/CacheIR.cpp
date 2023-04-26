@@ -5656,7 +5656,7 @@ ObjOperandId InlinableNativeIRGenerator::emitLoadArgsArray() {
   }
 
   MOZ_ASSERT(flags_.getArgFormat() == CallFlags::FunApplyArray);
-  return generator_.emitFunApplyArgsGuard(flags_.getArgFormat());
+  return generator_.emitFunApplyArgsGuard(flags_.getArgFormat()).ref();
 }
 
 void IRGenerator::emitCalleeGuard(ObjOperandId calleeId, JSFunction* callee) {
@@ -5701,15 +5701,15 @@ ObjOperandId CallIRGenerator::emitFunApplyGuard(Int32OperandId argcId) {
   return emitFunCallOrApplyGuard(argcId);
 }
 
-ObjOperandId CallIRGenerator::emitFunApplyArgsGuard(
+Maybe<ObjOperandId> CallIRGenerator::emitFunApplyArgsGuard(
     CallFlags::ArgFormat format) {
   MOZ_ASSERT(argc_ == 2);
 
   ValOperandId argValId =
       writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
 
-  ObjOperandId argObjId = writer.guardToObject(argValId);
   if (format == CallFlags::FunApplyArgsObj) {
+    ObjOperandId argObjId = writer.guardToObject(argValId);
     if (args_[1].toObject().is<MappedArgumentsObject>()) {
       writer.guardClass(argObjId, GuardClassKind::MappedArguments);
     } else {
@@ -5719,14 +5719,20 @@ ObjOperandId CallIRGenerator::emitFunApplyArgsGuard(
     uint8_t flags = ArgumentsObject::ELEMENT_OVERRIDDEN_BIT |
                     ArgumentsObject::FORWARDED_ARGUMENTS_BIT;
     writer.guardArgumentsObjectFlags(argObjId, flags);
-  } else {
-    MOZ_ASSERT(format == CallFlags::FunApplyArray);
+    return mozilla::Some(argObjId);
+  }
+
+  if (format == CallFlags::FunApplyArray) {
+    ObjOperandId argObjId = writer.guardToObject(argValId);
     emitOptimisticClassGuard(argObjId, &args_[1].toObject(),
                              GuardClassKind::Array);
     writer.guardArrayIsPacked(argObjId);
+    return mozilla::Some(argObjId);
   }
 
-  return argObjId;
+  MOZ_ASSERT(format == CallFlags::FunApplyNullUndefined);
+  writer.guardIsNullOrUndefined(argValId);
+  return mozilla::Nothing();
 }
 
 AttachDecision InlinableNativeIRGenerator::tryAttachArrayPush() {
@@ -9957,6 +9963,11 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
     // |fun.apply()| and |fun.apply(thisValue)| are equivalent to |fun.call()|
     // resp. |fun.call(thisValue)|.
     format = CallFlags::FunCall;
+  } else if (args_[1].isNullOrUndefined()) {
+    // |fun.apply(thisValue, null)| and |fun.apply(thisValue, undefined)| are
+    // also equivalent to |fun.call(thisValue)|, but we can't use FunCall
+    // because we have to discard the second argument.
+    format = CallFlags::FunApplyNullUndefined;
   } else if (args_[1].isObject() && args_[1].toObject().is<ArgumentsObject>()) {
     auto* argsObj = &args_[1].toObject().as<ArgumentsObject>();
     if (argsObj->hasOverriddenElement() || argsObj->anyArgIsForwarded() ||
@@ -10016,7 +10027,8 @@ AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
 
   uint32_t fixedArgc;
   if (format == CallFlags::FunApplyArray ||
-      format == CallFlags::FunApplyArgsObj) {
+      format == CallFlags::FunApplyArgsObj ||
+      format == CallFlags::FunApplyNullUndefined) {
     emitFunApplyArgsGuard(format);
 
     // We always use MaxUnrolledArgCopy here because the fixed argc is

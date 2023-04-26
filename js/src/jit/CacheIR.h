@@ -309,7 +309,8 @@ class CallFlags {
     FunCall,
     FunApplyArgsObj,
     FunApplyArray,
-    LastArgFormat = FunApplyArray
+    FunApplyNullUndefined,
+    LastArgFormat = FunApplyNullUndefined
   };
 
   CallFlags() = default;
@@ -465,6 +466,7 @@ inline int32_t GetIndexOfArgument(ArgumentKind kind, CallFlags flags,
     case CallFlags::FunCall:
     case CallFlags::FunApplyArgsObj:
     case CallFlags::FunApplyArray:
+    case CallFlags::FunApplyNullUndefined:
       MOZ_CRASH("Currently unreachable");
       break;
   }

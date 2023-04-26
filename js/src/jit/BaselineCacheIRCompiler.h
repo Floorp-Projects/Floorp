@@ -86,6 +86,7 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
                             uint32_t argcFixed, bool isJitCall);
   void pushFunApplyArgsObj(Register argcReg, Register calleeReg,
                            Register scratch, Register scratch2, bool isJitCall);
+  void pushFunApplyNullUndefinedArguments(Register calleeReg, bool isJitCall);
   void pushBoundFunctionArguments(Register argcReg, Register calleeReg,
                                   Register scratch, Register scratch2,
                                   CallFlags flags, uint32_t numBoundArgs,
