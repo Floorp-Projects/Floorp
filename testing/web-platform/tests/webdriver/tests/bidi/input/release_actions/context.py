@@ -28,7 +28,7 @@ async def test_different_top_level_contexts(
     # Release actions in another context
     await bidi_session.input.release_actions(context=new_tab["context"])
 
-    events = await get_events(top_context["context"], bidi_session)
+    events = await get_events(bidi_session, top_context["context"])
     assert len(events) == 0
 
     # Release actions in right context
@@ -37,6 +37,6 @@ async def test_different_top_level_contexts(
     expected = [
         {"code": "KeyA", "key": "a", "type": "keyup"},
     ]
-    all_events = await get_events(top_context["context"], bidi_session)
+    all_events = await get_events(bidi_session, top_context["context"])
     (events, expected) = filter_supported_key_events(all_events, expected)
     assert events == expected

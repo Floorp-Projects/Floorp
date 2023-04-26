@@ -30,7 +30,7 @@ async def test_release_char_sequence_sends_keyup_events_in_reverse(
         {"code": "KeyB", "key": "b", "type": "keyup"},
         {"code": "KeyA", "key": "a", "type": "keyup"},
     ]
-    all_events = await get_events(top_context["context"], bidi_session)
+    all_events = await get_events(bidi_session, top_context["context"])
     (events, expected) = filter_supported_key_events(all_events, expected)
     assert events == expected
 
@@ -66,7 +66,7 @@ async def test_release_mouse_sequence_resets_dblclick_state(
     await bidi_session.input.perform_actions(
         actions=actions, context=top_context["context"]
     )
-    events = await get_events(top_context["context"], bidi_session)
+    events = await get_events(bidi_session, top_context["context"])
 
     expected = [
         {"type": "mousedown", "button": 0},

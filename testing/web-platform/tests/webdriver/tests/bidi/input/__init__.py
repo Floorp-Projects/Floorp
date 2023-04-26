@@ -3,7 +3,7 @@ import json
 from webdriver.bidi.modules.script import ContextTarget
 
 
-async def get_events(context, bidi_session):
+async def get_events(bidi_session, context):
     """Return list of key events recorded on the test_actions.html page."""
     events_str = await bidi_session.script.evaluate(
         expression="JSON.stringify(allEvents.events)",

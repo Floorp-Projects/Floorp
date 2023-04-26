@@ -22,7 +22,7 @@ async def test_release_no_actions_sends_no_events(
         target=ContextTarget(top_context["context"]),
         await_promise=False,
     )
-    events = await get_events(top_context["context"], bidi_session)
+    events = await get_events(bidi_session, top_context["context"])
 
     assert len(keys["value"]) == 0
     assert len(events) == 0
