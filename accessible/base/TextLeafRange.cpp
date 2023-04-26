@@ -570,6 +570,13 @@ std::pair<nsIContent*, int32_t> TextLeafPoint::ToDOMPoint(
 /*** TextLeafPoint ***/
 
 TextLeafPoint::TextLeafPoint(Accessible* aAcc, int32_t aOffset) {
+  if (!aAcc) {
+    // Construct an invalid point.
+    mAcc = nullptr;
+    mOffset = 0;
+    return;
+  }
+
   // Even though an OuterDoc contains a document, we treat it as a leaf because
   // we don't want to move into another document.
   if (aOffset != nsIAccessibleText::TEXT_OFFSET_CARET && !aAcc->IsOuterDoc() &&
