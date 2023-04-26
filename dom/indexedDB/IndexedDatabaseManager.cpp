@@ -75,7 +75,8 @@ class FileManagerInfo {
 
     return !mPersistentStorageFileManagers.IsEmpty() ||
            !mTemporaryStorageFileManagers.IsEmpty() ||
-           !mDefaultStorageFileManagers.IsEmpty();
+           !mDefaultStorageFileManagers.IsEmpty() ||
+           !mPrivateStorageFileManagers.IsEmpty();
   }
 
   void InvalidateAllFileManagers() const;
@@ -496,6 +497,19 @@ void IndexedDatabaseManager::InvalidateAllFileManagers() {
 }
 
 void IndexedDatabaseManager::InvalidateFileManagers(
+    PersistenceType aPersistenceType) {
+  AssertIsOnIOThread();
+
+  for (auto iter = mFileManagerInfos.Iter(); !iter.Done(); iter.Next()) {
+    iter.Data()->InvalidateAndRemoveFileManagers(aPersistenceType);
+
+    if (!iter.Data()->HasFileManagers()) {
+      iter.Remove();
+    }
+  }
+}
+
+void IndexedDatabaseManager::InvalidateFileManagers(
     PersistenceType aPersistenceType, const nsACString& aOrigin) {
   AssertIsOnIOThread();
   MOZ_ASSERT(!aOrigin.IsEmpty());
@@ -666,6 +680,10 @@ void FileManagerInfo::InvalidateAllFileManagers() const {
   }
 
   for (i = 0; i < mDefaultStorageFileManagers.Length(); i++) {
+    mDefaultStorageFileManagers[i]->Invalidate();
+  }
+
+  for (i = 0; i < mPrivateStorageFileManagers.Length(); i++) {
     mDefaultStorageFileManagers[i]->Invalidate();
   }
 }

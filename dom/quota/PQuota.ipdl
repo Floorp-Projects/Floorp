@@ -105,6 +105,10 @@ struct ClearDataParams
   OriginAttributesPattern pattern;
 };
 
+struct ClearPrivateBrowsingParams
+{
+};
+
 struct ClearAllParams
 {
 };
@@ -145,6 +149,7 @@ union RequestParams
   ClearOriginParams;
   ResetOriginParams;
   ClearDataParams;
+  ClearPrivateBrowsingParams;
   ClearAllParams;
   ResetAllParams;
   PersistedParams;

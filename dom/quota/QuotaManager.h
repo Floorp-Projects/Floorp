@@ -190,6 +190,11 @@ class QuotaManager final : public BackgroundThreadObject {
 
   void RemoveQuota();
 
+  void RemoveQuotaForRepository(PersistenceType aPersistenceType) {
+    MutexAutoLock lock(mQuotaMutex);
+    LockedRemoveQuotaForRepository(aPersistenceType);
+  }
+
   void RemoveQuotaForOrigin(PersistenceType aPersistenceType,
                             const OriginMetadata& aOriginMetadata) {
     MutexAutoLock lock(mQuotaMutex);
@@ -324,6 +329,8 @@ class QuotaManager final : public BackgroundThreadObject {
   void OriginClearCompleted(PersistenceType aPersistenceType,
                             const nsACString& aOrigin,
                             const Nullable<Client::Type>& aClientType);
+
+  void RepositoryClearCompleted(PersistenceType aPersistenceType);
 
   void StartIdleMaintenance() {
     AssertIsOnOwningThread();
@@ -461,6 +468,8 @@ class QuotaManager final : public BackgroundThreadObject {
   uint64_t LockedCollectOriginsForEviction(
       uint64_t aMinSizeToBeFreed,
       nsTArray<RefPtr<OriginDirectoryLock>>& aLocks);
+
+  void LockedRemoveQuotaForRepository(PersistenceType aPersistenceType);
 
   void LockedRemoveQuotaForOrigin(const OriginMetadata& aOriginMetadata);
 

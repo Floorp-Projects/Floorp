@@ -63,6 +63,10 @@ struct ClearDataResponse
 {
 };
 
+struct ClearPrivateBrowsingResponse
+{
+};
+
 struct ClearAllResponse
 {
 };
@@ -105,6 +109,7 @@ union RequestResponse
   ClearOriginResponse;
   ResetOriginResponse;
   ClearDataResponse;
+  ClearPrivateBrowsingResponse;
   ClearAllResponse;
   ResetAllResponse;
   PersistedResponse;

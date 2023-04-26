@@ -53,6 +53,9 @@ class QuotaClient final : public mozilla::dom::quota::Client {
   void OnOriginClearCompleted(quota::PersistenceType aPersistenceType,
                               const nsACString& aOrigin) override;
 
+  void OnRepositoryClearCompleted(
+      quota::PersistenceType aPersistenceType) override;
+
   void ReleaseIOThreadObjects() override;
 
   void AbortOperationsForLocks(
@@ -170,6 +173,11 @@ Result<quota::UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(
 
 void QuotaClient::OnOriginClearCompleted(
     quota::PersistenceType aPersistenceType, const nsACString& aOrigin) {
+  quota::AssertIsOnIOThread();
+}
+
+void QuotaClient::OnRepositoryClearCompleted(
+    quota::PersistenceType aPersistenceType) {
   quota::AssertIsOnIOThread();
 }
 

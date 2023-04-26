@@ -43,6 +43,8 @@ class CacheQuotaClient final : public quota::Client {
   virtual void OnOriginClearCompleted(PersistenceType aPersistenceType,
                                       const nsACString& aOrigin) override;
 
+  void OnRepositoryClearCompleted(PersistenceType aPersistenceType) override;
+
   virtual void ReleaseIOThreadObjects() override;
 
   void AbortOperationsForLocks(

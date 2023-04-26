@@ -717,6 +717,23 @@ QuotaManagerService::Clear(nsIQuotaRequest** _retval) {
 }
 
 NS_IMETHODIMP
+QuotaManagerService::ClearStoragesForPrivateBrowsing(
+    nsIQuotaRequest** _retval) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<Request> request = new Request();
+
+  ClearPrivateBrowsingParams params;
+
+  RequestInfo info(request, params);
+
+  QM_TRY(MOZ_TO_RESULT(InitiateRequest(info)));
+
+  request.forget(_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 QuotaManagerService::ClearStoragesForOriginAttributesPattern(
     const nsAString& aPattern, nsIQuotaRequest** _retval) {
   MOZ_ASSERT(NS_IsMainThread());

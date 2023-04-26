@@ -1387,6 +1387,18 @@ class ResetOrClearOp final : public QuotaRequestBase {
   virtual void GetResponse(RequestResponse& aResponse) override;
 };
 
+class ClearPrivateBrowsingOp final : public QuotaRequestBase {
+ public:
+  ClearPrivateBrowsingOp();
+
+ private:
+  ~ClearPrivateBrowsingOp() = default;
+
+  nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
+
+  void GetResponse(RequestResponse& aResponse) override;
+};
+
 class ClearRequestBase : public QuotaRequestBase {
  protected:
   explicit ClearRequestBase(const char* aRunnableName, bool aExclusive)
@@ -6189,6 +6201,18 @@ void QuotaManager::OriginClearCompleted(
   }
 }
 
+void QuotaManager::RepositoryClearCompleted(PersistenceType aPersistenceType) {
+  AssertIsOnIOThread();
+
+  if (aPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
+    mInitializedOrigins.Clear();
+  }
+
+  for (Client::Type type : AllClientTypes()) {
+    (*mClients)[type]->OnRepositoryClearCompleted(aPersistenceType);
+  }
+}
+
 Client* QuotaManager::GetClient(Client::Type aClientType) {
   MOZ_ASSERT(aClientType >= Client::IDB);
   MOZ_ASSERT(aClientType < Client::TypeMax());
@@ -6620,6 +6644,27 @@ uint64_t QuotaManager::LockedCollectOriginsForEviction(
   }
 
   return helper->BlockAndReturnOriginsForEviction(aLocks);
+}
+
+void QuotaManager::LockedRemoveQuotaForRepository(
+    PersistenceType aPersistenceType) {
+  mQuotaMutex.AssertCurrentThreadOwns();
+  MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
+
+  for (auto iter = mGroupInfoPairs.Iter(); !iter.Done(); iter.Next()) {
+    auto& pair = iter.Data();
+
+    if (RefPtr<GroupInfo> groupInfo =
+            pair->LockedGetGroupInfo(aPersistenceType)) {
+      groupInfo->LockedRemoveOriginInfos();
+
+      pair->LockedClearGroupInfo(aPersistenceType);
+
+      if (!pair->LockedHasGroupInfos()) {
+        iter.Remove();
+      }
+    }
+  }
 }
 
 void QuotaManager::LockedRemoveQuotaForOrigin(
@@ -7660,6 +7705,7 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
       break;
     }
 
+    case RequestParams::TClearPrivateBrowsingParams:
     case RequestParams::TClearAllParams:
     case RequestParams::TResetAllParams:
     case RequestParams::TListOriginsParams:
@@ -7839,6 +7885,9 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
 
       case RequestParams::TClearDataParams:
         return MakeRefPtr<ClearDataOp>(aParams);
+
+      case RequestParams::TClearPrivateBrowsingParams:
+        return MakeRefPtr<ClearPrivateBrowsingOp>();
 
       case RequestParams::TClearAllParams:
         return MakeRefPtr<ResetOrClearOp>(/* aClear */ true);
@@ -8778,6 +8827,45 @@ void ResetOrClearOp::GetResponse(RequestResponse& aResponse) {
   } else {
     aResponse = ResetAllResponse();
   }
+}
+
+ClearPrivateBrowsingOp::ClearPrivateBrowsingOp()
+    : QuotaRequestBase("dom::quota::ClearPrivateBrowsingOp",
+                       Nullable<PersistenceType>(PERSISTENCE_TYPE_PRIVATE),
+                       OriginScope::FromNull(), Nullable<Client::Type>(),
+                       /* aExclusive */ true) {
+  AssertIsOnOwningThread();
+}
+
+nsresult ClearPrivateBrowsingOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(!mPersistenceType.IsNull());
+  MOZ_ASSERT(mPersistenceType.Value() == PERSISTENCE_TYPE_PRIVATE);
+
+  AUTO_PROFILER_LABEL("ClearPrivateBrowsingOp::DoDirectoryWork", OTHER);
+
+  QM_TRY_INSPECT(
+      const auto& directory,
+      QM_NewLocalFile(aQuotaManager.GetStoragePath(mPersistenceType.Value())));
+
+  nsresult rv = directory->Remove(true);
+  if (rv != NS_ERROR_FILE_NOT_FOUND && NS_FAILED(rv)) {
+    // This should never fail if we've closed all storage connections
+    // correctly...
+    MOZ_ASSERT(false, "Failed to remove directory!");
+  }
+
+  aQuotaManager.RemoveQuotaForRepository(mPersistenceType.Value());
+
+  aQuotaManager.RepositoryClearCompleted(mPersistenceType.Value());
+
+  return NS_OK;
+}
+
+void ClearPrivateBrowsingOp::GetResponse(RequestResponse& aResponse) {
+  AssertIsOnOwningThread();
+
+  aResponse = ClearPrivateBrowsingResponse();
 }
 
 static Result<nsCOMPtr<nsIFile>, QMResult> OpenToBeRemovedDirectory(
