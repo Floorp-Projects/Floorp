@@ -351,6 +351,13 @@ void CacheQuotaClient::OnOriginClearCompleted(PersistenceType aPersistenceType,
   // Nothing to do here.
 }
 
+void CacheQuotaClient::OnRepositoryClearCompleted(
+    PersistenceType aPersistenceType) {
+  AssertIsOnIOThread();
+
+  // Nothing to do here.
+}
+
 void CacheQuotaClient::ReleaseIOThreadObjects() {
   // Nothing to do here as the Context handles cleaning everything up
   // automatically.

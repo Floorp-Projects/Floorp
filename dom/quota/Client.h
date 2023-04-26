@@ -148,6 +148,8 @@ class Client {
   virtual void OnOriginClearCompleted(PersistenceType aPersistenceType,
                                       const nsACString& aOrigin) = 0;
 
+  virtual void OnRepositoryClearCompleted(PersistenceType aPersistenceType) = 0;
+
   virtual void ReleaseIOThreadObjects() = 0;
 
   // Methods which are called on the background thread.

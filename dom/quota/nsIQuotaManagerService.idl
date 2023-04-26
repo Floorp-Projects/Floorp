@@ -165,6 +165,15 @@ interface nsIQuotaManagerService : nsISupports
   clear();
 
   /**
+   * Removes all storages stored for private browsing. The files may not be
+   * deleted immediately depending on prohibitive concurrent operations.  In
+   * terms of locks, it will get an exclusive multi directory lock for entire
+   * private repository.
+   */
+  [must_use] nsIQuotaRequest
+  clearStoragesForPrivateBrowsing();
+
+  /**
    * Removes all storages stored for the given pattern. The files may not be
    * deleted immediately depending on prohibitive concurrent operations.  In
    * terms of locks, it will get an exclusive multi directory lock for given
