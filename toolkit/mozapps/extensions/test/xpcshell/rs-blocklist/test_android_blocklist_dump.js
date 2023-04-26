@@ -6,25 +6,6 @@
 // Blocklist v3 will be enabled on release in bug 1824863.
 // TODO bug 1824863: Remove this when blocklist v3 is enabled.
 const IS_USING_BLOCKLIST_V3 = AppConstants.NIGHTLY_BUILD;
-const ExtensionBlocklistMLBF = getExtensionBlocklistMLBF();
-
-let MLBF_LOAD_ATTEMPTS;
-let MLBF_LOAD_RESULTS;
-let originalFetchMLBF;
-
-add_task(async function setup() {
-  MLBF_LOAD_RESULTS = [];
-  MLBF_LOAD_ATTEMPTS = [];
-
-  // Tapping into the internals of ExtensionBlocklistMLBF._fetchMLBF to observe
-  originalFetchMLBF = ExtensionBlocklistMLBF._fetchMLBF;
-  ExtensionBlocklistMLBF._fetchMLBF = async function(record) {
-    MLBF_LOAD_ATTEMPTS.push(record);
-    let promise = originalFetchMLBF.apply(this, arguments);
-    MLBF_LOAD_RESULTS.push(promise);
-    return promise;
-  };
-});
 
 // When bug 1639050 is fixed, this whole test can be removed as it is already
 // covered by test_blocklist_mlbf_dump.js.
@@ -85,6 +66,12 @@ add_task(
 add_task(
   { skip_if: () => !IS_USING_BLOCKLIST_V3 },
   async function verify_a_known_blocked_add_on_is_not_detected_as_blocked_at_first_run() {
+    const MLBF_LOAD_RESULTS = [];
+    const MLBF_LOAD_ATTEMPTS = [];
+    const onLoadAttempts = record => MLBF_LOAD_ATTEMPTS.push(record);
+    const onLoadResult = promise => MLBF_LOAD_RESULTS.push(promise);
+    spyOnExtensionBlocklistMLBF(onLoadAttempts, onLoadResult);
+
     // The addons blocklist data is not packaged and will be downloaded after install
     Assert.equal(
       await Blocklist.getAddonBlocklistState(blockedAddon),
@@ -111,6 +98,23 @@ add_task(
       [],
       "MLBF is not fetched again after the first lookup"
     );
-    ExtensionBlocklistMLBF._fetchMLBF = originalFetchMLBF;
   }
 );
+
+function spyOnExtensionBlocklistMLBF(onLoadAttempts, onLoadResult) {
+  const ExtensionBlocklistMLBF = getExtensionBlocklistMLBF();
+  // Tapping into the internals of ExtensionBlocklistMLBF._fetchMLBF to observe
+  const originalFetchMLBF = ExtensionBlocklistMLBF._fetchMLBF;
+  ExtensionBlocklistMLBF._fetchMLBF = async function(record) {
+    onLoadAttempts(record);
+    let promise = originalFetchMLBF.apply(this, arguments);
+    onLoadResult(promise);
+    return promise;
+  };
+
+  registerCleanupFunction(
+    () => (ExtensionBlocklistMLBF._fetchMLBF = originalFetchMLBF)
+  );
+
+  return ExtensionBlocklistMLBF;
+}
