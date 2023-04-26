@@ -3169,7 +3169,8 @@ bool nsGenericHTMLElement::PopoverOpen() const {
 
 // https://html.spec.whatwg.org/#check-popover-validity
 bool nsGenericHTMLElement::CheckPopoverValidity(
-    PopoverVisibilityState aExpectedState, ErrorResult& aRv) {
+    PopoverVisibilityState aExpectedState, Document* aExpectedDocument,
+    ErrorResult& aRv) {
   if (!HasAttr(nsGkAtoms::popover)) {
     aRv.ThrowNotSupportedError("Element does not have the popover attribute");
     return false;
@@ -3177,6 +3178,11 @@ bool nsGenericHTMLElement::CheckPopoverValidity(
 
   if (!IsInComposedDoc()) {
     aRv.ThrowInvalidStateError("Element is not connected");
+    return false;
+  }
+
+  if (aExpectedDocument && aExpectedDocument != OwnerDoc()) {
+    aRv.ThrowInvalidStateError("Element is moved to other document");
     return false;
   }
 
@@ -3280,28 +3286,29 @@ void nsGenericHTMLElement::RunPopoverToggleEventTask(
 
 // https://html.spec.whatwg.org/#dom-showpopover
 void nsGenericHTMLElement::ShowPopover(ErrorResult& aRv) {
-  if (!CheckPopoverValidity(PopoverVisibilityState::Hidden, aRv)) {
+  if (!CheckPopoverValidity(PopoverVisibilityState::Hidden, nullptr, aRv)) {
     return;
   }
+  RefPtr<Document> document = OwnerDoc();
+
   // Fire beforetoggle event and re-check popover validity.
   if (FireToggleEvent(PopoverVisibilityState::Hidden,
                       PopoverVisibilityState::Showing, u"beforetoggle"_ns)) {
     return;
   }
-  if (!CheckPopoverValidity(PopoverVisibilityState::Hidden, aRv)) {
+  if (!CheckPopoverValidity(PopoverVisibilityState::Hidden, document, aRv)) {
     return;
   }
   // TODO: Run auto popover steps.
 
-  const bool shouldRestoreFocus = !OwnerDoc()->GetTopmostAutoPopover();
+  const bool shouldRestoreFocus = !document->GetTopmostAutoPopover();
   // Let originallyFocusedElement be document's focused area of the document's
   // DOM anchor.
   nsWeakPtr originallyFocusedElement;
-  if (Document* doc = GetComposedDoc()) {
-    if (nsIContent* unretargetedFocus = doc->GetUnretargetedFocusedContent()) {
-      originallyFocusedElement =
-          do_GetWeakReference(unretargetedFocus->AsElement());
-    }
+  if (nsIContent* unretargetedFocus =
+          document->GetUnretargetedFocusedContent()) {
+    originallyFocusedElement =
+        do_GetWeakReference(unretargetedFocus->AsElement());
   }
 
   // TODO: Add to Top Layer.
