@@ -56,6 +56,8 @@ class MediaTransportHandler {
 
   typedef MozPromise<dom::Sequence<nsString>, nsresult, true> IceLogPromise;
 
+  virtual void Initialize() {}
+
   // There's a wrinkle here; the ICE logging is not separated out by
   // MediaTransportHandler. These are a little more like static methods, but
   // to avoid needing yet another IPC interface, we bolt them on here.

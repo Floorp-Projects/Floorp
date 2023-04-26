@@ -203,6 +203,7 @@ already_AddRefed<MediaTransportHandler> MediaTransportHandler::Create(
   } else {
     result = new MediaTransportHandlerSTS(aCallbackThread);
   }
+  result->Initialize();
   return result.forget();
 }
 
