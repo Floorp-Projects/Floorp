@@ -103,8 +103,8 @@ static bool MakeFdNonBlocking(int fd) {
   return fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK) != -1;
 }
 
-static bool ManageChildProcess(int* aPID, int* aPipe, int aTimeout,
-                               char** aData) {
+static bool ManageChildProcess(const char* aProcessName, int* aPID, int* aPipe,
+                               int aTimeout, char** aData) {
   // Don't try anything if we failed before
   if (*aPID < 0) {
     return false;
@@ -121,19 +121,18 @@ static bool ManageChildProcess(int* aPID, int* aPipe, int aTimeout,
       close(*aPipe);
       *aPipe = -1;
     }
-    if (*aPID > 0) {
-      int status;
-      waitpid(*aPID, &status, WNOHANG);
-      *aPID = -1;
-    }
   });
+
+  const TimeStamp deadline =
+      TimeStamp::Now() + TimeDuration::FromMilliseconds(aTimeout);
 
   struct pollfd pfd {};
   pfd.fd = *aPipe;
   pfd.events = POLLIN;
   auto ret = poll(&pfd, 1, aTimeout);
   if (ret <= 0) {
-    gfxCriticalNote << "glxtest: poll failed: " << strerror(errno) << "\n";
+    gfxCriticalNote << "ManageChildProcess(" << aProcessName
+                    << "): poll failed: " << strerror(errno) << "\n";
     return false;
   }
 
@@ -148,32 +147,52 @@ static bool ManageChildProcess(int* aPID, int* aPipe, int aTimeout,
                                    getter_Transfers(error));
   } while (ret == G_IO_STATUS_AGAIN);
   if (error) {
-    gfxCriticalNote << "glxtest: failed to read data from child process: "
+    gfxCriticalNote << "ManageChildProcess(" << aProcessName
+                    << "): failed to read data from child process: "
                     << error->message << "\n";
     return false;
   }
   if (!length) {
     gfxCriticalNote
-        << "glxtest: failed to read data from child process, length = 0\n";
+        << "ManageChildProcess(" << aProcessName
+        << "): failed to read data from child process, length = 0\n";
     return false;
   }
 
   int status = 0;
   int pid = *aPID;
   *aPID = -1;
-  ret = waitpid(pid, &status, WNOHANG);
-  if (ret < 0) {
-    gfxCriticalNote << "glxtest: waitpid failed: " << strerror(errno) << "\n";
-    return false;
+
+  while (true) {
+    int ret = waitpid(pid, &status, WNOHANG);
+    if (ret > 0) {
+      break;
+    }
+    if (ret < 0) {
+      if (errno == ECHILD) {
+        // Bug 718629
+        // ECHILD happens when the glxtest process got reaped got reaped after a
+        // PR_CreateProcess as per bug 227246. This shouldn't matter, as we
+        // still seem to get the data from the pipe, and if we didn't, the
+        // outcome would be to blocklist anyway.
+        return true;
+      }
+      if (errno != EAGAIN && errno != EINTR) {
+        gfxCriticalNote << "ManageChildProcess(" << aProcessName
+                        << "): waitpid failed: " << strerror(errno) << "\n";
+        return false;
+      }
+    }
+    if (TimeStamp::Now() > deadline) {
+      gfxCriticalNote << "ManageChildProcess(" << aProcessName
+                      << "): process hangs\n";
+      return false;
+    }
+    // Wait 50ms to another waitpid() check.
+    usleep(50000);
   }
 
-  if (WEXITSTATUS(status) != EXIT_SUCCESS) {
-    gfxCriticalNote << "glxtest: waitpid failed, status " << WEXITSTATUS(status)
-                    << "\n";
-    return false;
-  }
-
-  return true;
+  return WIFEXITED(status) && WEXITSTATUS(status) == EXIT_SUCCESS;
 }
 
 // to understand this function, see bug 639842. We retrieve the OpenGL driver
@@ -194,7 +213,7 @@ void GfxInfo::GetData() {
   char* glxData = nullptr;
   auto free = mozilla::MakeScopeExit([&] { g_free((void*)glxData); });
 
-  bool error = !ManageChildProcess(&sGLXTestPID, &sGLXTestPipe,
+  bool error = !ManageChildProcess("glxtest", &sGLXTestPID, &sGLXTestPipe,
                                    GFX_TEST_TIMEOUT, &glxData);
   if (error) {
     gfxCriticalNote << "glxtest: ManageChildProcess failed\n";
@@ -632,8 +651,8 @@ void GfxInfo::GetDataVAAPI() {
     return;
   }
 
-  if (!ManageChildProcess(&vaapiPID, &vaapiPipe, VAAPI_TEST_TIMEOUT,
-                          &vaapiData)) {
+  if (!ManageChildProcess("vaapitest", &vaapiPID, &vaapiPipe,
+                          VAAPI_TEST_TIMEOUT, &vaapiData)) {
     gfxCriticalNote << "vaapitest: ManageChildProcess failed\n";
     return;
   }
