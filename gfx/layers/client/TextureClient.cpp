@@ -275,7 +275,7 @@ static TextureType GetTextureType(gfx::SurfaceFormat aFormat,
 #ifdef MOZ_WAYLAND
   if ((layersBackend == LayersBackend::LAYERS_WR &&
        !aKnowsCompositor->UsingSoftwareWebRender()) &&
-      widget::nsDMABufDevice::IsDMABufTexturesEnabled() &&
+      widget::DMABufDevice::IsDMABufTexturesEnabled() &&
       aFormat != SurfaceFormat::A8) {
     return TextureType::DMABUF;
   }
