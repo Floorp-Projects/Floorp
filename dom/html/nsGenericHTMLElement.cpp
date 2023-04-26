@@ -3343,8 +3343,13 @@ void nsGenericHTMLElement::HidePopoverInternal(bool aFocusPreviousElement,
   OwnerDoc()->HidePopover(*this, aFocusPreviousElement, aFireEvents, aRv);
 }
 
-void nsGenericHTMLElement::HandleFocusAfterHidingPopover(
-    bool aFocusPreviousElement) {
+void nsGenericHTMLElement::ForgetPreviouslyFocusedElementAfterHidingPopover() {
+  auto* data = GetPopoverData();
+  MOZ_ASSERT(data, "Should have popover data");
+  data->SetPreviouslyFocusedElement(nullptr);
+}
+
+void nsGenericHTMLElement::FocusPreviousElementAfterHidingPopover() {
   auto* data = GetPopoverData();
   MOZ_ASSERT(data, "Should have popover data");
 
@@ -3352,7 +3357,7 @@ void nsGenericHTMLElement::HandleFocusAfterHidingPopover(
       do_QueryReferent(data->GetPreviouslyFocusedElement().get());
   data->SetPreviouslyFocusedElement(nullptr);
 
-  if (!control || !aFocusPreviousElement) {
+  if (!control) {
     return;
   }
 
