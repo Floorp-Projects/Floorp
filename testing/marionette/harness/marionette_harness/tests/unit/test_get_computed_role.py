@@ -16,7 +16,7 @@ class TestGetComputedRole(MarionetteTestCase):
     def test_can_get_computed_role(self):
         self.marionette.navigate(inline("<button id=a>btn</button>"))
         computed_role = self.marionette.find_element(By.ID, "a").computed_role
-        self.assertEqual(computed_role, "pushbutton")
+        self.assertEqual(computed_role, "button")
 
     def test_get_computed_role_no_such_element(self):
         self.marionette.navigate(inline("<div id=a>"))
