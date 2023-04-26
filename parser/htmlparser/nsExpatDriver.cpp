@@ -85,8 +85,16 @@ static const uint16_t sMaxXMLTreeDepth = 5000;
       ->invoke_sandbox_function(foo, mExpatParser, ##__VA_ARGS__) \
       .copy_and_verify(verifier)
 
+#define RLBOX_EXPAT_CALL(foo, ...) \
+  aSandbox.invoke_sandbox_function(foo, self->mExpatParser, ##__VA_ARGS__)
+
 #define RLBOX_EXPAT_MCALL(foo, ...) \
   Sandbox()->invoke_sandbox_function(foo, mExpatParser, ##__VA_ARGS__)
+
+#define RLBOX_SAFE_PRINT "Value used only for printing"
+#define MOZ_RELEASE_ASSERT_TAINTED(cond, ...)                        \
+  MOZ_RELEASE_ASSERT((cond).unverified_safe_because("Sanity check"), \
+                     ##__VA_ARGS__)
 
 /* safe_unverified is used whenever it's safe to not use a validator */
 template <typename T>
@@ -421,19 +429,25 @@ void nsExpatDriver::HandleStartElement(rlbox_sandbox_expat& aSandbox,
   // XML_GetSpecifiedAttributeCount will only give us the number of specified
   // attrs (twice that number, actually), so we have to check for default
   // attrs ourselves.
-  int count = RLBOX_EXPAT_SAFE_CALL(MOZ_XML_GetSpecifiedAttributeCount,
-                                    safe_unverified<int>);
-  MOZ_RELEASE_ASSERT(count >= 0, "Unexpected attribute count");
-  uint32_t attrArrayLength;
-  for (attrArrayLength = count;
-       (aAttrs[attrArrayLength] != nullptr)
+  tainted_expat<int> count =
+      RLBOX_EXPAT_CALL(MOZ_XML_GetSpecifiedAttributeCount);
+  MOZ_RELEASE_ASSERT_TAINTED(count >= 0, "Unexpected attribute count");
+
+  tainted_expat<uint64_t> attrArrayLengthTainted;
+  for (attrArrayLengthTainted = rlbox::sandbox_static_cast<uint64_t>(count);
+       (aAttrs[attrArrayLengthTainted] != nullptr)
            .unverified_safe_because("Bad length is checked later");
-       attrArrayLength += 2) {
+       attrArrayLengthTainted += 2) {
     // Just looping till we find out what the length is
   }
-  // A malicious length could result in an overflow when we allocate aAttrs
-  // and then access elements of the array.
-  MOZ_RELEASE_ASSERT(attrArrayLength < UINT32_MAX, "Overflow attempt");
+
+  uint32_t attrArrayLength =
+      attrArrayLengthTainted.copy_and_verify([&](uint64_t value) {
+        // A malicious length could result in an overflow when we allocate
+        // aAttrs and then access elements of the array.
+        MOZ_RELEASE_ASSERT(value < UINT32_MAX, "Overflow attempt");
+        return value;
+      });
 
   // Copy tainted aAttrs from sandbox
   AllocAttrs allocAttrs;
@@ -486,11 +500,10 @@ void nsExpatDriver::HandleStartElementForSystemPrincipal(
 
     // Adjust the column number so that it is one based rather than zero
     // based.
-    uint32_t colNumber = RLBOX_EXPAT_SAFE_CALL(MOZ_XML_GetCurrentColumnNumber,
-                                               safe_unverified<XML_Size>) +
-                         1;
-    uint32_t lineNumber = RLBOX_EXPAT_SAFE_CALL(MOZ_XML_GetCurrentLineNumber,
-                                                safe_unverified<XML_Size>);
+    tainted_expat<XML_Size> colNumber =
+        RLBOX_EXPAT_CALL(MOZ_XML_GetCurrentColumnNumber) + 1;
+    tainted_expat<XML_Size> lineNumber =
+        RLBOX_EXPAT_CALL(MOZ_XML_GetCurrentLineNumber);
 
     int32_t nameSpaceID;
     RefPtr<nsAtom> prefix, localName;
@@ -509,7 +522,8 @@ void nsExpatDriver::HandleStartElementForSystemPrincipal(
 
     nsContentUtils::ReportToConsoleNonLocalized(
         error, nsIScriptError::warningFlag, "XML Document"_ns, doc, nullptr,
-        u""_ns, lineNumber, colNumber);
+        u""_ns, lineNumber.unverified_safe_because(RLBOX_SAFE_PRINT),
+        colNumber.unverified_safe_because(RLBOX_SAFE_PRINT));
   }
 }
 
@@ -930,8 +944,8 @@ nsresult nsExpatDriver::OpenInputStreamFromExternalDTD(const char16_t* aFPIStr,
 
 static nsresult CreateErrorText(const char16_t* aDescription,
                                 const char16_t* aSourceURL,
-                                const uint32_t aLineNumber,
-                                const uint32_t aColNumber,
+                                tainted_expat<XML_Size> aLineNumber,
+                                tainted_expat<XML_Size> aColNumber,
                                 nsString& aErrorString, bool spoofEnglish) {
   aErrorString.Truncate();
 
@@ -942,19 +956,30 @@ static nsresult CreateErrorText(const char16_t* aDescription,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // XML Parsing Error: %1$S\nLocation: %2$S\nLine Number %3$u, Column %4$u:
-  nsTextFormatter::ssprintf(aErrorString, msg.get(), aDescription, aSourceURL,
-                            aLineNumber, aColNumber);
+  nsTextFormatter::ssprintf(
+      aErrorString, msg.get(), aDescription, aSourceURL,
+      aLineNumber.unverified_safe_because(RLBOX_SAFE_PRINT),
+      aColNumber.unverified_safe_because(RLBOX_SAFE_PRINT));
   return NS_OK;
 }
 
-static nsresult AppendErrorPointer(const int32_t aColNumber,
+static nsresult AppendErrorPointer(tainted_expat<XML_Size> aColNumber,
                                    const char16_t* aSourceLine,
+                                   size_t aSourceLineLength,
                                    nsString& aSourceString) {
   aSourceString.Append(char16_t('\n'));
 
+  MOZ_RELEASE_ASSERT_TAINTED(aColNumber != static_cast<XML_Size>(0),
+                             "Unexpected value of column");
+
   // Last character will be '^'.
-  int32_t last = aColNumber - 1;
-  int32_t i;
+  XML_Size last = (aColNumber - 1).copy_and_verify([&](XML_Size val) {
+    MOZ_RELEASE_ASSERT(val <= aSourceLineLength,
+                       "Unexpected value of last column");
+    return val;
+  });
+
+  XML_Size i;
   uint32_t minuses = 0;
   for (i = 0; i < last; ++i) {
     if (aSourceLine[i] == '\t') {
@@ -973,7 +998,8 @@ static nsresult AppendErrorPointer(const int32_t aColNumber,
 }
 
 nsresult nsExpatDriver::HandleError() {
-  int32_t code = RLBOX_EXPAT_SAFE_MCALL(MOZ_XML_GetErrorCode, error_verifier);
+  int32_t code =
+      RLBOX_EXPAT_MCALL(MOZ_XML_GetErrorCode).copy_and_verify(error_verifier);
 
   // Map Expat error code to an error string
   // XXX Deal with error returns.
@@ -1037,17 +1063,24 @@ nsresult nsExpatDriver::HandleError() {
   }
 
   // Adjust the column number so that it is one based rather than zero based.
-  uint32_t colNumber = RLBOX_EXPAT_SAFE_MCALL(MOZ_XML_GetCurrentColumnNumber,
-                                              safe_unverified<XML_Size>) +
-                       1;
-  uint32_t lineNumber = RLBOX_EXPAT_SAFE_MCALL(MOZ_XML_GetCurrentLineNumber,
-                                               safe_unverified<XML_Size>);
-  const XML_Char* expatBase =
+  tainted_expat<XML_Size> colNumber =
+      RLBOX_EXPAT_MCALL(MOZ_XML_GetCurrentColumnNumber) + 1;
+  tainted_expat<XML_Size> lineNumber =
+      RLBOX_EXPAT_MCALL(MOZ_XML_GetCurrentLineNumber);
+
+  // Copy out the two character bufer that holds the expatBase
+  const std::unique_ptr<XML_Char[]> expatBase =
       RLBOX_EXPAT_MCALL(MOZ_XML_GetBase)
-          .copy_and_verify_address(unverified_xml_string);
+          .copy_and_verify_range(
+              [](std::unique_ptr<XML_Char[]> val) {
+                // No additional checks needed as this is sent to GetBaseURI
+                // which checks its inputs
+                return val;
+              },
+              ExpatBaseURI::Length);
   nsAutoString uri;
   nsCOMPtr<nsIURI> baseURI;
-  if (expatBase && (baseURI = GetBaseURI(expatBase))) {
+  if (expatBase && (baseURI = GetBaseURI(expatBase.get()))) {
     // Let's ignore if this fails, we're already reporting a parse error.
     Unused << CopyUTF8toUTF16(baseURI->GetSpecOrDefault(), uri, fallible);
   }
@@ -1056,7 +1089,8 @@ nsresult nsExpatDriver::HandleError() {
                   errorText, spoofEnglish);
 
   nsAutoString sourceText(mLastLine);
-  AppendErrorPointer(colNumber, mLastLine.get(), sourceText);
+  AppendErrorPointer(colNumber, mLastLine.get(), mLastLine.Length(),
+                     sourceText);
 
   if (doc && nsContentUtils::IsChromeDoc(doc)) {
     nsCString path = doc->GetDocumentURI()->GetSpecOrDefault();
@@ -1074,7 +1108,11 @@ nsresult nsExpatDriver::HandleError() {
             mozilla::Telemetry::EventExtraEntry{"error_code"_ns,
                                                 nsPrintfCString("%u", code)},
             mozilla::Telemetry::EventExtraEntry{
-                "location"_ns, nsPrintfCString("%u:%u", lineNumber, colNumber)},
+                "location"_ns,
+                nsPrintfCString(
+                    "%lu:%lu",
+                    lineNumber.unverified_safe_because(RLBOX_SAFE_PRINT),
+                    colNumber.unverified_safe_because(RLBOX_SAFE_PRINT))},
             mozilla::Telemetry::EventExtraEntry{
                 "last_line"_ns, NS_ConvertUTF16toUTF8(mLastLine)},
             mozilla::Telemetry::EventExtraEntry{
@@ -1096,7 +1134,9 @@ nsresult nsExpatDriver::HandleError() {
   nsresult rv = NS_ERROR_FAILURE;
   if (serr) {
     rv = serr->InitWithSourceURI(
-        errorText, mURIs.SafeElementAt(0), mLastLine, lineNumber, colNumber,
+        errorText, mURIs.SafeElementAt(0), mLastLine,
+        lineNumber.unverified_safe_because(RLBOX_SAFE_PRINT),
+        colNumber.unverified_safe_because(RLBOX_SAFE_PRINT),
         nsIScriptError::errorFlag, "malformed-xml", mInnerWindowID);
   }
 
