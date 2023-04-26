@@ -317,7 +317,6 @@ macosx1100-64-shippable-qr/opt:
         - macosx1100-64-qr-tests
         # - macosx64-talos
         # - browsertime-high-priority
-        # - raptor-firefox
 
 macosx1015-64-shippable-qr/opt:
     build-platform: macosx64-shippable/opt
