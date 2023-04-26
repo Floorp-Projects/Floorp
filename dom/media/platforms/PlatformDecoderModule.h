@@ -446,7 +446,7 @@ class MediaDataDecoder : public DecoderDoctorLifeLogger<MediaDataDecoder> {
       DecodePromise;
   typedef MozPromise<bool, MediaResult, /* IsExclusive = */ true> FlushPromise;
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDataDecoder)
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
   // Initialize the decoder. The decoder should be ready to decode once
   // the promise resolves. The decoder should do any initialization here, rather

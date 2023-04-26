@@ -89,7 +89,7 @@ class GMPVideoDecoderParent final : public PGMPVideoDecoderParent,
   bool mIsAwaitingResetComplete;
   bool mIsAwaitingDrainComplete;
   RefPtr<GMPContentParent> mPlugin;
-  GMPVideoDecoderCallbackProxy* mCallback;
+  RefPtr<GMPVideoDecoderCallbackProxy> mCallback;
   GMPVideoHostImpl mVideoHost;
   const uint32_t mPluginId;
   int32_t mFrameCount;
