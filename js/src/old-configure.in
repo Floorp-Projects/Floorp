@@ -233,9 +233,15 @@ if test "$GNU_CC"; then
                   AC_MSG_RESULT([no])
                   LDFLAGS=$_SAVE_LDFLAGS)
 
-    AC_MSG_CHECKING([for --build-id=uuid option to ld])
+    # While sha1 is deterministic, it is slower.
+    if test -z "$DEVELOPER_OPTIONS"; then
+        build_id=sha1
+    else
+        build_id=uuid
+    fi
+    AC_MSG_CHECKING([for --build-id=$build_id option to ld])
     _SAVE_LDFLAGS=$LDFLAGS
-    LDFLAGS="$LDFLAGS -Wl,--build-id=uuid"
+    LDFLAGS="$LDFLAGS -Wl,--build-id=$build_id"
     AC_TRY_LINK(,,AC_MSG_RESULT([yes]),
                   AC_MSG_RESULT([no])
                   LDFLAGS=$_SAVE_LDFLAGS)
