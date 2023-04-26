@@ -38,12 +38,15 @@ Review groups
    * - Name
      - Owns
      - Members
-   * - #anti-tracking or #anti-tracking-reviewers
-     - `Anti-Tracking <https://wiki.mozilla.org/Modules/All#Anti-Tracking>`__
+   * - #anti-tracking
+     - `Core: Anti-Tracking </mots/index.html#core-anti-tracking>`__
      - `Member list <https://phabricator.services.mozilla.com/project/members/157/>`__
    * - #build or #firefox-build-system-reviewers
      - The configure & build system
      - `Member list <https://phabricator.services.mozilla.com/project/members/20/>`__
+   * - #cookies
+     - `Core: Cookies </mots/index.html#core-cookies>`__
+     - `Member list <https://phabricator.services.mozilla.com/project/members/177/>`__
    * - #dom-workers-and-storage-reviewers
      - DOM Workers & Storage
      - `Member list <https://phabricator.services.mozilla.com/project/members/115/>`__
@@ -99,7 +102,7 @@ Review groups
      - Perf Tests
      - `Member list <https://phabricator.services.mozilla.com/project/members/102/>`__
    * - #permissions or #permissions-reviewers
-     - `Permissions <https://wiki.mozilla.org/Modules/All#Permissions>`__
+     - `Permissions </mots/index.html#core-permissions>`__
      - `Member list <https://phabricator.services.mozilla.com/project/members/158/>`__
    * - #platform-i18n-reviewers
      - Platform Internationalization
