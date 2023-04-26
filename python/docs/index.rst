@@ -21,7 +21,7 @@ For example, the following Mach command would have its 3rd-party dependencies de
     def foo_it_command():
         import specific_dependency
 
-The format of ``<site>_virtualenv_requirements.txt`` files are documented further in the
+The format of ``<site>.txt`` files are documented further in the
 :py:class:`~mach.requirements.MachEnvRequirements` class.
 
 Adding a Python package
