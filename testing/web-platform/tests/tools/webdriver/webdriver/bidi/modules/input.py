@@ -30,6 +30,12 @@ class PauseAction(Action):
     def __init__(self, duration: Optional[int] = None):
         self.duration = duration
 
+    def to_json(self) -> MutableMapping[str, Any]:
+        rv = super().to_json()
+        if self.duration is not None:
+            rv["duration"] = self.duration
+        return rv
+
 
 class KeyAction(Action):
     def __init__(self, key: str):
