@@ -56,7 +56,6 @@
 
         <View
             android:id="@+id/divider_line_apps_share_and_pdf_section"
-            android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginTop="8dp"
@@ -64,7 +63,6 @@
             app:layout_constraintTop_toBottomOf="@id/appsShareLayout" />
 
         <androidx.compose.ui.platform.ComposeView
-            android:visibility="gone"
             android:id="@+id/save_pdf"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

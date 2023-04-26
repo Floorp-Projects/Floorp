@@ -10,7 +10,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatDialogFragment
-import androidx.core.view.isVisible
 import androidx.fragment.app.clearFragmentResult
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
@@ -23,7 +22,6 @@ import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.feature.accounts.push.SendTabUseCases
 import mozilla.components.feature.share.RecentAppsStorage
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.databinding.FragmentShareBinding
@@ -116,19 +114,14 @@ class ShareFragment : AppCompatDialogFragment() {
         }
         shareToAppsView = ShareToAppsView(binding.appsShareLayout, shareInteractor)
 
-        if (FeatureFlags.saveToPDF) {
-            binding.dividerLineAppsShareAndPdfSection.isVisible = true
-            binding.savePdf.apply {
-                isVisible = true
-                setContent {
-                    FirefoxTheme(theme = Theme.getTheme(allowPrivateTheme = false)) {
-                        SaveToPDFItem {
-                            shareInteractor.onSaveToPDF(tabId = args.sessionId)
-                        }
-                    }
+        binding.savePdf.setContent {
+            FirefoxTheme(theme = Theme.getTheme(allowPrivateTheme = false)) {
+                SaveToPDFItem {
+                    shareInteractor.onSaveToPDF(tabId = args.sessionId)
                 }
             }
         }
+
         return binding.root
     }
 

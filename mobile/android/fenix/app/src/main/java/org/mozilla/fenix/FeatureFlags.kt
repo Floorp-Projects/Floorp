@@ -63,11 +63,6 @@ object FeatureFlags {
     const val composeTopSites = false
 
     /**
-     * Enables the save to PDF feature.
-     */
-    const val saveToPDF = true
-
-    /**
      * Enables the notification pre permission prompt.
      */
     const val notificationPrePermissionPromptEnabled = true
