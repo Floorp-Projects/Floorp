@@ -334,7 +334,7 @@ fuzzy(0-1,0-6400) == mask-type-04.svg mask-type-01-ref.svg
 fuzzy(0-3,0-448000) == nesting-invalid-01.svg nesting-invalid-01-ref.svg
 
 fuzzy(0-2,0-1000) == non-scaling-stroke-01.svg non-scaling-stroke-01-ref.svg # bug 1074161 for Win7 and OSX 10.8
-fuzzy-if(gtkWidget,0-1,0-99) fuzzy-if(!contentSameGfxBackendAsCanvas,0-9,0-99) fuzzy-if(Android,0-9,0-586) fails-if(useDrawSnapshot) == non-scaling-stroke-02.svg non-scaling-stroke-02-ref.svg
+fuzzy(0-51,0-900) fuzzy-if(Android,0-51,0-4090) fails-if(useDrawSnapshot) == non-scaling-stroke-02.svg non-scaling-stroke-02-ref.svg
 == non-scaling-stroke-03.svg non-scaling-stroke-03-ref.svg
 
 == objectBoundingBox-and-clipPath.svg pass.svg
@@ -392,15 +392,15 @@ fuzzy(0-1,0-400) == path-06.svg path-06-ref.svg
 fuzzy(0-128,0-100) == pattern-big-image.html pattern-big-image-ref.html
 == pattern-css-transform.html pattern-css-transform-ref.html
 == pattern-invalid-01.svg pattern-invalid-01-ref.svg
-fuzzy(0-1,0-5) == pattern-live-01a.svg pattern-live-01-ref.svg
-fuzzy(0-1,0-5) == pattern-live-01b.svg pattern-live-01-ref.svg
-fuzzy(0-1,0-5) == pattern-live-01c.svg pattern-live-01-ref.svg
+== pattern-live-01a.svg pattern-live-01-ref.svg
+== pattern-live-01b.svg pattern-live-01-ref.svg
+== pattern-live-01c.svg pattern-live-01-ref.svg
 == pattern-scale-01a.svg pattern-scale-01-ref.svg
 == pattern-scale-01b.svg pattern-scale-01-ref.svg
 == pattern-scale-01c.svg pattern-scale-01-ref.svg
 == pattern-transform-presence-01.svg pattern-transform-presence-01-ref.svg
-fuzzy(0-72,0-865) == pattern-transformed-01.svg pattern-transformed-01-ref.svg
-fuzzy(0-27,0-7960) fuzzy-if(Android,0-28,0-11200) == pattern-transformed-02.svg pattern-transformed-02-ref.svg
+== pattern-transformed-01.svg pattern-transformed-01-ref.svg
+fuzzy(0-27,0-9058) == pattern-transformed-02.svg pattern-transformed-02-ref.svg
 
 == polygon-01.svg polygon-01-ref.svg
 == polygon-marker-01.svg pass.svg
@@ -588,7 +588,7 @@ test-pref(svg.use-element.graphics-element-restrictions,1) ref-pref(svg.use-elem
 
 == viewBox-and-pattern-01.svg pass.svg
 == viewBox-and-pattern-02.svg pass.svg
-fuzzy(0-43,0-5) == viewBox-and-pattern-03.svg pass.svg
+== viewBox-and-pattern-03.svg pass.svg
 == viewBox-and-pattern-04.svg pass.svg
 == viewBox-and-symbol-01.svg pass.svg
 == viewBox-invalid-01.svg pass.svg

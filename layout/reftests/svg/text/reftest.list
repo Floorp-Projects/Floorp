@@ -186,7 +186,7 @@ fuzzy-if(winWidget,0-105,0-56) == clipPath-content.svg clipPath-content-ref.svg
 fuzzy-if(winWidget,0-53,0-112) == clipPath-content-2.svg clipPath-content-2-ref.svg
 
 # text and patterns
-fuzzy(0-74,0-385) fuzzy-if(geckoview,0-49,0-1793) == pattern-content.svg pattern-content-ref.svg
+== pattern-content.svg pattern-content-ref.svg
 
 # text and filters
 fuzzy-if(winWidget,0-126,0-336) == filter-applied.svg filter-applied-ref.svg
