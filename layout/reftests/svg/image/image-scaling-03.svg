@@ -1,0 +1,19 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!-- https://bugzilla.mozilla.org/show_bug.cgi?id=1776098
+
+     Make sure small scaled vector images display.
+-->
+
+<svg xmlns="http://www.w3.org/2000/svg">
+
+  <title> Ensure small vector images display</title>
+
+  <rect width="100%" height="100%" fill="lime"/>
+  <rect width="98" height="98" fill="red"/>
+  <image transform="scale(200)" width="0.5" height="0.5" href="lime100x100.svg"/>
+
+</svg>
+
