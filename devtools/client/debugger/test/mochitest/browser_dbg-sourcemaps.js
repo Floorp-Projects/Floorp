@@ -85,11 +85,9 @@ add_task(async function() {
   await stepIn(dbg);
   assertPausedAtSourceAndLine(dbg, findSource(dbg, "times2.js").id, 2);
 
-  await dbg.actions.jumpToMappedSelectedLocation(getContext(dbg));
   await stepOver(dbg);
   assertPausedAtSourceAndLine(dbg, findSource(dbg, "times2.js").id, 3);
 
-  await dbg.actions.jumpToMappedSelectedLocation(getContext(dbg));
   await stepOut(dbg);
   assertPausedAtSourceAndLine(dbg, entrySrc.id, 16);
 

@@ -121,10 +121,21 @@ add_task(async function() {
   await addBreakpoint(dbg, binarySource, virtualBinaryLine);
   invokeInTab("runWasm");
 
+  // We can't use waitForPaused test helper as the text content isn't displayed correctly
+  // so only assert that we are in paused state.
   await waitForPaused(dbg);
+  // We don't try to assert paused line as there is two types of line in wasm
+  assertPausedAtSourceAndLine(dbg, binarySource.id, virtualBinaryLine);
+
+  // Switch to original source
   info(
-    "The original C source is automatically displayed, even if we originaly set the breakpoint from the binary source"
+    "Manually switch to original C source as we set the breakpoint on binary source, we paused on it"
   );
+  await dbg.actions.jumpToMappedSelectedLocation(getContext(dbg));
+
+  // But once we switch to original source, we should have the original text content and be able
+  // to do all classic assertions for paused state.
+  await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, findSource(dbg, "fib.c").id, breakpointLine);
 
   info("Reselect the binary source");

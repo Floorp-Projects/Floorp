@@ -14,6 +14,10 @@ add_task(async function() {
 
   await addBreakpoint(dbg, "xbundle.js", 5);
   await waitForPaused(dbg);
+  assertPausedAtSourceAndLine(dbg, findSource(dbg, "xbundle.js").id, 5);
+
+  // Switch to original source
+  await dbg.actions.jumpToMappedSelectedLocation(getContext(dbg));
 
   info("Wait for the original file (xsource.js) to get selected");
   await waitForSelectedSource(dbg, "xsource.js");

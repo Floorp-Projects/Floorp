@@ -12,7 +12,7 @@ import {
 import { mapFrames, fetchFrames } from ".";
 import { removeBreakpoint } from "../breakpoints";
 import { evaluateExpressions } from "../expressions";
-import { selectSpecificLocation } from "../sources";
+import { selectLocation } from "../sources";
 import assert from "../../utils/assert";
 
 import { fetchScopes } from "./fetchScopes";
@@ -57,7 +57,7 @@ export function paused(pauseInfo) {
     // and highlight the paused line
     const selectedFrame = getSelectedFrame(getState(), thread);
     if (selectedFrame) {
-      await dispatch(selectSpecificLocation(cx, selectedFrame.location));
+      await dispatch(selectLocation(cx, selectedFrame.location));
     }
 
     // Fetch the previews for variables visible in the currently selected paused stackframe
