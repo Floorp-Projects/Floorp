@@ -286,6 +286,18 @@ def compare_png_bidi(bidi_session, url):
 
 
 @pytest.fixture
+def get_element(bidi_session, top_context):
+    async def get_element(css_selector, context=top_context):
+        result = await bidi_session.script.evaluate(
+            expression=f"document.querySelector('{css_selector}')",
+            target=ContextTarget(context["context"]),
+            await_promise=False,
+        )
+        return result
+    return get_element
+
+
+@pytest.fixture
 def get_reference_png(
     bidi_session, inline, render_pdf_to_png_bidi, top_context
 ):
