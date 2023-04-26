@@ -32,6 +32,9 @@ export async function buildMappedScopes(
   thunkArgs
 ) {
   const { parserWorker } = thunkArgs;
+  if (!parserWorker.isLocationSupported(frame.location)) {
+    return null;
+  }
   const originalAstScopes = await parserWorker.getScopes(frame.location);
   const generatedAstScopes = await parserWorker.getScopes(
     frame.generatedLocation

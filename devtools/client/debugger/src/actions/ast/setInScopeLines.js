@@ -35,7 +35,7 @@ async function getInScopeLines(
   const sourceTextContent = getSourceTextContent(getState(), location);
 
   let locations = null;
-  if (location.line && location.source && !location.source.isWasm) {
+  if (location.line && parserWorker.isLocationSupported(location)) {
     locations = await parserWorker.findOutOfScopeLocations(location);
   }
 

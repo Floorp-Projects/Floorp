@@ -34,7 +34,7 @@ export function highlightCalls(cx) {
       getCurrentThread(getState())
     );
 
-    if (!frame) {
+    if (!frame || !parserWorker.isLocationSupported(frame.location)) {
       return null;
     }
 
