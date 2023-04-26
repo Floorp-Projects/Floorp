@@ -3689,22 +3689,6 @@ dom.event:
     record_in_processes:
       - 'content'
 
-dom.midi:
-  has_devices:
-    bug_numbers:
-      - 1797019
-    description: >
-      Records if the user machine has connected MIDI devices.
-    expires: "120"
-    kind: boolean
-    notification_emails:
-      - bholley@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - main
-
 navigator.storage:
   estimate_count:
     bug_numbers:
