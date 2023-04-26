@@ -106,7 +106,7 @@ def _get_gradle_task_names(gradle_project):
     if gradle_project == "focus":
         gradle_tasks_name.extend(["assembleFocusDebug", "assembleAndroidTest", "testFocusDebugUnitTest", "lint"])
     elif gradle_project == "fenix":
-        gradle_tasks_name.extend(["assemble", "assembleAndroidTest", "testClasses", "test", "lint"])
+        gradle_tasks_name.extend(["assemble", "assembleAndroidTest", "testClasses", "lint"])
     else:
         lint_task_name = "lint" if gradle_project in ("tooling-lint", "samples-browser") else "lintRelease"
         gradle_tasks_name.extend(["assemble", "assembleAndroidTest", "test", lint_task_name])
