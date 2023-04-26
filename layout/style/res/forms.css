@@ -872,40 +872,18 @@ input[type=number]::-moz-number-spin-box {
   overflow: clip;
 }
 
-input[type=number]::-moz-number-spin-up {
+input[type=number]::-moz-number-spin-up,
+input[type=number]::-moz-number-spin-down {
   writing-mode: horizontal-tb;
   appearance: auto;
   -moz-default-appearance: spinner-upbutton;
   display: block; /* bug 926670 */
   flex-grow: 1;
   cursor: default;
-  /* Style for when native theming is off: */
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="5"><path d="M1,4 L3,0 5,4" fill="dimgrey"/></svg>');
-  background-repeat: no-repeat;
-  background-position: center bottom;
-  border: 1px solid darkgray;
-  border-bottom: none;
-  /* [JK] I think the border-*-*-radius properties here can remain physical,
-     as we probably don't want to turn the spinner sideways in vertical writing mode */
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
 }
 
 input[type=number]::-moz-number-spin-down {
-  writing-mode: horizontal-tb;
-  appearance: auto;
   -moz-default-appearance: spinner-downbutton;
-  display: block; /* bug 926670 */
-  flex-grow: 1;
-  cursor: default;
-  /* Style for when native theming is off: */
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="6" height="5"><path d="M1,1 L3,5 5,1" fill="dimgrey"/></svg>');
-  background-repeat: no-repeat;
-  background-position: center top;
-  border: 1px solid darkgray;
-  border-top: none;
-  border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 4px;
 }
 
 input[type=number] > div > div > div:hover {
