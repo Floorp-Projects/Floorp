@@ -112,4 +112,4 @@ redirects:
 fatal warnings:
     - "WARNING: '([^']*)' reference target not found:((?!.rst).)*$"
 
-max_num_warnings: 6220
+max_num_warnings: 861
