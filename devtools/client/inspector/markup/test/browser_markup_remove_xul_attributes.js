@@ -6,11 +6,11 @@
 // Test confirms that XUL attributes don't show up as empty
 // attributes after being deleted
 
-const TEST_URL = URL_ROOT + "doc_markup_xul.xhtml";
+const TEST_URL = URL_ROOT_SSL + "doc_markup_xul.xhtml";
 
 add_task(async function() {
   await SpecialPowers.pushPermissions([
-    { type: "allowXULXBL", allow: true, context: URL_ROOT },
+    { type: "allowXULXBL", allow: true, context: URL_ROOT_SSL },
   ]);
 
   const { inspector } = await openInspectorForURL(TEST_URL);

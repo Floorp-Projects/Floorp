@@ -5,7 +5,7 @@
 
 // Test viewports basics after opening, like size and location
 
-const TEST_URL = "http://example.org/";
+const TEST_URL = "https://example.org/";
 addRDMTask(TEST_URL, async function({ ui }) {
   const browser = ui.getViewportBrowser();
 

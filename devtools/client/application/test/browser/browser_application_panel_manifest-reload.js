@@ -12,7 +12,7 @@ add_task(async function() {
   await enableApplicationPanel();
 
   info("Loading a page with no manifest");
-  let url = URL_ROOT + "resources/manifest/load-no-manifest.html";
+  let url = URL_ROOT_SSL + "resources/manifest/load-no-manifest.html";
   const { panel, tab } = await openNewTabAndApplicationPanel(url);
   const doc = panel.panelWin.document;
 
@@ -23,7 +23,7 @@ add_task(async function() {
   ok(true, "Manifest page displays a 'no manifest' message");
 
   info("Navigating to a page with a manifest");
-  url = URL_ROOT + "resources/manifest/load-ok.html";
+  url = URL_ROOT_SSL + "resources/manifest/load-ok.html";
   await navigateTo(url);
 
   info("Waiting for the manifest to show up");
@@ -31,7 +31,7 @@ add_task(async function() {
   ok(true, "Manifest displayed successfully");
 
   info("Navigating to a page with a manifest that fails to load");
-  url = URL_ROOT + "resources/manifest/load-fail.html";
+  url = URL_ROOT_SSL + "resources/manifest/load-fail.html";
   await navigateTo(url);
 
   info("Waiting for the manifest to fail to load");

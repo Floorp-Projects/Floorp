@@ -8,7 +8,7 @@
 
 "use strict";
 
-const TEST_COM_URI = `${URL_ROOT_COM}examples/doc_dbg-fission-frame-sources.html`;
+const TEST_COM_URI = `${URL_ROOT_COM_SSL}examples/doc_dbg-fission-frame-sources.html`;
 const TEST_ORG_IFRAME_URI = `${URL_ROOT_ORG_SSL}examples/doc_dbg-fission-frame-sources-frame.html`;
 const DATA_URI = "data:text/html,<title>foo</title>";
 

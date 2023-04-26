@@ -3,7 +3,7 @@
 
 "use strict";
 
-const TEST_URI_ORG = `http://example.org/document-builder.sjs?html=<meta charset=utf8></meta>
+const TEST_URI_ORG = `https://example.org/document-builder.sjs?html=<meta charset=utf8></meta>
 <script>
       console.log("early message on org page");
 </script><body>`;

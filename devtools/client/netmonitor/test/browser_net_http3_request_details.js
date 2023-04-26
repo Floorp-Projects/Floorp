@@ -68,8 +68,12 @@ add_task(async function() {
     "There should be 2 header scopes displayed in this tabpanel."
   );
 
+  const headers = [...tabpanel.querySelectorAll(".accordion .treeLabelCell")];
+
   is(
-    tabpanel.querySelectorAll(".accordion .treeLabelCell").length,
+    // The Text-Encoding header is not consistently displayed, exclude it from
+    // the assertion. See Bug 1830053.
+    headers.filter(cell => cell.textContent != "TE").length,
     25,
     "There should be 25 header values displayed in this tabpanel."
   );
