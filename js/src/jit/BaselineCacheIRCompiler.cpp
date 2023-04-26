@@ -407,7 +407,7 @@ bool BaselineCacheIRCompiler::emitGuardSpecificAtom(StringOperandId strId,
                                liveVolatileFloatRegs());
   masm.PushRegsInMask(volatileRegs);
 
-  using Fn = bool (*)(JSString * str1, JSString * str2);
+  using Fn = bool (*)(JSString* str1, JSString* str2);
   masm.setupUnalignedABICall(scratch);
   masm.loadPtr(atomAddr, scratch);
   masm.passABIArg(scratch);
@@ -858,7 +858,7 @@ bool BaselineCacheIRCompiler::emitAddAndStoreSlotShared(
                          liveVolatileFloatRegs());
     masm.PushRegsInMask(save);
 
-    using Fn = bool (*)(JSContext * cx, NativeObject * obj, uint32_t newCount);
+    using Fn = bool (*)(JSContext* cx, NativeObject* obj, uint32_t newCount);
     masm.setupUnalignedABICall(scratch1);
     masm.loadJSContext(scratch1);
     masm.passABIArg(scratch1);
@@ -1408,7 +1408,7 @@ void BaselineCacheIRCompiler::emitAtomizeString(Register str, Register temp,
                          liveVolatileFloatRegs());
     masm.PushRegsInMask(save);
 
-    using Fn = JSAtom* (*)(JSContext * cx, JSString * str);
+    using Fn = JSAtom* (*)(JSContext* cx, JSString* str);
     masm.setupUnalignedABICall(temp);
     masm.loadJSContext(temp);
     masm.passABIArg(temp);
@@ -1796,7 +1796,7 @@ bool BaselineCacheIRCompiler::emitCallAddOrUpdateSparseElementHelper(
   masm.Push(id);
   masm.Push(obj);
 
-  using Fn = bool (*)(JSContext * cx, Handle<NativeObject*> obj, int32_t int_id,
+  using Fn = bool (*)(JSContext* cx, Handle<NativeObject*> obj, int32_t int_id,
                       HandleValue v, bool strict);
   callVM<Fn, AddOrUpdateSparseElementHelper>(masm);
 
@@ -2546,6 +2546,11 @@ bool BaselineCacheIRCompiler::updateArgc(CallFlags flags, Register argcReg,
       // fun_call has no extra guards, and argc will be corrected in
       // pushFunCallArguments.
       return true;
+    case CallFlags::FunApplyNullUndefined:
+      // argc must be 0 if null or undefined is passed as second argument to
+      // |apply|.
+      masm.move32(Imm32(0), argcReg);
+      return true;
     default:
       break;
   }
@@ -2612,6 +2617,9 @@ void BaselineCacheIRCompiler::pushArguments(Register argcReg,
     case CallFlags::FunApplyArray:
       pushArrayArguments(argcReg, scratch, scratch2, isJitCall,
                          /*isConstructing =*/false);
+      break;
+    case CallFlags::FunApplyNullUndefined:
+      pushFunApplyNullUndefinedArguments(calleeReg, isJitCall);
       break;
     default:
       MOZ_CRASH("Invalid arg format");
@@ -2741,6 +2749,29 @@ void BaselineCacheIRCompiler::pushArrayArguments(Register argcReg,
     size_t calleeOffset =
         BaselineStubFrameLayout::Size() + (2 + isConstructing) * sizeof(Value);
     masm.pushValue(Address(FramePointer, calleeOffset));
+  }
+}
+
+void BaselineCacheIRCompiler::pushFunApplyNullUndefinedArguments(
+    Register calleeReg, bool isJitCall) {
+  // argc is already set to 0, so we just have to push |this| and (for native
+  // calls) the callee.
+
+  MOZ_ASSERT(enteredStubFrame_);
+
+  // Align the stack such that the JitFrameLayout is aligned on the
+  // JitStackAlignment.
+  if (isJitCall) {
+    masm.alignJitStackBasedOnNArgs(0, /*countIncludesThis =*/false);
+  }
+
+  // Push |this|.
+  size_t thisvOffset = BaselineStubFrameLayout::Size() + 1 * sizeof(Value);
+  masm.pushValue(Address(FramePointer, thisvOffset));
+
+  // Push |callee| if needed.
+  if (!isJitCall) {
+    masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(calleeReg)));
   }
 }
 
