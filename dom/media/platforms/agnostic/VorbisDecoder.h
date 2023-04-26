@@ -20,13 +20,11 @@ namespace mozilla {
 
 DDLoggedTypeDeclNameAndBase(VorbisDataDecoder, MediaDataDecoder);
 
-class VorbisDataDecoder final
-    : public MediaDataDecoder,
-      public DecoderDoctorLifeLogger<VorbisDataDecoder> {
+class VorbisDataDecoder : public MediaDataDecoder,
+                          public DecoderDoctorLifeLogger<VorbisDataDecoder> {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VorbisDataDecoder, final);
-
   explicit VorbisDataDecoder(const CreateDecoderParams& aParams);
+  ~VorbisDataDecoder();
 
   RefPtr<InitPromise> Init() override;
   RefPtr<DecodePromise> Decode(MediaRawData* aSample) override;
@@ -43,8 +41,6 @@ class VorbisDataDecoder final
   static const AudioConfig::Channel* VorbisLayout(uint32_t aChannels);
 
  private:
-  ~VorbisDataDecoder();
-
   nsresult DecodeHeader(const unsigned char* aData, size_t aLength);
 
   const AudioInfo mInfo;

@@ -36,8 +36,6 @@ class GMPVideoDecoder final : public MediaDataDecoder,
                               public GMPVideoDecoderCallbackProxy,
                               public DecoderDoctorLifeLogger<GMPVideoDecoder> {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPVideoDecoder, final);
-
   explicit GMPVideoDecoder(const GMPVideoDecoderParams& aParams);
 
   RefPtr<InitPromise> Init() override;
@@ -75,8 +73,6 @@ class GMPVideoDecoder final : public MediaDataDecoder,
                            const char* aMethodName);
 
  private:
-  ~GMPVideoDecoder() = default;
-
   class GMPInitDoneCallback : public GetGMPVideoDecoderCallback {
    public:
     explicit GMPInitDoneCallback(GMPVideoDecoder* aDecoder)

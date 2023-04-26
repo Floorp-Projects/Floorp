@@ -18,12 +18,11 @@ class TaskQueue;
 
 DDLoggedTypeDeclNameAndBase(AppleATDecoder, MediaDataDecoder);
 
-class AppleATDecoder final : public MediaDataDecoder,
-                             public DecoderDoctorLifeLogger<AppleATDecoder> {
+class AppleATDecoder : public MediaDataDecoder,
+                       public DecoderDoctorLifeLogger<AppleATDecoder> {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AppleATDecoder, final);
-
   explicit AppleATDecoder(const AudioInfo& aConfig);
+  ~AppleATDecoder();
 
   RefPtr<InitPromise> Init() override;
   RefPtr<DecodePromise> Decode(MediaRawData* aSample) override;
@@ -49,8 +48,6 @@ class AppleATDecoder final : public MediaDataDecoder,
   nsCOMPtr<nsISerialEventTarget> mThread;
 
  private:
-  ~AppleATDecoder();
-
   AudioConverterRef mConverter;
   AudioStreamBasicDescription mOutputFormat;
   UInt32 mFormatID;
