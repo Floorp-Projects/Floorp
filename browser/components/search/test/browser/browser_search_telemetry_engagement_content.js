@@ -365,3 +365,86 @@ add_task(async function test_click_redirect_search_in_newtab() {
   BrowserTestUtils.removeTab(tab);
   BrowserTestUtils.removeTab(tab2);
 });
+
+// Ensure if a user does a search that uses one of the in-content sources,
+// we clear the cached source value.
+add_task(async function test_content_source_reset() {
+  resetTelemetry();
+  let url = getSERPUrl("searchTelemetryAd_searchbox_with_content.html");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  await waitForPageWithAdImpressions();
+
+  // Do a text search to trigger a defined target.
+  let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+    let input = content.document.querySelector("form input");
+    input.click();
+    input.focus();
+  });
+  EventUtils.synthesizeKey("KEY_Enter");
+  await pageLoadPromise;
+
+  // Click on a related search that will load within the same page and should
+  // have an unknown target.
+  await waitForPageWithAdImpressions();
+  pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+    content.document.getElementById("related-in-page").click();
+  });
+  await pageLoadPromise;
+
+  await TestUtils.waitForCondition(() => {
+    return Glean.serp.impression.testGetValue()?.length == 3;
+  }, "Should have three impressions.");
+
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        shopping_tab_displayed: "true",
+      },
+      engagements: [
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+          target: SearchSERPTelemetryUtils.COMPONENTS.INCONTENT_SEARCHBOX,
+        },
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.SUBMITTED,
+          target: SearchSERPTelemetryUtils.COMPONENTS.INCONTENT_SEARCHBOX,
+        },
+      ],
+    },
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "follow_on_from_refine_on_incontent_search",
+        is_shopping_page: "false",
+        shopping_tab_displayed: "true",
+      },
+      engagements: [
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+          target: SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK,
+        },
+      ],
+    },
+    {
+      impression: {
+        provider: "example",
+        tagged: "false",
+        partner_code: "",
+        source: "unknown",
+        is_shopping_page: "false",
+        shopping_tab_displayed: "true",
+      },
+    },
+  ]);
+
+  BrowserTestUtils.removeTab(tab);
+});

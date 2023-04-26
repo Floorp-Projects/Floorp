@@ -375,6 +375,7 @@ class TelemetryHandler {
     let inContentSource;
     if (lazy.serpEventsEnabled && this.#browserContentSourceMap.has(browser)) {
       inContentSource = this.#browserContentSourceMap.get(browser);
+      this.#browserContentSourceMap.delete(browser);
     }
 
     let newtabSessionId;
