@@ -139,6 +139,7 @@ public class GeckoSessionTestRule implements TestRule {
 
   public void addDisplay(final GeckoSession session, final int x, final int y) {
     final GeckoDisplay display = session.acquireDisplay();
+    session.setActive(true);
 
     final SurfaceTexture displayTexture = new SurfaceTexture(0);
     displayTexture.setDefaultBufferSize(x, y);
@@ -163,6 +164,7 @@ public class GeckoSessionTestRule implements TestRule {
     displaySurface.release();
     final SurfaceTexture displayTexture = mDisplayTextures.remove(session);
     displayTexture.release();
+    session.setActive(false);
   }
 
   /**
@@ -1315,6 +1317,7 @@ public class GeckoSessionTestRule implements TestRule {
           };
 
       session.open(getRuntime());
+      session.setActive(true);
 
       UiThreadUtils.waitForCondition(
           () -> mCallRecordHandler == null, env.getDefaultTimeoutMillis());

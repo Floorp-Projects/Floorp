@@ -78,11 +78,13 @@ public class TestRunnerActivity extends Activity {
       sessionDisplay = session.acquireDisplay();
       sessionDisplay.surfaceChanged(
           new GeckoDisplay.SurfaceInfo.Builder(surface).size(width, height).build());
+      session.setActive(true);
     }
 
     public void release(final GeckoSession session) {
       sessionDisplay.surfaceDestroyed();
       session.releaseDisplay(sessionDisplay);
+      session.setActive(false);
     }
   }
 
@@ -342,6 +344,7 @@ public class TestRunnerActivity extends Activity {
     session.setContentDelegate(mContentDelegate);
     session.setPermissionDelegate(mPermissionDelegate);
     session.setPromptDelegate(mPromptDelegate);
+    session.setActive(active);
 
     final WebExtension.SessionController sessionController = session.getWebExtensionController();
     for (final ExtensionWrapper wrapper : mExtensions.values()) {
