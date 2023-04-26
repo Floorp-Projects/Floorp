@@ -273,9 +273,9 @@ pub fn replay_from_buf(buf: &[u8]) -> Result<(), ()> {
                     metric.get(&label).add(count);
                 }
             }
-        } else {
+        } else if let Some(metric) = __glean_metric_maps::LABELED_COUNTER_MAP.get(&id) {
             for (label, count) in labeled_counts.into_iter() {
-                __glean_metric_maps::labeled_counter_get(id.0, &label).add(count);
+                metric.get(&label).add(count);
             }
         }
     }
