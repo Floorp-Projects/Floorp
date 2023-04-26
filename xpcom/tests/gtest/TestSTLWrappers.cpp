@@ -47,13 +47,19 @@ void ShouldAbort() {
   fputs("TEST-FAIL | TestSTLWrappers.cpp | didn't abort()?\n", stderr);
 }
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || (defined(XP_MACOSX) && !defined(MOZ_DEBUG))
 TEST(STLWrapper, DISABLED_ShouldAbortDeathTest)
 #else
 TEST(STLWrapper, ShouldAbortDeathTest)
 #endif
 {
   ASSERT_DEATH_IF_SUPPORTED(ShouldAbort(),
+#ifdef __GLIBCXX__
+                            // Only libstdc++ will print this message.
                             "terminate called after throwing an instance of "
-                            "'std::out_of_range'|vector::_M_range_check");
+                            "'std::out_of_range'|vector::_M_range_check"
+#else
+                            ""
+#endif
+  );
 }
