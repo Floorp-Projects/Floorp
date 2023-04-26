@@ -328,6 +328,7 @@
     <string name="pref_key_custom_sponsored_stories_site_id" translatable="false">pref_key_custom_sponsored_stories_site_id</string>
     <string name="pref_key_custom_sponsored_stories_country" translatable="false">pref_key_custom_sponsored_stories_country</string>
     <string name="pref_key_custom_sponsored_stories_city" translatable="false">pref_key_custom_sponsored_stories_city</string>
+    <string name="pref_key_shared_prefs_uuid" translatable="false">pref_key_shared_prefs_uuid</string>
 
     <!-- Growth Data -->
     <string name="pref_key_growth_set_as_default" translatable="false">pref_key_growth_set_as_default</string>

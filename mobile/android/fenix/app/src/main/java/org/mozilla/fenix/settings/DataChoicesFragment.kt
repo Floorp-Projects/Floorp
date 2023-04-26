@@ -32,6 +32,11 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
                     context.components.analytics.metrics.start(MetricServiceType.Data)
                 } else {
                     context.components.analytics.metrics.stop(MetricServiceType.Data)
+
+                    // Reset the Shared Prefs UUID on opt-out since we're investigating cases of
+                    // unexpected client ID regeneration. Telemetry data collection opt-out is
+                    // expected to reset the client ID.
+                    context.settings().sharedPrefsUUID = ""
                 }
                 // Reset experiment identifiers on both opt-in and opt-out; it's likely
                 // that in future we will need to pass in the new telemetry client_id

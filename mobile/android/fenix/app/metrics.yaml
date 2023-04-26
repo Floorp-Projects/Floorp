@@ -2291,6 +2291,26 @@ metrics:
     metadata:
       tags:
         - Notifications
+  shared_prefs_uuid:
+    type: uuid
+    lifetime: ping
+    description: |
+      A UUID stored in Shared Preferences used to analyze technical differences
+      between storage mechanisms in Android, specifically the Glean DB and
+      Shared Preferences.
+    send_in_pings:
+      - metrics
+    notification_emails:
+      - android-probes@mozilla.com
+      - raphael@mozilla.com
+      - fbertsch@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1822119
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1822119
+    data_sensitivity:
+      - technical
+    expires: 116
 
 customize_home:
   most_visited_sites:

@@ -191,6 +191,16 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = "",
     )
 
+    /**
+     * A UUID stored in Shared Preferences used to analyze technical differences
+     * between storage mechanisms in Android, specifically the Glean DB and
+     * Shared Preferences.
+     */
+    var sharedPrefsUUID by stringPreference(
+        appContext.getPreferenceKey(R.string.pref_key_shared_prefs_uuid),
+        default = "",
+    )
+
     var currentWallpaperName by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_current_wallpaper),
         default = Wallpaper.Default.name,
