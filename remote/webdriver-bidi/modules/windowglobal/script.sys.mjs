@@ -16,7 +16,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   setDefaultSerializationOptions:
     "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
   stringify: "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
-  WindowRealm: "chrome://remote/content/webdriver-bidi/Realm.sys.mjs",
 });
 
 /**
@@ -35,18 +34,11 @@ const EvaluationStatus = {
 };
 
 class ScriptModule extends WindowGlobalBiDiModule {
-  #defaultRealm;
   #observerListening;
   #preloadScripts;
-  #realms;
 
   constructor(messageHandler) {
     super(messageHandler);
-
-    this.#defaultRealm = new lazy.WindowRealm(this.messageHandler.window);
-
-    // Maps sandbox names to instances of window realms.
-    this.#realms = new Map();
 
     // Set of structs with an item named expression, which is a string,
     // and an item named sandbox which is a string or null.
@@ -57,13 +49,6 @@ class ScriptModule extends WindowGlobalBiDiModule {
     this.#preloadScripts = null;
 
     this.#stopObserving();
-
-    this.#defaultRealm.destroy();
-
-    for (const realm of this.#realms.values()) {
-      realm.destroy();
-    }
-    this.#realms = null;
   }
 
   observe(subject, topic) {
@@ -231,7 +216,7 @@ class ScriptModule extends WindowGlobalBiDiModule {
         functionDeclaration,
         sandbox,
       } = script;
-      const realm = this.#getRealmFromSandboxName(sandbox);
+      const realm = this.messageHandler.getRealm({ sandboxName: sandbox });
       const deserializedArguments = commandArguments.map(arg =>
         lazy.deserialize(realm, arg, {
           emitScriptMessage: this.#emitScriptMessage,
@@ -250,44 +235,6 @@ class ScriptModule extends WindowGlobalBiDiModule {
 
     // Continue script parsing.
     resolveBlockerPromise();
-  }
-
-  #getRealm(realmId, sandboxName) {
-    if (realmId === null) {
-      return this.#getRealmFromSandboxName(sandboxName);
-    }
-
-    if (this.#defaultRealm.id == realmId) {
-      return this.#defaultRealm;
-    }
-
-    const sandboxRealm = Array.from(this.#realms.values()).find(
-      realm => realm.id === realmId
-    );
-
-    if (sandboxRealm) {
-      return sandboxRealm;
-    }
-
-    throw new lazy.error.NoSuchFrameError(`Realm with id ${realmId} not found`);
-  }
-
-  #getRealmFromSandboxName(sandboxName) {
-    if (sandboxName === null || sandboxName === "") {
-      return this.#defaultRealm;
-    }
-
-    if (this.#realms.has(sandboxName)) {
-      return this.#realms.get(sandboxName);
-    }
-
-    const realm = new lazy.WindowRealm(this.messageHandler.window, {
-      sandboxName,
-    });
-
-    this.#realms.set(sandboxName, realm);
-
-    return realm;
   }
 
   #getSource(realm) {
@@ -372,7 +319,7 @@ class ScriptModule extends WindowGlobalBiDiModule {
       thisParameter = null,
     } = options;
 
-    const realm = this.#getRealm(realmId, sandboxName);
+    const realm = this.messageHandler.getRealm({ realmId, sandboxName });
     const nodeCache = this.nodeCache;
 
     const deserializedArguments =
@@ -425,7 +372,7 @@ class ScriptModule extends WindowGlobalBiDiModule {
    */
   disownHandles(options) {
     const { handles, realmId = null, sandbox: sandboxName = null } = options;
-    const realm = this.#getRealm(realmId, sandboxName);
+    const realm = this.messageHandler.getRealm({ realmId, sandboxName });
     for (const handle of handles) {
       realm.removeObjectHandle(handle);
     }
@@ -464,7 +411,7 @@ class ScriptModule extends WindowGlobalBiDiModule {
       serializationOptions,
     } = options;
 
-    const realm = this.#getRealm(realmId, sandboxName);
+    const realm = this.messageHandler.getRealm({ realmId, sandboxName });
 
     const rv = realm.executeInGlobal(expression);
 
@@ -485,15 +432,16 @@ class ScriptModule extends WindowGlobalBiDiModule {
    *
    * @returns {Array<object>}
    *     - context {BrowsingContext} The browsing context, associated with the realm.
-   *     - id {string} The realm unique identifier.
    *     - origin {string} The serialization of an origin.
+   *     - realm {string} The realm unique identifier.
    *     - sandbox {string=} The name of the sandbox.
    *     - type {RealmType.Window} The window realm type.
    */
   getWindowRealms() {
-    return [this.#defaultRealm, ...this.#realms.values()].map(realm =>
-      realm.getInfo()
-    );
+    return Array.from(this.messageHandler.realms.values()).map(realm => {
+      const { context, origin, realm: id, sandbox, type } = realm.getInfo();
+      return { context, origin, realm: id, sandbox, type };
+    });
   }
 
   /**
