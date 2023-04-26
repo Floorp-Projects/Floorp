@@ -6,6 +6,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+pub enum DynamicLabel { }
+
 pub mod test {
     use crate::private::*;
     use glean::CommonMetricData;
@@ -66,7 +68,7 @@ pub mod test {
     ///
     /// A multi-line
     /// description
-    pub static labeled_boolean_metric: Lazy<LabeledMetric<LabeledBooleanMetric>> = Lazy::new(|| {
+    pub static labeled_boolean_metric: Lazy<LabeledMetric<LabeledBooleanMetric, super::DynamicLabel>> = Lazy::new(|| {
         LabeledMetric::new(4.into(), CommonMetricData {
             name: "labeled_boolean_metric".into(),
             category: "test".into(),
@@ -77,12 +79,60 @@ pub mod test {
         }, None)
     });
 
+    #[repr(u16)]
+    pub enum LabeledBooleanMetricLabelsLabel {
+        OneLabel = 0,
+        TwoLabels = 1,
+        ThreeLabels = 2,
+        FourLabels = 3,
+        FiveLabels = 4,
+        SixLabels = 5,
+        SevenLabels = 6,
+        EightLabels = 7,
+        NineLabels = 8,
+        TenLabels = 9,
+        __Other__,
+    }
+    impl From<u16> for LabeledBooleanMetricLabelsLabel {
+        fn from(v: u16) -> Self {
+            match v {
+                0 => Self::OneLabel,
+                1 => Self::TwoLabels,
+                2 => Self::ThreeLabels,
+                3 => Self::FourLabels,
+                4 => Self::FiveLabels,
+                5 => Self::SixLabels,
+                6 => Self::SevenLabels,
+                7 => Self::EightLabels,
+                8 => Self::NineLabels,
+                9 => Self::TenLabels,
+                _ => Self::__Other__,
+            }
+        }
+    }
+    impl Into<&'static str> for LabeledBooleanMetricLabelsLabel {
+        fn into(self) -> &'static str {
+            match self {
+                Self::OneLabel => "one_label",
+                Self::TwoLabels => "two_labels",
+                Self::ThreeLabels => "three_labels",
+                Self::FourLabels => "four_labels",
+                Self::FiveLabels => "five_labels",
+                Self::SixLabels => "six_labels",
+                Self::SevenLabels => "seven_labels",
+                Self::EightLabels => "eight_labels",
+                Self::NineLabels => "nine_labels",
+                Self::TenLabels => "ten_labels",
+                Self::__Other__ => "__other__",
+            }
+        }
+    }
     #[allow(non_upper_case_globals)]
     /// generated from test.labeled_boolean_metric_labels
     ///
     /// A multi-line
     /// description
-    pub static labeled_boolean_metric_labels: Lazy<LabeledMetric<LabeledBooleanMetric>> = Lazy::new(|| {
+    pub static labeled_boolean_metric_labels: Lazy<LabeledMetric<LabeledBooleanMetric, LabeledBooleanMetricLabelsLabel>> = Lazy::new(|| {
         LabeledMetric::new(5.into(), CommonMetricData {
             name: "labeled_boolean_metric_labels".into(),
             category: "test".into(),
@@ -98,7 +148,7 @@ pub mod test {
     ///
     /// A multi-line
     /// description
-    pub static labeled_counter_metric: Lazy<LabeledMetric<LabeledCounterMetric>> = Lazy::new(|| {
+    pub static labeled_counter_metric: Lazy<LabeledMetric<LabeledCounterMetric, super::DynamicLabel>> = Lazy::new(|| {
         LabeledMetric::new(6.into(), CommonMetricData {
             name: "labeled_counter_metric".into(),
             category: "test".into(),
@@ -109,12 +159,36 @@ pub mod test {
         }, None)
     });
 
+    #[repr(u16)]
+    pub enum LabeledCounterMetricLabelsLabel {
+        OneLabel = 0,
+        TwoLabels = 1,
+        __Other__,
+    }
+    impl From<u16> for LabeledCounterMetricLabelsLabel {
+        fn from(v: u16) -> Self {
+            match v {
+                0 => Self::OneLabel,
+                1 => Self::TwoLabels,
+                _ => Self::__Other__,
+            }
+        }
+    }
+    impl Into<&'static str> for LabeledCounterMetricLabelsLabel {
+        fn into(self) -> &'static str {
+            match self {
+                Self::OneLabel => "one_label",
+                Self::TwoLabels => "two_labels",
+                Self::__Other__ => "__other__",
+            }
+        }
+    }
     #[allow(non_upper_case_globals)]
     /// generated from test.labeled_counter_metric_labels
     ///
     /// A multi-line
     /// description
-    pub static labeled_counter_metric_labels: Lazy<LabeledMetric<LabeledCounterMetric>> = Lazy::new(|| {
+    pub static labeled_counter_metric_labels: Lazy<LabeledMetric<LabeledCounterMetric, LabeledCounterMetricLabelsLabel>> = Lazy::new(|| {
         LabeledMetric::new(7.into(), CommonMetricData {
             name: "labeled_counter_metric_labels".into(),
             category: "test".into(),
@@ -130,7 +204,7 @@ pub mod test {
     ///
     /// A multi-line
     /// description
-    pub static labeled_string_metric: Lazy<LabeledMetric<LabeledStringMetric>> = Lazy::new(|| {
+    pub static labeled_string_metric: Lazy<LabeledMetric<LabeledStringMetric, super::DynamicLabel>> = Lazy::new(|| {
         LabeledMetric::new(8.into(), CommonMetricData {
             name: "labeled_string_metric".into(),
             category: "test".into(),
@@ -141,12 +215,36 @@ pub mod test {
         }, None)
     });
 
+    #[repr(u16)]
+    pub enum LabeledStringMetricLabelsLabel {
+        OneLabel = 0,
+        TwoLabels = 1,
+        __Other__,
+    }
+    impl From<u16> for LabeledStringMetricLabelsLabel {
+        fn from(v: u16) -> Self {
+            match v {
+                0 => Self::OneLabel,
+                1 => Self::TwoLabels,
+                _ => Self::__Other__,
+            }
+        }
+    }
+    impl Into<&'static str> for LabeledStringMetricLabelsLabel {
+        fn into(self) -> &'static str {
+            match self {
+                Self::OneLabel => "one_label",
+                Self::TwoLabels => "two_labels",
+                Self::__Other__ => "__other__",
+            }
+        }
+    }
     #[allow(non_upper_case_globals)]
     /// generated from test.labeled_string_metric_labels
     ///
     /// A multi-line
     /// description
-    pub static labeled_string_metric_labels: Lazy<LabeledMetric<LabeledStringMetric>> = Lazy::new(|| {
+    pub static labeled_string_metric_labels: Lazy<LabeledMetric<LabeledStringMetric, LabeledStringMetricLabelsLabel>> = Lazy::new(|| {
         LabeledMetric::new(9.into(), CommonMetricData {
             name: "labeled_string_metric_labels".into(),
             category: "test".into(),
@@ -417,27 +515,6 @@ pub(crate) mod __glean_metric_maps {
         map
     });
 
-    pub static LABELED_BOOLEAN_MAP: Lazy<HashMap<MetricId, &Lazy<LabeledMetric<LabeledBooleanMetric>>>> = Lazy::new(|| {
-        let mut map = HashMap::with_capacity(2);
-        map.insert(4.into(), &super::test::labeled_boolean_metric);
-        map.insert(5.into(), &super::test::labeled_boolean_metric_labels);
-        map
-    });
-
-    pub static LABELED_COUNTER_MAP: Lazy<HashMap<MetricId, &Lazy<LabeledMetric<LabeledCounterMetric>>>> = Lazy::new(|| {
-        let mut map = HashMap::with_capacity(2);
-        map.insert(6.into(), &super::test::labeled_counter_metric);
-        map.insert(7.into(), &super::test::labeled_counter_metric_labels);
-        map
-    });
-
-    pub static LABELED_STRING_MAP: Lazy<HashMap<MetricId, &Lazy<LabeledMetric<LabeledStringMetric>>>> = Lazy::new(|| {
-        let mut map = HashMap::with_capacity(2);
-        map.insert(8.into(), &super::test::labeled_string_metric);
-        map.insert(9.into(), &super::test::labeled_string_metric_labels);
-        map
-    });
-
     pub static MEMORY_DISTRIBUTION_MAP: Lazy<HashMap<MetricId, &Lazy<MemoryDistributionMetric>>> = Lazy::new(|| {
         let mut map = HashMap::with_capacity(1);
         map.insert(10.into(), &super::test::memory_distribution_metric);
@@ -630,6 +707,148 @@ pub(crate) mod __glean_metric_maps {
         }
     }
 
+    /// Gets the submetric from the specified labeled_boolean metric.
+    ///
+    /// # Arguments
+    ///
+    /// * `metric_id` - The metric's ID to look up
+    /// * `label` - The label identifying the boolean submetric.
+    ///
+    /// # Returns
+    ///
+    /// Returns the boolean submetric.
+    ///
+    /// # Panics
+    ///
+    /// Panics if no labeled_boolean by the given metric ID could be found.
+    #[allow(unused_variables)]
+    pub(crate) fn labeled_boolean_get(metric_id: u32, label: &str) -> LabeledBooleanMetric {
+        match metric_id {
+            4 => super::test::labeled_boolean_metric.get(label),
+            5 => super::test::labeled_boolean_metric_labels.get(label),
+            _ => panic!("No labeled_boolean for metric id {}", metric_id),
+        }
+    }
+
+    /// Gets the submetric from the specified labeled_boolean metric, by enum.
+    ///
+    /// # Arguments
+    ///
+    /// * `metric_id` - The metric's ID to look up
+    /// * `label_enum` - The label enum identifying the boolean submetric.
+    ///
+    /// # Returns
+    ///
+    /// Returns the boolean submetric.
+    ///
+    /// # Panics
+    ///
+    /// Panics if no labeled_boolean by the given metric ID could be found.
+    #[allow(unused_variables)]
+    pub(crate) fn labeled_boolean_enum_get(metric_id: u32, label_enum: u16) -> LabeledBooleanMetric {
+        match metric_id {
+            5 => super::test::labeled_boolean_metric_labels.get(labeled_enum_to_str(metric_id, label_enum)),
+            _ => panic!("No labeled_boolean for metric id {}", metric_id),
+        }
+    }
+    /// Gets the submetric from the specified labeled_counter metric.
+    ///
+    /// # Arguments
+    ///
+    /// * `metric_id` - The metric's ID to look up
+    /// * `label` - The label identifying the counter submetric.
+    ///
+    /// # Returns
+    ///
+    /// Returns the counter submetric.
+    ///
+    /// # Panics
+    ///
+    /// Panics if no labeled_counter by the given metric ID could be found.
+    #[allow(unused_variables)]
+    pub(crate) fn labeled_counter_get(metric_id: u32, label: &str) -> LabeledCounterMetric {
+        match metric_id {
+            6 => super::test::labeled_counter_metric.get(label),
+            7 => super::test::labeled_counter_metric_labels.get(label),
+            _ => panic!("No labeled_counter for metric id {}", metric_id),
+        }
+    }
+
+    /// Gets the submetric from the specified labeled_counter metric, by enum.
+    ///
+    /// # Arguments
+    ///
+    /// * `metric_id` - The metric's ID to look up
+    /// * `label_enum` - The label enum identifying the counter submetric.
+    ///
+    /// # Returns
+    ///
+    /// Returns the counter submetric.
+    ///
+    /// # Panics
+    ///
+    /// Panics if no labeled_counter by the given metric ID could be found.
+    #[allow(unused_variables)]
+    pub(crate) fn labeled_counter_enum_get(metric_id: u32, label_enum: u16) -> LabeledCounterMetric {
+        match metric_id {
+            7 => super::test::labeled_counter_metric_labels.get(labeled_enum_to_str(metric_id, label_enum)),
+            _ => panic!("No labeled_counter for metric id {}", metric_id),
+        }
+    }
+    /// Gets the submetric from the specified labeled_string metric.
+    ///
+    /// # Arguments
+    ///
+    /// * `metric_id` - The metric's ID to look up
+    /// * `label` - The label identifying the string submetric.
+    ///
+    /// # Returns
+    ///
+    /// Returns the string submetric.
+    ///
+    /// # Panics
+    ///
+    /// Panics if no labeled_string by the given metric ID could be found.
+    #[allow(unused_variables)]
+    pub(crate) fn labeled_string_get(metric_id: u32, label: &str) -> LabeledStringMetric {
+        match metric_id {
+            8 => super::test::labeled_string_metric.get(label),
+            9 => super::test::labeled_string_metric_labels.get(label),
+            _ => panic!("No labeled_string for metric id {}", metric_id),
+        }
+    }
+
+    /// Gets the submetric from the specified labeled_string metric, by enum.
+    ///
+    /// # Arguments
+    ///
+    /// * `metric_id` - The metric's ID to look up
+    /// * `label_enum` - The label enum identifying the string submetric.
+    ///
+    /// # Returns
+    ///
+    /// Returns the string submetric.
+    ///
+    /// # Panics
+    ///
+    /// Panics if no labeled_string by the given metric ID could be found.
+    #[allow(unused_variables)]
+    pub(crate) fn labeled_string_enum_get(metric_id: u32, label_enum: u16) -> LabeledStringMetric {
+        match metric_id {
+            9 => super::test::labeled_string_metric_labels.get(labeled_enum_to_str(metric_id, label_enum)),
+            _ => panic!("No labeled_string for metric id {}", metric_id),
+        }
+    }
+
+    pub(crate) fn labeled_enum_to_str(metric_id: u32, label: u16) -> &'static str {
+        match metric_id {
+            5 => super::test::LabeledBooleanMetricLabelsLabel::from(label).into(),
+            7 => super::test::LabeledCounterMetricLabelsLabel::from(label).into(),
+            9 => super::test::LabeledStringMetricLabelsLabel::from(label).into(),
+            _ => panic!("Can't turn label enum to string for metric {} which isn't a labeled metric with static labels", metric_id),
+        }
+    }
+
     pub(crate) mod submetric_maps {
         use std::sync::{
           atomic::AtomicU32,
@@ -640,6 +859,9 @@ pub(crate) mod __glean_metric_maps {
         pub(crate) const SUBMETRIC_BIT: u32 = 25;
         pub(crate) static NEXT_LABELED_SUBMETRIC_ID: AtomicU32 = AtomicU32::new((1 << SUBMETRIC_BIT) + 1);
         pub(crate) static LABELED_METRICS_TO_IDS: Lazy<RwLock<HashMap<(u32, String), u32>>> = Lazy::new(||
+            RwLock::new(HashMap::new())
+        );
+        pub(crate) static LABELED_ENUMS_TO_IDS: Lazy<RwLock<HashMap<(u32, u16), u32>>> = Lazy::new(||
             RwLock::new(HashMap::new())
         );
 
