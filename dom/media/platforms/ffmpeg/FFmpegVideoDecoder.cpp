@@ -192,13 +192,17 @@ class VAAPIDisplayHolder<LIBAV_VER>;
 template <>
 class VAAPIDisplayHolder<LIBAV_VER> {
  public:
-  VAAPIDisplayHolder(FFmpegLibWrapper* aLib, VADisplay aDisplay)
-      : mLib(aLib), mDisplay(aDisplay){};
-  ~VAAPIDisplayHolder() { mLib->vaTerminate(mDisplay); }
+  VAAPIDisplayHolder(FFmpegLibWrapper* aLib, VADisplay aDisplay, int aDRMFd)
+      : mLib(aLib), mDisplay(aDisplay), mDRMFd(aDRMFd){};
+  ~VAAPIDisplayHolder() {
+    mLib->vaTerminate(mDisplay);
+    close(mDRMFd);
+  }
 
  private:
   FFmpegLibWrapper* mLib;
   VADisplay mDisplay;
+  int mDRMFd;
 };
 
 static void VAAPIDisplayReleaseCallback(struct AVHWDeviceContext* hwctx) {
@@ -220,13 +224,14 @@ bool FFmpegVideoDecoder<LIBAV_VER>::CreateVAAPIDeviceContext() {
   AVHWDeviceContext* hwctx = (AVHWDeviceContext*)mVAAPIDeviceContext->data;
   AVVAAPIDeviceContext* vactx = (AVVAAPIDeviceContext*)hwctx->hwctx;
 
-  mDisplay = mLib->vaGetDisplayDRM(widget::GetDMABufDevice()->GetDRMFd());
+  int drmFd = widget::GetDMABufDevice()->OpenDRMFd();
+  mDisplay = mLib->vaGetDisplayDRM(drmFd);
   if (!mDisplay) {
     FFMPEG_LOG("  Can't get DRM VA-API display.");
     return false;
   }
 
-  hwctx->user_opaque = new VAAPIDisplayHolder<LIBAV_VER>(mLib, mDisplay);
+  hwctx->user_opaque = new VAAPIDisplayHolder<LIBAV_VER>(mLib, mDisplay, drmFd);
   hwctx->free = VAAPIDisplayReleaseCallback;
 
   int major, minor;
