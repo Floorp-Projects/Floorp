@@ -42,19 +42,31 @@ const TIMEOUT_DELAY_MS = 20000;
  *
  * @param  request
  *         The XMLHttpRequest.
- * @return an integer status value.
+ * @returns {Object} result - An object containing the results.
+ * @returns {integer} result.status - Request status code, if available, else the channel nsresult.
+ * @returns {integer} result.channelStatus - Channel nsresult.
+ * @returns {integer} result.errorCode - Request error code.
  */
 function getRequestStatus(request) {
   let status = null;
+  let errorCode = null;
+  let channelStatus = null;
+
   try {
     status = request.status;
   } catch (e) {}
+  try {
+    errorCode = request.errorCode;
+  } catch (e) {}
+  try {
+    channelStatus = request.channel.QueryInterface(Ci.nsIRequest).status;
+  } catch (e) {}
 
-  if (status != null) {
-    return status;
+  if (status == null) {
+    status = channelStatus;
   }
 
-  return request.channel.QueryInterface(Ci.nsIRequest).status;
+  return { status, channelStatus, errorCode };
 }
 
 /**
@@ -263,10 +275,17 @@ function downloadXMLWithRequest(
       let request = event.target;
       let status = getRequestStatus(request);
       let message =
-        "Failed downloading XML, status: " + status + ", reason: " + event.type;
+        "Failed downloading XML, status: " +
+        status.status +
+        ", channelStatus: " +
+        status.channelStatus +
+        ", errorCode: " +
+        status.errorCode +
+        ", reason: " +
+        event.type;
       logger.warn(message);
       let ex = new Error(message);
-      ex.status = status;
+      ex.status = status.status;
       if (event.type == "error") {
         ex.addonCheckerErr = ProductAddonChecker.NETWORK_REQUEST_ERR;
       } else if (event.type == "abort") {
@@ -285,7 +304,7 @@ function downloadXMLWithRequest(
         CertUtils.checkCert(request.channel, allowNonBuiltIn, allowedCerts);
       } catch (ex) {
         logger.error("Request failed certificate checks: " + ex);
-        ex.status = getRequestStatus(request);
+        ex.status = getRequestStatus(request).requestStatus;
         ex.addonCheckerErr = ProductAddonChecker.VERIFICATION_FAILED_ERR;
         reject(ex);
         return;
@@ -434,12 +453,16 @@ function downloadFile(url, options = { httpsOnlyNoUpgrade: false }) {
       let status = getRequestStatus(request);
       let message =
         "Failed downloading via ServiceRequest, status: " +
-        status +
+        status.status +
+        ", channelStatus: " +
+        status.channelStatus +
+        ", errorCode: " +
+        status.errorCode +
         ", reason: " +
         event.type;
       logger.warn(message);
       let ex = new Error(message);
-      ex.status = status;
+      ex.status = status.status;
       reject(ex);
     };
     sr.addEventListener("error", fail);
