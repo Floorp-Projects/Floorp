@@ -1033,6 +1033,7 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
         element.removeEventListener("clicked", listeners.clicked);
         element.removeEventListener("keydown", listeners.keydown);
       }
+      searchAdImpressionListeners.delete(element);
     }
     ChromeUtils.addProfilerMarker(
       "SearchSERPTelemetryChild.#clearListeners",
