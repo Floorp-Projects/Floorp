@@ -24,6 +24,7 @@ job-defaults:
         tier: 2
     run-on-projects: ['mozilla-central']
     optimization: null
+    use-system-python: false
 
 jobs:
     linux64-searchfox/debug:
