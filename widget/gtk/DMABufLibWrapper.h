@@ -10,6 +10,7 @@
 
 #include "mozilla/widget/gbm.h"
 #include "mozilla/StaticMutex.h"
+#include <mutex>
 
 #ifdef MOZ_LOGGING
 #  include "mozilla/Logging.h"
@@ -186,8 +187,9 @@ class nsDMABufDevice {
   nsDMABufDevice();
   ~nsDMABufDevice();
 
-  int GetDRMFd();
+  int OpenDRMFd();
   gbm_device* GetGbmDevice();
+  int GetDmabufFD(uint32_t aGEMHandle);
 
   bool IsEnabled(nsACString& aFailureId);
 
@@ -209,8 +211,10 @@ class nsDMABufDevice {
   GbmFormat mARGBFormat;
 
   int mDRMFd = -1;
+  std::once_flag mFlagGbmDevice;
   gbm_device* mGbmDevice = nullptr;
   const char* mFailureId = nullptr;
+  nsAutoCString mDrmRenderNode;
 };
 
 nsDMABufDevice* GetDMABufDevice();

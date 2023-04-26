@@ -358,12 +358,8 @@ bool DMABufSurfaceRGBA::OpenFileDescriptorForPlane(
     MOZ_ASSERT(aPlane == 0, "DMABuf: wrong surface plane!");
     mDmabufFds[0] = nsGbmLib::GetFd(bo);
   } else {
-    uint32_t handle = nsGbmLib::GetHandleForPlane(bo, aPlane).u32;
-    int ret = nsGbmLib::DrmPrimeHandleToFD(GetDMABufDevice()->GetDRMFd(),
-                                           handle, 0, &mDmabufFds[aPlane]);
-    if (ret < 0) {
-      mDmabufFds[aPlane] = -1;
-    }
+    mDmabufFds[aPlane] = GetDMABufDevice()->GetDmabufFD(
+        nsGbmLib::GetHandleForPlane(bo, aPlane).u32);
   }
 
   if (mDmabufFds[aPlane] < 0) {
