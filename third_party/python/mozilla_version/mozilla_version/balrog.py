@@ -51,20 +51,20 @@ _SUPPORTED_PRODUCTS = {
 def _supported_product(string):
     product = string.lower()
     if product not in _SUPPORTED_PRODUCTS:
-        raise PatternNotMatchedError(string, pattern='unknown product')
+        raise PatternNotMatchedError(string, patterns=('unknown product',))
     return product
 
 
 def _products_must_be_identical(method):
     def checker(this, other):
         if this.product != other.product:
-            raise ValueError('Cannot compare "{}" and "{}"'.format(this.product, other.product))
+            raise ValueError(f'Cannot compare "{this.product}" and "{other.product}"')
         return method(this, other)
     return checker
 
 
-@attr.s(frozen=True, cmp=False, hash=True)
-class BalrogReleaseName(object):
+@attr.s(frozen=True, eq=False, hash=True)
+class BalrogReleaseName:
     """Class that validates and handles Balrog release names.
 
     Raises:
@@ -83,20 +83,20 @@ class BalrogReleaseName(object):
     def __attrs_post_init__(self):
         """Ensure attributes are sane all together."""
         if self.version.build_number is None:
-            raise PatternNotMatchedError(self, pattern='build_number must exist')
+            raise PatternNotMatchedError(self, patterns=('build_number must exist',))
 
     @classmethod
     def parse(cls, release_string):
         """Construct an object representing a valid Firefox version number."""
         regex_matches = _VALID_ENOUGH_BALROG_RELEASE_PATTERN.match(release_string)
         if regex_matches is None:
-            raise PatternNotMatchedError(release_string, _VALID_ENOUGH_BALROG_RELEASE_PATTERN)
+            raise PatternNotMatchedError(release_string, (_VALID_ENOUGH_BALROG_RELEASE_PATTERN,))
 
         product = get_value_matched_by_regex('product', regex_matches, release_string)
         try:
             VersionClass = _SUPPORTED_PRODUCTS[product.lower()]
         except KeyError:
-            raise PatternNotMatchedError(release_string, pattern='unknown product')
+            raise PatternNotMatchedError(release_string, patterns=('unknown product',))
 
         version_string = get_value_matched_by_regex('version', regex_matches, release_string)
         version = VersionClass.parse(version_string)
@@ -109,7 +109,7 @@ class BalrogReleaseName(object):
         Computes a new string based on the given attributes.
         """
         version_string = str(self.version).replace('build', '-build')
-        return '{}-{}'.format(self.product, version_string)
+        return f'{self.product}-{version_string}'
 
     @_products_must_be_identical
     def __eq__(self, other):

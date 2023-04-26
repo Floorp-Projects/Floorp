@@ -6,7 +6,7 @@ import re
 from mozilla_version.version import BaseVersion
 
 
-@attr.s(frozen=True, cmp=False, hash=True)
+@attr.s(frozen=True, eq=False, hash=True)
 class MavenVersion(BaseVersion):
     """Class that validates and handles Maven version numbers.
 
@@ -14,6 +14,8 @@ class MavenVersion(BaseVersion):
     """
 
     is_snapshot = attr.ib(type=bool, default=False)
+    is_beta = attr.ib(type=bool, default=False, init=False)
+    is_release_candidate = attr.ib(type=bool, default=False, init=False)
 
     _VALID_ENOUGH_VERSION_PATTERN = re.compile(r"""
         ^(?P<major_number>\d+)
@@ -24,17 +26,17 @@ class MavenVersion(BaseVersion):
     @classmethod
     def parse(cls, version_string):
         """Construct an object representing a valid Maven version number."""
-        return super(MavenVersion, cls).parse(version_string, regex_groups=('is_snapshot', ))
+        return super().parse(version_string, regex_groups=('is_snapshot', ))
 
     def __str__(self):
         """Implement string representation.
 
         Computes a new string based on the given attributes.
         """
-        string = super(MavenVersion, self).__str__()
+        string = super().__str__()
 
         if self.is_snapshot:
-            string = '{}-SNAPSHOT'.format(string)
+            string = f'{string}-SNAPSHOT'
 
         return string
 
@@ -42,9 +44,9 @@ class MavenVersion(BaseVersion):
         if isinstance(other, str):
             other = MavenVersion.parse(other)
         elif not isinstance(other, MavenVersion):
-            raise ValueError('Cannot compare "{}", type not supported!'.format(other))
+            raise ValueError(f'Cannot compare "{other}", type not supported!')
 
-        difference = super(MavenVersion, self)._compare(other)
+        difference = super()._compare(other)
         if difference != 0:
             return difference
 
@@ -54,3 +56,10 @@ class MavenVersion(BaseVersion):
             return -1
         else:
             return 0
+
+    @property
+    def is_release(self):
+        """Return `True` if the others are both False."""
+        return not any((
+            self.is_beta, self.is_release_candidate, self.is_snapshot
+        ))

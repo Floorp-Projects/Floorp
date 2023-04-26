@@ -1,0 +1,12 @@
+Metadata-Version: 2.1
+Name: mozilla-version
+Version: 2.0.0
+Summary: Process Firefox versions numbers. Tells whether they are valid or not, whether they are nightlies or regular releases, whether this version precedes that other.
+Home-page: https://github.com/mozilla-releng/mozilla-version
+Author: Mozilla Release Engineering
+Author-email: release+python@mozilla.com
+License: MPL2
+Classifier: Programming Language :: Python :: 3
+License-File: LICENSE
+Requires-Dist: attrs (>=19.2)
+

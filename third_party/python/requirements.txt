@@ -198,9 +198,9 @@ mohawk==0.3.4 ; python_version >= "3.7" and python_version < "4.0" \
 mozilla-repo-urls==0.1.1 ; python_version >= "3.7" and python_version < "4.0" \
     --hash=sha256:30510d3519479aa70211145d0ac9cf6e2fadcb8d30fa3b196bb957bd773502ba \
     --hash=sha256:7364da790751db2a060eb45adbf1d7db89a145ed279ba235f3425db9dd255915
-mozilla-version==0.3.4 ; python_version >= "3.7" and python_version < "4.0" \
-    --hash=sha256:3ed4deb7a6fb25c83a5346ef4de08ddff9b2ddc4d16dd8fafb4a84978cc71255 \
-    --hash=sha256:ce5741c2e7d12c30b53de9f79e30d6ac2a8bd4c93be711d30c7a7a08e32a094f
+mozilla-version==2.0.0 ; python_version >= "3.7" and python_version < "4.0" \
+    --hash=sha256:09697ddc5f55ad8d76521bf3e37aaec4d5bfd7fd4c9018a1cbb0e8cf6c536538 \
+    --hash=sha256:50807a1f4000a7db6bfe95b0ffb1bade429cd8e56cbab70fd3eff5dd46ebb794
 multidict==5.1.0 ; python_version >= "3.7" and python_version < "4.0" \
     --hash=sha256:018132dbd8688c7a69ad89c4a3f39ea2f9f33302ebe567a879da8f4ca73f0d0a \
     --hash=sha256:051012ccee979b2b06be928a6150d237aec75dd6bf2d1eeeb190baf2b05abc93 \

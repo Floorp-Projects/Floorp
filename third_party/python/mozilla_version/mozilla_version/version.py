@@ -14,8 +14,8 @@ from mozilla_version.parser import (
 )
 
 
-@attr.s(frozen=True, cmp=False, hash=True)
-class BaseVersion(object):
+@attr.s(frozen=True, eq=False, hash=True)
+class BaseVersion:
     """Class that validates and handles general version numbers."""
 
     major_number = attr.ib(type=int, converter=positive_int)
@@ -37,7 +37,7 @@ class BaseVersion(object):
         regex_matches = cls._VALID_ENOUGH_VERSION_PATTERN.match(version_string)
 
         if regex_matches is None:
-            raise PatternNotMatchedError(version_string, cls._VALID_ENOUGH_VERSION_PATTERN)
+            raise PatternNotMatchedError(version_string, (cls._VALID_ENOUGH_VERSION_PATTERN,))
 
         kwargs = {}
 
@@ -101,20 +101,78 @@ class BaseVersion(object):
         if isinstance(other, str):
             other = BaseVersion.parse(other)
         elif not isinstance(other, BaseVersion):
-            raise ValueError('Cannot compare "{}", type not supported!'.format(other))
+            raise ValueError(f'Cannot compare "{other}", type not supported!')
 
         for field in ('major_number', 'minor_number', 'patch_number'):
-            this_number = getattr(self, field)
-            this_number = 0 if this_number is None else this_number
-            other_number = getattr(other, field)
-            other_number = 0 if other_number is None else other_number
-
-            difference = this_number - other_number
-
+            difference = self._substract_other_number_from_this_number(other, field)
             if difference != 0:
                 return difference
 
         return 0
+
+    def _substract_other_number_from_this_number(self, other, field):
+        # BaseVersion sets unmatched numbers to None. E.g.: "32.0" sets the patch_number to None.
+        # Because of this behavior, `getattr(self, 'patch_number')` returns None too. That's why
+        # we can't call `getattr(self, field, 0)` directly, it will return None for all unmatched
+        # numbers
+        this_number = getattr(self, field, None)
+        this_number = 0 if this_number is None else this_number
+        other_number = getattr(other, field, None)
+        other_number = 0 if other_number is None else other_number
+
+        return this_number - other_number
+
+    def bump(self, field):
+        """Bump the number defined `field`.
+
+        Returns:
+            A new BaseVersion with the right field bumped and the following ones set to 0,
+            if they exist or if they need to be set.
+
+            For instance:
+             * 32.0 is bumped to 33.0, because the patch number does not exist
+             * 32.0.1 is bumped to 33.0.0, because the patch number exists
+             * 32.0 is bumped to 32.1.0, because patch number must be defined if the minor number
+               is not 0.
+
+        """
+        try:
+            return self.__class__(**self._create_bump_kwargs(field))
+        except (ValueError, PatternNotMatchedError) as e:
+            raise ValueError(
+                f'Cannot bump "{field}". New version number is not valid. Cause: {e}'
+            ) from e
+
+    def _create_bump_kwargs(self, field):
+        if field not in self._ALL_NUMBERS:
+            raise ValueError(f'Unknown field "{field}"')
+
+        kwargs = {}
+        has_requested_field_been_met = False
+        should_set_optional_numbers = False
+        for current_field in self._ALL_NUMBERS:
+            current_number = getattr(self, current_field, None)
+            if current_field == field:
+                has_requested_field_been_met = True
+                new_number = 1 if current_number is None else current_number + 1
+                if new_number == 1 and current_field == 'minor_number':
+                    should_set_optional_numbers = True
+                kwargs[current_field] = new_number
+            else:
+                if (
+                    has_requested_field_been_met and
+                    (
+                        current_field not in self._OPTIONAL_NUMBERS or
+                        should_set_optional_numbers or
+                        current_number is not None
+                    )
+                ):
+                    new_number = 0
+                else:
+                    new_number = current_number
+                kwargs[current_field] = new_number
+
+        return kwargs
 
 
 class VersionType(Enum):
@@ -136,8 +194,9 @@ class VersionType(Enum):
     NIGHTLY = 1
     AURORA_OR_DEVEDITION = 2
     BETA = 3
-    RELEASE = 4
-    ESR = 5
+    RELEASE_CANDIDATE = 4
+    RELEASE = 5
+    ESR = 6
 
     def __eq__(self, other):
         """Implement `==` operator."""
