@@ -633,6 +633,12 @@ Tester.prototype = {
         continue;
       }
 
+      // Ignore nsHttpConnectionMgr timers which show up on browser mochitests
+      // running with http3. See Bug 1829841.
+      if (name == "nsHttpConnectionMgr") {
+        continue;
+      }
+
       if (
         !this._repeatingTimers.find(t => t.delay == delay && t.name == name)
       ) {
