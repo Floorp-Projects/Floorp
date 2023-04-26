@@ -428,6 +428,7 @@ mochitest-devtools-chrome:
         - socketprocess_networking
         - webrender-sw
         - devtools-no-eft+no-fission
+        - http3
     run-on-projects:
         by-variant:
             a11y-checks:
@@ -437,6 +438,10 @@ mochitest-devtools-chrome:
             devtools-no-eft+no-fission:
                 by-test-platform:
                     linux.*64(-shippable)?-qr/opt: ['trunk']
+                    default: []
+            http3:
+                by-test-platform:
+                    linux1804-64-qr/debug: built-projects
                     default: []
             socketprocess_networking:
                 by-test-platform:
@@ -478,6 +483,31 @@ mochitest-devtools-chrome:
             default: default
     # Bug 1296086: high number of intermittents observed with software GL and large instances
     allow-software-gl-layers: false
+    fetches:
+        toolchain:
+            by-test-platform:
+                linux.*:
+                    - linux64-node-12
+                    - linux64-minidump-stackwalk
+                    - linux64-fix-stacks
+                macosx.*:
+                    - macosx64-node-12
+                    - macosx64-minidump-stackwalk
+                    - macosx64-fix-stacks
+                win.*-64.*:
+                    - win64-node-12
+                    - win32-minidump-stackwalk
+                    - win32-fix-stacks
+                win.*32.*:
+                    - win32-node-12
+                    - win32-minidump-stackwalk
+                    - win32-fix-stacks
+                android-em-7.*:
+                    - android-system-image-x86_64-linux
+                    - android-avd-x86_64-linux
+                    - android-emulator-linux
+                    - linux64-node-12
+                    - linux64-minidump-stackwalk
 
 mochitest-plain-gpu:
     description: "Mochitest plain GPU run"
