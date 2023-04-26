@@ -3314,3 +3314,12 @@ option(
 )
 
 set_config("MOZ_SYSTEM_POLICIES", True, when="--enable-system-policies")
+
+
+# STL wrapping
+# ==============================================================
+set_config("WRAP_STL_INCLUDES", True)
+set_config(
+    "STL_FLAGS",
+    depends(build_environment.dist)(lambda dist: [f"-I{dist}/stl_wrappers"]),
+)
