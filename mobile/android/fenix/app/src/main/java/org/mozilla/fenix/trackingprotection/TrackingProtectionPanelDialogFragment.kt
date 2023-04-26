@@ -18,7 +18,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.whenStarted
+import androidx.lifecycle.withStarted
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -139,7 +139,7 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
         observeTrackersChange(store)
         protectionsStore.observe(view) {
             viewLifecycleOwner.lifecycleScope.launch {
-                whenStarted {
+                withStarted {
                     trackingProtectionView.update(it)
                 }
             }

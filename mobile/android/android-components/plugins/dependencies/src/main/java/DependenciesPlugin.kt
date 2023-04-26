@@ -50,7 +50,7 @@ object Versions {
 
     // see https://android-developers.googleblog.com/2022/06/independent-versioning-of-Jetpack-Compose-libraries.html
     // for Jetpack Compose libraries versioning
-    const val compose_version = "1.3.1"
+    const val compose_version = "1.4.2"
     const val compose_compiler = "1.4.6"
 
     object AndroidX {
@@ -76,7 +76,7 @@ object Versions {
         const val paging = "2.1.2"
         const val palette = "1.0.0"
         const val preferences = "1.1.1"
-        const val lifecycle = "2.5.1"
+        const val lifecycle = "2.6.1"
         const val media = "1.2.0"
         const val navigation = "2.5.1"
         const val work = "2.7.1"

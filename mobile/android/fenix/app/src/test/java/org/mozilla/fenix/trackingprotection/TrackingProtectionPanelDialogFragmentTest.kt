@@ -130,10 +130,8 @@ class TrackingProtectionPanelDialogFragmentTest {
     }
 
     internal class MockedLifecycleOwner(initialState: Lifecycle.State) : LifecycleOwner {
-        private val lifecycleRegistry = LifecycleRegistry(this).apply {
+        override val lifecycle: Lifecycle = LifecycleRegistry(this).apply {
             currentState = initialState
         }
-
-        override fun getLifecycle(): Lifecycle = lifecycleRegistry
     }
 }

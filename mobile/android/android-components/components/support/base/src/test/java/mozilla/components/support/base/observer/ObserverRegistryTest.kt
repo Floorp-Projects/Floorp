@@ -653,6 +653,6 @@ class ObserverRegistryTest {
             currentState = initialState
         }
 
-        override fun getLifecycle(): Lifecycle = lifecycleRegistry
+        override val lifecycle: Lifecycle = lifecycleRegistry
     }
 }

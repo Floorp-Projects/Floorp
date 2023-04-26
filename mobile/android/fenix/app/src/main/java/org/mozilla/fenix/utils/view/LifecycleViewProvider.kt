@@ -28,7 +28,8 @@ class LifecycleViewProvider(view: View) : LifecycleOwner {
         view.addOnAttachStateChangeListener(ViewBinding(registry))
     }
 
-    override fun getLifecycle(): Lifecycle = registry
+    override val lifecycle: Lifecycle
+        get() = registry
 }
 
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)

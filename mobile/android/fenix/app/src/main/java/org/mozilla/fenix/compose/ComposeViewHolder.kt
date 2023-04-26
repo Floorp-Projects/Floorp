@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ViewTreeLifecycleOwner
+import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
@@ -47,7 +47,7 @@ abstract class ComposeViewHolder(
             }
         }
 
-        ViewTreeLifecycleOwner.set(composeView, viewLifecycleOwner)
+        composeView.setViewTreeLifecycleOwner(viewLifecycleOwner)
         composeView.setViewTreeSavedStateRegistryOwner(
             viewLifecycleOwner as SavedStateRegistryOwner,
         )

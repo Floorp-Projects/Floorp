@@ -13,7 +13,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import androidx.compose.ui.platform.ComposeView
-import androidx.lifecycle.ViewTreeLifecycleOwner
+import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import mozilla.components.support.utils.PendingIntentUtils
 import mozilla.telemetry.glean.private.NoExtras
@@ -49,7 +49,7 @@ object SearchWidgetUtils {
         promoteSearchWidgetDialog.apply {
             setContentView(
                 ComposeView(activity).apply {
-                    ViewTreeLifecycleOwner.set(this, activity)
+                    setViewTreeLifecycleOwner(activity)
                     this.setViewTreeSavedStateRegistryOwner(activity)
                     setContent {
                         FocusTheme {

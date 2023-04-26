@@ -11,8 +11,8 @@ import android.view.ViewManager
 import android.view.WindowManager
 import android.view.WindowManager.LayoutParams
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewTreeLifecycleOwner
 import androidx.lifecycle.findViewTreeLifecycleOwner
+import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.savedstate.findViewTreeSavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -35,7 +35,7 @@ class CFRPopupFullscreenLayoutTest {
     @Test
     fun `WHEN the popup is constructed THEN setup lifecycle owners`() {
         val anchor = View(testContext).apply {
-            ViewTreeLifecycleOwner.set(this, mock())
+            setViewTreeLifecycleOwner(mock())
             this.setViewTreeSavedStateRegistryOwner(mock())
         }
 
@@ -65,7 +65,7 @@ class CFRPopupFullscreenLayoutTest {
     fun `WHEN the popup is dismissed THEN cleanup lifecycle owners and detach from window`() {
         val context = spy(testContext)
         val anchor = View(context).apply {
-            ViewTreeLifecycleOwner.set(this, mock())
+            setViewTreeLifecycleOwner(mock())
             this.setViewTreeSavedStateRegistryOwner(mock())
         }
         val windowManager = spy(context.getSystemService(Context.WINDOW_SERVICE) as WindowManager)

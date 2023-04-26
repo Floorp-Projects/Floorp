@@ -29,7 +29,8 @@ import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.ViewTreeLifecycleOwner
+import androidx.lifecycle.findViewTreeLifecycleOwner
+import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.savedstate.findViewTreeSavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import mozilla.components.compose.cfr.CFRPopup.IndicatorDirection.DOWN
@@ -110,7 +111,7 @@ internal class CFRPopupFullscreenLayout(
         private set
 
     init {
-        ViewTreeLifecycleOwner.set(this, ViewTreeLifecycleOwner.get(anchor))
+        setViewTreeLifecycleOwner(anchor.findViewTreeLifecycleOwner())
         this.setViewTreeSavedStateRegistryOwner(anchor.findViewTreeSavedStateRegistryOwner())
         anchor.addOnAttachStateChangeListener(anchorDetachedListener)
         orientationChangeListener.start()
@@ -404,7 +405,7 @@ internal class CFRPopupFullscreenLayout(
         anchor.removeOnAttachStateChangeListener(anchorDetachedListener)
         orientationChangeListener.stop()
         disposeComposition()
-        ViewTreeLifecycleOwner.set(this, null)
+        setViewTreeLifecycleOwner(null)
         this.setViewTreeSavedStateRegistryOwner(null)
         windowManager.removeViewImmediate(this)
     }

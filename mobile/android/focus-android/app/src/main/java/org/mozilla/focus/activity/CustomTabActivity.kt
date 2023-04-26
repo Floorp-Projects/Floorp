@@ -76,7 +76,7 @@ class CustomTabActivity : LocaleAwareAppCompatActivity() {
         if (browserFragment.sessionFeature.onBackPressed()) {
             return
         } else {
-            super.getOnBackPressedDispatcher().onBackPressed()
+            onBackPressedDispatcher.onBackPressed()
         }
     }
 

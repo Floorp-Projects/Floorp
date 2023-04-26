@@ -213,7 +213,7 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
 
     override fun onBackPressed() {
         if (!qrFeature.onBackPressed()) {
-            super.getOnBackPressedDispatcher().onBackPressed()
+            onBackPressedDispatcher.onBackPressed()
         }
     }
 }

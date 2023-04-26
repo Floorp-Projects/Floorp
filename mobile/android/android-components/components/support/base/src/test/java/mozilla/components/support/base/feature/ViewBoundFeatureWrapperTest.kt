@@ -467,9 +467,8 @@ private class MockedLifecycle(var state: State) : Lifecycle() {
         this.observer = null
     }
 
-    override fun getCurrentState(): State = state
+    override val currentState: State
+        get() = state
 }
 
-private class MockedLifecycleOwner(private val lifecycle: MockedLifecycle) : LifecycleOwner {
-    override fun getLifecycle(): Lifecycle = lifecycle
-}
+private class MockedLifecycleOwner(override val lifecycle: MockedLifecycle) : LifecycleOwner

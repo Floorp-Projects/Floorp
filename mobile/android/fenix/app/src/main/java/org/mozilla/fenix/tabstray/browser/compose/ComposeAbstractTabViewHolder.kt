@@ -7,7 +7,7 @@ package org.mozilla.fenix.tabstray.browser.compose
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ViewTreeLifecycleOwner
+import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
@@ -44,7 +44,7 @@ abstract class ComposeAbstractTabViewHolder(
             }
         }
 
-        ViewTreeLifecycleOwner.set(composeView, viewLifecycleOwner)
+        composeView.setViewTreeLifecycleOwner(viewLifecycleOwner)
         composeView.setViewTreeSavedStateRegistryOwner(
             viewLifecycleOwner as SavedStateRegistryOwner,
         )

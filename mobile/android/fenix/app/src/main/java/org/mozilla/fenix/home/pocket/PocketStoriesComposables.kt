@@ -36,7 +36,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toAndroidRect
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -399,7 +398,13 @@ private fun LayoutCoordinates.isVisible(
 ): Boolean {
     if (!isAttached) return false
 
-    return boundsInWindow().toAndroidRect().getIntersectPercentage(size, visibleRect) >= threshold
+    val boundsInWindow = boundsInWindow()
+    return Rect(
+        boundsInWindow.left.toInt(),
+        boundsInWindow.top.toInt(),
+        boundsInWindow.right.toInt(),
+        boundsInWindow.bottom.toInt(),
+    ).getIntersectPercentage(size, visibleRect) >= threshold
 }
 
 /**
