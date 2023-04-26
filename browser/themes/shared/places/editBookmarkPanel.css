@@ -29,6 +29,7 @@ html|div#editBookmarkPanelFaviconContainer {
 #editBookmarkPanelInfoArea {
   overflow: hidden;
   padding: 4px var(--arrowpanel-padding) 0;
+  flex: none;
 }
 
 html|img#editBookmarkPanelFavicon[src] {
