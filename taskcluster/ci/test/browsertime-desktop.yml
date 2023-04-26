@@ -357,8 +357,8 @@ browsertime-benchmark:
                     firefox:
                         by-test-platform:
                             windows.*-32.*: []
-                            linux.*64.*shippable-qr/.*: [trunk]
-                            (windows|macosx1015).*64.*shippable-qr/.*: [trunk, mozilla-release]
+                            (linux|macosx1015).*64.*shippable-qr/.*: [trunk]
+                            windows.*64.*shippable-qr/.*: [trunk, mozilla-release]
                             .*nightlyasrelease.*: [autoland]
                             default: []
                     default: []
@@ -367,8 +367,8 @@ browsertime-benchmark:
                     firefox:
                         by-test-platform:
                             windows.*-32.*: []
-                            linux.*64.*shippable-qr/.*: [trunk]
-                            (windows|macosx1015).*64.*shippable-qr/.*: [trunk, mozilla-release]
+                            (linux|macosx1015).*64.*shippable-qr/.*: [trunk]
+                            windows.*64.*shippable-qr/.*: [trunk, mozilla-release]
                             default: []
                     default: []
             speedometer:
@@ -376,8 +376,8 @@ browsertime-benchmark:
                     firefox:
                         by-test-platform:
                             windows.*-32.*: []
-                            linux.*64.*shippable-qr/.*: [trunk]
-                            (windows|macosx1015).*64.*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
+                            (linux|macosx1015).*64.*shippable-qr/.*: [trunk]
+                            windows.*64.*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
                             .*nightlyasrelease.*: [autoland]
                             default: []
                     default: []
@@ -386,8 +386,8 @@ browsertime-benchmark:
                     firefox:
                         by-test-platform:
                             windows.*-32.*: []
-                            linux.*64.*shippable-qr/.*: [trunk]
-                            (windows|macosx1015).*64.*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
+                            (linux|macosx1015).*64.*shippable-qr/.*: [trunk]
+                            windows.*64.*shippable-qr/.*: [trunk, mozilla-beta, mozilla-release]
                             default: []
                     default: []
     max-run-time:
