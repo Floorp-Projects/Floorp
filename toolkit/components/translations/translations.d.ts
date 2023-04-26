@@ -300,7 +300,7 @@ export interface LanguagePair { fromLang: string, toLang: string };
  * for translation language selection.
  */
 export interface SupportedLanguages {
-  langPairs: LanguagePair[],
+  languagePairs: LanguagePair[],
   fromLanguages: Array<{ langTag: string, isBeta: boolean, displayName: string, }>,
   toLanguages: Array<{ langTag: string, isBeta: boolean, displayName: string }>,
 }

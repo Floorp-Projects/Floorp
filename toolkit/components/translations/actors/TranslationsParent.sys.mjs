@@ -67,7 +67,7 @@ const VERIFY_SIGNATURES_FROM_FS = false;
  * @typedef {import("../translations").DetectedLanguages} DetectedLanguages
  * @typedef {import("../translations").LanguagePair} LanguagePair
  * @typedef {import("../translations").SupportedLanguages} SupportedLanguages
- *
+ * @typedef {import("../translations").LanguageIdModelRecord} LanguageIdModelRecord
  */
 
 /**
@@ -315,9 +315,10 @@ export class TranslationsParent extends JSWindowActorParent {
         modelRecords
       );
     }
+    const [modelRecord] = modelRecords;
 
     /** @type {{buffer: ArrayBuffer}} */
-    const { buffer } = await client.attachments.download(modelRecords[0]);
+    const { buffer } = await client.attachments.download(modelRecord);
 
     const duration = (Date.now() - now) / 1000;
     lazy.console.log(
@@ -366,13 +367,13 @@ export class TranslationsParent extends JSWindowActorParent {
       // The remote settings client provides an empty list of records when there is
       // an error.
       throw new Error(
-        "Unable to get language-identification wasm binary from Remote Settings."
+        'Unable to get "fasttext-wasm" language-identification wasm binary from Remote Settings.'
       );
     }
 
     if (wasmRecords.length > 1) {
       lazy.console.error(
-        "Expected the language-identification wasm collection to only have 1 record.",
+        'Expected the "fasttext-wasm" language-identification wasm collection to only have 1 record.',
         wasmRecords
       );
     }
@@ -618,7 +619,7 @@ export class TranslationsParent extends JSWindowActorParent {
 
   /**
    * Lazily initializes the model records, and returns the cached ones if they
-   * were already retrieved.
+   * were already retrieved. The key of the returned `Map` is the record id.
    *
    * @returns {Promise<Map<string, TranslationModelRecord>>}
    */
