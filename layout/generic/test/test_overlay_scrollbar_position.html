@@ -1,0 +1,42 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Test for overlay scrollbar positions</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<style>
+  div {
+    width: 100px;
+    height: 100px;
+  }
+</style>
+<div style="overflow-x: scroll" data-expected-bottom></div>
+<div style="overflow-y: scroll" data-expected-right></div>
+<div style="overflow-y: scroll" dir="rtl" data-expected-left></div>
+<script>
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["ui.useOverlayScrollbars", 1]],
+  });
+  for (let div of document.querySelectorAll("div")) {
+    let rect = div.getBoundingClientRect();
+    let kids = SpecialPowers.InspectorUtils.getChildrenForNode(
+      div,
+      /* anonymous = */ true,
+      false
+    );
+    is(kids.length, 3, "Should create both horizontal and vertical scrollbars, and a scrollcorner");
+    for (let attr of ["top", "left", "bottom", "right"]) {
+      if (!div.hasAttribute(`data-expected-${attr}`)) {
+        continue;
+      }
+      let vertical = attr == "left" || attr == "right";
+      let scrollbar = kids[vertical ? 1 : 0];
+      is(scrollbar.tagName, "scrollbar", "Should find scrollbar");
+      is(scrollbar.getAttribute("orient"), vertical ? "vertical" : "horizontal", "Should be the right scrollbar");
+      let scrollbarRect = scrollbar.getBoundingClientRect();
+      let diff = scrollbarRect[attr] - rect[attr];
+      is(diff, 0, `Scrollbar should be at ${attr}: ${scrollbarRect[attr]} vs. ${rect[attr]}`);
+    }
+  }
+});
+</script>
