@@ -1031,6 +1031,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.3.25 -> 0.3.26"
 
+[[audits.futures-channel]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.3.27 -> 0.3.26"
+
 [[audits.futures-core]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
@@ -1045,6 +1050,11 @@ delta = "0.3.23 -> 0.3.25"
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.3.25 -> 0.3.26"
+
+[[audits.futures-core]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.3.27 -> 0.3.26"
 
 [[audits.futures-executor]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
@@ -1061,6 +1071,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.3.25 -> 0.3.26"
 
+[[audits.futures-executor]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.3.27 -> 0.3.23"
+
 [[audits.futures-io]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
@@ -1075,6 +1090,11 @@ delta = "0.3.23 -> 0.3.25"
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.3.25 -> 0.3.26"
+
+[[audits.futures-io]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.3.27 -> 0.3.23"
 
 [[audits.futures-macro]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
@@ -1105,6 +1125,11 @@ delta = "0.3.23 -> 0.3.25"
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.3.25 -> 0.3.26"
+
+[[audits.futures-sink]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.3.27 -> 0.3.23"
 
 [[audits.futures-task]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
@@ -2162,6 +2187,11 @@ delta = "1.0.10 -> 1.0.13"
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.0.13 -> 1.0.16"
+
+[[audits.semver]]
+who = "Bobby Holley <bobbyholley@gmail.com>"
+criteria = "safe-to-deploy"
+delta = "1.0.17 -> 1.0.16"
 
 [[audits.serde]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"

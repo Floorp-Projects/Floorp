@@ -477,27 +477,7 @@ criteria = "safe-to-run"
 version = "0.3.21"
 criteria = "safe-to-deploy"
 
-[[exemptions.futures-channel]]
-version = "0.3.21"
-criteria = "safe-to-deploy"
-
-[[exemptions.futures-core]]
-version = "0.3.21"
-criteria = "safe-to-deploy"
-
-[[exemptions.futures-executor]]
-version = "0.3.21"
-criteria = "safe-to-deploy"
-
-[[exemptions.futures-io]]
-version = "0.3.21"
-criteria = "safe-to-deploy"
-
 [[exemptions.futures-macro]]
-version = "0.3.21"
-criteria = "safe-to-deploy"
-
-[[exemptions.futures-sink]]
 version = "0.3.21"
 criteria = "safe-to-deploy"
 
@@ -949,10 +929,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.self_cell]]
 version = "0.10.2"
-criteria = "safe-to-deploy"
-
-[[exemptions.semver]]
-version = "1.0.9"
 criteria = "safe-to-deploy"
 
 [[exemptions.serde]]
