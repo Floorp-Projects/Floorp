@@ -5,7 +5,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaDrmProxySupport.h"
-#include "MediaDrmCDMCallbackProxy.h"
 #include "mozilla/EMEUtils.h"
 #include "mozilla/java/MediaDrmProxyNatives.h"
 #include "mozilla/java/SessionKeyInfoWrappers.h"
@@ -29,8 +28,8 @@ class MediaDrmJavaCallbacksSupport
   using MediaDrmProxyNativeCallbacks::DisposeNative;
 
   explicit MediaDrmJavaCallbacksSupport(
-      UniquePtr<MediaDrmCDMCallbackProxy>&& aDecryptorProxyCallback)
-      : mDecryptorProxyCallback(std::move(aDecryptorProxyCallback)) {
+      DecryptorProxyCallback* aDecryptorProxyCallback)
+      : mDecryptorProxyCallback(aDecryptorProxyCallback) {
     MOZ_ASSERT(aDecryptorProxyCallback);
   }
   /*
@@ -58,7 +57,7 @@ class MediaDrmJavaCallbacksSupport
   void OnRejectPromise(int aPromiseId, jni::String::Param aMessage);
 
  private:
-  UniquePtr<MediaDrmCDMCallbackProxy> mDecryptorProxyCallback;
+  DecryptorProxyCallback* mDecryptorProxyCallback;
 };  // MediaDrmJavaCallbacksSupport
 
 void MediaDrmJavaCallbacksSupport::OnSessionCreated(
@@ -205,13 +204,13 @@ MediaDrmProxySupport::~MediaDrmProxySupport() {
   MediaDrmJavaCallbacksSupport::DisposeNative(mJavaCallbacks);
 }
 
-nsresult MediaDrmProxySupport::Init(
-    UniquePtr<MediaDrmCDMCallbackProxy>&& aCallback) {
+nsresult MediaDrmProxySupport::Init(DecryptorProxyCallback* aCallback) {
   MOZ_ASSERT(mJavaCallbacks);
 
+  mCallback = aCallback;
   MediaDrmJavaCallbacksSupport::AttachNative(
       mJavaCallbacks,
-      mozilla::MakeUnique<MediaDrmJavaCallbacksSupport>(std::move(aCallback)));
+      mozilla::MakeUnique<MediaDrmJavaCallbacksSupport>(mCallback));
   return mBridgeProxy != nullptr ? NS_OK : NS_ERROR_FAILURE;
 }
 
