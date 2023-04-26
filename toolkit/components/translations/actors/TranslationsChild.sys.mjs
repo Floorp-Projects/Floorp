@@ -548,7 +548,7 @@ export class TranslationsChild extends JSWindowActorChild {
     switch (event.type) {
       case "DOMContentLoaded":
         this.innerWindowId = this.contentWindow.windowGlobalChild.innerWindowId;
-        this.maybeOfferTranslation();
+        this.maybeOfferTranslation().catch(error => lazy.console.error(error));
         break;
       case "pagehide":
         lazy.console.log(
@@ -839,7 +839,7 @@ export class TranslationsChild extends JSWindowActorChild {
       case "Translations:GetLangTagsForTranslation":
         return this.getLangTagsForTranslation();
       default:
-        lazy.console.warn("Unknown message.");
+        lazy.console.warn("Unknown message.", name);
     }
     return undefined;
   }
