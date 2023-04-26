@@ -1,0 +1,152 @@
+[
+  { "key": "beforeInstall", "entries": [] },
+  {
+    "key": "afterInstall",
+    "entries": [
+      {
+        "name": "storage",
+        "dir": true,
+        "entries": [
+          {
+            "name": "default",
+            "dir": true,
+            "entries": [
+              {
+                "name": "http+++example.com",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "permanent",
+            "dir": true,
+            "entries": [
+              {
+                "name": "http+++example.com",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "private",
+            "dir": true,
+            "entries": [
+              {
+                "name": "http+++example.com^privateBrowsingId=1",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "temporary",
+            "dir": true,
+            "entries": [
+              {
+                "name": "http+++example.com",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      { "name": "storage.sqlite", "dir": false }
+    ]
+  },
+  {
+    "key": "afterClearPrivateBrowsing",
+    "entries": [
+      {
+        "name": "storage",
+        "dir": true,
+        "entries": [
+          {
+            "name": "default",
+            "dir": true,
+            "entries": [
+              {
+                "name": "http+++example.com",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "permanent",
+            "dir": true,
+            "entries": [
+              {
+                "name": "http+++example.com",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "temporary",
+            "dir": true,
+            "entries": [
+              {
+                "name": "http+++example.com",
+                "dir": true,
+                "entries": [
+                  { "name": "cache", "dir": true },
+                  { "name": "fs", "dir": true },
+                  { "name": "idb", "dir": true },
+                  { "name": "ls", "dir": true },
+                  { "name": "sdb", "dir": true },
+                  { "name": ".metadata-v2", "dir": false }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      { "name": "storage.sqlite", "dir": false }
+    ]
+  }
+]

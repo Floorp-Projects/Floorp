@@ -204,6 +204,13 @@ function clearOrigin(principal, persistence, callback) {
   return request;
 }
 
+function clearPrivateBrowsing(callback) {
+  let request = SpecialPowers._getQuotaManager().clearStoragesForPrivateBrowsing();
+  request.callback = callback;
+
+  return request;
+}
+
 function resetClient(principal, client) {
   let request = Services.qms.resetStoragesForPrincipal(
     principal,
