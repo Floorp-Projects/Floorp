@@ -18,11 +18,9 @@ namespace mozilla {
 
 DDLoggedTypeDeclNameAndBase(AOMDecoder, MediaDataDecoder);
 
-class AOMDecoder final : public MediaDataDecoder,
-                         public DecoderDoctorLifeLogger<AOMDecoder> {
+class AOMDecoder : public MediaDataDecoder,
+                   public DecoderDoctorLifeLogger<AOMDecoder> {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AOMDecoder, final);
-
   explicit AOMDecoder(const CreateDecoderParams& aParams);
 
   RefPtr<InitPromise> Init() override;

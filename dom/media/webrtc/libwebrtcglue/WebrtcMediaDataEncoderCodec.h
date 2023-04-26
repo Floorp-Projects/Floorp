@@ -22,8 +22,6 @@ class TaskQueue;
 
 class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebrtcMediaDataEncoder, final);
-
   static bool CanCreate(const webrtc::VideoCodecType aCodecType);
 
   explicit WebrtcMediaDataEncoder(const webrtc::SdpVideoFormat& aFormat);

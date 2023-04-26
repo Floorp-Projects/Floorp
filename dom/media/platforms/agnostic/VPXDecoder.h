@@ -19,11 +19,9 @@ namespace mozilla {
 
 DDLoggedTypeDeclNameAndBase(VPXDecoder, MediaDataDecoder);
 
-class VPXDecoder final : public MediaDataDecoder,
-                         public DecoderDoctorLifeLogger<VPXDecoder> {
+class VPXDecoder : public MediaDataDecoder,
+                   public DecoderDoctorLifeLogger<VPXDecoder> {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VPXDecoder, final);
-
   explicit VPXDecoder(const CreateDecoderParams& aParams);
 
   RefPtr<InitPromise> Init() override;

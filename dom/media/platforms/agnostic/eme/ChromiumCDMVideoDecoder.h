@@ -18,12 +18,10 @@ struct GMPVideoDecoderParams;
 
 DDLoggedTypeDeclNameAndBase(ChromiumCDMVideoDecoder, MediaDataDecoder);
 
-class ChromiumCDMVideoDecoder final
+class ChromiumCDMVideoDecoder
     : public MediaDataDecoder,
       public DecoderDoctorLifeLogger<ChromiumCDMVideoDecoder> {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ChromiumCDMVideoDecoder, final);
-
   ChromiumCDMVideoDecoder(const GMPVideoDecoderParams& aParams,
                           CDMProxy* aCDMProxy);
 

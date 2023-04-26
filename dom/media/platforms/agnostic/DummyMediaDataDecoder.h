@@ -26,12 +26,10 @@ DDLoggedTypeDeclNameAndBase(DummyMediaDataDecoder, MediaDataDecoder);
 
 // Decoder that uses a passed in object's Create function to create Null
 // MediaData objects.
-class DummyMediaDataDecoder final
+class DummyMediaDataDecoder
     : public MediaDataDecoder,
       public DecoderDoctorLifeLogger<DummyMediaDataDecoder> {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DummyMediaDataDecoder, final);
-
   DummyMediaDataDecoder(UniquePtr<DummyDataCreator>&& aCreator,
                         const nsACString& aDescription,
                         const CreateDecoderParams& aParams);
@@ -53,8 +51,6 @@ class DummyMediaDataDecoder final
   ConversionRequired NeedsConversion() const override;
 
  private:
-  ~DummyMediaDataDecoder() = default;
-
   UniquePtr<DummyDataCreator> mCreator;
   const bool mIsH264;
   const uint32_t mMaxRefFrames;

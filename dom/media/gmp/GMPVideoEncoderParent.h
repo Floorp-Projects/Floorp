@@ -75,7 +75,7 @@ class GMPVideoEncoderParent : public GMPVideoEncoderProxy,
   bool mShuttingDown;
   bool mActorDestroyed;
   RefPtr<GMPContentParent> mPlugin;
-  RefPtr<GMPVideoEncoderCallbackProxy> mCallback;
+  GMPVideoEncoderCallbackProxy* mCallback;
   GMPVideoHostImpl mVideoHost;
   const uint32_t mPluginId;
 };

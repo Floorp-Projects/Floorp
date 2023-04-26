@@ -6,12 +6,8 @@
 #ifndef GMPCallbackBase_h_
 #define GMPCallbackBase_h_
 
-#include "nsISupportsImpl.h"
-
 class GMPCallbackBase {
  public:
-  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
-
   virtual ~GMPCallbackBase() = default;
 
   // The GMP code will call this if the codec crashes or shuts down.  It's

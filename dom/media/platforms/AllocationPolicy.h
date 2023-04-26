@@ -120,14 +120,13 @@ class SingleAllocPolicy : public AllocPolicyImpl {
   MozPromiseRequestHolder<Promise> mTokenRequest;
 };
 
-class AllocationWrapper final : public MediaDataDecoder {
+class AllocationWrapper : public MediaDataDecoder {
   using Token = AllocPolicy::Token;
 
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AllocationWrapper, final);
-
   AllocationWrapper(already_AddRefed<MediaDataDecoder> aDecoder,
                     already_AddRefed<Token> aToken);
+  ~AllocationWrapper();
 
   RefPtr<InitPromise> Init() override { return mDecoder->Init(); }
   RefPtr<DecodePromise> Decode(MediaRawData* aSample) override {
@@ -172,8 +171,6 @@ class AllocationWrapper final : public MediaDataDecoder {
       const CreateDecoderParams& aParams, AllocPolicy* aPolicy = nullptr);
 
  private:
-  ~AllocationWrapper();
-
   RefPtr<MediaDataDecoder> mDecoder;
   RefPtr<Token> mToken;
 };
