@@ -6,6 +6,6 @@ Any changes made to this version of the source should
 be reflected in that script, e.g. by applying patch
 files after the copy step.
 
-The upstream repository is https://git.xiph.org/opus.git
+The upstream repository is https://gitlab.xiph.org/xiph/opus
 
 Refer to moz.yaml for the current in-tree revision.
