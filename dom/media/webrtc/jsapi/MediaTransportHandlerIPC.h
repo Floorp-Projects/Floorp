@@ -14,9 +14,10 @@ class MediaTransportChild;
 
 // Implementation of MediaTransportHandler that uses IPC (PMediaTransport) to
 // talk to mtransport on another process.
-class MediaTransportHandlerIPC : public MediaTransportHandler {
+class MediaTransportHandlerIPC final : public MediaTransportHandler {
  public:
   explicit MediaTransportHandlerIPC(nsISerialEventTarget* aCallbackThread);
+  void Initialize() override;
   RefPtr<IceLogPromise> GetIceLog(const nsCString& aPattern) override;
   void ClearIceLog() override;
   void EnterPrivateMode() override;
