@@ -403,6 +403,27 @@ async function loadTestPage({
 }
 
 /**
+ * Captures any reported errors in the TranslationsParent.
+ *
+ * @param {Function} callback
+ * @returns {Array<{ error: Error, args: any[] }>}
+ */
+async function captureTranslationsError(callback) {
+  const { reportError } = TranslationsParent;
+
+  let errors = [];
+  TranslationsParent.reportError = (error, ...args) => {
+    errors.push({ error, args });
+  };
+
+  await callback();
+
+  // Restore the original function.
+  TranslationsParent.reportError = reportError;
+  return errors;
+}
+
+/**
  * @param {Object} options - The options for `loadTestPage` plus a `runInPage` function.
  */
 async function loadTestPageAndRun(options) {
@@ -421,39 +442,48 @@ function createAttachmentMock(client) {
       pendingDownloads.push({ record, resolve, reject });
     });
 
-  function waitForDownloads() {
-    return TestUtils.waitForCondition(
-      () => !!pendingDownloads.length,
-      "Waiting for a pending download to be added"
-    );
-  }
-
-  function resolvePendingDownloads() {
-    info("Resolving downloads");
-    return downloadHandler(download =>
+  function resolvePendingDownloads(expectedDownloadCount) {
+    info(`Resolving mocked downloads for "${client.collectionName}"`);
+    return downloadHandler(expectedDownloadCount, download =>
       download.resolve({ buffer: new ArrayBuffer() })
     );
   }
 
-  function rejectPendingDownloads() {
-    info("Rejecting downloads");
-    return downloadHandler(download => download.reject());
+  async function rejectPendingDownloads(expectedDownloadCount) {
+    info(
+      `Intentionally rejecting mocked downloads for "${client.collectionName}"`
+    );
+
+    // Add 1 to account for the original attempt.
+    const attempts = TranslationsParent.MAX_DOWNLOAD_RETRIES + 1;
+    return downloadHandler(expectedDownloadCount * attempts, download =>
+      download.reject(new Error("Intentionally rejecting downloads."))
+    );
   }
 
-  async function downloadHandler(action) {
-    await waitForDownloads();
+  async function downloadHandler(expectedDownloadCount, action) {
     const names = [];
-    while (true) {
-      // Wait a tick, as downloads are added asynchronously. This will continue checking
-      // for downloads at the start of the next event loop.
-      await null;
+    let maxTries = 100;
+    while (names.length < expectedDownloadCount && maxTries-- > 0) {
+      await new Promise(resolve => setTimeout(resolve, 0));
       let download = pendingDownloads.shift();
       if (!download) {
-        break;
+        continue;
       }
       action(download);
       names.push(download.record.name);
     }
+
+    // This next check is not guaranteed to catch an unexpected download, but go ahead
+    // and wait two event loop ticks in order to catch any stray downloads.
+    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise(resolve => setTimeout(resolve, 0));
+    if (pendingDownloads.length) {
+      throw new Error(
+        `An unexpected download was found, only expected ${expectedDownloadCount} downloads`
+      );
+    }
+
     return names.sort((a, b) => a.localeCompare(b));
   }
 
@@ -567,4 +597,144 @@ async function createLanguageIdModelsRemoteClient() {
   await client.db.importChanges(metadata, Date.now(), records);
 
   return createAttachmentMock(client);
+}
+
+async function selectAboutPreferencesElements() {
+  const document = gBrowser.selectedBrowser.contentDocument;
+
+  const rows = await TestUtils.waitForCondition(() => {
+    const elements = document.querySelectorAll(".translations-manage-language");
+    if (elements.length !== 3) {
+      return false;
+    }
+    return elements;
+  }, "Waiting for manage language rows.");
+
+  const [downloadAllRow, frenchRow, spanishRow] = rows;
+
+  const downloadAllLabel = downloadAllRow.querySelector("label");
+  const downloadAll = downloadAllRow.querySelector(
+    "#translations-manage-install-all"
+  );
+  const deleteAll = downloadAllRow.querySelector(
+    "#translations-manage-delete-all"
+  );
+  const frenchLabel = frenchRow.querySelector("label");
+  const frenchDownload = frenchRow.querySelector(
+    `[data-l10n-id="translations-manage-download-button"]`
+  );
+  const frenchDelete = frenchRow.querySelector(
+    `[data-l10n-id="translations-manage-delete-button"]`
+  );
+  const spanishLabel = spanishRow.querySelector("label");
+  const spanishDownload = spanishRow.querySelector(
+    `[data-l10n-id="translations-manage-download-button"]`
+  );
+  const spanishDelete = spanishRow.querySelector(
+    `[data-l10n-id="translations-manage-delete-button"]`
+  );
+
+  return {
+    document,
+    downloadAllLabel,
+    downloadAll,
+    deleteAll,
+    frenchLabel,
+    frenchDownload,
+    frenchDelete,
+    spanishLabel,
+    spanishDownload,
+    spanishDelete,
+  };
+}
+
+function click(button, message) {
+  info(message);
+  if (button.hidden) {
+    throw new Error("The button was hidden when trying to click it.");
+  }
+  button.click();
+}
+
+/**
+ * @param {Object} options
+ * @param {string} options.message
+ * @param {Record<string, Element[]>} options.visible
+ * @param {Record<string, Element[]>} options.hidden
+ */
+async function assertVisibility({ message, visible, hidden }) {
+  info(message);
+  try {
+    // First wait for the condition to be met.
+    await TestUtils.waitForCondition(() => {
+      for (const element of Object.values(visible)) {
+        if (element.hidden) {
+          return false;
+        }
+      }
+      for (const element of Object.values(hidden)) {
+        if (!element.hidden) {
+          return false;
+        }
+      }
+      return true;
+    });
+  } catch (error) {
+    // Ignore, this will get caught below.
+  }
+  // Now report the conditions.
+  for (const [name, element] of Object.entries(visible)) {
+    ok(!element.hidden, `${name} is visible.`);
+  }
+  for (const [name, element] of Object.entries(hidden)) {
+    ok(element.hidden, `${name} is hidden.`);
+  }
+}
+
+async function setupAboutPreferences(languagePairs) {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      // Enabled by default.
+      ["browser.translations.enable", true],
+      ["browser.translations.logLevel", "All"],
+    ],
+  });
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    BLANK_PAGE,
+    true // waitForLoad
+  );
+
+  const remoteClients = {
+    translationModels: await createTranslationModelsRemoteClient(languagePairs),
+    translationsWasm: await createTranslationsWasmRemoteClient(),
+    languageIdModels: await createLanguageIdModelsRemoteClient(),
+  };
+
+  TranslationsParent.translationModelsRemoteClient =
+    remoteClients.translationModels.client;
+  TranslationsParent.translationsWasmRemoteClient =
+    remoteClients.translationsWasm.client;
+  TranslationsParent.languageIdModelsRemoteClient =
+    remoteClients.languageIdModels.client;
+
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, "about:preferences");
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+
+  const elements = await selectAboutPreferencesElements();
+
+  async function cleanup() {
+    gBrowser.removeCurrentTab();
+    TranslationsParent.translationModelsRemoteClient = null;
+    TranslationsParent.translationsWasmRemoteClient = null;
+    TranslationsParent.languageIdModelsRemoteClient = null;
+
+    await SpecialPowers.popPrefEnv();
+  }
+
+  return {
+    cleanup,
+    remoteClients,
+    elements,
+  };
 }

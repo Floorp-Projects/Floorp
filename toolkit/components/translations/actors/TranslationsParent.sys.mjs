@@ -341,8 +341,10 @@ export class TranslationsParent extends JSWindowActorParent {
     }
 
     if (modelRecords.length > 1) {
-      lazy.console.error(
-        "Expected the language-identification model collection to have only 1 record.",
+      TranslationsParent.reportError(
+        new Error(
+          "Expected the language-identification model collection to have only 1 record."
+        ),
         modelRecords
       );
     }
@@ -403,8 +405,10 @@ export class TranslationsParent extends JSWindowActorParent {
     }
 
     if (wasmRecords.length > 1) {
-      lazy.console.error(
-        'Expected the "fasttext-wasm" language-identification wasm collection to only have 1 record.',
+      TranslationsParent.reportError(
+        new Error(
+          'Expected the "fasttext-wasm" language-identification wasm collection to only have 1 record.'
+        ),
         wasmRecords
       );
     }
@@ -729,8 +733,10 @@ export class TranslationsParent extends JSWindowActorParent {
       }
       // Check for "lang -> pivot"
       if (!hasToPivot.has(lang)) {
-        lazy.console.error(
-          `The "from" language model "${lang}" is being discarded as it doesn't have a pivot language.`
+        TranslationsParent.reportError(
+          new Error(
+            `The "from" language model "${lang}" is being discarded as it doesn't have a pivot language.`
+          )
         );
         fromLangsToRemove.add(lang);
       }
@@ -742,8 +748,10 @@ export class TranslationsParent extends JSWindowActorParent {
       }
       // Check for "pivot -> lang"
       if (!hasFromPivot.has(lang)) {
-        lazy.console.error(
-          `The "to" language model "${lang}" is being discarded as it doesn't have a pivot language.`
+        TranslationsParent.reportError(
+          new Error(
+            `The "to" language model "${lang}" is being discarded as it doesn't have a pivot language.`
+          )
         );
         toLangsToRemove.add(lang);
       }
@@ -831,8 +839,8 @@ export class TranslationsParent extends JSWindowActorParent {
     }
 
     if (wasmRecords.length > 1) {
-      lazy.console.error(
-        "Expected the bergamot-translator to only have 1 record.",
+      TranslationsParent.reportError(
+        new Error("Expected the bergamot-translator to only have 1 record."),
         wasmRecords
       );
     }
@@ -1202,6 +1210,17 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   /**
+   * Report an error. Having this as a method allows tests to check that an error
+   * was properly reported.
+   * @param {Error} error - Providing an Error object makes sure the stack is properly
+   *                        reported.
+   * @param {any[]} args - Any args to pass on to console.error.
+   */
+  static reportError(error, ...args) {
+    lazy.console.error(error, ...args);
+  }
+
+  /**
    * @param {string} fromLanguage
    * @param {string} toLanguage
    */
@@ -1444,7 +1463,10 @@ async function downloadManager(queue) {
 
       const handleFailedDownload = error => {
         // The download failed. Either retry it, or report the failure.
-        lazy.console.error(`Failed to download file`, error);
+        TranslationsParent.reportError(
+          new Error("Failed to download file."),
+          error
+        );
 
         const newRetriesLeft = retriesLeft - 1;
 
