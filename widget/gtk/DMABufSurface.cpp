@@ -1078,7 +1078,7 @@ bool DMABufSurfaceYUV::CreateYUVPlane(int aPlane) {
   LOGDMABUF(("DMABufSurfaceYUV::CreateYUVPlane() UID %d size %d x %d", mUID,
              mWidth[aPlane], mHeight[aPlane]));
 
-  if (!GetAndConfigureDMABufDevice()->GetGbmDevice()) {
+  if (!GetDMABufDevice()->GetGbmDevice()) {
     LOGDMABUF(("    Missing GbmDevice!"));
     return false;
   }

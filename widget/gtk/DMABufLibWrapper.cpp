@@ -26,6 +26,8 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace widget {
 
+bool sUseWebGLDmabufBackend = true;
+
 #define GBMLIB_NAME "libgbm.so.1"
 #define DRMLIB_NAME "libdrm.so.2"
 
@@ -128,6 +130,14 @@ bool nsGbmLib::Load() {
 }
 
 gbm_device* nsDMABufDevice::GetGbmDevice() { return mGbmDevice; }
+int nsDMABufDevice::GetDRMFd() { return mDRMFd; }
+
+bool nsDMABufDevice::IsEnabled(nsACString& aFailureId) {
+  if (mDRMFd == -1) {
+    aFailureId = mFailureId;
+  }
+  return mDRMFd != -1;
+}
 
 static void dmabuf_modifiers(void* data,
                              struct zwp_linux_dmabuf_v1* zwp_linux_dmabuf,
@@ -164,12 +174,10 @@ static const struct zwp_linux_dmabuf_v1_listener dmabuf_listener = {
 static void global_registry_handler(void* data, wl_registry* registry,
                                     uint32_t id, const char* interface,
                                     uint32_t version) {
-  auto* device = static_cast<nsDMABufDevice*>(data);
   if (strcmp(interface, "zwp_linux_dmabuf_v1") == 0 && version > 2) {
     auto* dmabuf = WaylandRegistryBind<zwp_linux_dmabuf_v1>(
         registry, id, &zwp_linux_dmabuf_v1_interface, 3);
     LOGDMABUF(("zwp_linux_dmabuf_v1 is available."));
-    device->ResetFormatsModifiers();
     zwp_linux_dmabuf_v1_add_listener(dmabuf, &dmabuf_listener, data);
   } else if (strcmp(interface, "wl_drm") == 0) {
     LOGDMABUF(("wl_drm is available."));
@@ -183,12 +191,39 @@ static const struct wl_registry_listener registry_listener = {
     global_registry_handler, global_registry_remover};
 
 nsDMABufDevice::nsDMABufDevice()
-    : mUseWebGLDmabufBackend(true),
-      mXRGBFormat({true, false, GBM_FORMAT_XRGB8888, nullptr, 0}),
-      mARGBFormat({true, true, GBM_FORMAT_ARGB8888, nullptr, 0}),
-      mDRMFd(-1),
-      mGbmDevice(nullptr),
-      mInitialized(false) {
+    : mXRGBFormat({true, false, GBM_FORMAT_XRGB8888, nullptr, 0}),
+      mARGBFormat({true, true, GBM_FORMAT_ARGB8888, nullptr, 0}) {
+  Configure();
+}
+
+nsDMABufDevice::~nsDMABufDevice() {
+  mARGBFormat.mModifiersCount = 0;
+  free(mARGBFormat.mModifiers);
+  mARGBFormat.mModifiers = nullptr;
+
+  mXRGBFormat.mModifiersCount = 0;
+  free(mXRGBFormat.mModifiers);
+  mXRGBFormat.mModifiers = nullptr;
+
+  if (mGbmDevice) {
+    nsGbmLib::DestroyDevice(mGbmDevice);
+    mGbmDevice = nullptr;
+  }
+  if (mDRMFd != -1) {
+    close(mDRMFd);
+    mDRMFd = -1;
+  }
+}
+
+void nsDMABufDevice::Configure() {
+  LOGDMABUF(("nsDMABufDevice::Configure()"));
+
+  if (!nsGbmLib::IsAvailable()) {
+    LOGDMABUF(("nsGbmLib is not available!"));
+    mFailureId = "FEATURE_FAILURE_NO_LIBGBM";
+    return;
+  }
+
   if (GdkIsWaylandDisplay()) {
     wl_display* display = WaylandDisplayGetWLDisplay();
     wl_registry* registry = wl_display_get_registry(display);
@@ -209,50 +244,30 @@ nsDMABufDevice::nsDMABufDevice()
     if (mDRMFd < 0) {
       LOGDMABUF(("Failed to open drm render node %s error %s\n",
                  drm_render_node.get(), strerror(errno)));
+      mFailureId = "FEATURE_FAILURE_NO_DRM_DEVICE";
+      return;
     }
   } else {
     LOGDMABUF(("We're missing DRM render device!\n"));
-  }
-}
-
-nsDMABufDevice::~nsDMABufDevice() {
-  if (mGbmDevice) {
-    nsGbmLib::DestroyDevice(mGbmDevice);
-    mGbmDevice = nullptr;
-  }
-  if (mDRMFd != -1) {
-    close(mDRMFd);
-    mDRMFd = -1;
-  }
-}
-
-int nsDMABufDevice::GetDRMFd() { return mDRMFd; }
-
-bool nsDMABufDevice::Configure(nsACString& aFailureId) {
-  if (mInitialized) {
-    return true;
+    mFailureId = "FEATURE_FAILURE_NO_DRM_DEVICE";
+    return;
   }
 
-  LOGDMABUF(("nsDMABufDevice::Configure()"));
-  mInitialized = true;
-
-  if (!nsGbmLib::IsAvailable()) {
-    LOGDMABUF(("nsGbmLib is not available!"));
-    aFailureId = "FEATURE_FAILURE_NO_LIBGBM";
-    return false;
-  }
+  // mGbmDevice is optional and it's used to create dmabuf surfaces
+  // directly on GPU. Some drivers (NVIDIA) doesn't support that
+  // but we still can use mDRMFd to operate with dmabuf surfaces
+  // created by GFX drivers and exported by OpenGL.
 
   // fd passed to gbm_create_device() should be kept open until
   // gbm_device_destroy() is called.
-  mGbmDevice = nsGbmLib::CreateDevice(GetDRMFd());
+  mGbmDevice = nsGbmLib::CreateDevice(mDRMFd);
   if (!mGbmDevice) {
-    LOGDMABUF(("Failed to create drm render device"));
-    aFailureId = "FEATURE_FAILURE_BAD_DRM_RENDER_NODE";
-    return false;
+    LOGDMABUF(
+        ("Failed to create drm render device. Direct dmabuf surface creation "
+         "will be disabled."));
   }
 
   LOGDMABUF(("DMABuf is enabled"));
-  return true;
 }
 
 #ifdef NIGHTLY_BUILD
@@ -266,29 +281,19 @@ bool nsDMABufDevice::IsDMABufTexturesEnabled() { return false; }
 bool nsDMABufDevice::IsDMABufWebGLEnabled() {
   LOGDMABUF(
       ("nsDMABufDevice::IsDMABufWebGLEnabled: UseDMABuf %d "
-       "mUseWebGLDmabufBackend %d "
+       "sUseWebGLDmabufBackend %d "
        "widget_dmabuf_webgl_enabled %d\n",
-       gfx::gfxVars::UseDMABuf(), mUseWebGLDmabufBackend,
+       gfx::gfxVars::UseDMABuf(), sUseWebGLDmabufBackend,
        StaticPrefs::widget_dmabuf_webgl_enabled()));
-  return gfx::gfxVars::UseDMABuf() && mUseWebGLDmabufBackend &&
+  return gfx::gfxVars::UseDMABuf() && sUseWebGLDmabufBackend &&
          StaticPrefs::widget_dmabuf_webgl_enabled();
 }
 
-void nsDMABufDevice::DisableDMABufWebGL() { mUseWebGLDmabufBackend = false; }
+void nsDMABufDevice::DisableDMABufWebGL() { sUseWebGLDmabufBackend = false; }
 
 GbmFormat* nsDMABufDevice::GetGbmFormat(bool aHasAlpha) {
   GbmFormat* format = aHasAlpha ? &mARGBFormat : &mXRGBFormat;
   return format->mIsSupported ? format : nullptr;
-}
-
-GbmFormat* nsDMABufDevice::GetExactGbmFormat(int aFormat) {
-  if (aFormat == mARGBFormat.mFormat) {
-    return &mARGBFormat;
-  } else if (aFormat == mXRGBFormat.mFormat) {
-    return &mXRGBFormat;
-  }
-
-  return nullptr;
 }
 
 void nsDMABufDevice::AddFormatModifier(bool aHasAlpha, int aFormat,
@@ -306,27 +311,9 @@ void nsDMABufDevice::AddFormatModifier(bool aHasAlpha, int aFormat,
       ((uint64_t)mModifierHi << 32) | mModifierLo;
 }
 
-void nsDMABufDevice::ResetFormatsModifiers() {
-  mARGBFormat.mModifiersCount = 0;
-  free(mARGBFormat.mModifiers);
-  mARGBFormat.mModifiers = nullptr;
-
-  mXRGBFormat.mModifiersCount = 0;
-  free(mXRGBFormat.mModifiers);
-  mXRGBFormat.mModifiers = nullptr;
-}
-
 nsDMABufDevice* GetDMABufDevice() {
   static nsDMABufDevice dmaBufDevice;
   return &dmaBufDevice;
-}
-
-nsDMABufDevice* GetAndConfigureDMABufDevice() {
-  nsCString failureId;
-  if (GetDMABufDevice()->Configure(failureId)) {
-    return GetDMABufDevice();
-  }
-  return nullptr;
 }
 
 }  // namespace widget

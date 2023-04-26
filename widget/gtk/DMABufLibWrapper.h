@@ -186,36 +186,34 @@ class nsDMABufDevice {
   nsDMABufDevice();
   ~nsDMABufDevice();
 
+  int GetDRMFd();
   gbm_device* GetGbmDevice();
 
-  // Use dmabuf for WebRender general web content
-  bool IsDMABufTexturesEnabled();
-  // Use dmabuf for WebGL content
-  bool IsDMABufWebGLEnabled();
-  void DisableDMABufWebGL();
+  bool IsEnabled(nsACString& aFailureId);
 
-  int GetDRMFd();
-  GbmFormat* GetGbmFormat(bool aHasAlpha);
-  GbmFormat* GetExactGbmFormat(int aFormat);
-  void ResetFormatsModifiers();
+  // Use dmabuf for WebRender general web content
+  static bool IsDMABufTexturesEnabled();
+  // Use dmabuf for WebGL content
+  static bool IsDMABufWebGLEnabled();
+  static void DisableDMABufWebGL();
+
   void AddFormatModifier(bool aHasAlpha, int aFormat, uint32_t mModifierHi,
                          uint32_t mModifierLo);
-  bool Configure(nsACString& aFailureId);
+  GbmFormat* GetGbmFormat(bool aHasAlpha);
 
  private:
-  bool mUseWebGLDmabufBackend;
+  void Configure();
 
  private:
   GbmFormat mXRGBFormat;
   GbmFormat mARGBFormat;
 
-  int mDRMFd;
-  gbm_device* mGbmDevice;
-  bool mInitialized;
+  int mDRMFd = -1;
+  gbm_device* mGbmDevice = nullptr;
+  const char* mFailureId = nullptr;
 };
 
 nsDMABufDevice* GetDMABufDevice();
-nsDMABufDevice* GetAndConfigureDMABufDevice();
 
 }  // namespace widget
 }  // namespace mozilla
