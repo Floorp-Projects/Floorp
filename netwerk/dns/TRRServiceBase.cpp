@@ -6,6 +6,7 @@
 
 #include "TRRServiceBase.h"
 
+#include "TRRService.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ScopeExit.h"
 #include "nsHostResolver.h"
@@ -113,7 +114,8 @@ void TRRServiceBase::CheckURIPrefs() {
 }
 
 // static
-nsIDNSService::ResolverMode ModeFromPrefs() {
+nsIDNSService::ResolverMode ModeFromPrefs(
+    nsIDNSService::ResolverMode& aTRRModePrefValue) {
   // 0 - off, 1 - reserved, 2 - TRR first, 3 - TRR only, 4 - reserved,
   // 5 - explicit off
 
@@ -131,6 +133,7 @@ nsIDNSService::ResolverMode ModeFromPrefs() {
     tmp = 0;
   }
   nsIDNSService::ResolverMode modeFromPref = processPrefValue(tmp);
+  aTRRModePrefValue = modeFromPref;
 
   if (modeFromPref != nsIDNSService::MODE_NATIVEONLY) {
     return modeFromPref;
@@ -146,13 +149,17 @@ nsIDNSService::ResolverMode ModeFromPrefs() {
 
 void TRRServiceBase::OnTRRModeChange() {
   uint32_t oldMode = mMode;
-  mMode = ModeFromPrefs();
+  // This is the value of the pref "network.trr.mode"
+  nsIDNSService::ResolverMode trrModePrefValue;
+  mMode = ModeFromPrefs(trrModePrefValue);
   if (mMode != oldMode) {
     LOG(("TRR Mode changed from %d to %d", oldMode, int(mMode)));
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
       obs->NotifyObservers(nullptr, NS_NETWORK_TRR_MODE_CHANGED_TOPIC, nullptr);
     }
+
+    TRRService::SetCurrentTRRMode(trrModePrefValue);
   }
 
   static bool readHosts = false;

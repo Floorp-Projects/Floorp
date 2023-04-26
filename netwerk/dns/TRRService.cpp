@@ -43,9 +43,12 @@ StaticRefPtr<nsIThread> sTRRBackgroundThread;
 static Atomic<TRRService*> sTRRServicePtr;
 
 static Atomic<size_t, Relaxed> sDomainIndex(0);
+static Atomic<size_t, Relaxed> sCurrentTRRModeIndex(0);
 
-constexpr nsLiteralCString kTRRDomains[] = {
+constexpr nsLiteralCString kTRRDomains[3][7] = {
     // clang-format off
+    {
+    // When mode is 0, the provider key has no postfix.
     "(other)"_ns,
     "mozilla.cloudflare-dns.com"_ns,
     "firefox.dns.nextdns.io"_ns,
@@ -53,13 +56,45 @@ constexpr nsLiteralCString kTRRDomains[] = {
     "doh.xfinity.com"_ns,  // Steered clients
     "dns.shaw.ca"_ns, // Steered clients
     "dooh.cloudflare-dns.com"_ns, // DNS over Oblivious HTTP
+    },
+    {
+    "(other)_2"_ns,
+    "mozilla.cloudflare-dns.com_2"_ns,
+    "firefox.dns.nextdns.io_2"_ns,
+    "private.canadianshield.cira.ca_2"_ns,
+    "doh.xfinity.com_2"_ns,  // Steered clients
+    "dns.shaw.ca_2"_ns, // Steered clients
+    "dooh.cloudflare-dns.com_2"_ns, // DNS over Oblivious HTTP
+    },
+    {
+    "(other)_3"_ns,
+    "mozilla.cloudflare-dns.com_3"_ns,
+    "firefox.dns.nextdns.io_3"_ns,
+    "private.canadianshield.cira.ca_3"_ns,
+    "doh.xfinity.com_3"_ns,  // Steered clients
+    "dns.shaw.ca_3"_ns, // Steered clients
+    "dooh.cloudflare-dns.com_3"_ns, // DNS over Oblivious HTTP
+    },
     // clang-format on
 };
+
+// static
+void TRRService::SetCurrentTRRMode(nsIDNSService::ResolverMode aMode) {
+  // A table to map ResolverMode to the row of kTRRDomains.
+  // When the aMode is 2, we use kTRRDomains[1] as provider keys. When aMode is
+  // 3, we use kTRRDomains[2]. Otherwise, we kTRRDomains[0] is used.
+  static const uint32_t index[] = {0, 0, 1, 2, 0, 0};
+  if (aMode > nsIDNSService::MODE_TRROFF) {
+    aMode = nsIDNSService::MODE_TRROFF;
+  }
+  sCurrentTRRModeIndex = index[static_cast<size_t>(aMode)];
+}
+
 // static
 void TRRService::SetProviderDomain(const nsACString& aTRRDomain) {
   sDomainIndex = 0;
-  for (size_t i = 1; i < std::size(kTRRDomains); i++) {
-    if (aTRRDomain.Equals(kTRRDomains[i])) {
+  for (size_t i = 1; i < std::size(kTRRDomains[0]); i++) {
+    if (aTRRDomain.Equals(kTRRDomains[0][i])) {
       sDomainIndex = i;
       break;
     }
@@ -67,7 +102,9 @@ void TRRService::SetProviderDomain(const nsACString& aTRRDomain) {
 }
 
 // static
-const nsCString& TRRService::ProviderKey() { return kTRRDomains[sDomainIndex]; }
+const nsCString& TRRService::ProviderKey() {
+  return kTRRDomains[sCurrentTRRModeIndex][sDomainIndex];
+}
 
 NS_IMPL_ISUPPORTS_INHERITED(TRRService, TRRServiceBase, nsIObserver,
                             nsISupportsWeakReference)

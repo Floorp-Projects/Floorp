@@ -97,6 +97,8 @@ class TRRService : public TRRServiceBase,
   // If the DoH server is not one of the built-in ones it will return "(other)"
   static const nsCString& ProviderKey();
   static void SetProviderDomain(const nsACString& aTRRDomain);
+  // Only called when TRR mode changed.
+  static void SetCurrentTRRMode(nsIDNSService::ResolverMode aMode);
 
   void InitTRRConnectionInfo() override;
 

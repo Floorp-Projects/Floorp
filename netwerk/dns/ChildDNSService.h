@@ -37,6 +37,8 @@ class ChildDNSService final : public DNSServiceBase, public nsPIDNSService {
 
   void SetTRRDomain(const nsACString& aTRRDomain);
   void GetTRRDomainKey(nsACString& aTRRDomain);
+  void SetTRRModeInChild(nsIDNSService::ResolverMode mode,
+                         nsIDNSService::ResolverMode modeFromPref);
 
  private:
   virtual ~ChildDNSService() = default;
