@@ -35,3 +35,20 @@ async def test_params_actions_invalid_value_multiple_codepoints(
         await bidi_session.input.perform_actions(
             actions=actions, context=top_context["context"]
         )
+
+
+@pytest.mark.parametrize("missing", ["x", "y", "deltaX", "deltaY"])
+async def test_params_actions_missing_wheel_property(
+    bidi_session, top_context, missing
+):
+    actions = Actions()
+    wheel_input_source = actions.add_wheel().scroll(x=0, y=0, delta_x=5, delta_y=10)
+
+    json_actions = actions.to_json()
+    wheel_input_actions_json = json_actions[-1]["actions"]
+    del wheel_input_actions_json[-1][missing]
+
+    with pytest.raises(InvalidArgumentException):
+        await bidi_session.input.perform_actions(
+            actions=json_actions, context=top_context["context"]
+        )

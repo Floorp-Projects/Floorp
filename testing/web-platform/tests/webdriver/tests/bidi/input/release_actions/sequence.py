@@ -43,15 +43,13 @@ async def test_release_char_sequence_sends_keyup_events_in_reverse(
 async def test_release_mouse_sequence_resets_dblclick_state(
     bidi_session,
     top_context,
+    get_element,
     load_static_test_page,
     release_actions
 ):
     await load_static_test_page(page="test_actions.html")
-    reporter = await bidi_session.script.evaluate(
-        expression="document.querySelector('#outer')",
-        target=ContextTarget(top_context["context"]),
-        await_promise=False,
-    )
+    reporter = await get_element("#outer")
+
     actions = Actions()
     actions.add_pointer(pointer_type="mouse").pointer_move(
         x=0, y=0, origin=reporter["value"]
