@@ -11876,6 +11876,14 @@
   value: 1048576
   mirror: always
 
+# DNS Trusted Recursive Resolver
+# 0 - default off, 1 - reserved/off, 2 - TRR first, 3 - TRR only,
+# 4 - reserved/off, 5 off by choice
+- name: network.trr.mode
+  type: RelaxedAtomicUint32
+  value: 0
+  mirror: always
+
 # Default global TRR provider
 - name: network.trr.default_provider_uri
   type: String

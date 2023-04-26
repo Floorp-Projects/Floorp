@@ -1474,12 +1474,6 @@ nsDNSService::GetCurrentTrrURI(nsACString& aURI) {
 }
 
 NS_IMETHODIMP
-nsDNSService::SetTRRModeInChild(nsIDNSService::ResolverMode mode) {
-  MOZ_ASSERT(false, "Why are we calling this?");
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP
 nsDNSService::GetCurrentTrrMode(nsIDNSService::ResolverMode* aMode) {
   *aMode = nsIDNSService::MODE_NATIVEONLY;  // The default mode.
   if (mTrrService) {
