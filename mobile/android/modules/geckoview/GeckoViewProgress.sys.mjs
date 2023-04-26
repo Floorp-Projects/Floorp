@@ -284,6 +284,16 @@ class ProgressTracker extends Tracker {
       probe.start();
       this.start(displaySpec);
     }
+
+    // During history naviation, global window is recycled, so pagetitlechanged isn't fired
+    // Although Firefox Desktop always set title by onLocationChange, to reduce title change call,
+    // we only send title during history navigation.
+    if ((aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING) != 0) {
+      this.eventDispatcher.sendRequest({
+        type: "GeckoView:PageTitleChanged",
+        title: this.browser.contentTitle,
+      });
+    }
   }
 
   onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags) {
