@@ -515,7 +515,7 @@ RefPtr<GenericPromise> FlushAndUseFOGData() {
   RecordPowerMetrics();
 
   RefPtr<GenericPromise::Private> ret = new GenericPromise::Private(__func__);
-  std::function<void(nsTArray<ByteBuf> &&)> resolver =
+  std::function<void(nsTArray<ByteBuf>&&)> resolver =
       [ret](nsTArray<ByteBuf>&& bufs) {
         for (ByteBuf& buf : bufs) {
           FOGData(std::move(buf));
