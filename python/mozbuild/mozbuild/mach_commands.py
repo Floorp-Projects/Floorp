@@ -2729,7 +2729,7 @@ def repackage_mar(command_context, input, mar, output, arch, mar_channel_id):
     metavar="LOCALES",
     nargs="+",
     required=True,
-    help='List of locales to package, including "en-US"',
+    help="List of locales to package",
 )
 @CommandArgument(
     "--verbose", action="store_true", help="Log informative status messages."
@@ -2745,16 +2745,7 @@ def package_l10n(command_context, verbose=False, locales=[]):
         )
         return 1
 
-    if "en-US" not in locales:
-        command_context.log(
-            logging.WARN,
-            "package-multi-locale",
-            {"locales": locales},
-            'List of locales does not include default locale "en-US": '
-            '{locales}; adding "en-US"',
-        )
-        locales.append("en-US")
-    locales = list(sorted(locales))
+    locales = sorted(locale for locale in locales if locale != "en-US")
 
     append_env = {
         # We are only (re-)packaging, we don't want to (re-)build
@@ -2763,33 +2754,20 @@ def package_l10n(command_context, verbose=False, locales=[]):
         "MOZ_CHROME_MULTILOCALE": " ".join(locales),
     }
 
-    for locale in locales:
-        if locale == "en-US":
-            command_context.log(
-                logging.INFO,
-                "package-multi-locale",
-                {"locale": locale},
-                "Skipping default locale {locale}",
-            )
-            continue
-
-        command_context.log(
-            logging.INFO,
-            "package-multi-locale",
-            {"locale": locale},
-            "Processing chrome Gecko resources for locale {locale}",
-        )
-        command_context.run_process(
-            [
-                mozpath.join(command_context.topsrcdir, "mach"),
-                "build",
-                "chrome-{}".format(locale),
-            ],
-            append_env=append_env,
-            pass_thru=True,
-            ensure_exit_code=True,
-            cwd=mozpath.join(command_context.topsrcdir),
-        )
+    command_context.log(
+        logging.INFO,
+        "package-multi-locale",
+        {"locales": locales},
+        "Processing chrome Gecko resources for locales {locales}",
+    )
+    command_context._run_make(
+        directory=command_context.topobjdir,
+        target=["chrome-{}".format(locale) for locale in locales],
+        append_env=append_env,
+        pass_thru=False,
+        print_directory=False,
+        ensure_exit_code=True,
+    )
 
     if command_context.substs["MOZ_BUILD_APP"] == "mobile/android":
         command_context.log(
