@@ -56,25 +56,43 @@ struct {{ obj.name|Camelize }}{{ suffix }} {
     return std::make_tuple(std::move(extraKeys), std::move(extraValues));
   }
 };
+{%- endmacro -%}
+
+{# Okay, so though `enum class` means we can't pollute the namespace with the
+   enum variants' identifiers, there's no guarantee there isn't some
+   preprocessor #define lying in wait to collide with us. Using CamelCase
+   helps, but isn't foolproof (X11/X.h has `#define Success 0`).
+   So we prefix it. I chose `e` (for `enum`) for the prefix. #}
+{%- macro generate_label_enum(obj) -%}
+enum class {{ obj.name|Camelize }}Label: uint16_t {
+  {% for label in obj.ordered_labels %}
+  e{{ label|Camelize }} = {{loop.index0}},
+  {% endfor %}
+  e__Other__,
+};
 {%- endmacro %}
 
 struct NoExtraKeys;
+enum class DynamicLabel: uint16_t { };
 
 {% for category_name, objs in all_objs.items() %}
 namespace {{ category_name|snake_case }} {
-    {% for obj in objs.values() %}
-    /**
-     * generated from {{ category_name }}.{{ obj.name }}
-     */
-    {% if obj|attr("_generate_enums") %}
+  {% for obj in objs.values() %}
+  /**
+   * generated from {{ category_name }}.{{ obj.name }}
+   */
+  {% if obj|attr("_generate_enums") %}
 {{ generate_extra_keys(obj) }}
-    {%- endif %}
-    /**
-     * {{ obj.description|wordwrap() | replace('\n', '\n     * ') }}
-     */
-    constexpr impl::{{ obj|type_name }} {{obj.name|snake_case }}({{obj|metric_id}});
+  {%- endif %}
+  {% if obj.labeled and obj.labels and obj.labels|length %}
+  {{ generate_label_enum(obj)|indent }}
+  {% endif %}
+  /**
+   * {{ obj.description|wordwrap() | replace('\n', '\n     * ') }}
+   */
+  constexpr impl::{{ obj|type_name }} {{obj.name|snake_case }}({{obj|metric_id}});
 
-    {% endfor %}
+  {% endfor %}
 }
 {% endfor %}
 

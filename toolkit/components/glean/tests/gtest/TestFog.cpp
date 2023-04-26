@@ -288,6 +288,33 @@ TEST_F(FOGFixture, TestLabeledBooleanWorks) {
                        .ref());
 }
 
+TEST_F(FOGFixture, TestLabeledBooleanWithLabelsWorks) {
+  ASSERT_EQ(mozilla::Nothing(),
+            test_only::mabels_like_labeled_balloons
+                .EnumGet(test_only::MabelsLikeLabeledBalloonsLabel::eWater)
+                .TestGetValue()
+                .unwrap());
+  test_only::mabels_like_labeled_balloons
+      .EnumGet(test_only::MabelsLikeLabeledBalloonsLabel::eWater)
+      .Set(true);
+  test_only::mabels_like_labeled_balloons
+      .EnumGet(test_only::MabelsLikeLabeledBalloonsLabel::eBirthdayParty)
+      .Set(false);
+  ASSERT_EQ(true,
+            test_only::mabels_like_labeled_balloons
+                .EnumGet(test_only::MabelsLikeLabeledBalloonsLabel::eWater)
+                .TestGetValue()
+                .unwrap()
+                .ref());
+  ASSERT_EQ(
+      false,
+      test_only::mabels_like_labeled_balloons
+          .EnumGet(test_only::MabelsLikeLabeledBalloonsLabel::eBirthdayParty)
+          .TestGetValue()
+          .unwrap()
+          .ref());
+}
+
 TEST_F(FOGFixture, TestLabeledCounterWorks) {
   ASSERT_EQ(mozilla::Nothing(),
             test_only::mabels_kitchen_counters.Get("marble"_ns)
@@ -300,6 +327,32 @@ TEST_F(FOGFixture, TestLabeledCounterWorks) {
                    .unwrap()
                    .ref());
   ASSERT_EQ(2, test_only::mabels_kitchen_counters.Get("laminate"_ns)
+                   .TestGetValue()
+                   .unwrap()
+                   .ref());
+}
+
+TEST_F(FOGFixture, TestLabeledCounterWithLabelsWorks) {
+  ASSERT_EQ(
+      mozilla::Nothing(),
+      test_only::mabels_labeled_counters
+          .EnumGet(test_only::MabelsLabeledCountersLabel::eNextToTheFridge)
+          .TestGetValue()
+          .unwrap());
+  test_only::mabels_labeled_counters
+      .EnumGet(test_only::MabelsLabeledCountersLabel::eNextToTheFridge)
+      .Add(1);
+  test_only::mabels_labeled_counters
+      .EnumGet(test_only::MabelsLabeledCountersLabel::eClean)
+      .Add(2);
+  ASSERT_EQ(
+      1, test_only::mabels_labeled_counters
+             .EnumGet(test_only::MabelsLabeledCountersLabel::eNextToTheFridge)
+             .TestGetValue()
+             .unwrap()
+             .ref());
+  ASSERT_EQ(2, test_only::mabels_labeled_counters
+                   .EnumGet(test_only::MabelsLabeledCountersLabel::eClean)
                    .TestGetValue()
                    .unwrap()
                    .ref());
@@ -325,6 +378,35 @@ TEST_F(FOGFixture, TestLabeledStringWorks) {
                    .unwrap()
                    .ref()
                    .get());
+}
+
+TEST_F(FOGFixture, TestLabeledStringWithLabelsWorks) {
+  ASSERT_EQ(mozilla::Nothing(),
+            test_only::mabels_balloon_labels
+                .EnumGet(test_only::MabelsBalloonLabelsLabel::eCelebratory)
+                .TestGetValue()
+                .unwrap());
+  test_only::mabels_balloon_labels
+      .EnumGet(test_only::MabelsBalloonLabelsLabel::eCelebratory)
+      .Set("for birthdays, etc."_ns);
+  test_only::mabels_balloon_labels
+      .EnumGet(test_only::MabelsBalloonLabelsLabel::eCelebratoryAndSnarky)
+      .Set("for retirements and bridal showers"_ns);
+  ASSERT_STREQ("for birthdays, etc.",
+               test_only::mabels_balloon_labels
+                   .EnumGet(test_only::MabelsBalloonLabelsLabel::eCelebratory)
+                   .TestGetValue()
+                   .unwrap()
+                   .ref()
+                   .get());
+  ASSERT_STREQ(
+      "for retirements and bridal showers",
+      test_only::mabels_balloon_labels
+          .EnumGet(test_only::MabelsBalloonLabelsLabel::eCelebratoryAndSnarky)
+          .TestGetValue()
+          .unwrap()
+          .ref()
+          .get());
 }
 
 TEST_F(FOGFixture, TestCppQuantityWorks) {

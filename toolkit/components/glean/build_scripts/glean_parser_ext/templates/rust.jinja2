@@ -39,6 +39,39 @@ impl ExtraKeys for {{ obj.name|Camelize }}{{ suffix }} {
 }
 {%- endmacro -%}
 
+{% macro generate_label_enum(obj) %}
+#[repr(u16)]
+pub enum {{ obj.name|Camelize }}Label {
+    {% for label in obj.ordered_labels %}
+    {# Specifically _not_ using r# as C++ doesn't have it #}
+    {{ label|Camelize }} = {{loop.index0}},
+    {% endfor %}
+    __Other__,
+}
+impl From<u16> for {{ obj.name|Camelize }}Label {
+    fn from(v: u16) -> Self {
+        match v {
+            {% for label in obj.ordered_labels %}
+            {{ loop.index0 }} => Self::{{ label|Camelize }},
+            {% endfor %}
+            _ => Self::__Other__,
+        }
+    }
+}
+impl Into<&'static str> for {{ obj.name|Camelize }}Label {
+    fn into(self) -> &'static str {
+        match self {
+            {% for label in obj.ordered_labels %}
+            Self::{{ label| Camelize }} => "{{label}}",
+            {% endfor %}
+            Self::__Other__ => "__other__",
+        }
+    }
+}
+{%- endmacro -%}
+
+pub enum DynamicLabel { }
+
 {% for category_name, objs in all_objs.items() %}
 pub mod {{ category_name|snake_case }} {
     use crate::private::*;
@@ -51,6 +84,9 @@ pub mod {{ category_name|snake_case }} {
     {% if obj|attr("_generate_enums") %}
 {{ generate_extra_keys(obj) }}
     {%- endif %}
+    {% if obj.labeled and obj.labels and obj.labels|length %}
+    {{ generate_label_enum(obj)|indent }}
+    {% endif %}
     #[allow(non_upper_case_globals)]
     /// generated from {{ category_name }}.{{ obj.name }}
     ///
@@ -213,6 +249,71 @@ pub(crate) mod __glean_metric_maps {
         }
     }
 
+{% for labeled_type, labeleds_by_id in labeleds_by_id_by_type.items() %}
+    /// Gets the submetric from the specified labeled_{{labeled_type}} metric.
+    ///
+    /// # Arguments
+    ///
+    /// * `metric_id` - The metric's ID to look up
+    /// * `label` - The label identifying the {{labeled_type}} submetric.
+    ///
+    /// # Returns
+    ///
+    /// Returns the {{labeled_type}} submetric.
+    ///
+    /// # Panics
+    ///
+    /// Panics if no labeled_{{labeled_type}} by the given metric ID could be found.
+    #[allow(unused_variables)]
+    pub(crate) fn labeled_{{labeled_type}}_get(metric_id: u32, label: &str) -> Labeled{{labeled_type|Camelize}}Metric {
+        match metric_id {
+{% for metric_id, (labeled, _) in labeleds_by_id.items() %}
+            {{metric_id}} => super::{{labeled}}.get(label),
+{% endfor %}
+            _ => panic!("No labeled_{{labeled_type}} for metric id {}", metric_id),
+        }
+    }
+
+    /// Gets the submetric from the specified labeled_{{labeled_type}} metric, by enum.
+    ///
+    /// # Arguments
+    ///
+    /// * `metric_id` - The metric's ID to look up
+    /// * `label_enum` - The label enum identifying the {{labeled_type}} submetric.
+    ///
+    /// # Returns
+    ///
+    /// Returns the {{labeled_type}} submetric.
+    ///
+    /// # Panics
+    ///
+    /// Panics if no labeled_{{labeled_type}} by the given metric ID could be found.
+    #[allow(unused_variables)]
+    pub(crate) fn labeled_{{labeled_type}}_enum_get(metric_id: u32, label_enum: u16) -> Labeled{{labeled_type|Camelize}}Metric {
+        match metric_id {
+{% for metric_id, (labeled, has_enum) in labeleds_by_id.items() %}
+{% if has_enum %}
+            {{metric_id}} => super::{{labeled}}.get(labeled_enum_to_str(metric_id, label_enum)),
+{% endif %}
+{% endfor %}
+            _ => panic!("No labeled_{{labeled_type}} for metric id {}", metric_id),
+        }
+    }
+{% endfor %}
+
+    pub(crate) fn labeled_enum_to_str(metric_id: u32, label: u16) -> &'static str {
+        match metric_id {
+{% for category_name, objs in all_objs.items() %}
+{% for obj in objs.values() %}
+{% if obj.labeled and obj.labels and obj.labels|length %}
+            {{obj|metric_id}} => super::{{category_name|snake_case}}::{{obj.name|Camelize}}Label::from(label).into(),
+{% endif %}
+{% endfor %}
+{% endfor %}
+            _ => panic!("Can't turn label enum to string for metric {} which isn't a labeled metric with static labels", metric_id),
+        }
+    }
+
     pub(crate) mod submetric_maps {
         use std::sync::{
           atomic::AtomicU32,
@@ -223,6 +324,9 @@ pub(crate) mod __glean_metric_maps {
         pub(crate) const SUBMETRIC_BIT: u32 = {{submetric_bit}};
         pub(crate) static NEXT_LABELED_SUBMETRIC_ID: AtomicU32 = AtomicU32::new((1 << SUBMETRIC_BIT) + 1);
         pub(crate) static LABELED_METRICS_TO_IDS: Lazy<RwLock<HashMap<(u32, String), u32>>> = Lazy::new(||
+            RwLock::new(HashMap::new())
+        );
+        pub(crate) static LABELED_ENUMS_TO_IDS: Lazy<RwLock<HashMap<(u32, u16), u32>>> = Lazy::new(||
             RwLock::new(HashMap::new())
         );
 
