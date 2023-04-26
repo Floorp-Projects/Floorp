@@ -32,10 +32,6 @@ async function countEntriesOfChildHistogram(id, expected) {
   Assert.equal(countEntries(histogram), expected);
 }
 
-add_setup(async () => {
-  Services.telemetry.getSnapshotForHistograms("main", true);
-});
-
 add_task(async () => {
   await BrowserTestUtils.withNewTab(
     {
@@ -43,6 +39,9 @@ add_task(async () => {
       url: TEST_URL,
     },
     async function(browser) {
+      // we are clearing the histogram here, because loading the document already creates two histogram entries
+      Services.telemetry.getHistogramById(SIGNUP_DETECTION_HISTOGRAM).clear();
+
       await SpecialPowers.spawn(browser, [], async () => {
         const doc = content.document;
         const { LoginManagerChild } = ChromeUtils.importESModule(
