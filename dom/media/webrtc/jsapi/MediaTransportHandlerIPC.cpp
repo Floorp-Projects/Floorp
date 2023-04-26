@@ -21,7 +21,9 @@ static const char* mthipcLogTag = "MediaTransportHandler";
 
 MediaTransportHandlerIPC::MediaTransportHandlerIPC(
     nsISerialEventTarget* aCallbackThread)
-    : MediaTransportHandler(aCallbackThread) {
+    : MediaTransportHandler(aCallbackThread) {}
+
+void MediaTransportHandlerIPC::Initialize() {
   mInitPromise = net::SocketProcessBridgeChild::GetSocketProcessBridge()->Then(
       mCallbackThread, __func__,
       [this, self = RefPtr<MediaTransportHandlerIPC>(this)](
