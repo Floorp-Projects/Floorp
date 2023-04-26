@@ -391,7 +391,9 @@ export class MigrationWizard extends HTMLElement {
     let key = panelItem.getAttribute("key");
     let resourceTypes = panelItem.resourceTypes;
 
-    for (let child of this.#resourceTypeList.children) {
+    for (let child of this.#resourceTypeList.querySelectorAll(
+      "label[data-resource-type]"
+    )) {
       child.hidden = true;
       child.control.checked = false;
     }
