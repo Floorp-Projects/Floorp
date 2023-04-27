@@ -2983,13 +2983,15 @@ void MediaFormatReader::OnSeekFailed(TrackType aTrack,
 
   auto type = aTrack == TrackType::kAudioTrack ? MediaData::Type::AUDIO_DATA
                                                : MediaData::Type::VIDEO_DATA;
-  mSeekPromise.Reject(SeekRejectValue(type, aError), __func__);
+  mSeekPromise.RejectIfExists(SeekRejectValue(type, aError), __func__);
 }
 
 void MediaFormatReader::DoVideoSeek() {
   AUTO_PROFILER_LABEL("MediaFormatReader::DoVideoSeek", MEDIA_PLAYBACK);
   MOZ_ASSERT(mPendingSeekTime.isSome());
   LOGV("Seeking video to %" PRId64, mPendingSeekTime.ref().ToMicroseconds());
+  MOZ_DIAGNOSTIC_ASSERT(!IsAudioOnlySeeking());
+  MOZ_DIAGNOSTIC_ASSERT(!mVideo.mSeekRequest.Exists());
   auto seekTime = mPendingSeekTime.ref();
   mVideo.mTrackDemuxer->Seek(seekTime)
       ->Then(OwnerThread(), __func__, this,
@@ -3020,7 +3022,7 @@ void MediaFormatReader::OnVideoSeekCompleted(TimeUnit aTime) {
     DoAudioSeek();
   } else {
     mPendingSeekTime.reset();
-    mSeekPromise.Resolve(aTime, __func__);
+    mSeekPromise.ResolveIfExists(aTime, __func__);
   }
 }
 
@@ -3073,6 +3075,8 @@ void MediaFormatReader::DoAudioSeek() {
   AUTO_PROFILER_LABEL("MediaFormatReader::DoAudioSeek", MEDIA_PLAYBACK);
   MOZ_ASSERT(mPendingSeekTime.isSome());
   LOGV("Seeking audio to %" PRId64, mPendingSeekTime.ref().ToMicroseconds());
+  MOZ_DIAGNOSTIC_ASSERT(!IsVideoOnlySeeking());
+  MOZ_DIAGNOSTIC_ASSERT(!mAudio.mSeekRequest.Exists());
   auto seekTime = mPendingSeekTime.ref();
   mAudio.mTrackDemuxer->Seek(seekTime)
       ->Then(OwnerThread(), __func__, this,
@@ -3089,7 +3093,7 @@ void MediaFormatReader::OnAudioSeekCompleted(TimeUnit aTime) {
   mAudio.mSeekRequest.Complete();
   mAudio.mFirstFrameTime = Some(aTime);
   mPendingSeekTime.reset();
-  mSeekPromise.Resolve(aTime, __func__);
+  mSeekPromise.ResolveIfExists(aTime, __func__);
 }
 
 void MediaFormatReader::OnAudioSeekFailed(const MediaResult& aError) {
