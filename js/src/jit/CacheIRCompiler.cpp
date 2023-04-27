@@ -2378,7 +2378,7 @@ bool CacheIRCompiler::emitGuardStringToNumber(StringOperandId strId,
                                  liveVolatileFloatRegs());
     masm.PushRegsInMask(volatileRegs);
 
-    using Fn = bool (*)(JSContext * cx, JSString * str, double* result);
+    using Fn = bool (*)(JSContext* cx, JSString* str, double* result);
     masm.setupUnalignedABICall(scratch);
     masm.loadJSContext(scratch);
     masm.passABIArg(scratch);
@@ -2523,7 +2523,7 @@ bool CacheIRCompiler::emitGuardStringToIndex(StringOperandId strId,
                          liveVolatileFloatRegs());
     masm.PushRegsInMask(save);
 
-    using Fn = int32_t (*)(JSString * str);
+    using Fn = int32_t (*)(JSString* str);
     masm.setupUnalignedABICall(output);
     masm.passABIArg(str);
     masm.callWithABI<Fn, GetIndexFromString>();
@@ -4407,7 +4407,7 @@ bool CacheIRCompiler::emitIsCallableResult(ValOperandId inputId) {
                                  liveVolatileFloatRegs());
     masm.PushRegsInMask(volatileRegs);
 
-    using Fn = bool (*)(JSObject * obj);
+    using Fn = bool (*)(JSObject* obj);
     masm.setupUnalignedABICall(scratch2);
     masm.passABIArg(scratch1);
     masm.callWithABI<Fn, ObjectIsCallable>();
@@ -4441,7 +4441,7 @@ bool CacheIRCompiler::emitIsConstructorResult(ObjOperandId objId) {
                                  liveVolatileFloatRegs());
     masm.PushRegsInMask(volatileRegs);
 
-    using Fn = bool (*)(JSObject * obj);
+    using Fn = bool (*)(JSObject* obj);
     masm.setupUnalignedABICall(scratch);
     masm.passABIArg(obj);
     masm.callWithABI<Fn, ObjectIsConstructor>();
@@ -4603,10 +4603,10 @@ bool CacheIRCompiler::emitGetNextMapSetEntryForIteratorResult(
   masm.passABIArg(iter);
   masm.passABIArg(resultArr);
   if (isMap) {
-    using Fn = bool (*)(MapIteratorObject * iter, ArrayObject * resultPairObj);
+    using Fn = bool (*)(MapIteratorObject* iter, ArrayObject* resultPairObj);
     masm.callWithABI<Fn, MapIteratorObject::next>();
   } else {
-    using Fn = bool (*)(SetIteratorObject * iter, ArrayObject * resultObj);
+    using Fn = bool (*)(SetIteratorObject* iter, ArrayObject* resultObj);
     masm.callWithABI<Fn, SetIteratorObject::next>();
   }
   masm.storeCallBoolResult(scratch);
@@ -5544,7 +5544,7 @@ bool CacheIRCompiler::emitStoreDenseElementHole(ObjOperandId objId,
     save.takeUnchecked(scratch);
     masm.PushRegsInMask(save);
 
-    using Fn = bool (*)(JSContext * cx, NativeObject * obj);
+    using Fn = bool (*)(JSContext* cx, NativeObject* obj);
     masm.setupUnalignedABICall(scratch);
     masm.loadJSContext(scratch);
     masm.passABIArg(scratch);
@@ -5632,7 +5632,7 @@ bool CacheIRCompiler::emitArrayPush(ObjOperandId objId, ValOperandId rhsId) {
   save.takeUnchecked(scratch);
   masm.PushRegsInMask(save);
 
-  using Fn = bool (*)(JSContext * cx, NativeObject * obj);
+  using Fn = bool (*)(JSContext* cx, NativeObject* obj);
   masm.setupUnalignedABICall(scratch);
   masm.loadJSContext(scratch);
   masm.passABIArg(scratch);
@@ -5783,7 +5783,7 @@ static void EmitAllocateBigInt(MacroAssembler& masm, Register result,
     bool requestMinorGC = initialHeap == gc::DefaultHeap;
 
     masm.PushRegsInMask(liveSet);
-    using Fn = void* (*)(JSContext * cx, bool requestMinorGC);
+    using Fn = void* (*)(JSContext* cx, bool requestMinorGC);
     masm.setupUnalignedABICall(temp);
     masm.loadJSContext(temp);
     masm.passABIArg(temp);
@@ -6396,7 +6396,7 @@ bool CacheIRCompiler::emitLoadTypeOfObjectResult(ObjOperandId objId) {
                          liveVolatileFloatRegs());
     masm.PushRegsInMask(save);
 
-    using Fn = JSString* (*)(JSObject * obj, JSRuntime * rt);
+    using Fn = JSString* (*)(JSObject* obj, JSRuntime* rt);
     masm.setupUnalignedABICall(scratch);
     masm.passABIArg(obj);
     masm.movePtr(ImmPtr(cx_->runtime()), scratch);
@@ -6495,7 +6495,7 @@ bool CacheIRCompiler::emitLoadObjectTruthyResult(ObjOperandId objId) {
     volatileRegs.takeUnchecked(output);
     masm.PushRegsInMask(volatileRegs);
 
-    using Fn = bool (*)(JSObject * obj);
+    using Fn = bool (*)(JSObject* obj);
     masm.setupUnalignedABICall(scratch);
     masm.passABIArg(obj);
     masm.callWithABI<Fn, js::EmulatesUndefined>();
@@ -6586,7 +6586,7 @@ bool CacheIRCompiler::emitLoadValueTruthyResult(ValOperandId inputId) {
         volatileRegs.takeUnchecked(output);
         masm.PushRegsInMask(volatileRegs);
 
-        using Fn = bool (*)(JSObject * obj);
+        using Fn = bool (*)(JSObject* obj);
         masm.setupUnalignedABICall(scratch2);
         masm.passABIArg(obj);
         masm.callWithABI<Fn, js::EmulatesUndefined>();
@@ -7092,10 +7092,10 @@ void CacheIRCompiler::emitPostBarrierShared(Register obj,
   masm.passABIArg(obj);
   if (maybeIndex != InvalidReg) {
     masm.passABIArg(maybeIndex);
-    using Fn = void (*)(JSRuntime * rt, JSObject * obj, int32_t index);
+    using Fn = void (*)(JSRuntime* rt, JSObject* obj, int32_t index);
     masm.callWithABI<Fn, PostWriteElementBarrier<IndexInBounds::Yes>>();
   } else {
-    using Fn = void (*)(JSRuntime * rt, js::gc::Cell * cell);
+    using Fn = void (*)(JSRuntime* rt, js::gc::Cell* cell);
     masm.callWithABI<Fn, PostWriteBarrier>();
   }
   masm.PopRegsInMask(save);
@@ -7123,7 +7123,7 @@ bool CacheIRCompiler::emitWrapResult() {
   LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
   masm.PushRegsInMask(save);
 
-  using Fn = JSObject* (*)(JSContext * cx, JSObject * obj);
+  using Fn = JSObject* (*)(JSContext* cx, JSObject* obj);
   masm.setupUnalignedABICall(scratch);
   masm.loadJSContext(scratch);
   masm.passABIArg(scratch);
@@ -7192,8 +7192,8 @@ bool CacheIRCompiler::emitMegamorphicLoadSlotByValueResult(ObjOperandId objId,
   volatileRegs.takeUnchecked(idVal);
   masm.PushRegsInMask(volatileRegs);
 
-  using Fn = bool (*)(JSContext * cx, JSObject * obj,
-                      MegamorphicCache::Entry * cacheEntry, Value * vp);
+  using Fn = bool (*)(JSContext* cx, JSObject* obj,
+                      MegamorphicCache::Entry* cacheEntry, Value* vp);
   masm.setupUnalignedABICall(scratch1);
   masm.loadJSContext(scratch1);
   masm.passABIArg(scratch1);
@@ -7273,8 +7273,8 @@ bool CacheIRCompiler::emitMegamorphicHasPropResult(ObjOperandId objId,
   volatileRegs.takeUnchecked(idVal);
   masm.PushRegsInMask(volatileRegs);
 
-  using Fn = bool (*)(JSContext * cx, JSObject * obj,
-                      MegamorphicCache::Entry * cacheEntry, Value * vp);
+  using Fn = bool (*)(JSContext* cx, JSObject* obj,
+                      MegamorphicCache::Entry* cacheEntry, Value* vp);
   masm.setupUnalignedABICall(scratch1);
   masm.loadJSContext(scratch1);
   masm.passABIArg(scratch1);
@@ -7340,7 +7340,7 @@ bool CacheIRCompiler::emitCallObjectHasSparseElementResult(
   masm.PushRegsInMask(volatileRegs);
 
   using Fn =
-      bool (*)(JSContext * cx, NativeObject * obj, int32_t index, Value * vp);
+      bool (*)(JSContext* cx, NativeObject* obj, int32_t index, Value* vp);
   masm.setupUnalignedABICall(scratch1);
   masm.loadJSContext(scratch1);
   masm.passABIArg(scratch1);
@@ -7552,8 +7552,8 @@ bool CacheIRCompiler::emitMegamorphicLoadSlotResult(ObjOperandId objId,
   volatileRegs.takeUnchecked(idReg);
   masm.PushRegsInMask(volatileRegs);
 
-  using Fn = bool (*)(JSContext * cx, JSObject * obj, PropertyKey id,
-                      MegamorphicCache::Entry * cacheEntry, Value * vp);
+  using Fn = bool (*)(JSContext* cx, JSObject* obj, PropertyKey id,
+                      MegamorphicCache::Entry* cacheEntry, Value* vp);
   masm.setupUnalignedABICall(scratch1);
   masm.loadJSContext(scratch1);
   masm.passABIArg(scratch1);
@@ -7585,48 +7585,27 @@ bool CacheIRCompiler::emitMegamorphicLoadSlotResult(ObjOperandId objId,
 
 bool CacheIRCompiler::emitMegamorphicStoreSlot(ObjOperandId objId,
                                                uint32_t idOffset,
-                                               ValOperandId rhsId) {
+                                               ValOperandId rhsId,
+                                               bool strict) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
   Register obj = allocator.useRegister(masm, objId);
+  ConstantOrRegister val = allocator.useConstantOrRegister(masm, rhsId);
   StubFieldOffset id(idOffset, StubField::Type::Id);
-  ValueOperand val = allocator.useValueRegister(masm, rhsId);
+  AutoScratchRegister scratch(allocator, masm);
 
-  AutoScratchRegister scratch1(allocator, masm);
-  AutoScratchRegister scratch2(allocator, masm);
+  callvm.prepare();
 
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
+  masm.Push(Imm32(strict));
   masm.Push(val);
-  masm.moveStackPtrTo(val.scratchReg());
+  emitLoadStubField(id, scratch);
+  masm.Push(scratch);
+  masm.Push(obj);
 
-  LiveRegisterSet volatileRegs(GeneralRegisterSet::Volatile(),
-                               liveVolatileFloatRegs());
-  volatileRegs.takeUnchecked(scratch1);
-  volatileRegs.takeUnchecked(scratch2);
-  volatileRegs.takeUnchecked(val);
-  masm.PushRegsInMask(volatileRegs);
-
-  using Fn =
-      bool (*)(JSContext * cx, JSObject * obj, PropertyKey id, Value * val);
-  masm.setupUnalignedABICall(scratch1);
-  masm.loadJSContext(scratch1);
-  masm.passABIArg(scratch1);
-  masm.passABIArg(obj);
-  emitLoadStubField(id, scratch2);
-  masm.passABIArg(scratch2);
-  masm.passABIArg(val.scratchReg());
-  masm.callWithABI<Fn, SetNativeDataPropertyPure>();
-
-  masm.storeCallPointerResult(scratch1);
-  masm.PopRegsInMask(volatileRegs);
-
-  masm.loadValue(Address(masm.getStackPointer(), 0), val);
-  masm.adjustStack(sizeof(Value));
-
-  masm.branchIfFalseBool(scratch1, failure->label());
+  using Fn = bool (*)(JSContext*, HandleObject, HandleId, HandleValue, bool);
+  callvm.callNoResult<Fn, SetPropertyMegamorphic<false>>();
   return true;
 }
 
@@ -7656,8 +7635,8 @@ bool CacheIRCompiler::emitGuardHasGetterSetter(ObjOperandId objId,
   volatileRegs.takeUnchecked(scratch2);
   masm.PushRegsInMask(volatileRegs);
 
-  using Fn = bool (*)(JSContext * cx, JSObject * obj, jsid id,
-                      GetterSetter * getterSetter);
+  using Fn = bool (*)(JSContext* cx, JSObject* obj, jsid id,
+                      GetterSetter* getterSetter);
   masm.setupUnalignedABICall(scratch1);
   masm.loadJSContext(scratch1);
   masm.passABIArg(scratch1);
@@ -7833,7 +7812,7 @@ bool CacheIRCompiler::emitCallInt32ToString(Int32OperandId inputId,
   volatileRegs.takeUnchecked(result);
   masm.PushRegsInMask(volatileRegs);
 
-  using Fn = JSLinearString* (*)(JSContext * cx, int32_t i);
+  using Fn = JSLinearString* (*)(JSContext* cx, int32_t i);
   masm.setupUnalignedABICall(result);
   masm.loadJSContext(result);
   masm.passABIArg(result);
@@ -7866,7 +7845,7 @@ bool CacheIRCompiler::emitCallNumberToString(NumberOperandId inputId,
   volatileRegs.takeUnchecked(result);
   masm.PushRegsInMask(volatileRegs);
 
-  using Fn = JSString* (*)(JSContext * cx, double d);
+  using Fn = JSString* (*)(JSContext* cx, double d);
   masm.setupUnalignedABICall(result);
   masm.loadJSContext(result);
   masm.passABIArg(result);
@@ -8121,7 +8100,7 @@ bool CacheIRCompiler::emitCallGetSparseElementResult(ObjOperandId objId,
   masm.Push(id);
   masm.Push(obj);
 
-  using Fn = bool (*)(JSContext * cx, Handle<NativeObject*> obj, int32_t int_id,
+  using Fn = bool (*)(JSContext* cx, Handle<NativeObject*> obj, int32_t int_id,
                       MutableHandleValue result);
   callvm.call<Fn, GetSparseElementHelper>();
   return true;
@@ -8144,9 +8123,9 @@ bool CacheIRCompiler::emitCallRegExpMatcherResult(ObjOperandId regexpId,
   masm.Push(input);
   masm.Push(regexp);
 
-  using Fn = bool (*)(JSContext*, HandleObject regexp, HandleString input,
-                      int32_t lastIndex, MatchPairs * pairs,
-                      MutableHandleValue output);
+  using Fn =
+      bool (*)(JSContext*, HandleObject regexp, HandleString input,
+               int32_t lastIndex, MatchPairs* pairs, MutableHandleValue output);
   callvm.call<Fn, RegExpMatcherRaw>();
   return true;
 }
@@ -8169,7 +8148,7 @@ bool CacheIRCompiler::emitCallRegExpSearcherResult(ObjOperandId regexpId,
   masm.Push(regexp);
 
   using Fn = bool (*)(JSContext*, HandleObject regexp, HandleString input,
-                      int32_t lastIndex, MatchPairs * pairs, int32_t * result);
+                      int32_t lastIndex, MatchPairs* pairs, int32_t* result);
   callvm.call<Fn, RegExpSearcherRaw>();
   return true;
 }
@@ -8191,7 +8170,7 @@ bool CacheIRCompiler::emitCallRegExpTesterResult(ObjOperandId regexpId,
   masm.Push(regexp);
 
   using Fn = bool (*)(JSContext*, HandleObject regexp, HandleString input,
-                      int32_t lastIndex, int32_t * result);
+                      int32_t lastIndex, int32_t* result);
   callvm.call<Fn, RegExpTesterRaw>();
   return true;
 }
@@ -8236,7 +8215,7 @@ bool CacheIRCompiler::emitCallSubstringKernelResult(StringOperandId strId,
   masm.Push(begin);
   masm.Push(str);
 
-  using Fn = JSString* (*)(JSContext * cx, HandleString str, int32_t begin,
+  using Fn = JSString* (*)(JSContext* cx, HandleString str, int32_t begin,
                            int32_t len);
   callvm.call<Fn, SubstringKernel>();
   return true;
@@ -8304,7 +8283,7 @@ bool CacheIRCompiler::emitRegExpPrototypeOptimizableResult(
     volatileRegs.takeUnchecked(scratch);
     masm.PushRegsInMask(volatileRegs);
 
-    using Fn = bool (*)(JSContext * cx, JSObject * proto);
+    using Fn = bool (*)(JSContext* cx, JSObject* proto);
     masm.setupUnalignedABICall(scratch);
     masm.loadJSContext(scratch);
     masm.passABIArg(scratch);
@@ -8342,7 +8321,7 @@ bool CacheIRCompiler::emitRegExpInstanceOptimizableResult(
     volatileRegs.takeUnchecked(scratch);
     masm.PushRegsInMask(volatileRegs);
 
-    using Fn = bool (*)(JSContext * cx, JSObject * obj, JSObject * proto);
+    using Fn = bool (*)(JSContext* cx, JSObject* obj, JSObject* proto);
     masm.setupUnalignedABICall(scratch);
     masm.loadJSContext(scratch);
     masm.passABIArg(scratch);
@@ -9403,7 +9382,7 @@ bool CacheIRCompiler::emitFuzzilliHashResult(ValOperandId valId) {
       masm.PushRegsInMask(volatileRegs);
       // TODO: remove floatReg, scratch, scratchJS?
 
-      using Fn = uint32_t (*)(BigInt * bigInt);
+      using Fn = uint32_t (*)(BigInt* bigInt);
       masm.setupUnalignedABICall(scratchJSContext);
       masm.loadJSContext(scratchJSContext);
       masm.passABIArg(scratch);
@@ -9430,7 +9409,7 @@ bool CacheIRCompiler::emitFuzzilliHashResult(ValOperandId valId) {
       callvm.prepare();
       masm.Push(obj);
 
-      using Fn = void (*)(JSContext * cx, JSObject * o);
+      using Fn = void (*)(JSContext* cx, JSObject* o);
       callvm.callNoResult<Fn, js::FuzzilliHashObject>();
       allocator.releaseRegister(obj);
 
