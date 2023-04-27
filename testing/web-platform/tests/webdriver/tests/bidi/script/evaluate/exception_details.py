@@ -180,3 +180,33 @@ async def test_exception_details(bidi_session, top_context, await_promise, expre
         },
         exception.value.result,
     )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("chained", [True, False])
+async def test_rejected_promise(bidi_session, top_context, chained):
+    if chained:
+        expression = "Promise.reject('error').then(() => { })"
+    else:
+        expression = "Promise.reject('error')"
+
+    with pytest.raises(ScriptEvaluateResultException) as exception:
+        await bidi_session.script.evaluate(
+            expression=expression,
+            await_promise=True,
+            target=ContextTarget(top_context["context"]),
+        )
+
+    recursive_compare(
+        {
+            "realm": any_string,
+            "exceptionDetails": {
+                "columnNumber": any_int,
+                "exception": {"type": "string", "value": "error"},
+                "lineNumber": any_int,
+                "stackTrace": any_stack_trace,
+                "text": any_string,
+            },
+        },
+        exception.value.result,
+    )
