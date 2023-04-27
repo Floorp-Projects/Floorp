@@ -319,7 +319,7 @@ class BasePopup {
     browser.setAttribute("tooltip", "aHTMLTooltip");
     browser.setAttribute("contextmenu", "contentAreaContextMenu");
     browser.setAttribute("autocompletepopup", "PopupAutoComplete");
-    browser.setAttribute("selectmenuconstrained", "false");
+    browser.setAttribute("constrainpopups", "false");
 
     // Ensure the browser will initially load in the same group as other
     // browsers from the same extension.

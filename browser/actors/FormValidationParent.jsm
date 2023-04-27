@@ -100,7 +100,7 @@ class FormValidationParent extends JSWindowActorParent {
           return;
         }
 
-        this._showPopup(data);
+        this._showPopup(browser, data);
         break;
       case "FormValidation:HidePopup":
         this._hidePopup();
@@ -115,8 +115,8 @@ class FormValidationParent extends JSWindowActorParent {
       case "scroll":
         this._hidePopup();
         break;
-      case "popuphiding":
-        this._onPopupHiding(aEvent);
+      case "popuphidden":
+        this._onPopupHidden(aEvent);
         break;
     }
   }
@@ -125,8 +125,8 @@ class FormValidationParent extends JSWindowActorParent {
    * Internal
    */
 
-  _onPopupHiding(aEvent) {
-    aEvent.originalTarget.removeEventListener("popuphiding", this, true);
+  _onPopupHidden(aEvent) {
+    aEvent.originalTarget.removeEventListener("popuphidden", this, true);
     Services.obs.removeObserver(this._obs, "popup-shown");
     let tabBrowser = aEvent.originalTarget.ownerGlobal.gBrowser;
     tabBrowser.selectedBrowser.removeEventListener("scroll", this, true);
@@ -141,47 +141,46 @@ class FormValidationParent extends JSWindowActorParent {
    * Shows the form validation popup at a specified position or updates the
    * messaging and position if the popup is already displayed.
    *
+   * @aBrowser - Browser element that requests the popup.
    * @aPanelData - Object that contains popup information
    *  aPanelData stucture detail:
    *   screenRect - the screen rect of the target element.
    *   position - popup positional string constants.
    *   message - the form element validation message text.
    */
-  _showPopup(aPanelData) {
+  _showPopup(aBrowser, aPanelData) {
     let previouslyShown = !!this._panel;
     this._panel = this._getAndMaybeCreatePanel();
     this._panel.firstChild.textContent = aPanelData.message;
 
-    let browser = this.browsingContext.top.embedderElement;
-    let window = browser.ownerGlobal;
-
-    let tabBrowser = window.gBrowser;
-
     // Display the panel if it isn't already visible.
-    if (!previouslyShown) {
-      // Cleanup after the popup is hidden
-      this._panel.addEventListener("popuphiding", this, true);
-      // Hide ourselves if other popups shown
-      this._obs = new PopupShownObserver(this.browsingContext);
-      Services.obs.addObserver(this._obs, "popup-shown", true);
-
-      // Hide if the user scrolls the page
-      tabBrowser.selectedBrowser.addEventListener("scroll", this, true);
-      tabBrowser.selectedBrowser.addEventListener("FullZoomChange", this);
-      tabBrowser.selectedBrowser.addEventListener("TextZoomChange", this);
-
-      // Open the popup
-      let rect = aPanelData.screenRect;
-      this._panel.openPopupAtScreenRect(
-        aPanelData.position,
-        rect.left,
-        rect.top,
-        rect.width,
-        rect.height,
-        false,
-        false
-      );
+    if (previouslyShown) {
+      return;
     }
+    // Cleanup after the popup is hidden
+    this._panel.addEventListener("popuphidden", this, true);
+    // Hide ourselves if other popups shown
+    this._obs = new PopupShownObserver(this.browsingContext);
+    Services.obs.addObserver(this._obs, "popup-shown", true);
+
+    // Hide if the user scrolls the page
+    aBrowser.addEventListener("scroll", this, true);
+    aBrowser.addEventListener("FullZoomChange", this);
+    aBrowser.addEventListener("TextZoomChange", this);
+
+    aBrowser.constrainPopup(this._panel);
+
+    // Open the popup
+    let rect = aPanelData.screenRect;
+    this._panel.openPopupAtScreenRect(
+      aPanelData.position,
+      rect.left,
+      rect.top,
+      rect.width,
+      rect.height,
+      false,
+      false
+    );
   }
 
   /*
