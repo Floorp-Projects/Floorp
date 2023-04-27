@@ -116,7 +116,7 @@
 
     <!-- Address Autofill -->
     <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
-    <string name="mozac_feature_prompts_select_address" moz:removedIn="104" tools:ignore="UnusedResources">Mamili ng mga address</string>
-    <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
     <string name="mozac_feature_prompts_select_address_2">Mamili ng address</string>
-    </resources>
+    <!-- Text for the manage addresses button. -->
+    <string name="mozac_feature_prompts_manage_address">Pamahalaan ang mga address</string>
+</resources>

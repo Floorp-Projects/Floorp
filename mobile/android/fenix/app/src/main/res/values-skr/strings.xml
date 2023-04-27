@@ -291,6 +291,10 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">ہݨ کائناں</string>
 
+    <!-- Juno first user onboarding flow experiment -->
+    <!-- Title for set firefox as default browser screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_default_browser_title">%s کوں آپݨاں ون٘ڄݨ آلا براؤزر بݨاؤ</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text">رازداری نوٹس</string>
@@ -1253,6 +1257,10 @@
     <!-- Text B shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_B_text">نیڑے دی کئی شئے لبھو۔ یا کئی تفریحی شئے دریافت کرو۔</string>
 
+    <!-- Survey -->
+    <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_survey_message_text">سوہݨا، ہک مختصر سروے وچ حصہ گھن تے فائرفوکس بہتر بݨاوݨ کیتے مدد کرو۔</string>
     <!-- Preference for taking the short survey. -->
     <string name="preferences_take_survey">سروے وچ حصہ گھنو</string>
     <!-- Preference for not taking the short survey. -->
@@ -1489,6 +1497,8 @@
     <string name="preference_enhanced_tracking_protection_standard_default_1">معیاری (پہلے کنوں مقرر)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">کارکردگی تے رازداری کیتے متوازن تھیا، ورقے معمول دے مطابق لوڈ تھیندن۔</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_5">ورقے ٹھیک لوڈ تھیسن، پر کجھ ٹریکرز بلاک ہوسن۔</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">معیاری ٹریکنگ تحفظ نال کیا بلاک ہے</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
@@ -1579,6 +1589,10 @@
     <string name="preference_etp_smartblock_description"> ہیٹھاں کجھ نشان زدہ ٹریکرز کوں ایں ورقے تے  جزوی طور تے اݨ بلاک کر ݙتا ڳئے کیوں جو تساں انہاں نال تعامل کیتے*۔</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">ٻیا سِکھو</string>
+
+    <!-- Content description (not visible, for screen readers etc.):
+    Enhanced tracking protection exception preference icon for ETP settings. -->
+    <string name="preference_etp_exceptions_icon_description">ودھائی ہوئی ٹریکنگ حفاظت استشنائی ترجیح آئیکان</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">سہارا</string>

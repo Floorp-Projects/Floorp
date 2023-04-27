@@ -12,8 +12,16 @@
     <string name="content_description_private_browsing_button">Paganahin ang private browsing</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">I-disable ang private browsing</string>
-    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
     <string name="search_hint">Maghanap o ilagay ang address</string>
+    <!-- Placeholder text shown in the search bar before a user enters text for a general engine -->
+    <string name="search_hint_general_engine">Hanapin sa web</string>
+    <!-- Placeholder text shown in search bar when using history search -->
+    <string name="history_search_hint">Kasaysayan ng paghahanap</string>
+    <!-- Placeholder text shown in search bar when using bookmarks search -->
+    <string name="bookmark_search_hint">Hanapin sa mga bookmark</string>
+    <!-- Placeholder text shown in search bar when using tabs search -->
+    <string name="tab_search_hint">Hanapin sa mga tab</string>
     <!-- Placeholder text shown in the search bar when using application search engines -->
     <string name="application_search_hint">Ipasok ang mga search terms</string>
     <!-- No Open Tabs Message Description -->
@@ -53,11 +61,6 @@
        Mga karaniwang pamahiin tungkol sa pribadong pag-browse
     </string>
 
-    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Magdagdag ng shortcut para makapagbukas ng mga pribadong tab mula sa iyong Home screen.</string>
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Magdagdag ng shortcut</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Salamat na lang</string>
 
@@ -65,9 +68,6 @@
     <string name="open_in_app_cfr_positive_button_text">Magpunta sa Settings</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Alisin</string>
-
-    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
-    <string name="cfr_dismiss_button_default_content_description" moz:removedIn="110" tools:ignore="UnusedResources">Alisin</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Kailangan ng camera access. Pumunta sa Android settings, i-tap ang permiso, at i-tap ang payagan.</string>
@@ -108,6 +108,8 @@
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Ipakita lahat</string>
 
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">Alisin</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">Tangalin</string>
@@ -231,6 +233,16 @@
     <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
     <string name="onboarding_home_content_description_close_button">Isara</string>
 
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="onboarding_home_enable_notifications_positive_button">Magpatuloy</string>
+    <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
+    <string name="onboarding_home_enable_notifications_negative_button">Hindi sa ngayon</string>
+
+    <!-- Text for the button to sign in to sync on the device -->
+    <string name="juno_onboarding_sign_in_positive_button">Mag sign-in</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_sign_in_negative_button">Hindi sa ngayon</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Buksan ng bagong %1$s tab</string>
@@ -281,10 +293,17 @@
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">HTTPS-Only Mode</string>
 
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Nakabukas</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Kanselahin</string>
+    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Payagan</string>
+    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
+    <string name="reduce_cookie_banner_dialog_change_setting_button">Payagan</string>
+
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Nakasara</string>
+    <!-- Summary of https only preference if https only is set to on in all tabs -->
+    <string name="preferences_https_only_on_all">Naka-on sa lahat ng tab</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">Alamin</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
@@ -545,12 +564,9 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Isara</string>
 
-    <!-- Text to show users they have one site in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%d site</string>
-    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_sites" moz:RemovedIn="111" tools:ignore="UnusedResources">%d sites</string>
+    <!-- Text to show users they have multiple pages in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_sites_1">%d pahina</string>
 
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Mga isinarang tab kamakailan</string>
@@ -873,10 +889,10 @@
     <string name="phone_feature_blocked_by_android">Hinarang ng Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Mga exception</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Nakabukas</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Nakasara</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to standard -->
+    <string name="tracking_protection_standard">Pamantayan</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Payagan ang audio at video</string>
     <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
@@ -1002,13 +1018,6 @@
 
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Marketing</string>
-
-    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_title">Mabilis at pribado ang %1$s</string>
-    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_text">Gawing mong default browser ang %1$s</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
@@ -1207,21 +1216,21 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Enhanced Tracking Protection</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Mag-browse nang hindi sinusundan</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Mag-browse nang hindi sinusundan</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Itago mo ang data na para sa iyo lamang. Pinoprotektahan ka ng %s mula sa mga pinakakaraniwang tracker na nagmamanman sa mga gawain mo online.</string>
+    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Itago mo ang data na para sa iyo lamang. Pinoprotektahan ka ng %s mula sa mga pinakakaraniwang tracker na nagmamanman sa mga gawain mo online.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Alamin</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Karaniwan (default)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">Balanced for privacy and performance. Pages load normally.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Balanced for privacy and performance. Pages load normally.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Ano ang mga hinaharang sa karaniwang tracking protection</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Mahigpit</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">Hinaharang ang mas maraming tracker upang mabilis ang pag-load ng pahina, ngunit maaaring masira ang ilang on-page functionality.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Hinaharang ang mas maraming tracker upang mabilis ang pag-load ng pahina, ngunit maaaring masira ang ilang on-page functionality.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Ano ang mga hinaharang sa mahigpit na tracking protection</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1512,8 +1521,24 @@
 
     <!-- Title of the "Edit address" screen -->
     <string name="addresses_edit_address">Baguhin ang tirahan</string>
+    <!-- The header for the city of an address -->
+    <string name="addresses_city">Lungsod</string>
+    <!-- The header for the subregion of an address when "state" should be used -->
+    <string name="addresses_state">Estado</string>
+    <!-- The header for the subregion of an address when "province" should be used -->
+    <string name="addresses_province">Lalawigan</string>
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">Zip</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">Bansa o rehiyon</string>
+    <!-- The header for the phone number of an address -->
+    <string name="addresses_phone">Telepono</string>
+    <!-- The header for the email of an address -->
+    <string name="addresses_email">Email</string>
     <!-- The text for the "Save" button for saving an address -->
     <string name="addresses_save_button">I-save</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">Kanselahin</string>
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">Tanggalin ang address</string>
 
@@ -1635,6 +1660,12 @@
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Kanselahin</string>
 
+    <!-- Text for the menu button to open the homepage settings. -->
+    <string name="top_sites_menu_settings">Mga setting</string>
+
+    <!-- Title for search suggestions when Google is the default search suggestion engine. -->
+    <string name="google_search_engine_suggestion_header">Paghahanap sa Google</string>
+
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Set links from websites, emails, and messages to open automatically in Firefox.</string>
 
@@ -1650,4 +1681,11 @@
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Isara</string>
 
+    <!-- Clickable text for opening an external link for more information about Pocket. -->
+    <string name="pocket_stories_feature_learn_more">Matuto ng higit pa</string>
+
+    <!-- Action label for elements that can be expanded if interacting with them. Talkback will append this to say "Double tap to expand". -->
+    <string name="a11y_action_label_expand">palawigin</string>
+    <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
+    <string name="a11y_action_label_read_article">basahin ang artikulo</string>
     </resources>
