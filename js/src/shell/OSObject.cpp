@@ -418,15 +418,15 @@ static bool ListDir(JSContext* cx, unsigned argc, Value* vp,
       return false;
     }
 
-    WIN32_FIND_DATA FindFileData;
-    HANDLE hFind = FindFirstFile(pattern.begin(), &FindFileData);
+    WIN32_FIND_DATAA FindFileData;
+    HANDLE hFind = FindFirstFileA(pattern.begin(), &FindFileData);
     auto close = mozilla::MakeScopeExit([&] {
       if (!FindClose(hFind)) {
         MOZ_CRASH("Could not close Find");
       }
     });
     for (bool found = (hFind != INVALID_HANDLE_VALUE); found;
-         found = FindNextFile(hFind, &FindFileData)) {
+         found = FindNextFileA(hFind, &FindFileData)) {
       if (!append(FindFileData.cFileName)) {
         return false;
       }
