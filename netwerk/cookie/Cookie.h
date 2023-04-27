@@ -44,6 +44,10 @@ class Cookie final : public nsICookie {
          const OriginAttributes& aOriginAttributes)
       : mData(aCookieData), mOriginAttributes(aOriginAttributes) {}
 
+  static already_AddRefed<Cookie> FromCookieStruct(
+      const CookieStruct& aCookieData,
+      const OriginAttributes& aOriginAttributes);
+
  public:
   // Returns false if rawSameSite has an invalid value, compared to sameSite.
   static bool ValidateSameSite(const CookieStruct& aCookieData);
@@ -54,6 +58,13 @@ class Cookie final : public nsICookie {
 
   // public helper to create an Cookie object.
   static already_AddRefed<Cookie> Create(
+      const CookieStruct& aCookieData,
+      const OriginAttributes& aOriginAttributes);
+
+  // Same as Cookie::Create but fixes the lastAccessed and creationDates
+  // if they are set in the future.
+  // Should only get called from CookiePersistentStorage::InitDBConn
+  static already_AddRefed<Cookie> CreateValidated(
       const CookieStruct& aCookieData,
       const OriginAttributes& aOriginAttributes);
 

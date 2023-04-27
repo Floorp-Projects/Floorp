@@ -31,3 +31,64 @@ networking:
       - aborted_socket_fail
       - aborted_https_not_enabled
     telemetry_mirror: NETWORKING_SPECULATIVE_CONNECT_OUTCOME
+
+  cookie_timestamp_fixed_count:
+    type: labeled_counter
+    description: >
+      Counts the number of times a cookie's invalid timestamp was fixed when
+      reading it from the DB.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1828126
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1828126#c5
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - vgosu@mozilla.com
+    labels:
+      - creationTime
+      - lastAccessed
+    expires: never
+
+  cookie_creation_fixup_diff:
+    type: custom_distribution
+    unit: second
+    description: >
+      If we fix up a cookie creation timestamp that is in the future this
+      metric records the number of seconds that timestamp was off from NOW.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1828126
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1828126#c5
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - vgosu@mozilla.com
+    expires: never
+    range_min: 0
+    range_max: 315360000000
+    bucket_count: 100
+    histogram_type: exponential
+
+  cookie_access_fixup_diff:
+    type: custom_distribution
+    unit: second
+    description: >
+      If we fix up a cookie lastAccessed timestamp that is in the future this
+      metric records the number of seconds that timestamp was off from NOW.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1828126
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1828126#c5
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - vgosu@mozilla.com
+    expires: never
+    range_min: 0
+    range_max: 315360000000
+    bucket_count: 100
+    histogram_type: exponential
