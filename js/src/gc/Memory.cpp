@@ -919,7 +919,8 @@ void* AllocateMappedContent(int fd, size_t offset, size_t length,
   HANDLE hFile = reinterpret_cast<HANDLE>(intptr_t(fd));
 
   // This call will fail if the file does not exist.
-  HANDLE hMap = CreateFileMapping(hFile, nullptr, PAGE_READONLY, 0, 0, nullptr);
+  HANDLE hMap =
+      CreateFileMappingW(hFile, nullptr, PAGE_READONLY, 0, 0, nullptr);
   if (!hMap) {
     return nullptr;
   }

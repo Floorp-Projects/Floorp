@@ -282,7 +282,7 @@ static bool RegisterExecutableMemory(void* p, size_t bytes, size_t pageSize) {
   // RtlAddGrowableFunctionTable is only available in Windows 8.1 and higher.
   // This can be simplified if our compile target changes.
   HMODULE ntdll_module =
-      LoadLibraryEx("ntdll.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
+      LoadLibraryExW(L"ntdll.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
 
   static decltype(&::RtlAddGrowableFunctionTable) addGrowableFunctionTable =
       reinterpret_cast<decltype(&::RtlAddGrowableFunctionTable)>(
