@@ -5196,15 +5196,17 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                               Register outIndex,
                                               Register outKind);
 
+  template <typename IdType>
 #ifdef JS_CODEGEN_X86
   // See MegamorphicSetElement in LIROps.yaml
-  void emitMegamorphicCachedSetSlot(
-      ValueOperand id, Register obj, Register scratch1, ValueOperand value,
-      Label* cacheHit,
-      void (*emitPreBarrier)(MacroAssembler&, const Address&, MIRType));
+  void emitMegamorphicCachedSetSlot(IdType id, Register obj, Register scratch1,
+                                    ValueOperand value, Label* cacheHit,
+                                    void (*emitPreBarrier)(MacroAssembler&,
+                                                           const Address&,
+                                                           MIRType));
 #else
   void emitMegamorphicCachedSetSlot(
-      ValueOperand id, Register obj, Register scratch1, Register scratch2,
+      IdType id, Register obj, Register scratch1, Register scratch2,
       Register scratch3, ValueOperand value, Label* cacheHit,
       void (*emitPreBarrier)(MacroAssembler&, const Address&, MIRType));
 #endif

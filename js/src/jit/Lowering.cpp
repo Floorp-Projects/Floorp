@@ -4779,10 +4779,18 @@ void LIRGenerator::visitMegamorphicStoreSlot(MMegamorphicStoreSlot* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
   MOZ_ASSERT(ins->rhs()->type() == MIRType::Value);
 
+#ifdef JS_CODEGEN_X86
+  auto* lir = new (alloc()) LMegamorphicStoreSlot(
+      useFixedAtStart(ins->object(), CallTempReg0),
+      useBoxFixedAtStart(ins->rhs(), CallTempReg1, CallTempReg2),
+      tempFixed(CallTempReg5));
+#else
   auto* lir = new (alloc())
       LMegamorphicStoreSlot(useRegisterAtStart(ins->object()),
                             useBoxAtStart(ins->rhs()), tempFixed(CallTempReg0),
                             tempFixed(CallTempReg1), tempFixed(CallTempReg2));
+#endif
+
   add(lir, ins);
   assignSafepoint(lir, ins);
 }
