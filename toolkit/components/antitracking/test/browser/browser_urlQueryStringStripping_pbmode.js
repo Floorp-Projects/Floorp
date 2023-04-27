@@ -94,8 +94,10 @@ add_task(async function test() {
   }
 
   // Cleanup
-  await Promise
-    .all[(BrowserTestUtils.closeWindow(normalWindow), BrowserTestUtils.closeWindow(pbWindow))];
+  await Promise.all([
+    BrowserTestUtils.closeWindow(normalWindow),
+    BrowserTestUtils.closeWindow(pbWindow),
+  ]);
 
   Services.prefs.clearUserPref("privacy.query_stripping.enabled");
   Services.prefs.clearUserPref("privacy.query_stripping.enabled.pbmode");
