@@ -267,6 +267,12 @@ void run_loopback_duplex_test(bool is_float)
   std::unique_ptr<cubeb, decltype(&cubeb_destroy)>
     cleanup_cubeb_at_exit(ctx, cubeb_destroy);
 
+  /* This test needs an available input device, skip it if this host does not
+   * have one. */
+  if (!can_run_audio_input_test(ctx)) {
+    return;
+  }
+
   input_params.format = is_float ? CUBEB_SAMPLE_FLOAT32NE : CUBEB_SAMPLE_S16LE;
   input_params.rate = SAMPLE_FREQUENCY;
   input_params.channels = 1;
@@ -339,6 +345,10 @@ void run_loopback_separate_streams_test(bool is_float)
 
   std::unique_ptr<cubeb, decltype(&cubeb_destroy)>
     cleanup_cubeb_at_exit(ctx, cubeb_destroy);
+
+  if (!can_run_audio_input_test(ctx)) {
+    return;
+  }
 
   input_params.format = is_float ? CUBEB_SAMPLE_FLOAT32NE : CUBEB_SAMPLE_S16LE;
   input_params.rate = SAMPLE_FREQUENCY;
@@ -423,6 +433,10 @@ void run_loopback_silence_test(bool is_float)
   std::unique_ptr<cubeb, decltype(&cubeb_destroy)>
     cleanup_cubeb_at_exit(ctx, cubeb_destroy);
 
+  if (!can_run_audio_input_test(ctx)) {
+    return;
+  }
+
   input_params.format = is_float ? CUBEB_SAMPLE_FLOAT32NE : CUBEB_SAMPLE_S16LE;
   input_params.rate = SAMPLE_FREQUENCY;
   input_params.channels = 1;
@@ -485,6 +499,10 @@ void run_loopback_device_selection_test(bool is_float)
 
   std::unique_ptr<cubeb, decltype(&cubeb_destroy)>
     cleanup_cubeb_at_exit(ctx, cubeb_destroy);
+
+  if (!can_run_audio_input_test(ctx)) {
+    return;
+  }
 
   r = cubeb_enumerate_devices(ctx, CUBEB_DEVICE_TYPE_OUTPUT, &collection);
   if (r == CUBEB_ERROR_NOT_SUPPORTED) {
