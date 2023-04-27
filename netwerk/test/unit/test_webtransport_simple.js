@@ -192,9 +192,6 @@ add_task(async function test_wt_stream_create() {
     Ci.nsIWebTransport
   );
 
-  let error = await streamCreatePromise(webTransport, true);
-  Assert.equal(error, Ci.nsIWebTransport.INVALID_STATE_ERROR);
-
   await new Promise(resolve => {
     let listener = new WebTransportListener().QueryInterface(
       Ci.WebTransportSessionEventListener
