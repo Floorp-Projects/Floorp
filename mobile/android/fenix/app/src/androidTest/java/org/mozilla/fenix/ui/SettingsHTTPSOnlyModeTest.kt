@@ -6,6 +6,7 @@ package org.mozilla.fenix.ui
 
 import androidx.core.net.toUri
 import androidx.test.espresso.Espresso.pressBack
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -120,6 +121,7 @@ class SettingsHTTPSOnlyModeTest {
         }
     }
 
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1826500")
     @Test
     fun httpsOnlyModeEnabledOnlyInPrivateBrowsingTest() {
         homeScreen {
