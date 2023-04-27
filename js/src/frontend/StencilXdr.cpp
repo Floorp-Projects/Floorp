@@ -911,7 +911,7 @@ struct UnretrievableSourceDecoder {
     MOZ_TRY(xdr_->codeChars(sourceUnits.get(), uncompressedLength_));
 
     if (!scriptSource_->initializeUnretrievableUncompressedSource(
-            xdr_->cx(), std::move(sourceUnits), uncompressedLength_)) {
+            xdr_->fc(), std::move(sourceUnits), uncompressedLength_)) {
       return xdr_->fail(JS::TranscodeResult::Throw);
     }
 

@@ -1336,9 +1336,9 @@ JSLinearString* ScriptSource::functionBodyString(JSContext* cx) {
   return substring(cx, start, stop);
 }
 
-template <typename Unit>
+template <typename ContextT, typename Unit>
 [[nodiscard]] bool ScriptSource::setUncompressedSourceHelper(
-    JSContext* cx, EntryUnits<Unit>&& source, size_t length,
+    ContextT* cx, EntryUnits<Unit>&& source, size_t length,
     SourceRetrievable retrievable) {
   auto& cache = SharedImmutableStringsCache::getSingleton();
 
@@ -1823,16 +1823,16 @@ void ScriptSource::xdrAbortEncoder() { xdrEncoder_.reset(); }
 
 template <typename Unit>
 [[nodiscard]] bool ScriptSource::initializeUnretrievableUncompressedSource(
-    JSContext* cx, EntryUnits<Unit>&& source, size_t length) {
+    FrontendContext* fc, EntryUnits<Unit>&& source, size_t length) {
   MOZ_ASSERT(data.is<Missing>(), "must be initializing a fresh ScriptSource");
-  return setUncompressedSourceHelper(cx, std::move(source), length,
+  return setUncompressedSourceHelper(fc, std::move(source), length,
                                      SourceRetrievable::No);
 }
 
 template bool ScriptSource::initializeUnretrievableUncompressedSource(
-    JSContext* cx, EntryUnits<Utf8Unit>&& source, size_t length);
+    FrontendContext* fc, EntryUnits<Utf8Unit>&& source, size_t length);
 template bool ScriptSource::initializeUnretrievableUncompressedSource(
-    JSContext* cx, EntryUnits<char16_t>&& source, size_t length);
+    FrontendContext* fc, EntryUnits<char16_t>&& source, size_t length);
 
 // Format and return a cx->pod_malloc'ed URL for a generated script like:
 //   {filename} line {lineno} > {introducer}
