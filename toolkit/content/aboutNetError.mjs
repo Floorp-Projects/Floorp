@@ -251,6 +251,45 @@ function disallowCertOverridesIfNeeded() {
   }
 }
 
+function recordTRREventTelemetry(
+  warningPageType,
+  trrMode,
+  trrDomain,
+  skipReason
+) {
+  RPMRecordTelemetryEvent(
+    "security.doh.neterror",
+    "load",
+    "dohwarning",
+    warningPageType,
+    {
+      mode: trrMode,
+      provider_key: trrDomain,
+      skip_reason: skipReason,
+    }
+  );
+
+  const netErrorButtonDiv = document.getElementById("netErrorButtonContainer");
+  const buttons = netErrorButtonDiv.querySelectorAll("button");
+  for (let b of buttons) {
+    b.addEventListener("click", function(e) {
+      let target = e.originalTarget;
+      let telemetryId = target.dataset.telemetryId;
+      RPMRecordTelemetryEvent(
+        "security.doh.neterror",
+        "click",
+        telemetryId,
+        warningPageType,
+        {
+          mode: trrMode,
+          provider_key: trrDomain,
+          skip_reason: skipReason,
+        }
+      );
+    });
+  }
+}
+
 function initPage() {
   // We show an offline support page in case of a system-wide error,
   // when a user cannot connect to the internet and access the SUMO website.
@@ -450,7 +489,7 @@ function initPage() {
         RPMSendQuery("Browser:AddTRRExcludedDomain", {
           hostname: HOST_NAME,
         }).then(msg => {
-          retryThis(this);
+          retryThis(trrExceptionButton);
         });
       });
 
@@ -506,6 +545,14 @@ function initPage() {
         descriptionTag = "neterror-dns-not-found-trr-server-problem";
       }
 
+      let trrMode = RPMGetIntPref("network.trr.mode").toString();
+      recordTRREventTelemetry(
+        "TRROnlyFailure",
+        trrMode,
+        args.trrDomain,
+        skipReason
+      );
+
       let description = document.getElementById("trrOnlyDescription");
       document.l10n.setAttributes(description, descriptionTag, args);
 
@@ -522,6 +569,17 @@ function initPage() {
         trrOnlyLearnMoreLink.addEventListener("click", event => {
           event.preventDefault();
           RPMSendAsyncMessage("OpenTRRPreferences");
+          RPMRecordTelemetryEvent(
+            "security.doh.neterror",
+            "click",
+            "settings_button",
+            "TRROnlyFailure",
+            {
+              mode: trrMode,
+              provider_key: args.trrDomain,
+              skip_reason: skipReason,
+            }
+          );
         });
       } else {
         // This will be replaced at a later point with a link to an offline support page
@@ -622,6 +680,13 @@ function showNativeFallbackWarning() {
 
   let div = document.getElementById("nativeFallbackContainer");
   div.hidden = false;
+
+  recordTRREventTelemetry(
+    "NativeFallbackWarning",
+    RPMGetIntPref("network.trr.mode").toString(),
+    args.trrDomain,
+    skipReason
+  );
 }
 /**
  * Builds HTML elements from `parts` and appends them to `parentElement`.

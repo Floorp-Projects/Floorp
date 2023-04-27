@@ -3204,6 +3204,51 @@ security.doh.trrPerformance:
     products:
       - firefox
 
+security.doh.neterror:
+  load:
+    objects: ["dohwarning"]
+    bug_numbers:
+      - 1829342
+    description: >
+      The DoH warning page is loaded.
+    expiry_version: never
+    notification_emails:
+      - necko@mozilla.com
+      - kershaw@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes: ["content"]
+    extra_keys:
+      mode: Current TRR mode
+      provider_key: TRR provider
+      skip_reason: The reason why DoH request is failed
+  click:
+    objects: [
+      "try_again_button",
+      "add_exception_button",
+      "settings_button",
+      "continue_button",
+      "disable_warning",
+      "learn_more_link",
+    ]
+    bug_numbers:
+      - 1829342
+    description: >
+      User interaction by click buttons on the DoH warning page.
+    expiry_version: never
+    notification_emails:
+      - necko@mozilla.com
+      - kershaw@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes: ["content"]
+    extra_keys:
+      mode: Current TRR mode
+      provider_key: TRR provider
+      skip_reason: The reason why DoH request is failed
+
 security.ui.certerror:
   load:
     objects: ["aboutcerterror"]

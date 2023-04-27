@@ -32,6 +32,7 @@ export class NetErrorChild extends RemotePageChild {
       "RPMGetTRRDomain",
       "RPMIsSiteSpecificTRRError",
       "RPMSetTRRDisabledLoadFlags",
+      "RPMGetCurrentTRRMode",
     ];
     this.exportFunctions(exportableFunctions);
   }

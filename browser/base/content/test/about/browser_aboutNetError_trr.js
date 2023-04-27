@@ -10,11 +10,7 @@ function resetPrefs() {
   Services.prefs.setIntPref("network.proxy.type", oldProxyType);
 }
 
-// This test makes sure that the Add exception button only shows up
-// when the skipReason indicates that the domain could not be resolved.
-// If instead there is a problem with the TRR connection, then we don't
-// show the exception button.
-add_task(async function exceptionButtonTRROnly() {
+async function loadErrorPage() {
   Services.prefs.setBoolPref("network.dns.native-is-localhost", true);
   Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRONLY);
   // We need to disable proxy, otherwise TRR isn't used for name resolution.
@@ -38,6 +34,15 @@ add_task(async function exceptionButtonTRROnly() {
 
   info("Loading and waiting for the net error");
   await pageLoaded;
+  return browser;
+}
+
+// This test makes sure that the Add exception button only shows up
+// when the skipReason indicates that the domain could not be resolved.
+// If instead there is a problem with the TRR connection, then we don't
+// show the exception button.
+add_task(async function exceptionButtonTRROnly() {
+  let browser = await loadErrorPage();
 
   await SpecialPowers.spawn(browser, [], function() {
     const doc = content.document;
@@ -63,5 +68,103 @@ add_task(async function exceptionButtonTRROnly() {
   });
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  resetPrefs();
+});
+
+add_task(async function TRROnlyExceptionButtonTelemetry() {
+  // Clear everything.
+  Services.telemetry.clearEvents();
+  await TestUtils.waitForCondition(() => {
+    let events = Services.telemetry.snapshotEvents(
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+      true
+    ).content;
+    return !events || !events.length;
+  });
+  Services.telemetry.setEventRecordingEnabled("security.doh.neterror", true);
+
+  let browser = await loadErrorPage();
+
+  await SpecialPowers.spawn(browser, [], function() {
+    const doc = content.document;
+    ok(
+      doc.documentURI.startsWith("about:neterror"),
+      "Should be showing error page"
+    );
+
+    let buttons = ["neterrorTryAgainButton", "trrSettingsButton"];
+    for (let buttonId of buttons) {
+      let button = doc.getElementById(buttonId);
+      button.click();
+    }
+  });
+
+  is(
+    gBrowser.tabs.length,
+    3,
+    "Should open about:preferences#privacy-doh in another tab"
+  );
+
+  let loadEvent = await TestUtils.waitForCondition(() => {
+    let events = Services.telemetry.snapshotEvents(
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+      true
+    ).content;
+    return events?.find(e => e[1] == "security.doh.neterror" && e[2] == "load");
+  }, "recorded telemetry for the load");
+
+  loadEvent.shift();
+  Assert.deepEqual(loadEvent, [
+    "security.doh.neterror",
+    "load",
+    "dohwarning",
+    "TRROnlyFailure",
+    {
+      mode: "3",
+      provider_key: "mozilla.cloudflare-dns.com",
+      skip_reason: "TRR_UNKNOWN_CHANNEL_FAILURE",
+    },
+  ]);
+
+  let clickEvents = await TestUtils.waitForCondition(() => {
+    let events = Services.telemetry.snapshotEvents(
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+      true
+    ).content;
+    return events?.filter(
+      e => e[1] == "security.doh.neterror" && e[2] == "click"
+    );
+  }, "recorded telemetry for clicking buttons");
+
+  let firstEvent = clickEvents[0];
+  firstEvent.shift(); // remove timestamp
+  Assert.deepEqual(firstEvent, [
+    "security.doh.neterror",
+    "click",
+    "try_again_button",
+    "TRROnlyFailure",
+    {
+      mode: "3",
+      provider_key: "mozilla.cloudflare-dns.com",
+      skip_reason: "TRR_UNKNOWN_CHANNEL_FAILURE",
+    },
+  ]);
+
+  let secondEvent = clickEvents[1];
+  secondEvent.shift(); // remove timestamp
+  Assert.deepEqual(secondEvent, [
+    "security.doh.neterror",
+    "click",
+    "settings_button",
+    "TRROnlyFailure",
+    {
+      mode: "3",
+      provider_key: "mozilla.cloudflare-dns.com",
+      skip_reason: "TRR_UNKNOWN_CHANNEL_FAILURE",
+    },
+  ]);
+
+  BrowserTestUtils.removeTab(gBrowser.tabs[2]);
+  BrowserTestUtils.removeTab(gBrowser.tabs[1]);
   resetPrefs();
 });
