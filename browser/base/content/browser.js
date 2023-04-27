@@ -108,14 +108,6 @@ XPCOMUtils.defineLazyGetter(this, "fxAccounts", () => {
   ).getFxAccountsSingleton();
 });
 
-if (AppConstants.MOZ_CRASHREPORTER) {
-  ChromeUtils.defineModuleGetter(
-    this,
-    "PluginCrashReporter",
-    "resource:///modules/ContentCrashHandlers.jsm"
-  );
-}
-
 XPCOMUtils.defineLazyScriptGetter(
   this,
   "PlacesTreeView",
