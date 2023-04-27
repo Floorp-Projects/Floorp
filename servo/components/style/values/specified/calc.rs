@@ -429,7 +429,7 @@ impl CalcNode {
                 CalcNode::parse_argument(context, input, allowed_units)
             }),
             &Token::Function(ref name) => {
-                let function = CalcNode::math_function(name, location)?;
+                let function = CalcNode::math_function(context, name, location)?;
                 CalcNode::parse(context, input, function, allowed_units)
             },
             &Token::Ident(ref ident) => {
@@ -878,6 +878,7 @@ impl CalcNode {
     /// return a mathematical function corresponding to that name or an error.
     #[inline]
     pub fn math_function<'i>(
+        context: &ParserContext,
         name: &CowRcStr<'i>,
         location: cssparser::SourceLocation,
     ) -> Result<MathFunction, ParseError<'i>> {
@@ -890,7 +891,9 @@ impl CalcNode {
             },
         };
 
-        let enabled = if matches!(function, Sin | Cos | Tan | Asin | Acos | Atan | Atan2) {
+        let enabled = if context.chrome_rules_enabled() {
+            true
+        } else if matches!(function, Sin | Cos | Tan | Asin | Acos | Atan | Atan2) {
             trig_enabled()
         } else if matches!(function, Round) {
             static_prefs::pref!("layout.css.round.enabled")
