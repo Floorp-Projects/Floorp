@@ -4239,7 +4239,7 @@ void CodeGenerator::visitMegamorphicLoadSlot(LMegamorphicLoadSlot* lir) {
   masm.passABIArg(temp2);
   masm.passABIArg(temp3);
 
-  masm.callWithABI<Fn, GetNativeDataPropertyByIdPure>();
+  masm.callWithABI<Fn, GetNativeDataPropertyPure>();
 
   MOZ_ASSERT(!output.aliases(ReturnReg));
   masm.Pop(output);
@@ -4313,7 +4313,7 @@ void CodeGenerator::visitMegamorphicStoreSlot(LMegamorphicStoreSlot* lir) {
   masm.moveStackPtrTo(temp0);
 
   using Fn =
-      bool (*)(JSContext* cx, JSObject* obj, PropertyName* name, Value* val);
+      bool (*)(JSContext * cx, JSObject * obj, PropertyKey id, Value * val);
   masm.setupAlignedABICall();
   masm.loadJSContext(temp1);
   masm.passABIArg(temp1);

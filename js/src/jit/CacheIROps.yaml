@@ -798,7 +798,7 @@
   cost_estimate: 4
   args:
     obj: ObjId
-    name: PropertyNameField
+    name: IdField
 
 - name: MegamorphicLoadSlotByValueResult
   shared: true
@@ -814,7 +814,7 @@
   cost_estimate: 4
   args:
     obj: ObjId
-    name: PropertyNameField
+    name: IdField
     rhs: ValId
 
 - name: MegamorphicSetElement
@@ -3061,7 +3061,7 @@
   cost_estimate: 4
   args:
     obj: ObjId
-    id: PropertyNameField
+    id: IdField
     slot: RawInt32Field
 
 #ifdef FUZZING_JS_FUZZILLI
