@@ -66,8 +66,18 @@ class ScriptModule extends WindowGlobalBiDiModule {
 
   #buildExceptionDetails(exception, stack, realm, resultOwnership, options) {
     exception = this.#toRawObject(exception);
-    const frames = lazy.getFramesFromStack(stack) || [];
 
+    // A stacktrace is mandatory to build exception details and a missing stack
+    // means we encountered an unexpected issue. Throw with an explicit error.
+    if (!stack) {
+      throw new Error(
+        `Missing stack, unable to build exceptionDetails for exception: ${lazy.stringify(
+          exception
+        )}`
+      );
+    }
+
+    const frames = lazy.getFramesFromStack(stack) || [];
     const callFrames = frames
       // Remove chrome/internal frames
       .filter(frame => !lazy.isChromeFrame(frame))
