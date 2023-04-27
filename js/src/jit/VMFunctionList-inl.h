@@ -257,6 +257,8 @@ namespace jit {
   _(SetFunctionName, js::SetFunctionName)                                      \
   _(SetIntrinsicOperation, js::SetIntrinsicOperation)                          \
   _(SetObjectHas, js::jit::SetObjectHas)                                       \
+  _(SetPropertyMegamorphicNoCache, js::jit::SetPropertyMegamorphic<false>)     \
+  _(SetPropertyMegamorphicYesCache, js::jit::SetPropertyMegamorphic<true>)     \
   _(SetPropertySuper, js::SetPropertySuper)                                    \
   _(StartDynamicModuleImport, js::StartDynamicModuleImport)                    \
   _(StringBigIntGreaterThanOrEqual,                                            \
