@@ -1031,7 +1031,7 @@ XDRResult StencilXDR::codeSourceCompressedData(XDRState<mode>* const xdr,
     MOZ_TRY(xdr->codeBytes(bytes.get(), compressedLength));
 
     if (!ss->initializeWithUnretrievableCompressedSource<Unit>(
-            xdr->cx(), std::move(bytes), compressedLength,
+            xdr->fc(), std::move(bytes), compressedLength,
             uncompressedLength)) {
       return xdr->fail(JS::TranscodeResult::Throw);
     }

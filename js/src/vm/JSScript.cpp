@@ -1453,7 +1453,7 @@ void ScriptSource::triggerConvertToCompressedSource(
 
 template <typename Unit>
 [[nodiscard]] bool ScriptSource::initializeWithUnretrievableCompressedSource(
-    JSContext* cx, UniqueChars&& compressed, size_t rawLength,
+    FrontendContext* fc, UniqueChars&& compressed, size_t rawLength,
     size_t sourceLength) {
   MOZ_ASSERT(data.is<Missing>(), "shouldn't be double-initializing");
   MOZ_ASSERT(compressed != nullptr);
@@ -1461,7 +1461,7 @@ template <typename Unit>
   auto& cache = SharedImmutableStringsCache::getSingleton();
   auto deduped = cache.getOrCreate(std::move(compressed), rawLength);
   if (!deduped) {
-    ReportOutOfMemory(cx);
+    ReportOutOfMemory(fc);
     return false;
   }
 
@@ -1483,10 +1483,10 @@ template <typename Unit>
 }
 
 template bool ScriptSource::initializeWithUnretrievableCompressedSource<
-    Utf8Unit>(JSContext* cx, UniqueChars&& compressed, size_t rawLength,
+    Utf8Unit>(FrontendContext* fc, UniqueChars&& compressed, size_t rawLength,
               size_t sourceLength);
 template bool ScriptSource::initializeWithUnretrievableCompressedSource<
-    char16_t>(JSContext* cx, UniqueChars&& compressed, size_t rawLength,
+    char16_t>(FrontendContext* fc, UniqueChars&& compressed, size_t rawLength,
               size_t sourceLength);
 
 template <typename Unit>

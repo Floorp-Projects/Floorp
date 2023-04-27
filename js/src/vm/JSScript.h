@@ -942,7 +942,8 @@ class ScriptSource {
   // source of the indicated original encoding.
   template <typename Unit>
   [[nodiscard]] bool initializeWithUnretrievableCompressedSource(
-      JSContext* cx, UniqueChars&& raw, size_t rawLength, size_t sourceLength);
+      FrontendContext* fc, UniqueChars&& raw, size_t rawLength,
+      size_t sourceLength);
 
  private:
   void performTaskWork(SourceCompressionTask* task);
