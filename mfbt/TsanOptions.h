@@ -69,6 +69,7 @@ extern "C" const char* __tsan_default_options() {
     "called_from_lib:libunity-gtk3-parser\n"   \
     "called_from_lib:libvorbis.so\n"           \
     "called_from_lib:libvorbisfile\n"          \
+    "called_from_lib:libwayland-client\n"      \
     "called_from_lib:libX11.so\n"              \
     "called_from_lib:libX11-xcb\n"             \
     "called_from_lib:libXau\n"                 \
