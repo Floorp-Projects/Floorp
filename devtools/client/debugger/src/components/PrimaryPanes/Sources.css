@@ -153,22 +153,3 @@
 .sources-list .tree-node[data-expandable="false"] .tree-indent:last-of-type {
   margin-inline-end: 0;
 }
-
-.thread-header {
-  margin-top: 10px;
-}
-
-.thread-header .img.worker,
-.thread-header .img.file {
-  margin-top: -1px;
-  margin-inline-end: 4px;
-  margin-inline-start: 2px;
-}
-
-.thread-header .img.file {
-  margin-top: -2px;
-}
-
-.thread-header .label {
-  line-height: 15px;
-}
