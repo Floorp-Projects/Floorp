@@ -927,10 +927,6 @@ slot {
     background-color: Canvas;
   }
 
-  :popover-open {
-    -moz-top-layer: top;
-  }
-
   :popover-open::backdrop {
     position: fixed;
     inset: 0;
