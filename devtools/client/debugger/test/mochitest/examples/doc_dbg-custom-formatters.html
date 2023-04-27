@@ -1,0 +1,26 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Debugger custom formatters test page</title>
+  </head>
+  <body>
+    <p>Custom formatters test page</p>
+    <script>
+      "use strict";
+
+      window.devtoolsFormatters = [
+        {
+          header: obj => {
+            if (obj.hasOwnProperty("customFormatHeaderAndBody")) {
+              return ["span", {"style": "font-style: italic;"}, "CUSTOM"];
+            }
+            return null;
+          },
+          hasBody: obj => true,
+          body: obj => ["span", {"style": "font-family: serif; font-size: 2rem;"}, obj.customFormatHeaderAndBody]
+        }];
+    </script>
+  </body>
+</html>
