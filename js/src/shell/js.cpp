@@ -5156,8 +5156,7 @@ static bool InstantiateModuleStencilXDR(JSContext* cx, uint32_t argc,
   /* Deserialize the stencil from XDR. */
   JS::TranscodeRange xdrRange(xdrObj->buffer(), xdrObj->bufferLength());
   bool succeeded = false;
-  if (!stencil.deserializeStencils(cx, &fc, input.get(), xdrRange,
-                                   &succeeded)) {
+  if (!stencil.deserializeStencils(&fc, input.get(), xdrRange, &succeeded)) {
     return false;
   }
   if (!succeeded) {

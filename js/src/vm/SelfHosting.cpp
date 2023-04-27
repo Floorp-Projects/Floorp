@@ -2429,7 +2429,7 @@ bool JSRuntime::initSelfHostingStencil(JSContext* cx,
     if (!stencil) {
       return false;
     }
-    if (!stencil->deserializeStencils(cx, &fc, *input, xdrCache, &decodeOk)) {
+    if (!stencil->deserializeStencils(&fc, *input, xdrCache, &decodeOk)) {
       return false;
     }
 

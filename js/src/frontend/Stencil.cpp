@@ -2739,7 +2739,7 @@ bool CompilationStencil::serializeStencils(JSContext* cx,
   return true;
 }
 
-bool CompilationStencil::deserializeStencils(JSContext* cx, FrontendContext* fc,
+bool CompilationStencil::deserializeStencils(FrontendContext* fc,
                                              CompilationInput& input,
                                              const JS::TranscodeRange& range,
                                              bool* succeededOut) {
