@@ -543,15 +543,6 @@ AC_LANG_CPLUSPLUS
 
 MOZ_CXX11
 
-case "${OS_TARGET}" in
-WINNT|Darwin|Android)
-  ;;
-*)
-  STL_FLAGS="-I${DIST}/stl_wrappers"
-  WRAP_STL_INCLUDES=1
-  ;;
-esac
-
 dnl Checks for header files.
 dnl ========================================================
 AC_HEADER_DIRENT

@@ -125,9 +125,6 @@ case "$target" in
           fi
           WIN32_REDIST_DIR=`cd "$WIN32_REDIST_DIR" && (pwd -W 2>/dev/null || pwd)`
         fi
-
-        WRAP_STL_INCLUDES=1
-        STL_FLAGS="-I${DIST}/stl_wrappers"
     else
         # Check w32api version
         _W32API_MAJOR_VERSION=`echo $W32API_VERSION | $AWK -F\. '{ print $1 }'`
@@ -175,9 +172,6 @@ fi # COMPILE_ENVIRONMENT
 
 AC_SUBST(GNU_CC)
 AC_SUBST(GNU_CXX)
-
-AC_SUBST_LIST(STL_FLAGS)
-AC_SUBST(WRAP_STL_INCLUDES)
 
 dnl ========================================================
 dnl set the defaults first
@@ -602,13 +596,6 @@ AC_LANG_CPLUSPLUS
 MOZ_CXX11
 
 AC_LANG_C
-
-STL_FLAGS="-I${DIST}/stl_wrappers"
-WRAP_STL_INCLUDES=1
-
-if test "$MOZ_BUILD_APP" = "tools/crashreporter/injector"; then
-    WRAP_STL_INCLUDES=
-fi
 
 dnl Checks for header files.
 dnl ========================================================
