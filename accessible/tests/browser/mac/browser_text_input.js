@@ -153,6 +153,28 @@ async function synthKeyAndTestSelectionChanged(
     expectedSelectionString,
     `selection has correct value (${expectedSelectionString}) via top document`
   );
+
+  return inputEvent;
+}
+
+function testSelectionEventLeftChar(event, expectedChar) {
+  const selStart = event.macIface.getParameterizedAttributeValue(
+    "AXStartTextMarkerForTextMarkerRange",
+    event.data.AXSelectedTextMarkerRange
+  );
+  const selLeft = event.macIface.getParameterizedAttributeValue(
+    "AXPreviousTextMarkerForTextMarker",
+    selStart
+  );
+  const leftCharRange = event.macIface.getParameterizedAttributeValue(
+    "AXTextMarkerRangeForUnorderedTextMarkers",
+    [selLeft, selStart]
+  );
+  const leftCharString = event.macIface.getParameterizedAttributeValue(
+    "AXStringForTextMarkerRange",
+    leftCharRange
+  );
+  is(leftCharString, expectedChar, "Left character is correct");
 }
 
 async function synthKeyAndTestValueChanged(
@@ -451,4 +473,53 @@ addAccessibleTask(
     );
   },
   { topLevel: true, iframe: true, remoteIframe: true }
+);
+
+/**
+ * Test that the caret returns the correct marker when it is positioned after
+ * the last character (to facilitate appending text).
+ */
+addAccessibleTask(
+  `<input id="input" value="abc">`,
+  async function(browser, docAcc) {
+    await focusIntoInput(docAcc, "input");
+
+    let event = await synthKeyAndTestSelectionChanged(
+      "KEY_ArrowRight",
+      null,
+      "input",
+      "",
+      {
+        AXTextStateChangeType: AXTextStateChangeTypeSelectionMove,
+        AXTextSelectionDirection: AXTextSelectionDirectionNext,
+        AXTextSelectionGranularity: AXTextSelectionGranularityCharacter,
+      }
+    );
+    testSelectionEventLeftChar(event, "a");
+    event = await synthKeyAndTestSelectionChanged(
+      "KEY_ArrowRight",
+      null,
+      "input",
+      "",
+      {
+        AXTextStateChangeType: AXTextStateChangeTypeSelectionMove,
+        AXTextSelectionDirection: AXTextSelectionDirectionNext,
+        AXTextSelectionGranularity: AXTextSelectionGranularityCharacter,
+      }
+    );
+    testSelectionEventLeftChar(event, "b");
+    event = await synthKeyAndTestSelectionChanged(
+      "KEY_ArrowRight",
+      null,
+      "input",
+      "",
+      {
+        AXTextStateChangeType: AXTextStateChangeTypeSelectionMove,
+        AXTextSelectionDirection: AXTextSelectionDirectionNext,
+        AXTextSelectionGranularity: AXTextSelectionGranularityCharacter,
+      }
+    );
+    testSelectionEventLeftChar(event, "c");
+  },
+  { chrome: true, topLevel: true }
 );

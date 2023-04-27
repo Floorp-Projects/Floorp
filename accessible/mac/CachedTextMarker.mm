@@ -20,7 +20,7 @@ namespace a11y {
 CachedTextMarker::CachedTextMarker(Accessible* aAcc, int32_t aOffset) {
   HyperTextAccessibleBase* ht = aAcc->AsHyperTextBase();
   if (ht && aOffset != nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT &&
-      aOffset < static_cast<int32_t>(ht->CharacterCount())) {
+      aOffset <= static_cast<int32_t>(ht->CharacterCount())) {
     mPoint = aAcc->AsHyperTextBase()->ToTextLeafPoint(aOffset);
   } else {
     mPoint = TextLeafPoint(aAcc, aOffset);
