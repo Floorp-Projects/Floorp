@@ -331,7 +331,7 @@ XDRResult StencilXDR::codeSharedData(XDRState<mode>* xdr,
       MOZ_TRY(xdr->borrowedData(&isd, size));
       sisd->setExternal(isd, hash);
     } else {
-      auto isd = ImmutableScriptData::new_(xdr->cx(), size);
+      auto isd = ImmutableScriptData::new_(xdr->fc(), size);
       if (!isd) {
         return xdr->fail(JS::TranscodeResult::Throw);
       }
