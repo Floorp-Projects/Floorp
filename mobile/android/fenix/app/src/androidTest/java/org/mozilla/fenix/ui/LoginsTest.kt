@@ -241,6 +241,7 @@ class LoginsTest {
         }
     }
 
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1816066")
     @SmokeTest
     @Test
     fun verifyMultipleLoginsSelectionsTest() {
