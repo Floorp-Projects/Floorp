@@ -70,6 +70,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExtensionScriptingStore: "resource://gre/modules/ExtensionScriptingStore.jsm",
   ExtensionStorage: "resource://gre/modules/ExtensionStorage.jsm",
   ExtensionStorageIDB: "resource://gre/modules/ExtensionStorageIDB.jsm",
+  extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.jsm",
   ExtensionTelemetry: "resource://gre/modules/ExtensionTelemetry.jsm",
   LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
@@ -140,6 +141,15 @@ XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "eventPagesEnabled",
   "extensions.eventPages.enabled"
+);
+
+// This pref is used to check if storage.sync is still the Kinto-based backend
+// (GeckoView should be the only one still using it).
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "storageSyncOldKintoBackend",
+  "webextensions.storage.sync.kinto",
+  false
 );
 
 var {
@@ -523,6 +533,16 @@ var ExtensionAddonObserver = {
         `Clear Extension Storage ${addon.id} (File Backend)`,
         lazy.ExtensionStorage.clear(addon.id, { shouldNotifyListeners: false })
       );
+
+      // Clear browser.storage.sync rust-based backend.
+      // (storage.sync clearOnUninstall will resolve and log an error on the
+      // browser console in case of unexpected failures).
+      if (!lazy.storageSyncOldKintoBackend) {
+        lazy.AsyncShutdown.profileChangeTeardown.addBlocker(
+          `Clear Extension StorageSync ${addon.id}`,
+          lazy.extensionStorageSync.clearOnUninstall(addon.id)
+        );
+      }
 
       // Clear any IndexedDB and Cache API storage created by the extension.
       // If LSNG is enabled, this also clears localStorage.

@@ -39,6 +39,28 @@ const storageTestHelpers = {
       }
     },
   },
+  storageSync: {
+    async writeData() {
+      await browser.storage.sync.set({hello: "world"});
+      browser.test.sendMessage("finished");
+    },
+
+    async readData() {
+      const matchBrowserStorage = await browser.storage.sync.get("hello").then(result => {
+        return (Object.keys(result).length == 1 && result.hello == "world");
+      });
+
+      browser.test.sendMessage("results", {matchBrowserStorage});
+    },
+
+    assertResults({results, keepOnUninstall}) {
+      if (keepOnUninstall) {
+        is(results.matchBrowserStorage, true, "browser.storage.sync data is still present");
+      } else {
+        is(results.matchBrowserStorage, false, "browser.storage.sync data was cleared");
+      }
+    },
+  },
   webAPIs: {
     async readData() {
       let matchLocalStorage = (localStorage.getItem("hello") == "world");
@@ -228,6 +250,26 @@ add_task(async function test_uninistall_with_storage_local_idb_backend() {
 
   await SpecialPowers.popPrefEnv();
 });
+
+// Legacy storage.sync backend is still being used on GeckoView builds.
+const storageSyncOldKintoBackend = SpecialPowers.Services.prefs.getBoolPref(
+  "webextensions.storage.sync.kinto",
+  false
+);
+
+// Verify browser.storage.sync rust backend is also cleared on uninstall.
+async function test_uninistall_with_storage_sync() {
+  await test_uninstall({
+    extensionId: "storage.cleanup-sync@tests.mozilla.org",
+    ...(storageTestHelpers.storageSync),
+  });
+}
+
+// NOTE: ideally we would be using a skip_if option on the add_task call,
+// but we don't support that in the add_task defined in mochitest-plain.
+if (!storageSyncOldKintoBackend) {
+  add_task(test_uninistall_with_storage_sync);
+}
 
 </script>
 

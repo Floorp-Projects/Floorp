@@ -151,6 +151,30 @@ class ExtensionStorageSync {
     return this._promisify("clear", extension, context);
   }
 
+  clearOnUninstall(extensionId) {
+    if (!this.migrationOk) {
+      // If the rust-based backend isn't being used,
+      // no need to clear it.
+      return;
+    }
+    // Resolve the returned promise once the request has been either resolved
+    // or rejected (and report the error on the browser console in case of
+    // unexpected clear failures on addon uninstall).
+    return new Promise(resolve => {
+      const callback = new ExtensionStorageApiCallback(
+        resolve,
+        err => {
+          Cu.reportError(err);
+          resolve();
+        },
+        // empty changeCallback (no need to notify the extension
+        // while clearing the extension on uninstall).
+        () => {}
+      );
+      lazy.storageSvc.clear(extensionId, callback);
+    });
+  }
+
   get(extension, spec, context) {
     return this._promisify("get", extension, context, spec);
   }
