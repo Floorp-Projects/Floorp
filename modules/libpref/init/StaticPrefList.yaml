@@ -11272,14 +11272,6 @@
   value: false
   mirror: always
 
-# If true cookies loaded from the sqlite DB that have a creation or
-# last accessed time that is in the future will be fixed and the
-# timestamps will be set to the current time.
-- name: network.cookie.fixup_on_db_load
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # If we should attempt to race the cache and network.
 - name: network.http.rcwn.enabled
   type: bool
