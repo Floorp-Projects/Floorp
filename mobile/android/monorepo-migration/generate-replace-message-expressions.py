@@ -14,7 +14,7 @@ logging.basicConfig(
 DATA_DIR = (Path(__file__).parent / "data").absolute()
 GITHUB_URL_TEMPLATE = "https://github.com/{repo_owner}/{repo_name}/{number_type}"
 REPO_OWNER = "mozilla-mobile"
-REPO_NAME_TO_IMPORT = "fenix"
+REPO_NAME_TO_IMPORT = "firefox-android"
 
 
 def divide_chunks(sequence, n):
@@ -35,9 +35,7 @@ def main():
     with open(DATA_DIR / "repo-numbers.json") as f:
         repo_numbers = json.load(f)
 
-    regexes = [
-        "regex:^==>[fenix] ",
-    ]
+    regexes = []
 
     for repo_name in order_repo_names(repo_numbers.keys()):
         numbers = repo_numbers[repo_name]
