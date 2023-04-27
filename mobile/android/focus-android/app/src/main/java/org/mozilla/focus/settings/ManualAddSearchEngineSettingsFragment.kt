@@ -32,6 +32,7 @@ import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Request.Redirect.FOLLOW
 import mozilla.components.feature.search.ext.createSearchEngine
 import mozilla.components.service.glean.private.NoExtras
+import mozilla.components.support.ktx.util.URLStringUtils
 import org.mozilla.focus.GleanMetrics.SearchEngines
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
@@ -42,7 +43,6 @@ import org.mozilla.focus.search.ManualAddSearchEnginePreference
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.SupportUtils
-import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
 import java.io.IOException
 import java.net.MalformedURLException
@@ -192,7 +192,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
             // we should share the code to substitute and normalize the search string (see SearchEngine.buildSearchUrl).
             val encodedTestQuery = Uri.encode("testSearchEngineValidation")
 
-            val normalizedHttpsSearchURLStr = UrlUtils.normalize(query)
+            val normalizedHttpsSearchURLStr = URLStringUtils.toNormalizedURL(query)
             val searchURLStr = normalizedHttpsSearchURLStr.replace("%s".toRegex(), encodedTestQuery)
 
             try { URL(searchURLStr) } catch (e: MalformedURLException) {

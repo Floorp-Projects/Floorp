@@ -143,4 +143,25 @@ object URLStringUtils {
     private fun maybeStripTrailingSlash(url: CharSequence): CharSequence {
         return url.trimEnd('/')
     }
+
+    /**
+     * Determines whether a string is http or https URL
+     */
+    fun isHttpOrHttps(url: String): Boolean {
+        return !TextUtils.isEmpty(url) && (url.startsWith("http:") || url.startsWith("https:"))
+    }
+
+    /**
+     * Determine whether a string is a valid search query URL.
+     */
+    fun isValidSearchQueryUrl(url: String): Boolean {
+        var trimmedUrl = url.trim { it <= ' ' }
+        if (!trimmedUrl.matches("^.+?://.+?".toRegex())) {
+            // UI hint url doesn't have http scheme, so add it if necessary
+            trimmedUrl = "http://$trimmedUrl"
+        }
+        val isNetworkUrl = isHttpOrHttps(trimmedUrl)
+        val containsToken = trimmedUrl.contains("%s")
+        return isNetworkUrl && containsToken
+    }
 }

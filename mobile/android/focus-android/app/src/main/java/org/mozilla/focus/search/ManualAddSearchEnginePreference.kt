@@ -18,9 +18,9 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import com.google.android.material.textfield.TextInputLayout
 import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.support.ktx.util.URLStringUtils
 import mozilla.components.support.utils.ext.getParcelableCompat
 import org.mozilla.focus.R
-import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
 
 class ManualAddSearchEnginePreference(context: Context, attrs: AttributeSet) :
@@ -97,7 +97,7 @@ class ManualAddSearchEnginePreference(context: Context, attrs: AttributeSet) :
     fun validateSearchQueryAndShowError(searchQuery: String): Boolean {
         val errorMessage = when {
             TextUtils.isEmpty(searchQuery) -> context.getString(R.string.search_add_error_empty_search)
-            !UrlUtils.isValidSearchQueryUrl(searchQuery) -> context.getString(R.string.search_add_error_format)
+            !URLStringUtils.isValidSearchQueryUrl(searchQuery) -> context.getString(R.string.search_add_error_format)
             else -> null
         }
 

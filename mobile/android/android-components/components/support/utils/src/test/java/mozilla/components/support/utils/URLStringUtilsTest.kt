@@ -35,6 +35,14 @@ class URLStringUtilsTest {
         assertEquals(expectedUrl, toNormalizedURL("  http://mozilla.org  "))
         assertEquals(expectedUrl, toNormalizedURL("mozilla.org"))
         assertEquals(expectedUrl, toNormalizedURL("HTTP://mozilla.org"))
+        assertEquals("file:///mnt/sdcard/", toNormalizedURL("file:///mnt/sdcard/"))
+        assertEquals("http://mozilla.org", toNormalizedURL(" http://mozilla.org"))
+        assertEquals("http://localhost", toNormalizedURL("localhost"))
+
+        assertEquals(
+            "https://www.mozilla.org/en-US/internet-health/",
+            toNormalizedURL("https://www.mozilla.org/en-US/internet-health/"),
+        )
     }
 
     @Test
@@ -197,6 +205,28 @@ class URLStringUtilsTest {
         assertEquals("", URLStringUtils.toDisplayUrl(""))
 
         assertEquals("  ", URLStringUtils.toDisplayUrl("  "))
+    }
+
+    @Test
+    fun isHttpOrHttpsUrl() {
+        assertFalse(URLStringUtils.isHttpOrHttps(""))
+        assertFalse(URLStringUtils.isHttpOrHttps("     "))
+        assertFalse(URLStringUtils.isHttpOrHttps("mozilla.org"))
+        assertFalse(URLStringUtils.isHttpOrHttps("httpstrf://example.org"))
+        assertTrue(URLStringUtils.isHttpOrHttps("https://www.mozilla.org"))
+        assertTrue(URLStringUtils.isHttpOrHttps("http://example.org"))
+        assertTrue(URLStringUtils.isHttpOrHttps("http://192.168.0.1"))
+    }
+
+    @Test
+    fun isValidSearchQueryUrl() {
+        assertTrue(URLStringUtils.isValidSearchQueryUrl("https://example.com/search/?q=%s"))
+        assertTrue(URLStringUtils.isValidSearchQueryUrl("http://example.com/search/?q=%s"))
+        assertTrue(URLStringUtils.isValidSearchQueryUrl("http-test-site.com/search/?q=%s"))
+        assertFalse(URLStringUtils.isValidSearchQueryUrl("httpss://example.com/search/?q=%s"))
+        assertTrue(URLStringUtils.isValidSearchQueryUrl("example.com/search/?q=%s"))
+        assertTrue(URLStringUtils.isValidSearchQueryUrl(" example.com/search/?q=%s "))
+        assertFalse(URLStringUtils.isValidSearchQueryUrl("htps://example.com/search/?q=%s"))
     }
 }
 

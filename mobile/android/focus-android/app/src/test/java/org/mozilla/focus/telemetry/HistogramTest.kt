@@ -7,11 +7,13 @@ package org.mozilla.focus.telemetry
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class HistogramTest {
 
     @Test
-    @Suppress("Deprecation")
     fun testAddLoadToHistogram() {
         TelemetryWrapper.addLoadToHistogram("https://www.mozilla.org", 99L)
         TelemetryWrapper.addLoadToHistogram("https://www.mozilla.org/en-US/MPL/", 199L)

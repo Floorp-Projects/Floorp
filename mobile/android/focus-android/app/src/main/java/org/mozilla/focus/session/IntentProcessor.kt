@@ -13,13 +13,13 @@ import mozilla.components.feature.customtabs.createCustomTabConfigFromIntent
 import mozilla.components.feature.customtabs.isCustomTabIntent
 import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.support.ktx.util.URLStringUtils
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.WebURLFinder
 import org.mozilla.focus.activity.TextActionActivity
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.shortcut.HomeScreen
 import org.mozilla.focus.utils.SearchUtils
-import org.mozilla.focus.utils.UrlUtils
 
 /**
  * Implementation moved from Focus SessionManager. To be replaced with SessionIntentProcessor from feature-session
@@ -107,7 +107,7 @@ class IntentProcessor(
                     return Result.None
                 }
 
-                return if (!UrlUtils.isUrl(dataString)) {
+                return if (dataString == null || !URLStringUtils.isURLLike(dataString)) {
                     val bestURL = WebURLFinder(dataString).bestWebURL()
                     if (!TextUtils.isEmpty(bestURL)) {
                         createSession(SessionState.Source.External.ActionSend(null), bestURL ?: "")
@@ -119,7 +119,7 @@ class IntentProcessor(
                         )
                     }
                 } else {
-                    createSession(SessionState.Source.External.ActionSend(null), dataString ?: "")
+                    createSession(SessionState.Source.External.ActionSend(null), dataString)
                 }
             }
 

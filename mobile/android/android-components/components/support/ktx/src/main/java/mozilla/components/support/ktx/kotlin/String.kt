@@ -13,6 +13,7 @@ import android.util.Patterns
 import android.webkit.URLUtil
 import androidx.core.net.toUri
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
+import mozilla.components.support.ktx.android.net.commonPrefixes
 import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
 import mozilla.components.support.ktx.util.URLStringUtils
 import java.io.File
@@ -378,6 +379,16 @@ fun String.getRepresentativeCharacter(): String {
     }
 
     return "?"
+}
+
+/**
+ * Strips common mobile subdomains from a [String].
+ */
+fun String.stripCommonSubdomains(): String {
+    for (prefix in commonPrefixes) {
+        if (this.startsWith(prefix)) return this.substring(prefix.length)
+    }
+    return this
 }
 
 /**

@@ -16,7 +16,7 @@ import java.io.File
 import java.io.IOException
 import java.util.UUID
 
-private val commonPrefixes = listOf("www.", "mobile.", "m.")
+internal val commonPrefixes = listOf("www.", "mobile.", "m.")
 
 /**
  * Returns the host without common prefixes like "www" or "m".

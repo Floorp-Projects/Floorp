@@ -28,6 +28,7 @@ import mozilla.components.feature.top.sites.TopSitesFeature
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.hideKeyboard
+import mozilla.components.support.ktx.util.URLStringUtils
 import mozilla.components.support.utils.StatusBarUtils
 import mozilla.components.support.utils.ThreadUtils
 import org.mozilla.focus.GleanMetrics.BrowserSearch
@@ -55,7 +56,6 @@ import org.mozilla.focus.topsites.TopSitesOverlay
 import org.mozilla.focus.ui.theme.FocusTheme
 import org.mozilla.focus.utils.OneShotOnPreDrawListener
 import org.mozilla.focus.utils.SupportUtils
-import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
 import kotlin.coroutines.CoroutineContext
 
@@ -543,9 +543,9 @@ class UrlInputFragment :
 
             ViewUtils.hideKeyboard(binding.browserToolbar)
 
-            val isUrl = UrlUtils.isUrl(input)
+            val isUrl = URLStringUtils.isURLLike(input)
             if (isUrl) {
-                openUrl(UrlUtils.normalize(input))
+                openUrl(URLStringUtils.toNormalizedURL(input))
             } else {
                 search(input)
             }
@@ -580,8 +580,8 @@ class UrlInputFragment :
         if (alwaysSearch) {
             search(query)
         } else {
-            if (UrlUtils.isUrl(query)) {
-                openUrl(UrlUtils.normalize(query))
+            if (URLStringUtils.isURLLike(query)) {
+                openUrl(URLStringUtils.toNormalizedURL(query))
             } else {
                 search(query)
             }

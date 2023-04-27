@@ -14,8 +14,8 @@ import android.os.Build
 import android.util.TypedValue
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import mozilla.components.support.ktx.kotlin.stripCommonSubdomains
 import org.mozilla.focus.R
-import org.mozilla.focus.utils.UrlUtils
 
 class IconGenerator {
 
@@ -129,7 +129,7 @@ class IconGenerator {
             }
 
             // Strip common prefixes that we do not want to use to determine the representative characters
-            return UrlUtils.stripCommonSubdomains(snippet)
+            return snippet?.stripCommonSubdomains()
         }
     }
 }

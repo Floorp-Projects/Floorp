@@ -7,7 +7,7 @@ package org.mozilla.focus.ext
 import androidx.compose.ui.graphics.Color
 import androidx.core.net.toUri
 import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
-import org.mozilla.focus.utils.UrlUtils
+import mozilla.components.support.ktx.util.URLStringUtils
 
 // Extension functions for the String class
 
@@ -17,7 +17,7 @@ import org.mozilla.focus.utils.UrlUtils
  * Spec: https://github.com/mozilla-mobile/focus-android/issues/1231#issuecomment-326237077
  */
 fun String.beautifyUrl(): String {
-    if (isNullOrEmpty() || !UrlUtils.isHttpOrHttps(this)) {
+    if (isNullOrEmpty() || !URLStringUtils.isHttpOrHttps(this)) {
         return this
     }
 

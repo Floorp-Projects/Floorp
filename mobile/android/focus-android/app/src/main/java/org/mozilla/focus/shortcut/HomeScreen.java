@@ -17,9 +17,11 @@ import androidx.core.graphics.drawable.IconCompat;
 import android.text.TextUtils;
 
 import org.mozilla.focus.activity.MainActivity;
-import org.mozilla.focus.utils.UrlUtils;
 
 import java.util.UUID;
+
+import mozilla.components.support.ktx.kotlin.StringKt;
+import mozilla.components.support.ktx.util.URLStringUtils;
 
 public class HomeScreen {
     public static final String ADD_TO_HOMESCREEN_TAG = "add_to_homescreen";
@@ -77,7 +79,7 @@ public class HomeScreen {
 
     @VisibleForTesting static String generateTitleFromUrl(String url) {
         // For now we just use the host name and strip common subdomains like "www" or "m".
-        return UrlUtils.stripCommonSubdomains(Uri.parse(url).getHost());
+        return StringKt.stripCommonSubdomains(Uri.parse(url).getHost());
     }
 
     /**

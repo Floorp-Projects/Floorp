@@ -512,6 +512,15 @@ class StringTest {
     }
     // END test cases borrowed from FFTV
 
+    @Test
+    fun testStripCommonSubdomains() {
+        assertEquals("mozilla.org", ("mozilla.org").stripCommonSubdomains())
+        assertEquals("mozilla.org", ("www.mozilla.org").stripCommonSubdomains())
+        assertEquals("mozilla.org", ("m.mozilla.org").stripCommonSubdomains())
+        assertEquals("mozilla.org", ("mobile.mozilla.org").stripCommonSubdomains())
+        assertEquals("random.mozilla.org", ("random.mozilla.org").stripCommonSubdomains())
+    }
+
     private infix fun String.shortenedShouldBecome(expect: String) {
         assertEquals(expect, this.shortened())
     }
