@@ -1376,8 +1376,13 @@ BackgroundParentImpl::RecvEnsureUtilityProcessAndCreateBridge(
         using Type = Tuple<const nsresult&,
                            Endpoint<mozilla::PRemoteDecoderManagerChild>&&>;
         if (!upm) {
-          aResolver(Type(NS_ERROR_NOT_AVAILABLE,
-                         Endpoint<PRemoteDecoderManagerChild>()));
+          managerThread->Dispatch(NS_NewRunnableFunction(
+              "BackgroundParentImpl::RecvEnsureUtilityProcessAndCreateBridge::"
+              "Failure",
+              [aResolver]() {
+                aResolver(Type(NS_ERROR_NOT_AVAILABLE,
+                               Endpoint<PRemoteDecoderManagerChild>()));
+              }));
         } else {
           upm->StartAudioDecoding(otherPid)->Then(
               managerThread, __func__,
