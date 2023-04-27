@@ -4,6 +4,25 @@ const { Sampling } = ChromeUtils.importESModule(
   "resource://gre/modules/components-utils/Sampling.sys.mjs"
 );
 
+async function cleanupStore(store) {
+  Assert.deepEqual(
+    store.getAllActiveExperiments(),
+    [],
+    "There should be no experiments active."
+  );
+
+  Assert.deepEqual(
+    store.getAllActiveRollouts(),
+    [],
+    "There should be no rollouts active"
+  );
+
+  // We need to call finalize first to ensure that any pending saves from
+  // JSONFile.saveSoon overwrite files on disk.
+  await store._store.finalize();
+  await IOUtils.remove(store._store.path);
+}
+
 /**
  * onStartup()
  * - should set call setExperimentActive for each active experiment
@@ -45,6 +64,9 @@ add_task(async function test_onStartup_setExperimentActive_called() {
       `should not call setExperimentActive for inactive experiment: ${exp.slug}`
     )
   );
+
+  sandbox.restore();
+  await cleanupStore(manager.store);
 });
 
 add_task(async function test_onStartup_setRolloutActive_called() {
@@ -69,6 +91,9 @@ add_task(async function test_onStartup_setRolloutActive_called() {
       `should call setExperimentActive for rollout: ${r.slug}`
     )
   );
+
+  sandbox.restore();
+  await cleanupStore(manager.store);
 });
 
 add_task(async function test_startup_unenroll() {
@@ -104,6 +129,8 @@ add_task(async function test_startup_unenroll() {
   );
 
   Services.prefs.clearUserPref("app.shield.optoutstudies.enabled");
+
+  await cleanupStore(manager.store);
 });
 
 /**
@@ -120,6 +147,8 @@ add_task(async function test_onRecipe_track_slug() {
   sandbox.spy(manager, "updateEnrollment");
 
   const fooRecipe = ExperimentFakes.recipe("foo");
+  fooRecipe.bucketConfig.start = 0;
+  fooRecipe.bucketConfig.count = 0;
 
   await manager.onStartup();
   // The first time a recipe has seen;
@@ -130,6 +159,8 @@ add_task(async function test_onRecipe_track_slug() {
     true,
     "should add slug to sessions[test]"
   );
+
+  await cleanupStore(manager.store);
 });
 
 add_task(async function test_onRecipe_enroll() {
@@ -142,6 +173,13 @@ add_task(async function test_onRecipe_enroll() {
 
   const fooRecipe = ExperimentFakes.recipe("foo");
   await manager.onStartup();
+
+  Assert.deepEqual(
+    manager.store.getAllActiveExperiments(),
+    [],
+    "There should be no active experiments"
+  );
+
   await manager.onRecipe(fooRecipe, "test");
 
   Assert.equal(
@@ -156,6 +194,8 @@ add_task(async function test_onRecipe_enroll() {
   );
 
   manager.unenroll(fooRecipe.slug, "test-cleanup");
+
+  await cleanupStore(manager.store);
 });
 
 add_task(async function test_onRecipe_update() {
@@ -185,6 +225,8 @@ add_task(async function test_onRecipe_update() {
   );
 
   manager.unenroll(fooRecipe.slug, "test-cleanup");
+
+  await cleanupStore(manager.store);
 });
 
 add_task(async function test_onRecipe_rollout_update() {
@@ -243,6 +285,8 @@ add_task(async function test_onRecipe_rollout_update() {
     manager.unenroll.calledWith(fooRecipe.slug, "branch-removed"),
     "updateEnrollment will unenroll because the branch slug changed"
   );
+
+  await cleanupStore(manager.store);
 });
 
 add_task(async function test_onRecipe_isEnrollmentPaused() {
@@ -272,17 +316,16 @@ add_task(async function test_onRecipe_isEnrollmentPaused() {
   const updatedRecipe = ExperimentFakes.recipe("foo", {
     isEnrollmentPaused: true,
   });
-  let enrollmentPromise = new Promise(resolve =>
-    manager.store.on(`update:${fooRecipe.slug}`, resolve)
-  );
   await manager.enroll(fooRecipe, "test");
-  await enrollmentPromise;
   await manager.onRecipe(updatedRecipe, "test");
   Assert.equal(
     manager.updateEnrollment.calledWith(updatedRecipe),
     true,
     "should still update existing recipes, even if enrollment is paused"
   );
+
+  manager.unenroll(fooRecipe.slug);
+  await cleanupStore(manager.store);
 });
 
 /**
@@ -336,6 +379,10 @@ add_task(async function test_onFinalize_unenroll() {
     false,
     "should clear sessions[test]"
   );
+
+  manager.unenroll(recipe1.slug);
+  manager.unenroll(recipe2.slug);
+  await cleanupStore(manager.store);
 });
 
 add_task(async function test_onFinalize_unenroll_mismatch() {
@@ -384,6 +431,10 @@ add_task(async function test_onFinalize_unenroll_mismatch() {
     false,
     "should clear sessions[test]"
   );
+
+  manager.unenroll(recipe1.slug);
+  manager.unenroll(recipe2.slug);
+  await cleanupStore(manager.store);
 });
 
 add_task(async function test_onFinalize_rollout_unenroll() {
@@ -408,4 +459,6 @@ add_task(async function test_onFinalize_rollout_unenroll() {
     true,
     "should unenroll a experiment whose recipe wasn't seen in the current session"
   );
+
+  await cleanupStore(manager.store);
 });
