@@ -2717,6 +2717,17 @@ pub extern "C" fn Servo_ImportRule_GetLayerName(
 }
 
 #[no_mangle]
+pub extern "C" fn Servo_ImportRule_GetSupportsText(
+    rule: &RawServoImportRule,
+    result: &mut nsACString,
+) {
+    read_locked_arc(rule, |rule: &ImportRule| match rule.supports {
+        Some(ref supports) => supports.condition.to_css(&mut CssWriter::new(result)).unwrap(),
+        None => result.set_is_void(true),
+    })
+}
+
+#[no_mangle]
 pub extern "C" fn Servo_ImportRule_GetSheet(rule: &RawServoImportRule) -> *const DomStyleSheet {
     read_locked_arc(rule, |rule: &ImportRule| {
         rule.stylesheet.as_sheet().map_or(ptr::null(), |s| s.raw() as *const DomStyleSheet)
