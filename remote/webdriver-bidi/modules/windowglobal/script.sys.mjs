@@ -126,7 +126,13 @@ class ScriptModule extends WindowGlobalBiDiModule {
           exception = realm.globalObjectReference.makeDebuggeeValue(
             asyncException
           );
-          stack = rv.return.promiseResolutionSite;
+
+          // If the returned promise was rejected by calling its reject callback
+          // the stack will be available on promiseResolutionSite.
+          // Otherwise, (eg. rejected Promise chained with a then() call) we
+          // fallback on the promiseAllocationSite.
+          stack =
+            rv.return.promiseResolutionSite || rv.return.promiseAllocationSite;
         }
       } else {
         // rv.return is a Debugger.Object or a primitive.
