@@ -1704,6 +1704,8 @@ BrowserGlue.prototype = {
       true
     );
 
+    Services.telemetry.setEventRecordingEnabled("security.doh.neterror", true);
+
     lazy.PageActions.init();
 
     lazy.DoHController.init();

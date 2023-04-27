@@ -11,6 +11,7 @@ function reset() {
   Services.prefs.clearUserPref("network.dns.native-is-localhost");
   Services.prefs.clearUserPref("doh-rollout.disable-heuristics");
   Services.prefs.setIntPref("network.proxy.type", oldProxyType);
+  Services.prefs.clearUserPref("network.trr.uri");
 
   Services.dns.setHeuristicDetectionResult(Ci.nsITRRSkipReason.TRR_OK);
 }
@@ -39,6 +40,17 @@ async function verifyLoad(url, testName) {
 
 // This helper verifies that loading the given url will lead to an error -- the fallback warning if the parameter is true
 async function verifyError(url, fallbackWarning, testName) {
+  // Clear everything.
+  Services.telemetry.clearEvents();
+  await TestUtils.waitForCondition(() => {
+    let events = Services.telemetry.snapshotEvents(
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+      true
+    ).content;
+    return !events || !events.length;
+  });
+  Services.telemetry.setEventRecordingEnabled("security.doh.neterror", true);
+
   let browser;
   let pageLoaded;
   await BrowserTestUtils.openNewForegroundTab(
@@ -80,6 +92,29 @@ async function verifyError(url, fallbackWarning, testName) {
     }
   );
 
+  if (fallbackWarning) {
+    let loadEvent = await TestUtils.waitForCondition(() => {
+      let events = Services.telemetry.snapshotEvents(
+        Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+        true
+      ).content;
+      return events?.find(
+        e => e[1] == "security.doh.neterror" && e[2] == "load"
+      );
+    }, "recorded telemetry for the load");
+    loadEvent.shift();
+    Assert.deepEqual(loadEvent, [
+      "security.doh.neterror",
+      "load",
+      "dohwarning",
+      "NativeFallbackWarning",
+      {
+        mode: "2",
+        provider_key: "0.0.0.0",
+        skip_reason: "TRR_HEURISTIC_TRIPPED_CANARY",
+      },
+    ]);
+  }
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 }
 
