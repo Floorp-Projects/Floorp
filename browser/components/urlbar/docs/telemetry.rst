@@ -267,6 +267,9 @@ urlbar.searchmode.*
     Macs.
   - ``typed``
     Used when the user types an engine alias in the Urlbar.
+  - ``historymenu``
+    Used when the user selects the Search History menu item in a History
+    menu.
   - ``other``
     Used as a catchall for other behaviour. We don't expect this scalar to hold
     any values. If it does, we need to correct an issue with search mode entry

@@ -7887,6 +7887,22 @@ urlbar.searchmode:
       - 'firefox'
     record_in_processes:
       - main
+  historymenu:
+    bug_numbers:
+      - 1736939
+    description: >
+      A keyed uint recording how many times the user entered a particular search
+      mode after selecing the Search History menu item in a History menu.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
   other:
     bug_numbers:
       - 1654680
@@ -8099,6 +8115,23 @@ urlbar.picked.searchmode:
     description: >
       A keyed uint recording how many times the user picked a particular kind of
       result while in search mode after entering search mode by typing an alias.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  historymenu:
+    bug_numbers:
+      - 1736939
+    description: >
+      A keyed uint recording how many times the user picked a particular kind of
+      result while in search mode after entering search mode from the Search
+      History menu item in a History menu.
     expires: never
     kind: uint
     keyed: true

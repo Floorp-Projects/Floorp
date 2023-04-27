@@ -655,6 +655,12 @@ var PlacesCommandHook = {
       searchModeEntry: "bookmarkmenu",
     });
   },
+
+  searchHistory() {
+    gURLBar.search(UrlbarTokenizer.RESTRICT.HISTORY, {
+      searchModeEntry: "historymenu",
+    });
+  },
 };
 
 ChromeUtils.defineESModuleGetters(this, {
