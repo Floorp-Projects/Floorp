@@ -1,4 +1,5 @@
 export CFLAGS="-Wno-int-conversion"
+export RUSTC="$RUNNER_USERDIR/win-crosstool/rustc/bin/rustc"
 
 ac_add_options --with-app-name=floorp
 ac_add_options --with-app-basename=Floorp
