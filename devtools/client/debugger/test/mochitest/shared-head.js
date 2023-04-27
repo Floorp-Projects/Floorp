@@ -1667,8 +1667,6 @@ const selectors = {
     '.sources-list .tree-node[aria-level="1"] > .node > span:nth-child(1)',
   sourceTreeFiles: ".sources-list .tree-node[data-expandable=false]",
   threadSourceTree: i => `.threads-list .sources-pane:nth-child(${i})`,
-  threadSourceTreeHeader: i =>
-    `${selectors.threadSourceTree(i)} .thread-header`,
   threadSourceTreeSourceNode: (i, j) =>
     `${selectors.threadSourceTree(i)} .tree-node:nth-child(${j}) .node`,
   sourceDirectoryLabel: i => `.sources-list .tree-node:nth-child(${i}) .label`,
