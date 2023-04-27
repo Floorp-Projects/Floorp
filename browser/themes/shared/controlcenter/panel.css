@@ -310,6 +310,7 @@
 
 #protections-popup-sendReportView-collection-comments {
   height: 120px;
+  resize: vertical;
 }
 
 .protections-popup-sendReportView-collection-section label {
