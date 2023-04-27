@@ -24,9 +24,11 @@ namespace mozilla {
 
 DDLoggedTypeDeclNameAndBase(AppleVTDecoder, MediaDataDecoder);
 
-class AppleVTDecoder : public MediaDataDecoder,
-                       public DecoderDoctorLifeLogger<AppleVTDecoder> {
+class AppleVTDecoder final : public MediaDataDecoder,
+                             public DecoderDoctorLifeLogger<AppleVTDecoder> {
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AppleVTDecoder, final);
+
   AppleVTDecoder(const VideoInfo& aConfig,
                  layers::ImageContainer* aImageContainer,
                  CreateDecoderParams::OptionSet aOptions,

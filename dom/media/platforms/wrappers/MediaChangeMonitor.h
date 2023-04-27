@@ -25,9 +25,12 @@ DDLoggedTypeDeclNameAndBase(MediaChangeMonitor, MediaDataDecoder);
 // input data, and will delay creation of the MediaDataDecoder until such out
 // of band have been extracted should the underlying decoder required it.
 
-class MediaChangeMonitor : public MediaDataDecoder,
-                           public DecoderDoctorLifeLogger<MediaChangeMonitor> {
+class MediaChangeMonitor final
+    : public MediaDataDecoder,
+      public DecoderDoctorLifeLogger<MediaChangeMonitor> {
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaChangeMonitor, final);
+
   static RefPtr<PlatformDecoderModule::CreateDecoderPromise> Create(
       PDMFactory* aPDMFactory, const CreateDecoderParams& aParams);
 
