@@ -619,6 +619,9 @@ const TEST_GLOBAL = {
       homepageCategory: {
         set() {},
       },
+      blockedSponsors: {
+        set() {},
+      },
     },
     newtabSearch: {
       enabled: {
