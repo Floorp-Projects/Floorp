@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { correctIndentation } from "./indentation";
-import { getGrip } from "./evaluation-result";
+import { getGrip, getFront } from "./evaluation-result";
 
 const UNAVAILABLE_GRIP = { unavailable: true };
 
@@ -31,34 +31,37 @@ function isUnavailable(value) {
   );
 }
 
-export function getValue(expression) {
-  const { value, exception, error } = expression;
-
-  if (error) {
-    return error;
-  }
+/**
+ *
+ * @param {Object} expression: Expression item as stored in state.expressions in reducers/expressions.js
+ * @param {String} expression.input: evaluated expression string
+ * @param {Object} expression.value: evaluated expression result object as returned from ScriptCommand#execute
+ * @param {Object} expression.value.result: expression result, might be a primitive, a grip or a front
+ * @param {Object} expression.value.exception: expression result error, might be a primitive, a grip or a front
+ * @returns {Object} an object of the following shape:
+ *                   - expressionResultGrip: A primitive or a grip
+ *                   - expressionResultFront: An object front if it exists, or undefined
+ */
+export function getExpressionResultGripAndFront(expression) {
+  const { value } = expression;
 
   if (!value) {
-    return UNAVAILABLE_GRIP;
+    return { expressionResultGrip: UNAVAILABLE_GRIP };
   }
 
-  if (exception) {
-    if (isUnavailable(exception)) {
-      return UNAVAILABLE_GRIP;
-    }
-    return exception;
+  const expressionResultReturn = value.exception || value.result;
+  const valueGrip = getGrip(expressionResultReturn);
+  if (!valueGrip || isUnavailable(valueGrip)) {
+    return { expressionResultGrip: UNAVAILABLE_GRIP };
   }
 
-  const valueGrip = getGrip(value.result);
-
-  if (valueGrip && typeof valueGrip === "object" && valueGrip.isError) {
-    if (isUnavailable(valueGrip)) {
-      return UNAVAILABLE_GRIP;
-    }
-
+  if (valueGrip.isError) {
     const { name, message } = valueGrip.preview;
-    return `${name}: ${message}`;
+    return { expressionResultGrip: `${name}: ${message}` };
   }
 
-  return valueGrip;
+  return {
+    expressionResultGrip: valueGrip,
+    expressionResultFront: getFront(expressionResultReturn),
+  };
 }

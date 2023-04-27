@@ -16,8 +16,7 @@ import {
   getAutocompleteMatchset,
   getThreadContext,
 } from "../../selectors";
-import { getValue } from "../../utils/expressions";
-import { getGrip, getFront } from "../../utils/evaluation-result";
+import { getExpressionResultGripAndFront } from "../../utils/expressions";
 
 import { CloseButton } from "../shared/Button";
 
@@ -225,19 +224,17 @@ class Expressions extends Component {
       return null;
     }
 
-    let value = getValue(expression);
-    let front = null;
-    if (value && value.unavailable !== true) {
-      value = getGrip(value);
-      front = getFront(value);
-    }
+    const {
+      expressionResultGrip,
+      expressionResultFront,
+    } = getExpressionResultGripAndFront(expression);
 
     const root = {
       name: expression.input,
       path: input,
       contents: {
-        value,
-        front,
+        value: expressionResultGrip,
+        front: expressionResultFront,
       },
     };
 

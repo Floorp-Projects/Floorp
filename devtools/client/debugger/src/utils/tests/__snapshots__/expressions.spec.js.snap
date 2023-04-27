@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`expressions wrap exxpression should wrap an expression 1`] = `
+exports[`expressions wrap expression should wrap an expression 1`] = `
 "try {
  foo
 } catch (e) {
@@ -8,7 +8,7 @@ exports[`expressions wrap exxpression should wrap an expression 1`] = `
 }"
 `;
 
-exports[`expressions wrap exxpression should wrap expression with a comment 1`] = `
+exports[`expressions wrap expression should wrap expression with a comment 1`] = `
 "try {
  foo // yo yo
 } catch (e) {
@@ -16,7 +16,7 @@ exports[`expressions wrap exxpression should wrap expression with a comment 1`] 
 }"
 `;
 
-exports[`expressions wrap exxpression should wrap quotes 1`] = `
+exports[`expressions wrap expression should wrap quotes 1`] = `
 "try {
  \\"2\\"
 } catch (e) {
