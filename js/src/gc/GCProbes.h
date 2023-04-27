@@ -31,7 +31,6 @@ namespace gcprobes {
 
 inline void Init(gc::GCRuntime* gc) {}
 inline void Finish(gc::GCRuntime* gc) {}
-inline void NurseryAlloc(void* ptr, size_t size) {}
 inline void NurseryAlloc(void* ptr, JS::TraceKind kind) {}
 inline void TenuredAlloc(void* ptr, gc::AllocKind kind) {}
 inline void CreateObject(JSObject* object) {}
