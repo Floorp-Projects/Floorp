@@ -8,5 +8,5 @@ with Files("**"):
     BUG_COMPONENT = ("Firefox", "Enterprise Policies")
 
 EXTRA_PP_JS_MODULES.policies += [
-    "schema.jsm",
+    "schema.sys.mjs",
 ]
