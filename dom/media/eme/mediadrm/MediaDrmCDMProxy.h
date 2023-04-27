@@ -22,7 +22,7 @@
 namespace mozilla {
 
 class MediaDrmCDMCallbackProxy;
-class MediaDrmCDMProxy : public CDMProxy {
+class MediaDrmCDMProxy final : public CDMProxy {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDrmCDMProxy, override)
 
@@ -167,7 +167,6 @@ class MediaDrmCDMProxy : public CDMProxy {
 
   nsCString mNodeId;
   UniquePtr<MediaDrmProxySupport> mCDM;
-  UniquePtr<MediaDrmCDMCallbackProxy> mCallback;
   bool mShutdownCalled;
 
   // =====================================================================

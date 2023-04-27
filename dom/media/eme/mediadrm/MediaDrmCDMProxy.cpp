@@ -169,6 +169,7 @@ void MediaDrmCDMProxy::Shutdown() {
   mOwnerThread->Dispatch(task, NS_DISPATCH_NORMAL);
   mOwnerThread->Shutdown();
   mOwnerThread = nullptr;
+  mKeys.Clear();
 }
 
 void MediaDrmCDMProxy::Terminated() {
@@ -375,8 +376,9 @@ void MediaDrmCDMProxy::md_Init(uint32_t aPromiseId) {
   MOZ_ASSERT(IsOnOwnerThread());
   MOZ_ASSERT(mCDM);
 
-  mCallback.reset(new MediaDrmCDMCallbackProxy(this));
-  mCDM->Init(mCallback.get());
+  UniquePtr<MediaDrmCDMCallbackProxy> callback(
+      new MediaDrmCDMCallbackProxy(this));
+  mCDM->Init(std::move(callback));
   nsCOMPtr<nsIRunnable> task(
       NewRunnableMethod<uint32_t>("MediaDrmCDMProxy::OnCDMCreated", this,
                                   &MediaDrmCDMProxy::OnCDMCreated, aPromiseId));
