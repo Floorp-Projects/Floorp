@@ -641,6 +641,7 @@ static nsresult AppendImagePromise(nsITransferable* aTransferable,
   NS_ENSURE_SUCCESS(rv, rv);
 
   aTransferable->SetRequestingPrincipal(node->NodePrincipal());
+  aTransferable->SetCookieJarSettings(node->OwnerDoc()->CookieJarSettings());
   aTransferable->SetContentPolicyType(nsIContentPolicy::TYPE_INTERNAL_IMAGE);
 
   // add the dataless file promise flavor

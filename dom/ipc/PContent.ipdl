@@ -1218,6 +1218,7 @@ parent:
     async SetClipboard(IPCDataTransfer aDataTransfer,
                        bool aIsPrivateData,
                        nullable nsIPrincipal aRequestingPrincipal,
+                       CookieJarSettingsArgs? cookieJarSettings,
                        nsContentPolicyType aContentPolicyType,
                        nullable nsIReferrerInfo aReferrerInfo,
                        int32_t aWhichClipboard);
