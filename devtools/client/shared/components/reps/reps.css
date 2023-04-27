@@ -185,6 +185,23 @@
   vertical-align: middle;
 }
 
+.objectBox-jsonml-wrapper .jsonml-header-collapse-button::before {
+  content: "";
+  display: block;
+  width: 10px;
+  height: 10px;
+  background: url("chrome://devtools/skin/images/arrow.svg") no-repeat center;
+  background-size: 10px;
+  transform: rotate(-90deg);
+  transition: transform 125ms ease;
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-dimmed-color);
+}
+
+.objectBox-jsonml-wrapper .jsonml-header-collapse-button[aria-expanded="true"]::before {
+  transform: rotate(0deg);
+}
+
 /******************************************************************************/
 
 .objectBox-event,
