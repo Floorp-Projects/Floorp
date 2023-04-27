@@ -612,6 +612,11 @@ void BaselinePerfSpewer::recordInstruction(JSContext* cx, MacroAssembler& masm,
 const char* BaselinePerfSpewer::CodeName(unsigned op) {
   return js::CodeName(static_cast<JSOp>(op));
 }
+
+const char* BaselineInterpreterPerfSpewer::CodeName(unsigned op) {
+  return js::CodeName(static_cast<JSOp>(op));
+}
+
 const char* IonPerfSpewer::CodeName(unsigned op) {
   return js::jit::LIRCodeName(static_cast<LNode::Opcode>(op));
 }
@@ -1012,6 +1017,86 @@ void BaselinePerfSpewer::saveProfile(JSContext* cx, JSScript* script,
   }
   UniqueChars desc = GetFunctionDesc("Baseline", cx, script);
   PerfSpewer::saveProfile(code, desc, script);
+}
+
+void BaselineInterpreterPerfSpewer::saveProfile(JitCode* code) {
+  if (!PerfEnabled()) {
+    return;
+  }
+
+  enum class SpewKind { Uninitialized, SingleSym, MultiSym };
+
+  // Check which type of Baseline Interpreter Spew is requested.
+  static SpewKind kind = SpewKind::Uninitialized;
+  if (kind == SpewKind::Uninitialized) {
+    if (getenv("IONPERF_SINGLE_BLINTERP")) {
+      kind = SpewKind::SingleSym;
+    } else {
+      kind = SpewKind::MultiSym;
+    }
+  }
+
+  // For SingleSym, just emit one "BaselineInterpreter" symbol
+  // and emit the opcodes as IR if IONPERF=ir is used.
+  if (kind == SpewKind::SingleSym) {
+    UniqueChars desc = DuplicateString("BaselineInterpreter");
+    PerfSpewer::saveProfile(code, desc, nullptr);
+    return;
+  }
+
+  // For MultiSym, split up each opcode into its own symbol.
+  // No IR is emitted in this case, so we can skip PerfSpewer::saveProfile.
+  MOZ_ASSERT(kind == SpewKind::MultiSym);
+  for (size_t i = 1; i < opcodes_.length(); i++) {
+    uintptr_t base = uintptr_t(code->raw()) + opcodes_[i - 1].offset;
+    uintptr_t size = opcodes_[i].offset - opcodes_[i - 1].offset;
+
+    UniqueChars rangeName;
+    if (opcodes_[i - 1].str) {
+      rangeName = JS_smprintf("BlinterpOp: %s", opcodes_[i - 1].str.get());
+    } else {
+      rangeName =
+          JS_smprintf("BlinterpOp: %s", CodeName(opcodes_[i - 1].opcode));
+    }
+
+    // If rangeName is empty, we probably went OOM.
+    if (!rangeName) {
+      AutoLockPerfSpewer lock;
+      DisablePerfSpewer(lock);
+      return;
+    }
+
+    MOZ_ASSERT(base + size <=
+               uintptr_t(code->raw()) + code->instructionsSize());
+    CollectPerfSpewerJitCodeProfile(base, size, rangeName.get());
+  }
+}
+
+void BaselineInterpreterPerfSpewer::recordOffset(MacroAssembler& masm,
+                                                 JSOp op) {
+  if (!PerfEnabled()) {
+    return;
+  }
+
+  if (!opcodes_.emplaceBack(masm.currentOffset(), unsigned(op))) {
+    opcodes_.clear();
+    AutoLockPerfSpewer lock;
+    DisablePerfSpewer(lock);
+  }
+}
+
+void BaselineInterpreterPerfSpewer::recordOffset(MacroAssembler& masm,
+                                                 const char* name) {
+  if (!PerfEnabled()) {
+    return;
+  }
+
+  UniqueChars desc = DuplicateString(name);
+  if (!opcodes_.emplaceBack(masm.currentOffset(), desc)) {
+    opcodes_.clear();
+    AutoLockPerfSpewer lock;
+    DisablePerfSpewer(lock);
+  }
 }
 
 void IonPerfSpewer::saveProfile(JSContext* cx, JSScript* script,
