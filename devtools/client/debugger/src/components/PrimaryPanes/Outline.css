@@ -2,6 +2,82 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+
+.sources-panel .outline {
+  display: flex;
+  height: 100%;
+}
+
+.source-outline-tabs {
+  font-size: 12px;
+  width: 100%;
+  background: var(--theme-body-background);
+  display: flex;
+  user-select: none;
+  box-sizing: border-box;
+  height: var(--editor-header-height);
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.source-outline-tabs .tab {
+  align-items: center;
+  background-color: var(--theme-toolbar-background);
+  color: var(--theme-toolbar-color);
+  cursor: default;
+  display: inline-flex;
+  flex: 1;
+  justify-content: center;
+  overflow: hidden;
+  padding: 4px 8px;
+  position: relative;
+}
+
+.source-outline-tabs .tab::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--tab-line-color, transparent);
+  transition: transform 250ms var(--animation-curve),
+    opacity 250ms var(--animation-curve);
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.source-outline-tabs .tab.active {
+  --tab-line-color: var(--tab-line-selected-color);
+  color: var(--theme-toolbar-selected-color);
+  border-bottom-color: transparent;
+}
+
+.source-outline-tabs .tab:not(.active):hover {
+  --tab-line-color: var(--tab-line-hover-color);
+  background-color: var(--theme-toolbar-hover);
+}
+
+.source-outline-tabs .tab:hover::before,
+.source-outline-tabs .tab.active::before {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.source-outline-panel {
+  flex: 1;
+  overflow: auto;
+}
+
+.source-outline-panel.has-root > div {
+  height: 100%;
+}
+
+.source-outline-panel.has-root .thread-header {
+  margin-top: 4px;
+}
+
 .outline {
   overflow-y: hidden;
 }
