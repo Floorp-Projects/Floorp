@@ -1566,9 +1566,6 @@ border-bottom: 1.1px solid var(--toolbar-bgcolor);
 @supports not -moz-bool-pref("floorp.fluerial.roundVerticalTabs") {
   #browser .tab-background{
     border-radius: 8px 8px 8px 8px !important;
-  }
-
-  .tab-background {
     margin-left: 2px !important;
     margin-right: 2px !important;
   }
@@ -1577,6 +1574,8 @@ border-bottom: 1.1px solid var(--toolbar-bgcolor);
 
 .tab-background:not(#browser *){
   border-radius: 8px 8px 0 0 !important;
+      margin-left: 0.5px !important;
+    margin-right: 0.5px !important;
 }
 
 .tab-background {
@@ -1625,6 +1624,10 @@ border-bottom: 1.1px solid var(--toolbar-bgcolor);
   margin-right: 8px !important;
 }
 #firefox-view-button+#tabbrowser-tabs tab:first-of-type:not(#browser *){
+  margin-left: 16px !important;
+  margin-inline-start: 8px !important;
+}
+#firefox-view-button+#tabbrowser-tabs tab[floorp-firstVisibleTab]:not(#browser *){
   margin-left: 16px !important;
   margin-inline-start: 8px !important;
 }
@@ -1965,7 +1968,7 @@ menupopup> :is(menu:not(.menu-iconic), menuitem:not(.menuitem-iconic, [type="che
 
 /* special case for pinned tabs when overflowing */
 :is(:is(#tabbrowser-tabs:not([overflow]) .tabbrowser-tab:not([first-visible-tab]),
-#tabbrowser-tabs[overflow] .tabbrowser-tab:not([first-visible-tab]):not([pinned])):not(#browser *)):not(#firefox-view-button+#tabbrowser-tabs tab:first-of-type) {
+#tabbrowser-tabs[overflow] .tabbrowser-tab:not([first-visible-tab]):not([pinned])):not(#browser *)):not(#firefox-view-button+#tabbrowser-tabs tab:first-of-type):not(#firefox-view-button+#tabbrowser-tabs tab[floorp-firstVisibleTab]) {
   margin-inline-start: -.5px !important;
 }
 
@@ -2024,6 +2027,7 @@ menupopup> :is(menu:not(.menu-iconic), menuitem:not(.menuitem-iconic, [type="che
 :-moz-any(#TabsToolbar,#browser) .tabbrowser-tab[visuallyselected] {
   --tab-bgcolor: var(--toolbar-bgcolor);
   --tab-opacity: 1;
+  z-index:5;
 }
 
 
