@@ -334,7 +334,7 @@ mozAccessible* GetEditableNativeFromGeckoAccessible(Accessible* aAcc) {
     return nil;
   }
 
-  return geckoTextMarker.LeftLineRange().CreateAXTextMarkerRange();
+  return geckoTextMarker.LineRange().CreateAXTextMarkerRange();
 }
 
 - (AXTextMarkerRangeRef)moxLeftLineTextMarkerRangeForTextMarker:

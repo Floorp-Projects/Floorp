@@ -63,6 +63,8 @@ class GeckoTextMarker {
 
   GeckoTextMarkerRange RightWordRange() const;
 
+  GeckoTextMarkerRange LineRange() const;
+
   GeckoTextMarkerRange LeftLineRange() const;
 
   GeckoTextMarkerRange RightLineRange() const;

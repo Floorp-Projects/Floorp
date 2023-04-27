@@ -172,6 +172,19 @@ CachedTextMarkerRange CachedTextMarker::RightWordRange() const {
                                start < end ? end : start);
 }
 
+CachedTextMarkerRange CachedTextMarker::LineRange() const {
+  TextLeafPoint start = mPoint.FindBoundary(
+      nsIAccessibleText::BOUNDARY_LINE_START, eDirPrevious,
+      TextLeafPoint::BoundaryFlags::eStopInEditable |
+          TextLeafPoint::BoundaryFlags::eIgnoreListItemMarker |
+          TextLeafPoint::BoundaryFlags::eIncludeOrigin);
+  TextLeafPoint end =
+      start.FindBoundary(nsIAccessibleText::BOUNDARY_LINE_END, eDirNext,
+                         TextLeafPoint::BoundaryFlags::eStopInEditable);
+
+  return CachedTextMarkerRange(start, end);
+}
+
 CachedTextMarkerRange CachedTextMarker::LeftLineRange() const {
   TextLeafPoint start = mPoint.FindBoundary(
       nsIAccessibleText::BOUNDARY_LINE_START, eDirPrevious,

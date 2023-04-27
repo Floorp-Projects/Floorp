@@ -177,6 +177,22 @@ function testSelectionEventLeftChar(event, expectedChar) {
   is(leftCharString, expectedChar, "Left character is correct");
 }
 
+function testSelectionEventLine(event, expectedLine) {
+  const selStart = event.macIface.getParameterizedAttributeValue(
+    "AXStartTextMarkerForTextMarkerRange",
+    event.data.AXSelectedTextMarkerRange
+  );
+  const lineRange = event.macIface.getParameterizedAttributeValue(
+    "AXLineTextMarkerRangeForTextMarker",
+    selStart
+  );
+  const lineString = event.macIface.getParameterizedAttributeValue(
+    "AXStringForTextMarkerRange",
+    lineRange
+  );
+  is(lineString, expectedLine, "Line is correct");
+}
+
 async function synthKeyAndTestValueChanged(
   synthKey,
   synthEvent,
@@ -520,6 +536,73 @@ addAccessibleTask(
       }
     );
     testSelectionEventLeftChar(event, "c");
+  },
+  { chrome: true, topLevel: true }
+);
+
+/**
+ * Test that the caret returns the correct line when the caret is at the start
+ * of the line.
+ */
+addAccessibleTask(
+  `
+<textarea id="hard">ab
+cd
+ef</textarea>
+<div id="wrapped" contenteditable style="width: 1ch;">a b c</div>
+  `,
+  async function(browser, docAcc) {
+    await focusIntoInput(docAcc, "hard");
+    let event = await synthKeyAndTestSelectionChanged(
+      "KEY_ArrowDown",
+      null,
+      "hard",
+      "",
+      {
+        AXTextStateChangeType: AXTextStateChangeTypeSelectionMove,
+        AXTextSelectionDirection: AXTextSelectionDirectionNext,
+        AXTextSelectionGranularity: AXTextSelectionGranularityLine,
+      }
+    );
+    testSelectionEventLine(event, "cd");
+    event = await synthKeyAndTestSelectionChanged(
+      "KEY_ArrowDown",
+      null,
+      "hard",
+      "",
+      {
+        AXTextStateChangeType: AXTextStateChangeTypeSelectionMove,
+        AXTextSelectionDirection: AXTextSelectionDirectionNext,
+        AXTextSelectionGranularity: AXTextSelectionGranularityLine,
+      }
+    );
+    testSelectionEventLine(event, "ef");
+
+    await focusIntoInput(docAcc, "wrapped");
+    event = await synthKeyAndTestSelectionChanged(
+      "KEY_ArrowDown",
+      null,
+      "wrapped",
+      "",
+      {
+        AXTextStateChangeType: AXTextStateChangeTypeSelectionMove,
+        AXTextSelectionDirection: AXTextSelectionDirectionNext,
+        AXTextSelectionGranularity: AXTextSelectionGranularityLine,
+      }
+    );
+    testSelectionEventLine(event, "b ");
+    event = await synthKeyAndTestSelectionChanged(
+      "KEY_ArrowDown",
+      null,
+      "wrapped",
+      "",
+      {
+        AXTextStateChangeType: AXTextStateChangeTypeSelectionMove,
+        AXTextSelectionDirection: AXTextSelectionDirectionNext,
+        AXTextSelectionGranularity: AXTextSelectionGranularityLine,
+      }
+    );
+    testSelectionEventLine(event, "c");
   },
   { chrome: true, topLevel: true }
 );

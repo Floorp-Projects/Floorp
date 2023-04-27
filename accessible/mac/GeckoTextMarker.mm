@@ -141,6 +141,15 @@ GeckoTextMarkerRange GeckoTextMarker::RightWordRange() const {
   }
 }
 
+GeckoTextMarkerRange GeckoTextMarker::LineRange() const {
+  if (mLegacy) {
+    return GeckoTextMarkerRange(
+        mLegacyTextMarker.Range(EWhichRange::eLeftLine));
+  } else {
+    return GeckoTextMarkerRange(mCachedTextMarker.LineRange());
+  }
+}
+
 GeckoTextMarkerRange GeckoTextMarker::LeftLineRange() const {
   if (mLegacy) {
     return GeckoTextMarkerRange(
