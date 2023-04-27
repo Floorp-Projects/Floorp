@@ -19,9 +19,5 @@ interface CSSImportRule : CSSRule {
   // nullable.
   // see: https://github.com/w3c/csswg-drafts/issues/8608.
   [SameObject, BinaryName="styleSheetForBindings"] readonly attribute CSSStyleSheet? styleSheet;
-};
-
-// https://drafts.csswg.org/css-cascade-5/#extensions-to-cssimportrule-interface
-partial interface CSSImportRule {
   readonly attribute UTF8String? layerName;
 };
