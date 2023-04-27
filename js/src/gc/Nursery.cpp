@@ -506,6 +506,11 @@ void* js::Nursery::allocateCell(gc::AllocSite* site, size_t size,
     MOZ_ASSERT_IF(site->isNormal(), site->isInAllocatedList());
   }
 
+  // We count this regardless of the profiler's state, assuming that it costs
+  // just as much to count it, as to check the profiler's state and decide not
+  // to count it.
+  stats().noteNurseryAlloc();
+
   gcprobes::NurseryAlloc(cell, kind);
   return cell;
 }
@@ -540,10 +545,6 @@ inline void* js::Nursery::allocate(size_t size) {
 
   void* thing = (void*)position();
   position_ = position() + size;
-  // We count this regardless of the profiler's state, assuming that it costs
-  // just as much to count it, as to check the profiler's state and decide not
-  // to count it.
-  stats().noteNurseryAlloc();
 
   DebugOnlyPoison(thing, JS_ALLOCATED_NURSERY_PATTERN, size,
                   MemCheckKind::MakeUndefined);
