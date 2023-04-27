@@ -1,4 +1,5 @@
 var max = 40;
+var key = "d";
 setJitCompilerOption("ion.warmup.trigger", max - 10);
 
 function simple() {
@@ -22,7 +23,7 @@ function megamorphic() {
     }
 }
 
-function proto() {
+function protoSetProp() {
     var base = {a: 1};
     var array = [{__proto__: base},
                  {__proto__: base, b: 1, a: 1},
@@ -37,11 +38,27 @@ function proto() {
     }
 }
 
+function protoSetElem() {
+    var base = {a: 1};
+    var array = [{__proto__: base},
+                 {__proto__: base, b: 1, a: 1},
+                 {__proto__: base, c: 1, a: 1}];
+    for (var j = 0; j < 2; j++) {
+        for (var i = 0; i < array.length; i++) {
+            var x = array[i];
+            assertEq("a" in x, true);
+            assertEq("d" in x, (j > 0));
+        }
+        base[key] = 1; // Define property on prototype
+    }
+}
+
 function test() {
     for (var i = 0; i < max; i++) {
         simple();
         megamorphic();
-        proto();
+        protoSetProp();
+        protoSetElem();
     }
 }
 
