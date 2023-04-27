@@ -15,7 +15,7 @@
   /* --tabpanel-background-color matches $in-content-page-background in newtab
      (browser/components/newtab/content-src/styles/_variables.scss) */
   --tabpanel-background-color: #F9F9FB;
-  --tab-attention-icon-color: var(--lwt-tab-attention-icon-color, rgb(42,195,162));
+  --tab-attention-icon-color: rgb(42,195,162);
 }
 
 #tabbrowser-tabpanels browser[type=content] {
@@ -44,6 +44,10 @@
 
 :root[uidensity=touch] {
   --tab-min-height: 41px;
+}
+
+toolbar[brighttext] {
+  --tab-attention-icon-color: rgb(84,255,189);
 }
 
 #tabbrowser-tabs {
@@ -614,10 +618,6 @@
 }
 
 /* Pinned tabs */
-
-toolbar[brighttext] {
-  --tab-attention-icon-color: var(--lwt-tab-attention-icon-color, rgb(84,255,189));
-}
 
 .tabbrowser-tab:is([image], [pinned]) > .tab-stack > .tab-content[attention]:not([selected="true"]),
 .tabbrowser-tab > .tab-stack > .tab-content[pinned][titlechanged]:not([selected="true"]),
