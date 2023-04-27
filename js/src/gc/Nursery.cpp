@@ -477,7 +477,6 @@ void* js::Nursery::allocateObject(gc::AllocSite* site, size_t size,
     return nullptr;
   }
 
-  gcprobes::NurseryAlloc(ptr, size);
   return ptr;
 }
 
