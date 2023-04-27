@@ -118,7 +118,7 @@ class ICState {
     if (!shouldTransition()) {
       return false;
     }
-    if (numFailures_ == maxFailures() || mode() == Mode::Megamorphic) {
+    if (numFailures_ >= maxFailures() || mode() == Mode::Megamorphic) {
       transition(Mode::Generic);
       return true;
     }
