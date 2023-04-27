@@ -1113,6 +1113,7 @@ class WorkerPrivate final
   nsILoadInfo::CrossOriginEmbedderPolicy GetOwnerEmbedderPolicy() const;
 
   void SetCCCollectedAnything(bool collectedAnything);
+  bool isLastCCCollectedAnything();
 
   uint32_t GetCurrentTimerNestingLevel() const {
     auto data = mWorkerThreadAccessible.Access();
