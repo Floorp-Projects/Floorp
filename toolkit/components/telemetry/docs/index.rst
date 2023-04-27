@@ -21,7 +21,6 @@ There are also some notable special cases:
 
 1. `Firefox on Glean (FOG) <../glean/index.html>`__ a wrapper around Glean for Firefox Desktop.
 2. `GeckoView Streaming Telemetry <../internals/geckoview-streaming.html>`__ - gecko uses Desktop Telemetry for recording data, but on Android (Fenix) Glean is used for sending the data. GeckoView provides the necessary adapter to get the data from Desktop Telemetry to Glean.
-3. Origin Telemetry - this collects sensitive data and submits encrypted pings. Because the data is used in a `cryptographic multi-party computation <https://en.wikipedia.org/wiki/Secure_multi-party_computation>`__ the pings contain multiple encrypted payloads.
 
 *Note:* Mozilla's `data collection policy <https://wiki.mozilla.org/Firefox/Data_Collection>`_ documents the process and requirements that are applied here.
 
