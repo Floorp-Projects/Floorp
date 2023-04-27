@@ -86,7 +86,6 @@ job_description_schema = Schema(
                     Optional("dest"): str,
                     Optional("extract"): bool,
                     Optional("verify-hash"): bool,
-                    Optional("prefix"): str,
                 },
             ],
         },
@@ -372,8 +371,6 @@ def use_fetches(config, jobs):
                     )
 
                 for artifact in artifacts:
-                    artifact_prefix = prefix
-
                     if isinstance(artifact, str):
                         path = artifact
                         dest = None
@@ -385,11 +382,8 @@ def use_fetches(config, jobs):
                         extract = artifact.get("extract", True)
                         verify_hash = artifact.get("verify-hash", False)
 
-                        if "prefix" in artifact:
-                            artifact_prefix = artifact["prefix"]
-
                     fetch = {
-                        "artifact": f"{artifact_prefix}/{path}"
+                        "artifact": f"{prefix}/{path}"
                         if not path.startswith("/")
                         else path[1:],
                         "task": f"<{kind}>",

@@ -1572,47 +1572,36 @@ win64-aarch64-shippable/opt:
               extract: false
               dest: ../artifacts
             - artifact: target.common.tests.tar.gz
-              prefix: public/cidata
               extract: false
               dest: ../artifacts
             - artifact: target.cppunittest.tests.tar.gz
-              prefix: public/cidata
               extract: false
               dest: ../artifacts
             - artifact: target.mochitest.tests.tar.gz
-              prefix: public/cidata
               extract: false
               dest: ../artifacts
             - artifact: target.reftest.tests.tar.gz
-              prefix: public/cidata
               extract: false
               dest: ../artifacts
             - artifact: target.talos.tests.tar.gz
-              prefix: public/cidata
               extract: false
               dest: ../artifacts
             - artifact: target.raptor.tests.tar.gz
-              prefix: public/cidata
               extract: false
               dest: ../artifacts
             - artifact: target.condprof.tests.tar.gz
-              prefix: public/cidata
               extract: false
               dest: ../artifacts
             - artifact: target.awsy.tests.tar.gz
-              prefix: public/cidata
               extract: false
               dest: ../artifacts
             - artifact: target.xpcshell.tests.tar.gz
-              prefix: public/cidata
               extract: false
               dest: ../artifacts
             - artifact: target.web-platform.tests.tar.gz
-              prefix: public/cidata
               extract: false
               dest: ../artifacts
             - artifact: target.updater-dep.tests.tar.gz
-              prefix: public/cidata
               extract: false
               dest: ../artifacts
             - artifact: target.generated-files.tar.gz
@@ -1739,47 +1728,36 @@ win64-aarch64-devedition/opt:
               extract: false
               dest: ../artifacts
             - artifact: target.common.tests.tar.gz
-              prefix: public/cidata
               extract: false
               dest: ../artifacts
             - artifact: target.cppunittest.tests.tar.gz
-              prefix: public/cidata
               extract: false
               dest: ../artifacts
             - artifact: target.mochitest.tests.tar.gz
-              prefix: public/cidata
               extract: false
               dest: ../artifacts
             - artifact: target.reftest.tests.tar.gz
-              prefix: public/cidata
               extract: false
               dest: ../artifacts
             - artifact: target.talos.tests.tar.gz
-              prefix: public/cidata
               extract: false
               dest: ../artifacts
             - artifact: target.raptor.tests.tar.gz
-              prefix: public/cidata
               extract: false
               dest: ../artifacts
             - artifact: target.condprof.tests.tar.gz
-              prefix: public/cidata
               extract: false
               dest: ../artifacts
             - artifact: target.awsy.tests.tar.gz
-              prefix: public/cidata
               extract: false
               dest: ../artifacts
             - artifact: target.xpcshell.tests.tar.gz
-              prefix: public/cidata
               extract: false
               dest: ../artifacts
             - artifact: target.web-platform.tests.tar.gz
-              prefix: public/cidata
               extract: false
               dest: ../artifacts
             - artifact: target.updater-dep.tests.tar.gz
-              prefix: public/cidata
               extract: false
               dest: ../artifacts
             - artifact: target.generated-files.tar.gz

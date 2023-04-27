@@ -479,7 +479,7 @@ def generate_beetmover_upstream_artifacts(
 
             paths.append(
                 os.path.join(
-                    file_config.get("prefix", base_artifact_prefix),
+                    base_artifact_prefix,
                     jsone.render(file_config["source_path_modifier"], kwargs),
                     jsone.render(filename, kwargs),
                 )
@@ -639,7 +639,7 @@ def generate_beetmover_artifact_map(config, job, **kwargs):
             # Key must be artifact path, to avoid trampling duplicates, such
             # as public/build/target.apk and public/build/en-US/target.apk
             key = os.path.join(
-                file_config.get("prefix", base_artifact_prefix),
+                base_artifact_prefix,
                 file_config["source_path_modifier"],
                 filename,
             )
@@ -788,7 +788,7 @@ def generate_beetmover_partials_artifact_map(config, job, partials_info, **kwarg
             # Key must be artifact path, to avoid trampling duplicates, such
             # as public/build/target.apk and public/build/en-US/target.apk
             key = os.path.join(
-                file_config.get("prefix", base_artifact_prefix),
+                base_artifact_prefix,
                 file_config["source_path_modifier"],
                 filename,
             )
