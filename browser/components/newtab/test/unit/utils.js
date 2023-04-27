@@ -112,8 +112,8 @@ export class FakensIPrefBranch {
   setStringPref(prefName, value) {
     this.set(prefName, value);
   }
-  getStringPref(prefName) {
-    return this.get(prefName);
+  getStringPref(prefName, defaultValue) {
+    return this.get(prefName, defaultValue);
   }
   setBoolPref(prefName, value) {
     this.set(prefName, value);
@@ -136,8 +136,9 @@ export class FakensIPrefBranch {
   clearUserPref(prefName) {
     this.prefs.delete(prefName);
   }
-  get(prefName) {
-    return this.prefs.get(prefName);
+  get(prefName, defaultValue) {
+    let value = this.prefs.get(prefName);
+    return typeof value === "undefined" ? defaultValue : value;
   }
   getPrefType(prefName) {
     let value = this.prefs.get(prefName);
