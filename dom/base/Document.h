@@ -1891,8 +1891,6 @@ class Document : public nsINode,
    */
   nsTArray<Element*> GetTopLayer() const;
 
-  bool TopLayerContains(Element&) const;
-
   // Do the "fullscreen element ready check" from the fullscreen spec.
   // It returns true if the given element is allowed to go into fullscreen.
   // It is responsive to dispatch "fullscreenerror" event when necessary.
@@ -3479,7 +3477,7 @@ class Document : public nsINode,
   // See https://html.spec.whatwg.org/multipage/popover.html#auto-popover-list
   nsTArray<Element*> AutoPopoverList() const;
 
-  // Return document's auto popover list's last element.
+  // Teturn document's auto popover list's last element.
   // See
   // https://html.spec.whatwg.org/multipage/popover.html#topmost-auto-popover
   Element* GetTopmostAutoPopover() const;
@@ -3487,9 +3485,6 @@ class Document : public nsINode,
   // Adds/removes an element to/from the auto popover list.
   void AddToAutoPopoverList(Element&);
   void RemoveFromAutoPopoverList(Element&);
-
-  void AddPopoverToTopLayer(Element&);
-  void RemovePopoverFromTopLayer(Element&);
 
   Element* GetTopLayerTop();
   // Return the fullscreen element in the top layer
