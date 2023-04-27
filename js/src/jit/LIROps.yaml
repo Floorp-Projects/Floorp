@@ -2645,7 +2645,11 @@
   operands:
     object: WordSized
     rhs: BoxedValue
+#ifdef JS_CODEGEN_X86
+  num_temps: 1
+#else
   num_temps: 3
+#endif
   call_instruction: true
   mir_op: true
 

@@ -4303,17 +4303,51 @@ void CodeGenerator::visitMegamorphicLoadSlotByValue(
 }
 
 void CodeGenerator::visitMegamorphicStoreSlot(LMegamorphicStoreSlot* lir) {
-  Register object = ToRegister(lir->object());
-  ValueOperand rhs = ToValue(lir, LMegamorphicStoreSlot::RhsIndex);
-  Register temp = ToRegister(lir->temp0());
+  Register obj = ToRegister(lir->object());
+  ValueOperand value = ToValue(lir, LMegamorphicStoreSlot::RhsIndex);
+
+  Register temp0 = ToRegister(lir->temp0());
+#ifndef JS_CODEGEN_X86
+  Register temp1 = ToRegister(lir->temp1());
+  Register temp2 = ToRegister(lir->temp2());
+#endif
+
+  Label cacheHit, done;
+  if (JitOptions.enableWatchtowerMegamorphic) {
+#ifdef JS_CODEGEN_X86
+    masm.emitMegamorphicCachedSetSlot(
+        lir->mir()->name(), obj, temp0, value, &cacheHit,
+        [](MacroAssembler& masm, const Address& addr, MIRType mirType) {
+          EmitPreBarrier(masm, addr, mirType);
+        });
+#else
+    masm.emitMegamorphicCachedSetSlot(
+        lir->mir()->name(), obj, temp0, temp1, temp2, value, &cacheHit,
+        [](MacroAssembler& masm, const Address& addr, MIRType mirType) {
+          EmitPreBarrier(masm, addr, mirType);
+        });
+#endif
+  }
 
   pushArg(Imm32(lir->mir()->strict()));
-  pushArg(rhs);
-  pushArg(lir->mir()->name(), temp);
-  pushArg(object);
+  pushArg(value);
+  pushArg(lir->mir()->name(), temp0);
+  pushArg(obj);
 
   using Fn = bool (*)(JSContext*, HandleObject, HandleId, HandleValue, bool);
   callVM<Fn, SetPropertyMegamorphic<true>>(lir);
+
+  masm.jump(&done);
+  masm.bind(&cacheHit);
+
+  masm.branchPtrInNurseryChunk(Assembler::Equal, obj, temp0, &done);
+  masm.branchValueIsNurseryCell(Assembler::NotEqual, value, temp0, &done);
+
+  saveVolatile(temp0);
+  emitPostWriteBarrier(obj);
+  restoreVolatile(temp0);
+
+  masm.bind(&done);
 }
 
 void CodeGenerator::visitMegamorphicHasProp(LMegamorphicHasProp* lir) {
