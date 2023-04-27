@@ -2073,14 +2073,15 @@ static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
   return res;
 }
 
+template <bool Cached>
 bool SetElementMegamorphic(JSContext* cx, HandleObject obj, HandleValue index,
                            HandleValue value, bool strict) {
   if (obj->is<PlainObject>()) {
     PropertyKey key;
     if (ValueToAtomOrSymbolPure(cx, index, &key)) {
       bool optimized = false;
-      if (!TryAddOrSetPlainObjectProperty<false>(cx, obj.as<PlainObject>(), key,
-                                                 value, &optimized)) {
+      if (!TryAddOrSetPlainObjectProperty<Cached>(cx, obj.as<PlainObject>(),
+                                                  key, value, &optimized)) {
         return false;
       }
       if (optimized) {
@@ -2092,25 +2093,12 @@ bool SetElementMegamorphic(JSContext* cx, HandleObject obj, HandleValue index,
   return SetObjectElementWithReceiver(cx, obj, index, value, receiver, strict);
 }
 
-bool SetElementMegamorphicCached(JSContext* cx, HandleObject obj,
-                                 HandleValue index, HandleValue value,
-                                 bool strict) {
-  if (obj->is<PlainObject>()) {
-    PropertyKey key;
-    if (ValueToAtomOrSymbolPure(cx, index, &key)) {
-      bool optimized = false;
-      if (!TryAddOrSetPlainObjectProperty<true>(cx, obj.as<PlainObject>(), key,
-                                                value, &optimized)) {
-        return false;
-      }
-      if (optimized) {
-        return true;
-      }
-    }
-  }
-  Rooted<Value> receiver(cx, ObjectValue(*obj));
-  return SetObjectElementWithReceiver(cx, obj, index, value, receiver, strict);
-}
+template bool SetElementMegamorphic<false>(JSContext* cx, HandleObject obj,
+                                           HandleValue index, HandleValue value,
+                                           bool strict);
+template bool SetElementMegamorphic<true>(JSContext* cx, HandleObject obj,
+                                          HandleValue index, HandleValue value,
+                                          bool strict);
 
 template <bool Cached>
 bool SetPropertyMegamorphic(JSContext* cx, HandleObject obj, HandleId id,
