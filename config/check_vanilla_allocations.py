@@ -89,23 +89,35 @@ def main():
     # alloc_fns contains all the vanilla allocation/free functions that we look
     # for. Regexp chars are escaped appropriately.
 
-    alloc_fns = [
+    operator_news = [
         # Matches |operator new(unsigned T)|, where |T| is |int| or |long|.
-        r"operator new\(unsigned",
+        r"operator new(unsigned",
         # Matches |operator new[](unsigned T)|, where |T| is |int| or |long|.
-        r"operator new\[\]\(unsigned",
-        r"memalign",
-        # These three aren't available on all Linux configurations.
-        # r'posix_memalign',
-        # r'aligned_alloc',
-        # r'valloc',
+        r"operator new[](unsigned",
     ]
+
+    # operator new may end up inlined and replaced with moz_xmalloc.
+    inlined_operator_news = [
+        r"moz_xmalloc",
+    ]
+
+    alloc_fns = (
+        operator_news
+        + inlined_operator_news
+        + [
+            r"memalign",
+            # These three aren't available on all Linux configurations.
+            # r'posix_memalign',
+            # r'aligned_alloc',
+            # r'valloc',
+        ]
+    )
 
     if args.aggressive:
         alloc_fns += [r"malloc", r"calloc", r"realloc", r"free", r"strdup"]
 
     # This is like alloc_fns, but regexp chars are not escaped.
-    alloc_fns_unescaped = [fn.replace("\\", "") for fn in alloc_fns]
+    alloc_fns_escaped = [re.escape(fn) for fn in alloc_fns]
 
     # This regexp matches the relevant lines in the output of |nm|, which look
     # like the following.
@@ -113,8 +125,11 @@ def main():
     #   js/src/libjs_static.a:Utility.o:                  U malloc
     #   js/src/libjs_static.a:Utility.o: 00000000000007e0 T js::SetSourceOptions(...)
     #
-    nm_line_re = re.compile(r"([^:/ ]+):\s*[0-9a-fA-F]*\s+([TU]) (.*)")
-    alloc_fns_re = re.compile(r"|".join(alloc_fns))
+    # It may also, in LTO builds, look like
+    #   js/src/libjs_static.a:Utility.o: ---------------- T js::SetSourceOptions(...)
+    #
+    nm_line_re = re.compile(r"([^:/ ]+):\s*(?:[0-9a-fA-F]*|-*)\s+([TUw]) (.*)")
+    alloc_fns_re = re.compile(r"|".join(alloc_fns_escaped))
 
     # This tracks which allocation/free functions have been seen.
     functions = defaultdict(set)
@@ -202,9 +217,24 @@ def main():
 
     # Check that all functions we expect are used in util/Utility.cpp.  (This
     # will fail if the function-detection code breaks at any point.)
-    for fn in alloc_fns_unescaped:
+    # operator new and its inlined equivalent are mutually exclusive.
+    has_operator_news = any(fn in operator_news for fn in util_Utility_cpp)
+    has_inlined_operator_news = any(
+        fn in inlined_operator_news for fn in util_Utility_cpp
+    )
+    if has_operator_news and has_inlined_operator_news:
+        fail(
+            "Both operator new and moz_xmalloc aren't expected in util/Utility.cpp at the same time"
+        )
+
+    for fn in alloc_fns:
         if fn not in util_Utility_cpp:
-            fail("'" + fn + "' isn't used as expected in util/Utility.cpp")
+            if (
+                (fn in operator_news and not has_inlined_operator_news)
+                or (fn in inlined_operator_news and not has_operator_news)
+                or (fn not in operator_news and fn not in inlined_operator_news)
+            ):
+                fail("'" + fn + "' isn't used as expected in util/Utility.cpp")
         else:
             util_Utility_cpp.remove(fn)
 
@@ -240,7 +270,9 @@ def main():
         #
         #       U malloc util/Utility.cpp:117
         #
-        alloc_lines_re = r"U ((" + r"|".join(alloc_fns) + r").*)\s+(\S+:\d+)$"
+        alloc_lines_re = (
+            r"[Uw] ((" + r"|".join(alloc_fns_escaped) + r").*)\s+(\S+:\d+)$"
+        )
 
         for line in lines:
             m = re.search(alloc_lines_re, line)
