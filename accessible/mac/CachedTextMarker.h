@@ -43,6 +43,8 @@ class CachedTextMarker final {
 
   CachedTextMarkerRange RightWordRange() const;
 
+  CachedTextMarkerRange LineRange() const;
+
   CachedTextMarkerRange LeftLineRange() const;
 
   CachedTextMarkerRange RightLineRange() const;
