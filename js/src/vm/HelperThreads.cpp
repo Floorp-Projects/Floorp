@@ -800,8 +800,7 @@ void DecodeStencilTask::parse(JSContext* cx, FrontendContext* fc) {
   }
 
   bool succeeded = false;
-  (void)stencil_->deserializeStencils(cx, fc, *stencilInput_, range,
-                                      &succeeded);
+  (void)stencil_->deserializeStencils(fc, *stencilInput_, range, &succeeded);
   if (!succeeded) {
     stencil_ = nullptr;
     return;
@@ -842,7 +841,7 @@ void MultiStencilsDecodeTask::parse(JSContext* cx, FrontendContext* fc) {
       break;
     }
     bool succeeded = false;
-    (void)stencil->deserializeStencils(cx, fc, stencilInput, source.range,
+    (void)stencil->deserializeStencils(fc, stencilInput, source.range,
                                        &succeeded);
     if (!succeeded) {
       // If any decodes fail, don't process the rest. We likely are hitting OOM.
