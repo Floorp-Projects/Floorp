@@ -43,11 +43,6 @@ static EnumeratedArray<SandboxingKind, SandboxingKind::COUNT,
 UtilityAudioDecoderChild::UtilityAudioDecoderChild(SandboxingKind aKind)
     : mSandbox(aKind) {
   MOZ_ASSERT(NS_IsMainThread());
-#ifdef MOZ_WMF_MEDIA_ENGINE
-  if (mSandbox == SandboxingKind::MF_MEDIA_ENGINE_CDM) {
-    gfx::gfxVars::AddReceiver(this);
-  }
-#endif
   nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   if (observerService) {
     auto* obs = new UtilityAudioDecoderChildShutdownObserver(aKind);
@@ -67,8 +62,16 @@ void UtilityAudioDecoderChild::ActorDestroy(ActorDestroyReason aReason) {
 
 void UtilityAudioDecoderChild::Bind(
     Endpoint<PUtilityAudioDecoderChild>&& aEndpoint) {
-  DebugOnly<bool> ok = aEndpoint.Bind(this);
-  MOZ_ASSERT(ok);
+  MOZ_ASSERT(NS_IsMainThread());
+  if (NS_WARN_IF(!aEndpoint.Bind(this))) {
+    MOZ_ASSERT_UNREACHABLE("Failed to bind UtilityAudioDecoderChild!");
+    return;
+  }
+#ifdef MOZ_WMF_MEDIA_ENGINE
+  if (mSandbox == SandboxingKind::MF_MEDIA_ENGINE_CDM) {
+    gfx::gfxVars::AddReceiver(this);
+  }
+#endif
 }
 
 /* static */
