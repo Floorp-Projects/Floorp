@@ -487,10 +487,12 @@ void* js::Nursery::allocateCell(gc::AllocSite* site, size_t size,
 
   // Update the allocation site. This code is also inlined in
   // MacroAssembler::updateAllocSite.
-  if (!site->isInAllocatedList()) {
+  uint32_t allocCount = site->incAllocCount();
+  if (allocCount == 1) {
     pretenuringNursery.insertIntoAllocatedList(site);
+  } else {
+    MOZ_ASSERT_IF(site->isNormal(), site->isInAllocatedList());
   }
-  site->incAllocCount();
 
   gcprobes::NurseryAlloc(cell, kind);
   return cell;
