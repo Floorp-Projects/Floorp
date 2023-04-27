@@ -2077,8 +2077,8 @@ js::UniquePtr<ImmutableScriptData> js::ImmutableScriptData::new_(
 }
 
 js::UniquePtr<ImmutableScriptData> js::ImmutableScriptData::new_(
-    JSContext* cx, uint32_t totalSize) {
-  void* raw = cx->pod_malloc<uint8_t>(totalSize);
+    FrontendContext* fc, uint32_t totalSize) {
+  void* raw = fc->getAllocator()->pod_malloc<uint8_t>(totalSize);
   MOZ_ASSERT(uintptr_t(raw) % alignof(ImmutableScriptData) == 0);
   UniquePtr<ImmutableScriptData> result(
       reinterpret_cast<ImmutableScriptData*>(raw));
