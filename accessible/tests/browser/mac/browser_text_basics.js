@@ -84,13 +84,17 @@ function testLines(
   expectedLeft,
   expectedRight
 ) {
-  testRangeAtMarker(
-    macDoc,
-    marker,
-    "AXLineTextMarkerRangeForTextMarker",
-    expectedLine,
-    `${msg}: line matches`
-  );
+  if (!isCacheEnabled && expectedLine != expectedLeft) {
+    todo(false, `${msg}: line broken at start with cache disabled`);
+  } else {
+    testRangeAtMarker(
+      macDoc,
+      marker,
+      "AXLineTextMarkerRangeForTextMarker",
+      expectedLine,
+      `${msg}: line matches`
+    );
+  }
 
   testRangeAtMarker(
     macDoc,
@@ -254,14 +258,14 @@ addAccessibleTask("mac/doc_textmarker_test.html", async (browser, accDoc) => {
     // Some changes in expected results when cache is enabled
     // These are more correct return values (or at least not more incorrect)
     expectedValues[231].words[1] = "Skip'";
-    expectedValues[248].lines[0] = expectedValues[248].lines[1] = "These ";
-    expectedValues[252].lines[0] = expectedValues[252].lines[1] = "are ";
-    expectedValues[255].lines[0] = expectedValues[255].lines[1] = "my ";
+    expectedValues[248].lines[1] = "These ";
+    expectedValues[252].lines[1] = "are ";
+    expectedValues[255].lines[1] = "my ";
     expectedValues[261].words[0] = expectedValues[261].words[1] = "awards,";
-    expectedValues[263].lines[0] = expectedValues[263].lines[1] = "awards, ";
+    expectedValues[263].lines[1] = "awards, ";
     expectedValues[269].words[0] = expectedValues[269].words[1] = "Mother.";
-    expectedValues[271].lines[0] = expectedValues[271].lines[1] = "Mother. ";
-    expectedValues[276].lines[0] = expectedValues[276].lines[1] = "From ";
+    expectedValues[271].lines[1] = "Mother. ";
+    expectedValues[276].lines[1] = "From ";
     expectedValues[269].paragraph = "These are my awards, Mother. From Army.";
     expectedValues[283].words[0] = "deceived";
     expectedValues[295].paragraph = "I deceived you, mom.";
