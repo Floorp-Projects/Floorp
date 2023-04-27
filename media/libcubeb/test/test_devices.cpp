@@ -185,6 +185,9 @@ TEST(cubeb, enumerate_devices)
   count_before_creating_duplex_stream = collection.count;
   cubeb_device_collection_destroy(ctx, &collection);
 
+  if (!can_run_audio_input_test(ctx)) {
+    return;
+  }
   cubeb_stream * stream;
   cubeb_stream_params input_params;
   cubeb_stream_params output_params;
@@ -220,6 +223,10 @@ TEST(cubeb, stream_get_current_device)
 
   fprintf(stdout, "Getting current devices for backend %s\n",
     cubeb_get_backend_id(ctx));
+
+  if (!can_run_audio_input_test(ctx)) {
+    return;
+  }
 
   cubeb_stream * stream = NULL;
   cubeb_stream_params input_params;

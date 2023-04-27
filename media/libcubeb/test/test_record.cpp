@@ -86,7 +86,7 @@ TEST(cubeb, record)
 
   /* This test needs an available input device, skip it if this host does not
    * have one. */
-  if (!has_available_input_device(ctx)) {
+  if (!can_run_audio_input_test(ctx)) {
     return;
   }
 

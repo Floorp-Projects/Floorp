@@ -96,7 +96,7 @@ TEST(cubeb, duplex)
 
   /* This test needs an available input device, skip it if this host does not
    * have one. */
-  if (!has_available_input_device(ctx)) {
+  if (!can_run_audio_input_test(ctx)) {
     return;
   }
 
@@ -184,6 +184,12 @@ TEST(cubeb, duplex_collection_change)
   std::unique_ptr<cubeb, decltype(&cubeb_destroy)> cleanup_cubeb_at_exit(
       ctx, cubeb_destroy);
 
+  /* This test needs an available input device, skip it if this host does not
+   * have one. */
+  if (!can_run_audio_input_test(ctx)) {
+    return;
+  }
+
   duplex_collection_change_impl(ctx);
   r = cubeb_register_device_collection_changed(
       ctx, static_cast<cubeb_device_type>(CUBEB_DEVICE_TYPE_INPUT), nullptr,
@@ -198,6 +204,14 @@ TEST(cubeb, duplex_collection_change_no_unregister)
 
   r = common_init(&ctx, "Cubeb duplex example with collection change");
   ASSERT_EQ(r, CUBEB_OK) << "Error initializing cubeb library";
+
+  /* This test needs an available input device, skip it if this host does not
+   * have one. */
+  if (!can_run_audio_input_test(ctx)) {
+    cubeb_destroy(ctx);
+    return;
+  }
+
   std::unique_ptr<cubeb, decltype(&cubeb_destroy)> cleanup_cubeb_at_exit(
       ctx, [](cubeb * p) noexcept { EXPECT_DEATH(cubeb_destroy(p), ""); });
 
