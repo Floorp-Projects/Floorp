@@ -2193,6 +2193,7 @@ void MacroAssembler::loadAtomOrSymbolAndHash(ValueOperand value, Register outId,
 
     unboxSymbol(value, outId);
     load32(Address(outId, JS::Symbol::offsetOfHash()), outHash);
+    orPtr(Imm32(PropertyKey::SymbolTypeTag), outId);
     jump(&done);
   }
 
