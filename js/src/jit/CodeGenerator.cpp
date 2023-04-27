@@ -13830,13 +13830,11 @@ void CodeGenerator::visitMegamorphicSetElement(LMegamorphicSetElement* lir) {
   }
 
   pushArg(Imm32(lir->mir()->strict()));
-  pushArg(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
   pushArg(ToValue(lir, LMegamorphicSetElement::ValueIndex));
   pushArg(ToValue(lir, LMegamorphicSetElement::IndexIndex));
   pushArg(obj);
 
-  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, HandleValue,
-                      HandleValue, bool);
+  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, HandleValue, bool);
   callVM<Fn, js::jit::SetElementMegamorphicCached>(lir);
 
   masm.jump(&done);
