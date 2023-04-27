@@ -4,7 +4,7 @@
 "use strict";
 
 const { Realm } = ChromeUtils.importESModule(
-  "chrome://remote/content/webdriver-bidi/Realm.sys.mjs"
+  "chrome://remote/content/shared/Realm.sys.mjs"
 );
 
 add_task(function test_id() {

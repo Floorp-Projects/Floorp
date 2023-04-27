@@ -20,6 +20,7 @@ remote.jar:
   content/shared/MobileTabBrowser.sys.mjs (shared/MobileTabBrowser.sys.mjs)
   content/shared/Navigate.sys.mjs (shared/Navigate.sys.mjs)
   content/shared/PDF.sys.mjs (shared/PDF.sys.mjs)
+  content/shared/Realm.sys.mjs (shared/Realm.sys.mjs)
   content/shared/RecommendedPreferences.sys.mjs (shared/RecommendedPreferences.sys.mjs)
   content/shared/RemoteError.sys.mjs (shared/RemoteError.sys.mjs)
   content/shared/Stack.sys.mjs (shared/Stack.sys.mjs)

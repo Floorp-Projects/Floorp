@@ -7,7 +7,7 @@ const { NodeCache } = ChromeUtils.importESModule(
   "chrome://remote/content/shared/webdriver/NodeCache.sys.mjs"
 );
 const { Realm, WindowRealm } = ChromeUtils.importESModule(
-  "chrome://remote/content/webdriver-bidi/Realm.sys.mjs"
+  "chrome://remote/content/shared/Realm.sys.mjs"
 );
 const {
   deserialize,
@@ -1625,7 +1625,7 @@ function deserializeInWindowRealm(serialized) {
     [serialized],
     async _serialized => {
       const { WindowRealm } = ChromeUtils.importESModule(
-        "chrome://remote/content/webdriver-bidi/Realm.sys.mjs"
+        "chrome://remote/content/shared/Realm.sys.mjs"
       );
       const { deserialize } = ChromeUtils.importESModule(
         "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs"
