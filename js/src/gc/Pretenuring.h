@@ -142,7 +142,7 @@ class AllocSite {
     nurseryTenuredCount = 0;
   }
 
-  void incAllocCount() { nurseryAllocCount++; }
+  uint32_t incAllocCount() { return ++nurseryAllocCount; }
 
   void incTenuredCount() {
     // The nursery is not large enough for this to overflow.
