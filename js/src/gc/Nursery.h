@@ -118,7 +118,7 @@ inline bool CanNurseryAllocateFinalizedClass(const JSClass* const clasp) {
   return clasp->flags & JSCLASS_SKIP_NURSERY_FINALIZE;
 }
 
-class Nursery {
+class alignas(TypicalCacheLineSize) Nursery {
  public:
   static const size_t Alignment = gc::ChunkSize;
   static const size_t ChunkShift = gc::ChunkShift;
@@ -446,19 +446,10 @@ class Nursery {
   }
 
  private:
-  gc::GCRuntime* const gc;
-
-  // Vector of allocated chunks to allocate from.
-  Vector<NurseryChunk*, 0, SystemAllocPolicy> chunks_;
+  // Fields used during allocation fast path are grouped first:
 
   // Pointer to the first unallocated byte in the nursery.
   uintptr_t position_;
-
-  // These fields refer to the beginning of the nursery. They're normally 0
-  // and chunk(0).start() respectively. Except when a generational GC zeal
-  // mode is active, then they may be arbitrary (see Nursery::clear()).
-  unsigned currentStartChunk_;
-  uintptr_t currentStartPosition_;
 
   // Pointer to the last byte of space in the current chunk.
   uintptr_t currentEnd_;
@@ -471,8 +462,21 @@ class Nursery {
   // are not allocating BigInts in the nursery.
   uintptr_t currentBigIntEnd_;
 
+  // Other fields not necessarily used during allocation follow:
+
+  gc::GCRuntime* const gc;
+
+  // Vector of allocated chunks to allocate from.
+  Vector<NurseryChunk*, 0, SystemAllocPolicy> chunks_;
+
   // The index of the chunk that is currently being allocated from.
-  unsigned currentChunk_;
+  uint32_t currentChunk_;
+
+  // These fields refer to the beginning of the nursery. They're normally 0
+  // and chunk(0).start() respectively. Except when a generational GC zeal
+  // mode is active, then they may be arbitrary (see Nursery::clear()).
+  uint32_t currentStartChunk_;
+  uintptr_t currentStartPosition_;
 
   // The current nursery capacity measured in bytes. It may grow up to this
   // value without a collection, allocating chunks on demand. This limit may be

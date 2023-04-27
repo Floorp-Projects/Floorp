@@ -193,14 +193,14 @@ void js::NurseryDecommitTask::run(AutoLockHelperThreadState& lock) {
 }
 
 js::Nursery::Nursery(GCRuntime* gc)
-    : gc(gc),
-      position_(0),
-      currentStartChunk_(0),
-      currentStartPosition_(0),
+    : position_(0),
       currentEnd_(0),
       currentStringEnd_(0),
       currentBigIntEnd_(0),
+      gc(gc),
       currentChunk_(0),
+      currentStartChunk_(0),
+      currentStartPosition_(0),
       capacity_(0),
       timeInChunkAlloc_(0),
       enableProfiling_(false),
