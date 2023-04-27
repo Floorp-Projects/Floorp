@@ -1751,8 +1751,17 @@ void CookiePersistentStorage::InitDBConn() {
     CookieDomainTuple& tuple = mReadArray[i];
     MOZ_ASSERT(!tuple.cookie->isSession());
 
+    // CreateValidated fixes up the creation and lastAccessed times.
+    // If the DB is corrupted and the timestaps are far away in the future
+    // we don't want the creation timestamp to update gLastCreationTime
+    // as that would contaminate all the next creation times.
+    // We fix up these dates to not be later than the current time.
+    // The downside is that if the user sets the date far away in the past
+    // then back to the current date, those cookies will be stale,
+    // but if we don't fix their dates, those cookies might never be
+    // evicted.
     RefPtr<Cookie> cookie =
-        Cookie::Create(*tuple.cookie, tuple.originAttributes);
+        Cookie::CreateValidated(*tuple.cookie, tuple.originAttributes);
     AddCookieToList(tuple.key.mBaseDomain, tuple.key.mOriginAttributes, cookie);
   }
 
