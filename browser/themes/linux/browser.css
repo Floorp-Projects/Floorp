@@ -21,8 +21,8 @@
   --chrome-content-separator-color: ThreeDShadow;
 }
 
-#TabsToolbar:not(:-moz-lwtheme),
-#TabsToolbar[brighttext]:not(:-moz-lwtheme) {
+:root:not(:-moz-lwtheme),
+toolbar[brighttext]:not(:-moz-lwtheme) {
   --tab-attention-icon-color: AccentColor;
 }
 
