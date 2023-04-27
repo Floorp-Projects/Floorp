@@ -101,9 +101,7 @@ const TEST_PROVIDER_INFO = [
       },
       {
         type: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
-        included: {
-          default: true,
-        },
+        default: true,
       },
     ],
   },

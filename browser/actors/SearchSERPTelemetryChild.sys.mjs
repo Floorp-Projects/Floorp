@@ -188,10 +188,9 @@ class SearchAdImpression {
     this.#topDownComponents = [];
 
     for (let component of this.#providerInfo.components) {
-      // Shopping is parsed before any component, so its regular expression
-      // and flags should not be added to avoid double-checking.
-      if (component.included?.default) {
+      if (component.default) {
         this.#defaultComponent = component;
+        continue;
       }
       if (component.nonAd && component.included?.regexps) {
         this.#nonAdRegexps = this.#nonAdRegexps.concat(
@@ -558,7 +557,7 @@ class SearchAdImpression {
 
       // The default component doesn't need to be checked,
       // as it will be the fallback option.
-      if (component.included.default) {
+      if (component.default) {
         continue;
       }
 
