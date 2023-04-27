@@ -129,33 +129,39 @@ static bool ManageChildProcess(const char* aProcessName, int* aPID, int* aPipe,
   struct pollfd pfd {};
   pfd.fd = *aPipe;
   pfd.events = POLLIN;
-  auto ret = poll(&pfd, 1, aTimeout);
-  if (ret <= 0) {
-    gfxCriticalNote << "ManageChildProcess(" << aProcessName
-                    << "): poll failed: " << strerror(errno) << "\n";
-    return false;
+
+  while (poll(&pfd, 1, aTimeout) != 1) {
+    if (errno != EAGAIN && errno != EINTR) {
+      gfxCriticalNote << "ManageChildProcess(" << aProcessName
+                      << "): poll failed: " << strerror(errno) << "\n";
+      return false;
+    }
+    if (TimeStamp::Now() > deadline) {
+      gfxCriticalNote << "ManageChildProcess(" << aProcessName
+                      << "): process hangs\n";
+      return false;
+    }
   }
 
   channel = g_io_channel_unix_new(*aPipe);
   MakeFdNonBlocking(*aPipe);
 
   GUniquePtr<GError> error;
-  gsize length;
+  gsize length = 0;
+  int ret;
   do {
     error = nullptr;
     ret = g_io_channel_read_to_end(channel, aData, &length,
                                    getter_Transfers(error));
-  } while (ret == G_IO_STATUS_AGAIN);
-  if (error) {
+  } while (ret == G_IO_STATUS_AGAIN && TimeStamp::Now() < deadline);
+  if (error || ret != G_IO_STATUS_NORMAL) {
     gfxCriticalNote << "ManageChildProcess(" << aProcessName
-                    << "): failed to read data from child process: "
-                    << error->message << "\n";
-    return false;
-  }
-  if (!length) {
-    gfxCriticalNote
-        << "ManageChildProcess(" << aProcessName
-        << "): failed to read data from child process, length = 0\n";
+                    << "): failed to read data from child process: ";
+    if (error) {
+      gfxCriticalNote << error->message;
+    } else {
+      gfxCriticalNote << "timeout";
+    }
     return false;
   }
 
