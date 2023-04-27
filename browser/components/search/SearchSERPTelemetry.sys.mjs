@@ -929,7 +929,9 @@ class ContentHandler {
       });
 
       // The SERP "clicked" action is implied if a user loads another page from
-      // the context of a SERP.
+      // the context of a SERP. At this point, we don't know if the request is
+      // from a SERP but we want to avoid inspecting requests that are not
+      // documents, or not a top level load.
       if (
         lazy.serpEventsEnabled &&
         channel.isDocument &&
@@ -937,7 +939,9 @@ class ContentHandler {
         !wrappedChannel._countedClick
       ) {
         let start = Cu.now();
-        // Try to find the telemetryState that relates to the browser.
+
+        // Step 1: Check if the browser associated with the request was a
+        // tracked SERP.
         let browser = wrappedChannel.browserElement;
         let telemetryState;
         if (item.browserTelemetryStateMap.has(browser)) {
@@ -951,21 +955,21 @@ class ContentHandler {
           telemetryState = item.browserTelemetryStateMap.get(tab.linkedBrowser);
         }
 
-        let type;
-        // Check if telemetry is found. If a searchbox was used to initiate the
-        // load, then ignore the href because the event has already been logged.
-        // Related searches on some SERPs can be encoded as a nonAdsLinkRegexp
-        // before becoming a search page URL, so if the origin of the request
-        // was from a URL matching a non ads link, we can ignore it because
-        // we've already recorded an event.
+        // Step 2: If we have telemetryState, the browser object must be
+        // associated with another browser that is tracked. Try to find the
+        // component type on the SERP responsible for the request.
+        // Exceptions:
+        // - If a searchbox was used to initiate the load, don't record another
+        //   engagement because the event was logged elsewhere.
+        // - If the ad impression hasn't been recorded yet, we have no way of
+        //   knowing precisely what kind of component was selected.
         if (
           telemetryState &&
           telemetryState.adImpressionsReported &&
-          !telemetryState.searchBoxSubmitted &&
-          !info.nonAdsLinkRegexps.some(r => r.test(originURL))
+          !telemetryState.searchBoxSubmitted
         ) {
-          // First check, see if anything matches.
-          type = telemetryState.hrefToComponentMap?.get(URL);
+          // Determine the "type" of the link.
+          let type = telemetryState.hrefToComponentMap?.get(URL);
           // The SERP provider may have modified the url with different query
           // parameters, so try checking all the recorded hrefs to see if any
           // look similar.
@@ -980,53 +984,65 @@ class ContentHandler {
               }
             }
           }
-          // If no matches, check if the href matches a non-ads link. Do this
-          // check last because a link that looks like a non-ad might actually
-          // be more specific, but have additional query parameters from when
-          // the href was recorded in memory.
+          // Check if the href matches a non-ads link. Do this after looking at
+          // hrefToComponentMap because a link that looks like a non-ad might
+          // have a more specific component type.
           if (!type) {
             type = info.nonAdsLinkRegexps.some(r => r.test(URL))
               ? SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK
               : "";
           }
-          // The search may have been refined or moved into another search
-          // engine (e.g. images, video).
+          // The SERP may have moved onto another page that matches a SERP page
+          // e.g. Related Search
           if (!type) {
             type = info.searchPageRegexp?.test(URL)
               ? SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK
               : "";
           }
-          // Some variants of the search page have a different regular
-          // expression than the one we use for standard search pages.
+          // There might be other types of pages on a SERP that don't fall
+          // neatly into expected non-ad expressions or SERPs, such as Image
+          // Search, Maps, etc.
           if (!type) {
             type = info.extraPageRegexps?.some(r => r.test(URL))
               ? SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK
               : "";
           }
+
+          // Step 3: If we have a type, record an engagement.
+          // Exceptions:
+          // - Related searches on some SERPs can be encoded with a URL that
+          //   match a nonAdsLinkRegexp. This means we'll have seen the link
+          //   twice, once with the nonAdsLinkRegexp and again with a SERP URL
+          //   matching a searchPageRegexp. We don't want to record the
+          //   engagement twice, so if the origin of the request was
+          //   nonAdsLinkRegexp, skip the categorization. The reason why we
+          //   don't do this check earlier is because if the final URL is a
+          //   SERP, we'll want to define the source property of the subsequent
+          //   SERP impression.
+          if (type && !info.nonAdsLinkRegexps.some(r => r.test(originURL))) {
+            impressionIdsWithoutEngagementsSet.delete(
+              telemetryState.impressionId
+            );
+            Glean.serp.engagement.record({
+              impression_id: telemetryState.impressionId,
+              action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+              target: type,
+            });
+            lazy.logConsole.debug("Counting click:", {
+              impressionId: telemetryState.impressionId,
+              type,
+              URL,
+            });
+            wrappedChannel._countedClick = true;
+          } else if (!type) {
+            lazy.logConsole.warn(`Could not find a component type for ${URL}`);
+          }
         }
         ChromeUtils.addProfilerMarker(
           "SearchSERPTelemetry._observeActivity",
           start,
-          "Find component type"
+          "Maybe record user engagement."
         );
-        if (type) {
-          impressionIdsWithoutEngagementsSet.delete(
-            telemetryState.impressionId
-          );
-          Glean.serp.engagement.record({
-            impression_id: telemetryState.impressionId,
-            action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
-            target: type,
-          });
-          lazy.logConsole.debug("Counting click:", {
-            impressionId: telemetryState.impressionId,
-            type,
-            URL,
-          });
-          wrappedChannel._countedClick = true;
-        } else {
-          lazy.logConsole.warn(`Could not find a component type for ${URL}`);
-        }
       }
 
       if (!info.extraAdServersRegexps?.some(regex => regex.test(URL))) {
