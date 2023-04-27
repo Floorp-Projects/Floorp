@@ -856,7 +856,7 @@ template <XDRMode mode>
   if (stencil.scriptExtra[CompilationStencil::TopLevelIndex].isModule()) {
     if (mode == XDR_DECODE) {
       stencil.moduleMetadata =
-          xdr->cx()->template new_<StencilModuleMetadata>();
+          xdr->fc()->getAllocator()->template new_<StencilModuleMetadata>();
       if (!stencil.moduleMetadata) {
         return xdr->fail(JS::TranscodeResult::Throw);
       }
@@ -902,7 +902,7 @@ struct UnretrievableSourceDecoder {
         uncompressedLength_(uncompressedLength) {}
 
   XDRResult decode() {
-    auto sourceUnits = xdr_->cx()->make_pod_array<Unit>(
+    auto sourceUnits = xdr_->fc()->getAllocator()->make_pod_array<Unit>(
         std::max<size_t>(uncompressedLength_, 1));
     if (!sourceUnits) {
       return xdr_->fail(JS::TranscodeResult::Throw);
@@ -1024,7 +1024,8 @@ XDRResult StencilXDR::codeSourceCompressedData(XDRState<mode>* const xdr,
 
   if (mode == XDR_DECODE) {
     // Compressed data is always single-byte chars.
-    auto bytes = xdr->cx()->template make_pod_array<char>(compressedLength);
+    auto bytes = xdr->fc()->getAllocator()->template make_pod_array<char>(
+        compressedLength);
     if (!bytes) {
       return xdr->fail(JS::TranscodeResult::Throw);
     }

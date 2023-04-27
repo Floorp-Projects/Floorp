@@ -143,7 +143,7 @@ static XDRResult XDRCodeCharsZ(XDRState<mode>* xdr,
     // Set a reasonable limit on string length.
     size_t lengthSizeT = std::char_traits<CharT>::length(chars);
     if (lengthSizeT > JSString::MAX_LENGTH) {
-      ReportAllocationOverflow(xdr->cx());
+      ReportAllocationOverflow(xdr->fc());
       return xdr->fail(JS::TranscodeResult::Throw);
     }
     length = static_cast<uint32_t>(lengthSizeT);
@@ -151,7 +151,8 @@ static XDRResult XDRCodeCharsZ(XDRState<mode>* xdr,
   MOZ_TRY(xdr->codeUint32(&length));
 
   if (mode == XDR_DECODE) {
-    owned = xdr->cx()->template make_pod_array<CharT>(length + 1);
+    owned =
+        xdr->fc()->getAllocator()->template make_pod_array<CharT>(length + 1);
     if (!owned) {
       return xdr->fail(JS::TranscodeResult::Throw);
     }
