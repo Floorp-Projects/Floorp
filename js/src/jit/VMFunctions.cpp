@@ -36,7 +36,6 @@
 #include "vm/SelfHosting.h"
 #include "vm/StaticStrings.h"
 #include "vm/TypedArrayObject.h"
-#include "vm/Watchtower.h"
 #include "wasm/WasmGcObject.h"
 
 #include "debugger/DebugAPI-inl.h"
@@ -1649,12 +1648,16 @@ static MOZ_ALWAYS_INLINE bool GetNativeDataPropertyPureImpl(
   }
 }
 
-bool GetNativeDataPropertyPureWithCacheLookup(JSContext* cx, JSObject* obj,
-                                              PropertyKey id,
-                                              MegamorphicCacheEntry* entry,
-                                              Value* vp) {
+bool GetNativeDataPropertyByNamePure(JSContext* cx, JSObject* obj,
+                                     PropertyName* name,
+                                     MegamorphicCacheEntry* entry, Value* vp) {
   AutoUnsafeCallWithABI unsafe;
 
+  jsid id = NameToId(name);
+
+#ifndef JS_CODEGEN_X86
+  MOZ_ASSERT_IF(JitOptions.enableWatchtowerMegamorphic, entry);
+#else
   // If we're on x86, we didn't have enough registers to populate this
   // directly in Baseline JITted code, so we do the lookup here.
   if (JitOptions.enableWatchtowerMegamorphic) {
@@ -1685,12 +1688,13 @@ bool GetNativeDataPropertyPureWithCacheLookup(JSContext* cx, JSObject* obj,
       MOZ_ASSERT(entry->isMissingOwnProperty());
     }
   }
+#endif
 
   return GetNativeDataPropertyPureImpl(cx, obj, id, entry, vp);
 }
 
-bool GetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyKey id,
-                               MegamorphicCacheEntry* entry, Value* vp) {
+bool GetNativeDataPropertyByIdPure(JSContext* cx, JSObject* obj, PropertyKey id,
+                                   MegamorphicCacheEntry* entry, Value* vp) {
   AutoUnsafeCallWithABI unsafe;
   MOZ_ASSERT_IF(JitOptions.enableWatchtowerMegamorphic, entry);
   return GetNativeDataPropertyPureImpl(cx, obj, id, entry, vp);
@@ -1754,7 +1758,7 @@ bool GetNativeDataPropertyByValuePure(JSContext* cx, JSObject* obj,
   return GetNativeDataPropertyPureImpl(cx, obj, id, entry, res);
 }
 
-bool SetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyKey id,
+bool SetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name,
                                Value* val) {
   AutoUnsafeCallWithABI unsafe;
 
@@ -1764,7 +1768,7 @@ bool SetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyKey id,
 
   NativeObject* nobj = &obj->as<NativeObject>();
   uint32_t index;
-  PropMap* map = nobj->shape()->lookup(cx, id, &index);
+  PropMap* map = nobj->shape()->lookup(cx, NameToId(name), &index);
   if (!map) {
     return false;
   }
@@ -1961,9 +1965,16 @@ bool HasNativeElementPure(JSContext* cx, NativeObject* obj, int32_t index,
 template <bool UseCache>
 static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
                                            Handle<PlainObject*> obj,
-                                           PropertyKey key, HandleValue value,
-                                           bool* optimized) {
+                                           HandleValue keyVal,
+                                           HandleValue value, bool* optimized) {
   MOZ_ASSERT(!*optimized);
+
+  // The key must be a string or symbol so that we don't have to handle dense
+  // elements here.
+  PropertyKey key;
+  if (!ValueToAtomOrSymbolPure(cx, keyVal, &key)) {
+    return true;
+  }
 
   Shape* receiverShape = obj->shape();
   MegamorphicSetPropCache& cache = cx->caches().megamorphicSetPropCache;
@@ -2060,8 +2071,7 @@ static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
 
   if constexpr (UseCache) {
     if (res && obj->shape()->isShared() &&
-        resultSlot < SharedPropMap::MaxPropsForNonDictionary &&
-        !Watchtower::watchesPropertyAdd(obj)) {
+        resultSlot < SharedPropMap::MaxPropsForNonDictionary) {
       TaggedSlotOffset offset = obj->getTaggedSlotOffset(resultSlot);
       uint32_t newCapacity = 0;
       if (!(resultSlot < obj->numFixedSlots() ||
@@ -2075,58 +2085,37 @@ static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
   return res;
 }
 
-template <bool Cached>
 bool SetElementMegamorphic(JSContext* cx, HandleObject obj, HandleValue index,
-                           HandleValue value, bool strict) {
-  if (obj->is<PlainObject>()) {
-    PropertyKey key;
-    if (ValueToAtomOrSymbolPure(cx, index, &key)) {
-      bool optimized = false;
-      if (!TryAddOrSetPlainObjectProperty<Cached>(cx, obj.as<PlainObject>(),
-                                                  key, value, &optimized)) {
-        return false;
-      }
-      if (optimized) {
-        return true;
-      }
-    }
-  }
-  Rooted<Value> receiver(cx, ObjectValue(*obj));
-  return SetObjectElementWithReceiver(cx, obj, index, value, receiver, strict);
-}
-
-template bool SetElementMegamorphic<false>(JSContext* cx, HandleObject obj,
-                                           HandleValue index, HandleValue value,
-                                           bool strict);
-template bool SetElementMegamorphic<true>(JSContext* cx, HandleObject obj,
-                                          HandleValue index, HandleValue value,
-                                          bool strict);
-
-template <bool Cached>
-bool SetPropertyMegamorphic(JSContext* cx, HandleObject obj, HandleId id,
-                            HandleValue value, bool strict) {
+                           HandleValue value, HandleValue receiver,
+                           bool strict) {
   if (obj->is<PlainObject>()) {
     bool optimized = false;
-    if (!TryAddOrSetPlainObjectProperty<Cached>(cx, obj.as<PlainObject>(), id,
-                                                value, &optimized)) {
+    if (!TryAddOrSetPlainObjectProperty<false>(cx, obj.as<PlainObject>(), index,
+                                               value, &optimized)) {
       return false;
     }
     if (optimized) {
       return true;
     }
   }
-  Rooted<Value> receiver(cx, ObjectValue(*obj));
-  ObjectOpResult result;
-  return SetProperty(cx, obj, id, value, receiver, result) &&
-         result.checkStrictModeError(cx, obj, id, strict);
+  return SetObjectElementWithReceiver(cx, obj, index, value, receiver, strict);
 }
 
-template bool SetPropertyMegamorphic<false>(JSContext* cx, HandleObject obj,
-                                            HandleId id, HandleValue value,
-                                            bool strict);
-template bool SetPropertyMegamorphic<true>(JSContext* cx, HandleObject obj,
-                                           HandleId id, HandleValue value,
-                                           bool strict);
+bool SetElementMegamorphicCached(JSContext* cx, HandleObject obj,
+                                 HandleValue index, HandleValue value,
+                                 HandleValue receiver, bool strict) {
+  if (obj->is<PlainObject>()) {
+    bool optimized = false;
+    if (!TryAddOrSetPlainObjectProperty<true>(cx, obj.as<PlainObject>(), index,
+                                              value, &optimized)) {
+      return false;
+    }
+    if (optimized) {
+      return true;
+    }
+  }
+  return SetObjectElementWithReceiver(cx, obj, index, value, receiver, strict);
+}
 
 void HandleCodeCoverageAtPC(BaselineFrame* frame, jsbytecode* pc) {
   AutoUnsafeCallWithABI unsafe(UnsafeABIStrictness::AllowPendingExceptions);
@@ -2890,7 +2879,7 @@ void AssertMapObjectHash(JSContext* cx, MapObject* obj, const Value* value,
   MOZ_ASSERT(actualHash == HashValue(cx, obj->getData(), value));
 }
 
-void AssertPropertyLookup(NativeObject* obj, PropertyKey id, uint32_t slot) {
+void AssertPropertyLookup(NativeObject* obj, PropertyName* id, uint32_t slot) {
   AutoUnsafeCallWithABI unsafe;
 #ifdef DEBUG
   mozilla::Maybe<PropertyInfo> prop = obj->lookupPure(id);

@@ -204,6 +204,9 @@ JSString* CacheIRCloner::getStringField(uint32_t stubOffset) {
 JSAtom* CacheIRCloner::getAtomField(uint32_t stubOffset) {
   return reinterpret_cast<JSAtom*>(readStubWord(stubOffset));
 }
+PropertyName* CacheIRCloner::getPropertyNameField(uint32_t stubOffset) {
+  return reinterpret_cast<PropertyName*>(readStubWord(stubOffset));
+}
 JS::Symbol* CacheIRCloner::getSymbolField(uint32_t stubOffset) {
   return reinterpret_cast<JS::Symbol*>(readStubWord(stubOffset));
 }
@@ -1052,7 +1055,7 @@ void GetPropIRGenerator::attachMegamorphicNativeSlot(ObjOperandId objId,
 
   if (cacheKind_ == CacheKind::GetProp ||
       cacheKind_ == CacheKind::GetPropSuper) {
-    writer.megamorphicLoadSlotResult(objId, id);
+    writer.megamorphicLoadSlotResult(objId, id.toAtom()->asPropertyName());
   } else {
     MOZ_ASSERT(cacheKind_ == CacheKind::GetElem ||
                cacheKind_ == CacheKind::GetElemSuper);
@@ -3049,7 +3052,8 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId,
         globalLexical->global().addressOfGenerationCount());
     ObjOperandId holderId = writer.loadObject(holder);
 #ifdef DEBUG
-    writer.assertPropertyLookup(holderId, id, prop->slot());
+    writer.assertPropertyLookup(holderId, id.toAtom()->asPropertyName(),
+                                prop->slot());
 #endif
     EmitLoadSlotResult(writer, holderId, holder, *prop);
   } else {
@@ -3916,7 +3920,6 @@ AttachDecision SetPropIRGenerator::tryAttachStub() {
         TRY_ATTACH(tryAttachSetter(obj, objId, id, rhsValId));
         TRY_ATTACH(tryAttachWindowProxy(obj, objId, id, rhsValId));
         TRY_ATTACH(tryAttachProxy(obj, objId, id, rhsValId));
-        TRY_ATTACH(tryAttachMegamorphicSetSlot(obj, objId, id, rhsValId));
       }
       if (canAttachAddSlotStub(obj, id)) {
         deferType_ = DeferType::AddSlot;
@@ -4029,9 +4032,13 @@ AttachDecision SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
+  // Don't attach a megamorphic store slot stub for ops like JSOp::InitElem.
   if (mode_ == ICState::Mode::Megamorphic && cacheKind_ == CacheKind::SetProp &&
       IsPropertySetOp(JSOp(*pc_))) {
-    return AttachDecision::NoAction;
+    writer.megamorphicStoreSlot(objId, id.toAtom()->asPropertyName(), rhsId);
+    writer.returnFromIC();
+    trackAttached("SetMegamorphicNativeSlot");
+    return AttachDecision::Attach;
   }
 
   maybeEmitIdGuard(id);
@@ -4040,6 +4047,7 @@ AttachDecision SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj,
   if (!IsGlobalLexicalSetGName(JSOp(*pc_), nobj, *prop)) {
     TestMatchingNativeReceiver(writer, nobj, objId);
   }
+
   EmitStoreSlotAndReturn(writer, objId, nobj, *prop, rhsId);
 
   trackAttached("SetNativeSlot");
@@ -4826,18 +4834,6 @@ AttachDecision SetPropIRGenerator::tryAttachMegamorphicSetElement(
   writer.returnFromIC();
 
   trackAttached("MegamorphicSetElement");
-  return AttachDecision::Attach;
-}
-
-AttachDecision SetPropIRGenerator::tryAttachMegamorphicSetSlot(
-    HandleObject obj, ObjOperandId objId, HandleId id, ValOperandId rhsId) {
-  if (mode_ != ICState::Mode::Megamorphic || cacheKind_ != CacheKind::SetProp) {
-    return AttachDecision::NoAction;
-  }
-
-  writer.megamorphicStoreSlot(objId, id, rhsId, IsStrictSetPC(pc_));
-  writer.returnFromIC();
-  trackAttached("SetMegamorphicNativeSlot");
   return AttachDecision::Attach;
 }
 
