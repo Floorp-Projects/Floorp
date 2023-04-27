@@ -377,6 +377,8 @@ let Player = {
             // We handle the ESC key, as an intent to leave the picture-in-picture modus
             this.onClose();
           }
+        } else if (event.keyCode == KeyEvent.DOM_VK_F) {
+          this.fullscreenModeToggle();
         } else if (
           Services.prefs.getBoolPref(KEYBOARD_CONTROLS_ENABLED_PREF, false) &&
           (event.keyCode != KeyEvent.DOM_VK_SPACE || !event.target.id)
@@ -434,8 +436,9 @@ let Player = {
           : `pictureinpicture-fullscreen-btn`;
         document.l10n.setAttributes(fullscreenButton, strId);
 
+        window.focus();
+
         if (this.isFullscreen) {
-          window.focus();
           this.actor.sendAsyncMessage("PictureInPicture:EnterFullscreen", {
             isFullscreen: true,
             isVideoControlsShowing: null,
