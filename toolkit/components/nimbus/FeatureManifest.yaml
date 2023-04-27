@@ -1023,6 +1023,14 @@ dohPrefs:
       description: Same as trrUri, but set by the DoHController module.
       type: string
       setPref: "doh-rollout.uri"
+    enableFallbackWarningPage:
+      description: Whether DoH fallback warning page will be displayed when DoH doesn't work in TRR first mode.
+      type: boolean
+      setPref: "network.trr.display_fallback_warning"
+    showFallbackCheckbox:
+      description: Whether the checkbox to enable the fallback warning page is displayed in the settings UI.
+      type: boolean
+      setPref: "network.trr_ui.show_fallback_warning_option"
 
 dooh:
   description: "DNS over Oblivious HTTP"
