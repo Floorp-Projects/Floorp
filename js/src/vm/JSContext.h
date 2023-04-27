@@ -53,10 +53,6 @@ class JitContext;
 class DebugModeOSRVolatileJitFrameIter;
 }  // namespace jit
 
-namespace gc {
-class AutoSuppressNurseryCellAlloc;
-}  // namespace gc
-
 /* Detects cycles when traversing an object graph. */
 class MOZ_RAII AutoCycleDetector {
  public:
@@ -169,8 +165,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
  private:
   js::UnprotectedData<JSRuntime*> runtime_;
   js::WriteOnceData<js::ContextKind> kind_;
-
-  friend class js::gc::AutoSuppressNurseryCellAlloc;
 
   js::ContextData<JS::ContextOptions> options_;
 
