@@ -335,26 +335,27 @@ object DownloadUtils {
     /**
      * Compare the filename extension with the mime type and change it if necessary.
      */
-    private fun changeExtension(filename: String, mimeType: String?): String {
-        var extension: String? = null
-        val dotIndex = filename.lastIndexOf('.')
+    private fun changeExtension(filename: String, providedMimeType: String?): String {
+        val file = File(filename)
+        val mimeTypeMap = MimeTypeMap.getSingleton()
+        val extensionFromMimeType =
+            mimeTypeMap.getExtensionFromMimeType(providedMimeType)
+        if (providedMimeType == null || extensionFromMimeType == null) return filename
 
-        if (mimeType != null) {
-            val mimeTypeMap = MimeTypeMap.getSingleton()
-            // Compare the last segment of the extension against the mime type.
-            // If there's a mismatch, discard the entire extension.
-            val typeFromExt = mimeTypeMap.getMimeTypeFromExtension(filename.substringAfterLast('.'))
-            if (typeFromExt?.equals(mimeType, ignoreCase = true) != false) {
-                extension = mimeTypeMap.getExtensionFromMimeType(mimeType)?.let { ".$it" }
-                // Check if the extension needs to be changed
-                if (extension != null && filename.endsWith(extension, ignoreCase = true)) {
-                    return filename
-                }
-            }
-        }
+        val mimeTypeFromFilename = mimeTypeMap.getMimeTypeFromExtension(file.extension) ?: ""
 
-        return if (extension != null) {
-            filename.substring(0, dotIndex) + extension
+        val fileHasPossibleExtension = filename.contains(extensionFromMimeType, ignoreCase = true)
+        val isFileMimeTypeDifferentFromProvidedMimeType =
+            !mimeTypeFromFilename.equals(
+                providedMimeType,
+                ignoreCase = true,
+            )
+
+        // Mimetypes could have multiple possible file extensions, for example: text/html could have
+        // either .htm or .html extensions. Since [getExtensionFromMimeType]
+        // we try to only rename when there is a clear indication the existing extension is wrong.
+        return if (isFileMimeTypeDifferentFromProvidedMimeType && !fileHasPossibleExtension) {
+            return "${file.nameWithoutExtension}.$extensionFromMimeType"
         } else {
             filename
         }
