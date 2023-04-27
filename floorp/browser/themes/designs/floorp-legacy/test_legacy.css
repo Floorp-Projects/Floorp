@@ -2114,11 +2114,6 @@ menupopup> :is(menu:not(.menu-iconic), menuitem:not(.menuitem-iconic, [type="che
   padding-inline-start: 8px !important;
 }
 
-.tabbrowser-tab.tabbrowser-tab[pinned]:not(#browser *){
-  padding-inline-start:5px !important;
-  padding-inline-end:5px !important;
-}
-
 #tabbrowser-tabs[closebuttons=activetab] .tabbrowser-tab:not([visuallyselected]) .tab-close-button {
   visibility: collapse !important;
 }
