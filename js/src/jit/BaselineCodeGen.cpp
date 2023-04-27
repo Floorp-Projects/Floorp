@@ -6637,6 +6637,7 @@ bool BaselineInterpreterGenerator::emitInterpreterLoop() {
 #define EMIT_OP(OP, ...)                          \
   {                                               \
     AutoCreatedBy acb(masm, "op=" #OP);           \
+    perfSpewer_.recordOffset(masm, JSOp::OP);     \
     masm.bind(&opLabels[uint8_t(JSOp::OP)]);      \
     handler.setCurrentOp(JSOp::OP);               \
     if (!this->emit_##OP()) {                     \
@@ -6748,22 +6749,27 @@ void BaselineInterpreterGenerator::emitOutOfLineCodeCoverageInstrumentation() {
 bool BaselineInterpreterGenerator::generate(BaselineInterpreter& interpreter) {
   AutoCreatedBy acb(masm, "BaselineInterpreterGenerator::generate");
 
+  perfSpewer_.recordOffset(masm, "Prologue");
   if (!emitPrologue()) {
     return false;
   }
 
+  perfSpewer_.recordOffset(masm, "InterpreterLoop");
   if (!emitInterpreterLoop()) {
     return false;
   }
 
+  perfSpewer_.recordOffset(masm, "Epilogue");
   if (!emitEpilogue()) {
     return false;
   }
 
+  perfSpewer_.recordOffset(masm, "OOLPostBarrierSlot");
   if (!emitOutOfLinePostBarrierSlot()) {
     return false;
   }
 
+  perfSpewer_.recordOffset(masm, "OOLCodeCoverageInstrumentation");
   emitOutOfLineCodeCoverageInstrumentation();
 
   {
@@ -6804,7 +6810,7 @@ bool BaselineInterpreterGenerator::generate(BaselineInterpreter& interpreter) {
                                            tableLoc);
     }
 
-    CollectPerfSpewerJitCodeProfile(code, "BaselineInterpreter");
+    perfSpewer_.saveProfile(code);
 
 #ifdef MOZ_VTUNE
     vtune::MarkStub(code, "BaselineInterpreter");

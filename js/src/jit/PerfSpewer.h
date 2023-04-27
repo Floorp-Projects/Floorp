@@ -132,6 +132,21 @@ class IonPerfSpewer : public PerfSpewer {
   void saveProfile(JSContext* cx, JSScript* script, JitCode* code);
 };
 
+class BaselineInterpreterPerfSpewer : public PerfSpewer {
+  JS::JitTier GetTier() override { return JS::JitTier::Baseline; }
+  const char* CodeName(unsigned op) override;
+
+  // Do nothing, BaselineInterpreter has no source to reference.
+  void saveJitCodeSourceInfo(JSScript* script, JitCode* code,
+                             JS::JitCodeRecord* record,
+                             AutoLockPerfSpewer& lock) override {}
+
+ public:
+  void recordOffset(MacroAssembler& masm, JSOp op);
+  void recordOffset(MacroAssembler& masm, const char* name);
+  void saveProfile(JitCode* code);
+};
+
 class BaselinePerfSpewer : public PerfSpewer {
   JS::JitTier GetTier() override { return JS::JitTier::Baseline; }
   const char* CodeName(unsigned op) override;

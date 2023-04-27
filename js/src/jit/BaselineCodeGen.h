@@ -502,6 +502,8 @@ class BaselineInterpreterGenerator final : private BaselineInterpreterCodeGen {
   // When the debugger is enabled, NOPs are patched to calls to this location.
   uint32_t debugTrapHandlerOffset_ = 0;
 
+  BaselineInterpreterPerfSpewer perfSpewer_;
+
  public:
   explicit BaselineInterpreterGenerator(JSContext* cx, TempAllocator& alloc);
 
