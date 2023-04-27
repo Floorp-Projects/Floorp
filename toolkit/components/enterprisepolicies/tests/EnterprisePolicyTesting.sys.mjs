@@ -9,6 +9,7 @@ import { Assert } from "resource://testing-common/Assert.sys.mjs";
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   FileTestUtils: "resource://testing-common/FileTestUtils.sys.mjs",
+  modifySchemaForTests: "resource:///modules/policies/schema.sys.mjs",
 });
 
 export var EnterprisePolicyTesting = {
@@ -41,15 +42,8 @@ export var EnterprisePolicyTesting = {
       }, "EnterprisePolicies:AllPoliciesApplied");
     });
 
-    // Clear any previously used custom schema
-    Cu.unload("resource:///modules/policies/schema.jsm");
-
-    if (customSchema) {
-      let schemaModule = ChromeUtils.import(
-        "resource:///modules/policies/schema.jsm"
-      );
-      schemaModule.schema = customSchema;
-    }
+    // Clear any previously used custom schema or assign a new one
+    lazy.modifySchemaForTests(customSchema || null);
 
     Services.obs.notifyObservers(null, "EnterprisePolicies:Restart");
     return promise;
