@@ -18,6 +18,8 @@ DDLoggedTypeDeclNameAndBase(RemoteDataDecoder, MediaDataDecoder);
 class RemoteDataDecoder : public MediaDataDecoder,
                           public DecoderDoctorLifeLogger<RemoteDataDecoder> {
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteDataDecoder, final);
+
   static already_AddRefed<MediaDataDecoder> CreateAudioDecoder(
       const CreateDecoderParams& aParams, const nsString& aDrmStubId,
       CDMProxy* aProxy);

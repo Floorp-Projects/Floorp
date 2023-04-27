@@ -125,6 +125,8 @@ WebrtcMediaDataEncoder::WebrtcMediaDataEncoder(
   PodZero(&mCodecSpecific.codecSpecific);
 }
 
+WebrtcMediaDataEncoder::~WebrtcMediaDataEncoder() = default;
+
 static void InitCodecSpecficInfo(
     webrtc::CodecSpecificInfo& aInfo, const webrtc::VideoCodec* aCodecSettings,
     const webrtc::SdpVideoFormat::Parameters& aParameters) {

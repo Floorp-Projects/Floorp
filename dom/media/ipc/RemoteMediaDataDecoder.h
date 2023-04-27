@@ -22,10 +22,12 @@ DDLoggedTypeCustomNameAndBase(RemoteMediaDataDecoder, RemoteMediaDataDecoder,
 // to a 'real' decoder in the GPU or RDD process.
 // All requests get forwarded to a *DecoderChild instance that
 // operates solely on the provided manager and abstract manager threads.
-class RemoteMediaDataDecoder
+class RemoteMediaDataDecoder final
     : public MediaDataDecoder,
       public DecoderDoctorLifeLogger<RemoteMediaDataDecoder> {
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteMediaDataDecoder, final);
+
   explicit RemoteMediaDataDecoder(RemoteDecoderChild* aChild);
 
   // MediaDataDecoder

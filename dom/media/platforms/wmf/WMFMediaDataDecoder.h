@@ -90,12 +90,13 @@ DDLoggedTypeDeclNameAndBase(WMFMediaDataDecoder, MediaDataDecoder);
 // the higher-level logic that drives mapping the MFT to the async
 // MediaDataDecoder interface. The specifics of decoding the exact stream
 // type are handled by MFTManager and the MFTDecoder it creates.
-class WMFMediaDataDecoder
+class WMFMediaDataDecoder final
     : public MediaDataDecoder,
       public DecoderDoctorLifeLogger<WMFMediaDataDecoder> {
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WMFMediaDataDecoder, final);
+
   explicit WMFMediaDataDecoder(MFTManager* aOutputSource);
-  ~WMFMediaDataDecoder();
 
   RefPtr<MediaDataDecoder::InitPromise> Init() override;
 
@@ -125,6 +126,8 @@ class WMFMediaDataDecoder
   virtual void SetSeekThreshold(const media::TimeUnit& aTime) override;
 
  private:
+  ~WMFMediaDataDecoder();
+
   RefPtr<DecodePromise> ProcessError(HRESULT aError, const char* aReason);
 
   // Called on the task queue. Inserts the sample into the decoder, and
