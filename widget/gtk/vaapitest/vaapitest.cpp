@@ -34,7 +34,7 @@
 // Print VA-API test results to stdout and logging to stderr
 #define OUTPUT_PIPE 1
 
-// bits to use decoding childvaapitest() return values.
+// bits to use decoding vaapitest() return values.
 constexpr int CODEC_HW_H264 = 1 << 4;
 constexpr int CODEC_HW_VP8 = 1 << 5;
 constexpr int CODEC_HW_VP9 = 1 << 6;
@@ -79,7 +79,7 @@ static void vaapitest(const char* aRenderDevicePath) {
   VADisplay display = nullptr;
   void* libDrm = nullptr;
 
-  log("childvaapitest start, device %s\n", aRenderDevicePath);
+  log("vaapitest start, device %s\n", aRenderDevicePath);
 
   auto autoRelease = mozilla::MakeScopeExit([&] {
     free(profiles);
@@ -197,7 +197,7 @@ static void vaapitest(const char* aRenderDevicePath) {
   } else {
     record_value("VAAPI_SUPPORTED\nFALSE\n");
   }
-  log("childvaapitest finished\n");
+  log("vaapitest finished\n");
 }
 
 }  // extern "C"
@@ -241,8 +241,12 @@ int main(int argc, char** argv) {
 #endif
     const char* env = getenv("MOZ_GFX_DEBUG");
     enable_logging = env && *env == '1';
+    output_pipe = OUTPUT_PIPE;
+    if (!enable_logging) {
+      close_logging();
+    }
     vaapitest(drmDevice);
-    record_flush(OUTPUT_PIPE);
+    record_flush();
     return EXIT_SUCCESS;
   }
   PrintUsage();

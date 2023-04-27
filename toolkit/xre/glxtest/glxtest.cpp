@@ -171,15 +171,13 @@ typedef struct _drmDevice {
 #  define LIBDRM_FILENAME "libdrm.so.2"
 #endif
 
-static int glxtest_out_pipe = 1;
-
 #ifdef MOZ_X11
 static int x_error_handler(Display*, XErrorEvent* ev) {
   record_value(
       "ERROR\nX error, error_code=%d, "
       "request_code=%d, minor_code=%d\n",
       ev->error_code, ev->request_code, ev->minor_code);
-  record_flush(glxtest_out_pipe);
+  record_flush();
   _exit(EXIT_FAILURE);
 }
 #endif
@@ -964,27 +962,13 @@ int childgltest(bool aWayland) {
   }
 #endif
   // Finally write buffered data to the pipe.
-  record_flush(glxtest_out_pipe);
+  record_flush();
 
   log("GLX_TEST: childgltest finished\n");
   return EXIT_SUCCESS;
 }
 
 }  // extern "C"
-
-static void close_logging() {
-  // we want to redirect to /dev/null stdout, stderr, and while we're at it,
-  // any PR logging file descriptors. To that effect, we redirect all positive
-  // file descriptors up to what open() returns here. In particular, 1 is stdout
-  // and 2 is stderr.
-  int fd = open("/dev/null", O_WRONLY);
-  for (int i = 1; i < fd; i++) {
-    if (glxtest_out_pipe != i) {
-      dup2(fd, i);
-    }
-  }
-  close(fd);
-}
 
 static void PrintUsage() {
   printf(
@@ -1016,7 +1000,7 @@ int main(int argc, char** argv) {
         wayland = true;
         break;
       case 'f':
-        glxtest_out_pipe = atoi(optarg);
+        output_pipe = atoi(optarg);
         break;
       case 'h':
 #ifdef MOZ_WAYLAND
@@ -1033,7 +1017,7 @@ int main(int argc, char** argv) {
   }
   if (getenv("MOZ_AVOID_OPENGL_ALTOGETHER")) {
     const char* msg = "ERROR\nMOZ_AVOID_OPENGL_ALTOGETHER envvar set";
-    MOZ_UNUSED(write(glxtest_out_pipe, msg, strlen(msg)));
+    MOZ_UNUSED(write(output_pipe, msg, strlen(msg)));
     exit(EXIT_FAILURE);
   }
   const char* env = getenv("MOZ_GFX_DEBUG");
