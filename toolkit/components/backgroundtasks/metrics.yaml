@@ -17,7 +17,7 @@ background_tasks.rmdir.base: &rmdir
   metric_base: &metric_base
     expires: never
     send_in_pings:
-      - remove-directory
+      - background-tasks
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1788986
     data_reviews:
