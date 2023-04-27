@@ -1804,7 +1804,7 @@ bool ScriptSource::xdrFinalizeEncoder(JSContext* cx,
   auto cleanup = mozilla::MakeScopeExit([&] { xdrEncoder_.reset(); });
 
   AutoReportFrontendContext fc(cx);
-  XDRStencilEncoder encoder(cx, &fc, buffer);
+  XDRStencilEncoder encoder(&fc, buffer);
 
   frontend::BorrowingCompilationStencil borrowingStencil(
       xdrEncoder_.merger_->getResult());
