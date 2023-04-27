@@ -173,6 +173,7 @@ export var UrlbarUtils = {
     "handoff",
     "keywordoffer",
     "oneoff",
+    "historymenu",
     "other",
     "shortcut",
     "tabmenu",

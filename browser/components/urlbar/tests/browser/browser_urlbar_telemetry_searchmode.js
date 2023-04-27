@@ -374,6 +374,20 @@ add_task(async function test_bookmarkmenu() {
   BrowserTestUtils.removeTab(tab);
 });
 
+// Enters search mode by calling the same function called from a History
+// menu.
+add_task(async function test_historymenu() {
+  let searchPromise = UrlbarTestUtils.promiseSearchComplete(window);
+  PlacesCommandHook.searchHistory();
+  await searchPromise;
+
+  await UrlbarTestUtils.assertSearchMode(window, {
+    source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+    entry: "historymenu",
+  });
+  assertSearchModeScalars("historymenu", "history");
+});
+
 // Enters search mode by calling the same function called by the Search Tabs
 // menu item in the tab overflow menu.
 add_task(async function test_tabmenu() {
