@@ -6,6 +6,8 @@
 #  include "mozilla/a11y/Compatibility.h"
 #endif
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/net/CookieJarSettings.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Unused.h"
 #include "nsArrayUtils.h"
 #include "nsClipboardProxy.h"
@@ -36,14 +38,21 @@ nsClipboardProxy::SetData(nsITransferable* aTransferable,
   nsContentUtils::TransferableToIPCTransferable(aTransferable, &ipcDataTransfer,
                                                 false, nullptr);
 
+  Maybe<mozilla::net::CookieJarSettingsArgs> cookieJarSettingsArgs;
+  if (nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
+          aTransferable->GetCookieJarSettings()) {
+    mozilla::net::CookieJarSettingsArgs args;
+    mozilla::net::CookieJarSettings::Cast(cookieJarSettings)->Serialize(args);
+    cookieJarSettingsArgs = Some(args);
+  }
   bool isPrivateData = aTransferable->GetIsPrivateData();
   nsCOMPtr<nsIPrincipal> requestingPrincipal =
       aTransferable->GetRequestingPrincipal();
   nsContentPolicyType contentPolicyType = aTransferable->GetContentPolicyType();
   nsCOMPtr<nsIReferrerInfo> referrerInfo = aTransferable->GetReferrerInfo();
   child->SendSetClipboard(std::move(ipcDataTransfer), isPrivateData,
-                          requestingPrincipal, contentPolicyType, referrerInfo,
-                          aWhichClipboard);
+                          requestingPrincipal, cookieJarSettingsArgs,
+                          contentPolicyType, referrerInfo, aWhichClipboard);
 
   return NS_OK;
 }

@@ -3466,6 +3466,7 @@ void ContentParent::OnVarChanged(const GfxVarUpdate& aVar) {
 mozilla::ipc::IPCResult ContentParent::RecvSetClipboard(
     const IPCDataTransfer& aDataTransfer, const bool& aIsPrivateData,
     nsIPrincipal* aRequestingPrincipal,
+    mozilla::Maybe<CookieJarSettingsArgs> aCookieJarSettingsArgs,
     const nsContentPolicyType& aContentPolicyType,
     nsIReferrerInfo* aReferrerInfo, const int32_t& aWhichClipboard) {
   // aRequestingPrincipal is allowed to be nullptr here.
@@ -3484,6 +3485,13 @@ mozilla::ipc::IPCResult ContentParent::RecvSetClipboard(
   NS_ENSURE_SUCCESS(rv, IPC_OK());
   trans->Init(nullptr);
   trans->SetReferrerInfo(aReferrerInfo);
+
+  if (aCookieJarSettingsArgs.isSome()) {
+    nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+    net::CookieJarSettings::Deserialize(aCookieJarSettingsArgs.ref(),
+                                        getter_AddRefs(cookieJarSettings));
+    trans->SetCookieJarSettings(cookieJarSettings);
+  }
 
   rv = nsContentUtils::IPCTransferableToTransferable(
       aDataTransfer, aIsPrivateData, aRequestingPrincipal, aContentPolicyType,
