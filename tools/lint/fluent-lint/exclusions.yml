@@ -183,7 +183,6 @@ CO01:
         - virtual-monitor-disp
         # toolkit/locales/en-US/toolkit/about/aboutTelemetry.ftl
         - about-telemetry-firefox-data-doc
-        - about-telemetry-origins-explanation
         - about-telemetry-telemetry-client-doc
         - about-telemetry-telemetry-dashboard
         # toolkit/locales/en-US/toolkit/global/processTypes.ftl

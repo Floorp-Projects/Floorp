@@ -1979,10 +1979,6 @@ function setupServerOwnerBranding() {
   let serverOwner = Preferences.get(PREF_TELEMETRY_SERVER_OWNER, "Mozilla");
   const elements = [
     [document.getElementById("page-subtitle"), "about-telemetry-page-subtitle"],
-    [
-      document.getElementById("origins-explanation"),
-      "about-telemetry-origins-explanation",
-    ],
   ];
   for (const [elt, l10nName] of elements) {
     document.l10n.setAttributes(elt, l10nName, {
