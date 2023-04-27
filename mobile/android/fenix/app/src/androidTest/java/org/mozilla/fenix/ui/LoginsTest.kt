@@ -660,6 +660,7 @@ class LoginsTest {
         }
     }
 
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1815650")
     @Test
     fun verifyLastUsedLoginSortingOptionTest() {
         val firstLoginPage = TestAssetHelper.getSaveLoginAsset(mockWebServer)
