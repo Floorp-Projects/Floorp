@@ -32,9 +32,7 @@ const TEST_PROVIDER_INFO = [
     components: [
       {
         type: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
-        included: {
-          default: true,
-        },
+        default: true,
       },
     ],
   },
