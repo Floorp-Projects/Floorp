@@ -67,6 +67,8 @@ DAV1DDecoder::DAV1DDecoder(const CreateDecoderParams& aParams)
       mImageAllocator(aParams.mKnowsCompositor),
       mTrackingId(aParams.mTrackingId) {}
 
+DAV1DDecoder::~DAV1DDecoder() = default;
+
 RefPtr<MediaDataDecoder::InitPromise> DAV1DDecoder::Init() {
   Dav1dSettings settings;
   dav1d_default_settings(&settings);

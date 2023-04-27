@@ -16,9 +16,11 @@ namespace mozilla {
 
 DDLoggedTypeDeclNameAndBase(TheoraDecoder, MediaDataDecoder);
 
-class TheoraDecoder : public MediaDataDecoder,
-                      public DecoderDoctorLifeLogger<TheoraDecoder> {
+class TheoraDecoder final : public MediaDataDecoder,
+                            public DecoderDoctorLifeLogger<TheoraDecoder> {
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TheoraDecoder, final);
+
   explicit TheoraDecoder(const CreateDecoderParams& aParams);
 
   RefPtr<InitPromise> Init() override;
