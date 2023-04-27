@@ -13855,7 +13855,7 @@ void CodeGenerator::visitMegamorphicSetElement(LMegamorphicSetElement* lir) {
   pushArg(obj);
 
   using Fn = bool (*)(JSContext*, HandleObject, HandleValue, HandleValue, bool);
-  callVM<Fn, js::jit::SetElementMegamorphicCached>(lir);
+  callVM<Fn, js::jit::SetElementMegamorphic<true>>(lir);
 
   masm.jump(&done);
   masm.bind(&cacheHit);
