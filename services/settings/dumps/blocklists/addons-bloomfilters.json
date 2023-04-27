@@ -3,6 +3,50 @@
     {
       "stash": {
         "blocked": [
+          "{ff7f3168-970d-4f59-8007-560a154e13d9}:1.0.8",
+          "{2a113868-cb48-49c4-8638-87066e4f1d9b}:1.0.0",
+          "{f7bcc6a5-63ec-4637-86b4-6272c2d9850f}:1.0.8",
+          "{ff7f3168-970d-4f59-8007-560a154e13d9}:1.0.9",
+          "{f7bcc6a5-63ec-4637-86b4-6272c2d9850f}:1.0.9"
+        ],
+        "unblocked": []
+      },
+      "schema": 1682426258593,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1682534109325,
+      "id": "eb404ab7-19fb-4f47-8c67-5959c522a57b",
+      "last_modified": 1682534253272
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{335917fb-0014-4817-a7d9-88d9825837c5}:1.0",
+          "{335917fb-0014-4817-a7d9-88d9825837c5}:1.1"
+        ],
+        "unblocked": []
+      },
+      "schema": 1682339857300,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1682426108259,
+      "id": "ad1069b5-855e-4d65-bfd0-643026c23c50",
+      "last_modified": 1682426258529
+    },
+    {
+      "stash": {
+        "blocked": [
+          "stethoscope02-selfhost@netflix.com:0.0.1"
+        ],
+        "unblocked": []
+      },
+      "schema": 1682080650449,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1682339709007,
+      "id": "9d0de0d9-2b8a-486a-a29e-edd9d3190657",
+      "last_modified": 1682339857232
+    },
+    {
+      "stash": {
+        "blocked": [
           "{2874e75a-a67b-4311-82ac-c64ecf9fb642}:0.2",
           "{2874e75a-a67b-4311-82ac-c64ecf9fb642}:0.1",
           "{133f2efd-2a29-4be3-a8a8-6b9bb3288b66}:0.4",
@@ -1415,5 +1459,5 @@
       "last_modified": 1673354326131
     }
   ],
-  "timestamp": 1682080650383
+  "timestamp": 1682534253272
 }

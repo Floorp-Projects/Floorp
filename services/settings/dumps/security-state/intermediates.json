@@ -15877,24 +15877,6 @@
       "last_modified": 1664326625421
     },
     {
-      "schema": 1664326255105,
-      "derHash": "wWhWg/PIWQ6IWAGX8hnKuZ5UgqFWhjX1ltCYZ7L0Bb0=",
-      "subject": "CN=Postecom CS4,OU=Servizi di Certificazione,O=Postecom S.p.A.,C=IT",
-      "subjectDN": "MGIxCzAJBgNVBAYTAklUMRgwFgYDVQQKEw9Qb3N0ZWNvbSBTLnAuQS4xIjAgBgNVBAsTGVNlcnZpemkgZGkgQ2VydGlmaWNhemlvbmUxFTATBgNVBAMTDFBvc3RlY29tIENTNA==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "025dd377e3279318440b3b87d0d4f17cf16eba256149ccceaeca209fdbf2ee22",
-        "size": 1630,
-        "filename": "PBHUzxe1k4g4H4IZx6Fgmys4v5LbfykzxSURHhuSvZU=.pem",
-        "location": "security-state-staging/intermediates/dbb82e4f-7aec-48a0-ac02-21ed8c89e97c.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "PBHUzxe1k4g4H4IZx6Fgmys4v5LbfykzxSURHhuSvZU=",
-      "crlite_enrolled": false,
-      "id": "5d43a6fa-2101-4a52-bc0a-d48146c43faa",
-      "last_modified": 1664326625413
-    },
-    {
       "schema": 1664326255960,
       "derHash": "8crKarI1CnZowT5BlgkIaB2vzH42jcuNR/7PljE5BIE=",
       "subject": "CN=TrustAsia ECC OV TLS Pro CA,O=TrustAsia Technologies\\, Inc.,C=CN",
@@ -27595,5 +27577,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1682110623483
+  "timestamp": 1682521023549
 }
