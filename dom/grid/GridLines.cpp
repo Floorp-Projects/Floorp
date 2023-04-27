@@ -116,8 +116,9 @@ void GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
       // problem. We do the work here since this is only run when
       // requested by devtools, and slowness here will not affect
       // normal browsing.
+      nsTArray<RefPtr<nsAtom>> empty{};
       const nsTArray<RefPtr<nsAtom>>& possiblyDuplicateLineNames(
-          aLineInfo->mNames.SafeElementAt(i, nsTArray<RefPtr<nsAtom>>()));
+          aLineInfo->mNames.SafeElementAt(i, empty));
 
       nsTArray<RefPtr<nsAtom>> lineNames;
       AddLineNamesIfNotPresent(lineNames, possiblyDuplicateLineNames);
