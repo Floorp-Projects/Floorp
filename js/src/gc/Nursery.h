@@ -182,6 +182,7 @@ class Nursery {
   void* allocateCell(gc::AllocSite* site, size_t size, JS::TraceKind kind);
 
   void* allocateBigInt(gc::AllocSite* site, size_t size) {
+    MOZ_ASSERT(canAllocateBigInts());
     return allocateCell(site, size, JS::TraceKind::BigInt);
   }
   void* allocateString(gc::AllocSite* site, size_t size);
@@ -701,6 +702,8 @@ class Nursery {
   gcstats::Statistics& stats() const;
 
   const js::gc::GCSchedulingTunables& tunables() const;
+
+  void updateZoneAllocFlags();
 
   // Common internal allocator function.
   void* allocate(size_t size);

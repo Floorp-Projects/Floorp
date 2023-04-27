@@ -178,6 +178,13 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::MainThreadOrGCTaskData<size_t> markedStrings;
   js::MainThreadOrGCTaskData<size_t> finalizedStrings;
 
+  // Flags permanently set when nursery allocation is disabled for this zone.
+  js::MainThreadData<bool> nurseryStringsDisabled;
+  js::MainThreadData<bool> nurseryBigIntsDisabled;
+
+  // Flags dynamically updated based on more than one condition, including the
+  // flags above.
+  js::MainThreadData<bool> allocNurseryObjects;
   js::MainThreadData<bool> allocNurseryStrings;
   js::MainThreadData<bool> allocNurseryBigInts;
 
@@ -455,6 +462,11 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   void traceWeakCCWEdges(JSTracer* trc);
   static void fixupAllCrossCompartmentWrappersAfterMovingGC(JSTracer* trc);
 
+  void fixupAfterMovingGC();
+  void fixupScriptMapsAfterMovingGC(JSTracer* trc);
+
+  void updateNurseryAllocFlags(const js::Nursery& nursery);
+
   mozilla::LinkedList<detail::WeakCacheBase>& weakCaches() {
     return weakCaches_.ref();
   }
@@ -525,9 +537,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   BoundPrefixCache& boundPrefixCache() { return boundPrefixCache_.ref(); }
 
   js::ShapeZone& shapeZone() { return shapeZone_.ref(); }
-
-  void fixupAfterMovingGC();
-  void fixupScriptMapsAfterMovingGC(JSTracer* trc);
 
   // Gets an existing UID in |uidp| if one exists.
   [[nodiscard]] bool maybeGetUniqueId(js::gc::Cell* cell, uint64_t* uidp);
