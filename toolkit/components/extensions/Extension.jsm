@@ -13,6 +13,7 @@ var EXPORTED_SYMBOLS = [
   "Management",
   "SitePermission",
   "ExtensionAddonObserver",
+  "ExtensionProcessCrashObserver",
   "PRIVILEGED_PERMS",
 ];
 
@@ -600,6 +601,89 @@ var ExtensionAddonObserver = {
 };
 
 ExtensionAddonObserver.init();
+
+/**
+ * Observer ExtensionProcess crashes and notify all the extensions
+ * using a Management event named "extension-process-crash".
+ */
+var ExtensionProcessCrashObserver = {
+  initialized: false,
+  // Technically there is at most one child extension process,
+  // but we may need to adjust this assumption to account for more
+  // than one if that ever changes in the future.
+  currentProcessChildID: undefined,
+  lastCrashedProcessChildID: undefined,
+  QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
+
+  init() {
+    if (!this.initialized) {
+      Services.obs.addObserver(this, "ipc:content-created");
+      Services.obs.addObserver(this, "process-type-set");
+      Services.obs.addObserver(this, "ipc:content-shutdown");
+      this.initialized = true;
+    }
+  },
+
+  uninit() {
+    if (this.initialized) {
+      try {
+        Services.obs.removeObserver(this, "ipc:content-created");
+        Services.obs.removeObserver(this, "process-type-set");
+        Services.obs.removeObserver(this, "ipc:content-shutdown");
+      } catch (err) {
+        // Removing the observer may fail if they are not registered anymore,
+        // this shouldn't happen in practice, but let's still log the error
+        // in case it does.
+        Cu.reportError(err);
+      }
+      this.initialized = false;
+    }
+  },
+
+  observe(subject, topic, data) {
+    let childID = data;
+    switch (topic) {
+      case "process-type-set":
+      // Intentional fall-through
+      case "ipc:content-created": {
+        let pp = subject.QueryInterface(Ci.nsIDOMProcessParent);
+        if (pp.remoteType === "extension") {
+          this.currentProcessChildID = childID;
+        }
+        break;
+      }
+      case "ipc:content-shutdown": {
+        if (Services.startup.shuttingDown) {
+          // The application is shutting down, don't bother
+          // signaling process crashes anymore.
+          return;
+        }
+        if (this.currentProcessChildID !== childID) {
+          // Ignore non-extension child process shutdowns.
+          return;
+        }
+
+        // At this point we are sure that the current extension
+        // process is gone, and so even if the process did shutdown
+        // cleanly instead of crashing, we can clear the property
+        // that keeps track of the current extension process childID.
+        this.currentProcessChildID = undefined;
+
+        subject.QueryInterface(Ci.nsIPropertyBag2);
+        if (!subject.get("abnormal")) {
+          // Ignore non-abnormal child process shutdowns.
+          return;
+        }
+
+        this.lastCrashedProcessChildID = childID;
+        Management.emit("extension-process-crash", { childID });
+        break;
+      }
+    }
+  },
+};
+
+ExtensionProcessCrashObserver.init();
 
 const manifestTypes = new Map([
   ["theme", "manifest.ThemeManifest"],
