@@ -315,7 +315,7 @@ class MegamorphicSetPropCache {
   // We can get more hits if we increase this, but this seems to be around
   // the sweet spot where we are getting most of the hits we would get with
   // an infinitely sized cache
-  static constexpr size_t NumEntries = 256;
+  static constexpr size_t NumEntries = 1024;
   static constexpr uint8_t ShapeHashShift1 =
       mozilla::tl::FloorLog2<alignof(Shape)>::value;
   static constexpr uint8_t ShapeHashShift2 =
