@@ -131,6 +131,7 @@ enum GMPVideoCodecMode {
   kGMPRealtimeVideo,
   kGMPScreensharing,
   kGMPStreamingVideo,
+  kGMPNonRealtimeVideo,
   kGMPCodecModeInvalid  // Should always be last.
 };
 
@@ -145,6 +146,59 @@ enum GMPLogLevel {
   kGMPLogInvalid  // Should always be last.
 };
 
+enum GMPProfile {
+  kGMPH264ProfileUnknown,
+  kGMPH264ProfileBaseline,
+  kGMPH264ProfileMain,
+  kGMPH264ProfileExtended,
+  kGMPH264ProfileHigh,
+  kGMPH264ProfileHigh10,
+  kGMPH264ProfileHigh422,
+  kGMPH264ProfileHigh444,
+  kGMPH264ProfileCavlc444,
+  kGMPH264ProfileScalableBaseline,
+  kGMPH264ProfileScalableHigh
+};
+
+enum GMPLevel {
+  kGMPH264LevelUnknown,
+  kGMPH264Level1_0,
+  kGMPH264Level1_B,
+  kGMPH264Level1_1,
+  kGMPH264Level1_2,
+  kGMPH264Level1_3,
+  kGMPH264Level2_0,
+  kGMPH264Level2_1,
+  kGMPH264Level2_2,
+  kGMPH264Level3_0,
+  kGMPH264Level3_1,
+  kGMPH264Level3_2,
+  kGMPH264Level4_0,
+  kGMPH264Level4_1,
+  kGMPH264Level4_2,
+  kGMPH264Level5_0,
+  kGMPH264Level5_1,
+  kGMPH264Level5_2
+};
+
+enum GMPRateControlMode {
+  kGMPRateControlUnknown,
+  kGMPRateControlBitrate,
+  kGMPRateControlQuality,
+  kGMPRateControlBufferBased,
+  kGMPRateControlTimestamp,
+  kGMPRateControlBitratePostskip,
+  kGMPRateControlOff
+};
+
+enum GMPSliceMode {
+  kGMPSliceUnknown,
+  kGMPSliceSingle,
+  kGMPSliceFixedSlcNum,
+  kGMPSliceRaster,
+  kGMPSliceSizeLimited
+};
+
 enum GMPApiVersion {
   kGMPVersion32 =
       1,  // leveraging that V32 had mCodecType first, and only supported H264
@@ -152,6 +206,9 @@ enum GMPApiVersion {
 
   // Adds GMPVideoi420Frame::SetUpdatedTimestamp/UpdatedTimestamp
   kGMPVersion34 = 34,
+
+  // Adds new options for encoding
+  kGMPVersion35 = 35,
 };
 
 struct GMPVideoCodec {
@@ -178,8 +235,16 @@ struct GMPVideoCodec {
 
   GMPVideoCodecMode mMode;
 
+  // Since GMP version 34
   bool mUseThreadedDecode;
   GMPLogLevel mLogLevel;
+
+  // Since GMP version 35
+  GMPLevel mLevel;
+  GMPProfile mProfile;
+  GMPRateControlMode mRateControlMode;
+  GMPSliceMode mSliceMode;
+  bool mUseThreadedEncode;
 };
 
 // Either single encoded unit, or multiple units separated by 8/16/24/32
