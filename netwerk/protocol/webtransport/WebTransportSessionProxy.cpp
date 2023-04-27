@@ -317,67 +317,18 @@ class WebTransportStreamCallbackWrapper final {
 };
 
 void WebTransportSessionProxy::CreateStreamInternal(
-    nsIWebTransportStreamCallback* callback, bool aBidi) {
-  mMutex.AssertCurrentThreadOwns();
-  LOG(
-      ("WebTransportSessionProxy::CreateStreamInternal %p "
-       "mState=%d, bidi=%d",
-       this, mState, aBidi));
-  switch (mState) {
-    case WebTransportSessionProxyState::INIT:
-    case WebTransportSessionProxyState::NEGOTIATING:
-    case WebTransportSessionProxyState::NEGOTIATING_SUCCEEDED:
-    case WebTransportSessionProxyState::ACTIVE: {
-      RefPtr<WebTransportStreamCallbackWrapper> wrapper =
-          new WebTransportStreamCallbackWrapper(callback, aBidi);
-      if (mState == WebTransportSessionProxyState::ACTIVE &&
-          mWebTransportSession) {
-        DoCreateStream(wrapper, mWebTransportSession, aBidi);
-      } else {
-        LOG(
-            ("WebTransportSessionProxy::CreateStreamInternal %p "
-             " queue create stream event",
-             this));
-        auto task = [self = RefPtr{this}, wrapper{std::move(wrapper)},
-                     bidi(aBidi)](nsresult aStatus) {
-          if (NS_FAILED(aStatus)) {
-            wrapper->CallOnError(aStatus);
-            return;
-          }
-
-          self->DoCreateStream(wrapper, nullptr, bidi);
-        };
-        mPendingCreateStreamEvents.AppendElement(std::move(task));
-      }
-    } break;
-    case WebTransportSessionProxyState::SESSION_CLOSE_PENDING:
-    case WebTransportSessionProxyState::CLOSE_CALLBACK_PENDING:
-    case WebTransportSessionProxyState::DONE: {
-      nsCOMPtr<nsIWebTransportStreamCallback> cb(callback);
-      NS_DispatchToCurrentThread(NS_NewRunnableFunction(
-          "WebTransportSessionProxy::CreateOutgoingUnidirectionalStream",
-          [cb{std::move(cb)}]() {
-            cb->OnError(nsIWebTransport::INVALID_STATE_ERROR);
-          }));
-    } break;
-  }
-}
-
-void WebTransportSessionProxy::DoCreateStream(
-    WebTransportStreamCallbackWrapper* aCallback,
-    Http3WebTransportSession* aSession, bool aBidi) {
+    WebTransportStreamCallbackWrapper* aCallback, bool aBidi) {
   if (!OnSocketThread()) {
     RefPtr<WebTransportSessionProxy> self(this);
     RefPtr<WebTransportStreamCallbackWrapper> wrapper(aCallback);
     Unused << gSocketTransportService->Dispatch(NS_NewRunnableFunction(
-        "WebTransportSessionProxy::DoCreateStream",
+        "WebTransportSessionProxy::CreateStreamInternal",
         [self{std::move(self)}, wrapper{std::move(wrapper)}, bidi(aBidi)]() {
-          self->DoCreateStream(wrapper, nullptr, bidi);
+          self->CreateStreamInternal(wrapper, bidi);
         }));
     return;
   }
 
-  LOG(("WebTransportSessionProxy::DoCreateStream %p bidi=%d", this, aBidi));
   RefPtr<WebTransportStreamCallbackWrapper> wrapper(aCallback);
   auto callback =
       [wrapper{std::move(wrapper)}](
@@ -393,8 +344,8 @@ void WebTransportSessionProxy::DoCreateStream(
         wrapper->CallOnStreamReady(streamProxy);
       };
 
-  RefPtr<Http3WebTransportSession> session = aSession;
-  if (!aSession) {
+  RefPtr<Http3WebTransportSession> session;
+  {
     MutexAutoLock lock(mMutex);
     session = mWebTransportSession;
   }
@@ -419,8 +370,23 @@ WebTransportSessionProxy::CreateOutgoingUnidirectionalStream(
     return NS_ERROR_INVALID_ARG;
   }
 
-  MutexAutoLock lock(mMutex);
-  CreateStreamInternal(callback, false);
+  {
+    MutexAutoLock lock(mMutex);
+    if (mState != WebTransportSessionProxyState::ACTIVE ||
+        !mWebTransportSession) {
+      nsCOMPtr<nsIWebTransportStreamCallback> cb(callback);
+      NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+          "WebTransportSessionProxy::CreateOutgoingUnidirectionalStream",
+          [cb{std::move(cb)}]() {
+            cb->OnError(nsIWebTransport::INVALID_STATE_ERROR);
+          }));
+      return NS_OK;
+    }
+  }
+
+  RefPtr<WebTransportStreamCallbackWrapper> wrapper =
+      new WebTransportStreamCallbackWrapper(callback, false);
+  CreateStreamInternal(wrapper, false);
   return NS_OK;
 }
 
@@ -431,8 +397,23 @@ WebTransportSessionProxy::CreateOutgoingBidirectionalStream(
     return NS_ERROR_INVALID_ARG;
   }
 
-  MutexAutoLock lock(mMutex);
-  CreateStreamInternal(callback, true);
+  {
+    MutexAutoLock lock(mMutex);
+    if (mState != WebTransportSessionProxyState::ACTIVE ||
+        !mWebTransportSession) {
+      nsCOMPtr<nsIWebTransportStreamCallback> cb(callback);
+      NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+          "WebTransportSessionProxy::CreateOutgoingBidirectionalStream",
+          [cb{std::move(cb)}]() {
+            cb->OnError(nsIWebTransport::INVALID_STATE_ERROR);
+          }));
+      return NS_OK;
+    }
+  }
+
+  RefPtr<WebTransportStreamCallbackWrapper> wrapper =
+      new WebTransportStreamCallbackWrapper(callback, true);
+  CreateStreamInternal(wrapper, true);
   return NS_OK;
 }
 
@@ -580,8 +561,6 @@ WebTransportSessionProxy::OnStopRequest(nsIRequest* aRequest,
   uint32_t closeStatus = 0;
   uint64_t sessionId;
   bool succeeded = false;
-  nsTArray<std::function<void()>> pendingEvents;
-  nsTArray<std::function<void(nsresult)>> pendingCreateStreamEvents;
   {
     MutexAutoLock lock(mMutex);
     switch (mState) {
@@ -618,25 +597,16 @@ WebTransportSessionProxy::OnStopRequest(nsIRequest* aRequest,
       case WebTransportSessionProxyState::DONE:
         break;
     }
-    pendingEvents = std::move(mPendingEvents);
-    pendingCreateStreamEvents = std::move(mPendingCreateStreamEvents);
-    mStopRequestCalled = true;
   }
-
-  if (!pendingCreateStreamEvents.IsEmpty()) {
-    Unused << gSocketTransportService->Dispatch(NS_NewRunnableFunction(
-        "WebTransportSessionProxy::DispatchPendingCreateStreamEvents",
-        [pendingCreateStreamEvents = std::move(pendingCreateStreamEvents),
-         status(aStatus)]() {
-          for (const auto& event : pendingCreateStreamEvents) {
-            event(status);
-          }
-        }));
-  }
-
   if (listener) {
     if (succeeded) {
       listener->OnSessionReady(sessionId);
+      nsTArray<std::function<void()>> pendingEvents;
+      {
+        MutexAutoLock lock(mMutex);
+        pendingEvents = std::move(mPendingEvents);
+        mStopRequestCalled = true;
+      }
       if (!pendingEvents.IsEmpty()) {
         Unused << gSocketTransportService->Dispatch(NS_NewRunnableFunction(
             "WebTransportSessionProxy::DispatchPendingEvents",
