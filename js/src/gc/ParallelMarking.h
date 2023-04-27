@@ -98,7 +98,7 @@ class alignas(TypicalCacheLineSize) ParallelMarkTask
 
   void waitUntilResumed(AutoLockGC& lock);
   void resume();
-  void resume(const AutoLockGC& lock);
+  void resumeOnFinish(const AutoLockGC& lock);
 
   bool hasWork() const;
 
