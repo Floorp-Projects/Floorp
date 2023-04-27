@@ -3282,7 +3282,7 @@ void GCRuntime::maybeStopPretenuring() {
   nursery().maybeStopPretenuring(this);
 
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
-    if (zone->allocNurseryStrings) {
+    if (!zone->nurseryStringsDisabled) {
       continue;
     }
 
@@ -3304,7 +3304,8 @@ void GCRuntime::maybeStopPretenuring() {
 
       zone->markedStrings = 0;
       zone->finalizedStrings = 0;
-      zone->allocNurseryStrings = true;
+      zone->nurseryStringsDisabled = false;
+      zone->updateNurseryAllocFlags(nursery());
     }
   }
 }

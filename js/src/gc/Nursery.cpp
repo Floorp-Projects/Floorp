@@ -318,6 +318,8 @@ void js::Nursery::enable() {
   }
 #endif
 
+  updateZoneAllocFlags();
+
   // This should always succeed after the first time it's called.
   MOZ_ALWAYS_TRUE(gc->storeBuffer().enable());
 }
@@ -364,30 +366,41 @@ void js::Nursery::disable() {
   currentBigIntEnd_ = 0;
   position_ = 0;
   gc->storeBuffer().disable();
+  updateZoneAllocFlags();
 }
 
 void js::Nursery::enableStrings() {
   MOZ_ASSERT(isEmpty());
   canAllocateStrings_ = true;
   currentStringEnd_ = currentEnd_;
+  updateZoneAllocFlags();
 }
 
 void js::Nursery::disableStrings() {
   MOZ_ASSERT(isEmpty());
   canAllocateStrings_ = false;
   currentStringEnd_ = 0;
+  updateZoneAllocFlags();
 }
 
 void js::Nursery::enableBigInts() {
   MOZ_ASSERT(isEmpty());
   canAllocateBigInts_ = true;
   currentBigIntEnd_ = currentEnd_;
+  updateZoneAllocFlags();
 }
 
 void js::Nursery::disableBigInts() {
   MOZ_ASSERT(isEmpty());
   canAllocateBigInts_ = false;
   currentBigIntEnd_ = 0;
+  updateZoneAllocFlags();
+}
+
+void js::Nursery::updateZoneAllocFlags() {
+  for (AllZonesIter zone(gc); !zone.done(); zone.next()) {
+    zone->updateNurseryAllocFlags(*this);
+  }
 }
 
 bool js::Nursery::isEmpty() const {
@@ -499,6 +512,7 @@ void* js::Nursery::allocateCell(gc::AllocSite* site, size_t size,
 }
 
 void* js::Nursery::allocateString(gc::AllocSite* site, size_t size) {
+  MOZ_ASSERT(canAllocateStrings());
   void* ptr = allocateCell(site, size, JS::TraceKind::String);
   if (ptr) {
     site->zone()->nurseryAllocatedStrings++;
@@ -1596,11 +1610,12 @@ size_t js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
         }
       }
       if (disableNurseryStrings) {
-        zone->allocNurseryStrings = false;
+        zone->nurseryStringsDisabled = true;
       }
       if (disableNurseryBigInts) {
-        zone->allocNurseryBigInts = false;
+        zone->nurseryBigIntsDisabled = true;
       }
+      zone->updateNurseryAllocFlags(*this);
     }
     numStringsTenured += zoneTenuredStrings;
     numBigIntsTenured += zone->tenuredBigInts;
