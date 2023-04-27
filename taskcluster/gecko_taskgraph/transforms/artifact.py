@@ -68,7 +68,7 @@ def set_artifact_expiration(config, jobs):
                     )
             if "artifacts" in job["worker"]:
                 plat = platform.lower()
-                if "plain" in plat or "fuzzing-ccov" in plat or "rusttest" in plat:
+                if "plain" in plat or "ccov" in plat or "rusttest" in plat:
                     art_dict = None
                 elif (
                     plat == "toolchain-wasm32-wasi-compiler-rt-trunk"
@@ -77,8 +77,6 @@ def set_artifact_expiration(config, jobs):
                     or plat == "android-geckoview-docs"
                 ):
                     art_dict = None
-                elif "ccov" in plat:
-                    art_dict = {}
                 elif plat.startswith("win"):
                     art_dict = manifest["win"]
                 elif plat.startswith("linux"):
@@ -103,8 +101,6 @@ def set_artifact_expiration(config, jobs):
                     artifact_dest = "cidata/{}"
 
                 if art_dict is not None:
-                    art_dict.update(manifest["*"])
-
                     for art_name in art_dict.keys():
                         # The 'artifacts' key of a job is a list at this stage.
                         # So, must append a new dict to the list

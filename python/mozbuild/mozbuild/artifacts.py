@@ -172,7 +172,7 @@ class ArtifactJob(object):
         self._tests_re = None
         if download_tests:
             self._tests_re = re.compile(
-                r"public/(build|cidata)/(en-US/)?target\.common\.tests\.(zip|tar\.gz)$"
+                r"public/build/(en-US/)?target\.common\.tests\.(zip|tar\.gz)$"
             )
         self._maven_zip_re = None
         if download_maven_zip:

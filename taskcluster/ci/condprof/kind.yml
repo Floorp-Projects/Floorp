@@ -48,7 +48,6 @@ jobs:
         fetches:
             build:
                 - artifact: target.condprof.tests.tar.gz
-                  prefix: public/cidata
                 - artifact: target.zip
             toolchain:
                 - win64-geckodriver
@@ -83,7 +82,6 @@ jobs:
         fetches:
             build:
                 - artifact: target.condprof.tests.tar.gz
-                  prefix: public/cidata
                 - artifact: target.tar.bz2
             toolchain:
                 - linux64-geckodriver
@@ -117,7 +115,6 @@ jobs:
         fetches:
             build:
                 - artifact: target.condprof.tests.tar.gz
-                  prefix: public/cidata
                 - artifact: target.dmg
                   extract: false
             toolchain:

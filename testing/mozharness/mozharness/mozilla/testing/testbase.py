@@ -462,9 +462,6 @@ You can set this by specifying --test-url URL
                 unpack_dirs = None
 
             url = self.query_build_dir_url(file_name)
-            if "en-US" not in url:
-                url = url.replace("public/build/", "public/cidata/")
-
             self.download_unpack(url, target_dir, extract_dirs=unpack_dirs)
 
     def _download_test_zip(self, extract_dirs=None):

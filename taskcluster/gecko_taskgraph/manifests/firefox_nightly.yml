@@ -135,13 +135,11 @@ mapping:
         description: "Mixture of reftests, mochitests, UI and others, commonly bundled together in a test suite"
         pretty_name: firefox-${version}.${locale}.${filename_platform}.common.tests.tar.gz
         checksums_path: firefox-${version}.${locale}.${filename_platform}.common.tests.tar.gz
-        prefix: public/cidata
     target.cppunittest.tests.tar.gz:
         <<: *default
         description: "C++ unittests related in-tree test infrastructure"
         pretty_name: firefox-${version}.${locale}.${filename_platform}.cppunittest.tests.tar.gz
         checksums_path: firefox-${version}.${locale}.${filename_platform}.cppunittest.tests.tar.gz
-        prefix: public/cidata
     target.crashreporter-symbols.zip:
         <<: *default
         description: "Crashreporter symbols to be consumed by Socorro"
@@ -160,7 +158,6 @@ mapping:
         description: "Results for running the mochitest testing framework via Javascript function calls"
         pretty_name: firefox-${version}.${locale}.${filename_platform}.mochitest.tests.tar.gz
         checksums_path: firefox-${version}.${locale}.${filename_platform}.mochitest.tests.tar.gz
-        prefix: public/cidata
     target.mozinfo.json:
         <<: *default
         description: "Various compile and moz_app flags baked together in a json file"
@@ -171,19 +168,16 @@ mapping:
         description: "Results for running the reftest testing framework via display of two Web pages comparison"
         pretty_name: firefox-${version}.${locale}.${filename_platform}.reftest.tests.tar.gz
         checksums_path: firefox-${version}.${locale}.${filename_platform}.reftest.tests.tar.gz
-        prefix: public/cidata
     target.talos.tests.tar.gz:
         <<: *default
         description: "Results for running the talos testing framework to measure performance"
         pretty_name: firefox-${version}.${locale}.${filename_platform}.talos.tests.tar.gz
         checksums_path: firefox-${version}.${locale}.${filename_platform}.talos.tests.tar.gz
-        prefix: public/cidata
     target.awsy.tests.tar.gz:
         <<: *default
         description: "Results for running the awsy testing framework to track memory usage"
         pretty_name: firefox-${version}.${locale}.${filename_platform}.awsy.tests.tar.gz
         checksums_path: firefox-${version}.${locale}.${filename_platform}.awsy.tests.tar.gz
-        prefix: public/cidata
     target.test_packages.json:
         <<: *default
         description: "File containing metadata about all other files and testing harnesses specifics"
@@ -199,13 +193,11 @@ mapping:
         description: "Results for running the webplatform testing framework to cover standard Web platform features"
         pretty_name: firefox-${version}.${locale}.${filename_platform}.web-platform.tests.tar.gz
         checksums_path: firefox-${version}.${locale}.${filename_platform}.web-platform.tests.tar.gz
-        prefix: public/cidata
     target.xpcshell.tests.tar.gz:
         <<: *default
         description: "Results for running the xpcshell testing framework to enable XPConnect console application"
         pretty_name: firefox-${version}.${locale}.${filename_platform}.xpcshell.tests.tar.gz
         checksums_path: firefox-${version}.${locale}.${filename_platform}.xpcshell.tests.tar.gz
-        prefix: public/cidata
     target_info.txt:
         <<: *default
         description: "File containing the buildID"
