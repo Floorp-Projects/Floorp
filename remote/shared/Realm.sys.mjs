@@ -152,6 +152,7 @@ export class Realm {
  * Wrapper for Window realms including sandbox objects.
  */
 export class WindowRealm extends Realm {
+  #asyncStackEnabled;
   #globalObject;
   #globalObjectReference;
   #sandboxName;
@@ -179,12 +180,14 @@ export class WindowRealm extends Realm {
     this.#globalObjectReference = lazy.dbg.makeGlobalObjectReference(
       this.#globalObject
     );
-
-    lazy.dbg.enableAsyncStack(this.#globalObject);
+    this.#asyncStackEnabled = false;
   }
 
   destroy() {
-    lazy.dbg.disableAsyncStack(this.#globalObject);
+    if (this.#asyncStackEnabled) {
+      lazy.dbg.disableAsyncStack(this.#globalObject);
+      this.#asyncStackEnabled = false;
+    }
 
     this.#globalObjectReference = null;
     this.#globalObject = null;
@@ -221,6 +224,13 @@ export class WindowRealm extends Realm {
     return new Cu.Sandbox(win, opts);
   }
 
+  #enableAsyncStack() {
+    if (!this.#asyncStackEnabled) {
+      lazy.dbg.enableAsyncStack(this.#globalObject);
+      this.#asyncStackEnabled = true;
+    }
+  }
+
   /**
    * Clone the provided object into the scope of this Realm (either a window
    * global, or a sandbox).
@@ -249,6 +259,7 @@ export class WindowRealm extends Realm {
    *       RemoteValue if the evaluation status was "normal".
    */
   executeInGlobal(expression) {
+    this.#enableAsyncStack();
     return this.#globalObjectReference.executeInGlobal(expression, {
       url: this.#window.document.baseURI,
     });
@@ -276,6 +287,7 @@ export class WindowRealm extends Realm {
     functionArguments,
     thisParameter
   ) {
+    this.#enableAsyncStack();
     const expression = `(${functionDeclaration}).apply(__bidi_this, __bidi_args)`;
 
     const args = this.cloneIntoRealm([]);
