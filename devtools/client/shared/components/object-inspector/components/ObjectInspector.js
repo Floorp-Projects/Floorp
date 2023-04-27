@@ -105,11 +105,12 @@ class ObjectInspector extends Component {
     if (this.roots !== nextProps.roots) {
       // Since the roots changed, we assume the properties did as well,
       // so we need to cleanup the component internal state.
+      const oldRoots = this.roots;
       this.roots = nextProps.roots;
       this.focusedItem = nextProps.focusedItem;
       this.activeItem = nextProps.activeItem;
       if (this.props.rootsChanged) {
-        this.props.rootsChanged(this.roots);
+        this.props.rootsChanged(this.roots, oldRoots);
       }
     }
   }
