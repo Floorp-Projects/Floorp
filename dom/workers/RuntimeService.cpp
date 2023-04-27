@@ -2194,14 +2194,15 @@ WorkerThreadPrimaryRunnable::Run() {
 
       // Perform a full GC until we collect the main worker global and CC,
       // which should break all cycles that touch JS.
-      bool doGCCC = true;
-      while (doGCCC) {
+      bool repeatGCCC = true;
+      while (repeatGCCC) {
         JS::PrepareForFullGC(cx);
         JS::NonIncrementalGC(cx, JS::GCOptions::Shutdown,
                              JS::GCReason::WORKER_SHUTDOWN);
 
-        // Process any side effects thereof until we reach a stable state.
-        doGCCC = NS_HasPendingEvents(nullptr);
+        // If we CCed something or got new events as a side effect, repeat.
+        repeatGCCC = mWorkerPrivate->isLastCCCollectedAnything() ||
+                     NS_HasPendingEvents(nullptr);
         NS_ProcessPendingEvents(nullptr);
       }
 
