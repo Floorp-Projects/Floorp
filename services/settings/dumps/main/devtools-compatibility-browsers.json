@@ -1,6 +1,15 @@
 {
   "data": [
     {
+      "name": "Deno",
+      "schema": 1682429060482,
+      "status": "current",
+      "version": "1.32",
+      "browserid": "deno",
+      "id": "92819795-b6f4-4223-8dcb-4dfaaa85a5ba",
+      "last_modified": 1682429884605
+    },
+    {
       "name": "Node.js",
       "schema": 1682169844757,
       "status": "current",
@@ -235,15 +244,6 @@
       "last_modified": 1677256449920
     },
     {
-      "name": "Deno",
-      "schema": 1670592261154,
-      "status": "current",
-      "version": "1.28",
-      "browserid": "deno",
-      "id": "109a1bba-d9e2-4719-9a73-5dee014dc5ff",
-      "last_modified": 1670592814763
-    },
-    {
       "name": "Node.js",
       "schema": 1666790648265,
       "status": "esr",
@@ -415,5 +415,5 @@
       "last_modified": 1645448267500
     }
   ],
-  "timestamp": 1682319518056
+  "timestamp": 1682429884605
 }
