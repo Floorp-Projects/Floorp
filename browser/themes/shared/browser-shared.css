@@ -72,9 +72,9 @@
   --urlbar-box-active-bgcolor: var(--button-active-bgcolor);
   --urlbar-box-text-color: inherit;
   --urlbar-box-hover-text-color: var(--urlbar-box-text-color);
-  --urlbar-min-height: 32px;
+  --urlbar-min-height: max(32px, 1.4em);
   --urlbar-icon-fill-opacity: 0.9;
-  --urlbar-icon-padding: 6px; /* (32px - 2px border - 2px padding - 16px icon) / 2 */
+  --urlbar-icon-padding: calc((var(--urlbar-min-height) - 2px /* border */ - 2px /* padding */ - 16px /* icon */) / 2);
   /* This should be used for icons and chiclets inside the input field. It makes
      the gap around them more uniform when they are close to the field edges */
   --urlbar-icon-border-radius: calc(var(--toolbarbutton-border-radius) - 1px);
@@ -104,13 +104,11 @@
 }
 
 :root[uidensity=compact] {
-  --urlbar-min-height: 26px;
-  --urlbar-icon-padding: 3px; /* (26px - 2px border - 2px padding - 16px icon) / 2 */
+  --urlbar-min-height: max(26px, 1.4em);
 }
 
 :root[uidensity=touch] {
-  --urlbar-min-height: 34px;
-  --urlbar-icon-padding: 7px; /* (34px - 2px border - 2px padding - 16px icon) / 2 */
+  --urlbar-min-height: max(34px, 1.4em);
 }
 
 :root:-moz-lwtheme {
