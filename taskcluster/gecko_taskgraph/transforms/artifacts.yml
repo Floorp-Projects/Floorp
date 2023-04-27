@@ -1,4 +1,23 @@
 ---
+'*':
+    target.awsy.tests.tar.gz: short
+    target.common.tests.tar.gz: short
+    target.condprof.tests.tar.gz: short
+    target.cppunittest.tests.tar.gz: short
+    target.fuzztest.tests.tar.gz: short
+    target.gtest.tests.tar.gz: short
+    target.jittest.tests.tar.gz: short
+    target.jsreftest.tests.tar.gz: short
+    target.mochitest.tests.tar.gz: short
+    target.perftests.tests.tar.gz: short
+    target.raptor.tests.tar.gz: short
+    target.reftest.tests.tar.gz: short
+    target.talos.tests.tar.gz: short
+    target.updater-dep.tests.tar.gz: short
+    target.web-platform.tests.tar.gz: short
+    target.xpcshell.tests.tar.gz: short
+    target.jsshell.zip: long
+
 win:
     target.crashreporter-symbols-full.tar.zst: shortest
     sccache.log: shortest
