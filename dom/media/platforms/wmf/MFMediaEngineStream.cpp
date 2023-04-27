@@ -6,6 +6,8 @@
 
 namespace mozilla {
 
+MFMediaEngineStream::~MFMediaEngineStream() = default;
+
 RefPtr<MediaDataDecoder::DecodePromise> MFMediaEngineStream::Decode(
     MediaRawData* aSample) {
   // TODO : implement this by using MediaEngine API.

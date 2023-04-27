@@ -18,12 +18,17 @@ namespace mozilla {
 // TODO : Inherit IMFMediaStream in following patches
 class MFMediaEngineStream : public MediaDataDecoder {
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MFMediaEngineStream, final);
+
   MFMediaEngineStream() = default;
 
   RefPtr<DecodePromise> Decode(MediaRawData* aSample) override;
   RefPtr<DecodePromise> Drain() override;
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
+
+ protected:
+  virtual ~MFMediaEngineStream();
 };
 
 }  // namespace mozilla
