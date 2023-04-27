@@ -3185,7 +3185,10 @@ export class LoginManagerChild extends JSWindowActorChild {
   #relayIsAvailableOrEnabled() {
     // This code is a mirror of what FirefoxRelay.jsm is doing,
     // but we can not load Relay module in the child process.
-    const value = Services.prefs.getStringPref("signon.firefoxRelay.feature");
+    const value = Services.prefs.getStringPref(
+      "signon.firefoxRelay.feature",
+      undefined
+    );
     return ["available", "offered", "enabled"].includes(value);
   }
 
