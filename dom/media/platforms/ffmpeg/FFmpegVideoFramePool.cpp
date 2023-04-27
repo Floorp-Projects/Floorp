@@ -156,8 +156,7 @@ bool VideoFramePool<LIBAV_VER>::ShouldCopySurface() {
   if (!gfx::gfxVars::HwDecodedVideoZeroCopy()) {
     return true;
   }
-  MOZ_DIAGNOSTIC_ASSERT(mTextureCopyWorks.isSome());
-  return mTextureCopyWorks.value() && freeRatio < SURFACE_COPY_THRESHOLD;
+  return freeRatio < SURFACE_COPY_THRESHOLD;
 }
 
 RefPtr<VideoFrameSurface<LIBAV_VER>>
@@ -172,15 +171,6 @@ VideoFramePool<LIBAV_VER>::GetVideoFrameSurface(
   }
 
   MutexAutoLock lock(mSurfaceLock);
-  if (MOZ_UNLIKELY(mTextureCopyWorks.isNothing())) {
-    RefPtr<DMABufSurfaceYUV> surface =
-        DMABufSurfaceYUV::CopyYUVSurface(aVaDesc, aWidth, aHeight);
-    mTextureCopyWorks = Some(surface != nullptr);
-    if (!mTextureCopyWorks.value()) {
-      DMABUF_LOG("  DMABuf texture copy is broken");
-    }
-  }
-  VASurfaceID ffmpegSurfaceID = (uintptr_t)aAVFrame->data[3];
 
   RefPtr<DMABufSurfaceYUV> surface;
   RefPtr<VideoFrameSurface<LIBAV_VER>> videoSurface =
@@ -192,12 +182,22 @@ VideoFramePool<LIBAV_VER>::GetVideoFrameSurface(
   } else {
     surface = videoSurface->GetDMABufSurface();
   }
+  VASurfaceID ffmpegSurfaceID = (uintptr_t)aAVFrame->data[3];
   DMABUF_LOG("Using VA-API DMABufSurface UID %d FFMPEG ID 0x%x",
              surface->GetUID(), ffmpegSurfaceID);
 
-  bool copySurface = ShouldCopySurface();
+  bool copySurface = mTextureCopyWorks && ShouldCopySurface();
   if (!surface->UpdateYUVData(aVaDesc, aWidth, aHeight, copySurface)) {
-    return nullptr;
+    if (!copySurface) {
+      // Failed without texture copy. We can't do more here.
+      return nullptr;
+    }
+    // Try again without texture copy
+    DMABUF_LOG("  DMABuf texture copy is broken");
+    copySurface = mTextureCopyWorks = false;
+    if (!surface->UpdateYUVData(aVaDesc, aWidth, aHeight, copySurface)) {
+      return nullptr;
+    }
   }
 
   if (MOZ_UNLIKELY(!mTextureCreationWorks)) {

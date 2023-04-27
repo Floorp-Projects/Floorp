@@ -138,8 +138,7 @@ class VideoFramePool<LIBAV_VER> {
   // check that before we export first DMABuf video frame.
   Maybe<bool> mTextureCreationWorks;
   // We may fail to copy DMABuf memory on NVIDIA drivers.
-  // Check that before we try to copy any video frame.
-  Maybe<bool> mTextureCopyWorks;
+  bool mTextureCopyWorks = true;
 };
 
 }  // namespace mozilla
