@@ -85,6 +85,8 @@ add_task(async function test_aboutwelcome_pin_screen_impression() {
     .withArgs(
       "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin"
     )
+    .resolves(false)
+    .withArgs("isDeviceMigration")
     .resolves(false);
 
   let impressionSpy = sandbox.spy(
@@ -145,6 +147,8 @@ add_task(async function test_aboutwelcome_mr_template_content() {
     .withArgs(
       "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin"
     )
+    .resolves(false)
+    .withArgs("isDeviceMigration")
     .resolves(false);
 
   let { cleanup, browser } = await openMRAboutWelcome();
@@ -200,6 +204,8 @@ add_task(async function test_aboutwelcome_mr_template_content_pin() {
     .withArgs(
       "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin"
     )
+    .resolves(false)
+    .withArgs("isDeviceMigration")
     .resolves(false);
 
   let { browser, cleanup } = await openMRAboutWelcome();
@@ -242,6 +248,8 @@ add_task(async function test_aboutwelcome_mr_template_only_default() {
     .withArgs(
       "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin"
     )
+    .resolves(false)
+    .withArgs("isDeviceMigration")
     .resolves(false);
 
   let { browser, cleanup } = await openMRAboutWelcome();
@@ -273,6 +281,8 @@ add_task(async function test_aboutwelcome_mr_template_get_started() {
     .withArgs(
       "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin"
     )
+    .resolves(false)
+    .withArgs("isDeviceMigration")
     .resolves(false);
 
   let { browser, cleanup } = await openMRAboutWelcome();

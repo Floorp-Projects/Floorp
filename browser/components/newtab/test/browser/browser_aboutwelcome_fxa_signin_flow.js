@@ -29,7 +29,9 @@ add_task(async function test_fxa_sign_success() {
   await BrowserTestUtils.withNewTab("about:welcome", async browser => {
     let fxaTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
     let resultPromise = SpecialPowers.spawn(browser, [], async () => {
-      return content.wrappedJSObject.AWFxASignInTabFlow();
+      return content.wrappedJSObject.AWSendToParent("SPECIAL_ACTION", {
+        type: "FXA_SIGNIN_TAB_FLOW",
+      });
     });
     let fxaTab = await fxaTabPromise;
     let fxaTabClosing = BrowserTestUtils.waitForTabClosing(fxaTab);
@@ -47,15 +49,15 @@ add_task(async function test_fxa_sign_success() {
     await fxaTabClosing;
     Assert.ok(true, "FxA tab automatically closed.");
     let result = await resultPromise;
-    Assert.ok(result, "AWFxASignInTabFlow should have resolved to true");
+    Assert.ok(result, "FXA_SIGNIN_TAB_FLOW action's result should be true");
   });
 
   sandbox.restore();
 });
 
 /**
- * Tests that the AWFxASignInTabFlow method can disable the autoclose
- * behavior with a data.autoClose parameter.
+ * Tests that the FXA_SIGNIN_TAB_FLOW action's data.autoClose parameter can
+ * disable the autoclose behavior.
  */
 add_task(async function test_fxa_sign_success_no_autoclose() {
   let sandbox = sinon.createSandbox();
@@ -66,7 +68,10 @@ add_task(async function test_fxa_sign_success_no_autoclose() {
   await BrowserTestUtils.withNewTab("about:welcome", async browser => {
     let fxaTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
     let resultPromise = SpecialPowers.spawn(browser, [], async () => {
-      return content.wrappedJSObject.AWFxASignInTabFlow({ autoClose: false });
+      return content.wrappedJSObject.AWSendToParent("SPECIAL_ACTION", {
+        type: "FXA_SIGNIN_TAB_FLOW",
+        data: { autoClose: false },
+      });
     });
     let fxaTab = await fxaTabPromise;
 
@@ -90,20 +95,22 @@ add_task(async function test_fxa_sign_success_no_autoclose() {
 });
 
 /**
- * Tests that the AWFxASignInTabFlow method exposed to about:welcome
- * resolves to `false` if the tab closes before sign-in completes.
+ * Tests that the FXA_SIGNIN_TAB_FLOW action resolves to `false` if the tab
+ * closes before sign-in completes.
  */
 add_task(async function test_fxa_signin_aborted() {
   await BrowserTestUtils.withNewTab("about:welcome", async browser => {
     let fxaTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
     let resultPromise = SpecialPowers.spawn(browser, [], async () => {
-      return content.wrappedJSObject.AWFxASignInTabFlow();
+      return content.wrappedJSObject.AWSendToParent("SPECIAL_ACTION", {
+        type: "FXA_SIGNIN_TAB_FLOW",
+      });
     });
     let fxaTab = await fxaTabPromise;
     Assert.ok(!fxaTab.closing, "FxA tab was not asked to close yet.");
 
     BrowserTestUtils.removeTab(fxaTab);
     let result = await resultPromise;
-    Assert.ok(!result, "AWFxASignInTabFlow should have resolved to false");
+    Assert.ok(!result, "FXA_SIGNIN_TAB_FLOW action's result should be false");
   });
 });
