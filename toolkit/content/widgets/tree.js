@@ -1659,8 +1659,14 @@
     }
 
     #verticalScrollbar = null;
+    #lastScrollEventTimeStampMap = new Map();
 
     #canScroll(event) {
+      const lastScrollEventTimeStamp = this.#lastScrollEventTimeStampMap.get(
+        event.type
+      );
+      this.#lastScrollEventTimeStampMap.set(event.type, event.timeStamp);
+
       if (
         window.windowUtils.getWheelScrollTarget() ||
         event.axis == event.HORIZONTAL_AXIS ||
@@ -1668,6 +1674,16 @@
           this.getAttribute("hidevscroll") == "true")
       ) {
         return false;
+      }
+
+      if (
+        event.timeStamp - (lastScrollEventTimeStamp ?? 0) <
+        Services.prefs.getIntPref("mousewheel.scroll_series_timeout")
+      ) {
+        // If the time difference of previous event does not over the timeout,
+        // handle the event in tree as the same seies of events even if the
+        // current position is edge.
+        return true;
       }
 
       const curpos = Number(this.#verticalScrollbar.getAttribute("curpos"));

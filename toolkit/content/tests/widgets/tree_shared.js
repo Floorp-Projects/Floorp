@@ -229,7 +229,11 @@ function testtag_tree_columns(tree, expectedColumns, testid) {
 
   var columns = tree.columns;
 
-  is(columns instanceof TreeColumns, true, testid + "columns is a TreeColumns");
+  is(
+    TreeColumns.isInstance(columns),
+    true,
+    testid + "columns is a TreeColumns"
+  );
   is(columns.count, expectedColumns.length, testid + "TreeColumns count");
   is(columns.length, expectedColumns.length, testid + "TreeColumns length");
 
@@ -279,7 +283,7 @@ function testtag_tree_columns(tree, expectedColumns, testid) {
     x = column.x + column.width;
 
     // now check the TreeColumn properties
-    is(column instanceof TreeColumn, true, adjtestid + "is a TreeColumn");
+    is(TreeColumn.isInstance(column), true, adjtestid + "is a TreeColumn");
     is(column.element, treecol[c], adjtestid + "element is treecol");
     is(column.columns, columns, adjtestid + "columns is TreeColumns");
     is(column.id, expectedColumn.name, adjtestid + "name");
@@ -1813,10 +1817,74 @@ async function testtag_tree_scroll() {
   info("Check whether the tree is not scrolled when the parent is scrolling");
   await doScrollWhileScrollingParent(tree);
 
+  info(
+    "Check whether the tree component consumes wheel events even if the scroll is located at edge as long as the events are handled as the same series"
+  );
+  await doScrollInSameSeries({
+    tree,
+    initialTreeScrollRow: 0,
+    initialContainerScrollTop: 0,
+    scrollDelta: 10,
+  });
+  await doScrollInSameSeries({
+    tree,
+    initialTreeScrollRow: 9,
+    initialContainerScrollTop: 50,
+    scrollDelta: -10,
+  });
+
   SimpleTest.finish();
 }
 
+async function doScrollInSameSeries({
+  tree,
+  initialTreeScrollRow,
+  initialContainerScrollTop,
+  scrollDelta,
+}) {
+  // Set enough value to mousewheel.scroll_series_timeout pref to ensure the wheel
+  // event fired as the same series.
+  Services.prefs.setIntPref("mousewheel.scroll_series_timeout", 1000);
+
+  const scrollbar = tree.shadowRoot.querySelector(
+    "scrollbar[orient='vertical']"
+  );
+  const parent = tree.parentElement;
+
+  tree.scrollToRow(initialTreeScrollRow);
+  parent.scrollTop = initialContainerScrollTop;
+
+  // Scroll until the scrollbar was moved to the specified amount.
+  await SimpleTest.promiseWaitForCondition(async () => {
+    await nativeScroll(tree, 10, 10, scrollDelta);
+    const curpos = scrollbar.getAttribute("curpos");
+    return (
+      (scrollDelta < 0 && curpos == 0) ||
+      (scrollDelta > 0 && curpos == scrollbar.getAttribute("maxpos"))
+    );
+  });
+
+  // More scroll as the same series.
+  for (let i = 0; i < 10; i++) {
+    await nativeScroll(tree, 10, 10, scrollDelta);
+  }
+
+  is(
+    parent.scrollTop,
+    initialContainerScrollTop,
+    "The wheel events are condumed in tree component"
+  );
+  const utils = SpecialPowers.getDOMWindowUtils(window);
+  ok(!utils.getWheelScrollTarget(), "The parent should not handle the event");
+
+  Services.prefs.clearUserPref("mousewheel.scroll_series_timeout");
+}
+
 async function doScrollWhileScrollingParent(tree) {
+  // Set enough value to mousewheel.scroll_series_timeout pref to ensure the wheel
+  // event fired as the same series.
+  Services.prefs.setIntPref("mousewheel.scroll_series_timeout", 1000);
+
   const scrollbar = tree.shadowRoot.querySelector(
     "scrollbar[orient='vertical']"
   );
@@ -1829,29 +1897,20 @@ async function doScrollWhileScrollingParent(tree) {
   const scrollAmount = scrollbar.getAttribute("curpos");
 
   // Scroll parent from top to bottom.
-  const utils = SpecialPowers.getDOMWindowUtils(window);
-  let isScrollSeriesTimeout = false;
   await SimpleTest.promiseWaitForCondition(async () => {
     await nativeScroll(parent, 10, 10, 10);
-    if (!utils.getWheelScrollTarget()) {
-      // Dependent on the environment, it might be over the timeout
-      // (ScrollAnimationPhysics::kScrollSeriesTimeoutMs) that handles wheel
-      // events as one series. If wheel event happened on the parent couldn't
-      // be handled as one series of events, the tree component consumes the
-      // event, this test will be invalid.
-      isScrollSeriesTimeout = true;
-      return true;
-    }
     return parent.scrollTop === parent.scrollTopMax;
   });
 
-  if (!isScrollSeriesTimeout) {
-    is(
-      scrollAmount,
-      scrollbar.getAttribute("curpos"),
-      "The tree should not be scrolled"
-    );
-  }
+  is(
+    scrollAmount,
+    scrollbar.getAttribute("curpos"),
+    "The tree should not be scrolled"
+  );
+
+  const utils = SpecialPowers.getDOMWindowUtils(window);
+  await SimpleTest.promiseWaitForCondition(() => !utils.getWheelScrollTarget());
+  Services.prefs.clearUserPref("mousewheel.scroll_series_timeout");
 }
 
 async function doScrollTest({
