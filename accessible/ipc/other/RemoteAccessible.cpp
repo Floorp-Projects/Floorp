@@ -834,12 +834,6 @@ double RemoteAccessible::CurValue() const {
   return val;
 }
 
-bool RemoteAccessible::SetCurValue(double aValue) {
-  bool success = false;
-  Unused << mDoc->SendSetCurValue(mID, aValue, &success);
-  return success;
-}
-
 double RemoteAccessible::MinValue() const {
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return RemoteAccessibleBase<RemoteAccessible>::MinValue();

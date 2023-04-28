@@ -93,6 +93,9 @@ class DocAccessibleChildBase : public PDocAccessibleChild {
   virtual mozilla::ipc::IPCResult RecvRemoveTextSelection(
       const uint64_t& aID, const int32_t& aSelectionNum) override;
 
+  virtual mozilla::ipc::IPCResult RecvSetCurValue(
+      const uint64_t& aID, const double& aValue) override;
+
  protected:
   static void FlattenTree(LocalAccessible* aRoot,
                           nsTArray<LocalAccessible*>& aTree);

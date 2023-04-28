@@ -76,19 +76,13 @@ static void getMinimumIncrementCB(AtkValue* obj, GValue* minimumIncrement) {
 }
 
 static gboolean setCurrentValueCB(AtkValue* obj, const GValue* value) {
-  RemoteAccessible* proxy = nullptr;
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
-  if (!accWrap) {
-    proxy = GetProxy(ATK_OBJECT(obj));
-    if (!proxy) {
-      return FALSE;
-    }
+  Accessible* acc = GetInternalObj(ATK_OBJECT(obj));
+  if (!acc) {
+    return false;
   }
 
   double accValue = g_value_get_double(value);
-  return accWrap ? accWrap->SetCurValue(accValue)
-                 : proxy->SetCurValue(accValue);
-}
+  return acc->SetCurValue(accValue);
 }
 
 void valueInterfaceInitCB(AtkValueIface* aIface) {
@@ -100,4 +94,5 @@ void valueInterfaceInitCB(AtkValueIface* aIface) {
   aIface->get_minimum_value = getMinimumValueCB;
   aIface->get_minimum_increment = getMinimumIncrementCB;
   aIface->set_current_value = setCurrentValueCB;
+}
 }

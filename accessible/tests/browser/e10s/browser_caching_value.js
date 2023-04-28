@@ -50,6 +50,16 @@ const valueTests = [
     expected: ["5", 5, 0, 7, 0],
   },
   {
+    desc: "Value should change when currentValue is called",
+    id: "slider",
+    async action(browser, acc) {
+      acc.QueryInterface(nsIAccessibleValue);
+      acc.currentValue = 4;
+    },
+    waitFor: EVENT_VALUE_CHANGE,
+    expected: ["4", 4, 0, 7, 0],
+  },
+  {
     desc: "Value should change when @aria-valuenow is updated",
     id: "slider",
     attrs: [
@@ -131,6 +141,18 @@ const valueTests = [
     expected: "50%",
   },
   {
+    desc: "Setting currentValue on a progress accessible should fail",
+    id: "progress",
+    async action(browser, acc) {
+      acc.QueryInterface(nsIAccessibleValue);
+      try {
+        acc.currentValue = 25;
+        ok(false, "Setting currValue on progress element should fail");
+      } catch (e) {}
+    },
+    expected: "50%",
+  },
+  {
     desc: "Initially value corresponds to @value attribute for range",
     id: "range",
     expected: "6",
@@ -150,6 +172,16 @@ const valueTests = [
     },
     waitFor: EVENT_VALUE_CHANGE,
     expected: "5",
+  },
+  {
+    desc: "Value should change when currentValue is called",
+    id: "range",
+    async action(browser, acc) {
+      acc.QueryInterface(nsIAccessibleValue);
+      acc.currentValue = 4;
+    },
+    waitFor: EVENT_VALUE_CHANGE,
+    expected: "4",
   },
   {
     desc: "Initially textbox value is text subtree",
@@ -198,7 +230,7 @@ addAccessibleTask(
       }
 
       if (action) {
-        await action(browser);
+        await action(browser, acc);
       } else if (attrs) {
         for (let { attr, value } of attrs) {
           await invokeSetAttribute(browser, id, attr, value);

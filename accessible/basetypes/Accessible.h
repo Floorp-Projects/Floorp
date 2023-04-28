@@ -267,6 +267,7 @@ class Accessible {
   virtual double MinValue() const = 0;
   virtual double MaxValue() const = 0;
   virtual double Step() const = 0;
+  virtual bool SetCurValue(double aValue) = 0;
 
   /**
    * Return boundaries in screen coordinates in device pixels.

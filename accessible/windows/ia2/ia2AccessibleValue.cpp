@@ -74,7 +74,7 @@ STDMETHODIMP
 ia2AccessibleValue::setCurrentValue(VARIANT aValue) {
   if (aValue.vt != VT_R8) return E_INVALIDARG;
 
-  AccessibleWrap* valueAcc = LocalAcc();
+  Accessible* valueAcc = Acc();
   if (!valueAcc) {
     return CO_E_OBJNOTCONNECTED;
   }

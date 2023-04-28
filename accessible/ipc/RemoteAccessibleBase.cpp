@@ -330,6 +330,36 @@ double RemoteAccessibleBase<Derived>::Step() const {
 }
 
 template <class Derived>
+bool RemoteAccessibleBase<Derived>::SetCurValue(double aValue) {
+  if (!HasNumericValue() || IsProgress()) {
+    return false;
+  }
+
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    // XXX: If cache is disabled there is a slight regression
+    // where we don't check the readonly/unavailable state or the min/max
+    // values. This will go away once cache is enabled by default.
+    const uint32_t kValueCannotChange = states::READONLY | states::UNAVAILABLE;
+    if (State() & kValueCannotChange) {
+      return false;
+    }
+
+    double checkValue = MinValue();
+    if (!std::isnan(checkValue) && aValue < checkValue) {
+      return false;
+    }
+
+    checkValue = MaxValue();
+    if (!std::isnan(checkValue) && aValue > checkValue) {
+      return false;
+    }
+  }
+
+  Unused << mDoc->SendSetCurValue(mID, aValue);
+  return true;
+}
+
+template <class Derived>
 bool RemoteAccessibleBase<Derived>::ContainsPoint(int32_t aX, int32_t aY) {
   if (!BoundsWithOffset(Nothing(), true).Contains(aX, aY)) {
     return false;
