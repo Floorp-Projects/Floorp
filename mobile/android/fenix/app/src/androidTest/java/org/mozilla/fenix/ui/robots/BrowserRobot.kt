@@ -437,9 +437,14 @@ class BrowserRobot {
 
     fun fillAndSaveCreditCard(cardNumber: String, cardName: String, expiryMonthAndYear: String) {
         itemWithResId("cardNumber").setText(cardNumber)
+        mDevice.waitForIdle(waitingTime)
         itemWithResId("nameOnCard").setText(cardName)
+        mDevice.waitForIdle(waitingTime)
         itemWithResId("expiryMonthAndYear").setText(expiryMonthAndYear)
+        mDevice.waitForIdle(waitingTime)
         itemWithResId("submit").clickAndWaitForNewWindow(waitingTime)
+        waitForPageToLoad()
+        mDevice.waitForWindowUpdate(packageName, waitingTime)
     }
 
     fun verifyUpdateOrSaveCreditCardPromptExists(exists: Boolean) =
