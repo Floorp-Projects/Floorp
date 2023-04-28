@@ -370,6 +370,16 @@ class SearchAdImpression {
     if (href?.startsWith("/")) {
       href = this.#pageUrl.origin + href;
     }
+    // Some reserved characters are converted into percent-encoded strings by
+    // the time they are observed in the network.
+    // e.g. /path'?q=Mozilla's -> /path'?q=Mozilla%27s
+    if (href) {
+      try {
+        href = Services.io.newURI(href)?.spec;
+      } catch {
+        return "";
+      }
+    }
     return href;
   }
 
