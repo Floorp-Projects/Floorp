@@ -22,19 +22,20 @@ jobs:
         echo 'ac_add_options --enable-proxy-bypass-protection' >> mozconfig
         echo 'ac_add_options --disable-verify-mar' >> mozconfig
         echo 'ac_add_options --enable-update-channel=release' >> mozconfig
-        echo 'ac_add_options --with-mozilla-api-keyfile=/Users/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-mozilla-key' >> mozconfig
-        echo 'ac_add_options --with-google-location-service-api-keyfile=/Users/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-google-location-service-key' >> mozconfig
-        echo 'ac_add_options --with-google-safebrowsing-api-keyfile=/Users/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/floorp/apis/api-google-safe-browsing-key' >> mozconfig
-        echo 'ac_add_options --with-l10n-base=/Users/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/l10n-central/l10n-central' >> mozconfig
+        echo 'ac_add_options --with-mozilla-api-keyfile=$PWD/floorp/apis/api-mozilla-key' >> mozconfig
+        echo 'ac_add_options --with-google-location-service-api-keyfile=$PWD/floorp/apis/api-google-location-service-key' >> mozconfig
+        echo 'ac_add_options --with-google-safebrowsing-api-keyfile=$PWD/floorp/apis/api-google-safe-browsing-key' >> mozconfig
+        echo 'ac_add_options --with-l10n-base=$PWD/l10n-central/l10n-central' >> mozconfig
         echo 'ac_add_options --enable-bootstrap' >> mozconfig
         echo 'ac_add_options --target=x86_64-apple-darwin' >> mozconfig
-        echo 'ac_add_options "--enable-optimize=-O2 -march=nehalem -mtune=haswell -w"' >> mozconfig
+        echo 'ac_add_options --enable-optimize="-O2"' >> mozconfig
         echo 'ac_add_options --enable-rust-simd' >> mozconfig
         echo 'ac_add_options RUSTC_OPT_LEVEL=3' >> mozconfig
         echo 'MOZ_REQUIRE_SIGNING=' >> mozconfig
         echo 'MOZ_DATA_REPORTING=' >> mozconfig
         echo 'MOZ_TELEMETRY_REPORTING=' >> mozconfig
         ./mach configure
+
     - name: 🔨Build
       run: |        
         ./mach build
