@@ -102,25 +102,21 @@ class RTCRtpTransceiver : public nsISupports, public nsWrapperCache {
   void Stop(ErrorResult& aRv);
   void SetDirectionInternal(RTCRtpTransceiverDirection aDirection);
   bool HasBeenUsedToSend() const { return mHasBeenUsedToSend; }
-  void SetAddTrackMagic();
 
   bool CanSendDTMF() const;
   bool Stopped() const { return mStopped; }
-  void SyncToJsep() const;
-  void SyncFromJsep();
-  void SetJsepSession(JsepSession* aJsepSession);
+  void SyncToJsep(JsepSession& aSession) const;
+  void SyncFromJsep(const JsepSession& aSession);
   std::string GetMidAscii() const;
 
   void SetDtlsTransport(RTCDtlsTransport* aDtlsTransport, bool aStable);
   void RollbackToStableDtlsTransport();
 
   std::string GetTransportId() const {
-    return mJsepTransceiver->mTransport.mTransportId;
+    return mJsepTransceiver.mTransport.mTransportId;
   }
 
-  RefPtr<JsepTransceiver> GetJsepTransceiver() const {
-    return mJsepTransceiver;
-  }
+  JsepTransceiver& GetJsepTransceiver() { return mJsepTransceiver; }
 
   bool IsVideo() const;
 
@@ -193,7 +189,8 @@ class RTCRtpTransceiver : public nsISupports, public nsWrapperCache {
   RefPtr<PeerConnectionImpl> mPc;
   RefPtr<MediaTransportHandler> mTransportHandler;
   const std::string mTransceiverId;
-  RefPtr<JsepTransceiver> mJsepTransceiver;
+  // Copy of latest from the JSEP engine.
+  JsepTransceiver mJsepTransceiver;
   nsCOMPtr<nsISerialEventTarget> mStsThread;
   // state for webrtc.org that is shared between all transceivers
   RefPtr<WebrtcCallWrapper> mCallWrapper;

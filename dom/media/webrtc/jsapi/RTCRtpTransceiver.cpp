@@ -164,7 +164,7 @@ RTCRtpTransceiver::RTCRtpTransceiver(
       mPc(aPc),
       mTransportHandler(aTransportHandler),
       mTransceiverId(aTransceiverId),
-      mJsepTransceiver(aJsepSession->GetTransceiver(mTransceiverId)),
+      mJsepTransceiver(*aJsepSession->GetTransceiver(mTransceiverId)),
       mStsThread(aStsThread),
       mCallWrapper(aCallWrapper),
       mSendTrack(aSendTrack),
@@ -449,7 +449,7 @@ bool RTCRtpTransceiver::ConduitHasPluginID(uint64_t aPluginID) {
   return mConduit && mConduit->HasCodecPluginID(aPluginID);
 }
 
-void RTCRtpTransceiver::SyncFromJsep() {
+void RTCRtpTransceiver::SyncFromJsep(const JsepSession& aSession) {
   MOZ_MTLOG(ML_DEBUG, mPc->GetHandle()
                           << "[" << mMid.Ref() << "]: " << __FUNCTION__
                           << " Syncing from JSEP transceiver");
@@ -459,35 +459,35 @@ void RTCRtpTransceiver::SyncFromJsep() {
     return;
   }
 
-  auto jsepTransceiver = GetJsepTransceiver();
+  mJsepTransceiver = *aSession.GetTransceiver(mTransceiverId);
 
   // Transceivers can stop due to JSEP negotiation, so we need to check that
-  if (jsepTransceiver->IsStopped()) {
+  if (mJsepTransceiver.IsStopped()) {
     StopImpl();
   }
 
-  mReceiver->SyncFromJsep(*jsepTransceiver);
-  mSender->SyncFromJsep(*jsepTransceiver);
+  mReceiver->SyncFromJsep(mJsepTransceiver);
+  mSender->SyncFromJsep(mJsepTransceiver);
 
   // mid from JSEP
-  if (jsepTransceiver->IsAssociated()) {
-    mMid = jsepTransceiver->GetMid();
+  if (mJsepTransceiver.IsAssociated()) {
+    mMid = mJsepTransceiver.GetMid();
   } else {
     mMid = std::string();
   }
 
   // currentDirection from JSEP, but not if "this transceiver has never been
   // represented in an offer/answer exchange"
-  if (jsepTransceiver->HasLevel() && jsepTransceiver->IsNegotiated()) {
-    if (jsepTransceiver->mRecvTrack.GetActive()) {
-      if (jsepTransceiver->mSendTrack.GetActive()) {
+  if (mJsepTransceiver.HasLevel() && mJsepTransceiver.IsNegotiated()) {
+    if (mJsepTransceiver.mRecvTrack.GetActive()) {
+      if (mJsepTransceiver.mSendTrack.GetActive()) {
         mCurrentDirection.SetValue(dom::RTCRtpTransceiverDirection::Sendrecv);
         mHasBeenUsedToSend = true;
       } else {
         mCurrentDirection.SetValue(dom::RTCRtpTransceiverDirection::Recvonly);
       }
     } else {
-      if (jsepTransceiver->mSendTrack.GetActive()) {
+      if (mJsepTransceiver.mSendTrack.GetActive()) {
         mCurrentDirection.SetValue(dom::RTCRtpTransceiverDirection::Sendonly);
         mHasBeenUsedToSend = true;
       } else {
@@ -496,28 +496,25 @@ void RTCRtpTransceiver::SyncFromJsep() {
     }
   }
 
-  mShouldRemove = jsepTransceiver->IsRemoved();
-  mHasTransport = jsepTransceiver->HasLevel() && !jsepTransceiver->IsStopped();
+  mShouldRemove = mJsepTransceiver.IsRemoved();
+  mHasTransport = mJsepTransceiver.HasLevel() && !mJsepTransceiver.IsStopped();
 }
 
-void RTCRtpTransceiver::SyncToJsep() const {
+void RTCRtpTransceiver::SyncToJsep(JsepSession& aSession) const {
   MOZ_MTLOG(ML_DEBUG, mPc->GetHandle()
                           << "[" << mMid.Ref() << "]: " << __FUNCTION__
                           << " Syncing to JSEP transceiver");
 
-  auto jsepTransceiver = GetJsepTransceiver();
-  mReceiver->SyncToJsep(*jsepTransceiver);
-  mSender->SyncToJsep(*jsepTransceiver);
-  jsepTransceiver->mJsDirection = ToSdpDirection(mDirection);
-  if (mStopped) {
-    jsepTransceiver->Stop();
-  }
-}
-
-// TODO: Unify with SyncFromJsep
-void RTCRtpTransceiver::SetJsepSession(JsepSession* aJsepSession) {
-  mJsepTransceiver = aJsepSession->GetTransceiver(mTransceiverId);
-  MOZ_RELEASE_ASSERT(mJsepTransceiver);
+  aSession.ApplyToTransceiver(
+      mTransceiverId, [this, self = RefPtr<const RTCRtpTransceiver>(this)](
+                          JsepTransceiver& aTransceiver) {
+        mReceiver->SyncToJsep(aTransceiver);
+        mSender->SyncToJsep(aTransceiver);
+        aTransceiver.mJsDirection = ToSdpDirection(mDirection);
+        if (mStopped) {
+          aTransceiver.Stop();
+        }
+      });
 }
 
 void RTCRtpTransceiver::GetKind(nsAString& aKind) const {
@@ -565,12 +562,6 @@ void RTCRtpTransceiver::SetDirectionInternal(
   mDirection = aDirection;
 }
 
-void RTCRtpTransceiver::SetAddTrackMagic() {
-  // We do this immediately, without waiting for a SyncToJsep, because this is
-  // set at transceiver creation time.
-  GetJsepTransceiver()->SetAddTrackMagic();
-}
-
 bool RTCRtpTransceiver::ShouldRemove() const { return mShouldRemove; }
 
 bool RTCRtpTransceiver::CanSendDTMF() const {
@@ -589,8 +580,8 @@ bool RTCRtpTransceiver::CanSendDTMF() const {
 
   // Ok, it looks like the connection is up and sending. Did we negotiate
   // telephone-event?
-  JsepTrackNegotiatedDetails* details =
-      GetJsepTransceiver()->mSendTrack.GetNegotiatedDetails();
+  const JsepTrackNegotiatedDetails* details =
+      mJsepTransceiver.mSendTrack.GetNegotiatedDetails();
   if (NS_WARN_IF(!details || !details->GetEncodingCount())) {
     // What?
     return false;
@@ -648,12 +639,11 @@ static void JsepCodecDescToAudioCodecConfig(
 // TODO: This and the next function probably should move to JsepTransceiver
 Maybe<const std::vector<UniquePtr<JsepCodecDescription>>&>
 RTCRtpTransceiver::GetNegotiatedSendCodecs() const {
-  auto jsepTransceiver = GetJsepTransceiver();
-  if (!jsepTransceiver->mSendTrack.GetActive()) {
+  if (!mJsepTransceiver.mSendTrack.GetActive()) {
     return Nothing();
   }
 
-  const auto* details = jsepTransceiver->mSendTrack.GetNegotiatedDetails();
+  const auto* details = mJsepTransceiver.mSendTrack.GetNegotiatedDetails();
   if (!details) {
     return Nothing();
   }
@@ -667,12 +657,11 @@ RTCRtpTransceiver::GetNegotiatedSendCodecs() const {
 
 Maybe<const std::vector<UniquePtr<JsepCodecDescription>>&>
 RTCRtpTransceiver::GetNegotiatedRecvCodecs() const {
-  auto jsepTransceiver = GetJsepTransceiver();
-  if (!jsepTransceiver->mRecvTrack.GetActive()) {
+  if (!mJsepTransceiver.mRecvTrack.GetActive()) {
     return Nothing();
   }
 
-  const auto* details = jsepTransceiver->mRecvTrack.GetNegotiatedDetails();
+  const auto* details = mJsepTransceiver.mRecvTrack.GetNegotiatedDetails();
   if (!details) {
     return Nothing();
   }

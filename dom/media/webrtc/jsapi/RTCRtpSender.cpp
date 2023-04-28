@@ -74,10 +74,6 @@ RTCRtpSender::RTCRtpSender(nsPIDOMWindowInner* aWindow, PeerConnectionImpl* aPc,
 
   if (aConduit->type() == MediaSessionConduit::AUDIO) {
     mDtmf = new RTCDTMFSender(aWindow, mTransceiver);
-    GetJsepTransceiver().mSendTrack.SetMaxEncodings(1);
-  } else {
-    GetJsepTransceiver().mSendTrack.SetMaxEncodings(
-        webrtc::kMaxSimulcastStreams);
   }
   mPipeline->SetTrack(mSenderTrack);
 
@@ -91,7 +87,7 @@ RTCRtpSender::RTCRtpSender(nsPIDOMWindowInner* aWindow, PeerConnectionImpl* aPc,
   if (aEncodings.Length()) {
     // This sender was created by addTransceiver with sendEncodings.
     mParameters.mEncodings = aEncodings;
-    SetJsepRids(mParameters);
+    mSimulcastEnvelopeSet = true;
     mozilla::glean::rtcrtpsender::used_sendencodings.AddToNumerator(1);
   } else {
     // This sender was created by addTrack, sRD(offer), or addTransceiver
@@ -724,7 +720,7 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
   MaybeUpdateConduit();
 
   if (compatModeAllowedRidChange) {
-    SetJsepRids(paramsCopy);
+    mSimulcastEnvelopeSet = true;
   }
 
   // If the media stack is successfully configured with parameters,
@@ -839,22 +835,6 @@ void RTCRtpSender::CheckAndRectifyEncodings(
       }
     }
   }
-}
-
-void RTCRtpSender::SetJsepRids(const RTCRtpSendParameters& aParameters) {
-  MOZ_ASSERT(aParameters.mEncodings.Length());
-
-  std::vector<std::string> rids;
-  for (const auto& encoding : aParameters.mEncodings) {
-    if (encoding.mRid.WasPassed()) {
-      rids.push_back(NS_ConvertUTF16toUTF8(encoding.mRid.Value()).get());
-    } else {
-      rids.push_back("");
-    }
-  }
-
-  GetJsepTransceiver().mSendTrack.SetRids(rids);
-  mSimulcastEnvelopeSet = true;
 }
 
 void RTCRtpSender::GetParameters(RTCRtpSendParameters& aParameters) {
@@ -1206,10 +1186,10 @@ void RTCRtpSender::SetTrack(const RefPtr<MediaStreamTrack>& aTrack) {
   mSenderTrack = aTrack;
   SeamlessTrackSwitch(aTrack);
   if (aTrack) {
-    // RFC says:
+    // RFC says (in the section on remote rollback):
     // However, an RtpTransceiver MUST NOT be removed if a track was attached
     // to the RtpTransceiver via the addTrack method.
-    GetJsepTransceiver().SetOnlyExistsBecauseOfSetRemote(false);
+    mAddTrackCalled = true;
   }
 }
 
@@ -1314,6 +1294,29 @@ void RTCRtpSender::SyncToJsep(JsepTransceiver& aJsepTransceiver) const {
   }
 
   aJsepTransceiver.mSendTrack.UpdateStreamIds(streamIds);
+
+  if (mSimulcastEnvelopeSet) {
+    std::vector<std::string> rids;
+    for (const auto& encoding : mParameters.mEncodings) {
+      if (encoding.mRid.WasPassed()) {
+        rids.push_back(NS_ConvertUTF16toUTF8(encoding.mRid.Value()).get());
+      } else {
+        rids.push_back("");
+      }
+    }
+
+    aJsepTransceiver.mSendTrack.SetRids(rids);
+  }
+
+  if (mTransceiver->IsVideo()) {
+    aJsepTransceiver.mSendTrack.SetMaxEncodings(webrtc::kMaxSimulcastStreams);
+  } else {
+    aJsepTransceiver.mSendTrack.SetMaxEncodings(1);
+  }
+
+  if (mAddTrackCalled) {
+    aJsepTransceiver.SetOnlyExistsBecauseOfSetRemote(false);
+  }
 }
 
 Maybe<RTCRtpSender::VideoConfig> RTCRtpSender::GetNewVideoConfig() {
@@ -1579,7 +1582,7 @@ RefPtr<MediaPipelineTransmit> RTCRtpSender::GetPipeline() const {
 std::string RTCRtpSender::GetMid() const { return mTransceiver->GetMidAscii(); }
 
 JsepTransceiver& RTCRtpSender::GetJsepTransceiver() {
-  return *mTransceiver->GetJsepTransceiver();
+  return mTransceiver->GetJsepTransceiver();
 }
 
 void RTCRtpSender::UpdateDtmfSender() {

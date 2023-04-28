@@ -1391,11 +1391,14 @@ export class RTCPeerConnection {
         transceiver.setDirectionInternal("sendonly");
       }
     } else {
-      transceiver = this._addTransceiverNoEvents(track, {
-        streams,
-        direction: "sendrecv",
-      });
-      transceiver.setAddTrackMagic();
+      transceiver = this._addTransceiverNoEvents(
+        track,
+        {
+          streams,
+          direction: "sendrecv",
+        },
+        true
+      );
     }
 
     this.updateNegotiationNeeded();
@@ -1431,7 +1434,7 @@ export class RTCPeerConnection {
     this.updateNegotiationNeeded();
   }
 
-  _addTransceiverNoEvents(sendTrackOrKind, init) {
+  _addTransceiverNoEvents(sendTrackOrKind, init, addTrackMagic) {
     let sendTrack = null;
     let kind;
     if (typeof sendTrackOrKind == "string") {
@@ -1449,7 +1452,7 @@ export class RTCPeerConnection {
     }
 
     try {
-      return this._pc.addTransceiver(init, kind, sendTrack);
+      return this._pc.addTransceiver(init, kind, sendTrack, addTrackMagic);
     } catch (e) {
       // Exceptions thrown by c++ code do not propagate. In most cases, that's
       // fine because we're using Promises, which can be copied. But this is

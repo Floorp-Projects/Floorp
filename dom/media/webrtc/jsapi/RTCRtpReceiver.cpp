@@ -892,12 +892,12 @@ std::string RTCRtpReceiver::GetMid() const {
 
 JsepTransceiver& RTCRtpReceiver::GetJsepTransceiver() {
   MOZ_ASSERT(mTransceiver);
-  return *mTransceiver->GetJsepTransceiver();
+  return mTransceiver->GetJsepTransceiver();
 }
 
 const JsepTransceiver& RTCRtpReceiver::GetJsepTransceiver() const {
   MOZ_ASSERT(mTransceiver);
-  return *mTransceiver->GetJsepTransceiver();
+  return mTransceiver->GetJsepTransceiver();
 }
 
 }  // namespace mozilla::dom

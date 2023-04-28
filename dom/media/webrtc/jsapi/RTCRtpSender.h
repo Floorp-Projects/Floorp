@@ -138,7 +138,6 @@ class RTCRtpSender : public nsISupports,
 
   std::string GetMid() const;
   JsepTransceiver& GetJsepTransceiver();
-  void SetJsepRids(const RTCRtpSendParameters& aParameters);
   static void ApplyJsEncodingToConduitEncoding(
       const RTCRtpEncodingParameters& aJsEncoding,
       VideoCodecConfig::Encoding* aConduitEncoding);
@@ -157,6 +156,7 @@ class RTCRtpSender : public nsISupports,
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<PeerConnectionImpl> mPc;
   RefPtr<dom::MediaStreamTrack> mSenderTrack;
+  bool mAddTrackCalled = false;
   RTCRtpSendParameters mParameters;
   Maybe<RTCRtpSendParameters> mPendingParameters;
   uint32_t mNumSetParametersCalls = 0;

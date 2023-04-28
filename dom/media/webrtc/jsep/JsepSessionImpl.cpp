@@ -91,14 +91,6 @@ JsepSessionImpl::JsepSessionImpl(const JsepSessionImpl& aOrig)
                                     : nullptr),
       mSdpHelper(&mLastError),
       mParser(new HybridSdpParser()) {
-  for (const auto& transceiver : aOrig.mTransceivers) {
-    // Deep copy
-    mTransceivers.push_back(new JsepTransceiver(*transceiver));
-  }
-  for (const auto& transceiver : aOrig.mOldTransceivers) {
-    // Deep copy
-    mOldTransceivers.push_back(new JsepTransceiver(*transceiver));
-  }
   for (const auto& codec : aOrig.mSupportedCodecs) {
     mSupportedCodecs.emplace_back(codec->Clone());
   }
@@ -145,20 +137,20 @@ JsepSessionImpl::GetLocalIceCredentials() const {
   return result;
 }
 
-void JsepSessionImpl::AddTransceiver(RefPtr<JsepTransceiver> aTransceiver) {
+void JsepSessionImpl::AddTransceiver(const JsepTransceiver& aTransceiver) {
   mLastError.clear();
-  MOZ_MTLOG(ML_DEBUG, "[" << mName << "]: Adding transceiver "
-                          << aTransceiver->GetUuid());
-  InitTransceiver(*aTransceiver);
+  MOZ_MTLOG(ML_DEBUG,
+            "[" << mName << "]: Adding transceiver " << aTransceiver.GetUuid());
 #ifdef DEBUG
-  if (aTransceiver->GetMediaType() == SdpMediaSection::kApplication) {
+  if (aTransceiver.GetMediaType() == SdpMediaSection::kApplication) {
     // Make sure we don't add more than one DataChannel transceiver
     for (const auto& transceiver : mTransceivers) {
-      MOZ_ASSERT(transceiver->GetMediaType() != SdpMediaSection::kApplication);
+      MOZ_ASSERT(transceiver.GetMediaType() != SdpMediaSection::kApplication);
     }
   }
 #endif
   mTransceivers.push_back(aTransceiver);
+  InitTransceiver(mTransceivers.back());
 }
 
 void JsepSessionImpl::InitTransceiver(JsepTransceiver& aTransceiver) {
@@ -409,9 +401,11 @@ JsepSession::Result JsepSessionImpl::CreateOffer(
   NS_ENSURE_SUCCESS(rv, dom::PCError::OperationError);
 
   for (size_t level = 0;
-       JsepTransceiver* transceiver = GetTransceiverForLocal(level); ++level) {
+       Maybe<JsepTransceiver> transceiver = GetTransceiverForLocal(level);
+       ++level) {
     rv = CreateOfferMsection(options, *transceiver, sdp.get());
     NS_ENSURE_SUCCESS(rv, dom::PCError::OperationError);
+    SetTransceiver(*transceiver);
   }
 
   SetupBundle(sdp.get());
@@ -568,7 +562,7 @@ JsepSession::Result JsepSessionImpl::CreateAnswer(
 
   for (size_t i = 0; i < offer.GetMediaSectionCount(); ++i) {
     // The transceivers are already in place, due to setRemote
-    JsepTransceiver* transceiver(GetTransceiverForLevel(i));
+    Maybe<JsepTransceiver> transceiver(GetTransceiverForLevel(i));
     if (!transceiver) {
       JSEP_SET_ERROR("No transceiver for level " << i);
       MOZ_ASSERT(false);
@@ -577,6 +571,7 @@ JsepSession::Result JsepSessionImpl::CreateAnswer(
     rv = CreateAnswerMsection(options, *transceiver, offer.GetMediaSection(i),
                               sdp.get());
     NS_ENSURE_SUCCESS(rv, dom::PCError::OperationError);
+    SetTransceiver(*transceiver);
   }
 
   // Ensure that each bundle-group starts with a mid that has a transport, in
@@ -814,10 +809,7 @@ JsepSession::Result JsepSessionImpl::SetLocalDescription(
 
   if (type == kJsepSdpOffer) {
     // Save in case we need to rollback
-    mOldTransceivers.clear();
-    for (const auto& transceiver : mTransceivers) {
-      mOldTransceivers.push_back(new JsepTransceiver(*transceiver));
-    }
+    mOldTransceivers = mTransceivers;
   }
 
   SdpHelper::BundledMids bundledMids;
@@ -832,7 +824,7 @@ JsepSession::Result JsepSessionImpl::SetLocalDescription(
   }
 
   for (size_t i = 0; i < parsed->GetMediaSectionCount(); ++i) {
-    JsepTransceiver* transceiver(GetTransceiverForLevel(i));
+    Maybe<JsepTransceiver> transceiver(GetTransceiverForLevel(i));
     if (!transceiver) {
       MOZ_ASSERT(false);
       JSEP_SET_ERROR("No transceiver for level " << i);
@@ -845,6 +837,7 @@ JsepSession::Result JsepSessionImpl::SetLocalDescription(
 
     if (mSdpHelper.MsectionIsDisabled(msection)) {
       transceiver->mTransport.Close();
+      SetTransceiver(*transceiver);
       continue;
     }
 
@@ -860,7 +853,7 @@ JsepSession::Result JsepSessionImpl::SetLocalDescription(
     }
 
     if (hasOwnTransport) {
-      EnsureHasOwnTransport(parsed->GetMediaSection(i), transceiver);
+      EnsureHasOwnTransport(parsed->GetMediaSection(i), *transceiver);
     }
 
     if (type == kJsepSdpOffer) {
@@ -876,6 +869,7 @@ JsepSession::Result JsepSessionImpl::SetLocalDescription(
         transceiver->SetBundleLevel(it->second->GetLevel());
       }
     }
+    SetTransceiver(*transceiver);
   }
 
   CopyBundleTransports();
@@ -1024,15 +1018,14 @@ JsepSession::Result JsepSessionImpl::SetRemoteDescription(
     iceOptions = parsed->GetAttributeList().GetIceOptions().mValues;
   }
 
-  // Save in case we need to rollback.
   if (type == kJsepSdpOffer) {
-    mOldTransceivers.clear();
-    for (const auto& transceiver : mTransceivers) {
-      mOldTransceivers.push_back(new JsepTransceiver(*transceiver));
-      if (!transceiver->IsNegotiated()) {
+    // Save in case we need to rollback.
+    mOldTransceivers = mTransceivers;
+    for (auto& transceiver : mTransceivers) {
+      if (!transceiver.IsNegotiated()) {
         // We chose a level for this transceiver, but never negotiated it.
         // Discard this state.
-        transceiver->ClearLevel();
+        transceiver.ClearLevel();
       }
     }
   }
@@ -1085,18 +1078,19 @@ nsresult JsepSessionImpl::HandleNegotiatedSession(
 
   // First, set the bundle level on the transceivers
   for (auto& [mid, transportOwner] : bundledMids) {
-    JsepTransceiver* bundledTransceiver = GetTransceiverForMid(mid);
+    Maybe<JsepTransceiver> bundledTransceiver = GetTransceiverForMid(mid);
     if (!bundledTransceiver) {
       JSEP_SET_ERROR("No transceiver for bundled mid " << mid);
       return NS_ERROR_INVALID_ARG;
     }
     bundledTransceiver->SetBundleLevel(transportOwner->GetLevel());
+    SetTransceiver(*bundledTransceiver);
   }
 
   // Now walk through the m-sections, perform negotiation, and update the
   // transceivers.
   for (size_t i = 0; i < local->GetMediaSectionCount(); ++i) {
-    JsepTransceiver* transceiver(GetTransceiverForLevel(i));
+    Maybe<JsepTransceiver> transceiver(GetTransceiverForLevel(i));
     if (!transceiver) {
       MOZ_ASSERT(false);
       JSEP_SET_ERROR("No transceiver for level " << i);
@@ -1112,20 +1106,22 @@ nsresult JsepSessionImpl::HandleNegotiatedSession(
       transceiver->mSendTrack.SetActive(false);
       transceiver->mRecvTrack.SetActive(false);
       transceiver->SetCanRecycle();
+      SetTransceiver(*transceiver);
       // Do not clear mLevel yet! That will happen on the next negotiation.
       continue;
     }
 
     rv = MakeNegotiatedTransceiver(remote->GetMediaSection(i),
-                                   local->GetMediaSection(i), transceiver);
+                                   local->GetMediaSection(i), *transceiver);
     NS_ENSURE_SUCCESS(rv, rv);
+    SetTransceiver(*transceiver);
   }
 
   CopyBundleTransports();
 
   std::vector<JsepTrack*> remoteTracks;
-  for (const auto& transceiver : mTransceivers) {
-    remoteTracks.push_back(&transceiver->mRecvTrack);
+  for (auto& transceiver : mTransceivers) {
+    remoteTracks.push_back(&transceiver.mRecvTrack);
   }
   JsepTrack::SetUniquePayloadTypes(remoteTracks);
 
@@ -1139,14 +1135,14 @@ nsresult JsepSessionImpl::HandleNegotiatedSession(
 
 nsresult JsepSessionImpl::MakeNegotiatedTransceiver(
     const SdpMediaSection& remote, const SdpMediaSection& local,
-    JsepTransceiver* transceiver) {
+    JsepTransceiver& transceiver) {
   const SdpMediaSection& answer = *mIsPendingOfferer ? remote : local;
 
   bool sending = false;
   bool receiving = false;
 
   // JS could stop the transceiver after the answer was created.
-  if (!transceiver->IsStopped()) {
+  if (!transceiver.IsStopped()) {
     if (*mIsPendingOfferer) {
       receiving = answer.IsSending();
       sending = answer.IsReceiving();
@@ -1161,23 +1157,23 @@ nsresult JsepSessionImpl::MakeNegotiatedTransceiver(
                           << local.GetMediaType() << " sending=" << sending
                           << " receiving=" << receiving);
 
-  transceiver->SetNegotiated();
+  transceiver.SetNegotiated();
 
   // Ensure that this is finalized in case we need to copy it below
   nsresult rv =
       FinalizeTransport(remote.GetAttributeList(), answer.GetAttributeList(),
-                        &transceiver->mTransport);
+                        &transceiver.mTransport);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  transceiver->mSendTrack.SetActive(sending);
-  rv = transceiver->mSendTrack.Negotiate(answer, remote, local);
+  transceiver.mSendTrack.SetActive(sending);
+  rv = transceiver.mSendTrack.Negotiate(answer, remote, local);
   if (NS_FAILED(rv)) {
     JSEP_SET_ERROR("Answer had no codecs in common with offer in m-section "
                    << local.GetLevel());
     return rv;
   }
 
-  JsepTrack& recvTrack = transceiver->mRecvTrack;
+  JsepTrack& recvTrack = transceiver.mRecvTrack;
   recvTrack.SetActive(receiving);
   rv = recvTrack.Negotiate(answer, remote, local);
   if (NS_FAILED(rv)) {
@@ -1186,7 +1182,7 @@ nsresult JsepSessionImpl::MakeNegotiatedTransceiver(
     return rv;
   }
 
-  if (transceiver->HasBundleLevel() && recvTrack.GetSsrcs().empty() &&
+  if (transceiver.HasBundleLevel() && recvTrack.GetSsrcs().empty() &&
       recvTrack.GetMediaType() != SdpMediaSection::kApplication) {
     // TODO(bug 1105005): Once we have urn:ietf:params:rtp-hdrext:sdes:mid
     // support, we should only fire this warning if that extension was not
@@ -1197,7 +1193,7 @@ nsresult JsepSessionImpl::MakeNegotiatedTransceiver(
                                "dropped.");
   }
 
-  if (transceiver->mTransport.mComponents == 2) {
+  if (transceiver.mTransport.mComponents == 2) {
     // RTCP MUX or not.
     // TODO(bug 1095743): verify that the PTs are consistent with mux.
     MOZ_MTLOG(ML_DEBUG, "[" << mName << "]: RTCP-MUX is off");
@@ -1234,10 +1230,10 @@ nsresult JsepSessionImpl::MakeNegotiatedTransceiver(
 }
 
 void JsepSessionImpl::EnsureHasOwnTransport(const SdpMediaSection& msection,
-                                            JsepTransceiver* transceiver) {
-  JsepTransport& transport = transceiver->mTransport;
+                                            JsepTransceiver& transceiver) {
+  JsepTransport& transport = transceiver.mTransport;
 
-  if (!transceiver->HasOwnTransport()) {
+  if (!transceiver.HasOwnTransport()) {
     // Transceiver didn't own this transport last time, it won't now either
     transport.Close();
   }
@@ -1245,7 +1241,7 @@ void JsepSessionImpl::EnsureHasOwnTransport(const SdpMediaSection& msection,
   transport.mLocalUfrag = msection.GetAttributeList().GetIceUfrag();
   transport.mLocalPwd = msection.GetAttributeList().GetIcePwd();
 
-  transceiver->ClearBundleLevel();
+  transceiver.ClearBundleLevel();
 
   if (!transport.mComponents) {
     if (mSdpHelper.HasRtcp(msection.GetProtocol())) {
@@ -1266,34 +1262,34 @@ void JsepSessionImpl::EnsureHasOwnTransport(const SdpMediaSection& msection,
 
 void JsepSessionImpl::CopyBundleTransports() {
   for (auto& transceiver : mTransceivers) {
-    if (transceiver->HasBundleLevel()) {
+    if (transceiver.HasBundleLevel()) {
       MOZ_MTLOG(ML_DEBUG,
-                "[" << mName << "] Transceiver " << transceiver->GetLevel()
+                "[" << mName << "] Transceiver " << transceiver.GetLevel()
                     << " is in a bundle; transceiver "
-                    << transceiver->BundleLevel() << " owns the transport.");
-      const JsepTransceiver* transportOwner =
-          GetTransceiverForLevel(transceiver->BundleLevel());
+                    << transceiver.BundleLevel() << " owns the transport.");
+      Maybe<const JsepTransceiver> transportOwner =
+          GetTransceiverForLevel(transceiver.BundleLevel());
       MOZ_ASSERT(transportOwner);
       if (transportOwner) {
-        transceiver->mTransport = transportOwner->mTransport;
+        transceiver.mTransport = transportOwner->mTransport;
       }
-    } else if (transceiver->HasLevel()) {
+    } else if (transceiver.HasLevel()) {
       MOZ_MTLOG(ML_DEBUG, "[" << mName << "] Transceiver "
-                              << transceiver->GetLevel()
+                              << transceiver.GetLevel()
                               << " is not necessarily in a bundle.");
     }
-    if (transceiver->HasLevel()) {
+    if (transceiver.HasLevel()) {
       MOZ_MTLOG(ML_DEBUG,
-                "[" << mName << "] Transceiver " << transceiver->GetLevel()
-                    << " transport-id: " << transceiver->mTransport.mTransportId
-                    << " components: " << transceiver->mTransport.mComponents);
+                "[" << mName << "] Transceiver " << transceiver.GetLevel()
+                    << " transport-id: " << transceiver.mTransport.mTransportId
+                    << " components: " << transceiver.mTransport.mComponents);
     }
   }
 }
 
 nsresult JsepSessionImpl::FinalizeTransport(const SdpAttributeList& remote,
                                             const SdpAttributeList& answer,
-                                            JsepTransport* transport) {
+                                            JsepTransport* transport) const {
   if (!transport->mComponents) {
     return NS_OK;
   }
@@ -1382,7 +1378,7 @@ nsresult JsepSessionImpl::CopyPreviousTransportParams(
       // If newLocal is an offer, this will be the number of components we used
       // last time, and if it is an answer, this will be the number of
       // components we've decided we're using now.
-      JsepTransceiver* transceiver(GetTransceiverForLevel(i));
+      Maybe<const JsepTransceiver> transceiver(GetTransceiverForLevel(i));
       if (!transceiver) {
         MOZ_ASSERT(false);
         JSEP_SET_ERROR("No transceiver for level " << i);
@@ -1545,43 +1541,39 @@ nsresult JsepSessionImpl::SetRemoteDescriptionAnswer(JsepSdpType type,
   return NS_OK;
 }
 
-JsepTransceiver* JsepSessionImpl::GetTransceiverForLevel(size_t level) const {
-  for (const auto& transceiver : mTransceivers) {
-    if (transceiver->HasLevel() && (transceiver->GetLevel() == level)) {
-      return transceiver.get();
-    }
-  }
-
-  return nullptr;
+Maybe<JsepTransceiver> JsepSessionImpl::GetTransceiverForLevel(
+    size_t level) const {
+  return FindTransceiver([level](const JsepTransceiver& transceiver) {
+    return transceiver.HasLevel() && (transceiver.GetLevel() == level);
+  });
 }
 
-JsepTransceiver* JsepSessionImpl::GetTransceiverForMid(
+Maybe<JsepTransceiver> JsepSessionImpl::GetTransceiverForMid(
     const std::string& mid) const {
-  for (const auto& transceiver : mTransceivers) {
-    if (transceiver->IsAssociated() && (transceiver->GetMid() == mid)) {
-      return transceiver.get();
-    }
-  }
-
-  return nullptr;
+  return FindTransceiver([mid](const JsepTransceiver& transceiver) {
+    return transceiver.IsAssociated() && (transceiver.GetMid() == mid);
+  });
 }
 
-JsepTransceiver* JsepSessionImpl::GetTransceiverForLocal(size_t level) {
-  if (JsepTransceiver* transceiver = GetTransceiverForLevel(level)) {
+Maybe<JsepTransceiver> JsepSessionImpl::GetTransceiverForLocal(size_t level) {
+  if (Maybe<JsepTransceiver> transceiver = GetTransceiverForLevel(level)) {
     if (transceiver->CanRecycle() &&
         transceiver->GetMediaType() != SdpMediaSection::kApplication) {
       // Attempt to recycle. If this fails, the old transceiver stays put.
       transceiver->Disassociate();
-      JsepTransceiver* newTransceiver =
+      Maybe<JsepTransceiver> newTransceiver =
           FindUnassociatedTransceiver(transceiver->GetMediaType(), false);
       if (newTransceiver) {
         newTransceiver->SetLevel(level);
         transceiver->ClearLevel();
         transceiver->mSendTrack.ClearRids();
+        SetTransceiver(*newTransceiver);
+        SetTransceiver(*transceiver);
         return newTransceiver;
       }
     }
 
+    SetTransceiver(*transceiver);
     return transceiver;
   }
 
@@ -1589,66 +1581,67 @@ JsepTransceiver* JsepSessionImpl::GetTransceiverForLocal(size_t level) {
 
   // Look for an RTP transceiver
   for (auto& transceiver : mTransceivers) {
-    if (transceiver->GetMediaType() != SdpMediaSection::kApplication &&
-        !transceiver->IsStopped() && !transceiver->HasLevel()) {
-      transceiver->SetLevel(level);
-      return transceiver.get();
+    if (transceiver.GetMediaType() != SdpMediaSection::kApplication &&
+        !transceiver.IsStopped() && !transceiver.HasLevel()) {
+      transceiver.SetLevel(level);
+      return Some(transceiver);
     }
   }
 
   // Ok, look for a datachannel
   for (auto& transceiver : mTransceivers) {
-    if (!transceiver->IsStopped() && !transceiver->HasLevel()) {
-      transceiver->SetLevel(level);
-      return transceiver.get();
+    if (!transceiver.IsStopped() && !transceiver.HasLevel()) {
+      transceiver.SetLevel(level);
+      return Some(transceiver);
     }
   }
 
-  return nullptr;
+  return Nothing();
 }
 
-JsepTransceiver* JsepSessionImpl::GetTransceiverForRemote(
+Maybe<JsepTransceiver> JsepSessionImpl::GetTransceiverForRemote(
     const SdpMediaSection& msection) {
   size_t level = msection.GetLevel();
-  if (JsepTransceiver* transceiver = GetTransceiverForLevel(level)) {
+  Maybe<JsepTransceiver> transceiver = GetTransceiverForLevel(level);
+  if (transceiver) {
     if (!transceiver->CanRecycle()) {
       return transceiver;
     }
     transceiver->Disassociate();
     transceiver->ClearLevel();
     transceiver->mSendTrack.ClearRids();
+    SetTransceiver(*transceiver);
   }
 
   // No transceiver for |level|
-
-  JsepTransceiver* transceiver =
-      FindUnassociatedTransceiver(msection.GetMediaType(), true /*magic!*/);
+  transceiver = FindUnassociatedTransceiver(msection.GetMediaType(), true);
   if (transceiver) {
     transceiver->SetLevel(level);
+    SetTransceiver(*transceiver);
     return transceiver;
   }
 
   // Make a new transceiver
-  RefPtr<JsepTransceiver> newTransceiver(new JsepTransceiver(
-      msection.GetMediaType(), *mUuidGen, SdpDirectionAttribute::kRecvonly));
-  newTransceiver->SetLevel(level);
-  newTransceiver->SetOnlyExistsBecauseOfSetRemote(true);
+  JsepTransceiver newTransceiver(msection.GetMediaType(), *mUuidGen,
+                                 SdpDirectionAttribute::kRecvonly);
+  newTransceiver.SetLevel(level);
+  newTransceiver.SetOnlyExistsBecauseOfSetRemote(true);
   AddTransceiver(newTransceiver);
-  return newTransceiver.get();
+  return Some(mTransceivers.back());
 }
 
-JsepTransceiver* JsepSessionImpl::GetTransceiverWithTransport(
+Maybe<JsepTransceiver> JsepSessionImpl::GetTransceiverWithTransport(
     const std::string& transportId) const {
   for (const auto& transceiver : mTransceivers) {
-    if (transceiver->HasOwnTransport() &&
-        (transceiver->mTransport.mTransportId == transportId)) {
-      MOZ_ASSERT(transceiver->HasLevel(),
+    if (transceiver.HasOwnTransport() &&
+        (transceiver.mTransport.mTransportId == transportId)) {
+      MOZ_ASSERT(transceiver.HasLevel(),
                  "Transceiver has a transport, but no level!");
-      return transceiver.get();
+      return Some(transceiver);
     }
   }
 
-  return nullptr;
+  return Nothing();
 }
 
 nsresult JsepSessionImpl::UpdateTransceiversFromRemoteDescription(
@@ -1657,7 +1650,7 @@ nsresult JsepSessionImpl::UpdateTransceiversFromRemoteDescription(
   for (size_t i = 0; i < remote.GetMediaSectionCount(); ++i) {
     const SdpMediaSection& msection = remote.GetMediaSection(i);
 
-    JsepTransceiver* transceiver(GetTransceiverForRemote(msection));
+    Maybe<JsepTransceiver> transceiver(GetTransceiverForRemote(msection));
     if (!transceiver) {
       return NS_ERROR_FAILURE;
     }
@@ -1677,10 +1670,12 @@ nsresult JsepSessionImpl::UpdateTransceiversFromRemoteDescription(
       transceiver->Disassociate();
       // This cannot be rolled back.
       transceiver->Stop();
+      SetTransceiver(*transceiver);
       continue;
     }
 
     if (msection.GetMediaType() == SdpMediaSection::MediaType::kApplication) {
+      SetTransceiver(*transceiver);
       continue;
     }
 
@@ -1696,43 +1691,43 @@ nsresult JsepSessionImpl::UpdateTransceiversFromRemoteDescription(
     // msection is not sending. If the msection is sending, and there are no
     // a=msid, the previously set default will stay.
     transceiver->mRecvTrack.RecvTrackSetRemote(remote, msection);
+    SetTransceiver(*transceiver);
   }
 
   return NS_OK;
 }
 
-JsepTransceiver* JsepSessionImpl::FindUnassociatedTransceiver(
+Maybe<JsepTransceiver> JsepSessionImpl::FindUnassociatedTransceiver(
     SdpMediaSection::MediaType type, bool magic) {
   // Look through transceivers that are not mapped to an m-section
   for (auto& transceiver : mTransceivers) {
     if (type == SdpMediaSection::kApplication &&
-        type == transceiver->GetMediaType()) {
-      transceiver->RestartDatachannelTransceiver();
-      return transceiver.get();
+        type == transceiver.GetMediaType()) {
+      transceiver.RestartDatachannelTransceiver();
+      return Some(transceiver);
     }
-    if (!transceiver->IsStopped() && !transceiver->HasLevel() &&
-        (!magic || transceiver->HasAddTrackMagic()) &&
-        (transceiver->GetMediaType() == type)) {
-      return transceiver.get();
+    if (!transceiver.IsStopped() && !transceiver.HasLevel() &&
+        (!magic || transceiver.HasAddTrackMagic()) &&
+        (transceiver.GetMediaType() == type)) {
+      return Some(transceiver);
     }
   }
 
-  return nullptr;
+  return Nothing();
 }
 
 void JsepSessionImpl::RollbackLocalOffer() {
   for (size_t i = 0; i < mTransceivers.size(); ++i) {
-    auto transceiver = mTransceivers[i];
+    auto& transceiver = mTransceivers[i];
     if (mOldTransceivers.size() > i) {
-      transceiver->Rollback(*mOldTransceivers[i], false);
+      transceiver.Rollback(mOldTransceivers[i], false);
       mOldTransceivers[i] = transceiver;
       continue;
     }
 
-    RefPtr<JsepTransceiver> temp(
-        new JsepTransceiver(transceiver->GetMediaType(), *mUuidGen));
-    InitTransceiver(*temp);
-    transceiver->Rollback(*temp, false);
+    JsepTransceiver temp(transceiver.GetMediaType(), *mUuidGen);
+    InitTransceiver(temp);
+    transceiver.Rollback(temp, false);
     mOldTransceivers.push_back(transceiver);
   }
 
@@ -1741,10 +1736,10 @@ void JsepSessionImpl::RollbackLocalOffer() {
 
 void JsepSessionImpl::RollbackRemoteOffer() {
   for (size_t i = 0; i < mTransceivers.size(); ++i) {
-    auto transceiver = mTransceivers[i];
+    auto& transceiver = mTransceivers[i];
     if (mOldTransceivers.size() > i) {
       // Some stuff cannot be rolled back. Save this information.
-      transceiver->Rollback(*mOldTransceivers[i], true);
+      transceiver.Rollback(mOldTransceivers[i], true);
       mOldTransceivers[i] = transceiver;
       continue;
     }
@@ -1752,14 +1747,13 @@ void JsepSessionImpl::RollbackRemoteOffer() {
     // New transceiver!
     // We rollback even for transceivers we will remove, just to ensure we end
     // up at the starting state.
-    RefPtr<JsepTransceiver> temp(
-        new JsepTransceiver(transceiver->GetMediaType(), *mUuidGen));
-    InitTransceiver(*temp);
-    transceiver->Rollback(*temp, true);
+    JsepTransceiver temp(transceiver.GetMediaType(), *mUuidGen);
+    InitTransceiver(temp);
+    transceiver.Rollback(temp, true);
 
-    if (transceiver->OnlyExistsBecauseOfSetRemote()) {
-      transceiver->Stop();
-      transceiver->SetRemoved();
+    if (transceiver.OnlyExistsBecauseOfSetRemote()) {
+      transceiver.Stop();
+      transceiver.SetRemoved();
     }
     mOldTransceivers.push_back(transceiver);
   }
@@ -2197,7 +2191,7 @@ JsepSession::Result JsepSessionImpl::AddRemoteIceCandidate(
     return Result();
   }
 
-  JsepTransceiver* transceiver = nullptr;
+  Maybe<JsepTransceiver> transceiver;
   if (!mid.empty()) {
     transceiver = GetTransceiverForMid(mid);
   } else if (level.isSome()) {
@@ -2249,7 +2243,8 @@ nsresult JsepSessionImpl::AddLocalIceCandidate(const std::string& candidate,
     return NS_ERROR_UNEXPECTED;
   }
 
-  JsepTransceiver* transceiver = GetTransceiverWithTransport(transportId);
+  Maybe<const JsepTransceiver> transceiver =
+      GetTransceiverWithTransport(transportId);
   if (!transceiver || !transceiver->IsAssociated()) {
     // mainly here to make some testing less complicated, but also just in case
     return NS_OK;
@@ -2292,20 +2287,20 @@ nsresult JsepSessionImpl::UpdateDefaultCandidate(
   for (const auto& transceiver : mTransceivers) {
     // We set the default address for bundled m-sections, but not candidate
     // attributes. Ugh.
-    if (transceiver->mTransport.mTransportId == transportId) {
-      MOZ_ASSERT(transceiver->HasLevel(),
+    if (transceiver.mTransport.mTransportId == transportId) {
+      MOZ_ASSERT(transceiver.HasLevel(),
                  "Transceiver has a transport, but no level! "
                  "This should never happen.");
       std::string defaultRtcpCandidateAddrCopy(defaultRtcpCandidateAddr);
       if (mState == kJsepStateStable) {
-        if (transceiver->mTransport.mComponents == 1) {
+        if (transceiver.mTransport.mComponents == 1) {
           // We know we're doing rtcp-mux by now. Don't create an rtcp attr.
           defaultRtcpCandidateAddrCopy = "";
           defaultRtcpCandidatePort = 0;
         }
       }
 
-      size_t level = transceiver->GetLevel();
+      size_t level = transceiver.GetLevel();
       if (level >= sdp->GetMediaSectionCount()) {
         MOZ_ASSERT(false, "Transceiver's level is too large!");
         JSEP_SET_ERROR("Transceiver's level is too large!");
@@ -2404,8 +2399,8 @@ bool JsepSessionImpl::CheckNegotiationNeeded() const {
   MOZ_ASSERT(mState == kJsepStateStable);
 
   for (const auto& transceiver : mTransceivers) {
-    if (transceiver->IsStopped()) {
-      if (transceiver->IsAssociated()) {
+    if (transceiver.IsStopped()) {
+      if (transceiver.IsAssociated()) {
         MOZ_MTLOG(ML_DEBUG, "[" << mName
                                 << "]: Negotiation needed because of "
                                    "stopped transceiver that still has a mid.");
@@ -2414,7 +2409,7 @@ bool JsepSessionImpl::CheckNegotiationNeeded() const {
       continue;
     }
 
-    if (!transceiver->IsAssociated()) {
+    if (!transceiver.IsAssociated()) {
       MOZ_MTLOG(ML_DEBUG, "[" << mName
                               << "]: Negotiation needed because of "
                                  "unassociated (but not stopped) transceiver.");
@@ -2428,16 +2423,16 @@ bool JsepSessionImpl::CheckNegotiationNeeded() const {
       continue;
     }
 
-    if (!transceiver->HasLevel()) {
+    if (!transceiver.HasLevel()) {
       MOZ_CRASH("Associated transceivers should always have a level.");
       continue;
     }
 
-    if (transceiver->GetMediaType() == SdpMediaSection::kApplication) {
+    if (transceiver.GetMediaType() == SdpMediaSection::kApplication) {
       continue;
     }
 
-    size_t level = transceiver->GetLevel();
+    size_t level = transceiver.GetLevel();
     if (NS_WARN_IF(mCurrentLocalDescription->GetMediaSectionCount() <= level) ||
         NS_WARN_IF(mCurrentRemoteDescription->GetMediaSectionCount() <=
                    level)) {
@@ -2450,7 +2445,7 @@ bool JsepSessionImpl::CheckNegotiationNeeded() const {
     const SdpMediaSection& remote =
         mCurrentRemoteDescription->GetMediaSection(level);
 
-    if (transceiver->mJsDirection & sdp::kSend) {
+    if (transceiver.mJsDirection & sdp::kSend) {
       std::vector<std::string> sdpMsids;
       if (local.GetAttributeList().HasAttribute(SdpAttribute::kMsidAttribute)) {
         for (const auto& msidAttr : local.GetAttributeList().GetMsid().mMsids) {
@@ -2462,7 +2457,7 @@ bool JsepSessionImpl::CheckNegotiationNeeded() const {
       std::sort(sdpMsids.begin(), sdpMsids.end());
 
       std::vector<std::string> jsepMsids;
-      for (const auto& jsepMsid : transceiver->mSendTrack.GetStreamIds()) {
+      for (const auto& jsepMsid : transceiver.mSendTrack.GetStreamIds()) {
         jsepMsids.push_back(jsepMsid);
       }
       std::sort(jsepMsids.begin(), jsepMsids.end());
@@ -2489,8 +2484,8 @@ bool JsepSessionImpl::CheckNegotiationNeeded() const {
     }
 
     if (mIsCurrentOfferer.isSome() && *mIsCurrentOfferer) {
-      if ((local.GetDirection() != transceiver->mJsDirection) &&
-          reverse(remote.GetDirection()) != transceiver->mJsDirection) {
+      if ((local.GetDirection() != transceiver.mJsDirection) &&
+          reverse(remote.GetDirection()) != transceiver.mJsDirection) {
         MOZ_MTLOG(ML_DEBUG, "[" << mName
                                 << "]: Negotiation needed because "
                                    "the direction on our offer, and the remote "
@@ -2499,7 +2494,7 @@ bool JsepSessionImpl::CheckNegotiationNeeded() const {
         return true;
       }
     } else if (local.GetDirection() !=
-               (transceiver->mJsDirection & reverse(remote.GetDirection()))) {
+               (transceiver.mJsDirection & reverse(remote.GetDirection()))) {
       MOZ_MTLOG(
           ML_DEBUG,
           "[" << mName
