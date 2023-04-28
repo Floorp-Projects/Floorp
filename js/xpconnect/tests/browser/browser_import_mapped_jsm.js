@@ -28,7 +28,6 @@ const JSMs = [
   "resource://gre/modules/PrivateBrowsingUtils.jsm",
   "resource://gre/modules/Timer.jsm",
   "resource://gre/modules/XPCOMUtils.jsm",
-  "resource://gre/modules/osfile.jsm",
   "resource://gre/modules/addons/XPIDatabase.jsm",
   "resource://gre/modules/addons/XPIProvider.jsm",
   "resource://gre/modules/addons/XPIInstall.jsm",
