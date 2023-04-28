@@ -233,7 +233,7 @@ export const SpecialMessageActions = {
    * @param {Browser} browser the xul:browser rendering the page
    * @returns {Promise<boolean>} true if the user signed in, false otherwise
    */
-  async fxaSignInTabFlow(data, browser) {
+  async fxaSignInFlow(data, browser) {
     if (!(await lazy.FxAccounts.canConnectAccount())) {
       return false;
     }
@@ -245,13 +245,13 @@ export const SpecialMessageActions = {
     let window = browser.ownerGlobal;
 
     let fxaBrowser = await new Promise(resolve => {
-      window.openLinkIn(url, "tab", {
+      window.openLinkIn(url, data?.where || "tab", {
         private: false,
         triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
           {}
         ),
         csp: null,
-        resolveOnNewTabCreated: resolve,
+        resolveOnContentBrowserCreated: resolve,
         forceForeground: true,
       });
     });
@@ -310,6 +310,15 @@ export const SpecialMessageActions = {
         { once: true, signal }
       );
 
+      let window = fxaTab.ownerGlobal;
+      window.addEventListener("unload", () => {
+        // If the hosting window unload event was fired before the event handler
+        // was removed, this means that the window was closed and sign-in was
+        // not completed, which means we should resolve didSignIn to false.
+        controller.abort();
+        resolve(false);
+      });
+
       Services.obs.addObserver(fxaObserver, lazy.UIState.ON_UPDATE);
 
       // Unfortunately, nsIObserverService.addObserver does not accept an
@@ -326,6 +335,10 @@ export const SpecialMessageActions = {
 
     // If the user completed sign-in, we'll close the fxaBrowser tab for
     // them to bring them back to the about:welcome flow.
+    //
+    // If the sign-in page was loaded in a new window, this will close the
+    // tab for that window. That will close the window as well if it's the
+    // last tab in that window.
     if (didSignIn && data?.autoClose !== false) {
       gBrowser.removeTab(fxaTab);
     }
@@ -450,9 +463,9 @@ export const SpecialMessageActions = {
           csp: null,
         });
         break;
-      case "FXA_SIGNIN_TAB_FLOW":
+      case "FXA_SIGNIN_FLOW":
         /** @returns {Promise<boolean>} */
-        return this.fxaSignInTabFlow(action.data, browser);
+        return this.fxaSignInFlow(action.data, browser);
       case "OPEN_PROTECTION_PANEL":
         let { gProtectionsHandler } = window;
         gProtectionsHandler.showProtectionsPopup({});
