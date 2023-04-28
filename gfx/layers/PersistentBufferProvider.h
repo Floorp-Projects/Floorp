@@ -81,7 +81,8 @@ class PersistentBufferProvider : public RefCounted<PersistentBufferProvider>,
 
   virtual void OnShutdown() {}
 
-  virtual bool SetKnowsCompositor(KnowsCompositor* aKnowsCompositor) {
+  virtual bool SetKnowsCompositor(KnowsCompositor* aKnowsCompositor,
+                                  bool& aOutLostFrontTexture) {
     return true;
   }
 
@@ -207,7 +208,8 @@ class PersistentBufferProviderShared : public PersistentBufferProvider,
 
   void OnShutdown() override { Destroy(); }
 
-  bool SetKnowsCompositor(KnowsCompositor* aKnowsCompositor) override;
+  bool SetKnowsCompositor(KnowsCompositor* aKnowsCompositor,
+                          bool& aOutLostFrontTexture) override;
 
   void ClearCachedResources() override;
 
