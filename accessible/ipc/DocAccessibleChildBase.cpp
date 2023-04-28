@@ -267,6 +267,16 @@ mozilla::ipc::IPCResult DocAccessibleChildBase::RecvRemoveTextSelection(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult DocAccessibleChildBase::RecvSetCurValue(
+    const uint64_t& aID, const double& aValue) {
+  LocalAccessible* acc = IdToAccessible(aID);
+  if (acc) {
+    acc->SetCurValue(aValue);
+  }
+
+  return IPC_OK();
+}
+
 LocalAccessible* DocAccessibleChildBase::IdToAccessible(
     const uint64_t& aID) const {
   if (!aID) return mDoc;

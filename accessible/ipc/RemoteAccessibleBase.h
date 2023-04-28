@@ -185,6 +185,7 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   virtual double MinValue() const override;
   virtual double MaxValue() const override;
   virtual double Step() const override;
+  virtual bool SetCurValue(double aValue) override;
 
   virtual Accessible* ChildAtPoint(
       int32_t aX, int32_t aY,

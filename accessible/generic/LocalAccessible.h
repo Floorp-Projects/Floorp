@@ -563,7 +563,7 @@ class LocalAccessible : public nsISupports, public Accessible {
   virtual double MinValue() const override;
   virtual double CurValue() const override;
   virtual double Step() const override;
-  virtual bool SetCurValue(double aValue);
+  virtual bool SetCurValue(double aValue) override;
 
   //////////////////////////////////////////////////////////////////////////////
   // Widgets

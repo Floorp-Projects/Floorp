@@ -73,10 +73,8 @@ xpcAccessibleValue::SetCurrentValue(double aValue) {
     return NS_ERROR_FAILURE;
   }
 
-  if (Intl()->IsLocal()) {
-    Intl()->AsLocal()->SetCurValue(aValue);
-  } else {
-    Intl()->AsRemote()->SetCurValue(aValue);
+  if (!Intl()->SetCurValue(aValue)) {
+    return NS_ERROR_FAILURE;
   }
 
   return NS_OK;

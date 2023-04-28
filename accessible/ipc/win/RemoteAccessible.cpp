@@ -472,24 +472,6 @@ double RemoteAccessible::CurValue() const {
   return currentValue.dblVal;
 }
 
-bool RemoteAccessible::SetCurValue(double aValue) {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    // Not yet supported by the cache.
-    return false;
-  }
-  RefPtr<IAccessibleValue> acc = QueryInterface<IAccessibleValue>(this);
-  if (!acc) {
-    return false;
-  }
-
-  VARIANT currentValue;
-  VariantInit(&currentValue);
-  currentValue.vt = VT_R8;
-  currentValue.dblVal = aValue;
-  HRESULT hr = acc->setCurrentValue(currentValue);
-  return SUCCEEDED(hr);
-}
-
 double RemoteAccessible::MinValue() const {
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return RemoteAccessibleBase<RemoteAccessible>::MinValue();

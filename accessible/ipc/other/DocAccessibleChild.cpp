@@ -1278,17 +1278,6 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvCurValue(const uint64_t& aID,
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult DocAccessibleChild::RecvSetCurValue(
-    const uint64_t& aID, const double& aValue, bool* aRetVal) {
-  *aRetVal = false;
-  LocalAccessible* acc = IdToAccessible(aID);
-  if (acc) {
-    *aRetVal = acc->SetCurValue(aValue);
-  }
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult DocAccessibleChild::RecvMinValue(const uint64_t& aID,
                                                          double* aValue) {
   *aValue = UnspecifiedNaN<double>();

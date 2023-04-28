@@ -167,7 +167,6 @@ double CurValue() const override;
 double MinValue() const override;
 double MaxValue() const override;
 double Step() const override;
-bool SetCurValue(double aValue);
 
 Accessible* ChildAtPoint(
     int32_t aX, int32_t aY,

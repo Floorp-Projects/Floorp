@@ -214,18 +214,7 @@ using namespace mozilla::a11y;
  */
 - (void)setValue:(double)value {
   MOZ_ASSERT(mGeckoAccessible, "mGeckoAccessible is null");
-
-  double min = mGeckoAccessible->MinValue();
-  double max = mGeckoAccessible->MaxValue();
-
-  if ((std::isnan(min) || value >= min) && (std::isnan(max) || value <= max)) {
-    if (LocalAccessible* acc = mGeckoAccessible->AsLocal()) {
-      acc->SetCurValue(value);
-    } else {
-      RemoteAccessible* proxy = mGeckoAccessible->AsRemote();
-      proxy->SetCurValue(value);
-    }
-  }
+  mGeckoAccessible->SetCurValue(value);
 }
 
 @end

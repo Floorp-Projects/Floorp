@@ -309,7 +309,7 @@ child:
   [Nested=inside_sync] sync AtkKeyBinding(uint64_t aID) returns(nsString aResult);
 
   [Nested=inside_sync] sync CurValue(uint64_t aID) returns(double aValue);
-  [Nested=inside_sync] sync SetCurValue(uint64_t aID, double aValue) returns(bool aRetVal);
+  async SetCurValue(uint64_t aID, double aValue);
   [Nested=inside_sync] sync MinValue(uint64_t aID) returns(double aValue);
   [Nested=inside_sync] sync MaxValue(uint64_t aID) returns(double aValue);
   [Nested=inside_sync] sync Step(uint64_t aID) returns(double aStep);

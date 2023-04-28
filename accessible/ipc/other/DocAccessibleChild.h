@@ -382,10 +382,6 @@ class DocAccessibleChild : public DocAccessibleChildBase {
   virtual mozilla::ipc::IPCResult RecvCurValue(const uint64_t& aID,
                                                double* aValue) override;
 
-  virtual mozilla::ipc::IPCResult RecvSetCurValue(const uint64_t& aID,
-                                                  const double& aValue,
-                                                  bool* aRetVal) override;
-
   virtual mozilla::ipc::IPCResult RecvMinValue(const uint64_t& aID,
                                                double* aValue) override;
 
