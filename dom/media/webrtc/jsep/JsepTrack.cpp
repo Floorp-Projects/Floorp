@@ -249,7 +249,7 @@ void JsepTrack::SendTrackSetRemote(SsrcGenerator& aSsrcGenerator,
 
 void JsepTrack::AddToMsection(
     const std::vector<UniquePtr<JsepCodecDescription>>& codecs,
-    SdpMediaSection* msection) {
+    SdpMediaSection* msection) const {
   MOZ_ASSERT(msection->GetMediaType() == mType);
   MOZ_ASSERT(!codecs.empty());
 
