@@ -7,6 +7,7 @@
 #ifndef SubstitutingJARURI_h
 #define SubstitutingJARURI_h
 
+#include "nsIStandardURL.h"
 #include "nsIURL.h"
 #include "nsJARURI.h"
 #include "nsISerializable.h"
@@ -143,13 +144,73 @@ class SubstitutingJARURI : public nsIJARURI,
     return !mSource ? NS_ERROR_NULL_POINTER
                     : mSource->GetDisplayPrePath(aDisplayPrePath);
   }
-  NS_IMETHOD Mutate(nsIURIMutator** _retval) override {
-    return !mSource ? NS_ERROR_NULL_POINTER : mSource->Mutate(_retval);
+  NS_IMETHOD Mutate(nsIURIMutator** _retval) override;
+  NS_IMETHOD_(void) Serialize(mozilla::ipc::URIParams& aParams) override;
+
+ private:
+  nsresult Clone(nsIURI** aURI);
+  nsresult SetSpecInternal(const nsACString& input) {
+    return NS_ERROR_NOT_IMPLEMENTED;
   }
-  NS_IMETHOD_(void) Serialize(mozilla::ipc::URIParams& aParams) override {
-    MOZ_ASSERT(mSource);
-    mSource->Serialize(aParams);
+  nsresult SetScheme(const nsACString& input) {
+    return NS_ERROR_NOT_IMPLEMENTED;
   }
+  nsresult SetUserPass(const nsACString& aInput);
+  nsresult SetUsername(const nsACString& input) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  nsresult SetPassword(const nsACString& input) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  nsresult SetHostPort(const nsACString& aValue) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  nsresult SetHost(const nsACString& input) { return NS_ERROR_NOT_IMPLEMENTED; }
+  nsresult SetPort(int32_t aPort);
+  nsresult SetPathQueryRef(const nsACString& input) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  nsresult SetRef(const nsACString& input) { return NS_ERROR_NOT_IMPLEMENTED; }
+  nsresult SetFilePath(const nsACString& input) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  nsresult SetQuery(const nsACString& input) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  nsresult SetQueryWithEncoding(const nsACString& input,
+                                const mozilla::Encoding* encoding) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  bool Deserialize(const mozilla::ipc::URIParams& aParams);
+  nsresult ReadPrivate(nsIObjectInputStream* aStream);
+
+ public:
+  class Mutator final : public nsIURIMutator,
+                        public BaseURIMutator<SubstitutingJARURI>,
+                        public nsISerializable {
+    NS_DECL_ISUPPORTS
+    NS_FORWARD_SAFE_NSIURISETTERS_RET(mURI)
+    NS_DEFINE_NSIMUTATOR_COMMON
+
+    // nsISerializable overrides
+    NS_IMETHOD
+    Write(nsIObjectOutputStream* aOutputStream) override {
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    NS_IMETHOD Read(nsIObjectInputStream* aStream) override {
+      return InitFromInputStream(aStream);
+    }
+
+    explicit Mutator() = default;
+
+   private:
+    virtual ~Mutator() = default;
+
+    friend SubstitutingJARURI;
+  };
+
+  friend BaseURIMutator<SubstitutingJARURI>;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(SubstitutingJARURI,
