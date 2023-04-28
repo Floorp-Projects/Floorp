@@ -60,7 +60,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
             string_id: "onboarding-device-migration-primary-button-label",
           },
           action: {
-            type: "FXA_SIGNIN_TAB_FLOW",
+            type: "FXA_SIGNIN_FLOW",
             navigate: "actionResult",
             data: {
               entrypoint: "fx-device-migration-onboarding",

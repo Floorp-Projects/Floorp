@@ -538,8 +538,8 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
     } else if (action.type) {
       actionResult = await _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.handleUserAction(action);
 
-      if (action.type === "FXA_SIGNIN_TAB_FLOW") {
-        _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendActionTelemetry(props.messageId, actionResult ? "sign_in" : "sign_in_cancel", "FXA_SIGNIN_TAB_FLOW");
+      if (action.type === "FXA_SIGNIN_FLOW") {
+        _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendActionTelemetry(props.messageId, actionResult ? "sign_in" : "sign_in_cancel", "FXA_SIGNIN_FLOW");
       } // Wait until migration closes to complete the action
 
 
