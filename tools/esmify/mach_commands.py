@@ -120,7 +120,7 @@ excluded_from_imports_prefix = list(
             # Files has macro.
             "browser/app/profile/firefox.js",
             "browser/branding/official/pref/firefox-branding.js",
-            "browser/components/enterprisepolicies/schemas/schema.jsm",
+            "browser/components/enterprisepolicies/schemas/schema.sys.mjs",
             "browser/locales/en-US/firefox-l10n.js",
             "mobile/android/app/geckoview-prefs.js",
             "mobile/android/app/mobile.js",

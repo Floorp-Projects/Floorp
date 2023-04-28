@@ -8,7 +8,6 @@
 
 #include "APZUtils.h"
 #include "AsyncPanZoomController.h"  // for AsyncPanZoomController
-#include "ScrollAnimationPhysics.h"  // for kScrollSeriesTimeoutMs
 
 #include "mozilla/MouseEvents.h"
 #include "mozilla/StaticPrefs_apz.h"
@@ -358,7 +357,7 @@ void WheelBlockState::Update(ScrollWheelInput& aEvent) {
   // This makes GetScrollWheelDelta() consistent.
   if (!mLastEventTime.IsNull() &&
       (aEvent.mTimeStamp - mLastEventTime).ToMilliseconds() >
-          kScrollSeriesTimeoutMs) {
+          StaticPrefs::mousewheel_scroll_series_timeout()) {
     mScrollSeriesCounter = 0;
   }
   aEvent.mScrollSeriesNumber = ++mScrollSeriesCounter;

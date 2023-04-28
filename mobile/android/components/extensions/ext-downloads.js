@@ -144,7 +144,30 @@ class DownloadItem {
   }
 }
 
-this.downloads = class extends ExtensionAPI {
+this.downloads = class extends ExtensionAPIPersistent {
+  PERSISTENT_EVENTS = {
+    onChanged({ fire, context }, params) {
+      const listener = (eventName, event) => {
+        const { delta, downloadItem } = event;
+        const { extension } = this;
+        if (extension.privateBrowsingAllowed || !downloadItem.incognito) {
+          fire.async(delta);
+        }
+      };
+      DownloadTracker.on("download-changed", listener);
+
+      return {
+        unregister() {
+          DownloadTracker.off("download-changed", listener);
+        },
+        convert(_fire, _context) {
+          fire = _fire;
+          context = _context;
+        },
+      };
+    },
+  };
+
   getAPI(context) {
     const { extension } = context;
     return {
@@ -268,20 +291,9 @@ this.downloads = class extends ExtensionAPI {
 
         onChanged: new EventManager({
           context,
-          name: "downloads.onChanged",
-          register: fire => {
-            const listener = (eventName, event) => {
-              const { delta, downloadItem } = event;
-              if (context.privateBrowsingAllowed || !downloadItem.incognito) {
-                fire.async(delta);
-              }
-            };
-
-            DownloadTracker.on("download-changed", listener);
-            return () => {
-              DownloadTracker.off("download-changed", listener);
-            };
-          },
+          module: "downloads",
+          event: "onChanged",
+          extensionApi: this,
         }).api(),
 
         onCreated: ignoreEvent(context, "downloads.onCreated"),

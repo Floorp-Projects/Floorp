@@ -258,7 +258,7 @@ wmf-media-engine:
 a11y-no-cache:
     description: "{description} with accessibility cache disabled"
     component: "Core::Disability Access APIs"
-    expiration: "2023-05-01"
+    expiration: "2023-08-01"
     suffix: "a11y-no-cache"
     merge:
         mozharness:

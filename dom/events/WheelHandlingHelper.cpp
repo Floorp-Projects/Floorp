@@ -176,7 +176,8 @@ bool WheelTransaction::UpdateTransaction(const WidgetWheelEvent* aEvent) {
 
   SetTimeout();
 
-  if (sScrollSeriesCounter != 0 && OutOfTime(sTime, kScrollSeriesTimeoutMs)) {
+  if (sScrollSeriesCounter != 0 &&
+      OutOfTime(sTime, StaticPrefs::mousewheel_scroll_series_timeout())) {
     sScrollSeriesCounter = 0;
   }
   sScrollSeriesCounter++;

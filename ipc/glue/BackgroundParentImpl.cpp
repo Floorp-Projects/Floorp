@@ -1389,8 +1389,13 @@ BackgroundParentImpl::RecvEnsureUtilityProcessAndCreateBridge(
             std::tuple<const nsresult&,
                        Endpoint<mozilla::PRemoteDecoderManagerChild>&&>;
         if (!upm) {
-          aResolver(Type(NS_ERROR_NOT_AVAILABLE,
-                         Endpoint<PRemoteDecoderManagerChild>()));
+          managerThread->Dispatch(NS_NewRunnableFunction(
+              "BackgroundParentImpl::RecvEnsureUtilityProcessAndCreateBridge::"
+              "Failure",
+              [aResolver]() {
+                aResolver(Type(NS_ERROR_NOT_AVAILABLE,
+                               Endpoint<PRemoteDecoderManagerChild>()));
+              }));
         } else {
           SandboxingKind sbKind = GetSandboxingKindFromLocation(aLocation);
           upm->StartProcessForRemoteMediaDecoding(otherPid, sbKind)
