@@ -134,6 +134,7 @@ class JsepTrack {
       mRemoteSetSendBit = rhs.mRemoteSetSendBit;
       mReceptive = rhs.mReceptive;
       mMaxEncodings = rhs.mMaxEncodings;
+      mInHaveRemote = rhs.mInHaveRemote;
       mRtxIsAllowed = rhs.mRtxIsAllowed;
 
       mPrototypeCodecs.clear();
@@ -249,7 +250,7 @@ class JsepTrack {
       const std::vector<UniquePtr<JsepCodecDescription>>& codecs,
       std::vector<uint16_t>* pts);
   void AddToMsection(const std::vector<UniquePtr<JsepCodecDescription>>& codecs,
-                     SdpMediaSection* msection);
+                     SdpMediaSection* msection) const;
   void GetRids(const SdpMediaSection& msection, sdp::Direction direction,
                std::vector<SdpRidAttributeList::Rid>* rids) const;
   void CreateEncodings(
