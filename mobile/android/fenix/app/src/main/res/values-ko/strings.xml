@@ -73,8 +73,6 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">한 번 눌러 다음 사생활 보호 탭을 시작합니다.</string>
-    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">한 번 눌러 다음 사생활 보호 탭을 시작합니다.</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">홈 화면에 추가</string>
@@ -266,9 +264,6 @@
     <string name="search_settings_menu_item">검색 설정</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">이번만 검색:</string>
-
-    <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">이번만 검색:</string>
 
     <!-- Home onboarding -->
@@ -311,10 +306,16 @@
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_default_browser_title">%s를 기본 브라우저로 설정해 보세요</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Firefox를 기본 브라우저로 설정해 보세요</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
     <string name="juno_onboarding_default_browser_description">%1$s는 이익보다 사람을 우선시하고 교차 사이트 추적기를 차단하여 개인 정보를 보호합니다.\n\n%2$s에서 더 알아보세요.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox는 이익보다 사람을 우선시하고 교차 사이트 추적기를 차단하여 개인 정보를 보호합니다.\n\n개인정보처리방침에서 더 알아보세요.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text">개인정보처리방침</string>
@@ -333,9 +334,15 @@
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_enable_notifications_title">알림은 %s로 더 많은 작업을 수행하는 데 도움이 됩니다</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">알림은 Firefox로 더 많은 작업을 수행하는 데 도움이 됩니다</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_enable_notifications_description">기기 간에 탭을 보내고, 다운로드를 관리하고, %s를 최대한 활용하기 위한 팁을 얻으세요.</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated   -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">기기 간에 탭을 보내고, 다운로드를 관리하고, Firefox를 최대한 활용하기 위한 팁을 얻으세요.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button">알림 켜기</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -415,7 +422,7 @@
     <string name="cookie_banner_handling_report_site_snack_bar_text">사이트 지원 요청이 제출되었습니다.</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">이 사이트에서 켜짐</string>
-    <!-- Text for indicating that a request for unsupported site was sent to nimbus, this is shown as part of the protections panel with the tracking protection toggle -->
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site_request_submitted">사이트 지원 요청이 제출됨</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">현재 지원되지 않는 사이트</string>
@@ -429,16 +436,12 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s는 이 사이트의 쿠키를 지우고 페이지를 새로 고침합니다. 모든 쿠키를 삭제하면 로그아웃되거나 장바구니가 비워질 수 있습니다.</string>
 
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s는 쿠키 요청을 자동으로 거부할 수 있습니다.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s는 지원되는 사이트에서 모든 쿠키 요청을 자동으로 거부하려고 시도합니다.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">쿠키 배너가 사라졌습니다!</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_title">%1$s가 쿠키 배너를 거부하도록 허용하시겠습니까?</string>
-    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">가능한 경우 쿠키 요청을 자동으로 거부합니다.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">가능한 경우 %1$s가 자동으로 쿠키 요청을 거부하도록 허용하시겠습니까?</string>
     <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
@@ -469,8 +472,6 @@
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">보안 강화를 위해 HTTPS 암호화 프로토콜을 사용하여 사이트에 자동으로 연결을 시도합니다.</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">켜짐</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">꺼짐</string>
     <!-- Summary of https only preference if https only is set to on in all tabs -->
@@ -785,15 +786,9 @@
     <!-- Dialog button text for canceling open all tabs -->
     <string name="open_all_warning_cancel">취소</string>
 
-    <!-- Text to show users they have one site in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%d개 사이트</string>
     <!-- Text to show users they have one page in the history group section of the History fragment.
     %d is a placeholder for the number of pages in the group. -->
     <string name="history_search_group_site_1">%d 페이지</string>
-    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_sites" moz:RemovedIn="111" tools:ignore="UnusedResources">%d개 사이트</string>
 
     <!-- Text to show users they have multiple pages in the history group section of the History fragment.
     %d is a placeholder for the number of pages in the group. -->
@@ -1134,8 +1129,6 @@
     <string name="phone_feature_blocked_by_android">Android에 의해 차단됨</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">예외 목록</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">켜짐</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">꺼짐</string>
 
@@ -1313,11 +1306,11 @@
     <!-- Survey -->
     <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
     The app name is in the text, due to limitations with localizing Nimbus experiments -->
-    <string name="nimbus_survey_message_text" tools:ignore="UnusedResources">간단한 설문 조사로 Firefox를 개선할 수 있도록 도와주세요.</string>
+    <string name="nimbus_survey_message_text">간단한 설문 조사로 Firefox를 개선할 수 있도록 도와주세요.</string>
     <!-- Preference for taking the short survey. -->
-    <string name="preferences_take_survey" tools:ignore="UnusedResources">설문 조사 참여</string>
+    <string name="preferences_take_survey">설문 조사 참여</string>
     <!-- Preference for not taking the short survey. -->
-    <string name="preferences_not_take_survey" tools:ignore="UnusedResources">아니요</string>
+    <string name="preferences_not_take_survey">아니요</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->

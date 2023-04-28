@@ -60,11 +60,6 @@
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Avanzadis…</string>
 
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
-    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
-        <label> <b>%1$s</b> al à une politiche di sigurece clamade HTTP Strict Transport Security (HSTS), che al significhe che <b>%2$s</b> al pues conetisi dome in maniere sigure e no tu puedis zontâ une ecezion par visitâ chest sît.
-    ]]></string>
-
-    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
         <label> <b>%1$s</b> al à une politiche di sigurece clamade HTTP Strict Transport Security (HSTS), che al significhe che <b>%2$s</b> al pues conetisi dome in maniere sigure e no tu puedis zontâ une ecezion par visitâ chest sît. </label>
     ]]></string>
@@ -90,7 +85,7 @@
       <p>Il sît domandât nol à rispuindût a une richieste di conession e il navigadôr al à fermât di spietâ une rispueste.</p>
       <ul>
         <li>Isal pussibil che il servidôr al vedi une richieste masse elevade o une interuzion temporanie? Torne prove plui indenant.</li>
-        <li>Rivistu a visitâ altris sît? Controle la conession di rêt dal to dispositîf.</li>
+        <li>Rivistu a visitâ altris sîts? Controle la conession di rêt dal to dispositîf.</li>
         <li>Sono il to dispositîf o la rêt protets di un firewall o un proxy? Lis impostazions sbaliadis a puedin interferî cu la navigazion sul web.</li>
         <li>Âstu ancjemò problemis? Consulte l’aministradôr de rêt o il furnidôr di acès a internet par vê assistence.</li>
       </ul>

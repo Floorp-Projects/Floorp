@@ -932,6 +932,9 @@
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">‘Hiaj sunj màn ngà HTTPS</string>
 
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary3">Huin ruhuaj gātu riña nej sitio ngà ‘ngō da’nga’ gū’nàj HTTPS dadin’ dugumîn da’nga’ nan doj daran’ nej sa huā ‘hiát.</string>
+
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Ga\'ue na\'nïnt</string>
     <!-- Description for the exceptions preference screen-->
@@ -1002,6 +1005,10 @@
     <!-- Placeholder text for the input field of rename top site-->
     <string name="placeholder_rename_top_site">Si yūgui aksêso dīrêkto</string>
 
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note2">Nej ñadu’hua ngà na’nïn sà’t &lt;b&gt;sê sī&lt;/b&gt; nārè’ nej man si ruhuât nādurê’t nej sa ni’hiājt ngà gaché nut riña %1$s</string>
+
     <!-- Theme Preferences -->
     <!-- Preference category for changing default theme to dark or light mode -->
     <string name="preferences_theme">Têma</string>
@@ -1014,12 +1021,23 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Gānikò\' si tema aga\' dan</string>
 
-     <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Nitāj si aran’ sitiô nan ngà HTTPS</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s ginùn huin gārasunj HTTPS da’ gā nïn doj gāchē nunt.<a href="%2$s">Gāhuin chrūn doj</a> <br/><br/>     Nadunā dàj gā riña hiūj nan riña tàj sa nadunāt> Sa huìi &amp; Sa dugumîn> Sa dugumîn.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Nitāj seguridâ nikāj koneksiôn</string>
 
      <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Narán rakïj ñanj</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon2">Hìaj â. Si gâ’nïn’ da’ nāga’nāj sitiô nan sò’. Gūru’man ra’a riña nù eskûdo si ruhuât gīni’înt ahuin sa yi’ì arán ñûnj.</string>
 
     <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
     <string name="cfr_close_button_description">Nārán riña sa guruhui’ nan</string>
@@ -1027,8 +1045,13 @@
     <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
     <!-- Tool Tip Title -->
     <string name="tool_tip_title">Ngà dugumînt sò’</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">Sa ngà huā nan nī arán man nī dugumîn man sò’. Si ruhuât nādunāt doj dàj gaj nī gā’hue gan’ānjt riña tāj sa nāgi’hiô’.</string>
     <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
     <string name="tool_tip_dismiss_button_content_description">Si gi\'hiaj guendô\'</string>
+
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon2">Gūru’man ra’a hiūj nan da’ nādurê’t daran’anj — sa gaché nunt, nej kôki, daran’anj — y nayi’ì nākà ngà a’ngô rikïj ñanj.</string>
 
     <!-- Promote SearchWidget Dialog -->
 
@@ -1043,4 +1066,18 @@
     <!-- This is the title of promote search widget dialog. -->
     <string name="promote_search_widget_dialog_title">Nare\' nej nuguan\' garajsun rè\' nga nana\'hui\' rè\' 🎉</string>
 
-    </resources>
+    <!-- Banner Info Message than will appear when user first enters in the app. The location is at the toolbar. -->
+    <string name="cfr_for_start_browsing">Gayi’ì si sēsiûnt guendâ gāchē nun huìt nī gārán ñûnj riña nej sa naga’nāj a nī a’ngô nej sa yī’ìi.</string>
+
+    <!-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. "Focus") -->
+    <string name="promote_search_widget_dialog_subtitle">Dunâj ñûnj gāchē nun huìt, sanī ga’hue gāyi’ì râ’ñànjt doj riña %1$s widget nù riña pāntayâ ayì’ìt.</string>
+
+    <!-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. -->
+    <string name="promote_search_widget_button_text">Nāchrūn widget riña pāntayâ ayì’ìt</string>
+
+    <!-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. -->
+    <string name="promote_search_widget_snackbar_message">Ngà nanûn widget riña pāntayâ ayì’ìt</string>
+</resources>

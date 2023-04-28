@@ -547,6 +547,10 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">НЕ</string>
 
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">Цэтлік будзе адкрывацца з адключанай узмоцненай аховай ад сачэння</string>
+
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
 
@@ -554,6 +558,14 @@
     * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
     -->
     <string name="notification_browsing_session_channel_name">Сеанс прыватнага аглядання</string>
+
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">Апавяшчэнні дазваляюць сцерці сеанс %1$s адным дотыкам. Вам не трэба адкрываць праграму або бачыць, што адкрыта ў вашым браўзеры.</string>
 
     <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
     <string name="tabs_tray_action_erase">Сцерці гісторыю аглядання</string>
@@ -862,6 +874,12 @@
         Доўгае націсканне на любы URL у адрасным радку
     </string>
 
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_open_in_new_tab">Адкрыць спасылку ў новай картцы\n
+        Доўгае націсканне на любую спасылку на старонцы
+    </string>
+
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Выключыць парады на стартавым экране</string>
 
@@ -954,7 +972,11 @@
     <!-- Placeholder text for the input field of rename top site-->
     <string name="placeholder_rename_top_site">Назва цэтліка</string>
 
-     <!-- Theme Preferences -->
+     <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note2">Захаваныя і абагуленыя відарысы &lt;b&gt;не будуць&lt;/b&gt; выдалены, калі вы выдаліце гісторыю %1$s</string>
+
+    <!-- Theme Preferences -->
     <!-- Preference category for changing default theme to dark or light mode -->
     <string name="preferences_theme">Тэма</string>
     <!-- Preference for using light theme -->
@@ -969,6 +991,12 @@
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
     <string name="errorpage_httpsonly_title2">Гэты сайт не падтрымлівае HTTPS</string>
 
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s спрабуе выкарыстоўваць HTTPS-злучэнне, калі гэта магчыма, для лепшай бяспекі.
+     <a href="%2$s">Падрабязней</a> <br/><br/>
+     Змяніць гэта можна, перайшоўшы ў Налады > Прыватнасць і бяспека > Бяспека.]]></string>
+
     <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Злучэнне не бяспечнае</string>
 
@@ -976,6 +1004,13 @@
     <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
     Гэта можа быць праблемай наладкі сервера ці, магчыма, хтосьці спрабуе прыкінуцца гэтым серверам. <br/><br/>
     Калі вы паспяхова злучаліся з гэтым серверам раней, памылка можа быць часовай.
+    ]]></string>
+
+     <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Хтосьці можа спрабаваць падмяніць гэты сайт, і працягваць можа быць рызыкоўна.</label>
+        <br><br>
+        <label>%1$s не давярае <b>%2$s</b>, таму што выдавец яго сертыфіката нявызначаны, сертыфікат самападпісаны, або сервер не дае спраўных прамежкавых сертыфікатаў.</label>
     ]]></string>
 
      <!-- Sessions List -->

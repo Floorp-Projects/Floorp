@@ -68,8 +68,6 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">פתיחת הלשונית הפרטית הבאה בהקשה אחת.</string>
-    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">פתיחת הלשונית הפרטית הבאה שלך בהקשה אחת.</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">הוספה למסך הבית</string>
@@ -258,9 +256,6 @@
     <string name="search_settings_menu_item">הגדרות חיפוש</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">הפעם לחפש את:</string>
-
-    <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">הפעם לחפש ב:</string>
 
     <!-- Home onboarding -->
@@ -303,6 +298,9 @@
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_default_browser_title">הגדרת %s כדפדפן ברירת המחדל שלך</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">הגדרת Firefox כדפדפן ברירת המחדל שלך</string>
     <!-- Text for the button to set firefox as default browser on the device -->
     <string name="juno_onboarding_default_browser_positive_button">הגדרה כדפדפן ברירת המחדל</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -318,6 +316,9 @@
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_enable_notifications_title">התרעות עוזרות לך לעשות יותר עם %s</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">התרעות עוזרות לך לעשות יותר עם Firefox</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button">הפעלת התרעות</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -380,8 +381,6 @@
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">מנסה להתחבר באופן אוטומטי לאתרים באמצעות פרוטוקול ההצפנה HTTPS לצורך אבטחה מוגברת.</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">פעיל</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">כבוי</string>
     <!-- Summary of https only preference if https only is set to on in all tabs -->
@@ -691,15 +690,9 @@
     <!-- Dialog button text for canceling open all tabs -->
     <string name="open_all_warning_cancel">ביטול</string>
 
-    <!-- Text to show users they have one site in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_site" moz:RemovedIn="111" tools:ignore="UnusedResources">אתר אחד</string>
     <!-- Text to show users they have one page in the history group section of the History fragment.
     %d is a placeholder for the number of pages in the group. -->
     <string name="history_search_group_site_1">דף אחד (%d)</string>
-    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_sites" moz:RemovedIn="111" tools:ignore="UnusedResources">%d אתרים</string>
 
     <!-- Text to show users they have multiple pages in the history group section of the History fragment.
     %d is a placeholder for the number of pages in the group. -->
@@ -1033,8 +1026,6 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">חריגות</string>
 
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">פעילה</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">כבויה</string>
 
@@ -1199,11 +1190,11 @@
     <!-- Survey -->
     <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
     The app name is in the text, due to limitations with localizing Nimbus experiments -->
-    <string name="nimbus_survey_message_text" tools:ignore="UnusedResources">אנא עזרו לשפר את Firefox על־ידי השתתפות בסקר קצר.</string>
+    <string name="nimbus_survey_message_text">אנא עזרו לשפר את Firefox על־ידי השתתפות בסקר קצר.</string>
     <!-- Preference for taking the short survey. -->
-    <string name="preferences_take_survey" tools:ignore="UnusedResources">לקיחת סקר</string>
+    <string name="preferences_take_survey">לקיחת סקר</string>
     <!-- Preference for not taking the short survey. -->
-    <string name="preferences_not_take_survey" tools:ignore="UnusedResources">לא תודה</string>
+    <string name="preferences_not_take_survey">לא תודה</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
