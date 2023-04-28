@@ -69,10 +69,16 @@ void HTMLDialogElement::Close(
   eventDispatcher->PostDOMEvent();
 }
 
-void HTMLDialogElement::Show() {
+void HTMLDialogElement::Show(ErrorResult& aError) {
   if (Open()) {
     return;
   }
+
+  if (IsPopoverOpen()) {
+    return aError.ThrowInvalidStateError(
+        "Dialog element is already an open popover.");
+  }
+
   SetOpen(true, IgnoreErrors());
 
   StorePreviouslyFocusedElement();
@@ -122,6 +128,11 @@ void HTMLDialogElement::ShowModal(ErrorResult& aError) {
   if (Open()) {
     return aError.ThrowInvalidStateError(
         "Dialog element already has an 'open' attribute");
+  }
+
+  if (IsPopoverOpen()) {
+    return aError.ThrowInvalidStateError(
+        "Dialog element is already an open popover.");
   }
 
   AddToTopLayerIfNeeded();
