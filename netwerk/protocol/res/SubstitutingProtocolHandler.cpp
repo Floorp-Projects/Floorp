@@ -8,6 +8,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/chrome/RegistryMessageUtils.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/ipc/URIUtils.h"
 
 #include "SubstitutingProtocolHandler.h"
 #include "SubstitutingURL.h"
@@ -141,6 +142,32 @@ nsresult SubstitutingJARURI::EqualsInternal(nsIURI* aOther,
              : mSource->EqualsExceptRef(other->mSource, aResult);
 }
 
+NS_IMETHODIMP
+SubstitutingJARURI::Mutate(nsIURIMutator** aMutator) {
+  RefPtr<SubstitutingJARURI::Mutator> mutator =
+      new SubstitutingJARURI::Mutator();
+  nsresult rv = mutator->InitFromURI(this);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  mutator.forget(aMutator);
+  return NS_OK;
+}
+
+void SubstitutingJARURI::Serialize(mozilla::ipc::URIParams& aParams) {
+  using namespace mozilla::ipc;
+
+  SubstitutingJARURIParams params;
+  URIParams source;
+  URIParams resolved;
+
+  mSource->Serialize(source);
+  mResolved->Serialize(resolved);
+  params.source() = source;
+  params.resolved() = resolved;
+  aParams = params;
+}
+
 // SubstitutingJARURI::nsISerializable
 
 NS_IMETHODIMP
@@ -181,6 +208,76 @@ SubstitutingJARURI::Write(nsIObjectOutputStream* aStream) {
   return NS_OK;
 }
 
+nsresult SubstitutingJARURI::Clone(nsIURI** aURI) {
+  RefPtr<SubstitutingJARURI> uri = new SubstitutingJARURI();
+  // SubstitutingJARURI's mSource/mResolved isn't mutable.
+  uri->mSource = mSource;
+  uri->mResolved = mResolved;
+  uri.forget(aURI);
+
+  return NS_OK;
+}
+
+nsresult SubstitutingJARURI::SetUserPass(const nsACString& aInput) {
+  // If setting same value in mSource, return NS_OK;
+  if (!mSource) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsAutoCString sourceUserPass;
+  nsresult rv = mSource->GetUserPass(sourceUserPass);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (aInput.Equals(sourceUserPass)) {
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult SubstitutingJARURI::SetPort(int32_t aPort) {
+  // If setting same value in mSource, return NS_OK;
+  if (!mSource) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  int32_t sourcePort = -1;
+  nsresult rv = mSource->GetPort(&sourcePort);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (aPort == sourcePort) {
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+bool SubstitutingJARURI::Deserialize(const mozilla::ipc::URIParams& aParams) {
+  using namespace mozilla::ipc;
+
+  if (aParams.type() != URIParams::TSubstitutingJARURIParams) {
+    NS_ERROR("Received unknown parameters from the other process!");
+    return false;
+  }
+
+  const SubstitutingJARURIParams& jarUriParams =
+      aParams.get_SubstitutingJARURIParams();
+
+  nsCOMPtr<nsIURI> source = DeserializeURI(jarUriParams.source());
+  nsresult rv;
+  mSource = do_QueryInterface(source, &rv);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+  nsCOMPtr<nsIURI> jarUri = DeserializeURI(jarUriParams.resolved());
+  mResolved = do_QueryInterface(jarUri, &rv);
+  return NS_SUCCEEDED(rv);
+}
+
+nsresult SubstitutingJARURI::ReadPrivate(nsIObjectInputStream* aStream) {
+  return Read(aStream);
+}
+
 NS_IMPL_CLASSINFO(SubstitutingJARURI, nullptr, 0, NS_SUBSTITUTINGJARURI_CID)
 
 NS_IMPL_ADDREF(SubstitutingJARURI)
@@ -201,6 +298,9 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CI_INTERFACE_GETTER(SubstitutingJARURI, nsIURI, nsIJARURI, nsIURL,
                             nsIStandardURL, nsISerializable)
+
+NS_IMPL_NSIURIMUTATOR_ISUPPORTS(SubstitutingJARURI::Mutator, nsIURISetters,
+                                nsIURIMutator, nsISerializable)
 
 SubstitutingProtocolHandler::SubstitutingProtocolHandler(const char* aScheme,
                                                          bool aEnforceFileOrJar)

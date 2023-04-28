@@ -10,6 +10,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/BlobURL.h"
 #include "mozilla/net/DefaultURI.h"
+#include "mozilla/net/SubstitutingJARURI.h"
 #include "mozilla/net/SubstitutingURL.h"
 #include "nsAboutProtocolHandler.h"
 #include "nsComponentManagerUtils.h"
@@ -99,6 +100,10 @@ already_AddRefed<nsIURI> DeserializeURI(const URIParams& aParams) {
 
     case URIParams::TNestedAboutURIParams:
       mutator = new net::nsNestedAboutURI::Mutator();
+      break;
+
+    case URIParams::TSubstitutingJARURIParams:
+      mutator = new net::SubstitutingJARURI::Mutator();
       break;
 
     default:
