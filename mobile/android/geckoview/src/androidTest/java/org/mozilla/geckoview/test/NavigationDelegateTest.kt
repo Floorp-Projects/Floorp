@@ -285,6 +285,13 @@ class NavigationDelegateTest : BaseSessionTest() {
             WebRequestError.ERROR_CATEGORY_UNKNOWN,
             WebRequestError.ERROR_UNKNOWN
         )
+        testLoadExpectError(
+            TestLoader()
+                .uri("resource://android/assets/web_extensions/")
+                .flags(GeckoSession.LOAD_FLAGS_EXTERNAL),
+            WebRequestError.ERROR_CATEGORY_UNKNOWN,
+            WebRequestError.ERROR_UNKNOWN
+        )
     }
 
     @Test fun loadInvalidUri() {
@@ -3157,5 +3164,17 @@ class NavigationDelegateTest : BaseSessionTest() {
         mainSession.goBack()
         sessionRule.waitForPageStop()
         assertThat("Title should match", lastTitle, equalTo("Hello, world!"))
+    }
+
+    @Test
+    fun loadAndroidAssets() {
+        val assetUri = "resource://android/assets/web_extensions/"
+        mainSession.loadUri(assetUri)
+
+        mainSession.waitUntilCalled(object : ProgressDelegate {
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                assertThat("Page loaded successfully", success, equalTo(true))
+            }
+        })
     }
 }
