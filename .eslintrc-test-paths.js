@@ -263,7 +263,6 @@ const extraChromeTestPaths = [
   "layout/svg/tests/",
   "layout/xul/test/",
   "toolkit/components/aboutmemory/tests/",
-  "toolkit/components/osfile/tests/mochi/",
   "toolkit/components/printing/tests/",
   "toolkit/components/url-classifier/tests/mochitest/",
   "toolkit/components/viewsource/test/",
