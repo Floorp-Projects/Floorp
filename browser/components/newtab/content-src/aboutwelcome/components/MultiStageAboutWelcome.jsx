@@ -307,7 +307,7 @@ export class WelcomeScreen extends React.PureComponent {
       }
       data = { ...data, args: url.toString() };
     }
-    return AboutWelcomeUtils.handleUserAction({ type, data });
+    AboutWelcomeUtils.handleUserAction({ type, data });
   }
 
   async handleAction(event) {
@@ -361,22 +361,10 @@ export class WelcomeScreen extends React.PureComponent {
       );
     }
 
-    let actionResult;
     if (["OPEN_URL", "SHOW_FIREFOX_ACCOUNTS"].includes(action.type)) {
-      actionResult = await this.handleOpenURL(
-        action,
-        props.flowParams,
-        props.UTMTerm
-      );
+      this.handleOpenURL(action, props.flowParams, props.UTMTerm);
     } else if (action.type) {
-      actionResult = await AboutWelcomeUtils.handleUserAction(action);
-      if (action.type === "FXA_SIGNIN_FLOW") {
-        AboutWelcomeUtils.sendActionTelemetry(
-          props.messageId,
-          actionResult ? "sign_in" : "sign_in_cancel",
-          "FXA_SIGNIN_FLOW"
-        );
-      }
+      AboutWelcomeUtils.handleUserAction(action);
       // Wait until migration closes to complete the action
       const hasMigrate = a =>
         a.type === "SHOW_MIGRATION_WIZARD" ||
@@ -411,17 +399,11 @@ export class WelcomeScreen extends React.PureComponent {
       );
     }
 
-    // `navigate` and `dismiss` can be true/false/undefined, or they can be a
-    // string "actionResult" in which case we should use the actionResult
-    // (boolean resolved by handleUserAction)
-    const shouldDoBehavior = behavior =>
-      behavior === "actionResult" ? actionResult : behavior;
-
-    if (shouldDoBehavior(action.navigate)) {
+    if (action.navigate) {
       props.navigate();
     }
 
-    if (shouldDoBehavior(action.dismiss)) {
+    if (action.dismiss) {
       window.AWFinish();
     }
   }

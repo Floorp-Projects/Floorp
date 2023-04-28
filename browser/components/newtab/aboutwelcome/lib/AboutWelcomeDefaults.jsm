@@ -37,48 +37,6 @@ const MR_ABOUT_WELCOME_DEFAULT = {
     "var(--mr-welcome-background-color) var(--mr-welcome-background-gradient)",
   screens: [
     {
-      id: "AW_WELCOME_BACK",
-      targeting: "isDeviceMigration",
-      content: {
-        position: "split",
-        split_narrow_bkg_position: "-100px",
-        image_alt_text: {
-          string_id: "onboarding-device-migration-image-alt",
-        },
-        background:
-          "url('chrome://activity-stream/content/data/content/assets/device-migration.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
-        progress_bar: true,
-        logo: {},
-        title: {
-          string_id: "onboarding-device-migration-title",
-        },
-        subtitle: {
-          string_id: "onboarding-device-migration-subtitle",
-        },
-        primary_button: {
-          label: {
-            string_id: "onboarding-device-migration-primary-button-label",
-          },
-          action: {
-            type: "FXA_SIGNIN_FLOW",
-            navigate: "actionResult",
-            data: {
-              entrypoint: "fx-device-migration-onboarding",
-            },
-          },
-        },
-        secondary_button: {
-          label: {
-            string_id: "mr2022-onboarding-secondary-skip-button-label",
-          },
-          action: {
-            navigate: true,
-          },
-          has_arrow_icon: true,
-        },
-      },
-    },
-    {
       id: "AW_EASY_SETUP",
       targeting:
         "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin",
