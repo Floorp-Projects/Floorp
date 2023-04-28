@@ -39,7 +39,7 @@ var _document$querySelect;
 const page = ((_document$querySelect = document.querySelector("#multi-stage-message-root.onboardingContainer[data-page]")) === null || _document$querySelect === void 0 ? void 0 : _document$querySelect.dataset.page) || document.location.href;
 const AboutWelcomeUtils = {
   handleUserAction(action) {
-    return window.AWSendToParent("SPECIAL_ACTION", action);
+    window.AWSendToParent("SPECIAL_ACTION", action);
   },
 
   sendImpressionTelemetry(messageId, context) {
@@ -475,7 +475,7 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
       };
     }
 
-    return _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.handleUserAction({
+    _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.handleUserAction({
       type,
       data
     });
@@ -531,17 +531,10 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
       _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendActionTelemetry(props.messageId, props.activeMultiSelect, "SELECT_CHECKBOX");
     }
 
-    let actionResult;
-
     if (["OPEN_URL", "SHOW_FIREFOX_ACCOUNTS"].includes(action.type)) {
-      actionResult = await this.handleOpenURL(action, props.flowParams, props.UTMTerm);
+      this.handleOpenURL(action, props.flowParams, props.UTMTerm);
     } else if (action.type) {
-      actionResult = await _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.handleUserAction(action);
-
-      if (action.type === "FXA_SIGNIN_FLOW") {
-        _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendActionTelemetry(props.messageId, actionResult ? "sign_in" : "sign_in_cancel", "FXA_SIGNIN_FLOW");
-      } // Wait until migration closes to complete the action
-
+      _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.handleUserAction(action); // Wait until migration closes to complete the action
 
       const hasMigrate = a => {
         var _a$data, _a$data$actions;
@@ -571,18 +564,13 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
 
     if (action.isDynamic) {
       props.setScreens(await window.AWEvaluateScreenTargeting(props.defaultScreens));
-    } // `navigate` and `dismiss` can be true/false/undefined, or they can be a
-    // string "actionResult" in which case we should use the actionResult
-    // (boolean resolved by handleUserAction)
+    }
 
-
-    const shouldDoBehavior = behavior => behavior === "actionResult" ? actionResult : behavior;
-
-    if (shouldDoBehavior(action.navigate)) {
+    if (action.navigate) {
       props.navigate();
     }
 
-    if (shouldDoBehavior(action.dismiss)) {
+    if (action.dismiss) {
       window.AWFinish();
     }
   }
