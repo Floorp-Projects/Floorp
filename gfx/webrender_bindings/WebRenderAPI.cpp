@@ -550,6 +550,13 @@ void WebRenderAPI::HandleWrTransactionEvents(RemoteTextureWaitType aType) {
           WaitRemoteTextureReady(front.RemoteTextureInfoList());
         } else {
           MOZ_ASSERT(aType == RemoteTextureWaitType::FlushWithoutWait);
+          auto* list = front.RemoteTextureInfoList();
+          while (!list->mList.empty()) {
+            auto& front = list->mList.front();
+            layers::RemoteTextureMap::Get()->SuppressRemoteTextureReadyCheck(
+                front.mTextureId, front.mForPid);
+            list->mList.pop();
+          }
         }
         if (!isReady) {
           return;
