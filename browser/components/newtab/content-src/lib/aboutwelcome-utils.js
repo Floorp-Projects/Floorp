@@ -12,7 +12,7 @@ const page =
 
 export const AboutWelcomeUtils = {
   handleUserAction(action) {
-    window.AWSendToParent("SPECIAL_ACTION", action);
+    return window.AWSendToParent("SPECIAL_ACTION", action);
   },
   sendImpressionTelemetry(messageId, context) {
     window.AWSendEventTelemetry?.({
