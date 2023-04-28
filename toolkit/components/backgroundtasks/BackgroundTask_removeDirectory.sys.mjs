@@ -88,6 +88,14 @@ function tryRemoveDir(aFile, countObj) {
 
 const FILE_CHECK_ITERATION_TIMEOUT_MS = 1000;
 
+function cleanupDirLockFile(aLock, aProfileName) {
+  let lockFile = aLock.getLockFile(aProfileName);
+  try {
+    // Try to clean up the lock file
+    lockFile.remove(false);
+  } catch (ex) {}
+}
+
 async function deleteChildDirectory(
   parentDirPath,
   childDirName,
@@ -178,6 +186,7 @@ async function deleteChildDirectory(
     if (locked) {
       dirLock.unlock();
       locked = false;
+      cleanupDirLockFile(dirLock, childDirName);
     }
   }
 }
@@ -243,6 +252,7 @@ async function cleanupOtherDirectories(
       `Deletion of folder ${entry.leafName} - success=${removedDir}`
     );
     dirLock.unlock();
+    cleanupDirLockFile(dirLock, entry.leafName);
   }
 }
 

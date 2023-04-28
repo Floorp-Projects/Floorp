@@ -7,18 +7,16 @@
 #include "nsIFile.h"
 #include "nsAppRunner.h"
 #include "mozilla/MultiInstanceLock.h"
+#include "nsLocalFile.h"
 
 namespace mozilla::net {
 
 NS_IMPL_ISUPPORTS(CachePurgeLock, nsICachePurgeLock)
 
-NS_IMETHODIMP
-CachePurgeLock::Lock(const nsACString& profileName) {
+static nsresult PrepareLockArguments(const nsACString& profileName,
+                                     nsCString& lockName,
+                                     nsString& appDirPath) {
   nsresult rv;
-  if (mLock != MULTI_INSTANCE_LOCK_HANDLE_ERROR) {
-    // Lock is already open.
-    return NS_OK;
-  }
 
   nsCOMPtr<nsIFile> appFile = mozilla::GetNormalizedAppFile(nullptr);
   if (!appFile) {
@@ -29,12 +27,53 @@ CachePurgeLock::Lock(const nsACString& profileName) {
   rv = appFile->GetParent(getter_AddRefs(appDirFile));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoString appDirPath;
   rv = appDirFile->GetPath(appDirPath);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoCString lockName(profileName);
+  lockName = profileName;
   lockName.Append("-cachePurge");
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CachePurgeLock::GetLockFile(const nsACString& profileName, nsIFile** aResult) {
+  nsresult rv;
+  nsCString lockName;
+  nsString appDirPath;
+  rv = PrepareLockArguments(profileName, lockName, appDirPath);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCString filePath;
+  if (!GetMultiInstanceLockFileName(lockName.get(), appDirPath.get(),
+                                    filePath)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsCOMPtr<nsIFile> lockFile = new nsLocalFile();
+  rv = lockFile->InitWithNativePath(filePath);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  lockFile.forget(aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CachePurgeLock::Lock(const nsACString& profileName) {
+  nsresult rv;
+  if (mLock != MULTI_INSTANCE_LOCK_HANDLE_ERROR) {
+    // Lock is already open.
+    return NS_OK;
+  }
+
+  nsCString lockName;
+  nsString appDirPath;
+  rv = PrepareLockArguments(profileName, lockName, appDirPath);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   mLock = mozilla::OpenMultiInstanceLock(lockName.get(), appDirPath.get());
   if (mLock == MULTI_INSTANCE_LOCK_HANDLE_ERROR) {
