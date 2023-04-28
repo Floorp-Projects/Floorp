@@ -12,6 +12,7 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assume
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.focus.activity.robots.homeScreen
@@ -117,6 +118,7 @@ class SitePermissionsTest {
     }
 
     // Tests the autoplay setting: Allow audio and video on a video with autoplay attribute and not muted
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1830312")
     @SmokeTest
     @Test
     fun allowAudioVideoAutoplayPermissionTest() {
