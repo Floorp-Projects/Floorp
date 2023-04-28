@@ -19,7 +19,7 @@ interface HTMLDialogElement : HTMLElement {
   [CEReactions, SetterThrows]
   attribute boolean open;
   attribute DOMString returnValue;
-  [CEReactions]
+  [CEReactions, Throws]
   undefined show();
   [CEReactions, Throws]
   undefined showModal();

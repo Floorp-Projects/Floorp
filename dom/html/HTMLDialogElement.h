@@ -40,7 +40,7 @@ class HTMLDialogElement final : public nsGenericHTMLElement {
   void UnbindFromTree(bool aNullParent = true) override;
 
   void Close(const mozilla::dom::Optional<nsAString>& aReturnValue);
-  void Show();
+  void Show(ErrorResult& aError);
   void ShowModal(ErrorResult& aError);
 
   bool IsInTopLayer() const;
