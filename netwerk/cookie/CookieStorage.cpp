@@ -449,12 +449,6 @@ void CookieStorage::AddCookie(nsIConsoleReportCollector* aCRC,
         // The new cookie has expired and the old one is stale. Nothing to do.
         COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
                           "cookie has already expired");
-        CookieLogging::LogMessageToConsole(
-            aCRC, aHostURI, nsIScriptError::warningFlag,
-            CONSOLE_REJECTION_CATEGORY, "CookieRejectedExpired"_ns,
-            AutoTArray<nsString, 1>{
-                NS_ConvertUTF8toUTF16(aCookie->Name()),
-            });
         return;
       }
 
@@ -519,12 +513,6 @@ void CookieStorage::AddCookie(nsIConsoleReportCollector* aCRC,
       if (aCookie->Expiry() <= currentTime) {
         COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
                           "previously stored cookie was deleted");
-        CookieLogging::LogMessageToConsole(
-            aCRC, aHostURI, nsIScriptError::warningFlag,
-            CONSOLE_REJECTION_CATEGORY, "CookieRejectedExpired"_ns,
-            AutoTArray<nsString, 1>{
-                NS_ConvertUTF8toUTF16(aCookie->Name()),
-            });
         NotifyChanged(oldCookie, u"deleted", oldCookieIsSession);
         return;
       }
@@ -538,12 +526,6 @@ void CookieStorage::AddCookie(nsIConsoleReportCollector* aCRC,
     if (aCookie->Expiry() <= currentTime) {
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
                         "cookie has already expired");
-      CookieLogging::LogMessageToConsole(
-          aCRC, aHostURI, nsIScriptError::warningFlag,
-          CONSOLE_REJECTION_CATEGORY, "CookieRejectedExpired"_ns,
-          AutoTArray<nsString, 1>{
-              NS_ConvertUTF8toUTF16(aCookie->Name()),
-          });
       return;
     }
 
