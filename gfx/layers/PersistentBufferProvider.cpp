@@ -228,8 +228,9 @@ PersistentBufferProviderShared::~PersistentBufferProviderShared() {
 }
 
 bool PersistentBufferProviderShared::SetKnowsCompositor(
-    KnowsCompositor* aKnowsCompositor) {
+    KnowsCompositor* aKnowsCompositor, bool& aOutLostFrontTexture) {
   MOZ_ASSERT(aKnowsCompositor);
+  MOZ_ASSERT(!aOutLostFrontTexture);
   if (!aKnowsCompositor) {
     return false;
   }
@@ -257,7 +258,9 @@ bool PersistentBufferProviderShared::SetKnowsCompositor(
     // Get rid of everything else
     Destroy();
 
-    if (prevTexture && prevTexture->IsValid()) {
+    if (prevTexture && !prevTexture->IsValid()) {
+      aOutLostFrontTexture = true;
+    } else if (prevTexture && prevTexture->IsValid()) {
       RefPtr<TextureClient> newTexture =
           CreateTexture(aKnowsCompositor, mFormat, mSize, mWillReadFrequently);
 
