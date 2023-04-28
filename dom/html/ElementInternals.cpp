@@ -411,9 +411,11 @@ void ElementInternals::Unlink() {
   if (mForm) {
     // Don't notify, since we're being destroyed in any case.
     ClearForm(true, true);
+    MOZ_DIAGNOSTIC_ASSERT(!mForm);
   }
   if (mFieldSet) {
     mFieldSet->RemoveElement(mTarget);
+    mFieldSet = nullptr;
   }
 }
 

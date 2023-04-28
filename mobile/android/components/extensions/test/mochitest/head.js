@@ -13,25 +13,29 @@ var TEST_ICON_ARRAYBUFFER = Uint8Array.from(atob(TEST_ICON_DATA), byte =>
   byte.charCodeAt(0)
 ).buffer;
 
-async function assertPersistentListeners(extension, expected) {
-  const EVENTS = ["onActivated", "onCreated", "onRemoved", "onUpdated"];
+async function assertPersistentListeners(
+  extWrapper,
+  apiNs,
+  apiEvents,
+  expected
+) {
   const stringErr = await SpecialPowers.spawnChrome(
-    [extension.id, EVENTS, expected],
-    async (id, EVENTS, expectedParam) => {
+    [extWrapper.id, apiNs, apiEvents, expected],
+    async (id, apiNs, apiEvents, expected) => {
       try {
         const { ExtensionTestCommon } = ChromeUtils.import(
           "resource://testing-common/ExtensionTestCommon.jsm"
         );
         const ext = { id };
-        for (const event of EVENTS) {
+        for (const event of apiEvents) {
           ExtensionTestCommon.testAssertions.assertPersistentListeners(
             ext,
-            "tabs",
+            apiNs,
             event,
             {
-              primed: expectedParam.primed,
-              persisted: expectedParam.persisted,
-              primedListenersCount: expectedParam.primedListenersCount,
+              primed: expected.primed,
+              persisted: expected.persisted,
+              primedListenersCount: expected.primedListenersCount,
             }
           );
         }

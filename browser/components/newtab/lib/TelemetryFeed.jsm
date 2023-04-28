@@ -1301,7 +1301,8 @@ class TelemetryFeed {
   }
 
   _beginObservingNewtabPingPrefs() {
-    const BRANCH = "browser.newtabpage.activity-stream.";
+    const TOP_SITES_BLOCKED_SPONSORS_PREF = "browser.topsites.blockedSponsors";
+    const ACTIVITY_STREAM_PREF_BRANCH = "browser.newtabpage.activity-stream.";
     const NEWTAB_PING_PREFS = {
       showSearch: Glean.newtabSearch.enabled,
       "feeds.topsites": Glean.topsites.enabled,
@@ -1311,7 +1312,7 @@ class TelemetryFeed {
       topSitesRows: Glean.topsites.rows,
     };
     const setNewtabPrefMetrics = fullPrefName => {
-      const pref = fullPrefName.slice(BRANCH.length);
+      const pref = fullPrefName.slice(ACTIVITY_STREAM_PREF_BRANCH.length);
       if (!Object.hasOwn(NEWTAB_PING_PREFS, pref)) {
         return;
       }
@@ -1326,14 +1327,33 @@ class TelemetryFeed {
           break;
       }
     };
-    Services.prefs.addObserver(BRANCH, (subject, topic, data) =>
-      setNewtabPrefMetrics(data)
+    Services.prefs.addObserver(
+      ACTIVITY_STREAM_PREF_BRANCH,
+      (subject, topic, data) => setNewtabPrefMetrics(data)
     );
     for (const pref of Object.keys(NEWTAB_PING_PREFS)) {
-      const fullPrefName = BRANCH + pref;
+      const fullPrefName = ACTIVITY_STREAM_PREF_BRANCH + pref;
       setNewtabPrefMetrics(fullPrefName);
     }
     Glean.pocket.isSignedIn.set(lazy.pktApi.isUserLoggedIn());
+
+    const setBlockedSponsorsMetrics = () => {
+      let blocklist;
+      try {
+        blocklist = JSON.parse(
+          Services.prefs.getStringPref(TOP_SITES_BLOCKED_SPONSORS_PREF, "[]")
+        );
+      } catch (e) {}
+      if (blocklist) {
+        Glean.newtab.blockedSponsors.set(blocklist);
+      }
+    };
+
+    Services.prefs.addObserver(
+      TOP_SITES_BLOCKED_SPONSORS_PREF,
+      setBlockedSponsorsMetrics
+    );
+    setBlockedSponsorsMetrics();
   }
 
   uninit() {

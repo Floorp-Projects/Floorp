@@ -581,4 +581,63 @@ add_task(async function test_click_non_ad_with_no_ads() {
   ]);
 
   BrowserTestUtils.removeTab(tab);
+
+  // Reset state for other tests.
+  SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
+  await waitForIdle();
+});
+
+// This test clicks a link that has apostrophes in the both the path and list
+// of query parameters, and uses search telemetry with no nonAdsRegexps defined,
+// which will force us to cache every non ads link in a map and pass it back to
+// the parent.
+// If this test fails, it means we're doing the conversion wrong, because when
+// we observe the clicked URL in the parent process, it should look exactly the
+// same as how it was saved in the hrefToComponent map.
+add_task(async function test_click_link_with_special_characters_in_path() {
+  SearchSERPTelemetry.overrideSearchTelemetryForTests(
+    TEST_PROVIDER_INFO_NO_NON_ADS_REGEXP
+  );
+  await waitForIdle();
+
+  resetTelemetry();
+  let url = getSERPUrl("searchTelemetryAd_components_text.html");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  await waitForPageWithAdImpressions();
+
+  let pageLoadPromise = BrowserTestUtils.waitForLocationChange(
+    gBrowser,
+    "https://example.com/path'?hello_world&foo=bar%27s"
+  );
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+    content.document
+      .getElementById("non_ads_link_with_special_characters_in_path")
+      .click();
+  });
+  await pageLoadPromise;
+
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        shopping_tab_displayed: "false",
+      },
+      engagements: [
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+          target: SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK,
+        },
+      ],
+    },
+  ]);
+
+  BrowserTestUtils.removeTab(tab);
+
+  // Reset state for other tests.
+  SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
+  await waitForIdle();
 });

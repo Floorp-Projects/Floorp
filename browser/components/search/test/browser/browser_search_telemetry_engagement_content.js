@@ -55,6 +55,21 @@ const TEST_PROVIDER_INFO = [
         nonAd: true,
       },
       {
+        type: SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
+        included: {
+          parent: {
+            selector: ".refined-search-buttons",
+          },
+          children: [
+            {
+              selector: "a",
+            },
+          ],
+        },
+        topDown: true,
+        nonAd: true,
+      },
+      {
         type: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
         default: true,
       },
@@ -429,6 +444,68 @@ add_task(async function test_content_source_reset() {
         {
           action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
           target: SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK,
+        },
+      ],
+    },
+    {
+      impression: {
+        provider: "example",
+        tagged: "false",
+        partner_code: "",
+        source: "unknown",
+        is_shopping_page: "false",
+        shopping_tab_displayed: "true",
+      },
+    },
+  ]);
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+// This test also deliberately includes an anchor with a reserved character in
+// the href that gets parsed on page load. This is because when the URL is
+// requested and observed in the network process, it is converted into a
+// percent encoded string, so we want to ensure we're categorizing the
+// component properly. This can happen with refinement buttons.
+add_task(async function test_click_refinement_button() {
+  resetTelemetry();
+  let url = getSERPUrl("searchTelemetryAd_searchbox_with_content.html");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  await waitForPageWithAdImpressions();
+
+  let targetUrl =
+    getRootDirectory(gTestPath).replace(
+      "chrome://mochitests/content",
+      "https://example.org"
+    ) + "searchTelemetryAd_searchbox_with_content.html?s=test%27s";
+
+  let pageLoadPromise = BrowserTestUtils.waitForLocationChange(
+    gBrowser,
+    targetUrl
+  );
+  await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
+    content.document.getElementById("refined-search-button").click();
+  });
+  await pageLoadPromise;
+
+  await TestUtils.waitForCondition(() => {
+    return Glean.serp.impression.testGetValue()?.length == 2;
+  }, "Should have two impressions.");
+
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        shopping_tab_displayed: "true",
+      },
+      engagements: [
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+          target: SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
         },
       ],
     },

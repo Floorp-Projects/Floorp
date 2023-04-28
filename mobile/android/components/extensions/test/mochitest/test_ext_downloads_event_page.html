@@ -1,0 +1,102 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Downloads Events Test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(async function test_downloads_event_page() {
+  const apiEvents = ["onChanged"];
+  const apiNs = "downloads";
+  const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+			browser_specific_settings: { gecko: { id: "eventpage@downloads" } },
+      permissions: ["downloads"],
+      background: { persistent: false },
+    },
+    background() {
+      browser.downloads.onChanged.addListener(() => {
+        browser.test.sendMessage("onChanged");
+        browser.test.notifyPass("downloads-events");
+      });
+      browser.test.sendMessage("ready");
+    },
+  });
+
+  // on startup, onChanged event listener should not be primed
+  await extension.startup();
+  info("Wait for event page to be started");
+  await extension.awaitMessage("ready");
+  await assertPersistentListeners(extension, apiNs, apiEvents, { primed: false });
+
+  // when the extension is killed, onChanged event listener should be primed
+  info("Terminate event page");
+  await extension.terminateBackground();
+  await assertPersistentListeners(extension, apiNs, apiEvents, { primed: true });
+
+  // fire download-changed event and onChanged event listener should not be primed
+  info("Wait for download-changed to be emitted");
+  await SpecialPowers.spawnChrome([], async () => {
+    const { DownloadTracker } = ChromeUtils.importESModule(
+      "resource://gre/modules/GeckoViewWebExtension.sys.mjs"
+    );
+
+    const delta = {
+      filename: "test.gif",
+      id: 4,
+      mime: "image/gif",
+      totalBytes: 5,
+    };
+
+    // Mocks DownloadItem from mobile/android/components/extensions/ext-downloads.js
+    const downloadItem = {
+      byExtensionId: "download-onChanged@tests.mozilla.org",
+      byExtensionName: "Download",
+      bytesReceived: 0,
+      canResume: false,
+      danger: "safe",
+      exists: false,
+      fileSize: -1,
+      filename: "test.gif",
+      id: 4,
+      incognito: false,
+      mime: "image/gif",
+      paused: false,
+      referrer: "",
+      startTime: 1680818149350,
+      state: "in_progress",
+      totalBytes: 5,
+      url: "http://localhost:4245/assets/www/images/test.gif",
+    };
+
+    // WebExtension.DownloadDelegate has not been overridden in
+    // TestRunnerActivity (used by mochitests), so the downloads API
+    // does not actually work. In this test, we are only interested in
+    // whether or not dispatching an event would wake up the event page,
+    // so we artificially trigger a fake onChanged event to test that.
+    DownloadTracker.emit("download-changed", { delta, downloadItem });
+  });
+
+  info("Triggered download change, expecting downloads.onChanged event");
+
+  await extension.awaitMessage("ready");
+  await extension.awaitMessage("onChanged");
+  await extension.awaitFinish("downloads-events");
+  await assertPersistentListeners(extension, apiNs, apiEvents, { primed: false });
+
+  await extension.unload();
+});
+
+</script>
+
+</body>
+</html>

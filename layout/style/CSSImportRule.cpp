@@ -125,6 +125,10 @@ void CSSImportRule::GetLayerName(nsACString& aName) const {
   Servo_ImportRule_GetLayerName(mRawRule, &aName);
 }
 
+void CSSImportRule::GetSupportsText(nsACString& aSupportsText) const {
+  Servo_ImportRule_GetSupportsText(mRawRule, &aSupportsText);
+}
+
 /* virtual */
 void CSSImportRule::GetCssText(nsACString& aCssText) const {
   Servo_ImportRule_GetCssText(mRawRule, &aCssText);

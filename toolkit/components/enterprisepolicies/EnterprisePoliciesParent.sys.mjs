@@ -170,8 +170,8 @@ EnterprisePoliciesManager.prototype = {
   },
 
   _activatePolicies(unparsedPolicies) {
-    let { schema } = ChromeUtils.import(
-      "resource:///modules/policies/schema.jsm"
+    let { schema } = ChromeUtils.importESModule(
+      "resource:///modules/policies/schema.sys.mjs"
     );
 
     for (let policyName of Object.keys(unparsedPolicies)) {

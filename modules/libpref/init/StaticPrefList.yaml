@@ -7470,8 +7470,8 @@
   mirror: always  # LoadStartupJSPrefs
   do_not_use_directly: true
 
-# Jit Hints Cache - An in-process cache for the 
-# content process to accelerate repeated baseline 
+# Jit Hints Cache - An in-process cache for the
+# content process to accelerate repeated baseline
 # compilations
 - name: javascript.options.jithints
   type: bool
@@ -11112,6 +11112,13 @@
 - name: mousewheel.min_line_scroll_amount
   type: int32_t
   value: 5
+  mirror: always
+
+# Timeout period (in milliseconds) when the mouse wheel event is no longer
+# handled as the same series.
+- name: mousewheel.scroll_series_timeout
+  type: RelaxedAtomicInt32
+  value: 80
   mirror: always
 
 #---------------------------------------------------------------------------

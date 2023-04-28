@@ -684,10 +684,11 @@ wr::MaybeExternalImageId RemoteTextureMap::GetExternalImageIdOfRemoteTexture(
     // Use mLatestRenderedTextureHost for rendering. Remote texture of
     // aTextureId does not exist.
     remoteTexture = owner->mLatestRenderedTextureHost;
-
-    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-    gfxCriticalNoteOnce << "remote texture for rendering does not exist id:"
-                        << uint64_t(aTextureId);
+    if (!it->second->mReadyCheckSuppressed) {
+      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+      gfxCriticalNoteOnce << "remote texture for rendering does not exist id:"
+                          << uint64_t(aTextureId);
+    }
   } else {
     // Update mLatestRenderedTextureHost
     owner->mLatestRenderedTextureHost = remoteTexture;
@@ -920,6 +921,20 @@ bool RemoteTextureMap::WaitRemoteTextureReady(const RemoteTextureInfo& aInfo) {
   }
 
   return true;
+}
+
+void RemoteTextureMap::SuppressRemoteTextureReadyCheck(
+    const RemoteTextureId aTextureId, const base::ProcessId aForPid) {
+  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
+  MonitorAutoLock lock(mMonitor);
+
+  const auto key = std::pair(aForPid, aTextureId);
+  auto it = mRemoteTextureHostWrapperHolders.find(key);
+  if (it == mRemoteTextureHostWrapperHolders.end()) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    return;
+  }
+  it->second->mReadyCheckSuppressed = true;
 }
 
 UniquePtr<TextureData> RemoteTextureMap::GetRecycledBufferTextureData(

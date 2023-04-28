@@ -8,8 +8,8 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  schema: "resource:///modules/policies/schema.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  schema: "resource:///modules/policies/schema.sys.mjs",
 });
 
 function col(text, className) {
