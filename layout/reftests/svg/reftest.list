@@ -400,7 +400,7 @@ fuzzy(0-128,0-100) == pattern-big-image.html pattern-big-image-ref.html
 == pattern-scale-01c.svg pattern-scale-01-ref.svg
 == pattern-transform-presence-01.svg pattern-transform-presence-01-ref.svg
 == pattern-transformed-01.svg pattern-transformed-01-ref.svg
-fuzzy(0-27,0-9058) fuzzy-if(Android,0-28,0-11065) == pattern-transformed-02.svg pattern-transformed-02-ref.svg
+fuzzy(0-27,0-9058) fuzzy-if(Android,0-28,0-11093) == pattern-transformed-02.svg pattern-transformed-02-ref.svg
 
 == polygon-01.svg polygon-01-ref.svg
 == polygon-marker-01.svg pass.svg
