@@ -39,8 +39,6 @@ interface RTCRtpTransceiver {
     // undefined setCodecPreferences(sequence<RTCRtpCodecCapability> codecs);
 
     [ChromeOnly]
-    undefined setAddTrackMagic();
-    [ChromeOnly]
     undefined setDirectionInternal(RTCRtpTransceiverDirection direction);
 
     [ChromeOnly]

@@ -296,7 +296,7 @@ class PeerConnectionImpl final
 
   already_AddRefed<dom::RTCRtpTransceiver> AddTransceiver(
       const dom::RTCRtpTransceiverInit& aInit, const nsAString& aKind,
-      dom::MediaStreamTrack* aSendTrack, ErrorResult& aRv);
+      dom::MediaStreamTrack* aSendTrack, bool aAddTrackMagic, ErrorResult& aRv);
 
   bool CheckNegotiationNeeded();
   bool CreatedSender(const dom::RTCRtpSender& aSender) const;
@@ -614,7 +614,7 @@ class PeerConnectionImpl final
                                     std::string* transportId,
                                     bool* client) const;
 
-  nsresult AddRtpTransceiverToJsepSession(RefPtr<JsepTransceiver>& transceiver);
+  nsresult AddRtpTransceiverToJsepSession(JsepTransceiver& transceiver);
 
   void RecordIceRestartStatistics(JsepSdpType type);
 
@@ -825,7 +825,7 @@ class PeerConnectionImpl final
   already_AddRefed<dom::RTCRtpTransceiver> CreateTransceiver(
       const std::string& aId, bool aIsVideo,
       const dom::RTCRtpTransceiverInit& aInit,
-      dom::MediaStreamTrack* aSendTrack, ErrorResult& aRv);
+      dom::MediaStreamTrack* aSendTrack, bool aAddTrackMagic, ErrorResult& aRv);
 
   std::string GetTransportIdMatchingSendTrack(
       const dom::MediaStreamTrack& aTrack) const;

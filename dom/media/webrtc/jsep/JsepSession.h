@@ -113,8 +113,8 @@ class JsepSession {
   void ForEachCodec(UnaryFunction& function) {
     std::for_each(Codecs().begin(), Codecs().end(), function);
     for (auto& transceiver : GetTransceivers()) {
-      transceiver->mSendTrack.ForEachCodec(function);
-      transceiver->mRecvTrack.ForEachCodec(function);
+      transceiver.mSendTrack.ForEachCodec(function);
+      transceiver.mRecvTrack.ForEachCodec(function);
     }
   }
 
@@ -122,24 +122,63 @@ class JsepSession {
   void SortCodecs(BinaryPredicate& sorter) {
     std::stable_sort(Codecs().begin(), Codecs().end(), sorter);
     for (auto& transceiver : GetTransceivers()) {
-      transceiver->mSendTrack.SortCodecs(sorter);
-      transceiver->mRecvTrack.SortCodecs(sorter);
+      transceiver.mSendTrack.SortCodecs(sorter);
+      transceiver.mRecvTrack.SortCodecs(sorter);
     }
   }
 
-  // Returns transceivers in the order they were added.
-  virtual const std::vector<RefPtr<JsepTransceiver>>& GetTransceivers()
-      const = 0;
-  virtual std::vector<RefPtr<JsepTransceiver>>& GetTransceivers() = 0;
-  RefPtr<JsepTransceiver> GetTransceiver(const std::string& aId) const {
-    for (const auto& transceiver : GetTransceivers()) {
-      if (transceiver->GetUuid() == aId) {
-        return transceiver;
+  // Would be nice to have this return a Maybe containing the return of
+  // |aFunction|, but Maybe cannot contain a void.
+  template <typename UnaryFunction>
+  bool ApplyToTransceiver(const std::string& aId, UnaryFunction&& aFunction) {
+    for (auto& transceiver : GetTransceivers()) {
+      if (transceiver.GetUuid() == aId) {
+        std::forward<UnaryFunction>(aFunction)(transceiver);
+        return true;
       }
     }
-    return nullptr;
+    return false;
   }
-  virtual void AddTransceiver(RefPtr<JsepTransceiver> transceiver) = 0;
+
+  template <typename UnaryFunction>
+  void ForEachTransceiver(UnaryFunction&& aFunction) {
+    for (auto& transceiver : GetTransceivers()) {
+      std::forward<UnaryFunction>(aFunction)(transceiver);
+    }
+  }
+
+  template <typename UnaryFunction>
+  void ForEachTransceiver(UnaryFunction&& aFunction) const {
+    for (const auto& transceiver : GetTransceivers()) {
+      std::forward<UnaryFunction>(aFunction)(transceiver);
+    }
+  }
+
+  Maybe<const JsepTransceiver> GetTransceiver(const std::string& aId) const {
+    for (const auto& transceiver : GetTransceivers()) {
+      if (transceiver.GetUuid() == aId) {
+        return Some(transceiver);
+      }
+    }
+    return Nothing();
+  }
+
+  template <typename MatchFunction>
+  Maybe<const JsepTransceiver> FindTransceiver(MatchFunction&& aFunc) const {
+    for (const auto& transceiver : GetTransceivers()) {
+      if (std::forward<MatchFunction>(aFunc)(transceiver)) {
+        return Some(transceiver);
+      }
+    }
+    return Nothing();
+  }
+
+  bool SetTransceiver(const JsepTransceiver& aNew) {
+    return ApplyToTransceiver(aNew.GetUuid(),
+                              [aNew](JsepTransceiver& aOld) { aOld = aNew; });
+  }
+
+  virtual void AddTransceiver(const JsepTransceiver& transceiver) = 0;
 
   class Result {
    public:
@@ -211,14 +250,14 @@ class JsepSession {
     memset(sending, 0, sizeof(sending));
 
     for (const auto& transceiver : GetTransceivers()) {
-      if (transceiver->mRecvTrack.GetActive() ||
-          transceiver->GetMediaType() == SdpMediaSection::kApplication) {
-        receiving[transceiver->mRecvTrack.GetMediaType()]++;
+      if (transceiver.mRecvTrack.GetActive() ||
+          transceiver.GetMediaType() == SdpMediaSection::kApplication) {
+        receiving[transceiver.mRecvTrack.GetMediaType()]++;
       }
 
-      if (transceiver->mSendTrack.GetActive() ||
-          transceiver->GetMediaType() == SdpMediaSection::kApplication) {
-        sending[transceiver->mSendTrack.GetMediaType()]++;
+      if (transceiver.mSendTrack.GetActive() ||
+          transceiver.GetMediaType() == SdpMediaSection::kApplication) {
+        sending[transceiver.mSendTrack.GetMediaType()]++;
       }
     }
   }
@@ -230,6 +269,11 @@ class JsepSession {
   void SetRtxIsAllowed(bool aRtxIsAllowed) { mRtxIsAllowed = aRtxIsAllowed; }
 
  protected:
+  friend class JsepSessionTest;
+  // Returns transceivers in the order they were added.
+  virtual std::vector<JsepTransceiver>& GetTransceivers() = 0;
+  virtual const std::vector<JsepTransceiver>& GetTransceivers() const = 0;
+
   const std::string mName;
   JsepSignalingState mState;
   uint32_t mNegotiations;

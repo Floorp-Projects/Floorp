@@ -13,8 +13,6 @@
 #include "jsep/JsepTransport.h"
 #include "jsep/JsepTrack.h"
 
-#include <mozilla/OwningNonNull.h>
-#include "nsISupportsImpl.h"
 #include "nsError.h"
 
 namespace mozilla {
@@ -27,9 +25,6 @@ class JsepUuidGenerator {
 };
 
 class JsepTransceiver {
- private:
-  ~JsepTransceiver(){};
-
  public:
   explicit JsepTransceiver(SdpMediaSection::MediaType type,
                            JsepUuidGenerator& aUuidGen,
@@ -51,24 +46,12 @@ class JsepTransceiver {
     }
   }
 
-  // Can't use default copy c'tor because of the refcount members. Ugh.
-  JsepTransceiver(const JsepTransceiver& orig)
-      : mJsDirection(orig.mJsDirection),
-        mSendTrack(orig.mSendTrack),
-        mRecvTrack(orig.mRecvTrack),
-        mTransport(orig.mTransport),
-        mUuid(orig.mUuid),
-        mMid(orig.mMid),
-        mLevel(orig.mLevel),
-        mBundleLevel(orig.mBundleLevel),
-        mAddTrackMagic(orig.mAddTrackMagic),
-        mOnlyExistsBecauseOfSetRemote(orig.mOnlyExistsBecauseOfSetRemote),
-        mStopped(orig.mStopped),
-        mRemoved(orig.mRemoved),
-        mNegotiated(orig.mNegotiated),
-        mCanRecycle(orig.mCanRecycle) {}
+  JsepTransceiver(const JsepTransceiver& orig) = default;
+  JsepTransceiver(JsepTransceiver&& orig) = default;
+  JsepTransceiver& operator=(const JsepTransceiver& aRhs) = default;
+  JsepTransceiver& operator=(JsepTransceiver&& aRhs) = default;
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(JsepTransceiver);
+  ~JsepTransceiver() = default;
 
   void Rollback(JsepTransceiver& oldTransceiver, bool aRemote) {
     MOZ_ASSERT(oldTransceiver.GetMediaType() == GetMediaType());
@@ -130,6 +113,7 @@ class JsepTransceiver {
   void RestartDatachannelTransceiver() {
     MOZ_RELEASE_ASSERT(GetMediaType() == SdpMediaSection::kApplication);
     mStopped = false;
+    mCanRecycle = false;
   }
 
   void SetRemoved() { mRemoved = true; }

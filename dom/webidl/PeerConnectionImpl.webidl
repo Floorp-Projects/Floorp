@@ -45,7 +45,8 @@ interface PeerConnectionImpl  {
   [Throws]
   RTCRtpTransceiver addTransceiver(RTCRtpTransceiverInit init,
                                    DOMString kind,
-                                   MediaStreamTrack? sendTrack);
+                                   MediaStreamTrack? sendTrack,
+                                   boolean addTrackMagic);
   sequence<RTCRtpTransceiver> getTransceivers();
 
   [Throws]
