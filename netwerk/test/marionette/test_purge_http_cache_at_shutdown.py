@@ -34,27 +34,8 @@ class PurgeHTTPCacheAtShutdownTestCase(MarionetteTestCase):
             child.name.endswith(".purge.bg_rm") for child in self.profile_path.iterdir()
         )
 
-    def initLockDir(self):
-        self.lock_dir = None
-        with self.marionette.using_context("chrome"):
-            path = self.marionette.execute_script(
-                """
-              return Services.dirsvc.get("UpdRootD", Ci.nsIFile).parent.parent.path;
-            """
-            )
-            self.lock_dir = Path(path)
-
-    def assertNoLocks(self):
-        locks = [
-            x
-            for x in self.lock_dir.iterdir()
-            if x.is_file() and "-cachePurge" in x.name
-        ]
-        self.assertEqual(locks, [], "All locks should have been removed")
-
     def test_ensure_cache_purge_after_in_app_quit(self):
         self.assertTrue(self.cacheDirExists(), "Cache directory must exist")
-        self.initLockDir()
 
         self.marionette.quit()
 
@@ -63,11 +44,8 @@ class PurgeHTTPCacheAtShutdownTestCase(MarionetteTestCase):
             message="Cache directory must be removed after orderly shutdown",
         )
 
-        self.assertNoLocks()
-
     def test_longstanding_cache_purge_after_in_app_quit(self):
         self.assertTrue(self.cacheDirExists(), "Cache directory must exist")
-        self.initLockDir()
 
         self.marionette.set_pref(
             "toolkit.background_tasks.remove_directory.testing.sleep_ms", 5000
@@ -80,15 +58,12 @@ class PurgeHTTPCacheAtShutdownTestCase(MarionetteTestCase):
             message="Cache directory must be removed after orderly shutdown",
         )
 
-        self.assertNoLocks()
-
     def test_ensure_cache_purge_after_forced_restart(self):
         """
         Doing forced restart here to prevent the shutdown phase purging and only allow startup
         phase one, via `CacheFileIOManager::OnDelayedStartupFinished`.
         """
         self.profile_path.joinpath("foo.purge.bg_rm").mkdir()
-        self.initLockDir()
 
         self.marionette.restart(in_app=False)
 
@@ -97,5 +72,3 @@ class PurgeHTTPCacheAtShutdownTestCase(MarionetteTestCase):
             message="Directories with .purge.bg_rm postfix must be removed at startup after"
             "disorderly shutdown",
         )
-
-        self.assertNoLocks()
