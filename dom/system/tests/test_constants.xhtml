@@ -16,6 +16,21 @@
 
 let worker;
 
+function test_xul() {
+  let lib;
+  isnot(null, OS.Constants.Path.libxul, "libxulpath is defined");
+  try {
+    lib = ctypes.open(OS.Constants.Path.libxul);
+    lib.declare("DumpJSStack", ctypes.default_abi, ctypes.void_t);
+  } catch (x) {
+    ok(false, "Could not open libxul " + x);
+  }
+  if (lib) {
+    lib.close();
+  }
+  ok(true, "test_xul: opened libxul successfully");
+}
+
 // Test that OS.Constants.libc is defined
 function test_libc() {
   isnot(null, OS.Constants.libc, "OS.Constants.libc is defined");
@@ -43,6 +58,11 @@ function test_Win() {
   }
 }
 
+// Test that OS.Constants.Sys.DEBUG is set properly on main thread
+function test_debugBuildMainThread(isDebugBuild) {
+  is(isDebugBuild, !!OS.Constants.Sys.DEBUG, "OS.Constants.Sys.DEBUG is set properly on main thread");
+}
+
 // Test that OS.Constants.Sys.umask is set properly on main thread
 function test_umaskMainThread(umask) {
   is(umask, OS.Constants.Sys.umask,
@@ -59,9 +79,13 @@ function test() {
     getService(Ci.nsIOSFileConstantsService).
     init();
   ({ctypes} = ChromeUtils.import("resource://gre/modules/ctypes.jsm"));
+  test_xul();
   test_libc();
   test_Win();
 
+  let isDebugBuild = Cc["@mozilla.org/xpcom/debug;1"]
+                            .getService(Ci.nsIDebug2).isDebugBuild;
+  test_debugBuildMainThread(isDebugBuild);
 
   let umask = Cc["@mozilla.org/system-info;1"].
     getService(Ci.nsIPropertyBag2).
@@ -99,6 +123,7 @@ function test() {
   // pass expected values that are unavailable off-main-thread
   // to the worker
   worker.postMessage({
+    isDebugBuild: isDebugBuild,
     umask: umask
   });
   ok(true, "test_constants.xhtml: Test in progress");
