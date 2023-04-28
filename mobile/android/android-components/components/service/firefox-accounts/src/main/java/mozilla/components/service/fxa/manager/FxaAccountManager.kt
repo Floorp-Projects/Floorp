@@ -39,7 +39,7 @@ import mozilla.components.service.fxa.SyncConfig
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.asAuthFlowUrl
 import mozilla.components.service.fxa.asSyncAuthInfo
-import mozilla.components.service.fxa.intoSyncType
+import mozilla.components.service.fxa.into
 import mozilla.components.service.fxa.sync.SyncManager
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.sync.SyncStatusObserver
@@ -789,7 +789,7 @@ open class FxaAccountManager(
             DeviceSettings(
                 fxaDeviceId = account.getCurrentDeviceId()!!,
                 name = deviceConfig.name,
-                kind = deviceConfig.type.intoSyncType(),
+                kind = deviceConfig.type.into(),
             ),
         )
         return true

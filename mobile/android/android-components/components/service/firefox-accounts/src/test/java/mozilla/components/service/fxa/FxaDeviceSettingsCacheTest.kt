@@ -5,8 +5,8 @@
 package mozilla.components.service.fxa
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.appservices.sync15.DeviceType
 import mozilla.appservices.syncmanager.DeviceSettings
-import mozilla.appservices.syncmanager.DeviceType
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull

@@ -8,8 +8,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mozilla.appservices.remotetabs.ClientRemoteTabs
-import mozilla.appservices.remotetabs.DeviceType
 import mozilla.appservices.remotetabs.RemoteTab
+import mozilla.appservices.sync15.DeviceType
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock

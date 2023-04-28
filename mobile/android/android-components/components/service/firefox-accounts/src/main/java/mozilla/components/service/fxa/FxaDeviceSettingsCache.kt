@@ -5,8 +5,8 @@ package mozilla.components.service.fxa
 
 import android.content.Context
 import android.content.SharedPreferences
+import mozilla.appservices.sync15.DeviceType
 import mozilla.appservices.syncmanager.DeviceSettings
-import mozilla.appservices.syncmanager.DeviceType
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.utils.SharedPreferencesCache
 import org.json.JSONObject

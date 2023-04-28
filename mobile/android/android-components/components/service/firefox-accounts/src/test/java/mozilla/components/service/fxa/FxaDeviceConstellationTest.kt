@@ -54,9 +54,8 @@ import org.mockito.Mockito.`when`
 import mozilla.appservices.fxaclient.AccountEvent as ASAccountEvent
 import mozilla.appservices.fxaclient.Device as NativeDevice
 import mozilla.appservices.fxaclient.DevicePushSubscription as NativeDevicePushSubscription
-import mozilla.appservices.fxaclient.DeviceType as NativeDeviceType
 import mozilla.appservices.fxaclient.PersistedFirefoxAccount as NativeFirefoxAccount
-import mozilla.appservices.syncmanager.DeviceType as RustDeviceType
+import mozilla.appservices.sync15.DeviceType as RustDeviceType
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
@@ -102,7 +101,7 @@ class FxaDeviceConstellationTest {
             constellation.finalizeDevice(it, config)
             when (expectedFinalizeAction(it)) {
                 FxaDeviceConstellation.DeviceFinalizeAction.Initialize -> {
-                    verify(account).initializeDevice("test name", NativeDeviceType.TABLET, setOf(mozilla.appservices.fxaclient.DeviceCapability.SEND_TAB))
+                    verify(account).initializeDevice("test name", RustDeviceType.TABLET, setOf(mozilla.appservices.fxaclient.DeviceCapability.SEND_TAB))
                 }
                 FxaDeviceConstellation.DeviceFinalizeAction.EnsureCapabilities -> {
                     verify(account).ensureCapabilities(setOf(mozilla.appservices.fxaclient.DeviceCapability.SEND_TAB))
@@ -475,7 +474,7 @@ class FxaDeviceConstellationTest {
         return NativeDevice(
             id = id,
             displayName = "testName",
-            deviceType = NativeDeviceType.MOBILE,
+            deviceType = RustDeviceType.MOBILE,
             isCurrentDevice = current,
             lastAccessTime = 123L,
             capabilities = listOf(),
