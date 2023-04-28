@@ -95,6 +95,28 @@ Example:
 
 Opens Firefox accounts sign-up page. Encodes some information that the origin was from snippets by default.
 
+### `FXA_SIGNIN_FLOW`
+
+* args:
+
+```ts
+{
+  // a valid `where` value for `openUILinkIn`. Only `tab` and `window` have been tested, and `tabshifted`
+  // is unlikely to do anything different from `tab`.
+  where?: "tab" | "window" = "tab",
+
+  entrypoint?: string // URL search params string to pass along to FxA. Defaults to "activity-stream-firstrun".
+  extraParams?: object // Extra parameters to pass along to FxA. See FxAccountsConfig.promiseConnectAccountURI.
+}
+```
+
+Opens a Firefox accounts sign-up or sign-in page, and does the work of closing the resulting tab or window once
+sign-in completes. Returns a Promise that resolves to `true` if sign-in succeeded, or to `false` if the sign-in
+window or tab closed before sign-in could be completed.
+
+Encodes some information that the origin was from about:welcome by default.
+
+
 ### `SHOW_MIGRATION_WIZARD`
 
 * args: (none)

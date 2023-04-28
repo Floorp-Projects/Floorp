@@ -370,11 +370,11 @@ export class WelcomeScreen extends React.PureComponent {
       );
     } else if (action.type) {
       actionResult = await AboutWelcomeUtils.handleUserAction(action);
-      if (action.type === "FXA_SIGNIN_TAB_FLOW") {
+      if (action.type === "FXA_SIGNIN_FLOW") {
         AboutWelcomeUtils.sendActionTelemetry(
           props.messageId,
           actionResult ? "sign_in" : "sign_in_cancel",
-          "FXA_SIGNIN_TAB_FLOW"
+          "FXA_SIGNIN_FLOW"
         );
       }
       // Wait until migration closes to complete the action
