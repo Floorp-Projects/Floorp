@@ -346,3 +346,11 @@ mr2022-onboarding-gratitude-image-alt =
   .aria-label = View of a sunset through a window with a fox and a house plant on a windowsill
 mr2022-onboarding-colorways-image-alt =
   .aria-label = A hand spray paints a colorful collage of a green eye, orange shoe, red basketball, purple headphones, blue heart, and yellow crown
+
+## Device migration onboarding
+
+onboarding-device-migration-image-alt =
+  .aria-label = A fox on the screen of a laptop computer waving. The laptop has a mouse plugged into it.
+onboarding-device-migration-title = Welcome back!
+onboarding-device-migration-subtitle = Sign in to your { -fxaccount-brand-name(capitalization: "sentence") } to bring your bookmarks, passwords, and history with you on your new device.
+onboarding-device-migration-primary-button-label = Sign in

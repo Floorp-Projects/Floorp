@@ -401,7 +401,7 @@ describe("MultiStageAboutWelcome module", () => {
           UTMTerm: "you_tee_emm",
         };
         TEST_ACTION = SCREEN_PROPS.content.primary_button.action;
-        sandbox.stub(AboutWelcomeUtils, "handleUserAction");
+        sandbox.stub(AboutWelcomeUtils, "handleUserAction").resolves();
       });
       it("should handle navigate", () => {
         TEST_ACTION.navigate = true;
@@ -458,7 +458,7 @@ describe("MultiStageAboutWelcome module", () => {
           type: "SHOW_MIGRATION_WIZARD",
         });
       });
-      it("should handle SHOW_MIGRATION_WIZARD INSIDE MULTI_ACTION", () => {
+      it("should handle SHOW_MIGRATION_WIZARD INSIDE MULTI_ACTION", async () => {
         const migrationCloseStub = sandbox.stub(
           global,
           "AWWaitForMigrationClose"
@@ -512,10 +512,14 @@ describe("MultiStageAboutWelcome module", () => {
             ],
           },
         });
+        // handleUserAction returns a Promise, so let's let the microtask queue
+        // flush so that anything waiting for the handleUserAction Promise to
+        // resolve can run.
+        await new Promise(resolve => queueMicrotask(resolve));
         assert.calledOnce(migrationCloseStub);
       });
 
-      it("should handle SHOW_MIGRATION_WIZARD INSIDE NESTED MULTI_ACTION", () => {
+      it("should handle SHOW_MIGRATION_WIZARD INSIDE NESTED MULTI_ACTION", async () => {
         const migrationCloseStub = sandbox.stub(
           global,
           "AWWaitForMigrationClose"
@@ -589,6 +593,10 @@ describe("MultiStageAboutWelcome module", () => {
             ],
           },
         });
+        // handleUserAction returns a Promise, so let's let the microtask queue
+        // flush so that anything waiting for the handleUserAction Promise to
+        // resolve can run.
+        await new Promise(resolve => queueMicrotask(resolve));
         assert.calledOnce(migrationCloseStub);
       });
       it("should unset prefs from unchecked checkboxes", () => {
