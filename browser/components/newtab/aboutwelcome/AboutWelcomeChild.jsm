@@ -117,10 +117,6 @@ class AboutWelcomeChild extends JSWindowActorChild {
     Cu.exportFunction(this.AWNewScreen.bind(this), window, {
       defineAs: "AWNewScreen",
     });
-
-    Cu.exportFunction(this.AWFxASignInTabFlow.bind(this), window, {
-      defineAs: "AWFxASignInTabFlow",
-    });
   }
 
   /**
@@ -238,9 +234,10 @@ class AboutWelcomeChild extends JSWindowActorChild {
    * Send message that can be handled by AboutWelcomeParent.jsm
    * @param {string} type
    * @param {any=} data
+   * @returns {Promise<unknown>}
    */
   AWSendToParent(type, data) {
-    this.sendAsyncMessage(`AWPage:${type}`, data);
+    return this.sendQueryAndCloneForContent(`AWPage:${type}`, data);
   }
 
   AWWaitForMigrationClose() {
@@ -319,10 +316,6 @@ class AboutWelcomeChild extends JSWindowActorChild {
 
   AWNewScreen(screenId) {
     return this.wrapPromise(this.sendQuery("AWPage:NEW_SCREEN", screenId));
-  }
-
-  AWFxASignInTabFlow(data) {
-    return this.wrapPromise(this.sendQuery("AWPage:FXA_SIGNIN_TAB_FLOW", data));
   }
 
   /**

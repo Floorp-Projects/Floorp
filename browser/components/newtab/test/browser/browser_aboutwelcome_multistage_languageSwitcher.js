@@ -63,6 +63,8 @@ async function openAboutWelcome() {
     .withArgs(
       "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin"
     )
+    .resolves(false)
+    .withArgs("isDeviceMigration")
     .resolves(false);
 
   info("Opening about:welcome");
