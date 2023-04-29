@@ -197,55 +197,56 @@ __webpack_require__.r(__webpack_exports__);
  // Amount of milliseconds for all transitions to complete (including delays).
 
 const TRANSITION_OUT_TIME = 1000;
+const LANGUAGE_MISMATCH_SCREEN_ID = "AW_LANGUAGE_MISMATCH";
 const MultiStageAboutWelcome = props => {
   let {
     defaultScreens
   } = props;
   const didFilter = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(false);
+  const [didMount, setDidMount] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const [screens, setScreens] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(defaultScreens);
   const [index, setScreenIndex] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(props.startScreen);
   const [previousOrder, setPreviousOrder] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(props.startScreen - 1);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     (async () => {
-      // Evaluate targeting and update screens on load of about:welcome
-      let filteredScreens = await window.AWEvaluateScreenTargeting(defaultScreens);
+      // If we want to load index from history state, we don't want to send impression yet
+      if (!didMount) {
+        return;
+      } // On about:welcome first load, screensVisited should be empty
 
-      if (filteredScreens) {
-        setScreens(filteredScreens);
-        didFilter.current = true;
-      }
+
+      let screensVisited = didFilter.current ? screens.slice(0, index) : [];
+      let upcomingScreens = defaultScreens.filter(s => !screensVisited.find(v => v.id === s.id)) // Filter out Language Mismatch screen from upcoming
+      // screens if screens set from useLanguageSwitcher hook
+      // has filtered language screen
+      .filter(upcomingScreen => !(!screens.find(s => s.id === LANGUAGE_MISMATCH_SCREEN_ID) && upcomingScreen.id === LANGUAGE_MISMATCH_SCREEN_ID));
+      let filteredScreens = screensVisited.concat((await window.AWEvaluateScreenTargeting(upcomingScreens)) ?? upcomingScreens); // Use existing screen for the filtered screen to carry over any modification
+      // e.g. if AW_LANGUAGE_MISMATCH exists, use it from existing screens
+
+      setScreens(filteredScreens.map(filtered => screens.find(s => s.id === filtered.id) ?? filtered));
+      didFilter.current = true;
+      const screenInitials = filteredScreens.map(({
+        id
+      }) => {
+        var _id$split$;
+
+        return id === null || id === void 0 ? void 0 : (_id$split$ = id.split("_")[1]) === null || _id$split$ === void 0 ? void 0 : _id$split$[0];
+      }).join(""); // Send impression ping when respective screen first renders
+
+      filteredScreens.forEach((screen, order) => {
+        if (index === order) {
+          _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendImpressionTelemetry(`${props.message_id}_${order}_${screen.id}_${screenInitials}`);
+        }
+      }); // Remember that a new screen has loaded for browser navigation
+
+      if (props.updateHistory && index > window.history.state) {
+        window.history.pushState(index, "");
+      } // Remember the previous screen index so we can animate the transition
+
+
+      setPreviousOrder(index);
     })();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    if (!didFilter.current) {
-      return;
-    }
-
-    const screenInitials = screens.map(({
-      id
-    }) => {
-      var _id$split$;
-
-      return id === null || id === void 0 ? void 0 : (_id$split$ = id.split("_")[1]) === null || _id$split$ === void 0 ? void 0 : _id$split$[0];
-    }).join(""); // Send impression ping when respective screen first renders
-
-    screens.forEach((screen, order) => {
-      if (index === order) {
-        _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendImpressionTelemetry(`${props.message_id}_${order}_${screen.id}_${screenInitials}`);
-      }
-    });
-  }, [index, screens]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    // Remember that a new screen has loaded for browser navigation
-    if (props.updateHistory && index > window.history.state) {
-      window.history.pushState(index, "");
-    } // Remember the previous screen index so we can animate the transition
-
-
-    setPreviousOrder(index);
-  }, [index]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [index, didMount]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [flowParams, setFlowParams] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
   const {
@@ -287,6 +288,11 @@ const MultiStageAboutWelcome = props => {
   };
 
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    // When about:welcome loads (on refresh or pressing back button
+    // from about:home), ensure history state usEffect runs before
+    // useEffect hook that send impression telemetry
+    setDidMount(true);
+
     if (props.updateHistory) {
       // Switch to the screen tracked in state (null for initial state)
       // or last screen index if a user navigates by pressing back
@@ -377,9 +383,7 @@ const MultiStageAboutWelcome = props => {
       setActiveMultiSelect: setActiveMultiSelect,
       autoAdvance: screen.auto_advance,
       negotiatedLanguage: negotiatedLanguage,
-      langPackInstallPhase: langPackInstallPhase,
-      defaultScreens: defaultScreens,
-      setScreens: setScreens
+      langPackInstallPhase: langPackInstallPhase
     }) : null;
   })));
 };
@@ -566,11 +570,6 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
 
     if (action.persistActiveTheme) {
       this.props.setInitialTheme(this.props.activeTheme);
-    } // Set screens based on dynamic targeting evaluations
-
-
-    if (action.isDynamic) {
-      props.setScreens(await window.AWEvaluateScreenTargeting(props.defaultScreens));
     } // `navigate` and `dismiss` can be true/false/undefined, or they can be a
     // string "actionResult" in which case we should use the actionResult
     // (boolean resolved by handleUserAction)
