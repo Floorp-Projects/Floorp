@@ -600,26 +600,10 @@ to a match expression.
 """
 
 [[audits.cssparser-macros]]
-who = "Tiaan Louw <tlouw@mozilla.com>"
+who = "Emilio Cobos Álvarez <emilio@crisal.io>"
 criteria = "safe-to-deploy"
-delta = "0.6.0 -> 0.6.0@git:45bc47e2bcb846f1efb5aea156be5fe7d18624bf"
-notes = "Latest version of changes to the cssparser pulled from master branch."
-
-[[audits.cssparser-macros]]
-who = "Tiaan Louw <tlouw@mozilla.com>"
-criteria = "safe-to-deploy"
-delta = "0.6.0 -> 0.6.0@git:722b30d2f1634714befab967ecae627813fa4cf0"
+delta = "0.6.0 -> 0.6.0@git:3e1bd05139cb7174ace395d498ca7128feb8f69d"
 notes = "We are pulling this package from a non crates.io source until the changes are published. No changes were made to the code."
-
-[[audits.cssparser-macros]]
-who = "Tiaan Louw <tlouw@mozilla.com>"
-criteria = "safe-to-deploy"
-delta = "0.6.0 -> 0.6.0@git:b196a164dcbb317016d4aa6c58c13147e6045ebb"
-
-[[audits.cssparser-macros]]
-who = "Tiaan Louw <tlouw@mozilla.com>"
-criteria = "safe-to-deploy"
-delta = "0.6.0 -> 0.6.0@git:d3670a89bae26ba3a8db4758eb7976616113987d"
 
 [[audits.cstr]]
 who = "Emilio Cobos Álvarez <emilio@crisal.io>"

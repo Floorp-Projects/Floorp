@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// Allow text like <color> in docs.
+#![allow(rustdoc::invalid_html_tags)]
+
 use std::f32::consts::PI;
 use std::fmt;
 use std::str::FromStr;
@@ -23,7 +26,7 @@ where
     }
 }
 
-/// https://drafts.csswg.org/css-color-4/#serializing-alpha-values
+/// <https://drafts.csswg.org/css-color-4/#serializing-alpha-values>
 #[inline]
 fn serialize_alpha(
     dest: &mut impl fmt::Write,
@@ -53,14 +56,13 @@ fn serialize_alpha(
 
 // Guaratees hue in [0..360)
 fn normalize_hue(hue: f32) -> f32 {
-    // https://drafts.csswg.org/css-values/#angles
+    // <https://drafts.csswg.org/css-values/#angles>
     // Subtract an integer before rounding, to avoid some rounding errors:
     hue - 360.0 * (hue / 360.0).floor()
 }
 
 /// A color with red, green, blue, and alpha components, in a byte each.
 #[derive(Clone, Copy, PartialEq, Debug)]
-#[repr(C)]
 pub struct RGBA {
     /// The red component.
     pub red: Option<u8>,
@@ -150,6 +152,7 @@ impl ToCss for RGBA {
     }
 }
 
+/// Color specified by hue, saturation and lightness components.
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Hsl {
     /// The hue component.
@@ -163,6 +166,7 @@ pub struct Hsl {
 }
 
 impl Hsl {
+    /// Construct a new HSL color from it's components.
     pub fn new(
         hue: Option<f32>,
         saturation: Option<f32>,
@@ -215,6 +219,7 @@ impl<'de> Deserialize<'de> for Hsl {
     }
 }
 
+/// Color specified by hue, whiteness and blackness components.
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Hwb {
     /// The hue component.
@@ -228,6 +233,7 @@ pub struct Hwb {
 }
 
 impl Hwb {
+    /// Construct a new HWB color from it's components.
     pub fn new(
         hue: Option<f32>,
         whiteness: Option<f32>,
@@ -285,7 +291,6 @@ impl<'de> Deserialize<'de> for Hwb {
 
 /// Color specified by lightness, a- and b-axis components.
 #[derive(Clone, Copy, PartialEq, Debug)]
-#[repr(C)]
 pub struct Lab {
     /// The lightness component.
     pub lightness: Option<f32>,
@@ -299,7 +304,6 @@ pub struct Lab {
 
 /// Color specified by lightness, a- and b-axis components.
 #[derive(Clone, Copy, PartialEq, Debug)]
-#[repr(C)]
 pub struct Oklab {
     /// The lightness component.
     pub lightness: Option<f32>,
@@ -378,7 +382,6 @@ impl_lab_like!(Oklab, "oklab");
 
 /// Color specified by lightness, chroma and hue components.
 #[derive(Clone, Copy, PartialEq, Debug)]
-#[repr(C)]
 pub struct Lch {
     /// The lightness component.
     pub lightness: Option<f32>,
@@ -392,7 +395,6 @@ pub struct Lch {
 
 /// Color specified by lightness, chroma and hue components.
 #[derive(Clone, Copy, PartialEq, Debug)]
-#[repr(C)]
 pub struct Oklch {
     /// The lightness component.
     pub lightness: Option<f32>,
@@ -467,24 +469,24 @@ impl_lch_like!(Lch, "lch");
 impl_lch_like!(Oklch, "oklch");
 
 /// A Predefined color space specified in:
-/// https://drafts.csswg.org/css-color-4/#predefined
+/// <https://drafts.csswg.org/css-color-4/#predefined>
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum PredefinedColorSpace {
-    /// https://drafts.csswg.org/css-color-4/#predefined-sRGB
+    /// <https://drafts.csswg.org/css-color-4/#predefined-sRGB>
     Srgb,
-    /// https://drafts.csswg.org/css-color-4/#predefined-sRGB-linear
+    /// <https://drafts.csswg.org/css-color-4/#predefined-sRGB-linear>
     SrgbLinear,
-    /// https://drafts.csswg.org/css-color-4/#predefined-display-p3
+    /// <https://drafts.csswg.org/css-color-4/#predefined-display-p3>
     DisplayP3,
-    /// https://drafts.csswg.org/css-color-4/#predefined-a98-rgb
+    /// <https://drafts.csswg.org/css-color-4/#predefined-a98-rgb>
     A98Rgb,
-    /// https://drafts.csswg.org/css-color-4/#predefined-prophoto-rgb
+    /// <https://drafts.csswg.org/css-color-4/#predefined-prophoto-rgb>
     ProphotoRgb,
-    /// https://drafts.csswg.org/css-color-4/#predefined-rec2020
+    /// <https://drafts.csswg.org/css-color-4/#predefined-rec2020>
     Rec2020,
-    /// https://drafts.csswg.org/css-color-4/#predefined-xyz
+    /// <https://drafts.csswg.org/css-color-4/#predefined-xyz>
     XyzD50,
-    /// https://drafts.csswg.org/css-color-4/#predefined-xyz
+    /// <https://drafts.csswg.org/css-color-4/#predefined-xyz>
     XyzD65,
 }
 
@@ -533,7 +535,7 @@ impl ToCss for PredefinedColorSpace {
 }
 
 /// A color specified by the color() function.
-/// https://drafts.csswg.org/css-color-4/#color-function
+/// <https://drafts.csswg.org/css-color-4/#color-function>
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct ColorFunction {
     /// The color space for this color.
@@ -588,8 +590,13 @@ impl ToCss for ColorFunction {
     }
 }
 
-/// A <color> value.
-/// https://drafts.csswg.org/css-color-4/#color-type
+/// Describes one of the value <color> values according to the CSS
+/// specification.
+///
+/// Most components are `Option<_>`, so when the value is `None`, that component
+/// serializes to the "none" keyword.
+///
+/// <https://drafts.csswg.org/css-color-4/#color-type>
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Color {
     /// The 'currentcolor' keyword.
@@ -715,12 +722,14 @@ pub trait ColorParser<'i> {
             Token::Dimension {
                 value: v, ref unit, ..
             } => {
-                let degrees = match_ignore_ascii_case! { &*unit,
+                let degrees = match_ignore_ascii_case! { unit,
                     "deg" => v,
                     "grad" => v * 360. / 400.,
                     "rad" => v * 360. / (2. * PI),
                     "turn" => v * 360.,
-                    _ => return Err(location.new_unexpected_token_error(Token::Ident(unit.clone()))),
+                    _ => {
+                        return Err(location.new_unexpected_token_error(Token::Ident(unit.clone())))
+                    }
                 };
 
                 AngleOrNumber::Angle { degrees }
@@ -773,7 +782,7 @@ impl Color {
     /// Parse a <color> value, per CSS Color Module Level 3.
     ///
     /// FIXME(#2) Deprecated CSS2 System Colors are not supported yet.
-    pub fn parse<'i, 't>(input: &mut Parser<'i, 't>) -> Result<Color, ParseError<'i, ()>> {
+    pub fn parse<'i>(input: &mut Parser<'i, '_>) -> Result<Color, ParseError<'i, ()>> {
         parse_color_with(&DefaultColorParser, input)
     }
 }
@@ -842,7 +851,7 @@ pub trait FromParsedColor {
 
 /// Parse a color hash, without the leading '#' character.
 #[inline]
-pub fn parse_hash_color<'i, 't, O>(value: &[u8]) -> Result<O, ()>
+pub fn parse_hash_color<'i, O>(value: &[u8]) -> Result<O, ()>
 where
     O: FromParsedColor,
 {
@@ -875,8 +884,8 @@ where
     })
 }
 
-/// Parse a CSS color with the specified [`ColorComponentParser`] and return a
-/// new color value on success.
+/// Parse a CSS color using the specified [`ColorParser`] and return a new color
+/// value on success.
 pub fn parse_color_with<'i, 't, P>(
     color_parser: &P,
     input: &mut Parser<'i, 't>,
@@ -888,11 +897,11 @@ where
     let token = input.next()?;
     match *token {
         Token::Hash(ref value) | Token::IDHash(ref value) => parse_hash_color(value.as_bytes()),
-        Token::Ident(ref value) => parse_color_keyword(&*value),
+        Token::Ident(ref value) => parse_color_keyword(value),
         Token::Function(ref name) => {
             let name = name.clone();
             return input.parse_nested_block(|arguments| {
-                parse_color_function(color_parser, &*name, arguments)
+                parse_color_function(color_parser, &name, arguments)
             });
         }
         _ => Err(()),
@@ -1173,12 +1182,12 @@ fn clamp_unit_f32(val: f32) -> u8 {
     // Chrome does something similar for the alpha value, but not
     // the rgb values.
     //
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1340484
+    // See <https://bugzilla.mozilla.org/show_bug.cgi?id=1340484>
     //
     // Clamping to 256 and rounding after would let 1.0 map to 256, and
     // `256.0_f32 as u8` is undefined behavior:
     //
-    // https://github.com/rust-lang/rust/issues/10184
+    // <https://github.com/rust-lang/rust/issues/10184>
     clamp_floor_256_f32(val * 255.)
 }
 
@@ -1347,7 +1356,7 @@ where
 
 /// Parses hsl syntax.
 ///
-/// https://drafts.csswg.org/css-color/#the-hsl-notation
+/// <https://drafts.csswg.org/css-color/#the-hsl-notation>
 #[inline]
 fn parse_hsl<'i, 't, P>(
     color_parser: &P,
@@ -1386,7 +1395,7 @@ where
 
 /// Parses hwb syntax.
 ///
-/// https://drafts.csswg.org/css-color/#the-hbw-notation
+/// <https://drafts.csswg.org/css-color/#the-hbw-notation>
 #[inline]
 fn parse_hwb<'i, 't, P>(
     color_parser: &P,
@@ -1410,7 +1419,7 @@ where
     Ok(P::Output::from_hwb(hue, whiteness, blackness, alpha))
 }
 
-/// https://drafts.csswg.org/css-color-4/#hwb-to-rgb
+/// <https://drafts.csswg.org/css-color-4/#hwb-to-rgb>
 #[inline]
 pub fn hwb_to_rgb(h: f32, w: f32, b: f32) -> (f32, f32, f32) {
     if w + b >= 1.0 {
@@ -1427,11 +1436,11 @@ pub fn hwb_to_rgb(h: f32, w: f32, b: f32) -> (f32, f32, f32) {
     (red, green, blue)
 }
 
-/// https://drafts.csswg.org/css-color/#hsl-color
+/// <https://drafts.csswg.org/css-color/#hsl-color>
 /// except with h pre-multiplied by 3, to avoid some rounding errors.
 #[inline]
 pub fn hsl_to_rgb(hue: f32, saturation: f32, lightness: f32) -> (f32, f32, f32) {
-    debug_assert!(hue >= 0.0 && hue <= 1.0);
+    debug_assert!((0.0..=1.0).contains(&hue));
 
     fn hue_to_rgb(m1: f32, m2: f32, mut h3: f32) -> f32 {
         if h3 < 0. {
@@ -1463,13 +1472,16 @@ pub fn hsl_to_rgb(hue: f32, saturation: f32, lightness: f32) -> (f32, f32, f32) 
     (red, green, blue)
 }
 
+type IntoColorFn<Output> =
+    fn(l: Option<f32>, a: Option<f32>, b: Option<f32>, alpha: Option<f32>) -> Output;
+
 #[inline]
 fn parse_lab_like<'i, 't, P>(
     color_parser: &P,
     arguments: &mut Parser<'i, 't>,
     lightness_range: f32,
     a_b_range: f32,
-    into_color: fn(l: Option<f32>, a: Option<f32>, b: Option<f32>, alpha: Option<f32>) -> P::Output,
+    into_color: IntoColorFn<P::Output>,
 ) -> Result<P::Output, ParseError<'i, P::Error>>
 where
     P: ColorParser<'i>,
@@ -1495,7 +1507,7 @@ fn parse_lch_like<'i, 't, P>(
     arguments: &mut Parser<'i, 't>,
     lightness_range: f32,
     chroma_range: f32,
-    into_color: fn(l: Option<f32>, c: Option<f32>, h: Option<f32>, alpha: Option<f32>) -> P::Output,
+    into_color: IntoColorFn<P::Output>,
 ) -> Result<P::Output, ParseError<'i, P::Error>>
 where
     P: ColorParser<'i>,
@@ -1553,6 +1565,9 @@ where
     ))
 }
 
+type ComponentParseResult<'i, R1, R2, R3, Error> =
+    Result<(Option<R1>, Option<R2>, Option<R3>, Option<f32>), ParseError<'i, Error>>;
+
 /// Parse the color components and alpha with the modern [color-4] syntax.
 pub fn parse_components<'i, 't, P, F1, F2, F3, R1, R2, R3>(
     color_parser: &P,
@@ -1560,7 +1575,7 @@ pub fn parse_components<'i, 't, P, F1, F2, F3, R1, R2, R3>(
     f1: F1,
     f2: F2,
     f3: F3,
-) -> Result<(Option<R1>, Option<R2>, Option<R3>, Option<f32>), ParseError<'i, P::Error>>
+) -> ComponentParseResult<'i, R1, R2, R3, P::Error>
 where
     P: ColorParser<'i>,
     F1: FnOnce(&P, &mut Parser<'i, 't>) -> Result<R1, ParseError<'i, P::Error>>,

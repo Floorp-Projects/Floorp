@@ -16,7 +16,7 @@ jobs:
           - nightly
           - beta
           - stable
-          - 1.56.0
+          - 1.63.0
         features:
           -
           - --features dummy_match_byte
@@ -34,10 +34,6 @@ jobs:
           profile: minimal
           toolchain: ${{ matrix.toolchain }}
           override: true
-
-      - name: Downgrade phf to a version compatible with the MSRV
-        run: cargo update --package phf --precise 0.10.1
-        if: matrix.toolchain == '1.40.0'
 
       - name: Cargo build
         run: cargo build ${{ matrix.features }}

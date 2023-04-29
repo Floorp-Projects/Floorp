@@ -163,7 +163,7 @@ midir = { git = "https://github.com/mozilla/midir.git", rev = "519e651241e867af3
 # warp 0.3.3 + https://github.com/seanmonstar/warp/pull/1007
 warp = { git = "https://github.com/glandium/warp", rev = "4af45fae95bc98b0eba1ef0db17e1dac471bb23d" }
 
-cssparser = { git = "https://github.com/servo/rust-cssparser", rev = "45bc47e2bcb846f1efb5aea156be5fe7d18624bf" }
+cssparser = { git = "https://github.com/servo/rust-cssparser", rev = "3e1bd05139cb7174ace395d498ca7128feb8f69d" }
 
 # application-services overrides to make updating them all simpler.
 interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "86c84c217036c12283d19368867323a66bf35883" }

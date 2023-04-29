@@ -14,18 +14,20 @@ use crate::shared_lock::{SharedRwLockReadGuard, ToCssWithGuard};
 use crate::str::CssStringWriter;
 use crate::values::computed::font::{FamilyName, FontStretch};
 use crate::values::generics::font::FontStyle as GenericFontStyle;
-#[cfg(feature = "gecko")]
-use crate::values::specified::font::{FontFeatureSettings, FontVariationSettings};
 use crate::values::specified::font::SpecifiedFontStyle;
 use crate::values::specified::font::{
     AbsoluteFontWeight, FontStretch as SpecifiedFontStretch, MetricsOverride,
 };
+#[cfg(feature = "gecko")]
+use crate::values::specified::font::{FontFeatureSettings, FontVariationSettings};
 use crate::values::specified::url::SpecifiedUrl;
 use crate::values::specified::{Angle, NonNegativePercentage};
 #[cfg(feature = "gecko")]
 use cssparser::UnicodeRange;
-use cssparser::{AtRuleParser, DeclarationListParser, DeclarationParser, Parser};
-use cssparser::{CowRcStr, SourceLocation};
+use cssparser::{
+    AtRuleParser, CowRcStr, DeclarationListParser, DeclarationParser, Parser, QualifiedRuleParser,
+    SourceLocation,
+};
 use selectors::parser::SelectorParseErrorKind;
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ParseError};
@@ -538,6 +540,12 @@ struct FontFaceRuleParser<'a, 'b: 'a> {
 impl<'a, 'b, 'i> AtRuleParser<'i> for FontFaceRuleParser<'a, 'b> {
     type Prelude = ();
     type AtRule = ();
+    type Error = StyleParseErrorKind<'i>;
+}
+
+impl<'a, 'b, 'i> QualifiedRuleParser<'i> for FontFaceRuleParser<'a, 'b> {
+    type Prelude = ();
+    type QualifiedRule = ();
     type Error = StyleParseErrorKind<'i>;
 }
 

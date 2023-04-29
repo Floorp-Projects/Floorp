@@ -11,9 +11,9 @@
 
 [package]
 edition = "2018"
-rust-version = "1.56"
+rust-version = "1.63"
 name = "cssparser"
-version = "0.30.0"
+version = "0.31.0"
 authors = ["Simon Sapin <simon.sapin@exyr.org>"]
 build = "build.rs"
 exclude = [

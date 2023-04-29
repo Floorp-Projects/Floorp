@@ -8,7 +8,6 @@ use self::Token::*;
 use crate::cow_rc_str::CowRcStr;
 use crate::parser::ParserState;
 use std::char;
-use std::i32;
 use std::ops::Range;
 
 /// One of the pieces the CSS input is broken into.
