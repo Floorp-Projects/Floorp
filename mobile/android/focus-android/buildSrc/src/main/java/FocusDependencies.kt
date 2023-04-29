@@ -60,7 +60,7 @@ object FocusVersions {
         const val ktlint = "0.48.2"
         const val mockito = "4.8.1"
         const val mockwebserver = "4.10.0"
-        const val robolectric = "4.9.2"
+        const val robolectric = "4.10.1"
     }
 
     object ThirdParty {

@@ -19,7 +19,7 @@ object Versions {
     const val serialization = "1.5.0"
 
     const val junit = "4.13.2"
-    const val robolectric = "4.9.2"
+    const val robolectric = "4.10.1"
     const val mockito = "3.12.4"
     const val maven_ant_tasks = "2.1.3"
 
