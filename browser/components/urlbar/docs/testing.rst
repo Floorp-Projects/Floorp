@@ -175,8 +175,7 @@ test.
 
 UrlbarTestUtils
 ~~~~~~~~~~~~~~~
-`UrlbarTestUtils.jsm <https://searchfox.org/mozilla-central/source/browser/comp
-onents/urlbar/tests/UrlbarTestUtils.jsm>`_ is useful for url bar testing. This
+`UrlbarTestUtils.sys.mjs <https://searchfox.org/mozilla-central/source/browser/components/urlbar/tests/UrlbarTestUtils.sys.mjs>`_ is useful for url bar testing. This
 file contains methods that can help with starting a new search in the url bar,
 waiting for a new search to complete, returning the results in
 the view, and etc.
