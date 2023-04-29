@@ -18,6 +18,9 @@ text { font: 20px monospace; }
     <rect id="use-test" width="50" height="10"/>
   </symbol>
   <use id="use1" href="#use-test" x="100" y="50" fill="yellow"/>
+  <a id="a-use">
+    <use href="#use-test" x="100" y="50" fill="yellow"/>
+  </a>
   <text id="text1" x="25" y="25">abc</text>
   <text id="text1a" x="85" y="25" stroke="black" stroke-width="4">abc</text>
   <text id="text1b" x="25" y="25" style="text-shadow: 5px 5px 3em rgba(0, 0, 0, 0.98);">abc</text>

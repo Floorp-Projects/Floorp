@@ -101,6 +101,12 @@ function runTest() {
   is(use1Bounds.width, 50, "use1.getBoundingClientRect().width");
   is(use1Bounds.height, 10, "use1.getBoundingClientRect().height");
 
+  var useChildBounds = doc.getElementById("a-use").getBoundingClientRect();
+  is(useChildBounds.left, 100, "useChild.getBoundingClientRect().left");
+  is(useChildBounds.top, 50, "useChild.getBoundingClientRect().top");
+  is(useChildBounds.width, 50, "useChild.getBoundingClientRect().width");
+  is(useChildBounds.height, 10, "useChild.getBoundingClientRect().height");
+
   var text1 = doc.getElementById("text1");
 
   var text1Bounds = text1.getBoundingClientRect();

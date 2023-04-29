@@ -303,7 +303,8 @@ nsIFrame* SVGUtils::GetOuterSVGFrameAndCoveredRegion(nsIFrame* aFrame,
   } else {
     uint32_t flags = SVGUtils::eForGetClientRects | SVGUtils::eBBoxIncludeFill |
                      SVGUtils::eBBoxIncludeStroke |
-                     SVGUtils::eBBoxIncludeMarkers;
+                     SVGUtils::eBBoxIncludeMarkers |
+                     SVGUtils::eUseUserSpaceOfUseElement;
 
     auto ctm = nsLayoutUtils::GetTransformToAncestor(RelativeTo{aFrame},
                                                      RelativeTo{outer});
