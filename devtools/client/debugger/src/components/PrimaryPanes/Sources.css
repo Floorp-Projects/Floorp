@@ -15,6 +15,34 @@
   user-select: none;
 }
 
+/***********************/
+/* Souces Panel layout */
+/***********************/
+
+.sources-list {
+  display: grid;
+  grid-template-areas:
+    "custom-root"
+    "sources-tree-or-empty-message";
+  /* The custom root might not be visible */
+  grid-template-rows: auto 1fr;
+  max-height: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.sources-list .sources-clear-root-container {
+  grid-area: custom-root;
+}
+
+.sources-list :is(.managed-tree, .no-sources-message) {
+  grid-area: sources-tree-or-empty-message;
+}
+
+/****************/
+/*  Custom root */
+/****************/
+
 .sources-clear-root {
   padding: 4px 8px;
   width: 100%;
@@ -41,20 +69,13 @@
   line-height: 16px;
 }
 
-.sources-pane {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-}
-
-.sources-list {
-  flex: 1;
-  display: flex;
-}
+/*****************/
+/*  Sources tree */
+/*****************/
 
 .sources-list .managed-tree {
-  flex: 1;
   display: flex;
+  overflow: auto;
 }
 
 .sources-list .managed-tree .tree {
@@ -102,45 +123,14 @@
   background-color: var(--theme-tab-toolbar-background);
 }
 
-.sources-list .tree .label {
-  display: inline-block;
-  line-height: 16px;
-}
-
-.no-sources-message {
-  width: 100%;
-  font-style: italic;
-  text-align: center;
-  padding: 0.5em;
-  font-size: 12px;
-  user-select: none;
-  justify-content: center;
-  align-items: center;
-}
-
 .sources-list .img.blackBox {
   mask-size: 13px;
   background-color: var(--red-40);
 }
 
-/*
-  Custom root styles
-*/
-.sources-pane.sources-list-custom-root {
-  display: block;
-  position: relative;
-}
-
-.sources-list-custom-root .sources-pane {
-  display: block;
-}
-
-.sources-list-custom-root .no-sources-message {
-  position: absolute;
-  top: 26px;
-  right: 0;
-  bottom: 0;
-  left: 0;
+.sources-list .tree .label {
+  display: inline-block;
+  line-height: 16px;
 }
 
 /* Removes start margin when a custom root is used */
@@ -152,4 +142,20 @@
 
 .sources-list .tree-node[data-expandable="false"] .tree-indent:last-of-type {
   margin-inline-end: 0;
+}
+
+
+/*****************/
+/*   No Sources  */
+/*****************/
+
+.no-sources-message {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-style: italic;
+  text-align: center;
+  padding: 0.5em;
+  font-size: 12px;
+  user-select: none;
 }

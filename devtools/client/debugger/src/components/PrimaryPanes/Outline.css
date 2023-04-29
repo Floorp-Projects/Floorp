@@ -70,14 +70,6 @@
   overflow: auto;
 }
 
-.source-outline-panel.has-root > div {
-  height: 100%;
-}
-
-.source-outline-panel.has-root .thread-header {
-  margin-top: 4px;
-}
-
 .outline {
   overflow-y: hidden;
 }
