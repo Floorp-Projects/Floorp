@@ -1,4 +1,7 @@
 "use strict";
+const { SpecialMessageActions } = ChromeUtils.importESModule(
+  "resource://messaging-system/lib/SpecialMessageActions.sys.mjs"
+);
 
 const DID_SEE_ABOUT_WELCOME_PREF = "trailhead.firstrun.didSeeAboutWelcome";
 
@@ -280,12 +283,7 @@ add_task(async function test_AWMultistage_Primary_Action() {
   let browser = await openAboutWelcome();
   let aboutWelcomeActor = await getAboutWelcomeParent(browser);
   const sandbox = sinon.createSandbox();
-  // Stub AboutWelcomeParent Content Message Handler
-  sandbox
-    .stub(aboutWelcomeActor, "onContentMessage")
-    .resolves("")
-    .withArgs("AWPage:IMPORTABLE_SITES")
-    .resolves([]);
+  sandbox.spy(aboutWelcomeActor, "onContentMessage");
   registerCleanupFunction(() => {
     sandbox.restore();
   });
@@ -295,7 +293,6 @@ add_task(async function test_AWMultistage_Primary_Action() {
   ok(callCount >= 1, `${callCount} Stub was called`);
 
   let clickCall;
-  let impressionCall;
   let performanceCall;
   for (let i = 0; i < callCount; i++) {
     const call = aboutWelcomeActor.onContentMessage.getCall(i);
@@ -304,51 +301,11 @@ add_task(async function test_AWMultistage_Primary_Action() {
       clickCall = call;
     } else if (
       call.calledWithMatch("", {
-        event_context: { importable: sinon.match.number },
-      })
-    ) {
-      impressionCall = call;
-    } else if (
-      call.calledWithMatch("", {
         event_context: { mountStart: sinon.match.number },
       })
     ) {
       performanceCall = call;
     }
-  }
-
-  // For some builds, we can stub fast enough to catch the impression
-  if (impressionCall) {
-    Assert.equal(
-      impressionCall.args[0],
-      "AWPage:TELEMETRY_EVENT",
-      "send telemetry event"
-    );
-    Assert.equal(
-      impressionCall.args[1].event,
-      "IMPRESSION",
-      "impression event recorded in telemetry"
-    );
-    Assert.equal(
-      impressionCall.args[1].event_context.display,
-      "static",
-      "static sites display recorded in telemetry"
-    );
-    Assert.equal(
-      typeof impressionCall.args[1].event_context.importable,
-      "number",
-      "numeric importable sites recorded in telemetry"
-    );
-    Assert.equal(
-      impressionCall.args[1].message_id,
-      "MR_WELCOME_DEFAULT_SITES",
-      "SITES MessageId sent in impression event telemetry"
-    );
-    Assert.equal(
-      impressionCall.args[1].event_context.page,
-      "about:welcome",
-      "event context page set to 'about:welcome'"
-    );
   }
 
   // For some builds, we can stub fast enough to catch the performance
@@ -413,11 +370,7 @@ add_task(async function test_AWMultistage_Secondary_Open_URL_Action() {
   let aboutWelcomeActor = await getAboutWelcomeParent(browser);
   const sandbox = sinon.createSandbox();
   // Stub AboutWelcomeParent Content Message Handler
-  sandbox
-    .stub(aboutWelcomeActor, "onContentMessage")
-    .resolves("")
-    .withArgs("AWPage:IMPORTABLE_SITES")
-    .resolves([]);
+  sandbox.stub(aboutWelcomeActor, "onContentMessage").resolves(null);
   registerCleanupFunction(() => {
     sandbox.restore();
   });
@@ -486,12 +439,8 @@ add_task(async function test_AWMultistage_Themes() {
   let aboutWelcomeActor = await getAboutWelcomeParent(browser);
 
   const sandbox = sinon.createSandbox();
-  // Stub AboutWelcomeParent Content Message Handler
-  sandbox
-    .stub(aboutWelcomeActor, "onContentMessage")
-    .resolves("")
-    .withArgs("AWPage:IMPORTABLE_SITES")
-    .resolves([]);
+  sandbox.spy(aboutWelcomeActor, "onContentMessage");
+
   registerCleanupFunction(() => {
     sandbox.restore();
   });
@@ -650,12 +599,9 @@ add_task(async function test_AWMultistage_Import() {
   await onButtonClick(browser, "button.primary");
 
   const sandbox = sinon.createSandbox();
-  // Stub AboutWelcomeParent Content Message Handler
-  sandbox
-    .stub(aboutWelcomeActor, "onContentMessage")
-    .resolves("")
-    .withArgs("AWPage:IMPORTABLE_SITES")
-    .resolves([]);
+  sandbox.stub(SpecialMessageActions, "handleAction");
+  sandbox.spy(aboutWelcomeActor, "onContentMessage");
+
   registerCleanupFunction(() => {
     sandbox.restore();
   });
@@ -757,18 +703,29 @@ add_task(async function test_send_aboutwelcome_as_page_in_event_telemetry() {
   const sandbox = sinon.createSandbox();
   let browser = await openAboutWelcome();
   let aboutWelcomeActor = await getAboutWelcomeParent(browser);
-  // Stub AboutWelcomeParent Content Message Handler
-  let telemetryStub = sandbox.stub(aboutWelcomeActor, "onContentMessage");
+  sandbox.spy(aboutWelcomeActor, "onContentMessage");
 
   await onButtonClick(browser, "button.primary");
 
+  const { callCount } = aboutWelcomeActor.onContentMessage;
+  ok(callCount >= 1, `${callCount} Stub was called`);
+
+  let eventCall;
+  for (let i = 0; i < callCount; i++) {
+    const call = aboutWelcomeActor.onContentMessage.getCall(i);
+    info(`Call #${i}: ${call.args[0]} ${JSON.stringify(call.args[1])}`);
+    if (call.calledWithMatch("", { event: "CLICK_BUTTON" })) {
+      eventCall = call;
+    }
+  }
+
   Assert.equal(
-    telemetryStub.lastCall.args[1].event,
+    eventCall.args[1].event,
     "CLICK_BUTTON",
     "Event telemetry sent on primary button press"
   );
   Assert.equal(
-    telemetryStub.lastCall.args[1].event_context.page,
+    eventCall.args[1].event_context.page,
     "about:welcome",
     "Event context page set to 'about:welcome' in event telemetry"
   );
