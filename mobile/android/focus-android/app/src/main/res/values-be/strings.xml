@@ -138,6 +138,19 @@
           Do not translate or transliterate Focus Nightly.-->
     <string name="text_selection_search_action_focus_nightly">Шукаць у Focus Nightly</string>
 
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s дае вам кантроль.</p>
+<p>Выкарыстоўвайце яго як прыватны браўзер:
+  <ul>
+    <li>Шукайце і аглядайце наўпрост з праграмы</li>
+    <li>Блакіруйце трэкеры (або змяніце налады, каб дазволіць трэкеры)</li>
+    <li>Сцірайце сеанс, каб выдаліць кукі разам з пошукамі і гісторыяй аглядання</li>
+  </ul>
+</p>
+<p>%1$s створаны Mozilla. Наша місія — спрыяць здароваму, адкрытаму Інтэрнэту.<br/>
+<a href="%2$s">Даведацца больш</a></p>]]></string>
+
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Прыватнасць і бяспека</string>
 
@@ -472,6 +485,9 @@
     <string name="external_app_prompt_no_app">Ні адна з праграм на вашай прыладзе не можа адкрыць гэту спасылку. Вы можаце выйсці з %1$s для пошуку ў %2$s праграмы, якая можа.</string>
     <!-- This label is shown above a list of apps that can be used to open a given link -->
     <string name="external_multiple_apps_matched_exit">Пакінуць Прыватнае агляданне?</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">%1$s скончана</string>
 
     <!-- Snackbar action to immediately open the successfully downloaded file. -->
     <string name="download_snackbar_open">Адкрыць</string>

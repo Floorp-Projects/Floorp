@@ -1031,6 +1031,12 @@
     <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Nitāj seguridâ nikāj koneksiôn</string>
 
+     <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[Si gūruhuaj nī huā a’nan’ riña nagi’hiát dàj gā servidor, así huā ‘ngō sa yī’ì natûj riña servidor. <br/><br/> Sisī nitāj si gi’hiaj chìj gatût riña servidor nan ganïnj ïn, nī sê sa ahīi huin, dòj nī nāhuin man.]]></string>
+
+     <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Huā ‘ngō sa yī’ì natût riña sitio nī da’huît gāhuīt dadin’ gā’hue gā’huì’ yī’ìj sòj.</label><br><br><label>%1$s nitāj si nani’in <b>%2$s</b> man dadin’ nitāj si huā hia danè’ gurugui’ij, rû’huāj si sertifikâdo digañu’ūnj un huin man rû’ huaj, así na’hue gā’nïnj servidor sertifikadô huā hue’ê.</label>]]></string>
+
      <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Narán rakïj ñanj</string>

@@ -295,6 +295,9 @@
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_default_browser_title">%s کوں آپݨاں ون٘ڄݨ آلا براؤزر بݨاؤ</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">فائرفوکس کوں آپݨاں ون٘ڄݨ آلا براؤزر بݨاؤ</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text">رازداری نوٹس</string>
@@ -311,6 +314,9 @@
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_enable_notifications_title">اطلاع نامے %s نال ودھیک کرݨ وچ تہاݙی مدد کریندن۔</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">اطلاع نامے فائرفوکس نال ودھیک کرݨ وچ تہاݙی مدد کریندن۔</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button">اطلاع نامے چالو کرو</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->

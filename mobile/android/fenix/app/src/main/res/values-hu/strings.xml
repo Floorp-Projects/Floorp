@@ -68,8 +68,6 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">Indítsa el a következő privát lapot egy koppintással.</string>
-    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">Indítsa el a következő privát lapot egy koppintással.</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Kezdőképernyőhöz adás</string>
@@ -261,9 +259,6 @@
     <string name="search_settings_menu_item">Keresési beállítások</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">Ezúttal keresés ezzel:</string>
-
-    <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Ezúttal keresés ebben:</string>
 
     <!-- Home onboarding -->
@@ -306,10 +301,16 @@
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_default_browser_title">Legyen a %s a szokásos böngészője</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Legyen a Firefox a szokásos böngészője</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
     <string name="juno_onboarding_default_browser_description">A(z) %1$s az embereket helyezi a profit elé, és a webhelyek közötti nyomkövetők blokkolásával védi az Ön adatait.\n\nTovábbi információk az %2$s.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">A Firefox az embereket helyezi a profit elé, és a webhelyek közötti nyomkövetők blokkolásával védi az Ön adatait.\n\nTovábbi információk az adatvédelmi nyilatkozatban találhatók.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text">adatvédelmi nyilatkozatban</string>
@@ -328,9 +329,15 @@
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_enable_notifications_title">Az értesítések segítségével még többet tehet a %s alkalmazással</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Az értesítések segítségével még többet tehet a Firefoxszal</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_enable_notifications_description">Küldjön lapokat az eszközök között, kezelje a letöltéseket, és kapjon tippeket arról, hogyan hozza ki a legtöbbet a %s böngészőből.</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated   -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Küldjön lapokat az eszközök között, kezelje a letöltéseket, és kapjon tippeket arról, hogyan hozza ki a legtöbbet a Firefoxból.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button">Értesítések bekapcsolása</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -409,7 +416,7 @@
     <string name="cookie_banner_handling_report_site_snack_bar_text">A kérés elküldve a támogatási webhelynek.</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Bekapcsolva erre az oldalra</string>
-    <!-- Text for indicating that a request for unsupported site was sent to nimbus, this is shown as part of the protections panel with the tracking protection toggle -->
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site_request_submitted">A kérés elküldve a támogatási webhelynek</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">A webhely jelenleg nem támogatott</string>
@@ -422,16 +429,12 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">A %1$s törli a webhely sütijeit, és frissíti az oldalt. Az összes süti törlésével kijelentkezhet, vagy kiürítheti a kosarait.</string>
 
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">A %1$s megpróbálhatja automatikusan elutasítani a sütikéréseket.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">A %1$s automatikusan megpróbálja elutasítani az összes sütikérést a támogatott oldalakon.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Elég a sütibannerekből!</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_title">Engedélyezi a %1$s számára a sütibannerek elutasítását?</string>
-    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">A sütikérések automatikus elutasítása, ha lehetséges.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">Engedélyezi, hogy a %1$s automatikusan elutasítsa a sütikéréseket, ha lehetséges?</string>
     <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
@@ -460,8 +463,6 @@
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Automatikusan HTTPS titkosítási protokoll használatával próbál meg csatlakozni a webhelyekhez a fokozott biztonság érdekében.</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Be</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Ki</string>
     <!-- Summary of https only preference if https only is set to on in all tabs -->
@@ -777,15 +778,9 @@
     <!-- Dialog button text for canceling open all tabs -->
     <string name="open_all_warning_cancel">Mégse</string>
 
-    <!-- Text to show users they have one site in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%d webhely</string>
     <!-- Text to show users they have one page in the history group section of the History fragment.
     %d is a placeholder for the number of pages in the group. -->
     <string name="history_search_group_site_1">%d oldal</string>
-    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_sites" moz:RemovedIn="111" tools:ignore="UnusedResources">%d webhely</string>
 
     <!-- Text to show users they have multiple pages in the history group section of the History fragment.
     %d is a placeholder for the number of pages in the group. -->
@@ -1117,8 +1112,6 @@
     <string name="phone_feature_blocked_by_android">Az Android blokkolta</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Kivételek</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Be</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Ki</string>
 
@@ -1284,11 +1277,11 @@
     <!-- Survey -->
     <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
     The app name is in the text, due to limitations with localizing Nimbus experiments -->
-    <string name="nimbus_survey_message_text" tools:ignore="UnusedResources">Segítsen a Firefox jobbá tételében egy rövid felmérés kitöltésével.</string>
+    <string name="nimbus_survey_message_text">Segítsen a Firefox jobbá tételében egy rövid felmérés kitöltésével.</string>
     <!-- Preference for taking the short survey. -->
-    <string name="preferences_take_survey" tools:ignore="UnusedResources">Kérdőív kitöltése</string>
+    <string name="preferences_take_survey">Kérdőív kitöltése</string>
     <!-- Preference for not taking the short survey. -->
-    <string name="preferences_not_take_survey" tools:ignore="UnusedResources">Köszönöm, nem</string>
+    <string name="preferences_not_take_survey">Köszönöm, nem</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->

@@ -300,10 +300,16 @@
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_default_browser_title">Torne o %s seu navegador preferido</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Torne o Firefox seu navegador padrão</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
     <string name="juno_onboarding_default_browser_description">O %1$s coloca as pessoas acima dos lucros e defende sua privacidade bloqueando rastreadores entre sites.\n\nSaiba mais em nosso %2$s.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">O Firefox coloca as pessoas acima dos lucros e defende sua privacidade bloqueando rastreadores entre sites.\n\nSaiba mais em nosso aviso de privacidade.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text">aviso de privacidade</string>
@@ -322,9 +328,15 @@
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_enable_notifications_title">Notificações ajudam você a aproveitar mais o %s</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Notificações ajudam você a aproveitar mais o Firefox</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_enable_notifications_description">Envie abas entre dispositivos, gerencie downloads e receba dicas de como aproveitar ao máximo o %s.</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated   -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Envie abas entre dispositivos, gerencie downloads e receba dicas de como aproveitar ao máximo o Firefox.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button">Ativar notificações</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->

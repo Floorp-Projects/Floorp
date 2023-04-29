@@ -81,6 +81,8 @@
     <string name="mozac_feature_prompts_nov">Samh</string>
     <!-- December month of the year (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_dec">Dùbh</string>
+    <!-- Title of the time picker dialog. -->
+    <string name="mozac_feature_prompts_set_time">Suidhich àm</string>
     <!-- Option in expanded select login prompt that links to login settings -->
     <string name="mozac_feature_prompts_manage_logins">Stiùirich na clàraidhean a-steach</string>
     <!-- Content description for expanding the saved logins options in the select login prompt -->
@@ -115,8 +117,6 @@
     <string name="mozac_feature_prompts_save_credit_card_prompt_body">Thèid àireamh na cairte a chrioptachadh. Cha tèid an còd tèarainteachd a shàbhaladh.</string>
 
     <!-- Address Autofill -->
-    <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
-    <string moz:removedIn="104" name="mozac_feature_prompts_select_address" tools:ignore="UnusedResources">Tagh na seòlaidhean</string>
     <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
     <string name="mozac_feature_prompts_select_address_2">Tagh seòladh</string>
     <!-- Content description for expanding the select addresses options in the select address prompt. -->

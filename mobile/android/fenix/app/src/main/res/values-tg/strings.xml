@@ -300,12 +300,18 @@
     <!-- Juno first user onboarding flow experiment -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title">«%s»-ро ба браузери ҷории худро табдил диҳед</string>
+    <string name="juno_onboarding_default_browser_title">«%s»-ро ба браузери ҳамешагии худ табдил диҳед</string>
 
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">«Firefox»-ро ба браузери ҳамешагии худ табдил диҳед</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description">«%1$s» одамгариро нисбат ба фоидаоварӣ ба ҷойи аввал мегузорад ва махфияти шуморо тавассути манъкунии пайгирикунандаҳои байнисомонавӣ муҳофизат мекунад.\n\nМаълумоти бештар дар «%2$s» дастрас аст.</string>
+    <string name="juno_onboarding_default_browser_description">«%1$s» одамгариро нисбат ба фоидаоварӣ ба ҷойи аввал мегузорад ва махфияти шуморо тавассути манъкунии пайгирикунандаҳои байнисомонавӣ муҳофизат мекунад.\n\nМаълумоти бештар дар «%2$s»-и мо дастрас аст.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">«Firefox» одамгариро нисбат ба фоидаоварӣ ба ҷойи аввал мегузорад ва махфияти шуморо тавассути манъкунии пайгирикунандаҳои байнисомонавӣ муҳофизат мекунад.\n\nМаълумоти бештар дар «Огоҳномаи махфият»-и мо дастрас аст.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text">огоҳномаи махфият</string>
@@ -324,9 +330,15 @@
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_enable_notifications_title">Огоҳиҳо барои кори бештар бо «%s» ба шумо кумак мекунанд</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Огоҳиҳо барои кори бештар бо «Firefox» ба шумо кумак мекунанд</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_enable_notifications_description">Варақаҳоро байни дастгоҳҳо интиқол диҳед, боргириҳоро идора кунед ва барои истифодаи бештари «%s» маслиҳат гиред.</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated   -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Варақаҳоро байни дастгоҳҳо интиқол диҳед, боргириҳоро идора кунед ва барои истифодаи бештари «Firefox» маслиҳат гиред.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button">Хомӯш кардани огоҳномаҳо</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->

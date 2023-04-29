@@ -355,8 +355,14 @@
     <!-- In-app link (in settings) to Focus privacy notice. -->
     <string name="preference_privacy_notice">Nixi inka vaa tutu\'ku</string>
 
+    <!-- In-app link (in settings) to Focus licensing information. -->
+    <string name="preference_licensing_info">Información de licencia</string>
+
     <!-- Link to Focus licensing information from other libraries that we use. -->
     <string name="preference_libraries_we_use">Bibliotecas que usamos</string>
+
+    <!-- Open Source Licenses page title. The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | Bibliotecas OSS</string>
 
     <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
     <string name="preference_about">Tsaa ña\'a%1$s</string>
@@ -746,6 +752,12 @@
 
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
     <string name="cookie_banner_exception_panel_site_is_not_supported_request_support_button">Katu un</string>
+
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_report_a_site_snackbar_label">Pedido para soporte del sitio enviado.</string>
+
+    <!-- Label for cookie banner item from tracking protection, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_the_site_was_reported">Pedido para soporte del sitio enviado.</string>
 
     <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
     <string name="cfr_cookie_banner_link">Ndasama</string>

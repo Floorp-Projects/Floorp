@@ -68,8 +68,6 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">Vierç la prossime schede privade intune sole tocjade.</string>
-    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">Vierç la tô prossime schede privade intune sole tocjade.</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Zonte a schermade principâl</string>
@@ -254,8 +252,6 @@
     <!-- Menu option in the search selector menu to open the search settings -->
     <string name="search_settings_menu_item">Impostazions ricercje</string>
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">Cheste volte cîr cun:</string>
-    <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Cheste volte cîr in:</string>
 
     <!-- Home onboarding -->
@@ -299,10 +295,16 @@
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_default_browser_title">Rint %s il to navigadôr di riferiment</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Rint Firefox il to navigadôr di riferiment</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
     <string name="juno_onboarding_default_browser_description">%1$s al met lis personis denant dai profits e al difint la tô riservatece blocant lis spiis inter-sît.\n\nPlui informazions sul nestri %2$s.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox al met lis personis denant dai profits e al difint la tô riservatece blocant lis spiis inter-sît.\n\nPlui informazions su la nestre informative su la riservatece.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text">informative su la riservatece</string>
@@ -322,9 +324,15 @@
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_enable_notifications_title">Lis notifichis ti judin a jessi plui produtîf cun %s</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Lis notifichis ti judin a jessi plui produtîf cun Firefox</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_enable_notifications_description">Mande lis schedis tra dispositîfs, gjestìs i discjariaments e oten sugjeriments su cemût otignî il massim di %s.</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated   -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Mande lis schedis tra dispositîfs, gjestìs i files discjamâts e oten sugjeriments su cemût tirâ fûr il massim di Firefox.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button">Ative lis notifichis</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -416,16 +424,12 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s al netarà vie i cookies di chest sît e al inzornarà la pagjine. Al è pussibil che netant vie ducj i cookies tu vegnis disconetût dal sît opûr che i carei des spesis a sedin disvuedâts.</string>
 
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources"> %1$s al pues provâ a refudâ in automatic lis richiestis dai cookies.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s al cîr di refudâ in automatic dutis lis richiestis dai cookies sui sîts supuartâts.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Vonde strissons pai cookies!</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_title">Permeti a %1$s di refudâ i strissons dai cookies?</string>
-    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Refude in automatic lis richiestis dai cookies, se pussibil.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">Permeti a %1$s di refudâ in automatic, se pussibil, lis richiestis dai cookies?</string>
     <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
@@ -455,8 +459,6 @@
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Al cîr di conetisi in automatic ai sîts doprant il protocol di cifradure HTTPS par vê une sigurece miorade.</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Ativade</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Disativade</string>
     <!-- Summary of https only preference if https only is set to on in all tabs -->
@@ -776,15 +778,9 @@
     <!-- Dialog button text for canceling open all tabs -->
     <string name="open_all_warning_cancel">Anule</string>
 
-    <!-- Text to show users they have one site in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%d sît</string>
     <!-- Text to show users they have one page in the history group section of the History fragment.
     %d is a placeholder for the number of pages in the group. -->
     <string name="history_search_group_site_1">%d pagjine</string>
-    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_sites" moz:RemovedIn="111" tools:ignore="UnusedResources">%d sîts</string>
 
     <!-- Text to show users they have multiple pages in the history group section of the History fragment.
     %d is a placeholder for the number of pages in the group. -->
@@ -1116,8 +1112,6 @@
     <string name="phone_feature_blocked_by_android">Blocât di Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Ecezions</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Ativade</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Disativade</string>
     <!-- Summary of tracking protection preference if tracking protection is set to standard -->

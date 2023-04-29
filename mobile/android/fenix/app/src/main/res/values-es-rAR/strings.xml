@@ -307,14 +307,14 @@
     <string name="juno_onboarding_default_browser_title">Hacer que %s sea tu navegador habitual</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Haz de Firefox tu navegador favorito</string>
+    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Hacé de Firefox tu navegador favorito</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
     <string name="juno_onboarding_default_browser_description">%1$s pone a las personas por sobre las ganancias y defiende tu privacidad bloqueando rastreadores de sitios cruzados.\n\nConocé más en nuestra %2$s.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox pone a las personas por encima de las ganancias y defiende tu privacidad bloqueando los rastreadores entre sitios. \ N \ nMás información en nuestro aviso de privacidad.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox pone a las personas por encima de las ganancias y defiende tu privacidad bloqueando los rastreadores entre sitios.\n\nMás información en nuestra nota de privacidad.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text">nota de privacidad</string>
@@ -341,7 +341,7 @@
     <string name="juno_onboarding_enable_notifications_description">Enviá pestañas entre dispositivos, admisistrá descargas y recibí consejos para obtener el máximo de %s.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
-    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Envía pestañas entre dispositivos, gestiona descargas y recibe consejos para sacar el máximo provecho de Firefox.</string>
+    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Enviá pestañas entre dispositivos, administrá descargas y recibí consejos para sacar el máximo provecho de Firefox.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button">Habilitar notificaciones</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->

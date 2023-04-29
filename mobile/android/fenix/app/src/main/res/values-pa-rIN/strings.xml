@@ -72,8 +72,6 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">ਅਗਲੀ ਨਿੱਜੀ ਟੈਬ ਨੂੰ ਛੂਹ ਕੇ ਚਲਾਓ।</string>
-    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">ਆਪਣੀ ਅਗਲੀ ਨਿੱਜੀ ਟੈਬ ਨੂੰ ਛੂਹ ਕੇ ਚਲਾਓ।</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">ਮੁੱਖ ਸਕਰੀਨ ‘ਤੇ ਜੋੜੋ</string>
@@ -266,9 +264,6 @@
     <string name="search_settings_menu_item">ਖੋਜ ਸੈਟਿੰਗਾਂ</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">ਇਹ ਸਮਾਂ ਖੋਜ:</string>
-
-    <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">ਇਸ ਵਾਰ ਇਸ ਵਿੱਚ ਖੋਜੋ:</string>
 
     <!-- Home onboarding -->
@@ -311,10 +306,16 @@
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_default_browser_title">%s ਨੂੰ ਆਪਣਾ ਪੱਕਾ ਬਰਾਊਜ਼ਰ ਬਣਾਓ</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Firefox ਨੂੰ ਆਪਣਾ ਪੱਕਾ ਬਰਾਊਜ਼ਰ ਬਣਾਓ</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
     <string name="juno_onboarding_default_browser_description">%1$s ਫ਼ਾਇਦੇ ਤੋਂ ਪਹਿਲਾਂ ਲੋਕਾਂ ਨੂੰ ਰੱਖਦਾ ਹੈ ਅਤੇ ਅੰਤਰ-ਸਾਈਟ ਟਰੈਕਰਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾ ਕੇ ਤੁਹਾਡੀ ਪਰਦੇਦਾਰੀ ਦੀ ਰੱਖਿਆ ਕਰਦਾ ਹੈ।\n\nਸਾਡੇ %2$s ਬਾਰੇ ਹੋਰ ਜਾਣੋ।</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox ਫ਼ਾਇਦੇ ਨਾਲੋਂ ਲੋਕਾਂ ਨੂੰ ਪਹਿਲ ਦਿੰਦਾ ਹੈ ਅਤੇ ਅੰਤਰ-ਸਾਈਟ ਟਰੈਕਰਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾ ਕੇ ਤੁਹਾਡੇ ਪਰਦੇਦਾਰੀ ਨੂੰ ਬਚਾਉਂਦਾ ਹੈ।\n\nਹੋਰ ਜਾਣਕਾਰੀ ਸਾਡੀ ਪਰਦੇਦਾਰੀ ਸੂਚਨਾ ਨੂੰ ਪੜ੍ਹੋ।</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text">ਪਰਦੇਦਾਰੀ ਸੂਚਨਾ</string>
@@ -334,9 +335,15 @@
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_enable_notifications_title">ਨੋਟੀਫ਼ਿਕੇਸ਼ਨ ਤੁਹਾਨੂੰ %s ਨਾਲ ਹੋਰ ਕਰਨ ਦੀ ਮਦਦ ਕਰਦੇ ਹਨ</string>
 
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">ਨੋਟੀਫ਼ਿਕੇਸ਼ਨ ਤੁਹਾਨੂੰ Firefox ਨਾਲ ਵੱਧ ਕੰਮ ਦੀ ਮਦਦ ਕਰਦੇ ਹਨ</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_enable_notifications_description">ਡਿਵਾਈਸਾਂ ਵਿੱਚ ਟੈਬਾਂ ਭੇਜੋ, ਡਾਊਨਲੋਡਾਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ ਅਤੇ %s ਦਾ ਭਰਪੂਰ ਫ਼ਾਇਦਾ ਲੈਣ ਲਈ ਹੋਰ ਸੁਝਾਅ ਲਵੋ।</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated   -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">ਟੈਬਾਂ ਨੂੰ ਡਿਵਾਈਸਾਂ ਵਿਚਾਲੇ ਭੇਜੋ, ਡਾਊਨਲੋਡ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ ਅਤੇ Firefox ਦਾ ਪੂਰਾ ਫ਼ਾਇਦਾ ਲੈਣ ਲਈ ਸੁਝਾਅ ਲਵੋ।</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button">ਸੂਚਨਾਵਾਂ ਚਾਲੂ ਕਰੋ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -431,16 +438,12 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s ਇਸ ਸਾਈਟ ਦੀਆਂ ਕੁਕੀਆਂ ਨੂੰ ਸਾਫ਼ ਕਰ ਕੇ ਵਰਕੇ ਨੂੰ ਸੱਜਰਾ ਕਰ ਦੇਵੇਗਾ। ਸਾਰੀਆਂ ਕੁਕੀਆਂ ਨੂੰ ਸਾਫ਼ ਕਰਨ ਨਾਲ ਤੁਸੀਂ ਸਾਈਨ ਆਊਟ ਹੋ ਸਕਦੇ ਹੋ ਜਾਂ ਖਰੀਦਦਾਰੀ ਵਾਲੀ ਟੋਕਰੀ ਖਾਲੀ ਹੋ ਸਕਦੀ ਹੈ।</string>
 
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s ਕੂਕੀ ਬੇਨਤੀਆਂ ਨੂੰ ਆਪਣੇ-ਆਪ ਹੀ ਰੱਦ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ ਕਰ ਸਕਦਾ ਹੈ।</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s ਸਹਾਇਤਾ ਪ੍ਰਾਪਤ ਸਾਈਟਾਂ ਉੱਤੇ ਸਾਰੀਆਂ ਕੂਕੀ ਬੇਨਤੀਆਂ ਨੂੰ ਆਪਣੇ-ਆਪ ਰੱਦ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰਦਾ ਹੈ।</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">ਕੂਕੀ ਬੈਨਰ ਕਰੋ ਰਵਾਨਾ!</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_title">%1$s ਨੂੰ ਕੂਕੀ ਬੈਨਰ ਰੱਦ ਕਰਨ ਦੀ ਇਜਾਜ਼ਤ ਦੇਣੀ ਹੈ?</string>
-    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">ਜਦੋਂ ਵੀ ਸੰਭਵ ਹੋਵੇ ਤਾਂ ਕੂਕੀ ਬੇਨਤੀਆਂ ਨੂੰ ਆਪਣੇ-ਆਪ ਹੀ ਰੱਦ ਕਰੋ।</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">ਜਦੋਂ ਵੀ ਸੰਭਵ ਹੋਵੇ ਤਾਂ %1$s ਨੂੰ ਕੂਕੀ ਬੇਨਤੀਆਂ ਨੂੰ ਆਪਣੇ-ਆਪ ਹੀ ਰੱਦ ਕਰਨ ਦੀ ਇਜਾਜ਼ਤ ਦੇਣੀ ਹੈ?</string>
     <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
@@ -470,8 +473,6 @@
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">ਵਾਧਾ ਕੀਤੀ ਸੁਰੱਖਿਆ ਲਈ HTTPS ਇੰਕ੍ਰਿਪਸ਼ਨ ਪਰੋਟੋਕਾਲ ਵਰਤ ਕੇ ਸਾਈਟਾਂ ਨਾਲ ਕਨੈਕਟ ਕਰਨ ਦੀ ਆਪਣੇ-ਆਪ ਕੋਸ਼ਿਸ਼ ਕਰੋ।</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">ਚਾਲੂ</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">ਬੰਦ</string>
     <!-- Summary of https only preference if https only is set to on in all tabs -->
@@ -791,15 +792,9 @@
     <!-- Dialog button text for canceling open all tabs -->
     <string name="open_all_warning_cancel">ਰੱਦ ਕਰੋ</string>
 
-    <!-- Text to show users they have one site in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%d ਸਾਈਟ</string>
     <!-- Text to show users they have one page in the history group section of the History fragment.
     %d is a placeholder for the number of pages in the group. -->
     <string name="history_search_group_site_1">%d ਸਫ਼ਾ</string>
-    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_sites" moz:RemovedIn="111" tools:ignore="UnusedResources">%d ਸਾਈਟਾਂ</string>
 
     <!-- Text to show users they have multiple pages in the history group section of the History fragment.
     %d is a placeholder for the number of pages in the group. -->
@@ -1130,8 +1125,6 @@
     <string name="phone_feature_blocked_by_android">ਐਂਡਰਾਈਡ ਵਲੋਂ ਪਾਬੰਦੀ ਲਗਾਈ</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">ਛੋਟਾਂ</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">ਚਾਲੂ</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">ਬੰਦ</string>
 
