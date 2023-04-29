@@ -51,6 +51,13 @@ pub trait DeclarationParser<'i> {
         name: CowRcStr<'i>,
         input: &mut Parser<'i, 't>,
     ) -> Result<Self::Declaration, ParseError<'i, Self::Error>>;
+
+    /// Whether to try to parse qualified rules along with declarations. See
+    /// <https://github.com/w3c/csswg-drafts/issues/7961> for the current state of the discussion.
+    /// This is a low effort opt-in to be able to experiment with it, but it's likely to be needed
+    /// when nesting is less experimental as well (e.g., you probably don't want to allow nesting
+    /// in a style attribute anyways).
+    fn enable_nesting(&self) -> bool { false }
 }
 
 /// A trait to provide various parsing of at-rules.
@@ -140,14 +147,14 @@ pub trait AtRuleParser<'i> {
 
 /// A trait to provide various parsing of qualified rules.
 ///
-/// For example, there could be different implementations
-/// for top-level qualified rules (i.e. style rules with Selectors as prelude)
-/// and for qualified rules inside `@keyframes` (keyframe rules with keyframe selectors as prelude).
+/// For example, there could be different implementations for top-level qualified rules (i.e. style
+/// rules with Selectors as prelude) and for qualified rules inside `@keyframes` (keyframe rules
+/// with keyframe selectors as prelude).
 ///
-/// Default implementations that reject all qualified rules are provided,
-/// so that `impl QualifiedRuleParser<(), ()> for ... {}` can be used
-/// for example for using `RuleListParser` to parse a rule list with only at-rules
-/// (such as inside `@font-feature-values`).
+/// Default implementations that reject all qualified rules are provided, so that
+/// `impl QualifiedRuleParser<(), ()> for ... {}` can be used for example for using
+/// `RuleListParser` to parse a rule list with only at-rules (such as inside
+/// `@font-feature-values`).
 pub trait QualifiedRuleParser<'i> {
     /// The intermediate representation of a qualified rule prelude.
     type Prelude;
@@ -223,10 +230,7 @@ where
     /// since `<DeclarationListParser as Iterator>::next` can return either.
     /// It could be a custom enum.
     pub fn new(input: &'a mut Parser<'i, 't>, parser: P) -> Self {
-        DeclarationListParser {
-            input: input,
-            parser: parser,
-        }
+        DeclarationListParser { input, parser }
     }
 }
 
@@ -234,7 +238,9 @@ where
 /// or `Err(())` for an invalid one.
 impl<'i, 't, 'a, I, P, E: 'i> Iterator for DeclarationListParser<'i, 't, 'a, P>
 where
-    P: DeclarationParser<'i, Declaration = I, Error = E> + AtRuleParser<'i, AtRule = I, Error = E>,
+    P: DeclarationParser<'i, Declaration = I, Error = E>
+        + AtRuleParser<'i, AtRule = I, Error = E>
+        + QualifiedRuleParser<'i, QualifiedRule = I, Error = E>,
 {
     type Item = Result<I, (ParseError<'i, E>, &'i str)>;
 
@@ -247,15 +253,19 @@ where
                 }
                 Ok(&Token::Ident(ref name)) => {
                     let name = name.clone();
-                    let result = {
+                    let mut result = {
                         let parser = &mut self.parser;
-                        // FIXME: https://github.com/servo/rust-cssparser/issues/254
-                        let callback = |input: &mut Parser<'i, '_>| {
+                        parse_until_after(self.input, Delimiter::Semicolon, |input| {
                             input.expect_colon()?;
                             parser.parse_value(name, input)
-                        };
-                        parse_until_after(self.input, Delimiter::Semicolon, callback)
+                        })
                     };
+
+                    if result.is_err() && self.parser.enable_nesting() {
+                        self.input.reset(&start);
+                        result = parse_qualified_rule(&start, self.input, &mut self.parser);
+                    }
+
                     return Some(result.map_err(|e| (e, self.input.slice_from(start.position()))));
                 }
                 Ok(&Token::AtKeyword(ref name)) => {
@@ -263,10 +273,17 @@ where
                     return Some(parse_at_rule(&start, name, self.input, &mut self.parser));
                 }
                 Ok(token) => {
-                    let token = token.clone();
-                    let result = self.input.parse_until_after(Delimiter::Semicolon, |_| {
-                        Err(start.source_location().new_unexpected_token_error(token))
-                    });
+                    let result = if self.parser.enable_nesting() {
+                        self.input.reset(&start);
+                        // XXX do we need to, if we fail, consume only until the next semicolon,
+                        // rather than until the next `{`?
+                        parse_qualified_rule(&start, self.input, &mut self.parser)
+                    } else {
+                        let token = token.clone();
+                        self.input.parse_until_after(Delimiter::Semicolon, |_| {
+                            Err(start.source_location().new_unexpected_token_error(token))
+                        })
+                    };
                     return Some(result.map_err(|e| (e, self.input.slice_from(start.position()))));
                 }
                 Err(..) => return None,
@@ -304,8 +321,8 @@ where
     /// It could be a custom enum.
     pub fn new_for_stylesheet(input: &'a mut Parser<'i, 't>, parser: P) -> Self {
         RuleListParser {
-            input: input,
-            parser: parser,
+            input,
+            parser,
             is_stylesheet: true,
             any_rule_so_far: false,
         }
@@ -319,8 +336,8 @@ where
     /// (This is to deal with legacy workarounds for `<style>` HTML element parsing.)
     pub fn new_for_nested_rule(input: &'a mut Parser<'i, 't>, parser: P) -> Self {
         RuleListParser {
-            input: input,
-            parser: parser,
+            input,
+            parser,
             is_stylesheet: false,
             any_rule_so_far: false,
         }
@@ -372,7 +389,7 @@ where
                 }
             } else {
                 self.any_rule_so_far = true;
-                let result = parse_qualified_rule(self.input, &mut self.parser);
+                let result = parse_qualified_rule(&start, self.input, &mut self.parser);
                 return Some(result.map_err(|e| (e, self.input.slice_from(start.position()))));
             }
         }
@@ -424,7 +441,7 @@ where
         if let Some(name) = at_keyword {
             parse_at_rule(&start, name, input, parser).map_err(|e| e.0)
         } else {
-            parse_qualified_rule(input, parser)
+            parse_qualified_rule(&start, input, parser)
         }
     })
 }
@@ -439,26 +456,20 @@ where
     P: AtRuleParser<'i, Error = E>,
 {
     let delimiters = Delimiter::Semicolon | Delimiter::CurlyBracketBlock;
-    // FIXME: https://github.com/servo/rust-cssparser/issues/254
-    let callback = |input: &mut Parser<'i, '_>| parser.parse_prelude(name, input);
-    let result = parse_until_before(input, delimiters, callback);
+    let result = parse_until_before(input, delimiters, |input| parser.parse_prelude(name, input));
     match result {
         Ok(prelude) => {
             let result = match input.next() {
-                Ok(&Token::Semicolon) | Err(_) => {
-                    parser.rule_without_block(prelude, start)
-                        .map_err(|()| input.new_unexpected_token_error(Token::Semicolon))
-                },
+                Ok(&Token::Semicolon) | Err(_) => parser
+                    .rule_without_block(prelude, start)
+                    .map_err(|()| input.new_unexpected_token_error(Token::Semicolon)),
                 Ok(&Token::CurlyBracketBlock) => {
-                    // FIXME: https://github.com/servo/rust-cssparser/issues/254
-                    let callback =
-                        |input: &mut Parser<'i, '_>| parser.parse_block(prelude, start, input);
-                    parse_nested_block(input, callback)
-                },
+                    parse_nested_block(input, |input| parser.parse_block(prelude, start, input))
+                }
                 Ok(_) => unreachable!(),
             };
             result.map_err(|e| (e, input.slice_from(start.position())))
-        },
+        }
         Err(error) => {
             let end_position = input.position();
             match input.next() {
@@ -466,28 +477,26 @@ where
                 _ => unreachable!(),
             };
             Err((error, input.slice(start.position()..end_position)))
-        },
+        }
     }
 }
 
 fn parse_qualified_rule<'i, 't, P, E>(
+    start: &ParserState,
     input: &mut Parser<'i, 't>,
     parser: &mut P,
 ) -> Result<<P as QualifiedRuleParser<'i>>::QualifiedRule, ParseError<'i, E>>
 where
     P: QualifiedRuleParser<'i, Error = E>,
 {
-    let start = input.state();
-    // FIXME: https://github.com/servo/rust-cssparser/issues/254
-    let callback = |input: &mut Parser<'i, '_>| parser.parse_prelude(input);
-    let prelude = parse_until_before(input, Delimiter::CurlyBracketBlock, callback);
+    let prelude = parse_until_before(input, Delimiter::CurlyBracketBlock, |input| {
+        parser.parse_prelude(input)
+    });
     match *input.next()? {
         Token::CurlyBracketBlock => {
             // Do this here so that we consume the `{` even if the prelude is `Err`.
             let prelude = prelude?;
-            // FIXME: https://github.com/servo/rust-cssparser/issues/254
-            let callback = |input: &mut Parser<'i, '_>| parser.parse_block(prelude, &start, input);
-            parse_nested_block(input, callback)
+            parse_nested_block(input, |input| parser.parse_block(prelude, &start, input))
         }
         _ => unreachable!(),
     }

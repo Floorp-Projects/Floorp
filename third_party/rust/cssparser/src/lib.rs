@@ -69,8 +69,8 @@ fn parse_border_spacing(_context: &ParserContext, input: &mut Parser)
 
 pub use crate::color::{
     hsl_to_rgb, hwb_to_rgb, parse_color_keyword, parse_color_with, parse_hash_color, AngleOrNumber,
-    Color, ColorFunction, ColorParser, FromParsedColor, Lab, Lch, NumberOrPercentage, Oklab, Oklch,
-    PredefinedColorSpace, RGBA,
+    Color, ColorFunction, ColorParser, FromParsedColor, Hsl, Hwb, Lab, Lch, NumberOrPercentage,
+    Oklab, Oklch, PredefinedColorSpace, RGBA,
 };
 pub use crate::cow_rc_str::CowRcStr;
 pub use crate::from_bytes::{stylesheet_encoding, EncodingSupport};

@@ -12,7 +12,6 @@ use std::ops::Deref;
 use std::rc::Rc;
 use std::slice;
 use std::str;
-use std::usize;
 
 /// A string that is either shared (heap-allocated and reference-counted) or borrowed.
 ///
