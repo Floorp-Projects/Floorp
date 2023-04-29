@@ -12,6 +12,7 @@
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/SVGGeometryFrame.h"
+#include "mozilla/SVGImageFrame.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Logging.h"
@@ -1215,6 +1216,17 @@ static ItemActivity IsItemProbablyActive(
     }
     case DisplayItemType::TYPE_SVG_GEOMETRY: {
       auto* svgItem = static_cast<DisplaySVGGeometry*>(aItem);
+      if (StaticPrefs::gfx_webrender_svg_shapes() && aUniformlyScaled &&
+          svgItem->ShouldBeActive(aBuilder, aResources, aSc, aManager,
+                                  aDisplayListBuilder)) {
+        return AssessBounds(aSc, aDisplayListBuilder, aItem,
+                            aHasActivePrecedingSibling);
+      }
+
+      return ItemActivity::No;
+    }
+    case DisplayItemType::TYPE_SVG_IMAGE: {
+      auto* svgItem = static_cast<DisplaySVGImage*>(aItem);
       if (StaticPrefs::gfx_webrender_svg_images() && aUniformlyScaled &&
           svgItem->ShouldBeActive(aBuilder, aResources, aSc, aManager,
                                   aDisplayListBuilder)) {
