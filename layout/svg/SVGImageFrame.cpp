@@ -20,7 +20,6 @@
 #include "nsLayoutUtils.h"
 #include "imgINotificationObserver.h"
 #include "SVGGeometryProperty.h"
-#include "SVGGeometryFrame.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_image.h"
 #include "mozilla/SVGContentUtils.h"
@@ -56,9 +55,11 @@ class SVGImageListener final : public imgINotificationObserver {
 
 // ---------------------------------------------------------------------
 // nsQueryFrame methods
+
 NS_QUERYFRAME_HEAD(SVGImageFrame)
+  NS_QUERYFRAME_ENTRY(ISVGDisplayableFrame)
   NS_QUERYFRAME_ENTRY(SVGImageFrame)
-NS_QUERYFRAME_TAIL_INHERITING(SVGGeometryFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsIFrame)
 
 }  // namespace mozilla
 
@@ -90,7 +91,8 @@ void SVGImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::image),
                "Content is not an SVG image!");
 
-  SVGGeometryFrame::Init(aContent, aParent, aPrevInFlow);
+  AddStateBits(aParent->GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD);
+  nsIFrame::Init(aContent, aParent, aPrevInFlow);
 
   if (HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
     // Non-display frames are likely to be patterns, masks or the like.
@@ -167,6 +169,11 @@ void SVGImageFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
   }
 
   // TODO(heycam): We should handle aspect-ratio, like nsImageFrame does.
+}
+
+bool SVGImageFrame::IsSVGTransformed(gfx::Matrix* aOwnTransform,
+                                     gfx::Matrix* aFromParentTransform) const {
+  return SVGUtils::IsSVGTransformed(this, aOwnTransform, aFromParentTransform);
 }
 
 //----------------------------------------------------------------------
@@ -420,7 +427,7 @@ void SVGImageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   }
 
   DisplayOutline(aBuilder, aLists);
-  aLists.Content()->AppendNewToTop<DisplaySVGGeometry>(aBuilder, this);
+  aLists.Content()->AppendNewToTop<DisplaySVGImage>(aBuilder, this);
 }
 
 bool SVGImageFrame::IsInvisible() const {
@@ -439,7 +446,7 @@ bool SVGImageFrame::CreateWebRenderCommands(
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const mozilla::layers::StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager,
-    nsDisplayListBuilder* aDisplayListBuilder, DisplaySVGGeometry* aItem,
+    nsDisplayListBuilder* aDisplayListBuilder, DisplaySVGImage* aItem,
     bool aDryRun) {
   if (!StyleVisibility()->IsVisible()) {
     return true;
