@@ -7,11 +7,7 @@ import PropTypes from "prop-types";
 import { Tab, Tabs, TabList, TabPanels } from "react-aria-components/src/tabs";
 
 import actions from "../../actions";
-import {
-  getProjectDirectoryRootName,
-  getSelectedPrimaryPaneTab,
-  getContext,
-} from "../../selectors";
+import { getSelectedPrimaryPaneTab, getContext } from "../../selectors";
 import { prefs } from "../../utils/prefs";
 import { connect } from "../../utils/connect";
 import { primaryPaneTabs } from "../../constants";
@@ -20,7 +16,6 @@ import { formatKeyShortcut } from "../../utils/text";
 import Outline from "./Outline";
 import SourcesTree from "./SourcesTree";
 import ProjectSearch from "./ProjectSearch";
-import AccessibleImage from "../shared/AccessibleImage";
 
 const classnames = require("devtools/client/shared/classnames.js");
 
@@ -43,7 +38,6 @@ class PrimaryPanes extends Component {
 
   static get propTypes() {
     return {
-      clearProjectDirectoryRoot: PropTypes.func.isRequired,
       cx: PropTypes.object.isRequired,
       projectRootName: PropTypes.string.isRequired,
       selectedTab: PropTypes.oneOf(tabs).isRequired,
@@ -98,30 +92,8 @@ class PrimaryPanes extends Component {
     ];
   }
 
-  renderProjectRootHeader() {
-    const { cx, projectRootName } = this.props;
-
-    if (!projectRootName) {
-      return null;
-    }
-
-    return (
-      <div key="root" className="sources-clear-root-container">
-        <button
-          className="sources-clear-root"
-          onClick={() => this.props.clearProjectDirectoryRoot(cx)}
-          title={L10N.getStr("removeDirectoryRoot.label")}
-        >
-          <AccessibleImage className="home" />
-          <AccessibleImage className="breadcrumb" />
-          <span className="sources-clear-root-label">{projectRootName}</span>
-        </button>
-      </div>
-    );
-  }
-
   render() {
-    const { selectedTab, projectRootName } = this.props;
+    const { selectedTab } = this.props;
     return (
       <Tabs
         activeIndex={tabs.indexOf(selectedTab)}
@@ -131,16 +103,8 @@ class PrimaryPanes extends Component {
         <TabList className="source-outline-tabs">
           {this.renderTabList()}
         </TabList>
-        <TabPanels
-          className={classnames("source-outline-panel", {
-            "has-root": projectRootName,
-          })}
-          hasFocusableContent
-        >
-          <div className="threads-list">
-            {this.renderProjectRootHeader()}
-            <SourcesTree />
-          </div>
+        <TabPanels className="source-outline-panel" hasFocusableContent>
+          <SourcesTree />
           <Outline
             alphabetizeOutline={this.state.alphabetizeOutline}
             onAlphabetizeClick={this.onAlphabetizeClick}
@@ -156,7 +120,6 @@ const mapStateToProps = state => {
   return {
     cx: getContext(state),
     selectedTab: getSelectedPrimaryPaneTab(state),
-    projectRootName: getProjectDirectoryRootName(state),
   };
 };
 
@@ -164,7 +127,6 @@ const connector = connect(mapStateToProps, {
   setPrimaryPaneTab: actions.setPrimaryPaneTab,
   setActiveSearch: actions.setActiveSearch,
   closeActiveSearch: actions.closeActiveSearch,
-  clearProjectDirectoryRoot: actions.clearProjectDirectoryRoot,
 });
 
 export default connector(PrimaryPanes);
