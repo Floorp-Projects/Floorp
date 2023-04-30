@@ -31,7 +31,7 @@ You also need to set some options to get full diagnostics:
    "rust-analyzer.server.extraEnv": {
      "CARGO_TARGET_DIR": "/path/to/objdir"
    },
-   "rust-analyzer.checkOnSave.overrideCommand": [ "/path/to/mach", "--log-no-times", "cargo", "check", "--all-crates", "--message-format-json" ],
+   "rust-analyzer.check.overrideCommand": [ "/path/to/mach", "--log-no-times", "cargo", "check", "--all-crates", "--message-format-json" ],
    "rust-analyzer.cargo.buildScripts.overrideCommand": [ "/path/to/mach", "--log-no-times", "cargo", "check", "--all-crates", "--message-format-json" ],
 
 The easiest way to make these work out of the box is using
