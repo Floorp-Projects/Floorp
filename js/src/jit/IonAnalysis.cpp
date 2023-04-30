@@ -4584,10 +4584,19 @@ bool jit::FoldLoadsWithUnbox(MIRGenerator* mir, MIRGraph& graph) {
       MInstruction* load = ins;
 
       // Ensure there's a single def-use (ignoring resume points) and it's an
-      // unbox.
+      // unbox. Unwrap MLexicalCheck because it's redundant if we have a
+      // fallible unbox (checked below).
       MDefinition* defUse = load->maybeSingleDefUse();
       if (!defUse) {
         continue;
+      }
+      MLexicalCheck* lexicalCheck = nullptr;
+      if (defUse->isLexicalCheck()) {
+        lexicalCheck = defUse->toLexicalCheck();
+        defUse = lexicalCheck->maybeSingleDefUse();
+        if (!defUse) {
+          continue;
+        }
       }
       if (!defUse->isUnbox()) {
         continue;
@@ -4600,12 +4609,14 @@ bool jit::FoldLoadsWithUnbox(MIRGenerator* mir, MIRGraph& graph) {
       if (unbox->block() != *block) {
         continue;
       }
+      MOZ_ASSERT_IF(lexicalCheck, lexicalCheck->block() == *block);
 
       MOZ_ASSERT(!IsMagicType(unbox->type()));
 
-      // If this is a LoadElement, we only support folding it with a fallible
-      // unbox so that we can eliminate the hole check.
-      if (load->isLoadElement() && !unbox->fallible()) {
+      // If this is a LoadElement or if we have a lexical check between the load
+      // and unbox, we only support folding the load with a fallible unbox so
+      // that we can eliminate the MagicValue check.
+      if ((load->isLoadElement() || lexicalCheck) && !unbox->fallible()) {
         continue;
       }
 
@@ -4645,12 +4656,21 @@ bool jit::FoldLoadsWithUnbox(MIRGenerator* mir, MIRGraph& graph) {
 
       block->insertBefore(load, replacement);
       unbox->replaceAllUsesWith(replacement);
+      if (lexicalCheck) {
+        lexicalCheck->replaceAllUsesWith(replacement);
+      }
       load->replaceAllUsesWith(replacement);
 
+      if (lexicalCheck && *insIter == lexicalCheck) {
+        insIter++;
+      }
       if (*insIter == unbox) {
         insIter++;
       }
       block->discard(unbox);
+      if (lexicalCheck) {
+        block->discard(lexicalCheck);
+      }
       block->discard(load);
     }
   }
