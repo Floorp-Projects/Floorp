@@ -65,8 +65,6 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">ເປີດໃຊ້ແຖບສ່ວນຕົວຕໍ່ໄປໃນແທັບດຽວ.</string>
-    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">ເປີດໃຊ້ແຖບສ່ວນຕົວຕໍ່ໄປຂອງທ່ານໃນໜຶ່ງການກົດ.</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">ເພີ່ມເຂົ້າໄປຫນ້າຈໍຫລັກ</string>
@@ -256,9 +254,6 @@
     <string name="search_settings_menu_item">ການຕັ້ງຄ່າການຄົ້ນຫາ</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">ເວລານີ້ຄົ້ນຫາ:</string>
-
-    <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">ເວລານີ້ຄົ້ນຫາໃນ:</string>
 
     <!-- Home onboarding -->
@@ -302,10 +297,16 @@
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_default_browser_title">ເຮັດໃຫ້ %s ໄປຫາຕົວທ່ອງເວັບຂອງທ່ານ</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">ເຮັດໃຫ້ Firefox ໄປກັບຕົວທ່ອງເວັບຂອງທ່ານ</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
     <string name="juno_onboarding_default_browser_description">%1$s ເຮັດໃຫ້ຄົນຫຼາຍກວ່າຜົນກຳໄລ ແລະປົກປ້ອງຄວາມເປັນສ່ວນຕົວຂອງທ່ານໂດຍການບລັອກຕົວຕິດຕາມຂ້າມເວັບໄຊ.\n\nສຶກສາເພີ່ມເຕີມໃນ %2$s ຂອງພວກເຮົາ.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox ເຮັດໃຫ້ຄົນຫຼາຍກວ່າຜົນກຳໄລ ແລະ ປົກປ້ອງຄວາມເປັນສ່ວນຕົວຂອງທ່ານໂດຍການບລັອກຕົວຕິດຕາມຂ້າມເວັບໄຊ.\n\nສຶກສາເພີ່ມເຕີມໃນແຈ້ງການຄວາມເປັນສ່ວນຕົວຂອງພວກເຮົາ.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text">ແຈ້ງການຄວາມເປັນສ່ວນຕົວ</string>
@@ -325,9 +326,15 @@
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_enable_notifications_title">ການແຈ້ງເຕືອນຊ່ວຍໃຫ້ທ່ານເຮັດໄດ້ຫຼາຍຂຶ້ນກັບ %s</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">ການແຈ້ງເຕືອນຊ່ວຍໃຫ້ທ່ານເຮັດໄດ້ຫຼາຍຂຶ້ນກັບ Firefox</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_enable_notifications_description">ສົ່ງແຖບລະຫວ່າງອຸປະກອນ, ຈັດການການດາວໂຫຼດ, ແລະຮັບຄຳແນະນຳໃນການໄດ້ຮັບປະໂຫຍດສູງສຸດຈາກ %s.</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated   -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">ສົ່ງແຖບລະຫວ່າງອຸປະກອນ, ຈັດການການດາວໂຫຼດ, ແລະ ຮັບຄຳແນະນຳໃນການໃຊ້ Firefox ໃຫ້ຫຼາຍທີ່ສຸດ.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button">ເປີດການແຈ້ງເຕືອນ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -406,7 +413,7 @@
     <string name="cookie_banner_handling_report_site_snack_bar_text">ຮ້ອງຂໍໃຫ້ສະຫນັບສະຫນູນເວັບໄຊທີ່ສົ່ງ.</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">ເປິດສຳລັບເວັບໄຊນີ້</string>
-    <!-- Text for indicating that a request for unsupported site was sent to nimbus, this is shown as part of the protections panel with the tracking protection toggle -->
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site_request_submitted">ຮ້ອງຂໍໃຫ້ສະຫນັບສະຫນູນເວັບໄຊທີ່ສົ່ງ</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">ຕອນນີ້ບໍ່ຮອງຮັບເວັບໄຊ</string>
@@ -419,16 +426,12 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s ຈະລຶບລ້າງຄຸກກີ້ຂອງເວັບໄຊນີ້ ແລະໂຫຼດໜ້ານີ້ຄືນໃໝ່. ການລຶບລ້າງຄຸກກີ້ທັງໝົດອາດເຮັດໃຫ້ເຈົ້າອອກຈາກລະບົບ ຫຼືກະຕ່າຊື້ເຄື່ອງຫວ່າງເປົ່າ.</string>
 
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s ສາມາດພະຍາຍາມປະຕິເສດການຮ້ອງຂໍຄຸກກີໂດຍອັດຕະໂນມັດ.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s ພະຍາຍາມປະຕິເສດຄຳຮ້ອງຂໍຄຸກກີທັງໝົດໃນເວັບໄຊທີ່ຮອງຮັບໂດຍອັດຕະໂນມັດ.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">ປ້າຍໂຄສະນາຄຸກກີເລີ່ມແລ້ວ!</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_title">ອະນຸຍາດໃຫ້ %1$s ປະຕິເສດປ້າຍໂຄສະນາຄຸກກີບໍ?</string>
-    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">ປະຕິເສດການຮ້ອງຂໍຄຸກກີໂດຍອັດຕະໂນມັດ, ເມື່ອເປັນໄປໄດ້.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">ອະນຸຍາດໃຫ້ %1$s ປະຕິເສດຄຳຮ້ອງຂໍຄຸກກີໂດຍອັດຕະໂນມັດເມື່ອເປັນໄປໄດ້ບໍ?</string>
     <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
@@ -457,8 +460,6 @@
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">ພະຍາຍາມເຊື່ອມຕໍ່ຫາເວັບໄຊໂດຍອັດຕະໂນມັດໂດຍໃຊ້ໂປຣໂຕຄໍການເຂົ້າລະຫັດ HTTPS ເພື່ອຄວາມປອດໄພທີ່ເພີ່ມຂຶ້ນ.</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">ເປີດ</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">ປິດ</string>
     <!-- Summary of https only preference if https only is set to on in all tabs -->
@@ -780,15 +781,9 @@
     <!-- Dialog button text for canceling open all tabs -->
     <string name="open_all_warning_cancel">ຍົກເລີກ</string>
 
-    <!-- Text to show users they have one site in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%d ເວັບໄຊທ</string>
     <!-- Text to show users they have one page in the history group section of the History fragment.
     %d is a placeholder for the number of pages in the group. -->
     <string name="history_search_group_site_1">%d ໜ້າ</string>
-    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_sites" moz:RemovedIn="111" tools:ignore="UnusedResources">%d ເວັບໄຊທ</string>
 
     <!-- Text to show users they have multiple pages in the history group section of the History fragment.
     %d is a placeholder for the number of pages in the group. -->
@@ -1122,8 +1117,6 @@
     <string name="phone_feature_blocked_by_android">ຖືກບລັອກໂດຍ Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">ຂໍ້ຍົກເວັ້ນ</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">ເປີດ</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">ປິດ</string>
     <!-- Summary of tracking protection preference if tracking protection is set to standard -->
@@ -1288,11 +1281,11 @@
     <!-- Survey -->
     <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
     The app name is in the text, due to limitations with localizing Nimbus experiments -->
-    <string name="nimbus_survey_message_text" tools:ignore="UnusedResources">ກະລຸນາຊ່ວຍເຮັດໃຫ້ Firefox ດີຂຶ້ນໂດຍການເຮັດແບບສຳຫຼວດສັ້ນໆ.</string>
+    <string name="nimbus_survey_message_text">ກະລຸນາຊ່ວຍເຮັດໃຫ້ Firefox ດີຂຶ້ນໂດຍການເຮັດແບບສຳຫຼວດສັ້ນໆ.</string>
     <!-- Preference for taking the short survey. -->
-    <string name="preferences_take_survey" tools:ignore="UnusedResources">ເຮັດແບບສຳຫຼວດ</string>
+    <string name="preferences_take_survey">ເຮັດແບບສຳຫຼວດ</string>
     <!-- Preference for not taking the short survey. -->
-    <string name="preferences_not_take_survey" tools:ignore="UnusedResources">ບໍ່, ຂອບໃຈ</string>
+    <string name="preferences_not_take_survey">ບໍ່, ຂອບໃຈ</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->

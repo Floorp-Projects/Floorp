@@ -31,7 +31,7 @@
     <string name="menu_share">Подели…</string>
 
     <!-- Menu item: Report an issue on the current site -->
-    <string name="menu_report_site_issue">Пријави проблем на сајту</string>
+    <string name="menu_report_site_issue">Пријави проблем са сајтом</string>
 
     <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
       replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some

@@ -307,6 +307,8 @@
     <string name="juno_onboarding_default_browser_negative_button">ہݨ کائناں</string>
     <!-- Title for sign in to sync screen. -->
     <string name="juno_onboarding_sign_in_title">فون سیٹ کنوں لیپ ٹاپ تے ہاپ کرو تے ولدا واپس وی</string>
+    <!-- Description for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_description">تساں آپݨیاں ٻیاں ݙیوائساں نال ٹیباں تے پاس ورڈ گھنو، جتھوں تساں چھوڑیا ہائی۔</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button">سائن ان</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
