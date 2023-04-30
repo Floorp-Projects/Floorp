@@ -348,7 +348,7 @@ def setup_clangd_rust_in_vscode(command_context):
             "CARGO_TARGET_DIR": command_context.topobjdir,
         },
         "rust-analyzer.cargo.buildScripts.overrideCommand": cargo_check_command,
-        "rust-analyzer.checkOnSave.overrideCommand": cargo_check_command,
+        "rust-analyzer.check.overrideCommand": cargo_check_command,
     }
 
 
