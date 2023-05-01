@@ -120,7 +120,7 @@ use style::shared_lock::{
 use style::string_cache::{Atom, WeakAtom};
 use style::style_adjuster::StyleAdjuster;
 use style::stylesheets::container_rule::ContainerSizeQuery;
-use style::stylesheets::import_rule::ImportSheet;
+use style::stylesheets::import_rule::{ImportSheet, ImportLayer};
 use style::stylesheets::keyframes_rule::{Keyframe, KeyframeSelector, KeyframesStepValue};
 use style::stylesheets::layer_rule::LayerOrder;
 use style::stylesheets::supports_rule::parse_condition_or_declaration;
@@ -2710,9 +2710,11 @@ pub extern "C" fn Servo_ImportRule_GetLayerName(
     rule: &RawServoImportRule,
     result: &mut nsACString,
 ) {
+    // https://w3c.github.io/csswg-drafts/cssom/#dom-cssimportrule-layername
     read_locked_arc(rule, |rule: &ImportRule| match rule.layer {
-        Some(ref layer) => layer.name.to_css(&mut CssWriter::new(result)).unwrap(),
-        None => result.set_is_void(true),
+        ImportLayer::Named(ref name) => name.to_css(&mut CssWriter::new(result)).unwrap(), // "return the layer name declared in the at-rule itself"
+        ImportLayer::Anonymous => {}, // "or an empty string if the layer is anonymous"
+        ImportLayer::None => result.set_is_void(true), // "or null if the at-rule does not declare a layer"
     })
 }
 
