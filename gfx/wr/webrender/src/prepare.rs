@@ -108,8 +108,8 @@ fn can_use_clip_chain_for_quad_path(
     clip_chain: &ClipChainInstance,
     prim_spatial_node_index: SpatialNodeIndex,
     raster_spatial_node_index: SpatialNodeIndex,
-    clip_store: &ClipStore,
-    data_stores: &DataStores,
+    _clip_store: &ClipStore,
+    _data_stores: &DataStores,
     spatial_tree: &SpatialTree,
 ) -> bool {
     let map_prim_to_surface = spatial_tree.get_relative_transform(
@@ -123,6 +123,12 @@ fn can_use_clip_chain_for_quad_path(
         return false;
     }
 
+    !clip_chain.needs_mask
+
+    // TODO(gw): Temporarily disable the new clip-mask rendering path for now, while
+    //           investigating a driver-specific shader optimization regression.
+
+    /*
     if !clip_chain.needs_mask {
         return true;
     }
@@ -155,6 +161,7 @@ fn can_use_clip_chain_for_quad_path(
     }
 
     true
+    */
 }
 
 #[derive(Debug, Copy, Clone)]
