@@ -53,7 +53,7 @@ impl StyleStylesheetLoader for StylesheetLoader {
         lock: &SharedRwLock,
         media: Arc<Locked<MediaList>>,
         supports: Option<ImportSupportsCondition>,
-        layer: Option<ImportLayer>,
+        layer: ImportLayer,
     ) -> Arc<Locked<ImportRule>> {
         // Ensure the supports conditions for this @import are true, if not, refuse to load
         if !supports.as_ref().map_or(true, |s| s.enabled) {
@@ -175,7 +175,7 @@ impl StyleStylesheetLoader for AsyncStylesheetParser {
         lock: &SharedRwLock,
         media: Arc<Locked<MediaList>>,
         supports: Option<ImportSupportsCondition>,
-        layer: Option<ImportLayer>,
+        layer: ImportLayer,
     ) -> Arc<Locked<ImportRule>> {
         // Ensure the supports conditions for this @import are true, if not, refuse to load
         if !supports.as_ref().map_or(true, |s| s.enabled) {
