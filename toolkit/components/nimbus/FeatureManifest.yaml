@@ -1221,6 +1221,26 @@ mixedContentUpgrading:
       type: boolean
       setPref: security.mixed_content.upgrade_display_content
 
+raceCacheWithNetwork:
+  description: Prefs to toggle the race cache with network.
+  owner: dpalmeiro@mozilla.com, acreskey@mozilla.com
+  hasExposure: false
+  variables:
+    enabled:
+      description: True to enable the rcwn feature.
+      type: boolean
+      setPref: "network.http.rcwn.enabled"
+
+httpSpeculativeParallelLimit:
+  description: Prefs to control the http speculative parallel limit.
+  owner: dpalmeiro@mozilla.com, acreskey@mozilla.com
+  hasExposure: false
+  variables:
+    speculative_parallel_limit:
+      description: Maximum number of parallel speculative connections.
+      type: int
+      setPref: "network.http.speculative-parallel-limit"
+
 deviceMigration:
   description: Prefs to control aspects of the new device migration experiment
   owner: hjones@mozilla.com
