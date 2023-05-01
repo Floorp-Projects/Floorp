@@ -7579,60 +7579,6 @@
       "last_modified": 1666727870634
     },
     {
-      "schema": 1666727454193,
-      "derHash": "4KSpHFCvxPss7N60HtjK5yvwFE+w1ii0k/6sUREg/XM=",
-      "subject": "CN=Atos TrustedRoot Client-CA 2013,O=Atos,C=DE",
-      "subjectDN": "MEYxKDAmBgNVBAMMH0F0b3MgVHJ1c3RlZFJvb3QgQ2xpZW50LUNBIDIwMTMxDTALBgNVBAoMBEF0b3MxCzAJBgNVBAYTAkRF",
-      "whitelist": false,
-      "attachment": {
-        "hash": "8f4098af61d8dad073dd0771e4efd2ee78f3b9dde5b20990c03fe1075bdd678a",
-        "size": 1561,
-        "filename": "x1544Iz8YLSNjqF0CQ1JdKEkifn0AZ3h_QZt_MioExg=.pem",
-        "location": "security-state-staging/intermediates/92c082b5-f8f5-4f02-a1a2-d0a7112d4a35.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "x1544Iz8YLSNjqF0CQ1JdKEkifn0AZ3h/QZt/MioExg=",
-      "crlite_enrolled": false,
-      "id": "8b0d5b38-6f90-4466-8606-bde07a3e12e8",
-      "last_modified": 1666727870621
-    },
-    {
-      "schema": 1666727351799,
-      "derHash": "ChpSIfON1Fg2eiDVJ9sYgAgqzO72moVG+2fTAlP5CCQ=",
-      "subject": "CN=Atos TrustedRoot CodeSigning-CA 2013,O=Atos,C=DE",
-      "subjectDN": "MEsxLTArBgNVBAMMJEF0b3MgVHJ1c3RlZFJvb3QgQ29kZVNpZ25pbmctQ0EgMjAxMzENMAsGA1UECgwEQXRvczELMAkGA1UEBhMCREU=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "1fe6385ba0486b50631ee6ded9d813fe00c7b69915bb5ff98811bac7db2a494a",
-        "size": 1565,
-        "filename": "pxAruQtiJ4aLD27HqNd4qfvv07MUns2jaoeSYYi6OrQ=.pem",
-        "location": "security-state-staging/intermediates/54d610af-b3dc-447e-b948-7032624747a7.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "pxAruQtiJ4aLD27HqNd4qfvv07MUns2jaoeSYYi6OrQ=",
-      "crlite_enrolled": false,
-      "id": "d043bdbb-43b3-4701-b169-93da04b081aa",
-      "last_modified": 1666727870607
-    },
-    {
-      "schema": 1666727344192,
-      "derHash": "qq/pPjWbFJpMngtXLVG/N/2jin6aNZv5A1m6nKqWqt8=",
-      "subject": "CN=Atos TrustedRoot Server-CA 2013,O=Atos,C=DE",
-      "subjectDN": "MEYxKDAmBgNVBAMMH0F0b3MgVHJ1c3RlZFJvb3QgU2VydmVyLUNBIDIwMTMxDTALBgNVBAoMBEF0b3MxCzAJBgNVBAYTAkRF",
-      "whitelist": false,
-      "attachment": {
-        "hash": "3a6282f735ea66c38369711f7a511e7a8f40608ccbb6adb005af1b94bad5d4de",
-        "size": 1561,
-        "filename": "obLbX6ExWI0XXj12lo4-ITcs5rF7AE6dzl2X86Q8EpI=.pem",
-        "location": "security-state-staging/intermediates/69a41bd1-a437-463d-b4ba-83c2a65e4936.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "obLbX6ExWI0XXj12lo4+ITcs5rF7AE6dzl2X86Q8EpI=",
-      "crlite_enrolled": false,
-      "id": "a25c486d-fc0f-4770-9864-911e40701c9b",
-      "last_modified": 1666727870594
-    },
-    {
       "schema": 1666727404421,
       "derHash": "fP40N45zBp86aBO+yJoOR2k8Ia4mo3YNUM300F5A0fM=",
       "subject": "CN=HARICA EV TLS ECC 2,O=Hellenic Academic and Research Institutions CA,C=GR",
@@ -24769,24 +24715,6 @@
       "last_modified": 1601517441658
     },
     {
-      "schema": 1601376728241,
-      "derHash": "wa/GWx6BOw5hRuaqU0FoEnKr6aONWfe9Gye3KYNKDZw=",
-      "subject": "CN=UCA Global G2 Root,O=UniTrust,C=CN",
-      "subjectDN": "MD0xCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDEbMBkGA1UEAwwSVUNBIEdsb2JhbCBHMiBSb290",
-      "whitelist": false,
-      "attachment": {
-        "hash": "8b23b9246ee0e3e317646bd91f006eaccbe8145196df356203921598a861c41c",
-        "size": 2093,
-        "filename": "ElXKvoFS-mTflC96R0F-KflsHOEb-MhOy-KBXMEoCBA=.pem",
-        "location": "security-state-staging/intermediates/069b42b2-4592-4d14-8a72-aec786fb8af9.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "ElXKvoFS+mTflC96R0F+KflsHOEb+MhOy+KBXMEoCBA=",
-      "crlite_enrolled": false,
-      "id": "343087f6-4b20-4a64-8815-bfd565b84a7e",
-      "last_modified": 1601517441395
-    },
-    {
       "schema": 1592519327887,
       "derHash": "HQzX7zwZJlUI4g5Ys1OJZPShGt7Ipx2KuKiv8VaDxq4=",
       "subject": "CN=Trustwave XRamp Global Extended Validation CA\\, Level 1,O=Trustwave Holdings\\, Inc.,L=Chicago,ST=Illinois,C=US",
@@ -27577,5 +27505,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1682521023549
+  "timestamp": 1682866623436
 }
