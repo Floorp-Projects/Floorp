@@ -180,6 +180,21 @@ test:
       - https://example.com
     telemetry_mirror: YET_ANOTHER_KEYED_BOOL_SCALAR
 
+  text_metric:
+    type: text
+    expires: never
+    description: |
+      A multi-line
+      description
+    lifetime: application
+    notification_emails:
+      - glean-team@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1828528
+    data_reviews:
+      - https://example.com
+
+
   timespan_metric:
     type: timespan
     expires: never

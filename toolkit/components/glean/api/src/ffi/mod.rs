@@ -21,6 +21,7 @@ mod quantity;
 mod rate;
 mod string;
 mod string_list;
+mod text;
 mod timespan;
 mod timing_distribution;
 mod url;
