@@ -2092,13 +2092,15 @@ nscoord nsIFrame::SynthesizeFallbackBaseline(
 }
 
 nscoord nsIFrame::GetLogicalBaseline(WritingMode aWM) const {
-  return GetLogicalBaseline(aWM, GetDefaultBaselineSharingGroup());
+  return GetLogicalBaseline(aWM, GetDefaultBaselineSharingGroup(),
+                            BaselineExportContext::LineLayout);
 }
 
 nscoord nsIFrame::GetLogicalBaseline(
-    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
+    BaselineExportContext aExportContext) const {
   const auto result =
-      GetNaturalBaselineBOffset(aWM, aBaselineGroup)
+      GetNaturalBaselineBOffset(aWM, aBaselineGroup, aExportContext)
           .valueOrFrom([this, aWM, aBaselineGroup]() {
             return SynthesizeFallbackBaseline(aWM, aBaselineGroup);
           });

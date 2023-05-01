@@ -851,7 +851,8 @@ nscoord nsFieldSetFrame::SynthesizeFallbackBaseline(
 }
 
 Maybe<nscoord> nsFieldSetFrame::GetNaturalBaselineBOffset(
-    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
+    BaselineExportContext aExportContext) const {
   if (StyleDisplay()->IsContainLayout()) {
     // If we are layout-contained, our child 'inner' should not
     // affect how we calculate our baseline.
@@ -862,7 +863,8 @@ Maybe<nscoord> nsFieldSetFrame::GetNaturalBaselineBOffset(
     return Nothing{};
   }
   MOZ_ASSERT(!inner->GetWritingMode().IsOrthogonalTo(aWM));
-  const auto result = inner->GetNaturalBaselineBOffset(aWM, aBaselineGroup);
+  const auto result =
+      inner->GetNaturalBaselineBOffset(aWM, aBaselineGroup, aExportContext);
   if (!result) {
     return Nothing{};
   }

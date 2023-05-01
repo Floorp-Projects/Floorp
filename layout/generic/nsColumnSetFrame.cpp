@@ -1297,10 +1297,12 @@ void nsColumnSetFrame::AppendDirectlyOwnedAnonBoxes(
 }
 
 Maybe<nscoord> nsColumnSetFrame::GetNaturalBaselineBOffset(
-    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
+    BaselineExportContext aExportContext) const {
   Maybe<nscoord> result;
   for (const auto* kid : mFrames) {
-    auto kidBaseline = kid->GetNaturalBaselineBOffset(aWM, aBaselineGroup);
+    auto kidBaseline =
+        kid->GetNaturalBaselineBOffset(aWM, aBaselineGroup, aExportContext);
     if (!kidBaseline) {
       continue;
     }
