@@ -60,8 +60,7 @@ class ColumnSetWrapperFrame final : public nsBlockFrame {
   nscoord GetPrefISize(gfxContext* aRenderingContext) override;
 
   Maybe<nscoord> GetNaturalBaselineBOffset(
-      WritingMode aWM, BaselineSharingGroup aBaselineGroup,
-      BaselineExportContext aExportContext) const override;
+      WritingMode aWM, BaselineSharingGroup aBaselineGroup) const override;
 
  private:
   explicit ColumnSetWrapperFrame(ComputedStyle* aStyle,
@@ -79,8 +78,7 @@ class ColumnSetWrapperFrame final : public nsBlockFrame {
   template <typename Iterator>
   Maybe<nscoord> GetBaselineBOffset(Iterator aStart, Iterator aEnd,
                                     WritingMode aWM,
-                                    BaselineSharingGroup aBaselineGroup,
-                                    BaselineExportContext aExportContext) const;
+                                    BaselineSharingGroup aBaselineGroup) const;
 };
 
 }  // namespace mozilla

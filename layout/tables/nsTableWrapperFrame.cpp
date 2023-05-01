@@ -41,8 +41,7 @@ nscoord nsTableWrapperFrame::SynthesizeFallbackBaseline(
 }
 
 Maybe<nscoord> nsTableWrapperFrame::GetNaturalBaselineBOffset(
-    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
-    BaselineExportContext aExportContext) const {
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
   // Baseline is determined by row
   // (https://drafts.csswg.org/css-align-3/#baseline-export). If the row
   // direction is going to be orthogonal to the parent's writing mode, the
@@ -53,8 +52,7 @@ Maybe<nscoord> nsTableWrapperFrame::GetNaturalBaselineBOffset(
     return Nothing{};
   }
   auto* innerTable = InnerTableFrame();
-  return innerTable
-      ->GetNaturalBaselineBOffset(aWM, aBaselineGroup, aExportContext)
+  return innerTable->GetNaturalBaselineBOffset(aWM, aBaselineGroup)
       .map([this, aWM, aBaselineGroup, innerTable](nscoord aBaseline) {
         auto bStart = innerTable->BStart(aWM, mRect.Size());
         if (aBaselineGroup == BaselineSharingGroup::First) {
