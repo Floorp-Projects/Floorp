@@ -63,7 +63,7 @@ FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["icons"] += [
 FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["qr-code"] += [
     "qr-code/popup.html",
     "qr-code/popup.js",
-    "qr-code/qrcode.min.js",
+    "qr-code/qrcode.js",
 ]
 
 FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["gesturefy"] += [
