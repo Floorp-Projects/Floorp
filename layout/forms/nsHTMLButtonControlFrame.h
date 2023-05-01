@@ -39,8 +39,8 @@ class nsHTMLButtonControlFrame : public nsContainerFrame,
                       nsReflowStatus& aStatus) override;
 
   Maybe<nscoord> GetNaturalBaselineBOffset(
-      mozilla::WritingMode aWM,
-      BaselineSharingGroup aBaselineGroup) const override;
+      mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup,
+      BaselineExportContext aExportContext) const override;
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
                                mozilla::WidgetGUIEvent* aEvent,
