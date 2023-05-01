@@ -65,8 +65,7 @@ nscoord nsDateTimeControlFrame::GetPrefISize(gfxContext* aRenderingContext) {
 }
 
 Maybe<nscoord> nsDateTimeControlFrame::GetNaturalBaselineBOffset(
-    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
-    BaselineExportContext) const {
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
   return nsTextControlFrame::GetSingleLineTextControlBaseline(
       this, mFirstBaseline, aWM, aBaselineGroup);
 }

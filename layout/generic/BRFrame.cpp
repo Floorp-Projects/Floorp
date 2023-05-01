@@ -60,8 +60,7 @@ class BRFrame final : public nsIFrame {
   nscoord GetPrefISize(gfxContext* aRenderingContext) override;
 
   Maybe<nscoord> GetNaturalBaselineBOffset(
-      WritingMode aWM, BaselineSharingGroup aBaselineGroup,
-      BaselineExportContext) const override;
+      WritingMode aWM, BaselineSharingGroup aBaselineGroup) const override;
 
   bool IsFrameOfType(uint32_t aFlags) const override {
     return nsIFrame::IsFrameOfType(
@@ -204,8 +203,7 @@ nscoord BRFrame::GetPrefISize(gfxContext* aRenderingContext) {
 }
 
 Maybe<nscoord> BRFrame::GetNaturalBaselineBOffset(
-    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
-    BaselineExportContext) const {
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
   if (aBaselineGroup == BaselineSharingGroup::Last) {
     return Nothing{};
   }

@@ -603,76 +603,54 @@ nscoord nsBlockFrame::SynthesizeFallbackBaseline(
   return Baseline::SynthesizeBOffsetFromMarginBox(this, aWM, aBaselineGroup);
 }
 
-template <typename LineIterator>
-Maybe<nscoord> nsBlockFrame::GetBaselineBOffset(
-    LineIterator aStart, LineIterator aEnd, WritingMode aWM,
-    BaselineSharingGroup aBaselineGroup,
-    BaselineExportContext aExportContext) const {
-  MOZ_ASSERT((std::is_same_v<LineIterator, ConstLineIterator> &&
-              aBaselineGroup == BaselineSharingGroup::First) ||
-                 (std::is_same_v<LineIterator, ConstReverseLineIterator> &&
-                  aBaselineGroup == BaselineSharingGroup::Last),
-             "Iterator direction must match baseline sharing group.");
-  for (auto line = aStart; line != aEnd; ++line) {
-    if (!line->IsBlock()) {
-      // XXX Is this the right test?  We have some bogus empty lines
-      // floating around, but IsEmpty is perhaps too weak.
-      if (line->BSize() != 0 || !line->IsEmpty()) {
-        const auto ascent = line->BStart() + line->GetLogicalAscent();
-        if (aBaselineGroup == BaselineSharingGroup::Last) {
-          return Some(BSize(aWM) - ascent);
-        }
-        return Some(ascent);
-      }
-      continue;
-    }
-    nsIFrame* kid = line->mFirstChild;
-    if (aWM.IsOrthogonalTo(kid->GetWritingMode())) {
-      continue;
-    }
-    if (aExportContext == BaselineExportContext::LineLayout &&
-        kid->IsTableWrapperFrame()) {
-      // `<table>` in inline-block context does not export any baseline.
-      continue;
-    }
-    const auto kidBaselineGroup =
-        aExportContext == BaselineExportContext::LineLayout
-            ? kid->GetDefaultBaselineSharingGroup()
-            : aBaselineGroup;
-    const auto kidBaseline =
-        kid->GetNaturalBaselineBOffset(aWM, kidBaselineGroup, aExportContext);
-    if (!kidBaseline) {
-      continue;
-    }
-    auto result = *kidBaseline;
-    if (kidBaselineGroup == BaselineSharingGroup::Last) {
-      result = kid->BSize(aWM) - result;
-    }
-    // Ignore relative positioning for baseline calculations.
-    const nsSize& sz = line->mContainerSize;
-    result += kid->GetLogicalNormalPosition(aWM, sz).B(aWM);
-    if (aBaselineGroup == BaselineSharingGroup::Last) {
-      return Some(BSize(aWM) - result);
-    }
-    return Some(result);
-  }
-  return Nothing{};
-}
-
 Maybe<nscoord> nsBlockFrame::GetNaturalBaselineBOffset(
-    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
-    BaselineExportContext aExportContext) const {
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
   if (StyleDisplay()->IsContainLayout()) {
     return Nothing{};
   }
 
   if (aBaselineGroup == BaselineSharingGroup::First) {
-    return GetBaselineBOffset(LinesBegin(), LinesEnd(), aWM, aBaselineGroup,
-                              aExportContext);
+    nscoord result;
+    if (!nsLayoutUtils::GetFirstLineBaseline(aWM, this, &result)) {
+      return Nothing{};
+    }
+    return Some(result);
   }
 
-  return GetBaselineBOffset(LinesRBegin(), LinesREnd(), aWM, aBaselineGroup,
-                            aExportContext);
+  for (ConstReverseLineIterator line = LinesRBegin(), line_end = LinesREnd();
+       line != line_end; ++line) {
+    if (line->IsBlock()) {
+      nsIFrame* kid = line->mFirstChild;
+      if (aWM.IsOrthogonalTo(kid->GetWritingMode())) {
+        continue;
+      }
+      if (kid->IsTableWrapperFrame()) {
+        // `<table>` in block display context does not export any baseline.
+        continue;
+      }
+      const auto kidBaselineGroup = kid->GetDefaultBaselineSharingGroup();
+      const auto kidBaseline =
+          kid->GetNaturalBaselineBOffset(aWM, kidBaselineGroup);
+      if (!kidBaseline) {
+        continue;
+      }
+      auto result = *kidBaseline;
+      if (kidBaselineGroup == BaselineSharingGroup::Last) {
+        result = kid->BSize(aWM) - result;
+      }
+      // Ignore relative positioning for baseline calculations.
+      const nsSize& sz = line->mContainerSize;
+      result += kid->GetLogicalNormalPosition(aWM, sz).B(aWM);
+      return Some(BSize(aWM) - result);
+    } else {
+      // XXX Is this the right test?  We have some bogus empty lines
+      // floating around, but IsEmpty is perhaps too weak.
+      if (line->BSize() != 0 || !line->IsEmpty()) {
+        return Some(BSize(aWM) - (line->BStart() + line->GetLogicalAscent()));
+      }
+    }
+  }
+  return Nothing{};
 }
 
 nscoord nsBlockFrame::GetCaretBaseline() const {
@@ -1592,8 +1570,7 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
       const auto baselineGroup = BaselineSharingGroup::First;
       Maybe<nscoord> result;
       if (MOZ_LIKELY(!wm.IsOrthogonalTo(marker->GetWritingMode()))) {
-        result = marker->GetNaturalBaselineBOffset(
-            wm, baselineGroup, BaselineExportContext::LineLayout);
+        result = marker->GetNaturalBaselineBOffset(wm, baselineGroup);
       }
       const auto markerBaseline = result.valueOrFrom([bbox, wm, marker]() {
         return bbox.BSize(wm) + marker->GetLogicalUsedMargin(wm).BEnd(wm);
