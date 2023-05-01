@@ -28,7 +28,6 @@ use crate::shared_lock::{Locked, SharedRwLockReadGuard, StylesheetGuards};
 use crate::stylesheet_set::{DataValidity, DocumentStylesheetSet, SheetRebuildKind};
 use crate::stylesheet_set::{DocumentStylesheetFlusher, SheetCollectionFlusher};
 use crate::stylesheets::container_rule::ContainerCondition;
-use crate::stylesheets::import_rule::ImportLayer;
 use crate::stylesheets::keyframes_rule::KeyframesAnimation;
 use crate::stylesheets::layer_rule::{LayerName, LayerOrder};
 use crate::stylesheets::viewport_rule::{self, MaybeNew, ViewportRule};
@@ -2937,10 +2936,8 @@ impl CascadeData {
                         self.effective_media_query_results
                             .saw_effective(import_rule);
                     }
-                    match import_rule.layer {
-                        ImportLayer::Named(ref name) => maybe_register_layers(self, Some(name), containing_rule_state),
-                        ImportLayer::Anonymous => maybe_register_layers(self, None, containing_rule_state),
-                        ImportLayer::None => {},
+                    if let Some(ref layer) = import_rule.layer {
+                        maybe_register_layers(self, layer.name.as_ref(), containing_rule_state);
                     }
                 },
                 CssRule::Media(ref lock) => {

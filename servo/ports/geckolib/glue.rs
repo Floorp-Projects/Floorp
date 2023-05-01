@@ -120,7 +120,7 @@ use style::shared_lock::{
 use style::string_cache::{Atom, WeakAtom};
 use style::style_adjuster::StyleAdjuster;
 use style::stylesheets::container_rule::ContainerSizeQuery;
-use style::stylesheets::import_rule::{ImportSheet, ImportLayer};
+use style::stylesheets::import_rule::ImportSheet;
 use style::stylesheets::keyframes_rule::{Keyframe, KeyframeSelector, KeyframesStepValue};
 use style::stylesheets::layer_rule::LayerOrder;
 use style::stylesheets::supports_rule::parse_condition_or_declaration;
@@ -2711,9 +2711,8 @@ pub extern "C" fn Servo_ImportRule_GetLayerName(
     result: &mut nsACString,
 ) {
     read_locked_arc(rule, |rule: &ImportRule| match rule.layer {
-        ImportLayer::Named(ref name) => name.to_css(&mut CssWriter::new(result)).unwrap(),
-        ImportLayer::Anonymous => "".to_css(&mut CssWriter::new(result)).unwrap(),
-        ImportLayer::None => result.set_is_void(true),
+        Some(ref layer) => layer.name.to_css(&mut CssWriter::new(result)).unwrap(),
+        None => result.set_is_void(true),
     })
 }
 
