@@ -1011,11 +1011,7 @@ export class UrlbarInput {
           false,
           loadOpts
         );
-
-        // Make sure that we don't close the last tab in the browser.
-        let isLastTab = this.window.gBrowser.visibleTabs.length == 1;
-
-        if (switched && prevTab.isEmpty && !isLastTab) {
+        if (switched && prevTab.isEmpty) {
           this.window.gBrowser.removeTab(prevTab);
         }
 
