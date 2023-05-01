@@ -2182,20 +2182,33 @@ void MacroAssembler::loadAtomHash(Register id, Register outHash, Label* done) {
 void MacroAssembler::loadAtomOrSymbolAndHash(ValueOperand value, Register outId,
                                              Register outHash,
                                              Label* cacheMiss) {
-  Label isString, done, nonAtom, atom, lastLookupAtom;
+  Label isString, isSymbol, isNull, isUndefined, done, nonAtom, atom,
+      lastLookupAtom;
 
   {
     ScratchTagScope tag(*this, value);
     splitTagForTest(value, tag);
     branchTestString(Assembler::Equal, tag, &isString);
-
-    branchTestSymbol(Assembler::NotEqual, tag, cacheMiss);
-
-    unboxSymbol(value, outId);
-    load32(Address(outId, JS::Symbol::offsetOfHash()), outHash);
-    orPtr(Imm32(PropertyKey::SymbolTypeTag), outId);
-    jump(&done);
+    branchTestSymbol(Assembler::Equal, tag, &isSymbol);
+    branchTestNull(Assembler::Equal, tag, &isNull);
+    branchTestUndefined(Assembler::NotEqual, tag, cacheMiss);
   }
+
+  const JSAtomState& names = runtime()->names();
+  movePropertyKey(PropertyKey::NonIntAtom(names.undefined), outId);
+  move32(Imm32(names.undefined->hash()), outHash);
+  jump(&done);
+
+  bind(&isNull);
+  movePropertyKey(PropertyKey::NonIntAtom(names.null), outId);
+  move32(Imm32(names.null->hash()), outHash);
+  jump(&done);
+
+  bind(&isSymbol);
+  unboxSymbol(value, outId);
+  load32(Address(outId, JS::Symbol::offsetOfHash()), outHash);
+  orPtr(Imm32(PropertyKey::SymbolTypeTag), outId);
+  jump(&done);
 
   bind(&isString);
   unboxString(value, outId);
