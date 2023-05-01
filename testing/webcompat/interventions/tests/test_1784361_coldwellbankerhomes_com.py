@@ -5,7 +5,7 @@ import pytest
 
 URL = "https://www.coldwellbankerhomes.com/ri/little-compton/kvc-17_1,17_2/"
 ERROR_MSG = 'can\'t access property "dataset", v[0] is undefined'
-SUCCESS_CSS = "img[src='https://m.cbhomes.com/p/412/1333515/48cd7692a01247A/s23cc.jpg']"
+SUCCESS_CSS = "img.psr-lazy:not([src*='spacer'])"
 
 
 @pytest.mark.only_platforms("android")
