@@ -81,21 +81,22 @@ void MFCDMChild::Shutdown() {
 
   mRemoteRequest.DisconnectIfExists();
   mInitRequest.DisconnectIfExists();
-  mCreateSessionRequest.DisconnectIfExists();
-  mLoadSessionRequest.DisconnectIfExists();
-  mUpdateSessionRequest.DisconnectIfExists();
-  mCloseSessionRequest.DisconnectIfExists();
 
   if (mState == NS_OK) {
     mManagerThread->Dispatch(
         NS_NewRunnableFunction(__func__, [self = RefPtr{this}, this]() {
+          for (auto& promise : mPendingSessionPromises) {
+            promise.second.RejectIfExists(NS_ERROR_ABORT, __func__);
+          }
+          mPendingSessionPromises.clear();
+
+          for (auto& promise : mPendingGenericPromises) {
+            promise.second.RejectIfExists(NS_ERROR_ABORT, __func__);
+          }
+          mPendingGenericPromises.clear();
+
           mRemotePromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
           mCapabilitiesPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
-          mInitPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
-          mCreateSessionPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
-          mLoadSessionPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
-          mUpdateSessionPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
-          mCloseSessionPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
 
           Send__delete__(this);
         }));
@@ -209,168 +210,229 @@ RefPtr<MFCDMChild::InitPromise> MFCDMChild::Init(
 }
 
 RefPtr<MFCDMChild::SessionPromise> MFCDMChild::CreateSessionAndGenerateRequest(
-    KeySystemConfig::SessionType aSessionType, const nsAString& aInitDataType,
-    const nsTArray<uint8_t>& aInitData) {
+    uint32_t aPromiseId, KeySystemConfig::SessionType aSessionType,
+    const nsAString& aInitDataType, const nsTArray<uint8_t>& aInitData) {
   MOZ_ASSERT(mManagerThread);
   MOZ_ASSERT(mId > 0, "Should call Init() first and wait for it");
 
+  if (mShutdown) {
+    return MFCDMChild::SessionPromise::CreateAndReject(NS_ERROR_ABORT,
+                                                       __func__);
+  }
+
+  MOZ_ASSERT(mPendingSessionPromises.find(aPromiseId) ==
+             mPendingSessionPromises.end());
+  mPendingSessionPromises.emplace(aPromiseId,
+                                  MozPromiseHolder<SessionPromise>{});
   mManagerThread->Dispatch(NS_NewRunnableFunction(
       __func__, [self = RefPtr{this}, this,
-                 params = MFCDMCreateSessionParamsIPDL{
-                     aSessionType, nsString{aInitDataType}, aInitData}] {
-        SendCreateSessionAndGenerateRequest(params)
-            ->Then(
-                mManagerThread, __func__,
-                [self, this](const MFCDMSessionResult& result) {
-                  mCreateSessionRequest.Complete();
-                  if (result.type() == MFCDMSessionResult::Tnsresult) {
-                    mCreateSessionPromiseHolder.RejectIfExists(
-                        result.get_nsresult(), __func__);
-                    return;
-                  }
-                  LOG("session ID=[%zu]%s", result.get_nsString().Length(),
-                      NS_ConvertUTF16toUTF8(result.get_nsString()).get());
-                  mCreateSessionPromiseHolder.ResolveIfExists(
-                      result.get_nsString(), __func__);
-                },
-                [self,
-                 this](const mozilla::ipc::ResponseRejectReason& aReason) {
-                  mCreateSessionRequest.Complete();
-                  mCreateSessionPromiseHolder.RejectIfExists(NS_ERROR_FAILURE,
-                                                             __func__);
-                })
-            ->Track(mCreateSessionRequest);
+                 params =
+                     MFCDMCreateSessionParamsIPDL{
+                         aSessionType, nsString{aInitDataType}, aInitData},
+                 aPromiseId] {
+        SendCreateSessionAndGenerateRequest(params)->Then(
+            mManagerThread, __func__,
+            [self, aPromiseId, this](const MFCDMSessionResult& result) {
+              auto iter = mPendingSessionPromises.find(aPromiseId);
+              if (iter == mPendingSessionPromises.end()) {
+                return;
+              }
+              auto& promiseHolder = iter->second;
+              if (result.type() == MFCDMSessionResult::Tnsresult) {
+                promiseHolder.RejectIfExists(result.get_nsresult(), __func__);
+              } else {
+                LOG("session ID=[%zu]%s", result.get_nsString().Length(),
+                    NS_ConvertUTF16toUTF8(result.get_nsString()).get());
+                promiseHolder.ResolveIfExists(result.get_nsString(), __func__);
+              }
+              mPendingSessionPromises.erase(iter);
+            },
+            [self, aPromiseId,
+             this](const mozilla::ipc::ResponseRejectReason& aReason) {
+              auto iter = mPendingSessionPromises.find(aPromiseId);
+              if (iter == mPendingSessionPromises.end()) {
+                return;
+              }
+              auto& promiseHolder = iter->second;
+              promiseHolder.RejectIfExists(NS_ERROR_FAILURE, __func__);
+              mPendingSessionPromises.erase(iter);
+            });
       }));
-  return mCreateSessionPromiseHolder.Ensure(__func__);
+  return mPendingSessionPromises[aPromiseId].Ensure(__func__);
 }
 
 RefPtr<GenericPromise> MFCDMChild::LoadSession(
-    const KeySystemConfig::SessionType aSessionType,
+    uint32_t aPromiseId, const KeySystemConfig::SessionType aSessionType,
     const nsAString& aSessionId) {
   MOZ_ASSERT(mManagerThread);
   MOZ_ASSERT(mId > 0, "Should call Init() first and wait for it");
 
-  mManagerThread->Dispatch(
-      NS_NewRunnableFunction(__func__, [self = RefPtr{this}, this, aSessionType,
-                                        sessionId = nsString{aSessionId}] {
+  if (mShutdown) {
+    return GenericPromise::CreateAndReject(NS_ERROR_ABORT, __func__);
+  }
+
+  MOZ_ASSERT(mPendingGenericPromises.find(aPromiseId) ==
+             mPendingGenericPromises.end());
+  mPendingGenericPromises.emplace(aPromiseId,
+                                  MozPromiseHolder<GenericPromise>{});
+  mManagerThread->Dispatch(NS_NewRunnableFunction(
+      __func__, [self = RefPtr{this}, this, aSessionType,
+                 sessionId = nsString{aSessionId}, aPromiseId] {
         SendLoadSession(aSessionType, sessionId)
-            ->Then(
-                mManagerThread, __func__,
-                [self,
-                 this](PMFCDMChild::LoadSessionPromise::ResolveOrRejectValue&&
+            ->Then(mManagerThread, __func__,
+                   [self, this, aPromiseId](
+                       PMFCDMChild::LoadSessionPromise::ResolveOrRejectValue&&
                            aResult) {
-                  mLoadSessionRequest.Complete();
-                  if (aResult.IsResolve()) {
-                    if (NS_SUCCEEDED(aResult.ResolveValue())) {
-                      mLoadSessionPromiseHolder.ResolveIfExists(true, __func__);
-                    } else {
-                      mLoadSessionPromiseHolder.RejectIfExists(
-                          aResult.ResolveValue(), __func__);
-                    }
-                  } else {
-                    // IPC died
-                    mLoadSessionPromiseHolder.RejectIfExists(NS_ERROR_FAILURE,
-                                                             __func__);
-                  }
-                })
-            ->Track(mLoadSessionRequest);
+                     auto iter = mPendingGenericPromises.find(aPromiseId);
+                     if (iter == mPendingGenericPromises.end()) {
+                       return;
+                     }
+                     auto& promiseHolder = iter->second;
+                     if (aResult.IsResolve()) {
+                       if (NS_SUCCEEDED(aResult.ResolveValue())) {
+                         promiseHolder.ResolveIfExists(true, __func__);
+                       } else {
+                         promiseHolder.RejectIfExists(aResult.ResolveValue(),
+                                                      __func__);
+                       }
+                     } else {
+                       // IPC died
+                       promiseHolder.RejectIfExists(NS_ERROR_FAILURE, __func__);
+                     }
+                     mPendingGenericPromises.erase(iter);
+                   });
       }));
-  return mLoadSessionPromiseHolder.Ensure(__func__);
+  return mPendingGenericPromises[aPromiseId].Ensure(__func__);
 }
 
-RefPtr<GenericPromise> MFCDMChild::UpdateSession(const nsAString& aSessionId,
+RefPtr<GenericPromise> MFCDMChild::UpdateSession(uint32_t aPromiseId,
+                                                 const nsAString& aSessionId,
                                                  nsTArray<uint8_t>& aResponse) {
   MOZ_ASSERT(mManagerThread);
   MOZ_ASSERT(mId > 0, "Should call Init() first and wait for it");
 
+  if (mShutdown) {
+    return GenericPromise::CreateAndReject(NS_ERROR_ABORT, __func__);
+  }
+
+  MOZ_ASSERT(mPendingGenericPromises.find(aPromiseId) ==
+             mPendingGenericPromises.end());
+  mPendingGenericPromises.emplace(aPromiseId,
+                                  MozPromiseHolder<GenericPromise>{});
   mManagerThread->Dispatch(NS_NewRunnableFunction(
       __func__, [self = RefPtr{this}, this, sessionId = nsString{aSessionId},
-                 response = std::move(aResponse)] {
+                 response = std::move(aResponse), aPromiseId] {
         SendUpdateSession(sessionId, response)
             ->Then(mManagerThread, __func__,
-                   [self, this](
+                   [self, this, aPromiseId](
                        PMFCDMChild::UpdateSessionPromise::ResolveOrRejectValue&&
                            aResult) {
-                     mUpdateSessionRequest.Complete();
+                     auto iter = mPendingGenericPromises.find(aPromiseId);
+                     if (iter == mPendingGenericPromises.end()) {
+                       return;
+                     }
+                     auto& promiseHolder = iter->second;
                      if (aResult.IsResolve()) {
                        if (NS_SUCCEEDED(aResult.ResolveValue())) {
-                         mUpdateSessionPromiseHolder.ResolveIfExists(true,
-                                                                     __func__);
+                         promiseHolder.ResolveIfExists(true, __func__);
                        } else {
-                         mUpdateSessionPromiseHolder.RejectIfExists(
-                             aResult.ResolveValue(), __func__);
+                         promiseHolder.RejectIfExists(aResult.ResolveValue(),
+                                                      __func__);
                        }
                      } else {
                        // IPC died
-                       mUpdateSessionPromiseHolder.RejectIfExists(
-                           NS_ERROR_FAILURE, __func__);
+                       promiseHolder.RejectIfExists(NS_ERROR_FAILURE, __func__);
                      }
-                   })
-            ->Track(mUpdateSessionRequest);
+                     mPendingGenericPromises.erase(iter);
+                   });
       }));
-  return mUpdateSessionPromiseHolder.Ensure(__func__);
+  return mPendingGenericPromises[aPromiseId].Ensure(__func__);
 }
 
-RefPtr<GenericPromise> MFCDMChild::CloseSession(const nsAString& aSessionId) {
+RefPtr<GenericPromise> MFCDMChild::CloseSession(uint32_t aPromiseId,
+                                                const nsAString& aSessionId) {
   MOZ_ASSERT(mManagerThread);
   MOZ_ASSERT(mId > 0, "Should call Init() first and wait for it");
 
+  if (mShutdown) {
+    return GenericPromise::CreateAndReject(NS_ERROR_ABORT, __func__);
+  }
+
+  MOZ_ASSERT(mPendingGenericPromises.find(aPromiseId) ==
+             mPendingGenericPromises.end());
+  mPendingGenericPromises.emplace(aPromiseId,
+                                  MozPromiseHolder<GenericPromise>{});
   mManagerThread->Dispatch(NS_NewRunnableFunction(
-      __func__, [self = RefPtr{this}, this, sessionId = nsString{aSessionId}] {
-        SendCloseSession(sessionId)
-            ->Then(mManagerThread, __func__,
-                   [self, this](
-                       PMFCDMChild::CloseSessionPromise::ResolveOrRejectValue&&
-                           aResult) {
-                     mCloseSessionRequest.Complete();
-                     if (aResult.IsResolve()) {
-                       if (NS_SUCCEEDED(aResult.ResolveValue())) {
-                         mCloseSessionPromiseHolder.ResolveIfExists(true,
-                                                                    __func__);
-                       } else {
-                         mCloseSessionPromiseHolder.RejectIfExists(
-                             aResult.ResolveValue(), __func__);
-                       }
-                     } else {
-                       // IPC died
-                       mCloseSessionPromiseHolder.RejectIfExists(
-                           NS_ERROR_FAILURE, __func__);
-                     }
-                   })
-            ->Track(mCloseSessionRequest);
+      __func__, [self = RefPtr{this}, this, sessionId = nsString{aSessionId},
+                 aPromiseId] {
+        SendCloseSession(sessionId)->Then(
+            mManagerThread, __func__,
+            [self, this, aPromiseId](
+                PMFCDMChild::CloseSessionPromise::ResolveOrRejectValue&&
+                    aResult) {
+              auto iter = mPendingGenericPromises.find(aPromiseId);
+              if (iter == mPendingGenericPromises.end()) {
+                return;
+              }
+              auto& promiseHolder = iter->second;
+              if (aResult.IsResolve()) {
+                if (NS_SUCCEEDED(aResult.ResolveValue())) {
+                  promiseHolder.ResolveIfExists(true, __func__);
+                } else {
+                  promiseHolder.RejectIfExists(aResult.ResolveValue(),
+                                               __func__);
+                }
+              } else {
+                // IPC died
+                promiseHolder.RejectIfExists(NS_ERROR_FAILURE, __func__);
+              }
+              mPendingGenericPromises.erase(iter);
+            });
       }));
-  return mCloseSessionPromiseHolder.Ensure(__func__);
+  return mPendingGenericPromises[aPromiseId].Ensure(__func__);
 }
 
-RefPtr<GenericPromise> MFCDMChild::RemoveSession(const nsAString& aSessionId) {
+RefPtr<GenericPromise> MFCDMChild::RemoveSession(uint32_t aPromiseId,
+                                                 const nsAString& aSessionId) {
   MOZ_ASSERT(mManagerThread);
   MOZ_ASSERT(mId > 0, "Should call Init() first and wait for it");
 
+  if (mShutdown) {
+    return GenericPromise::CreateAndReject(NS_ERROR_ABORT, __func__);
+  }
+
+  MOZ_ASSERT(mPendingGenericPromises.find(aPromiseId) ==
+             mPendingGenericPromises.end());
+  mPendingGenericPromises.emplace(aPromiseId,
+                                  MozPromiseHolder<GenericPromise>{});
   mManagerThread->Dispatch(NS_NewRunnableFunction(
-      __func__, [self = RefPtr{this}, this, sessionId = nsString{aSessionId}] {
-        SendRemoveSession(sessionId)
-            ->Then(mManagerThread, __func__,
-                   [self, this](
-                       PMFCDMChild::RemoveSessionPromise::ResolveOrRejectValue&&
-                           aResult) {
-                     mRemoveSessionRequest.Complete();
-                     if (aResult.IsResolve()) {
-                       if (NS_SUCCEEDED(aResult.ResolveValue())) {
-                         mRemoveSessionPromiseHolder.ResolveIfExists(true,
-                                                                     __func__);
-                       } else {
-                         mRemoveSessionPromiseHolder.RejectIfExists(
-                             aResult.ResolveValue(), __func__);
-                       }
-                     } else {
-                       // IPC died
-                       mRemoveSessionPromiseHolder.RejectIfExists(
-                           NS_ERROR_FAILURE, __func__);
-                     }
-                   })
-            ->Track(mRemoveSessionRequest);
+      __func__, [self = RefPtr{this}, this, sessionId = nsString{aSessionId},
+                 aPromiseId] {
+        SendRemoveSession(sessionId)->Then(
+            mManagerThread, __func__,
+            [self, this, aPromiseId](
+                PMFCDMChild::RemoveSessionPromise::ResolveOrRejectValue&&
+                    aResult) {
+              auto iter = mPendingGenericPromises.find(aPromiseId);
+              if (iter == mPendingGenericPromises.end()) {
+                return;
+              }
+              auto& promiseHolder = iter->second;
+              if (aResult.IsResolve()) {
+                if (NS_SUCCEEDED(aResult.ResolveValue())) {
+                  promiseHolder.ResolveIfExists(true, __func__);
+                } else {
+                  promiseHolder.RejectIfExists(aResult.ResolveValue(),
+                                               __func__);
+                }
+              } else {
+                // IPC died
+                promiseHolder.RejectIfExists(NS_ERROR_FAILURE, __func__);
+              }
+              mPendingGenericPromises.erase(iter);
+            });
       }));
-  return mRemoveSessionPromiseHolder.Ensure(__func__);
+  return mPendingGenericPromises[aPromiseId].Ensure(__func__);
 }
 
 mozilla::ipc::IPCResult MFCDMChild::RecvOnSessionKeyMessage(
