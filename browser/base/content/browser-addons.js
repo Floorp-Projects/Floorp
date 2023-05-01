@@ -1775,21 +1775,31 @@ var gUnifiedExtensions = {
   },
 
   // This internal method is used to change some CSS classnames on the action
-  // button of an extension (CUI) widget. When the widget is placed in the
-  // panel, the action button should have the `.subviewbutton` class and not
-  // the `.toolbarbutton-1` one. When NOT placed in the panel, it is the other
-  // way around.
+  // and menu buttons of an extension (CUI) widget. When the widget is placed
+  // in the panel, the action and menu buttons should have the `.subviewbutton`
+  // class and not the `.toolbarbutton-1` one. When NOT placed in the panel,
+  // it is the other way around.
   _updateWidgetClassName(aWidgetId, inPanel) {
     if (!CustomizableUI.isWebExtensionWidget(aWidgetId)) {
       return;
     }
 
-    const actionButton = CustomizableUI.getWidget(aWidgetId)
-      ?.forWindow(window)
-      ?.node?.querySelector(".unified-extensions-item-action-button");
+    const node = CustomizableUI.getWidget(aWidgetId)?.forWindow(window)?.node;
+    const actionButton = node?.querySelector(
+      ".unified-extensions-item-action-button"
+    );
     if (actionButton) {
       actionButton.classList.toggle("subviewbutton", inPanel);
+      actionButton.classList.toggle("subviewbutton-iconic", inPanel);
       actionButton.classList.toggle("toolbarbutton-1", !inPanel);
+    }
+    const menuButton = node?.querySelector(
+      ".unified-extensions-item-menu-button"
+    );
+    if (menuButton) {
+      menuButton.classList.toggle("subviewbutton", inPanel);
+      menuButton.classList.toggle("subviewbutton-iconic", inPanel);
+      menuButton.classList.toggle("toolbarbutton-1", !inPanel);
     }
   },
 };
