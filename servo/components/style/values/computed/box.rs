@@ -18,7 +18,7 @@ pub use crate::values::specified::box_::{
     Float as SpecifiedFloat, Overflow, OverflowAnchor, OverflowClipBox, OverscrollBehavior,
     ScrollAxis, ScrollSnapAlign, ScrollSnapAxis, ScrollSnapStop, ScrollSnapStrictness,
     ScrollSnapType, ScrollTimelineName, ScrollbarGutter, TouchAction, TransitionProperty,
-    WillChange,
+    WillChange, BaselineSource,
 };
 
 use std::fmt::{self, Write};
