@@ -3491,27 +3491,33 @@ const int64_t TELEMETRY_REQUEST_SIZE_50M = (int64_t)50 * (int64_t)(1 << 20);
 const int64_t TELEMETRY_REQUEST_SIZE_100M = (int64_t)100 * (int64_t)(1 << 20);
 
 void nsHttpTransaction::CollectTelemetryForUploads() {
-  if ((mHttpVersion != HttpVersion::v3_0) && !mSupportsHTTP3) {
-    return;
-  }
   if ((mRequestSize < TELEMETRY_REQUEST_SIZE_10M) ||
       mTimings.requestStart.IsNull() || mTimings.responseStart.IsNull()) {
     return;
   }
 
-  nsCString key = (mHttpVersion == HttpVersion::v3_0) ? "uses_http3"_ns
-                                                      : "supports_http3"_ns;
-  auto hist = Telemetry::HTTP3_UPLOAD_TIME_10M_100M;
-  if (mRequestSize <= TELEMETRY_REQUEST_SIZE_50M) {
-    key.Append("_10_50"_ns);
-  } else if (mRequestSize <= TELEMETRY_REQUEST_SIZE_100M) {
-    key.Append("_50_100"_ns);
-  } else {
-    hist = Telemetry::HTTP3_UPLOAD_TIME_GT_100M;
-  }
+  nsAutoCString protocolVersion(nsHttp::GetProtocolVersion(mHttpVersion));
+  TimeDuration sendTime = mTimings.responseStart - mTimings.requestStart;
+  double megabits = static_cast<double>(mRequestSize) * 8.0 / 1000000.0;
+  uint32_t mpbs = static_cast<uint32_t>(megabits / sendTime.ToSeconds());
+  Telemetry::Accumulate(Telemetry::HTTP_UPLOAD_BANDWIDTH_MBPS, protocolVersion,
+                        mpbs);
 
-  Telemetry::AccumulateTimeDelta(hist, key, mTimings.requestStart,
-                                 mTimings.responseStart);
+  if ((mHttpVersion == HttpVersion::v3_0) || mSupportsHTTP3) {
+    nsAutoCString key((mHttpVersion == HttpVersion::v3_0) ? "uses_http3"
+                                                          : "supports_http3");
+    auto hist = Telemetry::HTTP3_UPLOAD_TIME_10M_100M;
+    if (mRequestSize <= TELEMETRY_REQUEST_SIZE_50M) {
+      key.Append("_10_50"_ns);
+    } else if (mRequestSize <= TELEMETRY_REQUEST_SIZE_100M) {
+      key.Append("_50_100"_ns);
+    } else {
+      hist = Telemetry::HTTP3_UPLOAD_TIME_GT_100M;
+    }
+
+    Telemetry::AccumulateTimeDelta(hist, key, mTimings.requestStart,
+                                   mTimings.responseStart);
+  }
 }
 
 void nsHttpTransaction::GetHashKeyOfConnectionEntry(nsACString& aResult) {
