@@ -637,6 +637,33 @@ impl Parse for VerticalAlign {
     }
 }
 
+/// A specified value for the `baseline-source` property.
+/// https://drafts.csswg.org/css-inline-3/#baseline-source
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    Hash,
+    MallocSizeOf,
+    Parse,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToCss,
+    ToShmem,
+    ToComputedValue,
+    ToResolvedValue,
+)]
+#[repr(u8)]
+pub enum BaselineSource {
+    /// `Last` for `inline-block`, `First` otherwise.
+    Auto,
+    /// Use first baseline for alignment.
+    First,
+    /// Use last baseline for alignment.
+    Last,
+}
+
 /// https://drafts.csswg.org/css-animations/#animation-iteration-count
 #[derive(Clone, Debug, MallocSizeOf, PartialEq, Parse, SpecifiedValueInfo, ToCss, ToShmem)]
 pub enum AnimationIterationCount {
