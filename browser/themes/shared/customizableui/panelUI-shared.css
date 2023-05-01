@@ -1317,7 +1317,7 @@ toolbarpaletteitem[place="palette"] > #search-container {
   max-height: 37px;
 }
 
-.toolbaritem-combined-buttons:is(
+.toolbaritem-combined-buttons:where(:not(.unified-extensions-item)):is(
   :not([cui-areatype="toolbar"]),
   [overflowedItem=true]
 ) > toolbarbutton {

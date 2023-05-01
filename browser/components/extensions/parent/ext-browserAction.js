@@ -265,9 +265,8 @@ this.browserAction = class extends ExtensionAPIPersistent {
 
         let menuButton = document.createXULElement("toolbarbutton");
         menuButton.classList.add(
-          "unified-extensions-item-menu-button",
-          "subviewbutton",
-          "subviewbutton-iconic"
+          "toolbarbutton-1",
+          "unified-extensions-item-menu-button"
         );
 
         menuButton.setAttribute(

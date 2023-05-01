@@ -39,6 +39,10 @@ unified-extensions-item > .subviewbutton {
   padding-block: 2px;
 }
 
+.unified-extensions-item > .subviewbutton {
+  margin: 0;
+}
+
 /* The "attention UI" for the unified extensions is based on:
  * https://searchfox.org/mozilla-central/rev/560b7b1b17/browser/themes/shared/tabs.css#624 */
 
@@ -71,8 +75,8 @@ unified-extensions-item > .subviewbutton {
 }
 
 .unified-extensions-item-action-button {
+  flex: 1;
   overflow: hidden;
-  background-color: transparent;
 }
 
 /* The padding-block for menuitems is set to 0 in compact mode which, with the
@@ -80,14 +84,6 @@ unified-extensions-item > .subviewbutton {
  * compact mode. */
 :root[uidensity="compact"] panel:not([touchmode]) .unified-extensions-item-action-button {
   padding-block: 4px;
-}
-
-.unified-extensions-item-action-button[disabled].subviewbutton {
-  color: var(--panel-description-color);
-}
-
-.unified-extensions-item-action-button[disabled] > .unified-extensions-item-icon {
-  opacity: 0.5;
 }
 
 .unified-extensions-item-icon,
@@ -121,8 +117,7 @@ unified-extensions-item > .subviewbutton {
 
 .unified-extensions-item-menu-button.subviewbutton {
   list-style-image: url("chrome://global/skin/icons/settings.svg");
-  margin: 0;
-  margin-inline-end: var(--arrowpanel-menuitem-margin-inline);
+  margin-inline-start: var(--arrowpanel-menuitem-margin-inline);
   /* Have the icon even padding all around by default */
   padding: var(--arrowpanel-menuitem-padding-inline);
   border: 1px solid transparent;
@@ -130,47 +125,28 @@ unified-extensions-item > .subviewbutton {
 }
 
 /* Hide subview label. */
-:is(unified-extensions-item, toolbaritem).unified-extensions-item .toolbarbutton-text {
-  display: none;
+.unified-extensions-item .toolbarbutton-text {
+  display: none !important; /* override panelUI-shared.css */
 }
 
 /* --- browser action CUI widget styles --- */
 
 /* Hide the menu button and the unified extensions content when the extension
  * item is placed on the toolbar. */
-.unified-extensions-item[cui-areatype="toolbar"]:not([overflowedItem="true"]) :is(
-  .unified-extensions-item-menu-button,
-  .unified-extensions-item-contents
-) {
+.unified-extensions-item-menu-button.toolbarbutton-1,
+.unified-extensions-item-action-button.toolbarbutton-1 > .unified-extensions-item-contents {
   display: none;
-}
-
-toolbaritem.unified-extensions-item .unified-extensions-item-menu-button.subviewbutton {
-  flex: none;
-  margin-inline-start: var(--arrowpanel-menuitem-margin-inline);
-  padding: 8px;
-  border: 1px solid transparent;
 }
 
 /* --- browser action CUI widget styles in the extensions panel --- */
 
-/* Align CUI widgets with the custom elements in the unified extensions panel,
- * especially when the widgets overflow in the panel. */
-#unified-extensions-panel toolbaritem.unified-extensions-item {
-  max-width: max-content;
-}
-
 @media (prefers-contrast) {
-  :root {
+  :root:not(:-moz-lwtheme) {
     --uei-button-attention-dot-color: ButtonText;
   }
 
-  #unified-extensions-panel :is(
-    .unified-extensions-item-action-button:not([disabled]).subviewbutton,
-    .unified-extensions-item-menu-button.subviewbutton,
-    toolbaritem.unified-extensions-item .unified-extensions-item-action-button:not([disabled]).subviewbutton,
-    toolbaritem.unified-extensions-item .unified-extensions-item-menu-button.subviewbutton
-  ) {
+  .unified-extensions-item-action-button.subviewbutton:not([disabled], :-moz-lwtheme),
+  .unified-extensions-item-menu-button.subviewbutton:not(:-moz-lwtheme) {
     border-color: currentColor;
     background-color: ButtonFace;
     color: ButtonText;
@@ -180,41 +156,35 @@ toolbaritem.unified-extensions-item .unified-extensions-item-menu-button.subview
     --uei-button-active-color: ButtonText;
   }
 
-  #unified-extensions-panel .unified-extensions-item-action-button[disabled].subviewbutton {
+  .unified-extensions-item-action-button[disabled].subviewbutton:not(:-moz-lwtheme) {
     background-color: Canvas;
-    color: GrayText;
+    color: GrayText !important; /* override panelUI-shared.css */
+    opacity: 1 !important; /* override panelUI-shared.css */
   }
 
-  .unified-extensions-item-action-button[disabled] .unified-extensions-item-message {
-    color: GrayText;
+  .unified-extensions-item[attention] > .unified-extensions-item-action-button.subviewbutton:hover:not(:-moz-lwtheme) {
+    --uei-button-attention-dot-color: ButtonFace;
   }
 
-  .unified-extensions-item-action-button:not([disabled]) .unified-extensions-item-message {
-    color: ButtonText;
+  .unified-extensions-item[attention] > .unified-extensions-item-action-button.subviewbutton:hover:active:not(:-moz-lwtheme) {
+    --uei-button-attention-dot-color: ButtonText;
   }
 
-  .unified-extensions-item-action-button:not([disabled]):hover .unified-extensions-item-message {
+  .unified-extensions-item-message:not(:-moz-lwtheme) {
     color: inherit;
   }
 
-  #unified-extensions-panel :is(
-    .unified-extensions-item-action-button:not([disabled]).subviewbutton,
-    .unified-extensions-item-menu-button.subviewbutton,
-    toolbaritem.unified-extensions-item .unified-extensions-item-action-button:not([disabled]).subviewbutton,
-    toolbaritem.unified-extensions-item .unified-extensions-item-menu-button.subviewbutton
-  ):hover:not(:active) {
+  .unified-extensions-item > .unified-extensions-item-action-button.subviewbutton:hover:not([disabled], :-moz-lwtheme),
+  .unified-extensions-item > .unified-extensions-item-menu-button.subviewbutton:hover:not(:-moz-lwtheme) {
     background-color: var(--uei-button-hover-bgcolor);
     color: var(--uei-button-hover-color);
     border-color: var(--uei-button-hover-bgcolor);
   }
 
-  #unified-extensions-panel :is(
-    .unified-extensions-item-action-button:not([disabled]).subviewbutton,
-    .unified-extensions-item-menu-button.subviewbutton,
-    toolbaritem.unified-extensions-item .unified-extensions-item-action-button:not([disabled]).subviewbutton,
-    toolbaritem.unified-extensions-item .unified-extensions-item-menu-button.subviewbutton
-  ):hover:active {
+  .unified-extensions-item > .unified-extensions-item-action-button.subviewbutton:hover:active:not([disabled], :-moz-lwtheme),
+  .unified-extensions-item > .unified-extensions-item-menu-button.subviewbutton:hover:active:not(:-moz-lwtheme) {
     background-color: var(--uei-button-active-bgcolor);
     color: var(--uei-button-active-color);
+    border-color: var(--uei-button-active-color);
   }
 }

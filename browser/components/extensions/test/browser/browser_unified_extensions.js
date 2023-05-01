@@ -1384,47 +1384,60 @@ add_task(async function test_temporary_access() {
   );
 });
 
-add_task(async function test_action_button_css_class_with_new_window() {
-  const [extension] = createExtensions([
-    {
-      name: "an extension placed in the extensions panel",
-      browser_action: {
-        default_area: "menupanel",
+add_task(
+  async function test_action_and_menu_buttons_css_class_with_new_window() {
+    const [extension] = createExtensions([
+      {
+        name: "an extension placed in the extensions panel",
+        browser_action: {
+          default_area: "menupanel",
+        },
       },
-    },
-  ]);
-  await extension.startup();
+    ]);
+    await extension.startup();
 
-  let aSecondWindow = await BrowserTestUtils.openNewBrowserWindow();
-  await ensureMaximizedWindow(aSecondWindow);
+    let aSecondWindow = await BrowserTestUtils.openNewBrowserWindow();
+    await ensureMaximizedWindow(aSecondWindow);
 
-  // Open and close the extensions panel in the newly created window to build
-  // the extensions panel and add the extension widget(s) to it.
-  await openExtensionsPanel(aSecondWindow);
-  await closeExtensionsPanel(aSecondWindow);
+    // Open and close the extensions panel in the newly created window to build
+    // the extensions panel and add the extension widget(s) to it.
+    await openExtensionsPanel(aSecondWindow);
+    await closeExtensionsPanel(aSecondWindow);
 
-  for (const { title, win } of [
-    { title: "current window", win: window },
-    { title: "second window", win: aSecondWindow },
-  ]) {
-    const node = CustomizableUI.getWidget(
-      AppUiTestInternals.getBrowserActionWidgetId(extension.id)
-    ).forWindow(win).node;
+    for (const { title, win } of [
+      { title: "current window", win: window },
+      { title: "second window", win: aSecondWindow },
+    ]) {
+      const node = CustomizableUI.getWidget(
+        AppUiTestInternals.getBrowserActionWidgetId(extension.id)
+      ).forWindow(win).node;
 
-    let actionButton = node.querySelector(
-      ".unified-extensions-item-action-button"
-    );
-    ok(
-      actionButton.classList.contains("subviewbutton"),
-      `${title} - expected .subviewbutton CSS class on the action button`
-    );
-    ok(
-      !actionButton.classList.contains("toolbarbutton-1"),
-      `${title} - expected no .toolbarbutton-1 CSS class on the action button`
-    );
+      let actionButton = node.querySelector(
+        ".unified-extensions-item-action-button"
+      );
+      ok(
+        actionButton.classList.contains("subviewbutton"),
+        `${title} - expected .subviewbutton CSS class on the action button`
+      );
+      ok(
+        !actionButton.classList.contains("toolbarbutton-1"),
+        `${title} - expected no .toolbarbutton-1 CSS class on the action button`
+      );
+      let menuButton = node.querySelector(
+        ".unified-extensions-item-menu-button"
+      );
+      ok(
+        menuButton.classList.contains("subviewbutton"),
+        `${title} - expected .subviewbutton CSS class on the menu button`
+      );
+      ok(
+        !menuButton.classList.contains("toolbarbutton-1"),
+        `${title} - expected no .toolbarbutton-1 CSS class on the menu button`
+      );
+    }
+
+    await BrowserTestUtils.closeWindow(aSecondWindow);
+
+    await extension.unload();
   }
-
-  await BrowserTestUtils.closeWindow(aSecondWindow);
-
-  await extension.unload();
-});
+);
