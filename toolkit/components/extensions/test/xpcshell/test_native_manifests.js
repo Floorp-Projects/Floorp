@@ -225,6 +225,36 @@ add_task(async function test_good_manifest() {
   );
 });
 
+add_task(
+  { skip_if: () => AppConstants.platform != "win" },
+  async function test_forward_slashes_instead_of_backslashes_in_registry() {
+    Assert.ok(USER_TEST_JSON.includes("\\"), `Path has \\: ${USER_TEST_JSON}`);
+    const manifest = { ...templateManifest, name: "testslash" };
+    await writeManifest(USER_TEST_JSON, manifest);
+    registry.setValue(
+      Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+      `${REGPATH}\\testslash`,
+      "",
+      USER_TEST_JSON.replaceAll("\\", "/")
+    );
+
+    let result = await lookupApplication("testslash", context);
+    notEqual(result, null, "lookupApplication finds the manifest despite /");
+    equal(
+      result.path,
+      USER_TEST_JSON,
+      "lookupApplication returns the correct path with platform-native slash"
+    );
+    // Side note: manifest.path does not contain a platform-native path,
+    // but it is normalized when used in NativeMessaging.jsm.
+    deepEqual(
+      result.manifest,
+      manifest,
+      "lookupApplication returns the manifest contents"
+    );
+  }
+);
+
 add_task(async function test_invalid_json() {
   await writeManifest(USER_TEST_JSON, "this is not valid json");
   let result = await lookupApplication("test", context);

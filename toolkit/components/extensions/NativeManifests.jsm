@@ -93,6 +93,9 @@ var NativeManifests = {
       return null;
     }
 
+    // Normalize in case the extension used / instead of \.
+    path = path.replaceAll("/", "\\");
+
     let manifest = await this._tryPath(type, path, name, context, true);
     return manifest ? { path, manifest } : null;
   },
