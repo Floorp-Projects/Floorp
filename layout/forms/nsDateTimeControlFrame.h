@@ -62,8 +62,8 @@ class nsDateTimeControlFrame final : public nsContainerFrame {
               nsReflowStatus& aStatus) override;
 
   Maybe<nscoord> GetNaturalBaselineBOffset(
-      mozilla::WritingMode aWM,
-      BaselineSharingGroup aBaselineGroup) const override;
+      mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup,
+      BaselineExportContext) const override;
 
   nscoord mFirstBaseline = NS_INTRINSIC_ISIZE_UNKNOWN;
 };
