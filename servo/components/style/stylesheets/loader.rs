@@ -26,6 +26,6 @@ pub trait StylesheetLoader {
         lock: &SharedRwLock,
         media: Arc<Locked<MediaList>>,
         supports: Option<ImportSupportsCondition>,
-        layer: ImportLayer,
+        layer: Option<ImportLayer>,
     ) -> Arc<Locked<ImportRule>>;
 }
