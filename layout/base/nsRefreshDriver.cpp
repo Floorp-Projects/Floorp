@@ -711,7 +711,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
     if (StaticPrefs::layout_lower_priority_refresh_driver_during_load() &&
         ShouldGiveNonVsyncTasksMoreTime()) {
       nsPresContext* pctx = GetPresContextForOnlyRefreshDriver();
-      if (pctx && pctx->HadContentfulPaint() && pctx->Document() &&
+      if (pctx && pctx->HadFirstContentfulPaint() && pctx->Document() &&
           pctx->Document()->GetReadyStateEnum() <
               Document::READYSTATE_COMPLETE) {
         nsPIDOMWindowInner* win = pctx->Document()->GetInnerWindow();
@@ -1992,7 +1992,8 @@ bool nsRefreshDriver::
   if (mThrottled || mTestControllingRefreshes || !XRE_IsContentProcess() ||
       !mPresContext->Document()->IsTopLevelContentDocument() ||
       mPresContext->Document()->IsInitialDocument() ||
-      gfxPlatform::IsInLayoutAsapMode() || mPresContext->HadContentfulPaint() ||
+      gfxPlatform::IsInLayoutAsapMode() ||
+      mPresContext->HadFirstContentfulPaint() ||
       mPresContext->Document()->GetReadyStateEnum() ==
           Document::READYSTATE_COMPLETE) {
     return false;

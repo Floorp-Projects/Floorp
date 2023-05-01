@@ -1046,7 +1046,7 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   bool IsRootContentDocumentCrossProcess() const;
 
   bool HadNonBlankPaint() const { return mHadNonBlankPaint; }
-  bool HadContentfulPaint() const { return mHadContentfulPaint; }
+  bool HadFirstContentfulPaint() const { return mHadFirstContentfulPaint; }
   void NotifyNonBlankPaint();
   void NotifyContentfulPaint();
   void NotifyPaintStatusReset();
@@ -1358,7 +1358,7 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   // Has NotifyNonBlankPaint been called on this PresContext?
   unsigned mHadNonBlankPaint : 1;
   // Has NotifyContentfulPaint been called on this PresContext?
-  unsigned mHadContentfulPaint : 1;
+  unsigned mHadFirstContentfulPaint : 1;
   // True when a contentful paint has happened and this paint doesn't
   // come from the regular tick process. Usually this means a
   // contentful paint was triggered manually.
