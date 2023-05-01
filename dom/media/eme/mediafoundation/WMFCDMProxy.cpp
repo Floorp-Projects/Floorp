@@ -26,7 +26,7 @@ namespace mozilla {
 
 #define PERFORM_ON_CDM(operation, promiseId, ...)                             \
   do {                                                                        \
-    mCDM->operation(__VA_ARGS__)                                              \
+    mCDM->operation(promiseId, __VA_ARGS__)                                   \
         ->Then(                                                               \
             mMainThread, __func__,                                            \
             [self = RefPtr{this}, this, promiseId]() {                        \
@@ -169,7 +169,7 @@ void WMFCDMProxy::CreateSession(uint32_t aCreateSessionToken,
   EME_LOG("WMFCDMProxy::CreateSession(this=%p, pid=%" PRIu32
           "), sessionType=%s",
           this, aPromiseId, SessionTypeToStr(sessionType));
-  mCDM->CreateSession(sessionType, aInitDataType, aInitData)
+  mCDM->CreateSession(aPromiseId, sessionType, aInitDataType, aInitData)
       ->Then(
           mMainThread, __func__,
           [self = RefPtr{this}, this, aCreateSessionToken,

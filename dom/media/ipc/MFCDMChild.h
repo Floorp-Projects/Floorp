@@ -5,6 +5,7 @@
 #ifndef DOM_MEDIA_IPC_MFCDMCHILD_H_
 #define DOM_MEDIA_IPC_MFCDMCHILD_H_
 
+#include <unordered_map>
 #include "mozilla/Atomics.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/PMFCDMChild.h"
@@ -41,19 +42,22 @@ class MFCDMChild final : public PMFCDMChild {
 
   using SessionPromise = MozPromise<nsString, nsresult, true>;
   RefPtr<SessionPromise> CreateSessionAndGenerateRequest(
-      const KeySystemConfig::SessionType aSessionType,
+      uint32_t aPromiseId, const KeySystemConfig::SessionType aSessionType,
       const nsAString& aInitDataType, const nsTArray<uint8_t>& aInitData);
 
   RefPtr<GenericPromise> LoadSession(
-      const KeySystemConfig::SessionType aSessionType,
+      uint32_t aPromiseId, const KeySystemConfig::SessionType aSessionType,
       const nsAString& aSessionId);
 
-  RefPtr<GenericPromise> UpdateSession(const nsAString& aSessionId,
+  RefPtr<GenericPromise> UpdateSession(uint32_t aPromiseId,
+                                       const nsAString& aSessionId,
                                        nsTArray<uint8_t>& aResponse);
 
-  RefPtr<GenericPromise> CloseSession(const nsAString& aSessionId);
+  RefPtr<GenericPromise> CloseSession(uint32_t aPromiseId,
+                                      const nsAString& aSessionId);
 
-  RefPtr<GenericPromise> RemoveSession(const nsAString& aSessionId);
+  RefPtr<GenericPromise> RemoveSession(uint32_t aPromiseId,
+                                       const nsAString& aSessionId);
 
   mozilla::ipc::IPCResult RecvOnSessionKeyMessage(
       const MFCDMKeyMessage& aMessage);
@@ -127,6 +131,12 @@ class MFCDMChild final : public PMFCDMChild {
 
   MozPromiseHolder<GenericPromise> mRemoveSessionPromiseHolder;
   MozPromiseRequestHolder<RemoveSessionPromise> mRemoveSessionRequest;
+
+  std::unordered_map<uint32_t, MozPromiseHolder<SessionPromise>>
+      mPendingSessionPromises;
+
+  std::unordered_map<uint32_t, MozPromiseHolder<GenericPromise>>
+      mPendingGenericPromises;
 
   RefPtr<WMFCDMProxyCallback> mProxyCallback;
 };

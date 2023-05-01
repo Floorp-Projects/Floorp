@@ -49,29 +49,32 @@ class WMFCDMImpl final {
   RefPtr<InitPromise> Init(const InitParams& aParams);
 
   RefPtr<MFCDMChild::SessionPromise> CreateSession(
-      const KeySystemConfig::SessionType aSessionType,
+      uint32_t aPromiseId, const KeySystemConfig::SessionType aSessionType,
       const nsAString& aInitDataType, const nsTArray<uint8_t>& aInitData) {
-    return mCDM->CreateSessionAndGenerateRequest(aSessionType, aInitDataType,
-                                                 aInitData);
+    return mCDM->CreateSessionAndGenerateRequest(aPromiseId, aSessionType,
+                                                 aInitDataType, aInitData);
   }
 
   RefPtr<GenericPromise> LoadSession(
-      const KeySystemConfig::SessionType aSessionType,
+      uint32_t aPromiseId, const KeySystemConfig::SessionType aSessionType,
       const nsAString& aSessionId) {
-    return mCDM->LoadSession(aSessionType, aSessionId);
+    return mCDM->LoadSession(aPromiseId, aSessionType, aSessionId);
   }
 
-  RefPtr<GenericPromise> UpdateSession(const nsAString& aSessionId,
+  RefPtr<GenericPromise> UpdateSession(uint32_t aPromiseId,
+                                       const nsAString& aSessionId,
                                        nsTArray<uint8_t>& aResponse) {
-    return mCDM->UpdateSession(aSessionId, aResponse);
+    return mCDM->UpdateSession(aPromiseId, aSessionId, aResponse);
   }
 
-  RefPtr<GenericPromise> CloseSession(const nsAString& aSessionId) {
-    return mCDM->CloseSession(aSessionId);
+  RefPtr<GenericPromise> CloseSession(uint32_t aPromiseId,
+                                      const nsAString& aSessionId) {
+    return mCDM->CloseSession(aPromiseId, aSessionId);
   }
 
-  RefPtr<GenericPromise> RemoveSession(const nsAString& aSessionId) {
-    return mCDM->RemoveSession(aSessionId);
+  RefPtr<GenericPromise> RemoveSession(uint32_t aPromiseId,
+                                       const nsAString& aSessionId) {
+    return mCDM->RemoveSession(aPromiseId, aSessionId);
   }
 
   uint64_t Id() {
