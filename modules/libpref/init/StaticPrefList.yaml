@@ -14989,7 +14989,7 @@
 # Forces async present to wait for a sync, even while using remote textures.
 - name: webgl.out-of-process.async-present.force-sync
   type: RelaxedAtomicBool
-#if !defined(MOZ_WIDGET_ANDROID) && defined(NIGHTLY_BUILD)
+#if !defined(MOZ_WIDGET_ANDROID) && defined(EARLY_BETA_OR_EARLIER)
   value: false
 #else
   value: true
