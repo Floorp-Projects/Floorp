@@ -519,6 +519,7 @@ class nsIFrame : public nsQueryFrame {
  public:
   using AlignmentContext = mozilla::AlignmentContext;
   using BaselineSharingGroup = mozilla::BaselineSharingGroup;
+  using BaselineExportContext = mozilla::BaselineExportContext;
   template <typename T>
   using Maybe = mozilla::Maybe<T>;
   template <typename T, typename E>
@@ -1528,14 +1529,19 @@ class nsIFrame : public nsQueryFrame {
 
   /**
    * `GetNaturalBaselineBOffset`, but determines the baseline sharing group
-   * through `GetDefaultBaselineSharingGroup` (If not specified), and never
-   * fails, returning a synthesized baseline through
+   * through `GetDefaultBaselineSharingGroup` (If not specified), assuming line
+   * layout context, and never fails, returning a synthesized baseline through
    * `SynthesizeFallbackBaseline`. Unlike `GetNaturalBaselineBOffset`, Result is
    * always relative to the block start of the frame.
    */
   nscoord GetLogicalBaseline(mozilla::WritingMode aWM) const;
+  /**
+   * Same as the above, but with baseline sharing group & export
+   * context specified.
+   */
   nscoord GetLogicalBaseline(mozilla::WritingMode aWM,
-                             BaselineSharingGroup aBaselineGroup) const;
+                             BaselineSharingGroup aBaselineGroup,
+                             BaselineExportContext aExportContext) const;
 
   /**
    * Return true if the frame has a first(last) inline-axis baseline per
@@ -1543,14 +1549,21 @@ class nsIFrame : public nsQueryFrame {
    * the relevant block-axis border-box edge (Start for
    * BaselineSharingGroup::First, end for BaselineSharingGroup::Last), where
    * a positive value points towards the content-box.
+   * Some frames can export different baselines depending if it's in a line
+   * layout context or any other context (e.g. Flex, grid).
    * https://drafts.csswg.org/css-align-3/#baseline-export
    * @note The returned value is only valid when reflow is not needed.
    * @note You should only call this on frames with a WM that's parallel to aWM.
+   * @note We're approaching `nsLayoutUtils::Get(First|Last)LineBaseline` ==
+   * `GetNaturalBaselineBOffset(aWM, (First|Last), Other)`. Grid relies on
+   * baseline synthesis behaviour in `nsLayoutUtils` implementations (bug
+   * 1609403), which blocks its removal.
    * @param aWM the writing-mode of the alignment context.
    * @return the baseline offset, if one exists
    */
   virtual Maybe<nscoord> GetNaturalBaselineBOffset(
-      mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
+      mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup,
+      BaselineExportContext aExportContext) const {
     return Nothing{};
   }
 
@@ -1657,7 +1670,8 @@ class nsIFrame : public nsQueryFrame {
 
  public:
   /**
-   * Get the suitable baseline sharing group for this element.
+   * Get the suitable baseline sharing group for this element, assuming line
+   * layout.
    */
   virtual BaselineSharingGroup GetDefaultBaselineSharingGroup() const {
     return BaselineSharingGroup::First;

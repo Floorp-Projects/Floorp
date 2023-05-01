@@ -75,8 +75,8 @@ class nsColumnSetFrame final : public nsContainerFrame {
                              const nsPoint& aPt);
 
   Maybe<nscoord> GetNaturalBaselineBOffset(
-      mozilla::WritingMode aWM,
-      BaselineSharingGroup aBaselineGroup) const override;
+      mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup,
+      BaselineExportContext aExportContext) const override;
 
  protected:
   nscoord mLastBalanceBSize;

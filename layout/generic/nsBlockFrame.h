@@ -133,8 +133,8 @@ class nsBlockFrame : public nsContainerFrame {
     return BaselineSharingGroup::Last;
   }
   Maybe<nscoord> GetNaturalBaselineBOffset(
-      mozilla::WritingMode aWM,
-      BaselineSharingGroup aBaselineGroup) const override;
+      mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup,
+      BaselineExportContext aExportContext) const override;
   nscoord GetCaretBaseline() const override;
   void DestroyFrom(nsIFrame* aDestructRoot,
                    PostDestroyData& aPostDestroyData) override;
@@ -275,6 +275,12 @@ class nsBlockFrame : public nsContainerFrame {
 
  private:
   void CheckIntrinsicCacheAgainstShrinkWrapState();
+
+  template <typename LineIterator>
+  Maybe<nscoord> GetBaselineBOffset(LineIterator aStart, LineIterator aEnd,
+                                    mozilla::WritingMode aWM,
+                                    BaselineSharingGroup aBaselineGroup,
+                                    BaselineExportContext aExportContext) const;
 
  public:
   nscoord GetMinISize(gfxContext* aRenderingContext) override;
