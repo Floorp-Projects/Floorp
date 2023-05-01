@@ -277,6 +277,7 @@ JS_HAZ_CAN_RUN_SCRIPT NS_IMETHODIMP ReceiveStream::OnError(uint8_t aError) {
   nsresult rv = aError == nsIWebTransport::INVALID_STATE_ERROR
                     ? NS_ERROR_DOM_INVALID_STATE_ERR
                     : NS_ERROR_FAILURE;
+  LOG(("CreateStream OnError: %u", aError));
   if (mUniResolver) {
     mUniResolver(nullptr);
   } else if (mBiResolver) {
