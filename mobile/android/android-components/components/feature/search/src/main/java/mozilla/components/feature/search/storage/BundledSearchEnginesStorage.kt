@@ -37,10 +37,11 @@ internal class BundledSearchEnginesStorage(
     override suspend fun load(
         region: RegionState,
         locale: Locale,
+        distribution: String?,
         coroutineContext: CoroutineContext,
     ): SearchMiddleware.BundleStorage.Bundle = withContext(coroutineContext) {
-        val localizedConfiguration = loadAndFilterConfiguration(context, region, locale)
-        val searchEngineIdentifiers = localizedConfiguration.visibleDefaultEngines
+        val localizedConfiguration = loadAndFilterConfiguration(context, region, locale, distribution)
+        val searchEngineIdentifiers = localizedConfiguration.visibleSearchEngines
 
         val searchEngines = loadSearchEnginesFromList(
             context,
@@ -92,7 +93,7 @@ internal class BundledSearchEnginesStorage(
 }
 
 private data class SearchEngineListConfiguration(
-    val visibleDefaultEngines: List<String>,
+    val visibleSearchEngines: List<String>,
     val searchOrder: List<String>,
     val searchDefault: String?,
 )
@@ -101,11 +102,13 @@ private fun loadAndFilterConfiguration(
     context: Context,
     region: RegionState,
     locale: Locale,
+    distribution: String?,
 ): SearchEngineListConfiguration {
     val config = context.assets.readJSONObject("search/list.json")
 
     val configBlocks = pickConfigurationBlocks(locale, config)
-    val jsonSearchEngineIdentifiers = getSearchEngineIdentifiersFromBlock(region, locale, configBlocks)
+    val jsonSearchEngineIdentifiers =
+        getSearchEngineIdentifiersFromBlock(region, locale, distribution, configBlocks)
 
     val searchOrder = getSearchOrderFromBlock(region, configBlocks)
     val searchDefault = getSearchDefaultFromBlock(region, configBlocks)
@@ -144,10 +147,12 @@ private fun pickConfigurationBlocks(
 private fun getSearchEngineIdentifiersFromBlock(
     region: RegionState,
     locale: Locale,
+    distribution: String?,
     configBlocks: Array<JSONObject>,
 ): JSONArray {
-    // Now test if there's an override for the region (if it's set)
-    return getArrayFromBlock(region, "visibleDefaultEngines", configBlocks)
+    // Now test if there's an override for the distribution or region (if it's set)
+    return distribution?.let { getArrayFromBlock(region, distribution, configBlocks) }
+        ?: getArrayFromBlock(region, "visibleDefaultEngines", configBlocks)
         ?: throw IllegalStateException("No visibleDefaultEngines using region $region and locale $locale")
 }
 

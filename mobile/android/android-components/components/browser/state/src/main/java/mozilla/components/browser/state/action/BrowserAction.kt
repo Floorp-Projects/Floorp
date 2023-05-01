@@ -1398,8 +1398,9 @@ sealed class SearchAction : BrowserAction() {
 
     /**
      * Sets the [RegionState] (region of the user).
+     * distribution is a [String] that specifies a set of default search engines if available
      */
-    data class SetRegionAction(val regionState: RegionState) : SearchAction()
+    data class SetRegionAction(val regionState: RegionState, val distribution: String? = null) : SearchAction()
 
     /**
      * Sets the list of search engines and default search engine IDs.

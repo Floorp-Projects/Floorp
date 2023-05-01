@@ -57,7 +57,7 @@ class SearchMiddleware(
         action: BrowserAction,
     ) {
         when (action) {
-            is SearchAction.SetRegionAction -> loadSearchEngines(context.store, action.regionState)
+            is SearchAction.SetRegionAction -> loadSearchEngines(context.store, action.regionState, action.distribution)
             is SearchAction.UpdateCustomSearchEngineAction -> saveCustomSearchEngine(action)
             is SearchAction.RemoveCustomSearchEngineAction -> removeCustomSearchEngine(action)
             is SearchAction.SelectSearchEngineAction -> updateSearchEngineSelection(action)
@@ -82,11 +82,14 @@ class SearchMiddleware(
     private fun loadSearchEngines(
         store: Store<BrowserState, BrowserAction>,
         region: RegionState,
+        distribution: String? = null,
     ) = scope.launch {
         val migrationValues = migration?.getValuesToMigrate()
         performCustomSearchEnginesMigration(migrationValues)
 
-        val regionBundle = async(ioDispatcher) { bundleStorage.load(region, coroutineContext = ioDispatcher) }
+        val regionBundle = async(ioDispatcher) {
+            bundleStorage.load(region, distribution = distribution, coroutineContext = ioDispatcher)
+        }
         val customSearchEngines = async(ioDispatcher) { customStorage.loadSearchEngineList() }
         val hiddenSearchEngineIds = async(ioDispatcher) { metadataStorage.getHiddenSearchEngines() }
         val additionalSearchEngineIds = async(ioDispatcher) { metadataStorage.getAdditionalSearchEngines() }
@@ -240,10 +243,14 @@ class SearchMiddleware(
     interface BundleStorage {
         /**
          * Loads the bundled search engines for the given [locale] and [region].
+         *
+         * If [distribution] is not null then attempt to load the bundled search engine for the
+         * [distribution] in the specified [locale] and [region] if available.
          */
         suspend fun load(
             region: RegionState,
             locale: Locale = Locale.getDefault(),
+            distribution: String? = null,
             coroutineContext: CoroutineContext = Dispatchers.IO,
         ): Bundle
 

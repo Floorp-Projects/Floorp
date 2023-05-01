@@ -89,6 +89,37 @@ class SearchMiddlewareTest {
     }
 
     @Test
+    fun `WHEN distribution doesn't exist THEN Loads default search engines`() {
+        val searchMiddleware = SearchMiddleware(
+            testContext,
+            ioDispatcher = dispatcher,
+            customStorage = CustomSearchEngineStorage(testContext, dispatcher),
+        )
+
+        val store = BrowserStore(
+            middleware = listOf(searchMiddleware),
+        )
+
+        assertTrue(store.state.search.regionSearchEngines.isEmpty())
+
+        store.dispatch(
+            SearchAction.SetRegionAction(
+                RegionState("US", "US"),
+                "test",
+            ),
+        ).joinBlocking()
+
+        wait(store, dispatcher)
+
+        assertTrue(store.state.search.regionSearchEngines.isNotEmpty())
+        assertTrue(store.state.search.additionalAvailableSearchEngines.isEmpty())
+        assertTrue(store.state.search.additionalSearchEngines.isEmpty())
+
+        assertNotNull(store.state.search.regionSearchEngines.find { it.name == "Google" })
+        assertNull(store.state.search.regionSearchEngines.find { it.name == "Yandex" })
+    }
+
+    @Test
     fun `Loads search engines for locale (en-AU)`() {
         Locale.setDefault(Locale("en", "AU"))
         val searchMiddleware = SearchMiddleware(
