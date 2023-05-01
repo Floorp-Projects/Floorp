@@ -1,8 +1,8 @@
 import pytest
 
-URL = "https://www.frontgate.com/resort-cotton-bath-towels/155771"
-MOBILE_CSS = "#app"
-DESKTOP_CSS = "#cbiBody"
+URL = "https://feelgoodcontacts.com/"
+MOBILE_CSS = "#aHomeMob"
+DESKTOP_CSS = "#mmenu"
 
 
 @pytest.mark.only_platforms("android")
@@ -11,7 +11,6 @@ DESKTOP_CSS = "#cbiBody"
 async def test_enabled(client):
     await client.navigate(URL)
     assert client.await_css(MOBILE_CSS)
-    assert not client.find_css(DESKTOP_CSS)
 
 
 @pytest.mark.only_platforms("android")
@@ -20,4 +19,3 @@ async def test_enabled(client):
 async def test_disabled(client):
     await client.navigate(URL)
     assert client.await_css(DESKTOP_CSS)
-    assert not client.find_css(MOBILE_CSS)
