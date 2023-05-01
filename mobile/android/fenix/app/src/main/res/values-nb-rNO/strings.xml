@@ -300,10 +300,16 @@
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_default_browser_title">Gjør %s til din nettleser</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Bruk Firefox som din favorittnettleser</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
     <string name="juno_onboarding_default_browser_description">%1$s setter mennesker over fortjeneste og forsvarer personvernet ditt ved å blokkere sporere på tvers av nettsteder.\n\nFinn ut mer i %2$s.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox setter mennesker over fortjeneste og forsvarer personvernet ditt ved å blokkere sporere på tvers av nettsteder.\n\nFinn ut mer i personvernerklæringen vår.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text">personvernerklæring</string>
@@ -322,9 +328,15 @@
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_enable_notifications_title">Varsler hjelper deg å gjøre mer med %s</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Varsler hjelper deg å gjøre mer med Firefox</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_enable_notifications_description">Send faner mellom enheter, behandle nedlastinger og få tips om hvordan du får mest mulig ut av %s.</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated   -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Send faner mellom enheter, behandle nedlastinger og få tips om hvordan du får mest mulig ut av Firefox.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button">Slå på varsler</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -1599,6 +1611,10 @@
     <string name="preference_etp_smartblock_description">Noen sporere som er merket nedenfor, er delvis blitt avblokkert på denne siden fordi du samhandlet med dem *.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">Les mer</string>
+
+    <!-- Content description (not visible, for screen readers etc.):
+    Enhanced tracking protection exception preference icon for ETP settings. -->
+    <string name="preference_etp_exceptions_icon_description">Ikon for unntaksinnstillinger for utvidet sporingsbeskyttelse</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Brukerstøtte</string>
