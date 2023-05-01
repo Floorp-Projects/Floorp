@@ -129,13 +129,22 @@ namespace test {
     constexpr impl::StringMetric string_metric(12);
 
     /**
+     * generated from test.text_metric
+     */
+    /**
+     * A multi-line
+     * description
+     */
+    constexpr impl::TextMetric text_metric(13);
+
+    /**
      * generated from test.timespan_metric
      */
     /**
      * A multi-line
      * description
      */
-    constexpr impl::TimespanMetric timespan_metric(13);
+    constexpr impl::TimespanMetric timespan_metric(14);
 
     /**
      * generated from test.timing_distribution_metric
@@ -144,7 +153,7 @@ namespace test {
      * A multi-line
      * description
      */
-    constexpr impl::TimingDistributionMetric timing_distribution_metric(14);
+    constexpr impl::TimingDistributionMetric timing_distribution_metric(15);
 
 }
 namespace test_nested {
@@ -155,7 +164,7 @@ namespace test_nested {
      * A multi-line
      * description
      */
-    constexpr impl::DatetimeMetric datetime_metric(15);
+    constexpr impl::DatetimeMetric datetime_metric(16);
 
     /**
      * generated from test.nested.event_metric
@@ -164,7 +173,7 @@ namespace test_nested {
      * A multi-line
      * description
      */
-    constexpr impl::EventMetric<NoExtraKeys> event_metric(16);
+    constexpr impl::EventMetric<NoExtraKeys> event_metric(17);
 
     /**
      * generated from test.nested.event_metric_with_extra
@@ -191,7 +200,7 @@ namespace test_nested {
      * A multi-line
      * description
      */
-    constexpr impl::EventMetric<EventMetricWithExtraExtra> event_metric_with_extra(17);
+    constexpr impl::EventMetric<EventMetricWithExtraExtra> event_metric_with_extra(18);
 
     /**
      * generated from test.nested.external_denominator
@@ -200,7 +209,7 @@ namespace test_nested {
      * A multi-line
      * description
      */
-    constexpr impl::DenominatorMetric external_denominator(18);
+    constexpr impl::DenominatorMetric external_denominator(19);
 
     /**
      * generated from test.nested.quantity_metric
@@ -209,7 +218,7 @@ namespace test_nested {
      * A multi-line
      * description
      */
-    constexpr impl::QuantityMetric quantity_metric(19);
+    constexpr impl::QuantityMetric quantity_metric(20);
 
     /**
      * generated from test.nested.rate_metric
@@ -218,7 +227,7 @@ namespace test_nested {
      * A multi-line
      * description
      */
-    constexpr impl::RateMetric rate_metric(20);
+    constexpr impl::RateMetric rate_metric(21);
 
     /**
      * generated from test.nested.rate_with_external_denominator
@@ -227,7 +236,7 @@ namespace test_nested {
      * A multi-line
      * description
      */
-    constexpr impl::NumeratorMetric rate_with_external_denominator(21);
+    constexpr impl::NumeratorMetric rate_with_external_denominator(22);
 
     /**
      * generated from test.nested.uuid_metric
@@ -236,7 +245,7 @@ namespace test_nested {
      * A multi-line
      * description
      */
-    constexpr impl::UuidMetric uuid_metric(22);
+    constexpr impl::UuidMetric uuid_metric(23);
 
 }
 
