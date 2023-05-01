@@ -10676,7 +10676,7 @@ bool nsContentUtils::
                  "Should never have a chrome PresContext in a content process");
 
       return !presContext->GetInProcessRootContentDocumentPresContext()
-                  ->HadContentfulPaint() &&
+                  ->HadFirstContentfulPaint() &&
              nsThreadManager::MainThreadHasPendingHighPriorityEvents();
     }
   }

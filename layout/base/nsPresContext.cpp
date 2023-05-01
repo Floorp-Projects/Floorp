@@ -284,7 +284,7 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mHasWarnedAboutTooLargeDashedOrDottedRadius(false),
       mQuirkSheetAdded(false),
       mHadNonBlankPaint(false),
-      mHadContentfulPaint(false),
+      mHadFirstContentfulPaint(false),
       mHadNonTickContentfulPaint(false),
       mHadContentfulPaintComposite(false),
 #ifdef DEBUG
@@ -2726,7 +2726,7 @@ void nsPresContext::NotifyNonBlankPaint() {
 }
 
 void nsPresContext::NotifyContentfulPaint() {
-  if (mHadContentfulPaint) {
+  if (mHadFirstContentfulPaint) {
     return;
   }
   nsRootPresContext* rootPresContext = GetRootPresContext();
@@ -2748,7 +2748,7 @@ void nsPresContext::NotifyContentfulPaint() {
     }
     return;
   }
-  mHadContentfulPaint = true;
+  mHadFirstContentfulPaint = true;
   mFirstContentfulPaintTransactionId =
       Some(rootPresContext->mRefreshDriver->LastTransactionId().Next());
   if (nsPIDOMWindowInner* innerWindow = mDocument->GetInnerWindow()) {
@@ -2788,7 +2788,7 @@ void nsPresContext::NotifyContentfulPaint() {
 
 void nsPresContext::NotifyPaintStatusReset() {
   mHadNonBlankPaint = false;
-  mHadContentfulPaint = false;
+  mHadFirstContentfulPaint = false;
 #if defined(MOZ_WIDGET_ANDROID)
   (new AsyncEventDispatcher(mDocument, u"MozPaintStatusReset"_ns,
                             CanBubble::eYes, ChromeOnlyDispatch::eYes))
