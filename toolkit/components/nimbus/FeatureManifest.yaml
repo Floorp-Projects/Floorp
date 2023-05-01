@@ -1221,6 +1221,70 @@ mixedContentUpgrading:
       type: boolean
       setPref: security.mixed_content.upgrade_display_content
 
+jsParallelParsing:
+  description: Pref to toggle JS parallel parsing.
+  owner: dpalmeiro@mozilla.com, nbp@mozilla.com
+  isEarlyStartup: true
+  hasExposure: false
+  variables:
+    enabled:
+      description: True to enable parallel parsing.
+      type: boolean
+      setPref: "javascript.options.parallel_parsing"
+
+gcParallelMarking:
+  description: Pref to toggle parallel marking in the GC.
+  owner: dpalmeiro@mozilla.com, jonco@mozilla.com
+  isEarlyStartup: true
+  hasExposure: false
+  variables:
+    enabled:
+      description: True to enable parallel marking.
+      type: boolean
+      setPref: "javascript.options.mem.gc_parallel_marking"
+
+jitThresholds:
+  description: Prefs that control jit tier thresholds.
+  owner: dpalmeiro@mozilla.com, jdemooij@mozilla.com
+  isEarlyStartup: true
+  hasExposure: false
+  variables:
+    blinterp_threshold:
+      description: Set the threshold to enable blinterp compilation.
+      type: int
+      setPref: "javascript.options.blinterp.threshold"
+    baseline_threshold:
+      description: Set the threshold to enable baseline compilation.
+      type: int
+      setPref: "javascript.options.baselinejit.threshold"
+    ion_threshold:
+      description: Set the threshold to enable ion compilation.
+      type: int
+      setPref: "javascript.options.ion.threshold"
+    ion_bailout_threshold:
+      description: Set the ion frequent bailout threshold.
+      type: int
+      setPref: "javascript.options.ion.frequent_bailout_threshold"
+    ion_offthread_compilation:
+      description: True to enable offthread ion compilations.
+      type: boolean
+      setPref: "javascript.options.ion.offthread_compilation"
+    inlining_max_length:
+      description: Set the max bytecode length considered for inlining.
+      type: int
+      setPref: "javascript.options.inlining_bytecode_max_length"
+
+jitHintsCache:
+  description: Pref to toggle the JIT hints cache.
+  owner: dpalmeiro@mozilla.com
+  isEarlyStartup: true
+  hasExposure: false
+  variables:
+    enabled:
+      description: True to enable the hints cache.
+      type: boolean
+      setPref: "javascript.options.jithints"
+    
 raceCacheWithNetwork:
   description: Prefs to toggle the race cache with network.
   owner: dpalmeiro@mozilla.com, acreskey@mozilla.com
