@@ -123,7 +123,7 @@ impl CtapRegisterResult {
     fn get_status(&self) -> Result<nsresult, nsresult> {
         match &self.result {
             Ok(_) => Ok(NS_OK),
-            Err(e) => Err(authrs_to_nserror(e)),
+            Err(e) => Ok(authrs_to_nserror(e)),
         }
     }
 }
@@ -207,7 +207,7 @@ impl CtapSignResult {
     fn get_status(&self) -> Result<nsresult, nsresult> {
         match &self.result {
             Ok(_) => Ok(NS_OK),
-            Err(e) => Err(authrs_to_nserror(e)),
+            Err(e) => Ok(authrs_to_nserror(e)),
         }
     }
 }
