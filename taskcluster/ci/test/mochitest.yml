@@ -121,7 +121,8 @@ mochitest-plain:
                     default: []
             default:
                 by-test-platform:
-                    android.*: []
+                    android-em-7.0-x86_64-qr/debug-isolated-process: []
+                    android.*: built-projects
                     default: built-projects
     chunks:
         by-test-platform:
@@ -543,7 +544,8 @@ mochitest-plain-gpu:
                     default: []
             default:
                 by-test-platform:
-                    android.*/.*: []
+                    android-em-7.0-x86_64-qr/debug-isolated-process: []
+                    android.*: built-projects
                     default: built-projects
     virtualization: virtual-with-gpu
     tier:
@@ -682,7 +684,9 @@ mochitest-media:
                     default: []
             default:
                 by-test-platform:
-                    android.*: []
+                    android-hw.*/opt: []
+                    android-em-7.0-x86_64-qr/debug-isolated-process: []
+                    android.*: built-projects
                     linux.*(asan|ccov)/opt: []
                     .*(ccov/|asan/|-32).*: built-projects
                     (android|linux|windows10-64-2004|windows11-64-2009|macos)(?!.*-qr).*: []
