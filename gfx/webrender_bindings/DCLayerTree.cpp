@@ -1352,6 +1352,50 @@ static Maybe<DXGI_COLOR_SPACE_TYPE> GetSourceDXGIColorSpace(
   return GetSourceDXGIColorSpace(info.space, info.range);
 }
 
+static void SetNvidiaVideoSuperRes(ID3D11VideoContext* videoContext,
+                                   ID3D11VideoProcessor* videoProcessor,
+                                   bool enabled) {
+  LOG("SetNvidiaVideoSuperRes() enabled=%d", enabled);
+
+  // Undocumented NVIDIA driver constants
+  constexpr GUID nvGUID = {0xD43CE1B3,
+                           0x1F4B,
+                           0x48AC,
+                           {0xBA, 0xEE, 0xC3, 0xC2, 0x53, 0x75, 0xE6, 0xF7}};
+
+  constexpr UINT nvExtensionVersion = 0x1;
+  constexpr UINT nvExtensionMethodSuperResolution = 0x2;
+  struct {
+    UINT version;
+    UINT method;
+    UINT enable;
+  } streamExtensionInfo = {nvExtensionVersion, nvExtensionMethodSuperResolution,
+                           enabled ? 0 : 1u};
+
+  HRESULT hr;
+  hr = videoContext->VideoProcessorSetStreamExtension(
+      videoProcessor, 0, &nvGUID, sizeof(streamExtensionInfo),
+      &streamExtensionInfo);
+
+  // Ignore errors as could be unsupported
+  if (FAILED(hr)) {
+    LOG("SetNvidiaVideoSuperRes() error: %lx", hr);
+    return;
+  }
+}
+
+static UINT GetVendorId(ID3D11VideoDevice* const videoDevice) {
+  RefPtr<IDXGIDevice> dxgiDevice;
+  RefPtr<IDXGIAdapter> adapter;
+  videoDevice->QueryInterface((IDXGIDevice**)getter_AddRefs(dxgiDevice));
+  dxgiDevice->GetAdapter(getter_AddRefs(adapter));
+
+  DXGI_ADAPTER_DESC adapterDesc;
+  adapter->GetDesc(&adapterDesc);
+
+  return adapterDesc.VendorId;
+}
+
 bool DCSurfaceVideo::CallVideoProcessorBlt() {
   MOZ_ASSERT(mRenderTextureHost);
 
@@ -1477,6 +1521,12 @@ bool DCSurfaceVideo::CallVideoProcessorBlt() {
                       << gfx::hexa(hr);
       return false;
     }
+  }
+
+  const UINT vendorId = GetVendorId(videoDevice);
+  if (vendorId == 0x10DE &&
+      StaticPrefs::gfx_webrender_super_resolution_nvidia_AtStartup()) {
+    SetNvidiaVideoSuperRes(videoContext, videoProcessor, true);
   }
 
   hr = videoContext->VideoProcessorBlt(videoProcessor, mOutputView, 0, 1,
