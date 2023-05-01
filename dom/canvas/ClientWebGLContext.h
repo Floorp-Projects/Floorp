@@ -278,7 +278,7 @@ class WebGLBufferJS final : public nsWrapperCache, public webgl::ObjectJS {
       : webgl::ObjectJS(webgl) {}
 
  private:
-  ~WebGLBufferJS() = default;
+  ~WebGLBufferJS();
 
  public:
   JSObject* WrapObject(JSContext*, JS::Handle<JSObject*>) override;
@@ -315,7 +315,7 @@ class WebGLFramebufferJS final : public nsWrapperCache, public webgl::ObjectJS {
   bool mInOpaqueRAF = false;
 
  private:
-  ~WebGLFramebufferJS() = default;
+  ~WebGLFramebufferJS();
 
   void EnsureColorAttachments();
 
@@ -407,7 +407,7 @@ class WebGLQueryJS final : public nsWrapperCache,
       : webgl::ObjectJS(webgl) {}
 
  private:
-  ~WebGLQueryJS() = default;
+  ~WebGLQueryJS();
 
  public:
   JSObject* WrapObject(JSContext*, JS::Handle<JSObject*>) override;
@@ -428,7 +428,7 @@ class WebGLRenderbufferJS final : public nsWrapperCache,
 
   explicit WebGLRenderbufferJS(const ClientWebGLContext& webgl)
       : webgl::ObjectJS(webgl) {}
-  ~WebGLRenderbufferJS() = default;
+  ~WebGLRenderbufferJS();
 
  public:
   JSObject* WrapObject(JSContext*, JS::Handle<JSObject*>) override;
@@ -446,7 +446,7 @@ class WebGLSamplerJS final : public nsWrapperCache, public webgl::ObjectJS {
       : webgl::ObjectJS(webgl) {}
 
  private:
-  ~WebGLSamplerJS() = default;
+  ~WebGLSamplerJS();
 
  public:
   JSObject* WrapObject(JSContext*, JS::Handle<JSObject*>) override;
@@ -507,7 +507,7 @@ class WebGLSyncJS final : public nsWrapperCache,
       : webgl::ObjectJS(webgl) {}
 
  private:
-  ~WebGLSyncJS() = default;
+  ~WebGLSyncJS();
 
  public:
   JSObject* WrapObject(JSContext*, JS::Handle<JSObject*>) override;
@@ -528,7 +528,7 @@ class WebGLTextureJS final : public nsWrapperCache, public webgl::ObjectJS {
       : webgl::ObjectJS(webgl) {}
 
  private:
-  ~WebGLTextureJS() = default;
+  ~WebGLTextureJS();
 
  public:
   JSObject* WrapObject(JSContext*, JS::Handle<JSObject*>) override;
@@ -553,7 +553,7 @@ class WebGLTransformFeedbackJS final : public nsWrapperCache,
   explicit WebGLTransformFeedbackJS(const ClientWebGLContext&);
 
  private:
-  ~WebGLTransformFeedbackJS() = default;
+  ~WebGLTransformFeedbackJS();
 
  public:
   JSObject* WrapObject(JSContext*, JS::Handle<JSObject*>) override;
@@ -606,7 +606,7 @@ class WebGLVertexArrayJS final : public nsWrapperCache, public webgl::ObjectJS {
   explicit WebGLVertexArrayJS(const ClientWebGLContext&);
 
  private:
-  ~WebGLVertexArrayJS() = default;
+  ~WebGLVertexArrayJS();
 
  public:
   JSObject* WrapObject(JSContext*, JS::Handle<JSObject*>) override;
