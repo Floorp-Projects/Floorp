@@ -12,6 +12,14 @@ I've written most of this crate, the rest has been either written and in any
 case has been reviewed by Mozilla developers.
 """
 
+[[wildcard-audits.authenticator]]
+who = "John M. Schanck <jschanck@mozilla.com>"
+criteria = "safe-to-deploy"
+user-id = 175410
+start = "2022-11-15"
+end = "2024-04-26"
+notes = "Maintained by the CryptoEng team at Mozilla."
+
 [[wildcard-audits.bhttp]]
 who = "Martin Thomson <mt@lowentropy.net>"
 criteria = "safe-to-deploy"
