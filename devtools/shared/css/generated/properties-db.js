@@ -3020,7 +3020,6 @@ exports.CSS_PROPERTIES = {
       "float",
       "clear",
       "vertical-align",
-      "baseline-source",
       "overflow-clip-box-inline",
       "overflow-clip-box-block",
       "overflow-x",
@@ -4009,23 +4008,6 @@ exports.CSS_PROPERTIES = {
       "cover",
       "inherit",
       "initial",
-      "revert",
-      "revert-layer",
-      "unset"
-    ]
-  },
-  "baseline-source": {
-    "isInherited": false,
-    "subproperties": [
-      "baseline-source"
-    ],
-    "supports": [],
-    "values": [
-      "auto",
-      "first",
-      "inherit",
-      "initial",
-      "last",
       "revert",
       "revert-layer",
       "unset"

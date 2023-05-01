@@ -235,8 +235,7 @@ nscoord ColumnSetWrapperFrame::GetPrefISize(gfxContext* aRenderingContext) {
 template <typename Iterator>
 Maybe<nscoord> ColumnSetWrapperFrame::GetBaselineBOffset(
     Iterator aStart, Iterator aEnd, WritingMode aWM,
-    BaselineSharingGroup aBaselineGroup,
-    BaselineExportContext aExportContext) const {
+    BaselineSharingGroup aBaselineGroup) const {
   // Either forward iterator + first baseline, or reverse iterator + last
   // baseline
   MOZ_ASSERT((*aStart == PrincipalChildList().FirstChild() &&
@@ -252,8 +251,7 @@ Maybe<nscoord> ColumnSetWrapperFrame::GetBaselineBOffset(
   // baseline.
   for (auto itr = aStart; itr != aEnd; ++itr) {
     const nsIFrame* kid = *itr;
-    auto kidBaseline =
-        kid->GetNaturalBaselineBOffset(aWM, aBaselineGroup, aExportContext);
+    auto kidBaseline = kid->GetNaturalBaselineBOffset(aWM, aBaselineGroup);
     if (!kidBaseline) {
       continue;
     }
@@ -272,16 +270,13 @@ Maybe<nscoord> ColumnSetWrapperFrame::GetBaselineBOffset(
 }
 
 Maybe<nscoord> ColumnSetWrapperFrame::GetNaturalBaselineBOffset(
-    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
-    BaselineExportContext aExportContext) const {
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
   if (aBaselineGroup == BaselineSharingGroup::First) {
     return GetBaselineBOffset(PrincipalChildList().cbegin(),
-                              PrincipalChildList().cend(), aWM, aBaselineGroup,
-                              aExportContext);
+                              PrincipalChildList().cend(), aWM, aBaselineGroup);
   }
   return GetBaselineBOffset(PrincipalChildList().crbegin(),
-                            PrincipalChildList().crend(), aWM, aBaselineGroup,
-                            aExportContext);
+                            PrincipalChildList().crend(), aWM, aBaselineGroup);
 }
 
 #ifdef DEBUG
