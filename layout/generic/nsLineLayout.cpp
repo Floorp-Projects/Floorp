@@ -1335,6 +1335,18 @@ bool nsLineLayout::CanPlaceFrame(PerFrameData* pfd, bool aNotSafeToBreak,
   return false;
 }
 
+BaselineSharingGroup BaselineSourceToBaselineSharingGroup(
+    const nsIFrame& aFrame) {
+  switch (aFrame.StyleDisplay()->mBaselineSource) {
+    case StyleBaselineSource::First:
+      return BaselineSharingGroup::First;
+    case StyleBaselineSource::Last:
+      return BaselineSharingGroup::Last;
+    case StyleBaselineSource::Auto:
+      return aFrame.GetDefaultBaselineSharingGroup();
+  }
+}
+
 /**
  * Place the frame. Update running counters.
  */
@@ -1349,10 +1361,32 @@ void nsLineLayout::PlaceFrame(PerFrameData* pfd, ReflowOutput& aMetrics) {
                        ? lineWM.IsLineInverted() ? 0 : aMetrics.BSize(lineWM)
                        : aMetrics.BSize(lineWM) / 2;
   } else {
-    if (aMetrics.BlockStartAscent() == ReflowOutput::ASK_FOR_BASELINE) {
-      pfd->mAscent = pfd->mFrame->GetLogicalBaseline(lineWM);
+    if (pfd->mFrame->StyleDisplay()->mBaselineSource ==
+        StyleBaselineSource::Auto) {
+      if (aMetrics.BlockStartAscent() == ReflowOutput::ASK_FOR_BASELINE) {
+        pfd->mAscent = pfd->mFrame->GetLogicalBaseline(lineWM);
+      } else {
+        pfd->mAscent = aMetrics.BlockStartAscent();
+      }
     } else {
-      pfd->mAscent = aMetrics.BlockStartAscent();
+      const auto sourceGroup = [pfd]() {
+        switch (pfd->mFrame->StyleDisplay()->mBaselineSource) {
+          case StyleBaselineSource::First:
+            return BaselineSharingGroup::First;
+          case StyleBaselineSource::Last:
+            return BaselineSharingGroup::Last;
+          case StyleBaselineSource::Auto:
+            break;
+        }
+        MOZ_ASSERT_UNREACHABLE("Auto should be already handled?");
+      }();
+      // We ignore line-layout specific layout quirks by setting
+      // `BaselineExportContext::Other`.
+      // Note(dshin): For a lot of frames, the export context does not make a
+      // difference, and we may be wasting the value cached in
+      // `BlockStartAscent`.
+      pfd->mAscent = pfd->mFrame->GetLogicalBaseline(
+          lineWM, sourceGroup, BaselineExportContext::Other);
     }
   }
 
@@ -1416,7 +1450,6 @@ void nsLineLayout::RemoveMarkerFrame(nsIFrame* aFrame) {
   psd->mFirstFrame = pfd->mNext;
   FreeFrame(pfd);
 }
-
 #ifdef DEBUG
 void nsLineLayout::DumpPerSpanData(PerSpanData* psd, int32_t aIndent) {
   nsIFrame::IndentBy(stdout, aIndent);
