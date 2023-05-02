@@ -493,6 +493,7 @@ struct RedirectToRealChannelArgs {
   uint64_t loadIdentifier;
   nsCString? originalUriString;
   EarlyHintConnectArgs[] earlyHints;
+  uint32_t earlyHintLinkType;
 };
 
 struct TimingStructArgs {

@@ -1457,10 +1457,12 @@ bool DocumentLoadListener::ResumeSuspendedChannel(
 void DocumentLoadListener::SerializeRedirectData(
     RedirectToRealChannelArgs& aArgs, bool aIsCrossProcess,
     uint32_t aRedirectFlags, uint32_t aLoadFlags, ContentParent* aParent,
-    nsTArray<EarlyHintConnectArgs>&& aEarlyHints) const {
+    nsTArray<EarlyHintConnectArgs>&& aEarlyHints,
+    uint32_t aEarlyHintLinkType) const {
   aArgs.uri() = GetChannelCreationURI();
   aArgs.loadIdentifier() = mLoadIdentifier;
   aArgs.earlyHints() = std::move(aEarlyHints);
+  aArgs.earlyHintLinkType() = aEarlyHintLinkType;
 
   // I previously used HttpBaseChannel::CloneLoadInfoForRedirect, but that
   // clears the principal to inherit, which fails tests (probably because this
@@ -2096,7 +2098,8 @@ DocumentLoadListener::RedirectToRealChannel(
 
     RedirectToRealChannelArgs args;
     SerializeRedirectData(args, /* aIsCrossProcess */ true, aRedirectFlags,
-                          aLoadFlags, cp, std::move(ehArgs));
+                          aLoadFlags, cp, std::move(ehArgs),
+                          mEarlyHintsService.LinkType());
     if (mTiming) {
       mTiming->Anonymize(args.uri());
       args.timing() = std::move(mTiming);
@@ -2142,10 +2145,11 @@ DocumentLoadListener::RedirectToRealChannel(
   nsTArray<EarlyHintConnectArgs> ehArgs;
   mEarlyHintsService.RegisterLinksAndGetConnectArgs(ehArgs);
 
-  mOpenPromise->Resolve(OpenPromiseSucceededType(
-                            {std::move(aStreamFilterEndpoints), aRedirectFlags,
-                             aLoadFlags, std::move(ehArgs), promise}),
-                        __func__);
+  mOpenPromise->Resolve(
+      OpenPromiseSucceededType({std::move(aStreamFilterEndpoints),
+                                aRedirectFlags, aLoadFlags, std::move(ehArgs),
+                                mEarlyHintsService.LinkType(), promise}),
+      __func__);
 
   // There is no way we could come back here if the promise had been resolved
   // previously. But for clarity and to avoid all doubt, we set this boolean to

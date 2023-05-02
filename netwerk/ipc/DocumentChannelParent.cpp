@@ -97,7 +97,8 @@ bool DocumentChannelParent::Init(dom::CanonicalBrowsingContext* aContext,
         auto promise = self->RedirectToRealChannel(
             std::move(aResolveValue.mStreamFilterEndpoints),
             aResolveValue.mRedirectFlags, aResolveValue.mLoadFlags,
-            std::move(aResolveValue.mEarlyHints));
+            std::move(aResolveValue.mEarlyHints),
+            aResolveValue.mEarlyHintLinkType);
         // We chain the promise the DLL is waiting on to the one returned by
         // RedirectToRealChannel. As soon as the promise returned is resolved
         // or rejected, so will the DLL's promise.
@@ -137,7 +138,7 @@ DocumentChannelParent::RedirectToRealChannel(
     nsTArray<ipc::Endpoint<extensions::PStreamFilterParent>>&&
         aStreamFilterEndpoints,
     uint32_t aRedirectFlags, uint32_t aLoadFlags,
-    nsTArray<EarlyHintConnectArgs>&& aEarlyHints) {
+    nsTArray<EarlyHintConnectArgs>&& aEarlyHints, uint32_t aEarlyHintLinkType) {
   if (!CanSend()) {
     return PDocumentChannelParent::RedirectToRealChannelPromise::
         CreateAndReject(ResponseRejectReason::ChannelClosed, __func__);
@@ -145,8 +146,8 @@ DocumentChannelParent::RedirectToRealChannel(
   RedirectToRealChannelArgs args;
   mDocumentLoadListener->SerializeRedirectData(
       args, false, aRedirectFlags, aLoadFlags,
-      static_cast<ContentParent*>(Manager()->Manager()),
-      std::move(aEarlyHints));
+      static_cast<ContentParent*>(Manager()->Manager()), std::move(aEarlyHints),
+      aEarlyHintLinkType);
   return SendRedirectToRealChannel(args, std::move(aStreamFilterEndpoints));
 }
 

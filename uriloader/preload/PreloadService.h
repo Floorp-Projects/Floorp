@@ -98,6 +98,9 @@ class PreloadService {
 
   static void NotifyNodeEvent(nsINode* aNode, bool aSuccess);
 
+  void SetEarlyHintUsed() { mEarlyHintUsed = true; }
+  bool GetEarlyHintUsed() const { return mEarlyHintUsed; }
+
  private:
   dom::ReferrerPolicy PreloadReferrerPolicy(const nsAString& aReferrerPolicy);
   nsIURI* BaseURIForPreload();
@@ -123,6 +126,8 @@ class PreloadService {
 
   // Set by `nsHtml5TreeOpExecutor::SetSpeculationBase`.
   nsCOMPtr<nsIURI> mSpeculationBaseURI;
+
+  bool mEarlyHintUsed = false;
 };
 
 }  // namespace mozilla

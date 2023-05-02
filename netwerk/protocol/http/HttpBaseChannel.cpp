@@ -6129,5 +6129,18 @@ void HttpBaseChannel::LogORBError(const nsAString& aReason) {
                                   nsContentUtils::eNECKO_PROPERTIES,
                                   "ResourceBlockedORB", params);
 }
+
+NS_IMETHODIMP HttpBaseChannel::SetEarlyHintLinkType(
+    uint32_t aEarlyHintLinkType) {
+  mEarlyHintLinkType = aEarlyHintLinkType;
+  return NS_OK;
+}
+
+NS_IMETHODIMP HttpBaseChannel::GetEarlyHintLinkType(
+    uint32_t* aEarlyHintLinkType) {
+  *aEarlyHintLinkType = mEarlyHintLinkType;
+  return NS_OK;
+}
+
 }  // namespace net
 }  // namespace mozilla
