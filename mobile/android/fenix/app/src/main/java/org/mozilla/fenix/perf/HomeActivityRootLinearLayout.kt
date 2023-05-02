@@ -33,7 +33,7 @@ class HomeActivityRootLinearLayout(context: Context, attrs: AttributeSet) : Line
         profiler?.addMarker(MEASURE_LAYOUT_DRAW_MARKER_NAME, profilerStartTime, "onLayout (HomeActivity root)")
     }
 
-    override fun dispatchDraw(canvas: Canvas?) {
+    override fun dispatchDraw(canvas: Canvas) {
         // We instrument dispatchDraw, for drawing children, because LinearLayout never draws itself,
         // i.e. it never calls onDraw or draw.
         val profilerStartTime = profiler?.getProfilerTime()
