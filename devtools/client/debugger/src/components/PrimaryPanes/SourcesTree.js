@@ -322,6 +322,10 @@ class SourcesTree extends Component {
 
   renderItem = (item, depth, focused, _, expanded, { setExpanded }) => {
     const { mainThreadHost, projectRoot } = this.props;
+    const isSourceBlackBoxed = item.source
+      ? this.props.blackBoxRanges[item.source.url]
+      : null;
+
     return (
       <SourcesTreeItem
         item={item}
@@ -331,6 +335,7 @@ class SourcesTree extends Component {
         expanded={expanded}
         focusItem={this.onFocus}
         selectSourceItem={this.selectSourceItem}
+        isSourceBlackBoxed={isSourceBlackBoxed}
         projectRoot={projectRoot}
         setExpanded={setExpanded}
         getBlackBoxSourcesGroups={this.getBlackBoxSourcesGroups}
