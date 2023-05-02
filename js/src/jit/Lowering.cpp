@@ -5586,11 +5586,9 @@ void LIRGenerator::visitWasmStoreRef(MWasmStoreRef* ins) {
 }
 
 void LIRGenerator::visitWasmPostWriteBarrier(MWasmPostWriteBarrier* ins) {
-  LDefinition tmp =
-      needTempForPostBarrier() ? temp() : LDefinition::BogusTemp();
   LWasmPostWriteBarrier* lir = new (alloc()) LWasmPostWriteBarrier(
       useFixed(ins->instance(), InstanceReg), useRegister(ins->object()),
-      useRegister(ins->valueBase()), useRegister(ins->value()), tmp,
+      useRegister(ins->valueBase()), useRegister(ins->value()), temp(),
       ins->valueOffset());
   add(lir, ins);
   assignWasmSafepoint(lir);
