@@ -7293,8 +7293,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateBrowsingContext(
     return IPC_FAIL(this, "Unrelated context from child in stale group");
   }
 
-  BrowsingContext::CreateFromIPC(std::move(aInit), group, this);
-  return IPC_OK();
+  return BrowsingContext::CreateFromIPC(std::move(aInit), group, this);
 }
 
 bool ContentParent::CheckBrowsingContextEmbedder(CanonicalBrowsingContext* aBC,
