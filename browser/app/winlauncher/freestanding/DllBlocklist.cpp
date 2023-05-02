@@ -214,6 +214,11 @@ static BlockAction CheckBlockInfo(const DllBlockInfo* aInfo,
     return BlockAction::Allow;
   }
 
+  if ((aInfo->mFlags & DllBlockInfo::GMPLUGIN_PROCESSES_ONLY) &&
+      !(gBlocklistInitFlags & eDllBlocklistInitFlagIsGMPluginProcess)) {
+    return BlockAction::Allow;
+  }
+
   if (aInfo->mMaxVersion == DllBlockInfo::ALL_VERSIONS) {
     return BlockAction::Deny;
   }
