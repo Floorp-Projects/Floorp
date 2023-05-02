@@ -63,7 +63,7 @@ async function run_test(path, dirs) {
         [{ eligibleElementSelector, file }],
         obj => {
           const { FieldScanner } = ChromeUtils.importESModule(
-            "resource://autofill/FormAutofillHeuristics.sys.mjs"
+            "resource://gre/modules/shared/FieldScanner.sys.mjs"
           );
           const { FormAutofillUtils } = ChromeUtils.importESModule(
             "resource://gre/modules/shared/FormAutofillUtils.sys.mjs"

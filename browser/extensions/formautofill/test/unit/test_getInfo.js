@@ -1,11 +1,11 @@
 "use strict";
 
 const { FieldScanner } = ChromeUtils.importESModule(
-  "resource://autofill/FormAutofillHeuristics.sys.mjs"
+  "resource://gre/modules/shared/FieldScanner.sys.mjs"
 );
 
 var { FormAutofillHeuristics } = ChromeUtils.importESModule(
-  "resource://autofill/FormAutofillHeuristics.sys.mjs"
+  "resource://gre/modules/shared/FormAutofillHeuristics.sys.mjs"
 );
 var { LabelUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/shared/LabelUtils.sys.mjs"

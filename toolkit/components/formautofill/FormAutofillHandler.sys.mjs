@@ -15,7 +15,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
-  FormAutofillHeuristics: "resource://autofill/FormAutofillHeuristics.sys.mjs",
+  FormAutofillHeuristics:
+    "resource://gre/modules/shared/FormAutofillHeuristics.sys.mjs",
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
 });
 
