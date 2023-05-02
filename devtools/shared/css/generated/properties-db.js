@@ -59,7 +59,8 @@ exports.CSS_PROPERTIES = {
       "step-end",
       "step-start",
       "steps",
-      "unset"
+      "unset",
+      "view"
     ]
   },
   "-moz-animation-delay": {
@@ -1331,7 +1332,8 @@ exports.CSS_PROPERTIES = {
       "step-end",
       "step-start",
       "steps",
-      "unset"
+      "unset",
+      "view"
     ]
   },
   "-webkit-animation-delay": {
@@ -3366,7 +3368,8 @@ exports.CSS_PROPERTIES = {
       "step-end",
       "step-start",
       "steps",
-      "unset"
+      "unset",
+      "view"
     ]
   },
   "animation-composition": {
