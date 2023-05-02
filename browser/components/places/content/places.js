@@ -496,7 +496,9 @@ var PlacesOrganizer = {
 
     fp.init(
       window,
-      PlacesUIUtils.getString("SelectImport"),
+      PlacesUIUtils.promptLocalization.formatValueSync(
+        "places-bookmarks-import"
+      ),
       Ci.nsIFilePicker.modeOpen
     );
     fp.appendFilters(Ci.nsIFilePicker.filterHTML);
@@ -519,7 +521,9 @@ var PlacesOrganizer = {
 
     fp.init(
       window,
-      PlacesUIUtils.getString("EnterExport"),
+      PlacesUIUtils.promptLocalization.formatValueSync(
+        "places-bookmarks-export"
+      ),
       Ci.nsIFilePicker.modeSave
     );
     fp.appendFilters(Ci.nsIFilePicker.filterHTML);
@@ -623,15 +627,15 @@ var PlacesOrganizer = {
       }
     };
 
-    fp.init(
-      window,
-      PlacesUIUtils.getString("bookmarksRestoreTitle"),
-      Ci.nsIFilePicker.modeOpen
-    );
-    fp.appendFilter(
-      PlacesUIUtils.getString("bookmarksRestoreFilterName"),
-      RESTORE_FILEPICKER_FILTER_EXT
-    );
+    const [
+      title,
+      filterName,
+    ] = PlacesUIUtils.promptLocalization.formatValuesSync([
+      "places-bookmarks-restore-title",
+      "places-bookmarks-restore-filter-name",
+    ]);
+    fp.init(window, title, Ci.nsIFilePicker.modeOpen);
+    fp.appendFilter(filterName, RESTORE_FILEPICKER_FILTER_EXT);
     fp.appendFilters(Ci.nsIFilePicker.filterAll);
     fp.displayDirectory = backupsDir;
     fp.open(fpCallback);
@@ -649,20 +653,16 @@ var PlacesOrganizer = {
       !aFilePath.toLowerCase().endsWith("json") &&
       !aFilePath.toLowerCase().endsWith("jsonlz4")
     ) {
-      this._showErrorAlert(
-        PlacesUIUtils.getString("bookmarksRestoreFormatError")
-      );
+      this._showErrorAlert("places-bookmarks-restore-format-error");
       return;
     }
 
+    const [title, body] = PlacesUIUtils.promptLocalization.formatValuesSync([
+      "places-bookmarks-restore-alert-title",
+      "places-bookmarks-restore-alert",
+    ]);
     // confirm ok to delete existing bookmarks
-    if (
-      !Services.prompt.confirm(
-        null,
-        PlacesUIUtils.getString("bookmarksRestoreAlertTitle"),
-        PlacesUIUtils.getString("bookmarksRestoreAlert")
-      )
-    ) {
+    if (!Services.prompt.confirm(null, title, body)) {
       return;
     }
 
@@ -672,19 +672,17 @@ var PlacesOrganizer = {
           replace: true,
         });
       } catch (ex) {
-        PlacesOrganizer._showErrorAlert(
-          PlacesUIUtils.getString("bookmarksRestoreParseError")
-        );
+        PlacesOrganizer._showErrorAlert("places-bookmarks-restore-parse-error");
       }
     })();
   },
 
-  _showErrorAlert: function PO__showErrorAlert(aMsg) {
-    var brandShortName = document
-      .getElementById("brandStrings")
-      .getString("brandShortName");
-
-    Services.prompt.alert(window, brandShortName, aMsg);
+  _showErrorAlert: function PO__showErrorAlert(l10nId) {
+    const [title, msg] = PlacesUIUtils.promptLocalization.formatValuesSync([
+      "places-error-title",
+      l10nId,
+    ]);
+    Services.prompt.alert(window, title, msg);
   },
 
   /**
@@ -704,15 +702,15 @@ var PlacesOrganizer = {
       }
     };
 
-    fp.init(
-      window,
-      PlacesUIUtils.getString("bookmarksBackupTitle"),
-      Ci.nsIFilePicker.modeSave
-    );
-    fp.appendFilter(
-      PlacesUIUtils.getString("bookmarksRestoreFilterName"),
-      RESTORE_FILEPICKER_FILTER_EXT
-    );
+    const [
+      title,
+      filterName,
+    ] = PlacesUIUtils.promptLocalization.formatValuesSync([
+      "places-bookmarks-backup-title",
+      "places-bookmarks-restore-filter-name",
+    ]);
+    fp.init(window, title, Ci.nsIFilePicker.modeSave);
+    fp.appendFilter(filterName, RESTORE_FILEPICKER_FILTER_EXT);
     fp.defaultString = PlacesBackups.getFilenameForDate();
     fp.defaultExtension = "json";
     fp.displayDirectory = backupsDir;

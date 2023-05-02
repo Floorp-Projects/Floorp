@@ -25,12 +25,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   OpenInTabsUtils: "resource:///modules/OpenInTabsUtils.jsm",
 });
 
-XPCOMUtils.defineLazyGetter(lazy, "bundle", function() {
-  return Services.strings.createBundle(
-    "chrome://browser/locale/places/places.properties"
-  );
-});
-
 const gInContentProcess =
   Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT;
 const FAVICON_REQUEST_TIMEOUT = 60 * 1000;
@@ -534,10 +528,6 @@ export var PlacesUIUtils = {
   // if a bookmark was created or modified.
   lastBookmarkDialogDeferred: null,
 
-  getString: function PUIU_getString(key) {
-    return lazy.bundle.GetStringFromName(key);
-  },
-
   /**
    * Obfuscates a place: URL to use it in xulstore without the risk of
    leaking browsing information. Uses md5 to hash the query string.
@@ -918,13 +908,14 @@ export var PlacesUIUtils = {
 
     var uri = Services.io.newURI(aURINode.uri);
     if (uri.schemeIs("javascript") || uri.schemeIs("data")) {
-      const BRANDING_BUNDLE_URI = "chrome://branding/locale/brand.properties";
-      var brandShortName = Services.strings
-        .createBundle(BRANDING_BUNDLE_URI)
-        .GetStringFromName("brandShortName");
-
-      var errorStr = this.getString("load-js-data-url-error");
-      Services.prompt.alert(aWindow, brandShortName, errorStr);
+      const [
+        title,
+        errorStr,
+      ] = PlacesUIUtils.promptLocalization.formatValuesSync([
+        "places-error-title",
+        "places-load-js-data-url-error",
+      ]);
+      Services.prompt.alert(aWindow, title, errorStr);
       return false;
     }
     return true;
@@ -1239,7 +1230,7 @@ export var PlacesUIUtils = {
       title = aNode.title;
     }
 
-    return title || this.getString("noTitle");
+    return title || this.promptLocalization.formatValueSync("places-no-title");
   },
 
   shouldShowTabsFromOtherComputersMenuitem() {
@@ -2021,6 +2012,13 @@ XPCOMUtils.defineLazyGetter(PlacesUIUtils, "ellipsis", function() {
     "intl.ellipsis",
     Ci.nsIPrefLocalizedString
   ).data;
+});
+
+XPCOMUtils.defineLazyGetter(PlacesUIUtils, "promptLocalization", () => {
+  return new Localization(
+    ["browser/placesPrompts.ftl", "branding/brand.ftl"],
+    true
+  );
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(

@@ -99,3 +99,29 @@ places-view-sortby-tags =
             source=source,
         ),
     )
+
+    ctx.add_transforms(
+        "browser/browser/placesPrompts.ftl",
+        "browser/browser/placesPrompts.ftl",
+        [
+            FTL.Message(
+                id=FTL.Identifier("places-error-title"),
+                value=FTL.Pattern([FTL.Placeable(TERM_REFERENCE("brand-short-name"))]),
+            ),
+        ]
+        + transforms_from(
+            """
+places-no-title = { COPY(source, "noTitle") }
+places-bookmarks-backup-title = { COPY(source, "bookmarksBackupTitle") }
+places-bookmarks-restore-alert-title = { COPY(source, "bookmarksRestoreAlertTitle") }
+places-bookmarks-restore-alert = { COPY(source, "bookmarksRestoreAlert") }
+places-bookmarks-restore-title = { COPY(source, "bookmarksRestoreTitle") }
+places-bookmarks-restore-filter-name = { COPY(source, "bookmarksRestoreFilterName") }
+places-bookmarks-restore-format-error = { COPY(source, "bookmarksRestoreFormatError") }
+places-bookmarks-restore-parse-error = { COPY(source, "bookmarksRestoreParseError") }
+places-bookmarks-import = { COPY(source, "SelectImport") }
+places-bookmarks-export = { COPY(source, "EnterExport") }
+""",
+            source=source,
+        ),
+    )
