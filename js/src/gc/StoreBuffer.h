@@ -15,6 +15,7 @@
 
 #include "ds/BitArray.h"
 #include "ds/LifoAlloc.h"
+#include "gc/Cell.h"
 #include "gc/Nursery.h"
 #include "gc/TraceKind.h"
 #include "js/AllocPolicy.h"
@@ -641,7 +642,7 @@ MOZ_ALWAYS_INLINE void PostWriteBarrier(T** vp, T* prev, T* next) {
   static_assert(std::is_base_of_v<Cell, T>);
   static_assert(!std::is_same_v<Cell, T> && !std::is_same_v<TenuredCell, T>);
 
-  if constexpr (!std::is_base_of_v<TenuredCell, T>) {
+  if constexpr (!GCTypeIsTenured<T>()) {
     using BaseT = typename BaseGCType<T>::type;
     PostWriteBarrierImpl<BaseT>(vp, prev, next);
     return;
