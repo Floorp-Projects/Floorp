@@ -318,6 +318,7 @@ class nsWindow final : public nsBaseWidget {
   /**
    * Misc.
    */
+  bool AutoErase(HDC dc);
   bool WidgetTypeSupportsAcceleration() override;
 
   void ForcePresent();
@@ -702,7 +703,6 @@ class nsWindow final : public nsBaseWidget {
                         uint32_t aOrientation = 90);
 
   void OnFullscreenChanged(nsSizeMode aOldSizeMode, bool aFullScreen);
-  void TryDwmResizeHack();
 
   static void OnCloakEvent(HWND aWnd, bool aCloaked);
   void OnCloakChanged(bool aCloaked);
@@ -764,6 +764,7 @@ class nsWindow final : public nsBaseWidget {
   bool mInDtor = false;
   bool mIsVisible = false;
   bool mIsCloaked = false;
+  bool mPainting = false;
   bool mTouchWindow = false;
   bool mDisplayPanFeedback = false;
   bool mHideChrome = false;
@@ -777,7 +778,6 @@ class nsWindow final : public nsBaseWidget {
   bool mIsShowingPreXULSkeletonUI = false;
   bool mResizable = false;
   bool mForMenupopupFrame = false;
-  bool mIsPerformingDwmFlushHack = false;
   DWORD_PTR mOldStyle = 0;
   DWORD_PTR mOldExStyle = 0;
   nsNativeDragTarget* mNativeDragTarget = nullptr;
