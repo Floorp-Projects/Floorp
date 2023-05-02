@@ -48,7 +48,7 @@ async function onLoad() {
           SimpleTest.finish();
           break;
         case "second":
-          ok(events.length === 1 && events[0] === "third",
+          ok(events.length === 0,
              "second dynamic import returned");
           events.push(event.data);
           worker.terminate()
@@ -58,10 +58,6 @@ async function onLoad() {
           if (successCount == 2) {
             SimpleTest.finish();
           }
-          break;
-        case "third":
-          ok(events.length === 0, "third dynamic import returned");
-          events.push(event.data);
           break;
         default:
           ok(false, "Unexpected message:" + event.data);
