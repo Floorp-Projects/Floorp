@@ -19,11 +19,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.theme.FirefoxTheme
+
+const val DEFAULT_MAX_LINES = 2
 
 /**
  * Base component for buttons.
@@ -44,6 +48,9 @@ private fun Button(
     tint: Color,
     onClick: () -> Unit,
 ) {
+    // Required to detect if font increased due to accessibility.
+    val fontScale: Float = LocalConfiguration.current.fontScale
+
     androidx.compose.material.Button(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
@@ -65,9 +72,10 @@ private fun Button(
 
         Text(
             text = text,
+            textAlign = TextAlign.Center,
             color = textColor,
             style = FirefoxTheme.typography.button,
-            maxLines = 1,
+            maxLines = if (fontScale > 1.0f) Int.MAX_VALUE else DEFAULT_MAX_LINES,
         )
     }
 }
