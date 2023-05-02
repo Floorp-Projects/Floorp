@@ -140,7 +140,7 @@ const GENERIC_TAGS = new Set(["A", "SPAN"]);
  */
 export class TranslationsDocument {
   /**
-   * The two-letter BCP 47 language tag that is used on the page.
+   * The BCP 47 language tag that is used on the page.
    *
    * @type {string} */
   documentLanguage;
@@ -205,7 +205,7 @@ export class TranslationsDocument {
    * manage the life cycle of the translations engines.
    *
    * @param {Document} document
-   * @param {string} documentLanguage - The two letter BCP 47 language tag.
+   * @param {string} documentLanguage - The BCP 47 language tag.
    * @param {number} innerWindowId - This is used for better profiler marker reporting.
    * @param {TranslationFunction} translateHTML
    * @param {TranslationFunction} translateText

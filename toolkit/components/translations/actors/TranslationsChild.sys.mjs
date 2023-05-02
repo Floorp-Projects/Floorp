@@ -164,7 +164,9 @@ class TranslationsEngineCache {
    */
   createGetter(actor, fromLanguage, toLanguage) {
     return async (onlyFromCache = false) => {
-      let enginePromise = this.#engines[fromLanguage + toLanguage];
+      let enginePromise = this.#engines[
+        TranslationsChild.languagePairKey(fromLanguage, toLanguage)
+      ];
       if (enginePromise) {
         return enginePromise;
       }
@@ -175,7 +177,9 @@ class TranslationsEngineCache {
       // A new engine needs to be created.
       enginePromise = actor.createTranslationsEngine(fromLanguage, toLanguage);
 
-      this.#engines[fromLanguage + toLanguage] = enginePromise;
+      this.#engines[
+        TranslationsChild.languagePairKey(fromLanguage, toLanguage)
+      ] = enginePromise;
 
       const engine = await enginePromise;
 
@@ -208,20 +212,20 @@ class TranslationsEngineCache {
    * @param {string} toLanguage
    */
   keepAlive(fromLanguage, toLanguage) {
-    const languagePair = fromLanguage + toLanguage;
-    const timeoutId = this.#timeouts[languagePair];
+    const key = TranslationsChild.languagePairKey(fromLanguage);
+    const timeoutId = this.#timeouts[key];
     if (timeoutId) {
       lazy.clearTimeout(timeoutId);
     }
-    const enginePromise = this.#engines[languagePair];
+    const enginePromise = this.#engines[key];
     if (!enginePromise) {
       // It appears that the engine is already dead.
       return;
     }
-    this.#timeouts[languagePair] = lazy.setTimeout(() => {
+    this.#timeouts[key] = lazy.setTimeout(() => {
       // Delete the caches.
-      delete this.#engines[languagePair];
-      delete this.#timeouts[languagePair];
+      delete this.#engines[key];
+      delete this.#timeouts[key];
 
       // Terminate the engine worker.
       enginePromise.then(engine => engine.terminate());
@@ -233,7 +237,9 @@ class TranslationsEngineCache {
    */
   isInCache(fromLanguage, toLanguage) {
     this.keepAlive(fromLanguage, toLanguage);
-    return Boolean(this.#engines[fromLanguage + toLanguage]);
+    return Boolean(
+      this.#engines[TranslationsChild.languagePairKey(fromLanguage, toLanguage)]
+    );
   }
 }
 
@@ -472,6 +478,17 @@ export class TranslationsChild extends JSWindowActorChild {
    * @type {null | { appLangTag: string, docLangTag: string }}
    * */
   #langTags = null;
+
+  /**
+   * Creates a lookup key that is unique to each fromLanguage-toLanguage pair.
+   *
+   * @param {string} fromLanguage
+   * @param {string} toLanguage
+   * @returns {string}
+   */
+  static languagePairKey(fromLanguage, toLanguage) {
+    return `${fromLanguage},${toLanguage}`;
+  }
 
   /**
    * @returns {Promise<ArrayBuffer>}

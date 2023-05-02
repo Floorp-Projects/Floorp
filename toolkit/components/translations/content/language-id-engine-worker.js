@@ -262,7 +262,7 @@ class LanguageIdEngine {
     // https://iso639-3.sil.org/code_tables/deprecated_codes/data
     //
     // Each of these tags have been cross checked for compatibility with the IANA
-    // language subtag registry, which is used by BCP47, and any edge cases are handled below.
+    // language subtag registry, which is used by BCP 47, and any edge cases are handled below.
     // https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry
     switch (formattedTag) {
       // fastText may return "eml" which is a deprecated ISO639-3 language tag for the language
@@ -298,13 +298,13 @@ class LanguageIdEngine {
 
   /**
    * Identifies the human language in which the message is written and returns
-   * the BCP47 language tag of the language it is determined to be along along
+   * the BCP 47 language tag of the language it is determined to be along along
    * with a rating of how confident the model is that the label is correct.
    *
    * @param {string} message
    * @returns {Array<number | string>} An array containing the confidence and language tag.
    * The confidence is a number between 0 and 1, representing a percentage.
-   * The language tag is a BCP47 language tag such as "en" for English.
+   * The language tag is a BCP 47 language tag such as "en" for English.
    *
    * e.g. [0.87, "en"]
    */

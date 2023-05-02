@@ -147,7 +147,10 @@ add_task(async function test_get_records_with_multiple_versions() {
   );
 
   const lookupKey = record =>
-    `${record.name}${record.fromLang}${record.toLang}`;
+    `${record.name}${TranslationsParent.languagePairKey(
+      record.fromLang,
+      record.toLang
+    )}`;
 
   // A mapping of each record name to its max version.
   const maxVersionMap = {};

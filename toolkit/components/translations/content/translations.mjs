@@ -108,7 +108,7 @@ class TranslationsState {
 
   /**
    * Identifies the human language in which the message is written and returns
-   * the two-letter language label of the language it is determined to be.
+   * the BCP 47 language tag of the language it is determined to be.
    *
    * e.g. "en" for English.
    *
@@ -222,7 +222,7 @@ class TranslationsState {
       // If fromLanguage or toLanguage are unpopulated we cannot load anything.
       !this.fromLanguage ||
       !this.toLanguage ||
-      // If fromLanguage's value is "detect", rather than a two-letter language tag, then no language
+      // If fromLanguage's value is "detect", rather than a BCP 47 language tag, then no language
       // has been detected yet.
       this.fromLanguage === "detect" ||
       // If fromLanguage and toLanguage are the same, this means that the detected language
