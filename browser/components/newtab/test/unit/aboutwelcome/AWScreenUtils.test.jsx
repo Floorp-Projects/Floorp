@@ -125,4 +125,18 @@ describe("AWScreenUtils", () => {
       assert.deepEqual(evaluatedStrings, expectedScreens);
     });
   });
+
+  describe("addScreenImpression", () => {
+    it("Should call addScreenImpression with provided screen ID", () => {
+      const addScreenImpressionStub = sandbox.stub(
+        ASRouter,
+        "addScreenImpression"
+      );
+      const testScreen = { id: "test" };
+      AWScreenUtils.addScreenImpression(testScreen);
+
+      assert.calledOnce(addScreenImpressionStub);
+      assert.equal(addScreenImpressionStub.firstCall.args[0].id, testScreen.id);
+    });
+  });
 });

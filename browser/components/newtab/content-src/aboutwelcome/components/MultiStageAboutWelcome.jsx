@@ -70,6 +70,7 @@ export const MultiStageAboutWelcome = props => {
           AboutWelcomeUtils.sendImpressionTelemetry(
             `${props.message_id}_${order}_${screen.id}_${screenInitials}`
           );
+          window.AWAddScreenImpression?.(screen);
         }
       });
 

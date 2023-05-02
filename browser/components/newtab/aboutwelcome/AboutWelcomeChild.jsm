@@ -58,6 +58,10 @@ class AboutWelcomeChild extends JSWindowActorChild {
   exportFunctions() {
     let window = this.contentWindow;
 
+    Cu.exportFunction(this.AWAddScreenImpression.bind(this), window, {
+      defineAs: "AWAddScreenImpression",
+    });
+
     Cu.exportFunction(this.AWGetFeatureConfig.bind(this), window, {
       defineAs: "AWGetFeatureConfig",
     });
@@ -152,6 +156,12 @@ class AboutWelcomeChild extends JSWindowActorChild {
     return this.sendQueryAndCloneForContent(
       "AWPage:EVALUATE_SCREEN_TARGETING",
       data
+    );
+  }
+
+  AWAddScreenImpression(screen) {
+    return this.wrapPromise(
+      this.sendQuery("AWPage:ADD_SCREEN_IMPRESSION", screen)
     );
   }
 
