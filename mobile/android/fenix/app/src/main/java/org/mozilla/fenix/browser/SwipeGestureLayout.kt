@@ -67,12 +67,12 @@ class SwipeGestureLayout @JvmOverloads constructor(
         }
 
         override fun onScroll(
-            e1: MotionEvent,
+            e1: MotionEvent?,
             e2: MotionEvent,
             distanceX: Float,
             distanceY: Float,
         ): Boolean {
-            val start = e1.let { event -> PointF(event.rawX, event.rawY) }
+            val start = e1?.let { event -> PointF(event.rawX, event.rawY) } ?: return false
             val next = e2.let { event -> PointF(event.rawX, event.rawY) }
 
             if (activeListener == null && !handledInitialScroll) {
@@ -86,7 +86,7 @@ class SwipeGestureLayout @JvmOverloads constructor(
         }
 
         override fun onFling(
-            e1: MotionEvent,
+            e1: MotionEvent?,
             e2: MotionEvent,
             velocityX: Float,
             velocityY: Float,
