@@ -431,7 +431,7 @@ export class TranslationsParent extends JSWindowActorParent {
 
   /**
    * For testing purposes, the LanguageIdEngine can be mocked to always return
-   * a pre-determined language label and confidence value.
+   * a pre-determined language tag and confidence value.
    *
    * @returns {LanguageIdEngineMockedPayload | null}
    */
@@ -449,6 +449,17 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   /**
+   * Creates a lookup key that is unique to each fromLanguage-toLanguage pair.
+   *
+   * @param {string} fromLanguage
+   * @param {string} toLanguage
+   * @returns {string}
+   */
+  static languagePairKey(fromLanguage, toLanguage) {
+    return `${fromLanguage},${toLanguage}`;
+  }
+
+  /**
    * Get the list of translation pairs supported by the translations engine.
    *
    * @returns {Promise<Array<LanguagePair>>}
@@ -463,7 +474,7 @@ export class TranslationsParent extends JSWindowActorParent {
 
     for (const { fromLang, toLang, version } of records.values()) {
       const isBeta = Services.vc.compare(version, "1.0") < 0;
-      const key = `${fromLang},${toLang}`;
+      const key = TranslationsParent.languagePairKey(fromLang, toLang);
       if (!languagePairMap.has(key)) {
         languagePairMap.set(key, { fromLang, toLang, isBeta });
       }
@@ -671,9 +682,13 @@ export class TranslationsParent extends JSWindowActorParent {
     const translationModelRecords = await TranslationsParent.getMaxVersionRecords(
       client,
       {
-        // Names in this collection are not unique, so we are appending the
-        // fromLang and toLang to the name which will guarantee uniqueness
-        lookupKey: record => `${record.name}${record.fromLang}${record.toLang}`,
+        // Names in this collection are not unique, so we are appending the languagePairKey
+        // to guarantee uniqueness.
+        lookupKey: record =>
+          `${record.name}${TranslationsParent.languagePairKey(
+            record.fromLang,
+            record.toLang
+          )}`,
       }
     );
 
@@ -1191,7 +1206,7 @@ export class TranslationsParent extends JSWindowActorParent {
    * For testing purposes, allow the LanguageIdEngine to be mocked. If called
    * with `null` in each argument, the mock is removed.
    *
-   * @param {string} langTag - The two-character language tag.
+   * @param {string} langTag - The BCP 47 language tag.
    * @param {number} confidence  - The confidence score of the detected language.
    */
   static mockLanguageIdentification(langTag, confidence) {

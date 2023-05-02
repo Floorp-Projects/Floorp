@@ -4,7 +4,7 @@
 "use strict";
 
 /**
- * This file contains unit tests for the translations actor. Generally it's preferrable
+ * This file contains unit tests for the translations actor. Generally it's preferable
  * to test behavior in a full integration test, but occasionally it's useful to test
  * specific implementation behavior.
  */
@@ -21,6 +21,8 @@ add_task(async function test_pivot_language_behavior() {
     languagePairs: [
       { fromLang: "en", toLang: "es", isBeta: false },
       { fromLang: "es", toLang: "en", isBeta: false },
+      { fromLang: "en", toLang: "yue", isBeta: true },
+      { fromLang: "yue", toLang: "en", isBeta: true },
       // This is not a bi-directional translation.
       { fromLang: "is", toLang: "en", isBeta: false },
       // These are non-pivot languages.
@@ -33,15 +35,19 @@ add_task(async function test_pivot_language_behavior() {
 
   // The pairs aren't guaranteed to be sorted.
   languagePairs.sort((a, b) =>
-    (a.fromLang + a.toLang).localeCompare(b.fromLang + b.toLang)
+    TranslationsParent.languagePairKey(a.fromLang, a.toLang).localeCompare(
+      TranslationsParent.languagePairKey(b.fromLang, b.toLang)
+    )
   );
 
   Assert.deepEqual(
     languagePairs,
     [
       { fromLang: "en", toLang: "es", isBeta: false },
+      { fromLang: "en", toLang: "yue", isBeta: true },
       { fromLang: "es", toLang: "en", isBeta: false },
       { fromLang: "is", toLang: "en", isBeta: false },
+      { fromLang: "yue", toLang: "en", isBeta: true },
     ],
     "Non-pivot languages were removed."
   );
@@ -86,14 +92,17 @@ add_task(async function test_translating_to_and_from_app_language() {
   function getUniqueLanguagePairs(records) {
     const langPairs = new Set();
     for (const { fromLang, toLang } of records) {
-      langPairs.add(fromLang + toLang);
+      langPairs.add(TranslationsParent.languagePairKey(fromLang, toLang));
     }
     return Array.from(langPairs)
       .sort()
-      .map(langPair => ({
-        fromLang: langPair[0] + langPair[1],
-        toLang: langPair[2] + langPair[3],
-      }));
+      .map(langPair => {
+        const [fromLang, toLang] = langPair.split(",");
+        return {
+          fromLang,
+          toLang,
+        };
+      });
   }
 
   function assertLanguagePairs({
