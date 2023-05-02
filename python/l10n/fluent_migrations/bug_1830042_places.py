@@ -2,7 +2,7 @@
 # http://creativecommons.org/publicdomain/zero/1.0/
 
 import fluent.syntax.ast as FTL
-from fluent.migrate.helpers import TERM_REFERENCE
+from fluent.migrate.helpers import TERM_REFERENCE, transforms_from
 from fluent.migrate.transforms import REPLACE
 
 
@@ -22,6 +22,25 @@ def migrate(ctx):
                     "lockPrompt.text",
                     {"%1$S": TERM_REFERENCE("brand-short-name")},
                 ),
-            )
-        ],
+            ),
+        ]
+        + transforms_from(
+            """
+places-delete-page =
+    .label =
+        { $count ->
+            [1] { COPY(source, "cmd.deleteSinglePage.label") }
+           *[other] { COPY(source, "cmd.deleteMultiplePages.label") }
+        }
+    .accesskey = { COPY(source, "cmd.deleteSinglePage.accesskey") }
+places-create-bookmark =
+    .label =
+        { $count ->
+            [1] { COPY(source, "cmd.bookmarkSinglePage2.label") }
+           *[other] { COPY(source, "cmd.bookmarkMultiplePages2.label") }
+        }
+    .accesskey = { COPY(source, "cmd.bookmarkSinglePage2.accesskey") }
+""",
+            source=source,
+        ),
     )
