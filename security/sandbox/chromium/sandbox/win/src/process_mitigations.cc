@@ -17,8 +17,6 @@
 #include "sandbox/win/src/sandbox_rand.h"
 #include "sandbox/win/src/win_utils.h"
 
-#include "mozilla/MozProcessMitigationDynamicCodePolicy.h"
-
 namespace {
 
 // API defined in libloaderapi.h >= Win8.
@@ -233,7 +231,7 @@ bool ApplyProcessMitigationsToCurrentProcess(MitigationFlags flags) {
     // Verify caller is not accidentally setting both mutually exclusive
     // policies.
     DCHECK(!(flags & MITIGATION_DYNAMIC_CODE_DISABLE_WITH_OPT_OUT));
-    MOZ_PROCESS_MITIGATION_DYNAMIC_CODE_POLICY policy = {};
+    PROCESS_MITIGATION_DYNAMIC_CODE_POLICY policy = {};
     policy.ProhibitDynamicCode = true;
 
     if (!set_process_mitigation_policy(ProcessDynamicCodePolicy, &policy,
@@ -309,7 +307,7 @@ bool ApplyProcessMitigationsToCurrentProcess(MitigationFlags flags) {
     // Verify caller is not accidentally setting both mutually exclusive
     // policies.
     DCHECK(!(flags & MITIGATION_DYNAMIC_CODE_DISABLE));
-    MOZ_PROCESS_MITIGATION_DYNAMIC_CODE_POLICY policy = {};
+    PROCESS_MITIGATION_DYNAMIC_CODE_POLICY policy = {};
     policy.ProhibitDynamicCode = true;
     policy.AllowThreadOptOut = true;
 
