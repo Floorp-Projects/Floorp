@@ -24,6 +24,9 @@ places-open-in-private-window =
   .label = Open in New Private Window
   .accesskey = P
 
+places-empty-bookmarks-folder =
+  .label = (Empty)
+
 places-add-bookmark =
   .label = Add Bookmark…
   .accesskey = B
