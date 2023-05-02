@@ -402,10 +402,13 @@ void WebAuthnController::RunFinishRegister(
     return;
   }
 
-  nsresult rv;
   nsresult status;
-  rv = aResult->GetStatus(&status);
-  if (NS_WARN_IF(NS_FAILED(rv)) || NS_FAILED(status)) {
+  nsresult rv = aResult->GetStatus(&status);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    AbortTransaction(aTransactionId, NS_ERROR_FAILURE, true);
+    return;
+  }
+  if (NS_FAILED(status)) {
     bool shouldCancelActiveDialog = true;
     if (status == NS_ERROR_DOM_OPERATION_ERR) {
       // PIN-related errors. Let the dialog show to inform the user
@@ -548,7 +551,11 @@ void WebAuthnController::RunFinishSign(
 
   if (aResult.Length() == 1) {
     nsresult status;
-    aResult[0]->GetStatus(&status);
+    nsresult rv = aResult[0]->GetStatus(&status);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      AbortTransaction(aTransactionId, NS_ERROR_FAILURE, true);
+      return;
+    }
     if (NS_FAILED(status)) {
       bool shouldCancelActiveDialog = true;
       if (status == NS_ERROR_DOM_OPERATION_ERR) {
@@ -569,7 +576,11 @@ void WebAuthnController::RunFinishSign(
   // If we more than one assertion, all of them should have OK status.
   for (const auto& assertion : aResult) {
     nsresult status;
-    assertion->GetStatus(&status);
+    nsresult rv = assertion->GetStatus(&status);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      AbortTransaction(aTransactionId, NS_ERROR_FAILURE, true);
+      return;
+    }
     if (NS_WARN_IF(NS_FAILED(status))) {
       Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                            u"CTAPSignAbort"_ns, 1);
