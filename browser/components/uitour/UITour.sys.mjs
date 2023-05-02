@@ -15,6 +15,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
   ResetProfile: "resource://gre/modules/ResetProfile.sys.mjs",
   TelemetryController: "resource://gre/modules/TelemetryController.sys.mjs",
+  UIState: "resource://services-sync/UIState.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
 
@@ -230,6 +231,8 @@ export var UITour = {
         return listener;
       }, {})
     );
+
+    Services.obs.addObserver(this, lazy.UIState.ON_UPDATE);
   },
 
   getNodeFromDocument(aDocument, aQuery) {
@@ -721,6 +724,11 @@ export var UITour = {
             }
           }
         }
+        break;
+      }
+      case lazy.UIState.ON_UPDATE: {
+        let syncState = lazy.UIState.get();
+        this.notify("FxA:SignedInStateChange", { status: syncState.status });
         break;
       }
     }
