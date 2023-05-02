@@ -11,10 +11,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
 
-// See bug 1766432 comment 4. In the future, we should keep this static assert
-// when we remove MOZ_PROCESS_MITIGATION_DYNAMIC_CODE_POLICY.
-#include "mozilla/MozProcessMitigationDynamicCodePolicy.h"
-static_assert(sizeof(MOZ_PROCESS_MITIGATION_DYNAMIC_CODE_POLICY) == 4);
+static_assert(sizeof(PROCESS_MITIGATION_DYNAMIC_CODE_POLICY) == 4);
 
 #if (_WIN32_WINNT < 0x0602)
 BOOL WINAPI GetProcessMitigationPolicy(
@@ -65,7 +62,7 @@ MFBT_API bool IsDynamicCodeDisabled() {
     return false;
   }
 
-  MOZ_PROCESS_MITIGATION_DYNAMIC_CODE_POLICY polInfo;
+  PROCESS_MITIGATION_DYNAMIC_CODE_POLICY polInfo;
   if (!pGetProcessMitigationPolicy(::GetCurrentProcess(),
                                    ProcessDynamicCodePolicy, &polInfo,
                                    sizeof(polInfo))) {
