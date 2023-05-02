@@ -564,11 +564,12 @@ void WebrtcAudioConduit::OnRtpReceived(MediaPacket&& aPacket,
 
     mCall->Call()->Receiver()->DeliverRtpPacket(
         webrtc::MediaType::AUDIO, std::move(parsed_packet),
-        [this](const webrtc::RtpPacketReceived& packet) {
+        [self = RefPtr<WebrtcAudioConduit>(this)](
+            const webrtc::RtpPacketReceived& packet) {
           CSFLogVerbose(
               LOGTAG,
-              "AudioConduit %p: failed demuxing packet, ssrc: %u seq: %u", this,
-              packet.Ssrc(), packet.SequenceNumber());
+              "AudioConduit %p: failed demuxing packet, ssrc: %u seq: %u",
+              self.get(), packet.Ssrc(), packet.SequenceNumber());
           return false;
         });
   }

@@ -1462,11 +1462,12 @@ void WebrtcVideoConduit::OnRtpReceived(MediaPacket&& aPacket,
         webrtc::kVideoPayloadTypeFrequency);
     mCall->Call()->Receiver()->DeliverRtpPacket(
         webrtc::MediaType::VIDEO, std::move(parsed_packet),
-        [this](const webrtc::RtpPacketReceived& packet) {
+        [self = RefPtr<WebrtcVideoConduit>(this)](
+            const webrtc::RtpPacketReceived& packet) {
           CSFLogVerbose(
               LOGTAG,
-              "VideoConduit %p: failed demuxing packet, ssrc: %u seq: %u", this,
-              packet.Ssrc(), packet.SequenceNumber());
+              "VideoConduit %p: failed demuxing packet, ssrc: %u seq: %u",
+              self.get(), packet.Ssrc(), packet.SequenceNumber());
           return false;
         });
   }
