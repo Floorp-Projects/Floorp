@@ -321,6 +321,7 @@ class alignas(TypicalCacheLineSize) Nursery {
       return false;
     }
     if (MOZ_UNLIKELY(!trailersRemoved_.append(nullptr))) {
+      trailersAdded_.popBack();
       return false;
     }
 
