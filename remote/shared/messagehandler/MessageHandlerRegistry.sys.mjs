@@ -195,7 +195,8 @@ export class MessageHandlerRegistry extends EventEmitter {
   _createMessageHandler(sessionId, sessionDataItems) {
     const messageHandler = new this._messageHandlerClass(
       sessionId,
-      this._context
+      this._context,
+      this
     );
 
     messageHandler.on(
