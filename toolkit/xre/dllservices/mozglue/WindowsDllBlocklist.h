@@ -24,6 +24,7 @@ enum DllBlocklistInitFlags {
   eDllBlocklistInitFlagIsUtilityProcess = 1 << 2,
   eDllBlocklistInitFlagIsSocketProcess = 1 << 3,
   eDllBlocklistInitFlagIsGPUProcess = 1 << 4,
+  eDllBlocklistInitFlagIsGMPluginProcess = 1 << 5,
 };
 
 inline void SetDllBlocklistProcessTypeFlags(uint32_t& aFlags,
@@ -34,6 +35,8 @@ inline void SetDllBlocklistProcessTypeFlags(uint32_t& aFlags,
     aFlags |= eDllBlocklistInitFlagIsSocketProcess;
   } else if (aProcessType == GeckoProcessType_GPU) {
     aFlags |= eDllBlocklistInitFlagIsGPUProcess;
+  } else if (aProcessType == GeckoProcessType_GMPlugin) {
+    aFlags |= eDllBlocklistInitFlagIsGMPluginProcess;
   }
 }
 
