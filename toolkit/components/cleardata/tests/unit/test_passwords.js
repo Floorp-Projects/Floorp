@@ -20,7 +20,7 @@ add_task(async function test_principal_downloads() {
     usernameField: "field_username",
     passwordField: "field_password",
   });
-  await Services.logins.addLoginAsync(loginInfo);
+  Services.logins.addLogin(loginInfo);
 
   Assert.equal(countLogins(URL), 1);
 
@@ -57,7 +57,7 @@ add_task(async function test_all() {
     usernameField: "field_username",
     passwordField: "field_password",
   });
-  await Services.logins.addLoginAsync(loginInfo);
+  Services.logins.addLogin(loginInfo);
 
   Assert.equal(countLogins(URL), 1);
 

@@ -99,7 +99,6 @@ Password.prototype = {
       this.props.usernameField,
       this.props.passwordField
     );
-    // TODO: use `addLoginAsync` instead, see https://bugzilla.mozilla.org/show_bug.cgi?id=1829396
     Services.logins.addLogin(login);
     login.QueryInterface(Ci.nsILoginMetaInfo);
     return login.guid;

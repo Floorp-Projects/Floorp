@@ -12,14 +12,19 @@ Login Manager test: html5 input types (email, tel, url, etc.)
 <script>
 runChecksAfterCommonInit(() => startTest());
 
-const DEFAULT_ORIGIN = window.location.origin;
+let DEFAULT_ORIGIN = window.location.origin;
 
-runInParent(async function setup() {
-  const login1 = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
-  const login2 = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
-  const login3 = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
-  const login4 = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
-  const login5 = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
+runInParent(function setup() {
+  let login1 = Cc["@mozilla.org/login-manager/loginInfo;1"].
+               createInstance(Ci.nsILoginInfo);
+  let login2 = Cc["@mozilla.org/login-manager/loginInfo;1"].
+               createInstance(Ci.nsILoginInfo);
+  let login3 = Cc["@mozilla.org/login-manager/loginInfo;1"].
+               createInstance(Ci.nsILoginInfo);
+  let login4 = Cc["@mozilla.org/login-manager/loginInfo;1"].
+               createInstance(Ci.nsILoginInfo);
+  let login5 = Cc["@mozilla.org/login-manager/loginInfo;1"].
+               createInstance(Ci.nsILoginInfo);
 
   login1.init("http://mochi.test:8888", "http://bug600551-1", null,
               "testuser@example.com", "testpass1", "", "");
@@ -32,13 +37,11 @@ runInParent(async function setup() {
   login5.init("http://mochi.test:8888", "http://bug600551-5", null,
               "test", "test", "", "");
 
-  await Services.logins.addLogins([
-    login1,
-    login2,
-    login3,
-    login4,
-    login5,
-  ]);
+  Services.logins.addLogin(login1);
+  Services.logins.addLogin(login2);
+  Services.logins.addLogin(login3);
+  Services.logins.addLogin(login4);
+  Services.logins.addLogin(login5);
 });
 </script>
 
@@ -52,7 +55,7 @@ runInParent(async function setup() {
   (Password manager not working with input type=email)
  */
 async function startTest() {
-  const win = window.open("about:blank");
+  let win = window.open("about:blank");
   SimpleTest.registerCleanupFunction(() => win.close());
   await loadFormIntoWindow(DEFAULT_ORIGIN, `
     <form id="form1" action="http://bug600551-1">

@@ -260,7 +260,7 @@ add_task(async function fill_generated_password_with_matching_logins() {
     "passwordmgr-storage-changed",
     (_, data) => data == "addLogin"
   );
-  await Services.logins.addLoginAsync(login);
+  Services.logins.addLogin(login);
   await storageChangedPromised;
 
   let formFilled = listenForTestNotification("FormProcessed");

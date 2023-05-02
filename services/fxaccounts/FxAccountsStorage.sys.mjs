@@ -562,7 +562,7 @@ LoginManagerStorage.prototype = {
       if (existingLogins.length) {
         Services.logins.modifyLogin(existingLogins[0], login);
       } else {
-        await Services.logins.addLoginAsync(login);
+        Services.logins.addLogin(login);
       }
       log.trace("finished write of user data to the login manager");
     } catch (ex) {
