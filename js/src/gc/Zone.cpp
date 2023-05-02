@@ -159,7 +159,6 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
       arenas(this),
       data(nullptr),
       tenuredBigInts(0),
-      nurseryAllocatedStrings(0),
       markedStrings(0),
       finalizedStrings(0),
       allocNurseryStrings(true),
