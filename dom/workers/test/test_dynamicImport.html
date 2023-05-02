@@ -14,7 +14,7 @@ done by dynamic import
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body>
+<body onload="onLoad()">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1540913">Worker Dynamic Import
  Bug 1540913</a>
 <p id="display"></p>
@@ -23,6 +23,12 @@ done by dynamic import
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+async function onLoad() {
+  await SpecialPowers.pushPrefEnv(
+      { set: [["dom.workers.modules.enabled", true ]] });
+
   const workers = [
     new Worker("dynamicImport_worker.js", {type: "classic"}),
     new Worker("dynamicImport_worker.js", {type: "module"})
@@ -67,8 +73,7 @@ done by dynamic import
 
     worker.postMessage("start");
   }
-
-  SimpleTest.waitForExplicitFinish();
+}
 </script>
 </pre>
 </body>
