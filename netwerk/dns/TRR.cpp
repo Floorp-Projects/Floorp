@@ -9,6 +9,7 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
 #include "nsHttpHandler.h"
+#include "nsHttpChannel.h"
 #include "nsHostResolver.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
@@ -1072,7 +1073,9 @@ void TRR::Cancel(nsresult aStatus) {
       isTRRServiceChannel = false;
     }
   }
-  if (isTRRServiceChannel && !XRE_IsSocketProcess()) {
+  // nsHttpChannel can be only canceled on the main thread.
+  RefPtr<nsHttpChannel> httpChannel = do_QueryObject(mChannel);
+  if (isTRRServiceChannel && !XRE_IsSocketProcess() && !httpChannel) {
     if (TRRService::Get()) {
       nsCOMPtr<nsIThread> thread = TRRService::Get()->TRRThread();
       if (thread && !thread->IsOnCurrentThread()) {

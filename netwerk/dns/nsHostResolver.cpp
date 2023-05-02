@@ -1367,7 +1367,17 @@ void nsHostResolver::AddToEvictionQ(nsHostRecord* rec,
 // Returns true if we retried with either TRR or Native.
 bool nsHostResolver::MaybeRetryTRRLookup(
     AddrHostRecord* aAddrRec, nsresult aFirstAttemptStatus,
-    TRRSkippedReason aFirstAttemptSkipReason, const MutexAutoLock& aLock) {
+    TRRSkippedReason aFirstAttemptSkipReason, nsresult aChannelStatus,
+    const MutexAutoLock& aLock) {
+  if (NS_FAILED(aFirstAttemptStatus) &&
+      (aChannelStatus == NS_ERROR_PROXY_UNAUTHORIZED ||
+       aChannelStatus == NS_ERROR_PROXY_AUTHENTICATION_FAILED) &&
+      aAddrRec->mEffectiveTRRMode == nsIRequest::TRR_ONLY_MODE) {
+    LOG(("MaybeRetryTRRLookup retry because of proxy connect failed"));
+    TRRService::Get()->DontUseTRRThread();
+    return DoRetryTRR(aAddrRec, aLock);
+  }
+
   if (NS_SUCCEEDED(aFirstAttemptStatus) ||
       aAddrRec->mEffectiveTRRMode != nsIRequest::TRR_FIRST_MODE ||
       aFirstAttemptStatus == NS_ERROR_DEFINITIVE_UNKNOWN_HOST) {
@@ -1415,6 +1425,11 @@ bool nsHostResolver::MaybeRetryTRRLookup(
        static_cast<uint32_t>(aFirstAttemptSkipReason)));
   TRRService::Get()->RetryTRRConfirm();
 
+  return DoRetryTRR(aAddrRec, aLock);
+}
+
+bool nsHostResolver::DoRetryTRR(AddrHostRecord* aAddrRec,
+                                const mozilla::MutexAutoLock& aLock) {
   {
     // Clear out the old query
     auto trrQuery = aAddrRec->mTRRQuery.Lock();
@@ -1498,7 +1513,8 @@ nsHostResolver::LookupStatus nsHostResolver::CompleteLookupLocked(
       addrRec->RecordReason(TRRSkippedReason::TRR_OK);
     }
 
-    if (MaybeRetryTRRLookup(addrRec, status, aReason, aLock)) {
+    nsresult channelStatus = aTRRRequest->ChannelStatus();
+    if (MaybeRetryTRRLookup(addrRec, status, aReason, channelStatus, aLock)) {
       MOZ_ASSERT(addrRec->mResolving);
       return LOOKUP_OK;
     }

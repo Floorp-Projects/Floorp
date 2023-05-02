@@ -448,7 +448,7 @@ class NodeHTTPSProxyServer extends BaseHTTPProxy {
 // HTTP2 proxy
 
 class HTTP2ProxyCode {
-  static async startServer(port) {
+  static async startServer(port, auth) {
     const fs = require("fs");
     const options = {
       key: fs.readFileSync(__dirname + "/proxy-cert.key"),
@@ -457,7 +457,7 @@ class HTTP2ProxyCode {
     const http2 = require("http2");
     global.proxy = http2.createSecureServer(options);
     global.socketCounts = {};
-    this.setupProxy();
+    this.setupProxy(auth);
 
     await global.proxy.listen(port);
     let proxyPort = global.proxy.address().port;
@@ -465,7 +465,7 @@ class HTTP2ProxyCode {
     return proxyPort;
   }
 
-  static setupProxy() {
+  static setupProxy(auth) {
     if (!global.proxy) {
       throw new Error("proxy is null");
     }
@@ -539,6 +539,16 @@ class HTTP2ProxyCode {
         return;
       }
 
+      const authorization_token = headers["proxy-authorization"];
+      if (auth && !authorization_token) {
+        stream.respond({
+          ":status": 407,
+          "proxy-authenticate": "Basic realm='foo'",
+        });
+        stream.end();
+        return;
+      }
+
       const target = headers[":authority"];
       const { port } = new URL(`https://${target}`);
       const net = require("net");
@@ -596,14 +606,16 @@ class NodeHTTP2ProxyServer extends BaseHTTPProxy {
   /// Starts the server
   /// @port - default 0
   ///    when provided, will attempt to listen on that port.
-  async start(port = 0) {
+  async start(port = 0, auth) {
     this.processId = await NodeServer.fork();
 
     await this.execute(BaseProxyCode);
     await this.execute(HTTP2ProxyCode);
     await this.execute(ADB);
     await this.execute(`global.connect_handler = null;`);
-    this._port = await this.execute(`HTTP2ProxyCode.startServer(${port})`);
+    this._port = await this.execute(
+      `HTTP2ProxyCode.startServer(${port}, ${auth})`
+    );
 
     this.registerFilter();
   }
