@@ -16,7 +16,7 @@ class BlankDragShadowBuilder : View.DragShadowBuilder() {
         outShadowTouchPoint?.y = 0
     }
 
-    override fun onDrawShadow(canvas: Canvas?) {
+    override fun onDrawShadow(canvas: Canvas) {
         // Do nothing
     }
 }
