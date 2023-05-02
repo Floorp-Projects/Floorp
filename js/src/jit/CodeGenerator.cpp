@@ -8535,21 +8535,25 @@ void CodeGenerator::visitWasmStoreRef(LWasmStoreRef* ins) {
 class OutOfLineWasmCallPostWriteBarrier
     : public OutOfLineCodeBase<CodeGenerator> {
   LInstruction* lir_;
-  const LAllocation* valueBase_;
+  Register valueBase_;
+  Register temp_;
   uint32_t valueOffset_;
 
  public:
-  OutOfLineWasmCallPostWriteBarrier(LInstruction* lir,
-                                    const LAllocation* valueBase,
-                                    uint32_t valueOffset)
-      : lir_(lir), valueBase_(valueBase), valueOffset_(valueOffset) {}
+  OutOfLineWasmCallPostWriteBarrier(LInstruction* lir, Register valueBase,
+                                    Register temp, uint32_t valueOffset)
+      : lir_(lir),
+        valueBase_(valueBase),
+        temp_(temp),
+        valueOffset_(valueOffset) {}
 
   void accept(CodeGenerator* codegen) override {
     codegen->visitOutOfLineWasmCallPostWriteBarrier(this);
   }
 
   LInstruction* lir() const { return lir_; }
-  const LAllocation* valueBase() const { return valueBase_; }
+  Register valueBase() const { return valueBase_; }
+  Register temp() const { return temp_; }
   uint32_t valueOffset() const { return valueOffset_; }
 };
 
@@ -8560,13 +8564,14 @@ void CodeGenerator::visitOutOfLineWasmCallPostWriteBarrier(
   int32_t framePushedAfterInstance = masm.framePushed();
 
   // Fold the value offset into the value base
-  Register valueAddr = ToRegister(ool->valueBase());
-  masm.addPtr(Imm32(ool->valueOffset()), valueAddr);
+  Register valueAddr = ool->valueBase();
+  Register temp = ool->temp();
+  masm.computeEffectiveAddress(Address(valueAddr, ool->valueOffset()), temp);
 
   // Call Instance::postBarrier
   masm.setupWasmABICall();
   masm.passABIArg(InstanceReg);
-  masm.passABIArg(valueAddr);
+  masm.passABIArg(temp);
   int32_t instanceOffset = masm.framePushed() - framePushedAfterInstance;
   masm.callWithABI(wasm::BytecodeOffset(0), wasm::SymbolicAddress::PostBarrier,
                    mozilla::Some(instanceOffset), MoveOp::GENERAL);
@@ -8578,14 +8583,14 @@ void CodeGenerator::visitOutOfLineWasmCallPostWriteBarrier(
 }
 
 void CodeGenerator::visitWasmPostWriteBarrier(LWasmPostWriteBarrier* lir) {
-  MOZ_ASSERT(ToRegister(lir->instance()) == InstanceReg);
-  auto ool = new (alloc()) OutOfLineWasmCallPostWriteBarrier(
-      lir, lir->valueBase(), lir->valueOffset());
-  addOutOfLineCode(ool, lir->mir());
-
-  Register temp = ToTempRegisterOrInvalid(lir->temp0());
   Register object = ToRegister(lir->object());
   Register value = ToRegister(lir->value());
+  Register valueBase = ToRegister(lir->valueBase());
+  Register temp = ToRegister(lir->temp0());
+  MOZ_ASSERT(ToRegister(lir->instance()) == InstanceReg);
+  auto ool = new (alloc()) OutOfLineWasmCallPostWriteBarrier(
+      lir, valueBase, temp, lir->valueOffset());
+  addOutOfLineCode(ool, lir->mir());
 
   // If the pointer being stored is null, no barrier.
   masm.branchTestPtr(Assembler::Zero, value, value, ool->rejoin());
