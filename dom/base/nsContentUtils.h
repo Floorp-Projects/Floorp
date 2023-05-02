@@ -460,7 +460,7 @@ class nsContentUtils {
   /**
    * @see https://wicg.github.io/element-timing/#get-an-element
    */
-  static nsINode* GetAnElementForTiming(Element* aTarget,
+  static Element* GetAnElementForTiming(Element* aTarget,
                                         const Document* aDocument,
                                         nsIGlobalObject* aGlobal);
 
