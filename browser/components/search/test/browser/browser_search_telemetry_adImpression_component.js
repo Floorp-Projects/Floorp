@@ -65,7 +65,7 @@ const TEST_PROVIDER_INFO = [
           },
           children: [
             {
-              selector: ".moz-suggestion a",
+              selector: ".moz-rich-suggestion a",
             },
           ],
         },

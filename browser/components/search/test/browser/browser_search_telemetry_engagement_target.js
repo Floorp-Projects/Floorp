@@ -76,6 +76,13 @@ const TEST_PROVIDER_INFO = [
           },
           children: [
             {
+              // This isn't contained in any of the HTML examples but the
+              // presence of the entry ensures that if it is not found during
+              // a topDown examination, the next element in the array is
+              // inspected and found.
+              selector: "textarea",
+            },
+            {
               selector: "input",
             },
           ],
