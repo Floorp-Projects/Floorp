@@ -2,51 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*
- * Defines a handler object to represent forms that autofill can handle.
- */
-
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
-import { FormAutofillUtils } from "resource://gre/modules/shared/FormAutofillUtils.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
-const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
-  FormAutofillHeuristics:
-    "resource://gre/modules/shared/FormAutofillHeuristics.sys.mjs",
-  FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AutofillTelemetry: "resource://autofill/AutofillTelemetry.jsm",
-});
-
-const formFillController = Cc[
-  "@mozilla.org/satchel/form-fill-controller;1"
-].getService(Ci.nsIFormFillController);
-
-XPCOMUtils.defineLazyGetter(lazy, "reauthPasswordPromptMessage", () => {
-  const brandShortName = FormAutofillUtils.brandBundle.GetStringFromName(
-    "brandShortName"
-  );
-  // The string name for Mac is changed because the value needed updating.
-  const platform = AppConstants.platform.replace("macosx", "macos");
-  return FormAutofillUtils.stringBundle.formatStringFromName(
-    `useCreditCardPasswordPrompt.${platform}`,
-    [brandShortName]
-  );
-});
-
-XPCOMUtils.defineLazyGetter(lazy, "log", () =>
-  FormAutofill.defineLogGetter(lazy, "FormAutofillHandler")
-);
+import { FormAutofillUtils } from "resource://gre/modules/shared/FormAutofillUtils.sys.mjs";
+import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
+import { CreditCard } from "resource://gre/modules/CreditCard.sys.mjs";
+import { AutofillTelemetry } from "resource://autofill/AutofillTelemetry.sys.mjs";
 
 const { FIELD_STATES } = FormAutofillUtils;
 
-class FormAutofillSection {
+export class FormAutofillSection {
+  static SHOULD_FOCUS_ON_AUTOFILL = true;
   #focusedInput = null;
 
   constructor(fieldDetails, handler) {
@@ -54,9 +20,25 @@ class FormAutofillSection {
     this.handler = handler;
     this.filledRecordGUID = null;
 
+    XPCOMUtils.defineLazyGetter(this, "reauthPasswordPromptMessage", () => {
+      const brandShortName = FormAutofillUtils.brandBundle.GetStringFromName(
+        "brandShortName"
+      );
+      // The string name for Mac is changed because the value needed updating.
+      const platform = AppConstants.platform.replace("macosx", "macos");
+      return FormAutofillUtils.stringBundle.formatStringFromName(
+        `useCreditCardPasswordPrompt.${platform}`,
+        [brandShortName]
+      );
+    });
+
+    XPCOMUtils.defineLazyGetter(this, "log", () =>
+      FormAutofill.defineLogGetter(this, "FormAutofillHandler")
+    );
+
     if (!this.isValidSection()) {
       this.fieldDetails = [];
-      lazy.log.debug(
+      this.log.debug(
         `Ignoring ${this.constructor.name} related fields since it is an invalid section`
       );
     }
@@ -68,7 +50,7 @@ class FormAutofillSection {
 
     // Identifier used to correlate events relating to the same form
     this.flowId = Services.uuid.generateUUID().toString();
-    lazy.log.debug(
+    this.log.debug(
       "Creating new credit card section with flowId =",
       this.flowId
     );
@@ -310,6 +292,28 @@ class FormAutofillSection {
     }
   }
 
+  fillFieldValue(
+    element,
+    value,
+    shouldFocus = FormAutofillSection.SHOULD_FOCUS_ON_AUTOFILL
+  ) {
+    if (shouldFocus) {
+      element.focus({ preventScroll: true });
+    }
+    if (HTMLInputElement.isInstance(element)) {
+      element.setUserInput(value);
+    } else if (HTMLSelectElement.isInstance(element)) {
+      // Set the value of the select element so that web event handlers can react accordingly
+      element.value = value;
+      element.dispatchEvent(
+        new element.ownerGlobal.Event("input", { bubbles: true })
+      );
+      element.dispatchEvent(
+        new element.ownerGlobal.Event("change", { bubbles: true })
+      );
+    }
+  }
+
   getAdaptedProfiles(originalProfiles) {
     for (let profile of originalProfiles) {
       this.applyTransformers(profile);
@@ -337,7 +341,7 @@ class FormAutofillSection {
     }
 
     if (!(await this.prepareFillingProfile(profile))) {
-      lazy.log.debug("profile cannot be filled");
+      this.log.debug("profile cannot be filled");
       return false;
     }
 
@@ -375,8 +379,7 @@ class FormAutofillSection {
           this.handler.getFilledStateByElement(element) ==
             FIELD_STATES.AUTO_FILLED
         ) {
-          element.focus({ preventScroll: true });
-          element.setUserInput(value);
+          this.fillFieldValue(element, value);
           this.handler.changeFieldState(fieldDetail, FIELD_STATES.AUTO_FILLED);
         }
       } else if (HTMLSelectElement.isInstance(element)) {
@@ -389,15 +392,7 @@ class FormAutofillSection {
         // Use case for multiple select is not considered here.
         if (!option.selected) {
           option.selected = true;
-          element.focus({ preventScroll: true });
-          // Set the value of the select element so that web event handlers can react accordingly
-          element.value = option.value;
-          element.dispatchEvent(
-            new element.ownerGlobal.Event("input", { bubbles: true })
-          );
-          element.dispatchEvent(
-            new element.ownerGlobal.Event("change", { bubbles: true })
-          );
+          this.fillFieldValue(element, option.value);
         }
         // Autofill highlight appears regardless if value is changed or not
         this.handler.changeFieldState(fieldDetail, FIELD_STATES.AUTO_FILLED);
@@ -405,7 +400,7 @@ class FormAutofillSection {
     }
     this.#focusedInput.focus({ preventScroll: true });
 
-    lazy.AutofillTelemetry.recordFormInteractionEvent("filled", this, {
+    AutofillTelemetry.recordFormInteractionEvent("filled", this, {
       profile,
     });
 
@@ -457,7 +452,7 @@ class FormAutofillSection {
    * Clear a previously autofilled field in this section
    */
   clearFilled(fieldDetail) {
-    lazy.AutofillTelemetry.recordFormInteractionEvent("filled_modified", this, {
+    AutofillTelemetry.recordFormInteractionEvent("filled_modified", this, {
       fieldName: fieldDetail.fieldName,
     });
 
@@ -493,12 +488,12 @@ class FormAutofillSection {
    * Clear preview text and background highlight of all fields.
    */
   clearPreviewedFormFields() {
-    lazy.log.debug("clear previewed fields");
+    this.log.debug("clear previewed fields");
 
     for (const fieldDetail of this.fieldDetails) {
       let element = fieldDetail.elementWeakRef.get();
       if (!element) {
-        lazy.log.warn(fieldDetail.fieldName, "is unreachable");
+        this.log.warn(fieldDetail.fieldName, "is unreachable");
         continue;
       }
 
@@ -524,7 +519,7 @@ class FormAutofillSection {
     for (let fieldDetail of this.fieldDetails) {
       let element = fieldDetail.elementWeakRef.get();
       if (!element) {
-        lazy.log.warn(fieldDetail.fieldName, "is unreachable");
+        this.log.warn(fieldDetail.fieldName, "is unreachable");
         continue;
       }
 
@@ -669,14 +664,14 @@ class FormAutofillSection {
   }
 }
 
-class FormAutofillAddressSection extends FormAutofillSection {
+export class FormAutofillAddressSection extends FormAutofillSection {
   constructor(fieldDetails, handler) {
     super(fieldDetails, handler);
 
     this._cacheValue.oneLineStreetAddress = null;
 
-    lazy.AutofillTelemetry.recordDetectedSectionCount(this);
-    lazy.AutofillTelemetry.recordFormInteractionEvent("detected", this);
+    AutofillTelemetry.recordDetectedSectionCount(this);
+    AutofillTelemetry.recordFormInteractionEvent("detected", this);
   }
 
   isValidSection() {
@@ -696,7 +691,7 @@ class FormAutofillAddressSection extends FormAutofillSection {
     ) {
       // We don't want to save data in the wrong fields due to not having proper
       // heuristic regexes in countries we don't yet support.
-      lazy.log.warn(
+      this.log.warn(
         "isRecordCreatable: Country not supported:",
         record.country
       );
@@ -915,13 +910,13 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
       return;
     }
 
-    lazy.AutofillTelemetry.recordDetectedSectionCount(this);
-    lazy.AutofillTelemetry.recordFormInteractionEvent("detected", this);
+    AutofillTelemetry.recordDetectedSectionCount(this);
+    AutofillTelemetry.recordFormInteractionEvent("detected", this);
 
     // Check whether the section is in an <iframe>; and, if so,
     // watch for the <iframe> to pagehide.
     if (handler.window.location != handler.window.parent?.location) {
-      lazy.log.debug(
+      this.log.debug(
         "Credit card form is in an iframe -- watching for pagehide",
         fieldDetails
       );
@@ -937,7 +932,7 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
       "pagehide",
       this._handlePageHide.bind(this)
     );
-    lazy.log.debug("Credit card subframe is pagehideing", this.handler.form);
+    this.log.debug("Credit card subframe is pagehideing", this.handler.form);
     this.handler.onFormSubmitted();
   }
 
@@ -1187,7 +1182,7 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
       let placeholder = year.placeholder;
 
       // Checks for 'YY'|'AA'|'JJ' placeholder and converts the year to a two digit string using the last two digits.
-      let result = /(?<!.)(yy|aa|jj)(?!.)/i.test(placeholder);
+      let result = /\b(yy|aa|jj)\b/i.test(placeholder);
       if (result) {
         profile["cc-exp-year-formatted"] = profile["cc-exp-year"]
           .toString()
@@ -1252,7 +1247,7 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
       return value;
     }
 
-    if (lazy.CreditCard.isValidNetwork(value)) {
+    if (CreditCard.isValidNetwork(value)) {
       return value;
     }
 
@@ -1262,8 +1257,8 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
     if (value && element.selectedOptions.length == 1) {
       let selectedOption = element.selectedOptions[0];
       let networkType =
-        lazy.CreditCard.getNetworkFromName(selectedOption.text) ??
-        lazy.CreditCard.getNetworkFromName(selectedOption.value);
+        CreditCard.getNetworkFromName(selectedOption.text) ??
+        CreditCard.getNetworkFromName(selectedOption.value);
       if (networkType) {
         return networkType;
       }
@@ -1306,7 +1301,7 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
     if (profile["cc-number-encrypted"]) {
       let decrypted = await this._decrypt(
         profile["cc-number-encrypted"],
-        lazy.reauthPasswordPromptMessage
+        this.reauthPasswordPromptMessage
       );
 
       if (!decrypted) {
@@ -1320,6 +1315,7 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
   }
 
   async autofillFields(profile) {
+    this.getAdaptedProfiles([profile]);
     if (!(await super.autofillFields(profile))) {
       return false;
     }
@@ -1332,12 +1328,12 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
       return;
     }
     // Normalize cc-number
-    creditCard.record["cc-number"] = lazy.CreditCard.normalizeCardNumber(
+    creditCard.record["cc-number"] = CreditCard.normalizeCardNumber(
       creditCard.record["cc-number"]
     );
 
     // Normalize cc-exp-month and cc-exp-year
-    let { month, year } = lazy.CreditCard.normalizeExpiration({
+    let { month, year } = CreditCard.normalizeExpiration({
       expirationString: creditCard.record["cc-exp"],
       expirationMonth: creditCard.record["cc-exp-month"],
       expirationYear: creditCard.record["cc-exp-year"],
@@ -1348,367 +1344,5 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
     if (year) {
       creditCard.record["cc-exp-year"] = year;
     }
-  }
-}
-
-/**
- * Handles profile autofill for a DOM Form element.
- */
-export class FormAutofillHandler {
-  // The window to which this form belongs
-  window = null;
-
-  // A WindowUtils reference of which Window the form belongs
-  winUtils = null;
-
-  // DOM Form element to which this object is attached
-  form = null;
-
-  // An array of section that are found in this form
-  sections = [];
-
-  // The section contains the focused input
-  #focusedSection = null;
-
-  // Caches the element to section mapping
-  #cachedSectionByElement = new WeakMap();
-
-  // Keeps track of filled state for all identified elements
-  #filledStateByElement = new WeakMap();
-  /**
-   * Array of collected data about relevant form fields.  Each item is an object
-   * storing the identifying details of the field and a reference to the
-   * originally associated element from the form.
-   *
-   * The "section", "addressType", "contactType", and "fieldName" values are
-   * used to identify the exact field when the serializable data is received
-   * from the backend.  There cannot be multiple fields which have
-   * the same exact combination of these values.
-   *
-   * A direct reference to the associated element cannot be sent to the user
-   * interface because processing may be done in the parent process.
-   */
-  fieldDetails = null;
-
-  /**
-   * Initialize the form from `FormLike` object to handle the section or form
-   * operations.
-   *
-   * @param {FormLike} form Form that need to be auto filled
-   * @param {Function} onFormSubmitted Function that can be invoked
-   *                   to simulate form submission. Function is passed
-   *                   three arguments: (1) a FormLike for the form being
-   *                   submitted, (2) the corresponding Window, and (3) the
-   *                   responsible FormAutofillHandler.
-   */
-  constructor(form, onFormSubmitted = () => {}) {
-    this._updateForm(form);
-
-    this.window = this.form.rootElement.ownerGlobal;
-    this.winUtils = this.window.windowUtils;
-
-    // Enum for form autofill MANUALLY_MANAGED_STATES values
-    this.FIELD_STATE_ENUM = {
-      // not themed
-      [FIELD_STATES.NORMAL]: null,
-      // highlighted
-      [FIELD_STATES.AUTO_FILLED]: "autofill",
-      // highlighted && grey color text
-      [FIELD_STATES.PREVIEW]: "-moz-autofill-preview",
-    };
-
-    /**
-     * This function is used if the form handler (or one of its sections)
-     * determines that it needs to act as if the form had been submitted.
-     */
-    this.onFormSubmitted = () => {
-      onFormSubmitted(this.form, this.window, this);
-    };
-  }
-
-  handleEvent(event) {
-    switch (event.type) {
-      case "input": {
-        if (!event.isTrusted) {
-          return;
-        }
-        const target = event.target;
-        const targetFieldDetail = this.getFieldDetailByElement(target);
-        const isCreditCardField = FormAutofillUtils.isCreditCardField(
-          targetFieldDetail.fieldName
-        );
-
-        // If the user manually blanks a credit card field, then
-        // we want the popup to be activated.
-        if (
-          !HTMLSelectElement.isInstance(target) &&
-          isCreditCardField &&
-          target.value === ""
-        ) {
-          formFillController.showPopup();
-        }
-
-        if (this.getFilledStateByElement(target) == FIELD_STATES.NORMAL) {
-          return;
-        }
-
-        this.changeFieldState(targetFieldDetail, FIELD_STATES.NORMAL);
-        const section = this.getSectionByElement(
-          targetFieldDetail.elementWeakRef.get()
-        );
-        section?.clearFilled(targetFieldDetail);
-      }
-    }
-  }
-
-  set focusedInput(element) {
-    const section = this.getSectionByElement(element);
-    if (!section) {
-      return;
-    }
-
-    this.#focusedSection = section;
-    this.#focusedSection.focusedInput = element;
-  }
-
-  getSectionByElement(element) {
-    const section =
-      this.#cachedSectionByElement.get(element) ??
-      this.sections.find(s => s.getFieldDetailByElement(element));
-    if (!section) {
-      return null;
-    }
-
-    this.#cachedSectionByElement.set(element, section);
-    return section;
-  }
-
-  getFieldDetailByElement(element) {
-    for (const section of this.sections) {
-      const detail = section.getFieldDetailByElement(element);
-      if (detail) {
-        return detail;
-      }
-    }
-    return null;
-  }
-
-  get activeSection() {
-    return this.#focusedSection;
-  }
-
-  /**
-   * Check the form is necessary to be updated. This function should be able to
-   * detect any changes including all control elements in the form.
-   *
-   * @param {HTMLElement} element The element supposed to be in the form.
-   * @returns {boolean} FormAutofillHandler.form is updated or not.
-   */
-  updateFormIfNeeded(element) {
-    // When the following condition happens, FormAutofillHandler.form should be
-    // updated:
-    // * The count of form controls is changed.
-    // * When the element can not be found in the current form.
-    //
-    // However, we should improve the function to detect the element changes.
-    // e.g. a tel field is changed from type="hidden" to type="tel".
-
-    let _formLike;
-    const getFormLike = () => {
-      if (!_formLike) {
-        _formLike = lazy.FormLikeFactory.createFromField(element);
-      }
-      return _formLike;
-    };
-
-    const currentForm = element.form ?? getFormLike();
-    if (currentForm.elements.length != this.form.elements.length) {
-      lazy.log.debug("The count of form elements is changed.");
-      this._updateForm(getFormLike());
-      return true;
-    }
-
-    if (!this.form.elements.includes(element)) {
-      lazy.log.debug("The element can not be found in the current form.");
-      this._updateForm(getFormLike());
-      return true;
-    }
-
-    return false;
-  }
-
-  /**
-   * Update the form with a new FormLike, and the related fields should be
-   * updated or clear to ensure the data consistency.
-   *
-   * @param {FormLike} form a new FormLike to replace the original one.
-   */
-  _updateForm(form) {
-    this.form = form;
-
-    this.fieldDetails = null;
-
-    this.sections = [];
-    this.#cachedSectionByElement = new WeakMap();
-  }
-
-  /**
-   * Set fieldDetails from the form about fields that can be autofilled.
-   *
-   * @returns {Array} The valid address and credit card details.
-   */
-  collectFormFields() {
-    const sections = lazy.FormAutofillHeuristics.getFormInfo(this.form);
-    const allValidDetails = [];
-    for (const { fieldDetails, type } of sections) {
-      let section;
-      if (type == FormAutofillUtils.SECTION_TYPES.ADDRESS) {
-        section = new FormAutofillAddressSection(fieldDetails, this);
-      } else if (type == FormAutofillUtils.SECTION_TYPES.CREDIT_CARD) {
-        section = new FormAutofillCreditCardSection(fieldDetails, this);
-      } else {
-        throw new Error("Unknown field type.");
-      }
-      this.sections.push(section);
-      allValidDetails.push(...section.fieldDetails);
-    }
-
-    this.fieldDetails = allValidDetails;
-    return allValidDetails;
-  }
-
-  #hasFilledSection() {
-    return this.sections.some(section => section.isFilled());
-  }
-
-  getFilledStateByElement(element) {
-    return this.#filledStateByElement.get(element);
-  }
-
-  /**
-   * Change the state of a field to correspond with different presentations.
-   *
-   * @param {object} fieldDetail
-   *        A fieldDetail of which its element is about to update the state.
-   * @param {string} nextState
-   *        Used to determine the next state
-   */
-  changeFieldState(fieldDetail, nextState) {
-    const element = fieldDetail.elementWeakRef.get();
-    if (!element) {
-      lazy.log.warn(
-        fieldDetail.fieldName,
-        "is unreachable while changing state"
-      );
-      return;
-    }
-    if (!(nextState in this.FIELD_STATE_ENUM)) {
-      lazy.log.warn(
-        fieldDetail.fieldName,
-        "is trying to change to an invalid state"
-      );
-      return;
-    }
-
-    if (this.#filledStateByElement.get(element) == nextState) {
-      return;
-    }
-
-    let nextStateValue = null;
-    for (const [state, mmStateValue] of Object.entries(this.FIELD_STATE_ENUM)) {
-      // The NORMAL state is simply the absence of other manually
-      // managed states so we never need to add or remove it.
-      if (!mmStateValue) {
-        continue;
-      }
-
-      if (state == nextState) {
-        nextStateValue = mmStateValue;
-      } else {
-        this.winUtils.removeManuallyManagedState(element, mmStateValue);
-      }
-    }
-
-    if (nextStateValue) {
-      this.winUtils.addManuallyManagedState(element, nextStateValue);
-    }
-
-    if (nextState == FIELD_STATES.AUTO_FILLED) {
-      element.addEventListener("input", this, { mozSystemGroup: true });
-    }
-
-    this.#filledStateByElement.set(element, nextState);
-  }
-
-  /**
-   * Processes form fields that can be autofilled, and populates them with the
-   * profile provided by backend.
-   *
-   * @param {object} profile
-   *        A profile to be filled in.
-   */
-  async autofillFormFields(profile) {
-    const noFilledSectionsPreviously = !this.#hasFilledSection();
-    await this.activeSection.autofillFields(profile);
-
-    const onChangeHandler = e => {
-      if (!e.isTrusted) {
-        return;
-      }
-      if (e.type == "reset") {
-        this.sections.map(section => section.resetFieldStates());
-      }
-      // Unregister listeners once no field is in AUTO_FILLED state.
-      if (!this.#hasFilledSection()) {
-        this.form.rootElement.removeEventListener("input", onChangeHandler, {
-          mozSystemGroup: true,
-        });
-        this.form.rootElement.removeEventListener("reset", onChangeHandler, {
-          mozSystemGroup: true,
-        });
-      }
-    };
-
-    if (noFilledSectionsPreviously) {
-      // Handle the highlight style resetting caused by user's correction afterward.
-      lazy.log.debug("register change handler for filled form:", this.form);
-      this.form.rootElement.addEventListener("input", onChangeHandler, {
-        mozSystemGroup: true,
-      });
-      this.form.rootElement.addEventListener("reset", onChangeHandler, {
-        mozSystemGroup: true,
-      });
-    }
-  }
-
-  /**
-   * Collect the filled sections within submitted form and convert all the valid
-   * field data into multiple records.
-   *
-   * @returns {object} records
-   *          {Array.<Object>} records.address
-   *          {Array.<Object>} records.creditCard
-   */
-  createRecords() {
-    const records = {
-      address: [],
-      creditCard: [],
-    };
-
-    for (const section of this.sections) {
-      const secRecord = section.createRecord();
-      if (!secRecord) {
-        continue;
-      }
-      if (section instanceof FormAutofillAddressSection) {
-        records.address.push(secRecord);
-      } else if (section instanceof FormAutofillCreditCardSection) {
-        records.creditCard.push(secRecord);
-      } else {
-        throw new Error("Unknown section type");
-      }
-    }
-
-    return records;
   }
 }

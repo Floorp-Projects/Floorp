@@ -19,7 +19,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AddressResult: "resource://autofill/ProfileAutoCompleteResult.sys.mjs",
   CreditCardResult: "resource://autofill/ProfileAutoCompleteResult.sys.mjs",
   FormAutofill: "resource://autofill/FormAutofill.sys.mjs",
-  FormAutofillHandler: "resource://autofill/FormAutofillHandler.sys.mjs",
+  FormAutofillHandler:
+    "resource://gre/modules/shared/FormAutofillHandler.sys.mjs",
   FormAutofillUtils: "resource://gre/modules/shared/FormAutofillUtils.sys.mjs",
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
   InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.sys.mjs",
@@ -563,6 +564,10 @@ export var FormAutofillContent = {
     this._onFormSubmit(records, domWin);
   },
 
+  _showPopup() {
+    formFillController.showPopup();
+  },
+
   handleEvent(evt) {
     switch (evt.type) {
       case "change": {
@@ -574,7 +579,7 @@ export var FormAutofillContent = {
           if (this._popupPending) {
             this._popupPending = false;
             this.debug("handleEvent: Opening deferred popup");
-            formFillController.showPopup();
+            this._showPopup();
           }
         } else {
           ProfileAutocomplete.ensureUnregistered();
@@ -656,7 +661,7 @@ export var FormAutofillContent = {
       ) {
         if (Services.cpmm.sharedData.get("FormAutofill:enabled")) {
           this.debug("updateActiveElement: opening pop up");
-          formFillController.showPopup();
+          this._showPopup();
         } else {
           this.debug(
             "updateActiveElement: Deferring pop-up until Autofill is ready"
@@ -742,7 +747,8 @@ export var FormAutofillContent = {
       let formLike = lazy.FormLikeFactory.createFromField(element);
       formHandler = new lazy.FormAutofillHandler(
         formLike,
-        this.formSubmitted.bind(this)
+        this.formSubmitted.bind(this),
+        this._showPopup.bind(this)
       );
     } else if (!formHandler.updateFormIfNeeded(element)) {
       this.debug("No control is removed or inserted since last collection.");
