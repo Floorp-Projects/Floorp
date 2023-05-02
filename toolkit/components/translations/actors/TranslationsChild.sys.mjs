@@ -597,6 +597,10 @@ export class TranslationsChild extends JSWindowActorChild {
    * @returns {Promise<null | { appLangTag: string, docLangTag: string }>}
    */
   async getLangTagsForTranslation(translationsStart = this.docShell.now()) {
+    if (this.#langTags) {
+      return this.#langTags;
+    }
+
     const { href } = this.contentWindow.location;
     if (
       !href.startsWith("http://") &&
@@ -683,7 +687,8 @@ export class TranslationsChild extends JSWindowActorChild {
         return null;
       }
     }
-    return { appLangTag, docLangTag };
+    this.#langTags = { appLangTag, docLangTag };
+    return this.#langTags;
   }
 
   /**
