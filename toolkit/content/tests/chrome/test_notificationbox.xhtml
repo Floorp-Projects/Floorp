@@ -44,12 +44,6 @@ var testtag_notificationbox_buttons_nopopup = [
   }
 ];
 
-let testtag_notificationbox_button_l10n = [
-  {
-    "l10n-id": "test-id"
-  }
-];
-
 var testtag_notificationbox_links = [
   {
     label: "Link 1",
@@ -70,15 +64,6 @@ var testtag_notificationbox_supportpage = [
   {
     label: "This is an existing label",
     supportPage: "test2",
-  },
-  {
-    supportPage: "test3",
-    "l10n-id": "more-specific-id",
-  },
-  {
-    supportPage: "test4",
-    label: "legacy label call",
-    "l10n-id": "modern-fluent-id"
   }
 ];
 
@@ -150,48 +135,6 @@ var tests =
       ntf.label = { "l10n-id": "foo-bar" };
       const message = ntf.messageText.querySelector("span");
       SimpleTest.is(message.dataset.l10nId, "foo-bar", "set notification label with l10n id");
-      return ntf;
-    },
-    result(nb, ntf) {
-      nb.removeNotification(ntf);
-      testtag_notificationbox_State(nb, "set notification label", null, 0);
-    }
-  },
-  /*
-  Ensures that buttons created with the "label" parameter have their
-  label attribute set correctly.
-  */
-  {
-    test(nb, ntf) {
-      ntf = nb.appendNotification("note", {
-        label: "Notification",
-        image: "happy.png",
-        priority: nb.PRIORITY_INFO_LOW,
-      }, testtag_notificationbox_buttons);
-      SimpleTest.is(ntf && ntf.localName == NOTIFICATION_LOCAL_NAME, true, "append notification");
-      const button = ntf.buttonContainer.querySelector("button");
-      SimpleTest.is(button.label, "Button 1", "set button label with the 'label' parameter");
-      return ntf;
-    },
-    result(nb, ntf) {
-      nb.removeNotification(ntf);
-      testtag_notificationbox_State(nb, "set notification label", null, 0);
-    }
-  },
-  {
-    /*
-    Ensures that buttons created with the "l10n-id" parameter have
-    their "l10n-id" assigned correctly.
-    */
-    test(nb, ntf) {
-      ntf = nb.appendNotification("note", {
-        label: "Notification",
-        image: "happy.png",
-        priority: nb.PRIORITY_INFO_LOW,
-      }, testtag_notificationbox_button_l10n);
-      SimpleTest.is(ntf && ntf.localName == NOTIFICATION_LOCAL_NAME, true, "append notification");
-      const button = ntf.buttonContainer.querySelector("button");
-      SimpleTest.is(button.dataset.l10nId, "test-id", "create notification button with correctly assigned l10n id");
       return ntf;
     },
     result(nb, ntf) {
@@ -486,27 +429,15 @@ var tests =
     result(nb, ntf) {
       testtag_notificationbox_State(nb, "append link with callback", ntf, 1);
 
-      let link = ntf.messageText.firstElementChild;
-      SimpleTest.is(link.localName, "a", "link 1 is an anchor");
-      SimpleTest.is(link.dataset.l10nId, "moz-support-link-text", "link 1 Fluent ID is set");
+      let link = ntf.messageText.lastElementChild.previousSibling.previousSibling;
+      SimpleTest.is(link.localName, "label", "link 1 is a label");
+      SimpleTest.ok(link.value != "", "link 1 label is set");
       SimpleTest.ok(link.href.endsWith("/test1"), "link 1 href is set");
 
-      link = link.nextElementSibling;
-      SimpleTest.is(link.localName, "a", "link 2 is an anchor");
-      SimpleTest.is(link.dataset.l10nId, "moz-support-link-text", "link 2 Fluent ID is set");
-      SimpleTest.ok(!link.value, "label is not assigned to value when using supportPage");
+      link = ntf.messageText.lastElementChild;
+      SimpleTest.is(link.localName, "label", "link 2 is a label");
+      SimpleTest.is(link.value, "This is an existing label", "link 2 label is set");
       SimpleTest.ok(link.href.endsWith("/test2"), "link 2 href is set");
-
-      link = link.nextElementSibling;
-      SimpleTest.is(link.localName, "a", "link 3 is an anchor");
-      SimpleTest.is(link.dataset.l10nId, "more-specific-id", "link 3 Fluent ID is the passed l10n-id");
-      SimpleTest.ok(link.href.endsWith("/test3"), "link 3 href is set");
-
-      link = link.nextElementSibling;
-      SimpleTest.is(link.localName, "a", "link 4 is an anchor");
-      SimpleTest.is(link.dataset.l10nId, "modern-fluent-id", "link 4 Fluent ID is the passed l10n-id");
-      SimpleTest.ok(!link.value, "label is not assigned to value when using supportPage");
-      SimpleTest.ok(link.href.endsWith("/test4"), "link 4 href is set");
 
       SimpleTest.is(nb.removeAllNotifications(false), undefined, "removeAllNotifications");
     }
@@ -731,3 +662,4 @@ setTimeout(() => {
 </script>
 
 </window>
+

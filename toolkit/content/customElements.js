@@ -790,6 +790,31 @@
     document.documentURI == "chrome://geckoview/content/geckoview.xhtml"
   );
   if (loadExtraCustomElements) {
+    for (let script of [
+      "chrome://global/content/elements/arrowscrollbox.js",
+      "chrome://global/content/elements/dialog.js",
+      "chrome://global/content/elements/general.js",
+      "chrome://global/content/elements/button.js",
+      "chrome://global/content/elements/checkbox.js",
+      "chrome://global/content/elements/menu.js",
+      "chrome://global/content/elements/menupopup.js",
+      "chrome://global/content/elements/moz-input-box.js",
+      "chrome://global/content/elements/notificationbox.js",
+      "chrome://global/content/elements/panel.js",
+      "chrome://global/content/elements/popupnotification.js",
+      "chrome://global/content/elements/radio.js",
+      "chrome://global/content/elements/richlistbox.js",
+      "chrome://global/content/elements/autocomplete-popup.js",
+      "chrome://global/content/elements/autocomplete-richlistitem.js",
+      "chrome://global/content/elements/tabbox.js",
+      "chrome://global/content/elements/text.js",
+      "chrome://global/content/elements/toolbarbutton.js",
+      "chrome://global/content/elements/tree.js",
+      "chrome://global/content/elements/wizard.js",
+    ]) {
+      Services.scriptloader.loadSubScript(script, window);
+    }
+
     for (let [tag, script] of [
       ["button-group", "chrome://global/content/elements/named-deck.js"],
       ["findbar", "chrome://global/content/elements/findbar.js"],
@@ -844,30 +869,5 @@
           .map(name => importCustomElementFromESModule(name))
       ).then(() => null);
     };
-
-    for (let script of [
-      "chrome://global/content/elements/arrowscrollbox.js",
-      "chrome://global/content/elements/dialog.js",
-      "chrome://global/content/elements/general.js",
-      "chrome://global/content/elements/button.js",
-      "chrome://global/content/elements/checkbox.js",
-      "chrome://global/content/elements/menu.js",
-      "chrome://global/content/elements/menupopup.js",
-      "chrome://global/content/elements/moz-input-box.js",
-      "chrome://global/content/elements/notificationbox.js",
-      "chrome://global/content/elements/panel.js",
-      "chrome://global/content/elements/popupnotification.js",
-      "chrome://global/content/elements/radio.js",
-      "chrome://global/content/elements/richlistbox.js",
-      "chrome://global/content/elements/autocomplete-popup.js",
-      "chrome://global/content/elements/autocomplete-richlistitem.js",
-      "chrome://global/content/elements/tabbox.js",
-      "chrome://global/content/elements/text.js",
-      "chrome://global/content/elements/toolbarbutton.js",
-      "chrome://global/content/elements/tree.js",
-      "chrome://global/content/elements/wizard.js",
-    ]) {
-      Services.scriptloader.loadSubScript(script, window);
-    }
   }
 })();
