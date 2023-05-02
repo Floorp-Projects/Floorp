@@ -16,6 +16,7 @@ EXTRA_JS_MODULES.shared += [
     "shared/FormAutofillHeuristics.sys.mjs",
     "shared/FormAutofillNameUtils.sys.mjs",
     "shared/FormAutofillUtils.sys.mjs",
+    "shared/FormStateManager.sys.mjs",
     "shared/HeuristicsRegExp.sys.mjs",
     "shared/LabelUtils.sys.mjs",
 ]
