@@ -138,8 +138,8 @@ async function _setPrefs() {
   });
 }
 
-function _addSavedLogin(username) {
-  Services.logins.addLogin(
+async function _addSavedLogins(logins) {
+  let loginsData = logins.map(({ username }) =>
     LoginTestUtils.testData.formLogin({
       origin: "https://example.com",
       formActionOrigin: "https://example.com",
@@ -147,6 +147,7 @@ function _addSavedLogin(username) {
       password: "Saved login passwords not used in this test",
     })
   );
+  await Services.logins.addLogins(loginsData);
 }
 
 async function _clickDropmarker(document, notificationElement) {
@@ -180,12 +181,9 @@ add_task(async function test_edit_password() {
     Services.logins.removeAllUserFacingLogins();
 
     // Create the pre-existing logins when needed.
-    info("Adding any saved logins");
     if (testCase.savedLogins) {
-      for (let login of testCase.savedLogins) {
-        info("Adding login " + JSON.stringify(login));
-        _addSavedLogin(login.username);
-      }
+      info("Adding logins " + JSON.stringify(testCase.savedLogins));
+      await _addSavedLogins(testCase.savedLogins);
     }
 
     info("Opening tab");
