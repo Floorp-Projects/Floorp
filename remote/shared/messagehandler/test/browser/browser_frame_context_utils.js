@@ -4,12 +4,12 @@
 "use strict";
 
 const { isBrowsingContextCompatible } = ChromeUtils.importESModule(
-  "chrome://remote/content/shared/messagehandler/transports/FrameContextUtils.sys.mjs"
+  "chrome://remote/content/shared/messagehandler/transports/BrowsingContextUtils.sys.mjs"
 );
 const TEST_COM_PAGE = "https://example.com/document-builder.sjs?html=com";
 const TEST_NET_PAGE = "https://example.net/document-builder.sjs?html=net";
 
-// Test helpers from FrameContextUtils in various processes.
+// Test helpers from BrowsingContextUtils in various processes.
 add_task(async function() {
   const tab1 = BrowserTestUtils.addTab(gBrowser, TEST_COM_PAGE);
   const contentBrowser1 = tab1.linkedBrowser;
@@ -81,13 +81,16 @@ async function checkBrowsingContextCompatible(browser, browserId, expected) {
     browser,
     [browserId, expected],
     (_browserId, _expected) => {
-      const FrameContextUtils = ChromeUtils.importESModule(
-        "chrome://remote/content/shared/messagehandler/transports/FrameContextUtils.sys.mjs"
+      const BrowsingContextUtils = ChromeUtils.importESModule(
+        "chrome://remote/content/shared/messagehandler/transports/BrowsingContextUtils.sys.mjs"
       );
       is(
-        FrameContextUtils.isBrowsingContextCompatible(content.browsingContext, {
-          browserId: _browserId,
-        }),
+        BrowsingContextUtils.isBrowsingContextCompatible(
+          content.browsingContext,
+          {
+            browserId: _browserId,
+          }
+        ),
         _expected
       );
     }

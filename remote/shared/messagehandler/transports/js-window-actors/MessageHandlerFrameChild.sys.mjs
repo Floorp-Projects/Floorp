@@ -6,7 +6,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   isBrowsingContextCompatible:
-    "chrome://remote/content/shared/messagehandler/transports/FrameContextUtils.sys.mjs",
+    "chrome://remote/content/shared/messagehandler/transports/BrowsingContextUtils.sys.mjs",
   MessageHandlerRegistry:
     "chrome://remote/content/shared/messagehandler/MessageHandlerRegistry.sys.mjs",
   WindowGlobalMessageHandler:
@@ -15,7 +15,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 /**
  * Child actor for the MessageHandlerFrame JSWindowActor. The
- * MessageHandlerFrame actor is used by FrameTransport to communicate between
+ * MessageHandlerFrame actor is used by RootTransport to communicate between
  * ROOT MessageHandlers and WINDOW_GLOBAL MessageHandlers.
  */
 export class MessageHandlerFrameChild extends JSWindowActorChild {
