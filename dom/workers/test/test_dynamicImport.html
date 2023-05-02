@@ -32,7 +32,7 @@ async function onLoad() {
   const workers = [
     new Worker("dynamicImport_worker.js", {type: "classic"}),
     new Worker("dynamicImport_worker.js", {type: "module"})
-  ]
+  ];
 
   let successCount = 0;
 
@@ -41,7 +41,7 @@ async function onLoad() {
     worker.onmessage = function(event) {
       switch (event.data) {
         case "first":
-          ok(events.length === 2 && events.join(",") === "third,second",
+          ok(events.length === 1 && events[0] === "second",
              "first dynamic import returned");
           events.push(event.data);
           successCount++;
@@ -52,12 +52,8 @@ async function onLoad() {
           }
           break;
         case "second":
-          ok(events.length === 1 && events[0] === "third",
+          ok(events.length === 0,
              "second dynamic import returned");
-          events.push(event.data);
-          break;
-        case "third":
-          ok(events.length === 0, "third dynamic import returned");
           events.push(event.data);
           break;
         default:
