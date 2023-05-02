@@ -44,6 +44,12 @@ var testtag_notificationbox_buttons_nopopup = [
   }
 ];
 
+let testtag_notificationbox_button_l10n = [
+  {
+    "l10n-id": "test-id"
+  }
+];
+
 var testtag_notificationbox_links = [
   {
     label: "Link 1",
@@ -144,6 +150,48 @@ var tests =
       ntf.label = { "l10n-id": "foo-bar" };
       const message = ntf.messageText.querySelector("span");
       SimpleTest.is(message.dataset.l10nId, "foo-bar", "set notification label with l10n id");
+      return ntf;
+    },
+    result(nb, ntf) {
+      nb.removeNotification(ntf);
+      testtag_notificationbox_State(nb, "set notification label", null, 0);
+    }
+  },
+  /*
+  Ensures that buttons created with the "label" parameter have their
+  label attribute set correctly.
+  */
+  {
+    test(nb, ntf) {
+      ntf = nb.appendNotification("note", {
+        label: "Notification",
+        image: "happy.png",
+        priority: nb.PRIORITY_INFO_LOW,
+      }, testtag_notificationbox_buttons);
+      SimpleTest.is(ntf && ntf.localName == NOTIFICATION_LOCAL_NAME, true, "append notification");
+      const button = ntf.buttonContainer.querySelector("button");
+      SimpleTest.is(button.label, "Button 1", "set button label with the 'label' parameter");
+      return ntf;
+    },
+    result(nb, ntf) {
+      nb.removeNotification(ntf);
+      testtag_notificationbox_State(nb, "set notification label", null, 0);
+    }
+  },
+  {
+    /*
+    Ensures that buttons created with the "l10n-id" parameter have
+    their "l10n-id" assigned correctly.
+    */
+    test(nb, ntf) {
+      ntf = nb.appendNotification("note", {
+        label: "Notification",
+        image: "happy.png",
+        priority: nb.PRIORITY_INFO_LOW,
+      }, testtag_notificationbox_button_l10n);
+      SimpleTest.is(ntf && ntf.localName == NOTIFICATION_LOCAL_NAME, true, "append notification");
+      const button = ntf.buttonContainer.querySelector("button");
+      SimpleTest.is(button.dataset.l10nId, "test-id", "create notification button with correctly assigned l10n id");
       return ntf;
     },
     result(nb, ntf) {
