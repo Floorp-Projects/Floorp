@@ -1,0 +1,146 @@
+name: Flatpak Build
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup Disk & Swap Space 💿
+      run: |
+        echo Before:
+        free -h
+        df -h
+        echo
+        echo
+        sudo swapoff /mnt/swapfile
+        sudo rm /mnt/swapfile
+        sudo fallocate -l 10G /mnt/swapfile
+        sudo chmod 600 /mnt/swapfile
+        sudo mkswap /mnt/swapfile
+        sudo swapon /mnt/swapfile
+        sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk hhvm google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
+        sudo apt autoremove -y
+        sudo apt clean
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /usr/local/graalvm
+        sudo rm -rf /usr/local/share/powershell
+        sudo rm -rf /usr/local/share/chromium
+        sudo rm -rf /usr/local/lib/node_modules
+        sudo rm -rf /opt/ghc
+        sudo rm -rf /usr/local/share/boost
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        sudo fallocate -l 20G /home/runner/swapfile2
+        sudo chmod 600 /home/runner/swapfile2
+        sudo mkswap /home/runner/swapfile2
+        sudo swapon /home/runner/swapfile2
+        echo
+        echo
+        echo After:
+        free -h
+        df -h
+  
+    - name: Create environment 🌲
+      run: |
+        sudo apt update
+        sudo apt install gzip gpg dpkg-dev
+        export WORKDIR=`pwd`
+        echo "Current Workdir: $WORKDIR"
+        git clone https://github.com/floorp-projects/l10n-central.git
+        ./mach --no-interactive bootstrap --application-choice browser
+        echo 'ac_add_options --with-app-name=floorp' >> mozconfig
+        echo 'ac_add_options --with-app-basename=Floorp' >> mozconfig
+        echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
+        echo 'ac_add_options --disable-crashreporter' >> mozconfig
+        echo 'ac_add_options --disable-updater' >> mozconfig
+        echo 'ac_add_options --enable-proxy-bypass-protection' >> mozconfig
+        echo 'ac_add_options --disable-verify-mar' >> mozconfig
+        echo 'ac_add_options --enable-update-channel=release' >> mozconfig
+        echo 'ac_add_options --with-mozilla-api-keyfile=$PWD/floorp/apis/api-mozilla-key' >> mozconfig
+        echo 'ac_add_options --with-google-location-service-api-keyfile=$PWD/floorp/apis/api-google-location-service-key' >> mozconfig
+        echo 'ac_add_options --with-google-safebrowsing-api-keyfile=$PWD/floorp/apis/api-google-safe-browsing-key' >> mozconfig
+        echo 'ac_add_options --enable-bootstrap' >> mozconfig
+        echo 'ac_add_options --with-l10n-base=$PWD/l10n-central/l10n-central' >> mozconfig
+        echo 'ac_add_options --enable-optimize="-O3"' >> mozconfig
+        echo 'ac_add_options --enable-lto' >> mozconfig
+        echo 'ac_add_options MOZ_PGO=1' >> mozconfig
+        echo 'export RUSTC_OPT_LEVEL=2 '>> mozconfig
+        echo 'export MOZ_INCLUDE_SOURCE_INFO=1' >> mozconfig
+        echo 'MOZ_REQUIRE_SIGNING=' >> mozconfig
+        echo 'MOZ_DATA_REPORTING=' >> mozconfig
+        echo 'MOZ_TELEMETRY_REPORTING=' >> mozconfig
+        ./mach configure
+
+    - name: Build 🔨
+      run: |
+        rm -rf ./l10n-central/.git
+        Xvfb :2 -screen 0 1920x1080x24 &
+        export DISPLAY=:2
+        export WORKDIR=`pwd`
+        echo "Current Workdir: $WORKDIR"
+        ./mach build
+
+    - name: Package 📦
+      run: |
+        export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ja-KA ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
+        for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
+        AB_CD=multi ./mach package
+
+        export DISPVER=`cat browser/config/version_display.txt`
+
+        sudo apt install flatpak
+        flatpak remote-add --user --if-not-exists --from flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+        flatpak install --user -y flathub org.mozilla.firefox.BaseApp//22.08 --no-deps
+        
+        mkdir ./flatpak_build
+        mkdir ./flatpak_build/tmp
+        mkdir ./flatpak_build/public
+
+        cp -r ~/.local/share/flatpak/app/org.mozilla.firefox.BaseApp/current/active/files/* ./flatpak_build/tmp/
+        rm ./flatpak_build/tmp/manifest.json
+        mkdir -p ./flatpak_build/tmp/lib/ffmpeg
+        ls ./flatpak_build/tmp
+
+        tar -xvf ./obj-x86_64-pc-linux-gnu/dist/floorp-$DISPVER.en-US.linux-x86_64.tar.bz2 -C ./flatpak_build/tmp/lib
+        ls ./flatpak_build/tmp/lib/floorp
+
+        launch_script=(
+        '#!/bin/bash'
+        'export TMPDIR=$XDG_CACHE_HOME/tmp'
+        'exec /app/lib/floorp/floorp "$@"'
+        )
+        for line in "${launch_script[@]}" ; do echo $line >> ./flatpak_build/tmp/bin/floorp ; done
+        chmod +x ./flatpak_build/tmp/bin/floorp
+
+        mkdir -p ./flatpak_build/tmp/share/applications
+        cp ./.github/flatpak-one.ablaze.floorp.desktop ./flatpak_build/tmp/share/applications/one.ablaze.floorp.desktop
+
+        for size in 16 32 48 64 128; do
+          mkdir -p "./flatpak_build/tmp/share/icons/hicolor/${size}x${size}/apps"
+          cp "./flatpak_build/tmp/lib/floorp/browser/chrome/icons/default/default${size}.png" "./flatpak_build/tmp/share/icons/hicolor/${size}x${size}/apps/one.ablaze.floorp.png"
+        done
+
+        cd ./flatpak_build/tmp
+        tar -Jcf flatpak-base-$DISPVER.tar.xz *
+        mv flatpak-base-$DISPVER.tar.xz ../public/
+        cd ../..
+        ls ./flatpak_build/public
+
+    - name: Publish 🎁
+      uses: actions/upload-artifact@v3
+      with:
+        name: floorp-linux-flatpak-x64
+        path: flatpak_build/public
+
+    - name: Take a screenshot 📸
+      run: |
+        curl -L \
+          -X POST \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ secrets.PAT_KEY }}"\
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          https://api.github.com/repos/Floorp-Projects/About-Floorp-Projects/actions/workflows/update-flathub-picture.yml/dispatches \
+          -d '{"ref":"main"}'

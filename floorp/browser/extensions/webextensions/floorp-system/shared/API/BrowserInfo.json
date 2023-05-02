@@ -1,0 +1,29 @@
+[
+  {
+    "namespace": "BrowserInfo",
+    "description": "Get browser info",
+    "functions": [
+      {
+        "name": "getDisplayVersion",
+        "type": "function",
+        "description": "Get display version",
+        "parameters": [],
+        "async": true
+      },
+      {
+        "name": "getAppExecutablePath",
+        "type": "function",
+        "description": "Get app executable path",
+        "parameters": [],
+        "async": true
+      },
+      {
+        "name": "getAppExecutableDirPath",
+        "type": "function",
+        "description": "Get app executable directory path",
+        "parameters": [],
+        "async": true
+      }
+    ]
+  }
+]

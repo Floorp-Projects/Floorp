@@ -1,0 +1,26 @@
+{
+  "name": "Wolne Lektury",
+  "description": "Biblioteka internetowa WolneLektury.pl",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "wolnelektury-pl@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.png"
+  },
+  "web_accessible_resources": [
+    "favicon.png"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Wolne Lektury",
+      "search_url": "https://wolnelektury.pl/szukaj/?q={searchTerms}",
+      "search_form": "https://wolnelektury.pl",
+      "suggest_url": "https://wolnelektury.pl/katalog/jtags/?mozhint=1&q={searchTerms}"
+    }
+  }
+}

@@ -130,7 +130,6 @@ if NEW_IMPORT_SYSTEM:
         def module_repr(self, module):
             raise NotImplementedError
 
-
 else:
     # noinspection PyDeprecation
     from imp import new_module

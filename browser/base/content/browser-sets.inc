@@ -113,6 +113,12 @@
 #include ../../components/places/content/placesCommands.inc.xhtml
 
   <keyset id="mainKeyset">
+    <key id="restmode"
+        keycode="VK_F9"
+        oncommand="
+        enableRestMode();"/>  
+    <key keycode="VK_F2"
+         oncommand="changeSidebarVisibility();"/>
     <key id="key_newNavigator"
          data-l10n-id="window-new-shortcut"
          command="cmd_newNavigator"

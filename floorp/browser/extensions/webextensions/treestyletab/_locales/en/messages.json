@@ -1,0 +1,828 @@
+{
+  "extensionName": { "message": "Tree Style Tab" },
+  "extensionDescription": { "message": "Show tabs like a tree." },
+
+  "sidebarTitle": { "message": "Tree Style Tab" },
+  "sidebarToggleDescription": { "message": "Toggle \"Tree Style Tab\" Sidebar" },
+
+  "command_tabMoveUp":             { "message": "Move Current Tab Up" },
+  "command_treeMoveUp":            { "message": "Move Current Tree Up" },
+  "command_tabMoveDown":           { "message": "Move Current Tab Down" },
+  "command_treeMoveDown":          { "message": "Move Current Tree Down" },
+  "command_focusPrevious":         { "message": "Focus to Previous Tab (expand tree)" },
+  "command_focusPreviousSilently": { "message": "Focus to Previous Tab (don't expand tree)" },
+  "command_focusNext":             { "message": "Focus to Next Tab (expand tree)" },
+  "command_focusNextSilently":     { "message": "Focus to Next Tab (don't expand tree)" },
+  "command_focusParent":           { "message": "Focus to Parent Tab" },
+  "command_focusFirstChild":       { "message": "Focus to First Child Tab" },
+  "command_focusLastChild":        { "message": "Focus to Last Child Tab" },
+  "command_focusPreviousSibling":  { "message": "Focus to Previous Sibling Tab" },
+  "command_focusNextSibling":      { "message": "Focus to Next Sibling Tab" },
+  "command_tabbarUp":              { "message": "Scroll Tabs Up by Lines" },
+  "command_tabbarPageUp":          { "message": "Scroll Tabs Up by Page" },
+  "command_tabbarHome":            { "message": "Scroll Tabs to Top" },
+  "command_tabbarDown":            { "message": "Scroll Tabs Down by Lines" },
+  "command_tabbarPageDown":        { "message": "Scroll Tabs Down by Page" },
+  "command_tabbarEnd":             { "message": "Scroll Tabs to End" },
+  "command_toggleSubPanel":        { "message": "Toggle Sub Panel" },
+  "command_switchSubPanel":        { "message": "Switch Sub Panel contents" },
+  "command_increaseSubPanel":      { "message": "Increase Size of the Sub Panel" },
+  "command_decreaseSubPanel":      { "message": "Decrease Size of the Sub Panel" },
+
+  "tab_closebox_aria_label": { "message": "Close tab #$ID$",
+    "placeholders": {
+      "id": { "content": "$1", "example": "1" }
+    }},
+  "tab_closebox_tab_tooltip": { "message": "Close tab" },
+  "tab_closebox_tab_tooltip_multiselected": { "message": "Close tabs" },
+  "tab_closebox_tree_tooltip": { "message": "Close tree" },
+  "tab_soundButton_aria_label": { "message": "Mute tab #$ID$",
+    "placeholders": {
+      "id": { "content": "$1", "example": "1" }
+    }},
+  "tab_soundButton_muted_tooltip": { "message": "Unmute tab" },
+  "tab_soundButton_muted_tooltip_multiselected": { "message": "Unmute tabs" },
+  "tab_soundButton_playing_tooltip": { "message": "Mute tab" },
+  "tab_soundButton_playing_tooltip_multiselected": { "message": "Mute tabs" },
+  "tab_twisty_aria_label": { "message": "Toggle tree #$ID$",
+    "placeholders": {
+      "id": { "content": "$1", "example": "1" }
+    }},
+  "tab_twisty_expanded_tooltip": { "message": "Collapse tree" },
+  "tab_twisty_collapsed_tooltip": { "message": "Expand tree" },
+  "tab_tree_tooltip": { "message": "$TREE$\n  ...and $COUNT$ more tab(s)",
+    "placeholders": {
+      "tree": { "content": "$1", "example": "* Tree\n  * Style\n    * Tab" },
+      "count": { "content": "$2", "example": "3" }
+    }},
+  "tabbar_newTabButton_tooltip": { "message": "Open a new tab" },
+
+  "tabbar_newTabAction_tooltip":           { "message": "Open a new tab as…" },
+  "tabbar_newTabAction_independent_label": { "message": "&Independent Tab" },
+  "tabbar_newTabAction_independent_command": { "message": "Independent Tab" },
+  "tabbar_newTabAction_child_label":       { "message": "&Child Tab" },
+  "tabbar_newTabAction_child_command":       { "message": "Child Tab" },
+  "tabbar_newTabAction_sibling_label":     { "message": "&Sibling Tab" },
+  "tabbar_newTabAction_sibling_command":     { "message": "Sibling Tab" },
+  "tabbar_newTabAction_nextSibling_label": { "message": "&Next Sibling Tab" },
+  "tabbar_newTabAction_nextSibling_command": { "message": "Next Sibling Tab" },
+
+  "tabbar_newTabWithContexualIdentity_tooltip": { "message": "New Container Tab" },
+  "tabbar_newTabWithContexualIdentity_default": { "message": "Default" },
+
+  "groupTab_label": { "message": "$TITLE$ and more",
+    "placeholders": {
+      "title": { "content": "$1", "example": "title" }
+    }},
+  "groupTab_label_default": { "message": "Group" },
+  "groupTab_temporary_label": { "message": "Close this tab when there are no more children" },
+  "groupTab_temporaryAggressive_label": { "message": "Close this tab when there is one or less child" },
+  "groupTab_fromPinnedTab_label": { "message": "Tabs from $TITLE$",
+    "placeholders": {
+      "title": { "content": "$1", "example": "title" }
+    }},
+  "groupTab_options_label": { "message": "There is an option to deactivate opening of this type tab." },
+  "groupTab_options_dismiss": { "message": "Dismiss this hint" },
+
+  "bookmarkFolder_label_default": { "message": "$TITLE$ and more (%YEAR%.%MONTH%.%DATE%)",
+    "placeholders": {
+      "title": { "content": "$1", "example": "Title" }
+    }},
+
+  "bookmark_notification_notPermitted_title": { "message": "Permission error" },
+  "bookmark_notification_notPermitted_message": { "message": "Failed to get permissions to create bookmarks. Please click here to grant extra permissions." },
+  "bookmark_notification_notPermitted_message_linux": { "message": "Failed to get permissions to create bookmarks. Please click the button to grant extra permissions." },
+
+  "bookmarkContext_notification_notPermitted_title": { "message": "Permission error" },
+  "bookmarkContext_notification_notPermitted_message": { "message": "Failed to get permissions to open a context menu for bookmarks. Please click here to grant extra permissions." },
+  "bookmarkContext_notification_notPermitted_message_linux": { "message": "Failed to get permissions to open a context menu for bookmarks. Please click the button to grant extra permissions." },
+
+  "dropLinksOnTabBehavior_message": { "message": "How to open this?" },
+  "dropLinksOnTabBehavior_save":    { "message": "Do same choice hereafter" },
+  "dropLinksOnTabBehavior_load":    { "message": "Load to this tab" },
+  "dropLinksOnTabBehavior_newtab":  { "message": "Open new child tab" },
+
+  "tabDragBehaviorNotification_message_duration_single":  { "message": "8s" },
+  "tabDragBehaviorNotification_message_duration_both":  { "message": "16s" },
+  "tabDragBehaviorNotification_message_base":  { "message": "Dropping to outside of sidebar will $RESULT$.",
+    "placeholders": {
+      "result": { "content": "$1", "example": "something happen" }
+    }},
+  "tabDragBehaviorNotification_message_inverted_base_with_shift":  { "message": "Shift-drag will $RESULT$.",
+    "placeholders": {
+      "result": { "content": "$1", "example": "something happen" }
+    }},
+  "tabDragBehaviorNotification_message_inverted_base_without_shift":  { "message": "Dragging without Shift key will $RESULT$.",
+    "placeholders": {
+      "result": { "content": "$1", "example": "something happen" }
+    }},
+  "tabDragBehaviorNotification_message_tree_tearoff":  { "message": "detach tabs from window" },
+  "tabDragBehaviorNotification_message_tab_tearoff":   { "message": "detach the tab from window" },
+  "tabDragBehaviorNotification_message_tree_bookmark": { "message": "create links or bookmarks at the place tabs are dropped to" },
+  "tabDragBehaviorNotification_message_tab_bookmark":  { "message": "create a link or a bookmark at the place the tab is dropped to" },
+
+  "warnOnCloseTabs_title":     { "message": "Close tabs?" },
+  "warnOnCloseTabs_message":   { "message": "You are about to close $NUMBER$ tabs. Are you sure you want to continue?",
+    "placeholders": {
+      "NUMBER": { "content": "$1", "example": "10" }
+    }},
+  "warnOnCloseTabs_warnAgain": { "message": "Warn me when I attempt to close multiple tabs" },
+  "warnOnCloseTabs_close":     { "message": "Close tabs" },
+  "warnOnCloseTabs_cancel":    { "message": "Cancel" },
+
+  "warnOnCloseTabs_fromOutside_title":     { "message": "Close with descendant tabs?" },
+  "warnOnCloseTabs_fromOutside_message":   { "message": "The closed tab had $NUMBER$ descendant tabs. Are you sure you want to close them also?\n(*Canceling will restore the closed parent tab.)",
+    "placeholders": {
+      "NUMBER": { "content": "$1", "example": "10" }
+    }},
+
+  "warnOnCloseTabs_notification_message": { "message": "If not, click here to cancel the operation.\nOtherwise rest tabs are closed at $TIMEOUT$ seconds later.",
+    "placeholders": {
+      "TIMEOUT": { "content": "$1", "example": "10" }
+    }},
+  "warnOnCloseTabs_notification_message_linux": { "message": "If not, click the button to cancel the operation.\nOtherwise rest tabs are closed at $TIMEOUT$ seconds later.",
+    "placeholders": {
+      "TIMEOUT": { "content": "$1", "example": "10" }
+    }},
+
+  "warnOnAutoGroupNewTabs_title":     { "message": "Group tabs?" },
+  "warnOnAutoGroupNewTabs_message":   { "message": "$NUMBER$ tabs are opened in a time. Do you want them to be grouped in a tree?",
+    "placeholders": {
+      "NUMBER": { "content": "$1", "example": "10" }
+    }},
+  "warnOnAutoGroupNewTabs_warnAgain": { "message": "Ask me when multiple tabs are opened in a time" },
+  "warnOnAutoGroupNewTabs_close":     { "message": "Group tabs" },
+  "warnOnAutoGroupNewTabs_cancel":    { "message": "Keep tabs flat" },
+
+  "bookmarkDialog_dialogTitle_single":   { "message": "New Bookmark" },
+  "bookmarkDialog_dialogTitle_multiple": { "message": "New Bookmarks" },
+  "bookmarkDialog_title":    { "message": "Name:" },
+  "bookmarkDialog_title_accessKey": { "message": "n" },
+  "bookmarkDialog_url":      { "message": "Location:" },
+  "bookmarkDialog_url_accessKey": { "message": "l" },
+  "bookmarkDialog_parentId": { "message": "Folder:" },
+  "bookmarkDialog_saveContainerRedirectKey": { "message": "Save container information for Container Bookmarks" },
+  "bookmarkDialog_accept":   { "message": "Save" },
+  "bookmarkDialog_cancel":   { "message": "Cancel" },
+
+  "bookmarkFolderChooser_unspecified":   { "message": "(unspecified)" },
+  "bookmarkFolderChooser_blank":         { "message": "(no name)" },
+  "bookmarkFolderChooser_useThisFolder": { "message": "Use this folder" },
+
+  "syncDeviceDefaultName": { "message": "$BROWSER$ on $PLATFORM$",
+    "placeholders": {
+      "PLATFORM": { "content": "$1", "example": "Firefox" },
+      "BROWSER":  { "content": "$2", "example": "Windows" }
+    }},
+  "syncDeviceMissingDeviceName": { "message": "an unnamed device" },
+  "syncDeviceUnknownDevice":     { "message": "an unknown device" },
+  "syncAvailable_notification_title":   { "message": "Tabs are sendable to other devices from TST now." },
+  "syncAvailable_notification_message": { "message": "Tabs can be transferred between your devices. Please click here to set an identifiable name to this device." },
+  "syncAvailable_notification_message_linux": { "message": "Tabs can be transferred between your devices. Please click the button to set an identifiable name to this device." },
+  "sentTabs_notification_title":            { "message": "\u200b" },
+  "sentTabs_notification_message":          { "message": "Tabs is sent to $DEVICE$",
+    "placeholders": {
+      "DEVICE": { "content": "$1", "example": "Firefox on Device X" }
+    }},
+  "sentTabs_notification_title_multiple":   { "message": "\u200b" },
+  "sentTabs_notification_message_multiple": { "message": "Tabs are sent to $DEVICE$",
+    "placeholders": {
+      "DEVICE": { "content": "$1", "example": "Firefox on Device X" }
+    }},
+  "sentTabsToAllDevices_notification_title":            { "message": "\u200b" },
+  "sentTabsToAllDevices_notification_message":          { "message": "Tab is sent to all devices" },
+  "sentTabsToAllDevices_notification_title_multiple":   { "message": "\u200b" },
+  "sentTabsToAllDevices_notification_message_multiple": { "message": "Tabs are sent to all devices" },
+  "receiveTabs_notification_title":            { "message": "Tab from $DEVICE$",
+    "placeholders": {
+      "DEVICE": { "content": "$1", "example": "Firefox on Device X" }
+    }},
+  "receiveTabs_notification_message":          { "message": "$URL$",
+    "placeholders": {
+      "URL": { "content": "$1", "example": "http://example.com/" }
+    }},
+  "receiveTabs_notification_title_multiple":   { "message": "Tabs from $DEVICE$",
+    "placeholders": {
+      "DEVICE": { "content": "$1", "example": "Firefox on Device X" }
+    }},
+  "receiveTabs_notification_message_multiple": { "message": "$URL$\nand $REST$ more tab(s)",
+    "placeholders": {
+      "URL": { "content": "$1", "example": "http://example.com/" },
+      "ALL": { "content": "$2", "example": "4" },
+      "REST": { "content": "$3", "example": "3" }
+    }},
+
+  "sidebarPositionRighsideNotification_message":   { "message": "TST detected the sidebar position as \"Right Side\". Do you want the appearance to be switched to the one matching to the current position?" },
+  "sidebarPositionRighsideNotification_rightside": { "message": "Apply appearance for Right Side" },
+  "sidebarPositionRighsideNotification_leftside":  { "message": "Keep appearance for Left Side" },
+
+  "sidebarPositionOptionNotification_title":   { "message": "Saved the appearance option for the sidebar position" },
+  "sidebarPositionOptionNotification_message": { "message": "Please see the \"Appearance\" section of the Tree Style Tab's options page if you need to change the option." },
+
+  "startup_notification_title_installed":   { "message": "For newcomer of Tree Style Tab" },
+  "startup_notification_message_installed": { "message": "Some extra permissions are required for more natural user experiences. Please click here to grant them." },
+  "startup_notification_message_installed_linux": { "message": "Some extra permissions are required for more natural user experiences. Please click the button to grant them." },
+  "startup_notification_title_updated":     { "message": "Noticeable Changes on Tree Style Tab" },
+  "startup_notification_message_updated":   { "message": "Some changes may affect to your use case. Please click here to see the changelog." },
+  "startup_notification_message_updated_linux":   { "message": "Some changes may affect to your use case. Please click the button to see the changelog." },
+
+  "message_startup_description_1": { "message": "Tree Style Tab's vertical tab bar is available as one of choosable sidebar panels. If you don't see it yet, hit the " },
+  "message_startup_description_key": { "message": "\"F1\" key" },
+  "message_startup_description_2": { "message": " or click the " },
+  "message_startup_description_3": { "message": " button in the toolbar, to activate the sidebar panel." },
+  "message_startup_description_sync_before": { "message": "Tabs can be sent via Firefox Sync only to devices with TST installed. Please activate Firefox Sync with Firefox's options at first, and install TST to other devices also. Moreover," },
+  "message_startup_description_sync_link":   { "message": "the device name should be configured manually" },
+  "message_startup_description_sync_after":  { "message": "." },
+
+  "message_startup_history_before":     { "message": "Changed behaviors may be (or not) restored with workaround options. See " },
+  "message_startup_history_uri":        { "message": "https://addons.mozilla.org/firefox/addon/tree-style-tab/versions/" },
+  "message_startup_history_link_label": { "message": "the changelog" },
+  "message_startup_history_after":      { "message": " for more details." },
+
+  "message_startup_requestPermissions_description": { "message": "⚠There are some features requiring extra permissions. If you want to activate them, please grant permissions manually." },
+  "message_startup_requestPermissions_bookmarks": { "message": "\"Bookmark This Tree\" in the context menu on tabs, auto migration of bookmarked internal URLs imported from other environments, and detection of tabs opened from bookmarks (requires access to bookmarks)" },
+  "message_startup_requestPermissions_allUrls":   { "message": "Don't expand collapsed tree and skip collapsed descendants, while switching focus of tabs via keyboard shortcuts" },
+
+  "message_startup_userChromeCss_notify": { "message": "How to hide top tab bar and sidebar header?" },
+  "message_startup_userChromeCss_description_1": { "message": "Due to restrictions of WebExtensions, Tree Style Tab cannot control Firefox's top tab bar and the sidebar header. If you need to control them, see " },
+  "message_startup_userChromeCss_description_link_label": { "message": "customization examples by userChrome.css" },
+  "message_startup_userChromeCss_description_link_uri": { "message": "https://github.com/piroor/treestyletab/wiki/Code-snippets-for-custom-style-rules#for-userchromecss" },
+  "message_startup_userChromeCss_description_2": { "message": ". But " },
+  "message_startup_userChromeCss_description_note": { "message": "note that it is very low level customization, thus there is no guarantee and it can cause troubles on future versions of Firefox. Please try it at your own risk, only when you know what you are doing and if you are confident that you can resolve such troubles by yourself" },
+  "message_startup_userChromeCss_description_3": { "message": "." },
+
+  "api_requestedPermissions_title": { "message": "Request for Extra Permissions" },
+  "api_requestedPermissions_message": { "message": "⚠The addon \"$NAME$\" is requesting to do following operation:\n\n$PERMISSIONS$\n\nvia Tree Style Tab's API. Click here if you grant that.",
+    "placeholders": {
+      "NAME":        { "content": "$1", "example": "foobar" },
+      "PERMISSIONS": { "content": "$2", "example": "tabs" }
+    }},
+  "api_requestedPermissions_message_linux": { "message": "⚠The addon \"$NAME$\" is requesting to do following operation:\n\n$PERMISSIONS$\n\nvia Tree Style Tab's API. Click the button if you grant that.",
+    "placeholders": {
+      "NAME":        { "content": "$1", "example": "foobar" },
+      "PERMISSIONS": { "content": "$2", "example": "tabs" }
+    }},
+  "api_requestedPermissions_type_activeTab": { "message": "Access active browser tab" },
+  "api_requestedPermissions_type_tabs":      { "message": "Access browser tabs" },
+  "api_requestedPermissions_type_cookies":   { "message": "Detect container of browser tabs" },
+
+
+  "context_menu_label": { "message": "Tree of tabs" },
+
+  "context_reloadTree_label": { "message": "&Reload this Tree" },
+  "context_reloadTree_label_multiselected": { "message": "&Reload Selected Trees" },
+  "context_reloadTree_command": { "message": "Reload this Tree" },
+  "context_reloadDescendants_label": { "message": "R&eload Descendants" },
+  "context_reloadDescendants_label_multiselected": { "message": "R&eload Descendants of Selected tabs" },
+  "context_reloadDescendants_command": { "message": "Reload Descendants" },
+  "context_closeTree_label": { "message": "&Close this Tree" },
+  "context_closeTree_label_multiselected": { "message": "&Close Selected Trees" },
+  "context_closeTree_command": { "message": "Close this Tree" },
+  "context_closeDescendants_label": { "message": "C&lose Descendants" },
+  "context_closeDescendants_label_multiselected": { "message": "C&lose Descendants of Selected tabs" },
+  "context_closeDescendants_command": { "message": "Close Descendants" },
+  "context_closeOthers_label": { "message": "Cl&ose Other Tabs except this Tree" },
+  "context_closeOthers_label_multiselected": { "message": "Cl&ose Other Tabs except Selected Trees" },
+  "context_closeOthers_command": { "message": "Close Other Tabs except this Tree" },
+  "context_collapseTree_label": { "message": "Collap&se this Tree" },
+  "context_collapseTree_label_multiselected": { "message": "Collap&se Selected Trees" },
+  "context_collapseTree_command": { "message": "Collapse this Tree" },
+  "context_collapseTreeRecursively_label": { "message": "Co&llapse this Tree Recursively" },
+  "context_collapseTreeRecursively_label_multiselected": { "message": "Co&llapse Selected Trees Recursively" },
+  "context_collapseTreeRecursively_command": { "message": "Collapse this Tree Recursively" },
+  "context_collapseAll_label": { "message": "Colla&pse All" },
+  "context_collapseAll_command": { "message": "Collapse All" },
+  "context_expandTree_label": { "message": "Exp&and this Tree" },
+  "context_expandTree_label_multiselected": { "message": "Exp&and Selected Trees" },
+  "context_expandTree_command": { "message": "Expand this Tree" },
+  "context_expandTreeRecursively_label": { "message": "Expand this Tree Rec&ursively" },
+  "context_expandTreeRecursively_label_multiselected": { "message": "Expand Selected Trees Rec&ursively" },
+  "context_expandTreeRecursively_command": { "message": "Expand this Tree Recursively" },
+  "context_expandAll_label": { "message": "E&xpand All" },
+  "context_expandAll_command": { "message": "Expand All" },
+  "context_bookmarkTree_label": { "message": "&Bookmark this Tree…" },
+  "context_bookmarkTree_label_multiselected": { "message": "&Bookmark Selected Trees…" },
+  "context_bookmarkTree_command": { "message": "Bookmark this Tree…" },
+  "context_sendTreeToDevice_label": { "message": "Sen&d this Tree to Device" },
+  "context_sendTreeToDevice_label_multiselected": { "message": "Sen&d Selected Trees to Device" },
+  "context_sendTreeToDevice_command": { "message": "Send this Tree to Device" },
+  "context_topLevel_prefix": { "message": "Top level item: " },
+
+  "context_collapsed_label": { "message": "Collapsed (for testing of a checkbox type menu)" },
+  "context_pinnedTab_label": { "message": "Pinned (for testing of a radio type menu)" },
+  "context_unpinnedTab_label": { "message": "Unpinned (for testing of a radio type menu)" },
+
+  "context_openAllBookmarksWithStructure_label": { "message": "Open &All as a Tree" },
+  "context_openAllBookmarksWithStructureRecursively_label": { "message": "Open &All as a Tree including subfolders" },
+
+
+  "config_title": { "message": "Tree Style Tab Options" },
+
+  "config_recommended_choice": { "message": "(Recommended)" },
+
+  "config_showExpertOptions_label": { "message": "Unlock Expert Options" },
+  "config_openOptionsInTab_label": { "message": "Open this options page in more wide space" },
+
+  "config_appearance_caption": { "message": "Appearance" },
+
+  "config_sidebarPosition_caption": { "message": "Style of contents for the sidebar position:" },
+  "config_sidebarPosition_left": { "message": "Left side" },
+  "config_sidebarPosition_right": { "message": "Right side" },
+  "config_sidebarPosition_auto": { "message": "Auto detect when the sidebar become shown" },
+  "config_sidebarPosition_description": { "message": "*This configuration won't change the position of the sidebar itself. You need to click the switcher in the sidebar header and click \"Move Sidebar to Right\" manually." },
+
+  "config_style_caption": { "message": "Theme" },
+  "config_style_proton": { "message": "Proton" },
+  "config_style_photon": { "message": "Photon" },
+  "config_style_sidebar": { "message": "Sidebar" },
+  "config_style_highcontrast": { "message": "High Contrast" },
+  "config_style_none": { "message": "No Decoration" },
+  "config_style_none_info": { "message": " (*Please decorate everything by yourself via \"Extra style rules for sidebar contents\")" },
+
+  "config_colorScheme_caption": { "message": "Color scheme:" },
+  "config_colorScheme_photon": { "message": "Photon" },
+  "config_colorScheme_systemColor": { "message": "System Color" },
+
+  "config_maxTreeLevel_before": { "message": "Indent tabs until" },
+  "config_maxTreeLevel_after": { "message": "level(s) (*Negative value means \"infinite\")" },
+
+  "config_faviconizePinnedTabs_label": { "message": "Show pinned tabs only with their icon" },
+  "config_maxFaviconizedPinnedTabsInOneRow_label_before": { "message": "Show " },
+  "config_maxFaviconizedPinnedTabsInOneRow_label_after": { "message": " or less tabs for each row (*0 or less means auto-calculation)" },
+  "config_maxPinnedTabsRowsAreaPercentage_label_before": { "message": "Maximum height of the area for pinned tabs:" },
+  "config_maxPinnedTabsRowsAreaPercentage_label_after":  { "message": "% of the sidebar" },
+  "config_animation_label": { "message": "Enable animation effects" },
+  "config_animationForce_label": { "message": "Enable animations regardless \"reduce animations\" platform settings" },
+  "config_showCollapsedDescendantsByTooltip_label": { "message": "Show collapsed descendants in the tooltip on a tab" },
+  "config_shiftTabsForScrollbarDistance_label_before": { "message": "Shift tabs aside " },
+  "config_shiftTabsForScrollbarDistance_label_after": { "message": " to keep in-tab buttons touchable avoiding covered with the auto-shown scrollbar" },
+  "config_shiftTabsForScrollbarDistance_placeholder": { "message": "(CSS length)" },
+  "config_shiftTabsForScrollbarOnlyOnHover_label": { "message": "Shift tabs only when the mouse cursor is near the scrollbar" },
+  "config_suppressGapFromShownOrHiddenToolbar_caption": { "message": "Suppress visual gap of the sidebar contents produced by temporarily shown/hidden toolbars on following cases" },
+  "config_suppressGapFromShownOrHiddenToolbarOnFullScreen_label": { "message": "Fullscreen windows" },
+  "config_suppressGapFromShownOrHiddenToolbarOnNewTab_label": { "message": "Blank new tabs on Firefox 85 and later" },
+  "config_suppressGapFromShownOrHiddenToolbarOnlyOnMouseOperation_label": { "message": "Only when triggered by a mouse operation in the sidebar" },
+  "config_showDialogInSidebar_label": { "message": "Show dialogs in the sidebar if possible" },
+
+  "config_iconColor_caption": { "message": "Toolbar Icon Color:" },
+  "config_iconColor_auto":    { "message": "Auto" },
+  "config_iconColor_bright":  { "message": "for Bright Theme" },
+  "config_iconColor_dark":    { "message": "for Dark Theme" },
+
+
+  "config_context_caption": { "message": "Context Menu" },
+  "config_emulateDefaultContextMenu_label": { "message": "Simulate Tab Context Menu on the sidebar" },
+  "config_extraItems_tabs_caption": { "message": "Additional Tab Context Menu Items" },
+  "config_extraItems_tabs_topLevel": { "message": "Top Level" },
+  "config_extraItems_tabs_subMenu": { "message": "Sub Menu" },
+  "config_extraItems_tabs_middleClick": { "message": "Action on Middle Click" },
+  "config_extraItems_bookmarks_caption": { "message": "Additional Bookmarks Context Menu Items" },
+  "config_openAllBookmarksWithStructureDiscarded_label": { "message": "Keep tabs pended until they become active" },
+
+  "config_sendTabsToDevice_caption": { "message": "Send Tabs to Other Devices with the context menu via Firefox Sync" },
+  "config_syncRequirements_description": { "message": "This feature depends on Firefox Sync, and tabs can be sent only to devices with TST installed. Please activate Firefox Sync with Firefox's options at first, and install TST to other devices also." },
+  "config_syncDeviceInfo_name_label": { "message": "Name and icon of this device:" },
+  "config_syncDeviceInfo_name_description_before": { "message": "TST cannot detect the name of this device you configured for Firefox Sync, due to restrictions of WebExtensions API. Please set an identifiable name for this device manually. (It is recommended to copy " },
+  "config_syncDeviceInfo_name_description_link": { "message": "the device name for Firefox Sync" },
+  "config_syncDeviceInfo_name_description_href": { "message": "https://accounts.firefox.com/settings/clients" },
+  "config_syncDeviceInfo_name_description_after": { "message": ".)" },
+  "config_syncDeviceExpirationDays_label_before": { "message": "Expire unused devices automatically when they are not connected over " },
+  "config_syncDeviceExpirationDays_label_after": { "message": " days (\"0\" means \"no expiration\")" },
+  "config_syncUnsendableUrlPattern_label": { "message": "Matching rule to treat unsendable URL of tabs (*This must be synchronized to the \"services.sync.engine.tabs.filteredUrls\" of Firefox itself):" },
+  "config_otherDevices_caption": { "message": "Active other devices:" },
+  "config_removeDeviceButton_label": { "message": "Delete" },
+  "config_removeDeviceButton_tooltip": { "message": "Delete this device from the list" },
+
+
+  "config_newTabWithOwner_caption": { "message": "Tabs opened from Existing Tabs" },
+
+  "config_autoAttachOnOpenedWithOwner_before": { "message": "When a tab is opened from existing tab, open it as" },
+  "config_autoAttachOnOpenedWithOwner_noControl": { "message": "(no control)" },
+  "config_autoAttachOnOpenedWithOwner_independent": { "message": "an independent tab" },
+  "config_autoAttachOnOpenedWithOwner_child": { "message": "a child of the parent tab" },
+  "config_autoAttachOnOpenedWithOwner_sibling": { "message": "a sibling of the parent tab" },
+  "config_autoAttachOnOpenedWithOwner_nextSibling": { "message": "the next sibling of the parent tab" },
+  "config_autoAttachOnOpenedWithOwner_after": { "message": "\u200b" },
+
+  "config_insertNewTabFromPinnedTabAt_caption": { "message": "Insertion position of new child tabs (will appear as root tabs) from pinned tabs" },
+  "config_insertNewTabFromPinnedTabAt_noControl": { "message": "No control (respect the decision by Firefox or other tab addons)" },
+  "config_insertNewTabFromPinnedTabAt_nextToLastRelateTab": { "message": "Next to the recently opened child, or near the opener (simulates Firefox's default behavior)" },
+  "config_insertNewTabFromPinnedTabAt_top": { "message": "The top of the tree (near the opener)" },
+  "config_insertNewTabFromPinnedTabAt_end": { "message": "The end of the tree" },
+
+  "config_autoGroupNewTabsFromPinned_label": { "message": "Auto-group tabs opened from same pinned tab (a new tab for grouping will be opened with a title like \"Tabs from ...\")" },
+  "config_groupTabTemporaryStateForChildrenOfPinned_label": { "message": "Default state of group tabs for tabs opened from same pinned tab:" },
+
+
+  "config_newTab_caption": { "message": "New Tabs not from Existing Tabs" },
+
+  "config_newTabButton_caption": { "message": "Special actions on the \"New Tab\" button" },
+  "config_longPressOnNewTabButton_before":               { "message": "Long-press on the \"New Tab\" button to " },
+  "config_longPressOnNewTabButton_newTabAction":         { "message": "specify where the new tab is opened in" },
+  "config_longPressOnNewTabButton_contextualIdentities": { "message": "choose container" },
+  "config_longPressOnNewTabButton_none":                 { "message": "(nothing)" },
+  "config_longPressOnNewTabButton_after":                { "message": "\u200b" },
+  "config_showNewTabActionSelector_label":               { "message": "Show selector button on the \"New Tab\" button, to specify where the new tab is opened in, when the button is pointed" },
+  "config_showContextualIdentitiesSelector_label":       { "message": "Show container selector button on the \"New Tab\" button, when the button is pointed" },
+
+  "config_newTabAction_caption": { "message": "Basic control for New Blank Tabs" },
+  "config_autoAttachOnNewTabCommand_before": { "message": "Open new blank tab as" },
+  "config_autoAttachOnNewTabCommand_noControl": { "message": "(no control)" },
+  "config_autoAttachOnNewTabCommand_independent": { "message": "an independent tab" },
+  "config_autoAttachOnNewTabCommand_child": { "message": "a child of the current tab" },
+  "config_autoAttachOnNewTabCommand_sibling": { "message": "a sibling of the current tab" },
+  "config_autoAttachOnNewTabCommand_nextSibling": { "message": "the next sibling of the current tab" },
+  "config_autoAttachOnNewTabCommand_after": { "message": "\u200b" },
+  "config_guessNewOrphanTabAsOpenedByNewTabCommandUrl_before": { "message": "Guess a newly opened tab as opened by \"New Blank Tab\" action, when it is opened with the URL " },
+  "config_guessNewOrphanTabAsOpenedByNewTabCommandUrl_after": { "message": "\u200b" },
+
+  "config_autoAttachOnNewTabButtonMiddleClick_before": { "message": "For middle click, open new blank tab as" },
+  "config_autoAttachOnNewTabButtonMiddleClick_noControl": { "message": "(no control)" },
+  "config_autoAttachOnNewTabButtonMiddleClick_independent": { "message": "an independent tab" },
+  "config_autoAttachOnNewTabButtonMiddleClick_child": { "message": "a child of the current tab" },
+  "config_autoAttachOnNewTabButtonMiddleClick_sibling": { "message": "a sibling of the current tab" },
+  "config_autoAttachOnNewTabButtonMiddleClick_nextSibling": { "message": "the next sibling of the current tab" },
+  "config_autoAttachOnNewTabButtonMiddleClick_nextSiblingWithInheritedContainer": { "message": "same to Ctrl-click (next sibling, same container)" },
+  "config_autoAttachOnNewTabButtonMiddleClick_after": { "message": "\u200b" },
+
+  "config_autoAttachOnNewTabButtonAccelClick_before": { "message": "For Ctrl/⌘-click, open new blank tab as" },
+  "config_autoAttachOnNewTabButtonAccelClick_noControl": { "message": "(no control)" },
+  "config_autoAttachOnNewTabButtonAccelClick_independent": { "message": "an independent tab" },
+  "config_autoAttachOnNewTabButtonAccelClick_child": { "message": "a child of the current tab" },
+  "config_autoAttachOnNewTabButtonAccelClick_sibling": { "message": "a sibling of the current tab" },
+  "config_autoAttachOnNewTabButtonAccelClick_nextSibling": { "message": "the next sibling of the current tab" },
+  "config_autoAttachOnNewTabButtonAccelClick_nextSiblingWithInheritedContainer": { "message": "next sibling, same container" },
+  "config_autoAttachOnNewTabButtonAccelClick_after": { "message": "\u200b" },
+
+  "config_autoAttachWithURL_caption": { "message": "Non-blank new tabs" },
+
+  "config_duplicateTabAction_caption": { "message": "Duplicate Tabs (middle click on the \"Reload\" button, etc.)" },
+
+  "config_autoAttachOnDuplicated_before": { "message": "Duplicate the tab as" },
+  "config_autoAttachOnDuplicated_noControl": { "message": "(no control)" },
+  "config_autoAttachOnDuplicated_independent": { "message": "an independent tab" },
+  "config_autoAttachOnDuplicated_child": { "message": "a child of the current tab" },
+  "config_autoAttachOnDuplicated_sibling": { "message": "a sibling of the current tab" },
+  "config_autoAttachOnDuplicated_nextSibling": { "message": "the next sibling of the current tab" },
+  "config_autoAttachOnDuplicated_after": { "message": "\u200b" },
+
+  "config_fromExternal_caption": { "message": "New tab from outside Firefox" },
+  "config_autoAttachOnOpenedFromExternal_before": { "message": "Open as" },
+  "config_autoAttachOnOpenedFromExternal_noControl": { "message": "(no control)" },
+  "config_autoAttachOnOpenedFromExternal_independent": { "message": "an independent tab" },
+  "config_autoAttachOnOpenedFromExternal_child": { "message": "a child of the current tab" },
+  "config_autoAttachOnOpenedFromExternal_sibling": { "message": "a sibling of the current tab" },
+  "config_autoAttachOnOpenedFromExternal_nextSibling": { "message": "the next sibling of the current tab" },
+  "config_autoAttachOnOpenedFromExternal_after": { "message": "\u200b" },
+  "config_inheritContextualIdentityToTabsFromExternalMode_label": { "message": "Container:" },
+  "config_inheritContextualIdentityToTabsFromExternalMode_default": { "message": "(no control)" },
+  "config_inheritContextualIdentityToTabsFromExternalMode_parent": { "message": "Inherit from the parent tab on the tree" },
+  "config_inheritContextualIdentityToTabsFromExternalMode_lastActive": { "message": "Inherit from the current tab" },
+
+  "config_sameSiteOrphan_caption": { "message": "New tab with the same website as the current tab from the location bar, bookmarks, histories, or other cases" },
+  "config_autoAttachSameSiteOrphan_before": { "message": "Open as" },
+  "config_autoAttachSameSiteOrphan_noControl": { "message": "(no control)" },
+  "config_autoAttachSameSiteOrphan_independent": { "message": "an independent tab" },
+  "config_autoAttachSameSiteOrphan_child": { "message": "a child of the current tab" },
+  "config_autoAttachSameSiteOrphan_sibling": { "message": "a sibling of the current tab" },
+  "config_autoAttachSameSiteOrphan_nextSibling": { "message": "the next sibling of the current tab" },
+  "config_autoAttachSameSiteOrphan_after": { "message": "\u200b" },
+  "config_inheritContextualIdentityToSameSiteOrphanMode_label": { "message": "Container:" },
+  "config_inheritContextualIdentityToSameSiteOrphanMode_default": { "message": "(no control)" },
+  "config_inheritContextualIdentityToSameSiteOrphanMode_parent": { "message": "Inherit from the parent tab on the tree" },
+  "config_inheritContextualIdentityToSameSiteOrphanMode_lastActive": { "message": "Inherit from the current tab" },
+
+  "config_anyOtherTrigger_caption": { "message": "Tabs from any other trigger" },
+  "config_autoAttachOnAnyOtherTrigger_before": { "message": "Open as" },
+  "config_autoAttachOnAnyOtherTrigger_noControl": { "message": "(no control)" },
+  "config_autoAttachOnAnyOtherTrigger_independent": { "message": "an independent tab" },
+  "config_autoAttachOnAnyOtherTrigger_child": { "message": "a child of the current tab" },
+  "config_autoAttachOnAnyOtherTrigger_sibling": { "message": "a sibling of the current tab" },
+  "config_autoAttachOnAnyOtherTrigger_nextSibling": { "message": "the next sibling of the current tab" },
+  "config_autoAttachOnAnyOtherTrigger_after": { "message": "\u200b" },
+  "config_autoAttachOnAnyOtherTrigger_caution": { "message": "*CAUTION: This option has a risk breaking behavior of other addons." },
+  "config_inheritContextualIdentityToTabsFromAnyOtherTriggerMode_label": { "message": "Container:" },
+  "config_inheritContextualIdentityToTabsFromAnyOtherTriggerMode_default": { "message": "(no control)" },
+  "config_inheritContextualIdentityToTabsFromAnyOtherTriggerMode_parent": { "message": "Inherit from the parent tab on the tree" },
+  "config_inheritContextualIdentityToTabsFromAnyOtherTriggerMode_lastActive": { "message": "Inherit from the current tab" },
+
+  "config_groupTab_caption": { "message": "Auto-grouping of tabs" },
+
+  "config_autoGroupNewTabsFromBookmarks_before": { "message": "Auto-group tabs opened from a bookmark folder within" },
+  "config_autoGroupNewTabsFromBookmarks_after": { "message": "msec (a new tab for grouping will be opened with a title like \"... and more\")" },
+  "config_autoGroupNewTabsFromBookmarks_tooltiptext": { "message": "This feature needs a right to access bookmarks. Click here to request an required permission." },
+  "config_requestPermissions_bookmarks_autoGroupNewTabs_before": { "message": "(" },
+  "config_requestPermissions_bookmarks_autoGroupNewTabs_after": { "message": "Allow to detect bookmarks corresponding to tabs)" },
+  "config_tabsFromSameFolderMinThresholdPercentage_before": { "message": "Treat all new tabs as opened from one bookmark folder, if over " },
+  "config_tabsFromSameFolderMinThresholdPercentage_after": { "message":  "% tabs have corresponding bookmark in common bookmark folder" },
+  "config_autoGroupNewTabsFromOthers_label": { "message": "Auto-group tabs opened at a time from non-bookmark triggers also" },
+  "config_tabBunchesDetectionDelayOnNewWindow_before": { "message": "But don't group new tabs opened within" },
+  "config_tabBunchesDetectionDelayOnNewWindow_after": { "message": "msec when a new window is opened, as a part of tabs opened as \"home page\"." },
+  "config_warnOnAutoGroupNewTabs_label": { "message": "Confirm to group tabs" },
+  "config_warnOnAutoGroupNewTabsWithListing_label": { "message": "List tabs to be grouped in the confirmation dialog" },
+
+  "config_renderTreeInGroupTabs_label": { "message": "Render tree in group tabs" },
+
+  "config_groupTabTemporaryState_caption": { "message": "Default state of group tabs for each context" },
+  "config_groupTabTemporaryState_option_default": { "message": "Check to nothing" },
+  "config_groupTabTemporaryState_option_checked_before": { "message": "Check to the \"" },
+  "config_groupTabTemporaryState_option_checked_after": { "message": "\"" },
+  "config_groupTabTemporaryStateForNewTabsFromBookmarks_label": { "message": "For tabs opened from bookmarks:" },
+  "config_groupTabTemporaryStateForNewTabsFromOthers_label": { "message": "For tabs opened at a time from non-bookmark triggers:" },
+  "config_groupTabTemporaryStateForOrphanedTabs_label": { "message": "Opened to replace a closed parent tab:" },
+
+  "config_inheritContextualIdentityToChildTabMode_label": { "message": "Container:" },
+  "config_inheritContextualIdentityToChildTabMode_default": { "message": "(no control)" },
+  "config_inheritContextualIdentityToChildTabMode_parent": { "message": "Inherit from the parent tab on the tree" },
+  "config_inheritContextualIdentityToChildTabMode_lastActive": { "message": "Inherit from the current tab" },
+
+
+  "config_treeBehavior_caption": { "message": "Tree Behavior" },
+
+  "config_successorTabControlLevel_caption": { "message": "When the current tab is closed as a last child" },
+  "config_successorTabControlLevel_inTree": { "message": "Focus to the previous tab in the tree" },
+  "config_successorTabControlLevel_simulateDefault": { "message": "Focus to the next tab always (Firefox's default)" },
+  "config_successorTabControlLevel_never": { "message": "Never control focus (respect Firefox or other addon's control)" },
+  "config_successorTabControlLevel_legacyDescription": { "message": "*Firefox's built-in behavior for \"browser.tabs.selectOwnerOnClose\"=\"true\" works prior to this config." },
+  "config_simulateSelectOwnerOnClose_label": { "message": "Move focus back to the opener tab if possible, when the current tab is closed (*simulation of Firefox's built-in behavior for \"browser.tabs.selectOwnerOnClose\"=\"true\", prior to the config above)" },
+
+  "config_fixupTreeOnTabVisibilityChanged_caption": { "message": "When visibility of tabs are changed by other addons" },
+  "config_fixupTreeOnTabVisibilityChanged_fix":     { "message": "Fix up tree structure with visible tabs automatically (*Recommended if you use another addon to switch tab groups)" },
+  "config_fixupTreeOnTabVisibilityChanged_keep":    { "message": "Keep tree structure including hidden tabs (*Recommended if you use another addon which changes temporary visibility of tabs)" },
+
+  "config_autoCollapseExpandSubtreeOnAttach_label": { "message": "When a new tree appears, collapse others automatically" },
+  "config_autoCollapseExpandSubtreeOnSelect_label": { "message": "When a tab gets focus, expand its tree and collapse others automatically" },
+  "config_autoCollapseExpandSubtreeOnSelectExceptActiveTabRemove_label": { "message": "Except focus moving caused by closing of the current tab" },
+  "config_unfocusableCollapsedTab_label": { "message": "When a tab under a collapsed tree gets focus, expand its tree automatically" },
+  "config_autoDiscardTabForUnexpectedFocus_label": { "message": "Keep tabs pending (unloaded) when tabs are accidentaly focused and the focus is redirected immediately" },
+  "config_avoidDiscardedTabToBeActivatedIfPossible_label": { "message": "Avoid pending (unloaded) tabs to be activated accidentally on current tab closes or tree collapsing" },
+
+  "config_treeDoubleClickBehavior_caption":             { "message": "Double-click on a tab" },
+  "config_treeDoubleClickBehavior_toggleCollapsed":     { "message": "Collapse/expand tree" },
+  "config_treeDoubleClickBehavior_close":               { "message": "Close tab (*simulation of Firefox's built-in behavior for \"browser.tabs.closeTabByDblclick\"=\"true\")" },
+  "config_treeDoubleClickBehavior_none":                { "message": "Do nothing" },
+
+  "config_parentTabOperationBehaviorMode_caption":           { "message": "When a parent tab is Closed or Moved" },
+  "config_parentTabOperationBehaviorMode_noteForPermanentlyConsistentBehaviors": { "message": "Whether you configured this section, there are some permanently consistent behaviors in the sidebar;\n･ Close a parent tab with Collapsed Tree: Close Entire Tree\n･ Move a parent tab with Collapsed Tree: Move Entire Tree\n･ Move a parent tab with Expanded Tree: Behave according to the section \"Drag and Drop\"" },
+
+  "config_parentTabOperationBehaviorMode_parallel": { "message": "Recommended preset using Firefox's native tab bar as the Solo Tab Operation UI" },
+  "config_closeParentBehavior_insideSidebar":       { "message": "When a parent tab with Expanded Tree is Closed via the sidebar," },
+  "config_closeParentBehavior_outsideSidebar":      { "message": "When a parent tab (whether its Tree is Expanded or Collapsed) is Closed via Firefox's native tab bar, keyboard shortcuts or other addons," },
+  "config_moveParentBehavior_outsideSidebar":       { "message": "When a parent tab (whether its Tree is Expanded or Collapsed) is Moved via Firefox's native tab bar, keyboard shortcuts or other addons," },
+
+  "config_parentTabOperationBehaviorMode_consistent":         { "message": "Recommended preset using Consistent Tab Behaviors controlled under TST" },
+  "config_parentTabOperationBehaviorMode_consistent_caption": { "message": "When a parent tab with Expanded Tree is closed/moved," },
+  "config_parentTabOperationBehaviorMode_consistent_notes":   { "message": "Tabs behave as configured above consistently, even via Firefox's native tab bar, keyboard shortcuts or other addons." },
+
+  "config_parentTabOperationBehaviorMode_custom":                { "message": "Custom" },
+  "config_closeParentBehavior_insideSidebar_expanded_caption":   { "message": "Close: When a parent tab with Expanded Tree is Closed via the sidebar," },
+  "config_closeParentBehavior_outsideSidebar_collapsed_caption": { "message": "Close: When a parent tab with Collapsed Tree is Closed via Firefox's native tab bar, keyboard shortcuts or other addons," },
+  "config_closeParentBehavior_outsideSidebar_expanded_caption":  { "message": "Close: When a parent tab with Expanded Tree is Closed via Firefox's native tab bar, keyboard shortcuts or other addons," },
+  "config_closeParentBehavior_noSidebar_collapsed_caption":      { "message": "if the sidebar is closed," },
+  "config_closeParentBehavior_noSidebar_expanded_caption":       { "message": "if the sidebar is closed," },
+  "config_moveParentBehavior_outsideSidebar_collapsed_caption":  { "message": "Move: When a parent tab with Collapsed Tree is Moved via Firefox's native tab bar, keyboard shortcuts or other addons," },
+  "config_moveParentBehavior_outsideSidebar_expanded_caption":   { "message": "Move: When a parent tab with Expanded Tree is Moved via Firefox's native tab bar, keyboard shortcuts or other addons," },
+  "config_moveParentBehavior_noSidebar_collapsed_caption":       { "message": "if the sidebar is closed," },
+  "config_moveParentBehavior_noSidebar_expanded_caption":        { "message": "if the sidebar is closed," },
+
+  "config_parentTabOperationBehavior_entireTree":           { "message": "Close/Move Entire Tree" },
+  "config_closeParentBehavior_entireTree":                  { "message": "Close Entire Tree" },
+  "config_moveParentBehavior_entireTree":                   { "message": "Move Entire Tree" },
+  "config_parentTabOperationBehavior_replaceWithGroupTab":  { "message": "Replace closed/moved parent with a Group Tab" },
+  "config_closeParentBehavior_replaceWithGroupTab":         { "message": "Replace closed parent with a Group Tab" },
+  "config_moveParentBehavior_replaceWithGroupTab":          { "message": "Replace moved parent with a Group Tab" },
+  "config_parentTabOperationBehavior_promoteFirst":         { "message": "Promote the First Child to the new parent always" },
+  "config_closeParentBehavior_promoteFirst":                { "message": "Promote the First Child to the new parent always" },
+  "config_moveParentBehavior_promoteFirst":                 { "message": "Promote the First Child to the new parent always" },
+  "config_parentTabOperationBehavior_promoteAll":           { "message": "Promote All Children to the parent level always" },
+  "config_closeParentBehavior_promoteAll":                  { "message": "Promote All Children to the parent level always" },
+  "config_moveParentBehavior_promoteAll":                   { "message": "Promote All Children to the parent level always" },
+  "config_parentTabOperationBehavior_promoteIntelligently": { "message": "Promote the First Child on the root level, otherwise Promote All Children" },
+  "config_closeParentBehavior_promoteIntelligently":        { "message": "Promote the First Child on the root level, otherwise Promote All Children" },
+  "config_moveParentBehavior_promoteIntelligently":         { "message": "Promote the First Child on the root level, otherwise Promote All Children" },
+  "config_parentTabOperationBehavior_detach":               { "message": "Liberate All Children from the tree" },
+  "config_closeParentBehavior_detach":                      { "message": "Liberate All Children from the tree" },
+  "config_moveParentBehavior_detach":                       { "message": "Liberate All Children from the tree" },
+
+  "config_warnOnCloseTabs_label": { "message": "Warn me when I attempt to close multiple tabs" },
+  "config_warnOnCloseTabsByClosebox_label": { "message": "Warn me when I attempt to close multiple tabs by a normal click on a closebox" },
+  "config_warnOnCloseTabsWithListing_label": { "message": "List closing tabs in the confirmation dialog" },
+
+  "config_insertNewChildAt_caption": { "message": "Insertion position of new child tabs" },
+  "config_insertNewChildAt_noControl": { "message": "No control (respect the decision by Firefox or other tab addons)" },
+  "config_insertNewChildAt_nextToLastRelateTab": { "message": "Next to the recently opened child, or next to the parent (simulates Firefox's  default behavior)" },
+  "config_insertNewChildAt_top": { "message": "The top of the tree (next to the parent)" },
+  "config_insertNewChildAt_end": { "message": "The end of the tree" },
+
+
+  "config_drag_caption": { "message": "Drag and Drop" },
+
+  "config_tabDragBehavior_caption":       { "message": "When a parent tab is dragged from the sidebar" },
+  "config_tabDragBehavior_description":   { "message": "Due to Firefox's restrictions, you need to decide it when you start dragging: how tabs are treated on dropped outside of TST's sidebar." },
+  "config_tabDragBehavior_label":         { "message": "Drag" },
+  "config_tabDragBehaviorShift_label":    { "message": "Shift-Drag" },
+  "config_tabDragBehavior_label_behaviorInsideSidebar":  { "message": "Behavior for Dropping Inside Sidebar" },
+  "config_tabDragBehavior_label_behaviorOutsideSidebar": { "message": "Behavior for Dropping Outside Sidebar" },
+  "config_tabDragBehavior_moveEntireTreeAlways":         { "message": "Move Entire Tree always" },
+  "config_tabDragBehavior_detachEntireTreeAlways":       { "message": "Detach Entire Tree always from the window (but impossible to create bookmarks)" },
+  "config_tabDragBehavior_bookmarkEntireTreeAlways":     { "message": "Create links or bookmarks from Entire Tree always (but impossible to detach from the window)" },
+  "config_tabDragBehavior_moveSoloTabIfExpanded":        { "message": "Move Solo Tab if expanded or Entire Tree if collapsed" },
+  "config_tabDragBehavior_detachSoloTabIfExpanded":      { "message": "Detach Solo Tab if expanded or Entire Tree if collapsed, from the window (but impossible to create bookmark)" },
+  "config_tabDragBehavior_bookmarkSoloTabIfExpanded":    { "message": "Create link or bookmark from Solo Tab if expanded or Entire Tree if collapsed (but impossible to detach from the window)" },
+  "config_tabDragBehavior_doNothing":                    { "message": "Do nothing" },
+  "config_tabDragBehavior_noteForDragstartOutsideSidebar": { "message": "When a parent tabs is dragged from Firefox's native tab bar, it will behave according to the section \"Tree Behavior\" => \"When a parent tab is Closed or Moved\"." },
+  "config_showTabDragBehaviorNotification_label": { "message": "Show notification about what will happen on tabs dropped outside the sidebar, while tab dragging." },
+
+  "config_dropLinksOnTabBehavior_caption": { "message": "When a link or URL string is dropped on a tab" },
+  "config_dropLinksOnTabBehavior_ask":     { "message": "Always ask me how to treat it" },
+  "config_dropLinksOnTabBehavior_load":    { "message": "Load to the tab" },
+  "config_dropLinksOnTabBehavior_newtab":  { "message": "Open new child tab" },
+
+  "config_insertDroppedTabsAt_caption": { "message": "Insertion position of children dropped onto a parent" },
+  "config_insertDroppedTabsAt_inherit": { "message": "Treat same as new children opened from the parent" },
+  "config_insertDroppedTabsAt_first": { "message": "The top of the tree (next to the parent)" },
+  "config_insertDroppedTabsAt_end": { "message": "The end of the tree" },
+
+  "config_autoExpandOnLongHoverDelay_before":  { "message": "Expand collapsed tree with hovering over " },
+  "config_autoExpandOnLongHoverDelay_after":  { "message": "msec while dragging" },
+  "config_autoExpandOnLongHoverRestoreIniitalState_label":  { "message": "Collapse such trees automatically after a drag action is finished" },
+  "config_autoExpandIntelligently_label":  { "message": "Collapse other trees when collapsed tree is auto-expanded" },
+  "config_ignoreTabDropNearSidebarArea_label":  { "message": "Don't detach tab from window if it is dropped near the sidebar area (recommended to uncheck this if you use \"privacy.resistFingerprinting\"=\"true\")" },
+
+
+  "config_more_caption": { "message": "More..." },
+
+  "config_shortcuts_caption": { "message": "Keyboard shortcuts" },
+
+  "config_requestPermissions_allUrls_ctrlTabTracking":   { "message": "Don't expand collapsed tree and skip collapsed descendants, while switching focus of tabs via keyboard shortcuts. (*You need to allow executing scripts on webpages.)" },
+  "config_autoExpandOnTabSwitchingShortcutsDelay_before": { "message": "Expand active collapsed tree when the Tab key is pressed over " },
+  "config_autoExpandOnTabSwitchingShortcutsDelay_after": { "message": "msec" },
+  "config_accelKey_label":   { "message": "Accelerator key for keyboard shortcuts (*You need to match this to the config \"ui.key.accelKey\"):" },
+  "config_accelKey_auto":    { "message": "Default (macOS=⌘, others=Ctrl)" },
+  "config_accelKey_alt":     { "message": "Alt" },
+  "config_accelKey_control": { "message": "Ctrl/Control" },
+  "config_accelKey_meta":    { "message": "Meta/⌘" },
+
+  "config_shortcuts_resetAll": { "message": "Reset All Shortcuts" },
+
+
+  "config_advanced_caption": { "message": "Advanced" },
+
+  "config_bookmarkTreeFolderName_before": { "message": "Folder name for \"Bookmark this Tree\":" },
+  "config_bookmarkTreeFolderName_after": { "message": "\u200b" },
+  "config_bookmarkTreeFolderName_description": { "message": "Available placeholders: %TITLE% (title of the first tab), %URL% (URL of the first tab), %YEAR% (year, four digits), %SHORT_YEAR% (year, two digits), %MONTH% (month, two digits), %DATE% (date, two digits)" },
+
+  "config_defaultBookmarkParentId_label_before":  { "message": "Create new bookmarks under" },
+  "config_defaultBookmarkParentId_label_after":   { "message": "\u200b" },
+
+  "config_supportTabsMultiselect_label": { "message": "Use tab multiselection API to control tab focus (*depends on a built-in preference \"browser.tabs.multiselect\"=\"true\" of Firefox itself)" },
+
+  "config_undoMultipleTabsClose_label": { "message": "Restore the set of tabs most recently closed, when one of them is restored via the \"Reopen Closed Tab\" command" },
+
+  "config_scrollLines_label_before": { "message": "Scroll up or down " },
+  "config_scrollLines_label_after":  { "message": "lines via \"Scroll Tabs Up/Down by Lines\" shortcut commands" },
+
+  "config_userStyleRules_label": { "message": "Extra style rules for contents provided by Tree Style Tab" },
+  "config_userStyleRules_description_before": { "message": "For more options, see " },
+  "config_userStyleRules_description_link_label": { "message": "code snippets at TST wiki" },
+  "config_userStyleRules_description_after": { "message": " also." },
+  "config_userStyleRules_description_link_uri": { "message": "https://github.com/piroor/treestyletab/wiki/Code-snippets-for-custom-style-rules#for-version-2x" },
+  "config_userStyleRules_themeRules_description": { "message": "Following custom properties are also available via \"var()\", based on the current browser theme:" },
+  "config_userStyleRules_themeRules_description_alphaVariations": { "message": "You can change the opacity of the color with a number suffix like \"--theme-colors-tab_background_text-30\" per 10% (for example, this case means 30% opacity.)" },
+  "config_userStyleRules_import": { "message": "Load from File" },
+  "config_userStyleRules_export": { "message": "Save as File" },
+  "config_userStyleRules_overwrite_title":     { "message": "Replace current style rules?" },
+  "config_userStyleRules_overwrite_message":   { "message": "Do you want the current style rules to be replaced with the loaded file completely?" },
+  "config_userStyleRules_overwrite_overwrite": { "message": "Replace All" },
+  "config_userStyleRules_overwrite_append":    { "message": "Append to the last" },
+  "config_tooLargeUserStyleRulesCaution": { "message": "Too long style rules! Please shorten more." },
+  "config_userStyleRulesTheme_label":     { "message": "Theme:" },
+  "config_userStyleRulesTheme_auto":      { "message": "Auto" },
+  "config_userStyleRulesTheme_separator": { "message": "-----------------" },
+  "config_userStyleRulesTheme_default":   { "message": "Default" },
+
+
+  "config_addons_caption": { "message": "Extra Features via Other Addons" },
+
+  "config_addons_description_before": { "message": "There are " },
+  "config_addons_description_link_label": { "message": "addons which extend TST itself" },
+  "config_addons_description_after": { "message": ". Check them out if you need more features on TST's sidebar." },
+  "helper_addons_list_link_uri": { "message": "https://github.com/piroor/treestyletab/blob/master/README.md#extensions-that-extend-tst" },
+
+  "config_theme_description_before": { "message": "Currently there are available built-in themes only \"Plain\", \"Sidebar\" and \"High Contrast\". If you want to use non-built-in theme, see " },
+  "config_theme_description_link_label": { "message": "the code snippets" },
+  "config_theme_description_after": { "message": " for examples." },
+  "helper_theme_list_link_uri": { "message": "https://github.com/piroor/treestyletab/wiki/Code-snippets-for-custom-style-rules#restore-old-built-in-themes" },
+
+  "config_externaladdonpermissions_label": { "message": "Permissions for API Call from Other Addons" },
+  "config_externaladdonpermissions_description": { "message": "Addons allowed here may access detailed tab data or tabs in private windows, <em>through Tree Style Tab's permissions</em>, even if the addon ifself is forbidden by Firefox to access them. <em>Please don't give permission for addons if you cannot trust them.</em>" },
+  "config_externalAddonPermissions_header_name": { "message": "Addon Name" },
+  "config_externalAddonPermissions_header_permissions": { "message": "Allowed Special Operations" },
+  "config_externalAddonPermissions_header_incognito": { "message": "Notify Messages from Private Windows" },
+
+  "addon_containerBookmarks_label": { "message": "Container Bookmarks" },
+  "addon_containerBookmarks_uri": { "message": "https://addons.mozilla.org/firefox/addon/container-bookmarks/" },
+  "config_containerRedirectKey_label": { "message": "Redirect Key (*Please set a value same to the one in the addon's options page):" },
+
+
+  "config_debug_caption": { "message": "Development" },
+
+  "config_link_startupPage_label": { "message": "Page for Initial Startup" },
+  "config_link_groupPage_label":   { "message": "Page for Group Tab" },
+  "config_link_tabbarPage_label":   { "message": "Page for Tab Bar" },
+
+  "config_runTests_label": { "message": "Run Automated Tests" },
+  "config_runBenchmark_label": { "message": "Run Benchmark" },
+  "config_enableLinuxBehaviors_label": { "message": "Activate Linux specific behaviors" },
+  "config_enableMacOSBehaviors_label": { "message": "Activate macOS specific behaviors" },
+  "config_enableWindowsBehaviors_label": { "message": "Activate Windows specific behaviors" },
+  "config_debug_label": { "message": "Debug mode" },
+  "config_log_caption":               { "message": "Detailed logging" },
+  "config_logTimestamp_label": { "message": "Log with timestamp" },
+  "config_logFor_common":     { "message": "Logs from common modules" },
+  "config_logFor_background": { "message": "Logs from background modules" },
+  "config_logFor_sidebar":    { "message": "Logs from sidebar modules" },
+  "config_loggingQueries_label": { "message": "Log querying of tabs" },
+  "config_loggingConnectionMessages_label": { "message": "Log internal messages" },
+  "config_showLogsButton_label": { "message": "Show Logs" },
+  "config_simulateSVGContextFill_label": { "message": "Activate workaround for the Bug 1388193 and Bug 1421329 to simulate SVG icons (*This may increase CPU usage. To deactivate this option, you need to activate \"svg.context-properties.content.enabled\" via \"about:config\", until these bugs are fixed.)" },
+  "config_staticARIALabel_label": { "message": "Use static ARIA label for tab elements" },
+  "config_staticARIALabel_description": { "message": "*Please try checking this if your speech recognition system misses tab elements after some tab operations." },
+  "config_useCachedTree_label": { "message": "Optimize tree restoration with cache" },
+  "config_useCachedTree_description": { "message": "*Please try unchecking and re-checking this to refresh the cache, when the behavior around tree is unstable." },
+  "config_acceleratedTabCreation_label": { "message": "Accelerate operations around newly opened tabs (*NOTE: You'll see unstable behavior around tabs.)" },
+  "config_maximumAcceptableDelayForTabDuplication_before": { "message": "Abort tab duplication when it takes" },
+  "config_maximumAcceptableDelayForTabDuplication_after": { "message": "milliseconds or more." },
+  "config_delayForDuplicatedTabDetection_label_before": { "message": "Delay to detect duplicated tabs:" },
+  "config_delayForDuplicatedTabDetection_label_after": { "message": "msec (please increase this if duplicated tabs are not detected correctly)" },
+  "config_delayForDuplicatedTabDetection_autoDetect": { "message": "Auto detect" },
+  "config_delayForDuplicatedTabDetection_test": { "message": "Test detection" },
+  "config_delayForDuplicatedTabDetection_test_resultMessage": { "message": "$PERCENTAGE$% successfully detected.",
+    "placeholders": {
+      "percentage": { "content": "$1", "example": "50" }
+    }},
+  "config_labelOverflowStyle_caption": { "message": "Too long label of tabs:" },
+  "config_labelOverflowStyle_fade":    { "message": "Fade Out (Better Visibility)" },
+  "config_labelOverflowStyle_crop":    { "message": "Crop with \"..\" (Better Performance)" },
+
+  "config_requestPermissions_bookmarks": { "message": "Allow to read and create bookmarks" },
+  "config_requestPermissions_bookmarks_context": { "message": "Allow to open the context menu on bookmarks" },
+  "config_requestPermissions_tabHide":   { "message": "Allow to show/hide individual tabs (*You must uncheck and re-check this before running tests, to ensure the permission is truly granted.)" },
+
+  "config_requestPermissions_fallbackToToolbarButton_title": { "message": "Click the \"Tree Style Tab\" toolbar button" },
+  "config_requestPermissions_fallbackToToolbarButton_message": { "message": "Due to Firefox's bug, you cannot request permission from this screen. Please click the \"Tree Style Tab\" toolbar button to grant permissions." },
+
+  "config_all_caption": { "message": "All Configs" },
+
+  "config_terms_delimiter": { "message": " " },
+
+
+  "tabContextMenu_newTab_label":      { "message": "Ne&w Tab" },
+
+  "tabContextMenu_reload_label":      { "message": "&Reload Tab" },
+  "tabContextMenu_mute_label":        { "message": "&Mute Tab" },
+  "tabContextMenu_unmute_label":      { "message": "Un&mute Tab" },
+
+  "tabContextMenu_pin_label":         { "message": "&Pin Tab" },
+  "tabContextMenu_unpin_label":       { "message": "Un&pin Tab" },
+  "tabContextMenu_duplicate_label":   { "message": "&Duplicate Tab" },
+  "tabContextMenu_selectAllTabs_label": { "message": "&Select All Tabs" },
+  "tabContextMenu_bookmark_label":    { "message": "&Bookmark Tab" },
+  "tabContextMenu_reopenInContainer_label":             { "message": "Op&en in New Container Tab" },
+  "tabContextMenu_reopenInContainer_noContainer_label": { "message": "&No Container" },
+  "tabContextMenu_moveTab_label":     { "message": "Mo&ve Tab" },
+  "tabContextMenu_moveTabToStart_label": { "message": "Move to &Start" },
+  "tabContextMenu_moveTabToEnd_label":   { "message": "Move to &End" },
+  "tabContextMenu_tearOff_label":     { "message": "Move to New &Window" },
+  "tabContextMenu_sendTabsToDevice_label": { "message": "Se&nd Tab to Device" },
+  "tabContextMenu_sendTabsToAllDevices_label": { "message": "Send to All Devices" },
+  "tabContextMenu_manageSyncDevices_label": { "message": "Manage Devices…" },
+  "tabContextMenu_shareTabURL_label":   { "message": "S&hare" },
+
+
+  "tabContextMenu_closeMultipleTabs_label":  { "message": "Close &Multiple Tabs" },
+  "tabContextMenu_closeTabsToTop_label":  { "message": "Close Tabs to the &Top" },
+  "tabContextMenu_closeTabsToBottom_label":  { "message": "Close Tabs to the &Bottom" },
+  "tabContextMenu_closeOther_label":  { "message": "Cl&ose Other Tabs" },
+
+  "tabContextMenu_undoClose_label":   { "message": "Re&open Closed Tab" },
+  "tabContextMenu_undoClose_label_multiple": { "message": "Re&open Closed Tabs" },
+  "tabContextMenu_close_label":       { "message": "&Close Tab" },
+
+  "tabContextMenu_reload_label_multiselected":      { "message": "&Reload Tabs" },
+  "tabContextMenu_mute_label_multiselected":        { "message": "&Mute Tabs" },
+  "tabContextMenu_unmute_label_multiselected":      { "message": "Un&mute Tabs" },
+
+  "tabContextMenu_pin_label_multiselected":         { "message": "&Pin Tabs" },
+  "tabContextMenu_unpin_label_multiselected":       { "message": "Un&pin Tabs" },
+
+  "tabContextMenu_duplicate_label_multiselected":   { "message": "&Duplicate Tabs" },
+
+  "tabContextMenu_moveTab_label_multiselected": { "message": "Mo&ve Tabs" },
+  "tabContextMenu_sendTabsToDevice_label_multiselected": { "message": "Se&nd %S Tabs to Device" },
+
+  "tabContextMenu_bookmark_label_multiselected": { "message": "&Bookmark Tabs…" },
+  "tabContextMenu_bookmarkSelected_label":       { "message": "Bookmark Selected &Tabs…" },
+
+  "tabContextMenu_close_label_multiselected":       { "message": "Close &Selected Tabs" }
+}

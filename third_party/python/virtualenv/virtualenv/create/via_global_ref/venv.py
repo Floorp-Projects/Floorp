@@ -10,6 +10,7 @@ from virtualenv.util.path import ensure_dir
 from virtualenv.util.subprocess import run_cmd
 
 from .api import ViaGlobalRefApi, ViaGlobalRefMeta
+from .builtin.pypy.pypy3 import Pypy3Windows
 
 
 class Venv(ViaGlobalRefApi):
@@ -41,6 +42,18 @@ class Venv(ViaGlobalRefApi):
         for lib in self.libs:
             ensure_dir(lib)
         super(Venv, self).create()
+        self.executables_for_win_pypy_less_v37()
+
+    def executables_for_win_pypy_less_v37(self):
+        """
+        PyPy <= 3.6 (v7.3.3) for Windows contains only pypy3.exe and pypy3w.exe
+        Venv does not handle non-existing exe sources, e.g. python.exe, so this
+        patch does it.
+        """
+        creator = self.describe
+        if isinstance(creator, Pypy3Windows) and creator.less_v37:
+            for exe in creator.executables(self.interpreter):
+                exe.run(creator, self.symlinks)
 
     def create_inline(self):
         from venv import EnvBuilder

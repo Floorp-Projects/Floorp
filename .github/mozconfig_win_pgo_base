@@ -1,0 +1,42 @@
+export CFLAGS="-Wno-int-conversion"
+export RUSTC="$RUNNER_USERDIR/win-crosstool/rustc/bin/rustc"
+
+ac_add_options --with-app-name=floorp
+ac_add_options --with-app-basename=Floorp
+ac_add_options --disable-crashreporter
+ac_add_options --disable-maintenance-service
+ac_add_options --enable-proxy-bypass-protection
+ac_add_options --disable-verify-mar
+ac_add_options --enable-update-channel=release
+ac_add_options --enable-optimize="-O2 -Qvec -w -clang:-ftree-vectorize -clang:-msse3 -clang:-mssse3 -clang:-msse4.1 -clang:-mtune=haswell"
+ac_add_options --disable-tests
+ac_add_options --enable-rust-simd
+ac_add_options --enable-release
+ac_add_options RUSTC_OPT_LEVEL=3
+MOZ_REQUIRE_SIGNING=
+MOZ_DATA_REPORTING=
+MOZ_TELEMETRY_REPORTING=
+
+ac_add_options --enable-bootstrap
+
+ac_add_options --with-mozilla-api-keyfile="$PWD/floorp/apis/api-mozilla-key"
+ac_add_options --with-google-location-service-api-keyfile="$PWD/floorp/apis/api-google-location-service-key"
+ac_add_options --with-google-safebrowsing-api-keyfile="$PWD/floorp/apis/api-google-safe-browsing-key"
+
+export WINDOWSSDKDIR="$RUNNER_USERDIR/win-crosstool/vs2017/windows kits/10"
+export WIN32_REDIST_DIR="$RUNNER_USERDIR/win-crosstool/vs2017/vc/redist/msvc/${WIN32_REDIST_VERSION}/x64/microsoft.vc141.crt/"
+export WIN_UCRT_REDIST_DIR="${WINDOWSSDKDIR}/redist/ucrt/dlls/x64"
+export DIA_SDK_PATH="$RUNNER_USERDIR/win-crosstool/vs2017/dia sdk"
+
+export MIDL="$RUNNER_USERDIR/win-crosstool/wine/bin/widl"
+export WINE="$RUNNER_USERDIR/win-crosstool/wine/bin/wine64"
+export WINEDEBUG=-all
+
+mk_add_options "export LD_PRELOAD=$RUNNER_USERDIR/win-crosstool/liblowercase/liblowercase.so"
+mk_add_options "export LOWERCASE_DIRS=$RUNNER_USERDIR/win-crosstool"
+
+ac_add_options --target=x86_64-pc-mingw32
+
+export MOZ_STUB_INSTALLER=1
+
+export MOZ_LTO=cross

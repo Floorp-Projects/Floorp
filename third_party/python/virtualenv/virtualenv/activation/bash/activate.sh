@@ -63,7 +63,7 @@ fi
 if [ -z "${VIRTUAL_ENV_DISABLE_PROMPT-}" ] ; then
     _OLD_VIRTUAL_PS1="${PS1-}"
     if [ "x__VIRTUAL_PROMPT__" != x ] ; then
-        PS1="__VIRTUAL_PROMPT__${PS1-}"
+        PS1="(__VIRTUAL_PROMPT__) ${PS1-}"
     else
         PS1="(`basename \"$VIRTUAL_ENV\"`) ${PS1-}"
     fi

@@ -27,3 +27,5 @@ if CONFIG["OS_TARGET"] == "WINNT" and CONFIG["CC_TYPE"] in ("gcc", "clang"):
     LDFLAGS += [
         "-municode",
     ]
+
+XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell.ini"]

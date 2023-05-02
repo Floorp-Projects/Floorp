@@ -1,0 +1,28 @@
+{
+  "name": "네이버",
+  "description": "네이버 검색",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "naver-kr@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "네이버",
+      "search_url": "https://search.naver.com/search.naver",
+      "search_form": "https://search.naver.com",
+      "search_url_get_params": "where=nexearch&frm=ff&sm=oss&ie=utf8&query={searchTerms}",
+      "suggest_url": "https://ac.search.naver.com/nx/ac",
+      "suggest_url_get_params": "of=os&ie=utf-8&q={searchTerms}"
+    }
+  }
+}

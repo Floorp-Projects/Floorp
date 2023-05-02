@@ -1,0 +1,119 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  --memo-list-sidebar-width: 250px;
+  --main-content-padding-to-sidebar: 25px;
+  font: message-box;
+  appearance: none;
+  background-color: var(--in-content-page-background);
+  color: var(--in-content-page-color);
+}
+
+body, html {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  overflow: hidden !important;
+  flex-direction: unset !important;
+  box-sizing: unset !important;
+  padding: 0 !important;
+  align-items: unset !important;
+  justify-content: unset !important;
+}
+
+#memo-title-input {
+   display: inherit;
+   width: 18em;
+   margin-bottom: 25px;
+}
+
+#memo-contents{
+   padding-left: var(--main-content-padding-to-sidebar);
+   width: 90%;
+}
+
+.memo-list-item {
+   margin: 0px;
+   border-bottom: solid 1px gray;
+   padding: 15px;
+   text-align: left;
+}
+
+#memo-lists-sidebar {
+   width: var(--memo-list-sidebar-width);
+   min-width: var(--memo-list-sidebar-width);
+   height: 100%;
+   display: inline;
+}
+
+#header-box {
+   display: flex;
+   border-bottom: solid 1px gray;
+}
+
+#memo-input {
+   min-width: 25vh;
+   height: 40vh;
+   resize: none;
+   max-width: 100%;
+   width: 85%;
+}
+
+#memo-list {
+   overflow: scroll;
+   max-height: 20em;
+}
+
+#memo-add {
+   margin: 0 auto;
+   margin-top: 10px;
+}
+
+#button-box {
+   padding-bottom: 0px;
+   padding-top: 10px;
+   margin-left: auto;
+}
+
+#memo-input-box {
+   display: flex;
+}
+
+#memo-delete {
+   background-image: url("chrome://global/skin/icons/delete.svg");
+   padding-inline-start: 30px;
+   background-repeat: no-repeat;
+   background-position: 8px;
+   -moz-context-properties: fill;
+   fill: currentColor;
+   min-width: auto;
+   flex: 0 0 auto;
+   height: 2.5em;
+   display: block;
+   margin-left: auto;
+}
+
+#titleAndDelete {
+   display: flex;
+}
+
+#memo-form {
+   margin-top: 2em;
+}
+
+#memo-save {
+   height: 2.5em;
+   margin-top: auto;
+}
+
+#beta {
+   margin: auto 10px 10px;
+   font-style: italic;
+   color: gray;
+}
+
+#title-box {
+   display: flex;
+}

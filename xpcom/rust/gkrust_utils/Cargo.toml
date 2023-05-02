@@ -4,5 +4,5 @@ version = "0.1.0"
 authors = ["Jonathan Kingston <jkt@mozilla.com>"]
 
 [dependencies]
-semver = "0.9"
+semver = "1.0"
 nsstring = { path = "../nsstring" }
