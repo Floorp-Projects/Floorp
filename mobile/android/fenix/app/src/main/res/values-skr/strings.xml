@@ -298,6 +298,13 @@
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">فائرفوکس کوں آپݨاں ون٘ڄݨ آلا براؤزر بݨاؤ</string>
+    <!-- Description for set firefox as default browser screen.
+        The first parameter is the Firefox brand name.
+        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
+    <string name="juno_onboarding_default_browser_description">%1$s لوکاں کوں منافع  کنوں ودھ رکھیندا ہے تے  کراس سائٹ ٹریکراں کوں بلاک کر تے تہاݙی رازداری دا دفاع کریند ہے۔\n\nساݙے %2$s وچ ٻیا ڄاݨو۔</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">فائرفوکس لوکاں کوں منافع  کنوں ودھ رکھیندا ہے تے  کراس سائٹ ٹریکراں کوں بلاک کر تے تہاݙی رازداری دا دفاع کریند ہے۔\n\nساݙے رازداری نوٹس وچ ٻیا ڄاݨو۔</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text">رازداری نوٹس</string>
@@ -319,6 +326,12 @@
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">اطلاع نامے فائرفوکس نال ودھیک کرݨ وچ تہاݙی مدد کریندن۔</string>
+    <!-- Description for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_description">ڈیوائساں دے درمیان ٹیباں بھیڄو، ڈاؤن لوڈ منیج کرو، تے %s کنوں ودھ کنوں ودھ فائدہ چاوݨ کیتے گُر گھنو۔</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated   -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">ڈیوائساں دے درمیان ٹیباں بھیڄو، ڈاؤن لوڈ منیج کرو، تے فائرفوکس کنوں ودھ کنوں ودھ فائدہ چاوݨ کیتے گُر گھنو۔</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button">اطلاع نامے چالو کرو</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -1495,6 +1508,8 @@
     <string name="preference_enhanced_tracking_protection">بہتر ٹریکنگ حفاظت</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">بغیر فالو تھئے براؤز کرو</string>
+    <!-- Preference summary for enhanced tracking protection settings on/off switch -->
+    <string name="preference_enhanced_tracking_protection_summary">ہݨ پوری کوکی حفاظت دی خاصیت، کراس سائٹ ٹریکراں دے خلاف ساݙی سب کنوں تکڑی رکاوٹ۔</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">آپݨاں ڈیٹا آپݨے کول رکھو۔ %s تہاکوں ٻہوں سارے ݙاڈھے عام ٹریکراں کنوں بچیندے، جہڑے  تہاݙے آن لائن کم کوں فالو کریندن۔</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
@@ -1513,6 +1528,8 @@
     <string name="preference_enhanced_tracking_protection_strict">سخت</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">ورقیاں کوں تکھیرا لوڈ کرݨ سانگے ٻئے ٹریکراں کوں بلاک کریندے، پر ورقے تے کجھ فعالت ترٹ سڳدی ہے۔</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_4">مظبوط ٹریکنگ تحفظ تے تکھیری کارکردگی، پر کجھ سائٹاں ٹھیک کم کائناں کریسن۔</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">سخت ٹریکنگ تحفظ نال کیا بلاک ہے</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
