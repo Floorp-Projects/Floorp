@@ -206,6 +206,7 @@ class Tab extends PureComponent {
     const className = classnames("source-tab", {
       active,
       pretty: isPrettyCode,
+      blackboxed: this.props.isBlackBoxed,
     });
 
     const path = getDisplayPath(source, tabSources);
