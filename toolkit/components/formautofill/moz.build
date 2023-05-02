@@ -9,6 +9,10 @@ JAR_MANIFESTS += ["jar.mn"]
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Form Autofill")
 
+EXTRA_JS_MODULES.shared += [
+    "shared/LabelUtils.sys.mjs",
+]
+
 EXPORTS.mozilla += ["FormAutofillNative.h"]
 
 UNIFIED_SOURCES += ["FormAutofillNative.cpp"]

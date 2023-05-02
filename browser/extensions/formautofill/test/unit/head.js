@@ -222,12 +222,11 @@ async function runHeuristicsTest(patterns, fixturePathPrefix) {
     ({ FormAutofillHeuristics } = ChromeUtils.importESModule(
       "resource://autofill/FormAutofillHeuristics.sys.mjs"
     ));
-    ({
-      AddressDataLoader,
-      FormAutofillUtils,
-      LabelUtils,
-    } = ChromeUtils.importESModule(
+    ({ AddressDataLoader, FormAutofillUtils } = ChromeUtils.importESModule(
       "resource://autofill/FormAutofillUtils.sys.mjs"
+    ));
+    ({ LabelUtils } = ChromeUtils.importESModule(
+      "resource://gre/modules/shared/LabelUtils.sys.mjs"
     ));
   });
 
