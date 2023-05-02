@@ -568,7 +568,6 @@ class ProviderWeather extends UrlbarProvider {
         this.logger.info("Dismissing weather result");
         lazy.UrlbarPrefs.set("suggest.weather", false);
         queryContext.view.controller.removeResult(result);
-        queryContext.view.acknowledgeDismissal(result);
         break;
       case RESULT_MENU_COMMAND.INACCURATE_LOCATION:
         // Currently the only way we record this feedback is in the Glean
