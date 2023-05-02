@@ -4,18 +4,12 @@
 
 package org.mozilla.fenix.tabstray
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.invisibleToUser
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
@@ -31,7 +25,6 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param onPrivateTabsFabClicked Invoked when the fab is clicked in [Page.PrivateTabs].
  * @param onSyncedTabsFabClicked Invoked when the fab is clicked in [Page.SyncedTabs].
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun TabsTrayFab(
     tabsTrayStore: TabsTrayStore,
@@ -81,22 +74,14 @@ fun TabsTrayFab(
         }
     }
 
-    Box(
-        Modifier
-            .fillMaxSize()
-            .semantics { invisibleToUser() },
-    ) {
-        if (isInNormalMode) {
-            FloatingActionButton(
-                icon = icon,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp),
-                contentDescription = contentDescription,
-                label = label,
-                onClick = onClick,
-            )
-        }
+    if (isInNormalMode) {
+        FloatingActionButton(
+            icon = icon,
+            modifier = Modifier.padding(bottom = 16.dp, end = 16.dp),
+            contentDescription = contentDescription,
+            label = label,
+            onClick = onClick,
+        )
     }
 }
 

@@ -298,6 +298,8 @@ class TabsTrayFragment : AppCompatDialogFragment() {
         _tabsTrayBinding = null
         _tabsTrayDialogBinding = null
         _fabButtonBinding = null
+        _tabsTrayComposeBinding = null
+        _fabButtonComposeBinding = null
     }
 
     @Suppress("LongMethod")
@@ -540,25 +542,31 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                 true -> getString(R.string.snackbar_private_tab_closed)
                 false -> getString(R.string.snackbar_tab_closed)
             }
+        val pagePosition = if (isPrivate) Page.PrivateTabs.ordinal else Page.NormalTabs.ordinal
 
-        if (!requireContext().settings().enableTabsTrayToCompose) {
-            lifecycleScope.allowUndo(
-                requireView(),
-                snackbarMessage,
-                getString(R.string.snackbar_deleted_undo),
-                {
-                    requireComponents.useCases.tabsUseCases.undo.invoke()
+        lifecycleScope.allowUndo(
+            view = requireView(),
+            message = snackbarMessage,
+            undoActionTitle = getString(R.string.snackbar_deleted_undo),
+            onCancel = {
+                requireComponents.useCases.tabsUseCases.undo.invoke()
+
+                if (requireContext().settings().enableTabsTrayToCompose) {
+                    tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.positionToPage(pagePosition)))
+                } else {
                     tabLayoutMediator.withFeature {
-                        it.selectTabAtPosition(
-                            if (isPrivate) Page.PrivateTabs.ordinal else Page.NormalTabs.ordinal,
-                        )
+                        it.selectTabAtPosition(pagePosition)
                     }
-                },
-                operation = { },
-                elevation = ELEVATION,
-                anchorView = if (fabButtonBinding.newTabButton.isVisible) fabButtonBinding.newTabButton else null,
-            )
-        }
+                }
+            },
+            operation = { },
+            elevation = ELEVATION,
+            anchorView = when {
+                requireContext().settings().enableTabsTrayToCompose -> fabButtonComposeBinding.root
+                fabButtonBinding.newTabButton.isVisible -> fabButtonBinding.newTabButton
+                else -> null
+            },
+        )
     }
 
     @VisibleForTesting
