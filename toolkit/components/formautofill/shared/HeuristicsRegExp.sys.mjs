@@ -3,16 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*
- * Form Autofill field Heuristics RegExp.
- */
-
-/* exported HeuristicsRegExp */
-
-"use strict";
-
-// prettier-ignore
-var HeuristicsRegExp = {
+export const HeuristicsRegExp = {
   RULES: {
     email: undefined,
     tel: undefined,
@@ -49,19 +40,11 @@ var HeuristicsRegExp = {
       "address-line3": "addrline3|address_3",
       "address-level1": "land", // de-DE
       "additional-name": "apellido.?materno|lastlastname",
-      "cc-name":
-        "accountholdername" + 
-        "|titulaire", // fr-FR
+      "cc-name": "accountholdername" + "|titulaire", // fr-FR
       "cc-number": "(cc|kk)nr", // de-DE
-      "cc-exp-month":
-        "month" + 
-        "|(cc|kk)month", // de-DE
-      "cc-exp-year":
-        "year" + 
-        "|(cc|kk)year", // de-DE
-      "cc-type":
-        "type" + 
-        "|kartenmarke", // de-DE
+      "cc-exp-month": "month" + "|(cc|kk)month", // de-DE
+      "cc-exp-year": "year" + "|(cc|kk)year", // de-DE
+      "cc-type": "type" + "|kartenmarke", // de-DE
     },
 
     //=========================================================================
@@ -351,7 +334,11 @@ var HeuristicsRegExp = {
       // ==== Address Fields ====
       organization:
         "company|business|organization|organisation" +
-        "|(?<!con)firma|firmenname" + // de-DE
+        // In order to support webkit we convert all negative lookbehinds to a capture group
+        // (?<!not)word -> (?<neg>notword)|word
+        // TODO: Bug 1829583
+        "|(?<neg>confirma)" +
+        "|firma|firmenname" + // de-DE
         "|empresa" + // es
         "|societe|société" + // fr-FR
         "|ragione.?sociale" + // it-IT
@@ -362,7 +349,6 @@ var HeuristicsRegExp = {
         "|회사|직장", // ko-KR
 
       "street-address": "streetaddress|street-address",
-
       "address-line1":
         "^address$|address[_-]?line(one)?|address1|addr1|street" +
         "|(?:shipping|billing)address$" +
@@ -372,7 +358,12 @@ var HeuristicsRegExp = {
         "|adresse" + // fr-FR
         "|indirizzo" + // it-IT
         "|^住所$|住所1" + // ja-JP
-        "|morada|((?<!identificação do )endereço)" + // pt-BR, pt-PT
+        "|morada" + // pt-BR, pt-PT
+        // In order to support webkit we convert all negative lookbehinds to a capture group
+        // (?<!not)word -> (?<neg>notword)|word
+        // TODO: Bug 1829583
+        "|(?<neg>identificação do endereço)" +
+        "|(endereço)" + // pt-BR, pt-PT
         "|Адрес" + // ru
         "|地址" + // zh-CN
         "|(\\b|_)adres(?! (başlığı(nız)?|tarifi))(\\b|_)" + // tr
@@ -422,8 +413,12 @@ var HeuristicsRegExp = {
         "|^시[^도·・]|시[·・]?군[·・]?구", // ko-KR
 
       "address-level1":
-        "(?<!(united|hist|history).?)state|county|region|province" +
-        "|county|principality" + // en-UK
+        // In order to support webkit we convert all negative lookbehinds to a capture group
+        // (?<!not)word -> (?<neg>notword)|word
+        // TODO: Bug 1829583
+        "(?<neg>united?.state|hist?.state|history?.state)" +
+        "|state|county|region|province" +
+        "|principality" + // en-UK
         "|都道府県" + // ja-JP
         "|estado|provincia" + // pt-BR, pt-PT
         "|область" + // ru
@@ -456,7 +451,11 @@ var HeuristicsRegExp = {
         "country|countries" +
         "|país|pais" + // es
         "|(\\b|_)land(\\b|_)(?!.*(mark.*))" + // de-DE landmark is a type in india.
-        "|(?<!(入|出))国" + // ja-JP
+        // In order to support webkit we convert all negative lookbehinds to a capture group
+        // (?<!not)word -> (?<neg>notword)|word
+        // TODO: Bug 1829583
+        "|(?<neg>入国|出国)" +
+        "|国" + // ja-JP
         "|国家" + // zh-CN
         "|국가|나라" + // ko-KR
         "|(\\b|_)(ülke|ulce|ulke)(\\b|_)" + // tr
@@ -524,7 +523,11 @@ var HeuristicsRegExp = {
       // order to handle specialization through ordering.
       "cc-number":
         "(add)?(?:card|cc|acct).?(?:number|#|no|num|field)" +
-        "|(?<!telefon|haus|person|fødsels)nummer" + // de-DE, sv-SE, no
+        // In order to support webkit we convert all negative lookbehinds to a capture group
+        // (?<!not)word -> (?<neg>notword)|word
+        // TODO: Bug 1829583
+        "|(?<neg>telefonnummer|hausnummer|personnummer|fødselsnummer)" + // de-DE, sv-SE, no
+        "|nummer" +
         "|カード番号" + // ja-JP
         "|Номер.*карты" + // ru
         "|信用卡号|信用卡号码" + // zh-CN
@@ -579,13 +582,13 @@ var HeuristicsRegExp = {
       }
     });
 
-    const value = new RegExp(rules.join("|"), "u");
+    const value = new RegExp(rules.join("|"), "gu");
     Object.defineProperty(this.RULES, name, { get: undefined });
     Object.defineProperty(this.RULES, name, { value });
     return value;
   },
 
-  init() {
+  getRules() {
     Object.keys(this.RULES).forEach(field =>
       Object.defineProperty(this.RULES, field, {
         get() {
@@ -593,7 +596,9 @@ var HeuristicsRegExp = {
         },
       })
     );
+
+    return this.RULES;
   },
 };
 
-HeuristicsRegExp.init();
+export default HeuristicsRegExp;

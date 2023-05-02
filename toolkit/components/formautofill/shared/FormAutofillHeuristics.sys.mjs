@@ -2,9 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*
- * Form Autofill field heuristics.
- */
 import { creditCardRulesets } from "resource://gre/modules/shared/CreditCardRuleset.sys.mjs";
 import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
 import { LabelUtils } from "resource://gre/modules/shared/LabelUtils.sys.mjs";
@@ -12,12 +9,13 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { FieldScanner } from "resource://gre/modules/shared/FieldScanner.sys.mjs";
 import { CreditCard } from "resource://gre/modules/CreditCard.sys.mjs";
 import { FormAutofillUtils } from "resource://gre/modules/shared/FormAutofillUtils.sys.mjs";
+import { HeuristicsRegExp } from "resource://gre/modules/shared/HeuristicsRegExp.sys.mjs";
 
 /**
  * Returns the autocomplete information of fields according to heuristics.
  */
 export const FormAutofillHeuristics = {
-  RULES: null,
+  RULES: HeuristicsRegExp.getRules(),
 
   CREDIT_CARD_FIELDNAMES: [],
   ADDRESS_FIELDNAMES: [],
@@ -648,6 +646,28 @@ export const FormAutofillHeuristics = {
     };
   },
 
+  // In order to support webkit we need to avoid usage of negative lookbehind due to low support
+  // First safari version with support is 16.4 (Release Date: 27th March 2023)
+  // https://caniuse.com/js-regexp-lookbehind
+  // We can mimic the behaviour of negative lookbehinds by using a named capture group
+  // (?<!not)word -> (?<neg>notword)|word
+  // TODO: Bug 1829583
+  testRegex(regex, string) {
+    const matches = string?.matchAll(regex);
+    if (!matches) {
+      return false;
+    }
+
+    const excludeNegativeCaptureGroups = [];
+
+    for (const match of matches) {
+      excludeNegativeCaptureGroups.push(
+        ...match.filter(m => m !== match?.groups?.neg).filter(Boolean)
+      );
+    }
+    return excludeNegativeCaptureGroups?.length > 0;
+  },
+
   /**
    * Find the first matched field name of the element wih given regex list.
    *
@@ -661,7 +681,7 @@ export const FormAutofillHeuristics = {
     const getElementStrings = this._getElementStrings(element);
     for (let regexp of regexps) {
       for (let string of getElementStrings) {
-        if (this.RULES[regexp].test(string?.toLowerCase())) {
+        if (this.testRegex(this.RULES[regexp], string?.toLowerCase())) {
           return regexp;
         }
       }
@@ -806,13 +826,6 @@ export const FormAutofillHeuristics = {
     // {REGEX_SEPARATOR, FIELD_NONE, 0},
   ],
 };
-
-XPCOMUtils.defineLazyGetter(FormAutofillHeuristics, "RULES", () => {
-  let sandbox = {};
-  const HEURISTICS_REGEXP = "resource://autofill/content/heuristicsRegexp.js";
-  Services.scriptloader.loadSubScript(HEURISTICS_REGEXP, sandbox);
-  return sandbox.HeuristicsRegExp.RULES;
-});
 
 XPCOMUtils.defineLazyGetter(
   FormAutofillHeuristics,
