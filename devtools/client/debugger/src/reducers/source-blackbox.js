@@ -21,111 +21,113 @@ export function initialSourceBlackBoxState(state) {
      */
     blackboxedRanges: state?.blackboxedRanges ?? {},
 
-    blackboxedSet: new Set(),
+    blackboxedSet: state?.blackboxedRanges
+      ? new Set(Object.keys(state.blackboxedRanges))
+      : new Set(),
   };
 }
 
 function update(state = initialSourceBlackBoxState(), action) {
   switch (action.type) {
-    case "BLACKBOX":
-      if (action.status === "done") {
-        const { blackboxSources } = action.value;
-        state = updateBlackBoxState(state, blackboxSources);
+    case "BLACKBOX_WHOLE_SOURCES": {
+      const { sources } = action;
+
+      const currentBlackboxedRanges = { ...state.blackboxedRanges };
+      const currentBlackboxedSet = new Set(state.blackboxedSet);
+
+      for (const source of sources) {
+        currentBlackboxedRanges[source.url] = [];
+        currentBlackboxedSet.add(source.url);
       }
-      break;
+
+      return {
+        ...state,
+        blackboxedRanges: currentBlackboxedRanges,
+        blackboxedSet: currentBlackboxedSet,
+      };
+    }
+
+    case "BLACKBOX_SOURCE_RANGES": {
+      const { source, ranges } = action;
+
+      const currentBlackboxedRanges = { ...state.blackboxedRanges };
+      const currentBlackboxedSet = new Set(state.blackboxedSet);
+
+      if (!currentBlackboxedRanges[source.url]) {
+        currentBlackboxedRanges[source.url] = [];
+        currentBlackboxedSet.add(source.url);
+      } else {
+        currentBlackboxedRanges[source.url] = [
+          ...state.blackboxedRanges[source.url],
+        ];
+      }
+
+      // Add new blackboxed lines in acsending order
+      for (const newRange of ranges) {
+        const index = currentBlackboxedRanges[source.url].findIndex(
+          range =>
+            range.end.line <= newRange.start.line &&
+            range.end.column <= newRange.start.column
+        );
+        currentBlackboxedRanges[source.url].splice(index + 1, 0, newRange);
+      }
+
+      return {
+        ...state,
+        blackboxedRanges: currentBlackboxedRanges,
+        blackboxedSet: currentBlackboxedSet,
+      };
+    }
+
+    case "UNBLACKBOX_WHOLE_SOURCES": {
+      const { sources } = action;
+
+      const currentBlackboxedRanges = { ...state.blackboxedRanges };
+      const currentBlackboxedSet = new Set(state.blackboxedSet);
+
+      for (const source of sources) {
+        delete currentBlackboxedRanges[source.url];
+        currentBlackboxedSet.delete(source.url);
+      }
+
+      return {
+        ...state,
+        blackboxedRanges: currentBlackboxedRanges,
+        blackboxedSet: currentBlackboxedSet,
+      };
+    }
+
+    case "UNBLACKBOX_SOURCE_RANGES": {
+      const { source, ranges } = action;
+
+      const currentBlackboxedRanges = {
+        ...state.blackboxedRanges,
+        [source.url]: [...state.blackboxedRanges[source.url]],
+      };
+
+      for (const newRange of ranges) {
+        const index = currentBlackboxedRanges[source.url].findIndex(
+          range =>
+            range.start.line === newRange.start.line &&
+            range.end.line === newRange.end.line
+        );
+
+        if (index !== -1) {
+          currentBlackboxedRanges[source.url].splice(index, 1);
+        }
+      }
+
+      return {
+        ...state,
+        blackboxedRanges: currentBlackboxedRanges,
+      };
+    }
 
     case "NAVIGATE":
       return initialSourceBlackBoxState(state);
   }
 
   return state;
-}
-
-function updateBlackboxRangesForSourceUrl(
-  currentRanges,
-  currentSet,
-  url,
-  shouldBlackBox,
-  newRanges
-) {
-  if (shouldBlackBox) {
-    currentSet.add(url);
-    // If newRanges is an empty array, it would mean we are blackboxing the whole
-    // source. To do that lets reset the content to an empty array.
-    if (!newRanges.length) {
-      currentRanges[url] = [];
-    } else {
-      currentRanges[url] = currentRanges[url] || [];
-      newRanges.forEach(newRange => {
-        // To avoid adding duplicate ranges make sure
-        // no range alredy exists with same start and end lines.
-        const duplicate = currentRanges[url].findIndex(
-          r =>
-            r.start.line == newRange.start.line &&
-            r.end.line == newRange.end.line
-        );
-        if (duplicate !== -1) {
-          return;
-        }
-        // ranges are sorted in asc
-        const index = currentRanges[url].findIndex(
-          range =>
-            range.end.line <= newRange.start.line &&
-            range.end.column <= newRange.start.column
-        );
-        currentRanges[url].splice(index + 1, 0, newRange);
-      });
-    }
-  } else {
-    // if there are no ranges to blackbox, then we are unblackboxing
-    // the whole source
-    if (!newRanges.length) {
-      currentSet.delete(url);
-      delete currentRanges[url];
-      return;
-    }
-    // Remove only the lines represented by the ranges provided.
-    newRanges.forEach(newRange => {
-      const index = currentRanges[url].findIndex(
-        range =>
-          range.start.line === newRange.start.line &&
-          range.end.line === newRange.end.line
-      );
-
-      if (index !== -1) {
-        currentRanges[url].splice(index, 1);
-      }
-    });
-
-    // if the last blackboxed line has been removed, unblackbox the source.
-    if (!currentRanges[url].length) {
-      currentSet.delete(url);
-      delete currentRanges[url];
-    }
-  }
-}
-
-/*
- * Updates the all the state necessary for blackboxing
- *
- */
-function updateBlackBoxState(state, blackboxSources) {
-  const currentRanges = { ...state.blackboxedRanges };
-  const currentSet = new Set(state.blackboxedSet);
-  blackboxSources.map(({ source, shouldBlackBox, ranges }) =>
-    updateBlackboxRangesForSourceUrl(
-      currentRanges,
-      currentSet,
-      source.url,
-      shouldBlackBox,
-      ranges
-    )
-  );
-  return {
-    ...state,
-    blackboxedRanges: currentRanges,
-    blackboxedSet: currentSet,
-  };
 }
 
 export default update;

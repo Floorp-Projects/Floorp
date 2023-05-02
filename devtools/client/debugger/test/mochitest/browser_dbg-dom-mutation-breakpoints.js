@@ -152,7 +152,7 @@ add_task(async function() {
 
   await selectSource(dbg, source);
   await clickElement(dbg, "blackbox");
-  await waitForDispatch(dbg.store, "BLACKBOX");
+  await waitForDispatch(dbg.store, "BLACKBOX_WHOLE_SOURCES");
 
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
     content.document.querySelector("#blackbox").click();
@@ -163,7 +163,7 @@ add_task(async function() {
 
   await selectSource(dbg, source);
   await clickElement(dbg, "blackbox");
-  await waitForDispatch(dbg.store, "BLACKBOX");
+  await waitForDispatch(dbg.store, "UNBLACKBOX_WHOLE_SOURCES");
 
   info("Removing breakpoints works");
   dbg.win.document.querySelector(".dom-mutation-list .close-btn").click();

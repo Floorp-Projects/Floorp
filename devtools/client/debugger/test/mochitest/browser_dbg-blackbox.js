@@ -50,7 +50,6 @@ add_task(async function testAllBlackBox() {
 // Test that the blackboxed lines are persisted accross reloads and still work accordingly.
 add_task(async function testBlackBoxOnReload() {
   await pushPref("devtools.debugger.features.blackbox-lines", true);
-
   const file = "simple4.js";
   const dbg = await initDebugger("doc-command-click.html", file);
 
@@ -63,8 +62,7 @@ add_task(async function testBlackBoxOnReload() {
   await addBreakpoint(dbg, file, 8);
   await addBreakpoint(dbg, file, 12);
 
-  // Lets reload without any blackboxing to make all necesary postions
-  // are hit.
+  info("Reload without any blackboxing to make all necesary postions are hit");
   const onReloaded = reload(dbg, file);
 
   await waitForPaused(dbg);
@@ -471,7 +469,10 @@ async function assertGutterBlackBoxBoxContextMenuItems(dbg, testFixtures) {
  *                 Details needed for the assertion. Any blackboxed/nonBlackboxed sources
  */
 async function assertSourceTreeBlackBoxBoxContextMenuItems(dbg, testFixtures) {
-  const { blackBoxedSourceTreeNode, nonBlackBoxedSourceTreeNode } = testFixtures;
+  const {
+    blackBoxedSourceTreeNode,
+    nonBlackBoxedSourceTreeNode,
+  } = testFixtures;
   if (blackBoxedSourceTreeNode) {
     info(
       "Asserts that the source tree blackbox context menu items when clicking on a blackboxed source tree node"
@@ -676,7 +677,19 @@ async function openContextMenu(dbg, elementName, line) {
  *                  The name of the context menu item.
  */
 async function selectBlackBoxContextMenuItem(dbg, itemName) {
-  const wait = waitForDispatch(dbg.store, "BLACKBOX");
+  let wait = null;
+  if (itemName == "blackbox-line" || itemName == "blackbox-lines") {
+    wait = Promise.any([
+      waitForDispatch(dbg.store, "BLACKBOX_SOURCE_RANGES"),
+      waitForDispatch(dbg.store, "UNBLACKBOX_SOURCE_RANGES"),
+    ]);
+  } else if (itemName == "blackbox") {
+    wait = Promise.any([
+      waitForDispatch(dbg.store, "BLACKBOX_WHOLE_SOURCES"),
+      waitForDispatch(dbg.store, "UNBLACKBOX_WHOLE_SOURCES"),
+    ]);
+  }
+
   info(`Select the ${itemName} context menu item`);
   selectContextMenuItem(dbg, `#node-menu-${itemName}`);
   return wait;
