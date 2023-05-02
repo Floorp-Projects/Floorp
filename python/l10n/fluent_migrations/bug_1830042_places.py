@@ -68,6 +68,33 @@ places-create-bookmark =
            *[other] { COPY(source, "cmd.bookmarkMultiplePages2.label") }
         }
     .accesskey = { COPY(source, "cmd.bookmarkSinglePage2.accesskey") }
+places-search-bookmarks =
+    .placeholder = { COPY(source, "searchBookmarks") }
+places-search-history =
+    .placeholder = { COPY(source, "searchHistory") }
+places-search-downloads =
+    .placeholder = { COPY(source, "searchDownloads") }
+places-view-sortby-name =
+  .label = { COPY(source, "view.sortBy.1.name.label") }
+  .accesskey = { COPY(source, "view.sortBy.1.name.accesskey") }
+places-view-sortby-url =
+  .label = { COPY(source, "view.sortBy.1.url.label") }
+  .accesskey = { COPY(source, "view.sortBy.1.url.accesskey") }
+places-view-sortby-date =
+  .label = { COPY(source, "view.sortBy.1.date.label") }
+  .accesskey = { COPY(source, "view.sortBy.1.date.accesskey") }
+places-view-sortby-visit-count =
+  .label = { COPY(source, "view.sortBy.1.visitCount.label") }
+  .accesskey = { COPY(source, "view.sortBy.1.visitCount.accesskey") }
+places-view-sortby-date-added =
+  .label = { COPY(source, "view.sortBy.1.dateAdded.label") }
+  .accesskey = { COPY(source, "view.sortBy.1.dateAdded.accesskey") }
+places-view-sortby-last-modified =
+  .label = { COPY(source, "view.sortBy.1.lastModified.label") }
+  .accesskey = { COPY(source, "view.sortBy.1.lastModified.accesskey") }
+places-view-sortby-tags =
+  .label = { COPY(source, "view.sortBy.1.tags.label") }
+  .accesskey = { COPY(source, "view.sortBy.1.tags.accesskey") }
 """,
             source=source,
         ),

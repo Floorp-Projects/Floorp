@@ -146,7 +146,7 @@
   <popupset id="placesPopupset">
 #include placesContextMenu.inc.xhtml
     <menupopup id="placesColumnsContext"
-               onpopupshowing="ViewMenu.fillWithColumns(event, null, null, 'checkbox', null);"
+               onpopupshowing="ViewMenu.fillWithColumns(event, null, null, 'checkbox', false);"
                oncommand="ViewMenu.showHideColumn(event.target); event.stopPropagation();"/>
 #include ../../downloads/content/downloadsContextMenu.inc.xhtml
   </popupset>
@@ -252,7 +252,7 @@
 
             <menu id="viewColumns"
                   data-l10n-id="places-view-menu-columns">
-              <menupopup onpopupshowing="ViewMenu.fillWithColumns(event, null, null, 'checkbox', null);"
+              <menupopup onpopupshowing="ViewMenu.fillWithColumns(event, null, null, 'checkbox', false);"
                          oncommand="ViewMenu.showHideColumn(event.target); event.stopPropagation();"/>
             </menu>
 
@@ -321,6 +321,7 @@
       <search-textbox id="searchFilter"
                       flex="1"
                       aria-controls="placeContent"
+                      data-l10n-attrs="placeholder"
                       oncommand="PlacesSearchBox.search(this.value);"
                       collection="bookmarks"/>
     </toolbar>
