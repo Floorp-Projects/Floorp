@@ -3,12 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
-const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  Region: "resource://gre/modules/Region.sys.mjs",
-});
+import { Region } from "resource://gre/modules/Region.sys.mjs";
 
 const ADDRESSES_FIRST_TIME_USE_PREF = "extensions.formautofill.firstTimeUse";
 const AUTOFILL_ADDRESSES_AVAILABLE_PREF =
@@ -39,31 +34,7 @@ const AUTOFILL_CREDITCARDS_AUTOCOMPLETE_OFF_PREF =
 const AUTOFILL_ADDRESSES_AUTOCOMPLETE_OFF_PREF =
   "extensions.formautofill.addresses.ignoreAutocompleteOff";
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "logLevel",
-  "extensions.formautofill.loglevel",
-  "Warn"
-);
-
-// A logging helper for debug logging to avoid creating Console objects
-// or triggering expensive JS -> C++ calls when debug logging is not
-// enabled.
-//
-// Console objects, even natively-implemented ones, can consume a lot of
-// memory, and since this code may run in every content process, that
-// memory can add up quickly. And, even when debug-level messages are
-// being ignored, console.debug() calls can be expensive.
-//
-// This helper avoids both of those problems by never touching the
-// console object unless debug logging is enabled.
-function debug() {
-  if (lazy.logLevel.toLowerCase() == "debug") {
-    this.log.debug(...arguments);
-  }
-}
-
-export var FormAutofill = {
+export const FormAutofill = {
   ENABLED_AUTOFILL_ADDRESSES_PREF,
   ENABLED_AUTOFILL_ADDRESSES_CAPTURE_PREF,
   ENABLED_AUTOFILL_ADDRESSES_CAPTURE_V2_PREF,
@@ -74,7 +45,7 @@ export var FormAutofill = {
   AUTOFILL_ADDRESSES_AUTOCOMPLETE_OFF_PREF,
 
   get DEFAULT_REGION() {
-    return lazy.Region.home || "US";
+    return Region.home || "US";
   },
   /**
    * Determines if an autofill feature should be enabled based on the "available"
@@ -93,14 +64,8 @@ export var FormAutofill = {
       if (!FormAutofill.supportRTL && Services.locale.isAppLocaleRTL) {
         return false;
       }
-      // TODO: Bug 1747284. Use Region.home instead of reading "browser.serach.region"
-      // by default. However, Region.home doesn't observe preference change at this point,
-      // we should also fix that issue.
-      let region = Services.prefs.getCharPref(
-        BROWSER_SEARCH_REGION_PREF,
-        this.DEFAULT_REGION
-      );
-      return supportedCountries.includes(region);
+
+      return supportedCountries.includes(FormAutofill.browserSearchRegion);
     }
     return false;
   },
@@ -174,7 +139,22 @@ export var FormAutofill = {
   },
 
   defineLogGetter(scope, logPrefix) {
-    scope.debug = debug;
+    // A logging helper for debug logging to avoid creating Console objects
+    // or triggering expensive JS -> C++ calls when debug logging is not
+    // enabled.
+    //
+    // Console objects, even natively-implemented ones, can consume a lot of
+    // memory, and since this code may run in every content process, that
+    // memory can add up quickly. And, even when debug-level messages are
+    // being ignored, console.debug() calls can be expensive.
+    //
+    // This helper avoids both of those problems by never touching the
+    // console object unless debug logging is enabled.
+    scope.debug = function debug() {
+      if (FormAutofill.logLevel.toLowerCase() == "debug") {
+        this.log.debug(...arguments);
+      }
+    };
 
     let { ConsoleAPI } = ChromeUtils.importESModule(
       "resource://gre/modules/Console.sys.mjs"
@@ -185,6 +165,22 @@ export var FormAutofill = {
     });
   },
 };
+
+// TODO: Bug 1747284. Use Region.home instead of reading "browser.serach.region"
+// by default. However, Region.home doesn't observe preference change at this point,
+// we should also fix that issue.
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofill,
+  "browserSearchRegion",
+  BROWSER_SEARCH_REGION_PREF,
+  FormAutofill.DEFAULT_REGION
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofill,
+  "logLevel",
+  "extensions.formautofill.loglevel",
+  "Warn"
+);
 
 XPCOMUtils.defineLazyPreferenceGetter(
   FormAutofill,
