@@ -19,6 +19,7 @@
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/MouseEventBinding.h"
+#include "mozilla/FileUtilsWin.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/gfx/DisplayConfigWindows.h"
@@ -1627,13 +1628,29 @@ bool WinUtils::ResolveJunctionPointsAndSymLinks(std::wstring& aPath) {
     return false;
   }
 
+  // According to the documentation for GetFinalPathNameByHandleW, some mount
+  // points will fail with VOLUME_NAME_DOS and can only succeed with
+  // VOLUME_NAME_NT. We then need to go from the NT path to the DOS path using
+  // QueryDosDevice. This is known to happen with ramdisks, see bug 1763978.
   DWORD pathLen = GetFinalPathNameByHandleW(
-      handle, path, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
-  if (pathLen == 0 || pathLen >= MAX_PATH) {
+      handle, path, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_NT);
+  if (pathLen >= MAX_PATH) {
+    LOG_E("Path is too long.");
+    return false;
+  }
+
+  if (pathLen == 0) {
     LOG_E("GetFinalPathNameByHandleW failed. GetLastError=%lu", GetLastError());
     return false;
   }
-  aPath = path;
+
+  nsAutoString dosPath;
+  if (!NtPathToDosPath(nsDependentString(path), dosPath)) {
+    LOG_E("NtPathToDosPath failed.");
+    return false;
+  }
+
+  aPath = dosPath.get();
 
   // GetFinalPathNameByHandle sticks a '\\?\' in front of the path,
   // but that confuses some APIs so strip it off. It will also put
