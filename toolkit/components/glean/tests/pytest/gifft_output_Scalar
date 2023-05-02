@@ -145,7 +145,7 @@ static inline bool IsSubmetricId(uint32_t aId) {
   return (aId & (1 << 25)) > 0;
 }
 
-static Maybe<ScalarID> ScalarIdForMetric(uint32_t aId) {
+static inline Maybe<ScalarID> ScalarIdForMetric(uint32_t aId) {
   switch(aId) {
     case 1: { // test.boolean_metric
       return Some(ScalarID::SOME_BOOL_SCALAR);

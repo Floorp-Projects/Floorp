@@ -179,6 +179,27 @@ test_only:
     send_in_pings:
       - test-ping
 
+  mabels_labeled_counters:
+    type: labeled_counter
+    description: |
+      Counts Mabels labeled by their kitchen counters.
+      Now with static labels.
+      This is a test-only metric.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1672273
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1672273
+    data_sensitivity:
+      - technical
+    expires: never
+    notification_emails:
+      - glean-team@mozilla.com
+    send_in_pings:
+      - test-ping
+    labels:
+      - next_to_the_fridge
+      - clean
+
   mabels_bathroom_counters:
     type: labeled_counter
     description: |
@@ -213,6 +234,26 @@ test_only:
     send_in_pings:
       - test-ping
 
+  mabels_like_labeled_balloons:
+    type: labeled_boolean
+    description: |
+      Does the labeled Mabel like balloons?
+      This is a test-only metric.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1672273
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1672273
+    data_sensitivity:
+      - technical
+    expires: never
+    notification_emails:
+      - glean-team@mozilla.com
+    send_in_pings:
+      - test-ping
+    labels:
+      - water
+      - birthday_party
+
   mabels_balloon_strings:
     type: labeled_string
     description: |
@@ -229,6 +270,26 @@ test_only:
       - glean-team@mozilla.com
     send_in_pings:
       - test-ping
+
+  mabels_balloon_labels:
+    type: labeled_string
+    description: |
+      How does Mabel label her balloons?
+      This is a test-only metric.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1672273
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1672273
+    data_sensitivity:
+      - technical
+    expires: never
+    notification_emails:
+      - glean-team@mozilla.com
+    send_in_pings:
+      - test-ping
+    labels:
+      - celebratory
+      - celebratory_and_snarky
 
   mabels_label_maker:
     type: labeled_string

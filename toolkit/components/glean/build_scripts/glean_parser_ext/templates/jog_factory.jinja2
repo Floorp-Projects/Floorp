@@ -36,6 +36,7 @@ pub(crate) static DYNAMIC_PING_BIT: u32 = {{runtime_ping_bit}};
 static NEXT_PING_ID: AtomicU32 = AtomicU32::new({{2**runtime_ping_bit + 1}});
 
 pub(crate) mod __jog_metric_maps {
+    use crate::metrics::DynamicLabel;
     use crate::private::MetricId;
     use crate::private::{
         Ping,
@@ -56,7 +57,7 @@ pub(crate) mod __jog_metric_maps {
 {% endfor %}
 {# Labeled metrics are special because they're LabeledMetric<Labeled{Counter|Boolean|...}Metric> #}
 {% for metric_type_name in metric_types.keys() if metric_type_name.startswith('labeled_') %}
-    pub static {{ metric_type_name.upper() }}_MAP: Lazy<Arc<RwLock<HashMap<MetricId, LabeledMetric<{{ metric_type_name|Camelize }}Metric>>>>> =
+    pub static {{ metric_type_name.upper() }}_MAP: Lazy<Arc<RwLock<HashMap<MetricId, LabeledMetric<{{ metric_type_name|Camelize }}Metric, DynamicLabel>>>>> =
         Lazy::new(|| Arc::new(RwLock::new(HashMap::new())));
 
 {% endfor %}

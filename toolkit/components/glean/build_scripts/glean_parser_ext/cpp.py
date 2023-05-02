@@ -50,10 +50,13 @@ def type_name(obj):
 
     if getattr(obj, "labeled", False):
         class_name = util.Camelize(obj.type[8:])  # strips "labeled_" off the front.
-        return "Labeled<impl::{}Metric>".format(class_name)
+        label_enum = "DynamicLabel"
+        if obj.labels and len(obj.labels):
+            label_enum = f"{util.Camelize(obj.name)}Label"
+        return f"Labeled<impl::{class_name}Metric, {label_enum}>"
     generate_enums = getattr(obj, "_generate_enums", [])  # Extra Keys? Reasons?
     if len(generate_enums):
-        for name, suffix in generate_enums:
+        for name, _ in generate_enums:
             if not len(getattr(obj, name)) and isinstance(obj, metrics.Event):
                 return util.Camelize(obj.type) + "Metric<NoExtraKeys>"
             else:
@@ -91,7 +94,7 @@ def output_cpp(objs, output_fd, options={}):
     :param options: options dictionary.
     """
 
-    # Monkeypatch a util.snake_case function for the templates to use
+    # Monkeypatch util.snake_case for the templates to use
     util.snake_case = lambda value: value.replace(".", "_").replace("-", "_")
     # Monkeypatch util.get_jinja2_template to find templates nearby
 

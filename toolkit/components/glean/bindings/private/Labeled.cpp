@@ -16,48 +16,6 @@
 
 namespace mozilla::glean {
 
-namespace impl {
-template <>
-BooleanMetric Labeled<BooleanMetric>::Get(const nsACString& aLabel) const {
-  auto submetricId = fog_labeled_boolean_get(mId, &aLabel);
-  // If this labeled metric is mirrored, we need to map the submetric id back
-  // to the label string and mirrored scalar so we can mirror its operations.
-  auto mirrorId = ScalarIdForMetric(mId);
-  if (mirrorId) {
-    GetLabeledMirrorLock().apply([&](auto& lock) {
-      auto tuple = std::make_tuple<Telemetry::ScalarID, nsString>(
-          mirrorId.extract(), NS_ConvertUTF8toUTF16(aLabel));
-      lock.ref()->InsertOrUpdate(submetricId, std::move(tuple));
-    });
-  }
-  return BooleanMetric(submetricId);
-}
-
-template <>
-CounterMetric Labeled<CounterMetric>::Get(const nsACString& aLabel) const {
-  auto submetricId = fog_labeled_counter_get(mId, &aLabel);
-  // If this labeled metric is mirrored, we need to map the submetric id back
-  // to the label string and mirrored scalar so we can mirror its operations.
-  auto mirrorId = ScalarIdForMetric(mId);
-  if (mirrorId) {
-    GetLabeledMirrorLock().apply([&](auto& lock) {
-      auto tuple = std::make_tuple<Telemetry::ScalarID, nsString>(
-          mirrorId.extract(), NS_ConvertUTF8toUTF16(aLabel));
-      lock.ref()->InsertOrUpdate(submetricId, std::move(tuple));
-    });
-  }
-  return CounterMetric(submetricId);
-}
-
-template <>
-StringMetric Labeled<StringMetric>::Get(const nsACString& aLabel) const {
-  auto submetricId = fog_labeled_string_get(mId, &aLabel);
-  // Why no GIFFT map here?
-  // Labeled Strings can't be mirrored. Telemetry has no compatible probe.
-  return StringMetric(submetricId);
-}
-}  // namespace impl
-
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(GleanLabeled)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(GleanLabeled)
