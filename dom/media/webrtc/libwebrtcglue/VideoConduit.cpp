@@ -1408,21 +1408,8 @@ MediaConduitErrorCode WebrtcVideoConduit::SendVideoFrame(
 
 void WebrtcVideoConduit::DeliverPacket(rtc::CopyOnWriteBuffer packet,
                                        PacketType type) {
-  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
-
-  if (!mCall->Call()) {
-    return;
-  }
-
-  // Bug 1499796 - we need to get passed the time the packet was received
-  webrtc::PacketReceiver::DeliveryStatus status =
-      mCall->Call()->Receiver()->DeliverPacket(webrtc::MediaType::VIDEO,
-                                               std::move(packet), -1);
-
-  if (status != webrtc::PacketReceiver::DELIVERY_OK) {
-    CSFLogError(LOGTAG, "%s DeliverPacket Failed for %s packet, %d",
-                __FUNCTION__, type == PacketType::RTP ? "RTP" : "RTCP", status);
-  }
+  // Currently unused.
+  MOZ_ASSERT(false);
 }
 
 void WebrtcVideoConduit::OnRtpReceived(MediaPacket&& aPacket,
@@ -1462,8 +1449,24 @@ void WebrtcVideoConduit::OnRtpReceived(MediaPacket&& aPacket,
       (uint32_t)ntohl(((uint32_t*)aPacket.data())[2]));
 
   mRtpPacketEvent.Notify();
-  DeliverPacket(rtc::CopyOnWriteBuffer(aPacket.data(), aPacket.len()),
-                PacketType::RTP);
+  if (mCall->Call()) {
+    webrtc::RtpPacketReceived parsed_packet;
+    if (!parsed_packet.Parse(
+            rtc::CopyOnWriteBuffer(aPacket.data(), aPacket.len()))) {
+      CSFLogError(LOGTAG, "%s Parsing packet failed for RTP packet",
+                  __FUNCTION__);
+      return;
+    }
+    parsed_packet.set_arrival_time(mCall->GetTimestampMaker().GetNowRealtime());
+    parsed_packet.set_payload_type_frequency(
+        webrtc::kVideoPayloadTypeFrequency);
+    mCall->Call()->Receiver()->DeliverRtpPacket(
+        webrtc::MediaType::VIDEO, std::move(parsed_packet),
+        [](const webrtc::RtpPacketReceived& packet) {
+          MOZ_ASSERT_UNREACHABLE();
+          return false;
+        });
+  }
 }
 
 void WebrtcVideoConduit::OnRtcpReceived(MediaPacket&& aPacket) {
@@ -1472,8 +1475,10 @@ void WebrtcVideoConduit::OnRtcpReceived(MediaPacket&& aPacket) {
   CSFLogVerbose(LOGTAG, "VideoConduit %p: Received RTCP Packet, len %zu ", this,
                 aPacket.len());
 
-  DeliverPacket(rtc::CopyOnWriteBuffer(aPacket.data(), aPacket.len()),
-                PacketType::RTCP);
+  if (mCall->Call()) {
+    mCall->Call()->Receiver()->DeliverRtcpPacket(
+        rtc::CopyOnWriteBuffer(aPacket.data(), aPacket.len()));
+  }
 }
 
 Maybe<uint16_t> WebrtcVideoConduit::RtpSendBaseSeqFor(uint32_t aSsrc) const {
