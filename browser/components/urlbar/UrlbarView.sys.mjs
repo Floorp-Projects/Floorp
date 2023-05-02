@@ -413,6 +413,26 @@ export class UrlbarView {
     });
   }
 
+  async acknowledgeFeedback(result) {
+    let row = this.#rows.children[result.rowIndex];
+    if (!row) {
+      return;
+    }
+
+    let l10n = { id: "firefox-suggest-feedback-acknowledgment" };
+    await this.#l10nCache.ensure(l10n);
+    if (row.result != result) {
+      return;
+    }
+
+    let { value } = this.#l10nCache.get(l10n);
+    row.setAttribute("feedback-acknowledgment", value);
+    this.window.A11yUtils.announce({
+      raw: value,
+      source: row._content.closest("[role=option]"),
+    });
+  }
+
   removeAccessibleFocus() {
     this.#setAccessibleFocus(null);
   }
