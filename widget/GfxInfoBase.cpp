@@ -1919,7 +1919,8 @@ GfxInfoBase::ControlGPUProcessForXPCShell(bool aEnable, bool* _retval) {
     if (!gfxConfig::IsEnabled(gfx::Feature::GPU_PROCESS)) {
       gfxConfig::UserForceEnable(gfx::Feature::GPU_PROCESS, "xpcshell-test");
     }
-    gpm->EnsureGPUReady();
+    DebugOnly<nsresult> rv = gpm->EnsureGPUReady();
+    MOZ_ASSERT(rv != NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
   } else {
     gfxConfig::UserDisable(gfx::Feature::GPU_PROCESS, "xpcshell-test");
     gpm->KillProcess();
