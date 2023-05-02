@@ -28,10 +28,10 @@ using Telemetry::EventID;
 
 static inline Maybe<EventID> EventIdForMetric(uint32_t aId) {
   switch(aId) {
-    case 17: { // test.nested.event_metric
+    case 16: { // test.nested.event_metric
       return Some(EventID::EventMetric_EnumNames_AreStrange);
     }
-    case 18: { // test.nested.event_metric_with_extra
+    case 17: { // test.nested.event_metric_with_extra
       return Some(EventID::EventMetric_EnumName_WithExtra);
     }
     default: {
