@@ -2455,6 +2455,7 @@ bool FallbackICCodeCompiler::emit_CloseIter() {
 bool JitRuntime::generateBaselineICFallbackCode(JSContext* cx) {
   TempAllocator temp(&cx->tempLifoAlloc());
   StackMacroAssembler masm(cx, temp);
+  PerfSpewerRangeRecorder rangeRecorder(masm);
   AutoCreatedBy acb(masm, "JitRuntime::generateBaselineICFallbackCode");
 
   BaselineICFallbackCode& fallbackCode = baselineICFallbackCode_.ref();
@@ -2471,6 +2472,7 @@ bool JitRuntime::generateBaselineICFallbackCode(JSContext* cx) {
       return false;                                                \
     }                                                              \
     fallbackCode.initOffset(BaselineICFallbackKind::kind, offset); \
+    rangeRecorder.recordOffset("BaselineICFallback: " #kind);      \
   }
   IC_BASELINE_FALLBACK_CODE_KIND_LIST(EMIT_CODE)
 #undef EMIT_CODE
@@ -2481,7 +2483,7 @@ bool JitRuntime::generateBaselineICFallbackCode(JSContext* cx) {
     return false;
   }
 
-  CollectPerfSpewerJitCodeProfile(code, "BaselineICFallback");
+  rangeRecorder.collectRangesForJitCode(code);
 
 #ifdef MOZ_VTUNE
   vtune::MarkStub(code, "BaselineICFallback");
