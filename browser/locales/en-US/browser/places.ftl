@@ -244,3 +244,5 @@ places-forward-button =
   .tooltiptext = Go forward
 
 places-details-pane-select-an-item-description = Select an item to view and edit its properties
+
+places-locked-prompt = The bookmarks and history system will not be functional because one of { -brand-short-name }’s files is in use by another application. Some security software can cause this problem.

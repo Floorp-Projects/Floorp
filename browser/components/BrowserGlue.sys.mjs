@@ -3449,14 +3449,6 @@ BrowserGlue.prototype = {
    * Show the notificationBox for a locked places database.
    */
   _showPlacesLockedNotificationBox: function BG__showPlacesLockedNotificationBox() {
-    var applicationName = lazy.gBrandBundle.GetStringFromName("brandShortName");
-    var placesBundle = Services.strings.createBundle(
-      "chrome://browser/locale/places/places.properties"
-    );
-    var text = placesBundle.formatStringFromName("lockPrompt.text", [
-      applicationName,
-    ]);
-
     var win = lazy.BrowserWindowTracker.getTopWindow();
     var buttons = [{ supportPage: "places-locked" }];
 
@@ -3464,7 +3456,7 @@ BrowserGlue.prototype = {
     var notification = notifyBox.appendNotification(
       "places-locked",
       {
-        label: text,
+        label: { "l10n-id": "places-locked-prompt" },
         priority: win.gNotificationBox.PRIORITY_CRITICAL_MEDIUM,
       },
       buttons
