@@ -14,28 +14,6 @@ Login Manager test: input events should fire.
 <div id="content" style="display: none"></div>
 <pre id="test"></pre>
 <script>
-  function setupForm () {
-    const form = document.createElement("form");
-
-    const usernameInput = document.createElement("input");
-    usernameInput.type = "text";
-    usernameInput.name = "username";
-    form.appendChild(usernameInput);
-    const passwordInput = document.createElement("input");
-    passwordInput.type = "password";
-    passwordInput.name = "password";
-    form.appendChild(passwordInput);
-
-    const content = document.getElementById("content")
-    if (content.firstChild) {
-      content.replaceChild(form, content.firstChild);
-    } else {
-      content.appendChild(form);
-    }
-
-    return form;
-  }
-
   add_setup(async () => {
     await setStoredLoginsAsync(
       [location.origin, location.origin, null, "testuser", "testpass", "uname", "pword"]
@@ -45,12 +23,12 @@ Login Manager test: input events should fire.
   add_task(async function username_events() {
     return new Promise(resolve => {
       let inputFired = false;
-      const form = setupForm();
-      form.username.oninput = e => {
+      const form = createLoginForm();
+      form.uname.oninput = e => {
         is(e.target.value, "testuser", "Should get 'testuser' as value in input event");
         inputFired = true;
       };
-      form.username.onchange = e => {
+      form.uname.onchange = e => {
         ok(inputFired, "Should get input event before change event for username field.");
         is(e.target.value, "testuser", "Should get 'testuser' as value in change event");
         resolve();
@@ -61,12 +39,12 @@ Login Manager test: input events should fire.
   add_task(async function password_events() {
     return new Promise(resolve => {
       let inputFired = false;
-      const form = setupForm();
-      form.password.oninput = e => {
+      const form = createLoginForm();
+      form.pword.oninput = e => {
         is(e.target.value, "testpass", "Should get 'testpass' as value in input event");
         inputFired = true;
       };
-      form.password.onchange = e => {
+      form.pword.onchange = e => {
         ok(inputFired, "Should get input event before change event for password field.");
         is(e.target.value, "testpass", "Should get 'testpass' as value in change event");
         resolve();
