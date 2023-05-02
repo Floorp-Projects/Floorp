@@ -112,7 +112,7 @@ export class LanguageIdEngine {
    * the language identification model was that it identified the correct language.
    *
    * @param {string} message
-   * @returns {Promise<{ languageLabel: string, confidence: number }>}
+   * @returns {Promise<{ langTag: string, confidence: number }>}
    */
   identifyLanguage(message) {
     const messageId = this.#messageId++;
@@ -124,8 +124,8 @@ export class LanguageIdEngine {
           return;
         }
         if (data.type === "language-id-response") {
-          let { languageLabel, confidence } = data;
-          resolve({ languageLabel, confidence });
+          let { langTag, confidence } = data;
+          resolve({ langTag, confidence });
         }
         if (data.type === "language-id-error") {
           reject(data.error);
@@ -602,15 +602,14 @@ export class TranslationsChild extends JSWindowActorChild {
     // to identify the page's language using the LanguageIdEngine.
     if (!docLangTag) {
       let languageIdEngine = await this.createLanguageIdEngine();
-      let {
-        languageLabel,
-        confidence,
-      } = await languageIdEngine.identifyLanguage(this.#getTextToIdentify());
+      let { langTag, confidence } = await languageIdEngine.identifyLanguage(
+        this.#getTextToIdentify()
+      );
       lazy.console.log(
-        `${languageLabel}(${confidence.toFixed(2)}) Detected Page Language`
+        `${langTag}(${confidence.toFixed(2)}) Detected Page Language`
       );
       if (confidence >= DOC_LANGUAGE_DETECTION_THRESHOLD) {
-        docLangTag = languageLabel;
+        docLangTag = langTag;
       }
     }
 
@@ -921,9 +920,9 @@ export class TranslationsChild extends JSWindowActorChild {
       "Translations:GetLanguageIdEngineMockedPayload"
     );
     if (mockedPayload) {
-      const { languageLabel, confidence } = mockedPayload;
+      const { langTag, confidence } = mockedPayload;
       return {
-        languageLabel,
+        langTag,
         confidence,
       };
     }
@@ -967,14 +966,14 @@ export class TranslationsChild extends JSWindowActorChild {
   async createLanguageIdEngine() {
     const {
       confidence,
-      languageLabel,
+      langTag,
       modelBuffer,
       wasmBuffer,
     } = await this.#getLanguageIdEnginePayload();
     const engine = new LanguageIdEngine({
       type: "initialize",
       confidence,
-      languageLabel,
+      langTag,
       modelBuffer,
       wasmBuffer,
       isLoggingEnabled:
