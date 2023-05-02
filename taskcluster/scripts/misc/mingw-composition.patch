@@ -1,0 +1,50 @@
+diff --git a/mingw-w64-headers/include/windows.ui.composition.h b/mingw-w64-headers/include/windows.ui.composition.h
+index 9dac0f1..58872d5 100644
+--- a/mingw-w64-headers/include/windows.ui.composition.h
++++ b/mingw-w64-headers/include/windows.ui.composition.h
+@@ -4916,13 +4916,13 @@ namespace ABI {
+                 ICompositionDrawingSurface : public IInspectable
+                 {
+                     virtual HRESULT STDMETHODCALLTYPE get_AlphaMode(
+-                        enum DirectXAlphaMode *value) = 0;
++                        ABI::Windows::Graphics::DirectX::DirectXAlphaMode *value) = 0;
+ 
+                     virtual HRESULT STDMETHODCALLTYPE get_PixelFormat(
+-                        enum DirectXPixelFormat *value) = 0;
++                        ABI::Windows::Graphics::DirectX::DirectXPixelFormat *value) = 0;
+ 
+                     virtual HRESULT STDMETHODCALLTYPE get_Size(
+-                        struct Size *value) = 0;
++                        ABI::Windows::Foundation::Size *value) = 0;
+ 
+                 };
+             }
+@@ -5704,8 +5704,8 @@ namespace ABI {
+                 {
+                     virtual HRESULT STDMETHODCALLTYPE CreateDrawingSurface(
+                         struct Size pixels,
+-                        enum DirectXPixelFormat format,
+-                        enum DirectXAlphaMode mode,
++                        ABI::Windows::Graphics::DirectX::DirectXPixelFormat format,
++                        ABI::Windows::Graphics::DirectX::DirectXAlphaMode mode,
+                         ABI::Windows::UI::Composition::ICompositionDrawingSurface **result) = 0;
+ 
+                     virtual HRESULT STDMETHODCALLTYPE add_RenderingDeviceReplaced(
+@@ -9338,7 +9338,7 @@ namespace ABI {
+                         boolean value) = 0;
+ 
+                     virtual HRESULT STDMETHODCALLTYPE get_Offset(
+-                        struct Vector3 *value) = 0;
++                        ABI::Windows::Foundation::Numerics::Vector3 *value) = 0;
+ 
+                     virtual HRESULT STDMETHODCALLTYPE put_Offset(
+                         struct Vector3 value) = 0;
+@@ -9383,7 +9383,7 @@ namespace ABI {
+                         struct Vector3 value) = 0;
+ 
+                     virtual HRESULT STDMETHODCALLTYPE get_Size(
+-                        struct Vector2 *value) = 0;
++                        ABI::Windows::Foundation::Numerics::Vector2 *value) = 0;
+ 
+                     virtual HRESULT STDMETHODCALLTYPE put_Size(
+                         struct Vector2 value) = 0;
