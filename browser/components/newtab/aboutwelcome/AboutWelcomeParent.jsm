@@ -231,6 +231,8 @@ class AboutWelcomeParent extends JSWindowActorParent {
         return lazy.LangPackMatcher.getAppAndSystemLocaleInfo();
       case "AWPage:EVALUATE_SCREEN_TARGETING":
         return lazy.AWScreenUtils.evaluateTargetingAndRemoveScreens(data);
+      case "AWPage:ADD_SCREEN_IMPRESSION":
+        return lazy.AWScreenUtils.addScreenImpression(data);
       case "AWPage:NEGOTIATE_LANGPACK":
         return lazy.LangPackMatcher.negotiateLangPackForLanguageMismatch(data);
       case "AWPage:ENSURE_LANG_PACK_INSTALLED":

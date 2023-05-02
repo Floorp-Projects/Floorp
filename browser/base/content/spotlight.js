@@ -36,6 +36,7 @@ function renderMultistage(ready) {
   window.AWSendToDeviceEmailsSupported = receive(
     "SEND_TO_DEVICE_EMAILS_SUPPORTED"
   );
+  window.AWAddScreenImpression = receive("ADD_SCREEN_IMPRESSION");
   window.AWSendToParent = (name, data) => receive(name)(data);
   window.AWFinish = () => {
     window.close();
