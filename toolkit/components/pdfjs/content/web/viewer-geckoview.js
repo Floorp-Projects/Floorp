@@ -2682,7 +2682,8 @@ const SidebarView = {
 exports.SidebarView = SidebarView;
 const TextLayerMode = {
   DISABLE: 0,
-  ENABLE: 1
+  ENABLE: 1,
+  ENABLE_PERMISSIONS: 2
 };
 exports.TextLayerMode = TextLayerMode;
 const ScrollMode = {
@@ -5998,7 +5999,6 @@ var _pdf_page_view = __webpack_require__(19);
 var _pdf_rendering_queue = __webpack_require__(15);
 var _pdf_link_service = __webpack_require__(8);
 const DEFAULT_CACHE_SIZE = 10;
-const ENABLE_PERMISSIONS_CLASS = "enablePermissions";
 const PagesCountLimit = {
   FORCE_SCROLL_MODE_PAGE: 15000,
   FORCE_LAZY_PAGE_INIT: 7500,
@@ -6063,7 +6063,7 @@ class PDFViewer {
   #annotationEditorUIManager = null;
   #annotationMode = _pdfjsLib.AnnotationMode.ENABLE_FORMS;
   #containerTopLeft = null;
-  #copyCallbackBound = this.#copyCallback.bind(this);
+  #copyCallbackBound = null;
   #enablePermissions = false;
   #getAllTextInProgress = false;
   #hiddenCopyElement = null;
@@ -6073,8 +6073,9 @@ class PDFViewer {
   #scrollModePageState = null;
   #onVisibilityChange = null;
   #scaleTimeoutId = null;
+  #textLayerMode = _ui_utils.TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = '3.6.115';
+    const viewerVersion = '3.6.125';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -6086,7 +6087,7 @@ class PDFViewer {
     this.downloadManager = options.downloadManager || null;
     this.findController = options.findController || null;
     this._scriptingManager = options.scriptingManager || null;
-    this.textLayerMode = options.textLayerMode ?? _ui_utils.TextLayerMode.ENABLE;
+    this.#textLayerMode = options.textLayerMode ?? _ui_utils.TextLayerMode.ENABLE;
     this.#annotationMode = options.annotationMode ?? _pdfjsLib.AnnotationMode.ENABLE_FORMS;
     this.#annotationEditorMode = options.annotationEditorMode ?? _pdfjsLib.AnnotationEditorType.NONE;
     this.imageResourcesPath = options.imageResourcesPath || "";
@@ -6284,28 +6285,17 @@ class PDFViewer {
       }
     };
   }
-  #createHiddenCopyElement() {
-    if (this.#hiddenCopyElement) {
-      return;
-    }
-    const element = this.#hiddenCopyElement = document.createElement("div");
-    element.id = "hiddenCopyElement";
-    this.viewer.before(element);
-  }
   #initializePermissions(permissions) {
     const params = {
       annotationEditorMode: this.#annotationEditorMode,
       annotationMode: this.#annotationMode,
-      textLayerMode: this.textLayerMode
+      textLayerMode: this.#textLayerMode
     };
     if (!permissions) {
-      this.#createHiddenCopyElement();
       return params;
     }
-    if (!permissions.includes(_pdfjsLib.PermissionFlag.COPY)) {
-      this.viewer.classList.add(ENABLE_PERMISSIONS_CLASS);
-    } else {
-      this.#createHiddenCopyElement();
+    if (!permissions.includes(_pdfjsLib.PermissionFlag.COPY) && this.#textLayerMode === _ui_utils.TextLayerMode.ENABLE) {
+      params.textLayerMode = _ui_utils.TextLayerMode.ENABLE_PERMISSIONS;
     }
     if (!permissions.includes(_pdfjsLib.PermissionFlag.MODIFY_CONTENTS)) {
       params.annotationEditorMode = _pdfjsLib.AnnotationEditorType.DISABLE;
@@ -6356,14 +6346,16 @@ class PDFViewer {
     }
     return texts.join("\n");
   }
-  #copyCallback(event) {
+  #copyCallback(textLayerMode, event) {
     const selection = document.getSelection();
     const {
       focusNode,
       anchorNode
     } = selection;
     if (anchorNode && focusNode && selection.containsNode(this.#hiddenCopyElement)) {
-      if (this.#getAllTextInProgress) {
+      if (this.#getAllTextInProgress || textLayerMode === _ui_utils.TextLayerMode.ENABLE_PERMISSIONS) {
+        event.preventDefault();
+        event.stopPropagation();
         return;
       }
       this.#getAllTextInProgress = true;
@@ -6457,6 +6449,11 @@ class PDFViewer {
         annotationMode,
         textLayerMode
       } = this.#initializePermissions(permissions);
+      if (textLayerMode !== _ui_utils.TextLayerMode.DISABLE) {
+        const element = this.#hiddenCopyElement = document.createElement("div");
+        element.id = "hiddenCopyElement";
+        this.viewer.before(element);
+      }
       if (annotationEditorMode !== _pdfjsLib.AnnotationEditorType.DISABLE) {
         const mode = annotationEditorMode;
         if (pdfDocument.isPureXfa) {
@@ -6512,6 +6509,7 @@ class PDFViewer {
         this.findController?.setDocument(pdfDocument);
         this._scriptingManager?.setDocument(pdfDocument);
         if (this.#hiddenCopyElement) {
+          this.#copyCallbackBound = this.#copyCallback.bind(this, textLayerMode);
           document.addEventListener("copy", this.#copyCallbackBound);
         }
         if (this.#annotationEditorUIManager) {
@@ -6623,9 +6621,9 @@ class PDFViewer {
     this.viewer.textContent = "";
     this._updateScrollMode();
     this.viewer.removeAttribute("lang");
-    this.viewer.classList.remove(ENABLE_PERMISSIONS_CLASS);
     if (this.#hiddenCopyElement) {
       document.removeEventListener("copy", this.#copyCallbackBound);
+      this.#copyCallbackBound = null;
       this.#hiddenCopyElement.remove();
       this.#hiddenCopyElement = null;
     }
@@ -7640,6 +7638,7 @@ class PDFPageView {
   #previousRotation = null;
   #renderError = null;
   #renderingState = _ui_utils.RenderingStates.INITIAL;
+  #textLayerMode = _ui_utils.TextLayerMode.ENABLE;
   #useThumbnailCanvas = {
     initialOptionalContent: true,
     regularAnnotations: true
@@ -7659,7 +7658,7 @@ class PDFPageView {
     this.pdfPageRotate = defaultViewport.rotation;
     this._optionalContentConfigPromise = options.optionalContentConfigPromise || null;
     this.hasRestrictedScaling = false;
-    this.textLayerMode = options.textLayerMode ?? _ui_utils.TextLayerMode.ENABLE;
+    this.#textLayerMode = options.textLayerMode ?? _ui_utils.TextLayerMode.ENABLE;
     this.#annotationMode = options.annotationMode ?? _pdfjsLib.AnnotationMode.ENABLE_FORMS;
     this.imageResourcesPath = options.imageResourcesPath || "";
     this.useOnlyCssZoom = options.useOnlyCssZoom || false;
@@ -8151,12 +8150,13 @@ class PDFPageView {
     const canvasWrapper = document.createElement("div");
     canvasWrapper.classList.add("canvasWrapper");
     div.append(canvasWrapper);
-    if (!this.textLayer && this.textLayerMode !== _ui_utils.TextLayerMode.DISABLE && !pdfPage.isPureXfa) {
+    if (!this.textLayer && this.#textLayerMode !== _ui_utils.TextLayerMode.DISABLE && !pdfPage.isPureXfa) {
       this._accessibilityManager ||= new _text_accessibility.TextAccessibilityManager();
       this.textLayer = new _text_layer_builder.TextLayerBuilder({
         highlighter: this._textHighlighter,
         accessibilityManager: this._accessibilityManager,
-        isOffscreenCanvasSupported: this.isOffscreenCanvasSupported
+        isOffscreenCanvasSupported: this.isOffscreenCanvasSupported,
+        enablePermissions: this.#textLayerMode === _ui_utils.TextLayerMode.ENABLE_PERMISSIONS
       });
       div.append(this.textLayer.div);
     }
@@ -9078,13 +9078,15 @@ exports.TextLayerBuilder = void 0;
 var _pdfjsLib = __webpack_require__(5);
 var _ui_utils = __webpack_require__(4);
 class TextLayerBuilder {
+  #enablePermissions = false;
   #rotation = 0;
   #scale = 0;
   #textContentSource = null;
   constructor({
     highlighter = null,
     accessibilityManager = null,
-    isOffscreenCanvasSupported = true
+    isOffscreenCanvasSupported = true,
+    enablePermissions = false
   }) {
     this.textContentItemsStr = [];
     this.renderingDone = false;
@@ -9094,6 +9096,7 @@ class TextLayerBuilder {
     this.highlighter = highlighter;
     this.accessibilityManager = accessibilityManager;
     this.isOffscreenCanvasSupported = isOffscreenCanvasSupported;
+    this.#enablePermissions = enablePermissions === true;
     this.div = document.createElement("div");
     this.div.className = "textLayer";
     this.hide();
@@ -9201,8 +9204,10 @@ class TextLayerBuilder {
       end.classList.remove("active");
     });
     div.addEventListener("copy", event => {
-      const selection = document.getSelection();
-      event.clipboardData.setData("text/plain", (0, _ui_utils.removeNullCharacters)((0, _pdfjsLib.normalizeUnicode)(selection.toString())));
+      if (!this.#enablePermissions) {
+        const selection = document.getSelection();
+        event.clipboardData.setData("text/plain", (0, _ui_utils.removeNullCharacters)((0, _pdfjsLib.normalizeUnicode)(selection.toString())));
+      }
       event.preventDefault();
       event.stopPropagation();
     });
@@ -9587,8 +9592,8 @@ var _ui_utils = __webpack_require__(4);
 var _app_options = __webpack_require__(6);
 var _pdf_link_service = __webpack_require__(8);
 var _app = __webpack_require__(3);
-const pdfjsVersion = '3.6.115';
-const pdfjsBuild = '1b79b0cd2';
+const pdfjsVersion = '3.6.125';
+const pdfjsBuild = '0ee0fcc6b';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;
