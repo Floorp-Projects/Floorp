@@ -6,21 +6,16 @@ package org.mozilla.fenix.downloads
 
 import android.app.Activity
 import android.content.Context
-import android.graphics.Color
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.content.ContextCompat
 import androidx.core.view.children
 import androidx.core.view.isVisible
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
-import io.mockk.verify
-import mozilla.components.support.ktx.android.view.setNavigationBarTheme
-import mozilla.components.support.ktx.android.view.setStatusBarTheme
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -37,20 +32,6 @@ import org.robolectric.Robolectric
 
 @RunWith(FenixRobolectricTestRunner::class)
 class StartDownloadDialogTest {
-    @Test
-    fun `WHEN the dialog is instantiated THEN cache the navigation and status bar colors`() {
-        val navigationBarColor = Color.RED
-        val statusBarColor = Color.BLUE
-        val activity: Activity = mockk {
-            every { window.navigationBarColor } returns navigationBarColor
-            every { window.statusBarColor } returns statusBarColor
-        }
-        val dialog = TestDownloadDialog(activity)
-
-        assertEquals(navigationBarColor, dialog.initialNavigationBarColor)
-        assertEquals(statusBarColor, dialog.initialStatusBarColor)
-    }
-
     @Test
     fun `WHEN the view is to be shown THEN set the scrim and other window customization bind the download values`() {
         val activity = Robolectric.buildActivity(Activity::class.java).create().get()
@@ -78,10 +59,6 @@ class StartDownloadDialogTest {
                 dialogContainer.elevation,
             )
             assertTrue(dialogContainer.isVisible)
-            verify {
-                activity.window.setNavigationBarTheme(ContextCompat.getColor(activity, R.color.material_scrim_color))
-                activity.window.setStatusBarTheme(ContextCompat.getColor(activity, R.color.material_scrim_color))
-            }
             assertEquals(dialog, fluentDialog)
         }
     }
@@ -119,10 +96,6 @@ class StartDownloadDialogTest {
             assertTrue(dialogParent.childCount == 1)
             assertTrue(dialogContainer.childCount == 0)
             assertFalse(dialogContainer.isVisible)
-            verify {
-                activity.window.setNavigationBarTheme(dialog.initialNavigationBarColor)
-                activity.window.setStatusBarTheme(dialog.initialStatusBarColor)
-            }
         }
     }
 
