@@ -16,7 +16,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
   FormAutofillUtils: "resource://gre/modules/shared/FormAutofillUtils.sys.mjs",
   LabelUtils: "resource://gre/modules/shared/LabelUtils.sys.mjs",
-  creditCardRulesets: "resource://autofill/CreditCardRuleset.sys.mjs",
+  creditCardRulesets: "resource://gre/modules/shared/CreditCardRuleset.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () =>

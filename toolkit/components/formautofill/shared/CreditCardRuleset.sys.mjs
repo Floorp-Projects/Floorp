@@ -19,8 +19,6 @@
  * CODE UNIQUE TO PRODUCTION--NOT IN THE TRAINING REPOSITORY:
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 import {
   element as clickedElement,
   out,
@@ -29,18 +27,14 @@ import {
   score,
   type,
 } from "resource://gre/modules/third_party/fathom/fathom.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { FormAutofillUtils } from "resource://gre/modules/shared/FormAutofillUtils.sys.mjs";
 import {
   CreditCard,
   NETWORK_NAMES,
 } from "resource://gre/modules/CreditCard.sys.mjs";
-
-const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  FormAutofillUtils:   "resource://gre/modules/shared/FormAutofillUtils.sys.mjs"  ,
-  FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
-  LabelUtils: "resource://gre/modules/shared/LabelUtils.sys.mjs",
-});
+import { FormLikeFactory } from "resource://gre/modules/FormLikeFactory.sys.mjs";
+import { LabelUtils } from "resource://gre/modules/shared/LabelUtils.sys.mjs";
 
 /**
  * Callthrough abstraction to allow .getAutocompleteInfo() to be mocked out
@@ -351,9 +345,9 @@ function autocompleteStringMatches(element, ccString) {
 }
 
 function getFillableFormElements(element) {
-  const formLike = lazy.FormLikeFactory.createFromField(element);
+  const formLike = FormLikeFactory.createFromField(element);
   return Array.from(formLike.elements).filter(el =>
-    lazy.FormAutofillUtils.isCreditCardOrAddressFieldType(el)
+    FormAutofillUtils.isCreditCardOrAddressFieldType(el)
   );
 }
 
@@ -405,9 +399,9 @@ function idOrNameMatchRegExp(element, regExp) {
 function getElementLabels(element) {
   return {
     *[Symbol.iterator]() {
-      const labels = lazy.LabelUtils.findLabelElements(element);
+      const labels = LabelUtils.findLabelElements(element);
       for (let label of labels) {
-        yield* lazy.LabelUtils.extractLabelStrings(label);
+        yield* LabelUtils.extractLabelStrings(label);
       }
     },
   };
@@ -1210,3 +1204,5 @@ export var creditCardRulesets = {
 };
 
 creditCardRulesets.init();
+
+export default creditCardRulesets;
