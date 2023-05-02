@@ -28,7 +28,7 @@
 // We expose a singleton from this module. Some tests may import the
 // constructor via a backstage pass.
 import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
-import { FormAutofillUtils } from "resource://autofill/FormAutofillUtils.sys.mjs";
+import { FormAutofillUtils } from "resource://gre/modules/shared/FormAutofillUtils.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};

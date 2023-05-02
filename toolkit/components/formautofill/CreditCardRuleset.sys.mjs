@@ -37,7 +37,7 @@ import {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  FormAutofillUtils: "resource://autofill/FormAutofillUtils.sys.mjs",
+  FormAutofillUtils:   "resource://gre/modules/shared/FormAutofillUtils.sys.mjs"  ,
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
   LabelUtils: "resource://gre/modules/shared/LabelUtils.sys.mjs",
 });

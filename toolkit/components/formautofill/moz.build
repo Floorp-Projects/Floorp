@@ -10,6 +10,8 @@ with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Form Autofill")
 
 EXTRA_JS_MODULES.shared += [
+    "shared/FormAutofillNameUtils.sys.mjs",
+    "shared/FormAutofillUtils.sys.mjs",
     "shared/LabelUtils.sys.mjs",
 ]
 

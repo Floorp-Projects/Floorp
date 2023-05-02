@@ -66,7 +66,7 @@ async function run_test(path, dirs) {
             "resource://autofill/FormAutofillHeuristics.sys.mjs"
           );
           const { FormAutofillUtils } = ChromeUtils.importESModule(
-            "resource://autofill/FormAutofillUtils.sys.mjs"
+            "resource://gre/modules/shared/FormAutofillUtils.sys.mjs"
           );
 
           let eligibleFields = [];

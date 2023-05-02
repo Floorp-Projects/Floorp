@@ -20,7 +20,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   CreditCardResult: "resource://autofill/ProfileAutoCompleteResult.sys.mjs",
   FormAutofill: "resource://autofill/FormAutofill.sys.mjs",
   FormAutofillHandler: "resource://autofill/FormAutofillHandler.sys.mjs",
-  FormAutofillUtils: "resource://autofill/FormAutofillUtils.sys.mjs",
+  FormAutofillUtils: "resource://gre/modules/shared/FormAutofillUtils.sys.mjs",
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.sys.mjs",
   InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
