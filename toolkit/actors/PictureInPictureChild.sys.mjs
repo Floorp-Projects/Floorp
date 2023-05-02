@@ -2139,6 +2139,26 @@ export class PictureInPictureChild extends JSWindowActorChild {
   }
 
   /**
+   * @returns {boolean} true if a textTrack with mode "hidden" should be treated as "showing"
+   */
+  shouldShowHiddenTextTracks() {
+    const video = this.getWeakVideo();
+    if (!video) {
+      return false;
+    }
+    const { documentURI } = video.ownerDocument;
+    if (!documentURI) {
+      return false;
+    }
+    for (let [override, { showHiddenTextTracks }] of lazy.gSiteOverrides) {
+      if (override.matches(documentURI) && showHiddenTextTracks) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Updates this._currentWebVTTTrack if an active track is found
    * for the originating video.
    * @param {TextTrackList} textTrackList list of text tracks
@@ -2149,7 +2169,10 @@ export class PictureInPictureChild extends JSWindowActorChild {
     for (let i = 0; i < textTrackList.length; i++) {
       let track = textTrackList[i];
       let isCCText = track.kind === "subtitles" || track.kind === "captions";
-      if (isCCText && track.mode === "showing" && track.cues) {
+      let shouldShowTrack =
+        track.mode === "showing" ||
+        (track.mode === "hidden" && this.shouldShowHiddenTextTracks());
+      if (isCCText && shouldShowTrack && track.cues) {
         this._currentWebVTTTrack = track;
         break;
       }
