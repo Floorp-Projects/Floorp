@@ -11,6 +11,10 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
+  getMessageHandlerFrameChildActor:
+    "chrome://remote/content/shared/messagehandler/transports/js-window-actors/MessageHandlerFrameChild.sys.mjs",
+  RootMessageHandler:
+    "chrome://remote/content/shared/messagehandler/RootMessageHandler.sys.mjs",
   WindowRealm: "chrome://remote/content/shared/Realm.sys.mjs",
 });
 
@@ -171,9 +175,16 @@ export class WindowGlobalMessageHandler extends MessageHandler {
   }
 
   forwardCommand(command) {
-    throw new Error(
-      `Cannot forward commands from a "WINDOW_GLOBAL" MessageHandler`
-    );
+    switch (command.destination.type) {
+      case lazy.RootMessageHandler.type:
+        return lazy
+          .getMessageHandlerFrameChildActor(this)
+          .sendCommand(command, this.sessionId);
+      default:
+        throw new Error(
+          `Cannot forward command to "${command.destination.type}" from "${this.constructor.type}".`
+        );
+    }
   }
 
   /**
@@ -213,5 +224,22 @@ export class WindowGlobalMessageHandler extends MessageHandler {
       (contextDescriptor.type === ContextDescriptorType.TopBrowsingContext &&
         contextDescriptor.id === this.context.browserId)
     );
+  }
+
+  /**
+   * Send a command to the root MessageHandler.
+   *
+   * @param {Command} command
+   *     The command to send to the root MessageHandler.
+   * @returns {Promise}
+   *     A promise which resolves with the return value of the command.
+   */
+  sendRootCommand(command) {
+    return this.handleCommand({
+      ...command,
+      destination: {
+        type: lazy.RootMessageHandler.type,
+      },
+    });
   }
 }
