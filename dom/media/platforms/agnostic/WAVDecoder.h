@@ -13,9 +13,11 @@ namespace mozilla {
 
 DDLoggedTypeDeclNameAndBase(WaveDataDecoder, MediaDataDecoder);
 
-class WaveDataDecoder : public MediaDataDecoder,
-                        public DecoderDoctorLifeLogger<WaveDataDecoder> {
+class WaveDataDecoder final : public MediaDataDecoder,
+                              public DecoderDoctorLifeLogger<WaveDataDecoder> {
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WaveDataDecoder, final);
+
   explicit WaveDataDecoder(const CreateDecoderParams& aParams);
 
   // Return true if mimetype is Wave
@@ -31,6 +33,8 @@ class WaveDataDecoder : public MediaDataDecoder,
   }
 
  private:
+  ~WaveDataDecoder() = default;
+
   const AudioInfo mInfo;
   nsCOMPtr<nsISerialEventTarget> mThread;
 };

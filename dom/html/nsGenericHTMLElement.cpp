@@ -1858,7 +1858,8 @@ nsresult nsGenericHTMLFormElement::AfterSetAttr(
 }
 
 void nsGenericHTMLFormElement::ForgetFieldSet(nsIContent* aFieldset) {
-  if (IsFormAssociatedElement() && GetFieldSetInternal() == aFieldset) {
+  MOZ_DIAGNOSTIC_ASSERT(IsFormAssociatedElement());
+  if (GetFieldSetInternal() == aFieldset) {
     SetFieldSetInternal(nullptr);
   }
 }

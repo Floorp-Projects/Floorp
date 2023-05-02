@@ -123,7 +123,7 @@ class GMPDecodeData {
 
 class RefCountedWebrtcVideoEncoder {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RefCountedWebrtcVideoEncoder);
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
   // Implement sort of WebrtcVideoEncoder interface and support refcounting.
   // (We cannot use |Release|, since that's needed for nsRefPtr)
@@ -156,6 +156,8 @@ class RefCountedWebrtcVideoEncoder {
 class WebrtcGmpVideoEncoder : public GMPVideoEncoderCallbackProxy,
                               public RefCountedWebrtcVideoEncoder {
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebrtcGmpVideoEncoder, final);
+
   explicit WebrtcGmpVideoEncoder(std::string aPCHandle);
 
   // Implement VideoEncoder interface, sort of.
@@ -358,7 +360,7 @@ class WebrtcVideoEncoderProxy : public WebrtcVideoEncoder {
 class WebrtcGmpVideoDecoder : public GMPVideoDecoderCallbackProxy {
  public:
   explicit WebrtcGmpVideoDecoder(std::string aPCHandle);
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebrtcGmpVideoDecoder);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebrtcGmpVideoDecoder, final);
 
   // Implement VideoEncoder interface, sort of.
   // (We cannot use |Release|, since that's needed for nsRefPtr)

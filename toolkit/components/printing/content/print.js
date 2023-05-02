@@ -92,6 +92,7 @@ document.addEventListener(
       Cu.reportError(e)
     );
     ourBrowser.setAttribute("flex", "0");
+    ourBrowser.setAttribute("constrainpopups", "false");
     ourBrowser.classList.add("printSettingsBrowser");
     ourBrowser.closest(".dialogBox")?.classList.add("printDialogBox");
   },

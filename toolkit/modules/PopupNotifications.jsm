@@ -1254,6 +1254,11 @@ PopupNotifications.prototype = {
       }
     }
 
+    // Remember the time the notification was shown for the security delay.
+    notificationsToShow.forEach(
+      n => (n.timeShown ??= this.window.performance.now())
+    );
+
     if (this.isPanelOpen && this._currentAnchorElement == anchorElement) {
       notificationsToShow.forEach(function(n) {
         this._fireCallback(n, NOTIFICATION_EVENT_SHOWN);
@@ -1293,8 +1298,6 @@ PopupNotifications.prototype = {
         // Notifications that were opened a second time or that were originally
         // shown with "options.dismissed" will be recorded in a separate bucket.
         n._recordTelemetryStat(TELEMETRY_STAT_OFFERED);
-        // Remember the time the notification was shown for the security delay.
-        n.timeShown = this.window.performance.now();
       }, this);
 
       let target = this.panel;
@@ -1835,6 +1838,17 @@ PopupNotifications.prototype = {
     }
 
     let notification = notificationEl.notification;
+
+    // Receiving a button event means the notification should have been shown.
+    // Make sure that timeShown is always set to ensure we don't break the
+    // security delay calculation below.
+    if (!notification.timeShown) {
+      console.warn(
+        "_onButtonEvent: notification.timeShown is unset. Setting to now.",
+        notification
+      );
+      notification.timeShown = this.window.performance.now();
+    }
 
     if (type == "dropmarkerpopupshown") {
       notification._recordTelemetryStat(TELEMETRY_STAT_OPEN_SUBMENU);

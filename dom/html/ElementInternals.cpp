@@ -410,6 +410,7 @@ void ElementInternals::Unlink() {
   }
   if (mFieldSet) {
     mFieldSet->RemoveElement(mTarget);
+    mFieldSet = nullptr;
   }
 }
 

@@ -33,7 +33,7 @@ bool D3D11YCbCrImage::SetData(KnowsCompositor* aAllocator,
   mColorRange = aData.mColorRange;
   mChromaSubsampling = aData.mChromaSubsampling;
 
-  D3D11YCbCrRecycleAllocator* allocator =
+  RefPtr<D3D11YCbCrRecycleAllocator> allocator =
       aContainer->GetD3D11YCbCrRecycleAllocator(aAllocator);
   if (!allocator) {
     return false;

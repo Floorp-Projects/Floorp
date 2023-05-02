@@ -297,6 +297,12 @@ BROWSER_PROCESS += [
 
     # Avast (bug 1794064)
     DllBlocklistEntry("aswJsFlt.dll", (18, 0, 1473, 0)),
+
+    # Sonic Studio 3 (bug 1540883)
+    DllBlocklistEntry("ss3devprops.dll", ALL_VERSIONS),
+
+    # Nahimic audio driver (bug 1540883)
+    DllBlocklistEntry("audiodevprops2.dll", (2, 6, 14, 0)),
 ]
 
 CHILD_PROCESSES += [

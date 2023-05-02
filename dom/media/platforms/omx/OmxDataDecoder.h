@@ -55,12 +55,14 @@ DDLoggedTypeDeclNameAndBase(OmxDataDecoder, MediaDataDecoder);
  *
  *   OmxPlatformLayer acts as the OpenMAX IL core.
  */
-class OmxDataDecoder : public MediaDataDecoder,
-                       public DecoderDoctorLifeLogger<OmxDataDecoder> {
+class OmxDataDecoder final : public MediaDataDecoder,
+                             public DecoderDoctorLifeLogger<OmxDataDecoder> {
  protected:
   virtual ~OmxDataDecoder();
 
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(OmxDataDecoder, final);
+
   OmxDataDecoder(const TrackInfo& aTrackInfo,
                  layers::ImageContainer* aImageContainer);
 
