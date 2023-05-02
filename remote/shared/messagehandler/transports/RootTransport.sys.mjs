@@ -10,7 +10,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ContextDescriptorType:
     "chrome://remote/content/shared/messagehandler/MessageHandler.sys.mjs",
   isBrowsingContextCompatible:
-    "chrome://remote/content/shared/messagehandler/transports/FrameContextUtils.sys.mjs",
+    "chrome://remote/content/shared/messagehandler/transports/BrowsingContextUtils.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   MessageHandlerFrameActor:
     "chrome://remote/content/shared/messagehandler/transports/js-window-actors/MessageHandlerFrameActor.sys.mjs",
@@ -22,20 +22,20 @@ XPCOMUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 const MAX_RETRY_ATTEMPTS = 10;
 
 /**
- * FrameTransport is intended to be used from a ROOT MessageHandler to communicate
+ * RootTransport is intended to be used from a ROOT MessageHandler to communicate
  * with WINDOW_GLOBAL MessageHandlers via the MessageHandlerFrame JSWindow
  * actors.
  */
-export class FrameTransport {
+export class RootTransport {
   /**
    * @param {MessageHandler} messageHandler
-   *     The MessageHandler instance which owns this FrameTransport instance.
+   *     The MessageHandler instance which owns this RootTransport instance.
    */
   constructor(messageHandler) {
     this._messageHandler = messageHandler;
 
-    // FrameTransport will rely on the MessageHandlerFrame JSWindow actors.
-    // Make sure they are registered when instanciating a FrameTransport.
+    // RootTransport will rely on the MessageHandlerFrame JSWindow actors.
+    // Make sure they are registered when instanciating a RootTransport.
     lazy.MessageHandlerFrameActor.register();
   }
 
@@ -126,14 +126,14 @@ export class FrameTransport {
 
         if (++attempts > MAX_RETRY_ATTEMPTS) {
           lazy.logger.trace(
-            `FrameTransport reached the limit of retry attempts (${MAX_RETRY_ATTEMPTS})` +
+            `RootTransport reached the limit of retry attempts (${MAX_RETRY_ATTEMPTS})` +
               ` for command ${name} and browsing context ${webProgress.browsingContext.id}.`
           );
           throw e;
         }
 
         lazy.logger.trace(
-          `FrameTransport retrying command ${name} for ` +
+          `RootTransport retrying command ${name} for ` +
             `browsing context ${webProgress.browsingContext.id}, attempt: ${attempts}.`
         );
         await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));

@@ -22,7 +22,7 @@ XPCOMUtils.defineLazyGetter(lazy, "WebDriverError", () => {
 
 /**
  * Parent actor for the MessageHandlerFrame JSWindowActor. The
- * MessageHandlerFrame actor is used by FrameTransport to communicate between
+ * MessageHandlerFrame actor is used by RootTransport to communicate between
  * ROOT MessageHandlers and WINDOW_GLOBAL MessageHandlers.
  */
 export class MessageHandlerFrameParent extends JSWindowActorParent {
