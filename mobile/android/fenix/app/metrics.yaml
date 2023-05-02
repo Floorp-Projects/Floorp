@@ -1379,11 +1379,12 @@ unified_search:
       - https://github.com/mozilla-mobile/fenix/issues/24522
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/25544
+      - https://github.com/mozilla-mobile/firefox-android/pull/1875
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 115
+    expires: 123
     metadata:
       tags:
         - Search
@@ -1401,9 +1402,10 @@ unified_search:
       - https://github.com/mozilla-mobile/fenix/issues/24522
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/25544
+      - https://github.com/mozilla-mobile/firefox-android/pull/1875
     notification_emails:
       - android-probes@mozilla.com
-    expires: 115
+    expires: 123
     metadata:
       tags:
         - Search
@@ -4679,11 +4681,13 @@ tabs_tray:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/20508#issuecomment-901336677
       - https://github.com/mozilla-mobile/fenix/pull/25405#issuecomment-1139058237
+      - https://github.com/mozilla-mobile/firefox-android/pull/1875
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 116
+      - cgordon@mozilla.com
+    expires: never
     metadata:
       tags:
         - Tabs
@@ -4697,11 +4701,13 @@ tabs_tray:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/20508#issuecomment-901336677
       - https://github.com/mozilla-mobile/fenix/pull/25405#issuecomment-1139058237
+      - https://github.com/mozilla-mobile/firefox-android/pull/1875
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 116
+      - cgordon@mozilla.com
+    expires: never
     metadata:
       tags:
         - Tabs
@@ -6965,11 +6971,13 @@ addons:
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
       - https://github.com/mozilla-mobile/fenix/pull/21316#issuecomment-944615938
       - https://github.com/mozilla-mobile/fenix/pull/25405#issuecomment-1139058237
+      - https://github.com/mozilla-mobile/firefox-android/pull/1875
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 116
+      - cgordon@mozilla.com
+    expires: never
     metadata:
       tags:
         - WebExtensions
@@ -6992,11 +7000,13 @@ addons:
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
       - https://github.com/mozilla-mobile/fenix/pull/21316#issuecomment-944615938
       - https://github.com/mozilla-mobile/fenix/pull/25405#issuecomment-1139058237
+      - https://github.com/mozilla-mobile/firefox-android/pull/1875
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 116
+      - cgordon@mozilla.com
+    expires: never
     metadata:
       tags:
         - WebExtensions
@@ -7088,11 +7098,13 @@ addons:
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
       - https://github.com/mozilla-mobile/fenix/pull/21316#issuecomment-944615938
       - https://github.com/mozilla-mobile/fenix/pull/25405#issuecomment-1139058237
+      - https://github.com/mozilla-mobile/firefox-android/pull/1875
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 116
+      - cgordon@mozilla.com
+    expires: never
     metadata:
       tags:
         - WebExtensions
@@ -7703,11 +7715,12 @@ site_permissions:
       - https://github.com/mozilla-mobile/fenix/issues/25658
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/25664#issuecomment-1159151213
+      - https://github.com/mozilla-mobile/firefox-android/pull/1875
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 115
+    expires: 123
     metadata:
       tags:
         - SitePermissions
@@ -7724,11 +7737,12 @@ site_permissions:
       - https://github.com/mozilla-mobile/fenix/issues/25658
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/25664#issuecomment-1159151213
+      - https://github.com/mozilla-mobile/firefox-android/pull/1875
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 115
+    expires: 123
     metadata:
       tags:
         - SitePermissions
@@ -7745,11 +7759,12 @@ site_permissions:
       - https://github.com/mozilla-mobile/fenix/issues/25658
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/25664#issuecomment-1159151213
+      - https://github.com/mozilla-mobile/firefox-android/pull/1875
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: 115
+    expires: 123
     metadata:
       tags:
         - SitePermissions
@@ -8030,123 +8045,6 @@ contextual_menu:
         - TextSelection
 
 engine_tab:
-  kills:
-    type: labeled_counter
-    labels:
-      - foreground
-      - background
-    description: |
-      How often was the content process of a foreground (selected) or
-      background tab killed.
-    bugs:
-      - https://github.com/mozilla-mobile/android-components/issues/9366
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/17864
-      - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
-      - https://github.com/mozilla-mobile/fenix/pull/21779#issuecomment-938089467
-      - https://github.com/mozilla-mobile/fenix/pull/25405#issuecomment-1139058237
-    data_sensitivity:
-      - technical
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: 116
-    metadata:
-      tags:
-        - Performance
-  kill_foreground_age:
-    type: timing_distribution
-    time_unit: millisecond
-    description: |
-      Measures the age of the engine session of a foreground (selected) tab
-      at the time its content process got killed.
-    bugs:
-      - https://github.com/mozilla-mobile/android-components/issues/9366
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/17864
-      - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
-      - https://github.com/mozilla-mobile/fenix/pull/21779#issuecomment-938089467
-      - https://github.com/mozilla-mobile/fenix/pull/25405#issuecomment-1139058237
-    data_sensitivity:
-      - technical
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: 116
-    metadata:
-      tags:
-        - Performance
-  kill_background_age:
-    type: timing_distribution
-    time_unit: millisecond
-    description: |
-      Measures the age of the engine session of a background tab at the
-      time its content process got killed.
-    bugs:
-      - https://github.com/mozilla-mobile/android-components/issues/9366
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/17864
-      - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
-      - https://github.com/mozilla-mobile/fenix/pull/21779#issuecomment-938089467
-      - https://github.com/mozilla-mobile/fenix/pull/25405#issuecomment-1139058237
-    data_sensitivity:
-      - technical
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: 116
-    metadata:
-      tags:
-        - Performance
-  foreground_metrics:
-    type: event
-    description: |
-      Event collecting data about the state of tabs when the app comes back to
-      the foreground.
-    bugs:
-      - https://github.com/mozilla-mobile/android-components/issues/9997
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/18747#issuecomment-815731764
-      - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
-      - https://github.com/mozilla-mobile/fenix/pull/21779#issuecomment-938089467
-      - https://github.com/mozilla-mobile/fenix/pull/25405#issuecomment-1139058237
-    data_sensitivity:
-      - technical
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: 116
-    extra_keys:
-      background_active_tabs:
-        description: |
-          Number of active tabs (with an engine session assigned) when the app
-          went to the background.
-        type: string
-      background_crashed_tabs:
-        description: |
-          Number of tabs marked as crashed when the app went to the background.
-        type: string
-      background_total_tabs:
-        description: |
-          Number of total tabs when the app went to the background.
-        type: string
-      foreground_active_tabs:
-        description: |
-          Number of active tabs (with an engine session assigned) when the
-          app came back to the foreground.
-        type: string
-      foreground_crashed_tabs:
-        description: |
-          Number of tabs marked as crashed when the app came back to the
-          foreground.
-        type: string
-      foreground_total_tabs:
-        description: |
-          Number of total tabs when the app came back to the foreground.
-        type: string
-      time_in_background:
-        description: |
-          Time (in milliseconds) the app was in the background.
-        type: string
-    metadata:
-      tags:
-        - Performance
   tab_killed:
     type: event
     description: |
@@ -9230,11 +9128,12 @@ wallpapers:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/23382
       - https://github.com/mozilla-mobile/fenix/pull/26893
+      - https://github.com/mozilla-mobile/firefox-android/pull/1875
     notification_emails:
       - android-probes@mozilla.com
     data_sensitivity:
       - interaction
-    expires: 116
+    expires: 123
     no_lint:
       - COMMON_PREFIX
     metadata:
@@ -9248,11 +9147,12 @@ wallpapers:
       - https://github.com/mozilla-mobile/fenix/issues/26215
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/26893
+      - https://github.com/mozilla-mobile/firefox-android/pull/1875
     notification_emails:
       - android-probes@mozilla.com
     data_sensitivity:
       - interaction
-    expires: 116
+    expires: 123
     metadata:
       tags:
         - Wallpapers
@@ -9268,11 +9168,12 @@ wallpapers:
       - https://github.com/mozilla-mobile/fenix/issues/26215
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/26893
+      - https://github.com/mozilla-mobile/firefox-android/pull/1875
     notification_emails:
       - android-probes@mozilla.com
     data_sensitivity:
       - interaction
-    expires: 116
+    expires: 123
     metadata:
       tags:
         - Wallpapers
@@ -9284,11 +9185,12 @@ wallpapers:
       - https://github.com/mozilla-mobile/fenix/issues/26215
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/26893
+      - https://github.com/mozilla-mobile/firefox-android/pull/1875
     notification_emails:
       - android-probes@mozilla.com
     data_sensitivity:
       - interaction
-    expires: 116
+    expires: 123
     metadata:
       tags:
         - Wallpapers
@@ -9307,11 +9209,12 @@ wallpapers:
       - https://github:com/mozilla-mobile/fenix/issues/26945
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/26990
+      - https://github.com/mozilla-mobile/firefox-android/pull/1875
     notification_emails:
       - android-probes@mozilla.com
     data_sensitivity:
       - interaction
-    expires: 116
+    expires: 123
     metadata:
       tags:
         - Wallpapers
