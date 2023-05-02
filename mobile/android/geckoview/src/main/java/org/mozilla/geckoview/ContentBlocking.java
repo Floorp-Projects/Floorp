@@ -631,10 +631,7 @@ public class ContentBlocking {
      * @return This Settings instance.
      */
     public @NonNull Settings setCookieBannerMode(final @CBCookieBannerMode int mode) {
-      // This won't be needed when COOKIE_BANNER_MODE_DETECT_ONLY is removed.
-      if (mode != CookieBannerMode.COOKIE_BANNER_MODE_DETECT_ONLY) {
-        mCbhMode.commit(mode);
-      }
+      mCbhMode.commit(mode);
       return this;
     }
 
@@ -679,10 +676,7 @@ public class ContentBlocking {
      */
     public @NonNull Settings setCookieBannerModePrivateBrowsing(
         final @CBCookieBannerMode int mode) {
-      // This won't be needed when COOKIE_BANNER_MODE_DETECT_ONLY is removed.
-      if (mode != CookieBannerMode.COOKIE_BANNER_MODE_DETECT_ONLY) {
-        mCbhModePrivateBrowsing.commit(mode);
-      }
+      mCbhModePrivateBrowsing.commit(mode);
       return this;
     }
 
@@ -1682,11 +1676,6 @@ public class ContentBlocking {
     /** Reject cookies when possible otherwise accept the cookies. */
     public static final int COOKIE_BANNER_MODE_REJECT_OR_ACCEPT = 2;
 
-    /** Detect cookie banners but do not handle them. */
-    @Deprecated
-    @DeprecationSchedule(id = "cookie-banner-detect-only-mode", version = 114)
-    public static final int COOKIE_BANNER_MODE_DETECT_ONLY = 3;
-
     protected CookieBannerMode() {}
   }
 
@@ -1695,7 +1684,6 @@ public class ContentBlocking {
     CookieBannerMode.COOKIE_BANNER_MODE_DISABLED,
     CookieBannerMode.COOKIE_BANNER_MODE_REJECT,
     CookieBannerMode.COOKIE_BANNER_MODE_REJECT_OR_ACCEPT,
-    CookieBannerMode.COOKIE_BANNER_MODE_DETECT_ONLY
   })
   public @interface CBCookieBannerMode {}
 }

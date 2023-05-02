@@ -49,7 +49,6 @@ import java.io.InputStream;
 import java.lang.Boolean;
 import java.lang.CharSequence;
 import java.lang.Class;
-import java.lang.Deprecated;
 import java.lang.Double;
 import java.lang.Exception;
 import java.lang.Float;
@@ -81,7 +80,6 @@ import org.mozilla.geckoview.Autofill;
 import org.mozilla.geckoview.CompositorController;
 import org.mozilla.geckoview.ContentBlocking;
 import org.mozilla.geckoview.ContentBlockingController;
-import org.mozilla.geckoview.DeprecationSchedule;
 import org.mozilla.geckoview.GeckoDisplay;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoRuntime;
@@ -452,7 +450,6 @@ package org.mozilla.geckoview {
 
   public static class ContentBlocking.CookieBannerMode {
     ctor protected CookieBannerMode();
-    field @Deprecated @DeprecationSchedule(id="cookie-banner-detect-only-mode",version=114) public static final int COOKIE_BANNER_MODE_DETECT_ONLY = 3;
     field public static final int COOKIE_BANNER_MODE_DISABLED = 0;
     field public static final int COOKIE_BANNER_MODE_REJECT = 1;
     field public static final int COOKIE_BANNER_MODE_REJECT_OR_ACCEPT = 2;
