@@ -32,7 +32,7 @@ class SearchDialogFragmentConstraintLayout(context: Context, attrs: AttributeSet
         profiler?.addMarker(MEASURE_LAYOUT_DRAW_MARKER_NAME, profilerStartTime, "onLayout (SearchDialogFragment root)")
     }
 
-    override fun draw(canvas: Canvas?) {
+    override fun draw(canvas: Canvas) {
         // We instrument draw, rather than onDraw or dispatchDraw, because ConstraintLayout's draw includes
         // both of the other methods. If we want to track how long it takes to draw the children,
         // we'd get more information by instrumenting them individually.
