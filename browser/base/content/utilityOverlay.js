@@ -511,7 +511,8 @@ function openFeedbackPage() {
 function openSwitchingDevicesPage() {
   let url = getHelpLinkURL("switching-devices");
   let parsedUrl = new URL(url);
-  parsedUrl.searchParams.set("utm_source", "fx-new-device-help-menu");
+  parsedUrl.searchParams.set("utm_content", "switch-to-new-device");
+  parsedUrl.searchParams.set("utm_source", "help-menu");
   parsedUrl.searchParams.set("utm_medium", "firefox-desktop");
   parsedUrl.searchParams.set("utm_campaign", "migration");
   openTrustedLinkIn(parsedUrl.href, "tab");
