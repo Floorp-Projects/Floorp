@@ -9,19 +9,14 @@
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple3.js", "long.js");
 
-  async function toggleBlackbox() {
-    await selectSource(dbg, "simple3.js");
-    await clickElement(dbg, "blackbox");
-    await waitForDispatch(dbg.store, "BLACKBOX");
-  }
-
   // With the debugger stopped at a breakpoint, blackbox the current source and step in
   await selectSource(dbg, "simple3.js");
   await addBreakpoint(dbg, "simple3.js", 5);
   invokeInTab("simple");
   await waitForPaused(dbg, "simple3");
 
-  await toggleBlackbox();
+  await clickElement(dbg, "blackbox");
+  await waitForDispatch(dbg.store, "BLACKBOX_WHOLE_SOURCES");
   await dbg.actions.stepIn(getThreadContext(dbg));
 
   // We should stop at this breakpoint, rather than the first executed script
@@ -36,5 +31,4 @@ add_task(async function() {
   await resume(dbg);
   await reloaded;
   await waitForSource(dbg, "simple3.js");
-  await toggleBlackbox();
 });

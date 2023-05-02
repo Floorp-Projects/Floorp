@@ -12,52 +12,46 @@ import {
   originalToGeneratedId,
 } from "devtools/client/shared/source-map-loader/index";
 import { recordEvent } from "../../utils/telemetry";
-import { getSourceActorsForSource, isSourceBlackBoxed } from "../../selectors";
+import {
+  getSourceActorsForSource,
+  isSourceBlackBoxed,
+  getBlackBoxRanges,
+} from "../../selectors";
 
-import { PROMISE } from "../utils/middleware/promise";
-
-async function blackboxSourceActors(
+async function _blackboxSourceActorsForSource(
   thunkArgs,
-  sources,
+  source,
   shouldBlackBox,
-  ranges
+  ranges = []
 ) {
   const { getState, client, sourceMapLoader } = thunkArgs;
-  const blackboxSources = await Promise.all(
-    sources.map(async source => {
-      let sourceId = source.id;
-      // If the source is the original, then get the source id of its generated file
-      // and the range for where the original is represented in the generated file
-      // (which might be a bundle including other files).
-      if (isOriginalId(source.id)) {
-        sourceId = originalToGeneratedId(source.id);
-        const range = await sourceMapLoader.getFileGeneratedRange(source.id);
-        ranges = [];
-        if (range) {
-          ranges.push(range);
-          // TODO bug 1752108: Investigate blackboxing lines in original files,
-          // there is likely to be issues as the whole genrated file
-          // representing the original file will always be blackboxed.
-          console.warn(
-            "The might be unxpected issues when ignoring lines in an original file. " +
-              "The whole original source is being blackboxed."
-          );
-        }
-      }
-
-      for (const actor of getSourceActorsForSource(getState(), sourceId)) {
-        await client.blackBox(actor, shouldBlackBox, ranges);
-      }
-
-      return { source, shouldBlackBox, ranges };
-    })
-  );
-
-  if (shouldBlackBox) {
-    recordEvent("blackbox");
+  let sourceId = source.id;
+  // If the source is the original, then get the source id of its generated file
+  // and the range for where the original is represented in the generated file
+  // (which might be a bundle including other files).
+  if (isOriginalId(source.id)) {
+    sourceId = originalToGeneratedId(source.id);
+    const range = await sourceMapLoader.getFileGeneratedRange(source.id);
+    ranges = [];
+    if (range) {
+      ranges.push(range);
+      // TODO bug 1752108: Investigate blackboxing lines in original files,
+      // there is likely to be issues as the whole genrated file
+      // representing the original file will always be blackboxed.
+      console.warn(
+        "The might be unxpected issues when ignoring lines in an original file. " +
+          "The whole original source is being blackboxed."
+      );
+    } else {
+      throw new Error(
+        `Unable to retrieve generated ranges for original source ${source.url}`
+      );
+    }
   }
 
-  return { blackboxSources };
+  for (const actor of getSourceActorsForSource(getState(), sourceId)) {
+    await client.blackBox(actor, shouldBlackBox, ranges);
+  }
 }
 
 /**
@@ -77,24 +71,56 @@ async function blackboxSourceActors(
  *                            end: { line: 3, column: 4 },
  *                           }
  */
-export function toggleBlackBox(cx, source, shouldBlackBox, ranges) {
+export function toggleBlackBox(cx, source, shouldBlackBox, ranges = []) {
   return async thunkArgs => {
     const { dispatch, getState } = thunkArgs;
+
     shouldBlackBox =
       typeof shouldBlackBox == "boolean"
         ? shouldBlackBox
         : !isSourceBlackBoxed(getState(), source);
 
-    return dispatch({
-      type: "BLACKBOX",
-      cx,
-      [PROMISE]: blackboxSourceActors(
-        thunkArgs,
-        [source],
-        shouldBlackBox,
-        ranges ? ranges : []
-      ),
-    });
+    await _blackboxSourceActorsForSource(
+      thunkArgs,
+      source,
+      shouldBlackBox,
+      ranges
+    );
+
+    if (shouldBlackBox) {
+      recordEvent("blackbox");
+      // If ranges is an empty array, it would mean we are blackboxing the whole
+      // source. To do that lets reset the content to an empty array.
+      if (!ranges.length) {
+        dispatch({ type: "BLACKBOX_WHOLE_SOURCES", sources: [source] });
+      } else {
+        const currentRanges = getBlackBoxRanges(getState())[source.url] || [];
+        ranges = ranges.filter(newRange => {
+          // To avoid adding duplicate ranges make sure
+          // no range already exists with same start and end lines.
+          const duplicate = currentRanges.findIndex(
+            r =>
+              r.start.line == newRange.start.line &&
+              r.end.line == newRange.end.line
+          );
+          return duplicate == -1;
+        });
+        dispatch({ type: "BLACKBOX_SOURCE_RANGES", source, ranges });
+      }
+    } else {
+      // if there are no ranges to blackbox, then we are unblackboxing
+      // the whole source
+      // eslint-disable-next-line no-lonely-if
+      if (!ranges.length) {
+        dispatch({ type: "UNBLACKBOX_WHOLE_SOURCES", sources: [source] });
+      } else {
+        await dispatch({ type: "UNBLACKBOX_SOURCE_RANGES", source, ranges });
+        const blackboxRanges = getBlackBoxRanges(getState());
+        if (!blackboxRanges[source.url].length) {
+          dispatch({ type: "UNBLACKBOX_WHOLE_SOURCES", sources: [source] });
+        }
+      }
+    }
   };
 }
 /*
@@ -113,10 +139,23 @@ export function blackBoxSources(cx, sourcesToBlackBox, shouldBlackBox) {
       source => isSourceBlackBoxed(getState(), source) !== shouldBlackBox
     );
 
-    return dispatch({
-      type: "BLACKBOX",
-      cx,
-      [PROMISE]: blackboxSourceActors(thunkArgs, sources, shouldBlackBox, []),
+    if (!sources.length) {
+      return;
+    }
+
+    for (const source of sources) {
+      await _blackboxSourceActorsForSource(thunkArgs, source, shouldBlackBox);
+    }
+
+    if (shouldBlackBox) {
+      recordEvent("blackbox");
+    }
+
+    dispatch({
+      type: shouldBlackBox
+        ? "BLACKBOX_WHOLE_SOURCES"
+        : "UNBLACKBOX_WHOLE_SOURCES",
+      sources,
     });
   };
 }

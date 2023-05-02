@@ -18,9 +18,8 @@ add_task(async function() {
 
   const sortedSrc = findSource(dbg, "sorted.js");
   await selectSource(dbg, sortedSrc);
-
   await clickElement(dbg, "blackbox");
-  await waitForDispatch(dbg.store, "BLACKBOX");
+  await waitForDispatch(dbg.store, "BLACKBOX_WHOLE_SOURCES");
 
   const sourceTab = findElementWithSelector(dbg, ".source-tab.active");
   ok(
@@ -43,7 +42,7 @@ add_task(async function() {
 
   // unblackbox
   await clickElement(dbg, "blackbox");
-  await waitForDispatch(dbg.store, "BLACKBOX");
+  await waitForDispatch(dbg.store, "UNBLACKBOX_WHOLE_SOURCES");
 
   // click on test
   invokeInTab("test");
