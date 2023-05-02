@@ -267,4 +267,15 @@ places-forward-button =
 
 places-details-pane-select-an-item-description = Select an item to view and edit its properties
 
+places-details-pane-no-items =
+  .value = No items
+# Variables:
+#   $count (Number): number of items
+places-details-pane-items-count =
+  .value =
+      { $count ->
+          [one] One item
+         *[other] { $count } items
+      }
+
 places-locked-prompt = The bookmarks and history system will not be functional because one of { -brand-short-name }’s files is in use by another application. Some security software can cause this problem.

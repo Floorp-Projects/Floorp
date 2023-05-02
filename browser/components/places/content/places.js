@@ -540,39 +540,36 @@ var PlacesOrganizer = {
       }
 
       // Populate menu with backups.
-      for (let i = 0; i < backupFiles.length; i++) {
-        let fileSize = (await IOUtils.stat(backupFiles[i])).size;
+      for (let file of backupFiles) {
+        let fileSize = (await IOUtils.stat(file)).size;
         let [size, unit] = DownloadUtils.convertByteUnits(fileSize);
         let sizeString = PlacesUtils.getFormattedString("backupFileSizeText", [
           size,
           unit,
         ]);
-        let sizeInfo;
-        let bookmarkCount = PlacesBackups.getBookmarkCountForFile(
-          backupFiles[i]
-        );
-        if (bookmarkCount != null) {
-          sizeInfo =
-            " (" +
-            sizeString +
-            " - " +
-            PlacesUIUtils.getPluralString(
-              "detailsPane.itemsCountLabel",
-              bookmarkCount,
-              [bookmarkCount]
-            ) +
-            ")";
-        } else {
-          sizeInfo = " (" + sizeString + ")";
+
+        let countString;
+        let count = PlacesBackups.getBookmarkCountForFile(file);
+        if (count != null) {
+          const [msg] = await document.l10n.formatMessages([
+            { id: "places-details-pane-items-count", args: { count } },
+          ]);
+          countString = msg.attributes.find(attr => attr.name === "value")
+            ?.value;
         }
 
-        let backupDate = PlacesBackups.getDateForFile(backupFiles[i]);
+        const backupDate = PlacesBackups.getDateForFile(file);
+        let label = dateFormatter.format(backupDate);
+        label += countString
+          ? ` (${sizeString} - ${countString})`
+          : ` (${sizeString})`;
+
         let m = restorePopup.insertBefore(
           document.createXULElement("menuitem"),
           document.getElementById("restoreFromFile")
         );
-        m.setAttribute("label", dateFormatter.format(backupDate) + sizeInfo);
-        m.setAttribute("value", PathUtils.filename(backupFiles[i]));
+        m.setAttribute("label", label);
+        m.setAttribute("value", PathUtils.filename(file));
         m.setAttribute(
           "oncommand",
           "PlacesOrganizer.onRestoreMenuItemClick(this);"
@@ -774,10 +771,10 @@ var PlacesOrganizer = {
         let selectItemDesc = document.getElementById("selectItemDescription");
         let itemsCountLabel = document.getElementById("itemsCountText");
         selectItemDesc.hidden = false;
-        itemsCountLabel.value = PlacesUIUtils.getPluralString(
-          "detailsPane.itemsCountLabel",
-          aNodeList.length,
-          [aNodeList.length]
+        document.l10n.setAttributes(
+          itemsCountLabel,
+          "places-details-pane-items-count",
+          { count: aNodeList.length }
         );
         infoBox.hidden = true;
       }
@@ -794,13 +791,16 @@ var PlacesOrganizer = {
       }
       if (itemsCount == 0) {
         selectItemDesc.hidden = true;
-        itemsCountLabel.value = PlacesUIUtils.getString("detailsPane.noItems");
+        document.l10n.setAttributes(
+          itemsCountLabel,
+          "places-details-pane-no-items"
+        );
       } else {
         selectItemDesc.hidden = false;
-        itemsCountLabel.value = PlacesUIUtils.getPluralString(
-          "detailsPane.itemsCountLabel",
-          itemsCount,
-          [itemsCount]
+        document.l10n.setAttributes(
+          itemsCountLabel,
+          "places-details-pane-items-count",
+          { count: itemsCount }
         );
       }
     }

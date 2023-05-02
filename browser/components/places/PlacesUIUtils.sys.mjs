@@ -23,7 +23,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
   OpenInTabsUtils: "resource:///modules/OpenInTabsUtils.jsm",
-  PluralForm: "resource://gre/modules/PluralForm.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "bundle", function() {
@@ -534,35 +533,6 @@ export var PlacesUIUtils = {
   // when a bookmark dialog is closed. It is resolved to the bookmark guid,
   // if a bookmark was created or modified.
   lastBookmarkDialogDeferred: null,
-
-  getFormattedString: function PUIU_getFormattedString(key, params) {
-    return lazy.bundle.formatStringFromName(key, params);
-  },
-
-  /**
-   * Get a localized plural string for the specified key name and numeric value
-   * substituting parameters.
-   *
-   * @param {string} aKey
-   *        key for looking up the localized string in the bundle
-   * @param {number} aNumber
-   *        Number based on which the final localized form is looked up
-   * @param {Array} aParams
-   *        Array whose items will substitute #1, #2,... #n parameters
-   *        in the string.
-   *
-   * @see https://developer.mozilla.org/en/Localization_and_Plurals
-   * @returns {string} The localized plural string.
-   */
-  getPluralString: function PUIU_getPluralString(aKey, aNumber, aParams) {
-    let str = lazy.PluralForm.get(aNumber, lazy.bundle.GetStringFromName(aKey));
-
-    // Replace #1 with aParams[0], #2 with aParams[1], and so on.
-    return str.replace(/\#(\d+)/g, function(matchedId, matchedNumber) {
-      let param = aParams[parseInt(matchedNumber, 10) - 1];
-      return param !== undefined ? param : matchedId;
-    });
-  },
 
   getString: function PUIU_getString(key) {
     return lazy.bundle.GetStringFromName(key);

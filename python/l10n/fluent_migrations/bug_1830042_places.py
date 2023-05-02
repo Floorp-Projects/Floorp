@@ -2,8 +2,8 @@
 # http://creativecommons.org/publicdomain/zero/1.0/
 
 import fluent.syntax.ast as FTL
-from fluent.migrate.helpers import TERM_REFERENCE, transforms_from
-from fluent.migrate.transforms import REPLACE
+from fluent.migrate.helpers import TERM_REFERENCE, transforms_from, VARIABLE_REFERENCE
+from fluent.migrate.transforms import COPY, PLURALS, REPLACE, REPLACE_IN_TEXT
 
 
 def migrate(ctx):
@@ -15,6 +15,32 @@ def migrate(ctx):
         target,
         target,
         [
+            FTL.Message(
+                id=FTL.Identifier("places-details-pane-no-items"),
+                attributes=[
+                    FTL.Attribute(
+                        id=FTL.Identifier("value"),
+                        value=COPY(source, "detailsPane.noItems"),
+                    )
+                ],
+            ),
+            FTL.Message(
+                id=FTL.Identifier("places-details-pane-items-count"),
+                attributes=[
+                    FTL.Attribute(
+                        id=FTL.Identifier("value"),
+                        value=PLURALS(
+                            source,
+                            "detailsPane.itemsCountLabel",
+                            VARIABLE_REFERENCE("count"),
+                            foreach=lambda n: REPLACE_IN_TEXT(
+                                n,
+                                {"#1": VARIABLE_REFERENCE("count")},
+                            ),
+                        ),
+                    )
+                ],
+            ),
             FTL.Message(
                 id=FTL.Identifier("places-locked-prompt"),
                 value=REPLACE(
