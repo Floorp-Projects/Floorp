@@ -15543,6 +15543,7 @@
   type: RelaxedAtomicUint32
   value: 6
   mirror: always
+#endif
 
 # Whether to flush the Ole clipboard synchronously.
 # Possible values are:
@@ -15553,20 +15554,6 @@
   type: uint32_t
   value: 2
   mirror: always
-
-# Whether to apply a hack (adjusting the window height by -1px and back again)
-# upon first entering fullscreen intended to work around a bug exhibited under
-# on some Windows 11 machines under some configurations. (See bug 1763981.)
-#
-# Semantics:
-#  * 0: never
-#  * 1: always
-#  * 2: auto
-- name: widget.windows.apply-dwm-resize-hack
-  type: RelaxedAtomicInt32
-  value: 2
-  mirror: always
-#endif
 
 # Whether to disable SwipeTracker (e.g. swipe-to-nav).
 - name: widget.disable-swipe-tracker
