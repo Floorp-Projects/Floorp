@@ -486,6 +486,7 @@ void* js::Nursery::allocateCell(gc::AllocSite* site, size_t size,
   // RelocationOverlay.
   MOZ_ASSERT(size >= sizeof(RelocationOverlay));
   MOZ_ASSERT(size % CellAlignBytes == 0);
+  MOZ_ASSERT(size_t(kind) < NurseryTraceKinds);
 
   void* ptr = allocate(sizeof(NurseryCellHeader) + size);
   if (!ptr) {
@@ -506,22 +507,8 @@ void* js::Nursery::allocateCell(gc::AllocSite* site, size_t size,
     MOZ_ASSERT_IF(site->isNormal(), site->isInAllocatedList());
   }
 
-  // We count this regardless of the profiler's state, assuming that it costs
-  // just as much to count it, as to check the profiler's state and decide not
-  // to count it.
-  stats().noteNurseryAlloc();
-
   gcprobes::NurseryAlloc(cell, kind);
   return cell;
-}
-
-void* js::Nursery::allocateString(gc::AllocSite* site, size_t size) {
-  MOZ_ASSERT(canAllocateStrings());
-  void* ptr = allocateCell(site, size, JS::TraceKind::String);
-  if (ptr) {
-    site->zone()->nurseryAllocatedStrings++;
-  }
-  return ptr;
 }
 
 inline void* js::Nursery::allocate(size_t size) {
@@ -870,7 +857,7 @@ void js::Nursery::renderProfileJSON(JSONPrinter& json) const {
   // and then there's no guarentee.
   if (runtime()->geckoProfiler().enabled()) {
     json.property("cells_allocated_nursery",
-                  stats().allocsSinceMinorGCNursery());
+                  pretenuringNursery.totalAllocCount());
     json.property("cells_allocated_tenured",
                   stats().allocsSinceMinorGCTenured());
   }
@@ -1258,7 +1245,7 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
   TimeDuration totalTime = profileDurations_[ProfileKey::Total];
   sendTelemetry(reason, totalTime, wasEmpty, promotionRate, sitesPretenured);
 
-  stats().endNurseryCollection(reason);
+  stats().endNurseryCollection(reason);  // Calls GCNurseryCollectionCallback.
   gcprobes::MinorGCEnd();
 
   timeInChunkAlloc_ = mozilla::TimeDuration();
@@ -1575,14 +1562,15 @@ size_t js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
     // For some tests in JetStream2 and Kraken, the tenuredRate is high but the
     // number of allocated strings is low. So we calculate the tenuredRate only
     // if the number of string allocations is enough.
-    bool allocThreshold = zone->nurseryAllocatedStrings > 30000;
+    uint32_t zoneNurseryStrings =
+        zone->nurseryAllocCount(JS::TraceKind::String);
+    bool allocThreshold = zoneNurseryStrings > 30000;
     uint64_t zoneTenuredStrings =
         zone->stringStats.ref().liveNurseryStrings -
         zone->previousGCStringStats.ref().liveNurseryStrings;
     double tenuredRate =
-        allocThreshold
-            ? double(zoneTenuredStrings) / double(zone->nurseryAllocatedStrings)
-            : 0.0;
+        allocThreshold ? double(zoneTenuredStrings) / double(zoneNurseryStrings)
+                       : 0.0;
     bool disableNurseryStrings =
         pretenureStr && zone->allocNurseryStrings &&
         tenuredRate > tunables().pretenureStringThreshold();
@@ -1620,7 +1608,6 @@ size_t js::Nursery::doPretenuring(JSRuntime* rt, JS::GCReason reason,
     numStringsTenured += zoneTenuredStrings;
     numBigIntsTenured += zone->tenuredBigInts;
     zone->tenuredBigInts = 0;
-    zone->nurseryAllocatedStrings = 0;
   }
   session.reset();  // End the minor GC session, if running one.
   stats().setStat(gcstats::STAT_NURSERY_STRING_REALMS_DISABLED,

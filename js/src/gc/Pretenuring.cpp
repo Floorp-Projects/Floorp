@@ -32,6 +32,7 @@ static constexpr size_t MaxAllocSitesPerMinorGC = 500;
 
 // The maximum number of times to invalidate JIT code for a site. After this we
 // leave the site's state as Unknown and don't pretenure allocations.
+// Note we use 4 bits to store the invalidation count.
 static constexpr size_t MaxInvalidationCount = 5;
 
 // The minimum number of allocated cells needed to determine the survival rate
@@ -69,6 +70,9 @@ JS_PUBLIC_API void JS::SetSiteBasedPretenuringEnabled(bool enable) {
   SiteBasedPretenuringEnabled = enable;
 }
 
+class PretenuringNursery::MaybeGCSession
+    : public mozilla::Maybe<AutoGCSession> {};
+
 bool PretenuringNursery::canCreateAllocSite() {
   MOZ_ASSERT(allocSitesCreated <= MaxAllocSitesPerMinorGC);
   return SiteBasedPretenuringEnabled &&
@@ -79,12 +83,20 @@ size_t PretenuringNursery::doPretenuring(GCRuntime* gc, JS::GCReason reason,
                                          bool validPromotionRate,
                                          double promotionRate, bool reportInfo,
                                          size_t reportThreshold) {
-  mozilla::Maybe<AutoGCSession> session;
+  MaybeGCSession session;
 
   size_t sitesActive = 0;
   size_t sitesPretenured = 0;
   size_t sitesInvalidated = 0;
   size_t zonesWithHighNurserySurvival = 0;
+
+  // Zero allocation counts.
+  totalAllocCount_ = 0;
+  for (ZonesIter zone(gc, SkipAtoms); !zone.done(); zone.next()) {
+    for (auto& count : zone->pretenuring.nurseryAllocCounts) {
+      count = 0;
+    }
+  }
 
   // Check whether previously optimized code has changed its behaviour and
   // needs to be recompiled so that it can pretenure its allocations.
@@ -114,47 +126,10 @@ size_t PretenuringNursery::doPretenuring(GCRuntime* gc, JS::GCReason reason,
     MOZ_ASSERT_IF(site->isNormal(),
                   site->nurseryAllocCount >= site->nurseryTenuredCount);
 
-    bool hasPromotionRate = false;
-    double promotionRate = 0.0;
-    bool wasInvalidated = false;
     if (site->isNormal()) {
-      sitesActive++;
-
-      if (site->nurseryAllocCount > AllocSiteAttentionThreshold) {
-        promotionRate =
-            double(site->nurseryTenuredCount) / double(site->nurseryAllocCount);
-        hasPromotionRate = true;
-
-        AllocSite::State prevState = site->state();
-        site->updateStateOnMinorGC(promotionRate);
-        AllocSite::State newState = site->state();
-
-        if (prevState == AllocSite::State::Unknown &&
-            newState == AllocSite::State::LongLived) {
-          sitesPretenured++;
-
-          // We can optimize JIT code before we realise that a site should be
-          // pretenured. Make sure we invalidate any existing optimized code.
-
-          if (!session.isSome()) {
-            session.emplace(gc, JS::HeapState::MinorCollecting);
-          }
-
-          if (site->hasScript()) {
-            wasInvalidated = site->invalidateScript(gc);
-            if (wasInvalidated) {
-              sitesInvalidated++;
-            }
-          }
-        }
-      }
+      processSite(gc, site, sitesActive, sitesPretenured, sitesInvalidated,
+                  session, reportInfo, reportThreshold);
     }
-
-    if (reportInfo && site->allocCount() >= reportThreshold) {
-      site->printInfo(hasPromotionRate, promotionRate, wasInvalidated);
-    }
-
-    site->resetNurseryAllocations();
 
     site = next;
   }
@@ -162,10 +137,11 @@ size_t PretenuringNursery::doPretenuring(GCRuntime* gc, JS::GCReason reason,
   // Catch-all sites don't end up on the list if they are only used from
   // optimized JIT code, so process them here.
   for (ZonesIter zone(gc, SkipAtoms); !zone.done(); zone.next()) {
-    reportAndResetCatchAllSite(zone->unknownAllocSite(), reportInfo,
-                               reportThreshold);
-    reportAndResetCatchAllSite(zone->optimizedAllocSite(), reportInfo,
-                               reportThreshold);
+    for (auto& site : zone->pretenuring.unknownAllocSites) {
+      processCatchAllSite(&site, reportInfo, reportThreshold);
+    }
+    processCatchAllSite(zone->optimizedAllocSite(), reportInfo,
+                        reportThreshold);
   }
 
   if (reportInfo) {
@@ -182,18 +158,75 @@ size_t PretenuringNursery::doPretenuring(GCRuntime* gc, JS::GCReason reason,
   return sitesPretenured;
 }
 
-void PretenuringNursery::reportAndResetCatchAllSite(AllocSite* site,
-                                                    bool reportInfo,
-                                                    size_t reportThreshold) {
+void PretenuringNursery::processSite(GCRuntime* gc, AllocSite* site,
+                                     size_t& sitesActive,
+                                     size_t& sitesPretenured,
+                                     size_t& sitesInvalidated,
+                                     MaybeGCSession& session, bool reportInfo,
+                                     size_t reportThreshold) {
+  sitesActive++;
+
+  updateAllocCounts(site);
+
+  bool hasPromotionRate = false;
+  double promotionRate = 0.0;
+  bool wasInvalidated = false;
+  if (site->nurseryAllocCount > AllocSiteAttentionThreshold) {
+    promotionRate =
+        double(site->nurseryTenuredCount) / double(site->nurseryAllocCount);
+    hasPromotionRate = true;
+
+    AllocSite::State prevState = site->state();
+    site->updateStateOnMinorGC(promotionRate);
+    AllocSite::State newState = site->state();
+
+    if (prevState == AllocSite::State::Unknown &&
+        newState == AllocSite::State::LongLived) {
+      sitesPretenured++;
+
+      // We can optimize JIT code before we realise that a site should be
+      // pretenured. Make sure we invalidate any existing optimized code.
+
+      if (!session.isSome()) {
+        session.emplace(gc, JS::HeapState::MinorCollecting);
+      }
+
+      if (site->hasScript()) {
+        wasInvalidated = site->invalidateScript(gc);
+        if (wasInvalidated) {
+          sitesInvalidated++;
+        }
+      }
+    }
+  }
+
+  if (reportInfo && site->allocCount() >= reportThreshold) {
+    site->printInfo(hasPromotionRate, promotionRate, wasInvalidated);
+  }
+
+  site->resetNurseryAllocations();
+}
+
+void PretenuringNursery::processCatchAllSite(AllocSite* site, bool reportInfo,
+                                             size_t reportThreshold) {
   if (!site->hasNurseryAllocations()) {
     return;
   }
+
+  updateAllocCounts(site);
 
   if (reportInfo && site->allocCount() >= reportThreshold) {
     site->printInfo(false, 0.0, false);
   }
 
   site->resetNurseryAllocations();
+}
+
+void PretenuringNursery::updateAllocCounts(AllocSite* site) {
+  JS::TraceKind kind = site->traceKind();
+  totalAllocCount_ += site->nurseryAllocCount;
+  PretenuringZone& zone = site->zone()->pretenuring;
+  zone.nurseryAllocCount(kind) += site->nurseryAllocCount;
 }
 
 bool AllocSite::invalidateScript(GCRuntime* gc) {
@@ -240,12 +273,12 @@ AllocSite::Kind AllocSite::kind() const {
     return Kind::Normal;
   }
 
-  if (this == zone()->unknownAllocSite()) {
-    return Kind::Unknown;
+  if (this == zone()->optimizedAllocSite()) {
+    return Kind::Optimized;
   }
 
-  MOZ_ASSERT(this == zone()->optimizedAllocSite());
-  return Kind::Optimized;
+  MOZ_ASSERT(this == zone()->unknownAllocSite(traceKind()));
+  return Kind::Unknown;
 }
 
 void AllocSite::updateStateOnMinorGC(double promotionRate) {

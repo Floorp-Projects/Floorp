@@ -763,7 +763,7 @@ Statistics::Statistics(GCRuntime* gc)
       gcDebugFile(nullptr),
       nonincrementalReason_(GCAbortReason::None),
       creationTime_(TimeStamp::Now()),
-      allocsSinceMinorGC({0, 0}),
+      tenuredAllocsSinceMinorGC(0),
       preTotalHeapBytes(0),
       postTotalHeapBytes(0),
       preCollectedHeapBytes(0),
@@ -1151,7 +1151,7 @@ void Statistics::endNurseryCollection(JS::GCReason reason) {
         context(), JS::GCNurseryProgress::GC_NURSERY_COLLECTION_END, reason);
   }
 
-  allocsSinceMinorGC = {0, 0};
+  tenuredAllocsSinceMinorGC = 0;
 }
 
 Statistics::SliceData::SliceData(const SliceBudget& budget,

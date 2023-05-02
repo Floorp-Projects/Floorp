@@ -114,15 +114,13 @@ class CompileZone {
   const void* addressOfStringNurseryCurrentEnd();
   const void* addressOfBigIntNurseryCurrentEnd();
 
-  uint32_t* addressOfNurseryAllocCount();
-
   void* addressOfNurseryAllocatedSites();
 
   bool canNurseryAllocateStrings();
   bool canNurseryAllocateBigInts();
 
-  uintptr_t nurseryCellHeader(JS::TraceKind traceKind,
-                              gc::CatchAllAllocSite siteKind);
+  gc::AllocSite* catchAllAllocSite(JS::TraceKind traceKind,
+                                   gc::CatchAllAllocSite siteKind);
 };
 
 class JitRealm;
