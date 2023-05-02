@@ -22,14 +22,16 @@ Worker Import failure test: Bug 1824498
 
 SimpleTest.waitForExplicitFinish();
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  await SpecialPowers.pushPrefEnv(
+    { set: [["dom.workers.modules.enabled", true ]] });
+
   const worker = new Worker("worker_bug1824498.mjs", {"type": "module"})
   worker.onerror = function(event) {
     ok(true, "not assert");
     SimpleTest.finish();
   };
 });
-
 </script>
 </pre>
 </body>
