@@ -481,6 +481,29 @@
   margin-block-start: calc(1.46em + 4px);
 }
 
+/* Feedback acknowledgment */
+
+.urlbarView-row[feedback-acknowledgment]::after {
+  content: attr(feedback-acknowledgment);
+  display: flex;
+  align-items: center;
+  position: absolute;
+  bottom: 0.72em;
+  font-size: 0.85em;
+  margin-inline-start: var(--urlbarView-item-inline-padding);
+  padding-inline-start: calc(var(--urlbarView-favicon-width) + 6px);
+  background-image: url("chrome://branding/content/icon32.png");
+  background-repeat: no-repeat;
+  background-position: 0 center;
+  background-size: var(--urlbarView-favicon-width);
+  min-height: var(--urlbarView-favicon-width);
+}
+
+.urlbarView-row[feedback-acknowledgment] {
+  position: relative;
+  padding-bottom: 1.94em;
+}
+
 /* Title */
 
 .urlbarView-title {
