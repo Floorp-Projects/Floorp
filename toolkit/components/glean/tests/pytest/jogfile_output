@@ -119,15 +119,6 @@
         false
       ],
       [
-        "text",
-        "text_metric",
-        [
-          "metrics"
-        ],
-        "application",
-        false
-      ],
-      [
         "timespan",
         "timespan_metric",
         [

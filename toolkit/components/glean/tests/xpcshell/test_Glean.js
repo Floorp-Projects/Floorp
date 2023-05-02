@@ -400,27 +400,3 @@ add_task(async function test_fog_url_works() {
 
   Assert.equal(value, Glean.testOnlyIpc.aUrl.testGetValue("store1"));
 });
-
-add_task(async function test_fog_text_works() {
-  const value =
-    "Before the risin' sun, we fly, So many roads to choose, We'll start out walkin' and learn to run, (We've only just begun)";
-  Glean.testOnlyIpc.aText.set(value);
-
-  let rslt = Glean.testOnlyIpc.aText.testGetValue();
-
-  Assert.equal(value, rslt);
-
-  Assert.equal(121, rslt.length);
-});
-
-add_task(async function test_fog_text_works_unusual_character() {
-  const value =
-    "The secret to Dominique Ansel's viennoiserie is the use of Isigny Sainte-Mère butter and Les Grands Moulins de Paris flour";
-  Glean.testOnlyIpc.aText.set(value);
-
-  let rslt = Glean.testOnlyIpc.aText.testGetValue();
-
-  Assert.equal(value, rslt);
-
-  Assert.greater(rslt.length, 100);
-});
