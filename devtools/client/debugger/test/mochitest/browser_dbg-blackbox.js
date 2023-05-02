@@ -197,6 +197,16 @@ async function testBlackBoxSource(dbg, source) {
   await openContextMenu(dbg, "CodeMirrorLines");
   await selectBlackBoxContextMenuItem(dbg, "blackbox");
 
+  info("Assert that all lines in the source are styled correctly");
+  assertIgnoredStyleInSourceLines(dbg, { hasBlackboxedLinesClass: true });
+
+  info("Assert that the source tree for simple4.js has the ignored style");
+  const node = findSourceNodeWithText(dbg, "simple4.js");
+  ok(
+    node.querySelector(".blackboxed"),
+    "simple4.js node does not have the ignored style"
+  );
+
   invokeInTab("funcA");
 
   info(
@@ -229,6 +239,18 @@ async function testBlackBoxSource(dbg, source) {
   rightClickEl(dbg, findSourceNodeWithText(dbg, "simple4.js"));
   await waitForContextMenu(dbg);
   await selectBlackBoxContextMenuItem(dbg, "blackbox");
+
+  info("Assert that all lines in the source are un-styled correctly");
+  assertIgnoredStyleInSourceLines(dbg, { hasBlackboxedLinesClass: false });
+
+  info(
+    "Assert that the source tree for simple4.js does not have the ignored style"
+  );
+  const nodeAfterBlackbox = findSourceNodeWithText(dbg, "simple4.js");
+  ok(
+    !nodeAfterBlackbox.querySelector(".blackboxed"),
+    "simple4.js node still has the ignored style"
+  );
 
   invokeInTab("funcA");
 
@@ -289,6 +311,20 @@ async function testBlackBoxMultipleLines(dbg, source) {
     nonBlackBoxedSourceTreeNode: findSourceNodeWithText(dbg, "simple2.js"),
   });
 
+  info("Assert that the ignored lines are styled correctly");
+  assertIgnoredStyleInSourceLines(dbg, {
+    lines: [7, 13],
+    hasBlackboxedLinesClass: true,
+  });
+
+  info("Assert that the source tree for simple4.js has the ignored style");
+  const node = findSourceNodeWithText(dbg, "simple4.js");
+
+  ok(
+    node.querySelector(".blackboxed"),
+    "simple4.js node does not have the ignored style"
+  );
+
   invokeInTab("funcA");
 
   info("assert the pause at the debugger statement on line 2");
@@ -323,6 +359,21 @@ async function testBlackBoxMultipleLines(dbg, source) {
     blackBoxedSourceTreeNode: null,
     nonBlackBoxedSourceTreeNode: findSourceNodeWithText(dbg, "simple2.js"),
   });
+
+  info("Assert that the un-ignored lines are no longer have the style");
+  assertIgnoredStyleInSourceLines(dbg, {
+    lines: [7, 13],
+    hasBlackboxedLinesClass: false,
+  });
+
+  info(
+    "Assert that the source tree for simple4.js does not have the ignored style"
+  );
+  const nodeAfterBlackbox = findSourceNodeWithText(dbg, "simple4.js");
+  ok(
+    !nodeAfterBlackbox.querySelector(".blackboxed"),
+    "simple4.js still has the ignored style"
+  );
 
   invokeInTab("funcA");
 
@@ -363,6 +414,22 @@ async function testBlackBoxSingleLine(dbg, source) {
     nonBlackBoxedSourceTreeNode: findSourceNodeWithText(dbg, "simple2.js"),
   });
 
+  info("Assert that the ignored line 2 is styled correctly");
+  assertIgnoredStyleInSourceLines(dbg, {
+    lines: [2],
+    hasBlackboxedLinesClass: true,
+  });
+
+  info("Black box line 4 of funcC() with the debugger statement");
+  await openContextMenu(dbg, "gutter", 4);
+  await selectBlackBoxContextMenuItem(dbg, "blackbox-line");
+
+  info("Assert that the ignored line 4 is styled correctly");
+  assertIgnoredStyleInSourceLines(dbg, {
+    lines: [4],
+    hasBlackboxedLinesClass: true,
+  });
+
   invokeInTab("funcA");
 
   // assert the pause at the breakpoint set on line 8
@@ -378,22 +445,28 @@ async function testBlackBoxSingleLine(dbg, source) {
   await selectBlackBoxContextMenuItem(dbg, "blackbox-line");
 
   await assertEditorBlackBoxBoxContextMenuItems(dbg, {
-    blackboxedLine: null,
-    nonBlackBoxedLine: 4,
+    blackboxedLine: 4,
+    nonBlackBoxedLine: 3,
     blackBoxedLines: null,
-    nonBlackBoxedLines: [3, 4],
-    blackboxedSourceState: SOURCE_IS_NOT_IGNORED,
+    nonBlackBoxedLines: [11, 12],
+    blackboxedSourceState: SOURCE_LINES_ARE_IGNORED,
   });
 
   await assertGutterBlackBoxBoxContextMenuItems(dbg, {
-    blackboxedLine: null,
-    nonBlackBoxedLine: 4,
-    blackboxedSourceState: SOURCE_IS_NOT_IGNORED,
+    blackboxedLine: 4,
+    nonBlackBoxedLine: 3,
+    blackboxedSourceState: SOURCE_LINES_ARE_IGNORED,
   });
 
   await assertSourceTreeBlackBoxBoxContextMenuItems(dbg, {
     blackBoxedSourceTreeNode: null,
     nonBlackBoxedSourceTreeNode: findSourceNodeWithText(dbg, "simple2.js"),
+  });
+
+  info("Assert that the un-ignored line 2 is styled correctly");
+  assertIgnoredStyleInSourceLines(dbg, {
+    lines: [2],
+    hasBlackboxedLinesClass: false,
   });
 
   invokeInTab("funcA");
@@ -657,10 +730,10 @@ async function selectEditorLinesAndOpenContextMenu(dbg, lines) {
 /**
  * Opens the debugger editor context menu in either codemirror or the
  * the debugger gutter.
- * @params {Object} dbg
- * @params {String} elementName
+ * @param {Object} dbg
+ * @param {String} elementName
  *                  The element to select
- * @params {Number} line
+ * @param {Number} line
  *                  The line to open the context menu on.
  */
 async function openContextMenu(dbg, elementName, line) {
@@ -672,8 +745,8 @@ async function openContextMenu(dbg, elementName, line) {
 
 /**
  * Selects the specific black box context menu item
- * @params {Object} dbg
- * @params {String} itemName
+ * @param {Object} dbg
+ * @param {String} itemName
  *                  The name of the context menu item.
  */
 async function selectBlackBoxContextMenuItem(dbg, itemName) {
@@ -697,13 +770,74 @@ async function selectBlackBoxContextMenuItem(dbg, itemName) {
 
 /**
  * Selects a range of lines
- * @params {Object} dbg
- * @params {Number} startLine
- * @params {Number} endLine
+ * @param {Object} dbg
+ * @param {Number} startLine
+ * @param {Number} endLine
  */
 function selectEditorLines(dbg, startLine, endLine) {
   getCM(dbg).setSelection(
     { line: startLine - 1, ch: 0 },
     { line: endLine, ch: 0 }
   );
+}
+/**
+ * Asserts that the styling for ignored lines are applied
+ * @param {Object} dbg
+ * @param {Object} options
+ *                 lines {null | Number | Number[]} [lines] Line(s) to assert.
+ *                   - If null is passed, the assertion is on all the blackboxed lines
+ *                   - If a line number is passed, the assertion is on the specified line
+ *                   - If an array (start and end lines) is passed, the assertion is on the multiple lines seelected
+ *                 hasBlackboxedLinesClass
+ *                   If `true` assert that style exist, else assert that style does not exist
+ */
+function assertIgnoredStyleInSourceLines(
+  dbg,
+  { lines, hasBlackboxedLinesClass }
+) {
+  if (lines) {
+    if (!lines[1]) {
+      // Single line ignored
+      const element = findElement(dbg, "line", lines[0]);
+      const hasStyle = hasBlackboxedLinesClass
+        ? element.parentNode.classList.contains("blackboxed-line")
+        : !element.parentNode.classList.contains("blackboxed-line");
+      ok(
+        hasStyle,
+        `Line ${lines[0]} ${
+          hasBlackboxedLinesClass ? "does not have" : "has"
+        } ignored styling`
+      );
+    } else {
+      // Multiple lines ignored
+      let currentLine = lines[0];
+      while (currentLine <= lines[1]) {
+        const element = findElement(dbg, "line", currentLine);
+        const hasStyle = hasBlackboxedLinesClass
+          ? element.parentNode.classList.contains("blackboxed-line")
+          : !element.parentNode.classList.contains("blackboxed-line");
+        ok(
+          hasStyle,
+          `Line ${currentLine} ${
+            hasBlackboxedLinesClass ? "does not have" : "has"
+          } ignored styling`
+        );
+        currentLine = currentLine + 1;
+      }
+    }
+  } else {
+    const codeLines = findAllElementsWithSelector(
+      dbg,
+      ".CodeMirror-code .CodeMirror-line"
+    );
+    const blackboxedLines = findAllElementsWithSelector(
+      dbg,
+      ".CodeMirror-code .blackboxed-line"
+    );
+    is(
+      hasBlackboxedLinesClass ? codeLines.length : 0,
+      blackboxedLines.length,
+      `${blackboxedLines.length} of ${codeLines.length} lines are blackboxed`
+    );
+  }
 }

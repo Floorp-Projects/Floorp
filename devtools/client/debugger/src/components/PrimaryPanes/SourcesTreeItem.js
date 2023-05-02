@@ -382,7 +382,10 @@ class SourceTreeItem extends Component {
 
     return (
       <div
-        className={classnames("node", { focused })}
+        className={classnames("node", {
+          focused,
+          blackboxed: item.type == "source" && item.isBlackBoxed,
+        })}
         key={item.path}
         onClick={this.onClick}
         onContextMenu={this.onContextMenu}
