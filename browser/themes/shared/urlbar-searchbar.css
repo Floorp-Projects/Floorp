@@ -321,14 +321,6 @@
   border-radius: var(--urlbar-icon-border-radius);
 }
 
-@supports not (width: round(1em, 2px)) {
-  #urlbar-search-mode-indicator-close {
-    background-size: max(10px, 0.7em);
-    width: max(16px, 1em);
-    height: max(16px, 1em);
-  }
-}
-
 #urlbar-search-mode-indicator-close:hover {
   background-color: var(--urlbar-box-hover-bgcolor);
   color: var(--urlbar-box-hover-text-color);
