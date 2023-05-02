@@ -339,7 +339,9 @@ already_AddRefed<Promise> OutgoingDatagramStreamAlgorithms::WriteCallback(
   return promise.forget();
 }
 
+// XXX should we allow datagrams to be sent before connect?  Check IETF spec
 void OutgoingDatagramStreamAlgorithms::SetChild(WebTransportChild* aChild) {
+  LOG(("Setting child in datagrams"));
   mChild = aChild;
   if (mWaitConnect) {
     LOG(("Sending queued datagram"));
