@@ -112,3 +112,6 @@ vendoring:
     - src/util/cb_args.h
     - src/util/ice_util.c
     - src/util/ice_util.h
+
+  patches:
+    - non-unified-build.patch

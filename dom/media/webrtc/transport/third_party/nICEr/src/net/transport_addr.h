@@ -38,7 +38,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <sys/types.h>
 #ifdef WIN32
+
+// FIXME: This is dangerous, but exactly the pattern used in
+// nrappkit/src/port/win32/include/csi_platform.h
+// Not good because INT8 are typedefed to different values in
+// <winsock2.h> and <r_types.h>.
+// {
+
+#define UINT8 UBLAH_IGNORE_ME_PLEASE
+#define INT8 BLAH_IGNORE_ME_PLEASE
 #include <winsock2.h>
+#undef UINT8
+#undef INT8
+#include <r_types.h>
+
+// }
+
 #include <ws2tcpip.h>
 #else
 #include <sys/socket.h>
