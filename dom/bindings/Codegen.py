@@ -12733,7 +12733,7 @@ class CGUnionStruct(CGThing):
     def getStruct(self):
 
         members = [
-            ClassMember("mType", "Type", body="eUninitialized"),
+            ClassMember("mType", "TypeOrUninit", body="eUninitialized"),
             ClassMember("mValue", "Value"),
         ]
         ctor = ClassConstructor(
@@ -13124,6 +13124,23 @@ class CGUnionStruct(CGThing):
                 )
             )
 
+            body = dedent(
+                """
+                MOZ_RELEASE_ASSERT(mType != eUninitialized);
+                return static_cast<Type>(mType);
+                """
+            )
+            methods.append(
+                ClassMethod(
+                    "GetType",
+                    "Type",
+                    [],
+                    bodyInHeader=True,
+                    body=body,
+                    const=True,
+                )
+            )
+
             if CGUnionStruct.isUnionCopyConstructible(self.type):
                 constructors.append(
                     ClassConstructor(
@@ -13159,7 +13176,19 @@ class CGUnionStruct(CGThing):
         else:
             friend = ""
 
+        enumValuesNoUninit = [x for x in enumValues if x != "eUninitialized"]
+
         bases = [ClassBase("AllOwningUnionBase")] if self.ownsMembers else []
+        enums = [
+            ClassEnum("TypeOrUninit", enumValues, visibility="private"),
+            ClassEnum(
+                "Type",
+                enumValuesNoUninit,
+                visibility="public",
+                enumClass=True,
+                values=["TypeOrUninit::" + x for x in enumValuesNoUninit],
+            ),
+        ]
         return CGClass(
             selfName,
             bases=bases,
@@ -13171,7 +13200,7 @@ class CGUnionStruct(CGThing):
             destructor=ClassDestructor(
                 visibility="public", body="Uninit();\n", bodyInHeader=True
             ),
-            enums=[ClassEnum("Type", enumValues, visibility="private")],
+            enums=enums,
             unions=[ClassUnion("Value", unionValues, visibility="private")],
         )
 
@@ -13626,9 +13655,12 @@ class ClassMember(ClassItem):
 
 
 class ClassEnum(ClassItem):
-    def __init__(self, name, entries, values=None, visibility="public"):
+    def __init__(
+        self, name, entries, values=None, visibility="public", enumClass=False
+    ):
         self.entries = entries
         self.values = values
+        self.enumClass = enumClass
         ClassItem.__init__(self, name, visibility)
 
     def declare(self, cgClass):
@@ -13639,8 +13671,13 @@ class ClassEnum(ClassItem):
             else:
                 entry = "%s = %s" % (self.entries[i], self.values[i])
             entries.append(entry)
-        name = "" if not self.name else " " + self.name
-        return "enum%s\n{\n%s\n};\n" % (name, indent(",\n".join(entries)))
+
+        decl = ["enum"]
+        self.enumClass and decl.append("class")
+        self.name and decl.append(self.name)
+        decl = " ".join(decl)
+
+        return "%s\n{\n%s\n};\n" % (decl, indent(",\n".join(entries)))
 
     def define(self, cgClass):
         # Only goes in the header
