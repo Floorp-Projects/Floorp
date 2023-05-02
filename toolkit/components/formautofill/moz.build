@@ -11,6 +11,8 @@ with Files("**"):
 
 EXTRA_JS_MODULES.shared += [
     "shared/CreditCardRuleset.sys.mjs",
+    "shared/FieldScanner.sys.mjs",
+    "shared/FormAutofillHeuristics.sys.mjs",
     "shared/FormAutofillNameUtils.sys.mjs",
     "shared/FormAutofillUtils.sys.mjs",
     "shared/LabelUtils.sys.mjs",

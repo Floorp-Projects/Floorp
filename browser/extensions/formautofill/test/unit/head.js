@@ -220,7 +220,7 @@ var AddressDataLoader, FormAutofillUtils;
 async function runHeuristicsTest(patterns, fixturePathPrefix) {
   add_setup(async () => {
     ({ FormAutofillHeuristics } = ChromeUtils.importESModule(
-      "resource://autofill/FormAutofillHeuristics.sys.mjs"
+      "resource://gre/modules/shared/FormAutofillHeuristics.sys.mjs"
     ));
     ({ AddressDataLoader, FormAutofillUtils } = ChromeUtils.importESModule(
       "resource://gre/modules/shared/FormAutofillUtils.sys.mjs"
