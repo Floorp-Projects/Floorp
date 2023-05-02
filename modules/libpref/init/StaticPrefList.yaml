@@ -2484,6 +2484,12 @@
   value: true
   mirror: always
 
+# Whether the LargestContentfulPaint API will be gathered and returned by performance observer*
+- name: dom.enable_largest_contentful_paint
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Whether performance.GetEntries* will contain an entry for the active document
 - name: dom.enable_performance_navigation_timing
   type: bool

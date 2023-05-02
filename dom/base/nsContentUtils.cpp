@@ -2695,7 +2695,7 @@ nsINode* nsContentUtils::Retarget(nsINode* aTargetA, nsINode* aTargetB) {
 }
 
 // static
-nsINode* nsContentUtils::GetAnElementForTiming(Element* aTarget,
+Element* nsContentUtils::GetAnElementForTiming(Element* aTarget,
                                                const Document* aDocument,
                                                nsIGlobalObject* aGlobal) {
   if (!aTarget->IsInComposedDoc()) {
