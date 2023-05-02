@@ -811,10 +811,6 @@ criteria = "safe-to-deploy"
 version = "1.0.4"
 criteria = "safe-to-deploy"
 
-[[exemptions.proc-macro-error-attr]]
-version = "1.0.4"
-criteria = "safe-to-deploy"
-
 [[exemptions.proc-macro-hack]]
 version = "0.5.19"
 criteria = "safe-to-deploy"
@@ -906,10 +902,6 @@ criteria = "safe-to-deploy"
 [[exemptions.same-file]]
 version = "1.0.6"
 criteria = "safe-to-deploy"
-
-[[exemptions.scoped-tls]]
-version = "1.0.0"
-criteria = "safe-to-run"
 
 [[exemptions.scopeguard]]
 version = "1.1.0"
