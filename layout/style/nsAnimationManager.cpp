@@ -270,8 +270,11 @@ static already_AddRefed<dom::AnimationTimeline> GetTimeline(
       return ScrollTimeline::MakeAnonymous(aPresContext->Document(), aTarget,
                                            scroll.axis, scroll.scroller);
     }
-    case StyleAnimationTimeline::Tag::View:
-      // TODO: Support this in this patch series. Treat it as auto for now.
+    case StyleAnimationTimeline::Tag::View: {
+      const auto& view = aStyleTimeline.AsView();
+      return ViewTimeline::MakeAnonymous(aPresContext->Document(), aTarget,
+                                         view.axis, view.inset);
+    }
     case StyleAnimationTimeline::Tag::Auto:
       return do_AddRef(aTarget.mElement->OwnerDoc()->Timeline());
   }
