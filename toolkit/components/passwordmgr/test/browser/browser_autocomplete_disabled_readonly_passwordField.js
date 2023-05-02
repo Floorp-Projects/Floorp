@@ -22,7 +22,8 @@ add_setup(async () => {
     password: "password2",
   });
 
-  await Services.logins.addLogins([login1, login2]);
+  Services.logins.addLogin(login1);
+  Services.logins.addLogin(login2);
 });
 
 add_task(

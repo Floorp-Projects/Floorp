@@ -77,31 +77,32 @@
                         {expectedDialogs: 1, test: testAnonymousCredentials},
                         {expectedDialogs: 0, test: testAnonymousNoAuth}];
 
-    const mm = runInParent(() => {
+    let mm = runInParent(() => {
       const { classes: parentCc, interfaces: parentCi } = Components;
 
-      const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+      let {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
-      const channel = NetUtil.newChannel({
+      let channel = NetUtil.newChannel({
         uri: "http://example.com",
         loadUsingSystemPrincipal: true,
       });
 
-      const pps = parentCc["@mozilla.org/network/protocol-proxy-service;1"].
+      let pps = parentCc["@mozilla.org/network/protocol-proxy-service;1"].
                 getService(parentCi.nsIProtocolProxyService);
       pps.asyncResolve(channel, 0, {
-        async onProxyAvailable(req, uri, pi, status) {
-          const mozproxy = "moz-proxy://" + pi.host + ":" + pi.port;
-          const login1 = parentCc["@mozilla.org/login-manager/loginInfo;1"].
+        onProxyAvailable(req, uri, pi, status) {
+          let mozproxy = "moz-proxy://" + pi.host + ":" + pi.port;
+          let login = parentCc["@mozilla.org/login-manager/loginInfo;1"].
                       createInstance(parentCi.nsILoginInfo);
-          login1.init(mozproxy, null, "proxy_realm", "proxy_user", "proxy_pass",
+          login.init(mozproxy, null, "proxy_realm", "proxy_user", "proxy_pass",
                      "", "");
+          Services.logins.addLogin(login);
 
-          const login2 = parentCc["@mozilla.org/login-manager/loginInfo;1"].
+          let login2 = parentCc["@mozilla.org/login-manager/loginInfo;1"].
                        createInstance(parentCi.nsILoginInfo);
           login2.init("http://mochi.test:8888", null, "mochirealm", "user1name",
                       "user1pass", "", "");
-          await Services.logins.addLogins([login1, login2]);
+          Services.logins.addLogin(login2);
 
           sendAsyncMessage("setupDone");
         },
@@ -115,10 +116,10 @@
         sendAsyncMessage("prepareForNextTestDone");
       });
 
-      const modalType = Services.prefs.getIntPref(
+      let modalType = Services.prefs.getIntPref(
         "prompts.modalType.httpAuth"
       );
-      const authPromptIsCommonDialog =
+      let authPromptIsCommonDialog =
         modalType === Services.prompt.MODAL_TYPE_WINDOW
           || (modalType === Services.prompt.MODAL_TYPE_TAB
             && Services.prefs.getBoolPref(
@@ -126,7 +127,7 @@
         false
       ));
 
-      const dialogObserverTopic = authPromptIsCommonDialog
+      let dialogObserverTopic = authPromptIsCommonDialog
         ? "common-dialog-loaded" : "tabmodal-dialog-loaded";
 
       function dialogObserver(subj, topic, data) {
@@ -135,7 +136,7 @@
           .getElementById("commonDialog")
           .acceptDialog();
         } else {
-          const prompt = subj.ownerGlobal.gBrowser.selectedBrowser
+          let prompt = subj.ownerGlobal.gBrowser.selectedBrowser
             .tabModalPromptBox.getPrompt(subj);
           prompt.Dialog.ui.button0.click(); // Accept button
         }

@@ -6,13 +6,13 @@ add_setup(async function() {
     "passwordmgr-storage-changed",
     (_, data) => data == "addLogin"
   );
-  TEST_LOGIN1 = await Services.logins.addLoginAsync(TEST_LOGIN1);
+  TEST_LOGIN1 = Services.logins.addLogin(TEST_LOGIN1);
   await storageChangedPromised;
   storageChangedPromised = TestUtils.topicObserved(
     "passwordmgr-storage-changed",
     (_, data) => data == "addLogin"
   );
-  TEST_LOGIN2 = await Services.logins.addLoginAsync(TEST_LOGIN2);
+  TEST_LOGIN2 = Services.logins.addLogin(TEST_LOGIN2);
   await storageChangedPromised;
   let tabOpenedPromise = BrowserTestUtils.waitForNewTab(
     gBrowser,

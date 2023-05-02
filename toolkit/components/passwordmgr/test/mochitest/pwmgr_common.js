@@ -183,57 +183,6 @@ function getPasswordEditedMessage() {
 }
 
 /**
- * Create a login form and insert into contents dom, replacing its childs if any.
- * @return {HTMLDomElement} the form
- */
-function createLoginForm({
-  action = "",
-  username = {
-    value: "",
-  },
-  password = {
-    type: "password",
-  },
-} = {}) {
-  info(`Creating login form ${JSON.stringify({ action, username, password })}`);
-
-  const form = document.createElement("form");
-  form.action = action;
-
-  const usernameInput = document.createElement("input");
-  usernameInput.type = "text";
-  usernameInput.name = "uname";
-  usernameInput.value = username.value;
-  if (username.autocomplete) {
-    usernameInput.setAttribute("autocomplete", username.autocomplete);
-  }
-  form.appendChild(usernameInput);
-
-  if (password) {
-    const passwordInput = document.createElement("input");
-    passwordInput.type = password.type;
-    passwordInput.name = "pword";
-    form.appendChild(passwordInput);
-  }
-
-  const submitButton = document.createElement("button");
-  submitButton.type = "submit";
-  submitButton.name = "submit";
-  submitButton.innerText = "Submit";
-  form.appendChild(submitButton);
-
-  const content = document.getElementById("content");
-
-  if (content.firstChild) {
-    content.replaceChild(form, content.firstChild);
-  } else {
-    content.appendChild(form);
-  }
-
-  return form;
-}
-
-/**
  * Check for expected username/password in form.
  * @see `checkForm` below for a similar function.
  */
@@ -754,52 +703,31 @@ function runInParent(aFunctionOrURL) {
   return chromeScript;
 }
 
-/** Manage logins in parent chrome process.
- * */
-function manageLoginsInParent() {
-  return runInParent(function addLoginsInParentInner() {
+/** Initialize with a list of logins. The logins are added within the parent chrome process.
+ * @param {array} aLogins - a list of logins to add. Each login is an array of the arguments
+ *                          that would be passed to nsLoginInfo.init().
+ */
+function addLoginsInParent(...aLogins) {
+  let script = runInParent(function addLoginsInParentInner() {
     /* eslint-env mozilla/chrome-script */
-    addMessageListener("removeAllUserFacingLogins", () => {
-      Services.logins.removeAllUserFacingLogins();
-    });
-
-    /* eslint-env mozilla/chrome-script */
-    addMessageListener("addLogins", async logins => {
+    addMessageListener("addLogins", logins => {
       let nsLoginInfo = Components.Constructor(
         "@mozilla.org/login-manager/loginInfo;1",
         Ci.nsILoginInfo,
         "init"
       );
 
-      const loginInfos = logins.map(login => new nsLoginInfo(...login));
-      try {
-        await Services.logins.addLogins(loginInfos);
-      } catch (e) {
-        assert.ok(false, "addLogins threw: " + e);
+      for (let login of logins) {
+        let loginInfo = new nsLoginInfo(...login);
+        try {
+          Services.logins.addLogin(loginInfo);
+        } catch (e) {
+          assert.ok(false, "addLogin threw: " + e);
+        }
       }
     });
   });
-}
-
-/** Initialize with a list of logins. The logins are added within the parent chrome process.
- * @param {array} aLogins - a list of logins to add. Each login is an array of the arguments
- *                          that would be passed to nsLoginInfo.init().
- */
-async function addLoginsInParent(...aLogins) {
-  const script = manageLoginsInParent();
-  await script.sendQuery("addLogins", aLogins);
-  return script;
-}
-
-/** Initialize with a list of logins, after removing all user facing logins.
- * The logins are added within the parent chrome process.
- * @param {array} aLogins - a list of logins to add. Each login is an array of the arguments
- *                          that would be passed to nsLoginInfo.init().
- */
-async function setStoredLoginsAsync(...aLogins) {
-  const script = manageLoginsInParent();
-  script.sendQuery("removeAllUserFacingLogins");
-  await script.sendQuery("addLogins", aLogins);
+  script.sendQuery("addLogins", aLogins);
   return script;
 }
 
