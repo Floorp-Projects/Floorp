@@ -64,6 +64,15 @@ var testtag_notificationbox_supportpage = [
   {
     label: "This is an existing label",
     supportPage: "test2",
+  },
+  {
+    supportPage: "test3",
+    "l10n-id": "more-specific-id",
+  },
+  {
+    supportPage: "test4",
+    label: "legacy label call",
+    "l10n-id": "modern-fluent-id"
   }
 ];
 
@@ -429,15 +438,27 @@ var tests =
     result(nb, ntf) {
       testtag_notificationbox_State(nb, "append link with callback", ntf, 1);
 
-      let link = ntf.messageText.lastElementChild.previousSibling.previousSibling;
-      SimpleTest.is(link.localName, "label", "link 1 is a label");
-      SimpleTest.ok(link.value != "", "link 1 label is set");
+      let link = ntf.messageText.firstElementChild;
+      SimpleTest.is(link.localName, "a", "link 1 is an anchor");
+      SimpleTest.is(link.dataset.l10nId, "moz-support-link-text", "link 1 Fluent ID is set");
       SimpleTest.ok(link.href.endsWith("/test1"), "link 1 href is set");
 
-      link = ntf.messageText.lastElementChild;
-      SimpleTest.is(link.localName, "label", "link 2 is a label");
-      SimpleTest.is(link.value, "This is an existing label", "link 2 label is set");
+      link = link.nextElementSibling;
+      SimpleTest.is(link.localName, "a", "link 2 is an anchor");
+      SimpleTest.is(link.dataset.l10nId, "moz-support-link-text", "link 2 Fluent ID is set");
+      SimpleTest.ok(!link.value, "label is not assigned to value when using supportPage");
       SimpleTest.ok(link.href.endsWith("/test2"), "link 2 href is set");
+
+      link = link.nextElementSibling;
+      SimpleTest.is(link.localName, "a", "link 3 is an anchor");
+      SimpleTest.is(link.dataset.l10nId, "more-specific-id", "link 3 Fluent ID is the passed l10n-id");
+      SimpleTest.ok(link.href.endsWith("/test3"), "link 3 href is set");
+
+      link = link.nextElementSibling;
+      SimpleTest.is(link.localName, "a", "link 4 is an anchor");
+      SimpleTest.is(link.dataset.l10nId, "modern-fluent-id", "link 4 Fluent ID is the passed l10n-id");
+      SimpleTest.ok(!link.value, "label is not assigned to value when using supportPage");
+      SimpleTest.ok(link.href.endsWith("/test4"), "link 4 href is set");
 
       SimpleTest.is(nb.removeAllNotifications(false), undefined, "removeAllNotifications");
     }
@@ -662,4 +683,3 @@ setTimeout(() => {
 </script>
 
 </window>
-
