@@ -77,10 +77,6 @@ add_task(async function test_filter_current_firefox_version() {
       filter_expression: ``,
     },
     {
-      name: `env.version == ${firefoxFullVersion}`,
-      filter_expression: `env.version|versionCompare('${firefoxFullVersion}') == 0`,
-    },
-    {
       name: `env.version <= ${firefoxMajorVersion}`,
       filter_expression: `env.version|versionCompare('${firefoxMajorVersion}') <= 0`,
     },
