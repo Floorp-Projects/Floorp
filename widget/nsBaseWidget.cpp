@@ -1368,7 +1368,10 @@ already_AddRefed<WebRenderLayerManager> nsBaseWidget::CreateCompositorSession(
     // Make sure GPU process is ready for use.
     // If it failed to connect to GPU process, GPU process usage is disabled in
     // EnsureGPUReady(). It could update gfxVars and gfxConfigs.
-    gpu->EnsureGPUReady();
+    nsresult rv = gpu->EnsureGPUReady();
+    if (NS_WARN_IF(rv == NS_ERROR_ILLEGAL_DURING_SHUTDOWN)) {
+      return nullptr;
+    }
 
     // If widget type does not supports acceleration, we may be allowed to use
     // software WebRender instead.

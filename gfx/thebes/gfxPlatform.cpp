@@ -25,6 +25,7 @@
 #include "mozilla/gfx/CanvasManagerParent.h"
 #include "mozilla/gfx/CanvasRenderThread.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/EnumTypeTraits.h"
 #include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/StaticPrefs_apz.h"
@@ -3775,7 +3776,8 @@ void gfxPlatform::BuildContentDeviceData(
   MOZ_ASSERT(XRE_IsParentProcess());
 
   // Make sure our settings are synchronized from the GPU process.
-  GPUProcessManager::Get()->EnsureGPUReady();
+  DebugOnly<nsresult> rv = GPUProcessManager::Get()->EnsureGPUReady();
+  MOZ_ASSERT(rv != NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
 
   aOut->prefs().hwCompositing() = gfxConfig::GetValue(Feature::HW_COMPOSITING);
   aOut->prefs().oglCompositing() =
