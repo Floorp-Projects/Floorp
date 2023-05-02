@@ -1400,8 +1400,6 @@ export var UrlbarUtils = {
             return "tip_persist";
           case lazy.UrlbarProviderSearchTips.TIP_TYPE.REDIRECT:
             return "tip_redirect";
-          case "dismissalAcknowledgment":
-            return "tip_dismissal_acknowledgment";
           default:
             return "tip_unknown";
         }
@@ -1833,7 +1831,6 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       type: {
         type: "string",
         enum: [
-          "dismissalAcknowledgment",
           "extension",
           "intervention_clear",
           "intervention_refresh",

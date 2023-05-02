@@ -12,7 +12,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.sys.mjs",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
   UrlbarProviderWeather: "resource:///modules/UrlbarProviderWeather.sys.mjs",
-  UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
   UrlbarSearchOneOffs: "resource:///modules/UrlbarSearchOneOffs.sys.mjs",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
@@ -432,27 +431,6 @@ export class UrlbarView {
       raw: value,
       source: row._content.closest("[role=option]"),
     });
-  }
-
-  acknowledgeDismissal(result) {
-    let row = this.#rows.children[result.rowIndex];
-    if (!row) {
-      return;
-    }
-
-    // Replace the row with a dismissal acknowledgment tip.
-    let tip = new lazy.UrlbarResult(
-      lazy.UrlbarUtils.RESULT_TYPE.TIP,
-      lazy.UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-      {
-        type: "dismissalAcknowledgment",
-        titleL10n: { id: "firefox-suggest-dismissal-acknowledgment" },
-        buttons: [{ l10n: { id: "urlbar-search-tips-confirm-short" } }],
-        icon: "chrome://branding/content/icon32.png",
-      }
-    );
-    this.#updateRow(row, tip);
-    this.#updateIndices();
   }
 
   removeAccessibleFocus() {
@@ -1495,7 +1473,7 @@ export class UrlbarView {
         oldResult.payload.dynamicType != result.payload.dynamicType) ||
       // Dynamic results that implement getViewTemplate will
       // always need updating.
-      provider?.getViewTemplate ||
+      provider.getViewTemplate ||
       oldResult.isBestMatch != result.isBestMatch ||
       (!lazy.UrlbarPrefs.get("resultMenu") &&
         (!!result.payload.helpUrl != item._buttons.has("help") ||
@@ -1515,7 +1493,6 @@ export class UrlbarView {
       item._content = this.#createElement("span");
       item._content.className = "urlbarView-row-inner";
       item.appendChild(item._content);
-      item.removeAttribute("tip-type");
       item.removeAttribute("dynamicType");
       if (item.result.type == lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC) {
         this.#createRowContentForDynamicType(item, result);
@@ -1540,7 +1517,6 @@ export class UrlbarView {
       item.setAttribute("type", "switchtab");
     } else if (result.type == lazy.UrlbarUtils.RESULT_TYPE.TIP) {
       item.setAttribute("type", "tip");
-      item.setAttribute("tip-type", result.payload.type);
 
       // Due to role=button, the button and help icon can sometimes become
       // focused. We want to prevent that because the input should always be
@@ -1550,10 +1526,7 @@ export class UrlbarView {
       // and the focus goes straight to the tip button.)
       item.addEventListener("focus", () => this.input.focus(), true);
 
-      if (
-        result.providerName == "UrlbarProviderSearchTips" ||
-        result.payload.type == "dismissalAcknowledgment"
-      ) {
+      if (result.providerName == "UrlbarProviderSearchTips") {
         // For a11y, we treat search tips as alerts. We use A11yUtils.announce
         // instead of role="alert" because role="alert" will only fire an alert
         // event when the alert (or something inside it) is the root of an
@@ -2749,7 +2722,7 @@ export class UrlbarView {
 
     let commands = lazy.UrlbarProvidersManager.getProvider(
       result.providerName
-    )?.tryMethod("getResultCommands", result);
+    ).tryMethod("getResultCommands", result);
     if (commands) {
       this.#resultMenuCommands.set(result, commands);
       return commands;
