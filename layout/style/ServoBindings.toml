@@ -393,6 +393,7 @@ opaque-types = [
     "mozilla::SeenPtrs",
     "mozilla::SupportsWeakPtr",
     "std::tuple",
+    "std::tuple_.*", # Causes "Cannot find type _Pred in this scope" error on mac, like rust-skia#571
     "SupportsWeakPtr",
     "mozilla::detail::WeakReference",
     "mozilla::WeakPtr",
