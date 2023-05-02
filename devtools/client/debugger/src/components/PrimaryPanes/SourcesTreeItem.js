@@ -46,6 +46,7 @@ class SourceTreeItem extends Component {
       setExpanded: PropTypes.func.isRequired,
       setProjectDirectoryRoot: PropTypes.func.isRequired,
       toggleBlackBox: PropTypes.func.isRequired,
+      isSourceBlackBoxed: PropTypes.bool.isRequired,
       getParent: PropTypes.func.isRequired,
       setOverrideSource: PropTypes.func.isRequired,
       removeOverrideSource: PropTypes.func.isRequired,
@@ -93,7 +94,7 @@ class SourceTreeItem extends Component {
       };
 
       const { cx } = this.props;
-      const ignoreStr = item.isBlackBoxed ? "unignore" : "ignore";
+      const ignoreStr = this.props.isSourceBlackBoxed ? "unignore" : "ignore";
       const blackBoxMenuItem = {
         id: "node-menu-blackbox",
         label: L10N.getStr(`ignoreContextItem.${ignoreStr}`),
@@ -382,10 +383,7 @@ class SourceTreeItem extends Component {
 
     return (
       <div
-        className={classnames("node", {
-          focused,
-          blackboxed: item.type == "source" && item.isBlackBoxed,
-        })}
+        className={classnames("node", { focused })}
         key={item.path}
         onClick={this.onClick}
         onContextMenu={this.onContextMenu}

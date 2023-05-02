@@ -127,8 +127,5 @@ add_task(async function testBlackBoxedSources() {
 
 async function toggleBlackbox(dbg) {
   await clickElement(dbg, "blackbox");
-  await Promise.any([
-    waitForDispatch(dbg.store, "BLACKBOX_WHOLE_SOURCES"),
-    waitForDispatch(dbg.store, "UNBLACKBOX_WHOLE_SOURCES"),
-  ]);
+  await waitForDispatch(dbg.store, "BLACKBOX");
 }
