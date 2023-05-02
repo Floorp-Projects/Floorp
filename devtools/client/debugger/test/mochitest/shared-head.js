@@ -1634,6 +1634,7 @@ const selectors = {
   frame: i => `.frames [role="list"] [role="listitem"]:nth-child(${i})`,
   frames: '.frames [role="list"] [role="listitem"]',
   gutter: i => `.CodeMirror-code *:nth-child(${i}) .CodeMirror-linenumber`,
+  line: i => `.CodeMirror-code div:nth-child(${i}) .CodeMirror-line`,
   addConditionItem:
     "#node-menu-add-condition, #node-menu-add-conditional-breakpoint",
   editConditionItem:
@@ -1892,9 +1893,13 @@ async function openContextMenuSubmenu(dbg, selector) {
   return popup;
 }
 
-async function assertContextMenuLabel(dbg, selector, label) {
+async function assertContextMenuLabel(dbg, selector, expectedLabel) {
   const item = await waitFor(() => findContextMenu(dbg, selector));
-  is(item.label, label, "The label of the context menu item shown to the user");
+  is(
+    item.label,
+    expectedLabel,
+    "The label of the context menu item shown to the user"
+  );
 }
 
 async function typeInPanel(dbg, text) {
