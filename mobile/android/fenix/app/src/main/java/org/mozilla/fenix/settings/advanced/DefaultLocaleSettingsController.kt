@@ -6,6 +6,7 @@ package org.mozilla.fenix.settings.advanced
 
 import android.app.Activity
 import android.content.Context
+import android.os.Build
 import mozilla.components.browser.state.action.SearchAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.locale.LocaleManager
@@ -40,7 +41,12 @@ class DefaultLocaleSettingsController(
         // Invalidate cached values to use the new locale
         FxNimbus.features.nimbusValidation.withCachedValue(null)
         activity.recreate()
-        activity.overridePendingTransition(0, 0)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            activity.overrideActivityTransition(Activity.OVERRIDE_TRANSITION_OPEN, 0, 0)
+        } else {
+            @Suppress("DEPRECATION")
+            activity.overridePendingTransition(0, 0)
+        }
     }
 
     override fun handleDefaultLocaleSelected() {
@@ -55,7 +61,12 @@ class DefaultLocaleSettingsController(
         // Invalidate cached values to use the default locale
         FxNimbus.features.nimbusValidation.withCachedValue(null)
         activity.recreate()
-        activity.overridePendingTransition(0, 0)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            activity.overrideActivityTransition(Activity.OVERRIDE_TRANSITION_OPEN, 0, 0)
+        } else {
+            @Suppress("DEPRECATION")
+            activity.overridePendingTransition(0, 0)
+        }
     }
 
     override fun handleSearchQueryTyped(query: String) {

@@ -85,7 +85,10 @@ class LocaleSettingsControllerTest {
         verify { browserStore.dispatch(SearchAction.RefreshSearchEnginesAction) }
         verify { LocaleManager.setNewLocale(activity, localeUseCases, selectedLocale) }
         verify { activity.recreate() }
-        verify { activity.overridePendingTransition(0, 0) }
+        verify {
+            @Suppress("DEPRECATION")
+            activity.overridePendingTransition(0, 0)
+        }
 
         with(controller) {
             verify { LocaleManager.updateBaseConfiguration(activity, selectedLocale) }
@@ -110,7 +113,10 @@ class LocaleSettingsControllerTest {
         verify { browserStore.dispatch(SearchAction.RefreshSearchEnginesAction) }
         verify { LocaleManager.setNewLocale(activity, localeUseCases, selectedLocale) }
         verify { activity.recreate() }
-        verify { activity.overridePendingTransition(0, 0) }
+        verify {
+            @Suppress("DEPRECATION")
+            activity.overridePendingTransition(0, 0)
+        }
 
         with(controller) {
             verify { LocaleManager.updateBaseConfiguration(activity, selectedLocale) }
@@ -152,7 +158,10 @@ class LocaleSettingsControllerTest {
         verify { browserStore.dispatch(SearchAction.RefreshSearchEnginesAction) }
         verify { LocaleManager.resetToSystemDefault(activity, localeUseCases) }
         verify { activity.recreate() }
-        verify { activity.overridePendingTransition(0, 0) }
+        verify {
+            @Suppress("DEPRECATION")
+            activity.overridePendingTransition(0, 0)
+        }
 
         with(controller) {
             verify { LocaleManager.updateBaseConfiguration(activity, selectedLocale) }
