@@ -266,32 +266,40 @@ void Queue::CopyExternalImageToTexture(
 
   const uint32_t surfaceFlags = nsLayoutUtils::SFE_ALLOW_NON_PREMULT;
   SurfaceFromElementResult sfeResult;
-  if (aSource.mSource.IsImageBitmap()) {
-    const auto& bitmap = aSource.mSource.GetAsImageBitmap();
-    if (bitmap->IsClosed()) {
-      aRv.ThrowInvalidStateError("Detached ImageBitmap");
-      return;
+  switch (aSource.mSource.GetType()) {
+    case decltype(aSource.mSource)::Type::eImageBitmap: {
+      const auto& bitmap = aSource.mSource.GetAsImageBitmap();
+      if (bitmap->IsClosed()) {
+        aRv.ThrowInvalidStateError("Detached ImageBitmap");
+        return;
+      }
+
+      sfeResult = nsLayoutUtils::SurfaceFromImageBitmap(bitmap, surfaceFlags);
+      break;
     }
+    case decltype(aSource.mSource)::Type::eHTMLCanvasElement: {
+      MOZ_ASSERT(NS_IsMainThread());
 
-    sfeResult = nsLayoutUtils::SurfaceFromImageBitmap(bitmap, surfaceFlags);
-  } else if (aSource.mSource.IsHTMLCanvasElement()) {
-    MOZ_ASSERT(NS_IsMainThread());
+      const auto& canvas = aSource.mSource.GetAsHTMLCanvasElement();
+      if (canvas->Width() == 0 || canvas->Height() == 0) {
+        aRv.ThrowInvalidStateError("Zero-sized HTMLCanvasElement");
+        return;
+      }
 
-    const auto& canvas = aSource.mSource.GetAsHTMLCanvasElement();
-    if (canvas->Width() == 0 || canvas->Height() == 0) {
-      aRv.ThrowInvalidStateError("Zero-sized HTMLCanvasElement");
-      return;
+      sfeResult = nsLayoutUtils::SurfaceFromElement(canvas, surfaceFlags);
+      break;
     }
+    case decltype(aSource.mSource)::Type::eOffscreenCanvas: {
+      const auto& canvas = aSource.mSource.GetAsOffscreenCanvas();
+      if (canvas->Width() == 0 || canvas->Height() == 0) {
+        aRv.ThrowInvalidStateError("Zero-sized OffscreenCanvas");
+        return;
+      }
 
-    sfeResult = nsLayoutUtils::SurfaceFromElement(canvas, surfaceFlags);
-  } else if (aSource.mSource.IsOffscreenCanvas()) {
-    const auto& canvas = aSource.mSource.GetAsOffscreenCanvas();
-    if (canvas->Width() == 0 || canvas->Height() == 0) {
-      aRv.ThrowInvalidStateError("Zero-sized OffscreenCanvas");
-      return;
+      sfeResult =
+          nsLayoutUtils::SurfaceFromOffscreenCanvas(canvas, surfaceFlags);
+      break;
     }
-
-    sfeResult = nsLayoutUtils::SurfaceFromOffscreenCanvas(canvas, surfaceFlags);
   }
 
   if (!sfeResult.mCORSUsed) {
