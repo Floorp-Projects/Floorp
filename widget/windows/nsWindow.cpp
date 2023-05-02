@@ -4327,13 +4327,6 @@ BOOL CALLBACK nsWindow::DispatchStarvedPaints(HWND aWnd, LPARAM aMsg) {
 // Note: We do not dispatch pending paint messages for non
 // nsIWidget managed windows.
 void nsWindow::DispatchPendingEvents() {
-  if (mPainting) {
-    NS_WARNING(
-        "We were asked to dispatch pending events during painting, "
-        "denying since that's unsafe.");
-    return;
-  }
-
   // We need to ensure that reflow events do not get starved.
   // At the same time, we don't want to recurse through here
   // as that would prevent us from dispatching starved paints.
@@ -4885,7 +4878,7 @@ static bool DisplaySystemMenu(HWND hWnd, nsSizeMode sizeMode, bool isRtl,
 }
 
 // The WndProc procedure for all nsWindows in this toolkit. This merely catches
-// exceptions and passes the real work to WindowProcInternal. See bug 587406
+// SEH exceptions and passes the real work to WindowProcInternal. See bug 587406
 // and http://msdn.microsoft.com/en-us/library/ms633573%28VS.85%29.aspx
 LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam,
                                       LPARAM lParam) {
@@ -5579,14 +5572,12 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
       DispatchPendingEvents();
     } break;
 
-    // say we've dealt with erase background if widget does
-    // not need auto-erasing
-    case WM_ERASEBKGND:
-      if (!AutoErase((HDC)wParam)) {
-        *aRetValue = 1;
-        result = true;
-      }
-      break;
+    // Say we've dealt with erasing the background. (This is actually handled in
+    // WM_PAINT, where necessary.)
+    case WM_ERASEBKGND: {
+      *aRetValue = 1;
+      result = true;
+    } break;
 
     case WM_MOUSEMOVE: {
       MaybeHideCursor(false);
@@ -7509,9 +7500,6 @@ void nsWindow::OnSizeModeChange() {
 }
 
 bool nsWindow::OnHotKey(WPARAM wParam, LPARAM lParam) { return true; }
-
-// Can be overriden. Controls auto-erase of background.
-bool nsWindow::AutoErase(HDC dc) { return false; }
 
 bool nsWindow::IsPopup() { return mWindowType == WindowType::Popup; }
 
