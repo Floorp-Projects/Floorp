@@ -26,6 +26,8 @@ def migrate(ctx):
         ]
         + transforms_from(
             """
+places-empty-bookmarks-folder =
+  .label = { COPY(source, "bookmarksMenuEmptyFolder") }
 places-delete-page =
     .label =
         { $count ->
