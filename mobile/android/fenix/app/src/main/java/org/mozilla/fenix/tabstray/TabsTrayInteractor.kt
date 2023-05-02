@@ -35,18 +35,29 @@ interface TabsTrayInteractor :
     fun onDeletePrivateTabWarningAccepted(tabId: String, source: String? = null)
 
     /**
-     * Invoked when tabs are requested to be deleted.
-     *
-     * @param tabs The group of [TabSessionState] to be deleted.
+     * Invoked when the selected tabs are requested to be deleted.
      */
-    fun onDeleteTabs(tabs: Collection<TabSessionState>)
+    fun onDeleteSelectedTabsClicked()
 
     /**
      * Invoked when the debug menu option for inactive tabs is clicked.
-     *
-     * @param tabs The group of [TabSessionState] to be made inactive.
      */
-    fun onInactiveDebugClicked(tabs: Collection<TabSessionState>)
+    fun onForceSelectedTabsAsInactiveClicked()
+
+    /**
+     * Invoked when the bookmark button in the multi selection banner is clicked.
+     */
+    fun onBookmarkSelectedTabsClicked()
+
+    /**
+     * Invoked when the collections button in the multi selection banner is clicked.
+     */
+    fun onAddSelectedTabsToCollectionClicked()
+
+    /**
+     * Invoked when the share button in the multi selection banner is clicked.
+     */
+    fun onShareSelectedTabs()
 
     /**
      * Invoked when a drag-drop operation with a tab is completed.
@@ -111,6 +122,7 @@ interface TabsTrayInteractor :
  *
  * @property controller [TabsTrayController] to which user actions can be delegated for app updates.
  */
+@Suppress("TooManyFunctions")
 class DefaultTabsTrayInteractor(
     private val controller: TabsTrayController,
 ) : TabsTrayInteractor {
@@ -123,8 +135,8 @@ class DefaultTabsTrayInteractor(
         controller.handleDeleteTabWarningAccepted(tabId, source)
     }
 
-    override fun onDeleteTabs(tabs: Collection<TabSessionState>) {
-        controller.handleMultipleTabsDeletion(tabs)
+    override fun onDeleteSelectedTabsClicked() {
+        controller.handleDeleteSelectedTabsClicked()
     }
 
     override fun onTabsMove(
@@ -135,8 +147,20 @@ class DefaultTabsTrayInteractor(
         controller.handleTabsMove(tabId, targetId, placeAfter)
     }
 
-    override fun onInactiveDebugClicked(tabs: Collection<TabSessionState>) {
-        controller.forceTabsAsInactive(tabs)
+    override fun onForceSelectedTabsAsInactiveClicked() {
+        controller.handleForceSelectedTabsAsInactiveClicked()
+    }
+
+    override fun onBookmarkSelectedTabsClicked() {
+        controller.handleBookmarkSelectedTabsClicked()
+    }
+
+    override fun onAddSelectedTabsToCollectionClicked() {
+        controller.handleAddSelectedTabsToCollectionClicked()
+    }
+
+    override fun onShareSelectedTabs() {
+        controller.handleShareSelectedTabsClicked()
     }
 
     override fun onSyncedTabClicked(tab: Tab) {

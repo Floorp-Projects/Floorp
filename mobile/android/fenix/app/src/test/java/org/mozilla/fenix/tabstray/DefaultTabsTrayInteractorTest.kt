@@ -50,12 +50,38 @@ class DefaultTabsTrayInteractorTest {
     }
 
     @Test
-    fun `WHEN user deletes multiple browser tabs THEN the Interactor delegates to the controller`() {
-        val tabsToDelete = listOf<TabSessionState>(mockk(), mockk())
+    fun `WHEN user clicks to delete the selected tabs THEN the Interactor delegates to the controller`() {
+        interactor.onDeleteSelectedTabsClicked()
 
-        interactor.onDeleteTabs(tabsToDelete)
+        verify { controller.handleDeleteSelectedTabsClicked() }
+    }
 
-        verifySequence { controller.handleMultipleTabsDeletion(tabsToDelete) }
+    @Test
+    fun `WHEN user clicks to force the selected tabs as inactive THEN the Interactor delegates to the controller`() {
+        interactor.onForceSelectedTabsAsInactiveClicked()
+
+        verify { controller.handleForceSelectedTabsAsInactiveClicked() }
+    }
+
+    @Test
+    fun `WHEN user clicks to bookmark the selected tabs THEN the Interactor delegates to the controller`() {
+        interactor.onBookmarkSelectedTabsClicked()
+
+        verify { controller.handleBookmarkSelectedTabsClicked() }
+    }
+
+    @Test
+    fun `WHEN user clicks to save the selected tabs to a collection THEN the Interactor delegates to the controller`() {
+        interactor.onAddSelectedTabsToCollectionClicked()
+
+        verify { controller.handleAddSelectedTabsToCollectionClicked() }
+    }
+
+    @Test
+    fun `WHEN user clicks to share the selected tabs THEN the Interactor delegates to the controller`() {
+        interactor.onShareSelectedTabs()
+
+        verify { controller.handleShareSelectedTabsClicked() }
     }
 
     @Test

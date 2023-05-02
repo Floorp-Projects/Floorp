@@ -6,10 +6,13 @@ package org.mozilla.fenix.tabstray
 
 import androidx.annotation.VisibleForTesting
 import androidx.navigation.NavController
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.DebugAction
 import mozilla.components.browser.state.action.LastAccessAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
+import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
@@ -17,6 +20,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.Tab
 import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.concept.engine.mediasession.MediaSession.PlaybackState
+import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.feature.downloads.ui.DownloadCancelDialogFragment
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.lib.state.DelicateAction
@@ -29,18 +33,24 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
+import org.mozilla.fenix.collections.CollectionsDialog
+import org.mozilla.fenix.collections.show
 import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.bookmarks.BookmarksUseCase
 import org.mozilla.fenix.ext.DEFAULT_ACTIVE_DAYS
 import org.mozilla.fenix.ext.potentialInactiveTabs
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.tabstray.browser.InactiveTabsController
 import org.mozilla.fenix.tabstray.browser.TabsTrayFabController
+import org.mozilla.fenix.tabstray.ext.getTabSessionState
 import org.mozilla.fenix.tabstray.ext.isActiveDownload
 import org.mozilla.fenix.tabstray.ext.isNormalTab
 import org.mozilla.fenix.tabstray.ext.isSelect
 import org.mozilla.fenix.utils.Settings
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.CoroutineContext
 import org.mozilla.fenix.GleanMetrics.Tab as GleanTab
 
 /**
@@ -79,11 +89,24 @@ interface TabsTrayController : SyncedTabsController, InactiveTabsController, Tab
     fun handleDeleteTabWarningAccepted(tabId: String, source: String? = null)
 
     /**
-     * Deletes a list of [tabs].
-     *
-     * @param tabs List of [TabSessionState]s (sessions) to be removed.
+     * Deletes the current state of selected tabs, offering an undo option.
      */
-    fun handleMultipleTabsDeletion(tabs: Collection<TabSessionState>)
+    fun handleDeleteSelectedTabsClicked()
+
+    /**
+     * Bookmarks the current set of selected tabs.
+     */
+    fun handleBookmarkSelectedTabsClicked()
+
+    /**
+     * Saves the current set of selected tabs to a collection.
+     */
+    fun handleAddSelectedTabsToCollectionClicked()
+
+    /**
+     * Shares the current set of selected tabs.
+     */
+    fun handleShareSelectedTabsClicked()
 
     /**
      * Moves [tabId] next to before/after [targetId]
@@ -100,16 +123,13 @@ interface TabsTrayController : SyncedTabsController, InactiveTabsController, Tab
     fun handleNavigateToRecentlyClosed()
 
     /**
-     * Set the list of [tabs] into the inactive state.
+     * Sets the current state of selected tabs into the inactive state.
      *
      * ⚠️ DO NOT USE THIS OUTSIDE OF DEBUGGING/TESTING.
      *
-     * @param tabs List of [TabSessionState]s to be removed.
+     * @param numDays The number of days to mark a tab's last access date.
      */
-    fun forceTabsAsInactive(
-        tabs: Collection<TabSessionState>,
-        numOfDays: Long = DEFAULT_ACTIVE_DAYS + 1,
-    )
+    fun handleForceSelectedTabsAsInactiveClicked(numDays: Long = DEFAULT_ACTIVE_DAYS + 1)
 
     /**
      * Handles when a tab item is click either to play/pause.
@@ -173,10 +193,16 @@ interface TabsTrayController : SyncedTabsController, InactiveTabsController, Tab
  * @property navigateToHomeAndDeleteSession Lambda used to return to the Homescreen and delete the current session.
  * @property navigationInteractor [NavigationInteractor] used to perform navigation actions with side effects.
  * @property tabsUseCases Use case wrapper for interacting with tabs.
+ * @property bookmarksUseCase Use case wrapper for interacting with bookmarks.
+ * @property ioDispatcher [CoroutineContext] used to handle saving tabs as bookmarks.
+ * @property collectionStorage Storage layer for interacting with collections.
  * @property selectTabPosition Lambda used to scroll the tabs tray to the desired position.
  * @property dismissTray Lambda used to dismiss/minimize the tabs tray.
  * @property showUndoSnackbarForTab Lambda used to display an UNDO Snackbar.
  * @property showCancelledDownloadWarning Lambda used to display a cancelled download warning.
+ * @property showBookmarkSnackbar Lambda used to display a snackbar upon saving tabs as bookmarks.
+ * @property showCollectionSnackbar Lambda used to display a snackbar upon successfully saving tabs
+ * to a collection.
  */
 @Suppress("TooManyFunctions", "LongParameterList")
 class DefaultTabsTrayController(
@@ -191,10 +217,18 @@ class DefaultTabsTrayController(
     private val profiler: Profiler?,
     private val navigationInteractor: NavigationInteractor,
     private val tabsUseCases: TabsUseCases,
+    private val bookmarksUseCase: BookmarksUseCase,
+    private val ioDispatcher: CoroutineContext,
+    private val collectionStorage: TabCollectionStorage,
     private val selectTabPosition: (Int, Boolean) -> Unit,
     private val dismissTray: () -> Unit,
     private val showUndoSnackbarForTab: (Boolean) -> Unit,
     internal val showCancelledDownloadWarning: (downloadCount: Int, tabId: String?, source: String?) -> Unit,
+    private val showBookmarkSnackbar: (tabSize: Int) -> Unit,
+    private val showCollectionSnackbar: (
+        tabSize: Int,
+        isNewCollection: Boolean,
+    ) -> Unit,
 ) : TabsTrayController {
 
     override fun handleNormalTabsFabClick() {
@@ -285,17 +319,25 @@ class DefaultTabsTrayController(
             }
             TabsTray.closedExistingTab.record(TabsTray.ClosedExistingTabExtra(source ?: "unknown"))
         }
+
+        tabsTrayStore.dispatch(TabsTrayAction.ExitSelectMode)
+    }
+
+    override fun handleDeleteSelectedTabsClicked() {
+        val tabs = tabsTrayStore.state.mode.selectedTabs
+
+        TabsTray.closeSelectedTabs.record(TabsTray.CloseSelectedTabsExtra(tabCount = tabs.size))
+
+        deleteMultipleTabs(tabs)
+
+        tabsTrayStore.dispatch(TabsTrayAction.ExitSelectMode)
     }
 
     /**
-     * Deletes a list of [tabs] offering an undo option.
-     *
-     * @param tabs List of [TabSessionState]s (sessions) to be removed.
-     * This method has no effect for tabs that do not exist.
+     * Helper function to delete multiple tabs and offer an undo option.
      */
-    override fun handleMultipleTabsDeletion(tabs: Collection<TabSessionState>) {
-        TabsTray.closeSelectedTabs.record(TabsTray.CloseSelectedTabsExtra(tabCount = tabs.size))
-
+    @VisibleForTesting
+    internal fun deleteMultipleTabs(tabs: Collection<TabSessionState>) {
         val isPrivate = tabs.any { it.content.private }
 
         // If user closes all the tabs from selected tabs page dismiss tray and navigate home.
@@ -331,23 +373,103 @@ class DefaultTabsTrayController(
     }
 
     /**
-     * Marks all the [tabs] with the [TabSessionState.lastAccess] to 15 days; enough time to
+     * Marks all selected tabs with the [TabSessionState.lastAccess] to 15 days or [numDays]; enough time to
      * have a tab considered as inactive.
      *
      * ⚠️ DO NOT USE THIS OUTSIDE OF DEBUGGING/TESTING.
+     *
+     * @param numDays The number of days to mark a tab's last access date.
      */
     @OptIn(DelicateAction::class)
-    override fun forceTabsAsInactive(tabs: Collection<TabSessionState>, numOfDays: Long) {
+    override fun handleForceSelectedTabsAsInactiveClicked(numDays: Long) {
+        val tabs = tabsTrayStore.state.mode.selectedTabs
         val currentTabId = browserStore.state.selectedTabId
         tabs
             .filterNot { it.id == currentTabId }
             .forEach { tab ->
-                val daysSince = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(numOfDays)
+                val daysSince = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(numDays)
                 browserStore.apply {
                     dispatch(LastAccessAction.UpdateLastAccessAction(tab.id, daysSince))
                     dispatch(DebugAction.UpdateCreatedAtAction(tab.id, daysSince))
                 }
             }
+
+        tabsTrayStore.dispatch(TabsTrayAction.ExitSelectMode)
+    }
+
+    override fun handleBookmarkSelectedTabsClicked() {
+        val tabs = tabsTrayStore.state.mode.selectedTabs
+
+        TabsTray.bookmarkSelectedTabs.record(TabsTray.BookmarkSelectedTabsExtra(tabCount = tabs.size))
+
+        tabs.forEach { tab ->
+            // We don't combine the context with lifecycleScope so that our jobs are not cancelled
+            // if we leave the fragment, i.e. we still want the bookmarks to be added if the
+            // tabs tray closes before the job is done.
+            CoroutineScope(ioDispatcher).launch {
+                bookmarksUseCase.addBookmark(tab.content.url, tab.content.title)
+            }
+        }
+
+        showBookmarkSnackbar(tabs.size)
+
+        tabsTrayStore.dispatch(TabsTrayAction.ExitSelectMode)
+    }
+
+    override fun handleAddSelectedTabsToCollectionClicked() {
+        val tabs = tabsTrayStore.state.mode.selectedTabs
+
+        TabsTray.selectedTabsToCollection.record(TabsTray.SelectedTabsToCollectionExtra(tabCount = tabs.size))
+        TabsTray.saveToCollection.record(NoExtras())
+
+        tabsTrayStore.dispatch(TabsTrayAction.ExitSelectMode)
+
+        showCollectionsDialog(tabs)
+    }
+
+    @VisibleForTesting
+    internal fun showCollectionsDialog(tabs: Collection<TabSessionState>) {
+        CollectionsDialog(
+            storage = collectionStorage,
+            sessionList = browserStore.getTabSessionState(tabs),
+            onPositiveButtonClick = { id, isNewCollection ->
+
+                // If collection is null, a new one was created.
+                if (isNewCollection) {
+                    Collections.saved.record(
+                        Collections.SavedExtra(
+                            browserStore.state.normalTabs.size.toString(),
+                            tabs.size.toString(),
+                        ),
+                    )
+                } else {
+                    Collections.tabsAdded.record(
+                        Collections.TabsAddedExtra(
+                            browserStore.state.normalTabs.size.toString(),
+                            tabs.size.toString(),
+                        ),
+                    )
+                }
+                id?.apply {
+                    showCollectionSnackbar(tabs.size, isNewCollection)
+                }
+            },
+            onNegativeButtonClick = {},
+        ).show(activity)
+    }
+
+    override fun handleShareSelectedTabsClicked() {
+        val tabs = tabsTrayStore.state.mode.selectedTabs
+
+        TabsTray.shareSelectedTabs.record(TabsTray.ShareSelectedTabsExtra(tabCount = tabs.size))
+
+        val data = tabs.map {
+            ShareData(url = it.content.url, title = it.content.title)
+        }
+        val directions = TabsTrayFragmentDirections.actionGlobalShareFragment(
+            data = data.toTypedArray(),
+        )
+        navController.navigate(directions)
     }
 
     @VisibleForTesting

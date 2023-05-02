@@ -7,17 +7,12 @@ package org.mozilla.fenix.tabstray.browser
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.menu.BrowserMenuBuilder
-import org.mozilla.fenix.tabstray.NavigationInteractor
-import org.mozilla.fenix.tabstray.TabsTrayAction
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
-import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.utils.Do
 
 class SelectionMenuIntegration(
     private val context: Context,
-    private val store: TabsTrayStore,
-    private val navInteractor: NavigationInteractor,
-    private val trayInteractor: TabsTrayInteractor,
+    private val interactor: TabsTrayInteractor,
 ) {
     private val menu by lazy {
         SelectionMenu(context, ::handleMenuClicked)
@@ -32,15 +27,14 @@ class SelectionMenuIntegration(
     internal fun handleMenuClicked(item: SelectionMenu.Item) {
         Do exhaustive when (item) {
             is SelectionMenu.Item.BookmarkTabs -> {
-                navInteractor.onSaveToBookmarks(store.state.mode.selectedTabs)
+                interactor.onBookmarkSelectedTabsClicked()
             }
             is SelectionMenu.Item.DeleteTabs -> {
-                trayInteractor.onDeleteTabs(store.state.mode.selectedTabs)
+                interactor.onDeleteSelectedTabsClicked()
             }
             is SelectionMenu.Item.MakeInactive -> {
-                trayInteractor.onInactiveDebugClicked(store.state.mode.selectedTabs)
+                interactor.onForceSelectedTabsAsInactiveClicked()
             }
         }
-        store.dispatch(TabsTrayAction.ExitSelectMode)
     }
 }

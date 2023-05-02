@@ -161,19 +161,12 @@ class TabsTrayFragment : AppCompatDialogFragment() {
 
         navigationInteractor =
             DefaultNavigationInteractor(
-                context = requireContext(),
-                tabsTrayStore = tabsTrayStore,
                 browserStore = requireComponents.core.store,
                 navController = findNavController(),
                 dismissTabTray = ::dismissTabsTray,
                 dismissTabTrayAndNavigateHome = ::dismissTabsTrayAndNavigateHome,
-                bookmarksUseCase = requireComponents.useCases.bookmarksUseCases,
-                collectionStorage = requireComponents.core.tabCollectionStorage,
-                showCollectionSnackbar = ::showCollectionSnackbar,
-                showBookmarkSnackbar = ::showBookmarkSnackbar,
                 showCancelledDownloadWarning = ::showCancelledDownloadWarning,
                 accountManager = requireComponents.backgroundServices.accountManager,
-                ioDispatcher = Dispatchers.IO,
             )
 
         tabsTrayController = DefaultTabsTrayController(
@@ -188,10 +181,15 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             navigationInteractor = navigationInteractor,
             profiler = requireComponents.core.engine.profiler,
             tabsUseCases = requireComponents.useCases.tabsUseCases,
+            bookmarksUseCase = requireComponents.useCases.bookmarksUseCases,
+            ioDispatcher = Dispatchers.IO,
+            collectionStorage = requireComponents.core.tabCollectionStorage,
             selectTabPosition = ::selectTabPosition,
             dismissTray = ::dismissTabsTray,
             showUndoSnackbarForTab = ::showUndoSnackbarForTab,
             showCancelledDownloadWarning = ::showCancelledDownloadWarning,
+            showCollectionSnackbar = ::showCollectionSnackbar,
+            showBookmarkSnackbar = ::showBookmarkSnackbar,
         )
 
         tabsTrayInteractor = DefaultTabsTrayInteractor(
@@ -405,8 +403,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                     context = requireContext(),
                     binding = tabsTrayBinding,
                     store = tabsTrayStore,
-                    navInteractor = navigationInteractor,
-                    tabsTrayInteractor = tabsTrayInteractor,
+                    interactor = tabsTrayInteractor,
                     backgroundView = tabsTrayBinding.topBar,
                     showOnSelectViews = VisibilityModifier(
                         tabsTrayMultiselectItemsBinding.collectMultiSelect,
