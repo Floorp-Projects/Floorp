@@ -38,6 +38,16 @@ const RESTORE_FILEPICKER_FILTER_EXT = "*.json;*.jsonlz4";
 const HISTORY_LIBRARY_SEARCH_TELEMETRY =
   "PLACES_HISTORY_LIBRARY_SEARCH_TIME_MS";
 
+const SORTBY_L10N_IDS = new Map([
+  ["title", "places-view-sortby-name"],
+  ["url", "places-view-sortby-url"],
+  ["date", "places-view-sortby-date"],
+  ["visitCount", "places-view-sortby-visit-count"],
+  ["dateAdded", "places-view-sortby-date-added"],
+  ["lastModified", "places-view-sortby-last-modified"],
+  ["tags", "places-view-sortby-tags"],
+]);
+
 var PlacesOrganizer = {
   _places: null,
 
@@ -847,7 +857,7 @@ var PlacesSearchBox = {
    * @param {string} filterString
    *          The text to search for.
    */
-  search: function PSB_search(filterString) {
+  search(filterString) {
     var PO = PlacesOrganizer;
     // If the user empties the search box manually, reset it and load all
     // contents of the current scope.
@@ -907,7 +917,7 @@ var PlacesSearchBox = {
   /**
    * Finds across all history, downloads or all bookmarks.
    */
-  findAll: function PSB_findAll() {
+  findAll() {
     switch (this.filterCollection) {
       case "history":
         PlacesQueryBuilder.setScope("history");
@@ -923,24 +933,21 @@ var PlacesSearchBox = {
   },
 
   /**
-   * Updates the display with the title of the current collection.
-   *
-   * @param {string} aTitle
-   *          The title of the current collection.
+   * Updates the search input placeholder to match the current collection.
    */
-  updateCollectionTitle: function PSB_updateCollectionTitle(aTitle) {
-    let title = "";
+  updatePlaceholder() {
+    let l10nId = "";
     switch (this.filterCollection) {
       case "history":
-        title = PlacesUIUtils.getString("searchHistory");
+        l10nId = "places-search-history";
         break;
       case "downloads":
-        title = PlacesUIUtils.getString("searchDownloads");
+        l10nId = "places-search-downloads";
         break;
       default:
-        title = PlacesUIUtils.getString("searchBookmarks");
+        l10nId = "places-search-bookmarks";
     }
-    this.searchFilter.placeholder = title;
+    document.l10n.setAttributes(this.searchFilter, l10nId);
   },
 
   /**
@@ -957,21 +964,21 @@ var PlacesSearchBox = {
     }
 
     this.searchFilter.setAttribute("collection", collectionName);
-    this.updateCollectionTitle();
+    this.updatePlaceholder();
   },
 
   /**
    * Focus the search box
    */
-  focus: function PSB_focus() {
+  focus() {
     this.searchFilter.focus();
   },
 
   /**
    * Set up the gray text in the search bar as the Places View loads.
    */
-  init: function PSB_init() {
-    this.updateCollectionTitle();
+  init() {
+    this.updatePlaceholder();
   },
 
   /**
@@ -1033,15 +1040,14 @@ var PlacesQueryBuilder = {
 
   /**
    * Sets the search scope.  This can be called when no search is active, and
-   * in that case, when the user does begin a search aScope will be used (see
-   * PSB_search()).  If there is an active search, it's performed again to
+   * in that case, when `search()` is called, `aScope` will be used.
+   * If there is an active search, it's performed again to
    * update the content tree.
    *
-   * @param {string} aScope
-   *          The search scope: "bookmarks", "collection", "downloads" or
-   *          "history".
+   * @param {"bookmarks" | "downloads" | "history"} aScope
+   *          The search scope: "bookmarks", "downloads" or "history".
    */
-  setScope: function PQB_setScope(aScope) {
+  setScope(aScope) {
     // Determine filterCollection, folders, and scopeButtonId based on aScope.
     var filterCollection;
     var folders = [];
@@ -1141,13 +1147,10 @@ var ViewMenu = {
    *          the type of the menuitem, e.g. "radio" or "checkbox".
    *          Can be null (no-type).
    *          Checkboxes are checked if the column is visible.
-   * @param {string} propertyPrefix
-   *          If propertyPrefix is non-null:
-   *          propertyPrefix + column ID + ".label" will be used to get the
-   *          localized label string.
-   *          propertyPrefix + column ID + ".accesskey" will be used to get the
-   *          localized accesskey.
-   *          If propertyPrefix is null, the column label is used as label and
+   * @param {boolean} localize
+   *          If localize is true, the column label and accesskey are set
+   *          via DOM Localization.
+   *          If localize is false, the column label is used as label and
    *          no accesskey is assigned.
    */
   fillWithColumns: function VM_fillWithColumns(
@@ -1155,7 +1158,7 @@ var ViewMenu = {
     startID,
     endID,
     type,
-    propertyPrefix
+    localize
   ) {
     var popup = event.target;
     var pivot = this._clean(popup, startID, endID);
@@ -1167,18 +1170,13 @@ var ViewMenu = {
       var menuitem = document.createXULElement("menuitem");
       menuitem.id = "menucol_" + column.id;
       menuitem.column = column;
-      var label = column.getAttribute("label");
-      if (propertyPrefix) {
-        var menuitemPrefix = propertyPrefix;
-        // for string properties, use "name" as the id, instead of "title"
-        // see bug #386287 for details
-        var columnId = column.getAttribute("anonid");
-        menuitemPrefix += columnId == "title" ? "name" : columnId;
-        label = PlacesUIUtils.getString(menuitemPrefix + ".label");
-        var accesskey = PlacesUIUtils.getString(menuitemPrefix + ".accesskey");
-        menuitem.setAttribute("accesskey", accesskey);
+      if (localize) {
+        const l10nId = SORTBY_L10N_IDS.get(column.getAttribute("anonid"));
+        document.l10n.setAttributes(menuitem, l10nId);
+      } else {
+        const label = column.getAttribute("label");
+        menuitem.setAttribute("label", label);
       }
-      menuitem.setAttribute("label", label);
       if (type == "radio") {
         menuitem.setAttribute("type", "radio");
         menuitem.setAttribute("name", "columns");
@@ -1218,7 +1216,7 @@ var ViewMenu = {
       "viewUnsorted",
       "directionSeparator",
       "radio",
-      "view.sortBy.1."
+      true
     );
 
     var sortColumn = this._getSortColumn();
