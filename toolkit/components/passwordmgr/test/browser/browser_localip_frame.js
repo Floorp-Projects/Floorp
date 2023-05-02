@@ -1,21 +1,19 @@
 "use strict";
 
-add_setup(async function() {
-  let login = LoginTestUtils.testData.formLogin({
+add_setup(async () => {
+  const login1 = LoginTestUtils.testData.formLogin({
     origin: "http://10.0.0.0",
     formActionOrigin: "https://example.org",
     username: "username1",
     password: "password1",
   });
-  Services.logins.addLogin(login);
-
-  login = LoginTestUtils.testData.formLogin({
+  const login2 = LoginTestUtils.testData.formLogin({
     origin: "https://example.org",
     formActionOrigin: "https://example.org",
     username: "username2",
     password: "password2",
   });
-  Services.logins.addLogin(login);
+  await Services.logins.addLogins([login1, login2]);
 });
 
 add_task(async function test_warningForLocalIP() {

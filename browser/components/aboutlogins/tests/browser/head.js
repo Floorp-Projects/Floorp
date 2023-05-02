@@ -54,17 +54,12 @@ let TEST_LOGIN3 = new nsLoginInfo(
 TEST_LOGIN3.QueryInterface(Ci.nsILoginMetaInfo).timePasswordChanged = 123456;
 
 async function addLogin(login) {
-  let storageChangedPromised = TestUtils.topicObserved(
-    "passwordmgr-storage-changed",
-    (_, data) => data == "addLogin"
-  );
-  login = Services.logins.addLogin(login);
-  await storageChangedPromised;
+  const result = await Services.logins.addLoginAsync(login);
   registerCleanupFunction(() => {
     let matchData = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
       Ci.nsIWritablePropertyBag2
     );
-    matchData.setPropertyAsAUTF8String("guid", login.guid);
+    matchData.setPropertyAsAUTF8String("guid", result.guid);
 
     let logins = Services.logins.searchLogins(matchData);
     if (!logins.length) {
@@ -76,7 +71,7 @@ async function addLogin(login) {
     // matches the login that it will be removing.
     Services.logins.removeLogin(logins[0]);
   });
-  return login;
+  return result;
 }
 
 let EXPECTED_BREACH = null;

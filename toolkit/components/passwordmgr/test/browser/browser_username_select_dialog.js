@@ -59,8 +59,7 @@ add_task(async function test_changeUPLoginOnPUpdateForm_accept() {
   info(
     "Select an u+p login from multiple logins, on password update form, and accept."
   );
-  Services.logins.addLogin(login1);
-  Services.logins.addLogin(login1B);
+  await Services.logins.addLogins([login1, login1B]);
 
   let selectDialogPromise = TestUtils.topicObserved("select-dialog-loaded");
 
@@ -122,8 +121,7 @@ add_task(async function test_changeUPLoginOnPUpdateForm_cancel() {
   info(
     "Select an u+p login from multiple logins, on password update form, and cancel."
   );
-  Services.logins.addLogin(login1);
-  Services.logins.addLogin(login1B);
+  await Services.logins.addLogins([login1, login1B]);
 
   let selectDialogPromise = TestUtils.topicObserved("select-dialog-loaded");
 

@@ -9,15 +9,6 @@
   <script type="text/javascript" src="pwmgr_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
-<script>
-let readyPromise = registerRunTests(1);
-
-let origin = window.location.origin;
-addLoginsInParent(
-  [origin, "https://autocomplete", null, "user1", "pass1", "", ""],
-  [origin, "https://autocomplete", null, "user2", "pass2", "", ""]);
-
-</script>
 <body>
 <p id="display"></p>
 <div id="content">
@@ -28,19 +19,22 @@ addLoginsInParent(
   </form>
 <pre id="test">
 <script>
-let { ContentTaskUtils } = SpecialPowers.ChromeUtils.import(
+const { ContentTaskUtils } = SpecialPowers.ChromeUtils.import(
   "resource://testing-common/ContentTaskUtils.jsm"
 );
 
 add_setup(async () => {
-  ok(readyPromise, "check promise is available");
-  await readyPromise;
+  const origin = window.location.origin;
+  await addLoginsInParent(
+    [origin, "https://autocomplete", null, "user1", "pass1", "", ""],
+    [origin, "https://autocomplete", null, "user2", "pass2", "", ""]
+  );
 });
 
 add_task(async function test_field_highlight_on_autocomplete() {
   // Test username autocomplete.
-  let username = document.getElementById("uname");
-  let password = document.getElementById("pword");
+  const username = document.getElementById("uname");
+  const password = document.getElementById("pword");
 
   await openPopupOn(username);
   synthesizeKey("KEY_ArrowDown");
