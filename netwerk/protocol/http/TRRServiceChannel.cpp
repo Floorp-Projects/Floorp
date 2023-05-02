@@ -1028,6 +1028,17 @@ TRRServiceChannel::OnStartRequest(nsIRequest* request) {
     mResponseHead = mTransaction->TakeResponseHead();
     if (mResponseHead) {
       uint32_t httpStatus = mResponseHead->Status();
+      if (mTransaction->ProxyConnectFailed()) {
+        LOG(("TRRServiceChannel proxy connect failed httpStatus: %d",
+             httpStatus));
+        MOZ_ASSERT(mConnectionInfo->UsingConnect(),
+                   "proxy connect failed but not using CONNECT?");
+        nsresult rv = HttpProxyResponseToErrorCode(httpStatus);
+        mTransaction->DontReuseConnection();
+        Cancel(rv);
+        return CallOnStartRequest();
+      }
+
       if ((httpStatus < 500) && (httpStatus != 421) && (httpStatus != 407)) {
         ProcessAltService();
       }

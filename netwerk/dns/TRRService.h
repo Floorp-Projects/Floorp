@@ -102,6 +102,8 @@ class TRRService : public TRRServiceBase,
 
   void InitTRRConnectionInfo() override;
 
+  void DontUseTRRThread() { mDontUseTRRThread = true; }
+
  private:
   virtual ~TRRService();
 
@@ -149,6 +151,7 @@ class TRRService : public TRRServiceBase,
       false};  // set when captive portal check is passed
   Atomic<bool, Relaxed> mDisableIPv6;  // don't even try
   Atomic<bool, Relaxed> mShutdown{false};
+  Atomic<bool, Relaxed> mDontUseTRRThread{false};
 
   // TRR Blocklist storage
   // mTRRBLStorage is only modified on the main thread, but we query whether it
