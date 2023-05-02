@@ -243,17 +243,57 @@ class LanguageIdEngine {
    * Formats the language tag returned by the language-identification model to match
    * conform to the format used internally by Firefox.
    *
-   * The current model returns labels of the format "__label_xx" where the last
-   * two characters are the two-character language tag.
-   *
-   * As such, this function strips of those final two characters.
-   * Updating the language-identification model may require updating this function.
+   * This function is currently configured to handle the fastText language-identification
+   * model. Updating the language-identification model or moving to something other than
+   * fastText in the future will likely require updating this function.
    *
    * @param {string} langTag
    * @returns {string} The correctly formatted langTag
    */
   #formatLangTag(langTag) {
-    return langTag.slice(-2);
+    // The fastText language model returns values of the format "__label__{langTag}".
+    // As such, this function strips the "__label__" prefix, leaving only the langTag.
+    let formattedTag = langTag.replace("__label__", "");
+
+    // fastText is capable of returning any of a predetermined set of 176 langTags:
+    // https://fasttext.cc/docs/en/language-identification.html
+    //
+    // These tags come from ISO639-3:
+    // https://iso639-3.sil.org/code_tables/deprecated_codes/data
+    //
+    // Each of these tags have been cross checked for compatibility with the IANA
+    // language subtag registry, which is used by BCP47, and any edge cases are handled below.
+    // https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry
+    switch (formattedTag) {
+      // fastText may return "eml" which is a deprecated ISO639-3 language tag for the language
+      // Emiliano-Romagnolo. It was split into two separate tags "egl" and "rgn":
+      // https://iso639-3.sil.org/request/2008-040
+      //
+      // "eml" was once requested to be added to the IANA registry, but it was denied:
+      // https://www.alvestrand.no/pipermail/ietf-languages/2009-December/009754.html
+      //
+      // This case should return either "egl" or "rgn", given that the "eml" tag was split.
+      // However, given that the fastText model does not distinguish between the two by using
+      // the deprecated tag, this function will default to "egl" because it is alphabetically first.
+      //
+      // At such a time that Firefox Translations may support either of these languages, we should consider
+      // a way to further distinguish between the two languages at that time.
+      case "eml": {
+        formattedTag = "egl";
+        break;
+      }
+      // The fastText model returns "no" for Norwegian Bokmål.
+      //
+      // According to advice from https://r12a.github.io/app-subtags/
+      // "no" is a macro language that encompasses the following more specific primary language subtags: "nb" "nn".
+      // It is recommended to use more specific language subtags as long as it does not break legacy usage of an application.
+      // As such, this function will return "nb" for Norwegian Bokmål instead of "no" as reported by fastText.
+      case "no": {
+        formattedTag = "nb";
+        break;
+      }
+    }
+    return formattedTag;
   }
 
   /**
