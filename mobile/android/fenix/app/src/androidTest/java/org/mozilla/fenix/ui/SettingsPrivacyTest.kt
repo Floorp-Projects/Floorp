@@ -54,7 +54,7 @@ class SettingsPrivacyTest {
             verifyHTTPSOnlyModeButton()
             verifySettingsOptionSummary("HTTPS-Only Mode", "Off")
             verifyCookieBannerReductionButton()
-            verifySettingsOptionSummary("Cookie Banner Reduction", "Off")
+            verifySettingsOptionSummary("Cookie banner reduction", "Off")
             verifyEnhancedTrackingProtectionButton()
             verifySettingsOptionSummary("Enhanced Tracking Protection", "Standard")
             verifySitePermissionsButton()

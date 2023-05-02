@@ -168,7 +168,7 @@ enum class CookieBannerUIMode(
      * for adding support for cookie banner handling for the domain.
      */
     REQUEST_UNSUPPORTED_SITE_SUBMITTED(
-        R.string.reduce_cookie_banner_unsupported_site_request_submitted,
+        R.string.reduce_cookie_banner_unsupported_site_request_submitted_2,
         R.drawable.ic_cookies_disabled,
     ),
 

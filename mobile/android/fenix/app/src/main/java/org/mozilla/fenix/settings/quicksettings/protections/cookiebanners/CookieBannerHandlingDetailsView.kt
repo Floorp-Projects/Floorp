@@ -100,7 +100,7 @@ class CookieBannerHandlingDetailsView(
                         shortUrl,
                     )
                     CookieBannerUIMode.SITE_NOT_SUPPORTED -> context.getString(
-                        R.string.cookie_banner_handling_details_site_is_not_supported_title,
+                        R.string.cookie_banner_handling_details_site_is_not_supported_title_2,
                     )
                     else -> ""
                 }
@@ -122,7 +122,8 @@ class CookieBannerHandlingDetailsView(
                 appName,
             )
             CookieBannerUIMode.SITE_NOT_SUPPORTED -> context.getString(
-                R.string.reduce_cookie_banner_details_panel_title_unsupported_site_request,
+                R.string.reduce_cookie_banner_details_panel_title_unsupported_site_request_2,
+                appName,
             )
             else -> ""
         }

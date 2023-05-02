@@ -164,7 +164,7 @@ class DefaultCookieBannerDetailsController(
                     fragment.activity?.getRootView()?.let { view ->
                         showSnackBar(
                             view,
-                            context.getString(R.string.cookie_banner_handling_report_site_snack_bar_text),
+                            context.getString(R.string.cookie_banner_handling_report_site_snack_bar_text_2),
                             FenixSnackbar.LENGTH_LONG,
                         )
                     }

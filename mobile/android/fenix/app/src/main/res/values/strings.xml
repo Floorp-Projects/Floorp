@@ -377,7 +377,7 @@
     <string name="preferences_https_only_title">HTTPS-Only Mode</string>
 
     <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
-    <string name="preferences_cookie_banner_reduction">Cookie Banner Reduction</string>
+    <string name="preferences_cookie_banner_reduction">Cookie banner reduction</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Reduce cookie banners</string>
     <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
@@ -393,21 +393,29 @@
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button">Request support</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_title">Cookie Banner Reduction</string>
+    <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">Cookie Banner Reduction</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title_2">Request support for this site?</string>
     <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
-    <string name="cookie_banner_handling_report_site_snack_bar_text">Request to support site submitted.</string>
+    <string name="cookie_banner_handling_report_site_snack_bar_text" moz:RemovedIn="114" tools:ignore="UnusedResources">Request to support site submitted.</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text_2">Request sent</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">On for this site</string>
     <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site_request_submitted">Request to support site submitted</string>
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted" moz:RemovedIn="114" tools:ignore="UnusedResources">Request to support site submitted</string>
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">Support request sent</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">Site currently not supported</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_on_for_site">Turn on Cookie Banner Reduction for %1$s?</string>
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">Turn on Cookie banner reduction for %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_off_for_site">Turn off Cookie Banner Reduction for %1$s?</string>
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">Turn off Cookie banner reduction for %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
-    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request">This site is currently not supported by Cookie Banner Reduction. Would you like our team to review this website and add support in the future?</string>
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request" moz:RemovedIn="114" tools:ignore="UnusedResources">This site is currently not supported by Cookie Banner Reduction. Would you like our team to review this website and add support in the future?</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s can’t automatically reject cookie requests on this site. You can send a request to support this site in the future.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s will clear this site’s cookies and refresh the page. Clearing all cookies may sign you out or empty shopping carts.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->

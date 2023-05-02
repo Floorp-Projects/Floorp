@@ -28,13 +28,13 @@ class CookieBannerReductionTest {
             verifyCookieBannerExists(exists = true)
         }.openThreeDotMenu {
         }.openSettings {
-            verifySettingsOptionSummary("Cookie Banner Reduction", "Off")
+            verifySettingsOptionSummary("Cookie banner reduction", "Off")
         }.openCookieBannerReductionSubMenu {
             verifyCookieBannerView(isCookieBannerReductionChecked = false)
             clickCookieBannerReductionToggle()
             verifyCheckedCookieBannerReductionToggle(isCookieBannerReductionChecked = true)
         }.goBack {
-            verifySettingsOptionSummary("Cookie Banner Reduction", "On")
+            verifySettingsOptionSummary("Cookie banner reduction", "On")
         }
 
         exitMenu()
@@ -78,13 +78,13 @@ class CookieBannerReductionTest {
             verifyCookieBannerExists(exists = true)
         }.openThreeDotMenu {
         }.openSettings {
-            verifySettingsOptionSummary("Cookie Banner Reduction", "Off")
+            verifySettingsOptionSummary("Cookie banner reduction", "Off")
         }.openCookieBannerReductionSubMenu {
             verifyCookieBannerView(isCookieBannerReductionChecked = false)
             clickCookieBannerReductionToggle()
             verifyCheckedCookieBannerReductionToggle(isCookieBannerReductionChecked = true)
         }.goBack {
-            verifySettingsOptionSummary("Cookie Banner Reduction", "On")
+            verifySettingsOptionSummary("Cookie banner reduction", "On")
         }
 
         exitMenu()
