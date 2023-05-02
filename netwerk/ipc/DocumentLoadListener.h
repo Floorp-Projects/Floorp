@@ -111,6 +111,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
     uint32_t mRedirectFlags;
     uint32_t mLoadFlags;
     nsTArray<EarlyHintConnectArgs> mEarlyHints;
+    uint32_t mEarlyHintLinkType;
     RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise::Private>
         mPromise;
   };
@@ -279,10 +280,11 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
 
   // Serializes all data needed to setup the new replacement channel
   // in the content process into the RedirectToRealChannelArgs struct.
-  void SerializeRedirectData(
-      RedirectToRealChannelArgs& aArgs, bool aIsCrossProcess,
-      uint32_t aRedirectFlags, uint32_t aLoadFlags, dom::ContentParent* aParent,
-      nsTArray<EarlyHintConnectArgs>&& aEarlyHints) const;
+  void SerializeRedirectData(RedirectToRealChannelArgs& aArgs,
+                             bool aIsCrossProcess, uint32_t aRedirectFlags,
+                             uint32_t aLoadFlags, dom::ContentParent* aParent,
+                             nsTArray<EarlyHintConnectArgs>&& aEarlyHints,
+                             uint32_t aEarlyHintLinkType) const;
 
   uint64_t GetLoadIdentifier() const { return mLoadIdentifier; }
   uint32_t GetLoadType() const { return mLoadStateLoadType; }

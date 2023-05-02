@@ -72,7 +72,8 @@ class PreloaderBase : public SupportsWeakPtr, public nsISupports {
   // progress, will not be removed the LOAD_BACKGROUND flag, for instance XHR is
   // the user here.
   enum class LoadBackground { Keep, Drop };
-  void NotifyUsage(LoadBackground aLoadBackground = LoadBackground::Drop);
+  void NotifyUsage(dom::Document* aDocument,
+                   LoadBackground aLoadBackground = LoadBackground::Drop);
   // Whether this preloader has been used for a regular/actual load or not.
   bool IsUsed() const { return mIsUsed; }
 
@@ -121,6 +122,8 @@ class PreloaderBase : public SupportsWeakPtr, public nsISupports {
   };
 
   const nsTArray<RedirectRecord>& Redirects() { return mRedirectRecords; }
+
+  void SetForEarlyHints() { mIsEarlyHintsPreload = true; }
 
  protected:
   virtual ~PreloaderBase();
@@ -182,6 +185,9 @@ class PreloaderBase : public SupportsWeakPtr, public nsISupports {
 
   // True after we have reported the usage telemetry.  Prevent duplicates.
   bool mUsageTelementryReported = false;
+
+  // True when this is used to Early Hints preload.
+  bool mIsEarlyHintsPreload = false;
 
   // Emplaced when the data delivery has finished, in NotifyStop, holds the
   // result of the load.
