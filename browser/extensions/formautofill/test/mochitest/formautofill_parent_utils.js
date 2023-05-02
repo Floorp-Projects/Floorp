@@ -6,7 +6,7 @@ const { FormAutofill } = ChromeUtils.importESModule(
   "resource://autofill/FormAutofill.sys.mjs"
 );
 const { FormAutofillUtils } = ChromeUtils.importESModule(
-  "resource://autofill/FormAutofillUtils.sys.mjs"
+  "resource://gre/modules/shared/FormAutofillUtils.sys.mjs"
 );
 const { OSKeyStoreTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/OSKeyStoreTestUtils.sys.mjs"

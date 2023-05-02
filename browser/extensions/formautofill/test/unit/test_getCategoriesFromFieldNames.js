@@ -3,7 +3,7 @@
 var FormAutofillUtils;
 add_task(async function() {
   ({ FormAutofillUtils } = ChromeUtils.importESModule(
-    "resource://autofill/FormAutofillUtils.sys.mjs"
+    "resource://gre/modules/shared/FormAutofillUtils.sys.mjs"
   ));
 });
 

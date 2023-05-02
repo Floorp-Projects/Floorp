@@ -2,6 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { CreditCard } from "resource://gre/modules/CreditCard.sys.mjs";
+import { FormAutofillNameUtils } from "resource://gre/modules/shared/FormAutofillNameUtils.sys.mjs";
+import { OSKeyStore } from "resource://gre/modules/OSKeyStore.sys.mjs";
+
 export let FormAutofillUtils;
 
 const ADDRESS_METADATA_PATH = "resource://autofill/addressmetadata/";
@@ -55,17 +61,6 @@ const ELIGIBLE_INPUT_TYPES = ["text", "email", "tel", "number", "month"];
 // The maximum length of data to be saved in a single field for preventing DoS
 // attacks that fill the user's hard drive(s).
 const MAX_FIELD_VALUE_LENGTH = 200;
-
-import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
-const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
-  FormAutofillNameUtils: "resource://autofill/FormAutofillNameUtils.sys.mjs",
-  OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
-});
 
 export let AddressDataLoader = {
   // Status of address data loading. We'll load all the countries with basic level 1
@@ -274,11 +269,11 @@ FormAutofillUtils = {
   },
 
   isCCNumber(ccNumber) {
-    return lazy.CreditCard.isValidNumber(ccNumber);
+    return CreditCard.isValidNumber(ccNumber);
   },
 
   ensureLoggedIn(promptMessage) {
-    return lazy.OSKeyStore.ensureLoggedIn(
+    return OSKeyStore.ensureLoggedIn(
       this._reauthEnabledByUser && promptMessage ? promptMessage : false
     );
   },
@@ -289,7 +284,7 @@ FormAutofillUtils = {
    * @returns {Array}
    */
   getCreditCardNetworks() {
-    return lazy.CreditCard.getSupportedNetworks();
+    return CreditCard.getSupportedNetworks();
   },
 
   getCategoryFromFieldName(fieldName) {
@@ -346,7 +341,7 @@ FormAutofillUtils = {
     }
 
     if (!("name" in address)) {
-      address.name = lazy.FormAutofillNameUtils.joinNameParts({
+      address.name = FormAutofillNameUtils.joinNameParts({
         given: address["given-name"],
         middle: address["additional-name"],
         family: address["family-name"],
@@ -1013,7 +1008,7 @@ FormAutofillUtils = {
         for (let option of options) {
           if (
             [option.text, option.label, option.value].some(
-              s => lazy.CreditCard.getNetworkFromName(s) == network
+              s => CreditCard.getNetworkFromName(s) == network
             )
           ) {
             return option;

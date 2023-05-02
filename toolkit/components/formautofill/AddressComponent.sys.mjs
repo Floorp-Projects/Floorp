@@ -7,7 +7,7 @@ import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  FormAutofillUtils: "resource://autofill/FormAutofillUtils.sys.mjs",
+  FormAutofillUtils: "resource://gre/modules/shared/FormAutofillUtils.sys.mjs",
   PhoneNumber: "resource://autofill/phonenumberutils/PhoneNumber.sys.mjs",
 });
 
