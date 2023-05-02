@@ -5280,6 +5280,7 @@ static void LoadDOMPrivate(MacroAssembler& masm, Register obj, Register priv,
   switch (kind) {
     case DOMObjectKind::Native:
       // If it's a native object, the value must be in a fixed slot.
+      // See CanAttachDOMCall in CacheIR.cpp.
       masm.debugAssertObjHasFixedSlots(obj, priv);
       masm.loadPrivate(Address(obj, NativeObject::getFixedSlotOffset(0)), priv);
       break;
