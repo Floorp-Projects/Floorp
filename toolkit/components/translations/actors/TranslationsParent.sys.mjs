@@ -150,7 +150,7 @@ export class TranslationsParent extends JSWindowActorParent {
    *
    * @type {string | null}
    */
-  static #mockedLanguageLabel = null;
+  static #mockedLangTag = null;
 
   /**
    * The language identification engine can be mocked for testing
@@ -437,13 +437,13 @@ export class TranslationsParent extends JSWindowActorParent {
    */
   #getLanguageIdEngineMockedPayload() {
     if (
-      !TranslationsParent.#mockedLanguageLabel ||
+      !TranslationsParent.#mockedLangTag ||
       !TranslationsParent.#mockedLanguageIdConfidence
     ) {
       return null;
     }
     return {
-      languageLabel: TranslationsParent.#mockedLanguageLabel,
+      langTag: TranslationsParent.#mockedLangTag,
       confidence: TranslationsParent.#mockedLanguageIdConfidence,
     };
   }
@@ -1191,18 +1191,18 @@ export class TranslationsParent extends JSWindowActorParent {
    * For testing purposes, allow the LanguageIdEngine to be mocked. If called
    * with `null` in each argument, the mock is removed.
    *
-   * @param {string} languageLabel - The two-character language label.
+   * @param {string} langTag - The two-character language tag.
    * @param {number} confidence  - The confidence score of the detected language.
    */
-  static mockLanguageIdentification(languageLabel, confidence) {
-    TranslationsParent.#mockedLanguageLabel = languageLabel;
+  static mockLanguageIdentification(langTag, confidence) {
+    TranslationsParent.#mockedLangTag = langTag;
     TranslationsParent.#mockedLanguageIdConfidence = confidence;
-    if (languageLabel) {
-      lazy.console.log("Mocking detected language label", languageLabel);
+    if (langTag) {
+      lazy.console.log("Mocking detected language tag", langTag);
     } else {
-      lazy.console.log("Removing detected-language label mock");
+      lazy.console.log("Removing detected language tag mock");
     }
-    if (languageLabel) {
+    if (langTag) {
       lazy.console.log("Mocking detected language confidence", confidence);
     } else {
       lazy.console.log("Removing detected-language confidence mock");
