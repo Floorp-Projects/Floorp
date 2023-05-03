@@ -318,7 +318,6 @@ class nsWindow final : public nsBaseWidget {
   /**
    * Misc.
    */
-  bool AutoErase(HDC dc);
   bool WidgetTypeSupportsAcceleration() override;
 
   void ForcePresent();
@@ -764,7 +763,6 @@ class nsWindow final : public nsBaseWidget {
   bool mInDtor = false;
   bool mIsVisible = false;
   bool mIsCloaked = false;
-  bool mPainting = false;
   bool mTouchWindow = false;
   bool mDisplayPanFeedback = false;
   bool mHideChrome = false;
