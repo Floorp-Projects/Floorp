@@ -568,12 +568,18 @@ class ProviderWeather extends UrlbarProvider {
         this.logger.info("Dismissing weather result");
         lazy.UrlbarPrefs.set("suggest.weather", false);
         queryContext.view.controller.removeResult(result);
+        queryContext.view.acknowledgeDismissal(result);
         break;
       case RESULT_MENU_COMMAND.INACCURATE_LOCATION:
-        // TODO
+        // Currently the only way we record this feedback is in the Glean
+        // engagement event. As with all commands, it will be recorded with an
+        // `engagement_type` value that is the command's name, in this case
+        // `inaccurate_location`.
+        queryContext.view.acknowledgeFeedback(result);
         break;
       case RESULT_MENU_COMMAND.SHOW_LESS_FREQUENTLY:
-        // TODO
+        // TODO: Increment required keyword length
+        queryContext.view.acknowledgeFeedback(result);
         break;
     }
   }

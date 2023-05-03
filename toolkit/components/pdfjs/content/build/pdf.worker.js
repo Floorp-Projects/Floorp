@@ -101,7 +101,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.6.115';
+    const workerVersion = '3.6.125';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -38051,8 +38051,10 @@ const CipherTransformFactory = function CipherTransformFactoryClosure() {
       if (!Number.isInteger(keyLength) || keyLength < 40 || keyLength % 8 !== 0) {
         throw new _util.FormatError("invalid key length");
       }
-      const ownerPassword = (0, _util.stringToBytes)(dict.get("O")).subarray(0, 32);
-      const userPassword = (0, _util.stringToBytes)(dict.get("U")).subarray(0, 32);
+      const ownerBytes = (0, _util.stringToBytes)(dict.get("O")),
+        userBytes = (0, _util.stringToBytes)(dict.get("U"));
+      const ownerPassword = ownerBytes.subarray(0, 32);
+      const userPassword = userBytes.subarray(0, 32);
       const flags = dict.get("P");
       const revision = dict.get("R");
       const encryptMetadata = (algorithm === 4 || algorithm === 5) && dict.get("EncryptMetadata") !== false;
@@ -38064,7 +38066,7 @@ const CipherTransformFactory = function CipherTransformFactoryClosure() {
           try {
             password = (0, _util.utf8StringToString)(password);
           } catch (ex) {
-            (0, _util.warn)("CipherTransformFactory: " + "Unable to convert UTF8 encoded password.");
+            (0, _util.warn)("CipherTransformFactory: Unable to convert UTF8 encoded password.");
           }
         }
         passwordBytes = (0, _util.stringToBytes)(password);
@@ -38073,11 +38075,11 @@ const CipherTransformFactory = function CipherTransformFactoryClosure() {
       if (algorithm !== 5) {
         encryptionKey = prepareKeyData(fileIdBytes, passwordBytes, ownerPassword, userPassword, flags, revision, keyLength, encryptMetadata);
       } else {
-        const ownerValidationSalt = (0, _util.stringToBytes)(dict.get("O")).subarray(32, 40);
-        const ownerKeySalt = (0, _util.stringToBytes)(dict.get("O")).subarray(40, 48);
-        const uBytes = (0, _util.stringToBytes)(dict.get("U")).subarray(0, 48);
-        const userValidationSalt = (0, _util.stringToBytes)(dict.get("U")).subarray(32, 40);
-        const userKeySalt = (0, _util.stringToBytes)(dict.get("U")).subarray(40, 48);
+        const ownerValidationSalt = ownerBytes.subarray(32, 40);
+        const ownerKeySalt = ownerBytes.subarray(40, 48);
+        const uBytes = userBytes.subarray(0, 48);
+        const userValidationSalt = userBytes.subarray(32, 40);
+        const userKeySalt = userBytes.subarray(40, 48);
         const ownerEncryption = (0, _util.stringToBytes)(dict.get("OE"));
         const userEncryption = (0, _util.stringToBytes)(dict.get("UE"));
         const perms = (0, _util.stringToBytes)(dict.get("Perms"));
@@ -52700,8 +52702,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
   }
 }));
 var _worker = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.6.115';
-const pdfjsBuild = '1b79b0cd2';
+const pdfjsVersion = '3.6.125';
+const pdfjsBuild = '0ee0fcc6b';
 })();
 
 /******/ 	return __webpack_exports__;

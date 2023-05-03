@@ -22,43 +22,18 @@ XPCOMUtils.defineLazyGetter(lazy, "WebDriverError", () => {
 
 /**
  * Parent actor for the MessageHandlerFrame JSWindowActor. The
- * MessageHandlerFrame actor is used by FrameTransport to communicate between
+ * MessageHandlerFrame actor is used by RootTransport to communicate between
  * ROOT MessageHandlers and WINDOW_GLOBAL MessageHandlers.
  */
 export class MessageHandlerFrameParent extends JSWindowActorParent {
   async receiveMessage(message) {
     switch (message.name) {
-      case "MessageHandlerFrameChild:messageHandlerEvent":
-        const { name, contextInfo, data, sessionId } = message.data;
-        const [moduleName] = name.split(".");
-
-        // Re-emit the event on the RootMessageHandler.
-        const messageHandler = lazy.RootMessageHandlerRegistry.getExistingMessageHandler(
-          sessionId
-        );
-        // TODO: getModuleInstance expects a CommandDestination in theory,
-        // but only uses the MessageHandler type in practice, see Bug 1776389.
-        const module = messageHandler.moduleCache.getModuleInstance(
-          moduleName,
-          { type: lazy.WindowGlobalMessageHandler.type }
-        );
-        let eventPayload = data;
-
-        // Modify an event payload if there is a special method in the targeted module.
-        // If present it can be found in windowglobal-in-root module.
-        if (module?.interceptEvent) {
-          eventPayload = await module.interceptEvent(name, data);
-
-          // Make sure that an event payload is returned.
-          if (!eventPayload) {
-            throw new Error(
-              `${moduleName}.interceptEvent doesn't return the event payload`
-            );
-          }
-        }
-        messageHandler.emitEvent(name, eventPayload, contextInfo);
-
-        break;
+      case "MessageHandlerFrameChild:sendCommand": {
+        return this.#handleSendCommandMessage(message.data);
+      }
+      case "MessageHandlerFrameChild:messageHandlerEvent": {
+        return this.#handleMessageHandlerEventMessage(message.data);
+      }
       default:
         throw new Error("Unsupported message:" + message.name);
     }
@@ -95,5 +70,53 @@ export class MessageHandlerFrameParent extends JSWindowActorParent {
     }
 
     return result;
+  }
+
+  async #handleMessageHandlerEventMessage(messageData) {
+    const { name, contextInfo, data, sessionId } = messageData;
+    const [moduleName] = name.split(".");
+
+    // Re-emit the event on the RootMessageHandler.
+    const messageHandler = lazy.RootMessageHandlerRegistry.getExistingMessageHandler(
+      sessionId
+    );
+    // TODO: getModuleInstance expects a CommandDestination in theory,
+    // but only uses the MessageHandler type in practice, see Bug 1776389.
+    const module = messageHandler.moduleCache.getModuleInstance(moduleName, {
+      type: lazy.WindowGlobalMessageHandler.type,
+    });
+    let eventPayload = data;
+
+    // Modify an event payload if there is a special method in the targeted module.
+    // If present it can be found in windowglobal-in-root module.
+    if (module?.interceptEvent) {
+      eventPayload = await module.interceptEvent(name, data);
+
+      // Make sure that an event payload is returned.
+      if (!eventPayload) {
+        throw new Error(
+          `${moduleName}.interceptEvent doesn't return the event payload`
+        );
+      }
+    }
+    messageHandler.emitEvent(name, eventPayload, contextInfo);
+  }
+
+  async #handleSendCommandMessage(messageData) {
+    const { sessionId, command } = messageData;
+    const messageHandler = lazy.RootMessageHandlerRegistry.getExistingMessageHandler(
+      sessionId
+    );
+    try {
+      return await messageHandler.handleCommand(command);
+    } catch (e) {
+      if (e?.isRemoteError) {
+        return {
+          error: e.toJSON(),
+          isMessageHandlerError: e.isMessageHandlerError,
+        };
+      }
+      throw e;
+    }
   }
 }

@@ -23,6 +23,7 @@
 #include "gc/FindSCCs.h"
 #include "gc/GCMarker.h"
 #include "gc/NurseryAwareHashMap.h"
+#include "gc/Pretenuring.h"
 #include "gc/Statistics.h"
 #include "gc/ZoneAllocator.h"
 #include "js/GCHashTable.h"
@@ -171,8 +172,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::MainThreadData<void*> data;
 
   js::MainThreadData<uint32_t> tenuredBigInts;
-
-  js::MainThreadOrIonCompileData<uint64_t> nurseryAllocatedStrings;
 
   // Number of marked/finalized JSStrings/JSFatInlineStrings during major GC.
   js::MainThreadOrGCTaskData<size_t> markedStrings;
@@ -584,11 +583,14 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   // See: https://tc39.es/proposal-weakrefs/#sec-clear-kept-objects
   void clearKeptObjects();
 
-  js::gc::AllocSite* unknownAllocSite() {
-    return &pretenuring.unknownAllocSite;
+  js::gc::AllocSite* unknownAllocSite(JS::TraceKind kind) {
+    return &pretenuring.unknownAllocSite(kind);
   }
   js::gc::AllocSite* optimizedAllocSite() {
     return &pretenuring.optimizedAllocSite;
+  }
+  uint32_t nurseryAllocCount(JS::TraceKind kind) const {
+    return pretenuring.nurseryAllocCount(kind);
   }
 
 #ifdef JSGC_HASH_TABLE_CHECKS

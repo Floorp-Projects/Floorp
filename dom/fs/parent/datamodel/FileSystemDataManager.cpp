@@ -110,12 +110,13 @@ void RemoveFileSystemDataManager(const Origin& aOrigin) {
 }
 
 Result<ResultConnection, QMResult> GetStorageConnection(
-    const Origin& aOrigin, const int64_t aDirectoryLockId) {
+    const quota::OriginMetadata& aOriginMetadata,
+    const int64_t aDirectoryLockId) {
   MOZ_ASSERT(aDirectoryLockId >= 0);
 
   // Ensure that storage is initialized and file system folder exists!
   QM_TRY_INSPECT(const auto& dbFileUrl,
-                 GetDatabaseFileURL(aOrigin, aDirectoryLockId));
+                 GetDatabaseFileURL(aOriginMetadata, aDirectoryLockId));
 
   QM_TRY_INSPECT(
       const auto& storageService,
@@ -461,7 +462,7 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
 
                QM_TRY_UNWRAP(
                    auto connection,
-                   fs::data::GetStorageConnection(self->mOriginMetadata.mOrigin,
+                   fs::data::GetStorageConnection(self->mOriginMetadata,
                                                   self->mDirectoryLock->Id()),
                    CreateAndRejectBoolPromiseFromQMResult);
 
@@ -474,7 +475,7 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
                  QM_TRY_UNWRAP(
                      FileSystemFileManager fmRes,
                      FileSystemFileManager::CreateFileSystemFileManager(
-                         self->mOriginMetadata.mOrigin),
+                         self->mOriginMetadata),
                      CreateAndRejectBoolPromiseFromQMResult);
 
                  QM_TRY_UNWRAP(

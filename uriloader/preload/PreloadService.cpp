@@ -188,7 +188,12 @@ PreloadService::PreloadOrCoalesceResult PreloadService::PreloadOrCoalesce(
     PreloadFetch(uri, aCORS, aReferrerPolicy, aEarlyHintPreloaderId);
   }
 
-  return {LookupPreload(preloadKey), false};
+  RefPtr<PreloaderBase> preload = LookupPreload(preloadKey);
+  if (preload && aEarlyHintPreloaderId) {
+    preload->SetForEarlyHints();
+  }
+
+  return {preload, false};
 }
 
 void PreloadService::PreloadScript(nsIURI* aURI, const nsAString& aType,

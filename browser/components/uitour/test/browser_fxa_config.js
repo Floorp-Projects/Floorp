@@ -7,6 +7,10 @@ const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
 
+const { UIState } = ChromeUtils.importESModule(
+  "resource://services-sync/UIState.sys.mjs"
+);
+
 var gTestTab;
 var gContentAPI;
 
@@ -234,5 +238,140 @@ add_UITour_task(async function test_fxa_fails() {
   sandbox.stub(fxAccounts, "getSignedInUser").throws();
   let result = await getConfigurationPromise("fxa");
   Assert.deepEqual(result, {});
+  sandbox.restore();
+});
+
+/**
+ * Tests that a UITour page can get notifications on FxA sign-in state
+ * changes.
+ */
+add_UITour_task(async function test_fxa_signedin_state_change() {
+  const sandbox = sinon.createSandbox();
+  registerCleanupFunction(() => {
+    sandbox.restore();
+  });
+
+  let fxaConfig = await getConfigurationPromise("fxa");
+  Assert.ok(!fxaConfig.setup, "FxA should not yet be set up.");
+
+  // A helper function that waits for the state change event to fire
+  // in content, and returns a Promise that resolves to the status
+  // parameter on the event detail.
+  let waitForSignedInStateChange = () => {
+    return SpecialPowers.spawn(gTestTab.linkedBrowser, [], async () => {
+      let event = await ContentTaskUtils.waitForEvent(
+        content.document,
+        "mozUITourNotification",
+        false,
+        e => {
+          return e.detail.event === "FxA:SignedInStateChange";
+        },
+        true
+      );
+      return event.detail.params.status;
+    });
+  };
+
+  // We'll first test the STATUS_SIGNED_IN status.
+
+  let stateChangePromise = waitForSignedInStateChange();
+
+  // Per bug 1743857, we wait for a JSWindowActor message round trip to
+  // ensure that the mozUITourNotification event listener has been setup
+  // in the SpecialPowers.spawn task.
+  await new Promise(resolve => {
+    gContentAPI.ping(resolve);
+  });
+
+  let UIStateStub = sandbox.stub(UIState, "get").returns({
+    status: UIState.STATUS_SIGNED_IN,
+    syncEnabled: true,
+    email: "email@example.com",
+  });
+
+  Services.obs.notifyObservers(null, UIState.ON_UPDATE);
+
+  let status = await stateChangePromise;
+  Assert.equal(
+    status,
+    UIState.STATUS_SIGNED_IN,
+    "FxA:SignedInStateChange should have notified that we'd signed in."
+  );
+
+  // We'll next test the STATUS_NOT_CONFIGURED status.
+
+  stateChangePromise = waitForSignedInStateChange();
+
+  // Per bug 1743857, we wait for a JSWindowActor message round trip to
+  // ensure that the mozUITourNotification event listener has been setup
+  // in the SpecialPowers.spawn task.
+  await new Promise(resolve => {
+    gContentAPI.ping(resolve);
+  });
+
+  UIStateStub.restore();
+  UIStateStub = sandbox.stub(UIState, "get").returns({
+    status: UIState.STATUS_NOT_CONFIGURED,
+  });
+
+  Services.obs.notifyObservers(null, UIState.ON_UPDATE);
+
+  status = await stateChangePromise;
+  Assert.equal(
+    status,
+    UIState.STATUS_NOT_CONFIGURED,
+    "FxA:SignedInStateChange should have notified that we're not configured."
+  );
+
+  // We'll next test the STATUS_LOGIN_FAILED status.
+
+  stateChangePromise = waitForSignedInStateChange();
+
+  // Per bug 1743857, we wait for a JSWindowActor message round trip to
+  // ensure that the mozUITourNotification event listener has been setup
+  // in the SpecialPowers.spawn task.
+  await new Promise(resolve => {
+    gContentAPI.ping(resolve);
+  });
+
+  UIStateStub.restore();
+  UIStateStub = sandbox.stub(UIState, "get").returns({
+    status: UIState.STATUS_LOGIN_FAILED,
+  });
+
+  Services.obs.notifyObservers(null, UIState.ON_UPDATE);
+
+  status = await stateChangePromise;
+  Assert.equal(
+    status,
+    UIState.STATUS_LOGIN_FAILED,
+    "FxA:SignedInStateChange should have notified that login has failed."
+  );
+
+  // We'll next test the STATUS_NOT_VERIFIED status.
+
+  stateChangePromise = waitForSignedInStateChange();
+
+  // Per bug 1743857, we wait for a JSWindowActor message round trip to
+  // ensure that the mozUITourNotification event listener has been setup
+  // in the SpecialPowers.spawn task.
+  await new Promise(resolve => {
+    gContentAPI.ping(resolve);
+  });
+
+  UIStateStub.restore();
+  UIStateStub = sandbox.stub(UIState, "get").returns({
+    status: UIState.STATUS_NOT_VERIFIED,
+  });
+
+  Services.obs.notifyObservers(null, UIState.ON_UPDATE);
+
+  status = await stateChangePromise;
+  Assert.equal(
+    status,
+    UIState.STATUS_NOT_VERIFIED,
+    "FxA:SignedInStateChange should have notified that the login hasn't yet been verified."
+  );
+
   sandbox.restore();
 });

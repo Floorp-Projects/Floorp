@@ -52,7 +52,6 @@ struct TypeDefInstanceData {
         superTypeVector(nullptr),
         shape(nullptr),
         clasp(nullptr),
-        allocSite(nullptr),
         allocKind(gc::AllocKind::LIMIT) {}
 
   // The canonicalized pointer to this type definition. This is kept alive by

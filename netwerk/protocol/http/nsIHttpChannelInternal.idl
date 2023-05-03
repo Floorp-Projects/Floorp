@@ -506,4 +506,10 @@ interface nsIHttpChannelInternal : nsISupports
      */
     [must_use] void setWebTransportSessionEventListener(
         in WebTransportSessionEventListener aListener);
+
+    /**
+     * This attribute indicates the type of Link header in the received
+     * 103 response.
+     */
+    [must_use] attribute unsigned long earlyHintLinkType;
 };

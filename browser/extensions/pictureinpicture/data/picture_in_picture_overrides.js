@@ -199,6 +199,12 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
+    ted: {
+      "https://*.ted.com/*": {
+        showHiddenTextTracks: true,
+      },
+    },
+
     tubi: {
       "https://*.tubitv.com/*": {
         videoWrapperScriptPath: "video-wrappers/tubi.js",

@@ -41,8 +41,8 @@ const TRANSLATIONS_TESTER_NO_TAG =
  * This is the value for the MockedLanguageIdEngine to give as a confidence score for
  * the mocked detected language.
  *
- * @param {string} detectedLanguageLabel
- * This is the two-letter language label for the MockedLanguageIdEngine to return as
+ * @param {string} detectedLangTag
+ * This is the BCP 47 language tag for the MockedLanguageIdEngine to return as
  * the mocked detected language.
  *
  * @param {Array<{ fromLang: string, toLang: string, isBeta: boolean }>} options.languagePairs
@@ -56,7 +56,7 @@ async function openAboutTranslations({
   disabled,
   runInPage,
   detectedLanguageConfidence,
-  detectedLanguageLabel,
+  detectedLangTag,
   languagePairs,
   prefs,
 }) {
@@ -95,7 +95,7 @@ async function openAboutTranslations({
     TranslationsParent.mockLanguagePairs(languagePairs);
   }
   TranslationsParent.mockLanguageIdentification(
-    detectedLanguageLabel ?? "en",
+    detectedLangTag ?? "en",
     detectedLanguageConfidence ?? "0.5"
   );
 
@@ -112,7 +112,7 @@ async function openAboutTranslations({
   if (languagePairs) {
     TranslationsParent.mockLanguagePairs(null);
   }
-  if (detectedLanguageLabel && detectedLanguageConfidence) {
+  if (detectedLangTag && detectedLanguageConfidence) {
     TranslationsParent.mockLanguageIdentification(null, null);
   }
   BrowserTestUtils.removeTab(tab);
@@ -273,7 +273,7 @@ async function setupActorTest({
   languagePairs,
   prefs,
   detectedLanguageConfidence,
-  detectedLanguageLabel,
+  detectedLangTag,
 }) {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -291,9 +291,9 @@ async function setupActorTest({
     TranslationsParent.translationModelsRemoteClient = translationModels.client;
   }
 
-  if (detectedLanguageLabel && detectedLanguageConfidence) {
+  if (detectedLangTag && detectedLanguageConfidence) {
     TranslationsParent.mockLanguageIdentification(
-      detectedLanguageLabel,
+      detectedLangTag,
       detectedLanguageConfidence
     );
   }
@@ -316,7 +316,7 @@ async function setupActorTest({
 async function loadTestPage({
   languagePairs,
   detectedLanguageConfidence,
-  detectedLanguageLabel,
+  detectedLangTag,
   page,
   prefs,
 }) {
@@ -341,9 +341,9 @@ async function loadTestPage({
     TranslationsParent.mockLanguagePairs(languagePairs);
   }
 
-  if (detectedLanguageLabel && detectedLanguageConfidence) {
+  if (detectedLangTag && detectedLanguageConfidence) {
     TranslationsParent.mockLanguageIdentification(
-      detectedLanguageLabel,
+      detectedLangTag,
       detectedLanguageConfidence
     );
   }
@@ -362,7 +362,7 @@ async function loadTestPage({
         TranslationsParent.mockLanguagePairs(null);
       }
 
-      if (detectedLanguageLabel && detectedLanguageConfidence) {
+      if (detectedLangTag && detectedLanguageConfidence) {
         TranslationsParent.mockLanguageIdentification(null, null);
       }
 
@@ -513,7 +513,7 @@ function createAttachmentMock(client) {
  */
 async function createTranslationModelsRemoteClient(langPairs) {
   const records = [];
-  for (const { fromLang, toLang } of langPairs) {
+  for (const { fromLang, toLang, isBeta } of langPairs) {
     const lang = fromLang + toLang;
     const models = [
       { fileType: "model", name: `model.${lang}.intgemm.alphas.bin` },
@@ -529,7 +529,7 @@ async function createTranslationModelsRemoteClient(langPairs) {
         fromLang,
         toLang,
         fileType,
-        version: "1.0",
+        version: isBeta ? "0.1" : "1.0",
         last_modified: Date.now(),
         schema: Date.now(),
       });

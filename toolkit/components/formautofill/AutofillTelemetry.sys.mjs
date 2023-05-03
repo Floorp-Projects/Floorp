@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { FormAutofillCreditCardSection } from "resource://autofill/FormAutofillHandler.sys.mjs";
-import { FormAutofillUtils } from "resource://autofill/FormAutofillUtils.sys.mjs";
+import { FormAutofillUtils } from "resource://gre/modules/shared/FormAutofillUtils.sys.mjs";
+import { FormAutofillCreditCardSection } from "resource://autofill/FormAutofillSection.sys.mjs";
 
 const { FIELD_STATES } = FormAutofillUtils;
 

@@ -192,12 +192,23 @@ export class ModuleCache {
   }
 
   _getModuleFolder(originType, destinationType) {
+    // root messages should always target the root layer.
+    // NB: The idea here is just to avoid confusing the module cache when
+    // trying to send to `root` from `windowglobal`. The general rule should
+    // normally be "if the destination has a higher level than the origin, just
+    // use the destination as target folder", but as we don't support other
+    // levels than root & windowglobal, we can simplify this to this for now.
+    if (destinationType === "root") {
+      return "root";
+    }
+
     const originPath = lazy.getMessageHandlerClass(originType).modulePath;
     if (originType === destinationType) {
       // If the command is targeting the current type, the module is expected to
       // be in eg "windowglobal/${moduleName}.jsm".
       return originPath;
     }
+
     // If the command is targeting another type, the module is expected to
     // be in a composed folder eg "windowglobal-in-root/${moduleName}.jsm".
     const destinationPath = lazy.getMessageHandlerClass(destinationType)

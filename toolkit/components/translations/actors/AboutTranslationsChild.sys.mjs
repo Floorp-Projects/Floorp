@@ -243,7 +243,7 @@ export class AboutTranslationsChild extends JSWindowActorChild {
    * @see LanguageIdEngine#identifyLanguage for more detailed documentation.
    *
    * @param {string} message
-   * @returns {Promise<{ languageLabel: string, confidence: number }>}
+   * @returns {Promise<{ langTag: string, confidence: number }>}
    */
   AT_identifyLanguage(message) {
     if (!this.languageIdEngine) {

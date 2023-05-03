@@ -48,7 +48,6 @@ This compatibility table explains which Telemetry probe types can be mirrors for
 | [events](https://mozilla.github.io/glean/book/user/metrics/event.html) | [Events](/toolkit/components/telemetry/collection/events.rst). The `value` field will be left empty.  |
 | [quantity](https://mozilla.github.io/glean/book/user/metrics/quantity.html) | [Scalar of kind: uint](/toolkit/components/telemetry/collection/scalars.rst) |
 | [rate](https://mozilla.github.io/glean/book/user/metrics/rate.html) | [Keyed Scalar of kind: uint](/toolkit/components/telemetry/collection/scalars.rst). The keys are "numerator" and "denominator". Does not work for `rate` metrics with external denominators. |
-| [text](https://mozilla.github.io/glean/book/reference/metrics/text.html) | *No Supported Telemetry Type* |
 
 ### The `telemetry_mirror` property in `metrics.yaml`
 

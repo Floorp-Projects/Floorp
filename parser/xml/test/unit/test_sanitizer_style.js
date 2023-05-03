@@ -71,6 +71,10 @@ const kConditionalCSSTestCases = [
     data: `#foo { display: none } @media (min-width: 300px) { #bar { display: none } }`,
     sanitized: `#foo { display: none }`,
   },
+  {
+    data: `@media (min-width: 300px) { #bar { display: none } }`,
+    sanitized: ``,
+  },
 ];
 
 function run_test() {

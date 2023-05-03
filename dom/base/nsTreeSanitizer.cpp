@@ -1823,11 +1823,14 @@ bool nsTreeSanitizer::SanitizeInlineStyle(
 }
 
 void nsTreeSanitizer::RemoveConditionalCSSFromSubtree(nsINode* aRoot) {
+  AutoTArray<RefPtr<nsINode>, 10> nodesToSanitize;
   for (nsINode* node : ShadowIncludingTreeIterator(*aRoot)) {
-    if (!node->IsHTMLElement(nsGkAtoms::style) &&
-        !node->IsSVGElement(nsGkAtoms::style)) {
-      continue;
+    if (node->IsHTMLElement(nsGkAtoms::style) ||
+        node->IsSVGElement(nsGkAtoms::style)) {
+      nodesToSanitize.AppendElement(node);
     }
+  }
+  for (nsINode* node : nodesToSanitize) {
     SanitizeInlineStyle(node->AsElement(),
                         StyleSanitizationKind::NoConditionalRules);
   }

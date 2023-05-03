@@ -154,13 +154,16 @@ Result<Usage, QMResult> GetFileSize(const nsCOMPtr<nsIFile>& aFileObject) {
 }  // namespace
 
 Result<nsCOMPtr<nsIFile>, QMResult> GetFileSystemDirectory(
-    const Origin& aOrigin) {
+    const quota::OriginMetadata& aOriginMetadata) {
+  MOZ_ASSERT(aOriginMetadata.mPersistenceType ==
+             quota::PERSISTENCE_TYPE_DEFAULT);
+
   quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
   QM_TRY_UNWRAP(nsCOMPtr<nsIFile> fileSystemDirectory,
-                QM_TO_RESULT_TRANSFORM(quotaManager->GetDirectoryForOrigin(
-                    quota::PERSISTENCE_TYPE_DEFAULT, aOrigin)));
+                QM_TO_RESULT_TRANSFORM(
+                    quotaManager->GetOriginDirectory(aOriginMetadata)));
 
   QM_TRY(QM_TO_RESULT(fileSystemDirectory->AppendRelativePath(
       NS_LITERAL_STRING_FROM_CSTRING(FILESYSTEM_DIRECTORY_NAME))));
@@ -203,11 +206,12 @@ nsresult EnsureFileSystemDirectory(
   return NS_OK;
 }
 
-Result<nsCOMPtr<nsIFile>, QMResult> GetDatabaseFile(const Origin& aOrigin) {
-  MOZ_ASSERT(!aOrigin.IsEmpty());
+Result<nsCOMPtr<nsIFile>, QMResult> GetDatabaseFile(
+    const quota::OriginMetadata& aOriginMetadata) {
+  MOZ_ASSERT(!aOriginMetadata.mOrigin.IsEmpty());
 
   QM_TRY_UNWRAP(nsCOMPtr<nsIFile> databaseFile,
-                GetFileSystemDirectory(aOrigin));
+                GetFileSystemDirectory(aOriginMetadata));
 
   QM_TRY(QM_TO_RESULT(databaseFile->AppendRelativePath(kDatabaseFileName)));
 
@@ -218,10 +222,12 @@ Result<nsCOMPtr<nsIFile>, QMResult> GetDatabaseFile(const Origin& aOrigin) {
  * TODO: This is almost identical to the corresponding function of IndexedDB
  */
 Result<nsCOMPtr<nsIFileURL>, QMResult> GetDatabaseFileURL(
-    const Origin& aOrigin, const int64_t aDirectoryLockId) {
+    const quota::OriginMetadata& aOriginMetadata,
+    const int64_t aDirectoryLockId) {
   MOZ_ASSERT(aDirectoryLockId >= 0);
 
-  QM_TRY_UNWRAP(nsCOMPtr<nsIFile> databaseFile, GetDatabaseFile(aOrigin));
+  QM_TRY_UNWRAP(nsCOMPtr<nsIFile> databaseFile,
+                GetDatabaseFile(aOriginMetadata));
 
   QM_TRY_INSPECT(
       const auto& protocolHandler,
@@ -258,9 +264,10 @@ FileSystemFileManager::CreateFileSystemFileManager(
 
 /* static */
 Result<FileSystemFileManager, QMResult>
-FileSystemFileManager::CreateFileSystemFileManager(const Origin& aOrigin) {
+FileSystemFileManager::CreateFileSystemFileManager(
+    const quota::OriginMetadata& aOriginMetadata) {
   QM_TRY_UNWRAP(nsCOMPtr<nsIFile> topDirectory,
-                GetFileSystemDirectory(aOrigin));
+                GetFileSystemDirectory(aOriginMetadata));
 
   return FileSystemFileManager(std::move(topDirectory));
 }

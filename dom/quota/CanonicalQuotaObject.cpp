@@ -235,8 +235,7 @@ bool CanonicalQuotaObject::LockedMaybeUpdateSize(int64_t aSize,
       MutexAutoUnlock autoUnlock(quotaManager->mQuotaMutex);
 
       for (const auto& lock : locks) {
-        quotaManager->DeleteFilesForOrigin(lock->GetPersistenceType(),
-                                           lock->Origin());
+        quotaManager->DeleteOriginDirectory(lock->OriginMetadata());
       }
     }
 

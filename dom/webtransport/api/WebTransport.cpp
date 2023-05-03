@@ -333,6 +333,7 @@ void WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
        NS_ConvertUTF16toUTF8(aURL).get()));
 
   // https://w3c.github.io/webtransport/#webtransport-constructor Spec 5.2
+  mChild = child;
   backgroundChild
       ->SendCreateWebTransportParent(aURL, principal, ipcClientInfo, dedicated,
                                      requireUnreliable,
@@ -340,9 +341,9 @@ void WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
                                      // XXX serverCertHashes,
                                      std::move(parentEndpoint))
       ->Then(GetCurrentSerialEventTarget(), __func__,
-             [self = RefPtr{this},
-              child](PBackgroundChild::CreateWebTransportParentPromise::
-                         ResolveOrRejectValue&& aResult) {
+             [self = RefPtr{this}](
+                 PBackgroundChild::CreateWebTransportParentPromise::
+                     ResolveOrRejectValue&& aResult) {
                // aResult is a std::tuple<nsresult, uint8_t>
                // TODO: is there a better/more-spec-compliant error in the
                // reject case? Which begs the question, why would we get a
@@ -353,21 +354,20 @@ void WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
                LOG(("isreject: %d nsresult 0x%x", aResult.IsReject(),
                     (uint32_t)rv));
                if (NS_FAILED(rv)) {
-                 self->RejectWaitingConnection(rv, child);
+                 self->RejectWaitingConnection(rv);
                } else {
                  // This will process anything waiting for the connection to
                  // complete;
 
                  self->ResolveWaitingConnection(
                      static_cast<WebTransportReliabilityMode>(
-                         std::get<1>(aResult.ResolveValue())),
-                     child);
+                         std::get<1>(aResult.ResolveValue())));
                }
              });
 }
 
 void WebTransport::ResolveWaitingConnection(
-    WebTransportReliabilityMode aReliability, WebTransportChild* aChild) {
+    WebTransportReliabilityMode aReliability) {
   LOG(("Resolved Connection %p, reliability = %u", this,
        (unsigned)aReliability));
   // https://w3c.github.io/webtransport/#webtransport-constructor
@@ -380,8 +380,6 @@ void WebTransport::ResolveWaitingConnection(
     return;
   }
 
-  mChild = aChild;
-  mDatagrams->SetChild(aChild);
   // Step 17.2: Set transport.[[State]] to "connected".
   mState = WebTransportState::CONNECTED;
   // Step 17.3: Set transport.[[Session]] to session.
@@ -390,10 +388,12 @@ void WebTransport::ResolveWaitingConnection(
 
   // Step 17.5: Resolve transport.[[Ready]] with undefined.
   mReady->MaybeResolveWithUndefined();
+
+  // We can now release any queued datagrams
+  mDatagrams->SetChild(mChild);
 }
 
-void WebTransport::RejectWaitingConnection(nsresult aRv,
-                                           WebTransportChild* aChild) {
+void WebTransport::RejectWaitingConnection(nsresult aRv) {
   LOG(("Rejected connection %p %x", this, (uint32_t)aRv));
   // https://w3c.github.io/webtransport/#initialize-webtransport-over-http
 
@@ -408,7 +408,8 @@ void WebTransport::RejectWaitingConnection(nsresult aRv,
   // these steps.
   if (mState == WebTransportState::CLOSED ||
       mState == WebTransportState::FAILED) {
-    aChild->Shutdown(true);
+    mChild->Shutdown(true);
+    mChild = nullptr;
     // Cleanup should have been called, which means Ready has been
     // rejected and pulls resolved
     return;
@@ -421,8 +422,8 @@ void WebTransport::RejectWaitingConnection(nsresult aRv,
   // Step 14.3: Cleanup transport with error.
   Cleanup(error, nullptr, IgnoreErrors());
 
-  // We never set mChild, but we need to prepare it to die
-  aChild->Shutdown(true);
+  mChild->Shutdown(true);
+  mChild = nullptr;
 }
 
 bool WebTransport::ParseURL(const nsAString& aURL) const {
@@ -514,7 +515,8 @@ void WebTransport::Close(const WebTransportCloseInfo& aOptions,
     // Step 3.2: Cleanup transport with error.
     Cleanup(error, nullptr, aRv);
     // Step 3.3: Abort these steps.
-    MOZ_ASSERT(!mChild);
+    mChild->Shutdown(true);
+    mChild = nullptr;
     return;
   }
   LOG(("Sending Close"));
@@ -596,6 +598,10 @@ already_AddRefed<Promise> WebTransport::CreateBidirectionalStream(
         LOG(("CreateBidirectionalStream response"));
         // Step 5.2.1: If transport.[[State]] is "closed" or "failed",
         // reject p with an InvalidStateError and abort these steps.
+        if (BidirectionalStreamResponse::Tnsresult == aPipes.type()) {
+          promise->MaybeReject(aPipes.get_nsresult());
+          return;
+        }
         if (self->mState == WebTransportState::CLOSED ||
             self->mState == WebTransportState::FAILED) {
           promise->MaybeRejectWithInvalidStateError(

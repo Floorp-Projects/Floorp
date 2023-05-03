@@ -333,13 +333,11 @@ UNIFIED_SOURCES += [
     "ChromeNodeList.cpp",
     "ChromeUtils.cpp",
     "Comment.cpp",
-    "CompressionStream.cpp",
     "ContentFrameMessageManager.cpp",
     "ContentIterator.cpp",
     "ContentProcessMessageManager.cpp",
     "Crypto.cpp",
     "CustomElementRegistry.cpp",
-    "DecompressionStream.cpp",
     "DirectionalityUtils.cpp",
     "DispatcherTrait.cpp",
     "DocGroup.cpp",
@@ -505,6 +503,20 @@ if CONFIG["MOZ_PLACES"]:
         "PlacesEvent.cpp",
         "PlacesObservers.cpp",
         "PlacesWeakCallbackWrapper.cpp",
+    ]
+
+# on win32 if we add these files to UNIFIED_SOURCES then the compiler generates
+# larger stack frames for some recursive functions that cause us to hit stack
+# overflows (see bug 1824565)
+if CONFIG["OS_ARCH"] == "WINNT" and CONFIG["CPU_ARCH"] == "x86":
+    SOURCES += [
+        "CompressionStream.cpp",
+        "DecompressionStream.cpp",
+    ]
+else:
+    UNIFIED_SOURCES += [
+        "CompressionStream.cpp",
+        "DecompressionStream.cpp",
     ]
 
 # these files couldn't be in UNIFIED_SOURCES for now for reasons given below:

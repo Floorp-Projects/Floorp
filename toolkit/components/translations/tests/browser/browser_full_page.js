@@ -101,7 +101,7 @@ add_task(async function test_language_identification_for_page_translation() {
   await loadTestPageAndRun({
     page: TRANSLATIONS_TESTER_NO_TAG,
     prefs: [["browser.translations.autoTranslate", true]],
-    detectedLanguageLabel: "es",
+    detectedLangTag: "es",
     detectedLanguageConfidence: 0.95,
     languagePairs: [
       { fromLang: "es", toLang: "en", isBeta: false },

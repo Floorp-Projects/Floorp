@@ -69,7 +69,7 @@ toolkit/components/backgroundtasks/defaults
 
 # A mainly-imported file, that we don't want to format, but want to keep an eye
 # on with the other imported files.
-toolkit/components/formautofill/CreditCardRuleset.sys.mjs
+toolkit/components/formautofill/shared/CreditCardRuleset.sys.mjs
 
 ##############################################################################
 # The list below is copied from .eslintignore. Prettier doesn't currently

@@ -11,7 +11,7 @@ let defaultDisabledTextColor;
 let expectingPopup = null;
 
 const { FormAutofillUtils } = SpecialPowers.ChromeUtils.importESModule(
-  "resource://autofill/FormAutofillUtils.sys.mjs"
+  "resource://gre/modules/shared/FormAutofillUtils.sys.mjs"
 );
 
 async function sleep(ms = 500, reason = "Intentionally wait for UI ready") {

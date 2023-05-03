@@ -35,10 +35,6 @@ notes = "This is a crate Henri wrote which is also published. We should probably
 audit-as-crates-io = true
 notes = "This is a pinned version of the upstream code, presumably to get a fix that hadn't been released yet. We should consider switching to the latest official release."
 
-[policy.cssparser-macros]
-audit-as-crates-io = true
-notes = "Using non-crates.io revision because the color-4 changes has not been published yet."
-
 [policy.d3d12]
 audit-as-crates-io = true
 notes = "Unpublished wgpu revisions point to unpublished d3d12 revisions."
@@ -815,10 +811,6 @@ criteria = "safe-to-deploy"
 version = "1.0.4"
 criteria = "safe-to-deploy"
 
-[[exemptions.proc-macro-error-attr]]
-version = "1.0.4"
-criteria = "safe-to-deploy"
-
 [[exemptions.proc-macro-hack]]
 version = "0.5.19"
 criteria = "safe-to-deploy"
@@ -910,10 +902,6 @@ criteria = "safe-to-deploy"
 [[exemptions.same-file]]
 version = "1.0.6"
 criteria = "safe-to-deploy"
-
-[[exemptions.scoped-tls]]
-version = "1.0.0"
-criteria = "safe-to-run"
 
 [[exemptions.scopeguard]]
 version = "1.1.0"

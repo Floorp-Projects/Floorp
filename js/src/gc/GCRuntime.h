@@ -376,9 +376,6 @@ class GCRuntime {
   const void* addressOfBigIntNurseryCurrentEnd() {
     return nursery_.refNoCheck().addressOfCurrentBigIntEnd();
   }
-  uint32_t* addressOfNurseryAllocCount() {
-    return stats().addressOfAllocsSinceMinorGCNursery();
-  }
 
   const void* addressOfLastBufferedWholeCell() {
     return storeBuffer_.refNoCheck().addressOfLastBufferedWholeCell();

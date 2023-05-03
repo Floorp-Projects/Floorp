@@ -365,15 +365,4 @@ IsUserCetAvailableInEnvironment(
 
 #endif // (_WIN32_WINNT < 0x0A00)
 
-#if defined(__MINGW32__)
-
-// winnt.h
-#define THREAD_DYNAMIC_CODE_ALLOW   1     // Opt-out of dynamic code generation.
-
-// Mingw uses an old version THREAD_INFORMATION_CLASS defined in winbase.h
-// where ThreadDynamicCodePolicy does not exist.
-#define ThreadDynamicCodePolicy static_cast<THREAD_INFORMATION_CLASS>(2)
-
-#endif // defined(__MINGW32__)
-
 #endif // _SECURITY_SANDBOX_BASE_SHIM_SDKDECLS_H_

@@ -150,7 +150,7 @@ export class TranslationsParent extends JSWindowActorParent {
    *
    * @type {string | null}
    */
-  static #mockedLanguageLabel = null;
+  static #mockedLangTag = null;
 
   /**
    * The language identification engine can be mocked for testing
@@ -431,21 +431,32 @@ export class TranslationsParent extends JSWindowActorParent {
 
   /**
    * For testing purposes, the LanguageIdEngine can be mocked to always return
-   * a pre-determined language label and confidence value.
+   * a pre-determined language tag and confidence value.
    *
    * @returns {LanguageIdEngineMockedPayload | null}
    */
   #getLanguageIdEngineMockedPayload() {
     if (
-      !TranslationsParent.#mockedLanguageLabel ||
+      !TranslationsParent.#mockedLangTag ||
       !TranslationsParent.#mockedLanguageIdConfidence
     ) {
       return null;
     }
     return {
-      languageLabel: TranslationsParent.#mockedLanguageLabel,
+      langTag: TranslationsParent.#mockedLangTag,
       confidence: TranslationsParent.#mockedLanguageIdConfidence,
     };
+  }
+
+  /**
+   * Creates a lookup key that is unique to each fromLanguage-toLanguage pair.
+   *
+   * @param {string} fromLanguage
+   * @param {string} toLanguage
+   * @returns {string}
+   */
+  static languagePairKey(fromLanguage, toLanguage) {
+    return `${fromLanguage},${toLanguage}`;
   }
 
   /**
@@ -463,7 +474,7 @@ export class TranslationsParent extends JSWindowActorParent {
 
     for (const { fromLang, toLang, version } of records.values()) {
       const isBeta = Services.vc.compare(version, "1.0") < 0;
-      const key = `${fromLang},${toLang}`;
+      const key = TranslationsParent.languagePairKey(fromLang, toLang);
       if (!languagePairMap.has(key)) {
         languagePairMap.set(key, { fromLang, toLang, isBeta });
       }
@@ -671,9 +682,13 @@ export class TranslationsParent extends JSWindowActorParent {
     const translationModelRecords = await TranslationsParent.getMaxVersionRecords(
       client,
       {
-        // Names in this collection are not unique, so we are appending the
-        // fromLang and toLang to the name which will guarantee uniqueness
-        lookupKey: record => `${record.name}${record.fromLang}${record.toLang}`,
+        // Names in this collection are not unique, so we are appending the languagePairKey
+        // to guarantee uniqueness.
+        lookupKey: record =>
+          `${record.name}${TranslationsParent.languagePairKey(
+            record.fromLang,
+            record.toLang
+          )}`,
       }
     );
 
@@ -1191,18 +1206,18 @@ export class TranslationsParent extends JSWindowActorParent {
    * For testing purposes, allow the LanguageIdEngine to be mocked. If called
    * with `null` in each argument, the mock is removed.
    *
-   * @param {string} languageLabel - The two-character language label.
+   * @param {string} langTag - The BCP 47 language tag.
    * @param {number} confidence  - The confidence score of the detected language.
    */
-  static mockLanguageIdentification(languageLabel, confidence) {
-    TranslationsParent.#mockedLanguageLabel = languageLabel;
+  static mockLanguageIdentification(langTag, confidence) {
+    TranslationsParent.#mockedLangTag = langTag;
     TranslationsParent.#mockedLanguageIdConfidence = confidence;
-    if (languageLabel) {
-      lazy.console.log("Mocking detected language label", languageLabel);
+    if (langTag) {
+      lazy.console.log("Mocking detected language tag", langTag);
     } else {
-      lazy.console.log("Removing detected-language label mock");
+      lazy.console.log("Removing detected language tag mock");
     }
-    if (languageLabel) {
+    if (langTag) {
       lazy.console.log("Mocking detected language confidence", confidence);
     } else {
       lazy.console.log("Removing detected-language confidence mock");

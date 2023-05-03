@@ -458,7 +458,7 @@ class SearchAdImpression {
           if (component.included.children) {
             for (let child of component.included.children) {
               let childElements = parent.querySelectorAll(child.selector);
-              if (childElements) {
+              if (childElements.length) {
                 this.#recordElementData(parent, {
                   type: component.type,
                   childElements: Array.from(childElements),

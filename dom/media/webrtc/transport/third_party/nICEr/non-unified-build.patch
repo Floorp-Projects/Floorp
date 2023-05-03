@@ -1,0 +1,40 @@
+diff --git a/src/net/nr_socket_wrapper.c b/src/net/nr_socket_wrapper.c
+index 0c9ec5674407d..4ad59527c12ec 100644
+--- a/src/net/nr_socket_wrapper.c
++++ b/src/net/nr_socket_wrapper.c
+@@ -36,6 +36,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ #include <nr_api.h>
+ #include "nr_socket_wrapper.h"
+ 
++#include <assert.h>
++
+ int nr_socket_wrapper_factory_create_int(void *obj, nr_socket_wrapper_factory_vtbl *vtbl,
+                                          nr_socket_wrapper_factory **wrapperp)
+ {
+diff --git a/src/net/transport_addr.h b/nICEr/src/net/transport_addr.h
+index c75c70a1d94fa..1783d2e4506a8 100644
+--- a/src/net/transport_addr.h
++++ b/src/net/transport_addr.h
+@@ -38,7 +38,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ #include <stdbool.h>
+ #include <sys/types.h>
+ #ifdef WIN32
++
++// FIXME: This is dangerous, but exactly the pattern used in
++// nrappkit/src/port/win32/include/csi_platform.h
++// Not good because INT8 are typedefed to different values in
++// <winsock2.h> and <r_types.h>.
++// {
++
++#define UINT8 UBLAH_IGNORE_ME_PLEASE
++#define INT8 BLAH_IGNORE_ME_PLEASE
+ #include <winsock2.h>
++#undef UINT8
++#undef INT8
++#include <r_types.h>
++
++// }
++
+ #include <ws2tcpip.h>
+ #else
+ #include <sys/socket.h>

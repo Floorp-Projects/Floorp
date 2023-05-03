@@ -23,13 +23,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
   OpenInTabsUtils: "resource:///modules/OpenInTabsUtils.jsm",
-  PluralForm: "resource://gre/modules/PluralForm.jsm",
-});
-
-XPCOMUtils.defineLazyGetter(lazy, "bundle", function() {
-  return Services.strings.createBundle(
-    "chrome://browser/locale/places/places.properties"
-  );
 });
 
 const gInContentProcess =
@@ -535,39 +528,6 @@ export var PlacesUIUtils = {
   // if a bookmark was created or modified.
   lastBookmarkDialogDeferred: null,
 
-  getFormattedString: function PUIU_getFormattedString(key, params) {
-    return lazy.bundle.formatStringFromName(key, params);
-  },
-
-  /**
-   * Get a localized plural string for the specified key name and numeric value
-   * substituting parameters.
-   *
-   * @param {string} aKey
-   *        key for looking up the localized string in the bundle
-   * @param {number} aNumber
-   *        Number based on which the final localized form is looked up
-   * @param {Array} aParams
-   *        Array whose items will substitute #1, #2,... #n parameters
-   *        in the string.
-   *
-   * @see https://developer.mozilla.org/en/Localization_and_Plurals
-   * @returns {string} The localized plural string.
-   */
-  getPluralString: function PUIU_getPluralString(aKey, aNumber, aParams) {
-    let str = lazy.PluralForm.get(aNumber, lazy.bundle.GetStringFromName(aKey));
-
-    // Replace #1 with aParams[0], #2 with aParams[1], and so on.
-    return str.replace(/\#(\d+)/g, function(matchedId, matchedNumber) {
-      let param = aParams[parseInt(matchedNumber, 10) - 1];
-      return param !== undefined ? param : matchedId;
-    });
-  },
-
-  getString: function PUIU_getString(key) {
-    return lazy.bundle.GetStringFromName(key);
-  },
-
   /**
    * Obfuscates a place: URL to use it in xulstore without the risk of
    leaking browsing information. Uses md5 to hash the query string.
@@ -948,13 +908,14 @@ export var PlacesUIUtils = {
 
     var uri = Services.io.newURI(aURINode.uri);
     if (uri.schemeIs("javascript") || uri.schemeIs("data")) {
-      const BRANDING_BUNDLE_URI = "chrome://branding/locale/brand.properties";
-      var brandShortName = Services.strings
-        .createBundle(BRANDING_BUNDLE_URI)
-        .GetStringFromName("brandShortName");
-
-      var errorStr = this.getString("load-js-data-url-error");
-      Services.prompt.alert(aWindow, brandShortName, errorStr);
+      const [
+        title,
+        errorStr,
+      ] = PlacesUIUtils.promptLocalization.formatValuesSync([
+        "places-error-title",
+        "places-load-js-data-url-error",
+      ]);
+      Services.prompt.alert(aWindow, title, errorStr);
       return false;
     }
     return true;
@@ -1269,7 +1230,7 @@ export var PlacesUIUtils = {
       title = aNode.title;
     }
 
-    return title || this.getString("noTitle");
+    return title || this.promptLocalization.formatValueSync("places-no-title");
   },
 
   shouldShowTabsFromOtherComputersMenuitem() {
@@ -2051,6 +2012,13 @@ XPCOMUtils.defineLazyGetter(PlacesUIUtils, "ellipsis", function() {
     "intl.ellipsis",
     Ci.nsIPrefLocalizedString
   ).data;
+});
+
+XPCOMUtils.defineLazyGetter(PlacesUIUtils, "promptLocalization", () => {
+  return new Localization(
+    ["browser/placesPrompts.ftl", "branding/brand.ftl"],
+    true
+  );
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(

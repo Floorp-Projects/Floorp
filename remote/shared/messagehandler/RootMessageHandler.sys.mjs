@@ -7,8 +7,8 @@ import { MessageHandler } from "chrome://remote/content/shared/messagehandler/Me
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  FrameTransport:
-    "chrome://remote/content/shared/messagehandler/transports/FrameTransport.sys.mjs",
+  RootTransport:
+    "chrome://remote/content/shared/messagehandler/transports/RootTransport.sys.mjs",
   SessionData:
     "chrome://remote/content/shared/messagehandler/sessiondata/SessionData.sys.mjs",
   SessionDataMethod:
@@ -23,7 +23,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * layers (at the moment WindowGlobalMessageHandlers in content processes).
  */
 export class RootMessageHandler extends MessageHandler {
-  #frameTransport;
+  #rootTransport;
   #sessionData;
 
   /**
@@ -61,7 +61,7 @@ export class RootMessageHandler extends MessageHandler {
   constructor(sessionId) {
     super(sessionId, null);
 
-    this.#frameTransport = new lazy.FrameTransport(this);
+    this.#rootTransport = new lazy.RootTransport(this);
     this.#sessionData = new lazy.SessionData(this);
   }
 
@@ -106,7 +106,7 @@ export class RootMessageHandler extends MessageHandler {
 
   /**
    * Forward the provided command to WINDOW_GLOBAL MessageHandlers via the
-   * FrameTransport.
+   * RootTransport.
    *
    * @param {Command} command
    *     The command to forward. See type definition in MessageHandler.js
@@ -116,7 +116,7 @@ export class RootMessageHandler extends MessageHandler {
   forwardCommand(command) {
     switch (command.destination.type) {
       case lazy.WindowGlobalMessageHandler.type:
-        return this.#frameTransport.forwardCommand(command);
+        return this.#rootTransport.forwardCommand(command);
       default:
         throw new Error(
           `Cannot forward command to "${command.destination.type}" from "${this.constructor.type}".`

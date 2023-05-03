@@ -16,15 +16,16 @@ DirectoryLockImpl::DirectoryLockImpl(
     MovingNotNull<RefPtr<QuotaManager>> aQuotaManager,
     const Nullable<PersistenceType>& aPersistenceType,
     const nsACString& aSuffix, const nsACString& aGroup,
-    const OriginScope& aOriginScope, bool aIsPrivate,
-    const Nullable<Client::Type>& aClientType, const bool aExclusive,
-    const bool aInternal,
+    const OriginScope& aOriginScope, const nsACString& aStorageOrigin,
+    bool aIsPrivate, const Nullable<Client::Type>& aClientType,
+    const bool aExclusive, const bool aInternal,
     const ShouldUpdateLockIdTableFlag aShouldUpdateLockIdTableFlag)
     : mQuotaManager(std::move(aQuotaManager)),
       mPersistenceType(aPersistenceType),
       mSuffix(aSuffix),
       mGroup(aGroup),
       mOriginScope(aOriginScope),
+      mStorageOrigin(aStorageOrigin),
       mClientType(aClientType),
       mId(mQuotaManager->GenerateDirectoryLockId()),
       mIsPrivate(aIsPrivate),
@@ -40,6 +41,8 @@ DirectoryLockImpl::DirectoryLockImpl(
                 aPersistenceType.Value() != PERSISTENCE_TYPE_INVALID);
   MOZ_ASSERT_IF(!aInternal, !aGroup.IsEmpty());
   MOZ_ASSERT_IF(!aInternal, aOriginScope.IsOrigin());
+  MOZ_ASSERT_IF(!aInternal, !aStorageOrigin.IsEmpty());
+  MOZ_ASSERT_IF(!aInternal, aOriginScope.GetOrigin() == aStorageOrigin);
   MOZ_ASSERT_IF(!aInternal, !aClientType.IsNull());
   MOZ_ASSERT_IF(!aInternal, aClientType.Value() < Client::TypeMax());
 }
@@ -282,7 +285,8 @@ RefPtr<ClientDirectoryLock> DirectoryLockImpl::SpecializeForClient(
       mQuotaManager, Nullable<PersistenceType>(aPersistenceType),
       aOriginMetadata.mSuffix, aOriginMetadata.mGroup,
       OriginScope::FromOrigin(aOriginMetadata.mOrigin),
-      aOriginMetadata.mIsPrivate, Nullable<Client::Type>(aClientType),
+      aOriginMetadata.mStorageOrigin, aOriginMetadata.mIsPrivate,
+      Nullable<Client::Type>(aClientType),
       /* aExclusive */ false, mInternal, ShouldUpdateLockIdTableFlag::Yes);
   if (NS_WARN_IF(!Overlaps(*lock))) {
     return nullptr;

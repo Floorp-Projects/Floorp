@@ -352,6 +352,9 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD SetEarlyHintPreloaderId(uint64_t aEarlyHintPreloaderId) override;
   NS_IMETHOD GetEarlyHintPreloaderId(uint64_t* aEarlyHintPreloaderId) override;
 
+  NS_IMETHOD SetEarlyHintLinkType(uint32_t aEarlyHintLinkType) override;
+  NS_IMETHOD GetEarlyHintLinkType(uint32_t* aEarlyHintLinkType) override;
+
   NS_IMETHOD SetClassicScriptHintCharset(
       const nsAString& aClassicScriptHintCharset) override;
   NS_IMETHOD GetClassicScriptHintCharset(
@@ -822,6 +825,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   // EarlyHintRegistrar id to connect back to the preload. Set on preload
   // channels started from the above list
   uint64_t mEarlyHintPreloaderId = 0;
+  uint32_t mEarlyHintLinkType = 0;
 
   nsString mClassicScriptHintCharset;
   nsString mDocumentCharacterSet;

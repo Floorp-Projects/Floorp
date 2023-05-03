@@ -9,6 +9,18 @@ JAR_MANIFESTS += ["jar.mn"]
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Form Autofill")
 
+EXTRA_JS_MODULES.shared += [
+    "shared/CreditCardRuleset.sys.mjs",
+    "shared/FieldScanner.sys.mjs",
+    "shared/FormAutofillHandler.sys.mjs",
+    "shared/FormAutofillHeuristics.sys.mjs",
+    "shared/FormAutofillNameUtils.sys.mjs",
+    "shared/FormAutofillUtils.sys.mjs",
+    "shared/FormStateManager.sys.mjs",
+    "shared/HeuristicsRegExp.sys.mjs",
+    "shared/LabelUtils.sys.mjs",
+]
+
 EXPORTS.mozilla += ["FormAutofillNative.h"]
 
 UNIFIED_SOURCES += ["FormAutofillNative.cpp"]

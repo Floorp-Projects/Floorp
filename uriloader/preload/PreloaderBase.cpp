@@ -157,7 +157,8 @@ void PreloaderBase::NotifyOpen(const PreloadHashKey& aKey, nsIChannel* aChannel,
   mChannel->SetNotificationCallbacks(sink);
 }
 
-void PreloaderBase::NotifyUsage(LoadBackground aLoadBackground) {
+void PreloaderBase::NotifyUsage(dom::Document* aDocument,
+                                LoadBackground aLoadBackground) {
   if (!mIsUsed && mChannel && aLoadBackground == LoadBackground::Drop) {
     nsLoadFlags loadFlags;
     mChannel->GetLoadFlags(&loadFlags);
@@ -186,6 +187,9 @@ void PreloaderBase::NotifyUsage(LoadBackground aLoadBackground) {
   mIsUsed = true;
   ReportUsageTelemetry();
   CancelUsageTimer();
+  if (mIsEarlyHintsPreload) {
+    aDocument->Preloads().SetEarlyHintUsed();
+  }
 }
 
 void PreloaderBase::RemoveSelf(dom::Document* aDocument) {

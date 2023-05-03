@@ -329,7 +329,7 @@ mingw-w64:
     fetch:
         type: git
         repo: https://git.code.sf.net/p/mingw-w64/mingw-w64
-        revision: e0f8679e6d7e77251578d5f29787fbbf1aa8ad0c
+        revision: f9500e2d85b9400c0982518663660a127e1dc61a
 
 llvm-mingw:
     description: llvm-mingw source code

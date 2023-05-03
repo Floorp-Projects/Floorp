@@ -519,7 +519,7 @@ nsresult FetchDriver::HttpFetch(
   RefPtr<PreloaderBase> fetchPreload = FindPreload(uri);
   if (fetchPreload) {
     fetchPreload->RemoveSelf(mDocument);
-    fetchPreload->NotifyUsage(PreloaderBase::LoadBackground::Keep);
+    fetchPreload->NotifyUsage(mDocument, PreloaderBase::LoadBackground::Keep);
 
     rv = fetchPreload->AsyncConsume(this);
     if (NS_SUCCEEDED(rv)) {

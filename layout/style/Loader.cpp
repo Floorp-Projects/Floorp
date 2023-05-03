@@ -1712,7 +1712,7 @@ void Loader::MaybeNotifyPreloadUsed(SheetLoadData& aData) {
     return;
   }
 
-  preload->NotifyUsage();
+  preload->NotifyUsage(mDocument);
 }
 
 Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(

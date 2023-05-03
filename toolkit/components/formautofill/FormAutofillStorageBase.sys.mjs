@@ -133,8 +133,9 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
-  FormAutofillNameUtils: "resource://autofill/FormAutofillNameUtils.sys.mjs",
-  FormAutofillUtils: "resource://autofill/FormAutofillUtils.sys.mjs",
+  FormAutofillNameUtils:
+    "resource://gre/modules/shared/FormAutofillNameUtils.sys.mjs",
+  FormAutofillUtils: "resource://gre/modules/shared/FormAutofillUtils.sys.mjs",
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
   PhoneNumber: "resource://autofill/phonenumberutils/PhoneNumber.sys.mjs",
 });

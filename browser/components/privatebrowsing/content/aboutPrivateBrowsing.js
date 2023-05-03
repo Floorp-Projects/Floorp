@@ -9,7 +9,7 @@
  * @param {Array<[HTMLElement, string]>} items An array of [element, value] where value is
  *                                       a fluent id starting with "fluent:" or plain text
  */
-function translateElements(container, items) {
+function translateElements(items) {
   items.forEach(([element, value]) => {
     // Skip empty text or elements
     if (!element || !value) {
@@ -52,7 +52,7 @@ function renderInfo({
     titleEl.remove();
   }
 
-  translateElements(container, [
+  translateElements([
     [titleEl, infoTitle],
     [bodyEl, infoBody],
     [linkEl, infoLinkText],
@@ -175,7 +175,7 @@ async function renderPromo({
     promoHeaderEl.remove();
   }
 
-  translateElements(container, [
+  translateElements([
     [titleEl, promoTitle],
     [linkEl, promoLinkText],
     [promoHeaderEl, promoHeader],
@@ -252,7 +252,7 @@ async function setupMessageConfig(config = null) {
   }
 
   renderInfo(config);
-  let hasRendered = renderPromo(config);
+  let hasRendered = await renderPromo(config);
   if (hasRendered && message) {
     recordOnceVisible(message);
     handlePromoOnPreload(message);

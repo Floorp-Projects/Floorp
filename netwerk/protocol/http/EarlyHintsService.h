@@ -35,6 +35,8 @@ class EarlyHintsService {
   void RegisterLinksAndGetConnectArgs(
       nsTArray<EarlyHintConnectArgs>& aOutLinks);
 
+  uint32_t LinkType() const { return mLinkType; }
+
  private:
   void CollectTelemetry(Maybe<uint32_t> aResponseStatus);
   void CollectLinkTypeTelemetry(const nsAString& aRel);
@@ -43,6 +45,7 @@ class EarlyHintsService {
   uint32_t mEarlyHintsCount{0};
 
   RefPtr<OngoingEarlyHints> mOngoingEarlyHints;
+  uint32_t mLinkType = 0;
 };
 
 }  // namespace mozilla::net

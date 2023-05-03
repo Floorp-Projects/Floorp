@@ -350,11 +350,13 @@ class PlacesViewBase {
 
   _setEmptyPopupStatus(aPopup, aEmpty) {
     if (!aPopup._emptyMenuitem) {
-      let label = PlacesUIUtils.getString("bookmarksMenuEmptyFolder");
       aPopup._emptyMenuitem = document.createXULElement("menuitem");
-      aPopup._emptyMenuitem.setAttribute("label", label);
       aPopup._emptyMenuitem.setAttribute("disabled", true);
       aPopup._emptyMenuitem.className = "bookmark-item";
+      document.l10n.setAttributes(
+        aPopup._emptyMenuitem,
+        "places-empty-bookmarks-folder"
+      );
       if (this._appendClassToChildren) {
         aPopup._emptyMenuitem.classList.add(this._appendClassToChildren);
       }
@@ -2188,11 +2190,13 @@ this.PlacesPanelview = class PlacesPanelview extends PlacesViewBase {
 
   _setEmptyPopupStatus(panelview, empty = false) {
     if (!panelview._emptyMenuitem) {
-      let label = PlacesUIUtils.getString("bookmarksMenuEmptyFolder");
       panelview._emptyMenuitem = document.createXULElement("toolbarbutton");
-      panelview._emptyMenuitem.setAttribute("label", label);
       panelview._emptyMenuitem.setAttribute("disabled", true);
       panelview._emptyMenuitem.className = "subviewbutton";
+      document.l10n.setAttributes(
+        panelview._emptyMenuitem,
+        "places-empty-bookmarks-folder"
+      );
       if (this._appendClassToChildren) {
         panelview._emptyMenuitem.classList.add(this._appendClassToChildren);
       }

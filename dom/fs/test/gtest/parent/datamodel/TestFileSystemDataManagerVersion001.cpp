@@ -81,8 +81,8 @@ static void MakeDatabaseManagerVersion001(
 
   TEST_TRY_UNWRAP(EntryId rootId, data::GetRootHandle(GetTestOrigin()));
 
-  auto fmRes =
-      FileSystemFileManager::CreateFileSystemFileManager(GetTestOrigin());
+  auto fmRes = FileSystemFileManager::CreateFileSystemFileManager(
+      GetTestOriginMetadata());
   ASSERT_FALSE(fmRes.isErr());
 
   QM_TRY_UNWRAP(auto streamTransportService,

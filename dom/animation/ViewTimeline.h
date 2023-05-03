@@ -18,6 +18,9 @@ namespace mozilla::dom {
  * is a special case of ScrollTimeline.
  */
 class ViewTimeline final : public ScrollTimeline {
+  template <typename T, typename... Args>
+  friend already_AddRefed<T> mozilla::MakeAndAddRef(Args&&... aArgs);
+
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ViewTimeline, ScrollTimeline)
@@ -29,6 +32,10 @@ class ViewTimeline final : public ScrollTimeline {
   static already_AddRefed<ViewTimeline> MakeNamed(
       Document* aDocument, Element* aSubject, PseudoStyleType aPseudoType,
       const StyleViewTimeline& aStyleTimeline);
+
+  static already_AddRefed<ViewTimeline> MakeAnonymous(
+      Document* aDocument, const NonOwningAnimationTarget& aTarget,
+      StyleScrollAxis aAxis, const StyleViewTimelineInset& aInset);
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override {

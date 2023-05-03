@@ -36,6 +36,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <nr_api.h>
 #include "nr_socket_wrapper.h"
 
+#include <assert.h>
+
 int nr_socket_wrapper_factory_create_int(void *obj, nr_socket_wrapper_factory_vtbl *vtbl,
                                          nr_socket_wrapper_factory **wrapperp)
 {

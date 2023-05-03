@@ -4,14 +4,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# This file exposes six lists:
-# ALL_PROCESSES, BROWSER_PROCESS, CHILD_PROCESSES, GPU_PROCESSES,
-# UTILITY_PROCESSES, and SOCKET_PROCESSES
+# This file exposes these lists:
+# ALL_PROCESSES, BROWSER_PROCESS, CHILD_PROCESSES, GMPLUGIN_PROCESSES,
+# GPU_PROCESSES, UTILITY_PROCESSES, and SOCKET_PROCESSES
 #
 # In addition, each of those lists supports a special variant for test-only
 # entries:
 # ALL_PROCESSES_TESTS, BROWSER_PROCESS_TESTS, CHILD_PROCESSES_TESTS,
-# GPU_PROCESSES_TESTS, UTILITY_PROCESSES_TESTS, and SOCKET_PROCESSES_TESTS
+# GMPLUGIN_PROCESSES_TESTS, GPU_PROCESSES_TESTS, UTILITY_PROCESSES_TESTS, and
+# SOCKET_PROCESSES_TESTS
 #
 # Choose the list that is applicable to the applicable process type(s) for your
 # DLL block.
@@ -403,3 +404,15 @@ UTILITY_PROCESSES_TESTS += [
     DllBlocklistEntry("testdllblocklist_utilityprocessonly.dll", ALL_VERSIONS),
 ]
 
+GMPLUGIN_PROCESSES += [
+    # Causes crashes in the plugin process, bug 1830950
+    DllBlocklistEntry("ipseng64.dll", ALL_VERSIONS),
+    DllBlocklistEntry("ipseng32.dll", ALL_VERSIONS),
+    DllBlocklistEntry("ks3rdhmpg.dll", ALL_VERSIONS),
+    DllBlocklistEntry("kwsui64.dll", ALL_VERSIONS),
+]
+
+GMPLUGIN_PROCESSES_TESTS += [
+    # DLLs used by TestDllBlocklist* gTests
+    DllBlocklistEntry("testdllblocklist_gmpluginprocessonly.dll", ALL_VERSIONS),
+]

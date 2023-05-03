@@ -53,6 +53,7 @@ describe("ASRouter", () => {
   let FakeToolbarPanelHub;
   let FakeMomentsPageHub;
   let ASRouterTargeting;
+  let screenImpressions;
 
   function setMessageProviderPref(value) {
     sandbox.stub(ASRouterPreferences, "providers").get(() => value);
@@ -74,6 +75,9 @@ describe("ASRouter", () => {
     getStub
       .withArgs("previousSessionEnd")
       .returns(Promise.resolve(previousSessionEnd));
+    getStub
+      .withArgs("screenImpressions")
+      .returns(Promise.resolve(screenImpressions));
     initParams = {
       storage: {
         get: getStub,
@@ -103,6 +107,7 @@ describe("ASRouter", () => {
     messageImpressions = {};
     groupImpressions = {};
     previousSessionEnd = 100;
+    screenImpressions = {};
     sandbox = sinon.createSandbox();
     ASRouterTargeting = {
       isMatch: sandbox.stub(),
@@ -401,6 +406,14 @@ describe("ASRouter", () => {
       await initASRouter(Router);
 
       assert.deepEqual(Router.state.messageImpressions, messageImpressions);
+    });
+    it("should set state.screenImpressions to the screenImpressions object in persistent storage", async () => {
+      screenImpressions = { test: 123 };
+
+      Router = new _ASRouter();
+      await initASRouter(Router);
+
+      assert.deepEqual(Router.state.screenImpressions, screenImpressions);
     });
     it("should clear impressions for groups that are not active", async () => {
       groupImpressions = { foo: [0, 1, 2] };

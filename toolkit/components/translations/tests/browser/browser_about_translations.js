@@ -513,7 +513,7 @@ add_task(async function test_about_translations_html() {
 
 add_task(async function test_about_translations_language_identification() {
   await openAboutTranslations({
-    detectedLanguageLabel: "en",
+    detectedLangTag: "en",
     detectedLanguageConfidence: "0.98",
     languagePairs: [
       { fromLang: "en", toLang: "fr", isBeta: false },

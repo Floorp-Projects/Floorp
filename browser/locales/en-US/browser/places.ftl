@@ -24,6 +24,9 @@ places-open-in-private-window =
   .label = Open in New Private Window
   .accesskey = P
 
+places-empty-bookmarks-folder =
+  .label = (Empty)
+
 places-add-bookmark =
   .label = Add Bookmark…
   .accesskey = B
@@ -88,6 +91,15 @@ places-delete-folder =
          *[other] Delete Folders
       }
   .accesskey = D
+# Variables:
+#   $count (number) - The number of pages selected for removal.
+places-delete-page =
+  .label =
+      { $count ->
+          [1] Delete Page
+         *[other] Delete Pages
+      }
+  .accesskey = D
 
 # Managed bookmarks are created by an administrator and cannot be changed by the user.
 managed-bookmarks =
@@ -113,6 +125,16 @@ places-delete-bookmark =
          *[other] Delete Bookmarks
       }
   .accesskey = D
+
+# Variables:
+#   $count (number) - The number of bookmarks being added.
+places-create-bookmark =
+  .label =
+      { $count ->
+          [1] Bookmark Page…
+         *[other] Bookmark Pages…
+      }
+  .accesskey = B
 
 places-untag-bookmark =
   .label = Remove Tag
@@ -234,6 +256,28 @@ places-view-sort-col-date-added =
 places-view-sort-col-last-modified =
   .label = Last Modified
 
+places-view-sortby-name =
+  .label = Sort by Name
+  .accesskey = N
+places-view-sortby-url =
+  .label = Sort by Location
+  .accesskey = L
+places-view-sortby-date =
+  .label = Sort by Most Recent Visit
+  .accesskey = V
+places-view-sortby-visit-count =
+  .label = Sort by Visit Count
+  .accesskey = C
+places-view-sortby-date-added =
+  .label = Sort by Added
+  .accesskey = e
+places-view-sortby-last-modified =
+  .label = Sort by Last Modified
+  .accesskey = M
+places-view-sortby-tags =
+  .label = Sort by Tags
+  .accesskey = T
+
 places-cmd-find-key =
   .key = f
 
@@ -244,3 +288,28 @@ places-forward-button =
   .tooltiptext = Go forward
 
 places-details-pane-select-an-item-description = Select an item to view and edit its properties
+
+places-details-pane-no-items =
+  .value = No items
+# Variables:
+#   $count (Number): number of items
+places-details-pane-items-count =
+  .value =
+      { $count ->
+          [one] One item
+         *[other] { $count } items
+      }
+
+## Strings used as a placeholder in the Library search field. For example,
+## "Search History" stands for "Search through the browser's history".
+
+places-search-bookmarks =
+    .placeholder = Search Bookmarks
+places-search-history =
+    .placeholder = Search History
+places-search-downloads =
+    .placeholder = Search Downloads
+
+##
+
+places-locked-prompt = The bookmarks and history system will not be functional because one of { -brand-short-name }’s files is in use by another application. Some security software can cause this problem.

@@ -610,6 +610,7 @@ class _ASRouter {
       providers: [],
       messageBlockList: [],
       messageImpressions: {},
+      screenImpressions: {},
       messages: [],
       groups: [],
       errors: [],
@@ -622,6 +623,7 @@ class _ASRouter {
     this.unblockMessageById = this.unblockMessageById.bind(this);
     this.handleMessageRequest = this.handleMessageRequest.bind(this);
     this.addImpression = this.addImpression.bind(this);
+    this.addScreenImpression = this.addScreenImpression.bind(this);
     this._handleTargetingError = this._handleTargetingError.bind(this);
     this.onPrefChange = this.onPrefChange.bind(this);
     this._onLocaleChanged = this._onLocaleChanged.bind(this);
@@ -1029,6 +1031,8 @@ class _ASRouter {
       (await this._storage.get("messageImpressions")) || {};
     const groupImpressions =
       (await this._storage.get("groupImpressions")) || {};
+    const screenImpressions =
+      (await this._storage.get("screenImpressions")) || {};
     const previousSessionEnd =
       (await this._storage.get("previousSessionEnd")) || 0;
 
@@ -1036,6 +1040,7 @@ class _ASRouter {
       messageBlockList,
       groupImpressions,
       messageImpressions,
+      screenImpressions,
       previousSessionEnd,
       ...(lazy.ASRouterPreferences.specialConditions || {}),
       initialized: false,
@@ -1192,7 +1197,11 @@ class _ASRouter {
 
   // Return an object containing targeting parameters used to select messages
   _getMessagesContext() {
-    const { messageImpressions, previousSessionEnd } = this.state;
+    const {
+      messageImpressions,
+      previousSessionEnd,
+      screenImpressions,
+    } = this.state;
 
     return {
       get messageImpressions() {
@@ -1200,6 +1209,9 @@ class _ASRouter {
       },
       get previousSessionEnd() {
         return previousSessionEnd;
+      },
+      get screenImpressions() {
+        return screenImpressions;
       },
     };
   }
@@ -1399,6 +1411,25 @@ class _ASRouter {
     return { message };
   }
 
+  addScreenImpression(screen) {
+    lazy.ASRouterPreferences.console.debug(
+      `entering addScreenImpression for ${screen.id}`
+    );
+
+    const time = Date.now();
+
+    let screenImpressions = { ...this.state.screenImpressions };
+    screenImpressions[screen.id] = time;
+
+    this.setState({ screenImpressions });
+    lazy.ASRouterPreferences.console.debug(
+      screen.id,
+      `screen impression added, screenImpressions[screen.id]: `,
+      screenImpressions[screen.id]
+    );
+    this._storage.set("screenImpressions", screenImpressions);
+  }
+
   addImpression(message) {
     lazy.ASRouterPreferences.console.debug(
       `entering addImpression for ${message.id}`
@@ -1445,10 +1476,8 @@ class _ASRouter {
     // (see https://redux.js.org/recipes/structuring-reducers/prerequisite-concepts#immutable-data-management)
     const impressions = { ...currentImpressions };
     if (item.frequency) {
-      impressions[item.id] = impressions[item.id]
-        ? [...impressions[item.id]]
-        : [];
-      impressions[item.id].push(time);
+      impressions[item.id] = [...(impressions[item.id] ?? []), time];
+
       lazy.ASRouterPreferences.console.debug(
         item.id,
         "impression added, impressions[item.id]: ",

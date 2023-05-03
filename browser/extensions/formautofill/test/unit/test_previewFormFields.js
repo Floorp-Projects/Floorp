@@ -4,13 +4,13 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
 const { FormAutofillHandler } = ChromeUtils.importESModule(
-  "resource://autofill/FormAutofillHandler.sys.mjs"
+  "resource://gre/modules/shared/FormAutofillHandler.sys.mjs"
 );
 
 // Bug 1762063 - we need to fix this pattern of having to wrap destructuring calls in parentheses.
 // We can't do a standard destructuring call because FormAutofillUtils is already declared as a var in head.js
 ({ FormAutofillUtils } = ChromeUtils.importESModule(
-  "resource://autofill/FormAutofillUtils.sys.mjs"
+  "resource://gre/modules/shared/FormAutofillUtils.sys.mjs"
 ));
 const { FIELD_STATES } = FormAutofillUtils;
 const PREVIEW = FIELD_STATES.PREVIEW;

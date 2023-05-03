@@ -4673,6 +4673,11 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     return result;
   }
 
+  bool isBackgroundTaskMode = false;
+#ifdef MOZ_BACKGROUNDTASKS
+  isBackgroundTaskMode = BackgroundTasks::IsBackgroundTaskMode();
+#endif
+
 #ifdef MOZ_HAS_REMOTE
   if (gfxPlatform::IsHeadless()) {
     mDisableRemoteClient = true;
@@ -4684,12 +4689,12 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
   // Init X11 in thread-safe mode. Must be called prior to the first call to
   // XOpenDisplay (called inside gdk_display_open). This is a requirement for
   // off main tread compositing.
-  if (!gfxPlatform::IsHeadless()) {
+  if (!isBackgroundTaskMode && !gfxPlatform::IsHeadless()) {
     XInitThreads();
   }
 #endif
 #if defined(MOZ_WIDGET_GTK)
-  if (!gfxPlatform::IsHeadless()) {
+  if (!isBackgroundTaskMode && !gfxPlatform::IsHeadless()) {
     const char* display_name = nullptr;
     bool saveDisplayArg = false;
 
@@ -5107,18 +5112,19 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
   // Flush any pending page load events.
   mozilla::glean_pings::Pageload.Submit("startup"_ns);
 
+  if (!isBackgroundTaskMode) {
 #ifdef USE_GLX_TEST
-  GfxInfo::FireGLXTestProcess();
+    GfxInfo::FireGLXTestProcess();
 #endif
-
 #ifdef MOZ_WAYLAND
-  // Make sure we have wayland connection for main thread.
-  // It's used as template to create display connections
-  // for different threads.
-  if (IsWaylandEnabled()) {
-    MOZ_UNUSED(WaylandDisplayGet());
-  }
+    // Make sure we have wayland connection for main thread.
+    // It's used as template to create display connections
+    // for different threads.
+    if (IsWaylandEnabled()) {
+      MOZ_UNUSED(WaylandDisplayGet());
+    }
 #endif
+  }
 
   return 0;
 }

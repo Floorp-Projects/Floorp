@@ -286,6 +286,7 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
     Services.cpmm.sharedData.addEventListener("change", this);
 
     this.eligiblePipVideos = new WeakSet();
+    this.trackingVideos = new WeakSet();
   }
 
   receiveMessage(message) {
@@ -320,6 +321,14 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
 
     for (let video of ChromeUtils.nondeterministicGetWeakSetKeys(
       this.eligiblePipVideos
+    )) {
+      video.removeEventListener("emptied", this);
+      video.removeEventListener("loadedmetadata", this);
+      video.removeEventListener("durationchange", this);
+    }
+
+    for (let video of ChromeUtils.nondeterministicGetWeakSetKeys(
+      this.trackingVideos
     )) {
       video.removeEventListener("emptied", this);
       video.removeEventListener("loadedmetadata", this);
@@ -567,11 +576,22 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
 
     state.intersectionObserver.observe(video);
 
+    if (!lazy.PIP_URLBAR_BUTTON) {
+      return;
+    }
+
+    video.addEventListener("emptied", this);
+    video.addEventListener("loadedmetadata", this);
+    video.addEventListener("durationchange", this);
+
+    this.trackingVideos.add(video);
+
     this.updatePipVideoEligibility(video);
   }
 
   updatePipVideoEligibility(video) {
-    if (this.isVideoPiPEligible(video)) {
+    let isEligible = this.isVideoPiPEligible(video);
+    if (isEligible) {
       if (!this.eligiblePipVideos.has(video)) {
         this.eligiblePipVideos.add(video);
 
@@ -581,14 +601,15 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
           }
         );
         mutationObserver.observe(video.parentElement, { childList: true });
-
-        this.sendAsyncMessage("PictureInPicture:UpdateEligiblePipVideoCount", {
-          count: ChromeUtils.nondeterministicGetWeakSetKeys(
-            this.eligiblePipVideos
-          ).length,
-        });
       }
+    } else if (this.eligiblePipVideos.has(video)) {
+      this.eligiblePipVideos.delete(video);
     }
+
+    this.sendAsyncMessage("PictureInPicture:UpdateEligiblePipVideoCount", {
+      count: ChromeUtils.nondeterministicGetWeakSetKeys(this.eligiblePipVideos)
+        .length,
+    });
   }
 
   handleEligiblePipVideoMutation(mutationList) {
@@ -634,22 +655,11 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
   }
 
   isVideoPiPEligible(video) {
-    if (!lazy.PIP_URLBAR_BUTTON) {
-      return false;
-    }
-
     if (lazy.PIP_TOGGLE_ALWAYS_SHOW) {
       return true;
     }
 
-    if (isNaN(video.duration)) {
-      video.addEventListener("emptied", this);
-      video.addEventListener("loadedmetadata", this);
-      video.addEventListener("durationchange", this);
-      return false;
-    }
-
-    if (video.duration < lazy.MIN_VIDEO_LENGTH) {
+    if (isNaN(video.duration) || video.duration < lazy.MIN_VIDEO_LENGTH) {
       return false;
     }
 
@@ -2139,6 +2149,26 @@ export class PictureInPictureChild extends JSWindowActorChild {
   }
 
   /**
+   * @returns {boolean} true if a textTrack with mode "hidden" should be treated as "showing"
+   */
+  shouldShowHiddenTextTracks() {
+    const video = this.getWeakVideo();
+    if (!video) {
+      return false;
+    }
+    const { documentURI } = video.ownerDocument;
+    if (!documentURI) {
+      return false;
+    }
+    for (let [override, { showHiddenTextTracks }] of lazy.gSiteOverrides) {
+      if (override.matches(documentURI) && showHiddenTextTracks) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Updates this._currentWebVTTTrack if an active track is found
    * for the originating video.
    * @param {TextTrackList} textTrackList list of text tracks
@@ -2149,7 +2179,10 @@ export class PictureInPictureChild extends JSWindowActorChild {
     for (let i = 0; i < textTrackList.length; i++) {
       let track = textTrackList[i];
       let isCCText = track.kind === "subtitles" || track.kind === "captions";
-      if (isCCText && track.mode === "showing" && track.cues) {
+      let shouldShowTrack =
+        track.mode === "showing" ||
+        (track.mode === "hidden" && this.shouldShowHiddenTextTracks());
+      if (isCCText && shouldShowTrack && track.cues) {
         this._currentWebVTTTrack = track;
         break;
       }

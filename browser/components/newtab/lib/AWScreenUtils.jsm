@@ -70,6 +70,10 @@ const AWScreenUtils = {
 
     return filteredScreens;
   },
+
+  async addScreenImpression(screen) {
+    await lazy.ASRouter.addScreenImpression(screen);
+  },
 };
 
 const EXPORTED_SYMBOLS = ["AWScreenUtils"];

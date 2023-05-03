@@ -110,6 +110,16 @@ macro_rules! ascii_case_insensitive_phf_map {
     }
 }
 
+/// Create a new array of MaybeUninit<T> items, in an uninitialized state.
+#[inline(always)]
+pub fn _cssparser_internal_create_uninit_array<const N: usize>() -> [MaybeUninit<u8>; N] {
+    unsafe {
+        // SAFETY: An uninitialized `[MaybeUninit<_>; LEN]` is valid.
+        // See: https://doc.rust-lang.org/stable/core/mem/union.MaybeUninit.html#method.uninit_array
+        MaybeUninit::<[MaybeUninit<u8>; N]>::uninit().assume_init()
+    }
+}
+
 /// Implementation detail of match_ignore_ascii_case! and ascii_case_insensitive_phf_map! macros.
 ///
 /// **This macro is not part of the public API. It can change or be removed between any versions.**
@@ -121,11 +131,7 @@ macro_rules! ascii_case_insensitive_phf_map {
 #[doc(hidden)]
 macro_rules! _cssparser_internal_to_lowercase {
     ($input: expr, $BUFFER_SIZE: expr => $output: ident) => {
-        #[allow(unsafe_code)]
-        let mut buffer = unsafe {
-            ::std::mem::MaybeUninit::<[::std::mem::MaybeUninit<u8>; $BUFFER_SIZE]>::uninit()
-                .assume_init()
-        };
+        let mut buffer = $crate::_cssparser_internal_create_uninit_array::<{ $BUFFER_SIZE }>();
         let input: &str = $input;
         let $output = $crate::_cssparser_internal_to_lowercase(&mut buffer, input);
     };

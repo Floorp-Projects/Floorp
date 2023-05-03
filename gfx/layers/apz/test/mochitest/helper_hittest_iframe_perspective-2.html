@@ -25,11 +25,16 @@
 <body>
   <div class="outer">
     <div class="inner">
-      <iframe width="300px" height="200px" src="https://example.com/tests/gfx/layers/apz/test/mochitest/helper_hittest_iframe_perspective_child.html"></iframe>
+      <iframe id="iframe" width="300px" height="200px" src="https://example.com/tests/gfx/layers/apz/test/mochitest/helper_hittest_iframe_perspective_child.html"></iframe>
     </div>
   </div>
   <script type="application/javascript">
 async function test() {
+  // Wait for iframe to receive content transforms.
+  await SpecialPowers.spawn(iframe, [], async () => {
+    await SpecialPowers.contentTransformsReceived(content.window);
+  });
+
   let eventPromise = new Promise(resolve => {
     window.addEventListener("message", event => {
       let data = JSON.parse(event.data);

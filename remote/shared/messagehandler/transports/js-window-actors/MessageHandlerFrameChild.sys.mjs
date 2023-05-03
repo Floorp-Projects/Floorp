@@ -6,7 +6,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   isBrowsingContextCompatible:
-    "chrome://remote/content/shared/messagehandler/transports/FrameContextUtils.sys.mjs",
+    "chrome://remote/content/shared/messagehandler/transports/BrowsingContextUtils.sys.mjs",
   MessageHandlerRegistry:
     "chrome://remote/content/shared/messagehandler/MessageHandlerRegistry.sys.mjs",
   WindowGlobalMessageHandler:
@@ -14,8 +14,28 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 /**
+ * Map from MessageHandlerRegistry to MessageHandlerFrameChild actor. This will
+ * allow a WindowGlobalMessageHandler to find the JSWindowActorChild instance to
+ * use to send commands.
+ */
+const registryToActor = new WeakMap();
+
+/**
+ * Retrieve the MessageHandlerFrameChild which is linked to the provided
+ * WindowGlobalMessageHandler instance.
+ *
+ * @param {WindowGlobalMessageHandler} messageHandler
+ *     The WindowGlobalMessageHandler for which to get the JSWindowActor.
+ * @returns {MessageHandlerFrameChild}
+ *     The corresponding MessageHandlerFrameChild instance.
+ */
+export function getMessageHandlerFrameChildActor(messageHandler) {
+  return registryToActor.get(messageHandler.registry);
+}
+
+/**
  * Child actor for the MessageHandlerFrame JSWindowActor. The
- * MessageHandlerFrame actor is used by FrameTransport to communicate between
+ * MessageHandlerFrame actor is used by RootTransport to communicate between
  * ROOT MessageHandlers and WINDOW_GLOBAL MessageHandlers.
  */
 export class MessageHandlerFrameChild extends JSWindowActorChild {
@@ -24,6 +44,8 @@ export class MessageHandlerFrameChild extends JSWindowActorChild {
     this.context = this.manager.browsingContext;
 
     this._registry = new lazy.MessageHandlerRegistry(this.type, this.context);
+    registryToActor.set(this._registry, this);
+
     this._onRegistryEvent = this._onRegistryEvent.bind(this);
 
     // MessageHandlerFrameChild is responsible for forwarding events from
@@ -67,6 +89,13 @@ export class MessageHandlerFrameChild extends JSWindowActorChild {
     }
 
     return null;
+  }
+
+  sendCommand(command, sessionId) {
+    return this.sendQuery("MessageHandlerFrameChild:sendCommand", {
+      command,
+      sessionId,
+    });
   }
 
   _onRegistryEvent(eventName, wrappedEvent) {

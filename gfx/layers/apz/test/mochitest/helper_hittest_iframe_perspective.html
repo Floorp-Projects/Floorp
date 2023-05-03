@@ -16,10 +16,15 @@
 </head>
 <body>
   <div id="container">
-    <iframe src="https://example.com/tests/gfx/layers/apz/test/mochitest/helper_hittest_iframe_perspective_child.html"></iframe>
+    <iframe id="iframe" src="https://example.com/tests/gfx/layers/apz/test/mochitest/helper_hittest_iframe_perspective_child.html"></iframe>
   </div>
   <script type="application/javascript">
 async function test() {
+  // Wait for iframe to receive content transforms.
+  await SpecialPowers.spawn(iframe, [], async () => {
+    await SpecialPowers.contentTransformsReceived(content.window);
+  });
+
   let clickCoordsInChild = {
     offsetX: 0,
     offsetY: 0

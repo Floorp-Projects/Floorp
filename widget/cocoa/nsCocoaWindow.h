@@ -380,6 +380,13 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   void FinishCurrentTransition();
   void FinishCurrentTransitionIfMatching(const TransitionType& aTransition);
 
+  // Called when something has happened that might cause us to update our
+  // fullscreen state. Returns true if we updated state. We'll call this
+  // on window resize, and we'll call it when we enter or exit fullscreen,
+  // since fullscreen to-and-from zoomed windows won't necessarily trigger
+  // a resize.
+  bool HandleUpdateFullscreenOnResize();
+
  protected:
   virtual ~nsCocoaWindow();
 

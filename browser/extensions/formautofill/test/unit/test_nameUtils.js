@@ -7,7 +7,7 @@
 var FormAutofillNameUtils;
 add_task(async function() {
   ({ FormAutofillNameUtils } = ChromeUtils.importESModule(
-    "resource://autofill/FormAutofillNameUtils.sys.mjs"
+    "resource://gre/modules/shared/FormAutofillNameUtils.sys.mjs"
   ));
 });
 

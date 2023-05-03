@@ -393,6 +393,7 @@ opaque-types = [
     "mozilla::SeenPtrs",
     "mozilla::SupportsWeakPtr",
     "std::tuple",
+    "std::tuple_.*", # Causes "Cannot find type _Pred in this scope" error on mac, like rust-skia#571
     "SupportsWeakPtr",
     "mozilla::detail::WeakReference",
     "mozilla::WeakPtr",
@@ -426,8 +427,8 @@ opaque-types = [
 # All cbindgen-types are in mod "structs::root::mozilla".
 # FIXME(emilio): We probably want to automate this somehow...
 cbindgen-types = [
-    { gecko = "StyleAnimationIterationCount", servo = "crate::values::computed::box_::AnimationIterationCount" },
-    { gecko = "StyleAnimationTimeline", servo = "crate::values::computed::box_::AnimationTimeline" },
+    { gecko = "StyleAnimationIterationCount", servo = "crate::values::computed::AnimationIterationCount" },
+    { gecko = "StyleAnimationTimeline", servo = "crate::values::computed::AnimationTimeline" },
     { gecko = "StyleAppearance", servo = "crate::values::specified::Appearance" },
     { gecko = "StyleAspectRatio", servo = "crate::values::computed::position::AspectRatio" },
     { gecko = "StyleComputedFontStretchRange", servo = "crate::font_face::ComputedFontStretchRange" },
