@@ -411,6 +411,7 @@ already_AddRefed<Cookie> CookieCommons::CreateCookieFromDocument(
   nsCString cookieString(aCookieString);
 
   CookieStruct cookieData;
+  MOZ_ASSERT(cookieData.creationTime() == 0, "Must be initialized to 0");
   bool canSetCookie = false;
   CookieService::CanSetCookie(principalURI, baseDomain, cookieData,
                               requireHostMatch, cookieStatus, cookieString,
