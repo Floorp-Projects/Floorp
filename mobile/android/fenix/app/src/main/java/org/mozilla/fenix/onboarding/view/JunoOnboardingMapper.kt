@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.onboarding.view
 
-import org.mozilla.fenix.R
 import org.mozilla.fenix.nimbus.OnboardingCardData
 import org.mozilla.fenix.nimbus.OnboardingCardType
 import org.mozilla.fenix.settings.SupportUtils
@@ -22,36 +21,20 @@ internal fun Collection<OnboardingCardData>.toPageUiData(showNotificationPage: B
     }.sortedBy { it.ordering }
         .map { it.toPageUiData() }
 
-private fun OnboardingCardData.toPageUiData(): OnboardingPageUiData {
-    return when (cardType) {
-        OnboardingCardType.DEFAULT_BROWSER -> OnboardingPageUiData(
-            type = OnboardingPageUiData.Type.DEFAULT_BROWSER,
-            imageRes = R.drawable.ic_onboarding_welcome,
-            title = title,
-            description = body,
-            linkText = linkText,
-            primaryButtonLabel = primaryButtonLabel,
-            secondaryButtonLabel = secondaryButtonLabel,
-        )
+private fun OnboardingCardData.toPageUiData() = OnboardingPageUiData(
+    type = cardType.toPageUiDataType(),
+    imageRes = imageRes.resourceId,
+    title = title,
+    description = body,
+    linkText = linkText,
+    primaryButtonLabel = primaryButtonLabel,
+    secondaryButtonLabel = secondaryButtonLabel,
+)
 
-        OnboardingCardType.SYNC_SIGN_IN -> OnboardingPageUiData(
-            type = OnboardingPageUiData.Type.SYNC_SIGN_IN,
-            imageRes = R.drawable.ic_onboarding_sync,
-            title = title,
-            description = body,
-            primaryButtonLabel = primaryButtonLabel,
-            secondaryButtonLabel = secondaryButtonLabel,
-        )
-
-        OnboardingCardType.NOTIFICATION_PERMISSION -> OnboardingPageUiData(
-            type = OnboardingPageUiData.Type.NOTIFICATION_PERMISSION,
-            imageRes = R.drawable.ic_notification_permission,
-            title = title,
-            description = body,
-            primaryButtonLabel = primaryButtonLabel,
-            secondaryButtonLabel = secondaryButtonLabel,
-        )
-    }
+private fun OnboardingCardType.toPageUiDataType() = when (this) {
+    OnboardingCardType.DEFAULT_BROWSER -> OnboardingPageUiData.Type.DEFAULT_BROWSER
+    OnboardingCardType.SYNC_SIGN_IN -> OnboardingPageUiData.Type.SYNC_SIGN_IN
+    OnboardingCardType.NOTIFICATION_PERMISSION -> OnboardingPageUiData.Type.NOTIFICATION_PERMISSION
 }
 
 /**

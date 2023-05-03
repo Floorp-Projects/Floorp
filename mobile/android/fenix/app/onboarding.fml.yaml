@@ -19,6 +19,7 @@ features:
               ordering: 10
               body: juno_onboarding_default_browser_description_nimbus
               link-text: juno_onboarding_default_browser_description_link_text
+              image-res: ic_onboarding_welcome
               primary-button-label: juno_onboarding_default_browser_positive_button
               secondary-button-label: juno_onboarding_default_browser_negative_button
 
@@ -26,6 +27,7 @@ features:
               card-type: sync-sign-in
               title: juno_onboarding_sign_in_title
               body: juno_onboarding_sign_in_description
+              image-res: ic_onboarding_sync
               ordering: 20
               primary-button-label: juno_onboarding_sign_in_positive_button
               secondary-button-label: juno_onboarding_sign_in_negative_button
@@ -34,6 +36,7 @@ features:
               card-type: notification-permission
               title: juno_onboarding_enable_notifications_title_nimbus
               body: juno_onboarding_enable_notifications_description_nimbus
+              image-res: ic_notification_permission
               ordering: 30
               primary-button-label: juno_onboarding_enable_notifications_positive_button
               secondary-button-label: juno_onboarding_enable_notifications_negative_button
@@ -73,6 +76,11 @@ objects:
           e.g. body: This is a policy link
                link-text: policy link
         default: null
+      image-res:
+        type: Image
+        description: The resource id of the image to be displayed.
+        # This should never be defaulted.
+        default: ic_onboarding_welcome
       ordering:
         type: Int
         description: Used to sequence the cards.

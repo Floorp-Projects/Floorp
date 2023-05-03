@@ -56,6 +56,7 @@ private val notificationPageUiData = OnboardingPageUiData(
 
 private val defaultBrowserCardData = OnboardingCardData(
     cardType = OnboardingCardType.DEFAULT_BROWSER,
+    imageRes = R.drawable.ic_onboarding_welcome,
     title = StringHolder(null, "default browser title"),
     body = StringHolder(null, "default browser body with link text"),
     linkText = StringHolder(null, "link text"),
@@ -65,6 +66,7 @@ private val defaultBrowserCardData = OnboardingCardData(
 )
 private val syncCardData = OnboardingCardData(
     cardType = OnboardingCardType.SYNC_SIGN_IN,
+    imageRes = R.drawable.ic_onboarding_sync,
     title = StringHolder(null, "sync title"),
     body = StringHolder(null, "sync body"),
     primaryButtonLabel = StringHolder(null, "sync primary button text"),
@@ -73,6 +75,7 @@ private val syncCardData = OnboardingCardData(
 )
 private val notificationCardData = OnboardingCardData(
     cardType = OnboardingCardType.NOTIFICATION_PERMISSION,
+    imageRes = R.drawable.ic_notification_permission,
     title = StringHolder(null, "notification title"),
     body = StringHolder(null, "notification body"),
     primaryButtonLabel = StringHolder(null, "notification primary button text"),
