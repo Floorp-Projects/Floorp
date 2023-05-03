@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { ComponentUtils } = ChromeUtils.import(
-  "resource://gre/modules/ComponentUtils.jsm"
+const { ComponentUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/ComponentUtils.sys.mjs"
 );
 
 const ROOT = getRootDirectory(gTestPath).replace(

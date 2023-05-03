@@ -14,11 +14,7 @@
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
-const { ComponentUtils } = ChromeUtils.import(
-  "resource://gre/modules/ComponentUtils.jsm"
-);
-
+import { ComponentUtils } from "resource://gre/modules/ComponentUtils.sys.mjs";
 import { TestUtils } from "resource://testing-common/TestUtils.sys.mjs";
 
 const lazy = {};

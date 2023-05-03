@@ -4,8 +4,8 @@
 
 /* globals ExtensionAPI, Services, XPCOMUtils */
 
-const { ComponentUtils } = ChromeUtils.import(
-  "resource://gre/modules/ComponentUtils.jsm"
+const { ComponentUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/ComponentUtils.sys.mjs"
 );
 
 ChromeUtils.defineESModuleGetters(this, {
