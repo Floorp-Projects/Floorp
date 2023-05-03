@@ -816,7 +816,6 @@ class OriginOperationBase : public BackgroundThreadObject, public Runnable {
   bool mActorDestroyed;
 
  protected:
-  bool mNeedsQuotaManagerInit;
   bool mNeedsStorageInit;
 
  public:
@@ -840,7 +839,6 @@ class OriginOperationBase : public BackgroundThreadObject, public Runnable {
         mResultCode(NS_OK),
         mState(State_Initial),
         mActorDestroyed(false),
-        mNeedsQuotaManagerInit(false),
         mNeedsStorageInit(false) {}
 
   // Reference counted.
@@ -7263,9 +7261,7 @@ nsresult OriginOperationBase::Init() {
     return NS_ERROR_ABORT;
   }
 
-  if (mNeedsQuotaManagerInit) {
-    QM_TRY(QuotaManager::EnsureCreated());
-  }
+  MOZ_ASSERT(QuotaManager::Get());
 
   Open();
 
@@ -7797,6 +7793,8 @@ PQuotaUsageRequestParent* Quota::AllocPQuotaUsageRequestParent(
     return nullptr;
   }
 
+  QM_TRY(QuotaManager::EnsureCreated(), nullptr);
+
   auto actor = [&]() -> RefPtr<QuotaUsageRequestBase> {
     switch (aParams.type()) {
       case UsageRequestParams::TAllUsageParams:
@@ -7863,6 +7861,8 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
     MOZ_CRASH_UNLESS_FUZZING();
     return nullptr;
   }
+
+  QM_TRY(QuotaManager::EnsureCreated(), nullptr);
 
   auto actor = [&]() -> RefPtr<QuotaRequestBase> {
     switch (aParams.type()) {
@@ -8038,7 +8038,6 @@ mozilla::ipc::IPCResult Quota::RecvAbortOperationsForProcess(
 void QuotaUsageRequestBase::Init(Quota& aQuota) {
   AssertIsOnOwningThread();
 
-  mNeedsQuotaManagerInit = true;
   mNeedsStorageInit = true;
 }
 
@@ -8368,7 +8367,6 @@ GetOriginUsageOp::GetOriginUsageOp(const UsageRequestParams& aParams)
   mFromMemory = params.fromMemory();
 
   // Overwrite OriginOperationBase default values.
-  mNeedsQuotaManagerInit = true;
   mNeedsStorageInit = true;
 }
 
@@ -8442,7 +8440,6 @@ void GetOriginUsageOp::GetResponse(UsageRequestResponse& aResponse) {
 void QuotaRequestBase::Init(Quota& aQuota) {
   AssertIsOnOwningThread();
 
-  mNeedsQuotaManagerInit = true;
   mNeedsStorageInit = true;
 }
 
@@ -8477,7 +8474,6 @@ StorageNameOp::StorageNameOp()
   AssertIsOnOwningThread();
 
   // Overwrite OriginOperationBase default values.
-  mNeedsQuotaManagerInit = true;
   mNeedsStorageInit = false;
 }
 
@@ -8511,7 +8507,6 @@ InitializedRequestBase::InitializedRequestBase(const char* aRunnableName)
   AssertIsOnOwningThread();
 
   // Overwrite OriginOperationBase default values.
-  mNeedsQuotaManagerInit = true;
   mNeedsStorageInit = false;
 }
 
@@ -8567,7 +8562,6 @@ InitOp::InitOp()
   AssertIsOnOwningThread();
 
   // Overwrite OriginOperationBase default values.
-  mNeedsQuotaManagerInit = true;
   mNeedsStorageInit = false;
 }
 
@@ -8595,7 +8589,6 @@ InitTemporaryStorageOp::InitTemporaryStorageOp()
   AssertIsOnOwningThread();
 
   // Overwrite OriginOperationBase default values.
-  mNeedsQuotaManagerInit = true;
   mNeedsStorageInit = false;
 }
 
@@ -8632,7 +8625,6 @@ InitializeOriginRequestBase::InitializeOriginRequestBase(
   MOZ_ASSERT(principalMetadata.mOrigin == principalMetadata.mStorageOrigin);
 
   // Overwrite OriginOperationBase default values.
-  mNeedsQuotaManagerInit = true;
   mNeedsStorageInit = false;
 
   // Overwrite NormalOriginOperationBase default values.
@@ -8773,7 +8765,6 @@ ResetOrClearOp::ResetOrClearOp(bool aClear)
   AssertIsOnOwningThread();
 
   // Overwrite OriginOperationBase default values.
-  mNeedsQuotaManagerInit = true;
   mNeedsStorageInit = false;
 }
 
@@ -9186,7 +9177,6 @@ ResetOriginOp::ResetOriginOp(const RequestParams& aParams)
       QuotaManager::GetOriginFromValidatedPrincipalInfo(params.principalInfo());
 
   // Overwrite OriginOperationBase default values.
-  mNeedsQuotaManagerInit = true;
   mNeedsStorageInit = false;
 
   // Overwrite NormalOriginOperationBase default values.
@@ -9393,7 +9383,6 @@ EstimateOp::EstimateOp(const EstimateParams& aParams)
   AssertIsOnOwningThread();
 
   // Overwrite OriginOperationBase default values.
-  mNeedsQuotaManagerInit = true;
   mNeedsStorageInit = true;
 }
 
@@ -9437,7 +9426,6 @@ ListOriginsOp::ListOriginsOp()
 void ListOriginsOp::Init(Quota& aQuota) {
   AssertIsOnOwningThread();
 
-  mNeedsQuotaManagerInit = true;
   mNeedsStorageInit = true;
 }
 
