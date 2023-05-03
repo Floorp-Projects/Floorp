@@ -57,9 +57,10 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
       const FileSystemChildMetadata& aHandle, bool aCreate) override;
 
   virtual Result<EntryId, QMResult> GetOrCreateFile(
-      const FileSystemChildMetadata& aHandle, bool aCreate) override;
+      const FileSystemChildMetadata& aHandle, const ContentType& aType,
+      bool aCreate) override;
 
-  virtual nsresult GetFile(const EntryId& aEntryId, nsString& aType,
+  virtual nsresult GetFile(const EntryId& aEntryId, ContentType& aType,
                            TimeStamp& lastModifiedMilliSeconds, Path& aPath,
                            nsCOMPtr<nsIFile>& aFile) const override;
 

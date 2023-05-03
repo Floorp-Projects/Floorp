@@ -85,15 +85,18 @@ class FileSystemDatabaseManager {
    * @brief Returns file identifier, optionally creating it if it doesn't exist
    *
    * @param aHandle Current directory and filename
+   * @param aType Content type which is ignored if the file already exists
+   * @param aCreate true if file is to be created when it does not already exist
    * @return Result<bool, QMResult> File identifier or error
    */
   virtual Result<EntryId, QMResult> GetOrCreateFile(
-      const FileSystemChildMetadata& aHandle, bool aCreate) = 0;
+      const FileSystemChildMetadata& aHandle, const ContentType& aType,
+      bool aCreate) = 0;
 
   /**
    * @brief Returns the properties of a file corresponding to a file handle
    */
-  virtual nsresult GetFile(const EntryId& aEntryId, nsString& aType,
+  virtual nsresult GetFile(const EntryId& aEntryId, ContentType& aType,
                            TimeStamp& lastModifiedMilliSeconds, Path& aPath,
                            nsCOMPtr<nsIFile>& aFile) const = 0;
 

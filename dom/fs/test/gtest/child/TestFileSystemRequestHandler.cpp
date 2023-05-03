@@ -212,7 +212,7 @@ TEST_F(TestFileSystemRequestHandler, isGetFileSuccessful) {
     auto blob = MakeRefPtr<FileBlobImpl>(tmpfile);
 
     TimeStamp last_modified_ms = 0;
-    ContentType type = u"txt"_ns;
+    ContentType type = "txt"_ns;
     IPCBlob file;
     IPCBlobUtils::Serialize(blob, file);
 
