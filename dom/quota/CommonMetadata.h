@@ -19,6 +19,7 @@ struct PrincipalMetadata {
   nsCString mSuffix;
   nsCString mGroup;
   nsCString mOrigin;
+  nsCString mStorageOrigin;
   bool mIsPrivate = false;
 
   // These explicit constructors exist to prevent accidental aggregate
@@ -27,11 +28,14 @@ struct PrincipalMetadata {
   PrincipalMetadata() = default;
 
   PrincipalMetadata(nsCString aSuffix, nsCString aGroup, nsCString aOrigin,
-                    bool aIsPrivate)
+                    nsCString aStorageOrigin, bool aIsPrivate)
       : mSuffix{std::move(aSuffix)},
         mGroup{std::move(aGroup)},
         mOrigin{std::move(aOrigin)},
-        mIsPrivate{aIsPrivate} {}
+        mStorageOrigin{std::move(aStorageOrigin)},
+        mIsPrivate{aIsPrivate} {
+    MOZ_ASSERT(mOrigin == mStorageOrigin);
+  }
 };
 
 struct OriginMetadata : public PrincipalMetadata {
@@ -40,9 +44,11 @@ struct OriginMetadata : public PrincipalMetadata {
   OriginMetadata() = default;
 
   OriginMetadata(nsCString aSuffix, nsCString aGroup, nsCString aOrigin,
-                 bool aIsPrivate, PersistenceType aPersistenceType)
+                 nsCString aStorageOrigin, bool aIsPrivate,
+                 PersistenceType aPersistenceType)
       : PrincipalMetadata(std::move(aSuffix), std::move(aGroup),
-                          std::move(aOrigin), aIsPrivate),
+                          std::move(aOrigin), std::move(aStorageOrigin),
+                          aIsPrivate),
         mPersistenceType(aPersistenceType) {}
 
   OriginMetadata(PrincipalMetadata&& aPrincipalMetadata,
