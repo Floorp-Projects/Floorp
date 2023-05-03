@@ -845,7 +845,7 @@ void DocAccessible::AttributeChanged(dom::Element* aElement,
     dom::Element* elm = accessible->Elm();
     RelocateARIAOwnedIfNeeded(elm);
     ARIAActiveDescendantIDMaybeMoved(accessible);
-    accessible->SendCache(CacheDomain::DOMNodeID, CacheUpdateType::Update);
+    QueueCacheUpdate(accessible, CacheDomain::DOMNodeIDAndClass);
     QueueCacheUpdateForDependentRelations(accessible);
   }
 
