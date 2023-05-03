@@ -13,13 +13,19 @@ requestLongerTimeout(2);
 
 const appUnitsPerDevPixel = 60;
 
-function testCachedScrollPosition(acc, expectedX, expectedY) {
+function testCachedScrollPosition(
+  acc,
+  expectedX,
+  expectedY,
+  shouldBeEmpty = false
+) {
   let cachedPosition = "";
   try {
     cachedPosition = acc.cache.getStringProperty("scroll-position");
   } catch (e) {
-    // If the key doesn't exist, this means 0, 0.
-    cachedPosition = "0, 0";
+    info("Cache was not populated");
+    // If the key doesn't exist, this frame is not scrollable.
+    return shouldBeEmpty;
   }
 
   // The value we retrieve from the cache is in app units, but the values
@@ -610,4 +616,61 @@ addAccessibleTask(
     assertBoundsFuzzyEqual(newMutateBounds, origMutateBounds);
   },
   { chrome: true, iframe: true, remoteIframe: true }
+);
+
+/**
+ * Test scroll offset on non-scrollable accs
+ */
+addAccessibleTask(
+  `
+  <div id='square' style='height:100px; width: 100px; background:green;'>hello world
+  </div>
+  `,
+  async function(browser, docAcc) {
+    // We can only access the `cache` attribute of an accessible when
+    // the cache is enabled and we're in a remote browser. Verify
+    // both these conditions hold, and return early if they don't.
+    if (!isCacheEnabled || !browser.isRemoteBrowser) {
+      return;
+    }
+
+    const square = findAccessibleChildByID(docAcc, "square");
+    await untilCacheOk(
+      () => testCachedScrollPosition(square, 0, 0, true),
+      "Square is not scrollable."
+    );
+
+    info("Adding more text content to square");
+    await invokeContentTask(browser, [], () => {
+      const s = content.document.getElementById("square");
+      s.textContent =
+        "hello world I am some text and I should overflow this container because I am very long";
+      s.offsetTop; // Flush layout.
+    });
+
+    await waitForContentPaint(browser);
+
+    await untilCacheOk(
+      () => testCachedScrollPosition(square, 0, 0, true),
+      "Square is not scrollable (still has overflow:visible)."
+    );
+
+    info("Adding overflow:auto; styling");
+    await invokeContentTask(browser, [], () => {
+      const s = content.document.getElementById("square");
+      s.setAttribute(
+        "style",
+        "overflow:auto; height:100px; width: 100px; background:green;"
+      );
+      s.offsetTop; // Flush layout.
+    });
+
+    await waitForContentPaint(browser);
+
+    await untilCacheOk(
+      () => testCachedScrollPosition(square, 0, 0),
+      "Square is scrollable."
+    );
+  },
+  { iframe: true, remoteIframe: true }
 );
