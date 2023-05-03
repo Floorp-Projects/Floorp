@@ -19,9 +19,11 @@ from tryselect.selectors.perf import (
     Platforms,
     Suites,
     Variants,
+    run,
+)
+from tryselect.selectors.perfselector.classification import (
     check_for_live_sites,
     check_for_profile,
-    run,
 )
 
 TASKS = [
