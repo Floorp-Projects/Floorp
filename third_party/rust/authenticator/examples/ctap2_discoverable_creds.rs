@@ -3,12 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use authenticator::{
-    authenticatorservice::{
-        AuthenticatorService, GetAssertionOptions, MakeCredentialsOptions,
-        RegisterArgs, SignArgs,
-    },
+    authenticatorservice::{AuthenticatorService, RegisterArgs, SignArgs},
     ctap2::server::{
-        PublicKeyCredentialDescriptor, PublicKeyCredentialParameters, RelyingParty, Transport, User,
+        PublicKeyCredentialDescriptor, PublicKeyCredentialParameters, RelyingParty,
+        ResidentKeyRequirement, Transport, User, UserVerificationRequirement,
     },
     statecallback::StateCallback,
     COSEAlgorithm, Pin, RegisterResult, SignResult, StatusPinUv, StatusUpdate,
@@ -49,6 +47,9 @@ fn register_user(manager: &mut AuthenticatorService, username: &str, timeout_ms:
     let (status_tx, status_rx) = channel::<StatusUpdate>();
     thread::spawn(move || loop {
         match status_rx.recv() {
+            Ok(StatusUpdate::InteractiveManagement(..)) => {
+                panic!("STATUS: This can't happen when doing non-interactive usage");
+            }
             Ok(StatusUpdate::DeviceAvailable { dev_info }) => {
                 println!("STATUS: device available: {dev_info}")
             }
@@ -139,10 +140,8 @@ fn register_user(manager: &mut AuthenticatorService, username: &str, timeout_ms:
             id: vec![],
             transports: vec![Transport::USB, Transport::NFC],
         }],
-        options: MakeCredentialsOptions {
-            resident_key: Some(true),
-            user_verification: Some(true),
-        },
+        user_verification_req: UserVerificationRequirement::Required,
+        resident_key_req: ResidentKeyRequirement::Required,
         extensions: Default::default(),
         pin: None,
         use_ctap1_fallback: false,
@@ -201,8 +200,8 @@ fn main() {
         return;
     }
 
-    let mut manager = AuthenticatorService::new()
-        .expect("The auth service should initialize safely");
+    let mut manager =
+        AuthenticatorService::new().expect("The auth service should initialize safely");
 
     if !matches.opt_present("no-u2f-usb-hid") {
         manager.add_u2f_usb_hid_platform_transports();
@@ -241,6 +240,9 @@ fn main() {
     let (status_tx, status_rx) = channel::<StatusUpdate>();
     thread::spawn(move || loop {
         match status_rx.recv() {
+            Ok(StatusUpdate::InteractiveManagement(..)) => {
+                panic!("STATUS: This can't happen when doing non-interactive usage");
+            }
             Ok(StatusUpdate::DeviceAvailable { dev_info }) => {
                 println!("STATUS: device available: {dev_info}")
             }
@@ -311,7 +313,8 @@ fn main() {
         origin,
         relying_party_id: "example.com".to_string(),
         allow_list,
-        options: GetAssertionOptions::default(),
+        user_verification_req: UserVerificationRequirement::Required,
+        user_presence_req: true,
         extensions: Default::default(),
         pin: None,
         alternate_rp_id: None,

@@ -9,13 +9,11 @@ extern crate log;
 extern crate xpcom;
 
 use authenticator::{
-    authenticatorservice::{
-        AuthenticatorService, GetAssertionOptions, MakeCredentialsOptions,
-        RegisterArgs, SignArgs,
-    },
+    authenticatorservice::{AuthenticatorService, RegisterArgs, SignArgs},
     ctap2::attestation::AttestationStatement,
     ctap2::server::{
-        PublicKeyCredentialDescriptor, PublicKeyCredentialParameters, RelyingParty, User,
+        PublicKeyCredentialDescriptor, PublicKeyCredentialParameters, RelyingParty,
+        ResidentKeyRequirement, User, UserVerificationRequirement,
     },
     errors::{AuthenticatorError, PinError, U2FTokenError},
     statecallback::StateCallback,
@@ -85,6 +83,7 @@ fn authrs_to_nserror(e: &AuthenticatorError) -> nsresult {
         AuthenticatorError::PinError(PinError::InvalidPin(_)) => NS_ERROR_DOM_OPERATION_ERR,
         AuthenticatorError::PinError(PinError::PinAuthBlocked) => NS_ERROR_DOM_OPERATION_ERR,
         AuthenticatorError::PinError(PinError::PinBlocked) => NS_ERROR_DOM_OPERATION_ERR,
+        AuthenticatorError::PinError(PinError::PinNotSet) => NS_ERROR_DOM_OPERATION_ERR,
         _ => NS_ERROR_DOM_UNKNOWN_ERR,
     }
 }
@@ -376,8 +375,19 @@ fn status_callback(
                     make_pin_error_prompt("device-blocked", tid, origin, browsing_context_id);
                 controller.send_prompt(tid, &notification_str);
             }
+            Ok(StatusUpdate::PinUvError(StatusPinUv::PinNotSet)) => {
+                let notification_str =
+                    make_pin_error_prompt("pin-not-set", tid, origin, browsing_context_id);
+                controller.send_prompt(tid, &notification_str);
+            }
             Ok(StatusUpdate::PinUvError(e)) => {
                 warn!("Unexpected error: {:?}", e)
+            }
+            Ok(StatusUpdate::InteractiveManagement((_, dev_info, auth_info))) => {
+                debug!(
+                    "STATUS: interactive management: {}, {:?}",
+                    dev_info, auth_info
+                );
             }
             Err(RecvError) => {
                 debug!("STATUS: end");
@@ -482,22 +492,26 @@ impl AuthrsTransport {
 
         let mut resident_key = nsString::new();
         unsafe { args.GetResidentKey(&mut *resident_key) }.to_result()?;
-        let resident_key = if resident_key.eq("required") {
-            Some(true)
+        let resident_key_req = if resident_key.eq("required") {
+            ResidentKeyRequirement::Required
+        } else if resident_key.eq("preferred") {
+            ResidentKeyRequirement::Preferred
         } else if resident_key.eq("discouraged") {
-            Some(false)
+            ResidentKeyRequirement::Discouraged
         } else {
-            None
+            return Err(NS_ERROR_FAILURE);
         };
 
         let mut user_verification = nsString::new();
         unsafe { args.GetUserVerification(&mut *user_verification) }.to_result()?;
-        let user_verification = if user_verification.eq("required") {
-            Some(true)
+        let user_verification_req = if user_verification.eq("required") {
+            UserVerificationRequirement::Required
+        } else if user_verification.eq("preferred") {
+            UserVerificationRequirement::Preferred
         } else if user_verification.eq("discouraged") {
-            Some(false)
+            UserVerificationRequirement::Discouraged
         } else {
-            None
+            return Err(NS_ERROR_FAILURE);
         };
 
         let mut attestation_conveyance_preference = nsString::new();
@@ -529,10 +543,8 @@ impl AuthrsTransport {
             },
             pub_cred_params,
             exclude_list,
-            options: MakeCredentialsOptions {
-                resident_key,
-                user_verification,
-            },
+            user_verification_req,
+            resident_key_req,
             extensions: Default::default(),
             pin: None,
             use_ctap1_fallback: static_prefs::pref!("security.webauthn.ctap2") == false,
@@ -625,12 +637,14 @@ impl AuthrsTransport {
 
         let mut user_verification = nsString::new();
         unsafe { args.GetUserVerification(&mut *user_verification) }.to_result()?;
-        let user_verification = if user_verification.eq("required") {
-            Some(true)
+        let user_verification_req = if user_verification.eq("required") {
+            UserVerificationRequirement::Required
+        } else if user_verification.eq("preferred") {
+            UserVerificationRequirement::Preferred
         } else if user_verification.eq("discouraged") {
-            Some(false)
+            UserVerificationRequirement::Discouraged
         } else {
-            None
+            return Err(NS_ERROR_FAILURE);
         };
 
         let mut alternate_rp_id = None;
@@ -695,10 +709,8 @@ impl AuthrsTransport {
             relying_party_id: relying_party_id.to_string(),
             origin: origin.to_string(),
             allow_list,
-            options: GetAssertionOptions {
-                user_presence: Some(true),
-                user_verification,
-            },
+            user_verification_req,
+            user_presence_req: true,
             extensions: Default::default(),
             pin: None,
             alternate_rp_id,

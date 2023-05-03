@@ -4,11 +4,6 @@
 
 use crate::authenticatorservice::AuthenticatorTransport;
 use crate::authenticatorservice::{RegisterArgs, SignArgs};
-
-use crate::ctap2::client_data::ClientDataHash;
-use crate::ctap2::commands::get_assertion::GetAssertion;
-use crate::ctap2::commands::make_credentials::MakeCredentials;
-use crate::ctap2::server::{RelyingParty, RelyingPartyWrapper};
 use crate::errors::*;
 use crate::statecallback::StateCallback;
 use crate::statemachine::StateMachine;
@@ -21,13 +16,13 @@ use std::time::Duration;
 enum QueueAction {
     Register {
         timeout: u64,
-        make_credentials: MakeCredentials,
+        register_args: RegisterArgs,
         status: Sender<crate::StatusUpdate>,
         callback: StateCallback<crate::Result<crate::RegisterResult>>,
     },
     Sign {
         timeout: u64,
-        get_assertion: GetAssertion,
+        sign_args: SignArgs,
         status: Sender<crate::StatusUpdate>,
         callback: StateCallback<crate::Result<crate::SignResult>>,
     },
@@ -40,6 +35,11 @@ enum QueueAction {
     SetPin {
         timeout: u64,
         new_pin: Pin,
+        status: Sender<crate::StatusUpdate>,
+        callback: StateCallback<crate::Result<crate::ResetResult>>,
+    },
+    InteractiveManagement {
+        timeout: u64,
         status: Sender<crate::StatusUpdate>,
         callback: StateCallback<crate::Result<crate::ResetResult>>,
     },
@@ -62,22 +62,22 @@ impl Manager {
                 match rx.recv_timeout(Duration::from_millis(50)) {
                     Ok(QueueAction::Register {
                         timeout,
-                        make_credentials,
+                        register_args,
                         status,
                         callback,
                     }) => {
                         // This must not block, otherwise we can't cancel.
-                        sm.register(timeout, make_credentials, status, callback);
+                        sm.register(timeout, register_args, status, callback);
                     }
 
                     Ok(QueueAction::Sign {
                         timeout,
-                        get_assertion,
+                        sign_args,
                         status,
                         callback,
                     }) => {
                         // This must not block, otherwise we can't cancel.
-                        sm.sign(timeout, get_assertion, status, callback);
+                        sm.sign(timeout, sign_args, status, callback);
                     }
 
                     Ok(QueueAction::Cancel) => {
@@ -103,6 +103,15 @@ impl Manager {
                     }) => {
                         // This must not block, otherwise we can't cancel.
                         sm.set_pin(timeout, new_pin, status, callback);
+                    }
+
+                    Ok(QueueAction::InteractiveManagement {
+                        timeout,
+                        status,
+                        callback,
+                    }) => {
+                        // Manage token interactively
+                        sm.manage(timeout, status, callback);
                     }
 
                     Err(RecvTimeoutError::Disconnected) => {
@@ -131,26 +140,13 @@ impl AuthenticatorTransport for Manager {
     fn register(
         &mut self,
         timeout: u64,
-        args: RegisterArgs,
+        register_args: RegisterArgs,
         status: Sender<crate::StatusUpdate>,
         callback: StateCallback<crate::Result<crate::RegisterResult>>,
     ) -> Result<(), AuthenticatorError> {
-        let make_credentials = MakeCredentials::new(
-            ClientDataHash(args.client_data_hash),
-            RelyingPartyWrapper::Data(args.relying_party),
-            Some(args.user),
-            args.pub_cred_params,
-            args.exclude_list,
-            args.options,
-            args.extensions,
-            args.pin,
-            args.use_ctap1_fallback,
-            // pin_auth will be filled in Statemachine, once we have a device
-        )?;
-
         let action = QueueAction::Register {
             timeout,
-            make_credentials,
+            register_args,
             status,
             callback,
         };
@@ -160,28 +156,13 @@ impl AuthenticatorTransport for Manager {
     fn sign(
         &mut self,
         timeout: u64,
-        args: SignArgs,
+        sign_args: SignArgs,
         status: Sender<crate::StatusUpdate>,
         callback: StateCallback<crate::Result<crate::SignResult>>,
     ) -> crate::Result<()> {
-        let get_assertion = GetAssertion::new(
-            ClientDataHash(args.client_data_hash),
-            RelyingPartyWrapper::Data(RelyingParty {
-                id: args.relying_party_id,
-                name: None,
-                icon: None,
-            }),
-            args.allow_list,
-            args.options,
-            args.extensions,
-            args.pin,
-            args.alternate_rp_id,
-            args.use_ctap1_fallback,
-        )?;
-
         let action = QueueAction::Sign {
             timeout,
-            get_assertion,
+            sign_args,
             status,
             callback,
         };
@@ -217,6 +198,19 @@ impl AuthenticatorTransport for Manager {
         Ok(self.tx.send(QueueAction::SetPin {
             timeout,
             new_pin,
+            status,
+            callback,
+        })?)
+    }
+
+    fn manage(
+        &mut self,
+        timeout: u64,
+        status: Sender<crate::StatusUpdate>,
+        callback: StateCallback<crate::Result<crate::ResetResult>>,
+    ) -> Result<(), AuthenticatorError> {
+        Ok(self.tx.send(QueueAction::InteractiveManagement {
+            timeout,
             status,
             callback,
         })?)

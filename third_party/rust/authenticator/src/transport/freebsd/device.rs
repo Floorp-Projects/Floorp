@@ -212,25 +212,6 @@ impl HIDDevice for Device {
     fn set_authenticator_info(&mut self, authenticator_info: AuthenticatorInfo) {
         self.authenticator_info = Some(authenticator_info);
     }
-
-    /// This is used for cancellation of blocking read()-requests.
-    /// With this, we can clone the Device, pass it to another thread and call "cancel()" on that.
-    fn clone_device_as_write_only(&self) -> Result<Self, HIDError> {
-        // Try to open the device.
-        // This can't really error out as we already did this conversion
-        let cstr = CString::new(self.path.as_bytes()).map_err(|_| (HIDError::DeviceError))?;
-        let fd = unsafe { libc::open(cstr.as_ptr(), libc::O_WRONLY) };
-        let fd =
-            from_unix_result(fd).map_err(|e| (HIDError::IO(Some(self.path.clone().into()), e)))?;
-        Ok(Self {
-            path: self.path.clone(),
-            fd,
-            cid: self.cid,
-            dev_info: self.dev_info.clone(),
-            secret: self.secret.clone(),
-            authenticator_info: self.authenticator_info.clone(),
-        })
-    }
 }
 
 impl FidoDevice for Device {}

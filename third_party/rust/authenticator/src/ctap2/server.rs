@@ -300,6 +300,20 @@ impl From<&KeyHandle> for PublicKeyCredentialDescriptor {
     }
 }
 
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum ResidentKeyRequirement {
+    Discouraged,
+    Preferred,
+    Required,
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum UserVerificationRequirement {
+    Discouraged,
+    Preferred,
+    Required,
+}
+
 #[cfg(test)]
 mod test {
     use super::{

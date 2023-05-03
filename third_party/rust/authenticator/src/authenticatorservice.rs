@@ -3,14 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::ctap2::commands::client_pin::Pin;
-pub use crate::ctap2::commands::get_assertion::{
-    GetAssertionExtensions, GetAssertionOptions, HmacSecretExtension,
-};
-pub use crate::ctap2::commands::make_credentials::{
-    MakeCredentialsExtensions, MakeCredentialsOptions,
-};
+pub use crate::ctap2::commands::get_assertion::{GetAssertionExtensions, HmacSecretExtension};
+pub use crate::ctap2::commands::make_credentials::MakeCredentialsExtensions;
 use crate::ctap2::server::{
-    PublicKeyCredentialDescriptor, PublicKeyCredentialParameters, RelyingParty, User,
+    PublicKeyCredentialDescriptor, PublicKeyCredentialParameters, RelyingParty,
+    ResidentKeyRequirement, User, UserVerificationRequirement,
 };
 use crate::errors::*;
 use crate::manager::Manager;
@@ -25,7 +22,8 @@ pub struct RegisterArgs {
     pub user: User,
     pub pub_cred_params: Vec<PublicKeyCredentialParameters>,
     pub exclude_list: Vec<PublicKeyCredentialDescriptor>,
-    pub options: MakeCredentialsOptions,
+    pub user_verification_req: UserVerificationRequirement,
+    pub resident_key_req: ResidentKeyRequirement,
     pub extensions: MakeCredentialsExtensions,
     pub pin: Option<Pin>,
     pub use_ctap1_fallback: bool,
@@ -37,7 +35,8 @@ pub struct SignArgs {
     pub origin: String,
     pub relying_party_id: String,
     pub allow_list: Vec<PublicKeyCredentialDescriptor>,
-    pub options: GetAssertionOptions,
+    pub user_verification_req: UserVerificationRequirement,
+    pub user_presence_req: bool,
     pub extensions: GetAssertionExtensions,
     pub pin: Option<Pin>,
     pub alternate_rp_id: Option<String>,
@@ -82,6 +81,12 @@ pub trait AuthenticatorTransport {
         &mut self,
         timeout: u64,
         new_pin: Pin,
+        status: Sender<crate::StatusUpdate>,
+        callback: StateCallback<crate::Result<crate::ResetResult>>,
+    ) -> crate::Result<()>;
+    fn manage(
+        &mut self,
+        timeout: u64,
         status: Sender<crate::StatusUpdate>,
         callback: StateCallback<crate::Result<crate::ResetResult>>,
     ) -> crate::Result<()>;
@@ -288,6 +293,39 @@ impl AuthenticatorService {
 
         Ok(())
     }
+
+    pub fn manage(
+        &mut self,
+        timeout: u64,
+        status: Sender<crate::StatusUpdate>,
+        callback: StateCallback<crate::Result<crate::ResetResult>>,
+    ) -> crate::Result<()> {
+        let iterable_transports = self.transports.clone();
+        if iterable_transports.is_empty() {
+            return Err(AuthenticatorError::NoConfiguredTransports);
+        }
+
+        debug!(
+            "Manage called with {} transports, iterable is {}",
+            self.transports.len(),
+            iterable_transports.len()
+        );
+
+        for (idx, transport_mutex) in iterable_transports.iter().enumerate() {
+            let mut transports_to_cancel = iterable_transports.clone();
+            transports_to_cancel.remove(idx);
+
+            debug!("reset transports_to_cancel {}", transports_to_cancel.len());
+
+            transport_mutex.lock().unwrap().manage(
+                timeout,
+                status.clone(),
+                clone_and_configure_cancellation_callback(callback.clone(), transports_to_cancel),
+            )?;
+        }
+
+        Ok(())
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -298,7 +336,9 @@ impl AuthenticatorService {
 mod tests {
     use super::{AuthenticatorService, AuthenticatorTransport, Pin, RegisterArgs, SignArgs};
     use crate::consts::{Capability, PARAMETER_SIZE};
-    use crate::ctap2::server::{RelyingParty, User};
+    use crate::ctap2::server::{
+        RelyingParty, ResidentKeyRequirement, User, UserVerificationRequirement,
+    };
     use crate::statecallback::StateCallback;
     use crate::{RegisterResult, SignResult, StatusUpdate};
     use std::sync::atomic::{AtomicBool, Ordering};
@@ -401,6 +441,15 @@ mod tests {
         ) -> crate::Result<()> {
             unimplemented!();
         }
+
+        fn manage(
+            &mut self,
+            _timeout: u64,
+            _status: Sender<crate::StatusUpdate>,
+            _callback: StateCallback<crate::Result<crate::ResetResult>>,
+        ) -> crate::Result<()> {
+            unimplemented!();
+        }
     }
 
     fn mk_challenge() -> [u8; PARAMETER_SIZE] {
@@ -432,7 +481,8 @@ mod tests {
                     },
                     pub_cred_params: vec![],
                     exclude_list: vec![],
-                    options: Default::default(),
+                    user_verification_req: UserVerificationRequirement::Preferred,
+                    resident_key_req: ResidentKeyRequirement::Preferred,
                     extensions: Default::default(),
                     pin: None,
                     use_ctap1_fallback: false,
@@ -453,7 +503,8 @@ mod tests {
                     origin: "example.com".to_string(),
                     relying_party_id: "example.com".to_string(),
                     allow_list: vec![],
-                    options: Default::default(),
+                    user_verification_req: UserVerificationRequirement::Preferred,
+                    user_presence_req: true,
                     extensions: Default::default(),
                     pin: None,
                     alternate_rp_id: None,
@@ -511,7 +562,8 @@ mod tests {
                     },
                     pub_cred_params: vec![],
                     exclude_list: vec![],
-                    options: Default::default(),
+                    user_verification_req: UserVerificationRequirement::Preferred,
+                    resident_key_req: ResidentKeyRequirement::Preferred,
                     extensions: Default::default(),
                     pin: None,
                     use_ctap1_fallback: false,
@@ -555,7 +607,8 @@ mod tests {
                     origin: "example.com".to_string(),
                     relying_party_id: "example.com".to_string(),
                     allow_list: vec![],
-                    options: Default::default(),
+                    user_verification_req: UserVerificationRequirement::Preferred,
+                    user_presence_req: true,
                     extensions: Default::default(),
                     pin: None,
                     alternate_rp_id: None,
@@ -609,7 +662,8 @@ mod tests {
                     },
                     pub_cred_params: vec![],
                     exclude_list: vec![],
-                    options: Default::default(),
+                    user_verification_req: UserVerificationRequirement::Preferred,
+                    resident_key_req: ResidentKeyRequirement::Preferred,
                     extensions: Default::default(),
                     pin: None,
                     use_ctap1_fallback: false,
