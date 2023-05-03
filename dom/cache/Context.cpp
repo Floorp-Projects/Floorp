@@ -363,8 +363,11 @@ Context::QuotaInitRunnable::Run() {
       auto* const quotaManager = QuotaManager::Get();
       MOZ_DIAGNOSTIC_ASSERT(quotaManager);
 
-      mDirectoryMetadata.emplace(
+      QM_TRY_UNWRAP(
+          auto principalMetadata,
           quotaManager->GetInfoFromValidatedPrincipalInfo(*mPrincipalInfo));
+
+      mDirectoryMetadata.emplace(std::move(principalMetadata));
 
       // Open directory
       RefPtr<DirectoryLock> directoryLock = quotaManager->CreateDirectoryLock(

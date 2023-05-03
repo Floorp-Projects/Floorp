@@ -39,14 +39,17 @@ mozilla::ipc::IPCResult CreateFileSystemManagerParent(
          [aResolver](const auto&) { aResolver(NS_ERROR_DOM_SECURITY_ERR); });
 
   QM_TRY(quota::QuotaManager::EnsureCreated(), IPC_OK(),
-         [aResolver](const auto&) { aResolver(NS_ERROR_FAILURE); });
+         [aResolver](const auto rv) { aResolver(rv); });
 
   auto* const quotaManager = quota::QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  quota::OriginMetadata originMetadata(
-      quotaManager->GetInfoFromValidatedPrincipalInfo(aPrincipalInfo),
-      quota::PERSISTENCE_TYPE_DEFAULT);
+  QM_TRY_UNWRAP(auto principalMetadata,
+                quotaManager->GetInfoFromValidatedPrincipalInfo(aPrincipalInfo),
+                IPC_OK(), [aResolver](const auto rv) { aResolver(rv); });
+
+  quota::OriginMetadata originMetadata(std::move(principalMetadata),
+                                       quota::PERSISTENCE_TYPE_DEFAULT);
 
   // Block use for now in PrivateBrowsing
   QM_TRY(OkIf(!OriginAttributes::IsPrivateBrowsing(originMetadata.mOrigin)),
