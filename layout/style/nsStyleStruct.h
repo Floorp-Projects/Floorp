@@ -102,7 +102,7 @@ struct ContainSizeAxes {
 }  // namespace mozilla
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont {
-  nsStyleFont(const nsStyleFont& aStyleFont);
+  nsStyleFont(const nsStyleFont&);
   explicit nsStyleFont(const mozilla::dom::Document&);
   MOZ_COUNTED_DTOR(nsStyleFont)
   static constexpr bool kHasTriggerImageLoads = false;
@@ -144,15 +144,16 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont {
   mozilla::StyleMathStyle mMathStyle;
 
   // allow different min font-size for certain cases
-  uint8_t mMinFontSizeRatio;  // percent * 100
+  uint8_t mMinFontSizeRatio = 100;  // percent * 100
 
-  // was mLanguage set based on a lang attribute in the document?
-  bool mExplicitLanguage;
+  // Was mLanguage set based on a lang attribute in the document?
+  bool mExplicitLanguage = false;
 
-  // should calls to ZoomText() and UnZoomText() be made to the font
-  // size on this nsStyleFont? Also used to prevent SVG text from being
-  // affected by minimum font size pref.
-  bool mAllowZoomAndMinSize;
+  mozilla::StyleXTextScale mXTextScale;
+
+  bool MinFontSizeEnabled() const {
+    return mXTextScale == mozilla::StyleXTextScale::All;
+  }
 
   // The value mSize would have had if scriptminsize had never been applied
   mozilla::NonNegativeLength mScriptUnconstrainedSize;

@@ -92,7 +92,7 @@ const char* gInaccessibleProperties[] = {
     "-x-cols",
     "-x-lang",
     "-x-span",
-    "-x-text-zoom",
+    "-x-text-scale",
     "-moz-default-appearance",
     "-moz-inert",
     "-moz-script-level",  // parsed by UA sheets only

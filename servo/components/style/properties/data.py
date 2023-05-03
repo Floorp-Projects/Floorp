@@ -522,7 +522,7 @@ class Longhand(Property):
                 "UserSelect",
                 "WordBreak",
                 "XSpan",
-                "XTextZoom",
+                "XTextScale",
                 "ZIndex",
             }
         if self.name == "overflow-y":
