@@ -23,6 +23,13 @@ class nsTraceRefcnt {
    */
   static void SetActivityIsLegal(bool aLegal);
 
+  /**
+   * Start refcount logging aClass. If refcount logging has not already begun,
+   * it will use the environment variable XPCOM_MEM_LATE_REFCNT_LOG to decide
+   * where to make the log, in a similar way as the other nsTraceRefcnt logs.
+   */
+  static void StartLoggingClass(const char* aClass);
+
 #ifdef MOZ_ENABLE_FORKSERVER
   static void ResetLogFiles(const char* aProcType = nullptr);
 #endif
