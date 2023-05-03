@@ -38,8 +38,14 @@ mozilla::ipc::IPCResult CreateFileSystemManagerParent(
          IPC_OK(),
          [aResolver](const auto&) { aResolver(NS_ERROR_DOM_SECURITY_ERR); });
 
+  QM_TRY(quota::QuotaManager::EnsureCreated(), IPC_OK(),
+         [aResolver](const auto&) { aResolver(NS_ERROR_FAILURE); });
+
+  auto* const quotaManager = quota::QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
   quota::OriginMetadata originMetadata(
-      quota::QuotaManager::GetInfoFromValidatedPrincipalInfo(aPrincipalInfo),
+      quotaManager->GetInfoFromValidatedPrincipalInfo(aPrincipalInfo),
       quota::PERSISTENCE_TYPE_DEFAULT);
 
   // Block use for now in PrivateBrowsing

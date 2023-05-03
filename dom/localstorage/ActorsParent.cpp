@@ -6654,6 +6654,8 @@ nsresult PrepareDatastoreOp::Start() {
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
   MOZ_ASSERT(MayProceed());
 
+  QM_TRY(QuotaManager::EnsureCreated());
+
   const LSRequestCommonParams& commonParams =
       mForPreload
           ? mParams.get_LSRequestPreloadDatastoreParams().commonParams()
@@ -6670,7 +6672,8 @@ nsresult PrepareDatastoreOp::Start() {
                PrincipalInfo::TContentPrincipalInfo);
 
     PrincipalMetadata principalMetadata =
-        QuotaManager::GetInfoFromValidatedPrincipalInfo(storagePrincipalInfo);
+        QuotaManager::Get()->GetInfoFromValidatedPrincipalInfo(
+            storagePrincipalInfo);
 
     mOriginMetadata.mSuffix = std::move(principalMetadata.mSuffix);
     mOriginMetadata.mGroup = std::move(principalMetadata.mGroup);
@@ -6840,10 +6843,11 @@ nsresult PrepareDatastoreOp::BeginDatastorePreparationInternal() {
     return NS_OK;
   }
 
-  QM_TRY(QuotaManager::EnsureCreated());
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
 
   // Open directory
-  mPendingDirectoryLock = QuotaManager::Get()->CreateDirectoryLock(
+  mPendingDirectoryLock = quotaManager->CreateDirectoryLock(
       PERSISTENCE_TYPE_DEFAULT, mOriginMetadata,
       mozilla::dom::quota::Client::LS,
       /* aExclusive */ false);

@@ -864,6 +864,8 @@ PBackgroundSDBRequestParent* Connection::AllocPBackgroundSDBRequestParent(
     return nullptr;
   }
 
+  QM_TRY(QuotaManager::EnsureCreated(), nullptr);
+
   RefPtr<ConnectionOperationBase> actor;
 
   switch (aParams.type()) {
@@ -1098,6 +1100,9 @@ nsresult OpenOp::FinishOpen() {
     return NS_ERROR_ABORT;
   }
 
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
   const PrincipalInfo& principalInfo = GetConnection()->GetPrincipalInfo();
 
   PersistenceType persistenceType = GetConnection()->GetPersistenceType();
@@ -1108,7 +1113,7 @@ nsresult OpenOp::FinishOpen() {
     MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
 
     mOriginMetadata = {
-        QuotaManager::GetInfoFromValidatedPrincipalInfo(principalInfo),
+        quotaManager->GetInfoFromValidatedPrincipalInfo(principalInfo),
         persistenceType};
   }
 
@@ -1121,16 +1126,12 @@ nsresult OpenOp::FinishOpen() {
     }
   }
 
-  QM_TRY(QuotaManager::EnsureCreated());
-
   // Open the directory
-  MOZ_ASSERT(QuotaManager::Get());
 
-  RefPtr<DirectoryLock> directoryLock =
-      QuotaManager::Get()->CreateDirectoryLock(
-          GetConnection()->GetPersistenceType(), mOriginMetadata,
-          mozilla::dom::quota::Client::SDB,
-          /* aExclusive */ false);
+  RefPtr<DirectoryLock> directoryLock = quotaManager->CreateDirectoryLock(
+      GetConnection()->GetPersistenceType(), mOriginMetadata,
+      mozilla::dom::quota::Client::SDB,
+      /* aExclusive */ false);
 
   mState = State::DirectoryOpenPending;
   directoryLock->Acquire(this);
