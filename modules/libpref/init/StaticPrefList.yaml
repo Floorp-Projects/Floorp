@@ -10879,7 +10879,16 @@
 #if defined(MOZ_WIDGET_ANDROID)
   value: true
 #else
+  value: @IS_EARLY_BETA_OR_EARLIER@
+#endif
+  mirror: always
+
+- name: media.webrtc.platformencoder.sw_only
+  type: RelaxedAtomicBool
+#if defined(MOZ_WIDGET_ANDROID)
   value: false
+#else
+  value: true
 #endif
   mirror: always
 
@@ -10890,11 +10899,6 @@
 #else
   value: false
 #endif
-  mirror: always
-
-- name: media.webrtc.platformencoder.sw_mft
-  type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 #if defined(XP_MACOSX)
