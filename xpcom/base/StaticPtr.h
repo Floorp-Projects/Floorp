@@ -42,17 +42,9 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS StaticAutoPtr {
   // by the compiler.  In non-debug builds, don't declare a constructor
   // so that the compiler can see that the constructor is trivial.
 #ifdef DEBUG
-  StaticAutoPtr() {
-#  ifdef __GNUC__
-#    pragma GCC diagnostic push
-#    pragma GCC diagnostic ignored "-Wuninitialized"
-    // False positive with gcc. See bug 1430729
-#  endif
-    MOZ_ASSERT(!mRawPtr);
-#  ifdef __GNUC__
-#    pragma GCC diagnostic pop
-#  endif
-  }
+  StaticAutoPtr() { MOZ_ASSERT(!mRawPtr); }
+#else
+  constexpr StaticAutoPtr() = default;
 #endif
 
   StaticAutoPtr<T>& operator=(T* aRhs) {
@@ -93,7 +85,7 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS StaticAutoPtr {
     delete oldPtr;
   }
 
-  T* mRawPtr;
+  T* mRawPtr = nullptr;
 };
 
 template <class T>
@@ -103,17 +95,9 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS StaticRefPtr {
   // by the compiler.  In non-debug builds, don't declare a constructor
   // so that the compiler can see that the constructor is trivial.
 #ifdef DEBUG
-  StaticRefPtr() {
-#  ifdef __GNUC__
-#    pragma GCC diagnostic push
-#    pragma GCC diagnostic ignored "-Wuninitialized"
-    // False positive with gcc. See bug 1430729
-#  endif
-    MOZ_ASSERT(!mRawPtr);
-#  ifdef __GNUC__
-#    pragma GCC diagnostic pop
-#  endif
-  }
+  StaticRefPtr() { MOZ_ASSERT(!mRawPtr); }
+#else
+  constexpr StaticRefPtr() = default;
 #endif
 
   StaticRefPtr<T>& operator=(T* aRhs) {
@@ -174,7 +158,7 @@ class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS StaticRefPtr {
     }
   }
 
-  T* MOZ_OWNING_REF mRawPtr;
+  T* MOZ_OWNING_REF mRawPtr = nullptr;
 };
 
 namespace StaticPtr_internal {
