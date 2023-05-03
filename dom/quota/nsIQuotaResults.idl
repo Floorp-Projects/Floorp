@@ -15,6 +15,8 @@ interface nsIQuotaFullOriginMetadataResult : nsISupports
 
   readonly attribute ACString origin;
 
+  readonly attribute ACString storageOrigin;
+
   readonly attribute ACString persistenceType;
 
   readonly attribute boolean persisted;
