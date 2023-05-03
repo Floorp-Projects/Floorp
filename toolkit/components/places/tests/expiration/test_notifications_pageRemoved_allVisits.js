@@ -73,7 +73,7 @@ add_task(async () => {
 
   for (let testIndex = 1; testIndex <= tests.length; testIndex++) {
     let currentTest = tests[testIndex - 1];
-    print("\nTEST " + testIndex + ": " + currentTest.desc);
+    info("TEST " + testIndex + ": " + currentTest.desc);
     currentTest.receivedNotifications = 0;
 
     // Setup visits.
@@ -107,35 +107,38 @@ add_task(async () => {
     }
 
     // Observe history.
-    const listener = async events => {
-      for (const event of events) {
-        Assert.equal(event.type, "page-removed");
-        Assert.equal(event.reason, PlacesVisitRemoved.REASON_EXPIRED);
+    let notificationsHandled = new Promise(resolve => {
+      const listener = async events => {
+        for (const event of events) {
+          Assert.equal(event.type, "page-removed");
+          Assert.equal(event.reason, PlacesVisitRemoved.REASON_EXPIRED);
 
-        if (event.isRemovedFromStore) {
-          // Check this uri was not bookmarked.
-          Assert.equal(currentTest.bookmarks.indexOf(event.url), -1);
-          do_check_valid_places_guid(event.pageGuid);
-        } else {
-          currentTest.receivedNotifications++;
-          await check_guid_for_uri(
-            Services.io.newURI(event.url),
-            event.pageGuid
-          );
-          Assert.equal(
-            event.isPartialVisistsRemoval,
-            currentTest.expectedIsPartialRemoval,
-            "Should have the correct flag setting for partial removal"
-          );
+          if (event.isRemovedFromStore) {
+            // Check this uri was not bookmarked.
+            Assert.equal(currentTest.bookmarks.indexOf(event.url), -1);
+            do_check_valid_places_guid(event.pageGuid);
+          } else {
+            currentTest.receivedNotifications++;
+            await check_guid_for_uri(
+              Services.io.newURI(event.url),
+              event.pageGuid
+            );
+            Assert.equal(
+              event.isPartialVisistsRemoval,
+              currentTest.expectedIsPartialRemoval,
+              "Should have the correct flag setting for partial removal"
+            );
+          }
         }
-      }
-    };
-    PlacesObservers.addListener(["page-removed"], listener);
+        PlacesObservers.removeListener(["page-removed"], listener);
+        resolve();
+      };
+      PlacesObservers.addListener(["page-removed"], listener);
+    });
 
     // Expire now.
     await promiseForceExpirationStep(currentTest.limitExpiration);
-
-    PlacesObservers.removeListener(["page-removed"], listener);
+    await notificationsHandled;
 
     Assert.equal(
       currentTest.receivedNotifications,
