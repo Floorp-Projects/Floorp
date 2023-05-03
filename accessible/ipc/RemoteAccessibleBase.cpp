@@ -1427,6 +1427,14 @@ already_AddRefed<AccAttributes> RemoteAccessibleBase<Derived>::Attributes() {
     if (!className.IsEmpty()) {
       attributes->SetAttribute(nsGkAtoms::_class, std::move(className));
     }
+
+    if (IsImage()) {
+      nsString src;
+      mCachedFields->GetAttribute(nsGkAtoms::src, src);
+      if (!src.IsEmpty()) {
+        attributes->SetAttribute(nsGkAtoms::src, std::move(src));
+      }
+    }
   }
 
   nsAutoString name;

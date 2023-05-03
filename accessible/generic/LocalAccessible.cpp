@@ -1419,7 +1419,7 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
     SendCache(CacheDomain::Actions, CacheUpdateType::Update);
   }
 
-  if (aAttribute == nsGkAtoms::href) {
+  if (aAttribute == nsGkAtoms::href || aAttribute == nsGkAtoms::src) {
     mDoc->QueueCacheUpdate(this, CacheDomain::Value);
   }
 
@@ -3206,6 +3206,24 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
         fields->SetAttribute(nsGkAtoms::aria_valuetext, std::move(value));
       } else if (aUpdateType == CacheUpdateType::Update) {
         fields->SetAttribute(nsGkAtoms::aria_valuetext, DeleteEntry());
+      }
+    }
+
+    if (IsImage()) {
+      // Cache the src of images. This is used by some clients to help remediate
+      // inaccessible images. If the image has a name, it's accessible, so this
+      // isn't necessary.
+      MOZ_ASSERT(mContent, "Image must have mContent");
+      nsAutoString name;
+      Name(name);
+      if (name.IsEmpty()) {
+        nsString src;
+        mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::src, src);
+        if (!src.IsEmpty()) {
+          fields->SetAttribute(nsGkAtoms::src, std::move(src));
+        } else if (aUpdateType == CacheUpdateType::Update) {
+          fields->SetAttribute(nsGkAtoms::src, DeleteEntry());
+        }
       }
     }
   }

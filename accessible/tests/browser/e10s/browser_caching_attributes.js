@@ -603,3 +603,38 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true }
 );
+
+/**
+ * Test the src attribute.
+ */
+const kImgUrl = "https://example.com/a11y/accessible/tests/mochitest/moz.png";
+addAccessibleTask(
+  `
+<img id="noAlt" src="${kImgUrl}">
+<img id="alt" alt="alt" src="${kImgUrl}">
+<img id="mutate">
+  `,
+  async function(browser, docAcc) {
+    const noAlt = findAccessibleChildByID(docAcc, "noAlt");
+    testAttrs(noAlt, { src: kImgUrl }, true);
+    if (isCacheEnabled && browser.isRemoteBrowser) {
+      // To avoid wasting memory, we don't cache src if there's a name.
+      const alt = findAccessibleChildByID(docAcc, "alt");
+      testAbsentAttrs(alt, { src: "" });
+    }
+
+    const mutate = findAccessibleChildByID(docAcc, "mutate");
+    testAbsentAttrs(mutate, { src: "" });
+    info("Adding src to mutate");
+    await invokeContentTask(browser, [kImgUrl], url => {
+      content.document.getElementById("mutate").src = url;
+    });
+    await untilCacheAttrIs(mutate, "src", kImgUrl, "mutate src correct");
+    info("Removing src from mutate");
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("mutate").removeAttribute("src");
+    });
+    await untilCacheAttrAbsent(mutate, "src", "mutate src not present");
+  },
+  { chrome: true, topLevel: true }
+);
