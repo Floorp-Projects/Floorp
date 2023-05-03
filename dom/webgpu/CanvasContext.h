@@ -40,14 +40,10 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
                        JS::Handle<JSObject*> aGivenProto) override;
 
  public:  // nsICanvasRenderingContextInternal
-  int32_t GetWidth() override { return mWidth; }
-  int32_t GetHeight() override { return mHeight; }
+  int32_t GetWidth() override { return mCanvasSize.width; }
+  int32_t GetHeight() override { return mCanvasSize.height; }
 
-  NS_IMETHOD SetDimensions(int32_t aWidth, int32_t aHeight) override {
-    mWidth = aWidth;
-    mHeight = aHeight;
-    return NS_OK;
-  }
+  NS_IMETHOD SetDimensions(int32_t aWidth, int32_t aHeight) override;
   NS_IMETHOD InitializeWithDrawTarget(
       nsIDocShell* aShell, NotNull<gfx::DrawTarget*> aTarget) override {
     return NS_OK;
@@ -94,7 +90,8 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
   void ForceNewFrame();
 
  private:
-  uint32_t mWidth = 0, mHeight = 0;
+  gfx::IntSize mCanvasSize;
+  std::unique_ptr<dom::GPUCanvasConfiguration> mConfig;
   bool mPendingSwapChainPresent = false;
 
   RefPtr<WebGPUChild> mBridge;
