@@ -23,7 +23,9 @@ interface Animation : EventTarget {
   attribute DOMString id;
   [Func="Document::IsWebAnimationsEnabled", Pure]
   attribute AnimationEffect? effect;
-  [Func="Document::AreWebAnimationsTimelinesEnabled"]
+  // Bug 1676794. Drop BinaryName once we support ScrollTimeline interface.
+  [Func="Document::AreWebAnimationsTimelinesEnabled",
+   BinaryName="timelineFromJS"]
   attribute AnimationTimeline? timeline;
 
   [BinaryName="startTimeAsDouble"]
