@@ -721,3 +721,19 @@ add_task(function test_enumerable_names() {
   Assert.ok(Object.keys(Glean.testOnlyJog).includes("aCounter"));
   Assert.ok(Object.keys(GleanPings).includes("testPing"));
 });
+
+add_task(async function test_jog_text_works() {
+  const kValue =
+    "In the heart of the Opéra district in Paris, the Cédric Grolet Opéra bakery-pastry shop is a veritable temple of gourmet delights.";
+  Services.fog.testRegisterRuntimeMetric(
+    "text",
+    "test_only.jog",
+    "a_text",
+    ["test-only"],
+    `"ping"`,
+    false
+  );
+  Glean.testOnlyJog.aText.set(kValue);
+
+  Assert.equal(kValue, Glean.testOnlyJog.aText.testGetValue());
+});
