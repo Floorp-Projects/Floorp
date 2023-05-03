@@ -1711,6 +1711,11 @@ public class GeckoViewActivity extends AppCompatActivity
       setRequestedOrientation(aOrientation);
       return GeckoResult.allow();
     }
+
+    @Override
+    public void onOrientationUnlock() {
+      setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+    }
   }
 
   private class ExampleContentDelegate implements GeckoSession.ContentDelegate {

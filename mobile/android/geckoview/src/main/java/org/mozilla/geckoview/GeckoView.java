@@ -649,16 +649,20 @@ public class GeckoView extends FrameLayout {
     if (mSession != null) {
       final GeckoRuntime runtime = mSession.getRuntime();
       if (runtime != null) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1
-            || Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
           // onConfigurationChanged is not called for 180 degree orientation changes,
           // we will miss such rotations and the screen orientation will not be
           // updated.
           //
           // If API is 17+, we use DisplayManager API to detect all degree
-          // orientation change. But if API is 31+, DisplayManager API may report previous
-          // information. So we have to report it again.
+          // orientation change.
           runtime.orientationChanged(newConfig.orientation);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+          // If API is 31+, DisplayManager API may report previous information.
+          // So we have to report it again. But since Configuration.orientation may still have
+          // previous information even if onConfigurationChanged is called, we have to calculate it
+          // from display data.
+          runtime.orientationChanged();
         }
 
         runtime.configurationChanged(newConfig);
