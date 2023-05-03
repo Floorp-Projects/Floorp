@@ -7403,6 +7403,32 @@ bool BytecodeEmitter::emitSelfHostedToString(CallNode* callNode) {
   return emit1(JSOp::ToString);
 }
 
+bool BytecodeEmitter::emitSelfHostedIsNullOrUndefined(CallNode* callNode) {
+  ListNode* argsList = &callNode->right()->as<ListNode>();
+
+  MOZ_ASSERT(argsList->count() == 1);
+
+  ParseNode* argNode = argsList->head();
+
+  if (!emitTree(argNode)) {
+    //              [stack] ARG
+    return false;
+  }
+  if (!emit1(JSOp::IsNullOrUndefined)) {
+    //              [stack] ARG IS_NULL_OR_UNDEF
+    return false;
+  }
+  if (!emit1(JSOp::Swap)) {
+    //              [stack] IS_NULL_OR_UNDEF ARG
+    return false;
+  }
+  if (!emit1(JSOp::Pop)) {
+    //              [stack] IS_NULL_OR_UNDEF
+    return false;
+  }
+  return true;
+}
+
 bool BytecodeEmitter::emitSelfHostedGetBuiltinConstructorOrPrototype(
     CallNode* callNode, bool isConstructor) {
   ListNode* argsList = &callNode->right()->as<ListNode>();
@@ -8080,6 +8106,9 @@ bool BytecodeEmitter::emitCallOrNew(CallNode* callNode, ValueUsage valueUsage) {
     }
     if (calleeName == TaggedParserAtomIndex::WellKnown::SetCanonicalName()) {
       return emitSelfHostedSetCanonicalName(callNode);
+    }
+    if (calleeName == TaggedParserAtomIndex::WellKnown::IsNullOrUndefined()) {
+      return emitSelfHostedIsNullOrUndefined(callNode);
     }
 #ifdef DEBUG
     if (calleeName ==
