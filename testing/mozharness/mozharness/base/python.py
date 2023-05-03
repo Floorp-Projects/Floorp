@@ -217,9 +217,9 @@ class VirtualenvMixin(object):
                     + pip_freeze_output
                 )
 
-        for line in pip_freeze_output.splitlines():
+        for l in pip_freeze_output.splitlines():
             # parse the output into package, version
-            line = line.strip()
+            line = l.strip()
             if not line:
                 # whitespace
                 continue
@@ -300,16 +300,6 @@ class VirtualenvMixin(object):
                 command += ["--no-index"]
             for opt in global_options:
                 command += ["--global-option", opt]
-        elif install_method == "easy_install":
-            if not module:
-                self.fatal(
-                    "module parameter required with install_method='easy_install'"
-                )
-            if requirements:
-                # Install pip requirements files separately, since they're
-                # not understood by easy_install.
-                self.install_module(requirements=requirements, install_method="pip")
-            command = [self.query_python_path(), "-m", "easy_install"]
         else:
             self.fatal(
                 "install_module() doesn't understand an install_method of %s!"
@@ -636,8 +626,6 @@ class VirtualenvMixin(object):
                 module_url = self.config.get("%s_url" % module, module_url)
                 module_name = module
             install_method = "pip"
-            if module_name in ("pywin32",):
-                install_method = "easy_install"
             self.install_module(
                 module=module_name,
                 module_url=module_url,

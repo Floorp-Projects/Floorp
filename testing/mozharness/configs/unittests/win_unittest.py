@@ -18,9 +18,7 @@ REQUIRE_GPU = False
 if "REQUIRE_GPU" in os.environ:
     REQUIRE_GPU = os.environ["REQUIRE_GPU"] == "1"
 
-PYWIN32 = "pypiwin32==219"
-if sys.version_info > (3, 0):
-    PYWIN32 = "pywin32==300"
+PYWIN32 = "pywin32==306"
 
 XPCSHELL_NAME = "xpcshell.exe"
 EXE_SUFFIX = ".exe"
