@@ -14378,7 +14378,7 @@
 - name: timer.maximum_firing_delay_tolerance_ms
   type: AtomicFloat
 #ifdef NIGHTLY_BUILD
-  value: 100.0
+  value: 10000.0
 #else
   value: 0.0
 #endif
