@@ -493,6 +493,13 @@ bool RTPSenderVideo::SendVideo(
     // Backward compatibility for older receivers without temporal layer logic.
     retransmission_settings = kRetransmitBaseLayer | kRetransmitHigherLayers;
   }
+  const uint8_t temporal_id = GetTemporalId(video_header);
+  // TODO(bugs.webrtc.org/10714): retransmission_settings_ should generally be
+  // replaced by expected_retransmission_time_ms.has_value().
+  const bool allow_retransmission =
+      expected_retransmission_time_ms.has_value() &&
+      AllowRetransmission(temporal_id, retransmission_settings,
+                          *expected_retransmission_time_ms);
 
   MaybeUpdateCurrentPlayoutDelay(video_header);
   if (video_header.frame_type == VideoFrameType::kVideoFrameKey) {
@@ -514,16 +521,19 @@ bool RTPSenderVideo::SendVideo(
         video_header.generic->frame_id, video_header.generic->chain_diffs);
   }
 
-  const uint8_t temporal_id = GetTemporalId(video_header);
   // No FEC protection for upper temporal layers, if used.
   const bool use_fec = fec_type_.has_value() &&
                        (temporal_id == 0 || temporal_id == kNoTemporalIdx);
 
   // Maximum size of packet including rtp headers.
   // Extra space left in case packet will be resent using fec or rtx.
-  int packet_capacity = rtp_sender_->MaxRtpPacketSize() -
-                        (use_fec ? FecPacketOverhead() : 0) -
-                        (rtp_sender_->RtxStatus() ? kRtxHeaderSize : 0);
+  int packet_capacity = rtp_sender_->MaxRtpPacketSize();
+  if (use_fec) {
+    packet_capacity -= FecPacketOverhead();
+  }
+  if (allow_retransmission) {
+    packet_capacity -= rtp_sender_->RtxPacketOverhead();
+  }
 
   absl::optional<Timestamp> capture_time;
   if (capture_time_ms > 0) {
@@ -652,14 +662,6 @@ bool RTPSenderVideo::SendVideo(
   std::unique_ptr<RtpPacketizer> packetizer =
       RtpPacketizer::Create(codec_type, payload, limits, video_header);
 
-  // TODO(bugs.webrtc.org/10714): retransmission_settings_ should generally be
-  // replaced by expected_retransmission_time_ms.has_value(). For now, though,
-  // only VP8 with an injected frame buffer controller actually controls it.
-  const bool allow_retransmission =
-      expected_retransmission_time_ms.has_value()
-          ? AllowRetransmission(temporal_id, retransmission_settings,
-                                expected_retransmission_time_ms.value())
-          : false;
   const size_t num_packets = packetizer->NumPackets();
 
   if (num_packets == 0)
