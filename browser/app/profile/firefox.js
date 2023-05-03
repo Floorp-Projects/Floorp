@@ -1814,11 +1814,7 @@ pref("media.videocontrols.picture-in-picture.audio-toggle.enabled", true);
 pref("media.videocontrols.picture-in-picture.video-toggle.enabled", true);
 pref("media.videocontrols.picture-in-picture.video-toggle.visibility-threshold", "1.0");
 pref("media.videocontrols.picture-in-picture.keyboard-controls.enabled", true);
-#ifdef NIGHTLY_BUILD
-  pref("media.videocontrols.picture-in-picture.urlbar-button.enabled", true);
-#else
-  pref("media.videocontrols.picture-in-picture.urlbar-button.enabled", false);
-#endif
+pref("media.videocontrols.picture-in-picture.urlbar-button.enabled", true);
 
 // Preferences for the older translation service backed by external services. This is
 // planned to be replaced with an integration of the Firefox Translations service.
