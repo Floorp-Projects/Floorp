@@ -558,6 +558,39 @@ std::unique_ptr<RtpPacketToSend> RTPSender::AllocatePacket() const {
   return packet;
 }
 
+size_t RTPSender::RtxPacketOverhead() const {
+  MutexLock lock(&send_mutex_);
+  if (rtx_ == kRtxOff) {
+    return 0;
+  }
+  size_t overhead = 0;
+
+  // Count space for the RTP header extensions that might need to be added to
+  // the RTX packet.
+  if (!always_send_mid_and_rid_ && (!rtx_ssrc_has_acked_ && ssrc_has_acked_)) {
+    // Prefer to reserve extra byte in case two byte header rtp header
+    // extensions are used.
+    static constexpr int kRtpExtensionHeaderSize = 2;
+
+    // Rtx packets hasn't been acked and would need to have mid and rrsid rtp
+    // header extensions, while media packets no longer needs to include mid and
+    // rsid extensions.
+    if (!mid_.empty()) {
+      overhead += (kRtpExtensionHeaderSize + mid_.size());
+    }
+    if (!rid_.empty()) {
+      overhead += (kRtpExtensionHeaderSize + rid_.size());
+    }
+    // RTP header extensions are rounded up to 4 bytes. Depending on already
+    // present extensions adding mid & rrsid may add up to 3 bytes of padding.
+    overhead += 3;
+  }
+
+  // Add two bytes for the original sequence number in the RTP payload.
+  overhead += kRtxHeaderSize;
+  return overhead;
+}
+
 void RTPSender::SetSendingMediaStatus(bool enabled) {
   MutexLock lock(&send_mutex_);
   sending_media_ = enabled;
