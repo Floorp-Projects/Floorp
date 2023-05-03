@@ -408,6 +408,7 @@ void LIRGenerator::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins) {
 
 void LIRGeneratorX86Shared::lowerUDiv(MDiv* div) {
   if (div->rhs()->isConstant()) {
+    // NOTE: the result of toInt32 is coerced to uint32_t.
     uint32_t rhs = div->rhs()->toConstant()->toInt32();
     int32_t shift = FloorLog2(rhs);
 

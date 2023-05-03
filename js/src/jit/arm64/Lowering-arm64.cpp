@@ -574,6 +574,7 @@ void LIRGenerator::visitWasmNeg(MWasmNeg* ins) {
 void LIRGeneratorARM64::lowerUDiv(MDiv* div) {
   LAllocation lhs = useRegister(div->lhs());
   if (div->rhs()->isConstant()) {
+    // NOTE: the result of toInt32 is coerced to uint32_t.
     uint32_t rhs = div->rhs()->toConstant()->toInt32();
     int32_t shift = mozilla::FloorLog2(rhs);
 
