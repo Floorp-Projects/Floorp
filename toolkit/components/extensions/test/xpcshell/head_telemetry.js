@@ -28,13 +28,6 @@ const IS_OOP = Services.prefs.getBoolPref("extensions.webextensions.remote");
 // for Android builds.
 const IS_ANDROID_BUILD = AppConstants.platform === "android";
 
-// TODO(Bug 1826817): this shouldn't be needed anymore once we will be remove the
-// short term workaround currently being conditioned on this pref.
-const IS_FOG_ARTIFACTS_BUILD = Services.prefs.getBoolPref(
-  "telemetry.fog.artifact_build",
-  false
-);
-
 const WEBEXT_EVENTPAGE_RUNNING_TIME_MS = "WEBEXT_EVENTPAGE_RUNNING_TIME_MS";
 const WEBEXT_EVENTPAGE_RUNNING_TIME_MS_BY_ADDONID =
   "WEBEXT_EVENTPAGE_RUNNING_TIME_MS_BY_ADDONID";
@@ -239,15 +232,6 @@ function assertDNRTelemetryMirrored({
   unifiedName,
   unifiedType,
 }) {
-  // TODO(Bug 1826817): Remove this short term workaround once the underlying
-  // issue (Bug 1826797) have been fixed.
-  if (IS_FOG_ARTIFACTS_BUILD) {
-    info(
-      `Skipping assertion on FOG mirrored telemetry in artifact builds: ${unifiedName} (See Bug TBF)`
-    );
-    return;
-  }
-
   assertDNRTelemetryMetricsDefined([
     { metric: gleanMetric, label: gleanLabel },
   ]);
