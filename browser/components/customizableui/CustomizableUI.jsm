@@ -15,15 +15,15 @@ const { AppConstants } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  CustomizableWidgets: "resource:///modules/CustomizableWidgets.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  SearchWidgetTracker: "resource:///modules/SearchWidgetTracker.sys.mjs",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
-  SearchWidgetTracker: "resource:///modules/SearchWidgetTracker.jsm",
-  CustomizableWidgets: "resource:///modules/CustomizableWidgets.jsm",
   PanelMultiView: "resource:///modules/PanelMultiView.jsm",
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
   HomePage: "resource:///modules/HomePage.jsm",

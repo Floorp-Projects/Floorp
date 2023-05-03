@@ -39,12 +39,8 @@ ChromeUtils.defineModuleGetter(
   "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CustomizableWidgets",
-  "resource:///modules/CustomizableWidgets.jsm"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  CustomizableWidgets: "resource:///modules/CustomizableWidgets.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   WebChannel: "resource://gre/modules/WebChannel.sys.mjs",
 });

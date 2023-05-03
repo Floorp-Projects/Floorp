@@ -2040,7 +2040,7 @@ class PlacesMenu extends PlacesViewBase {
   }
 }
 
-// This is used from CustomizableWidgets.jsm using a `window` reference,
+// This is used from CustomizableWidgets.sys.mjs using a `window` reference,
 // so we have to expose this on the global.
 this.PlacesPanelview = class PlacesPanelview extends PlacesViewBase {
   constructor(placeUrl, rootElt, viewElt) {

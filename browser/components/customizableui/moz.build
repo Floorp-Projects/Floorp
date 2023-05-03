@@ -17,11 +17,11 @@ TESTING_JS_MODULES += [
 
 EXTRA_JS_MODULES += [
     "CustomizableUI.jsm",
-    "CustomizableWidgets.jsm",
-    "CustomizeMode.jsm",
-    "DragPositionManager.jsm",
+    "CustomizableWidgets.sys.mjs",
+    "CustomizeMode.sys.mjs",
+    "DragPositionManager.sys.mjs",
     "PanelMultiView.jsm",
-    "SearchWidgetTracker.jsm",
+    "SearchWidgetTracker.sys.mjs",
 ]
 
 with Files("**"):
