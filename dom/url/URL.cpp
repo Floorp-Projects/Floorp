@@ -190,7 +190,7 @@ void URL::SetHref(const nsAString& aHref, ErrorResult& aRv) {
   UpdateURLSearchParams();
 }
 
-void URL::GetOrigin(nsAString& aOrigin, ErrorResult& aRv) const {
+void URL::GetOrigin(nsAString& aOrigin) const {
   nsresult rv = nsContentUtils::GetUTFOrigin(URI(), aOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aOrigin.Truncate();
@@ -202,7 +202,7 @@ void URL::GetProtocol(nsAString& aProtocol) const {
   aProtocol.Append(char16_t(':'));
 }
 
-void URL::SetProtocol(const nsAString& aProtocol, ErrorResult& aRv) {
+void URL::SetProtocol(const nsAString& aProtocol) {
   nsAString::const_iterator start;
   aProtocol.BeginReading(start);
 
