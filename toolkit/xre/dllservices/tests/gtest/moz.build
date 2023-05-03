@@ -15,6 +15,7 @@ LOCAL_INCLUDES += [
 ]
 
 TEST_DIRS += [
+    "rust",
     "TestDllBlocklist_AllowByVersion",
     "TestDllBlocklist_GMPluginProcessOnly",
     "TestDllBlocklist_GPUProcessOnly",
