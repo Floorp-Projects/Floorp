@@ -103,12 +103,11 @@ void* moz_xmemdup(const void* ptr, size_t size) {
   return newPtr;
 }
 
-#ifndef __wasm__
-#  ifndef HAVE_MEMALIGN
+#ifndef HAVE_MEMALIGN
 // We always have a definition of memalign, but system headers don't
 // necessarily come with a declaration.
 extern "C" void* memalign(size_t, size_t);
-#  endif
+#endif
 
 void* moz_xmemalign(size_t boundary, size_t size) {
   void* ptr = memalign_impl(boundary, size);
@@ -119,7 +118,6 @@ void* moz_xmemalign(size_t boundary, size_t size) {
   // non-NULL ptr or errno == EINVAL
   return ptr;
 }
-#endif
 
 size_t moz_malloc_usable_size(void* ptr) {
   if (!ptr) return 0;
