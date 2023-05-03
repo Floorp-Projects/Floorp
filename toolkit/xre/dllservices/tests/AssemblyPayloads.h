@@ -144,19 +144,16 @@ alignas(uint32_t) uint8_t gDetouredCallUnwindInfo[] = {
 extern decltype(&DetouredCallCode) gDetouredCall;
 
 // This is just a jumper: our hooking code will thus detour the jump target
-// DetouredCall -- it will not detour DetouredCallJumper. We need to do this to
-// point our hooking code to the dynamic code, because our hooking API needs an
+// -- it will not detour DetouredCallJumper. We need to do this to point our
+// hooking code to the dynamic code, because our hooking API works with an
 // exported function name.
-//
-// guard(nocf) ensures that our generated code is a recognized jumper:
-//   jmp qword ptr [rip+offset DetouredCall]
-// rather than:
-//   mov rax, qword ptr [rip+offset DetouredCall]
-//   mov rdx, qword ptr [rip+offset __guard_dispatch_icall_fptr]
-//   jmp rdx
-__declspec(dllexport noinline guard(nocf)) void DetouredCallJumper(
+__attribute__((naked)) __declspec(dllexport noinline) void DetouredCallJumper(
     uintptr_t aCallee) {
-  gDetouredCall(aCallee);
+  // Ideally we would want this to be:
+  //   jmp qword ptr [rip + offset gDetouredCall]
+  // Unfortunately, it is unclear how to do that with inline assembly, so we
+  // use a zero offset and patch it before the test.
+  asm volatile("jmpq *0(%rip)");
 }
 #    endif  // !defined(MOZ_CODE_COVERAGE)
 
