@@ -963,10 +963,12 @@ async function maybeSanitizeSessionPrincipals(progress, principals, flags) {
   });
 
   progress.step = "promises:" + promises.length;
-  await Promise.all(promises);
-  await new Promise(resolve =>
-    Services.clearData.cleanupAfterDeletionAtShutdown(flags, resolve)
-  );
+  if (promises.length) {
+    await Promise.all(promises);
+    await new Promise(resolve =>
+      Services.clearData.cleanupAfterDeletionAtShutdown(flags, resolve)
+    );
+  }
   progress.step = "promises resolved";
 }
 
