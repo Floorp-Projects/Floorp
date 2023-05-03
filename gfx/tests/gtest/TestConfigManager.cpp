@@ -645,27 +645,7 @@ TEST_F(GfxConfigManager, WebRenderIntelBatteryNoHwStretchingNotNightly) {
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
 }
 
-TEST_F(GfxConfigManager, WebRenderNvidiaHighMixedRefreshRateNightly) {
-  mIsNightly = true;
-  mMockGfxInfo->mMaxRefreshRate = 120;
-  mMockGfxInfo->mHasMixedRefreshRate = true;
-  ConfigureWebRender();
-
-  EXPECT_TRUE(mFeatures.mWr.IsEnabled());
-  EXPECT_TRUE(mFeatures.mWrCompositor.IsEnabled());
-  EXPECT_TRUE(mFeatures.mWrAngle.IsEnabled());
-  EXPECT_TRUE(mFeatures.mWrDComp.IsEnabled());
-  EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
-  EXPECT_TRUE(mFeatures.mWrShaderCache.IsEnabled());
-  EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());
-  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
-  EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
-  EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
-  EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
-}
-
-TEST_F(GfxConfigManager, WebRenderNvidiaHighMixedRefreshRateNotNightly) {
-  mIsNightly = mIsEarlyBetaOrEarlier = false;
+TEST_F(GfxConfigManager, WebRenderNvidiaHighMixedRefreshRate) {
   mMockGfxInfo->mMaxRefreshRate = 120;
   mMockGfxInfo->mHasMixedRefreshRate = true;
   ConfigureWebRender();
