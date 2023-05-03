@@ -4239,7 +4239,7 @@ void CodeGenerator::visitMegamorphicLoadSlot(LMegamorphicLoadSlot* lir) {
   masm.passABIArg(temp2);
   masm.passABIArg(temp3);
 
-  masm.callWithABI<Fn, GetNativeDataPropertyPure>();
+  masm.callWithABI<Fn, GetNativeDataPropertyByIdPure>();
 
   MOZ_ASSERT(!output.aliases(ReturnReg));
   masm.Pop(output);
@@ -4304,50 +4304,30 @@ void CodeGenerator::visitMegamorphicLoadSlotByValue(
 
 void CodeGenerator::visitMegamorphicStoreSlot(LMegamorphicStoreSlot* lir) {
   Register obj = ToRegister(lir->object());
-  ValueOperand value = ToValue(lir, LMegamorphicStoreSlot::RhsIndex);
-
+  ValueOperand rhs = ToValue(lir, LMegamorphicStoreSlot::RhsIndex);
   Register temp0 = ToRegister(lir->temp0());
-#ifndef JS_CODEGEN_X86
   Register temp1 = ToRegister(lir->temp1());
   Register temp2 = ToRegister(lir->temp2());
-#endif
 
-  Label cacheHit, done;
-  if (JitOptions.enableWatchtowerMegamorphic) {
-#ifdef JS_CODEGEN_X86
-    masm.emitMegamorphicCachedSetSlot(
-        lir->mir()->name(), obj, temp0, value, &cacheHit,
-        [](MacroAssembler& masm, const Address& addr, MIRType mirType) {
-          EmitPreBarrier(masm, addr, mirType);
-        });
-#else
-    masm.emitMegamorphicCachedSetSlot(
-        lir->mir()->name(), obj, temp0, temp1, temp2, value, &cacheHit,
-        [](MacroAssembler& masm, const Address& addr, MIRType mirType) {
-          EmitPreBarrier(masm, addr, mirType);
-        });
-#endif
-  }
+  masm.Push(rhs);
+  masm.moveStackPtrTo(temp0);
 
-  pushArg(Imm32(lir->mir()->strict()));
-  pushArg(value);
-  pushArg(lir->mir()->name(), temp0);
-  pushArg(obj);
+  using Fn =
+      bool (*)(JSContext* cx, JSObject* obj, PropertyName* name, Value* val);
+  masm.setupAlignedABICall();
+  masm.loadJSContext(temp1);
+  masm.passABIArg(temp1);
+  masm.passABIArg(obj);
+  masm.movePtr(ImmGCPtr(lir->mir()->name()), temp2);
+  masm.passABIArg(temp2);
+  masm.passABIArg(temp0);
+  masm.callWithABI<Fn, SetNativeDataPropertyPure>();
 
-  using Fn = bool (*)(JSContext*, HandleObject, HandleId, HandleValue, bool);
-  callVM<Fn, SetPropertyMegamorphic<true>>(lir);
+  MOZ_ASSERT(!rhs.aliases(temp0));
+  masm.storeCallPointerResult(temp0);
+  masm.Pop(rhs);
 
-  masm.jump(&done);
-  masm.bind(&cacheHit);
-
-  masm.branchPtrInNurseryChunk(Assembler::Equal, obj, temp0, &done);
-  masm.branchValueIsNurseryCell(Assembler::NotEqual, value, temp0, &done);
-
-  saveVolatile(temp0);
-  emitPostWriteBarrier(obj);
-  restoreVolatile(temp0);
-
-  masm.bind(&done);
+  bailoutIfFalseBool(temp0, lir->snapshot());
 }
 
 void CodeGenerator::visitMegamorphicHasProp(LMegamorphicHasProp* lir) {
@@ -13856,12 +13836,14 @@ void CodeGenerator::visitMegamorphicSetElement(LMegamorphicSetElement* lir) {
   }
 
   pushArg(Imm32(lir->mir()->strict()));
+  pushArg(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
   pushArg(ToValue(lir, LMegamorphicSetElement::ValueIndex));
   pushArg(ToValue(lir, LMegamorphicSetElement::IndexIndex));
   pushArg(obj);
 
-  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, HandleValue, bool);
-  callVM<Fn, js::jit::SetElementMegamorphic<true>>(lir);
+  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, HandleValue,
+                      HandleValue, bool);
+  callVM<Fn, js::jit::SetElementMegamorphicCached>(lir);
 
   masm.jump(&done);
   masm.bind(&cacheHit);

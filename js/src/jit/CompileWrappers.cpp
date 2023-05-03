@@ -81,7 +81,7 @@ const void* CompileRuntime::addressOfMegamorphicCache() {
 }
 
 const void* CompileRuntime::addressOfMegamorphicSetPropCache() {
-  return runtime()->caches().megamorphicSetPropCache.get();
+  return &runtime()->caches().megamorphicSetPropCache;
 }
 
 const void* CompileRuntime::addressOfStringToAtomCache() {
