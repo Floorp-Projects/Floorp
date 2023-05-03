@@ -214,9 +214,8 @@ FileSystemDataManager::GetOrCreateFileSystemDataManager(
         Registered<FileSystemDataManager>(std::move(dataManager)), __func__);
   }
 
-  QM_TRY_UNWRAP(RefPtr<quota::QuotaManager> quotaManager,
-                quota::QuotaManager::GetOrCreate(),
-                CreatePromise::CreateAndReject(NS_ERROR_FAILURE, __func__));
+  RefPtr<quota::QuotaManager> quotaManager = quota::QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
 
   QM_TRY_UNWRAP(auto streamTransportService,
                 MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<nsIEventTarget>,

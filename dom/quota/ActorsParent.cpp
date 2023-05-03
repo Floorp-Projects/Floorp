@@ -6420,7 +6420,6 @@ bool QuotaManager::IsPrincipalInfoValid(const PrincipalInfo& aPrincipalInfo) {
   return false;
 }
 
-// static
 PrincipalMetadata QuotaManager::GetInfoFromValidatedPrincipalInfo(
     const PrincipalInfo& aPrincipalInfo) {
   MOZ_ASSERT(IsPrincipalInfoValid(aPrincipalInfo));
@@ -8352,10 +8351,13 @@ GetOriginUsageOp::GetOriginUsageOp(const UsageRequestParams& aParams)
   AssertIsOnOwningThread();
   MOZ_ASSERT(aParams.type() == UsageRequestParams::TOriginUsageParams);
 
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
   const OriginUsageParams& params = aParams.get_OriginUsageParams();
 
   PrincipalMetadata principalMetadata =
-      QuotaManager::GetInfoFromValidatedPrincipalInfo(params.principalInfo());
+      quotaManager->GetInfoFromValidatedPrincipalInfo(params.principalInfo());
   MOZ_ASSERT(principalMetadata.mOrigin == principalMetadata.mStorageOrigin);
 
   mSuffix = std::move(principalMetadata.mSuffix);
@@ -8620,8 +8622,11 @@ InitializeOriginRequestBase::InitializeOriginRequestBase(
       mCreated(false) {
   AssertIsOnOwningThread();
 
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
   auto principalMetadata =
-      QuotaManager::GetInfoFromValidatedPrincipalInfo(aPrincipalInfo);
+      quotaManager->GetInfoFromValidatedPrincipalInfo(aPrincipalInfo);
   MOZ_ASSERT(principalMetadata.mOrigin == principalMetadata.mStorageOrigin);
 
   // Overwrite OriginOperationBase default values.
@@ -8723,7 +8728,7 @@ GetFullOriginMetadataOp::GetFullOriginMetadataOp(
     const GetFullOriginMetadataParams& aParams)
     : QuotaRequestBase("dom::quota::GetFullOriginMetadataOp",
                        /* aExclusive */ false),
-      mOriginMetadata(QuotaManager::GetInfoFromValidatedPrincipalInfo(
+      mOriginMetadata(QuotaManager::Get()->GetInfoFromValidatedPrincipalInfo(
                           aParams.principalInfo()),
                       aParams.persistenceType()) {
   AssertIsOnOwningThread();
@@ -9225,9 +9230,12 @@ void PersistRequestBase::Init(Quota& aQuota) {
 
   mPersistenceType.SetValue(PERSISTENCE_TYPE_DEFAULT);
 
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
   // Figure out which origin we're dealing with.
   PrincipalMetadata principalMetadata =
-      QuotaManager::GetInfoFromValidatedPrincipalInfo(mPrincipalInfo);
+      quotaManager->GetInfoFromValidatedPrincipalInfo(mPrincipalInfo);
   MOZ_ASSERT(principalMetadata.mOrigin == principalMetadata.mStorageOrigin);
 
   mSuffix = std::move(principalMetadata.mSuffix);
@@ -9377,7 +9385,7 @@ void PersistOp::GetResponse(RequestResponse& aResponse) {
 
 EstimateOp::EstimateOp(const EstimateParams& aParams)
     : QuotaRequestBase("dom::quota::EstimateOp", /* aExclusive */ false),
-      mOriginMetadata(QuotaManager::GetInfoFromValidatedPrincipalInfo(
+      mOriginMetadata(QuotaManager::Get()->GetInfoFromValidatedPrincipalInfo(
                           aParams.principalInfo()),
                       PERSISTENCE_TYPE_DEFAULT) {
   AssertIsOnOwningThread();
@@ -9767,6 +9775,9 @@ nsresult StorageOperationBase::ProcessOriginDirectories() {
   AssertIsOnIOThread();
   MOZ_ASSERT(!mOriginProps.IsEmpty());
 
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
 #ifdef QM_PRINCIPALINFO_VERIFICATION_ENABLED
   nsTArray<PrincipalInfo> principalInfos;
 #endif
@@ -9815,7 +9826,7 @@ nsresult StorageOperationBase::ProcessOriginDirectories() {
         PrincipalInfo principalInfo(contentPrincipalInfo);
 
         originProps.mOriginMetadata = {
-            QuotaManager::GetInfoFromValidatedPrincipalInfo(principalInfo),
+            quotaManager->GetInfoFromValidatedPrincipalInfo(principalInfo),
             *originProps.mPersistenceType};
 
 #ifdef QM_PRINCIPALINFO_VERIFICATION_ENABLED

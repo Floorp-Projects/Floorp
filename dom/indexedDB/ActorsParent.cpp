@@ -14922,6 +14922,11 @@ nsresult FactoryOp::FinishOpen() {
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
+  QM_TRY(QuotaManager::EnsureCreated());
+
+  QuotaManager* const quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
   const PrincipalInfo& principalInfo = mCommonParams.principalInfo();
 
   const DatabaseMetadata& metadata = mCommonParams.metadata();
@@ -14938,7 +14943,7 @@ nsresult FactoryOp::FinishOpen() {
     MOZ_ASSERT(principalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
 
     mOriginMetadata = {
-        QuotaManager::GetInfoFromValidatedPrincipalInfo(principalInfo),
+        quotaManager->GetInfoFromValidatedPrincipalInfo(principalInfo),
         persistenceType};
 
     mEnforcingQuota = persistenceType != PERSISTENCE_TYPE_PERSISTENT;
@@ -14949,11 +14954,6 @@ nsresult FactoryOp::FinishOpen() {
 
   mDatabaseId.Append('*');
   mDatabaseId.Append(NS_ConvertUTF16toUTF8(metadata.name()));
-
-  QM_TRY(QuotaManager::EnsureCreated());
-
-  QuotaManager* const quotaManager = QuotaManager::Get();
-  MOZ_ASSERT(quotaManager);
 
   // Need to get database file path before opening the directory.
   // XXX: For what reason?

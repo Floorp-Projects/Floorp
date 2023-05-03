@@ -357,20 +357,20 @@ Context::QuotaInitRunnable::Run() {
         break;
       }
 
-      mDirectoryMetadata.emplace(
-          QuotaManager::GetInfoFromValidatedPrincipalInfo(*mPrincipalInfo));
-
       QM_TRY(QuotaManager::EnsureCreated(), QM_PROPAGATE,
              [&resolver](const auto rv) { resolver->Resolve(rv); });
 
-      MOZ_DIAGNOSTIC_ASSERT(QuotaManager::Get());
+      auto* const quotaManager = QuotaManager::Get();
+      MOZ_DIAGNOSTIC_ASSERT(quotaManager);
+
+      mDirectoryMetadata.emplace(
+          quotaManager->GetInfoFromValidatedPrincipalInfo(*mPrincipalInfo));
 
       // Open directory
-      RefPtr<DirectoryLock> directoryLock =
-          QuotaManager::Get()->CreateDirectoryLock(PERSISTENCE_TYPE_DEFAULT,
-                                                   *mDirectoryMetadata,
-                                                   quota::Client::DOMCACHE,
-                                                   /* aExclusive */ false);
+      RefPtr<DirectoryLock> directoryLock = quotaManager->CreateDirectoryLock(
+          PERSISTENCE_TYPE_DEFAULT, *mDirectoryMetadata,
+          quota::Client::DOMCACHE,
+          /* aExclusive */ false);
 
       // DirectoryLock::Acquire() will hold a reference to us as a listener. We
       // will then get DirectoryLockAcquired() on the owning thread when it is
