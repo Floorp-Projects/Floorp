@@ -40,6 +40,7 @@ pub use ctap2::attestation::AttestationObject;
 pub use ctap2::client_data::CollectedClientData;
 pub use ctap2::commands::client_pin::{Pin, PinError};
 pub use ctap2::commands::get_assertion::Assertion;
+pub use ctap2::commands::get_info::AuthenticatorInfo;
 pub use ctap2::AssertionObject;
 
 pub mod errors;

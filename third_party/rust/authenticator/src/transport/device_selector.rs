@@ -1,11 +1,13 @@
-use crate::send_status;
 use crate::transport::hid::HIDDevice;
 pub use crate::transport::platform::device::Device;
-use crate::u2ftypes::U2FDevice;
 use runloop::RunLoop;
 use std::collections::{HashMap, HashSet};
 use std::sync::mpsc::{channel, RecvTimeoutError, Sender};
 use std::time::Duration;
+
+// This import is used, but Rust 1.68 gives a warning
+#[allow(unused_imports)]
+use crate::u2ftypes::U2FDevice;
 
 pub type DeviceID = <Device as HIDDevice>::Id;
 pub type DeviceBuildParameters = <Device as HIDDevice>::BuildParameters;
@@ -33,7 +35,7 @@ pub enum DeviceSelectorEvent {
     DevicesAdded(Vec<DeviceID>),
     DeviceRemoved(DeviceID),
     NotAToken(DeviceID),
-    ImAToken((Device, Sender<DeviceCommand>)),
+    ImAToken((DeviceID, Sender<DeviceCommand>)),
     SelectedToken(DeviceID),
 }
 
@@ -45,11 +47,7 @@ pub struct DeviceSelector {
 }
 
 impl DeviceSelector {
-    // Devices are hashed according to their DeviceID (usually a path),
-    // all other members (which can be mutable) are not used, but clippy
-    // can't check this.
-    #![allow(clippy::mutable_key_type)]
-    pub fn run(status: Sender<crate::StatusUpdate>) -> Self {
+    pub fn run() -> Self {
         let (selector_send, selector_rec) = channel();
         // let new_device_callback = Arc::new(new_device_cb);
         let runloop = RunLoop::new(move |alive| {
@@ -57,7 +55,8 @@ impl DeviceSelector {
             // Device was added, but we wait for its response, if it is a token or not
             // We save both a write-only copy of the device (for cancellation) and it's thread
             let mut waiting_for_response = HashSet::new();
-            // All devices that responded with "ImAToken"
+            // Device IDs of devices that responded with "ImAToken" mapping to channels that are
+            // waiting to receive a DeviceCommand
             let mut tokens = HashMap::new();
             while alive() {
                 let d = Duration::from_secs(100);
@@ -75,14 +74,8 @@ impl DeviceSelector {
                         Self::cancel_all(tokens, None);
                         break;
                     }
-                    DeviceSelectorEvent::SelectedToken(id) => {
-                        if let Some(dev) = tokens.keys().find(|d| d.id() == id) {
-                            send_status(
-                                &status,
-                                crate::StatusUpdate::DeviceSelected(dev.get_device_info()),
-                            );
-                        }
-                        Self::cancel_all(tokens, Some(&id));
+                    DeviceSelectorEvent::SelectedToken(ref id) => {
+                        Self::cancel_all(tokens, Some(id));
                         break; // We are done here. The selected device continues without us.
                     }
                     DeviceSelectorEvent::DevicesAdded(ids) => {
@@ -92,26 +85,20 @@ impl DeviceSelector {
                         }
                         continue;
                     }
-                    DeviceSelectorEvent::DeviceRemoved(id) => {
+                    DeviceSelectorEvent::DeviceRemoved(ref id) => {
                         debug!("Device removed event: {:?}", id);
-                        if !waiting_for_response.remove(&id) {
+                        if !waiting_for_response.remove(id) {
                             // Note: We _could_ check here if we had multiple tokens and are already blinking
                             //       and the removal of this one leads to only one token left. So we could in theory
                             //       stop blinking and select it right away. At the moment, I think this is a
                             //       too surprising behavior and therefore, we let the remaining device keep on blinking
                             //       since the user could add yet another device, instead of using the remaining one.
-                            tokens.iter().for_each(|(dev, send)| {
-                                if dev.id() == id {
-                                    let _ = send.send(DeviceCommand::Removed);
-                                    send_status(
-                                        &status,
-                                        crate::StatusUpdate::DeviceUnavailable {
-                                            dev_info: dev.get_device_info(),
-                                        },
-                                    );
+                            tokens.iter().for_each(|(dev_id, tx)| {
+                                if dev_id == id {
+                                    let _ = tx.send(DeviceCommand::Removed);
                                 }
                             });
-                            tokens.retain(|dev, _| dev.id() != id);
+                            tokens.retain(|dev_id, _| dev_id != id);
                             if tokens.is_empty() {
                                 blinking = false;
                                 continue;
@@ -127,27 +114,20 @@ impl DeviceSelector {
                             continue;
                         }
                     }
-                    DeviceSelectorEvent::NotAToken(id) => {
+                    DeviceSelectorEvent::NotAToken(ref id) => {
                         debug!("Device not a token event: {:?}", id);
-                        waiting_for_response.remove(&id);
+                        waiting_for_response.remove(id);
                     }
-                    DeviceSelectorEvent::ImAToken((dev, tx)) => {
-                        send_status(
-                            &status,
-                            crate::StatusUpdate::DeviceAvailable {
-                                dev_info: dev.get_device_info(),
-                            },
-                        );
-                        let id = dev.id();
+                    DeviceSelectorEvent::ImAToken((id, tx)) => {
                         let _ = waiting_for_response.remove(&id);
-                        tokens.insert(dev, tx.clone());
                         if blinking {
                             // We are already blinking, so this new device should blink too.
-                            if tx.send(DeviceCommand::Blink).is_err() {
-                                // Device thread died in the meantime (which shouldn't happen)
-                                tokens.retain(|dev, _| dev.id() != id);
+                            if tx.send(DeviceCommand::Blink).is_ok() {
+                                tokens.insert(id, tx.clone());
                             }
                             continue;
+                        } else {
+                            tokens.insert(id, tx.clone());
                         }
                     }
                 }
@@ -155,17 +135,13 @@ impl DeviceSelector {
                 // All known devices told us, whether they are tokens or not and we have at least one token
                 if waiting_for_response.is_empty() && !tokens.is_empty() {
                     if tokens.len() == 1 {
-                        let (dev, tx) = tokens.drain().next().unwrap(); // We just checked that it can't be empty
+                        let (dev_id, tx) = tokens.drain().next().unwrap(); // We just checked that it can't be empty
                         if tx.send(DeviceCommand::Continue).is_err() {
                             // Device thread died in the meantime (which shouldn't happen).
                             // Tokens is empty, so we just start over again
                             continue;
                         }
-                        send_status(
-                            &status,
-                            crate::StatusUpdate::DeviceSelected(dev.get_device_info()),
-                        );
-                        Self::cancel_all(tokens, Some(&dev.id()));
+                        Self::cancel_all(tokens, Some(&dev_id));
                         break; // We are done here
                     } else {
                         blinking = true;
@@ -175,7 +151,6 @@ impl DeviceSelector {
                             // We ignore errors here for now, but should probably remove the device in such a case (even though it theoretically can't happen)
                             let _ = tx.send(DeviceCommand::Blink);
                         });
-                        send_status(&status, crate::StatusUpdate::SelectDeviceNotice);
                     }
                 }
             }
@@ -190,9 +165,9 @@ impl DeviceSelector {
         self.sender.clone()
     }
 
-    fn cancel_all(tokens: HashMap<Device, Sender<DeviceCommand>>, exclude: Option<&DeviceID>) {
-        for (dev, tx) in tokens.iter() {
-            if Some(&dev.id()) != exclude {
+    fn cancel_all(tokens: HashMap<DeviceID, Sender<DeviceCommand>>, exclude: Option<&DeviceID>) {
+        for (dev_id, tx) in tokens.iter() {
+            if Some(dev_id) != exclude {
                 let _ = tx.send(DeviceCommand::Cancel);
             }
         }
@@ -212,16 +187,7 @@ pub mod tests {
         consts::Capability,
         ctap2::commands::get_info::{AuthenticatorInfo, AuthenticatorOptions},
         u2ftypes::U2FDeviceInfo,
-        StatusUpdate,
     };
-    use std::sync::mpsc::Receiver;
-
-    enum ExpectedUpdate {
-        DeviceAvailable,
-        DeviceUnavailable,
-        SelectDeviceNotice,
-        DeviceSelected,
-    }
 
     fn gen_info(id: String) -> U2FDeviceInfo {
         U2FDeviceInfo {
@@ -257,7 +223,7 @@ pub mod tests {
         selector
             .sender
             .send(DeviceSelectorEvent::ImAToken((
-                dev.clone_device_as_write_only().unwrap(),
+                dev.id(),
                 dev.sender.clone().unwrap(),
             )))
             .unwrap();
@@ -279,22 +245,6 @@ pub mod tests {
             dev.receiver.as_ref().unwrap().recv().unwrap(),
             DeviceCommand::Removed
         );
-    }
-
-    fn recv_status(dev: &Device, status_rx: &Receiver<StatusUpdate>, expected: ExpectedUpdate) {
-        let res = status_rx.recv().unwrap();
-        // Marking it with _, as cargo warns about "unused exp", as it doesn't view the assert below as a usage
-        let _exp = match expected {
-            ExpectedUpdate::DeviceAvailable => StatusUpdate::DeviceUnavailable {
-                dev_info: gen_info(dev.id()),
-            },
-            ExpectedUpdate::DeviceUnavailable => StatusUpdate::DeviceUnavailable {
-                dev_info: gen_info(dev.id()),
-            },
-            ExpectedUpdate::DeviceSelected => StatusUpdate::DeviceSelected(gen_info(dev.id())),
-            ExpectedUpdate::SelectDeviceNotice => StatusUpdate::SelectDeviceNotice,
-        };
-        assert!(matches!(res, _exp));
     }
 
     fn add_devices<'a, T>(iter: T, selector: &DeviceSelector)
@@ -320,8 +270,7 @@ pub mod tests {
 
         // Make those actual tokens. The rest is interpreted as non-u2f-devices
         make_device_with_pin(&mut devices[2]);
-        let (status_tx, status_rx) = channel();
-        let selector = DeviceSelector::run(status_tx);
+        let selector = DeviceSelector::run();
 
         // Adding all
         add_devices(devices.iter(), &selector);
@@ -333,12 +282,10 @@ pub mod tests {
 
         send_i_am_token(&devices[2], &selector);
 
-        recv_status(&devices[2], &status_rx, ExpectedUpdate::DeviceAvailable);
         assert_eq!(
             devices[2].receiver.as_ref().unwrap().recv().unwrap(),
             DeviceCommand::Continue
         );
-        recv_status(&devices[2], &status_rx, ExpectedUpdate::DeviceSelected);
     }
 
     // This test is mostly for testing stop() and clone_sender()
@@ -346,8 +293,7 @@ pub mod tests {
     fn test_device_selector_stop() {
         let device = Device::new("device selector 1").unwrap();
 
-        let (status_tx, _) = channel();
-        let mut selector = DeviceSelector::run(status_tx);
+        let mut selector = DeviceSelector::run();
 
         // Adding all
         selector
@@ -378,15 +324,13 @@ pub mod tests {
         make_device_with_pin(&mut devices[4]);
         make_device_with_pin(&mut devices[5]);
 
-        let (status_tx, status_rx) = channel();
-        let selector = DeviceSelector::run(status_tx);
+        let selector = DeviceSelector::run();
 
         // Adding all, except the last one (we simulate that this one is not yet plugged in)
         add_devices(devices.iter().take(5), &selector);
 
         // Interleave tokens and non-tokens
         send_i_am_token(&devices[2], &selector);
-        recv_status(&devices[2], &status_rx, ExpectedUpdate::DeviceAvailable);
 
         devices.iter_mut().for_each(|d| {
             if !d.is_u2f() {
@@ -395,7 +339,6 @@ pub mod tests {
         });
 
         send_i_am_token(&devices[4], &selector);
-        recv_status(&devices[4], &status_rx, ExpectedUpdate::DeviceAvailable);
 
         // We added 2 devices that are tokens. They should get the blink-command now
         assert_eq!(
@@ -406,11 +349,9 @@ pub mod tests {
             devices[4].receiver.as_ref().unwrap().recv().unwrap(),
             DeviceCommand::Blink
         );
-        recv_status(&devices[2], &status_rx, ExpectedUpdate::SelectDeviceNotice);
 
         // Plug in late device
         send_i_am_token(&devices[5], &selector);
-        recv_status(&devices[5], &status_rx, ExpectedUpdate::DeviceAvailable);
         assert_eq!(
             devices[5].receiver.as_ref().unwrap().recv().unwrap(),
             DeviceCommand::Blink
@@ -435,15 +376,13 @@ pub mod tests {
         make_device_simple_u2f(&mut devices[4]);
         make_device_simple_u2f(&mut devices[5]);
 
-        let (status_tx, status_rx) = channel();
-        let selector = DeviceSelector::run(status_tx);
+        let selector = DeviceSelector::run();
 
         // Adding all, except the last one (we simulate that this one is not yet plugged in)
         add_devices(devices.iter().take(5), &selector);
 
         // Interleave tokens and non-tokens
         send_i_am_token(&devices[2], &selector);
-        recv_status(&devices[2], &status_rx, ExpectedUpdate::DeviceAvailable);
 
         devices.iter_mut().for_each(|d| {
             if !d.is_u2f() {
@@ -452,7 +391,6 @@ pub mod tests {
         });
 
         send_i_am_token(&devices[4], &selector);
-        recv_status(&devices[4], &status_rx, ExpectedUpdate::DeviceAvailable);
 
         // We added 2 devices that are tokens. They should get the blink-command now
         assert_eq!(
@@ -463,23 +401,19 @@ pub mod tests {
             devices[4].receiver.as_ref().unwrap().recv().unwrap(),
             DeviceCommand::Blink
         );
-        recv_status(&devices[2], &status_rx, ExpectedUpdate::SelectDeviceNotice);
 
         // Plug in late device
         send_i_am_token(&devices[5], &selector);
-        recv_status(&devices[5], &status_rx, ExpectedUpdate::DeviceAvailable);
         assert_eq!(
             devices[5].receiver.as_ref().unwrap().recv().unwrap(),
             DeviceCommand::Blink
         );
         // Remove device again
         remove_device(&devices[5], &selector);
-        recv_status(&devices[5], &status_rx, ExpectedUpdate::DeviceUnavailable);
 
         // Now we add a token that has a PIN, it should not get "Continue" but "Blink"
         make_device_with_pin(&mut devices[6]);
         send_i_am_token(&devices[6], &selector);
-        recv_status(&devices[6], &status_rx, ExpectedUpdate::DeviceAvailable);
         assert_eq!(
             devices[6].receiver.as_ref().unwrap().recv().unwrap(),
             DeviceCommand::Blink
@@ -504,8 +438,7 @@ pub mod tests {
         make_device_with_pin(&mut devices[4]);
         make_device_with_pin(&mut devices[5]);
 
-        let (status_tx, status_rx) = channel();
-        let selector = DeviceSelector::run(status_tx);
+        let selector = DeviceSelector::run();
 
         // Adding all, except the last one (we simulate that this one is not yet plugged in)
         add_devices(devices.iter(), &selector);
@@ -519,29 +452,24 @@ pub mod tests {
         });
 
         for idx in [2, 4, 5] {
-            recv_status(&devices[idx], &status_rx, ExpectedUpdate::DeviceAvailable);
             assert_eq!(
                 devices[idx].receiver.as_ref().unwrap().recv().unwrap(),
                 DeviceCommand::Blink
             );
         }
-        recv_status(&devices[2], &status_rx, ExpectedUpdate::SelectDeviceNotice);
 
         // Remove all tokens
         for idx in [2, 4, 5] {
             remove_device(&devices[idx], &selector);
-            recv_status(&devices[idx], &status_rx, ExpectedUpdate::DeviceUnavailable);
         }
 
         // Adding one again
         send_i_am_token(&devices[4], &selector);
-        recv_status(&devices[4], &status_rx, ExpectedUpdate::DeviceAvailable);
 
         // This should now get a "Continue" instead of "Blinking", because it's the only device
         assert_eq!(
             devices[4].receiver.as_ref().unwrap().recv().unwrap(),
             DeviceCommand::Continue
         );
-        recv_status(&devices[4], &status_rx, ExpectedUpdate::DeviceSelected);
     }
 }

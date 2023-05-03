@@ -173,19 +173,6 @@ impl HIDDevice for Device {
         self.id.clone()
     }
 
-    fn clone_device_as_write_only(&self) -> Result<Self, HIDError> {
-        Ok(Device {
-            id: self.id.clone(),
-            cid: self.cid,
-            reads: self.reads.clone(),
-            writes: self.writes.clone(),
-            dev_info: self.dev_info.clone(),
-            authenticator_info: self.authenticator_info.clone(),
-            sender: self.sender.clone(),
-            receiver: None,
-        })
-    }
-
     fn is_u2f(&mut self) -> bool {
         self.sender.is_some()
     }

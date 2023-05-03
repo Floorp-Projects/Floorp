@@ -39,7 +39,7 @@ dependencies = [
 
 [[package]]
 name = "authenticator"
-version = "0.4.0-alpha.13"
+version = "0.4.0-alpha.14"
 dependencies = [
  "assert_matches",
  "base64",

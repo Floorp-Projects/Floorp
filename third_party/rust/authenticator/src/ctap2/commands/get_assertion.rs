@@ -12,7 +12,9 @@ use crate::ctap2::client_data::ClientDataHash;
 use crate::ctap2::commands::client_pin::Pin;
 use crate::ctap2::commands::get_next_assertion::GetNextAssertion;
 use crate::ctap2::commands::make_credentials::UserVerification;
-use crate::ctap2::server::{PublicKeyCredentialDescriptor, RelyingPartyWrapper, RpIdHash, User};
+use crate::ctap2::server::{
+    PublicKeyCredentialDescriptor, RelyingPartyWrapper, RpIdHash, User, UserVerificationRequirement,
+};
 use crate::errors::AuthenticatorError;
 use crate::transport::errors::{ApduErrorStatus, HIDError};
 use crate::transport::FidoDevice;
@@ -218,7 +220,6 @@ pub struct GetAssertion {
 
     // This is used to implement the FIDO AppID extension.
     pub(crate) alternate_rp_id: Option<String>,
-    pub(crate) use_ctap1_fallback: bool,
 }
 
 impl GetAssertion {
@@ -230,9 +231,8 @@ impl GetAssertion {
         extensions: GetAssertionExtensions,
         pin: Option<Pin>,
         alternate_rp_id: Option<String>,
-        use_ctap1_fallback: bool,
-    ) -> Result<Self, HIDError> {
-        Ok(Self {
+    ) -> Self {
+        Self {
             client_data_hash,
             rp,
             allow_list,
@@ -241,8 +241,7 @@ impl GetAssertion {
             pin,
             pin_uv_auth_param: None,
             alternate_rp_id,
-            use_ctap1_fallback,
-        })
+        }
     }
 }
 
@@ -275,10 +274,6 @@ impl PinUvAuthCommand for GetAssertion {
         self.options.user_verification = uv;
     }
 
-    fn get_uv_option(&mut self) -> Option<bool> {
-        self.options.user_verification
-    }
-
     fn get_rp_id(&self) -> Option<&String> {
         match &self.rp {
             // CTAP1 case: We only have the hash, not the entire RpID
@@ -287,24 +282,18 @@ impl PinUvAuthCommand for GetAssertion {
         }
     }
 
-    fn can_skip_user_verification(&mut self, info: &AuthenticatorInfo) -> bool {
+    fn can_skip_user_verification(
+        &mut self,
+        info: &AuthenticatorInfo,
+        uv_req: UserVerificationRequirement,
+    ) -> bool {
         let supports_uv = info.options.user_verification == Some(true);
         let pin_configured = info.options.client_pin == Some(true);
         let device_protected = supports_uv || pin_configured;
-        let uv_preferred_or_required = self.get_uv_option() != Some(false);
+        let uv_discouraged = uv_req == UserVerificationRequirement::Discouraged;
         let always_uv = info.options.always_uv == Some(true);
 
-        if always_uv || (device_protected && uv_preferred_or_required) {
-            // If the token is protected AND the RP doesn't specifically discourage UV, we have to use it
-            self.set_uv_option(Some(true));
-            false
-        } else {
-            // "[..] the Relying Party does not wish to require user verification (e.g., by setting options.userVerification
-            // to "discouraged" in the WebAuthn API), the platform invokes the authenticatorGetAssertion operation using
-            // the marshalled input parameters along with an absent "uv" option key."
-            self.set_uv_option(None);
-            true
-        }
+        !always_uv && (!device_protected || uv_discouraged)
     }
 }
 
@@ -730,9 +719,7 @@ pub mod test {
             Default::default(),
             None,
             None,
-            false,
-        )
-        .expect("Failed to create GetAssertion");
+        );
         let mut device = Device::new("commands/get_assertion").unwrap();
         let mut cid = [0u8; 4];
         thread_rng().fill_bytes(&mut cid);
@@ -933,9 +920,7 @@ pub mod test {
             Default::default(),
             None,
             None,
-            false,
-        )
-        .expect("Failed to create GetAssertion");
+        );
         let mut device = Device::new("commands/get_assertion").unwrap(); // not really used (all functions ignore it)
                                                                          // channel id
         let mut cid = [0u8; 4];
@@ -1022,9 +1007,7 @@ pub mod test {
             Default::default(),
             None,
             None,
-            false,
-        )
-        .expect("Failed to create GetAssertion");
+        );
 
         let mut device = Device::new("commands/get_assertion").unwrap(); // not really used (all functions ignore it)
                                                                          // channel id

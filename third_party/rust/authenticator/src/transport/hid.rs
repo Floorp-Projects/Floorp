@@ -30,7 +30,6 @@ where
     fn set_authenticator_info(&mut self, authenticator_info: AuthenticatorInfo);
     fn set_shared_secret(&mut self, secret: SharedSecret);
     fn get_shared_secret(&self) -> Option<&SharedSecret>;
-    fn clone_device_as_write_only(&self) -> Result<Self, HIDError>;
 
     fn supports_ctap1(&self) -> bool {
         // CAPABILITY_NMSG:

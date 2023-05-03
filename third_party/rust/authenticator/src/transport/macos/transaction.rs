@@ -46,8 +46,7 @@ impl Transaction {
     {
         let (tx, rx) = channel();
         let timeout = (timeout as f64) / 1000.0;
-        let status_sender = status.clone();
-        let device_selector = DeviceSelector::run(status);
+        let device_selector = DeviceSelector::run();
         let selector_sender = device_selector.clone_sender();
         let builder = thread::Builder::new();
         let thread = builder
@@ -61,7 +60,7 @@ impl Transaction {
                 obs.add_to_current_runloop();
 
                 // Create a new HID device monitor and start polling.
-                let mut monitor = Monitor::new(new_device_cb, selector_sender, status_sender);
+                let mut monitor = Monitor::new(new_device_cb, selector_sender, status);
                 try_or!(monitor.start(), |_| callback
                     .call(Err(errors::AuthenticatorError::Platform)));
 

@@ -96,10 +96,6 @@ impl HIDDevice for Device {
     fn get_shared_secret(&self) -> Option<&SharedSecret> {
         unimplemented!()
     }
-
-    fn clone_device_as_write_only(&self) -> Result<Self, HIDError> {
-        unimplemented!()
-    }
 }
 
 impl FidoDevice for Device {}

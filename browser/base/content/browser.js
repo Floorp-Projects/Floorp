@@ -7609,6 +7609,14 @@ var WebAuthnPromptHelper = {
         "deviceBlocked",
         "webauthn.deviceBlockedPrompt"
       );
+    } else if (data.action == "pin-not-set") {
+      this.show_info(
+        mgr,
+        data.origin,
+        data.tid,
+        "pinNotSet",
+        "webauthn.pinNotSetPrompt"
+      );
     }
   },
 

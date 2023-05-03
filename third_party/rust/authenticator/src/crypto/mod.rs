@@ -362,6 +362,15 @@ pub struct PinUvAuthParam {
     pin_auth: Vec<u8>,
 }
 
+impl PinUvAuthParam {
+    pub(crate) fn create_empty() -> Self {
+        Self {
+            pin_protocol: PinUvAuthProtocol(Box::new(PinUvAuth1 {})),
+            pin_auth: vec![],
+        }
+    }
+}
+
 impl Serialize for PinUvAuthParam {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

@@ -8,6 +8,13 @@ user-id = 1258
 user-login = "padenot"
 user-name = "Paul Adenot"
 
+[[publisher.authenticator]]
+version = "0.4.0-alpha.14"
+when = "2023-05-02"
+user-id = 175410
+user-login = "jschanck"
+user-name = "John Schanck"
+
 [[publisher.bhttp]]
 version = "0.3.1"
 when = "2023-02-23"

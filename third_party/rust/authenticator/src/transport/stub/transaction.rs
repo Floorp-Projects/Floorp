@@ -16,7 +16,7 @@ impl Transaction {
     pub fn new<F, T>(
         timeout: u64,
         callback: StateCallback<crate::Result<T>>,
-        status: Sender<crate::StatusUpdate>,
+        _status: Sender<crate::StatusUpdate>,
         new_device_cb: F,
     ) -> crate::Result<Self>
     where
@@ -31,7 +31,7 @@ impl Transaction {
         T: 'static,
     {
         // Just to silence "unused"-warnings
-        let mut device_selector = DeviceSelector::run(status);
+        let mut device_selector = DeviceSelector::run();
         let _ = DeviceSelectorEvent::DevicesAdded(vec![]);
         let _ = DeviceSelectorEvent::DeviceRemoved(PathBuf::new());
         let _ = device_selector.clone_sender();
