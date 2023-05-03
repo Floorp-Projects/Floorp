@@ -14,6 +14,9 @@
 #include "mozilla/WindowsVersion.h"
 #include "nsDebug.h"
 #include "nsString.h"
+#ifdef MOZ_MEMORY
+#  include "mozmemory_utils.h"
+#endif
 
 namespace {
 // NtQuerySection is an internal (but believed to be stable) API and the
@@ -82,6 +85,71 @@ bool SharedMemory::IsHandleValid(const SharedMemoryHandle& handle) {
 // static
 SharedMemoryHandle SharedMemory::NULLHandle() { return nullptr; }
 
+// Wrapper around CreateFileMappingW for pagefile-backed regions. When out of
+// memory, may attempt to stall and retry rather than returning immediately, in
+// hopes that the page file is about to be expanded by Windows. (bug 1822383,
+// bug 1716727)
+//
+// This method is largely a copy of the MozVirtualAlloc method from
+// mozjemalloc.cpp, which implements this strategy for VirtualAlloc calls,
+// except re-purposed to handle CreateFileMapping.
+static HANDLE MozCreateFileMappingW(
+    LPSECURITY_ATTRIBUTES lpFileMappingAttributes, DWORD flProtect,
+    DWORD dwMaximumSizeHigh, DWORD dwMaximumSizeLow, LPCWSTR lpName) {
+#ifdef MOZ_MEMORY
+  constexpr auto IsOOMError = [] {
+    return ::GetLastError() == ERROR_COMMITMENT_LIMIT;
+  };
+
+  {
+    HANDLE handle = ::CreateFileMappingW(
+        INVALID_HANDLE_VALUE, lpFileMappingAttributes, flProtect,
+        dwMaximumSizeHigh, dwMaximumSizeLow, lpName);
+    if (MOZ_LIKELY(handle)) {
+      MOZ_DIAGNOSTIC_ASSERT(handle != INVALID_HANDLE_VALUE,
+                            "::CreateFileMapping should return NULL, not "
+                            "INVALID_HANDLE_VALUE, on failure");
+      return handle;
+    }
+
+    // We can't do anything for errors other than OOM.
+    if (!IsOOMError()) {
+      return nullptr;
+    }
+  }
+
+  // Retry as many times as desired (possibly zero).
+  const mozilla::StallSpecs stallSpecs = mozilla::GetAllocatorStallSpecs();
+
+  const auto ret =
+      stallSpecs.StallAndRetry(&::Sleep, [&]() -> std::optional<HANDLE> {
+        HANDLE handle = ::CreateFileMappingW(
+            INVALID_HANDLE_VALUE, lpFileMappingAttributes, flProtect,
+            dwMaximumSizeHigh, dwMaximumSizeLow, lpName);
+
+        if (handle) {
+          MOZ_DIAGNOSTIC_ASSERT(handle != INVALID_HANDLE_VALUE,
+                                "::CreateFileMapping should return NULL, not "
+                                "INVALID_HANDLE_VALUE, on failure");
+          return handle;
+        }
+
+        // Failure for some reason other than OOM.
+        if (!IsOOMError()) {
+          return nullptr;
+        }
+
+        return std::nullopt;
+      });
+
+  return ret.value_or(nullptr);
+#else
+  return ::CreateFileMappingW(INVALID_HANDLE_VALUE, lpFileMappingAttributes,
+                              flProtect, dwMaximumSizeHigh, dwMaximumSizeLow,
+                              lpName);
+#endif
+}
+
 bool SharedMemory::CreateInternal(size_t size, bool freezeable) {
   DCHECK(!mapped_file_);
   read_only_ = false;
@@ -122,9 +190,9 @@ bool SharedMemory::CreateInternal(size_t size, bool freezeable) {
     }
   }
 
-  mapped_file_.reset(CreateFileMapping(
-      INVALID_HANDLE_VALUE, psa, PAGE_READWRITE, 0, static_cast<DWORD>(size),
-      name.IsEmpty() ? nullptr : name.get()));
+  mapped_file_.reset(
+      MozCreateFileMappingW(psa, PAGE_READWRITE, 0, static_cast<DWORD>(size),
+                            name.IsEmpty() ? nullptr : name.get()));
   if (!mapped_file_) return false;
 
   max_size_ = size;
