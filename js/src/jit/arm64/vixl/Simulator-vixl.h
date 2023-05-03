@@ -1,4 +1,4 @@
-// Copyright 2015, ARM Limited
+// Copyright 2015, VIXL authors
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -651,8 +651,19 @@ class Simulator : public DecoderVisitor {
   void set_reg(unsigned code, T value,
                RegLogMode log_mode = LogRegWrites,
                Reg31Mode r31mode = Reg31IsZeroRegister) {
-    VIXL_STATIC_ASSERT((sizeof(T) == kWRegSizeInBytes) ||
-                       (sizeof(T) == kXRegSizeInBytes));
+    if (sizeof(T) < kWRegSizeInBytes) {
+      // We use a C-style cast on purpose here.
+      // Since we do not have access to 'constepxr if', the casts in this `if`
+      // must be valid even if we know the code will never be executed, in
+      // particular when `T` is a pointer type.
+      int64_t tmp_64bit = (int64_t)value;
+      int32_t tmp_32bit = static_cast<int32_t>(tmp_64bit);
+      set_reg<int32_t>(code, tmp_32bit, log_mode, r31mode);
+      return;
+    }
+
+    VIXL_ASSERT((sizeof(T) == kWRegSizeInBytes) ||
+                (sizeof(T) == kXRegSizeInBytes));
     VIXL_ASSERT(code < kNumberOfRegisters);
 
     if ((code == 31) && (r31mode == Reg31IsZeroRegister)) {
@@ -1159,6 +1170,16 @@ class Simulator : public DecoderVisitor {
                        int64_t offset,
                        AddrMode addrmode);
   void LoadStorePairHelper(const Instruction* instr, AddrMode addrmode);
+  template <typename T>
+  void CompareAndSwapHelper(const Instruction* instr);
+  template <typename T>
+  void CompareAndSwapPairHelper(const Instruction* instr);
+  template <typename T>
+  void AtomicMemorySimpleHelper(const Instruction* instr);
+  template <typename T>
+  void AtomicMemorySwapHelper(const Instruction* instr);
+  template <typename T>
+  void LoadAcquireRCpcHelper(const Instruction* instr);
   uintptr_t AddressModeHelper(unsigned addr_reg,
                               int64_t offset,
                               AddrMode addrmode);
