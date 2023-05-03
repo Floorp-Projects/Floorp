@@ -8,10 +8,7 @@ WASM_SOURCES += [
     "/third_party/rlbox_wasm2c_sandbox/c_src/wasm2c_sandbox_wrapper.c",
 ]
 
-LOCAL_INCLUDES += [
-    "/third_party/simde/",
-    "/third_party/wasm2c/wasm2c/",
-]
+LOCAL_INCLUDES += ["/third_party/wasm2c/wasm2c/"]
 
 EXPORTS += [
     "/third_party/wasm2c/wasm2c/wasm-rt.h",
@@ -40,8 +37,6 @@ DEFINES["WASM_RT_USE_STACK_DEPTH_COUNT"] = 0
 # fails inside the sandbox. This information is used to annotate crash reports.
 DEFINES["WASM_RT_GROW_FAILED_HANDLER"] = "moz_wasm2c_memgrow_failed"
 
-# Enable SIMD enhancements
-DEFINES["WASM_RT_ENABLE_SIMD"] = 1
 
 FINAL_LIBRARY = "xul"
 
