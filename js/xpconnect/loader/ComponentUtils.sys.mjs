@@ -9,11 +9,9 @@
  * loader.
  */
 
-var EXPORTED_SYMBOLS = ["ComponentUtils"];
-
 const nsIFactoryQI = ChromeUtils.generateQI(["nsIFactory"]);
 
-var ComponentUtils = {
+export var ComponentUtils = {
   /**
    * Generates a singleton nsIFactory implementation that can be used as
    * an argument to nsIComponentRegistrar.registerFactory.

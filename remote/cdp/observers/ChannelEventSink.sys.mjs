@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { ComponentUtils } = ChromeUtils.import(
-  "resource://gre/modules/ComponentUtils.jsm"
-);
+import { ComponentUtils } from "resource://gre/modules/ComponentUtils.sys.mjs";
 
 const Cm = Components.manager;
 
