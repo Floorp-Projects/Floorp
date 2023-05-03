@@ -567,12 +567,9 @@ bool HasNativeElementPure(JSContext* cx, NativeObject* obj, int32_t index,
 bool ObjectHasGetterSetterPure(JSContext* cx, JSObject* objArg, jsid id,
                                GetterSetter* getterSetter);
 
+template <bool Cached>
 bool SetElementMegamorphic(JSContext* cx, HandleObject obj, HandleValue index,
                            HandleValue value, bool strict);
-
-bool SetElementMegamorphicCached(JSContext* cx, HandleObject obj,
-                                 HandleValue index, HandleValue value,
-                                 bool strict);
 
 template <bool Cached>
 bool SetPropertyMegamorphic(JSContext* cx, HandleObject obj, HandleId id,
