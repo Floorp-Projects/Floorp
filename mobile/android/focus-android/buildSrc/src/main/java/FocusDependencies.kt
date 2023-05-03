@@ -66,7 +66,7 @@ object FocusVersions {
     object ThirdParty {
         const val leakcanary = "2.10"
         const val osslicenses_plugin = "0.10.4"
-        const val sentry = "6.17.0"
+        const val sentry = "6.18.1"
     }
 
     // Workaround for a Gradle parsing bug that prevents using nested objects directly in Gradle files.
