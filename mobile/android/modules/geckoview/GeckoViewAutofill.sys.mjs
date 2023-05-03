@@ -1,13 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-const { GeckoViewUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/GeckoViewUtils.sys.mjs"
-);
-
-var EXPORTED_SYMBOLS = ["gAutofillManager"];
+import { GeckoViewUtils } from "resource://gre/modules/GeckoViewUtils.sys.mjs";
 
 class Autofill {
   constructor(sessionId, eventDispatcher) {
@@ -96,6 +91,6 @@ class AutofillManager {
   }
 }
 
-var gAutofillManager = new AutofillManager();
+export var gAutofillManager = new AutofillManager();
 
 const { debug, warn } = GeckoViewUtils.initLogging("Autofill");

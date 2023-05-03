@@ -8,18 +8,11 @@ const { GeckoViewActorChild } = ChromeUtils.importESModule(
   "resource://gre/modules/GeckoViewActorChild.sys.mjs"
 );
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  MediaUtils: "resource://gre/modules/MediaUtils.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  MediaUtils: "resource://gre/modules/MediaUtils.jsm",
 });
 
 var EXPORTED_SYMBOLS = ["MediaControlDelegateChild"];

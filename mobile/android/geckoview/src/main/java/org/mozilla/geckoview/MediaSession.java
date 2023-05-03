@@ -310,7 +310,7 @@ public class MediaSession {
     }
 
     /* package */ static @NonNull ElementMetadata fromBundle(final GeckoBundle bundle) {
-      // Sync with MediaUtils.jsm.
+      // Sync with MediaUtils.sys.mjs.
       return new ElementMetadata(
           bundle.getString("src"),
           bundle.getDouble("duration", 0.0),

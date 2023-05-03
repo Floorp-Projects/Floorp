@@ -13,7 +13,7 @@ EXTRA_JS_MODULES += [
     "GeckoViewActorManager.sys.mjs",
     "GeckoViewActorParent.sys.mjs",
     "GeckoViewAutocomplete.jsm",
-    "GeckoViewAutofill.jsm",
+    "GeckoViewAutofill.sys.mjs",
     "GeckoViewChildModule.jsm",
     "GeckoViewConsole.sys.mjs",
     "GeckoViewContent.sys.mjs",
@@ -35,6 +35,6 @@ EXTRA_JS_MODULES += [
     "GeckoViewUtils.sys.mjs",
     "GeckoViewWebExtension.sys.mjs",
     "LoadURIDelegate.sys.mjs",
-    "MediaUtils.jsm",
+    "MediaUtils.sys.mjs",
     "Messaging.sys.mjs",
 ]
