@@ -17,14 +17,11 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AddressResult: "resource://autofill/ProfileAutoCompleteResult.sys.mjs",
+  ComponentUtils: "resource://gre/modules/ComponentUtils.sys.mjs",
   CreditCardResult: "resource://autofill/ProfileAutoCompleteResult.sys.mjs",
   FormAutofill: "resource://autofill/FormAutofill.sys.mjs",
   FormAutofillUtils: "resource://gre/modules/shared/FormAutofillUtils.sys.mjs",
   InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ComponentUtils: "resource://gre/modules/ComponentUtils.jsm",
 });
 
 const autocompleteController = Cc[
