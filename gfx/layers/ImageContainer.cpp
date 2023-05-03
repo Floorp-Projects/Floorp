@@ -235,6 +235,12 @@ Maybe<SurfaceDescriptor> Image::GetDescFromTexClient(
   return Some(ret);
 }
 
+already_AddRefed<ImageContainerListener>
+ImageContainer::GetImageContainerListener() const {
+  MOZ_ASSERT(InImageBridgeChildThread());
+  return do_AddRef(mNotifyCompositeListener);
+}
+
 RefPtr<PlanarYCbCrImage> ImageContainer::CreatePlanarYCbCrImage() {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   EnsureImageClient();
