@@ -195,7 +195,7 @@ void MacroAssemblerCompat::handleFailureWithHandlerTail(Label* profilerExitTail,
   Mov(x0, PseudoStackPointer64);
 
   // Call the handler.
-  using Fn = void (*)(ResumeFromException * rfe);
+  using Fn = void (*)(ResumeFromException* rfe);
   asMasm().setupUnalignedABICall(r1);
   asMasm().passABIArg(r0);
   asMasm().callWithABI<Fn, HandleException>(
@@ -2308,6 +2308,21 @@ static void StoreExclusive(MacroAssembler& masm, Scalar::Type type,
   }
 }
 
+static bool HasAtomicInstructions(MacroAssembler& masm) {
+  return masm.asVIXL().GetCPUFeatures()->Has(vixl::CPUFeatures::kAtomics);
+}
+
+static inline bool SupportedAtomicInstructionOperands(Scalar::Type type,
+                                                      Width targetWidth) {
+  if (targetWidth == Width::_32) {
+    return byteSize(type) <= 4;
+  }
+  if (targetWidth == Width::_64) {
+    return byteSize(type) == 8;
+  }
+  return false;
+}
+
 template <typename T>
 static void CompareExchange(MacroAssembler& masm,
                             const wasm::MemoryAccessDesc* access,
@@ -2316,15 +2331,46 @@ static void CompareExchange(MacroAssembler& masm,
                             Register oldval, Register newval, Register output) {
   MOZ_ASSERT(oldval != output && newval != output);
 
-  Label again;
-  Label done;
-
   vixl::UseScratchRegisterScope temps(&masm);
 
-  Register scratch2 = temps.AcquireX().asUnsized();
-  MemOperand ptr = ComputePointerForAtomic(masm, mem, scratch2);
+  Register ptrScratch = temps.AcquireX().asUnsized();
+  MemOperand ptr = ComputePointerForAtomic(masm, mem, ptrScratch);
 
   MOZ_ASSERT(ptr.base().asUnsized() != output);
+
+  if (HasAtomicInstructions(masm) &&
+      SupportedAtomicInstructionOperands(type, targetWidth)) {
+    masm.Mov(X(output), X(oldval));
+    // Capal is using same atomic mechanism as Ldxr/Stxr, and
+    // consider it is the same for "Inner Shareable" domain.
+    // Not updated gen_cmpxchg in GenerateAtomicOperations.py.
+    masm.memoryBarrierBefore(sync);
+    if (access) {
+      masm.append(*access, masm.currentOffset());
+    }
+    switch (byteSize(type)) {
+      case 1:
+        masm.Casalb(R(output, targetWidth), R(newval, targetWidth), ptr);
+        break;
+      case 2:
+        masm.Casalh(R(output, targetWidth), R(newval, targetWidth), ptr);
+        break;
+      case 4:
+      case 8:
+        masm.Casal(R(output, targetWidth), R(newval, targetWidth), ptr);
+        break;
+      default:
+        MOZ_CRASH("CompareExchange unsupported type");
+    }
+    masm.memoryBarrierAfter(sync);
+    SignOrZeroExtend(masm, type, targetWidth, output, output);
+    return;
+  }
+
+  // The target doesn't support atomics, so generate a LL-SC loop. This requires
+  // only AArch64 v8.0.
+  Label again;
+  Label done;
 
   // NOTE: the generated code must match the assembly code in gen_cmpxchg in
   // GenerateAtomicOperations.py
@@ -2352,12 +2398,42 @@ static void AtomicExchange(MacroAssembler& masm,
                            Register value, Register output) {
   MOZ_ASSERT(value != output);
 
-  Label again;
-
   vixl::UseScratchRegisterScope temps(&masm);
 
-  Register scratch2 = temps.AcquireX().asUnsized();
-  MemOperand ptr = ComputePointerForAtomic(masm, mem, scratch2);
+  Register ptrScratch = temps.AcquireX().asUnsized();
+  MemOperand ptr = ComputePointerForAtomic(masm, mem, ptrScratch);
+
+  if (HasAtomicInstructions(masm) &&
+      SupportedAtomicInstructionOperands(type, targetWidth)) {
+    // Swpal is using same atomic mechanism as Ldxr/Stxr, and
+    // consider it is the same for "Inner Shareable" domain.
+    // Not updated gen_exchange in GenerateAtomicOperations.py.
+    masm.memoryBarrierBefore(sync);
+    if (access) {
+      masm.append(*access, masm.currentOffset());
+    }
+    switch (byteSize(type)) {
+      case 1:
+        masm.Swpalb(R(value, targetWidth), R(output, targetWidth), ptr);
+        break;
+      case 2:
+        masm.Swpalh(R(value, targetWidth), R(output, targetWidth), ptr);
+        break;
+      case 4:
+      case 8:
+        masm.Swpal(R(value, targetWidth), R(output, targetWidth), ptr);
+        break;
+      default:
+        MOZ_CRASH("AtomicExchange unsupported type");
+    }
+    masm.memoryBarrierAfter(sync);
+    SignOrZeroExtend(masm, type, targetWidth, output, output);
+    return;
+  }
+
+  // The target doesn't support atomics, so generate a LL-SC loop. This requires
+  // only AArch64 v8.0.
+  Label again;
 
   // NOTE: the generated code must match the assembly code in gen_exchange in
   // GenerateAtomicOperations.py
@@ -2384,12 +2460,85 @@ static void AtomicFetchOp(MacroAssembler& masm,
   MOZ_ASSERT(value != temp);
   MOZ_ASSERT_IF(wantResult, output != temp);
 
-  Label again;
-
   vixl::UseScratchRegisterScope temps(&masm);
 
-  Register scratch2 = temps.AcquireX().asUnsized();
-  MemOperand ptr = ComputePointerForAtomic(masm, mem, scratch2);
+  Register ptrScratch = temps.AcquireX().asUnsized();
+  MemOperand ptr = ComputePointerForAtomic(masm, mem, ptrScratch);
+
+  if (HasAtomicInstructions(masm) &&
+      SupportedAtomicInstructionOperands(type, targetWidth) &&
+      !isFloatingType(type)) {
+    // LdXXXal/StXXXl is using same atomic mechanism as Ldxr/Stxr, and
+    // consider it is the same for "Inner Shareable" domain.
+    // Not updated gen_fetchop in GenerateAtomicOperations.py.
+    masm.memoryBarrierBefore(sync);
+
+#define FETCH_OP_CASE(op, arg)                                              \
+  if (access) {                                                             \
+    masm.append(*access, masm.currentOffset());                             \
+  }                                                                         \
+  switch (byteSize(type)) {                                                 \
+    case 1:                                                                 \
+      if (wantResult) {                                                     \
+        masm.Ld##op##alb(R(arg, targetWidth), R(output, targetWidth), ptr); \
+      } else {                                                              \
+        masm.St##op##lb(R(arg, targetWidth), ptr);                          \
+      }                                                                     \
+      break;                                                                \
+    case 2:                                                                 \
+      if (wantResult) {                                                     \
+        masm.Ld##op##alh(R(arg, targetWidth), R(output, targetWidth), ptr); \
+      } else {                                                              \
+        masm.St##op##lh(R(arg, targetWidth), ptr);                          \
+      }                                                                     \
+      break;                                                                \
+    case 4:                                                                 \
+    case 8:                                                                 \
+      if (wantResult) {                                                     \
+        masm.Ld##op##al(R(arg, targetWidth), R(output, targetWidth), ptr);  \
+      } else {                                                              \
+        masm.St##op##l(R(arg, targetWidth), ptr);                           \
+      }                                                                     \
+      break;                                                                \
+    default:                                                                \
+      MOZ_CRASH("AtomicFetchOp unsupported type");                          \
+  }
+
+    switch (op) {
+      case AtomicFetchAddOp:
+        FETCH_OP_CASE(add, value);
+        break;
+      case AtomicFetchSubOp: {
+        Register scratch = temps.AcquireX().asUnsized();
+        masm.Neg(X(scratch), X(value));
+        FETCH_OP_CASE(add, scratch);
+        break;
+      }
+      case AtomicFetchAndOp: {
+        Register scratch = temps.AcquireX().asUnsized();
+        masm.Eor(X(scratch), X(value), Operand(~0));
+        FETCH_OP_CASE(clr, scratch);
+        break;
+      }
+      case AtomicFetchOrOp:
+        FETCH_OP_CASE(set, value);
+        break;
+      case AtomicFetchXorOp:
+        FETCH_OP_CASE(eor, value);
+        break;
+    }
+    masm.memoryBarrierAfter(sync);
+    if (wantResult) {
+      SignOrZeroExtend(masm, type, targetWidth, output, output);
+    }
+    return;
+  }
+
+#undef FETCH_OP_CASE
+
+  // The target doesn't support atomics, so generate a LL-SC loop. This requires
+  // only AArch64 v8.0.
+  Label again;
 
   // NOTE: the generated code must match the assembly code in gen_fetchop in
   // GenerateAtomicOperations.py
