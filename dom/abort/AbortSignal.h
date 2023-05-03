@@ -41,8 +41,7 @@ class AbortSignal : public DOMEventTargetHelper,
   IMPL_EVENT_HANDLER(abort);
 
   static already_AddRefed<AbortSignal> Abort(GlobalObject& aGlobal,
-                                             JS::Handle<JS::Value> aReason,
-                                             ErrorResult& aRv);
+                                             JS::Handle<JS::Value> aReason);
 
   static already_AddRefed<AbortSignal> Timeout(GlobalObject& aGlobal,
                                                uint64_t aMilliseconds,

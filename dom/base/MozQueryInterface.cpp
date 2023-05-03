@@ -29,8 +29,7 @@ static int CompareIIDs(const nsIID& aA, const nsIID& aB) {
 
 /* static */
 MozQueryInterface* ChromeUtils::GenerateQI(
-    const GlobalObject& aGlobal, const Sequence<JS::Value>& aInterfaces,
-    ErrorResult& aRv) {
+    const GlobalObject& aGlobal, const Sequence<JS::Value>& aInterfaces) {
   JSContext* cx = aGlobal.Context();
 
   nsTArray<nsIID> ifaces;

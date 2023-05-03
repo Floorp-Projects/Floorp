@@ -1344,7 +1344,7 @@ class Document : public nsINode,
 
   already_AddRefed<AnonymousContent> InsertAnonymousContent(
       Element& aElement, bool aForce, ErrorResult& aError);
-  void RemoveAnonymousContent(AnonymousContent& aContent, ErrorResult& aError);
+  void RemoveAnonymousContent(AnonymousContent& aContent);
   /**
    * If aNode is a descendant of anonymous content inserted by
    * InsertAnonymousContent, this method returns the root element of the
