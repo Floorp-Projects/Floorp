@@ -7,12 +7,9 @@ import socket
 import sys
 
 PYTHON = sys.executable
-PYTHON_DLL = "c:/mozilla-build/python27/python27.dll"
 VENV_PATH = os.path.join(os.getcwd(), "build/venv")
 
-PYWIN32 = "pypiwin32==219"
-if sys.version_info > (3, 0):
-    PYWIN32 = "pywin32==300"
+PYWIN32 = "pywin32==306"
 
 config = {
     "log_name": "raptor",
@@ -21,10 +18,6 @@ config = {
     "virtualenv_modules": [PYWIN32, "raptor", "mozinstall"],
     "exes": {
         "python": PYTHON,
-        "easy_install": [
-            "%s/scripts/python" % VENV_PATH,
-            "%s/scripts/easy_install-2.7-script.py" % VENV_PATH,
-        ],
         "mozinstall": [
             "%s/scripts/python" % VENV_PATH,
             "%s/scripts/mozinstall-script.py" % VENV_PATH,
