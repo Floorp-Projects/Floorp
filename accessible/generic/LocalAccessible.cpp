@@ -3644,6 +3644,17 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     } else if (aUpdateType != CacheUpdateType::Initial) {
       fields->SetAttribute(nsGkAtoms::position, DeleteEntry());
     }
+
+    if (frame) {
+      nsAutoCString overflow;
+      frame->Style()->GetComputedPropertyValue(eCSSProperty_overflow, overflow);
+      RefPtr<nsAtom> overflowAtom = NS_Atomize(overflow);
+      if (overflowAtom == nsGkAtoms::hidden) {
+        fields->SetAttribute(nsGkAtoms::overflow, nsGkAtoms::hidden);
+      } else if (aUpdateType != CacheUpdateType::Initial) {
+        fields->SetAttribute(nsGkAtoms::overflow, DeleteEntry());
+      }
+    }
   }
 
   if (aCacheDomain & CacheDomain::Table) {
@@ -3847,6 +3858,19 @@ void LocalAccessible::MaybeQueueCacheUpdateForStyleChanges() {
 
   if (nsIFrame* frame = GetFrame()) {
     const ComputedStyle* newStyle = frame->Style();
+
+    nsAutoCString oldOverflow, newOverflow;
+    mOldComputedStyle->GetComputedPropertyValue(eCSSProperty_overflow,
+                                                oldOverflow);
+    newStyle->GetComputedPropertyValue(eCSSProperty_overflow, newOverflow);
+
+    if (oldOverflow != newOverflow) {
+      RefPtr<nsAtom> oldAtom = NS_Atomize(oldOverflow);
+      RefPtr<nsAtom> newAtom = NS_Atomize(newOverflow);
+      if (oldAtom == nsGkAtoms::hidden || newAtom == nsGkAtoms::hidden) {
+        mDoc->QueueCacheUpdate(this, CacheDomain::Style);
+      }
+    }
 
     nsAutoCString oldDisplay, newDisplay;
     mOldComputedStyle->GetComputedPropertyValue(eCSSProperty_display,
