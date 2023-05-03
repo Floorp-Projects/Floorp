@@ -118,7 +118,7 @@ async function verifyTelemetryForProcess(process, codecNames, extraKey = "") {
   // But we dont care really we just want to ensure 0 on RDD, Content and others
   // in the wild.[${codecName}]
   codecNames.forEach(codecName => {
-    Assert.greaterOrEqual(
+    Assert.equal(
       telemetry[MEDIA_AUDIO_PROCESS][`${process},${codecName}${extraKey}`],
       1,
       `${MEDIA_AUDIO_PROCESS} must have the correct value (${process}, ${codecName}).`
