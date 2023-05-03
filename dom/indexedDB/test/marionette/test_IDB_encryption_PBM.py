@@ -9,7 +9,6 @@ from marionette_driver import Wait
 from marionette_harness import MarionetteTestCase
 
 INDEXED_DB_PBM_PREF = "dom.indexedDB.privateBrowsing.enabled"
-QM_TESTING_PREF = "dom.quotaManager.testing"
 
 
 class IDBEncryptionPBM(MarionetteTestCase):
@@ -27,28 +26,20 @@ class IDBEncryptionPBM(MarionetteTestCase):
         self.IDBStoreName = "IDBTestStore"
         self.IDBVersion = 1
         self.IDBValue = "test_IDB_Encryption_PBM"
-        self.idbStoragePath = None
 
         self.profilePath = self.marionette.instance.profile.profile
 
-        self.defaultIDBPrefValue = self.marionette.get_pref(INDEXED_DB_PBM_PREF)
+        self.defaultPrefValue = self.marionette.get_pref(INDEXED_DB_PBM_PREF)
         self.marionette.set_pref(INDEXED_DB_PBM_PREF, True)
 
-        self.defaultQMPrefValue = self.marionette.get_pref(QM_TESTING_PREF)
-        self.marionette.set_pref(QM_TESTING_PREF, True)
-
         # Navigate by opening a new private window
-        pbmWindowHandle = self.marionette.open(type="window", private=True)["handle"]
-        self.marionette.switch_to_window(pbmWindowHandle)
-        self.marionette.navigate(
-            self.marionette.absolute_url("dom/indexedDB/basicIDB_PBM.html")
-        )
+        self.navigate_to_private_window()
+
+        self.idbStoragePath = self.getIDBStoragePath()
 
     def tearDown(self):
         super(IDBEncryptionPBM, self).setUp()
-
-        self.marionette.set_pref(INDEXED_DB_PBM_PREF, self.defaultIDBPrefValue)
-        self.marionette.set_pref(QM_TESTING_PREF, self.defaultQMPrefValue)
+        self.marionette.set_pref(INDEXED_DB_PBM_PREF, self.defaultPrefValue)
 
         # closes the new private window we opened in the setUp and referred by 'pbmWindowHandle'
         self.marionette.close()
@@ -109,57 +100,54 @@ class IDBEncryptionPBM(MarionetteTestCase):
 
         self.assertFalse(foundRawValue, "sqlite data did not get encrypted")
 
+    def test_purge_private_origin_restart(self):
+        self.marionette.execute_script(
+            """
+                const [idb, store, key, value] = arguments;
+                window.wrappedJSObject.addDataIntoIDB(idb, store, key, value);
+            """,
+            script_args=(self.IDBName, self.IDBStoreName, "textKey", self.IDBValue),
+        )
+
+        self.marionette.restart(in_app=True)
+        self.ensureInvariantHolds(lambda _: not os.path.exists(self.idbStoragePath))
+
+    def purge_private_origin_session_end(self):
+        # Bug 1821027: test disabled
+        self.marionette.execute_script(
+            """
+                const [idb, store, key, value] = arguments;
+                window.wrappedJSObject.addDataIntoIDB(idb, store, key, value);
+            """,
+            script_args=(self.IDBName, self.IDBStoreName, "textKey", self.IDBValue),
+        )
+
+        self.marionette.close()
+        try:
+            self.ensureInvariantHolds(lambda _: not os.path.exists(self.idbStoragePath))
+        finally:
+            # revert back to the original state
+            self.marionette.start_session()
+            self.navigate_to_private_window()
+
+    def navigate_to_private_window(self):
+        # Navigate by opening a new private window
+        pbmWindowHandle = self.marionette.open(type="window", private=True)["handle"]
+        self.marionette.switch_to_window(pbmWindowHandle)
+
+        self.marionette.navigate(
+            self.marionette.absolute_url("dom/indexedDB/basicIDB_PBM.html")
+        )
+
     def getIDBStoragePath(self):
-        if self.idbStoragePath is not None:
-            return self.idbStoragePath
-
-        fullOriginMetadata = self.getFullOriginMetadata(
-            self.marionette.absolute_url("")[:-1] + "^privateBrowsingId=1"
+        origin = (
+            self.marionette.absolute_url("")[:-1].replace(":", "+").replace("/", "+")
         )
 
-        storageOrigin = fullOriginMetadata["storageOrigin"]
-        sanitizedStorageOrigin = storageOrigin.replace(":", "+").replace("/", "+")
+        # origin directory under storage is suffice'd with '^privateBrowsingId=1' for PBM
+        originDir = origin + "^privateBrowsingId=1"
 
-        storagePath = os.path.join(
-            self.profilePath, "storage", "private", sanitizedStorageOrigin, "idb"
-        )
-
-        self.idbStoragePath = storagePath
-
-        print("idb origin directory = " + self.idbStoragePath)
-        return self.idbStoragePath
-
-    def getFullOriginMetadata(self, origin):
-        with self.marionette.using_context("chrome"):
-            res = self.marionette.execute_async_script(
-                """
-                    const [url, resolve] = arguments;
-
-                    function getOrigin() {
-                        return new Promise((resolve, reject) => {
-                            let context = "private"
-                            let principal = Services.scriptSecurityManager.
-                                createContentPrincipalFromOrigin(url);
-
-                            let qms = Services.qms;
-                            let req = qms.getFullOriginMetadata(context, principal);
-                            req.callback = () => {
-                                if (req.resultCode != 0) reject("Error!");
-                                resolve(req.result);
-                            };
-                        });
-                    }
-
-                    return getOrigin()
-                        .then((result) => resolve(result))
-                        .catch((error) => resolve(null));
-                """,
-                script_args=(origin,),
-                new_sandbox=False,
-            )
-
-            assert res is not None
-            return res
+        return os.path.join(self.profilePath, "storage", "default", originDir, "idb")
 
     def findDirObj(self, path, pattern, isFile):
         for obj in os.scandir(path):
@@ -172,7 +160,8 @@ class IDBEncryptionPBM(MarionetteTestCase):
         checks if .sqlite-wal has been cleared or not.
         returns False if idbStoragePath does not exist
         """
-        if not os.path.exists(self.getIDBStoragePath()):
+
+        if not os.path.exists(self.idbStoragePath):
             return False
         return self.findDirObj(self.idbStoragePath, ".sqlite-wal", True) is None
 
@@ -180,5 +169,5 @@ class IDBEncryptionPBM(MarionetteTestCase):
         maxWaitTime = 60
         Wait(self.marionette, timeout=maxWaitTime).until(
             op,
-            message=f"operation did not yield success even after waiting {maxWaitTime}s time",
+            message=f"operation did not yield success even after waiting {maxWaitTime} time",
         )
