@@ -64,6 +64,12 @@ const MR_ABOUT_WELCOME_DEFAULT = {
             navigate: "actionResult",
             data: {
               entrypoint: "fx-device-migration-onboarding",
+              extraParams: {
+                utm_content: "migration-onboarding",
+                utm_source: "fx-new-device-sync",
+                utm_medium: "firefox-desktop",
+                utm_campaign: "migration",
+              },
             },
           },
         },
