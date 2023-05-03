@@ -2,13 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 var gManagers = new WeakMap();
 
 const kPaletteId = "customization-palette";
-
-var EXPORTED_SYMBOLS = ["DragPositionManager"];
 
 function AreaPositionManager(aContainer) {
   // Caching the direction and bounds of the container for quick access later:
@@ -292,7 +288,7 @@ AreaPositionManager.prototype = {
   },
 };
 
-var DragPositionManager = {
+export var DragPositionManager = {
   start(aWindow) {
     let areas = [aWindow.document.getElementById(kPaletteId)];
     for (let areaNode of areas) {

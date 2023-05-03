@@ -7,13 +7,7 @@
  * and ensures persisted widths are updated if the search bar is removed.
  */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["SearchWidgetTracker"];
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
@@ -31,7 +25,7 @@ ChromeUtils.defineModuleGetter(
 const WIDGET_ID = "search-container";
 const PREF_NAME = "browser.search.widget.inNavBar";
 
-const SearchWidgetTracker = {
+export const SearchWidgetTracker = {
   init() {
     this.onWidgetReset = this.onWidgetUndoMove = node => {
       if (node.id == WIDGET_ID) {

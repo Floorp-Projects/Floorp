@@ -24,7 +24,7 @@ declare namespace MockedExports {
     Services: typeof import("Services");
     "resource://gre/modules/AppConstants.sys.mjs": typeof import("resource://gre/modules/AppConstants.sys.mjs");
     "resource:///modules/CustomizableUI.jsm": typeof import("resource:///modules/CustomizableUI.jsm");
-    "resource:///modules/CustomizableWidgets.jsm": typeof import("resource:///modules/CustomizableWidgets.jsm");
+    "resource:///modules/CustomizableWidgets.sys.mjs": typeof import("resource:///modules/CustomizableWidgets.sys.mjs");
     "resource://devtools/shared/loader/Loader.sys.mjs": typeof import("resource://devtools/shared/loader/Loader.sys.mjs");
     "resource://devtools/client/performance-new/shared/background.jsm.js": typeof import("resource://devtools/client/performance-new/shared/background.jsm.js");
     "resource://devtools/client/performance-new/shared/symbolication.jsm.js": typeof import("resource://devtools/client/performance-new/shared/symbolication.jsm.js");
@@ -234,7 +234,7 @@ declare namespace MockedExports {
 
   // TS-TODO
   const CustomizableUIJSM: any;
-  const CustomizableWidgetsJSM: any;
+  const CustomizableWidgetsSYSMJS: any;
   const PanelMultiViewJSM: any;
 
   const LoaderESM: {
@@ -352,8 +352,8 @@ declare module "resource:///modules/CustomizableUI.jsm" {
   export = MockedExports.CustomizableUIJSM;
 }
 
-declare module "resource:///modules/CustomizableWidgets.jsm" {
-  export = MockedExports.CustomizableWidgetsJSM;
+declare module "resource:///modules/CustomizableWidgets.sys.mjs" {
+  export = MockedExports.CustomizableWidgetsSYSMJS;
 }
 
 declare module "resource:///modules/PanelMultiView.jsm" {

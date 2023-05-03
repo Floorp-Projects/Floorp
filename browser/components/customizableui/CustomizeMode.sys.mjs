@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["CustomizeMode"];
-
 const kPrefCustomizationDebug = "browser.uiCustomization.debug";
 const kPaletteId = "customization-palette";
 const kDragDataTypePrefix = "text/toolbarwrapper-id/";
@@ -25,12 +21,8 @@ const kDownloadAutoHidePref = "browser.download.autohideButton";
 const { CustomizableUI } = ChromeUtils.import(
   "resource:///modules/CustomizableUI.jsm"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
@@ -39,20 +31,16 @@ ChromeUtils.defineModuleGetter(
   "AddonManager",
   "resource://gre/modules/AddonManager.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "DragPositionManager",
-  "resource:///modules/DragPositionManager.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  DragPositionManager: "resource:///modules/DragPositionManager.sys.mjs",
+  SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
+  URILoadingHelper: "resource:///modules/URILoadingHelper.sys.mjs",
+});
 ChromeUtils.defineModuleGetter(
   lazy,
   "BrowserUsageTelemetry",
   "resource:///modules/BrowserUsageTelemetry.jsm"
 );
-ChromeUtils.defineESModuleGetters(lazy, {
-  SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
-  URILoadingHelper: "resource:///modules/URILoadingHelper.sys.mjs",
-});
 XPCOMUtils.defineLazyGetter(lazy, "gWidgetsBundle", function() {
   const kUrl =
     "chrome://browser/locale/customizableui/customizableWidgets.properties";
@@ -119,7 +107,7 @@ function unregisterGlobalTab() {
   gTab = null;
 }
 
-function CustomizeMode(aWindow) {
+export function CustomizeMode(aWindow) {
   this.window = aWindow;
   this.document = aWindow.document;
   this.browser = aWindow.gBrowser;
@@ -2970,7 +2958,7 @@ function __dumpDragData(aEvent, caller) {
   let str =
     "Dumping drag data (" +
     (caller ? caller + " in " : "") +
-    "CustomizeMode.jsm) {\n";
+    "CustomizeMode.sys.mjs) {\n";
   str += "  type: " + aEvent.type + "\n";
   for (let el of ["target", "currentTarget", "relatedTarget"]) {
     if (aEvent[el]) {

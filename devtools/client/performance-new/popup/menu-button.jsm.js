@@ -21,7 +21,9 @@ const lazy = createLazyLoaders({
   CustomizableUI: () =>
     ChromeUtils.import("resource:///modules/CustomizableUI.jsm"),
   CustomizableWidgets: () =>
-    ChromeUtils.import("resource:///modules/CustomizableWidgets.jsm"),
+    ChromeUtils.importESModule(
+      "resource:///modules/CustomizableWidgets.sys.mjs"
+    ),
   PopupLogic: () =>
     ChromeUtils.import(
       "resource://devtools/client/performance-new/popup/logic.jsm.js"

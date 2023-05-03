@@ -330,8 +330,8 @@ XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", () => {
 });
 
 XPCOMUtils.defineLazyGetter(this, "gCustomizeMode", () => {
-  let { CustomizeMode } = ChromeUtils.import(
-    "resource:///modules/CustomizeMode.jsm"
+  let { CustomizeMode } = ChromeUtils.importESModule(
+    "resource:///modules/CustomizeMode.sys.mjs"
   );
   return new CustomizeMode(window);
 });
@@ -5343,7 +5343,7 @@ var XULBrowserWindow = {
     button?.setAttribute("disabled", "true");
 
     // Try not to instantiate gCustomizeMode as much as possible,
-    // so don't use CustomizeMode.jsm to check for URI or customizing.
+    // so don't use CustomizeMode.sys.mjs to check for URI or customizing.
     if (
       location == "about:blank" &&
       gBrowser.selectedTab.hasAttribute("customizemode")
