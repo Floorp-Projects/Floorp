@@ -60,6 +60,7 @@
 
 #include "mozilla/AppShutdown.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/Likely.h"
 #include "mozilla/PreXULSkeletonUI.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MathAlgorithms.h"
@@ -2896,19 +2897,20 @@ bool nsWindow::UpdateNonClientMargins(bool aReflowWindow) {
     mNonClientOffset.left = mHorResizeMargin;
     mNonClientOffset.right = mHorResizeMargin;
   } else if (sizeMode == nsSizeMode_Maximized) {
-    // On Windows 10+, we make the entire frame part of the client area.
-    // We leave the default frame sizes for left, right and bottom since
-    // Windows will automagically position the edges "offscreen" for maximized
-    // windows.
+    // On Windows 10+, we make the entire frame part of the client area. We
+    // leave the default frame sizes for left, right and bottom since Windows
+    // will automagically position the edges "offscreen" for maximized windows.
+    //
     // On versions prior to Windows 10, we add padding to the widget to
     // circumvent a bug in DwmDefWindowProc (see
     // nsNativeThemeWin::GetWidgetPadding).  We "undo" that padding in
     // WM_NCCALCSIZE by adding the caption (as well as the sizing frame) to the
     // client area.
+    //
     // The padding is not needed on Win10+ because we handle window buttons
-    // non-natively in the theme.  It also does not work on Win10+ -- it
-    // exposes a new issue where widget edges would sometimes appear to bleed
-    // into other displays (bug 1614218).
+    // non-natively in the theme.  It also does not work on Win10+ -- it exposes
+    // a new issue where widget edges would sometimes appear to bleed into other
+    // displays (bug 1614218).
     int verticalResize = 0;
     if (IsWin10OrLater()) {
       verticalResize =
@@ -3647,7 +3649,153 @@ void nsWindow::CleanupFullscreenTransition() {
   mTransitionWnd = nullptr;
 }
 
+void nsWindow::TryDwmResizeHack() {
+  // The "DWM resize hack", aka the "fullscreen resize hack", is a workaround
+  // for DWM's occasional and not-entirely-predictable failure to update its
+  // internal state when the client area of a window changes without changing
+  // the window size. The effect of this is that DWM will clip the content of
+  // the window to its former client area.
+  //
+  // It is not known under what circumstances the bug will trigger. Windows 11
+  // is known to be required, but many Windows 11 machines do not exhibit the
+  // issue. Even machines that _do_ exhibit it will sometimes not do so when
+  // apparently- irrelevant changes are made to the configuration. (See bug
+  // 1763981.)
+  //
+  // The bug is triggered by Firefox when a maximized window (which has window
+  // decorations) becomes fullscreen (which doesn't). To work around this, if we
+  // think it may occur, we "flicker-resize" the relevant window -- that is, we
+  // reduce its height by 1px, then restore it. This causes DWM to acquire the
+  // new client-area metrics.
+  //
+  // This is admittedly a sledgehammer where a screwdriver should suffice.
+
+  // ---------------------------------------------------------------------------
+
+  // Regardless of preferences or heuristics, only apply the hack if this is the
+  // first time we've entered fullscreen across the entire Firefox session.
+  // (Subsequent transitions to fullscreen, even with different windows, don't
+  // appear to induce the bug.)
+  {
+    // (main thread only; `atomic` not needed)
+    static bool sIsFirstFullscreenEntry = true;
+    bool isFirstFullscreenEntry = sIsFirstFullscreenEntry;
+    sIsFirstFullscreenEntry = false;
+    if (MOZ_LIKELY(!isFirstFullscreenEntry)) {
+      return;
+    }
+    MOZ_LOG(gWindowsLog, LogLevel::Verbose,
+            ("%s: first fullscreen entry", __PRETTY_FUNCTION__));
+  }
+
+  // Check whether to try to apply the DWM resize hack, based on the override
+  // pref and/or some internal heuristics.
+  {
+    const auto hackApplicationHeuristics = [&]() -> bool {
+      // The bug has only been seen under Windows 11. (At time of writing, this
+      // is the latest version of Windows.)
+      if (!IsWin11OrLater()) {
+        return false;
+      }
+
+      KnowsCompositor const* const kc = mWindowRenderer->AsKnowsCompositor();
+      // This should never happen...
+      MOZ_ASSERT(kc);
+      // ... so if it does, we are in uncharted territory: don't apply the hack.
+      if (!kc) {
+        return false;
+      }
+
+      // The bug doesn't occur when we're using a separate compositor window
+      // (since the compositor window always comprises exactly its client area,
+      // with no non-client border).
+      if (kc->GetUseCompositorWnd()) {
+        return false;
+      }
+
+      // Otherwise, apply the hack.
+      return true;
+    };
+
+    // Figure out whether or not we should perform the hack, and -- arguably
+    // more importantly -- log that decision.
+    bool const shouldApplyHack = [&]() {
+      enum Reason : bool { Pref, Heuristics };
+      auto const msg = [&](bool decision, Reason reason) -> bool {
+        MOZ_LOG(gWindowsLog, LogLevel::Verbose,
+                ("%s %s per %s", decision ? "applying" : "skipping",
+                 "DWM resize hack", reason == Pref ? "pref" : "heuristics"));
+        return decision;
+      };
+      switch (StaticPrefs::widget_windows_apply_dwm_resize_hack()) {
+        case 0:
+          return msg(false, Pref);
+        case 1:
+          return msg(true, Pref);
+        default:  // treat all other values as `auto`
+          return msg(hackApplicationHeuristics(), Heuristics);
+      }
+    }();
+
+    if (!shouldApplyHack) {
+      return;
+    }
+  }
+
+  // The DWM bug is believed to involve a race condition: some users have
+  // reported that setting a custom theme or adding unused command-line
+  // parameters sometimes causes the bug to vanish.
+  //
+  // Out of an abundance of caution, we therefore apply the hack in a later
+  // event, rather than inline.
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "nsWindow::TryFullscreenResizeHack", [self = RefPtr(this)]() {
+        HWND const hwnd = self->GetWindowHandle();
+
+        if (self->mFrameState->GetSizeMode() != nsSizeMode_Fullscreen) {
+          MOZ_LOG(gWindowsLog, mozilla::LogLevel::Info,
+                  ("DWM resize hack: window no longer fullscreen; aborting"));
+          return;
+        }
+
+        RECT origRect;
+        if (!::GetWindowRect(hwnd, &origRect)) {
+          MOZ_LOG(gWindowsLog, mozilla::LogLevel::Error,
+                  ("DWM resize hack: could not get window size?!"));
+          return;
+        }
+        LONG const x = origRect.left;
+        LONG const y = origRect.top;
+        LONG const width = origRect.right - origRect.left;
+        LONG const height = origRect.bottom - origRect.top;
+
+        MOZ_DIAGNOSTIC_ASSERT(!self->mIsPerformingDwmFlushHack);
+        auto const onExit =
+            MakeScopeExit([&, oldVal = self->mIsPerformingDwmFlushHack]() {
+              self->mIsPerformingDwmFlushHack = oldVal;
+            });
+        self->mIsPerformingDwmFlushHack = true;
+
+        MOZ_LOG(gWindowsLog, LogLevel::Debug,
+                ("beginning DWM resize hack for HWND %08" PRIXPTR,
+                 uintptr_t(hwnd)));
+        ::MoveWindow(hwnd, x, y, width, height - 1, FALSE);
+        ::MoveWindow(hwnd, x, y, width, height, TRUE);
+        MOZ_LOG(gWindowsLog, LogLevel::Debug,
+                ("concluded DWM resize hack for HWND %08" PRIXPTR,
+                 uintptr_t(hwnd)));
+      }));
+}
+
 void nsWindow::OnFullscreenChanged(nsSizeMode aOldSizeMode, bool aFullScreen) {
+  MOZ_ASSERT((aOldSizeMode != nsSizeMode_Fullscreen) == aFullScreen);
+
+  // HACK: Potentially flicker-resize the window, to force DWM to get the right
+  // client-area information.
+  if (aFullScreen) {
+    TryDwmResizeHack();
+  }
+
   // Hide chrome and reposition window. Note this will also cache dimensions for
   // restoration, so it should only be called once per fullscreen request.
   //
@@ -5097,6 +5245,17 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
   bool result = false;  // call the default nsWindow proc
   *aRetValue = 0;
+
+  // The DWM resize hack (see bug 1763981) causes us to process a number of
+  // messages, notably including some WM_WINDOWPOSCHANG{ING,ED} messages which
+  // would ordinarily result in a whole lot of internal state being updated.
+  //
+  // Since we're supposed to end in the same state we started in (and since the
+  // content shouldn't know about any of this nonsense), just discard any
+  // messages synchronously dispatched from within the hack.
+  if (MOZ_UNLIKELY(mIsPerformingDwmFlushHack)) {
+    return true;
+  }
 
   // Glass hit testing w/custom transparent margins
   LRESULT dwmHitResult;
