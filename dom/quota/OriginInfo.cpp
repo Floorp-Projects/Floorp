@@ -30,7 +30,8 @@ OriginInfo::OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin,
       mPersisted(aPersisted),
       mDirectoryExists(aDirectoryExists) {
   MOZ_ASSERT(aGroupInfo);
-  MOZ_ASSERT(aOrigin == aStorageOrigin);
+  MOZ_ASSERT_IF(!aIsPrivate, aOrigin == aStorageOrigin);
+  MOZ_ASSERT_IF(aIsPrivate, aOrigin != aStorageOrigin);
   MOZ_ASSERT(aClientUsages.Length() == Client::TypeMax());
   MOZ_ASSERT_IF(aPersisted,
                 aGroupInfo->mPersistenceType == PERSISTENCE_TYPE_DEFAULT);

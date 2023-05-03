@@ -34,6 +34,7 @@ EXPORTS.mozilla.dom.quota += [
     "ClientImpl.h",
     "CommonMetadata.h",
     "Config.h",
+    "Constants.h",
     "DebugOnlyMacro.h",
     "DecryptingInputStream.h",
     "DecryptingInputStream_impl.h",
