@@ -153,6 +153,7 @@ class FileSystemDataManager
 
   const quota::OriginMetadata mOriginMetadata;
   nsTHashSet<EntryId> mExclusiveLocks;
+  nsTHashMap<EntryId, uint32_t> mSharedLocks;
   NS_DECL_OWNINGEVENTTARGET
   const RefPtr<quota::QuotaManager> mQuotaManager;
   const NotNull<nsCOMPtr<nsISerialEventTarget>> mBackgroundTarget;

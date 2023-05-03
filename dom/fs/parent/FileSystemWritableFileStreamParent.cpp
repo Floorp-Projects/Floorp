@@ -70,7 +70,8 @@ void FileSystemWritableFileStreamParent::Close() {
 
   mClosed.Flip();
 
-  mManager->DataManagerStrongRef()->UnlockShared(mEntryId);
+  // TODO: Change to UnlockShared after temporary files
+  mManager->DataManagerStrongRef()->UnlockExclusive(mEntryId);
 }
 
 }  // namespace mozilla::dom

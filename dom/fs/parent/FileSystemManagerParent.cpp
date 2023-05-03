@@ -191,22 +191,23 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetWritable(
   AssertIsOnIOTarget();
   MOZ_ASSERT(mDataManager);
 
-  QM_TRY(MOZ_TO_RESULT(mDataManager->LockShared(aRequest.entryId())), IPC_OK(),
-         ([aResolver](const nsresult& aRv) { aResolver(aRv); }));
-
-  auto autoUnlock =
-      MakeScopeExit([self = RefPtr<FileSystemManagerParent>(this), aRequest] {
-        self->mDataManager->UnlockShared(aRequest.entryId());
-      });
-
   auto reportError = [aResolver](nsresult rv) { aResolver(rv); };
+  const EntryId& entryId = aRequest.entryId();
+  // TODO: Change to LockShared after temporary files
+  QM_TRY(MOZ_TO_RESULT(mDataManager->LockExclusive(entryId)), IPC_OK(),
+         reportError);
+
+  auto autoUnlock = MakeScopeExit([self = RefPtr{this}, &entryId] {
+    // TODO: Change to UnlockShared after temporary files
+    self->mDataManager->UnlockExclusive(entryId);
+  });
 
   fs::ContentType type;
   fs::TimeStamp lastModifiedMilliSeconds;
   fs::Path path;
   nsCOMPtr<nsIFile> file;
   QM_TRY(MOZ_TO_RESULT(mDataManager->MutableDatabaseManagerPtr()->GetFile(
-             aRequest.entryId(), type, lastModifiedMilliSeconds, path, file)),
+             entryId, type, lastModifiedMilliSeconds, path, file)),
          IPC_OK(), reportError);
 
   if (LOG_ENABLED()) {
