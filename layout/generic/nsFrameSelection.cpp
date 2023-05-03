@@ -1597,13 +1597,9 @@ Selection* nsFrameSelection::GetSelection(SelectionType aSelectionType) const {
 }
 
 void nsFrameSelection::AddHighlightSelection(
-    const nsAtom* aHighlightName, const mozilla::dom::Highlight& aHighlight,
-    ErrorResult& aRv) {
+    const nsAtom* aHighlightName, const mozilla::dom::Highlight& aHighlight) {
   RefPtr<Selection> selection =
-      aHighlight.CreateHighlightSelection(aHighlightName, this, aRv);
-  if (aRv.Failed()) {
-    return;
-  }
+      aHighlight.CreateHighlightSelection(aHighlightName, this);
   mHighlightSelections.InsertOrUpdate(aHighlightName, std::move(selection));
 }
 
@@ -1617,17 +1613,14 @@ void nsFrameSelection::RemoveHighlightSelection(const nsAtom* aHighlightName) {
 
 void nsFrameSelection::AddHighlightSelectionRange(
     const nsAtom* aHighlightName, const mozilla::dom::Highlight& aHighlight,
-    mozilla::dom::AbstractRange& aRange, ErrorResult& aRv) {
+    mozilla::dom::AbstractRange& aRange) {
   if (auto lookupResult = mHighlightSelections.Lookup(aHighlightName)) {
     RefPtr<Selection> selection = lookupResult.Data();
-    selection->AddHighlightRangeAndSelectFramesAndNotifyListeners(aRange, aRv);
+    selection->AddHighlightRangeAndSelectFramesAndNotifyListeners(aRange);
   } else {
     // if the selection does not exist yet, add all of its ranges and exit.
     RefPtr<Selection> selection =
-        aHighlight.CreateHighlightSelection(aHighlightName, this, aRv);
-    if (aRv.Failed()) {
-      return;
-    }
+        aHighlight.CreateHighlightSelection(aHighlightName, this);
     lookupResult.Data() = selection;
   }
 }

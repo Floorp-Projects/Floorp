@@ -489,7 +489,7 @@ class Selection final : public nsSupportsWeakReference,
                  const nsAString& aAltForeColor, const nsAString& aAltBackColor,
                  ErrorResult& aRv);
 
-  void ResetColors(ErrorResult& aRv);
+  void ResetColors();
 
   /**
    * Non-JS callers should use the following
@@ -556,7 +556,7 @@ class Selection final : public nsSupportsWeakReference,
       nsRange& aRange, mozilla::ErrorResult& aRv);
 
   MOZ_CAN_RUN_SCRIPT void AddHighlightRangeAndSelectFramesAndNotifyListeners(
-      AbstractRange& aRange, mozilla::ErrorResult& aRv);
+      AbstractRange& aRange);
 
   /**
    * Adds all children of the specified node to the selection.

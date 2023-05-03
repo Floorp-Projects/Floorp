@@ -2233,7 +2233,7 @@ void Selection::AddRangeAndSelectFramesAndNotifyListenersInternal(
 }
 
 void Selection::AddHighlightRangeAndSelectFramesAndNotifyListeners(
-    AbstractRange& aRange, mozilla::ErrorResult& aRv) {
+    AbstractRange& aRange) {
   MOZ_ASSERT(mSelectionType == SelectionType::eHighlight);
 
   mStyledRanges.mRanges.AppendElement(StyledRange{&aRange});
@@ -4096,7 +4096,7 @@ void Selection::SetColors(const nsAString& aForegroundColor,
   }
 }
 
-void Selection::ResetColors(ErrorResult& aRv) { mCustomColors = nullptr; }
+void Selection::ResetColors() { mCustomColors = nullptr; }
 
 void Selection::SetHighlightName(const nsAtom* aHighlightName) {
   MOZ_ASSERT(mSelectionType == SelectionType::eHighlight);

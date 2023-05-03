@@ -154,6 +154,6 @@ partial interface Selection {
   /**
    * resetColors() forget the customized colors which were set by setColors().
    */
-  [ChromeOnly,Throws]
+  [ChromeOnly]
   undefined resetColors();
 };
