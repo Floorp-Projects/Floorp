@@ -81,8 +81,7 @@ void Highlight::RemoveFromHighlightRegistry(
 }
 
 already_AddRefed<Selection> Highlight::CreateHighlightSelection(
-    const nsAtom* aHighlightName, nsFrameSelection* aFrameSelection,
-    ErrorResult& aRv) const {
+    const nsAtom* aHighlightName, nsFrameSelection* aFrameSelection) const {
   MOZ_ASSERT(aFrameSelection);
   MOZ_ASSERT(aFrameSelection->GetPresShell());
   RefPtr<Selection> selection =
@@ -96,7 +95,7 @@ already_AddRefed<Selection> Highlight::CreateHighlightSelection(
       // since this is run in a context guarded by a selection batcher,
       // no strong reference is needed to keep `range` alive.
       selection->AddHighlightRangeAndSelectFramesAndNotifyListeners(
-          MOZ_KnownLive(*range), aRv);
+          MOZ_KnownLive(*range));
     }
   }
   return selection.forget();
@@ -117,8 +116,7 @@ void Highlight::Add(AbstractRange& aRange, ErrorResult& aRv) {
       selectionBatcher.AddFrameSelection(frameSelection);
       // since this is run in a context guarded by a selection batcher,
       // no strong reference is needed to keep `registry` alive.
-      MOZ_KnownLive(registry)->MaybeAddRangeToHighlightSelection(aRange, *this,
-                                                                 aRv);
+      MOZ_KnownLive(registry)->MaybeAddRangeToHighlightSelection(aRange, *this);
       if (aRv.Failed()) {
         return;
       }

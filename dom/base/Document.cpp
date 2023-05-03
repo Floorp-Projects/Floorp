@@ -6962,7 +6962,7 @@ already_AddRefed<PresShell> Document::CreatePresShell(
 
   presShell->Init(aContext, aViewManager);
   if (RefPtr<class HighlightRegistry> highlightRegistry = mHighlightRegistry) {
-    highlightRegistry->AddHighlightSelectionsToFrameSelection(IgnoreErrors());
+    highlightRegistry->AddHighlightSelectionsToFrameSelection();
   }
   // Gaining a shell causes changes in how media queries are evaluated, so
   // invalidate that.

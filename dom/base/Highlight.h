@@ -81,8 +81,7 @@ class Highlight final : public nsISupports, public nsWrapperCache {
    * @brief Creates a Highlight Selection using the given ranges.
    */
   MOZ_CAN_RUN_SCRIPT already_AddRefed<Selection> CreateHighlightSelection(
-      const nsAtom* aHighlightName, nsFrameSelection* aFrameSelection,
-      ErrorResult& aRv) const;
+      const nsAtom* aHighlightName, nsFrameSelection* aFrameSelection) const;
 
   // WebIDL interface
   nsPIDOMWindowInner* GetParentObject() const { return mWindow; }

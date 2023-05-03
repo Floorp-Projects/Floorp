@@ -59,9 +59,8 @@ JSObject* HighlightRegistry::WrapObject(JSContext* aCx,
   return HighlightRegistry_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void HighlightRegistry::MaybeAddRangeToHighlightSelection(AbstractRange& aRange,
-                                                          Highlight& aHighlight,
-                                                          ErrorResult& aRv) {
+void HighlightRegistry::MaybeAddRangeToHighlightSelection(
+    AbstractRange& aRange, Highlight& aHighlight) {
   RefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
   if (!frameSelection) {
     return;
@@ -80,7 +79,7 @@ void HighlightRegistry::MaybeAddRangeToHighlightSelection(AbstractRange& aRange,
 
     const RefPtr<const nsAtom> highlightName = iter.first();
     frameSelection->AddHighlightSelectionRange(highlightName, aHighlight,
-                                               aRange, aRv);
+                                               aRange);
   }
 }
 
@@ -117,8 +116,7 @@ void HighlightRegistry::RemoveHighlightSelection(Highlight& aHighlight) {
   }
 }
 
-void HighlightRegistry::AddHighlightSelectionsToFrameSelection(
-    ErrorResult& aRv) {
+void HighlightRegistry::AddHighlightSelectionsToFrameSelection() {
   if (mHighlightsOrdered.IsEmpty()) {
     return;
   }
@@ -129,10 +127,7 @@ void HighlightRegistry::AddHighlightSelectionsToFrameSelection(
   for (auto const& iter : mHighlightsOrdered) {
     RefPtr<const nsAtom> highlightName = iter.first();
     RefPtr<Highlight> highlight = iter.second();
-    frameSelection->AddHighlightSelection(highlightName, *highlight, aRv);
-    if (aRv.Failed()) {
-      return;
-    }
+    frameSelection->AddHighlightSelection(highlightName, *highlight);
   }
 }
 
@@ -162,7 +157,7 @@ void HighlightRegistry::Set(const nsAString& aKey, Highlight& aValue,
   }
   aValue.AddToHighlightRegistry(*this, *highlightNameAtom);
   if (frameSelection) {
-    frameSelection->AddHighlightSelection(highlightNameAtom, aValue, aRv);
+    frameSelection->AddHighlightSelection(highlightNameAtom, aValue);
   }
 }
 

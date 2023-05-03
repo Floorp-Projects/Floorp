@@ -59,8 +59,7 @@ class HighlightRegistry final : public nsISupports, public nsWrapperCache {
    * This method is called if highlights are added to the registry before
    * a `FrameSelection` is available.
    */
-  MOZ_CAN_RUN_SCRIPT void AddHighlightSelectionsToFrameSelection(
-      ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void AddHighlightSelectionsToFrameSelection();
 
   /**
    * @brief Adds the Range to the Highlight Selection if it belongs to the same
@@ -71,7 +70,7 @@ class HighlightRegistry final : public nsISupports, public nsWrapperCache {
    * nsFrameSelection is created.
    */
   MOZ_CAN_RUN_SCRIPT void MaybeAddRangeToHighlightSelection(
-      AbstractRange& aRange, Highlight& aHighlight, ErrorResult& aRv);
+      AbstractRange& aRange, Highlight& aHighlight);
 
   /**
    * @brief Removes the Range from the Highlight Selection if it belongs to the
