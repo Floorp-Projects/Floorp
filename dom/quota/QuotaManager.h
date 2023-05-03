@@ -314,6 +314,8 @@ class QuotaManager final : public BackgroundThreadObject {
 
   nsresult EnsureTemporaryStorageIsInitialized();
 
+  RefPtr<BoolPromise> ClearPrivateRepository();
+
   RefPtr<BoolPromise> ShutdownStorage();
 
   void ShutdownStorageInternal();
