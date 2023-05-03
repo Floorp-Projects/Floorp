@@ -13,7 +13,9 @@ const Cc = SpecialPowers.Cc;
 const Ci = SpecialPowers.Ci;
 const Cu = SpecialPowers.Cu;
 
-const {ComponentUtils} = ChromeUtils.import("resource://gre/modules/ComponentUtils.jsm");
+const { ComponentUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/ComponentUtils.sys.mjs"
+);
 
 const HELPERAPP_DIALOG_CID =
         SpecialPowers.wrap(SpecialPowers.Components)
