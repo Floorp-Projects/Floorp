@@ -17,7 +17,6 @@ a {
   min-width: 220px;
   max-width: 500px;
   overflow: auto;
-  min-width: 0;
   min-height: 0;
   background: var(--theme-sidebar-background);
   /* Let the component gain focus when a click hits an empty area */
