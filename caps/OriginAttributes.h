@@ -113,13 +113,6 @@ class OriginAttributes : public dom::OriginAttributesDictionary {
     return StaticPrefs::privacy_firstparty_isolate();
   }
 
-  static inline bool UseSiteForFirstPartyDomain() {
-    if (IsFirstPartyEnabled()) {
-      return StaticPrefs::privacy_firstparty_isolate_use_site();
-    }
-    return StaticPrefs::privacy_dynamic_firstparty_use_site();
-  }
-
   // check if the access of window.opener across different FPDs is restricted.
   // We only restrict the access of window.opener when first party isolation
   // is enabled and "privacy.firstparty.isolate.restrict_opener_access" is on.
