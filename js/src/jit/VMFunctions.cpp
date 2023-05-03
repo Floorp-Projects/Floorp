@@ -2093,8 +2093,7 @@ static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
 }
 
 bool SetElementMegamorphic(JSContext* cx, HandleObject obj, HandleValue index,
-                           HandleValue value, HandleValue receiver,
-                           bool strict) {
+                           HandleValue value, bool strict) {
   if (obj->is<PlainObject>()) {
     bool optimized = false;
     if (!TryAddOrSetPlainObjectProperty<false>(cx, obj.as<PlainObject>(), index,
@@ -2105,12 +2104,13 @@ bool SetElementMegamorphic(JSContext* cx, HandleObject obj, HandleValue index,
       return true;
     }
   }
+  Rooted<Value> receiver(cx, ObjectValue(*obj));
   return SetObjectElementWithReceiver(cx, obj, index, value, receiver, strict);
 }
 
 bool SetElementMegamorphicCached(JSContext* cx, HandleObject obj,
                                  HandleValue index, HandleValue value,
-                                 HandleValue receiver, bool strict) {
+                                 bool strict) {
   if (obj->is<PlainObject>()) {
     bool optimized = false;
     if (!TryAddOrSetPlainObjectProperty<true>(cx, obj.as<PlainObject>(), index,
@@ -2121,6 +2121,7 @@ bool SetElementMegamorphicCached(JSContext* cx, HandleObject obj,
       return true;
     }
   }
+  Rooted<Value> receiver(cx, ObjectValue(*obj));
   return SetObjectElementWithReceiver(cx, obj, index, value, receiver, strict);
 }
 
