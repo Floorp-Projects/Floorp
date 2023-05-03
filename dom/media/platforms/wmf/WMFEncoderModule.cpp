@@ -16,22 +16,22 @@ bool WMFEncoderModule::SupportsMimeType(const nsACString& aMimeType) const {
 }
 
 already_AddRefed<MediaDataEncoder> WMFEncoderModule::CreateVideoEncoder(
-    const CreateEncoderParams& aParams, const bool aHardwareNotAllowed) const {
+    const CreateEncoderParams& aParams) const {
   MediaDataEncoder::CodecType codec =
       CreateEncoderParams::CodecTypeForMime(aParams.mConfig.mMimeType);
   RefPtr<MediaDataEncoder> encoder;
   switch (codec) {
     case MediaDataEncoder::CodecType::H264:
       encoder = new WMFMediaDataEncoder<MediaDataEncoder::H264Config>(
-          aParams.ToH264Config(), aParams.mTaskQueue, aHardwareNotAllowed);
+          aParams.ToH264Config(), aParams.mTaskQueue);
       break;
     case MediaDataEncoder::CodecType::VP8:
       encoder = new WMFMediaDataEncoder<MediaDataEncoder::VP8Config>(
-          aParams.ToVP8Config(), aParams.mTaskQueue, aHardwareNotAllowed);
+          aParams.ToVP8Config(), aParams.mTaskQueue);
       break;
     case MediaDataEncoder::CodecType::VP9:
       encoder = new WMFMediaDataEncoder<MediaDataEncoder::VP9Config>(
-          aParams.ToVP9Config(), aParams.mTaskQueue, aHardwareNotAllowed);
+          aParams.ToVP9Config(), aParams.mTaskQueue);
       break;
     default:
       // Do nothing.

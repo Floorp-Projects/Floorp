@@ -23,11 +23,9 @@ class AppleVTEncoder final : public MediaDataEncoder {
  public:
   using Config = H264Config;
 
-  AppleVTEncoder(const Config& aConfig, RefPtr<TaskQueue> aTaskQueue,
-                 const bool aHwardwareNotAllowed)
+  AppleVTEncoder(const Config& aConfig, RefPtr<TaskQueue> aTaskQueue)
       : mConfig(aConfig),
         mTaskQueue(aTaskQueue),
-        mHardwareNotAllowed(aHwardwareNotAllowed),
         mFramesCompleted(false),
         mError(NS_OK),
         mSession(nullptr) {
@@ -65,7 +63,6 @@ class AppleVTEncoder final : public MediaDataEncoder {
 
   const Config mConfig;
   const RefPtr<TaskQueue> mTaskQueue;
-  const bool mHardwareNotAllowed;
   // Access only in mTaskQueue.
   EncodedData mEncodedData;
   bool mFramesCompleted;
