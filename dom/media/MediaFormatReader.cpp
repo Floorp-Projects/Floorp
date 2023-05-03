@@ -477,8 +477,20 @@ void MediaFormatReader::DecoderFactory::DoInitDecoder(Data& aData) {
                   ownerData.GetCurrentInfo()->mMimeType);
             }
             if (aTrack == TrackInfo::kAudioTrack) {
-              ownerData.mProcessName = ownerData.mDecoder->GetProcessName();
-              ownerData.mCodecName = ownerData.mDecoder->GetCodecName();
+              nsCString processName = ownerData.mDecoder->GetProcessName();
+              nsCString audioProcessPerCodecName(
+                  processName + ","_ns + ownerData.mDecoder->GetCodecName());
+              if (processName != "utility"_ns) {
+                if (!StaticPrefs::media_rdd_process_enabled()) {
+                  audioProcessPerCodecName += ",rdd-disabled"_ns;
+                }
+                if (!StaticPrefs::media_utility_process_enabled()) {
+                  audioProcessPerCodecName += ",utility-disabled"_ns;
+                }
+              }
+              Telemetry::ScalarAdd(
+                  Telemetry::ScalarID::MEDIA_AUDIO_PROCESS_PER_CODEC_NAME,
+                  NS_ConvertUTF8toUTF16(audioProcessPerCodecName), 1);
             }
           },
           [this, &aData, &ownerData](const MediaResult& aError) {
@@ -1361,10 +1373,6 @@ void MediaFormatReader::ReadUpdatedMetadata(MediaInfo* aInfo) {
     MutexAutoLock lock(mAudio.mMutex);
     if (HasAudio()) {
       aInfo->mAudio = *mAudio.GetWorkingInfo()->GetAsAudioInfo();
-      nsCString audioProcessPerCodecName = GetAudioProcessPerCodec();
-      Telemetry::ScalarAdd(
-          Telemetry::ScalarID::MEDIA_AUDIO_PROCESS_PER_CODEC_NAME,
-          NS_ConvertUTF8toUTF16(audioProcessPerCodecName), 1);
     }
   }
 }
@@ -3238,24 +3246,6 @@ RefPtr<GenericPromise> MediaFormatReader::RequestDebugInfo(
   }
   GetDebugInfo(aInfo);
   return GenericPromise::CreateAndResolve(true, __func__);
-}
-
-nsCString MediaFormatReader::GetAudioProcessPerCodec() {
-  MOZ_ASSERT(mAudio.mProcessName.Length() > 0,
-             "Should have had a process name");
-  MOZ_ASSERT(mAudio.mCodecName.Length() > 0, "Should have had a codec name");
-
-  nsCString processName = mAudio.mProcessName;
-  nsCString audioProcessPerCodecName(processName + ","_ns + mAudio.mCodecName);
-  if (processName != "utility"_ns) {
-    if (!StaticPrefs::media_rdd_process_enabled()) {
-      audioProcessPerCodecName += ",rdd-disabled"_ns;
-    }
-    if (!StaticPrefs::media_utility_process_enabled()) {
-      audioProcessPerCodecName += ",utility-disabled"_ns;
-    }
-  }
-  return audioProcessPerCodecName;
 }
 
 void MediaFormatReader::GetDebugInfo(dom::MediaFormatReaderDebugInfo& aInfo) {

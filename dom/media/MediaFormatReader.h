@@ -194,8 +194,6 @@ class MediaFormatReader final
   RefPtr<GenericPromise> RequestDebugInfo(
       dom::MediaFormatReaderDebugInfo& aInfo);
 
-  nsCString GetAudioProcessPerCodec();
-
   // Switch the video decoder to NullDecoderModule. It might takes effective
   // since a few samples later depends on how much demuxed samples are already
   // queued in the original video decoder.
@@ -366,8 +364,6 @@ class MediaFormatReader final
           mType(aType),
           mMutex("DecoderData"),
           mDescription("shutdown"),
-          mProcessName(""),
-          mCodecName(""),
           mUpdateScheduled(false),
           mDemuxEOS(false),
           mWaitingForData(false),
@@ -411,16 +407,14 @@ class MediaFormatReader final
     // Only non-null up until the decoder is created.
     RefPtr<TaskQueue> mTaskQueue;
 
-    // Mutex protecting mDescription, mDecoder, mTrackDemuxer, mWorkingInfo,
-    // mProcessName and mCodecName as those can be read outside the TaskQueue.
+    // Mutex protecting mDescription, mDecoder, mTrackDemuxer and mWorkingInfo
+    // as those can be read outside the TaskQueue.
     // They are only written on the TaskQueue however, as such mMutex doesn't
     // need to be held when those members are read on the TaskQueue.
     Mutex mMutex MOZ_UNANNOTATED;
     // The platform decoder.
     RefPtr<MediaDataDecoder> mDecoder;
     nsCString mDescription;
-    nsCString mProcessName;
-    nsCString mCodecName;
     void ShutdownDecoder();
 
     // Only accessed from reader's task queue.
