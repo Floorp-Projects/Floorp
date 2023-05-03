@@ -22,7 +22,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-const BEST_HEADER_ICON_SIZE = 16;
 const BEST_ICON_SIZE = 32;
 
 // Used in plain mochitests to enable automation
@@ -67,30 +66,6 @@ export class IdentityCredentialPromptService {
     "nsIIdentityCredentialPromptService",
   ]);
 
-  async loadIconFromManifest(providerManifest, bestIconSize = BEST_ICON_SIZE) {
-    if (providerManifest?.branding?.icons?.length) {
-      // Prefer a vector icon, then an exactly sized icon,
-      // the the largest icon available.
-      let iconsArray = providerManifest.branding.icons;
-      let vectorIcon = iconsArray.find(icon => !icon.size);
-      if (vectorIcon) {
-        return fetchToDataUrl(vectorIcon.url);
-      }
-      let exactIcon = iconsArray.find(icon => icon.size == bestIconSize);
-      if (exactIcon) {
-        return fetchToDataUrl(exactIcon.url);
-      }
-      let biggestIcon = iconsArray.sort(
-        (iconA, iconB) => iconB.size - iconA.size
-      )[0];
-      if (biggestIcon) {
-        return fetchToDataUrl(biggestIcon.url);
-      }
-    }
-
-    return null;
-  }
-
   /**
    * Ask the user, using a PopupNotification, to select an Identity Provider from a provided list.
    * @param {BrowsingContext} browsingContext - The BrowsingContext of the document requesting an identity credential via navigator.credentials.get()
@@ -117,11 +92,29 @@ export class IdentityCredentialPromptService {
     }
 
     // Map each identity manifest to a promise that would resolve to its icon
-    let promises = identityManifests.map(async providerManifest => {
-      const iconResult = await this.loadIconFromManifest(providerManifest);
+    let promises = identityManifests.map(providerManifest => {
+      if (providerManifest?.branding?.icons?.length) {
+        // Prefer a vector icon, then an exactly sized icon,
+        // the the largest icon available.
+        let iconsArray = providerManifest.branding.icons;
+        let vectorIcon = iconsArray.find(icon => !icon.size);
+        if (vectorIcon) {
+          return fetchToDataUrl(vectorIcon.url);
+        }
+        let exactIcon = iconsArray.find(icon => icon.size == BEST_ICON_SIZE);
+        if (exactIcon) {
+          return fetchToDataUrl(exactIcon.url);
+        }
+        let biggestIcon = iconsArray.sort(
+          (iconA, iconB) => iconB.size - iconA.size
+        )[0];
+        if (biggestIcon) {
+          return fetchToDataUrl(biggestIcon.url);
+        }
+      }
       // If we didn't have a manifest with an icon, push a rejection.
       // This will be replaced with the default icon.
-      return iconResult ? iconResult : Promise.reject();
+      return Promise.reject();
     });
 
     // Sanity check that we made one promise per IDP.
@@ -246,9 +239,6 @@ export class IdentityCredentialPromptService {
       browser.ownerDocument.getElementById(
         "identity-credential-account"
       ).hidden = true;
-      browser.ownerDocument.getElementById(
-        "identity-credential-header"
-      ).hidden = true;
       browser.ownerGlobal.PopupNotifications.show(
         browser,
         "identity-credential",
@@ -269,7 +259,7 @@ export class IdentityCredentialPromptService {
    * @param {IdentityCredentialMetadata} identityCredentialMetadata - The metadata displayed to the user
    * @returns {Promise<bool>} A boolean representing the user's acceptance of the metadata.
    */
-  async showPolicyPrompt(
+  showPolicyPrompt(
     browsingContext,
     identityProvider,
     identityManifest,
@@ -286,12 +276,6 @@ export class IdentityCredentialPromptService {
     ) {
       return Promise.resolve(true);
     }
-
-    let iconResult = await this.loadIconFromManifest(
-      identityManifest,
-      BEST_HEADER_ICON_SIZE
-    );
-
     return new Promise(function(resolve, reject) {
       let browser = browsingContext.top.embedderElement;
       if (!browser) {
@@ -306,7 +290,6 @@ export class IdentityCredentialPromptService {
       );
       let currentBaseDomain =
         browsingContext.currentWindowContext.documentPrincipal.baseDomain;
-
       // Localize the description
       // Bug 1797154 - Convert localization calls to use the async formatValues.
       let localization = new Localization(
@@ -329,18 +312,6 @@ export class IdentityCredentialPromptService {
           provider: providerDisplayDomain,
         }
       );
-
-      if (iconResult) {
-        let headerIcon = browser.ownerDocument.getElementsByClassName(
-          "identity-credential-header-icon"
-        )[0];
-        headerIcon.setAttribute("src", iconResult);
-      }
-
-      const headerText = browser.ownerDocument.getElementById(
-        "identity-credential-header-text"
-      );
-      headerText.textContent = title;
 
       let privacyPolicyAnchor = browser.ownerDocument.getElementById(
         "identity-credential-privacy-policy"
@@ -406,11 +377,10 @@ export class IdentityCredentialPromptService {
       ).hidden = true;
       ownerDocument.getElementById("identity-credential-policy").hidden = false;
       ownerDocument.getElementById("identity-credential-account").hidden = true;
-      ownerDocument.getElementById("identity-credential-header").hidden = false;
       browser.ownerGlobal.PopupNotifications.show(
         browser,
         "identity-credential",
-        "",
+        title,
         "identity-credential-notification-icon",
         mainAction,
         secondaryActions,
@@ -538,11 +508,6 @@ export class IdentityCredentialPromptService {
       listBox.append(newItem);
     }
 
-    let headerIconResult = await this.loadIconFromManifest(
-      providerManifest,
-      BEST_HEADER_ICON_SIZE
-    );
-
     // Create a new promise to wrap the callbacks of the popup buttons
     return new Promise(function(resolve, reject) {
       // Construct the necessary arguments for notification behavior
@@ -574,18 +539,6 @@ export class IdentityCredentialPromptService {
         },
       ];
 
-      if (headerIconResult) {
-        let headerIcon = browser.ownerDocument.getElementsByClassName(
-          "identity-credential-header-icon"
-        )[0];
-        headerIcon.setAttribute("src", headerIconResult);
-      }
-
-      const headerText = browser.ownerDocument.getElementById(
-        "identity-credential-header-text"
-      );
-      headerText.textContent = headerMessage;
-
       // Show the popup
       browser.ownerDocument.getElementById(
         "identity-credential-provider"
@@ -596,13 +549,10 @@ export class IdentityCredentialPromptService {
       browser.ownerDocument.getElementById(
         "identity-credential-account"
       ).hidden = false;
-      browser.ownerDocument.getElementById(
-        "identity-credential-header"
-      ).hidden = false;
       browser.ownerGlobal.PopupNotifications.show(
         browser,
         "identity-credential",
-        "",
+        headerMessage,
         "identity-credential-notification-icon",
         mainAction,
         secondaryActions,
