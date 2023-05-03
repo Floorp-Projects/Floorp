@@ -128,8 +128,13 @@ TEST(DelayedRunnable, TimerFiresBeforeRunnableRuns)
   auto noTailTaskQueue =
       TaskQueue::Create(do_AddRef(pool), "TestDelayedRunnable noTailTaskQueue",
                         /* aSupportsTailDispatch = */ false);
-  Monitor outerMonitor MOZ_UNANNOTATED(__func__);
-  MonitorAutoLock lock(outerMonitor);
+  enum class State : uint8_t {
+    Start,
+    TimerRan,
+    TasksFinished,
+  } state = State::Start;
+  Monitor monitor MOZ_UNANNOTATED(__func__);
+  MonitorAutoLock lock(monitor);
   MOZ_ALWAYS_SUCCEEDS(
       tailTaskQueue1->Dispatch(NS_NewRunnableFunction(__func__, [&] {
         // This will tail dispatch the delayed runnable, making it prone to
@@ -138,22 +143,26 @@ TEST(DelayedRunnable, TimerFiresBeforeRunnableRuns)
         EXPECT_TRUE(tailTaskQueue1->RequiresTailDispatch(tailTaskQueue2));
         tailTaskQueue2->DelayedDispatch(
             NS_NewRunnableFunction(__func__, [&] {}), 1);
-        Monitor innerMonitor MOZ_UNANNOTATED(__func__);
-        MonitorAutoLock lock(innerMonitor);
+        MonitorAutoLock lock(monitor);
         auto timer = MakeRefPtr<mozilla::MediaTimer>();
         timer->WaitFor(mozilla::TimeDuration::FromMilliseconds(1), __func__)
             ->Then(noTailTaskQueue, __func__, [&] {
-              MonitorAutoLock lock(innerMonitor);
-              innerMonitor.NotifyAll();
+              MonitorAutoLock lock(monitor);
+              state = State::TimerRan;
+              monitor.NotifyAll();
             });
         // Wait until the timer has run. It should have dispatched the
         // TimerEvent to tailTaskQueue2 by then. The tail dispatch happens when
         // we leave scope.
-        innerMonitor.Wait();
-        // Notify the outer monitor that we've finished the async steps.
-        MonitorAutoLock outerLock(outerMonitor);
-        outerMonitor.NotifyAll();
+        while (state != State::TimerRan) {
+          monitor.Wait();
+        }
+        // Notify main thread that we've finished the async steps.
+        state = State::TasksFinished;
+        monitor.Notify();
       })));
   // Wait for async steps before wrapping up the test case.
-  outerMonitor.Wait();
+  while (state != State::TasksFinished) {
+    monitor.Wait();
+  }
 }
