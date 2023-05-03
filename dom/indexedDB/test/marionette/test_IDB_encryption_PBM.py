@@ -121,7 +121,7 @@ class IDBEncryptionPBM(MarionetteTestCase):
         sanitizedOrigin = origin.replace(":", "+").replace("/", "+")
 
         storagePath = os.path.join(
-            self.profilePath, "storage", "default", sanitizedOrigin, "idb"
+            self.profilePath, "storage", "private", sanitizedOrigin, "idb"
         )
 
         self.idbStoragePath = storagePath
@@ -137,7 +137,7 @@ class IDBEncryptionPBM(MarionetteTestCase):
 
                     function getOrigin() {
                         return new Promise((resolve, reject) => {
-                            let context = "default"
+                            let context = "private"
                             let principal = Services.scriptSecurityManager.
                                 createContentPrincipalFromOrigin(url);
 
