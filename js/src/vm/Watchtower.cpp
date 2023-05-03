@@ -97,7 +97,7 @@ static void InvalidateMegamorphicCache(JSContext* cx,
   MOZ_ASSERT(obj->isUsedAsPrototype());
 
   cx->caches().megamorphicCache.bumpGeneration();
-  cx->caches().megamorphicSetPropCache.bumpGeneration();
+  cx->caches().megamorphicSetPropCache->bumpGeneration();
 }
 
 // static

@@ -1978,7 +1978,7 @@ static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
   MOZ_ASSERT(!*optimized);
 
   Shape* receiverShape = obj->shape();
-  MegamorphicSetPropCache& cache = cx->caches().megamorphicSetPropCache;
+  MegamorphicSetPropCache& cache = *cx->caches().megamorphicSetPropCache;
 
 #ifdef DEBUG
   if constexpr (UseCache) {
