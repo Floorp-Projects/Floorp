@@ -159,7 +159,7 @@ Result<nsCOMPtr<nsIFile>, QMResult> GetFileSystemDirectory(
   MOZ_ASSERT(quotaManager);
 
   QM_TRY_UNWRAP(nsCOMPtr<nsIFile> fileSystemDirectory,
-                QM_TO_RESULT_TRANSFORM(quotaManager->GetDirectoryForOrigin(
+                QM_TO_RESULT_TRANSFORM(quotaManager->GetOriginDirectory(
                     quota::PERSISTENCE_TYPE_DEFAULT, aOrigin)));
 
   QM_TRY(QM_TO_RESULT(fileSystemDirectory->AppendRelativePath(

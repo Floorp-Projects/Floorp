@@ -71,7 +71,7 @@ TEST_F(TestFileOutputStream, extendFileStreamWithSetEOF) {
                                             quota::Client::Type::SDB);
 
     {
-      auto testPathRes = quotaManager->GetDirectoryForOrigin(
+      auto testPathRes = quotaManager->GetOriginDirectory(
           quota::PERSISTENCE_TYPE_DEFAULT, originMetadata.mOrigin);
 
       ASSERT_TRUE(testPathRes.isOk());

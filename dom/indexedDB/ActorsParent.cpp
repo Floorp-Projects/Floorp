@@ -12581,8 +12581,8 @@ Result<nsCOMPtr<nsIFile>, nsresult> QuotaClient::GetDirectory(
   QuotaManager* const quotaManager = QuotaManager::Get();
   NS_ASSERTION(quotaManager, "This should never fail!");
 
-  QM_TRY_INSPECT(const auto& directory, quotaManager->GetDirectoryForOrigin(
-                                            aPersistenceType, aOrigin));
+  QM_TRY_INSPECT(const auto& directory,
+                 quotaManager->GetOriginDirectory(aPersistenceType, aOrigin));
 
   MOZ_ASSERT(directory);
 
@@ -14964,7 +14964,7 @@ nsresult FactoryOp::FinishOpen() {
                 ([this, quotaManager,
                   persistenceType]() -> mozilla::Result<nsString, nsresult> {
                   QM_TRY_INSPECT(const auto& dbFile,
-                                 quotaManager->GetDirectoryForOrigin(
+                                 quotaManager->GetOriginDirectory(
                                      persistenceType, mOriginMetadata.mOrigin));
 
                   QM_TRY(MOZ_TO_RESULT(dbFile->Append(
@@ -16352,7 +16352,7 @@ nsresult DeleteDatabaseOp::DoDatabaseWork() {
   QuotaManager* const quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  QM_TRY_UNWRAP(auto directory, quotaManager->GetDirectoryForOrigin(
+  QM_TRY_UNWRAP(auto directory, quotaManager->GetOriginDirectory(
                                     persistenceType, mOriginMetadata.mOrigin));
 
   QM_TRY(MOZ_TO_RESULT(
