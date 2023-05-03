@@ -5,17 +5,14 @@
 
 var EXPORTED_SYMBOLS = ["GeckoViewAutoFillParent"];
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const { GeckoViewActorParent } = ChromeUtils.importESModule(
   "resource://gre/modules/GeckoViewActorParent.sys.mjs"
 );
 
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  gAutofillManager: "resource://gre/modules/GeckoViewAutofill.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  gAutofillManager: "resource://gre/modules/GeckoViewAutofill.sys.mjs",
 });
 
 class GeckoViewAutoFillParent extends GeckoViewActorParent {
