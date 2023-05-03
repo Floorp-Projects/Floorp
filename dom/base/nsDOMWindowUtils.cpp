@@ -3460,10 +3460,8 @@ nsDOMWindowUtils::GetFileReferences(const nsAString& aDatabaseName, int64_t aId,
   RefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::Get();
   if (mgr) {
     nsresult rv = mgr->BlockAndGetFileReferences(
-        principalMetadata.mIsPrivate ? quota::PERSISTENCE_TYPE_PRIVATE
-                                     : quota::PERSISTENCE_TYPE_DEFAULT,
-        principalMetadata.mOrigin, aDatabaseName, aId, aRefCnt, aDBRefCnt,
-        aResult);
+        quota::PERSISTENCE_TYPE_DEFAULT, principalMetadata.mOrigin,
+        aDatabaseName, aId, aRefCnt, aDBRefCnt, aResult);
 
     NS_ENSURE_SUCCESS(rv, rv);
   } else {

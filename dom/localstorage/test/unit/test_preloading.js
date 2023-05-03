@@ -73,10 +73,7 @@ add_task(async function testSteps() {
 
     info("Clearing origin");
 
-    let request = clearOrigin(
-      principal,
-      principal.privateBrowsingId > 0 ? "private" : "default"
-    );
+    let request = clearOrigin(principal, "default");
     await requestFinished(request);
 
     ok(
