@@ -15047,7 +15047,17 @@ void Document::HidePopover(Element& aPopover, bool aFocusPreviousElement,
     // TODO: we can't always guarantee:
     // The last item in document's auto popover list is popoverHTMLEl.
     // See, https://github.com/whatwg/html/issues/9197
-    MOZ_ASSERT(GetTopmostAutoPopover() == popoverHTMLEl);
+    // If popoverHTMLEl is not on top, hide popovers again without firing
+    // events.
+    if (NS_WARN_IF(GetTopmostAutoPopover() != popoverHTMLEl)) {
+      HideAllPopoversUntil(*popoverHTMLEl, aFocusPreviousElement, false);
+      if (!popoverHTMLEl->CheckPopoverValidity(PopoverVisibilityState::Showing,
+                                               nullptr, aRv)) {
+        return;
+      }
+      MOZ_ASSERT(GetTopmostAutoPopover() == popoverHTMLEl,
+                 "popoverHTMLEl should be on top of auto popover list");
+    }
   }
 
   aPopover.SetHasPopoverInvoker(false);
