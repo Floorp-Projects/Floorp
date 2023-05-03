@@ -2460,7 +2460,8 @@ nsresult CreateDirectoryMetadata2(nsIFile& aDirectory, int64_t aTimestamp,
   // Currently unused (used to be group).
   QM_TRY(MOZ_TO_RESULT(stream->WriteStringZ("")));
 
-  QM_TRY(MOZ_TO_RESULT(stream->WriteStringZ(aOriginMetadata.mOrigin.get())));
+  QM_TRY(MOZ_TO_RESULT(
+      stream->WriteStringZ(aOriginMetadata.mStorageOrigin.get())));
 
   // Currently used for isPrivate (used to be used for isApp).
   QM_TRY(MOZ_TO_RESULT(stream->WriteBoolean(aOriginMetadata.mIsPrivate)));
@@ -4377,8 +4378,8 @@ Result<nsCOMPtr<nsIFile>, nsresult> QuotaManager::GetOriginDirectory(
       auto directory,
       QM_NewLocalFile(GetStoragePath(aOriginMetadata.mPersistenceType)));
 
-  QM_TRY(MOZ_TO_RESULT(
-      directory->Append(MakeSanitizedOriginString(aOriginMetadata.mOrigin))));
+  QM_TRY(MOZ_TO_RESULT(directory->Append(
+      MakeSanitizedOriginString(aOriginMetadata.mStorageOrigin))));
 
   return directory;
 }
@@ -4436,10 +4437,8 @@ Result<FullOriginMetadata, nsresult> QuotaManager::LoadFullOriginMetadata(
   Unused << group;
 
   QM_TRY_UNWRAP(
-      fullOriginMetadata.mOrigin,
+      fullOriginMetadata.mStorageOrigin,
       MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsCString, binaryStream, ReadCString));
-
-  fullOriginMetadata.mStorageOrigin = fullOriginMetadata.mOrigin;
 
   // Currently used for isPrivate (used to be used for isApp).
   QM_TRY_UNWRAP(fullOriginMetadata.mIsPrivate,
@@ -4448,11 +4447,12 @@ Result<FullOriginMetadata, nsresult> QuotaManager::LoadFullOriginMetadata(
   QM_TRY(MOZ_TO_RESULT(binaryStream->Close()));
 
   auto principal =
-      [&origin = fullOriginMetadata.mOrigin]() -> nsCOMPtr<nsIPrincipal> {
-    if (origin.EqualsLiteral(kChromeOrigin)) {
+      [&storageOrigin =
+           fullOriginMetadata.mStorageOrigin]() -> nsCOMPtr<nsIPrincipal> {
+    if (storageOrigin.EqualsLiteral(kChromeOrigin)) {
       return SystemPrincipal::Get();
     }
-    return BasePrincipal::CreateContentPrincipal(origin);
+    return BasePrincipal::CreateContentPrincipal(storageOrigin);
   }();
   QM_TRY(MOZ_TO_RESULT(principal));
 
@@ -4464,6 +4464,7 @@ Result<FullOriginMetadata, nsresult> QuotaManager::LoadFullOriginMetadata(
 
   fullOriginMetadata.mSuffix = std::move(principalMetadata.mSuffix);
   fullOriginMetadata.mGroup = std::move(principalMetadata.mGroup);
+  fullOriginMetadata.mOrigin = std::move(principalMetadata.mOrigin);
 
   QM_TRY_INSPECT(const bool& groupUpdated,
                  MaybeUpdateGroupForOrigin(fullOriginMetadata));
