@@ -199,8 +199,6 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     }
 
     @Test fun waitUntilCalled_anyInterfaceMethod() {
-        // TODO: Bug 1673953
-        assumeThat(sessionRule.env.isFission, equalTo(false))
         mainSession.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitUntilCalled(ProgressDelegate::class)
 
@@ -300,8 +298,6 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     }
 
     @Test fun waitUntilCalled_anyObjectMethod() {
-        // TODO: Bug 1673953
-        assumeThat(sessionRule.env.isFission, equalTo(false))
         mainSession.loadTestPath(HELLO_HTML_PATH)
 
         var counter = 0
@@ -457,8 +453,6 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     }
 
     @Test fun forCallbacksDuringWait_anyMethod() {
-        // TODO: Bug 1673953
-        assumeThat(sessionRule.env.isFission, equalTo(false))
         mainSession.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 

@@ -526,9 +526,6 @@ class NavigationDelegateTest : BaseSessionTest() {
     // Due to Bug 1692578 we currently cannot test bypassing of the error
     // the URI loading process takes the desktop path for iframes
     @Test fun loadHTTPSOnlyInSubframe() {
-        // TODO: Bug 1673954
-        assumeThat(sessionRule.env.isFission, equalTo(false))
-
         sessionRule.runtime.settings.setAllowInsecureConnections(GeckoRuntimeSettings.HTTPS_ONLY)
 
         val uri = "http://example.org/tests/junit/iframe_http_only.html"
@@ -726,9 +723,6 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun loadHSTSBadCert() {
-        // TODO: Bug 1673954
-        assumeThat(sessionRule.env.isFission, equalTo(false))
-
         val httpsFirstPref = "dom.security.https_first"
         assertThat("https pref should be false", sessionRule.getPrefs(httpsFirstPref)[0] as Boolean, equalTo(false))
 
@@ -975,9 +969,6 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun redirectDenyLoad() {
-        // TODO: Bug 1673954
-        assumeThat(sessionRule.env.isFission, equalTo(false))
-
         val redirectUri = if (sessionRule.env.isAutomation) {
             "https://example.org/tests/junit/hello.html"
         } else {
@@ -1046,8 +1037,6 @@ class NavigationDelegateTest : BaseSessionTest() {
 
     @Test fun redirectIntentLoad() {
         assumeThat(sessionRule.env.isAutomation, equalTo(true))
-        // TODO: Bug 1673954
-        assumeThat(sessionRule.env.isFission, equalTo(false))
 
         val redirectUri = "intent://test"
         val uri = "https://example.org/tests/junit/simple_redirect.sjs?$redirectUri"
@@ -2856,9 +2845,6 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun loadAfterLoad() {
-        // TODO: Bug 1657028
-        assumeThat(sessionRule.env.isFission, equalTo(false))
-
         mainSession.delegateDuringNextWait(object : NavigationDelegate {
             @AssertCalled(count = 2)
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
