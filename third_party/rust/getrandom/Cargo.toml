@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "getrandom"
-version = "0.2.8"
+version = "0.2.9"
 authors = ["The Rand Project Developers"]
 exclude = [".*"]
 description = "A small cross-platform library for retrieving random data from system source"
@@ -63,21 +63,22 @@ rustc-dep-of-std = [
 std = []
 test-in-browser = []
 
-[target."cfg(all(target_arch = \"wasm32\", target_os = \"unknown\"))".dependencies.js-sys]
+[target."cfg(all(any(target_arch = \"wasm32\", target_arch = \"wasm64\"), target_os = \"unknown\"))".dependencies.js-sys]
 version = "0.3"
 optional = true
 
-[target."cfg(all(target_arch = \"wasm32\", target_os = \"unknown\"))".dependencies.wasm-bindgen]
+[target."cfg(all(any(target_arch = \"wasm32\", target_arch = \"wasm64\"), target_os = \"unknown\"))".dependencies.wasm-bindgen]
 version = "0.2.62"
 optional = true
 default-features = false
 
-[target."cfg(all(target_arch = \"wasm32\", target_os = \"unknown\"))".dev-dependencies.wasm-bindgen-test]
+[target."cfg(all(any(target_arch = \"wasm32\", target_arch = \"wasm64\"), target_os = \"unknown\"))".dev-dependencies.wasm-bindgen-test]
 version = "0.3.18"
 
 [target."cfg(target_os = \"wasi\")".dependencies.wasi]
 version = "0.11"
+default-features = false
 
 [target."cfg(unix)".dependencies.libc]
-version = "0.2.120"
+version = "0.2.139"
 default-features = false

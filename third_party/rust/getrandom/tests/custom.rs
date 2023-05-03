@@ -7,13 +7,8 @@
 ))]
 
 use wasm_bindgen_test::wasm_bindgen_test as test;
-#[cfg(feature = "test-in-browser")]
-wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
-use core::{
-    num::NonZeroU32,
-    sync::atomic::{AtomicU8, Ordering},
-};
+use core::num::NonZeroU32;
 use getrandom::{getrandom, register_custom_getrandom, Error};
 
 fn len7_err() -> Error {
@@ -21,27 +16,36 @@ fn len7_err() -> Error {
 }
 
 fn super_insecure_rng(buf: &mut [u8]) -> Result<(), Error> {
+    // `getrandom` guarantees it will not call any implementation if the output
+    // buffer is empty.
+    assert!(!buf.is_empty());
     // Length 7 buffers return a custom error
     if buf.len() == 7 {
         return Err(len7_err());
     }
-    // Otherwise, increment an atomic counter
-    static COUNTER: AtomicU8 = AtomicU8::new(0);
+    // Otherwise, fill bytes based on input length
+    let mut start = buf.len() as u8;
     for b in buf {
-        *b = COUNTER.fetch_add(1, Ordering::Relaxed);
+        *b = start;
+        start = start.wrapping_mul(3);
     }
     Ok(())
 }
 
 register_custom_getrandom!(super_insecure_rng);
 
+use getrandom::getrandom as getrandom_impl;
+mod common;
+
 #[test]
 fn custom_rng_output() {
     let mut buf = [0u8; 4];
     assert_eq!(getrandom(&mut buf), Ok(()));
-    assert_eq!(buf, [0, 1, 2, 3]);
+    assert_eq!(buf, [4, 12, 36, 108]);
+
+    let mut buf = [0u8; 3];
     assert_eq!(getrandom(&mut buf), Ok(()));
-    assert_eq!(buf, [4, 5, 6, 7]);
+    assert_eq!(buf, [3, 9, 27]);
 }
 
 #[test]

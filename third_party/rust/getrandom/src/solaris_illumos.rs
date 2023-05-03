@@ -8,12 +8,11 @@
 
 //! Implementation for the Solaris family
 //!
-//! Read from `/dev/random`, with chunks of limited size (256 bytes).
 //! `/dev/random` uses the Hash_DRBG with SHA512 algorithm from NIST SP 800-90A.
 //! `/dev/urandom` uses the FIPS 186-2 algorithm, which is considered less
-//! secure. We choose to read from `/dev/random`.
+//! secure. We choose to read from `/dev/random` (and use GRND_RANDOM).
 //!
-//! Since Solaris 11.3 and mid-2015 illumos, the `getrandom` syscall is available.
+//! Solaris 11.3 and late-2018 illumos added the getrandom(2) libc function.
 //! To make sure we can compile on both Solaris and its derivatives, as well as
 //! function, we check for the existence of getrandom(2) in libc by calling
 //! libc::dlsym.
@@ -22,23 +21,25 @@ use crate::{
     util_libc::{sys_fill_exact, Weak},
     Error,
 };
-use core::mem;
+use core::mem::{self, MaybeUninit};
 
-#[cfg(target_os = "illumos")]
-type GetRandomFn = unsafe extern "C" fn(*mut u8, libc::size_t, libc::c_uint) -> libc::ssize_t;
-#[cfg(target_os = "solaris")]
-type GetRandomFn = unsafe extern "C" fn(*mut u8, libc::size_t, libc::c_uint) -> libc::c_int;
+static GETRANDOM: Weak = unsafe { Weak::new("getrandom\0") };
+type GetRandomFn =
+    unsafe extern "C" fn(*mut libc::c_void, libc::size_t, libc::c_uint) -> libc::ssize_t;
 
-pub fn getrandom_inner(dest: &mut [u8]) -> Result<(), Error> {
-    // getrandom(2) was introduced in Solaris 11.3 for Illumos in 2015.
-    static GETRANDOM: Weak = unsafe { Weak::new("getrandom\0") };
+pub fn getrandom_inner(dest: &mut [MaybeUninit<u8>]) -> Result<(), Error> {
     if let Some(fptr) = GETRANDOM.ptr() {
         let func: GetRandomFn = unsafe { mem::transmute(fptr) };
         // 256 bytes is the lowest common denominator across all the Solaris
         // derived platforms for atomically obtaining random data.
         for chunk in dest.chunks_mut(256) {
             sys_fill_exact(chunk, |buf| unsafe {
-                func(buf.as_mut_ptr(), buf.len(), 0) as libc::ssize_t
+                // A cast is needed for the flags as libc uses the wrong type.
+                func(
+                    buf.as_mut_ptr() as *mut libc::c_void,
+                    buf.len(),
+                    libc::GRND_RANDOM as libc::c_uint,
+                )
             })?
         }
         Ok(())

@@ -8,7 +8,7 @@
 use crate::Error;
 
 extern crate std;
-use std::thread_local;
+use std::{mem::MaybeUninit, thread_local};
 
 use js_sys::{global, Function, Uint8Array};
 use wasm_bindgen::{prelude::wasm_bindgen, JsCast, JsValue};
@@ -16,6 +16,8 @@ use wasm_bindgen::{prelude::wasm_bindgen, JsCast, JsValue};
 // Size of our temporary Uint8Array buffer used with WebCrypto methods
 // Maximum is 65536 bytes see https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues
 const WEB_CRYPTO_BUFFER_SIZE: usize = 256;
+// Node.js's crypto.randomFillSync requires the size to be less than 2**31.
+const NODE_MAX_BUFFER_SIZE: usize = (1 << 31) - 1;
 
 enum RngSource {
     Node(NodeCrypto),
@@ -28,14 +30,27 @@ thread_local!(
     static RNG_SOURCE: Result<RngSource, Error> = getrandom_init();
 );
 
-pub(crate) fn getrandom_inner(dest: &mut [u8]) -> Result<(), Error> {
+pub(crate) fn getrandom_inner(dest: &mut [MaybeUninit<u8>]) -> Result<(), Error> {
     RNG_SOURCE.with(|result| {
         let source = result.as_ref().map_err(|&e| e)?;
 
         match source {
             RngSource::Node(n) => {
-                if n.random_fill_sync(dest).is_err() {
-                    return Err(Error::NODE_RANDOM_FILL_SYNC);
+                for chunk in dest.chunks_mut(NODE_MAX_BUFFER_SIZE) {
+                    // SAFETY: chunk is never used directly, the memory is only
+                    // modified via the Uint8Array view, which is passed
+                    // directly to JavaScript. Also, crypto.randomFillSync does
+                    // not resize the buffer. We know the length is less than
+                    // u32::MAX because of the chunking above.
+                    // Note that this uses the fact that JavaScript doesn't
+                    // have a notion of "uninitialized memory", this is purely
+                    // a Rust/C/C++ concept.
+                    let res = n.random_fill_sync(unsafe {
+                        Uint8Array::view_mut_raw(chunk.as_mut_ptr() as *mut u8, chunk.len())
+                    });
+                    if res.is_err() {
+                        return Err(Error::NODE_RANDOM_FILL_SYNC);
+                    }
                 }
             }
             RngSource::Web(crypto, buf) => {
@@ -49,7 +64,9 @@ pub(crate) fn getrandom_inner(dest: &mut [u8]) -> Result<(), Error> {
                     if crypto.get_random_values(&sub_buf).is_err() {
                         return Err(Error::WEB_GET_RANDOM_VALUES);
                     }
-                    sub_buf.copy_to(chunk);
+
+                    // SAFETY: `sub_buf`'s length is the same length as `chunk`
+                    unsafe { sub_buf.raw_copy_to_ptr(chunk.as_mut_ptr() as *mut u8) };
                 }
             }
         };
@@ -120,7 +137,7 @@ extern "C" {
     type NodeCrypto;
     // crypto.randomFillSync()
     #[wasm_bindgen(method, js_name = randomFillSync, catch)]
-    fn random_fill_sync(this: &NodeCrypto, buf: &mut [u8]) -> Result<(), JsValue>;
+    fn random_fill_sync(this: &NodeCrypto, buf: Uint8Array) -> Result<(), JsValue>;
 
     // Ideally, we would just use `fn require(s: &str)` here. However, doing
     // this causes a Webpack warning. So we instead return the function itself

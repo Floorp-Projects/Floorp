@@ -12,7 +12,19 @@ fn test_zero() {
     getrandom_impl(&mut [0u8; 0]).unwrap();
 }
 
+// Return the number of bits in which s1 and s2 differ
+#[cfg(not(feature = "custom"))]
+fn num_diff_bits(s1: &[u8], s2: &[u8]) -> usize {
+    assert_eq!(s1.len(), s2.len());
+    s1.iter()
+        .zip(s2.iter())
+        .map(|(a, b)| (a ^ b).count_ones() as usize)
+        .sum()
+}
+
+// Tests the quality of calling getrandom on two large buffers
 #[test]
+#[cfg(not(feature = "custom"))]
 fn test_diff() {
     let mut v1 = [0u8; 1000];
     getrandom_impl(&mut v1).unwrap();
@@ -20,13 +32,35 @@ fn test_diff() {
     let mut v2 = [0u8; 1000];
     getrandom_impl(&mut v2).unwrap();
 
-    let mut n_diff_bits = 0;
-    for i in 0..v1.len() {
-        n_diff_bits += (v1[i] ^ v2[i]).count_ones();
-    }
+    // Between 3.5 and 4.5 bits per byte should differ. Probability of failure:
+    // ~ 2^(-94) = 2 * CDF[BinomialDistribution[8000, 0.5], 3500]
+    let d = num_diff_bits(&v1, &v2);
+    assert!(d > 3500);
+    assert!(d < 4500);
+}
 
-    // Check at least 1 bit per byte differs. p(failure) < 1e-1000 with random input.
-    assert!(n_diff_bits >= v1.len() as u32);
+// Tests the quality of calling getrandom repeatedly on small buffers
+#[test]
+#[cfg(not(feature = "custom"))]
+fn test_small() {
+    // For each buffer size, get at least 256 bytes and check that between
+    // 3 and 5 bits per byte differ. Probability of failure:
+    // ~ 2^(-91) = 64 * 2 * CDF[BinomialDistribution[8*256, 0.5], 3*256]
+    for size in 1..=64 {
+        let mut num_bytes = 0;
+        let mut diff_bits = 0;
+        while num_bytes < 256 {
+            let mut s1 = vec![0u8; size];
+            getrandom_impl(&mut s1).unwrap();
+            let mut s2 = vec![0u8; size];
+            getrandom_impl(&mut s2).unwrap();
+
+            num_bytes += size;
+            diff_bits += num_diff_bits(&s1, &s2);
+        }
+        assert!(diff_bits > 3 * num_bytes);
+        assert!(diff_bits < 5 * num_bytes);
+    }
 }
 
 #[test]
