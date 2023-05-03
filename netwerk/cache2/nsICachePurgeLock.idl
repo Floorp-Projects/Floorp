@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+interface nsIFile;
 
 /**
  * This object is a wrapper of MultiInstanceLock.
@@ -30,4 +31,10 @@ interface nsICachePurgeLock : nsISupports {
      * after unlocking.
      */
     void unlock();
+
+    /**
+     * Returns the file used to guarantee single access to a resource.
+     * This method is used to remove the lock file when no longer necessary.
+     */
+    nsIFile getLockFile(in AUTF8String profileName);
 };

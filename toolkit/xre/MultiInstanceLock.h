@@ -88,6 +88,12 @@ bool IsOtherInstanceRunning(MultiInstLockHandle lock, bool* aResult);
 // this function ensures the file path is properly normalized.
 already_AddRefed<nsIFile> GetNormalizedAppFile(nsIFile* aAppFile);
 
+// Computes the file path of multi instance lock
+// Returns true when successful - false otherwise
+bool GetMultiInstanceLockFileName(const char* nameToken,
+                                  const char16_t* installPath,
+                                  nsCString& filePath);
+
 };  // namespace mozilla
 
 #endif  // MULTIINSTANCELOCK_H
