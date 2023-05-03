@@ -3567,6 +3567,11 @@ void StyleCalcNode::ScaleLengthsBy(float aScale) {
       }
       break;
     }
+    case Tag::Negate: {
+      const auto& negate = AsNegate();
+      ScaleNode(*negate);
+      break;
+    }
     case Tag::Hypot: {
       for (const auto& child : AsHypot().AsSpan()) {
         ScaleNode(child);
@@ -3595,6 +3600,11 @@ ResultT StyleCalcNode::ResolveInternal(ResultT aPercentageBasis,
       } else {
         return leaf.AsLength().ToCSSPixels();
       }
+    }
+    case Tag::Negate: {
+      const auto& negate = AsNegate();
+      auto value = negate->ResolveInternal(aPercentageBasis, aConverter);
+      return -value;
     }
     case Tag::Clamp: {
       auto& clamp = AsClamp();
