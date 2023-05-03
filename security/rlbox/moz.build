@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 WASM_SOURCES += [
+    "/memory/mozalloc/mozalloc.cpp",
     "/third_party/rlbox_wasm2c_sandbox/c_src/wasm2c_sandbox_wrapper.c",
 ]
 
