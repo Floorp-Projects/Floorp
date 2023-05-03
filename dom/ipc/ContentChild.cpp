@@ -3816,7 +3816,8 @@ mozilla::ipc::IPCResult ContentChild::RecvCreateBrowsingContext(
 
   RefPtr<BrowsingContextGroup> group =
       BrowsingContextGroup::GetOrCreate(aGroupId);
-  return BrowsingContext::CreateFromIPC(std::move(aInit), group, nullptr);
+  BrowsingContext::CreateFromIPC(std::move(aInit), group, nullptr);
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvDiscardBrowsingContext(
@@ -3855,7 +3856,8 @@ mozilla::ipc::IPCResult ContentChild::RecvRegisterBrowsingContextGroup(
         MOZ_ASSERT_IF(parent, parent->Group() == group);
 #endif
 
-        return BrowsingContext::CreateFromIPC(std::move(init), group, nullptr);
+        BrowsingContext::CreateFromIPC(std::move(init), group, nullptr);
+        break;
       }
       case SyncedContextInitializer::TWindowContextInitializer: {
         auto& init = initUnion.get_WindowContextInitializer();
