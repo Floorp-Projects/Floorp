@@ -1972,16 +1972,9 @@ bool HasNativeElementPure(JSContext* cx, NativeObject* obj, int32_t index,
 template <bool UseCache>
 static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
                                            Handle<PlainObject*> obj,
-                                           HandleValue keyVal,
-                                           HandleValue value, bool* optimized) {
+                                           PropertyKey key, HandleValue value,
+                                           bool* optimized) {
   MOZ_ASSERT(!*optimized);
-
-  // The key must be a string or symbol so that we don't have to handle dense
-  // elements here.
-  PropertyKey key;
-  if (!ValueToAtomOrSymbolPure(cx, keyVal, &key)) {
-    return true;
-  }
 
   Shape* receiverShape = obj->shape();
   MegamorphicSetPropCache& cache = cx->caches().megamorphicSetPropCache;
@@ -2095,13 +2088,16 @@ static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
 bool SetElementMegamorphic(JSContext* cx, HandleObject obj, HandleValue index,
                            HandleValue value, bool strict) {
   if (obj->is<PlainObject>()) {
-    bool optimized = false;
-    if (!TryAddOrSetPlainObjectProperty<false>(cx, obj.as<PlainObject>(), index,
-                                               value, &optimized)) {
-      return false;
-    }
-    if (optimized) {
-      return true;
+    PropertyKey key;
+    if (ValueToAtomOrSymbolPure(cx, index, &key)) {
+      bool optimized = false;
+      if (!TryAddOrSetPlainObjectProperty<false>(cx, obj.as<PlainObject>(), key,
+                                                 value, &optimized)) {
+        return false;
+      }
+      if (optimized) {
+        return true;
+      }
     }
   }
   Rooted<Value> receiver(cx, ObjectValue(*obj));
@@ -2112,9 +2108,29 @@ bool SetElementMegamorphicCached(JSContext* cx, HandleObject obj,
                                  HandleValue index, HandleValue value,
                                  bool strict) {
   if (obj->is<PlainObject>()) {
+    PropertyKey key;
+    if (ValueToAtomOrSymbolPure(cx, index, &key)) {
+      bool optimized = false;
+      if (!TryAddOrSetPlainObjectProperty<true>(cx, obj.as<PlainObject>(), key,
+                                                value, &optimized)) {
+        return false;
+      }
+      if (optimized) {
+        return true;
+      }
+    }
+  }
+  Rooted<Value> receiver(cx, ObjectValue(*obj));
+  return SetObjectElementWithReceiver(cx, obj, index, value, receiver, strict);
+}
+
+template <bool Cached>
+bool SetPropertyMegamorphic(JSContext* cx, HandleObject obj, HandleId id,
+                            HandleValue value, bool strict) {
+  if (obj->is<PlainObject>()) {
     bool optimized = false;
-    if (!TryAddOrSetPlainObjectProperty<true>(cx, obj.as<PlainObject>(), index,
-                                              value, &optimized)) {
+    if (!TryAddOrSetPlainObjectProperty<Cached>(cx, obj.as<PlainObject>(), id,
+                                                value, &optimized)) {
       return false;
     }
     if (optimized) {
@@ -2122,8 +2138,17 @@ bool SetElementMegamorphicCached(JSContext* cx, HandleObject obj,
     }
   }
   Rooted<Value> receiver(cx, ObjectValue(*obj));
-  return SetObjectElementWithReceiver(cx, obj, index, value, receiver, strict);
+  ObjectOpResult result;
+  return SetProperty(cx, obj, id, value, receiver, result) &&
+         result.checkStrictModeError(cx, obj, id, strict);
 }
+
+template bool SetPropertyMegamorphic<false>(JSContext* cx, HandleObject obj,
+                                            HandleId id, HandleValue value,
+                                            bool strict);
+template bool SetPropertyMegamorphic<true>(JSContext* cx, HandleObject obj,
+                                           HandleId id, HandleValue value,
+                                           bool strict);
 
 void HandleCodeCoverageAtPC(BaselineFrame* frame, jsbytecode* pc) {
   AutoUnsafeCallWithABI unsafe(UnsafeABIStrictness::AllowPendingExceptions);

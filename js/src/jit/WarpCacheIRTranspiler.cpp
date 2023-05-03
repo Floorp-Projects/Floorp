@@ -699,13 +699,14 @@ bool WarpCacheIRTranspiler::emitMegamorphicLoadSlotByValueResult(
 }
 
 bool WarpCacheIRTranspiler::emitMegamorphicStoreSlot(ObjOperandId objId,
-                                                     uint32_t nameOffset,
-                                                     ValOperandId rhsId) {
+                                                     uint32_t idOffset,
+                                                     ValOperandId rhsId,
+                                                     bool strict) {
   MDefinition* obj = getOperand(objId);
-  PropertyName* name = stringStubField(nameOffset)->asAtom().asPropertyName();
+  jsid id = idStubField(idOffset);
   MDefinition* rhs = getOperand(rhsId);
 
-  auto* ins = MMegamorphicStoreSlot::New(alloc(), obj, rhs, name);
+  auto* ins = MMegamorphicStoreSlot::New(alloc(), obj, rhs, id, strict);
   addEffectful(ins);
 
   return resumeAfter(ins);
