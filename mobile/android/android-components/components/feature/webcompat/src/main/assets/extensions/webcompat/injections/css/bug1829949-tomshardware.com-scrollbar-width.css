@@ -1,0 +1,14 @@
+/**
+ * tomshardware.com - a scrollbar covering navigation menu
+ * Bug #1829949 - https://bugzilla.mozilla.org/show_bug.cgi?id=1829949
+ * WebCompat issue #121170 - https://github.com/webcompat/web-bugs/issues/121170
+ *
+ * The scrollbar is covering navigation items and that makes them half hidden.
+ * There are some ::-webkit-scrollbar css rules applied to the scrollbar,
+ * making it thinner. Adding similar rules for Firefox fixes the issue.
+ */
+
+.trending__list {
+  scrollbar-width: thin;
+  scrollbar-color: #000 #f5f5f5;
+}

@@ -1,0 +1,9 @@
+/**
+ * copyleaks.com - Unsupported message
+ * Bug #1830796 - https://bugzilla.mozilla.org/show_bug.cgi?id=1830796
+ * WebCompat issue #121395 - https://github.com/webcompat/web-bugs/issues/121395
+ */
+
+#outdated {
+  display: none !important;
+}

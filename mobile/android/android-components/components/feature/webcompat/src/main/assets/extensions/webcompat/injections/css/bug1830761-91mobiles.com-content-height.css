@@ -1,0 +1,14 @@
+/**
+ * 91mobiles.com - Text overlapping
+ * Bug #1830761 - https://bugzilla.mozilla.org/show_bug.cgi?id=1830761
+ * WebCompat issue #117029 - https://github.com/webcompat/web-bugs/issues/117029
+ *
+ * The content overlaps dedicated space since Firefox honors small heights on <td>
+ * due to https://bugzilla.mozilla.org/show_bug.cgi?id=1461852. Setting the height to
+ * fit-content makes it work as expected.
+ */
+
+#fixed-table tr td .cmp-summary-box,
+.cmpr-table .textpanel {
+  height: fit-content;
+}

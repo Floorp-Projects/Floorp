@@ -1,0 +1,19 @@
+/**
+ * afisha.ru - Slider not working
+ * Bug #1830752 - https://bugzilla.mozilla.org/show_bug.cgi?id=1830752
+ * WebCompat issue #120455 - https://github.com/webcompat/web-bugs/issues/120455
+ *
+ * The range slider for price filtering is not working because of pointer-events:none applied
+ * on the slider element. It's working in Chrome because of webkit specific rules
+ * set with -moz-range-thumb that override the pointer events on the slider thumb to auto.
+ * Setting the same rule with -moz-range-thumb makes the slider to work.
+ */
+
+.gNPvK::-moz-range-thumb,
+.y5iHc::-moz-range-thumb {
+  background-color: #0050ff;
+  border-color: #0050ff;
+  border-radius: 50%;
+  cursor: pointer;
+  pointer-events: auto;
+}
