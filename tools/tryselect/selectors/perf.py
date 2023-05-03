@@ -3,15 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import copy
-import enum
 import itertools
 import json
 import os
 import pathlib
-import re
 import shutil
 import subprocess
-import sys
 from contextlib import redirect_stdout
 from datetime import datetime, timedelta
 
@@ -27,6 +24,14 @@ from ..util.fzf import (
     setup_tasks_for_fzf,
 )
 from .compare import CompareParser
+from .perfselector.classification import (
+    Apps,
+    ClassificationProvider,
+    Platforms,
+    Suites,
+    Variants,
+)
+from .perfselector.utils import LogProcessor
 
 here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)
@@ -41,7 +46,6 @@ TREEHERDER_TRY_BASE_URL = "https://treeherder.mozilla.org/jobs?repo=try&revision
 # Prevent users from running more than 300 tests at once. It's possible, but
 # it's more likely that a query is broken and is selecting far too much.
 MAX_PERF_TASKS = 300
-REVISION_MATCHER = re.compile(r"remote:.*/try/rev/([\w]*)[ \t]*$")
 
 # Name of the base category with no variants applied to it
 BASE_CATEGORY_NAME = "base"
@@ -75,117 +79,6 @@ class InvalidRegressionDetectorQuery(Exception):
     pass
 
 
-class LogProcessor:
-    def __init__(self):
-        self.buf = ""
-        self.stdout = sys.__stdout__
-        self._revision = None
-
-    @property
-    def revision(self):
-        return self._revision
-
-    def write(self, buf):
-        while buf:
-            try:
-                newline_index = buf.index("\n")
-            except ValueError:
-                # No newline, wait for next call
-                self.buf += buf
-                break
-
-            # Get data up to next newline and combine with previously buffered data
-            data = self.buf + buf[: newline_index + 1]
-            buf = buf[newline_index + 1 :]
-
-            # Reset buffer then output line
-            self.buf = ""
-            if data.strip() == "":
-                continue
-            self.stdout.write(data.strip("\n") + "\n")
-
-            # Check if a temporary commit wa created
-            match = REVISION_MATCHER.match(data)
-            if match:
-                # Last line found is the revision we want
-                self._revision = match.group(1)
-
-
-class ClassificationEnum(enum.Enum):
-    """This class provides the ability to use Enums as array indices."""
-
-    @property
-    def value(self):
-        return self._value_["value"]
-
-    def __index__(self):
-        return self._value_["index"]
-
-    def __int__(self):
-        return self._value_["index"]
-
-
-class Platforms(ClassificationEnum):
-    ANDROID_A51 = {"value": "android-a51", "index": 0}
-    ANDROID = {"value": "android", "index": 1}
-    WINDOWS = {"value": "windows", "index": 2}
-    LINUX = {"value": "linux", "index": 3}
-    MACOSX = {"value": "macosx", "index": 4}
-    DESKTOP = {"value": "desktop", "index": 5}
-
-
-class Apps(ClassificationEnum):
-    FIREFOX = {"value": "firefox", "index": 0}
-    CHROME = {"value": "chrome", "index": 1}
-    CHROMIUM = {"value": "chromium", "index": 2}
-    GECKOVIEW = {"value": "geckoview", "index": 3}
-    FENIX = {"value": "fenix", "index": 4}
-    CHROME_M = {"value": "chrome-m", "index": 5}
-    SAFARI = {"value": "safari", "index": 6}
-
-
-class Suites(ClassificationEnum):
-    RAPTOR = {"value": "raptor", "index": 0}
-    TALOS = {"value": "talos", "index": 1}
-    AWSY = {"value": "awsy", "index": 2}
-
-
-class Variants(ClassificationEnum):
-    NO_FISSION = {"value": "no-fission", "index": 0}
-    BYTECODE_CACHED = {"value": "bytecode-cached", "index": 1}
-    LIVE_SITES = {"value": "live-sites", "index": 2}
-    PROFILING = {"value": "profiling", "index": 3}
-    SWR = {"value": "swr", "index": 4}
-
-
-"""
-The following methods and constants are used for restricting
-certain platforms and applications such as chrome, safari, and
-android tests. These all require a flag such as --android to
-enable (see build_category_matrix for more info).
-"""
-
-
-def check_for_android(android=False, **kwargs):
-    return android
-
-
-def check_for_chrome(chrome=False, **kwargs):
-    return chrome
-
-
-def check_for_safari(safari=False, **kwargs):
-    return safari
-
-
-def check_for_live_sites(live_sites=False, **kwargs):
-    return live_sites
-
-
-def check_for_profile(profile=False, **kwargs):
-    return profile
-
-
 class PerfParser(CompareParser):
     name = "perf"
     common_groups = ["push", "task"]
@@ -199,261 +92,12 @@ class PerfParser(CompareParser):
         "rebuild",
     ]
 
-    platforms = {
-        Platforms.ANDROID_A51.value: {
-            "query": "'android 'a51 'shippable 'aarch64",
-            "restriction": check_for_android,
-            "platform": Platforms.ANDROID.value,
-        },
-        Platforms.ANDROID.value: {
-            # The android, and android-a51 queries are expected to be the same,
-            # we don't want to run the tests on other mobile platforms.
-            "query": "'android 'a51 'shippable 'aarch64",
-            "restriction": check_for_android,
-            "platform": Platforms.ANDROID.value,
-        },
-        Platforms.WINDOWS.value: {
-            "query": "!-32 'windows 'shippable",
-            "platform": Platforms.DESKTOP.value,
-        },
-        Platforms.LINUX.value: {
-            "query": "!clang 'linux 'shippable",
-            "platform": Platforms.DESKTOP.value,
-        },
-        Platforms.MACOSX.value: {
-            "query": "'osx 'shippable",
-            "platform": Platforms.DESKTOP.value,
-        },
-        Platforms.DESKTOP.value: {
-            "query": "!android 'shippable !-32 !clang",
-            "platform": Platforms.DESKTOP.value,
-        },
-    }
-
-    apps = {
-        Apps.FIREFOX.value: {
-            "query": "!chrom !geckoview !fenix !safari",
-            "platforms": [Platforms.DESKTOP.value],
-        },
-        Apps.CHROME.value: {
-            "query": "'chrome",
-            "negation": "!chrom",
-            "restriction": check_for_chrome,
-            "platforms": [Platforms.DESKTOP.value],
-        },
-        Apps.CHROMIUM.value: {
-            "query": "'chromium",
-            "negation": "!chrom",
-            "restriction": check_for_chrome,
-            "platforms": [Platforms.DESKTOP.value],
-        },
-        Apps.GECKOVIEW.value: {
-            "query": "'geckoview",
-            "platforms": [Platforms.ANDROID.value],
-        },
-        Apps.FENIX.value: {
-            "query": "'fenix",
-            "platforms": [Platforms.ANDROID.value],
-        },
-        Apps.CHROME_M.value: {
-            "query": "'chrome-m",
-            "negation": "!chrom",
-            "restriction": check_for_chrome,
-            "platforms": [Platforms.ANDROID.value],
-        },
-        Apps.SAFARI.value: {
-            "query": "'safari",
-            "negation": "!safari",
-            "restriction": check_for_safari,
-            "platforms": [Platforms.MACOSX.value],
-        },
-    }
-
-    variants = {
-        Variants.NO_FISSION.value: {
-            "query": "'nofis",
-            "negation": "!nofis",
-            "platforms": [Platforms.ANDROID.value],
-            "apps": [Apps.FENIX.value, Apps.GECKOVIEW.value],
-        },
-        Variants.BYTECODE_CACHED.value: {
-            "query": "'bytecode",
-            "negation": "!bytecode",
-            "platforms": [Platforms.DESKTOP.value],
-            "apps": [Apps.FIREFOX.value],
-        },
-        Variants.LIVE_SITES.value: {
-            "query": "'live",
-            "negation": "!live",
-            "restriction": check_for_live_sites,
-            "platforms": [Platforms.DESKTOP.value, Platforms.ANDROID.value],
-            "apps": list(apps.keys()),
-        },
-        Variants.PROFILING.value: {
-            "query": "'profil",
-            "negation": "!profil",
-            "restriction": check_for_profile,
-            "platforms": [Platforms.DESKTOP.value, Platforms.ANDROID.value],
-            "apps": [Apps.FIREFOX.value, Apps.GECKOVIEW.value, Apps.FENIX.value],
-        },
-        Variants.SWR.value: {
-            "query": "'swr",
-            "negation": "!swr",
-            "platforms": [Platforms.DESKTOP.value],
-            "apps": [Apps.FIREFOX.value],
-        },
-    }
-
-    suites = {
-        Suites.RAPTOR.value: {
-            "apps": list(apps.keys()),
-            "platforms": list(platforms.keys()),
-            "variants": [
-                Variants.NO_FISSION.value,
-                Variants.LIVE_SITES.value,
-                Variants.PROFILING.value,
-                Variants.BYTECODE_CACHED.value,
-            ],
-        },
-        Suites.TALOS.value: {
-            "apps": [Apps.FIREFOX.value],
-            "platforms": [Platforms.DESKTOP.value],
-            "variants": [
-                Variants.PROFILING.value,
-                Variants.SWR.value,
-            ],
-        },
-        Suites.AWSY.value: {
-            "apps": [Apps.FIREFOX.value],
-            "platforms": [Platforms.DESKTOP.value],
-            "variants": [],
-        },
-    }
-
-    """
-    Here you can find the base categories that are defined for the perf
-    selector. The following fields are available:
-        * query: Set the queries to use for each suite you need.
-        * suites: The suites that are needed for this category.
-        * tasks: A hard-coded list of tasks to select.
-        * platforms: The platforms that it can run on.
-        * app-restrictions: A list of apps that the category can run.
-        * variant-restrictions: A list of variants available for each suite.
-
-    Note that setting the App/Variant-Restriction fields should be used to
-    restrict the available apps and variants, not expand them.
-    """
-    categories = {
-        "Pageload": {
-            "query": {
-                Suites.RAPTOR.value: ["'browsertime 'tp6"],
-            },
-            "suites": [Suites.RAPTOR.value],
-            "tasks": [],
-        },
-        "Pageload (essential)": {
-            "query": {
-                Suites.RAPTOR.value: ["'browsertime 'tp6 'essential"],
-            },
-            "variant-restrictions": {Suites.RAPTOR.value: [Variants.NO_FISSION.value]},
-            "suites": [Suites.RAPTOR.value],
-            "app-restrictions": {
-                Suites.RAPTOR.value: [
-                    Apps.FIREFOX.value,
-                    Apps.CHROME.value,
-                    Apps.CHROMIUM.value,
-                    Apps.FENIX.value,
-                    Apps.GECKOVIEW.value,
-                ],
-            },
-            "tasks": [],
-        },
-        "Speedometer 3": {
-            "query": {
-                Suites.RAPTOR.value: ["'browsertime 'speedometer3"],
-            },
-            "variant-restrictions": {Suites.RAPTOR.value: [Variants.NO_FISSION.value]},
-            "suites": [Suites.RAPTOR.value],
-            "app-restrictions": {},
-            "tasks": [],
-        },
-        "Responsiveness": {
-            "query": {
-                Suites.RAPTOR.value: ["'browsertime 'responsive"],
-            },
-            "suites": [Suites.RAPTOR.value],
-            "variant-restrictions": {Suites.RAPTOR.value: []},
-            "app-restrictions": {
-                Suites.RAPTOR.value: [
-                    Apps.FIREFOX.value,
-                    Apps.CHROME.value,
-                    Apps.CHROMIUM.value,
-                    Apps.FENIX.value,
-                    Apps.GECKOVIEW.value,
-                ],
-            },
-            "tasks": [],
-        },
-        "Benchmarks": {
-            "query": {
-                Suites.RAPTOR.value: ["'browsertime 'benchmark"],
-            },
-            "suites": [Suites.RAPTOR.value],
-            "variant-restrictions": {Suites.RAPTOR.value: []},
-            "tasks": [],
-        },
-        "DAMP (Devtools)": {
-            "query": {
-                Suites.TALOS.value: ["'talos 'damp"],
-            },
-            "suites": [Suites.TALOS.value],
-            "tasks": [],
-        },
-        "Talos PerfTests": {
-            "query": {
-                Suites.TALOS.value: ["'talos"],
-            },
-            "suites": [Suites.TALOS.value],
-            "tasks": [],
-        },
-        "Resource Usage": {
-            "query": {
-                Suites.TALOS.value: ["'talos 'xperf | 'tp5"],
-                Suites.RAPTOR.value: ["'power 'osx"],
-                Suites.AWSY.value: ["'awsy"],
-            },
-            "suites": [Suites.TALOS.value, Suites.RAPTOR.value, Suites.AWSY.value],
-            "platform-restrictions": [Platforms.DESKTOP.value],
-            "variant-restrictions": {
-                Suites.RAPTOR.value: [],
-                Suites.TALOS.value: [],
-            },
-            "app-restrictions": {
-                Suites.RAPTOR.value: [Apps.FIREFOX.value],
-                Suites.TALOS.value: [Apps.FIREFOX.value],
-            },
-            "tasks": [],
-        },
-        "Graphics, & Media Playback": {
-            "query": {
-                # XXX This might not be an exhaustive list for talos atm
-                Suites.TALOS.value: ["'talos 'svgr | 'bcv | 'webgl"],
-                Suites.RAPTOR.value: ["'browsertime 'youtube-playback"],
-            },
-            "suites": [Suites.TALOS.value, Suites.RAPTOR.value],
-            "variant-restrictions": {Suites.RAPTOR.value: [Variants.NO_FISSION.value]},
-            "app-restrictions": {
-                Suites.RAPTOR.value: [
-                    Apps.FIREFOX.value,
-                    Apps.CHROME.value,
-                    Apps.CHROMIUM.value,
-                    Apps.FENIX.value,
-                    Apps.GECKOVIEW.value,
-                ],
-            },
-            "tasks": [],
-        },
-    }
+    provider = ClassificationProvider()
+    platforms = provider.platforms
+    apps = provider.apps
+    variants = provider.variants
+    suites = provider.suites
+    categories = provider.categories
 
     arguments = [
         [
