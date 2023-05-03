@@ -1208,7 +1208,7 @@ template <class Derived>
 void RemoteAccessibleBase<Derived>::DOMNodeID(nsString& aID) const {
   if (mCachedFields) {
     mCachedFields->GetAttribute(nsGkAtoms::id, aID);
-    VERIFY_CACHE(CacheDomain::DOMNodeID);
+    VERIFY_CACHE(CacheDomain::DOMNodeIDAndClass);
   }
 }
 
@@ -1420,6 +1420,12 @@ already_AddRefed<AccAttributes> RemoteAccessibleBase<Derived>::Attributes() {
     DOMNodeID(id);
     if (!id.IsEmpty()) {
       attributes->SetAttribute(nsGkAtoms::id, std::move(id));
+    }
+
+    nsString className;
+    mCachedFields->GetAttribute(nsGkAtoms::_class, className);
+    if (!className.IsEmpty()) {
+      attributes->SetAttribute(nsGkAtoms::_class, std::move(className));
     }
   }
 
