@@ -36,31 +36,6 @@ const replaceStringInRequest = (
 };
 
 const CUSTOM_FUNCTIONS = {
-  acceptLanguageFix: injection => {
-    const { urls } = injection.data;
-    const re = /^([a-zA-Z]{2,3})-/; // match 2 or 3 letters at the start followed by a hyphen
-    const listener = (injection.data.listener = e => {
-      for (const header of e.requestHeaders) {
-        if (header.name.toLowerCase() === "accept-language") {
-          const match = header.value.match(re);
-          if (match) {
-            // add country code to start with comma -> 'en-US,en;q=0.5' to 'en,en-US,en;q=0.5'
-            header.value = `${match[1]},${header.value}`;
-          }
-        }
-      }
-      return { requestHeaders: e.requestHeaders };
-    });
-    browser.webRequest.onBeforeSendHeaders.addListener(listener, { urls }, [
-      "blocking",
-      "requestHeaders",
-    ]);
-  },
-  acceptLanguageFixDisable: injection => {
-    const { listener } = injection.data;
-    browser.webRequest.onBeforeSendHeaders.removeListener(listener);
-    delete injection.data.listener;
-  },
   detectSwipeFix: injection => {
     const { urls, types } = injection.data;
     const listener = (injection.data.listener = ({ requestId }) => {

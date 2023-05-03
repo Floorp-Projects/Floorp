@@ -1,9 +1,0 @@
-/**
- * www.reddit.com - Slideshow images have zero width
- * Bug #1748455 - https://bugzilla.mozilla.org/show_bug.cgi?id=1748455
- * WebCompat issue #97271 - https://webcompat.com/issues/97271
- */
-
-.gallery-img > faceplate-img {
-  height: auto;
-}
