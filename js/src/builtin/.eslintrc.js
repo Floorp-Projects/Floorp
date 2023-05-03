@@ -136,6 +136,7 @@ module.exports = {
         SetIsInlinableLargeFunction: "readonly",
         ToNumeric: "readonly",
         ToString: "readonly",
+        IsNullOrUndefined: "readonly",
 
         // We've disabled all built-in environments, which also removed
         // `undefined` from the list of globals. Put it back because it's

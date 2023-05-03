@@ -64,7 +64,7 @@ function GetMethod(V, P) {
   var func = V[P];
 
   // Step 3.
-  if (func === undefined || func === null) {
+  if (IsNullOrUndefined(func)) {
     return undefined;
   }
 
@@ -108,7 +108,7 @@ function SpeciesConstructor(obj, defaultConstructor) {
   var s = ctor[GetBuiltinSymbol("species")];
 
   // Step 6.
-  if (s === undefined || s === null) {
+  if (IsNullOrUndefined(s)) {
     return defaultConstructor;
   }
 
@@ -164,7 +164,7 @@ function CopyDataProperties(target, source, excludedItems) {
   assert(IsObject(excludedItems), "excludedItems is an object");
 
   // Steps 3 and 7.
-  if (source === undefined || source === null) {
+  if (IsNullOrUndefined(source)) {
     return;
   }
 
@@ -205,7 +205,7 @@ function CopyDataPropertiesUnfiltered(target, source) {
   // Step 2 (Not applicable).
 
   // Steps 3 and 7.
-  if (source === undefined || source === null) {
+  if (IsNullOrUndefined(source)) {
     return;
   }
 

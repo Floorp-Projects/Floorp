@@ -295,6 +295,7 @@
   MACRO_(isExtensible, isExtensible, "isExtensible")                           \
   MACRO_(isFinite, isFinite, "isFinite")                                       \
   MACRO_(isNaN, isNaN, "isNaN")                                                \
+  MACRO_(IsNullOrUndefined, IsNullOrUndefined, "IsNullOrUndefined")            \
   MACRO_(isPrototypeOf, isPrototypeOf, "isPrototypeOf")                        \
   MACRO_(isStepStart, isStepStart, "isStepStart")                              \
   MACRO_(isSubsetOf, isSubsetOf, "isSubsetOf")                                 \

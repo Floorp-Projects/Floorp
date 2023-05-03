@@ -1024,7 +1024,7 @@ function ArrayFrom(items, mapfn = undefined, thisArg = undefined) {
 
   // Step 5.
   // Inlined: GetMethod, step 3.
-  if (usingIterator !== undefined && usingIterator !== null) {
+  if (!IsNullOrUndefined(usingIterator)) {
     // Inlined: GetMethod, step 4.
     if (!IsCallable(usingIterator)) {
       ThrowTypeError(JSMSG_NOT_ITERABLE, DecompileArg(0, items));
@@ -1135,7 +1135,7 @@ function ArrayToLocaleString(locales, options) {
 
   // Steps 6-7.
   var R;
-  if (firstElement === undefined || firstElement === null) {
+  if (IsNullOrUndefined(firstElement)) {
     R = "";
   } else {
 #if JS_HAS_INTL_API
@@ -1165,7 +1165,7 @@ function ArrayToLocaleString(locales, options) {
 
     // Steps 9.a, 9.c-e.
     R += separator;
-    if (!(nextElement === undefined || nextElement === null)) {
+    if (!IsNullOrUndefined(nextElement)) {
 #if JS_HAS_INTL_API
       R += ToString(
         callContentFunction(

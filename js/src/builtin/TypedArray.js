@@ -108,7 +108,7 @@ function TypedArraySpeciesConstructor(obj) {
   var s = ctor[GetBuiltinSymbol("species")];
 
   // Step 6.
-  if (s === undefined || s === null) {
+  if (IsNullOrUndefined(s)) {
     return ConstructorForTypedArray(obj);
   }
 
