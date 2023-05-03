@@ -214,12 +214,19 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
       mMathStyle(aSrc.mMathStyle),
       mMinFontSizeRatio(aSrc.mMinFontSizeRatio),
       mExplicitLanguage(aSrc.mExplicitLanguage),
-      mAllowZoomAndMinSize(aSrc.mAllowZoomAndMinSize),
+      mXTextScale(aSrc.mXTextScale),
       mScriptUnconstrainedSize(aSrc.mScriptUnconstrainedSize),
       mScriptMinSize(aSrc.mScriptMinSize),
       mScriptSizeMultiplier(aSrc.mScriptSizeMultiplier),
       mLanguage(aSrc.mLanguage) {
   MOZ_COUNT_CTOR(nsStyleFont);
+}
+
+static StyleXTextScale InitialTextScale(const Document& aDoc) {
+  if (nsContentUtils::IsChromeDoc(&aDoc)) {
+    return StyleXTextScale::ZoomOnly;
+  }
+  return StyleXTextScale::All;
 }
 
 nsStyleFont::nsStyleFont(const Document& aDocument)
@@ -233,9 +240,7 @@ nsStyleFont::nsStyleFont(const Document& aDocument)
       mMathDepth(0),
       mMathVariant(StyleMathVariant::None),
       mMathStyle(StyleMathStyle::Normal),
-      mMinFontSizeRatio(100),  // 100%
-      mExplicitLanguage(false),
-      mAllowZoomAndMinSize(true),
+      mXTextScale(InitialTextScale(aDocument)),
       mScriptUnconstrainedSize(mSize),
       mScriptMinSize(Length::FromPixels(
           CSSPixel::FromPoints(kMathMLDefaultScriptMinSizePt))),
@@ -245,8 +250,8 @@ nsStyleFont::nsStyleFont(const Document& aDocument)
   MOZ_ASSERT(NS_IsMainThread());
   mFont.family.is_initial = true;
   mFont.size = mSize;
-  if (!nsContentUtils::IsChromeDoc(&aDocument)) {
-    Length minimumFontSize =
+  if (MinFontSizeEnabled()) {
+    const Length minimumFontSize =
         aDocument.GetFontPrefsForLang(mLanguage)->mMinimumFontSize;
     mFont.size = Length::FromPixels(
         std::max(mSize.ToCSSPixels(), minimumFontSize.ToCSSPixels()));
@@ -254,9 +259,8 @@ nsStyleFont::nsStyleFont(const Document& aDocument)
 }
 
 nsChangeHint nsStyleFont::CalcDifference(const nsStyleFont& aNewData) const {
-  MOZ_ASSERT(
-      mAllowZoomAndMinSize == aNewData.mAllowZoomAndMinSize,
-      "expected mAllowZoomAndMinSize to be the same on both nsStyleFonts");
+  MOZ_ASSERT(mXTextScale == aNewData.mXTextScale,
+             "expected -x-text-scale to be the same on both nsStyleFonts");
   if (mSize != aNewData.mSize || mLanguage != aNewData.mLanguage ||
       mExplicitLanguage != aNewData.mExplicitLanguage ||
       mMathVariant != aNewData.mMathVariant ||

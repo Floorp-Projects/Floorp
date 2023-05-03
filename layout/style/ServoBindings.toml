@@ -647,6 +647,7 @@ cbindgen-types = [
     { gecko = "StyleFontSynthesis", servo = "crate::values::computed::font::FontSynthesis" },
     { gecko = "StyleBoolInteger", servo = "crate::values::computed::BoolInteger" },
     { gecko = "StyleTime", servo = "crate::values::computed::Time" },
+    { gecko = "StyleXTextScale", servo = "crate::values::computed::XTextScale" },
 ]
 
 mapped-generic-types = [

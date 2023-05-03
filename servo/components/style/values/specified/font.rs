@@ -1908,6 +1908,7 @@ impl MetricsOverride {
     Copy,
     Debug,
     MallocSizeOf,
+    Parse,
     PartialEq,
     SpecifiedValueInfo,
     ToComputedValue,
@@ -1915,19 +1916,22 @@ impl MetricsOverride {
     ToResolvedValue,
     ToShmem,
 )]
-/// text-zoom. Enable if true, disable if false
-pub struct XTextZoom(#[css(skip)] pub bool);
+#[repr(u8)]
+/// How to do font-size scaling.
+pub enum XTextScale {
+    /// Both min-font-size and text zoom are enabled.
+    All,
+    /// Text-only zoom is enabled, but min-font-size is not honored.
+    ZoomOnly,
+    /// Neither of them is enabled.
+    None,
+}
 
-impl Parse for XTextZoom {
-    fn parse<'i, 't>(
-        _: &ParserContext,
-        input: &mut Parser<'i, 't>,
-    ) -> Result<XTextZoom, ParseError<'i>> {
-        debug_assert!(
-            false,
-            "Should be set directly by presentation attributes only."
-        );
-        Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError))
+impl XTextScale {
+    /// Returns whether text zoom is enabled.
+    #[inline]
+    pub fn text_zoom_enabled(self) -> bool {
+        self != Self::None
     }
 }
 

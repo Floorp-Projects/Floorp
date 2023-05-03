@@ -1374,18 +1374,19 @@ void Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont,
 
 Length Gecko_nsStyleFont_ComputeMinSize(const nsStyleFont* aFont,
                                         const Document* aDocument) {
-  // Don't change font-size:0, since that would un-hide hidden text,
-  // or SVG text, or chrome docs, we assume those know what they do.
-  if (aFont->mSize.IsZero() || !aFont->mAllowZoomAndMinSize ||
-      nsContentUtils::IsChromeDoc(aDocument)) {
+  // Don't change font-size:0, since that would un-hide hidden text.
+  if (aFont->mSize.IsZero()) {
     return {0};
   }
-
+  // Don't change it for docs where we don't enable the min-font-size.
+  if (!aFont->MinFontSizeEnabled()) {
+    return {0};
+  }
   Length minFontSize;
   bool needsCache = false;
 
   auto MinFontSize = [&](bool* aNeedsToCache) {
-    auto* prefs =
+    const auto* prefs =
         aDocument->GetFontPrefsForLang(aFont->mLanguage, aNeedsToCache);
     return prefs ? prefs->mMinimumFontSize : Length{0};
   };
