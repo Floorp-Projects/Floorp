@@ -5670,9 +5670,9 @@
     },
 
     getTabTooltip(tab, includeLabel = true) {
-      let label = "";
+      let labelArray = [];
       if (includeLabel) {
-        label = tab._fullLabel || tab.getAttribute("label");
+        labelArray.push(tab._fullLabel || tab.getAttribute("label"));
       }
       if (
         Services.prefs.getBoolPref(
@@ -5688,16 +5688,20 @@
           );
           if (contentPid) {
             if (framePids && framePids.length) {
-              label += ` (pids ${contentPid}, ${framePids.sort().join(", ")})`;
+              labelArray.push(
+                `(pids ${contentPid}, ${framePids.sort().join(", ")})`
+              );
             } else {
-              label += ` (pid ${contentPid})`;
+              labelArray.push(`(pid ${contentPid})`);
             }
           }
           if (tab.linkedBrowser.docShellIsActive) {
-            label += " [A]";
+            labelArray.push("[A]");
           }
         }
       }
+
+      let label = labelArray.join(" ");
       if (tab.userContextId) {
         const containerName = ContextualIdentityService.getUserContextLabel(
           tab.userContextId
@@ -5707,7 +5711,15 @@
           { title: label, containerName }
         );
       }
-      return label;
+
+      labelArray = [label];
+      if (tab.soundPlaying) {
+        let audioPlayingString = this.tabLocalization.formatValueSync(
+          "tabbrowser-tab-audio-playing-description"
+        );
+        labelArray.push(audioPlayingString);
+      }
+      return labelArray.join("\n");
     },
 
     createTooltip(event) {
