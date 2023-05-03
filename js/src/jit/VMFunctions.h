@@ -545,13 +545,13 @@ bool CallDOMSetter(JSContext* cx, const JSJitInfo* jitInfo, HandleObject obj,
 void HandleCodeCoverageAtPC(BaselineFrame* frame, jsbytecode* pc);
 void HandleCodeCoverageAtPrologue(BaselineFrame* frame);
 
-bool GetNativeDataPropertyByNamePure(JSContext* cx, JSObject* obj,
-                                     PropertyName* name,
-                                     MegamorphicCacheEntry* entry, Value* vp);
+bool GetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyKey id,
+                               MegamorphicCacheEntry* entry, Value* vp);
 
-bool GetNativeDataPropertyByIdPure(JSContext* cx, JSObject* obj, PropertyKey id,
-                                   MegamorphicCacheEntry* cacheEntry,
-                                   Value* vp);
+bool GetNativeDataPropertyPureWithCacheLookup(JSContext* cx, JSObject* obj,
+                                              PropertyKey id,
+                                              MegamorphicCacheEntry* entry,
+                                              Value* vp);
 
 bool GetNativeDataPropertyByValuePure(JSContext* cx, JSObject* obj,
                                       MegamorphicCacheEntry* cacheEntry,
@@ -564,7 +564,7 @@ bool HasNativeDataPropertyPure(JSContext* cx, JSObject* obj,
 bool HasNativeElementPure(JSContext* cx, NativeObject* obj, int32_t index,
                           Value* vp);
 
-bool SetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name,
+bool SetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyKey id,
                                Value* val);
 
 bool ObjectHasGetterSetterPure(JSContext* cx, JSObject* objArg, jsid id,
@@ -690,7 +690,7 @@ void AssertSetObjectHash(JSContext* cx, SetObject* obj, const Value* value,
 void AssertMapObjectHash(JSContext* cx, MapObject* obj, const Value* value,
                          mozilla::HashNumber actualHash);
 
-void AssertPropertyLookup(NativeObject* obj, PropertyName* id, uint32_t slot);
+void AssertPropertyLookup(NativeObject* obj, PropertyKey id, uint32_t slot);
 
 // Functions used when JS_MASM_VERBOSE is enabled.
 void AssumeUnreachable(const char* output);
