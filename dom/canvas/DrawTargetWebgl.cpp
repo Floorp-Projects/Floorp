@@ -2306,8 +2306,7 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
                         : aMaskColor.valueOr(DeviceColor(1, 1, 1, 1)),
                     aOptions.mAlpha);
       float colorData[4] = {color.b, color.g, color.r, color.a};
-      float swizzleData =
-          aMaskColor && format == SurfaceFormat::A8 ? 1.0f : 0.0f;
+      float swizzleData = format == SurfaceFormat::A8 ? 1.0f : 0.0f;
       Matrix xform(aRect.width, 0.0f, 0.0f, aRect.height, aRect.x, aRect.y);
       if (aTransformed) {
         xform *= currentTransform;
