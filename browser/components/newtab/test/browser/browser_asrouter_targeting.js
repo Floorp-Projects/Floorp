@@ -1658,12 +1658,12 @@ add_task(async function check_isDeviceMigration() {
       expected: false,
     },
     {
-      title: "other source",
+      title: "invalid source",
       attributionData: {
         source: "www.mozilla.org",
         campaign: "migration",
       },
-      expected: true,
+      expected: false,
     },
     {
       title: "valid attribution data for isDeviceMigration",

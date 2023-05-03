@@ -967,14 +967,17 @@ const TargetingGetters = {
   },
 
   /**
-   * Whether the user installed via the device migration flow.
-   * @return {boolean} `true` when the link to download the browser was part
+   * Whether the user installed via the device migration flow from SUMO.
+   * @return {boolean} `true` when SUMO provided the link to download as part
    * of guidance for device migration. `false` otherwise.
    */
   get isDeviceMigration() {
     const { attributionData } = this;
 
-    return attributionData?.campaign === "migration";
+    return (
+      attributionData?.source === "support.mozilla.org" &&
+      attributionData?.campaign === "migration"
+    );
   },
 };
 
