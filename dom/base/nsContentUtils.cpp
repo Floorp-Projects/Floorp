@@ -8830,7 +8830,15 @@ class StringBuilder {
   // Try to keep the size of StringBuilder close to a jemalloc bucket size (the
   // 16kb one in this case).
   static constexpr uint32_t TARGET_SIZE = 16 * 1024;
-  static const uint32_t STRING_BUFFER_UNITS = TARGET_SIZE / sizeof(Unit) - 1;
+
+  // The number of units we need to remove from the inline buffer so that the
+  // rest of the builder members fit. A more precise approach would be to
+  // calculate that extra size and use (TARGET_SIZE - OTHER_SIZE) / sizeof(Unit)
+  // or so, but this is simpler.
+  static constexpr uint32_t PADDING_UNITS = sizeof(void*) == 8 ? 1 : 2;
+
+  static constexpr uint32_t STRING_BUFFER_UNITS =
+      TARGET_SIZE / sizeof(Unit) - PADDING_UNITS;
 
   StringBuilder() : mLast(this), mLength(0) { MOZ_COUNT_CTOR(StringBuilder); }
 
