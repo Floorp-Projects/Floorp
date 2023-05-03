@@ -8793,8 +8793,6 @@ class BulkAppender {
 
 class StringBuilder {
  private:
-  // Try to keep the size of StringBuilder close to a jemalloc bucket size.
-  static const uint32_t STRING_BUFFER_UNITS = 1020;
   class Unit {
    public:
     Unit() : mAtom(nullptr) { MOZ_COUNT_CTOR(StringBuilder::Unit); }
@@ -8829,6 +8827,11 @@ class StringBuilder {
                 "Unit should remain small");
 
  public:
+  // Try to keep the size of StringBuilder close to a jemalloc bucket size (the
+  // 16kb one in this case).
+  static constexpr uint32_t TARGET_SIZE = 16 * 1024;
+  static const uint32_t STRING_BUFFER_UNITS = TARGET_SIZE / sizeof(Unit) - 1;
+
   StringBuilder() : mLast(this), mLength(0) { MOZ_COUNT_CTOR(StringBuilder); }
 
   MOZ_COUNTED_DTOR(StringBuilder)
@@ -9030,6 +9033,9 @@ class StringBuilder {
   // mLength is used only in the first StringBuilder object in the linked list.
   CheckedInt<uint32_t> mLength;
 };
+
+static_assert(sizeof(StringBuilder) <= StringBuilder::TARGET_SIZE,
+              "StringBuilder should fit in the target bucket");
 
 }  // namespace
 
