@@ -12593,13 +12593,6 @@
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
-# nsJARInputStream::Available returns the size indicated by the archived entry
-# so we need a limit so we don't OOM if the archive is corrupted.
-- name: network.jar.max_available_size
-  type: RelaxedAtomicUint32
-  value: 256*1024*1024 # 256 Mb
-  mirror: always
-
 # When this pref is true we clear the Content-Encoding header for
 # application/x-gzip Content-Type responses, see bug 1030660.
 #

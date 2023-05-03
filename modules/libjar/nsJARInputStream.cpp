@@ -9,7 +9,6 @@
 #include "zipstruct.h"  // defines ZIP compression codes
 #include "nsZipArchive.h"
 #include "mozilla/MmapFaultHandler.h"
-#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 
@@ -155,8 +154,6 @@ nsJARInputStream::Available(uint64_t* _retval) {
   // They just use the _retval value.
   *_retval = 0;
 
-  uint64_t maxAvailableSize = 0;
-
   switch (mMode) {
     case MODE_NOTINITED:
       break;
@@ -170,11 +167,7 @@ nsJARInputStream::Available(uint64_t* _retval) {
 
     case MODE_INFLATE:
     case MODE_COPY:
-      maxAvailableSize = StaticPrefs::network_jar_max_available_size();
-      if (!maxAvailableSize) {
-        maxAvailableSize = std::numeric_limits<uint64_t>::max();
-      }
-      *_retval = std::min(mOutSize - mZs.total_out, maxAvailableSize);
+      *_retval = mOutSize - mZs.total_out;
       break;
   }
 
