@@ -34,6 +34,7 @@ import com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialRpEntity;
 import com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialType;
 import com.google.android.gms.fido.fido2.api.common.PublicKeyCredentialUserEntity;
 import com.google.android.gms.fido.fido2.api.common.RSAAlgorithm;
+import com.google.android.gms.fido.fido2.api.common.ResidentKeyRequirement;
 import com.google.android.gms.tasks.Task;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -188,6 +189,20 @@ import org.mozilla.gecko.util.GeckoBundle;
     if (authenticatorSelection.getInt("requireCrossPlatformAttachment", 0) == 1) {
       selBuild.setAttachment(Attachment.CROSS_PLATFORM);
     }
+    final String residentKey = authenticatorSelection.getString("residentKey", "");
+    if (residentKey.equals("required")) {
+      selBuild
+          .setRequireResidentKey(true)
+          .setResidentKeyRequirement(ResidentKeyRequirement.RESIDENT_KEY_REQUIRED);
+    } else if (residentKey.equals("preferred")) {
+      selBuild
+          .setRequireResidentKey(false)
+          .setResidentKeyRequirement(ResidentKeyRequirement.RESIDENT_KEY_PREFERRED);
+    } else if (residentKey.equals("discouraged")) {
+      selBuild
+          .setRequireResidentKey(false)
+          .setResidentKeyRequirement(ResidentKeyRequirement.RESIDENT_KEY_DISCOURAGED);
+    }
     final AuthenticatorSelectionCriteria sel = selBuild.build();
 
     final AuthenticationExtensions.Builder extBuilder = new AuthenticationExtensions.Builder();
@@ -196,8 +211,7 @@ import org.mozilla.gecko.util.GeckoBundle;
     }
     final AuthenticationExtensions ext = extBuilder.build();
 
-    // requireResidentKey andrequireUserVerification are not yet
-    // consumed by Android's API
+    // requireUserVerification are not yet consumed by Android's API
 
     final List<PublicKeyCredentialDescriptor> excludedList =
         new ArrayList<PublicKeyCredentialDescriptor>();
