@@ -41,19 +41,19 @@ add_task(async function validate_filename_method() {
   Assert.equal(checkFilename(" happy\u061c\u2069.png", 0), "happy__.png");
   Assert.equal(
     checkFilename("12345678".repeat(31) + "abcdefgh.png", 0),
-    "12345678".repeat(31) + "abc.png"
+    "12345678".repeat(31) + "ab.png"
   );
   Assert.equal(
     checkFilename("簡単".repeat(41) + ".png", 0),
     "簡単".repeat(41) + ".png"
   );
   Assert.equal(
-    checkFilename("簡単".repeat(42) + ".png", 0),
-    "簡単".repeat(41) + "簡.png"
+    checkFilename("a" + "簡単".repeat(42) + ".png", 0),
+    "a" + "簡単".repeat(40) + "簡.png"
   );
   Assert.equal(
-    checkFilename("簡単".repeat(56) + ".png", 0),
-    "簡単".repeat(40) + "簡.png"
+    checkFilename("a" + "簡単".repeat(56) + ".png", 0),
+    "a" + "簡単".repeat(40) + ".png"
   );
   Assert.equal(checkFilename("café.png", 0), "café.png");
   Assert.equal(
@@ -62,7 +62,7 @@ add_task(async function validate_filename_method() {
   );
   Assert.equal(
     checkFilename("café".repeat(51) + ".png", 0),
-    "café".repeat(50) + ".png"
+    "café".repeat(49) + "caf.png"
   );
 
   Assert.equal(
@@ -84,11 +84,11 @@ add_task(async function validate_filename_method() {
   );
   Assert.equal(
     checkFilename("noextensionfile".repeat(17), 0),
-    "noextensionfile".repeat(16) + "noextension.png"
+    "noextensionfile".repeat(16) + "noextensio.png"
   );
   Assert.equal(
     checkFilename("noextensionfile".repeat(16) + "noextensionfil.", 0),
-    "noextensionfile".repeat(16) + "noextension.png"
+    "noextensionfile".repeat(16) + "noextensio.png"
   );
 
   Assert.equal(checkFilename("  first  .png  ", 0), "first .png");
@@ -130,7 +130,7 @@ add_task(async function validate_filename_method() {
   );
   Assert.equal(
     checkFilename(repeatStr + "seventh.png", 0),
-    repeatStr + "sev.png"
+    repeatStr + "se.png"
   );
 
   // no filename, so index is used by default.
@@ -154,19 +154,19 @@ add_task(async function validate_filename_method() {
   let ext = ".fairlyLongExtension";
   Assert.equal(
     checkFilename(repeatStr + ext, mimeService.VALIDATE_SANITIZE_ONLY),
-    repeatStr.substring(0, 255 - ext.length) + ext
+    repeatStr.substring(0, 254 - ext.length) + ext
   );
 
-  ext = "lo%?ng/invalid? ch\\ars";
+  ext = "lo%?n/ginvalid? ch\\ars";
   Assert.equal(
     checkFilename(repeatStr + ext, mimeService.VALIDATE_SANITIZE_ONLY),
-    repeatStr + "lo% ng_"
+    repeatStr + "lo% n_"
   );
 
   ext = ".long/invalid%? ch\\ars";
   Assert.equal(
     checkFilename(repeatStr + ext, mimeService.VALIDATE_SANITIZE_ONLY),
-    repeatStr.substring(0, 234) + ".long_invalid% ch_ars"
+    repeatStr.substring(0, 233) + ".long_invalid% ch_ars"
   );
 
   Assert.equal(
