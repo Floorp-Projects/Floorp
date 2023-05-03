@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 WASM_SOURCES += [
+    "/memory/mozalloc/mozalloc.cpp",
     "/third_party/rlbox_wasm2c_sandbox/c_src/wasm2c_sandbox_wrapper.c",
 ]
 
@@ -47,6 +48,8 @@ AllowCompilerWarnings()
 WASM_DEFINES["MOZILLA_CLIENT"] = True
 WASM_DEFINES["_WASI_EMULATED_PROCESS_CLOCKS"] = True
 WASM_DEFINES["MOZ_IN_WASM_SANDBOX"] = True
+if CONFIG["ENABLE_CLANG_PLUGIN"]:
+    WASM_DEFINES["MOZ_CLANG_PLUGIN"] = True
 
 SANDBOXED_WASM_LIBRARY_NAME = "rlbox.wasm"
 
