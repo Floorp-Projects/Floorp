@@ -63,6 +63,10 @@ SetProcessMitigationPolicy(PROCESS_MITIGATION_POLICY aMitigationPolicy,
                            PVOID aBuffer, SIZE_T aBufferLen);
 #endif  // (_WIN32_WINNT < 0x0602)
 
+#define RtlGenRandom SystemFunction036
+extern "C" BOOLEAN NTAPI RtlGenRandom(PVOID aRandomBuffer,
+                                      ULONG aRandomBufferLength);
+
 using namespace mozilla;
 
 struct payload {
@@ -599,9 +603,11 @@ struct Predicates<void(__fastcall*)(Args...)> {
 //
 // Note: When |func| returns void, you must supply |Ignore| and |nullptr| as the
 // |pred| and |comp| arguments, respectively.
-#define TEST_HOOK(dll, func, pred, comp) \
-  TestHook<decltype(&func)>(dll, #func,  \
+#define TEST_HOOK_HELPER(dll, func, pred, comp) \
+  TestHook<decltype(&func)>(dll, #func,         \
                             &Predicates<decltype(&func)>::pred<comp>)
+
+#define TEST_HOOK(dll, func, pred, comp) TEST_HOOK_HELPER(dll, func, pred, comp)
 
 // We need to special-case functions that return INVALID_HANDLE_VALUE
 // (ie, CreateFile). Our template machinery for comparing values doesn't work
@@ -1383,6 +1389,7 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
       TEST_HOOK("user32.dll", SetCursorPos, NotEquals, FALSE) &&
       TEST_HOOK("bcrypt.dll", BCryptGenRandom, Equals,
                 static_cast<NTSTATUS>(STATUS_INVALID_HANDLE)) &&
+      TEST_HOOK("advapi32.dll", RtlGenRandom, Equals, TRUE) &&
 #if !defined(_M_ARM64)
       TEST_HOOK("imm32.dll", ImmGetContext, Equals, nullptr) &&
 #endif  // !defined(_M_ARM64)
