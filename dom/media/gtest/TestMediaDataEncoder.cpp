@@ -156,25 +156,16 @@ already_AddRefed<MediaDataEncoder> CreateVideoEncoder(
                         "TestMediaDataEncoder"));
 
   RefPtr<MediaDataEncoder> e;
-#ifdef MOZ_WIDGET_ANDROID
-  const bool hardwareNotAllowed = false;
-#else
-  const bool hardwareNotAllowed = true;
-#endif
   if (aSpecific) {
-    e = f->CreateEncoder(
-        CreateEncoderParams(videoInfo /* track info */, aUsage, taskQueue,
-                            aPixelFormat, FRAME_RATE /* FPS */,
-                            KEYFRAME_INTERVAL /* keyframe interval */,
-                            BIT_RATE /* bitrate */, aSpecific.value()),
-        hardwareNotAllowed);
+    e = f->CreateEncoder(CreateEncoderParams(
+        videoInfo /* track info */, aUsage, taskQueue, aPixelFormat,
+        FRAME_RATE /* FPS */, KEYFRAME_INTERVAL /* keyframe interval */,
+        BIT_RATE /* bitrate */, aSpecific.value()));
   } else {
-    e = f->CreateEncoder(
-        CreateEncoderParams(videoInfo /* track info */, aUsage, taskQueue,
-                            aPixelFormat, FRAME_RATE /* FPS */,
-                            KEYFRAME_INTERVAL /* keyframe interval */,
-                            BIT_RATE /* bitrate */),
-        hardwareNotAllowed);
+    e = f->CreateEncoder(CreateEncoderParams(
+        videoInfo /* track info */, aUsage, taskQueue, aPixelFormat,
+        FRAME_RATE /* FPS */, KEYFRAME_INTERVAL /* keyframe interval */,
+        BIT_RATE /* bitrate */));
   }
 
   return e.forget();
