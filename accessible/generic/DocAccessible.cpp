@@ -1570,10 +1570,9 @@ LocalAccessible* DocAccessible::GetAccessibleEvenIfNotInMap(
   if (imageFrame) {
     LocalAccessible* parent = GetAccessible(imageFrame->GetContent());
     if (parent) {
-      LocalAccessible* area =
-          parent->AsImageMap()->GetChildAccessibleFor(aNode);
-      if (area) return area;
-
+      if (HTMLImageMapAccessible* imageMap = parent->AsImageMap()) {
+        return imageMap->GetChildAccessibleFor(aNode);
+      }
       return nullptr;
     }
   }
