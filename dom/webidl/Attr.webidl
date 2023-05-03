@@ -29,6 +29,5 @@ interface Attr : Node {
 // Mozilla extensions
 
 partial interface Attr {
-           [GetterThrows]
   readonly attribute Element? ownerElement;
 };

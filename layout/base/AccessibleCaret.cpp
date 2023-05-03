@@ -226,7 +226,7 @@ void AccessibleCaret::RemoveCaretElement(Document* aDocument) {
   CaretElement().RemoveEventListener(u"touchstart"_ns, mDummyTouchListener,
                                      false);
 
-  aDocument->RemoveAnonymousContent(*mCaretElementHolder, IgnoreErrors());
+  aDocument->RemoveAnonymousContent(*mCaretElementHolder);
 }
 
 void AccessibleCaret::ClearCachedData() {

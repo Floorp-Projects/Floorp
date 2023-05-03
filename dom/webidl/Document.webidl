@@ -528,7 +528,7 @@ partial interface Document {
    * Removes the element inserted into the CanvasFrame given an AnonymousContent
    * instance.
    */
-  [ChromeOnly, Throws]
+  [ChromeOnly]
   undefined removeAnonymousContent(AnonymousContent aContent);
 };
 

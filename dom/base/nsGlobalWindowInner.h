@@ -662,9 +662,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   // https://w3c.github.io/webappsec-secure-contexts/#dom-window-issecurecontext
   bool IsSecureContext() const;
 
-  void GetSidebar(mozilla::dom::OwningExternalOrWindowProxy& aResult,
-                  mozilla::ErrorResult& aRv);
-  mozilla::dom::External* GetExternal(mozilla::ErrorResult& aRv);
+  void GetSidebar(mozilla::dom::OwningExternalOrWindowProxy& aResult);
+  mozilla::dom::External* External();
 
   mozilla::dom::Worklet* GetPaintWorklet(mozilla::ErrorResult& aRv);
 

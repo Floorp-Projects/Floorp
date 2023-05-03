@@ -405,7 +405,7 @@ partial namespace ChromeUtils {
    * nsISupports is implicitly supported, and must not be included in the
    * interface list.
    */
-  [Affects=Nothing, NewObject, Throws]
+  [Affects=Nothing, NewObject]
   MozQueryInterface generateQI(sequence<any> interfaces);
 
   /**

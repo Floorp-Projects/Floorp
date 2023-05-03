@@ -164,7 +164,7 @@ void Attr::SetValue(const nsAString& aValue, ErrorResult& aRv) {
 
 bool Attr::Specified() const { return true; }
 
-Element* Attr::GetOwnerElement(ErrorResult& aRv) { return GetElement(); }
+Element* Attr::GetOwnerElement() { return GetElement(); }
 
 void Attr::GetNodeValueInternal(nsAString& aNodeValue) { GetValue(aNodeValue); }
 

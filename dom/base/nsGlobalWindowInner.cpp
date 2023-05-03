@@ -7496,7 +7496,7 @@ bool nsGlobalWindowInner::IsSecureContext() const {
   return JS::GetIsSecureContext(realm);
 }
 
-External* nsGlobalWindowInner::GetExternal(ErrorResult& aRv) {
+External* nsGlobalWindowInner::External() {
   if (!mExternal) {
     mExternal = new dom::External(ToSupports(this));
   }
@@ -7504,8 +7504,7 @@ External* nsGlobalWindowInner::GetExternal(ErrorResult& aRv) {
   return mExternal;
 }
 
-void nsGlobalWindowInner::GetSidebar(OwningExternalOrWindowProxy& aResult,
-                                     ErrorResult& aRv) {
+void nsGlobalWindowInner::GetSidebar(OwningExternalOrWindowProxy& aResult) {
   // First check for a named frame named "sidebar"
   RefPtr<BrowsingContext> domWindow = GetChildWindow(u"sidebar"_ns);
   if (domWindow) {
@@ -7513,7 +7512,7 @@ void nsGlobalWindowInner::GetSidebar(OwningExternalOrWindowProxy& aResult,
     return;
   }
 
-  RefPtr<External> external = GetExternal(aRv);
+  RefPtr<dom::External> external = External();
   if (external) {
     aResult.SetAsExternal() = external;
   }
