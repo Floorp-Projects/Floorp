@@ -169,6 +169,8 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
             object : BottomSheetDialog(requireContext(), this.theme) {
                 @Deprecated("Deprecated in Java")
                 override fun onBackPressed() {
+                    @Suppress("DEPRECATION")
+                    super.onBackPressed()
                     this@TrackingProtectionPanelDialogFragment.onBackPressed()
                 }
             }.apply {

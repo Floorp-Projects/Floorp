@@ -22,7 +22,7 @@ object FenixVersions {
     const val androidx_activity = "1.6.1"
     const val androidx_compose = "1.4.2"
     const val androidx_compose_compiler = "1.4.6"
-    const val androidx_appcompat = "1.3.0"
+    const val androidx_appcompat = "1.6.1"
     const val androidx_benchmark = "1.1.1"
     const val androidx_biometric = "1.1.0"
     const val androidx_coordinator_layout = "1.1.0"
