@@ -2823,8 +2823,8 @@ QuotaManager::Observer::Observe(nsISupports* aSubject, const char* aTopic,
     }
 
     nsCOMPtr<nsIQuotaRequest> request;
-    rv = quotaManagerService->ClearStoragesForOriginAttributesPattern(
-        u"{ \"privateBrowsingId\": 1 }"_ns, nsGetterAddRefs(request));
+    rv = quotaManagerService->ClearStoragesForPrivateBrowsing(
+        nsGetterAddRefs(request));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
