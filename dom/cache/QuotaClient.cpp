@@ -181,7 +181,7 @@ Result<UsageInfo, nsresult> CacheQuotaClient::InitOrigin(
 
   QM_TRY_INSPECT(
       const auto& dir,
-      qm->GetDirectoryForOrigin(aPersistenceType, aOriginMetadata.mOrigin));
+      qm->GetOriginDirectory(aPersistenceType, aOriginMetadata.mOrigin));
 
   QM_TRY(MOZ_TO_RESULT(
       dir->Append(NS_LITERAL_STRING_FROM_CSTRING(DOMCACHE_DIRECTORY_NAME))));

@@ -1683,7 +1683,7 @@ Result<UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  QM_TRY_UNWRAP(auto directory, quotaManager->GetDirectoryForOrigin(
+  QM_TRY_UNWRAP(auto directory, quotaManager->GetOriginDirectory(
                                     aPersistenceType, aOriginMetadata.mOrigin));
 
   MOZ_ASSERT(directory);
