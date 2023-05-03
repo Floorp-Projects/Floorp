@@ -21,6 +21,7 @@
 #include "Http2Stream.h"
 
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Telemetry.h"
 #include "nsAlgorithm.h"
 #include "nsHttp.h"
@@ -554,19 +555,25 @@ void Http2StreamBase::UpdateTransportReadEvents(uint32_t count) {
 void Http2StreamBase::UpdateTransportSendEvents(uint32_t count) {
   mTotalSent += count;
 
+  // Setting the TCP send buffer, introduced in
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=790184, which the following
+  // comment refers to, is being removed once we verify no increases in error
+  // rate.
+  //
   // normally on non-windows platform we use TCP autotuning for
   // the socket buffers, and this works well (managing enough
   // buffers for BDP while conserving memory) for HTTP even when
   // it creates really deep queues. However this 'buffer bloat' is
   // a problem for http/2 because it ruins the low latency properties
   // necessary for PING and cancel to work meaningfully.
-  //
+
   // If this stream represents a large upload, disable autotuning for
   // the session and cap the send buffers by default at 128KB.
   // (10Mbit/sec @ 100ms)
   //
   uint32_t bufferSize = gHttpHandler->SpdySendBufferSize();
-  if ((mTotalSent > bufferSize) && !mSetTCPSocketBuffer) {
+  if (StaticPrefs::network_http_http2_send_buffer_size() > 0 &&
+      (mTotalSent > bufferSize) && !mSetTCPSocketBuffer) {
     mSetTCPSocketBuffer = 1;
     mSocketTransport->SetSendBufferSize(bufferSize);
   }

@@ -1388,8 +1388,8 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
         1));
   }
 
-  // The amount of seconds to wait for a http2 ping response before
-  // closing the session.
+  // If http2.send-buffer-size is non-zero, the size to set the TCP
+  //  sendbuffer to once the stream has surpassed this number of bytes uploaded
   if (PREF_CHANGED(HTTP_PREF("http2.send-buffer-size"))) {
     mSpdySendBufferSize = (uint32_t)clamped(
         StaticPrefs::network_http_http2_send_buffer_size(), 1500, 0x7fffffff);
