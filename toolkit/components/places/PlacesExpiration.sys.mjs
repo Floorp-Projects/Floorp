@@ -120,22 +120,29 @@ const ACTION = {
 const EXPIRATION_QUERIES = {
   // Some visits can be expired more often than others, cause they are less
   // useful to the user and can pollute awesomebar results:
-  // 1. visits to urls over 255 chars
+  // 1. urls over 255 chars having only one visit
   // 2. downloads
+  // 3. non-typed hidden single-visit urls
   // We never expire redirect targets, because they are currently necessary to
   // recognize redirect sources (see Bug 468710 for better options).
-  // Note: due to the REPLACE option, this should be executed before
-  // QUERY_FIND_VISITS_TO_EXPIRE, that has a more complete result.
   QUERY_FIND_EXOTIC_VISITS_TO_EXPIRE: {
     sql: `INSERT INTO expiration_notify (v_id, url, guid, visit_date, reason)
-          SELECT v.id, h.url, h.guid, v.visit_date, "exotic"
-          FROM moz_historyvisits v
-          JOIN moz_places h ON h.id = v.place_id
-          WHERE visit_date < strftime('%s','now','localtime','start of day','-60 days','utc') * 1000000
-          AND visit_type NOT IN (5,6)
-          AND ( LENGTH(h.url) > 255 OR v.visit_type = 7 )
-          ORDER BY v.visit_date ASC
-          LIMIT :limit_visits`,
+      WITH visits AS (
+        SELECT v.id, url, guid, visit_type, visit_date, visit_count, hidden, typed
+        FROM moz_historyvisits v
+        JOIN moz_places h ON h.id = v.place_id
+        WHERE visit_date < strftime('%s','now','localtime','start of day','-90 days','utc') * 1000000
+        AND visit_type NOT IN (5,6)
+      )
+      SELECT id, url, guid, visit_date, "exotic"
+      FROM visits
+      WHERE (hidden = 1 AND typed = 0 AND visit_count <= 1) OR visit_type = 7
+      UNION ALL
+      SELECT id, url, guid, visit_date, "exotic"
+      FROM visits
+      WHERE visit_count = 1 AND LENGTH(url) > 255
+      ORDER BY visit_date ASC
+      LIMIT :limit_visits`,
     actions:
       ACTION.TIMED_OVERLIMIT |
       ACTION.IDLE_DIRTY |
@@ -555,7 +562,7 @@ nsPlacesExpiration.prototype = {
     }, 300000);
   },
 
-  _onQueryResult(row) {
+  _handleQueryResultAndAddNotification(row, notifications) {
     // We don't want to notify after shutdown.
     if (this._shuttingDown) {
       return;
@@ -597,15 +604,15 @@ nsPlacesExpiration.prototype = {
 
     // Dispatch expiration notifications to history.
     const isRemovedFromStore = !!wholeEntry;
-    PlacesObservers.notifyListeners([
+    notifications.push(
       new PlacesVisitRemoved({
         url: uri.spec,
         pageGuid: guid,
         reason: PlacesVisitRemoved.REASON_EXPIRED,
         isRemovedFromStore,
         isPartialVisistsRemoval: !isRemovedFromStore && visitDate > 0,
-      }),
-    ]);
+      })
+    );
   },
 
   _shuttingDown: false,
@@ -748,6 +755,7 @@ nsPlacesExpiration.prototype = {
     await this._dbInitializedPromise;
 
     try {
+      let notifications = [];
       await lazy.PlacesUtils.withConnectionWrapper(
         "PlacesExpiration.jsm: expire",
         async db => {
@@ -760,16 +768,17 @@ nsPlacesExpiration.prototype = {
                   aLimit,
                   aAction
                 );
-                await db.executeCached(
-                  query.sql,
-                  params,
-                  this._onQueryResult.bind(this)
-                );
+                await db.executeCached(query.sql, params, row => {
+                  this._handleQueryResultAndAddNotification(row, notifications);
+                });
               }
             }
           });
         }
       );
+      if (notifications.length) {
+        PlacesObservers.notifyListeners(notifications);
+      }
     } catch (ex) {
       console.error(ex);
       return;
