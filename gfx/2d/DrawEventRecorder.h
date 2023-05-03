@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "mozilla/DataMutex.h"
+#include "mozilla/ThreadSafeWeakPtr.h"
 #include "nsTHashSet.h"
 
 namespace mozilla {
@@ -36,19 +37,26 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
   }
   virtual void FlushItem(IntRect) {}
   void DetachResources() {
-    // The iteration is a bit awkward here because our iterator will
-    // be invalidated by the removal
-    for (auto font = mStoredFonts.begin(); font != mStoredFonts.end();) {
-      auto oldFont = font++;
-      (*oldFont)->RemoveUserData(reinterpret_cast<UserDataKey*>(this));
-    }
-    for (auto surface = mStoredSurfaces.begin();
-         surface != mStoredSurfaces.end();) {
-      auto oldSurface = surface++;
-      (*oldSurface)->RemoveUserData(reinterpret_cast<UserDataKey*>(this));
-    }
-    mStoredFonts.clear();
-    mStoredSurfaces.clear();
+    std::unordered_set<ScaledFont*> fonts;
+    fonts.swap(mStoredFonts);
+    std::for_each(fonts.begin(), fonts.end(), [this](auto font) {
+      font->RemoveUserData(reinterpret_cast<UserDataKey*>(this));
+    });
+
+    // SourceSurfaces can be deleted off the main thread, so we use
+    // ThreadSafeWeakPtrs to allow for this. RemoveUserData is thread safe.
+    std::unordered_map<void*, ThreadSafeWeakPtr<SourceSurface>> surfaces;
+    surfaces.swap(mStoredSurfaces);
+    std::for_each(surfaces.begin(), surfaces.end(), [this](auto surfacePair) {
+      RefPtr<SourceSurface> strongRef(surfacePair.second);
+      if (strongRef) {
+        strongRef->RemoveUserData(reinterpret_cast<UserDataKey*>(this));
+      }
+    });
+
+    // Now that we've detached we can't get any more pending deletions, so
+    // processing now should mean we include all clean up operations.
+    ProcessPendingDeletions();
   }
 
   void ClearResources() {
@@ -67,14 +75,7 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
   virtual void RecordEvent(const RecordedEvent& aEvent) = 0;
 
   void AddStoredObject(const ReferencePtr aObject) {
-    PendingDeletionsVector pendingDeletions;
-    {
-      auto lockedPendingDeletions = mPendingDeletions.Lock();
-      pendingDeletions.swap(*lockedPendingDeletions);
-    }
-    for (const auto& pendingDeletion : pendingDeletions) {
-      pendingDeletion();
-    }
+    ProcessPendingDeletions();
     mStoredObjects.insert(aObject);
   }
 
@@ -112,7 +113,7 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
   void RemoveScaledFont(ScaledFont* aFont) { mStoredFonts.erase(aFont); }
 
   void AddSourceSurface(SourceSurface* aSurface) {
-    mStoredSurfaces.insert(aSurface);
+    mStoredSurfaces.emplace(aSurface, aSurface);
   }
 
   void RemoveSourceSurface(SourceSurface* aSurface) {
@@ -155,6 +156,19 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
  protected:
   void StoreExternalSurfaceRecording(SourceSurface* aSurface, uint64_t aKey);
 
+  void ProcessPendingDeletions() {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    PendingDeletionsVector pendingDeletions;
+    {
+      auto lockedPendingDeletions = mPendingDeletions.Lock();
+      pendingDeletions.swap(*lockedPendingDeletions);
+    }
+    for (const auto& pendingDeletion : pendingDeletions) {
+      pendingDeletion();
+    }
+  }
+
   virtual void Flush() = 0;
 
   std::unordered_set<const void*> mStoredObjects;
@@ -174,7 +188,10 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
   std::unordered_set<uint64_t> mStoredFontData;
   std::unordered_set<ScaledFont*> mStoredFonts;
   std::vector<RefPtr<ScaledFont>> mScaledFonts;
-  std::unordered_set<SourceSurface*> mStoredSurfaces;
+
+  // SourceSurfaces can get deleted off the main thread, so we hold a map of the
+  // raw pointer to a ThreadSafeWeakPtr to protect against this.
+  std::unordered_map<void*, ThreadSafeWeakPtr<SourceSurface>> mStoredSurfaces;
   std::vector<RefPtr<SourceSurface>> mExternalSurfaces;
   bool mExternalFonts;
 };
