@@ -329,14 +329,23 @@ Result<EntryId, QMResult> FindEntryId(const FileSystemConnection& aConnection,
   return entryId;
 }
 
-bool IsSame(const FileSystemConnection& aConnection,
-            const FileSystemEntryMetadata& aHandle,
-            const FileSystemChildMetadata& aNewHandle, bool aIsFile) {
+Result<bool, QMResult> IsSame(const FileSystemConnection& aConnection,
+                              const FileSystemEntryMetadata& aHandle,
+                              const FileSystemChildMetadata& aNewHandle,
+                              bool aIsFile) {
   MOZ_ASSERT(!aNewHandle.parentId().IsEmpty());
 
-  QM_TRY_UNWRAP(EntryId entryId, FindEntryId(aConnection, aNewHandle, aIsFile),
-                false);
-  return entryId == aHandle.entryId();
+  // Typically aNewHandle does not exist which is not an error
+  QM_TRY_RETURN(QM_OR_ELSE_LOG_VERBOSE_IF(
+      // Expression.
+      FindEntryId(aConnection, aNewHandle, aIsFile)
+          .map([&aHandle](const EntryId& entryId) {
+            return entryId == aHandle.entryId();
+          }),
+      // Predicate.
+      IsSpecificError<NS_ERROR_DOM_NOT_FOUND_ERR>,
+      // Fallback.
+      ErrToOkFromQMResult<false>));
 }
 
 Result<bool, QMResult> IsFile(const FileSystemConnection& aConnection,
@@ -1338,7 +1347,9 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::MoveEntry(
 
   // If the rename doesn't change the name or directory, just return success.
   // XXX Needs to be added to the spec
-  if (IsSame(mConnection, aHandle, aNewDesignation, isFile)) {
+  QM_WARNONLY_TRY_UNWRAP(Maybe<bool> maybeSame,
+                         IsSame(mConnection, aHandle, aNewDesignation, isFile));
+  if (maybeSame && maybeSame.value()) {
     return true;
   }
 
