@@ -1646,8 +1646,9 @@
     object: Object
     rhs: Value
   arguments:
-    name: PropertyKey
-    strict: bool
+    name: PropertyName*
+  congruent_to: custom
+  alias_set: custom
   possibly_calls: true
 
 - name: MegamorphicHasProp
