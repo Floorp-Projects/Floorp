@@ -1920,7 +1920,7 @@ nsresult NS_NewURI(nsIURI** aURI, const nsACString& aSpec,
     return handler->NewURI(aSpec, aCharset, aBaseURI, aURI);
   }
 
-  if (scheme.EqualsLiteral("indexeddb")) {
+  if (scheme.EqualsLiteral("indexeddb") || scheme.EqualsLiteral("uuid")) {
     return NS_MutateURI(new nsStandardURL::Mutator())
         .Apply(&nsIStandardURLMutator::Init, nsIStandardURL::URLTYPE_AUTHORITY,
                0, aSpec, aCharset, aBaseURI, nullptr)
