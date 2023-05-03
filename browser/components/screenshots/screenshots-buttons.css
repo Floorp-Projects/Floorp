@@ -6,15 +6,9 @@
   background-position: center top;
   background-repeat: no-repeat;
   background-size: 46px 46px;
-  border: 1px solid transparent;
-  height: 100%;
   min-width: 90px;
   padding: 46px 5px 5px;
   margin: 2px;
-}
-
-.all-buttons-container button:hover {
-  background-color: var(--button-hover-bgcolor, color-mix(in srgb, currentColor 17%, transparent));
 }
 
 .all-buttons-container .full-page {
@@ -28,5 +22,5 @@
 .full-page, .visible-page {
   -moz-context-properties: fill, stroke;
   fill: buttonText;
-  stroke: #00fdff;
+  stroke: AccentColor;
 }
