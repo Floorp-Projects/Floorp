@@ -270,3 +270,34 @@ add_task(async function test_fxa_signin_window_multiple_tabs_success() {
 
   sandbox.restore();
 });
+
+/**
+ * Tests that we can pass an entrypoint and UTM parameters to the FxA sign-in
+ * page.
+ */
+add_task(async function test_fxa_signin_flow_entrypoint_utm_params() {
+  await BrowserTestUtils.withNewTab("about:welcome", async browser => {
+    let fxaTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
+    let resultPromise = SpecialPowers.spawn(browser, [], async () => {
+      return content.wrappedJSObject.AWSendToParent("SPECIAL_ACTION", {
+        type: "FXA_SIGNIN_FLOW",
+        data: {
+          entrypoint: "test-entrypoint",
+          extraParams: {
+            utm_test1: "utm_test1",
+            utm_test2: "utm_test2",
+          },
+        },
+      });
+    });
+    let fxaTab = await fxaTabPromise;
+
+    let uriParams = new URLSearchParams(fxaTab.linkedBrowser.currentURI.query);
+    Assert.equal(uriParams.get("entrypoint"), "test-entrypoint");
+    Assert.equal(uriParams.get("utm_test1"), "utm_test1");
+    Assert.equal(uriParams.get("utm_test2"), "utm_test2");
+
+    BrowserTestUtils.removeTab(fxaTab);
+    await resultPromise;
+  });
+});
