@@ -1,0 +1,9 @@
+/**
+ * interceramic.com - Unsupported message
+ * Bug #1830810 - https://bugzilla.mozilla.org/show_bug.cgi?id=1830810
+ * WebCompat issue #117807 - https://github.com/webcompat/web-bugs/issues/117807
+ */
+
+#ff-modal {
+  display: none !important;
+}

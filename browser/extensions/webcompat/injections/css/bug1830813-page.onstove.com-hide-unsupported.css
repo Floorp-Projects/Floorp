@@ -1,0 +1,14 @@
+/**
+ * onstove.com - Unsupported message
+ * Bug #1830813 - https://bugzilla.mozilla.org/show_bug.cgi?id=1830813
+ * WebCompat issue #116760 - https://github.com/webcompat/web-bugs/issues/116760
+ */
+
+.gnb-alerts.gnb-old-browser {
+  height: 0;
+}
+
+.isCampaign .gnb-stove.gnb-default-fixed,
+.isCampaign .layout.layout-base .layout-header {
+  height: 68px;
+}
