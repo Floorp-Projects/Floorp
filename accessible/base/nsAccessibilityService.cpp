@@ -195,33 +195,19 @@ static bool AttributesMustBeAccessible(nsIContent* aContent,
  */
 static bool MustBeGenericAccessible(nsIContent* aContent,
                                     DocAccessible* aDocument) {
-  if (aContent->IsInNativeAnonymousSubtree() || aContent->IsSVGElement()) {
-    // We should not force create accs for anonymous content.
-    // This is an issue for inputs, which have an intermediate
-    // container with relevant overflow styling between the input
-    // and its internal input content.
-    // We should also avoid this for SVG elements (ie. `<foreignobject>`s
-    // which have default overflow:hidden styling).
-    return false;
-  }
   nsIFrame* frame = aContent->GetPrimaryFrame();
   MOZ_ASSERT(frame);
-  nsAutoCString overflow;
-  frame->Style()->GetComputedPropertyValue(eCSSProperty_overflow, overflow);
   // If the frame has been transformed, and the content has any children, we
   // should create an Accessible so that we can account for the transform when
   // calculating the Accessible's bounds using the parent process cache.
-  // Ditto for content which is position: fixed or sticky or has overflow
-  // styling (auto, scroll, hidden).
+  // Ditto for content which is position: fixed or sticky.
   // However, don't do this for XUL widgets, as this breaks XUL a11y code
   // expectations in some cases. XUL widgets are only used in the parent
   // process and can't be cached anyway.
   return aContent->HasChildren() && !aContent->IsXULElement() &&
          (frame->IsTransformed() || frame->IsStickyPositioned() ||
           (frame->StyleDisplay()->mPosition == StylePositionProperty::Fixed &&
-           nsLayoutUtils::IsReallyFixedPos(frame)) ||
-          (overflow.Equals("auto"_ns) || overflow.Equals("scroll"_ns) ||
-           overflow.Equals("hidden"_ns)));
+           nsLayoutUtils::IsReallyFixedPos(frame)));
 }
 
 /**
@@ -531,23 +517,18 @@ void nsAccessibilityService::NotifyOfComputedStyleChange(
   LocalAccessible* accessible = aContent == document->GetContent()
                                     ? document
                                     : document->GetAccessible(aContent);
-  if (!accessible && aContent && aContent->HasChildren() &&
-      !aContent->IsInNativeAnonymousSubtree()) {
+  if (!accessible && aContent && aContent->HasChildren()) {
     // If the content has children and its frame has a transform, create an
     // Accessible so that we can account for the transform when calculating
     // the Accessible's bounds using the parent process cache. Ditto for
-    // position: fixed/sticky and content with overflow styling (hidden, auto,
-    // scroll)
+    // position: fixed/sticky content.
     const nsIFrame* frame = aContent->GetPrimaryFrame();
     const ComputedStyle* newStyle = frame ? frame->Style() : nullptr;
-    nsAutoCString overflow;
-    newStyle->GetComputedPropertyValue(eCSSProperty_overflow, overflow);
     if (newStyle &&
         (newStyle->StyleDisplay()->HasTransform(frame) ||
          newStyle->StyleDisplay()->mPosition == StylePositionProperty::Fixed ||
-         newStyle->StyleDisplay()->mPosition == StylePositionProperty::Sticky ||
-         (overflow.Equals("hidden"_ns) || overflow.Equals("scroll"_ns) ||
-          overflow.Equals("auto"_ns)))) {
+         newStyle->StyleDisplay()->mPosition ==
+             StylePositionProperty::Sticky)) {
       document->ContentInserted(aContent, aContent->GetNextSibling());
     }
   } else if (accessible && IPCAccessibilityActive() &&
