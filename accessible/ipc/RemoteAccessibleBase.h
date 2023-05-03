@@ -444,6 +444,7 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   LayoutDeviceIntRect BoundsWithOffset(
       Maybe<nsRect> aOffset, bool aBoundsAreForHittesting = false) const;
   bool IsFixedPos() const;
+  bool IsOverflowHidden() const;
 
   // This function is used exclusively for hit testing.
   bool ContainsPoint(int32_t aX, int32_t aY);
