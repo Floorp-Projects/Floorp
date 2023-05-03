@@ -820,7 +820,7 @@ Result Validator::CheckModule() {
                                                   f->elem_segment.elem_type);
 
       // Init expr.
-      if (f->elem_segment.offset.size()) {
+      if (f->elem_segment.kind == SegmentKind::Active) {
         result_ |= validator_.BeginInitExpr(field.loc, Type::I32);
         ExprVisitor visitor(this);
         result_ |= visitor.VisitExprList(
@@ -881,7 +881,7 @@ Result Validator::CheckModule() {
                                           f->data_segment.kind);
 
       // Init expr.
-      if (f->data_segment.offset.size()) {
+      if (f->data_segment.kind == SegmentKind::Active) {
         Type offset_type = Type::I32;
         Index memory_index = module->GetMemoryIndex(f->data_segment.memory_var);
         if (memory_index < module->memories.size() &&
