@@ -484,6 +484,9 @@ class nsAttrValue {
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
+  nsAtom* GetStoredAtom() const;
+  nsStringBuffer* GetStoredStringBuffer() const;
+
  private:
   // These have to be the same as in ValueType
   enum ValueBaseType {
@@ -495,9 +498,6 @@ class nsAttrValue {
 
   inline ValueBaseType BaseType() const;
   inline bool IsSVGType(ValueType aType) const;
-
-  nsAtom* GetStoredAtom() const;
-  nsStringBuffer* GetStoredStringBuffer() const;
 
   /**
    * Get the index of an EnumTable in the sEnumTableArray.
