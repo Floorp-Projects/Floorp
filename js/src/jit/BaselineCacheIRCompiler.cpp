@@ -1813,8 +1813,8 @@ bool BaselineCacheIRCompiler::emitMegamorphicSetElement(ObjOperandId objId,
   ValueOperand idVal = allocator.useValueRegister(masm, idId);
   ValueOperand val = allocator.useValueRegister(masm, rhsId);
 
+#ifdef JS_CODEGEN_X86
   allocator.discardStack(masm);
-
   // We need a scratch register but we don't have any registers available on
   // x86, so temporarily store |obj| in the frame's scratch slot.
   int scratchOffset = BaselineFrame::reverseOffsetOfScratchValue();
@@ -1827,6 +1827,13 @@ bool BaselineCacheIRCompiler::emitMegamorphicSetElement(ObjOperandId objId,
   // the original frame pointer.
   masm.loadPtr(Address(FramePointer, 0), obj);
   masm.loadPtr(Address(obj, scratchOffset), obj);
+#else
+  AutoScratchRegister scratch(allocator, masm);
+
+  allocator.discardStack(masm);
+  AutoStubFrame stubFrame(*this);
+  stubFrame.enter(masm, scratch);
+#endif
 
   masm.Push(Imm32(strict));
   masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
