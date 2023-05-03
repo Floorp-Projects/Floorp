@@ -1679,12 +1679,13 @@ Result<UsageInfo, nsresult> QuotaClient::GetUsageForOrigin(
     PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
     const AtomicBool& aCanceled) {
   AssertIsOnIOThread();
+  MOZ_ASSERT(aOriginMetadata.mPersistenceType == aPersistenceType);
 
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  QM_TRY_UNWRAP(auto directory, quotaManager->GetOriginDirectory(
-                                    aPersistenceType, aOriginMetadata.mOrigin));
+  QM_TRY_UNWRAP(auto directory,
+                quotaManager->GetOriginDirectory(aOriginMetadata));
 
   MOZ_ASSERT(directory);
 

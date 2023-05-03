@@ -4016,9 +4016,10 @@ nsresult Connection::EnsureStorageConnection() {
   MOZ_ASSERT(quotaManager);
 
   if (!mDatabaseWasNotAvailable || mHasCreatedDatabase) {
-    QM_TRY_INSPECT(
-        const auto& directoryEntry,
-        quotaManager->GetOriginDirectory(PERSISTENCE_TYPE_DEFAULT, Origin()));
+    MOZ_ASSERT(mOriginMetadata.mPersistenceType == PERSISTENCE_TYPE_DEFAULT);
+
+    QM_TRY_INSPECT(const auto& directoryEntry,
+                   quotaManager->GetOriginDirectory(mOriginMetadata));
 
     QM_TRY(MOZ_TO_RESULT(directoryEntry->Append(
         NS_LITERAL_STRING_FROM_CSTRING(LS_DIRECTORY_NAME))));
@@ -6953,9 +6954,11 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
                               .map([](const auto& res) { return res.first; }));
           }
 
+          MOZ_ASSERT(mOriginMetadata.mPersistenceType ==
+                     PERSISTENCE_TYPE_DEFAULT);
+
           QM_TRY_UNWRAP(auto directoryEntry,
-                        quotaManager->GetOriginDirectory(
-                            PERSISTENCE_TYPE_DEFAULT, Origin()));
+                        quotaManager->GetOriginDirectory(mOriginMetadata));
 
           quotaManager->EnsureQuotaForOrigin(mOriginMetadata);
 
@@ -8299,13 +8302,13 @@ Result<UsageInfo, nsresult> QuotaClient::InitOrigin(
     const AtomicBool& aCanceled) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aPersistenceType == PERSISTENCE_TYPE_DEFAULT);
+  MOZ_ASSERT(aOriginMetadata.mPersistenceType == aPersistenceType);
 
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
   QM_TRY_INSPECT(const auto& directory,
-                 quotaManager->GetOriginDirectory(aPersistenceType,
-                                                  aOriginMetadata.mOrigin));
+                 quotaManager->GetOriginDirectory(aOriginMetadata));
 
   MOZ_ASSERT(directory);
 
