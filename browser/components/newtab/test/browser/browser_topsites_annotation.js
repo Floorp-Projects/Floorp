@@ -57,7 +57,7 @@ const {
  * @param {string} href the page to await notifications for.
  */
 async function waitForVisitNotification(href) {
-  PlacesTestUtils.waitForNotification("page-visited", events =>
+  await PlacesTestUtils.waitForNotification("page-visited", events =>
     events.some(e => e.url === href)
   );
 }
@@ -135,7 +135,7 @@ async function openAndTest({
   );
 
   info("Open specific link by type and wait for loading.");
-  let promiseVisited = await waitForVisitNotification(destinationURL);
+  let promiseVisited = waitForVisitNotification(destinationURL);
   if (openType === OPEN_TYPE.CURRENT_BY_CLICK) {
     const onLoad = BrowserTestUtils.browserLoaded(
       gBrowser.selectedBrowser,
@@ -570,7 +570,6 @@ add_task(async function redirection() {
     await pin(link);
 
     // Test with new tab.
-    let promiseVisited = await waitForVisitNotification(link.url);
     await openAndTest({
       linkSelector: ".top-site-button",
       linkURL: link.url,
@@ -582,7 +581,6 @@ add_task(async function redirection() {
         triggerURL: link.url,
       },
     });
-    await promiseVisited;
 
     // Check for URL causes the redirection.
     await assertDatabase({
@@ -595,7 +593,6 @@ add_task(async function redirection() {
     await clearHistoryAndBookmarks();
 
     // Test with same tab.
-    promiseVisited = await waitForVisitNotification(link.url);
     await openAndTest({
       linkSelector: ".top-site-button",
       linkURL: link.url,
@@ -607,7 +604,6 @@ add_task(async function redirection() {
         triggerURL: link.url,
       },
     });
-    await promiseVisited;
 
     // Check for URL causes the redirection.
     await assertDatabase({
@@ -783,7 +779,7 @@ add_task(async function inherit() {
       value: host,
       waitForFocus: SimpleTest.waitForFocus,
     });
-    let promiseVisited = await waitForVisitNotification(host);
+    let promiseVisited = waitForVisitNotification(host);
     EventUtils.synthesizeKey("KEY_Enter");
     await onLoad;
     await promiseVisited;
@@ -911,7 +907,7 @@ add_task(async function fixup() {
     await pin(link);
 
     info("Click sponsored tile");
-    let promiseVisited = await waitForVisitNotification(destinationURL);
+    let promiseVisited = waitForVisitNotification(destinationURL);
     const onLoad = BrowserTestUtils.browserLoaded(
       gBrowser.selectedBrowser,
       false,
@@ -955,7 +951,7 @@ add_task(async function noTriggeringURL() {
     browser.setAttribute("triggeringSponsoredURLVisitTimeMS", Date.now());
 
     info("Open URL whose host is the same as dummy triggering sponsored URL");
-    let promiseVisited = await waitForVisitNotification(targetURL);
+    let promiseVisited = waitForVisitNotification(targetURL);
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: targetURL,
